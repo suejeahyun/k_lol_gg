@@ -112,16 +112,18 @@ export default async function PlayerDetailPage({ params }: PageProps) {
     },
   });
 
-  const championMap = new Map(
-    champions.map((champion: (typeof champions)[number]) => [
-      champion.id,
-      champion,
-    ])
-  );
+type ChampionType = (typeof champions)[number];
+
+const championMap = new Map<number, ChampionType>(
+  champions.map((champion: ChampionType) => [
+    champion.id,
+    champion,
+  ])
+);
 
   const mostChampions = mostChampionsRaw.map(
     (item: (typeof mostChampionsRaw)[number]) => {
-      const champion = championMap.get(item.championId);
+      const champion = championMap.get(item.championId) as ChampionType | undefined;
       const games = item._count.championId;
       const kills = item._sum.kills ?? 0;
       const deaths = item._sum.deaths ?? 0;
