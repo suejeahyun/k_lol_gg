@@ -1,33 +1,15 @@
+import { prisma } from "@/lib/prisma/client";
 import SeasonActivateButton from "./SeasonActivateButton";
 import SeasonCreateForm from "./SeasonCreateForm";
 import SeasonDeleteButton from "./SeasonDeleteButton";
 import SeasonEditButton from "./SeasonEditButton";
 
-type SeasonItem = {
-  id: number;
-  name: string;
-  isActive: boolean;
-  createdAt?: string;
-};
-
-async function getSeasons(): Promise<SeasonItem[]> {
-  const baseUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000";
-
-  const res = await fetch(`${baseUrl}/api/seasons`, {
-    cache: "no-store",
-  });
-
-  if (!res.ok) {
-    throw new Error("시즌 목록을 불러오지 못했습니다.");
-  }
-
-  return res.json();
-}
-
 export default async function AdminSeasonsPage() {
-  const seasons = await getSeasons();
+  const seasons = await prisma.season.findMany({
+    orderBy: {
+      id: "desc",
+    },
+  });
 
   return (
     <div className="page-container">
@@ -44,7 +26,7 @@ export default async function AdminSeasonsPage() {
         </div>
 
         <div className="card-grid">
-          {seasons.map((season: (typeof seasons)[number]) => (
+          {seasons.map((season) => (
             <div key={season.id} className="admin-player-row-card">
               <div className="admin-player-row-grid">
                 <div className="player-col player-name">{season.name}</div>
@@ -54,9 +36,7 @@ export default async function AdminSeasonsPage() {
                 </div>
 
                 <div className="player-col">
-                  {season.createdAt
-                    ? new Date(season.createdAt).toLocaleDateString("ko-KR")
-                    : "-"}
+                  {new Date(season.createdAt).toLocaleDateString("ko-KR")}
                 </div>
 
                 <div className="admin-player-actions">
