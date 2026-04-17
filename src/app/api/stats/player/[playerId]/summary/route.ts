@@ -7,10 +7,7 @@ type RouteContext = {
   }>;
 };
 
-export async function GET(
-  _req: NextRequest,
-  { params }: RouteContext
-) {
+export async function GET(_req: NextRequest, { params }: RouteContext) {
   try {
     const { playerId } = await params;
     const id = Number(playerId);
@@ -79,7 +76,9 @@ export async function GET(
       take: 3,
     });
 
-    const championIds = championStatsRaw.map((item) => item.championId);
+    const championIds = championStatsRaw.map(
+      (item: (typeof championStatsRaw)[number]) => item.championId
+    );
 
     const champions = championIds.length
       ? await prisma.champion.findMany({
@@ -96,18 +95,40 @@ export async function GET(
         })
       : [];
 
-    const championMap = new Map(champions.map((champion) => [champion.id, champion]));
+    type ChampionType = (typeof champions)[number];
+
+    const championMap = new Map<number, ChampionType>(
+      champions.map((champion: ChampionType) => [champion.id, champion])
+    );
 
     const totalGames = records.length;
+
     const wins = records.filter(
-      (record) => record.team === record.game.winnerTeam
+      (record: (typeof records)[number]) =>
+        record.team === record.game.winnerTeam
     ).length;
+
     const losses = totalGames - wins;
 
-    const totalKills = records.reduce((sum, record) => sum + record.kills, 0);
-    const totalDeaths = records.reduce((sum, record) => sum + record.deaths, 0);
-    const totalAssists = records.reduce((sum, record) => sum + record.assists, 0);
-    const totalGold = records.reduce((sum, record) => sum + record.gold, 0);
+    const totalKills = records.reduce(
+      (sum: number, record: (typeof records)[number]) => sum + record.kills,
+      0
+    );
+
+    const totalDeaths = records.reduce(
+      (sum: number, record: (typeof records)[number]) => sum + record.deaths,
+      0
+    );
+
+    const totalAssists = records.reduce(
+      (sum: number, record: (typeof records)[number]) => sum + record.assists,
+      0
+    );
+
+    const totalGold = records.reduce(
+      (sum: number, record: (typeof records)[number]) => sum + record.gold,
+      0
+    );
 
     const winRate =
       totalGames > 0 ? Number(((wins / totalGames) * 100).toFixed(1)) : 0;
@@ -119,25 +140,28 @@ export async function GET(
 
     const avgGold = totalGames > 0 ? Math.round(totalGold / totalGames) : 0;
 
-    const mostChampions = championStatsRaw.map((item) => {
-      const champion = championMap.get(item.championId);
-      const games = item._count.championId;
-      const kills = item._sum.kills ?? 0;
-      const deaths = item._sum.deaths ?? 0;
-      const assists = item._sum.assists ?? 0;
-      const championKda =
-        deaths === 0
-          ? Number((kills + assists).toFixed(2))
-          : Number(((kills + assists) / deaths).toFixed(2));
+    const mostChampions = championStatsRaw.map(
+      (item: (typeof championStatsRaw)[number]) => {
+        const champion = championMap.get(item.championId);
+        const games = item._count.championId;
+        const kills = item._sum.kills ?? 0;
+        const deaths = item._sum.deaths ?? 0;
+        const assists = item._sum.assists ?? 0;
 
-      return {
-        championId: item.championId,
-        championName: champion?.name ?? "Unknown",
-        championImageUrl: champion?.imageUrl ?? "",
-        games,
-        kda: championKda,
-      };
-    });
+        const championKda =
+          deaths === 0
+            ? Number((kills + assists).toFixed(2))
+            : Number(((kills + assists) / deaths).toFixed(2));
+
+        return {
+          championId: item.championId,
+          championName: champion?.name ?? "Unknown",
+          championImageUrl: champion?.imageUrl ?? "",
+          games,
+          kda: championKda,
+        };
+      }
+    );
 
     return NextResponse.json({
       player,

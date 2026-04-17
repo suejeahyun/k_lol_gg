@@ -48,123 +48,79 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const rankings = players
-      .map((player: (typeof players)[number]) => {
-        const totalGames = player.participants.length;
+    const mappedRankings = players.map((player: (typeof players)[number]) => {
+  const totalGames = player.participants.length;
 
-        const wins = player.participants.filter(
-          (participant: (typeof player.participants)[number]) =>
-            participant.team === participant.game.winnerTeam
-        ).length;
+  const wins = player.participants.filter(
+    (participant: (typeof player.participants)[number]) =>
+      participant.team === participant.game.winnerTeam
+  ).length;
 
-        const losses = totalGames - wins;
+  const losses = totalGames - wins;
 
-        const totalKills = player.participants.reduce(
-          (
-            sum: number,
-            participant: (typeof player.participants)[number]
-          ) => sum + participant.kills,
-          0
-        );
+  const totalKills = player.participants.reduce(
+    (sum: number, participant: (typeof player.participants)[number]) =>
+      sum + participant.kills,
+    0
+  );
 
-        const totalDeaths = player.participants.reduce(
-          (
-            sum: number,
-            participant: (typeof player.participants)[number]
-          ) => sum + participant.deaths,
-          0
-        );
+  const totalDeaths = player.participants.reduce(
+    (sum: number, participant: (typeof player.participants)[number]) =>
+      sum + participant.deaths,
+    0
+  );
 
-        const totalAssists = player.participants.reduce(
-          (
-            sum: number,
-            participant: (typeof player.participants)[number]
-          ) => sum + participant.assists,
-          0
-        );
+  const totalAssists = player.participants.reduce(
+    (sum: number, participant: (typeof player.participants)[number]) =>
+      sum + participant.assists,
+    0
+  );
 
-        const totalGold = player.participants.reduce(
-          (
-            sum: number,
-            participant: (typeof player.participants)[number]
-          ) => sum + participant.gold,
-          0
-        );
+  const totalGold = player.participants.reduce(
+    (sum: number, participant: (typeof player.participants)[number]) =>
+      sum + participant.gold,
+    0
+  );
 
-        const winRate =
-          totalGames > 0 ? Number(((wins / totalGames) * 100).toFixed(1)) : 0;
+  const winRate =
+    totalGames > 0 ? Number(((wins / totalGames) * 100).toFixed(1)) : 0;
 
-        const kda =
-          totalDeaths === 0
-            ? Number((totalKills + totalAssists).toFixed(2))
-            : Number(((totalKills + totalAssists) / totalDeaths).toFixed(2));
+  const kda =
+    totalDeaths === 0
+      ? Number((totalKills + totalAssists).toFixed(2))
+      : Number(((totalKills + totalAssists) / totalDeaths).toFixed(2));
 
-        const avgGold = totalGames > 0 ? Math.round(totalGold / totalGames) : 0;
+  const avgGold = totalGames > 0 ? Math.round(totalGold / totalGames) : 0;
 
-        return {
-          playerId: player.id,
-          name: player.name,
-          nickname: player.nickname ?? "",
-          tag: player.tag ?? "",
-          totalGames,
-          wins,
-          losses,
-          winRate,
-          kda,
-          avgGold,
-        };
-      })
-      .filter((player: (typeof players)[number] | {
-        playerId: number;
-        name: string;
-        nickname: string;
-        tag: string;
-        totalGames: number;
-        wins: number;
-        losses: number;
-        winRate: number;
-        kda: number;
-        avgGold: number;
-      }) => player.totalGames > 0)
-      .sort(
-        (
-          a: {
-            playerId: number;
-            name: string;
-            nickname: string;
-            tag: string;
-            totalGames: number;
-            wins: number;
-            losses: number;
-            winRate: number;
-            kda: number;
-            avgGold: number;
-          },
-          b: {
-            playerId: number;
-            name: string;
-            nickname: string;
-            tag: string;
-            totalGames: number;
-            wins: number;
-            losses: number;
-            winRate: number;
-            kda: number;
-            avgGold: number;
-          }
-        ) => {
-          if (b.winRate !== a.winRate) return b.winRate - a.winRate;
-          if (b.wins !== a.wins) return b.wins - a.wins;
-          if (b.kda !== a.kda) return b.kda - a.kda;
-          if (b.avgGold !== a.avgGold) return b.avgGold - a.avgGold;
-          return a.playerId - b.playerId;
-        }
-      );
+  return {
+    playerId: player.id,
+    name: player.name,
+    nickname: player.nickname ?? "",
+    tag: player.tag ?? "",
+    totalGames,
+    wins,
+    losses,
+    winRate,
+    kda,
+    avgGold,
+  };
+});
 
-    return NextResponse.json({
-      season: currentSeason,
-      rankings,
-    });
+const rankings = mappedRankings
+  .filter((player: (typeof mappedRankings)[number]) => player.totalGames > 0)
+  .sort(
+    (
+      a: (typeof mappedRankings)[number],
+      b: (typeof mappedRankings)[number]
+    ) => {
+      if (b.winRate !== a.winRate) return b.winRate - a.winRate;
+      if (b.wins !== a.wins) return b.wins - a.wins;
+      if (b.kda !== a.kda) return b.kda - a.kda;
+      if (b.avgGold !== a.avgGold) return b.avgGold - a.avgGold;
+      return a.playerId - b.playerId;
+    }
+  );
+  
   } catch (error) {
     console.error("[RANKINGS_GET_ERROR]", error);
 
