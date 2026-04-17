@@ -105,7 +105,7 @@ export default async function MatchDetailPage({ params }: PageProps) {
       </div>
 
       <div className="card-grid">
-        {gamesWithMvp.map((game) => (
+        {gamesWithMvp.map((game: (typeof gamesWithMvp)[number]) => (
           <section key={game.id} className="detail-board">
             <div className="detail-board__title">
               {game.gameNumber}세트 / 승리 팀: {getTeamLabel(game.winnerTeam)} / {game.durationMin}분
@@ -129,7 +129,7 @@ export default async function MatchDetailPage({ params }: PageProps) {
             </div>
 
             <div className="card-grid">
-              {game.participants.map((participant) => (
+              {game.participants.map((participant: (typeof game.participants)[number]) => (
                 <div key={participant.id} className="match-detail-row">
                   <div>{participant.team}</div>
                   <div>{participant.player.name}</div>

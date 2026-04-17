@@ -16,14 +16,17 @@ const currentSeason =
     <MatchForm
       mode="create"
       submitUrl="/api/matches"
-      seasons={seasons.map((season) => ({ id: season.id, name: season.name }))}
-      players={players.map((player) => ({
+      seasons={seasons.map((season: (typeof seasons)[number]) => ({
+  id: season.id,
+  name: season.name,
+}))}
+      players={players.map((player: (typeof players)[number]) => ({
         id: player.id,
         name: player.name,
         nickname: player.nickname,
         tag: player.tag,
       }))}
-      champions={champions.map((champion) => ({
+      champions={champions.map((champion: (typeof champions)[number]) => ({
         id: champion.id,
         name: champion.name,
       }))}

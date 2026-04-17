@@ -74,7 +74,7 @@ export default async function AdminPlayersPage({
           </div>
 
           <div className="card-grid">
-            {players.map((player) => (
+            {players.map((player: (typeof players)[number]) => (
               <div key={player.id} className="admin-player-row-card">
                 <div className="admin-player-row-grid">
                   <div className="player-col player-name">{player.name}</div>

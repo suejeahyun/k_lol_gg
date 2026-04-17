@@ -40,7 +40,7 @@ export default async function AdminSeasonsPage() {
         </div>
 
         <div className="card-grid">
-          {seasons.map((season) => (
+          {seasons.map((season: (typeof seasons)[number]) => (
             <div key={season.id} className="admin-player-row-card">
               <div className="admin-player-row-grid">
                 <div className="player-col player-name">{season.name}</div>

@@ -132,7 +132,7 @@ export default function AdminChampionsPage() {
         </div>
 
         <div className="card-grid">
-          {champions.map((champion) => (
+          {champions.map((champion: (typeof champions)[number]) => (
             <div key={champion.id} className="admin-player-row-card">
               <div className="admin-player-row-grid">
                 <div className="player-col player-name">{champion.name}</div>

@@ -114,7 +114,7 @@ export default async function AdminMatchesPage({
           </div>
 
           <div className="card-grid">
-            {matches.map((match) => (
+            {matches.map((match: (typeof matches)[number]) => (
               <div key={match.id} className="admin-player-row-card">
                 <div className="admin-match-row-grid">
                   <div className="player-col player-name">{match.title}</div>

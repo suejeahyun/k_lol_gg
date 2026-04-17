@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
     });
 
     const rankings = players
-      .map((player) => {
+      .map((player: (typeof players)[number]) => {
         const totalGames = player.participants.length;
         const wins = player.participants.filter(
           (participant) => participant.team === participant.game.winnerTeam
