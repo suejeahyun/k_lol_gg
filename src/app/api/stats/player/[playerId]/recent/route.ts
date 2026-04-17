@@ -59,7 +59,7 @@ export async function GET(
       }),
     ]);
 
-    const items = participants.map((participant) => {
+    const items = participants.map((participant: (typeof participants)[number]) => {
       const isWin = participant.team === participant.game.winnerTeam;
 
       return {
