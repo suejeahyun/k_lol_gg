@@ -11,7 +11,11 @@ type SeasonItem = {
 };
 
 async function getSeasons(): Promise<SeasonItem[]> {
-  const res = await fetch("http://localhost:3000/api/seasons", {
+  const baseUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000";
+
+  const res = await fetch(`${baseUrl}/api/seasons`, {
     cache: "no-store",
   });
 
