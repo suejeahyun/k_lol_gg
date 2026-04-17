@@ -51,25 +51,43 @@ export async function GET(req: NextRequest) {
     const rankings = players
       .map((player: (typeof players)[number]) => {
         const totalGames = player.participants.length;
+
         const wins = player.participants.filter(
-          (participant) => participant.team === participant.game.winnerTeam
+          (participant: (typeof player.participants)[number]) =>
+            participant.team === participant.game.winnerTeam
         ).length;
+
         const losses = totalGames - wins;
 
         const totalKills = player.participants.reduce(
-          (sum, participant) => sum + participant.kills,
+          (
+            sum: number,
+            participant: (typeof player.participants)[number]
+          ) => sum + participant.kills,
           0
         );
+
         const totalDeaths = player.participants.reduce(
-          (sum, participant) => sum + participant.deaths,
+          (
+            sum: number,
+            participant: (typeof player.participants)[number]
+          ) => sum + participant.deaths,
           0
         );
+
         const totalAssists = player.participants.reduce(
-          (sum, participant) => sum + participant.assists,
+          (
+            sum: number,
+            participant: (typeof player.participants)[number]
+          ) => sum + participant.assists,
           0
         );
+
         const totalGold = player.participants.reduce(
-          (sum, participant) => sum + participant.gold,
+          (
+            sum: number,
+            participant: (typeof player.participants)[number]
+          ) => sum + participant.gold,
           0
         );
 
@@ -86,8 +104,8 @@ export async function GET(req: NextRequest) {
         return {
           playerId: player.id,
           name: player.name,
-          nickname: player.nickname,
-          tag: player.tag,
+          nickname: player.nickname ?? "",
+          tag: player.tag ?? "",
           totalGames,
           wins,
           losses,
@@ -96,14 +114,52 @@ export async function GET(req: NextRequest) {
           avgGold,
         };
       })
-      .filter((player) => player.totalGames > 0)
-      .sort((a, b) => {
-        if (b.winRate !== a.winRate) return b.winRate - a.winRate;
-        if (b.wins !== a.wins) return b.wins - a.wins;
-        if (b.kda !== a.kda) return b.kda - a.kda;
-        if (b.avgGold !== a.avgGold) return b.avgGold - a.avgGold;
-        return a.playerId - b.playerId;
-      });
+      .filter((player: (typeof players)[number] | {
+        playerId: number;
+        name: string;
+        nickname: string;
+        tag: string;
+        totalGames: number;
+        wins: number;
+        losses: number;
+        winRate: number;
+        kda: number;
+        avgGold: number;
+      }) => player.totalGames > 0)
+      .sort(
+        (
+          a: {
+            playerId: number;
+            name: string;
+            nickname: string;
+            tag: string;
+            totalGames: number;
+            wins: number;
+            losses: number;
+            winRate: number;
+            kda: number;
+            avgGold: number;
+          },
+          b: {
+            playerId: number;
+            name: string;
+            nickname: string;
+            tag: string;
+            totalGames: number;
+            wins: number;
+            losses: number;
+            winRate: number;
+            kda: number;
+            avgGold: number;
+          }
+        ) => {
+          if (b.winRate !== a.winRate) return b.winRate - a.winRate;
+          if (b.wins !== a.wins) return b.wins - a.wins;
+          if (b.kda !== a.kda) return b.kda - a.kda;
+          if (b.avgGold !== a.avgGold) return b.avgGold - a.avgGold;
+          return a.playerId - b.playerId;
+        }
+      );
 
     return NextResponse.json({
       season: currentSeason,
