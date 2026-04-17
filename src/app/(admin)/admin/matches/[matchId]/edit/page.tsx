@@ -5,6 +5,23 @@ type EditMatchPageProps = {
   params: Promise<{ matchId: string }>;
 };
 
+type SeasonOption = {
+  id: number;
+  name: string;
+};
+
+type PlayerOption = {
+  id: number;
+  name: string;
+  nickname: string | null;
+  tag: string | null;
+};
+
+type ChampionOption = {
+  id: number;
+  name: string;
+};
+
 export default async function EditMatchPage({ params }: EditMatchPageProps) {
   const { matchId } = await params;
   const id = Number(matchId);
@@ -56,14 +73,17 @@ export default async function EditMatchPage({ params }: EditMatchPageProps) {
     <MatchForm
       mode="edit"
       submitUrl={`/api/matches/${match.id}`}
-      seasons={seasons.map((season) => ({ id: season.id, name: season.name }))}
-      players={players.map((player) => ({
+      seasons={seasons.map((season: SeasonOption) => ({
+        id: season.id,
+        name: season.name,
+      }))}
+      players={players.map((player: PlayerOption) => ({
         id: player.id,
         name: player.name,
         nickname: player.nickname,
         tag: player.tag,
       }))}
-      champions={champions.map((champion) => ({
+      champions={champions.map((champion: ChampionOption) => ({
         id: champion.id,
         name: champion.name,
       }))}
