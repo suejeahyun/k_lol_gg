@@ -1,0 +1,155 @@
+
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Team {
+  BLUE
+  RED
+}
+
+enum Position {
+  TOP
+  JGL
+  MID
+  ADC
+  SUP
+}
+
+model Player {
+  id        Int      @id @default(autoincrement())
+  name      String
+  nickname  String
+  tag       String
+  createdAt DateTime @default(now())
+
+  participants MatchParticipant[]
+  seasonStats  PlayerSeasonStat[]
+  championStats PlayerChampionStat[]
+  positionStats PlayerPositionStat[]
+  seasonResults SeasonResult[]
+}
+
+model Champion {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  imageUrl  String
+  createdAt DateTime @default(now())
+
+  participants  MatchParticipant[]
+  championStats PlayerChampionStat[]
+}
+
+model Season {
+  id        Int      @id @default(autoincrement())
+  name      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  matches       MatchSeries[]
+  seasonStats   PlayerSeasonStat[]
+  seasonResults SeasonResult[]
+}
+
+model MatchSeries {
+  id        Int      @id @default(autoincrement())
+  title     String
+  matchDate DateTime
+  seasonId  Int
+  createdAt DateTime @default(now())
+
+  season Season @relation(fields: [seasonId], references: [id])
+  games  MatchGame[]
+}
+
+model MatchGame {
+  id          Int    @id @default(autoincrement())
+  seriesId    Int
+  gameNumber  Int
+  durationMin Int
+  winnerTeam  Team
+
+  series       MatchSeries       @relation(fields: [seriesId], references: [id])
+  participants MatchParticipant[]
+}
+
+model MatchParticipant {
+  id         Int      @id @default(autoincrement())
+  gameId     Int
+  playerId   Int
+  championId Int
+  team       Team
+  position   Position
+
+  kills   Int
+  deaths  Int
+  assists Int
+  cs      Int
+  gold    Int
+
+  game     MatchGame @relation(fields: [gameId], references: [id])
+  player   Player    @relation(fields: [playerId], references: [id])
+  champion Champion  @relation(fields: [championId], references: [id])
+}
+
+model PlayerSeasonStat {
+  id         Int @id @default(autoincrement())
+  playerId   Int
+  seasonId   Int
+
+  totalGames Int
+  wins       Int
+  losses     Int
+  kda        Float
+  avgGold    Float
+
+  player Player @relation(fields: [playerId], references: [id])
+  season Season @relation(fields: [seasonId], references: [id])
+}
+
+model PlayerChampionStat {
+  id         Int @id @default(autoincrement())
+  playerId   Int
+  championId Int
+
+  games Int
+  wins  Int
+  kda   Float
+
+  player   Player   @relation(fields: [playerId], references: [id])
+  champion Champion @relation(fields: [championId], references: [id])
+}
+
+model PlayerPositionStat {
+  id       Int @id @default(autoincrement())
+  playerId Int
+  position Position
+
+  games Int
+  wins  Int
+
+  player Player @relation(fields: [playerId], references: [id])
+}
+
+model SeasonResult {
+  id       Int @id @default(autoincrement())
+  seasonId Int
+  category String
+  playerId Int
+  value    Float
+
+  season Season @relation(fields: [seasonId], references: [id])
+  player Player @relation(fields: [playerId], references: [id])
+}
+
+model AdminLog {
+  id        Int      @id @default(autoincrement())
+  action    String
+  target    String
+  createdAt DateTime @default(now())
+}

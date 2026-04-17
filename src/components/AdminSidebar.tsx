@@ -1,0 +1,27 @@
+import Link from "next/link";
+
+export default function AdminSidebar() {
+  return (
+    <aside className="app-sidebar">
+      <div className="app-sidebar__title">관리자 메뉴</div>
+
+      <nav className="app-sidebar__nav">
+        <Link href="/admin/matches" className="app-sidebar__link">
+          내전 관리
+        </Link>
+        <Link href="/admin/matches/new" className="app-sidebar__link">
+          내전 등록
+        </Link>
+        <Link href="/admin/players" className="app-sidebar__link">
+          플레이어 관리
+        </Link>
+        <Link href="/admin/champions" className="app-sidebar__link">
+          챔피언 관리
+        </Link>
+        <Link href="/admin/seasons" className="app-sidebar__link">
+          시즌 관리
+        </Link>
+      </nav>
+    </aside>
+  );
+}
