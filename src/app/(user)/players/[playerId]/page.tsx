@@ -60,9 +60,10 @@ export default async function PlayerDetailPage({
   });
 
   const totalGames = summaryRecords.length;
-  const wins = summaryRecords.filter(
-    (record) => record.team === record.game.winnerTeam
-  ).length;
+const wins = summaryRecords.filter(
+  (record: (typeof summaryRecords)[number]) =>
+    record.team === record.game.winnerTeam
+).length;
   const losses = totalGames - wins;
 
   const totalKills = summaryRecords.reduce((sum, record) => sum + record.kills, 0);
@@ -101,7 +102,9 @@ export default async function PlayerDetailPage({
     take: 3,
   });
 
-  const championIds = mostChampionsRaw.map((item) => item.championId);
+const championIds = mostChampionsRaw.map(
+  (item: (typeof mostChampionsRaw)[number]) => item.championId
+);
 
   const champions = championIds.length
     ? await prisma.champion.findMany({
@@ -118,7 +121,12 @@ export default async function PlayerDetailPage({
       })
     : [];
 
-  const championMap = new Map(champions.map((champion) => [champion.id, champion]));
+const championMap = new Map(
+  champions.map((champion: (typeof champions)[number]) => [
+    champion.id,
+    champion,
+  ])
+);
 
   const mostChampions = mostChampionsRaw.map((item) => {
     const champion = championMap.get(item.championId);
@@ -199,7 +207,8 @@ export default async function PlayerDetailPage({
     },
   });
 
-  const recentMatches = recentRecords.map((record: (typeof recentRecords)[number]) => ({
+const recentMatches = recentRecords.map(
+  (record: (typeof recentRecords)[number]) => ({
     id: record.id,
     matchId: record.game.series.id,
     matchTitle: record.game.series.title,
