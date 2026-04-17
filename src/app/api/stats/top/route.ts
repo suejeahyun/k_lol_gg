@@ -29,17 +29,29 @@ export async function GET(req: NextRequest) {
     prisma.player.count(),
   ]);
 
-  const mapped = players.map((p) => {
+  const mapped = players.map((p: (typeof players)[number]) => {
     const totalGames = p.participants.length;
 
     const wins = p.participants.filter(
-      (pt) => pt.team === pt.game.winnerTeam
+      (pt: (typeof p.participants)[number]) => pt.team === pt.game.winnerTeam
     ).length;
 
-    const totalKills = p.participants.reduce((s, v) => s + v.kills, 0);
-    const totalDeaths = p.participants.reduce((s, v) => s + v.deaths, 0);
-    const totalAssists = p.participants.reduce((s, v) => s + v.assists, 0);
-    const totalGold = p.participants.reduce((s, v) => s + v.gold, 0);
+    const totalKills = p.participants.reduce(
+      (s: number, v: (typeof p.participants)[number]) => s + v.kills,
+      0
+    );
+    const totalDeaths = p.participants.reduce(
+      (s: number, v: (typeof p.participants)[number]) => s + v.deaths,
+      0
+    );
+    const totalAssists = p.participants.reduce(
+      (s: number, v: (typeof p.participants)[number]) => s + v.assists,
+      0
+    );
+    const totalGold = p.participants.reduce(
+      (s: number, v: (typeof p.participants)[number]) => s + v.gold,
+      0
+    );
 
     const winRate =
       totalGames > 0 ? Number(((wins / totalGames) * 100).toFixed(1)) : 0;
@@ -64,7 +76,10 @@ export async function GET(req: NextRequest) {
   });
 
   // 정렬 (승률 기준)
-  const sorted = mapped.sort((a, b) => b.winRate - a.winRate);
+  const sorted = mapped.sort(
+  (a: (typeof mapped)[number], b: (typeof mapped)[number]) =>
+    b.winRate - a.winRate
+  );
 
   // 페이지네이션 적용
   const paged = sorted.slice(skip, skip + pageSize);
