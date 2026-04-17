@@ -111,7 +111,7 @@ export default async function PlayerDetailPage({
           },
         },
         select: {
-          id: true,
+          id: true, 
           name: true,
           imageUrl: true,
         },
@@ -199,7 +199,7 @@ export default async function PlayerDetailPage({
     },
   });
 
-  const recentMatches = recentRecords.map((record) => ({
+  const recentMatches = recentRecords.map((record: (typeof recentRecords)[number]) => ({
     id: record.id,
     matchId: record.game.series.id,
     matchTitle: record.game.series.title,
