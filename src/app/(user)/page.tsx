@@ -162,7 +162,7 @@ export default async function HomePage() {
             <p>등록된 내전이 없습니다.</p>
           ) : (
             <div className="card-grid">
-              {recentMatches.map((match) => (
+              {recentMatches.map((match: (typeof recentMatches)[number]) => (
                 <Link
                   key={match.id}
                   href={`/matches/${match.id}`}
