@@ -62,11 +62,16 @@ export default async function MatchDetailPage({ params }: PageProps) {
       }
     );
 
+    type ScoredParticipant = (typeof participantsWithScore)[number];
+
     const mvp =
       participantsWithScore.length === 0
         ? null
         : participantsWithScore.reduce(
-            (best, current) => {
+            (
+              best: ScoredParticipant | null,
+              current: ScoredParticipant
+            ): ScoredParticipant => {
               if (!best) {
                 return current;
               }
@@ -93,7 +98,7 @@ export default async function MatchDetailPage({ params }: PageProps) {
 
               return best;
             },
-            null as (typeof participantsWithScore)[number] | null
+            null
           );
 
     return {
