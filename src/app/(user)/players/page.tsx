@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import Pagination from "@/components/Pagination";
 import PlayerSearchBox from "./PlayerSearchBox";
@@ -35,7 +34,7 @@ function getOrder(order?: string): OrderType {
   return order === "asc" ? "asc" : "desc";
 }
 
-function buildPlayerSearchWhere(query: string): Prisma.PlayerWhereInput {
+function buildPlayerSearchWhere(query: string) {
   const trimmed = query.trim();
 
   if (!trimmed) {
@@ -54,7 +53,7 @@ function buildPlayerSearchWhere(query: string): Prisma.PlayerWhereInput {
         {
           name: {
             contains: trimmed,
-            mode: "insensitive",
+            mode: "insensitive" as const,
           },
         },
         {
@@ -62,13 +61,13 @@ function buildPlayerSearchWhere(query: string): Prisma.PlayerWhereInput {
             {
               nickname: {
                 contains: nicknamePart,
-                mode: "insensitive",
+                mode: "insensitive" as const,
               },
             },
             {
               tag: {
                 contains: tagPart,
-                mode: "insensitive",
+                mode: "insensitive" as const,
               },
             },
           ],
@@ -80,7 +79,7 @@ function buildPlayerSearchWhere(query: string): Prisma.PlayerWhereInput {
   return {
     name: {
       contains: trimmed,
-      mode: "insensitive",
+      mode: "insensitive" as const,
     },
   };
 }
@@ -111,29 +110,48 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
         },
       },
     },
+    orderBy: {
+      id: "asc",
+    },
   });
 
-  const mapped = players.map((player) => {
+  const mapped = players.map((player: (typeof players)[number]) => {
     const totalGames = player.participants.length;
 
     const wins = player.participants.filter(
-      (participant) => participant.team === participant.game.winnerTeam
+      (participant: (typeof player.participants)[number]) =>
+        participant.team === participant.game.winnerTeam
     ).length;
 
     const totalKills = player.participants.reduce(
-      (sum, participant) => sum + participant.kills,
+      (
+        sum: number,
+        participant: (typeof player.participants)[number]
+      ) => sum + participant.kills,
       0
     );
+
     const totalDeaths = player.participants.reduce(
-      (sum, participant) => sum + participant.deaths,
+      (
+        sum: number,
+        participant: (typeof player.participants)[number]
+      ) => sum + participant.deaths,
       0
     );
+
     const totalAssists = player.participants.reduce(
-      (sum, participant) => sum + participant.assists,
+      (
+        sum: number,
+        participant: (typeof player.participants)[number]
+      ) => sum + participant.assists,
       0
     );
+
     const totalGold = player.participants.reduce(
-      (sum, participant) => sum + participant.gold,
+      (
+        sum: number,
+        participant: (typeof player.participants)[number]
+      ) => sum + participant.gold,
       0
     );
 
@@ -150,8 +168,8 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
     return {
       id: player.id,
       name: player.name,
-      nickname: player.nickname,
-      tag: player.tag,
+      nickname: player.nickname ?? "",
+      tag: player.tag ?? "",
       totalGames,
       winRate,
       kda,
@@ -159,19 +177,24 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
     };
   });
 
-  const sorted = [...mapped].sort((a, b) => {
-    let result = 0;
+  const sorted = [...mapped].sort(
+    (
+      a: (typeof mapped)[number],
+      b: (typeof mapped)[number]
+    ) => {
+      let result = 0;
 
-    if (sort === "name") result = a.name.localeCompare(b.name);
-    if (sort === "totalGames") result = a.totalGames - b.totalGames;
-    if (sort === "winRate") result = a.winRate - b.winRate;
-    if (sort === "kda") result = a.kda - b.kda;
-    if (sort === "avgGold") result = a.avgGold - b.avgGold;
+      if (sort === "name") result = a.name.localeCompare(b.name);
+      if (sort === "totalGames") result = a.totalGames - b.totalGames;
+      if (sort === "winRate") result = a.winRate - b.winRate;
+      if (sort === "kda") result = a.kda - b.kda;
+      if (sort === "avgGold") result = a.avgGold - b.avgGold;
 
-    return order === "asc" ? result : -result;
-  });
+      return order === "asc" ? result : -result;
+    }
+  );
 
-  const totalPages = Math.ceil(sorted.length / PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
 
   const paged = sorted.slice(
     (currentPage - 1) * PAGE_SIZE,
@@ -205,7 +228,7 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
       </div>
 
       <div className="card-grid">
-        {paged.map((player) => (
+        {paged.map((player: (typeof paged)[number]) => (
           <Link
             key={player.id}
             href={`/players/${player.id}`}
