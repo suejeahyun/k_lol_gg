@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
-import { Prisma } from "@prisma/client";
 
-function buildPlayerSearchWhere(query: string): Prisma.PlayerWhereInput {
+function buildPlayerSearchWhere(query: string) {
   const trimmed = query.trim();
 
   if (!trimmed) return {};
@@ -21,13 +20,13 @@ function buildPlayerSearchWhere(query: string): Prisma.PlayerWhereInput {
             {
               nickname: {
                 contains: nicknamePart,
-                mode: "insensitive",
+                mode: "insensitive" as const,
               },
             },
             {
               tag: {
                 contains: tagPart,
-                mode: "insensitive",
+                mode: "insensitive" as const,
               },
             },
           ],
@@ -35,7 +34,7 @@ function buildPlayerSearchWhere(query: string): Prisma.PlayerWhereInput {
         {
           name: {
             contains: trimmed,
-            mode: "insensitive",
+            mode: "insensitive" as const,
           },
         },
       ],
@@ -47,19 +46,19 @@ function buildPlayerSearchWhere(query: string): Prisma.PlayerWhereInput {
       {
         name: {
           contains: trimmed,
-          mode: "insensitive",
+          mode: "insensitive" as const,
         },
       },
       {
         nickname: {
           contains: trimmed,
-          mode: "insensitive",
+          mode: "insensitive" as const,
         },
       },
       {
         tag: {
           contains: trimmed,
-          mode: "insensitive",
+          mode: "insensitive" as const,
         },
       },
     ],
@@ -67,22 +66,31 @@ function buildPlayerSearchWhere(query: string): Prisma.PlayerWhereInput {
 }
 
 export async function GET(request: NextRequest) {
-  const query = request.nextUrl.searchParams.get("q") ?? "";
+  try {
+    const query = request.nextUrl.searchParams.get("q") ?? "";
 
-  if (!query.trim()) {
-    return NextResponse.json([]);
+    if (!query.trim()) {
+      return NextResponse.json([]);
+    }
+
+    const players = await prisma.player.findMany({
+      where: buildPlayerSearchWhere(query),
+      select: {
+        id: true,
+        name: true,
+        nickname: true,
+        tag: true,
+      },
+      take: 8,
+    });
+
+    return NextResponse.json(players);
+  } catch (error) {
+    console.error("[PLAYER_SEARCH_GET_ERROR]", error);
+
+    return NextResponse.json(
+      { message: "Failed to search players" },
+      { status: 500 }
+    );
   }
-
-  const players = await prisma.player.findMany({
-    where: buildPlayerSearchWhere(query),
-    select: {
-      id: true,
-      name: true,
-      nickname: true,
-      tag: true,
-    },
-    take: 8,
-  });
-
-  return NextResponse.json(players);
 }
