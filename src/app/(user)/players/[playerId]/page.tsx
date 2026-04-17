@@ -66,10 +66,23 @@ const wins = summaryRecords.filter(
 ).length;
   const losses = totalGames - wins;
 
-  const totalKills = summaryRecords.reduce((sum, record) => sum + record.kills, 0);
-  const totalDeaths = summaryRecords.reduce((sum, record) => sum + record.deaths, 0);
-  const totalAssists = summaryRecords.reduce((sum, record) => sum + record.assists, 0);
-  const totalGold = summaryRecords.reduce((sum, record) => sum + record.gold, 0);
+const totalKills = summaryRecords.reduce(
+  (sum: number, record: (typeof summaryRecords)[number]) => sum + record.kills,
+  0
+);
+const totalDeaths = summaryRecords.reduce(
+  (sum: number, record: (typeof summaryRecords)[number]) => sum + record.deaths,
+  0
+);
+const totalAssists = summaryRecords.reduce(
+  (sum: number, record: (typeof summaryRecords)[number]) =>
+    sum + record.assists,
+  0
+);
+const totalGold = summaryRecords.reduce(
+  (sum: number, record: (typeof summaryRecords)[number]) => sum + record.gold,
+  0
+);
 
   const winRate =
     totalGames > 0 ? Number(((wins / totalGames) * 100).toFixed(1)) : 0;
