@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 
-const PAGE_SIZE = 10;
-
 type RouteContext = {
-  params: {
+  params: Promise<{
     playerId: string;
-  };
+  }>;
 };
 
 export async function GET(
@@ -14,11 +12,12 @@ export async function GET(
   { params }: RouteContext
 ) {
   try {
-    const id = Number(params.playerId);
+    const { playerId } = await params;
+    const id = Number(playerId);
 
     if (Number.isNaN(id)) {
       return NextResponse.json(
-        { message: "Invalid playerId" },
+        { message: "유효하지 않은 playerId 입니다." },
         { status: 400 }
       );
     }
@@ -27,100 +26,80 @@ export async function GET(
       1,
       Number(req.nextUrl.searchParams.get("page") ?? "1") || 1
     );
+    const pageSize = 5;
+    const skip = (page - 1) * pageSize;
 
-    const totalCount = await prisma.matchParticipant.count({
-      where: {
-        playerId: id,
-      },
-    });
-
-    const records = await prisma.matchParticipant.findMany({
-      where: {
-        playerId: id,
-      },
-      orderBy: [
-        {
+    const [totalCount, participants] = await Promise.all([
+      prisma.matchParticipant.count({
+        where: {
+          playerId: id,
+        },
+      }),
+      prisma.matchParticipant.findMany({
+        where: {
+          playerId: id,
+        },
+        include: {
+          champion: true,
+          game: {
+            include: {
+              series: true,
+            },
+          },
+        },
+        orderBy: {
           game: {
             series: {
               matchDate: "desc",
             },
           },
         },
-        {
-          game: {
-            gameNumber: "desc",
-          },
-        },
-      ],
-      skip: (page - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
-      select: {
-        id: true,
-        team: true,
-        position: true,
-        kills: true,
-        deaths: true,
-        assists: true,
-        cs: true,
-        gold: true,
-        champion: {
-          select: {
-            id: true,
-            name: true,
-            imageUrl: true,
-          },
-        },
-        game: {
-          select: {
-            id: true,
-            gameNumber: true,
-            winnerTeam: true,
-            durationMin: true,
-            series: {
-              select: {
-                id: true,
-                title: true,
-                matchDate: true,
-              },
-            },
-          },
-        },
-      },
-    });
+        skip,
+        take: pageSize,
+      }),
+    ]);
 
-    const items = records.map((record) => ({
-      id: record.id,
-      matchId: record.game.series.id,
-      matchTitle: record.game.series.title,
-      matchDate: record.game.series.matchDate,
-      gameId: record.game.id,
-      gameNumber: record.game.gameNumber,
-      durationMin: record.game.durationMin,
-      team: record.team,
-      position: record.position,
-      result: record.team === record.game.winnerTeam ? "WIN" : "LOSE",
-      kills: record.kills,
-      deaths: record.deaths,
-      assists: record.assists,
-      cs: record.cs,
-      gold: record.gold,
-      champion: record.champion,
-    }));
+    const items = participants.map((participant) => {
+      const isWin = participant.team === participant.game.winnerTeam;
+
+      return {
+        id: participant.id,
+        matchId: participant.game.seriesId,
+        matchTitle: participant.game.series.title,
+        matchDate: participant.game.series.matchDate,
+        gameId: participant.gameId,
+        gameNumber: participant.game.gameNumber,
+        durationMin: participant.game.durationMin,
+        team: participant.team,
+        position: participant.position,
+        result: isWin ? "WIN" : "LOSE",
+        kills: participant.kills,
+        deaths: participant.deaths,
+        assists: participant.assists,
+        cs: participant.cs,
+        gold: participant.gold,
+        champion: {
+          id: participant.champion.id,
+          name: participant.champion.name,
+          imageUrl: participant.champion.imageUrl,
+        },
+      };
+    });
 
     return NextResponse.json({
       items,
       pagination: {
         currentPage: page,
-        pageSize: PAGE_SIZE,
+        pageSize,
         totalCount,
-        totalPages: Math.ceil(totalCount / PAGE_SIZE),
+        totalPages: Math.max(1, Math.ceil(totalCount / pageSize)),
       },
     });
   } catch (error) {
     console.error("[PLAYER_RECENT_GET_ERROR]", error);
 
     return NextResponse.json(
-      { message: "Failed to fetch recent matches" },
+      { message: "최근 경기 조회 중 오류가 발생했습니다." },
       { status: 500 }
     );
   }

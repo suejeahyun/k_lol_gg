@@ -22,6 +22,10 @@ export default async function EditMatchPage({ params }: EditMatchPageProps) {
               orderBy: {
                 id: "asc",
               },
+              include: {
+                player: true,
+                champion: true,
+              },
             },
           },
         },
@@ -75,6 +79,11 @@ export default async function EditMatchPage({ params }: EditMatchPageProps) {
           participants: game.participants.map((participant) => ({
             playerId: participant.playerId,
             championId: participant.championId,
+            playerInput:
+              participant.player.nickname ||
+              participant.player.name ||
+              "",
+            championInput: participant.champion.name || "",
             team: participant.team,
             position: participant.position,
             kills: participant.kills,
