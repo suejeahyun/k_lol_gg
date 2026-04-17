@@ -8,7 +8,9 @@ export default async function NewMatchPage() {
     prisma.champion.findMany({ orderBy: { id: "asc" } }),
   ]);
 
-  const currentSeason = seasons.find((season) => season.isActive) ?? seasons[0];
+const currentSeason =
+  seasons.find((season: (typeof seasons)[number]) => season.isActive) ??
+  seasons[0];
 
   return (
     <MatchForm
