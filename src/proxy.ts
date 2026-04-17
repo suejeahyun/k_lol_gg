@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authConstants } from "@/lib/auth";
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   if (!pathname.startsWith("/admin")) {
