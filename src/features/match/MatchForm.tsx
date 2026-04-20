@@ -62,7 +62,7 @@ type MatchFormProps = {
 };
 
 function makePlayerLabel(player: PlayerOption) {
-  return `${player.name} (${player.nickname}#${player.tag})`;
+  return `${player.name}(${player.nickname}#${player.tag})`;
 }
 
 function createEmptyParticipants(): ParticipantForm[] {
@@ -219,14 +219,6 @@ export default function MatchForm({
 }: MatchFormProps) {
   const router = useRouter();
 
-  const playerMap = useMemo(() => {
-    const map = new Map<string, number>();
-    players.forEach((player) => {
-      map.set(makePlayerLabel(player), player.id);
-    });
-    return map;
-  }, [players]);
-
   const championMap = useMemo(() => {
     const map = new Map<string, number>();
     champions.forEach((champion) => {
@@ -276,6 +268,8 @@ export default function MatchForm({
 
   const [form, setForm] = useState<MatchFormData>(normalizedInitialData);
   const [submitting, setSubmitting] = useState(false);
+  const [activePlayerField, setActivePlayerField] = useState<string | null>(null);
+  const [activeChampionField, setActiveChampionField] = useState<string | null>(null);
 
   const updateGameField = <K extends keyof GameForm>(
     gameIndex: number,
@@ -351,25 +345,17 @@ export default function MatchForm({
         gameNumber: game.gameNumber,
         durationMin: game.durationMin,
         winnerTeam: game.winnerTeam,
-        participants: game.participants.map((participant) => {
-          const playerId =
-            playerMap.get(participant.playerInput.trim()) ?? participant.playerId;
-          const championId =
-            championMap.get(participant.championInput.trim()) ??
-            participant.championId;
-
-          return {
-            playerId,
-            championId,
-            team: participant.team,
-            position: participant.position,
-            kills: participant.kills,
-            deaths: participant.deaths,
-            assists: participant.assists,
-            cs: participant.cs,
-            gold: participant.gold,
-          };
-        }),
+        participants: game.participants.map((participant) => ({
+          playerId: participant.playerId,
+          championId: participant.championId,
+          team: participant.team,
+          position: participant.position,
+          kills: participant.kills,
+          deaths: participant.deaths,
+          assists: participant.assists,
+          cs: participant.cs,
+          gold: participant.gold,
+        })),
       })),
     };
   };
@@ -384,7 +370,7 @@ export default function MatchForm({
         game.participants.some((participant) => !participant.playerId)
       );
       if (hasInvalidPlayer) {
-        alert("플레이어 입력값 중 자동완성 목록과 일치하지 않는 값이 있습니다.");
+        alert("플레이어 입력값 중 등록된 플레이어와 일치하지 않는 값이 있습니다.");
         return;
       }
 
@@ -392,7 +378,7 @@ export default function MatchForm({
         game.participants.some((participant) => !participant.championId)
       );
       if (hasInvalidChampion) {
-        alert("챔피언 입력값 중 자동완성 목록과 일치하지 않는 값이 있습니다.");
+        alert("챔피언 입력값 중 등록된 챔피언과 일치하지 않는 값이 있습니다.");
         return;
       }
 
@@ -424,21 +410,52 @@ export default function MatchForm({
     }
   };
 
+  const getPlayerSuggestions = (
+    keyword: string,
+    currentPlayerId: number
+  ): PlayerOption[] => {
+    const normalizedKeyword = keyword.trim().toLowerCase();
+
+    const selectedPlayerIds = new Set<number>();
+    form.games.forEach((game) => {
+      game.participants.forEach((participant) => {
+        if (participant.playerId && participant.playerId !== currentPlayerId) {
+          selectedPlayerIds.add(participant.playerId);
+        }
+      });
+    });
+
+    return players
+      .filter((player) => {
+        if (selectedPlayerIds.has(player.id)) {
+          return false;
+        }
+
+        if (!normalizedKeyword) {
+          return true;
+        }
+
+        return player.name.toLowerCase().includes(normalizedKeyword);
+      })
+      .slice(0, 20);
+  };
+
+  const getChampionSuggestions = (keyword: string): ChampionOption[] => {
+    const normalizedKeyword = keyword.trim().toLowerCase();
+
+    return champions
+      .filter((champion) => {
+        if (!normalizedKeyword) {
+          return true;
+        }
+
+        return champion.name.toLowerCase().includes(normalizedKeyword);
+      })
+      .slice(0, 20);
+  };
+
   return (
     <main className="page-container">
-      <datalist id="player-options">
-        {players.map((player) => {
-          const label = makePlayerLabel(player);
-          return <option key={player.id} value={label} />;
-        })}
-      </datalist>
-
-      <datalist id="champion-options">
-        {champions.map((champion) => (
-          <option key={champion.id} value={champion.name} />
-        ))}
-      </datalist>
-
       <h1 className="page-title">
         {mode === "create" ? "내전 등록" : "내전 수정"}
       </h1>
@@ -560,152 +577,281 @@ export default function MatchForm({
                 <div>골드</div>
               </div>
 
-              {game.participants.map((participant, participantIndex) => (
-                <div
-                  key={`${participant.team}-${participant.position}-${participantIndex}`}
-                  className="match-participant-row"
-                >
+              {game.participants.map((participant, participantIndex) => {
+                const playerFieldKey = `player-${gameIndex}-${participantIndex}`;
+                const championFieldKey = `champion-${gameIndex}-${participantIndex}`;
+                const playerSuggestions =
+                  activePlayerField === playerFieldKey
+                    ? getPlayerSuggestions(participant.playerInput, participant.playerId)
+                    : [];
+                const championSuggestions =
+                  activeChampionField === championFieldKey
+                    ? getChampionSuggestions(participant.championInput)
+                    : [];
+
+                return (
                   <div
-                    className={`match-team-badge ${
-                      participant.team === "BLUE"
-                        ? "match-team-badge--blue"
-                        : "match-team-badge--red"
-                    }`}
+                    key={`${participant.team}-${participant.position}-${participantIndex}`}
+                    className="match-participant-row"
                   >
-                    {participant.team}
-                  </div>
+                    <div
+                      className={`match-team-badge ${
+                        participant.team === "BLUE"
+                          ? "match-team-badge--blue"
+                          : "match-team-badge--red"
+                      }`}
+                    >
+                      {participant.team}
+                    </div>
 
-                  <div className="match-position-cell">{participant.position}</div>
+                    <div className="match-position-cell">{participant.position}</div>
 
-                  <div>
-                    <input
-                      list="player-options"
-                      value={participant.playerInput}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        updateParticipantField(
-                          gameIndex,
-                          participantIndex,
-                          "playerInput",
-                          value
-                        );
-                        updateParticipantField(
-                          gameIndex,
-                          participantIndex,
-                          "playerId",
-                          playerMap.get(value.trim()) ?? 0
-                        );
-                      }}
-                      className="match-grid-input"
-                      placeholder="플레이어 입력"
-                    />
-                  </div>
+                    <div style={{ position: "relative" }}>
+                      <input
+                        value={participant.playerInput}
+                        onFocus={() => setActivePlayerField(playerFieldKey)}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          updateParticipantField(
+                            gameIndex,
+                            participantIndex,
+                            "playerInput",
+                            value
+                          );
+                          updateParticipantField(
+                            gameIndex,
+                            participantIndex,
+                            "playerId",
+                            0
+                          );
+                          setActivePlayerField(playerFieldKey);
+                        }}
+                        onBlur={() => {
+                          setTimeout(() => setActivePlayerField(null), 150);
+                        }}
+                        className="match-grid-input"
+                        placeholder="플레이어 이름 검색"
+                        autoComplete="off"
+                      />
 
-                  <div>
-                    <input
-                      list="champion-options"
-                      value={participant.championInput}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        updateParticipantField(
-                          gameIndex,
-                          participantIndex,
-                          "championInput",
-                          value
-                        );
-                        updateParticipantField(
-                          gameIndex,
-                          participantIndex,
-                          "championId",
-                          championMap.get(value.trim()) ?? 0
-                        );
-                      }}
-                      className="match-grid-input"
-                      placeholder="챔피언 입력"
-                    />
-                  </div>
+                      {activePlayerField === playerFieldKey &&
+                        playerSuggestions.length > 0 && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              top: "calc(100% + 4px)",
+                              left: 0,
+                              right: 0,
+                              background: "#111",
+                              border: "1px solid #333",
+                              borderRadius: "8px",
+                              maxHeight: "220px",
+                              overflowY: "auto",
+                              zIndex: 20,
+                            }}
+                          >
+                            {playerSuggestions.map((player) => (
+                              <button
+                                key={player.id}
+                                type="button"
+                                onMouseDown={(e) => e.preventDefault()}
+                                onClick={() => {
+                                  updateParticipantField(
+                                    gameIndex,
+                                    participantIndex,
+                                    "playerInput",
+                                    makePlayerLabel(player)
+                                  );
+                                  updateParticipantField(
+                                    gameIndex,
+                                    participantIndex,
+                                    "playerId",
+                                    player.id
+                                  );
+                                  setActivePlayerField(null);
+                                }}
+                                style={{
+                                  display: "block",
+                                  width: "100%",
+                                  padding: "10px 12px",
+                                  textAlign: "left",
+                                  background: "transparent",
+                                  border: "none",
+                                  color: "#fff",
+                                  cursor: "pointer",
+                                }}
+                              >
+                                {makePlayerLabel(player)}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                    </div>
 
-                  <div>
-                    <input
-                      type="number"
-                      value={participant.kills}
-                      onChange={(e) =>
-                        updateParticipantField(
-                          gameIndex,
-                          participantIndex,
-                          "kills",
-                          Number(e.target.value)
-                        )
-                      }
-                      className="match-grid-input"
-                    />
-                  </div>
+                    <div style={{ position: "relative" }}>
+                      <input
+                        value={participant.championInput}
+                        onFocus={() => setActiveChampionField(championFieldKey)}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          updateParticipantField(
+                            gameIndex,
+                            participantIndex,
+                            "championInput",
+                            value
+                          );
+                          updateParticipantField(
+                            gameIndex,
+                            participantIndex,
+                            "championId",
+                            championMap.get(value.trim()) ?? 0
+                          );
+                          setActiveChampionField(championFieldKey);
+                        }}
+                        onBlur={() => {
+                          setTimeout(() => setActiveChampionField(null), 150);
+                        }}
+                        className="match-grid-input"
+                        placeholder="챔피언 입력"
+                        autoComplete="off"
+                      />
 
-                  <div>
-                    <input
-                      type="number"
-                      value={participant.deaths}
-                      onChange={(e) =>
-                        updateParticipantField(
-                          gameIndex,
-                          participantIndex,
-                          "deaths",
-                          Number(e.target.value)
-                        )
-                      }
-                      className="match-grid-input"
-                    />
-                  </div>
+                      {activeChampionField === championFieldKey &&
+                        championSuggestions.length > 0 && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              top: "calc(100% + 4px)",
+                              left: 0,
+                              right: 0,
+                              background: "#111",
+                              border: "1px solid #333",
+                              borderRadius: "8px",
+                              maxHeight: "220px",
+                              overflowY: "auto",
+                              zIndex: 20,
+                            }}
+                          >
+                            {championSuggestions.map((champion) => (
+                              <button
+                                key={champion.id}
+                                type="button"
+                                onMouseDown={(e) => e.preventDefault()}
+                                onClick={() => {
+                                  updateParticipantField(
+                                    gameIndex,
+                                    participantIndex,
+                                    "championInput",
+                                    champion.name
+                                  );
+                                  updateParticipantField(
+                                    gameIndex,
+                                    participantIndex,
+                                    "championId",
+                                    champion.id
+                                  );
+                                  setActiveChampionField(null);
+                                }}
+                                style={{
+                                  display: "block",
+                                  width: "100%",
+                                  padding: "10px 12px",
+                                  textAlign: "left",
+                                  background: "transparent",
+                                  border: "none",
+                                  color: "#fff",
+                                  cursor: "pointer",
+                                }}
+                              >
+                                {champion.name}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                    </div>
 
-                  <div>
-                    <input
-                      type="number"
-                      value={participant.assists}
-                      onChange={(e) =>
-                        updateParticipantField(
-                          gameIndex,
-                          participantIndex,
-                          "assists",
-                          Number(e.target.value)
-                        )
-                      }
-                      className="match-grid-input"
-                    />
-                  </div>
+                    <div>
+                      <input
+                        type="number"
+                        value={participant.kills}
+                        onChange={(e) =>
+                          updateParticipantField(
+                            gameIndex,
+                            participantIndex,
+                            "kills",
+                            Number(e.target.value)
+                          )
+                        }
+                        className="match-grid-input"
+                      />
+                    </div>
 
-                  <div>
-                    <input
-                      type="number"
-                      value={participant.cs}
-                      onChange={(e) =>
-                        updateParticipantField(
-                          gameIndex,
-                          participantIndex,
-                          "cs",
-                          Number(e.target.value)
-                        )
-                      }
-                      className="match-grid-input"
-                    />
-                  </div>
+                    <div>
+                      <input
+                        type="number"
+                        value={participant.deaths}
+                        onChange={(e) =>
+                          updateParticipantField(
+                            gameIndex,
+                            participantIndex,
+                            "deaths",
+                            Number(e.target.value)
+                          )
+                        }
+                        className="match-grid-input"
+                      />
+                    </div>
 
-                  <div>
-                    <input
-                      type="number"
-                      value={participant.gold}
-                      onChange={(e) =>
-                        updateParticipantField(
-                          gameIndex,
-                          participantIndex,
-                          "gold",
-                          Number(e.target.value)
-                        )
-                      }
-                      className="match-grid-input"
-                    />
+                    <div>
+                      <input
+                        type="number"
+                        value={participant.assists}
+                        onChange={(e) =>
+                          updateParticipantField(
+                            gameIndex,
+                            participantIndex,
+                            "assists",
+                            Number(e.target.value)
+                          )
+                        }
+                        className="match-grid-input"
+                      />
+                    </div>
+
+                    <div>
+                      <input
+                        type="number"
+                        value={participant.cs}
+                        onChange={(e) =>
+                          updateParticipantField(
+                            gameIndex,
+                            participantIndex,
+                            "cs",
+                            Number(e.target.value)
+                          )
+                        }
+                        className="match-grid-input"
+                      />
+                    </div>
+
+                    <div>
+                      <input
+                        type="number"
+                        value={participant.gold}
+                        onChange={(e) =>
+                          updateParticipantField(
+                            gameIndex,
+                            participantIndex,
+                            "gold",
+                            Number(e.target.value)
+                          )
+                        }
+                        className="match-grid-input"
+                      />
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
         ))}
