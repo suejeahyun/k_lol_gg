@@ -996,3 +996,76 @@ a {
   background: #111;
   color: #fff;
 }
+
+/* ===== PLAYER TIER EXTENSION ===== */
+
+.player-row-header,
+.player-row-grid {
+  display: grid;
+  grid-template-columns:
+    1fr
+    1.3fr
+    1fr
+    1fr
+    0.8fr
+    0.8fr
+    0.8fr
+    0.8fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.tier {
+  font-weight: 600;
+}
+
+.tier-bronze {
+  color: #cd7f32;
+}
+
+.tier-silver {
+  color: #c0c0c0;
+}
+
+.tier-gold {
+  color: #ffd700;
+}
+
+.tier-emerald {
+  color: #2ecc71;
+}
+
+.tier-diamond {
+  color: #00bfff;
+}
+
+.tier-master {
+  color: #9b59b6;
+}
+
+.tier-grandmaster {
+  color: #e74c3c;
+}
+
+.tier-challenger {
+  color: #f1c40f;
+}
+
+.tier-input-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.tier-input-row select,
+.tier-input-row input {
+  min-width: 120px;
+}
+
+@media (max-width: 768px) {
+  .player-row-header,
+  .player-row-grid {
+    grid-template-columns: 1fr 1fr;
+    row-gap: 8px;
+  }
+}
