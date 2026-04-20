@@ -5,7 +5,7 @@ type Team = "RED" | "BLUE";
 type Position = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
 
 type PlayerInput = {
-  playerId: number;
+  name: string;
   preferredPositions: Position[];
 };
 
@@ -291,9 +291,9 @@ export async function POST(req: NextRequest) {
     }
 
     for (const player of body.players) {
-      if (!Number.isFinite(player.playerId)) {
+      if (!player.name?.trim()) {
         return NextResponse.json(
-          { message: "플레이어 선택이 올바르지 않습니다." },
+          { message: "플레이어 이름을 모두 입력해주세요." },
           { status: 400 }
         );
       }
@@ -309,24 +309,31 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const duplicateCheck = new Set<number>();
+    const normalizedNames = body.players.map((player) =>
+      player.name.trim().toLowerCase()
+    );
 
-    for (const player of body.players) {
-      if (duplicateCheck.has(player.playerId)) {
+    const duplicateCheck = new Set<string>();
+
+    for (const name of normalizedNames) {
+      if (duplicateCheck.has(name)) {
         return NextResponse.json(
-          { message: "중복된 플레이어가 선택되었습니다." },
+          { message: "중복된 플레이어 이름이 입력되었습니다." },
           { status: 400 }
         );
       }
 
-      duplicateCheck.add(player.playerId);
+      duplicateCheck.add(name);
     }
 
     const dbPlayers = await prisma.player.findMany({
       where: {
-        id: {
-          in: body.players.map((player) => player.playerId),
-        },
+        OR: body.players.map((player) => ({
+          name: {
+            equals: player.name.trim(),
+            mode: "insensitive",
+          },
+        })),
       },
       include: {
         participants: {
@@ -342,10 +349,31 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const dbPlayerMap = new Map(dbPlayers.map((player) => [player.id, player]));
+    const dbPlayerMap = new Map(
+      dbPlayers.map((player) => [player.name.trim().toLowerCase(), player])
+    );
+
+    const invalidNames: string[] = [];
+    for (const input of body.players) {
+      const found = dbPlayerMap.get(input.name.trim().toLowerCase());
+
+      if (!found) {
+        invalidNames.push(input.name.trim());
+      }
+    }
+
+    if (invalidNames.length > 0) {
+      return NextResponse.json(
+        {
+          message: "등록되어있지 않은 플레이어가 있습니다.",
+          invalidNames,
+        },
+        { status: 400 }
+      );
+    }
 
     const resolvedPlayers: ResolvedPlayer[] = body.players.map((input) => {
-      const found = dbPlayerMap.get(input.playerId);
+      const found = dbPlayerMap.get(input.name.trim().toLowerCase());
 
       if (!found) {
         throw new Error("선택한 플레이어 정보를 찾을 수 없습니다.");
