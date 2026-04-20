@@ -67,17 +67,17 @@ function buildTopPlayersFromSeasonParticipants(
       const losses = totalGames - wins;
 
       const totalKills = player.participants.reduce(
-        (s, v) => s + v.kills,
+        (sum, participant) => sum + participant.kills,
         0
       );
 
       const totalDeaths = player.participants.reduce(
-        (s, v) => s + v.deaths,
+        (sum, participant) => sum + participant.deaths,
         0
       );
 
       const totalAssists = player.participants.reduce(
-        (s, v) => s + v.assists,
+        (sum, participant) => sum + participant.assists,
         0
       );
 
@@ -102,11 +102,12 @@ function buildTopPlayersFromSeasonParticipants(
         kda,
       };
     })
-    .filter((p) => p.totalGames > 0)
+    .filter((player) => player.totalGames > 0)
     .sort((a, b) => {
       if (b.winRate !== a.winRate) return b.winRate - a.winRate;
-      if (b.participation !== a.participation)
+      if (b.participation !== a.participation) {
         return b.participation - a.participation;
+      }
       return b.kda - a.kda;
     })
     .slice(0, 3);
@@ -150,10 +151,7 @@ async function getSeasonTop3(seasonId: number): Promise<TopPlayerDto[]> {
 export async function GET() {
   try {
     const seasons = await prisma.season.findMany({
-      orderBy: [
-        { isActive: "desc" },
-        { createdAt: "desc" },
-      ],
+      orderBy: [{ isActive: "desc" }, { createdAt: "desc" }],
       take: 10,
     });
 
@@ -166,19 +164,14 @@ export async function GET() {
       });
     }
 
-    const activeSeason =
-      seasons.find((s) => s.isActive) ?? null;
-
+    const activeSeason = seasons.find((season) => season.isActive) ?? null;
     const currentSeason = activeSeason ?? seasons[0];
-
     const previousSeason =
-      seasons.find((s) => s.id !== currentSeason.id) ?? null;
+      seasons.find((season) => season.id !== currentSeason.id) ?? null;
 
     const [currentTop3, previousTop3] = await Promise.all([
       getSeasonTop3(currentSeason.id),
-      previousSeason
-        ? getSeasonTop3(previousSeason.id)
-        : Promise.resolve([]),
+      previousSeason ? getSeasonTop3(previousSeason.id) : Promise.resolve([]),
     ]);
 
     return NextResponse.json({

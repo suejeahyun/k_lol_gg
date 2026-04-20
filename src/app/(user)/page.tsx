@@ -22,11 +22,11 @@ type TopApiResponse = {
     nickname: string;
     tag: string;
     totalGames: number;
+    participation: number;
     wins: number;
     losses: number;
     winRate: number;
     kda: number;
-    avgGold: number;
   }>;
   previousTop3: Array<{
     playerId: number;
@@ -34,11 +34,11 @@ type TopApiResponse = {
     nickname: string;
     tag: string;
     totalGames: number;
+    participation: number;
     wins: number;
     losses: number;
     winRate: number;
     kda: number;
-    avgGold: number;
   }>;
 };
 

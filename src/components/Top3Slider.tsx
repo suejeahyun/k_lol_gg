@@ -8,11 +8,11 @@ type TopPlayer = {
   nickname: string;
   tag: string;
   totalGames: number;
+  participation: number;
   wins: number;
   losses: number;
   winRate: number;
   kda: number;
-  avgGold: number;
 };
 
 type Props = {
@@ -32,8 +32,8 @@ export default function Top3Slider({
   const metrics = useMemo(
     () => [
       { label: "승률", get: (p: TopPlayer) => `${p.winRate}%` },
-      { label: "획득골드", get: (p: TopPlayer) => `${p.avgGold}` },
       { label: "KDA", get: (p: TopPlayer) => `${p.kda}` },
+      { label: "최다 참여", get: (p: TopPlayer) => `${p.participation}회` },
     ],
     []
   );
