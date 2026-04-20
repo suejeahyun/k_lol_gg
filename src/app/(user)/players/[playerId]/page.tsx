@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 
 type PlayerDetailPageProps = {
   params: Promise<{
@@ -119,12 +120,16 @@ function formatWinRate(wins: number, losses: number) {
   return Math.round((wins / total) * 100);
 }
 
-function getBaseUrl() {
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
+async function getRequestBaseUrl() {
+  const headerStore = await headers();
+  const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host");
+  const protocol = headerStore.get("x-forwarded-proto") ?? "http";
+
+  if (!host) {
+    return "http://localhost:3000";
   }
 
-  return "http://localhost:3000";
+  return `${protocol}://${host}`;
 }
 
 export default async function PlayerDetailPage({
@@ -137,7 +142,9 @@ export default async function PlayerDetailPage({
     notFound();
   }
 
-  const response = await fetch(`${getBaseUrl()}/api/players/${id}`, {
+  const baseUrl = await getRequestBaseUrl();
+
+  const response = await fetch(`${baseUrl}/api/players/${id}`, {
     cache: "no-store",
   });
 
