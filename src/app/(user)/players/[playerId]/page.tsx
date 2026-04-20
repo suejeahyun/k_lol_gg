@@ -1,7 +1,5 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma/client";
-import { getQueueLabel, getRiotPlayerOverview } from "@/lib/riot";
 
 type PlayerDetailPageProps = {
   params: Promise<{
@@ -9,7 +7,104 @@ type PlayerDetailPageProps = {
   }>;
 };
 
-function formatDateTime(value: string) {
+type PlayerApiResponse = {
+  id: number;
+  name: string;
+  nickname: string;
+  tag: string;
+  peakTier: string | null;
+  currentTier: string | null;
+  createdAt: string;
+  participants: Array<{
+    id: number;
+    gameId: number;
+    playerId: number;
+    championId: number;
+    team: "BLUE" | "RED";
+    position: string;
+    kills: number;
+    deaths: number;
+    assists: number;
+    cs: number;
+    gold: number;
+    champion: {
+      id: number;
+      name: string;
+      imageUrl: string;
+      createdAt: string;
+    };
+    game: {
+      id: number;
+      seriesId: number;
+      gameNumber: number;
+      durationMin: number;
+      winnerTeam: "BLUE" | "RED";
+      series: {
+        id: number;
+        title: string;
+        matchDate: string;
+        seasonId: number;
+        createdAt: string;
+        season: {
+          id: number;
+          name: string;
+          isActive: boolean;
+          createdAt: string;
+        };
+      };
+    };
+  }>;
+  riotOverview: {
+    success: boolean;
+    message?: string;
+    account?: {
+      puuid: string;
+      gameName: string;
+      tagLine: string;
+    };
+    summoner?: {
+      id?: string;
+      level: number;
+      profileIconId: number;
+    };
+    soloRank?: {
+      tier: string;
+      rank: string;
+      leaguePoints: number;
+      wins: number;
+      losses: number;
+      winRate: number;
+    } | null;
+    flexRank?: {
+      tier: string;
+      rank: string;
+      leaguePoints: number;
+      wins: number;
+      losses: number;
+      winRate: number;
+    } | null;
+    recentMatches?: Array<{
+      matchId: string;
+      gameCreation: number;
+      gameDuration: number;
+      queueId: number;
+      queueLabel: string;
+      championName: string;
+      kills: number;
+      deaths: number;
+      assists: number;
+      kda: string;
+      win: boolean;
+      position: string;
+      cs: number;
+      goldEarned: number;
+      totalDamageDealtToChampions: number;
+      totalDamageTaken: number;
+    }>;
+  };
+};
+
+function formatDateTime(value: string | number) {
   return new Intl.DateTimeFormat("ko-KR", {
     dateStyle: "medium",
     timeStyle: "short",
@@ -23,6 +118,20 @@ function formatDuration(seconds: number) {
   return `${min}분 ${String(sec).padStart(2, "0")}초`;
 }
 
+function formatWinRate(wins: number, losses: number) {
+  const total = wins + losses;
+  if (total === 0) return 0;
+  return Math.round((wins / total) * 100);
+}
+
+function getBaseUrl() {
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+
+  return "http://localhost:3000";
+}
+
 export default async function PlayerDetailPage({
   params,
 }: PlayerDetailPageProps) {
@@ -33,305 +142,328 @@ export default async function PlayerDetailPage({
     notFound();
   }
 
-  const player = await prisma.player.findUnique({
-    where: { id },
-    include: {
-      participants: {
-        include: {
-          champion: true,
-          game: {
-            include: {
-              series: {
-                include: {
-                  season: true,
-                },
-              },
-            },
-          },
-        },
-        orderBy: {
-          id: "desc",
-        },
-      },
-    },
+  const response = await fetch(`${getBaseUrl()}/api/players/${id}`, {
+    cache: "no-store",
   });
 
-  if (!player) {
+  if (!response.ok) {
     notFound();
   }
 
+  const player = (await response.json()) as PlayerApiResponse;
+  const riotOverview = player.riotOverview;
+  const recentMatches = riotOverview?.recentMatches ?? [];
+
   const totalGames = player.participants.length;
-
   const wins = player.participants.filter(
-    (participant) => participant.team === participant.game.winnerTeam
+    (participant) => participant.game.winnerTeam === participant.team
   ).length;
-
   const losses = totalGames - wins;
+  const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
 
   const totalKills = player.participants.reduce(
     (sum, participant) => sum + participant.kills,
     0
   );
-
   const totalDeaths = player.participants.reduce(
     (sum, participant) => sum + participant.deaths,
     0
   );
-
   const totalAssists = player.participants.reduce(
     (sum, participant) => sum + participant.assists,
     0
   );
 
-  const totalGold = player.participants.reduce(
-    (sum, participant) => sum + participant.gold,
-    0
-  );
-
-  const winRate =
-    totalGames > 0 ? Number(((wins / totalGames) * 100).toFixed(1)) : 0;
-
-  const kda =
-    totalDeaths === 0
-      ? Number((totalKills + totalAssists).toFixed(2))
-      : Number(((totalKills + totalAssists) / totalDeaths).toFixed(2));
-
-  const avgGold = totalGames > 0 ? Math.round(totalGold / totalGames) : 0;
-
-  const recentMatches = player.participants.slice(0, 10);
-
-  const riotOverview = await getRiotPlayerOverview(player.nickname, player.tag, 20);
+  const avgKda =
+    totalGames > 0
+      ? totalDeaths === 0
+        ? "Perfect"
+        : ((totalKills + totalAssists) / totalDeaths).toFixed(2)
+      : "0.00";
 
   return (
-    <main className="page-container">
-      <div style={{ marginBottom: 16 }}>
-        <Link href="/players">← 플레이어 목록으로</Link>
-      </div>
+    <div className="page-shell">
+      <div className="page-header">
+        <div>
+          <p className="page-eyebrow">플레이어 상세</p>
+          <h1 className="page-title">
+            {player.name} ({player.nickname}#{player.tag})
+          </h1>
+          <p className="page-description">
+            등록일: {formatDateTime(player.createdAt)}
+          </p>
+        </div>
 
-      <h1 className="page-title">{player.name}</h1>
-
-      <div className="card" style={{ marginBottom: 24 }}>
-        <div style={{ display: "grid", gap: 10 }}>
-          <div>
-            <strong>닉네임#태그:</strong> {player.nickname}#{player.tag}
-          </div>
-          <div>
-            <strong>최대 티어:</strong> {player.peakTier ?? "-"}
-          </div>
-          <div>
-            <strong>현재 티어:</strong> {player.currentTier ?? "-"}
-          </div>
-          <div>
-            <strong>총 경기:</strong> {totalGames}
-          </div>
-          <div>
-            <strong>승 / 패:</strong> {wins}승 {losses}패
-          </div>
-          <div>
-            <strong>승률:</strong> {winRate}%
-          </div>
-          <div>
-            <strong>KDA:</strong> {kda}
-          </div>
-          <div>
-            <strong>평균 골드:</strong> {avgGold}
-          </div>
+        <div className="page-actions">
+          <Link href="/players" className="btn btn-ghost">
+            목록으로
+          </Link>
         </div>
       </div>
 
-      <section style={{ marginBottom: 32 }}>
-        <h2 style={{ marginBottom: 16 }}>최근 경기</h2>
+      <section className="card-grid">
+        <article className="stat-card">
+          <span className="stat-card__label">총 경기</span>
+          <strong className="stat-card__value">{totalGames}</strong>
+        </article>
 
-        {recentMatches.length === 0 ? (
-          <div className="card">최근 경기 기록이 없습니다.</div>
+        <article className="stat-card">
+          <span className="stat-card__label">승 / 패</span>
+          <strong className="stat-card__value">
+            {wins}승 {losses}패
+          </strong>
+        </article>
+
+        <article className="stat-card">
+          <span className="stat-card__label">승률</span>
+          <strong className="stat-card__value">{winRate}%</strong>
+        </article>
+
+        <article className="stat-card">
+          <span className="stat-card__label">평균 KDA</span>
+          <strong className="stat-card__value">{avgKda}</strong>
+        </article>
+      </section>
+
+      <section className="content-section">
+        <div className="section-header">
+          <h2>기본 정보</h2>
+        </div>
+
+        <div className="info-grid">
+          <div className="info-card">
+            <span className="info-card__label">이름</span>
+            <strong className="info-card__value">{player.name}</strong>
+          </div>
+
+          <div className="info-card">
+            <span className="info-card__label">닉네임</span>
+            <strong className="info-card__value">{player.nickname}</strong>
+          </div>
+
+          <div className="info-card">
+            <span className="info-card__label">태그</span>
+            <strong className="info-card__value">{player.tag}</strong>
+          </div>
+
+          <div className="info-card">
+            <span className="info-card__label">최대 티어</span>
+            <strong className="info-card__value">
+              {player.peakTier ?? "-"}
+            </strong>
+          </div>
+
+          <div className="info-card">
+            <span className="info-card__label">현재 티어</span>
+            <strong className="info-card__value">
+              {player.currentTier ?? "-"}
+            </strong>
+          </div>
+        </div>
+      </section>
+
+      <section className="content-section">
+        <div className="section-header">
+          <h2>Riot 정보</h2>
+        </div>
+
+        {riotOverview?.success ? (
+          <>
+            <div className="info-grid">
+              <div className="info-card">
+                <span className="info-card__label">Riot ID</span>
+                <strong className="info-card__value">
+                  {riotOverview.account?.gameName}#
+                  {riotOverview.account?.tagLine}
+                </strong>
+              </div>
+
+              <div className="info-card">
+                <span className="info-card__label">소환사 레벨</span>
+                <strong className="info-card__value">
+                  {riotOverview.summoner?.level ?? "-"}
+                </strong>
+              </div>
+
+              <div className="info-card">
+                <span className="info-card__label">프로필 아이콘</span>
+                <strong className="info-card__value">
+                  {riotOverview.summoner?.profileIconId ?? "-"}
+                </strong>
+              </div>
+            </div>
+
+            <div className="card-grid" style={{ marginTop: 16 }}>
+              <article className="stat-card">
+                <span className="stat-card__label">솔로랭크</span>
+                <strong className="stat-card__value">
+                  {riotOverview.soloRank
+                    ? `${riotOverview.soloRank.tier} ${riotOverview.soloRank.rank} ${riotOverview.soloRank.leaguePoints}LP`
+                    : "기록 없음"}
+                </strong>
+                {riotOverview.soloRank ? (
+                  <span className="stat-card__sub">
+                    {riotOverview.soloRank.wins}승 {riotOverview.soloRank.losses}
+                    패 ·{" "}
+                    {formatWinRate(
+                      riotOverview.soloRank.wins,
+                      riotOverview.soloRank.losses
+                    )}
+                    %
+                  </span>
+                ) : null}
+              </article>
+
+              <article className="stat-card">
+                <span className="stat-card__label">자유랭크</span>
+                <strong className="stat-card__value">
+                  {riotOverview.flexRank
+                    ? `${riotOverview.flexRank.tier} ${riotOverview.flexRank.rank} ${riotOverview.flexRank.leaguePoints}LP`
+                    : "기록 없음"}
+                </strong>
+                {riotOverview.flexRank ? (
+                  <span className="stat-card__sub">
+                    {riotOverview.flexRank.wins}승 {riotOverview.flexRank.losses}
+                    패 ·{" "}
+                    {formatWinRate(
+                      riotOverview.flexRank.wins,
+                      riotOverview.flexRank.losses
+                    )}
+                    %
+                  </span>
+                ) : null}
+              </article>
+            </div>
+          </>
         ) : (
-          <div className="card-grid">
-            {recentMatches.map((participant) => {
-              const isWin = participant.team === participant.game.winnerTeam;
+          <div className="empty-box">
+            {riotOverview?.message ?? "Riot 정보를 불러오지 못했습니다."}
+          </div>
+        )}
+      </section>
 
-              return (
-                <div key={participant.id} className="card">
-                  <div style={{ fontWeight: 700, marginBottom: 8 }}>
-                    {participant.game.series.title}
-                  </div>
-                  <div>시즌: {participant.game.series.season.name}</div>
-                  <div>게임 번호: {participant.game.gameNumber}</div>
-                  <div>챔피언: {participant.champion.name}</div>
-                  <div>팀: {participant.team}</div>
-                  <div>포지션: {participant.position}</div>
+      <section className="content-section">
+        <div className="section-header">
+          <h2>Riot 최근 20게임</h2>
+        </div>
+
+        {riotOverview?.success && recentMatches.length > 0 ? (
+          <div className="match-list">
+            {recentMatches.map((match) => (
+              <article
+                key={match.matchId}
+                className={`match-card ${
+                  match.win ? "match-card--win" : "match-card--loss"
+                }`}
+              >
+                <div className="match-card__top">
                   <div>
-                    K / D / A : {participant.kills} / {participant.deaths} /{" "}
-                    {participant.assists}
+                    <strong className="match-card__queue">
+                      {match.queueLabel}
+                    </strong>
+                    <p className="match-card__date">
+                      {formatDateTime(match.gameCreation)}
+                    </p>
                   </div>
-                  <div>CS: {participant.cs}</div>
-                  <div>골드: {participant.gold}</div>
-                  <div style={{ marginTop: 8, fontWeight: 700 }}>
-                    결과: {isWin ? "승리" : "패배"}
+
+                  <div className="match-card__result">
+                    <span>{match.win ? "승리" : "패배"}</span>
+                    <span>{formatDuration(match.gameDuration)}</span>
                   </div>
                 </div>
+
+                <div className="match-card__body">
+                  <div className="match-card__champion">
+                    <strong>{match.championName}</strong>
+                    <span>{match.position}</span>
+                  </div>
+
+                  <div className="match-card__score">
+                    <strong>
+                      {match.kills} / {match.deaths} / {match.assists}
+                    </strong>
+                    <span>KDA {match.kda}</span>
+                  </div>
+
+                  <div className="match-card__damage">
+                    <span>
+                      챔피언 피해량{" "}
+                      {match.totalDamageDealtToChampions.toLocaleString()}
+                    </span>
+                    <span>
+                      받은 피해량 {match.totalDamageTaken.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-box">
+            {riotOverview?.message ?? "Riot 전적 정보를 불러오지 못했습니다."}
+          </div>
+        )}
+      </section>
+
+      <section className="content-section">
+        <div className="section-header">
+          <h2>내전 최근 기록</h2>
+        </div>
+
+        {player.participants.length === 0 ? (
+          <div className="empty-box">등록된 내전 기록이 없습니다.</div>
+        ) : (
+          <div className="match-list">
+            {player.participants.map((participant) => {
+              const isWin = participant.game.winnerTeam === participant.team;
+
+              return (
+                <article
+                  key={participant.id}
+                  className={`match-card ${
+                    isWin ? "match-card--win" : "match-card--loss"
+                  }`}
+                >
+                  <div className="match-card__top">
+                    <div>
+                      <strong className="match-card__queue">
+                        {participant.game.series.title}
+                      </strong>
+                      <p className="match-card__date">
+                        {formatDateTime(participant.game.series.matchDate)}
+                      </p>
+                    </div>
+
+                    <div className="match-card__result">
+                      <span>{isWin ? "승리" : "패배"}</span>
+                      <span>세트 {participant.game.gameNumber}</span>
+                    </div>
+                  </div>
+
+                  <div className="match-card__body">
+                    <div className="match-card__champion">
+                      <strong>{participant.champion.name}</strong>
+                      <span>{participant.position}</span>
+                    </div>
+
+                    <div className="match-card__score">
+                      <strong>
+                        {participant.kills} / {participant.deaths} /{" "}
+                        {participant.assists}
+                      </strong>
+                      <span>팀 {participant.team}</span>
+                    </div>
+
+                    <div className="match-card__damage">
+                      <span>시즌 {participant.game.series.season.name}</span>
+                    </div>
+                  </div>
+                </article>
               );
             })}
           </div>
         )}
       </section>
-
-      <section className="riot-section">
-        <div className="riot-section__head">
-          <div>
-            <h2 className="riot-section__title">Riot 최근 20게임</h2>
-            <p className="riot-section__desc">
-              Riot 공식 API 기준 최근 전적입니다.
-            </p>
-          </div>
-
-          {riotOverview?.opggUrl ? (
-            <a
-              href={riotOverview.opggUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="chip-button"
-            >
-              OP.GG 보기
-            </a>
-          ) : null}
-        </div>
-
-        {!riotOverview ? (
-          <div className="card">
-            Riot 전적 정보를 불러오지 못했습니다.
-            <br />
-            Riot API 키가 없거나, 닉네임/태그가 실제 Riot ID와 다를 수 있습니다.
-          </div>
-        ) : (
-          <div className="riot-board">
-            <div className="riot-summary-grid">
-              <div className="riot-summary-card">
-                <div className="riot-summary-card__label">Riot ID</div>
-                <div className="riot-summary-card__value">{riotOverview.riotId}</div>
-              </div>
-
-              <div className="riot-summary-card">
-                <div className="riot-summary-card__label">소환사 레벨</div>
-                <div className="riot-summary-card__value">
-                  {riotOverview.summonerLevel}
-                </div>
-              </div>
-
-              <div className="riot-summary-card">
-                <div className="riot-summary-card__label">솔로랭크</div>
-                <div className="riot-summary-card__value">
-                  {riotOverview.soloRank
-                    ? `${riotOverview.soloRank.tier} · ${riotOverview.soloRank.leaguePoints}LP`
-                    : "배치 전 / 정보 없음"}
-                </div>
-                {riotOverview.soloRank ? (
-                  <div className="riot-summary-card__sub">
-                    {riotOverview.soloRank.wins}승 {riotOverview.soloRank.losses}패 ·{" "}
-                    {riotOverview.soloRank.winRate}%
-                  </div>
-                ) : null}
-              </div>
-
-              <div className="riot-summary-card">
-                <div className="riot-summary-card__label">자유랭크</div>
-                <div className="riot-summary-card__value">
-                  {riotOverview.flexRank
-                    ? `${riotOverview.flexRank.tier} · ${riotOverview.flexRank.leaguePoints}LP`
-                    : "배치 전 / 정보 없음"}
-                </div>
-                {riotOverview.flexRank ? (
-                  <div className="riot-summary-card__sub">
-                    {riotOverview.flexRank.wins}승 {riotOverview.flexRank.losses}패 ·{" "}
-                    {riotOverview.flexRank.winRate}%
-                  </div>
-                ) : null}
-              </div>
-
-              <div className="riot-summary-card">
-                <div className="riot-summary-card__label">최근 20게임 전적</div>
-                <div className="riot-summary-card__value">
-                  {riotOverview.recentSummary.wins}승{" "}
-                  {riotOverview.recentSummary.losses}패
-                </div>
-                <div className="riot-summary-card__sub">
-                  승률 {riotOverview.recentSummary.winRate}%
-                </div>
-              </div>
-
-              <div className="riot-summary-card">
-                <div className="riot-summary-card__label">최근 20게임 평균 KDA</div>
-                <div className="riot-summary-card__value">
-                  {riotOverview.recentSummary.avgKda}
-                </div>
-                <div className="riot-summary-card__sub">
-                  평균 CS {riotOverview.recentSummary.avgCs} / 평균 골드{" "}
-                  {riotOverview.recentSummary.avgGold}
-                </div>
-              </div>
-            </div>
-
-            {riotOverview.recentMatches.length === 0 ? (
-              <div className="card">최근 20게임 정보가 없습니다.</div>
-            ) : (
-              <div className="riot-match-list">
-                {riotOverview.recentMatches.map((match) => (
-                  <div key={match.matchId} className="riot-match-card">
-                    <div className="riot-match-card__top">
-                      <div className="riot-match-card__left">
-                        <div className="riot-match-card__champion">
-                          {match.championName}
-                        </div>
-                        <div className="riot-match-card__meta">
-                          {getQueueLabel(match.queueId)} · {match.position} ·{" "}
-                          {formatDateTime(match.playedAt)}
-                        </div>
-                      </div>
-
-                      <div
-                        className={
-                          match.result === "승리"
-                            ? "riot-result riot-result--win"
-                            : "riot-result riot-result--lose"
-                        }
-                      >
-                        {match.result}
-                      </div>
-                    </div>
-
-                    <div className="riot-match-card__stats">
-                      <div>
-                        <span className="riot-stat-label">KDA</span>
-                        <span className="riot-stat-value">
-                          {match.kills} / {match.deaths} / {match.assists} (
-                          {match.kda})
-                        </span>
-                      </div>
-                      <div>
-                        <span className="riot-stat-label">CS</span>
-                        <span className="riot-stat-value">{match.cs}</span>
-                      </div>
-                      <div>
-                        <span className="riot-stat-label">골드</span>
-                        <span className="riot-stat-value">{match.gold}</span>
-                      </div>
-                      <div>
-                        <span className="riot-stat-label">챔피언 피해량</span>
-                        <span className="riot-stat-value">{match.damage}</span>
-                      </div>
-                      <div>
-                        <span className="riot-stat-label">게임 시간</span>
-                        <span className="riot-stat-value">
-                          {formatDuration(match.durationSec)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </section>
-    </main>
+    </div>
   );
 }
