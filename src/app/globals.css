@@ -1809,3 +1809,181 @@ a {
     grid-template-columns: 1fr;
   }
 }
+
+/* ===== RIOT PLAYER DETAIL ===== */
+
+.riot-section {
+  display: grid;
+  gap: 16px;
+  margin-top: 8px;
+  margin-bottom: 40px;
+}
+
+.riot-section__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.riot-section__title {
+  margin: 0 0 6px;
+  font-size: 22px;
+  font-weight: 800;
+  color: #000;
+}
+
+.riot-section__desc {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.riot-board {
+  display: grid;
+  gap: 18px;
+}
+
+.riot-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.riot-summary-card {
+  background: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 16px;
+  padding: 18px;
+  display: grid;
+  gap: 8px;
+}
+
+.riot-summary-card__label {
+  font-size: 13px;
+  font-weight: 800;
+  color: #6b7280;
+}
+
+.riot-summary-card__value {
+  font-size: 18px;
+  font-weight: 800;
+  color: #111;
+  line-height: 1.4;
+}
+
+.riot-summary-card__sub {
+  font-size: 13px;
+  font-weight: 600;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+.riot-match-list {
+  display: grid;
+  gap: 12px;
+}
+
+.riot-match-card {
+  background: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 16px;
+  padding: 18px;
+  display: grid;
+  gap: 14px;
+}
+
+.riot-match-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.riot-match-card__left {
+  display: grid;
+  gap: 6px;
+}
+
+.riot-match-card__champion {
+  font-size: 18px;
+  font-weight: 800;
+  color: #111;
+}
+
+.riot-match-card__meta {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.riot-result {
+  min-width: 72px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.riot-result--win {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.riot-result--lose {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.riot-match-card__stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.riot-stat-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.riot-stat-value {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: #111;
+  word-break: break-word;
+}
+
+@media (max-width: 1100px) {
+  .riot-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .riot-match-card__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .riot-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .riot-match-card__top {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .riot-match-card__stats {
+    grid-template-columns: 1fr;
+  }
+}
