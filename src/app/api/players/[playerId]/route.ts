@@ -2,69 +2,125 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 
 type RouteContext = {
-  params: Promise<{ playerId: string }>;
+  params: Promise<{
+    playerId: string;
+  }>;
 };
 
-export async function GET(
-  _req: NextRequest,
-  { params }: RouteContext
-) {
+type UpdatePlayerBody = {
+  name?: string;
+  nickname?: string;
+  tag?: string;
+  peakTier?: string | null;
+  currentTier?: string | null;
+};
+
+function normalizeTier(value?: string | null) {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
+}
+
+function isValidTierValue(value?: string | null) {
+  const tier = normalizeTier(value);
+
+  if (!tier) return true;
+
+  const basicRegex = /^(아이언|브론즈|실버|골드|플래티넘|에메랄드|다이아) [1-4]$/;
+  const masterRegex = /^마스터 (10층|[1-9]층)$/;
+  const highRegex = /^(그랜드마스터|챌린저) \d+$/;
+
+  return basicRegex.test(tier) || masterRegex.test(tier) || highRegex.test(tier);
+}
+
+export async function GET(_: NextRequest, context: RouteContext) {
   try {
-    const { playerId } = await params;
+    const { playerId } = await context.params;
     const id = Number(playerId);
 
-    if (Number.isNaN(id)) {
+    if (!Number.isInteger(id)) {
       return NextResponse.json(
-        { message: "Invalid playerId" },
+        { message: "유효하지 않은 플레이어 ID입니다." },
         { status: 400 }
       );
     }
 
     const player = await prisma.player.findUnique({
       where: { id },
+      include: {
+        participants: {
+          include: {
+            champion: true,
+            game: {
+              include: {
+                series: {
+                  include: {
+                    season: true,
+                  },
+                },
+              },
+            },
+          },
+          orderBy: {
+            id: "desc",
+          },
+        },
+      },
     });
 
     if (!player) {
       return NextResponse.json(
-        { message: "Player not found" },
+        { message: "플레이어를 찾을 수 없습니다." },
         { status: 404 }
       );
     }
 
     return NextResponse.json(player);
   } catch (error) {
-    console.error("[PLAYER_DETAIL_GET_ERROR]", error);
+    console.error("[PLAYER_GET_ERROR]", error);
     return NextResponse.json(
-      { message: "Failed to fetch player" },
+      { message: "플레이어 조회에 실패했습니다." },
       { status: 500 }
     );
   }
 }
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: RouteContext
-) {
+export async function PUT(req: NextRequest, context: RouteContext) {
   try {
-    const { playerId } = await params;
+    const { playerId } = await context.params;
     const id = Number(playerId);
 
-    if (Number.isNaN(id)) {
+    if (!Number.isInteger(id)) {
       return NextResponse.json(
-        { message: "Invalid playerId" },
+        { message: "유효하지 않은 플레이어 ID입니다." },
         { status: 400 }
       );
     }
 
-    const body = await req.json();
+    const body = (await req.json()) as UpdatePlayerBody;
 
-    const name = String(body.name ?? "").trim();
-    const nickname = String(body.nickname ?? "").trim();
-    const tag = String(body.tag ?? "").trim();
+    const name = body.name?.trim();
+    const nickname = body.nickname?.trim();
+    const tag = body.tag?.trim();
+    const peakTier = normalizeTier(body.peakTier);
+    const currentTier = normalizeTier(body.currentTier);
 
     if (!name || !nickname || !tag) {
       return NextResponse.json(
         { message: "이름, 닉네임, 태그를 모두 입력해주세요." },
+        { status: 400 }
+      );
+    }
+
+    if (!isValidTierValue(peakTier)) {
+      return NextResponse.json(
+        { message: "최대 티어 형식이 올바르지 않습니다." },
+        { status: 400 }
+      );
+    }
+
+    if (!isValidTierValue(currentTier)) {
+      return NextResponse.json(
+        { message: "현재 티어 형식이 올바르지 않습니다." },
         { status: 400 }
       );
     }
@@ -75,30 +131,29 @@ export async function PATCH(
         name,
         nickname,
         tag,
+        peakTier,
+        currentTier,
       },
     });
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("[PLAYER_PATCH_ERROR]", error);
+    console.error("[PLAYER_UPDATE_ERROR]", error);
     return NextResponse.json(
-      { message: "Failed to update player" },
+      { message: "플레이어 수정에 실패했습니다." },
       { status: 500 }
     );
   }
 }
 
-export async function DELETE(
-  _req: NextRequest,
-  { params }: RouteContext
-) {
+export async function DELETE(_: NextRequest, context: RouteContext) {
   try {
-    const { playerId } = await params;
+    const { playerId } = await context.params;
     const id = Number(playerId);
 
-    if (Number.isNaN(id)) {
+    if (!Number.isInteger(id)) {
       return NextResponse.json(
-        { message: "Invalid playerId" },
+        { message: "유효하지 않은 플레이어 ID입니다." },
         { status: 400 }
       );
     }
@@ -111,7 +166,7 @@ export async function DELETE(
   } catch (error) {
     console.error("[PLAYER_DELETE_ERROR]", error);
     return NextResponse.json(
-      { message: "삭제할 수 없습니다. 경기 기록에 연결되어 있을 수 있습니다." },
+      { message: "플레이어 삭제에 실패했습니다." },
       { status: 500 }
     );
   }

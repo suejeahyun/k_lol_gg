@@ -1,5 +1,3 @@
-
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -22,14 +20,16 @@ enum Position {
 }
 
 model Player {
-  id        Int      @id @default(autoincrement())
-  name      String
-  nickname  String
-  tag       String
-  createdAt DateTime @default(now())
+  id          Int      @id @default(autoincrement())
+  name        String
+  nickname    String
+  tag         String
+  peakTier    String?
+  currentTier String?
+  createdAt   DateTime @default(now())
 
-  participants MatchParticipant[]
-  seasonStats  PlayerSeasonStat[]
+  participants  MatchParticipant[]
+  seasonStats   PlayerSeasonStat[]
   championStats PlayerChampionStat[]
   positionStats PlayerPositionStat[]
   seasonResults SeasonResult[]

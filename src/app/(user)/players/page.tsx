@@ -12,7 +12,15 @@ type PlayersPageProps = {
   }>;
 };
 
-type SortType = "name" | "totalGames" | "winRate" | "kda" | "avgGold";
+type SortType =
+  | "name"
+  | "totalGames"
+  | "winRate"
+  | "kda"
+  | "avgGold"
+  | "peakTier"
+  | "currentTier";
+
 type OrderType = "asc" | "desc";
 
 const PAGE_SIZE = 10;
@@ -22,7 +30,9 @@ function getSort(sort?: string): SortType {
     sort === "name" ||
     sort === "totalGames" ||
     sort === "kda" ||
-    sort === "avgGold"
+    sort === "avgGold" ||
+    sort === "peakTier" ||
+    sort === "currentTier"
   ) {
     return sort;
   }
@@ -84,6 +94,53 @@ function buildPlayerSearchWhere(query: string) {
   };
 }
 
+function tierRank(value: string | null) {
+  if (!value) return -1;
+
+  const normalized = value.trim();
+
+  const baseOrder: Record<string, number> = {
+    아이언: 1,
+    브론즈: 2,
+    실버: 3,
+    골드: 4,
+    플래티넘: 5,
+    에메랄드: 6,
+    다이아: 7,
+    마스터: 8,
+    그랜드마스터: 9,
+    챌린저: 10,
+  };
+
+  const [tier, detailRaw] = normalized.split(" ");
+  const tierScore = baseOrder[tier] ?? 0;
+
+  if (
+    tier === "아이언" ||
+    tier === "브론즈" ||
+    tier === "실버" ||
+    tier === "골드" ||
+    tier === "플래티넘" ||
+    tier === "에메랄드" ||
+    tier === "다이아"
+  ) {
+    const division = Number(detailRaw ?? "0");
+    return tierScore * 100 + (5 - division);
+  }
+
+  if (tier === "마스터") {
+    const floor = Number((detailRaw ?? "").replace("층", ""));
+    return tierScore * 100 + floor;
+  }
+
+  if (tier === "그랜드마스터" || tier === "챌린저") {
+    const score = Number(detailRaw ?? "0");
+    return tierScore * 100000 + score;
+  }
+
+  return 0;
+}
+
 export default async function PlayersPage({ searchParams }: PlayersPageProps) {
   const resolved = await searchParams;
 
@@ -124,34 +181,26 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
     ).length;
 
     const totalKills = player.participants.reduce(
-      (
-        sum: number,
-        participant: (typeof player.participants)[number]
-      ) => sum + participant.kills,
+      (sum: number, participant: (typeof player.participants)[number]) =>
+        sum + participant.kills,
       0
     );
 
     const totalDeaths = player.participants.reduce(
-      (
-        sum: number,
-        participant: (typeof player.participants)[number]
-      ) => sum + participant.deaths,
+      (sum: number, participant: (typeof player.participants)[number]) =>
+        sum + participant.deaths,
       0
     );
 
     const totalAssists = player.participants.reduce(
-      (
-        sum: number,
-        participant: (typeof player.participants)[number]
-      ) => sum + participant.assists,
+      (sum: number, participant: (typeof player.participants)[number]) =>
+        sum + participant.assists,
       0
     );
 
     const totalGold = player.participants.reduce(
-      (
-        sum: number,
-        participant: (typeof player.participants)[number]
-      ) => sum + participant.gold,
+      (sum: number, participant: (typeof player.participants)[number]) =>
+        sum + participant.gold,
       0
     );
 
@@ -170,6 +219,8 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
       name: player.name,
       nickname: player.nickname ?? "",
       tag: player.tag ?? "",
+      peakTier: player.peakTier ?? null,
+      currentTier: player.currentTier ?? null,
       totalGames,
       winRate,
       kda,
@@ -177,22 +228,21 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
     };
   });
 
-  const sorted = [...mapped].sort(
-    (
-      a: (typeof mapped)[number],
-      b: (typeof mapped)[number]
-    ) => {
-      let result = 0;
+  const sorted = [...mapped].sort((a, b) => {
+    let result = 0;
 
-      if (sort === "name") result = a.name.localeCompare(b.name);
-      if (sort === "totalGames") result = a.totalGames - b.totalGames;
-      if (sort === "winRate") result = a.winRate - b.winRate;
-      if (sort === "kda") result = a.kda - b.kda;
-      if (sort === "avgGold") result = a.avgGold - b.avgGold;
-
-      return order === "asc" ? result : -result;
+    if (sort === "name") result = a.name.localeCompare(b.name);
+    if (sort === "totalGames") result = a.totalGames - b.totalGames;
+    if (sort === "winRate") result = a.winRate - b.winRate;
+    if (sort === "kda") result = a.kda - b.kda;
+    if (sort === "avgGold") result = a.avgGold - b.avgGold;
+    if (sort === "peakTier") result = tierRank(a.peakTier) - tierRank(b.peakTier);
+    if (sort === "currentTier") {
+      result = tierRank(a.currentTier) - tierRank(b.currentTier);
     }
-  );
+
+    return order === "asc" ? result : -result;
+  });
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
 
@@ -221,6 +271,8 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
       <div className="player-row-header clickable">
         <Link href={sortLink("name")}>이름</Link>
         <div>닉네임#태그</div>
+        <Link href={sortLink("peakTier")}>최대티어</Link>
+        <Link href={sortLink("currentTier")}>현재티어</Link>
         <Link href={sortLink("totalGames")}>총경기</Link>
         <Link href={sortLink("winRate")}>승률</Link>
         <Link href={sortLink("kda")}>KDA</Link>
@@ -228,17 +280,26 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
       </div>
 
       <div className="card-grid">
-        {paged.map((player: (typeof paged)[number]) => (
+        {paged.map((player) => (
           <Link
             key={player.id}
             href={`/players/${player.id}`}
             className="player-row-card"
           >
-            <div className="player-row-grid">
+            <div
+              className="player-row-grid"
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1.3fr 1fr 1fr .8fr .8fr .8fr .8fr",
+                gap: 12,
+              }}
+            >
               <div className="player-name">{player.name}</div>
               <div>
                 {player.nickname}#{player.tag}
               </div>
+              <div>{player.peakTier ?? "-"}</div>
+              <div>{player.currentTier ?? "-"}</div>
               <div>{player.totalGames}</div>
               <div>{player.winRate}%</div>
               <div>{player.kda}</div>

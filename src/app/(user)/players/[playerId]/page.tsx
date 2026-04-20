@@ -1,259 +1,161 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
 
-type PageProps = {
-  params: Promise<{ playerId: string }>;
+type PlayerDetailPageProps = {
+  params: Promise<{
+    playerId: string;
+  }>;
 };
 
-function formatDate(date: Date): string {
-  return new Date(date).toLocaleString("ko-KR");
-}
-
-export default async function PlayerDetailPage({ params }: PageProps) {
+export default async function PlayerDetailPage({
+  params,
+}: PlayerDetailPageProps) {
   const { playerId } = await params;
   const id = Number(playerId);
 
-  if (Number.isNaN(id)) {
-    throw new Error("Invalid playerId");
+  if (!Number.isInteger(id)) {
+    notFound();
   }
 
   const player = await prisma.player.findUnique({
     where: { id },
+    include: {
+      participants: {
+        include: {
+          champion: true,
+          game: {
+            include: {
+              series: {
+                include: {
+                  season: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: {
+          id: "desc",
+        },
+      },
+    },
   });
 
   if (!player) {
-    throw new Error("Player not found");
+    notFound();
   }
 
-  const summaryRecords = await prisma.matchParticipant.findMany({
-    where: {
-      playerId: id,
-    },
-    include: {
-      game: true,
-    },
-    orderBy: {
-      id: "desc",
-    },
-  });
+  const totalGames = player.participants.length;
 
-  const totalGames = summaryRecords.length;
-
-  const wins = summaryRecords.filter(
-    (record: (typeof summaryRecords)[number]) =>
-      record.team === record.game.winnerTeam
+  const wins = player.participants.filter(
+    (participant) => participant.team === participant.game.winnerTeam
   ).length;
 
   const losses = totalGames - wins;
 
-  const totalKills = summaryRecords.reduce(
-    (sum: number, record: (typeof summaryRecords)[number]) => sum + record.kills,
+  const totalKills = player.participants.reduce(
+    (sum, participant) => sum + participant.kills,
     0
   );
 
-  const totalDeaths = summaryRecords.reduce(
-    (sum: number, record: (typeof summaryRecords)[number]) =>
-      sum + record.deaths,
+  const totalDeaths = player.participants.reduce(
+    (sum, participant) => sum + participant.deaths,
     0
   );
 
-  const totalAssists = summaryRecords.reduce(
-    (sum: number, record: (typeof summaryRecords)[number]) =>
-      sum + record.assists,
+  const totalAssists = player.participants.reduce(
+    (sum, participant) => sum + participant.assists,
     0
   );
 
-  const totalGold = summaryRecords.reduce(
-    (sum: number, record: (typeof summaryRecords)[number]) => sum + record.gold,
+  const totalGold = player.participants.reduce(
+    (sum, participant) => sum + participant.gold,
     0
   );
 
   const winRate =
-    totalGames === 0 ? 0 : Number(((wins / totalGames) * 100).toFixed(1));
+    totalGames > 0 ? Number(((wins / totalGames) * 100).toFixed(1)) : 0;
 
   const kda =
     totalDeaths === 0
-      ? totalKills + totalAssists
+      ? Number((totalKills + totalAssists).toFixed(2))
       : Number(((totalKills + totalAssists) / totalDeaths).toFixed(2));
 
-  const avgGold =
-    totalGames === 0 ? 0 : Math.round(totalGold / totalGames);
+  const avgGold = totalGames > 0 ? Math.round(totalGold / totalGames) : 0;
 
-  const mostChampionsRaw = await prisma.matchParticipant.groupBy({
-    by: ["championId"],
-    where: {
-      playerId: id,
-    },
-    _count: {
-      championId: true,
-    },
-    _sum: {
-      kills: true,
-      deaths: true,
-      assists: true,
-    },
-    orderBy: {
-      _count: {
-        championId: "desc",
-      },
-    },
-    take: 5,
-  });
-
-  const championIds = mostChampionsRaw.map(
-    (item: (typeof mostChampionsRaw)[number]) => item.championId
-  );
-
-  const champions = await prisma.champion.findMany({
-    where: {
-      id: {
-        in: championIds,
-      },
-    },
-  });
-
-type ChampionType = (typeof champions)[number];
-
-const championMap = new Map<number, ChampionType>(
-  champions.map((champion: ChampionType) => [
-    champion.id,
-    champion,
-  ])
-);
-
-  const mostChampions = mostChampionsRaw.map(
-    (item: (typeof mostChampionsRaw)[number]) => {
-      const champion = championMap.get(item.championId) as ChampionType | undefined;
-      const games = item._count.championId;
-      const kills = item._sum.kills ?? 0;
-      const deaths = item._sum.deaths ?? 0;
-      const assists = item._sum.assists ?? 0;
-
-      const championKda =
-        deaths === 0
-          ? kills + assists
-          : Number(((kills + assists) / deaths).toFixed(2));
-
-      return {
-        championId: item.championId,
-        championName: champion?.name ?? "알 수 없음",
-        imageUrl: champion?.imageUrl ?? "",
-        games,
-        kills,
-        deaths,
-        assists,
-        kda: championKda,
-      };
-    }
-  );
-
-  const recentRecords = await prisma.matchParticipant.findMany({
-    where: {
-      playerId: id,
-    },
-    include: {
-      champion: true,
-      game: {
-        include: {
-          series: true,
-        },
-      },
-    },
-    orderBy: {
-      id: "desc",
-    },
-    take: 10,
-  });
-
-  const recentMatches = recentRecords.map(
-    (record: (typeof recentRecords)[number]) => ({
-      id: record.id,
-      matchId: record.game.series.id,
-      matchTitle: record.game.series.title,
-      matchDate: record.game.series.matchDate,
-      gameId: record.game.id,
-      gameNumber: record.game.gameNumber,
-      durationMin: record.game.durationMin,
-      team: record.team,
-      result: record.team === record.game.winnerTeam ? "WIN" : "LOSE",
-      position: record.position,
-      championName: record.champion.name,
-      championImageUrl: record.champion.imageUrl,
-      kills: record.kills,
-      deaths: record.deaths,
-      assists: record.assists,
-      cs: record.cs,
-      gold: record.gold,
-    })
-  );
+  const recentMatches = player.participants.slice(0, 10);
 
   return (
     <main className="page-container">
-      <h1 className="page-title">
-        {player.name} / {player.nickname}#{player.tag}
-      </h1>
+      <div style={{ marginBottom: 16 }}>
+        <Link href="/players">← 플레이어 목록으로</Link>
+      </div>
 
-      <section className="detail-board">
-        <div className="detail-board__title">요약 통계</div>
-        <div className="detail-header-grid">
-          <div className="detail-header-label">총 경기</div>
-          <div className="detail-header-value">{totalGames}</div>
+      <h1 className="page-title">{player.name}</h1>
 
-          <div className="detail-header-label">승 / 패</div>
-          <div className="detail-header-value">
-            {wins}승 {losses}패
+      <div className="card" style={{ marginBottom: 24 }}>
+        <div style={{ display: "grid", gap: 10 }}>
+          <div>
+            <strong>닉네임#태그:</strong> {player.nickname}#{player.tag}
           </div>
-
-          <div className="detail-header-label">승률</div>
-          <div className="detail-header-value">{winRate}%</div>
-
-          <div className="detail-header-label">KDA</div>
-          <div className="detail-header-value">{kda}</div>
-
-          <div className="detail-header-label">평균 골드</div>
-          <div className="detail-header-value">{avgGold}</div>
+          <div>
+            <strong>최대 티어:</strong> {player.peakTier ?? "-"}
+          </div>
+          <div>
+            <strong>현재 티어:</strong> {player.currentTier ?? "-"}
+          </div>
+          <div>
+            <strong>총 경기:</strong> {totalGames}
+          </div>
+          <div>
+            <strong>승 / 패:</strong> {wins}승 {losses}패
+          </div>
+          <div>
+            <strong>승률:</strong> {winRate}%
+          </div>
+          <div>
+            <strong>KDA:</strong> {kda}
+          </div>
+          <div>
+            <strong>평균 골드:</strong> {avgGold}
+          </div>
         </div>
-      </section>
+      </div>
 
-      <section className="detail-board">
-        <div className="detail-board__title">많이 한 챔피언</div>
-        <div className="card-grid">
-          {mostChampions.map((champion: (typeof mostChampions)[number], index: number) => (
-            <div key={`${champion.championId}-${index}`} className="match-detail-row">
-              <div>{champion.championName}</div>
-              <div>{champion.games}판</div>
-              <div>
-                {champion.kills}/{champion.deaths}/{champion.assists}
-              </div>
-              <div>KDA {champion.kda}</div>
-            </div>
-          ))}
-        </div>
-      </section>
+      <section>
+        <h2 style={{ marginBottom: 16 }}>최근 경기</h2>
 
-      <section className="detail-board">
-        <div className="detail-board__title">최근 경기</div>
-        <div className="card-grid">
-          {recentMatches.map((g: (typeof recentMatches)[number]) => (
-            <Link
-              key={g.id}
-              href={`/matches/${g.matchId}`}
-              className="match-detail-row"
-            >
-              <div>{g.matchTitle}</div>
-              <div>{formatDate(g.matchDate)}</div>
-              <div>{g.gameNumber}세트</div>
-              <div>{g.position}</div>
-              <div>{g.championName}</div>
-              <div>{g.result}</div>
-              <div>
-                {g.kills}/{g.deaths}/{g.assists}
-              </div>
-              <div>{g.cs}</div>
-              <div>{g.gold}</div>
-            </Link>
-          ))}
-        </div>
+        {recentMatches.length === 0 ? (
+          <div className="card">최근 경기 기록이 없습니다.</div>
+        ) : (
+          <div className="card-grid">
+            {recentMatches.map((participant) => {
+              const isWin = participant.team === participant.game.winnerTeam;
+
+              return (
+                <div key={participant.id} className="card">
+                  <div style={{ fontWeight: 700, marginBottom: 8 }}>
+                    {participant.game.series.title}
+                  </div>
+                  <div>시즌: {participant.game.series.season.name}</div>
+                  <div>게임 번호: {participant.game.gameNumber}</div>
+                  <div>챔피언: {participant.champion.name}</div>
+                  <div>팀: {participant.team}</div>
+                  <div>포지션: {participant.position}</div>
+                  <div>
+                    K / D / A : {participant.kills} / {participant.deaths} /{" "}
+                    {participant.assists}
+                  </div>
+                  <div>CS: {participant.cs}</div>
+                  <div>골드: {participant.gold}</div>
+                  <div style={{ marginTop: 8, fontWeight: 700 }}>
+                    결과: {isWin ? "승리" : "패배"}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </section>
     </main>
   );
