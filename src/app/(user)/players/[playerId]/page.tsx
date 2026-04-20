@@ -55,7 +55,7 @@ type PlayerApiResponse = {
       };
     };
   }>;
-  riotOverview: {
+  riotOverview?: {
     success: boolean;
     message?: string;
     account?: {
@@ -146,6 +146,7 @@ export default async function PlayerDetailPage({
   }
 
   const player = (await response.json()) as PlayerApiResponse;
+
   const riotOverview = player.riotOverview;
   const championSummary = riotOverview?.championSummary ?? [];
 
@@ -298,7 +299,8 @@ export default async function PlayerDetailPage({
                 </strong>
                 {riotOverview.soloRank ? (
                   <span className="stat-card__sub">
-                    {riotOverview.soloRank.wins}승 {riotOverview.soloRank.losses}패 ·{" "}
+                    {riotOverview.soloRank.wins}승 {riotOverview.soloRank.losses}
+                    패 ·{" "}
                     {formatWinRate(
                       riotOverview.soloRank.wins,
                       riotOverview.soloRank.losses
@@ -317,7 +319,8 @@ export default async function PlayerDetailPage({
                 </strong>
                 {riotOverview.flexRank ? (
                   <span className="stat-card__sub">
-                    {riotOverview.flexRank.wins}승 {riotOverview.flexRank.losses}패 ·{" "}
+                    {riotOverview.flexRank.wins}승 {riotOverview.flexRank.losses}
+                    패 ·{" "}
                     {formatWinRate(
                       riotOverview.flexRank.wins,
                       riotOverview.flexRank.losses
@@ -340,49 +343,56 @@ export default async function PlayerDetailPage({
           <h2>Riot 챔피언 집계</h2>
         </div>
 
-        {riotOverview?.success && championSummary.length > 0 ? (
-          <div className="champion-summary-list">
-            <div className="champion-summary-list__head">
-              <span>챔피언</span>
-              <span>승률</span>
-              <span>KDA</span>
-              <span>판수</span>
+        {riotOverview?.success ? (
+          championSummary.length > 0 ? (
+            <div className="champion-summary-list">
+              <div className="champion-summary-list__head">
+                <span>챔피언</span>
+                <span>승률</span>
+                <span>KDA</span>
+                <span>판수</span>
+              </div>
+
+              {championSummary.map((champion) => (
+                <article
+                  key={champion.championKey}
+                  className="champion-summary-row"
+                >
+                  <div className="champion-summary-row__champion">
+                    {champion.championImageUrl ? (
+                      <Image
+                        src={champion.championImageUrl}
+                        alt={champion.championName}
+                        width={40}
+                        height={40}
+                        className="champion-summary-row__image"
+                      />
+                    ) : (
+                      <div className="champion-summary-row__fallback" />
+                    )}
+                    <strong>{champion.championName}</strong>
+                  </div>
+
+                  <div className="champion-summary-row__metric">
+                    {champion.winRate}%
+                  </div>
+
+                  <div className="champion-summary-row__metric">
+                    {champion.kda}
+                  </div>
+
+                  <div className="champion-summary-row__metric">
+                    {champion.games}
+                  </div>
+                </article>
+              ))}
             </div>
-
-            {championSummary.map((champion) => (
-              <article key={champion.championKey} className="champion-summary-row">
-                <div className="champion-summary-row__champion">
-                  {champion.championImageUrl ? (
-                    <Image
-                      src={champion.championImageUrl}
-                      alt={champion.championName}
-                      width={40}
-                      height={40}
-                      className="champion-summary-row__image"
-                    />
-                  ) : (
-                    <div className="champion-summary-row__fallback" />
-                  )}
-                  <strong>{champion.championName}</strong>
-                </div>
-
-                <div className="champion-summary-row__metric">
-                  {champion.winRate}%
-                </div>
-
-                <div className="champion-summary-row__metric">
-                  {champion.kda}
-                </div>
-
-                <div className="champion-summary-row__metric">
-                  {champion.games}
-                </div>
-              </article>
-            ))}
-          </div>
+          ) : (
+            <div className="empty-box">집계된 챔피언 데이터가 없습니다.</div>
+          )
         ) : (
           <div className="empty-box">
-            {riotOverview?.message ?? "Riot 챔피언 집계 정보를 불러오지 못했습니다."}
+            {riotOverview?.message ?? "Riot 챔피언 집계를 불러오지 못했습니다."}
           </div>
         )}
       </section>
@@ -430,7 +440,8 @@ export default async function PlayerDetailPage({
 
                     <div className="match-card__score">
                       <strong>
-                        {participant.kills} / {participant.deaths} / {participant.assists}
+                        {participant.kills} / {participant.deaths} /{" "}
+                        {participant.assists}
                       </strong>
                       <span>팀 {participant.team}</span>
                     </div>
