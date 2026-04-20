@@ -14,6 +14,7 @@ type TopPlayerDto = {
   nickname: string;
   tag: string;
   totalGames: number;
+  participation: number;
   wins: number;
   losses: number;
   winRate: number;
@@ -94,6 +95,7 @@ function buildTopPlayersFromSeasonParticipants(
         nickname: player.nickname,
         tag: player.tag,
         totalGames,
+        participation: totalGames,
         wins,
         losses,
         winRate,
@@ -103,7 +105,8 @@ function buildTopPlayersFromSeasonParticipants(
     .filter((p) => p.totalGames > 0)
     .sort((a, b) => {
       if (b.winRate !== a.winRate) return b.winRate - a.winRate;
-      if (b.totalGames !== a.totalGames) return b.totalGames - a.totalGames;
+      if (b.participation !== a.participation)
+        return b.participation - a.participation;
       return b.kda - a.kda;
     })
     .slice(0, 3);
