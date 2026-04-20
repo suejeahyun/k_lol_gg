@@ -139,6 +139,10 @@ async function fetchRiotJson<T>(url: string): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+function isSoloRankQueue(queueId: number) {
+  return queueId === 420;
+}
+
 function extractChampionKeyFromImageUrl(imageUrl: string) {
   const fileName = imageUrl.split("/").pop() ?? "";
   return fileName.replace(".png", "");
@@ -348,11 +352,15 @@ async function getRiotOverviewAndChampionSummary(nickname: string, tag: string) 
       )
       .map((result) => result.value);
 
-    const championSummary = buildChampionSummary(
-      account.puuid,
-      fullMatches,
-      championMap
-    );
+      const soloRankMatches = fullMatches.filter((match) =>
+        isSoloRankQueue(match.info.queueId)
+      );
+
+      const championSummary = buildChampionSummary(
+        account.puuid,
+        soloRankMatches,
+        championMap
+      );
 
     return {
       success: true,
@@ -386,7 +394,7 @@ async function getRiotOverviewAndChampionSummary(nickname: string, tag: string) 
           }
         : null,
       championSummary,
-      totalAnalyzedMatches: fullMatches.length,
+      totalAnalyzedMatches: soloRankMatches.length,
     };
   } catch (error) {
     console.error("[RIOT_OVERVIEW_ERROR]", error);
