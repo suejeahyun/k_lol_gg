@@ -26,7 +26,6 @@ type TopApiResponse = {
     losses: number;
     winRate: number;
     kda: number;
-    avgGold: number;
   }>;
   previousTop3: Array<{
     playerId: number;
@@ -38,7 +37,6 @@ type TopApiResponse = {
     losses: number;
     winRate: number;
     kda: number;
-    avgGold: number;
   }>;
 };
 

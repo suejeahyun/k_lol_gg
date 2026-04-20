@@ -18,7 +18,6 @@ type TopPlayerDto = {
   losses: number;
   winRate: number;
   kda: number;
-  avgGold: number;
 };
 
 function toSeasonDto(
@@ -29,9 +28,7 @@ function toSeasonDto(
     createdAt: Date;
   } | null
 ): SeasonDto | null {
-  if (!season) {
-    return null;
-  }
+  if (!season) return null;
 
   return {
     id: season.id,
@@ -51,7 +48,6 @@ function buildTopPlayersFromSeasonParticipants(
       kills: number;
       deaths: number;
       assists: number;
-      gold: number;
       team: "BLUE" | "RED";
       game: {
         winnerTeam: "BLUE" | "RED";
@@ -64,28 +60,23 @@ function buildTopPlayersFromSeasonParticipants(
       const totalGames = player.participants.length;
 
       const wins = player.participants.filter(
-        (participant) => participant.team === participant.game.winnerTeam
+        (p) => p.team === p.game.winnerTeam
       ).length;
 
       const losses = totalGames - wins;
 
       const totalKills = player.participants.reduce(
-        (sum, participant) => sum + participant.kills,
+        (s, v) => s + v.kills,
         0
       );
 
       const totalDeaths = player.participants.reduce(
-        (sum, participant) => sum + participant.deaths,
+        (s, v) => s + v.deaths,
         0
       );
 
       const totalAssists = player.participants.reduce(
-        (sum, participant) => sum + participant.assists,
-        0
-      );
-
-      const totalGold = player.participants.reduce(
-        (sum, participant) => sum + participant.gold,
+        (s, v) => s + v.assists,
         0
       );
 
@@ -97,8 +88,6 @@ function buildTopPlayersFromSeasonParticipants(
           ? Number((totalKills + totalAssists).toFixed(2))
           : Number(((totalKills + totalAssists) / totalDeaths).toFixed(2));
 
-      const avgGold = totalGames > 0 ? Math.round(totalGold / totalGames) : 0;
-
       return {
         playerId: player.id,
         name: player.name,
@@ -109,24 +98,13 @@ function buildTopPlayersFromSeasonParticipants(
         losses,
         winRate,
         kda,
-        avgGold,
       };
     })
-    .filter((player) => player.totalGames > 0)
+    .filter((p) => p.totalGames > 0)
     .sort((a, b) => {
-      if (b.winRate !== a.winRate) {
-        return b.winRate - a.winRate;
-      }
-
-      if (b.totalGames !== a.totalGames) {
-        return b.totalGames - a.totalGames;
-      }
-
-      if (b.kda !== a.kda) {
-        return b.kda - a.kda;
-      }
-
-      return b.avgGold - a.avgGold;
+      if (b.winRate !== a.winRate) return b.winRate - a.winRate;
+      if (b.totalGames !== a.totalGames) return b.totalGames - a.totalGames;
+      return b.kda - a.kda;
     })
     .slice(0, 3);
 
@@ -152,7 +130,6 @@ async function getSeasonTop3(seasonId: number): Promise<TopPlayerDto[]> {
           kills: true,
           deaths: true,
           assists: true,
-          gold: true,
           team: true,
           game: {
             select: {
@@ -175,12 +152,6 @@ export async function GET() {
         { createdAt: "desc" },
       ],
       take: 10,
-      select: {
-        id: true,
-        name: true,
-        isActive: true,
-        createdAt: true,
-      },
     });
 
     if (seasons.length === 0) {
@@ -193,16 +164,18 @@ export async function GET() {
     }
 
     const activeSeason =
-      seasons.find((season) => season.isActive) ?? null;
+      seasons.find((s) => s.isActive) ?? null;
 
     const currentSeason = activeSeason ?? seasons[0];
 
     const previousSeason =
-      seasons.find((season) => season.id !== currentSeason.id) ?? null;
+      seasons.find((s) => s.id !== currentSeason.id) ?? null;
 
     const [currentTop3, previousTop3] = await Promise.all([
       getSeasonTop3(currentSeason.id),
-      previousSeason ? getSeasonTop3(previousSeason.id) : Promise.resolve([]),
+      previousSeason
+        ? getSeasonTop3(previousSeason.id)
+        : Promise.resolve([]),
     ]);
 
     return NextResponse.json({
