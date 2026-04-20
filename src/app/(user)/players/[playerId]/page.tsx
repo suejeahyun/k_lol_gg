@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -65,7 +66,6 @@ type PlayerApiResponse = {
     summoner?: {
       id?: string;
       level: number;
-      profileIconId: number;
     };
     soloRank?: {
       tier: string;
@@ -83,24 +83,25 @@ type PlayerApiResponse = {
       losses: number;
       winRate: number;
     } | null;
-    recentMatches?: Array<{
-      matchId: string;
-      gameCreation: number;
-      gameDuration: number;
-      queueId: number;
-      queueLabel: string;
+    championSummary?: Array<{
+      championKey: string;
       championName: string;
-      kills: number;
-      deaths: number;
-      assists: number;
+      championImageUrl: string | null;
+      games: number;
+      wins: number;
+      losses: number;
+      winRate: number;
+      totalKills: number;
+      totalDeaths: number;
+      totalAssists: number;
+      avgKills: number;
+      avgDeaths: number;
+      avgAssists: number;
       kda: string;
-      win: boolean;
-      position: string;
-      cs: number;
-      goldEarned: number;
-      totalDamageDealtToChampions: number;
-      totalDamageTaken: number;
+      avgDamageDealtToChampions: number;
+      avgDamageTaken: number;
     }>;
+    totalAnalyzedMatches?: number;
   };
 };
 
@@ -110,12 +111,6 @@ function formatDateTime(value: string | number) {
     timeStyle: "short",
     timeZone: "Asia/Seoul",
   }).format(new Date(value));
-}
-
-function formatDuration(seconds: number) {
-  const min = Math.floor(seconds / 60);
-  const sec = seconds % 60;
-  return `${min}분 ${String(sec).padStart(2, "0")}초`;
 }
 
 function formatWinRate(wins: number, losses: number) {
@@ -152,7 +147,7 @@ export default async function PlayerDetailPage({
 
   const player = (await response.json()) as PlayerApiResponse;
   const riotOverview = player.riotOverview;
-  const recentMatches = riotOverview?.recentMatches ?? [];
+  const championSummary = riotOverview?.championSummary ?? [];
 
   const totalGames = player.participants.length;
   const wins = player.participants.filter(
@@ -286,9 +281,9 @@ export default async function PlayerDetailPage({
               </div>
 
               <div className="info-card">
-                <span className="info-card__label">프로필 아이콘</span>
+                <span className="info-card__label">분석 경기 수</span>
                 <strong className="info-card__value">
-                  {riotOverview.summoner?.profileIconId ?? "-"}
+                  {riotOverview.totalAnalyzedMatches ?? 0}
                 </strong>
               </div>
             </div>
@@ -303,8 +298,7 @@ export default async function PlayerDetailPage({
                 </strong>
                 {riotOverview.soloRank ? (
                   <span className="stat-card__sub">
-                    {riotOverview.soloRank.wins}승 {riotOverview.soloRank.losses}
-                    패 ·{" "}
+                    {riotOverview.soloRank.wins}승 {riotOverview.soloRank.losses}패 ·{" "}
                     {formatWinRate(
                       riotOverview.soloRank.wins,
                       riotOverview.soloRank.losses
@@ -323,8 +317,7 @@ export default async function PlayerDetailPage({
                 </strong>
                 {riotOverview.flexRank ? (
                   <span className="stat-card__sub">
-                    {riotOverview.flexRank.wins}승 {riotOverview.flexRank.losses}
-                    패 ·{" "}
+                    {riotOverview.flexRank.wins}승 {riotOverview.flexRank.losses}패 ·{" "}
                     {formatWinRate(
                       riotOverview.flexRank.wins,
                       riotOverview.flexRank.losses
@@ -344,63 +337,52 @@ export default async function PlayerDetailPage({
 
       <section className="content-section">
         <div className="section-header">
-          <h2>Riot 최근 20게임</h2>
+          <h2>Riot 챔피언 집계</h2>
         </div>
 
-        {riotOverview?.success && recentMatches.length > 0 ? (
-          <div className="match-list">
-            {recentMatches.map((match) => (
-              <article
-                key={match.matchId}
-                className={`match-card ${
-                  match.win ? "match-card--win" : "match-card--loss"
-                }`}
-              >
-                <div className="match-card__top">
-                  <div>
-                    <strong className="match-card__queue">
-                      {match.queueLabel}
-                    </strong>
-                    <p className="match-card__date">
-                      {formatDateTime(match.gameCreation)}
-                    </p>
-                  </div>
+        {riotOverview?.success && championSummary.length > 0 ? (
+          <div className="champion-summary-list">
+            <div className="champion-summary-list__head">
+              <span>챔피언</span>
+              <span>승률</span>
+              <span>KDA</span>
+              <span>판수</span>
+            </div>
 
-                  <div className="match-card__result">
-                    <span>{match.win ? "승리" : "패배"}</span>
-                    <span>{formatDuration(match.gameDuration)}</span>
-                  </div>
+            {championSummary.map((champion) => (
+              <article key={champion.championKey} className="champion-summary-row">
+                <div className="champion-summary-row__champion">
+                  {champion.championImageUrl ? (
+                    <Image
+                      src={champion.championImageUrl}
+                      alt={champion.championName}
+                      width={40}
+                      height={40}
+                      className="champion-summary-row__image"
+                    />
+                  ) : (
+                    <div className="champion-summary-row__fallback" />
+                  )}
+                  <strong>{champion.championName}</strong>
                 </div>
 
-                <div className="match-card__body">
-                  <div className="match-card__champion">
-                    <strong>{match.championName}</strong>
-                    <span>{match.position}</span>
-                  </div>
+                <div className="champion-summary-row__metric">
+                  {champion.winRate}%
+                </div>
 
-                  <div className="match-card__score">
-                    <strong>
-                      {match.kills} / {match.deaths} / {match.assists}
-                    </strong>
-                    <span>KDA {match.kda}</span>
-                  </div>
+                <div className="champion-summary-row__metric">
+                  {champion.kda}
+                </div>
 
-                  <div className="match-card__damage">
-                    <span>
-                      챔피언 피해량{" "}
-                      {match.totalDamageDealtToChampions.toLocaleString()}
-                    </span>
-                    <span>
-                      받은 피해량 {match.totalDamageTaken.toLocaleString()}
-                    </span>
-                  </div>
+                <div className="champion-summary-row__metric">
+                  {champion.games}
                 </div>
               </article>
             ))}
           </div>
         ) : (
           <div className="empty-box">
-            {riotOverview?.message ?? "Riot 전적 정보를 불러오지 못했습니다."}
+            {riotOverview?.message ?? "Riot 챔피언 집계 정보를 불러오지 못했습니다."}
           </div>
         )}
       </section>
@@ -448,8 +430,7 @@ export default async function PlayerDetailPage({
 
                     <div className="match-card__score">
                       <strong>
-                        {participant.kills} / {participant.deaths} /{" "}
-                        {participant.assists}
+                        {participant.kills} / {participant.deaths} / {participant.assists}
                       </strong>
                       <span>팀 {participant.team}</span>
                     </div>

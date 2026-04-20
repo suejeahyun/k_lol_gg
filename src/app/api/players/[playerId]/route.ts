@@ -52,22 +52,34 @@ type RiotMatchResponse = {
     queueId: number;
     participants: Array<{
       puuid: string;
-      riotIdGameName?: string;
-      riotIdTagline?: string;
       championName: string;
       kills: number;
       deaths: number;
       assists: number;
       win: boolean;
-      teamPosition?: string;
-      individualPosition?: string;
-      totalMinionsKilled?: number;
-      neutralMinionsKilled?: number;
-      goldEarned?: number;
       totalDamageDealtToChampions?: number;
       totalDamageTaken?: number;
     }>;
   };
+};
+
+type ChampionSummaryItem = {
+  championKey: string;
+  championName: string;
+  championImageUrl: string | null;
+  games: number;
+  wins: number;
+  losses: number;
+  winRate: number;
+  totalKills: number;
+  totalDeaths: number;
+  totalAssists: number;
+  avgKills: number;
+  avgDeaths: number;
+  avgAssists: number;
+  kda: string;
+  avgDamageDealtToChampions: number;
+  avgDamageTaken: number;
 };
 
 function normalizeTier(value?: string | null) {
@@ -99,42 +111,6 @@ function getAccountRegion() {
   return process.env.RIOT_ACCOUNT_REGION?.trim() || "asia";
 }
 
-function formatQueueName(queueId: number) {
-  const queueMap: Record<number, string> = {
-    400: "일반",
-    420: "솔로랭크",
-    430: "일반",
-    440: "자유랭크",
-    450: "칼바람",
-    490: "일반",
-    700: "격전",
-    720: "칼바람",
-    830: "봇전",
-    840: "봇전",
-    850: "봇전",
-    900: "URF",
-    1700: "아레나",
-  };
-
-  return queueMap[queueId] ?? `큐 ${queueId}`;
-}
-
-function formatPosition(position?: string) {
-  if (!position) return "UNKNOWN";
-
-  const map: Record<string, string> = {
-    TOP: "TOP",
-    JUNGLE: "JGL",
-    MIDDLE: "MID",
-    BOTTOM: "ADC",
-    UTILITY: "SUP",
-    NONE: "NONE",
-    INVALID: "UNKNOWN",
-  };
-
-  return map[position] ?? position;
-}
-
 function calcWinRate(wins: number, losses: number) {
   const total = wins + losses;
   if (total === 0) return 0;
@@ -163,28 +139,187 @@ async function fetchRiotJson<T>(url: string): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-async function getRiotOverviewAndRecentMatches(nickname: string, tag: string) {
+function extractChampionKeyFromImageUrl(imageUrl: string) {
+  const fileName = imageUrl.split("/").pop() ?? "";
+  return fileName.replace(".png", "");
+}
+
+async function getChampionNameMap() {
+  const champions = await prisma.champion.findMany({
+    select: {
+      name: true,
+      imageUrl: true,
+    },
+  });
+
+  const championMap = new Map<
+    string,
+    {
+      koName: string;
+      imageUrl: string;
+    }
+  >();
+
+  for (const champion of champions) {
+    const key = extractChampionKeyFromImageUrl(champion.imageUrl);
+    if (!key) continue;
+
+    championMap.set(key, {
+      koName: champion.name,
+      imageUrl: champion.imageUrl,
+    });
+  }
+
+  return championMap;
+}
+
+async function getAllMatchIdsByPuuid(
+  puuid: string,
+  accountRegion: string
+): Promise<string[]> {
+  const encodedPuuid = encodeURIComponent(puuid);
+  const pageSize = 100;
+  let start = 0;
+  const allMatchIds: string[] = [];
+
+  while (true) {
+    const batch = await fetchRiotJson<RiotMatchIdsResponse>(
+      `https://${accountRegion}.api.riotgames.com/lol/match/v5/matches/by-puuid/${encodedPuuid}/ids?start=${start}&count=${pageSize}`
+    );
+
+    if (batch.length === 0) {
+      break;
+    }
+
+    allMatchIds.push(...batch);
+
+    if (batch.length < pageSize) {
+      break;
+    }
+
+    start += pageSize;
+  }
+
+  return allMatchIds;
+}
+
+function buildChampionSummary(
+  puuid: string,
+  matches: RiotMatchResponse[],
+  championMap: Map<string, { koName: string; imageUrl: string }>
+): ChampionSummaryItem[] {
+  const summaryMap = new Map<
+    string,
+    {
+      championKey: string;
+      championName: string;
+      championImageUrl: string | null;
+      games: number;
+      wins: number;
+      losses: number;
+      totalKills: number;
+      totalDeaths: number;
+      totalAssists: number;
+      totalDamageDealtToChampions: number;
+      totalDamageTaken: number;
+    }
+  >();
+
+  for (const match of matches) {
+    const me = match.info.participants.find((participant) => participant.puuid === puuid);
+
+    if (!me) continue;
+
+    const mappedChampion = championMap.get(me.championName);
+    const current = summaryMap.get(me.championName) ?? {
+      championKey: me.championName,
+      championName: mappedChampion?.koName ?? me.championName,
+      championImageUrl: mappedChampion?.imageUrl ?? null,
+      games: 0,
+      wins: 0,
+      losses: 0,
+      totalKills: 0,
+      totalDeaths: 0,
+      totalAssists: 0,
+      totalDamageDealtToChampions: 0,
+      totalDamageTaken: 0,
+    };
+
+    current.games += 1;
+    current.wins += me.win ? 1 : 0;
+    current.losses += me.win ? 0 : 1;
+    current.totalKills += me.kills;
+    current.totalDeaths += me.deaths;
+    current.totalAssists += me.assists;
+    current.totalDamageDealtToChampions += me.totalDamageDealtToChampions ?? 0;
+    current.totalDamageTaken += me.totalDamageTaken ?? 0;
+
+    summaryMap.set(me.championName, current);
+  }
+
+  return Array.from(summaryMap.values())
+    .map((item) => {
+      const avgKills = Number((item.totalKills / item.games).toFixed(2));
+      const avgDeaths = Number((item.totalDeaths / item.games).toFixed(2));
+      const avgAssists = Number((item.totalAssists / item.games).toFixed(2));
+      const kda =
+        item.totalDeaths === 0
+          ? "Perfect"
+          : ((item.totalKills + item.totalAssists) / item.totalDeaths).toFixed(2);
+
+      return {
+        championKey: item.championKey,
+        championName: item.championName,
+        championImageUrl: item.championImageUrl,
+        games: item.games,
+        wins: item.wins,
+        losses: item.losses,
+        winRate: calcWinRate(item.wins, item.losses),
+        totalKills: item.totalKills,
+        totalDeaths: item.totalDeaths,
+        totalAssists: item.totalAssists,
+        avgKills,
+        avgDeaths,
+        avgAssists,
+        kda,
+        avgDamageDealtToChampions: Math.round(
+          item.totalDamageDealtToChampions / item.games
+        ),
+        avgDamageTaken: Math.round(item.totalDamageTaken / item.games),
+      };
+    })
+    .sort((a, b) => {
+      if (b.games !== a.games) return b.games - a.games;
+      if (b.winRate !== a.winRate) return b.winRate - a.winRate;
+
+      const aKda = a.kda === "Perfect" ? Number.POSITIVE_INFINITY : Number(a.kda);
+      const bKda = b.kda === "Perfect" ? Number.POSITIVE_INFINITY : Number(b.kda);
+
+      return bKda - aKda;
+    });
+}
+
+async function getRiotOverviewAndChampionSummary(nickname: string, tag: string) {
   const encodedNickname = encodeURIComponent(nickname.trim());
   const encodedTag = encodeURIComponent(tag.trim());
   const lolRegion = getLolRegion();
   const accountRegion = getAccountRegion();
 
   try {
+    const championMap = await getChampionNameMap();
+
     const account = await fetchRiotJson<RiotAccountResponse>(
       `https://${accountRegion}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodedNickname}/${encodedTag}`
     );
 
     const encodedPuuid = encodeURIComponent(account.puuid);
 
-    const [summoner, leagueEntries, matchIds] = await Promise.all([
+    const [summoner, leagueEntries] = await Promise.all([
       fetchRiotJson<RiotSummonerResponse>(
         `https://${lolRegion}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${encodedPuuid}`
       ),
       fetchRiotJson<RiotLeagueEntryResponse[]>(
         `https://${lolRegion}.api.riotgames.com/lol/league/v4/entries/by-puuid/${encodedPuuid}`
-      ),
-      fetchRiotJson<RiotMatchIdsResponse>(
-        `https://${accountRegion}.api.riotgames.com/lol/match/v5/matches/by-puuid/${encodedPuuid}/ids?start=0&count=20`
       ),
     ]);
 
@@ -194,106 +329,30 @@ async function getRiotOverviewAndRecentMatches(nickname: string, tag: string) {
     const flexRank =
       leagueEntries.find((entry) => entry.queueType === "RANKED_FLEX_SR") ?? null;
 
-    let recentMatches: Array<{
-      matchId: string;
-      gameCreation: number;
-      gameDuration: number;
-      queueId: number;
-      queueLabel: string;
-      championName: string;
-      kills: number;
-      deaths: number;
-      assists: number;
-      kda: string;
-      win: boolean;
-      position: string;
-      cs: number;
-      goldEarned: number;
-      totalDamageDealtToChampions: number;
-      totalDamageTaken: number;
-    }> = [];
+    const allMatchIds = await getAllMatchIdsByPuuid(account.puuid, accountRegion);
 
-    if (matchIds.length > 0) {
-      const matchResults = await Promise.allSettled(
-        matchIds.map((matchId) =>
-          fetchRiotJson<RiotMatchResponse>(
-            `https://${accountRegion}.api.riotgames.com/lol/match/v5/matches/${encodeURIComponent(matchId)}`
-          )
+    const matchResults = await Promise.allSettled(
+      allMatchIds.map((matchId) =>
+        fetchRiotJson<RiotMatchResponse>(
+          `https://${accountRegion}.api.riotgames.com/lol/match/v5/matches/${encodeURIComponent(matchId)}`
         )
-      );
+      )
+    );
 
-      recentMatches = matchResults
-        .filter(
-          (
-            result
-          ): result is PromiseFulfilledResult<RiotMatchResponse> =>
-            result.status === "fulfilled"
-        )
-        .map((result) => result.value)
-        .map((match) => {
-          const me = match.info.participants.find(
-            (participant) => participant.puuid === account.puuid
-          );
+    const fullMatches = matchResults
+      .filter(
+        (
+          result
+        ): result is PromiseFulfilledResult<RiotMatchResponse> =>
+          result.status === "fulfilled"
+      )
+      .map((result) => result.value);
 
-          if (!me) {
-            return null;
-          }
-
-          const cs =
-            (me.totalMinionsKilled ?? 0) + (me.neutralMinionsKilled ?? 0);
-
-          const kdaValue =
-            me.deaths === 0
-              ? "Perfect"
-              : ((me.kills + me.assists) / me.deaths).toFixed(2);
-
-          const position = formatPosition(
-            me.teamPosition || me.individualPosition
-          );
-
-          return {
-            matchId: match.metadata.matchId,
-            gameCreation: match.info.gameCreation,
-            gameDuration: match.info.gameDuration,
-            queueId: match.info.queueId,
-            queueLabel: formatQueueName(match.info.queueId),
-            championName: me.championName,
-            kills: me.kills,
-            deaths: me.deaths,
-            assists: me.assists,
-            kda: kdaValue,
-            win: me.win,
-            position,
-            cs,
-            goldEarned: me.goldEarned ?? 0,
-            totalDamageDealtToChampions:
-              me.totalDamageDealtToChampions ?? 0,
-            totalDamageTaken: me.totalDamageTaken ?? 0,
-          };
-        })
-        .filter(
-          (
-            match
-          ): match is {
-            matchId: string;
-            gameCreation: number;
-            gameDuration: number;
-            queueId: number;
-            queueLabel: string;
-            championName: string;
-            kills: number;
-            deaths: number;
-            assists: number;
-            kda: string;
-            win: boolean;
-            position: string;
-            cs: number;
-            goldEarned: number;
-            totalDamageDealtToChampions: number;
-            totalDamageTaken: number;
-          } => match !== null
-        );
-    }
+    const championSummary = buildChampionSummary(
+      account.puuid,
+      fullMatches,
+      championMap
+    );
 
     return {
       success: true,
@@ -305,7 +364,6 @@ async function getRiotOverviewAndRecentMatches(nickname: string, tag: string) {
       summoner: {
         id: summoner.id,
         level: summoner.summonerLevel,
-        profileIconId: summoner.profileIconId,
       },
       soloRank: soloRank
         ? {
@@ -327,7 +385,8 @@ async function getRiotOverviewAndRecentMatches(nickname: string, tag: string) {
             winRate: calcWinRate(flexRank.wins, flexRank.losses),
           }
         : null,
-      recentMatches,
+      championSummary,
+      totalAnalyzedMatches: fullMatches.length,
     };
   } catch (error) {
     console.error("[RIOT_OVERVIEW_ERROR]", error);
@@ -335,8 +394,9 @@ async function getRiotOverviewAndRecentMatches(nickname: string, tag: string) {
     return {
       success: false,
       message:
-        "Riot 전적 정보를 불러오지 못했습니다. Riot API 키가 없거나, 닉네임/태그가 실제 Riot ID와 다를 수 있습니다.",
-      recentMatches: [],
+        "Riot 챔피언 집계 정보를 불러오지 못했습니다. Riot API 키가 없거나, 닉네임/태그가 실제 Riot ID와 다를 수 있습니다.",
+      championSummary: [],
+      totalAnalyzedMatches: 0,
     };
   }
 }
@@ -385,12 +445,13 @@ export async function GET(_: NextRequest, context: RouteContext) {
 
     const riotOverview =
       player.nickname && player.tag
-        ? await getRiotOverviewAndRecentMatches(player.nickname, player.tag)
+        ? await getRiotOverviewAndChampionSummary(player.nickname, player.tag)
         : {
             success: false,
             message:
               "닉네임 또는 태그가 없어 Riot 정보를 조회할 수 없습니다.",
-            recentMatches: [],
+            championSummary: [],
+            totalAnalyzedMatches: 0,
           };
 
     return NextResponse.json({

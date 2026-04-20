@@ -17,7 +17,6 @@ type SortType =
   | "totalGames"
   | "winRate"
   | "kda"
-  | "avgGold"
   | "peakTier"
   | "currentTier";
 
@@ -30,7 +29,6 @@ function getSort(sort?: string): SortType {
     sort === "name" ||
     sort === "totalGames" ||
     sort === "kda" ||
-    sort === "avgGold" ||
     sort === "peakTier" ||
     sort === "currentTier"
   ) {
@@ -157,7 +155,6 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
           kills: true,
           deaths: true,
           assists: true,
-          gold: true,
           team: true,
           game: {
             select: {
@@ -198,12 +195,6 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
       0
     );
 
-    const totalGold = player.participants.reduce(
-      (sum: number, participant: (typeof player.participants)[number]) =>
-        sum + participant.gold,
-      0
-    );
-
     const winRate =
       totalGames > 0 ? Number(((wins / totalGames) * 100).toFixed(1)) : 0;
 
@@ -211,8 +202,6 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
       totalDeaths === 0
         ? Number((totalKills + totalAssists).toFixed(2))
         : Number(((totalKills + totalAssists) / totalDeaths).toFixed(2));
-
-    const avgGold = totalGames > 0 ? Math.round(totalGold / totalGames) : 0;
 
     return {
       id: player.id,
@@ -224,7 +213,6 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
       totalGames,
       winRate,
       kda,
-      avgGold,
     };
   });
 
@@ -235,7 +223,6 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
     if (sort === "totalGames") result = a.totalGames - b.totalGames;
     if (sort === "winRate") result = a.winRate - b.winRate;
     if (sort === "kda") result = a.kda - b.kda;
-    if (sort === "avgGold") result = a.avgGold - b.avgGold;
     if (sort === "peakTier") result = tierRank(a.peakTier) - tierRank(b.peakTier);
     if (sort === "currentTier") {
       result = tierRank(a.currentTier) - tierRank(b.currentTier);
@@ -276,7 +263,6 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
         <Link href={sortLink("totalGames")}>총경기</Link>
         <Link href={sortLink("winRate")}>승률</Link>
         <Link href={sortLink("kda")}>KDA</Link>
-        <Link href={sortLink("avgGold")}>골드</Link>
       </div>
 
       <div className="card-grid">
@@ -290,7 +276,7 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
               className="player-row-grid"
               style={{
                 display: "grid",
-                gridTemplateColumns: "1fr 1.3fr 1fr 1fr .8fr .8fr .8fr .8fr",
+                gridTemplateColumns: "1fr 1.3fr 1fr 1fr .8fr .8fr .8fr",
                 gap: 12,
               }}
             >
@@ -303,7 +289,6 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
               <div>{player.totalGames}</div>
               <div>{player.winRate}%</div>
               <div>{player.kda}</div>
-              <div>{player.avgGold}</div>
             </div>
           </Link>
         ))}
