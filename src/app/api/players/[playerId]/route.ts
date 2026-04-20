@@ -83,24 +83,94 @@ async function fetchRiotJson<T>(url: string): Promise<T> {
 }
 
 async function getRiotOverview(nickname: string, tag: string) {
-  const encodedNickname = encodeURIComponent(nickname);
-  const encodedTag = encodeURIComponent(tag);
+  const encodedNickname = encodeURIComponent(nickname.trim());
+  const encodedTag = encodeURIComponent(tag.trim());
+
+  const apiKey = getRiotApiKey();
+
+  if (!apiKey) {
+    console.error("[RIOT_OVERVIEW_ERROR] RIOT_API_KEY is missing");
+    return {
+      success: false,
+      stage: "config",
+      message: "RIOT_API_KEY가 없습니다.",
+    };
+  }
 
   try {
-    // 1) Riot Account 조회: 반드시 asia
-    const account = await fetchRiotJson<RiotAccountResponse>(
-      `https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodedNickname}/${encodedTag}`
-    );
+    const accountUrl = `https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodedNickname}/${encodedTag}`;
+    console.log("[RIOT_REQUEST] accountUrl:", accountUrl);
 
-    // 2) Summoner 조회: KR 서버
-    const summoner = await fetchRiotJson<RiotSummonerResponse>(
-      `https://kr.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${account.puuid}`
-    );
+    const accountResponse = await fetch(accountUrl, {
+      headers: {
+        "X-Riot-Token": apiKey,
+      },
+      cache: "no-store",
+    });
 
-    // 3) 랭크 조회: KR 서버
-    const leagueEntries = await fetchRiotJson<RiotLeagueEntryResponse[]>(
-      `https://kr.api.riotgames.com/lol/league/v4/entries/by-puuid/${account.puuid}`
-    );
+    if (!accountResponse.ok) {
+      const text = await accountResponse.text();
+      console.error("[RIOT_ACCOUNT_ERROR]", accountResponse.status, text);
+      return {
+        success: false,
+        stage: "account",
+        status: accountResponse.status,
+        message: text,
+      };
+    }
+
+    const account = (await accountResponse.json()) as RiotAccountResponse;
+
+    const summonerUrl = `https://kr.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${encodeURIComponent(
+      account.puuid
+    )}`;
+    console.log("[RIOT_REQUEST] summonerUrl:", summonerUrl);
+
+    const summonerResponse = await fetch(summonerUrl, {
+      headers: {
+        "X-Riot-Token": apiKey,
+      },
+      cache: "no-store",
+    });
+
+    if (!summonerResponse.ok) {
+      const text = await summonerResponse.text();
+      console.error("[RIOT_SUMMONER_ERROR]", summonerResponse.status, text);
+      return {
+        success: false,
+        stage: "summoner",
+        status: summonerResponse.status,
+        message: text,
+      };
+    }
+
+    const summoner = (await summonerResponse.json()) as RiotSummonerResponse;
+
+    const leagueUrl = `https://kr.api.riotgames.com/lol/league/v4/entries/by-puuid/${encodeURIComponent(
+      account.puuid
+    )}`;
+    console.log("[RIOT_REQUEST] leagueUrl:", leagueUrl);
+
+    const leagueResponse = await fetch(leagueUrl, {
+      headers: {
+        "X-Riot-Token": apiKey,
+      },
+      cache: "no-store",
+    });
+
+    if (!leagueResponse.ok) {
+      const text = await leagueResponse.text();
+      console.error("[RIOT_LEAGUE_ERROR]", leagueResponse.status, text);
+      return {
+        success: false,
+        stage: "league",
+        status: leagueResponse.status,
+        message: text,
+      };
+    }
+
+    const leagueEntries =
+      (await leagueResponse.json()) as RiotLeagueEntryResponse[];
 
     const soloRank =
       leagueEntries.find((entry) => entry.queueType === "RANKED_SOLO_5x5") ?? null;
@@ -129,7 +199,9 @@ async function getRiotOverview(nickname: string, tag: string) {
             losses: soloRank.losses,
             winRate:
               soloRank.wins + soloRank.losses > 0
-                ? Math.round((soloRank.wins / (soloRank.wins + soloRank.losses)) * 100)
+                ? Math.round(
+                    (soloRank.wins / (soloRank.wins + soloRank.losses)) * 100
+                  )
                 : 0,
           }
         : null,
@@ -142,16 +214,18 @@ async function getRiotOverview(nickname: string, tag: string) {
             losses: flexRank.losses,
             winRate:
               flexRank.wins + flexRank.losses > 0
-                ? Math.round((flexRank.wins / (flexRank.wins + flexRank.losses)) * 100)
+                ? Math.round(
+                    (flexRank.wins / (flexRank.wins + flexRank.losses)) * 100
+                  )
                 : 0,
           }
         : null,
     };
   } catch (error) {
     console.error("[RIOT_OVERVIEW_ERROR]", error);
-
     return {
       success: false,
+      stage: "unknown",
       message: "Riot 정보 조회에 실패했습니다.",
     };
   }
