@@ -39,6 +39,37 @@ type RiotLeagueEntryResponse = {
   losses: number;
 };
 
+type RiotMatchIdsResponse = string[];
+
+type RiotMatchResponse = {
+  metadata: {
+    matchId: string;
+    participants: string[];
+  };
+  info: {
+    gameCreation: number;
+    gameDuration: number;
+    queueId: number;
+    participants: Array<{
+      puuid: string;
+      riotIdGameName?: string;
+      riotIdTagline?: string;
+      championName: string;
+      kills: number;
+      deaths: number;
+      assists: number;
+      win: boolean;
+      teamPosition?: string;
+      individualPosition?: string;
+      totalMinionsKilled?: number;
+      neutralMinionsKilled?: number;
+      goldEarned?: number;
+      totalDamageDealtToChampions?: number;
+      totalDamageTaken?: number;
+    }>;
+  };
+};
+
 function normalizeTier(value?: string | null) {
   const trimmed = value?.trim();
   return trimmed ? trimmed : null;
@@ -58,6 +89,56 @@ function isValidTierValue(value?: string | null) {
 
 function getRiotApiKey() {
   return process.env.RIOT_API_KEY?.trim() ?? "";
+}
+
+function getLolRegion() {
+  return process.env.RIOT_LOL_REGION?.trim() || "kr";
+}
+
+function getAccountRegion() {
+  return process.env.RIOT_ACCOUNT_REGION?.trim() || "asia";
+}
+
+function formatQueueName(queueId: number) {
+  const queueMap: Record<number, string> = {
+    400: "일반",
+    420: "솔로랭크",
+    430: "일반",
+    440: "자유랭크",
+    450: "칼바람",
+    490: "일반",
+    700: "격전",
+    720: "칼바람",
+    830: "봇전",
+    840: "봇전",
+    850: "봇전",
+    900: "URF",
+    1700: "아레나",
+  };
+
+  return queueMap[queueId] ?? `큐 ${queueId}`;
+}
+
+function formatPosition(position?: string) {
+  if (!position) return "UNKNOWN";
+
+  const map: Record<string, string> = {
+    TOP: "TOP",
+    JUNGLE: "JGL",
+    MIDDLE: "MID",
+    BOTTOM: "ADC",
+    UTILITY: "SUP",
+    NONE: "NONE",
+    INVALID: "UNKNOWN",
+  };
+
+  return map[position] ?? position;
+}
+
+function calcWinRate(wins: number, losses: number) {
+  const total = wins + losses;
+  if (total === 0) return 0;
+  return Math.round((wins / total) * 100);
 }
 
 async function fetchRiotJson<T>(url: string): Promise<T> {
@@ -82,101 +163,137 @@ async function fetchRiotJson<T>(url: string): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-async function getRiotOverview(nickname: string, tag: string) {
+async function getRiotOverviewAndRecentMatches(nickname: string, tag: string) {
   const encodedNickname = encodeURIComponent(nickname.trim());
   const encodedTag = encodeURIComponent(tag.trim());
-
-  const apiKey = getRiotApiKey();
-
-  if (!apiKey) {
-    console.error("[RIOT_OVERVIEW_ERROR] RIOT_API_KEY is missing");
-    return {
-      success: false,
-      stage: "config",
-      message: "RIOT_API_KEY가 없습니다.",
-    };
-  }
+  const lolRegion = getLolRegion();
+  const accountRegion = getAccountRegion();
 
   try {
-    const accountUrl = `https://asia.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodedNickname}/${encodedTag}`;
-    console.log("[RIOT_REQUEST] accountUrl:", accountUrl);
+    const account = await fetchRiotJson<RiotAccountResponse>(
+      `https://${accountRegion}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodedNickname}/${encodedTag}`
+    );
 
-    const accountResponse = await fetch(accountUrl, {
-      headers: {
-        "X-Riot-Token": apiKey,
-      },
-      cache: "no-store",
-    });
+    const encodedPuuid = encodeURIComponent(account.puuid);
 
-    if (!accountResponse.ok) {
-      const text = await accountResponse.text();
-      console.error("[RIOT_ACCOUNT_ERROR]", accountResponse.status, text);
-      return {
-        success: false,
-        stage: "account",
-        status: accountResponse.status,
-        message: text,
-      };
-    }
-
-    const account = (await accountResponse.json()) as RiotAccountResponse;
-
-    const summonerUrl = `https://kr.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${encodeURIComponent(
-      account.puuid
-    )}`;
-    console.log("[RIOT_REQUEST] summonerUrl:", summonerUrl);
-
-    const summonerResponse = await fetch(summonerUrl, {
-      headers: {
-        "X-Riot-Token": apiKey,
-      },
-      cache: "no-store",
-    });
-
-    if (!summonerResponse.ok) {
-      const text = await summonerResponse.text();
-      console.error("[RIOT_SUMMONER_ERROR]", summonerResponse.status, text);
-      return {
-        success: false,
-        stage: "summoner",
-        status: summonerResponse.status,
-        message: text,
-      };
-    }
-
-    const summoner = (await summonerResponse.json()) as RiotSummonerResponse;
-
-    const leagueUrl = `https://kr.api.riotgames.com/lol/league/v4/entries/by-puuid/${encodeURIComponent(
-      account.puuid
-    )}`;
-    console.log("[RIOT_REQUEST] leagueUrl:", leagueUrl);
-
-    const leagueResponse = await fetch(leagueUrl, {
-      headers: {
-        "X-Riot-Token": apiKey,
-      },
-      cache: "no-store",
-    });
-
-    if (!leagueResponse.ok) {
-      const text = await leagueResponse.text();
-      console.error("[RIOT_LEAGUE_ERROR]", leagueResponse.status, text);
-      return {
-        success: false,
-        stage: "league",
-        status: leagueResponse.status,
-        message: text,
-      };
-    }
-
-    const leagueEntries =
-      (await leagueResponse.json()) as RiotLeagueEntryResponse[];
+    const [summoner, leagueEntries, matchIds] = await Promise.all([
+      fetchRiotJson<RiotSummonerResponse>(
+        `https://${lolRegion}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${encodedPuuid}`
+      ),
+      fetchRiotJson<RiotLeagueEntryResponse[]>(
+        `https://${lolRegion}.api.riotgames.com/lol/league/v4/entries/by-puuid/${encodedPuuid}`
+      ),
+      fetchRiotJson<RiotMatchIdsResponse>(
+        `https://${accountRegion}.api.riotgames.com/lol/match/v5/matches/by-puuid/${encodedPuuid}/ids?start=0&count=20`
+      ),
+    ]);
 
     const soloRank =
       leagueEntries.find((entry) => entry.queueType === "RANKED_SOLO_5x5") ?? null;
 
     const flexRank =
       leagueEntries.find((entry) => entry.queueType === "RANKED_FLEX_SR") ?? null;
+
+    let recentMatches: Array<{
+      matchId: string;
+      gameCreation: number;
+      gameDuration: number;
+      queueId: number;
+      queueLabel: string;
+      championName: string;
+      kills: number;
+      deaths: number;
+      assists: number;
+      kda: string;
+      win: boolean;
+      position: string;
+      cs: number;
+      goldEarned: number;
+      totalDamageDealtToChampions: number;
+      totalDamageTaken: number;
+    }> = [];
+
+    if (matchIds.length > 0) {
+      const matchResults = await Promise.allSettled(
+        matchIds.map((matchId) =>
+          fetchRiotJson<RiotMatchResponse>(
+            `https://${accountRegion}.api.riotgames.com/lol/match/v5/matches/${encodeURIComponent(matchId)}`
+          )
+        )
+      );
+
+      recentMatches = matchResults
+        .filter(
+          (
+            result
+          ): result is PromiseFulfilledResult<RiotMatchResponse> =>
+            result.status === "fulfilled"
+        )
+        .map((result) => result.value)
+        .map((match) => {
+          const me = match.info.participants.find(
+            (participant) => participant.puuid === account.puuid
+          );
+
+          if (!me) {
+            return null;
+          }
+
+          const cs =
+            (me.totalMinionsKilled ?? 0) + (me.neutralMinionsKilled ?? 0);
+
+          const kdaValue =
+            me.deaths === 0
+              ? "Perfect"
+              : ((me.kills + me.assists) / me.deaths).toFixed(2);
+
+          const position = formatPosition(
+            me.teamPosition || me.individualPosition
+          );
+
+          return {
+            matchId: match.metadata.matchId,
+            gameCreation: match.info.gameCreation,
+            gameDuration: match.info.gameDuration,
+            queueId: match.info.queueId,
+            queueLabel: formatQueueName(match.info.queueId),
+            championName: me.championName,
+            kills: me.kills,
+            deaths: me.deaths,
+            assists: me.assists,
+            kda: kdaValue,
+            win: me.win,
+            position,
+            cs,
+            goldEarned: me.goldEarned ?? 0,
+            totalDamageDealtToChampions:
+              me.totalDamageDealtToChampions ?? 0,
+            totalDamageTaken: me.totalDamageTaken ?? 0,
+          };
+        })
+        .filter(
+          (
+            match
+          ): match is {
+            matchId: string;
+            gameCreation: number;
+            gameDuration: number;
+            queueId: number;
+            queueLabel: string;
+            championName: string;
+            kills: number;
+            deaths: number;
+            assists: number;
+            kda: string;
+            win: boolean;
+            position: string;
+            cs: number;
+            goldEarned: number;
+            totalDamageDealtToChampions: number;
+            totalDamageTaken: number;
+          } => match !== null
+        );
+    }
 
     return {
       success: true,
@@ -197,12 +314,7 @@ async function getRiotOverview(nickname: string, tag: string) {
             leaguePoints: soloRank.leaguePoints,
             wins: soloRank.wins,
             losses: soloRank.losses,
-            winRate:
-              soloRank.wins + soloRank.losses > 0
-                ? Math.round(
-                    (soloRank.wins / (soloRank.wins + soloRank.losses)) * 100
-                  )
-                : 0,
+            winRate: calcWinRate(soloRank.wins, soloRank.losses),
           }
         : null,
       flexRank: flexRank
@@ -212,21 +324,19 @@ async function getRiotOverview(nickname: string, tag: string) {
             leaguePoints: flexRank.leaguePoints,
             wins: flexRank.wins,
             losses: flexRank.losses,
-            winRate:
-              flexRank.wins + flexRank.losses > 0
-                ? Math.round(
-                    (flexRank.wins / (flexRank.wins + flexRank.losses)) * 100
-                  )
-                : 0,
+            winRate: calcWinRate(flexRank.wins, flexRank.losses),
           }
         : null,
+      recentMatches,
     };
   } catch (error) {
     console.error("[RIOT_OVERVIEW_ERROR]", error);
+
     return {
       success: false,
-      stage: "unknown",
-      message: "Riot 정보 조회에 실패했습니다.",
+      message:
+        "Riot 전적 정보를 불러오지 못했습니다. Riot API 키가 없거나, 닉네임/태그가 실제 Riot ID와 다를 수 있습니다.",
+      recentMatches: [],
     };
   }
 }
@@ -275,10 +385,12 @@ export async function GET(_: NextRequest, context: RouteContext) {
 
     const riotOverview =
       player.nickname && player.tag
-        ? await getRiotOverview(player.nickname, player.tag)
+        ? await getRiotOverviewAndRecentMatches(player.nickname, player.tag)
         : {
             success: false,
-            message: "닉네임 또는 태그가 없어 Riot 정보를 조회할 수 없습니다.",
+            message:
+              "닉네임 또는 태그가 없어 Riot 정보를 조회할 수 없습니다.",
+            recentMatches: [],
           };
 
     return NextResponse.json({
