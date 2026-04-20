@@ -1,26 +1,50 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { validateMatchCreateInput } from "@/validations/match";
 
 type RouteContext = {
   params: Promise<{ matchId: string }>;
 };
 
+type Team = "BLUE" | "RED";
+
 type PatchGameInput = {
   gameNumber: number;
-  durationMin: number;
-  winnerTeam: "BLUE" | "RED";
   participants: Array<{
     playerId: number;
     championId: number;
-    team: "BLUE" | "RED";
+    team: Team;
     position: "TOP" | "JGL" | "MID" | "ADC" | "SUP";
     kills: number;
     deaths: number;
     assists: number;
-    cs: number;
-    gold: number;
   }>;
 };
+
+type PatchBody = {
+  seasonId: number;
+  title: string;
+  matchDate: string;
+  games: PatchGameInput[];
+};
+
+function resolveWinnerTeam(
+  participants: PatchGameInput["participants"]
+): Team {
+  const blueKills = participants
+    .filter((participant) => participant.team === "BLUE")
+    .reduce((sum, participant) => sum + participant.kills, 0);
+
+  const redKills = participants
+    .filter((participant) => participant.team === "RED")
+    .reduce((sum, participant) => sum + participant.kills, 0);
+
+  if (redKills > blueKills) {
+    return "RED";
+  }
+
+  return "BLUE";
+}
 
 export async function GET(_req: NextRequest, { params }: RouteContext) {
   try {
@@ -61,23 +85,21 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
       );
     }
 
-    const gamesWithMvp = match.games.map((game: (typeof match.games)[number]) => {
-      const participantsWithScore = game.participants.map(
-        (participant: (typeof game.participants)[number]) => {
-          const isWinner = participant.team === game.winnerTeam;
-          const score =
-            participant.kills * 3 +
-            participant.assists -
-            participant.deaths +
-            (isWinner ? 5 : 0);
+    const gamesWithMvp = match.games.map((game) => {
+      const participantsWithScore = game.participants.map((participant) => {
+        const isWinner = participant.team === game.winnerTeam;
+        const score =
+          participant.kills * 3 +
+          participant.assists -
+          participant.deaths +
+          (isWinner ? 5 : 0);
 
-          return {
-            ...participant,
-            isWinner,
-            score,
-          };
-        }
-      );
+        return {
+          ...participant,
+          isWinner,
+          score,
+        };
+      });
 
       type ScoredParticipant = (typeof participantsWithScore)[number];
 
@@ -171,7 +193,92 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       );
     }
 
-    const body = await req.json();
+    const body = (await req.json()) as PatchBody;
+
+    const validation = validateMatchCreateInput(body);
+    if (!validation.ok) {
+      return NextResponse.json(
+        { message: validation.message },
+        { status: 400 }
+      );
+    }
+
+    const match = await prisma.matchSeries.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+
+    if (!match) {
+      return NextResponse.json(
+        { message: "Match not found" },
+        { status: 404 }
+      );
+    }
+
+    const season = await prisma.season.findUnique({
+      where: { id: body.seasonId },
+      select: { id: true },
+    });
+
+    if (!season) {
+      return NextResponse.json(
+        { message: "존재하지 않는 시즌입니다." },
+        { status: 400 }
+      );
+    }
+
+    const playerIds = [
+      ...new Set(
+        body.games.flatMap((game) =>
+          game.participants.map((participant) => participant.playerId)
+        )
+      ),
+    ];
+
+    const championIds = [
+      ...new Set(
+        body.games.flatMap((game) =>
+          game.participants.map((participant) => participant.championId)
+        )
+      ),
+    ];
+
+    const [players, champions] = await Promise.all([
+      prisma.player.findMany({
+        where: {
+          id: {
+            in: playerIds,
+          },
+        },
+        select: {
+          id: true,
+        },
+      }),
+      prisma.champion.findMany({
+        where: {
+          id: {
+            in: championIds,
+          },
+        },
+        select: {
+          id: true,
+        },
+      }),
+    ]);
+
+    if (players.length !== playerIds.length) {
+      return NextResponse.json(
+        { message: "존재하지 않는 플레이어가 포함되어 있습니다." },
+        { status: 400 }
+      );
+    }
+
+    if (champions.length !== championIds.length) {
+      return NextResponse.json(
+        { message: "존재하지 않는 챔피언이 포함되어 있습니다." },
+        { status: 400 }
+      );
+    }
 
     await prisma.matchParticipant.deleteMany({
       where: {
@@ -190,28 +297,26 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     const updated = await prisma.matchSeries.update({
       where: { id },
       data: {
-        title: body.title,
+        title: body.title.trim(),
         matchDate: new Date(body.matchDate),
         seasonId: body.seasonId,
         games: {
-          create: body.games.map((game: PatchGameInput) => ({
+          create: body.games.map((game) => ({
             gameNumber: game.gameNumber,
-            durationMin: game.durationMin,
-            winnerTeam: game.winnerTeam,
+            durationMin: 0,
+            winnerTeam: resolveWinnerTeam(game.participants),
             participants: {
-              create: game.participants.map(
-                (participant: PatchGameInput["participants"][number]) => ({
-                  playerId: participant.playerId,
-                  championId: participant.championId,
-                  team: participant.team,
-                  position: participant.position,
-                  kills: participant.kills,
-                  deaths: participant.deaths,
-                  assists: participant.assists,
-                  cs: participant.cs,
-                  gold: participant.gold,
-                })
-              ),
+              create: game.participants.map((participant) => ({
+                playerId: participant.playerId,
+                championId: participant.championId,
+                team: participant.team,
+                position: participant.position,
+                kills: participant.kills,
+                deaths: participant.deaths,
+                assists: participant.assists,
+                cs: 0,
+                gold: 0,
+              })),
             },
           })),
         },

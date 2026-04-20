@@ -60,52 +60,37 @@ export default async function EditMatchPage({ params }: EditMatchPageProps) {
     .toISOString()
     .slice(0, 16);
 
-  const seasonItems: MatchFormSeason[] = seasons.map(
-    (season: (typeof seasons)[number]) => ({
-      id: season.id,
-      name: season.name,
-    })
-  );
+  const seasonItems: MatchFormSeason[] = seasons.map((season) => ({
+    id: season.id,
+    name: season.name,
+  }));
 
-  const playerItems: MatchFormPlayer[] = players.map(
-    (player: (typeof players)[number]) => ({
-      id: player.id,
-      name: player.name,
-      nickname: player.nickname ?? "",
-      tag: player.tag ?? "",
-    })
-  );
+  const playerItems: MatchFormPlayer[] = players.map((player) => ({
+    id: player.id,
+    name: player.name,
+    nickname: player.nickname ?? "",
+    tag: player.tag ?? "",
+  }));
 
-  const championItems: MatchFormChampion[] = champions.map(
-    (champion: (typeof champions)[number]) => ({
-      id: champion.id,
-      name: champion.name,
-    })
-  );
+  const championItems: MatchFormChampion[] = champions.map((champion) => ({
+    id: champion.id,
+    name: champion.name,
+  }));
 
-  const formGames: MatchFormGame[] = match.games.map(
-    (game: (typeof match.games)[number]) => ({
-      gameNumber: game.gameNumber,
-      durationMin: game.durationMin,
-      winnerTeam: game.winnerTeam as MatchFormGame["winnerTeam"],
-      participants: game.participants.map(
-        (participant: (typeof game.participants)[number]) => ({
-          playerId: participant.playerId,
-          playerInput:
-            participant.player.nickname ?? participant.player.name ?? "",
-          championId: participant.championId,
-          championInput: participant.champion.name ?? "",
-          team: participant.team as MatchFormParticipant["team"],
-          position: participant.position as MatchFormParticipant["position"],
-          kills: participant.kills,
-          deaths: participant.deaths,
-          assists: participant.assists,
-          cs: participant.cs,
-          gold: participant.gold,
-        })
-      ),
-    })
-  );
+  const formGames: MatchFormGame[] = match.games.map((game) => ({
+    gameNumber: game.gameNumber,
+    participants: game.participants.map((participant) => ({
+      playerId: participant.playerId,
+      playerInput: participant.player.name ?? "",
+      championId: participant.championId,
+      championInput: participant.champion.name ?? "",
+      team: participant.team as MatchFormParticipant["team"],
+      position: participant.position as MatchFormParticipant["position"],
+      kills: participant.kills,
+      deaths: participant.deaths,
+      assists: participant.assists,
+    })),
+  }));
 
   const initialData: MatchFormProps["initialData"] = {
     id: match.id,

@@ -33,14 +33,10 @@ type ParticipantForm = {
   kills: number;
   deaths: number;
   assists: number;
-  cs: number;
-  gold: number;
 };
 
 type GameForm = {
   gameNumber: number;
-  durationMin: number;
-  winnerTeam: Team;
   participants: ParticipantForm[];
 };
 
@@ -77,8 +73,6 @@ function createEmptyParticipants(): ParticipantForm[] {
       kills: 0,
       deaths: 0,
       assists: 0,
-      cs: 0,
-      gold: 0,
     },
     {
       playerId: 0,
@@ -90,8 +84,6 @@ function createEmptyParticipants(): ParticipantForm[] {
       kills: 0,
       deaths: 0,
       assists: 0,
-      cs: 0,
-      gold: 0,
     },
     {
       playerId: 0,
@@ -103,8 +95,6 @@ function createEmptyParticipants(): ParticipantForm[] {
       kills: 0,
       deaths: 0,
       assists: 0,
-      cs: 0,
-      gold: 0,
     },
     {
       playerId: 0,
@@ -116,8 +106,6 @@ function createEmptyParticipants(): ParticipantForm[] {
       kills: 0,
       deaths: 0,
       assists: 0,
-      cs: 0,
-      gold: 0,
     },
     {
       playerId: 0,
@@ -129,8 +117,6 @@ function createEmptyParticipants(): ParticipantForm[] {
       kills: 0,
       deaths: 0,
       assists: 0,
-      cs: 0,
-      gold: 0,
     },
     {
       playerId: 0,
@@ -142,8 +128,6 @@ function createEmptyParticipants(): ParticipantForm[] {
       kills: 0,
       deaths: 0,
       assists: 0,
-      cs: 0,
-      gold: 0,
     },
     {
       playerId: 0,
@@ -155,8 +139,6 @@ function createEmptyParticipants(): ParticipantForm[] {
       kills: 0,
       deaths: 0,
       assists: 0,
-      cs: 0,
-      gold: 0,
     },
     {
       playerId: 0,
@@ -168,8 +150,6 @@ function createEmptyParticipants(): ParticipantForm[] {
       kills: 0,
       deaths: 0,
       assists: 0,
-      cs: 0,
-      gold: 0,
     },
     {
       playerId: 0,
@@ -181,8 +161,6 @@ function createEmptyParticipants(): ParticipantForm[] {
       kills: 0,
       deaths: 0,
       assists: 0,
-      cs: 0,
-      gold: 0,
     },
     {
       playerId: 0,
@@ -194,8 +172,6 @@ function createEmptyParticipants(): ParticipantForm[] {
       kills: 0,
       deaths: 0,
       assists: 0,
-      cs: 0,
-      gold: 0,
     },
   ];
 }
@@ -203,10 +179,38 @@ function createEmptyParticipants(): ParticipantForm[] {
 function createEmptyGame(nextGameNumber: number): GameForm {
   return {
     gameNumber: nextGameNumber,
-    durationMin: 0,
-    winnerTeam: "BLUE",
     participants: createEmptyParticipants(),
   };
+}
+
+function cloneParticipantsFromPreviousGame(
+  previousParticipants: ParticipantForm[]
+): ParticipantForm[] {
+  return previousParticipants.map((participant) => ({
+    playerId: participant.playerId,
+    playerInput: participant.playerInput,
+    championId: 0,
+    championInput: "",
+    team: participant.team,
+    position: participant.position,
+    kills: 0,
+    deaths: 0,
+    assists: 0,
+  }));
+}
+
+function parseNonNegativeInt(value: string) {
+  if (value.trim() === "") {
+    return 0;
+  }
+
+  const parsed = Number(value);
+
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    return 0;
+  }
+
+  return Math.floor(parsed);
 }
 
 export default function MatchForm({
@@ -222,7 +226,7 @@ export default function MatchForm({
   const championMap = useMemo(() => {
     const map = new Map<string, number>();
     champions.forEach((champion) => {
-      map.set(champion.name, champion.id);
+      map.set(champion.name.trim().toLowerCase(), champion.id);
     });
     return map;
   }, [champions]);
@@ -269,22 +273,9 @@ export default function MatchForm({
   const [form, setForm] = useState<MatchFormData>(normalizedInitialData);
   const [submitting, setSubmitting] = useState(false);
   const [activePlayerField, setActivePlayerField] = useState<string | null>(null);
-  const [activeChampionField, setActiveChampionField] = useState<string | null>(null);
-
-  const updateGameField = <K extends keyof GameForm>(
-    gameIndex: number,
-    field: K,
-    value: GameForm[K]
-  ) => {
-    setForm((prev) => {
-      const nextGames = [...prev.games];
-      nextGames[gameIndex] = {
-        ...nextGames[gameIndex],
-        [field]: value,
-      };
-      return { ...prev, games: nextGames };
-    });
-  };
+  const [activeChampionField, setActiveChampionField] = useState<string | null>(
+    null
+  );
 
   const updateParticipantField = <K extends keyof ParticipantForm>(
     gameIndex: number,
@@ -314,10 +305,24 @@ export default function MatchForm({
   };
 
   const addGame = () => {
-    setForm((prev) => ({
-      ...prev,
-      games: [...prev.games, createEmptyGame(prev.games.length + 1)],
-    }));
+    setForm((prev) => {
+      const nextGameNumber = prev.games.length + 1;
+      const lastGame = prev.games[prev.games.length - 1];
+
+      const nextGame: GameForm = lastGame
+        ? {
+            gameNumber: nextGameNumber,
+            participants: cloneParticipantsFromPreviousGame(
+              lastGame.participants
+            ),
+          }
+        : createEmptyGame(nextGameNumber);
+
+      return {
+        ...prev,
+        games: [...prev.games, nextGame],
+      };
+    });
   };
 
   const removeGame = (gameIndex: number) => {
@@ -339,12 +344,10 @@ export default function MatchForm({
     return {
       id: form.id,
       seasonId: form.seasonId,
-      title: form.title,
+      title: form.title.trim(),
       matchDate: form.matchDate,
       games: form.games.map((game) => ({
         gameNumber: game.gameNumber,
-        durationMin: game.durationMin,
-        winnerTeam: game.winnerTeam,
         participants: game.participants.map((participant) => ({
           playerId: participant.playerId,
           championId: participant.championId,
@@ -353,35 +356,120 @@ export default function MatchForm({
           kills: participant.kills,
           deaths: participant.deaths,
           assists: participant.assists,
-          cs: participant.cs,
-          gold: participant.gold,
         })),
       })),
     };
   };
 
+  const runClientValidation = () => {
+    if (!form.title.trim()) {
+      return "내전 제목을 입력해주세요.";
+    }
+
+    if (!Number.isInteger(form.seasonId) || form.seasonId <= 0) {
+      return "시즌을 선택해주세요.";
+    }
+
+    if (!form.matchDate) {
+      return "내전 일시를 입력해주세요.";
+    }
+
+    if (Number.isNaN(new Date(form.matchDate).getTime())) {
+      return "내전 일시 형식이 올바르지 않습니다.";
+    }
+
+    if (form.games.length === 0) {
+      return "최소 1세트 이상 추가해주세요.";
+    }
+
+    for (const game of form.games) {
+      const gameLabel = `${game.gameNumber}세트`;
+
+      if (game.participants.length !== 10) {
+        return `${gameLabel} 참가자는 정확히 10명이어야 합니다.`;
+      }
+
+      const blueCount = game.participants.filter(
+        (participant) => participant.team === "BLUE"
+      ).length;
+      const redCount = game.participants.filter(
+        (participant) => participant.team === "RED"
+      ).length;
+
+      if (blueCount !== 5 || redCount !== 5) {
+        return `${gameLabel}는 블루 5명, 레드 5명이어야 합니다.`;
+      }
+
+      const playerIds = game.participants.map((participant) => participant.playerId);
+      if (playerIds.some((id) => !id)) {
+        return `${gameLabel}에 등록되지 않은 플레이어가 있습니다.`;
+      }
+
+      if (new Set(playerIds).size !== playerIds.length) {
+        return `${gameLabel}에 중복된 플레이어가 있습니다.`;
+      }
+
+      const championIds = game.participants.map(
+        (participant) => participant.championId
+      );
+      if (championIds.some((id) => !id)) {
+        return `${gameLabel}에 등록되지 않은 챔피언이 있습니다.`;
+      }
+
+      if (new Set(championIds).size !== championIds.length) {
+        return `${gameLabel}에 중복된 챔피언이 있습니다.`;
+      }
+
+      const bluePositions = new Set(
+        game.participants
+          .filter((participant) => participant.team === "BLUE")
+          .map((participant) => participant.position)
+      );
+
+      const redPositions = new Set(
+        game.participants
+          .filter((participant) => participant.team === "RED")
+          .map((participant) => participant.position)
+      );
+
+      if (bluePositions.size !== 5) {
+        return `${gameLabel} 블루팀 포지션이 중복되었습니다.`;
+      }
+
+      if (redPositions.size !== 5) {
+        return `${gameLabel} 레드팀 포지션이 중복되었습니다.`;
+      }
+
+      for (const participant of game.participants) {
+        if (!Number.isInteger(participant.kills) || participant.kills < 0) {
+          return `${gameLabel} 킬은 0 이상의 정수만 입력할 수 있습니다.`;
+        }
+
+        if (!Number.isInteger(participant.deaths) || participant.deaths < 0) {
+          return `${gameLabel} 데스는 0 이상의 정수만 입력할 수 있습니다.`;
+        }
+
+        if (!Number.isInteger(participant.assists) || participant.assists < 0) {
+          return `${gameLabel} 어시스트는 0 이상의 정수만 입력할 수 있습니다.`;
+        }
+      }
+    }
+
+    return null;
+  };
+
   const handleSubmit = async () => {
     try {
+      const validationMessage = runClientValidation();
+
+      if (validationMessage) {
+        alert(validationMessage);
+        return;
+      }
+
       setSubmitting(true);
 
       const payload = buildPayload();
-
-      const hasInvalidPlayer = payload.games.some((game) =>
-        game.participants.some((participant) => !participant.playerId)
-      );
-      if (hasInvalidPlayer) {
-        alert("플레이어 입력값 중 등록된 플레이어와 일치하지 않는 값이 있습니다.");
-        return;
-      }
-
-      const hasInvalidChampion = payload.games.some((game) =>
-        game.participants.some((participant) => !participant.championId)
-      );
-      if (hasInvalidChampion) {
-        alert("챔피언 입력값 중 등록된 챔피언과 일치하지 않는 값이 있습니다.");
-        return;
-      }
-
       const method = mode === "create" ? "POST" : "PATCH";
 
       const response = await fetch(submitUrl, {
@@ -399,7 +487,11 @@ export default function MatchForm({
         return;
       }
 
-      alert(mode === "create" ? "내전이 등록되었습니다." : "내전이 수정되었습니다.");
+      alert(
+        mode === "create"
+          ? "내전이 등록되었습니다."
+          : "내전이 수정되었습니다."
+      );
       router.push("/admin/matches");
       router.refresh();
     } catch (error) {
@@ -411,18 +503,17 @@ export default function MatchForm({
   };
 
   const getPlayerSuggestions = (
+    gameIndex: number,
     keyword: string,
     currentPlayerId: number
   ): PlayerOption[] => {
     const normalizedKeyword = keyword.trim().toLowerCase();
 
     const selectedPlayerIds = new Set<number>();
-    form.games.forEach((game) => {
-      game.participants.forEach((participant) => {
-        if (participant.playerId && participant.playerId !== currentPlayerId) {
-          selectedPlayerIds.add(participant.playerId);
-        }
-      });
+    form.games[gameIndex]?.participants.forEach((participant) => {
+      if (participant.playerId && participant.playerId !== currentPlayerId) {
+        selectedPlayerIds.add(participant.playerId);
+      }
     });
 
     return players
@@ -435,16 +526,39 @@ export default function MatchForm({
           return true;
         }
 
-        return player.name.toLowerCase().includes(normalizedKeyword);
+        return (
+          player.name.toLowerCase().includes(normalizedKeyword) ||
+          `${player.nickname}#${player.tag}`
+            .toLowerCase()
+            .includes(normalizedKeyword)
+        );
       })
       .slice(0, 20);
   };
 
-  const getChampionSuggestions = (keyword: string): ChampionOption[] => {
+  const getChampionSuggestions = (
+    gameIndex: number,
+    keyword: string,
+    currentChampionId: number
+  ): ChampionOption[] => {
     const normalizedKeyword = keyword.trim().toLowerCase();
+
+    const selectedChampionIds = new Set<number>();
+    form.games[gameIndex]?.participants.forEach((participant) => {
+      if (
+        participant.championId &&
+        participant.championId !== currentChampionId
+      ) {
+        selectedChampionIds.add(participant.championId);
+      }
+    });
 
     return champions
       .filter((champion) => {
+        if (selectedChampionIds.has(champion.id)) {
+          return false;
+        }
+
         if (!normalizedKeyword) {
           return true;
         }
@@ -522,38 +636,6 @@ export default function MatchForm({
               </div>
 
               <div className="match-form-game__controls">
-                <label className="match-form-inline-field">
-                  <span>승리팀</span>
-                  <select
-                    value={game.winnerTeam}
-                    onChange={(e) =>
-                      updateGameField(
-                        gameIndex,
-                        "winnerTeam",
-                        e.target.value as Team
-                      )
-                    }
-                  >
-                    <option value="BLUE">BLUE</option>
-                    <option value="RED">RED</option>
-                  </select>
-                </label>
-
-                <label className="match-form-inline-field">
-                  <span>시간(분)</span>
-                  <input
-                    type="number"
-                    value={game.durationMin}
-                    onChange={(e) =>
-                      updateGameField(
-                        gameIndex,
-                        "durationMin",
-                        Number(e.target.value)
-                      )
-                    }
-                  />
-                </label>
-
                 <button
                   type="button"
                   className="app-button--danger-outline"
@@ -573,20 +655,28 @@ export default function MatchForm({
                 <div>킬</div>
                 <div>데스</div>
                 <div>어시스트</div>
-                <div>CS</div>
-                <div>골드</div>
               </div>
 
               {game.participants.map((participant, participantIndex) => {
                 const playerFieldKey = `player-${gameIndex}-${participantIndex}`;
                 const championFieldKey = `champion-${gameIndex}-${participantIndex}`;
+
                 const playerSuggestions =
                   activePlayerField === playerFieldKey
-                    ? getPlayerSuggestions(participant.playerInput, participant.playerId)
+                    ? getPlayerSuggestions(
+                        gameIndex,
+                        participant.playerInput,
+                        participant.playerId
+                      )
                     : [];
+
                 const championSuggestions =
                   activeChampionField === championFieldKey
-                    ? getChampionSuggestions(participant.championInput)
+                    ? getChampionSuggestions(
+                        gameIndex,
+                        participant.championInput,
+                        participant.championId
+                      )
                     : [];
 
                 return (
@@ -604,7 +694,9 @@ export default function MatchForm({
                       {participant.team}
                     </div>
 
-                    <div className="match-position-cell">{participant.position}</div>
+                    <div className="match-position-cell">
+                      {participant.position}
+                    </div>
 
                     <div style={{ position: "relative" }}>
                       <input
@@ -612,6 +704,7 @@ export default function MatchForm({
                         onFocus={() => setActivePlayerField(playerFieldKey)}
                         onChange={(e) => {
                           const value = e.target.value;
+
                           updateParticipantField(
                             gameIndex,
                             participantIndex,
@@ -694,6 +787,7 @@ export default function MatchForm({
                         onFocus={() => setActiveChampionField(championFieldKey)}
                         onChange={(e) => {
                           const value = e.target.value;
+
                           updateParticipantField(
                             gameIndex,
                             participantIndex,
@@ -704,7 +798,7 @@ export default function MatchForm({
                             gameIndex,
                             participantIndex,
                             "championId",
-                            championMap.get(value.trim()) ?? 0
+                            championMap.get(value.trim().toLowerCase()) ?? 0
                           );
                           setActiveChampionField(championFieldKey);
                         }}
@@ -773,13 +867,15 @@ export default function MatchForm({
                     <div>
                       <input
                         type="number"
+                        min={0}
+                        step={1}
                         value={participant.kills}
                         onChange={(e) =>
                           updateParticipantField(
                             gameIndex,
                             participantIndex,
                             "kills",
-                            Number(e.target.value)
+                            parseNonNegativeInt(e.target.value)
                           )
                         }
                         className="match-grid-input"
@@ -789,13 +885,15 @@ export default function MatchForm({
                     <div>
                       <input
                         type="number"
+                        min={0}
+                        step={1}
                         value={participant.deaths}
                         onChange={(e) =>
                           updateParticipantField(
                             gameIndex,
                             participantIndex,
                             "deaths",
-                            Number(e.target.value)
+                            parseNonNegativeInt(e.target.value)
                           )
                         }
                         className="match-grid-input"
@@ -805,45 +903,15 @@ export default function MatchForm({
                     <div>
                       <input
                         type="number"
+                        min={0}
+                        step={1}
                         value={participant.assists}
                         onChange={(e) =>
                           updateParticipantField(
                             gameIndex,
                             participantIndex,
                             "assists",
-                            Number(e.target.value)
-                          )
-                        }
-                        className="match-grid-input"
-                      />
-                    </div>
-
-                    <div>
-                      <input
-                        type="number"
-                        value={participant.cs}
-                        onChange={(e) =>
-                          updateParticipantField(
-                            gameIndex,
-                            participantIndex,
-                            "cs",
-                            Number(e.target.value)
-                          )
-                        }
-                        className="match-grid-input"
-                      />
-                    </div>
-
-                    <div>
-                      <input
-                        type="number"
-                        value={participant.gold}
-                        onChange={(e) =>
-                          updateParticipantField(
-                            gameIndex,
-                            participantIndex,
-                            "gold",
-                            Number(e.target.value)
+                            parseNonNegativeInt(e.target.value)
                           )
                         }
                         className="match-grid-input"
