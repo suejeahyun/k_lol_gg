@@ -1,7 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { headers } from "next/headers";
+import { prisma } from "@/lib/prisma/client";
+import RiotRefreshButton from "@/components/RiotRefreshButton";
 
 type PlayerDetailPageProps = {
   params: Promise<{
@@ -9,104 +10,7 @@ type PlayerDetailPageProps = {
   }>;
 };
 
-type PlayerApiResponse = {
-  id: number;
-  name: string;
-  nickname: string;
-  tag: string;
-  peakTier: string | null;
-  currentTier: string | null;
-  createdAt: string;
-  participants: Array<{
-    id: number;
-    gameId: number;
-    playerId: number;
-    championId: number;
-    team: "BLUE" | "RED";
-    position: string;
-    kills: number;
-    deaths: number;
-    assists: number;
-    cs: number;
-    gold: number;
-    champion: {
-      id: number;
-      name: string;
-      imageUrl: string;
-      createdAt: string;
-    };
-    game: {
-      id: number;
-      seriesId: number;
-      gameNumber: number;
-      durationMin: number;
-      winnerTeam: "BLUE" | "RED";
-      series: {
-        id: number;
-        title: string;
-        matchDate: string;
-        seasonId: number;
-        createdAt: string;
-        season: {
-          id: number;
-          name: string;
-          isActive: boolean;
-          createdAt: string;
-        };
-      };
-    };
-  }>;
-  riotOverview?: {
-    success: boolean;
-    message?: string;
-    account?: {
-      puuid: string;
-      gameName: string;
-      tagLine: string;
-    };
-    summoner?: {
-      id?: string;
-      level: number;
-    };
-    soloRank?: {
-      tier: string;
-      rank: string;
-      leaguePoints: number;
-      wins: number;
-      losses: number;
-      winRate: number;
-    } | null;
-    flexRank?: {
-      tier: string;
-      rank: string;
-      leaguePoints: number;
-      wins: number;
-      losses: number;
-      winRate: number;
-    } | null;
-    championSummary?: Array<{
-      championKey: string;
-      championName: string;
-      championImageUrl: string | null;
-      games: number;
-      wins: number;
-      losses: number;
-      winRate: number;
-      totalKills: number;
-      totalDeaths: number;
-      totalAssists: number;
-      avgKills: number;
-      avgDeaths: number;
-      avgAssists: number;
-      kda: string;
-      avgDamageDealtToChampions: number;
-      avgDamageTaken: number;
-    }>;
-    totalAnalyzedMatches?: number;
-  };
-};
-
-function formatDateTime(value: string | number) {
+function formatDateTime(value: string | number | Date) {
   return new Intl.DateTimeFormat("ko-KR", {
     dateStyle: "medium",
     timeStyle: "short",
@@ -120,18 +24,6 @@ function formatWinRate(wins: number, losses: number) {
   return Math.round((wins / total) * 100);
 }
 
-async function getRequestBaseUrl() {
-  const headerStore = await headers();
-  const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host");
-  const protocol = headerStore.get("x-forwarded-proto") ?? "http";
-
-  if (!host) {
-    return "http://localhost:3000";
-  }
-
-  return `${protocol}://${host}`;
-}
-
 export default async function PlayerDetailPage({
   params,
 }: PlayerDetailPageProps) {
@@ -142,20 +34,47 @@ export default async function PlayerDetailPage({
     notFound();
   }
 
-  const baseUrl = await getRequestBaseUrl();
-
-  const response = await fetch(`${baseUrl}/api/players/${id}`, {
-    cache: "no-store",
+  const player = await prisma.player.findUnique({
+    where: { id },
+    include: {
+      participants: {
+        orderBy: {
+          game: {
+            series: {
+              matchDate: "desc",
+            },
+          },
+        },
+        include: {
+          champion: true,
+          game: {
+            include: {
+              series: {
+                include: {
+                  season: true,
+                },
+              },
+            },
+          },
+        },
+      },
+      riotSnapshot: {
+        include: {
+          champions: {
+            orderBy: [
+              { games: "desc" },
+              { winRate: "desc" },
+              { championName: "asc" },
+            ],
+          },
+        },
+      },
+    },
   });
 
-  if (!response.ok) {
+  if (!player) {
     notFound();
   }
-
-  const player = (await response.json()) as PlayerApiResponse;
-
-  const riotOverview = player.riotOverview;
-  const championSummary = riotOverview?.championSummary ?? [];
 
   const totalGames = player.participants.length;
   const wins = player.participants.filter(
@@ -183,6 +102,9 @@ export default async function PlayerDetailPage({
         ? "Perfect"
         : ((totalKills + totalAssists) / totalDeaths).toFixed(2)
       : "0.00";
+
+  const riotSnapshot = player.riotSnapshot;
+  const championSummary = riotSnapshot?.champions ?? [];
 
   return (
     <div className="page-shell">
@@ -268,30 +190,41 @@ export default async function PlayerDetailPage({
       <section className="content-section">
         <div className="section-header">
           <h2>Riot 정보</h2>
+          <RiotRefreshButton playerId={player.id} />
         </div>
 
-        {riotOverview?.success ? (
+        {riotSnapshot ? (
           <>
             <div className="info-grid">
               <div className="info-card">
                 <span className="info-card__label">Riot ID</span>
                 <strong className="info-card__value">
-                  {riotOverview.account?.gameName}#
-                  {riotOverview.account?.tagLine}
+                  {riotSnapshot.gameName && riotSnapshot.tagLine
+                    ? `${riotSnapshot.gameName}#${riotSnapshot.tagLine}`
+                    : "저장된 정보 없음"}
                 </strong>
               </div>
 
               <div className="info-card">
                 <span className="info-card__label">소환사 레벨</span>
                 <strong className="info-card__value">
-                  {riotOverview.summoner?.level ?? "-"}
+                  {riotSnapshot.summonerLevel ?? "-"}
                 </strong>
               </div>
 
               <div className="info-card">
                 <span className="info-card__label">분석 경기 수</span>
                 <strong className="info-card__value">
-                  {riotOverview.totalAnalyzedMatches ?? 0}
+                  {riotSnapshot.totalAnalyzedMatches}
+                </strong>
+              </div>
+
+              <div className="info-card">
+                <span className="info-card__label">마지막 갱신</span>
+                <strong className="info-card__value">
+                  {riotSnapshot.lastRefreshedAt
+                    ? formatDateTime(riotSnapshot.lastRefreshedAt)
+                    : "-"}
                 </strong>
               </div>
             </div>
@@ -300,17 +233,17 @@ export default async function PlayerDetailPage({
               <article className="stat-card">
                 <span className="stat-card__label">솔로랭크</span>
                 <strong className="stat-card__value">
-                  {riotOverview.soloRank
-                    ? `${riotOverview.soloRank.tier} ${riotOverview.soloRank.rank} ${riotOverview.soloRank.leaguePoints}LP`
+                  {riotSnapshot.soloTier && riotSnapshot.soloRank
+                    ? `${riotSnapshot.soloTier} ${riotSnapshot.soloRank} ${riotSnapshot.soloLp ?? 0}LP`
                     : "기록 없음"}
                 </strong>
-                {riotOverview.soloRank ? (
+                {riotSnapshot.soloTier && riotSnapshot.soloRank ? (
                   <span className="stat-card__sub">
-                    {riotOverview.soloRank.wins}승 {riotOverview.soloRank.losses}
+                    {riotSnapshot.soloWins ?? 0}승 {riotSnapshot.soloLosses ?? 0}
                     패 ·{" "}
                     {formatWinRate(
-                      riotOverview.soloRank.wins,
-                      riotOverview.soloRank.losses
+                      riotSnapshot.soloWins ?? 0,
+                      riotSnapshot.soloLosses ?? 0
                     )}
                     %
                   </span>
@@ -320,17 +253,17 @@ export default async function PlayerDetailPage({
               <article className="stat-card">
                 <span className="stat-card__label">자유랭크</span>
                 <strong className="stat-card__value">
-                  {riotOverview.flexRank
-                    ? `${riotOverview.flexRank.tier} ${riotOverview.flexRank.rank} ${riotOverview.flexRank.leaguePoints}LP`
+                  {riotSnapshot.flexTier && riotSnapshot.flexRank
+                    ? `${riotSnapshot.flexTier} ${riotSnapshot.flexRank} ${riotSnapshot.flexLp ?? 0}LP`
                     : "기록 없음"}
                 </strong>
-                {riotOverview.flexRank ? (
+                {riotSnapshot.flexTier && riotSnapshot.flexRank ? (
                   <span className="stat-card__sub">
-                    {riotOverview.flexRank.wins}승 {riotOverview.flexRank.losses}
+                    {riotSnapshot.flexWins ?? 0}승 {riotSnapshot.flexLosses ?? 0}
                     패 ·{" "}
                     {formatWinRate(
-                      riotOverview.flexRank.wins,
-                      riotOverview.flexRank.losses
+                      riotSnapshot.flexWins ?? 0,
+                      riotSnapshot.flexLosses ?? 0
                     )}
                     %
                   </span>
@@ -340,7 +273,7 @@ export default async function PlayerDetailPage({
           </>
         ) : (
           <div className="empty-box">
-            {riotOverview?.message ?? "Riot 정보를 불러오지 못했습니다."}
+            저장된 Riot 집계 데이터가 없습니다.
           </div>
         )}
       </section>
@@ -350,7 +283,7 @@ export default async function PlayerDetailPage({
           <h2>Riot 챔피언 집계</h2>
         </div>
 
-        {riotOverview?.success ? (
+        {riotSnapshot ? (
           championSummary.length > 0 ? (
             <div className="champion-summary-list">
               <div className="champion-summary-list__head">
@@ -361,10 +294,7 @@ export default async function PlayerDetailPage({
               </div>
 
               {championSummary.map((champion) => (
-                <article
-                  key={champion.championKey}
-                  className="champion-summary-row"
-                >
+                <article key={champion.id} className="champion-summary-row">
                   <div className="champion-summary-row__champion">
                     {champion.championImageUrl ? (
                       <Image
@@ -385,7 +315,7 @@ export default async function PlayerDetailPage({
                   </div>
 
                   <div className="champion-summary-row__metric">
-                    {champion.kda}
+                    {champion.kda ?? "0.00"}
                   </div>
 
                   <div className="champion-summary-row__metric">
@@ -399,7 +329,7 @@ export default async function PlayerDetailPage({
           )
         ) : (
           <div className="empty-box">
-            {riotOverview?.message ?? "Riot 챔피언 집계를 불러오지 못했습니다."}
+            저장된 Riot 챔피언 집계 데이터가 없습니다.
           </div>
         )}
       </section>
