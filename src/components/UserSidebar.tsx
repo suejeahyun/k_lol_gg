@@ -15,6 +15,9 @@ export default function UserSidebar() {
         <Link href="/matches" className="app-sidebar__link">
           내전 목록 / 검색
         </Link>
+        <Link href="/players/balance" className="app-sidebar__link">
+          팀 밸런스
+        </Link>
         <Link href="/rankings" className="app-sidebar__link">
           랭킹
         </Link>
