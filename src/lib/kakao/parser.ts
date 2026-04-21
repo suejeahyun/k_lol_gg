@@ -35,15 +35,29 @@ export function parseNicknameTag(input: string): KakaoPlayerSearchInput {
   };
 }
 
-export function extractKakaoUtterance(body: unknown): string {
-  if (!body || typeof body !== "object") return "";
+type KakaoRequestBody = {
+  userRequest?: {
+    utterance?: string;
+  };
+  action?: {
+    params?: {
+      query?: string;
+    };
+  };
+  query?: string;
+};
 
-  const safeBody = body as Record<string, any>;
+export function extractKakaoUtterance(body: unknown): string {
+  if (!body || typeof body !== "object") {
+    return "";
+  }
+
+  const safeBody = body as KakaoRequestBody;
 
   const utterance =
-    safeBody?.userRequest?.utterance ??
-    safeBody?.action?.params?.query ??
-    safeBody?.query ??
+    safeBody.userRequest?.utterance ??
+    safeBody.action?.params?.query ??
+    safeBody.query ??
     "";
 
   return typeof utterance === "string" ? utterance.trim() : "";
