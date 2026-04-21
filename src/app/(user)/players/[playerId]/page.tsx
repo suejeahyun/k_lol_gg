@@ -168,71 +168,60 @@ export default async function PlayerDetailPage({
 
       <section className="content-section">
         <div className="section-header">
-          <h2>최근 경기</h2>
+          <h2>내전 최근 기록</h2>
         </div>
 
         {player.participants.length === 0 ? (
-          <div className="empty-state">아직 등록된 경기 데이터가 없습니다.</div>
+          <div className="empty-box">등록된 내전 기록이 없습니다.</div>
         ) : (
-          <div className="table-card">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>날짜</th>
-                  <th>시즌</th>
-                  <th>내전명</th>
-                  <th>세트</th>
-                  <th>팀</th>
-                  <th>포지션</th>
-                  <th>챔피언</th>
-                  <th>K / D / A</th>
-                  <th>CS</th>
-                  <th>골드</th>
-                  <th>결과</th>
-                </tr>
-              </thead>
-              <tbody>
-                {player.participants.slice(0, 10).map((participant) => {
-                  const isWin = participant.game.winnerTeam === participant.team;
+          <div className="match-list">
+            {player.participants.map((participant) => {
+              const isWin = participant.game.winnerTeam === participant.team;
 
-                  return (
-                    <tr key={participant.id}>
-                      <td>{formatDateTime(participant.game.series.matchDate)}</td>
-                      <td>{participant.game.series.season.name}</td>
-                      <td>{participant.game.series.title}</td>
-                      <td>{participant.game.gameNumber}세트</td>
-                      <td>{participant.team}</td>
-                      <td>{participant.position}</td>
-                      <td>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 8,
-                          }}
-                        >
-                          <Image
-                            src={participant.champion.imageUrl}
-                            alt={participant.champion.name}
-                            width={28}
-                            height={28}
-                            style={{ borderRadius: 6 }}
-                          />
-                          <span>{participant.champion.name}</span>
-                        </div>
-                      </td>
-                      <td>
+              return (
+                <article
+                  key={participant.id}
+                  className={`match-card ${
+                    isWin ? "match-card--win" : "match-card--loss"
+                  }`}
+                >
+                  <div className="match-card__top">
+                    <div>
+                      <strong className="match-card__queue">
+                        {participant.game.series.title}
+                      </strong>
+                      <p className="match-card__date">
+                        {formatDateTime(participant.game.series.matchDate)}
+                      </p>
+                    </div>
+
+                    <div className="match-card__result">
+                      <span>{isWin ? "승리" : "패배"}</span>
+                      <span>세트 {participant.game.gameNumber}</span>
+                    </div>
+                  </div>
+
+                  <div className="match-card__body">
+                    <div className="match-card__champion">
+                      <strong>{participant.champion.name}</strong>
+                      <span>{participant.position}</span>
+                    </div>
+
+                    <div className="match-card__score">
+                      <strong>
                         {participant.kills} / {participant.deaths} /{" "}
                         {participant.assists}
-                      </td>
-                      <td>{participant.cs}</td>
-                      <td>{participant.gold}</td>
-                      <td>{isWin ? "승" : "패"}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                      </strong>
+                      <span>팀 {participant.team}</span>
+                    </div>
+
+                    <div className="match-card__damage">
+                      <span>시즌 {participant.game.series.season.name}</span>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         )}
       </section>
