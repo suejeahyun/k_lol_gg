@@ -33,7 +33,6 @@ model Player {
   championStats PlayerChampionStat[]
   positionStats PlayerPositionStat[]
   seasonResults SeasonResult[]
-  riotSnapshot  PlayerRiotSnapshot?
 }
 
 model Champion {
@@ -153,61 +152,4 @@ model AdminLog {
   action    String
   target    String
   createdAt DateTime @default(now())
-}
-
-model PlayerRiotSnapshot {
-  id                   Int      @id @default(autoincrement())
-  playerId             Int      @unique
-  puuid                String?
-  summonerId           String?
-  gameName             String?
-  tagLine              String?
-  summonerLevel        Int?
-  soloTier             String?
-  soloRank             String?
-  soloLp               Int?
-  soloWins             Int?
-  soloLosses           Int?
-  soloWinRate          Int?
-  flexTier             String?
-  flexRank             String?
-  flexLp               Int?
-  flexWins             Int?
-  flexLosses           Int?
-  flexWinRate          Int?
-  totalAnalyzedMatches Int      @default(0)
-  lastRefreshedAt      DateTime?
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-
-  player    Player                       @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  champions PlayerRiotChampionSnapshot[]
-}
-
-model PlayerRiotChampionSnapshot {
-  id                        Int      @id @default(autoincrement())
-  snapshotId                Int
-  championKey               String
-  championName              String
-  championImageUrl          String?
-  games                     Int      @default(0)
-  wins                      Int      @default(0)
-  losses                    Int      @default(0)
-  winRate                   Int      @default(0)
-  totalKills                Int      @default(0)
-  totalDeaths               Int      @default(0)
-  totalAssists              Int      @default(0)
-  avgKills                  Float    @default(0)
-  avgDeaths                 Float    @default(0)
-  avgAssists                Float    @default(0)
-  kda                       String?
-  avgDamageDealtToChampions Int      @default(0)
-  avgDamageTaken            Int      @default(0)
-  createdAt                 DateTime @default(now())
-  updatedAt                 DateTime @updatedAt
-
-  snapshot PlayerRiotSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
-
-  @@index([snapshotId])
-  @@unique([snapshotId, championKey])
 }
