@@ -162,8 +162,6 @@ export async function POST(req: Request) {
                 kills: participant.kills,
                 deaths: participant.deaths,
                 assists: participant.assists,
-                cs: 0,
-                gold: 0,
               })),
             },
           })),

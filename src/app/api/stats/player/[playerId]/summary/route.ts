@@ -125,11 +125,6 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
       0
     );
 
-    const totalGold = records.reduce(
-      (sum: number, record: (typeof records)[number]) => sum + record.gold,
-      0
-    );
-
     const winRate =
       totalGames > 0 ? Number(((wins / totalGames) * 100).toFixed(1)) : 0;
 
@@ -138,7 +133,6 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
         ? Number((totalKills + totalAssists).toFixed(2))
         : Number(((totalKills + totalAssists) / totalDeaths).toFixed(2));
 
-    const avgGold = totalGames > 0 ? Math.round(totalGold / totalGames) : 0;
 
     const mostChampions = championStatsRaw.map(
       (item: (typeof championStatsRaw)[number]) => {
@@ -171,7 +165,6 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
         losses,
         winRate,
         kda,
-        avgGold,
       },
       mostChampions,
     });

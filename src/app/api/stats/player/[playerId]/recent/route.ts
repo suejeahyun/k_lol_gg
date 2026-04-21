@@ -76,8 +76,6 @@ export async function GET(
         kills: participant.kills,
         deaths: participant.deaths,
         assists: participant.assists,
-        cs: participant.cs,
-        gold: participant.gold,
         champion: {
           id: participant.champion.id,
           name: participant.champion.name,

@@ -152,8 +152,6 @@ export default async function MatchDetailPage({ params }: PageProps) {
               <div>챔피언</div>
               <div>결과</div>
               <div>KDA</div>
-              <div>CS</div>
-              <div>골드</div>
             </div>
 
             <div className="card-grid">
@@ -172,8 +170,6 @@ export default async function MatchDetailPage({ params }: PageProps) {
                       {participant.kills}/{participant.deaths}/
                       {participant.assists}
                     </div>
-                    <div>{participant.cs}</div>
-                    <div>{participant.gold}</div>
                   </div>
                 )
               )}

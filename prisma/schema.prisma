@@ -89,8 +89,6 @@ model MatchParticipant {
   kills   Int
   deaths  Int
   assists Int
-  cs      Int
-  gold    Int
 
   game     MatchGame @relation(fields: [gameId], references: [id])
   player   Player    @relation(fields: [playerId], references: [id])
