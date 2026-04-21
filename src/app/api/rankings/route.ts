@@ -36,7 +36,6 @@ export async function GET(req: NextRequest) {
             kills: true,
             deaths: true,
             assists: true,
-            gold: true,
             team: true,
             game: {
               select: {
@@ -76,12 +75,6 @@ export async function GET(req: NextRequest) {
         0
       );
 
-      const totalGold = player.participants.reduce(
-        (sum: number, participant: (typeof player.participants)[number]) =>
-          sum + participant.gold,
-        0
-      );
-
       const winRate =
         totalGames > 0 ? Number(((wins / totalGames) * 100).toFixed(1)) : 0;
 
@@ -90,7 +83,6 @@ export async function GET(req: NextRequest) {
           ? Number((totalKills + totalAssists).toFixed(2))
           : Number(((totalKills + totalAssists) / totalDeaths).toFixed(2));
 
-      const avgGold = totalGames > 0 ? Math.round(totalGold / totalGames) : 0;
 
       return {
         playerId: player.id,
@@ -102,7 +94,6 @@ export async function GET(req: NextRequest) {
         losses,
         winRate,
         kda,
-        avgGold,
       };
     });
 
@@ -116,7 +107,6 @@ export async function GET(req: NextRequest) {
           if (b.winRate !== a.winRate) return b.winRate - a.winRate;
           if (b.wins !== a.wins) return b.wins - a.wins;
           if (b.kda !== a.kda) return b.kda - a.kda;
-          if (b.avgGold !== a.avgGold) return b.avgGold - a.avgGold;
           return a.playerId - b.playerId;
         }
       );
