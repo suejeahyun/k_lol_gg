@@ -29,11 +29,10 @@ type RankingApiResponse = {
     losses: number;
     winRate: number;
     kda: number;
-    avgGold: number;
   }>;
 };
 
-type SortType = "name" | "totalGames" | "winRate" | "kda" | "avgGold";
+type SortType = "name" | "totalGames" | "winRate" | "kda" ;
 type OrderType = "asc" | "desc";
 
 const PAGE_SIZE = 10;
@@ -42,8 +41,7 @@ function getSort(sort?: string): SortType {
   if (
     sort === "name" ||
     sort === "totalGames" ||
-    sort === "kda" ||
-    sort === "avgGold"
+    sort === "kda"
   ) {
     return sort;
   }
@@ -94,7 +92,6 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
     if (sort === "totalGames") result = a.totalGames - b.totalGames;
     if (sort === "winRate") result = a.winRate - b.winRate;
     if (sort === "kda") result = a.kda - b.kda;
-    if (sort === "avgGold") result = a.avgGold - b.avgGold;
 
     return order === "asc" ? result : -result;
   });
@@ -142,7 +139,6 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
               <Link href={sortLink("totalGames")}>총 경기</Link>
               <Link href={sortLink("winRate")}>승률</Link>
               <Link href={sortLink("kda")}>KDA</Link>
-              <Link href={sortLink("avgGold")}>골드</Link>
             </div>
 
             <div className="card-grid">
@@ -163,7 +159,6 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
                     <div className="ranking-col">{player.totalGames}</div>
                     <div className="ranking-col">{player.winRate}%</div>
                     <div className="ranking-col">{player.kda}</div>
-                    <div className="ranking-col">{player.avgGold}</div>
                   </div>
                 </Link>
               ))}
