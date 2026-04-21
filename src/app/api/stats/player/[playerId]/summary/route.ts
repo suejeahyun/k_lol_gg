@@ -44,7 +44,6 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
         kills: true,
         deaths: true,
         assists: true,
-        gold: true,
         team: true,
         championId: true,
         game: {
