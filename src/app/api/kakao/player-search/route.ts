@@ -1,42 +1,19 @@
-import { NextRequest, NextResponse } from "next/server";
-import { extractKakaoUtterance, parseNicknameTag } from "@/lib/kakao/parser";
-import {
-  createKakaoErrorResponse,
-  createKakaoPlayerSummaryResponse,
-} from "@/lib/kakao/response";
-import { getPlayerSummaryByRiotId } from "@/lib/stats/getPlayerSummaryByRiotId";
+import { NextResponse } from "next/server";
 
-export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json().catch(() => null);
-    console.log("[KAKAO_REQUEST_BODY]", JSON.stringify(body));
-
-    const utterance = extractKakaoUtterance(body);
-    console.log("[KAKAO_UTTERANCE]", utterance);
-
-    const { nickname, tag } = parseNicknameTag(utterance);
-    const summary = await getPlayerSummaryByRiotId(nickname, tag);
-
-    if (!summary) {
-      return NextResponse.json(
-        createKakaoErrorResponse(
-          `해당 플레이어를 찾을 수 없습니다.\n입력값: ${nickname}#${tag}`
-        ),
-        { status: 200 }
-      );
-    }
-
-    return NextResponse.json(createKakaoPlayerSummaryResponse(summary), {
-      status: 200,
-    });
-  } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : "조회 중 오류가 발생했습니다.";
-
-    return NextResponse.json(createKakaoErrorResponse(message), {
-      status: 200,
-    });
-  }
+export async function POST() {
+  return NextResponse.json(
+    {
+      version: "2.0",
+      template: {
+        outputs: [
+          {
+            simpleText: {
+              text: "K-LOL 스킬 연결 테스트 성공",
+            },
+          },
+        ],
+      },
+    },
+    { status: 200 }
+  );
 }
