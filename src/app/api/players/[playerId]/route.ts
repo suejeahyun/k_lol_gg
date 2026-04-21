@@ -32,117 +32,6 @@ function isValidTierValue(value?: string | null) {
   return basicRegex.test(tier) || masterRegex.test(tier) || highRegex.test(tier);
 }
 
-function toRiotOverview(
-  snapshot: {
-    puuid: string | null;
-    summonerId: string | null;
-    gameName: string | null;
-    tagLine: string | null;
-    summonerLevel: number | null;
-    soloTier: string | null;
-    soloRank: string | null;
-    soloLp: number | null;
-    soloWins: number | null;
-    soloLosses: number | null;
-    soloWinRate: number | null;
-    flexTier: string | null;
-    flexRank: string | null;
-    flexLp: number | null;
-    flexWins: number | null;
-    flexLosses: number | null;
-    flexWinRate: number | null;
-    totalAnalyzedMatches: number;
-    lastRefreshedAt: Date | null;
-    champions: Array<{
-      championKey: string;
-      championName: string;
-      championImageUrl: string | null;
-      games: number;
-      wins: number;
-      losses: number;
-      winRate: number;
-      totalKills: number;
-      totalDeaths: number;
-      totalAssists: number;
-      avgKills: number;
-      avgDeaths: number;
-      avgAssists: number;
-      kda: string | null;
-      avgDamageDealtToChampions: number;
-      avgDamageTaken: number;
-    }>;
-  } | null) {
-  if (!snapshot) {
-    return {
-      success: false,
-      message: "저장된 Riot 집계 데이터가 없습니다.",
-      lastRefreshedAt: null,
-      championSummary: [],
-      totalAnalyzedMatches: 0,
-    };
-  }
-
-  return {
-    success: true,
-    message: undefined,
-    account:
-      snapshot.puuid && snapshot.gameName && snapshot.tagLine
-        ? {
-            puuid: snapshot.puuid,
-            gameName: snapshot.gameName,
-            tagLine: snapshot.tagLine,
-          }
-        : null,
-    summoner:
-      snapshot.summonerId || snapshot.summonerLevel !== null
-        ? {
-            id: snapshot.summonerId ?? undefined,
-            level: snapshot.summonerLevel ?? 0,
-          }
-        : null,
-    soloRank: snapshot.soloTier && snapshot.soloRank
-      ? {
-          tier: snapshot.soloTier,
-          rank: snapshot.soloRank,
-          leaguePoints: snapshot.soloLp ?? 0,
-          wins: snapshot.soloWins ?? 0,
-          losses: snapshot.soloLosses ?? 0,
-          winRate: snapshot.soloWinRate ?? 0,
-        }
-      : null,
-    flexRank: snapshot.flexTier && snapshot.flexRank
-      ? {
-          tier: snapshot.flexTier,
-          rank: snapshot.flexRank,
-          leaguePoints: snapshot.flexLp ?? 0,
-          wins: snapshot.flexWins ?? 0,
-          losses: snapshot.flexLosses ?? 0,
-          winRate: snapshot.flexWinRate ?? 0,
-        }
-      : null,
-    championSummary: snapshot.champions.map((champion) => ({
-      championKey: champion.championKey,
-      championName: champion.championName,
-      championImageUrl: champion.championImageUrl,
-      games: champion.games,
-      wins: champion.wins,
-      losses: champion.losses,
-      winRate: champion.winRate,
-      totalKills: champion.totalKills,
-      totalDeaths: champion.totalDeaths,
-      totalAssists: champion.totalAssists,
-      avgKills: champion.avgKills,
-      avgDeaths: champion.avgDeaths,
-      avgAssists: champion.avgAssists,
-      kda: champion.kda ?? "0.00",
-      avgDamageDealtToChampions: champion.avgDamageDealtToChampions,
-      avgDamageTaken: champion.avgDamageTaken,
-    })),
-    totalAnalyzedMatches: snapshot.totalAnalyzedMatches,
-    lastRefreshedAt: snapshot.lastRefreshedAt?.toISOString() ?? null,
-  };
-}
-
 export async function GET(_request: NextRequest, context: RouteContext) {
   try {
     const { playerId } = await context.params;
@@ -179,17 +68,6 @@ export async function GET(_request: NextRequest, context: RouteContext) {
             },
           },
         },
-        riotSnapshot: {
-          include: {
-            champions: {
-              orderBy: [
-                { games: "desc" },
-                { winRate: "desc" },
-                { championName: "asc" },
-              ],
-            },
-          },
-        },
       },
     });
 
@@ -200,12 +78,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
       );
     }
 
-    const riotOverview = toRiotOverview(player.riotSnapshot);
-
-    return NextResponse.json({
-      ...player,
-      riotOverview,
-    });
+    return NextResponse.json(player);
   } catch (error) {
     console.error("[PLAYER_DETAIL_GET_ERROR]", error);
 
@@ -279,25 +152,9 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         peakTier,
         currentTier,
       },
-      include: {
-        riotSnapshot: {
-          include: {
-            champions: {
-              orderBy: [
-                { games: "desc" },
-                { winRate: "desc" },
-                { championName: "asc" },
-              ],
-            },
-          },
-        },
-      },
     });
 
-    return NextResponse.json({
-      ...updatedPlayer,
-      riotOverview: toRiotOverview(updatedPlayer.riotSnapshot),
-    });
+    return NextResponse.json(updatedPlayer);
   } catch (error) {
     console.error("[PLAYER_DETAIL_PATCH_ERROR]", error);
 
