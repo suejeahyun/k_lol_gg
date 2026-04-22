@@ -2953,3 +2953,14 @@ grid-template-columns:
     font-size: 26px;
   }
 }
+.balance-position-button--main {
+  background: #111;
+  color: #fff;
+  border-color: #111;
+}
+
+.balance-position-button--sub {
+  background: #e5e7eb;
+  color: #111;
+  border-color: #d1d5db;
+}

@@ -102,6 +102,18 @@ function parseTierValue(value?: string | null): {
   };
 }
 
+async function parseResponse<T>(res: Response): Promise<T | null> {
+  const text = await res.text();
+
+  if (!text) return null;
+
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    return null;
+  }
+}
+
 export default function AdminPlayersPage() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
@@ -130,11 +142,21 @@ export default function AdminPlayersPage() {
         cache: "no-store",
       });
 
-      const data = (await res.json()) as Player[];
-      setPlayers(data);
+      const data = await parseResponse<Player[] | { message?: string }>(res);
+
+      if (!res.ok) {
+        const message =
+          data && !Array.isArray(data) ? data.message : "플레이어 목록 조회에 실패했습니다.";
+        alert(message);
+        setPlayers([]);
+        return;
+      }
+
+      setPlayers(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("플레이어 목록 조회 실패:", error);
       alert("플레이어 목록 조회에 실패했습니다.");
+      setPlayers([]);
     } finally {
       setLoading(false);
     }
@@ -175,7 +197,7 @@ export default function AdminPlayersPage() {
       };
 
       const url = editingId ? `/api/players/${editingId}` : "/api/players";
-      const method = editingId ? "PUT" : "POST";
+      const method = editingId ? "PATCH" : "POST";
 
       const res = await fetch(url, {
         method,
@@ -185,15 +207,16 @@ export default function AdminPlayersPage() {
         body: JSON.stringify(payload),
       });
 
-      const result = await res.json();
+      const result = await parseResponse<{ message?: string }>(res);
 
       if (!res.ok) {
-        alert(result.message ?? "저장에 실패했습니다.");
+        alert(result?.message ?? "저장에 실패했습니다.");
         return;
       }
 
       resetForm();
       await fetchPlayers();
+      alert(result?.message ?? (editingId ? "플레이어가 수정되었습니다." : "플레이어가 등록되었습니다."));
     } catch (error) {
       console.error("플레이어 저장 실패:", error);
       alert("플레이어 저장 중 오류가 발생했습니다.");
@@ -231,10 +254,10 @@ export default function AdminPlayersPage() {
         method: "DELETE",
       });
 
-      const result = await res.json();
+      const result = await parseResponse<{ message?: string }>(res);
 
       if (!res.ok) {
-        alert(result.message ?? "삭제에 실패했습니다.");
+        alert(result?.message ?? "삭제에 실패했습니다.");
         return;
       }
 
@@ -243,6 +266,7 @@ export default function AdminPlayersPage() {
       }
 
       await fetchPlayers();
+      alert(result?.message ?? "플레이어가 삭제되었습니다.");
     } catch (error) {
       console.error("플레이어 삭제 실패:", error);
       alert("플레이어 삭제 중 오류가 발생했습니다.");

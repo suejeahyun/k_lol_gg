@@ -39,7 +39,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 
     if (!Number.isInteger(id)) {
       return NextResponse.json(
-        { error: "유효하지 않은 playerId 입니다." },
+        { message: "유효하지 않은 playerId 입니다." },
         { status: 400 }
       );
     }
@@ -73,7 +73,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 
     if (!player) {
       return NextResponse.json(
-        { error: "플레이어를 찾을 수 없습니다." },
+        { message: "플레이어를 찾을 수 없습니다." },
         { status: 404 }
       );
     }
@@ -83,7 +83,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
     console.error("[PLAYER_DETAIL_GET_ERROR]", error);
 
     return NextResponse.json(
-      { error: "플레이어 상세 조회 중 오류가 발생했습니다." },
+      { message: "플레이어 상세 조회 중 오류가 발생했습니다." },
       { status: 500 }
     );
   }
@@ -96,8 +96,19 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     if (!Number.isInteger(id)) {
       return NextResponse.json(
-        { error: "유효하지 않은 playerId 입니다." },
+        { message: "유효하지 않은 playerId 입니다." },
         { status: 400 }
+      );
+    }
+
+    const player = await prisma.player.findUnique({
+      where: { id },
+    });
+
+    if (!player) {
+      return NextResponse.json(
+        { message: "플레이어를 찾을 수 없습니다." },
+        { status: 404 }
       );
     }
 
@@ -111,7 +122,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     if (!name || !nickname || !tag) {
       return NextResponse.json(
-        { error: "이름, 닉네임, 태그는 필수입니다." },
+        { message: "이름, 닉네임, 태그는 필수입니다." },
         { status: 400 }
       );
     }
@@ -119,7 +130,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     if (!isValidTierValue(peakTier) || !isValidTierValue(currentTier)) {
       return NextResponse.json(
         {
-          error:
+          message:
             "티어 형식이 올바르지 않습니다. 예: 브론즈 2, 에메랄드 1, 마스터 3층, 그랜드마스터 500",
         },
         { status: 400 }
@@ -138,7 +149,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     if (existing) {
       return NextResponse.json(
-        { error: "동일한 닉네임#태그를 가진 플레이어가 이미 존재합니다." },
+        { message: "동일한 닉네임#태그를 가진 플레이어가 이미 존재합니다." },
         { status: 409 }
       );
     }
@@ -154,12 +165,91 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       },
     });
 
-    return NextResponse.json(updatedPlayer);
+    return NextResponse.json({
+      message: "플레이어가 수정되었습니다.",
+      player: updatedPlayer,
+    });
   } catch (error) {
     console.error("[PLAYER_DETAIL_PATCH_ERROR]", error);
 
     return NextResponse.json(
-      { error: "플레이어 수정 중 오류가 발생했습니다." },
+      { message: "플레이어 수정 중 오류가 발생했습니다." },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(_request: NextRequest, context: RouteContext) {
+  try {
+    const { playerId } = await context.params;
+    const id = Number(playerId);
+
+    if (!Number.isInteger(id)) {
+      return NextResponse.json(
+        { message: "유효하지 않은 playerId 입니다." },
+        { status: 400 }
+      );
+    }
+
+    const player = await prisma.player.findUnique({
+      where: { id },
+      include: {
+        participants: {
+          select: { id: true },
+          take: 1,
+        },
+        seasonStats: {
+          select: { id: true },
+          take: 1,
+        },
+        championStats: {
+          select: { id: true },
+          take: 1,
+        },
+        positionStats: {
+          select: { id: true },
+          take: 1,
+        },
+        seasonResults: {
+          select: { id: true },
+          take: 1,
+        },
+      },
+    });
+
+    if (!player) {
+      return NextResponse.json(
+        { message: "플레이어를 찾을 수 없습니다." },
+        { status: 404 }
+      );
+    }
+
+    const hasRelatedData =
+      player.participants.length > 0 ||
+      player.seasonStats.length > 0 ||
+      player.championStats.length > 0 ||
+      player.positionStats.length > 0 ||
+      player.seasonResults.length > 0;
+
+    if (hasRelatedData) {
+      return NextResponse.json(
+        { message: "경기 또는 통계 데이터가 연결된 플레이어는 삭제할 수 없습니다." },
+        { status: 400 }
+      );
+    }
+
+    await prisma.player.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({
+      message: "플레이어가 삭제되었습니다.",
+    });
+  } catch (error) {
+    console.error("[PLAYER_DETAIL_DELETE_ERROR]", error);
+
+    return NextResponse.json(
+      { message: "플레이어 삭제 중 오류가 발생했습니다." },
       { status: 500 }
     );
   }

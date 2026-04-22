@@ -2,25 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 
 type CreatePlayerBody = {
-  name: string;
-  nickname: string;
-  tag: string;
+  name?: string;
+  nickname?: string;
+  tag?: string;
   peakTier?: string | null;
   currentTier?: string | null;
 };
-
-const BASIC_TIERS = [
-  "아이언",
-  "브론즈",
-  "실버",
-  "골드",
-  "플래티넘",
-  "에메랄드",
-  "다이아",
-] as const;
-
-const MASTER_TIERS = ["마스터"] as const;
-const HIGH_TIERS = ["그랜드마스터", "챌린저"] as const;
 
 function normalizeTier(value?: string | null) {
   const trimmed = value?.trim();
@@ -83,15 +70,35 @@ export async function POST(req: NextRequest) {
 
     if (!isValidTierValue(peakTier)) {
       return NextResponse.json(
-        { message: "최대 티어 형식이 올바르지 않습니다." },
+        {
+          message:
+            "최대 티어 형식이 올바르지 않습니다. 예: 브론즈 2, 에메랄드 1, 마스터 3층, 그랜드마스터 500",
+        },
         { status: 400 }
       );
     }
 
     if (!isValidTierValue(currentTier)) {
       return NextResponse.json(
-        { message: "현재 티어 형식이 올바르지 않습니다." },
+        {
+          message:
+            "현재 티어 형식이 올바르지 않습니다. 예: 브론즈 2, 에메랄드 1, 마스터 3층, 그랜드마스터 500",
+        },
         { status: 400 }
+      );
+    }
+
+    const existing = await prisma.player.findFirst({
+      where: {
+        nickname,
+        tag,
+      },
+    });
+
+    if (existing) {
+      return NextResponse.json(
+        { message: "동일한 닉네임#태그를 가진 플레이어가 이미 존재합니다." },
+        { status: 409 }
       );
     }
 
@@ -105,7 +112,13 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json(created, { status: 201 });
+    return NextResponse.json(
+      {
+        message: "플레이어가 등록되었습니다.",
+        player: created,
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("[PLAYER_CREATE_POST_ERROR]", error);
     return NextResponse.json(
