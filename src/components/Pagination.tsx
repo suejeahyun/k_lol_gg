@@ -14,20 +14,20 @@ type PaginationProps =
       currentPage: number;
       totalPages: number;
       basePath: string;
-      query?: Record<string, string>;
+      query?: Record<string, string | undefined>;
       onPageChange?: never;
     };
 
 function buildHref(
   basePath: string,
   page: number,
-  query?: Record<string, string>
+  query?: Record<string, string | undefined>
 ) {
   const params = new URLSearchParams();
 
   if (query) {
     Object.entries(query).forEach(([key, value]) => {
-      if (value?.trim()) {
+      if (typeof value === "string" && value.trim()) {
         params.set(key, value);
       }
     });
@@ -54,7 +54,13 @@ export default function Pagination(props: PaginationProps) {
     pages.push(page);
   }
 
-  const isCallbackMode = "onPageChange" in props;
+  const isCallbackMode = "onPageChange" in props && !!props.onPageChange;
+
+  const handlePageChange = (page: number) => {
+    if (isCallbackMode) {
+      props.onPageChange(page);
+    }
+  };
 
   const renderPageButton = (page: number, label?: string) => {
     const text = label ?? String(page);
@@ -64,11 +70,7 @@ export default function Pagination(props: PaginationProps) {
         <button
           key={`${text}-${page}`}
           type="button"
-          onClick={() => {
-          if ("onPageChange" in props && props.onPageChange) {
-            props.onPageChange(page);
-          }
-        }}
+          onClick={() => handlePageChange(page)}
           className="chip-button"
           style={{
             fontWeight: page === currentPage ? 700 : 400,
@@ -105,13 +107,13 @@ export default function Pagination(props: PaginationProps) {
         alignItems: "center",
       }}
     >
-      {currentPage > 1
-        ? renderPageButton(currentPage - 1, "이전")
-        : (
-          <button type="button" disabled className="chip-button">
-            이전
-          </button>
-        )}
+      {currentPage > 1 ? (
+        renderPageButton(currentPage - 1, "이전")
+      ) : (
+        <button type="button" disabled className="chip-button">
+          이전
+        </button>
+      )}
 
       {startPage > 1 && (
         <>
@@ -129,13 +131,13 @@ export default function Pagination(props: PaginationProps) {
         </>
       )}
 
-      {currentPage < totalPages
-        ? renderPageButton(currentPage + 1, "다음")
-        : (
-          <button type="button" disabled className="chip-button">
-            다음
-          </button>
-        )}
+      {currentPage < totalPages ? (
+        renderPageButton(currentPage + 1, "다음")
+      ) : (
+        <button type="button" disabled className="chip-button">
+          다음
+        </button>
+      )}
     </div>
   );
 }
