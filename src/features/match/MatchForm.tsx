@@ -213,6 +213,21 @@ function parseNonNegativeInt(value: string) {
   return Math.floor(parsed);
 }
 
+async function parseResponse<T>(response: Response): Promise<T | null> {
+  const text = await response.text();
+
+  if (!text) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(text) as T;
+  } catch (error) {
+    console.error("응답 JSON 파싱 실패:", error, text);
+    return null;
+  }
+}
+
 export default function MatchForm({
   mode,
   submitUrl,
@@ -480,10 +495,10 @@ export default function MatchForm({
         body: JSON.stringify(payload),
       });
 
-      const data = await response.json();
+      const data = await parseResponse<{ message?: string; id?: number }>(response);
 
       if (!response.ok) {
-        alert(data.message ?? "저장에 실패했습니다.");
+        alert(data?.message ?? "저장에 실패했습니다.");
         return;
       }
 
