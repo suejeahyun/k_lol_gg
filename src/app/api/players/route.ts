@@ -26,10 +26,40 @@ function isValidTierValue(value?: string | null) {
   return basicRegex.test(tier) || masterRegex.test(tier) || highRegex.test(tier);
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const pageParam = Number(request.nextUrl.searchParams.get("page") ?? "1");
+    const pageSizeParam = Number(
+      request.nextUrl.searchParams.get("pageSize") ?? "10"
+    );
+    const name = request.nextUrl.searchParams.get("name")?.trim() ?? "";
+
+    const page = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
+    const pageSize =
+      Number.isInteger(pageSizeParam) && pageSizeParam > 0 ? pageSizeParam : 10;
+
+    const where = name
+      ? {
+          name: {
+            contains: name,
+            mode: "insensitive" as const,
+          },
+        }
+      : undefined;
+
+    const totalCount = await prisma.player.count({
+      where,
+    });
+
+    const totalPages = Math.max(Math.ceil(totalCount / pageSize), 1);
+    const safePage = Math.min(page, totalPages);
+    const skip = (safePage - 1) * pageSize;
+
     const players = await prisma.player.findMany({
-      orderBy: { id: "desc" },
+      where,
+      orderBy: [{ id: "desc" }],
+      skip,
+      take: pageSize,
       select: {
         id: true,
         name: true,
@@ -41,7 +71,13 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json(players);
+    return NextResponse.json({
+      items: players,
+      totalCount,
+      currentPage: safePage,
+      totalPages,
+      pageSize,
+    });
   } catch (error) {
     console.error("[PLAYERS_GET_ERROR]", error);
     return NextResponse.json(

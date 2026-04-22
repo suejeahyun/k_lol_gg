@@ -1,56 +1,97 @@
-import Link from "next/link";
+"use client";
 
 type PaginationProps = {
   currentPage: number;
   totalPages: number;
-  basePath: string;
-  query?: Record<string, string | number | undefined>;
-  pageParamName?: string;
+  onPageChange: (page: number) => void;
 };
 
 export default function Pagination({
   currentPage,
   totalPages,
-  basePath,
-  query = {},
-  pageParamName = "page",
+  onPageChange,
 }: PaginationProps) {
   if (totalPages <= 1) {
     return null;
   }
 
-  const createHref = (page: number) => {
-    const params = new URLSearchParams();
+  const pages: number[] = [];
 
-    Object.entries(query).forEach(([key, value]) => {
-      if (value !== undefined && value !== "") {
-        params.set(key, String(value));
-      }
-    });
+  const startPage = Math.max(1, currentPage - 2);
+  const endPage = Math.min(totalPages, currentPage + 2);
 
-    params.set(pageParamName, String(page));
-
-    return `${basePath}?${params.toString()}`;
-  };
+  for (let page = startPage; page <= endPage; page += 1) {
+    pages.push(page);
+  }
 
   return (
-    <div style={{ display: "flex", gap: "8px", marginTop: "24px", flexWrap: "wrap" }}>
-      {currentPage > 1 && <Link href={createHref(currentPage - 1)}>이전</Link>}
+    <div
+      style={{
+        display: "flex",
+        gap: "8px",
+        marginTop: "24px",
+        flexWrap: "wrap",
+        alignItems: "center",
+      }}
+    >
+      <button
+        type="button"
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage <= 1}
+        className="chip-button"
+      >
+        이전
+      </button>
 
-      {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
-        <Link
+      {startPage > 1 && (
+        <>
+          <button
+            type="button"
+            onClick={() => onPageChange(1)}
+            className="chip-button"
+          >
+            1
+          </button>
+          {startPage > 2 && <span>...</span>}
+        </>
+      )}
+
+      {pages.map((page) => (
+        <button
           key={page}
-          href={createHref(page)}
+          type="button"
+          onClick={() => onPageChange(page)}
+          className="chip-button"
           style={{
             fontWeight: page === currentPage ? 700 : 400,
             textDecoration: page === currentPage ? "underline" : "none",
           }}
         >
           {page}
-        </Link>
+        </button>
       ))}
 
-      {currentPage < totalPages && <Link href={createHref(currentPage + 1)}>다음</Link>}
+      {endPage < totalPages && (
+        <>
+          {endPage < totalPages - 1 && <span>...</span>}
+          <button
+            type="button"
+            onClick={() => onPageChange(totalPages)}
+            className="chip-button"
+          >
+            {totalPages}
+          </button>
+        </>
+      )}
+
+      <button
+        type="button"
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage >= totalPages}
+        className="chip-button"
+      >
+        다음
+      </button>
     </div>
   );
 }

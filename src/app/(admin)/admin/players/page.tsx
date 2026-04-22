@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Pagination from "@/components/Pagination";
 
 type Player = {
   id: number;
@@ -13,6 +14,14 @@ type Player = {
 };
 
 type TierType = "basic" | "master" | "high";
+
+type PlayersListResponse = {
+  items: Player[];
+  totalCount: number;
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
+};
 
 const BASIC_TIERS = [
   "아이언",
@@ -131,39 +140,70 @@ export default function AdminPlayersPage() {
   const [currentTier, setCurrentTier] = useState("");
   const [currentDetail, setCurrentDetail] = useState("");
 
+  const [searchNameInput, setSearchNameInput] = useState("");
+  const [searchName, setSearchName] = useState("");
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
   const peakType = useMemo(() => getTierType(peakTier), [peakTier]);
   const currentType = useMemo(() => getTierType(currentTier), [currentTier]);
 
-  async function fetchPlayers() {
+  async function fetchPlayers(page = 1, nameQuery = searchName) {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/players", {
+      const params = new URLSearchParams();
+      params.set("page", String(page));
+      params.set("pageSize", String(pageSize));
+
+      if (nameQuery.trim()) {
+        params.set("name", nameQuery.trim());
+      }
+
+      const res = await fetch(`/api/players?${params.toString()}`, {
         cache: "no-store",
       });
 
-      const data = await parseResponse<Player[] | { message?: string }>(res);
+      const data = await parseResponse<
+        PlayersListResponse | { message?: string }
+      >(res);
 
       if (!res.ok) {
         const message =
-          data && !Array.isArray(data) ? data.message : "플레이어 목록 조회에 실패했습니다.";
+          data && !Array.isArray(data) && "message" in data
+            ? data.message
+            : "플레이어 목록 조회에 실패했습니다.";
         alert(message);
         setPlayers([]);
+        setCurrentPage(1);
+        setTotalPages(1);
+        setTotalCount(0);
         return;
       }
 
-      setPlayers(Array.isArray(data) ? data : []);
+      const listData = data as PlayersListResponse;
+
+      setPlayers(Array.isArray(listData.items) ? listData.items : []);
+      setCurrentPage(listData.currentPage ?? 1);
+      setTotalPages(listData.totalPages ?? 1);
+      setTotalCount(listData.totalCount ?? 0);
     } catch (error) {
       console.error("플레이어 목록 조회 실패:", error);
       alert("플레이어 목록 조회에 실패했습니다.");
       setPlayers([]);
+      setCurrentPage(1);
+      setTotalPages(1);
+      setTotalCount(0);
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    fetchPlayers();
+    fetchPlayers(1, "");
   }, []);
 
   function resetForm() {
@@ -215,8 +255,18 @@ export default function AdminPlayersPage() {
       }
 
       resetForm();
-      await fetchPlayers();
-      alert(result?.message ?? (editingId ? "플레이어가 수정되었습니다." : "플레이어가 등록되었습니다."));
+
+      const targetPage =
+        editingId && currentPage > totalPages ? totalPages : currentPage;
+
+      await fetchPlayers(targetPage, searchName);
+
+      alert(
+        result?.message ??
+          (editingId
+            ? "플레이어가 수정되었습니다."
+            : "플레이어가 등록되었습니다.")
+      );
     } catch (error) {
       console.error("플레이어 저장 실패:", error);
       alert("플레이어 저장 중 오류가 발생했습니다.");
@@ -265,12 +315,35 @@ export default function AdminPlayersPage() {
         resetForm();
       }
 
-      await fetchPlayers();
+      const nextTotalCount = Math.max(totalCount - 1, 0);
+      const nextTotalPages = Math.max(Math.ceil(nextTotalCount / pageSize), 1);
+      const nextPage = Math.min(currentPage, nextTotalPages);
+
+      await fetchPlayers(nextPage, searchName);
+
       alert(result?.message ?? "플레이어가 삭제되었습니다.");
     } catch (error) {
       console.error("플레이어 삭제 실패:", error);
       alert("플레이어 삭제 중 오류가 발생했습니다.");
     }
+  }
+
+  async function handleSearchSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const nextSearch = searchNameInput.trim();
+    setSearchName(nextSearch);
+    await fetchPlayers(1, nextSearch);
+  }
+
+  async function handleSearchReset() {
+    setSearchNameInput("");
+    setSearchName("");
+    await fetchPlayers(1, "");
+  }
+
+  async function handlePageChange(page: number) {
+    await fetchPlayers(page, searchName);
   }
 
   return (
@@ -456,16 +529,76 @@ export default function AdminPlayersPage() {
       </form>
 
       <section className="card">
-        <h2
+        <div
           style={{
-            margin: "0 0 16px",
-            fontSize: "20px",
-            fontWeight: 800,
-            color: "#000",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: "12px",
+            flexWrap: "wrap",
+            marginBottom: "16px",
           }}
         >
-          플레이어 목록
-        </h2>
+          <h2
+            style={{
+              margin: 0,
+              fontSize: "20px",
+              fontWeight: 800,
+              color: "#000",
+            }}
+          >
+            플레이어 목록
+          </h2>
+
+          <form
+            onSubmit={handleSearchSubmit}
+            style={{
+              display: "flex",
+              gap: "8px",
+              flexWrap: "wrap",
+              alignItems: "center",
+            }}
+          >
+            <input
+              value={searchNameInput}
+              onChange={(e) => setSearchNameInput(e.target.value)}
+              placeholder="이름으로 검색"
+              style={{
+                minWidth: "220px",
+                height: "40px",
+                padding: "0 12px",
+                border: "1px solid #d0d0d0",
+                borderRadius: "10px",
+              }}
+            />
+            <button
+              type="submit"
+              className="chip-button"
+              style={{ minWidth: "72px" }}
+            >
+              검색
+            </button>
+            <button
+              type="button"
+              className="chip-button"
+              onClick={handleSearchReset}
+              style={{ minWidth: "72px" }}
+            >
+              초기화
+            </button>
+          </form>
+        </div>
+
+        <div
+          style={{
+            marginBottom: "12px",
+            fontSize: "14px",
+            color: "#666",
+          }}
+        >
+          총 {totalCount}명
+          {searchName ? ` · 이름 검색: "${searchName}"` : ""}
+        </div>
 
         <div
           className="player-row-header admin-player-row-header"
@@ -483,44 +616,56 @@ export default function AdminPlayersPage() {
         {loading ? (
           <div style={{ padding: "16px 0" }}>불러오는 중...</div>
         ) : players.length === 0 ? (
-          <div style={{ padding: "16px 0" }}>등록된 플레이어가 없습니다.</div>
+          <div style={{ padding: "16px 0" }}>
+            {searchName
+              ? "검색된 플레이어가 없습니다."
+              : "등록된 플레이어가 없습니다."}
+          </div>
         ) : (
-          <div className="card-grid" style={{ marginTop: 12 }}>
-            {players.map((player) => (
-              <div key={player.id} className="admin-player-row-card">
-                <div
-                  className="admin-player-row-grid"
-                  style={{
-                    gridTemplateColumns: "1.2fr 1.2fr 1fr 1fr 1fr",
-                  }}
-                >
-                  <div className="player-col player-name">{player.name}</div>
-                  <div className="player-col">
-                    {player.nickname}#{player.tag}
-                  </div>
-                  <div className="player-col">{player.peakTier ?? "-"}</div>
-                  <div className="player-col">{player.currentTier ?? "-"}</div>
+          <>
+            <div className="card-grid" style={{ marginTop: 12 }}>
+              {players.map((player) => (
+                <div key={player.id} className="admin-player-row-card">
+                  <div
+                    className="admin-player-row-grid"
+                    style={{
+                      gridTemplateColumns: "1.2fr 1.2fr 1fr 1fr 1fr",
+                    }}
+                  >
+                    <div className="player-col player-name">{player.name}</div>
+                    <div className="player-col">
+                      {player.nickname}#{player.tag}
+                    </div>
+                    <div className="player-col">{player.peakTier ?? "-"}</div>
+                    <div className="player-col">{player.currentTier ?? "-"}</div>
 
-                  <div className="admin-player-actions">
-                    <button
-                      type="button"
-                      className="chip-button"
-                      onClick={() => handleEdit(player)}
-                    >
-                      수정
-                    </button>
-                    <button
-                      type="button"
-                      className="chip-button chip-button--danger"
-                      onClick={() => handleDelete(player.id)}
-                    >
-                      삭제
-                    </button>
+                    <div className="admin-player-actions">
+                      <button
+                        type="button"
+                        className="chip-button"
+                        onClick={() => handleEdit(player)}
+                      >
+                        수정
+                      </button>
+                      <button
+                        type="button"
+                        className="chip-button chip-button--danger"
+                        onClick={() => handleDelete(player.id)}
+                      >
+                        삭제
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </>
         )}
       </section>
     </main>
