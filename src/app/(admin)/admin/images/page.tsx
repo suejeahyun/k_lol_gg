@@ -58,7 +58,7 @@ export default async function AdminImagesPage() {
                 {/* 수정 버튼 */}
                 <Link
                   href={`/admin/images/${image.id}/edit`}
-                  className="gallery-admin-card__edit-button"
+                  className="chip-button"
                 >
                   수정
                 </Link>

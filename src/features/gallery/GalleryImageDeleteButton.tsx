@@ -45,7 +45,7 @@ export default function GalleryImageDeleteButton({
   return (
     <button
       type="button"
-      className="gallery-delete-button"
+      className="chip-button chip-button--danger"
       onClick={handleDelete}
       disabled={isDeleting}
     >

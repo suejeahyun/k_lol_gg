@@ -52,7 +52,7 @@ export default async function AdminNoticesPage() {
               <div className="notice-admin-card__actions">
                 <Link
                   href={`/admin/notices/${notice.id}/edit`}
-                  className="notice-admin-card__edit-button"
+                  className="chip-button"
                 >
                   수정
                 </Link>

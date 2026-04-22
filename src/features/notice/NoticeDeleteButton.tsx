@@ -45,7 +45,7 @@ export default function NoticeDeleteButton({
   return (
     <button
       type="button"
-      className="notice-delete-button"
+      className="chip-button chip-button--danger"
       onClick={handleDelete}
       disabled={isDeleting}
     >
