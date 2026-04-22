@@ -21,6 +21,9 @@ export default function UserSidebar() {
         <Link href="/rankings" className="app-sidebar__link">
           랭킹
         </Link>
+        <Link href="/notices" className="app-sidebar__link">
+          공지사항
+        </Link>
       </nav>
     </aside>
   );
