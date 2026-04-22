@@ -24,6 +24,9 @@ export default function UserSidebar() {
         <Link href="/notices" className="app-sidebar__link">
           공지사항
         </Link>
+        <Link href="/images" className="app-sidebar__link">
+          이미지
+        </Link>
       </nav>
     </aside>
   );

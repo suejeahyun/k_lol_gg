@@ -24,6 +24,9 @@ export default function AdminSidebar() {
         <Link href="/admin/notices" className="app-sidebar__link">
           공지사항 관리
         </Link>
+        <Link href="/admin/images" className="app-sidebar__link">
+          이미지 관리
+        </Link>
       </nav>
     </aside>
   );
