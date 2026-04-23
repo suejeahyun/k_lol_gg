@@ -10,7 +10,7 @@ type Props = {
   initialData?: {
     title: string;
     description: string;
-    imageUrls: string[];
+    imageUrl: string[];
   };
 };
 
@@ -26,29 +26,29 @@ export default function GalleryImageForm({
 
   const [title, setTitle] = useState(initialData?.title ?? "");
   const [description, setDescription] = useState(initialData?.description ?? "");
-  const [imageUrls, setImageUrls] = useState<string[]>(
-    initialData?.imageUrls?.length
-      ? initialData.imageUrls
+  const [imageUrl, setimageUrl] = useState<string[]>(
+    initialData?.imageUrl?.length
+      ? initialData.imageUrl
       : [""]
   );
   const [submitting, setSubmitting] = useState(false);
 
   const filledCount = useMemo(
-    () => imageUrls.map((url) => url.trim()).filter(Boolean).length,
-    [imageUrls]
+    () => imageUrl.map((url) => url.trim()).filter(Boolean).length,
+    [imageUrl]
   );
 
   const handleChangeImageUrl = (index: number, value: string) => {
-    setImageUrls((prev) => prev.map((item, i) => (i === index ? value : item)));
+    setimageUrl((prev) => prev.map((item, i) => (i === index ? value : item)));
   };
 
   const handleAddImageInput = () => {
-    if (imageUrls.length >= MAX_IMAGE_COUNT) return;
-    setImageUrls((prev) => [...prev, ""]);
+    if (imageUrl.length >= MAX_IMAGE_COUNT) return;
+    setimageUrl((prev) => [...prev, ""]);
   };
 
   const handleRemoveImageInput = (index: number) => {
-    setImageUrls((prev) => {
+    setimageUrl((prev) => {
       const next = prev.filter((_, i) => i !== index);
       return next.length > 0 ? next : [""];
     });
@@ -57,16 +57,16 @@ export default function GalleryImageForm({
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const normalizedImageUrls = imageUrls
+    const normalizedimageUrl = imageUrl
       .map((url) => url.trim())
       .filter(Boolean);
 
-    if (normalizedImageUrls.length === 0) {
+    if (normalizedimageUrl.length === 0) {
       alert("이미지를 최소 1개 이상 입력해주세요.");
       return;
     }
 
-    if (normalizedImageUrls.length > MAX_IMAGE_COUNT) {
+    if (normalizedimageUrl.length > MAX_IMAGE_COUNT) {
       alert("이미지는 최대 5개까지 등록할 수 있습니다.");
       return;
     }
@@ -82,7 +82,7 @@ export default function GalleryImageForm({
         body: JSON.stringify({
           title,
           description,
-          imageUrls: normalizedImageUrls,
+          imageUrl: normalizedimageUrl,
         }),
       });
 
@@ -138,7 +138,7 @@ export default function GalleryImageForm({
         </div>
 
         <div className="gallery-image-input-list">
-          {imageUrls.map((url, index) => (
+          {imageUrl.map((url, index) => (
             <div key={index} className="gallery-image-input-row">
               <input
                 type="text"
@@ -152,7 +152,7 @@ export default function GalleryImageForm({
                 type="button"
                 className="chip-button"
                 onClick={() => handleRemoveImageInput(index)}
-                disabled={imageUrls.length === 1}
+                disabled={imageUrl.length === 1}
               >
                 삭제
               </button>
@@ -160,7 +160,7 @@ export default function GalleryImageForm({
           ))}
         </div>
 
-        {imageUrls.length < MAX_IMAGE_COUNT && (
+        {imageUrl.length < MAX_IMAGE_COUNT && (
           <button
             type="button"
             className="admin-page__create-button"

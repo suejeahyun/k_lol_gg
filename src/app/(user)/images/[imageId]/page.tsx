@@ -25,6 +25,8 @@ export default async function ImageDetailPage({
     notFound();
   }
 
+  const imageList = Array.isArray(image.imageUrl) ? image.imageUrl : [];
+
   return (
     <div className="gallery-detail">
       <div className="gallery-detail__header">
@@ -36,11 +38,22 @@ export default async function ImageDetailPage({
       </div>
 
       <div className="gallery-detail__image-wrap">
-        <img
-          src={image.imageUrl}
-          alt={image.title}
-          className="gallery-detail__image"
-        />
+        {imageList.length > 0 ? (
+          <div className="gallery-detail__image-list">
+            {imageList.map((url, index) => (
+              <img
+                key={`${image.id}-${index}`}
+                src={url}
+                alt={`${image.title} ${index + 1}`}
+                className="gallery-detail__image"
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="gallery-detail__image-empty">
+            등록된 이미지가 없습니다.
+          </div>
+        )}
       </div>
 
       <div className="gallery-detail__content">
