@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma/client";
 type CreateGalleryImageBody = {
   title: string;
   description: string;
-  imageUrls: string[];
+  imageUrl: string[];
 };
 
 export async function GET() {
@@ -28,8 +28,8 @@ export async function POST(req: NextRequest) {
     const body = (await req.json()) as CreateGalleryImageBody;
     const title = body.title?.trim();
     const description = body.description?.trim();
-    const imageUrls = Array.isArray(body.imageUrls)
-      ? body.imageUrls.map((url) => url.trim()).filter(Boolean)
+    const imageUrl = Array.isArray(body.imageUrl)
+      ? body.imageUrl.map((url) => url.trim()).filter(Boolean)
       : [];
 
     if (!title) {
@@ -46,14 +46,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (imageUrls.length === 0) {
+    if (imageUrl.length === 0) {
       return NextResponse.json(
         { message: "이미지를 최소 1개 이상 입력해주세요." },
         { status: 400 }
       );
     }
 
-    if (imageUrls.length > 5) {
+    if (imageUrl.length > 5) {
       return NextResponse.json(
         { message: "이미지는 최대 5개까지 등록할 수 있습니다." },
         { status: 400 }
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
       data: {
         title,
         description,
-        imageUrl: imageUrls,
+        imageUrl,
       },
     });
 

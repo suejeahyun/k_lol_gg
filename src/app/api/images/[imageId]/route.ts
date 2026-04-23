@@ -10,7 +10,7 @@ type RouteContext = {
 type UpdateGalleryImageBody = {
   title: string;
   description: string;
-  imageUrls: string[];
+  imageUrl: string[];
 };
 
 export async function GET(_: NextRequest, context: RouteContext) {
@@ -61,8 +61,8 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     const body = (await req.json()) as UpdateGalleryImageBody;
     const title = body.title?.trim();
     const description = body.description?.trim();
-    const imageUrls = Array.isArray(body.imageUrls)
-      ? body.imageUrls.map((url) => url.trim()).filter(Boolean)
+    const imageUrl = Array.isArray(body.imageUrl)
+      ? body.imageUrl.map((url) => url.trim()).filter(Boolean)
       : [];
 
     if (!title) {
@@ -79,14 +79,14 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
       );
     }
 
-    if (imageUrls.length === 0) {
+    if (imageUrl.length === 0) {
       return NextResponse.json(
         { message: "이미지를 최소 1개 이상 입력해주세요." },
         { status: 400 }
       );
     }
 
-    if (imageUrls.length > 5) {
+    if (imageUrl.length > 5) {
       return NextResponse.json(
         { message: "이미지는 최대 5개까지 등록할 수 있습니다." },
         { status: 400 }
@@ -98,7 +98,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
       data: {
         title,
         description,
-        imageUrl: imageUrls,
+        imageUrl,
       },
     });
 

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
+import ImageSlider from "@/components/ImageSlider";
 
 type ImageDetailPageProps = {
   params: Promise<{
@@ -39,16 +40,7 @@ export default async function ImageDetailPage({
 
       <div className="gallery-detail__image-wrap">
         {imageList.length > 0 ? (
-          <div className="gallery-detail__image-list">
-            {imageList.map((url, index) => (
-              <img
-                key={`${image.id}-${index}`}
-                src={url}
-                alt={`${image.title} ${index + 1}`}
-                className="gallery-detail__image"
-              />
-            ))}
-          </div>
+          <ImageSlider images={imageList} title={image.title} />
         ) : (
           <div className="gallery-detail__image-empty">
             등록된 이미지가 없습니다.
