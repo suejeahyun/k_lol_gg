@@ -25,7 +25,7 @@ export default function UserSidebar() {
           공지사항
         </Link>
         <Link href="/images" className="app-sidebar__link">
-          이미지
+          멸망전 우승팀
         </Link>
       </nav>
     </aside>

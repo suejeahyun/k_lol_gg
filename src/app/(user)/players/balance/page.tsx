@@ -356,20 +356,11 @@ export default function PlayersBalancePage() {
       <div className="balance-page">
         <div className="balance-page__header">
           <h1 className="page-title">팀 밸런스</h1>
-          <p className="balance-page__description">
-            플레이어 10명의 이름과 포지션을 입력하면 현재티어·최대티어·승률을
-            기준으로 균형 잡힌 RED / BLUE 조합을 추천합니다. 첫 번째로 누른
-            포지션은 주 포지션, 이후 선택은 부 포지션으로 처리됩니다.
-          </p>
         </div>
 
         <section className="card balance-form-card">
           <div className="balance-form-head">
             <div className="balance-form-head__title">플레이어 입력</div>
-            <div className="balance-form-head__desc">
-              총 10명 / 이름 검색 가능 / 첫 선택 = 주 포지션(100%), 추가 선택 =
-              부 포지션(80%)
-            </div>
           </div>
 
           <div className="balance-input-list">

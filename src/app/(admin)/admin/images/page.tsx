@@ -11,14 +11,11 @@ export default async function AdminImagesPage() {
     <div className="admin-page">
       <div className="admin-page__header">
         <div>
-          <h1 className="admin-page__title">이미지 관리</h1>
-          <p className="admin-page__description">
-            이미지 게시물을 등록, 수정, 삭제할 수 있습니다.
-          </p>
+          <h1 className="admin-page__title">멸망전 우승팀 관리</h1>
         </div>
 
         <Link href="/admin/images/new" className="admin-page__create-button">
-          이미지 등록
+          멸망전 우승팀 등록
         </Link>
       </div>
 

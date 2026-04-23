@@ -73,10 +73,6 @@ export default async function AdminMatchesPage({
         <h1 className="page-title" style={{ marginBottom: 0 }}>
           관리자 - 내전 목록
         </h1>
-
-        <Link href="/admin/matches/new" className="app-button">
-          등록
-        </Link>
       </div>
 
       <form

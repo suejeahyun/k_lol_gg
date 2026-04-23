@@ -12,9 +12,6 @@ export default async function AdminNoticesPage() {
       <div className="admin-page__header">
         <div>
           <h1 className="admin-page__title">공지사항 관리</h1>
-          <p className="admin-page__description">
-            공지사항을 등록, 수정, 삭제할 수 있습니다.
-          </p>
         </div>
 
         <Link href="/admin/notices/new" className="admin-page__create-button">

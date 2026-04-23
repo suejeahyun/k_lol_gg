@@ -10,9 +10,6 @@ export default async function NoticesPage() {
     <div className="notice-page">
       <div className="notice-page__header">
         <h1 className="notice-page__title">공지사항</h1>
-        <p className="notice-page__description">
-          운영 공지 및 안내사항을 확인할 수 있습니다.
-        </p>
       </div>
 
       <div className="notice-list">

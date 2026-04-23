@@ -9,10 +9,7 @@ export default async function ImagesPage() {
   return (
     <div className="gallery-page">
       <div className="gallery-page__header">
-        <h1 className="gallery-page__title">이미지</h1>
-        <p className="gallery-page__description">
-          등록된 이미지 게시물을 확인할 수 있습니다.
-        </p>
+        <h1 className="gallery-page__title">멸망전 우승 팀</h1>
       </div>
 
       <div className="gallery-grid">

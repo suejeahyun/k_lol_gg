@@ -69,10 +69,10 @@ export default function AppTopBar({
           onChange={(e) => setMenu(e.target.value as "players" | "matches")}
         >
           <option value="players">
-            {mode === "admin" ? "관리자 플레이어" : "플레이어"}
+            {mode === "admin" ? "플레이어" : "플레이어"}
           </option>
           <option value="matches">
-            {mode === "admin" ? "관리자 내전" : "내전"}
+            {mode === "admin" ? "내전" : "내전"}
           </option>
         </select>
 

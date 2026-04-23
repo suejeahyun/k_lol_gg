@@ -25,7 +25,7 @@ export default function AdminSidebar() {
           공지사항 관리
         </Link>
         <Link href="/admin/images" className="app-sidebar__link">
-          이미지 관리
+          멸망전 우승팀 관리
         </Link>
       </nav>
     </aside>

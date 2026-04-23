@@ -97,11 +97,6 @@ export default async function HomePage() {
           <div className="page-title" style={{ marginBottom: "12px" }}>
             K-LOL.GG
           </div>
-
-          <div style={{ color: "#4b5563", lineHeight: 1.7, marginBottom: "18px" }}>
-            내전 기록, 플레이어 통계, 시즌 랭킹을 한 번에 확인하는 페이지입니다.
-          </div>
-
           <div className="social-link-row">
             <a
               href="https://open.kakao.com/o/gGQ80Ucf"
