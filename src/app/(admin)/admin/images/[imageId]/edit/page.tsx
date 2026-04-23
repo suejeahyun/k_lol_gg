@@ -39,7 +39,7 @@ export default async function AdminEditImagePage({ params }: PageProps) {
         initialData={{
           title: image.title,
           description: image.description,
-          imageUrls: image.imageUrls,
+          imageUrls: image.imageUrl,
         }}
       />
     </div>
