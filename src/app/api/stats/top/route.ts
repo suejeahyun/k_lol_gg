@@ -8,7 +8,7 @@ type SeasonDto = {
   createdAt: string;
 };
 
-type TopPlayerDto = {
+type SeasonPlayerDto = {
   playerId: number;
   name: string;
   nickname: string;
@@ -39,7 +39,7 @@ function toSeasonDto(
   };
 }
 
-function buildTopPlayersFromSeasonParticipants(
+function buildSeasonPlayers(
   players: Array<{
     id: number;
     name: string;
@@ -52,16 +52,21 @@ function buildTopPlayersFromSeasonParticipants(
       team: "BLUE" | "RED";
       game: {
         winnerTeam: "BLUE" | "RED";
+        seriesId: number;
       };
     }>;
   }>
-): TopPlayerDto[] {
-  const mapped = players
+): SeasonPlayerDto[] {
+  return players
     .map((player) => {
       const totalGames = player.participants.length;
 
+      const participation = new Set(
+        player.participants.map((participant) => participant.game.seriesId)
+      ).size;
+
       const wins = player.participants.filter(
-        (p) => p.team === p.game.winnerTeam
+        (participant) => participant.team === participant.game.winnerTeam
       ).length;
 
       const losses = totalGames - wins;
@@ -95,27 +100,17 @@ function buildTopPlayersFromSeasonParticipants(
         nickname: player.nickname,
         tag: player.tag,
         totalGames,
-        participation: totalGames,
+        participation,
         wins,
         losses,
         winRate,
         kda,
       };
     })
-    .filter((player) => player.totalGames > 0)
-    .sort((a, b) => {
-      if (b.winRate !== a.winRate) return b.winRate - a.winRate;
-      if (b.participation !== a.participation) {
-        return b.participation - a.participation;
-      }
-      return b.kda - a.kda;
-    })
-    .slice(0, 3);
-
-  return mapped;
+    .filter((player) => player.totalGames > 0);
 }
 
-async function getSeasonTop3(seasonId: number): Promise<TopPlayerDto[]> {
+async function getSeasonPlayers(seasonId: number): Promise<SeasonPlayerDto[]> {
   const players = await prisma.player.findMany({
     select: {
       id: true,
@@ -138,6 +133,7 @@ async function getSeasonTop3(seasonId: number): Promise<TopPlayerDto[]> {
           game: {
             select: {
               winnerTeam: true,
+              seriesId: true,
             },
           },
         },
@@ -145,22 +141,21 @@ async function getSeasonTop3(seasonId: number): Promise<TopPlayerDto[]> {
     },
   });
 
-  return buildTopPlayersFromSeasonParticipants(players);
+  return buildSeasonPlayers(players);
 }
 
 export async function GET() {
   try {
     const seasons = await prisma.season.findMany({
       orderBy: [{ isActive: "desc" }, { createdAt: "desc" }],
-      take: 10,
     });
 
     if (seasons.length === 0) {
       return NextResponse.json({
         currentSeason: null,
         previousSeason: null,
-        currentTop3: [],
-        previousTop3: [],
+        currentPlayers: [],
+        previousPlayers: [],
       });
     }
 
@@ -169,22 +164,22 @@ export async function GET() {
     const previousSeason =
       seasons.find((season) => season.id !== currentSeason.id) ?? null;
 
-    const [currentTop3, previousTop3] = await Promise.all([
-      getSeasonTop3(currentSeason.id),
-      previousSeason ? getSeasonTop3(previousSeason.id) : Promise.resolve([]),
+    const [currentPlayers, previousPlayers] = await Promise.all([
+      getSeasonPlayers(currentSeason.id),
+      previousSeason ? getSeasonPlayers(previousSeason.id) : Promise.resolve([]),
     ]);
 
     return NextResponse.json({
       currentSeason: toSeasonDto(currentSeason),
       previousSeason: toSeasonDto(previousSeason),
-      currentTop3,
-      previousTop3,
+      currentPlayers,
+      previousPlayers,
     });
   } catch (error) {
     console.error("[STATS_TOP_GET_ERROR]", error);
 
     return NextResponse.json(
-      { message: "TOP 3 조회 실패" },
+      { message: "시즌 TOP 데이터 조회 실패" },
       { status: 500 }
     );
   }

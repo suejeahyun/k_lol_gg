@@ -165,7 +165,7 @@ model GalleryImage {
   id          Int      @id @default(autoincrement())
   title       String
   description String   @db.Text
-  imageUrl    String
+  imageUrl    String[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

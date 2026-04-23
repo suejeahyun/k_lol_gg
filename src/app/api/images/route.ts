@@ -1,41 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
-import { validateGalleryImageInput } from "@/validations/gallery-image";
 
-export async function GET(req: NextRequest) {
+type CreateGalleryImageBody = {
+  title: string;
+  description: string;
+  imageUrls: string[];
+};
+
+export async function GET() {
   try {
-    const page = Number(req.nextUrl.searchParams.get("page") ?? "1");
-    const pageSize = Number(req.nextUrl.searchParams.get("pageSize") ?? "12");
-
-    const safePage = Number.isNaN(page) || page < 1 ? 1 : page;
-    const safePageSize =
-      Number.isNaN(pageSize) || pageSize < 1 || pageSize > 100 ? 12 : pageSize;
-
-    const skip = (safePage - 1) * safePageSize;
-
-    const [images, totalCount] = await Promise.all([
-      prisma.galleryImage.findMany({
-        orderBy: [{ createdAt: "desc" }],
-        skip,
-        take: safePageSize,
-      }),
-      prisma.galleryImage.count(),
-    ]);
-
-    return NextResponse.json({
-      images,
-      pagination: {
-        page: safePage,
-        pageSize: safePageSize,
-        totalCount,
-        totalPages: Math.ceil(totalCount / safePageSize),
-      },
+    const images = await prisma.galleryImage.findMany({
+      orderBy: [{ createdAt: "desc" }],
     });
-  } catch (error) {
-    console.error("[IMAGES_GET_ERROR]", error);
 
+    return NextResponse.json(images);
+  } catch (error) {
+    console.error("[GALLERY_IMAGES_GET_ERROR]", error);
     return NextResponse.json(
-      { message: "이미지 목록 조회에 실패했습니다." },
+      { message: "이미지 목록 조회 중 오류가 발생했습니다." },
       { status: 500 }
     );
   }
@@ -43,30 +25,54 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const validated = validateGalleryImageInput(body);
+    const body = (await req.json()) as CreateGalleryImageBody;
+    const title = body.title?.trim();
+    const description = body.description?.trim();
+    const imageUrls = Array.isArray(body.imageUrls)
+      ? body.imageUrls.map((url) => url.trim()).filter(Boolean)
+      : [];
 
-    if (!validated.success) {
+    if (!title) {
       return NextResponse.json(
-        { message: validated.message },
+        { message: "제목을 입력해주세요." },
         { status: 400 }
       );
     }
 
-    const image = await prisma.galleryImage.create({
+    if (!description) {
+      return NextResponse.json(
+        { message: "설명을 입력해주세요." },
+        { status: 400 }
+      );
+    }
+
+    if (imageUrls.length === 0) {
+      return NextResponse.json(
+        { message: "이미지를 최소 1개 이상 입력해주세요." },
+        { status: 400 }
+      );
+    }
+
+    if (imageUrls.length > 5) {
+      return NextResponse.json(
+        { message: "이미지는 최대 5개까지 등록할 수 있습니다." },
+        { status: 400 }
+      );
+    }
+
+    const created = await prisma.galleryImage.create({
       data: {
-        title: validated.data.title,
-        description: validated.data.description,
-        imageUrl: validated.data.imageUrl,
+        title,
+        description,
+        imageUrls,
       },
     });
 
-    return NextResponse.json(image, { status: 201 });
+    return NextResponse.json(created, { status: 201 });
   } catch (error) {
-    console.error("[IMAGE_POST_ERROR]", error);
-
+    console.error("[GALLERY_IMAGES_POST_ERROR]", error);
     return NextResponse.json(
-      { message: "이미지 등록에 실패했습니다." },
+      { message: "이미지 등록 중 오류가 발생했습니다." },
       { status: 500 }
     );
   }

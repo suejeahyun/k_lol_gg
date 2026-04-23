@@ -23,11 +23,11 @@ export default function PlayerSearchBox({
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="이름 또는 닉네임#태그 검색"
-          className="player-search-input"
+          className="app-input"
           autoComplete="off"
         />
 
-        <button type="submit" className="player-search-button">
+        <button type="submit" className="app-button">
           검색
         </button>
       </form>

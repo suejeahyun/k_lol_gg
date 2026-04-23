@@ -25,7 +25,7 @@ export default function MatchSearchBox({ initialQuery }: MatchSearchBoxProps) {
             borderRadius: "8px",
           }}
         />
-        <button type="submit">검색</button>
+        <button type="submit" className="app-button">검색</button>
       </form>
     </div>
   );

@@ -21,6 +21,8 @@ type Props = {
   players?: TopPlayer[];
 };
 
+type MetricKey = "winRate" | "kda" | "participation";
+
 export default function Top3Slider({
   title,
   seasonName,
@@ -30,15 +32,64 @@ export default function Top3Slider({
   const [index, setIndex] = useState(0);
 
   const metrics = useMemo(
-    () => [
-      { label: "승률", get: (p: TopPlayer) => `${p.winRate}%` },
-      { label: "KDA", get: (p: TopPlayer) => `${p.kda}` },
-      { label: "최다 참여", get: (p: TopPlayer) => `${p.participation}회` },
-    ],
+    () =>
+      [
+        { key: "winRate", label: "승률" },
+        { key: "kda", label: "KDA" },
+        { key: "participation", label: "최다 참여" },
+      ] as const satisfies ReadonlyArray<{
+        key: MetricKey;
+        label: string;
+      }>,
     []
   );
 
   const current = metrics[index];
+
+  const rankedPlayers = useMemo(() => {
+    const copied = [...safePlayers];
+
+    return copied.sort((a, b) => {
+      if (current.key === "winRate") {
+        if (b.winRate !== a.winRate) return b.winRate - a.winRate;
+        if (b.participation !== a.participation) {
+          return b.participation - a.participation;
+        }
+        if (b.kda !== a.kda) return b.kda - a.kda;
+        return a.nickname.localeCompare(b.nickname);
+      }
+
+      if (current.key === "kda") {
+        if (b.kda !== a.kda) return b.kda - a.kda;
+        if (b.winRate !== a.winRate) return b.winRate - a.winRate;
+        if (b.participation !== a.participation) {
+          return b.participation - a.participation;
+        }
+        return a.nickname.localeCompare(b.nickname);
+      }
+
+      if (b.participation !== a.participation) {
+        return b.participation - a.participation;
+      }
+      if (b.winRate !== a.winRate) return b.winRate - a.winRate;
+      if (b.kda !== a.kda) return b.kda - a.kda;
+      return a.nickname.localeCompare(b.nickname);
+    });
+  }, [safePlayers, current.key]);
+
+  const top3Players = rankedPlayers.slice(0, 3);
+
+  const getValueText = (player: TopPlayer) => {
+    if (current.key === "winRate") {
+      return `${player.winRate}%`;
+    }
+
+    if (current.key === "kda") {
+      return `${player.kda}`;
+    }
+
+    return `${player.participation}회`;
+  };
 
   return (
     <div className="top3-panel">
@@ -73,18 +124,18 @@ export default function Top3Slider({
         </div>
       </div>
 
-      {safePlayers.length === 0 ? (
+      {top3Players.length === 0 ? (
         <div className="top3-empty">표시할 데이터가 없습니다.</div>
       ) : (
         <div className="top3-rank-list">
-          {safePlayers.map((p, i) => (
+          {top3Players.map((p, i) => (
             <div key={p.playerId} className="top3-rank-card">
               <div className="top3-rank-card__place">{i + 1}위</div>
               <div className="top3-rank-card__name">
                 {p.nickname}#{p.tag}
               </div>
               <div className="top3-rank-card__value">
-                {current.label}: {current.get(p)}
+                {current.label}: {getValueText(p)}
               </div>
             </div>
           ))}

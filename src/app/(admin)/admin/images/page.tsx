@@ -15,7 +15,7 @@ export default async function AdminImagesPage() {
         </div>
 
         <Link href="/admin/images/new" className="admin-page__create-button">
-          멸망전 우승팀 등록
+          이미지 추가
         </Link>
       </div>
 
@@ -25,46 +25,62 @@ export default async function AdminImagesPage() {
             등록된 이미지가 없습니다.
           </div>
         ) : (
-          images.map((image) => (
-            <div key={image.id} className="gallery-admin-card">
-              <div className="gallery-admin-card__thumbnail-wrap">
-                <img
-                  src={image.imageUrl}
-                  alt={image.title}
-                  className="gallery-admin-card__thumbnail"
-                />
-              </div>
+          images.map((image) => {
+            const imageList = Array.isArray((image as any).imageUrls)
+              ? (image as any).imageUrls
+              : image.imageUrl
+              ? [image.imageUrl]
+              : [];
 
-              <div className="gallery-admin-card__content">
-                <div className="gallery-admin-card__date">
-                  {new Date(image.createdAt).toLocaleDateString("ko-KR")}
+            const thumbnail = imageList[0] ?? "";
+
+            return (
+              <div key={image.id} className="gallery-admin-card">
+                <div className="gallery-admin-card__thumbnail-wrap">
+                  {thumbnail ? (
+                    <img
+                      src={thumbnail}
+                      alt={image.title}
+                      className="gallery-admin-card__thumbnail"
+                    />
+                  ) : (
+                    <div className="gallery-admin-card__thumbnail gallery-admin-card__thumbnail--empty">
+                      이미지 없음
+                    </div>
+                  )}
                 </div>
 
-                <h2 className="gallery-admin-card__title">
-                  {image.title}
-                </h2>
+                <div className="gallery-admin-card__content">
+                  <div className="gallery-admin-card__date">
+                    {new Date(image.createdAt).toLocaleDateString("ko-KR")}
+                  </div>
 
-                <p className="gallery-admin-card__summary">
-                  {image.description.length > 140
-                    ? `${image.description.slice(0, 140)}...`
-                    : image.description}
-                </p>
+                  <h2 className="gallery-admin-card__title">{image.title}</h2>
+
+                  <p className="gallery-admin-card__summary">
+                    {image.description.length > 140
+                      ? `${image.description.slice(0, 140)}...`
+                      : image.description}
+                  </p>
+
+                  <div className="gallery-admin-card__count">
+                    등록 이미지 수: {imageList.length}장
+                  </div>
+                </div>
+
+                <div className="gallery-admin-card__actions">
+                  <Link
+                    href={`/admin/images/${image.id}/edit`}
+                    className="chip-button"
+                  >
+                    수정
+                  </Link>
+
+                  <GalleryImageDeleteButton imageId={image.id} />
+                </div>
               </div>
-
-              <div className="gallery-admin-card__actions">
-                {/* 수정 버튼 */}
-                <Link
-                  href={`/admin/images/${image.id}/edit`}
-                  className="chip-button"
-                >
-                  수정
-                </Link>
-
-                {/* 삭제 버튼 */}
-                <GalleryImageDeleteButton imageId={image.id} />
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>

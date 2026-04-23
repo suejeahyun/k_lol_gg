@@ -2,15 +2,13 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
 import GalleryImageForm from "@/features/gallery/GalleryImageForm";
 
-type AdminImageEditPageProps = {
+type PageProps = {
   params: Promise<{
     imageId: string;
   }>;
 };
 
-export default async function AdminImageEditPage({
-  params,
-}: AdminImageEditPageProps) {
+export default async function AdminEditImagePage({ params }: PageProps) {
   const { imageId } = await params;
   const id = Number(imageId);
 
@@ -31,19 +29,17 @@ export default async function AdminImageEditPage({
       <div className="admin-page__header">
         <div>
           <h1 className="admin-page__title">이미지 수정</h1>
-          <p className="admin-page__description">
-            기존 이미지 게시물을 수정합니다.
-          </p>
         </div>
       </div>
 
       <GalleryImageForm
         mode="edit"
         submitUrl={`/api/images/${image.id}`}
+        method="PATCH"
         initialData={{
           title: image.title,
           description: image.description,
-          imageUrl: image.imageUrl,
+          imageUrls: image.imageUrls,
         }}
       />
     </div>
