@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
       data: {
         title,
         description,
-        imageUrls,
+        imageUrl: imageUrls,
       },
     });
 

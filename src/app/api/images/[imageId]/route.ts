@@ -98,7 +98,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
       data: {
         title,
         description,
-        imageUrls,
+        imageUrl: imageUrls,
       },
     });
 
