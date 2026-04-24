@@ -3660,6 +3660,10 @@ grid-template-columns:
   }
 }
 
+.container {
+  width: 80%;
+  margin: 0 auto;
+}
 
 input {
   width: 100%;
