@@ -36,8 +36,8 @@ export default function AppTopBar({
 
       router.push(
         q
-          ? `/admin/matches?q=${encodeURIComponent(q)}`
-          : "/admin/matches"
+          ? `/admin/`
+          : "/admin/"
       );
       return;
     }
