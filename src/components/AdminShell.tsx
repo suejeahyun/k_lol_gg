@@ -22,7 +22,7 @@ export default function AdminShell({ children }: AdminShellProps) {
     <div className="app-shell">
       <AppTopBar
         title="관리자 페이지"
-        homeHref="/admin/matches"
+        homeHref="/admin/"
         mode="admin"
       />
 
