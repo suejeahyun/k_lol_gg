@@ -1,8 +1,17 @@
+import Image from "next/image";
 import { prisma } from "@/lib/prisma/client";
 
 type PageProps = {
   params: Promise<{ matchId: string }>;
 };
+
+const POSITION_ORDER = {
+  TOP: 1,
+  JGL: 2,
+  MID: 3,
+  ADC: 4,
+  SUP: 5,
+} as const;
 
 function formatDate(date: Date): string {
   return new Date(date).toLocaleString("ko-KR");
@@ -44,23 +53,29 @@ export default async function MatchDetailPage({ params }: PageProps) {
     throw new Error("Match not found");
   }
 
-  const gamesWithMvp = match.games.map((game: (typeof match.games)[number]) => {
-    const participantsWithScore = game.participants.map(
-      (participant: (typeof game.participants)[number]) => {
-        const isWinner = participant.team === game.winnerTeam;
-        const score =
-          participant.kills * 3 +
-          participant.assists -
-          participant.deaths +
-          (isWinner ? 5 : 0);
+  const gamesWithMvp = match.games.map((game) => {
+    const participantsWithScore = game.participants.map((participant) => {
+      const isWinner = participant.team === game.winnerTeam;
+      const score =
+        participant.kills * 3 +
+        participant.assists -
+        participant.deaths +
+        (isWinner ? 5 : 0);
 
-        return {
-          ...participant,
-          isWinner,
-          score,
-        };
+      return {
+        ...participant,
+        isWinner,
+        score,
+      };
+    });
+
+    const sortedParticipants = [...participantsWithScore].sort((a, b) => {
+      if (a.team !== b.team) {
+        return a.team === "BLUE" ? -1 : 1;
       }
-    );
+
+      return POSITION_ORDER[a.position] - POSITION_ORDER[b.position];
+    });
 
     type ScoredParticipant = (typeof participantsWithScore)[number];
 
@@ -72,13 +87,9 @@ export default async function MatchDetailPage({ params }: PageProps) {
               best: ScoredParticipant | null,
               current: ScoredParticipant
             ): ScoredParticipant => {
-              if (!best) {
-                return current;
-              }
+              if (!best) return current;
 
-              if (current.score > best.score) {
-                return current;
-              }
+              if (current.score > best.score) return current;
 
               if (current.score === best.score) {
                 const currentKda =
@@ -91,9 +102,7 @@ export default async function MatchDetailPage({ params }: PageProps) {
                     ? best.kills + best.assists
                     : (best.kills + best.assists) / best.deaths;
 
-                if (currentKda > bestKda) {
-                  return current;
-                }
+                if (currentKda > bestKda) return current;
               }
 
               return best;
@@ -103,7 +112,7 @@ export default async function MatchDetailPage({ params }: PageProps) {
 
     return {
       ...game,
-      participants: participantsWithScore,
+      participants: sortedParticipants,
       mvp,
     };
   });
@@ -124,7 +133,7 @@ export default async function MatchDetailPage({ params }: PageProps) {
       </div>
 
       <div className="card-grid">
-        {gamesWithMvp.map((game: (typeof gamesWithMvp)[number]) => (
+        {gamesWithMvp.map((game) => (
           <section key={game.id} className="detail-board">
             <div className="detail-board__title">
               {game.gameNumber}세트 / 승리 팀: {getTeamLabel(game.winnerTeam)} /{" "}
@@ -145,34 +154,59 @@ export default async function MatchDetailPage({ params }: PageProps) {
             </div>
 
             <div className="match-detail-header">
-              <div>팀</div>
-              <div>이름</div>
-              <div>닉네임#태그</div>
               <div>포지션</div>
+              <div>이름</div>
+              <div>닉네임</div>
               <div>챔피언</div>
-              <div>결과</div>
               <div>KDA</div>
+              <div>결과</div>
             </div>
 
-            <div className="card-grid">
-              {game.participants.map(
-                (participant: (typeof game.participants)[number]) => (
-                  <div key={participant.id} className="match-detail-row">
-                    <div>{participant.team}</div>
-                    <div>{participant.player.name}</div>
-                    <div>
-                      {participant.player.nickname}#{participant.player.tag}
-                    </div>
-                    <div>{participant.position}</div>
-                    <div>{participant.champion.name}</div>
-                    <div>{participant.isWinner ? "WIN" : "LOSE"}</div>
-                    <div>
-                      {participant.kills}/{participant.deaths}/
-                      {participant.assists}
-                    </div>
+            <div className="match-detail-list">
+              {game.participants.map((participant) => (
+                <div
+                  key={participant.id}
+                  className={`match-detail-row match-detail-row--${participant.team.toLowerCase()}`}
+                >
+                  <div className="match-detail-position">
+                    {participant.position}
                   </div>
-                )
-              )}
+
+                  <div className="match-detail-name">
+                    {participant.player.name}
+                  </div>
+
+                  <div className="match-detail-nickname">
+                    {participant.player.nickname}#{participant.player.tag}
+                  </div>
+
+                  <div className="match-detail-champion">
+                    <Image
+                      src={participant.champion.imageUrl}
+                      alt={participant.champion.name}
+                      width={32}
+                      height={32}
+                      className="match-detail-champion__image"
+                    />
+                    <span>{participant.champion.name}</span>
+                  </div>
+
+                  <div className="match-detail-kda">
+                    {participant.kills}/{participant.deaths}/
+                    {participant.assists}
+                  </div>
+
+                  <div
+                    className={`match-detail-result ${
+                      participant.isWinner
+                        ? "match-detail-result--win"
+                        : "match-detail-result--lose"
+                    }`}
+                  >
+                    {participant.isWinner ? "WIN" : "LOSE"}
+                  </div>
+                </div>
+              ))}
             </div>
           </section>
         ))}

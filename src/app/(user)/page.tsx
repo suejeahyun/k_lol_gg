@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma/client";
-import Top3Slider from "../../components/Top3Slider";
+import Top3Slider from "@/components/Top3Slider";
 
 type SeasonDto = {
   id: number;
