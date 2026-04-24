@@ -3659,3 +3659,10 @@ grid-template-columns:
     align-items: flex-start;
   }
 }
+
+
+input {
+  width: 100%;
+  padding: 10px 12px;
+  box-sizing: border-box;
+}
