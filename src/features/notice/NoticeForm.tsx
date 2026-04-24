@@ -48,7 +48,7 @@ export default function NoticeForm({
       const result = await response.json().catch(() => null);
 
       if (!response.ok) {
-        setErrorMessage(result?.message ?? "공지사항 저장에 실패했습니다.");
+        setErrorMessage(result?.message ?? "공지사항 저장 실패");
         return;
       }
 
@@ -56,7 +56,7 @@ export default function NoticeForm({
       router.refresh();
     } catch (error) {
       console.error("[NOTICE_FORM_SUBMIT_ERROR]", error);
-      setErrorMessage("공지사항 저장 중 오류가 발생했습니다.");
+      setErrorMessage("서버 오류 발생");
     } finally {
       setIsSubmitting(false);
     }
@@ -64,50 +64,64 @@ export default function NoticeForm({
 
   return (
     <form className="notice-form" onSubmit={handleSubmit}>
+      {/* 제목 */}
       <div className="notice-form__group">
-        <label htmlFor="title" className="notice-form__label">
-          제목
-        </label>
+        <label className="notice-form__label">제목</label>
         <input
-          id="title"
           type="text"
           className="notice-form__input"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="공지 제목을 입력하세요."
           maxLength={100}
+          placeholder="공지 제목 입력"
           required
         />
+        <div className="notice-form__count">{title.length} / 100</div>
       </div>
 
+      {/* 내용 */}
       <div className="notice-form__group">
-        <label htmlFor="content" className="notice-form__label">
-          내용
-        </label>
+        <label className="notice-form__label">내용</label>
+
         <textarea
-          id="content"
           className="notice-form__textarea"
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          placeholder="공지 내용을 입력하세요."
-          rows={12}
+          placeholder="공지 내용을 입력하세요"
+          rows={10}
           required
         />
+
+        {/* 미리보기 + 덮개 */}
+        <div className="notice-preview">
+          <div className="notice-preview__content">
+            {content || "내용 미리보기 영역"}
+          </div>
+
+          <div className="notice-preview__overlay">
+            미리보기
+          </div>
+        </div>
+
+        <div className="notice-form__count">{content.length}자</div>
       </div>
 
+      {/* 고정 */}
       <label className="notice-form__checkbox">
         <input
           type="checkbox"
           checked={isPinned}
           onChange={(e) => setIsPinned(e.target.checked)}
         />
-        <span>상단 고정</span>
+        상단 고정
       </label>
 
-      {errorMessage ? (
+      {/* 에러 */}
+      {errorMessage && (
         <p className="notice-form__error">{errorMessage}</p>
-      ) : null}
+      )}
 
+      {/* 버튼 */}
       <div className="notice-form__actions">
         <button
           type="button"
@@ -121,15 +135,15 @@ export default function NoticeForm({
         <button
           type="submit"
           className="notice-form__submit-button"
-          disabled={isSubmitting}
+          disabled={isSubmitting || !title || !content}
         >
           {isSubmitting
             ? mode === "create"
               ? "등록 중..."
               : "수정 중..."
             : mode === "create"
-              ? "공지 등록"
-              : "공지 수정"}
+            ? "공지 등록"
+            : "공지 수정"}
         </button>
       </div>
     </form>

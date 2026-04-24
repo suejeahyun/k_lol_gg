@@ -1,5 +1,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
+import RandomBackgroundLayout from "../components/RandomBackgroundLayout";
 
 export const metadata: Metadata = {
   title: "K-LOL.GG",
@@ -13,7 +14,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body>{children}</body>
+      <body>
+        <RandomBackgroundLayout>{children}</RandomBackgroundLayout>
+      </body>
     </html>
   );
 }

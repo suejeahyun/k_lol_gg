@@ -2052,9 +2052,13 @@ grid-template-columns:
  flex-wrap: wrap;
 }
 .notice-page {
- display: flex;
- flex-direction: column;
- gap: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
+  max-width: 1100px;   /* 기존 대비 약 15~20% 축소 */
+  margin: 0 auto;      /* 가운데 정렬 */
+  width: 100%;
 }
 .notice-page__header {
  display: flex;
@@ -2177,6 +2181,87 @@ grid-template-columns:
 .notice-detail__content p {
  margin: 0;
 }
+.notice-card__summaryWrap {
+  position: relative;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.notice-card__overlay {
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(17, 24, 39, 0.72);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+
+  opacity: 1;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.notice-card:hover .notice-card__overlay {
+  opacity: 0;
+}
+
+.notice-preview {
+  position: relative;
+  margin-top: 12px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #f9fafb;
+}
+
+.notice-preview__content {
+  min-height: 80px;
+  padding: 14px;
+  color: #374151;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.notice-preview__overlay {
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(17, 24, 39, 0.68);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+
+  opacity: 1;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.notice-preview:hover .notice-preview__overlay {
+  opacity: 0;
+}
+
+.notice-form__count {
+  margin-top: 4px;
+  color: #6b7280;
+  font-size: 12px;
+  text-align: right;
+}
+
+.notice-form__secondary-button:disabled,
+.notice-form__submit-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 @media (max-width: 768px) {
  .notice-admin-card {
  flex-direction: column;
@@ -2905,5 +2990,117 @@ grid-template-columns:
     width: 36px;
     height: 36px;
     font-size: 22px;
+  }
+}
+/* ==== BACKGROUND SYSTEM - TOPBAR + SIDEBAR AWARE ==== */
+
+.app-background-root {
+  position: relative;
+  min-height: 100vh;
+  background: #ffffff;
+  overflow-x: hidden;
+  isolation: isolate;
+}
+
+/* 전체 배경 이미지 */
+.app-background-image {
+  position: fixed;
+  top: 64px;        /* 상단바 높이 제외 */
+  left: 230px;      /* 좌측 사이드바 너비 제외 */
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+
+  background-image: var(--app-bg-left), var(--app-bg-right);
+  background-size: 34% 100%, 34% 100%;
+  background-position: left center, right center;
+  background-repeat: no-repeat, no-repeat;
+  background-color: #ffffff;
+
+  filter: brightness(0.97);
+  pointer-events: none;
+}
+
+/* 중앙 콘텐츠 가독성 확보 */
+.app-background-overlay {
+  position: fixed;
+  top: 64px;
+  left: 230px;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.18) 0%,
+    rgba(255, 255, 255, 0.92) 32%,
+    rgba(255, 255, 255, 0.98) 50%,
+    rgba(255, 255, 255, 0.92) 68%,
+    rgba(255, 255, 255, 0.18) 100%
+  );
+
+  pointer-events: none;
+}
+
+/* 실제 콘텐츠 */
+.app-background-content {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+}
+
+/* 기존 레이아웃 배경 제거 */
+.app-shell,
+.app-body,
+.app-content {
+  background: transparent !important;
+}
+
+/* 상단바는 명확하게 유지 */
+.app-topbar {
+  position: relative;
+  z-index: 5;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+}
+
+/* 좌측 사이드바는 내용 가독성 때문에 유지 */
+.app-sidebar {
+  position: relative;
+  z-index: 5;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(12px);
+}
+
+/* 콘텐츠 카드 가독성 */
+.card,
+.top3-panel,
+.list-card,
+.player-row-card,
+.match-row-card,
+.ranking-board,
+.ranking-row-card,
+.detail-header-card,
+.detail-board,
+.content-section,
+.notice-card,
+.notice-form,
+.gallery-card,
+.gallery-form,
+.balance-form-card {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+}
+
+/* 모바일에서는 사이드바가 위로 올라가므로 좌측 여백 제거 */
+@media (max-width: 768px) {
+  .app-background-image,
+  .app-background-overlay {
+    top: 116px;
+    left: 0;
+  }
+
+  .app-background-image {
+    background-size: 50% 100%, 50% 100%;
   }
 }
