@@ -2855,8 +2855,17 @@ grid-template-columns:
   transform: translateY(-1px);
 }
 
+/* 기존 */
 .chip-button {
   min-width: 76px;
+}
+
+/* 수정 */
+.chip-button {
+  min-width: 36px;
+  height: 32px;
+  padding: 0 8px;
+  font-size: 13px;
 }
 
 .chip-button:disabled,

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type ChampionItem = {
   id: number;
@@ -10,10 +10,13 @@ type ChampionItem = {
   createdAt?: string;
 };
 
+const PAGE_SIZE = 10;
+
 export default function AdminChampionsPage() {
   const [champions, setChampions] = useState<ChampionItem[]>([]);
   const [name, setName] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [page, setPage] = useState(1);
 
   const fetchChampions = async () => {
     const res = await fetch("/api/champions", { cache: "no-store" });
@@ -30,6 +33,19 @@ export default function AdminChampionsPage() {
   useEffect(() => {
     fetchChampions();
   }, []);
+
+  const totalPages = Math.max(1, Math.ceil(champions.length / PAGE_SIZE));
+
+  const paginatedChampions = useMemo(() => {
+    const startIndex = (page - 1) * PAGE_SIZE;
+    return champions.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [champions, page]);
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
   const handleCreate = async () => {
     const res = await fetch("/api/champions", {
@@ -48,6 +64,7 @@ export default function AdminChampionsPage() {
 
     setName("");
     setImageUrl("");
+    setPage(1);
     await fetchChampions();
   };
 
@@ -132,7 +149,7 @@ export default function AdminChampionsPage() {
         </div>
 
         <div className="card-grid">
-          {champions.map((champion: (typeof champions)[number]) => (
+          {paginatedChampions.map((champion) => (
             <div key={champion.id} className="admin-player-row-card">
               <div className="admin-player-row-grid">
                 <div className="player-col player-name">{champion.name}</div>
@@ -172,6 +189,55 @@ export default function AdminChampionsPage() {
             </div>
           ))}
         </div>
+
+        {champions.length > PAGE_SIZE && (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: "8px",
+              marginTop: "20px",
+            }}
+          >
+            <button
+              className="chip-button"
+              type="button"
+              disabled={page === 1}
+              onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+            >
+              이전
+            </button>
+
+            {Array.from({ length: totalPages }, (_, index) => {
+              const pageNumber = index + 1;
+
+              return (
+                <button
+                  key={pageNumber}
+                  className="chip-button"
+                  type="button"
+                  onClick={() => setPage(pageNumber)}
+                  style={{
+                    fontWeight: page === pageNumber ? 800 : 500,
+                    borderColor: page === pageNumber ? "#111" : undefined,
+                  }}
+                >
+                  {pageNumber}
+                </button>
+              );
+            })}
+
+            <button
+              className="chip-button"
+              type="button"
+              disabled={page === totalPages}
+              onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+            >
+              다음
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

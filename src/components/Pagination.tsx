@@ -18,6 +18,8 @@ type PaginationProps =
       onPageChange?: never;
     };
 
+const VISIBLE_PAGE_COUNT = 10;
+
 function buildHref(
   basePath: string,
   page: number,
@@ -39,6 +41,32 @@ function buildHref(
   return queryString ? `${basePath}?${queryString}` : basePath;
 }
 
+function getVisiblePages(currentPage: number, totalPages: number) {
+  if (totalPages <= VISIBLE_PAGE_COUNT) {
+    return Array.from({ length: totalPages }, (_, index) => index + 1);
+  }
+
+  const half = Math.floor(VISIBLE_PAGE_COUNT / 2);
+
+  let startPage = currentPage - half;
+  let endPage = startPage + VISIBLE_PAGE_COUNT - 1;
+
+  if (startPage < 1) {
+    startPage = 1;
+    endPage = VISIBLE_PAGE_COUNT;
+  }
+
+  if (endPage > totalPages) {
+    endPage = totalPages;
+    startPage = totalPages - VISIBLE_PAGE_COUNT + 1;
+  }
+
+  return Array.from(
+    { length: endPage - startPage + 1 },
+    (_, index) => startPage + index
+  );
+}
+
 export default function Pagination(props: PaginationProps) {
   const { currentPage, totalPages } = props;
 
@@ -46,13 +74,9 @@ export default function Pagination(props: PaginationProps) {
     return null;
   }
 
-  const pages: number[] = [];
-  const startPage = Math.max(1, currentPage - 2);
-  const endPage = Math.min(totalPages, currentPage + 2);
-
-  for (let page = startPage; page <= endPage; page += 1) {
-    pages.push(page);
-  }
+  const pages = getVisiblePages(currentPage, totalPages);
+  const firstVisiblePage = pages[0];
+  const lastVisiblePage = pages[pages.length - 1];
 
   const isCallbackMode = "onPageChange" in props && !!props.onPageChange;
 
@@ -115,21 +139,11 @@ export default function Pagination(props: PaginationProps) {
         </button>
       )}
 
-      {startPage > 1 && (
-        <>
-          {renderPageButton(1)}
-          {startPage > 2 && <span>...</span>}
-        </>
-      )}
+      {firstVisiblePage > 1 && <span>...</span>}
 
       {pages.map((page) => renderPageButton(page))}
 
-      {endPage < totalPages && (
-        <>
-          {endPage < totalPages - 1 && <span>...</span>}
-          {renderPageButton(totalPages)}
-        </>
-      )}
+      {lastVisiblePage < totalPages && <span>...</span>}
 
       {currentPage < totalPages ? (
         renderPageButton(currentPage + 1, "다음")
