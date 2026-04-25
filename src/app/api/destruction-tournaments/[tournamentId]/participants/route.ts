@@ -11,7 +11,6 @@ type RouteProps = {
 type ParticipantInput = {
   playerId: number;
   position: Position;
-  balanceScore?: number;
 };
 
 const POSITIONS: Position[] = ["TOP", "JGL", "MID", "ADC", "SUP"];
@@ -78,13 +77,9 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
       Number(participant.playerId)
     );
 
-    const hasInvalidPlayerId = playerIds.some((playerId) =>
-      Number.isNaN(playerId)
-    );
-
-    if (hasInvalidPlayerId) {
+    if (playerIds.some((playerId) => Number.isNaN(playerId) || playerId <= 0)) {
       return NextResponse.json(
-        { message: "플레이어 ID가 올바르지 않습니다." },
+        { message: "플레이어 정보가 올바르지 않습니다." },
         { status: 400 }
       );
     }
@@ -137,7 +132,7 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
 
     if (existingPlayers.length !== playerIds.length) {
       return NextResponse.json(
-        { message: "존재하지 않는 플레이어가 포함되어 있습니다." },
+        { message: "등록되지 않은 플레이어가 포함되어 있습니다." },
         { status: 400 }
       );
     }
@@ -160,7 +155,7 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
             teamId: captainTeam?.id ?? null,
             playerId: Number(participant.playerId),
             position: participant.position,
-            balanceScore: Number(participant.balanceScore ?? 0),
+            balanceScore: 0,
           },
         });
       }

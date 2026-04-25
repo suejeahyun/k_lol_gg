@@ -6282,7 +6282,7 @@ input::placeholder, textarea::placeholder, .app-input::placeholder, .kakao-searc
 
 .destruction-participant-form__row {
   display: grid;
-  grid-template-columns: 70px 1fr 1fr 1fr;
+  grid-template-columns: 70px minmax(0, 1.4fr) minmax(140px, 0.65fr) minmax(180px, 0.8fr);
   gap: 10px;
   align-items: center;
   padding: 12px;
@@ -6338,10 +6338,24 @@ input::placeholder, textarea::placeholder, .app-input::placeholder, .kakao-searc
   display: grid;
   gap: 8px;
 }
+.destruction-tier-box {
+  display: grid;
+  gap: 4px;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid var(--k-border);
+  border-radius: 10px;
+  background: rgba(15, 30, 52, 0.72);
+}
 
+.destruction-tier-box span {
+  color: var(--k-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
 .destruction-team-assignment-form__row {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(180px, 0.6fr);
+  grid-template-columns: minmax(0, 1.3fr) minmax(160px, 0.55fr) minmax(140px, 0.45fr);
   gap: 10px;
   align-items: center;
   padding: 12px;
@@ -6755,4 +6769,26 @@ input::placeholder, textarea::placeholder, .app-input::placeholder, .kakao-searc
   font-size: 11px;
   font-style: normal;
   font-weight: 700;
+}
+/* ===== DESTRUCTION TEAM FORM SEARCH VERSION ===== */
+
+.destruction-team-form__row {
+  display: grid;
+  grid-template-columns:
+    minmax(120px, 0.6fr)
+    minmax(0, 1.4fr)
+    minmax(140px, 0.6fr)
+    minmax(180px, 0.7fr);
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid var(--k-border);
+  border-radius: 14px;
+  background: rgba(2, 6, 23, 0.42);
+}
+
+@media (max-width: 768px) {
+  .destruction-team-form__row {
+    grid-template-columns: 1fr;
+  }
 }

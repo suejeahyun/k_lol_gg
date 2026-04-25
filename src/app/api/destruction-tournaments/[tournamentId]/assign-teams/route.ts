@@ -10,6 +10,7 @@ type RouteProps = {
 type AssignedParticipant = {
   participantId: number;
   teamId: number;
+  auctionPoint: number;
 };
 
 export async function PUT(req: NextRequest, { params }: RouteProps) {
@@ -92,11 +93,24 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
 
     const duplicatedParticipantIds = assignments
       .map((assignment) => Number(assignment.participantId))
-      .filter((participantId, index, arr) => arr.indexOf(participantId) !== index);
+      .filter(
+        (participantId, index, arr) => arr.indexOf(participantId) !== index
+      );
 
     if (duplicatedParticipantIds.length > 0) {
       return NextResponse.json(
         { message: "중복 배정된 참가자가 있습니다." },
+        { status: 400 }
+      );
+    }
+
+    const hasInvalidAuctionPoint = assignments.some((assignment) =>
+      Number.isNaN(Number(assignment.auctionPoint))
+    );
+
+    if (hasInvalidAuctionPoint) {
+      return NextResponse.json(
+        { message: "경매 포인트가 올바르지 않습니다." },
         { status: 400 }
       );
     }
@@ -109,6 +123,7 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
           },
           data: {
             teamId: Number(assignment.teamId),
+            balanceScore: Number(assignment.auctionPoint),
           },
         });
       }

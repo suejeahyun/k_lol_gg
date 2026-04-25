@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Position } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 
 type RouteProps = {
@@ -10,7 +11,14 @@ type RouteProps = {
 type TeamInput = {
   name: string;
   captainId: number;
+  captainPosition: Position;
 };
+
+const POSITIONS: Position[] = ["TOP", "JGL", "MID", "ADC", "SUP"];
+
+function isValidPosition(position: unknown): position is Position {
+  return typeof position === "string" && POSITIONS.includes(position as Position);
+}
 
 export async function POST(req: NextRequest, { params }: RouteProps) {
   try {
@@ -37,13 +45,20 @@ export async function POST(req: NextRequest, { params }: RouteProps) {
 
     const captainIds = teams.map((team) => Number(team.captainId));
 
-    const hasInvalidCaptain = captainIds.some((captainId) =>
-      Number.isNaN(captainId)
+    if (captainIds.some((captainId) => Number.isNaN(captainId))) {
+      return NextResponse.json(
+        { message: "팀장 정보가 올바르지 않습니다." },
+        { status: 400 }
+      );
+    }
+
+    const hasInvalidPosition = teams.some(
+      (team) => !isValidPosition(team.captainPosition)
     );
 
-    if (hasInvalidCaptain) {
+    if (hasInvalidPosition) {
       return NextResponse.json(
-        { message: "팀장 ID가 올바르지 않습니다." },
+        { message: "모든 팀장의 포지션을 선택해주세요." },
         { status: 400 }
       );
     }
@@ -96,7 +111,7 @@ export async function POST(req: NextRequest, { params }: RouteProps) {
 
     if (players.length !== captainIds.length) {
       return NextResponse.json(
-        { message: "존재하지 않는 팀장이 포함되어 있습니다." },
+        { message: "등록되지 않은 팀장이 포함되어 있습니다." },
         { status: 400 }
       );
     }
@@ -139,12 +154,13 @@ export async function POST(req: NextRequest, { params }: RouteProps) {
           },
           update: {
             teamId: createdTeam.id,
+            position: team.captainPosition,
           },
           create: {
             tournamentId: id,
             teamId: createdTeam.id,
             playerId: Number(team.captainId),
-            position: "TOP",
+            position: team.captainPosition,
             balanceScore: 0,
           },
         });

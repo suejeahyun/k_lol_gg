@@ -13,9 +13,12 @@ type Participant = {
   playerId: number;
   teamId: number | null;
   position: string;
+  balanceScore: number;
   player: {
     nickname: string;
     tag: string;
+    currentTier?: string | null;
+    peakTier?: string | null;
   };
 };
 
@@ -46,13 +49,32 @@ export default function DestructionTeamAssignmentForm({
     return initial;
   });
 
+  const [auctionPoints, setAuctionPoints] = useState<Record<number, string>>(
+    () => {
+      const initial: Record<number, string> = {};
+
+      participants.forEach((participant) => {
+        initial[participant.id] = String(participant.balanceScore ?? 0);
+      });
+
+      return initial;
+    }
+  );
+
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleChange = (participantId: number, teamId: string) => {
+  const handleTeamChange = (participantId: number, teamId: string) => {
     setAssignments((prev) => ({
       ...prev,
       [participantId]: teamId,
+    }));
+  };
+
+  const handlePointChange = (participantId: number, point: string) => {
+    setAuctionPoints((prev) => ({
+      ...prev,
+      [participantId]: point,
     }));
   };
 
@@ -63,11 +85,21 @@ export default function DestructionTeamAssignmentForm({
       .map((participant) => ({
         participantId: participant.id,
         teamId: Number(assignments[participant.id]),
+        auctionPoint: Number(auctionPoints[participant.id] || 0),
       }))
       .filter((assignment) => assignment.teamId > 0);
 
     if (payload.length !== participants.length) {
       setError("모든 참가자의 팀을 선택해주세요.");
+      return;
+    }
+
+    const hasInvalidPoint = payload.some((assignment) =>
+      Number.isNaN(assignment.auctionPoint)
+    );
+
+    if (hasInvalidPoint) {
+      setError("경매 포인트는 숫자로 입력해주세요.");
       return;
     }
 
@@ -107,7 +139,7 @@ export default function DestructionTeamAssignmentForm({
       <div className="destruction-team-assignment-form__head">
         <div>
           <h3>참가자 팀 배정</h3>
-          <p>경기 생성 전까지 참가자를 각 팀에 배정할 수 있습니다.</p>
+          <p>참가자를 팀에 배정하고 경매 포인트를 수기로 입력합니다.</p>
         </div>
       </div>
 
@@ -126,14 +158,18 @@ export default function DestructionTeamAssignmentForm({
                 <strong>
                   {participant.player.nickname}#{participant.player.tag}
                 </strong>
-                <span>{participant.position}</span>
+                <span>
+                  {participant.position} · 현재{" "}
+                  {participant.player.currentTier ?? "-"} · 최고{" "}
+                  {participant.player.peakTier ?? "-"}
+                </span>
               </div>
 
               <select
                 className="admin-form__input"
                 value={assignments[participant.id] ?? ""}
                 onChange={(event) =>
-                  handleChange(participant.id, event.target.value)
+                  handleTeamChange(participant.id, event.target.value)
                 }
                 disabled={hasMatches}
               >
@@ -144,6 +180,17 @@ export default function DestructionTeamAssignmentForm({
                   </option>
                 ))}
               </select>
+
+              <input
+                className="admin-form__input"
+                value={auctionPoints[participant.id] ?? "0"}
+                onChange={(event) =>
+                  handlePointChange(participant.id, event.target.value)
+                }
+                placeholder="경매 포인트"
+                inputMode="decimal"
+                disabled={hasMatches}
+              />
             </div>
           ))}
         </div>

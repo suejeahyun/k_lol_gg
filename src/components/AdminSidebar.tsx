@@ -18,12 +18,8 @@ export default function AdminSidebar() {
           플레이어 관리
         </Link>
 
-        <Link href="/admin/champions" className="app-sidebar__link">
-          챔피언 관리
-        </Link>
-
         <Link href="/admin/seasons" className="app-sidebar__link">
-          시즌 관리
+          시즌 내전 관리
         </Link>
 
         <Link href="/admin/progress/event" className="app-sidebar__link">
@@ -32,13 +28,17 @@ export default function AdminSidebar() {
         <Link href="/admin/progress/destruction" className="app-sidebar__link">
           멸망전 관리
         </Link>
+        <Link href="/admin/images" className="app-sidebar__link">
+          우승팀 이미지 관리
+        </Link>
+        <Link href="/admin/champions" className="app-sidebar__link">
+          챔피언 관리
+        </Link>
         <Link href="/admin/notices" className="app-sidebar__link">
           공지사항 관리
         </Link>
 
-        <Link href="/admin/images" className="app-sidebar__link">
-          멸망전 우승팀 관리
-        </Link>
+
       </nav>
     </aside>
   );

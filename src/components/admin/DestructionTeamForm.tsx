@@ -2,36 +2,49 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import PlayerSearchInput from "@/components/admin/PlayerSearchInput";
+
+type Position = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
 
 type PlayerOption = {
   id: number;
   name: string;
   nickname: string;
   tag: string;
+  currentTier?: string | null;
+  peakTier?: string | null;
 };
 
 type TeamRow = {
   name: string;
-  captainId: string;
+  captainId: number | null;
+  captainLabel: string;
+  captainPosition: Position | "";
+  currentTier: string;
+  peakTier: string;
 };
 
 type Props = {
   tournamentId: number;
   hasMatches: boolean;
-  players: PlayerOption[];
 };
+
+const POSITIONS: Position[] = ["TOP", "JGL", "MID", "ADC", "SUP"];
 
 function createRows(count: number): TeamRow[] {
   return Array.from({ length: count }, (_, index) => ({
     name: `${String.fromCharCode(65 + index)}팀`,
-    captainId: "",
+    captainId: null,
+    captainLabel: "",
+    captainPosition: "",
+    currentTier: "-",
+    peakTier: "-",
   }));
 }
 
 export default function DestructionTeamForm({
   tournamentId,
   hasMatches,
-  players,
 }: Props) {
   const router = useRouter();
 
@@ -44,7 +57,11 @@ export default function DestructionTeamForm({
       ...prev,
       {
         name: `${String.fromCharCode(65 + prev.length)}팀`,
-        captainId: "",
+        captainId: null,
+        captainLabel: "",
+        captainPosition: "",
+        currentTier: "-",
+        peakTier: "-",
       },
     ]);
   };
@@ -56,10 +73,34 @@ export default function DestructionTeamForm({
     });
   };
 
-  const updateRow = (index: number, key: keyof TeamRow, value: string) => {
+  const updateRow = (
+    index: number,
+    key: keyof TeamRow,
+    value: TeamRow[keyof TeamRow]
+  ) => {
     setRows((prev) =>
       prev.map((row, rowIndex) =>
         rowIndex === index ? { ...row, [key]: value } : row
+      )
+    );
+  };
+
+  const handleCaptainChange = (
+    index: number,
+    player: PlayerOption | null,
+    label: string
+  ) => {
+    setRows((prev) =>
+      prev.map((row, rowIndex) =>
+        rowIndex === index
+          ? {
+              ...row,
+              captainId: player ? player.id : null,
+              captainLabel: label,
+              currentTier: player?.currentTier ?? "-",
+              peakTier: player?.peakTier ?? "-",
+            }
+          : row
       )
     );
   };
@@ -69,15 +110,23 @@ export default function DestructionTeamForm({
 
     const teams = rows.map((row) => ({
       name: row.name.trim(),
-      captainId: Number(row.captainId),
+      captainId: row.captainId,
+      captainPosition: row.captainPosition,
     }));
 
     const hasInvalidCaptain = teams.some(
-      (team) => Number.isNaN(team.captainId) || team.captainId <= 0
+      (team) => !team.captainId || team.captainId <= 0
     );
 
     if (hasInvalidCaptain) {
-      setError("모든 팀장을 선택해주세요.");
+      setError("모든 팀장을 등록된 플레이어 목록에서 선택해주세요.");
+      return;
+    }
+
+    const hasEmptyPosition = teams.some((team) => !team.captainPosition);
+
+    if (hasEmptyPosition) {
+      setError("모든 팀장의 포지션을 선택해주세요.");
       return;
     }
 
@@ -125,7 +174,9 @@ export default function DestructionTeamForm({
       <div className="destruction-team-form__head">
         <div>
           <h3>팀장 / 팀 입력</h3>
-          <p>등록된 플레이어 목록에서 팀장을 선택합니다.</p>
+          <p>
+            이름 또는 닉네임을 입력해 팀장을 선택하고, 팀장 포지션을 지정합니다.
+          </p>
         </div>
 
         <div className="destruction-team-form__actions">
@@ -160,21 +211,39 @@ export default function DestructionTeamForm({
               disabled={hasMatches}
             />
 
+            <PlayerSearchInput
+              value={row.captainLabel}
+              onChange={(player, label) =>
+                handleCaptainChange(index, player, label)
+              }
+              disabled={hasMatches}
+              placeholder="팀장 이름 / 닉네임 / 태그 검색"
+            />
+
             <select
               className="admin-form__input"
-              value={row.captainId}
+              value={row.captainPosition}
               onChange={(event) =>
-                updateRow(index, "captainId", event.target.value)
+                updateRow(
+                  index,
+                  "captainPosition",
+                  event.target.value as Position
+                )
               }
               disabled={hasMatches}
             >
-              <option value="">팀장 선택</option>
-              {players.map((player) => (
-                <option key={player.id} value={player.id}>
-                  {player.name} / {player.nickname}#{player.tag}
+              <option value="">팀장 포지션</option>
+              {POSITIONS.map((position) => (
+                <option key={position} value={position}>
+                  {position}
                 </option>
               ))}
             </select>
+
+            <div className="destruction-tier-box">
+              <span>현재 {row.currentTier}</span>
+              <span>최고 {row.peakTier}</span>
+            </div>
           </div>
         ))}
       </div>

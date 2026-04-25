@@ -266,7 +266,6 @@ export default async function AdminDestructionTournamentDetailPage({
         <DestructionTeamForm
           tournamentId={tournament.id}
           hasMatches={tournament.matches.length > 0}
-          players={players}
         />
 
         {tournament.teams.length === 0 ? (
@@ -316,7 +315,6 @@ export default async function AdminDestructionTournamentDetailPage({
           tournamentId={tournament.id}
           hasTeams={tournament.teams.length > 0}
           hasMatches={tournament.matches.length > 0}
-          players={players}
         />
 
         {tournament.participants.length === 0 ? (

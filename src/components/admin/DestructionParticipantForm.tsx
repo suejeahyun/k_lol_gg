@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import PlayerSearchInput from "@/components/admin/PlayerSearchInput";
 
 type Position = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
 
@@ -10,28 +11,33 @@ type PlayerOption = {
   name: string;
   nickname: string;
   tag: string;
+  currentTier?: string | null;
+  peakTier?: string | null;
 };
 
 type ParticipantRow = {
-  playerId: string;
+  playerId: number | null;
+  playerLabel: string;
   position: Position | "";
-  balanceScore: string;
+  currentTier: string;
+  peakTier: string;
 };
 
 type Props = {
   tournamentId: number;
   hasTeams: boolean;
   hasMatches: boolean;
-  players: PlayerOption[];
 };
 
 const POSITIONS: Position[] = ["TOP", "JGL", "MID", "ADC", "SUP"];
 
 function createRows(count: number): ParticipantRow[] {
   return Array.from({ length: count }, () => ({
-    playerId: "",
+    playerId: null,
+    playerLabel: "",
     position: "",
-    balanceScore: "0",
+    currentTier: "-",
+    peakTier: "-",
   }));
 }
 
@@ -39,7 +45,6 @@ export default function DestructionParticipantForm({
   tournamentId,
   hasTeams,
   hasMatches,
-  players,
 }: Props) {
   const router = useRouter();
 
@@ -61,11 +66,31 @@ export default function DestructionParticipantForm({
   const updateRow = (
     index: number,
     key: keyof ParticipantRow,
-    value: string
+    value: ParticipantRow[keyof ParticipantRow]
   ) => {
     setRows((prev) =>
       prev.map((row, rowIndex) =>
         rowIndex === index ? { ...row, [key]: value } : row
+      )
+    );
+  };
+
+  const handlePlayerChange = (
+    index: number,
+    player: PlayerOption | null,
+    label: string
+  ) => {
+    setRows((prev) =>
+      prev.map((row, rowIndex) =>
+        rowIndex === index
+          ? {
+              ...row,
+              playerId: player ? player.id : null,
+              playerLabel: label,
+              currentTier: player?.currentTier ?? "-",
+              peakTier: player?.peakTier ?? "-",
+            }
+          : row
       )
     );
   };
@@ -79,18 +104,16 @@ export default function DestructionParticipantForm({
     }
 
     const participants = rows.map((row) => ({
-      playerId: Number(row.playerId),
+      playerId: row.playerId,
       position: row.position,
-      balanceScore: Number(row.balanceScore || 0),
     }));
 
     const hasInvalidPlayer = participants.some(
-      (participant) =>
-        Number.isNaN(participant.playerId) || participant.playerId <= 0
+      (participant) => !participant.playerId || participant.playerId <= 0
     );
 
     if (hasInvalidPlayer) {
-      setError("모든 참가자를 선택해주세요.");
+      setError("모든 참가자를 등록된 플레이어 목록에서 선택해주세요.");
       return;
     }
 
@@ -147,7 +170,10 @@ export default function DestructionParticipantForm({
       <div className="destruction-participant-form__head">
         <div>
           <h3>참가자 입력</h3>
-          <p>등록된 플레이어 목록에서 참가자를 선택합니다.</p>
+          <p>
+            이름 또는 닉네임을 입력해 등록된 플레이어를 선택합니다. 현재티어와
+            최고티어는 자동 표시됩니다.
+          </p>
         </div>
 
         <div className="destruction-participant-form__actions">
@@ -178,27 +204,20 @@ export default function DestructionParticipantForm({
               {index + 1}
             </div>
 
-            <select
-              className="admin-form__input"
-              value={row.playerId}
-              onChange={(event) =>
-                updateRow(index, "playerId", event.target.value)
+            <PlayerSearchInput
+              value={row.playerLabel}
+              onChange={(player, label) =>
+                handlePlayerChange(index, player, label)
               }
               disabled={hasMatches}
-            >
-              <option value="">플레이어 선택</option>
-              {players.map((player) => (
-                <option key={player.id} value={player.id}>
-                  {player.name} / {player.nickname}#{player.tag}
-                </option>
-              ))}
-            </select>
+              placeholder="이름 / 닉네임 / 태그 검색"
+            />
 
             <select
               className="admin-form__input"
               value={row.position}
               onChange={(event) =>
-                updateRow(index, "position", event.target.value)
+                updateRow(index, "position", event.target.value as Position)
               }
               disabled={hasMatches}
             >
@@ -210,16 +229,10 @@ export default function DestructionParticipantForm({
               ))}
             </select>
 
-            <input
-              className="admin-form__input"
-              value={row.balanceScore}
-              onChange={(event) =>
-                updateRow(index, "balanceScore", event.target.value)
-              }
-              placeholder="밸런스 점수"
-              inputMode="decimal"
-              disabled={hasMatches}
-            />
+            <div className="destruction-tier-box">
+              <span>현재 {row.currentTier}</span>
+              <span>최고 {row.peakTier}</span>
+            </div>
           </div>
         ))}
       </div>
