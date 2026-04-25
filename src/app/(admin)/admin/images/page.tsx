@@ -12,6 +12,9 @@ export default async function AdminImagesPage() {
       <div className="admin-page__header">
         <div>
           <h1 className="admin-page__title">멸망전 우승팀 관리</h1>
+          <p className="admin-page__description">
+            메인 화면에 노출할 우승팀 이미지를 선택할 수 있습니다.
+          </p>
         </div>
 
         <Link href="/admin/images/new" className="admin-page__create-button">
@@ -26,10 +29,8 @@ export default async function AdminImagesPage() {
           </div>
         ) : (
           images.map((image) => {
-            const imageList = Array.isArray((image as any).imageUrls)
-              ? (image as any).imageUrls
-              : image.imageUrl
-              ? [image.imageUrl]
+            const imageList = Array.isArray(image.imageUrl)
+              ? image.imageUrl
               : [];
 
             const thumbnail = imageList[0] ?? "";
@@ -66,9 +67,29 @@ export default async function AdminImagesPage() {
                   <div className="gallery-admin-card__count">
                     등록 이미지 수: {imageList.length}장
                   </div>
+
+                  <div className="gallery-admin-card__home-state">
+                    {image.showOnHome ? "메인 노출 중" : "메인 미노출"}
+                  </div>
                 </div>
 
                 <div className="gallery-admin-card__actions">
+                  <form
+                    action={`/api/gallery-images/${image.id}/home-display`}
+                    method="post"
+                  >
+                    <button
+                      type="submit"
+                      className={
+                        image.showOnHome
+                          ? "chip-button chip-button--home-active"
+                          : "chip-button"
+                      }
+                    >
+                      {image.showOnHome ? "메인 해제" : "메인 표시"}
+                    </button>
+                  </form>
+
                   <Link
                     href={`/admin/images/${image.id}/edit`}
                     className="chip-button"

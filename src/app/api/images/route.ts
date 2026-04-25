@@ -5,6 +5,7 @@ type CreateGalleryImageBody = {
   title: string;
   description: string;
   imageUrl: string[];
+  showOnHome?: boolean;
 };
 
 export async function GET() {
@@ -16,6 +17,7 @@ export async function GET() {
     return NextResponse.json(images);
   } catch (error) {
     console.error("[GALLERY_IMAGES_GET_ERROR]", error);
+
     return NextResponse.json(
       { message: "이미지 목록 조회 중 오류가 발생했습니다." },
       { status: 500 }
@@ -26,11 +28,14 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as CreateGalleryImageBody;
+
     const title = body.title?.trim();
     const description = body.description?.trim();
     const imageUrl = Array.isArray(body.imageUrl)
       ? body.imageUrl.map((url) => url.trim()).filter(Boolean)
       : [];
+
+    const showOnHome = Boolean(body.showOnHome);
 
     if (!title) {
       return NextResponse.json(
@@ -65,12 +70,14 @@ export async function POST(req: NextRequest) {
         title,
         description,
         imageUrl,
+        showOnHome,
       },
     });
 
     return NextResponse.json(created, { status: 201 });
   } catch (error) {
     console.error("[GALLERY_IMAGES_POST_ERROR]", error);
+
     return NextResponse.json(
       { message: "이미지 등록 중 오류가 발생했습니다." },
       { status: 500 }

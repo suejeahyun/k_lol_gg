@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma/client";
 import Top3Slider from "@/components/Top3Slider";
+import GalleryWinnerSlider from "@/components/GalleryWinnerSlider";
 
 type SeasonDto = {
   id: number;
@@ -25,9 +26,7 @@ type TopPlayerDto = {
 
 type TopPageData = {
   currentSeason: SeasonDto;
-  previousSeason: SeasonDto;
   currentPlayers: TopPlayerDto[];
-  previousPlayers: TopPlayerDto[];
 };
 
 function toSeasonDto(
@@ -154,34 +153,27 @@ async function getSeasonPlayers(seasonId: number): Promise<TopPlayerDto[]> {
 }
 
 async function getTopPageData(): Promise<TopPageData> {
-  const seasons = await prisma.season.findMany({
-    orderBy: [{ isActive: "desc" }, { createdAt: "desc" }],
+  const currentSeason = await prisma.season.findFirst({
+    where: {
+      isActive: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
   });
 
-  if (seasons.length === 0) {
+  if (!currentSeason) {
     return {
       currentSeason: null,
-      previousSeason: null,
       currentPlayers: [],
-      previousPlayers: [],
     };
   }
 
-  const activeSeason = seasons.find((season) => season.isActive) ?? null;
-  const currentSeason = activeSeason ?? seasons[0];
-  const previousSeason =
-    seasons.find((season) => season.id !== currentSeason.id) ?? null;
-
-  const [currentPlayers, previousPlayers] = await Promise.all([
-    getSeasonPlayers(currentSeason.id),
-    previousSeason ? getSeasonPlayers(previousSeason.id) : Promise.resolve([]),
-  ]);
+  const currentPlayers = await getSeasonPlayers(currentSeason.id);
 
   return {
     currentSeason: toSeasonDto(currentSeason),
-    previousSeason: toSeasonDto(previousSeason),
     currentPlayers,
-    previousPlayers,
   };
 }
 
@@ -190,8 +182,24 @@ function formatDate(date: Date): string {
 }
 
 export default async function HomePage() {
-  const [topData, recentMatches] = await Promise.all([
+  const [topData, winnerImages, recentMatches] = await Promise.all([
     getTopPageData(),
+
+    prisma.galleryImage.findMany({
+      where: {
+        showOnHome: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        imageUrl: true,
+      },
+    }),
+
     prisma.matchSeries.findMany({
       orderBy: {
         matchDate: "desc",
@@ -212,13 +220,6 @@ export default async function HomePage() {
       },
     }),
   ]);
-
-  const safeTopData = {
-    currentSeason: topData.currentSeason,
-    previousSeason: topData.previousSeason,
-    currentPlayers: topData.currentPlayers,
-    previousPlayers: topData.previousPlayers,
-  };
 
   return (
     <main className="page-container">
@@ -264,16 +265,12 @@ export default async function HomePage() {
 
       <section className="section-block">
         <div className="home-top3-grid">
-          <Top3Slider
-            title="전 시즌 TOP 3"
-            seasonName={safeTopData.previousSeason?.name ?? null}
-            players={safeTopData.previousPlayers}
-          />
+          <GalleryWinnerSlider images={winnerImages} />
 
           <Top3Slider
             title="현 시즌 TOP 3"
-            seasonName={safeTopData.currentSeason?.name ?? null}
-            players={safeTopData.currentPlayers}
+            seasonName={topData.currentSeason?.name ?? null}
+            players={topData.currentPlayers}
           />
         </div>
       </section>

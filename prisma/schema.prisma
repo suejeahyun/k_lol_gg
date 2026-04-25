@@ -166,6 +166,7 @@ model GalleryImage {
   title       String
   description String   @db.Text
   imageUrl    String[]
+  showOnHome  Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
