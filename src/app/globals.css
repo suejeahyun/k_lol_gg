@@ -5157,3 +5157,96 @@ input::placeholder, textarea::placeholder, .app-input::placeholder, .kakao-searc
   font-weight: 700;
   line-height: 1.6;
 }
+
+/* ===== ADMIN EVENT MATCH LIST ===== */
+
+.admin-event-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-event-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px;
+  border: 1px solid var(--k-border);
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(15, 30, 52, 0.94), rgba(8, 20, 39, 0.94));
+  color: var(--k-text);
+  box-shadow: var(--k-glow);
+}
+
+.admin-event-card__main {
+  min-width: 0;
+  flex: 1;
+}
+
+.admin-event-card__top {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.admin-event-card__status,
+.admin-event-card__mode {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--k-border);
+  background: rgba(59, 130, 246, 0.14);
+  color: var(--k-blue-2);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.admin-event-card__mode {
+  background: rgba(34, 211, 238, 0.12);
+  color: var(--k-cyan);
+}
+
+.admin-event-card__title {
+  margin: 0 0 12px;
+  color: var(--k-text-strong);
+  font-size: 22px;
+  font-weight: 950;
+}
+
+.admin-event-card__meta,
+.admin-event-card__counts {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: var(--k-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.admin-event-card__counts {
+  margin-top: 10px;
+}
+
+.admin-event-card__actions {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .admin-event-card {
+    flex-direction: column;
+  }
+
+  .admin-event-card__actions {
+    width: 100%;
+  }
+
+  .admin-event-card__actions .chip-button {
+    width: 100%;
+  }
+}
