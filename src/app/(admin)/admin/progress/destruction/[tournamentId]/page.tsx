@@ -6,6 +6,7 @@ import DestructionParticipantForm from "@/components/admin/DestructionParticipan
 import DestructionTeamAssignmentForm from "@/components/admin/DestructionTeamAssignmentForm";
 import DestructionPreliminaryGenerator from "@/components/admin/DestructionPreliminaryGenerator";
 import DestructionMatchResultForm from "@/components/admin/DestructionMatchResultForm";
+import DestructionTournamentGenerator from "@/components/admin/DestructionTournamentGenerator";
 
 type PageProps = {
   params: Promise<{
@@ -75,9 +76,12 @@ export default async function AdminDestructionTournamentDetailPage({
             },
           },
         },
-        orderBy: {
-          id: "asc",
-        },
+        orderBy: [
+          { points: "desc" },
+          { wins: "desc" },
+          { losses: "asc" },
+          { id: "asc" },
+        ],
       },
       participants: {
         include: {
@@ -115,6 +119,14 @@ export default async function AdminDestructionTournamentDetailPage({
   const preliminaryMatches = tournament.matches.filter(
     (match) => match.stage === "PRELIMINARY"
   );
+
+  const tournamentMatches = tournament.matches.filter(
+    (match) => match.stage === "SEMI_FINAL" || match.stage === "FINAL"
+  );
+
+  const unfinishedPreliminaryCount = preliminaryMatches.filter(
+    (match) => !match.winnerTeamId
+  ).length;
 
   const hasInvalidTeamSize =
     tournament.teams.length > 0 &&
@@ -214,9 +226,11 @@ export default async function AdminDestructionTournamentDetailPage({
           <div className="empty-box">등록된 팀이 없습니다.</div>
         ) : (
           <div className="admin-event-team-list">
-            {tournament.teams.map((team) => (
+            {tournament.teams.map((team, index) => (
               <div key={team.id} className="admin-event-team-card">
-                <h3>{team.name}</h3>
+                <h3>
+                  {index + 1}위 · {team.name}
+                </h3>
 
                 <div>
                   <span>
@@ -314,6 +328,53 @@ export default async function AdminDestructionTournamentDetailPage({
         ) : (
           <div className="admin-event-bracket-list">
             {preliminaryMatches.map((match) => (
+              <div key={match.id} className="admin-event-bracket-row">
+                <div>
+                  <span>{getStageLabel(match.stage)}</span>
+                  <strong>
+                    {match.teamA.name} vs {match.teamB.name}
+                  </strong>
+                  <span>{match.round}경기</span>
+                </div>
+
+                <DestructionMatchResultForm
+                  tournamentId={tournament.id}
+                  matchId={match.id}
+                  teamA={match.teamA}
+                  teamB={match.teamB}
+                  participants={tournament.participants}
+                  initialWinnerTeamId={match.winnerTeamId}
+                  initialMvpPlayerId={match.mvpPlayerId}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="admin-form">
+        <div className="admin-page__header">
+          <div>
+            <h2 className="admin-event-section-title">상위 4팀 토너먼트</h2>
+            <p className="admin-page__description">
+              예선 결과 기준 상위 4팀으로 4강 토너먼트를 생성합니다.
+            </p>
+          </div>
+        </div>
+
+        <DestructionTournamentGenerator
+          tournamentId={tournament.id}
+          teamCount={tournament.teams.length}
+          preliminaryMatchCount={preliminaryMatches.length}
+          unfinishedPreliminaryCount={unfinishedPreliminaryCount}
+          tournamentMatchCount={tournamentMatches.length}
+        />
+
+        {tournamentMatches.length === 0 ? (
+          <div className="empty-box">생성된 토너먼트 경기가 없습니다.</div>
+        ) : (
+          <div className="admin-event-bracket-list">
+            {tournamentMatches.map((match) => (
               <div key={match.id} className="admin-event-bracket-row">
                 <div>
                   <span>{getStageLabel(match.stage)}</span>

@@ -6369,3 +6369,11 @@ input::placeholder, textarea::placeholder, .app-input::placeholder, .kakao-searc
     grid-template-columns: 1fr;
   }
 }
+
+/* ===== DESTRUCTION TOURNAMENT GENERATOR ===== */
+
+.destruction-tournament-generator {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 20px;
+}
