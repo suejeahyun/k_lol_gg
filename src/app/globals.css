@@ -6377,3 +6377,10 @@ input::placeholder, textarea::placeholder, .app-input::placeholder, .kakao-searc
   gap: 14px;
   margin-bottom: 20px;
 }
+/* ===== DESTRUCTION FINAL GENERATOR ===== */
+
+.destruction-final-generator {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 20px;
+}
