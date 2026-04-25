@@ -178,11 +178,23 @@ async function getTopPageData(): Promise<TopPageData> {
 }
 
 function formatDate(date: Date): string {
+  return new Date(date).toLocaleDateString("ko-KR");
+}
+
+function formatDateTime(date: Date): string {
   return new Date(date).toLocaleString("ko-KR");
 }
 
+function calcKda(kills: number, deaths: number, assists: number): number {
+  if (deaths === 0) {
+    return kills + assists;
+  }
+
+  return Number(((kills + assists) / deaths).toFixed(2));
+}
+
 export default async function HomePage() {
-  const [topData, winnerImages, recentMatches] = await Promise.all([
+  const [topData, winnerImages, recentMatches, notices] = await Promise.all([
     getTopPageData(),
 
     prisma.galleryImage.findMany({
@@ -212,6 +224,32 @@ export default async function HomePage() {
             name: true,
           },
         },
+        games: {
+          orderBy: {
+            gameNumber: "asc",
+          },
+          include: {
+            participants: {
+              include: {
+                player: {
+                  select: {
+                    id: true,
+                    name: true,
+                    nickname: true,
+                    tag: true,
+                  },
+                },
+                champion: {
+                  select: {
+                    id: true,
+                    name: true,
+                    imageUrl: true,
+                  },
+                },
+              },
+            },
+          },
+        },
         _count: {
           select: {
             games: true,
@@ -219,14 +257,101 @@ export default async function HomePage() {
         },
       },
     }),
+
+    prisma.notice.findMany({
+      orderBy: [{ isPinned: "desc" }, { createdAt: "desc" }],
+      take: 5,
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        isPinned: true,
+        createdAt: true,
+      },
+    }),
   ]);
 
+  const currentSeasonId = topData.currentSeason?.id ?? null;
+
+  const [seasonMatchCount, seasonGameCount, seasonParticipantCount] =
+    currentSeasonId
+      ? await Promise.all([
+          prisma.matchSeries.count({
+            where: {
+              seasonId: currentSeasonId,
+            },
+          }),
+
+          prisma.matchGame.count({
+            where: {
+              series: {
+                seasonId: currentSeasonId,
+              },
+            },
+          }),
+
+          prisma.matchParticipant.findMany({
+            where: {
+              game: {
+                series: {
+                  seasonId: currentSeasonId,
+                },
+              },
+            },
+            distinct: ["playerId"],
+            select: {
+              playerId: true,
+            },
+          }),
+        ])
+      : [0, 0, []];
+
+  const recentMvpCandidates = recentMatches.flatMap((match) =>
+    match.games.flatMap((game) =>
+      game.participants.map((participant) => {
+        const kda = calcKda(
+          participant.kills,
+          participant.deaths,
+          participant.assists
+        );
+
+        return {
+          matchId: match.id,
+          matchTitle: match.title,
+          matchDate: match.matchDate,
+          gameNumber: game.gameNumber,
+          playerId: participant.player.id,
+          name: participant.player.name,
+          nickname: participant.player.nickname,
+          tag: participant.player.tag,
+          championName: participant.champion.name,
+          championImageUrl: participant.champion.imageUrl,
+          kills: participant.kills,
+          deaths: participant.deaths,
+          assists: participant.assists,
+          kda,
+          isWin: participant.team === game.winnerTeam,
+        };
+      })
+    )
+  );
+
+  const recentMvp =
+    recentMvpCandidates.length > 0
+      ? recentMvpCandidates.sort((a, b) => {
+          if (b.kda !== a.kda) return b.kda - a.kda;
+          if (b.kills !== a.kills) return b.kills - a.kills;
+          return b.assists - a.assists;
+        })[0]
+      : null;
+
   return (
-    <main className="page-container">
-      <section className="section-block">
-        <div className="card">
-          <div className="page-title" style={{ marginBottom: "12px" }}>
-            K-LOL.GG
+    <main className="page-container home-page">
+      <section className="home-hero-grid">
+        <div className="card home-main-card">
+          <div>
+            <p className="home-eyebrow">KOREA LOL CUSTOM STATS</p>
+            <h1 className="home-main-title">K-LOL.GG</h1>
           </div>
 
           <div className="social-link-row">
@@ -239,10 +364,11 @@ export default async function HomePage() {
               <Image
                 src="/kakao.png"
                 alt="카카오톡"
-                width={56}
-                height={56}
+                width={52}
+                height={52}
                 className="social-link-image"
               />
+              <span>카카오톡</span>
             </a>
 
             <a
@@ -254,11 +380,43 @@ export default async function HomePage() {
               <Image
                 src="/discord.png"
                 alt="디스코드"
-                width={56}
-                height={56}
+                width={52}
+                height={52}
                 className="social-link-image"
               />
+              <span>디스코드</span>
             </a>
+          </div>
+        </div>
+
+        <div className="card home-season-card">
+          <div className="home-section-head">
+            <div>
+              <p className="home-eyebrow">CURRENT SEASON</p>
+              <h2 className="home-section-title">시즌 요약</h2>
+            </div>
+          </div>
+
+          <div className="home-season-grid">
+            <div className="home-stat-box">
+              <span>현재 시즌</span>
+              <strong>{topData.currentSeason?.name ?? "시즌 없음"}</strong>
+            </div>
+
+            <div className="home-stat-box">
+              <span>내전 수</span>
+              <strong>{seasonMatchCount}</strong>
+            </div>
+
+            <div className="home-stat-box">
+              <span>세트 수</span>
+              <strong>{seasonGameCount}</strong>
+            </div>
+
+            <div className="home-stat-box">
+              <span>참여 인원</span>
+              <strong>{seasonParticipantCount.length}</strong>
+            </div>
           </div>
         </div>
       </section>
@@ -276,28 +434,145 @@ export default async function HomePage() {
       </section>
 
       <section className="section-block">
+        <div className="card home-mvp-card">
+          <div className="home-section-head">
+            <div>
+              <p className="home-eyebrow">RECENT MVP</p>
+              <h2 className="home-section-title">최근 MVP</h2>
+            </div>
+
+            {recentMvp ? (
+              <Link href={`/matches/${recentMvp.matchId}`} className="chip-button">
+                경기 보기
+              </Link>
+            ) : null}
+          </div>
+
+          {recentMvp ? (
+            <div className="home-mvp-content">
+              <div className="home-mvp-champion">
+                {recentMvp.championImageUrl ? (
+                  <Image
+                    src={recentMvp.championImageUrl}
+                    alt={recentMvp.championName}
+                    width={72}
+                    height={72}
+                    className="home-mvp-champion__image"
+                  />
+                ) : (
+                  <div className="home-mvp-champion__fallback" />
+                )}
+              </div>
+
+              <div className="home-mvp-info">
+                <div className="home-mvp-name">
+                  {recentMvp.nickname}
+                  <span>#{recentMvp.tag}</span>
+                </div>
+
+                <div className="home-mvp-meta">
+                  {recentMvp.matchTitle} · {recentMvp.gameNumber}세트 ·{" "}
+                  {recentMvp.championName}
+                </div>
+              </div>
+
+              <div className="home-mvp-score">
+                <strong>{recentMvp.kda}</strong>
+                <span>
+                  {recentMvp.kills}/{recentMvp.deaths}/{recentMvp.assists}
+                </span>
+                <em>{recentMvp.isWin ? "WIN" : "LOSE"}</em>
+              </div>
+            </div>
+          ) : (
+            <div className="empty-box">최근 MVP 데이터가 없습니다.</div>
+          )}
+        </div>
+      </section>
+
+      <section className="section-block">
         <div className="card">
-          <div className="list-card__title" style={{ marginBottom: "16px" }}>
-            최근 내전
+          <div className="home-section-head">
+            <div>
+              <p className="home-eyebrow">RECENT MATCHES</p>
+              <h2 className="home-section-title">최근 내전</h2>
+            </div>
+
+            <Link href="/matches" className="chip-button">
+              전체 보기
+            </Link>
           </div>
 
           {recentMatches.length === 0 ? (
-            <p>등록된 내전이 없습니다.</p>
+            <div className="empty-box">등록된 내전이 없습니다.</div>
           ) : (
-            <div className="card-grid">
+            <div className="home-recent-match-list">
               {recentMatches.map((match) => (
                 <Link
                   key={match.id}
                   href={`/matches/${match.id}`}
-                  className="list-card"
+                  className="list-card home-recent-match-card"
                 >
-                  <div className="list-card__title">{match.title}</div>
+                  <div>
+                    <div className="list-card__title">{match.title}</div>
 
-                  <div className="list-card__meta">
-                    <div>시즌: {match.season.name}</div>
-                    <div>날짜: {formatDate(match.matchDate)}</div>
-                    <div>세트 수: {match._count.games}</div>
+                    <div className="list-card__meta">
+                      <div>시즌: {match.season.name}</div>
+                      <div>날짜: {formatDateTime(match.matchDate)}</div>
+                    </div>
                   </div>
+
+                  <div className="home-recent-match-count">
+                    <strong>{match._count.games}</strong>
+                    <span>세트</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="section-block">
+        <div className="card">
+          <div className="home-section-head">
+            <div>
+              <p className="home-eyebrow">NOTICE</p>
+              <h2 className="home-section-title">공지사항</h2>
+            </div>
+
+            <Link href="/notices" className="chip-button">
+              전체 보기
+            </Link>
+          </div>
+
+          {notices.length === 0 ? (
+            <div className="empty-box">등록된 공지사항이 없습니다.</div>
+          ) : (
+            <div className="home-notice-list">
+              {notices.map((notice) => (
+                <Link
+                  key={notice.id}
+                  href={`/notices/${notice.id}`}
+                  className="notice-card home-notice-card"
+                >
+                  <div className="notice-card__top">
+                    {notice.isPinned ? (
+                      <span className="notice-card__badge">고정</span>
+                    ) : null}
+
+                    <span className="notice-card__date">
+                      {formatDate(notice.createdAt)}
+                    </span>
+                  </div>
+
+                  <h3 className="notice-card__title">{notice.title}</h3>
+
+                  <p className="notice-card__summary">
+                    {notice.content.length > 90
+                      ? `${notice.content.slice(0, 90)}...`
+                      : notice.content}
+                  </p>
                 </Link>
               ))}
             </div>
