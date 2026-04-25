@@ -12,7 +12,7 @@ export async function GET() {
     return NextResponse.json(
       logs.map((log) => ({
         id: log.id,
-        type: log.type,
+        type: log.action,
         message: log.message,
         createdAt: log.createdAt.toISOString(),
       }))

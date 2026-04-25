@@ -54,7 +54,7 @@ export async function GET() {
         : null,
       logs: logs.map((log) => ({
         id: log.id,
-        type: log.type,
+        type: log.action,
         message: log.message,
         createdAt: log.createdAt.toISOString(),
       })),
