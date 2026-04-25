@@ -8,6 +8,7 @@ import DestructionPreliminaryGenerator from "@/components/admin/DestructionPreli
 import DestructionMatchResultForm from "@/components/admin/DestructionMatchResultForm";
 import DestructionTournamentGenerator from "@/components/admin/DestructionTournamentGenerator";
 import DestructionFinalGenerator from "@/components/admin/DestructionFinalGenerator";
+import DestructionCompleteForm from "@/components/admin/DestructionCompleteForm";
 
 type PageProps = {
   params: Promise<{
@@ -59,49 +60,61 @@ export default async function AdminDestructionTournamentDetailPage({
     notFound();
   }
 
-  const tournament = await prisma.destructionTournament.findUnique({
-    where: {
-      id,
-    },
-    include: {
-      galleryImage: true,
-      teams: {
-        include: {
-          captain: true,
-          members: {
-            include: {
-              player: true,
-            },
-            orderBy: {
-              id: "asc",
+  const [tournament, galleryImages] = await Promise.all([
+    prisma.destructionTournament.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        galleryImage: true,
+        teams: {
+          include: {
+            captain: true,
+            members: {
+              include: {
+                player: true,
+              },
+              orderBy: {
+                id: "asc",
+              },
             },
           },
+          orderBy: [
+            { points: "desc" },
+            { wins: "desc" },
+            { losses: "asc" },
+            { id: "asc" },
+          ],
         },
-        orderBy: [
-          { points: "desc" },
-          { wins: "desc" },
-          { losses: "asc" },
-          { id: "asc" },
-        ],
+        participants: {
+          include: {
+            player: true,
+            team: true,
+          },
+          orderBy: {
+            id: "asc",
+          },
+        },
+        matches: {
+          include: {
+            teamA: true,
+            teamB: true,
+          },
+          orderBy: [{ stage: "asc" }, { round: "asc" }],
+        },
       },
-      participants: {
-        include: {
-          player: true,
-          team: true,
-        },
-        orderBy: {
-          id: "asc",
-        },
+    }),
+
+    prisma.galleryImage.findMany({
+      orderBy: {
+        createdAt: "desc",
       },
-      matches: {
-        include: {
-          teamA: true,
-          teamB: true,
-        },
-        orderBy: [{ stage: "asc" }, { round: "asc" }],
+      select: {
+        id: true,
+        title: true,
       },
-    },
-  });
+    }),
+  ]);
 
   if (!tournament) {
     notFound();
@@ -217,6 +230,16 @@ export default async function AdminDestructionTournamentDetailPage({
             </p>
           </div>
         </div>
+
+        <DestructionCompleteForm
+          tournamentId={tournament.id}
+          teams={tournament.teams}
+          participants={tournament.participants}
+          galleryImages={galleryImages}
+          initialWinnerTeamId={tournament.winnerTeamId}
+          initialMvpPlayerId={tournament.mvpPlayerId}
+          initialGalleryImageId={tournament.galleryImageId}
+        />
       </section>
 
       <section className="admin-form">
