@@ -1,8 +1,8 @@
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
-import Top3Slider from "@/components/Top3Slider";
 import GalleryWinnerSlider from "@/components/GalleryWinnerSlider";
+import Top3Slider from "@/components/Top3Slider";
 
 type SeasonDto = {
   id: number;
@@ -49,7 +49,7 @@ function toSeasonDto(
   };
 }
 
-function getStatusLabel(status: string) {
+function getEventStatusLabel(status: string) {
   const labels: Record<string, string> = {
     PLANNED: "기획중",
     RECRUITING: "모집중",
@@ -62,7 +62,21 @@ function getStatusLabel(status: string) {
   return labels[status] ?? status;
 }
 
-function getProgressPercent(status?: string | null) {
+function getDestructionStatusLabel(status: string) {
+  const labels: Record<string, string> = {
+    PLANNED: "기획중",
+    RECRUITING: "모집중",
+    TEAM_BUILDING: "팀 구성중",
+    PRELIMINARY: "예선 진행",
+    TOURNAMENT: "토너먼트 진행",
+    COMPLETED: "종료",
+    CANCELLED: "취소",
+  };
+
+  return labels[status] ?? status;
+}
+
+function getEventProgressPercent(status?: string | null) {
   if (!status) return "10%";
 
   const values: Record<string, string> = {
@@ -70,6 +84,22 @@ function getProgressPercent(status?: string | null) {
     RECRUITING: "30%",
     TEAM_BUILDING: "50%",
     IN_PROGRESS: "70%",
+    COMPLETED: "100%",
+    CANCELLED: "0%",
+  };
+
+  return values[status] ?? "10%";
+}
+
+function getDestructionProgressPercent(status?: string | null) {
+  if (!status) return "10%";
+
+  const values: Record<string, string> = {
+    PLANNED: "10%",
+    RECRUITING: "25%",
+    TEAM_BUILDING: "40%",
+    PRELIMINARY: "60%",
+    TOURNAMENT: "80%",
     COMPLETED: "100%",
     CANCELLED: "0%",
   };
@@ -234,94 +264,111 @@ function calcKda(kills: number, deaths: number, assists: number): number {
 }
 
 export default async function HomePage() {
-  const [topData, winnerImages, recentMatches, notices, latestEvent] =
-    await Promise.all([
-      getTopPageData(),
+  const [
+    topData,
+    winnerImages,
+    recentMatches,
+    notices,
+    latestEvent,
+    latestDestruction,
+  ] = await Promise.all([
+    getTopPageData(),
 
-      prisma.galleryImage.findMany({
-        where: {
-          showOnHome: true,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-        select: {
-          id: true,
-          title: true,
-          description: true,
-          imageUrl: true,
-        },
-      }),
+    prisma.galleryImage.findMany({
+      where: {
+        showOnHome: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        imageUrl: true,
+      },
+    }),
 
-      prisma.matchSeries.findMany({
-        orderBy: {
-          matchDate: "desc",
-        },
-        take: 5,
-        include: {
-          season: {
-            select: {
-              id: true,
-              name: true,
-            },
+    prisma.matchSeries.findMany({
+      orderBy: {
+        matchDate: "desc",
+      },
+      take: 5,
+      include: {
+        season: {
+          select: {
+            id: true,
+            name: true,
           },
-          games: {
-            orderBy: {
-              gameNumber: "asc",
-            },
-            include: {
-              participants: {
-                include: {
-                  player: {
-                    select: {
-                      id: true,
-                      name: true,
-                      nickname: true,
-                      tag: true,
-                    },
+        },
+        games: {
+          orderBy: {
+            gameNumber: "asc",
+          },
+          include: {
+            participants: {
+              include: {
+                player: {
+                  select: {
+                    id: true,
+                    name: true,
+                    nickname: true,
+                    tag: true,
                   },
-                  champion: {
-                    select: {
-                      id: true,
-                      name: true,
-                      imageUrl: true,
-                    },
+                },
+                champion: {
+                  select: {
+                    id: true,
+                    name: true,
+                    imageUrl: true,
                   },
                 },
               },
             },
           },
-          _count: {
-            select: {
-              games: true,
-            },
+        },
+        _count: {
+          select: {
+            games: true,
           },
         },
-      }),
+      },
+    }),
 
-      prisma.notice.findMany({
-        orderBy: [{ isPinned: "desc" }, { createdAt: "desc" }],
-        take: 5,
-        select: {
-          id: true,
-          title: true,
-          content: true,
-          isPinned: true,
-          createdAt: true,
-        },
-      }),
+    prisma.notice.findMany({
+      orderBy: [{ isPinned: "desc" }, { createdAt: "desc" }],
+      take: 5,
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        isPinned: true,
+        createdAt: true,
+      },
+    }),
 
-      prisma.eventMatch.findFirst({
-        orderBy: {
-          eventDate: "desc",
-        },
-        include: {
-          participants: true,
-          teams: true,
-          matches: true,
-        },
-      }),
-    ]);
+    prisma.eventMatch.findFirst({
+      orderBy: {
+        eventDate: "desc",
+      },
+      include: {
+        participants: true,
+        teams: true,
+        matches: true,
+      },
+    }),
+
+    prisma.destructionTournament.findFirst({
+      orderBy: {
+        createdAt: "desc",
+      },
+      include: {
+        participants: true,
+        teams: true,
+        matches: true,
+      },
+    }),
+  ]);
 
   const currentSeasonId = topData.currentSeason?.id ?? null;
 
@@ -509,13 +556,17 @@ export default async function HomePage() {
                   <strong>이벤트 내전</strong>
                   <span>
                     {latestEvent
-                      ? getStatusLabel(latestEvent.status)
+                      ? getEventStatusLabel(latestEvent.status)
                       : "준비중"}
                   </span>
                 </div>
 
                 <div className="home-progress-bar">
-                  <div style={{ width: getProgressPercent(latestEvent?.status) }} />
+                  <div
+                    style={{
+                      width: getEventProgressPercent(latestEvent?.status),
+                    }}
+                  />
                 </div>
 
                 <p>
@@ -525,17 +576,34 @@ export default async function HomePage() {
                 </p>
               </Link>
 
-              <Link href="/progress/destruction" className="home-progress-item">
+              <Link
+                href="/progress/destruction"
+                className="home-progress-item"
+              >
                 <div className="home-progress-item__top">
                   <strong>멸망전</strong>
-                  <span>준비중</span>
+                  <span>
+                    {latestDestruction
+                      ? getDestructionStatusLabel(latestDestruction.status)
+                      : "준비중"}
+                  </span>
                 </div>
 
                 <div className="home-progress-bar">
-                  <div style={{ width: "10%" }} />
+                  <div
+                    style={{
+                      width: getDestructionProgressPercent(
+                        latestDestruction?.status
+                      ),
+                    }}
+                  />
                 </div>
 
-                <p>팀장, 예선 풀리그, 상위 4팀 토너먼트 구조로 준비중입니다.</p>
+                <p>
+                  {latestDestruction
+                    ? `${latestDestruction.title} · 참가자 ${latestDestruction.participants.length}명 · 팀 ${latestDestruction.teams.length}개`
+                    : "등록된 멸망전이 없습니다."}
+                </p>
               </Link>
             </div>
           </div>
@@ -557,7 +625,10 @@ export default async function HomePage() {
             </div>
 
             {recentMvp ? (
-              <Link href={`/matches/${recentMvp.matchId}`} className="chip-button">
+              <Link
+                href={`/matches/${recentMvp.matchId}`}
+                className="chip-button"
+              >
                 경기 보기
               </Link>
             ) : null}
