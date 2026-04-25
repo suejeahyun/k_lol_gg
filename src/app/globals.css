@@ -5474,3 +5474,103 @@ input::placeholder, textarea::placeholder, .app-input::placeholder, .kakao-searc
     grid-template-columns: 1fr;
   }
 }
+
+/* ===== EVENT TEAM GENERATOR ===== */
+
+.event-team-generator {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.event-team-generator__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.event-team-generator__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.event-team-generator__team {
+  padding: 16px;
+  border: 1px solid var(--k-border);
+  border-radius: 16px;
+  background: rgba(2, 6, 23, 0.42);
+}
+
+.event-team-generator__team-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.event-team-generator__team-head h3 {
+  margin: 0;
+  color: var(--k-text-strong);
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.event-team-generator__team-head span {
+  color: var(--k-blue-2);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.event-team-generator__members {
+  display: grid;
+  gap: 8px;
+}
+
+.event-team-generator__member {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 0.6fr;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--k-border);
+  border-radius: 12px;
+  background: rgba(15, 30, 52, 0.72);
+}
+
+.event-team-generator__member strong {
+  color: var(--k-text-strong);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.event-team-generator__member span {
+  color: var(--k-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.event-team-generator__member em {
+  color: var(--k-gold);
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 950;
+  text-align: right;
+}
+
+@media (max-width: 900px) {
+  .event-team-generator__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .event-team-generator__member {
+    grid-template-columns: 1fr;
+  }
+
+  .event-team-generator__member em {
+    text-align: left;
+  }
+}

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
 import EventParticipantForm from "@/components/admin/EventParticipantForm";
+import EventTeamGenerator from "@/components/admin/EventTeamGenerator";
 
 type PageProps = {
   params: Promise<{
@@ -192,14 +193,17 @@ export default async function AdminEventMatchDetailPage({
           <div>
             <h2 className="admin-event-section-title">팀 구성</h2>
             <p className="admin-page__description">
-              참가자 저장 후 팀 자동 생성 기능을 연결합니다.
+              참가자 저장 후 팀 자동 생성을 실행합니다.
             </p>
           </div>
-
-          <button type="button" className="admin-page__create-button" disabled>
-            팀 자동 생성 준비중
-          </button>
         </div>
+
+        <EventTeamGenerator
+          eventId={event.id}
+          mode={event.mode}
+          participants={event.participants}
+          hasTeams={event.teams.length > 0}
+        />
 
         {event.teams.length === 0 ? (
           <div className="empty-box">생성된 팀이 없습니다.</div>
