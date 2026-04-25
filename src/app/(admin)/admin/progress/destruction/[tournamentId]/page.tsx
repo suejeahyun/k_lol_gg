@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma/client";
 import DestructionTeamForm from "@/components/admin/DestructionTeamForm";
 import DestructionParticipantForm from "@/components/admin/DestructionParticipantForm";
 import DestructionTeamAssignmentForm from "@/components/admin/DestructionTeamAssignmentForm";
+import DestructionPreliminaryGenerator from "@/components/admin/DestructionPreliminaryGenerator";
 
 type PageProps = {
   params: Promise<{
@@ -109,6 +110,14 @@ export default async function AdminDestructionTournamentDetailPage({
         (participant) => participant.playerId === tournament.mvpPlayerId
       )
     : null;
+
+  const preliminaryMatches = tournament.matches.filter(
+    (match) => match.stage === "PRELIMINARY"
+  );
+
+  const hasInvalidTeamSize =
+    tournament.teams.length > 0 &&
+    tournament.teams.some((team) => team.members.length !== 5);
 
   return (
     <main className="admin-page">
@@ -285,18 +294,25 @@ export default async function AdminDestructionTournamentDetailPage({
       <section className="admin-form">
         <div className="admin-page__header">
           <div>
-            <h2 className="admin-event-section-title">경기</h2>
+            <h2 className="admin-event-section-title">예선 풀리그</h2>
             <p className="admin-page__description">
-              예선 풀리그와 상위 4팀 토너먼트 대진을 관리합니다.
+              모든 팀이 한 번씩 맞붙는 예선 풀리그를 생성합니다.
             </p>
           </div>
         </div>
 
-        {tournament.matches.length === 0 ? (
-          <div className="empty-box">등록된 경기가 없습니다.</div>
+        <DestructionPreliminaryGenerator
+          tournamentId={tournament.id}
+          teamCount={tournament.teams.length}
+          preliminaryMatchCount={preliminaryMatches.length}
+          hasInvalidTeamSize={hasInvalidTeamSize}
+        />
+
+        {preliminaryMatches.length === 0 ? (
+          <div className="empty-box">생성된 예선 경기가 없습니다.</div>
         ) : (
           <div className="admin-event-bracket-list">
-            {tournament.matches.map((match) => (
+            {preliminaryMatches.map((match) => (
               <div key={match.id} className="admin-event-bracket-row">
                 <div>
                   <span>{getStageLabel(match.stage)}</span>
