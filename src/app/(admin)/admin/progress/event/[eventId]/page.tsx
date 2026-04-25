@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
 import EventParticipantForm from "@/components/admin/EventParticipantForm";
 import EventTeamGenerator from "@/components/admin/EventTeamGenerator";
+import EventBracketGenerator from "@/components/admin/EventBracketGenerator";
 
 type PageProps = {
   params: Promise<{
@@ -40,6 +41,18 @@ function getModeLabel(mode: string) {
   };
 
   return labels[mode] ?? mode;
+}
+
+function getStageLabel(stage: string) {
+  const labels: Record<string, string> = {
+    ROUND_OF_32: "32강",
+    ROUND_OF_16: "16강",
+    QUARTER_FINAL: "8강",
+    SEMI_FINAL: "4강",
+    FINAL: "결승",
+  };
+
+  return labels[stage] ?? stage;
 }
 
 export default async function AdminEventMatchDetailPage({
@@ -220,6 +233,39 @@ export default async function AdminEventMatchDetailPage({
                     </span>
                   ))}
                 </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="admin-form">
+        <div className="admin-page__header">
+          <div>
+            <h2 className="admin-event-section-title">대진표</h2>
+            <p className="admin-page__description">
+              팀 생성 후 토너먼트 대진을 생성합니다.
+            </p>
+          </div>
+        </div>
+
+        <EventBracketGenerator
+          eventId={event.id}
+          teamCount={event.teams.length}
+          matchCount={event.matches.length}
+        />
+
+        {event.matches.length === 0 ? (
+          <div className="empty-box">생성된 대진이 없습니다.</div>
+        ) : (
+          <div className="admin-event-bracket-list">
+            {event.matches.map((match) => (
+              <div key={match.id} className="admin-event-bracket-row">
+                <span>{getStageLabel(match.stage)}</span>
+                <strong>
+                  {match.teamA.name} vs {match.teamB.name}
+                </strong>
+                <span>{match.round}경기</span>
               </div>
             ))}
           </div>

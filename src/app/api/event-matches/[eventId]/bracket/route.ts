@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { EventTournamentStage } from "@prisma/client";
 
 type RouteProps = {
   params: Promise<{
@@ -7,7 +8,15 @@ type RouteProps = {
   }>;
 };
 
-function getStageByTeamCount(teamCount: number) {
+type MatchCreateInput = {
+  eventId: number;
+  stage: EventTournamentStage;
+  round: number;
+  teamAId: number;
+  teamBId: number;
+};
+
+function getStageByTeamCount(teamCount: number): EventTournamentStage {
   if (teamCount <= 2) return "FINAL";
   if (teamCount <= 4) return "SEMI_FINAL";
   if (teamCount <= 8) return "QUARTER_FINAL";
@@ -62,7 +71,7 @@ export async function POST(_req: NextRequest, { params }: RouteProps) {
 
     const stage = getStageByTeamCount(event.teams.length);
     const teams = event.teams;
-    const matchData = [];
+    const matchData: MatchCreateInput[] = [];
 
     for (let i = 0; i < teams.length; i += 2) {
       const teamA = teams[i];
@@ -79,6 +88,13 @@ export async function POST(_req: NextRequest, { params }: RouteProps) {
         teamAId: teamA.id,
         teamBId: teamB.id,
       });
+    }
+
+    if (matchData.length === 0) {
+      return NextResponse.json(
+        { message: "생성 가능한 대진이 없습니다." },
+        { status: 400 }
+      );
     }
 
     const result = await prisma.$transaction(async (tx) => {

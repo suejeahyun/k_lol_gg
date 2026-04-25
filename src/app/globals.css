@@ -5574,3 +5574,45 @@ input::placeholder, textarea::placeholder, .app-input::placeholder, .kakao-searc
     text-align: left;
   }
 }
+
+/* ===== EVENT BRACKET GENERATOR ===== */
+
+.event-bracket-generator {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.admin-event-bracket-list {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-event-bracket-row {
+  display: grid;
+  grid-template-columns: 100px 1fr 100px;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  border: 1px solid var(--k-border);
+  border-radius: 14px;
+  background: rgba(2, 6, 23, 0.42);
+}
+
+.admin-event-bracket-row span {
+  color: var(--k-muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.admin-event-bracket-row strong {
+  color: var(--k-text-strong);
+  font-size: 15px;
+  font-weight: 950;
+}
+
+@media (max-width: 640px) {
+  .admin-event-bracket-row {
+    grid-template-columns: 1fr;
+  }
+}
