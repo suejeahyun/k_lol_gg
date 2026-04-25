@@ -5,6 +5,7 @@ import DestructionTeamForm from "@/components/admin/DestructionTeamForm";
 import DestructionParticipantForm from "@/components/admin/DestructionParticipantForm";
 import DestructionTeamAssignmentForm from "@/components/admin/DestructionTeamAssignmentForm";
 import DestructionPreliminaryGenerator from "@/components/admin/DestructionPreliminaryGenerator";
+import DestructionMatchResultForm from "@/components/admin/DestructionMatchResultForm";
 
 type PageProps = {
   params: Promise<{
@@ -321,6 +322,16 @@ export default async function AdminDestructionTournamentDetailPage({
                   </strong>
                   <span>{match.round}경기</span>
                 </div>
+
+                <DestructionMatchResultForm
+                  tournamentId={tournament.id}
+                  matchId={match.id}
+                  teamA={match.teamA}
+                  teamB={match.teamB}
+                  participants={tournament.participants}
+                  initialWinnerTeamId={match.winnerTeamId}
+                  initialMvpPlayerId={match.mvpPlayerId}
+                />
               </div>
             ))}
           </div>

@@ -6355,3 +6355,17 @@ input::placeholder, textarea::placeholder, .app-input::placeholder, .kakao-searc
   gap: 14px;
   margin-bottom: 20px;
 }
+/* ===== DESTRUCTION MATCH RESULT FORM ===== */
+
+.destruction-match-result-form {
+  display: grid;
+  grid-template-columns: minmax(130px, 1fr) minmax(160px, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+@media (max-width: 900px) {
+  .destruction-match-result-form {
+    grid-template-columns: 1fr;
+  }
+}
