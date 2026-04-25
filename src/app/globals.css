@@ -4700,3 +4700,21 @@ input::placeholder, textarea::placeholder, .app-input::placeholder, .kakao-searc
 .delete-button:hover {
   background: #dc2626;
 }
+
+/* ===== USER PAGE TOP SPACING FIX ===== */
+
+.app-content {
+  padding-top: 88px !important;
+}
+
+/* 공지사항 / 멸망전 우승팀은 이미 여백이 있으므로 중복 방지 */
+.notice-page,
+.gallery-page {
+  padding-top: 0 !important;
+}
+
+/* 상세 페이지류 공통 보정 */
+.page-container,
+.page-shell {
+  padding-top: 0 !important;
+}
