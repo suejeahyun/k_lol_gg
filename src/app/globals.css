@@ -4706,3 +4706,37 @@ input::placeholder, textarea::placeholder, .app-input::placeholder, .kakao-searc
   padding-top: 0 !important;
 }
 
+/* ===== USER MATCH LIST ALIGN FIX ===== */
+
+.page-container .match-row-header,
+.page-container .match-row-grid {
+  display: grid !important;
+  grid-template-columns:
+    minmax(220px, 2fr)
+    minmax(140px, 1fr)
+    minmax(180px, 1.4fr)
+    80px !important;
+  gap: 12px !important;
+  align-items: center !important;
+}
+
+.page-container .match-row-header {
+  padding: 12px 16px !important;
+}
+
+.page-container .match-row-card {
+  padding: 14px 16px !important;
+}
+
+.page-container .match-row-header > *,
+.page-container .match-row-grid > * {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.page-container .match-row-header > :nth-child(4),
+.page-container .match-row-grid > :nth-child(4) {
+  text-align: center !important;
+}
