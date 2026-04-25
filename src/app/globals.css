@@ -5264,3 +5264,125 @@ input::placeholder, textarea::placeholder, .app-input::placeholder, .kakao-searc
     grid-template-columns: 1fr;
   }
 }
+
+/* ===== ADMIN EVENT MATCH DETAIL ===== */
+
+.admin-event-detail-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-event-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.admin-event-detail-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px 20px;
+  border: 1px solid var(--k-border);
+  border-radius: 18px;
+  background: linear-gradient(
+    180deg,
+    rgba(15, 30, 52, 0.94),
+    rgba(8, 20, 39, 0.94)
+  );
+  color: var(--k-text);
+  box-shadow: var(--k-glow);
+}
+
+.admin-event-detail-card span {
+  color: var(--k-muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.admin-event-detail-card strong {
+  color: var(--k-text-strong);
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.admin-event-section-title {
+  margin: 0;
+  color: var(--k-text-strong);
+  font-size: 22px;
+  font-weight: 950;
+}
+
+.admin-event-participant-list {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-event-participant-row {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--k-border);
+  border-radius: 14px;
+  background: rgba(2, 6, 23, 0.42);
+  color: var(--k-text);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.admin-event-team-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.admin-event-team-card {
+  padding: 16px;
+  border: 1px solid var(--k-border);
+  border-radius: 16px;
+  background: rgba(2, 6, 23, 0.42);
+}
+
+.admin-event-team-card h3 {
+  margin: 0 0 12px;
+  color: var(--k-text-strong);
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.admin-event-team-card div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-event-team-card span {
+  padding: 6px 9px;
+  border: 1px solid var(--k-border);
+  border-radius: 999px;
+  color: var(--k-text);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+@media (max-width: 900px) {
+  .admin-event-detail-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-event-team-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-event-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-event-participant-row {
+    grid-template-columns: 1fr;
+  }
+}
