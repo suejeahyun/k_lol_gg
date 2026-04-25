@@ -208,7 +208,6 @@ export default async function AdminEventMatchDetailPage({
         <EventParticipantForm
           eventId={event.id}
           mode={event.mode}
-          players={players}
         />
 
         {event.participants.length === 0 ? (
