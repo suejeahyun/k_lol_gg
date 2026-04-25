@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Position } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
+import { calculateBalanceScore } from "@/lib/balance/tierScore";
 
 type RouteProps = {
   params: Promise<{
@@ -11,7 +12,6 @@ type RouteProps = {
 type ParticipantInput = {
   playerId: number;
   position?: Position | null;
-  balanceScore?: number;
 };
 
 const POSITIONS: Position[] = ["TOP", "JGL", "MID", "ADC", "SUP"];
@@ -55,7 +55,6 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
     const event = await prisma.eventMatch.findUnique({
       where: { id },
       include: {
-        participants: true,
         teams: true,
       },
     });
@@ -78,13 +77,9 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
       Number(participant.playerId)
     );
 
-    const hasInvalidPlayerId = playerIds.some((playerId) =>
-      Number.isNaN(playerId)
-    );
-
-    if (hasInvalidPlayerId) {
+    if (playerIds.some((playerId) => Number.isNaN(playerId) || playerId <= 0)) {
       return NextResponse.json(
-        { message: "플레이어 ID가 올바르지 않습니다." },
+        { message: "플레이어 정보가 올바르지 않습니다." },
         { status: 400 }
       );
     }
@@ -113,6 +108,28 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
       }
     }
 
+    const players = await prisma.player.findMany({
+      where: {
+        id: {
+          in: playerIds,
+        },
+      },
+      select: {
+        id: true,
+        peakTier: true,
+        currentTier: true,
+      },
+    });
+
+    if (players.length !== playerIds.length) {
+      return NextResponse.json(
+        { message: "등록되지 않은 플레이어가 포함되어 있습니다." },
+        { status: 400 }
+      );
+    }
+
+    const playerMap = new Map(players.map((player) => [player.id, player]));
+
     const updatedEvent = await prisma.$transaction(async (tx) => {
       await tx.eventParticipant.deleteMany({
         where: {
@@ -121,17 +138,24 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
       });
 
       await tx.eventParticipant.createMany({
-        data: participants.map((participant) => ({
-          eventId: id,
-          playerId: Number(participant.playerId),
-          position:
-            event.mode === "ARAM"
-              ? null
-              : isValidPosition(participant.position)
-                ? participant.position
-                : null,
-          balanceScore: Number(participant.balanceScore ?? 0),
-        })),
+        data: participants.map((participant) => {
+          const player = playerMap.get(Number(participant.playerId));
+
+          return {
+            eventId: id,
+            playerId: Number(participant.playerId),
+            position:
+              event.mode === "ARAM"
+                ? null
+                : isValidPosition(participant.position)
+                  ? participant.position
+                  : null,
+            balanceScore: calculateBalanceScore({
+              currentTier: player?.currentTier,
+              peakTier: player?.peakTier,
+            }),
+          };
+        }),
       });
 
       await tx.eventMatch.update({

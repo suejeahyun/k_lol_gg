@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import PlayerSearchInput from "@/components/admin/PlayerSearchInput";
 
 type EventMode = "POSITION" | "ARAM";
 type Position = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
@@ -11,31 +12,32 @@ type PlayerOption = {
   name: string;
   nickname: string;
   tag: string;
+  currentTier?: string | null;
+  peakTier?: string | null;
 };
 
 type ParticipantRow = {
-  playerId: string;
+  playerId: number | null;
+  playerLabel: string;
   position: Position | "";
-  balanceScore: string;
 };
 
 type Props = {
   eventId: number;
   mode: EventMode;
-  players: PlayerOption[];
 };
 
 const POSITIONS: Position[] = ["TOP", "JGL", "MID", "ADC", "SUP"];
 
 function createEmptyRows(count: number): ParticipantRow[] {
   return Array.from({ length: count }, () => ({
-    playerId: "",
+    playerId: null,
+    playerLabel: "",
     position: "",
-    balanceScore: "0",
   }));
 }
 
-export default function EventParticipantForm({ eventId, mode, players }: Props) {
+export default function EventParticipantForm({ eventId, mode }: Props) {
   const router = useRouter();
 
   const [rows, setRows] = useState<ParticipantRow[]>(createEmptyRows(10));
@@ -56,7 +58,7 @@ export default function EventParticipantForm({ eventId, mode, players }: Props) 
   const updateRow = (
     index: number,
     key: keyof ParticipantRow,
-    value: string
+    value: ParticipantRow[keyof ParticipantRow]
   ) => {
     setRows((prev) =>
       prev.map((row, rowIndex) =>
@@ -65,22 +67,38 @@ export default function EventParticipantForm({ eventId, mode, players }: Props) 
     );
   };
 
+  const handlePlayerChange = (
+    index: number,
+    player: PlayerOption | null,
+    label: string
+  ) => {
+    setRows((prev) =>
+      prev.map((row, rowIndex) =>
+        rowIndex === index
+          ? {
+              ...row,
+              playerId: player ? player.id : null,
+              playerLabel: label,
+            }
+          : row
+      )
+    );
+  };
+
   const handleSubmit = async () => {
     setError("");
 
     const participants = rows.map((row) => ({
-      playerId: Number(row.playerId),
+      playerId: row.playerId,
       position: mode === "ARAM" ? null : row.position,
-      balanceScore: Number(row.balanceScore || 0),
     }));
 
     const hasEmptyPlayer = participants.some(
-      (participant) =>
-        Number.isNaN(participant.playerId) || participant.playerId <= 0
+      (participant) => !participant.playerId || participant.playerId <= 0
     );
 
     if (hasEmptyPlayer) {
-      setError("모든 참가자를 선택해주세요.");
+      setError("모든 참가자를 등록된 플레이어 목록에서 선택해주세요.");
       return;
     }
 
@@ -136,7 +154,10 @@ export default function EventParticipantForm({ eventId, mode, players }: Props) 
       <div className="event-participant-form__head">
         <div>
           <h3>참가자 입력</h3>
-          <p>등록된 플레이어 목록에서 참가자를 선택합니다.</p>
+          <p>
+            이름 또는 닉네임을 입력한 뒤 검색 결과에서 플레이어를 선택합니다.
+            밸런스 점수는 현재티어와 최고티어 기준으로 자동 계산됩니다.
+          </p>
         </div>
 
         <div className="event-participant-form__actions">
@@ -152,30 +173,30 @@ export default function EventParticipantForm({ eventId, mode, players }: Props) 
 
       <div className="event-participant-form__list">
         {rows.map((row, index) => (
-          <div key={index} className="event-participant-form__row">
+          <div
+            key={index}
+            className={
+              mode === "POSITION"
+                ? "event-participant-form__row"
+                : "event-participant-form__row event-participant-form__row--aram"
+            }
+          >
             <div className="event-participant-form__index">{index + 1}</div>
 
-            <select
-              className="admin-form__input"
-              value={row.playerId}
-              onChange={(event) =>
-                updateRow(index, "playerId", event.target.value)
+            <PlayerSearchInput
+              value={row.playerLabel}
+              onChange={(player, label) =>
+                handlePlayerChange(index, player, label)
               }
-            >
-              <option value="">플레이어 선택</option>
-              {players.map((player) => (
-                <option key={player.id} value={player.id}>
-                  {player.name} / {player.nickname}#{player.tag}
-                </option>
-              ))}
-            </select>
+              placeholder="이름 / 닉네임 / 태그 검색"
+            />
 
             {mode === "POSITION" ? (
               <select
                 className="admin-form__input"
                 value={row.position}
                 onChange={(event) =>
-                  updateRow(index, "position", event.target.value)
+                  updateRow(index, "position", event.target.value as Position)
                 }
               >
                 <option value="">라인 선택</option>
@@ -186,16 +207,6 @@ export default function EventParticipantForm({ eventId, mode, players }: Props) 
                 ))}
               </select>
             ) : null}
-
-            <input
-              className="admin-form__input"
-              value={row.balanceScore}
-              onChange={(event) =>
-                updateRow(index, "balanceScore", event.target.value)
-              }
-              placeholder="밸런스 점수"
-              inputMode="decimal"
-            />
           </div>
         ))}
       </div>

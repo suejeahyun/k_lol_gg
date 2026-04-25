@@ -22,6 +22,10 @@ export default function UserSidebar() {
           랭킹
         </Link>
 
+        <Link href="/players/balance" className="app-sidebar__link">
+          팀 밸런스 생성
+        </Link>
+
         <Link href="/progress" className="app-sidebar__link">
           멸망전 / 이벤트 내전
         </Link>
