@@ -37,9 +37,16 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
       ? body.participants
       : [];
 
-    if (participants.length < 10) {
+    if (participants.length < 4) {
       return NextResponse.json(
-        { message: "참가자는 최소 10명 이상이어야 합니다." },
+        { message: "일반 참가자는 최소 4명 이상이어야 합니다." },
+        { status: 400 }
+      );
+    }
+
+    if (participants.length % 4 !== 0) {
+      return NextResponse.json(
+        { message: "일반 참가자는 4명 단위로 등록해야 합니다." },
         { status: 400 }
       );
     }
@@ -73,6 +80,8 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
       );
     }
 
+    const captainIds = tournament.teams.map((team) => team.captainId);
+
     const playerIds = participants.map((participant) =>
       Number(participant.playerId)
     );
@@ -80,6 +89,20 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
     if (playerIds.some((playerId) => Number.isNaN(playerId) || playerId <= 0)) {
       return NextResponse.json(
         { message: "플레이어 정보가 올바르지 않습니다." },
+        { status: 400 }
+      );
+    }
+
+    const includesCaptain = playerIds.some((playerId) =>
+      captainIds.includes(playerId)
+    );
+
+    if (includesCaptain) {
+      return NextResponse.json(
+        {
+          message:
+            "팀장은 팀장/팀 등록 단계에서 자동 등록됩니다. 일반 참가자 목록에는 팀장을 제외해주세요.",
+        },
         { status: 400 }
       );
     }
@@ -106,19 +129,6 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
       );
     }
 
-    const captainIds = tournament.teams.map((team) => team.captainId);
-
-    const missingCaptains = captainIds.filter(
-      (captainId) => !playerIds.includes(captainId)
-    );
-
-    if (missingCaptains.length > 0) {
-      return NextResponse.json(
-        { message: "팀장도 참가자 목록에 포함되어야 합니다." },
-        { status: 400 }
-      );
-    }
-
     const existingPlayers = await prisma.player.findMany({
       where: {
         id: {
@@ -137,69 +147,66 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
       );
     }
 
-    const updatedTournament = await prisma.$transaction(async (tx) => {
-      await tx.destructionParticipant.deleteMany({
+    await prisma.$transaction([
+      prisma.destructionParticipant.deleteMany({
         where: {
           tournamentId: id,
-        },
-      });
-
-      for (const participant of participants) {
-        const captainTeam = tournament.teams.find(
-          (team) => team.captainId === Number(participant.playerId)
-        );
-
-        await tx.destructionParticipant.create({
-          data: {
-            tournamentId: id,
-            teamId: captainTeam?.id ?? null,
-            playerId: Number(participant.playerId),
-            position: participant.position,
-            balanceScore: 0,
+          playerId: {
+            notIn: captainIds,
           },
-        });
-      }
+        },
+      }),
 
-      await tx.destructionTournament.update({
+      prisma.destructionParticipant.createMany({
+        data: participants.map((participant) => ({
+          tournamentId: id,
+          teamId: null,
+          playerId: Number(participant.playerId),
+          position: participant.position,
+          balanceScore: 0,
+        })),
+      }),
+
+      prisma.destructionTournament.update({
         where: {
           id,
         },
         data: {
           status: "RECRUITING",
         },
-      });
+      }),
 
-      await tx.adminLog.create({
+      prisma.adminLog.create({
         data: {
           action: "DESTRUCTION_PARTICIPANTS_UPDATE",
-          message: `멸망전 참가자 등록: ${tournament.title}`,
+          message: `멸망전 일반 참가자 등록: ${tournament.title}`,
         },
-      });
+      }),
+    ]);
 
-      return tx.destructionTournament.findUnique({
-        where: {
-          id,
-        },
-        include: {
-          teams: {
-            include: {
-              captain: true,
-              members: {
-                include: {
-                  player: true,
-                },
+    const updatedTournament = await prisma.destructionTournament.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        teams: {
+          include: {
+            captain: true,
+            members: {
+              include: {
+                player: true,
               },
             },
           },
-          participants: {
-            include: {
-              player: true,
-              team: true,
-            },
-          },
-          matches: true,
         },
-      });
+        participants: {
+          include: {
+            player: true,
+            team: true,
+          },
+        },
+        matches: true,
+      },
     });
 
     return NextResponse.json(updatedTournament);

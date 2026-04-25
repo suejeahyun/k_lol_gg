@@ -115,9 +115,9 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
       );
     }
 
-    const updatedTournament = await prisma.$transaction(async (tx) => {
-      for (const assignment of assignments) {
-        await tx.destructionParticipant.update({
+    await prisma.$transaction([
+      ...assignments.map((assignment) =>
+        prisma.destructionParticipant.update({
           where: {
             id: Number(assignment.participantId),
           },
@@ -125,40 +125,40 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
             teamId: Number(assignment.teamId),
             balanceScore: Number(assignment.auctionPoint),
           },
-        });
-      }
+        })
+      ),
 
-      await tx.adminLog.create({
+      prisma.adminLog.create({
         data: {
           action: "DESTRUCTION_ASSIGN_TEAMS",
           message: `멸망전 참가자 팀 배정: ${tournament.title}`,
         },
-      });
+      }),
+    ]);
 
-      return tx.destructionTournament.findUnique({
-        where: {
-          id,
-        },
-        include: {
-          teams: {
-            include: {
-              captain: true,
-              members: {
-                include: {
-                  player: true,
-                },
+    const updatedTournament = await prisma.destructionTournament.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        teams: {
+          include: {
+            captain: true,
+            members: {
+              include: {
+                player: true,
               },
             },
           },
-          participants: {
-            include: {
-              player: true,
-              team: true,
-            },
-          },
-          matches: true,
         },
-      });
+        participants: {
+          include: {
+            player: true,
+            team: true,
+          },
+        },
+        matches: true,
+      },
     });
 
     return NextResponse.json(updatedTournament);

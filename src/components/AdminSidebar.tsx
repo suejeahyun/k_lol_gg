@@ -19,7 +19,7 @@ export default function AdminSidebar() {
         </Link>
 
         <Link href="/admin/seasons" className="app-sidebar__link">
-          시즌 내전 관리
+          시즌 관리
         </Link>
 
         <Link href="/admin/progress/event" className="app-sidebar__link">

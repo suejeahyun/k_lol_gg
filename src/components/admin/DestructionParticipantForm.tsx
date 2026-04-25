@@ -48,18 +48,18 @@ export default function DestructionParticipantForm({
 }: Props) {
   const router = useRouter();
 
-  const [rows, setRows] = useState<ParticipantRow[]>(createRows(10));
+  const [rows, setRows] = useState<ParticipantRow[]>(createRows(4));
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const addFiveRows = () => {
-    setRows((prev) => [...prev, ...createRows(5)]);
+  const addFourRows = () => {
+    setRows((prev) => [...prev, ...createRows(4)]);
   };
 
-  const removeFiveRows = () => {
+  const removeFourRows = () => {
     setRows((prev) => {
-      if (prev.length <= 10) return prev;
-      return prev.slice(0, prev.length - 5);
+      if (prev.length <= 4) return prev;
+      return prev.slice(0, prev.length - 4);
     });
   };
 
@@ -171,8 +171,8 @@ export default function DestructionParticipantForm({
         <div>
           <h3>참가자 입력</h3>
           <p>
-            이름 또는 닉네임을 입력해 등록된 플레이어를 선택합니다. 현재티어와
-            최고티어는 자동 표시됩니다.
+            팀장을 제외한 일반 참가자를 4명 단위로 입력합니다. 팀장은 팀장/팀
+            등록 단계에서 자동으로 참가자에 포함됩니다.
           </p>
         </div>
 
@@ -180,19 +180,19 @@ export default function DestructionParticipantForm({
           <button
             type="button"
             className="chip-button"
-            onClick={addFiveRows}
+            onClick={addFourRows}
             disabled={hasMatches}
           >
-            5명 추가
+            4명 추가
           </button>
 
           <button
             type="button"
             className="chip-button"
-            onClick={removeFiveRows}
+            onClick={removeFourRows}
             disabled={hasMatches}
           >
-            5명 제거
+            4명 제거
           </button>
         </div>
       </div>
