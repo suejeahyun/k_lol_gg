@@ -41,6 +41,22 @@ enum EventTournamentStage {
   FINAL
 }
 
+enum DestructionStatus {
+  PLANNED
+  RECRUITING
+  TEAM_BUILDING
+  PRELIMINARY
+  TOURNAMENT
+  COMPLETED
+  CANCELLED
+}
+
+enum DestructionStage {
+  PRELIMINARY
+  SEMI_FINAL
+  FINAL
+}
+
 model Player {
   id          Int      @id @default(autoincrement())
   name        String
@@ -57,6 +73,9 @@ model Player {
   seasonResults SeasonResult[]
 
   eventParticipants EventParticipant[]
+
+  destructionCaptainTeams DestructionTeam[]
+  destructionParticipants DestructionParticipant[]
 }
 
 model Champion {
@@ -194,7 +213,8 @@ model GalleryImage {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  eventMatches EventMatch[]
+  eventMatches           EventMatch[]
+  destructionTournaments DestructionTournament[]
 }
 
 model EventMatch {
@@ -272,4 +292,85 @@ model EventTournamentMatch {
   event EventMatch @relation(fields: [eventId], references: [id])
   teamA EventTeam  @relation("EventTeamA", fields: [teamAId], references: [id])
   teamB EventTeam  @relation("EventTeamB", fields: [teamBId], references: [id])
+}
+
+model DestructionTournament {
+  id          Int               @id @default(autoincrement())
+  title       String
+  description String?           @db.Text
+  status      DestructionStatus @default(PLANNED)
+
+  startDate DateTime?
+  endDate   DateTime?
+
+  winnerTeamId   Int?
+  mvpPlayerId    Int?
+  galleryImageId Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  galleryImage GalleryImage? @relation(fields: [galleryImageId], references: [id])
+
+  teams        DestructionTeam[]
+  participants DestructionParticipant[]
+  matches      DestructionMatch[]
+}
+
+model DestructionTeam {
+  id           Int    @id @default(autoincrement())
+  tournamentId Int
+  name         String
+  captainId    Int
+
+  points Int @default(0)
+  wins   Int @default(0)
+  losses Int @default(0)
+
+  tournament DestructionTournament @relation(fields: [tournamentId], references: [id])
+  captain    Player                @relation(fields: [captainId], references: [id])
+
+  members DestructionParticipant[]
+
+  matchesA DestructionMatch[] @relation("DestructionTeamA")
+  matchesB DestructionMatch[] @relation("DestructionTeamB")
+}
+
+model DestructionParticipant {
+  id           Int      @id @default(autoincrement())
+  tournamentId Int
+  teamId       Int?
+  playerId     Int
+  position     Position
+
+  balanceScore Float @default(0)
+
+  tournament DestructionTournament @relation(fields: [tournamentId], references: [id])
+  team       DestructionTeam?      @relation(fields: [teamId], references: [id])
+  player     Player                @relation(fields: [playerId], references: [id])
+
+  @@unique([tournamentId, playerId])
+}
+
+model DestructionMatch {
+  id           Int              @id @default(autoincrement())
+  tournamentId Int
+  stage        DestructionStage
+  round        Int
+
+  teamAId      Int
+  teamBId      Int
+  winnerTeamId Int?
+  mvpPlayerId  Int?
+
+  isReplay  Boolean   @default(false)
+  matchDate DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tournament DestructionTournament @relation(fields: [tournamentId], references: [id])
+
+  teamA DestructionTeam @relation("DestructionTeamA", fields: [teamAId], references: [id])
+  teamB DestructionTeam @relation("DestructionTeamB", fields: [teamBId], references: [id])
 }
