@@ -5,6 +5,7 @@ import EventParticipantForm from "@/components/admin/EventParticipantForm";
 import EventTeamGenerator from "@/components/admin/EventTeamGenerator";
 import EventBracketGenerator from "@/components/admin/EventBracketGenerator";
 import EventMatchResultForm from "@/components/admin/EventMatchResultForm";
+import EventCompleteForm from "@/components/admin/EventCompleteForm";
 
 type PageProps = {
   params: Promise<{
@@ -66,45 +67,57 @@ export default async function AdminEventMatchDetailPage({
     notFound();
   }
 
-  const event = await prisma.eventMatch.findUnique({
-    where: {
-      id,
-    },
-    include: {
-      galleryImage: true,
-      participants: {
-        include: {
-          player: true,
-          team: true,
-        },
-        orderBy: {
-          id: "asc",
-        },
+  const [event, galleryImages] = await Promise.all([
+    prisma.eventMatch.findUnique({
+      where: {
+        id,
       },
-      teams: {
-        include: {
-          members: {
-            include: {
-              player: true,
-            },
-            orderBy: {
-              id: "asc",
-            },
+      include: {
+        galleryImage: true,
+        participants: {
+          include: {
+            player: true,
+            team: true,
+          },
+          orderBy: {
+            id: "asc",
           },
         },
-        orderBy: {
-          id: "asc",
+        teams: {
+          include: {
+            members: {
+              include: {
+                player: true,
+              },
+              orderBy: {
+                id: "asc",
+              },
+            },
+          },
+          orderBy: {
+            id: "asc",
+          },
+        },
+        matches: {
+          include: {
+            teamA: true,
+            teamB: true,
+          },
+          orderBy: [{ stage: "asc" }, { round: "asc" }],
         },
       },
-      matches: {
-        include: {
-          teamA: true,
-          teamB: true,
-        },
-        orderBy: [{ stage: "asc" }, { round: "asc" }],
+    }),
+
+    prisma.galleryImage.findMany({
+      orderBy: {
+        createdAt: "desc",
       },
-    },
-  });
+      select: {
+        id: true,
+        title: true,
+      },
+    }),
+  ]);
 
   if (!event) {
     notFound();
@@ -283,6 +296,27 @@ export default async function AdminEventMatchDetailPage({
             ))}
           </div>
         )}
+      </section>
+
+      <section className="admin-form">
+        <div className="admin-page__header">
+          <div>
+            <h2 className="admin-event-section-title">최종 결과</h2>
+            <p className="admin-page__description">
+              우승 팀, MVP, 연결할 갤러리 이미지를 선택하고 이벤트를 종료합니다.
+            </p>
+          </div>
+        </div>
+
+        <EventCompleteForm
+          eventId={event.id}
+          teams={event.teams}
+          participants={event.participants}
+          galleryImages={galleryImages}
+          initialWinnerTeamId={event.winnerTeamId}
+          initialMvpPlayerId={event.mvpPlayerId}
+          initialGalleryImageId={event.galleryImageId}
+        />
       </section>
     </main>
   );

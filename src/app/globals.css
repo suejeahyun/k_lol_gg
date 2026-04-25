@@ -5650,3 +5650,23 @@ input::placeholder, textarea::placeholder, .app-input::placeholder, .kakao-searc
     grid-template-columns: 1fr;
   }
 }
+
+/* ===== EVENT COMPLETE FORM ===== */
+
+.event-complete-form {
+  display: grid;
+  gap: 12px;
+}
+
+.event-complete-form__grid {
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) minmax(160px, 1fr) minmax(180px, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+@media (max-width: 900px) {
+  .event-complete-form__grid {
+    grid-template-columns: 1fr;
+  }
+}
