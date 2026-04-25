@@ -5960,3 +5960,114 @@ input::placeholder, textarea::placeholder, .app-input::placeholder, .kakao-searc
     grid-template-columns: 1fr;
   }
 }
+
+/* ===== USER PROGRESS MAIN ===== */
+
+.progress-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.progress-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.progress-overview-card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-height: 320px;
+  padding: 24px;
+  border: 1px solid var(--k-border);
+  border-radius: 22px;
+  background: linear-gradient(
+    180deg,
+    rgba(15, 30, 52, 0.94),
+    rgba(8, 20, 39, 0.94)
+  );
+  color: var(--k-text);
+  box-shadow: var(--k-glow);
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.progress-overview-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--k-border-strong);
+  box-shadow: var(--k-shadow), 0 0 34px rgba(59, 130, 246, 0.2);
+}
+
+.progress-overview-card__top {
+  display: grid;
+  gap: 6px;
+}
+
+.progress-overview-card__top span {
+  color: var(--k-cyan);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.progress-overview-card__top strong {
+  color: var(--k-text-strong);
+  font-size: 28px;
+  font-weight: 950;
+  letter-spacing: -0.5px;
+}
+
+.progress-overview-card p {
+  margin: 0;
+  color: var(--k-muted);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.7;
+}
+
+.progress-overview-card__stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.progress-overview-card__stats div,
+.progress-overview-card__latest {
+  display: grid;
+  gap: 7px;
+  padding: 15px;
+  border: 1px solid var(--k-border);
+  border-radius: 16px;
+  background: rgba(2, 6, 23, 0.42);
+}
+
+.progress-overview-card__stats span,
+.progress-overview-card__latest span {
+  color: var(--k-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.progress-overview-card__stats strong,
+.progress-overview-card__latest strong {
+  color: var(--k-text-strong);
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.progress-overview-card__latest em {
+  color: var(--k-blue-2);
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+@media (max-width: 900px) {
+  .progress-overview-grid {
+    grid-template-columns: 1fr;
+  }
+}
