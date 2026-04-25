@@ -60,7 +60,7 @@ export default async function AdminDestructionTournamentDetailPage({
     notFound();
   }
 
-  const [tournament, galleryImages] = await Promise.all([
+  const [tournament, galleryImages, players] = await Promise.all([
     prisma.destructionTournament.findUnique({
       where: {
         id,
@@ -112,6 +112,16 @@ export default async function AdminDestructionTournamentDetailPage({
       select: {
         id: true,
         title: true,
+      },
+    }),
+
+    prisma.player.findMany({
+      orderBy: [{ name: "asc" }, { nickname: "asc" }],
+      select: {
+        id: true,
+        name: true,
+        nickname: true,
+        tag: true,
       },
     }),
   ]);
@@ -247,8 +257,8 @@ export default async function AdminDestructionTournamentDetailPage({
           <div>
             <h2 className="admin-event-section-title">팀장 / 팀</h2>
             <p className="admin-page__description">
-              팀 수에 맞춰 팀장을 등록합니다. 팀장은 자동으로 해당 팀 참가자로
-              등록됩니다.
+              등록된 플레이어 목록에서 팀장을 선택합니다. 팀장은 자동으로 해당
+              팀 참가자로 등록됩니다.
             </p>
           </div>
         </div>
@@ -256,6 +266,7 @@ export default async function AdminDestructionTournamentDetailPage({
         <DestructionTeamForm
           tournamentId={tournament.id}
           hasMatches={tournament.matches.length > 0}
+          players={players}
         />
 
         {tournament.teams.length === 0 ? (
@@ -296,7 +307,7 @@ export default async function AdminDestructionTournamentDetailPage({
           <div>
             <h2 className="admin-event-section-title">참가자</h2>
             <p className="admin-page__description">
-              팀장을 포함해 참가자와 지정 포지션을 등록합니다.
+              등록된 플레이어 목록에서 참가자와 지정 포지션을 선택합니다.
             </p>
           </div>
         </div>
@@ -305,6 +316,7 @@ export default async function AdminDestructionTournamentDetailPage({
           tournamentId={tournament.id}
           hasTeams={tournament.teams.length > 0}
           hasMatches={tournament.matches.length > 0}
+          players={players}
         />
 
         {tournament.participants.length === 0 ? (

@@ -6,6 +6,13 @@ import { useState } from "react";
 type EventMode = "POSITION" | "ARAM";
 type Position = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
 
+type PlayerOption = {
+  id: number;
+  name: string;
+  nickname: string;
+  tag: string;
+};
+
 type ParticipantRow = {
   playerId: string;
   position: Position | "";
@@ -15,6 +22,7 @@ type ParticipantRow = {
 type Props = {
   eventId: number;
   mode: EventMode;
+  players: PlayerOption[];
 };
 
 const POSITIONS: Position[] = ["TOP", "JGL", "MID", "ADC", "SUP"];
@@ -27,7 +35,7 @@ function createEmptyRows(count: number): ParticipantRow[] {
   }));
 }
 
-export default function EventParticipantForm({ eventId, mode }: Props) {
+export default function EventParticipantForm({ eventId, mode, players }: Props) {
   const router = useRouter();
 
   const [rows, setRows] = useState<ParticipantRow[]>(createEmptyRows(10));
@@ -72,7 +80,17 @@ export default function EventParticipantForm({ eventId, mode }: Props) {
     );
 
     if (hasEmptyPlayer) {
-      setError("모든 참가자의 playerId를 입력해주세요.");
+      setError("모든 참가자를 선택해주세요.");
+      return;
+    }
+
+    const playerIds = participants.map((participant) => participant.playerId);
+    const hasDuplicatedPlayer = playerIds.some(
+      (playerId, index) => playerIds.indexOf(playerId) !== index
+    );
+
+    if (hasDuplicatedPlayer) {
+      setError("중복된 참가자가 있습니다.");
       return;
     }
 
@@ -95,9 +113,7 @@ export default function EventParticipantForm({ eventId, mode }: Props) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          participants,
-        }),
+        body: JSON.stringify({ participants }),
       });
 
       const data = await res.json();
@@ -120,10 +136,7 @@ export default function EventParticipantForm({ eventId, mode }: Props) {
       <div className="event-participant-form__head">
         <div>
           <h3>참가자 입력</h3>
-          <p>
-            참가자는 5명 단위로 추가합니다. 현재 {rows.length}명 /{" "}
-            {rows.length / 5}팀 구성 가능
-          </p>
+          <p>등록된 플레이어 목록에서 참가자를 선택합니다.</p>
         </div>
 
         <div className="event-participant-form__actions">
@@ -137,27 +150,25 @@ export default function EventParticipantForm({ eventId, mode }: Props) {
         </div>
       </div>
 
-      <div className="event-participant-form__header">
-        <span>번호</span>
-        <span>Player ID</span>
-        {mode === "POSITION" ? <span>포지션</span> : null}
-        <span>밸런스 점수</span>
-      </div>
-
       <div className="event-participant-form__list">
         {rows.map((row, index) => (
           <div key={index} className="event-participant-form__row">
             <div className="event-participant-form__index">{index + 1}</div>
 
-            <input
+            <select
               className="admin-form__input"
               value={row.playerId}
               onChange={(event) =>
                 updateRow(index, "playerId", event.target.value)
               }
-              placeholder="예: 1"
-              inputMode="numeric"
-            />
+            >
+              <option value="">플레이어 선택</option>
+              {players.map((player) => (
+                <option key={player.id} value={player.id}>
+                  {player.name} / {player.nickname}#{player.tag}
+                </option>
+              ))}
+            </select>
 
             {mode === "POSITION" ? (
               <select
@@ -182,7 +193,7 @@ export default function EventParticipantForm({ eventId, mode }: Props) {
               onChange={(event) =>
                 updateRow(index, "balanceScore", event.target.value)
               }
-              placeholder="예: 75"
+              placeholder="밸런스 점수"
               inputMode="decimal"
             />
           </div>

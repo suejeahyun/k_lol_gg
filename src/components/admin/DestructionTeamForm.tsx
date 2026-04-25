@@ -3,6 +3,13 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+type PlayerOption = {
+  id: number;
+  name: string;
+  nickname: string;
+  tag: string;
+};
+
 type TeamRow = {
   name: string;
   captainId: string;
@@ -11,6 +18,7 @@ type TeamRow = {
 type Props = {
   tournamentId: number;
   hasMatches: boolean;
+  players: PlayerOption[];
 };
 
 function createRows(count: number): TeamRow[] {
@@ -23,6 +31,7 @@ function createRows(count: number): TeamRow[] {
 export default function DestructionTeamForm({
   tournamentId,
   hasMatches,
+  players,
 }: Props) {
   const router = useRouter();
 
@@ -68,7 +77,17 @@ export default function DestructionTeamForm({
     );
 
     if (hasInvalidCaptain) {
-      setError("모든 팀장의 playerId를 입력해주세요.");
+      setError("모든 팀장을 선택해주세요.");
+      return;
+    }
+
+    const captainIds = teams.map((team) => team.captainId);
+    const hasDuplicatedCaptain = captainIds.some(
+      (captainId, index) => captainIds.indexOf(captainId) !== index
+    );
+
+    if (hasDuplicatedCaptain) {
+      setError("중복된 팀장이 있습니다.");
       return;
     }
 
@@ -106,7 +125,7 @@ export default function DestructionTeamForm({
       <div className="destruction-team-form__head">
         <div>
           <h3>팀장 / 팀 입력</h3>
-          <p>팀 수는 고정하지 않습니다. 팀 수만큼 팀장을 등록합니다.</p>
+          <p>등록된 플레이어 목록에서 팀장을 선택합니다.</p>
         </div>
 
         <div className="destruction-team-form__actions">
@@ -141,22 +160,29 @@ export default function DestructionTeamForm({
               disabled={hasMatches}
             />
 
-            <input
+            <select
               className="admin-form__input"
               value={row.captainId}
               onChange={(event) =>
                 updateRow(index, "captainId", event.target.value)
               }
-              placeholder="팀장 playerId"
-              inputMode="numeric"
               disabled={hasMatches}
-            />
+            >
+              <option value="">팀장 선택</option>
+              {players.map((player) => (
+                <option key={player.id} value={player.id}>
+                  {player.name} / {player.nickname}#{player.tag}
+                </option>
+              ))}
+            </select>
           </div>
         ))}
       </div>
 
       {hasMatches ? (
-        <div className="empty-box">경기가 생성된 멸망전은 팀을 수정할 수 없습니다.</div>
+        <div className="empty-box">
+          경기가 생성된 멸망전은 팀을 수정할 수 없습니다.
+        </div>
       ) : null}
 
       {error ? <p className="notice-form__error">{error}</p> : null}

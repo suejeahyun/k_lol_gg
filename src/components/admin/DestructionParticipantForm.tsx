@@ -5,6 +5,13 @@ import { useState } from "react";
 
 type Position = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
 
+type PlayerOption = {
+  id: number;
+  name: string;
+  nickname: string;
+  tag: string;
+};
+
 type ParticipantRow = {
   playerId: string;
   position: Position | "";
@@ -15,6 +22,7 @@ type Props = {
   tournamentId: number;
   hasTeams: boolean;
   hasMatches: boolean;
+  players: PlayerOption[];
 };
 
 const POSITIONS: Position[] = ["TOP", "JGL", "MID", "ADC", "SUP"];
@@ -31,6 +39,7 @@ export default function DestructionParticipantForm({
   tournamentId,
   hasTeams,
   hasMatches,
+  players,
 }: Props) {
   const router = useRouter();
 
@@ -81,7 +90,17 @@ export default function DestructionParticipantForm({
     );
 
     if (hasInvalidPlayer) {
-      setError("모든 참가자의 playerId를 입력해주세요.");
+      setError("모든 참가자를 선택해주세요.");
+      return;
+    }
+
+    const playerIds = participants.map((participant) => participant.playerId);
+    const hasDuplicatedPlayer = playerIds.some(
+      (playerId, index) => playerIds.indexOf(playerId) !== index
+    );
+
+    if (hasDuplicatedPlayer) {
+      setError("중복된 참가자가 있습니다.");
       return;
     }
 
@@ -128,9 +147,7 @@ export default function DestructionParticipantForm({
       <div className="destruction-participant-form__head">
         <div>
           <h3>참가자 입력</h3>
-          <p>
-            팀장을 포함해 참가자를 입력합니다. 현재 {rows.length}명 등록 예정
-          </p>
+          <p>등록된 플레이어 목록에서 참가자를 선택합니다.</p>
         </div>
 
         <div className="destruction-participant-form__actions">
@@ -161,16 +178,21 @@ export default function DestructionParticipantForm({
               {index + 1}
             </div>
 
-            <input
+            <select
               className="admin-form__input"
               value={row.playerId}
               onChange={(event) =>
                 updateRow(index, "playerId", event.target.value)
               }
-              placeholder="playerId"
-              inputMode="numeric"
               disabled={hasMatches}
-            />
+            >
+              <option value="">플레이어 선택</option>
+              {players.map((player) => (
+                <option key={player.id} value={player.id}>
+                  {player.name} / {player.nickname}#{player.tag}
+                </option>
+              ))}
+            </select>
 
             <select
               className="admin-form__input"

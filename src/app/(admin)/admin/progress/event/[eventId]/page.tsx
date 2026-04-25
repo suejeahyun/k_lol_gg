@@ -67,7 +67,7 @@ export default async function AdminEventMatchDetailPage({
     notFound();
   }
 
-  const [event, galleryImages] = await Promise.all([
+  const [event, galleryImages, players] = await Promise.all([
     prisma.eventMatch.findUnique({
       where: {
         id,
@@ -115,6 +115,16 @@ export default async function AdminEventMatchDetailPage({
       select: {
         id: true,
         title: true,
+      },
+    }),
+
+    prisma.player.findMany({
+      orderBy: [{ name: "asc" }, { nickname: "asc" }],
+      select: {
+        id: true,
+        name: true,
+        nickname: true,
+        tag: true,
       },
     }),
   ]);
@@ -190,13 +200,16 @@ export default async function AdminEventMatchDetailPage({
           <div>
             <h2 className="admin-event-section-title">참가자 등록</h2>
             <p className="admin-page__description">
-              참가자는 5명 단위로 입력합니다. 칼바람 모드는 포지션 없이
-              저장됩니다.
+              등록된 플레이어 목록에서 참가자를 선택합니다.
             </p>
           </div>
         </div>
 
-        <EventParticipantForm eventId={event.id} mode={event.mode} />
+        <EventParticipantForm
+          eventId={event.id}
+          mode={event.mode}
+          players={players}
+        />
 
         {event.participants.length === 0 ? (
           <div className="empty-box">등록된 참가자가 없습니다.</div>

@@ -23,15 +23,7 @@ export default function UserSidebar() {
         </Link>
 
         <Link href="/progress" className="app-sidebar__link">
-          진행현황
-        </Link>
-
-        <Link href="/progress/event" className="app-sidebar__link">
-          이벤트 내전
-        </Link>
-
-        <Link href="/progress/destruction" className="app-sidebar__link">
-          멸망전
+          멸망전 / 이벤트 내전
         </Link>
 
         <Link href="/notices" className="app-sidebar__link">
