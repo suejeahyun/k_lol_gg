@@ -29,7 +29,9 @@ export default function AdminSidebar() {
         <Link href="/admin/progress/event" className="app-sidebar__link">
           이벤트 내전 관리
         </Link>
-
+        <Link href="/admin/progress/destruction" className="app-sidebar__link">
+          멸망전 관리
+        </Link>
         <Link href="/admin/notices" className="app-sidebar__link">
           공지사항 관리
         </Link>
