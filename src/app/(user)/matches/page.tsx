@@ -115,7 +115,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
         <p>검색 결과가 없습니다.</p>
       ) : (
         <>
-          <div className="player-row-header clickable match-row-header">
+          <div className="match-row-header">
             <Link href={sortLink("title")}>내전명</Link>
             <Link href={sortLink("season")}>시즌</Link>
             <Link href={sortLink("matchDate")}>날짜</Link>

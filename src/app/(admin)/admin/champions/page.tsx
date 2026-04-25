@@ -141,11 +141,10 @@ export default function AdminChampionsPage() {
       </div>
 
       <div className="card">
-        <div className="player-row-header admin-player-row-header">
+        <div className="admin-player-row-header">
           <div>챔피언</div>
           <div>이미지</div>
           <div>생성일</div>
-          <div style={{ textAlign: "right" }}>관리</div>
         </div>
 
         <div className="card-grid">

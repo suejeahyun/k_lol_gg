@@ -19,11 +19,10 @@ export default async function AdminSeasonsPage() {
       <SeasonCreateForm />
 
       <div className="card">
-        <div className="player-row-header admin-player-row-header">
+        <div className="admin-player-row-header">
           <div>시즌명</div>
           <div>상태</div>
           <div>생성일</div>
-          <div style={{ textAlign: "right" }}>관리</div>
         </div>
 
         <div className="card-grid">

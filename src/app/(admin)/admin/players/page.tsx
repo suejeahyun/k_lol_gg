@@ -601,7 +601,7 @@ export default function AdminPlayersPage() {
         </div>
 
         <div
-          className="player-row-header admin-player-row-header"
+          className="admin-player-row-header"
           style={{
             gridTemplateColumns: "1.2fr 1.2fr 1fr 1fr 1fr",
           }}
@@ -610,7 +610,6 @@ export default function AdminPlayersPage() {
           <div>닉네임#태그</div>
           <div>최대 티어</div>
           <div>현재 티어</div>
-          <div style={{ textAlign: "right" }}>관리</div>
         </div>
 
         {loading ? (

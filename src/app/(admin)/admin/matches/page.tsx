@@ -105,12 +105,11 @@ export default async function AdminMatchesPage({
         <p>등록된 내전이 없습니다.</p>
       ) : (
         <>
-          <div className="player-row-header admin-match-row-header">
+          <div className="admin-match-row-header">
             <div>제목</div>
             <div>날짜</div>
             <div>시즌</div>
             <div>세트 수</div>
-            <div>관리</div>
           </div>
 
           <div className="card-grid">

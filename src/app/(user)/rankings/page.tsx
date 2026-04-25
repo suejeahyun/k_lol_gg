@@ -132,7 +132,7 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
           <p>랭킹 데이터가 없습니다.</p>
         ) : (
           <>
-            <div className="player-row-header clickable ranking-row-header">
+            <div className="ranking-row-header">
               <div>순위</div>
               <Link href={sortLink("name")}>이름</Link>
               <div>닉네임#태그</div>
