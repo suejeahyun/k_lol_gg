@@ -55,11 +55,22 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const created = await prisma.season.create({
-      data: {
-        name,
-        isActive: activeSeason ? false : true,
-      },
+    const created = await prisma.$transaction(async (tx) => {
+      const season = await tx.season.create({
+        data: {
+          name,
+          isActive: activeSeason ? false : true,
+        },
+      });
+
+      await tx.adminLog.create({
+        data: {
+          action: "SEASON_CREATE",
+          message: `시즌 등록: ${season.name}${season.isActive ? " / 활성 시즌" : ""}`,
+        },
+      });
+
+      return season;
     });
 
     return NextResponse.json(created, { status: 201 });

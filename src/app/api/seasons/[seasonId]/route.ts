@@ -32,6 +32,21 @@ export async function PATCH(
       );
     }
 
+    const season = await prisma.season.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    if (!season) {
+      return NextResponse.json(
+        { message: "Season not found" },
+        { status: 404 }
+      );
+    }
+
     const existing = await prisma.season.findFirst({
       where: {
         name,
@@ -51,11 +66,22 @@ export async function PATCH(
       );
     }
 
-    const updated = await prisma.season.update({
-      where: { id },
-      data: {
-        name,
-      },
+    const updated = await prisma.$transaction(async (tx) => {
+      const nextSeason = await tx.season.update({
+        where: { id },
+        data: {
+          name,
+        },
+      });
+
+      await tx.adminLog.create({
+        data: {
+          action: "SEASON_UPDATE",
+          message: `시즌 수정: ${season.name} → ${nextSeason.name}`,
+        },
+      });
+
+      return nextSeason;
     });
 
     return NextResponse.json(updated);
@@ -88,6 +114,7 @@ export async function DELETE(
       where: { id },
       select: {
         id: true,
+        name: true,
         isActive: true,
       },
     });
@@ -115,26 +142,35 @@ export async function DELETE(
       );
     }
 
-    await prisma.season.delete({
-      where: { id },
-    });
-
-    if (season.isActive) {
-      const latestSeason = await prisma.season.findFirst({
-        orderBy: {
-          id: "desc",
-        },
+    await prisma.$transaction(async (tx) => {
+      await tx.season.delete({
+        where: { id },
       });
 
-      if (latestSeason) {
-        await prisma.season.update({
-          where: { id: latestSeason.id },
-          data: {
-            isActive: true,
+      if (season.isActive) {
+        const latestSeason = await tx.season.findFirst({
+          orderBy: {
+            id: "desc",
           },
         });
+
+        if (latestSeason) {
+          await tx.season.update({
+            where: { id: latestSeason.id },
+            data: {
+              isActive: true,
+            },
+          });
+        }
       }
-    }
+
+      await tx.adminLog.create({
+        data: {
+          action: "SEASON_DELETE",
+          message: `시즌 삭제: ${season.name}`,
+        },
+      });
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

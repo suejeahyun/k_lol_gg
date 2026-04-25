@@ -27,7 +27,11 @@ export default async function AdminMatchesPage({
     ? {
         OR: [
           { title: { contains: query, mode: "insensitive" as const } },
-          { season: { name: { contains: query, mode: "insensitive" as const } } },
+          {
+            season: {
+              name: { contains: query, mode: "insensitive" as const },
+            },
+          },
         ],
       }
     : {};
@@ -114,7 +118,9 @@ export default async function AdminMatchesPage({
               <div key={match.id} className="admin-player-row-card">
                 <div className="admin-match-row-grid">
                   <div className="player-col player-name">{match.title}</div>
-                  <div className="player-col">{formatDate(match.matchDate)}</div>
+                  <div className="player-col">
+                    {formatDate(match.matchDate)}
+                  </div>
                   <div className="player-col">{match.season.name}</div>
                   <div className="player-col">{match._count.games}</div>
 
@@ -130,7 +136,10 @@ export default async function AdminMatchesPage({
                       수정
                     </Link>
 
-                    <MatchDeleteButton matchId={match.id} />
+                    <MatchDeleteButton
+                      matchId={match.id}
+                      matchTitle={match.title}
+                    />
                   </div>
                 </div>
               </div>

@@ -80,7 +80,7 @@ export async function POST(req: Request) {
 
     const season = await prisma.season.findUnique({
       where: { id: body.seasonId },
-      select: { id: true },
+      select: { id: true, name: true },
     });
 
     if (!season) {
@@ -143,38 +143,49 @@ export async function POST(req: Request) {
       );
     }
 
-    const created = await prisma.matchSeries.create({
-      data: {
-        title: body.title.trim(),
-        matchDate: new Date(body.matchDate),
-        seasonId: body.seasonId,
-        games: {
-          create: body.games.map((game) => ({
-            gameNumber: game.gameNumber,
-            durationMin: 0,
-            winnerTeam: resolveWinnerTeam(game.participants),
-            participants: {
-              create: game.participants.map((participant) => ({
-                playerId: participant.playerId,
-                championId: participant.championId,
-                team: participant.team,
-                position: participant.position,
-                kills: participant.kills,
-                deaths: participant.deaths,
-                assists: participant.assists,
-              })),
-            },
-          })),
-        },
-      },
-      include: {
-        season: true,
-        games: {
-          include: {
-            participants: true,
+    const created = await prisma.$transaction(async (tx) => {
+      const match = await tx.matchSeries.create({
+        data: {
+          title: body.title.trim(),
+          matchDate: new Date(body.matchDate),
+          seasonId: body.seasonId,
+          games: {
+            create: body.games.map((game) => ({
+              gameNumber: game.gameNumber,
+              durationMin: 0,
+              winnerTeam: resolveWinnerTeam(game.participants),
+              participants: {
+                create: game.participants.map((participant) => ({
+                  playerId: participant.playerId,
+                  championId: participant.championId,
+                  team: participant.team,
+                  position: participant.position,
+                  kills: participant.kills,
+                  deaths: participant.deaths,
+                  assists: participant.assists,
+                })),
+              },
+            })),
           },
         },
-      },
+        include: {
+          season: true,
+          games: {
+            include: {
+              participants: true,
+            },
+          },
+        },
+      });
+
+      await tx.adminLog.create({
+        data: {
+          action: "MATCH_CREATE",
+          message: `내전 등록: ${match.title} / 시즌: ${match.season.name} / 세트: ${match.games.length}개`,
+        },
+      });
+
+      return match;
     });
 
     return NextResponse.json(created);

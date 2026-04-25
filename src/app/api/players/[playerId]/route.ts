@@ -154,15 +154,26 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       );
     }
 
-    const updatedPlayer = await prisma.player.update({
-      where: { id },
-      data: {
-        name,
-        nickname,
-        tag,
-        peakTier,
-        currentTier,
-      },
+    const updatedPlayer = await prisma.$transaction(async (tx) => {
+      const updated = await tx.player.update({
+        where: { id },
+        data: {
+          name,
+          nickname,
+          tag,
+          peakTier,
+          currentTier,
+        },
+      });
+
+      await tx.adminLog.create({
+        data: {
+          action: "PLAYER_UPDATE",
+          message: `플레이어 수정: ${player.name} (${player.nickname}#${player.tag}) → ${updated.name} (${updated.nickname}#${updated.tag})`,
+        },
+      });
+
+      return updated;
     });
 
     return NextResponse.json({
@@ -238,8 +249,17 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
       );
     }
 
-    await prisma.player.delete({
-      where: { id },
+    await prisma.$transaction(async (tx) => {
+      await tx.player.delete({
+        where: { id },
+      });
+
+      await tx.adminLog.create({
+        data: {
+          action: "PLAYER_DELETE",
+          message: `플레이어 삭제: ${player.name} (${player.nickname}#${player.tag})`,
+        },
+      });
     });
 
     return NextResponse.json({

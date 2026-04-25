@@ -138,14 +138,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const created = await prisma.player.create({
-      data: {
-        name,
-        nickname,
-        tag,
-        peakTier,
-        currentTier,
-      },
+    const created = await prisma.$transaction(async (tx) => {
+      const player = await tx.player.create({
+        data: {
+          name,
+          nickname,
+          tag,
+          peakTier,
+          currentTier,
+        },
+      });
+
+      await tx.adminLog.create({
+        data: {
+          action: "PLAYER_CREATE",
+          message: `플레이어 등록: ${player.name} (${player.nickname}#${player.tag})`,
+        },
+      });
+
+      return player;
     });
 
     return NextResponse.json(

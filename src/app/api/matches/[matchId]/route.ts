@@ -46,13 +46,15 @@ function isValidPosition(value: unknown): value is Position {
   );
 }
 
-function validatePayload(body: unknown): {
-  success: true;
-  data: UpdateMatchInput;
-} | {
-  success: false;
-  message: string;
-} {
+function validatePayload(body: unknown):
+  | {
+      success: true;
+      data: UpdateMatchInput;
+    }
+  | {
+      success: false;
+      message: string;
+    } {
   if (!body || typeof body !== "object") {
     return {
       success: false,
@@ -317,7 +319,7 @@ export async function PATCH(
 
     const existingMatch = await prisma.matchSeries.findUnique({
       where: { id: matchIdNumber },
-      select: { id: true },
+      select: { id: true, title: true },
     });
 
     if (!existingMatch) {
@@ -341,7 +343,7 @@ export async function PATCH(
 
     const season = await prisma.season.findUnique({
       where: { id: data.seasonId },
-      select: { id: true },
+      select: { id: true, name: true },
     });
 
     if (!season) {
@@ -435,6 +437,13 @@ export async function PATCH(
         });
       }
 
+      await tx.adminLog.create({
+        data: {
+          action: "MATCH_UPDATE",
+          message: `내전 수정: ${existingMatch.title} → ${matchSeries.title} / 시즌: ${season.name} / 세트: ${data.games.length}개`,
+        },
+      });
+
       return matchSeries;
     });
 
@@ -468,7 +477,20 @@ export async function DELETE(
 
     const existingMatch = await prisma.matchSeries.findUnique({
       where: { id: matchIdNumber },
-      select: { id: true },
+      select: {
+        id: true,
+        title: true,
+        season: {
+          select: {
+            name: true,
+          },
+        },
+        _count: {
+          select: {
+            games: true,
+          },
+        },
+      },
     });
 
     if (!existingMatch) {
@@ -496,6 +518,13 @@ export async function DELETE(
       await tx.matchSeries.delete({
         where: {
           id: matchIdNumber,
+        },
+      });
+
+      await tx.adminLog.create({
+        data: {
+          action: "MATCH_DELETE",
+          message: `내전 삭제: ${existingMatch.title} / 시즌: ${existingMatch.season.name} / 세트: ${existingMatch._count.games}개`,
         },
       });
     });

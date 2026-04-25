@@ -147,7 +147,7 @@ model SeasonResult {
 
 model AdminLog {
   id        Int      @id @default(autoincrement())
-  type      String
+  action    String
   message   String
   createdAt DateTime @default(now())
 }
