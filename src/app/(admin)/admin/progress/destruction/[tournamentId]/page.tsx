@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
+import DestructionTeamForm from "@/components/admin/DestructionTeamForm";
 
 type PageProps = {
   params: Promise<{
@@ -186,14 +187,15 @@ export default async function AdminDestructionTournamentDetailPage({
           <div>
             <h2 className="admin-event-section-title">팀장 / 팀</h2>
             <p className="admin-page__description">
-              팀장 등록과 팀 구성 기능은 다음 단계에서 연결합니다.
+              팀 수에 맞춰 팀장을 등록합니다. 팀장은 자동으로 해당 팀 참가자로 등록됩니다.
             </p>
           </div>
-
-          <button type="button" className="admin-page__create-button" disabled>
-            팀장 등록 준비중
-          </button>
         </div>
+
+        <DestructionTeamForm
+          tournamentId={tournament.id}
+          hasMatches={tournament.matches.length > 0}
+        />
 
         {tournament.teams.length === 0 ? (
           <div className="empty-box">등록된 팀이 없습니다.</div>

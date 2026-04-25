@@ -6158,3 +6158,63 @@ input::placeholder, textarea::placeholder, .app-input::placeholder, .kakao-searc
     grid-template-columns: 1fr;
   }
 }
+
+/* ===== DESTRUCTION TEAM FORM ===== */
+
+.destruction-team-form {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.destruction-team-form__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.destruction-team-form__head h3 {
+  margin: 0 0 6px;
+  color: var(--k-text-strong);
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.destruction-team-form__head p {
+  margin: 0;
+  color: var(--k-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.destruction-team-form__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.destruction-team-form__list {
+  display: grid;
+  gap: 8px;
+}
+
+.destruction-team-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--k-border);
+  border-radius: 14px;
+  background: rgba(2, 6, 23, 0.42);
+}
+
+@media (max-width: 640px) {
+  .destruction-team-form__head {
+    flex-direction: column;
+  }
+
+  .destruction-team-form__row {
+    grid-template-columns: 1fr;
+  }
+}
