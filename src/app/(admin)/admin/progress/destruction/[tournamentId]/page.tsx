@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
 import DestructionTeamForm from "@/components/admin/DestructionTeamForm";
 import DestructionParticipantForm from "@/components/admin/DestructionParticipantForm";
+import DestructionTeamAssignmentForm from "@/components/admin/DestructionTeamAssignmentForm";
 
 type PageProps = {
   params: Promise<{
@@ -261,6 +262,24 @@ export default async function AdminDestructionTournamentDetailPage({
             ))}
           </div>
         )}
+      </section>
+
+      <section className="admin-form">
+        <div className="admin-page__header">
+          <div>
+            <h2 className="admin-event-section-title">팀 배정</h2>
+            <p className="admin-page__description">
+              팀장 외 참가자들을 각 팀에 배정합니다.
+            </p>
+          </div>
+        </div>
+
+        <DestructionTeamAssignmentForm
+          tournamentId={tournament.id}
+          teams={tournament.teams}
+          participants={tournament.participants}
+          hasMatches={tournament.matches.length > 0}
+        />
       </section>
 
       <section className="admin-form">
