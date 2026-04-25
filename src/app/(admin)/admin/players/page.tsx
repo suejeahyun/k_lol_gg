@@ -544,7 +544,7 @@ export default function AdminPlayersPage() {
               margin: 0,
               fontSize: "20px",
               fontWeight: 800,
-              color: "#000",
+              color: "#ffffff",
             }}
           >
             플레이어 목록
