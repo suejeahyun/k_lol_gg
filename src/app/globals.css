@@ -5670,3 +5670,114 @@ input::placeholder, textarea::placeholder, .app-input::placeholder, .kakao-searc
     grid-template-columns: 1fr;
   }
 }
+
+/* ===== USER EVENT PROGRESS LIST ===== */
+
+.event-progress-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.event-progress-list {
+  display: grid;
+  gap: 16px;
+}
+
+.event-progress-card {
+  display: block;
+  padding: 22px;
+  border: 1px solid var(--k-border);
+  border-radius: 20px;
+  background: linear-gradient(
+    180deg,
+    rgba(15, 30, 52, 0.94),
+    rgba(8, 20, 39, 0.94)
+  );
+  color: var(--k-text);
+  box-shadow: var(--k-glow);
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.event-progress-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--k-border-strong);
+  box-shadow: var(--k-shadow), 0 0 34px rgba(59, 130, 246, 0.2);
+}
+
+.event-progress-card__top {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.event-progress-card__top span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--k-border);
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.14);
+  color: var(--k-blue-2);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.event-progress-card h2 {
+  margin: 0 0 10px;
+  color: var(--k-text-strong);
+  font-size: 24px;
+  font-weight: 950;
+}
+
+.event-progress-card p {
+  margin: 0 0 16px;
+  color: var(--k-muted);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.event-progress-card__meta {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.event-progress-card__meta div {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid var(--k-border);
+  border-radius: 14px;
+  background: rgba(2, 6, 23, 0.42);
+}
+
+.event-progress-card__meta span {
+  color: var(--k-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.event-progress-card__meta strong {
+  color: var(--k-text-strong);
+  font-size: 16px;
+  font-weight: 950;
+}
+
+@media (max-width: 900px) {
+  .event-progress-card__meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .event-progress-card__meta {
+    grid-template-columns: 1fr;
+  }
+}
