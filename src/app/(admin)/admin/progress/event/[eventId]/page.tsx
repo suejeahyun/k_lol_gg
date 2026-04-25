@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma/client";
 import EventParticipantForm from "@/components/admin/EventParticipantForm";
 import EventTeamGenerator from "@/components/admin/EventTeamGenerator";
 import EventBracketGenerator from "@/components/admin/EventBracketGenerator";
+import EventMatchResultForm from "@/components/admin/EventMatchResultForm";
 
 type PageProps = {
   params: Promise<{
@@ -244,7 +245,7 @@ export default async function AdminEventMatchDetailPage({
           <div>
             <h2 className="admin-event-section-title">대진표</h2>
             <p className="admin-page__description">
-              팀 생성 후 토너먼트 대진을 생성합니다.
+              팀 생성 후 토너먼트 대진을 생성하고 경기 결과를 등록합니다.
             </p>
           </div>
         </div>
@@ -261,11 +262,23 @@ export default async function AdminEventMatchDetailPage({
           <div className="admin-event-bracket-list">
             {event.matches.map((match) => (
               <div key={match.id} className="admin-event-bracket-row">
-                <span>{getStageLabel(match.stage)}</span>
-                <strong>
-                  {match.teamA.name} vs {match.teamB.name}
-                </strong>
-                <span>{match.round}경기</span>
+                <div>
+                  <span>{getStageLabel(match.stage)}</span>
+                  <strong>
+                    {match.teamA.name} vs {match.teamB.name}
+                  </strong>
+                  <span>{match.round}경기</span>
+                </div>
+
+                <EventMatchResultForm
+                  eventId={event.id}
+                  matchId={match.id}
+                  teamA={match.teamA}
+                  teamB={match.teamB}
+                  participants={event.participants}
+                  initialWinnerTeamId={match.winnerTeamId}
+                  initialMvpPlayerId={match.mvpPlayerId}
+                />
               </div>
             ))}
           </div>
