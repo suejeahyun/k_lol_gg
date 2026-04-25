@@ -27,6 +27,8 @@ type TopPlayerDto = {
 type TopPageData = {
   currentSeason: SeasonDto;
   currentPlayers: TopPlayerDto[];
+  previousSeason: SeasonDto;
+  previousPlayers: TopPlayerDto[];
 };
 
 function toSeasonDto(
@@ -162,18 +164,28 @@ async function getTopPageData(): Promise<TopPageData> {
     },
   });
 
-  if (!currentSeason) {
-    return {
-      currentSeason: null,
-      currentPlayers: [],
-    };
-  }
+  const previousSeason = await prisma.season.findFirst({
+    where: {
+      isActive: false,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
 
-  const currentPlayers = await getSeasonPlayers(currentSeason.id);
+  const currentPlayers = currentSeason
+    ? await getSeasonPlayers(currentSeason.id)
+    : [];
+
+  const previousPlayers = previousSeason
+    ? await getSeasonPlayers(previousSeason.id)
+    : [];
 
   return {
     currentSeason: toSeasonDto(currentSeason),
     currentPlayers,
+    previousSeason: toSeasonDto(previousSeason),
+    previousPlayers,
   };
 }
 
@@ -353,7 +365,6 @@ export default async function HomePage() {
             <p className="home-eyebrow">KOREA LOL CUSTOM STATS</p>
             <h1 className="home-main-title">K-LOL.GG</h1>
           </div>
-
           <div className="social-link-row">
             <a
               href="https://open.kakao.com/o/gGQ80Ucf"
@@ -429,6 +440,53 @@ export default async function HomePage() {
             title="현 시즌 TOP 3"
             seasonName={topData.currentSeason?.name ?? null}
             players={topData.currentPlayers}
+          />
+        </div>
+      </section>
+
+      <section className="section-block">
+        <div className="home-top3-grid">
+          <div className="card home-progress-card">
+            <div className="home-section-head">
+              <div>
+                <p className="home-eyebrow">EVENT STATUS</p>
+                <h2 className="home-section-title">진행 현황</h2>
+              </div>
+            </div>
+
+            <div className="home-progress-list">
+              <div className="home-progress-item">
+                <div className="home-progress-item__top">
+                  <strong>이벤트 내전</strong>
+                  <span>준비중</span>
+                </div>
+
+                <div className="home-progress-bar">
+                  <div style={{ width: "15%" }} />
+                </div>
+
+                <p>참가자 모집 및 일정 조율 단계입니다.</p>
+              </div>
+
+              <div className="home-progress-item">
+                <div className="home-progress-item__top">
+                  <strong>멸망전</strong>
+                  <span>기획중</span>
+                </div>
+
+                <div className="home-progress-bar">
+                  <div style={{ width: "10%" }} />
+                </div>
+
+                <p>팀장 선정, 참가자 구성, 예선 방식 준비중입니다.</p>
+              </div>
+            </div>
+          </div>
+
+          <Top3Slider
+            title="전 시즌 TOP 3"
+            seasonName={topData.previousSeason?.name ?? "이전 시즌 없음"}
+            players={topData.previousPlayers}
           />
         </div>
       </section>

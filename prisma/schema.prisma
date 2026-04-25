@@ -19,6 +19,28 @@ enum Position {
   SUP
 }
 
+enum EventMatchStatus {
+  PLANNED
+  RECRUITING
+  TEAM_BUILDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum EventMatchMode {
+  POSITION
+  ARAM
+}
+
+enum EventTournamentStage {
+  ROUND_OF_32
+  ROUND_OF_16
+  QUARTER_FINAL
+  SEMI_FINAL
+  FINAL
+}
+
 model Player {
   id          Int      @id @default(autoincrement())
   name        String
@@ -33,6 +55,8 @@ model Player {
   championStats PlayerChampionStat[]
   positionStats PlayerPositionStat[]
   seasonResults SeasonResult[]
+
+  eventParticipants EventParticipant[]
 }
 
 model Champion {
@@ -63,18 +87,18 @@ model MatchSeries {
   seasonId  Int
   createdAt DateTime @default(now())
 
-  season Season @relation(fields: [seasonId], references: [id])
+  season Season      @relation(fields: [seasonId], references: [id])
   games  MatchGame[]
 }
 
 model MatchGame {
-  id          Int    @id @default(autoincrement())
+  id          Int  @id @default(autoincrement())
   seriesId    Int
   gameNumber  Int
   durationMin Int
   winnerTeam  Team
 
-  series       MatchSeries       @relation(fields: [seriesId], references: [id])
+  series       MatchSeries        @relation(fields: [seriesId], references: [id])
   participants MatchParticipant[]
 }
 
@@ -124,7 +148,7 @@ model PlayerChampionStat {
 }
 
 model PlayerPositionStat {
-  id       Int @id @default(autoincrement())
+  id       Int      @id @default(autoincrement())
   playerId Int
   position Position
 
@@ -135,7 +159,7 @@ model PlayerPositionStat {
 }
 
 model SeasonResult {
-  id       Int @id @default(autoincrement())
+  id       Int    @id @default(autoincrement())
   seasonId Int
   category String
   playerId Int
@@ -169,4 +193,83 @@ model GalleryImage {
   showOnHome  Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  eventMatches EventMatch[]
+}
+
+model EventMatch {
+  id          Int     @id @default(autoincrement())
+  title       String
+  description String? @db.Text
+
+  status EventMatchStatus @default(PLANNED)
+  mode   EventMatchMode   @default(POSITION)
+
+  eventDate   DateTime
+  recruitFrom DateTime?
+  recruitTo   DateTime?
+
+  winnerTeamId   Int?
+  mvpPlayerId    Int?
+  galleryImageId Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  galleryImage GalleryImage? @relation(fields: [galleryImageId], references: [id])
+
+  teams        EventTeam[]
+  participants EventParticipant[]
+  matches      EventTournamentMatch[]
+}
+
+model EventTeam {
+  id      Int    @id @default(autoincrement())
+  eventId Int
+  name    String
+  seed    Int?
+  score   Float  @default(0)
+
+  event EventMatch @relation(fields: [eventId], references: [id])
+
+  members EventParticipant[]
+
+  matchesA EventTournamentMatch[] @relation("EventTeamA")
+  matchesB EventTournamentMatch[] @relation("EventTeamB")
+}
+
+model EventParticipant {
+  id       Int       @id @default(autoincrement())
+  eventId  Int
+  teamId   Int?
+  playerId Int
+  position Position?
+
+  balanceScore Float @default(0)
+
+  event  EventMatch @relation(fields: [eventId], references: [id])
+  team   EventTeam? @relation(fields: [teamId], references: [id])
+  player Player     @relation(fields: [playerId], references: [id])
+
+  @@unique([eventId, playerId])
+}
+
+model EventTournamentMatch {
+  id      Int                  @id @default(autoincrement())
+  eventId Int
+  stage   EventTournamentStage
+  round   Int
+
+  teamAId      Int
+  teamBId      Int
+  winnerTeamId Int?
+  matchDate    DateTime?
+  mvpPlayerId  Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  event EventMatch @relation(fields: [eventId], references: [id])
+  teamA EventTeam  @relation("EventTeamA", fields: [teamAId], references: [id])
+  teamB EventTeam  @relation("EventTeamB", fields: [teamBId], references: [id])
 }
