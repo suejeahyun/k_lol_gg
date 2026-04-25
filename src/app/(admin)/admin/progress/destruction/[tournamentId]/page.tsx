@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
 import DestructionTeamForm from "@/components/admin/DestructionTeamForm";
+import DestructionParticipantForm from "@/components/admin/DestructionParticipantForm";
 
 type PageProps = {
   params: Promise<{
@@ -187,7 +188,8 @@ export default async function AdminDestructionTournamentDetailPage({
           <div>
             <h2 className="admin-event-section-title">팀장 / 팀</h2>
             <p className="admin-page__description">
-              팀 수에 맞춰 팀장을 등록합니다. 팀장은 자동으로 해당 팀 참가자로 등록됩니다.
+              팀 수에 맞춰 팀장을 등록합니다. 팀장은 자동으로 해당 팀 참가자로
+              등록됩니다.
             </p>
           </div>
         </div>
@@ -233,10 +235,16 @@ export default async function AdminDestructionTournamentDetailPage({
           <div>
             <h2 className="admin-event-section-title">참가자</h2>
             <p className="admin-page__description">
-              참가자 등록 기능은 다음 단계에서 연결합니다.
+              팀장을 포함해 참가자와 지정 포지션을 등록합니다.
             </p>
           </div>
         </div>
+
+        <DestructionParticipantForm
+          tournamentId={tournament.id}
+          hasTeams={tournament.teams.length > 0}
+          hasMatches={tournament.matches.length > 0}
+        />
 
         {tournament.participants.length === 0 ? (
           <div className="empty-box">등록된 참가자가 없습니다.</div>
