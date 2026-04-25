@@ -6519,3 +6519,153 @@ input::placeholder, textarea::placeholder, .app-input::placeholder, .kakao-searc
     grid-template-columns: 1fr;
   }
 }
+
+/* ===== USER DESTRUCTION DETAIL ===== */
+
+.destruction-detail-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.destruction-detail-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.destruction-detail-summary-card,
+.destruction-final-card,
+.destruction-team-card {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+  border: 1px solid var(--k-border);
+  border-radius: 18px;
+  background: linear-gradient(
+    180deg,
+    rgba(15, 30, 52, 0.94),
+    rgba(8, 20, 39, 0.94)
+  );
+  color: var(--k-text);
+  box-shadow: var(--k-glow);
+}
+
+.destruction-detail-summary-card span,
+.destruction-final-card span {
+  color: var(--k-muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.destruction-detail-summary-card strong,
+.destruction-final-card strong {
+  color: var(--k-text-strong);
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.destruction-final-grid,
+.destruction-team-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.destruction-final-card strong {
+  color: var(--k-gold);
+  font-size: 22px;
+}
+
+.destruction-final-gallery {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.destruction-final-gallery__image {
+  width: 100%;
+  height: auto;
+  max-height: 720px;
+  object-fit: contain;
+  border: 1px solid var(--k-border);
+  border-radius: 18px;
+  background: #020617;
+}
+
+.destruction-rank-list,
+.destruction-match-list,
+.destruction-member-list {
+  display: grid;
+  gap: 10px;
+}
+
+.destruction-rank-row,
+.destruction-match-row,
+.destruction-member-row {
+  display: grid;
+  grid-template-columns: 90px 1fr 1fr 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid var(--k-border);
+  border-radius: 14px;
+  background: rgba(2, 6, 23, 0.42);
+}
+
+.destruction-member-row {
+  grid-template-columns: 1.4fr 1fr 0.7fr;
+}
+
+.destruction-rank-row strong,
+.destruction-match-row strong,
+.destruction-member-row strong {
+  color: var(--k-text-strong);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.destruction-rank-row span,
+.destruction-match-row span,
+.destruction-member-row span,
+.destruction-team-captain {
+  color: var(--k-blue-2);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.destruction-rank-row em,
+.destruction-match-row em,
+.destruction-member-row em {
+  color: var(--k-muted);
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.destruction-match-row b {
+  color: var(--k-gold);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.destruction-team-card h3 {
+  margin: 0;
+  color: var(--k-text-strong);
+  font-size: 18px;
+  font-weight: 950;
+}
+
+@media (max-width: 900px) {
+  .destruction-detail-summary-grid,
+  .destruction-final-grid,
+  .destruction-team-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .destruction-rank-row,
+  .destruction-match-row,
+  .destruction-member-row {
+    grid-template-columns: 1fr;
+  }
+}
