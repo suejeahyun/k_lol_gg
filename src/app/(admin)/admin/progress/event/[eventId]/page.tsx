@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
+import EventParticipantForm from "@/components/admin/EventParticipantForm";
 
 type PageProps = {
   params: Promise<{
@@ -40,7 +41,9 @@ function getModeLabel(mode: string) {
   return labels[mode] ?? mode;
 }
 
-export default async function AdminEventMatchDetailPage({ params }: PageProps) {
+export default async function AdminEventMatchDetailPage({
+  params,
+}: PageProps) {
   const { eventId } = await params;
   const id = Number(eventId);
 
@@ -49,7 +52,9 @@ export default async function AdminEventMatchDetailPage({ params }: PageProps) {
   }
 
   const event = await prisma.eventMatch.findUnique({
-    where: { id },
+    where: {
+      id,
+    },
     include: {
       galleryImage: true,
       participants: {
@@ -96,8 +101,7 @@ export default async function AdminEventMatchDetailPage({ params }: PageProps) {
         <div>
           <h1 className="admin-page__title">{event.title}</h1>
           <p className="admin-page__description">
-            이벤트 내전 상세 관리 페이지입니다. 참가자 등록, 팀 생성, 결과
-            등록 기능을 다음 단계에서 연결합니다.
+            이벤트 내전 참가자 등록, 팀 구성, 경기 결과를 관리합니다.
           </p>
         </div>
 
@@ -156,16 +160,15 @@ export default async function AdminEventMatchDetailPage({ params }: PageProps) {
       <section className="admin-form">
         <div className="admin-page__header">
           <div>
-            <h2 className="admin-event-section-title">참가자</h2>
+            <h2 className="admin-event-section-title">참가자 등록</h2>
             <p className="admin-page__description">
-              참가자 추가 기능은 다음 단계에서 연결합니다.
+              참가자는 5명 단위로 입력합니다. 칼바람 모드는 포지션 없이
+              저장됩니다.
             </p>
           </div>
-
-          <button type="button" className="admin-page__create-button" disabled>
-            참가자 추가 준비중
-          </button>
         </div>
+
+        <EventParticipantForm eventId={event.id} mode={event.mode} />
 
         {event.participants.length === 0 ? (
           <div className="empty-box">등록된 참가자가 없습니다.</div>
@@ -189,7 +192,7 @@ export default async function AdminEventMatchDetailPage({ params }: PageProps) {
           <div>
             <h2 className="admin-event-section-title">팀 구성</h2>
             <p className="admin-page__description">
-              밸런스 기반 팀 자동 생성 기능은 다음 단계에서 연결합니다.
+              참가자 저장 후 팀 자동 생성 기능을 연결합니다.
             </p>
           </div>
 
@@ -205,6 +208,7 @@ export default async function AdminEventMatchDetailPage({ params }: PageProps) {
             {event.teams.map((team) => (
               <div key={team.id} className="admin-event-team-card">
                 <h3>{team.name}</h3>
+
                 <div>
                   {team.members.map((member) => (
                     <span key={member.id}>
