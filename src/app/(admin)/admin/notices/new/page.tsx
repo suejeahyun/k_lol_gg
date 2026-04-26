@@ -12,7 +12,7 @@ export default function AdminNoticeNewPage() {
         </div>
       </div>
 
-      <NoticeForm mode="create" />
+      <NoticeForm mode="create" submitUrl="/api/notices" />
     </div>
   );
 }
