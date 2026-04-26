@@ -7,10 +7,7 @@ type RouteContext = {
   }>;
 };
 
-export async function PATCH(
-  _req: NextRequest,
-  { params }: RouteContext
-) {
+export async function PATCH(_req: NextRequest, { params }: RouteContext) {
   try {
     const { seasonId } = await params;
     const id = Number(seasonId);
@@ -26,6 +23,7 @@ export async function PATCH(
       where: { id },
       select: {
         id: true,
+        isActive: true,
       },
     });
 
@@ -36,8 +34,19 @@ export async function PATCH(
       );
     }
 
+    if (targetSeason.isActive) {
+      return NextResponse.json({
+        success: true,
+        seasonId: id,
+        message: "Already active season",
+      });
+    }
+
     await prisma.$transaction([
       prisma.season.updateMany({
+        where: {
+          isActive: true,
+        },
         data: {
           isActive: false,
         },
