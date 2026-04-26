@@ -1,64 +1,146 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
-import { parseNickname } from "@/lib/kakao/parser";
 import { createSimpleText } from "@/lib/kakao/response";
+
+function normalizeText(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function normalizeTag(tag: string | null | undefined) {
+  if (!tag) return "";
+  return tag.trim().replace(/^#/, "").toLowerCase();
+}
+
+function parseSearchKeyword(input: string) {
+  let text = input.trim();
+
+  text = text.replace(/^전적검색\s*/i, "");
+  text = text.replace(/^전적\s*/i, "");
+  text = text.trim();
+
+  if (!text) {
+    return {
+      nickname: "",
+      tag: "",
+    };
+  }
+
+  if (text.includes("#")) {
+    const [nickname, tag] = text.split("#");
+
+    return {
+      nickname: nickname.trim(),
+      tag: tag.trim().replace(/^#/, ""),
+    };
+  }
+
+  return {
+    nickname: text,
+    tag: "",
+  };
+}
+
+function formatPlayerName(player: {
+  nickname: string;
+  tag: string | null;
+}) {
+  const tag = player.tag ? player.tag.replace(/^#/, "") : "";
+
+  return tag ? `${player.nickname}#${tag}` : player.nickname;
+}
+
+function getKda(kills: number, deaths: number, assists: number) {
+  if (deaths === 0) return kills + assists;
+  return (kills + assists) / deaths;
+}
+
+function roundOne(value: number) {
+  return Math.round(value * 10) / 10;
+}
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const utterance: string = body?.userRequest?.utterance || "";
 
-    if (!utterance) {
+    const paramNickname =
+      body?.action?.params?.nickname ||
+      body?.action?.detailParams?.nickname?.origin ||
+      body?.action?.detailParams?.nickname?.value ||
+      "";
+
+    const rawInput =
+      String(paramNickname || body?.userRequest?.utterance || "").trim();
+
+    const { nickname, tag } = parseSearchKeyword(rawInput);
+
+    if (!nickname) {
       return NextResponse.json(
-        createSimpleText("입력값이 없습니다.")
+        createSimpleText("닉네임을 입력해주세요.\n예: pokey")
       );
     }
 
-    const { nickname, tag } = parseNickname(utterance);
+    const normalizedNickname = normalizeText(nickname);
+    const normalizedTag = normalizeTag(tag);
 
-    // 플레이어 조회
-    const player = await prisma.player.findFirst({
-      where: tag
-        ? {
-            nickname: {
-              contains: nickname,
-              mode: "insensitive",
-            },
-            tag: {
-              contains: tag,
-              mode: "insensitive",
-            },
-          }
-        : {
-            nickname: {
-              contains: nickname,
-              mode: "insensitive",
-            },
-          },
+    const players = await prisma.player.findMany({
+      select: {
+        id: true,
+        name: true,
+        nickname: true,
+        tag: true,
+      },
     });
 
-    if (!player) {
+    const matchedPlayers = players.filter((player) => {
+      const playerNickname = normalizeText(player.nickname);
+      const playerTag = normalizeTag(player.tag);
+
+      if (normalizedTag) {
+        return (
+          playerNickname === normalizedNickname &&
+          playerTag === normalizedTag
+        );
+      }
+
+      return playerNickname === normalizedNickname;
+    });
+
+    if (matchedPlayers.length === 0) {
       return NextResponse.json(
-        createSimpleText("Player not found.")
+        createSimpleText(
+          `해당 닉네임의 전적을 찾을 수 없습니다.\n입력값: ${nickname}`
+        )
       );
     }
 
-    // 현재 시즌
+    if (matchedPlayers.length > 1 && !normalizedTag) {
+      const names = matchedPlayers
+        .slice(0, 5)
+        .map((player) => `- ${formatPlayerName(player)}`)
+        .join("\n");
+
+      return NextResponse.json(
+        createSimpleText(
+          `동일한 닉네임이 여러 명 있습니다.\n태그까지 입력해주세요.\n예: ${formatPlayerName(
+            matchedPlayers[0]
+          )}\n\n검색 결과\n${names}`
+        )
+      );
+    }
+
+    const player = matchedPlayers[0];
+
     const season = await prisma.season.findFirst({
       where: { isActive: true },
       orderBy: { id: "desc" },
     });
 
     if (!season) {
-      return NextResponse.json(
-        createSimpleText("현재 시즌이 없습니다.")
-      );
+      return NextResponse.json(createSimpleText("현재 시즌이 없습니다."));
     }
 
-    // 참가 기록
-    const participants = await prisma.matchParticipant.findMany({
+    const allParticipants = await prisma.matchParticipant.findMany({
       where: {
-        playerId: player.id,
         game: {
           series: {
             seasonId: season.id,
@@ -66,69 +148,169 @@ export async function POST(req: NextRequest) {
         },
       },
       include: {
-        game: true,
-        champion: true,
+        player: {
+          select: {
+            id: true,
+            nickname: true,
+            tag: true,
+          },
+        },
+        champion: {
+          select: {
+            name: true,
+          },
+        },
+        game: {
+          include: {
+            series: {
+              select: {
+                matchDate: true,
+                createdAt: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        id: "desc",
       },
     });
 
-    if (participants.length === 0) {
+    const playerStatsMap = new Map<
+      number,
+      {
+        playerId: number;
+        nickname: string;
+        tag: string | null;
+        totalGames: number;
+        wins: number;
+        losses: number;
+        kills: number;
+        deaths: number;
+        assists: number;
+      }
+    >();
+
+    for (const participant of allParticipants) {
+      const stat = playerStatsMap.get(participant.playerId) ?? {
+        playerId: participant.playerId,
+        nickname: participant.player.nickname,
+        tag: participant.player.tag,
+        totalGames: 0,
+        wins: 0,
+        losses: 0,
+        kills: 0,
+        deaths: 0,
+        assists: 0,
+      };
+
+      const isWin = participant.team === participant.game.winnerTeam;
+
+      stat.totalGames += 1;
+      stat.wins += isWin ? 1 : 0;
+      stat.losses += isWin ? 0 : 1;
+      stat.kills += participant.kills;
+      stat.deaths += participant.deaths;
+      stat.assists += participant.assists;
+
+      playerStatsMap.set(participant.playerId, stat);
+    }
+
+    const rankings = Array.from(playerStatsMap.values()).map((stat) => {
+      const winRate =
+        stat.totalGames > 0 ? (stat.wins / stat.totalGames) * 100 : 0;
+
+      const kda = getKda(stat.kills, stat.deaths, stat.assists);
+
+      return {
+        ...stat,
+        winRate,
+        kda,
+      };
+    });
+
+    const winRateRanking = [...rankings]
+      .sort((a, b) => {
+        if (b.winRate !== a.winRate) return b.winRate - a.winRate;
+        return b.totalGames - a.totalGames;
+      })
+      .findIndex((item) => item.playerId === player.id);
+
+    const kdaRanking = [...rankings]
+      .sort((a, b) => {
+        if (b.kda !== a.kda) return b.kda - a.kda;
+        return b.totalGames - a.totalGames;
+      })
+      .findIndex((item) => item.playerId === player.id);
+
+    const participationRanking = [...rankings]
+      .sort((a, b) => {
+        if (b.totalGames !== a.totalGames) {
+          return b.totalGames - a.totalGames;
+        }
+
+        return b.winRate - a.winRate;
+      })
+      .findIndex((item) => item.playerId === player.id);
+
+    const currentPlayerStat = rankings.find(
+      (item) => item.playerId === player.id
+    );
+
+    if (!currentPlayerStat || currentPlayerStat.totalGames === 0) {
       return NextResponse.json(
-        createSimpleText("전적 데이터가 없습니다.")
+        createSimpleText(
+          `[${formatPlayerName(player)}]\n현재 시즌 전적 데이터가 없습니다.`
+        )
       );
     }
 
-    // 통계 계산
-    let wins = 0;
-    let losses = 0;
-    let kills = 0;
-    let deaths = 0;
-    let assists = 0;
+    const recentParticipants = allParticipants
+      .filter((participant) => participant.playerId === player.id)
+      .slice(0, 5);
 
-    participants.forEach((p) => {
-      const win = p.team === p.game.winnerTeam;
+    const recentText =
+      recentParticipants.length > 0
+        ? recentParticipants
+            .map((participant, index) => {
+              const result =
+                participant.team === participant.game.winnerTeam ? "승" : "패";
 
-      if (win) wins++;
-      else losses++;
-
-      kills += p.kills;
-      deaths += p.deaths;
-      assists += p.assists;
-    });
-
-    const total = wins + losses;
-    const winRate = ((wins / total) * 100).toFixed(1);
-    const kda =
-      deaths === 0
-        ? (kills + assists).toFixed(2)
-        : ((kills + assists) / deaths).toFixed(2);
-
-    // 최근 5경기
-    const recent = participants.slice(0, 5);
-
-    const recentText = recent
-      .map((p, i) => {
-        const result = p.team === p.game.winnerTeam ? "승" : "패";
-        return `${i + 1}. ${result} / ${p.champion.name} / ${p.kills}-${p.deaths}-${p.assists}`;
-      })
-      .join("\n");
+              return `${index + 1}. ${result} / ${
+                participant.champion.name
+              } / ${participant.kills}-${participant.deaths}-${
+                participant.assists
+              }`;
+            })
+            .join("\n")
+        : "최근 경기 없음";
 
     const text = `
-[${player.nickname}${player.tag ? `${player.tag.startsWith("#") ? "" : "#"}${player.tag}` : ""}]
+[${formatPlayerName(player)}]
 
-총 경기: ${total}전
-승리: ${wins}승 / 패배: ${losses}패
-승률: ${winRate}%
-KDA: ${kda}
+총 경기: ${currentPlayerStat.totalGames}전
+승리: ${currentPlayerStat.wins}승 / 패배: ${currentPlayerStat.losses}패
+승률: ${roundOne(currentPlayerStat.winRate)}%
+KDA: ${roundOne(currentPlayerStat.kda)}
 
-최근 경기
+랭킹
+승률 랭킹: ${winRateRanking + 1}등
+KDA 랭킹: ${kdaRanking + 1}등
+최다 참여 랭킹: ${participationRanking + 1}등
+
+최근 경기 5경기
 ${recentText}
 `.trim();
 
     return NextResponse.json(createSimpleText(text));
   } catch (error) {
-    console.error(error);
+    console.error("[KAKAO_SEARCH_PLAYER_ERROR]", error);
+
     return NextResponse.json(
-      createSimpleText("서버 오류 발생")
+      createSimpleText(
+        "전적 검색 중 오류가 발생했습니다.\n잠시 후 다시 시도해주세요."
+      ),
+      { status: 200 }
     );
   }
 }
