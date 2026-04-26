@@ -1,45 +1,59 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 
-export async function GET() {
+const LOG_PAGE_SIZE = 30;
+
+export async function GET(req: NextRequest) {
   try {
-    const [currentSeason, playerCount, matchCount, latestMatch, logs] =
-      await Promise.all([
-        prisma.season.findFirst({
-          where: {
-            isActive: true,
-          },
-          orderBy: {
-            id: "desc",
-          },
-          select: {
-            id: true,
-            name: true,
-            isActive: true,
-          },
-        }),
+    const pageParam = req.nextUrl.searchParams.get("page");
+    const page = pageParam ? Math.max(Number(pageParam), 1) : 1;
+    const skip = (page - 1) * LOG_PAGE_SIZE;
 
-        prisma.player.count(),
+    const [
+      currentSeason,
+      playerCount,
+      matchCount,
+      latestMatch,
+      logs,
+      totalLogCount,
+    ] = await Promise.all([
+      prisma.season.findFirst({
+        where: { isActive: true },
+        orderBy: { id: "desc" },
+        select: {
+          id: true,
+          name: true,
+          isActive: true,
+        },
+      }),
 
-        prisma.matchSeries.count(),
+      prisma.player.count(),
 
-        prisma.matchSeries.findFirst({
-          orderBy: {
-            createdAt: "desc",
-          },
-          select: {
-            id: true,
-            title: true,
-            createdAt: true,
-          },
-        }),
+      prisma.matchSeries.count(),
 
-        prisma.adminLog.findMany({
-          orderBy: {
-            createdAt: "desc",
-          },
-        }),
-      ]);
+      prisma.matchSeries.findFirst({
+        orderBy: { matchDate: "desc" },
+        select: {
+          id: true,
+          title: true,
+          matchDate: true,
+        },
+      }),
+
+      prisma.adminLog.findMany({
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: LOG_PAGE_SIZE,
+        select: {
+          id: true,
+          action: true,
+          message: true,
+          createdAt: true,
+        },
+      }),
+
+      prisma.adminLog.count(),
+    ]);
 
     return NextResponse.json({
       currentSeason,
@@ -49,23 +63,27 @@ export async function GET() {
         ? {
             id: latestMatch.id,
             title: latestMatch.title,
-            createdAt: latestMatch.createdAt.toISOString(),
+            playedAt: latestMatch.matchDate.toISOString(),
           }
         : null,
       logs: logs.map((log) => ({
         id: log.id,
-        type: log.action,
+        action: log.action,
         message: log.message,
         createdAt: log.createdAt.toISOString(),
       })),
+      logPagination: {
+        page,
+        pageSize: LOG_PAGE_SIZE,
+        totalCount: totalLogCount,
+        totalPages: Math.max(Math.ceil(totalLogCount / LOG_PAGE_SIZE), 1),
+      },
     });
   } catch (error) {
     console.error("[ADMIN_DASHBOARD_GET_ERROR]", error);
 
     return NextResponse.json(
-      {
-        message: "관리자 대시보드 데이터를 불러오지 못했습니다.",
-      },
+      { message: "관리자 대시보드 조회 실패" },
       { status: 500 }
     );
   }
