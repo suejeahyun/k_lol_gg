@@ -7,13 +7,15 @@ type RouteContext = {
   }>;
 };
 
+const REDIRECT_PATH = "/admin/images";
+
 export async function POST(req: NextRequest, { params }: RouteContext) {
   try {
     const { imageId } = await params;
     const id = Number(imageId);
 
     if (Number.isNaN(id)) {
-      return NextResponse.redirect(new URL("/admin/images", req.url), 303);
+      return NextResponse.redirect(new URL(REDIRECT_PATH, req.url), 303);
     }
 
     const image = await prisma.galleryImage.findUnique({
@@ -25,7 +27,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     });
 
     if (!image) {
-      return NextResponse.redirect(new URL("/admin/images", req.url), 303);
+      return NextResponse.redirect(new URL(REDIRECT_PATH, req.url), 303);
     }
 
     await prisma.$transaction(async (tx) => {
@@ -41,6 +43,9 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
       }
 
       await tx.galleryImage.updateMany({
+        where: {
+          showOnHome: true,
+        },
         data: {
           showOnHome: false,
         },
@@ -54,11 +59,11 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
       });
     });
 
-    return NextResponse.redirect(new URL("/admin/images", req.url), 303);
+    return NextResponse.redirect(new URL(REDIRECT_PATH, req.url), 303);
   } catch (error) {
     console.error("[GALLERY_HOME_DISPLAY_POST_ERROR]", error);
 
-    return NextResponse.redirect(new URL("/admin/images", req.url), 303);
+    return NextResponse.redirect(new URL(REDIRECT_PATH, req.url), 303);
   }
 }
 
@@ -74,12 +79,32 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       );
     }
 
-    const body = await req.json();
-    const showOnHome = Boolean(body.showOnHome);
+    const image = await prisma.galleryImage.findUnique({
+      where: { id },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!image) {
+      return NextResponse.json(
+        { message: "이미지를 찾을 수 없습니다." },
+        { status: 404 }
+      );
+    }
+
+    const body = (await req.json()) as {
+      showOnHome?: boolean;
+    };
+
+    const showOnHome = body.showOnHome === true;
 
     const updatedImage = await prisma.$transaction(async (tx) => {
       if (showOnHome) {
         await tx.galleryImage.updateMany({
+          where: {
+            showOnHome: true,
+          },
           data: {
             showOnHome: false,
           },
