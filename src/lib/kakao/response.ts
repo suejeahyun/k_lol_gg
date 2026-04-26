@@ -5,10 +5,11 @@ export function createSimpleText(text: string) {
       outputs: [
         {
           simpleText: {
-            text,
+            text: String(text),
           },
         },
       ],
+      quickReplies: [],
     },
   };
 }
