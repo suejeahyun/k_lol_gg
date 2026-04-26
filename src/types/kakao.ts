@@ -4,17 +4,18 @@ export type KakaoRequest = {
   };
 };
 
-export type KakaoSimpleText = {
+export type KakaoSkillResponse = {
   version: "2.0";
   template: {
     outputs: Array<{
-      simpleText: {
-        text: string;
+      basicCard: {
+        title: string;
+        description: string;
       };
     }>;
-    quickReplies: [];
   };
 };
+
 export type PlayerSummaryResult = {
   playerId: number;
   name: string;

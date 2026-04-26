@@ -1,17 +1,17 @@
-import { KakaoSimpleText } from "@/types/kakao";
+import { KakaoSkillResponse } from "@/types/kakao";
 
-export function createSimpleText(text: string): KakaoSimpleText {
+export function createSimpleText(text: string): KakaoSkillResponse {
   return {
     version: "2.0",
     template: {
       outputs: [
         {
-          simpleText: {
-            text,
+          basicCard: {
+            title: "K-LOL.GG 전적검색",
+            description: text,
           },
         },
       ],
-      quickReplies: [],
     },
   };
 }
