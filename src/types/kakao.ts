@@ -7,11 +7,12 @@ export type KakaoRequest = {
 export type KakaoSimpleText = {
   version: "2.0";
   template: {
-    outputs: {
+    outputs: Array<{
       simpleText: {
         text: string;
       };
-    }[];
+    }>;
+    quickReplies: [];
   };
 };
 export type PlayerSummaryResult = {

@@ -11,6 +11,7 @@ export function createSimpleText(text: string): KakaoSimpleText {
           },
         },
       ],
+      quickReplies: [],
     },
   };
 }
