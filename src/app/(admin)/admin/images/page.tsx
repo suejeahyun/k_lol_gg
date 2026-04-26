@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import GalleryImageDeleteButton from "@/features/gallery/GalleryImageDeleteButton";
-
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 export default async function AdminImagesPage() {
   const images = await prisma.galleryImage.findMany({
     orderBy: [{ createdAt: "desc" }],
