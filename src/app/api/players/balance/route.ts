@@ -8,6 +8,7 @@ type RoleType = "MAIN" | "SUB" | "AUTO";
 type PlayerInput = {
   name: string;
   mainPosition: Position | null;
+  mainPositions: Position[];
   subPositions: Position[];
 };
 
@@ -24,6 +25,7 @@ type ResolvedPlayer = {
   currentTier: string;
   winRate: number;
   mainPosition: Position | null;
+  mainPositions: Position[];
   subPositions: Position[];
 };
 
@@ -77,14 +79,29 @@ function normalizeText(value: string) {
 
 function uniquePositions(
   mainPosition: Position | null,
+  mainPositions: Position[],
   subPositions: Position[]
-): { mainPosition: Position | null; subPositions: Position[] } {
+): {
+  mainPosition: Position | null;
+  mainPositions: Position[];
+  subPositions: Position[];
+} {
+  const uniqueMainPositions = [...new Set(mainPositions)];
+
+  const fallbackMainPositions =
+    uniqueMainPositions.length > 0
+      ? uniqueMainPositions
+      : mainPosition
+      ? [mainPosition]
+      : [];
+
   const filteredSubs = [...new Set(subPositions)].filter(
-    (position) => position !== mainPosition
+    (position) => !fallbackMainPositions.includes(position)
   );
 
   return {
-    mainPosition,
+    mainPosition: fallbackMainPositions[0] ?? null,
+    mainPositions: fallbackMainPositions,
     subPositions: filteredSubs,
   };
 }
@@ -267,7 +284,7 @@ function getBaseScore(player: ResolvedPlayer, position: Position): number {
 }
 
 function getRoleType(player: ResolvedPlayer, position: Position): RoleType {
-  if (player.mainPosition === position) return "MAIN";
+  if (player.mainPositions.includes(position)) return "MAIN";
   if (player.subPositions.includes(position)) return "SUB";
   return "AUTO";
 }
@@ -433,8 +450,14 @@ export async function POST(request: NextRequest) {
     for (const player of body.players) {
       const rawName =
         typeof player?.name === "string" ? player.name.trim() : "";
-      const mainPosition = player?.mainPosition ?? null;
-      const subPositions = player?.subPositions ?? [];
+        const mainPosition = player?.mainPosition ?? null;
+        const mainPositions = Array.isArray(player?.mainPositions)
+          ? player.mainPositions
+          : mainPosition
+          ? [mainPosition]
+          : [];
+
+const subPositions = player?.subPositions ?? [];
 
       if (!rawName) {
         invalidInputNames.push(rawName);
@@ -455,9 +478,13 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const normalized = uniquePositions(mainPosition, subPositions);
+      const normalized = uniquePositions(
+        mainPosition,
+        mainPositions,
+        subPositions
+      );
 
-      if (!normalized.mainPosition) {
+      if (normalized.mainPositions.length === 0) {
         return NextResponse.json(
           { message: "모든 플레이어는 최소 1개의 포지션을 선택해야 합니다." },
           { status: 400 }
@@ -467,6 +494,7 @@ export async function POST(request: NextRequest) {
       normalizedInputs.push({
         name: rawName,
         mainPosition: normalized.mainPosition,
+        mainPositions: normalized.mainPositions,
         subPositions: normalized.subPositions,
       });
     }
@@ -548,6 +576,7 @@ export async function POST(request: NextRequest) {
         currentTier: player.currentTier ?? "",
         winRate,
         mainPosition: input.mainPosition,
+        mainPositions: input.mainPositions,
         subPositions: input.subPositions,
       };
     });

@@ -19,6 +19,7 @@ type PlayerRow = {
   nickname: string;
   tag: string;
   mainPosition: Position | null;
+  mainPositions: Position[];
   subPositions: Position[];
   error: string;
   suggestions: SearchPlayer[];
@@ -66,6 +67,7 @@ function createInitialRows(): PlayerRow[] {
     nickname: "",
     tag: "",
     mainPosition: null,
+    mainPositions: [],
     subPositions: [],
     error: "",
     suggestions: [],
@@ -108,44 +110,75 @@ export default function PlayersBalancePage() {
     };
   }, []);
 
-  const canSubmit = useMemo(() => {
-    return rows.every(
-      (row) => row.name.trim().length > 0 && row.mainPosition !== null
-    );
-  }, [rows]);
+const canSubmit = useMemo(() => {
+  return rows.every(
+    (row) => row.name.trim().length > 0 && row.mainPositions.length > 0
+  );
+}, [rows]);
 
   function updateRow(index: number, updater: (row: PlayerRow) => PlayerRow) {
     setRows((prev) => prev.map((row, i) => (i === index ? updater(row) : row)));
   }
 
-  function togglePosition(index: number, position: Position) {
-    updateRow(index, (row) => {
-      const selected = row.mainPosition
-        ? [row.mainPosition, ...row.subPositions]
-        : [...row.subPositions];
+function togglePosition(index: number, position: Position) {
+  updateRow(index, (row) => {
+    if (row.mainPositions.length === POSITIONS.length) {
+      return {
+        ...row,
+        mainPosition: position,
+        mainPositions: [position],
+        subPositions: [],
+      };
+    }
 
-      const exists = selected.includes(position);
+    const selected = row.mainPosition
+      ? [row.mainPosition, ...row.subPositions]
+      : [...row.subPositions];
 
-      if (exists) {
-        const filtered = selected.filter((item) => item !== position);
+    const exists = selected.includes(position);
 
-        return {
-          ...row,
-          mainPosition: filtered[0] ?? null,
-          subPositions: filtered.slice(1),
-        };
-      }
-
-      const next = [...selected, position];
+    if (exists) {
+      const filtered = selected.filter((item) => item !== position);
 
       return {
         ...row,
-        mainPosition: next[0] ?? null,
-        subPositions: next.slice(1),
+        mainPosition: filtered[0] ?? null,
+        mainPositions: filtered[0] ? [filtered[0]] : [],
+        subPositions: filtered.slice(1),
       };
-    });
-  }
+    }
 
+    const next = [...selected, position];
+
+    return {
+      ...row,
+      mainPosition: next[0] ?? null,
+      mainPositions: next[0] ? [next[0]] : [],
+      subPositions: next.slice(1),
+    };
+  });
+}
+    function toggleAllMainPositions(index: number) {
+      updateRow(index, (row) => {
+        const isAllSelected = row.mainPositions.length === POSITIONS.length;
+
+        if (isAllSelected) {
+          return {
+            ...row,
+            mainPosition: null,
+            mainPositions: [],
+            subPositions: [],
+          };
+        }
+
+        return {
+          ...row,
+          mainPosition: POSITIONS[0],
+          mainPositions: [...POSITIONS],
+          subPositions: [],
+        };
+      });
+    }
   function resetForm() {
     setRows(createInitialRows());
     setResult(null);
@@ -304,11 +337,12 @@ export default function PlayersBalancePage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          players: rows.map((row) => ({
-            name: row.name.trim(),
-            mainPosition: row.mainPosition,
-            subPositions: row.subPositions,
-          })),
+        players: rows.map((row) => ({
+          name: row.name.trim(),
+          mainPosition: row.mainPosition,
+          mainPositions: row.mainPositions,
+          subPositions: row.subPositions,
+        })),
         }),
       });
 
@@ -418,18 +452,34 @@ export default function PlayersBalancePage() {
                   ) : null}
                 </div>
 
-                <div className="balance-position-group">
-                  {POSITIONS.map((position) => (
-                    <button
-                      key={position}
-                      type="button"
-                      className={getPositionButtonClass(row, position)}
-                      onClick={() => togglePosition(index, position)}
-                    >
-                      {position}
-                    </button>
-                  ))}
-                </div>
+            <div className="balance-position-group">
+              <button
+                type="button"
+                className={
+                  row.mainPositions.length === POSITIONS.length
+                    ? "balance-position-button balance-position-button--main"
+                    : "balance-position-button"
+                }
+                onClick={() => toggleAllMainPositions(index)}
+              >
+                ALL
+              </button>
+
+              {POSITIONS.map((position) => (
+                <button
+                  key={position}
+                  type="button"
+                  className={
+                    row.mainPositions.includes(position)
+                      ? "balance-position-button balance-position-button--main"
+                      : getPositionButtonClass(row, position)
+                  }
+                  onClick={() => togglePosition(index, position)}
+                >
+                  {position}
+                </button>
+              ))}
+            </div>
               </div>
             ))}
           </div>
