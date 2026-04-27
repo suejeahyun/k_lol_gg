@@ -52,7 +52,18 @@ type BalanceResponse = {
   red: AssignedPlayer[];
   blue: AssignedPlayer[];
 };
+type ApplyPosition = Position | "ALL";
 
+type SeasonApplyPlayer = {
+  playerId: number;
+  name: string;
+  nickname: string;
+  tag: string;
+  peakTier: string | null;
+  currentTier: string | null;
+  mainPosition: ApplyPosition | null;
+  subPositions: ApplyPosition[];
+};
 type ErrorResponse = {
   message: string;
   invalidNames?: string[];
@@ -99,7 +110,8 @@ export default function PlayersBalancePage() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [result, setResult] = useState<BalanceResponse | null>(null);
-
+  const [importLoading, setImportLoading] = useState(false);
+  const [saveLoading, setSaveLoading] = useState(false);
   const searchTimeoutRefs = useRef<Record<number, ReturnType<typeof setTimeout> | null>>({});
 
   useEffect(() => {
@@ -184,7 +196,154 @@ function togglePosition(index: number, position: Position) {
     setResult(null);
     setErrorMessage("");
   }
+  function normalizeApplyPositions(
+  mainPosition: ApplyPosition | null,
+  subPositions: ApplyPosition[]
+): {
+  mainPosition: Position | null;
+  mainPositions: Position[];
+  subPositions: Position[];
+} {
+  if (mainPosition === "ALL") {
+    return {
+      mainPosition: POSITIONS[0],
+      mainPositions: [...POSITIONS],
+      subPositions: [],
+    };
+  }
 
+  if (!mainPosition) {
+    return {
+      mainPosition: null,
+      mainPositions: [],
+      subPositions: [],
+    };
+  }
+
+  const normalizedSubs = subPositions.includes("ALL")
+    ? POSITIONS.filter((position) => position !== mainPosition)
+    : subPositions.filter(
+        (position): position is Position =>
+          position !== "ALL" && position !== mainPosition
+      );
+
+  return {
+    mainPosition,
+    mainPositions: [mainPosition],
+    subPositions: normalizedSubs,
+  };
+}
+
+async function handleImportSeasonApplies() {
+  try {
+    setImportLoading(true);
+    setErrorMessage("");
+    setResult(null);
+
+    const response = await fetch("/api/team-balance/season-applies", {
+      cache: "no-store",
+    });
+
+    const data = (await response.json()) as {
+      message?: string;
+      players?: SeasonApplyPlayer[];
+    };
+
+    if (!response.ok) {
+      alert(data.message || "오늘 참가 신청자 가져오기 실패");
+      return;
+    }
+
+    const players = data.players ?? [];
+
+    if (players.length === 0) {
+      alert("오늘 참가 신청자가 없습니다.");
+      return;
+    }
+
+    if (players.length > 10) {
+      alert(`신청자가 ${players.length}명입니다. 우선 10명만 불러옵니다.`);
+    }
+
+    const nextRows = createInitialRows();
+
+    players.slice(0, 10).forEach((player, index) => {
+      const positions = normalizeApplyPositions(
+        player.mainPosition,
+        player.subPositions
+      );
+
+      nextRows[index] = {
+        ...nextRows[index],
+        playerId: player.playerId,
+        name: player.name,
+        nickname: player.nickname,
+        tag: player.tag,
+        selectedLabel: `${player.name} (${player.nickname}#${player.tag})`,
+        mainPosition: positions.mainPosition,
+        mainPositions: positions.mainPositions,
+        subPositions: positions.subPositions,
+      };
+    });
+
+    setRows(nextRows);
+    alert(`${Math.min(players.length, 10)}명을 불러왔습니다.`);
+  } catch (error: unknown) {
+    console.error("[IMPORT_SEASON_APPLIES_ERROR]", error);
+    alert("참가 신청자 가져오기 중 오류가 발생했습니다.");
+  } finally {
+    setImportLoading(false);
+  }
+}
+
+async function handleSaveBalanceDraft() {
+  if (!result) {
+    alert("저장할 팀 밸런스 결과가 없습니다. 먼저 팀 밸런스를 계산해주세요.");
+    return;
+  }
+
+  try {
+    setSaveLoading(true);
+
+    const players = [
+      ...result.blue.map((player) => ({
+        playerId: player.playerId,
+        team: "BLUE",
+        position: player.position,
+      })),
+      ...result.red.map((player) => ({
+        playerId: player.playerId,
+        team: "RED",
+        position: player.position,
+      })),
+    ];
+
+    const response = await fetch("/api/team-balance/drafts", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        title: "시즌내전 팀 밸런스",
+        players,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      alert(data.message || "팀 밸런스 저장 실패");
+      return;
+    }
+
+    alert("팀 밸런스 결과가 저장되었습니다.");
+  } catch (error: unknown) {
+    console.error("[SAVE_BALANCE_DRAFT_ERROR]", error);
+    alert("팀 밸런스 저장 중 오류가 발생했습니다.");
+  } finally {
+    setSaveLoading(false);
+  }
+}
   function applySearchResult(index: number, player: SearchPlayer) {
     updateRow(index, (row) => ({
       ...row,
@@ -396,7 +555,25 @@ function togglePosition(index: number, position: Position) {
           <div className="balance-form-head">
             <div className="balance-form-head__title">플레이어 입력</div>
           </div>
+          <div className="balance-action-row">
+  <button
+    type="button"
+    className="balance-action-button"
+    onClick={handleImportSeasonApplies}
+    disabled={importLoading}
+  >
+    {importLoading ? "불러오는 중..." : "오늘 참가 신청자 가져오기"}
+  </button>
 
+  <button
+    type="button"
+    className="balance-action-button balance-action-button--save"
+    onClick={handleSaveBalanceDraft}
+    disabled={saveLoading || !result}
+  >
+    {saveLoading ? "저장 중..." : "팀 밸런스 결과 저장"}
+  </button>
+</div>
           <div className="balance-input-list">
             {rows.map((row, index) => (
               <div
@@ -502,7 +679,7 @@ function togglePosition(index: number, position: Position) {
             >
               결과 복사
             </button>
-
+            
             <button
               type="button"
               className="app-button--danger-outline"

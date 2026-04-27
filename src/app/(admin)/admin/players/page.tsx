@@ -2,8 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Pagination from "@/components/Pagination";
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
 type Player = {
   id: number;
   name: string;

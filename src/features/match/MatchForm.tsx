@@ -18,9 +18,48 @@ type PlayerOption = {
   tag: string;
 };
 
+type SeasonParticipationPlayer = {
+  id: number;
+  name: string;
+  nickname: string;
+  tag: string;
+  peakTier?: string | null;
+  currentTier?: string | null;
+};
+
+type SeasonParticipationResponse = {
+  message?: string;
+  season?: {
+    id: number;
+    name: string;
+  };
+  players?: SeasonParticipationPlayer[];
+};
+
 type ChampionOption = {
   id: number;
   name: string;
+};
+
+type TeamBalanceDraftPlayer = {
+  playerId: number;
+  name: string;
+  nickname: string;
+  tag: string;
+  currentTier: string | null;
+  peakTier: string | null;
+  position: Position;
+};
+
+type TeamBalanceLatestResponse = {
+  message?: string;
+  id?: number;
+  title?: string;
+  applyDate?: string;
+  teams?: {
+    BLUE?: TeamBalanceDraftPlayer[];
+    RED?: TeamBalanceDraftPlayer[];
+  };
 };
 
 type ParticipantForm = {
@@ -287,6 +326,7 @@ export default function MatchForm({
 
   const [form, setForm] = useState<MatchFormData>(normalizedInitialData);
   const [submitting, setSubmitting] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
   const [activePlayerField, setActivePlayerField] = useState<string | null>(null);
   const [activeChampionField, setActiveChampionField] = useState<string | null>(
     null
@@ -473,6 +513,97 @@ export default function MatchForm({
     return null;
   };
 
+
+  const applyTeamBalanceToParticipants = (
+    participants: ParticipantForm[],
+    bluePlayers: TeamBalanceDraftPlayer[],
+    redPlayers: TeamBalanceDraftPlayer[]
+  ): ParticipantForm[] => {
+    const draftPlayers = [...bluePlayers, ...redPlayers];
+
+    return participants.map((participant, index) => {
+      const draftPlayer = draftPlayers[index];
+
+      if (!draftPlayer) {
+        return {
+          ...participant,
+          playerId: 0,
+          playerInput: "",
+        };
+      }
+
+      return {
+        ...participant,
+        playerId: draftPlayer.playerId,
+        playerInput: makePlayerLabel({
+          id: draftPlayer.playerId,
+          name: draftPlayer.name,
+          nickname: draftPlayer.nickname,
+          tag: draftPlayer.tag,
+        }),
+        team: index < bluePlayers.length ? "BLUE" : "RED",
+        position: draftPlayer.position,
+      };
+    });
+  };
+
+  const handleImportTeamBalance = async () => {
+    try {
+      const ok = confirm("저장된 최신 팀 밸런스 결과를 가져오시겠습니까?");
+      if (!ok) return;
+
+      setImportLoading(true);
+
+      const response = await fetch("/api/team-balance/drafts/latest", {
+        cache: "no-store",
+      });
+
+      const data = await parseResponse<TeamBalanceLatestResponse>(response);
+
+      if (!response.ok) {
+        alert(data?.message ?? "팀 밸런스 결과 불러오기에 실패했습니다.");
+        return;
+      }
+
+      const bluePlayers = data?.teams?.BLUE ?? [];
+      const redPlayers = data?.teams?.RED ?? [];
+      const totalCount = bluePlayers.length + redPlayers.length;
+
+      if (totalCount === 0) {
+        alert("저장된 팀 밸런스 참가자가 없습니다.");
+        return;
+      }
+
+      if (totalCount !== 10) {
+        alert("팀 밸런스 참가자는 현재 " + totalCount + "명입니다. 10명 기준으로 불러옵니다.");
+      }
+
+      setForm((prev) => {
+        const baseGames =
+          prev.games.length > 0 ? prev.games : [createEmptyGame(1)];
+
+        return {
+          ...prev,
+          games: baseGames.map((game) => ({
+            ...game,
+            participants: applyTeamBalanceToParticipants(
+              game.participants,
+              bluePlayers,
+              redPlayers
+            ),
+          })),
+        };
+      });
+
+      alert("팀 밸런스 결과를 불러왔습니다.");
+    } catch (error: unknown) {
+      console.error("[IMPORT_TEAM_BALANCE_ERROR]", error);
+      alert("팀 밸런스 결과 불러오기 중 오류가 발생했습니다.");
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
   const handleSubmit = async () => {
     try {
       const validationMessage = runClientValidation();
@@ -640,6 +771,21 @@ export default function MatchForm({
         >
           세트 추가
         </button>
+
+        {mode === "create" ? (
+          <button
+            type="button"
+            className="app-button--danger-outline"
+            onClick={() => {
+              handleImportTeamBalance().catch((error: unknown) => {
+                console.error("[IMPORT_TEAM_BALANCE_PROMISE_ERROR]", error);
+              });
+            }}
+            disabled={importLoading}
+          >
+            {importLoading ? "불러오는 중..." : "팀 밸런스 불러오기"}
+          </button>
+        ) : null}
       </div>
 
       <div className="card-grid">

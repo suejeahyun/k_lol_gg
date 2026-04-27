@@ -57,6 +57,15 @@ enum DestructionStage {
   FINAL
 }
 
+enum ApplyPosition {
+  TOP
+  JGL
+  MID
+  ADC
+  SUP
+  ALL
+}
+
 model Player {
   id          Int      @id @default(autoincrement())
   name        String
@@ -66,16 +75,56 @@ model Player {
   currentTier String?
   createdAt   DateTime @default(now())
 
+  // 🔽 추가 (핵심)
+  userAccountId Int?         @unique
+  userAccount   UserAccount? @relation(fields: [userAccountId], references: [id], onDelete: SetNull)
+
   participants  MatchParticipant[]
   seasonStats   PlayerSeasonStat[]
   championStats PlayerChampionStat[]
   positionStats PlayerPositionStat[]
   seasonResults SeasonResult[]
 
+  seasonParticipationApplies      SeasonParticipationApply[]
+  eventParticipationApplies       EventParticipationApply[]
+  destructionParticipationApplies DestructionParticipationApply[]
+
   eventParticipants EventParticipant[]
 
   destructionCaptainTeams DestructionTeam[]
   destructionParticipants DestructionParticipant[]
+  teamBalanceDraftPlayers TeamBalanceDraftPlayer[]
+
+  @@unique([nickname, tag])
+}
+
+model UserAccount {
+  id           Int        @id @default(autoincrement())
+  userId       String     @unique
+  passwordHash String
+  role         UserRole   @default(USER)
+  status       UserStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  player Player?
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum UserStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ParticipationApplyStatus {
+  APPLIED
+  CANCELLED
 }
 
 model Champion {
@@ -94,9 +143,11 @@ model Season {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 
-  matches       MatchSeries[]
-  seasonStats   PlayerSeasonStat[]
-  seasonResults SeasonResult[]
+  matches              MatchSeries[]
+  seasonStats          PlayerSeasonStat[]
+  seasonResults        SeasonResult[]
+  participationApplies SeasonParticipationApply[]
+  teamBalanceDrafts    TeamBalanceDraft[]
 }
 
 model MatchSeries {
@@ -238,9 +289,10 @@ model EventMatch {
 
   galleryImage GalleryImage? @relation(fields: [galleryImageId], references: [id])
 
-  teams        EventTeam[]
-  participants EventParticipant[]
-  matches      EventTournamentMatch[]
+  teams                EventTeam[]
+  participants         EventParticipant[]
+  matches              EventTournamentMatch[]
+  participationApplies EventParticipationApply[]
 }
 
 model EventTeam {
@@ -312,9 +364,10 @@ model DestructionTournament {
 
   galleryImage GalleryImage? @relation(fields: [galleryImageId], references: [id])
 
-  teams        DestructionTeam[]
-  participants DestructionParticipant[]
-  matches      DestructionMatch[]
+  teams                DestructionTeam[]
+  participants         DestructionParticipant[]
+  matches              DestructionMatch[]
+  participationApplies DestructionParticipationApply[]
 }
 
 model DestructionTeam {
@@ -373,4 +426,92 @@ model DestructionMatch {
 
   teamA DestructionTeam @relation("DestructionTeamA", fields: [teamAId], references: [id])
   teamB DestructionTeam @relation("DestructionTeamB", fields: [teamBId], references: [id])
+}
+
+model SeasonParticipationApply {
+  id        Int      @id @default(autoincrement())
+  seasonId  Int
+  playerId  Int
+  applyDate DateTime
+
+  mainPosition ApplyPosition?
+  subPositions ApplyPosition[]
+
+  status ParticipationApplyStatus @default(APPLIED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  season Season @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([seasonId, playerId, applyDate])
+}
+
+model EventParticipationApply {
+  id       Int @id @default(autoincrement())
+  eventId  Int
+  playerId Int
+
+  mainPosition ApplyPosition?
+  subPositions ApplyPosition[]
+
+  status ParticipationApplyStatus @default(APPLIED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  event  EventMatch @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  player Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, playerId])
+}
+
+model DestructionParticipationApply {
+  id           Int @id @default(autoincrement())
+  tournamentId Int
+  playerId     Int
+
+  mainPosition ApplyPosition
+  subPositions ApplyPosition[]
+
+  isCaptain Boolean                  @default(false)
+  status    ParticipationApplyStatus @default(APPLIED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tournament DestructionTournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  player     Player                @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([tournamentId, playerId])
+}
+
+model TeamBalanceDraft {
+  id        Int      @id @default(autoincrement())
+  title     String
+  seasonId  Int?
+  applyDate DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  season  Season?                  @relation(fields: [seasonId], references: [id], onDelete: SetNull)
+  players TeamBalanceDraftPlayer[]
+}
+
+model TeamBalanceDraftPlayer {
+  id       Int @id @default(autoincrement())
+  draftId  Int
+  playerId Int
+
+  team     Team
+  position Position
+
+  createdAt DateTime @default(now())
+
+  draft  TeamBalanceDraft @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  player Player           @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([draftId, playerId])
 }

@@ -9,15 +9,12 @@ export default function AdminSidebar() {
         <Link href="/admin/matches" className="app-sidebar__link">
           내전 관리
         </Link>
-
         <Link href="/admin/matches/new" className="app-sidebar__link">
           내전 등록
         </Link>
-
         <Link href="/admin/players" className="app-sidebar__link">
           플레이어 관리
         </Link>
-
         <Link href="/admin/seasons" className="app-sidebar__link">
           시즌 관리
         </Link>
@@ -37,8 +34,9 @@ export default function AdminSidebar() {
         <Link href="/admin/notices" className="app-sidebar__link">
           공지사항 관리
         </Link>
-
-
+        <Link href="/admin/users" className="app-sidebar__link">
+          회원 승인
+        </Link>
       </nav>
     </aside>
   );

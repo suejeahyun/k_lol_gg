@@ -6,6 +6,7 @@ import EventTeamGenerator from "@/components/admin/EventTeamGenerator";
 import EventBracketGenerator from "@/components/admin/EventBracketGenerator";
 import EventMatchResultForm from "@/components/admin/EventMatchResultForm";
 import EventCompleteForm from "@/components/admin/EventCompleteForm";
+import ImportParticipantsButton from "@/components/admin/ImportParticipantsButton";
 
 type PageProps = {
   params: Promise<{
@@ -144,6 +145,7 @@ export default async function AdminEventMatchDetailPage({
         </div>
 
         <div className="admin-event-detail-actions">
+          <ImportParticipantsButton type="event" targetId={id} />
           <Link href="/admin/progress/event" className="chip-button">
             목록으로
           </Link>

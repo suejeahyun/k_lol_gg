@@ -9,6 +9,7 @@ import DestructionMatchResultForm from "@/components/admin/DestructionMatchResul
 import DestructionTournamentGenerator from "@/components/admin/DestructionTournamentGenerator";
 import DestructionFinalGenerator from "@/components/admin/DestructionFinalGenerator";
 import DestructionCompleteForm from "@/components/admin/DestructionCompleteForm";
+import ImportParticipantsButton from "@/components/admin/ImportParticipantsButton";
 
 type PageProps = {
   params: Promise<{
@@ -179,9 +180,11 @@ export default async function AdminDestructionTournamentDetailPage({
         </div>
 
         <div className="admin-event-detail-actions">
+          <ImportParticipantsButton type="destruction" targetId={id} />
           <Link href="/admin/progress/destruction" className="chip-button">
             목록으로
           </Link>
+          
         </div>
       </div>
 
