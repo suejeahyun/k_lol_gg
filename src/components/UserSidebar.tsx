@@ -10,6 +10,7 @@ import {
   UserPlus,
   Scale,
   Bell,
+  CalendarDays,
 } from "lucide-react";
 
 type Props = {
@@ -38,6 +39,7 @@ const menuGroups = [
     title: "SYSTEM",
     items: [
       { href: "/notices", label: "공지사항", icon: Bell },
+      { href: "/event-notices", label: "이벤트 공지", icon: CalendarDays  },
     ],
   },
 ];

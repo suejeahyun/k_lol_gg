@@ -105,8 +105,14 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
 
   return (
     <main className="page-container">
-      <h1 className="page-title">내전 목록</h1>
+      <div className="page-header">
+        <div>
+          <p className="page-eyebrow">CIVIL WAR LIST</p>
+          <h1 className="page-title">내전 목록</h1>
+        </div>
+      </div>
 
+        <section className="card balance-form-card">
       <div className="section-search">
         <MatchSearchBox initialQuery={query} />
       </div>
@@ -147,6 +153,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
           />
         </>
       )}
+      </section>
     </main>
   );
 }

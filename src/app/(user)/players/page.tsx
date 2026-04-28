@@ -252,8 +252,14 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
 
   return (
     <main className="page-container">
-      <h1 className="page-title">플레이어 목록</h1>
+      <div className="page-header">
+        <div>
+          <p className="page-eyebrow">PLAYER LIST</p>
+          <h1 className="page-title">플레이어 목록</h1>
+        </div>
+      </div>
 
+      <section className="card balance-form-card">
       <PlayerSearchBox initialQuery={query} />
 
       <div className="player-row-header clickable">
@@ -306,6 +312,7 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
         basePath="/players"
         query={{ q: query, sort, order }}
       />
+      </section>
     </main>
   );
 }

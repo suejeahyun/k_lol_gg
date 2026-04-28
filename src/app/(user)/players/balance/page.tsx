@@ -547,9 +547,12 @@ async function handleSaveBalanceDraft() {
   return (
     <main className="page-container">
       <div className="balance-page">
-        <div className="balance-page__header">
+      <div className="page-header">
+        <div>
+          <p className="page-eyebrow">TEAM BALANCE</p>
           <h1 className="page-title">팀 밸런스</h1>
         </div>
+      </div>
 
         <section className="card balance-form-card">
           <div className="balance-form-head">

@@ -92,9 +92,6 @@ export default async function ProgressPage() {
         <div>
           <p className="page-eyebrow">PROGRESS</p>
           <h1 className="page-title">진행 현황</h1>
-          <p className="page-description">
-            이벤트 내전과 멸망전 진행 상태를 확인합니다.
-          </p>
         </div>
       </div>
 

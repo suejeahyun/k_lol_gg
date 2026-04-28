@@ -515,3 +515,24 @@ model TeamBalanceDraftPlayer {
 
   @@unique([draftId, playerId])
 }
+
+enum EventNoticeType {
+  EVENT_MATCH
+  DESTRUCTION
+  ETC
+}
+
+model EventNotice {
+  id          Int             @id @default(autoincrement())
+  title       String
+  content     String          @db.Text
+  type        EventNoticeType
+
+  recruitInfo String?         @db.Text
+  rule        String?         @db.Text
+  startDate   DateTime?
+
+  isPinned    Boolean         @default(false)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}

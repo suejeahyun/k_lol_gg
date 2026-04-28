@@ -1,8 +1,20 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 
-export default async function NoticesPage() {
-  const notices = await prisma.notice.findMany({
+const typeLabels = {
+  EVENT_MATCH: "이벤트 내전",
+  DESTRUCTION: "멸망전",
+  ETC: "기타 이벤트",
+} as const;
+
+function formatDate(date: Date | null) {
+  if (!date) return "일정 미정";
+
+  return new Date(date).toLocaleDateString("ko-KR");
+}
+
+export default async function EventNoticesPage() {
+  const notices = await prisma.eventNotice.findMany({
     orderBy: [{ isPinned: "desc" }, { createdAt: "desc" }],
   });
 
@@ -10,20 +22,21 @@ export default async function NoticesPage() {
     <div className="notice-page">
       <div className="page-header">
         <div>
-          <p className="page-eyebrow">Notice list</p>
-          <h1 className="page-title">공지사항 목록</h1>
+          <p className="page-eyebrow">Event Notice List</p>
+          <h1 className="page-title">이벤트 공지 목록</h1>
         </div>
       </div>
-      
 
       <div className="notice-list">
         {notices.length === 0 ? (
-          <div className="notice-list__empty">등록된 공지사항이 없습니다.</div>
+          <div className="notice-list__empty">
+            등록된 이벤트 공지가 없습니다.
+          </div>
         ) : (
           notices.map((notice) => (
             <Link
               key={notice.id}
-              href={`/notices/${notice.id}`}
+              href={`/event-notices/${notice.id}`}
               className="notice-card"
             >
               <div className="notice-card__content">
@@ -32,8 +45,12 @@ export default async function NoticesPage() {
                     <span className="notice-card__badge">공지</span>
                   ) : null}
 
+                  <span className="notice-card__badge">
+                    {typeLabels[notice.type]}
+                  </span>
+
                   <span className="notice-card__date">
-                    {new Date(notice.createdAt).toLocaleDateString("ko-KR")}
+                    {formatDate(notice.startDate)}
                   </span>
                 </div>
 
@@ -44,6 +61,15 @@ export default async function NoticesPage() {
                     ? `${notice.content.slice(0, 120)}...`
                     : notice.content}
                 </p>
+
+                {notice.recruitInfo ? (
+                  <p className="notice-card__summary">
+                    참가 방법:{" "}
+                    {notice.recruitInfo.length > 80
+                      ? `${notice.recruitInfo.slice(0, 80)}...`
+                      : notice.recruitInfo}
+                  </p>
+                ) : null}
               </div>
             </Link>
           ))

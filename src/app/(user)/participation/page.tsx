@@ -68,10 +68,8 @@ export default function ParticipationPage() {
     <div className="page-container participation-page">
       <div className="page-header">
         <div>
+          <p className="page-eyebrow">Participation In Civil War</p>
           <h1 className="page-title">내전 참가</h1>
-          <p className="page-description">
-            시즌내전, 이벤트 내전, 멸망전 모집 현황을 확인하고 참가 신청할 수 있습니다.
-          </p>
         </div>
       </div>
 

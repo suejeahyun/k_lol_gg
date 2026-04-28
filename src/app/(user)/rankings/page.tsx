@@ -117,8 +117,14 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
 
   return (
     <main className="page-container">
-      <h1 className="page-title">랭킹</h1>
-
+      <div className="page-header">
+        <div>
+          <p className="page-eyebrow">RANKING</p>
+          <h1 className="page-title">랭킹</h1>
+        </div>
+      </div>
+      
+        <section className="card balance-form-card">
       <RankingSeasonFilter
         seasons={seasons}
         selectedSeasonId={seasonId ? Number(seasonId) : data.season?.id}
@@ -178,6 +184,7 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
           </>
         )}
       </div>
+      </section>
     </main>
   );
 }

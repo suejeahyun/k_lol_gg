@@ -27,6 +27,7 @@ const menuGroups = [
     title: "운영",
     items: [
       { href: "/admin/notices", label: "공지사항" },
+      { href: "/admin/event-notices", label: "이벤트 공지" },
       { href: "/admin/users", label: "회원 승인" },
     ],
   },
