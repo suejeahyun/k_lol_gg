@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Pagination from "@/components/Pagination";
+
 type Player = {
   id: number;
   name: string;
@@ -128,6 +129,7 @@ export default function AdminPlayersPage() {
   const [saving, setSaving] = useState(false);
 
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [showForm, setShowForm] = useState(false);
 
   const [name, setName] = useState("");
   const [nickname, setNickname] = useState("");
@@ -175,6 +177,7 @@ export default function AdminPlayersPage() {
           data && !Array.isArray(data) && "message" in data
             ? data.message
             : "플레이어 목록 조회에 실패했습니다.";
+
         alert(message);
         setPlayers([]);
         setCurrentPage(1);
@@ -207,6 +210,7 @@ export default function AdminPlayersPage() {
 
   function resetForm() {
     setEditingId(null);
+    setShowForm(false);
     setName("");
     setNickname("");
     setTag("");
@@ -216,6 +220,11 @@ export default function AdminPlayersPage() {
     setCurrentDetail("");
   }
 
+  function openCreateForm() {
+    resetForm();
+    setShowForm(true);
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -223,6 +232,8 @@ export default function AdminPlayersPage() {
       alert("이름, 닉네임, 태그를 모두 입력해주세요.");
       return;
     }
+
+    const isEditing = editingId !== null;
 
     setSaving(true);
 
@@ -235,8 +246,8 @@ export default function AdminPlayersPage() {
         currentTier: buildTierValue(currentTier, currentDetail) || null,
       };
 
-      const url = editingId ? `/api/players/${editingId}` : "/api/players";
-      const method = editingId ? "PATCH" : "POST";
+      const url = isEditing ? `/api/players/${editingId}` : "/api/players";
+      const method = isEditing ? "PATCH" : "POST";
 
       const res = await fetch(url, {
         method,
@@ -256,13 +267,13 @@ export default function AdminPlayersPage() {
       resetForm();
 
       const targetPage =
-        editingId && currentPage > totalPages ? totalPages : currentPage;
+        isEditing && currentPage > totalPages ? totalPages : currentPage;
 
       await fetchPlayers(targetPage, searchName);
 
       alert(
         result?.message ??
-          (editingId
+          (isEditing
             ? "플레이어가 수정되었습니다."
             : "플레이어가 등록되었습니다.")
       );
@@ -276,6 +287,8 @@ export default function AdminPlayersPage() {
 
   function handleEdit(player: Player) {
     setEditingId(player.id);
+    setShowForm(true);
+
     setName(player.name);
     setNickname(player.nickname);
     setTag(player.tag);
@@ -349,173 +362,177 @@ export default function AdminPlayersPage() {
     <main className="page-container">
       <h1 className="page-title">플레이어 관리</h1>
 
-      <form onSubmit={handleSubmit} className="card admin-player-form">
-        <h2 className="admin-player-form__title">
-          {editingId ? "플레이어 수정" : "플레이어 등록"}
-        </h2>
+      {showForm && (
+        <form onSubmit={handleSubmit} className="card admin-player-form">
+          <h2 className="admin-player-form__title">
+            {editingId ? "플레이어 수정" : "플레이어 등록"}
+          </h2>
 
-        <div className="admin-player-form__grid">
-          <div className="admin-player-form__field">
-            <label htmlFor="player-name">이름</label>
-            <input
-              id="player-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="이름 입력"
-            />
-          </div>
-
-          <div className="admin-player-form__field">
-            <label htmlFor="player-nickname">닉네임</label>
-            <input
-              id="player-nickname"
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
-              placeholder="닉네임 입력"
-            />
-          </div>
-
-          <div className="admin-player-form__field">
-            <label htmlFor="player-tag">태그</label>
-            <input
-              id="player-tag"
-              value={tag}
-              onChange={(e) => setTag(e.target.value)}
-              placeholder="태그 입력"
-            />
-          </div>
-        </div>
-
-        <div className="admin-player-form__section">
-          <div className="admin-player-form__section-title">최대 티어</div>
-
-          <div className="admin-player-form__tier-row">
-            <select
-              value={peakTier}
-              onChange={(e) => {
-                setPeakTier(e.target.value);
-                setPeakDetail("");
-              }}
-            >
-              <option value="">선택 안함</option>
-              {[...BASIC_TIERS, ...MASTER_TIERS, ...HIGH_TIERS].map((tier) => (
-                <option key={tier} value={tier}>
-                  {tier}
-                </option>
-              ))}
-            </select>
-
-            {peakTier && peakType === "basic" && (
-              <select
-                value={peakDetail}
-                onChange={(e) => setPeakDetail(e.target.value)}
-              >
-                <option value="">단계 선택</option>
-                {BASIC_DIVISIONS.map((division) => (
-                  <option key={division} value={division}>
-                    {division}
-                  </option>
-                ))}
-              </select>
-            )}
-
-            {peakTier && peakType === "master" && (
-              <select
-                value={peakDetail}
-                onChange={(e) => setPeakDetail(e.target.value)}
-              >
-                <option value="">층 선택</option>
-                {MASTER_FLOORS.map((floor) => (
-                  <option key={floor} value={floor}>
-                    {floor}층
-                  </option>
-                ))}
-              </select>
-            )}
-
-            {peakTier && peakType === "high" && (
+          <div className="admin-player-form__grid">
+            <div className="admin-player-form__field">
+              <label htmlFor="player-name">이름</label>
               <input
-                value={peakDetail}
-                onChange={(e) =>
-                  setPeakDetail(e.target.value.replace(/[^0-9]/g, ""))
-                }
-                placeholder="숫자 입력"
-                inputMode="numeric"
+                id="player-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="이름 입력"
               />
-            )}
-          </div>
-        </div>
+            </div>
 
-        <div className="admin-player-form__section">
-          <div className="admin-player-form__section-title">현재 티어</div>
-
-          <div className="admin-player-form__tier-row">
-            <select
-              value={currentTier}
-              onChange={(e) => {
-                setCurrentTier(e.target.value);
-                setCurrentDetail("");
-              }}
-            >
-              <option value="">선택 안함</option>
-              {[...BASIC_TIERS, ...MASTER_TIERS, ...HIGH_TIERS].map((tier) => (
-                <option key={tier} value={tier}>
-                  {tier}
-                </option>
-              ))}
-            </select>
-
-            {currentTier && currentType === "basic" && (
-              <select
-                value={currentDetail}
-                onChange={(e) => setCurrentDetail(e.target.value)}
-              >
-                <option value="">단계 선택</option>
-                {BASIC_DIVISIONS.map((division) => (
-                  <option key={division} value={division}>
-                    {division}
-                  </option>
-                ))}
-              </select>
-            )}
-
-            {currentTier && currentType === "master" && (
-              <select
-                value={currentDetail}
-                onChange={(e) => setCurrentDetail(e.target.value)}
-              >
-                <option value="">층 선택</option>
-                {MASTER_FLOORS.map((floor) => (
-                  <option key={floor} value={floor}>
-                    {floor}층
-                  </option>
-                ))}
-              </select>
-            )}
-
-            {currentTier && currentType === "high" && (
+            <div className="admin-player-form__field">
+              <label htmlFor="player-nickname">닉네임</label>
               <input
-                value={currentDetail}
-                onChange={(e) =>
-                  setCurrentDetail(e.target.value.replace(/[^0-9]/g, ""))
-                }
-                placeholder="숫자 입력"
-                inputMode="numeric"
+                id="player-nickname"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                placeholder="닉네임 입력"
               />
-            )}
+            </div>
+
+            <div className="admin-player-form__field">
+              <label htmlFor="player-tag">태그</label>
+              <input
+                id="player-tag"
+                value={tag}
+                onChange={(e) => setTag(e.target.value)}
+                placeholder="태그 입력"
+              />
+            </div>
           </div>
-        </div>
 
-        <div className="admin-player-form__actions">
-          <button
-            type="submit"
-            className="admin-player-form__submit"
-            disabled={saving}
-          >
-            {saving ? "저장 중..." : editingId ? "수정하기" : "등록하기"}
-          </button>
+          <div className="admin-player-form__section">
+            <div className="admin-player-form__section-title">최대 티어</div>
 
-          {editingId && (
+            <div className="admin-player-form__tier-row">
+              <select
+                value={peakTier}
+                onChange={(e) => {
+                  setPeakTier(e.target.value);
+                  setPeakDetail("");
+                }}
+              >
+                <option value="">선택 안함</option>
+                {[...BASIC_TIERS, ...MASTER_TIERS, ...HIGH_TIERS].map(
+                  (tier) => (
+                    <option key={tier} value={tier}>
+                      {tier}
+                    </option>
+                  )
+                )}
+              </select>
+
+              {peakTier && peakType === "basic" && (
+                <select
+                  value={peakDetail}
+                  onChange={(e) => setPeakDetail(e.target.value)}
+                >
+                  <option value="">단계 선택</option>
+                  {BASIC_DIVISIONS.map((division) => (
+                    <option key={division} value={division}>
+                      {division}
+                    </option>
+                  ))}
+                </select>
+              )}
+
+              {peakTier && peakType === "master" && (
+                <select
+                  value={peakDetail}
+                  onChange={(e) => setPeakDetail(e.target.value)}
+                >
+                  <option value="">층 선택</option>
+                  {MASTER_FLOORS.map((floor) => (
+                    <option key={floor} value={floor}>
+                      {floor}층
+                    </option>
+                  ))}
+                </select>
+              )}
+
+              {peakTier && peakType === "high" && (
+                <input
+                  value={peakDetail}
+                  onChange={(e) =>
+                    setPeakDetail(e.target.value.replace(/[^0-9]/g, ""))
+                  }
+                  placeholder="숫자 입력"
+                  inputMode="numeric"
+                />
+              )}
+            </div>
+          </div>
+
+          <div className="admin-player-form__section">
+            <div className="admin-player-form__section-title">현재 티어</div>
+
+            <div className="admin-player-form__tier-row">
+              <select
+                value={currentTier}
+                onChange={(e) => {
+                  setCurrentTier(e.target.value);
+                  setCurrentDetail("");
+                }}
+              >
+                <option value="">선택 안함</option>
+                {[...BASIC_TIERS, ...MASTER_TIERS, ...HIGH_TIERS].map(
+                  (tier) => (
+                    <option key={tier} value={tier}>
+                      {tier}
+                    </option>
+                  )
+                )}
+              </select>
+
+              {currentTier && currentType === "basic" && (
+                <select
+                  value={currentDetail}
+                  onChange={(e) => setCurrentDetail(e.target.value)}
+                >
+                  <option value="">단계 선택</option>
+                  {BASIC_DIVISIONS.map((division) => (
+                    <option key={division} value={division}>
+                      {division}
+                    </option>
+                  ))}
+                </select>
+              )}
+
+              {currentTier && currentType === "master" && (
+                <select
+                  value={currentDetail}
+                  onChange={(e) => setCurrentDetail(e.target.value)}
+                >
+                  <option value="">층 선택</option>
+                  {MASTER_FLOORS.map((floor) => (
+                    <option key={floor} value={floor}>
+                      {floor}층
+                    </option>
+                  ))}
+                </select>
+              )}
+
+              {currentTier && currentType === "high" && (
+                <input
+                  value={currentDetail}
+                  onChange={(e) =>
+                    setCurrentDetail(e.target.value.replace(/[^0-9]/g, ""))
+                  }
+                  placeholder="숫자 입력"
+                  inputMode="numeric"
+                />
+              )}
+            </div>
+          </div>
+
+          <div className="admin-player-form__actions">
+            <button
+              type="submit"
+              className="admin-player-form__submit"
+              disabled={saving}
+            >
+              {saving ? "저장 중..." : editingId ? "수정하기" : "등록하기"}
+            </button>
+
             <button
               type="button"
               className="admin-player-form__cancel"
@@ -523,9 +540,9 @@ export default function AdminPlayersPage() {
             >
               취소
             </button>
-          )}
-        </div>
-      </form>
+          </div>
+        </form>
+      )}
 
       <section className="card">
         <div
@@ -570,6 +587,7 @@ export default function AdminPlayersPage() {
                 borderRadius: "10px",
               }}
             />
+
             <button
               type="submit"
               className="chip-button"
@@ -577,6 +595,7 @@ export default function AdminPlayersPage() {
             >
               검색
             </button>
+
             <button
               type="button"
               className="chip-button"
@@ -584,6 +603,15 @@ export default function AdminPlayersPage() {
               style={{ minWidth: "72px" }}
             >
               초기화
+            </button>
+
+            <button
+              type="button"
+              className="chip-button"
+              onClick={openCreateForm}
+              style={{ minWidth: "72px" }}
+            >
+              등록
             </button>
           </form>
         </div>
@@ -635,7 +663,9 @@ export default function AdminPlayersPage() {
                       {player.nickname}#{player.tag}
                     </div>
                     <div className="player-col">{player.peakTier ?? "-"}</div>
-                    <div className="player-col">{player.currentTier ?? "-"}</div>
+                    <div className="player-col">
+                      {player.currentTier ?? "-"}
+                    </div>
 
                     <div className="admin-player-actions">
                       <button
@@ -645,6 +675,7 @@ export default function AdminPlayersPage() {
                       >
                         수정
                       </button>
+
                       <button
                         type="button"
                         className="chip-button chip-button--danger"

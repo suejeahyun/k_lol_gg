@@ -29,6 +29,7 @@ const menuGroups = [
       { href: "/admin/notices", label: "공지사항" },
       { href: "/admin/event-notices", label: "이벤트 공지" },
       { href: "/admin/users", label: "회원 승인" },
+      { href: "/admin/players", label: "플레이어 목록" },
     ],
   },
 ];

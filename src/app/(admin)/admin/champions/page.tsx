@@ -1,7 +1,6 @@
 "use client";
-
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 type ChampionItem = {
   id: number;
@@ -18,7 +17,7 @@ export default function AdminChampionsPage() {
   const [imageUrl, setImageUrl] = useState("");
   const [page, setPage] = useState(1);
 
-  const fetchChampions = async () => {
+  const fetchChampions = useCallback(async () => {
     const res = await fetch("/api/champions", { cache: "no-store" });
 
     if (!res.ok) {
@@ -27,12 +26,13 @@ export default function AdminChampionsPage() {
     }
 
     const data = await res.json();
-    setChampions(data);
-  };
+
+    setChampions(Array.isArray(data) ? data : data.champions ?? []);
+  }, []);
 
   useEffect(() => {
     fetchChampions();
-  }, []);
+  }, [fetchChampions]);
 
   const totalPages = Math.max(1, Math.ceil(champions.length / PAGE_SIZE));
 
@@ -42,10 +42,9 @@ export default function AdminChampionsPage() {
   }, [champions, page]);
 
   useEffect(() => {
-    if (page > totalPages) {
-      setPage(totalPages);
-    }
-  }, [page, totalPages]);
+    fetchChampions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleCreate = async () => {
     const res = await fetch("/api/champions", {
