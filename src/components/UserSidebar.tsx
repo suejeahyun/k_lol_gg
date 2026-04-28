@@ -11,26 +11,13 @@ import {
   Scale,
   Bell,
   CalendarDays,
-  type LucideIcon,
 } from "lucide-react";
 
 type Props = {
   isLoggedIn: boolean;
 };
 
-type MenuItem = {
-  href: string;
-  label: string;
-  icon: LucideIcon;
-  auth?: boolean;
-};
-
-type MenuGroup = {
-  title: string;
-  items: MenuItem[];
-};
-
-const menuGroups: MenuGroup[] = [
+const menuGroups = [
   {
     title: "LOBBY",
     items: [
@@ -52,7 +39,7 @@ const menuGroups: MenuGroup[] = [
     title: "SYSTEM",
     items: [
       { href: "/notices", label: "공지사항", icon: Bell },
-      { href: "/event-notices", label: "이벤트 공지", icon: CalendarDays },
+      { href: "/event-notices", label: "이벤트 공지", icon: CalendarDays  },
     ],
   },
 ];
@@ -70,9 +57,7 @@ export default function UserSidebar({ isLoggedIn }: Props) {
 
               <div className="app-sidebar__group-items">
                 {group.items.map((item) => {
-                  if (item.auth && !isLoggedIn) {
-                    return null;
-                  }
+                  if (item.auth && !isLoggedIn) return null;
 
                   const Icon = item.icon;
 
@@ -94,7 +79,7 @@ export default function UserSidebar({ isLoggedIn }: Props) {
       </div>
 
       <div className="app-sidebar__bottom">
-        <AuthSection isLoggedIn={isLoggedIn} />
+        <AuthSection />
       </div>
     </aside>
   );
