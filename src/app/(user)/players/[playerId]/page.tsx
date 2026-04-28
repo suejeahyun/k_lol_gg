@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
+import TierIcon from "@/components/TierIcon";
 
 type PlayerDetailPageProps = {
   params: Promise<{
@@ -151,16 +152,12 @@ export default async function PlayerDetailPage({
 
           <div className="info-card">
             <span className="info-card__label">최대 티어</span>
-            <strong className="info-card__value">
-              {player.peakTier ?? "-"}
-            </strong>
+            <TierIcon tier={player.currentTier} size={26} showText />
           </div>
 
           <div className="info-card">
             <span className="info-card__label">현재 티어</span>
-            <strong className="info-card__value">
-              {player.currentTier ?? "-"}
-            </strong>
+            <TierIcon tier={player.currentTier} size={26} showText />
           </div>
         </div>
       </section>

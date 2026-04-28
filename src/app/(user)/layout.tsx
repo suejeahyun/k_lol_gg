@@ -12,7 +12,7 @@ export default function UserLayout({ children }: UserLayoutProps) {
       <AppTopBar title="유저 페이지" homeHref="/" mode="user" />
 
       <div className="app-body">
-        <UserSidebar />
+        <UserSidebar isLoggedIn={true} />
         <div className="app-content">{children}</div>
       </div>
     </div>

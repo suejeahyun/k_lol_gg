@@ -1,42 +1,60 @@
 import Link from "next/link";
 
+const menuGroups = [
+  {
+    title: "내전",
+    items: [
+      { href: "/admin/matches/new", label: "등록" },
+      { href: "/admin/matches", label: "관리" },
+    ],
+  },
+  {
+    title: "시즌 · 이벤트 · 멸망전" ,
+    items: [
+      { href: "/admin/seasons", label: "시즌" },
+      { href: "/admin/progress/event", label: "이벤트" },
+      { href: "/admin/progress/destruction", label: "멸망전" },
+    ],
+  },
+  {
+    title: "데이터",
+    items: [
+      { href: "/admin/champions", label: "챔피언" },
+      { href: "/admin/images", label: "우승 이미지" },
+    ],
+  },
+  {
+    title: "운영",
+    items: [
+      { href: "/admin/notices", label: "공지사항" },
+      { href: "/admin/users", label: "회원 승인" },
+    ],
+  },
+];
+
 export default function AdminSidebar() {
   return (
     <aside className="app-sidebar">
-      <div className="app-sidebar__title">관리자 메뉴</div>
+      <div className="app-sidebar__title">관리자</div>
 
       <nav className="app-sidebar__nav">
-        <Link href="/admin/matches" className="app-sidebar__link">
-          내전 관리
-        </Link>
-        <Link href="/admin/matches/new" className="app-sidebar__link">
-          내전 등록
-        </Link>
-        <Link href="/admin/players" className="app-sidebar__link">
-          플레이어 관리
-        </Link>
-        <Link href="/admin/seasons" className="app-sidebar__link">
-          시즌 관리
-        </Link>
+        {menuGroups.map((group) => (
+          <div key={group.title} className="app-sidebar__group">
+            <div className="app-sidebar__group-title">{group.title}</div>
 
-        <Link href="/admin/progress/event" className="app-sidebar__link">
-          이벤트 내전 관리
-        </Link>
-        <Link href="/admin/progress/destruction" className="app-sidebar__link">
-          멸망전 관리
-        </Link>
-        <Link href="/admin/images" className="app-sidebar__link">
-          우승팀 이미지 관리
-        </Link>
-        <Link href="/admin/champions" className="app-sidebar__link">
-          챔피언 관리
-        </Link>
-        <Link href="/admin/notices" className="app-sidebar__link">
-          공지사항 관리
-        </Link>
-        <Link href="/admin/users" className="app-sidebar__link">
-          회원 승인
-        </Link>
+            <div className="app-sidebar__group-items">
+              {group.items.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="app-sidebar__link app-sidebar__link--compact"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        ))}
       </nav>
     </aside>
   );

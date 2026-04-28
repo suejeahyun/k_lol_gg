@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import RankingSeasonFilter from "@/components/RankingSeasonFilter";
 import Pagination from "@/components/Pagination";
+import TierIcon from "@/components/TierIcon";
 
 type RankingsPageProps = {
   searchParams: Promise<{

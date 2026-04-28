@@ -1,21 +1,78 @@
 import Link from "next/link";
 import AuthSection from "./AuthSection";
 
-export default function UserSidebar() {
+import {
+  Home,
+  Users,
+  Trophy,
+  Swords,
+  Flame,
+  UserPlus,
+  Scale,
+  Bell,
+} from "lucide-react";
+
+type Props = {
+  isLoggedIn: boolean;
+};
+
+const menuGroups = [
+  {
+    title: "LOBBY",
+    items: [
+      { href: "/", label: "홈", icon: Home },
+      { href: "/players", label: "플레이어", icon: Users },
+      { href: "/rankings", label: "랭킹", icon: Trophy },
+    ],
+  },
+  {
+    title: "BATTLE",
+    items: [
+      { href: "/matches", label: "내전 목록", icon: Swords },
+      { href: "/progress", label: "이벤트 / 멸망전", icon: Flame },
+      { href: "/participation", label: "참가하기", icon: UserPlus, auth: true },
+      { href: "/players/balance", label: "팀 밸런스", icon: Scale, auth: true },
+    ],
+  },
+  {
+    title: "SYSTEM",
+    items: [
+      { href: "/notices", label: "공지사항", icon: Bell },
+    ],
+  },
+];
+
+export default function UserSidebar({ isLoggedIn }: Props) {
   return (
     <aside className="app-sidebar">
       <div className="app-sidebar__top">
-        <div className="app-sidebar__title">메뉴</div>
+        <div className="app-sidebar__title">K-LOL.GG</div>
 
         <nav className="app-sidebar__nav">
-          <Link href="/" className="app-sidebar__link">홈</Link>
-          <Link href="/players" className="app-sidebar__link">플레이어</Link>
-          <Link href="/matches" className="app-sidebar__link">내전 기록</Link>
-          <Link href="/rankings" className="app-sidebar__link">랭킹</Link>
-          <Link href="/players/balance" className="app-sidebar__link">팀 밸런스 생성</Link>
-          <Link href="/participation" className="app-sidebar__link">내전 참가</Link>
-          <Link href="/progress" className="app-sidebar__link">멸망전 / 이벤트 내전</Link>
-          <Link href="/notices" className="app-sidebar__link">공지사항</Link>
+          {menuGroups.map((group) => (
+            <div key={group.title} className="app-sidebar__group">
+              <div className="app-sidebar__group-title">{group.title}</div>
+
+              <div className="app-sidebar__group-items">
+                {group.items.map((item) => {
+                  if (item.auth && !isLoggedIn) return null;
+
+                  const Icon = item.icon;
+
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="app-sidebar__link app-sidebar__link--compact"
+                    >
+                      <Icon size={18} className="app-sidebar__icon" />
+                      <span>{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
       </div>
 

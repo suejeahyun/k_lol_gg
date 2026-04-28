@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import Pagination from "@/components/Pagination";
 import PlayerSearchBox from "./PlayerSearchBox";
+import TierIcon from "@/components/TierIcon";
 
 type PlayersPageProps = {
   searchParams: Promise<{
@@ -284,8 +285,13 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
               <div>
                 {player.nickname}#{player.tag}
               </div>
-              <div>{player.peakTier ?? "-"}</div>
-              <div>{player.currentTier ?? "-"}</div>
+              <div>
+                <TierIcon tier={player.peakTier} size={24} showText />
+              </div>
+
+              <div>
+                <TierIcon tier={player.currentTier} size={24} showText />
+              </div>
               <div>{player.totalGames}</div>
               <div>{player.winRate}%</div>
               <div>{player.kda}</div>
