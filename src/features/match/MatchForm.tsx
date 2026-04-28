@@ -859,7 +859,7 @@ export default function MatchForm({
                       {participant.position}
                     </div>
 
-                    <div style={{ position: "relative" }}>
+                    <div className="match-autocomplete-cell">
                       <input
                         value={participant.playerInput}
                         onFocus={() => setActivePlayerField(playerFieldKey)}
@@ -890,20 +890,7 @@ export default function MatchForm({
 
                       {activePlayerField === playerFieldKey &&
                         playerSuggestions.length > 0 && (
-                          <div
-                            style={{
-                              position: "absolute",
-                              top: "calc(100% + 4px)",
-                              left: 0,
-                              right: 0,
-                              background: "#111",
-                              border: "1px solid #333",
-                              borderRadius: "8px",
-                              maxHeight: "220px",
-                              overflowY: "auto",
-                              zIndex: 20,
-                            }}
-                          >
+                          <div className="match-autocomplete-list">
                             {playerSuggestions.map((player) => (
                               <button
                                 key={player.id}
@@ -924,16 +911,7 @@ export default function MatchForm({
                                   );
                                   setActivePlayerField(null);
                                 }}
-                                style={{
-                                  display: "block",
-                                  width: "100%",
-                                  padding: "10px 12px",
-                                  textAlign: "left",
-                                  background: "transparent",
-                                  border: "none",
-                                  color: "#fff",
-                                  cursor: "pointer",
-                                }}
+                                className="match-autocomplete-item"
                               >
                                 {makePlayerLabel(player)}
                               </button>
@@ -942,7 +920,7 @@ export default function MatchForm({
                         )}
                     </div>
 
-                    <div style={{ position: "relative" }}>
+                    <div className="match-autocomplete-cell">
                       <input
                         value={participant.championInput}
                         onFocus={() => setActiveChampionField(championFieldKey)}
@@ -973,20 +951,7 @@ export default function MatchForm({
 
                       {activeChampionField === championFieldKey &&
                         championSuggestions.length > 0 && (
-                          <div
-                            style={{
-                              position: "absolute",
-                              top: "calc(100% + 4px)",
-                              left: 0,
-                              right: 0,
-                              background: "#111",
-                              border: "1px solid #333",
-                              borderRadius: "8px",
-                              maxHeight: "220px",
-                              overflowY: "auto",
-                              zIndex: 20,
-                            }}
-                          >
+                          <div className="match-autocomplete-list">
                             {championSuggestions.map((champion) => (
                               <button
                                 key={champion.id}
@@ -1007,16 +972,7 @@ export default function MatchForm({
                                   );
                                   setActiveChampionField(null);
                                 }}
-                                style={{
-                                  display: "block",
-                                  width: "100%",
-                                  padding: "10px 12px",
-                                  textAlign: "left",
-                                  background: "transparent",
-                                  border: "none",
-                                  color: "#fff",
-                                  cursor: "pointer",
-                                }}
+                                className="match-autocomplete-item"
                               >
                                 {champion.name}
                               </button>
