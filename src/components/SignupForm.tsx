@@ -1,0 +1,82 @@
+"use client";
+
+import { FormEvent, useState } from "react";
+
+export default function SignupForm() {
+  const [userId, setUserId] = useState("");
+  const [password, setPassword] = useState("");
+  const [nickname, setNickname] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    try {
+      setLoading(true);
+
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId,
+          password,
+          nickname,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "회원가입 실패");
+        return;
+      }
+
+      alert("회원가입이 완료되었습니다. 관리자 승인 후 이용 가능합니다.");
+      window.location.href = "/login";
+    } catch (error: unknown) {
+      console.error("[SIGNUP_ERROR]", error);
+      alert("회원가입 중 오류가 발생했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="auth-page">
+      <form className="auth-card" onSubmit={handleSubmit}>
+        <h1 className="auth-title">회원가입</h1>
+
+        <label className="auth-field">
+          <span>아이디</span>
+          <input
+            value={userId}
+            onChange={(e) => setUserId(e.target.value)}
+          />
+        </label>
+
+        <label className="auth-field">
+          <span>닉네임</span>
+          <input
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
+          />
+        </label>
+
+        <label className="auth-field">
+          <span>비밀번호</span>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </label>
+
+        <button className="auth-button" type="submit" disabled={loading}>
+          {loading ? "가입 중..." : "회원가입"}
+        </button>
+      </form>
+    </div>
+  );
+}
