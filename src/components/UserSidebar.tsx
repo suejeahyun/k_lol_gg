@@ -1,5 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import AuthSection from "./AuthSection";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import {
   Home,
@@ -13,8 +17,11 @@ import {
   CalendarDays,
 } from "lucide-react";
 
-type Props = {
-  isLoggedIn: boolean;
+type UserStatus = "PENDING" | "APPROVED" | "REJECTED";
+
+type User = {
+  userId: string;
+  status: UserStatus;
 };
 
 const menuGroups = [
@@ -39,12 +46,43 @@ const menuGroups = [
     title: "SYSTEM",
     items: [
       { href: "/notices", label: "공지사항", icon: Bell },
-      { href: "/event-notices", label: "이벤트 공지", icon: CalendarDays  },
+      { href: "/event-notices", label: "이벤트 공지", icon: CalendarDays },
     ],
   },
 ];
 
-export default function UserSidebar({ isLoggedIn }: Props) {
+export default function UserSidebar() {
+  const pathname = usePathname();
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const res = await fetch("/api/auth/me", {
+          cache: "no-store",
+        });
+
+        if (!res.ok) {
+          setUser(null);
+          return;
+        }
+
+        const data: { user: User | null } = await res.json();
+        setUser(data.user ?? null);
+      } catch (error: unknown) {
+        console.error("[USER_SIDEBAR_AUTH_ERROR]", error);
+        setUser(null);
+      }
+    }
+
+    fetchUser().catch((error: unknown) => {
+      console.error("[USER_SIDEBAR_AUTH_PROMISE_ERROR]", error);
+      setUser(null);
+    });
+  }, [pathname]);
+
+  const isLoggedIn = Boolean(user);
+
   return (
     <aside className="app-sidebar">
       <div className="app-sidebar__top">

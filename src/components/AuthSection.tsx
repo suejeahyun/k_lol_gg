@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 type UserStatus = "PENDING" | "APPROVED" | "REJECTED";
@@ -11,6 +12,7 @@ type User = {
 };
 
 export default function AuthSection() {
+  const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
@@ -25,8 +27,8 @@ export default function AuthSection() {
           return;
         }
 
-        const data: { user: User } = await res.json();
-        setUser(data.user);
+        const data: { user: User | null } = await res.json();
+        setUser(data.user ?? null);
       } catch (error: unknown) {
         console.error("[AUTH_SECTION_FETCH_ERROR]", error);
         setUser(null);
@@ -37,7 +39,7 @@ export default function AuthSection() {
       console.error("[AUTH_SECTION_FETCH_PROMISE_ERROR]", error);
       setUser(null);
     });
-  }, []);
+  }, [pathname]);
 
   const handleLogout = async () => {
     try {
@@ -45,7 +47,7 @@ export default function AuthSection() {
         method: "POST",
       });
 
-      window.location.reload();
+      window.location.href = "/";
     } catch (error: unknown) {
       console.error("[AUTH_SECTION_LOGOUT_ERROR]", error);
       alert("로그아웃 중 오류가 발생했습니다.");

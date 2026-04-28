@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import GalleryWinnerSlider from "@/components/GalleryWinnerSlider";
 import Top3Slider from "@/components/Top3Slider";
+
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 type SeasonDto = {
