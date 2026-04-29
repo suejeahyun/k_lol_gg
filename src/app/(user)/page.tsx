@@ -455,8 +455,6 @@ export default async function HomePage() {
             <h1 className="home-main-title">K-LOL.GG</h1>
             <p className="home-main-description">
               모든 규정은 공정한 운영과 원활한 진행을 위한 기준입니다.
-              <p>
-              </p>
               구성원 모두의 협조를 바랍니다.
             </p>
             <p>

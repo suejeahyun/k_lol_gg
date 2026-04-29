@@ -7,7 +7,7 @@ export default function SignupForm() {
   const [password, setPassword] = useState("");
   const [nickname, setNickname] = useState("");
   const [loading, setLoading] = useState(false);
-
+  const [tag, setTag] = useState("");
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -20,10 +20,11 @@ export default function SignupForm() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userId,
-          password,
-          nickname,
-        }),
+        userId,
+        password,
+        nickname,
+        tag,
+      }),
       });
 
       const data = await res.json();
@@ -63,7 +64,14 @@ export default function SignupForm() {
             onChange={(e) => setNickname(e.target.value)}
           />
         </label>
-
+        <label className="auth-field">
+          <span>태그</span>
+          <input
+            value={tag}
+            onChange={(e) => setTag(e.target.value)}
+            placeholder="KR1"
+          />
+        </label>
         <label className="auth-field">
           <span>비밀번호</span>
           <input
