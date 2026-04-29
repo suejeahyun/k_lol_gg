@@ -454,8 +454,13 @@ export default async function HomePage() {
             <p className="home-eyebrow">KOREA LOL CUSTOM STATS</p>
             <h1 className="home-main-title">K-LOL.GG</h1>
             <p className="home-main-description">
-              내전 기록, 시즌 랭킹, 최근 경기, 공지사항을 한 번에 확인하는
-              K-LOL 통계 페이지입니다.
+              모든 규정은 공정한 운영과 원활한 진행을 위한 기준입니다.
+              <p>
+              </p>
+              구성원 모두의 협조를 바랍니다.
+            </p>
+            <p>
+              
             </p>
           </div>
 
