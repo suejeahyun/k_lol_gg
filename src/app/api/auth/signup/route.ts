@@ -9,15 +9,16 @@ export async function POST(req: NextRequest) {
     const {
       userId,
       password,
+      name,
       nickname,
       tag,
       peakTier,
       currentTier,
     } = body;
 
-    if (!userId || !password || !nickname || !tag) {
+    if (!userId || !password || !name || !nickname || !tag) {
       return NextResponse.json(
-        { message: "아이디, 비밀번호, 닉네임, 태그는 필수입니다." },
+        { message: "아이디, 비밀번호, 이름, 닉네임, 태그는 필수입니다." },
         { status: 400 }
       );
     }
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest) {
 
       await tx.player.create({
         data: {
-          name: nickname,
+          name,
           nickname,
           tag,
           peakTier: peakTier || null,
@@ -74,7 +75,10 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(
-      { message: "회원가입 신청이 완료되었습니다. 관리자 승인 후 이용할 수 있습니다." },
+      {
+        message:
+          "회원가입 신청이 완료되었습니다. 관리자 승인 후 이용할 수 있습니다.",
+      },
       { status: 201 }
     );
   } catch (error) {
