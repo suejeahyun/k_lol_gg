@@ -279,3 +279,634 @@
   box-shadow: 0 18px 48px rgba(0, 0, 0, 0.65) !important;
 }
 
+/* =========================================================
+   K-LOL.GG UI Refinement Override
+   - 전체 톤 정리
+   - 카드 / 버튼 / 텍스트 / 배경 통일
+   - 기존 구조 유지
+   ========================================================= */
+
+:root {
+  --ui-bg-main: #020617;
+  --ui-bg-panel: rgba(8, 20, 39, 0.88);
+  --ui-bg-card: rgba(15, 30, 52, 0.86);
+  --ui-bg-card-hover: rgba(18, 39, 68, 0.92);
+
+  --ui-border: rgba(96, 165, 250, 0.22);
+  --ui-border-strong: rgba(96, 165, 250, 0.42);
+
+  --ui-text-main: #f8fbff;
+  --ui-text-body: #dbeafe;
+  --ui-text-muted: #91a4c2;
+
+  --ui-blue: #3b82f6;
+  --ui-cyan: #22d3ee;
+  --ui-red: #ef4444;
+  --ui-gold: #facc15;
+
+  --ui-radius-sm: 10px;
+  --ui-radius-md: 14px;
+  --ui-radius-lg: 20px;
+  --ui-radius-xl: 24px;
+
+  --ui-shadow-card: 0 14px 38px rgba(0, 0, 0, 0.34);
+  --ui-shadow-glow: 0 0 0 1px rgba(96, 165, 250, 0.14),
+    0 0 28px rgba(37, 99, 235, 0.14);
+}
+
+/* 전체 배경 */
+html,
+body {
+  background: var(--ui-bg-main) !important;
+  color: var(--ui-text-body) !important;
+}
+
+.app-shell,
+.app-body,
+.app-content,
+.page-container,
+.page-shell,
+.home-page,
+.notice-page,
+.gallery-page,
+.progress-page,
+.event-progress-page,
+.destruction-progress-page,
+.participation-page {
+  background: transparent !important;
+}
+
+/* 중앙 콘텐츠 폭 정리 */
+.app-content {
+  padding: 28px 28px 60px !important;
+}
+
+.page-container,
+.page-shell,
+.notice-page,
+.gallery-page,
+.progress-page,
+.event-progress-page,
+.destruction-progress-page,
+.participation-page {
+  max-width: 1180px !important;
+}
+
+/* 좌우 배경 자연스럽게 */
+.app-background-image {
+  filter: brightness(0.38) saturate(1.05) contrast(1.08) blur(0.3px) !important;
+  opacity: 0.72 !important;
+}
+
+.app-background-side {
+  filter: brightness(0.38) saturate(1.05) contrast(1.08) blur(0.3px) !important;
+  opacity: 0.72 !important;
+}
+
+.app-background-side--left {
+  background-position: right center !important;
+}
+
+.app-background-side--right {
+  background-position: left center !important;
+}
+
+.app-background-overlay {
+  background:
+    linear-gradient(
+      to right,
+      rgba(2, 6, 23, 0.16) 0%,
+      rgba(2, 6, 23, 0.38) 20%,
+      rgba(2, 6, 23, 0.78) 36%,
+      rgba(2, 6, 23, 0.9) 50%,
+      rgba(2, 6, 23, 0.78) 64%,
+      rgba(2, 6, 23, 0.38) 80%,
+      rgba(2, 6, 23, 0.16) 100%
+    ) !important;
+}
+
+/* 상단바 정리 */
+.app-topbar {
+  background: rgba(2, 6, 23, 0.88) !important;
+  border-bottom: 1px solid var(--ui-border) !important;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.28) !important;
+  backdrop-filter: blur(18px) !important;
+}
+
+.app-topbar__home {
+  color: var(--ui-text-main) !important;
+  font-weight: 950 !important;
+}
+
+.app-topbar__title,
+.app-topbar__divider {
+  color: var(--ui-text-muted) !important;
+}
+
+/* 사이드바 정리 */
+.app-sidebar {
+  background: rgba(2, 6, 23, 0.88) !important;
+  border-right: 1px solid var(--ui-border) !important;
+  backdrop-filter: blur(18px) !important;
+}
+
+.app-sidebar__title,
+.app-sidebar__section-title,
+.app-sidebar__group-title {
+  color: rgba(219, 234, 254, 0.62) !important;
+}
+
+.app-sidebar__link {
+  border-radius: 12px !important;
+  color: var(--ui-text-muted) !important;
+}
+
+.app-sidebar__link:hover {
+  background: rgba(59, 130, 246, 0.18) !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+/* 공통 카드 */
+.card,
+.list-card,
+.top3-card,
+.top3-panel,
+.top3-player,
+.top3-slide-header,
+.top3-rank-card,
+.player-row-card,
+.match-row-card,
+.ranking-board,
+.ranking-row-card,
+.detail-header-card,
+.detail-board,
+.content-section,
+.page-header,
+.stat-card,
+.info-card,
+.match-card,
+.champion-summary-row,
+.most-table-row,
+.recent-table-row,
+.admin-player-row-card,
+.match-form-game,
+.match-participant-row,
+.balance-form-card,
+.balance-team-card,
+.balance-team-row,
+.balance-summary-card,
+.notice-card,
+.notice-form,
+.notice-admin-card,
+.gallery-card,
+.gallery-form,
+.gallery-admin-card,
+.gallery-detail__image-wrap,
+.admin-card,
+.admin-form,
+.admin-summary-card,
+.admin-log-section,
+.admin-log-item,
+.kakao-player-card,
+.kakao-player-card__stat,
+.participation-card,
+.participation-box,
+.progress-overview-card,
+.event-progress-card,
+.destruction-progress-card {
+  background: var(--ui-bg-card) !important;
+  border: 1px solid var(--ui-border) !important;
+  border-radius: var(--ui-radius-lg) !important;
+  color: var(--ui-text-body) !important;
+  box-shadow: var(--ui-shadow-card) !important;
+  backdrop-filter: blur(14px) !important;
+}
+
+/* 카드 hover 과한 효과 줄이기 */
+.card:hover,
+.list-card:hover,
+.top3-card:hover,
+.top3-player:hover,
+.player-row-card:hover,
+.match-row-card:hover,
+.ranking-row-card:hover,
+.notice-card:hover,
+.gallery-card:hover,
+.match-card:hover,
+.champion-summary-row:hover,
+.balance-team-row:hover,
+.admin-player-row-card:hover,
+.admin-summary-card:hover,
+.participation-card:hover,
+.progress-overview-card:hover,
+.event-progress-card:hover,
+.destruction-progress-card:hover {
+  transform: translateY(-2px) !important;
+  background: var(--ui-bg-card-hover) !important;
+  border-color: var(--ui-border-strong) !important;
+  box-shadow: var(--ui-shadow-card), var(--ui-shadow-glow) !important;
+}
+
+/* 제목 */
+.page-title,
+.admin-page__title,
+.gallery-page__title,
+.notice-page__title,
+.notice-detail__title,
+.gallery-detail__title,
+.ranking-board__title,
+.detail-board__title,
+.balance-form-head__title,
+.balance-team-card__title,
+.balance-summary-card__title,
+.section-header h2,
+.admin-section-title,
+.top3-card__title,
+.top3-panel__title,
+.top3-slide-header__title,
+.list-card__title,
+.kakao-search-page__title,
+.home-main-title,
+.home-section-title,
+.home-progress-item__top strong,
+.event-progress-card h2,
+.destruction-progress-card h2 {
+  color: var(--ui-text-main) !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.3px;
+}
+
+/* 설명 / 보조 텍스트 */
+.page-description,
+.admin-page__description,
+.gallery-page__description,
+.notice-page__description,
+.notice-detail__meta,
+.gallery-detail__meta,
+.balance-page__description,
+.balance-form-head__desc,
+.admin-dashboard-subtitle,
+.admin-section-description,
+.list-card__meta,
+.top3-panel__season,
+.top3-empty,
+.kakao-search-page__desc,
+.stat-card__label,
+.stat-card__sub,
+.info-card__label,
+.match-card__date,
+.notice-card__date,
+.gallery-admin-card__date,
+.admin-summary-card__label,
+.admin-summary-card__meta,
+.admin-log-item__date {
+  color: var(--ui-text-muted) !important;
+}
+
+/* 본문 */
+.player-col,
+.match-col,
+.ranking-col,
+.detail-header-value,
+.summary-table-row,
+.most-table-row,
+.recent-table-row,
+.admin-log-item__message,
+.balance-team-row__name,
+.balance-team-row__score,
+.balance-summary-list,
+.notice-card__summary,
+.notice-detail__content,
+.gallery-card__description,
+.gallery-detail__content,
+.kakao-player-card__value {
+  color: var(--ui-text-body) !important;
+}
+
+/* 강조 텍스트 */
+.player-name,
+.match-title,
+.ranking-rank,
+.ranking-name,
+.top3-player__name,
+.top3-player__result strong,
+.champion-summary-row__champion strong,
+.champion-summary-row__metric,
+.stat-card__value,
+.info-card__value,
+.match-card__queue,
+.match-card__champion strong,
+.match-card__score strong,
+.notice-card__title,
+.notice-admin-card__title,
+.gallery-card__title,
+.gallery-admin-card__title,
+.kakao-player-card__title {
+  color: var(--ui-text-main) !important;
+}
+
+/* 테이블 / 리스트 헤더 */
+.player-row-header,
+.match-row-header,
+.ranking-row-header,
+.summary-table-header,
+.most-table-header,
+.recent-table-header,
+.admin-player-row-header,
+.admin-match-row-header,
+.match-entry-header,
+.champion-summary-list__head,
+.match-detail-header,
+.participation-header {
+  background: rgba(2, 6, 23, 0.58) !important;
+  border: 1px solid var(--ui-border) !important;
+  border-radius: var(--ui-radius-md) !important;
+  color: var(--ui-cyan) !important;
+}
+
+/* input / select / textarea */
+input,
+select,
+textarea,
+.app-input,
+.app-select,
+.match-grid-input,
+.balance-text-input,
+.admin-form__input,
+.admin-form__textarea,
+.notice-form__input,
+.notice-form__textarea,
+.gallery-form__input,
+.gallery-form__textarea,
+.kakao-search-form__input,
+.match-form-field input,
+.match-form-field select,
+.match-form-inline-field input,
+.match-form-inline-field select {
+  background: rgba(2, 6, 23, 0.72) !important;
+  border: 1px solid rgba(96, 165, 250, 0.24) !important;
+  border-radius: var(--ui-radius-sm) !important;
+  color: var(--ui-text-main) !important;
+  box-shadow: none !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(145, 164, 194, 0.72) !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+.app-input:focus,
+.app-select:focus,
+.match-grid-input:focus,
+.balance-text-input:focus,
+.admin-form__input:focus,
+.admin-form__textarea:focus,
+.notice-form__input:focus,
+.notice-form__textarea:focus,
+.gallery-form__input:focus,
+.gallery-form__textarea:focus,
+.kakao-search-form__input:focus {
+  outline: none !important;
+  border-color: var(--ui-cyan) !important;
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.18) !important;
+}
+
+/* 버튼 */
+.app-button,
+.btn-primary,
+.admin-button,
+.admin-page__create-button,
+.notice-form__submit-button,
+.gallery-form__submit-button,
+.admin-player-form__submit,
+.kakao-search-form__button,
+.participation-apply-button,
+.balance-action-button--save {
+  background: linear-gradient(135deg, var(--ui-blue), var(--ui-cyan)) !important;
+  border: 1px solid rgba(96, 165, 250, 0.52) !important;
+  border-radius: var(--ui-radius-sm) !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.24) !important;
+}
+
+.app-button:hover,
+.btn-primary:hover,
+.admin-button:hover,
+.admin-page__create-button:hover,
+.notice-form__submit-button:hover,
+.gallery-form__submit-button:hover,
+.admin-player-form__submit:hover,
+.kakao-search-form__button:hover,
+.participation-apply-button:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 14px 30px rgba(34, 211, 238, 0.24) !important;
+}
+
+/* 보조 버튼 */
+.btn-ghost,
+.chip-button,
+.notice-form__secondary-button,
+.gallery-form__secondary-button,
+.admin-player-form__cancel,
+.pagination-button,
+.balance-position-button,
+.participation-position-button,
+.gallery-image-input-row .chip-button {
+  background: rgba(2, 6, 23, 0.52) !important;
+  border: 1px solid var(--ui-border) !important;
+  border-radius: var(--ui-radius-sm) !important;
+  color: var(--ui-text-body) !important;
+  box-shadow: none !important;
+}
+
+.btn-ghost:hover,
+.chip-button:hover,
+.notice-form__secondary-button:hover,
+.gallery-form__secondary-button:hover,
+.admin-player-form__cancel:hover,
+.pagination-button:hover,
+.balance-position-button:hover,
+.participation-position-button:hover,
+.gallery-image-input-row .chip-button:hover {
+  background: rgba(59, 130, 246, 0.18) !important;
+  border-color: var(--ui-border-strong) !important;
+  color: #ffffff !important;
+}
+
+/* 위험 버튼 */
+.chip-button--danger,
+.notice-delete-button,
+.gallery-delete-button,
+.delete-button {
+  background: rgba(239, 68, 68, 0.14) !important;
+  border: 1px solid rgba(248, 113, 113, 0.38) !important;
+  color: #fecaca !important;
+}
+
+.chip-button--danger:hover,
+.notice-delete-button:hover,
+.gallery-delete-button:hover,
+.delete-button:hover {
+  background: rgba(239, 68, 68, 0.88) !important;
+  color: #ffffff !important;
+}
+
+/* 배지 */
+.notice-card__badge,
+.notice-detail__badge,
+.notice-admin-card__badge,
+.top3-slide-header__badge,
+.admin-log-item__type,
+.balance-input-row__index,
+.pagination-button.active,
+.balance-position-button.active,
+.balance-position-button--main,
+.participation-position-button.active {
+  background: linear-gradient(135deg, var(--ui-blue), var(--ui-cyan)) !important;
+  border: 1px solid rgba(96, 165, 250, 0.58) !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+/* TOP3 랭크 */
+.top3-player__rank {
+  background: rgba(59, 130, 246, 0.14) !important;
+  border: 1px solid var(--ui-border) !important;
+  color: var(--ui-cyan) !important;
+}
+
+.top3-player--rank-1 .top3-player__rank {
+  background: linear-gradient(135deg, #facc15, #a16207) !important;
+  color: #111827 !important;
+}
+
+.top3-player--rank-2 .top3-player__rank {
+  background: linear-gradient(135deg, #e5e7eb, #64748b) !important;
+  color: #0f172a !important;
+}
+
+.top3-player--rank-3 .top3-player__rank {
+  background: linear-gradient(135deg, #fb923c, #7c2d12) !important;
+  color: #fff7ed !important;
+}
+
+/* 팀 색상 */
+.match-team-badge--blue,
+.match-detail-result--win {
+  background: rgba(59, 130, 246, 0.18) !important;
+  color: #bfdbfe !important;
+  border: 1px solid rgba(96, 165, 250, 0.34) !important;
+}
+
+.match-team-badge--red,
+.match-detail-result--lose {
+  background: rgba(239, 68, 68, 0.18) !important;
+  color: #fecaca !important;
+  border: 1px solid rgba(248, 113, 113, 0.34) !important;
+}
+
+/* 공지 / 이미지 카드 */
+.notice-card,
+.gallery-card {
+  overflow: hidden;
+}
+
+.gallery-card__image-wrap {
+  background: #020617 !important;
+}
+
+/* 로딩 */
+.main-loading {
+  background: transparent !important;
+}
+
+.main-loading__box {
+  background: rgba(8, 20, 39, 0.78) !important;
+  border: 1px solid var(--ui-border) !important;
+  border-radius: var(--ui-radius-lg) !important;
+  box-shadow: var(--ui-shadow-card) !important;
+}
+
+/* 자동완성 */
+.match-autocomplete-list,
+.balance-suggestion-list,
+.player-search-input__list {
+  background: rgba(2, 6, 23, 0.98) !important;
+  border: 1px solid var(--ui-border-strong) !important;
+  border-radius: var(--ui-radius-md) !important;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.6) !important;
+}
+
+.match-autocomplete-item,
+.balance-suggestion-item,
+.player-search-input__item {
+  background: rgba(15, 30, 52, 0.9) !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--ui-radius-sm) !important;
+  color: var(--ui-text-body) !important;
+}
+
+.match-autocomplete-item:hover,
+.balance-suggestion-item:hover,
+.player-search-input__item:hover {
+  background: rgba(59, 130, 246, 0.18) !important;
+  border-color: var(--ui-border-strong) !important;
+}
+
+/* 스크롤바 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(96, 165, 250, 0.42) rgba(2, 6, 23, 0.6);
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: rgba(2, 6, 23, 0.6);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(96, 165, 250, 0.42);
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(96, 165, 250, 0.68);
+}
+
+/* 모바일 */
+@media (max-width: 900px) {
+  .app-content {
+    padding: 20px 14px 48px !important;
+  }
+
+  .page-container,
+  .page-shell,
+  .notice-page,
+  .gallery-page,
+  .progress-page,
+  .event-progress-page,
+  .destruction-progress-page,
+  .participation-page {
+    max-width: 100% !important;
+  }
+
+  .page-header,
+  .content-section,
+  .card,
+  .top3-card,
+  .ranking-board,
+  .detail-board,
+  .notice-card,
+  .gallery-card {
+    border-radius: var(--ui-radius-md) !important;
+  }
+}
