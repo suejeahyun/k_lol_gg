@@ -7,6 +7,7 @@ export default function SignupForm() {
   const [password, setPassword] = useState("");
   const [nickname, setNickname] = useState("");
   const [loading, setLoading] = useState(false);
+  const [name, setName] = useState("");
   const [tag, setTag] = useState("");
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -19,12 +20,13 @@ export default function SignupForm() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-        userId,
-        password,
-        nickname,
-        tag,
-      }),
+          body: JSON.stringify({
+            userId,
+            password,
+            name,
+            nickname,
+            tag,
+          }),
       });
 
       const data = await res.json();
@@ -48,20 +50,20 @@ export default function SignupForm() {
     <div className="auth-page">
       <form className="auth-card" onSubmit={handleSubmit}>
         <h1 className="auth-title">회원가입</h1>
-
         <label className="auth-field">
-          <span>아이디</span>
-          <input
-            value={userId}
-            onChange={(e) => setUserId(e.target.value)}
-          />
+          <span>이름</span>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            placeholder="대상혁"
+            />
         </label>
-
         <label className="auth-field">
           <span>닉네임</span>
           <input
             value={nickname}
             onChange={(e) => setNickname(e.target.value)}
+            placeholder="Hide On Bush"
           />
         </label>
         <label className="auth-field">
@@ -72,12 +74,21 @@ export default function SignupForm() {
             placeholder="KR1"
           />
         </label>
+          <label className="auth-field">
+          <span>아이디</span>
+          <input
+            value={userId}
+            onChange={(e) => setUserId(e.target.value)}
+            placeholder="6~20자"
+          />
+        </label>
         <label className="auth-field">
           <span>비밀번호</span>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            placeholder="8~32자"
           />
         </label>
 
