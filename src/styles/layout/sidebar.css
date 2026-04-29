@@ -1,0 +1,209 @@
+/* 사이드바 / 유저 서브내비 */
+
+.app-sidebar__nav {
+  display: grid;
+  gap: 6px;
+}
+
+.app-sidebar__link {
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  transition: all 0.15s ease;
+}
+
+.app-sidebar__link:hover {
+  background: #000;
+  color: #fff;
+}
+
+.user-subnav__inner {
+  max-width: 100%;
+  padding: 0 28px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-subnav__link {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #374151;
+  transition: all 0.15s ease;
+}
+
+.user-subnav__link:hover {
+  background: #111;
+  color: #fff;
+}
+
+.app-sidebar__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--k-blue-2) !important;
+  margin-bottom: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.app-sidebar__link, .user-subnav__link {
+  color: var(--k-muted) !important;
+}
+
+.app-sidebar__link:hover, .user-subnav__link:hover {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.9), rgba(34, 211, 238, 0.72)) !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 22px rgba(59, 130, 246, 0.26);
+}
+
+.user-subnav {
+  background: rgba(5, 11, 22, 0.76) !important;
+  border-bottom: 1px solid var(--k-border) !important;
+  backdrop-filter: blur(14px);
+}
+
+.app-sidebar__top {
+  flex: 1 1 auto !important;
+}
+
+.app-sidebar__bottom {
+  margin-top: auto !important;
+  padding-top: 16px !important;
+  border-top: 1px solid var(--k-border) !important;
+}
+
+.sidebar-auth {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sidebar-auth__user {
+  padding: 10px 12px;
+  border: 1px solid var(--k-border);
+  border-radius: 12px;
+  background: rgba(2, 6, 23, 0.48);
+  color: var(--k-text-strong);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.sidebar-auth__pending, .sidebar-auth__rejected {
+  display: inline-flex;
+  margin-left: 6px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.sidebar-auth__pending {
+  background: rgba(250, 204, 21, 0.16);
+  color: #fde68a;
+  border: 1px solid rgba(250, 204, 21, 0.32);
+}
+
+.sidebar-auth__rejected {
+  background: rgba(239, 68, 68, 0.16);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.32);
+}
+
+.sidebar-auth__button {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--k-border);
+  border-radius: 10px;
+  background: rgba(2, 6, 23, 0.56);
+  color: var(--k-text) !important;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sidebar-auth__button:hover {
+  background: rgba(37, 99, 235, 0.24);
+  border-color: var(--k-border-strong);
+  color: #ffffff !important;
+  box-shadow: 0 0 22px rgba(59, 130, 246, 0.22);
+}
+
+.sidebar-auth__button.secondary {
+  background: linear-gradient(135deg, #2563eb, #22d3ee);
+  border-color: rgba(96, 165, 250, 0.64);
+  color: #ffffff !important;
+}
+
+.sidebar-auth__button.danger {
+  background: rgba(239, 68, 68, 0.14);
+  border-color: rgba(248, 113, 113, 0.38);
+  color: #fecaca !important;
+}
+
+.sidebar-auth__button.danger:hover {
+  background: rgba(239, 68, 68, 0.88);
+  color: #ffffff !important;
+}
+
+.app-sidebar__section-title {
+  margin: 18px 0 8px;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.55);
+  letter-spacing: 0.08em;
+}
+
+.app-sidebar__group {
+  margin-top: 14px;
+}
+
+.app-sidebar__group-title {
+  margin-bottom: 6px;
+  padding: 0 12px;
+  font-size: 11px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.46);
+  letter-spacing: 0.12em;
+}
+
+.app-sidebar__group-items {
+  display: grid;
+  gap: 6px;
+}
+
+.app-sidebar__link--compact {
+  min-height: 34px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.15s ease;
+}
+
+.app-sidebar__icon {
+  opacity: 0.85;
+}
+
+.app-sidebar__link--compact:hover {
+  background: rgba(255,255,255,0.06);
+}
+
+.app-sidebar__link--compact:hover .app-sidebar__icon {
+  opacity: 1;
+}

@@ -1,0 +1,83 @@
+/* 랭킹 페이지 */
+
+.ranking-board {
+  background: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.ranking-board__title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #000;
+  margin-bottom: 14px;
+}
+
+.ranking-row-header {
+  display: grid;
+  grid-template-columns: 0.6fr 1fr 1.4fr 0.8fr 0.8fr 0.8fr 1fr;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #6b7280;
+}
+
+.ranking-row-card {
+  display: block;
+  background: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  padding: 14px 16px;
+  transition: all 0.15s ease;
+}
+
+.ranking-row-card:hover {
+  border-color: #111;
+  transform: translateY(-1px);
+}
+
+.ranking-row-grid {
+  display: grid;
+  grid-template-columns: 0.6fr 1fr 1.4fr 0.8fr 0.8fr 0.8fr 1fr;
+  align-items: center;
+  gap: 8px;
+}
+
+.ranking-col {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111;
+}
+
+.ranking-rank, .ranking-name {
+  font-weight: 800;
+}
+
+.ranking-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.ranking-row-card:nth-child(1) .ranking-rank {
+  color: var(--k-gold) !important;
+  font-size: 18px;
+  font-weight: 900;
+  text-shadow: 0 0 12px rgba(250, 204, 21, 0.5) !important;
+}
+
+.ranking-row-card:nth-child(2) .ranking-rank {
+  color: #cbd5e1 !important;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.ranking-row-card:nth-child(3) .ranking-rank {
+  color: #fb923c !important;
+  font-size: 16px;
+  font-weight: 800;
+}

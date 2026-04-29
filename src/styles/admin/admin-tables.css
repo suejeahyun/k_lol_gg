@@ -1,0 +1,331 @@
+/* 관리자 테이블 */
+
+.notice-form__secondary-button, .notice-form__submit-button, .notice-delete-button, .notice-admin-card__edit-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 96px;
+  padding: 11px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.notice-admin-card__edit-button {
+  border: none;
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.notice-form__secondary-button:hover, .notice-form__submit-button:hover, .notice-delete-button:hover, .notice-admin-card__edit-button:hover {
+  opacity: 0.85;
+}
+
+.gallery-form__secondary-button, .gallery-form__submit-button, .gallery-delete-button, .gallery-admin-card__edit-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 96px;
+  padding: 11px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.gallery-admin-card__edit-button {
+  border: none;
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.gallery-form__secondary-button:hover, .gallery-form__submit-button:hover, .gallery-delete-button:hover, .gallery-admin-card__edit-button:hover {
+  opacity: 0.85;
+}
+
+.gallery-admin-card {
+  display: flex;
+  gap: 18px;
+  padding: 20px;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+}
+
+.gallery-admin-card__thumbnail-wrap {
+  width: 180px;
+  min-width: 180px;
+  height: 120px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  background: #f3f4f6;
+}
+
+.gallery-admin-card__thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gallery-admin-card__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.gallery-admin-card__date {
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.gallery-admin-card__title {
+  margin: 0 0 10px;
+  font-size: 20px;
+  color: #111827;
+}
+
+.gallery-admin-card__summary {
+  margin: 0;
+  color: #4b5563;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+.gallery-admin-card__actions {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.gallery-admin-card__count, .gallery-admin-card__home-state {
+  margin-top: 8px;
+  color: #91a4c2;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.admin-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--k-border);
+  border-radius: 18px;
+  background: rgba(2, 6, 23, 0.6);
+  box-shadow: var(--k-shadow);
+}
+
+.admin-table thead {
+  background: rgba(15, 30, 52, 0.9);
+}
+
+.admin-muted {
+  color: var(--k-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.admin-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.admin-empty {
+  padding: 40px;
+  text-align: center;
+  color: var(--k-muted);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.admin-table .admin-actions .chip-button:hover {
+  background: rgba(37, 99, 235, 0.9) !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 18px rgba(59, 130, 246, 0.45) !important;
+}
+
+.admin-table .admin-actions .chip-button.chip-button--danger {
+  border-color: rgba(248, 113, 113, 0.6) !important;
+  background: rgba(239, 68, 68, 0.24) !important;
+  color: #fecaca !important;
+}
+
+.admin-table .admin-actions .chip-button.chip-button--danger:hover {
+  background: rgba(239, 68, 68, 0.9) !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 18px rgba(239, 68, 68, 0.45) !important;
+}
+
+.admin-table tr:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.admin-card {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.88);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.24);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+  font-size: 14px;
+  color: #fff;
+}
+
+.admin-table th, .admin-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.admin-table th {
+  padding: 14px 12px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 800;
+  color: #dbeafe;
+  border-bottom: 1px solid var(--k-border);
+  background: rgba(2, 6, 23, 0.75);
+  white-space: nowrap;
+}
+
+.admin-table td {
+  padding: 14px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #e5e7eb;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.admin-table tbody tr:hover {
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.admin-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.admin-table a {
+  color: #93c5fd;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.admin-table a:hover {
+  color: #bfdbfe;
+  text-decoration: underline;
+}
+
+.notice-admin-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(15, 23, 42, 0.88);
+  align-items: stretch;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.2);
+}
+
+.notice-admin-card__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notice-admin-card__top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.notice-admin-card__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: rgba(239, 68, 68, 0.16);
+  color: #fecaca;
+  font-size: 12px;
+  font-weight: 900;
+  min-height: 24px;
+}
+
+.notice-admin-card__date {
+  font-size: 13px;
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+.notice-admin-card__title {
+  margin: 0 0 8px;
+  font-size: 19px;
+  color: #fff;
+  font-weight: 900;
+  line-height: 1.35;
+}
+
+.notice-admin-card__summary {
+  margin: 0;
+  color: #cbd5e1;
+  line-height: 1.65;
+  white-space: pre-line;
+  font-size: 14px;
+  word-break: keep-all;
+}
+
+.notice-admin-card__actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.notice-admin-card__actions button, .notice-admin-card__actions .delete-button {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  border-radius: 10px;
+  background: rgba(127, 29, 29, 0.72);
+  color: #fecaca;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.notice-admin-card__actions button:hover, .notice-admin-card__actions .delete-button:hover {
+  background: rgba(153, 27, 27, 0.9);
+}
+
+.notice-admin-card__type {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.16);
+  color: #bfdbfe;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.notice-admin-card__meta {
+  margin-top: 10px;
+  color: #93c5fd;
+  font-size: 13px;
+  font-weight: 800;
+}

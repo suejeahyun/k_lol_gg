@@ -1,0 +1,7 @@
+/* 애니메이션 keyframes */
+
+@keyframes main-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

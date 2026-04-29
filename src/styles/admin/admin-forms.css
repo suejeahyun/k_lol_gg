@@ -1,0 +1,181 @@
+/* 관리자 공통 폼 */
+
+.admin-player-form {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.admin-player-form__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.admin-player-form__field {
+  display: grid;
+  gap: 6px;
+}
+
+.admin-player-form__field label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.admin-player-form__field input {
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #ffffff;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 14px;
+}
+
+.admin-player-form__field input:focus {
+  outline: none;
+  border-color: #111;
+}
+
+.admin-player-form__section {
+  display: grid;
+  gap: 6px;
+}
+
+.admin-player-form__section-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.admin-player-form__actions {
+  display: flex;
+  gap: 10px;
+}
+
+.admin-player-form__submit {
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 8px;
+  border: none;
+  background: #111;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.admin-player-form__submit:hover {
+  opacity: 0.9;
+}
+
+.admin-player-form__cancel {
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 8px;
+  border: 1px solid #dcdcdc;
+  background: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.admin-player-form__cancel:hover {
+  background: #111;
+  color: #fff;
+}
+
+.admin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 28px;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+}
+
+.admin-form__group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-form__label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #374151;
+}
+
+.admin-form__label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-form__helper {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.admin-form__input, .admin-form__textarea {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 14px;
+  color: #111827;
+  background: #ffffff;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+.admin-form__input:focus, .admin-form__textarea:focus {
+  outline: none;
+  border-color: #111827;
+  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.08);
+}
+
+.admin-form__textarea {
+  min-height: 140px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.gallery-image-input-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gallery-image-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gallery-image-input-row .admin-form__input {
+  flex: 1;
+}
+
+.gallery-image-input-row .chip-button {
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #111827;
+}
+
+.gallery-image-input-row .chip-button:hover {
+  border-color: #111827;
+  background: #f9fafb;
+  color: #111827;
+}
+
+.admin-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 4px;
+}

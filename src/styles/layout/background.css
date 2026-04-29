@@ -1,0 +1,167 @@
+/* 좌우 배경 이미지 / 배경 오버레이 */
+
+.app-background-root {
+  position: relative;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(59, 130, 246, 0.22), transparent 30%),
+    radial-gradient(circle at 82% 12%, rgba(34, 211, 238, 0.12), transparent 28%),
+    linear-gradient(135deg, #050b16 0%, #081427 45%, #020617 100%) !important;
+  color: var(--k-text);
+  overflow-x: hidden;
+  isolation: isolate;
+}
+
+/* 기존 var 방식 배경 */
+.app-background-image {
+  position: fixed;
+  top: 64px;
+  left: 230px;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  background-image: var(--app-bg-left), var(--app-bg-right);
+  background-size: 38% 100%, 38% 100%;
+  background-position: left center, right center;
+  background-repeat: no-repeat, no-repeat;
+  background-color: #020617 !important;
+  filter: brightness(0.42) saturate(1.05) contrast(1.08) blur(0.2px) !important;
+  opacity: 0.78;
+  pointer-events: none;
+}
+
+/* 개별 div 방식 배경 */
+.app-background-side {
+  position: fixed;
+  top: 64px;
+  bottom: 0;
+  z-index: 0;
+  width: 34vw;
+  min-width: 280px;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.5);
+  opacity: 0.95;
+  pointer-events: none;
+}
+
+.app-background-side--left {
+  left: 230px;
+  background-position: right center;
+}
+
+.app-background-side--right {
+  right: 0;
+  background-position: left center;
+}
+
+.app-background-overlay {
+  position: fixed;
+  top: 64px;
+  left: 230px;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  background:
+    linear-gradient(
+      to right,
+      rgba(2, 6, 23, 0.16) 0%,
+      rgba(2, 6, 23, 0.38) 18%,
+      rgba(2, 6, 23, 0.76) 34%,
+      rgba(2, 6, 23, 0.9) 50%,
+      rgba(2, 6, 23, 0.76) 66%,
+      rgba(2, 6, 23, 0.38) 82%,
+      rgba(2, 6, 23, 0.16) 100%
+    ),
+    radial-gradient(
+      circle at center,
+      rgba(2, 6, 23, 0.92) 0%,
+      rgba(2, 6, 23, 0.82) 34%,
+      rgba(2, 6, 23, 0.48) 62%,
+      rgba(2, 6, 23, 0.28) 100%
+    );
+  pointer-events: none;
+}
+
+.app-background-content {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+}
+
+/* 페이지 본문이 배경을 덮지 않도록 처리 */
+.app-shell,
+.app-body,
+.app-content,
+.page-container,
+.page-shell,
+.home-page,
+.notice-page,
+.gallery-page,
+.progress-page,
+.event-progress-page,
+.destruction-progress-page,
+.participation-page {
+  background: transparent !important;
+}
+
+/* 로딩 화면도 배경을 덮지 않음 */
+.main-loading {
+  background: transparent !important;
+  position: relative;
+  z-index: 3;
+}
+
+@media (max-width: 768px) {
+  .app-background-image,
+  .app-background-overlay {
+    top: 116px;
+    left: 0;
+  }
+
+  .app-background-image {
+    background-size: 50% 100%, 50% 100%;
+  }
+
+  .app-background-side,
+  .app-background-overlay {
+    top: 116px;
+  }
+
+  .app-background-side {
+    width: 50vw;
+    min-width: 0;
+    opacity: 0.45;
+  }
+
+.app-background-side--left {
+  left: 230px;
+  background-position: right center;
+}
+
+.app-background-side--right {
+  right: 0;
+  background-position: left center;
+}
+
+  .app-background-overlay {
+    left: 0;
+  }
+}
+
+.app-content::before {
+  content: "";
+  position: fixed;
+  top: 64px;
+  left: 230px;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  background:
+    linear-gradient(rgba(96, 165, 250, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(96, 165, 250, 0.035) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.65), transparent 80%);
+  pointer-events: none;
+}

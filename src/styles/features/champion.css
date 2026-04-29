@@ -1,0 +1,163 @@
+/* 챔피언 / 티어 표시 */
+
+.admin-player-form__tier-row {
+  display: flex;
+  gap: 10px;
+}
+
+.admin-player-form__tier-row select, .admin-player-form__tier-row input {
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #dcdcdc;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 14px;
+  min-width: 120px;
+}
+
+.admin-player-form__tier-row select:focus, .admin-player-form__tier-row input:focus {
+  outline: none;
+  border-color: #111;
+}
+
+.champion-summary-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.champion-summary-list__head, .champion-summary-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.8fr) 1fr 1fr 0.8fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.champion-summary-list__head {
+  padding: 0 14px;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.champion-summary-row {
+  padding: 14px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  background: #ffffff;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.champion-summary-row:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+}
+
+.champion-summary-row__champion {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.champion-summary-row__champion strong {
+  font-size: 15px;
+  font-weight: 800;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.champion-summary-row__image, .champion-summary-row__fallback {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #f3f4f6;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.champion-summary-row__metric {
+  font-size: 14px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.tier-bronze {
+  color: #fb923c !important;
+}
+
+.tier-silver {
+  color: #cbd5e1 !important;
+}
+
+.tier-gold {
+  color: #facc15 !important;
+}
+
+.tier-emerald {
+  color: #34d399 !important;
+}
+
+.tier-diamond {
+  color: #22d3ee !important;
+}
+
+.tier-master {
+  color: #c084fc !important;
+}
+
+.tier-grandmaster {
+  color: #f87171 !important;
+}
+
+.tier-challenger {
+  color: #fde68a !important;
+}
+
+.gallery-card__image-wrap, .gallery-card__image-empty, .gallery-detail__image, .gallery-form__preview-empty, .champion-summary-row__image, .champion-summary-row__fallback, .image-slider, .image-slider__image {
+  background: #020617 !important;
+}
+
+.destruction-tier-box {
+  display: grid;
+  gap: 4px;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid var(--k-border);
+  border-radius: 10px;
+  background: rgba(15, 30, 52, 0.72);
+}
+
+.destruction-tier-box span {
+  color: var(--k-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.tier-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  vertical-align: middle;
+}
+
+.tier-icon__image {
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.tier-icon__text {
+  font-size: 13px;
+  font-weight: 700;
+  color: inherit;
+}
+
+.tier-icon__empty {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.45);
+}

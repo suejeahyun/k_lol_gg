@@ -1,0 +1,83 @@
+/* 공통 리스트 / 행 / 테이블형 UI */
+
+.summary-table-header, .summary-table-row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  align-items: center;
+}
+
+.summary-table-header {
+  padding: 12px 14px;
+  border-bottom: 1px solid #eaeaea;
+  font-size: 13px;
+  font-weight: 800;
+  color: #6b7280;
+}
+
+.summary-table-row {
+  padding: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #111;
+}
+
+.most-table-header, .most-table-row {
+  display: grid;
+  grid-template-columns: 0.6fr 1.8fr 1fr 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.most-table-header {
+  padding: 12px 14px;
+  border-bottom: 1px solid #eaeaea;
+  font-size: 13px;
+  font-weight: 800;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.most-table-row {
+  padding: 14px;
+  background: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.recent-table-header, .recent-table-row {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr 0.6fr 1fr 0.8fr 0.8fr 1fr 0.8fr 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.recent-table-header {
+  padding: 12px 14px;
+  border-bottom: 1px solid #eaeaea;
+  font-size: 13px;
+  font-weight: 800;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.recent-table-row {
+  padding: 14px;
+  background: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #1e1e1e;
+  border: 1px solid #2c2c2c;
+}

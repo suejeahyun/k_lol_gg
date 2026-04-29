@@ -1,0 +1,486 @@
+/* 멸망전 관련 UI */
+
+.destruction-status-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.destruction-status-card {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+  border: 1px solid var(--k-border);
+  border-radius: 18px;
+  background: linear-gradient(
+    180deg,
+    rgba(15, 30, 52, 0.94),
+    rgba(8, 20, 39, 0.94)
+  );
+  color: var(--k-text);
+  box-shadow: var(--k-glow);
+}
+
+.destruction-status-card span {
+  color: var(--k-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.destruction-status-card strong {
+  color: var(--k-text-strong);
+  font-size: 20px;
+  font-weight: 950;
+}
+
+.destruction-status-card p {
+  margin: 0;
+  color: var(--k-muted);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.destruction-feature-list {
+  display: grid;
+  gap: 10px;
+}
+
+.destruction-feature-item {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 1px solid var(--k-border);
+  border-radius: 14px;
+  background: rgba(2, 6, 23, 0.42);
+}
+
+.destruction-feature-item strong {
+  color: var(--k-text-strong);
+  font-size: 15px;
+  font-weight: 950;
+}
+
+.destruction-feature-item span {
+  color: var(--k-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.destruction-team-form {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.destruction-team-form__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.destruction-team-form__head h3 {
+  margin: 0 0 6px;
+  color: var(--k-text-strong);
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.destruction-team-form__head p {
+  margin: 0;
+  color: var(--k-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.destruction-team-form__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.destruction-team-form__list {
+  display: grid;
+  gap: 8px;
+}
+
+.destruction-participant-form {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.destruction-participant-form__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.destruction-participant-form__head h3 {
+  margin: 0 0 6px;
+  color: var(--k-text-strong);
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.destruction-participant-form__head p {
+  margin: 0;
+  color: var(--k-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.destruction-participant-form__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.destruction-participant-form__list {
+  display: grid;
+  gap: 8px;
+}
+
+.destruction-participant-form__row {
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1.4fr) minmax(140px, 0.65fr) minmax(180px, 0.8fr);
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid var(--k-border);
+  border-radius: 14px;
+  background: rgba(2, 6, 23, 0.42);
+}
+
+.destruction-participant-form__index {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(59, 130, 246, 0.16);
+  color: var(--k-blue-2);
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.destruction-team-assignment-form {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.destruction-team-assignment-form__head h3 {
+  margin: 0 0 6px;
+  color: var(--k-text-strong);
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.destruction-team-assignment-form__head p {
+  margin: 0;
+  color: var(--k-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.destruction-team-assignment-form__list {
+  display: grid;
+  gap: 8px;
+}
+
+.destruction-team-assignment-form__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(160px, 0.55fr) minmax(140px, 0.45fr);
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid var(--k-border);
+  border-radius: 14px;
+  background: rgba(2, 6, 23, 0.42);
+}
+
+.destruction-team-assignment-form__row strong {
+  display: block;
+  color: var(--k-text-strong);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.destruction-team-assignment-form__row span {
+  display: block;
+  margin-top: 4px;
+  color: var(--k-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.destruction-preliminary-generator {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.destruction-match-result-form {
+  display: grid;
+  grid-template-columns: minmax(130px, 1fr) minmax(160px, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.destruction-tournament-generator {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.destruction-final-generator {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.destruction-complete-form {
+  display: grid;
+  gap: 12px;
+}
+
+.destruction-complete-form__grid {
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr)
+    minmax(160px, 1fr)
+    minmax(180px, 1fr)
+    auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.destruction-progress-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.destruction-progress-list {
+  display: grid;
+  gap: 16px;
+}
+
+.destruction-progress-card {
+  display: block;
+  padding: 22px;
+  border: 1px solid var(--k-border);
+  border-radius: 20px;
+  background: linear-gradient(
+    180deg,
+    rgba(15, 30, 52, 0.94),
+    rgba(8, 20, 39, 0.94)
+  );
+  color: var(--k-text);
+  box-shadow: var(--k-glow);
+  transition: transform 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.destruction-progress-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--k-border-strong);
+  box-shadow: var(--k-shadow), 0 0 34px rgba(59, 130, 246, 0.2);
+}
+
+.destruction-progress-card__top {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.destruction-progress-card__top span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--k-border);
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.14);
+  color: var(--k-blue-2);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.destruction-progress-card h2 {
+  margin: 0 0 10px;
+  color: var(--k-text-strong);
+  font-size: 24px;
+  font-weight: 950;
+}
+
+.destruction-progress-card p {
+  margin: 0 0 16px;
+  color: var(--k-muted);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.destruction-progress-card__meta {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.destruction-progress-card__meta div {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid var(--k-border);
+  border-radius: 14px;
+  background: rgba(2, 6, 23, 0.42);
+}
+
+.destruction-progress-card__meta span {
+  color: var(--k-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.destruction-progress-card__meta strong {
+  color: var(--k-text-strong);
+  font-size: 16px;
+  font-weight: 950;
+}
+
+.destruction-detail-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.destruction-detail-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.destruction-detail-summary-card, .destruction-final-card, .destruction-team-card {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+  border: 1px solid var(--k-border);
+  border-radius: 18px;
+  background: linear-gradient(
+    180deg,
+    rgba(15, 30, 52, 0.94),
+    rgba(8, 20, 39, 0.94)
+  );
+  color: var(--k-text);
+  box-shadow: var(--k-glow);
+}
+
+.destruction-detail-summary-card span, .destruction-final-card span {
+  color: var(--k-muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.destruction-detail-summary-card strong, .destruction-final-card strong {
+  color: var(--k-text-strong);
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.destruction-final-grid, .destruction-team-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.destruction-final-card strong {
+  color: var(--k-gold);
+  font-size: 22px;
+}
+
+.destruction-final-gallery {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.destruction-final-gallery__image {
+  width: 100%;
+  height: auto;
+  max-height: 720px;
+  object-fit: contain;
+  border: 1px solid var(--k-border);
+  border-radius: 18px;
+  background: #020617;
+}
+
+.destruction-rank-list, .destruction-match-list, .destruction-member-list {
+  display: grid;
+  gap: 10px;
+}
+
+.destruction-rank-row, .destruction-match-row, .destruction-member-row {
+  display: grid;
+  grid-template-columns: 90px 1fr 1fr 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid var(--k-border);
+  border-radius: 14px;
+  background: rgba(2, 6, 23, 0.42);
+}
+
+.destruction-member-row {
+  grid-template-columns: 1.4fr 1fr 0.7fr;
+}
+
+.destruction-rank-row strong, .destruction-match-row strong, .destruction-member-row strong {
+  color: var(--k-text-strong);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.destruction-rank-row span, .destruction-match-row span, .destruction-member-row span, .destruction-team-captain {
+  color: var(--k-blue-2);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.destruction-rank-row em, .destruction-match-row em, .destruction-member-row em {
+  color: var(--k-muted);
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.destruction-match-row b {
+  color: var(--k-gold);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.destruction-team-card h3 {
+  margin: 0;
+  color: var(--k-text-strong);
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.destruction-team-form__row {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.6fr)
+    minmax(0, 1.4fr)
+    minmax(140px, 0.6fr)
+    minmax(180px, 0.7fr);
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--k-border);
+  border-radius: 14px;
+  background: rgba(2, 6, 23, 0.42);
+  align-items: center;
+}
