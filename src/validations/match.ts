@@ -13,6 +13,7 @@ type ParticipantInput = {
 
 type GameInput = {
   gameNumber: number;
+  winnerTeam?: Team;
   participants: ParticipantInput[];
 };
 
@@ -73,6 +74,10 @@ export function validateMatchCreateInput(
 
     if (!Number.isInteger(game.gameNumber) || game.gameNumber <= 0) {
       return { ok: false, message: "세트 번호가 올바르지 않습니다." };
+    }
+
+    if (game.winnerTeam !== undefined && !["BLUE", "RED"].includes(game.winnerTeam)) {
+      return { ok: false, message: `${gameLabel} 승리팀 정보가 올바르지 않습니다.` };
     }
 
     if (!Array.isArray(game.participants) || game.participants.length !== 10) {

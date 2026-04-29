@@ -1,22 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 
-function getTodayStart() {
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
-}
-
 export async function GET() {
   try {
-    const today = getTodayStart();
-
     const draft = await prisma.teamBalanceDraft.findFirst({
-      where: {
-        applyDate: today,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
       include: {
         players: {
           include: {
@@ -37,52 +24,55 @@ export async function GET() {
           ],
         },
       },
+      orderBy: [
+        { applyDate: "desc" },
+        { createdAt: "desc" },
+        { id: "desc" },
+      ],
     });
 
     if (!draft) {
       return NextResponse.json(
         { message: "저장된 팀 밸런스 결과가 없습니다." },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     return NextResponse.json({
       id: draft.id,
       title: draft.title,
-      applyDate: draft.applyDate,
-
+      label: draft.title,
+      applyDate: draft.applyDate.toISOString(),
       teams: {
         BLUE: draft.players
-          .filter((p) => p.team === "BLUE")
-          .map((p) => ({
-            playerId: p.player.id,
-            name: p.player.name,
-            nickname: p.player.nickname,
-            tag: p.player.tag,
-            currentTier: p.player.currentTier,
-            peakTier: p.player.peakTier,
-            position: p.position,
+          .filter((draftPlayer) => draftPlayer.team === "BLUE")
+          .map((draftPlayer) => ({
+            playerId: draftPlayer.player.id,
+            name: draftPlayer.player.name,
+            nickname: draftPlayer.player.nickname,
+            tag: draftPlayer.player.tag,
+            currentTier: draftPlayer.player.currentTier,
+            peakTier: draftPlayer.player.peakTier,
+            position: draftPlayer.position,
           })),
-
         RED: draft.players
-          .filter((p) => p.team === "RED")
-          .map((p) => ({
-            playerId: p.player.id,
-            name: p.player.name,
-            nickname: p.player.nickname,
-            tag: p.player.tag,
-            currentTier: p.player.currentTier,
-            peakTier: p.player.peakTier,
-            position: p.position,
+          .filter((draftPlayer) => draftPlayer.team === "RED")
+          .map((draftPlayer) => ({
+            playerId: draftPlayer.player.id,
+            name: draftPlayer.player.name,
+            nickname: draftPlayer.player.nickname,
+            tag: draftPlayer.player.tag,
+            currentTier: draftPlayer.player.currentTier,
+            peakTier: draftPlayer.player.peakTier,
+            position: draftPlayer.position,
           })),
       },
     });
   } catch (error: unknown) {
-    console.error("[TEAM_BALANCE_LATEST_GET_ERROR]", error);
-
+    console.error("[TEAM_BALANCE_DRAFT_LATEST_GET_ERROR]", error);
     return NextResponse.json(
-      { message: "팀 밸런스 결과 조회 중 오류가 발생했습니다." },
-      { status: 500 }
+      { message: "최신 팀 밸런스 결과 조회 중 오류가 발생했습니다." },
+      { status: 500 },
     );
   }
 }

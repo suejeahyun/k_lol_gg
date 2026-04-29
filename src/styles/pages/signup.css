@@ -1,0 +1,75 @@
+/* ===== Signup Form 전용 ===== */
+.auth-form {
+  max-width: 520px;
+  margin: 60px auto;
+  padding: 32px;
+  border-radius: 16px;
+
+  background: linear-gradient(145deg, #0b1a2d, #0f243c);
+  border: 1px solid rgba(80, 140, 255, 0.4);
+
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* 라벨 + 입력 묶음 */
+.auth-form > label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  font-size: 14px;
+  font-weight: 500;
+  color: #dbeafe;
+}
+
+/* 입력칸 */
+.auth-form > label > input {
+  height: 42px;
+  padding: 0 12px;
+  border-radius: 8px;
+
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(10, 20, 40, 0.7);
+  color: #fff;
+
+  outline: none;
+  transition: 0.2s;
+}
+
+/* focus */
+.auth-form > label > input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 1px #3b82f6;
+}
+
+/* 버튼 */
+.auth-form > button {
+  margin-top: 10px;
+  height: 44px;
+
+  border-radius: 10px;
+  border: none;
+
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
+  font-weight: 600;
+
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+/* hover */
+.auth-form > button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+}
+
+/* disabled */
+.auth-form > button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

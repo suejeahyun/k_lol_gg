@@ -17,6 +17,7 @@ type CreateParticipantInput = {
 
 type CreateGameInput = {
   gameNumber: number;
+  winnerTeam?: Team;
   participants: CreateParticipantInput[];
 };
 
@@ -153,7 +154,7 @@ export async function POST(req: Request) {
             create: body.games.map((game) => ({
               gameNumber: game.gameNumber,
               durationMin: 0,
-              winnerTeam: resolveWinnerTeam(game.participants),
+              winnerTeam: game.winnerTeam ?? resolveWinnerTeam(game.participants),
               participants: {
                 create: game.participants.map((participant) => ({
                   playerId: participant.playerId,

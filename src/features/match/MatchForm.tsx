@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type Team = "BLUE" | "RED";
@@ -51,7 +51,7 @@ type TeamBalanceDraftPlayer = {
   position: Position;
 };
 
-type TeamBalanceLatestResponse = {
+type TeamBalanceDraftDetailResponse = {
   message?: string;
   id?: number;
   title?: string;
@@ -60,6 +60,19 @@ type TeamBalanceLatestResponse = {
     BLUE?: TeamBalanceDraftPlayer[];
     RED?: TeamBalanceDraftPlayer[];
   };
+};
+
+type TeamBalanceDraftListItem = {
+  id: number;
+  title: string;
+  label: string;
+  applyDate: string;
+  count: number;
+};
+
+type TeamBalanceDraftListResponse = {
+  message?: string;
+  drafts?: TeamBalanceDraftListItem[];
 };
 
 type ParticipantForm = {
@@ -76,6 +89,7 @@ type ParticipantForm = {
 
 type GameForm = {
   gameNumber: number;
+  winnerTeam: Team;
   participants: ParticipantForm[];
 };
 
@@ -218,6 +232,7 @@ function createEmptyParticipants(): ParticipantForm[] {
 function createEmptyGame(nextGameNumber: number): GameForm {
   return {
     gameNumber: nextGameNumber,
+    winnerTeam: "BLUE",
     participants: createEmptyParticipants(),
   };
 }
@@ -308,6 +323,7 @@ export default function MatchForm({
         initialData.games.length > 0
           ? initialData.games.map((game) => ({
               ...game,
+              winnerTeam: game.winnerTeam ?? "BLUE",
               participants: game.participants.map((participant) => ({
                 ...participant,
                 playerInput:
@@ -327,10 +343,58 @@ export default function MatchForm({
   const [form, setForm] = useState<MatchFormData>(normalizedInitialData);
   const [submitting, setSubmitting] = useState(false);
   const [importLoading, setImportLoading] = useState(false);
+  const [draftListLoading, setDraftListLoading] = useState(false);
+  const [teamBalanceDrafts, setTeamBalanceDrafts] = useState<TeamBalanceDraftListItem[]>([]);
+  const [selectedTeamBalanceDraftId, setSelectedTeamBalanceDraftId] = useState("");
   const [activePlayerField, setActivePlayerField] = useState<string | null>(null);
   const [activeChampionField, setActiveChampionField] = useState<string | null>(
     null
   );
+
+  const loadTeamBalanceDrafts = async () => {
+    try {
+      setDraftListLoading(true);
+
+      const response = await fetch("/api/team-balance/drafts", {
+        cache: "no-store",
+      });
+
+      const data = await parseResponse<TeamBalanceDraftListResponse>(response);
+
+      if (!response.ok) {
+        console.error("[TEAM_BALANCE_DRAFTS_GET_ERROR]", data?.message);
+        setTeamBalanceDrafts([]);
+        setSelectedTeamBalanceDraftId("");
+        return [];
+      }
+
+      const drafts = data?.drafts ?? [];
+      setTeamBalanceDrafts(drafts);
+
+      setSelectedTeamBalanceDraftId((prev) => {
+        if (prev && drafts.some((draft) => String(draft.id) === prev)) {
+          return prev;
+        }
+
+        return drafts[0]?.id ? String(drafts[0].id) : "";
+      });
+
+      return drafts;
+    } catch (error: unknown) {
+      console.error("[LOAD_TEAM_BALANCE_DRAFTS_ERROR]", error);
+      setTeamBalanceDrafts([]);
+      setSelectedTeamBalanceDraftId("");
+      return [];
+    } finally {
+      setDraftListLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (mode !== "create") return;
+
+    void loadTeamBalanceDrafts();
+  }, [mode]);
 
   const updateParticipantField = <K extends keyof ParticipantForm>(
     gameIndex: number,
@@ -359,6 +423,22 @@ export default function MatchForm({
     });
   };
 
+  const updateGameWinnerTeam = (gameIndex: number, winnerTeam: Team) => {
+    setForm((prev) => {
+      const nextGames = [...prev.games];
+
+      nextGames[gameIndex] = {
+        ...nextGames[gameIndex],
+        winnerTeam,
+      };
+
+      return {
+        ...prev,
+        games: nextGames,
+      };
+    });
+  };
+
   const addGame = () => {
     setForm((prev) => {
       const nextGameNumber = prev.games.length + 1;
@@ -367,6 +447,7 @@ export default function MatchForm({
       const nextGame: GameForm = lastGame
         ? {
             gameNumber: nextGameNumber,
+            winnerTeam: lastGame.winnerTeam,
             participants: cloneParticipantsFromPreviousGame(
               lastGame.participants
             ),
@@ -403,6 +484,7 @@ export default function MatchForm({
       matchDate: form.matchDate,
       games: form.games.map((game) => ({
         gameNumber: game.gameNumber,
+        winnerTeam: game.winnerTeam,
         participants: game.participants.map((participant) => ({
           playerId: participant.playerId,
           championId: participant.championId,
@@ -439,6 +521,10 @@ export default function MatchForm({
 
     for (const game of form.games) {
       const gameLabel = `${game.gameNumber}세트`;
+
+      if (!["BLUE", "RED"].includes(game.winnerTeam)) {
+        return `${gameLabel} 승리팀을 선택해주세요.`;
+      }
 
       if (game.participants.length !== 10) {
         return `${gameLabel} 참가자는 정확히 10명이어야 합니다.`;
@@ -549,16 +635,33 @@ export default function MatchForm({
 
   const handleImportTeamBalance = async () => {
     try {
-      const ok = confirm("저장된 최신 팀 밸런스 결과를 가져오시겠습니까?");
+      const drafts =
+        teamBalanceDrafts.length > 0
+          ? teamBalanceDrafts
+          : await loadTeamBalanceDrafts();
+
+      const targetDraftId =
+        selectedTeamBalanceDraftId ||
+        (drafts[0]?.id ? String(drafts[0].id) : "");
+
+      if (!targetDraftId || Number.isNaN(Number(targetDraftId))) {
+        alert("팀 밸런스 결과를 선택해주세요.");
+        return;
+      }
+
+      const ok = confirm("선택한 팀 밸런스 결과를 가져오시겠습니까?");
       if (!ok) return;
 
       setImportLoading(true);
 
-      const response = await fetch("/api/team-balance/drafts/latest", {
-        cache: "no-store",
-      });
+      const response = await fetch(
+        `/api/team-balance/drafts/${encodeURIComponent(targetDraftId)}`,
+        {
+          cache: "no-store",
+        }
+      );
 
-      const data = await parseResponse<TeamBalanceLatestResponse>(response);
+      const data = await parseResponse<TeamBalanceDraftDetailResponse>(response);
 
       if (!response.ok) {
         alert(data?.message ?? "팀 밸런스 결과 불러오기에 실패했습니다.");
@@ -577,6 +680,8 @@ export default function MatchForm({
       if (totalCount !== 10) {
         alert("팀 밸런스 참가자는 현재 " + totalCount + "명입니다. 10명 기준으로 불러옵니다.");
       }
+
+      setSelectedTeamBalanceDraftId(targetDraftId);
 
       setForm((prev) => {
         const baseGames =
@@ -773,18 +878,51 @@ export default function MatchForm({
         </button>
 
         {mode === "create" ? (
-          <button
-            type="button"
-            className="app-button--danger-outline"
-            onClick={() => {
-              handleImportTeamBalance().catch((error: unknown) => {
-                console.error("[IMPORT_TEAM_BALANCE_PROMISE_ERROR]", error);
-              });
+          <div
+            className="match-team-balance-import"
+            style={{
+              display: "flex",
+              gap: "8px",
+              alignItems: "center",
+              flexWrap: "wrap",
             }}
-            disabled={importLoading}
           >
-            {importLoading ? "불러오는 중..." : "팀 밸런스 불러오기"}
-          </button>
+            <select
+              className="match-form-select"
+              value={selectedTeamBalanceDraftId}
+              onChange={(event) => setSelectedTeamBalanceDraftId(event.target.value)}
+              disabled={draftListLoading || importLoading || teamBalanceDrafts.length === 0}
+              style={{
+                minWidth: "260px",
+                height: "40px",
+              }}
+            >
+              <option value="">
+                {teamBalanceDrafts.length === 0
+                  ? "최근 3일 이내 저장 결과 없음"
+                  : "팀 밸런스 결과 선택"}
+              </option>
+
+              {teamBalanceDrafts.map((draft) => (
+                <option key={draft.id} value={String(draft.id)}>
+                  {draft.label} · {draft.count}명
+                </option>
+              ))}
+            </select>
+
+            <button
+              type="button"
+              className="app-button--danger-outline"
+              onClick={() => {
+                handleImportTeamBalance().catch((error: unknown) => {
+                  console.error("[IMPORT_TEAM_BALANCE_PROMISE_ERROR]", error);
+                });
+              }}
+              disabled={draftListLoading || importLoading || teamBalanceDrafts.length === 0}
+            >
+              {importLoading ? "불러오는 중..." : "팀 밸런스 불러오기"}
+            </button>
+          </div>
         ) : null}
       </div>
 
@@ -797,6 +935,34 @@ export default function MatchForm({
               </div>
 
               <div className="match-form-game__controls">
+                <div className="match-winner-toggle">
+                  <span className="match-winner-toggle__label">승리팀</span>
+
+                  <button
+                    type="button"
+                    className={
+                      game.winnerTeam === "BLUE"
+                        ? "match-winner-button match-winner-button--blue active"
+                        : "match-winner-button match-winner-button--blue"
+                    }
+                    onClick={() => updateGameWinnerTeam(gameIndex, "BLUE")}
+                  >
+                    BLUE
+                  </button>
+
+                  <button
+                    type="button"
+                    className={
+                      game.winnerTeam === "RED"
+                        ? "match-winner-button match-winner-button--red active"
+                        : "match-winner-button match-winner-button--red"
+                    }
+                    onClick={() => updateGameWinnerTeam(gameIndex, "RED")}
+                  >
+                    RED
+                  </button>
+                </div>
+
                 <button
                   type="button"
                   className="app-button--danger-outline"
@@ -1059,6 +1225,83 @@ export default function MatchForm({
             : "내전 수정"}
         </button>
       </div>
+
+      <style jsx global>{`
+        .match-form-game__controls {
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .match-winner-toggle {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px;
+          border-radius: 999px;
+          background: rgba(15, 23, 42, 0.68);
+          border: 1px solid rgba(148, 163, 184, 0.28);
+        }
+
+        .match-winner-toggle__label {
+          padding: 0 4px 0 8px;
+          color: #cbd5e1;
+          font-size: 12px;
+          font-weight: 900;
+          white-space: nowrap;
+        }
+
+        .match-winner-button {
+          min-width: 70px;
+          height: 30px;
+          padding: 0 10px;
+          border-radius: 999px;
+          border: 1px solid rgba(148, 163, 184, 0.36);
+          background: rgba(2, 6, 23, 0.58);
+          color: #cbd5e1;
+          font-size: 12px;
+          font-weight: 900;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .match-winner-button:hover {
+          border-color: rgba(226, 232, 240, 0.6);
+          color: #ffffff;
+        }
+
+        .match-winner-button--blue.active {
+          border-color: rgba(96, 165, 250, 0.9);
+          background: linear-gradient(135deg, #2563eb, #1d4ed8);
+          color: #ffffff;
+          box-shadow: 0 0 12px rgba(37, 99, 235, 0.36);
+        }
+
+        .match-winner-button--red.active {
+          border-color: rgba(248, 113, 113, 0.9);
+          background: linear-gradient(135deg, #dc2626, #b91c1c);
+          color: #ffffff;
+          box-shadow: 0 0 12px rgba(220, 38, 38, 0.32);
+        }
+
+        @media (max-width: 720px) {
+          .match-form-game__controls {
+            justify-content: flex-start;
+          }
+
+          .match-winner-toggle {
+            width: 100%;
+            justify-content: space-between;
+          }
+
+          .match-winner-button {
+            flex: 1;
+          }
+        }
+      `}</style>
+
     </main>
   );
 }

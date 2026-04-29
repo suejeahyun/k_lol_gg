@@ -82,8 +82,6 @@
   font-weight: 900;
 }
 
-/* 상세 박스 */
-
 .participation-detail {
   display: flex;
   flex-direction: column;
@@ -110,9 +108,9 @@
 }
 
 .participation-box__info strong {
-  color: var(--k-text-strong);
   font-size: 16px;
   font-weight: 900;
+  color: var(--k-text-strong);
 }
 
 .participation-box__info ul {
@@ -121,13 +119,27 @@
   line-height: 1.6;
 }
 
-.participation-message {
-  color: var(--k-blue-2);
-  font-size: 14px;
-  font-weight: 800;
+.participation-apply-button {
+  height: 48px;
+  border: 1px solid rgba(96, 165, 250, 0.6);
+  border-radius: 12px;
+  background: linear-gradient(135deg, #2563eb, #22d3ee);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 900;
+  cursor: pointer;
 }
 
-/* 포지션 선택 */
+.participation-apply-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.participation-message {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--k-blue-2);
+}
 
 .participation-position-section {
   display: grid;
@@ -154,8 +166,8 @@
 
 .participation-position-group {
   display: flex;
-  flex-wrap: wrap;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .participation-position-button {
@@ -176,7 +188,7 @@
 .participation-position-button.active {
   border-color: var(--k-border-strong);
   background: rgba(37, 99, 235, 0.24);
-  color: #ffffff;
+  color: #fff;
 }
 
 .participation-checkbox {
@@ -204,47 +216,6 @@
   color: var(--k-text-strong);
 }
 
-/* 참가하기 버튼 */
-
-.participation-apply-button {
-  width: 100%;
-  height: 52px;
-  border: none;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #3b82f6, #22d3ee);
-  color: #ffffff;
-  font-size: 16px;
-  font-weight: 900;
-  letter-spacing: 0.3px;
-  cursor: pointer;
-  box-shadow:
-    0 6px 20px rgba(34, 211, 238, 0.25),
-    0 2px 6px rgba(0, 0, 0, 0.3);
-  transition: all 0.15s ease;
-}
-
-.participation-apply-button:hover {
-  transform: translateY(-1px);
-  box-shadow:
-    0 10px 28px rgba(34, 211, 238, 0.35),
-    0 4px 10px rgba(0, 0, 0, 0.4);
-}
-
-.participation-apply-button:active {
-  transform: translateY(0);
-  box-shadow:
-    0 4px 12px rgba(34, 211, 238, 0.2),
-    0 2px 6px rgba(0, 0, 0, 0.3);
-}
-
-.participation-apply-button:disabled {
-  background: linear-gradient(135deg, #475569, #334155);
-  color: #cbd5f5;
-  box-shadow: none;
-  cursor: not-allowed;
-  transform: none;
-}
-
 /* 오늘 참가자 */
 
 .participation-list {
@@ -266,37 +237,24 @@
   font-weight: 950;
 }
 
-/*
-  헤더 컬럼:
-  1 번호
-  2 이름
-  3 닉네임#태그
-  4 현재티어
-  5 최고티어
-  6 주라인
-  7 부라인
-
-  취소 버튼은 grid가 아니라 row 우측 하단 absolute 고정
-*/
-
 .participation-page .participation-list .participation-header,
 .participation-page .participation-list .participation-item {
   display: grid !important;
   grid-template-columns:
-    44px
+    42px
     minmax(120px, 0.9fr)
-    minmax(220px, 1.7fr)
+    minmax(210px, 1.8fr)
     minmax(110px, 1fr)
     minmax(110px, 1fr)
-    minmax(120px, 1fr)
-    minmax(120px, 1fr) !important;
+    minmax(130px, 1.15fr)
+    minmax(130px, 1.15fr)
+    100px !important;
   gap: 10px !important;
   align-items: center !important;
-  width: 100%;
-  box-sizing: border-box;
 }
 
 .participation-page .participation-list .participation-header {
+  position: relative;
   padding: 10px 16px !important;
   border: 1px solid rgba(59, 130, 246, 0.32);
   border-radius: 12px;
@@ -306,16 +264,21 @@
   font-weight: 950;
 }
 
+.participation-page .participation-list .participation-header::after {
+  content: "";
+  grid-column: 8;
+  grid-row: 1;
+}
+
 .participation-page .participation-list .participation-header > span,
 .participation-page .participation-list .participation-item > span,
 .participation-page .participation-list .participation-item > strong,
-.participation-page .participation-list .participation-item > em {
+.participation-page .participation-list .participation-item > em,
+.participation-page .participation-list .participation-item__actions {
   min-width: 0 !important;
   grid-row: 1 !important;
   align-self: center !important;
 }
-
-/* 헤더 / 행 컬럼 고정 */
 
 .participation-page .participation-list .participation-header > span:nth-child(1),
 .participation-page .participation-list .participation-item > span:nth-child(1) {
@@ -352,12 +315,8 @@
   grid-column: 7 !important;
 }
 
-/* 참가자 행 */
-
 .participation-page .participation-list .participation-item {
-  position: relative !important;
-  min-height: 86px;
-  padding: 16px 16px 48px 16px;
+  padding: 14px 16px;
   border: 1px solid var(--k-border);
   border-radius: 14px;
   background: linear-gradient(
@@ -384,7 +343,6 @@
   color: var(--k-text-strong);
   font-size: 14px;
   font-weight: 950;
-  white-space: nowrap;
 }
 
 .participation-page .participation-list .participation-item em {
@@ -392,20 +350,15 @@
   font-size: 13px;
   font-style: normal;
   font-weight: 850;
-  white-space: normal;
-  overflow-wrap: anywhere;
-  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .participation-page .participation-list .participation-item span {
   color: var(--k-text);
   font-size: 13px;
   font-weight: 800;
-}
-
-.participation-page .participation-list .participation-item > span:nth-child(4),
-.participation-page .participation-list .participation-item > span:nth-child(5) {
-  text-align: center;
 }
 
 .participation-page .participation-list .participation-item__position,
@@ -425,47 +378,37 @@
   white-space: nowrap;
 }
 
-/* 취소 버튼: 본인 row 우측 하단 고정 */
-
-/* 취소 버튼: 전체 페이지 우측 하단 고정 */
-
-.participation-page-actions {
-  position: fixed;
-  right: 32px;
-  bottom: 32px;
-  z-index: 50;
-  display: flex;
-  justify-content: flex-end;
+.participation-page .participation-list .participation-item__actions {
+  grid-column: 8 !important;
+  grid-row: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
-.participation-cancel-button {
+.participation-page .participation-list .participation-cancel-button {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  width: 90px !important;
-  min-width: 90px !important;
+  width: 86px !important;
   height: 34px !important;
-  min-height: 34px !important;
   margin: 0 !important;
-  padding: 0 !important;
+  padding: 0 12px !important;
   border: 1px solid rgba(248, 113, 113, 0.65);
   border-radius: 10px;
   background: rgba(127, 29, 29, 0.24);
   color: #fecaca;
   font-size: 12px;
   font-weight: 900;
-  line-height: 1 !important;
-  text-align: center;
-  white-space: nowrap !important;
-  word-break: keep-all !important;
-  writing-mode: horizontal-tb !important;
+  line-height: 1;
+  white-space: nowrap;
   cursor: pointer;
 }
 
 .participation-page .participation-list .participation-cancel-button:hover {
   border-color: rgba(248, 113, 113, 0.9);
   background: rgba(185, 28, 28, 0.4);
-  color: #ffffff;
+  color: #fff;
 }
 
 .participation-page .participation-list .participation-cancel-button:disabled {
@@ -493,6 +436,6 @@
 
   .participation-page .participation-list .participation-header,
   .participation-page .participation-list .participation-item {
-    min-width: 920px;
+    min-width: 1040px;
   }
 }

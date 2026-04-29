@@ -17,21 +17,31 @@ type Player = {
   subPositions: ApplyPosition[];
 };
 
+type SeasonParticipationResponse = {
+  loginPlayerId: number | null;
+  players: Player[];
+};
+
 export default function SeasonParticipationPage() {
   const [players, setPlayers] = useState<Player[]>([]);
+  const [loginPlayerId, setLoginPlayerId] = useState<number | null>(null);
   const [mainPosition, setMainPosition] = useState<ApplyPosition | "">("");
   const [subPositions, setSubPositions] = useState<ApplyPosition[]>([]);
   const [loading, setLoading] = useState(false);
+  const [cancelingId, setCancelingId] = useState<number | null>(null);
 
   const fetchPlayers = async () => {
     const res = await fetch("/api/participation/season", {
       cache: "no-store",
+      credentials: "include",
     });
 
-    const data = await res.json();
+    const text = await res.text();
+    const data = text ? (JSON.parse(text) as SeasonParticipationResponse) : null;
 
-    if (res.ok) {
-      setPlayers(data.players || []);
+    if (res.ok && data) {
+      setPlayers(Array.isArray(data.players) ? data.players : []);
+      setLoginPlayerId(data.loginPlayerId ?? null);
     }
   };
 
@@ -54,6 +64,7 @@ export default function SeasonParticipationPage() {
 
       const res = await fetch("/api/participation/season", {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
@@ -63,20 +74,56 @@ export default function SeasonParticipationPage() {
         }),
       });
 
-      const data = await res.json();
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : { message: "" };
 
       if (!res.ok) {
         alert(data.message || "참가 신청 실패");
         return;
       }
 
-      alert("참가 신청이 완료되었습니다.");
+      alert(data.message || "참가 신청이 완료되었습니다.");
       await fetchPlayers();
     } catch (error: unknown) {
       console.error("[SEASON_APPLY_ERROR]", error);
       alert("참가 신청 중 오류가 발생했습니다.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCancel = async (playerId: number) => {
+    if (!confirm("참가를 취소하시겠습니까?")) return;
+
+    try {
+      setCancelingId(playerId);
+
+      const res = await fetch("/api/participation/season", {
+        method: "DELETE",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          playerId,
+        }),
+      });
+
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : { message: "" };
+
+      if (!res.ok) {
+        alert(data.message || "참가 취소 실패");
+        return;
+      }
+
+      alert(data.message || "참가가 취소되었습니다.");
+      await fetchPlayers();
+    } catch (error: unknown) {
+      console.error("[SEASON_CANCEL_ERROR]", error);
+      alert("참가 취소 중 오류가 발생했습니다.");
+    } finally {
+      setCancelingId(null);
     }
   };
 
@@ -124,7 +171,29 @@ export default function SeasonParticipationPage() {
         </button>
       </div>
 
-      <ParticipationList players={players} title="오늘 참가자" />
+      <ParticipationList
+        players={players}
+        loginPlayerId={loginPlayerId}
+        cancelingId={cancelingId}
+        onCancel={handleCancel}
+        title="오늘 참가자"
+      />
+            {loginPlayerId ? (
+        <div className="participation-page-actions">
+          <button
+            type="button"
+            className="participation-cancel-button participation-cancel-button--fixed"
+            onClick={() => {
+              handleCancel(loginPlayerId).catch((error: unknown) => {
+                console.error("[SEASON_CANCEL_PROMISE_ERROR]", error);
+              });
+            }}
+            disabled={cancelingId === loginPlayerId}
+          >
+            {cancelingId === loginPlayerId ? "취소 중" : "취소하기"}
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -184,9 +253,15 @@ function PositionSelector({
 
 function ParticipationList({
   players,
+  loginPlayerId,
+  cancelingId,
+  onCancel,
   title,
 }: {
   players: Player[];
+  loginPlayerId: number | null;
+  cancelingId: number | null;
+  onCancel: (playerId: number) => Promise<void>;
   title: string;
 }) {
   return (

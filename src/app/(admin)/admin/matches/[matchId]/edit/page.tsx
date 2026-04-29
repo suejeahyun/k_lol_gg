@@ -79,13 +79,14 @@ export default async function EditMatchPage({ params }: EditMatchPageProps) {
 
   const formGames: MatchFormGame[] = match.games.map((game) => ({
     gameNumber: game.gameNumber,
+    winnerTeam: game.winnerTeam,
     participants: game.participants.map((participant) => ({
       playerId: participant.playerId,
-      playerInput: participant.player.name ?? "",
+      playerInput: `${participant.player.name} (${participant.player.nickname}#${participant.player.tag})`,
       championId: participant.championId,
-      championInput: participant.champion.name ?? "",
-      team: participant.team as MatchFormParticipant["team"],
-      position: participant.position as MatchFormParticipant["position"],
+      championInput: participant.champion.name,
+      team: participant.team,
+      position: participant.position,
       kills: participant.kills,
       deaths: participant.deaths,
       assists: participant.assists,
