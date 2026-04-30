@@ -12,7 +12,6 @@ import {
   Swords,
   Flame,
   UserPlus,
-  Scale,
   Bell,
   CalendarDays,
 } from "lucide-react";
@@ -39,7 +38,6 @@ const menuGroups = [
       { href: "/matches", label: "내전 목록", icon: Swords },
       { href: "/progress", label: "이벤트 / 멸망전", icon: Flame },
       { href: "/participation", label: "참가하기", icon: UserPlus, auth: true },
-      { href: "/players/balance", label: "팀 밸런스", icon: Scale, auth: true },
     ],
   },
   {
