@@ -67,6 +67,10 @@ type CandidateSnapshot = {
   blueTotal: number;
   diff: number;
   totalScore: number;
+  lineDiffTotal: number;
+  topPlayerDiff: number;
+  sTierStackPenalty: number;
+  balanceCost: number;
   mainAssignedCount: number;
   subAssignedCount: number;
   autoAssignedCount: number;
@@ -93,6 +97,7 @@ const POSITIONS: Position[] = ["TOP", "JGL", "MID", "ADC", "SUP"];
 
 const RANK_SCORE_START = 100;
 const RANK_SCORE_STEP = 6;
+
 const MAIN_POSITION_MULTIPLIER = 1;
 const SUB_POSITION_MULTIPLIER = 0.8;
 const AUTO_POSITION_MULTIPLIER = 0.6;
@@ -301,7 +306,10 @@ function getSTierBonus(peakTier: string) {
   return 0;
 }
 
-function getPositionBaseScore(player: Pick<ResolvedPlayer, "currentTier" | "peakTier">, position: Position) {
+function getPositionBaseScore(
+  player: Pick<ResolvedPlayer, "currentTier" | "peakTier">,
+  position: Position
+) {
   const currentBucket = normalizeTierBucket(player.currentTier || "");
   const peakBucket = normalizeTierBucket(player.peakTier || "");
 
@@ -314,7 +322,12 @@ function getPositionBaseScore(player: Pick<ResolvedPlayer, "currentTier" | "peak
   return Number(Math.max(baseScore, floorScore).toFixed(2));
 }
 
-function getPlayerAdjustedScore(player: Pick<ResolvedPlayer, "currentTier" | "peakTier" | "mainPositions" | "subPositions">) {
+function getPlayerAdjustedScore(
+  player: Pick<
+    ResolvedPlayer,
+    "currentTier" | "peakTier" | "mainPositions" | "subPositions"
+  >
+) {
   const preferredPositions =
     player.mainPositions.length > 0
       ? player.mainPositions
@@ -330,7 +343,12 @@ function getPlayerAdjustedScore(player: Pick<ResolvedPlayer, "currentTier" | "pe
   return Number(average.toFixed(2));
 }
 
-function applyInternalRankScores(players: Omit<ResolvedPlayer, "adjustedScore" | "rankScore" | "bonus" | "finalBaseScore">[]): ResolvedPlayer[] {
+function applyInternalRankScores(
+  players: Omit<
+    ResolvedPlayer,
+    "adjustedScore" | "rankScore" | "bonus" | "finalBaseScore"
+  >[]
+): ResolvedPlayer[] {
   const sortedPlayers = players
     .map((player) => {
       const adjustedScore = getPlayerAdjustedScore(player);
@@ -343,7 +361,10 @@ function applyInternalRankScores(players: Omit<ResolvedPlayer, "adjustedScore" |
       };
     })
     .sort((a, b) => {
-      if (b.adjustedScore !== a.adjustedScore) return b.adjustedScore - a.adjustedScore;
+      if (b.adjustedScore !== a.adjustedScore) {
+        return b.adjustedScore - a.adjustedScore;
+      }
+
       return b.bonus - a.bonus;
     });
 
@@ -393,6 +414,7 @@ function permute<T>(items: T[]): T[][] {
   items.forEach((item, index) => {
     const remaining = [...items.slice(0, index), ...items.slice(index + 1)];
     const permutations = permute(remaining);
+
     permutations.forEach((permutation) => {
       result.push([item, ...permutation]);
     });
@@ -501,16 +523,99 @@ function evaluateTeam(team: Team, players: ResolvedPlayer[]): TeamBestResult {
   );
 }
 
-function isBetterCandidate(candidate: CandidateSnapshot, current: CandidateSnapshot | null) {
+function getLineDiffTotal(assignments: Assignment[]) {
+  let total = 0;
+
+  POSITIONS.forEach((position) => {
+    const red = assignments.find(
+      (item) => item.team === "RED" && item.position === position
+    );
+
+    const blue = assignments.find(
+      (item) => item.team === "BLUE" && item.position === position
+    );
+
+    if (!red || !blue) return;
+
+    total += Math.abs(red.score - blue.score);
+  });
+
+  return Number(total.toFixed(2));
+}
+
+function getTopPlayerDiff(assignments: Assignment[]) {
+  const redScores = assignments
+    .filter((item) => item.team === "RED")
+    .map((item) => item.score);
+
+  const blueScores = assignments
+    .filter((item) => item.team === "BLUE")
+    .map((item) => item.score);
+
+  const redTop = Math.max(...redScores);
+  const blueTop = Math.max(...blueScores);
+
+  return Number(Math.abs(redTop - blueTop).toFixed(2));
+}
+
+function getSTierStackPenalty(assignments: Assignment[]) {
+  const redCount = assignments.filter(
+    (item) => item.team === "RED" && item.bonus >= 5
+  ).length;
+
+  const blueCount = assignments.filter(
+    (item) => item.team === "BLUE" && item.bonus >= 5
+  ).length;
+
+  return Math.abs(redCount - blueCount) * 12;
+}
+
+function getBalanceCost(params: {
+  diff: number;
+  lineDiffTotal: number;
+  autoAssignedCount: number;
+  subAssignedCount: number;
+  sTierStackPenalty: number;
+  topPlayerDiff: number;
+}) {
+  return Number(
+    (
+      params.diff * 1.0 +
+      params.lineDiffTotal * 1.35 +
+      params.autoAssignedCount * 18 +
+      params.subAssignedCount * 5 +
+      params.sTierStackPenalty +
+      params.topPlayerDiff * 0.8
+    ).toFixed(2)
+  );
+}
+
+function isBetterCandidate(
+  candidate: CandidateSnapshot,
+  current: CandidateSnapshot | null
+) {
   if (!current) return true;
 
-  if (candidate.diff !== current.diff) return candidate.diff < current.diff;
+  if (candidate.balanceCost !== current.balanceCost) {
+    return candidate.balanceCost < current.balanceCost;
+  }
+
+  if (candidate.diff !== current.diff) {
+    return candidate.diff < current.diff;
+  }
+
+  if (candidate.lineDiffTotal !== current.lineDiffTotal) {
+    return candidate.lineDiffTotal < current.lineDiffTotal;
+  }
+
   if (candidate.mainAssignedCount !== current.mainAssignedCount) {
     return candidate.mainAssignedCount > current.mainAssignedCount;
   }
+
   if (candidate.subAssignedCount !== current.subAssignedCount) {
     return candidate.subAssignedCount > current.subAssignedCount;
   }
+
   if (candidate.autoAssignedCount !== current.autoAssignedCount) {
     return candidate.autoAssignedCount < current.autoAssignedCount;
   }
@@ -535,12 +640,15 @@ export async function POST(request: NextRequest) {
     for (const player of body.players) {
       const rawName =
         typeof player?.name === "string" ? player.name.trim() : "";
+
       const mainPosition = player?.mainPosition ?? null;
+
       const mainPositions = Array.isArray(player?.mainPositions)
         ? player.mainPositions
         : mainPosition
         ? [mainPosition]
         : [];
+
       const subPositions = player?.subPositions ?? [];
 
       if (!rawName) {
@@ -584,11 +692,13 @@ export async function POST(request: NextRequest) {
 
       normalizedInputs.push({
         playerId:
-          typeof player?.playerId === "number" && Number.isInteger(player.playerId)
+          typeof player?.playerId === "number" &&
+          Number.isInteger(player.playerId)
             ? player.playerId
             : null,
         name: rawName,
-        nickname: typeof player?.nickname === "string" ? player.nickname.trim() : "",
+        nickname:
+          typeof player?.nickname === "string" ? player.nickname.trim() : "",
         tag: typeof player?.tag === "string" ? player.tag.trim() : "",
         mainPosition: normalized.mainPosition,
         mainPositions: normalized.mainPositions,
@@ -598,7 +708,10 @@ export async function POST(request: NextRequest) {
 
     if (invalidInputNames.length > 0) {
       return NextResponse.json(
-        { message: "이름이 비어있는 플레이어가 있습니다.", invalidNames: invalidInputNames },
+        {
+          message: "이름이 비어있는 플레이어가 있습니다.",
+          invalidNames: invalidInputNames,
+        },
         { status: 400 }
       );
     }
@@ -608,6 +721,7 @@ export async function POST(request: NextRequest) {
       .filter((playerId): playerId is number => typeof playerId === "number");
 
     const selectedIdCounts = new Map<number, number>();
+
     selectedIds.forEach((playerId) => {
       selectedIdCounts.set(playerId, (selectedIdCounts.get(playerId) ?? 0) + 1);
     });
@@ -628,6 +742,7 @@ export async function POST(request: NextRequest) {
       .map((player) => normalizeText(player.name));
 
     const nameCounts = new Map<string, number>();
+
     nameKeys.forEach((key) => {
       nameCounts.set(key, (nameCounts.get(key) ?? 0) + 1);
     });
@@ -638,7 +753,11 @@ export async function POST(request: NextRequest) {
 
     if (duplicatedNames.length > 0) {
       return NextResponse.json(
-        { message: "중복된 이름이 있습니다. 이름이 같은 경우 검색 목록에서 정확한 플레이어를 선택해주세요.", invalidNames: duplicatedNames },
+        {
+          message:
+            "중복된 이름이 있습니다. 이름이 같은 경우 검색 목록에서 정확한 플레이어를 선택해주세요.",
+          invalidNames: duplicatedNames,
+        },
         { status: 400 }
       );
     }
@@ -675,7 +794,10 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    const dbPlayerByIdMap = new Map(dbPlayers.map((player) => [player.id, player]));
+    const dbPlayerByIdMap = new Map(
+      dbPlayers.map((player) => [player.id, player])
+    );
+
     const dbPlayerByNameMap = new Map(
       dbPlayers.map((player) => [normalizeText(player.name), player])
     );
@@ -727,23 +849,57 @@ export async function POST(request: NextRequest) {
 
     for (const redPlayers of teamCombinations) {
       const redIds = new Set(redPlayers.map((player) => player.id));
-      const bluePlayers = resolvedPlayers.filter((player) => !redIds.has(player.id));
+      const bluePlayers = resolvedPlayers.filter(
+        (player) => !redIds.has(player.id)
+      );
 
       const redResult = evaluateTeam("RED", redPlayers);
       const blueResult = evaluateTeam("BLUE", bluePlayers);
 
+      const assignments = [
+        ...redResult.assignments,
+        ...blueResult.assignments,
+      ];
+
+      const diff = Number(
+        Math.abs(redResult.total - blueResult.total).toFixed(2)
+      );
+
+      const lineDiffTotal = getLineDiffTotal(assignments);
+      const topPlayerDiff = getTopPlayerDiff(assignments);
+      const sTierStackPenalty = getSTierStackPenalty(assignments);
+
+      const mainAssignedCount =
+        redResult.mainAssignedCount + blueResult.mainAssignedCount;
+
+      const subAssignedCount =
+        redResult.subAssignedCount + blueResult.subAssignedCount;
+
+      const autoAssignedCount =
+        redResult.autoAssignedCount + blueResult.autoAssignedCount;
+
+      const balanceCost = getBalanceCost({
+        diff,
+        lineDiffTotal,
+        autoAssignedCount,
+        subAssignedCount,
+        sTierStackPenalty,
+        topPlayerDiff,
+      });
+
       const candidate: CandidateSnapshot = {
         redTotal: redResult.total,
         blueTotal: blueResult.total,
-        diff: Number(Math.abs(redResult.total - blueResult.total).toFixed(2)),
+        diff,
         totalScore: Number((redResult.total + blueResult.total).toFixed(2)),
-        mainAssignedCount:
-          redResult.mainAssignedCount + blueResult.mainAssignedCount,
-        subAssignedCount:
-          redResult.subAssignedCount + blueResult.subAssignedCount,
-        autoAssignedCount:
-          redResult.autoAssignedCount + blueResult.autoAssignedCount,
-        assignments: [...redResult.assignments, ...blueResult.assignments],
+        lineDiffTotal,
+        topPlayerDiff,
+        sTierStackPenalty,
+        balanceCost,
+        mainAssignedCount,
+        subAssignedCount,
+        autoAssignedCount,
+        assignments,
       };
 
       if (isBetterCandidate(candidate, bestCandidate)) {
@@ -760,16 +916,24 @@ export async function POST(request: NextRequest) {
 
     const red = bestCandidate.assignments
       .filter((assignment) => assignment.team === "RED")
-      .sort((a, b) => POSITIONS.indexOf(a.position) - POSITIONS.indexOf(b.position));
+      .sort(
+        (a, b) => POSITIONS.indexOf(a.position) - POSITIONS.indexOf(b.position)
+      );
 
     const blue = bestCandidate.assignments
       .filter((assignment) => assignment.team === "BLUE")
-      .sort((a, b) => POSITIONS.indexOf(a.position) - POSITIONS.indexOf(b.position));
+      .sort(
+        (a, b) => POSITIONS.indexOf(a.position) - POSITIONS.indexOf(b.position)
+      );
 
     return NextResponse.json({
       redTotal: bestCandidate.redTotal,
       blueTotal: bestCandidate.blueTotal,
       diff: bestCandidate.diff,
+      balanceCost: bestCandidate.balanceCost,
+      lineDiffTotal: bestCandidate.lineDiffTotal,
+      topPlayerDiff: bestCandidate.topPlayerDiff,
+      sTierStackPenalty: bestCandidate.sTierStackPenalty,
       mainAssignedCount: bestCandidate.mainAssignedCount,
       subAssignedCount: bestCandidate.subAssignedCount,
       autoAssignedCount: bestCandidate.autoAssignedCount,
