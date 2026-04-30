@@ -65,6 +65,12 @@ export default function EventBracketGenerator({
         {isGenerating ? "대진 생성 중..." : "대진 생성"}
       </button>
 
+      {teamCount < 2 ? (
+        <p className="notice-form__error">
+          대진 생성을 위해 최소 2팀이 필요합니다.
+        </p>
+      ) : null}
+
       {matchCount > 0 ? (
         <div className="empty-box">이미 생성된 대진이 있습니다.</div>
       ) : null}
