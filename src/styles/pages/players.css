@@ -587,3 +587,22 @@
     width: 100%;
   }
 }
+.solo-sync-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .solo-sync-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .solo-sync-actions .solo-sync-button {
+    width: 100%;
+  }
+}

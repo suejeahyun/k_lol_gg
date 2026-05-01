@@ -232,18 +232,26 @@ export async function getSoloRankEntryByPuuid(
   );
 }
 
-export async function getRecentRankedMatchIdsByPuuid(
+export async function getRankedMatchIdsByPuuid(
   puuid: string,
-  count = 20
+  count = 20,
+  start = 0
 ): Promise<string[]> {
   const encodedPuuid = encodeURIComponent(puuid);
 
   const url =
     `https://${MATCH_REGION}.api.riotgames.com` +
     `/lol/match/v5/matches/by-puuid/${encodedPuuid}/ids` +
-    `?queue=${SOLO_RANK_QUEUE_ID}&type=ranked&start=0&count=${count}`;
+    `?queue=${SOLO_RANK_QUEUE_ID}&type=ranked&start=${start}&count=${count}`;
 
   return riotFetch<string[]>(url);
+}
+
+export async function getRecentRankedMatchIdsByPuuid(
+  puuid: string,
+  count = 20
+): Promise<string[]> {
+  return getRankedMatchIdsByPuuid(puuid, count, 0);
 }
 
 export async function getMatchById(matchId: string): Promise<RiotMatchDto> {

@@ -48,6 +48,7 @@ type SoloSummaryResponse = {
   mostChampions: Array<{
     championId: number;
     championName: string;
+    championNameKo: string;
     games: number;
     wins: number;
     losses: number;
@@ -62,6 +63,7 @@ type SoloSummaryResponse = {
     matchId: string;
     championId: number;
     championName: string;
+    championNameKo: string;
     position: string | null;
     role: string | null;
     kills: number;
@@ -170,6 +172,7 @@ export default function SoloRankSection({ playerId }: SoloRankSectionProps) {
   const [data, setData] = useState<SoloSummaryResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [fullSyncing, setFullSyncing] = useState(false);
   const [message, setMessage] = useState("");
 
   const summaryUrl = useMemo(
@@ -232,6 +235,50 @@ export default function SoloRankSection({ playerId }: SoloRankSectionProps) {
     }
   }
 
+  async function handleFullSync() {
+    const confirmed = window.confirm(
+      "전체 솔랭 최초 갱신은 Riot API에서 조회 가능한 솔랭 기록을 모두 저장합니다.\n경기 수가 많으면 시간이 오래 걸리고 API 제한이 발생할 수 있습니다. 진행하시겠습니까?"
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setFullSyncing(true);
+      setMessage("");
+
+      const response = await fetch(`/api/riot/player/${playerId}/sync-full`, {
+        method: "POST",
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 429 && result.remainSeconds) {
+          const hours = Math.ceil(result.remainSeconds / 3600);
+          setMessage(`전체 갱신은 약 ${hours}시간 후 다시 가능합니다.`);
+          return;
+        }
+
+        setMessage(result.message || "전체 솔랭 기록 갱신에 실패했습니다.");
+        return;
+      }
+
+      const synced = result.synced;
+
+      setMessage(
+        `전체 솔랭 기록 갱신 완료: 요청 ${synced.requestedMatchCount}게임 / 저장 ${synced.savedMatchCount}게임 / 실패 ${synced.failedMatchCount}게임`
+      );
+
+      await fetchSummary();
+    } catch {
+      setMessage("전체 솔랭 기록 갱신 중 오류가 발생했습니다.");
+    } finally {
+      setFullSyncing(false);
+    }
+  }
+
   useEffect(() => {
     void fetchSummary();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -255,18 +302,29 @@ export default function SoloRankSection({ playerId }: SoloRankSectionProps) {
           <div>
             <h2>솔랭 분석</h2>
             <p className="section-subtitle">
-              Riot ID 기준 솔로랭크 최근 20게임과 저장된 전체 솔랭 기록을 분석합니다.
+              일반 갱신은 최근 20게임, 전체 최초 갱신은 조회 가능한 솔랭 기록 전체를 저장합니다.
             </p>
           </div>
 
-          <button
-            type="button"
-            className="btn btn-primary solo-sync-button"
-            onClick={handleSync}
-            disabled={syncing}
-          >
-            {syncing ? "갱신 중..." : "솔랭 전적 갱신"}
-          </button>
+          <div className="solo-sync-actions">
+            <button
+              type="button"
+              className="btn btn-primary solo-sync-button"
+              onClick={handleSync}
+              disabled={syncing || fullSyncing}
+            >
+              {syncing ? "갱신 중..." : "솔랭 전적 갱신"}
+            </button>
+
+            <button
+              type="button"
+              className="btn btn-ghost solo-sync-button"
+              onClick={handleFullSync}
+              disabled={syncing || fullSyncing}
+            >
+              {fullSyncing ? "전체 갱신 중..." : "전체 솔랭 기록 갱신"}
+            </button>
+          </div>
         </div>
 
         {message ? <div className="solo-message">{message}</div> : null}
@@ -355,14 +413,14 @@ export default function SoloRankSection({ playerId }: SoloRankSectionProps) {
 
                       <Image
                         src={getChampionImageUrl(champion.championName)}
-                        alt={champion.championName}
+                        alt={champion.championNameKo}
                         width={46}
                         height={46}
                         className="solo-most-image"
                       />
 
                       <div className="solo-most-info">
-                        <strong>{champion.championName}</strong>
+                        <strong>{champion.championNameKo}</strong>
                         <span>
                           {champion.games}게임 · {champion.wins}승{" "}
                           {champion.losses}패
@@ -417,13 +475,13 @@ export default function SoloRankSection({ playerId }: SoloRankSectionProps) {
                   <div className="solo-match-champion">
                     <Image
                       src={getChampionImageUrl(match.championName)}
-                      alt={match.championName}
+                      alt={match.championNameKo}
                       width={54}
                       height={54}
                       className="solo-match-champion-image"
                     />
                     <div>
-                      <strong>{match.championName}</strong>
+                      <strong>{match.championNameKo}</strong>
                       <span>{formatPosition(match.position)}</span>
                     </div>
                   </div>

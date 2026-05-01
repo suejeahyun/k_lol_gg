@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import {
+  getChampionNameKo,
+  getKoreanChampionNameMap,
+} from "@/lib/riot/champion";
 
 type RouteContext = {
   params: Promise<{
@@ -95,7 +99,10 @@ function getMainPosition(matches: SoloMatchForSummary[]) {
   };
 }
 
-function getMostChampions(matches: SoloMatchForSummary[]) {
+function getMostChampions(
+  matches: SoloMatchForSummary[],
+  championNameMap: Map<string, string>
+) {
   const championMap = new Map<
     number,
     {
@@ -133,6 +140,11 @@ function getMostChampions(matches: SoloMatchForSummary[]) {
     .map((champion) => ({
       championId: champion.championId,
       championName: champion.championName,
+      championNameKo: getChampionNameKo(
+        championNameMap,
+        champion.championName,
+        champion.championId
+      ),
       games: champion.games,
       wins: champion.wins,
       losses: champion.games - champion.wins,
@@ -156,12 +168,20 @@ function getMostChampions(matches: SoloMatchForSummary[]) {
     .slice(0, MOST_CHAMPION_LIMIT);
 }
 
-function formatRecentMatch(match: SoloMatchForSummary) {
+function formatRecentMatch(
+  match: SoloMatchForSummary,
+  championNameMap: Map<string, string>
+) {
   return {
     id: match.id,
     matchId: match.matchId,
     championId: match.championId,
     championName: match.championName,
+    championNameKo: getChampionNameKo(
+      championNameMap,
+      match.championName,
+      match.championId
+    ),
     position: match.position,
     role: match.role,
     kills: match.kills,
@@ -248,6 +268,7 @@ export async function GET(_request: Request, context: RouteContext) {
     const recentTotalGames = recentMatches.length;
     const recentWins = recentMatches.filter((match) => match.win).length;
     const recentLosses = recentTotalGames - recentWins;
+    const championNameMap = await getKoreanChampionNameMap();
 
     const response = {
       player: {
@@ -289,8 +310,10 @@ export async function GET(_request: Request, context: RouteContext) {
         averageKda: getAverageKda(recentMatches),
         mainPosition: getMainPosition(recentMatches),
       },
-      mostChampions: getMostChampions(allSoloMatches),
-      recentMatches: recentMatches.map(formatRecentMatch),
+      mostChampions: getMostChampions(allSoloMatches, championNameMap),
+      recentMatches: recentMatches.map((match) =>
+        formatRecentMatch(match, championNameMap)
+      ),
     };
 
     return NextResponse.json(response);
