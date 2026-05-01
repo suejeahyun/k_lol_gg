@@ -16,6 +16,7 @@ type UpdateParticipantInput = {
 
 type UpdateGameInput = {
   gameNumber: number;
+  winnerTeam: Team;
   participants: UpdateParticipantInput[];
 };
 
@@ -40,26 +41,14 @@ function isValidTeam(value: unknown): value is Team {
 }
 
 function isValidPosition(value: unknown): value is Position {
-  return (
-    typeof value === "string" &&
-    VALID_POSITIONS.includes(value as Position)
-  );
+  return typeof value === "string" && VALID_POSITIONS.includes(value as Position);
 }
 
 function validatePayload(body: unknown):
-  | {
-      success: true;
-      data: UpdateMatchInput;
-    }
-  | {
-      success: false;
-      message: string;
-    } {
+  | { success: true; data: UpdateMatchInput }
+  | { success: false; message: string } {
   if (!body || typeof body !== "object") {
-    return {
-      success: false,
-      message: "요청 본문이 올바르지 않습니다.",
-    };
+    return { success: false, message: "요청 본문이 올바르지 않습니다." };
   }
 
   const payload = body as Partial<UpdateMatchInput>;
@@ -69,39 +58,24 @@ function validatePayload(body: unknown):
     !Number.isInteger(payload.seasonId) ||
     payload.seasonId <= 0
   ) {
-    return {
-      success: false,
-      message: "seasonId가 올바르지 않습니다.",
-    };
+    return { success: false, message: "seasonId가 올바르지 않습니다." };
   }
 
   if (typeof payload.title !== "string" || !payload.title.trim()) {
-    return {
-      success: false,
-      message: "제목을 입력해주세요.",
-    };
+    return { success: false, message: "제목을 입력해주세요." };
   }
 
   if (typeof payload.matchDate !== "string" || !payload.matchDate.trim()) {
-    return {
-      success: false,
-      message: "matchDate가 올바르지 않습니다.",
-    };
+    return { success: false, message: "matchDate가 올바르지 않습니다." };
   }
 
   const parsedDate = new Date(payload.matchDate);
   if (Number.isNaN(parsedDate.getTime())) {
-    return {
-      success: false,
-      message: "matchDate 형식이 올바르지 않습니다.",
-    };
+    return { success: false, message: "matchDate 형식이 올바르지 않습니다." };
   }
 
   if (!Array.isArray(payload.games) || payload.games.length === 0) {
-    return {
-      success: false,
-      message: "최소 1개의 세트가 필요합니다.",
-    };
+    return { success: false, message: "최소 1개의 세트가 필요합니다." };
   }
 
   for (const game of payload.games) {
@@ -112,9 +86,13 @@ function validatePayload(body: unknown):
       !Number.isInteger(game.gameNumber) ||
       game.gameNumber <= 0
     ) {
+      return { success: false, message: "gameNumber가 올바르지 않습니다." };
+    }
+
+    if (!isValidTeam(game.winnerTeam)) {
       return {
         success: false,
-        message: "gameNumber가 올바르지 않습니다.",
+        message: `${game.gameNumber}세트의 승리팀 값이 올바르지 않습니다.`,
       };
     }
 
@@ -125,12 +103,8 @@ function validatePayload(body: unknown):
       };
     }
 
-    const blueCount = game.participants.filter(
-      (participant) => participant.team === "BLUE"
-    ).length;
-    const redCount = game.participants.filter(
-      (participant) => participant.team === "RED"
-    ).length;
+    const blueCount = game.participants.filter((p) => p.team === "BLUE").length;
+    const redCount = game.participants.filter((p) => p.team === "RED").length;
 
     if (blueCount !== 5 || redCount !== 5) {
       return {
@@ -161,6 +135,7 @@ function validatePayload(body: unknown):
           message: `${game.gameNumber}세트에 중복된 플레이어가 있습니다.`,
         };
       }
+
       seenPlayers.add(participant.playerId);
 
       if (
@@ -235,22 +210,7 @@ function validatePayload(body: unknown):
   };
 }
 
-function resolveWinnerTeam(participants: UpdateParticipantInput[]): Team {
-  const blueKills = participants
-    .filter((participant) => participant.team === "BLUE")
-    .reduce((sum, participant) => sum + participant.kills, 0);
-
-  const redKills = participants
-    .filter((participant) => participant.team === "RED")
-    .reduce((sum, participant) => sum + participant.kills, 0);
-
-  return blueKills >= redKills ? "BLUE" : "RED";
-}
-
-export async function GET(
-  _req: NextRequest,
-  context: RouteContext
-) {
+export async function GET(_req: NextRequest, context: RouteContext) {
   try {
     const { matchId } = await context.params;
     const matchIdNumber = Number(matchId);
@@ -267,14 +227,10 @@ export async function GET(
       include: {
         season: true,
         games: {
-          orderBy: {
-            gameNumber: "asc",
-          },
+          orderBy: { gameNumber: "asc" },
           include: {
             participants: {
-              orderBy: {
-                id: "asc",
-              },
+              orderBy: { id: "asc" },
               include: {
                 player: true,
                 champion: true,
@@ -302,10 +258,7 @@ export async function GET(
   }
 }
 
-export async function PATCH(
-  req: NextRequest,
-  context: RouteContext
-) {
+export async function PATCH(req: NextRequest, context: RouteContext) {
   try {
     const { matchId } = await context.params;
     const matchIdNumber = Number(matchId);
@@ -356,33 +309,33 @@ export async function PATCH(
     const playerIds = data.games.flatMap((game) =>
       game.participants.map((participant) => participant.playerId)
     );
+
     const championIds = data.games.flatMap((game) =>
       game.participants.map((participant) => participant.championId)
     );
 
+    const uniquePlayerIds = [...new Set(playerIds)];
+    const uniqueChampionIds = [...new Set(championIds)];
+
     const [players, champions] = await Promise.all([
       prisma.player.findMany({
-        where: {
-          id: { in: [...new Set(playerIds)] },
-        },
+        where: { id: { in: uniquePlayerIds } },
         select: { id: true },
       }),
       prisma.champion.findMany({
-        where: {
-          id: { in: [...new Set(championIds)] },
-        },
+        where: { id: { in: uniqueChampionIds } },
         select: { id: true },
       }),
     ]);
 
-    if (players.length !== new Set(playerIds).size) {
+    if (players.length !== uniquePlayerIds.length) {
       return NextResponse.json(
         { message: "존재하지 않는 플레이어가 포함되어 있습니다." },
         { status: 400 }
       );
     }
 
-    if (champions.length !== new Set(championIds).size) {
+    if (champions.length !== uniqueChampionIds.length) {
       return NextResponse.json(
         { message: "존재하지 않는 챔피언이 포함되어 있습니다." },
         { status: 400 }
@@ -419,7 +372,7 @@ export async function PATCH(
             seriesId: matchIdNumber,
             gameNumber: game.gameNumber,
             durationMin: 0,
-            winnerTeam: resolveWinnerTeam(game.participants),
+            winnerTeam: game.winnerTeam,
           },
         });
 
@@ -460,10 +413,7 @@ export async function PATCH(
   }
 }
 
-export async function DELETE(
-  _req: NextRequest,
-  context: RouteContext
-) {
+export async function DELETE(_req: NextRequest, context: RouteContext) {
   try {
     const { matchId } = await context.params;
     const matchIdNumber = Number(matchId);
