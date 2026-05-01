@@ -102,12 +102,6 @@ function createInitialRows(): PlayerRow[] {
   }));
 }
 
-function getDisplayName(row: PlayerRow) {
-  if (!row.name.trim()) return "";
-  if (!row.nickname.trim() || !row.tag.trim()) return row.name.trim();
-  return `${row.name.trim()} (${row.nickname.trim()}#${row.tag.trim()})`;
-}
-
 function getPositionButtonClass(row: PlayerRow, position: Position) {
   if (row.mainPosition === position) {
     return "balance-position-button balance-position-button--main";
@@ -138,13 +132,14 @@ export default function PlayersBalancePage() {
   >({});
 
   useEffect(() => {
-    return () => {
-      Object.values(searchTimeoutRefs.current).forEach((timer) => {
-        if (timer) clearTimeout(timer);
-      });
-    };
-  }, []);
+  const timeoutRefs = searchTimeoutRefs.current;
 
+  return () => {
+    Object.values(timeoutRefs).forEach((timer) => {
+      if (timer) clearTimeout(timer);
+    });
+  };
+}, []);
   useEffect(() => {
     loadSeasonApplyGroups().catch((error: unknown) => {
       console.error("[LOAD_SEASON_APPLY_GROUPS_ERROR]", error);
@@ -577,47 +572,6 @@ export default function PlayersBalancePage() {
       const nextBlue = nextPlayers.filter((player) => player.team === "BLUE");
 
       return normalizeResult(nextRed, nextBlue);
-    });
-  }
-
-  function updateResultPlayer(
-    currentTeam: Team,
-    playerId: number,
-    changes: Partial<Pick<AssignedPlayer, "team" | "position">>,
-  ) {
-    setResult((prev) => {
-      if (!prev) return prev;
-
-      const red = prev.red.filter((player) => player.playerId !== playerId);
-      const blue = prev.blue.filter((player) => player.playerId !== playerId);
-      const sourcePlayer = [...prev.red, ...prev.blue].find(
-        (player) => player.playerId === playerId,
-      );
-
-      if (!sourcePlayer) return prev;
-
-      const nextTeam = changes.team ?? currentTeam;
-      const updatedPlayer: AssignedPlayer = {
-        ...sourcePlayer,
-        ...changes,
-        team: nextTeam,
-      };
-
-      if (nextTeam === "RED") {
-        if (red.length >= 5 && currentTeam !== "RED") {
-          alert("RED 팀은 최대 5명입니다.");
-          return prev;
-        }
-        red.push(updatedPlayer);
-      } else {
-        if (blue.length >= 5 && currentTeam !== "BLUE") {
-          alert("BLUE 팀은 최대 5명입니다.");
-          return prev;
-        }
-        blue.push(updatedPlayer);
-      }
-
-      return normalizeResult(red, blue);
     });
   }
 

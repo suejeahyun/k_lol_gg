@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 
@@ -28,9 +29,11 @@ export default async function ImagesPage() {
               >
                 <div className="gallery-card__image-wrap">
                   {thumbnail ? (
-                    <img
+                    <Image
                       src={thumbnail}
                       alt={image.title}
+                      width={360}
+                      height={220}
                       className="gallery-card__image"
                     />
                   ) : (

@@ -18,24 +18,6 @@ type PlayerOption = {
   tag: string;
 };
 
-type SeasonParticipationPlayer = {
-  id: number;
-  name: string;
-  nickname: string;
-  tag: string;
-  peakTier?: string | null;
-  currentTier?: string | null;
-};
-
-type SeasonParticipationResponse = {
-  message?: string;
-  season?: {
-    id: number;
-    name: string;
-  };
-  players?: SeasonParticipationPlayer[];
-};
-
 type ChampionOption = {
   id: number;
   name: string;

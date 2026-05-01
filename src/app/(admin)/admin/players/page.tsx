@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Pagination from "@/components/Pagination";
 
 type Player = {
@@ -152,7 +152,8 @@ export default function AdminPlayersPage() {
   const peakType = useMemo(() => getTierType(peakTier), [peakTier]);
   const currentType = useMemo(() => getTierType(currentTier), [currentTier]);
 
-  async function fetchPlayers(page = 1, nameQuery = searchName) {
+  const fetchPlayers = useCallback(
+  async (page = 1, nameQuery = searchName) => {
     setLoading(true);
 
     try {
@@ -202,11 +203,13 @@ export default function AdminPlayersPage() {
     } finally {
       setLoading(false);
     }
-  }
+  },
+  [pageSize, searchName]
+);
 
   useEffect(() => {
-    fetchPlayers(1, "");
-  }, []);
+  void fetchPlayers(1, "");
+}, [fetchPlayers]);
 
   function resetForm() {
     setEditingId(null);

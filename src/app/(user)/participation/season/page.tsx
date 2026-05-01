@@ -138,7 +138,8 @@ export default function SeasonParticipationPage() {
       <div className="page-header">
         <h1 className="page-title">시즌내전 참가</h1>
         <p className="page-description">
-          오늘 진행될 시즌내전에 참가 신청합니다. 주라인은 1개, 부라인은 여러 개 선택할 수 있습니다.
+          오늘 진행될 시즌내전에 참가 신청합니다. 주라인은 1개, 부라인은
+          여러 개 선택할 수 있습니다.
         </p>
       </div>
 
@@ -171,14 +172,9 @@ export default function SeasonParticipationPage() {
         </button>
       </div>
 
-      <ParticipationList
-        players={players}
-        loginPlayerId={loginPlayerId}
-        cancelingId={cancelingId}
-        onCancel={handleCancel}
-        title="오늘 참가자"
-      />
-            {loginPlayerId ? (
+      <ParticipationList players={players} title="오늘 참가자" />
+
+      {loginPlayerId ? (
         <div className="participation-page-actions">
           <button
             type="button"
@@ -253,15 +249,9 @@ function PositionSelector({
 
 function ParticipationList({
   players,
-  loginPlayerId,
-  cancelingId,
-  onCancel,
   title,
 }: {
   players: Player[];
-  loginPlayerId: number | null;
-  cancelingId: number | null;
-  onCancel: (playerId: number) => Promise<void>;
   title: string;
 }) {
   return (

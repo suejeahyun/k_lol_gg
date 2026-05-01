@@ -61,7 +61,7 @@ export default async function AdminDestructionTournamentDetailPage({
     notFound();
   }
 
-  const [tournament, galleryImages, players] = await Promise.all([
+  const [tournament, galleryImages] = await Promise.all([
     prisma.destructionTournament.findUnique({
       where: {
         id,

@@ -26,7 +26,12 @@ const backgrounds = [
 const FALLBACK_LEFT = "/images/backgrounds/bg-1.jpg";
 const FALLBACK_RIGHT = "/images/backgrounds/bg-2.jpg";
 
-function getRandomPair() {
+type BackgroundPair = {
+  left: string;
+  right: string;
+};
+
+function getRandomPair(): BackgroundPair {
   const leftIndex = Math.floor(Math.random() * backgrounds.length);
   let rightIndex = Math.floor(Math.random() * backgrounds.length);
 
@@ -45,13 +50,19 @@ export default function RandomBackgroundLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [images, setImages] = useState({
+  const [images, setImages] = useState<BackgroundPair>({
     left: FALLBACK_LEFT,
     right: FALLBACK_RIGHT,
   });
 
   useEffect(() => {
-    setImages(getRandomPair());
+    const animationFrameId = window.requestAnimationFrame(() => {
+      setImages(getRandomPair());
+    });
+
+    return () => {
+      window.cancelAnimationFrame(animationFrameId);
+    };
   }, []);
 
   return (

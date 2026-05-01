@@ -11,7 +11,6 @@ type MatchFormSeason = MatchFormProps["seasons"][number];
 type MatchFormPlayer = MatchFormProps["players"][number];
 type MatchFormChampion = MatchFormProps["champions"][number];
 type MatchFormGame = MatchFormProps["initialData"]["games"][number];
-type MatchFormParticipant = MatchFormGame["participants"][number];
 
 export default async function EditMatchPage({ params }: EditMatchPageProps) {
   const { matchId } = await params;

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 
 type GalleryWinnerImage = {
@@ -54,10 +55,13 @@ export default function GalleryWinnerSlider({
   return (
     <div className="winner-slider">
       <div className="winner-slider__image-wrap">
-        <img
+        <Image
           src={current.imageUrl}
           alt={current.title}
+          width={960}
+          height={540}
           className="winner-slider__image"
+          priority
         />
       </div>
 

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
 type Props = {
@@ -15,10 +16,12 @@ export default function ImageSlider({ images, title }: Props) {
   const startXRef = useRef<number | null>(null);
 
   const next = () => {
+    if (length <= 0) return;
     setIndex((prev) => (prev + 1) % length);
   };
 
   const prev = () => {
+    if (length <= 0) return;
     setIndex((prev) => (prev - 1 + length) % length);
   };
 
@@ -36,14 +39,14 @@ export default function ImageSlider({ images, title }: Props) {
     };
   }, [length]);
 
-  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-    startXRef.current = e.touches[0].clientX;
+  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    startXRef.current = event.touches[0].clientX;
   };
 
-  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+  const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
     if (startXRef.current === null) return;
 
-    const endX = e.changedTouches[0].clientX;
+    const endX = event.changedTouches[0].clientX;
     const diff = startXRef.current - endX;
 
     if (diff > 50) {
@@ -71,17 +74,19 @@ export default function ImageSlider({ images, title }: Props) {
           transform: `translateX(-${index * 100}%)`,
         }}
       >
-        {images.map((url, i) => (
-          <img
-            key={`${url}-${i}`}
+        {images.map((url, imageIndex) => (
+          <Image
+            key={`${url}-${imageIndex}`}
             src={url}
-            alt={`${title} ${i + 1}`}
+            alt={`${title} ${imageIndex + 1}`}
+            width={960}
+            height={540}
             className="image-slider__image"
           />
         ))}
       </div>
 
-      {length > 1 && (
+      {length > 1 ? (
         <>
           <button
             type="button"
@@ -105,7 +110,7 @@ export default function ImageSlider({ images, title }: Props) {
             {index + 1} / {length}
           </div>
         </>
-      )}
+      ) : null}
     </div>
   );
 }

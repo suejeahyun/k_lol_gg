@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import GalleryImageDeleteButton from "@/features/gallery/GalleryImageDeleteButton";
@@ -40,9 +41,11 @@ export default async function AdminImagesPage() {
               <div key={image.id} className="gallery-admin-card">
                 <div className="gallery-admin-card__thumbnail-wrap">
                   {thumbnail ? (
-                    <img
+                    <Image
                       src={thumbnail}
                       alt={image.title}
+                      width={320}
+                      height={180}
                       className="gallery-admin-card__thumbnail"
                     />
                   ) : (

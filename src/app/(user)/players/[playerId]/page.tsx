@@ -3,6 +3,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
 import TierIcon from "@/components/TierIcon";
+import SoloRankSection from "@/components/SoloRankSection";
 
 type PlayerDetailPageProps = {
   params: Promise<{
@@ -156,7 +157,7 @@ export default async function PlayerDetailPage({
 
       <section className="content-section player-panel">
         <div className="section-header">
-          <h2>기본 정보</h2>
+          <h2>프로필 카드</h2>
         </div>
 
         <div className="info-grid">
@@ -166,55 +167,63 @@ export default async function PlayerDetailPage({
           </div>
 
           <div className="info-card">
-            <span className="info-card__label">닉네임</span>
-            <strong className="info-card__value">{player.nickname}</strong>
-          </div>
-
-          <div className="info-card">
-            <span className="info-card__label">태그</span>
-            <strong className="info-card__value">{player.tag}</strong>
-          </div>
-
-          <div className="info-card">
-            <span className="info-card__label">최대 티어</span>
-            <TierIcon tier={player.peakTier} size={26} showText />
+            <span className="info-card__label">닉네임#태그</span>
+            <strong className="info-card__value">
+              {player.nickname}#{player.tag}
+            </strong>
           </div>
 
           <div className="info-card">
             <span className="info-card__label">현재 티어</span>
             <TierIcon tier={player.currentTier} size={26} showText />
           </div>
+
+          <div className="info-card">
+            <span className="info-card__label">최고 티어</span>
+            <TierIcon tier={player.peakTier} size={26} showText />
+          </div>
         </div>
       </section>
 
-      <section className="card-grid player-stat-grid">
-        <article className="stat-card">
-          <span className="stat-card__label">총 경기</span>
-          <strong className="stat-card__value">{totalGames}</strong>
-        </article>
+      <section className="content-section player-panel">
+        <div className="section-header section-header--split">
+          <div>
+            <h2>내전 분석</h2>
+            <p className="section-subtitle">
+              K-LOL.GG에 등록된 내전 기록 기준 통계입니다.
+            </p>
+          </div>
+        </div>
 
-        <article className="stat-card">
-          <span className="stat-card__label">승 / 패</span>
-          <strong className="stat-card__value">
-            {wins}승 {losses}패
-          </strong>
-        </article>
+        <div className="card-grid player-stat-grid">
+          <article className="stat-card">
+            <span className="stat-card__label">총 경기</span>
+            <strong className="stat-card__value">{totalGames}</strong>
+          </article>
 
-        <article className="stat-card">
-          <span className="stat-card__label">승률</span>
-          <strong className="stat-card__value">{winRate}%</strong>
-        </article>
+          <article className="stat-card">
+            <span className="stat-card__label">승 / 패</span>
+            <strong className="stat-card__value">
+              {wins}승 {losses}패
+            </strong>
+          </article>
 
-        <article className="stat-card">
-          <span className="stat-card__label">평균 KDA</span>
-          <strong className="stat-card__value">{avgKda}</strong>
-        </article>
+          <article className="stat-card">
+            <span className="stat-card__label">승률</span>
+            <strong className="stat-card__value">{winRate}%</strong>
+          </article>
+
+          <article className="stat-card">
+            <span className="stat-card__label">평균 KDA</span>
+            <strong className="stat-card__value">{avgKda}</strong>
+          </article>
+        </div>
       </section>
 
       <section className="content-section player-panel champion-section">
         <div className="section-header section-header--split">
           <div>
-            <h2>사용 챔피언 통계</h2>
+            <h2>내전 사용 챔피언 통계</h2>
             <p className="section-subtitle">
               내전에서 사용한 챔피언별 픽 횟수와 승률입니다.
             </p>
@@ -274,6 +283,8 @@ export default async function PlayerDetailPage({
           </div>
         )}
       </section>
+
+      <SoloRankSection playerId={player.id} />
 
       <section className="content-section player-panel">
         <div className="section-header">

@@ -66,6 +66,28 @@ enum ApplyPosition {
   ALL
 }
 
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum UserStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ParticipationApplyStatus {
+  APPLIED
+  CANCELLED
+}
+
+enum EventNoticeType {
+  EVENT_MATCH
+  DESTRUCTION
+  ETC
+}
+
 model Player {
   id          Int      @id @default(autoincrement())
   name        String
@@ -75,7 +97,6 @@ model Player {
   currentTier String?
   createdAt   DateTime @default(now())
 
-  // 🔽 추가 (핵심)
   userAccountId Int?         @unique
   userAccount   UserAccount? @relation(fields: [userAccountId], references: [id], onDelete: SetNull)
 
@@ -95,6 +116,10 @@ model Player {
   destructionParticipants DestructionParticipant[]
   teamBalanceDraftPlayers TeamBalanceDraftPlayer[]
 
+  riotAccount      PlayerRiotAccount?
+  soloRankSnapshot PlayerSoloRankSnapshot?
+  soloMatches      PlayerSoloMatch[]
+
   @@unique([nickname, tag])
 }
 
@@ -109,22 +134,6 @@ model UserAccount {
   updatedAt DateTime @updatedAt
 
   player Player?
-}
-
-enum UserRole {
-  USER
-  ADMIN
-}
-
-enum UserStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
-enum ParticipationApplyStatus {
-  APPLIED
-  CANCELLED
 }
 
 model Champion {
@@ -516,23 +525,107 @@ model TeamBalanceDraftPlayer {
   @@unique([draftId, playerId])
 }
 
-enum EventNoticeType {
-  EVENT_MATCH
-  DESTRUCTION
-  ETC
-}
-
 model EventNotice {
-  id          Int             @id @default(autoincrement())
-  title       String
-  content     String          @db.Text
-  type        EventNoticeType
+  id      Int             @id @default(autoincrement())
+  title   String
+  content String          @db.Text
+  type    EventNoticeType
 
-  recruitInfo String?         @db.Text
-  rule        String?         @db.Text
+  recruitInfo String?   @db.Text
+  rule        String?   @db.Text
   startDate   DateTime?
 
-  isPinned    Boolean         @default(false)
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  isPinned  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PlayerRiotAccount {
+  id       Int @id @default(autoincrement())
+  playerId Int @unique
+
+  gameName String
+  tagLine  String
+  puuid    String @unique
+
+  summonerId    String?
+  accountId     String?
+  profileIconId Int?
+  summonerLevel Int?
+
+  lastSyncedAt DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([gameName, tagLine])
+}
+
+model PlayerSoloRankSnapshot {
+  id       Int @id @default(autoincrement())
+  playerId Int @unique
+
+  queueType    String  @default("RANKED_SOLO_5x5")
+  tier         String?
+  rank         String?
+  leaguePoints Int     @default(0)
+  wins         Int     @default(0)
+  losses       Int     @default(0)
+  winRate      Float   @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+}
+
+model PlayerSoloMatch {
+  id       Int @id @default(autoincrement())
+  playerId Int
+
+  matchId String
+  queueId Int    @default(420)
+
+  championId   Int
+  championName String
+
+  position String?
+  role     String?
+
+  kills   Int @default(0)
+  deaths  Int @default(0)
+  assists Int @default(0)
+
+  win          Boolean
+  gameDuration Int
+  gameCreation DateTime
+
+  summonerSpell1 Int?
+  summonerSpell2 Int?
+
+  primaryRuneId Int?
+  subRuneId     Int?
+
+  item0 Int?
+  item1 Int?
+  item2 Int?
+  item3 Int?
+  item4 Int?
+  item5 Int?
+  item6 Int?
+
+  totalDamageDealtToChampions Int @default(0)
+  totalDamageTaken            Int @default(0)
+  visionScore                 Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, matchId])
+  @@index([playerId])
+  @@index([championId])
+  @@index([gameCreation])
 }
