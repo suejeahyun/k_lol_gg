@@ -4,7 +4,6 @@ const menuGroups = [
   {
     title: "내전 운영",
     items: [
-      { href: "/players/balance", label: "팀 밸런스" },
       { href: "/admin/matches/new", label: "시즌 내전 등록" },
       { href: "/admin/matches", label: "시즌 내전 관리" },
     ],
