@@ -666,6 +666,7 @@ export default function PlayersBalancePage() {
             "balance-player-card",
             isDragging ? "balance-player-card--dragging" : "",
             player.roleType === "SUB" ? "balance-player-card--sub" : "",
+            player.roleType === "AUTO" ? "balance-player-card--auto" : "",
           ]
             .filter(Boolean)
             .join(" ")}
