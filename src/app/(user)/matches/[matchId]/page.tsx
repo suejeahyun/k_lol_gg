@@ -99,22 +99,27 @@ export default async function MatchDetailPage({
     });
 
     const mappedParticipants = sortedParticipants.map((participant) => {
+      const playerName = participant.player?.name ?? "-";
+
       const nicknameTag = participant.player
         ? `${participant.player.nickname}#${participant.player.tag}`
-        : participant.playerInput || "-";
+        : "-";
+
+      const championName = participant.champion?.name ?? "-";
 
       return {
         id: participant.id,
         team: participant.team,
         position: participant.position,
-        name: participant.player?.name || participant.playerInput || "-",
+        name: playerName,
         nicknameTag,
-        championName:
-          participant.champion?.name || participant.championInput || "-",
-        championImageUrl: participant.champion?.imageUrl || null,
+        championName,
+        championImageUrl: participant.champion?.imageUrl ?? null,
         kdaText: `${participant.kills}/${participant.deaths}/${participant.assists}`,
         resultText:
-          participant.team === game.winnerTeam ? ("WIN" as const) : ("LOSE" as const),
+          participant.team === game.winnerTeam
+            ? ("WIN" as const)
+            : ("LOSE" as const),
       };
     });
 
@@ -136,17 +141,11 @@ export default async function MatchDetailPage({
 
     const mvp = mvpParticipant
       ? {
-          name:
-            mvpParticipant.participant.player?.name ||
-            mvpParticipant.participant.playerInput ||
-            "-",
+          name: mvpParticipant.participant.player?.name ?? "-",
           nicknameTag: mvpParticipant.participant.player
             ? `${mvpParticipant.participant.player.nickname}#${mvpParticipant.participant.player.tag}`
-            : mvpParticipant.participant.playerInput || "-",
-          championName:
-            mvpParticipant.participant.champion?.name ||
-            mvpParticipant.participant.championInput ||
-            "-",
+            : "-",
+          championName: mvpParticipant.participant.champion?.name ?? "-",
           kdaText: `${mvpParticipant.participant.kills}/${mvpParticipant.participant.deaths}/${mvpParticipant.participant.assists}`,
           score: mvpParticipant.score,
         }
