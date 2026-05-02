@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma/client";
 import RankingSeasonFilter from "@/components/RankingSeasonFilter";
 import Pagination from "@/components/Pagination";
@@ -28,6 +29,7 @@ type RankingPlayer = {
   nickname: string;
   tag: string;
   totalGames: number;
+  participationCount: number;
   wins: number;
   losses: number;
   winRate: number;
@@ -80,18 +82,41 @@ function getRankLabel(index: number) {
 }
 
 async function getRankings(seasonId?: string): Promise<RankingApiResponse> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
+  const headersList = await headers();
+
+  const host = headersList.get("host");
+  const protocol =
+    process.env.NODE_ENV === "production" ? "https" : "http";
+
+  const baseUrl = host
+    ? `${protocol}://${host}`
+    : "http://localhost:3000";
+
   const query = seasonId ? `?seasonId=${seasonId}` : "";
 
   const response = await fetch(`${baseUrl}/api/rankings${query}`, {
     cache: "no-store",
+    next: {
+      revalidate: 0,
+    },
   });
 
   if (!response.ok) {
     throw new Error("Failed to fetch rankings");
   }
 
-  return response.json();
+  const data = (await response.json()) as RankingApiResponse;
+
+  return {
+    ...data,
+    rankings: data.rankings.map((player) => ({
+      ...player,
+      participationCount:
+        typeof player.participationCount === "number"
+          ? player.participationCount
+          : 0,
+    })),
+  };
 }
 
 function TopRankingCard({
@@ -100,6 +125,7 @@ function TopRankingCard({
   players,
   metricLabel,
   metricValue,
+  subMetricValue,
   emptyText,
 }: {
   eyebrow: string;
@@ -107,6 +133,7 @@ function TopRankingCard({
   players: RankingPlayer[];
   metricLabel: string;
   metricValue: (player: RankingPlayer) => string;
+  subMetricValue?: (player: RankingPlayer) => string;
   emptyText: string;
 }) {
   return (
@@ -142,7 +169,11 @@ function TopRankingCard({
                   <span>
                     {metricLabel} <b>{metricValue(player)}</b>
                   </span>
-                  <span>총 {player.totalGames}경기</span>
+
+                  <span>
+                    {subMetricValue ? subMetricValue(player) : `총 ${player.totalGames}경기`}
+                  </span>
+
                   <span>KDA {formatKda(player.kda)}</span>
                 </div>
               </div>
@@ -203,6 +234,7 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
   const topParticipation = [...data.rankings]
     .sort((a, b) => {
       return (
+        b.participationCount - a.participationCount ||
         b.totalGames - a.totalGames ||
         b.winRate - a.winRate ||
         b.kda - a.kda ||
@@ -273,8 +305,9 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
             eyebrow="PARTICIPATION"
             title="최다참여 TOP 3"
             players={topParticipation}
-            metricLabel="참여"
-            metricValue={(player) => `${player.totalGames}경기`}
+            metricLabel="참가"
+            metricValue={(player) => `${player.participationCount ?? 0}회`}
+            subMetricValue={(player) => `세트 ${player.totalGames}경기`}
             emptyText="참여 기록이 없습니다."
           />
 

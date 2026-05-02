@@ -40,6 +40,7 @@ export async function GET(req: NextRequest) {
             game: {
               select: {
                 winnerTeam: true,
+                seriesId: true,
               },
             },
           },
@@ -48,7 +49,14 @@ export async function GET(req: NextRequest) {
     });
 
     const mappedRankings = players.map((player: (typeof players)[number]) => {
+      // 세트 기준 총 경기 수
       const totalGames = player.participants.length;
+      
+      // 내전 시리즈 기준 참가 횟수
+      // 같은 내전에서 1세트, 2세트, 3세트를 모두 뛰어도 참가횟수는 1회
+      const participationCount = new Set(
+        player.participants.map((participant) => participant.game.seriesId)
+      ).size;
 
       const wins = player.participants.filter(
         (participant: (typeof player.participants)[number]) =>
@@ -83,13 +91,13 @@ export async function GET(req: NextRequest) {
           ? Number((totalKills + totalAssists).toFixed(2))
           : Number(((totalKills + totalAssists) / totalDeaths).toFixed(2));
 
-
       return {
         playerId: player.id,
         name: player.name,
         nickname: player.nickname ?? "",
         tag: player.tag ?? "",
         totalGames,
+        participationCount,
         wins,
         losses,
         winRate,
