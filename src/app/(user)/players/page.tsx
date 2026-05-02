@@ -29,6 +29,7 @@ function getSort(sort?: string): SortType {
   if (
     sort === "name" ||
     sort === "totalGames" ||
+    sort === "winRate" ||
     sort === "kda" ||
     sort === "peakTier" ||
     sort === "currentTier"
@@ -86,10 +87,26 @@ function buildPlayerSearchWhere(query: string) {
   }
 
   return {
-    name: {
-      contains: trimmed,
-      mode: "insensitive" as const,
-    },
+    OR: [
+      {
+        name: {
+          contains: trimmed,
+          mode: "insensitive" as const,
+        },
+      },
+      {
+        nickname: {
+          contains: trimmed,
+          mode: "insensitive" as const,
+        },
+      },
+      {
+        tag: {
+          contains: trimmed,
+          mode: "insensitive" as const,
+        },
+      },
+    ],
   };
 }
 
@@ -140,6 +157,96 @@ function tierRank(value: string | null) {
   return 0;
 }
 
+function formatPercent(value: number) {
+  if (!Number.isFinite(value)) return "0%";
+
+  const rounded = Math.round(value * 10) / 10;
+  return Number.isInteger(rounded) ? `${rounded}%` : `${rounded.toFixed(1)}%`;
+}
+
+function formatKda(value: number) {
+  if (!Number.isFinite(value)) return "0";
+
+  const rounded = Math.round(value * 100) / 100;
+  return Number.isInteger(rounded) ? `${rounded}` : rounded.toFixed(2);
+}
+
+function getPrimaryPosition(
+  participants: Array<{
+    position: string;
+  }>
+) {
+  if (participants.length === 0) return "-";
+
+  const countMap = participants.reduce<Record<string, number>>(
+    (acc, participant) => {
+      acc[participant.position] = (acc[participant.position] ?? 0) + 1;
+      return acc;
+    },
+    {}
+  );
+
+  const [position] =
+    Object.entries(countMap).sort((a, b) => b[1] - a[1])[0] ?? [];
+
+  return position ?? "-";
+}
+
+function getPlayerStatus({
+  totalGames,
+  winRate,
+  kda,
+}: {
+  totalGames: number;
+  winRate: number;
+  kda: number;
+}) {
+  if (totalGames < 3) {
+    return {
+      label: "NEED DATA",
+      className: "need-data",
+    };
+  }
+
+  if (winRate >= 65 && kda >= 3) {
+    return {
+      label: "ACE",
+      className: "ace",
+    };
+  }
+
+  if (winRate >= 55) {
+    return {
+      label: "STABLE",
+      className: "stable",
+    };
+  }
+
+  if (winRate < 45) {
+    return {
+      label: "SLUMP",
+      className: "slump",
+    };
+  }
+
+  return {
+    label: "NORMAL",
+    className: "normal",
+  };
+}
+
+function getWinRateTone(winRate: number) {
+  if (winRate >= 60) return "good";
+  if (winRate < 45) return "danger";
+  return "normal";
+}
+
+function getKdaTone(kda: number) {
+  if (kda >= 3) return "gold";
+  if (kda >= 2) return "good";
+  return "normal";
+}
+
 export default async function PlayersPage({ searchParams }: PlayersPageProps) {
   const resolved = await searchParams;
 
@@ -157,6 +264,7 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
           deaths: true,
           assists: true,
           team: true,
+          position: true,
           game: {
             select: {
               winnerTeam: true,
@@ -204,6 +312,14 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
         ? Number((totalKills + totalAssists).toFixed(2))
         : Number(((totalKills + totalAssists) / totalDeaths).toFixed(2));
 
+    const primaryPosition = getPrimaryPosition(player.participants);
+
+    const status = getPlayerStatus({
+      totalGames,
+      winRate,
+      kda,
+    });
+
     return {
       id: player.id,
       name: player.name,
@@ -214,6 +330,8 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
       totalGames,
       winRate,
       kda,
+      primaryPosition,
+      status,
     };
   });
 
@@ -233,11 +351,34 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
   });
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
 
   const paged = sorted.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
+    (safeCurrentPage - 1) * PAGE_SIZE,
+    safeCurrentPage * PAGE_SIZE
   );
+  const mostActivePlayer = [...mapped].sort((a, b) => {
+    if (b.totalGames !== a.totalGames) return b.totalGames - a.totalGames;
+    return b.winRate - a.winRate;
+  })[0];
+
+  const highestWinRatePlayer = [...mapped]
+    .filter((player) => player.totalGames >= 3)
+    .sort((a, b) => {
+      if (b.winRate !== a.winRate) return b.winRate - a.winRate;
+      return b.totalGames - a.totalGames;
+    })[0];
+
+  const highestKdaPlayer = [...mapped]
+    .filter((player) => player.totalGames >= 3)
+    .sort((a, b) => {
+      if (b.kda !== a.kda) return b.kda - a.kda;
+      return b.totalGames - a.totalGames;
+    })[0];
+
+  const highestTierPlayer = [...mapped].sort(
+    (a, b) => tierRank(b.peakTier) - tierRank(a.peakTier)
+  )[0];
 
   function sortLink(field: SortType) {
     const nextOrder = sort === field && order === "desc" ? "asc" : "desc";
@@ -246,12 +387,13 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
     if (query) params.set("q", query);
     params.set("sort", field);
     params.set("order", nextOrder);
+    params.set("page", "1");
 
     return `/players?${params.toString()}`;
   }
 
   return (
-    <main className="page-container">
+    <main className="page-container players-page-v2">
       <div className="page-header">
         <div>
           <p className="page-eyebrow">PLAYER LIST</p>
@@ -259,59 +401,159 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
         </div>
       </div>
 
-      <section className="card balance-form-card">
-      <PlayerSearchBox initialQuery={query} />
+      <section className="card balance-form-card players-page-v2__panel">
+        <div className="players-page-v2__search">
+          <PlayerSearchBox initialQuery={query} />
+        </div>
 
-      <div className="player-row-header clickable">
-        <Link href={sortLink("name")}>이름</Link>
-        <div>닉네임#태그</div>
-        <Link href={sortLink("peakTier")}>최대티어</Link>
-        <Link href={sortLink("currentTier")}>현재티어</Link>
-        <Link href={sortLink("totalGames")}>총경기</Link>
-        <Link href={sortLink("winRate")}>승률</Link>
-        <Link href={sortLink("kda")}>KDA</Link>
-      </div>
+      <section className="players-page-v2__summary" aria-label="플레이어 요약">
+        <div className="players-page-v2__summary-card">
+          <span>총 플레이어</span>
+          <strong>{mapped.length}</strong>
+        </div>
 
-      <div className="card-grid">
-        {paged.map((player) => (
-          <Link
-            key={player.id}
-            href={`/players/${player.id}`}
-            className="player-row-card"
-          >
-            <div
-              className="player-row-grid"
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1.3fr 1fr 1fr .8fr .8fr .8fr",
-                gap: 12,
-              }}
-            >
-              <div className="player-name">{player.name}</div>
-              <div>
-                {player.nickname}#{player.tag}
-              </div>
-              <div>
-                <TierIcon tier={player.peakTier} size={24} showText />
-              </div>
+        <div className="players-page-v2__summary-card players-page-v2__summary-card--wide">
+          <span>최다 참여</span>
+          <strong>
+            {mostActivePlayer
+              ? `${mostActivePlayer.name} · ${mostActivePlayer.totalGames}전`
+              : "없음"}
+          </strong>
+        </div>
 
-              <div>
-                <TierIcon tier={player.currentTier} size={24} showText />
-              </div>
-              <div>{player.totalGames}</div>
-              <div>{player.winRate}%</div>
-              <div>{player.kda}</div>
+        <div className="players-page-v2__summary-card players-page-v2__summary-card--wide">
+          <span>최고 승률</span>
+          <strong>
+            {highestWinRatePlayer
+              ? `${highestWinRatePlayer.name} · ${formatPercent(highestWinRatePlayer.winRate)}`
+              : "없음"}
+          </strong>
+        </div>
+
+        <div className="players-page-v2__summary-card players-page-v2__summary-card--wide">
+          <span>최고 KDA</span>
+          <strong>
+            {highestKdaPlayer
+              ? `${highestKdaPlayer.name} · ${formatKda(highestKdaPlayer.kda)}`
+              : "없음"}
+          </strong>
+        </div>
+
+        <div className="players-page-v2__summary-card players-page-v2__summary-card--wide">
+          <span>최고 티어</span>
+          <strong>
+            {highestTierPlayer
+              ? `${highestTierPlayer.name} · ${highestTierPlayer.peakTier ?? "-"}`
+              : "없음"}
+          </strong>
+        </div>
+      </section>
+
+        <div className="players-page-v2__board">
+          <div className="players-page-v2__board-head">
+            <div>
+              <p className="players-page-v2__eyebrow">PLAYER DATA</p>
+              <h2>플레이어 데이터</h2>
             </div>
-          </Link>
-        ))}
-      </div>
 
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        basePath="/players"
-        query={{ q: query, sort, order }}
-      />
+            <div className="players-page-v2__meta">
+              <span>검색 결과 {sorted.length}명</span>
+              <span>{order === "desc" ? "내림차순" : "오름차순"}</span>
+            </div>
+          </div>
+
+          <div className="players-page-v2__header">
+            <Link href={sortLink("name")}>플레이어</Link>
+            <div>닉네임#태그</div>
+            <Link href={sortLink("currentTier")}>티어 정보</Link>
+            <div>주 포지션</div>
+            <Link href={sortLink("totalGames")}>전적</Link>
+            <Link href={sortLink("winRate")}>승률</Link>
+            <Link href={sortLink("kda")}>KDA</Link>
+            <div>상태</div>
+          </div>
+
+          {paged.length === 0 ? (
+            <p className="players-page-v2__empty">플레이어 데이터가 없습니다.</p>
+          ) : (
+            <div className="players-page-v2__list">
+              {paged.map((player) => (
+                <Link
+                  key={player.id}
+                  href={`/players/${player.id}`}
+                  className="players-page-v2__row"
+                >
+                  <div className="players-page-v2__cell players-page-v2__name">
+                    {player.name}
+                  </div>
+
+                  <div className="players-page-v2__cell players-page-v2__riot">
+                    {player.nickname}#{player.tag}
+                  </div>
+
+                  <div className="players-page-v2__cell players-page-v2__tier-stack">
+                    <div className="players-page-v2__tier-line">
+                      <span>현재</span>
+                      <TierIcon tier={player.currentTier} size={22} showText />
+                    </div>
+
+                    <div className="players-page-v2__tier-line players-page-v2__tier-line--sub">
+                      <span>최고</span>
+                      <TierIcon tier={player.peakTier} size={20} showText />
+                    </div>
+                  </div>
+
+                  <div className="players-page-v2__cell">
+                    <span className="players-page-v2__position-pill">
+                      {player.primaryPosition}
+                    </span>
+                  </div>
+
+                  <div className="players-page-v2__cell">
+                    <span className="players-page-v2__stat-pill">
+                      {player.totalGames}전
+                    </span>
+                  </div>
+
+                  <div className="players-page-v2__cell">
+                    <span
+                      className={`players-page-v2__stat-pill players-page-v2__stat-pill--${getWinRateTone(
+                        player.winRate
+                      )}`}
+                    >
+                      {formatPercent(player.winRate)}
+                    </span>
+                  </div>
+
+                  <div className="players-page-v2__cell">
+                    <span
+                      className={`players-page-v2__stat-pill players-page-v2__stat-pill--${getKdaTone(
+                        player.kda
+                      )}`}
+                    >
+                      {formatKda(player.kda)}
+                    </span>
+                  </div>
+
+                  <div className="players-page-v2__cell">
+                    <span
+                      className={`players-page-v2__status players-page-v2__status--${player.status.className}`}
+                    >
+                      {player.status.label}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+
+          <Pagination
+            currentPage={safeCurrentPage}
+            totalPages={totalPages}
+            basePath="/players"
+            query={{ q: query, sort, order }}
+          />
+        </div>
       </section>
     </main>
   );

@@ -1,32 +1,66 @@
-import Image from "next/image";
+import { notFound } from "next/navigation";
+import MatchDetailSlider, {
+  MatchDetailSlide,
+} from "@/components/matches/MatchDetailSlider";
 import { prisma } from "@/lib/prisma/client";
 
-type PageProps = {
-  params: Promise<{ matchId: string }>;
+type MatchDetailPageProps = {
+  params: Promise<{
+    matchId: string;
+  }>;
 };
 
-const POSITION_ORDER = {
-  TOP: 1,
-  JGL: 2,
-  MID: 3,
-  ADC: 4,
-  SUP: 5,
-} as const;
+const positionOrder: Record<string, number> = {
+  TOP: 0,
+  JGL: 1,
+  MID: 2,
+  ADC: 3,
+  SUP: 4,
+};
 
-function formatDate(date: Date): string {
-  return new Date(date).toLocaleString("ko-KR");
+function formatDate(date: Date) {
+  return new Date(date).toLocaleString("ko-KR", {
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }
 
-function getTeamLabel(team: "BLUE" | "RED"): string {
-  return team === "BLUE" ? "블루" : "레드";
+function getWinnerLabel(team: "BLUE" | "RED" | null) {
+  if (team === "BLUE") return "블루";
+  if (team === "RED") return "레드";
+  return "미정";
 }
 
-export default async function MatchDetailPage({ params }: PageProps) {
+/**
+ * 기존에 따로 MVP 점수 계산 로직이 있다면
+ * 이 함수만 기존 로직으로 교체하면 됩니다.
+ */
+function calculateMvpScore({
+  kills,
+  deaths,
+  assists,
+  isWinner,
+}: {
+  kills: number;
+  deaths: number;
+  assists: number;
+  isWinner: boolean;
+}) {
+  const base = kills * 3 + assists * 2 - deaths;
+  return Math.max(0, base + (isWinner ? 10 : 0));
+}
+
+export default async function MatchDetailPage({
+  params,
+}: MatchDetailPageProps) {
   const { matchId } = await params;
   const id = Number(matchId);
 
   if (Number.isNaN(id)) {
-    throw new Error("Invalid matchId");
+    notFound();
   }
 
   const match = await prisma.matchSeries.findUnique({
@@ -50,167 +84,105 @@ export default async function MatchDetailPage({ params }: PageProps) {
   });
 
   if (!match) {
-    throw new Error("Match not found");
+    notFound();
   }
 
-  const gamesWithMvp = match.games.map((game) => {
-    const participantsWithScore = game.participants.map((participant) => {
-      const isWinner = participant.team === game.winnerTeam;
-      const score =
-        participant.kills * 3 +
-        participant.assists -
-        participant.deaths +
-        (isWinner ? 5 : 0);
-
-      return {
-        ...participant,
-        isWinner,
-        score,
-      };
-    });
-
-    const sortedParticipants = [...participantsWithScore].sort((a, b) => {
+  const slides: MatchDetailSlide[] = match.games.map((game) => {
+    const sortedParticipants = [...game.participants].sort((a, b) => {
       if (a.team !== b.team) {
         return a.team === "BLUE" ? -1 : 1;
       }
 
-      return POSITION_ORDER[a.position] - POSITION_ORDER[b.position];
+      return (
+        (positionOrder[a.position] ?? 999) - (positionOrder[b.position] ?? 999)
+      );
     });
 
-    type ScoredParticipant = (typeof participantsWithScore)[number];
+    const mappedParticipants = sortedParticipants.map((participant) => {
+      const nicknameTag = participant.player
+        ? `${participant.player.nickname}#${participant.player.tag}`
+        : participant.playerInput || "-";
 
-    const mvp =
-      participantsWithScore.length === 0
-        ? null
-        : participantsWithScore.reduce(
-            (
-              best: ScoredParticipant | null,
-              current: ScoredParticipant
-            ): ScoredParticipant => {
-              if (!best) return current;
+      return {
+        id: participant.id,
+        team: participant.team,
+        position: participant.position,
+        name: participant.player?.name || participant.playerInput || "-",
+        nicknameTag,
+        championName:
+          participant.champion?.name || participant.championInput || "-",
+        championImageUrl: participant.champion?.imageUrl || null,
+        kdaText: `${participant.kills}/${participant.deaths}/${participant.assists}`,
+        resultText:
+          participant.team === game.winnerTeam ? ("WIN" as const) : ("LOSE" as const),
+      };
+    });
 
-              if (current.score > best.score) return current;
+    const mvpParticipant = [...game.participants]
+      .map((participant) => {
+        const score = calculateMvpScore({
+          kills: participant.kills,
+          deaths: participant.deaths,
+          assists: participant.assists,
+          isWinner: participant.team === game.winnerTeam,
+        });
 
-              if (current.score === best.score) {
-                const currentKda =
-                  current.deaths === 0
-                    ? current.kills + current.assists
-                    : (current.kills + current.assists) / current.deaths;
+        return {
+          participant,
+          score,
+        };
+      })
+      .sort((a, b) => b.score - a.score)[0];
 
-                const bestKda =
-                  best.deaths === 0
-                    ? best.kills + best.assists
-                    : (best.kills + best.assists) / best.deaths;
-
-                if (currentKda > bestKda) return current;
-              }
-
-              return best;
-            },
-            null
-          );
+    const mvp = mvpParticipant
+      ? {
+          name:
+            mvpParticipant.participant.player?.name ||
+            mvpParticipant.participant.playerInput ||
+            "-",
+          nicknameTag: mvpParticipant.participant.player
+            ? `${mvpParticipant.participant.player.nickname}#${mvpParticipant.participant.player.tag}`
+            : mvpParticipant.participant.playerInput || "-",
+          championName:
+            mvpParticipant.participant.champion?.name ||
+            mvpParticipant.participant.championInput ||
+            "-",
+          kdaText: `${mvpParticipant.participant.kills}/${mvpParticipant.participant.deaths}/${mvpParticipant.participant.assists}`,
+          score: mvpParticipant.score,
+        }
+      : null;
 
     return {
-      ...game,
-      participants: sortedParticipants,
+      id: game.id,
+      gameNumber: game.gameNumber,
+      winnerTeam: game.winnerTeam ?? "미정",
+      winnerLabel: getWinnerLabel(game.winnerTeam),
       mvp,
+      participants: mappedParticipants,
     };
   });
 
   return (
     <main className="page-container">
-      <h1 className="page-title">{match.title}</h1>
+      <section className="card">
+        <div className="match-series-detail">
+          <h1 className="match-series-detail__title">{match.title}</h1>
 
-      <div className="detail-header-card">
-        <div className="detail-header-grid detail-header-grid--match">
-          <div className="detail-header-label">시즌</div>
-          <div className="detail-header-value">{match.season.name}</div>
-          <div className="detail-header-label">날짜</div>
-          <div className="detail-header-value">
-            {formatDate(match.matchDate)}
+          <div className="match-series-detail__meta">
+            <div className="match-series-detail__meta-row">
+              <span>시즌</span>
+              <strong>{match.season.name}</strong>
+            </div>
+
+            <div className="match-series-detail__meta-row">
+              <span>날짜</span>
+              <strong>{formatDate(match.matchDate)}</strong>
+            </div>
           </div>
+
+          <MatchDetailSlider slides={slides} />
         </div>
-      </div>
-
-      <div className="card-grid">
-        {gamesWithMvp.map((game) => (
-          <section key={game.id} className="detail-board">
-            <div className="detail-board__title">
-              {game.gameNumber}세트 / 승리 팀: {getTeamLabel(game.winnerTeam)} /{" "}
-              {game.durationMin}분
-            </div>
-
-            <div className="mvp-strip">
-              {game.mvp ? (
-                <>
-                  MVP: {game.mvp.player.name} / {game.mvp.player.nickname}#
-                  {game.mvp.player.tag} / {game.mvp.champion.name} /{" "}
-                  {game.mvp.kills}/{game.mvp.deaths}/{game.mvp.assists} / 점수{" "}
-                  {game.mvp.score}
-                </>
-              ) : (
-                <>MVP 데이터 없음</>
-              )}
-            </div>
-
-            <div className="match-detail-header">
-              <div>포지션</div>
-              <div>이름</div>
-              <div>닉네임</div>
-              <div>챔피언</div>
-              <div>KDA</div>
-              <div>결과</div>
-            </div>
-
-            <div className="match-detail-list">
-              {game.participants.map((participant) => (
-                <div
-                  key={participant.id}
-                  className={`match-detail-row match-detail-row--${participant.team.toLowerCase()}`}
-                >
-                  <div className="match-detail-position">
-                    {participant.position}
-                  </div>
-
-                  <div className="match-detail-name">
-                    {participant.player.name}
-                  </div>
-
-                  <div className="match-detail-nickname">
-                    {participant.player.nickname}#{participant.player.tag}
-                  </div>
-
-                  <div className="match-detail-champion">
-                    <Image
-                      src={participant.champion.imageUrl}
-                      alt={participant.champion.name}
-                      width={32}
-                      height={32}
-                      className="match-detail-champion__image"
-                    />
-                    <span>{participant.champion.name}</span>
-                  </div>
-
-                  <div className="match-detail-kda">
-                    {participant.kills}/{participant.deaths}/
-                    {participant.assists}
-                  </div>
-
-                  <div
-                    className={`match-detail-result ${
-                      participant.isWinner
-                        ? "match-detail-result--win"
-                        : "match-detail-result--lose"
-                    }`}
-                  >
-                    {participant.isWinner ? "WIN" : "LOSE"}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        ))}
-      </div>
+      </section>
     </main>
   );
 }
