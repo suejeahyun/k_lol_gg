@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { CSSProperties, useEffect, useMemo, useState } from "react";
 
 type SoloRankSectionProps = {
   playerId: number;
@@ -85,6 +85,20 @@ type SoloSummaryResponse = {
   }>;
 };
 
+type RecentMostChampion = {
+  championId: number;
+  championName: string;
+  championNameKo: string;
+  games: number;
+  wins: number;
+  losses: number;
+  winRate: number;
+  kda: number;
+  averageKills: number;
+  averageDeaths: number;
+  averageAssists: number;
+};
+
 const DDRAGON_VERSION = "15.24.1";
 
 const POSITION_LABELS: Record<string, string> = {
@@ -94,6 +108,14 @@ const POSITION_LABELS: Record<string, string> = {
   BOTTOM: "원딜",
   UTILITY: "서포터",
   UNKNOWN: "미정",
+};
+
+const POSITION_IMAGE_URLS: Record<string, string> = {
+  TOP: "/images/positions/position-top.png",
+  JUNGLE: "/images/positions/position-jungle.png",
+  MIDDLE: "/images/positions/position-mid.png",
+  BOTTOM: "/images/positions/position-adc.png",
+  UTILITY: "/images/positions/position-sup.png",
 };
 
 const TIER_LABELS: Record<string, string> = {
@@ -124,7 +146,13 @@ function formatPosition(position: string | null) {
 
   return POSITION_LABELS[position] ?? position;
 }
+function getPositionImageUrl(position: string | null) {
+  if (!position) {
+    return null;
+  }
 
+  return POSITION_IMAGE_URLS[position] ?? null;
+}
 function formatTier(tier: string | null, rank: string | null, lp: number) {
   if (!tier) {
     return "Unranked";
@@ -168,6 +196,105 @@ function getKdaTone(kda: number) {
   return "normal";
 }
 
+function clampPercent(value: number) {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+
+  return Math.max(0, Math.min(100, value));
+}
+
+function toFixedNumber(value: number, digit = 2) {
+  if (!Number.isFinite(value)) {
+    return Number((0).toFixed(digit));
+  }
+
+  return Number(value.toFixed(digit));
+}
+
+function getRecentMostChampions(
+  recentMatches: SoloSummaryResponse["recentMatches"]
+): RecentMostChampion[] {
+  const championMap = new Map<
+    number,
+    {
+      championId: number;
+      championName: string;
+      championNameKo: string;
+      games: number;
+      wins: number;
+      losses: number;
+      kills: number;
+      deaths: number;
+      assists: number;
+    }
+  >();
+
+  recentMatches.forEach((match) => {
+    const existing = championMap.get(match.championId);
+
+    if (!existing) {
+      championMap.set(match.championId, {
+        championId: match.championId,
+        championName: match.championName,
+        championNameKo: match.championNameKo,
+        games: 1,
+        wins: match.win ? 1 : 0,
+        losses: match.win ? 0 : 1,
+        kills: match.kills,
+        deaths: match.deaths,
+        assists: match.assists,
+      });
+
+      return;
+    }
+
+    existing.games += 1;
+    existing.wins += match.win ? 1 : 0;
+    existing.losses += match.win ? 0 : 1;
+    existing.kills += match.kills;
+    existing.deaths += match.deaths;
+    existing.assists += match.assists;
+  });
+
+  return Array.from(championMap.values())
+    .map((champion) => {
+      const winRate =
+        champion.games > 0 ? (champion.wins / champion.games) * 100 : 0;
+
+      const kda =
+        champion.deaths === 0
+          ? champion.kills + champion.assists
+          : (champion.kills + champion.assists) / champion.deaths;
+
+      return {
+        championId: champion.championId,
+        championName: champion.championName,
+        championNameKo: champion.championNameKo,
+        games: champion.games,
+        wins: champion.wins,
+        losses: champion.losses,
+        winRate: toFixedNumber(winRate, 1),
+        kda: toFixedNumber(kda, 2),
+        averageKills: toFixedNumber(champion.kills / champion.games, 1),
+        averageDeaths: toFixedNumber(champion.deaths / champion.games, 1),
+        averageAssists: toFixedNumber(champion.assists / champion.games, 1),
+      };
+    })
+    .sort((a, b) => {
+      if (b.games !== a.games) {
+        return b.games - a.games;
+      }
+
+      if (b.winRate !== a.winRate) {
+        return b.winRate - a.winRate;
+      }
+
+      return b.kda - a.kda;
+    })
+    .slice(0, 3);
+}
+
 export default function SoloRankSection({ playerId }: SoloRankSectionProps) {
   const [data, setData] = useState<SoloSummaryResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -180,6 +307,42 @@ export default function SoloRankSection({ playerId }: SoloRankSectionProps) {
     [playerId]
   );
 
+  const recentMostChampions = useMemo(() => {
+    if (!data) {
+      return [];
+    }
+
+    return getRecentMostChampions(data.recentMatches);
+  }, [data]);
+
+  const recentAverageDamage = useMemo(() => {
+    if (!data || data.recentMatches.length === 0) {
+      return 0;
+    }
+
+    const total = data.recentMatches.reduce(
+      (sum, match) => sum + match.totalDamageDealtToChampions,
+      0
+    );
+
+    return Math.round(total / data.recentMatches.length);
+  }, [data]);
+
+  const recentAverageVision = useMemo(() => {
+    if (!data || data.recentMatches.length === 0) {
+      return 0;
+    }
+
+    const total = data.recentMatches.reduce(
+      (sum, match) => sum + match.visionScore,
+      0
+    );
+
+  return Number((total / data.recentMatches.length).toFixed(1));
+}, [data]);
+
+  const mainPosition = data?.recentSummary.mainPosition?.position ?? null;
+  const mainPositionImageUrl = getPositionImageUrl(mainPosition);
   async function fetchSummary() {
     try {
       setLoading(true);
@@ -333,78 +496,226 @@ export default function SoloRankSection({ playerId }: SoloRankSectionProps) {
           <div className="empty-box">솔랭 분석 데이터가 없습니다.</div>
         ) : (
           <>
-            <div className="solo-summary-layout">
-              <article className="solo-rank-card">
-                <span className="solo-card-label">솔로랭크</span>
-                <strong className="solo-rank-tier">
-                  {data.soloRank
-                    ? formatTier(
-                        data.soloRank.tier,
-                        data.soloRank.rank,
-                        data.soloRank.leaguePoints
-                      )
-                    : "Unranked"}
-                </strong>
-                <p>
-                  {data.soloRank
-                    ? `${data.soloRank.wins}승 ${data.soloRank.losses}패 · 승률 ${data.soloRank.winRate}%`
-                    : "랭크 정보 없음"}
-                </p>
-                <span className="solo-rank-id">
-                  {data.riotAccount
-                    ? `${data.riotAccount.gameName}#${data.riotAccount.tagLine}`
-                    : data.player.riotId}
-                </span>
-              </article>
+            <div className="solo-rank-overview">
+              <article className="solo-rank-card solo-rank-card--wide">
+                <div className="solo-rank-main">
+                  <span className="solo-card-label">솔로랭크</span>
 
-              <div className="solo-mini-stat-grid">
-                <article className="solo-mini-stat">
-                  <span>최근 20게임</span>
-                  <strong>{data.recentSummary.totalGames}게임</strong>
-                </article>
-
-                <article className="solo-mini-stat">
-                  <span>승률</span>
-                  <strong>{data.recentSummary.winRate}%</strong>
-                  <small>
-                    {data.recentSummary.wins}승 {data.recentSummary.losses}패
-                  </small>
-                </article>
-
-                <article className="solo-mini-stat">
-                  <span>평균 KDA</span>
-                  <strong>{data.recentSummary.averageKda}</strong>
-                </article>
-
-                <article className="solo-mini-stat">
-                  <span>주 포지션</span>
-                  <strong>
-                    {formatPosition(
-                      data.recentSummary.mainPosition?.position ?? null
-                    )}
+                  <strong className="solo-rank-tier">
+                    {data.soloRank
+                      ? formatTier(
+                          data.soloRank.tier,
+                          data.soloRank.rank,
+                          data.soloRank.leaguePoints
+                        )
+                      : "Unranked"}
                   </strong>
-                  <small>
-                    {data.recentSummary.mainPosition?.games ?? 0}게임
-                  </small>
-                </article>
-              </div>
+
+                  <p>
+                    {data.soloRank
+                      ? `${data.soloRank.wins}승 ${data.soloRank.losses}패 · 승률 ${data.soloRank.winRate}%`
+                      : "랭크 정보 없음"}
+                  </p>
+
+                  <span className="solo-rank-id">
+                    {data.riotAccount
+                      ? `${data.riotAccount.gameName}#${data.riotAccount.tagLine}`
+                      : data.player.riotId}
+                  </span>
+                </div>
+
+                <div className="solo-rank-divider" />
+
+                <div className="solo-winrate-donut-wrap">
+                  <div
+                    className="solo-winrate-donut"
+                    style={
+                      {
+                        "--solo-win-rate": `${clampPercent(
+                          data.recentSummary.winRate
+                        )}%`,
+                      } as CSSProperties
+                    }
+                  >
+                    <div className="solo-winrate-donut__inner">
+                      <strong>{data.recentSummary.winRate}%</strong>
+                      <span>최근 승률</span>
+                    </div>
+                  </div>
+
+                  <p className="solo-winrate-record">
+                    {data.recentSummary.totalGames}전 {data.recentSummary.wins}승{" "}
+                    {data.recentSummary.losses}패
+                  </p>
+                </div>
+
+                <div className="solo-rank-stat-grid">
+                  <div className="solo-rank-summary-stat">
+                    <span>승리</span>
+                    <strong className="solo-text-blue">
+                      {data.recentSummary.wins}
+                    </strong>
+                  </div>
+
+                  <div className="solo-rank-summary-stat">
+                    <span>패배</span>
+                    <strong className="solo-text-red">
+                      {data.recentSummary.losses}
+                    </strong>
+                  </div>
+
+                  <div className="solo-rank-summary-stat">
+                    <span>최고 티어</span>
+                    <strong className="solo-rank-summary-stat__text">
+                      {data.player.peakTier ?? "기록 없음"}
+                    </strong>
+                  </div>
+
+                  <div className="solo-rank-summary-stat">
+                    <span>평균 KDA</span>
+                    <strong>{data.recentSummary.averageKda}</strong>
+                  </div>
+
+                  <div className="solo-rank-summary-stat">
+                    <span>평균 딜량</span>
+                    <strong>{recentAverageDamage.toLocaleString()}</strong>
+                  </div>
+
+                  <div className="solo-rank-summary-stat">
+                    <span>평균 시야</span>
+                    <strong>{recentAverageVision}</strong>
+                  </div>
+                </div>
+              </article>
             </div>
 
-            <div className="solo-most-section">
+            <div className="solo-analysis-bottom">
+              <article className="solo-role-card">
+                <h3>주 포지션</h3>
+
+                <div className="solo-role-image">
+                  {mainPositionImageUrl ? (
+                    <Image
+                      src={mainPositionImageUrl}
+                      alt={`${formatPosition(mainPosition)} 포지션`}
+                      width={128}
+                      height={128}
+                      className="solo-role-position-image"
+                      priority={false}
+                    />
+                  ) : (
+                    <span>POSITION</span>
+                  )}
+                </div>
+
+                <strong className="solo-role-name">
+                  {formatPosition(data.recentSummary.mainPosition?.position ?? null)}
+                </strong>
+
+                <p>
+                  {data.recentSummary.totalGames}게임 중{" "}
+                  {data.recentSummary.mainPosition?.games ?? 0}게임
+                </p>
+
+                <div className="solo-role-rate">
+                  <strong>
+                    {data.recentSummary.totalGames > 0
+                      ? Math.round(
+                          ((data.recentSummary.mainPosition?.games ?? 0) /
+                            data.recentSummary.totalGames) *
+                            100
+                        )
+                      : 0}
+                    %
+                  </strong>
+                  <span>플레이 비중</span>
+                </div>
+              </article>
+
+              <article className="solo-most-section solo-most-section--panel">
+                <div className="section-header section-header--split">
+                  <div>
+                    <h3>최근 20게임 모스트 TOP 3</h3>
+                    <p className="section-subtitle">
+                      최근 전적에 저장된 최대 20게임 기준입니다.
+                    </p>
+                  </div>
+                </div>
+
+                {recentMostChampions.length === 0 ? (
+                  <div className="empty-box">
+                    최근 20게임 챔피언 기록이 없습니다.
+                  </div>
+                ) : (
+                  <div className="solo-most-grid solo-most-grid--top3">
+                    {recentMostChampions.map((champion, index) => (
+                      <article
+                        key={champion.championId}
+                        className="solo-most-card solo-most-card--featured"
+                      >
+                        <span
+                          className={`solo-most-rank solo-most-rank--${
+                            index + 1
+                          }`}
+                        >
+                          {index + 1}
+                        </span>
+
+                        <Image
+                          src={getChampionImageUrl(champion.championName)}
+                          alt={champion.championNameKo}
+                          width={112}
+                          height={112}
+                          className="solo-most-image solo-most-image--featured"
+                        />
+
+                        <div className="solo-most-info">
+                          <strong>{champion.championNameKo}</strong>
+                          <span>
+                            {champion.games}게임 · {champion.wins}승{" "}
+                            {champion.losses}패
+                          </span>
+                        </div>
+
+                        <div className="solo-most-numbers">
+                          <strong>{champion.winRate}%</strong>
+                          <span>승률</span>
+                        </div>
+
+                        <div className="solo-most-kda">
+                          <strong>{champion.kda}</strong>
+                          <span>KDA</span>
+                        </div>
+
+                        <p className="solo-most-average">
+                          {champion.averageKills.toFixed(1)} /{" "}
+                          {champion.averageDeaths.toFixed(1)} /{" "}
+                          {champion.averageAssists.toFixed(1)}
+                        </p>
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </article>
+            </div>
+
+            <div className="solo-most-section solo-most-section--top10">
               <div className="section-header section-header--split">
                 <div>
-                  <h3>솔랭 모스트 챔피언 TOP 10</h3>
+                  <h3>모스트 챔피언 TOP 10</h3>
                   <p className="section-subtitle">
-                    저장된 전체 솔랭 기록 기준입니다.
+                    전체 저장된 솔랭 기록 기준입니다.
                   </p>
                 </div>
               </div>
 
               {data.mostChampions.length === 0 ? (
-                <div className="empty-box">저장된 솔랭 챔피언 기록이 없습니다.</div>
+                <div className="empty-box">
+                  저장된 솔랭 챔피언 기록이 없습니다.
+                </div>
               ) : (
-                <div className="solo-most-grid">
-                  {data.mostChampions.map((champion, index) => (
+                <div className="solo-most-grid solo-most-grid--top10">
+                  {data.mostChampions.slice(0, 10).map((champion, index) => (
                     <article
                       key={champion.championId}
                       className="solo-most-card"
@@ -496,8 +807,12 @@ export default function SoloRankSection({ playerId }: SoloRankSectionProps) {
                   </div>
 
                   <div className="solo-match-extra">
-                    <span>딜량 {match.totalDamageDealtToChampions.toLocaleString()}</span>
-                    <span>받은 피해 {match.totalDamageTaken.toLocaleString()}</span>
+                    <span>
+                      딜량 {match.totalDamageDealtToChampions.toLocaleString()}
+                    </span>
+                    <span>
+                      받은 피해 {match.totalDamageTaken.toLocaleString()}
+                    </span>
                     <span>시야 {match.visionScore}</span>
                   </div>
 
