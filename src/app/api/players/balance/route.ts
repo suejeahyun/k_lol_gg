@@ -310,11 +310,48 @@ function getPositionBaseScore(
   player: Pick<ResolvedPlayer, "currentTier" | "peakTier">,
   position: Position
 ) {
-  const currentBucket = normalizeTierBucket(player.currentTier || "");
-  const peakBucket = normalizeTierBucket(player.peakTier || "");
+  const currentTier = player.currentTier?.trim() ?? "";
+  const peakTier = player.peakTier?.trim() ?? "";
 
-  const currentScore = TIER_TABLE[currentBucket][position];
-  const peakScore = TIER_TABLE[peakBucket][position];
+  const hasCurrentTier = currentTier.length > 0;
+  const hasPeakTier = peakTier.length > 0;
+
+  const fallbackBucket: TierBucket = "B1_70_OR_BELOW";
+
+  const currentBucket = hasCurrentTier
+    ? normalizeTierBucket(currentTier)
+    : fallbackBucket;
+
+  const peakBucket = hasPeakTier
+    ? normalizeTierBucket(peakTier)
+    : fallbackBucket;
+
+  const rawCurrentScore = TIER_TABLE[currentBucket][position];
+  const rawPeakScore = TIER_TABLE[peakBucket][position];
+
+  let currentScore = rawCurrentScore;
+  let peakScore = rawPeakScore;
+
+  // 최고티어만 있는 경우:
+  // 현재티어는 최고티어 점수의 80%로 계산
+  if (!hasCurrentTier && hasPeakTier) {
+    currentScore = rawPeakScore * 0.8;
+    peakScore = rawPeakScore;
+  }
+
+  // 현재티어만 있는 경우:
+  // 최고티어는 현재티어와 동일하게 계산
+  if (hasCurrentTier && !hasPeakTier) {
+    currentScore = rawCurrentScore;
+    peakScore = rawCurrentScore;
+  }
+
+  // 현재티어, 최고티어 둘 다 없는 경우:
+  // 최저 구간으로 계산
+  if (!hasCurrentTier && !hasPeakTier) {
+    currentScore = TIER_TABLE[fallbackBucket][position];
+    peakScore = TIER_TABLE[fallbackBucket][position];
+  }
 
   const baseScore = peakScore * 0.7 + currentScore * 0.3;
   const floorScore = peakScore * 0.65;
