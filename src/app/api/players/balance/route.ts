@@ -5,6 +5,25 @@ type Team = "RED" | "BLUE";
 type Position = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
 type RoleType = "MAIN" | "SUB" | "AUTO";
 
+type ScoreBreakdown = {
+  currentTierScore: number;
+  peakTierScore: number;
+  tierBaseScore: number;
+  adjustedScore: number;
+  internalRankBaseScore: number;
+  rankGapFromLowest: number;
+  rankAddedScore: number;
+  rankScore: number;
+  tierWeight: number;
+  internalRankWeight: number;
+  mixedBaseScore: number;
+  sTierBonus: number;
+  finalBaseScore: number;
+  roleMultiplier: number;
+  roleLoss: number;
+  finalScore: number;
+};
+
 type PlayerInput = {
   playerId?: number | null;
   name: string;
@@ -29,6 +48,12 @@ type ResolvedPlayer = {
   winRate: number;
   adjustedScore: number;
   rankScore: number;
+  rankBaseScore: number;
+  rankAddedScore: number;
+  rankGapFromLowest: number;
+  tierWeight: number;
+  internalRankWeight: number;
+  mixedBaseScore: number;
   bonus: number;
   finalBaseScore: number;
   mainPosition: Position | null;
@@ -51,7 +76,21 @@ type Assignment = {
   winRate: number;
   adjustedScore: number;
   rankScore: number;
+  rankBaseScore: number;
+  rankAddedScore: number;
+  rankGapFromLowest: number;
+  tierWeight: number;
+  internalRankWeight: number;
+  mixedBaseScore: number;
   bonus: number;
+  finalBaseScore: number;
+  mainPositions: Position[];
+  subPositions: Position[];
+  currentTierScore: number;
+  peakTierScore: number;
+  baseTierScore: number;
+  scoreBreakdown: ScoreBreakdown;
+  explanation: string[];
 };
 
 type TeamBestResult = {
@@ -68,6 +107,7 @@ type CandidateSnapshot = {
   diff: number;
   totalScore: number;
   lineDiffTotal: number;
+  maxLineDiff: number;
   topPlayerDiff: number;
   sTierStackPenalty: number;
   balanceCost: number;
@@ -77,30 +117,13 @@ type CandidateSnapshot = {
   assignments: Assignment[];
 };
 
-type TierBucket =
-  | "CHALLENGER"
-  | "GRANDMASTER"
-  | "MASTER_500_PLUS"
-  | "MASTER_200_499"
-  | "MASTER_TO_D1_71P"
-  | "D1_70_TO_D3_71"
-  | "D3_70_TO_P1_71"
-  | "P1_70_TO_P3_71"
-  | "P3_70_TO_G1_71"
-  | "G1_70_TO_G3_71"
-  | "G3_70_TO_S1_71"
-  | "S1_70_TO_S3_71"
-  | "S3_70_TO_B1_71"
-  | "B1_70_OR_BELOW";
+type TierScoreDetail = {
+  label: string;
+  score: number;
+  source: "tier" | "fallback";
+};
 
 const POSITIONS: Position[] = ["TOP", "JGL", "MID", "ADC", "SUP"];
-
-const RANK_SCORE_START = 100;
-const RANK_SCORE_STEP = 6;
-
-const MAIN_POSITION_MULTIPLIER = 1;
-const SUB_POSITION_MULTIPLIER = 0.8;
-const AUTO_POSITION_MULTIPLIER = 0.6;
 
 function isValidPosition(value: unknown): value is Position {
   return typeof value === "string" && POSITIONS.includes(value as Position);
@@ -117,7 +140,7 @@ function normalizeText(value: string) {
 function uniquePositions(
   mainPosition: Position | null,
   mainPositions: Position[],
-  subPositions: Position[]
+  subPositions: Position[],
 ): {
   mainPosition: Position | null;
   mainPositions: Position[];
@@ -129,11 +152,11 @@ function uniquePositions(
     uniqueMainPositions.length > 0
       ? uniqueMainPositions
       : mainPosition
-      ? [mainPosition]
-      : [];
+        ? [mainPosition]
+        : [];
 
   const filteredSubs = [...new Set(subPositions)].filter(
-    (position) => !fallbackMainPositions.includes(position)
+    (position) => !fallbackMainPositions.includes(position),
   );
 
   return {
@@ -145,19 +168,16 @@ function uniquePositions(
 
 function extractLp(raw: string): number | null {
   const compact = raw.replace(/\s/g, "");
-  const pMatch = compact.match(/(\d+)\s*(p|P|lp|LP)/);
-  if (pMatch) return Number(pMatch[1]);
+  const lpMatch = compact.match(/(\d+)\s*(p|P|lp|LP|점)/);
+  if (lpMatch) return Number(lpMatch[1]);
 
-  const onlyNumberMatch = compact.match(/(\d+)/g);
-  if (!onlyNumberMatch || onlyNumberMatch.length === 0) return null;
-
-  return Number(onlyNumberMatch[onlyNumberMatch.length - 1]);
+  return null;
 }
 
 function extractDivision(raw: string): number | null {
   const compact = raw.replace(/\s/g, "");
   const tierMatch = compact.match(
-    /(다이아|다이아몬드|에메랄드|플래티넘|플레|골드|실버|브론즈)([1-4])/
+    /(다이아|다이아몬드|에메랄드|플래티넘|플레|골드|실버|브론즈|아이언)([1-4])/,
   );
 
   if (!tierMatch) return null;
@@ -172,120 +192,177 @@ function extractFloor(raw: string): number | null {
   return Number(floorMatch[1]);
 }
 
-function normalizeTierBucket(raw: string): TierBucket {
+const CURRENT_TIER_WEIGHT = 0.7;
+const PEAK_TIER_WEIGHT = 0.3;
+const INTERNAL_GAP_BONUS_MAX = 8;
+
+const MAIN_POSITION_MULTIPLIER = 1;
+const SUB_POSITION_MULTIPLIER = 0.85;
+const AUTO_POSITION_MULTIPLIER = 0.75;
+
+function getDivisionBonus(division: number | null) {
+  if (division === 1) return 6;
+  if (division === 2) return 4;
+  if (division === 3) return 2;
+  return 0;
+}
+
+function getLpBonus(raw: string, unit = 100, maxBonus = 10) {
+  const lp = extractLp(raw);
+  if (lp === null) return 0;
+  return Math.min(maxBonus, Math.floor(lp / unit));
+}
+
+function getTierScoreDetail(raw: string): TierScoreDetail | null {
   const value = raw.trim();
-  const compact = value.replace(/\s/g, "");
-  const lp = extractLp(value);
+  const compact = value.replace(/\s/g, "").toLowerCase();
+  if (!compact) return null;
+
   const division = extractDivision(value);
   const floor = extractFloor(value);
 
-  if (compact.includes("챌린저")) return "CHALLENGER";
-  if (compact.includes("그랜드마스터")) return "GRANDMASTER";
-
-  if (compact.includes("마스터")) {
-    if (floor !== null) {
-      if (floor <= 1) return "MASTER_500_PLUS";
-      if (floor <= 2) return "MASTER_200_499";
-      return "MASTER_TO_D1_71P";
-    }
-
-    if (lp !== null) {
-      if (lp >= 500) return "MASTER_500_PLUS";
-      if (lp >= 200) return "MASTER_200_499";
-      return "MASTER_TO_D1_71P";
-    }
-
-    return "MASTER_TO_D1_71P";
+  if (compact.includes("챌린저") || compact.includes("challenger")) {
+    return {
+      label: value,
+      score: 118 + getLpBonus(value, 200, 7),
+      source: "tier",
+    };
   }
 
-  if (compact.includes("다이아")) {
-    if (division === 1) {
-      if (lp !== null && lp >= 71) return "MASTER_TO_D1_71P";
-      return "D1_70_TO_D3_71";
-    }
-    if (division === 2) return "D1_70_TO_D3_71";
-    if (division === 3) {
-      if (lp !== null && lp <= 70) return "D3_70_TO_P1_71";
-      return "D1_70_TO_D3_71";
-    }
-    return "D3_70_TO_P1_71";
+  if (compact.includes("그랜드마스터") || compact.includes("grandmaster")) {
+    return {
+      label: value,
+      score: 112 + getLpBonus(value, 200, 4),
+      source: "tier",
+    };
   }
 
-  if (compact.includes("에메랄드")) {
-    if (division === 1 || division === 2) return "P1_70_TO_P3_71";
-    return "P3_70_TO_G1_71";
+  if (compact.includes("마스터") || compact.includes("master")) {
+    const parsedFloor =
+      floor ??
+      (() => {
+        const lp = extractLp(value);
+        if (lp === null) return 1;
+        return Math.max(1, Math.min(10, Math.floor(lp / 100) + 1));
+      })();
+
+    const safeFloor = Math.max(1, Math.min(10, parsedFloor));
+
+    return {
+      label: value,
+      score: 82 + (safeFloor - 1) * 3,
+      source: "tier",
+    };
   }
 
-  if (compact.includes("플래티넘") || compact.includes("플레")) {
-    if (division === 1) {
-      if (lp !== null && lp >= 71) return "D3_70_TO_P1_71";
-      return "P1_70_TO_P3_71";
-    }
-    if (division === 2) return "P1_70_TO_P3_71";
-    if (division === 3) {
-      if (lp !== null && lp <= 70) return "P3_70_TO_G1_71";
-      return "P1_70_TO_P3_71";
-    }
-    return "P3_70_TO_G1_71";
+  if (compact.includes("다이아") || compact.includes("diamond")) {
+    return {
+      label: value,
+      score: 70 + getDivisionBonus(division),
+      source: "tier",
+    };
   }
 
-  if (compact.includes("골드")) {
-    if (division === 1) {
-      if (lp !== null && lp >= 71) return "P3_70_TO_G1_71";
-      return "G1_70_TO_G3_71";
-    }
-    if (division === 2) return "G1_70_TO_G3_71";
-    if (division === 3) {
-      if (lp !== null && lp <= 70) return "G3_70_TO_S1_71";
-      return "G1_70_TO_G3_71";
-    }
-    return "G3_70_TO_S1_71";
+  if (compact.includes("에메랄드") || compact.includes("emerald")) {
+    return {
+      label: value,
+      score: 60 + getDivisionBonus(division),
+      source: "tier",
+    };
   }
 
-  if (compact.includes("실버")) {
-    if (division === 1) {
-      if (lp !== null && lp >= 71) return "G3_70_TO_S1_71";
-      return "S1_70_TO_S3_71";
-    }
-    if (division === 2) return "S1_70_TO_S3_71";
-    if (division === 3) {
-      if (lp !== null && lp <= 70) return "S3_70_TO_B1_71";
-      return "S1_70_TO_S3_71";
-    }
-    return "S3_70_TO_B1_71";
+  if (
+    compact.includes("플래티넘") ||
+    compact.includes("플레") ||
+    compact.includes("platinum")
+  ) {
+    return {
+      label: value,
+      score: 50 + getDivisionBonus(division),
+      source: "tier",
+    };
   }
 
-  if (compact.includes("브론즈")) {
-    if (division === 1 && lp !== null && lp >= 71) {
-      return "S3_70_TO_B1_71";
-    }
-    return "B1_70_OR_BELOW";
+  if (compact.includes("골드") || compact.includes("gold")) {
+    return {
+      label: value,
+      score: 40 + getDivisionBonus(division),
+      source: "tier",
+    };
   }
 
-  return "B1_70_OR_BELOW";
+  if (compact.includes("실버") || compact.includes("silver")) {
+    return {
+      label: value,
+      score: 30 + getDivisionBonus(division),
+      source: "tier",
+    };
+  }
+
+  if (compact.includes("브론즈") || compact.includes("bronze")) {
+    return {
+      label: value,
+      score: 20 + getDivisionBonus(division),
+      source: "tier",
+    };
+  }
+
+  if (compact.includes("아이언") || compact.includes("iron")) {
+    return {
+      label: value,
+      score: 10 + getDivisionBonus(division),
+      source: "tier",
+    };
+  }
+
+  return null;
 }
 
-const TIER_TABLE: Record<TierBucket, Record<Position, number>> = {
-  CHALLENGER: { TOP: 58, JGL: 72, MID: 68, ADC: 62, SUP: 56 },
-  GRANDMASTER: { TOP: 54, JGL: 68, MID: 64, ADC: 58, SUP: 52 },
-  MASTER_500_PLUS: { TOP: 50, JGL: 64, MID: 60, ADC: 54, SUP: 48 },
-  MASTER_200_499: { TOP: 46, JGL: 58, MID: 55, ADC: 49, SUP: 45 },
-  MASTER_TO_D1_71P: { TOP: 43, JGL: 51, MID: 48, ADC: 43, SUP: 43 },
+function getResolvedTierScoreDetail(currentTier: string, peakTier: string) {
+  const current = getTierScoreDetail(currentTier || "");
+  const peak = getTierScoreDetail(peakTier || "");
 
-  D1_70_TO_D3_71: { TOP: 35, JGL: 40, MID: 40, ADC: 35, SUP: 35 },
-  D3_70_TO_P1_71: { TOP: 30, JGL: 32, MID: 34, ADC: 30, SUP: 30 },
+  if (current && peak) {
+    return {
+      currentTierScore: current.score,
+      peakTierScore: peak.score,
+      currentTierNote: "현재티어 점수를 그대로 반영",
+      peakTierNote: "최고티어 점수를 그대로 반영",
+    };
+  }
 
-  P1_70_TO_P3_71: { TOP: 27, JGL: 29, MID: 29, ADC: 26, SUP: 26 },
-  P3_70_TO_G1_71: { TOP: 24, JGL: 25, MID: 25, ADC: 22, SUP: 24 },
+  if (!current && peak) {
+    return {
+      currentTierScore: Number((peak.score * 0.8).toFixed(2)),
+      peakTierScore: peak.score,
+      currentTierNote:
+        "현재티어 없음: 최고티어 점수의 80%를 현재티어 대체값으로 반영",
+      peakTierNote: "최고티어 점수를 그대로 반영",
+    };
+  }
 
-  G1_70_TO_G3_71: { TOP: 18, JGL: 16, MID: 17, ADC: 17, SUP: 20 },
-  G3_70_TO_S1_71: { TOP: 15, JGL: 10, MID: 12, ADC: 12, SUP: 17 },
+  if (current && !peak) {
+    return {
+      currentTierScore: current.score,
+      peakTierScore: current.score,
+      currentTierNote: "현재티어 점수를 그대로 반영",
+      peakTierNote: "최고티어 없음: 현재티어와 동일하게 반영",
+    };
+  }
 
-  S1_70_TO_S3_71: { TOP: 11, JGL: 5, MID: 7, ADC: 7, SUP: 13 },
-  S3_70_TO_B1_71: { TOP: 5, JGL: 3, MID: 6, ADC: 5, SUP: 8 },
+  return {
+    currentTierScore: 30,
+    peakTierScore: 30,
+    currentTierNote: "티어 미등록: 임시 기준 30점 적용",
+    peakTierNote: "티어 미등록: 임시 기준 30점 적용",
+  };
+}
 
-  B1_70_OR_BELOW: { TOP: 0, JGL: 0, MID: 0, ADC: 0, SUP: 2 },
-};
+function getInternalGapBonus(gap: number) {
+  if (gap < 5) return 0;
+  if (gap >= 40) return INTERNAL_GAP_BONUS_MAX;
+  return Math.min(INTERNAL_GAP_BONUS_MAX, Math.floor(gap / 5));
+}
 
 function getTierLabel(currentTier: string, peakTier: string) {
   const current = currentTier?.trim();
@@ -308,35 +385,109 @@ function getSTierBonus(peakTier: string) {
 
 function getPositionBaseScore(
   player: Pick<ResolvedPlayer, "currentTier" | "peakTier">,
-  position: Position
+  _position?: Position,
 ) {
-  const currentBucket = normalizeTierBucket(player.currentTier || "");
-  const peakBucket = normalizeTierBucket(player.peakTier || "");
+  const tierDetail = getResolvedTierScoreDetail(
+    player.currentTier || "",
+    player.peakTier || "",
+  );
+  const baseTierScore =
+    tierDetail.currentTierScore * CURRENT_TIER_WEIGHT +
+    tierDetail.peakTierScore * PEAK_TIER_WEIGHT;
 
-  const currentScore = TIER_TABLE[currentBucket][position];
-  const peakScore = TIER_TABLE[peakBucket][position];
+  return Number(baseTierScore.toFixed(2));
+}
 
-  const baseScore = peakScore * 0.7 + currentScore * 0.3;
-  const floorScore = peakScore * 0.65;
+function getPositionTierScoreDetail(
+  player: Pick<ResolvedPlayer, "currentTier" | "peakTier">,
+  _position?: Position,
+) {
+  const tierDetail = getResolvedTierScoreDetail(
+    player.currentTier || "",
+    player.peakTier || "",
+  );
+  const baseTierScore = Number(
+    (
+      tierDetail.currentTierScore * CURRENT_TIER_WEIGHT +
+      tierDetail.peakTierScore * PEAK_TIER_WEIGHT
+    ).toFixed(2),
+  );
 
-  return Number(Math.max(baseScore, floorScore).toFixed(2));
+  return {
+    currentTierScore: tierDetail.currentTierScore,
+    peakTierScore: tierDetail.peakTierScore,
+    weightedTierScore: baseTierScore,
+    floorScore: 0,
+    baseTierScore,
+    currentTierNote: tierDetail.currentTierNote,
+    peakTierNote: tierDetail.peakTierNote,
+  };
+}
+
+function getRoleMultiplier(roleType: RoleType) {
+  if (roleType === "MAIN") return MAIN_POSITION_MULTIPLIER;
+  if (roleType === "SUB") return SUB_POSITION_MULTIPLIER;
+  return AUTO_POSITION_MULTIPLIER;
+}
+
+function getScoreExplanation(params: {
+  player: ResolvedPlayer;
+  position: Position;
+  roleType: RoleType;
+  scoreBreakdown: ScoreBreakdown;
+}) {
+  const { player, position, roleType, scoreBreakdown } = params;
+  const roleLabel =
+    roleType === "MAIN"
+      ? "주 포지션"
+      : roleType === "SUB"
+        ? "부 포지션"
+        : "자동배정";
+
+  const explanations = [
+    `티어 기준점수는 현재티어 ${scoreBreakdown.currentTierScore.toFixed(1)}점 × 70% + 최고티어 ${scoreBreakdown.peakTierScore.toFixed(1)}점 × 30% = ${scoreBreakdown.adjustedScore.toFixed(1)}점입니다.`,
+    `내부 보정은 참가자 최하위 티어 기준점수와의 차이 ${scoreBreakdown.rankGapFromLowest.toFixed(1)}점을 구간표에 적용해 +${scoreBreakdown.rankAddedScore.toFixed(1)}점으로 계산했습니다.`,
+    `최종 기준점수는 티어 기준점수 ${scoreBreakdown.adjustedScore.toFixed(1)}점 + 내부 보정 ${scoreBreakdown.rankAddedScore.toFixed(1)}점 + S급 보정 ${scoreBreakdown.sTierBonus.toFixed(1)}점 = ${scoreBreakdown.finalBaseScore.toFixed(1)}점입니다.`,
+    `${position} 배정은 ${roleLabel} 기준이므로 포지션 반영률 ${(scoreBreakdown.roleMultiplier * 100).toFixed(0)}%가 적용되었습니다.`,
+    `최종 반영점수는 ${scoreBreakdown.finalBaseScore.toFixed(1)} × ${scoreBreakdown.roleMultiplier.toFixed(2)} = ${scoreBreakdown.finalScore.toFixed(1)}점입니다.`,
+  ];
+
+  if (!player.currentTier && player.peakTier) {
+    explanations.push(
+      "현재티어가 없어 최고티어 점수의 80%를 현재티어 대체값으로 사용했습니다.",
+    );
+  }
+
+  if (!player.peakTier && player.currentTier) {
+    explanations.push(
+      "최고티어가 없어 최고티어 점수는 현재티어와 동일하게 계산했습니다.",
+    );
+  }
+
+  if (roleType === "AUTO") {
+    explanations.push(
+      "선택한 주/부 포지션이 아니므로 자동배정 반영률이 적용되었습니다.",
+    );
+  }
+
+  return explanations;
 }
 
 function getPlayerAdjustedScore(
   player: Pick<
     ResolvedPlayer,
     "currentTier" | "peakTier" | "mainPositions" | "subPositions"
-  >
+  >,
 ) {
   const preferredPositions =
     player.mainPositions.length > 0
       ? player.mainPositions
       : player.subPositions.length > 0
-      ? player.subPositions
-      : POSITIONS;
+        ? player.subPositions
+        : POSITIONS;
 
   const scores = preferredPositions.map((position) =>
-    getPositionBaseScore(player, position)
+    getPositionBaseScore(player, position),
   );
 
   const average = scores.reduce((sum, score) => sum + score, 0) / scores.length;
@@ -346,42 +497,58 @@ function getPlayerAdjustedScore(
 function applyInternalRankScores(
   players: Omit<
     ResolvedPlayer,
-    "adjustedScore" | "rankScore" | "bonus" | "finalBaseScore"
-  >[]
+    | "adjustedScore"
+    | "rankScore"
+    | "rankBaseScore"
+    | "rankAddedScore"
+    | "rankGapFromLowest"
+    | "tierWeight"
+    | "internalRankWeight"
+    | "mixedBaseScore"
+    | "bonus"
+    | "finalBaseScore"
+  >[],
 ): ResolvedPlayer[] {
-  const sortedPlayers = players
-    .map((player) => {
-      const adjustedScore = getPlayerAdjustedScore(player);
-      const bonus = getSTierBonus(player.peakTier);
+  const playersWithTierScore = players.map((player) => {
+    const adjustedScore = getPlayerAdjustedScore(player);
+    const bonus = getSTierBonus(player.peakTier);
 
-      return {
-        ...player,
-        adjustedScore,
-        bonus,
-      };
-    })
-    .sort((a, b) => {
-      if (b.adjustedScore !== a.adjustedScore) {
-        return b.adjustedScore - a.adjustedScore;
-      }
-
-      return b.bonus - a.bonus;
-    });
-
-  const rankScoreMap = new Map<number, number>();
-
-  sortedPlayers.forEach((player, index) => {
-    rankScoreMap.set(player.id, RANK_SCORE_START - index * RANK_SCORE_STEP);
+    return {
+      ...player,
+      adjustedScore,
+      bonus,
+    };
   });
 
-  return sortedPlayers
+  const lowestAdjustedScore = Math.min(
+    ...playersWithTierScore.map((player) => player.adjustedScore),
+  );
+
+  return playersWithTierScore
     .map((player) => {
-      const rankScore = rankScoreMap.get(player.id) ?? 0;
+      const rankGapFromLowest = Number(
+        (player.adjustedScore - lowestAdjustedScore).toFixed(2),
+      );
+      const rankAddedScore = getInternalGapBonus(rankGapFromLowest);
+      const rankScore = Number(
+        (player.adjustedScore + rankAddedScore).toFixed(2),
+      );
+      const finalBaseScore = Number(
+        (player.adjustedScore + rankAddedScore + player.bonus).toFixed(2),
+      );
 
       return {
         ...player,
         rankScore,
-        finalBaseScore: rankScore + player.bonus,
+        rankBaseScore: Number(lowestAdjustedScore.toFixed(2)),
+        rankAddedScore,
+        rankGapFromLowest,
+        tierWeight: 1,
+        internalRankWeight: 0,
+        mixedBaseScore: Number(
+          (player.adjustedScore + rankAddedScore).toFixed(2),
+        ),
+        finalBaseScore,
       };
     })
     .sort((a, b) => a.id - b.id);
@@ -395,14 +562,43 @@ function getRoleType(player: ResolvedPlayer, position: Position): RoleType {
 
 function getAssignedScore(player: ResolvedPlayer, position: Position) {
   const roleType = getRoleType(player, position);
+  const multiplier = getRoleMultiplier(roleType);
+  const tierDetail = getPositionTierScoreDetail(player, position);
+  const score = Number((player.finalBaseScore * multiplier).toFixed(2));
+  const roleLoss = Number((player.finalBaseScore - score).toFixed(2));
 
-  let multiplier = AUTO_POSITION_MULTIPLIER;
-  if (roleType === "MAIN") multiplier = MAIN_POSITION_MULTIPLIER;
-  if (roleType === "SUB") multiplier = SUB_POSITION_MULTIPLIER;
+  const scoreBreakdown: ScoreBreakdown = {
+    currentTierScore: tierDetail.currentTierScore,
+    peakTierScore: tierDetail.peakTierScore,
+    tierBaseScore: tierDetail.baseTierScore,
+    adjustedScore: player.adjustedScore,
+    internalRankBaseScore: player.rankBaseScore,
+    rankGapFromLowest: player.rankGapFromLowest,
+    rankAddedScore: player.rankAddedScore,
+    rankScore: player.rankScore,
+    sTierBonus: player.bonus,
+    tierWeight: 1,
+    internalRankWeight: 0,
+    mixedBaseScore: player.mixedBaseScore,
+    finalBaseScore: player.finalBaseScore,
+    roleMultiplier: multiplier,
+    roleLoss,
+    finalScore: score,
+  };
 
   return {
     roleType,
-    score: Number((player.finalBaseScore * multiplier).toFixed(2)),
+    score,
+    currentTierScore: tierDetail.currentTierScore,
+    peakTierScore: tierDetail.peakTierScore,
+    baseTierScore: tierDetail.baseTierScore,
+    scoreBreakdown,
+    explanation: getScoreExplanation({
+      player,
+      position,
+      roleType,
+      scoreBreakdown,
+    }),
   };
 }
 
@@ -455,7 +651,15 @@ function evaluateTeam(team: Team, players: ResolvedPlayer[]): TeamBestResult {
 
     const assignments: Assignment[] = orderedPlayers.map((player, index) => {
       const position = POSITIONS[index];
-      const { roleType, score } = getAssignedScore(player, position);
+      const {
+        roleType,
+        score,
+        currentTierScore,
+        peakTierScore,
+        baseTierScore,
+        scoreBreakdown,
+        explanation,
+      } = getAssignedScore(player, position);
 
       if (roleType === "MAIN") mainAssignedCount += 1;
       else if (roleType === "SUB") subAssignedCount += 1;
@@ -478,7 +682,21 @@ function evaluateTeam(team: Team, players: ResolvedPlayer[]): TeamBestResult {
         winRate: player.winRate,
         adjustedScore: player.adjustedScore,
         rankScore: player.rankScore,
+        rankBaseScore: player.rankBaseScore,
+        rankAddedScore: player.rankAddedScore,
+        rankGapFromLowest: player.rankGapFromLowest,
         bonus: player.bonus,
+        tierWeight: 1,
+        internalRankWeight: 0,
+        mixedBaseScore: player.mixedBaseScore,
+        finalBaseScore: player.finalBaseScore,
+        mainPositions: player.mainPositions,
+        subPositions: player.subPositions,
+        currentTierScore,
+        peakTierScore,
+        baseTierScore,
+        scoreBreakdown,
+        explanation,
       };
     });
 
@@ -528,11 +746,11 @@ function getLineDiffTotal(assignments: Assignment[]) {
 
   POSITIONS.forEach((position) => {
     const red = assignments.find(
-      (item) => item.team === "RED" && item.position === position
+      (item) => item.team === "RED" && item.position === position,
     );
 
     const blue = assignments.find(
-      (item) => item.team === "BLUE" && item.position === position
+      (item) => item.team === "BLUE" && item.position === position,
     );
 
     if (!red || !blue) return;
@@ -541,6 +759,19 @@ function getLineDiffTotal(assignments: Assignment[]) {
   });
 
   return Number(total.toFixed(2));
+}
+
+function getMaxLineDiff(assignments: Assignment[]) {
+  const diffs = POSITIONS.map((position) => {
+    const red = assignments.find((item) => item.team === "RED" && item.position === position);
+    const blue = assignments.find((item) => item.team === "BLUE" && item.position === position);
+
+    if (!red || !blue) return 0;
+
+    return Math.abs(red.score - blue.score);
+  });
+
+  return Number(Math.max(...diffs).toFixed(2));
 }
 
 function getTopPlayerDiff(assignments: Assignment[]) {
@@ -560,11 +791,11 @@ function getTopPlayerDiff(assignments: Assignment[]) {
 
 function getSTierStackPenalty(assignments: Assignment[]) {
   const redCount = assignments.filter(
-    (item) => item.team === "RED" && item.bonus >= 5
+    (item) => item.team === "RED" && item.bonus >= 5,
   ).length;
 
   const blueCount = assignments.filter(
-    (item) => item.team === "BLUE" && item.bonus >= 5
+    (item) => item.team === "BLUE" && item.bonus >= 5,
   ).length;
 
   return Math.abs(redCount - blueCount) * 12;
@@ -581,18 +812,18 @@ function getBalanceCost(params: {
   return Number(
     (
       params.diff * 1.0 +
-      params.lineDiffTotal * 1.35 +
-      params.autoAssignedCount * 18 +
-      params.subAssignedCount * 5 +
+      params.lineDiffTotal * 1.2 +
+      params.autoAssignedCount * 14 +
+      params.subAssignedCount * 3 +
       params.sTierStackPenalty +
       params.topPlayerDiff * 0.8
-    ).toFixed(2)
+    ).toFixed(2),
   );
 }
 
 function isBetterCandidate(
   candidate: CandidateSnapshot,
-  current: CandidateSnapshot | null
+  current: CandidateSnapshot | null,
 ) {
   if (!current) return true;
 
@@ -623,6 +854,95 @@ function isBetterCandidate(
   return candidate.totalScore > current.totalScore;
 }
 
+function getCandidateKey(candidate: CandidateSnapshot) {
+  return candidate.assignments
+    .filter((assignment) => assignment.team === "RED")
+    .sort((a, b) => POSITIONS.indexOf(a.position) - POSITIONS.indexOf(b.position))
+    .map((assignment) => `${assignment.position}:${assignment.playerId}`)
+    .join("|");
+}
+
+function getTeamTotalPlanCost(candidate: CandidateSnapshot) {
+  return Number(
+    (
+      candidate.diff * 1.0 +
+      candidate.lineDiffTotal * 0.15 +
+      candidate.autoAssignedCount * 2 +
+      candidate.subAssignedCount * 0.5 +
+      candidate.sTierStackPenalty * 0.2
+    ).toFixed(2),
+  );
+}
+
+function getLineBalancePlanCost(candidate: CandidateSnapshot) {
+  return Number(
+    (
+      candidate.lineDiffTotal * 1.0 +
+      candidate.maxLineDiff * 1.5 +
+      candidate.diff * 0.35 +
+      candidate.autoAssignedCount * 2 +
+      candidate.sTierStackPenalty * 0.2
+    ).toFixed(2),
+  );
+}
+
+function getPositionSatisfactionPlanCost(candidate: CandidateSnapshot) {
+  return Number(
+    (
+      candidate.autoAssignedCount * 5 +
+      candidate.subAssignedCount * 1.5 -
+      candidate.mainAssignedCount * 2 +
+      candidate.diff * 0.5 +
+      candidate.lineDiffTotal * 0.15 +
+      candidate.sTierStackPenalty * 0.2
+    ).toFixed(2),
+  );
+}
+
+type PlanKind = "TEAM_TOTAL" | "LINE_BALANCE" | "POSITION_SATISFACTION";
+
+function getPlanCost(candidate: CandidateSnapshot, kind: PlanKind) {
+  if (kind === "TEAM_TOTAL") return getTeamTotalPlanCost(candidate);
+  if (kind === "LINE_BALANCE") return getLineBalancePlanCost(candidate);
+  return getPositionSatisfactionPlanCost(candidate);
+}
+
+function compareByPlan(kind: PlanKind) {
+  return (a: CandidateSnapshot, b: CandidateSnapshot) => {
+    const costA = getPlanCost(a, kind);
+    const costB = getPlanCost(b, kind);
+
+    if (costA !== costB) return costA - costB;
+
+    if (kind === "TEAM_TOTAL") {
+      if (a.diff !== b.diff) return a.diff - b.diff;
+      if (a.lineDiffTotal !== b.lineDiffTotal) return a.lineDiffTotal - b.lineDiffTotal;
+    }
+
+    if (kind === "LINE_BALANCE") {
+      if (a.maxLineDiff !== b.maxLineDiff) return a.maxLineDiff - b.maxLineDiff;
+      if (a.lineDiffTotal !== b.lineDiffTotal) return a.lineDiffTotal - b.lineDiffTotal;
+      if (a.diff !== b.diff) return a.diff - b.diff;
+    }
+
+    if (kind === "POSITION_SATISFACTION") {
+      if (a.mainAssignedCount !== b.mainAssignedCount) {
+        return b.mainAssignedCount - a.mainAssignedCount;
+      }
+      if (a.autoAssignedCount !== b.autoAssignedCount) {
+        return a.autoAssignedCount - b.autoAssignedCount;
+      }
+      if (a.diff !== b.diff) return a.diff - b.diff;
+    }
+
+    if (a.autoAssignedCount !== b.autoAssignedCount) {
+      return a.autoAssignedCount - b.autoAssignedCount;
+    }
+
+    return a.balanceCost - b.balanceCost;
+  };
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as RequestBody;
@@ -630,7 +950,7 @@ export async function POST(request: NextRequest) {
     if (!body || !Array.isArray(body.players) || body.players.length !== 10) {
       return NextResponse.json(
         { message: "플레이어는 정확히 10명이어야 합니다." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -646,8 +966,8 @@ export async function POST(request: NextRequest) {
       const mainPositions = Array.isArray(player?.mainPositions)
         ? player.mainPositions
         : mainPosition
-        ? [mainPosition]
-        : [];
+          ? [mainPosition]
+          : [];
 
       const subPositions = player?.subPositions ?? [];
 
@@ -659,34 +979,34 @@ export async function POST(request: NextRequest) {
       if (mainPosition !== null && !isValidPosition(mainPosition)) {
         return NextResponse.json(
           { message: "주 포지션 값이 올바르지 않습니다." },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
       if (!isValidSubPositions(mainPositions)) {
         return NextResponse.json(
           { message: "주 포지션 목록 값이 올바르지 않습니다." },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
       if (!isValidSubPositions(subPositions)) {
         return NextResponse.json(
           { message: "부 포지션 값이 올바르지 않습니다." },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
       const normalized = uniquePositions(
         mainPosition,
         mainPositions,
-        subPositions
+        subPositions,
       );
 
       if (normalized.mainPositions.length === 0) {
         return NextResponse.json(
           { message: "모든 플레이어는 최소 1개의 포지션을 선택해야 합니다." },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -712,7 +1032,7 @@ export async function POST(request: NextRequest) {
           message: "이름이 비어있는 플레이어가 있습니다.",
           invalidNames: invalidInputNames,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -733,7 +1053,7 @@ export async function POST(request: NextRequest) {
     if (duplicatedSelectedIds.length > 0) {
       return NextResponse.json(
         { message: "중복 선택된 플레이어가 있습니다." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -758,7 +1078,7 @@ export async function POST(request: NextRequest) {
             "중복된 이름이 있습니다. 이름이 같은 경우 검색 목록에서 정확한 플레이어를 선택해주세요.",
           invalidNames: duplicatedNames,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -795,11 +1115,11 @@ export async function POST(request: NextRequest) {
     });
 
     const dbPlayerByIdMap = new Map(
-      dbPlayers.map((player) => [player.id, player])
+      dbPlayers.map((player) => [player.id, player]),
     );
 
     const dbPlayerByNameMap = new Map(
-      dbPlayers.map((player) => [normalizeText(player.name), player])
+      dbPlayers.map((player) => [normalizeText(player.name), player]),
     );
 
     const invalidNames = normalizedInputs
@@ -818,7 +1138,7 @@ export async function POST(request: NextRequest) {
           message: "등록되어있지 않은 플레이어가 있습니다.",
           invalidNames,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -845,27 +1165,33 @@ export async function POST(request: NextRequest) {
     const resolvedPlayers = applyInternalRankScores(baseResolvedPlayers);
 
     const teamCombinations = combinations(resolvedPlayers, 5);
-    let bestCandidate: CandidateSnapshot | null = null;
+    const anchorPlayerId = resolvedPlayers[0]?.id;
+    const candidates: CandidateSnapshot[] = [];
 
     for (const redPlayers of teamCombinations) {
       const redIds = new Set(redPlayers.map((player) => player.id));
+
+      // RED/BLUE가 완전히 뒤집힌 중복 조합은 제외합니다.
+      // 같은 조합을 1안/2안/3안에 중복 노출하지 않기 위한 기준입니다.
+      if (anchorPlayerId && !redIds.has(anchorPlayerId)) {
+        continue;
+      }
+
       const bluePlayers = resolvedPlayers.filter(
-        (player) => !redIds.has(player.id)
+        (player) => !redIds.has(player.id),
       );
 
       const redResult = evaluateTeam("RED", redPlayers);
       const blueResult = evaluateTeam("BLUE", bluePlayers);
 
-      const assignments = [
-        ...redResult.assignments,
-        ...blueResult.assignments,
-      ];
+      const assignments = [...redResult.assignments, ...blueResult.assignments];
 
       const diff = Number(
-        Math.abs(redResult.total - blueResult.total).toFixed(2)
+        Math.abs(redResult.total - blueResult.total).toFixed(2),
       );
 
       const lineDiffTotal = getLineDiffTotal(assignments);
+      const maxLineDiff = getMaxLineDiff(assignments);
       const topPlayerDiff = getTopPlayerDiff(assignments);
       const sTierStackPenalty = getSTierStackPenalty(assignments);
 
@@ -893,6 +1219,7 @@ export async function POST(request: NextRequest) {
         diff,
         totalScore: Number((redResult.total + blueResult.total).toFixed(2)),
         lineDiffTotal,
+        maxLineDiff,
         topPlayerDiff,
         sTierStackPenalty,
         balanceCost,
@@ -902,50 +1229,116 @@ export async function POST(request: NextRequest) {
         assignments,
       };
 
-      if (isBetterCandidate(candidate, bestCandidate)) {
-        bestCandidate = candidate;
-      }
+      candidates.push(candidate);
     }
 
-    if (!bestCandidate) {
+    if (candidates.length === 0) {
       return NextResponse.json(
         { message: "팀 밸런스 계산 결과를 만들 수 없습니다." },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
-    const red = bestCandidate.assignments
-      .filter((assignment) => assignment.team === "RED")
-      .sort(
-        (a, b) => POSITIONS.indexOf(a.position) - POSITIONS.indexOf(b.position)
-      );
+    const usedKeys = new Set<string>();
+    const planDefinitions: Array<{
+      kind: PlanKind;
+      optionNo: number;
+      optionTitle: string;
+      optionDescription: string;
+    }> = [
+      {
+        kind: "TEAM_TOTAL",
+        optionNo: 1,
+        optionTitle: "팀 총점 균형형",
+        optionDescription: "RED / BLUE 전체 점수 차이를 가장 우선한 조합입니다.",
+      },
+      {
+        kind: "LINE_BALANCE",
+        optionNo: 2,
+        optionTitle: "라인별 균형형",
+        optionDescription: "TOP/JGL/MID/ADC/SUP 각 라인의 점수 차이를 가장 줄인 조합입니다.",
+      },
+      {
+        kind: "POSITION_SATISFACTION",
+        optionNo: 3,
+        optionTitle: "포지션 만족형",
+        optionDescription: "주포지션 배정을 최대화하면서 팀 점수 차이도 함께 고려한 조합입니다.",
+      },
+    ];
 
-    const blue = bestCandidate.assignments
-      .filter((assignment) => assignment.team === "BLUE")
-      .sort(
-        (a, b) => POSITIONS.indexOf(a.position) - POSITIONS.indexOf(b.position)
-      );
+    const selectedPlans = planDefinitions.map((plan) => {
+      const sorted = [...candidates].sort(compareByPlan(plan.kind));
+      const uniqueCandidate = sorted.find((candidate) => {
+        const key = getCandidateKey(candidate);
+        return !usedKeys.has(key);
+      });
+
+      const candidate = uniqueCandidate ?? sorted[0];
+
+      if (candidate) {
+        usedKeys.add(getCandidateKey(candidate));
+      }
+
+      return { ...plan, candidate };
+    });
+
+    const bestCandidate = selectedPlans[0]?.candidate ?? candidates.sort(compareByPlan("TEAM_TOTAL"))[0];
+
+    const toResponsePayload = (candidate: CandidateSnapshot) => {
+      const red = candidate.assignments
+        .filter((assignment) => assignment.team === "RED")
+        .sort(
+          (a, b) => POSITIONS.indexOf(a.position) - POSITIONS.indexOf(b.position),
+        );
+
+      const blue = candidate.assignments
+        .filter((assignment) => assignment.team === "BLUE")
+        .sort(
+          (a, b) => POSITIONS.indexOf(a.position) - POSITIONS.indexOf(b.position),
+        );
+
+      return {
+        redTotal: candidate.redTotal,
+        blueTotal: candidate.blueTotal,
+        diff: candidate.diff,
+        balanceCost: candidate.balanceCost,
+        lineDiffTotal: candidate.lineDiffTotal,
+        maxLineDiff: candidate.maxLineDiff,
+        topPlayerDiff: candidate.topPlayerDiff,
+        sTierStackPenalty: candidate.sTierStackPenalty,
+        mainAssignedCount: candidate.mainAssignedCount,
+        subAssignedCount: candidate.subAssignedCount,
+        autoAssignedCount: candidate.autoAssignedCount,
+        red,
+        blue,
+      };
+    };
+
+    const alternatives = selectedPlans
+      .filter((plan) => Boolean(plan.candidate))
+      .map((plan) => {
+        const candidate = plan.candidate as CandidateSnapshot;
+
+        return {
+          optionNo: plan.optionNo,
+          optionTitle: plan.optionTitle,
+          optionDescription: plan.optionDescription,
+          planType: plan.kind,
+          planCost: getPlanCost(candidate, plan.kind),
+          ...toResponsePayload(candidate),
+        };
+      });
 
     return NextResponse.json({
-      redTotal: bestCandidate.redTotal,
-      blueTotal: bestCandidate.blueTotal,
-      diff: bestCandidate.diff,
-      balanceCost: bestCandidate.balanceCost,
-      lineDiffTotal: bestCandidate.lineDiffTotal,
-      topPlayerDiff: bestCandidate.topPlayerDiff,
-      sTierStackPenalty: bestCandidate.sTierStackPenalty,
-      mainAssignedCount: bestCandidate.mainAssignedCount,
-      subAssignedCount: bestCandidate.subAssignedCount,
-      autoAssignedCount: bestCandidate.autoAssignedCount,
-      red,
-      blue,
+      ...toResponsePayload(bestCandidate),
+      alternatives,
     });
   } catch (error) {
     console.error("[PLAYERS_BALANCE_POST_ERROR]", error);
 
     return NextResponse.json(
       { message: "팀 밸런스 계산 중 오류가 발생했습니다." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

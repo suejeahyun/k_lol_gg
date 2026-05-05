@@ -44,18 +44,88 @@ type AssignedPlayer = {
   winRate: number;
   adjustedScore?: number;
   rankScore?: number;
+  rankBaseScore?: number;
+  rankAddedScore?: number;
+  rankGapFromLowest?: number;
+  tierWeight?: number;
+  internalRankWeight?: number;
+  mixedBaseScore?: number;
   bonus?: number;
+  finalBaseScore?: number;
+  mainPositions?: Position[];
+  subPositions?: Position[];
+  currentTierScore?: number;
+  peakTierScore?: number;
+  baseTierScore?: number;
+  recentStats?: {
+    games?: number;
+    wins?: number;
+    winRate?: number | null;
+    kda?: number | null;
+    mainPosition?: Position | null;
+    avgDamage?: number | null;
+    avgVisionScore?: number | null;
+  };
+  internalStats?: {
+    totalGames?: number;
+    wins?: number;
+    losses?: number;
+    winRate?: number | null;
+    kda?: number | null;
+  };
+  internalPositionStats?: {
+    position?: Position;
+    games?: number;
+    wins?: number;
+    losses?: number;
+    winRate?: number | null;
+    kda?: number | null;
+  };
+  scoreBreakdown?: {
+    currentTierScore?: number;
+    peakTierScore?: number;
+    tierBaseScore?: number;
+    adjustedScore?: number;
+    tierScore?: number;
+    internalRankBaseScore?: number;
+    rankGapFromLowest?: number;
+    rankAddedScore?: number;
+    rankScore?: number;
+    tierWeight?: number;
+    internalRankWeight?: number;
+    mixedBaseScore?: number;
+    sTierBonus?: number;
+    finalBaseScore?: number;
+    roleMultiplier?: number;
+    roleLoss?: number;
+    rolePenalty?: number;
+    recentBonus?: number;
+    internalBonus?: number;
+    finalScore?: number;
+  };
+  explanation?: string[];
 };
 
 type BalanceResponse = {
+  optionNo?: number;
+  optionTitle?: string;
+  optionDescription?: string;
+  planType?: "TEAM_TOTAL" | "LINE_BALANCE" | "POSITION_SATISFACTION";
+  planCost?: number;
   redTotal: number;
   blueTotal: number;
   diff: number;
+  balanceCost?: number;
+  lineDiffTotal?: number;
+  maxLineDiff?: number;
+  topPlayerDiff?: number;
+  sTierStackPenalty?: number;
   mainAssignedCount: number;
   subAssignedCount: number;
   autoAssignedCount: number;
   red: AssignedPlayer[];
   blue: AssignedPlayer[];
+  alternatives?: BalanceResponse[];
 };
 type ApplyPosition = Position | "ALL";
 
@@ -119,6 +189,7 @@ export default function PlayersBalancePage() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [result, setResult] = useState<BalanceResponse | null>(null);
+  const [selectedResultIndex, setSelectedResultIndex] = useState(0);
   const [importLoading, setImportLoading] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
   const [draggingPlayerId, setDraggingPlayerId] = useState<number | null>(null);
@@ -132,14 +203,14 @@ export default function PlayersBalancePage() {
   >({});
 
   useEffect(() => {
-  const timeoutRefs = searchTimeoutRefs.current;
+    const timeoutRefs = searchTimeoutRefs.current;
 
-  return () => {
-    Object.values(timeoutRefs).forEach((timer) => {
-      if (timer) clearTimeout(timer);
-    });
-  };
-}, []);
+    return () => {
+      Object.values(timeoutRefs).forEach((timer) => {
+        if (timer) clearTimeout(timer);
+      });
+    };
+  }, []);
   useEffect(() => {
     loadSeasonApplyGroups().catch((error: unknown) => {
       console.error("[LOAD_SEASON_APPLY_GROUPS_ERROR]", error);
@@ -518,33 +589,725 @@ export default function PlayersBalancePage() {
     return `RED ${formatNames(target.red)}\nBLUE ${formatNames(target.blue)}`;
   }
 
-  function normalizeResult(nextRed: AssignedPlayer[], nextBlue: AssignedPlayer[]) {
-    const redTotal = nextRed.reduce((sum, player) => sum + player.score, 0);
-    const blueTotal = nextBlue.reduce((sum, player) => sum + player.score, 0);
-    const allPlayers = [...nextRed, ...nextBlue];
+  function getManualRoleType(
+    player: AssignedPlayer,
+    position: Position,
+  ): RoleType {
+    if (player.mainPositions?.includes(position)) return "MAIN";
+    if (player.subPositions?.includes(position)) return "SUB";
+    return "AUTO";
+  }
+
+  function buildManualExplanation(params: {
+    player: AssignedPlayer;
+    position: Position;
+    roleType: RoleType;
+    baseScore: number;
+    multiplier: number;
+    score: number;
+  }) {
+    const { player, position, roleType, baseScore, multiplier, score } = params;
+    const roleText = getRoleText(roleType);
+
+    return [
+      `수동 변경 후 ${position} ${roleText} 기준으로 다시 계산되었습니다.`,
+      `최종 기준점수 ${baseScore.toFixed(1)}점에 포지션 반영률 ${(multiplier * 100).toFixed(0)}%를 적용해 ${score.toFixed(1)}점이 되었습니다.`,
+      roleType === "AUTO"
+        ? "선택한 주/부 포지션이 아니므로 AUTO 기준 반영률이 적용되었습니다."
+        : `${position}은(는) ${roleText}에 해당합니다.`,
+      ...(Array.isArray(player.explanation)
+        ? player.explanation.slice(0, 2)
+        : []),
+    ];
+  }
+
+  function getManualScore(player: AssignedPlayer, position: Position) {
+    const roleType = getManualRoleType(player, position);
+    const baseScore =
+      typeof player.finalBaseScore === "number"
+        ? player.finalBaseScore
+        : typeof player.rankScore === "number"
+          ? player.rankScore + (player.bonus ?? 0)
+          : player.score;
+
+    const multiplier =
+      roleType === "MAIN" ? 1 : roleType === "SUB" ? 0.85 : 0.75;
+    const score = Number((baseScore * multiplier).toFixed(2));
+    const roleLoss = Number((baseScore - score).toFixed(2));
+
+    return {
+      roleType,
+      score,
+      scoreBreakdown: {
+        ...player.scoreBreakdown,
+        currentTierScore:
+          player.currentTierScore ?? player.scoreBreakdown?.currentTierScore,
+        peakTierScore:
+          player.peakTierScore ?? player.scoreBreakdown?.peakTierScore,
+        tierBaseScore:
+          player.baseTierScore ??
+          player.adjustedScore ??
+          player.scoreBreakdown?.tierBaseScore,
+        adjustedScore:
+          player.adjustedScore ??
+          player.scoreBreakdown?.adjustedScore ??
+          player.scoreBreakdown?.tierScore,
+        tierScore:
+          player.adjustedScore ??
+          player.scoreBreakdown?.tierScore ??
+          player.baseTierScore,
+        internalRankBaseScore:
+          player.scoreBreakdown?.internalRankBaseScore ??
+          player.rankBaseScore ??
+          0,
+        rankGapFromLowest:
+          player.scoreBreakdown?.rankGapFromLowest ??
+          player.rankGapFromLowest ??
+          0,
+        rankAddedScore:
+          player.scoreBreakdown?.rankAddedScore ?? player.rankAddedScore ?? 0,
+        rankScore: player.rankScore ?? player.scoreBreakdown?.rankScore,
+        tierWeight: player.scoreBreakdown?.tierWeight ?? player.tierWeight ?? 1,
+        internalRankWeight:
+          player.scoreBreakdown?.internalRankWeight ??
+          player.internalRankWeight ??
+          0,
+        mixedBaseScore:
+          player.scoreBreakdown?.mixedBaseScore ??
+          player.mixedBaseScore ??
+          Number(
+            (
+              (player.adjustedScore ??
+                player.scoreBreakdown?.adjustedScore ??
+                player.baseTierScore ??
+                0) *
+                0.7 +
+              (player.rankScore ??
+                player.scoreBreakdown?.rankScore ??
+                player.adjustedScore ??
+                player.baseTierScore ??
+                0) *
+                0.3
+            ).toFixed(2),
+          ),
+        sTierBonus: player.bonus ?? player.scoreBreakdown?.sTierBonus ?? 0,
+        finalBaseScore: baseScore,
+        roleMultiplier: multiplier,
+        roleLoss,
+        finalScore: score,
+      },
+      explanation: buildManualExplanation({
+        player,
+        position,
+        roleType,
+        baseScore,
+        multiplier,
+        score,
+      }),
+    };
+  }
+
+  function rebuildPlayerForSlot(
+    player: AssignedPlayer,
+    team: Team,
+    position: Position,
+  ): AssignedPlayer {
+    const { roleType, score, scoreBreakdown, explanation } = getManualScore(
+      player,
+      position,
+    );
+
+    return {
+      ...player,
+      team,
+      position,
+      roleType,
+      score,
+      scoreBreakdown,
+      explanation,
+    };
+  }
+
+  function normalizeResult(
+    nextRed: AssignedPlayer[],
+    nextBlue: AssignedPlayer[],
+  ): BalanceResponse {
+    const red = sortByPosition(
+      nextRed.map((player) =>
+        rebuildPlayerForSlot(player, "RED", player.position),
+      ),
+    );
+    const blue = sortByPosition(
+      nextBlue.map((player) =>
+        rebuildPlayerForSlot(player, "BLUE", player.position),
+      ),
+    );
+
+    const redTotal = red.reduce((sum, player) => sum + player.score, 0);
+    const blueTotal = blue.reduce((sum, player) => sum + player.score, 0);
+    const allPlayers = [...red, ...blue];
 
     return {
       redTotal: Number(redTotal.toFixed(2)),
       blueTotal: Number(blueTotal.toFixed(2)),
       diff: Number(Math.abs(redTotal - blueTotal).toFixed(2)),
-      mainAssignedCount: allPlayers.filter((player) => player.roleType === "MAIN").length,
-      subAssignedCount: allPlayers.filter((player) => player.roleType === "SUB").length,
-      autoAssignedCount: allPlayers.filter((player) => player.roleType === "AUTO").length,
-      red: sortByPosition(nextRed).map((player) => ({ ...player, team: "RED" as Team })),
-      blue: sortByPosition(nextBlue).map((player) => ({ ...player, team: "BLUE" as Team })),
+      mainAssignedCount: allPlayers.filter(
+        (player) => player.roleType === "MAIN",
+      ).length,
+      subAssignedCount: allPlayers.filter((player) => player.roleType === "SUB")
+        .length,
+      autoAssignedCount: allPlayers.filter(
+        (player) => player.roleType === "AUTO",
+      ).length,
+      red,
+      blue,
     };
   }
 
+  function getLineComparisons(target: BalanceResponse) {
+    return POSITIONS.map((position) => {
+      const red =
+        target.red.find((player) => player.position === position) ?? null;
+      const blue =
+        target.blue.find((player) => player.position === position) ?? null;
+      const diff = red && blue ? Math.abs(red.score - blue.score) : 0;
+      const status =
+        diff <= 2
+          ? "안정"
+          : diff <= 5
+            ? "보통"
+            : diff <= 8
+              ? "주의"
+              : "조정권장";
+
+      return {
+        position,
+        red,
+        blue,
+        diff: Number(diff.toFixed(1)),
+        status,
+      };
+    });
+  }
+
+  function getBalanceGrade(target: BalanceResponse) {
+    if (target.diff <= 2) return { grade: "S", label: "매우 균형" };
+    if (target.diff <= 5) return { grade: "A", label: "좋은 밸런스" };
+    if (target.diff <= 8) return { grade: "B", label: "무난함" };
+    if (target.diff <= 12) return { grade: "C", label: "일부 조정 필요" };
+    return { grade: "D", label: "수동 조정 권장" };
+  }
+
+  function getPlayerBaseScore(player: AssignedPlayer) {
+    if (typeof player.finalBaseScore === "number") return player.finalBaseScore;
+    if (typeof player.rankScore === "number")
+      return player.rankScore + (player.bonus ?? 0);
+    return player.score;
+  }
+
+  function getRoleText(roleType: RoleType) {
+    if (roleType === "MAIN") return "주 포지션";
+    if (roleType === "SUB") return "부 포지션";
+    return "자동배정";
+  }
+
+  function getRoleMultiplier(roleType: RoleType) {
+    if (roleType === "MAIN") return 1;
+    if (roleType === "SUB") return 0.85;
+    return 0.75;
+  }
+
+  function getRoleReason(player: AssignedPlayer) {
+    if (player.roleType === "MAIN") {
+      return `${player.position}이(가) 선택한 주 포지션에 포함되어 기준 점수의 100%가 반영되었습니다.`;
+    }
+
+    if (player.roleType === "SUB") {
+      return `${player.position}이(가) 선택한 부 포지션에 포함되어 기준 점수의 85%가 반영되었습니다.`;
+    }
+
+    return `${player.position}이(가) 선택한 주/부 포지션에 포함되지 않아 자동배정 기준으로 기준 점수의 75%가 반영되었습니다.`;
+  }
+
+  function formatPercent(value?: number | null) {
+    if (typeof value !== "number" || Number.isNaN(value)) return "-";
+    return `${value.toFixed(1)}%`;
+  }
+
+  function formatDecimal(value?: number | null, digits = 1) {
+    if (typeof value !== "number" || Number.isNaN(value)) return "-";
+    return value.toFixed(digits);
+  }
+
+  function getScoreCalculationParts(player: AssignedPlayer) {
+    const breakdown = player.scoreBreakdown ?? {};
+    const tierBaseScore =
+      breakdown.tierBaseScore ??
+      player.baseTierScore ??
+      player.adjustedScore ??
+      0;
+    const currentTierScore =
+      breakdown.currentTierScore ?? player.currentTierScore ?? tierBaseScore;
+    const peakTierScore =
+      breakdown.peakTierScore ?? player.peakTierScore ?? tierBaseScore;
+    const tierScore =
+      breakdown.adjustedScore ??
+      breakdown.tierScore ??
+      player.adjustedScore ??
+      tierBaseScore;
+    const internalRankBaseScore =
+      breakdown.internalRankBaseScore ?? player.rankBaseScore ?? 70;
+    const rankAddedScore =
+      breakdown.rankAddedScore ?? player.rankAddedScore ?? 0;
+    const rankGapFromLowest =
+      breakdown.rankGapFromLowest ?? player.rankGapFromLowest ?? 0;
+    const rankScore =
+      breakdown.rankScore ??
+      player.rankScore ??
+      internalRankBaseScore + rankAddedScore;
+    const tierWeight = breakdown.tierWeight ?? player.tierWeight ?? 0.7;
+    const internalRankWeight =
+      breakdown.internalRankWeight ?? player.internalRankWeight ?? 0.3;
+    const mixedBaseScore =
+      breakdown.mixedBaseScore ??
+      player.mixedBaseScore ??
+      Number((tierScore + rankAddedScore).toFixed(2));
+    const sTierBonus = breakdown.sTierBonus ?? player.bonus ?? 0;
+    const finalBaseScore =
+      breakdown.finalBaseScore ??
+      Number((mixedBaseScore + sTierBonus).toFixed(2));
+    const multiplier =
+      breakdown.roleMultiplier ?? getRoleMultiplier(player.roleType);
+    const roleLoss =
+      breakdown.roleLoss ?? Number((finalBaseScore - player.score).toFixed(2));
+    const finalScore = breakdown.finalScore ?? player.score;
+
+    return {
+      currentTierScore,
+      peakTierScore,
+      tierBaseScore,
+      tierScore,
+      internalRankBaseScore,
+      rankGapFromLowest,
+      rankAddedScore,
+      rankScore,
+      tierWeight,
+      internalRankWeight,
+      mixedBaseScore,
+      sTierBonus,
+      finalBaseScore,
+      multiplier,
+      roleLoss,
+      finalScore,
+    };
+  }
+
+  function selectBalanceAlternative(index: number) {
+    setResult((prev) => {
+      const alternatives = prev?.alternatives;
+
+      if (!alternatives || !alternatives[index]) return prev;
+
+      return {
+        ...alternatives[index],
+        alternatives,
+      };
+    });
+
+    setSelectedResultIndex(index);
+  }
+
+  function renderBalanceAlternatives(target: BalanceResponse) {
+    const alternatives = target.alternatives ?? [];
+
+    if (alternatives.length <= 1) return null;
+
+    return (
+      <section className="balance-alternative-card">
+        <div className="balance-alternative-head">
+          <div>
+            <strong>자동 계산 추천안</strong>
+            <span>1안은 팀 총점, 2안은 라인별 균형, 3안은 주포지션 만족도를 우선합니다.</span>
+          </div>
+          <b>{selectedResultIndex >= 0 ? `${selectedResultIndex + 1}안 선택 중` : "수동 조정 중"}</b>
+        </div>
+
+        <div className="balance-alternative-list">
+          {alternatives.slice(0, 3).map((option, index) => {
+            const grade = getBalanceGrade(option);
+            const active = selectedResultIndex === index;
+
+            return (
+              <button
+                key={`balance-option-${index}`}
+                type="button"
+                className={[
+                  "balance-alternative-button",
+                  active ? "balance-alternative-button--active" : "",
+                ].join(" ")}
+                onClick={() => selectBalanceAlternative(index)}
+              >
+                <span className="balance-alternative-button__no">{option.optionNo ?? index + 1}안</span>
+                <strong>{option.optionTitle ?? `${grade.grade} · ${grade.label}`}</strong>
+                <small>{option.optionDescription ?? grade.label}</small>
+                <em>RED {option.redTotal.toFixed(1)} / BLUE {option.blueTotal.toFixed(1)}</em>
+                <b>차이 {option.diff.toFixed(1)} · 라인차 {Number(option.lineDiffTotal ?? 0).toFixed(1)} · 주/부/AUTO {option.mainAssignedCount}/{option.subAssignedCount}/{option.autoAssignedCount}</b>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+    );
+  }
+
+  function renderScoreEvidence(target: BalanceResponse) {
+    const lines = getLineComparisons(target);
+    const allPlayers = [
+      ...sortByPosition(target.red),
+      ...sortByPosition(target.blue),
+    ];
+
+    return (
+      <section className="card balance-score-evidence-card">
+        <div className="balance-score-evidence-head">
+          <div>
+            <div className="balance-score-evidence-title">점수 근거 상세</div>
+            <div className="balance-score-evidence-desc">
+              팀 카드는 짧게 유지하고, 티어 기준점수·내부 보정·포지션 반영
+              과정을 이 영역에서 확인합니다.
+            </div>
+          </div>
+        </div>
+
+        <details className="balance-score-evidence" open>
+          <summary>점수 근거 보기</summary>
+
+          <div className="balance-evidence-section">
+            <h3>1. 팀 밸런스 요약</h3>
+            <div className="balance-evidence-grid balance-evidence-grid--summary">
+              <div>
+                <span>RED 총점</span>
+                <strong>{target.redTotal.toFixed(1)}</strong>
+              </div>
+              <div>
+                <span>BLUE 총점</span>
+                <strong>{target.blueTotal.toFixed(1)}</strong>
+              </div>
+              <div>
+                <span>점수 차이</span>
+                <strong>{target.diff.toFixed(1)}</strong>
+              </div>
+              <div>
+                <span>배정 구조</span>
+                <strong>
+                  주 {target.mainAssignedCount} / 부 {target.subAssignedCount} /
+                  AUTO {target.autoAssignedCount}
+                </strong>
+              </div>
+            </div>
+            <p className="balance-evidence-note">
+              점수 차이가 낮을수록 전체 팀 전력은 비슷합니다. 단, 실제 체감
+              밸런스는 라인별 차이와 자동배정 수까지 함께 봅니다.
+            </p>
+          </div>
+
+          <div className="balance-evidence-section">
+            <h3>2. 라인별 비교</h3>
+            <div className="balance-evidence-line-table">
+              {lines.map((line) => (
+                <div key={line.position} className="balance-evidence-line-row">
+                  <strong>{line.position}</strong>
+                  <span className="balance-evidence-team-red">
+                    RED {line.red?.name ?? "-"} ·{" "}
+                    {line.red?.score.toFixed(1) ?? "-"}
+                  </span>
+                  <span className="balance-evidence-team-blue">
+                    BLUE {line.blue?.name ?? "-"} ·{" "}
+                    {line.blue?.score.toFixed(1) ?? "-"}
+                  </span>
+                  <b>
+                    {line.diff.toFixed(1)}점 · {line.status}
+                  </b>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="balance-evidence-section">
+            <h3>3. 선수별 상세 계산</h3>
+            <div className="balance-evidence-player-list">
+              {allPlayers.map((player) => {
+                const calc = getScoreCalculationParts(player);
+                const baseScore = calc.finalBaseScore;
+                const multiplier = calc.multiplier;
+                const roleText = getRoleText(player.roleType);
+                const bonus = calc.sTierBonus;
+                const calculatedByPosition = calc.finalScore;
+                const customExplanations = Array.isArray(player.explanation)
+                  ? player.explanation
+                  : [];
+
+                return (
+                  <article
+                    key={`evidence-${player.team}-${player.playerId}`}
+                    className="balance-evidence-player-card"
+                  >
+                    <div className="balance-evidence-player-top">
+                      <div>
+                        <strong>
+                          {player.team} · {player.position} · {player.name}
+                        </strong>
+                        <span>
+                          {player.nickname}#{player.tag}
+                        </span>
+                      </div>
+                      <b>{player.score.toFixed(1)}점</b>
+                    </div>
+
+                    <div className="balance-score-flow">
+                      <div className="balance-score-flow__item">
+                        <span>1. 티어 기준점수</span>
+                        <strong>{formatDecimal(calc.tierScore)}</strong>
+                        <p>
+                          현재 {player.currentTier || "미등록"} ={" "}
+                          {formatDecimal(calc.currentTierScore)}점 / 최고{" "}
+                          {player.peakTier || "미등록"} ={" "}
+                          {formatDecimal(calc.peakTierScore)}점을 기준으로
+                          환산했습니다.
+                        </p>
+                      </div>
+                      <div className="balance-score-flow__arrow">→</div>
+                      <div className="balance-score-flow__item">
+                        <span>2. 내부 티어차 보정</span>
+                        <strong>+{formatDecimal(calc.rankAddedScore)}</strong>
+                        <p>
+                          참가자 최하위 티어 기준점수{" "}
+                          {formatDecimal(calc.internalRankBaseScore)}점과 비교해
+                          차이 {formatDecimal(calc.rankGapFromLowest)}점입니다.
+                          구간 보정표에 따라 +
+                          {formatDecimal(calc.rankAddedScore)}점이
+                          적용되었습니다.
+                        </p>
+                      </div>
+                      <div className="balance-score-flow__arrow">→</div>
+                      <div className="balance-score-flow__item">
+                        <span>3. 보정 반영 기준점수</span>
+                        <strong>{formatDecimal(calc.mixedBaseScore)}</strong>
+                        <p>
+                          티어 기준점수 {formatDecimal(calc.tierScore)}점 + 내부
+                          보정 +{formatDecimal(calc.rankAddedScore)}점 ={" "}
+                          {formatDecimal(calc.mixedBaseScore)}점입니다.
+                        </p>
+                      </div>
+                      <div className="balance-score-flow__arrow">→</div>
+                      <div className="balance-score-flow__item">
+                        <span>4. 보정 후 최종 기준점수</span>
+                        <strong>{formatDecimal(calc.finalBaseScore)}</strong>
+                        <p>
+                          보정 반영 기준점수{" "}
+                          {formatDecimal(calc.mixedBaseScore)} + S급 보정{" "}
+                          {bonus > 0 ? `+${formatDecimal(bonus)}` : "0.0"} ={" "}
+                          {formatDecimal(calc.finalBaseScore)}점입니다.
+                        </p>
+                      </div>
+                      <div className="balance-score-flow__arrow">→</div>
+                      <div className="balance-score-flow__item balance-score-flow__item--final">
+                        <span>5. 포지션 계산 점수</span>
+                        <strong>{formatDecimal(calc.finalScore)}</strong>
+                        <p>
+                          {roleText} 반영률 {Math.round(multiplier * 100)}%
+                          적용: {formatDecimal(calc.finalBaseScore)} ×{" "}
+                          {multiplier.toFixed(1)} ={" "}
+                          {formatDecimal(calculatedByPosition)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="balance-evidence-grid">
+                      <div>
+                        <span>현재티어 점수</span>
+                        <strong>{formatDecimal(calc.currentTierScore)}</strong>
+                      </div>
+                      <div>
+                        <span>최고티어 점수</span>
+                        <strong>{formatDecimal(calc.peakTierScore)}</strong>
+                      </div>
+                      <div>
+                        <span>티어 기준점수</span>
+                        <strong>{formatDecimal(calc.tierScore)}</strong>
+                      </div>
+                      <div>
+                        <span>최하위 기준점수</span>
+                        <strong>
+                          {formatDecimal(calc.internalRankBaseScore)}
+                        </strong>
+                      </div>
+                      <div>
+                        <span>최하위 대비 티어차</span>
+                        <strong>{formatDecimal(calc.rankGapFromLowest)}</strong>
+                      </div>
+                      <div>
+                        <span>내부 보정점수</span>
+                        <strong>+{formatDecimal(calc.rankAddedScore)}</strong>
+                      </div>
+                      <div>
+                        <span>내부 보정 후 점수</span>
+                        <strong>{formatDecimal(calc.rankScore)}</strong>
+                      </div>
+                      <div>
+                        <span>반영 방식</span>
+                        <strong>티어 기준 + 내부 구간 보정</strong>
+                      </div>
+                      <div>
+                        <span>보정 반영 기준점수</span>
+                        <strong>{formatDecimal(calc.mixedBaseScore)}</strong>
+                      </div>
+                      <div>
+                        <span>S급 보정</span>
+                        <strong>
+                          {bonus > 0 ? `+${formatDecimal(bonus)}` : "0.0"}
+                        </strong>
+                      </div>
+                      <div>
+                        <span>최종 기준점수</span>
+                        <strong>{formatDecimal(baseScore)}</strong>
+                      </div>
+                      <div>
+                        <span>배정 기준</span>
+                        <strong>{roleText}</strong>
+                      </div>
+                      <div>
+                        <span>포지션 반영률</span>
+                        <strong>{Math.round(multiplier * 100)}%</strong>
+                      </div>
+                      <div>
+                        <span>포지션 손실</span>
+                        <strong>
+                          {calc.roleLoss > 0
+                            ? `-${formatDecimal(calc.roleLoss)}`
+                            : "0.0"}
+                        </strong>
+                      </div>
+                      <div>
+                        <span>최종 반영점수</span>
+                        <strong>{formatDecimal(player.score)}</strong>
+                      </div>
+                    </div>
+
+                    {player.recentStats ||
+                    player.internalStats ||
+                    player.internalPositionStats ? (
+                      <div className="balance-evidence-grid balance-evidence-grid--substats">
+                        <div>
+                          <span>최근 20게임 승률</span>
+                          <strong>
+                            {formatPercent(player.recentStats?.winRate)}
+                          </strong>
+                        </div>
+                        <div>
+                          <span>최근 20게임 KDA</span>
+                          <strong>
+                            {formatDecimal(player.recentStats?.kda, 2)}
+                          </strong>
+                        </div>
+                        <div>
+                          <span>최근 주 포지션</span>
+                          <strong>
+                            {player.recentStats?.mainPosition ?? "-"}
+                          </strong>
+                        </div>
+                        <div>
+                          <span>평균 딜량</span>
+                          <strong>
+                            {formatDecimal(player.recentStats?.avgDamage, 0)}
+                          </strong>
+                        </div>
+                        <div>
+                          <span>평균 시야</span>
+                          <strong>
+                            {formatDecimal(
+                              player.recentStats?.avgVisionScore,
+                              1,
+                            )}
+                          </strong>
+                        </div>
+                        <div>
+                          <span>내전 경기 수</span>
+                          <strong>
+                            {player.internalStats?.totalGames ?? "-"}
+                          </strong>
+                        </div>
+                        <div>
+                          <span>내전 승률</span>
+                          <strong>
+                            {formatPercent(player.internalStats?.winRate)}
+                          </strong>
+                        </div>
+                        <div>
+                          <span>내전 KDA</span>
+                          <strong>
+                            {formatDecimal(player.internalStats?.kda, 2)}
+                          </strong>
+                        </div>
+                        <div>
+                          <span>{player.position} 내전 승률</span>
+                          <strong>
+                            {formatPercent(
+                              player.internalPositionStats?.winRate,
+                            )}
+                          </strong>
+                        </div>
+                        <div>
+                          <span>{player.position} 내전 KDA</span>
+                          <strong>
+                            {formatDecimal(
+                              player.internalPositionStats?.kda,
+                              2,
+                            )}
+                          </strong>
+                        </div>
+                      </div>
+                    ) : null}
+
+                    <div className="balance-evidence-reason">
+                      <p>{getRoleReason(player)}</p>
+                      {player.currentTier ? null : (
+                        <p>
+                          현재티어가 없는 경우 최고티어 또는 등록된 기준값을
+                          중심으로 계산됩니다.
+                        </p>
+                      )}
+                      {customExplanations.map((text, index) => (
+                        <p key={`${player.playerId}-explanation-${index}`}>
+                          {text}
+                        </p>
+                      ))}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </div>
+        </details>
+      </section>
+    );
+  }
 
   function swapResultPlayers(sourcePlayerId: number, targetPlayerId: number) {
     if (sourcePlayerId === targetPlayerId) return;
+
+    setSelectedResultIndex(-1);
 
     setResult((prev) => {
       if (!prev) return prev;
 
       const allPlayers = [...prev.red, ...prev.blue];
-      const source = allPlayers.find((player) => player.playerId === sourcePlayerId);
-      const target = allPlayers.find((player) => player.playerId === targetPlayerId);
+      const source = allPlayers.find(
+        (player) => player.playerId === sourcePlayerId,
+      );
+      const target = allPlayers.find(
+        (player) => player.playerId === targetPlayerId,
+      );
 
       if (!source || !target) return prev;
 
@@ -645,6 +1408,7 @@ export default function PlayersBalancePage() {
         return;
       }
 
+      setSelectedResultIndex(0);
       setResult(data as BalanceResponse);
     } catch (error) {
       console.error(error);
@@ -657,13 +1421,14 @@ export default function PlayersBalancePage() {
   function renderTeamRows(team: Team, players: AssignedPlayer[]) {
     return sortByPosition(players).map((player) => {
       const isDragging = draggingPlayerId === player.playerId;
-      const bonusText = player.bonus ? `+${player.bonus}` : "없음";
+      const roleText = getRoleText(player.roleType);
 
       return (
         <div
           key={`${team}-${player.playerId}`}
           className={[
             "balance-player-card",
+            "balance-player-card--compact",
             isDragging ? "balance-player-card--dragging" : "",
             player.roleType === "SUB" ? "balance-player-card--sub" : "",
             player.roleType === "AUTO" ? "balance-player-card--auto" : "",
@@ -688,31 +1453,27 @@ export default function PlayersBalancePage() {
             swapResultPlayers(sourceId, player.playerId);
             setDraggingPlayerId(null);
           }}
-          title="선수 카드를 다른 선수 카드 위로 드래그하면 두 선수의 팀/라인이 교체됩니다."
+          title="선수 카드를 다른 선수 카드 위로 드래그하면 팀/라인이 교체되고 점수가 즉시 재계산됩니다."
         >
-          <div className="balance-position-badge">{player.position}</div>
-
-          <div className="balance-player-main">
-            <p className="balance-player-name">
-              {player.name}
-              <span className="balance-player-nickname">
-                {" "}({player.nickname}#{player.tag})
-              </span>
-            </p>
-
-            <div className="balance-player-info">
-              <div className="balance-player-info-row">
-                현재티어 : <strong>{player.currentTier || "미등록"}</strong>
+          <div className="balance-player-compact-head">
+            <div className="balance-position-badge">{player.position}</div>
+            <div className="balance-player-main">
+              <p className="balance-player-name">
+                {player.name}
+                <span className="balance-player-nickname">
+                  {" "}
+                  ({player.nickname}#{player.tag})
+                </span>
+              </p>
+              <div className="balance-player-compact-meta">
+                <span>{roleText}</span>
+                <span>현재 {player.currentTier || "미등록"}</span>
+                <span>최고 {player.peakTier || "미등록"}</span>
               </div>
-              <div className="balance-player-info-row">
-                최대티어 : <strong>{player.peakTier || "미등록"}</strong>
-              </div>
-              <div className="balance-player-info-row">
-                최종점수 : <span className="balance-player-score">{player.score.toFixed(1)}</span>
-              </div>
-              <div className="balance-player-info-row">
-                S급 보정 : <span className={player.bonus ? "balance-player-bonus" : "balance-player-bonus balance-player-bonus--none"}>{bonusText}</span>
-              </div>
+            </div>
+            <div className="balance-player-score-box">
+              <span>점수</span>
+              <strong>{player.score.toFixed(1)}</strong>
             </div>
           </div>
         </div>
@@ -762,7 +1523,6 @@ export default function PlayersBalancePage() {
             >
               {importLoading ? "불러오는 중..." : "참가 신청자 가져오기"}
             </button>
-
           </div>
           <div className="balance-input-list">
             {rows.map((row, index) => (
@@ -877,11 +1637,73 @@ export default function PlayersBalancePage() {
 
         {result ? (
           <>
-            <section className="balance-result-teams">
+            {(() => {
+              const grade = getBalanceGrade(result);
+              const lines = getLineComparisons(result);
+
+              return (
+                <section className="balance-overview-card">
+                  <div className="balance-overview-main">
+                    <div className="balance-grade-badge">
+                      <span>{grade.grade}</span>
+                      <strong>{grade.label}</strong>
+                    </div>
+                    <div className="balance-overview-stats">
+                      <div>
+                        <span>RED</span>
+                        <strong>{result.redTotal.toFixed(1)}</strong>
+                      </div>
+                      <div>
+                        <span>BLUE</span>
+                        <strong>{result.blueTotal.toFixed(1)}</strong>
+                      </div>
+                      <div>
+                        <span>차이</span>
+                        <strong>{result.diff.toFixed(1)}</strong>
+                      </div>
+                      <div>
+                        <span>주/부/AUTO</span>
+                        <strong>
+                          {result.mainAssignedCount}/{result.subAssignedCount}/
+                          {result.autoAssignedCount}
+                        </strong>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="balance-line-strip">
+                    {lines.map((line) => (
+                      <div key={line.position} className="balance-line-chip">
+                        <strong>{line.position}</strong>
+                        <span>
+                          {line.red?.name ?? "-"}{" "}
+                          {line.red?.score.toFixed(1) ?? "-"}
+                        </span>
+                        <em>vs</em>
+                        <span>
+                          {line.blue?.name ?? "-"}{" "}
+                          {line.blue?.score.toFixed(1) ?? "-"}
+                        </span>
+                        <b>
+                          {line.diff.toFixed(1)} · {line.status}
+                        </b>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              );
+            })()}
+
+            {renderBalanceAlternatives(result)}
+
+            <section className="balance-result-teams balance-result-teams--compact">
               <div className="balance-team-panel balance-team-panel--red">
                 <div className="balance-team-header">
-                  <h2 className="balance-team-title balance-team-title--red">RED</h2>
-                  <span className="balance-team-total">총점 {result.redTotal.toFixed(1)}</span>
+                  <h2 className="balance-team-title balance-team-title--red">
+                    RED
+                  </h2>
+                  <span className="balance-team-total">
+                    총점 {result.redTotal.toFixed(1)}
+                  </span>
                 </div>
 
                 <div className="balance-team-list">
@@ -891,8 +1713,12 @@ export default function PlayersBalancePage() {
 
               <div className="balance-team-panel balance-team-panel--blue">
                 <div className="balance-team-header">
-                  <h2 className="balance-team-title balance-team-title--blue">BLUE</h2>
-                  <span className="balance-team-total">총점 {result.blueTotal.toFixed(1)}</span>
+                  <h2 className="balance-team-title balance-team-title--blue">
+                    BLUE
+                  </h2>
+                  <span className="balance-team-total">
+                    총점 {result.blueTotal.toFixed(1)}
+                  </span>
                 </div>
 
                 <div className="balance-team-list">
@@ -906,7 +1732,8 @@ export default function PlayersBalancePage() {
                     계산 결과 요약
                   </div>
                   <div className="balance-form-head__desc">
-                    선수 카드를 다른 선수 카드 위로 드래그하면 두 선수의 팀과 라인이 서로 교체됩니다.
+                    선수 카드를 드래그해 교체하면 포지션 기준에 따라 개인 점수와
+                    팀 총점이 즉시 재계산됩니다.
                   </div>
 
                   <div className="balance-summary-list balance-summary-list--compact">
@@ -922,7 +1749,9 @@ export default function PlayersBalancePage() {
                 <section className="card balance-result-utility">
                   <div className="balance-result-utility__header">
                     <div>
-                      <div className="balance-result-utility__title">결과 활용</div>
+                      <div className="balance-result-utility__title">
+                        결과 활용
+                      </div>
                       <div className="balance-result-utility__desc">
                         저장하거나 디스코드에 복사할 수 있습니다.
                       </div>
@@ -956,307 +1785,888 @@ export default function PlayersBalancePage() {
                     </pre>
                   </div>
                 </section>
+
+                {renderScoreEvidence(result)}
               </div>
             </section>
-
           </>
         ) : null}
 
-      <style jsx global>{`
-        .balance-result-teams {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 24px;
-          margin-top: 28px;
-        }
+        <style jsx global>{`
+          .balance-result-teams {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 24px;
+            margin-top: 28px;
+          }
 
-        .balance-team-panel {
-          padding: 22px;
-          border-radius: 24px;
-          background:
-            radial-gradient(circle at 20% 0%, rgba(59, 130, 246, 0.16), transparent 34%),
-            linear-gradient(145deg, rgba(8, 22, 43, 0.96), rgba(10, 30, 55, 0.96));
-          border: 1px solid rgba(96, 165, 250, 0.32);
-          box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
-        }
+          .balance-team-panel {
+            padding: 22px;
+            border-radius: 24px;
+            background:
+              radial-gradient(
+                circle at 20% 0%,
+                rgba(59, 130, 246, 0.16),
+                transparent 34%
+              ),
+              linear-gradient(
+                145deg,
+                rgba(8, 22, 43, 0.96),
+                rgba(10, 30, 55, 0.96)
+              );
+            border: 1px solid rgba(96, 165, 250, 0.32);
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+          }
 
-        .balance-team-panel--red {
-          border-color: rgba(248, 113, 113, 0.48);
-          box-shadow:
-            0 18px 45px rgba(0, 0, 0, 0.35),
-            inset 0 0 0 1px rgba(248, 113, 113, 0.08);
-        }
+          .balance-team-panel--red {
+            border-color: rgba(248, 113, 113, 0.48);
+            box-shadow:
+              0 18px 45px rgba(0, 0, 0, 0.35),
+              inset 0 0 0 1px rgba(248, 113, 113, 0.08);
+          }
 
-        .balance-team-panel--blue {
-          border-color: rgba(96, 165, 250, 0.55);
-          box-shadow:
-            0 18px 45px rgba(0, 0, 0, 0.35),
-            inset 0 0 0 1px rgba(96, 165, 250, 0.1);
-        }
+          .balance-team-panel--blue {
+            border-color: rgba(96, 165, 250, 0.55);
+            box-shadow:
+              0 18px 45px rgba(0, 0, 0, 0.35),
+              inset 0 0 0 1px rgba(96, 165, 250, 0.1);
+          }
 
-        .balance-team-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 14px;
-          margin-bottom: 18px;
-        }
+          .balance-team-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            margin-bottom: 18px;
+          }
 
-        .balance-team-title {
-          margin: 0;
-          font-size: 22px;
-          font-weight: 800;
-          letter-spacing: 0.08em;
-          color: #f8fafc;
-        }
+          .balance-team-title {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            color: #f8fafc;
+          }
 
-        .balance-team-title--red { color: #fecaca; }
-        .balance-team-title--blue { color: #bfdbfe; }
+          .balance-team-title--red {
+            color: #fecaca;
+          }
+          .balance-team-title--blue {
+            color: #bfdbfe;
+          }
 
-        .balance-team-total {
-          padding: 6px 12px;
-          border-radius: 999px;
-          background: rgba(15, 23, 42, 0.75);
-          border: 1px solid rgba(148, 163, 184, 0.28);
-          color: #dbeafe;
-          font-size: 13px;
-          font-weight: 800;
-          white-space: nowrap;
-        }
+          .balance-team-total {
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.75);
+            border: 1px solid rgba(148, 163, 184, 0.28);
+            color: #dbeafe;
+            font-size: 13px;
+            font-weight: 800;
+            white-space: nowrap;
+          }
 
-        .balance-player-card {
-          position: relative;
-          display: grid;
-          grid-template-columns: 66px minmax(0, 1fr);
-          gap: 16px;
-          align-items: center;
-          padding: 18px;
-          border-radius: 18px;
-          background:
-            linear-gradient(145deg, rgba(15, 35, 65, 0.98), rgba(9, 24, 48, 0.98));
-          border: 1px solid rgba(96, 165, 250, 0.28);
-          color: #f8fafc;
-        }
-        .balance-player-card--sub::after {
-          content: "SUB";
-          position: absolute;
-          top: 6px;
-          right: 8px;
-          padding: 2px 6px;
-          border-radius: 999px;
-          background: rgba(56, 189, 248, 0.9);
-          color: #ffffff;
-          font-size: 9px;
-          font-weight: 900;
-          line-height: 1;
-          pointer-events: none;
-        }
-        .balance-player-card + .balance-player-card { margin-top: 12px; }
+          .balance-player-card {
+            position: relative;
+            display: grid;
+            grid-template-columns: 66px minmax(0, 1fr);
+            gap: 16px;
+            align-items: center;
+            padding: 18px;
+            border-radius: 18px;
+            background: linear-gradient(
+              145deg,
+              rgba(15, 35, 65, 0.98),
+              rgba(9, 24, 48, 0.98)
+            );
+            border: 1px solid rgba(96, 165, 250, 0.28);
+            color: #f8fafc;
+          }
+          .balance-player-card--sub::after {
+            content: "SUB";
+            position: absolute;
+            top: 6px;
+            right: 8px;
+            padding: 2px 6px;
+            border-radius: 999px;
+            background: rgba(56, 189, 248, 0.9);
+            color: #ffffff;
+            font-size: 9px;
+            font-weight: 900;
+            line-height: 1;
+            pointer-events: none;
+          }
+          .balance-player-card + .balance-player-card {
+            margin-top: 12px;
+          }
 
-        .balance-player-card:hover {
-          transform: translateY(-2px);
-          border-color: rgba(147, 197, 253, 0.65);
-          box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
-        }
+          .balance-player-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(147, 197, 253, 0.65);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+          }
 
-        .balance-player-card--dragging {
-          opacity: 0.55;
-          outline: 1px dashed rgba(255, 255, 255, 0.55);
-        }
+          .balance-player-card--dragging {
+            opacity: 0.55;
+            outline: 1px dashed rgba(255, 255, 255, 0.55);
+          }
 
-        .balance-position-badge {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          min-height: 42px;
-          border-radius: 12px;
-          background: rgba(2, 6, 23, 0.82);
-          border: 1px solid rgba(96, 165, 250, 0.35);
-          color: #ffffff;
-          font-size: 14px;
-          font-weight: 800;
-          letter-spacing: 0.08em;
-        }
+          .balance-position-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 42px;
+            border-radius: 12px;
+            background: rgba(2, 6, 23, 0.82);
+            border: 1px solid rgba(96, 165, 250, 0.35);
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+          }
 
-        .balance-player-main { min-width: 0; }
+          .balance-player-main {
+            min-width: 0;
+          }
 
-        .balance-player-name {
-          margin: 0 0 8px;
-          color: #ffffff;
-          font-size: 16px;
-          font-weight: 800;
-          line-height: 1.35;
-          word-break: keep-all;
-        }
+          .balance-player-name {
+            margin: 0 0 8px;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 800;
+            line-height: 1.35;
+            word-break: keep-all;
+          }
 
-        .balance-player-nickname {
-          color: #cbd5e1;
-          font-size: 13px;
-          font-weight: 600;
-        }
+          .balance-player-nickname {
+            color: #cbd5e1;
+            font-size: 13px;
+            font-weight: 600;
+          }
 
-        .balance-player-info {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 6px 18px;
-          margin-top: 8px;
-        }
+          .balance-player-info {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 6px 18px;
+            margin-top: 8px;
+          }
 
-        .balance-player-info-row {
-          color: #cbd5e1;
-          font-size: 13px;
-          line-height: 1.45;
-        }
+          .balance-player-info-row {
+            color: #cbd5e1;
+            font-size: 13px;
+            line-height: 1.45;
+          }
 
-        .balance-player-info-row strong {
-          color: #f8fafc;
-          font-weight: 800;
-        }
+          .balance-player-info-row strong {
+            color: #f8fafc;
+            font-weight: 800;
+          }
 
-        .balance-player-score {
-          color: #dbeafe;
-          font-weight: 800;
-        }
+          .balance-player-score {
+            color: #dbeafe;
+            font-weight: 800;
+          }
 
-        .balance-player-bonus {
-          color: #93c5fd;
-          font-weight: 800;
-        }
+          .balance-player-bonus {
+            color: #93c5fd;
+            font-weight: 800;
+          }
 
-        .balance-player-bonus--none { color: #94a3b8; }
+          .balance-player-bonus--none {
+            color: #94a3b8;
+          }
 
+          /* 결과 하단 정리형 레이아웃 */
+          .balance-result-bottom {
+            grid-column: 1 / -1 !important;
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+            gap: 20px !important;
+            align-items: stretch !important;
+            width: 100% !important;
+            margin-top: 2px !important;
+          }
 
-        /* 결과 하단 정리형 레이아웃 */
-        .balance-result-bottom {
-          grid-column: 1 / -1 !important;
-          display: grid !important;
-          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
-          gap: 20px !important;
-          align-items: stretch !important;
-          width: 100% !important;
-          margin-top: 2px !important;
-        }
+          .balance-result-bottom .card {
+            min-width: 0 !important;
+            margin: 0 !important;
+          }
 
-        .balance-result-bottom .card {
-          min-width: 0 !important;
-          margin: 0 !important;
-        }
+          .balance-result-bottom .balance-summary-card,
+          .balance-summary-card--compact {
+            grid-column: auto !important;
+            width: 100% !important;
+          }
 
-        .balance-result-bottom .balance-summary-card,
-        .balance-summary-card--compact {
-          grid-column: auto !important;
-          width: 100% !important;
-        }
+          .balance-summary-card--compact,
+          .balance-result-utility {
+            padding: 22px !important;
+            border-radius: 20px !important;
+            background:
+              radial-gradient(
+                circle at 16% 0%,
+                rgba(59, 130, 246, 0.14),
+                transparent 34%
+              ),
+              linear-gradient(
+                145deg,
+                rgba(8, 22, 43, 0.96),
+                rgba(10, 30, 55, 0.96)
+              ) !important;
+            border: 1px solid rgba(96, 165, 250, 0.32) !important;
+            box-shadow: 0 16px 38px rgba(0, 0, 0, 0.28) !important;
+          }
 
-        .balance-summary-card--compact,
-        .balance-result-utility {
-          padding: 22px !important;
-          border-radius: 20px !important;
-          background:
-            radial-gradient(circle at 16% 0%, rgba(59, 130, 246, 0.14), transparent 34%),
-            linear-gradient(145deg, rgba(8, 22, 43, 0.96), rgba(10, 30, 55, 0.96)) !important;
-          border: 1px solid rgba(96, 165, 250, 0.32) !important;
-          box-shadow: 0 16px 38px rgba(0, 0, 0, 0.28) !important;
-        }
+          .balance-summary-list--compact {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 10px 18px !important;
+            margin-top: 14px !important;
+          }
 
-        .balance-summary-list--compact {
-          display: grid !important;
-          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-          gap: 10px 18px !important;
-          margin-top: 14px !important;
-        }
+          .balance-result-utility {
+            display: grid !important;
+            grid-template-rows: auto 1fr !important;
+            gap: 14px !important;
+            align-content: start !important;
+          }
 
-        .balance-result-utility {
-          display: grid !important;
-          grid-template-rows: auto 1fr !important;
-          gap: 14px !important;
-          align-content: start !important;
-        }
+          .balance-result-utility__header {
+            display: flex !important;
+            align-items: flex-start !important;
+            justify-content: space-between !important;
+            gap: 16px !important;
+          }
 
-        .balance-result-utility__header {
-          display: flex !important;
-          align-items: flex-start !important;
-          justify-content: space-between !important;
-          gap: 16px !important;
-        }
+          .balance-result-utility__title {
+            color: #f8fafc !important;
+            font-size: 16px !important;
+            font-weight: 900 !important;
+            line-height: 1.2 !important;
+          }
 
-        .balance-result-utility__title {
-          color: #f8fafc !important;
-          font-size: 16px !important;
-          font-weight: 900 !important;
-          line-height: 1.2 !important;
-        }
+          .balance-result-utility__desc {
+            margin-top: 5px !important;
+            color: #94a3b8 !important;
+            font-size: 12px !important;
+            font-weight: 700 !important;
+            line-height: 1.5 !important;
+          }
 
-        .balance-result-utility__desc {
-          margin-top: 5px !important;
-          color: #94a3b8 !important;
-          font-size: 12px !important;
-          font-weight: 700 !important;
-          line-height: 1.5 !important;
-        }
+          .balance-result-utility__buttons {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-end !important;
+            gap: 8px !important;
+            flex-shrink: 0 !important;
+          }
 
-        .balance-result-utility__buttons {
-          display: flex !important;
-          align-items: center !important;
-          justify-content: flex-end !important;
-          gap: 8px !important;
-          flex-shrink: 0 !important;
-        }
+          .balance-compact-button {
+            min-height: 32px !important;
+            height: 32px !important;
+            padding: 0 11px !important;
+            border-radius: 10px !important;
+            font-size: 12px !important;
+            font-weight: 900 !important;
+            white-space: nowrap !important;
+            box-shadow: none !important;
+          }
 
-        .balance-compact-button {
-          min-height: 32px !important;
-          height: 32px !important;
-          padding: 0 11px !important;
-          border-radius: 10px !important;
-          font-size: 12px !important;
-          font-weight: 900 !important;
-          white-space: nowrap !important;
-          box-shadow: none !important;
-        }
+          .balance-compact-button--copy {
+            background: rgba(15, 23, 42, 0.7) !important;
+            border-color: rgba(148, 163, 184, 0.35) !important;
+          }
 
-        .balance-compact-button--copy {
-          background: rgba(15, 23, 42, 0.7) !important;
-          border-color: rgba(148, 163, 184, 0.35) !important;
-        }
+          .balance-copy-box {
+            display: grid !important;
+            gap: 8px !important;
+            min-width: 0 !important;
+            width: 100% !important;
+            min-height: 96px !important;
+            padding: 14px 16px !important;
+            border-radius: 16px !important;
+            background: rgba(2, 6, 23, 0.38) !important;
+            border: 1px solid rgba(148, 163, 184, 0.2) !important;
+          }
 
-        .balance-copy-box {
-          display: grid !important;
-          gap: 8px !important;
-          min-width: 0 !important;
-          width: 100% !important;
-          min-height: 96px !important;
-          padding: 14px 16px !important;
-          border-radius: 16px !important;
-          background: rgba(2, 6, 23, 0.38) !important;
-          border: 1px solid rgba(148, 163, 184, 0.2) !important;
-        }
+          .balance-copy-box__title {
+            color: #e2e8f0 !important;
+            font-size: 12px !important;
+            font-weight: 900 !important;
+          }
 
-        .balance-copy-box__title {
-          color: #e2e8f0 !important;
-          font-size: 12px !important;
-          font-weight: 900 !important;
-        }
+          .balance-copy-box__content {
+            margin: 0 !important;
+            white-space: pre-wrap !important;
+            font-family: inherit !important;
+            font-size: 14px !important;
+            line-height: 1.7 !important;
+            color: #dbeafe !important;
+            overflow-wrap: anywhere !important;
+          }
 
-        .balance-copy-box__content {
-          margin: 0 !important;
-          white-space: pre-wrap !important;
-          font-family: inherit !important;
-          font-size: 14px !important;
-          line-height: 1.7 !important;
-          color: #dbeafe !important;
-          overflow-wrap: anywhere !important;
-        }
+          /* compact balance board: one-screen visible drag area */
+          .balance-overview-card {
+            display: grid !important;
+            gap: 14px !important;
+            margin-top: 24px !important;
+            padding: 18px !important;
+            border-radius: 22px !important;
+            background:
+              radial-gradient(
+                circle at 14% 0%,
+                rgba(59, 130, 246, 0.18),
+                transparent 36%
+              ),
+              linear-gradient(
+                145deg,
+                rgba(8, 22, 43, 0.98),
+                rgba(9, 24, 48, 0.98)
+              ) !important;
+            border: 1px solid rgba(96, 165, 250, 0.32) !important;
+            box-shadow: 0 16px 38px rgba(0, 0, 0, 0.28) !important;
+          }
 
-        @media (max-width: 900px) {
-          .balance-result-teams { grid-template-columns: 1fr; }
-          .balance-result-bottom { grid-template-columns: 1fr !important; }
-          .balance-result-utility__header { flex-direction: column !important; }
-          .balance-result-utility__buttons { width: 100% !important; justify-content: stretch !important; }
-          .balance-compact-button { flex: 1; }
-          .balance-summary-list--compact { grid-template-columns: 1fr !important; }
-          .balance-player-info { grid-template-columns: 1fr; }
-        }
-      `}</style>
+          .balance-overview-main {
+            display: grid !important;
+            grid-template-columns: 220px minmax(0, 1fr) !important;
+            gap: 14px !important;
+            align-items: stretch !important;
+          }
+
+          .balance-grade-badge {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 10px !important;
+            min-height: 70px !important;
+            border-radius: 18px !important;
+            background: rgba(2, 6, 23, 0.62) !important;
+            border: 1px solid rgba(147, 197, 253, 0.28) !important;
+          }
+
+          .balance-grade-badge span {
+            display: grid !important;
+            place-items: center !important;
+            width: 42px !important;
+            height: 42px !important;
+            border-radius: 14px !important;
+            background: rgba(59, 130, 246, 0.32) !important;
+            color: #ffffff !important;
+            font-size: 20px !important;
+            font-weight: 950 !important;
+          }
+
+          .balance-grade-badge strong {
+            color: #e0f2fe !important;
+            font-size: 15px !important;
+            font-weight: 950 !important;
+          }
+
+          .balance-overview-stats {
+            display: grid !important;
+            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+            gap: 10px !important;
+          }
+
+          .balance-overview-stats div {
+            display: grid !important;
+            gap: 4px !important;
+            padding: 12px !important;
+            border-radius: 16px !important;
+            background: rgba(2, 6, 23, 0.42) !important;
+            border: 1px solid rgba(148, 163, 184, 0.2) !important;
+          }
+
+          .balance-overview-stats span {
+            color: #94a3b8 !important;
+            font-size: 11px !important;
+            font-weight: 900 !important;
+          }
+
+          .balance-overview-stats strong {
+            color: #f8fafc !important;
+            font-size: 18px !important;
+            font-weight: 950 !important;
+          }
+
+          .balance-line-strip {
+            display: grid !important;
+            grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+          }
+
+          .balance-line-chip {
+            display: grid !important;
+            gap: 4px !important;
+            min-width: 0 !important;
+            padding: 10px !important;
+            border-radius: 14px !important;
+            background: rgba(15, 23, 42, 0.58) !important;
+            border: 1px solid rgba(148, 163, 184, 0.18) !important;
+          }
+
+          .balance-line-chip strong {
+            color: #bfdbfe !important;
+            font-size: 12px !important;
+            font-weight: 950 !important;
+          }
+
+          .balance-line-chip span,
+          .balance-line-chip em,
+          .balance-line-chip b {
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+            font-size: 11px !important;
+            line-height: 1.25 !important;
+          }
+
+          .balance-line-chip span {
+            color: #e5e7eb !important;
+            font-style: normal !important;
+          }
+          .balance-line-chip em {
+            color: #64748b !important;
+            font-style: normal !important;
+          }
+          .balance-line-chip b {
+            color: #93c5fd !important;
+            font-weight: 950 !important;
+          }
+
+          .balance-result-teams--compact {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 16px !important;
+            margin-top: 16px !important;
+            align-items: start !important;
+          }
+
+          .balance-result-teams--compact .balance-team-panel {
+            padding: 16px !important;
+            border-radius: 20px !important;
+          }
+
+          .balance-result-teams--compact .balance-team-header {
+            margin-bottom: 10px !important;
+          }
+
+          .balance-result-teams--compact .balance-team-list {
+            display: grid !important;
+            gap: 8px !important;
+          }
+
+          .balance-player-card--compact {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 8px !important;
+            padding: 10px 12px !important;
+            min-height: 74px !important;
+            border-radius: 14px !important;
+            cursor: grab !important;
+          }
+
+          .balance-player-card--compact:active {
+            cursor: grabbing !important;
+          }
+
+          .balance-player-card--compact + .balance-player-card--compact {
+            margin-top: 0 !important;
+          }
+
+          .balance-player-compact-head {
+            display: grid !important;
+            grid-template-columns: 52px minmax(0, 1fr) 66px !important;
+            gap: 10px !important;
+            align-items: center !important;
+            min-width: 0 !important;
+          }
+
+          .balance-result-teams--compact .balance-position-badge {
+            min-height: 38px !important;
+            border-radius: 10px !important;
+            font-size: 12px !important;
+          }
+
+          .balance-result-teams--compact .balance-player-name {
+            margin: 0 0 4px !important;
+            font-size: 14px !important;
+            line-height: 1.25 !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+          }
+
+          .balance-result-teams--compact .balance-player-nickname {
+            font-size: 11px !important;
+          }
+
+          .balance-player-compact-meta {
+            display: flex !important;
+            gap: 6px !important;
+            flex-wrap: wrap !important;
+            min-width: 0 !important;
+          }
+
+          .balance-player-compact-meta span {
+            max-width: 120px !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+            padding: 2px 7px !important;
+            border-radius: 999px !important;
+            background: rgba(15, 23, 42, 0.72) !important;
+            border: 1px solid rgba(148, 163, 184, 0.18) !important;
+            color: #cbd5e1 !important;
+            font-size: 10px !important;
+            font-weight: 850 !important;
+            line-height: 1.2 !important;
+          }
+
+          .balance-player-score-box {
+            display: grid !important;
+            justify-items: end !important;
+            gap: 2px !important;
+          }
+
+          .balance-player-score-box span {
+            color: #94a3b8 !important;
+            font-size: 10px !important;
+            font-weight: 900 !important;
+          }
+
+          .balance-player-score-box strong {
+            color: #dbeafe !important;
+            font-size: 18px !important;
+            font-weight: 950 !important;
+            line-height: 1 !important;
+          }
+
+          .balance-player-details {
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+
+          .balance-player-details summary {
+            display: inline-flex !important;
+            align-items: center !important;
+            width: fit-content !important;
+            padding: 4px 8px !important;
+            border-radius: 999px !important;
+            background: rgba(59, 130, 246, 0.14) !important;
+            border: 1px solid rgba(96, 165, 250, 0.22) !important;
+            color: #bfdbfe !important;
+            font-size: 11px !important;
+            font-weight: 900 !important;
+            list-style: none !important;
+            cursor: pointer !important;
+          }
+
+          .balance-player-details summary::-webkit-details-marker {
+            display: none !important;
+          }
+
+          .balance-player-info--compact {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 6px 10px !important;
+            margin-top: 8px !important;
+            padding-top: 8px !important;
+            border-top: 1px solid rgba(148, 163, 184, 0.16) !important;
+          }
+
+          .balance-player-info--compact .balance-player-info-row {
+            font-size: 11px !important;
+          }
+
+          .balance-player-reason {
+            margin: 8px 0 0 !important;
+            color: #cbd5e1 !important;
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            line-height: 1.45 !important;
+          }
+
+          .balance-score-evidence-card {
+            grid-column: 1 / -1 !important;
+            padding: 22px !important;
+            border-radius: 20px !important;
+            background:
+              radial-gradient(
+                circle at 14% 0%,
+                rgba(59, 130, 246, 0.16),
+                transparent 34%
+              ),
+              linear-gradient(
+                145deg,
+                rgba(8, 22, 43, 0.98),
+                rgba(10, 30, 55, 0.98)
+              ) !important;
+            border: 1px solid rgba(96, 165, 250, 0.32) !important;
+            box-shadow: 0 16px 38px rgba(0, 0, 0, 0.28) !important;
+          }
+
+          .balance-score-evidence-head {
+            display: flex !important;
+            align-items: flex-start !important;
+            justify-content: space-between !important;
+            gap: 16px !important;
+            margin-bottom: 14px !important;
+          }
+
+          .balance-score-evidence-title {
+            color: #f8fafc !important;
+            font-size: 17px !important;
+            font-weight: 950 !important;
+            line-height: 1.25 !important;
+          }
+
+          .balance-score-evidence-desc {
+            margin-top: 5px !important;
+            color: #94a3b8 !important;
+            font-size: 12px !important;
+            font-weight: 750 !important;
+            line-height: 1.5 !important;
+          }
+
+          .balance-score-evidence summary {
+            display: inline-flex !important;
+            align-items: center !important;
+            width: fit-content !important;
+            min-height: 34px !important;
+            padding: 0 13px !important;
+            border-radius: 999px !important;
+            background: rgba(59, 130, 246, 0.18) !important;
+            border: 1px solid rgba(96, 165, 250, 0.32) !important;
+            color: #dbeafe !important;
+            font-size: 12px !important;
+            font-weight: 950 !important;
+            list-style: none !important;
+            cursor: pointer !important;
+          }
+
+          .balance-score-evidence summary::-webkit-details-marker {
+            display: none !important;
+          }
+
+          .balance-evidence-section {
+            display: grid !important;
+            gap: 12px !important;
+            margin-top: 18px !important;
+            padding-top: 18px !important;
+            border-top: 1px solid rgba(148, 163, 184, 0.16) !important;
+          }
+
+          .balance-evidence-section h3 {
+            margin: 0 !important;
+            color: #e0f2fe !important;
+            font-size: 15px !important;
+            font-weight: 950 !important;
+          }
+
+          .balance-evidence-grid {
+            display: grid !important;
+            grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+          }
+
+          .balance-evidence-grid--summary {
+            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+          }
+
+          .balance-evidence-grid div {
+            display: grid !important;
+            gap: 4px !important;
+            min-width: 0 !important;
+            padding: 10px 12px !important;
+            border-radius: 13px !important;
+            background: rgba(2, 6, 23, 0.44) !important;
+            border: 1px solid rgba(148, 163, 184, 0.18) !important;
+          }
+
+          .balance-evidence-grid span {
+            color: #94a3b8 !important;
+            font-size: 10px !important;
+            font-weight: 900 !important;
+            line-height: 1.3 !important;
+          }
+
+          .balance-evidence-grid strong {
+            min-width: 0 !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+            color: #f8fafc !important;
+            font-size: 13px !important;
+            font-weight: 950 !important;
+          }
+
+          .balance-evidence-note {
+            margin: 0 !important;
+            color: #cbd5e1 !important;
+            font-size: 12px !important;
+            font-weight: 700 !important;
+            line-height: 1.65 !important;
+          }
+
+          .balance-evidence-line-table {
+            display: grid !important;
+            gap: 8px !important;
+          }
+
+          .balance-evidence-line-row {
+            display: grid !important;
+            grid-template-columns: 64px minmax(0, 1fr) minmax(0, 1fr) 120px !important;
+            gap: 10px !important;
+            align-items: center !important;
+            padding: 10px 12px !important;
+            border-radius: 13px !important;
+            background: rgba(15, 23, 42, 0.54) !important;
+            border: 1px solid rgba(148, 163, 184, 0.16) !important;
+          }
+
+          .balance-evidence-line-row strong {
+            color: #bfdbfe !important;
+            font-size: 12px !important;
+            font-weight: 950 !important;
+          }
+
+          .balance-evidence-line-row span,
+          .balance-evidence-line-row b {
+            min-width: 0 !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+            font-size: 12px !important;
+            font-weight: 850 !important;
+          }
+
+          .balance-evidence-team-red {
+            color: #fecaca !important;
+          }
+          .balance-evidence-team-blue {
+            color: #bfdbfe !important;
+          }
+          .balance-evidence-line-row b {
+            color: #93c5fd !important;
+            text-align: right !important;
+          }
+
+          .balance-evidence-player-list {
+            display: grid !important;
+            gap: 12px !important;
+          }
+
+          .balance-evidence-player-card {
+            display: grid !important;
+            gap: 12px !important;
+            padding: 14px !important;
+            border-radius: 16px !important;
+            background: rgba(2, 6, 23, 0.46) !important;
+            border: 1px solid rgba(148, 163, 184, 0.18) !important;
+          }
+
+          .balance-evidence-player-top {
+            display: flex !important;
+            align-items: flex-start !important;
+            justify-content: space-between !important;
+            gap: 12px !important;
+          }
+
+          .balance-evidence-player-top div {
+            display: grid !important;
+            gap: 4px !important;
+            min-width: 0 !important;
+          }
+
+          .balance-evidence-player-top strong {
+            color: #f8fafc !important;
+            font-size: 14px !important;
+            font-weight: 950 !important;
+          }
+
+          .balance-evidence-player-top span {
+            color: #94a3b8 !important;
+            font-size: 12px !important;
+            font-weight: 750 !important;
+          }
+
+          .balance-evidence-player-top b {
+            flex-shrink: 0 !important;
+            color: #dbeafe !important;
+            font-size: 20px !important;
+            font-weight: 950 !important;
+            line-height: 1 !important;
+          }
+
+          .balance-evidence-grid--substats {
+            padding-top: 10px !important;
+            border-top: 1px dashed rgba(148, 163, 184, 0.2) !important;
+          }
+
+          .balance-evidence-reason {
+            display: grid !important;
+            gap: 6px !important;
+            padding: 10px 12px !important;
+            border-radius: 13px !important;
+            background: rgba(59, 130, 246, 0.09) !important;
+            border: 1px solid rgba(96, 165, 250, 0.18) !important;
+          }
+
+          .balance-evidence-reason p {
+            margin: 0 !important;
+            color: #dbeafe !important;
+            font-size: 12px !important;
+            font-weight: 750 !important;
+            line-height: 1.55 !important;
+          }
+
+          @media (max-width: 900px) {
+            .balance-overview-main {
+              grid-template-columns: 1fr !important;
+            }
+            .balance-overview-stats {
+              grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+            .balance-line-strip {
+              grid-template-columns: 1fr !important;
+            }
+            .balance-result-teams {
+              grid-template-columns: 1fr;
+            }
+            .balance-result-bottom {
+              grid-template-columns: 1fr !important;
+            }
+            .balance-result-utility__header {
+              flex-direction: column !important;
+            }
+            .balance-result-utility__buttons {
+              width: 100% !important;
+              justify-content: stretch !important;
+            }
+            .balance-compact-button {
+              flex: 1;
+            }
+            .balance-summary-list--compact {
+              grid-template-columns: 1fr !important;
+            }
+            .balance-player-info {
+              grid-template-columns: 1fr;
+            }
+            .balance-evidence-grid,
+            .balance-evidence-grid--summary {
+              grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+            .balance-evidence-line-row {
+              grid-template-columns: 1fr !important;
+            }
+            .balance-evidence-line-row b {
+              text-align: left !important;
+            }
+            .balance-evidence-player-top {
+              align-items: stretch !important;
+            }
+          }
+        `}</style>
       </div>
     </main>
   );
