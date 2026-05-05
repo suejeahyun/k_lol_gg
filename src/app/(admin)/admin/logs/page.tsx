@@ -1,4 +1,6 @@
+import type { Prisma } from "@prisma/client";
 import Pagination from "@/components/Pagination";
+import { prisma } from "@/lib/prisma/client";
 
 type AdminLog = {
   id: number;
@@ -40,6 +42,75 @@ const LOG_GROUPS = [
   ["RIOT", "Riot API"],
 ] as const;
 
+const ACTION_GROUP_PREFIX: Record<string, string[]> = {
+  ADMIN: ["ADMIN_"],
+  USER: ["USER_", "MY_PLAYER_"],
+  PLAYER: ["PLAYER_"],
+  CHAMPION: ["CHAMPION_"],
+  SEASON: ["SEASON_", "STATS_"],
+  MATCH: ["MATCH_"],
+  NOTICE: ["NOTICE_", "EVENT_NOTICE_"],
+  GALLERY: ["GALLERY_"],
+  PARTICIPATION: [
+    "SEASON_PARTICIPATION_",
+    "EVENT_PARTICIPATION_",
+    "DESTRUCTION_PARTICIPATION_",
+    "EVENT_PARTICIPANT_",
+    "DESTRUCTION_PARTICIPANT_",
+  ],
+  BALANCE: ["TEAM_BALANCE_", "EVENT_TEAMS_"],
+  RIOT: ["RIOT_"],
+};
+
+function parseDate(value: string | undefined, endOfDay = false) {
+  if (!value) return null;
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return null;
+  if (endOfDay) date.setHours(23, 59, 59, 999);
+
+  return date;
+}
+
+function buildWhere(searchParams: LogSearchParams): Prisma.AdminLogWhereInput {
+  const q = String(searchParams.q ?? "").trim();
+  const group = String(searchParams.group ?? "").trim();
+  const from = parseDate(searchParams.from);
+  const to = parseDate(searchParams.to, true);
+  const prefixes = ACTION_GROUP_PREFIX[group] ?? [];
+
+  const and: Prisma.AdminLogWhereInput[] = [];
+
+  if (q) {
+    and.push({
+      OR: [
+        { action: { contains: q, mode: "insensitive" } },
+        { message: { contains: q, mode: "insensitive" } },
+      ],
+    });
+  }
+
+  if (prefixes.length > 0) {
+    and.push({
+      OR: prefixes.map((prefix) => ({
+        action: { startsWith: prefix, mode: "insensitive" },
+      })),
+    });
+  }
+
+  if (from || to) {
+    and.push({
+      createdAt: {
+        ...(from ? { gte: from } : {}),
+        ...(to ? { lte: to } : {}),
+      },
+    });
+  }
+
+  return and.length > 0 ? { AND: and } : {};
+}
+
 function buildQuery(searchParams: LogSearchParams) {
   const params = new URLSearchParams();
   params.set("page", searchParams.page ?? "1");
@@ -54,21 +125,45 @@ function buildQuery(searchParams: LogSearchParams) {
 }
 
 async function getLogs(searchParams: LogSearchParams): Promise<LogsResponse> {
-  const params = buildQuery(searchParams);
+  const page = Number(searchParams.page ?? "1");
+  const pageSize = 50;
+  const safePage = Number.isNaN(page) || page < 1 ? 1 : page;
+  const where = buildWhere(searchParams);
 
-  const baseUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000";
+  const totalCount = await prisma.adminLog.count({ where });
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const currentPage = Math.min(safePage, totalPages);
+  const skip = (currentPage - 1) * pageSize;
 
-  const res = await fetch(`${baseUrl}/api/logs?${params.toString()}`, {
-    cache: "no-store",
+  const logs = await prisma.adminLog.findMany({
+    where,
+    orderBy: {
+      createdAt: "desc",
+    },
+    skip,
+    take: pageSize,
+    select: {
+      id: true,
+      action: true,
+      message: true,
+      createdAt: true,
+    },
   });
 
-  if (!res.ok) {
-    throw new Error("로그 목록 조회 실패");
-  }
-
-  return res.json();
+  return {
+    logs: logs.map((log) => ({
+      id: log.id,
+      action: log.action,
+      message: log.message,
+      createdAt: log.createdAt.toISOString(),
+    })),
+    pagination: {
+      page: currentPage,
+      pageSize,
+      totalCount,
+      totalPages,
+    },
+  };
 }
 
 type PageProps = {
@@ -77,11 +172,29 @@ type PageProps = {
 
 export default async function AdminLogsPage({ searchParams }: PageProps) {
   const resolvedSearchParams = await searchParams;
-  const data = await getLogs(resolvedSearchParams);
   const q = resolvedSearchParams.q ?? "";
   const group = resolvedSearchParams.group ?? "";
   const from = resolvedSearchParams.from ?? "";
   const to = resolvedSearchParams.to ?? "";
+
+  let data: LogsResponse = {
+    logs: [],
+    pagination: {
+      page: 1,
+      pageSize: 50,
+      totalCount: 0,
+      totalPages: 1,
+    },
+  };
+  let errorMessage: string | null = null;
+
+  try {
+    data = await getLogs(resolvedSearchParams);
+  } catch (error) {
+    console.error("[ADMIN_LOGS_PAGE_ERROR]", error);
+    errorMessage =
+      "로그 목록을 불러오지 못했습니다. Vercel DATABASE_URL과 AdminLog(action, message, createdAt) 컬럼 상태를 확인하세요.";
+  }
 
   const paginationQuery = {
     q: q || undefined,
@@ -144,51 +257,60 @@ export default async function AdminLogsPage({ searchParams }: PageProps) {
           </div>
         </div>
 
-        <div className="admin-table-wrap">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>액션</th>
-                <th>내용</th>
-                <th>시간</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.logs.length === 0 ? (
-                <tr>
-                  <td colSpan={4}>조건에 맞는 관리자 로그가 없습니다.</td>
-                </tr>
-              ) : (
-                data.logs.map((log) => (
-                  <tr key={log.id}>
-                    <td>{log.id}</td>
-                    <td>
-                      <span className="admin-log-action-pill">{log.action}</span>
-                    </td>
-                    <td>{log.message}</td>
-                    <td>
-                      {new Intl.DateTimeFormat("ko-KR", {
-                        year: "numeric",
-                        month: "2-digit",
-                        day: "2-digit",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      }).format(new Date(log.createdAt))}
-                    </td>
+        {errorMessage ? (
+          <div className="admin-empty">
+            <strong>로그 조회 실패</strong>
+            <p>{errorMessage}</p>
+          </div>
+        ) : (
+          <>
+            <div className="admin-table-wrap">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>액션</th>
+                    <th>내용</th>
+                    <th>시간</th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                </thead>
+                <tbody>
+                  {data.logs.length === 0 ? (
+                    <tr>
+                      <td colSpan={4}>조건에 맞는 관리자 로그가 없습니다.</td>
+                    </tr>
+                  ) : (
+                    data.logs.map((log) => (
+                      <tr key={log.id}>
+                        <td>{log.id}</td>
+                        <td>
+                          <span className="admin-log-action-pill">{log.action}</span>
+                        </td>
+                        <td>{log.message}</td>
+                        <td>
+                          {new Intl.DateTimeFormat("ko-KR", {
+                            year: "numeric",
+                            month: "2-digit",
+                            day: "2-digit",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }).format(new Date(log.createdAt))}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
 
-        <Pagination
-          currentPage={data.pagination.page}
-          totalPages={data.pagination.totalPages}
-          basePath="/admin/logs"
-          query={paginationQuery}
-        />
+            <Pagination
+              currentPage={data.pagination.page}
+              totalPages={data.pagination.totalPages}
+              basePath="/admin/logs"
+              query={paginationQuery}
+            />
+          </>
+        )}
       </section>
     </main>
   );
