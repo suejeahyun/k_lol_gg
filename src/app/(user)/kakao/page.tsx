@@ -12,7 +12,7 @@ type PlayerSummaryResult = {
   wins: number;
   losses: number;
   winRate: number;
-  kda: number;
+  mvpCount: number;
   avgKills: number;
   avgDeaths: number;
   avgAssists: number;
@@ -55,7 +55,7 @@ export default function KakaoPage() {
       <div className="kakao-search-page__inner">
         <h1 className="kakao-search-page__title">카카오 플레이어 조회</h1>
         <p className="kakao-search-page__desc">
-          닉네임#태그 형식으로 입력하면 총판수, 승률, KDA를 조회합니다.
+          닉네임#태그 형식으로 입력하면 총판수, 승률, MVP를 조회합니다.
         </p>
 
         <form className="kakao-search-form" onSubmit={handleSubmit}>

@@ -33,10 +33,10 @@ type RankingPlayer = {
   wins: number;
   losses: number;
   winRate: number;
-  kda: number;
+  mvpCount: number;
 };
 
-type SortType = "name" | "totalGames" | "winRate" | "kda";
+type SortType = "name" | "totalGames" | "winRate" | "mvpCount";
 type OrderType = "asc" | "desc";
 
 const PAGE_SIZE = 10;
@@ -47,7 +47,7 @@ function getSort(sort?: string): SortType {
     sort === "name" ||
     sort === "totalGames" ||
     sort === "winRate" ||
-    sort === "kda"
+    sort === "mvpCount"
   ) {
     return sort;
   }
@@ -66,13 +66,6 @@ function formatPercent(value: number) {
   return Number.isInteger(rounded) ? `${rounded}%` : `${rounded.toFixed(1)}%`;
 }
 
-function formatKda(value: number) {
-  if (!Number.isFinite(value)) return "0";
-
-  const rounded = Math.round(value * 100) / 100;
-  return Number.isInteger(rounded) ? `${rounded}` : rounded.toFixed(2);
-}
-
 function getRankLabel(index: number) {
   if (index === 0) return "1";
   if (index === 1) return "2";
@@ -85,13 +78,9 @@ async function getRankings(seasonId?: string): Promise<RankingApiResponse> {
   const headersList = await headers();
 
   const host = headersList.get("host");
-  const protocol =
-    process.env.NODE_ENV === "production" ? "https" : "http";
+  const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
 
-  const baseUrl = host
-    ? `${protocol}://${host}`
-    : "http://localhost:3000";
-
+  const baseUrl = host ? `${protocol}://${host}` : "http://localhost:3000";
   const query = seasonId ? `?seasonId=${seasonId}` : "";
 
   const response = await fetch(`${baseUrl}/api/rankings${query}`, {
@@ -115,6 +104,7 @@ async function getRankings(seasonId?: string): Promise<RankingApiResponse> {
         typeof player.participationCount === "number"
           ? player.participationCount
           : 0,
+      mvpCount: typeof player.mvpCount === "number" ? player.mvpCount : 0,
     })),
   };
 }
@@ -174,7 +164,7 @@ function TopRankingCard({
                     {subMetricValue ? subMetricValue(player) : `총 ${player.totalGames}경기`}
                   </span>
 
-                  <span>KDA {formatKda(player.kda)}</span>
+                  <span>MVP {player.mvpCount}회</span>
                 </div>
               </div>
             </Link>
@@ -191,10 +181,7 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
   const seasonId = resolvedSearchParams.seasonId;
   const sort = getSort(resolvedSearchParams.sort);
   const order = getOrder(resolvedSearchParams.order);
-  const currentPage = Math.max(
-    1,
-    Number(resolvedSearchParams.page ?? "1") || 1
-  );
+  const currentPage = Math.max(1, Number(resolvedSearchParams.page ?? "1") || 1);
 
   const [data, seasons] = await Promise.all([
     getRankings(seasonId),
@@ -214,7 +201,7 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
     if (sort === "name") result = a.name.localeCompare(b.name);
     if (sort === "totalGames") result = a.totalGames - b.totalGames;
     if (sort === "winRate") result = a.winRate - b.winRate;
-    if (sort === "kda") result = a.kda - b.kda;
+    if (sort === "mvpCount") result = a.mvpCount - b.mvpCount;
 
     return order === "asc" ? result : -result;
   });
@@ -225,7 +212,7 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
       return (
         b.winRate - a.winRate ||
         b.totalGames - a.totalGames ||
-        b.kda - a.kda ||
+        b.mvpCount - a.mvpCount ||
         a.name.localeCompare(b.name)
       );
     })
@@ -237,18 +224,17 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
         b.participationCount - a.participationCount ||
         b.totalGames - a.totalGames ||
         b.winRate - a.winRate ||
-        b.kda - a.kda ||
+        b.mvpCount - a.mvpCount ||
         a.name.localeCompare(b.name)
       );
     })
     .slice(0, 3);
 
-  const topKda = [...data.rankings]
-    .filter((player) => player.totalGames >= MIN_GAMES_FOR_TOP_RATE)
+  const topMvp = [...data.rankings]
+    .filter((player) => player.mvpCount > 0)
     .sort((a, b) => {
       return (
-        b.kda - a.kda ||
-        b.totalGames - a.totalGames ||
+        b.mvpCount - a.mvpCount ||
         b.winRate - a.winRate ||
         a.name.localeCompare(b.name)
       );
@@ -256,12 +242,10 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
     .slice(0, 3);
 
   const totalPages = Math.max(1, Math.ceil(sortedRankings.length / PAGE_SIZE));
-
   const safeCurrentPage = Math.min(currentPage, totalPages);
-
   const pagedRankings = sortedRankings.slice(
     (safeCurrentPage - 1) * PAGE_SIZE,
-    safeCurrentPage * PAGE_SIZE
+    safeCurrentPage * PAGE_SIZE,
   );
 
   function sortLink(field: SortType) {
@@ -306,18 +290,19 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
             title="최다참여 TOP 3"
             players={topParticipation}
             metricLabel="참가"
-            metricValue={(player) => `${player.participationCount ?? 0}회`}
+            metricValue={(player) => `${player.participationCount}회`}
             subMetricValue={(player) => `세트 ${player.totalGames}경기`}
             emptyText="참여 기록이 없습니다."
           />
 
           <TopRankingCard
-            eyebrow="KDA"
-            title="KDA TOP 3"
-            players={topKda}
-            metricLabel="KDA"
-            metricValue={(player) => formatKda(player.kda)}
-            emptyText={`최소 ${MIN_GAMES_FOR_TOP_RATE}경기 이상 플레이어가 없습니다.`}
+            eyebrow="MVP"
+            title="MVP TOP 3"
+            players={topMvp}
+            metricLabel="MVP"
+            metricValue={(player) => `${player.mvpCount}회`}
+            subMetricValue={(player) => `승률 ${formatPercent(player.winRate)}`}
+            emptyText="MVP 기록이 없습니다."
           />
         </section>
 
@@ -346,7 +331,7 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
                 <div>닉네임#태그</div>
                 <Link href={sortLink("totalGames")}>총 경기</Link>
                 <Link href={sortLink("winRate")}>승률</Link>
-                <Link href={sortLink("kda")}>KDA</Link>
+                <Link href={sortLink("mvpCount")}>MVP</Link>
               </div>
 
               <div className="ranking-list">
@@ -382,9 +367,7 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
                           {formatPercent(player.winRate)}
                         </div>
 
-                        <div className="ranking-col">
-                          {formatKda(player.kda)}
-                        </div>
+                        <div className="ranking-col">{player.mvpCount}</div>
                       </div>
                     </Link>
                   );

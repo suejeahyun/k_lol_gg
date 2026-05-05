@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Pagination from "@/components/Pagination";
+import RecalculateStatsButton from "@/components/admin/RecalculateStatsButton";
 
 type DashboardData = {
   currentSeason: {
@@ -11,6 +12,9 @@ type DashboardData = {
   } | null;
   playerCount: number;
   matchCount: number;
+  pendingUserCount: number;
+  todayParticipationCount: number;
+  riotFailureCount: number;
   latestMatch: {
     id: number;
     title: string | null;
@@ -112,6 +116,12 @@ export default function AdminHomePage() {
             현재 시즌, 전체 데이터 현황, 최근 내전 및 운영 로그를 확인합니다.
           </p>
         </div>
+        <div className="admin-dashboard-actions">
+          <RecalculateStatsButton seasonId={data.currentSeason?.id ?? null} />
+          <a className="admin-button admin-button--ghost" href="/api/admin/backup/players.csv">플레이어 CSV</a>
+          <a className="admin-button admin-button--ghost" href="/api/admin/backup/matches.csv">내전 CSV</a>
+          <a className="admin-button admin-button--ghost" href="/api/logs?download=csv">로그 CSV</a>
+        </div>
       </div>
 
       <section className="admin-summary-grid">
@@ -142,6 +152,37 @@ export default function AdminHomePage() {
           </div>
           <div className="admin-summary-card__meta">
             등록된 전체 내전
+          </div>
+        </div>
+
+
+        <div className="admin-summary-card">
+          <div className="admin-summary-card__label">승인 대기</div>
+          <div className="admin-summary-card__value">
+            {data.pendingUserCount.toLocaleString()}명
+          </div>
+          <div className="admin-summary-card__meta">
+            처리해야 할 회원가입 신청
+          </div>
+        </div>
+
+        <div className="admin-summary-card">
+          <div className="admin-summary-card__label">오늘 참가 신청</div>
+          <div className="admin-summary-card__value">
+            {data.todayParticipationCount.toLocaleString()}명
+          </div>
+          <div className="admin-summary-card__meta">
+            당일 시즌 참가 신청 기준
+          </div>
+        </div>
+
+        <div className="admin-summary-card">
+          <div className="admin-summary-card__label">Riot 실패 로그</div>
+          <div className="admin-summary-card__value">
+            {data.riotFailureCount.toLocaleString()}건
+          </div>
+          <div className="admin-summary-card__meta">
+            API 키·호출 제한 점검 대상
           </div>
         </div>
 

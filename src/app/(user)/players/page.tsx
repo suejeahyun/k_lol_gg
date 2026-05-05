@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma/client";
 import Pagination from "@/components/Pagination";
 import PlayerSearchBox from "./PlayerSearchBox";
 import TierIcon from "@/components/TierIcon";
+import { getGameMvpParticipant } from "@/lib/mvp";
 
 type PlayersPageProps = {
   searchParams: Promise<{
@@ -17,7 +18,7 @@ type SortType =
   | "name"
   | "totalGames"
   | "winRate"
-  | "kda"
+  | "mvpCount"
   | "peakTier"
   | "currentTier";
 
@@ -30,7 +31,7 @@ function getSort(sort?: string): SortType {
     sort === "name" ||
     sort === "totalGames" ||
     sort === "winRate" ||
-    sort === "kda" ||
+    sort === "mvpCount" ||
     sort === "peakTier" ||
     sort === "currentTier"
   ) {
@@ -164,11 +165,8 @@ function formatPercent(value: number) {
   return Number.isInteger(rounded) ? `${rounded}%` : `${rounded.toFixed(1)}%`;
 }
 
-function formatKda(value: number) {
-  if (!Number.isFinite(value)) return "0";
-
-  const rounded = Math.round(value * 100) / 100;
-  return Number.isInteger(rounded) ? `${rounded}` : rounded.toFixed(2);
+function formatMvp(value: number) {
+  return `${value}회`;
 }
 
 function getPrimaryPosition(
@@ -195,11 +193,11 @@ function getPrimaryPosition(
 function getPlayerStatus({
   totalGames,
   winRate,
-  kda,
+  mvpCount,
 }: {
   totalGames: number;
   winRate: number;
-  kda: number;
+  mvpCount: number;
 }) {
   if (totalGames < 3) {
     return {
@@ -208,7 +206,7 @@ function getPlayerStatus({
     };
   }
 
-  if (winRate >= 65 && kda >= 3) {
+  if (winRate >= 60 && mvpCount >= 2) {
     return {
       label: "ACE",
       className: "ace",
@@ -241,9 +239,9 @@ function getWinRateTone(winRate: number) {
   return "normal";
 }
 
-function getKdaTone(kda: number) {
-  if (kda >= 3) return "gold";
-  if (kda >= 2) return "good";
+function getMvpTone(mvpCount: number) {
+  if (mvpCount >= 3) return "gold";
+  if (mvpCount >= 1) return "good";
   return "normal";
 }
 
@@ -267,7 +265,17 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
           position: true,
           game: {
             select: {
+              id: true,
               winnerTeam: true,
+              participants: {
+                select: {
+                  playerId: true,
+                  kills: true,
+                  deaths: true,
+                  assists: true,
+                  team: true,
+                },
+              },
             },
           },
         },
@@ -286,38 +294,24 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
         participant.team === participant.game.winnerTeam
     ).length;
 
-    const totalKills = player.participants.reduce(
-      (sum: number, participant: (typeof player.participants)[number]) =>
-        sum + participant.kills,
-      0
-    );
-
-    const totalDeaths = player.participants.reduce(
-      (sum: number, participant: (typeof player.participants)[number]) =>
-        sum + participant.deaths,
-      0
-    );
-
-    const totalAssists = player.participants.reduce(
-      (sum: number, participant: (typeof player.participants)[number]) =>
-        sum + participant.assists,
-      0
-    );
-
     const winRate =
       totalGames > 0 ? Number(((wins / totalGames) * 100).toFixed(1)) : 0;
 
-    const kda =
-      totalDeaths === 0
-        ? Number((totalKills + totalAssists).toFixed(2))
-        : Number(((totalKills + totalAssists) / totalDeaths).toFixed(2));
+    const mvpCount = player.participants.filter((participant) => {
+      const mvp = getGameMvpParticipant(
+        participant.game.participants,
+        participant.game.winnerTeam,
+      );
+
+      return mvp?.playerId === player.id;
+    }).length;
 
     const primaryPosition = getPrimaryPosition(player.participants);
 
     const status = getPlayerStatus({
       totalGames,
       winRate,
-      kda,
+      mvpCount,
     });
 
     return {
@@ -329,7 +323,7 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
       currentTier: player.currentTier ?? null,
       totalGames,
       winRate,
-      kda,
+      mvpCount,
       primaryPosition,
       status,
     };
@@ -341,7 +335,7 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
     if (sort === "name") result = a.name.localeCompare(b.name);
     if (sort === "totalGames") result = a.totalGames - b.totalGames;
     if (sort === "winRate") result = a.winRate - b.winRate;
-    if (sort === "kda") result = a.kda - b.kda;
+    if (sort === "mvpCount") result = a.mvpCount - b.mvpCount;
     if (sort === "peakTier") result = tierRank(a.peakTier) - tierRank(b.peakTier);
     if (sort === "currentTier") {
       result = tierRank(a.currentTier) - tierRank(b.currentTier);
@@ -369,10 +363,9 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
       return b.totalGames - a.totalGames;
     })[0];
 
-  const highestKdaPlayer = [...mapped]
-    .filter((player) => player.totalGames >= 3)
+  const highestMvpPlayer = [...mapped]
     .sort((a, b) => {
-      if (b.kda !== a.kda) return b.kda - a.kda;
+      if (b.mvpCount !== a.mvpCount) return b.mvpCount - a.mvpCount;
       return b.totalGames - a.totalGames;
     })[0];
 
@@ -431,10 +424,10 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
         </div>
 
         <div className="players-page-v2__summary-card players-page-v2__summary-card--wide">
-          <span>최고 KDA</span>
+          <span>최다 MVP</span>
           <strong>
-            {highestKdaPlayer
-              ? `${highestKdaPlayer.name} · ${formatKda(highestKdaPlayer.kda)}`
+            {highestMvpPlayer
+              ? `${highestMvpPlayer.name} · ${formatMvp(highestMvpPlayer.mvpCount)}`
               : "없음"}
           </strong>
         </div>
@@ -469,7 +462,7 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
             <div>주 포지션</div>
             <Link href={sortLink("totalGames")}>전적</Link>
             <Link href={sortLink("winRate")}>승률</Link>
-            <Link href={sortLink("kda")}>KDA</Link>
+            <Link href={sortLink("mvpCount")}>MVP</Link>
             <div>상태</div>
           </div>
 
@@ -527,11 +520,11 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
 
                   <div className="players-page-v2__cell">
                     <span
-                      className={`players-page-v2__stat-pill players-page-v2__stat-pill--${getKdaTone(
-                        player.kda
+                      className={`players-page-v2__stat-pill players-page-v2__stat-pill--${getMvpTone(
+                        player.mvpCount
                       )}`}
                     >
-                      {formatKda(player.kda)}
+                      {formatMvp(player.mvpCount)}
                     </span>
                   </div>
 

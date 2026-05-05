@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { getGameMvpParticipant } from "@/lib/mvp";
 
 export async function GET(req: NextRequest) {
   try {
@@ -39,6 +40,7 @@ export async function GET(req: NextRequest) {
             team: true,
             game: {
               select: {
+                id: true,
                 winnerTeam: true,
                 seriesId: true,
               },
@@ -48,48 +50,62 @@ export async function GET(req: NextRequest) {
       },
     });
 
+    const mvpCountByPlayer = new Map<number, number>();
+    const participantsByGame = new Map<
+      number,
+      Array<{
+        playerId: number;
+        kills: number;
+        deaths: number;
+        assists: number;
+        team: string;
+        winnerTeam: string;
+      }>
+    >();
+
+    for (const player of players) {
+      for (const participant of player.participants) {
+        const items = participantsByGame.get(participant.game.id) ?? [];
+        items.push({
+          playerId: player.id,
+          kills: participant.kills,
+          deaths: participant.deaths,
+          assists: participant.assists,
+          team: participant.team,
+          winnerTeam: participant.game.winnerTeam,
+        });
+        participantsByGame.set(participant.game.id, items);
+      }
+    }
+
+    for (const gameParticipants of participantsByGame.values()) {
+      const mvp = getGameMvpParticipant(
+        gameParticipants,
+        gameParticipants[0]?.winnerTeam ?? "",
+      );
+
+      if (mvp) {
+        mvpCountByPlayer.set(
+          mvp.playerId,
+          (mvpCountByPlayer.get(mvp.playerId) ?? 0) + 1,
+        );
+      }
+    }
+
     const mappedRankings = players.map((player: (typeof players)[number]) => {
-      // 세트 기준 총 경기 수
       const totalGames = player.participants.length;
-      
-      // 내전 시리즈 기준 참가 횟수
-      // 같은 내전에서 1세트, 2세트, 3세트를 모두 뛰어도 참가횟수는 1회
       const participationCount = new Set(
-        player.participants.map((participant) => participant.game.seriesId)
+        player.participants.map((participant) => participant.game.seriesId),
       ).size;
 
       const wins = player.participants.filter(
         (participant: (typeof player.participants)[number]) =>
-          participant.team === participant.game.winnerTeam
+          participant.team === participant.game.winnerTeam,
       ).length;
 
       const losses = totalGames - wins;
-
-      const totalKills = player.participants.reduce(
-        (sum: number, participant: (typeof player.participants)[number]) =>
-          sum + participant.kills,
-        0
-      );
-
-      const totalDeaths = player.participants.reduce(
-        (sum: number, participant: (typeof player.participants)[number]) =>
-          sum + participant.deaths,
-        0
-      );
-
-      const totalAssists = player.participants.reduce(
-        (sum: number, participant: (typeof player.participants)[number]) =>
-          sum + participant.assists,
-        0
-      );
-
       const winRate =
         totalGames > 0 ? Number(((wins / totalGames) * 100).toFixed(1)) : 0;
-
-      const kda =
-        totalDeaths === 0
-          ? Number((totalKills + totalAssists).toFixed(2))
-          : Number(((totalKills + totalAssists) / totalDeaths).toFixed(2));
 
       return {
         playerId: player.id,
@@ -101,23 +117,18 @@ export async function GET(req: NextRequest) {
         wins,
         losses,
         winRate,
-        kda,
+        mvpCount: mvpCountByPlayer.get(player.id) ?? 0,
       };
     });
 
     const rankings = mappedRankings
       .filter((player: (typeof mappedRankings)[number]) => player.totalGames > 0)
-      .sort(
-        (
-          a: (typeof mappedRankings)[number],
-          b: (typeof mappedRankings)[number]
-        ) => {
-          if (b.winRate !== a.winRate) return b.winRate - a.winRate;
-          if (b.wins !== a.wins) return b.wins - a.wins;
-          if (b.kda !== a.kda) return b.kda - a.kda;
-          return a.playerId - b.playerId;
-        }
-      );
+      .sort((a, b) => {
+        if (b.winRate !== a.winRate) return b.winRate - a.winRate;
+        if (b.wins !== a.wins) return b.wins - a.wins;
+        if (b.mvpCount !== a.mvpCount) return b.mvpCount - a.mvpCount;
+        return a.playerId - b.playerId;
+      });
 
     return NextResponse.json({
       season: {
@@ -133,7 +144,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(
       { message: "Failed to fetch rankings" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

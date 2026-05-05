@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { createSimpleText } from "@/lib/kakao/response";
+import { getGameMvpParticipant } from "@/lib/mvp";
 
 function normalizeText(value: string) {
   return value.trim().toLowerCase();
@@ -47,11 +48,6 @@ function formatPlayerName(player: {
   const tag = player.tag ? player.tag.replace(/^#/, "") : "";
 
   return tag ? `${player.nickname}#${tag}` : player.nickname;
-}
-
-function getKda(kills: number, deaths: number, assists: number) {
-  if (deaths === 0) return kills + assists;
-  return (kills + assists) / deaths;
 }
 
 function roundOne(value: number) {
@@ -168,6 +164,15 @@ export async function POST(req: NextRequest) {
                 createdAt: true,
               },
             },
+            participants: {
+              select: {
+                playerId: true,
+                kills: true,
+                deaths: true,
+                assists: true,
+                team: true,
+              },
+            },
           },
         },
       },
@@ -188,6 +193,7 @@ export async function POST(req: NextRequest) {
         kills: number;
         deaths: number;
         assists: number;
+        mvpCount: number;
       }
     >();
 
@@ -202,6 +208,7 @@ export async function POST(req: NextRequest) {
         kills: 0,
         deaths: 0,
         assists: 0,
+        mvpCount: 0,
       };
 
       const isWin = participant.team === participant.game.winnerTeam;
@@ -213,6 +220,15 @@ export async function POST(req: NextRequest) {
       stat.deaths += participant.deaths;
       stat.assists += participant.assists;
 
+      const mvp = getGameMvpParticipant(
+        participant.game.participants,
+        participant.game.winnerTeam,
+      );
+
+      if (mvp?.playerId === participant.playerId) {
+        stat.mvpCount += 1;
+      }
+
       playerStatsMap.set(participant.playerId, stat);
     }
 
@@ -220,12 +236,9 @@ export async function POST(req: NextRequest) {
       const winRate =
         stat.totalGames > 0 ? (stat.wins / stat.totalGames) * 100 : 0;
 
-      const kda = getKda(stat.kills, stat.deaths, stat.assists);
-
       return {
         ...stat,
         winRate,
-        kda,
       };
     });
 
@@ -236,9 +249,9 @@ export async function POST(req: NextRequest) {
       })
       .findIndex((item) => item.playerId === player.id);
 
-    const kdaRanking = [...rankings]
+    const mvpRanking = [...rankings]
       .sort((a, b) => {
-        if (b.kda !== a.kda) return b.kda - a.kda;
+        if (b.mvpCount !== a.mvpCount) return b.mvpCount - a.mvpCount;
         return b.totalGames - a.totalGames;
       })
       .findIndex((item) => item.playerId === player.id);
@@ -291,11 +304,11 @@ export async function POST(req: NextRequest) {
 총 경기: ${currentPlayerStat.totalGames}전
 승리: ${currentPlayerStat.wins}승 / 패배: ${currentPlayerStat.losses}패
 승률: ${roundOne(currentPlayerStat.winRate)}%
-KDA: ${roundOne(currentPlayerStat.kda)}
+MVP: ${currentPlayerStat.mvpCount}회
 
 랭킹
 승률 랭킹: ${winRateRanking + 1}등
-KDA 랭킹: ${kdaRanking + 1}등
+MVP 랭킹: ${mvpRanking + 1}등
 최다 참여 랭킹: ${participationRanking + 1}등
 
 최근 경기 5경기

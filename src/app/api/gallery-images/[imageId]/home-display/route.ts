@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
+import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 
 type RouteContext = {
   params: Promise<{
@@ -11,6 +12,9 @@ type RouteContext = {
 const REDIRECT_PATH = "/admin/images";
 
 export async function POST(req: NextRequest, { params }: RouteContext) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
   try {
     const { imageId } = await params;
     const id = Number(imageId);
@@ -81,6 +85,9 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
 }
 
 export async function PATCH(req: NextRequest, { params }: RouteContext) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
   try {
     const { imageId } = await params;
     const id = Number(imageId);

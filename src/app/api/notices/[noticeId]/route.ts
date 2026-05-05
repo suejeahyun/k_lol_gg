@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import { validateNoticeInput } from "@/validations/notice";
+import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 
 type NoticeRouteContext = {
   params: Promise<{
@@ -44,6 +45,9 @@ export async function GET(_: NextRequest, context: NoticeRouteContext) {
 }
 
 export async function PATCH(req: NextRequest, context: NoticeRouteContext) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
   try {
     const { noticeId } = await context.params;
     const id = Number(noticeId);
@@ -102,6 +106,9 @@ export async function PATCH(req: NextRequest, context: NoticeRouteContext) {
 }
 
 export async function DELETE(_: NextRequest, context: NoticeRouteContext) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
   try {
     const { noticeId } = await context.params;
     const id = Number(noticeId);

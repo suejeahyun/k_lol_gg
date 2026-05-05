@@ -1242,7 +1242,7 @@ export default function PlayersBalancePage() {
                           </strong>
                         </div>
                         <div>
-                          <span>최근 20게임 KDA</span>
+                          <span>최근 20게임 평점</span>
                           <strong>
                             {formatDecimal(player.recentStats?.kda, 2)}
                           </strong>
@@ -1281,7 +1281,7 @@ export default function PlayersBalancePage() {
                           </strong>
                         </div>
                         <div>
-                          <span>내전 KDA</span>
+                          <span>내전 평점</span>
                           <strong>
                             {formatDecimal(player.internalStats?.kda, 2)}
                           </strong>
@@ -1295,7 +1295,7 @@ export default function PlayersBalancePage() {
                           </strong>
                         </div>
                         <div>
-                          <span>{player.position} 내전 KDA</span>
+                          <span>{player.position} 내전 평점</span>
                           <strong>
                             {formatDecimal(
                               player.internalPositionStats?.kda,

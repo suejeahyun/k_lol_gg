@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 
 type EventMatchResultRouteProps = {
   params: Promise<{
@@ -11,6 +12,9 @@ export async function PATCH(
   req: NextRequest,
   { params }: EventMatchResultRouteProps
 ) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
   try {
     const { eventId } = await params;
     const id = Number(eventId);

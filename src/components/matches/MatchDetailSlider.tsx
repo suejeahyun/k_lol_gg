@@ -139,7 +139,7 @@ export default function MatchDetailSlider({
                 <span>이름</span>
                 <span>닉네임</span>
                 <span>챔피언</span>
-                <span>KDA</span>
+                <span>스코어</span>
                 <span>결과</span>
               </div>
 

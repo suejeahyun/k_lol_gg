@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
+import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 
 type RouteContext = {
   params: Promise<{
@@ -48,6 +49,9 @@ export async function GET(_: NextRequest, context: RouteContext) {
 }
 
 export async function PATCH(req: NextRequest, context: RouteContext) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
   try {
     const { imageId } = await context.params;
     const id = Number(imageId);
@@ -119,6 +123,9 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
 }
 
 export async function DELETE(_: NextRequest, context: RouteContext) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
   try {
     const { imageId } = await context.params;
     const id = Number(imageId);

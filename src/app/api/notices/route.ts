@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import { validateNoticeInput } from "@/validations/notice";
+import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 
 export async function GET(req: NextRequest) {
   try {
@@ -43,6 +44,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
   try {
     const body = await req.json();
     const validated = validateNoticeInput(body);

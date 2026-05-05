@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
+import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 
 type CreateGalleryImageBody = {
   title: string;
@@ -27,6 +28,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
   try {
     const body = (await req.json()) as CreateGalleryImageBody;
 

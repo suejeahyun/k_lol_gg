@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
 import TierIcon from "@/components/TierIcon";
 import SoloRankSection from "@/components/SoloRankSection";
+import { getGameMvpParticipant } from "@/lib/mvp";
 
 type PlayerDetailPageProps = {
   params: Promise<{
@@ -49,6 +50,15 @@ export default async function PlayerDetailPage({
                   season: true,
                 },
               },
+              participants: {
+                select: {
+                  playerId: true,
+                  kills: true,
+                  deaths: true,
+                  assists: true,
+                  team: true,
+                },
+              },
             },
           },
         },
@@ -69,27 +79,14 @@ export default async function PlayerDetailPage({
   const losses = totalGames - wins;
   const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
 
-  const totalKills = player.participants.reduce(
-    (sum, participant) => sum + participant.kills,
-    0
-  );
+  const mvpCount = player.participants.filter((participant) => {
+    const mvp = getGameMvpParticipant(
+      participant.game.participants,
+      participant.game.winnerTeam,
+    );
 
-  const totalDeaths = player.participants.reduce(
-    (sum, participant) => sum + participant.deaths,
-    0
-  );
-
-  const totalAssists = player.participants.reduce(
-    (sum, participant) => sum + participant.assists,
-    0
-  );
-
-  const avgKda =
-    totalGames > 0
-      ? totalDeaths === 0
-        ? "Perfect"
-        : ((totalKills + totalAssists) / totalDeaths).toFixed(2)
-      : "0.00";
+    return mvp?.playerId === player.id;
+  }).length;
 
   const championStats = Array.from(
     player.participants
@@ -106,12 +103,22 @@ export default async function PlayerDetailPage({
           kills: 0,
           deaths: 0,
           assists: 0,
+          mvpCount: 0,
         };
 
         prev.games += 1;
         prev.kills += participant.kills;
         prev.deaths += participant.deaths;
         prev.assists += participant.assists;
+
+        const mvp = getGameMvpParticipant(
+          participant.game.participants,
+          participant.game.winnerTeam,
+        );
+
+        if (mvp?.playerId === player.id) {
+          prev.mvpCount += 1;
+        }
 
         if (isWin) {
           prev.wins += 1;
@@ -130,6 +137,7 @@ export default async function PlayerDetailPage({
           kills: number;
           deaths: number;
           assists: number;
+          mvpCount: number;
         }
       >())
       .values()
@@ -214,8 +222,8 @@ export default async function PlayerDetailPage({
           </article>
 
           <article className="stat-card">
-            <span className="stat-card__label">평균 KDA</span>
-            <strong className="stat-card__value">{avgKda}</strong>
+            <span className="stat-card__label">MVP</span>
+            <strong className="stat-card__value">{mvpCount}회</strong>
           </article>
         </div>
       </section>
@@ -240,13 +248,6 @@ export default async function PlayerDetailPage({
                 (champion.wins / champion.games) * 100
               );
 
-              const championKda =
-                champion.deaths === 0
-                  ? "Perfect"
-                  : ((champion.kills + champion.assists) / champion.deaths).toFixed(
-                      2
-                    );
-
               return (
                 <article
                   key={champion.championId}
@@ -268,7 +269,7 @@ export default async function PlayerDetailPage({
                     <div className="champion-stat-card__text">
                       <strong>{champion.championName}</strong>
                       <span>
-                        {champion.wins}승 {championLosses}패 · KDA {championKda}
+                        {champion.wins}승 {championLosses}패 · MVP {champion.mvpCount}회
                       </span>
                     </div>
                   </div>

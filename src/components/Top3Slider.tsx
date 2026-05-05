@@ -13,7 +13,7 @@ type TopPlayerDto = {
   wins: number;
   losses: number;
   winRate: number;
-  kda: number;
+  mvpCount: number;
 };
 
 type Top3SliderProps = {
@@ -22,7 +22,7 @@ type Top3SliderProps = {
   players: TopPlayerDto[];
 };
 
-type RankingType = "winRate" | "participation" | "kda";
+type RankingType = "winRate" | "participation" | "mvpCount";
 
 type RankingSlide = {
   key: RankingType;
@@ -48,11 +48,11 @@ const slides: RankingSlide[] = [
     getSubValue: (player) => `${player.wins}승 ${player.losses}패`,
   },
   {
-    key: "kda",
-    title: "KDA TOP 3",
-    label: "KDA",
-    getValue: (player) => player.kda.toFixed(2),
-    getSubValue: () => null,
+    key: "mvpCount",
+    title: "MVP TOP 3",
+    label: "MVP",
+    getValue: (player) => `${player.mvpCount}회`,
+    getSubValue: (player) => `${player.wins}승 ${player.losses}패`,
   },
 ];
 
@@ -61,7 +61,7 @@ function getSortedPlayers(players: TopPlayerDto[], type: RankingType) {
     .sort((a, b) => {
       if (type === "winRate") {
         if (b.winRate !== a.winRate) return b.winRate - a.winRate;
-        if (b.kda !== a.kda) return b.kda - a.kda;
+        if (b.mvpCount !== a.mvpCount) return b.mvpCount - a.mvpCount;
         return b.participation - a.participation;
       }
 
@@ -71,10 +71,10 @@ function getSortedPlayers(players: TopPlayerDto[], type: RankingType) {
         }
 
         if (b.winRate !== a.winRate) return b.winRate - a.winRate;
-        return b.kda - a.kda;
+        return b.mvpCount - a.mvpCount;
       }
 
-      if (b.kda !== a.kda) return b.kda - a.kda;
+      if (b.mvpCount !== a.mvpCount) return b.mvpCount - a.mvpCount;
       if (b.winRate !== a.winRate) return b.winRate - a.winRate;
       return b.participation - a.participation;
     })

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 
 type Team = "BLUE" | "RED";
 type Position = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
@@ -78,6 +79,11 @@ function validatePayload(body: unknown):
     return { success: false, message: "최소 1개의 세트가 필요합니다." };
   }
 
+  const gameNumbers = payload.games.map((game) => game.gameNumber);
+  if (new Set(gameNumbers).size !== gameNumbers.length) {
+    return { success: false, message: "세트 번호가 중복되었습니다." };
+  }
+
   for (const game of payload.games) {
     if (
       !game ||
@@ -114,6 +120,7 @@ function validatePayload(body: unknown):
     }
 
     const seenPlayers = new Set<number>();
+    const seenChampions = new Set<number>();
     const bluePositions = new Set<Position>();
     const redPositions = new Set<Position>();
 
@@ -148,6 +155,15 @@ function validatePayload(body: unknown):
           message: `${game.gameNumber}세트의 championId가 올바르지 않습니다.`,
         };
       }
+
+      if (seenChampions.has(participant.championId)) {
+        return {
+          success: false,
+          message: `${game.gameNumber}세트에 중복된 챔피언이 있습니다.`,
+        };
+      }
+
+      seenChampions.add(participant.championId);
 
       if (!isValidTeam(participant.team)) {
         return {
@@ -195,6 +211,22 @@ function validatePayload(body: unknown):
           };
         }
         redPositions.add(participant.position);
+      }
+    }
+
+    for (const position of VALID_POSITIONS) {
+      if (!bluePositions.has(position)) {
+        return {
+          success: false,
+          message: `${game.gameNumber}세트 블루팀에 ${position} 포지션이 없습니다.`,
+        };
+      }
+
+      if (!redPositions.has(position)) {
+        return {
+          success: false,
+          message: `${game.gameNumber}세트 레드팀에 ${position} 포지션이 없습니다.`,
+        };
       }
     }
   }
@@ -259,6 +291,9 @@ export async function GET(_req: NextRequest, context: RouteContext) {
 }
 
 export async function PATCH(req: NextRequest, context: RouteContext) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
   try {
     const { matchId } = await context.params;
     const matchIdNumber = Number(matchId);
@@ -414,6 +449,9 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
 }
 
 export async function DELETE(_req: NextRequest, context: RouteContext) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
   try {
     const { matchId } = await context.params;
     const matchIdNumber = Number(matchId);

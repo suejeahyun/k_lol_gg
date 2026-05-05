@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DestructionStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
+import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 
 function isValidStatus(status: string): status is DestructionStatus {
   return (
@@ -59,6 +60,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
   try {
     const body = await req.json();
 

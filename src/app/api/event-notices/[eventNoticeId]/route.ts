@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { EventNoticeType } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
+import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 
 type RouteContext = {
   params: Promise<{
@@ -48,6 +49,9 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
 }
 
 export async function PATCH(req: NextRequest, { params }: RouteContext) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
   try {
     const { eventNoticeId } = await params;
     const id = Number(eventNoticeId);
@@ -127,6 +131,9 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
 }
 
 export async function DELETE(_req: NextRequest, { params }: RouteContext) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
   try {
     const { eventNoticeId } = await params;
     const id = Number(eventNoticeId);

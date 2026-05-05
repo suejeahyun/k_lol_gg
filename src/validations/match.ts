@@ -76,8 +76,8 @@ export function validateMatchCreateInput(
       return { ok: false, message: "세트 번호가 올바르지 않습니다." };
     }
 
-    if (game.winnerTeam !== undefined && !["BLUE", "RED"].includes(game.winnerTeam)) {
-      return { ok: false, message: `${gameLabel} 승리팀 정보가 올바르지 않습니다.` };
+    if (!["BLUE", "RED"].includes(game.winnerTeam as Team)) {
+      return { ok: false, message: `${gameLabel} 승리팀을 선택해주세요.` };
     }
 
     if (!Array.isArray(game.participants) || game.participants.length !== 10) {

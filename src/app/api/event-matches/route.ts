@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { EventMatchMode, EventMatchStatus, Position } from "@prisma/client";
+import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 
 type ParticipantInput = {
   playerId: number;
@@ -66,6 +67,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
   try {
     const body = await req.json();
 

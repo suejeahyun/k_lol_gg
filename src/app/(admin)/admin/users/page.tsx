@@ -20,6 +20,7 @@ type AdminUser = {
     peakTier: string | null;
     currentTier: string | null;
   } | null;
+  linkStatus: "PLAYER_LINKED" | "NO_PLAYER";
 };
 
 type PaginationState = {
@@ -119,8 +120,11 @@ export default function AdminUsersPage() {
   };
 
   const handleReject = async (userAccountId: number) => {
+    const reason = window.prompt("거절 사유를 입력하세요. 비워두면 사유 없이 처리됩니다.") ?? "";
     const res = await fetch(`/api/admin/users/${userAccountId}/reject`, {
       method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reason }),
     });
 
     if (res.ok) {
@@ -128,6 +132,22 @@ export default function AdminUsersPage() {
     } else {
       const data = await res.json();
       alert(data.message || "거절 처리 실패");
+    }
+  };
+
+  const handleReset = async (userAccountId: number) => {
+    const ok = window.confirm("해당 회원 상태를 승인 대기로 되돌리겠습니까?");
+    if (!ok) return;
+
+    const res = await fetch(`/api/admin/users/${userAccountId}/reset`, {
+      method: "PATCH",
+    });
+
+    if (res.ok) {
+      void fetchUsers(pagination.page);
+    } else {
+      const data = await res.json();
+      alert(data.message || "상태 초기화 실패");
     }
   };
 
@@ -193,6 +213,7 @@ export default function AdminUsersPage() {
                   <th>최고티어</th>
                   <th>현재티어</th>
                   <th>상태</th>
+                  <th>연결</th>
                   <th>가입일</th>
                   <th>관리</th>
                 </tr>
@@ -208,6 +229,7 @@ export default function AdminUsersPage() {
                     <td>{user.player?.peakTier ?? "-"}</td>
                     <td>{user.player?.currentTier ?? "-"}</td>
                     <td>{getStatusLabel(user.status)}</td>
+                    <td>{getLinkStatusLabel(user.linkStatus)}</td>
                     <td>
                       {new Date(user.createdAt).toLocaleDateString("ko-KR")}
                     </td>
@@ -231,7 +253,16 @@ export default function AdminUsersPage() {
                           </button>
                         </div>
                       ) : (
-                        <span className="admin-muted">처리 완료</span>
+                        <div className="admin-actions">
+                          <span className="admin-muted">처리 완료</span>
+                          <button
+                            type="button"
+                            className="chip-button"
+                            onClick={() => handleReset(user.id)}
+                          >
+                            대기 전환
+                          </button>
+                        </div>
                       )}
                     </td>
                   </tr>
@@ -256,4 +287,10 @@ function getStatusLabel(status: UserStatus) {
   if (status === "APPROVED") return "승인 완료";
   if (status === "REJECTED") return "거절됨";
   return status;
+}
+
+
+function getLinkStatusLabel(status: AdminUser["linkStatus"]) {
+  if (status === "PLAYER_LINKED") return "Player 연결됨";
+  return "Player 없음";
 }

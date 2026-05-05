@@ -206,7 +206,7 @@ model PlayerSeasonStat {
   totalGames Int
   wins       Int
   losses     Int
-  kda        Float
+  mvpCount   Int @default(0)
   avgGold    Float
 
   player Player @relation(fields: [playerId], references: [id])
@@ -220,7 +220,7 @@ model PlayerChampionStat {
 
   games Int
   wins  Int
-  kda   Float
+  mvpCount Int @default(0)
 
   player   Player   @relation(fields: [playerId], references: [id])
   champion Champion @relation(fields: [championId], references: [id])
@@ -253,6 +253,9 @@ model AdminLog {
   action    String
   message   String
   createdAt DateTime @default(now())
+
+  @@index([action])
+  @@index([createdAt])
 }
 
 model Notice {

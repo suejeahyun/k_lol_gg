@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { EventTournamentStage } from "@prisma/client";
+import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 
 type RouteProps = {
   params: Promise<{
@@ -25,6 +26,9 @@ function getStageByTeamCount(teamCount: number): EventTournamentStage {
 }
 
 export async function POST(_req: NextRequest, { params }: RouteProps) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
   try {
     const { eventId } = await params;
     const id = Number(eventId);

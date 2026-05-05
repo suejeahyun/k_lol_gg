@@ -26,7 +26,7 @@ export type PlayerSummaryResult = {
   wins: number;
   losses: number;
   winRate: number;
-  kda: number;
+  mvpCount: number;
 
   avgKills: number;
   avgDeaths: number;

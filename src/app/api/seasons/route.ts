@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 
 type CreateSeasonBody = {
   name: string;
@@ -25,6 +26,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
   try {
     const body = (await req.json()) as CreateSeasonBody;
     const name = body.name?.trim();

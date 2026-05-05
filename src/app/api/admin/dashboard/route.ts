@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 
 const LOG_PAGE_SIZE = 30;
 
 export async function GET(req: NextRequest) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
   try {
     const pageParam = req.nextUrl.searchParams.get("page");
     const page = pageParam ? Math.max(Number(pageParam), 1) : 1;
@@ -14,6 +18,9 @@ export async function GET(req: NextRequest) {
       playerCount,
       matchCount,
       latestMatch,
+      pendingUserCount,
+      todayParticipationCount,
+      riotFailureCount,
       logs,
       totalLogCount,
     ] = await Promise.all([
@@ -40,6 +47,25 @@ export async function GET(req: NextRequest) {
         },
       }),
 
+      prisma.userAccount.count({ where: { status: "PENDING" } }),
+
+      prisma.seasonParticipationApply.count({
+        where: {
+          status: "APPLIED",
+          applyDate: {
+            gte: new Date(new Date().setHours(0, 0, 0, 0)),
+            lte: new Date(new Date().setHours(23, 59, 59, 999)),
+          },
+        },
+      }),
+
+      prisma.adminLog.count({
+        where: {
+          action: { startsWith: "RIOT_" },
+          message: { contains: "실패", mode: "insensitive" },
+        },
+      }),
+
       prisma.adminLog.findMany({
         orderBy: { createdAt: "desc" },
         skip,
@@ -59,6 +85,9 @@ export async function GET(req: NextRequest) {
       currentSeason,
       playerCount,
       matchCount,
+      pendingUserCount,
+      todayParticipationCount,
+      riotFailureCount,
       latestMatch: latestMatch
         ? {
             id: latestMatch.id,

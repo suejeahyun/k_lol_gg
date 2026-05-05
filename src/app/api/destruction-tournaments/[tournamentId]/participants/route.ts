@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Position } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
+import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 
 type RouteProps = {
   params: Promise<{
@@ -20,6 +21,9 @@ function isValidPosition(position: unknown): position is Position {
 }
 
 export async function PUT(req: NextRequest, { params }: RouteProps) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
   try {
     const { tournamentId } = await params;
     const id = Number(tournamentId);

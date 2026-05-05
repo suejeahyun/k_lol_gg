@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { getGameMvpParticipant } from "@/lib/mvp";
 
 type RouteContext = {
   params: Promise<{
@@ -49,6 +50,15 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
         game: {
           select: {
             winnerTeam: true,
+            participants: {
+              select: {
+                playerId: true,
+                kills: true,
+                deaths: true,
+                assists: true,
+                team: true,
+              },
+            },
           },
         },
       },
@@ -109,49 +119,40 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
 
     const losses = totalGames - wins;
 
-    const totalKills = records.reduce(
-      (sum: number, record: (typeof records)[number]) => sum + record.kills,
-      0
-    );
-
-    const totalDeaths = records.reduce(
-      (sum: number, record: (typeof records)[number]) => sum + record.deaths,
-      0
-    );
-
-    const totalAssists = records.reduce(
-      (sum: number, record: (typeof records)[number]) => sum + record.assists,
-      0
-    );
-
     const winRate =
       totalGames > 0 ? Number(((wins / totalGames) * 100).toFixed(1)) : 0;
 
-    const kda =
-      totalDeaths === 0
-        ? Number((totalKills + totalAssists).toFixed(2))
-        : Number(((totalKills + totalAssists) / totalDeaths).toFixed(2));
+    const mvpCount = records.filter((record) => {
+      const mvp = getGameMvpParticipant(
+        record.game.participants,
+        record.game.winnerTeam,
+      );
+
+      return mvp?.playerId === id;
+    }).length;
 
 
     const mostChampions = championStatsRaw.map(
       (item: (typeof championStatsRaw)[number]) => {
         const champion = championMap.get(item.championId);
         const games = item._count.championId;
-        const kills = item._sum.kills ?? 0;
-        const deaths = item._sum.deaths ?? 0;
-        const assists = item._sum.assists ?? 0;
+        const mvpCount = records.filter((record) => {
+          if (record.championId !== item.championId) return false;
 
-        const championKda =
-          deaths === 0
-            ? Number((kills + assists).toFixed(2))
-            : Number(((kills + assists) / deaths).toFixed(2));
+          const mvp = getGameMvpParticipant(
+            record.game.participants,
+            record.game.winnerTeam,
+          );
+
+          return mvp?.playerId === id;
+        }).length;
 
         return {
           championId: item.championId,
           championName: champion?.name ?? "Unknown",
           championImageUrl: champion?.imageUrl ?? "",
           games,
-          kda: championKda,
+          mvpCount,
         };
       }
     );
@@ -163,7 +164,7 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
         wins,
         losses,
         winRate,
-        kda,
+        mvpCount,
       },
       mostChampions,
     });

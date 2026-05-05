@@ -572,7 +572,7 @@ export default function SoloRankSection({ playerId }: SoloRankSectionProps) {
                   </div>
 
                   <div className="solo-rank-summary-stat">
-                    <span>평균 KDA</span>
+                    <span>평균 평점</span>
                     <strong>{data.recentSummary.averageKda}</strong>
                   </div>
 
@@ -684,7 +684,7 @@ export default function SoloRankSection({ playerId }: SoloRankSectionProps) {
 
                         <div className="solo-most-kda">
                           <strong>{champion.kda}</strong>
-                          <span>KDA</span>
+                          <span>평점</span>
                         </div>
 
                         <p className="solo-most-average">
@@ -740,7 +740,7 @@ export default function SoloRankSection({ playerId }: SoloRankSectionProps) {
 
                       <div className="solo-most-numbers">
                         <strong>{champion.winRate}%</strong>
-                        <span>KDA {champion.kda}</span>
+                        <span>평점 {champion.kda}</span>
                       </div>
                     </article>
                   ))}

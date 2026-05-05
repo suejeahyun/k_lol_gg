@@ -7,7 +7,7 @@ type PlayerSummaryResult = {
   wins: number;
   losses: number;
   winRate: number;
-  kda: number;
+  mvpCount: number;
   avgKills: number;
   avgDeaths: number;
   avgAssists: number;
@@ -39,8 +39,8 @@ export default function KakaoPlayerSearchCard({ data }: Props) {
         </div>
 
         <div className="kakao-player-card__stat">
-          <span className="kakao-player-card__label">KDA</span>
-          <strong className="kakao-player-card__value">{data.kda}</strong>
+          <span className="kakao-player-card__label">MVP</span>
+          <strong className="kakao-player-card__value">{data.mvpCount}회</strong>
         </div>
 
         <div className="kakao-player-card__stat">

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
+import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 
 type RouteContext = {
   params: Promise<{
@@ -8,8 +9,13 @@ type RouteContext = {
   }>;
 };
 
-export async function PATCH(_req: NextRequest, { params }: RouteContext) {
+export async function PATCH(req: NextRequest, { params }: RouteContext) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
   try {
+    const body = await req.json().catch(() => ({}));
+    const reason = String(body.reason ?? "").trim();
 
     const { userAccountId } = await params;
     const id = Number(userAccountId);
@@ -41,7 +47,7 @@ export async function PATCH(_req: NextRequest, { params }: RouteContext) {
 
     await writeAdminLog({
       action: "USER_REJECT",
-      message: `회원 거절: #${id} ${user.userId}`,
+      message: `회원 거절: #${id} ${user.userId}${reason ? ` / 사유: ${reason}` : ""}`,
     });
 
     return NextResponse.json({

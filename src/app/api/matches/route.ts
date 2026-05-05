@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { validateMatchCreateInput } from "@/validations/match";
+import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 
 type Team = "BLUE" | "RED";
 type Position = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
@@ -28,22 +29,6 @@ type CreateMatchInput = {
   games: CreateGameInput[];
 };
 
-function resolveWinnerTeam(participants: CreateParticipantInput[]): Team {
-  const blueKills = participants
-    .filter((participant) => participant.team === "BLUE")
-    .reduce((sum, participant) => sum + participant.kills, 0);
-
-  const redKills = participants
-    .filter((participant) => participant.team === "RED")
-    .reduce((sum, participant) => sum + participant.kills, 0);
-
-  if (redKills > blueKills) {
-    return "RED";
-  }
-
-  return "BLUE";
-}
-
 export async function GET() {
   try {
     const matches = await prisma.matchSeries.findMany({
@@ -68,6 +53,9 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
   try {
     const body = (await req.json()) as CreateMatchInput;
 
@@ -154,7 +142,7 @@ export async function POST(req: Request) {
             create: body.games.map((game) => ({
               gameNumber: game.gameNumber,
               durationMin: 0,
-              winnerTeam: game.winnerTeam ?? resolveWinnerTeam(game.participants),
+              winnerTeam: game.winnerTeam as Team,
               participants: {
                 create: game.participants.map((participant) => ({
                   playerId: participant.playerId,

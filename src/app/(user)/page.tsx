@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import GalleryWinnerSlider from "@/components/GalleryWinnerSlider";
 import Top3Slider from "@/components/Top3Slider";
+import { calculateMvpScore, getGameMvpParticipant } from "@/lib/mvp";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -23,7 +24,7 @@ type TopPlayerDto = {
   wins: number;
   losses: number;
   winRate: number;
-  kda: number;
+  mvpCount: number;
 };
 
 type TopPageData = {
@@ -121,8 +122,16 @@ function buildSeasonPlayers(
       assists: number;
       team: "BLUE" | "RED";
       game: {
+        id: number;
         winnerTeam: "BLUE" | "RED";
         seriesId: number;
+        participants: Array<{
+          playerId: number;
+          kills: number;
+          deaths: number;
+          assists: number;
+          team: "BLUE" | "RED";
+        }>;
       };
     }>;
   }>
@@ -141,28 +150,17 @@ function buildSeasonPlayers(
 
       const losses = totalGames - wins;
 
-      const totalKills = player.participants.reduce(
-        (sum, participant) => sum + participant.kills,
-        0
-      );
-
-      const totalDeaths = player.participants.reduce(
-        (sum, participant) => sum + participant.deaths,
-        0
-      );
-
-      const totalAssists = player.participants.reduce(
-        (sum, participant) => sum + participant.assists,
-        0
-      );
-
       const winRate =
         totalGames > 0 ? Number(((wins / totalGames) * 100).toFixed(1)) : 0;
 
-      const kda =
-        totalDeaths === 0
-          ? Number((totalKills + totalAssists).toFixed(2))
-          : Number(((totalKills + totalAssists) / totalDeaths).toFixed(2));
+      const mvpCount = player.participants.filter((participant) => {
+        const mvp = getGameMvpParticipant(
+          participant.game.participants,
+          participant.game.winnerTeam,
+        );
+
+        return mvp?.playerId === player.id;
+      }).length;
 
       return {
         playerId: player.id,
@@ -174,7 +172,7 @@ function buildSeasonPlayers(
         wins,
         losses,
         winRate,
-        kda,
+        mvpCount,
       };
     })
     .filter((player) => player.totalGames > 0);
@@ -202,8 +200,18 @@ async function getSeasonPlayers(seasonId: number): Promise<TopPlayerDto[]> {
           team: true,
           game: {
             select: {
+              id: true,
               winnerTeam: true,
               seriesId: true,
+              participants: {
+                select: {
+                  playerId: true,
+                  kills: true,
+                  deaths: true,
+                  assists: true,
+                  team: true,
+                },
+              },
             },
           },
         },
@@ -255,14 +263,6 @@ function formatDate(date: Date): string {
 
 function formatDateTime(date: Date): string {
   return new Date(date).toLocaleString("ko-KR");
-}
-
-function calcKda(kills: number, deaths: number, assists: number): number {
-  if (deaths === 0) {
-    return kills + assists;
-  }
-
-  return Number(((kills + assists) / deaths).toFixed(2));
 }
 
 export default async function HomePage() {
@@ -408,15 +408,21 @@ export default async function HomePage() {
       : [0, 0, []];
 
   const recentMvpCandidates = recentMatches.flatMap((match) =>
-    match.games.flatMap((game) =>
-      game.participants.map((participant) => {
-        const kda = calcKda(
-          participant.kills,
-          participant.deaths,
-          participant.assists
-        );
+    match.games.flatMap((game) => {
+      const gameMvp = getGameMvpParticipant(
+        game.participants.map((participant) => ({
+          playerId: participant.player.id,
+          kills: participant.kills,
+          deaths: participant.deaths,
+          assists: participant.assists,
+          team: participant.team,
+        })),
+        game.winnerTeam,
+      );
 
-        return {
+      return game.participants
+        .filter((participant) => participant.player.id === gameMvp?.playerId)
+        .map((participant) => ({
           matchId: match.id,
           matchTitle: match.title,
           matchDate: match.matchDate,
@@ -430,17 +436,22 @@ export default async function HomePage() {
           kills: participant.kills,
           deaths: participant.deaths,
           assists: participant.assists,
-          kda,
+          mvpScore: calculateMvpScore({
+            playerId: participant.player.id,
+            kills: participant.kills,
+            deaths: participant.deaths,
+            assists: participant.assists,
+            team: participant.team,
+          }),
           isWin: participant.team === game.winnerTeam,
-        };
-      })
-    )
+        }));
+    })
   );
 
   const recentMvp =
     recentMvpCandidates.length > 0
       ? recentMvpCandidates.sort((a, b) => {
-          if (b.kda !== a.kda) return b.kda - a.kda;
+          if (b.mvpScore !== a.mvpScore) return b.mvpScore - a.mvpScore;
           if (b.kills !== a.kills) return b.kills - a.kills;
           return b.assists - a.assists;
         })[0]
@@ -668,7 +679,7 @@ export default async function HomePage() {
               </div>
 
               <div className="home-mvp-score">
-                <strong>{recentMvp.kda}</strong>
+                <strong>{recentMvp.mvpScore.toFixed(1)}</strong>
                 <span>
                   {recentMvp.kills}/{recentMvp.deaths}/{recentMvp.assists}
                 </span>

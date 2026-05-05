@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 
 type RouteContext = {
   params: Promise<{
@@ -8,6 +9,9 @@ type RouteContext = {
 };
 
 export async function PATCH(_req: NextRequest, { params }: RouteContext) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
   try {
     const { seasonId } = await params;
     const id = Number(seasonId);

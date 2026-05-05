@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 
 const USER_STATUSES = ["PENDING", "APPROVED", "REJECTED"] as const;
 
 export async function GET(req: NextRequest) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
   try {
     const page = Number(req.nextUrl.searchParams.get("page") ?? "1");
     const pageSize = Number(req.nextUrl.searchParams.get("pageSize") ?? "20");
@@ -80,6 +84,7 @@ export async function GET(req: NextRequest) {
               currentTier: user.player.currentTier,
             }
           : null,
+        linkStatus: user.player ? "PLAYER_LINKED" : "NO_PLAYER",
       })),
       pagination: {
         page: currentPage,

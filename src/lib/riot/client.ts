@@ -149,9 +149,14 @@ async function riotFetch<T>(url: string): Promise<T> {
   if (!response.ok) {
     let message = `Riot API 요청 실패: ${response.status}`;
 
+    if (response.status === 401) message = "Riot API 키가 올바르지 않습니다.";
+    if (response.status === 403) message = "Riot API 키 권한 또는 만료 상태를 확인해야 합니다.";
+    if (response.status === 404) message = "Riot ID를 찾을 수 없습니다.";
+    if (response.status === 429) message = "Riot API 호출 제한에 도달했습니다.";
+
     try {
       const data = await response.json();
-      message = data?.status?.message ?? message;
+      message = data?.status?.message ? `${message} (${data.status.message})` : message;
     } catch {
       // Riot API가 JSON이 아닌 응답을 줄 수도 있으므로 무시
     }

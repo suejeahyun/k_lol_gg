@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
+import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 
 type Context = {
   params: Promise<{
@@ -10,6 +11,9 @@ type Context = {
 };
 
 export async function POST(req: NextRequest, { params }: Context) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
   const { eventId, participantId } = await params;
 
   const parsedEventId = Number(eventId);

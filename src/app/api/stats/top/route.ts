@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { getGameMvpParticipant } from "@/lib/mvp";
 
 type SeasonDto = {
   id: number;
@@ -18,7 +19,7 @@ type SeasonPlayerDto = {
   wins: number;
   losses: number;
   winRate: number;
-  kda: number;
+  mvpCount: number;
 };
 
 function toSeasonDto(
@@ -27,7 +28,7 @@ function toSeasonDto(
     name: string;
     isActive: boolean;
     createdAt: Date;
-  } | null
+  } | null,
 ): SeasonDto | null {
   if (!season) return null;
 
@@ -51,48 +52,60 @@ function buildSeasonPlayers(
       assists: number;
       team: "BLUE" | "RED";
       game: {
+        id: number;
         winnerTeam: "BLUE" | "RED";
         seriesId: number;
       };
     }>;
-  }>
+  }>,
 ): SeasonPlayerDto[] {
+  const mvpCountByPlayer = new Map<number, number>();
+  const participantsByGame = new Map<
+    number,
+    Array<{
+      playerId: number;
+      kills: number;
+      deaths: number;
+      assists: number;
+      team: string;
+      winnerTeam: string;
+    }>
+  >();
+
+  for (const player of players) {
+    for (const participant of player.participants) {
+      const items = participantsByGame.get(participant.game.id) ?? [];
+      items.push({
+        playerId: player.id,
+        kills: participant.kills,
+        deaths: participant.deaths,
+        assists: participant.assists,
+        team: participant.team,
+        winnerTeam: participant.game.winnerTeam,
+      });
+      participantsByGame.set(participant.game.id, items);
+    }
+  }
+
+  for (const participants of participantsByGame.values()) {
+    const mvp = getGameMvpParticipant(participants, participants[0]?.winnerTeam ?? "");
+    if (mvp) {
+      mvpCountByPlayer.set(mvp.playerId, (mvpCountByPlayer.get(mvp.playerId) ?? 0) + 1);
+    }
+  }
+
   return players
     .map((player) => {
       const totalGames = player.participants.length;
-
       const participation = new Set(
-        player.participants.map((participant) => participant.game.seriesId)
+        player.participants.map((participant) => participant.game.seriesId),
       ).size;
-
       const wins = player.participants.filter(
-        (participant) => participant.team === participant.game.winnerTeam
+        (participant) => participant.team === participant.game.winnerTeam,
       ).length;
-
       const losses = totalGames - wins;
-
-      const totalKills = player.participants.reduce(
-        (sum, participant) => sum + participant.kills,
-        0
-      );
-
-      const totalDeaths = player.participants.reduce(
-        (sum, participant) => sum + participant.deaths,
-        0
-      );
-
-      const totalAssists = player.participants.reduce(
-        (sum, participant) => sum + participant.assists,
-        0
-      );
-
       const winRate =
         totalGames > 0 ? Number(((wins / totalGames) * 100).toFixed(1)) : 0;
-
-      const kda =
-        totalDeaths === 0
-          ? Number((totalKills + totalAssists).toFixed(2))
-          : Number(((totalKills + totalAssists) / totalDeaths).toFixed(2));
 
       return {
         playerId: player.id,
@@ -104,7 +117,7 @@ function buildSeasonPlayers(
         wins,
         losses,
         winRate,
-        kda,
+        mvpCount: mvpCountByPlayer.get(player.id) ?? 0,
       };
     })
     .filter((player) => player.totalGames > 0);
@@ -132,6 +145,7 @@ async function getSeasonPlayers(seasonId: number): Promise<SeasonPlayerDto[]> {
           team: true,
           game: {
             select: {
+              id: true,
               winnerTeam: true,
               seriesId: true,
             },
@@ -180,7 +194,7 @@ export async function GET() {
 
     return NextResponse.json(
       { message: "시즌 TOP 데이터 조회 실패" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
