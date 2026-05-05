@@ -110,6 +110,14 @@ type CandidateSnapshot = {
   maxLineDiff: number;
   topPlayerDiff: number;
   sTierStackPenalty: number;
+  weightedLineDiff: number;
+  frontSideDiff: number;
+  midJglDiff: number;
+  bottomDiff: number;
+  autoLinePenalty: number;
+  mainImbalancePenalty: number;
+  dataReliabilityPenalty: number;
+  stompPenalty: number;
   balanceCost: number;
   mainAssignedCount: number;
   subAssignedCount: number;
@@ -385,8 +393,10 @@ function getSTierBonus(peakTier: string) {
 
 function getPositionBaseScore(
   player: Pick<ResolvedPlayer, "currentTier" | "peakTier">,
-  _position?: Position,
+  position?: Position,
 ) {
+  void position;
+
   const tierDetail = getResolvedTierScoreDetail(
     player.currentTier || "",
     player.peakTier || "",
@@ -400,8 +410,10 @@ function getPositionBaseScore(
 
 function getPositionTierScoreDetail(
   player: Pick<ResolvedPlayer, "currentTier" | "peakTier">,
-  _position?: Position,
+  position?: Position,
 ) {
+  void position;
+
   const tierDetail = getResolvedTierScoreDetail(
     player.currentTier || "",
     player.peakTier || "",
@@ -801,57 +813,184 @@ function getSTierStackPenalty(assignments: Assignment[]) {
   return Math.abs(redCount - blueCount) * 12;
 }
 
+
+
+function getAssignment(
+  assignments: Assignment[],
+  team: Team,
+  position: Position,
+) {
+  return assignments.find(
+    (assignment) => assignment.team === team && assignment.position === position,
+  );
+}
+
+function getLineDiff(assignments: Assignment[], position: Position) {
+  const red = getAssignment(assignments, "RED", position);
+  const blue = getAssignment(assignments, "BLUE", position);
+
+  if (!red || !blue) return 0;
+  return Math.abs(red.score - blue.score);
+}
+
+function getWeightedLineDiff(assignments: Assignment[]) {
+  const weights: Record<Position, number> = {
+    TOP: 1,
+    JGL: 1.25,
+    MID: 1.2,
+    ADC: 1.1,
+    SUP: 1,
+  };
+
+  const total = POSITIONS.reduce(
+    (sum, position) => sum + getLineDiff(assignments, position) * weights[position],
+    0,
+  );
+
+  return Number(total.toFixed(2));
+}
+
+function getGroupDiff(assignments: Assignment[], positions: Position[]) {
+  const redTotal = positions.reduce((sum, position) => {
+    const assignment = getAssignment(assignments, "RED", position);
+    return sum + (assignment?.score ?? 0);
+  }, 0);
+
+  const blueTotal = positions.reduce((sum, position) => {
+    const assignment = getAssignment(assignments, "BLUE", position);
+    return sum + (assignment?.score ?? 0);
+  }, 0);
+
+  return Number(Math.abs(redTotal - blueTotal).toFixed(2));
+}
+
+function getGapPenalty(diff: number) {
+  if (diff >= 20) return 12;
+  if (diff >= 15) return 8;
+  if (diff >= 10) return 5;
+  if (diff >= 5) return 2;
+  return 0;
+}
+
+function getAutoLinePenalty(assignments: Assignment[]) {
+  const penalties: Record<Position, number> = {
+    TOP: 2,
+    JGL: 5,
+    MID: 4,
+    ADC: 3,
+    SUP: 3,
+  };
+
+  return assignments.reduce((sum, assignment) => {
+    if (assignment.roleType !== "AUTO") return sum;
+    return sum + penalties[assignment.position];
+  }, 0);
+}
+
+function getMainImbalancePenalty(assignments: Assignment[]) {
+  const redMain = assignments.filter(
+    (assignment) => assignment.team === "RED" && assignment.roleType === "MAIN",
+  ).length;
+  const blueMain = assignments.filter(
+    (assignment) => assignment.team === "BLUE" && assignment.roleType === "MAIN",
+  ).length;
+
+  return Math.abs(redMain - blueMain) * 2;
+}
+
+function getReliabilityRate(count: number, bands: Array<[number, number]>) {
+  for (const [minCount, rate] of bands) {
+    if (count >= minCount) return rate;
+  }
+
+  return 0;
+}
+
+function getDataReliabilityPenalty(
+  assignments: Assignment[],
+  recentCountByPlayerId: Map<number, number>,
+  internalCountByPlayerId: Map<number, number>,
+  internalPositionCountByKey: Map<string, number>,
+) {
+  const totalPenalty = assignments.reduce((sum, assignment) => {
+    const recentCount = recentCountByPlayerId.get(assignment.playerId) ?? 0;
+    const internalCount = internalCountByPlayerId.get(assignment.playerId) ?? 0;
+    const positionCount =
+      internalPositionCountByKey.get(`${assignment.playerId}:${assignment.position}`) ?? 0;
+
+    const recentRate = getReliabilityRate(recentCount, [
+      [15, 1],
+      [10, 0.6],
+      [5, 0.3],
+    ]);
+    const internalRate = getReliabilityRate(internalCount, [
+      [20, 1],
+      [10, 0.6],
+      [5, 0.3],
+    ]);
+    const positionRate = getReliabilityRate(positionCount, [
+      [10, 1],
+      [6, 0.6],
+      [3, 0.3],
+    ]);
+
+    // 데이터가 부족할수록 조합 평가 신뢰도가 낮으므로 작은 패널티를 줍니다.
+    return sum + (1 - recentRate) * 0.5 + (1 - internalRate) * 0.7 + (1 - positionRate) * 0.5;
+  }, 0);
+
+  return Number(totalPenalty.toFixed(2));
+}
+
+function getStompPenalty(assignments: Assignment[]) {
+  const lineGapPenalty = POSITIONS.reduce(
+    (sum, position) => sum + getGapPenalty(getLineDiff(assignments, position)),
+    0,
+  );
+
+  const topSidePenalty = getGapPenalty(
+    getGroupDiff(assignments, ["TOP", "JGL", "MID"]),
+  );
+  const midJglPenalty = getGapPenalty(
+    getGroupDiff(assignments, ["JGL", "MID"]),
+  );
+  const bottomPenalty = getGapPenalty(
+    getGroupDiff(assignments, ["ADC", "SUP"]),
+  );
+
+  return Number(
+    (lineGapPenalty + topSidePenalty * 0.5 + midJglPenalty * 0.7 + bottomPenalty * 0.7).toFixed(2),
+  );
+}
+
 function getBalanceCost(params: {
   diff: number;
   lineDiffTotal: number;
+  maxLineDiff: number;
   autoAssignedCount: number;
   subAssignedCount: number;
   sTierStackPenalty: number;
   topPlayerDiff: number;
+  weightedLineDiff: number;
+  frontSideDiff: number;
+  midJglDiff: number;
+  bottomDiff: number;
+  autoLinePenalty: number;
+  mainImbalancePenalty: number;
+  dataReliabilityPenalty: number;
+  stompPenalty: number;
 }) {
   return Number(
     (
-      params.diff * 1.0 +
-      params.lineDiffTotal * 1.2 +
-      params.autoAssignedCount * 14 +
-      params.subAssignedCount * 3 +
-      params.sTierStackPenalty +
-      params.topPlayerDiff * 0.8
+      params.diff * 1.2 +
+      params.weightedLineDiff * 0.7 +
+      params.maxLineDiff * 1.0 +
+      params.midJglDiff * 0.45 +
+      params.bottomDiff * 0.45 +
+      params.autoLinePenalty * 1.0 +
+      params.mainImbalancePenalty * 0.6 +
+      params.sTierStackPenalty * 0.25
     ).toFixed(2),
   );
-}
-
-function isBetterCandidate(
-  candidate: CandidateSnapshot,
-  current: CandidateSnapshot | null,
-) {
-  if (!current) return true;
-
-  if (candidate.balanceCost !== current.balanceCost) {
-    return candidate.balanceCost < current.balanceCost;
-  }
-
-  if (candidate.diff !== current.diff) {
-    return candidate.diff < current.diff;
-  }
-
-  if (candidate.lineDiffTotal !== current.lineDiffTotal) {
-    return candidate.lineDiffTotal < current.lineDiffTotal;
-  }
-
-  if (candidate.mainAssignedCount !== current.mainAssignedCount) {
-    return candidate.mainAssignedCount > current.mainAssignedCount;
-  }
-
-  if (candidate.subAssignedCount !== current.subAssignedCount) {
-    return candidate.subAssignedCount > current.subAssignedCount;
-  }
-
-  if (candidate.autoAssignedCount !== current.autoAssignedCount) {
-    return candidate.autoAssignedCount < current.autoAssignedCount;
-  }
-
-  return candidate.totalScore > current.totalScore;
 }
 
 function getCandidateKey(candidate: CandidateSnapshot) {
@@ -865,10 +1004,13 @@ function getCandidateKey(candidate: CandidateSnapshot) {
 function getTeamTotalPlanCost(candidate: CandidateSnapshot) {
   return Number(
     (
-      candidate.diff * 1.0 +
-      candidate.lineDiffTotal * 0.15 +
-      candidate.autoAssignedCount * 2 +
-      candidate.subAssignedCount * 0.5 +
+      candidate.diff * 1.5 +
+      candidate.weightedLineDiff * 0.25 +
+      candidate.maxLineDiff * 0.5 +
+      candidate.midJglDiff * 0.2 +
+      candidate.bottomDiff * 0.2 +
+      candidate.autoLinePenalty * 0.8 +
+      candidate.mainImbalancePenalty * 0.4 +
       candidate.sTierStackPenalty * 0.2
     ).toFixed(2),
   );
@@ -877,10 +1019,13 @@ function getTeamTotalPlanCost(candidate: CandidateSnapshot) {
 function getLineBalancePlanCost(candidate: CandidateSnapshot) {
   return Number(
     (
-      candidate.lineDiffTotal * 1.0 +
+      candidate.weightedLineDiff * 1.0 +
       candidate.maxLineDiff * 1.5 +
+      candidate.midJglDiff * 0.7 +
+      candidate.bottomDiff * 0.7 +
       candidate.diff * 0.35 +
-      candidate.autoAssignedCount * 2 +
+      candidate.autoLinePenalty * 0.9 +
+      candidate.mainImbalancePenalty * 0.3 +
       candidate.sTierStackPenalty * 0.2
     ).toFixed(2),
   );
@@ -890,10 +1035,14 @@ function getPositionSatisfactionPlanCost(candidate: CandidateSnapshot) {
   return Number(
     (
       candidate.autoAssignedCount * 5 +
+      candidate.autoLinePenalty * 1.5 +
       candidate.subAssignedCount * 1.5 -
       candidate.mainAssignedCount * 2 +
+      candidate.mainImbalancePenalty * 0.8 +
       candidate.diff * 0.5 +
-      candidate.lineDiffTotal * 0.15 +
+      candidate.maxLineDiff * 0.4 +
+      candidate.bottomDiff * 0.2 +
+      candidate.midJglDiff * 0.2 +
       candidate.sTierStackPenalty * 0.2
     ).toFixed(2),
   );
@@ -1162,6 +1311,59 @@ export async function POST(request: NextRequest) {
       };
     });
 
+    const playerIds = baseResolvedPlayers.map((player) => player.id);
+
+    const [recentSoloMatches, internalParticipants] = await Promise.all([
+      prisma.playerSoloMatch.findMany({
+        where: {
+          playerId: {
+            in: playerIds,
+          },
+        },
+        orderBy: {
+          gameCreation: "desc",
+        },
+        select: {
+          playerId: true,
+        },
+      }),
+      prisma.matchParticipant.findMany({
+        where: {
+          playerId: {
+            in: playerIds,
+          },
+        },
+        select: {
+          playerId: true,
+          position: true,
+        },
+      }),
+    ]);
+
+    const recentCountByPlayerId = new Map<number, number>();
+    recentSoloMatches.forEach((match) => {
+      const current = recentCountByPlayerId.get(match.playerId) ?? 0;
+      if (current < 20) {
+        recentCountByPlayerId.set(match.playerId, current + 1);
+      }
+    });
+
+    const internalCountByPlayerId = new Map<number, number>();
+    const internalPositionCountByKey = new Map<string, number>();
+
+    internalParticipants.forEach((participant) => {
+      internalCountByPlayerId.set(
+        participant.playerId,
+        (internalCountByPlayerId.get(participant.playerId) ?? 0) + 1,
+      );
+
+      const key = `${participant.playerId}:${participant.position}`;
+      internalPositionCountByKey.set(
+        key,
+        (internalPositionCountByKey.get(key) ?? 0) + 1,
+      );
+    });
+
     const resolvedPlayers = applyInternalRankScores(baseResolvedPlayers);
 
     const teamCombinations = combinations(resolvedPlayers, 5);
@@ -1194,6 +1396,19 @@ export async function POST(request: NextRequest) {
       const maxLineDiff = getMaxLineDiff(assignments);
       const topPlayerDiff = getTopPlayerDiff(assignments);
       const sTierStackPenalty = getSTierStackPenalty(assignments);
+      const weightedLineDiff = getWeightedLineDiff(assignments);
+      const frontSideDiff = getGroupDiff(assignments, ["TOP", "JGL", "MID"]);
+      const midJglDiff = getGroupDiff(assignments, ["JGL", "MID"]);
+      const bottomDiff = getGroupDiff(assignments, ["ADC", "SUP"]);
+      const autoLinePenalty = getAutoLinePenalty(assignments);
+      const mainImbalancePenalty = getMainImbalancePenalty(assignments);
+      const dataReliabilityPenalty = getDataReliabilityPenalty(
+        assignments,
+        recentCountByPlayerId,
+        internalCountByPlayerId,
+        internalPositionCountByKey,
+      );
+      const stompPenalty = getStompPenalty(assignments);
 
       const mainAssignedCount =
         redResult.mainAssignedCount + blueResult.mainAssignedCount;
@@ -1207,10 +1422,19 @@ export async function POST(request: NextRequest) {
       const balanceCost = getBalanceCost({
         diff,
         lineDiffTotal,
+        maxLineDiff,
         autoAssignedCount,
         subAssignedCount,
         sTierStackPenalty,
         topPlayerDiff,
+        weightedLineDiff,
+        frontSideDiff,
+        midJglDiff,
+        bottomDiff,
+        autoLinePenalty,
+        mainImbalancePenalty,
+        dataReliabilityPenalty,
+        stompPenalty,
       });
 
       const candidate: CandidateSnapshot = {
@@ -1222,6 +1446,14 @@ export async function POST(request: NextRequest) {
         maxLineDiff,
         topPlayerDiff,
         sTierStackPenalty,
+        weightedLineDiff,
+        frontSideDiff,
+        midJglDiff,
+        bottomDiff,
+        autoLinePenalty,
+        mainImbalancePenalty,
+        dataReliabilityPenalty,
+        stompPenalty,
         balanceCost,
         mainAssignedCount,
         subAssignedCount,
@@ -1306,6 +1538,14 @@ export async function POST(request: NextRequest) {
         maxLineDiff: candidate.maxLineDiff,
         topPlayerDiff: candidate.topPlayerDiff,
         sTierStackPenalty: candidate.sTierStackPenalty,
+        weightedLineDiff: candidate.weightedLineDiff,
+        frontSideDiff: candidate.frontSideDiff,
+        midJglDiff: candidate.midJglDiff,
+        bottomDiff: candidate.bottomDiff,
+        autoLinePenalty: candidate.autoLinePenalty,
+        mainImbalancePenalty: candidate.mainImbalancePenalty,
+        dataReliabilityPenalty: candidate.dataReliabilityPenalty,
+        stompPenalty: candidate.stompPenalty,
         mainAssignedCount: candidate.mainAssignedCount,
         subAssignedCount: candidate.subAssignedCount,
         autoAssignedCount: candidate.autoAssignedCount,

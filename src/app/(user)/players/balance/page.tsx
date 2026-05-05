@@ -120,6 +120,14 @@ type BalanceResponse = {
   maxLineDiff?: number;
   topPlayerDiff?: number;
   sTierStackPenalty?: number;
+  weightedLineDiff?: number;
+  frontSideDiff?: number;
+  midJglDiff?: number;
+  bottomDiff?: number;
+  autoLinePenalty?: number;
+  mainImbalancePenalty?: number;
+  dataReliabilityPenalty?: number;
+  stompPenalty?: number;
   mainAssignedCount: number;
   subAssignedCount: number;
   autoAssignedCount: number;
@@ -798,13 +806,6 @@ export default function PlayersBalancePage() {
     return { grade: "D", label: "수동 조정 권장" };
   }
 
-  function getPlayerBaseScore(player: AssignedPlayer) {
-    if (typeof player.finalBaseScore === "number") return player.finalBaseScore;
-    if (typeof player.rankScore === "number")
-      return player.rankScore + (player.bonus ?? 0);
-    return player.score;
-  }
-
   function getRoleText(roleType: RoleType) {
     if (roleType === "MAIN") return "주 포지션";
     if (roleType === "SUB") return "부 포지션";
@@ -951,7 +952,7 @@ export default function PlayersBalancePage() {
                 <strong>{option.optionTitle ?? `${grade.grade} · ${grade.label}`}</strong>
                 <small>{option.optionDescription ?? grade.label}</small>
                 <em>RED {option.redTotal.toFixed(1)} / BLUE {option.blueTotal.toFixed(1)}</em>
-                <b>차이 {option.diff.toFixed(1)} · 라인차 {Number(option.lineDiffTotal ?? 0).toFixed(1)} · 주/부/AUTO {option.mainAssignedCount}/{option.subAssignedCount}/{option.autoAssignedCount}</b>
+                <b>차이 {option.diff.toFixed(1)} · 가중라인 {Number(option.weightedLineDiff ?? option.lineDiffTotal ?? 0).toFixed(1)} · 상체 {Number(option.frontSideDiff ?? 0).toFixed(1)} · 미드정글 {Number(option.midJglDiff ?? 0).toFixed(1)} · 바텀 {Number(option.bottomDiff ?? 0).toFixed(1)}</b>
               </button>
             );
           })}
@@ -1003,6 +1004,42 @@ export default function PlayersBalancePage() {
                   주 {target.mainAssignedCount} / 부 {target.subAssignedCount} /
                   AUTO {target.autoAssignedCount}
                 </strong>
+              </div>
+              <div>
+                <span>가중 라인 차이</span>
+                <strong>{formatDecimal(target.weightedLineDiff ?? target.lineDiffTotal)}</strong>
+              </div>
+              <div>
+                <span>최대 라인 차이</span>
+                <strong>{formatDecimal(target.maxLineDiff)}</strong>
+              </div>
+              <div>
+                <span>상체 차이</span>
+                <strong>{formatDecimal(target.frontSideDiff)}</strong>
+              </div>
+              <div>
+                <span>미드정글 차이</span>
+                <strong>{formatDecimal(target.midJglDiff)}</strong>
+              </div>
+              <div>
+                <span>바텀 차이</span>
+                <strong>{formatDecimal(target.bottomDiff)}</strong>
+              </div>
+              <div>
+                <span>AUTO 라인 패널티</span>
+                <strong>{formatDecimal(target.autoLinePenalty)}</strong>
+              </div>
+              <div>
+                <span>주포지션 불균형</span>
+                <strong>{formatDecimal(target.mainImbalancePenalty)}</strong>
+              </div>
+              <div>
+                <span>데이터 신뢰도 패널티</span>
+                <strong>{formatDecimal(target.dataReliabilityPenalty)}</strong>
+              </div>
+              <div>
+                <span>원사이드 방지 패널티</span>
+                <strong>{formatDecimal(target.stompPenalty)}</strong>
               </div>
             </div>
             <p className="balance-evidence-note">
