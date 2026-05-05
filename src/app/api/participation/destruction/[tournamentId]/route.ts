@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { writeAdminLog } from "@/lib/admin-log";
 import { requireApprovedUser } from "@/lib/auth/session";
 
 const APPLY_POSITIONS = ["TOP", "JGL", "MID", "ADC", "SUP", "ALL"] as const;
@@ -176,6 +177,11 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
         isCaptain,
         status: "APPLIED",
       },
+    });
+
+    await writeAdminLog({
+      action: "DESTRUCTION_PARTICIPATION_APPLY",
+      message: `멸망전 참가 신청: 멸망전 #${id} ${tournament.title}, 플레이어 #${user.playerId}, 신청 #${apply.id}`,
     });
 
     return NextResponse.json({

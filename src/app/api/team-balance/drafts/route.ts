@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { writeAdminLog } from "@/lib/admin-log";
 
 type TeamValue = "BLUE" | "RED";
 type PositionValue = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
@@ -169,6 +170,11 @@ export async function POST(req: NextRequest) {
           },
         },
       },
+    });
+
+    await writeAdminLog({
+      action: "TEAM_BALANCE_DRAFT_CREATE",
+      message: `팀 밸런스 결과 저장: #${draft.id} ${draft.title}, ${draft._count.players}명`,
     });
 
     return NextResponse.json({

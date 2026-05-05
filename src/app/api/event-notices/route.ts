@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { EventNoticeType } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
+import { writeAdminLog } from "@/lib/admin-log";
 
 function isEventNoticeType(value: string): value is EventNoticeType {
   return Object.values(EventNoticeType).includes(value as EventNoticeType);
@@ -76,6 +77,11 @@ export async function POST(req: NextRequest) {
         startDate,
         isPinned,
       },
+    });
+
+    await writeAdminLog({
+      action: "EVENT_NOTICE_CREATE",
+      message: `이벤트 공지 등록: #${notice.id} ${notice.title}`,
     });
 
     return NextResponse.json(notice, { status: 201 });

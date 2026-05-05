@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { writeAdminLog } from "@/lib/admin-log";
 
 type Context = {
   params: Promise<{
@@ -21,12 +22,19 @@ export async function POST(req: NextRequest, { params }: Context) {
     );
   }
 
-  await prisma.eventParticipant.deleteMany({
+  const deleted = await prisma.eventParticipant.deleteMany({
     where: {
       id: parsedParticipantId,
       eventId: parsedEventId,
     },
   });
+
+  if (deleted.count > 0) {
+    await writeAdminLog({
+      action: "EVENT_PARTICIPANT_DELETE",
+      message: `이벤트 참가자 삭제: 이벤트 #${parsedEventId}, 참가자 #${parsedParticipantId}`,
+    });
+  }
 
   return NextResponse.redirect(
     new URL(`/admin/progress/event/${parsedEventId}`, req.url),

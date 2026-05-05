@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { writeAdminLog } from "@/lib/admin-log";
 
 const POSITIONS = ["TOP", "JGL", "MID", "ADC", "SUP", "ALL"] as const;
 
@@ -209,7 +210,7 @@ export async function POST(req: NextRequest) {
 
     const { start } = getTodayRange();
 
-    await prisma.seasonParticipationApply.upsert({
+    const apply = await prisma.seasonParticipationApply.upsert({
       where: {
         seasonId_playerId_applyDate: {
           seasonId: season.id,
@@ -230,6 +231,11 @@ export async function POST(req: NextRequest) {
         subPositions,
         status: "APPLIED",
       },
+    });
+
+    await writeAdminLog({
+      action: "SEASON_PARTICIPATION_APPLY",
+      message: `시즌 참가 신청: 시즌 #${season.id}, 플레이어 #${loginPlayer.id} ${loginPlayer.nickname}#${loginPlayer.tag}, 신청 #${apply.id}`,
     });
 
     return NextResponse.json({
@@ -309,6 +315,11 @@ export async function DELETE(req: NextRequest) {
         { status: 404 }
       );
     }
+
+    await writeAdminLog({
+      action: "SEASON_PARTICIPATION_CANCEL",
+      message: `시즌 참가 취소: 시즌 #${season.id}, 플레이어 #${playerId} ${loginPlayer.nickname}#${loginPlayer.tag}`,
+    });
 
     return NextResponse.json({
       message: "참가가 취소되었습니다.",

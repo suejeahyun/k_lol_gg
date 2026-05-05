@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { EventNoticeType } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
+import { writeAdminLog } from "@/lib/admin-log";
 
 type RouteContext = {
   params: Promise<{
@@ -109,6 +110,11 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       },
     });
 
+    await writeAdminLog({
+      action: "EVENT_NOTICE_UPDATE",
+      message: `이벤트 공지 수정: #${id} ${notice.title}`,
+    });
+
     return NextResponse.json(notice);
   } catch (error) {
     console.error("[EVENT_NOTICE_PATCH_ERROR]", error);
@@ -132,8 +138,24 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
       );
     }
 
+    const existingNotice = await prisma.eventNotice.findUnique({
+      where: { id },
+    });
+
+    if (!existingNotice) {
+      return NextResponse.json(
+        { message: "이벤트 공지를 찾을 수 없습니다." },
+        { status: 404 }
+      );
+    }
+
     await prisma.eventNotice.delete({
       where: { id },
+    });
+
+    await writeAdminLog({
+      action: "EVENT_NOTICE_DELETE",
+      message: `이벤트 공지 삭제: #${id} ${existingNotice.title}`,
     });
 
     return NextResponse.json({ ok: true });

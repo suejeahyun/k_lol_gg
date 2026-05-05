@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { writeAdminLog } from "@/lib/admin-log";
 
 type RouteContext = {
   params: Promise<{
@@ -36,6 +37,11 @@ export async function PATCH(_req: NextRequest, { params }: RouteContext) {
       data: {
         status: "REJECTED",
       },
+    });
+
+    await writeAdminLog({
+      action: "USER_REJECT",
+      message: `회원 거절: #${id} ${user.userId}`,
     });
 
     return NextResponse.json({

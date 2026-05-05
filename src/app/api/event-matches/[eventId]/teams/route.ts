@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { writeAdminLog } from "@/lib/admin-log";
 
 type RouteContext = {
   params: Promise<{
@@ -257,6 +258,11 @@ for (const participant of sortedParticipants) {
         },
       });
     }
+    await writeAdminLog({
+      action: "EVENT_TEAMS_GENERATE",
+      message: `이벤트 팀 자동 생성: 이벤트 #${parsedEventId}, ${teamCount}팀`,
+    });
+
     return NextResponse.json({
       message: "팀 자동 생성 완료",
       teamCount,

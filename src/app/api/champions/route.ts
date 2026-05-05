@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { writeAdminLog } from "@/lib/admin-log";
 
 type CreateChampionBody = {
   name: string;
@@ -41,6 +42,11 @@ export async function POST(req: NextRequest) {
         name,
         imageUrl,
       },
+    });
+
+    await writeAdminLog({
+      action: "CHAMPION_CREATE",
+      message: `챔피언 등록: ${created.name}`,
     });
 
     return NextResponse.json(created, { status: 201 });

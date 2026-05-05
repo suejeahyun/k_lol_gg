@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { writeAdminLog } from "@/lib/admin-log";
 import { verifyPassword } from "@/lib/auth/password";
 import { signAuthToken } from "@/lib/auth/token";
 
@@ -36,6 +37,11 @@ export async function POST(req: NextRequest) {
         { status: 401 }
       );
     }
+
+    await writeAdminLog({
+      action: "USER_LOGIN",
+      message: `유저 로그인: #${user.id} ${user.userId} (${user.status})`,
+    });
 
     const token = signAuthToken({
       userAccountId: user.id,

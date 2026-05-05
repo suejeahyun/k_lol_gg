@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { writeAdminLog } from "@/lib/admin-log";
 import {
   calculateWinRate,
   findParticipantByPuuid,
@@ -284,6 +285,11 @@ export async function POST(_req: NextRequest, context: RouteContext) {
         },
       });
     }
+
+    await writeAdminLog({
+      action: "RIOT_SOLO_SYNC",
+      message: `솔랭 전적 갱신: 플레이어 #${player.id} ${player.nickname}#${player.tag}, 저장 ${savedMatchCount}개`,
+    });
 
     return NextResponse.json({
       message: "솔랭 전적 갱신이 완료되었습니다.",

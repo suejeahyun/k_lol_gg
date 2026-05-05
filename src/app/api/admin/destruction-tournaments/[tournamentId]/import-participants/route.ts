@@ -53,8 +53,8 @@ export async function POST(_req: NextRequest, { params }: RouteContext) {
       });
     }
 
-    await prisma.$transaction(
-      applies.map((apply) =>
+    await prisma.$transaction([
+      ...applies.map((apply) =>
         prisma.destructionParticipant.upsert({
           where: {
             tournamentId_playerId: {
@@ -71,8 +71,14 @@ export async function POST(_req: NextRequest, { params }: RouteContext) {
             position: toRealPosition(apply.mainPosition),
           },
         })
-      )
-    );
+      ),
+      prisma.adminLog.create({
+        data: {
+          action: "DESTRUCTION_PARTICIPANTS_IMPORT",
+          message: `멸망전 참가자 가져오기: 멸망전 #${id}, ${applies.length}명`,
+        },
+      }),
+    ]);
 
     return NextResponse.json({
       message: "멸망전 참가자 가져오기가 완료되었습니다.",

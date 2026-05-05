@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { writeAdminLog } from "@/lib/admin-log";
 
 type RouteContext = {
   params: Promise<{
@@ -39,6 +40,12 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
           },
         });
 
+        await writeAdminLog({
+          action: "GALLERY_HOME_DISPLAY_OFF",
+          message: `메인 우승 이미지 노출 해제: #${id}`,
+          db: tx,
+        });
+
         return;
       }
 
@@ -56,6 +63,12 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
         data: {
           showOnHome: true,
         },
+      });
+
+      await writeAdminLog({
+        action: "GALLERY_HOME_DISPLAY_ON",
+        message: `메인 우승 이미지 노출 설정: #${id}`,
+        db: tx,
       });
     });
 
@@ -111,12 +124,22 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
         });
       }
 
-      return tx.galleryImage.update({
+      const result = await tx.galleryImage.update({
         where: { id },
         data: {
           showOnHome,
         },
       });
+
+      await writeAdminLog({
+        action: showOnHome ? "GALLERY_HOME_DISPLAY_ON" : "GALLERY_HOME_DISPLAY_OFF",
+        message: showOnHome
+          ? `메인 우승 이미지 노출 설정: #${id}`
+          : `메인 우승 이미지 노출 해제: #${id}`,
+        db: tx,
+      });
+
+      return result;
     });
 
     return NextResponse.json(updatedImage);

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { writeAdminLog } from "@/lib/admin-log";
 import { validateNoticeInput } from "@/validations/notice";
 
 export async function GET(req: NextRequest) {
@@ -59,6 +60,11 @@ export async function POST(req: NextRequest) {
         content: validated.data.content,
         isPinned: validated.data.isPinned ?? false,
       },
+    });
+
+    await writeAdminLog({
+      action: "NOTICE_CREATE",
+      message: `공지사항 등록: #${notice.id} ${notice.title}`,
     });
 
     return NextResponse.json(notice, { status: 201 });

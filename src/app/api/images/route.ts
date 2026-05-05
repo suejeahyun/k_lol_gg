@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { writeAdminLog } from "@/lib/admin-log";
 
 type CreateGalleryImageBody = {
   title: string;
@@ -72,6 +73,11 @@ export async function POST(req: NextRequest) {
         imageUrl,
         showOnHome,
       },
+    });
+
+    await writeAdminLog({
+      action: "GALLERY_IMAGE_CREATE",
+      message: `우승 이미지 등록: #${created.id} ${created.title}`,
     });
 
     return NextResponse.json(created, { status: 201 });

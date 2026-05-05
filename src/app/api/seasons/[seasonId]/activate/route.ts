@@ -57,6 +57,12 @@ export async function PATCH(_req: NextRequest, { params }: RouteContext) {
           isActive: true,
         },
       }),
+      prisma.adminLog.create({
+        data: {
+          action: "SEASON_ACTIVATE",
+          message: `시즌 활성화: #${id}`,
+        },
+      }),
     ]);
 
     return NextResponse.json({

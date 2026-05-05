@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authConstants } from "@/lib/auth";
+import { writeAdminLog } from "@/lib/admin-log";
 
 type LoginBody = {
   id: string;
@@ -26,6 +27,11 @@ export async function POST(req: NextRequest) {
         { status: 401 }
       );
     }
+
+    await writeAdminLog({
+      action: "ADMIN_LOGIN",
+      message: "관리자 로그인",
+    });
 
     const response = NextResponse.json({ success: true });
 

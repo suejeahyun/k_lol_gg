@@ -1,30 +1,21 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma/client";
+import { writeAdminLog } from "@/lib/admin-log";
+import { authConstants } from "@/lib/auth";
 
-export async function GET() {
-  try {
-    const logs = await prisma.adminLog.findMany({
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+export async function POST() {
+  await writeAdminLog({
+    action: "ADMIN_LOGOUT",
+    message: "관리자 로그아웃",
+  });
 
-    return NextResponse.json(
-      logs.map((log) => ({
-        id: log.id,
-        type: log.action,
-        message: log.message,
-        createdAt: log.createdAt.toISOString(),
-      }))
-    );
-  } catch (error) {
-    console.error("[LOGS_GET_ERROR]", error);
+  const response = NextResponse.json({ success: true });
 
-    return NextResponse.json(
-      {
-        message: "로그 목록을 불러오지 못했습니다.",
-      },
-      { status: 500 }
-    );
-  }
+  response.cookies.set(authConstants.ADMIN_TOKEN_KEY, "", {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 0,
+  });
+
+  return response;
 }

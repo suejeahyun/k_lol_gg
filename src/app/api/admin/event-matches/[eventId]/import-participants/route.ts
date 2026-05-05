@@ -53,8 +53,8 @@ export async function POST(_req: NextRequest, { params }: RouteContext) {
       });
     }
 
-    await prisma.$transaction(
-      applies.map((apply) =>
+    await prisma.$transaction([
+      ...applies.map((apply) =>
         prisma.eventParticipant.upsert({
           where: {
             eventId_playerId: {
@@ -71,8 +71,14 @@ export async function POST(_req: NextRequest, { params }: RouteContext) {
             position: toRealPosition(apply.mainPosition),
           },
         })
-      )
-    );
+      ),
+      prisma.adminLog.create({
+        data: {
+          action: "EVENT_PARTICIPANTS_IMPORT",
+          message: `이벤트 내전 참가자 가져오기: 이벤트 #${id}, ${applies.length}명`,
+        },
+      }),
+    ]);
 
     return NextResponse.json({
       message: "이벤트 내전 참가자 가져오기가 완료되었습니다.",

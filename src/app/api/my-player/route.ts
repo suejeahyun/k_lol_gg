@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { writeAdminLog } from "@/lib/admin-log";
 import { requireApprovedUser } from "@/lib/auth/session";
 
 export async function GET() {
@@ -80,6 +81,11 @@ export async function PATCH(req: NextRequest) {
         peakTier: peakTier || null,
         currentTier: currentTier || null,
       },
+    });
+
+    await writeAdminLog({
+      action: "MY_PLAYER_UPDATE",
+      message: `내 플레이어 정보 수정: 유저 #${user.userAccountId}, 플레이어 #${updated.id} ${updated.nickname}#${updated.tag}`,
     });
 
     return NextResponse.json({ player: updated });

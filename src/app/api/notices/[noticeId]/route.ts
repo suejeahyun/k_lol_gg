@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { writeAdminLog } from "@/lib/admin-log";
 import { validateNoticeInput } from "@/validations/notice";
 
 type NoticeRouteContext = {
@@ -84,6 +85,11 @@ export async function PATCH(req: NextRequest, context: NoticeRouteContext) {
       },
     });
 
+    await writeAdminLog({
+      action: "NOTICE_UPDATE",
+      message: `공지사항 수정: #${id} ${updatedNotice.title}`,
+    });
+
     return NextResponse.json(updatedNotice);
   } catch (error) {
     console.error("[NOTICE_PATCH_ERROR]", error);
@@ -120,6 +126,11 @@ export async function DELETE(_: NextRequest, context: NoticeRouteContext) {
 
     await prisma.notice.delete({
       where: { id },
+    });
+
+    await writeAdminLog({
+      action: "NOTICE_DELETE",
+      message: `공지사항 삭제: #${id} ${existingNotice.title}`,
     });
 
     return NextResponse.json({ success: true });

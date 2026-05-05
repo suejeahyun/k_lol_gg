@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { writeAdminLog } from "@/lib/admin-log";
 
 type RouteContext = {
   params: Promise<{
@@ -102,6 +103,11 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
       },
     });
 
+    await writeAdminLog({
+      action: "GALLERY_IMAGE_UPDATE",
+      message: `우승 이미지 수정: #${id} ${updated.title}`,
+    });
+
     return NextResponse.json(updated);
   } catch (error) {
     console.error("[GALLERY_IMAGE_PATCH_ERROR]", error);
@@ -124,8 +130,24 @@ export async function DELETE(_: NextRequest, context: RouteContext) {
       );
     }
 
+    const existingImage = await prisma.galleryImage.findUnique({
+      where: { id },
+    });
+
+    if (!existingImage) {
+      return NextResponse.json(
+        { message: "이미지를 찾을 수 없습니다." },
+        { status: 404 }
+      );
+    }
+
     await prisma.galleryImage.delete({
       where: { id },
+    });
+
+    await writeAdminLog({
+      action: "GALLERY_IMAGE_DELETE",
+      message: `우승 이미지 삭제: #${id} ${existingImage.title}`,
     });
 
     return NextResponse.json({ success: true });

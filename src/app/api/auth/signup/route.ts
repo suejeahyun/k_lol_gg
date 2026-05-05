@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { writeAdminLog } from "@/lib/admin-log";
 import { hashPassword } from "@/lib/auth/password";
 
 export async function POST(req: NextRequest) {
@@ -62,7 +63,7 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      await tx.player.create({
+      const player = await tx.player.create({
         data: {
           name,
           nickname,
@@ -71,6 +72,12 @@ export async function POST(req: NextRequest) {
           currentTier: currentTier || null,
           userAccountId: user.id,
         },
+      });
+
+      await writeAdminLog({
+        action: "USER_SIGNUP",
+        message: `회원가입 신청: #${user.id} ${user.userId} / 플레이어 #${player.id} ${player.nickname}#${player.tag}`,
+        db: tx,
       });
     });
 

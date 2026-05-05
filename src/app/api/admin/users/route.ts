@@ -1,13 +1,63 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 
-export async function GET() {
+const USER_STATUSES = ["PENDING", "APPROVED", "REJECTED"] as const;
+
+export async function GET(req: NextRequest) {
   try {
+    const page = Number(req.nextUrl.searchParams.get("page") ?? "1");
+    const pageSize = Number(req.nextUrl.searchParams.get("pageSize") ?? "20");
+    const q = String(req.nextUrl.searchParams.get("q") ?? "").trim();
+    const statusParam = String(
+      req.nextUrl.searchParams.get("status") ?? "",
+    ).trim();
+
+    const safePage = Number.isNaN(page) || page < 1 ? 1 : page;
+    const safePageSize =
+      Number.isNaN(pageSize) || pageSize < 1 || pageSize > 100 ? 20 : pageSize;
+
+    const status = USER_STATUSES.includes(
+      statusParam as (typeof USER_STATUSES)[number],
+    )
+      ? (statusParam as (typeof USER_STATUSES)[number])
+      : undefined;
+
+    const where = {
+      ...(status ? { status } : {}),
+      ...(q
+        ? {
+            OR: [
+              { userId: { contains: q, mode: "insensitive" as const } },
+              {
+                player: {
+                  is: {
+                    OR: [
+                      { name: { contains: q, mode: "insensitive" as const } },
+                      {
+                        nickname: { contains: q, mode: "insensitive" as const },
+                      },
+                      { tag: { contains: q, mode: "insensitive" as const } },
+                    ],
+                  },
+                },
+              },
+            ],
+          }
+        : {}),
+    };
+
+    const totalCount = await prisma.userAccount.count({ where });
+    const totalPages = Math.max(1, Math.ceil(totalCount / safePageSize));
+    const currentPage = Math.min(safePage, totalPages);
+    const skip = (currentPage - 1) * safePageSize;
 
     const users = await prisma.userAccount.findMany({
+      where,
       orderBy: {
         createdAt: "desc",
       },
+      skip,
+      take: safePageSize,
       include: {
         player: true,
       },
@@ -19,10 +69,11 @@ export async function GET() {
         userId: user.userId,
         role: user.role,
         status: user.status,
-        createdAt: user.createdAt,
+        createdAt: user.createdAt.toISOString(),
         player: user.player
           ? {
               id: user.player.id,
+              name: user.player.name,
               nickname: user.player.nickname,
               tag: user.player.tag,
               peakTier: user.player.peakTier,
@@ -30,29 +81,35 @@ export async function GET() {
             }
           : null,
       })),
+      pagination: {
+        page: currentPage,
+        pageSize: safePageSize,
+        totalCount,
+        totalPages,
+      },
     });
   } catch (error: unknown) {
     if (error instanceof Error) {
-        if (error.message === "UNAUTHORIZED") {
+      if (error.message === "UNAUTHORIZED") {
         return NextResponse.json(
-            { message: "로그인이 필요합니다." },
-            { status: 401 }
+          { message: "로그인이 필요합니다." },
+          { status: 401 },
         );
-        }
+      }
 
-        if (error.message === "FORBIDDEN") {
+      if (error.message === "FORBIDDEN") {
         return NextResponse.json(
-            { message: "관리자 권한이 필요합니다." },
-            { status: 403 }
+          { message: "관리자 권한이 필요합니다." },
+          { status: 403 },
         );
-        }
+      }
     }
 
-    console.error("[ERROR]", error);
+    console.error("[ADMIN_USERS_GET_ERROR]", error);
 
     return NextResponse.json(
-        { message: "오류 발생" },
-        { status: 500 }
+      { message: "회원 목록 조회 중 오류가 발생했습니다." },
+      { status: 500 },
     );
-    }
+  }
 }

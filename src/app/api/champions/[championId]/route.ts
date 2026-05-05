@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { writeAdminLog } from "@/lib/admin-log";
 
 type RouteContext = {
   params: Promise<{ championId: string }>;
@@ -76,6 +77,11 @@ export async function PATCH(
       },
     });
 
+    await writeAdminLog({
+      action: "CHAMPION_UPDATE",
+      message: `챔피언 수정: #${id} ${updated.name}`,
+    });
+
     return NextResponse.json(updated);
   } catch (error) {
     console.error("[CHAMPION_PATCH_ERROR]", error);
@@ -101,8 +107,24 @@ export async function DELETE(
       );
     }
 
+    const existingChampion = await prisma.champion.findUnique({
+      where: { id },
+    });
+
+    if (!existingChampion) {
+      return NextResponse.json(
+        { message: "Champion not found" },
+        { status: 404 }
+      );
+    }
+
     await prisma.champion.delete({
       where: { id },
+    });
+
+    await writeAdminLog({
+      action: "CHAMPION_DELETE",
+      message: `챔피언 삭제: #${id} ${existingChampion.name}`,
     });
 
     return NextResponse.json({ success: true });
