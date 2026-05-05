@@ -164,7 +164,7 @@ export default async function AdminLogsPage({ searchParams }: PageProps) {
                   <tr key={log.id}>
                     <td>{log.id}</td>
                     <td>
-                      <span className="admin-log-action-pill">{log.action}</span>
+                      <span className="admin-log-action-pill">{log.type}</span>
                     </td>
                     <td>{log.message}</td>
                     <td>
