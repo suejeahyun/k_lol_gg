@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
-import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { requireAdminRequest } from "@/lib/auth/requireAdmin";
 
 const USER_STATUSES = ["PENDING", "APPROVED", "REJECTED"] as const;
 
 export async function GET(req: NextRequest) {
-  const rejected = await rejectIfNotAdmin();
-  if (rejected) return rejected;
+  const admin = await requireAdminRequest();
+
+  if (!admin) {
+    return NextResponse.json(
+      { message: "관리자 권한이 필요합니다." },
+      { status: 401 },
+    );
+  }
 
   try {
     const page = Number(req.nextUrl.searchParams.get("page") ?? "1");
@@ -68,6 +74,11 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json({
+      currentAdmin: {
+        id: admin.user.id,
+        userId: admin.user.userId,
+        role: admin.user.role,
+      },
       users: users.map((user) => ({
         id: user.id,
         userId: user.userId,
@@ -94,22 +105,6 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error: unknown) {
-    if (error instanceof Error) {
-      if (error.message === "UNAUTHORIZED") {
-        return NextResponse.json(
-          { message: "로그인이 필요합니다." },
-          { status: 401 },
-        );
-      }
-
-      if (error.message === "FORBIDDEN") {
-        return NextResponse.json(
-          { message: "관리자 권한이 필요합니다." },
-          { status: 403 },
-        );
-      }
-    }
-
     console.error("[ADMIN_USERS_GET_ERROR]", error);
 
     return NextResponse.json(

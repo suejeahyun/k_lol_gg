@@ -4,7 +4,7 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import Pagination from "@/components/Pagination";
 
 type UserStatus = "PENDING" | "APPROVED" | "REJECTED";
-type UserRole = "USER" | "ADMIN";
+type UserRole = "USER" | "ADMIN" | "SUPER_ADMIN";
 
 type AdminUser = {
   id: number;
@@ -23,6 +23,12 @@ type AdminUser = {
   linkStatus: "PLAYER_LINKED" | "NO_PLAYER";
 };
 
+type CurrentAdmin = {
+  id: number | null;
+  userId: string;
+  role: UserRole;
+};
+
 type PaginationState = {
   page: number;
   pageSize: number;
@@ -31,6 +37,7 @@ type PaginationState = {
 };
 
 type AdminUsersResponse = {
+  currentAdmin: CurrentAdmin;
   users: AdminUser[];
   pagination: PaginationState;
 };
@@ -39,6 +46,7 @@ const PAGE_SIZE = 20;
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [currentAdmin, setCurrentAdmin] = useState<CurrentAdmin | null>(null);
   const [pagination, setPagination] = useState<PaginationState>({
     page: 1,
     pageSize: PAGE_SIZE,
@@ -49,6 +57,8 @@ export default function AdminUsersPage() {
   const [searchText, setSearchText] = useState("");
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<UserStatus | "">("PENDING");
+
+  const isSuperAdmin = currentAdmin?.role === "SUPER_ADMIN";
 
   const fetchUsers = useCallback(
     async (targetPage: number) => {
@@ -80,6 +90,7 @@ export default function AdminUsersPage() {
           return;
         }
 
+        setCurrentAdmin(data.currentAdmin);
         setUsers(data.users);
         setPagination(data.pagination);
       } catch (error) {
@@ -94,7 +105,6 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     void fetchUsers(1);
-    // 최초 진입 및 적용된 필터 변경 시 1페이지부터 조회합니다.
   }, [fetchUsers]);
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
@@ -151,13 +161,57 @@ export default function AdminUsersPage() {
     }
   };
 
+  const handleRoleChange = async (user: AdminUser, nextRole: "USER" | "ADMIN") => {
+    const message =
+      nextRole === "ADMIN"
+        ? `${user.userId} 계정을 관리자로 지정하겠습니까?`
+        : `${user.userId} 계정의 관리자 권한을 해제하겠습니까?`;
+
+    const ok = window.confirm(message);
+    if (!ok) return;
+
+    const res = await fetch(`/api/admin/users/${user.id}/role`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role: nextRole }),
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      alert(data.message || "권한이 변경되었습니다.");
+      void fetchUsers(pagination.page);
+    } else {
+      alert(data.message || "권한 변경 실패");
+    }
+  };
+
+  const handlePasswordReset = async (user: AdminUser) => {
+    const ok = window.confirm(`${user.userId} 계정의 비밀번호를 임시 비밀번호로 초기화하겠습니까?`);
+    if (!ok) return;
+
+    const res = await fetch(`/api/admin/users/${user.id}/password-reset`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      window.alert(`임시 비밀번호: ${data.tempPassword}\n해당 유저에게 전달 후 로그인 뒤 비밀번호 변경을 안내하세요.`);
+    } else {
+      alert(data.message || "비밀번호 초기화 실패");
+    }
+  };
+
   return (
     <main className="admin-page">
       <div className="admin-page__header">
         <div>
           <h1 className="admin-page__title">회원 승인 관리</h1>
           <p className="admin-page__description">
-            회원가입 신청자를 승인하거나 거절합니다.
+            회원 승인, 관리자 지정, 비밀번호 초기화를 관리합니다.
           </p>
         </div>
       </div>
@@ -193,6 +247,7 @@ export default function AdminUsersPage() {
             <p className="admin-muted">
               총 {pagination.totalCount.toLocaleString("ko-KR")}명 · 현재{" "}
               {pagination.page} / {pagination.totalPages}페이지
+              {currentAdmin ? ` · 현재 권한: ${getRoleLabel(currentAdmin.role)}` : ""}
             </p>
           </div>
         </div>
@@ -213,6 +268,7 @@ export default function AdminUsersPage() {
                   <th>최고티어</th>
                   <th>현재티어</th>
                   <th>상태</th>
+                  <th>권한</th>
                   <th>연결</th>
                   <th>가입일</th>
                   <th>관리</th>
@@ -229,32 +285,32 @@ export default function AdminUsersPage() {
                     <td>{user.player?.peakTier ?? "-"}</td>
                     <td>{user.player?.currentTier ?? "-"}</td>
                     <td>{getStatusLabel(user.status)}</td>
+                    <td>{getRoleLabel(user.role)}</td>
                     <td>{getLinkStatusLabel(user.linkStatus)}</td>
                     <td>
                       {new Date(user.createdAt).toLocaleDateString("ko-KR")}
                     </td>
                     <td>
-                      {user.status === "PENDING" ? (
-                        <div className="admin-actions">
-                          <button
-                            type="button"
-                            className="chip-button"
-                            onClick={() => handleApprove(user.id)}
-                          >
-                            승인
-                          </button>
+                      <div className="admin-actions">
+                        {user.status === "PENDING" ? (
+                          <>
+                            <button
+                              type="button"
+                              className="chip-button"
+                              onClick={() => handleApprove(user.id)}
+                            >
+                              승인
+                            </button>
 
-                          <button
-                            type="button"
-                            className="chip-button chip-button--danger"
-                            onClick={() => handleReject(user.id)}
-                          >
-                            거절
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="admin-actions">
-                          <span className="admin-muted">처리 완료</span>
+                            <button
+                              type="button"
+                              className="chip-button chip-button--danger"
+                              onClick={() => handleReject(user.id)}
+                            >
+                              거절
+                            </button>
+                          </>
+                        ) : (
                           <button
                             type="button"
                             className="chip-button"
@@ -262,8 +318,40 @@ export default function AdminUsersPage() {
                           >
                             대기 전환
                           </button>
-                        </div>
-                      )}
+                        )}
+
+                        {isSuperAdmin && user.role !== "SUPER_ADMIN" ? (
+                          <>
+                            {user.role === "ADMIN" ? (
+                              <button
+                                type="button"
+                                className="chip-button chip-button--danger"
+                                onClick={() => handleRoleChange(user, "USER")}
+                              >
+                                관리자 해제
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                className="chip-button"
+                                onClick={() => handleRoleChange(user, "ADMIN")}
+                                disabled={user.status !== "APPROVED"}
+                                title={user.status !== "APPROVED" ? "승인 완료 후 관리자 지정 가능" : undefined}
+                              >
+                                관리자 지정
+                              </button>
+                            )}
+
+                            <button
+                              type="button"
+                              className="chip-button"
+                              onClick={() => handlePasswordReset(user)}
+                            >
+                              비번 초기화
+                            </button>
+                          </>
+                        ) : null}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -289,6 +377,11 @@ function getStatusLabel(status: UserStatus) {
   return status;
 }
 
+function getRoleLabel(role: UserRole) {
+  if (role === "SUPER_ADMIN") return "최고 관리자";
+  if (role === "ADMIN") return "관리자";
+  return "일반 유저";
+}
 
 function getLinkStatusLabel(status: AdminUser["linkStatus"]) {
   if (status === "PLAYER_LINKED") return "Player 연결됨";

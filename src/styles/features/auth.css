@@ -68,3 +68,29 @@
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.22),
     0 0 24px rgba(59, 130, 246, 0.18) !important;
 }
+
+
+.auth-description {
+  margin: -4px 0 6px;
+  color: var(--k-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.auth-link-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 2px;
+}
+
+.auth-link-row a {
+  color: var(--k-blue-2);
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.auth-link-row a:hover {
+  text-decoration: underline;
+}

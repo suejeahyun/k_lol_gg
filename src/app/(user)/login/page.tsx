@@ -4,7 +4,7 @@ import LoginForm from "@/components/LoginForm";
 
 export default async function LoginPage() {
   const cookieStore = await cookies();
-  const token = cookieStore.get("token");
+  const token = cookieStore.get("user_token");
 
   if (token) {
     redirect("/");

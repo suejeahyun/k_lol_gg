@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma/client";
+import { hashPassword } from "@/lib/auth/password";
 
 type RiotChampionSummary = {
   id: string;
@@ -46,6 +47,30 @@ async function getChampions(version: string): Promise<RiotChampionSummary[]> {
   const json = (await res.json()) as RiotChampionResponse;
 
   return Object.values(json.data);
+}
+
+async function seedSuperAdmin() {
+  const userId = process.env.SUPER_ADMIN_ID || process.env.ADMIN_ID || "klol";
+  const password = process.env.SUPER_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD || "7942";
+
+  const passwordHash = await hashPassword(password);
+
+  await prisma.userAccount.upsert({
+    where: { userId },
+    update: {
+      passwordHash,
+      role: "SUPER_ADMIN",
+      status: "APPROVED",
+    },
+    create: {
+      userId,
+      passwordHash,
+      role: "SUPER_ADMIN",
+      status: "APPROVED",
+    },
+  });
+
+  console.log(`최고 관리자 시드 완료: ${userId}`);
 }
 
 async function seedChampions() {
@@ -118,6 +143,7 @@ async function seedEventParticipants() {
 }
 
 async function main() {
+  await seedSuperAdmin();
   await seedChampions();
   await seedEventParticipants();
 }

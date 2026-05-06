@@ -14,6 +14,7 @@ import {
   UserPlus,
   Bell,
   CalendarDays,
+  KeyRound,
 } from "lucide-react";
 
 type UserStatus = "PENDING" | "APPROVED" | "REJECTED";
@@ -46,6 +47,7 @@ const menuGroups = [
     items: [
       { href: "/notices", label: "공지사항", icon: Bell },
       { href: "/event-notices", label: "이벤트 공지", icon: CalendarDays },
+      { href: "/account/password", label: "비밀번호 변경", icon: KeyRound, auth: true },
     ],
   },
 ];

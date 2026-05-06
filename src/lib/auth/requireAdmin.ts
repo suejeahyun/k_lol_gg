@@ -4,12 +4,40 @@ import { authConstants } from "@/lib/auth";
 import { verifyAuthToken } from "@/lib/auth/token";
 import { prisma } from "@/lib/prisma/client";
 
-export async function requireAdminRequest() {
+const ADMIN_ROLES = ["ADMIN", "SUPER_ADMIN"] as const;
+
+type AdminRole = (typeof ADMIN_ROLES)[number];
+
+type AdminSession = {
+  mode: "legacy-admin" | "user-admin";
+  user: {
+    id: number | null;
+    userId: string;
+    role: AdminRole;
+    status: "APPROVED";
+    playerId: number | null;
+  };
+};
+
+function isAdminRole(role: string): role is AdminRole {
+  return ADMIN_ROLES.includes(role as AdminRole);
+}
+
+export async function requireAdminRequest(): Promise<AdminSession | null> {
   const cookieStore = await cookies();
   const legacyAdminToken = cookieStore.get(authConstants.ADMIN_TOKEN_KEY)?.value;
 
   if (legacyAdminToken === authConstants.ADMIN_TOKEN_VALUE) {
-    return { mode: "legacy-admin" as const };
+    return {
+      mode: "legacy-admin",
+      user: {
+        id: null,
+        userId: "legacy-admin",
+        role: "SUPER_ADMIN",
+        status: "APPROVED",
+        playerId: null,
+      },
+    };
   }
 
   const userToken = cookieStore.get("user_token")?.value;
@@ -36,12 +64,12 @@ export async function requireAdminRequest() {
     },
   });
 
-  if (!user || user.role !== "ADMIN" || user.status !== "APPROVED") {
+  if (!user || !isAdminRole(user.role) || user.status !== "APPROVED") {
     return null;
   }
 
   return {
-    mode: "user-admin" as const,
+    mode: "user-admin",
     user: {
       id: user.id,
       userId: user.userId,
@@ -59,6 +87,29 @@ export async function rejectIfNotAdmin() {
     return NextResponse.json(
       { message: "관리자 권한이 필요합니다." },
       { status: 401 },
+    );
+  }
+
+  return null;
+}
+
+export async function requireSuperAdminRequest(): Promise<AdminSession | null> {
+  const admin = await requireAdminRequest();
+
+  if (!admin || admin.user.role !== "SUPER_ADMIN") {
+    return null;
+  }
+
+  return admin;
+}
+
+export async function rejectIfNotSuperAdmin() {
+  const admin = await requireSuperAdminRequest();
+
+  if (!admin) {
+    return NextResponse.json(
+      { message: "최고 관리자 권한이 필요합니다." },
+      { status: 403 },
     );
   }
 

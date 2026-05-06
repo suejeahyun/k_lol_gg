@@ -63,7 +63,7 @@ export async function requireApprovedUser() {
 export async function requireAdmin() {
   const user = await requireUser();
 
-  if (user.role !== "ADMIN" || user.status !== "APPROVED") {
+  if ((user.role !== "ADMIN" && user.role !== "SUPER_ADMIN") || user.status !== "APPROVED") {
     throw new Error("FORBIDDEN");
   }
 

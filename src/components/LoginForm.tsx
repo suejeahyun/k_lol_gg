@@ -69,6 +69,11 @@ export default function LoginForm() {
         <button className="auth-button" type="submit" disabled={loading}>
           {loading ? "로그인 중..." : "로그인"}
         </button>
+
+        <div className="auth-link-row">
+          <a href="/forgot-password">비밀번호 찾기</a>
+          <a href="/signup">회원가입</a>
+        </div>
       </form>
     </div>
   );
