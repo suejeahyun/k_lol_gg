@@ -52,9 +52,9 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    if (user.role === "SUPER_ADMIN") {
+    if (user.role === "ADMIN" || user.role === "SUPER_ADMIN") {
       return NextResponse.json(
-        { message: "최고 관리자 계정은 관리자 페이지에서만 초기화할 수 있습니다." },
+        { message: "관리자 계정은 최고 관리자 초기화 기능으로만 비밀번호를 변경할 수 있습니다." },
         { status: 403 },
       );
     }

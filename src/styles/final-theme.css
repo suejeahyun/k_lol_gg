@@ -1,0 +1,922 @@
+/* src/styles/final-theme.css */
+
+/* =========================================================
+   K-LOL.GG FINAL THEME
+   - 다크 네온 e스포츠 대시보드
+   - 기존 CSS를 삭제하지 않고 마지막에 덮어쓰는 방식
+   - 문제 발생 시 globals.css의 import 한 줄만 제거하면 복구 가능
+========================================================= */
+
+:root {
+  --k-bg-main: #030712;
+  --k-bg-deep: #020617;
+  --k-bg-panel: rgba(8, 18, 36, 0.92);
+  --k-bg-panel-soft: rgba(15, 23, 42, 0.84);
+  --k-bg-panel-strong: rgba(2, 6, 23, 0.96);
+
+  --k-line-soft: rgba(96, 165, 250, 0.18);
+  --k-line-mid: rgba(96, 165, 250, 0.34);
+  --k-line-strong: rgba(34, 211, 238, 0.58);
+
+  --k-text-main: #e5f0ff;
+  --k-text-strong: #f8fbff;
+  --k-text-muted: #8ea3c2;
+  --k-text-faint: #64748b;
+
+  --k-blue: #3b82f6;
+  --k-cyan: #22d3ee;
+  --k-gold: #facc15;
+  --k-red: #ef4444;
+  --k-green: #22c55e;
+  --k-purple: #a855f7;
+
+  --k-radius-sm: 10px;
+  --k-radius-md: 14px;
+  --k-radius-lg: 20px;
+  --k-radius-xl: 28px;
+
+  --k-shadow-card: 0 18px 48px rgba(0, 0, 0, 0.45);
+  --k-shadow-blue: 0 0 32px rgba(37, 99, 235, 0.2);
+  --k-shadow-cyan: 0 0 34px rgba(34, 211, 238, 0.16);
+}
+
+/* =========================================================
+   BASE
+========================================================= */
+
+html,
+body {
+  background:
+    radial-gradient(circle at 15% 0%, rgba(59, 130, 246, 0.2), transparent 34%),
+    radial-gradient(circle at 85% 8%, rgba(34, 211, 238, 0.13), transparent 30%),
+    linear-gradient(135deg, var(--k-bg-main) 0%, #071426 48%, var(--k-bg-deep) 100%) !important;
+  color: var(--k-text-main) !important;
+}
+
+body {
+  min-height: 100vh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::selection {
+  background: rgba(34, 211, 238, 0.28);
+  color: #ffffff;
+}
+
+/* =========================================================
+   SCROLLBAR
+========================================================= */
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: rgba(2, 6, 23, 0.9);
+}
+
+*::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.7), rgba(34, 211, 238, 0.52));
+  border: 2px solid rgba(2, 6, 23, 0.9);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(96, 165, 250, 0.9), rgba(34, 211, 238, 0.75));
+}
+
+/* =========================================================
+   COMMON PANEL / CARD
+========================================================= */
+
+.card,
+.panel,
+.page-card,
+.content-card,
+.list-card,
+.stat-card,
+.summary-card,
+.admin-card,
+.admin-panel,
+.admin-dashboard-card,
+.admin-summary-card,
+.notice-card,
+.event-notice-card,
+.gallery-card,
+.player-card,
+.match-card,
+.ranking-card,
+.ranking-board,
+.balance-card,
+.balance-panel,
+.balance-form-card,
+.form-card,
+.auth-card,
+.login-card,
+.signup-card,
+.password-card,
+.table-card,
+.k-card {
+  border: 1px solid var(--k-line-soft) !important;
+  border-radius: var(--k-radius-lg) !important;
+  background:
+    linear-gradient(180deg, rgba(15, 30, 52, 0.94), rgba(8, 18, 36, 0.9)) !important;
+  color: var(--k-text-main) !important;
+  box-shadow: var(--k-shadow-card), var(--k-shadow-blue) !important;
+  backdrop-filter: blur(14px);
+}
+
+.card:hover,
+.page-card:hover,
+.content-card:hover,
+.list-card:hover,
+.stat-card:hover,
+.notice-card:hover,
+.gallery-card:hover,
+.player-card:hover,
+.match-card:hover,
+.ranking-card:hover,
+.balance-card:hover,
+.k-card:hover {
+  border-color: var(--k-line-mid) !important;
+  box-shadow: var(--k-shadow-card), var(--k-shadow-cyan) !important;
+}
+
+/* =========================================================
+   TEXT
+========================================================= */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.page-title,
+.section-title,
+.card-title,
+.admin-title {
+  color: var(--k-text-strong) !important;
+  letter-spacing: -0.02em;
+}
+
+p,
+span,
+li,
+td,
+th,
+label,
+small {
+  color: inherit;
+}
+
+.text-muted,
+.muted,
+.description,
+.page-description,
+.card-description,
+.help-text,
+.sub-text,
+.meta-text {
+  color: var(--k-text-muted) !important;
+}
+
+strong,
+b {
+  color: var(--k-text-strong);
+}
+
+/* =========================================================
+   LINKS
+========================================================= */
+
+a {
+  color: inherit;
+}
+
+a:hover {
+  color: var(--k-cyan);
+}
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+button,
+.btn,
+.button,
+.admin-button,
+.action-button,
+.submit-button,
+.primary-button,
+.secondary-button,
+.danger-button,
+.cancel-button,
+.link-button,
+a.btn,
+a.button {
+  min-height: 38px;
+  border-radius: 999px !important;
+  border: 1px solid rgba(96, 165, 250, 0.28) !important;
+  background:
+    linear-gradient(135deg, rgba(37, 99, 235, 0.9), rgba(34, 211, 238, 0.72)) !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.01em;
+  box-shadow: 0 10px 26px rgba(37, 99, 235, 0.22) !important;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    background 0.16s ease,
+    opacity 0.16s ease !important;
+}
+
+button:hover,
+.btn:hover,
+.button:hover,
+.admin-button:hover,
+.action-button:hover,
+.submit-button:hover,
+.primary-button:hover,
+.secondary-button:hover,
+.link-button:hover,
+a.btn:hover,
+a.button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(34, 211, 238, 0.64) !important;
+  box-shadow: 0 14px 32px rgba(34, 211, 238, 0.18), 0 10px 26px rgba(37, 99, 235, 0.22) !important;
+}
+
+button:disabled,
+.btn:disabled,
+.button:disabled {
+  cursor: not-allowed !important;
+  opacity: 0.48 !important;
+  transform: none !important;
+}
+
+.secondary-button,
+.btn-secondary,
+.button-secondary,
+.cancel-button {
+  background: rgba(15, 23, 42, 0.86) !important;
+  color: var(--k-text-main) !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+  box-shadow: none !important;
+}
+
+.ghost-button,
+.btn-ghost,
+.button-ghost {
+  background: transparent !important;
+  color: var(--k-text-muted) !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  box-shadow: none !important;
+}
+
+.danger-button,
+.btn-danger,
+.button-danger,
+.delete-button,
+.reset-button {
+  background:
+    linear-gradient(135deg, rgba(220, 38, 38, 0.95), rgba(244, 63, 94, 0.78)) !important;
+  border-color: rgba(248, 113, 113, 0.5) !important;
+  color: #fff !important;
+  box-shadow: 0 12px 28px rgba(239, 68, 68, 0.22) !important;
+}
+
+/* =========================================================
+   FORMS
+========================================================= */
+
+input,
+select,
+textarea {
+  border: 1px solid rgba(96, 165, 250, 0.22) !important;
+  border-radius: var(--k-radius-md) !important;
+  background: rgba(2, 6, 23, 0.72) !important;
+  color: var(--k-text-strong) !important;
+  outline: none !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.015) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(148, 163, 184, 0.72) !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: rgba(34, 211, 238, 0.65) !important;
+  box-shadow:
+    0 0 0 3px rgba(34, 211, 238, 0.12),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.025) !important;
+}
+
+label {
+  color: var(--k-text-main) !important;
+  font-weight: 700;
+}
+
+fieldset {
+  border-color: var(--k-line-soft) !important;
+}
+
+/* =========================================================
+   TABLES
+========================================================= */
+
+table {
+  color: var(--k-text-main) !important;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+thead,
+.table-head {
+  background: rgba(15, 23, 42, 0.92) !important;
+}
+
+th {
+  color: #bfdbfe !important;
+  font-weight: 900 !important;
+  border-bottom: 1px solid var(--k-line-mid) !important;
+}
+
+td {
+  color: var(--k-text-main) !important;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12) !important;
+}
+
+tbody tr {
+  transition: background 0.14s ease, transform 0.14s ease;
+}
+
+tbody tr:hover {
+  background: rgba(59, 130, 246, 0.08) !important;
+}
+
+/* =========================================================
+   BADGES
+========================================================= */
+
+.badge,
+.status-badge,
+.role-badge,
+.tier-badge,
+.position-badge,
+.rank-badge,
+.tag,
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 24px;
+  padding: 4px 10px;
+  border-radius: 999px !important;
+  border: 1px solid rgba(96, 165, 250, 0.28) !important;
+  background: rgba(15, 23, 42, 0.8) !important;
+  color: #dbeafe !important;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+
+.badge-super,
+.role-super,
+.role-super-admin,
+[data-role="SUPER_ADMIN"] {
+  border-color: rgba(250, 204, 21, 0.55) !important;
+  background: rgba(250, 204, 21, 0.13) !important;
+  color: #fde68a !important;
+}
+
+.badge-admin,
+.role-admin,
+[data-role="ADMIN"] {
+  border-color: rgba(34, 211, 238, 0.52) !important;
+  background: rgba(34, 211, 238, 0.12) !important;
+  color: #a5f3fc !important;
+}
+
+.badge-user,
+.role-user,
+[data-role="USER"] {
+  border-color: rgba(148, 163, 184, 0.28) !important;
+  background: rgba(148, 163, 184, 0.08) !important;
+  color: #cbd5e1 !important;
+}
+
+.badge-approved,
+.status-approved,
+[data-status="APPROVED"] {
+  border-color: rgba(34, 197, 94, 0.48) !important;
+  background: rgba(34, 197, 94, 0.12) !important;
+  color: #bbf7d0 !important;
+}
+
+.badge-pending,
+.status-pending,
+[data-status="PENDING"] {
+  border-color: rgba(250, 204, 21, 0.48) !important;
+  background: rgba(250, 204, 21, 0.12) !important;
+  color: #fef08a !important;
+}
+
+.badge-rejected,
+.status-rejected,
+[data-status="REJECTED"] {
+  border-color: rgba(239, 68, 68, 0.48) !important;
+  background: rgba(239, 68, 68, 0.12) !important;
+  color: #fecaca !important;
+}
+
+/* =========================================================
+   LAYOUT
+========================================================= */
+
+.app-shell,
+.app-background-root,
+.admin-layout,
+.user-layout,
+.main-layout,
+.page-shell {
+  background: transparent !important;
+  color: var(--k-text-main) !important;
+}
+
+main,
+.page-main,
+.admin-main,
+.content-main {
+  color: var(--k-text-main) !important;
+}
+
+.page-header,
+.admin-page-header,
+.section-header {
+  border-bottom: 1px solid rgba(96, 165, 250, 0.12);
+}
+
+.page-header p,
+.admin-page-header p,
+.section-header p {
+  color: var(--k-text-muted) !important;
+}
+
+/* =========================================================
+   SIDEBAR / TOPBAR
+========================================================= */
+
+.sidebar,
+.admin-sidebar,
+.user-sidebar,
+.topbar,
+.admin-topbar,
+.user-topbar {
+  border-color: rgba(96, 165, 250, 0.16) !important;
+  background:
+    linear-gradient(180deg, rgba(2, 6, 23, 0.96), rgba(8, 18, 36, 0.94)) !important;
+  color: var(--k-text-main) !important;
+  box-shadow: 12px 0 42px rgba(0, 0, 0, 0.28);
+}
+
+.sidebar a,
+.admin-sidebar a,
+.user-sidebar a,
+.nav-link,
+.menu-link {
+  color: var(--k-text-muted) !important;
+  border-radius: var(--k-radius-md) !important;
+  transition: background 0.16s ease, color 0.16s ease, transform 0.16s ease;
+}
+
+.sidebar a:hover,
+.admin-sidebar a:hover,
+.user-sidebar a:hover,
+.nav-link:hover,
+.menu-link:hover {
+  color: var(--k-text-strong) !important;
+  background: rgba(59, 130, 246, 0.12) !important;
+  transform: translateX(2px);
+}
+
+.sidebar a.active,
+.admin-sidebar a.active,
+.user-sidebar a.active,
+.nav-link.active,
+.menu-link.active,
+[aria-current="page"] {
+  color: #ffffff !important;
+  background:
+    linear-gradient(135deg, rgba(37, 99, 235, 0.32), rgba(34, 211, 238, 0.16)) !important;
+  border: 1px solid rgba(34, 211, 238, 0.26) !important;
+}
+
+/* =========================================================
+   ADMIN USERS / PERMISSION PAGE
+========================================================= */
+
+.admin-users-page,
+.admin-users,
+.users-admin-page {
+  color: var(--k-text-main) !important;
+}
+
+.admin-users-page table,
+.admin-users table,
+.users-admin-page table {
+  overflow: hidden;
+  border: 1px solid rgba(96, 165, 250, 0.18) !important;
+  border-radius: var(--k-radius-lg) !important;
+  background: rgba(2, 6, 23, 0.62) !important;
+}
+
+.admin-users-page td,
+.admin-users td,
+.users-admin-page td {
+  vertical-align: middle;
+}
+
+.admin-users-page .actions,
+.admin-users .actions,
+.users-admin-page .actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* 관리자 지정/해제 계열 버튼 */
+button[data-action="make-admin"],
+.make-admin-button {
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.85), rgba(37, 99, 235, 0.82)) !important;
+}
+
+button[data-action="remove-admin"],
+.remove-admin-button {
+  background: rgba(15, 23, 42, 0.88) !important;
+  border-color: rgba(250, 204, 21, 0.42) !important;
+  color: #fde68a !important;
+}
+
+/* =========================================================
+   RANKINGS / TOP
+========================================================= */
+
+.ranking-board,
+.rankings-page,
+.top3-section,
+.top3-card,
+.leaderboard {
+  color: var(--k-text-main) !important;
+}
+
+.ranking-board tr:first-child,
+.leaderboard tr:first-child {
+  background: linear-gradient(90deg, rgba(250, 204, 21, 0.16), rgba(59, 130, 246, 0.06)) !important;
+}
+
+.ranking-board tr:first-child td,
+.leaderboard tr:first-child td {
+  color: #fff7cc !important;
+  font-weight: 900;
+}
+
+.rank-1,
+.first-rank,
+.top-rank {
+  border-color: rgba(250, 204, 21, 0.62) !important;
+  background:
+    radial-gradient(circle at 30% 0%, rgba(250, 204, 21, 0.18), transparent 48%),
+    linear-gradient(180deg, rgba(30, 41, 59, 0.96), rgba(8, 18, 36, 0.92)) !important;
+  box-shadow: 0 0 36px rgba(250, 204, 21, 0.13), var(--k-shadow-card) !important;
+}
+
+.rank-2 {
+  border-color: rgba(203, 213, 225, 0.5) !important;
+}
+
+.rank-3 {
+  border-color: rgba(251, 146, 60, 0.48) !important;
+}
+
+/* =========================================================
+   TEAM BALANCE
+========================================================= */
+
+.balance-page,
+.team-balance-page,
+.players-balance-page {
+  color: var(--k-text-main) !important;
+}
+
+.balance-result,
+.balance-results,
+.team-result,
+.team-card,
+.blue-team,
+.red-team {
+  border-radius: var(--k-radius-xl) !important;
+  border: 1px solid var(--k-line-soft) !important;
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(2, 6, 23, 0.9)) !important;
+  box-shadow: var(--k-shadow-card) !important;
+}
+
+.blue-team,
+.team-blue,
+[data-team="BLUE"] {
+  border-color: rgba(59, 130, 246, 0.5) !important;
+  box-shadow: 0 0 36px rgba(59, 130, 246, 0.16), var(--k-shadow-card) !important;
+}
+
+.red-team,
+.team-red,
+[data-team="RED"] {
+  border-color: rgba(239, 68, 68, 0.46) !important;
+  box-shadow: 0 0 36px rgba(239, 68, 68, 0.14), var(--k-shadow-card) !important;
+}
+
+.team-title,
+.balance-team-title {
+  color: var(--k-text-strong) !important;
+  font-weight: 950;
+  letter-spacing: 0.04em;
+}
+
+.position-badge,
+.position-chip {
+  min-width: 46px;
+  color: #cffafe !important;
+  border-color: rgba(34, 211, 238, 0.42) !important;
+  background: rgba(34, 211, 238, 0.1) !important;
+}
+
+.auto-badge,
+.badge-auto {
+  border-color: rgba(168, 85, 247, 0.48) !important;
+  background: rgba(168, 85, 247, 0.13) !important;
+  color: #e9d5ff !important;
+}
+
+.main-badge,
+.badge-main {
+  border-color: rgba(34, 197, 94, 0.48) !important;
+  background: rgba(34, 197, 94, 0.12) !important;
+  color: #bbf7d0 !important;
+}
+
+.sub-badge,
+.badge-sub {
+  border-color: rgba(59, 130, 246, 0.5) !important;
+  background: rgba(59, 130, 246, 0.12) !important;
+  color: #bfdbfe !important;
+}
+
+/* =========================================================
+   MATCHES / PLAYERS / NOTICES
+========================================================= */
+
+.matches-page,
+.players-page,
+.notices-page,
+.event-notices-page,
+.gallery-page {
+  color: var(--k-text-main) !important;
+}
+
+.match-list-item,
+.player-list-item,
+.notice-list-item,
+.event-notice-list-item {
+  border-color: rgba(96, 165, 250, 0.16) !important;
+  background: rgba(8, 18, 36, 0.78) !important;
+}
+
+.match-list-item:hover,
+.player-list-item:hover,
+.notice-list-item:hover,
+.event-notice-list-item:hover {
+  border-color: rgba(34, 211, 238, 0.38) !important;
+  background: rgba(59, 130, 246, 0.1) !important;
+}
+
+.player-name,
+.match-title,
+.notice-title,
+.event-notice-title {
+  color: var(--k-text-strong) !important;
+  font-weight: 900;
+}
+
+.player-meta,
+.match-meta,
+.notice-meta,
+.event-notice-meta {
+  color: var(--k-text-muted) !important;
+}
+
+/* =========================================================
+   AUTH PAGES
+========================================================= */
+
+.login-page,
+.signup-page,
+.forgot-password-page,
+.password-change-page,
+.auth-page {
+  color: var(--k-text-main) !important;
+}
+
+.login-card,
+.signup-card,
+.auth-card,
+.password-card {
+  max-width: 460px;
+  margin-inline: auto;
+}
+
+.login-card h1,
+.signup-card h1,
+.auth-card h1,
+.password-card h1 {
+  color: var(--k-text-strong) !important;
+}
+
+/* =========================================================
+   EMPTY / LOADING / ERROR
+========================================================= */
+
+.empty-state,
+.loading-state,
+.error-state,
+.notice-empty,
+.table-empty {
+  border: 1px dashed rgba(96, 165, 250, 0.26) !important;
+  border-radius: var(--k-radius-lg) !important;
+  background: rgba(2, 6, 23, 0.48) !important;
+  color: var(--k-text-muted) !important;
+}
+
+.error-state,
+.error-message,
+.form-error {
+  border-color: rgba(239, 68, 68, 0.42) !important;
+  background: rgba(239, 68, 68, 0.1) !important;
+  color: #fecaca !important;
+}
+
+.success-message,
+.form-success {
+  border-color: rgba(34, 197, 94, 0.42) !important;
+  background: rgba(34, 197, 94, 0.1) !important;
+  color: #bbf7d0 !important;
+}
+
+/* =========================================================
+   PAGINATION
+========================================================= */
+
+.pagination,
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.pagination a,
+.pagination button,
+.pager a,
+.pager button {
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 999px !important;
+  background: rgba(15, 23, 42, 0.8) !important;
+  border: 1px solid rgba(96, 165, 250, 0.22) !important;
+  color: var(--k-text-muted) !important;
+  box-shadow: none !important;
+}
+
+.pagination a:hover,
+.pagination button:hover,
+.pager a:hover,
+.pager button:hover {
+  color: #fff !important;
+  border-color: rgba(34, 211, 238, 0.46) !important;
+}
+
+.pagination .active,
+.pager .active,
+.pagination [aria-current="page"],
+.pager [aria-current="page"] {
+  color: #fff !important;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.85), rgba(34, 211, 238, 0.62)) !important;
+}
+
+/* =========================================================
+   IMAGE / GALLERY
+========================================================= */
+
+img {
+  max-width: 100%;
+}
+
+.gallery-card img,
+.image-card img,
+.winner-slider img {
+  border-radius: var(--k-radius-lg);
+  border: 1px solid rgba(96, 165, 250, 0.18);
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 900px) {
+  :root {
+    --k-radius-lg: 16px;
+    --k-radius-xl: 20px;
+  }
+
+  .card,
+  .panel,
+  .page-card,
+  .content-card,
+  .list-card,
+  .stat-card,
+  .admin-card,
+  .notice-card,
+  .player-card,
+  .match-card,
+  .ranking-card,
+  .balance-card,
+  .k-card {
+    border-radius: var(--k-radius-md) !important;
+  }
+
+  table {
+    font-size: 13px;
+  }
+
+  th,
+  td {
+    padding: 10px 8px !important;
+  }
+
+  button,
+  .btn,
+  .button,
+  .admin-button,
+  .action-button {
+    min-height: 36px;
+    padding-inline: 12px !important;
+    font-size: 13px !important;
+  }
+
+  .admin-users-page .actions,
+  .admin-users .actions,
+  .users-admin-page .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pagination,
+  .pager {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 640px) {
+  h1,
+  .page-title,
+  .admin-title {
+    font-size: 26px !important;
+  }
+
+  h2,
+  .section-title {
+    font-size: 20px !important;
+  }
+
+  .badge,
+  .status-badge,
+  .role-badge,
+  .tier-badge,
+  .position-badge,
+  .tag,
+  .pill {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+}
