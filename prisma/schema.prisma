@@ -168,6 +168,8 @@ model MatchSeries {
 
   season Season      @relation(fields: [seasonId], references: [id])
   games  MatchGame[]
+
+  @@index([seasonId, matchDate])
 }
 
 model MatchGame {
@@ -179,6 +181,8 @@ model MatchGame {
 
   series       MatchSeries        @relation(fields: [seriesId], references: [id])
   participants MatchParticipant[]
+
+  @@index([seriesId, gameNumber])
 }
 
 model MatchParticipant {
@@ -196,6 +200,10 @@ model MatchParticipant {
   game     MatchGame @relation(fields: [gameId], references: [id])
   player   Player    @relation(fields: [playerId], references: [id])
   champion Champion  @relation(fields: [championId], references: [id])
+
+  @@index([gameId])
+  @@index([playerId])
+  @@index([championId])
 }
 
 model PlayerSeasonStat {
@@ -458,6 +466,7 @@ model SeasonParticipationApply {
   player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
   @@unique([seasonId, playerId, applyDate])
+  @@index([seasonId, applyDate, status])
 }
 
 model EventParticipationApply {
@@ -510,6 +519,9 @@ model TeamBalanceDraft {
 
   season  Season?                  @relation(fields: [seasonId], references: [id], onDelete: SetNull)
   players TeamBalanceDraftPlayer[]
+
+  @@index([createdAt])
+  @@index([applyDate])
 }
 
 model TeamBalanceDraftPlayer {

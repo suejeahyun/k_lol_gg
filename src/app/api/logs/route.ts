@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import { createCsvResponse } from "@/lib/csv";
+import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 
 type CreateAdminLogBody = {
   action?: string;
@@ -75,6 +76,9 @@ function buildWhere(req: NextRequest): Prisma.AdminLogWhereInput {
 }
 
 export async function GET(req: NextRequest) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
   try {
     const page = Number(req.nextUrl.searchParams.get("page") ?? "1");
     const pageSize = Number(req.nextUrl.searchParams.get("pageSize") ?? "50");
@@ -141,6 +145,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
   try {
     const body = (await req.json()) as CreateAdminLogBody;
 

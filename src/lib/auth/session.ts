@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { verifyAuthToken } from "./token";
+import { prisma } from "@/lib/prisma/client";
 
 export async function getCurrentUser() {
   const cookieStore = await cookies();
@@ -9,10 +10,36 @@ export async function getCurrentUser() {
 
   const payload = verifyAuthToken(token);
 
-  if (!payload) return null;
+  if (!payload?.userAccountId) return null;
 
-  return payload;
+  const user = await prisma.userAccount.findUnique({
+    where: {
+      id: payload.userAccountId,
+    },
+    select: {
+      id: true,
+      userId: true,
+      role: true,
+      status: true,
+      player: {
+        select: {
+          id: true,
+        },
+      },
+    },
+  });
+
+  if (!user) return null;
+
+  return {
+    userAccountId: user.id,
+    userId: user.userId,
+    role: user.role,
+    status: user.status,
+    playerId: user.player?.id ?? null,
+  };
 }
+
 export async function requireUser() {
   const user = await getCurrentUser();
 
@@ -36,7 +63,7 @@ export async function requireApprovedUser() {
 export async function requireAdmin() {
   const user = await requireUser();
 
-  if (user.role !== "ADMIN") {
+  if (user.role !== "ADMIN" || user.status !== "APPROVED") {
     throw new Error("FORBIDDEN");
   }
 

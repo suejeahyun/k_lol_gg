@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
+import { requireApprovedUser } from "@/lib/auth/session";
 import {
   calculateWinRate,
   findParticipantByPuuid,
@@ -67,6 +68,15 @@ export async function POST(_req: NextRequest, context: RouteContext) {
       return NextResponse.json(
         { message: "유효하지 않은 플레이어 ID입니다." },
         { status: 400 }
+      );
+    }
+
+    const user = await requireApprovedUser();
+
+    if (user.role !== "ADMIN" && user.playerId !== parsedPlayerId) {
+      return NextResponse.json(
+        { message: "본인 또는 관리자만 솔랭 전적을 갱신할 수 있습니다." },
+        { status: 403 }
       );
     }
 
@@ -322,6 +332,17 @@ export async function POST(_req: NextRequest, context: RouteContext) {
     console.error("[RIOT_PLAYER_SOLO_SYNC_POST_ERROR]", error);
 
     if (error instanceof Error) {
+      if (error.message === "UNAUTHORIZED") {
+        return NextResponse.json({ message: "로그인이 필요합니다." }, { status: 401 });
+      }
+
+      if (error.message === "NOT_APPROVED") {
+        return NextResponse.json(
+          { message: "승인된 유저만 사용할 수 있습니다." },
+          { status: 403 }
+        );
+      }
+
       if (error.message.includes("RIOT_API_KEY")) {
         return NextResponse.json(
           { message: error.message },

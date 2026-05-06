@@ -1,18 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
+import { verifyAuthToken } from "@/lib/auth/token";
 
 const POSITIONS = ["TOP", "JGL", "MID", "ADC", "SUP", "ALL"] as const;
 
 type ApplyPosition = (typeof POSITIONS)[number];
-
-type JwtPayloadLike = {
-  userAccountId?: number | string;
-  userId?: string;
-  role?: string;
-  status?: string;
-  playerId?: number | string | null;
-};
 
 function getTodayRange() {
   const start = new Date();
@@ -34,34 +27,14 @@ function normalizeSubPositions(value: unknown): ApplyPosition[] {
   return value.filter(isApplyPosition);
 }
 
-function decodeJwtPayload(token: string): JwtPayloadLike | null {
-  try {
-    const payload = token.split(".")[1];
-
-    if (!payload) return null;
-
-    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
-    const padded = normalized.padEnd(
-      normalized.length + ((4 - (normalized.length % 4)) % 4),
-      "="
-    );
-
-    const json = Buffer.from(padded, "base64").toString("utf8");
-
-    return JSON.parse(json) as JwtPayloadLike;
-  } catch {
-    return null;
-  }
-}
-
 async function findLoginPlayer(req: NextRequest) {
   const token = req.cookies.get("user_token")?.value;
 
   if (!token) return null;
 
-  const payload = decodeJwtPayload(token);
+  const payload = verifyAuthToken(token);
 
-  if (!payload) return null;
+  if (!payload?.userAccountId) return null;
 
   const userAccountId = Number(payload.userAccountId);
 

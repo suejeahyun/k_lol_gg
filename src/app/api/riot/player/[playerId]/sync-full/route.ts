@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
+import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import {
   calculateWinRate,
   findParticipantByPuuid,
@@ -83,6 +84,9 @@ async function getFullSyncMatchIds(puuid: string) {
 }
 
 export async function POST(_req: NextRequest, context: RouteContext) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
   try {
     const { playerId } = await context.params;
     const parsedPlayerId = Number(playerId);
