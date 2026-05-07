@@ -1,3 +1,6 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import Link from "next/link";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma/client";

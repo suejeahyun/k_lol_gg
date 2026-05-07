@@ -4,7 +4,7 @@ import SignupForm from "@/components/SignupForm";
 
 export default async function SignupPage() {
   const cookieStore = await cookies();
-  const token = cookieStore.get("token");
+  const token = cookieStore.get("user_token");
 
   if (token) {
     redirect("/");

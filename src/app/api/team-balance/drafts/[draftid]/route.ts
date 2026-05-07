@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 
@@ -11,6 +13,7 @@ export async function GET(_req: Request, { params }: RouteContext) {
 
     const rawDraftId =
       resolvedParams.draftId ??
+      resolvedParams.draftid ??
       resolvedParams.id ??
       Object.values(resolvedParams)[0] ??
       "";

@@ -1,12 +1,14 @@
+export const dynamic = "force-dynamic";
+
 import { NextRequest, NextResponse } from "next/server";
+import { EventMatchMode, EventMatchStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
-import { EventMatchMode, EventMatchStatus, Position } from "@prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 
-type ParticipantInput = {
-  playerId: number;
-  position?: Position | null;
-  balanceScore?: number;
+type RouteProps = {
+  params: Promise<{
+    eventId: string;
+  }>;
 };
 
 function isValidMode(mode: string): mode is EventMatchMode {
@@ -24,12 +26,25 @@ function isValidStatus(status: string): status is EventMatchStatus {
   );
 }
 
-export async function GET() {
+function parseId(value: string) {
+  const id = Number(value);
+  return Number.isInteger(id) && id > 0 ? id : null;
+}
+
+export async function GET(_req: NextRequest, { params }: RouteProps) {
   try {
-    const events = await prisma.eventMatch.findMany({
-      orderBy: {
-        eventDate: "desc",
-      },
+    const { eventId } = await params;
+    const id = parseId(eventId);
+
+    if (!id) {
+      return NextResponse.json(
+        { message: "이벤트 내전 ID가 올바르지 않습니다." },
+        { status: 400 }
+      );
+    }
+
+    const event = await prisma.eventMatch.findUnique({
+      where: { id },
       include: {
         galleryImage: true,
         teams: {
@@ -38,12 +53,20 @@ export async function GET() {
               include: {
                 player: true,
               },
+              orderBy: {
+                id: "asc",
+              },
             },
           },
+          orderBy: [{ seed: "asc" }, { id: "asc" }],
         },
         participants: {
           include: {
             player: true,
+            team: true,
+          },
+          orderBy: {
+            id: "asc",
           },
         },
         matches: {
@@ -51,156 +74,213 @@ export async function GET() {
             teamA: true,
             teamB: true,
           },
+          orderBy: [{ stage: "asc" }, { round: "asc" }, { id: "asc" }],
         },
       },
     });
 
-    return NextResponse.json(events);
+    if (!event) {
+      return NextResponse.json(
+        { message: "이벤트 내전을 찾을 수 없습니다." },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(event);
   } catch (error) {
-    console.error("[EVENT_MATCHES_GET_ERROR]", error);
+    console.error("[EVENT_MATCH_GET_ERROR]", error);
 
     return NextResponse.json(
-      { message: "이벤트 내전 목록 조회 실패" },
+      { message: "이벤트 내전 조회 실패" },
       { status: 500 }
     );
   }
 }
 
-export async function POST(req: NextRequest) {
+export async function PATCH(req: NextRequest, { params }: RouteProps) {
   const rejected = await rejectIfNotAdmin();
   if (rejected) return rejected;
 
   try {
+    const { eventId } = await params;
+    const id = parseId(eventId);
+
+    if (!id) {
+      return NextResponse.json(
+        { message: "이벤트 내전 ID가 올바르지 않습니다." },
+        { status: 400 }
+      );
+    }
+
     const body = await req.json();
 
-    const title = String(body.title ?? "").trim();
+    const title =
+      typeof body.title === "string" ? body.title.trim() : undefined;
     const description =
-      typeof body.description === "string" ? body.description.trim() : null;
+      typeof body.description === "string" ? body.description.trim() : undefined;
+    const mode = typeof body.mode === "string" ? body.mode : undefined;
+    const status = typeof body.status === "string" ? body.status : undefined;
 
-    const mode = String(body.mode ?? "POSITION");
-    const status = String(body.status ?? "PLANNED");
+    const eventDate = body.eventDate ? new Date(body.eventDate) : undefined;
+    const recruitFrom =
+      body.recruitFrom === null
+        ? null
+        : body.recruitFrom
+          ? new Date(body.recruitFrom)
+          : undefined;
+    const recruitTo =
+      body.recruitTo === null
+        ? null
+        : body.recruitTo
+          ? new Date(body.recruitTo)
+          : undefined;
 
-    const eventDate = body.eventDate ? new Date(body.eventDate) : null;
-    const recruitFrom = body.recruitFrom ? new Date(body.recruitFrom) : null;
-    const recruitTo = body.recruitTo ? new Date(body.recruitTo) : null;
+    const winnerTeamId =
+      body.winnerTeamId === null
+        ? null
+        : body.winnerTeamId
+          ? Number(body.winnerTeamId)
+          : undefined;
+    const mvpPlayerId =
+      body.mvpPlayerId === null
+        ? null
+        : body.mvpPlayerId
+          ? Number(body.mvpPlayerId)
+          : undefined;
+    const galleryImageId =
+      body.galleryImageId === null
+        ? null
+        : body.galleryImageId
+          ? Number(body.galleryImageId)
+          : undefined;
 
-    const galleryImageId = body.galleryImageId
-      ? Number(body.galleryImageId)
-      : null;
-
-    const participants: ParticipantInput[] = Array.isArray(body.participants)
-      ? body.participants
-      : [];
-
-    if (!title) {
+    if (title !== undefined && !title) {
       return NextResponse.json(
         { message: "이벤트명을 입력해주세요." },
         { status: 400 }
       );
     }
 
-    if (!eventDate || Number.isNaN(eventDate.getTime())) {
-      return NextResponse.json(
-        { message: "진행일을 입력해주세요." },
-        { status: 400 }
-      );
-    }
-
-    if (!isValidMode(mode)) {
+    if (mode !== undefined && !isValidMode(mode)) {
       return NextResponse.json(
         { message: "이벤트 모드가 올바르지 않습니다." },
         { status: 400 }
       );
     }
 
-    if (!isValidStatus(status)) {
+    if (status !== undefined && !isValidStatus(status)) {
       return NextResponse.json(
         { message: "진행 상태가 올바르지 않습니다." },
         { status: 400 }
       );
     }
 
-    if (participants.length > 0 && participants.length % 5 !== 0) {
-      return NextResponse.json(
-        { message: "참가자는 5명 단위로 등록해야 합니다." },
-        { status: 400 }
-      );
-    }
-
-    if (participants.length > 0 && participants.length < 10) {
-      return NextResponse.json(
-        { message: "이벤트 내전은 최소 10명 이상이어야 합니다." },
-        { status: 400 }
-      );
-    }
-
-    if (mode === "POSITION") {
-      const hasEmptyPosition = participants.some(
-        (participant) => !participant.position
-      );
-
-      if (hasEmptyPosition) {
+    for (const [label, value] of [
+      ["진행일", eventDate],
+      ["모집 시작일", recruitFrom],
+      ["모집 종료일", recruitTo],
+    ] as const) {
+      if (value instanceof Date && Number.isNaN(value.getTime())) {
         return NextResponse.json(
-          { message: "포지션 모드에서는 모든 참가자의 라인이 필요합니다." },
+          { message: `${label}이 올바르지 않습니다.` },
           { status: 400 }
         );
       }
     }
 
-    const duplicatedPlayerIds = participants
-      .map((participant) => Number(participant.playerId))
-      .filter((playerId, index, arr) => arr.indexOf(playerId) !== index);
-
-    if (duplicatedPlayerIds.length > 0) {
-      return NextResponse.json(
-        { message: "중복된 참가자가 있습니다." },
-        { status: 400 }
-      );
-    }
-
-    const event = await prisma.eventMatch.create({
+    const event = await prisma.eventMatch.update({
+      where: { id },
       data: {
-        title,
-        description,
-        mode,
-        status,
-        eventDate,
-        recruitFrom,
-        recruitTo,
-        galleryImageId,
-        participants: {
-          create: participants.map((participant) => ({
-            playerId: Number(participant.playerId),
-            position: mode === "ARAM" ? null : participant.position ?? null,
-            balanceScore: Number(participant.balanceScore ?? 0),
-          })),
-        },
+        ...(title !== undefined ? { title } : {}),
+        ...(description !== undefined ? { description } : {}),
+        ...(mode !== undefined ? { mode } : {}),
+        ...(status !== undefined ? { status } : {}),
+        ...(eventDate !== undefined ? { eventDate } : {}),
+        ...(recruitFrom !== undefined ? { recruitFrom } : {}),
+        ...(recruitTo !== undefined ? { recruitTo } : {}),
+        ...(winnerTeamId !== undefined ? { winnerTeamId } : {}),
+        ...(mvpPlayerId !== undefined ? { mvpPlayerId } : {}),
+        ...(galleryImageId !== undefined ? { galleryImageId } : {}),
       },
       include: {
         galleryImage: true,
-        participants: {
-          include: {
-            player: true,
-          },
-        },
         teams: true,
+        participants: true,
         matches: true,
       },
     });
 
     await prisma.adminLog.create({
       data: {
-        action: "EVENT_MATCH_CREATE",
-        message: `이벤트 내전 생성: ${event.title}`,
+        action: "EVENT_MATCH_UPDATE",
+        message: `이벤트 내전 수정: ${event.title}`,
       },
     });
 
-    return NextResponse.json(event, { status: 201 });
+    return NextResponse.json(event);
   } catch (error) {
-    console.error("[EVENT_MATCHES_POST_ERROR]", error);
+    console.error("[EVENT_MATCH_PATCH_ERROR]", error);
 
     return NextResponse.json(
-      { message: "이벤트 내전 생성 실패" },
+      { message: "이벤트 내전 수정 실패" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(_req: NextRequest, { params }: RouteProps) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
+  try {
+    const { eventId } = await params;
+    const id = parseId(eventId);
+
+    if (!id) {
+      return NextResponse.json(
+        { message: "이벤트 내전 ID가 올바르지 않습니다." },
+        { status: 400 }
+      );
+    }
+
+    const event = await prisma.eventMatch.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        title: true,
+      },
+    });
+
+    if (!event) {
+      return NextResponse.json(
+        { message: "이벤트 내전을 찾을 수 없습니다." },
+        { status: 404 }
+      );
+    }
+
+    await prisma.$transaction([
+      prisma.eventTournamentMatch.deleteMany({ where: { eventId: id } }),
+      prisma.eventParticipant.deleteMany({ where: { eventId: id } }),
+      prisma.eventTeam.deleteMany({ where: { eventId: id } }),
+      prisma.eventParticipationApply.deleteMany({ where: { eventId: id } }),
+      prisma.eventMatch.delete({ where: { id } }),
+      prisma.adminLog.create({
+        data: {
+          action: "EVENT_MATCH_DELETE",
+          message: `이벤트 내전 삭제: ${event.title}`,
+        },
+      }),
+    ]);
+
+    return NextResponse.json({
+      success: true,
+      message: "이벤트 내전이 삭제되었습니다.",
+    });
+  } catch (error) {
+    console.error("[EVENT_MATCH_DELETE_ERROR]", error);
+
+    return NextResponse.json(
+      { message: "이벤트 내전 삭제 실패" },
       { status: 500 }
     );
   }

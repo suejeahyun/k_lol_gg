@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { NextRequest, NextResponse } from "next/server";
 import { authConstants } from "@/lib/auth";
 import { writeAdminLog } from "@/lib/admin-log";

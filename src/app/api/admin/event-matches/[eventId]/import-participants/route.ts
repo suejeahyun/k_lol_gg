@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
@@ -10,7 +12,7 @@ type RouteContext = {
 
 type RealPosition = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
 
-function toRealPosition(position: string | null): RealPosition {
+function toRealPosition(position: string | null): RealPosition | null {
   if (
     position === "TOP" ||
     position === "JGL" ||
@@ -21,7 +23,7 @@ function toRealPosition(position: string | null): RealPosition {
     return position;
   }
 
-  return "TOP";
+  return null;
 }
 
 export async function POST(_req: NextRequest, { params }: RouteContext) {
