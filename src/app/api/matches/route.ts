@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma/client";
 import { validateMatchCreateInput } from "@/validations/match";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { recalculateSeasonStats } from "@/lib/stats/recalculate";
+import { parseKstDateTime } from "@/lib/date/kst";
 
 type Team = "BLUE" | "RED";
 type Position = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
@@ -66,6 +67,14 @@ export async function POST(req: Request) {
     if (!validation.ok) {
       return NextResponse.json(
         { message: validation.message },
+        { status: 400 }
+      );
+    }
+
+    const parsedMatchDate = parseKstDateTime(body.matchDate);
+    if (!parsedMatchDate) {
+      return NextResponse.json(
+        { message: "내전 일시 형식이 올바르지 않습니다." },
         { status: 400 }
       );
     }
@@ -139,7 +148,7 @@ export async function POST(req: Request) {
       const match = await tx.matchSeries.create({
         data: {
           title: body.title.trim(),
-          matchDate: new Date(body.matchDate),
+          matchDate: parsedMatchDate,
           seasonId: body.seasonId,
           games: {
             create: body.games.map((game) => ({

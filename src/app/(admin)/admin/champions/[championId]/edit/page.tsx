@@ -1,5 +1,5 @@
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
+
 
 import EditChampionClient from "./champion-edit-client";
 import { prisma } from "@/lib/prisma/client";

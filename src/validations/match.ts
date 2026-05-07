@@ -1,3 +1,5 @@
+import { parseKstDateTime } from "@/lib/date/kst";
+
 type Team = "BLUE" | "RED";
 type Position = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
 
@@ -55,8 +57,8 @@ export function validateMatchCreateInput(
     return { ok: false, message: "내전 일시를 입력해주세요." };
   }
 
-  const parsedDate = new Date(data.matchDate);
-  if (Number.isNaN(parsedDate.getTime())) {
+  const parsedDate = parseKstDateTime(data.matchDate);
+  if (!parsedDate) {
     return { ok: false, message: "내전 일시 형식이 올바르지 않습니다." };
   }
 

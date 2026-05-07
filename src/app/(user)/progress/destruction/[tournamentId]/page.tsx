@@ -1,5 +1,5 @@
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
+
 
 import Image from "next/image";
 import Link from "next/link";

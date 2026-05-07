@@ -1,5 +1,5 @@
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
+
 
 import type { Prisma } from "@prisma/client";
 import Pagination from "@/components/Pagination";

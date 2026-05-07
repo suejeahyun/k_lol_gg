@@ -4,20 +4,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import { verifyAuthToken } from "@/lib/auth/token";
+import { getTodayKstRange } from "@/lib/date/kst";
 
 const POSITIONS = ["TOP", "JGL", "MID", "ADC", "SUP", "ALL"] as const;
 
 type ApplyPosition = (typeof POSITIONS)[number];
 
-function getTodayRange() {
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
-
-  const end = new Date();
-  end.setHours(23, 59, 59, 999);
-
-  return { start, end };
-}
 
 function isApplyPosition(value: unknown): value is ApplyPosition {
   return typeof value === "string" && POSITIONS.includes(value as ApplyPosition);
@@ -89,7 +81,7 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    const { start, end } = getTodayRange();
+    const { start, end } = getTodayKstRange();
 
     const applies = await prisma.seasonParticipationApply.findMany({
       where: {
@@ -183,7 +175,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { start } = getTodayRange();
+    const { start } = getTodayKstRange();
 
     const apply = await prisma.seasonParticipationApply.upsert({
       where: {
@@ -270,7 +262,7 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    const { start, end } = getTodayRange();
+    const { start, end } = getTodayKstRange();
 
     const deleted = await prisma.seasonParticipationApply.deleteMany({
       where: {

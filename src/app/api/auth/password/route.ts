@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma/client";
 import { getCurrentUser } from "@/lib/auth/session";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { writeAdminLog } from "@/lib/admin-log";
+import { authConstants } from "@/lib/auth";
 
 export async function PATCH(req: NextRequest) {
   try {
@@ -82,9 +83,27 @@ export async function PATCH(req: NextRequest) {
       message: `비밀번호 변경: #${user.id} ${user.userId}`,
     });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       message: "비밀번호가 변경되었습니다. 다시 로그인해주세요.",
     });
+
+    response.cookies.set("user_token", "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 0,
+    });
+
+    response.cookies.set(authConstants.ADMIN_TOKEN_KEY, "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 0,
+    });
+
+    return response;
   } catch (error) {
     console.error("[AUTH_PASSWORD_PATCH_ERROR]", error);
 

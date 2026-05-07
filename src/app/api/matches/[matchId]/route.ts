@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { recalculateSeasonStats } from "@/lib/stats/recalculate";
+import { parseKstDateTime } from "@/lib/date/kst";
 
 type Team = "BLUE" | "RED";
 type Position = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
@@ -73,8 +74,8 @@ function validatePayload(body: unknown):
     return { success: false, message: "matchDate가 올바르지 않습니다." };
   }
 
-  const parsedDate = new Date(payload.matchDate);
-  if (Number.isNaN(parsedDate.getTime())) {
+  const parsedDate = parseKstDateTime(payload.matchDate);
+  if (!parsedDate) {
     return { success: false, message: "matchDate 형식이 올바르지 않습니다." };
   }
 
@@ -400,7 +401,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
         data: {
           seasonId: data.seasonId,
           title: data.title,
-          matchDate: new Date(data.matchDate),
+          matchDate: parseKstDateTime(data.matchDate)!,
         },
       });
 

@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
@@ -9,7 +11,8 @@ import {
   getSeasonRankingPlayers,
 } from "@/lib/stats/season-performance";
 
-export const revalidate = 60;
+
+
 type SeasonDto = {
   id: number;
   name: string;

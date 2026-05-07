@@ -1,5 +1,5 @@
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
+
 
 import type { ComponentProps } from "react";
 import { prisma } from "@/lib/prisma/client";

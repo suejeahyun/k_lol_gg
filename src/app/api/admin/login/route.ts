@@ -14,14 +14,30 @@ type LoginBody = {
 
 const ADMIN_ROLES = ["ADMIN", "SUPER_ADMIN"] as const;
 
+function getRequiredEnv(name: string) {
+  const value = process.env[name];
+
+  if (!value) {
+    throw new Error(`${name} 환경변수가 설정되지 않았습니다.`);
+  }
+
+  return value;
+}
+
 function isAdminRole(role: string) {
   return ADMIN_ROLES.includes(role as (typeof ADMIN_ROLES)[number]);
 }
 
 async function ensureSuperAdmin(id: string, password: string) {
-  const superAdminId = process.env.SUPER_ADMIN_ID || process.env.ADMIN_ID || "klol";
+  const superAdminId =
+    process.env.NODE_ENV === "production"
+      ? getRequiredEnv("SUPER_ADMIN_ID")
+      : process.env.SUPER_ADMIN_ID || process.env.ADMIN_ID || "klol";
+
   const superAdminPassword =
-    process.env.SUPER_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD || "7942";
+    process.env.NODE_ENV === "production"
+      ? getRequiredEnv("SUPER_ADMIN_PASSWORD")
+      : process.env.SUPER_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD || "7942";
 
   if (id !== superAdminId || password !== superAdminPassword) {
     return null;

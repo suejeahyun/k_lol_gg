@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
+import { addDays, getKstDateKey, getKstDisplayDate, getKstStartOfDate } from "@/lib/date/kst";
 import { requireApprovedUser } from "@/lib/auth/session";
 
 type TeamValue = "BLUE" | "RED";
@@ -35,24 +36,6 @@ function isPosition(value: unknown): value is PositionValue {
   );
 }
 
-function getKstDateKey(date: Date) {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(date);
-}
-
-function getKstDisplayDate(dateKey: string) {
-  const [year, month, day] = dateKey.split("-");
-  return `${Number(year)}-${Number(month)}-${Number(day)}`;
-}
-
-function getKstStartOfDate(dateKey: string) {
-  const [year, month, day] = dateKey.split("-").map(Number);
-  return new Date(Date.UTC(year, month - 1, day, -9, 0, 0, 0));
-}
 
 function getOrdinal(value: number) {
   if (value === 1) return "1st";
@@ -61,14 +44,9 @@ function getOrdinal(value: number) {
   return `${value}th`;
 }
 
-function addDays(date: Date, days: number) {
-  const next = new Date(date);
-  next.setDate(next.getDate() + days);
-  return next;
-}
 
 function startOfTodayKst() {
-  return getKstStartOfDate(getKstDateKey(new Date()));
+  return getKstStartOfDate(getKstDateKey());
 }
 
 export async function GET() {
@@ -139,7 +117,41 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const kstDateKey = getKstDateKey(new Date());
+    if (players.length !== 10) {
+      return NextResponse.json(
+        { message: "팀 밸런스 결과는 정확히 10명이어야 저장할 수 있습니다." },
+        { status: 400 }
+      );
+    }
+
+    const uniquePlayerIds = new Set(players.map((player) => player.playerId));
+    if (uniquePlayerIds.size !== players.length) {
+      return NextResponse.json(
+        { message: "중복된 플레이어가 포함되어 있습니다." },
+        { status: 400 }
+      );
+    }
+
+    for (const team of ["BLUE", "RED"] as const) {
+      const teamPlayers = players.filter((player) => player.team === team);
+
+      if (teamPlayers.length !== 5) {
+        return NextResponse.json(
+          { message: `${team} 팀은 정확히 5명이어야 합니다.` },
+          { status: 400 }
+        );
+      }
+
+      const positions = new Set(teamPlayers.map((player) => player.position));
+      if (positions.size !== 5) {
+        return NextResponse.json(
+          { message: `${team} 팀 포지션이 중복되었습니다.` },
+          { status: 400 }
+        );
+      }
+    }
+
+    const kstDateKey = getKstDateKey();
     const applyDate = getKstStartOfDate(kstDateKey);
     const nextDate = addDays(applyDate, 1);
 

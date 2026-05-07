@@ -3,7 +3,8 @@ import { prisma } from "@/lib/prisma/client";
 import Pagination from "@/components/Pagination";
 import MatchDeleteButton from "./[matchId]/MatchDeleteButton";
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
+
+
 type AdminMatchesPageProps = {
   searchParams: Promise<{
     page?: string;
