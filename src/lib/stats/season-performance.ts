@@ -34,16 +34,16 @@ export async function getSeasonRankingPlayers(seasonId: number): Promise<SeasonR
   await ensureSeasonStats(seasonId);
 
   const stats = await prisma.playerSeasonStat.findMany({
-    where: { seasonId, totalGames: { gt: 0 } },
-    select: {
-      playerId: true,
-      totalGames: true,
-      participationCount: true,
-      wins: true,
-      losses: true,
-      mvpCount: true,
+    where: {
+      seasonId,
+      totalGames: { gt: 0 },
       player: {
-        select: { name: true, nickname: true, tag: true },
+        isActive: true,
+      },
+    },
+    include: {
+      player: {
+        select: { id: true, name: true, nickname: true, tag: true },
       },
     },
     orderBy: [{ wins: "desc" }, { totalGames: "desc" }, { mvpCount: "desc" }],

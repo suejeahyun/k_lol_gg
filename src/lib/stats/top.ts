@@ -110,6 +110,9 @@ export async function getSeasonTopPlayers(seasonId: number): Promise<StatsTopPla
     where: {
       seasonId,
       totalGames: { gt: 0 },
+      player: {
+        isActive: true,
+      },
     },
     select: {
       playerId: true,

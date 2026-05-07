@@ -1,11 +1,20 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
+import { rejectIfRateLimited } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma/client";
 import { hashPassword } from "@/lib/auth/password";
 import { writeAdminLog } from "@/lib/admin-log";
 
 export async function PATCH(req: NextRequest) {
+  const rateLimitRejected = await rejectIfRateLimited(req, {
+    action: "PASSWORD_FORGOT",
+    limit: 5,
+    windowSeconds: 1800,
+  });
+
+  if (rateLimitRejected) return rateLimitRejected;
+
   try {
     const body = await req.json();
     const userId = String(body.userId ?? "").trim();

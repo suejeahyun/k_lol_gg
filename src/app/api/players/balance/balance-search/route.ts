@@ -21,6 +21,7 @@ export async function GET(req: NextRequest) {
 
     const players = await prisma.player.findMany({
       where: {
+        isActive: true,
         name: {
           contains: q,
           mode: "insensitive",

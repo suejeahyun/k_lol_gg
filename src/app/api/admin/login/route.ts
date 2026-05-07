@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
+import { rejectIfRateLimited } from "@/lib/rate-limit";
 import { authConstants } from "@/lib/auth";
 import { writeAdminLog } from "@/lib/admin-log";
 import { prisma } from "@/lib/prisma/client";
@@ -65,6 +66,14 @@ async function ensureSuperAdmin(id: string, password: string) {
 }
 
 export async function POST(req: NextRequest) {
+  const rateLimitRejected = await rejectIfRateLimited(req, {
+    action: "ADMIN_LOGIN",
+    limit: 5,
+    windowSeconds: 600,
+  });
+
+  if (rateLimitRejected) return rateLimitRejected;
+
   try {
     const body = (await req.json()) as LoginBody;
     const id = String(body.id ?? "").trim();

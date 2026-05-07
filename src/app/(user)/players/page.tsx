@@ -51,7 +51,7 @@ function buildPlayerSearchWhere(query: string) {
   const trimmed = query.trim();
 
   if (!trimmed) {
-    return {};
+    return { isActive: true };
   }
 
   const normalized = trimmed.replace(/\s+/g, "");
@@ -62,6 +62,7 @@ function buildPlayerSearchWhere(query: string) {
     const tagPart = parts.slice(1).join("#");
 
     return {
+      isActive: true,
       OR: [
         {
           name: {
@@ -90,6 +91,7 @@ function buildPlayerSearchWhere(query: string) {
   }
 
   return {
+    isActive: true,
     OR: [
       {
         name: {
@@ -275,6 +277,7 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
         take: 1,
       },
       positionStats: {
+        where: { seasonId: currentSeason?.id ?? -1 },
         select: {
           position: true,
           games: true,

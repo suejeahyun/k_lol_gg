@@ -94,7 +94,7 @@ export async function recalculateSeasonStats(seasonId: number, db: DbClient = pr
     playerStat.mvpCount += isMvp ? 1 : 0;
     seasonByPlayer.set(participant.playerId, playerStat);
 
-    const championKey = `${participant.playerId}:${participant.championId}`;
+    const championKey = `${participant.playerId}:${seasonId}:${participant.championId}`;
     const championStat = championByKey.get(championKey) ?? {
       playerId: participant.playerId,
       championId: participant.championId,
@@ -107,7 +107,7 @@ export async function recalculateSeasonStats(seasonId: number, db: DbClient = pr
     championStat.mvpCount += isMvp ? 1 : 0;
     championByKey.set(championKey, championStat);
 
-    const positionKey = `${participant.playerId}:${participant.position}`;
+    const positionKey = `${participant.playerId}:${seasonId}:${participant.position}`;
     const positionStat = positionByKey.get(positionKey) ?? {
       playerId: participant.playerId,
       position: participant.position,
@@ -131,20 +131,19 @@ export async function recalculateSeasonStats(seasonId: number, db: DbClient = pr
         wins: stat.wins,
         losses: stat.games - stat.wins,
         mvpCount: stat.mvpCount,
-        avgGold: 0,
       })),
     });
   }
 
-  const recalculatedPlayerIds = [...seasonByPlayer.keys()];
 
   await db.playerChampionStat.deleteMany({
-    where: { playerId: { in: recalculatedPlayerIds.length > 0 ? recalculatedPlayerIds : [-1] } },
+    where: { seasonId },
   });
   if (championByKey.size > 0) {
     await db.playerChampionStat.createMany({
       data: [...championByKey.values()].map((stat) => ({
         playerId: stat.playerId,
+        seasonId,
         championId: stat.championId,
         games: stat.games,
         wins: stat.wins,
@@ -154,12 +153,13 @@ export async function recalculateSeasonStats(seasonId: number, db: DbClient = pr
   }
 
   await db.playerPositionStat.deleteMany({
-    where: { playerId: { in: recalculatedPlayerIds.length > 0 ? recalculatedPlayerIds : [-1] } },
+    where: { seasonId },
   });
   if (positionByKey.size > 0) {
     await db.playerPositionStat.createMany({
       data: [...positionByKey.values()].map((stat) => ({
         playerId: stat.playerId,
+        seasonId,
         position: stat.position,
         games: stat.games,
         wins: stat.wins,

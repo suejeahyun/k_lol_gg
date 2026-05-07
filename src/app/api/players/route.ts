@@ -43,12 +43,13 @@ export async function GET(request: NextRequest) {
 
     const where = name
       ? {
+          isActive: true,
           name: {
             contains: name,
             mode: "insensitive" as const,
           },
         }
-      : undefined;
+      : { isActive: true };
 
     const totalCount = await prisma.player.count({
       where,

@@ -169,6 +169,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
           tag,
           peakTier,
           currentTier,
+          isActive: true,
+          deactivatedAt: null,
         },
       });
 
@@ -204,7 +206,7 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
     const { playerId } = await context.params;
     const id = Number(playerId);
 
-    if (!Number.isInteger(id)) {
+    if (!Number.isInteger(id) || id <= 0) {
       return NextResponse.json(
         { message: "유효하지 않은 playerId 입니다." },
         { status: 400 }
@@ -213,27 +215,12 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
 
     const player = await prisma.player.findUnique({
       where: { id },
-      include: {
-        participants: {
-          select: { id: true },
-          take: 1,
-        },
-        seasonStats: {
-          select: { id: true },
-          take: 1,
-        },
-        championStats: {
-          select: { id: true },
-          take: 1,
-        },
-        positionStats: {
-          select: { id: true },
-          take: 1,
-        },
-        seasonResults: {
-          select: { id: true },
-          take: 1,
-        },
+      select: {
+        id: true,
+        name: true,
+        nickname: true,
+        tag: true,
+        isActive: true,
       },
     });
 
@@ -244,41 +231,37 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
       );
     }
 
-    const hasRelatedData =
-      player.participants.length > 0 ||
-      player.seasonStats.length > 0 ||
-      player.championStats.length > 0 ||
-      player.positionStats.length > 0 ||
-      player.seasonResults.length > 0;
-
-    if (hasRelatedData) {
-      return NextResponse.json(
-        { message: "경기 또는 통계 데이터가 연결된 플레이어는 삭제할 수 없습니다." },
-        { status: 400 }
-      );
+    if (!player.isActive) {
+      return NextResponse.json({
+        message: "이미 비활성화된 플레이어입니다.",
+      });
     }
 
     await prisma.$transaction(async (tx) => {
-      await tx.player.delete({
+      await tx.player.update({
         where: { id },
+        data: {
+          isActive: false,
+          deactivatedAt: new Date(),
+        },
       });
 
       await tx.adminLog.create({
         data: {
-          action: "PLAYER_DELETE",
-          message: `플레이어 삭제: ${player.name} (${player.nickname}#${player.tag})`,
+          action: "PLAYER_DEACTIVATE",
+          message: `플레이어 비활성화: ${player.name} (${player.nickname}#${player.tag})`,
         },
       });
     });
 
     return NextResponse.json({
-      message: "플레이어가 삭제되었습니다.",
+      message: "플레이어가 비활성화되었습니다. 기존 경기/통계 기록은 보존됩니다.",
     });
   } catch (error) {
     console.error("[PLAYER_DETAIL_DELETE_ERROR]", error);
 
     return NextResponse.json(
-      { message: "플레이어 삭제 중 오류가 발생했습니다." },
+      { message: "플레이어 비활성화 중 오류가 발생했습니다." },
       { status: 500 }
     );
   }

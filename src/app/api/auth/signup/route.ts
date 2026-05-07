@@ -1,11 +1,20 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
+import { rejectIfRateLimited } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import { hashPassword } from "@/lib/auth/password";
 
 export async function POST(req: NextRequest) {
+  const rateLimitRejected = await rejectIfRateLimited(req, {
+    action: "AUTH_SIGNUP",
+    limit: 5,
+    windowSeconds: 3600,
+  });
+
+  if (rateLimitRejected) return rateLimitRejected;
+
   try {
     const body = await req.json();
 
@@ -73,6 +82,8 @@ export async function POST(req: NextRequest) {
               peakTier: existingPlayer.peakTier ?? peakTier ?? null,
               currentTier: existingPlayer.currentTier ?? currentTier ?? null,
               userAccountId: user.id,
+              isActive: true,
+              deactivatedAt: null,
             },
           })
         : await tx.player.create({

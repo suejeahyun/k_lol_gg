@@ -94,9 +94,11 @@ model Player {
   name        String
   nickname    String
   tag         String
-  peakTier    String?
-  currentTier String?
-  createdAt   DateTime @default(now())
+  peakTier      String?
+  currentTier   String?
+  isActive      Boolean   @default(true)
+  deactivatedAt DateTime?
+  createdAt     DateTime  @default(now())
 
   userAccountId Int?         @unique
   userAccount   UserAccount? @relation(fields: [userAccountId], references: [id], onDelete: SetNull)
@@ -155,6 +157,8 @@ model Season {
 
   matches              MatchSeries[]
   seasonStats          PlayerSeasonStat[]
+  championStats        PlayerChampionStat[]
+  positionStats        PlayerPositionStat[]
   seasonResults        SeasonResult[]
   participationApplies SeasonParticipationApply[]
   teamBalanceDrafts    TeamBalanceDraft[]
@@ -217,7 +221,6 @@ model PlayerSeasonStat {
   wins               Int
   losses             Int
   mvpCount           Int   @default(0)
-  avgGold            Float
 
   player Player @relation(fields: [playerId], references: [id])
   season Season @relation(fields: [seasonId], references: [id])
@@ -231,6 +234,7 @@ model PlayerSeasonStat {
 model PlayerChampionStat {
   id         Int @id @default(autoincrement())
   playerId   Int
+  seasonId   Int
   championId Int
 
   games    Int
@@ -238,25 +242,30 @@ model PlayerChampionStat {
   mvpCount Int @default(0)
 
   player   Player   @relation(fields: [playerId], references: [id])
+  season   Season   @relation(fields: [seasonId], references: [id], onDelete: Cascade)
   champion Champion @relation(fields: [championId], references: [id])
 
-  @@unique([playerId, championId])
+  @@unique([playerId, seasonId, championId])
+  @@index([seasonId])
   @@index([championId])
-  @@index([playerId, games])
+  @@index([playerId, seasonId, games])
 }
 
 model PlayerPositionStat {
   id       Int      @id @default(autoincrement())
   playerId Int
+  seasonId Int
   position Position
 
   games Int
   wins  Int
 
   player Player @relation(fields: [playerId], references: [id])
+  season Season @relation(fields: [seasonId], references: [id], onDelete: Cascade)
 
-  @@unique([playerId, position])
-  @@index([playerId, games])
+  @@unique([playerId, seasonId, position])
+  @@index([seasonId])
+  @@index([playerId, seasonId, games])
 }
 
 model SeasonResult {
@@ -268,6 +277,15 @@ model SeasonResult {
 
   season Season @relation(fields: [seasonId], references: [id])
   player Player @relation(fields: [playerId], references: [id])
+}
+
+model RateLimitLog {
+  id        Int      @id @default(autoincrement())
+  key       String
+  action    String
+  createdAt DateTime @default(now())
+
+  @@index([key, action, createdAt])
 }
 
 model AdminLog {

@@ -1235,6 +1235,7 @@ export async function POST(request: NextRequest) {
 
     const dbPlayers = await prisma.player.findMany({
       where: {
+        isActive: true,
         OR: [
           ...(selectedIds.length > 0
             ? [

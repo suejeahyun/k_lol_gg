@@ -1,12 +1,21 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
+import { rejectIfRateLimited } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import { verifyPassword } from "@/lib/auth/password";
 import { signAuthToken } from "@/lib/auth/token";
 
 export async function POST(req: NextRequest) {
+  const rateLimitRejected = await rejectIfRateLimited(req, {
+    action: "AUTH_LOGIN",
+    limit: 10,
+    windowSeconds: 600,
+  });
+
+  if (rateLimitRejected) return rateLimitRejected;
+
   try {
     const { userId, password } = await req.json();
 

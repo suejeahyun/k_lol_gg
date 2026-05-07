@@ -8,6 +8,8 @@ import Top3Slider from "@/components/Top3Slider";
 import { calculateMvpScore, getGameMvpParticipant } from "@/lib/mvp";
 import { getCachedStatsTopData } from "@/lib/stats/top";
 
+
+
 function getEventStatusLabel(status: string) {
   const labels: Record<string, string> = {
     PLANNED: "기획중",
