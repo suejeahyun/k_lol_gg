@@ -60,7 +60,7 @@ async function handleMessage(message: string) {
       return jsonReply([
         "닉네임#태그 형식으로 입력해주세요.",
         "",
-        "예시: 전적 sexyblood#kr1",
+        "예시: 전적 sax0ph0ne#99단굵묵"
       ].join("\n"), 400);
     }
 
@@ -71,7 +71,7 @@ async function handleMessage(message: string) {
         "검색 결과가 없습니다.",
         "닉네임#태그를 확인해주세요.",
         "",
-        "예시: 전적 sexyblood#kr1",
+        "예시: 전적 sax0ph0ne#99단굵묵"
       ].join("\n"), 404);
     }
 
