@@ -73,6 +73,7 @@ export function getKakaoHelpMessage() {
     "최근 닉네임#태그",
     "랭킹",
     "도움말",
+    "내전참가",
     "",
     "예시: 전적 sax0ph0ne#99단굵묵",
   ].join("\n");
