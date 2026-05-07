@@ -74,6 +74,6 @@ export function getKakaoHelpMessage() {
     "랭킹",
     "도움말",
     "",
-    "예시: 전적 sexyblood#kr1",
+    "예시: 전적 sax0ph0ne#99단굵묵",
   ].join("\n");
 }
