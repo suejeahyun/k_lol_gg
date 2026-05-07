@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { recalculateSeasonStats } from "@/lib/stats/recalculate";
 
 type Team = "BLUE" | "RED";
 type Position = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
@@ -309,7 +310,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
 
     const existingMatch = await prisma.matchSeries.findUnique({
       where: { id: matchIdNumber },
-      select: { id: true, title: true },
+      select: { id: true, title: true, seasonId: true },
     });
 
     if (!existingMatch) {
@@ -434,6 +435,11 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
         },
       });
 
+      await recalculateSeasonStats(data.seasonId, tx);
+      if (existingMatch.seasonId !== data.seasonId) {
+        await recalculateSeasonStats(existingMatch.seasonId, tx);
+      }
+
       return matchSeries;
     });
 
@@ -470,6 +476,7 @@ export async function DELETE(_req: NextRequest, context: RouteContext) {
       select: {
         id: true,
         title: true,
+        seasonId: true,
         season: {
           select: {
             name: true,
@@ -517,6 +524,8 @@ export async function DELETE(_req: NextRequest, context: RouteContext) {
           message: `내전 삭제: ${existingMatch.title} / 시즌: ${existingMatch.season.name} / 세트: ${existingMatch._count.games}개`,
         },
       });
+
+      await recalculateSeasonStats(existingMatch.seasonId, tx);
     });
 
     return NextResponse.json({

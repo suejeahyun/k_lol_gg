@@ -1,12 +1,13 @@
-#!/usr/bin/env node
+﻿#!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-require-imports */
 /*
-  PC 테스트용 콘솔 클라이언트입니다.
-  카카오톡 PC 메시지를 자동으로 읽는 기능은 포함하지 않습니다.
+  PC ?뚯뒪?몄슜 肄섏넄 ?대씪?댁뼵?몄엯?덈떎.
+  移댁뭅?ㅽ넚 PC 硫붿떆吏瑜??먮룞?쇰줈 ?쎈뒗 湲곕뒫? ?ы븿?섏? ?딆뒿?덈떎.
 
-  사용법:
-  1) npm run dev 실행
+  ?ъ슜踰?
+  1) npm run dev ?ㅽ뻾
   2) node tools/openchat-api-test-client.js http://localhost:3000
-  3) 콘솔에 "전적 닉네임#태그" 입력
+  3) 肄섏넄??"?꾩쟻 ?됰꽕???쒓렇" ?낅젰
 */
 
 const readline = require("node:readline");
@@ -17,7 +18,7 @@ const endpoint = `${baseUrl}/api/kakao/openchat`;
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
-  prompt: "K-LOL 명령어> ",
+  prompt: "K-LOL 紐낅졊?? ",
 });
 
 async function request(message) {
@@ -30,12 +31,12 @@ async function request(message) {
   });
 
   const data = await response.json().catch(() => ({}));
-  return data.reply || `응답 형식 오류: HTTP ${response.status}`;
+  return data.reply || `?묐떟 ?뺤떇 ?ㅻ쪟: HTTP ${response.status}`;
 }
 
-console.log(`K-LOL.GG Openchat API 테스트 클라이언트`);
+console.log(`K-LOL.GG Openchat API ?뚯뒪???대씪?댁뼵??);
 console.log(`Endpoint: ${endpoint}`);
-console.log(`종료: exit`);
+console.log(`醫낅즺: exit`);
 console.log("");
 
 rl.prompt();
@@ -48,19 +49,22 @@ rl.on("line", async (line) => {
     return;
   }
 
-  if (["exit", "quit", "종료"].includes(message.toLowerCase())) {
+  if (["exit", "quit", "醫낅즺"].includes(message.toLowerCase())) {
     rl.close();
     return;
   }
 
   try {
     const reply = await request(message);
-    console.log("\n--- 봇 응답 ---");
+    console.log("\n--- 遊??묐떟 ---");
     console.log(reply);
     console.log("--------------\n");
   } catch (error) {
-    console.error("요청 실패:", error.message);
+    console.error("?붿껌 ?ㅽ뙣:", error.message);
   }
 
   rl.prompt();
 });
+
+
+

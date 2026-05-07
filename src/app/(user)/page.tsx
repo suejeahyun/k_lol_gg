@@ -4,9 +4,12 @@ import { prisma } from "@/lib/prisma/client";
 import GalleryWinnerSlider from "@/components/GalleryWinnerSlider";
 import Top3Slider from "@/components/Top3Slider";
 import { calculateMvpScore, getGameMvpParticipant } from "@/lib/mvp";
+import {
+  getCurrentAndPreviousSeason,
+  getSeasonRankingPlayers,
+} from "@/lib/stats/season-performance";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 60;
 type SeasonDto = {
   id: number;
   name: string;
@@ -21,6 +24,7 @@ type TopPlayerDto = {
   tag: string;
   totalGames: number;
   participation: number;
+  participationCount: number;
   wins: number;
   losses: number;
   winRate: number;
@@ -110,144 +114,13 @@ function getDestructionProgressPercent(status?: string | null) {
   return values[status] ?? "10%";
 }
 
-function buildSeasonPlayers(
-  players: Array<{
-    id: number;
-    name: string;
-    nickname: string;
-    tag: string;
-    participants: Array<{
-      kills: number;
-      deaths: number;
-      assists: number;
-      team: "BLUE" | "RED";
-      game: {
-        id: number;
-        winnerTeam: "BLUE" | "RED";
-        seriesId: number;
-        participants: Array<{
-          playerId: number;
-          kills: number;
-          deaths: number;
-          assists: number;
-          team: "BLUE" | "RED";
-        }>;
-      };
-    }>;
-  }>
-): TopPlayerDto[] {
-  return players
-    .map((player) => {
-      const totalGames = player.participants.length;
-
-      const participation = new Set(
-        player.participants.map((participant) => participant.game.seriesId)
-      ).size;
-
-      const wins = player.participants.filter(
-        (participant) => participant.team === participant.game.winnerTeam
-      ).length;
-
-      const losses = totalGames - wins;
-
-      const winRate =
-        totalGames > 0 ? Number(((wins / totalGames) * 100).toFixed(1)) : 0;
-
-      const mvpCount = player.participants.filter((participant) => {
-        const mvp = getGameMvpParticipant(
-          participant.game.participants,
-          participant.game.winnerTeam,
-        );
-
-        return mvp?.playerId === player.id;
-      }).length;
-
-      return {
-        playerId: player.id,
-        name: player.name,
-        nickname: player.nickname,
-        tag: player.tag,
-        totalGames,
-        participation,
-        wins,
-        losses,
-        winRate,
-        mvpCount,
-      };
-    })
-    .filter((player) => player.totalGames > 0);
-}
-
-async function getSeasonPlayers(seasonId: number): Promise<TopPlayerDto[]> {
-  const players = await prisma.player.findMany({
-    select: {
-      id: true,
-      name: true,
-      nickname: true,
-      tag: true,
-      participants: {
-        where: {
-          game: {
-            series: {
-              seasonId,
-            },
-          },
-        },
-        select: {
-          kills: true,
-          deaths: true,
-          assists: true,
-          team: true,
-          game: {
-            select: {
-              id: true,
-              winnerTeam: true,
-              seriesId: true,
-              participants: {
-                select: {
-                  playerId: true,
-                  kills: true,
-                  deaths: true,
-                  assists: true,
-                  team: true,
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  });
-
-  return buildSeasonPlayers(players);
-}
-
 async function getTopPageData(): Promise<TopPageData> {
-  const currentSeason = await prisma.season.findFirst({
-    where: {
-      isActive: true,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+  const { currentSeason, previousSeason } = await getCurrentAndPreviousSeason();
 
-  const previousSeason = await prisma.season.findFirst({
-    where: {
-      isActive: false,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
-
-  const currentPlayers = currentSeason
-    ? await getSeasonPlayers(currentSeason.id)
-    : [];
-
-  const previousPlayers = previousSeason
-    ? await getSeasonPlayers(previousSeason.id)
-    : [];
+  const [currentPlayers, previousPlayers] = await Promise.all([
+    currentSeason ? getSeasonRankingPlayers(currentSeason.id) : Promise.resolve([]),
+    previousSeason ? getSeasonRankingPlayers(previousSeason.id) : Promise.resolve([]),
+  ]);
 
   return {
     currentSeason: toSeasonDto(currentSeason),

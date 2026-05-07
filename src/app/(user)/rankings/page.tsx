@@ -1,5 +1,4 @@
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 60;
 
 import Link from "next/link";
 import { headers } from "next/headers";
@@ -87,9 +86,8 @@ async function getRankings(seasonId?: string): Promise<RankingApiResponse> {
   const query = seasonId ? `?seasonId=${seasonId}` : "";
 
   const response = await fetch(`${baseUrl}/api/rankings${query}`, {
-    cache: "no-store",
     next: {
-      revalidate: 0,
+      revalidate: 60,
     },
   });
 

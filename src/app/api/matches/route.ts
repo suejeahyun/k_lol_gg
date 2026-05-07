@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { validateMatchCreateInput } from "@/validations/match";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { recalculateSeasonStats } from "@/lib/stats/recalculate";
 
 type Team = "BLUE" | "RED";
 type Position = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
@@ -175,6 +176,8 @@ export async function POST(req: Request) {
           message: `내전 등록: ${match.title} / 시즌: ${match.season.name} / 세트: ${match.games.length}개`,
         },
       });
+
+      await recalculateSeasonStats(body.seasonId, tx);
 
       return match;
     });

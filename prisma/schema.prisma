@@ -212,14 +212,20 @@ model PlayerSeasonStat {
   playerId Int
   seasonId Int
 
-  totalGames Int
-  wins       Int
-  losses     Int
-  mvpCount   Int @default(0)
-  avgGold    Float
+  totalGames         Int
+  participationCount Int   @default(0)
+  wins               Int
+  losses             Int
+  mvpCount           Int   @default(0)
+  avgGold            Float
 
   player Player @relation(fields: [playerId], references: [id])
   season Season @relation(fields: [seasonId], references: [id])
+
+  @@unique([playerId, seasonId])
+  @@index([seasonId, totalGames])
+  @@index([seasonId, wins])
+  @@index([seasonId, mvpCount])
 }
 
 model PlayerChampionStat {
@@ -227,12 +233,16 @@ model PlayerChampionStat {
   playerId   Int
   championId Int
 
-  games Int
-  wins  Int
+  games    Int
+  wins     Int
   mvpCount Int @default(0)
 
   player   Player   @relation(fields: [playerId], references: [id])
   champion Champion @relation(fields: [championId], references: [id])
+
+  @@unique([playerId, championId])
+  @@index([championId])
+  @@index([playerId, games])
 }
 
 model PlayerPositionStat {
@@ -244,6 +254,9 @@ model PlayerPositionStat {
   wins  Int
 
   player Player @relation(fields: [playerId], references: [id])
+
+  @@unique([playerId, position])
+  @@index([playerId, games])
 }
 
 model SeasonResult {

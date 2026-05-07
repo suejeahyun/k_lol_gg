@@ -1,12 +1,11 @@
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 60;
 
 import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import Pagination from "@/components/Pagination";
 import PlayerSearchBox from "./PlayerSearchBox";
 import TierIcon from "@/components/TierIcon";
-import { getGameMvpParticipant } from "@/lib/mvp";
+import { ensureSeasonStats, getWinRate } from "@/lib/stats/season-performance";
 
 type PlayersPageProps = {
   searchParams: Promise<{
@@ -173,24 +172,14 @@ function formatMvp(value: number) {
 }
 
 function getPrimaryPosition(
-  participants: Array<{
+  positionStats: Array<{
     position: string;
+    games: number;
   }>
 ) {
-  if (participants.length === 0) return "-";
+  if (positionStats.length === 0) return "-";
 
-  const countMap = participants.reduce<Record<string, number>>(
-    (acc, participant) => {
-      acc[participant.position] = (acc[participant.position] ?? 0) + 1;
-      return acc;
-    },
-    {}
-  );
-
-  const [position] =
-    Object.entries(countMap).sort((a, b) => b[1] - a[1])[0] ?? [];
-
-  return position ?? "-";
+  return [...positionStats].sort((a, b) => b.games - a.games)[0]?.position ?? "-";
 }
 
 function getPlayerStatus({
@@ -256,31 +245,42 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
   const sort = getSort(resolved.sort);
   const order = getOrder(resolved.order);
 
+  const currentSeason = await prisma.season.findFirst({
+    where: { isActive: true },
+    orderBy: { id: "desc" },
+    select: { id: true },
+  });
+
+  if (currentSeason) {
+    await ensureSeasonStats(currentSeason.id);
+  }
+
   const players = await prisma.player.findMany({
     where: buildPlayerSearchWhere(query),
-    include: {
-      participants: {
+    select: {
+      id: true,
+      name: true,
+      nickname: true,
+      tag: true,
+      peakTier: true,
+      currentTier: true,
+      seasonStats: {
+        where: { seasonId: currentSeason?.id ?? -1 },
         select: {
-          kills: true,
-          deaths: true,
-          assists: true,
-          team: true,
+          totalGames: true,
+          wins: true,
+          losses: true,
+          mvpCount: true,
+        },
+        take: 1,
+      },
+      positionStats: {
+        select: {
           position: true,
-          game: {
-            select: {
-              id: true,
-              winnerTeam: true,
-              participants: {
-                select: {
-                  playerId: true,
-                  kills: true,
-                  deaths: true,
-                  assists: true,
-                  team: true,
-                },
-              },
-            },
-          },
+          games: true,
+        },
+        orderBy: {
+          games: "desc",
         },
       },
     },
@@ -290,26 +290,12 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
   });
 
   const mapped = players.map((player: (typeof players)[number]) => {
-    const totalGames = player.participants.length;
-
-    const wins = player.participants.filter(
-      (participant: (typeof player.participants)[number]) =>
-        participant.team === participant.game.winnerTeam
-    ).length;
-
-    const winRate =
-      totalGames > 0 ? Number(((wins / totalGames) * 100).toFixed(1)) : 0;
-
-    const mvpCount = player.participants.filter((participant) => {
-      const mvp = getGameMvpParticipant(
-        participant.game.participants,
-        participant.game.winnerTeam,
-      );
-
-      return mvp?.playerId === player.id;
-    }).length;
-
-    const primaryPosition = getPrimaryPosition(player.participants);
+    const seasonStat = player.seasonStats[0] ?? null;
+    const totalGames = seasonStat?.totalGames ?? 0;
+    const wins = seasonStat?.wins ?? 0;
+    const winRate = getWinRate(wins, totalGames);
+    const mvpCount = seasonStat?.mvpCount ?? 0;
+    const primaryPosition = getPrimaryPosition(player.positionStats);
 
     const status = getPlayerStatus({
       totalGames,

@@ -26,6 +26,7 @@ export async function recalculateSeasonStats(seasonId: number, db: DbClient = pr
       game: {
         select: {
           id: true,
+          seriesId: true,
           winnerTeam: true,
         },
       },
@@ -60,7 +61,7 @@ export async function recalculateSeasonStats(seasonId: number, db: DbClient = pr
 
   const seasonByPlayer = new Map<
     number,
-    { games: number; wins: number; mvpCount: number }
+    { games: number; seriesIds: Set<number>; wins: number; mvpCount: number }
   >();
   const championByKey = new Map<
     string,
@@ -83,10 +84,12 @@ export async function recalculateSeasonStats(seasonId: number, db: DbClient = pr
 
     const playerStat = seasonByPlayer.get(participant.playerId) ?? {
       games: 0,
+      seriesIds: new Set<number>(),
       wins: 0,
       mvpCount: 0,
     };
     playerStat.games += 1;
+    playerStat.seriesIds.add(participant.game.seriesId);
     playerStat.wins += win ? 1 : 0;
     playerStat.mvpCount += isMvp ? 1 : 0;
     seasonByPlayer.set(participant.playerId, playerStat);
@@ -124,6 +127,7 @@ export async function recalculateSeasonStats(seasonId: number, db: DbClient = pr
         playerId,
         seasonId,
         totalGames: stat.games,
+        participationCount: stat.seriesIds.size,
         wins: stat.wins,
         losses: stat.games - stat.wins,
         mvpCount: stat.mvpCount,
@@ -132,7 +136,11 @@ export async function recalculateSeasonStats(seasonId: number, db: DbClient = pr
     });
   }
 
-  await db.playerChampionStat.deleteMany({});
+  const recalculatedPlayerIds = [...seasonByPlayer.keys()];
+
+  await db.playerChampionStat.deleteMany({
+    where: { playerId: { in: recalculatedPlayerIds.length > 0 ? recalculatedPlayerIds : [-1] } },
+  });
   if (championByKey.size > 0) {
     await db.playerChampionStat.createMany({
       data: [...championByKey.values()].map((stat) => ({
@@ -145,7 +153,9 @@ export async function recalculateSeasonStats(seasonId: number, db: DbClient = pr
     });
   }
 
-  await db.playerPositionStat.deleteMany({});
+  await db.playerPositionStat.deleteMany({
+    where: { playerId: { in: recalculatedPlayerIds.length > 0 ? recalculatedPlayerIds : [-1] } },
+  });
   if (positionByKey.size > 0) {
     await db.playerPositionStat.createMany({
       data: [...positionByKey.values()].map((stat) => ({
