@@ -79,6 +79,207 @@ function getTeamName(index: number) {
   return `${String.fromCharCode(65 + index)}팀`;
 }
 
+
+type TeamAssignmentInput = {
+  participantId: number;
+  teamId: number;
+  balanceScore?: number;
+  auctionPoint?: number;
+};
+
+export async function PUT(req: NextRequest, { params }: RouteContext) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
+  try {
+    const { eventId } = await params;
+    const parsedEventId = Number(eventId);
+
+    if (Number.isNaN(parsedEventId)) {
+      return NextResponse.json(
+        { message: "잘못된 이벤트 ID입니다." },
+        { status: 400 },
+      );
+    }
+
+    const body = await req.json();
+    const assignments: TeamAssignmentInput[] = Array.isArray(body.assignments)
+      ? body.assignments
+      : [];
+
+    if (assignments.length === 0) {
+      return NextResponse.json(
+        { message: "팀 구성 데이터가 없습니다." },
+        { status: 400 },
+      );
+    }
+
+    const event = await prisma.eventMatch.findUnique({
+      where: { id: parsedEventId },
+      include: {
+        teams: true,
+        participants: true,
+        matches: {
+          select: {
+            id: true,
+            winnerTeamId: true,
+            mvpPlayerId: true,
+          },
+        },
+      },
+    });
+
+    if (!event) {
+      return NextResponse.json(
+        { message: "이벤트를 찾을 수 없습니다." },
+        { status: 404 },
+      );
+    }
+
+    const hasSubmittedMatchResult = event.matches.some(
+      (match) => match.winnerTeamId !== null || match.mvpPlayerId !== null,
+    );
+
+    if (hasSubmittedMatchResult) {
+      return NextResponse.json(
+        { message: "이미 결과가 저장된 경기가 있어 팀 구성을 수정할 수 없습니다." },
+        { status: 400 },
+      );
+    }
+
+    const validTeamIds = event.teams.map((team) => team.id);
+    const validParticipantIds = event.participants.map(
+      (participant) => participant.id,
+    );
+
+    const hasInvalidTeam = assignments.some(
+      (assignment) => !validTeamIds.includes(Number(assignment.teamId)),
+    );
+
+    if (hasInvalidTeam) {
+      return NextResponse.json(
+        { message: "이벤트에 속하지 않은 팀이 포함되어 있습니다." },
+        { status: 400 },
+      );
+    }
+
+    const hasInvalidParticipant = assignments.some(
+      (assignment) =>
+        !validParticipantIds.includes(Number(assignment.participantId)),
+    );
+
+    if (hasInvalidParticipant) {
+      return NextResponse.json(
+        { message: "이벤트에 속하지 않은 참가자가 포함되어 있습니다." },
+        { status: 400 },
+      );
+    }
+
+    const duplicatedParticipantIds = assignments
+      .map((assignment) => Number(assignment.participantId))
+      .filter(
+        (participantId, index, arr) => arr.indexOf(participantId) !== index,
+      );
+
+    if (duplicatedParticipantIds.length > 0) {
+      return NextResponse.json(
+        { message: "중복 배정된 참가자가 있습니다." },
+        { status: 400 },
+      );
+    }
+
+    if (assignments.length !== event.participants.length) {
+      return NextResponse.json(
+        { message: "모든 참가자를 팀에 배정해야 합니다." },
+        { status: 400 },
+      );
+    }
+
+    const hasInvalidScore = assignments.some((assignment) => {
+      const score = assignment.balanceScore ?? assignment.auctionPoint ?? 0;
+      return Number.isNaN(Number(score));
+    });
+
+    if (hasInvalidScore) {
+      return NextResponse.json(
+        { message: "점수가 올바르지 않습니다." },
+        { status: 400 },
+      );
+    }
+
+    const teamMemberCounts = new Map<number, number>();
+
+    assignments.forEach((assignment) => {
+      const teamId = Number(assignment.teamId);
+      teamMemberCounts.set(teamId, (teamMemberCounts.get(teamId) ?? 0) + 1);
+    });
+
+    const hasInvalidTeamSize = validTeamIds.some(
+      (teamId) => (teamMemberCounts.get(teamId) ?? 0) !== 5,
+    );
+
+    if (hasInvalidTeamSize) {
+      return NextResponse.json(
+        { message: "이벤트 내전은 각 팀이 정확히 5명이어야 합니다." },
+        { status: 400 },
+      );
+    }
+
+    await prisma.$transaction(async (tx) => {
+      for (const assignment of assignments) {
+        await tx.eventParticipant.update({
+          where: {
+            id: Number(assignment.participantId),
+          },
+          data: {
+            teamId: Number(assignment.teamId),
+            balanceScore: Number(
+              assignment.balanceScore ?? assignment.auctionPoint ?? 0,
+            ),
+          },
+        });
+      }
+
+      for (const teamId of validTeamIds) {
+        const teamAssignments = assignments.filter(
+          (assignment) => Number(assignment.teamId) === teamId,
+        );
+
+        const totalScore = teamAssignments.reduce((sum, assignment) => {
+          return (
+            sum + Number(assignment.balanceScore ?? assignment.auctionPoint ?? 0)
+          );
+        }, 0);
+
+        await tx.eventTeam.update({
+          where: {
+            id: teamId,
+          },
+          data: {
+            score: Math.round(totalScore * 100) / 100,
+          },
+        });
+      }
+
+      await tx.adminLog.create({
+        data: {
+          action: "EVENT_TEAMS_DRAG_UPDATE",
+          message: `이벤트 팀 드래그 구성 저장: 이벤트 #${parsedEventId}`,
+        },
+      });
+    });
+
+    return NextResponse.json({ message: "팀 구성을 저장했습니다." });
+  } catch (error) {
+    console.error("[EVENT_TEAM_DRAG_UPDATE_ERROR]", error);
+
+    return NextResponse.json(
+      { message: "팀 구성 저장 중 오류가 발생했습니다." },
+      { status: 500 },
+    );
+  }
+}
+
 export async function POST(_req: NextRequest, { params }: RouteContext) {
   const rejected = await rejectIfNotAdmin();
   if (rejected) return rejected;

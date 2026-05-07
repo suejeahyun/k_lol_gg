@@ -51,7 +51,13 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
       include: {
         teams: true,
         participants: true,
-        matches: true,
+        matches: {
+          select: {
+            id: true,
+            winnerTeamId: true,
+            mvpPlayerId: true,
+          },
+        },
       },
     });
 
@@ -62,9 +68,13 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
       );
     }
 
-    if (tournament.matches.length > 0) {
+    const hasSubmittedMatchResult = tournament.matches.some(
+      (match) => match.winnerTeamId !== null || match.mvpPlayerId !== null,
+    );
+
+    if (hasSubmittedMatchResult) {
       return NextResponse.json(
-        { message: "경기가 생성된 멸망전은 팀 배정을 수정할 수 없습니다." },
+        { message: "이미 결과가 저장된 경기가 있어 팀 배정을 수정할 수 없습니다." },
         { status: 400 }
       );
     }
@@ -163,7 +173,13 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
             team: true,
           },
         },
-        matches: true,
+        matches: {
+          select: {
+            id: true,
+            winnerTeamId: true,
+            mvpPlayerId: true,
+          },
+        },
       },
     });
 

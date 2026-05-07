@@ -6,13 +6,13 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
 import DestructionTeamForm from "@/components/admin/DestructionTeamForm";
 import DestructionParticipantForm from "@/components/admin/DestructionParticipantForm";
-import DestructionTeamAssignmentForm from "@/components/admin/DestructionTeamAssignmentForm";
 import DestructionPreliminaryGenerator from "@/components/admin/DestructionPreliminaryGenerator";
 import DestructionMatchResultForm from "@/components/admin/DestructionMatchResultForm";
 import DestructionTournamentGenerator from "@/components/admin/DestructionTournamentGenerator";
 import DestructionFinalGenerator from "@/components/admin/DestructionFinalGenerator";
 import DestructionCompleteForm from "@/components/admin/DestructionCompleteForm";
 import ImportParticipantsButton from "@/components/admin/ImportParticipantsButton";
+import AdminTeamDragManager from "@/components/admin/AdminTeamDragManager";
 
 type PageProps = {
   params: Promise<{
@@ -171,6 +171,10 @@ export default async function AdminDestructionTournamentDetailPage({
   const hasInvalidTeamSize =
     tournament.teams.length > 0 &&
     tournament.teams.some((team) => team.members.length !== 5);
+
+  const hasSubmittedMatchResult = tournament.matches.some(
+    (match) => match.winnerTeamId !== null || match.mvpPlayerId !== null,
+  );
 
   return (
     <main className="admin-page">
@@ -350,11 +354,18 @@ export default async function AdminDestructionTournamentDetailPage({
           </div>
         </div>
 
-        <DestructionTeamAssignmentForm
-          tournamentId={tournament.id}
+        <AdminTeamDragManager
+          mode="destruction"
+          targetId={tournament.id}
           teams={tournament.teams}
           participants={tournament.participants}
-          hasMatches={tournament.matches.length > 0}
+          disabled={hasSubmittedMatchResult}
+          lockReason={
+            hasSubmittedMatchResult
+              ? "이미 결과가 저장된 경기가 있어 팀 구성을 수정할 수 없습니다."
+              : undefined
+          }
+          lockCaptains
         />
       </section>
 

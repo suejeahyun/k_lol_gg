@@ -10,19 +10,13 @@ import EventBracketGenerator from "@/components/admin/EventBracketGenerator";
 import EventMatchResultForm from "@/components/admin/EventMatchResultForm";
 import EventCompleteForm from "@/components/admin/EventCompleteForm";
 import ImportParticipantsButton from "@/components/admin/ImportParticipantsButton";
+import AdminTeamDragManager from "@/components/admin/AdminTeamDragManager";
 
 type PageProps = {
   params: Promise<{
     eventId: string;
   }>;
 };
-
-const POSITION_ORDER = ["TOP", "JGL", "MID", "ADC", "SUP"];
-
-function getPositionOrder(position: string | null) {
-  const index = POSITION_ORDER.indexOf(position ?? "");
-  return index === -1 ? 999 : index;
-}
 
 export default async function AdminEventMatchDetailPage({ params }: PageProps) {
   const { eventId } = await params;
@@ -86,6 +80,10 @@ export default async function AdminEventMatchDetailPage({ params }: PageProps) {
   if (!event) {
     notFound();
   }
+
+  const hasSubmittedMatchResult = event.matches.some(
+    (match) => match.winnerTeamId !== null || match.mvpPlayerId !== null,
+  );
 
   return (
     <main className="admin-page">
@@ -174,51 +172,18 @@ export default async function AdminEventMatchDetailPage({ params }: PageProps) {
         {event.teams.length === 0 ? (
           <div className="empty-box">생성된 팀이 없습니다.</div>
         ) : (
-          <div className="admin-event-team-list">
-            {event.teams.map((team) => {
-              const sortedMembers = [...team.members].sort(
-                (a, b) =>
-                  getPositionOrder(a.position) - getPositionOrder(b.position)
-              );
-
-              return (
-                <div key={team.id} className="admin-event-team-card">
-                  <div className="event-team-generator__team-head">
-                    <h3>{team.name}</h3>
-                    <span>점수 {team.score}</span>
-                  </div>
-
-                  <div className="event-team-generator__members">
-                   {sortedMembers.map((member) => (
-                    <div key={member.id} className="event-team-member">
-                      <div className="event-team-member__position">
-                        {member.position ?? "-"}
-                      </div>
-
-                      <div className="event-team-member__main-row">
-                        <div className="event-team-member__identity">
-                          <strong>{member.player.name}</strong>
-                          <span>
-                            {member.player.nickname}#{member.player.tag}
-                          </span>
-                        </div>
-
-                        <div className="event-team-member__score">
-                          {member.balanceScore}
-                        </div>
-                      </div>
-
-                      <div className="event-team-member__tier-row">
-                        <span>현재 {member.player.currentTier ?? "-"}</span>
-                        <span>최고 {member.player.peakTier ?? "-"}</span>
-                      </div>
-                    </div>
-                  ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <AdminTeamDragManager
+            mode="event"
+            targetId={event.id}
+            teams={event.teams}
+            participants={event.participants}
+            disabled={hasSubmittedMatchResult}
+            lockReason={
+              hasSubmittedMatchResult
+                ? "이미 결과가 저장된 경기가 있어 팀 구성을 수정할 수 없습니다."
+                : undefined
+            }
+          />
         )}
       </section>
 
