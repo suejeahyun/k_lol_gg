@@ -6,58 +6,7 @@ import { prisma } from "@/lib/prisma/client";
 import GalleryWinnerSlider from "@/components/GalleryWinnerSlider";
 import Top3Slider from "@/components/Top3Slider";
 import { calculateMvpScore, getGameMvpParticipant } from "@/lib/mvp";
-import {
-  getCurrentAndPreviousSeason,
-  getSeasonRankingPlayers,
-} from "@/lib/stats/season-performance";
-
-
-
-type SeasonDto = {
-  id: number;
-  name: string;
-  isActive: boolean;
-  createdAt: string;
-} | null;
-
-type TopPlayerDto = {
-  playerId: number;
-  name: string;
-  nickname: string;
-  tag: string;
-  totalGames: number;
-  participation: number;
-  participationCount: number;
-  wins: number;
-  losses: number;
-  winRate: number;
-  mvpCount: number;
-};
-
-type TopPageData = {
-  currentSeason: SeasonDto;
-  currentPlayers: TopPlayerDto[];
-  previousSeason: SeasonDto;
-  previousPlayers: TopPlayerDto[];
-};
-
-function toSeasonDto(
-  season: {
-    id: number;
-    name: string;
-    isActive: boolean;
-    createdAt: Date;
-  } | null
-): SeasonDto {
-  if (!season) return null;
-
-  return {
-    id: season.id,
-    name: season.name,
-    isActive: season.isActive,
-    createdAt: season.createdAt.toISOString(),
-  };
-}
+import { getCachedStatsTopData } from "@/lib/stats/top";
 
 function getEventStatusLabel(status: string) {
   const labels: Record<string, string> = {
@@ -117,22 +66,6 @@ function getDestructionProgressPercent(status?: string | null) {
   return values[status] ?? "10%";
 }
 
-async function getTopPageData(): Promise<TopPageData> {
-  const { currentSeason, previousSeason } = await getCurrentAndPreviousSeason();
-
-  const [currentPlayers, previousPlayers] = await Promise.all([
-    currentSeason ? getSeasonRankingPlayers(currentSeason.id) : Promise.resolve([]),
-    previousSeason ? getSeasonRankingPlayers(previousSeason.id) : Promise.resolve([]),
-  ]);
-
-  return {
-    currentSeason: toSeasonDto(currentSeason),
-    currentPlayers,
-    previousSeason: toSeasonDto(previousSeason),
-    previousPlayers,
-  };
-}
-
 function formatDate(date: Date): string {
   return new Date(date).toLocaleDateString("ko-KR");
 }
@@ -150,7 +83,7 @@ export default async function HomePage() {
     latestEvent,
     latestDestruction,
   ] = await Promise.all([
-    getTopPageData(),
+    getCachedStatsTopData(),
 
     prisma.galleryImage.findMany({
       where: {
