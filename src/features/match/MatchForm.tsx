@@ -249,6 +249,10 @@ function parseNonNegativeInt(value: string) {
   return Math.floor(parsed);
 }
 
+function normalizeWinnerTeam(value: unknown): Team {
+  return value === "RED" ? "RED" : "BLUE";
+}
+
 async function parseResponse<T>(response: Response): Promise<T | null> {
   const text = await response.text();
 
@@ -305,7 +309,7 @@ export default function MatchForm({
         initialData.games.length > 0
           ? initialData.games.map((game) => ({
               ...game,
-              winnerTeam: game.winnerTeam ?? "BLUE",
+              winnerTeam: normalizeWinnerTeam(game.winnerTeam),
               participants: game.participants.map((participant) => ({
                 ...participant,
                 playerInput:
@@ -922,11 +926,12 @@ export default function MatchForm({
 
                   <button
                     type="button"
-                    className={
+                    className={`match-winner-button match-winner-button--blue ${
                       game.winnerTeam === "BLUE"
-                        ? "match-winner-button match-winner-button--blue active"
-                        : "match-winner-button match-winner-button--blue"
-                    }
+                        ? "match-winner-button--selected"
+                        : ""
+                    }`}
+                    aria-pressed={game.winnerTeam === "BLUE"}
                     onClick={() => updateGameWinnerTeam(gameIndex, "BLUE")}
                   >
                     BLUE
@@ -934,11 +939,12 @@ export default function MatchForm({
 
                   <button
                     type="button"
-                    className={
+                    className={`match-winner-button match-winner-button--red ${
                       game.winnerTeam === "RED"
-                        ? "match-winner-button match-winner-button--red active"
-                        : "match-winner-button match-winner-button--red"
-                    }
+                        ? "match-winner-button--selected"
+                        : ""
+                    }`}
+                    aria-pressed={game.winnerTeam === "RED"}
                     onClick={() => updateGameWinnerTeam(gameIndex, "RED")}
                   >
                     RED
@@ -1236,36 +1242,42 @@ export default function MatchForm({
         }
 
         .match-winner-button {
-          min-width: 70px;
-          height: 30px;
-          padding: 0 10px;
-          border-radius: 999px;
-          border: 1px solid rgba(148, 163, 184, 0.36);
-          background: rgba(2, 6, 23, 0.58);
-          color: #cbd5e1;
-          font-size: 12px;
-          font-weight: 900;
+          min-width: 70px !important;
+          height: 30px !important;
+          min-height: 30px !important;
+          padding: 0 10px !important;
+          border-radius: 999px !important;
+          border: 1px solid rgba(148, 163, 184, 0.36) !important;
+          background: rgba(2, 6, 23, 0.68) !important;
+          color: #cbd5e1 !important;
+          font-size: 12px !important;
+          font-weight: 900 !important;
           cursor: pointer;
-          transition: all 0.15s ease;
+          box-shadow: none !important;
+          transform: none !important;
+          transition: all 0.15s ease !important;
         }
 
         .match-winner-button:hover {
-          border-color: rgba(226, 232, 240, 0.6);
-          color: #ffffff;
+          border-color: rgba(226, 232, 240, 0.64) !important;
+          background: rgba(15, 23, 42, 0.92) !important;
+          color: #ffffff !important;
+          box-shadow: none !important;
+          transform: none !important;
         }
 
-        .match-winner-button--blue.active {
-          border-color: rgba(96, 165, 250, 0.9);
-          background: linear-gradient(135deg, #2563eb, #1d4ed8);
-          color: #ffffff;
-          box-shadow: 0 0 12px rgba(37, 99, 235, 0.36);
+        .match-winner-button--blue.match-winner-button--selected {
+          border-color: rgba(96, 165, 250, 0.95) !important;
+          background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+          color: #ffffff !important;
+          box-shadow: 0 0 14px rgba(37, 99, 235, 0.44) !important;
         }
 
-        .match-winner-button--red.active {
-          border-color: rgba(248, 113, 113, 0.9);
-          background: linear-gradient(135deg, #dc2626, #b91c1c);
-          color: #ffffff;
-          box-shadow: 0 0 12px rgba(220, 38, 38, 0.32);
+        .match-winner-button--red.match-winner-button--selected {
+          border-color: rgba(248, 113, 113, 0.95) !important;
+          background: linear-gradient(135deg, #dc2626, #991b1b) !important;
+          color: #ffffff !important;
+          box-shadow: 0 0 14px rgba(220, 38, 38, 0.42) !important;
         }
 
         @media (max-width: 720px) {
