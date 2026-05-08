@@ -139,6 +139,26 @@ function getItemImageUrl(itemId: number) {
   return `https://ddragon.leagueoflegends.com/cdn/${DDRAGON_VERSION}/img/item/${itemId}.png`;
 }
 
+function SafeRiotItemImage({ itemId }: { itemId: number }) {
+  const [failed, setFailed] = useState(false);
+
+  if (!itemId || itemId <= 0 || failed) {
+    return <span className="solo-item-empty" />;
+  }
+
+  return (
+    <Image
+      src={getItemImageUrl(itemId)}
+      alt={`item-${itemId}`}
+      width={28}
+      height={28}
+      unoptimized
+      className="solo-item-image"
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
 function formatPosition(position: string | null) {
   if (!position) {
     return "미정";
@@ -666,6 +686,7 @@ export default function SoloRankSection({ playerId }: SoloRankSectionProps) {
                           alt={champion.championNameKo}
                           width={112}
                           height={112}
+                          unoptimized
                           className="solo-most-image solo-most-image--featured"
                         />
 
@@ -727,6 +748,7 @@ export default function SoloRankSection({ playerId }: SoloRankSectionProps) {
                         alt={champion.championNameKo}
                         width={46}
                         height={46}
+                        unoptimized
                         className="solo-most-image"
                       />
 
@@ -789,6 +811,7 @@ export default function SoloRankSection({ playerId }: SoloRankSectionProps) {
                       alt={match.championNameKo}
                       width={54}
                       height={54}
+                      unoptimized
                       className="solo-match-champion-image"
                     />
                     <div>
@@ -819,13 +842,9 @@ export default function SoloRankSection({ playerId }: SoloRankSectionProps) {
                   <div className="solo-match-items">
                     {match.items.slice(0, 6).map((itemId, itemIndex) =>
                       itemId && itemId > 0 ? (
-                        <Image
+                        <SafeRiotItemImage
                           key={`${match.id}-${itemIndex}`}
-                          src={getItemImageUrl(itemId)}
-                          alt={`item-${itemId}`}
-                          width={28}
-                          height={28}
-                          className="solo-item-image"
+                          itemId={itemId}
                         />
                       ) : (
                         <span
