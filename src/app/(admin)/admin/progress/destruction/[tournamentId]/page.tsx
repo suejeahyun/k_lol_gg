@@ -259,6 +259,7 @@ export default async function AdminDestructionTournamentDetailPage({
           initialWinnerTeamId={tournament.winnerTeamId}
           initialMvpPlayerId={tournament.mvpPlayerId}
           initialGalleryImageId={tournament.galleryImageId}
+          initialHighlightYoutubeUrls={tournament.highlightYoutubeUrls}
         />
       </section>
 

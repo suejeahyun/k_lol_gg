@@ -407,9 +407,10 @@ model DestructionTournament {
   startDate DateTime?
   endDate   DateTime?
 
-  winnerTeamId   Int?
-  mvpPlayerId    Int?
-  galleryImageId Int?
+  winnerTeamId          Int?
+  mvpPlayerId           Int?
+  galleryImageId        Int?
+  highlightYoutubeUrls  String[] @default([])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

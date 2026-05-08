@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { hasOnlyValidYoutubeUrls, normalizeYoutubeUrls } from "@/lib/youtube";
 
 type RouteProps = {
   params: Promise<{
@@ -32,6 +33,7 @@ export async function PATCH(req: NextRequest, { params }: RouteProps) {
     const galleryImageId = body.galleryImageId
       ? Number(body.galleryImageId)
       : null;
+    const highlightYoutubeUrls = normalizeYoutubeUrls(body.highlightYoutubeUrls);
 
     if (!winnerTeamId) {
       return NextResponse.json(
@@ -107,6 +109,13 @@ export async function PATCH(req: NextRequest, { params }: RouteProps) {
       }
     }
 
+    if (!hasOnlyValidYoutubeUrls(highlightYoutubeUrls)) {
+      return NextResponse.json(
+        { message: "유효한 유튜브 URL만 등록할 수 있습니다." },
+        { status: 400 }
+      );
+    }
+
     if (galleryImageId) {
       const galleryImage = await prisma.galleryImage.findUnique({
         where: {
@@ -130,6 +139,7 @@ export async function PATCH(req: NextRequest, { params }: RouteProps) {
         winnerTeamId,
         mvpPlayerId,
         galleryImageId,
+        highlightYoutubeUrls,
         status: "COMPLETED",
       },
       include: {
