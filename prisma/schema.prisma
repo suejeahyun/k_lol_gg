@@ -307,6 +307,22 @@ model Notice {
   updatedAt DateTime @updatedAt
 }
 
+
+model Highlight {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String   @db.Text
+  youtubeUrl  String
+  youtubeId   String
+  thumbnailUrl String?
+  isPublished Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isPublished, sortOrder, createdAt])
+}
+
 model GalleryImage {
   id          Int      @id @default(autoincrement())
   title       String
@@ -407,10 +423,9 @@ model DestructionTournament {
   startDate DateTime?
   endDate   DateTime?
 
-  winnerTeamId          Int?
-  mvpPlayerId           Int?
-  galleryImageId        Int?
-  highlightYoutubeUrls  String[] @default([])
+  winnerTeamId   Int?
+  mvpPlayerId    Int?
+  galleryImageId Int?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

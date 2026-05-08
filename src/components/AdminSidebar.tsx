@@ -30,6 +30,7 @@ const menuGroups = [
       { href: "/admin/notices", label: "공지사항" },
       { href: "/admin/event-notices", label: "이벤트 공지" },
       { href: "/admin/images", label: "우승 이미지" },
+      { href: "/admin/highlights", label: "하이라이트" },
     ],
   },
   {

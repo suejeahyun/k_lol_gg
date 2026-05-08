@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
-import { getYoutubeEmbedUrl } from "@/lib/youtube";
 
 type PageProps = {
   params: Promise<{
@@ -127,15 +126,6 @@ export default async function DestructionProgressDetailPage({
     (match) => match.stage === "FINAL"
   );
 
-  const highlightYoutubeItems = tournament.highlightYoutubeUrls
-    .map((url) => ({
-      url,
-      embedUrl: getYoutubeEmbedUrl(url),
-    }))
-    .filter((item): item is { url: string; embedUrl: string } =>
-      Boolean(item.embedUrl)
-    );
-
   return (
     <main className="page-container destruction-detail-page">
       <div className="page-header">
@@ -224,39 +214,6 @@ export default async function DestructionProgressDetailPage({
               ))}
             </div>
           ) : null}
-        </section>
-      ) : null}
-
-      {highlightYoutubeItems.length > 0 ? (
-        <section className="content-section destruction-highlight-section">
-          <div className="section-header">
-            <div>
-              <h2>멸망전 하이라이트</h2>
-              <p>유튜브 URL로 등록된 주요 장면입니다.</p>
-            </div>
-          </div>
-
-          <div className="destruction-highlight-grid">
-            {highlightYoutubeItems.map((item, index) => (
-              <article key={`${item.url}-${index}`} className="destruction-highlight-card">
-                <div className="destruction-highlight-card__frame">
-                  <iframe
-                    src={item.embedUrl}
-                    title={`멸망전 하이라이트 ${index + 1}`}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                  />
-                </div>
-
-                <div className="destruction-highlight-card__meta">
-                  <strong>Highlight #{index + 1}</strong>
-                  <Link href={item.url} target="_blank" rel="noopener noreferrer">
-                    유튜브에서 보기
-                  </Link>
-                </div>
-              </article>
-            ))}
-          </div>
         </section>
       ) : null}
 

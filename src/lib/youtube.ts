@@ -1,54 +1,56 @@
-const YOUTUBE_ID_PATTERN = /^[a-zA-Z0-9_-]{11}$/;
+export function extractYoutubeId(input: string): string | null {
+  const raw = input.trim();
 
-export function getYoutubeVideoId(url: string) {
-  const value = url.trim();
-
-  if (!value) return null;
+  if (!raw) return null;
 
   try {
-    const parsedUrl = new URL(value);
-    const host = parsedUrl.hostname.replace(/^www\./, "");
-
-    if (host === "youtube.com" || host === "m.youtube.com") {
-      if (parsedUrl.pathname === "/watch") {
-        const videoId = parsedUrl.searchParams.get("v");
-        return videoId && YOUTUBE_ID_PATTERN.test(videoId) ? videoId : null;
-      }
-
-      const pathParts = parsedUrl.pathname.split("/").filter(Boolean);
-
-      if (["embed", "shorts", "live"].includes(pathParts[0] ?? "")) {
-        const videoId = pathParts[1];
-        return videoId && YOUTUBE_ID_PATTERN.test(videoId) ? videoId : null;
-      }
-    }
+    const url = new URL(raw);
+    const host = url.hostname.replace(/^www\./, "").replace(/^m\./, "");
 
     if (host === "youtu.be") {
-      const videoId = parsedUrl.pathname.split("/").filter(Boolean)[0];
-      return videoId && YOUTUBE_ID_PATTERN.test(videoId) ? videoId : null;
+      const id = url.pathname.split("/").filter(Boolean)[0];
+      return normalizeYoutubeId(id);
     }
 
-    return null;
+    if (host === "youtube.com" || host === "youtube-nocookie.com") {
+      if (url.pathname === "/watch") {
+        return normalizeYoutubeId(url.searchParams.get("v"));
+      }
+
+      const parts = url.pathname.split("/").filter(Boolean);
+      const supportedPrefixes = ["embed", "shorts", "live"];
+
+      if (parts.length >= 2 && supportedPrefixes.includes(parts[0])) {
+        return normalizeYoutubeId(parts[1]);
+      }
+    }
   } catch {
+    return normalizeYoutubeId(raw);
+  }
+
+  return null;
+}
+
+function normalizeYoutubeId(value: string | null | undefined): string | null {
+  if (!value) return null;
+
+  const id = value.trim();
+
+  if (!/^[a-zA-Z0-9_-]{11}$/.test(id)) {
     return null;
   }
+
+  return id;
 }
 
-export function getYoutubeEmbedUrl(url: string) {
-  const videoId = getYoutubeVideoId(url);
-  return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+export function getYoutubeEmbedUrl(youtubeId: string) {
+  return `https://www.youtube.com/embed/${youtubeId}`;
 }
 
-export function normalizeYoutubeUrls(urls: unknown) {
-  if (!Array.isArray(urls)) return [];
-
-  const normalizedUrls = urls
-    .map((url) => (typeof url === "string" ? url.trim() : ""))
-    .filter(Boolean);
-
-  return Array.from(new Set(normalizedUrls));
+export function getYoutubeWatchUrl(youtubeId: string) {
+  return `https://www.youtube.com/watch?v=${youtubeId}`;
 }
 
-export function hasOnlyValidYoutubeUrls(urls: string[]) {
-  return urls.every((url) => Boolean(getYoutubeVideoId(url)));
+export function getYoutubeThumbnailUrl(youtubeId: string) {
+  return `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
 }

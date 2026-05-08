@@ -966,11 +966,3 @@
     font-size: 26px;
   }
 }
-
-
-@media (max-width: 640px) {
-  .destruction-highlight-card__meta {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-}
