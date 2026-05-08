@@ -1,5 +1,5 @@
 "use client";
-import Image from "next/image";
+import SafeChampionImage from "@/components/SafeChampionImage";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 type ChampionItem = {
@@ -153,11 +153,13 @@ export default function AdminChampionsPage() {
                 <div className="player-col player-name">{champion.name}</div>
 
                 <div className="player-col">
-                  <Image
+                  <SafeChampionImage
                     src={champion.imageUrl}
                     alt={champion.name}
                     width={40}
                     height={40}
+                    className="champion-thumb"
+                    fallbackClassName="champion-thumb champion-thumb--empty"
                   />
                 </div>
 

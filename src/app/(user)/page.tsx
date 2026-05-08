@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import Image from "next/image";
+import SafeChampionImage from "@/components/SafeChampionImage";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import GalleryWinnerSlider from "@/components/GalleryWinnerSlider";
@@ -464,17 +465,14 @@ export default async function HomePage() {
           {recentMvp ? (
             <div className="home-mvp-content">
               <div className="home-mvp-champion">
-                {recentMvp.championImageUrl ? (
-                  <Image
-                    src={recentMvp.championImageUrl}
-                    alt={recentMvp.championName}
-                    width={72}
-                    height={72}
-                    className="home-mvp-champion__image"
-                  />
-                ) : (
-                  <div className="home-mvp-champion__fallback" />
-                )}
+                <SafeChampionImage
+                  src={recentMvp.championImageUrl}
+                  alt={recentMvp.championName}
+                  width={72}
+                  height={72}
+                  className="home-mvp-champion__image"
+                  fallbackClassName="home-mvp-champion__fallback"
+                />
               </div>
 
               <div className="home-mvp-info">

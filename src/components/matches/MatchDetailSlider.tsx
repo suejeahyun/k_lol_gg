@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+import SafeChampionImage from "@/components/SafeChampionImage";
 
 export type MatchDetailSlideParticipant = {
   id: number;
@@ -166,17 +166,14 @@ export default function MatchDetailSlider({
                     </span>
 
                     <div className="match-slide__champion">
-                      {participant.championImageUrl ? (
-                        <Image
-                          src={participant.championImageUrl}
-                          alt={participant.championName}
-                          width={28}
-                          height={28}
-                          className="match-slide__champion-image"
-                        />
-                      ) : (
-                        <span className="match-slide__champion-fallback" />
-                      )}
+                      <SafeChampionImage
+                        src={participant.championImageUrl}
+                        alt={participant.championName}
+                        width={28}
+                        height={28}
+                        className="match-slide__champion-image"
+                        fallbackClassName="match-slide__champion-fallback"
+                      />
                       <span>{participant.championName}</span>
                     </div>
 

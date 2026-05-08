@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 
 import Link from "next/link";
-import Image from "next/image";
+import SafeChampionImage from "@/components/SafeChampionImage";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
 import TierIcon from "@/components/TierIcon";
@@ -257,17 +257,14 @@ export default async function PlayerDetailPage({
                   className="champion-stat-card"
                 >
                   <div className="champion-stat-card__main">
-                    {champion.imageUrl ? (
-                      <Image
-                        src={champion.imageUrl}
-                        alt={champion.championName}
-                        width={52}
-                        height={52}
-                        className="champion-stat-card__image"
-                      />
-                    ) : (
-                      <div className="champion-stat-card__image champion-stat-card__image--empty" />
-                    )}
+                    <SafeChampionImage
+                      src={champion.imageUrl}
+                      alt={champion.championName}
+                      width={52}
+                      height={52}
+                      className="champion-stat-card__image"
+                      fallbackClassName="champion-stat-card__image champion-stat-card__image--empty"
+                    />
 
                     <div className="champion-stat-card__text">
                       <strong>{champion.championName}</strong>
