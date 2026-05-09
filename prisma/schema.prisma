@@ -690,6 +690,14 @@ model BalanceMatchReview {
   highTierOffRoleCount Int?
   qualityScore Float?
 
+  aiVerdict String?
+  aiRiskLevel String?
+  aiConfidence Float?
+  aiInferredWinner Team?
+  aiReasoning String? @db.Text
+  aiRiskFactors String? @db.Text
+  aiFormulaVersion String? @default("v2.0.0")
+
   feedbackRating String?
   feedbackProblemTeam Team?
   feedbackProblemLine Position?

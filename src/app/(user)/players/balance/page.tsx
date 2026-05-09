@@ -179,6 +179,19 @@ type BalanceResponse = {
     recommendationScore?: number;
     reason?: string;
   } | null;
+  aiJudgement?: {
+    selectedOptionNo: number | null;
+    selectedOptionTitle: string | null;
+    confidence: number;
+    riskLevel: "LOW" | "MEDIUM" | "HIGH";
+    verdict: string;
+    inferredWinner: "RED" | "BLUE" | "EVEN";
+    predictedRedWinRate: number;
+    predictedBlueWinRate: number;
+    reasoning: string[];
+    riskFactors: string[];
+    operatingAdvice: string;
+  } | null;
   alternatives?: BalanceResponse[];
 };
 type ApplyPosition = Position | "ALL";
@@ -658,7 +671,11 @@ export default function PlayersBalancePage() {
         .join(" ");
     };
 
-    return `RED ${formatNames(target.red)}\nBLUE ${formatNames(target.blue)}`;
+    const aiLine = target.aiJudgement
+      ? `\nAI 판단: ${target.aiJudgement.selectedOptionNo ?? "-"}안 ${target.aiJudgement.selectedOptionTitle ?? ""} / RED ${target.aiJudgement.predictedRedWinRate.toFixed(1)}% vs BLUE ${target.aiJudgement.predictedBlueWinRate.toFixed(1)}%`
+      : "";
+
+    return `RED ${formatNames(target.red)}\nBLUE ${formatNames(target.blue)}${aiLine}`;
   }
 
   function getManualRoleType(
@@ -987,11 +1004,85 @@ export default function PlayersBalancePage() {
       return {
         ...alternatives[index],
         soloSync: prev.soloSync ?? alternatives[index].soloSync ?? null,
+        aiJudgement: prev.aiJudgement ?? alternatives[index].aiJudgement ?? null,
+        recommendedAlternative: prev.recommendedAlternative ?? alternatives[index].recommendedAlternative ?? null,
         alternatives,
       };
     });
 
     setSelectedResultIndex(index);
+  }
+
+  function renderAiJudgement(target: BalanceResponse) {
+    const judgement = target.aiJudgement;
+    if (!judgement) return null;
+
+    const riskLabel =
+      judgement.riskLevel === "LOW"
+        ? "낮음"
+        : judgement.riskLevel === "MEDIUM"
+          ? "보통"
+          : "높음";
+
+    return (
+      <section className="balance-ai-judgement-card">
+        <div className="balance-ai-judgement-head">
+          <div>
+            <strong>AI 판단</strong>
+            <span>
+              공식 개선 제안이 아니라, 현재 후보 3개를 실제 운영 리스크 기준으로 추론한 결과입니다.
+            </span>
+          </div>
+          <b>
+            {judgement.selectedOptionNo ?? "-"}안 · 신뢰도 {judgement.confidence.toFixed(1)}점
+          </b>
+        </div>
+
+        <div className="balance-ai-judgement-grid">
+          <div>
+            <span>판단</span>
+            <strong>{judgement.verdict}</strong>
+          </div>
+          <div>
+            <span>예상 승률</span>
+            <strong>RED {judgement.predictedRedWinRate.toFixed(1)}% / BLUE {judgement.predictedBlueWinRate.toFixed(1)}%</strong>
+          </div>
+          <div>
+            <span>위험도</span>
+            <strong>{riskLabel}</strong>
+          </div>
+          <div>
+            <span>추론 우세</span>
+            <strong>{judgement.inferredWinner === "EVEN" ? "반반" : judgement.inferredWinner}</strong>
+          </div>
+        </div>
+
+        <div className="balance-ai-judgement-body">
+          <div>
+            <h3>판단 근거</h3>
+            <ul>
+              {judgement.reasoning.map((item, index) => (
+                <li key={`ai-reason-${index}`}>{item}</li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h3>리스크</h3>
+            {judgement.riskFactors.length > 0 ? (
+              <ul>
+                {judgement.riskFactors.map((item, index) => (
+                  <li key={`ai-risk-${index}`}>{item}</li>
+                ))}
+              </ul>
+            ) : (
+              <p>특별한 위험 요소가 크지 않습니다.</p>
+            )}
+          </div>
+        </div>
+
+        <p className="balance-ai-judgement-advice">{judgement.operatingAdvice}</p>
+      </section>
+    );
   }
 
   function renderBalanceAlternatives(target: BalanceResponse) {
@@ -1839,6 +1930,8 @@ export default function PlayersBalancePage() {
               );
             })()}
 
+            {renderAiJudgement(result)}
+
             {renderBalanceAlternatives(result)}
 
             <section className="balance-result-teams balance-result-teams--compact">
@@ -1939,6 +2032,109 @@ export default function PlayersBalancePage() {
         ) : null}
 
         <style jsx global>{`
+          .balance-ai-judgement-card {
+            margin-top: 22px;
+            padding: 22px;
+            border-radius: 24px;
+            border: 1px solid rgba(125, 211, 252, 0.34);
+            background:
+              radial-gradient(circle at 10% 0%, rgba(34, 211, 238, 0.14), transparent 34%),
+              linear-gradient(145deg, rgba(8, 22, 43, 0.96), rgba(10, 30, 55, 0.96));
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.34);
+          }
+
+          .balance-ai-judgement-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 16px;
+          }
+
+          .balance-ai-judgement-head strong {
+            display: block;
+            color: #e0f2fe;
+            font-size: 18px;
+            font-weight: 900;
+          }
+
+          .balance-ai-judgement-head span,
+          .balance-ai-judgement-advice,
+          .balance-ai-judgement-body p {
+            color: #a5b4fc;
+            font-size: 13px;
+            line-height: 1.65;
+          }
+
+          .balance-ai-judgement-head b {
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: rgba(14, 165, 233, 0.14);
+            border: 1px solid rgba(125, 211, 252, 0.28);
+            color: #bae6fd;
+            font-size: 13px;
+            white-space: nowrap;
+          }
+
+          .balance-ai-judgement-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 18px;
+          }
+
+          .balance-ai-judgement-grid div {
+            padding: 12px;
+            border-radius: 16px;
+            background: rgba(15, 23, 42, 0.68);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+          }
+
+          .balance-ai-judgement-grid span {
+            display: block;
+            color: #94a3b8;
+            font-size: 11px;
+            font-weight: 800;
+            margin-bottom: 5px;
+          }
+
+          .balance-ai-judgement-grid strong {
+            color: #f8fafc;
+            font-size: 13px;
+            line-height: 1.4;
+          }
+
+          .balance-ai-judgement-body {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+          }
+
+          .balance-ai-judgement-body div {
+            padding: 14px;
+            border-radius: 18px;
+            background: rgba(2, 6, 23, 0.34);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+          }
+
+          .balance-ai-judgement-body h3 {
+            margin: 0 0 8px;
+            color: #dbeafe;
+            font-size: 13px;
+          }
+
+          .balance-ai-judgement-body ul {
+            margin: 0;
+            padding-left: 18px;
+            color: #cbd5e1;
+            font-size: 12px;
+            line-height: 1.7;
+          }
+
+          .balance-ai-judgement-advice {
+            margin: 14px 0 0;
+          }
+
           .balance-result-teams {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));

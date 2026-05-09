@@ -183,6 +183,20 @@ type CandidateSnapshot = {
   assignments: Assignment[];
 };
 
+type AiBalanceJudgement = {
+  selectedOptionNo: number | null;
+  selectedOptionTitle: string | null;
+  confidence: number;
+  riskLevel: "LOW" | "MEDIUM" | "HIGH";
+  verdict: string;
+  inferredWinner: Team | "EVEN";
+  predictedRedWinRate: number;
+  predictedBlueWinRate: number;
+  reasoning: string[];
+  riskFactors: string[];
+  operatingAdvice: string;
+};
+
 type TierScoreDetail = {
   label: string;
   score: number;
@@ -1437,6 +1451,139 @@ function getWarningMessages(candidate: Omit<CandidateSnapshot, "qualityScore" | 
   return warnings;
 }
 
+function getPredictedWinRates(redTotal: number, blueTotal: number) {
+  const redRate = 1 / (1 + 10 ** ((blueTotal - redTotal) / 40));
+  const red = Number((redRate * 100).toFixed(1));
+  return {
+    red,
+    blue: Number((100 - red).toFixed(1)),
+  };
+}
+
+function getAiInferenceScore(candidate: {
+  qualityScore?: number;
+  recommendationScore?: number;
+  diff: number;
+  maxLineDiff?: number;
+  midJglDiff?: number;
+  bottomDiff?: number;
+  autoAssignedCount: number;
+  highTierPriorityPenalty?: number;
+  dataReliabilityPenalty?: number;
+  stompPenalty?: number;
+}) {
+  const qualityScore = candidate.qualityScore ?? 0;
+  const winRates = getPredictedWinRates(100, 100 + candidate.diff);
+  const predictedCloseness = 100 - Math.abs(50 - winRates.red) * 2;
+  const riskPenalty =
+    (candidate.maxLineDiff ?? 0) * 0.8 +
+    (candidate.midJglDiff ?? 0) * 0.75 +
+    (candidate.bottomDiff ?? 0) * 0.45 +
+    candidate.autoAssignedCount * 3.5 +
+    (candidate.highTierPriorityPenalty ?? 0) * 0.1 +
+    (candidate.dataReliabilityPenalty ?? 0) * 0.7 +
+    (candidate.stompPenalty ?? 0) * 0.7;
+
+  return Number((qualityScore * 0.55 + predictedCloseness * 0.35 - riskPenalty * 0.1).toFixed(2));
+}
+
+function getAiBalanceJudgement(
+  alternatives: Array<{
+    optionNo?: number;
+    optionTitle?: string;
+    redTotal: number;
+    blueTotal: number;
+    diff: number;
+    qualityScore?: number;
+    recommendationScore?: number;
+    maxLineDiff?: number;
+    midJglDiff?: number;
+    bottomDiff?: number;
+    autoAssignedCount: number;
+    highTierPriorityPenalty?: number;
+    dataReliabilityPenalty?: number;
+    stompPenalty?: number;
+    warningMessages?: string[];
+  }>,
+): AiBalanceJudgement | null {
+  if (alternatives.length === 0) return null;
+
+  const scored = alternatives
+    .map((option) => ({
+      option,
+      aiScore: getAiInferenceScore(option),
+    }))
+    .sort((a, b) => b.aiScore - a.aiScore);
+
+  const best = scored[0].option;
+  const winRates = getPredictedWinRates(best.redTotal, best.blueTotal);
+  const inferredWinner =
+    Math.abs(winRates.red - winRates.blue) < 3
+      ? "EVEN"
+      : winRates.red > winRates.blue
+        ? "RED"
+        : "BLUE";
+
+  const riskFactors = [
+    ...(best.warningMessages ?? []),
+    (best.maxLineDiff ?? 0) >= 10 ? `라인 최대 격차 ${Number(best.maxLineDiff ?? 0).toFixed(1)}점` : null,
+    (best.midJglDiff ?? 0) >= 8 ? `미드-정글 격차 ${Number(best.midJglDiff ?? 0).toFixed(1)}점` : null,
+    (best.bottomDiff ?? 0) >= 8 ? `바텀 격차 ${Number(best.bottomDiff ?? 0).toFixed(1)}점` : null,
+    best.autoAssignedCount > 0 ? `AUTO ${best.autoAssignedCount}명` : null,
+    (best.dataReliabilityPenalty ?? 0) >= 5 ? "데이터 신뢰도 낮은 플레이어 포함" : null,
+  ].filter(Boolean) as string[];
+
+  const riskValue =
+    best.diff * 0.8 +
+    (best.maxLineDiff ?? 0) * 1.1 +
+    (best.midJglDiff ?? 0) * 1.15 +
+    (best.bottomDiff ?? 0) * 0.85 +
+    best.autoAssignedCount * 4 +
+    (best.highTierPriorityPenalty ?? 0) * 0.12 +
+    (best.dataReliabilityPenalty ?? 0) * 0.8;
+
+  const riskLevel: AiBalanceJudgement["riskLevel"] =
+    riskValue >= 38 ? "HIGH" : riskValue >= 22 ? "MEDIUM" : "LOW";
+
+  const confidence = Number(
+    limitRange((best.qualityScore ?? 70) - (best.dataReliabilityPenalty ?? 0) * 1.2 - riskFactors.length * 2, 0, 100).toFixed(1),
+  );
+
+  const reasoning = [
+    `${best.optionNo ?? "-"}안 ${best.optionTitle ?? "선택안"}이 품질 점수 ${Number(best.qualityScore ?? 0).toFixed(1)}점으로 가장 안정적입니다.`,
+    `예상 승률은 RED ${winRates.red.toFixed(1)}% / BLUE ${winRates.blue.toFixed(1)}%로 ${inferredWinner === "EVEN" ? "거의 반반" : `${inferredWinner} 근소 우세`}입니다.`,
+    `총점 차이 ${best.diff.toFixed(1)}점, 최대 라인 차이 ${Number(best.maxLineDiff ?? 0).toFixed(1)}점, 미드-정글 차이 ${Number(best.midJglDiff ?? 0).toFixed(1)}점을 함께 판단했습니다.`,
+  ];
+
+  const verdict =
+    riskLevel === "LOW"
+      ? "실사용 추천: 현재 조건에서 가장 터질 가능성이 낮은 조합입니다."
+      : riskLevel === "MEDIUM"
+        ? "조건부 추천: 사용할 수 있지만 경고 항목을 확인해야 합니다."
+        : "주의 필요: 계산상 추천안이지만 운영자가 라인/포지션 리스크를 확인해야 합니다.";
+
+  const operatingAdvice =
+    riskLevel === "LOW"
+      ? "그대로 사용해도 무리가 적습니다. 내전 결과 등록 후 MMR 변화를 확인하세요."
+      : riskLevel === "MEDIUM"
+        ? "추천안을 쓰되, AUTO 배정자와 핵심 라인 차이를 먼저 공유하는 편이 좋습니다."
+        : "가능하면 대체안을 비교하거나 수동 드래그로 핵심 라인 차이를 줄인 뒤 저장하세요.";
+
+  return {
+    selectedOptionNo: best.optionNo ?? null,
+    selectedOptionTitle: best.optionTitle ?? null,
+    confidence,
+    riskLevel,
+    verdict,
+    inferredWinner,
+    predictedRedWinRate: winRates.red,
+    predictedBlueWinRate: winRates.blue,
+    reasoning,
+    riskFactors,
+    operatingAdvice,
+  };
+}
+
 function getBalanceCost(params: {
   diff: number;
   lineDiffTotal: number;
@@ -2291,17 +2438,17 @@ export async function POST(request: NextRequest) {
         };
       });
 
-    const recommendedAlternative = alternatives
-      .map((option) => ({
-        optionNo: option.optionNo,
-        optionTitle: option.optionTitle,
-        qualityScore: option.qualityScore ?? 0,
-        recommendationScore: option.recommendationScore ?? 0,
-        reason: option.warningMessages?.length
-          ? `주의: ${option.warningMessages.join(", ")}`
-          : "고티어 주포지션, 총점, 라인 차이, AUTO 수 기준에서 가장 안정적입니다.",
-      }))
-      .sort((a, b) => b.recommendationScore - a.recommendationScore)[0] ?? null;
+    const aiJudgement = getAiBalanceJudgement(alternatives);
+    const recommendedAlternative = aiJudgement
+      ? {
+          optionNo: aiJudgement.selectedOptionNo ?? undefined,
+          optionTitle: aiJudgement.selectedOptionTitle ?? undefined,
+          qualityScore:
+            alternatives.find((option) => option.optionNo === aiJudgement.selectedOptionNo)?.qualityScore ?? 0,
+          recommendationScore: aiJudgement.confidence,
+          reason: aiJudgement.verdict,
+        }
+      : null;
 
     return NextResponse.json({
       ...toResponsePayload(bestCandidate),
@@ -2315,6 +2462,7 @@ export async function POST(request: NextRequest) {
           }
         : null,
       recommendedAlternative,
+      aiJudgement,
       alternatives,
     });
   } catch (error) {
