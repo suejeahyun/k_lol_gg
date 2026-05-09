@@ -47,6 +47,11 @@ export async function GET() {
       title: draft.title,
       label: draft.title,
       applyDate: draft.applyDate.toISOString(),
+      optionType: draft.optionType,
+      redTotal: draft.redTotal,
+      blueTotal: draft.blueTotal,
+      diff: draft.diff,
+      balanceCost: draft.balanceCost,
       teams: {
         BLUE: draft.players
           .filter((draftPlayer) => draftPlayer.team === "BLUE")
@@ -58,6 +63,12 @@ export async function GET() {
             currentTier: draftPlayer.player.currentTier,
             peakTier: draftPlayer.player.peakTier,
             position: draftPlayer.position,
+            roleType: draftPlayer.roleType,
+            score: draftPlayer.score,
+            baseScore: draftPlayer.baseScore,
+            soloBonus: draftPlayer.soloBonus,
+            positionBonus: draftPlayer.positionBonus,
+            rolePenalty: draftPlayer.rolePenalty,
           })),
         RED: draft.players
           .filter((draftPlayer) => draftPlayer.team === "RED")
@@ -69,6 +80,12 @@ export async function GET() {
             currentTier: draftPlayer.player.currentTier,
             peakTier: draftPlayer.player.peakTier,
             position: draftPlayer.position,
+            roleType: draftPlayer.roleType,
+            score: draftPlayer.score,
+            baseScore: draftPlayer.baseScore,
+            soloBonus: draftPlayer.soloBonus,
+            positionBonus: draftPlayer.positionBonus,
+            rolePenalty: draftPlayer.rolePenalty,
           })),
       },
     });

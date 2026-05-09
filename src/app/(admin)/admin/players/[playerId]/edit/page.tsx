@@ -23,6 +23,10 @@ export default async function AdminPlayerEditPage({ params }: Props) {
       name: true,
       nickname: true,
       tag: true,
+      peakTier: true,
+      currentTier: true,
+      balanceOverrideScore: true,
+      balanceOverrideReason: true,
     },
   });
 

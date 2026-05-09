@@ -15,10 +15,21 @@ type DraftPlayerInput = {
   playerId: number;
   team: TeamValue;
   position: PositionValue;
+  roleType?: string | null;
+  score?: number | null;
+  baseScore?: number | null;
+  soloBonus?: number | null;
+  positionBonus?: number | null;
+  rolePenalty?: number | null;
 };
 
 type DraftPostBody = {
   title?: string;
+  optionType?: string | null;
+  redTotal?: number | null;
+  blueTotal?: number | null;
+  diff?: number | null;
+  balanceCost?: number | null;
   players?: DraftPlayerInput[];
 };
 
@@ -78,6 +89,11 @@ export async function GET() {
         title: draft.title,
         label: draft.title,
         applyDate: draft.applyDate.toISOString(),
+        optionType: draft.optionType,
+        redTotal: draft.redTotal,
+        blueTotal: draft.blueTotal,
+        diff: draft.diff,
+        balanceCost: draft.balanceCost,
         count: draft._count.players,
       })),
     });
@@ -186,11 +202,22 @@ export async function POST(req: NextRequest) {
       data: {
         title,
         applyDate,
+        optionType: body.optionType?.trim() || null,
+        redTotal: typeof body.redTotal === "number" ? body.redTotal : null,
+        blueTotal: typeof body.blueTotal === "number" ? body.blueTotal : null,
+        diff: typeof body.diff === "number" ? body.diff : null,
+        balanceCost: typeof body.balanceCost === "number" ? body.balanceCost : null,
         players: {
           create: players.map((player) => ({
             playerId: player.playerId,
             team: player.team,
             position: player.position,
+            roleType: player.roleType ?? null,
+            score: typeof player.score === "number" ? player.score : null,
+            baseScore: typeof player.baseScore === "number" ? player.baseScore : null,
+            soloBonus: typeof player.soloBonus === "number" ? player.soloBonus : null,
+            positionBonus: typeof player.positionBonus === "number" ? player.positionBonus : null,
+            rolePenalty: typeof player.rolePenalty === "number" ? player.rolePenalty : null,
           })),
         },
       },

@@ -9,6 +9,10 @@ type Props = {
     name: string;
     nickname: string;
     tag: string;
+    peakTier?: string | null;
+    currentTier?: string | null;
+    balanceOverrideScore?: number | null;
+    balanceOverrideReason?: string | null;
   };
 };
 
@@ -18,6 +22,14 @@ export default function EditPlayerClient({ player }: Props) {
   const [name, setName] = useState(player.name);
   const [nickname, setNickname] = useState(player.nickname);
   const [tag, setTag] = useState(player.tag);
+  const [peakTier, setPeakTier] = useState(player.peakTier ?? "");
+  const [currentTier, setCurrentTier] = useState(player.currentTier ?? "");
+  const [balanceOverrideScore, setBalanceOverrideScore] = useState(
+    String(player.balanceOverrideScore ?? 0),
+  );
+  const [balanceOverrideReason, setBalanceOverrideReason] = useState(
+    player.balanceOverrideReason ?? "",
+  );
   const [loading, setLoading] = useState(false);
 
   const handleUpdate = async () => {
@@ -33,6 +45,10 @@ export default function EditPlayerClient({ player }: Props) {
           name,
           nickname,
           tag,
+          peakTier,
+          currentTier,
+          balanceOverrideScore: Number(balanceOverrideScore || 0),
+          balanceOverrideReason,
         }),
       });
 
@@ -121,6 +137,54 @@ export default function EditPlayerClient({ player }: Props) {
                 value={tag}
                 onChange={(e) => setTag(e.target.value)}
                 style={{ width: "100%", marginTop: "8px" }}
+              />
+            </div>
+
+            <div>
+              <label>최고티어</label>
+              <input
+                className="app-input"
+                value={peakTier}
+                onChange={(e) => setPeakTier(e.target.value)}
+                placeholder="예: 다이아 2, 마스터 3층"
+                style={{ width: "100%", marginTop: "8px" }}
+              />
+            </div>
+
+            <div>
+              <label>현재티어</label>
+              <input
+                className="app-input"
+                value={currentTier}
+                onChange={(e) => setCurrentTier(e.target.value)}
+                placeholder="예: 에메랄드 1"
+                style={{ width: "100%", marginTop: "8px" }}
+              />
+            </div>
+
+            <div>
+              <label>밸런스 수동 보정 점수 (-10 ~ +10)</label>
+              <input
+                className="app-input"
+                type="number"
+                min={-10}
+                max={10}
+                step={0.5}
+                value={balanceOverrideScore}
+                onChange={(e) => setBalanceOverrideScore(e.target.value)}
+                style={{ width: "100%", marginTop: "8px" }}
+              />
+            </div>
+
+            <div>
+              <label>밸런스 보정 사유</label>
+              <textarea
+                className="app-input"
+                value={balanceOverrideReason}
+                onChange={(e) => setBalanceOverrideReason(e.target.value)}
+                placeholder="예: 최근 내전 체감 실력 +3, 휴면 복귀 -4"
+                rows={3}
+                style={{ width: "100%", marginTop: "8px", resize: "vertical" }}
               />
             </div>
 

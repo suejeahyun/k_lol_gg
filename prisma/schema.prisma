@@ -96,6 +96,8 @@ model Player {
   tag         String
   peakTier      String?
   currentTier   String?
+  balanceOverrideScore  Float   @default(0)
+  balanceOverrideReason String?
   isActive      Boolean   @default(true)
   deactivatedAt DateTime?
   createdAt     DateTime  @default(now())
@@ -122,6 +124,9 @@ model Player {
   riotAccount      PlayerRiotAccount?
   soloRankSnapshot PlayerSoloRankSnapshot?
   soloMatches      PlayerSoloMatch[]
+
+  balanceProfile      PlayerBalanceProfile?
+  balanceMatchResults PlayerBalanceMatchResult[]
 
   @@unique([nickname, tag])
 }
@@ -173,6 +178,9 @@ model MatchSeries {
 
   season Season      @relation(fields: [seasonId], references: [id])
   games  MatchGame[]
+
+  balanceReviews       BalanceMatchReview[]
+  balanceMatchResults  PlayerBalanceMatchResult[]
 
   @@index([seasonId, matchDate])
 }
@@ -600,8 +608,15 @@ model TeamBalanceDraft {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  optionType  String?
+  redTotal    Float?
+  blueTotal   Float?
+  diff        Float?
+  balanceCost Float?
+
   season  Season?                  @relation(fields: [seasonId], references: [id], onDelete: SetNull)
   players TeamBalanceDraftPlayer[]
+  balanceReviews BalanceMatchReview[]
 
   @@index([createdAt])
   @@index([applyDate])
@@ -615,12 +630,110 @@ model TeamBalanceDraftPlayer {
   team     Team
   position Position
 
+  roleType      String?
+  score         Float?
+  baseScore     Float?
+  soloBonus     Float?
+  positionBonus Float?
+  rolePenalty   Float?
+
   createdAt DateTime @default(now())
 
   draft  TeamBalanceDraft @relation(fields: [draftId], references: [id], onDelete: Cascade)
   player Player           @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
   @@unique([draftId, playerId])
+}
+
+model PlayerBalanceProfile {
+  id       Int @id @default(autoincrement())
+  playerId Int @unique
+
+  overallMmr Float @default(50)
+  topMmr     Float @default(50)
+  jungleMmr  Float @default(50)
+  midMmr     Float @default(50)
+  adcMmr     Float @default(50)
+  supportMmr Float @default(50)
+
+  confidence      Float @default(0)
+  matchesAnalyzed Int   @default(0)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  lastUpdatedAt DateTime @default(now())
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([overallMmr])
+  @@index([confidence])
+}
+
+model BalanceMatchReview {
+  id Int @id @default(autoincrement())
+
+  matchSeriesId Int
+  draftId       Int?
+
+  selectedOptionType String?
+  predictedRedWinRate  Float?
+  predictedBlueWinRate Float?
+  actualWinner Team?
+
+  redTotal    Float?
+  blueTotal   Float?
+  diff        Float?
+  maxLineDiff Float?
+  midJglDiff  Float?
+  bottomDiff  Float?
+  autoCount   Int?
+  highTierOffRoleCount Int?
+  qualityScore Float?
+
+  feedbackRating String?
+  feedbackProblemTeam Team?
+  feedbackProblemLine Position?
+  feedbackMemo String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  matchSeries MatchSeries @relation(fields: [matchSeriesId], references: [id], onDelete: Cascade)
+  draft TeamBalanceDraft? @relation(fields: [draftId], references: [id], onDelete: SetNull)
+
+  @@index([matchSeriesId])
+  @@index([draftId])
+  @@index([actualWinner])
+}
+
+model PlayerBalanceMatchResult {
+  id Int @id @default(autoincrement())
+
+  matchSeriesId Int
+  gameId        Int?
+  playerId      Int
+  championId    Int?
+
+  team     Team
+  position Position
+  kills    Int @default(0)
+  deaths   Int @default(0)
+  assists  Int @default(0)
+  win      Boolean @default(false)
+
+  expectedScoreBefore   Float?
+  actualPerformanceScore Float?
+  mmrDelta              Float @default(0)
+  positionMmrDelta      Float @default(0)
+
+  createdAt DateTime @default(now())
+
+  matchSeries MatchSeries @relation(fields: [matchSeriesId], references: [id], onDelete: Cascade)
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([matchSeriesId])
+  @@index([playerId])
+  @@index([position])
 }
 
 model EventNotice {

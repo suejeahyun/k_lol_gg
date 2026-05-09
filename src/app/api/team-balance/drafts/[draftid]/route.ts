@@ -62,6 +62,11 @@ export async function GET(_req: Request, { params }: RouteContext) {
       title: draft.title,
       label: draft.title,
       applyDate: draft.applyDate.toISOString(),
+      optionType: draft.optionType,
+      redTotal: draft.redTotal,
+      blueTotal: draft.blueTotal,
+      diff: draft.diff,
+      balanceCost: draft.balanceCost,
       teams: {
         BLUE: draft.players
           .filter((item) => item.team === "BLUE")
@@ -73,6 +78,12 @@ export async function GET(_req: Request, { params }: RouteContext) {
             currentTier: item.player.currentTier,
             peakTier: item.player.peakTier,
             position: item.position,
+            roleType: item.roleType,
+            score: item.score,
+            baseScore: item.baseScore,
+            soloBonus: item.soloBonus,
+            positionBonus: item.positionBonus,
+            rolePenalty: item.rolePenalty,
           })),
         RED: draft.players
           .filter((item) => item.team === "RED")
@@ -84,6 +95,12 @@ export async function GET(_req: Request, { params }: RouteContext) {
             currentTier: item.player.currentTier,
             peakTier: item.player.peakTier,
             position: item.position,
+            roleType: item.roleType,
+            score: item.score,
+            baseScore: item.baseScore,
+            soloBonus: item.soloBonus,
+            positionBonus: item.positionBonus,
+            rolePenalty: item.rolePenalty,
           })),
       },
     });

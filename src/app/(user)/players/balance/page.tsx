@@ -42,6 +42,7 @@ type AssignedPlayer = {
   currentTier: string;
   tierLabel: string;
   winRate: number;
+  inhouseScore?: number;
   adjustedScore?: number;
   rankScore?: number;
   rankBaseScore?: number;
@@ -81,9 +82,31 @@ type AssignedPlayer = {
     winRate?: number | null;
     kda?: number | null;
   };
+  balanceOverrideScore?: number;
+  balanceOverrideReason?: string | null;
+  soloRecentGames?: number;
+  soloRecentWins?: number;
+  soloRecentWinRate?: number | null;
+  soloRecentKda?: number | null;
+  soloRecentMainPosition?: Position | null;
+  soloRecentSubPosition?: Position | null;
+  soloRecentPositionConfidence?: number;
+  soloRecentAvgDamage?: number | null;
+  soloRecentAvgVisionScore?: number | null;
+  internalPositionBonus?: number;
+  soloPositionBonus?: number;
+  soloApplyPositionMatchBonus?: number;
+  positionSkillBonus?: number;
+  mmrBonus?: number;
+  balanceMmr?: number;
+  assignedPositionMmr?: number;
+  mmrConfidence?: number;
+  rolePenalty?: number;
+  soloRecentFormBonus?: number;
   scoreBreakdown?: {
     currentTierScore?: number;
     peakTierScore?: number;
+    inhouseScore?: number;
     tierBaseScore?: number;
     adjustedScore?: number;
     tierScore?: number;
@@ -101,6 +124,13 @@ type AssignedPlayer = {
     rolePenalty?: number;
     recentBonus?: number;
     internalBonus?: number;
+    soloRecentFormBonus?: number;
+    soloApplyPositionMatchBonus?: number;
+    internalPositionBonus?: number;
+    soloPositionBonus?: number;
+    positionSkillBonus?: number;
+    mmrBonus?: number;
+    balanceOverrideScore?: number;
     finalScore?: number;
   };
   explanation?: string[];
@@ -116,6 +146,9 @@ type BalanceResponse = {
   blueTotal: number;
   diff: number;
   balanceCost?: number;
+  qualityScore?: number;
+  recommendationScore?: number;
+  warningMessages?: string[];
   lineDiffTotal?: number;
   maxLineDiff?: number;
   topPlayerDiff?: number;
@@ -133,6 +166,19 @@ type BalanceResponse = {
   autoAssignedCount: number;
   red: AssignedPlayer[];
   blue: AssignedPlayer[];
+  soloSync?: {
+    requested: number;
+    synced: number;
+    skipped: number;
+    failed: number;
+  } | null;
+  recommendedAlternative?: {
+    optionNo?: number;
+    optionTitle?: string;
+    qualityScore?: number;
+    recommendationScore?: number;
+    reason?: string;
+  } | null;
   alternatives?: BalanceResponse[];
 };
 type ApplyPosition = Position | "ALL";
@@ -195,6 +241,7 @@ function getPositionButtonClass(row: PlayerRow, position: Position) {
 export default function PlayersBalancePage() {
   const [rows, setRows] = useState<PlayerRow[]>(createInitialRows());
   const [loading, setLoading] = useState(false);
+  const [loadingMode, setLoadingMode] = useState<"fast" | "sync" | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [result, setResult] = useState<BalanceResponse | null>(null);
   const [selectedResultIndex, setSelectedResultIndex] = useState(0);
@@ -445,11 +492,23 @@ export default function PlayersBalancePage() {
           playerId: player.playerId,
           team: "BLUE",
           position: player.position,
+          roleType: player.roleType,
+          score: player.score,
+          baseScore: player.finalBaseScore ?? player.scoreBreakdown?.finalBaseScore ?? player.score,
+          soloBonus: player.soloRecentFormBonus ?? player.scoreBreakdown?.soloRecentFormBonus ?? 0,
+          positionBonus: player.positionSkillBonus ?? player.scoreBreakdown?.positionSkillBonus ?? 0,
+          rolePenalty: player.rolePenalty ?? player.scoreBreakdown?.rolePenalty ?? 0,
         })),
         ...result.red.map((player) => ({
           playerId: player.playerId,
           team: "RED",
           position: player.position,
+          roleType: player.roleType,
+          score: player.score,
+          baseScore: player.finalBaseScore ?? player.scoreBreakdown?.finalBaseScore ?? player.score,
+          soloBonus: player.soloRecentFormBonus ?? player.scoreBreakdown?.soloRecentFormBonus ?? 0,
+          positionBonus: player.positionSkillBonus ?? player.scoreBreakdown?.positionSkillBonus ?? 0,
+          rolePenalty: player.rolePenalty ?? player.scoreBreakdown?.rolePenalty ?? 0,
         })),
       ];
 
@@ -459,6 +518,11 @@ export default function PlayersBalancePage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          optionType: result.planType,
+          redTotal: result.redTotal,
+          blueTotal: result.blueTotal,
+          diff: result.diff,
+          balanceCost: result.balanceCost ?? result.planCost,
           players,
         }),
       });
@@ -611,15 +675,15 @@ export default function PlayersBalancePage() {
     position: Position;
     roleType: RoleType;
     baseScore: number;
-    multiplier: number;
+    rolePenalty: number;
     score: number;
   }) {
-    const { player, position, roleType, baseScore, multiplier, score } = params;
+    const { player, position, roleType, baseScore, rolePenalty, score } = params;
     const roleText = getRoleText(roleType);
 
     return [
       `수동 변경 후 ${position} ${roleText} 기준으로 다시 계산되었습니다.`,
-      `최종 기준점수 ${baseScore.toFixed(1)}점에 포지션 반영률 ${(multiplier * 100).toFixed(0)}%를 적용해 ${score.toFixed(1)}점이 되었습니다.`,
+      `최종 기준점수 ${baseScore.toFixed(1)}점에서 배정 감점 ${rolePenalty.toFixed(1)}점을 반영해 ${score.toFixed(1)}점이 되었습니다.`,
       roleType === "AUTO"
         ? "선택한 주/부 포지션이 아니므로 AUTO 기준 반영률이 적용되었습니다."
         : `${position}은(는) ${roleText}에 해당합니다.`,
@@ -638,10 +702,15 @@ export default function PlayersBalancePage() {
           ? player.rankScore + (player.bonus ?? 0)
           : player.score;
 
-    const multiplier =
-      roleType === "MAIN" ? 1 : roleType === "SUB" ? 0.85 : 0.75;
-    const score = Number((baseScore * multiplier).toFixed(2));
-    const roleLoss = Number((baseScore - score).toFixed(2));
+    const rolePenalty =
+      roleType === "MAIN"
+        ? 0
+        : roleType === "SUB"
+          ? player.scoreBreakdown?.rolePenalty ?? player.rolePenalty ?? 5
+          : player.scoreBreakdown?.rolePenalty ?? player.rolePenalty ?? 10;
+    const score = Number(Math.max(0, baseScore - rolePenalty).toFixed(2));
+    const roleLoss = Number(rolePenalty.toFixed(2));
+    const multiplier = 1;
 
     return {
       roleType,
@@ -652,6 +721,8 @@ export default function PlayersBalancePage() {
           player.currentTierScore ?? player.scoreBreakdown?.currentTierScore,
         peakTierScore:
           player.peakTierScore ?? player.scoreBreakdown?.peakTierScore,
+        inhouseScore:
+          player.inhouseScore ?? player.scoreBreakdown?.inhouseScore ?? 50,
         tierBaseScore:
           player.baseTierScore ??
           player.adjustedScore ??
@@ -688,20 +759,14 @@ export default function PlayersBalancePage() {
               (player.adjustedScore ??
                 player.scoreBreakdown?.adjustedScore ??
                 player.baseTierScore ??
-                0) *
-                0.7 +
-              (player.rankScore ??
-                player.scoreBreakdown?.rankScore ??
-                player.adjustedScore ??
-                player.baseTierScore ??
-                0) *
-                0.3
+                0)
             ).toFixed(2),
           ),
         sTierBonus: player.bonus ?? player.scoreBreakdown?.sTierBonus ?? 0,
         finalBaseScore: baseScore,
         roleMultiplier: multiplier,
         roleLoss,
+        rolePenalty,
         finalScore: score,
       },
       explanation: buildManualExplanation({
@@ -709,7 +774,7 @@ export default function PlayersBalancePage() {
         position,
         roleType,
         baseScore,
-        multiplier,
+        rolePenalty,
         score,
       }),
     };
@@ -814,20 +879,20 @@ export default function PlayersBalancePage() {
 
   function getRoleMultiplier(roleType: RoleType) {
     if (roleType === "MAIN") return 1;
-    if (roleType === "SUB") return 0.85;
-    return 0.75;
+    if (roleType === "SUB") return 1;
+    return 1;
   }
 
   function getRoleReason(player: AssignedPlayer) {
     if (player.roleType === "MAIN") {
-      return `${player.position}이(가) 선택한 주 포지션에 포함되어 기준 점수의 100%가 반영되었습니다.`;
+      return `${player.position}이(가) 선택한 주 포지션에 포함되어 배정 감점 없이 계산되었습니다.`;
     }
 
     if (player.roleType === "SUB") {
-      return `${player.position}이(가) 선택한 부 포지션에 포함되어 기준 점수의 85%가 반영되었습니다.`;
+      return `${player.position}이(가) 선택한 부 포지션에 포함되어 부 포지션 감점이 적용되었습니다.`;
     }
 
-    return `${player.position}이(가) 선택한 주/부 포지션에 포함되지 않아 자동배정 기준으로 기준 점수의 75%가 반영되었습니다.`;
+    return `${player.position}이(가) 선택한 주/부 포지션에 포함되지 않아 자동배정 감점이 적용되었습니다.`;
   }
 
   function formatPercent(value?: number | null) {
@@ -866,9 +931,9 @@ export default function PlayersBalancePage() {
       breakdown.rankScore ??
       player.rankScore ??
       internalRankBaseScore + rankAddedScore;
-    const tierWeight = breakdown.tierWeight ?? player.tierWeight ?? 0.7;
+    const tierWeight = breakdown.tierWeight ?? player.tierWeight ?? 1;
     const internalRankWeight =
-      breakdown.internalRankWeight ?? player.internalRankWeight ?? 0.3;
+      breakdown.internalRankWeight ?? player.internalRankWeight ?? 0;
     const mixedBaseScore =
       breakdown.mixedBaseScore ??
       player.mixedBaseScore ??
@@ -880,7 +945,12 @@ export default function PlayersBalancePage() {
     const multiplier =
       breakdown.roleMultiplier ?? getRoleMultiplier(player.roleType);
     const roleLoss =
-      breakdown.roleLoss ?? Number((finalBaseScore - player.score).toFixed(2));
+      breakdown.roleLoss ?? breakdown.rolePenalty ?? player.rolePenalty ?? Number((finalBaseScore - player.score).toFixed(2));
+    const soloRecentFormBonus = breakdown.soloRecentFormBonus ?? player.soloRecentFormBonus ?? 0;
+    const soloApplyPositionMatchBonus = breakdown.soloApplyPositionMatchBonus ?? player.soloApplyPositionMatchBonus ?? 0;
+    const positionSkillBonus = breakdown.positionSkillBonus ?? player.positionSkillBonus ?? 0;
+    const mmrBonus = breakdown.mmrBonus ?? player.mmrBonus ?? 0;
+    const balanceOverrideScore = breakdown.balanceOverrideScore ?? player.balanceOverrideScore ?? 0;
     const finalScore = breakdown.finalScore ?? player.score;
 
     return {
@@ -899,6 +969,11 @@ export default function PlayersBalancePage() {
       finalBaseScore,
       multiplier,
       roleLoss,
+      soloRecentFormBonus,
+      soloApplyPositionMatchBonus,
+      positionSkillBonus,
+      mmrBonus,
+      balanceOverrideScore,
       finalScore,
     };
   }
@@ -911,6 +986,7 @@ export default function PlayersBalancePage() {
 
       return {
         ...alternatives[index],
+        soloSync: prev.soloSync ?? alternatives[index].soloSync ?? null,
         alternatives,
       };
     });
@@ -928,7 +1004,7 @@ export default function PlayersBalancePage() {
         <div className="balance-alternative-head">
           <div>
             <strong>자동 계산 추천안</strong>
-            <span>1안은 팀 총점, 2안은 라인별 균형, 3안은 주포지션 만족도를 우선합니다.</span>
+            <span>모든 안은 고티어 주포지션을 우선한 뒤, 1안은 총합, 2안은 라인 균형, 3안은 포지션 만족도를 우선합니다.</span>
           </div>
           <b>{selectedResultIndex >= 0 ? `${selectedResultIndex + 1}안 선택 중` : "수동 조정 중"}</b>
         </div>
@@ -951,8 +1027,9 @@ export default function PlayersBalancePage() {
                 <span className="balance-alternative-button__no">{option.optionNo ?? index + 1}안</span>
                 <strong>{option.optionTitle ?? `${grade.grade} · ${grade.label}`}</strong>
                 <small>{option.optionDescription ?? grade.label}</small>
-                <em>RED {option.redTotal.toFixed(1)} / BLUE {option.blueTotal.toFixed(1)}</em>
+                <em>RED {option.redTotal.toFixed(1)} / BLUE {option.blueTotal.toFixed(1)} / 품질 {Number(option.qualityScore ?? 0).toFixed(1)}</em>
                 <b>차이 {option.diff.toFixed(1)} · 가중라인 {Number(option.weightedLineDiff ?? option.lineDiffTotal ?? 0).toFixed(1)} · 상체 {Number(option.frontSideDiff ?? 0).toFixed(1)} · 미드정글 {Number(option.midJglDiff ?? 0).toFixed(1)} · 바텀 {Number(option.bottomDiff ?? 0).toFixed(1)}</b>
+                {option.warningMessages?.length ? <small>{option.warningMessages.join(" / ")}</small> : null}
               </button>
             );
           })}
@@ -974,7 +1051,7 @@ export default function PlayersBalancePage() {
           <div>
             <div className="balance-score-evidence-title">점수 근거 상세</div>
             <div className="balance-score-evidence-desc">
-              팀 카드는 짧게 유지하고, 티어 기준점수·내부 보정·포지션 반영
+              팀 카드는 짧게 유지하고, 최고티어 60%·현재티어 30%·내전지표 10%와 포지션 반영
               과정을 이 영역에서 확인합니다.
             </div>
           </div>
@@ -1149,13 +1226,10 @@ export default function PlayersBalancePage() {
                       </div>
                       <div className="balance-score-flow__arrow">→</div>
                       <div className="balance-score-flow__item balance-score-flow__item--final">
-                        <span>5. 포지션 계산 점수</span>
+                        <span>5. 보정/감점 후 점수</span>
                         <strong>{formatDecimal(calc.finalScore)}</strong>
                         <p>
-                          {roleText} 반영률 {Math.round(multiplier * 100)}%
-                          적용: {formatDecimal(calc.finalBaseScore)} ×{" "}
-                          {multiplier.toFixed(1)} ={" "}
-                          {formatDecimal(calculatedByPosition)}
+                          솔로랭 보정 {formatDecimal(calc.soloRecentFormBonus)}, 포지션 보정 {formatDecimal(calc.positionSkillBonus)}(솔랭/신청 일치 {formatDecimal(calc.soloApplyPositionMatchBonus)}), 내부 MMR 보정 {formatDecimal(calc.mmrBonus)}, 수동 보정 {formatDecimal(calc.balanceOverrideScore)}, 배정 감점 {formatDecimal(calc.roleLoss)}을 반영해 {formatDecimal(calculatedByPosition)}점입니다.
                         </p>
                       </div>
                     </div>
@@ -1208,6 +1282,18 @@ export default function PlayersBalancePage() {
                       <div>
                         <span>최종 기준점수</span>
                         <strong>{formatDecimal(baseScore)}</strong>
+                      </div>
+                      <div>
+                        <span>솔로랭 최근폼</span>
+                        <strong>{formatDecimal(calc.soloRecentFormBonus)}</strong>
+                      </div>
+                      <div>
+                        <span>포지션 숙련도</span>
+                        <strong>{formatDecimal(calc.positionSkillBonus)}</strong>
+                      </div>
+                      <div>
+                        <span>관리자 수동 보정</span>
+                        <strong>{formatDecimal(calc.balanceOverrideScore)}</strong>
                       </div>
                       <div>
                         <span>배정 기준</span>
@@ -1387,8 +1473,9 @@ export default function PlayersBalancePage() {
     }
   }
 
-  async function handleSubmit() {
+  async function handleSubmit(syncSoloRank = false) {
     setLoading(true);
+    setLoadingMode(syncSoloRank ? "sync" : "fast");
     setErrorMessage("");
     setResult(null);
 
@@ -1406,7 +1493,9 @@ export default function PlayersBalancePage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          syncSoloRank,
           players: rows.map((row) => ({
+            playerId: row.playerId,
             name: row.name.trim(),
             mainPosition: row.mainPosition,
             mainPositions: row.mainPositions,
@@ -1452,6 +1541,7 @@ export default function PlayersBalancePage() {
       setErrorMessage("팀 밸런스 계산 중 오류가 발생했습니다.");
     } finally {
       setLoading(false);
+      setLoadingMode(null);
     }
   }
 
@@ -1652,10 +1742,19 @@ export default function PlayersBalancePage() {
             <button
               type="button"
               className="app-button"
-              onClick={handleSubmit}
+              onClick={() => handleSubmit(false)}
               disabled={!canSubmit || loading}
             >
-              {loading ? "계산 중..." : "계산하기"}
+              {loading && loadingMode === "fast" ? "계산 중..." : "빠른 계산"}
+            </button>
+
+            <button
+              type="button"
+              className="app-button"
+              onClick={() => handleSubmit(true)}
+              disabled={!canSubmit || loading}
+            >
+              {loading && loadingMode === "sync" ? "갱신 후 계산 중..." : "솔로랭 갱신 후 계산"}
             </button>
 
             <button
@@ -1706,6 +1805,16 @@ export default function PlayersBalancePage() {
                         </strong>
                       </div>
                     </div>
+                    <div className="balance-form-head__desc">
+                      품질 점수 {Number(result.qualityScore ?? 0).toFixed(1)}점
+                      {result.recommendedAlternative ? ` · 추천: ${result.recommendedAlternative.optionNo}안 ${result.recommendedAlternative.optionTitle ?? ""}` : ""}
+                      {result.warningMessages?.length ? ` · 주의: ${result.warningMessages.join(" / ")}` : ""}
+                    </div>
+                    {result.soloSync ? (
+                      <div className="balance-form-head__desc">
+                        솔로랭 갱신: 성공 {result.soloSync.synced}명 / 스킵 {result.soloSync.skipped}명 / 실패 {result.soloSync.failed}명
+                      </div>
+                    ) : null}
                   </div>
                   <div className="balance-line-strip">
                     {lines.map((line) => (

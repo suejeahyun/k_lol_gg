@@ -16,6 +16,8 @@ type UpdatePlayerBody = {
   tag?: string;
   peakTier?: string | null;
   currentTier?: string | null;
+  balanceOverrideScore?: number | null;
+  balanceOverrideReason?: string | null;
 };
 
 function normalizeTier(value?: string | null) {
@@ -125,6 +127,11 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const tag = body.tag?.trim();
     const peakTier = normalizeTier(body.peakTier);
     const currentTier = normalizeTier(body.currentTier);
+    const balanceOverrideScore =
+      typeof body.balanceOverrideScore === "number"
+        ? Math.max(-10, Math.min(10, body.balanceOverrideScore))
+        : 0;
+    const balanceOverrideReason = body.balanceOverrideReason?.trim() || null;
 
     if (!name || !nickname || !tag) {
       return NextResponse.json(
@@ -169,6 +176,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
           tag,
           peakTier,
           currentTier,
+          balanceOverrideScore,
+          balanceOverrideReason,
           isActive: true,
           deactivatedAt: null,
         },

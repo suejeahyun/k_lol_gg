@@ -6,6 +6,7 @@ import { validateMatchCreateInput } from "@/validations/match";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { recalculateSeasonStats } from "@/lib/stats/recalculate";
 import { parseKstDateTime } from "@/lib/date/kst";
+import { updateInternalMmrAfterMatch } from "@/lib/balance/internal-mmr";
 
 type Team = "BLUE" | "RED";
 type Position = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
@@ -187,6 +188,7 @@ export async function POST(req: Request) {
       });
 
       await recalculateSeasonStats(body.seasonId, tx);
+      await updateInternalMmrAfterMatch(tx, match);
 
       return match;
     });
