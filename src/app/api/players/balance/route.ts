@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { rejectIfRateLimited } from "@/lib/rate-limit";
 
 type Team = "RED" | "BLUE";
 type Position = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
@@ -1096,6 +1097,21 @@ function compareByPlan(kind: PlanKind) {
 
 export async function POST(request: NextRequest) {
   try {
+    const rateLimitRejected = await rejectIfRateLimited(request, {
+      action: "TEAM_BALANCE_CALCULATE",
+      limit: 20,
+      windowSeconds: 600,
+    });
+    if (rateLimitRejected) return rateLimitRejected;
+
+    const contentLength = Number(request.headers.get("content-length") ?? "0");
+    if (contentLength > 64 * 1024) {
+      return NextResponse.json(
+        { message: "요청 데이터가 너무 큽니다." },
+        { status: 413 },
+      );
+    }
+
     const body = (await request.json()) as RequestBody;
 
     if (!body || !Array.isArray(body.players) || body.players.length !== 10) {

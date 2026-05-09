@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import { requireApprovedUser } from "@/lib/auth/session";
+import { rejectIfRateLimited } from "@/lib/rate-limit";
 import {
   calculateWinRate,
   findParticipantByPuuid,
@@ -61,8 +62,14 @@ function getSubRuneId(
   return participant.perks?.styles?.[1]?.style ?? null;
 }
 
-export async function POST(_req: NextRequest, context: RouteContext) {
+export async function POST(req: NextRequest, context: RouteContext) {
   try {
+    const rateLimitRejected = await rejectIfRateLimited(req, {
+      action: "RIOT_RECENT_SYNC",
+      limit: 12,
+      windowSeconds: 600,
+    });
+    if (rateLimitRejected) return rateLimitRejected;
     const { playerId } = await context.params;
     const parsedPlayerId = Number(playerId);
 

@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import { verifyAuthToken } from "@/lib/auth/token";
 import { getTodayKstRange } from "@/lib/date/kst";
+import { rejectIfRateLimited } from "@/lib/rate-limit";
 
 const POSITIONS = ["TOP", "JGL", "MID", "ADC", "SUP", "ALL"] as const;
 
@@ -135,6 +136,12 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const rateLimitRejected = await rejectIfRateLimited(req, {
+      action: "SEASON_PARTICIPATION_APPLY",
+      limit: 12,
+      windowSeconds: 600,
+    });
+    if (rateLimitRejected) return rateLimitRejected;
     const body = await req.json().catch(() => ({}));
 
     const mainPosition = body.mainPosition;
@@ -220,6 +227,12 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
+    const rateLimitRejected = await rejectIfRateLimited(req, {
+      action: "SEASON_PARTICIPATION_CANCEL",
+      limit: 12,
+      windowSeconds: 600,
+    });
+    if (rateLimitRejected) return rateLimitRejected;
     const body = await req.json().catch(() => ({}));
     const playerId = Number(body.playerId);
 

@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import { requireApprovedUser } from "@/lib/auth/session";
+import { rejectIfRateLimited } from "@/lib/rate-limit";
 
 const APPLY_POSITIONS = ["TOP", "JGL", "MID", "ADC", "SUP", "ALL"] as const;
 
@@ -104,6 +105,13 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
 
 export async function POST(req: NextRequest, { params }: RouteContext) {
   try {
+    const rateLimitRejected = await rejectIfRateLimited(req, {
+      action: "DESTRUCTION_PARTICIPATION_APPLY",
+      limit: 12,
+      windowSeconds: 600,
+    });
+    if (rateLimitRejected) return rateLimitRejected;
+
     const user = await requireApprovedUser();
 
     if (!user.playerId) {

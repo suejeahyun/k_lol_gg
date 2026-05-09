@@ -1,31 +1,45 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authConstants } from "@/lib/auth";
+import { verifyAuthToken } from "@/lib/auth/token";
+
+function isApprovedAdminUserToken(token?: string) {
+  if (!token) return false;
+
+  const payload = verifyAuthToken(token);
+
+  return Boolean(
+    payload &&
+      payload.status === "APPROVED" &&
+      (payload.role === "ADMIN" || payload.role === "SUPER_ADMIN"),
+  );
+}
 
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // API 요청은 로그인 검사 제외
   if (pathname.startsWith("/api")) {
     return NextResponse.next();
   }
 
-  // 관리자 페이지가 아니면 통과
   if (!pathname.startsWith("/admin")) {
     return NextResponse.next();
   }
 
-  // 로그인 페이지는 통과
   if (pathname === "/admin/login") {
     return NextResponse.next();
   }
 
-  const token = req.cookies.get(authConstants.ADMIN_TOKEN_KEY)?.value;
+  const legacyAdminToken = req.cookies.get(authConstants.ADMIN_TOKEN_KEY)?.value;
+  const userToken = req.cookies.get("user_token")?.value;
 
-  if (token !== authConstants.ADMIN_TOKEN_VALUE) {
-    return NextResponse.redirect(new URL("/admin/login", req.url));
+  if (
+    legacyAdminToken === authConstants.ADMIN_TOKEN_VALUE ||
+    isApprovedAdminUserToken(userToken)
+  ) {
+    return NextResponse.next();
   }
 
-  return NextResponse.next();
+  return NextResponse.redirect(new URL("/admin/login", req.url));
 }
 
 export const config = {

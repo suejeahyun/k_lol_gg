@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Position } from "@prisma/client";
+import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { rejectIfRateLimited } from "@/lib/rate-limit";
 
 type BalanceMode = "POSITION" | "ARAM";
 
@@ -115,7 +117,25 @@ function buildPositionTeams(participants: ParticipantInput[]): BalancedTeam[] {
 }
 
 export async function POST(req: NextRequest) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
   try {
+    const rateLimitRejected = await rejectIfRateLimited(req, {
+      action: "EVENT_TEAM_BALANCE",
+      limit: 20,
+      windowSeconds: 600,
+    });
+    if (rateLimitRejected) return rateLimitRejected;
+
+    const contentLength = Number(req.headers.get("content-length") ?? "0");
+    if (contentLength > 64 * 1024) {
+      return NextResponse.json(
+        { message: "요청 데이터가 너무 큽니다." },
+        { status: 413 },
+      );
+    }
+
     const body = await req.json();
 
     const mode = String(body.mode ?? "POSITION");

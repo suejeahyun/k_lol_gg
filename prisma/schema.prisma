@@ -184,9 +184,10 @@ model MatchGame {
   durationMin Int
   winnerTeam  Team
 
-  series       MatchSeries        @relation(fields: [seriesId], references: [id])
+  series       MatchSeries        @relation(fields: [seriesId], references: [id], onDelete: Cascade)
   participants MatchParticipant[]
 
+  @@unique([seriesId, gameNumber])
   @@index([seriesId, gameNumber])
 }
 
@@ -202,7 +203,7 @@ model MatchParticipant {
   deaths  Int
   assists Int
 
-  game     MatchGame @relation(fields: [gameId], references: [id])
+  game     MatchGame @relation(fields: [gameId], references: [id], onDelete: Cascade)
   player   Player    @relation(fields: [playerId], references: [id])
   champion Champion  @relation(fields: [championId], references: [id])
 
@@ -223,7 +224,7 @@ model PlayerSeasonStat {
   mvpCount           Int   @default(0)
 
   player Player @relation(fields: [playerId], references: [id])
-  season Season @relation(fields: [seasonId], references: [id])
+  season Season @relation(fields: [seasonId], references: [id], onDelete: Cascade)
 
   @@unique([playerId, seasonId])
   @@index([seasonId, totalGames])
@@ -275,8 +276,11 @@ model SeasonResult {
   playerId Int
   value    Float
 
-  season Season @relation(fields: [seasonId], references: [id])
+  season Season @relation(fields: [seasonId], references: [id], onDelete: Cascade)
   player Player @relation(fields: [playerId], references: [id])
+
+  @@unique([seasonId, category, playerId])
+  @@index([seasonId, category, value])
 }
 
 model RateLimitLog {
@@ -289,12 +293,23 @@ model RateLimitLog {
 }
 
 model AdminLog {
-  id        Int      @id @default(autoincrement())
-  action    String
-  message   String
-  createdAt DateTime @default(now())
+  id         Int      @id @default(autoincrement())
+  action     String
+  message    String
+  actorId    Int?
+  actorType  String?
+  actorUserId String?
+  targetType String?
+  targetId   Int?
+  beforeJson Json?
+  afterJson  Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
 
   @@index([action])
+  @@index([actorId])
+  @@index([targetType, targetId])
   @@index([createdAt])
 }
 
@@ -361,6 +376,9 @@ model EventMatch {
   participants         EventParticipant[]
   matches              EventTournamentMatch[]
   participationApplies EventParticipationApply[]
+
+  @@index([status, eventDate])
+  @@index([galleryImageId])
 }
 
 model EventTeam {
@@ -370,12 +388,15 @@ model EventTeam {
   seed    Int?
   score   Float  @default(0)
 
-  event EventMatch @relation(fields: [eventId], references: [id])
+  event EventMatch @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   members EventParticipant[]
 
   matchesA EventTournamentMatch[] @relation("EventTeamA")
   matchesB EventTournamentMatch[] @relation("EventTeamB")
+
+  @@unique([eventId, name])
+  @@index([eventId, seed])
 }
 
 model EventParticipant {
@@ -387,11 +408,12 @@ model EventParticipant {
 
   balanceScore Float @default(0)
 
-  event  EventMatch @relation(fields: [eventId], references: [id])
-  team   EventTeam? @relation(fields: [teamId], references: [id])
+  event  EventMatch @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  team   EventTeam? @relation(fields: [teamId], references: [id], onDelete: SetNull)
   player Player     @relation(fields: [playerId], references: [id])
 
   @@unique([eventId, playerId])
+  @@index([eventId, teamId])
 }
 
 model EventTournamentMatch {
@@ -409,9 +431,12 @@ model EventTournamentMatch {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  event EventMatch @relation(fields: [eventId], references: [id])
+  event EventMatch @relation(fields: [eventId], references: [id], onDelete: Cascade)
   teamA EventTeam  @relation("EventTeamA", fields: [teamAId], references: [id])
   teamB EventTeam  @relation("EventTeamB", fields: [teamBId], references: [id])
+
+  @@unique([eventId, stage, round])
+  @@index([eventId, winnerTeamId])
 }
 
 model DestructionTournament {
@@ -436,6 +461,9 @@ model DestructionTournament {
   participants         DestructionParticipant[]
   matches              DestructionMatch[]
   participationApplies DestructionParticipationApply[]
+
+  @@index([status, startDate])
+  @@index([galleryImageId])
 }
 
 model DestructionTeam {
@@ -448,13 +476,16 @@ model DestructionTeam {
   wins   Int @default(0)
   losses Int @default(0)
 
-  tournament DestructionTournament @relation(fields: [tournamentId], references: [id])
+  tournament DestructionTournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   captain    Player                @relation(fields: [captainId], references: [id])
 
   members DestructionParticipant[]
 
   matchesA DestructionMatch[] @relation("DestructionTeamA")
   matchesB DestructionMatch[] @relation("DestructionTeamB")
+
+  @@unique([tournamentId, name])
+  @@index([tournamentId, points, wins, losses])
 }
 
 model DestructionParticipant {
@@ -466,11 +497,12 @@ model DestructionParticipant {
 
   balanceScore Float @default(0)
 
-  tournament DestructionTournament @relation(fields: [tournamentId], references: [id])
-  team       DestructionTeam?      @relation(fields: [teamId], references: [id])
+  tournament DestructionTournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  team       DestructionTeam?      @relation(fields: [teamId], references: [id], onDelete: SetNull)
   player     Player                @relation(fields: [playerId], references: [id])
 
   @@unique([tournamentId, playerId])
+  @@index([tournamentId, teamId])
 }
 
 model DestructionMatch {
@@ -490,10 +522,13 @@ model DestructionMatch {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  tournament DestructionTournament @relation(fields: [tournamentId], references: [id])
+  tournament DestructionTournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 
   teamA DestructionTeam @relation("DestructionTeamA", fields: [teamAId], references: [id])
   teamB DestructionTeam @relation("DestructionTeamB", fields: [teamBId], references: [id])
+
+  @@unique([tournamentId, stage, round])
+  @@index([tournamentId, winnerTeamId])
 }
 
 model SeasonParticipationApply {

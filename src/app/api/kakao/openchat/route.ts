@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rejectIfRateLimited } from "@/lib/rate-limit";
 import { getKakaoHelpMessage, parseKakaoCommand } from "@/lib/kakao/parseKakaoCommand";
 import {
   formatPlayerRecordMessage,
@@ -31,6 +32,20 @@ function jsonReply(reply: string, status = 200) {
       },
     },
   );
+}
+
+
+function rejectIfInvalidSecret(req: NextRequest) {
+  const secret = process.env.KAKAO_OPENCHAT_SECRET;
+
+  if (!secret) return null;
+
+  const headerSecret = req.headers.get("x-kakao-openchat-secret");
+  const bearer = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
+
+  if (headerSecret === secret || bearer === secret) return null;
+
+  return jsonReply("인증되지 않은 요청입니다.", 401);
 }
 
 function extractMessage(body: KakaoOpenchatBody) {
@@ -88,6 +103,16 @@ async function handleMessage(message: string) {
 
 export async function POST(req: NextRequest) {
   try {
+    const secretRejected = rejectIfInvalidSecret(req);
+    if (secretRejected) return secretRejected;
+
+    const rateLimitRejected = await rejectIfRateLimited(req, {
+      action: "KAKAO_OPENCHAT",
+      limit: 60,
+      windowSeconds: 60,
+    });
+    if (rateLimitRejected) return rateLimitRejected;
+
     const body = (await req.json().catch(() => ({}))) as KakaoOpenchatBody;
     return handleMessage(extractMessage(body));
   } catch (error) {
@@ -101,6 +126,16 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
+  const secretRejected = rejectIfInvalidSecret(req);
+  if (secretRejected) return secretRejected;
+
+  const rateLimitRejected = await rejectIfRateLimited(req, {
+    action: "KAKAO_OPENCHAT",
+    limit: 60,
+    windowSeconds: 60,
+  });
+  if (rateLimitRejected) return rateLimitRejected;
+
   const message = req.nextUrl.searchParams.get("message") ?? "도움말";
   return handleMessage(message);
 }

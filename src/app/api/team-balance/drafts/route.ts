@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import { addDays, getKstDateKey, getKstDisplayDate, getKstStartOfDate } from "@/lib/date/kst";
 import { requireApprovedUser } from "@/lib/auth/session";
+import { requireApprovedUserOrAdmin, getAccessErrorResponseMessage } from "@/lib/auth/access";
+import { rejectIfRateLimited } from "@/lib/rate-limit";
 
 type TeamValue = "BLUE" | "RED";
 type PositionValue = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
@@ -51,6 +53,7 @@ function startOfTodayKst() {
 
 export async function GET() {
   try {
+    await requireApprovedUserOrAdmin();
     const from = addDays(startOfTodayKst(), -(LOOKBACK_DAYS - 1));
 
     const drafts = await prisma.teamBalanceDraft.findMany({
@@ -80,16 +83,27 @@ export async function GET() {
     });
   } catch (error: unknown) {
     console.error("[TEAM_BALANCE_DRAFTS_GET_ERROR]", error);
+    const response = getAccessErrorResponseMessage(
+      error,
+      "팀 밸런스 결과 목록 조회 중 오류가 발생했습니다.",
+    );
 
     return NextResponse.json(
-      { message: "팀 밸런스 결과 목록 조회 중 오류가 발생했습니다." },
-      { status: 500 }
+      { message: response.message },
+      { status: response.status },
     );
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
+    const rateLimitRejected = await rejectIfRateLimited(req, {
+      action: "TEAM_BALANCE_DRAFT_CREATE",
+      limit: 12,
+      windowSeconds: 600,
+    });
+    if (rateLimitRejected) return rateLimitRejected;
+
     await requireApprovedUser();
 
     const body = (await req.json()) as DraftPostBody;

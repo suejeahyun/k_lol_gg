@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { rejectIfRateLimited } from "@/lib/rate-limit";
 import {
   calculateWinRate,
   findParticipantByPuuid,
@@ -22,6 +23,7 @@ type RouteContext = {
 };
 
 const FULL_SYNC_BATCH_SIZE = 100;
+const FULL_SYNC_MAX_MATCHES = 200;
 const FULL_SYNC_COOLDOWN_HOURS = 24;
 
 function isCooldownActive(lastSyncedAt: Date | null | undefined) {
@@ -75,6 +77,10 @@ async function getFullSyncMatchIds(puuid: string) {
 
     allMatchIds.push(...matchIds);
 
+    if (allMatchIds.length >= FULL_SYNC_MAX_MATCHES) {
+      break;
+    }
+
     if (matchIds.length < FULL_SYNC_BATCH_SIZE) {
       break;
     }
@@ -82,14 +88,20 @@ async function getFullSyncMatchIds(puuid: string) {
     start += FULL_SYNC_BATCH_SIZE;
   }
 
-  return Array.from(new Set(allMatchIds));
+  return Array.from(new Set(allMatchIds)).slice(0, FULL_SYNC_MAX_MATCHES);
 }
 
-export async function POST(_req: NextRequest, context: RouteContext) {
+export async function POST(req: NextRequest, context: RouteContext) {
   const rejected = await rejectIfNotAdmin();
   if (rejected) return rejected;
 
   try {
+    const rateLimitRejected = await rejectIfRateLimited(req, {
+      action: "RIOT_FULL_SYNC",
+      limit: 3,
+      windowSeconds: 3600,
+    });
+    if (rateLimitRejected) return rateLimitRejected;
     const { playerId } = await context.params;
     const parsedPlayerId = Number(playerId);
 

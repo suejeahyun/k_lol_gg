@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 
+import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 
@@ -70,9 +71,11 @@ export default async function HighlightsPage() {
                 >
                   <div className="highlight-winner-image-card__thumb-wrap">
                     {thumbnail ? (
-                      <img
+                      <Image
                         src={thumbnail}
                         alt={image.title}
+                        width={480}
+                        height={270}
                         className="highlight-winner-image-card__thumb"
                       />
                     ) : (
@@ -115,12 +118,14 @@ export default async function HighlightsPage() {
                 className="highlight-card"
               >
                 <div className="highlight-card__thumb-wrap">
-                  <img
+                  <Image
                     src={
                       highlight.thumbnailUrl ||
                       `https://img.youtube.com/vi/${highlight.youtubeId}/hqdefault.jpg`
                     }
                     alt={highlight.title}
+                    width={640}
+                    height={360}
                     className="highlight-card__thumb"
                   />
                   <span className="highlight-card__play">▶</span>

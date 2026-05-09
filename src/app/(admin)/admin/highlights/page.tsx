@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 
+import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import HighlightDeleteButton from "@/features/highlight/HighlightDeleteButton";
@@ -39,9 +40,11 @@ export default async function AdminHighlightsPage() {
           {highlights.map((highlight) => (
             <article key={highlight.id} className="highlight-admin-card">
               <div className="highlight-admin-card__thumb-wrap">
-                <img
+                <Image
                   src={highlight.thumbnailUrl || `https://img.youtube.com/vi/${highlight.youtubeId}/hqdefault.jpg`}
                   alt={highlight.title}
+                  width={320}
+                  height={180}
                   className="highlight-admin-card__thumb"
                 />
               </div>

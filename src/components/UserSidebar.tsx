@@ -39,8 +39,8 @@ const menuGroups = [
       { href: "/matches", label: "내전 목록", icon: Swords },
       { href: "/progress", label: "이벤트 / 멸망전", icon: Flame },
       { href: "/highlights", label: "하이라이트", icon: Flame },
-      { href: "/participation", label: "참가하기", icon: UserPlus, auth: true },
-      { href: "/players/balance", label: "팀 밸런스", icon: UserPlus, auth: true },
+      { href: "/participation", label: "참가하기", icon: UserPlus, auth: true, approvedOnly: true },
+      { href: "/players/balance", label: "팀 밸런스", icon: UserPlus, auth: true, approvedOnly: true },
     ],
   },
   {
@@ -84,6 +84,7 @@ export default function UserSidebar() {
   }, [pathname]);
 
   const isLoggedIn = Boolean(user);
+  const isApproved = user?.status === "APPROVED";
 
   return (
     <aside className="app-sidebar">
@@ -98,6 +99,7 @@ export default function UserSidebar() {
               <div className="app-sidebar__group-items">
                 {group.items.map((item) => {
                   if (item.auth && !isLoggedIn) return null;
+                  if ("approvedOnly" in item && item.approvedOnly && !isApproved) return null;
 
                   const Icon = item.icon;
 
