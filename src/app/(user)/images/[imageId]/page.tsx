@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
 import ImageSlider from "@/components/ImageSlider";
+import { coerceGalleryImageUrls } from "@/lib/gallery/winner-image-paths";
 
 type ImageDetailPageProps = {
   params: Promise<{
@@ -28,7 +29,7 @@ export default async function ImageDetailPage({
     notFound();
   }
 
-  const imageList = Array.isArray(image.imageUrl) ? image.imageUrl : [];
+  const imageList = coerceGalleryImageUrls(image.imageUrl);
 
   return (
     <div className="gallery-detail">

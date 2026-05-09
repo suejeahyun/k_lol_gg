@@ -2,6 +2,7 @@ import SafeGalleryImage from "@/components/SafeGalleryImage";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import GalleryImageDeleteButton from "@/features/gallery/GalleryImageDeleteButton";
+import { coerceGalleryImageUrls } from "@/lib/gallery/winner-image-paths";
 export const dynamic = "force-dynamic";
 
 
@@ -32,10 +33,7 @@ export default async function AdminImagesPage() {
           </div>
         ) : (
           images.map((image) => {
-            const imageList = Array.isArray(image.imageUrl)
-              ? image.imageUrl
-              : [];
-
+            const imageList = coerceGalleryImageUrls(image.imageUrl);
             const thumbnail = imageList[0] ?? "";
 
             return (

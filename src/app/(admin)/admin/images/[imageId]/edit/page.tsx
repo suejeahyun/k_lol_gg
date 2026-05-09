@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
 import GalleryImageForm from "@/features/gallery/GalleryImageForm";
+import { coerceGalleryImageUrls } from "@/lib/gallery/winner-image-paths";
 
 type PageProps = {
   params: Promise<{
@@ -42,7 +43,7 @@ export default async function AdminEditImagePage({ params }: PageProps) {
         initialData={{
           title: image.title,
           description: image.description,
-          imageUrl: image.imageUrl,
+          imageUrl: coerceGalleryImageUrls(image.imageUrl),
         }}
       />
     </div>

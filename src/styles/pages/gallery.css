@@ -398,3 +398,19 @@
   text-align: center;
   object-fit: initial;
 }
+
+.safe-gallery-image-fallback {
+  width: 100%;
+  height: 100%;
+}
+
+.gallery-card__image,
+.gallery-admin-card__thumbnail,
+.highlight-winner-image-card__thumb,
+.winner-slider__image,
+.destruction-image-list-card__image,
+.destruction-image-detail-card__image,
+.destruction-final-gallery__image,
+.event-final-gallery__image {
+  display: block;
+}

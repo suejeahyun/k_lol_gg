@@ -5,6 +5,7 @@ import SafeGalleryImage from "@/components/SafeGalleryImage";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
+import { coerceGalleryImageUrls } from "@/lib/gallery/winner-image-paths";
 
 type PageProps = {
   params: Promise<{
@@ -126,6 +127,8 @@ export default async function DestructionProgressDetailPage({
     (match) => match.stage === "FINAL"
   );
 
+  const galleryImageUrls = coerceGalleryImageUrls(tournament.galleryImage?.imageUrl);
+
   return (
     <main className="page-container destruction-detail-page">
       <div className="page-header">
@@ -198,9 +201,9 @@ export default async function DestructionProgressDetailPage({
             </div>
           </div>
 
-          {tournament.galleryImage?.imageUrl?.length ? (
+          {galleryImageUrls.length ? (
             <div className="destruction-final-gallery">
-              {tournament.galleryImage.imageUrl.map((imageUrl, index) => (
+              {galleryImageUrls.map((imageUrl, index) => (
                 <SafeGalleryImage
                   key={`${imageUrl}-${index}`}
                   src={imageUrl}

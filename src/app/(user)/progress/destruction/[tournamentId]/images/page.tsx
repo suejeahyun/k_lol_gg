@@ -4,6 +4,7 @@ import SafeGalleryImage from "@/components/SafeGalleryImage";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
+import { coerceGalleryImageUrls } from "@/lib/gallery/winner-image-paths";
 
 type PageProps = {
   params: Promise<{
@@ -30,7 +31,7 @@ export default async function DestructionImagesPage({ params }: PageProps) {
     notFound();
   }
 
-  const images = tournament.galleryImage?.imageUrl ?? [];
+  const images = coerceGalleryImageUrls(tournament.galleryImage?.imageUrl);
 
   return (
     <main className="page-container destruction-content-detail-page">

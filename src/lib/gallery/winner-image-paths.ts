@@ -90,3 +90,42 @@ export function normalizeGalleryImageUrls(urls: string[]): string[] {
       return true;
     });
 }
+
+export function coerceGalleryImageUrls(input: unknown): string[] {
+  if (Array.isArray(input)) {
+    return normalizeGalleryImageUrls(
+      input.filter((item): item is string => typeof item === "string")
+    );
+  }
+
+  if (typeof input !== "string") {
+    return [];
+  }
+
+  const value = input.trim();
+
+  if (!value) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(value) as unknown;
+
+    if (Array.isArray(parsed)) {
+      return coerceGalleryImageUrls(parsed);
+    }
+  } catch {
+    // 일반 문자열 URL은 그대로 처리합니다.
+  }
+
+  return normalizeGalleryImageUrls(
+    value
+      .split(/\r?\n|,/)
+      .map((url) => url.trim())
+      .filter(Boolean)
+  );
+}
+
+export function getGalleryThumbnailUrl(input: unknown): string {
+  return coerceGalleryImageUrls(input)[0] ?? "";
+}

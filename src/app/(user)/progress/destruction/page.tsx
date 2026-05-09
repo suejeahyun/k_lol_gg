@@ -1,7 +1,9 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
+import SafeGalleryImage from "@/components/SafeGalleryImage";
 import { prisma } from "@/lib/prisma/client";
+import { getGalleryThumbnailUrl } from "@/lib/gallery/winner-image-paths";
 
 function formatDate(date: Date | null) {
   if (!date) return "-";
@@ -62,21 +64,41 @@ export default async function DestructionProgressPage() {
         <div className="empty-box">등록된 멸망전이 없습니다.</div>
       ) : (
         <div className="destruction-progress-list">
-          {tournaments.map((tournament) => (
-            <Link
-              key={tournament.id}
-              href={`/progress/destruction/${tournament.id}`}
-              className="destruction-progress-card"
-            >
-              <div className="destruction-progress-card__top">
-                <span>{getStatusLabel(tournament.status)}</span>
-              </div>
+          {tournaments.map((tournament) => {
+            const thumbnail = getGalleryThumbnailUrl(tournament.galleryImage?.imageUrl);
 
-              <h2>{tournament.title}</h2>
+            return (
+              <Link
+                key={tournament.id}
+                href={`/progress/destruction/${tournament.id}`}
+                className="destruction-progress-card destruction-progress-card--with-image"
+              >
+                <div className="destruction-progress-card__preview">
+                  {thumbnail ? (
+                    <SafeGalleryImage
+                      src={thumbnail}
+                      alt={`${tournament.title} 대표 이미지`}
+                      width={480}
+                      height={270}
+                      className="destruction-progress-card__preview-image"
+                    />
+                  ) : (
+                    <div className="destruction-progress-card__preview-empty">
+                      우승 이미지 미등록
+                    </div>
+                  )}
+                </div>
 
-              <p>{tournament.description || "등록된 설명이 없습니다."}</p>
+                <div className="destruction-progress-card__content">
+                  <div className="destruction-progress-card__top">
+                    <span>{getStatusLabel(tournament.status)}</span>
+                  </div>
 
-              <div className="destruction-progress-card__meta">
+                  <h2>{tournament.title}</h2>
+
+                  <p>{tournament.description || "등록된 설명이 없습니다."}</p>
+
+                  <div className="destruction-progress-card__meta">
                 <div>
                   <span>시작일</span>
                   <strong>{formatDate(tournament.startDate)}</strong>
@@ -101,9 +123,11 @@ export default async function DestructionProgressPage() {
                   <span>경기</span>
                   <strong>{tournament.matches.length}개</strong>
                 </div>
-              </div>
-            </Link>
-          ))}
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       )}
     </main>

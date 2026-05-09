@@ -1,13 +1,14 @@
 "use client";
 
 import SafeGalleryImage from "@/components/SafeGalleryImage";
+import { coerceGalleryImageUrls } from "@/lib/gallery/winner-image-paths";
 import { useEffect, useMemo, useState } from "react";
 
 type GalleryWinnerImage = {
   id: number;
   title: string;
   description: string;
-  imageUrl: string[];
+  imageUrl: unknown;
 };
 
 type GalleryWinnerSliderProps = {
@@ -20,7 +21,7 @@ export default function GalleryWinnerSlider({
   const slideItems = useMemo(
     () =>
       images.flatMap((item) =>
-        item.imageUrl.map((url, index) => ({
+        coerceGalleryImageUrls(item.imageUrl).map((url, index) => ({
           id: `${item.id}-${index}`,
           title: item.title,
           description: item.description,

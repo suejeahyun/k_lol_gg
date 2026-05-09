@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import SafeGalleryImage from "@/components/SafeGalleryImage";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
+import { coerceGalleryImageUrls } from "@/lib/gallery/winner-image-paths";
 
 export default async function ImagesPage() {
   const images = await prisma.galleryImage.findMany({
@@ -20,7 +21,7 @@ export default async function ImagesPage() {
           <div className="gallery-list__empty">등록된 이미지가 없습니다.</div>
         ) : (
           images.map((image) => {
-            const imageList = Array.isArray(image.imageUrl) ? image.imageUrl : [];
+            const imageList = coerceGalleryImageUrls(image.imageUrl);
             const thumbnail = imageList[0] ?? "";
 
             return (

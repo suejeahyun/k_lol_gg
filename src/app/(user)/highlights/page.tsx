@@ -1,8 +1,10 @@
 export const dynamic = "force-dynamic";
 
 import Image from "next/image";
+import SafeGalleryImage from "@/components/SafeGalleryImage";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
+import { coerceGalleryImageUrls, getGalleryThumbnailUrl } from "@/lib/gallery/winner-image-paths";
 
 function formatDate(date: Date) {
   return new Date(date).toLocaleDateString("ko-KR", {
@@ -10,14 +12,6 @@ function formatDate(date: Date) {
     month: "2-digit",
     day: "2-digit",
   });
-}
-
-function getGalleryThumbnail(imageUrl: string[]) {
-  if (!Array.isArray(imageUrl) || imageUrl.length === 0) {
-    return "";
-  }
-
-  return imageUrl[0] ?? "";
 }
 
 export default async function HighlightsPage() {
@@ -60,8 +54,8 @@ export default async function HighlightsPage() {
         ) : (
           <div className="highlight-winner-image-list">
             {winnerImages.map((image) => {
-              const imageList = Array.isArray(image.imageUrl) ? image.imageUrl : [];
-              const thumbnail = getGalleryThumbnail(imageList);
+              const imageList = coerceGalleryImageUrls(image.imageUrl);
+              const thumbnail = getGalleryThumbnailUrl(image.imageUrl);
 
               return (
                 <Link
@@ -71,7 +65,7 @@ export default async function HighlightsPage() {
                 >
                   <div className="highlight-winner-image-card__thumb-wrap">
                     {thumbnail ? (
-                      <Image
+                      <SafeGalleryImage
                         src={thumbnail}
                         alt={image.title}
                         width={480}
