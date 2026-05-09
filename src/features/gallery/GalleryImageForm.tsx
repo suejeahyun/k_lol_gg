@@ -2,6 +2,11 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  buildDestructionWinnerImageUrls,
+  getDestructionWinnerImageCount,
+  normalizeGalleryImageUrls,
+} from "@/lib/gallery/winner-image-paths";
 
 type Props = {
   mode: "create" | "edit";
@@ -26,11 +31,11 @@ export default function GalleryImageForm({
 
   const [title, setTitle] = useState(initialData?.title ?? "");
   const [description, setDescription] = useState(initialData?.description ?? "");
-  const [imageUrl, setimageUrl] = useState<string[]>(
-    initialData?.imageUrl?.length
-      ? initialData.imageUrl
-      : [""]
+  const [imageUrl, setImageUrl] = useState<string[]>(
+    initialData?.imageUrl?.length ? initialData.imageUrl : [""]
   );
+  const [destructionRound, setDestructionRound] = useState("");
+  const [destructionImageCount, setDestructionImageCount] = useState("1");
   const [submitting, setSubmitting] = useState(false);
 
   const filledCount = useMemo(
@@ -39,34 +44,58 @@ export default function GalleryImageForm({
   );
 
   const handleChangeImageUrl = (index: number, value: string) => {
-    setimageUrl((prev) => prev.map((item, i) => (i === index ? value : item)));
+    setImageUrl((prev) => prev.map((item, i) => (i === index ? value : item)));
   };
 
   const handleAddImageInput = () => {
     if (imageUrl.length >= MAX_IMAGE_COUNT) return;
-    setimageUrl((prev) => [...prev, ""]);
+    setImageUrl((prev) => [...prev, ""]);
   };
 
   const handleRemoveImageInput = (index: number) => {
-    setimageUrl((prev) => {
+    setImageUrl((prev) => {
       const next = prev.filter((_, i) => i !== index);
       return next.length > 0 ? next : [""];
     });
   };
 
+  const handleFillDestructionPaths = () => {
+    const round = Number(destructionRound);
+
+    if (!Number.isInteger(round) || round <= 0) {
+      alert("멸망전 회차를 숫자로 입력해주세요.");
+      return;
+    }
+
+    const fallbackCount = getDestructionWinnerImageCount(round);
+    const selectedCount = Number(destructionImageCount);
+    const imageCount = Number.isInteger(selectedCount)
+      ? selectedCount
+      : fallbackCount;
+
+    setImageUrl(buildDestructionWinnerImageUrls(round, imageCount));
+  };
+
+  const handleRoundChange = (value: string) => {
+    setDestructionRound(value);
+
+    const round = Number(value);
+    if (Number.isInteger(round) && round > 0) {
+      setDestructionImageCount(String(getDestructionWinnerImageCount(round)));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const normalizedimageUrl = imageUrl
-      .map((url) => url.trim())
-      .filter(Boolean);
+    const normalizedImageUrl = normalizeGalleryImageUrls(imageUrl);
 
-    if (normalizedimageUrl.length === 0) {
+    if (normalizedImageUrl.length === 0) {
       alert("이미지를 최소 1개 이상 입력해주세요.");
       return;
     }
 
-    if (normalizedimageUrl.length > MAX_IMAGE_COUNT) {
+    if (normalizedImageUrl.length > MAX_IMAGE_COUNT) {
       alert("이미지는 최대 5개까지 등록할 수 있습니다.");
       return;
     }
@@ -82,7 +111,7 @@ export default function GalleryImageForm({
         body: JSON.stringify({
           title,
           description,
-          imageUrl: normalizedimageUrl,
+          imageUrl: normalizedImageUrl,
         }),
       });
 
@@ -112,7 +141,7 @@ export default function GalleryImageForm({
           className="admin-form__input"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="제목을 입력해주세요"
+          placeholder="예: 제 6회 멸망전 우승"
           required
         />
       </div>
@@ -129,12 +158,56 @@ export default function GalleryImageForm({
         />
       </div>
 
+      <div className="admin-form__group gallery-local-path-box">
+        <div className="admin-form__label-row">
+          <label className="admin-form__label">public 멸망전 이미지 자동 입력</label>
+          <span className="admin-form__helper">
+            /public/images/winners/destruction
+          </span>
+        </div>
+
+        <div className="gallery-local-path-box__row">
+          <input
+            type="number"
+            min={1}
+            className="admin-form__input"
+            value={destructionRound}
+            onChange={(e) => handleRoundChange(e.target.value)}
+            placeholder="회차 예: 5"
+          />
+
+          <select
+            className="admin-form__input"
+            value={destructionImageCount}
+            onChange={(e) => setDestructionImageCount(e.target.value)}
+            aria-label="이미지 개수"
+          >
+            {[1, 2, 3, 4, 5].map((count) => (
+              <option key={count} value={count}>
+                {count}장
+              </option>
+            ))}
+          </select>
+
+          <button
+            type="button"
+            className="admin-page__create-button"
+            onClick={handleFillDestructionPaths}
+          >
+            경로 자동 입력
+          </button>
+        </div>
+
+        <p className="gallery-local-path-box__help">
+          2~4회는 1장, 5회부터는 기본 5장으로 입력됩니다. 파일명은
+          <code>/images/winners/destruction/5/1.jpg</code> 형식을 사용합니다.
+        </p>
+      </div>
+
       <div className="admin-form__group">
         <div className="admin-form__label-row">
-          <label className="admin-form__label">이미지 URL</label>
-          <span className="admin-form__helper">
-            {filledCount} / 5
-          </span>
+          <label className="admin-form__label">이미지 경로</label>
+          <span className="admin-form__helper">{filledCount} / 5</span>
         </div>
 
         <div className="gallery-image-input-list">
@@ -145,7 +218,7 @@ export default function GalleryImageForm({
                 className="admin-form__input"
                 value={url}
                 onChange={(e) => handleChangeImageUrl(index, e.target.value)}
-                placeholder={`이미지 URL ${index + 1}`}
+                placeholder={`/images/winners/destruction/5/${index + 1}.jpg`}
               />
 
               <button
@@ -182,8 +255,8 @@ export default function GalleryImageForm({
               ? "등록 중..."
               : "수정 중..."
             : mode === "create"
-            ? "등록"
-            : "수정"}
+              ? "등록"
+              : "수정"}
         </button>
       </div>
     </form>

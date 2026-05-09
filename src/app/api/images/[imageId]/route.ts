@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { normalizeGalleryImageUrls } from "@/lib/gallery/winner-image-paths";
 
 type RouteContext = {
   params: Promise<{
@@ -69,7 +70,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     const title = body.title?.trim();
     const description = body.description?.trim();
     const imageUrl = Array.isArray(body.imageUrl)
-      ? body.imageUrl.map((url) => url.trim()).filter(Boolean)
+      ? normalizeGalleryImageUrls(body.imageUrl)
       : [];
 
     if (!title) {
