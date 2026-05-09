@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { normalizeGalleryImageUrl } from "@/lib/gallery/winner-image-paths";
 import { getYoutubeThumbnailUrls } from "@/lib/youtube";
 
@@ -13,6 +13,11 @@ type SafeHighlightThumbnailProps = Omit<
   thumbnailUrl?: string | null;
   alt: string;
   fallbackText?: string;
+};
+
+type FailedThumbnailState = {
+  key: string;
+  urls: Set<string>;
 };
 
 export default function SafeHighlightThumbnail({
@@ -34,13 +39,18 @@ export default function SafeHighlightThumbnail({
     return Array.from(new Set(urls.filter(Boolean)));
   }, [thumbnailUrl, youtubeId]);
 
-  const [index, setIndex] = useState(0);
+  const candidatesKey = candidates.join("|");
 
-  useEffect(() => {
-    setIndex(0);
-  }, [candidates.join("|")]);
+  const [failedState, setFailedState] = useState<FailedThumbnailState>({
+    key: "",
+    urls: new Set<string>(),
+  });
 
-  const src = candidates[index];
+  const failedUrls = failedState.key === candidatesKey
+    ? failedState.urls
+    : new Set<string>();
+
+  const src = candidates.find((candidate) => !failedUrls.has(candidate));
 
   if (!src) {
     return (
@@ -64,7 +74,18 @@ export default function SafeHighlightThumbnail({
       className={className}
       loading={loading}
       onError={() => {
-        setIndex((current) => current + 1);
+        setFailedState((current) => {
+          const nextUrls = current.key === candidatesKey
+            ? new Set(current.urls)
+            : new Set<string>();
+
+          nextUrls.add(src);
+
+          return {
+            key: candidatesKey,
+            urls: nextUrls,
+          };
+        });
       }}
     />
   );

@@ -121,6 +121,8 @@ type CandidateSnapshot = {
   mainImbalancePenalty: number;
   dataReliabilityPenalty: number;
   stompPenalty: number;
+  highTierPriorityPenalty: number;
+  remainingMainPriorityPenalty: number;
   balanceCost: number;
   mainAssignedCount: number;
   subAssignedCount: number;
@@ -901,6 +903,75 @@ function getMainImbalancePenalty(assignments: Assignment[]) {
   return Math.abs(redMain - blueMain) * 2;
 }
 
+function getHighTierPlayerIds(players: ResolvedPlayer[]) {
+  const sortedPlayers = [...players].sort((a, b) => {
+    if (b.finalBaseScore !== a.finalBaseScore) {
+      return b.finalBaseScore - a.finalBaseScore;
+    }
+
+    return a.id - b.id;
+  });
+
+  const sTierPlayers = sortedPlayers.filter((player) => player.bonus >= 5);
+  const highTierPlayers = sTierPlayers.length >= 2 ? sTierPlayers : sortedPlayers.slice(0, 4);
+
+  return new Set(highTierPlayers.map((player) => player.id));
+}
+
+function getHighTierPriorityPenalty(
+  assignments: Assignment[],
+  highTierPlayerIds: Set<number>,
+) {
+  const highTierAssignments = assignments.filter((assignment) =>
+    highTierPlayerIds.has(assignment.playerId),
+  );
+
+  const rolePenalty = highTierAssignments.reduce((sum, assignment) => {
+    if (assignment.roleType === "MAIN") return sum;
+    if (assignment.roleType === "SUB") return sum + 8;
+    return sum + 24;
+  }, 0);
+
+  const redHighTierCount = highTierAssignments.filter(
+    (assignment) => assignment.team === "RED",
+  ).length;
+  const blueHighTierCount = highTierAssignments.filter(
+    (assignment) => assignment.team === "BLUE",
+  ).length;
+
+  const teamSplitPenalty = Math.abs(redHighTierCount - blueHighTierCount) * 18;
+
+  const lineMismatchPenalty = POSITIONS.reduce((sum, position) => {
+    const red = getAssignment(assignments, "RED", position);
+    const blue = getAssignment(assignments, "BLUE", position);
+
+    if (!red || !blue) return sum;
+
+    const redIsHighTier = highTierPlayerIds.has(red.playerId);
+    const blueIsHighTier = highTierPlayerIds.has(blue.playerId);
+
+    if (redIsHighTier === blueIsHighTier) return sum;
+
+    return sum + Math.min(10, getLineDiff(assignments, position) * 0.45);
+  }, 0);
+
+  return Number((rolePenalty + teamSplitPenalty + lineMismatchPenalty).toFixed(2));
+}
+
+function getRemainingMainPriorityPenalty(
+  assignments: Assignment[],
+  highTierPlayerIds: Set<number>,
+) {
+  const penalty = assignments.reduce((sum, assignment) => {
+    if (highTierPlayerIds.has(assignment.playerId)) return sum;
+    if (assignment.roleType === "MAIN") return sum;
+    if (assignment.roleType === "SUB") return sum + 2;
+    return sum + 8;
+  }, 0);
+
+  return Number(penalty.toFixed(2));
+}
+
 function getReliabilityRate(count: number, bands: Array<[number, number]>) {
   for (const [minCount, rate] of bands) {
     if (count >= minCount) return rate;
@@ -1022,12 +1093,14 @@ function getTeamTotalPlanCost(candidate: CandidateSnapshot) {
 function getLineBalancePlanCost(candidate: CandidateSnapshot) {
   return Number(
     (
-      candidate.weightedLineDiff * 1.0 +
-      candidate.maxLineDiff * 1.5 +
-      candidate.midJglDiff * 0.7 +
-      candidate.bottomDiff * 0.7 +
-      candidate.diff * 0.35 +
-      candidate.autoLinePenalty * 0.9 +
+      candidate.highTierPriorityPenalty * 2.4 +
+      candidate.remainingMainPriorityPenalty * 1.4 +
+      candidate.weightedLineDiff * 0.9 +
+      candidate.maxLineDiff * 1.2 +
+      candidate.midJglDiff * 0.6 +
+      candidate.bottomDiff * 0.6 +
+      candidate.diff * 0.45 +
+      candidate.autoLinePenalty * 0.7 +
       candidate.mainImbalancePenalty * 0.3 +
       candidate.sTierStackPenalty * 0.2
     ).toFixed(2),
@@ -1072,6 +1145,12 @@ function compareByPlan(kind: PlanKind) {
     }
 
     if (kind === "LINE_BALANCE") {
+      if (a.highTierPriorityPenalty !== b.highTierPriorityPenalty) {
+        return a.highTierPriorityPenalty - b.highTierPriorityPenalty;
+      }
+      if (a.remainingMainPriorityPenalty !== b.remainingMainPriorityPenalty) {
+        return a.remainingMainPriorityPenalty - b.remainingMainPriorityPenalty;
+      }
       if (a.maxLineDiff !== b.maxLineDiff) return a.maxLineDiff - b.maxLineDiff;
       if (a.lineDiffTotal !== b.lineDiffTotal) return a.lineDiffTotal - b.lineDiffTotal;
       if (a.diff !== b.diff) return a.diff - b.diff;
@@ -1384,6 +1463,7 @@ export async function POST(request: NextRequest) {
     });
 
     const resolvedPlayers = applyInternalRankScores(baseResolvedPlayers);
+    const highTierPlayerIds = getHighTierPlayerIds(resolvedPlayers);
 
     const teamCombinations = combinations(resolvedPlayers, 5);
     const anchorPlayerId = resolvedPlayers[0]?.id;
@@ -1428,6 +1508,14 @@ export async function POST(request: NextRequest) {
         internalPositionCountByKey,
       );
       const stompPenalty = getStompPenalty(assignments);
+      const highTierPriorityPenalty = getHighTierPriorityPenalty(
+        assignments,
+        highTierPlayerIds,
+      );
+      const remainingMainPriorityPenalty = getRemainingMainPriorityPenalty(
+        assignments,
+        highTierPlayerIds,
+      );
 
       const mainAssignedCount =
         redResult.mainAssignedCount + blueResult.mainAssignedCount;
@@ -1473,6 +1561,8 @@ export async function POST(request: NextRequest) {
         mainImbalancePenalty,
         dataReliabilityPenalty,
         stompPenalty,
+        highTierPriorityPenalty,
+        remainingMainPriorityPenalty,
         balanceCost,
         mainAssignedCount,
         subAssignedCount,
@@ -1507,7 +1597,8 @@ export async function POST(request: NextRequest) {
         kind: "LINE_BALANCE",
         optionNo: 2,
         optionTitle: "라인별 균형형",
-        optionDescription: "TOP/JGL/MID/ADC/SUP 각 라인의 점수 차이를 가장 줄인 조합입니다.",
+        optionDescription:
+          "고티어 배치를 먼저 안정화하고, 남은 인원은 주포지션 우선으로 배치한 뒤 팀 총점 차이를 계산한 조합입니다.",
       },
       {
         kind: "POSITION_SATISFACTION",
@@ -1565,6 +1656,8 @@ export async function POST(request: NextRequest) {
         mainImbalancePenalty: candidate.mainImbalancePenalty,
         dataReliabilityPenalty: candidate.dataReliabilityPenalty,
         stompPenalty: candidate.stompPenalty,
+        highTierPriorityPenalty: candidate.highTierPriorityPenalty,
+        remainingMainPriorityPenalty: candidate.remainingMainPriorityPenalty,
         mainAssignedCount: candidate.mainAssignedCount,
         subAssignedCount: candidate.subAssignedCount,
         autoAssignedCount: candidate.autoAssignedCount,

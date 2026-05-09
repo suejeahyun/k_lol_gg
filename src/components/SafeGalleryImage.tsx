@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { normalizeGalleryImageUrl } from "@/lib/gallery/winner-image-paths";
 
 type SafeGalleryImageProps = Omit<
@@ -26,19 +26,13 @@ export default function SafeGalleryImage({
     [src]
   );
 
-  const [hasError, setHasError] = useState(false);
-
-  useEffect(() => {
-    setHasError(false);
-  }, [normalizedSrc]);
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const hasError = Boolean(normalizedSrc && failedSrc === normalizedSrc);
 
   if (!normalizedSrc || hasError) {
     return (
       <div
-        className={[
-          className,
-          "safe-gallery-image-fallback",
-        ]
+        className={[className, "safe-gallery-image-fallback"]
           .filter(Boolean)
           .join(" ")}
         role="img"
@@ -56,7 +50,7 @@ export default function SafeGalleryImage({
       alt={alt}
       className={className}
       loading={loading}
-      onError={() => setHasError(true)}
+      onError={() => setFailedSrc(normalizedSrc)}
     />
   );
 }
