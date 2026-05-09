@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 
-import Image from "next/image";
+import SafeHighlightThumbnail from "@/components/SafeHighlightThumbnail";
 import SafeGalleryImage from "@/components/SafeGalleryImage";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
@@ -112,11 +112,9 @@ export default async function HighlightsPage() {
                 className="highlight-card"
               >
                 <div className="highlight-card__thumb-wrap">
-                  <Image
-                    src={
-                      highlight.thumbnailUrl ||
-                      `https://img.youtube.com/vi/${highlight.youtubeId}/hqdefault.jpg`
-                    }
+                  <SafeHighlightThumbnail
+                    youtubeId={highlight.youtubeId}
+                    thumbnailUrl={highlight.thumbnailUrl}
                     alt={highlight.title}
                     width={640}
                     height={360}

@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { normalizeGalleryImageUrl } from "@/lib/gallery/winner-image-paths";
 import { extractYoutubeId, getYoutubeThumbnailUrl, getYoutubeWatchUrl } from "@/lib/youtube";
 
 type HighlightBody = {
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest) {
     const title = body.title?.trim();
     const description = body.description?.trim();
     const youtubeId = extractYoutubeId(body.youtubeUrl ?? "");
-    const thumbnailUrl = body.thumbnailUrl?.trim() || null;
+    const thumbnailUrl = normalizeGalleryImageUrl(body.thumbnailUrl ?? "") || null;
     const sortOrder = Number(body.sortOrder ?? 0);
 
     if (!title) {

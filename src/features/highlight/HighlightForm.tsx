@@ -95,7 +95,7 @@ export default function HighlightForm({
           required
         />
         <p className="admin-form__helper">
-          watch, youtu.be, shorts, embed, live 형식을 지원합니다.
+          watch, youtu.be, shorts, embed, live 형식을 지원합니다. 저장 시 표준 watch URL과 YouTube ID로 자동 정리됩니다.
         </p>
       </div>
 
@@ -106,7 +106,7 @@ export default function HighlightForm({
           className="admin-form__input"
           value={thumbnailUrl}
           onChange={(e) => setThumbnailUrl(e.target.value)}
-          placeholder="비워두면 YouTube 기본 썸네일 자동 사용"
+          placeholder="비워두면 YouTube 기본 썸네일 자동 사용 / Drive 공유 링크도 가능"
         />
       </div>
 
