@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 
-import Image from "next/image";
+import SafeGalleryImage from "@/components/SafeGalleryImage";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
@@ -61,13 +61,13 @@ export default async function DestructionImageDetailPage({ params }: PageProps) 
       </div>
 
       <figure className="destruction-image-detail-card">
-        <Image
+        <SafeGalleryImage
           src={imageUrl}
           alt={`${tournament.galleryImage?.title ?? tournament.title} ${index}`}
           width={1600}
           height={960}
           className="destruction-image-detail-card__image"
-          priority
+          loading="eager"
         />
         <figcaption>
           {tournament.galleryImage?.title ?? tournament.title} · IMAGE {String(index).padStart(2, "0")}

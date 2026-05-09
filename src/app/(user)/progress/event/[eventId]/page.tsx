@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 
-import Image from "next/image";
+import SafeGalleryImage from "@/components/SafeGalleryImage";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
@@ -195,7 +195,7 @@ export default async function EventProgressDetailPage({ params }: PageProps) {
           {event.galleryImage?.imageUrl?.length ? (
             <div className="event-final-gallery">
               {event.galleryImage.imageUrl.map((imageUrl, index) => (
-                <Image
+                <SafeGalleryImage
                   key={`${imageUrl}-${index}`}
                   src={imageUrl}
                   alt={`${event.galleryImage?.title ?? event.title} ${index + 1}`}

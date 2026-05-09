@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 
-import Image from "next/image";
+import SafeGalleryImage from "@/components/SafeGalleryImage";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 
@@ -31,7 +31,7 @@ export default async function ImagesPage() {
               >
                 <div className="gallery-card__image-wrap">
                   {thumbnail ? (
-                    <Image
+                    <SafeGalleryImage
                       src={thumbnail}
                       alt={image.title}
                       width={360}

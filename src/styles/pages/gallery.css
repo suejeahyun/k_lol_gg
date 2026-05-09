@@ -382,3 +382,19 @@
   padding: 32px 20px;
   padding-top: 80px;
 }
+
+.safe-gallery-image-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 140px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.82), rgba(30, 41, 59, 0.74));
+  color: rgba(226, 232, 240, 0.72);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  object-fit: initial;
+}

@@ -8,6 +8,8 @@ export const DESTRUCTION_WINNER_IMAGE_COUNTS: Record<number, number> = {
   6: 5,
 };
 
+const GOOGLE_DRIVE_FILE_ID_PATTERN = /[-\w]{25,}/;
+
 export function getDestructionWinnerImageCount(round: number): number {
   return DESTRUCTION_WINNER_IMAGE_COUNTS[round] ?? (round >= 5 ? 5 : 1);
 }
@@ -28,8 +30,52 @@ export function buildDestructionWinnerImageUrls(
   );
 }
 
+export function extractGoogleDriveFileId(input: string): string | null {
+  const value = input.trim();
+
+  if (!value.includes("drive.google.com")) {
+    return null;
+  }
+
+  const filePathMatch = value.match(/\/file\/d\/([^/?#]+)/);
+  if (filePathMatch?.[1]) {
+    return filePathMatch[1];
+  }
+
+  try {
+    const url = new URL(value);
+    const idParam = url.searchParams.get("id");
+
+    if (idParam) {
+      return idParam;
+    }
+  } catch {
+    const idMatch = value.match(/[?&]id=([^&#]+)/);
+    if (idMatch?.[1]) {
+      return idMatch[1];
+    }
+  }
+
+  return value.match(GOOGLE_DRIVE_FILE_ID_PATTERN)?.[0] ?? null;
+}
+
+export function buildGoogleDriveThumbnailUrl(fileId: string, size = "w1600"): string {
+  return `https://drive.google.com/thumbnail?id=${encodeURIComponent(fileId)}&sz=${size}`;
+}
+
 export function normalizeGalleryImageUrl(url: string): string {
-  return url.trim().replace(/^https?:\/\/[^/]+(?=\/images\/)/, "");
+  const value = url.trim();
+
+  if (!value) {
+    return "";
+  }
+
+  const googleDriveFileId = extractGoogleDriveFileId(value);
+  if (googleDriveFileId) {
+    return buildGoogleDriveThumbnailUrl(googleDriveFileId);
+  }
+
+  return value.replace(/^https?:\/\/[^/]+(?=\/images\/)/, "");
 }
 
 export function normalizeGalleryImageUrls(urls: string[]): string[] {

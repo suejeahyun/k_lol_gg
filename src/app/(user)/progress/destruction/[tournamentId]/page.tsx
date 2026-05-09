@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 
-import Image from "next/image";
+import SafeGalleryImage from "@/components/SafeGalleryImage";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
@@ -201,7 +201,7 @@ export default async function DestructionProgressDetailPage({
           {tournament.galleryImage?.imageUrl?.length ? (
             <div className="destruction-final-gallery">
               {tournament.galleryImage.imageUrl.map((imageUrl, index) => (
-                <Image
+                <SafeGalleryImage
                   key={`${imageUrl}-${index}`}
                   src={imageUrl}
                   alt={`${tournament.galleryImage?.title ?? tournament.title} ${

@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import SafeGalleryImage from "@/components/SafeGalleryImage";
 import { useEffect, useRef, useState } from "react";
 
 type Props = {
@@ -75,7 +75,7 @@ export default function ImageSlider({ images, title }: Props) {
         }}
       >
         {images.map((url, imageIndex) => (
-          <Image
+          <SafeGalleryImage
             key={`${url}-${imageIndex}`}
             src={url}
             alt={`${title} ${imageIndex + 1}`}
