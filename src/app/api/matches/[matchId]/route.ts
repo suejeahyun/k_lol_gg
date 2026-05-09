@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { recalculateSeasonStats } from "@/lib/stats/recalculate";
 import { parseKstDateTime } from "@/lib/date/kst";
+import { getStoredGameMvpFields } from "@/lib/match/mvp";
 
 type Team = "BLUE" | "RED";
 type Position = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
@@ -406,12 +407,14 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
       });
 
       for (const game of data.games) {
+        const mvpFields = getStoredGameMvpFields(game.participants, game.winnerTeam);
         const createdGame = await tx.matchGame.create({
           data: {
             seriesId: matchIdNumber,
             gameNumber: game.gameNumber,
             durationMin: 0,
             winnerTeam: game.winnerTeam,
+            ...mvpFields,
           },
         });
 

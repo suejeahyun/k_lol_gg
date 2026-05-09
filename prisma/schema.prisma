@@ -191,12 +191,15 @@ model MatchGame {
   gameNumber  Int
   durationMin Int
   winnerTeam  Team
+  mvpPlayerId Int?
+  mvpScore    Float?
 
   series       MatchSeries        @relation(fields: [seriesId], references: [id], onDelete: Cascade)
   participants MatchParticipant[]
 
   @@unique([seriesId, gameNumber])
   @@index([seriesId, gameNumber])
+  @@index([mvpPlayerId])
 }
 
 model MatchParticipant {
@@ -609,6 +612,8 @@ model TeamBalanceDraft {
   updatedAt DateTime @updatedAt
 
   optionType  String?
+  formulaVersion String? @default("v3.0.0")
+  isOfficial Boolean @default(false)
   redTotal    Float?
   blueTotal   Float?
   diff        Float?
@@ -620,6 +625,7 @@ model TeamBalanceDraft {
 
   @@index([createdAt])
   @@index([applyDate])
+  @@index([isOfficial, createdAt])
 }
 
 model TeamBalanceDraftPlayer {
@@ -757,6 +763,24 @@ model EventNotice {
   isPinned  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+
+model RiotApiStatus {
+  id          Int      @id @default(autoincrement())
+  scope       String   @unique
+  statusCode  Int?
+  statusText  String?
+  message     String?  @db.Text
+  retryAfterSec Int?
+  requestCount Int     @default(0)
+  failureCount Int     @default(0)
+  lastSuccessAt DateTime?
+  lastFailureAt DateTime?
+  updatedAt   DateTime @updatedAt
+
+  @@index([statusCode])
+  @@index([lastFailureAt])
 }
 
 model PlayerRiotAccount {

@@ -6,6 +6,8 @@ import SeasonActivateButton from "./SeasonActivateButton";
 import SeasonCreateForm from "./SeasonCreateForm";
 import SeasonDeleteButton from "./SeasonDeleteButton";
 import SeasonEditButton from "./SeasonEditButton";
+import SeasonEndButton from "./SeasonEndButton";
+import SeasonCloneButton from "./SeasonCloneButton";
 
 export default async function AdminSeasonsPage() {
   const seasons = await prisma.season.findMany({
@@ -57,6 +59,14 @@ export default async function AdminSeasonsPage() {
                       isActive={season.isActive}
                     />
                     <SeasonEditButton
+                      seasonId={season.id}
+                      currentName={season.name}
+                    />
+                    <SeasonEndButton
+                      seasonId={season.id}
+                      isActive={season.isActive}
+                    />
+                    <SeasonCloneButton
                       seasonId={season.id}
                       currentName={season.name}
                     />

@@ -23,6 +23,7 @@ export async function GET(req: NextRequest) {
       pendingUserCount,
       todayParticipationCount,
       riotFailureCount,
+      recentErrors,
       logs,
       totalLogCount,
     ] = await Promise.all([
@@ -69,6 +70,20 @@ export async function GET(req: NextRequest) {
       }),
 
       prisma.adminLog.findMany({
+        where: {
+          OR: [
+            { action: { contains: "ERROR", mode: "insensitive" } },
+            { action: { contains: "FAIL", mode: "insensitive" } },
+            { message: { contains: "오류", mode: "insensitive" } },
+            { message: { contains: "실패", mode: "insensitive" } },
+          ],
+        },
+        orderBy: { createdAt: "desc" },
+        take: 5,
+        select: { id: true, action: true, message: true, createdAt: true },
+      }),
+
+      prisma.adminLog.findMany({
         orderBy: { createdAt: "desc" },
         skip,
         take: LOG_PAGE_SIZE,
@@ -90,6 +105,12 @@ export async function GET(req: NextRequest) {
       pendingUserCount,
       todayParticipationCount,
       riotFailureCount,
+      recentErrors: recentErrors.map((log) => ({
+        id: log.id,
+        action: log.action,
+        message: log.message,
+        createdAt: log.createdAt.toISOString(),
+      })),
       latestMatch: latestMatch
         ? {
             id: latestMatch.id,

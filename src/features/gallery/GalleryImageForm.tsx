@@ -20,6 +20,7 @@ type Props = {
 };
 
 const MAX_IMAGE_COUNT = 5;
+const LARGE_IMAGE_WARNING_TEXT = "권장: WebP, 1600px 이하, 파일 1개당 1MB 안팎. 3MB 이상 PNG 원본은 목록/모바일 로딩을 느리게 만들 수 있습니다.";
 
 export default function GalleryImageForm({
   mode,
@@ -201,7 +202,7 @@ export default function GalleryImageForm({
         <p className="gallery-local-path-box__help">
           2~4회는 1장, 5회부터는 기본 5장으로 입력됩니다. 파일명은
           <code>/images/winners/destruction/5/1.jpg</code> 형식을 사용합니다.
-          Google Drive 공유 링크를 입력해도 저장 시 thumbnail 주소로 자동 변환됩니다.
+          Google Drive 공유 링크를 입력해도 저장 시 thumbnail 주소로 자동 변환됩니다. 가능하면 .webp 경로를 우선 사용하세요.
         </p>
       </div>
 
@@ -211,6 +212,10 @@ export default function GalleryImageForm({
           <span className="admin-form__helper">{filledCount} / 5</span>
         </div>
 
+        <p className="gallery-local-path-box__help gallery-local-path-box__help--warning">
+          {LARGE_IMAGE_WARNING_TEXT}
+        </p>
+
         <div className="gallery-image-input-list">
           {imageUrl.map((url, index) => (
             <div key={index} className="gallery-image-input-row">
@@ -219,7 +224,7 @@ export default function GalleryImageForm({
                 className="admin-form__input"
                 value={url}
                 onChange={(e) => handleChangeImageUrl(index, e.target.value)}
-                placeholder={`/images/winners/destruction/5/${index + 1}.jpg`}
+                placeholder={`/images/winners/destruction/5/${index + 1}.webp`}
               />
 
               <button

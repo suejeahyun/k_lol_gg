@@ -168,3 +168,12 @@
   text-align: center;
   font-size: 14px;
 }
+
+.admin-log-section--alert {
+  border: 1px solid rgba(255, 92, 122, 0.28);
+  background: linear-gradient(135deg, rgba(255, 92, 122, 0.09), rgba(8, 14, 28, 0.72));
+}
+
+.admin-log-item--alert .admin-log-item__type {
+  color: #ffb7c4;
+}

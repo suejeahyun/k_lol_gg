@@ -19,7 +19,7 @@ export default function AdminShell({ children }: AdminShellProps) {
   }
 
   return (
-    <div className="app-shell">
+    <div className="app-shell app-shell--admin">
       <AppTopBar
         title="관리자 페이지"
         homeHref="/admin/"

@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma/client";
 import { recalculateSeasonStats } from "@/lib/stats/recalculate";
 
@@ -66,6 +67,15 @@ export async function getSeasonRankingPlayers(seasonId: number): Promise<SeasonR
     };
   });
 }
+
+export const getCachedSeasonRankingPlayers = unstable_cache(
+  async (seasonId: number) => getSeasonRankingPlayers(seasonId),
+  ["season-ranking-players-v1"],
+  {
+    revalidate: 60,
+    tags: ["rankings"],
+  },
+);
 
 export async function getCurrentAndPreviousSeason() {
   const seasons = await prisma.season.findMany({

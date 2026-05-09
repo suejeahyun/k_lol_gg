@@ -26,7 +26,7 @@ export function buildDestructionWinnerImageUrls(
 
   return Array.from(
     { length: safeCount },
-    (_, index) => `${DESTRUCTION_WINNER_IMAGE_BASE_PATH}/${Math.trunc(round)}/${index + 1}.jpg`
+    (_, index) => `${DESTRUCTION_WINNER_IMAGE_BASE_PATH}/${Math.trunc(round)}/${index + 1}.webp`
   );
 }
 

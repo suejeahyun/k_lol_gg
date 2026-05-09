@@ -7,6 +7,7 @@ import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { recalculateSeasonStats } from "@/lib/stats/recalculate";
 import { parseKstDateTime } from "@/lib/date/kst";
 import { updateInternalMmrAfterMatch } from "@/lib/balance/internal-mmr";
+import { getStoredGameMvpFields } from "@/lib/match/mvp";
 
 type Team = "BLUE" | "RED";
 type Position = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
@@ -92,6 +93,26 @@ export async function POST(req: Request) {
       );
     }
 
+    const duplicateMatch = await prisma.matchSeries.findFirst({
+      where: {
+        seasonId: body.seasonId,
+        title: body.title.trim(),
+        matchDate: parsedMatchDate,
+      },
+      select: { id: true, title: true },
+    });
+
+    if (duplicateMatch) {
+      return NextResponse.json(
+        {
+          message:
+            "같은 시즌, 제목, 일시로 등록된 내전이 이미 있습니다. 중복 등록 여부를 확인해주세요.",
+          duplicateMatchId: duplicateMatch.id,
+        },
+        { status: 409 },
+      );
+    }
+
     const playerIds = [
       ...new Set(
         body.games.flatMap((game) =>
@@ -152,10 +173,14 @@ export async function POST(req: Request) {
           matchDate: parsedMatchDate,
           seasonId: body.seasonId,
           games: {
-            create: body.games.map((game) => ({
+            create: body.games.map((game) => {
+              const mvpFields = getStoredGameMvpFields(game.participants, game.winnerTeam as Team);
+
+              return {
               gameNumber: game.gameNumber,
               durationMin: 0,
               winnerTeam: game.winnerTeam as Team,
+              ...mvpFields,
               participants: {
                 create: game.participants.map((participant) => ({
                   playerId: participant.playerId,
@@ -167,7 +192,8 @@ export async function POST(req: Request) {
                   assists: participant.assists,
                 })),
               },
-            })),
+            };
+            }),
           },
         },
         include: {

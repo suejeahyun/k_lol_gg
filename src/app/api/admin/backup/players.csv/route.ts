@@ -1,11 +1,11 @@
 export const dynamic = "force-dynamic";
 
 import { prisma } from "@/lib/prisma/client";
-import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { rejectIfNotSuperAdmin } from "@/lib/auth/requireAdmin";
 import { createCsvResponse } from "@/lib/csv";
 
 export async function GET() {
-  const rejected = await rejectIfNotAdmin();
+  const rejected = await rejectIfNotSuperAdmin();
   if (rejected) return rejected;
 
   const players = await prisma.player.findMany({

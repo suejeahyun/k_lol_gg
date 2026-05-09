@@ -30,6 +30,8 @@ type DraftPostBody = {
   blueTotal?: number | null;
   diff?: number | null;
   balanceCost?: number | null;
+  formulaVersion?: string | null;
+  isOfficial?: boolean | null;
   players?: DraftPlayerInput[];
 };
 
@@ -94,6 +96,8 @@ export async function GET() {
         blueTotal: draft.blueTotal,
         diff: draft.diff,
         balanceCost: draft.balanceCost,
+        formulaVersion: draft.formulaVersion,
+        isOfficial: draft.isOfficial,
         count: draft._count.players,
       })),
     });
@@ -207,6 +211,8 @@ export async function POST(req: NextRequest) {
         blueTotal: typeof body.blueTotal === "number" ? body.blueTotal : null,
         diff: typeof body.diff === "number" ? body.diff : null,
         balanceCost: typeof body.balanceCost === "number" ? body.balanceCost : null,
+        formulaVersion: body.formulaVersion?.trim() || "v3.0.0",
+        isOfficial: Boolean(body.isOfficial),
         players: {
           create: players.map((player) => ({
             playerId: player.playerId,
@@ -240,6 +246,8 @@ export async function POST(req: NextRequest) {
       title: draft.title,
       label: draft.title,
       applyDate: draft.applyDate.toISOString(),
+      formulaVersion: draft.formulaVersion,
+      isOfficial: draft.isOfficial,
       count: draft._count.players,
     });
   } catch (error: unknown) {

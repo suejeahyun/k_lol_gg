@@ -221,16 +221,19 @@ export default async function HomePage() {
 
   const recentMvpCandidates = recentMatches.flatMap((match) =>
     match.games.flatMap((game) => {
-      const gameMvp = getGameMvpParticipant(
-        game.participants.map((participant) => ({
-          playerId: participant.player.id,
-          kills: participant.kills,
-          deaths: participant.deaths,
-          assists: participant.assists,
-          team: participant.team,
-        })),
-        game.winnerTeam,
-      );
+      const storedMvpPlayerId = game.mvpPlayerId ?? null;
+      const gameMvp = storedMvpPlayerId
+        ? { playerId: storedMvpPlayerId }
+        : getGameMvpParticipant(
+            game.participants.map((participant) => ({
+              playerId: participant.player.id,
+              kills: participant.kills,
+              deaths: participant.deaths,
+              assists: participant.assists,
+              team: participant.team,
+            })),
+            game.winnerTeam,
+          );
 
       return game.participants
         .filter((participant) => participant.player.id === gameMvp?.playerId)
@@ -248,13 +251,15 @@ export default async function HomePage() {
           kills: participant.kills,
           deaths: participant.deaths,
           assists: participant.assists,
-          mvpScore: calculateMvpScore({
-            playerId: participant.player.id,
-            kills: participant.kills,
-            deaths: participant.deaths,
-            assists: participant.assists,
-            team: participant.team,
-          }),
+          mvpScore:
+            game.mvpScore ??
+            calculateMvpScore({
+              playerId: participant.player.id,
+              kills: participant.kills,
+              deaths: participant.deaths,
+              assists: participant.assists,
+              team: participant.team,
+            }),
           isWin: participant.team === game.winnerTeam,
         }));
     })

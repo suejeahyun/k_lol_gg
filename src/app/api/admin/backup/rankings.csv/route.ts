@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { rejectIfNotSuperAdmin } from "@/lib/auth/requireAdmin";
 import { createCsvResponse } from "@/lib/csv";
 
 type RankingPlayer = {
@@ -20,7 +20,7 @@ type RankingResponse = {
 };
 
 export async function GET(req: NextRequest) {
-  const rejected = await rejectIfNotAdmin();
+  const rejected = await rejectIfNotSuperAdmin();
   if (rejected) return rejected;
 
   const origin = req.nextUrl.origin;

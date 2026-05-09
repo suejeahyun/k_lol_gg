@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
+import { getRiotStatusFromError, recordRiotApiStatus } from "@/lib/riot/status";
 import {
   calculateWinRate,
   findParticipantByPuuid,
@@ -333,6 +334,8 @@ export async function POST(req: NextRequest, context: RouteContext) {
       });
     }
 
+    await recordRiotApiStatus({ scope: "RIOT_SOLO_FULL_SYNC", ok: true });
+
     await writeAdminLog({
       action: "RIOT_SOLO_FULL_SYNC",
       message: `전체 솔랭 기록 갱신: 플레이어 #${player.id} ${player.nickname}#${player.tag}, 저장 ${savedMatchCount}개, 실패 ${failedMatchCount}개`,
@@ -367,6 +370,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
         : null,
     });
   } catch (error) {
+    await recordRiotApiStatus(getRiotStatusFromError("RIOT_SOLO_FULL_SYNC", error));
     console.error("[RIOT_PLAYER_SOLO_FULL_SYNC_POST_ERROR]", error);
 
     if (error instanceof Error) {

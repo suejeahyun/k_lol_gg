@@ -8,11 +8,11 @@ type UserLayoutProps = {
 
 export default function UserLayout({ children }: UserLayoutProps) {
   return (
-    <div className="app-shell">
+    <div className="app-shell app-shell--user">
       <AppTopBar title="유저 페이지" homeHref="/" mode="user" />
 
       <div className="app-body">
-        <UserSidebar/>
+        <UserSidebar />
         <div className="app-content">{children}</div>
       </div>
     </div>

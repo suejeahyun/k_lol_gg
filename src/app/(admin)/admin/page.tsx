@@ -20,6 +20,12 @@ type DashboardData = {
     title: string | null;
     playedAt: string;
   } | null;
+  recentErrors: {
+    id: number;
+    action: string;
+    message: string;
+    createdAt: string;
+  }[];
   logs: {
     id: number;
     action: string;
@@ -200,6 +206,32 @@ export default function AdminHomePage() {
           </div>
         </div>
       </section>
+
+
+      {data.recentErrors.length > 0 && (
+        <section className="admin-log-section admin-log-section--alert">
+          <div className="admin-log-section__header">
+            <div>
+              <h2 className="admin-section-title">최근 오류/실패 기록</h2>
+              <p className="admin-section-description">
+                운영자가 먼저 확인해야 할 최근 실패 로그입니다.
+              </p>
+            </div>
+          </div>
+
+          <div className="admin-log-list">
+            {data.recentErrors.map((log) => (
+              <div key={log.id} className="admin-log-item admin-log-item--alert">
+                <div className="admin-log-item__left">
+                  <span className="admin-log-item__type">{log.action}</span>
+                  <span className="admin-log-item__message">{log.message}</span>
+                </div>
+                <div className="admin-log-item__date">{formatDate(log.createdAt)}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="admin-log-section">
         <div className="admin-log-section__header">

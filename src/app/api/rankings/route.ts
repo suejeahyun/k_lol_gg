@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
-import { getSeasonRankingPlayers } from "@/lib/stats/season-performance";
+import { getCachedSeasonRankingPlayers } from "@/lib/stats/season-performance";
 import { makeServerTiming, withTiming } from "@/lib/performance";
 
 export const dynamic = "force-dynamic";
@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
         };
       }
 
-      const rankings = (await getSeasonRankingPlayers(currentSeason.id)).sort((a, b) => {
+      const rankings = (await getCachedSeasonRankingPlayers(currentSeason.id)).sort((a, b) => {
         if (b.winRate !== a.winRate) return b.winRate - a.winRate;
         if (b.wins !== a.wins) return b.wins - a.wins;
         if (b.mvpCount !== a.mvpCount) return b.mvpCount - a.mvpCount;
