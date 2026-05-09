@@ -83,6 +83,13 @@ enum ParticipationApplyStatus {
   CANCELLED
 }
 
+enum OperationAiRequestStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+  FAILED
+}
+
 enum EventNoticeType {
   EVENT_MATCH
   DESTRUCTION
@@ -872,3 +879,24 @@ model PlayerSoloMatch {
   @@index([championId])
   @@index([gameCreation])
 }
+
+model OperationAiRequest {
+  id              Int                      @id @default(autoincrement())
+  taskType        String                   @default("PARTICIPATION_PARSE")
+  status          OperationAiRequestStatus @default(PENDING)
+
+  prompt          String
+  rawText         String?
+  parsedJson      Json?
+  resultJson      Json?
+  errorMessage    String?
+
+  createdByUserId String?
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+
+  @@index([taskType])
+  @@index([status])
+  @@index([createdAt])
+}
+

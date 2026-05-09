@@ -41,6 +41,12 @@ const menuGroups: AdminSidebarGroup[] = [
     ],
   },
   {
+    title: "운영 AI",
+    items: [
+      { href: "/admin/operation-ai", label: "운영 AI 보조", code: "OPS" },
+    ],
+  },
+  {
     title: "대회 운영",
     items: [
       { href: "/admin/progress/event", label: "이벤트 내전 관리", code: "EVT" },
