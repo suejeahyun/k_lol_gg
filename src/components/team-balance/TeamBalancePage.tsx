@@ -190,8 +190,17 @@ type BalanceResponse = {
     predictedBlueWinRate: number;
     reasoning: string[];
     riskFactors: string[];
+    strengthFactors?: string[];
+    improvementSuggestions?: string[];
+    laneFocus?: string;
+    draftNotes?: string[];
+    dataWarnings?: string[];
+    overallSummary?: string;
     operatingAdvice: string;
   } | null;
+  aiBestAlternative?: BalanceResponse | null;
+  aiCandidateCount?: number;
+  aiSearchScope?: "ALL_CANDIDATES" | "THREE_OPTIONS";
   alternatives?: BalanceResponse[];
 };
 type ApplyPosition = Position | "ALL";
@@ -507,10 +516,20 @@ export default function PlayersBalancePage() {
           position: player.position,
           roleType: player.roleType,
           score: player.score,
-          baseScore: player.finalBaseScore ?? player.scoreBreakdown?.finalBaseScore ?? player.score,
-          soloBonus: player.soloRecentFormBonus ?? player.scoreBreakdown?.soloRecentFormBonus ?? 0,
-          positionBonus: player.positionSkillBonus ?? player.scoreBreakdown?.positionSkillBonus ?? 0,
-          rolePenalty: player.rolePenalty ?? player.scoreBreakdown?.rolePenalty ?? 0,
+          baseScore:
+            player.finalBaseScore ??
+            player.scoreBreakdown?.finalBaseScore ??
+            player.score,
+          soloBonus:
+            player.soloRecentFormBonus ??
+            player.scoreBreakdown?.soloRecentFormBonus ??
+            0,
+          positionBonus:
+            player.positionSkillBonus ??
+            player.scoreBreakdown?.positionSkillBonus ??
+            0,
+          rolePenalty:
+            player.rolePenalty ?? player.scoreBreakdown?.rolePenalty ?? 0,
         })),
         ...result.red.map((player) => ({
           playerId: player.playerId,
@@ -518,10 +537,20 @@ export default function PlayersBalancePage() {
           position: player.position,
           roleType: player.roleType,
           score: player.score,
-          baseScore: player.finalBaseScore ?? player.scoreBreakdown?.finalBaseScore ?? player.score,
-          soloBonus: player.soloRecentFormBonus ?? player.scoreBreakdown?.soloRecentFormBonus ?? 0,
-          positionBonus: player.positionSkillBonus ?? player.scoreBreakdown?.positionSkillBonus ?? 0,
-          rolePenalty: player.rolePenalty ?? player.scoreBreakdown?.rolePenalty ?? 0,
+          baseScore:
+            player.finalBaseScore ??
+            player.scoreBreakdown?.finalBaseScore ??
+            player.score,
+          soloBonus:
+            player.soloRecentFormBonus ??
+            player.scoreBreakdown?.soloRecentFormBonus ??
+            0,
+          positionBonus:
+            player.positionSkillBonus ??
+            player.scoreBreakdown?.positionSkillBonus ??
+            0,
+          rolePenalty:
+            player.rolePenalty ?? player.scoreBreakdown?.rolePenalty ?? 0,
         })),
       ];
 
@@ -697,7 +726,8 @@ export default function PlayersBalancePage() {
     rolePenalty: number;
     score: number;
   }) {
-    const { player, position, roleType, baseScore, rolePenalty, score } = params;
+    const { player, position, roleType, baseScore, rolePenalty, score } =
+      params;
     const roleText = getRoleText(roleType);
 
     return [
@@ -725,8 +755,8 @@ export default function PlayersBalancePage() {
       roleType === "MAIN"
         ? 0
         : roleType === "SUB"
-          ? player.scoreBreakdown?.rolePenalty ?? player.rolePenalty ?? 5
-          : player.scoreBreakdown?.rolePenalty ?? player.rolePenalty ?? 10;
+          ? (player.scoreBreakdown?.rolePenalty ?? player.rolePenalty ?? 5)
+          : (player.scoreBreakdown?.rolePenalty ?? player.rolePenalty ?? 10);
     const score = Number(Math.max(0, baseScore - rolePenalty).toFixed(2));
     const roleLoss = Number(rolePenalty.toFixed(2));
     const multiplier = 1;
@@ -775,10 +805,10 @@ export default function PlayersBalancePage() {
           player.mixedBaseScore ??
           Number(
             (
-              (player.adjustedScore ??
-                player.scoreBreakdown?.adjustedScore ??
-                player.baseTierScore ??
-                0)
+              player.adjustedScore ??
+              player.scoreBreakdown?.adjustedScore ??
+              player.baseTierScore ??
+              0
             ).toFixed(2),
           ),
         sTierBonus: player.bonus ?? player.scoreBreakdown?.sTierBonus ?? 0,
@@ -823,6 +853,7 @@ export default function PlayersBalancePage() {
   function normalizeResult(
     nextRed: AssignedPlayer[],
     nextBlue: AssignedPlayer[],
+    baseResult?: BalanceResponse,
   ): BalanceResponse {
     const red = sortByPosition(
       nextRed.map((player) =>
@@ -839,7 +870,7 @@ export default function PlayersBalancePage() {
     const blueTotal = blue.reduce((sum, player) => sum + player.score, 0);
     const allPlayers = [...red, ...blue];
 
-    return {
+    const manualResult = enrichManualBalanceResult({
       redTotal: Number(redTotal.toFixed(2)),
       blueTotal: Number(blueTotal.toFixed(2)),
       diff: Number(Math.abs(redTotal - blueTotal).toFixed(2)),
@@ -853,6 +884,16 @@ export default function PlayersBalancePage() {
       ).length,
       red,
       blue,
+    });
+
+    return {
+      ...manualResult,
+      soloSync: baseResult?.soloSync ?? null,
+      recommendedAlternative: baseResult?.recommendedAlternative ?? null,
+      aiBestAlternative: baseResult?.aiBestAlternative ?? null,
+      aiCandidateCount: baseResult?.aiCandidateCount,
+      aiSearchScope: baseResult?.aiSearchScope,
+      alternatives: baseResult?.alternatives,
     };
   }
 
@@ -888,6 +929,336 @@ export default function PlayersBalancePage() {
     if (target.diff <= 8) return { grade: "B", label: "무난함" };
     if (target.diff <= 12) return { grade: "C", label: "일부 조정 필요" };
     return { grade: "D", label: "수동 조정 권장" };
+  }
+
+  function getBalanceMetricCards(target: BalanceResponse) {
+    const judgement = target.aiJudgement ?? buildClientAiJudgement(target);
+    const maxLineDiff = Number(target.maxLineDiff ?? Math.max(...getLineComparisons(target).map((line) => line.diff), 0));
+    const weightedLineDiff = Number(target.weightedLineDiff ?? target.lineDiffTotal ?? 0);
+    const midJglDiff = Number(target.midJglDiff ?? 0);
+    const bottomDiff = Number(target.bottomDiff ?? 0);
+    const aiScore = Number(target.recommendationScore ?? judgement.confidence ?? 0);
+
+    return [
+      {
+        label: "품질",
+        value: `${Number(target.qualityScore ?? 0).toFixed(1)}점`,
+        status: Number(target.qualityScore ?? 0) >= 80 ? "good" : Number(target.qualityScore ?? 0) >= 65 ? "warn" : "danger",
+      },
+      {
+        label: "AI 점수",
+        value: `${aiScore.toFixed(1)}점`,
+        status: aiScore >= 75 ? "good" : aiScore >= 58 ? "warn" : "danger",
+      },
+      {
+        label: "최대 라인차",
+        value: `${maxLineDiff.toFixed(1)}점`,
+        status: maxLineDiff <= 5 ? "good" : maxLineDiff <= 8 ? "warn" : "danger",
+      },
+      {
+        label: "가중 라인차",
+        value: `${weightedLineDiff.toFixed(1)}점`,
+        status: weightedLineDiff <= 18 ? "good" : weightedLineDiff <= 28 ? "warn" : "danger",
+      },
+      {
+        label: "미드·정글",
+        value: `${midJglDiff.toFixed(1)}점`,
+        status: midJglDiff <= 5 ? "good" : midJglDiff <= 8 ? "warn" : "danger",
+      },
+      {
+        label: "바텀",
+        value: `${bottomDiff.toFixed(1)}점`,
+        status: bottomDiff <= 5 ? "good" : bottomDiff <= 8 ? "warn" : "danger",
+      },
+      {
+        label: "AUTO",
+        value: `${target.autoAssignedCount}명`,
+        status: target.autoAssignedCount === 0 ? "good" : target.autoAssignedCount <= 1 ? "warn" : "danger",
+      },
+      {
+        label: "예상 승률",
+        value: `R ${judgement.predictedRedWinRate.toFixed(1)} / B ${judgement.predictedBlueWinRate.toFixed(1)}`,
+        status: Math.abs(judgement.predictedRedWinRate - judgement.predictedBlueWinRate) <= 6 ? "good" : "warn",
+      },
+    ];
+  }
+
+  function renderBalanceMetricGrid(target: BalanceResponse) {
+    return (
+      <div className="balance-kpi-grid">
+        {getBalanceMetricCards(target).map((item) => (
+          <div
+            key={item.label}
+            className={`balance-kpi-card balance-kpi-card--${item.status}`}
+          >
+            <span>{item.label}</span>
+            <strong>{item.value}</strong>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  function getPredictedWinRates(redTotal: number, blueTotal: number) {
+    const redRate = 1 / (1 + 10 ** ((blueTotal - redTotal) / 40));
+    const red = Number((redRate * 100).toFixed(1));
+    return {
+      red,
+      blue: Number((100 - red).toFixed(1)),
+    };
+  }
+
+  function sumPositions(players: AssignedPlayer[], positions: Position[]) {
+    return positions.reduce((sum, position) => {
+      const player = players.find((item) => item.position === position);
+      return sum + (player?.score ?? 0);
+    }, 0);
+  }
+
+  function buildClientAiJudgement(target: BalanceResponse) {
+    const lines = getLineComparisons(target);
+    const maxLineDiff = Math.max(...lines.map((line) => line.diff), 0);
+    const lineDiffTotal = Number(
+      lines.reduce((sum, line) => sum + line.diff, 0).toFixed(1),
+    );
+    const weightedLineDiff = Number(
+      lines
+        .reduce((sum, line) => {
+          const weight =
+            line.position === "JGL" || line.position === "MID"
+              ? 1.25
+              : line.position === "ADC" || line.position === "SUP"
+                ? 1.1
+                : 1;
+          return sum + line.diff * weight;
+        }, 0)
+        .toFixed(1),
+    );
+    const frontSideDiff = Number(
+      Math.abs(
+        sumPositions(target.red, ["TOP", "JGL", "MID"]) -
+          sumPositions(target.blue, ["TOP", "JGL", "MID"]),
+      ).toFixed(1),
+    );
+    const midJglDiff = Number(
+      Math.abs(
+        sumPositions(target.red, ["JGL", "MID"]) -
+          sumPositions(target.blue, ["JGL", "MID"]),
+      ).toFixed(1),
+    );
+    const bottomDiff = Number(
+      Math.abs(
+        sumPositions(target.red, ["ADC", "SUP"]) -
+          sumPositions(target.blue, ["ADC", "SUP"]),
+      ).toFixed(1),
+    );
+    const winRates = getPredictedWinRates(target.redTotal, target.blueTotal);
+    const inferredWinner =
+      Math.abs(winRates.red - winRates.blue) < 3
+        ? "EVEN"
+        : winRates.red > winRates.blue
+          ? "RED"
+          : "BLUE";
+    const qualityScore = Number(
+      Math.max(
+        0,
+        Math.min(
+          100,
+          100 -
+            Math.min(18, target.diff * 1.1) -
+            Math.min(28, maxLineDiff * 1.0 + weightedLineDiff * 0.35) -
+            Math.min(22, midJglDiff * 0.9 + bottomDiff * 0.65 + frontSideDiff * 0.25) -
+            Math.min(18, target.autoAssignedCount * 4),
+        ),
+      ).toFixed(1),
+    );
+    const riskValue =
+      target.diff * 0.9 +
+      maxLineDiff * 1.2 +
+      midJglDiff * 1.15 +
+      bottomDiff * 0.85 +
+      target.autoAssignedCount * 4;
+    const riskLevel =
+      riskValue >= 38 ? "HIGH" : riskValue >= 22 ? "MEDIUM" : "LOW";
+    const riskFactors = [
+      maxLineDiff >= 10 ? `라인 최대 격차 ${maxLineDiff.toFixed(1)}점` : null,
+      midJglDiff >= 8 ? `미드-정글 격차 ${midJglDiff.toFixed(1)}점` : null,
+      bottomDiff >= 8 ? `바텀 격차 ${bottomDiff.toFixed(1)}점` : null,
+      target.autoAssignedCount > 0
+        ? `AUTO ${target.autoAssignedCount}명`
+        : null,
+      ...(target.warningMessages ?? []),
+    ].filter(Boolean) as string[];
+    const strengthFactors = [
+      target.diff <= 3
+        ? `총점 차이 ${target.diff.toFixed(1)}점으로 전체 체급이 안정적입니다.`
+        : null,
+      maxLineDiff <= 5
+        ? `최대 라인 차이 ${maxLineDiff.toFixed(1)}점으로 라인 붕괴 위험이 낮습니다.`
+        : null,
+      midJglDiff <= 5
+        ? "미드-정글 격차가 작아 초반 주도권 리스크가 낮습니다."
+        : null,
+      bottomDiff <= 5
+        ? "바텀 듀오 격차가 작아 2:2 라인전 변수가 낮습니다."
+        : null,
+      target.autoAssignedCount === 0
+        ? "AUTO 배정 없이 주/부 포지션 중심으로 구성되었습니다."
+        : null,
+    ].filter(Boolean) as string[];
+    const improvementSuggestions = [
+      target.diff > 5
+        ? "총점 차이가 크므로 고점/저점 플레이어 1명 교환을 우선 검토하세요."
+        : null,
+      maxLineDiff > 8 ? "가장 벌어진 단일 라인을 먼저 조정하세요." : null,
+      midJglDiff > 7
+        ? "미드-정글 차이가 있어 초반 교전과 오브젝트 콜을 확인하세요."
+        : null,
+      bottomDiff > 7
+        ? "바텀 차이가 있어 드래곤 운영과 2:2 라인전 변수를 확인하세요."
+        : null,
+      target.autoAssignedCount > 0
+        ? "AUTO 배정자는 실제 가능 포지션인지 확인한 뒤 확정하세요."
+        : null,
+    ].filter(Boolean) as string[];
+    const focusEntries = [
+      ["미드-정글", midJglDiff],
+      ["바텀", bottomDiff],
+      ["상체", frontSideDiff],
+      ["단일 라인", maxLineDiff],
+    ] as const;
+    const [focusLabel, focusValue] = [...focusEntries].sort(
+      (a, b) => b[1] - a[1],
+    )[0];
+    const laneFocus =
+      focusValue >= 7
+        ? `${focusLabel} 구간을 가장 먼저 확인해야 합니다. 현재 격차 ${focusValue.toFixed(1)}점입니다.`
+        : "특정 라인 하나가 과도하게 벌어지지는 않았습니다.";
+    const draftNotes = [
+      inferredWinner === "EVEN"
+        ? "밴픽은 양팀 모두 편한 픽 위주로 가도 무리가 적습니다."
+        : `${inferredWinner}가 근소 우세로 추론되므로 반대팀은 초반 안정형 픽이 유리합니다.`,
+      midJglDiff >= 7
+        ? "미드-정글 2:2 구도가 승패를 크게 흔들 수 있습니다."
+        : "미드-정글 구도는 과도한 리스크 구간은 아닙니다.",
+      bottomDiff >= 7
+        ? "바텀 중심 밴픽 또는 서포터 주도권 픽을 확인하세요."
+        : "바텀 격차는 관리 가능한 범위입니다.",
+    ];
+    const confidence = Number(
+      Math.max(0, Math.min(100, qualityScore - riskFactors.length * 2)).toFixed(
+        1,
+      ),
+    );
+
+    return {
+      selectedOptionNo: target.optionNo ?? null,
+      selectedOptionTitle:
+        target.optionTitle ??
+        (selectedResultIndex === -1 ? "수동 조정안" : null),
+      confidence,
+      riskLevel,
+      verdict:
+        riskLevel === "LOW"
+          ? "실사용 추천: 현재 조건에서 터질 가능성이 낮은 조합입니다."
+          : riskLevel === "MEDIUM"
+            ? "조건부 추천: 사용할 수 있지만 핵심 리스크를 확인해야 합니다."
+            : "주의 필요: 운영자가 라인/포지션 리스크를 먼저 조정하는 편이 안전합니다.",
+      inferredWinner,
+      predictedRedWinRate: winRates.red,
+      predictedBlueWinRate: winRates.blue,
+      reasoning: [
+        `${target.optionNo ?? "수동"}안 기준 품질 점수 ${qualityScore.toFixed(1)}점입니다.`,
+        `예상 승률은 RED ${winRates.red.toFixed(1)}% / BLUE ${winRates.blue.toFixed(1)}%입니다.`,
+        `총점 차이 ${target.diff.toFixed(1)}점, 전체 라인 차이 ${lineDiffTotal.toFixed(1)}점, 최대 라인 차이 ${maxLineDiff.toFixed(1)}점, 미드-정글 차이 ${midJglDiff.toFixed(1)}점을 함께 판단했습니다.`,
+      ],
+      riskFactors,
+      strengthFactors,
+      improvementSuggestions,
+      laneFocus,
+      draftNotes,
+      dataWarnings: [],
+      overallSummary: `${target.optionNo ?? "수동"}안은 RED ${winRates.red.toFixed(1)}% / BLUE ${winRates.blue.toFixed(1)}%로 예측되며, 위험도는 ${riskLevel}입니다.`,
+      operatingAdvice:
+        riskLevel === "LOW"
+          ? "그대로 사용해도 무리가 적습니다. 내전 결과 등록 후 MMR 변화를 확인하세요."
+          : riskLevel === "MEDIUM"
+            ? "추천안을 쓰되, AUTO 배정자와 핵심 라인 차이를 먼저 공유하세요."
+            : "가능하면 수동 드래그로 핵심 라인 차이를 줄인 뒤 저장하세요.",
+    } satisfies NonNullable<BalanceResponse["aiJudgement"]>;
+  }
+
+  function enrichManualBalanceResult(target: BalanceResponse): BalanceResponse {
+    const lines = getLineComparisons(target);
+    const maxLineDiff = Math.max(...lines.map((line) => line.diff), 0);
+    const lineDiffTotal = Number(
+      lines.reduce((sum, line) => sum + line.diff, 0).toFixed(1),
+    );
+    const weightedLineDiff = Number(
+      lines
+        .reduce((sum, line) => {
+          const weight =
+            line.position === "JGL" || line.position === "MID"
+              ? 1.25
+              : line.position === "ADC" || line.position === "SUP"
+                ? 1.1
+                : 1;
+          return sum + line.diff * weight;
+        }, 0)
+        .toFixed(1),
+    );
+    const frontSideDiff = Number(
+      Math.abs(
+        sumPositions(target.red, ["TOP", "JGL", "MID"]) -
+          sumPositions(target.blue, ["TOP", "JGL", "MID"]),
+      ).toFixed(1),
+    );
+    const midJglDiff = Number(
+      Math.abs(
+        sumPositions(target.red, ["JGL", "MID"]) -
+          sumPositions(target.blue, ["JGL", "MID"]),
+      ).toFixed(1),
+    );
+    const bottomDiff = Number(
+      Math.abs(
+        sumPositions(target.red, ["ADC", "SUP"]) -
+          sumPositions(target.blue, ["ADC", "SUP"]),
+      ).toFixed(1),
+    );
+    const qualityScore = Number(
+      Math.max(
+        0,
+        Math.min(
+          100,
+          100 -
+            Math.min(18, target.diff * 1.1) -
+            Math.min(28, maxLineDiff * 1.0 + weightedLineDiff * 0.35) -
+            Math.min(22, midJglDiff * 0.9 + bottomDiff * 0.65 + frontSideDiff * 0.25) -
+            Math.min(18, target.autoAssignedCount * 4),
+        ),
+      ).toFixed(1),
+    );
+
+    const enriched = {
+      ...target,
+      optionNo: undefined,
+      optionTitle: "수동 조정안",
+      optionDescription: "드래그로 직접 조정한 현재 RED / BLUE 배치입니다.",
+      lineDiffTotal,
+      maxLineDiff,
+      weightedLineDiff,
+      frontSideDiff,
+      midJglDiff,
+      bottomDiff,
+      qualityScore,
+      recommendationScore: qualityScore,
+      warningMessages: target.warningMessages ?? [],
+    };
+
+    return {
+      ...enriched,
+      aiJudgement: buildClientAiJudgement(enriched),
+    };
   }
 
   function getRoleText(roleType: RoleType) {
@@ -964,12 +1335,21 @@ export default function PlayersBalancePage() {
     const multiplier =
       breakdown.roleMultiplier ?? getRoleMultiplier(player.roleType);
     const roleLoss =
-      breakdown.roleLoss ?? breakdown.rolePenalty ?? player.rolePenalty ?? Number((finalBaseScore - player.score).toFixed(2));
-    const soloRecentFormBonus = breakdown.soloRecentFormBonus ?? player.soloRecentFormBonus ?? 0;
-    const soloApplyPositionMatchBonus = breakdown.soloApplyPositionMatchBonus ?? player.soloApplyPositionMatchBonus ?? 0;
-    const positionSkillBonus = breakdown.positionSkillBonus ?? player.positionSkillBonus ?? 0;
+      breakdown.roleLoss ??
+      breakdown.rolePenalty ??
+      player.rolePenalty ??
+      Number((finalBaseScore - player.score).toFixed(2));
+    const soloRecentFormBonus =
+      breakdown.soloRecentFormBonus ?? player.soloRecentFormBonus ?? 0;
+    const soloApplyPositionMatchBonus =
+      breakdown.soloApplyPositionMatchBonus ??
+      player.soloApplyPositionMatchBonus ??
+      0;
+    const positionSkillBonus =
+      breakdown.positionSkillBonus ?? player.positionSkillBonus ?? 0;
     const mmrBonus = breakdown.mmrBonus ?? player.mmrBonus ?? 0;
-    const balanceOverrideScore = breakdown.balanceOverrideScore ?? player.balanceOverrideScore ?? 0;
+    const balanceOverrideScore =
+      breakdown.balanceOverrideScore ?? player.balanceOverrideScore ?? 0;
     const finalScore = breakdown.finalScore ?? player.score;
 
     return {
@@ -1003,16 +1383,101 @@ export default function PlayersBalancePage() {
 
       if (!alternatives || !alternatives[index]) return prev;
 
+      const selected = alternatives[index];
+
       return {
-        ...alternatives[index],
-        soloSync: prev.soloSync ?? alternatives[index].soloSync ?? null,
-        aiJudgement: prev.aiJudgement ?? alternatives[index].aiJudgement ?? null,
-        recommendedAlternative: prev.recommendedAlternative ?? alternatives[index].recommendedAlternative ?? null,
+        ...selected,
+        soloSync: prev.soloSync ?? selected.soloSync ?? null,
+        aiJudgement: selected.aiJudgement ?? buildClientAiJudgement(selected),
+        recommendedAlternative:
+          selected.recommendedAlternative ??
+          prev.recommendedAlternative ??
+          null,
         alternatives,
       };
     });
 
     setSelectedResultIndex(index);
+  }
+
+  function getRiskScore(riskLevel?: "LOW" | "MEDIUM" | "HIGH") {
+    if (riskLevel === "HIGH") return 18;
+    if (riskLevel === "MEDIUM") return 8;
+    return 0;
+  }
+
+  function getAiAlternativeScore(option: BalanceResponse) {
+    const judgement = option.aiJudgement ?? buildClientAiJudgement(option);
+    const qualityScore = Number(option.qualityScore ?? 0);
+    const recommendationScore = Number(
+      option.recommendationScore ?? qualityScore,
+    );
+
+    return (
+      recommendationScore * 0.45 +
+      qualityScore * 0.25 +
+      judgement.confidence * 0.3 -
+      getRiskScore(judgement.riskLevel) -
+      Number(option.stompPenalty ?? 0) * 0.4 -
+      Number(option.autoLinePenalty ?? 0) * 0.35
+    );
+  }
+
+  function getAiBestAlternativeIndex(target: BalanceResponse) {
+    const alternatives = target.alternatives ?? [];
+    if (alternatives.length === 0) return null;
+
+    const recommendedNo = target.recommendedAlternative?.optionNo;
+    if (recommendedNo) {
+      const recommendedIndex = alternatives.findIndex(
+        (option) => option.optionNo === recommendedNo,
+      );
+      if (recommendedIndex >= 0) return recommendedIndex;
+    }
+
+    let bestIndex = 0;
+    let bestScore = Number.NEGATIVE_INFINITY;
+
+    alternatives.forEach((option, index) => {
+      const score = getAiAlternativeScore(option);
+      if (score > bestScore) {
+        bestScore = score;
+        bestIndex = index;
+      }
+    });
+
+    return bestIndex;
+  }
+
+  function applyAiBestAlternative() {
+    if (!result) return;
+
+    if (result.aiBestAlternative) {
+      const aiBest = result.aiBestAlternative;
+
+      setResult({
+        ...aiBest,
+        soloSync: result.soloSync ?? aiBest.soloSync ?? null,
+        aiJudgement: aiBest.aiJudgement ?? buildClientAiJudgement(aiBest),
+        recommendedAlternative:
+          result.recommendedAlternative ??
+          aiBest.recommendedAlternative ??
+          null,
+        aiBestAlternative: aiBest,
+        aiCandidateCount: result.aiCandidateCount ?? aiBest.aiCandidateCount,
+        aiSearchScope: result.aiSearchScope ?? aiBest.aiSearchScope,
+        alternatives: result.alternatives ?? aiBest.alternatives,
+      });
+      setSelectedResultIndex(-1);
+      return;
+    }
+
+    if (!result.alternatives?.length) return;
+
+    const bestIndex = getAiBestAlternativeIndex(result);
+    if (bestIndex === null) return;
+
+    selectBalanceAlternative(bestIndex);
   }
 
   function renderAiJudgement(target: BalanceResponse) {
@@ -1032,11 +1497,15 @@ export default function PlayersBalancePage() {
           <div>
             <strong>AI 판단</strong>
             <span>
-              공식 개선 제안이 아니라, 현재 후보 3개를 실제 운영 리스크 기준으로 추론한 결과입니다.
+              공식 개선 제안이 아니라, 현재 RED / BLUE 배치를 실제 운영 리스크
+              기준으로 추론한 결과입니다.
             </span>
           </div>
           <b>
-            {judgement.selectedOptionNo ?? "-"}안 · 신뢰도 {judgement.confidence.toFixed(1)}점
+            {judgement.selectedOptionNo === 0
+              ? "AI 전체탐색"
+              : `${judgement.selectedOptionNo ?? "-"}안`}{" "}
+            · 신뢰도 {judgement.confidence.toFixed(1)}점
           </b>
         </div>
 
@@ -1047,7 +1516,10 @@ export default function PlayersBalancePage() {
           </div>
           <div>
             <span>예상 승률</span>
-            <strong>RED {judgement.predictedRedWinRate.toFixed(1)}% / BLUE {judgement.predictedBlueWinRate.toFixed(1)}%</strong>
+            <strong>
+              RED {judgement.predictedRedWinRate.toFixed(1)}% / BLUE{" "}
+              {judgement.predictedBlueWinRate.toFixed(1)}%
+            </strong>
           </div>
           <div>
             <span>위험도</span>
@@ -1055,7 +1527,11 @@ export default function PlayersBalancePage() {
           </div>
           <div>
             <span>추론 우세</span>
-            <strong>{judgement.inferredWinner === "EVEN" ? "반반" : judgement.inferredWinner}</strong>
+            <strong>
+              {judgement.inferredWinner === "EVEN"
+                ? "반반"
+                : judgement.inferredWinner}
+            </strong>
           </div>
         </div>
 
@@ -1082,7 +1558,76 @@ export default function PlayersBalancePage() {
           </div>
         </div>
 
-        <p className="balance-ai-judgement-advice">{judgement.operatingAdvice}</p>
+        <div className="balance-ai-judgement-body balance-ai-judgement-body--secondary">
+          <div>
+            <h3>장점</h3>
+            {judgement.strengthFactors?.length ? (
+              <ul>
+                {judgement.strengthFactors.map((item, index) => (
+                  <li key={`ai-strength-${index}`}>{item}</li>
+                ))}
+              </ul>
+            ) : (
+              <p>뚜렷한 강점보다 전체 균형 유지가 핵심입니다.</p>
+            )}
+          </div>
+          <div>
+            <h3>개선 제안</h3>
+            {judgement.improvementSuggestions?.length ? (
+              <ul>
+                {judgement.improvementSuggestions.map((item, index) => (
+                  <li key={`ai-suggestion-${index}`}>{item}</li>
+                ))}
+              </ul>
+            ) : (
+              <p>현재 기준에서는 추가 조정 필요성이 크지 않습니다.</p>
+            )}
+          </div>
+        </div>
+
+        <div className="balance-ai-note-grid">
+          {judgement.laneFocus ? (
+            <div>
+              <span>핵심 구간</span>
+              <strong>{judgement.laneFocus}</strong>
+            </div>
+          ) : null}
+          {judgement.overallSummary ? (
+            <div>
+              <span>요약</span>
+              <strong>{judgement.overallSummary}</strong>
+            </div>
+          ) : null}
+        </div>
+
+        {judgement.draftNotes?.length || judgement.dataWarnings?.length ? (
+          <div className="balance-ai-judgement-body balance-ai-judgement-body--secondary">
+            <div>
+              <h3>밴픽·운영 메모</h3>
+              <ul>
+                {(judgement.draftNotes ?? []).map((item, index) => (
+                  <li key={`ai-draft-${index}`}>{item}</li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h3>데이터 주의</h3>
+              {judgement.dataWarnings?.length ? (
+                <ul>
+                  {judgement.dataWarnings.map((item, index) => (
+                    <li key={`ai-data-warning-${index}`}>{item}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p>현재 판단에 치명적인 데이터 부족 경고는 없습니다.</p>
+              )}
+            </div>
+          </div>
+        ) : null}
+
+        <p className="balance-ai-judgement-advice">
+          {judgement.operatingAdvice}
+        </p>
       </section>
     );
   }
@@ -1090,16 +1635,59 @@ export default function PlayersBalancePage() {
   function renderBalanceAlternatives(target: BalanceResponse) {
     const alternatives = target.alternatives ?? [];
 
-    if (alternatives.length <= 1) return null;
+    if (alternatives.length <= 1 && !target.aiBestAlternative) return null;
+
+    const aiBestIndex = getAiBestAlternativeIndex(target);
+    const aiBestOption =
+      target.aiBestAlternative ??
+      (aiBestIndex === null ? null : alternatives[aiBestIndex]);
+    const aiBestJudgement =
+      aiBestOption?.aiJudgement ??
+      (aiBestOption ? buildClientAiJudgement(aiBestOption) : null);
+    const isAiBestActive = Boolean(target.aiBestAlternative)
+      ? selectedResultIndex === -1 && result?.optionNo === 0
+      : aiBestIndex !== null && selectedResultIndex === aiBestIndex;
 
     return (
       <section className="balance-alternative-card">
         <div className="balance-alternative-head">
           <div>
             <strong>자동 계산 추천안</strong>
-            <span>모든 안은 고티어 주포지션을 우선한 뒤, 1안은 총합, 2안은 라인 균형, 3안은 포지션 만족도를 우선합니다.</span>
+            <span>
+              1안/2안/3안은 비교용 기준안이며, AI 최고안 버튼은 전체 후보 조합을
+              다시 평가해 가장 안정적인 RED / BLUE를 적용합니다.
+            </span>
           </div>
-          <b>{selectedResultIndex >= 0 ? `${selectedResultIndex + 1}안 선택 중` : "수동 조정 중"}</b>
+          <div className="balance-alternative-actions">
+            <b>
+              {selectedResultIndex >= 0
+                ? `${selectedResultIndex + 1}안 선택 중`
+                : result?.optionNo === 0
+                  ? "AI 전체탐색 선택 중"
+                  : "수동 조정 중"}
+            </b>
+            <button
+              type="button"
+              className="balance-ai-best-button"
+              onClick={applyAiBestAlternative}
+              disabled={!aiBestOption || isAiBestActive}
+              title="AI가 품질 점수, 위험도, 예상 승률, 라인 격차를 종합해 가장 안정적으로 판단한 RED/BLUE 조합을 적용합니다."
+            >
+              {isAiBestActive
+                ? "AI 전체탐색 최고안 적용됨"
+                : "AI 전체탐색 최고안으로 변경"}
+            </button>
+            {aiBestOption ? (
+              <span className="balance-ai-best-hint">
+                {target.aiBestAlternative
+                  ? `전체 ${target.aiCandidateCount ?? "-"}개 후보 중 AI 최고안`
+                  : `AI 최고안: ${aiBestOption.optionNo ?? (aiBestIndex ?? 0) + 1}안`}
+                {aiBestJudgement
+                  ? ` · 위험도 ${aiBestJudgement.riskLevel} · RED ${aiBestJudgement.predictedRedWinRate.toFixed(1)}% / BLUE ${aiBestJudgement.predictedBlueWinRate.toFixed(1)}%`
+                  : ""}
+              </span>
+            ) : null}
+          </div>
         </div>
 
         <div className="balance-alternative-list">
@@ -1117,12 +1705,30 @@ export default function PlayersBalancePage() {
                 ].join(" ")}
                 onClick={() => selectBalanceAlternative(index)}
               >
-                <span className="balance-alternative-button__no">{option.optionNo ?? index + 1}안</span>
-                <strong>{option.optionTitle ?? `${grade.grade} · ${grade.label}`}</strong>
+                <span className="balance-alternative-button__no">
+                  {option.optionNo ?? index + 1}안
+                </span>
+                <strong>
+                  {option.optionTitle ?? `${grade.grade} · ${grade.label}`}
+                </strong>
                 <small>{option.optionDescription ?? grade.label}</small>
-                <em>RED {option.redTotal.toFixed(1)} / BLUE {option.blueTotal.toFixed(1)} / 품질 {Number(option.qualityScore ?? 0).toFixed(1)}</em>
-                <b>차이 {option.diff.toFixed(1)} · 가중라인 {Number(option.weightedLineDiff ?? option.lineDiffTotal ?? 0).toFixed(1)} · 상체 {Number(option.frontSideDiff ?? 0).toFixed(1)} · 미드정글 {Number(option.midJglDiff ?? 0).toFixed(1)} · 바텀 {Number(option.bottomDiff ?? 0).toFixed(1)}</b>
-                {option.warningMessages?.length ? <small>{option.warningMessages.join(" / ")}</small> : null}
+                <em>
+                  RED {option.redTotal.toFixed(1)} / BLUE{" "}
+                  {option.blueTotal.toFixed(1)} / 품질{" "}
+                  {Number(option.qualityScore ?? 0).toFixed(1)}
+                </em>
+                <b>
+                  차이 {option.diff.toFixed(1)} · 가중라인{" "}
+                  {Number(
+                    option.weightedLineDiff ?? option.lineDiffTotal ?? 0,
+                  ).toFixed(1)}{" "}
+                  · 상체 {Number(option.frontSideDiff ?? 0).toFixed(1)} ·
+                  미드정글 {Number(option.midJglDiff ?? 0).toFixed(1)} · 바텀{" "}
+                  {Number(option.bottomDiff ?? 0).toFixed(1)}
+                </b>
+                {option.warningMessages?.length ? (
+                  <small>{option.warningMessages.join(" / ")}</small>
+                ) : null}
               </button>
             );
           })}
@@ -1144,8 +1750,8 @@ export default function PlayersBalancePage() {
           <div>
             <div className="balance-score-evidence-title">점수 근거 상세</div>
             <div className="balance-score-evidence-desc">
-              팀 카드는 짧게 유지하고, 최고티어 60%·현재티어 30%·내전지표 10%와 포지션 반영
-              과정을 이 영역에서 확인합니다.
+              팀 카드는 짧게 유지하고, 최고티어 60%·현재티어 30%·내전지표 10%와
+              포지션 반영 과정을 이 영역에서 확인합니다.
             </div>
           </div>
         </div>
@@ -1177,7 +1783,11 @@ export default function PlayersBalancePage() {
               </div>
               <div>
                 <span>가중 라인 차이</span>
-                <strong>{formatDecimal(target.weightedLineDiff ?? target.lineDiffTotal)}</strong>
+                <strong>
+                  {formatDecimal(
+                    target.weightedLineDiff ?? target.lineDiffTotal,
+                  )}
+                </strong>
               </div>
               <div>
                 <span>최대 라인 차이</span>
@@ -1322,7 +1932,14 @@ export default function PlayersBalancePage() {
                         <span>5. 보정/감점 후 점수</span>
                         <strong>{formatDecimal(calc.finalScore)}</strong>
                         <p>
-                          솔로랭 보정 {formatDecimal(calc.soloRecentFormBonus)}, 포지션 보정 {formatDecimal(calc.positionSkillBonus)}(솔랭/신청 일치 {formatDecimal(calc.soloApplyPositionMatchBonus)}), 내부 MMR 보정 {formatDecimal(calc.mmrBonus)}, 수동 보정 {formatDecimal(calc.balanceOverrideScore)}, 배정 감점 {formatDecimal(calc.roleLoss)}을 반영해 {formatDecimal(calculatedByPosition)}점입니다.
+                          솔로랭 보정 {formatDecimal(calc.soloRecentFormBonus)},
+                          포지션 보정 {formatDecimal(calc.positionSkillBonus)}
+                          (솔랭/신청 일치{" "}
+                          {formatDecimal(calc.soloApplyPositionMatchBonus)}),
+                          내부 MMR 보정 {formatDecimal(calc.mmrBonus)}, 수동
+                          보정 {formatDecimal(calc.balanceOverrideScore)}, 배정
+                          감점 {formatDecimal(calc.roleLoss)}을 반영해{" "}
+                          {formatDecimal(calculatedByPosition)}점입니다.
                         </p>
                       </div>
                     </div>
@@ -1378,15 +1995,21 @@ export default function PlayersBalancePage() {
                       </div>
                       <div>
                         <span>솔로랭 최근폼</span>
-                        <strong>{formatDecimal(calc.soloRecentFormBonus)}</strong>
+                        <strong>
+                          {formatDecimal(calc.soloRecentFormBonus)}
+                        </strong>
                       </div>
                       <div>
                         <span>포지션 숙련도</span>
-                        <strong>{formatDecimal(calc.positionSkillBonus)}</strong>
+                        <strong>
+                          {formatDecimal(calc.positionSkillBonus)}
+                        </strong>
                       </div>
                       <div>
                         <span>관리자 수동 보정</span>
-                        <strong>{formatDecimal(calc.balanceOverrideScore)}</strong>
+                        <strong>
+                          {formatDecimal(calc.balanceOverrideScore)}
+                        </strong>
                       </div>
                       <div>
                         <span>배정 기준</span>
@@ -1550,7 +2173,7 @@ export default function PlayersBalancePage() {
       const nextRed = nextPlayers.filter((player) => player.team === "RED");
       const nextBlue = nextPlayers.filter((player) => player.team === "BLUE");
 
-      return normalizeResult(nextRed, nextBlue);
+      return normalizeResult(nextRed, nextBlue, prev);
     });
   }
 
@@ -1627,8 +2250,15 @@ export default function PlayersBalancePage() {
         return;
       }
 
-      setSelectedResultIndex(0);
-      setResult(data as BalanceResponse);
+      const balanceData = data as BalanceResponse;
+      const optionIndex = Math.max(
+        0,
+        (balanceData.optionNo ??
+          balanceData.aiJudgement?.selectedOptionNo ??
+          1) - 1,
+      );
+      setSelectedResultIndex(optionIndex);
+      setResult(balanceData);
     } catch (error) {
       console.error(error);
       setErrorMessage("팀 밸런스 계산 중 오류가 발생했습니다.");
@@ -1847,7 +2477,9 @@ export default function PlayersBalancePage() {
               onClick={() => handleSubmit(true)}
               disabled={!canSubmit || loading}
             >
-              {loading && loadingMode === "sync" ? "갱신 후 계산 중..." : "솔로랭 갱신 후 계산"}
+              {loading && loadingMode === "sync"
+                ? "갱신 후 계산 중..."
+                : "솔로랭 갱신 후 계산"}
             </button>
 
             <button
@@ -1900,15 +2532,22 @@ export default function PlayersBalancePage() {
                     </div>
                     <div className="balance-form-head__desc">
                       품질 점수 {Number(result.qualityScore ?? 0).toFixed(1)}점
-                      {result.recommendedAlternative ? ` · 추천: ${result.recommendedAlternative.optionNo}안 ${result.recommendedAlternative.optionTitle ?? ""}` : ""}
-                      {result.warningMessages?.length ? ` · 주의: ${result.warningMessages.join(" / ")}` : ""}
+                      {result.recommendedAlternative
+                        ? ` · 추천: ${result.recommendedAlternative.optionNo}안 ${result.recommendedAlternative.optionTitle ?? ""}`
+                        : ""}
+                      {result.warningMessages?.length
+                        ? ` · 주의: ${result.warningMessages.join(" / ")}`
+                        : ""}
                     </div>
                     {result.soloSync ? (
                       <div className="balance-form-head__desc">
-                        솔로랭 갱신: 성공 {result.soloSync.synced}명 / 스킵 {result.soloSync.skipped}명 / 실패 {result.soloSync.failed}명
+                        솔로랭 갱신: 성공 {result.soloSync.synced}명 / 스킵{" "}
+                        {result.soloSync.skipped}명 / 실패{" "}
+                        {result.soloSync.failed}명
                       </div>
                     ) : null}
                   </div>
+                  {renderBalanceMetricGrid(result)}
                   <div className="balance-line-strip">
                     {lines.map((line) => (
                       <div key={line.position} className="balance-line-chip">
@@ -2040,8 +2679,16 @@ export default function PlayersBalancePage() {
             border-radius: 24px;
             border: 1px solid rgba(125, 211, 252, 0.34);
             background:
-              radial-gradient(circle at 10% 0%, rgba(34, 211, 238, 0.14), transparent 34%),
-              linear-gradient(145deg, rgba(8, 22, 43, 0.96), rgba(10, 30, 55, 0.96));
+              radial-gradient(
+                circle at 10% 0%,
+                rgba(34, 211, 238, 0.14),
+                transparent 34%
+              ),
+              linear-gradient(
+                145deg,
+                rgba(8, 22, 43, 0.96),
+                rgba(10, 30, 55, 0.96)
+              );
             box-shadow: 0 18px 45px rgba(0, 0, 0, 0.34);
           }
 
@@ -2135,6 +2782,141 @@ export default function PlayersBalancePage() {
 
           .balance-ai-judgement-advice {
             margin: 14px 0 0;
+          }
+
+          .balance-alternative-card {
+            margin-top: 18px;
+            padding: 18px;
+            border-radius: 22px;
+            border: 1px solid rgba(96, 165, 250, 0.28);
+            background: linear-gradient(
+              145deg,
+              rgba(8, 22, 43, 0.92),
+              rgba(15, 23, 42, 0.92)
+            );
+          }
+
+          .balance-alternative-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 14px;
+          }
+
+          .balance-alternative-head strong {
+            display: block;
+            color: #f8fafc;
+            font-size: 16px;
+            font-weight: 900;
+          }
+
+          .balance-alternative-head span {
+            display: block;
+            margin-top: 5px;
+            color: #94a3b8;
+            font-size: 12px;
+            line-height: 1.55;
+          }
+
+          .balance-alternative-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+            min-width: 260px;
+          }
+
+          .balance-alternative-actions b {
+            color: #dbeafe;
+            font-size: 12px;
+          }
+
+          .balance-ai-best-button {
+            border: 1px solid rgba(250, 204, 21, 0.48);
+            border-radius: 999px;
+            padding: 9px 14px;
+            background: linear-gradient(
+              135deg,
+              rgba(250, 204, 21, 0.18),
+              rgba(59, 130, 246, 0.18)
+            );
+            color: #fef3c7;
+            font-size: 12px;
+            font-weight: 900;
+            cursor: pointer;
+            transition:
+              transform 0.16s ease,
+              border-color 0.16s ease,
+              opacity 0.16s ease;
+            white-space: nowrap;
+          }
+
+          .balance-ai-best-button:hover:not(:disabled) {
+            transform: translateY(-1px);
+            border-color: rgba(250, 204, 21, 0.78);
+          }
+
+          .balance-ai-best-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.62;
+          }
+
+          .balance-ai-best-hint {
+            max-width: 360px;
+            text-align: right;
+            color: #cbd5e1 !important;
+            font-size: 11px !important;
+          }
+
+          .balance-alternative-list {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+          }
+
+          .balance-alternative-button {
+            display: flex;
+            min-height: 138px;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 6px;
+            padding: 14px;
+            border-radius: 16px;
+            border: 1px solid rgba(148, 163, 184, 0.24);
+            background: rgba(15, 23, 42, 0.72);
+            color: #e5e7eb;
+            text-align: left;
+            cursor: pointer;
+          }
+
+          .balance-alternative-button--active {
+            border-color: rgba(250, 204, 21, 0.62);
+            box-shadow: inset 0 0 0 1px rgba(250, 204, 21, 0.16);
+          }
+
+          .balance-alternative-button__no {
+            display: inline-flex;
+            padding: 3px 8px;
+            border-radius: 999px;
+            background: rgba(59, 130, 246, 0.18);
+            color: #bfdbfe;
+            font-size: 11px;
+            font-weight: 900;
+          }
+
+          .balance-alternative-button strong {
+            color: #ffffff;
+            font-size: 14px;
+          }
+
+          .balance-alternative-button small,
+          .balance-alternative-button em,
+          .balance-alternative-button b {
+            color: #cbd5e1;
+            font-size: 11px;
+            font-style: normal;
+            line-height: 1.45;
           }
 
           .balance-result-teams {

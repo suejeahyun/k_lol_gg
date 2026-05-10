@@ -1,7 +1,6 @@
 import type { AiMatchResultExtraction, AiMatchResultParticipant } from "@/lib/operation-ai/match-result-image-extractor";
 
-const POSITIONS = ["TOP", "JGL", "MID", "ADC", "SUP"] as const;
-type Position = (typeof POSITIONS)[number];
+type Position = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
 type Team = "BLUE" | "RED";
 
 function stripJsonFence(value: string) {

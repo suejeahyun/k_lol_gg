@@ -192,6 +192,12 @@ type AiBalanceJudgement = {
   predictedBlueWinRate: number;
   reasoning: string[];
   riskFactors: string[];
+  strengthFactors: string[];
+  improvementSuggestions: string[];
+  laneFocus: string;
+  draftNotes: string[];
+  dataWarnings: string[];
+  overallSummary: string;
   operatingAdvice: string;
 };
 
@@ -678,18 +684,21 @@ function getRoleType(player: ResolvedPlayer, position: Position): RoleType {
   return "AUTO";
 }
 
-
 function limitRange(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
 }
 
-function isMasterPlusPlayer(player: Pick<ResolvedPlayer, "currentTier" | "peakTier">) {
+function isMasterPlusPlayer(
+  player: Pick<ResolvedPlayer, "currentTier" | "peakTier">,
+) {
   const current = getTierScoreDetail(player.currentTier || "")?.score ?? 0;
   const peak = getTierScoreDetail(player.peakTier || "")?.score ?? 0;
   return Math.max(current, peak) >= MASTER_TIER_SCORE;
 }
 
-function isDiamondTwoPlusPlayer(player: Pick<ResolvedPlayer, "currentTier" | "peakTier">) {
+function isDiamondTwoPlusPlayer(
+  player: Pick<ResolvedPlayer, "currentTier" | "peakTier">,
+) {
   const current = getTierScoreDetail(player.currentTier || "")?.score ?? 0;
   const peak = getTierScoreDetail(player.peakTier || "")?.score ?? 0;
   return Math.max(current, peak) >= DIAMOND_TWO_PLUS_SCORE;
@@ -754,30 +763,50 @@ function getInternalPositionBonus(
 function getSoloPositionBonus(player: ResolvedPlayer, position: Position) {
   if (!player.soloRecentMainPosition) return 0;
   if (player.soloRecentMainPosition === position) return 2;
-  if (player.soloRecentGames >= 10 && player.mainPositions.includes(position)) return 0.5;
-  if (player.soloRecentGames >= 10 && !player.subPositions.includes(position)) return -1.5;
+  if (player.soloRecentGames >= 10 && player.mainPositions.includes(position))
+    return 0.5;
+  if (player.soloRecentGames >= 10 && !player.subPositions.includes(position))
+    return -1.5;
   return 0;
 }
 
-function getSoloApplyPositionMatchBonus(player: ResolvedPlayer, position: Position) {
+function getSoloApplyPositionMatchBonus(
+  player: ResolvedPlayer,
+  position: Position,
+) {
   const soloMain = player.soloRecentMainPosition;
   const soloSub = player.soloRecentSubPosition;
   if (!soloMain && !soloSub) return 0;
 
   let base = 0;
-  if (soloMain && player.mainPositions.includes(soloMain)) base = Math.max(base, 3);
-  if (soloMain && player.subPositions.includes(soloMain)) base = Math.max(base, 1.5);
-  if (soloSub && player.mainPositions.includes(soloSub)) base = Math.max(base, 2);
-  if (soloSub && player.subPositions.includes(soloSub)) base = Math.max(base, 1);
+  if (soloMain && player.mainPositions.includes(soloMain))
+    base = Math.max(base, 3);
+  if (soloMain && player.subPositions.includes(soloMain))
+    base = Math.max(base, 1.5);
+  if (soloSub && player.mainPositions.includes(soloSub))
+    base = Math.max(base, 2);
+  if (soloSub && player.subPositions.includes(soloSub))
+    base = Math.max(base, 1);
 
   if (base === 0 && player.soloRecentGames >= 10) base = -1.5;
 
   const assignedLineBoost =
-    soloMain === position ? 1 : soloSub === position ? 0.65 : player.mainPositions.includes(position) ? 0.35 : 0.2;
-  const reliability = Math.min(1, player.soloRecentGames / 20) * Math.max(0.35, player.soloRecentPositionConfidence || 0.35);
-  const weighted = base * LINE_IMPACT_MULTIPLIER[position] * assignedLineBoost * reliability;
+    soloMain === position
+      ? 1
+      : soloSub === position
+        ? 0.65
+        : player.mainPositions.includes(position)
+          ? 0.35
+          : 0.2;
+  const reliability =
+    Math.min(1, player.soloRecentGames / 20) *
+    Math.max(0.35, player.soloRecentPositionConfidence || 0.35);
+  const weighted =
+    base * LINE_IMPACT_MULTIPLIER[position] * assignedLineBoost * reliability;
 
-  return Number(limitRange(weighted, -2, SOLO_APPLY_POSITION_BONUS_LIMIT).toFixed(2));
+  return Number(
+    limitRange(weighted, -2, SOLO_APPLY_POSITION_BONUS_LIMIT).toFixed(2),
+  );
 }
 
 function getPositionSkillBonus(
@@ -791,7 +820,10 @@ function getPositionSkillBonus(
     internalPositionCountByKey,
   );
   const soloPositionBonus = getSoloPositionBonus(player, position);
-  const soloApplyPositionMatchBonus = getSoloApplyPositionMatchBonus(player, position);
+  const soloApplyPositionMatchBonus = getSoloApplyPositionMatchBonus(
+    player,
+    position,
+  );
   const positionSkillBonus = Number(
     limitRange(
       internalPositionBonus + soloPositionBonus + soloApplyPositionMatchBonus,
@@ -824,7 +856,10 @@ function getAssignedScore(
     soloApplyPositionMatchBonus,
     positionSkillBonus,
   } = getPositionSkillBonus(player, position, internalPositionCountByKey);
-  const assignedPositionMmr = getPositionMmrValue(player.positionMmrs, position);
+  const assignedPositionMmr = getPositionMmrValue(
+    player.positionMmrs,
+    position,
+  );
   const mmrBonus = getMmrBonus({
     overallMmr: player.balanceMmr,
     positionMmr: assignedPositionMmr,
@@ -1119,8 +1154,12 @@ function getLineDiffTotal(assignments: Assignment[]) {
 
 function getMaxLineDiff(assignments: Assignment[]) {
   const diffs = POSITIONS.map((position) => {
-    const red = assignments.find((item) => item.team === "RED" && item.position === position);
-    const blue = assignments.find((item) => item.team === "BLUE" && item.position === position);
+    const red = assignments.find(
+      (item) => item.team === "RED" && item.position === position,
+    );
+    const blue = assignments.find(
+      (item) => item.team === "BLUE" && item.position === position,
+    );
 
     if (!red || !blue) return 0;
 
@@ -1147,7 +1186,8 @@ function getTopPlayerDiff(assignments: Assignment[]) {
 
 function getTopRankStackPenalty(assignments: Assignment[]) {
   const sorted = [...assignments].sort((a, b) => {
-    if (b.finalBaseScore !== a.finalBaseScore) return b.finalBaseScore - a.finalBaseScore;
+    if (b.finalBaseScore !== a.finalBaseScore)
+      return b.finalBaseScore - a.finalBaseScore;
     return a.playerId - b.playerId;
   });
 
@@ -1158,10 +1198,14 @@ function getTopRankStackPenalty(assignments: Assignment[]) {
   const topTwoSameTeam =
     topTwo.length === 2 && topTwo[0].team === topTwo[1].team ? 25 : 0;
 
-  const redTopThree = topThree.filter((assignment) => assignment.team === "RED").length;
+  const redTopThree = topThree.filter(
+    (assignment) => assignment.team === "RED",
+  ).length;
   const blueTopThree = topThree.length - redTopThree;
 
-  const redTopFive = topFive.filter((assignment) => assignment.team === "RED").length;
+  const redTopFive = topFive.filter(
+    (assignment) => assignment.team === "RED",
+  ).length;
   const blueTopFive = topFive.length - redTopFive;
 
   return Number(
@@ -1185,15 +1229,14 @@ function getSTierStackPenalty(assignments: Assignment[]) {
   return Math.abs(redCount - blueCount) * 12;
 }
 
-
-
 function getAssignment(
   assignments: Assignment[],
   team: Team,
   position: Position,
 ) {
   return assignments.find(
-    (assignment) => assignment.team === team && assignment.position === position,
+    (assignment) =>
+      assignment.team === team && assignment.position === position,
   );
 }
 
@@ -1215,7 +1258,8 @@ function getWeightedLineDiff(assignments: Assignment[]) {
   };
 
   const total = POSITIONS.reduce(
-    (sum, position) => sum + getLineDiff(assignments, position) * weights[position],
+    (sum, position) =>
+      sum + getLineDiff(assignments, position) * weights[position],
     0,
   );
 
@@ -1264,7 +1308,8 @@ function getMainImbalancePenalty(assignments: Assignment[]) {
     (assignment) => assignment.team === "RED" && assignment.roleType === "MAIN",
   ).length;
   const blueMain = assignments.filter(
-    (assignment) => assignment.team === "BLUE" && assignment.roleType === "MAIN",
+    (assignment) =>
+      assignment.team === "BLUE" && assignment.roleType === "MAIN",
   ).length;
 
   return Math.abs(redMain - blueMain) * 2;
@@ -1330,7 +1375,9 @@ function getHighTierPriorityPenalty(
     return sum + Math.min(10, getLineDiff(assignments, position) * 0.45);
   }, 0);
 
-  return Number((rolePenalty + teamSplitPenalty + lineMismatchPenalty).toFixed(2));
+  return Number(
+    (rolePenalty + teamSplitPenalty + lineMismatchPenalty).toFixed(2),
+  );
 }
 
 function getRemainingMainPriorityPenalty(
@@ -1365,7 +1412,9 @@ function getDataReliabilityPenalty(
     const recentCount = recentCountByPlayerId.get(assignment.playerId) ?? 0;
     const internalCount = internalCountByPlayerId.get(assignment.playerId) ?? 0;
     const positionCount =
-      internalPositionCountByKey.get(`${assignment.playerId}:${assignment.position}`) ?? 0;
+      internalPositionCountByKey.get(
+        `${assignment.playerId}:${assignment.position}`,
+      ) ?? 0;
 
     const recentRate = getReliabilityRate(recentCount, [
       [15, 1],
@@ -1384,7 +1433,12 @@ function getDataReliabilityPenalty(
     ]);
 
     // 데이터가 부족할수록 조합 평가 신뢰도가 낮으므로 작은 패널티를 줍니다.
-    return sum + (1 - recentRate) * 0.5 + (1 - internalRate) * 0.7 + (1 - positionRate) * 0.5;
+    return (
+      sum +
+      (1 - recentRate) * 0.5 +
+      (1 - internalRate) * 0.7 +
+      (1 - positionRate) * 0.5
+    );
   }, 0);
 
   return Number(totalPenalty.toFixed(2));
@@ -1411,41 +1465,140 @@ function getStompPenalty(assignments: Assignment[]) {
     getLanePairPenalty(assignments, ["ADC", "SUP"]);
 
   return Number(
-    (lineGapPenalty + topSidePenalty * 0.5 + midJglPenalty * 0.7 + bottomPenalty * 0.7 + pairPenalty).toFixed(2),
+    (
+      lineGapPenalty +
+      topSidePenalty * 0.5 +
+      midJglPenalty * 0.7 +
+      bottomPenalty * 0.7 +
+      pairPenalty
+    ).toFixed(2),
   );
 }
 
 function getLanePairPenalty(assignments: Assignment[], positions: Position[]) {
-  const redAuto = positions.filter((position) => getAssignment(assignments, "RED", position)?.roleType === "AUTO").length;
-  const blueAuto = positions.filter((position) => getAssignment(assignments, "BLUE", position)?.roleType === "AUTO").length;
-  const redMain = positions.filter((position) => getAssignment(assignments, "RED", position)?.roleType === "MAIN").length;
-  const blueMain = positions.filter((position) => getAssignment(assignments, "BLUE", position)?.roleType === "MAIN").length;
+  const redAuto = positions.filter(
+    (position) =>
+      getAssignment(assignments, "RED", position)?.roleType === "AUTO",
+  ).length;
+  const blueAuto = positions.filter(
+    (position) =>
+      getAssignment(assignments, "BLUE", position)?.roleType === "AUTO",
+  ).length;
+  const redMain = positions.filter(
+    (position) =>
+      getAssignment(assignments, "RED", position)?.roleType === "MAIN",
+  ).length;
+  const blueMain = positions.filter(
+    (position) =>
+      getAssignment(assignments, "BLUE", position)?.roleType === "MAIN",
+  ).length;
 
   return Math.abs(redAuto - blueAuto) * 3 + Math.abs(redMain - blueMain) * 1.5;
 }
 
-function getQualityScore(candidate: Omit<CandidateSnapshot, "qualityScore" | "recommendationScore" | "warningMessages">) {
-  const penalty =
-    candidate.diff * 1.2 +
-    candidate.maxLineDiff * 1.4 +
-    candidate.midJglDiff * 1.1 +
-    candidate.bottomDiff * 0.8 +
-    candidate.autoAssignedCount * 5 +
-    candidate.highTierPriorityPenalty * 0.08 +
-    candidate.remainingMainPriorityPenalty * 1.1 +
-    candidate.stompPenalty * 1.3;
+function getNormalizedBalanceMetrics(
+  candidate: Pick<
+    CandidateSnapshot,
+    | "diff"
+    | "weightedLineDiff"
+    | "maxLineDiff"
+    | "frontSideDiff"
+    | "midJglDiff"
+    | "bottomDiff"
+    | "autoAssignedCount"
+    | "subAssignedCount"
+    | "mainAssignedCount"
+    | "topRankStackPenalty"
+    | "sTierStackPenalty"
+    | "dataReliabilityPenalty"
+    | "stompPenalty"
+    | "highTierPriorityPenalty"
+    | "remainingMainPriorityPenalty"
+    | "mainImbalancePenalty"
+  >,
+) {
+  const totalBalanceScore = limitRange(100 - candidate.diff * 4.2, 0, 100);
+  const lineBalanceScore = limitRange(
+    100 -
+      candidate.maxLineDiff * 4.4 -
+      candidate.weightedLineDiff * 0.9 -
+      candidate.midJglDiff * 1.15 -
+      candidate.bottomDiff * 0.8,
+    0,
+    100,
+  );
+  const positionSatisfactionScore = limitRange(
+    100 -
+      candidate.autoAssignedCount * 12 -
+      candidate.subAssignedCount * 2.4 -
+      candidate.remainingMainPriorityPenalty * 1.4 -
+      candidate.mainImbalancePenalty * 1.1 -
+      candidate.highTierPriorityPenalty * 0.008,
+    0,
+    100,
+  );
+  const carryDistributionScore = limitRange(
+    100 -
+      candidate.topRankStackPenalty * 1.5 -
+      candidate.sTierStackPenalty * 1.4 -
+      candidate.frontSideDiff * 0.7,
+    0,
+    100,
+  );
+  const reliabilityScore = limitRange(
+    100 - candidate.dataReliabilityPenalty * 7 - candidate.stompPenalty * 4.5,
+    0,
+    100,
+  );
 
-  return Number(limitRange(100 - penalty, 0, 100).toFixed(1));
+  return {
+    totalBalanceScore: Number(totalBalanceScore.toFixed(1)),
+    lineBalanceScore: Number(lineBalanceScore.toFixed(1)),
+    positionSatisfactionScore: Number(positionSatisfactionScore.toFixed(1)),
+    carryDistributionScore: Number(carryDistributionScore.toFixed(1)),
+    reliabilityScore: Number(reliabilityScore.toFixed(1)),
+  };
 }
 
-function getWarningMessages(candidate: Omit<CandidateSnapshot, "qualityScore" | "recommendationScore" | "warningMessages">) {
+function getQualityScore(
+  candidate: Omit<
+    CandidateSnapshot,
+    "qualityScore" | "recommendationScore" | "warningMessages"
+  >,
+) {
+  const metrics = getNormalizedBalanceMetrics(candidate);
+
+  // 표시용 품질 점수는 단일 패널티 차감값이 아니라 운영자가 체감하는 5개 축을 합산합니다.
+  // 총점이 같아도 미드-정글/바텀/고티어 몰림이 크면 실제 게임은 쉽게 터지므로 라인·포지션 축 비중을 높였습니다.
+  const score =
+    metrics.totalBalanceScore * 0.24 +
+    metrics.lineBalanceScore * 0.28 +
+    metrics.positionSatisfactionScore * 0.2 +
+    metrics.carryDistributionScore * 0.14 +
+    metrics.reliabilityScore * 0.14;
+
+  return Number(limitRange(score, 0, 100).toFixed(1));
+}
+
+function getWarningMessages(
+  candidate: Omit<
+    CandidateSnapshot,
+    "qualityScore" | "recommendationScore" | "warningMessages"
+  >,
+) {
   const warnings: string[] = [];
-  if (candidate.highTierPriorityPenalty > 0) warnings.push("고티어 주포지션 이탈이 있습니다.");
-  if (candidate.autoAssignedCount > 0) warnings.push(`AUTO 배정 ${candidate.autoAssignedCount}명`);
-  if (candidate.maxLineDiff >= 12) warnings.push(`최대 라인 차이 ${candidate.maxLineDiff.toFixed(1)}점`);
-  if (candidate.midJglDiff >= 10) warnings.push(`미드-정글 합산 차이 ${candidate.midJglDiff.toFixed(1)}점`);
-  if (candidate.bottomDiff >= 10) warnings.push(`바텀 합산 차이 ${candidate.bottomDiff.toFixed(1)}점`);
-  if (candidate.dataReliabilityPenalty >= 5) warnings.push("일부 플레이어의 데이터 신뢰도가 낮습니다.");
+  if (candidate.highTierPriorityPenalty > 0)
+    warnings.push("고티어 주포지션 이탈이 있습니다.");
+  if (candidate.autoAssignedCount > 0)
+    warnings.push(`AUTO 배정 ${candidate.autoAssignedCount}명`);
+  if (candidate.maxLineDiff >= 12)
+    warnings.push(`최대 라인 차이 ${candidate.maxLineDiff.toFixed(1)}점`);
+  if (candidate.midJglDiff >= 10)
+    warnings.push(`미드-정글 합산 차이 ${candidate.midJglDiff.toFixed(1)}점`);
+  if (candidate.bottomDiff >= 10)
+    warnings.push(`바텀 합산 차이 ${candidate.bottomDiff.toFixed(1)}점`);
+  if (candidate.dataReliabilityPenalty >= 5)
+    warnings.push("일부 플레이어의 데이터 신뢰도가 낮습니다.");
   return warnings;
 }
 
@@ -1458,31 +1611,82 @@ function getPredictedWinRates(redTotal: number, blueTotal: number) {
   };
 }
 
-function getAiInferenceScore(candidate: {
-  qualityScore?: number;
-  recommendationScore?: number;
-  diff: number;
-  maxLineDiff?: number;
-  midJglDiff?: number;
-  bottomDiff?: number;
-  autoAssignedCount: number;
-  highTierPriorityPenalty?: number;
-  dataReliabilityPenalty?: number;
-  stompPenalty?: number;
-}) {
+function getAiInferenceScore(
+  candidate: CandidateSnapshot | {
+    qualityScore?: number;
+    recommendationScore?: number;
+    diff: number;
+    weightedLineDiff?: number;
+    maxLineDiff?: number;
+    frontSideDiff?: number;
+    midJglDiff?: number;
+    bottomDiff?: number;
+    autoAssignedCount: number;
+    subAssignedCount?: number;
+    mainAssignedCount?: number;
+    topRankStackPenalty?: number;
+    sTierStackPenalty?: number;
+    highTierPriorityPenalty?: number;
+    remainingMainPriorityPenalty?: number;
+    mainImbalancePenalty?: number;
+    dataReliabilityPenalty?: number;
+    stompPenalty?: number;
+  },
+) {
   const qualityScore = candidate.qualityScore ?? 0;
+  const metrics = getNormalizedBalanceMetrics({
+    diff: candidate.diff,
+    weightedLineDiff: candidate.weightedLineDiff ?? 0,
+    maxLineDiff: candidate.maxLineDiff ?? 0,
+    frontSideDiff: candidate.frontSideDiff ?? 0,
+    midJglDiff: candidate.midJglDiff ?? 0,
+    bottomDiff: candidate.bottomDiff ?? 0,
+    autoAssignedCount: candidate.autoAssignedCount,
+    subAssignedCount: candidate.subAssignedCount ?? 0,
+    mainAssignedCount: candidate.mainAssignedCount ?? 0,
+    topRankStackPenalty: candidate.topRankStackPenalty ?? 0,
+    sTierStackPenalty: candidate.sTierStackPenalty ?? 0,
+    dataReliabilityPenalty: candidate.dataReliabilityPenalty ?? 0,
+    stompPenalty: candidate.stompPenalty ?? 0,
+    highTierPriorityPenalty: candidate.highTierPriorityPenalty ?? 0,
+    remainingMainPriorityPenalty: candidate.remainingMainPriorityPenalty ?? 0,
+    mainImbalancePenalty: candidate.mainImbalancePenalty ?? 0,
+  });
+
   const winRates = getPredictedWinRates(100, 100 + candidate.diff);
   const predictedCloseness = 100 - Math.abs(50 - winRates.red) * 2;
-  const riskPenalty =
-    (candidate.maxLineDiff ?? 0) * 0.8 +
-    (candidate.midJglDiff ?? 0) * 0.75 +
-    (candidate.bottomDiff ?? 0) * 0.45 +
-    candidate.autoAssignedCount * 3.5 +
-    (candidate.highTierPriorityPenalty ?? 0) * 0.1 +
-    (candidate.dataReliabilityPenalty ?? 0) * 0.7 +
-    (candidate.stompPenalty ?? 0) * 0.7;
+  const hardRiskPenalty =
+    limitRange((candidate.highTierPriorityPenalty ?? 0) * 0.012, 0, 22) +
+    limitRange((candidate.stompPenalty ?? 0) * 1.2, 0, 16) +
+    limitRange(candidate.autoAssignedCount * 3.2, 0, 16);
 
-  return Number((qualityScore * 0.55 + predictedCloseness * 0.35 - riskPenalty * 0.1).toFixed(2));
+  return Number(
+    (
+      qualityScore * 0.34 +
+      metrics.lineBalanceScore * 0.22 +
+      metrics.positionSatisfactionScore * 0.2 +
+      metrics.carryDistributionScore * 0.1 +
+      metrics.reliabilityScore * 0.06 +
+      predictedCloseness * 0.08 -
+      hardRiskPenalty
+    ).toFixed(2),
+  );
+}
+
+function compareByAiGlobal(a: CandidateSnapshot, b: CandidateSnapshot) {
+  const scoreA = getAiInferenceScore(a);
+  const scoreB = getAiInferenceScore(b);
+
+  if (scoreA !== scoreB) return scoreB - scoreA;
+  if (a.qualityScore !== b.qualityScore) return b.qualityScore - a.qualityScore;
+  if (a.diff !== b.diff) return a.diff - b.diff;
+  if (a.maxLineDiff !== b.maxLineDiff) return a.maxLineDiff - b.maxLineDiff;
+  if (a.midJglDiff !== b.midJglDiff) return a.midJglDiff - b.midJglDiff;
+  if (a.bottomDiff !== b.bottomDiff) return a.bottomDiff - b.bottomDiff;
+  if (a.autoAssignedCount !== b.autoAssignedCount)
+    return a.autoAssignedCount - b.autoAssignedCount;
+
+  return a.balanceCost - b.balanceCost;
 }
 
 function getAiBalanceJudgement(
@@ -1524,27 +1728,119 @@ function getAiBalanceJudgement(
 
   const riskFactors = [
     ...(best.warningMessages ?? []),
-    (best.maxLineDiff ?? 0) >= 10 ? `라인 최대 격차 ${Number(best.maxLineDiff ?? 0).toFixed(1)}점` : null,
-    (best.midJglDiff ?? 0) >= 8 ? `미드-정글 격차 ${Number(best.midJglDiff ?? 0).toFixed(1)}점` : null,
-    (best.bottomDiff ?? 0) >= 8 ? `바텀 격차 ${Number(best.bottomDiff ?? 0).toFixed(1)}점` : null,
+    (best.maxLineDiff ?? 0) >= 10
+      ? `라인 최대 격차 ${Number(best.maxLineDiff ?? 0).toFixed(1)}점`
+      : null,
+    (best.midJglDiff ?? 0) >= 8
+      ? `미드-정글 격차 ${Number(best.midJglDiff ?? 0).toFixed(1)}점`
+      : null,
+    (best.bottomDiff ?? 0) >= 8
+      ? `바텀 격차 ${Number(best.bottomDiff ?? 0).toFixed(1)}점`
+      : null,
     best.autoAssignedCount > 0 ? `AUTO ${best.autoAssignedCount}명` : null,
-    (best.dataReliabilityPenalty ?? 0) >= 5 ? "데이터 신뢰도 낮은 플레이어 포함" : null,
+    (best.dataReliabilityPenalty ?? 0) >= 5
+      ? "데이터 신뢰도 낮은 플레이어 포함"
+      : null,
   ].filter(Boolean) as string[];
 
+  const strengthFactors = [
+    best.diff <= 3
+      ? `총점 차이 ${best.diff.toFixed(1)}점으로 전체 체급이 안정적입니다.`
+      : null,
+    (best.maxLineDiff ?? 0) <= 5
+      ? `최대 라인 차이 ${Number(best.maxLineDiff ?? 0).toFixed(1)}점으로 라인 붕괴 위험이 낮습니다.`
+      : null,
+    (best.midJglDiff ?? 0) <= 5
+      ? "미드-정글 격차가 작아 초반 주도권 리스크가 낮습니다."
+      : null,
+    (best.bottomDiff ?? 0) <= 5
+      ? "바텀 듀오 격차가 작아 2:2 라인전 변수가 비교적 낮습니다."
+      : null,
+    best.autoAssignedCount === 0
+      ? "AUTO 배정 없이 주/부 포지션 중심으로 구성되었습니다."
+      : null,
+    (best.qualityScore ?? 0) >= 80
+      ? `품질 점수 ${Number(best.qualityScore ?? 0).toFixed(1)}점으로 후보군 중 운영 안정성이 높습니다.`
+      : null,
+  ].filter(Boolean) as string[];
+
+  const improvementSuggestions = [
+    best.diff > 5
+      ? "총점 차이가 크므로 RED/BLUE의 저점 또는 고점 플레이어 1명 교환을 검토하세요."
+      : null,
+    (best.maxLineDiff ?? 0) > 8
+      ? "가장 벌어진 단일 라인을 우선 조정하세요. 전체 총점보다 라인 폭발 위험이 더 큽니다."
+      : null,
+    (best.midJglDiff ?? 0) > 7
+      ? "미드-정글 차이가 있어 초반 교전·오브젝트 콜 주도권이 한쪽으로 쏠릴 수 있습니다."
+      : null,
+    (best.bottomDiff ?? 0) > 7
+      ? "바텀 차이가 있어 드래곤 운영과 2:2 라인전 변수를 확인하세요."
+      : null,
+    best.autoAssignedCount > 0
+      ? "AUTO 배정자는 실제 가능 포지션인지 확인한 뒤 확정하는 편이 안전합니다."
+      : null,
+    (best.dataReliabilityPenalty ?? 0) >= 5
+      ? "최근 내전/솔랭 표본이 적은 플레이어는 운영자 체감 실력으로 보정하세요."
+      : null,
+  ].filter(Boolean) as string[];
+
+  const laneFocus = (() => {
+    const entries = [
+      ["미드-정글", Number(best.midJglDiff ?? 0)],
+      ["바텀", Number(best.bottomDiff ?? 0)],
+      ["상체", Number((best as { frontSideDiff?: number }).frontSideDiff ?? 0)],
+      ["단일 라인", Number(best.maxLineDiff ?? 0)],
+    ] as const;
+    const [label, value] = [...entries].sort((a, b) => b[1] - a[1])[0];
+    return value >= 7
+      ? `${label} 구간을 가장 먼저 확인해야 합니다. 현재 격차 ${value.toFixed(1)}점입니다.`
+      : "특정 라인 하나가 과도하게 벌어지지는 않았습니다.";
+  })();
+
+  const dataWarnings = [
+    (best.dataReliabilityPenalty ?? 0) >= 5
+      ? "일부 플레이어의 최근 내전/솔랭 표본이 부족합니다."
+      : null,
+    (best.stompPenalty ?? 0) >= 5
+      ? "한쪽으로 경기가 빠르게 기울 가능성이 감지되었습니다."
+      : null,
+  ].filter(Boolean) as string[];
+
+  const draftNotes = [
+    inferredWinner === "EVEN"
+      ? "밴픽은 양팀 모두 편한 픽 위주로 가도 무리가 적습니다."
+      : `${inferredWinner}가 근소 우세로 추론되므로 반대팀은 초반 안정형 픽이나 라인전 버티기 픽이 유리합니다.`,
+    (best.midJglDiff ?? 0) >= 7
+      ? "미드-정글 2:2 구도가 승패를 크게 흔들 수 있습니다."
+      : "미드-정글 구도는 과도한 리스크 구간은 아닙니다.",
+    (best.bottomDiff ?? 0) >= 7
+      ? "바텀 중심 밴픽 또는 서포터 주도권 픽을 확인하세요."
+      : "바텀 격차는 관리 가능한 범위입니다.",
+  ];
+
   const riskValue =
-    best.diff * 0.8 +
-    (best.maxLineDiff ?? 0) * 1.1 +
-    (best.midJglDiff ?? 0) * 1.15 +
-    (best.bottomDiff ?? 0) * 0.85 +
-    best.autoAssignedCount * 4 +
-    (best.highTierPriorityPenalty ?? 0) * 0.12 +
-    (best.dataReliabilityPenalty ?? 0) * 0.8;
+    best.diff * 0.9 +
+    (best.maxLineDiff ?? 0) * 1.15 +
+    (best.midJglDiff ?? 0) * 1.2 +
+    (best.bottomDiff ?? 0) * 0.9 +
+    best.autoAssignedCount * 4.5 +
+    limitRange((best.highTierPriorityPenalty ?? 0) * 0.012, 0, 20) +
+    limitRange((best.dataReliabilityPenalty ?? 0) * 0.9, 0, 12) +
+    limitRange((best.stompPenalty ?? 0) * 1.05, 0, 16);
 
   const riskLevel: AiBalanceJudgement["riskLevel"] =
     riskValue >= 38 ? "HIGH" : riskValue >= 22 ? "MEDIUM" : "LOW";
 
   const confidence = Number(
-    limitRange((best.qualityScore ?? 70) - (best.dataReliabilityPenalty ?? 0) * 1.2 - riskFactors.length * 2, 0, 100).toFixed(1),
+    limitRange(
+      (best.qualityScore ?? 70) * 0.72 +
+        getAiInferenceScore(best) * 0.28 -
+        (best.dataReliabilityPenalty ?? 0) * 0.8 -
+        riskFactors.length * 1.6,
+      0,
+      100,
+    ).toFixed(1),
   );
 
   const reasoning = [
@@ -1567,6 +1863,8 @@ function getAiBalanceJudgement(
         ? "추천안을 쓰되, AUTO 배정자와 핵심 라인 차이를 먼저 공유하는 편이 좋습니다."
         : "가능하면 대체안을 비교하거나 수동 드래그로 핵심 라인 차이를 줄인 뒤 저장하세요.";
 
+  const overallSummary = `${best.optionNo ?? "-"}안은 RED ${winRates.red.toFixed(1)}% / BLUE ${winRates.blue.toFixed(1)}%로 예측되며, 위험도는 ${riskLevel}입니다.`;
+
   return {
     selectedOptionNo: best.optionNo ?? null,
     selectedOptionTitle: best.optionTitle ?? null,
@@ -1578,6 +1876,12 @@ function getAiBalanceJudgement(
     predictedBlueWinRate: winRates.blue,
     reasoning,
     riskFactors,
+    strengthFactors,
+    improvementSuggestions,
+    laneFocus,
+    draftNotes,
+    dataWarnings,
+    overallSummary,
     operatingAdvice,
   };
 }
@@ -1624,7 +1928,9 @@ function getBalanceCost(params: {
 function getCandidateKey(candidate: CandidateSnapshot) {
   return candidate.assignments
     .filter((assignment) => assignment.team === "RED")
-    .sort((a, b) => POSITIONS.indexOf(a.position) - POSITIONS.indexOf(b.position))
+    .sort(
+      (a, b) => POSITIONS.indexOf(a.position) - POSITIONS.indexOf(b.position),
+    )
     .map((assignment) => `${assignment.position}:${assignment.playerId}`)
     .join("|");
 }
@@ -1710,7 +2016,8 @@ function compareByPlan(kind: PlanKind) {
 
     if (kind === "TEAM_TOTAL") {
       if (a.diff !== b.diff) return a.diff - b.diff;
-      if (a.lineDiffTotal !== b.lineDiffTotal) return a.lineDiffTotal - b.lineDiffTotal;
+      if (a.lineDiffTotal !== b.lineDiffTotal)
+        return a.lineDiffTotal - b.lineDiffTotal;
     }
 
     if (kind === "LINE_BALANCE") {
@@ -1722,7 +2029,8 @@ function compareByPlan(kind: PlanKind) {
       }
       if (a.midJglDiff !== b.midJglDiff) return a.midJglDiff - b.midJglDiff;
       if (a.maxLineDiff !== b.maxLineDiff) return a.maxLineDiff - b.maxLineDiff;
-      if (a.frontSideDiff !== b.frontSideDiff) return a.frontSideDiff - b.frontSideDiff;
+      if (a.frontSideDiff !== b.frontSideDiff)
+        return a.frontSideDiff - b.frontSideDiff;
       if (a.bottomDiff !== b.bottomDiff) return a.bottomDiff - b.bottomDiff;
       if (a.diff !== b.diff) return a.diff - b.diff;
     }
@@ -2083,18 +2391,16 @@ export async function handlePlayersBalanceRequest(request: NextRequest) {
       if (current >= 20) return;
 
       recentCountByPlayerId.set(match.playerId, current + 1);
-      const stat =
-        recentStatsByPlayerId.get(match.playerId) ??
-        {
-          games: 0,
-          wins: 0,
-          kills: 0,
-          deaths: 0,
-          assists: 0,
-          damage: 0,
-          vision: 0,
-          positionCounts: new Map<Position, number>(),
-        };
+      const stat = recentStatsByPlayerId.get(match.playerId) ?? {
+        games: 0,
+        wins: 0,
+        kills: 0,
+        deaths: 0,
+        assists: 0,
+        damage: 0,
+        vision: 0,
+        positionCounts: new Map<Position, number>(),
+      };
 
       stat.games += 1;
       stat.wins += match.win ? 1 : 0;
@@ -2166,20 +2472,34 @@ export async function handlePlayersBalanceRequest(request: NextRequest) {
           ? Number((sortedSoloPositions[0][1] / soloRecentGames).toFixed(2))
           : 0;
       const soloRecentKda = recent
-        ? Number(((recent.kills + recent.assists) / Math.max(1, recent.deaths)).toFixed(2))
+        ? Number(
+            (
+              (recent.kills + recent.assists) /
+              Math.max(1, recent.deaths)
+            ).toFixed(2),
+          )
         : null;
 
       return {
         ...player,
         soloRecentGames,
         soloRecentWins,
-        soloRecentWinRate: soloRecentGames > 0 ? Number(((soloRecentWins / soloRecentGames) * 100).toFixed(1)) : null,
+        soloRecentWinRate:
+          soloRecentGames > 0
+            ? Number(((soloRecentWins / soloRecentGames) * 100).toFixed(1))
+            : null,
         soloRecentKda,
         soloRecentMainPosition,
         soloRecentSubPosition,
         soloRecentPositionConfidence,
-        soloRecentAvgDamage: recent && soloRecentGames > 0 ? Number((recent.damage / soloRecentGames).toFixed(0)) : null,
-        soloRecentAvgVisionScore: recent && soloRecentGames > 0 ? Number((recent.vision / soloRecentGames).toFixed(1)) : null,
+        soloRecentAvgDamage:
+          recent && soloRecentGames > 0
+            ? Number((recent.damage / soloRecentGames).toFixed(0))
+            : null,
+        soloRecentAvgVisionScore:
+          recent && soloRecentGames > 0
+            ? Number((recent.vision / soloRecentGames).toFixed(1))
+            : null,
       };
     });
     const highTierPlayerIds = getHighTierPlayerIds(resolvedPlayers);
@@ -2309,10 +2629,11 @@ export async function handlePlayersBalanceRequest(request: NextRequest) {
       const candidate: CandidateSnapshot = {
         ...candidateBase,
         qualityScore,
-        recommendationScore: Number((qualityScore - balanceCost * 0.08).toFixed(2)),
+        recommendationScore: 0,
         warningMessages,
       };
 
+      candidate.recommendationScore = getAiInferenceScore(candidate);
       candidates.push(candidate);
     }
 
@@ -2342,7 +2663,8 @@ export async function handlePlayersBalanceRequest(request: NextRequest) {
         kind: "TEAM_TOTAL",
         optionNo: 1,
         optionTitle: "총합 균형형",
-        optionDescription: "고티어 주포지션을 우선 고정한 뒤 RED / BLUE 전체 점수 차이를 가장 우선한 조합입니다.",
+        optionDescription:
+          "고티어 주포지션을 우선 고정한 뒤 RED / BLUE 전체 점수 차이를 가장 우선한 조합입니다.",
       },
       {
         kind: "LINE_BALANCE",
@@ -2355,7 +2677,8 @@ export async function handlePlayersBalanceRequest(request: NextRequest) {
         kind: "POSITION_SATISFACTION",
         optionNo: 3,
         optionTitle: "포지션 만족형",
-        optionDescription: "주포지션 배정을 최대화하면서 팀 점수 차이도 함께 고려한 조합입니다.",
+        optionDescription:
+          "주포지션 배정을 최대화하면서 팀 점수 차이도 함께 고려한 조합입니다.",
       },
     ];
 
@@ -2375,19 +2698,23 @@ export async function handlePlayersBalanceRequest(request: NextRequest) {
       return { ...plan, candidate };
     });
 
-    const bestCandidate = selectedPlans[0]?.candidate ?? planCandidatePool.sort(compareByPlan("TEAM_TOTAL"))[0];
+    const bestCandidate =
+      selectedPlans[0]?.candidate ??
+      planCandidatePool.sort(compareByPlan("TEAM_TOTAL"))[0];
 
     const toResponsePayload = (candidate: CandidateSnapshot) => {
       const red = candidate.assignments
         .filter((assignment) => assignment.team === "RED")
         .sort(
-          (a, b) => POSITIONS.indexOf(a.position) - POSITIONS.indexOf(b.position),
+          (a, b) =>
+            POSITIONS.indexOf(a.position) - POSITIONS.indexOf(b.position),
         );
 
       const blue = candidate.assignments
         .filter((assignment) => assignment.team === "BLUE")
         .sort(
-          (a, b) => POSITIONS.indexOf(a.position) - POSITIONS.indexOf(b.position),
+          (a, b) =>
+            POSITIONS.indexOf(a.position) - POSITIONS.indexOf(b.position),
         );
 
       return {
@@ -2436,32 +2763,59 @@ export async function handlePlayersBalanceRequest(request: NextRequest) {
         };
       });
 
-    const aiJudgement = getAiBalanceJudgement(alternatives);
-    const recommendedAlternative = aiJudgement
+    const alternativesWithAi = alternatives.map((option) => ({
+      ...option,
+      aiJudgement: getAiBalanceJudgement([option]),
+    }));
+
+    const globalAiCandidate =
+      [...candidates].sort(compareByAiGlobal)[0] ?? bestCandidate;
+    const aiBestAlternativeBase = {
+      optionNo: 0,
+      optionTitle: "AI 전체탐색 최고안",
+      optionDescription: `1안/2안/3안에 한정하지 않고 전체 ${candidates.length}개 후보 조합을 AI 평가 점수로 다시 비교한 RED / BLUE 배치입니다.`,
+      planType: "TEAM_TOTAL" as PlanKind,
+      planCost: getPlanCost(globalAiCandidate, "TEAM_TOTAL"),
+      aiSearchScope: "ALL_CANDIDATES" as const,
+      aiCandidateCount: candidates.length,
+      ...toResponsePayload(globalAiCandidate),
+    };
+    const aiBestAlternative = {
+      ...aiBestAlternativeBase,
+      aiJudgement: getAiBalanceJudgement([aiBestAlternativeBase]),
+    };
+
+    const selectedAlternative = aiBestAlternative;
+    const selectedAiJudgement = aiBestAlternative.aiJudgement;
+    const recommendedAlternative = selectedAiJudgement
       ? {
-          optionNo: aiJudgement.selectedOptionNo ?? undefined,
-          optionTitle: aiJudgement.selectedOptionTitle ?? undefined,
-          qualityScore:
-            alternatives.find((option) => option.optionNo === aiJudgement.selectedOptionNo)?.qualityScore ?? 0,
-          recommendationScore: aiJudgement.confidence,
-          reason: aiJudgement.verdict,
+          optionNo: 0,
+          optionTitle: "AI 전체탐색 최고안",
+          qualityScore: aiBestAlternative.qualityScore ?? 0,
+          recommendationScore: selectedAiJudgement.confidence,
+          reason: selectedAiJudgement.verdict,
         }
       : null;
 
     return NextResponse.json({
-      ...toResponsePayload(bestCandidate),
+      ...selectedAlternative,
       soloSync: body.syncSoloRank
         ? {
             requested: soloSyncResults.length,
-            synced: soloSyncResults.filter((item) => item.status === "synced").length,
-            skipped: soloSyncResults.filter((item) => item.status === "skipped").length,
-            failed: soloSyncResults.filter((item) => item.status === "failed").length,
+            synced: soloSyncResults.filter((item) => item.status === "synced")
+              .length,
+            skipped: soloSyncResults.filter((item) => item.status === "skipped")
+              .length,
+            failed: soloSyncResults.filter((item) => item.status === "failed")
+              .length,
             results: soloSyncResults,
           }
         : null,
       recommendedAlternative,
-      aiJudgement,
-      alternatives,
+      aiJudgement: selectedAiJudgement,
+      aiBestAlternative,
+      aiCandidateCount: candidates.length,
+      alternatives: alternativesWithAi,
     });
   } catch (error) {
     console.error("[PLAYERS_BALANCE_POST_ERROR]", error);
