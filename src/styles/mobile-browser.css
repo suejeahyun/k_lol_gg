@@ -1,209 +1,210 @@
-/* Mobile browser refinement layer for K-LOL.GG
-   Import this file last in src/app/globals.css.
-   Goal: phone browser layout, not native app layout. */
-
-:root {
-  --mobile-safe-left: max(14px, env(safe-area-inset-left));
-  --mobile-safe-right: max(14px, env(safe-area-inset-right));
-  --mobile-safe-bottom: max(22px, env(safe-area-inset-bottom));
-  --mobile-topbar-height: 56px;
-  --mobile-nav-height: 54px;
-  --mobile-radius: 18px;
-}
-
-html {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden;
-  -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
-}
-
-body {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden;
-  touch-action: manipulation;
-  overscroll-behavior-x: none;
-  background: #050b16;
-}
-
-button,
-a,
-input,
-select,
-textarea {
-  -webkit-tap-highlight-color: rgba(96, 165, 250, 0.16);
-}
-
-img,
-video,
-iframe,
-svg,
-canvas {
-  max-width: 100%;
-}
+/*
+  K-LOL.GG mobile browser override
+  목적: PC형 CSS를 유지하면서 768px 이하에서 모든 주요 화면을 앱형 1열 레이아웃으로 전환한다.
+  원칙:
+  - 모바일에서 가로 스크롤 금지
+  - PC용 검색/사이드 여백/테이블 헤더 등 불필요 영역 축소 또는 숨김
+  - 목록, 테이블, 그리드, 관리자 화면을 카드형으로 재배치
+*/
 
 @media (max-width: 768px) {
+  :root {
+    --mobile-page-x: 14px;
+    --mobile-card-radius: 20px;
+    --mobile-bottom-safe: env(safe-area-inset-bottom, 0px);
+    --mobile-top-safe: env(safe-area-inset-top, 0px);
+  }
+
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden !important;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    overscroll-behavior-x: none;
+  }
+
+  body {
+    min-width: 0 !important;
+    font-size: 15px;
+  }
+
   *,
   *::before,
   *::after {
     box-sizing: border-box;
+    max-width: 100%;
+  }
+
+  img,
+  video,
+  canvas,
+  iframe,
+  svg {
+    max-width: 100%;
+  }
+
+  iframe {
+    width: 100% !important;
+    min-height: 210px;
+  }
+
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  label {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  input,
+  select,
+  textarea {
+    min-height: 46px;
+    font-size: 16px !important;
+  }
+
+  button,
+  .button,
+  .btn,
+  .app-button,
+  .admin-button,
+  .admin-primary-button,
+  .auth-button,
+  .balance-action-button,
+  .balance-compact-button,
+  .participation-apply-button,
+  .participation-cancel-button,
+  .chip-button {
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+
+  /* 앱 배경은 유지하되 모바일에서 과한 좌우 배경 장식은 제거 */
+  .app-background-side,
+  .app-background-side--left,
+  .app-background-side--right {
+    display: none !important;
+  }
+
+  .app-background-overlay {
+    opacity: 0.92;
   }
 
   .app-shell,
-  .app-body,
-  .app-content,
-  .page-container,
-  .page-shell,
-  .notice-page,
-  .gallery-page,
-  .event-progress-page,
-  .destruction-progress-page,
-  .progress-page,
-  .admin-page {
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    overflow-x: clip !important;
-  }
-
-  .app-shell {
-    min-height: 100dvh !important;
-    background: #050b16 !important;
-  }
-
-  .app-body {
+  .app-shell--user,
+  .app-shell--admin {
     display: block !important;
-    min-height: auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 100dvh;
     padding: 0 !important;
   }
 
-  /* 1) Topbar: mobile browser에서는 검색 폼을 숨기고 브랜드 헤더만 남김 */
-  .app-topbar {
+  .app-body,
+  .app-content,
+  .app-background-content {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow-x: hidden !important;
+  }
+
+  .app-content {
+    padding-bottom: calc(28px + var(--mobile-bottom-safe)) !important;
+  }
+
+  /* 모바일 상단바 */
+  .app-topbar,
+  .admin-topbar-wrap {
     position: sticky !important;
     top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    z-index: 1400 !important;
-    height: var(--mobile-topbar-height) !important;
-    min-height: var(--mobile-topbar-height) !important;
-    padding: 0 var(--mobile-safe-right) 0 var(--mobile-safe-left) !important;
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    justify-content: flex-start !important;
-    gap: 8px !important;
-    background: rgba(2, 6, 23, 0.96) !important;
-    border-bottom: 1px solid rgba(96, 165, 250, 0.22) !important;
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.26) !important;
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    z-index: 60 !important;
+    width: 100% !important;
+    min-height: 54px !important;
+    padding: calc(10px + var(--mobile-top-safe)) var(--mobile-page-x) 10px !important;
+    border-radius: 0 !important;
+    border-left: 0 !important;
+    border-right: 0 !important;
+    backdrop-filter: blur(16px);
   }
 
   .app-topbar__left {
     width: 100% !important;
     min-width: 0 !important;
-    display: flex !important;
-    flex: 1 1 auto !important;
-    align-items: center !important;
-    gap: 9px !important;
-    flex-wrap: nowrap !important;
-    overflow: hidden !important;
   }
 
   .app-topbar__home {
-    flex: 0 0 auto !important;
-    max-width: 56vw !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
-    font-size: clamp(22px, 7vw, 30px) !important;
+    font-size: clamp(24px, 7vw, 34px) !important;
     line-height: 1 !important;
-    letter-spacing: -1px !important;
+    white-space: nowrap;
   }
 
+  .app-topbar__title,
   .app-topbar__divider {
-    flex: 0 0 auto !important;
-    color: rgba(174, 196, 225, 0.58) !important;
-    font-size: 14px !important;
-  }
-
-  .app-topbar__title {
-    flex: 1 1 auto !important;
-    min-width: 0 !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
-    color: rgba(174, 196, 225, 0.74) !important;
     font-size: 13px !important;
-    font-weight: 800 !important;
+    white-space: nowrap;
   }
 
-  .app-topbar__search {
+  /* PC 검색폼은 모바일에서 상단 공간을 과하게 차지하므로 숨김 */
+  .app-topbar__search,
+  .admin-topbar-logout {
     display: none !important;
   }
 
-  /* 2) Sidebar: PC 사이드바를 모바일 하단/상단 메뉴가 아닌 가로 탭 메뉴로 정리 */
+  /* 사이드바 -> 모바일 가로 탭 */
   .app-sidebar,
-  .app-shell--user .app-sidebar--user,
-  .app-shell--admin .app-sidebar--admin {
+  .app-sidebar--user,
+  .app-sidebar--admin {
     position: sticky !important;
-    top: var(--mobile-topbar-height) !important;
-    z-index: 1300 !important;
+    top: calc(54px + var(--mobile-top-safe)) !important;
+    z-index: 55 !important;
     width: 100% !important;
-    min-width: 0 !important;
-    max-width: 100% !important;
-    height: var(--mobile-nav-height) !important;
-    min-height: var(--mobile-nav-height) !important;
-    max-height: var(--mobile-nav-height) !important;
-    padding: 7px var(--mobile-safe-right) 7px var(--mobile-safe-left) !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 9px var(--mobile-page-x) !important;
+    border-radius: 0 !important;
+    border-left: 0 !important;
     border-right: 0 !important;
-    border-bottom: 1px solid rgba(96, 165, 250, 0.22) !important;
-    background: rgba(5, 11, 22, 0.94) !important;
     overflow: hidden !important;
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(16px);
   }
 
+  .app-sidebar__top,
+  .app-sidebar__bottom,
   .app-sidebar__title,
   .app-sidebar__subtitle,
   .app-sidebar__section-title,
   .app-sidebar__group-title,
-  .app-sidebar__bottom,
-  .sidebar-auth {
+  .app-sidebar__access,
+  .sidebar-auth,
+  .sidebar-auth__user,
+  .sidebar-auth__pending,
+  .sidebar-auth__rejected {
     display: none !important;
-  }
-
-  .app-sidebar__top,
-  .app-sidebar__nav {
-    width: 100% !important;
-    height: 100% !important;
-    min-width: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    border: 0 !important;
-  }
-
-  .app-sidebar__top {
-    display: block !important;
-    overflow: hidden !important;
   }
 
   .app-sidebar__nav {
     display: flex !important;
+    flex-direction: row !important;
     align-items: center !important;
     gap: 8px !important;
+    width: 100% !important;
     overflow-x: auto !important;
     overflow-y: hidden !important;
-    overscroll-behavior-x: contain !important;
-    scrollbar-width: none !important;
+    padding: 2px 0 4px !important;
     -webkit-overflow-scrolling: touch;
-    padding-bottom: 2px !important;
+    scrollbar-width: none;
   }
 
   .app-sidebar__nav::-webkit-scrollbar {
-    display: none !important;
+    display: none;
   }
 
   .app-sidebar__group,
@@ -213,521 +214,911 @@ canvas {
 
   .app-sidebar__link,
   .app-sidebar__link--compact,
-  .app-shell--user .app-sidebar__link,
-  .app-shell--admin .app-sidebar__link,
   .user-subnav__link {
+    flex: 0 0 auto !important;
     width: auto !important;
     min-width: max-content !important;
-    max-width: none !important;
-    flex: 0 0 auto !important;
-    display: inline-flex !important;
-    grid-template-columns: none !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 7px !important;
     min-height: 38px !important;
-    height: 38px !important;
-    padding: 0 12px !important;
-    margin: 0 !important;
+    padding: 9px 13px !important;
     border-radius: 999px !important;
     white-space: nowrap !important;
     font-size: 13px !important;
-    font-weight: 900 !important;
     line-height: 1 !important;
-    text-decoration: none !important;
-    color: rgba(237, 244, 255, 0.88) !important;
-    background: rgba(15, 30, 52, 0.72) !important;
-    border: 1px solid rgba(96, 165, 250, 0.18) !important;
-    box-shadow: none !important;
+    gap: 7px !important;
   }
 
-  .app-sidebar__link--active,
-  .app-shell--user .app-sidebar__link--active,
-  .app-shell--admin .app-sidebar__link--active,
-  .user-subnav__link--active {
-    background: linear-gradient(135deg, rgba(255, 214, 120, 0.20), rgba(34, 211, 238, 0.14)) !important;
-    border-color: rgba(34, 211, 238, 0.46) !important;
-    color: #ffffff !important;
-    box-shadow: 0 0 18px rgba(34, 211, 238, 0.16) !important;
-  }
-
-  .app-sidebar__code,
-  .app-shell--user .app-sidebar__code,
-  .app-shell--admin .app-sidebar__code {
-    flex: 0 0 auto !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    min-width: 30px !important;
-    width: auto !important;
-    height: 24px !important;
+  .app-sidebar__code {
+    min-width: 28px !important;
+    height: 28px !important;
     padding: 0 7px !important;
-    border-radius: 999px !important;
-    font-size: 10px !important;
-    font-weight: 950 !important;
-    line-height: 1 !important;
-    letter-spacing: 0.03em !important;
-    color: rgba(234, 240, 255, 0.82) !important;
-    background: rgba(255, 255, 255, 0.08) !important;
+    font-size: 11px !important;
   }
 
-  .app-sidebar__label,
-  .app-shell--user .app-sidebar__label,
-  .app-shell--admin .app-sidebar__label {
-    display: inline-block !important;
-    flex: 0 0 auto !important;
-    width: auto !important;
-    min-width: 0 !important;
-    max-width: none !important;
-    overflow: visible !important;
-    text-overflow: clip !important;
+  .app-sidebar__label {
+    display: inline !important;
     white-space: nowrap !important;
   }
 
-  /* 3) Content: 상단 검색 제거 후 여백 재조정 */
-  .app-content {
+  .user-subnav,
+  .user-subnav__inner {
     width: 100% !important;
-    padding: 18px var(--mobile-safe-right) calc(56px + var(--mobile-safe-bottom)) var(--mobile-safe-left) !important;
-    padding-top: 18px !important;
+    overflow-x: auto !important;
+    scrollbar-width: none;
   }
 
-  .page-container,
+  .user-subnav::-webkit-scrollbar,
+  .user-subnav__inner::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* 페이지 공통 */
   .page-shell,
+  .page-container,
+  .admin-page,
+  .home-page,
+  .players-page-v2,
+  .matches-page-v2,
   .notice-page,
   .gallery-page,
+  .highlights-page,
+  .ranking-page-card,
+  .balance-page,
+  .progress-page,
   .event-progress-page,
   .destruction-progress-page,
-  .progress-page,
-  .admin-page {
-    padding: 18px 0 calc(56px + var(--mobile-safe-bottom)) !important;
-    margin: 0 auto !important;
+  .participation-page,
+  .auth-page,
+  .kakao-search-page,
+  .ai-page,
+  .operation-ai-page {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 16px var(--mobile-page-x) 26px !important;
   }
 
   .page-header,
   .section-header,
-  .content-section,
-  .admin-dashboard-header,
-  .admin-log-section__header,
-  .notice-detail__header,
-  .notice-detail__content,
-  .admin-form,
-  .match-form-base,
-  .match-form-game,
-  .match-entry-board,
-  .gallery-form,
-  .notice-form,
-  .event-notice-form,
-  .home-main-card,
-  .home-season-card,
-  .home-mvp-card,
-  .top3-card,
-  .stat-card,
-  .match-card,
-  .notice-card,
-  .gallery-card,
-  .admin-event-card,
-  .destruction-progress-card,
-  .event-progress-card {
-    padding: 18px !important;
-    border-radius: var(--mobile-radius) !important;
-  }
-
-  .page-header,
-  .section-header,
-  .admin-dashboard-header,
-  .admin-log-section__header {
+  .section-header--split,
+  .admin-page__header,
+  .players-page-v2__header,
+  .players-page-v2__board-head,
+  .matches-list-v4__header,
+  .ranking-board__head,
+  .balance-form-head,
+  .balance-ai-judgement-head,
+  .operation-ai-hero,
+  .ai-hero,
+  .participation-header,
+  .destruction-participant-form__head,
+  .event-participant-form__summary {
     display: flex !important;
     flex-direction: column !important;
     align-items: stretch !important;
-    gap: 12px !important;
+    gap: 10px !important;
+    margin-bottom: 14px !important;
   }
 
   .page-title,
   .admin-page__title,
-  .notice-page__title,
+  .section-title,
+  .home-main-title,
   .gallery-page__title,
-  .progress-page__title {
-    margin: 0 0 10px !important;
-    font-size: clamp(22px, 6vw, 28px) !important;
-    line-height: 1.18 !important;
+  .notice-detail__title,
+  .match-series-detail__title,
+  .ranking-board__title,
+  .balance-form-head__title,
+  .operation-ai-hero h1,
+  .ai-hero h1,
+  .auth-title {
+    font-size: clamp(24px, 7vw, 34px) !important;
+    line-height: 1.12 !important;
     letter-spacing: -0.04em !important;
-    word-break: keep-all !important;
+    word-break: keep-all;
   }
 
   .page-description,
-  .section-description,
-  .notice-page__description,
-  .gallery-page__description {
-    font-size: 13px !important;
-    line-height: 1.62 !important;
+  .admin-page__description,
+  .section-subtitle,
+  .home-main-description,
+  .balance-form-head__desc,
+  .ai-panel__desc,
+  .kakao-search-page__desc,
+  .auth-description {
+    font-size: 14px !important;
+    line-height: 1.55 !important;
   }
 
   .page-actions,
+  .admin-actions,
   .admin-form__actions,
-  .notice-form__actions,
-  .gallery-form__actions,
+  .admin-player-form__actions,
+  .event-team-generator__actions,
+  .destruction-participant-form__actions,
+  .destruction-team-form__actions,
+  .participation-page-actions,
   .balance-actions,
-  .admin-event-card__actions,
-  .event-notice-form__actions {
+  .balance-action-row,
+  .balance-result-utility__buttons,
+  .ai-actions,
+  .ai-hero__actions,
+  .operation-ai-toolbar,
+  .operation-ai-match-toolbar {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
     width: 100% !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
     gap: 8px !important;
   }
 
   .page-actions > *,
+  .admin-actions > *,
   .admin-form__actions > *,
-  .notice-form__actions > *,
-  .gallery-form__actions > *,
+  .admin-player-form__actions > *,
   .balance-actions > *,
-  .admin-event-card__actions > *,
-  .event-notice-form__actions > *,
-  .app-button,
-  .btn,
-  .chip-button,
-  .admin-button,
-  .admin-page__create-button {
+  .balance-action-row > *,
+  .balance-result-utility__buttons > *,
+  .ai-actions > *,
+  .operation-ai-toolbar > *,
+  .operation-ai-match-toolbar > * {
     width: 100% !important;
-    min-height: 44px !important;
   }
 
-  input,
-  select,
-  textarea,
-  .app-input,
-  .app-select,
-  .admin-input,
-  .admin-select,
-  .admin-textarea,
-  .notice-form__input,
-  .notice-form__textarea,
-  .gallery-form__input,
-  .gallery-form__textarea {
+  /* 공통 카드 */
+  .card,
+  .list-card,
+  .content-section,
+  .section-block,
+  .admin-card,
+  .admin-hero,
+  .admin-summary-card,
+  .home-main-card,
+  .home-season-card,
+  .home-mvp-card,
+  .home-progress-card,
+  .home-recent-match-card,
+  .home-notice-card,
+  .top3-card,
+  .ranking-board,
+  .ranking-row-card,
+  .ranking-top-card,
+  .players-page-v2__panel,
+  .players-page-v2__summary-card,
+  .players-page-v2__row,
+  .matches-list-v4__card,
+  .match-list-page-card,
+  .match-row-card,
+  .match-series-detail,
+  .notice-card,
+  .notice-detail,
+  .gallery-card,
+  .gallery-detail,
+  .highlight-card,
+  .highlight-detail-card,
+  .highlight-winner-image-card,
+  .balance-form-card,
+  .balance-overview-card,
+  .balance-team-panel,
+  .balance-summary-card,
+  .balance-ai-judgement-card,
+  .balance-score-evidence-card,
+  .balance-result-utility,
+  .ai-panel,
+  .ai-kpi,
+  .operation-ai-card,
+  .operation-ai-game-card,
+  .auth-card,
+  .participation-card,
+  .event-progress-card,
+  .event-detail-summary-card,
+  .event-detail-team-card,
+  .event-final-card,
+  .destruction-progress-card,
+  .destruction-detail-summary-card,
+  .destruction-team-card,
+  .destruction-final-card,
+  .destruction-image-list-card,
+  .kakao-player-card,
+  .solo-overview-panel,
+  .solo-history-panel,
+  .solo-most-section,
+  .solo-rank-card {
     width: 100% !important;
-    min-height: 44px !important;
-    font-size: 16px !important;
+    min-width: 0 !important;
+    border-radius: var(--mobile-card-radius) !important;
+    padding: 16px !important;
   }
 
-  textarea,
-  .admin-textarea,
-  .notice-form__textarea,
-  .gallery-form__textarea {
-    min-height: 132px !important;
-    line-height: 1.55 !important;
-  }
-
+  /* 전체 그리드 1열화 */
   .card-grid,
+  .stats-grid,
   .info-grid,
-  .admin-summary-grid,
   .home-hero-grid,
+  .home-season-grid,
   .home-top3-grid,
+  .home-summary-grid,
+  .home-section-grid,
+  .ranking-top-grid,
+  .match-summary-grid,
+  .player-stat-grid,
+  .champion-stat-grid,
   .gallery-list,
-  .gallery-grid,
+  .highlight-list,
+  .highlight-winner-image-list,
+  .admin-summary-grid,
+  .admin-form-grid,
+  .admin-player-form__grid,
+  .admin-event-form-grid,
+  .admin-team-dnd__grid,
+  .balance-kpi-grid,
+  .balance-result-teams,
+  .balance-result-teams--compact,
+  .balance-ai-judgement-grid,
+  .balance-note-grid,
+  .balance-evidence-grid,
+  .balance-evidence-grid--summary,
+  .balance-evidence-grid--substats,
+  .ai-grid-2,
+  .ai-grid-3,
+  .ai-kpi-grid,
+  .ai-team-grid,
+  .ai-draft-grid,
+  .operation-ai-result-grid,
+  .operation-ai-image-grid,
+  .participation-grid,
   .progress-overview-grid,
   .event-detail-summary-grid,
   .event-detail-team-grid,
   .event-final-grid,
-  .destruction-status-grid,
   .destruction-detail-summary-grid,
   .destruction-team-grid,
   .destruction-final-grid,
-  .balance-result-grid,
-  .participation-grid,
-  .admin-event-detail-grid {
+  .destruction-content-list-grid,
+  .destruction-complete-form__grid,
+  .event-complete-form__grid,
+  .solo-rank-overview,
+  .solo-rank-stat-grid,
+  .solo-most-grid,
+  .solo-most-grid--top3,
+  .solo-most-grid--top10,
+  .solo-analysis-bottom {
+    display: grid !important;
     grid-template-columns: 1fr !important;
-    gap: 14px !important;
+    gap: 12px !important;
   }
 
-  .player-row-header,
-  .match-row-header,
-  .ranking-row-header,
-  .admin-match-row-header,
-  .admin-player-row-header,
-  .recent-table-header,
-  .summary-table-header,
-  .most-table-header,
-  .match-detail-header,
-  .participation-header,
-  .match-entry-header,
-  .event-participant-form__header {
-    display: none !important;
-  }
-
-  .player-row-card,
-  .match-row-card,
-  .ranking-row-card,
-  .admin-player-row-card,
-  .admin-match-row-card,
-  .recent-table-row,
-  .summary-table-row,
-  .most-table-row,
-  .match-detail-row,
-  .participation-item,
-  .event-participant-form__row,
-  .destruction-participant-form__row,
-  .destruction-team-form__row,
-  .destruction-team-assignment-form__row {
-    padding: 14px !important;
-    border-radius: 15px !important;
-  }
-
-  .player-row-grid,
-  .match-row-grid,
-  .ranking-row-grid,
-  .admin-player-row-grid,
-  .admin-match-row-grid,
-  .recent-table-row,
-  .summary-table-row,
-  .most-table-row,
-  .match-detail-row,
-  .participation-item,
-  .event-participant-form__row,
-  .destruction-participant-form__row,
-  .destruction-team-form__row,
+  .admin-form-grid--single,
+  .admin-player-form__tier-row,
+  .auth-tier-row,
+  .operation-ai-line-pair,
+  .operation-ai-tier-pair,
+  .operation-ai-kda-inputs,
   .destruction-team-assignment-form__row,
-  .match-participant-row,
-  .match-entry-row,
-  .balance-input-row,
-  .balance-team-row {
-    display: grid !important;
+  .event-participant-form__summary {
     grid-template-columns: 1fr !important;
-    gap: 8px !important;
   }
 
-  .player-row-grid > *,
-  .match-row-grid > *,
-  .ranking-row-grid > *,
-  .admin-player-row-grid > *,
-  .admin-match-row-grid > *,
-  .recent-table-row > *,
-  .summary-table-row > *,
-  .most-table-row > *,
-  .match-detail-row > *,
-  .participation-item > * {
-    min-width: 0 !important;
-    white-space: normal !important;
-    overflow: visible !important;
-    text-overflow: unset !important;
-    text-align: left !important;
-  }
-
-  .table-scroll,
-  .admin-table-wrap,
-  .match-entry-board,
-  .balance-board,
-  .operation-ai-table-wrap {
+  /* 폼 */
+  .app-input,
+  .app-select,
+  .form-input,
+  .admin-input,
+  .admin-form__input,
+  .admin-form__textarea,
+  .admin-player-form__field,
+  .match-search-form__input,
+  .match-search-form__select,
+  .player-search-form input,
+  .player-search-input,
+  .balance-text-input,
+  .operation-ai-inline-input,
+  .operation-ai-title-field,
+  .operation-ai-date-field,
+  .kakao-search-form__input,
+  textarea,
+  select,
+  input[type="text"],
+  input[type="number"],
+  input[type="date"],
+  input[type="password"],
+  input[type="email"] {
     width: 100% !important;
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-x: contain;
-  }
-
-  .home-main-title {
-    font-size: clamp(42px, 14vw, 64px) !important;
-    line-height: 0.98 !important;
-    letter-spacing: -0.06em !important;
-  }
-
-  .home-main-lead,
-  .home-main-desc {
-    font-size: 15px !important;
-    line-height: 1.7 !important;
-    word-break: keep-all !important;
-  }
-
-  .home-main-links,
-  .home-link-list,
-  .home-main-actions {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 12px !important;
-  }
-
-  .winner-slider,
-  .winner-slider__content {
-    min-height: 240px !important;
-  }
-
-  .winner-slider__content {
-    padding: 18px !important;
-  }
-
-  .winner-slider__title {
-    font-size: clamp(20px, 6vw, 26px) !important;
-    line-height: 1.2 !important;
-  }
-
-  .top3-player {
-    grid-template-columns: 40px minmax(0, 1fr) !important;
-    gap: 10px !important;
-  }
-
-  .top3-player__result {
-    grid-column: 2 !important;
-    align-items: flex-start !important;
-  }
-
-  .home-mvp-content {
-    grid-template-columns: 64px minmax(0, 1fr) !important;
-    gap: 12px !important;
-  }
-
-  .home-mvp-score {
-    grid-column: 1 / -1 !important;
-    align-items: flex-start !important;
-  }
-
-  .gallery-admin-card,
-  .notice-admin-card,
-  .admin-event-card,
-  .home-recent-match-card,
-  .match-card__body,
-  .match-card__top,
-  .event-participant-form__head,
-  .destruction-participant-form__head,
-  .destruction-team-form__head {
-    flex-direction: column !important;
-    align-items: stretch !important;
-  }
-
-  .gallery-admin-card__thumbnail-wrap,
-  .gallery-card__image-wrap,
-  .highlight-card__media {
-    width: 100% !important;
-    min-width: 100% !important;
     max-width: 100% !important;
   }
 
-  .app-background-side,
-  .app-background-image,
-  .app-background-overlay {
-    top: 0 !important;
-  }
-
-  .app-background-side,
-  .app-background-image {
-    width: 50vw !important;
-    min-width: 0 !important;
-    opacity: 0.14 !important;
-    filter: saturate(0.85) brightness(0.62) !important;
-  }
-
-  .app-background-overlay {
-    left: 0 !important;
-    background: linear-gradient(180deg, rgba(5, 11, 22, 0.9), rgba(5, 11, 22, 0.985)) !important;
-  }
-
-  .pagination-wrap,
-  .pagination {
+  .match-search-form,
+  .player-search-form,
+  .players-page-v2__search,
+  .section-search,
+  .admin-filter-bar,
+  .admin-filter-bar--grid,
+  .kakao-search-form,
+  .operation-ai-form,
+  .auth-tier-section {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
     width: 100% !important;
+  }
+
+  .match-search-form__button,
+  .kakao-search-form__button,
+  .player-search-form button,
+  .players-page-v2__search button,
+  .section-search button {
+    width: 100% !important;
+  }
+
+  /* PC 테이블/가로 스크롤을 카드형으로 변경 */
+  .table-wrap,
+  .admin-table-wrap,
+  .ai-table-wrap,
+  .operation-ai-table-wrap,
+  .overflow-x-auto {
+    width: 100% !important;
+    overflow: visible !important;
+  }
+
+  table,
+  .admin-table,
+  .ai-table,
+  .operation-ai-table,
+  .balance-evidence-line-table {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+  }
+
+  thead,
+  .admin-table thead,
+  .ai-table thead,
+  .operation-ai-table thead {
+    display: none !important;
+  }
+
+  tbody,
+  tr,
+  td,
+  th {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  tbody tr,
+  .admin-table tbody tr,
+  .ai-table tbody tr,
+  .operation-ai-table tbody tr,
+  .balance-evidence-line-table tbody tr {
+    margin: 0 0 10px !important;
+    padding: 12px !important;
+    border: 1px solid rgba(120, 150, 210, 0.25) !important;
+    border-radius: 16px !important;
+    background: rgba(8, 14, 28, 0.72) !important;
+  }
+
+  td,
+  th,
+  .admin-table td,
+  .ai-table td,
+  .operation-ai-table td,
+  .balance-evidence-line-table td {
+    min-height: 34px !important;
+    padding: 8px 0 !important;
+    border: 0 !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    text-align: left !important;
+  }
+
+  td + td,
+  th + th {
+    border-top: 1px solid rgba(120, 150, 210, 0.14) !important;
+  }
+
+  td[data-label]::before,
+  th[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 4px;
+    color: rgba(190, 205, 235, 0.66);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* 목록형 페이지 */
+  .players-page-v2__board,
+  .matches-list-v4__board,
+  .match-list-board,
+  .ranking-board,
+  .notice-list,
+  .gallery-list,
+  .highlight-list,
+  .admin-log-list,
+  .admin-event-list,
+  .gallery-admin-list,
+  .highlight-admin-list,
+  .notice-admin-list,
+  .event-progress-list,
+  .destruction-progress-list,
+  .destruction-match-list,
+  .destruction-rank-list,
+  .participation-list,
+  .balance-input-list,
+  .balance-suggestion-list,
+  .balance-team-list,
+  .balance-evidence-player-list,
+  .ai-list {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  .players-page-v2__board-head,
+  .matches-list-v4__head-date,
+  .matches-list-v4__head-season,
+  .matches-list-v4__head-set,
+  .matches-list-v4__head-title,
+  .matches-list-v4__head-score,
+  .matches-list-v4__head-winner,
+  .ranking-row-header,
+  .match-row-header,
+  .admin-match-row-header,
+  .admin-player-row-header {
+    display: none !important;
+  }
+
+  .players-page-v2__row,
+  .matches-list-v4__row,
+  .ranking-row-card,
+  .match-row-card,
+  .admin-player-row-card,
+  .admin-log-item,
+  .admin-event-card,
+  .gallery-admin-card,
+  .highlight-admin-card,
+  .notice-admin-card,
+  .event-detail-bracket-row,
+  .event-detail-member-row,
+  .event-detail-participant-row,
+  .destruction-match-row,
+  .destruction-member-row,
+  .destruction-rank-row,
+  .destruction-participant-form__row,
+  .destruction-team-form__row,
+  .event-participant-form__list > *,
+  .participation-item,
+  .balance-input-row,
+  .balance-selected-player,
+  .balance-suggestion-item,
+  .balance-evidence-line-row,
+  .ai-draft-card {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    gap: 8px !important;
+    padding: 13px !important;
+    border-radius: 16px !important;
+  }
+
+  .players-page-v2__cell,
+  .matches-list-v4__date,
+  .matches-list-v4__season,
+  .matches-list-v4__set,
+  .matches-list-v4__title,
+  .matches-list-v4__score-cell,
+  .matches-list-v4__winner,
+  .ranking-col,
+  .player-col,
+  .match-col {
+    width: 100% !important;
+    min-width: 0 !important;
+    text-align: left !important;
+    justify-content: flex-start !important;
+  }
+
+  .players-page-v2__name,
+  .ranking-name,
+  .match-list-board__head,
+  .notice-card__title,
+  .gallery-card__title,
+  .highlight-card__body,
+  .admin-event-card__title,
+  .balance-player-name,
+  .ai-player-name {
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .players-page-v2__meta,
+  .players-page-v2__tier-stack,
+  .players-page-v2__summary,
+  .players-page-v2__riot,
+  .ranking-riot,
+  .matches-list-v4__score,
+  .notice-card__meta,
+  .notice-admin-card__meta,
+  .gallery-card__meta,
+  .highlight-card__meta,
+  .admin-event-card__meta,
+  .balance-player-compact-meta,
+  .balance-team-total,
+  .ai-draft-card__meta {
     display: flex !important;
     flex-wrap: wrap !important;
-    justify-content: center !important;
     gap: 6px !important;
+    min-width: 0 !important;
+  }
+
+  /* 홈 */
+  .home-main-card {
+    min-height: auto !important;
+  }
+
+  .home-main-title {
+    font-size: clamp(42px, 15vw, 64px) !important;
+  }
+
+  .social-link-row {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .social-link-card {
+    min-height: 74px !important;
+    padding: 14px !important;
+  }
+
+  .social-link-image {
+    width: 52px !important;
+    height: 52px !important;
+  }
+
+  .winner-slider,
+  .winner-slider__image-wrap,
+  .image-slider,
+  .image-slider__track,
+  .image-slider__image {
+    height: auto !important;
+    min-height: 220px !important;
+    max-height: 360px !important;
+  }
+
+  .winner-slider__content,
+  .winner-slider__overlay {
+    position: static !important;
+    padding: 14px !important;
+  }
+
+  .home-progress-item,
+  .home-stat-box,
+  .info-card,
+  .stat-card,
+  .top3-player__body {
+    min-width: 0 !important;
+  }
+
+  /* 플레이어 상세 / 솔로랭크 */
+  .player-hero,
+  .player-panel,
+  .solo-rank-main,
+  .solo-rank-summary-stat,
+  .solo-match-list,
+  .solo-match-items {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .solo-rank-card,
+  .solo-rank-card--wide,
+  .solo-most-card,
+  .solo-most-card--featured,
+  .solo-role-card {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .solo-most-image,
+  .solo-most-image--featured,
+  .solo-role-position-image {
+    width: 68px !important;
+    height: 68px !important;
+  }
+
+  .solo-match-list {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .solo-match-extra,
+  .solo-match-items {
+    display: flex !important;
+    flex-wrap: wrap !important;
+  }
+
+  /* 매치 상세/슬라이더 */
+  .match-slide__viewport,
+  .match-slide__track,
+  .match-slide,
+  .match-slide__panel {
+    width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .match-slide__topbar,
+  .match-slide__tabs,
+  .match-slide__controls,
+  .match-slide__set-head {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  .match-slide__rows,
+  .match-card__body,
+  .match-card__top {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .match-slide__table-head {
+    display: none !important;
+  }
+
+  /* 팀 밸런스 */
+  .balance-input-row__index {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .balance-position-group,
+  .balance-line-strip,
+  .balance-score-flow,
+  .balance-player-main,
+  .balance-player-compact-head,
+  .balance-evidence-player-top,
+  .balance-team-header,
+  .balance-alternative-head,
+  .balance-result-bottom,
+  .balance-overview-main,
+  .balance-overview-stats {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  .balance-score-flow__arrow {
+    display: none !important;
+  }
+
+  .balance-copy-box__content {
+    white-space: pre-wrap !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .balance-team-panel--red,
+  .balance-team-panel--blue {
+    min-height: auto !important;
+  }
+
+  /* 운영 AI */
+  .operation-ai-image-preview,
+  .operation-ai-image-placeholder {
+    min-height: 220px !important;
+  }
+
+  .operation-ai-extracted-text,
+  .operation-ai-paste-box {
+    max-height: 260px !important;
+    overflow-y: auto !important;
+  }
+
+  .operation-ai-game-card__head,
+  .operation-ai-result-table,
+  .operation-ai-noapi-grid,
+  .operation-ai-mode-tabs {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  /* 관리자 */
+  .admin-floating-logout {
+    position: static !important;
+    width: 100% !important;
+    margin: 8px 0 0 !important;
+  }
+
+  .admin-event-card__top,
+  .admin-event-card__main,
+  .admin-event-card__actions,
+  .gallery-admin-card__actions,
+  .highlight-admin-card__actions,
+  .notice-admin-card__actions,
+  .admin-log-item__left,
+  .admin-section-head,
+  .admin-team-dnd__head,
+  .admin-team-dnd__column-head,
+  .admin-team-dnd__member-top {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  .admin-team-dnd__dropzone {
+    min-height: 120px !important;
+  }
+
+  .admin-team-dnd__score-field {
+    width: 100% !important;
+  }
+
+  /* 이벤트 / 멸망전 */
+  .event-progress-card__top,
+  .destruction-progress-card__top,
+  .event-final-gallery,
+  .destruction-final-gallery,
+  .destruction-image-list-card__media,
+  .destruction-image-list-card__body,
+  .destruction-progress-card--with-image {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .destruction-progress-card__preview,
+  .destruction-image-list-card__image,
+  .destruction-image-detail-card__image,
+  .event-final-gallery__image,
+  .destruction-final-gallery__image,
+  .gallery-card__image,
+  .gallery-detail__image-wrap,
+  .highlight-card__thumb,
+  .highlight-winner-image-card__thumb {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 360px !important;
+    object-fit: cover !important;
+  }
+
+  /* 참여 페이지 */
+  .participation-cancel-button--fixed {
+    position: static !important;
+    width: 100% !important;
+    margin-top: 10px !important;
+  }
+
+  .participation-position-group {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .participation-checkbox {
+    min-height: 44px !important;
+  }
+
+  /* 갤러리 / 하이라이트 */
+  .gallery-card__image-wrap,
+  .highlight-card__thumb-wrap,
+  .highlight-winner-image-card__thumb-wrap,
+  .highlight-detail-card__frame {
+    width: 100% !important;
+    aspect-ratio: 16 / 9 !important;
+    height: auto !important;
+    overflow: hidden !important;
+  }
+
+  .highlight-detail-page {
+    padding: 16px var(--mobile-page-x) 26px !important;
+  }
+
+  /* 불필요하거나 모바일에서 비중이 낮은 보조 정보 */
+  .players-page-v2__eyebrow,
+  .matches-list-v4__head-date,
+  .match-list-board__eyebrow,
+  .ranking-board__eyebrow,
+  .home-eyebrow,
+  .admin-page__kicker,
+  .page-kicker,
+  .page-eyebrow {
+    font-size: 11px !important;
+  }
+
+  /* 화면 밖으로 튀는 텍스트 방지 */
+  .home-main-card *,
+  .players-page-v2 *,
+  .matches-page-v2 *,
+  .ranking-page-card *,
+  .balance-page *,
+  .admin-page *,
+  .operation-ai-page *,
+  .progress-page *,
+  .participation-page * {
+    min-width: 0;
   }
 }
 
-@media (max-width: 420px) {
+@media (max-width: 480px) {
   :root {
-    --mobile-safe-left: max(12px, env(safe-area-inset-left));
-    --mobile-safe-right: max(12px, env(safe-area-inset-right));
-    --mobile-topbar-height: 54px;
-    --mobile-nav-height: 52px;
-  }
-
-  .app-topbar__home {
-    max-width: 52vw !important;
-    font-size: clamp(21px, 7vw, 27px) !important;
-  }
-
-  .app-topbar__title {
-    font-size: 12px !important;
-  }
-
-  .app-sidebar,
-  .app-shell--user .app-sidebar--user,
-  .app-shell--admin .app-sidebar--admin {
-    padding-top: 7px !important;
-    padding-bottom: 7px !important;
+    --mobile-page-x: 12px;
   }
 
   .app-sidebar__link,
   .app-sidebar__link--compact,
-  .app-shell--user .app-sidebar__link,
-  .app-shell--admin .app-sidebar__link,
   .user-subnav__link {
-    min-height: 36px !important;
-    height: 36px !important;
-    padding: 0 11px !important;
+    padding: 8px 11px !important;
     font-size: 12px !important;
   }
 
-  .app-sidebar__code,
-  .app-shell--user .app-sidebar__code,
-  .app-shell--admin .app-sidebar__code {
-    min-width: 28px !important;
-    height: 22px !important;
-    padding: 0 6px !important;
-    font-size: 9px !important;
+  .app-sidebar__code {
+    display: none !important;
   }
 
-  .app-content {
-    padding: 16px var(--mobile-safe-right) calc(52px + var(--mobile-safe-bottom)) var(--mobile-safe-left) !important;
+  .page-shell,
+  .page-container,
+  .admin-page,
+  .home-page,
+  .players-page-v2,
+  .matches-page-v2,
+  .notice-page,
+  .gallery-page,
+  .highlights-page,
+  .ranking-page-card,
+  .balance-page,
+  .progress-page,
+  .event-progress-page,
+  .destruction-progress-page,
+  .participation-page,
+  .auth-page,
+  .kakao-search-page,
+  .ai-page,
+  .operation-ai-page {
+    padding-top: 12px !important;
   }
 
-  .page-header,
-  .section-header,
+  .card,
+  .list-card,
   .content-section,
-  .admin-form,
-  .match-form-base,
-  .match-form-game,
-  .match-entry-board,
+  .section-block,
+  .admin-card,
   .home-main-card,
   .home-season-card,
   .home-mvp-card,
   .top3-card,
-  .stat-card,
-  .match-card,
+  .ranking-board,
+  .players-page-v2__panel,
+  .matches-list-v4__card,
   .notice-card,
-  .gallery-card {
-    padding: 16px !important;
-    border-radius: 16px !important;
+  .gallery-card,
+  .highlight-card,
+  .balance-form-card,
+  .balance-team-panel,
+  .ai-panel,
+  .operation-ai-card,
+  .auth-card,
+  .participation-card,
+  .event-progress-card,
+  .destruction-progress-card {
+    padding: 14px !important;
+    border-radius: 18px !important;
   }
 
   .home-main-title {
-    font-size: clamp(38px, 13vw, 54px) !important;
+    font-size: clamp(38px, 14vw, 56px) !important;
   }
 
-  .page-title,
-  .admin-page__title,
-  .notice-page__title,
-  .gallery-page__title {
-    font-size: 22px !important;
-  }
-}
-
-@media (max-height: 540px) and (orientation: landscape) {
-  :root {
-    --mobile-topbar-height: 48px;
-    --mobile-nav-height: 46px;
-  }
-
-  .app-topbar__search {
-    display: none !important;
-  }
-
-  .app-sidebar__link,
-  .app-sidebar__link--compact,
-  .user-subnav__link {
-    min-height: 32px !important;
-    height: 32px !important;
-  }
-
-  .app-content,
-  .page-container,
-  .page-shell,
-  .admin-page {
-    padding-top: 12px !important;
+  .participation-position-group {
+    grid-template-columns: 1fr !important;
   }
 }
