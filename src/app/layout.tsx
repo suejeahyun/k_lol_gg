@@ -1,10 +1,29 @@
 import "./globals.css";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import RandomBackgroundLayout from "../components/RandomBackgroundLayout";
 
+const appName = "K-LOL.GG";
+const appDescription = "K-LOL.GG 내전 전적, 랭킹, 팀 밸런스, 운영 도구";
+
 export const metadata: Metadata = {
-  title: "K-LOL.GG",
-  description: "K-LOL.GG",
+  applicationName: appName,
+  title: {
+    default: appName,
+    template: `%s | ${appName}`,
+  },
+  description: appDescription,
+
+  icons: {
+    icon: "/icon",
+    apple: "/apple-icon",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#05070d",
 };
 
 export default function RootLayout({
@@ -14,7 +33,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body>
+      <body className="theme-lol-gold">
         <RandomBackgroundLayout>{children}</RandomBackgroundLayout>
       </body>
     </html>

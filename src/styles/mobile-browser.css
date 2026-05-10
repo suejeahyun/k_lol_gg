@@ -1,0 +1,586 @@
+/* Mobile browser polish layer
+   Imported last. Keeps desktop CSS intact and corrects phone-width layouts. */
+
+:root {
+  --mobile-safe-x: max(12px, env(safe-area-inset-left));
+  --mobile-safe-r: max(12px, env(safe-area-inset-right));
+  --mobile-bottom-safe: max(16px, env(safe-area-inset-bottom));
+  --mobile-topbar-h: 58px;
+  --mobile-radius: 16px;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  overflow-x: hidden;
+  touch-action: manipulation;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: rgba(96, 165, 250, 0.18);
+}
+
+img,
+video,
+iframe,
+svg,
+canvas {
+  max-width: 100%;
+}
+
+@media (max-width: 768px) {
+  body {
+    background: var(--k-bg);
+  }
+
+  .app-shell,
+  .app-body,
+  .app-content,
+  .page-container,
+  .page-shell,
+  .admin-page,
+  .notice-page,
+  .gallery-page,
+  .event-progress-page,
+  .destruction-progress-page,
+  .progress-page {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: clip;
+  }
+
+  .app-body {
+    display: block;
+    min-height: 100dvh;
+    padding: 0 !important;
+  }
+
+  .app-topbar {
+    position: sticky !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1200;
+    min-height: var(--mobile-topbar-h);
+    height: auto !important;
+    padding: 10px var(--mobile-safe-r) 10px var(--mobile-safe-x) !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    background: rgba(2, 6, 23, 0.94) !important;
+    border-bottom: 1px solid rgba(96, 165, 250, 0.24) !important;
+    backdrop-filter: blur(14px);
+  }
+
+  .app-topbar__left,
+  .app-topbar__search {
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .app-topbar__home {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: clamp(17px, 4.8vw, 20px) !important;
+  }
+
+  .app-topbar__title,
+  .app-topbar__divider {
+    font-size: 12px;
+  }
+
+  .app-sidebar,
+  .app-shell--admin .app-sidebar--admin {
+    position: sticky !important;
+    top: 0;
+    z-index: 1100;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    padding: 10px var(--mobile-safe-r) 10px var(--mobile-safe-x) !important;
+    border-right: 0 !important;
+    border-bottom: 1px solid rgba(96, 165, 250, 0.22) !important;
+    background: rgba(5, 11, 22, 0.94) !important;
+    backdrop-filter: blur(14px);
+    overflow: visible !important;
+  }
+
+  .app-sidebar__title,
+  .app-sidebar__subtitle,
+  .app-sidebar__section-title,
+  .app-sidebar__group-title,
+  .app-sidebar__bottom,
+  .sidebar-auth {
+    display: none !important;
+  }
+
+  .app-sidebar__top,
+  .app-sidebar__nav,
+  .app-sidebar__group,
+  .app-sidebar__group-items {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    min-width: 0;
+  }
+
+  .app-sidebar__top,
+  .app-sidebar__nav {
+    width: 100%;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .app-sidebar__top::-webkit-scrollbar,
+  .app-sidebar__nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .app-sidebar__link,
+  .app-sidebar__link--compact,
+  .user-subnav__link {
+    flex: 0 0 auto;
+    min-height: 40px;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    padding: 0 12px !important;
+    border-radius: 999px !important;
+    white-space: nowrap;
+    font-size: 13px !important;
+    line-height: 1;
+    background: rgba(15, 30, 52, 0.72);
+    border: 1px solid rgba(96, 165, 250, 0.18);
+  }
+
+  .app-content {
+    padding: 16px var(--mobile-safe-r) calc(48px + var(--mobile-bottom-safe)) var(--mobile-safe-x) !important;
+  }
+
+  .page-container,
+  .page-shell,
+  .admin-page,
+  .notice-page,
+  .gallery-page,
+  .event-progress-page,
+  .destruction-progress-page,
+  .progress-page {
+    padding: 16px var(--mobile-safe-r) calc(48px + var(--mobile-bottom-safe)) var(--mobile-safe-x) !important;
+    margin: 0 auto !important;
+  }
+
+  .page-header,
+  .section-header,
+  .content-section,
+  .admin-dashboard-header,
+  .admin-log-section__header,
+  .notice-detail__header,
+  .notice-detail__content,
+  .admin-form,
+  .match-form-base,
+  .match-form-game,
+  .match-entry-board,
+  .gallery-form,
+  .notice-form,
+  .event-notice-form {
+    padding: 16px !important;
+    border-radius: var(--mobile-radius) !important;
+  }
+
+  .page-header,
+  .section-header,
+  .admin-dashboard-header,
+  .admin-log-section__header {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .page-title,
+  .admin-page__title,
+  .notice-page__title,
+  .gallery-page__title,
+  .progress-page__title {
+    font-size: clamp(22px, 6vw, 28px) !important;
+    line-height: 1.15 !important;
+    margin-bottom: 8px !important;
+    word-break: keep-all;
+  }
+
+  .page-description,
+  .section-description,
+  .notice-page__description,
+  .gallery-page__description {
+    font-size: 13px !important;
+    line-height: 1.55 !important;
+  }
+
+  .page-actions,
+  .admin-form__actions,
+  .notice-form__actions,
+  .gallery-form__actions,
+  .balance-actions,
+  .admin-event-card__actions,
+  .event-notice-form__actions {
+    width: 100%;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  .page-actions > *,
+  .admin-form__actions > *,
+  .notice-form__actions > *,
+  .gallery-form__actions > *,
+  .balance-actions > *,
+  .admin-event-card__actions > *,
+  .event-notice-form__actions > *,
+  .app-button,
+  .btn,
+  .chip-button,
+  .admin-button,
+  .admin-page__create-button {
+    width: 100% !important;
+    min-height: 44px;
+  }
+
+  input,
+  select,
+  textarea,
+  .app-input,
+  .admin-input,
+  .admin-select,
+  .admin-textarea,
+  .notice-form__input,
+  .notice-form__textarea,
+  .gallery-form__input,
+  .gallery-form__textarea {
+    width: 100% !important;
+    min-height: 44px;
+    font-size: 16px !important;
+  }
+
+  textarea,
+  .admin-textarea,
+  .notice-form__textarea,
+  .gallery-form__textarea {
+    min-height: 140px;
+    line-height: 1.55;
+  }
+
+  .card-grid,
+  .info-grid,
+  .admin-summary-grid,
+  .home-hero-grid,
+  .home-top3-grid,
+  .gallery-list,
+  .gallery-grid,
+  .progress-overview-grid,
+  .event-detail-summary-grid,
+  .event-detail-team-grid,
+  .event-final-grid,
+  .destruction-status-grid,
+  .destruction-detail-summary-grid,
+  .destruction-team-grid,
+  .destruction-final-grid,
+  .balance-result-grid,
+  .participation-grid,
+  .admin-event-detail-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .player-row-header,
+  .match-row-header,
+  .ranking-row-header,
+  .admin-match-row-header,
+  .admin-player-row-header,
+  .recent-table-header,
+  .summary-table-header,
+  .most-table-header,
+  .match-detail-header,
+  .participation-header,
+  .match-entry-header,
+  .event-participant-form__header {
+    display: none !important;
+  }
+
+  .player-row-card,
+  .match-row-card,
+  .ranking-row-card,
+  .admin-player-row-card,
+  .admin-match-row-card,
+  .recent-table-row,
+  .summary-table-row,
+  .most-table-row,
+  .match-detail-row,
+  .participation-item,
+  .event-participant-form__row,
+  .destruction-participant-form__row,
+  .destruction-team-form__row,
+  .destruction-team-assignment-form__row {
+    padding: 14px !important;
+    border-radius: 14px !important;
+  }
+
+  .player-row-grid,
+  .match-row-grid,
+  .ranking-row-grid,
+  .admin-player-row-grid,
+  .admin-match-row-grid,
+  .recent-table-row,
+  .summary-table-row,
+  .most-table-row,
+  .match-detail-row,
+  .participation-item,
+  .event-participant-form__row,
+  .destruction-participant-form__row,
+  .destruction-team-form__row,
+  .destruction-team-assignment-form__row,
+  .match-participant-row,
+  .match-entry-row,
+  .balance-input-row,
+  .balance-team-row {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .player-row-grid > *,
+  .match-row-grid > *,
+  .ranking-row-grid > *,
+  .admin-player-row-grid > *,
+  .admin-match-row-grid > *,
+  .recent-table-row > *,
+  .summary-table-row > *,
+  .most-table-row > *,
+  .match-detail-row > *,
+  .participation-item > * {
+    min-width: 0;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    text-align: left !important;
+  }
+
+  .table-scroll,
+  .admin-table-wrap,
+  .match-entry-board,
+  .balance-board,
+  .operation-ai-table-wrap {
+    width: 100%;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+
+  .home-main-card,
+  .home-season-card,
+  .home-mvp-card,
+  .top3-card,
+  .stat-card,
+  .match-card,
+  .notice-card,
+  .gallery-card,
+  .admin-event-card,
+  .destruction-progress-card,
+  .event-progress-card {
+    padding: 16px !important;
+    border-radius: var(--mobile-radius) !important;
+  }
+
+  .home-main-title {
+    font-size: clamp(30px, 9vw, 42px) !important;
+    line-height: 1.08 !important;
+  }
+
+  .home-main-lead,
+  .home-main-desc {
+    font-size: 14px !important;
+    line-height: 1.65 !important;
+  }
+
+  .winner-slider,
+  .winner-slider__content {
+    min-height: 260px !important;
+  }
+
+  .winner-slider__content {
+    padding: 18px !important;
+  }
+
+  .winner-slider__title {
+    font-size: clamp(20px, 6vw, 26px) !important;
+    line-height: 1.2;
+  }
+
+  .top3-player {
+    grid-template-columns: 40px minmax(0, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  .top3-player__result {
+    grid-column: 2 !important;
+    align-items: flex-start !important;
+  }
+
+  .home-mvp-content {
+    grid-template-columns: 64px minmax(0, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  .home-mvp-score {
+    grid-column: 1 / -1 !important;
+    align-items: flex-start !important;
+  }
+
+  .gallery-admin-card,
+  .notice-admin-card,
+  .admin-event-card,
+  .home-recent-match-card,
+  .match-card__body,
+  .match-card__top,
+  .event-participant-form__head,
+  .destruction-participant-form__head,
+  .destruction-team-form__head {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .gallery-admin-card__thumbnail-wrap,
+  .gallery-card__image-wrap,
+  .highlight-card__media {
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .app-background-side,
+  .app-background-image,
+  .app-background-overlay {
+    top: 0 !important;
+  }
+
+  .app-background-side,
+  .app-background-image {
+    width: 50vw !important;
+    min-width: 0 !important;
+    opacity: 0.18 !important;
+    filter: saturate(0.9) brightness(0.72);
+  }
+
+  .app-background-overlay {
+    left: 0 !important;
+    background: linear-gradient(180deg, rgba(5, 11, 22, 0.88), rgba(5, 11, 22, 0.98)) !important;
+  }
+
+  .pagination-wrap,
+  .pagination {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+  }
+}
+
+@media (max-width: 420px) {
+  :root {
+    --mobile-safe-x: max(10px, env(safe-area-inset-left));
+    --mobile-safe-r: max(10px, env(safe-area-inset-right));
+  }
+
+  .app-content,
+  .page-container,
+  .page-shell,
+  .admin-page,
+  .notice-page,
+  .gallery-page,
+  .event-progress-page,
+  .destruction-progress-page,
+  .progress-page {
+    padding-left: var(--mobile-safe-x) !important;
+    padding-right: var(--mobile-safe-r) !important;
+  }
+
+  .page-header,
+  .section-header,
+  .content-section,
+  .admin-form,
+  .match-form-base,
+  .match-form-game,
+  .match-entry-board,
+  .home-main-card,
+  .home-season-card,
+  .home-mvp-card,
+  .top3-card,
+  .stat-card,
+  .match-card,
+  .notice-card,
+  .gallery-card {
+    padding: 14px !important;
+    border-radius: 14px !important;
+  }
+
+  .app-sidebar__link,
+  .app-sidebar__link--compact,
+  .user-subnav__link {
+    min-height: 38px;
+    padding: 0 10px !important;
+    font-size: 12px !important;
+  }
+
+  .home-main-title {
+    font-size: 30px !important;
+  }
+
+  .page-title,
+  .admin-page__title,
+  .notice-page__title,
+  .gallery-page__title {
+    font-size: 22px !important;
+  }
+}
+
+@media (max-height: 540px) and (orientation: landscape) {
+  .app-topbar,
+  .app-sidebar {
+    position: sticky !important;
+  }
+
+  .app-sidebar__link,
+  .app-sidebar__link--compact,
+  .user-subnav__link {
+    min-height: 36px;
+  }
+
+  .app-content,
+  .page-container,
+  .page-shell,
+  .admin-page {
+    padding-top: 12px !important;
+  }
+}

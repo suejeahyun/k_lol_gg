@@ -1,0 +1,51 @@
+/* 3안: 관리자 - Clean Admin Dark */
+.app-shell--admin {
+  --klol-surface: var(--klol-admin-surface);
+  --klol-surface-2: var(--klol-admin-surface-2);
+  --klol-border: var(--klol-admin-border);
+  background: radial-gradient(circle at 10% 0%, rgba(56, 189, 248, 0.08), transparent 32%), var(--klol-admin-bg);
+}
+
+.app-shell--admin .app-topbar,
+.app-shell--admin .app-sidebar,
+.app-shell--admin .admin-card,
+.app-shell--admin .admin-hero,
+.app-shell--admin .admin-summary-card,
+.app-shell--admin .admin-form,
+.app-shell--admin .admin-table-wrap,
+.app-shell--admin .admin-log-section,
+.app-shell--admin .admin-event-card,
+.app-shell--admin .gallery-admin-card,
+.app-shell--admin .notice-admin-card,
+.app-shell--admin .highlight-admin-card {
+  background: linear-gradient(180deg, rgba(17, 24, 39, 0.96), rgba(10, 15, 26, 0.96));
+  border: 1px solid var(--klol-admin-border);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
+}
+
+.app-shell--admin .admin-page__kicker,
+.app-shell--admin .admin-eyebrow,
+.app-shell--admin .admin-section-title,
+.app-shell--admin .admin-log-action-pill {
+  color: var(--klol-admin-accent);
+}
+
+.app-shell--admin .admin-primary-button,
+.app-shell--admin .admin-button:not(.admin-button--ghost) {
+  background: linear-gradient(135deg, #38bdf8, #2563eb);
+  color: #eff6ff;
+  border-color: rgba(125, 211, 252, 0.45);
+}
+
+.app-shell--admin .admin-table th,
+.app-shell--admin .ai-table th,
+.app-shell--admin .operation-ai-table th {
+  background: rgba(15, 23, 42, 0.94);
+  color: #dbeafe;
+}
+
+.app-shell--admin .admin-table td,
+.app-shell--admin .ai-table td,
+.app-shell--admin .operation-ai-table td {
+  border-color: rgba(148, 163, 184, 0.16);
+}

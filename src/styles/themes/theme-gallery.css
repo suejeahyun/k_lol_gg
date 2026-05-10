@@ -1,0 +1,39 @@
+/* 5안: 이미지/영상 콘텐츠 - 제한형 글래스모피즘 */
+.gallery-card,
+.gallery-detail,
+.highlight-card,
+.highlight-detail-card,
+.highlight-winner-image-card,
+.winner-slider,
+.image-slider,
+.destruction-image-list-card,
+.destruction-image-detail-card,
+.event-final-card,
+.destruction-final-card {
+  background: var(--klol-glass-bg);
+  border: 1px solid var(--klol-glass-border);
+  backdrop-filter: var(--klol-glass-blur);
+  box-shadow: 0 20px 52px rgba(0, 0, 0, 0.36);
+}
+
+.gallery-card__image-wrap,
+.gallery-detail__image-wrap,
+.highlight-card__thumb-wrap,
+.highlight-detail-card__frame,
+.highlight-winner-image-card__thumb-wrap,
+.winner-slider__image-wrap,
+.image-slider__track,
+.destruction-image-list-card__media,
+.destruction-image-detail-card__image {
+  border-radius: var(--klol-radius-lg);
+  border: 1px solid rgba(148, 197, 255, 0.18);
+  background: rgba(3, 8, 18, 0.56);
+  overflow: hidden;
+}
+
+.gallery-card__title,
+.highlight-card__body,
+.winner-slider__title,
+.image-slider__indicator {
+  color: var(--klol-text-strong);
+}
