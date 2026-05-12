@@ -23,6 +23,10 @@ function isAdminRole(role: string): role is AdminRole {
   return ADMIN_ROLES.includes(role as AdminRole);
 }
 
+function isLegacyAdminTokenEnabled() {
+  return process.env.NODE_ENV !== "production" || process.env.ALLOW_LEGACY_ADMIN_TOKEN === "true";
+}
+
 export async function requireAdminRequest(): Promise<AdminSession | null> {
   const cookieStore = await cookies();
   const userToken = cookieStore.get("user_token")?.value;
@@ -62,7 +66,7 @@ export async function requireAdminRequest(): Promise<AdminSession | null> {
 
   const legacyAdminToken = cookieStore.get(authConstants.ADMIN_TOKEN_KEY)?.value;
 
-  if (legacyAdminToken === authConstants.ADMIN_TOKEN_VALUE) {
+  if (isLegacyAdminTokenEnabled() && legacyAdminToken === authConstants.ADMIN_TOKEN_VALUE) {
     return {
       mode: "legacy-admin",
       user: {

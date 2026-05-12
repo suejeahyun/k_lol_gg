@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
 import { authConstants } from "@/lib/auth";
-import { writeAdminLog } from "@/lib/admin-log";
+import { getRequestAuditFields, writeAdminLog } from "@/lib/admin-log";
 import { prisma } from "@/lib/prisma/client";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { signAuthToken } from "@/lib/auth/token";
@@ -130,6 +130,12 @@ export async function POST(req: NextRequest) {
     await writeAdminLog({
       action: "ADMIN_LOGIN",
       message: `관리자 로그인: #${user.id} ${user.userId} (${user.role})`,
+      actorId: user.id,
+      actorType: user.role,
+      actorUserId: user.userId,
+      targetType: "UserAccount",
+      targetId: user.id,
+      ...getRequestAuditFields(req),
     });
 
     const token = signAuthToken({
@@ -151,12 +157,12 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    response.cookies.set(authConstants.ADMIN_TOKEN_KEY, authConstants.ADMIN_TOKEN_VALUE, {
+    response.cookies.set(authConstants.ADMIN_TOKEN_KEY, "", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 24 * 7,
+      maxAge: 0,
     });
 
     response.cookies.set("user_token", token, {

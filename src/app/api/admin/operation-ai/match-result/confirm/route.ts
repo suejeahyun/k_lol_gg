@@ -2,11 +2,13 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
-import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { requireAdminRequest } from "@/lib/auth/requireAdmin";
 import { parseKstDateTime } from "@/lib/date/kst";
 import { recalculateSeasonStats } from "@/lib/stats/recalculate";
 import { updateInternalMmrAfterMatch } from "@/lib/balance/internal-mmr";
 import { getStoredGameMvpFields } from "@/lib/match/mvp";
+import { getRequestAuditFields } from "@/lib/admin-log";
+import { validateMatchCreateInput } from "@/validations/match";
 
 type Team = "BLUE" | "RED";
 type Position = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
@@ -57,8 +59,10 @@ function toStat(value: unknown) {
 }
 
 export async function POST(req: Request) {
-  const rejected = await rejectIfNotAdmin();
-  if (rejected) return rejected;
+  const admin = await requireAdminRequest();
+  if (!admin) {
+    return NextResponse.json({ message: "관리자 권한이 필요합니다." }, { status: 401 });
+  }
 
   try {
     const body = (await req.json()) as ConfirmInput;
@@ -101,27 +105,28 @@ export async function POST(req: Request) {
       return { gameNumber, winnerTeam, participants };
     });
 
-    for (const game of normalizedGames) {
-      if (!game.winnerTeam) {
-        return NextResponse.json({ message: `${game.gameNumber}세트 승리팀을 선택해주세요.` }, { status: 400 });
-      }
+    const validationPayload = {
+      seasonId,
+      title,
+      matchDate: body.matchDate,
+      games: normalizedGames.map((game) => ({
+        gameNumber: game.gameNumber,
+        winnerTeam: game.winnerTeam ?? undefined,
+        participants: game.participants.map((participant) => ({
+          playerId: participant.playerId ?? 0,
+          championId: participant.championId ?? 0,
+          team: participant.team ?? ("" as Team),
+          position: participant.position ?? ("" as Position),
+          kills: participant.kills ?? -1,
+          deaths: participant.deaths ?? -1,
+          assists: participant.assists ?? -1,
+        })),
+      })),
+    };
 
-      if (game.participants.length !== 10) {
-        return NextResponse.json(
-          { message: `${game.gameNumber}세트 참가자는 10명이어야 합니다. 현재 ${game.participants.length}명입니다.` },
-          { status: 400 },
-        );
-      }
-
-      for (const participant of game.participants) {
-        if (!participant.playerId || !participant.championId || !participant.team || !participant.position) {
-          return NextResponse.json({ message: `${game.gameNumber}세트에 미완성 참가자 정보가 있습니다.` }, { status: 400 });
-        }
-
-        if (participant.kills === null || participant.deaths === null || participant.assists === null) {
-          return NextResponse.json({ message: `${game.gameNumber}세트에 미완성 K/D/A 정보가 있습니다.` }, { status: 400 });
-        }
-      }
+    const validation = validateMatchCreateInput(validationPayload);
+    if (!validation.ok) {
+      return NextResponse.json({ message: validation.message }, { status: 400 });
     }
 
     const season = await prisma.season.findUnique({
@@ -208,6 +213,19 @@ export async function POST(req: Request) {
         data: {
           action: "MATCH_CREATE_BY_OPERATION_AI",
           message: `운영 AI 내전 결과 이미지 등록: ${match.title} / 시즌: ${match.season.name} / 세트: ${match.games.length}개`,
+          actorId: admin.user.id,
+          actorType: admin.user.role,
+          actorUserId: admin.user.userId,
+          targetType: "MatchSeries",
+          targetId: match.id,
+          afterJson: {
+            matchId: match.id,
+            title: match.title,
+            seasonId,
+            requestId: body.requestId ?? null,
+            gameCount: match.games.length,
+          },
+          ...getRequestAuditFields(req),
         },
       });
 

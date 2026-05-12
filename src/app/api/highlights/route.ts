@@ -6,6 +6,7 @@ import { writeAdminLog } from "@/lib/admin-log";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { normalizeGalleryImageUrl } from "@/lib/gallery/winner-image-paths";
 import { extractYoutubeId, getYoutubeThumbnailUrl, getYoutubeWatchUrl } from "@/lib/youtube";
+import { PUBLIC_SHORT_CACHE_HEADER } from "@/lib/http/cache";
 
 type HighlightBody = {
   title?: string;
@@ -20,9 +21,14 @@ export async function GET() {
   try {
     const highlights = await prisma.highlight.findMany({
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+      take: 100,
     });
 
-    return NextResponse.json(highlights);
+    return NextResponse.json(highlights, {
+      headers: {
+        "Cache-Control": PUBLIC_SHORT_CACHE_HEADER,
+      },
+    });
   } catch (error) {
     console.error("[HIGHLIGHTS_GET_ERROR]", error);
     return NextResponse.json(

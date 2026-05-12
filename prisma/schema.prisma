@@ -136,6 +136,10 @@ model Player {
   balanceMatchResults PlayerBalanceMatchResult[]
 
   @@unique([nickname, tag])
+  @@index([isActive, createdAt])
+  @@index([name])
+  @@index([nickname])
+  @@index([tag])
 }
 
 model UserAccount {
@@ -367,6 +371,8 @@ model GalleryImage {
 
   eventMatches           EventMatch[]
   destructionTournaments DestructionTournament[]
+
+  @@index([showOnHome, createdAt])
 }
 
 model EventMatch {

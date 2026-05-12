@@ -5,36 +5,38 @@ import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import { validateNoticeInput } from "@/validations/notice";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { getPaginationMeta, getSafePagination } from "@/lib/http/pagination";
+import { PUBLIC_SHORT_CACHE_HEADER } from "@/lib/http/cache";
 
 export async function GET(req: NextRequest) {
   try {
-    const page = Number(req.nextUrl.searchParams.get("page") ?? "1");
-    const pageSize = Number(req.nextUrl.searchParams.get("pageSize") ?? "10");
-
-    const safePage = Number.isNaN(page) || page < 1 ? 1 : page;
-    const safePageSize =
-      Number.isNaN(pageSize) || pageSize < 1 || pageSize > 100 ? 10 : pageSize;
-
-    const skip = (safePage - 1) * safePageSize;
+    const pagination = getSafePagination({
+      page: req.nextUrl.searchParams.get("page"),
+      pageSize: req.nextUrl.searchParams.get("pageSize"),
+      defaultPageSize: 10,
+      maxPageSize: 100,
+    });
 
     const [notices, totalCount] = await Promise.all([
       prisma.notice.findMany({
         orderBy: [{ isPinned: "desc" }, { createdAt: "desc" }],
-        skip,
-        take: safePageSize,
+        skip: pagination.skip,
+        take: pagination.take,
       }),
       prisma.notice.count(),
     ]);
 
-    return NextResponse.json({
-      notices,
-      pagination: {
-        page: safePage,
-        pageSize: safePageSize,
-        totalCount,
-        totalPages: Math.ceil(totalCount / safePageSize),
+    return NextResponse.json(
+      {
+        notices,
+        pagination: getPaginationMeta(totalCount, pagination),
       },
-    });
+      {
+        headers: {
+          "Cache-Control": PUBLIC_SHORT_CACHE_HEADER,
+        },
+      },
+    );
   } catch (error) {
     console.error("[NOTICES_GET_ERROR]", error);
 

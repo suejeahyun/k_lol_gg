@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { authConstants } from "@/lib/auth";
 import { verifyAuthToken } from "@/lib/auth/token";
 
+function isLegacyAdminTokenEnabled() {
+  return process.env.NODE_ENV !== "production" || process.env.ALLOW_LEGACY_ADMIN_TOKEN === "true";
+}
+
 function isApprovedAdminUserToken(token?: string) {
   if (!token) return false;
 
@@ -33,8 +37,8 @@ export function proxy(req: NextRequest) {
   const userToken = req.cookies.get("user_token")?.value;
 
   if (
-    legacyAdminToken === authConstants.ADMIN_TOKEN_VALUE ||
-    isApprovedAdminUserToken(userToken)
+    isApprovedAdminUserToken(userToken) ||
+    (isLegacyAdminTokenEnabled() && legacyAdminToken === authConstants.ADMIN_TOKEN_VALUE)
   ) {
     return NextResponse.next();
   }

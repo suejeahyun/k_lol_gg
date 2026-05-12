@@ -5,6 +5,7 @@ import { EventNoticeType } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { PUBLIC_SHORT_CACHE_HEADER } from "@/lib/http/cache";
 
 function isEventNoticeType(value: string): value is EventNoticeType {
   return Object.values(EventNoticeType).includes(value as EventNoticeType);
@@ -17,9 +18,14 @@ export async function GET() {
         { isPinned: "desc" },
         { createdAt: "desc" },
       ],
+      take: 100,
     });
 
-    return NextResponse.json(notices);
+    return NextResponse.json(notices, {
+      headers: {
+        "Cache-Control": PUBLIC_SHORT_CACHE_HEADER,
+      },
+    });
   } catch (error) {
     console.error("[EVENT_NOTICES_GET_ERROR]", error);
 

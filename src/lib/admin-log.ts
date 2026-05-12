@@ -77,3 +77,13 @@ export async function writeAdminLog({
     console.error("[ADMIN_LOG_WRITE_ERROR]", error);
   }
 }
+
+export function getRequestAuditFields(req: Request) {
+  const forwardedFor = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  const realIp = req.headers.get("x-real-ip")?.trim();
+
+  return {
+    ipAddress: forwardedFor || realIp || null,
+    userAgent: req.headers.get("user-agent") || null,
+  };
+}

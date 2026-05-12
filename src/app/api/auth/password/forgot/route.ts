@@ -1,14 +1,12 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
+import { getRequestAuditFields, writeAdminLog } from "@/lib/admin-log";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
-import { prisma } from "@/lib/prisma/client";
-import { hashPassword } from "@/lib/auth/password";
-import { writeAdminLog } from "@/lib/admin-log";
 
 export async function PATCH(req: NextRequest) {
   const rateLimitRejected = await rejectIfRateLimited(req, {
-    action: "PASSWORD_FORGOT",
+    action: "PASSWORD_FORGOT_REQUEST",
     limit: 5,
     windowSeconds: 1800,
   });
@@ -21,75 +19,37 @@ export async function PATCH(req: NextRequest) {
     const name = String(body.name ?? "").trim();
     const nickname = String(body.nickname ?? "").trim();
     const tag = String(body.tag ?? "").replace(/^#/, "").trim();
-    const newPassword = String(body.newPassword ?? "");
-    const confirmPassword = String(body.confirmPassword ?? "");
-
-    if (!userId || !name || !nickname || !tag || !newPassword || !confirmPassword) {
-      return NextResponse.json(
-        { message: "아이디, 이름, 닉네임, 태그, 새 비밀번호를 모두 입력해주세요." },
-        { status: 400 },
-      );
-    }
-
-    if (newPassword !== confirmPassword) {
-      return NextResponse.json(
-        { message: "새 비밀번호 확인이 일치하지 않습니다." },
-        { status: 400 },
-      );
-    }
-
-    if (newPassword.length < 8 || newPassword.length > 32) {
-      return NextResponse.json(
-        { message: "새 비밀번호는 8~32자로 입력해주세요." },
-        { status: 400 },
-      );
-    }
-
-    const user = await prisma.userAccount.findUnique({
-      where: { userId },
-      include: { player: true },
-    });
-
-    if (
-      !user ||
-      !user.player ||
-      user.player.name !== name ||
-      user.player.nickname !== nickname ||
-      user.player.tag !== tag
-    ) {
-      return NextResponse.json(
-        { message: "입력한 계정 정보와 플레이어 정보가 일치하지 않습니다." },
-        { status: 404 },
-      );
-    }
-
-    if (user.role === "ADMIN" || user.role === "SUPER_ADMIN") {
-      return NextResponse.json(
-        { message: "관리자 계정은 최고 관리자 초기화 기능으로만 비밀번호를 변경할 수 있습니다." },
-        { status: 403 },
-      );
-    }
-
-    const passwordHash = await hashPassword(newPassword);
-
-    await prisma.userAccount.update({
-      where: { id: user.id },
-      data: { passwordHash },
-    });
 
     await writeAdminLog({
-      action: "USER_PASSWORD_FORGOT_RESET",
-      message: `비밀번호 찾기 재설정: #${user.id} ${user.userId}`,
+      action: "USER_PASSWORD_RESET_REQUEST_BLOCKED",
+      message: userId
+        ? `비밀번호 찾기 직접 재설정 차단: ${userId}`
+        : "비밀번호 찾기 직접 재설정 차단: 아이디 미입력",
+      targetType: "UserAccount",
+      actorUserId: userId || null,
+      afterJson: {
+        userId: userId || null,
+        name: name || null,
+        nickname: nickname || null,
+        tag: tag || null,
+        policy: "ADMIN_RESET_REQUIRED",
+      },
+      ...getRequestAuditFields(req),
     });
 
-    return NextResponse.json({
-      message: "비밀번호가 재설정되었습니다. 새 비밀번호로 로그인해주세요.",
-    });
+    return NextResponse.json(
+      {
+        message:
+          "보안 정책상 비밀번호 찾기에서 직접 재설정할 수 없습니다. 관리자에게 비밀번호 초기화를 요청해주세요.",
+        code: "ADMIN_RESET_REQUIRED",
+      },
+      { status: 403 },
+    );
   } catch (error) {
     console.error("[AUTH_PASSWORD_FORGOT_PATCH_ERROR]", error);
 
     return NextResponse.json(
-      { message: "비밀번호 재설정 중 오류가 발생했습니다." },
+      { message: "비밀번호 초기화 요청 처리 중 오류가 발생했습니다." },
       { status: 500 },
     );
   }

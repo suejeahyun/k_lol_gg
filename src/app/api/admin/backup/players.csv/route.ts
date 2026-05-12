@@ -1,16 +1,30 @@
 export const dynamic = "force-dynamic";
 
 import { prisma } from "@/lib/prisma/client";
-import { rejectIfNotSuperAdmin } from "@/lib/auth/requireAdmin";
+import { requireSuperAdminRequest } from "@/lib/auth/requireAdmin";
 import { createCsvResponse } from "@/lib/csv";
+import { getRequestAuditFields, writeAdminLog } from "@/lib/admin-log";
 
-export async function GET() {
-  const rejected = await rejectIfNotSuperAdmin();
-  if (rejected) return rejected;
+export async function GET(req: Request) {
+  const admin = await requireSuperAdminRequest();
+  if (!admin) {
+    return Response.json({ message: "최고 관리자 권한이 필요합니다." }, { status: 403 });
+  }
 
   const players = await prisma.player.findMany({
     orderBy: { id: "asc" },
     include: { userAccount: { select: { userId: true, status: true } } },
+  });
+
+  await writeAdminLog({
+    action: "BACKUP_CSV_DOWNLOAD",
+    message: "관리자 CSV 백업 다운로드: players.csv",
+    actorId: admin.user.id,
+    actorType: admin.user.role,
+    actorUserId: admin.user.userId,
+    targetType: "BackupCsv",
+    afterJson: { file: "players.csv" },
+    ...getRequestAuditFields(req),
   });
 
   return createCsvResponse(

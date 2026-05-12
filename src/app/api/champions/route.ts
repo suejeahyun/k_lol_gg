@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { PUBLIC_MEDIUM_CACHE_HEADER } from "@/lib/http/cache";
 
 type CreateChampionBody = {
   name: string;
@@ -14,9 +15,14 @@ export async function GET() {
   try {
     const champions = await prisma.champion.findMany({
       orderBy: { id: "desc" },
+      take: 300,
     });
 
-    return NextResponse.json(champions);
+    return NextResponse.json(champions, {
+      headers: {
+        "Cache-Control": PUBLIC_MEDIUM_CACHE_HEADER,
+      },
+    });
   } catch (error) {
     console.error("[CHAMPIONS_GET_ERROR]", error);
     return NextResponse.json(

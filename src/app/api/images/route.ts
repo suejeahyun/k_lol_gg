@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { normalizeGalleryImageUrls } from "@/lib/gallery/winner-image-paths";
+import { PUBLIC_SHORT_CACHE_HEADER } from "@/lib/http/cache";
 
 type CreateGalleryImageBody = {
   title: string;
@@ -17,9 +18,14 @@ export async function GET() {
   try {
     const images = await prisma.galleryImage.findMany({
       orderBy: [{ createdAt: "desc" }],
+      take: 100,
     });
 
-    return NextResponse.json(images);
+    return NextResponse.json(images, {
+      headers: {
+        "Cache-Control": PUBLIC_SHORT_CACHE_HEADER,
+      },
+    });
   } catch (error) {
     console.error("[GALLERY_IMAGES_GET_ERROR]", error);
 

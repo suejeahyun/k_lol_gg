@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma/client";
-import { writeAdminLog } from "@/lib/admin-log";
+import { getRequestAuditFields, writeAdminLog } from "@/lib/admin-log";
 import { verifyPassword } from "@/lib/auth/password";
 import { authConstants } from "@/lib/auth";
 import { signAuthToken } from "@/lib/auth/token";
@@ -53,6 +53,12 @@ export async function POST(req: NextRequest) {
     await writeAdminLog({
       action: "USER_LOGIN",
       message: `유저 로그인: #${user.id} ${user.userId} (${user.status})`,
+      actorId: user.id,
+      actorType: user.role,
+      actorUserId: user.userId,
+      targetType: "UserAccount",
+      targetId: user.id,
+      ...getRequestAuditFields(req),
     });
 
     const token = signAuthToken({
@@ -85,23 +91,13 @@ export async function POST(req: NextRequest) {
       maxAge: 60 * 60 * 24 * 7,
     });
 
-    if ((user.role === "ADMIN" || user.role === "SUPER_ADMIN") && user.status === "APPROVED") {
-      res.cookies.set(authConstants.ADMIN_TOKEN_KEY, authConstants.ADMIN_TOKEN_VALUE, {
-        httpOnly: true,
-        sameSite: "lax",
-        secure: process.env.NODE_ENV === "production",
-        path: "/",
-        maxAge: 60 * 60 * 24 * 7,
-      });
-    } else {
-      res.cookies.set(authConstants.ADMIN_TOKEN_KEY, "", {
-        httpOnly: true,
-        sameSite: "lax",
-        secure: process.env.NODE_ENV === "production",
-        path: "/",
-        maxAge: 0,
-      });
-    }
+    res.cookies.set(authConstants.ADMIN_TOKEN_KEY, "", {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 0,
+    });
 
     return res;
   } catch (error) {
