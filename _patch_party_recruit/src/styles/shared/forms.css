@@ -1,0 +1,44 @@
+/* 공통 폼 / 입력 요소 */
+
+.app-select, .app-input {
+  height: 38px;
+  border-radius: 8px;
+  border: 1px solid #e5e5e5;
+  background: #ffffff;
+  transition: all 0.15s ease;
+}
+
+.app-select {
+  padding: 0 10px;
+}
+
+.app-select:focus, .app-input:focus {
+  outline: none;
+  border-color: #000;
+}
+
+input {
+  width: 100%;
+  padding: 10px 12px;
+  box-sizing: border-box;
+}
+
+.form-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.app-input {
+  width: 220px;
+  padding: 10px 12px;
+  flex: 1;
+  border: 1px solid #2f2f2f;
+  border-radius: 8px;
+  background: #1a1a1a;
+  color: #fff;
+}
+
+.app-input::placeholder {
+  color: #777;
+}

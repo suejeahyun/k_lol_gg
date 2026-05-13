@@ -1,0 +1,24 @@
+/* K-LOL.GG 색상 / 테마 변수 */
+
+:root {
+  --k-bg: #050b16;
+  --k-bg-2: #071426;
+  --k-bg-3: #0b1b31;
+  --k-panel: rgba(15, 30, 52, 0.88);
+  --k-panel-solid: #0f1e34;
+  --k-panel-2: rgba(11, 27, 49, 0.94);
+  --k-border: rgba(96, 165, 250, 0.22);
+  --k-border-strong: rgba(96, 165, 250, 0.48);
+  --k-text: #e5f0ff;
+  --k-text-strong: #f8fbff;
+  --k-muted: #91a4c2;
+  --k-muted-2: #64748b;
+  --k-blue: #3b82f6;
+  --k-blue-2: #60a5fa;
+  --k-cyan: #22d3ee;
+  --k-red: #ef4444;
+  --k-red-soft: rgba(239, 68, 68, 0.18);
+  --k-gold: #facc15;
+  --k-shadow: 0 18px 48px rgba(0, 0, 0, 0.42);
+  --k-glow: 0 0 0 1px rgba(96, 165, 250, 0.18), 0 0 28px rgba(37, 99, 235, 0.18);
+}

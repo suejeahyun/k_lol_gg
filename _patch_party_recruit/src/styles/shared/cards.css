@@ -1,0 +1,170 @@
+/* 공통 카드 / 섹션 */
+
+.card {
+  background: #ffffff;
+  border: 1px solid #eaeaea;
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.card:hover {
+  border-color: #000;
+}
+
+.section-search {
+  margin-bottom: 20px;
+}
+
+.section-block {
+  margin-bottom: 24px;
+}
+
+.list-card {
+  display: block;
+  background: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 16px;
+  padding: 18px 20px;
+  transition: border-color 0.15s ease,
+ transform 0.15s ease,
+ box-shadow 0.15s ease,
+ background 0.15s ease;
+}
+
+.list-card:hover {
+  border-color: #111;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+}
+
+.list-card__title {
+  font-size: 19px;
+  font-weight: 800;
+  color: #000;
+  margin-bottom: 10px;
+}
+
+.list-card__meta {
+  display: grid;
+  gap: 6px;
+  color: #4b5563;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.list-card__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.detail-header-card {
+  background: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 20px;
+}
+
+.stat-card__sub {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.card-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  background: #1a1a1a;
+}
+
+.stat-card__label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #888;
+}
+
+.stat-card__value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.2;
+  margin-top: 4px;
+}
+
+.content-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  background: #ffffff;
+  margin-bottom: 28px;
+}
+
+.section-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 12px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.info-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #1a1a1a;
+}
+
+.info-card__label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #888;
+}
+
+.info-card__value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.empty-box {
+  border: 1px dashed #d1d5db;
+  border-radius: 16px;
+  background: #f9fafb;
+  color: #777;
+  padding: 30px;
+  text-align: center;
+  font-size: 14px;
+}
