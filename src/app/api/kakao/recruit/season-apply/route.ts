@@ -362,6 +362,82 @@ function rejectIfInvalidSecret(req: NextRequest, bodySecret: unknown) {
   );
 }
 
+function normalizeCommand(value: string) {
+  return value.trim().replace(/\s+/g, "");
+}
+
+function getTodayKstDateText() {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+
+  const year = parts.find((part) => part.type === "year")?.value;
+  const month = parts.find((part) => part.type === "month")?.value;
+  const day = parts.find((part) => part.type === "day")?.value;
+
+  if (!year || !month || !day) {
+    throw new Error("오늘 날짜를 계산하지 못했습니다.");
+  }
+
+  return `${year}-${month}-${day}`;
+}
+
+async function resetTodaySeasonApply(params: {
+  message: string;
+  roomName: string | null;
+  sender: string | null;
+}) {
+  const season = await prisma.season.findFirst({
+    where: { isActive: true },
+    orderBy: { id: "desc" },
+    select: { id: true, name: true },
+  });
+
+  if (!season) {
+    throw new Error("활성 시즌이 없습니다.");
+  }
+
+  const todayText = getTodayKstDateText();
+  const applyDate = getKstStartOfDate(todayText);
+
+  const result = await prisma.$transaction(async (tx) => {
+    const deleted = await tx.seasonParticipationApply.deleteMany({
+      where: {
+        seasonId: season.id,
+        applyDate,
+      },
+    });
+
+    await writeAdminLog({
+      action: "KAKAO_RECRUIT_SEASON_APPLY_RESET",
+      message: `카카오 구인구직방 오늘 내전 참가 초기화: 시즌 #${season.id} ${season.name}, 신청일 ${todayText}, 삭제 ${deleted.count}명`,
+      targetType: "Season",
+      targetId: season.id,
+      afterJson: {
+        command: params.message,
+        applyDate: applyDate.toISOString(),
+        applyDateKst: todayText,
+        roomName: params.roomName,
+        sender: params.sender,
+        deletedCount: deleted.count,
+      },
+      db: tx,
+    });
+
+    return deleted;
+  });
+
+  return {
+    season,
+    todayText,
+    applyDate,
+    deletedCount: result.count,
+  };
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
@@ -369,6 +445,37 @@ export async function POST(req: NextRequest) {
     if (secretRejected) return secretRejected;
 
     const message = String(body.message || body.text || body.utterance || "");
+    const roomName =
+      typeof body.roomName === "string"
+        ? body.roomName
+        : typeof body.room === "string"
+          ? body.room
+          : null;
+    const sender = typeof body.sender === "string" ? body.sender : null;
+
+    if (normalizeCommand(message) === "오늘내전초기화") {
+      const reset = await resetTodaySeasonApply({
+        message,
+        roomName,
+        sender,
+      });
+
+      return NextResponse.json({
+        ok: true,
+        formatVersion: FORMAT_VERSION,
+        command: "TODAY_SEASON_APPLY_RESET",
+        season: reset.season,
+        applyDate: reset.todayText,
+        deletedCount: reset.deletedCount,
+        reply:
+          "[K-LOL.GG 구인구직방 참가 초기화]\n" +
+          `시즌: ${reset.season.name}\n` +
+          `신청일: ${reset.todayText}\n` +
+          `삭제: ${reset.deletedCount}명\n\n` +
+          "오늘 내전 참가 신청 기록을 초기화했습니다.",
+      });
+    }
+
     const parsed = parseRecruitMessage(message);
 
     if (parsed.participants.length < 1) {
@@ -387,8 +494,8 @@ export async function POST(req: NextRequest) {
     const applied = await applyParticipants({
       parsed,
       message,
-      roomName: typeof body.roomName === "string" ? body.roomName : typeof body.room === "string" ? body.room : null,
-      sender: typeof body.sender === "string" ? body.sender : null,
+      roomName,
+      sender,
     });
 
     const registered = applied.results.filter((item) => item.status === "REGISTERED").length;
