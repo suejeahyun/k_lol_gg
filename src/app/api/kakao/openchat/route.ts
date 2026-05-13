@@ -10,6 +10,7 @@ import {
   getPlayerRecordForKakao,
   getRankingForKakao,
 } from "@/features/player/services/getPlayerRecordForKakao";
+import { generateOperationNotice } from "@/lib/operation-ai/addons/analytics";
 
 type KakaoOpenchatBody = {
   message?: string;
@@ -59,6 +60,14 @@ function extractMessage(body: KakaoOpenchatBody) {
 }
 
 async function handleMessage(message: string) {
+  const trimmedMessage = message.trim();
+
+  if (/^(AI공지|자동공지|공지생성)(\s+(12|15|18|20))?$/i.test(trimmedMessage)) {
+    const slot = trimmedMessage.match(/(12|15|18|20)/)?.[1] ?? null;
+    const notice = await generateOperationNotice({ slot });
+    return jsonReply(notice.text);
+  }
+
   const command = parseKakaoCommand(message);
 
   if (command.type === "help") {

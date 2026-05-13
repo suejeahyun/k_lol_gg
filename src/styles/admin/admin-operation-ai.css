@@ -775,3 +775,306 @@
   font-size: 12px;
   line-height: 1.6;
 }
+
+/* 운영 AI 확장 대시보드 */
+.operation-ai-addon-page {
+  padding-bottom: 40px;
+}
+
+.operation-ai-addon-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.operation-ai-addon-grid > div,
+.operation-ai-addon-stat,
+.operation-ai-addon-card {
+  border: 1px solid rgba(129, 164, 226, 0.18);
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(8, 16, 34, 0.9), rgba(4, 10, 24, 0.74));
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.operation-ai-addon-grid > div,
+.operation-ai-addon-stat {
+  min-height: 118px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 7px;
+}
+
+.operation-ai-addon-grid span,
+.operation-ai-addon-stat span,
+.operation-ai-addon-stat small,
+.operation-ai-addon-grid small {
+  color: rgba(221, 232, 255, 0.68);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.operation-ai-addon-grid strong,
+.operation-ai-addon-stat strong {
+  color: #f6f8ff;
+  font-size: 22px;
+  line-height: 1.18;
+  letter-spacing: -0.04em;
+}
+
+.operation-ai-addon-card {
+  padding: 22px;
+}
+
+.operation-ai-addon-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.operation-ai-addon-card h2 {
+  margin: 0;
+  color: #f6f8ff;
+  font-size: 21px;
+  letter-spacing: -0.04em;
+}
+
+.operation-ai-addon-card h3 {
+  margin: 0 0 10px;
+  color: #f6f8ff;
+  font-size: 16px;
+}
+
+.operation-ai-addon-card p,
+.operation-ai-addon-card small,
+.operation-ai-addon-empty,
+.operation-ai-addon-ul li {
+  color: rgba(226, 235, 255, 0.74);
+  line-height: 1.7;
+}
+
+.operation-ai-addon-card__head p {
+  margin: 7px 0 0;
+  font-size: 14px;
+}
+
+.operation-ai-addon-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.operation-ai-addon-issue {
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr);
+  gap: 12px;
+  align-items: flex-start;
+  border: 1px solid rgba(129, 164, 226, 0.13);
+  border-radius: 16px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.operation-ai-addon-issue strong {
+  display: block;
+  color: #f6f8ff;
+  margin-bottom: 4px;
+}
+
+.operation-ai-addon-issue p {
+  margin: 0 0 4px;
+}
+
+.operation-ai-addon-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-height: 28px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(129, 164, 226, 0.22);
+  color: rgba(238, 244, 255, 0.88);
+  background: rgba(129, 164, 226, 0.11);
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.operation-ai-addon-badge--danger {
+  border-color: rgba(255, 104, 104, 0.38);
+  background: rgba(255, 104, 104, 0.14);
+  color: #ffd5d5;
+}
+
+.operation-ai-addon-badge--warning {
+  border-color: rgba(245, 210, 122, 0.38);
+  background: rgba(245, 210, 122, 0.13);
+  color: #ffe8a8;
+}
+
+.operation-ai-addon-badge--good {
+  border-color: rgba(91, 231, 168, 0.36);
+  background: rgba(91, 231, 168, 0.12);
+  color: #c9ffe9;
+}
+
+.operation-ai-addon-table-wrap {
+  overflow-x: auto;
+  border-radius: 16px;
+  border: 1px solid rgba(129, 164, 226, 0.13);
+}
+
+.operation-ai-addon-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+}
+
+.operation-ai-addon-table th,
+.operation-ai-addon-table td {
+  padding: 12px 13px;
+  border-bottom: 1px solid rgba(129, 164, 226, 0.12);
+  text-align: left;
+  color: rgba(238, 244, 255, 0.86);
+  font-size: 13px;
+  vertical-align: top;
+}
+
+.operation-ai-addon-table th {
+  color: rgba(245, 210, 122, 0.9);
+  background: rgba(255, 255, 255, 0.04);
+  font-weight: 900;
+}
+
+.operation-ai-addon-table small {
+  display: block;
+  margin-top: 3px;
+  color: rgba(226, 235, 255, 0.55);
+}
+
+.operation-ai-addon-notices {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.operation-ai-addon-notices article {
+  border: 1px solid rgba(129, 164, 226, 0.13);
+  border-radius: 16px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.operation-ai-addon-notices pre {
+  white-space: pre-wrap;
+  margin: 0;
+  color: rgba(238, 244, 255, 0.86);
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.72;
+}
+
+.operation-ai-addon-code {
+  margin-top: 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.operation-ai-addon-code strong {
+  color: #f6f8ff;
+}
+
+.operation-ai-addon-code code {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 12px;
+  color: #e8efff;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(129, 164, 226, 0.13);
+  overflow-x: auto;
+}
+
+.operation-ai-addon-tags {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.operation-ai-addon-tags article {
+  border: 1px solid rgba(129, 164, 226, 0.13);
+  border-radius: 16px;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.operation-ai-addon-tags strong,
+.operation-ai-addon-tags small {
+  display: block;
+}
+
+.operation-ai-addon-tags div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0;
+}
+
+.operation-ai-addon-tags p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.operation-ai-addon-callout {
+  border: 1px solid rgba(245, 210, 122, 0.2);
+  border-radius: 18px;
+  padding: 18px;
+  background: radial-gradient(circle at top left, rgba(245, 210, 122, 0.12), transparent 42%), rgba(255, 255, 255, 0.035);
+}
+
+.operation-ai-addon-callout strong {
+  color: #f5d27a;
+  font-size: 22px;
+}
+
+.operation-ai-addon-callout p {
+  margin: 8px 0;
+}
+
+.operation-ai-addon-callout small {
+  display: block;
+}
+
+.operation-ai-addon-ul {
+  margin: 12px 0 0;
+  padding-left: 20px;
+}
+
+@media (max-width: 980px) {
+  .operation-ai-addon-grid,
+  .operation-ai-addon-grid--stats,
+  .operation-ai-addon-notices,
+  .operation-ai-addon-tags {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .operation-ai-addon-grid,
+  .operation-ai-addon-grid--stats,
+  .operation-ai-addon-notices,
+  .operation-ai-addon-tags {
+    grid-template-columns: 1fr;
+  }
+
+  .operation-ai-addon-card {
+    padding: 16px;
+  }
+
+  .operation-ai-addon-issue {
+    grid-template-columns: 1fr;
+  }
+}
