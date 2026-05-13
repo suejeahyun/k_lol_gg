@@ -46,6 +46,7 @@ const tierMap: Record<string, NormalizedTier> = {
   p: "PLATINUM",
   plat: "PLATINUM",
   platinum: "PLATINUM",
+  플레: "PLATINUM",
   플래: "PLATINUM",
   플래티넘: "PLATINUM",
 
@@ -58,6 +59,7 @@ const tierMap: Record<string, NormalizedTier> = {
   dia: "DIAMOND",
   diamond: "DIAMOND",
   다이아: "DIAMOND",
+  다이아몬드: "DIAMOND",
 
   m: "MASTER",
   master: "MASTER",
@@ -66,6 +68,7 @@ const tierMap: Record<string, NormalizedTier> = {
   gm: "GRANDMASTER",
   grandmaster: "GRANDMASTER",
   그마: "GRANDMASTER",
+  그랜드마스터: "GRANDMASTER",
 
   c: "CHALLENGER",
   challenger: "CHALLENGER",
@@ -81,24 +84,42 @@ const tierMap: Record<string, NormalizedTier> = {
 const positionMap: Record<string, ApplyPositionValue> = {
   top: "TOP",
   tp: "TOP",
+  topl: "TOP",
+  toplane: "TOP",
   탑: "TOP",
+  탑라인: "TOP",
+  탑솔: "TOP",
+  탑솔러: "TOP",
+  "ㅌ": "TOP",
 
   jg: "JGL",
   jgl: "JGL",
+  jug: "JGL",
   jungle: "JGL",
   jung: "JGL",
+  jun: "JGL",
+  jng: "JGL",
   정글: "JGL",
+  정글러: "JGL",
+  "ㅈㄱ": "JGL",
+  "ㅈ글": "JGL",
 
   mid: "MID",
   md: "MID",
   middle: "MID",
   미드: "MID",
+  "ㅁㄷ": "MID",
+  미: "MID",
 
   ad: "ADC",
   adc: "ADC",
   bot: "ADC",
   bottom: "ADC",
   원딜: "ADC",
+  원: "ADC",
+  바텀: "ADC",
+  봇: "ADC",
+  "ㅇㄷ": "ADC",
 
   sup: "SUP",
   sp: "SUP",
@@ -106,18 +127,26 @@ const positionMap: Record<string, ApplyPositionValue> = {
   support: "SUP",
   서폿: "SUP",
   서포터: "SUP",
+  폿: "SUP",
+  "ㅅㅍ": "SUP",
 
   a: "ALL",
   all: "ALL",
   any: "ALL",
   fill: "ALL",
+  auto: "ALL",
   올: "ALL",
   올라인: "ALL",
   아무거나: "ALL",
 };
 
 function normalizeToken(value: string) {
-  return value.trim().toLowerCase().replace(/[，、]/g, ",").replace(/\s+/g, " ");
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[，、]/g, ",")
+    .replace(/[／]/g, "/")
+    .replace(/\s+/g, " ");
 }
 
 export function normalizeParticipantName(value: string) {
@@ -141,7 +170,7 @@ export function normalizePositions(value: string): {
   const warnings: string[] = [];
   const tokens = value
     .replace(/[，、/]/g, " ")
-    .replace(/,/g, " ")
+    .replace(/[,|+]/g, " ")
     .split(/\s+/)
     .map((token) => token.trim().toLowerCase())
     .filter(Boolean);
@@ -170,15 +199,25 @@ export function normalizePositions(value: string): {
 export function parseParticipationText(input: string): ParsedParticipationRow[] {
   const lines = input.split(/\r?\n/);
   const result: ParsedParticipationRow[] = [];
-  const regex = /^\s*(\d+)\s*[.)]\s*([^/]+?)\s*\/\s*([^/]+?)\s*\/\s*([^/]+?)\s*\/\s*(.+?)\s*$/;
+  const regex = /^\s*(\d{1,2})\s*[.)]\s*([^/]+?)\s*\/\s*([^/]+?)\s*\/\s*([^/]+?)\s*\/\s*(.+?)\s*$/;
 
   for (const rawLine of lines) {
-    const match = rawLine.match(regex);
+    const normalizedLine = rawLine
+      .replace(/[．。]/g, ".")
+      .replace(/[）]/g, ")")
+      .replace(/[／]/g, "/")
+      .replace(/[，]/g, ",")
+      .trim();
+
+    const match = normalizedLine.match(regex);
     if (!match) continue;
 
     const [, orderText, nameText, currentTierText, peakTierText, positionText] = match;
     const warnings: string[] = [];
     const order = Number(orderText);
+
+    if (!Number.isInteger(order) || order < 1 || order > 10) continue;
+
     const rawName = nameText.trim();
     const normalizedName = normalizeParticipantName(rawName);
 

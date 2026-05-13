@@ -566,6 +566,12 @@ model SeasonParticipationApply {
 
   status ParticipationApplyStatus @default(APPLIED)
 
+  source            String  @default("SITE")
+  sourceRoom        String?
+  sourceSender      String?
+  sourceMessageHash String?
+  sourceSlotNo      Int?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -574,6 +580,8 @@ model SeasonParticipationApply {
 
   @@unique([seasonId, playerId, applyDate])
   @@index([seasonId, applyDate, status])
+  @@index([seasonId, applyDate, source, status])
+  @@index([sourceMessageHash])
 }
 
 model EventParticipationApply {
