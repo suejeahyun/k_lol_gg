@@ -28,9 +28,31 @@ export async function POST(req: NextRequest) {
     }
 
     const normalizedUserId = String(userId).trim();
+    const normalizedPassword = String(password);
     const normalizedName = String(name).trim();
     const normalizedNickname = String(nickname).trim();
     const normalizedTag = String(tag).replace(/^#/, "").trim();
+
+    if (normalizedUserId.length < 4 || normalizedUserId.length > 32) {
+      return NextResponse.json(
+        { message: "아이디는 4~32자로 입력해주세요." },
+        { status: 400 },
+      );
+    }
+
+    if (normalizedPassword.length < 8 || normalizedPassword.length > 32) {
+      return NextResponse.json(
+        { message: "비밀번호는 8~32자로 입력해주세요." },
+        { status: 400 },
+      );
+    }
+
+    if (!normalizedName || !normalizedNickname || !normalizedTag) {
+      return NextResponse.json(
+        { message: "이름, 닉네임, 태그를 정확히 입력해주세요." },
+        { status: 400 },
+      );
+    }
 
     const existingUser = await prisma.userAccount.findUnique({
       where: { userId: normalizedUserId },
@@ -62,7 +84,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const passwordHash = await hashPassword(password);
+    const passwordHash = await hashPassword(normalizedPassword);
 
     await prisma.$transaction(async (tx) => {
       const user = await tx.userAccount.create({

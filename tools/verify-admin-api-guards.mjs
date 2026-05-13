@@ -9,7 +9,7 @@ const guardPatterns = [
   "requireAdminRequest",
   "requireSuperAdminRequest",
 ];
-const methodPattern = /export\s+async\s+function\s+(POST|PUT|PATCH|DELETE)\s*\(/g;
+const methodPattern = /export\s+async\s+function\s+(GET|POST|PUT|PATCH|DELETE)\s*\(/g;
 
 function walk(dir) {
   if (!fs.existsSync(dir)) return [];
@@ -52,4 +52,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log("[ADMIN API GUARD CHECK PASSED] Mutating /api/admin routes contain an admin guard.");
+console.log("[ADMIN API GUARD CHECK PASSED] /api/admin routes contain an admin guard.");

@@ -393,3 +393,33 @@ export async function updateInternalMmrAfterMatch(tx: Tx, match: MatchLike) {
     });
   }
 }
+
+export async function rebuildInternalMmr(tx: Tx) {
+  const matches = await tx.matchSeries.findMany({
+    orderBy: [{ matchDate: "asc" }, { id: "asc" }],
+    include: {
+      games: {
+        orderBy: [{ gameNumber: "asc" }, { id: "asc" }],
+        include: {
+          participants: {
+            orderBy: { id: "asc" },
+          },
+        },
+      },
+    },
+  });
+
+  await tx.playerBalanceMatchResult.deleteMany();
+  await tx.balanceMatchReview.deleteMany({
+    where: {
+      selectedOptionType: "AI_INFERRED_MMR",
+    },
+  });
+  await tx.playerBalanceProfile.deleteMany();
+
+  for (const match of matches) {
+    await updateInternalMmrAfterMatch(tx, match);
+  }
+
+  return matches.length;
+}

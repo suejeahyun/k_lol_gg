@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { recalculateSeasonStats } from "@/lib/stats/recalculate";
+import { rebuildInternalMmr } from "@/lib/balance/internal-mmr";
 import { parseKstDateTime } from "@/lib/date/kst";
 import { getStoredGameMvpFields } from "@/lib/match/mvp";
 
@@ -443,9 +444,10 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
       if (existingMatch.seasonId !== data.seasonId) {
         await recalculateSeasonStats(existingMatch.seasonId, tx);
       }
+      await rebuildInternalMmr(tx);
 
       return matchSeries;
-    });
+    }, { timeout: 30000 });
 
     return NextResponse.json({
       message: "내전이 수정되었습니다.",
@@ -530,7 +532,8 @@ export async function DELETE(_req: NextRequest, context: RouteContext) {
       });
 
       await recalculateSeasonStats(existingMatch.seasonId, tx);
-    });
+      await rebuildInternalMmr(tx);
+    }, { timeout: 30000 });
 
     return NextResponse.json({
       message: "내전이 삭제되었습니다.",

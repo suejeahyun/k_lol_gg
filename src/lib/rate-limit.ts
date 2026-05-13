@@ -54,6 +54,12 @@ export async function rejectIfRateLimited(
     },
   });
 
+  if (Math.random() < 0.01) {
+    await cleanupOldRateLimitLogs().catch((error) => {
+      console.error("[RATE_LIMIT_LOG_CLEANUP_ERROR]", error);
+    });
+  }
+
   return null;
 }
 

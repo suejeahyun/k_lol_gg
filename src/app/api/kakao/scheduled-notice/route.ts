@@ -2,6 +2,8 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
+import { getTodayKstRange } from "@/lib/date/kst";
+import { getRequiredSecretInProduction } from "@/lib/security/secrets";
 import { prisma } from "@/lib/prisma/client";
 
 type PositionKey = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
@@ -43,7 +45,7 @@ function jsonReply(
 }
 
 function rejectIfInvalidSecret(req: NextRequest) {
-  const secret = process.env.KAKAO_OPENCHAT_SECRET;
+  const secret = getRequiredSecretInProduction("KAKAO_OPENCHAT_SECRET");
   if (!secret) return null;
 
   const headerSecret = req.headers.get("x-kakao-openchat-secret");
@@ -55,25 +57,6 @@ function rejectIfInvalidSecret(req: NextRequest) {
   }
 
   return jsonReply("인증되지 않은 요청입니다.", {}, 401);
-}
-
-/**
- * 한국 시간 기준 오늘 범위.
- * 서버가 Vercel/UTC 환경이어도 한국 날짜 기준으로 참가자를 계산하기 위함.
- */
-function getKstTodayRange() {
-  const now = new Date();
-  const kstOffsetMs = 9 * 60 * 60 * 1000;
-  const kstNow = new Date(now.getTime() + kstOffsetMs);
-
-  const year = kstNow.getUTCFullYear();
-  const month = kstNow.getUTCMonth();
-  const date = kstNow.getUTCDate();
-
-  const start = new Date(Date.UTC(year, month, date, -9, 0, 0, 0));
-  const end = new Date(Date.UTC(year, month, date + 1, -9, 0, 0, -1));
-
-  return { start, end };
 }
 
 function isPositionKey(value: unknown): value is PositionKey {
@@ -152,7 +135,7 @@ async function createNotice(req: NextRequest, body?: NoticeBody) {
     req.nextUrl.searchParams.get("room") ??
     null;
 
-  const { start, end } = getKstTodayRange();
+  const { start, end } = getTodayKstRange();
   const activeSeasonId = await getActiveSeasonId();
 
   const positionCounts: Record<PositionKey, number> = {
@@ -240,6 +223,10 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error("[KAKAO_SCHEDULED_NOTICE_GET_ERROR]", error);
 
+    if (error instanceof Error && error.message.includes("KAKAO_OPENCHAT_SECRET")) {
+      return jsonReply("서버 인증 환경변수가 설정되지 않았습니다.", {}, 500);
+    }
+
     return jsonReply(
       getFallbackReply(),
       {
@@ -256,6 +243,10 @@ export async function POST(req: NextRequest) {
     return await createNotice(req, body);
   } catch (error) {
     console.error("[KAKAO_SCHEDULED_NOTICE_POST_ERROR]", error);
+
+    if (error instanceof Error && error.message.includes("KAKAO_OPENCHAT_SECRET")) {
+      return jsonReply("서버 인증 환경변수가 설정되지 않았습니다.", {}, 500);
+    }
 
     return jsonReply(
       getFallbackReply(),
