@@ -146,6 +146,13 @@ function buildReply(params: {
         .join("\n")
     : "";
 
+  if (pending === 0 && registered + updated > 0) {
+    return (
+      "[K-LOL.GG 구인구직방 참가 자동 등록 완료]\n" +
+      "내전 시작 10분전에 디스코드 내전 대기방으로 와주세요."
+    );
+  }
+
   return (
     "[K-LOL.GG 구인구직방 참가 자동 등록]\n" +
     `시즌: ${params.seasonName}\n` +

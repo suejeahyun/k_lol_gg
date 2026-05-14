@@ -139,7 +139,7 @@ export function parseCreateRecruitCommand(
 ): CreateRecruitCommand | null {
   const text = normalizeText(message).trim();
   const match = text.match(
-    /^\/(자랭구인|일반구인|솔랭구인|칼바람구인|증바람구인|기타게임구인)(?:\s+(\d{1,2}))?\s*$/,
+    /^\/?(자랭구인|일반구인|솔랭구인|칼바람구인|증바람구인|기타게임구인)(?:\s+(\d{1,2}))?\s*$/,
   );
   if (!match) return null;
 
@@ -263,7 +263,7 @@ export function parseFinishRecruitCommand(
   message: string,
 ): FinishRecruitCommand | null {
   const text = normalizeText(message).trim();
-  const match = text.match(/^\/(\d{1,2})\s*(쫑|ㅉ)\s*$/);
+  const match = text.match(/^\/?(\d{1,2})\s*(쫑|ㅉ)\s*$/);
   if (!match) return null;
 
   const recruitNo = Number(match[1]);

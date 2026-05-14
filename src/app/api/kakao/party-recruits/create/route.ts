@@ -37,12 +37,12 @@ export async function POST(req: NextRequest) {
             "[K-LOL.GG 구인구직 생성 실패]\n\n" +
             "명령어 형식이 올바르지 않습니다.\n\n" +
             "예시\n" +
-            "/자랭구인\n" +
-            "/일반구인\n" +
-            "/솔랭구인\n" +
-            "/칼바람구인\n" +
-            "/증바람구인\n" +
-            "/기타게임구인\n"
+            "자랭구인\n" +
+            "일반구인\n" +
+            "솔랭구인\n" +
+            "칼바람구인\n" +
+            "증바람구인\n" +
+            "기타게임구인",
         },
         { status: 400 },
       );
@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
             `${existing.title}\n` +
             `현재 인원: ${activeCount}/${existing.maxMembers}\n\n` +
             "새 구인글은 번호를 직접 지정하지 않고 생성해주세요.\n" +
-            "예: /자랭구인",
+            "예: 자랭구인",
         },
         { status: 409 },
       );
@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
             `마무리 기록: ${finishedLog.title || "구인글"}\n` +
             `최종 인원: ${finishedLog.memberCount}/${finishedLog.maxMembers}\n\n` +
             "새 구인글은 번호 없이 생성하면 다음 번호가 자동 배정됩니다.\n" +
-            "예: /자랭구인",
+            "예: 자랭구인",
         },
         { status: 409 },
       );
