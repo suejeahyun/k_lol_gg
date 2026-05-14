@@ -3,13 +3,13 @@ export const revalidate = 0;
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
-import { buildRecruitStatusReply } from "@/lib/kakao/party-recruit";
+import { buildRecruitStatusReply, getKakaoRecruitTodayRange } from "@/lib/kakao/party-recruit";
 import { PARTY_RECRUIT_FORMAT_VERSION } from "../_shared";
 
 export async function GET() {
   try {
     const parties = await prisma.recruitParty.findMany({
-      where: { status: "IN_PROGRESS" },
+      where: { status: "IN_PROGRESS", createdAt: getKakaoRecruitTodayRange() },
       include: {
         members: {
           orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }],

@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import {
   buildCreateReply,
+  getKakaoRecruitTodayRange,
   parseCreateRecruitCommand,
 } from "@/lib/kakao/party-recruit";
 import {
@@ -22,6 +23,8 @@ export async function POST(req: NextRequest) {
     const body = await readJsonBody(req);
     const secretRejected = rejectIfInvalidPartySecret(req, body.secret);
     if (secretRejected) return secretRejected;
+
+    await archiveStaleRecruitParties();
 
     const message = getBodyText(body);
     const roomName = getBodyRoom(body);
@@ -56,7 +59,11 @@ export async function POST(req: NextRequest) {
         include: { members: true },
       }),
       prisma.recruitPartyLog.findFirst({
-        where: { recruitNo, action: "FINISHED" },
+        where: {
+          recruitNo,
+          action: "FINISHED",
+          createdAt: getKakaoRecruitTodayRange(),
+        },
         orderBy: { createdAt: "desc" },
         select: { id: true, title: true, createdAt: true, memberCount: true, maxMembers: true },
       }),
@@ -147,12 +154,18 @@ export async function POST(req: NextRequest) {
 }
 
 async function getNextRecruitNo() {
+  const todayRange = getKakaoRecruitTodayRange();
   const [latestActive, latestLog] = await Promise.all([
     prisma.recruitParty.findFirst({
+      where: { createdAt: todayRange },
       orderBy: { recruitNo: "desc" },
       select: { recruitNo: true },
     }),
     prisma.recruitPartyLog.findFirst({
+      where: {
+        createdAt: todayRange,
+        action: { in: ["FINISHED", "AUTO_EXPIRED"] },
+      },
       orderBy: { recruitNo: "desc" },
       select: { recruitNo: true },
     }),
@@ -173,6 +186,35 @@ async function getNextRecruitNo() {
   }
 
   throw new Error(
-    "사용 가능한 모집번호가 없습니다. 진행중인 구인글을 마무리해주세요.",
+    "오늘 사용 가능한 모집번호가 없습니다. 진행중인 구인글을 마무리해주세요.",
   );
+}
+
+async function archiveStaleRecruitParties() {
+  const todayRange = getKakaoRecruitTodayRange();
+  const staleParties = await prisma.recruitParty.findMany({
+    where: { createdAt: { lt: todayRange.gte } },
+    include: { members: { orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }] } },
+  });
+
+  if (staleParties.length === 0) return;
+
+  await prisma.$transaction(async (tx) => {
+    for (const party of staleParties) {
+      await tx.recruitPartyLog.create({
+        data: {
+          recruitNo: party.recruitNo,
+          type: String(party.type),
+          title: party.title,
+          action: "AUTO_EXPIRED",
+          memberCount: party.members.filter((member) => !member.isSubstitute && member.name.trim() !== "").length,
+          maxMembers: party.maxMembers,
+          summary: "일자 변경으로 자동 마감되었습니다.",
+          roomName: party.roomName,
+          sender: "system",
+        },
+      });
+      await tx.recruitParty.delete({ where: { id: party.id } });
+    }
+  });
 }

@@ -77,6 +77,26 @@ const POSITION_ALIASES: Record<string, RecruitLinePosition> = {
   서포터: "SUP",
 };
 
+
+export function getKakaoRecruitTodayRange(now = new Date()) {
+  const kstOffsetMs = 9 * 60 * 60 * 1000;
+  const kstNow = new Date(now.getTime() + kstOffsetMs);
+  const startUtcMs = Date.UTC(
+    kstNow.getUTCFullYear(),
+    kstNow.getUTCMonth(),
+    kstNow.getUTCDate(),
+    0,
+    0,
+    0,
+    0,
+  ) - kstOffsetMs;
+
+  return {
+    gte: new Date(startUtcMs),
+    lt: new Date(startUtcMs + 24 * 60 * 60 * 1000),
+  };
+}
+
 function normalizeText(value: string) {
   return String(value || "")
     .replace(/\r/g, "\n")

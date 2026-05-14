@@ -4,7 +4,7 @@ export const revalidate = 0;
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
-import { buildSyncReply, parsePartyForm } from "@/lib/kakao/party-recruit";
+import { buildSyncReply, getKakaoRecruitTodayRange, parsePartyForm } from "@/lib/kakao/party-recruit";
 import {
   PARTY_RECRUIT_FORMAT_VERSION,
   getBodyRoom,
@@ -45,14 +45,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const party = await prisma.recruitParty.findUnique({
-      where: { recruitNo },
+    const todayRange = getKakaoRecruitTodayRange();
+    const party = await prisma.recruitParty.findFirst({
+      where: { recruitNo, createdAt: todayRange },
       include: { members: true },
     });
 
     if (!party) {
       const finishedLog = await prisma.recruitPartyLog.findFirst({
-        where: { recruitNo, action: "FINISHED" },
+        where: { recruitNo, action: { in: ["FINISHED", "AUTO_EXPIRED"] }, createdAt: todayRange },
         orderBy: { createdAt: "desc" },
         select: { title: true, memberCount: true, maxMembers: true },
       });
@@ -71,7 +72,7 @@ export async function POST(req: NextRequest) {
               ].join("\n")
             : "[K-LOL.GG 구인구직 반영 실패]\n\n" +
               `모집번호 #${recruitNo} 파티를 찾지 못했습니다.\n` +
-              "먼저 /자랭구인 형식으로 파티를 생성해주세요.",
+              "먼저 자랭구인 형식으로 오늘 파티를 생성해주세요.",
         },
         { status: 404 },
       );
