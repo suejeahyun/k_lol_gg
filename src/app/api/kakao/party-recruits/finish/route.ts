@@ -42,11 +42,24 @@ export async function POST(req: NextRequest) {
     });
 
     if (!party) {
+      const finishedLog = await prisma.recruitPartyLog.findFirst({
+        where: { recruitNo: parsed.recruitNo, action: "FINISHED" },
+        orderBy: { createdAt: "desc" },
+        select: { title: true, memberCount: true, maxMembers: true },
+      });
+
       return NextResponse.json(
         {
           ok: false,
           formatVersion: PARTY_RECRUIT_FORMAT_VERSION,
-          reply: `[K-LOL.GG 구인구직 마무리]\n\n모집번호 #${parsed.recruitNo} 파티를 찾지 못했습니다.`,
+          reply: finishedLog
+            ? [
+                "[K-LOL 구인구직 마무리]",
+                `모집번호 #${parsed.recruitNo}는 이미 마무리된 구인글입니다.`,
+                `기록: ${finishedLog.title || "구인글"}`,
+                `최종 인원: ${finishedLog.memberCount}/${finishedLog.maxMembers}`,
+              ].join("\n")
+            : `[K-LOL.GG 구인구직 마무리]\n\n모집번호 #${parsed.recruitNo} 파티를 찾지 못했습니다.`,
         },
         { status: 404 },
       );
@@ -89,6 +102,7 @@ export async function POST(req: NextRequest) {
       formatVersion: PARTY_RECRUIT_FORMAT_VERSION,
       reply: [
         "[K-LOL 구인구직 마무리]",
+        `모집번호 #${party.recruitNo} 마무리 완료`,
         "다음에 또 같이해요.",
       ].join("\n"),
     });

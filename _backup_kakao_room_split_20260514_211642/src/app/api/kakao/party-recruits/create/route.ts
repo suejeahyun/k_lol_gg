@@ -1,0 +1,155 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma/client";
+import { writeAdminLog } from "@/lib/admin-log";
+import {
+  buildCreateReply,
+  parseCreateRecruitCommand,
+} from "@/lib/kakao/party-recruit";
+import {
+  PARTY_RECRUIT_FORMAT_VERSION,
+  getBodyRoom,
+  getBodySender,
+  getBodyText,
+  readJsonBody,
+  rejectIfInvalidPartySecret,
+} from "../_shared";
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await readJsonBody(req);
+    const secretRejected = rejectIfInvalidPartySecret(req, body.secret);
+    if (secretRejected) return secretRejected;
+
+    const message = getBodyText(body);
+    const roomName = getBodyRoom(body);
+    const sender = getBodySender(body);
+    const parsed = parseCreateRecruitCommand(message);
+
+    if (!parsed) {
+      return NextResponse.json(
+        {
+          ok: false,
+          formatVersion: PARTY_RECRUIT_FORMAT_VERSION,
+          reply:
+            "[K-LOL.GG 구인구직 생성 실패]\n\n" +
+            "명령어 형식이 올바르지 않습니다.\n\n" +
+            "예시\n" +
+            "/자랭구인\n" +
+            "/일반구인\n" +
+            "/솔랭구인\n" +
+            "/칼바람구인\n" +
+            "/증바람구인\n" +
+            "/기타게임구인\n" +
+            "/내전구인",
+        },
+        { status: 400 },
+      );
+    }
+
+    const recruitNo = parsed.recruitNo ?? (await getNextRecruitNo());
+
+    const existing = await prisma.recruitParty.findUnique({
+      where: { recruitNo },
+      include: { members: true },
+    });
+
+    if (existing) {
+      const activeCount = existing.members.filter(
+        (member) => !member.isSubstitute,
+      ).length;
+      return NextResponse.json(
+        {
+          ok: false,
+          formatVersion: PARTY_RECRUIT_FORMAT_VERSION,
+          reply:
+            "[K-LOL.GG 구인구직 안내]\n\n" +
+            `모집번호 #${recruitNo}는 이미 사용 중입니다.\n\n` +
+            `현재 #${recruitNo} 상태:\n` +
+            `${existing.title}\n` +
+            `현재 인원: ${activeCount}/${existing.maxMembers}\n\n` +
+            "번호를 직접 지정하지 않고 다시 생성하거나, 다른 번호를 붙여주세요.\n" +
+            "예: /자랭구인 13",
+        },
+        { status: 409 },
+      );
+    }
+
+    const party = await prisma.recruitParty.create({
+      data: {
+        recruitNo,
+        type: parsed.type,
+        status: "IN_PROGRESS",
+        title: parsed.title,
+        roomName,
+        hostName: sender,
+        maxMembers: parsed.maxMembers,
+      },
+      include: { members: true },
+    });
+
+    await writeAdminLog({
+      action: "KAKAO_PARTY_RECRUIT_CREATE",
+      message: `카카오 구인구직 파티 생성: #${party.recruitNo} ${party.title}`,
+      targetType: "RecruitParty",
+      targetId: party.id,
+      afterJson: {
+        recruitNo: party.recruitNo,
+        type: party.type,
+        roomName,
+        sender,
+      },
+    });
+
+    return NextResponse.json({
+      ok: true,
+      formatVersion: PARTY_RECRUIT_FORMAT_VERSION,
+      party,
+      reply: buildCreateReply(parsed.template, party.recruitNo),
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json(
+      {
+        ok: false,
+        formatVersion: PARTY_RECRUIT_FORMAT_VERSION,
+        reply: `[K-LOL.GG 구인구직 생성 실패]\n${message || "서버 처리 중 오류가 발생했습니다."}`,
+        error: message,
+      },
+      { status: 500 },
+    );
+  }
+}
+
+async function getNextRecruitNo() {
+  const [latestActive, latestLog] = await Promise.all([
+    prisma.recruitParty.findFirst({
+      orderBy: { recruitNo: "desc" },
+      select: { recruitNo: true },
+    }),
+    prisma.recruitPartyLog.findFirst({
+      orderBy: { recruitNo: "desc" },
+      select: { recruitNo: true },
+    }),
+  ]);
+
+  const lastNo = Math.max(
+    latestActive?.recruitNo ?? 0,
+    latestLog?.recruitNo ?? 0,
+  );
+
+  for (let offset = 1; offset <= 99; offset += 1) {
+    const candidate = ((lastNo + offset - 1) % 99) + 1;
+    const exists = await prisma.recruitParty.findUnique({
+      where: { recruitNo: candidate },
+      select: { id: true },
+    });
+    if (!exists) return candidate;
+  }
+
+  throw new Error(
+    "사용 가능한 모집번호가 없습니다. 진행중인 구인글을 마무리해주세요.",
+  );
+}

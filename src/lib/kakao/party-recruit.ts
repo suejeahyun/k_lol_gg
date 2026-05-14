@@ -105,7 +105,7 @@ function trimName(value: string) {
 }
 
 function isValidRecruitNo(value: number) {
-  return Number.isInteger(value) && value >= 0 && value <= 99;
+  return Number.isInteger(value) && value >= 1 && value <= 99;
 }
 
 export function getRecruitTypeLabel(type: string) {

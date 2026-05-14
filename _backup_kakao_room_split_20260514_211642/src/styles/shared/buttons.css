@@ -1,0 +1,150 @@
+/* 공통 버튼 */
+
+.app-button--danger-outline {
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid #000;
+  background: #fff;
+  color: #000;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.app-button--danger-outline:hover {
+  background: #000;
+  color: #fff;
+}
+
+.pagination-button {
+  min-width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pagination-button.active {
+  background: #111;
+  color: #fff;
+  border-color: #111;
+}
+
+.pagination-button:hover {
+  background: #111;
+  color: #fff;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn-ghost:hover {
+  background: #f9fafb;
+}
+
+.btn-primary {
+  padding: 8px 16px;
+  background: #2563eb;
+  color: white;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.btn-primary:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s ease,
+ border-color 0.15s ease,
+ color 0.15s ease,
+ transform 0.15s ease;
+}
+
+.btn-ghost {
+  border-color: #d1d5db;
+  background: transparent;
+  color: #fff;
+  border: 1px solid #444;
+}
+
+.app-button {
+  height: 38px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  background: #3b82f6;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.app-button:hover {
+  opacity: 0.85;
+  background: #2563eb;
+}
+
+.delete-button {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: none;
+  background: #ef4444;
+  color: #fff;
+  cursor: pointer;
+}
+
+.delete-button:hover {
+  background: #dc2626;
+}
+
+.chip-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(96, 165, 250, 0.5);
+  background: rgba(37, 99, 235, 0.2);
+  color: #e0f2fe;
+  font-size: 12px;
+  font-weight: 900;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.chip-button:hover {
+  background: rgba(37, 99, 235, 0.8);
+  color: #ffffff;
+  border-color: #111;
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.4);
+}
+
+.chip-button--danger {
+  border-color: rgba(248, 113, 113, 0.5);
+  color: #fecaca;
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.chip-button--danger:hover {
+  background: rgba(239, 68, 68, 0.9);
+  color: #ffffff;
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.4);
+}

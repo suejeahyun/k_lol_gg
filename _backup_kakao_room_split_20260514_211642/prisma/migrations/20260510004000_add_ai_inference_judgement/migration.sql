@@ -1,0 +1,8 @@
+ALTER TABLE "BalanceMatchReview"
+  ADD COLUMN IF NOT EXISTS "aiVerdict" TEXT,
+  ADD COLUMN IF NOT EXISTS "aiRiskLevel" TEXT,
+  ADD COLUMN IF NOT EXISTS "aiConfidence" DOUBLE PRECISION,
+  ADD COLUMN IF NOT EXISTS "aiInferredWinner" "Team",
+  ADD COLUMN IF NOT EXISTS "aiReasoning" TEXT,
+  ADD COLUMN IF NOT EXISTS "aiRiskFactors" TEXT,
+  ADD COLUMN IF NOT EXISTS "aiFormulaVersion" TEXT DEFAULT 'v2.0.0';

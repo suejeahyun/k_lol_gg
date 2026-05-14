@@ -51,14 +51,27 @@ export async function POST(req: NextRequest) {
     });
 
     if (!party) {
+      const finishedLog = await prisma.recruitPartyLog.findFirst({
+        where: { recruitNo, action: "FINISHED" },
+        orderBy: { createdAt: "desc" },
+        select: { title: true, memberCount: true, maxMembers: true },
+      });
+
       return NextResponse.json(
         {
           ok: false,
           formatVersion: PARTY_RECRUIT_FORMAT_VERSION,
-          reply:
-            "[K-LOL.GG 구인구직 반영 실패]\n\n" +
-            `모집번호 #${recruitNo} 파티를 찾지 못했습니다.\n` +
-            "먼저 /자랭구인 형식으로 파티를 생성해주세요.",
+          reply: finishedLog
+            ? [
+                "[K-LOL.GG 구인구직 반영 안내]",
+                `모집번호 #${recruitNo}는 이미 마무리된 구인글입니다.`,
+                `기록: ${finishedLog.title || "구인글"}`,
+                `최종 인원: ${finishedLog.memberCount}/${finishedLog.maxMembers}`,
+                "마무리된 번호에는 인원을 추가할 수 없습니다.",
+              ].join("\n")
+            : "[K-LOL.GG 구인구직 반영 실패]\n\n" +
+              `모집번호 #${recruitNo} 파티를 찾지 못했습니다.\n` +
+              "먼저 /자랭구인 형식으로 파티를 생성해주세요.",
         },
         { status: 404 },
       );

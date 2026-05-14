@@ -51,14 +51,21 @@ export async function POST(req: NextRequest) {
 
     const recruitNo = parsed.recruitNo ?? (await getNextRecruitNo());
 
-    const existing = await prisma.recruitParty.findUnique({
-      where: { recruitNo },
-      include: { members: true },
-    });
+    const [existing, finishedLog] = await Promise.all([
+      prisma.recruitParty.findUnique({
+        where: { recruitNo },
+        include: { members: true },
+      }),
+      prisma.recruitPartyLog.findFirst({
+        where: { recruitNo, action: "FINISHED" },
+        orderBy: { createdAt: "desc" },
+        select: { id: true, title: true, createdAt: true, memberCount: true, maxMembers: true },
+      }),
+    ]);
 
     if (existing) {
       const activeCount = existing.members.filter(
-        (member) => !member.isSubstitute,
+        (member) => !member.isSubstitute && member.name.trim() !== "",
       ).length;
       return NextResponse.json(
         {
@@ -66,12 +73,29 @@ export async function POST(req: NextRequest) {
           formatVersion: PARTY_RECRUIT_FORMAT_VERSION,
           reply:
             "[K-LOL.GG 구인구직 안내]\n\n" +
-            `모집번호 #${recruitNo}는 이미 사용 중입니다.\n\n` +
+            `모집번호 #${recruitNo}는 이미 진행 중입니다.\n\n` +
             `현재 #${recruitNo} 상태:\n` +
             `${existing.title}\n` +
             `현재 인원: ${activeCount}/${existing.maxMembers}\n\n` +
-            "번호를 직접 지정하지 않고 다시 생성하거나, 다른 번호를 붙여주세요.\n" +
-            "예: /자랭구인 13",
+            "새 구인글은 번호를 직접 지정하지 않고 생성해주세요.\n" +
+            "예: /자랭구인",
+        },
+        { status: 409 },
+      );
+    }
+
+    if (parsed.recruitNo !== null && finishedLog) {
+      return NextResponse.json(
+        {
+          ok: false,
+          formatVersion: PARTY_RECRUIT_FORMAT_VERSION,
+          reply:
+            "[K-LOL.GG 구인구직 안내]\n\n" +
+            `모집번호 #${recruitNo}는 이미 마무리된 번호입니다.\n\n` +
+            `마무리 기록: ${finishedLog.title || "구인글"}\n` +
+            `최종 인원: ${finishedLog.memberCount}/${finishedLog.maxMembers}\n\n` +
+            "새 구인글은 번호 없이 생성하면 다음 번호가 자동 배정됩니다.\n" +
+            "예: /자랭구인",
         },
         { status: 409 },
       );
