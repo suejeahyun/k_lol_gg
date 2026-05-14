@@ -1,0 +1,286 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getKstDateKey, getKstDisplayDate, getKstStartOfDate, addDays } from "@/lib/date/kst";
+import { prisma } from "@/lib/prisma/client";
+import { getRequiredSecretInProduction } from "@/lib/security/secrets";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+const TARGET_COUNT = 10;
+const DEFAULT_APPLY_TIME_LABEL = "21시";
+
+type PositionKey = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
+
+type TierKey =
+  | "IRON"
+  | "BRONZE"
+  | "SILVER"
+  | "GOLD"
+  | "PLATINUM"
+  | "EMERALD"
+  | "DIAMOND"
+  | "MASTER"
+  | "GRANDMASTER"
+  | "CHALLENGER"
+  | "UNRANKED";
+
+type ApplyStatusBody = {
+  secret?: string | null;
+  date?: string | null;
+};
+
+const TIER_SHORT_LABEL: Record<TierKey, string> = {
+  IRON: "I",
+  BRONZE: "B",
+  SILVER: "S",
+  GOLD: "G",
+  PLATINUM: "P",
+  EMERALD: "E",
+  DIAMOND: "D",
+  MASTER: "M",
+  GRANDMASTER: "GM",
+  CHALLENGER: "C",
+  UNRANKED: "U",
+};
+
+const POSITION_SHORT_LABEL: Record<PositionKey, string> = {
+  TOP: "top",
+  JGL: "jg",
+  MID: "mid",
+  ADC: "ad",
+  SUP: "sup",
+};
+
+function jsonReply(reply: string, extra: Record<string, unknown> = {}, status = 200) {
+  return NextResponse.json(
+    {
+      ok: status >= 200 && status < 300,
+      reply,
+      ...extra,
+    },
+    {
+      status,
+      headers: {
+        "Cache-Control": "no-store",
+      },
+    },
+  );
+}
+
+function rejectIfInvalidSecret(req: NextRequest, bodySecret: unknown) {
+  const secret = getRequiredSecretInProduction("KAKAO_RECRUIT_SECRET");
+
+  if (!secret) return null;
+
+  const headerSecret = req.headers.get("x-kakao-recruit-secret");
+  const bearer = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
+  const querySecret = req.nextUrl.searchParams.get("secret");
+  const secretText = typeof bodySecret === "string" ? bodySecret : null;
+
+  if (headerSecret === secret || bearer === secret || querySecret === secret || secretText === secret) {
+    return null;
+  }
+
+  return jsonReply("[K-LOL.GG 내전현황]\n인증값이 올바르지 않습니다.", {}, 401);
+}
+
+function normalizeDateKey(value: string | null) {
+  const text = String(value || "").trim();
+
+  if (!text) return getKstDateKey();
+
+  const match = text.match(/^(20\d{2})[-./](\d{1,2})[-./](\d{1,2})$/);
+  if (!match) return getKstDateKey();
+
+  return `${match[1]}-${match[2].padStart(2, "0")}-${match[3].padStart(2, "0")}`;
+}
+
+function normalizeTier(value: string | null | undefined) {
+  const text = String(value || "UNRANKED").trim().toUpperCase();
+
+  if (text in TIER_SHORT_LABEL) {
+    return TIER_SHORT_LABEL[text as TierKey];
+  }
+
+  const first = text.charAt(0);
+  if (first && first in TIER_SHORT_LABEL) {
+    return TIER_SHORT_LABEL[first as TierKey];
+  }
+
+  if (text.includes("아이언")) return "I";
+  if (text.includes("브론즈")) return "B";
+  if (text.includes("실버")) return "S";
+  if (text.includes("골드")) return "G";
+  if (text.includes("플래") || text.includes("플레")) return "P";
+  if (text.includes("에메")) return "E";
+  if (text.includes("다이아")) return "D";
+  if (text.includes("마스터") || text === "마") return "M";
+  if (text.includes("그마") || text.includes("그랜드마스터")) return "GM";
+  if (text.includes("챌")) return "C";
+
+  return "U";
+}
+
+function isPositionKey(value: unknown): value is PositionKey {
+  return value === "TOP" || value === "JGL" || value === "MID" || value === "ADC" || value === "SUP";
+}
+
+function formatPositions(mainPosition: unknown, subPositions: unknown) {
+  const positions: string[] = [];
+
+  if (isPositionKey(mainPosition)) {
+    positions.push(POSITION_SHORT_LABEL[mainPosition]);
+  }
+
+  if (Array.isArray(subPositions)) {
+    for (const subPosition of subPositions) {
+      if (isPositionKey(subPosition) && subPosition !== mainPosition) {
+        positions.push(POSITION_SHORT_LABEL[subPosition]);
+      }
+    }
+  }
+
+  return positions.length > 0 ? positions.join(" ") : "-";
+}
+
+function buildSeasonRecruitStatusTemplate(params: {
+  dateKey: string;
+  timeLabel: string;
+  applies: Array<{
+    mainPosition: string | null;
+    subPositions: string[];
+    player: {
+      name: string;
+      currentTier: string | null;
+      peakTier: string | null;
+    };
+  }>;
+}) {
+  const lines: string[] = [];
+
+  lines.push("📢 협곡내전하실분");
+  lines.push(` 》${getKstDisplayDate(params.dateKey)} ${params.timeLabel}`);
+  lines.push("");
+  lines.push("*참가 신청 양식*");
+  lines.push("이름/현티어/최고티어/주,부라인");
+  lines.push("EX) 1.지후/P/E/AD,MD");
+  lines.push("");
+
+  for (let index = 0; index < TARGET_COUNT; index += 1) {
+    const apply = params.applies[index];
+
+    if (!apply) {
+      lines.push(`${index + 1}.`);
+      continue;
+    }
+
+    const currentTier = normalizeTier(apply.player.currentTier);
+    const peakTier = normalizeTier(apply.player.peakTier);
+    const positionText = formatPositions(apply.mainPosition, apply.subPositions);
+
+    lines.push(`${index + 1}. ${apply.player.name}/${currentTier}/${peakTier}/${positionText}`);
+  }
+
+  return lines.join("\n");
+}
+
+async function createStatusReply(req: NextRequest, body?: ApplyStatusBody) {
+  const secretRejected = rejectIfInvalidSecret(req, body?.secret);
+  if (secretRejected) return secretRejected;
+
+  const dateKey = normalizeDateKey(body?.date ?? req.nextUrl.searchParams.get("date"));
+  const start = getKstStartOfDate(dateKey);
+  const end = addDays(start, 1);
+  end.setMilliseconds(end.getMilliseconds() - 1);
+
+  const season = await prisma.season.findFirst({
+    where: { isActive: true },
+    orderBy: { id: "desc" },
+    select: { id: true, name: true },
+  });
+
+  if (!season) {
+    return jsonReply(
+      buildSeasonRecruitStatusTemplate({
+        dateKey,
+        timeLabel: DEFAULT_APPLY_TIME_LABEL,
+        applies: [],
+      }),
+      {
+        activeSeasonId: null,
+        total: 0,
+        warning: "활성 시즌이 없습니다.",
+      },
+    );
+  }
+
+  const applies = await prisma.seasonParticipationApply.findMany({
+    where: {
+      seasonId: season.id,
+      status: "APPLIED",
+      applyDate: {
+        gte: start,
+        lte: end,
+      },
+    },
+    select: {
+      id: true,
+      mainPosition: true,
+      subPositions: true,
+      sourceSlotNo: true,
+      createdAt: true,
+      player: {
+        select: {
+          name: true,
+          currentTier: true,
+          peakTier: true,
+        },
+      },
+    },
+    orderBy: [
+      { sourceSlotNo: "asc" },
+      { createdAt: "asc" },
+    ],
+    take: TARGET_COUNT,
+  });
+
+  const reply = buildSeasonRecruitStatusTemplate({
+    dateKey,
+    timeLabel: DEFAULT_APPLY_TIME_LABEL,
+    applies: applies.map((apply) => ({
+      mainPosition: apply.mainPosition,
+      subPositions: apply.subPositions,
+      player: apply.player,
+    })),
+  });
+
+  return jsonReply(reply, {
+    activeSeasonId: season.id,
+    seasonName: season.name,
+    total: applies.length,
+    dateKey,
+    dateRange: {
+      start: start.toISOString(),
+      end: end.toISOString(),
+    },
+  });
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    return await createStatusReply(req);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return jsonReply(`[K-LOL.GG 내전현황]\n현황을 불러오지 못했습니다.\n${message}`, {}, 500);
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = (await req.json().catch(() => ({}))) as ApplyStatusBody;
+    return await createStatusReply(req, body);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return jsonReply(`[K-LOL.GG 내전현황]\n현황을 불러오지 못했습니다.\n${message}`, {}, 500);
+  }
+}
