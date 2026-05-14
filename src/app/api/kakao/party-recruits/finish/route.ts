@@ -87,11 +87,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       ok: true,
       formatVersion: PARTY_RECRUIT_FORMAT_VERSION,
-      reply:
-        "[K-LOL.GG 구인구직 마무리]\n\n" +
-        `${party.title.replace(/!$/, "")} 파티 #${party.recruitNo}가 마무리되어 현황에서 삭제되었습니다.\n\n` +
-        "현황 보기:\n" +
-        "https://k-lol-gg.vercel.app/recruit",
+      reply: [
+        "[K-LOL 구인구직 마무리]",
+        "다음에 또 같이해요.",
+      ].join("\n"),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

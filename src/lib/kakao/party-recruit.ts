@@ -426,17 +426,36 @@ export function buildRecruitStatusReply(parties: RecruitPartyLike[]) {
   ].join("\n");
 }
 
-export function buildSyncReply(party: RecruitPartyLike) {
+export function buildSyncReply(party: RecruitPartyLike, previousActiveCount?: number) {
+  const activeCount = getActiveMemberCount(party.members);
+
+  if (typeof previousActiveCount === "number" && activeCount > previousActiveCount) {
+    return [
+      "[K-LOL 구인구직 등록 완료]",
+      "같이 할사람~",
+    ].join("\n");
+  }
+
+  if (typeof previousActiveCount === "number" && activeCount < previousActiveCount) {
+    return [
+      "[K-LOL 구인구직 반영 완료]",
+      "다음에 또 같이해요.",
+    ].join("\n");
+  }
+
   return [
-    "[K-LOL.GG 구인구직 현황 반영]",
-    "",
-    formatRecruitPartyBlock(party),
-    "",
-    "현황 보기:",
-    "https://k-lol-gg.vercel.app/recruit",
+    "[K-LOL 구인구직 반영 완료]",
+    "변경사항이 반영되었습니다.",
   ].join("\n");
 }
 
 export function buildCreateReply(template: string) {
-  return template;
+  return [
+    "[K-LOL 구인구직 등록 완료]",
+    "같이 할사람~",
+    "",
+    "아래 양식의 모집번호는 유지해서 작성해주세요.",
+    "",
+    template,
+  ].join("\n");
 }

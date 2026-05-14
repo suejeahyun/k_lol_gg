@@ -74,6 +74,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const previousActiveCount = party.members.filter((member) => !member.isSubstitute).length;
+
     const updated = await prisma.$transaction(async (tx) => {
       await tx.recruitPartyMember.deleteMany({ where: { partyId: party.id } });
 
@@ -121,7 +123,7 @@ export async function POST(req: NextRequest) {
       ok: true,
       formatVersion: PARTY_RECRUIT_FORMAT_VERSION,
       party: updated,
-      reply: buildSyncReply(updated),
+      reply: buildSyncReply(updated, previousActiveCount),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
