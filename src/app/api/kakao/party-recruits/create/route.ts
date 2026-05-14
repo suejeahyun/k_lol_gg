@@ -42,8 +42,7 @@ export async function POST(req: NextRequest) {
             "/솔랭구인\n" +
             "/칼바람구인\n" +
             "/증바람구인\n" +
-            "/기타게임구인\n" +
-            "/내전구인",
+            "/기타게임구인\n"
         },
         { status: 400 },
       );

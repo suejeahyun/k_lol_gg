@@ -139,7 +139,7 @@ export function parseCreateRecruitCommand(
 ): CreateRecruitCommand | null {
   const text = normalizeText(message).trim();
   const match = text.match(
-    /^\/(자랭구인|일반구인|솔랭구인|칼바람구인|증바람구인|기타게임구인|내전구인)(?:\s+(\d{1,2}))?\s*$/,
+    /^\/(자랭구인|일반구인|솔랭구인|칼바람구인|증바람구인|기타게임구인)(?:\s+(\d{1,2}))?\s*$/,
   );
   if (!match) return null;
 
@@ -157,15 +157,6 @@ export function parseCreateRecruitCommand(
     };
   }
 
-  if (command === "내전구인") {
-    return {
-      recruitNo,
-      type: "FLEX_RANK",
-      title: "내전 하실분!",
-      maxMembers: 5,
-      template: buildLineTemplate("내전", recruitNo),
-    };
-  }
 
   if (command === "일반구인") {
     return {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
-import { getRequiredSecretInProduction } from "@/lib/security/secrets";
+import { getOptionalSecret } from "@/lib/security/secrets";
 import { getKakaoHelpMessage, parseKakaoCommand } from "@/lib/kakao/parseKakaoCommand";
 import {
   formatPlayerRecordMessage,
@@ -39,7 +39,7 @@ function jsonReply(reply: string, status = 200) {
 
 
 function rejectIfInvalidSecret(req: NextRequest) {
-  const secret = getRequiredSecretInProduction("KAKAO_OPENCHAT_SECRET");
+  const secret = getOptionalSecret("KAKAO_OPENCHAT_SECRET");
 
   if (!secret) return null;
 
