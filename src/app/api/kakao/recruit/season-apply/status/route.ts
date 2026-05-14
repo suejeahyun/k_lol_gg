@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getKstDateKey, getKstDisplayDate, getKstStartOfDate, addDays } from "@/lib/date/kst";
+import { addDays, getKstDateKey, getKstDisplayDate, getKstStartOfDate } from "@/lib/date/kst";
 import { prisma } from "@/lib/prisma/client";
 import { getRequiredSecretInProduction } from "@/lib/security/secrets";
 
@@ -7,7 +7,6 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 const TARGET_COUNT = 10;
-const DEFAULT_APPLY_TIME_LABEL = "21시";
 
 type PositionKey = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
 
@@ -26,7 +25,6 @@ type TierKey =
 
 type ApplyStatusBody = {
   secret?: string | null;
-  date?: string | null;
 };
 
 const TIER_SHORT_LABEL: Record<TierKey, string> = {
@@ -67,6 +65,10 @@ function jsonReply(reply: string, extra: Record<string, unknown> = {}, status = 
   );
 }
 
+function emptyReply(extra: Record<string, unknown> = {}) {
+  return jsonReply("", { empty: true, ...extra });
+}
+
 function rejectIfInvalidSecret(req: NextRequest, bodySecret: unknown) {
   const secret = getRequiredSecretInProduction("KAKAO_RECRUIT_SECRET");
 
@@ -82,17 +84,6 @@ function rejectIfInvalidSecret(req: NextRequest, bodySecret: unknown) {
   }
 
   return jsonReply("[K-LOL.GG 내전현황]\n인증값이 올바르지 않습니다.", {}, 401);
-}
-
-function normalizeDateKey(value: string | null) {
-  const text = String(value || "").trim();
-
-  if (!text) return getKstDateKey();
-
-  const match = text.match(/^(20\d{2})[-./](\d{1,2})[-./](\d{1,2})$/);
-  if (!match) return getKstDateKey();
-
-  return `${match[1]}-${match[2].padStart(2, "0")}-${match[3].padStart(2, "0")}`;
 }
 
 function normalizeTier(value: string | null | undefined) {
@@ -145,7 +136,6 @@ function formatPositions(mainPosition: unknown, subPositions: unknown) {
 
 function buildSeasonRecruitStatusTemplate(params: {
   dateKey: string;
-  timeLabel: string;
   applies: Array<{
     mainPosition: string | null;
     subPositions: string[];
@@ -159,7 +149,7 @@ function buildSeasonRecruitStatusTemplate(params: {
   const lines: string[] = [];
 
   lines.push("📢 협곡내전하실분");
-  lines.push(` 》${getKstDisplayDate(params.dateKey)} ${params.timeLabel}`);
+  lines.push(` 》${getKstDisplayDate(params.dateKey)}`);
   lines.push("");
   lines.push("*참가 신청 양식*");
   lines.push("이름/현티어/최고티어/주,부라인");
@@ -188,7 +178,7 @@ async function createStatusReply(req: NextRequest, body?: ApplyStatusBody) {
   const secretRejected = rejectIfInvalidSecret(req, body?.secret);
   if (secretRejected) return secretRejected;
 
-  const dateKey = normalizeDateKey(body?.date ?? req.nextUrl.searchParams.get("date"));
+  const dateKey = getKstDateKey();
   const start = getKstStartOfDate(dateKey);
   const end = addDays(start, 1);
   end.setMilliseconds(end.getMilliseconds() - 1);
@@ -200,18 +190,12 @@ async function createStatusReply(req: NextRequest, body?: ApplyStatusBody) {
   });
 
   if (!season) {
-    return jsonReply(
-      buildSeasonRecruitStatusTemplate({
-        dateKey,
-        timeLabel: DEFAULT_APPLY_TIME_LABEL,
-        applies: [],
-      }),
-      {
-        activeSeasonId: null,
-        total: 0,
-        warning: "활성 시즌이 없습니다.",
-      },
-    );
+    return emptyReply({
+      activeSeasonId: null,
+      total: 0,
+      warning: "활성 시즌이 없습니다.",
+      dateKey,
+    });
   }
 
   const applies = await prisma.seasonParticipationApply.findMany({
@@ -244,9 +228,21 @@ async function createStatusReply(req: NextRequest, body?: ApplyStatusBody) {
     take: TARGET_COUNT,
   });
 
+  if (applies.length === 0) {
+    return emptyReply({
+      activeSeasonId: season.id,
+      seasonName: season.name,
+      total: 0,
+      dateKey,
+      dateRange: {
+        start: start.toISOString(),
+        end: end.toISOString(),
+      },
+    });
+  }
+
   const reply = buildSeasonRecruitStatusTemplate({
     dateKey,
-    timeLabel: DEFAULT_APPLY_TIME_LABEL,
     applies: applies.map((apply) => ({
       mainPosition: apply.mainPosition,
       subPositions: apply.subPositions,
@@ -255,6 +251,7 @@ async function createStatusReply(req: NextRequest, body?: ApplyStatusBody) {
   });
 
   return jsonReply(reply, {
+    empty: false,
     activeSeasonId: season.id,
     seasonName: season.name,
     total: applies.length,
