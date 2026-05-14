@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma/client";
 import {
   formatRecruitPartyBlock,
   getActiveMemberCount,
+  getKakaoRecruitDateKey,
   getRecruitStatusLabel,
   getRecruitTypeLabel,
   isLinePartyType,
@@ -21,6 +22,7 @@ type RecruitPageMember = {
 type RecruitPageParty = {
   id: number;
   recruitNo: number;
+  recruitDate: string;
   type: string;
   status: string;
   title: string;
@@ -86,7 +88,7 @@ function renderSlots(party: RecruitPageParty) {
 
 export default async function RecruitPage() {
   const parties = await prisma.recruitParty.findMany({
-    where: { status: "IN_PROGRESS" },
+    where: { status: "IN_PROGRESS", recruitDate: getKakaoRecruitDateKey() },
     include: {
       members: {
         orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }],

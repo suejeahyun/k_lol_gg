@@ -3,28 +3,28 @@
 import { useEffect, useState } from "react";
 
 const backgrounds = [
-  "/images/backgrounds/bg-1.jpg",
-  "/images/backgrounds/bg-2.jpg",
-  "/images/backgrounds/bg-3.jpg",
-  "/images/backgrounds/bg-4.jpg",
-  "/images/backgrounds/bg-5.jpg",
-  "/images/backgrounds/bg-6.jpg",
-  "/images/backgrounds/bg-7.jpg",
-  "/images/backgrounds/bg-8.jpg",
-  "/images/backgrounds/bg-9.jpg",
-  "/images/backgrounds/bg-10.jpg",
-  "/images/backgrounds/bg-11.jpg",
-  "/images/backgrounds/bg-12.jpg",
-  "/images/backgrounds/bg-13.jpg",
-  "/images/backgrounds/bg-14.jpg",
-  "/images/backgrounds/bg-15.jpg",
-  "/images/backgrounds/bg-16.jpg",
-  "/images/backgrounds/bg-17.jpg",
-  "/images/backgrounds/bg-18.jpg",
+  "/images/backgrounds/bg-1.webp",
+  "/images/backgrounds/bg-2.webp",
+  "/images/backgrounds/bg-3.webp",
+  "/images/backgrounds/bg-4.webp",
+  "/images/backgrounds/bg-5.webp",
+  "/images/backgrounds/bg-6.webp",
+  "/images/backgrounds/bg-7.webp",
+  "/images/backgrounds/bg-8.webp",
+  "/images/backgrounds/bg-9.webp",
+  "/images/backgrounds/bg-10.webp",
+  "/images/backgrounds/bg-11.webp",
+  "/images/backgrounds/bg-12.webp",
+  "/images/backgrounds/bg-13.webp",
+  "/images/backgrounds/bg-14.webp",
+  "/images/backgrounds/bg-15.webp",
+  "/images/backgrounds/bg-16.webp",
+  "/images/backgrounds/bg-17.webp",
+  "/images/backgrounds/bg-18.webp",
 ] as const;
 
-const FALLBACK_LEFT = "/images/backgrounds/bg-1.jpg";
-const FALLBACK_RIGHT = "/images/backgrounds/bg-2.jpg";
+const FALLBACK_LEFT = "/images/backgrounds/bg-1.webp";
+const FALLBACK_RIGHT = "/images/backgrounds/bg-2.webp";
 
 type BackgroundPair = {
   left: string;

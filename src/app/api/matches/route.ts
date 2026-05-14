@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { validateMatchCreateInput } from "@/validations/match";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
@@ -8,6 +8,7 @@ import { recalculateSeasonStats } from "@/lib/stats/recalculate";
 import { parseKstDateTime } from "@/lib/date/kst";
 import { updateInternalMmrAfterMatch } from "@/lib/balance/internal-mmr";
 import { getStoredGameMvpFields } from "@/lib/match/mvp";
+import { getPaginationMeta, getSafePagination } from "@/lib/http/pagination";
 
 type Team = "BLUE" | "RED";
 type Position = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
@@ -35,19 +36,52 @@ type CreateMatchInput = {
   games: CreateGameInput[];
 };
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const matches = await prisma.matchSeries.findMany({
-      include: {
-        season: true,
-        games: true,
-      },
-      orderBy: {
-        matchDate: "desc",
-      },
+    const hasPaginationQuery =
+      req.nextUrl.searchParams.has("page") ||
+      req.nextUrl.searchParams.has("pageSize") ||
+      req.nextUrl.searchParams.has("meta");
+    const pagination = getSafePagination({
+      page: req.nextUrl.searchParams.get("page"),
+      pageSize: req.nextUrl.searchParams.get("pageSize"),
+      defaultPageSize: 50,
+      maxPageSize: 100,
     });
 
-    return NextResponse.json(matches);
+    const [matches, totalCount] = await Promise.all([
+      prisma.matchSeries.findMany({
+        include: {
+          season: true,
+          games: true,
+        },
+        orderBy: {
+          matchDate: "desc",
+        },
+        skip: pagination.skip,
+        take: pagination.take,
+      }),
+      prisma.matchSeries.count(),
+    ]);
+
+    const meta = getPaginationMeta(totalCount, pagination);
+
+    if (!hasPaginationQuery) {
+      return NextResponse.json(matches, {
+        headers: {
+          "Cache-Control": "no-store",
+          "X-Total-Count": String(totalCount),
+          "X-Page": String(meta.page),
+          "X-Page-Size": String(meta.pageSize),
+          "X-Total-Pages": String(meta.totalPages),
+        },
+      });
+    }
+
+    return NextResponse.json(
+      { data: matches, meta },
+      { headers: { "Cache-Control": "no-store" } },
+    );
   } catch (error) {
     console.error("[MATCH_LIST_GET_ERROR]", error);
 

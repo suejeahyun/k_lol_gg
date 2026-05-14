@@ -75,7 +75,13 @@ export function normalizeGalleryImageUrl(url: string): string {
     return buildGoogleDriveThumbnailUrl(googleDriveFileId);
   }
 
-  return value.replace(/^https?:\/\/[^/]+(?=\/images\/)/, "");
+  const localPath = value.replace(/^https?:\/\/[^/]+(?=\/images\/)/, "");
+
+  if (/^\/images\/winners\/.+\.(?:jpg|jpeg|png)$/i.test(localPath)) {
+    return localPath.replace(/\.(?:jpg|jpeg|png)$/i, ".webp");
+  }
+
+  return localPath;
 }
 
 export function normalizeGalleryImageUrls(urls: string[]): string[] {

@@ -3,6 +3,9 @@ export type RecruitPartyType =
   | "NORMAL_GAME"
   | "SOLO_RANK"
   | "ARAM"
+  | "TFT_NORMAL"
+  | "TFT_RANK"
+  | "DOUBLE_UP"
   | "OTHER_GAME";
 export type RecruitPartyStatus = "IN_PROGRESS" | "CANCELED";
 export type RecruitLinePosition = "TOP" | "JUG" | "MID" | "ADC" | "SUP";
@@ -17,6 +20,7 @@ export type RecruitMemberLike = {
 export type RecruitPartyLike = {
   id: number;
   recruitNo: number;
+  recruitDate: string;
   type: RecruitPartyType | string;
   status: RecruitPartyStatus | string;
   title: string;
@@ -78,6 +82,16 @@ const POSITION_ALIASES: Record<string, RecruitLinePosition> = {
 };
 
 
+export function getKakaoRecruitDateKey(now = new Date()) {
+  const kstOffsetMs = 9 * 60 * 60 * 1000;
+  const kstNow = new Date(now.getTime() + kstOffsetMs);
+  const yyyy = kstNow.getUTCFullYear();
+  const mm = String(kstNow.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(kstNow.getUTCDate()).padStart(2, "0");
+
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 export function getKakaoRecruitTodayRange(now = new Date()) {
   const kstOffsetMs = 9 * 60 * 60 * 1000;
   const kstNow = new Date(now.getTime() + kstOffsetMs);
@@ -133,6 +147,9 @@ export function getRecruitTypeLabel(type: string) {
   if (type === "NORMAL_GAME") return "일반";
   if (type === "SOLO_RANK") return "솔랭";
   if (type === "ARAM") return "칼바람";
+  if (type === "TFT_NORMAL") return "롤체 일반";
+  if (type === "TFT_RANK") return "롤체 랭크";
+  if (type === "DOUBLE_UP") return "더블업";
   if (type === "OTHER_GAME") return "기타게임";
   return "구인구직";
 }
@@ -216,7 +233,7 @@ export function parseCreateRecruitCommand(
   if (command === "롤체일반구인") {
     return {
       recruitNo,
-      type: "OTHER_GAME",
+      type: "TFT_NORMAL",
       title: "롤체 일반 하실분!",
       maxMembers: 8,
       template: buildNumberTemplate("롤체 일반", recruitNo, 8, [
@@ -229,7 +246,7 @@ export function parseCreateRecruitCommand(
   if (command === "롤체랭크구인") {
     return {
       recruitNo,
-      type: "OTHER_GAME",
+      type: "TFT_RANK",
       title: "롤체 랭크 하실분!",
       maxMembers: 3,
       template: buildNumberTemplate("롤체 랭크", recruitNo, 3, [
@@ -242,7 +259,7 @@ export function parseCreateRecruitCommand(
   if (command === "더블업구인") {
     return {
       recruitNo,
-      type: "OTHER_GAME",
+      type: "DOUBLE_UP",
       title: "더블업 하실분!",
       maxMembers: 2,
       template: buildNumberTemplate("더블업", recruitNo, 2, [

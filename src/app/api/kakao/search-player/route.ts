@@ -1,331 +1,136 @@
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma/client";
+import { getPlayerRecordForKakao } from "@/features/player/services/getPlayerRecordForKakao";
+import { formatPlayerRecordMessage } from "@/lib/kakao/formatPlayerRecordMessage";
 import { createSimpleText } from "@/lib/kakao/response";
-import { getGameMvpParticipant } from "@/lib/mvp";
+import { rejectIfRateLimited } from "@/lib/rate-limit";
+import { getOptionalSecret } from "@/lib/security/secrets";
 
-function normalizeText(value: string) {
-  return value.trim().toLowerCase();
+function kakaoText(text: string, status = 200) {
+  return NextResponse.json(createSimpleText(text), {
+    status,
+    headers: {
+      "Cache-Control": "no-store",
+    },
+  });
 }
 
-function normalizeTag(tag: string | null | undefined) {
-  if (!tag) return "";
-  return tag.trim().replace(/^#/, "").toLowerCase();
+function rejectIfInvalidSecret(req: NextRequest) {
+  const secret =
+    getOptionalSecret("KAKAO_SEARCH_PLAYER_SECRET") ||
+    getOptionalSecret("KAKAO_OPENCHAT_SECRET");
+
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      return kakaoText("KAKAO_SEARCH_PLAYER_SECRET 또는 KAKAO_OPENCHAT_SECRET 환경변수가 설정되지 않았습니다.", 200);
+    }
+
+    return null;
+  }
+
+  const headerSecret = req.headers.get("x-kakao-search-player-secret");
+  const openchatSecret = req.headers.get("x-kakao-openchat-secret");
+  const bearer = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
+  const querySecret = req.nextUrl.searchParams.get("secret");
+
+  if ([headerSecret, openchatSecret, bearer, querySecret].includes(secret)) {
+    return null;
+  }
+
+  return kakaoText("인증되지 않은 요청입니다.", 200);
 }
 
 function parseSearchKeyword(input: string) {
-  let text = input.trim();
-
-  text = text.replace(/^전적검색\s*/i, "");
-  text = text.replace(/^전적\s*/i, "");
-  text = text.trim();
-
-  if (!text) {
-    return {
-      nickname: "",
-      tag: "",
-    };
-  }
-
-  if (text.includes("#")) {
-    const [nickname, tag] = text.split("#");
-
-    return {
-      nickname: nickname.trim(),
-      tag: tag.trim().replace(/^#/, ""),
-    };
-  }
-
-  return {
-    nickname: text,
-    tag: "",
-  };
+  return input
+    .trim()
+    .replace(/^전적검색\s*/i, "")
+    .replace(/^전적\s*/i, "")
+    .trim();
 }
 
-function formatPlayerName(player: {
-  nickname: string;
-  tag: string | null;
-}) {
-  const tag = player.tag ? player.tag.replace(/^#/, "") : "";
+function extractQueryFromBody(body: Record<string, unknown>) {
+  const action = body.action as
+    | {
+        params?: Record<string, unknown>;
+        detailParams?: Record<string, { origin?: unknown; value?: unknown }>;
+      }
+    | undefined;
+  const userRequest = body.userRequest as { utterance?: unknown } | undefined;
 
-  return tag ? `${player.nickname}#${tag}` : player.nickname;
+  return String(
+    action?.params?.nickname ||
+      action?.detailParams?.nickname?.origin ||
+      action?.detailParams?.nickname?.value ||
+      userRequest?.utterance ||
+      body.message ||
+      body.text ||
+      "",
+  );
 }
 
-function roundOne(value: number) {
-  return Math.round(value * 10) / 10;
+async function handleSearch(req: NextRequest, rawQuery: string) {
+  const secretRejected = rejectIfInvalidSecret(req);
+  if (secretRejected) return secretRejected;
+
+  const rateLimitRejected = await rejectIfRateLimited(req, {
+    action: "KAKAO_SEARCH_PLAYER",
+    limit: 30,
+    windowSeconds: 60,
+  });
+
+  if (rateLimitRejected) {
+    return kakaoText("요청이 너무 많습니다. 잠시 후 다시 시도해주세요.");
+  }
+
+  const query = parseSearchKeyword(rawQuery);
+
+  if (!query) {
+    return kakaoText([
+      "닉네임#태그 형식으로 입력해주세요.",
+      "",
+      "예시: 전적 sax0ph0ne#99단굵묵",
+    ].join("\n"));
+  }
+
+  const record = await getPlayerRecordForKakao(query);
+
+  if (!record) {
+    return kakaoText([
+      "검색 결과가 없습니다.",
+      "닉네임#태그를 확인해주세요.",
+      "",
+      `입력값: ${query}`,
+    ].join("\n"));
+  }
+
+  return kakaoText(formatPlayerRecordMessage(record));
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-
-    const paramNickname =
-      body?.action?.params?.nickname ||
-      body?.action?.detailParams?.nickname?.origin ||
-      body?.action?.detailParams?.nickname?.value ||
-      "";
-
-    const rawInput =
-      String(paramNickname || body?.userRequest?.utterance || "").trim();
-
-    const { nickname, tag } = parseSearchKeyword(rawInput);
-
-    if (!nickname) {
-      return NextResponse.json(
-        createSimpleText("닉네임을 입력해주세요.\n예: pokey")
-      );
-    }
-
-    const normalizedNickname = normalizeText(nickname);
-    const normalizedTag = normalizeTag(tag);
-
-    const players = await prisma.player.findMany({
-      select: {
-        id: true,
-        name: true,
-        nickname: true,
-        tag: true,
-      },
-    });
-
-    const matchedPlayers = players.filter((player) => {
-      const playerNickname = normalizeText(player.nickname);
-      const playerTag = normalizeTag(player.tag);
-
-      if (normalizedTag) {
-        return (
-          playerNickname === normalizedNickname &&
-          playerTag === normalizedTag
-        );
-      }
-
-      return playerNickname === normalizedNickname;
-    });
-
-    if (matchedPlayers.length === 0) {
-      return NextResponse.json(
-        createSimpleText(
-          `해당 닉네임의 전적을 찾을 수 없습니다.\n입력값: ${nickname}`
-        )
-      );
-    }
-
-    if (matchedPlayers.length > 1 && !normalizedTag) {
-      const names = matchedPlayers
-        .slice(0, 5)
-        .map((player) => `- ${formatPlayerName(player)}`)
-        .join("\n");
-
-      return NextResponse.json(
-        createSimpleText(
-          `동일한 닉네임이 여러 명 있습니다.\n태그까지 입력해주세요.\n예: ${formatPlayerName(
-            matchedPlayers[0]
-          )}\n\n검색 결과\n${names}`
-        )
-      );
-    }
-
-    const player = matchedPlayers[0];
-
-    const season = await prisma.season.findFirst({
-      where: { isActive: true },
-      orderBy: { id: "desc" },
-    });
-
-    if (!season) {
-      return NextResponse.json(createSimpleText("현재 시즌이 없습니다."));
-    }
-
-    const allParticipants = await prisma.matchParticipant.findMany({
-      where: {
-        game: {
-          series: {
-            seasonId: season.id,
-          },
-        },
-      },
-      include: {
-        player: {
-          select: {
-            id: true,
-            nickname: true,
-            tag: true,
-          },
-        },
-        champion: {
-          select: {
-            name: true,
-          },
-        },
-        game: {
-          include: {
-            series: {
-              select: {
-                matchDate: true,
-                createdAt: true,
-              },
-            },
-            participants: {
-              select: {
-                playerId: true,
-                kills: true,
-                deaths: true,
-                assists: true,
-                team: true,
-              },
-            },
-          },
-        },
-      },
-      orderBy: {
-        id: "desc",
-      },
-    });
-
-    const playerStatsMap = new Map<
-      number,
-      {
-        playerId: number;
-        nickname: string;
-        tag: string | null;
-        totalGames: number;
-        wins: number;
-        losses: number;
-        kills: number;
-        deaths: number;
-        assists: number;
-        mvpCount: number;
-      }
-    >();
-
-    for (const participant of allParticipants) {
-      const stat = playerStatsMap.get(participant.playerId) ?? {
-        playerId: participant.playerId,
-        nickname: participant.player.nickname,
-        tag: participant.player.tag,
-        totalGames: 0,
-        wins: 0,
-        losses: 0,
-        kills: 0,
-        deaths: 0,
-        assists: 0,
-        mvpCount: 0,
-      };
-
-      const isWin = participant.team === participant.game.winnerTeam;
-
-      stat.totalGames += 1;
-      stat.wins += isWin ? 1 : 0;
-      stat.losses += isWin ? 0 : 1;
-      stat.kills += participant.kills;
-      stat.deaths += participant.deaths;
-      stat.assists += participant.assists;
-
-      const mvp = getGameMvpParticipant(
-        participant.game.participants,
-        participant.game.winnerTeam,
-      );
-
-      if (mvp?.playerId === participant.playerId) {
-        stat.mvpCount += 1;
-      }
-
-      playerStatsMap.set(participant.playerId, stat);
-    }
-
-    const rankings = Array.from(playerStatsMap.values()).map((stat) => {
-      const winRate =
-        stat.totalGames > 0 ? (stat.wins / stat.totalGames) * 100 : 0;
-
-      return {
-        ...stat,
-        winRate,
-      };
-    });
-
-    const winRateRanking = [...rankings]
-      .sort((a, b) => {
-        if (b.winRate !== a.winRate) return b.winRate - a.winRate;
-        return b.totalGames - a.totalGames;
-      })
-      .findIndex((item) => item.playerId === player.id);
-
-    const mvpRanking = [...rankings]
-      .sort((a, b) => {
-        if (b.mvpCount !== a.mvpCount) return b.mvpCount - a.mvpCount;
-        return b.totalGames - a.totalGames;
-      })
-      .findIndex((item) => item.playerId === player.id);
-
-    const participationRanking = [...rankings]
-      .sort((a, b) => {
-        if (b.totalGames !== a.totalGames) {
-          return b.totalGames - a.totalGames;
-        }
-
-        return b.winRate - a.winRate;
-      })
-      .findIndex((item) => item.playerId === player.id);
-
-    const currentPlayerStat = rankings.find(
-      (item) => item.playerId === player.id
-    );
-
-    if (!currentPlayerStat || currentPlayerStat.totalGames === 0) {
-      return NextResponse.json(
-        createSimpleText(
-          `[${formatPlayerName(player)}]\n현재 시즌 전적 데이터가 없습니다.`
-        )
-      );
-    }
-
-    const recentParticipants = allParticipants
-      .filter((participant) => participant.playerId === player.id)
-      .slice(0, 5);
-
-    const recentText =
-      recentParticipants.length > 0
-        ? recentParticipants
-            .map((participant, index) => {
-              const result =
-                participant.team === participant.game.winnerTeam ? "승" : "패";
-
-              return `${index + 1}. ${result} / ${
-                participant.champion.name
-              } / ${participant.kills}-${participant.deaths}-${
-                participant.assists
-              }`;
-            })
-            .join("\n")
-        : "최근 경기 없음";
-
-    const text = `
-[${formatPlayerName(player)}]
-
-총 경기: ${currentPlayerStat.totalGames}전
-승리: ${currentPlayerStat.wins}승 / 패배: ${currentPlayerStat.losses}패
-승률: ${roundOne(currentPlayerStat.winRate)}%
-MVP: ${currentPlayerStat.mvpCount}회
-
-랭킹
-승률 랭킹: ${winRateRanking + 1}등
-MVP 랭킹: ${mvpRanking + 1}등
-최다 참여 랭킹: ${participationRanking + 1}등
-
-최근 경기 5경기
-${recentText}
-`.trim();
-
-    return NextResponse.json(createSimpleText(text));
+    const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+    return handleSearch(req, extractQueryFromBody(body));
   } catch (error) {
     console.error("[KAKAO_SEARCH_PLAYER_ERROR]", error);
 
-    return NextResponse.json(
-      createSimpleText(
-        "전적 검색 중 오류가 발생했습니다.\n잠시 후 다시 시도해주세요."
-      ),
-      { status: 200 }
-    );
+    return kakaoText([
+      "전적 검색 중 오류가 발생했습니다.",
+      "잠시 후 다시 시도해주세요.",
+    ].join("\n"));
+  }
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    return handleSearch(req, req.nextUrl.searchParams.get("q") ?? "");
+  } catch (error) {
+    console.error("[KAKAO_SEARCH_PLAYER_GET_ERROR]", error);
+
+    return kakaoText([
+      "전적 검색 중 오류가 발생했습니다.",
+      "잠시 후 다시 시도해주세요.",
+    ].join("\n"));
   }
 }

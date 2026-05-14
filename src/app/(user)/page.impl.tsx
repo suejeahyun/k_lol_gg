@@ -298,7 +298,7 @@ export default async function HomePage() {
               className="social-link-card"
             >
               <Image
-                src="/kakao.png"
+                src="/kakao.webp"
                 alt="카카오톡"
                 width={52}
                 height={52}
@@ -314,7 +314,7 @@ export default async function HomePage() {
               className="social-link-card"
             >
               <Image
-                src="/discord.png"
+                src="/discord.webp"
                 alt="디스코드"
                 width={52}
                 height={52}

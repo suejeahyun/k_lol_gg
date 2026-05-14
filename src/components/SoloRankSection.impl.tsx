@@ -111,11 +111,11 @@ const POSITION_LABELS: Record<string, string> = {
 };
 
 const POSITION_IMAGE_URLS: Record<string, string> = {
-  TOP: "/images/positions/position-top.png",
-  JUNGLE: "/images/positions/position-jungle.png",
-  MIDDLE: "/images/positions/position-mid.png",
-  BOTTOM: "/images/positions/position-adc.png",
-  UTILITY: "/images/positions/position-sup.png",
+  TOP: "/images/positions/position-top.webp",
+  JUNGLE: "/images/positions/position-jungle.webp",
+  MIDDLE: "/images/positions/position-mid.webp",
+  BOTTOM: "/images/positions/position-adc.webp",
+  UTILITY: "/images/positions/position-sup.webp",
 };
 
 const TIER_LABELS: Record<string, string> = {

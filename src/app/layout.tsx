@@ -14,8 +14,7 @@ export const metadata: Metadata = {
   description: appDescription,
 
   icons: {
-    icon: "/icon",
-    apple: "/apple-icon",
+    icon: "/favicon.ico",
   },
 };
 

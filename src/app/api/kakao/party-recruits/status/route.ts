@@ -2,13 +2,13 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 import { prisma } from "@/lib/prisma/client";
-import { buildRecruitStatusReply, getKakaoRecruitTodayRange } from "@/lib/kakao/party-recruit";
+import { buildRecruitStatusReply, getKakaoRecruitDateKey } from "@/lib/kakao/party-recruit";
 import { partyRecruitJson } from "../_shared";
 
 export async function GET() {
   try {
     const parties = await prisma.recruitParty.findMany({
-      where: { status: "IN_PROGRESS", createdAt: getKakaoRecruitTodayRange() },
+      where: { status: "IN_PROGRESS", recruitDate: getKakaoRecruitDateKey() },
       include: {
         members: {
           orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }],

@@ -201,7 +201,7 @@ export default function GalleryImageForm({
 
         <p className="gallery-local-path-box__help">
           2~4회는 1장, 5회부터는 기본 5장으로 입력됩니다. 파일명은
-          <code>/images/winners/destruction/5/1.jpg</code> 형식을 사용합니다.
+          <code>/images/winners/destruction/5/1.webp</code> 형식을 사용합니다.
           Google Drive 공유 링크를 입력해도 저장 시 thumbnail 주소로 자동 변환됩니다. 가능하면 .webp 경로를 우선 사용하세요.
         </p>
       </div>

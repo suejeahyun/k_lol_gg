@@ -19,5 +19,5 @@ export function getTierImageSrc(tier?: string | null): string | null {
   const key = getTierKey(tier);
   if (!key) return null;
 
-  return `/images/tiers/${key}.png`;
+  return `/images/tiers/${key}.webp`;
 }

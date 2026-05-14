@@ -4,7 +4,7 @@ export const revalidate = 0;
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
-import { formatRecruitPartyBlock, getActiveMemberCount, getKakaoRecruitTodayRange, parseFinishRecruitCommand } from "@/lib/kakao/party-recruit";
+import { formatRecruitPartyBlock, getActiveMemberCount, getKakaoRecruitDateKey, getKakaoRecruitTodayRange, parseFinishRecruitCommand } from "@/lib/kakao/party-recruit";
 import {
   getBodyRoom,
   getBodySender,
@@ -34,9 +34,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const recruitDate = getKakaoRecruitDateKey();
     const todayRange = getKakaoRecruitTodayRange();
     const party = await prisma.recruitParty.findFirst({
-      where: { recruitNo: parsed.recruitNo, createdAt: todayRange },
+      where: { recruitNo: parsed.recruitNo, recruitDate },
       include: { members: { orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }] } },
     });
 
@@ -86,6 +87,7 @@ export async function POST(req: NextRequest) {
         targetId: party.id,
         afterJson: {
           recruitNo: party.recruitNo,
+          recruitDate: party.recruitDate,
           roomName,
           sender,
           memberCount: getActiveMemberCount(party.members),

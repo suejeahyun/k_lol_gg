@@ -921,6 +921,9 @@ enum RecruitPartyType {
   NORMAL_GAME
   SOLO_RANK
   ARAM
+  TFT_NORMAL
+  TFT_RANK
+  DOUBLE_UP
   OTHER_GAME
 }
 
@@ -931,7 +934,8 @@ enum RecruitPartyStatus {
 
 model RecruitParty {
   id          Int                @id @default(autoincrement())
-  recruitNo   Int                @unique
+  recruitNo   Int
+  recruitDate String
   type        RecruitPartyType
   status      RecruitPartyStatus @default(IN_PROGRESS)
 
@@ -948,8 +952,10 @@ model RecruitParty {
 
   members RecruitPartyMember[]
 
+  @@unique([recruitDate, recruitNo])
   @@index([type])
   @@index([status, updatedAt])
+  @@index([recruitDate, status])
   @@index([createdAt])
 }
 

@@ -129,15 +129,32 @@ export async function getPlayerRecordForKakao(query: string): Promise<KakaoPlaye
       AND (${season?.id ?? null}::int IS NULL OR ms."seasonId" = ${season?.id ?? null})
   `;
 
+  const seasonStat = season
+    ? await prisma.playerSeasonStat.findFirst({
+        where: {
+          playerId: player.id,
+          seasonId: season.id,
+        },
+        select: {
+          totalGames: true,
+          participationCount: true,
+          wins: true,
+          losses: true,
+          mvpCount: true,
+        },
+      })
+    : null;
+
   const stat = stats[0] ?? null;
-  const totalGames = toNumber(stat?.totalGames);
-  const wins = toNumber(stat?.wins);
-  const losses = toNumber(stat?.losses);
+  const totalGames = seasonStat?.totalGames ?? toNumber(stat?.totalGames);
+  const wins = seasonStat?.wins ?? toNumber(stat?.wins);
+  const losses = seasonStat?.losses ?? toNumber(stat?.losses);
   const kills = toNumber(stat?.kills);
   const deaths = toNumber(stat?.deaths);
   const assists = toNumber(stat?.assists);
-  const participationCount = toNumber(stat?.participationCount);
-  const mvpCount = toNumber(stat?.mvpCount);
+  const participationCount =
+    seasonStat?.participationCount ?? toNumber(stat?.participationCount);
+  const mvpCount = seasonStat?.mvpCount ?? toNumber(stat?.mvpCount);
   const winRate = totalGames > 0 ? (wins / totalGames) * 100 : 0;
   const kda = deaths > 0 ? (kills + assists) / deaths : kills + assists;
 
