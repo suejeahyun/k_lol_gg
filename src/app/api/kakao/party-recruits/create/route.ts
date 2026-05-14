@@ -4,7 +4,10 @@ export const revalidate = 0;
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
-import { buildCreateReply, parseCreateRecruitCommand } from "@/lib/kakao/party-recruit";
+import {
+  buildCreateReply,
+  parseCreateRecruitCommand,
+} from "@/lib/kakao/party-recruit";
 import {
   PARTY_RECRUIT_FORMAT_VERSION,
   getBodyRoom,
@@ -34,34 +37,41 @@ export async function POST(req: NextRequest) {
             "[K-LOL.GG 구인구직 생성 실패]\n\n" +
             "명령어 형식이 올바르지 않습니다.\n\n" +
             "예시\n" +
-            "/자랭구인구직 12\n" +
-            "/일반게임구인구직 13\n" +
-            "/솔랭구인구직 14\n" +
-            "/칼바람구인구직 15",
+            "/자랭구인\n" +
+            "/일반구인\n" +
+            "/솔랭구인\n" +
+            "/칼바람구인\n" +
+            "/증바람구인\n" +
+            "/기타게임구인\n" +
+            "/내전구인",
         },
         { status: 400 },
       );
     }
 
+    const recruitNo = parsed.recruitNo ?? (await getNextRecruitNo());
+
     const existing = await prisma.recruitParty.findUnique({
-      where: { recruitNo: parsed.recruitNo },
+      where: { recruitNo },
       include: { members: true },
     });
 
     if (existing) {
-      const activeCount = existing.members.filter((member) => !member.isSubstitute).length;
+      const activeCount = existing.members.filter(
+        (member) => !member.isSubstitute,
+      ).length;
       return NextResponse.json(
         {
           ok: false,
           formatVersion: PARTY_RECRUIT_FORMAT_VERSION,
           reply:
             "[K-LOL.GG 구인구직 안내]\n\n" +
-            `모집번호 #${parsed.recruitNo}는 이미 사용 중입니다.\n\n` +
-            `현재 #${parsed.recruitNo} 상태:\n` +
+            `모집번호 #${recruitNo}는 이미 사용 중입니다.\n\n` +
+            `현재 #${recruitNo} 상태:\n` +
             `${existing.title}\n` +
             `현재 인원: ${activeCount}/${existing.maxMembers}\n\n` +
-            "다른 번호를 사용해주세요.\n" +
-            "예: /자랭구인구직 13",
+            "번호를 직접 지정하지 않고 다시 생성하거나, 다른 번호를 붙여주세요.\n" +
+            "예: /자랭구인 13",
         },
         { status: 409 },
       );
@@ -69,7 +79,7 @@ export async function POST(req: NextRequest) {
 
     const party = await prisma.recruitParty.create({
       data: {
-        recruitNo: parsed.recruitNo,
+        recruitNo,
         type: parsed.type,
         status: "IN_PROGRESS",
         title: parsed.title,
@@ -97,7 +107,7 @@ export async function POST(req: NextRequest) {
       ok: true,
       formatVersion: PARTY_RECRUIT_FORMAT_VERSION,
       party,
-      reply: buildCreateReply(parsed.template),
+      reply: buildCreateReply(parsed.template, party.recruitNo),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -111,4 +121,35 @@ export async function POST(req: NextRequest) {
       { status: 500 },
     );
   }
+}
+
+async function getNextRecruitNo() {
+  const [latestActive, latestLog] = await Promise.all([
+    prisma.recruitParty.findFirst({
+      orderBy: { recruitNo: "desc" },
+      select: { recruitNo: true },
+    }),
+    prisma.recruitPartyLog.findFirst({
+      orderBy: { recruitNo: "desc" },
+      select: { recruitNo: true },
+    }),
+  ]);
+
+  const lastNo = Math.max(
+    latestActive?.recruitNo ?? 0,
+    latestLog?.recruitNo ?? 0,
+  );
+
+  for (let offset = 1; offset <= 99; offset += 1) {
+    const candidate = ((lastNo + offset - 1) % 99) + 1;
+    const exists = await prisma.recruitParty.findUnique({
+      where: { recruitNo: candidate },
+      select: { id: true },
+    });
+    if (!exists) return candidate;
+  }
+
+  throw new Error(
+    "사용 가능한 모집번호가 없습니다. 진행중인 구인글을 마무리해주세요.",
+  );
 }

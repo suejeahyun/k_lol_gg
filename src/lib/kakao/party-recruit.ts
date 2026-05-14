@@ -1,4 +1,9 @@
-export type RecruitPartyType = "FLEX_RANK" | "NORMAL_GAME" | "SOLO_RANK" | "ARAM" | "OTHER_GAME";
+export type RecruitPartyType =
+  | "FLEX_RANK"
+  | "NORMAL_GAME"
+  | "SOLO_RANK"
+  | "ARAM"
+  | "OTHER_GAME";
 export type RecruitPartyStatus = "IN_PROGRESS" | "CANCELED";
 export type RecruitLinePosition = "TOP" | "JUG" | "MID" | "ADC" | "SUP";
 
@@ -27,7 +32,7 @@ export type RecruitPartyLike = {
 };
 
 export type CreateRecruitCommand = {
-  recruitNo: number;
+  recruitNo: number | null;
   type: RecruitPartyType;
   title: string;
   maxMembers: number;
@@ -45,7 +50,13 @@ export type ParsedPartyForm = {
   members: RecruitMemberLike[];
 };
 
-const LINE_POSITIONS: RecruitLinePosition[] = ["TOP", "JUG", "MID", "ADC", "SUP"];
+const LINE_POSITIONS: RecruitLinePosition[] = [
+  "TOP",
+  "JUG",
+  "MID",
+  "ADC",
+  "SUP",
+];
 
 const POSITION_ALIASES: Record<string, RecruitLinePosition> = {
   TOP: "TOP",
@@ -99,36 +110,44 @@ function isValidRecruitNo(value: number) {
 
 export function getRecruitTypeLabel(type: string) {
   if (type === "FLEX_RANK") return "자랭";
-  if (type === "NORMAL_GAME") return "일반게임";
+  if (type === "NORMAL_GAME") return "일반";
   if (type === "SOLO_RANK") return "솔랭";
   if (type === "ARAM") return "칼바람";
-  if (type === "OTHER_GAME") return "종합게임";
+  if (type === "OTHER_GAME") return "기타게임";
   return "구인구직";
 }
 
-export function getRecruitStatusLabel(party: Pick<RecruitPartyLike, "type" | "maxMembers" | "members">) {
+export function getRecruitStatusLabel(
+  party: Pick<RecruitPartyLike, "type" | "maxMembers" | "members">,
+) {
   const activeCount = getActiveMemberCount(party.members);
   return activeCount >= party.maxMembers ? "진행중" : "진행중 · 구인중";
 }
 
 export function getActiveMemberCount(members: RecruitMemberLike[]) {
-  return members.filter((member) => !member.isSubstitute && member.name.trim() !== "").length;
+  return members.filter(
+    (member) => !member.isSubstitute && member.name.trim() !== "",
+  ).length;
 }
 
 export function isLinePartyType(type: string) {
   return type === "FLEX_RANK" || type === "NORMAL_GAME";
 }
 
-export function parseCreateRecruitCommand(message: string): CreateRecruitCommand | null {
+export function parseCreateRecruitCommand(
+  message: string,
+): CreateRecruitCommand | null {
   const text = normalizeText(message).trim();
-  const match = text.match(/^\/(자랭구인구직|일반게임구인구직|일겜구인구직|솔랭구인구직|칼바람구인구직|종합게임구인구직)\s+(\d{1,2})\s*$/);
+  const match = text.match(
+    /^\/(자랭구인|일반구인|솔랭구인|칼바람구인|증바람구인|기타게임구인|내전구인)(?:\s+(\d{1,2}))?\s*$/,
+  );
   if (!match) return null;
 
-  const recruitNo = Number(match[2]);
-  if (!isValidRecruitNo(recruitNo)) return null;
+  const recruitNo = match[2] ? Number(match[2]) : null;
+  if (recruitNo !== null && !isValidRecruitNo(recruitNo)) return null;
 
   const command = match[1];
-  if (command === "자랭구인구직") {
+  if (command === "자랭구인") {
     return {
       recruitNo,
       type: "FLEX_RANK",
@@ -138,94 +157,76 @@ export function parseCreateRecruitCommand(message: string): CreateRecruitCommand
     };
   }
 
-  if (command === "일반게임구인구직" || command === "일겜구인구직") {
+  if (command === "내전구인") {
     return {
       recruitNo,
-      type: "NORMAL_GAME",
-      title: "일반게임 하실분!",
+      type: "FLEX_RANK",
+      title: "내전 하실분!",
       maxMembers: 5,
-      template: buildLineTemplate("일반게임", recruitNo),
+      template: buildLineTemplate("내전", recruitNo),
     };
   }
 
-  if (command === "솔랭구인구직") {
+  if (command === "일반구인") {
+    return {
+      recruitNo,
+      type: "NORMAL_GAME",
+      title: "일반 하실분!",
+      maxMembers: 5,
+      template: buildLineTemplate("일반", recruitNo),
+    };
+  }
+
+  if (command === "솔랭구인") {
     return {
       recruitNo,
       type: "SOLO_RANK",
       title: "솔랭하실분!",
       maxMembers: 2,
-      template: [
-        "📢 솔랭하실분!",
-        `모집번호: #${recruitNo}`,
-        "",
+      template: buildNumberTemplate("솔랭", recruitNo, 2, [
         "》게임 시작 시간 + 티어",
         "》즐겜 & 빡겜 중에 선택",
         "》듀오 선호하는 라인",
-        "",
-        "1.",
-        "2.",
-        "",
-        "참여해주실분은 태그해주세요",
-        "*상호배려와 존중 부탁드립니다!",
-      ].join("\n"),
+      ]),
     };
   }
 
-  if (command === "칼바람구인구직") {
+  if (command === "칼바람구인" || command === "증바람구인") {
+    const label = command === "증바람구인" ? "증바람" : "칼바람";
     return {
       recruitNo,
       type: "ARAM",
-      title: "칼바람 하실분!",
+      title: `${label} 하실분!`,
       maxMembers: 5,
-      template: [
-        "📢 칼바람 하실분!",
-        `모집번호: #${recruitNo}`,
-        "",
-        "》게임 시작 시간",
-        "",
-        "1.",
-        "2.",
-        "3.",
-        "4.",
-        "5.",
-        "예비.",
-        "",
-        "마지막 참여자가 전체태그해주세요",
-        "*상호배려와 존중 부탁드립니다! 기분좋고 즐겁게 같이 게임 해요",
-      ].join("\n"),
+      template: buildNumberTemplate(
+        label,
+        recruitNo,
+        5,
+        ["》게임 시작 시간"],
+        true,
+      ),
     };
   }
 
   return {
     recruitNo,
     type: "OTHER_GAME",
-    title: "게임 할 제목 하실분!",
+    title: "기타게임 하실분!",
     maxMembers: 8,
-    template: [
-      "📢 게임 할 제목 하실분!",
-      `모집번호: #${recruitNo}`,
-      "",
+    template: buildNumberTemplate("기타게임", recruitNo, 8, [
       "》게임 시작 시간",
-      "",
-      "1.",
-      "2.",
-      "3.",
-      "4.",
-      "5.",
-      "6.",
-      "7.",
-      "8.",
-      "",
-      "참여해주실분은 태그해주세요",
-      "*상호배려와 존중 부탁드립니다! 기분좋고 즐겁게 같이 게임 해요",
-    ].join("\n"),
+    ]),
   };
 }
 
-function buildLineTemplate(label: string, recruitNo: number) {
+function formatRecruitNoLine(recruitNo: number | null) {
+  return recruitNo === null ? "모집번호: #자동생성" : `모집번호: #${recruitNo}`;
+}
+
+function buildLineTemplate(label: string, recruitNo: number | null) {
   return [
     `📢 ${label} 하실분!`,
-    `모집번호: #${recruitNo}`,
+    formatRecruitNoLine(recruitNo),
     "",
     "》게임 시작 시간",
     "》즐겜 & 빡겜 중에 선택",
@@ -241,7 +242,35 @@ function buildLineTemplate(label: string, recruitNo: number) {
   ].join("\n");
 }
 
-export function parseFinishRecruitCommand(message: string): FinishRecruitCommand | null {
+function buildNumberTemplate(
+  label: string,
+  recruitNo: number | null,
+  maxMembers: number,
+  guides: string[],
+  includeSubstitute = false,
+) {
+  const lines = [
+    `📢 ${label} 하실분!`,
+    formatRecruitNoLine(recruitNo),
+    "",
+    ...guides,
+    "",
+  ];
+  for (let slotNo = 1; slotNo <= maxMembers; slotNo += 1) {
+    lines.push(`${slotNo}.`);
+  }
+  if (includeSubstitute) lines.push("예비.");
+  lines.push(
+    "",
+    "참여해주실분은 태그해주세요",
+    "*상호배려와 존중 부탁드립니다.",
+  );
+  return lines.join("\n");
+}
+
+export function parseFinishRecruitCommand(
+  message: string,
+): FinishRecruitCommand | null {
   const text = normalizeText(message).trim();
   const match = text.match(/^\/(\d{1,2})\s*(쫑|ㅉ)\s*$/);
   if (!match) return null;
@@ -255,17 +284,29 @@ export function extractRecruitNoFromForm(message: string) {
   const text = normalizeText(message);
   const explicit = text.match(/모집번호\s*[:：]?\s*#?\s*(\d{1,2})/);
   const fallback = text.match(/(^|\s)#(\d{1,2})(\s|$)/);
-  const value = explicit ? Number(explicit[1]) : fallback ? Number(fallback[2]) : NaN;
+  const value = explicit
+    ? Number(explicit[1])
+    : fallback
+      ? Number(fallback[2])
+      : NaN;
   return isValidRecruitNo(value) ? value : null;
 }
 
 export function looksLikeRecruitPartyForm(message: string) {
   const text = normalizeText(message);
   if (extractRecruitNoFromForm(text) === null) return false;
-  return /(^|\n)\s*(TOP|JUG|JGL|JG|MID|ADC|AD|SUP|탑|정글|미드|원딜|서폿|서포터)\s*[.:：]?/i.test(text) || /(^|\n)\s*\d{1,2}\s*[.)]?/.test(text);
+  return (
+    /(^|\n)\s*(TOP|JUG|JGL|JG|MID|ADC|AD|SUP|탑|정글|미드|원딜|서폿|서포터)\s*[.:：]?/i.test(
+      text,
+    ) || /(^|\n)\s*\d{1,2}\s*[.)]?/.test(text)
+  );
 }
 
-export function parsePartyForm(message: string, partyType: string, maxMembers: number): ParsedPartyForm | null {
+export function parsePartyForm(
+  message: string,
+  partyType: string,
+  maxMembers: number,
+): ParsedPartyForm | null {
   const text = normalizeText(message);
   const recruitNo = extractRecruitNoFromForm(text);
   if (recruitNo === null) return null;
@@ -274,7 +315,9 @@ export function parsePartyForm(message: string, partyType: string, maxMembers: n
     recruitNo,
     startTimeText: parseStartTimeText(text),
     playStyle: parsePlayStyle(text),
-    members: isLinePartyType(partyType) ? parseLineMembers(text) : parseNumberMembers(text, maxMembers),
+    members: isLinePartyType(partyType)
+      ? parseLineMembers(text)
+      : parseNumberMembers(text, maxMembers),
   };
 }
 
@@ -308,7 +351,9 @@ function parseLineMembers(text: string): RecruitMemberLike[] {
 
   for (const rawLine of lines) {
     const line = rawLine.trim();
-    const match = line.match(/^(TOP|JUG|JGL|JG|MID|ADC|AD|SUP|탑|정글|미드|원딜|서폿|서포터)\s*[.:：]?\s*(.*)$/i);
+    const match = line.match(
+      /^(TOP|JUG|JGL|JG|MID|ADC|AD|SUP|탑|정글|미드|원딜|서폿|서포터)\s*[.:：]?\s*(.*)$/i,
+    );
     if (!match) continue;
 
     const alias = match[1].toUpperCase();
@@ -324,10 +369,17 @@ function parseLineMembers(text: string): RecruitMemberLike[] {
   for (const member of members) {
     if (member.position) unique.set(member.position, member);
   }
-  return [...unique.values()].sort((a, b) => LINE_POSITIONS.indexOf(a.position as RecruitLinePosition) - LINE_POSITIONS.indexOf(b.position as RecruitLinePosition));
+  return [...unique.values()].sort(
+    (a, b) =>
+      LINE_POSITIONS.indexOf(a.position as RecruitLinePosition) -
+      LINE_POSITIONS.indexOf(b.position as RecruitLinePosition),
+  );
 }
 
-function parseNumberMembers(text: string, maxMembers: number): RecruitMemberLike[] {
+function parseNumberMembers(
+  text: string,
+  maxMembers: number,
+): RecruitMemberLike[] {
   const members: RecruitMemberLike[] = [];
   const lines = normalizeText(text).split("\n");
 
@@ -337,7 +389,12 @@ function parseNumberMembers(text: string, maxMembers: number): RecruitMemberLike
     if (subMatch) {
       const names = splitNames(subMatch[1]);
       for (const name of names) {
-        members.push({ name, position: null, slotNo: null, isSubstitute: true });
+        members.push({
+          name,
+          position: null,
+          slotNo: null,
+          isSubstitute: true,
+        });
       }
       continue;
     }
@@ -346,7 +403,8 @@ function parseNumberMembers(text: string, maxMembers: number): RecruitMemberLike
     if (!match) continue;
 
     const slotNo = Number(match[1]);
-    if (!Number.isInteger(slotNo) || slotNo < 1 || slotNo > maxMembers) continue;
+    if (!Number.isInteger(slotNo) || slotNo < 1 || slotNo > maxMembers)
+      continue;
 
     const name = trimName(match[2]);
     if (!name) continue;
@@ -361,23 +419,30 @@ function parseNumberMembers(text: string, maxMembers: number): RecruitMemberLike
       unique.set(`slot-${member.slotNo}`, member);
     }
   }
-  return [...unique.values()].sort((a, b) => Number(a.slotNo ?? 999) - Number(b.slotNo ?? 999));
+  return [...unique.values()].sort(
+    (a, b) => Number(a.slotNo ?? 999) - Number(b.slotNo ?? 999),
+  );
 }
 
 function splitNames(value: string) {
   const cleaned = trimName(value);
   if (!cleaned) return [];
-  return cleaned.split(/[,，\/]+/).map((item) => trimName(item)).filter(Boolean);
+  return cleaned
+    .split(/[,，\/]+/)
+    .map((item) => trimName(item))
+    .filter(Boolean);
 }
 
 export function formatRecruitPartyBlock(party: RecruitPartyLike) {
-  const typeLabel = getRecruitTypeLabel(String(party.type));
   const statusLabel = getRecruitStatusLabel(party);
+  const titleLabel = String(
+    party.title || getRecruitTypeLabel(String(party.type)),
+  ).replace(/!+$/, "");
   const activeCount = getActiveMemberCount(party.members);
   const subMembers = party.members.filter((member) => member.isSubstitute);
   const lines: string[] = [];
 
-  lines.push(`${typeLabel} ${statusLabel}`);
+  lines.push(`${titleLabel} ${statusLabel}`);
   lines.push(`모집번호: #${party.recruitNo}`);
   if (party.startTimeText) lines.push(`게임 시작 시간: ${party.startTimeText}`);
   lines.push(`현재 인원: ${activeCount}/${party.maxMembers}`);
@@ -391,11 +456,15 @@ export function formatRecruitPartyBlock(party: RecruitPartyLike) {
     }
   } else {
     for (let slotNo = 1; slotNo <= party.maxMembers; slotNo += 1) {
-      const member = party.members.find((item) => !item.isSubstitute && item.slotNo === slotNo);
+      const member = party.members.find(
+        (item) => !item.isSubstitute && item.slotNo === slotNo,
+      );
       lines.push(`${slotNo}. ${member?.name || "-"}`);
     }
     if (String(party.type) === "ARAM" || subMembers.length > 0) {
-      lines.push(`예비. ${subMembers.map((item) => item.name).join(", ") || "-"}`);
+      lines.push(
+        `예비. ${subMembers.map((item) => item.name).join(", ") || "-"}`,
+      );
     }
   }
 
@@ -417,7 +486,9 @@ export function buildRecruitStatusReply(parties: RecruitPartyLike[]) {
   return [
     "[K-LOL.GG 구인구직 현황]",
     "",
-    parties.map(formatRecruitPartyBlock).join("\n\n------------------------------------\n\n"),
+    parties
+      .map(formatRecruitPartyBlock)
+      .join("\n\n------------------------------------\n\n"),
     "",
     "------------------------------------",
     "",
@@ -426,36 +497,42 @@ export function buildRecruitStatusReply(parties: RecruitPartyLike[]) {
   ].join("\n");
 }
 
-export function buildSyncReply(party: RecruitPartyLike, previousActiveCount?: number) {
+export function buildSyncReply(
+  party: RecruitPartyLike,
+  previousActiveCount?: number,
+) {
   const activeCount = getActiveMemberCount(party.members);
 
-  if (typeof previousActiveCount === "number" && activeCount > previousActiveCount) {
-    return [
-      "[K-LOL 구인구직 등록 완료]",
-      "같이 할사람~",
-    ].join("\n");
+  if (
+    typeof previousActiveCount === "number" &&
+    activeCount > previousActiveCount
+  ) {
+    return ["[K-LOL 구인구직 등록 완료]", "같이 할사람~"].join("\n");
   }
 
-  if (typeof previousActiveCount === "number" && activeCount < previousActiveCount) {
-    return [
-      "[K-LOL 구인구직 반영 완료]",
-      "다음에 또 같이해요.",
-    ].join("\n");
+  if (
+    typeof previousActiveCount === "number" &&
+    activeCount < previousActiveCount
+  ) {
+    return ["[K-LOL 구인구직 반영 완료]", "다음에 또 같이해요."].join("\n");
   }
 
-  return [
-    "[K-LOL 구인구직 반영 완료]",
-    "변경사항이 반영되었습니다.",
-  ].join("\n");
+  return ["[K-LOL 구인구직 반영 완료]", "변경사항이 반영되었습니다."].join(
+    "\n",
+  );
 }
 
-export function buildCreateReply(template: string) {
+export function buildCreateReply(template: string, recruitNo?: number) {
+  const fixedTemplate =
+    typeof recruitNo === "number"
+      ? template.replace("모집번호: #자동생성", `모집번호: #${recruitNo}`)
+      : template;
   return [
     "[K-LOL 구인구직 등록 완료]",
     "같이 할사람~",
     "",
     "아래 양식의 모집번호는 유지해서 작성해주세요.",
     "",
-    template,
+    fixedTemplate,
   ].join("\n");
 }

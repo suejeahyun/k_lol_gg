@@ -24,7 +24,9 @@ export async function POST(req: NextRequest) {
     const roomName = getBodyRoom(body);
     const sender = getBodySender(body);
 
-    const noOnly = message.match(/모집번호\s*[:：]?\s*#?\s*(\d{1,2})/) || message.match(/(^|\s)#(\d{1,2})(\s|$)/);
+    const noOnly =
+      message.match(/모집번호\s*[:：]?\s*#?\s*(\d{1,2})/) ||
+      message.match(/(^|\s)#(\d{1,2})(\s|$)/);
     const recruitNo = noOnly ? Number(noOnly[1] || noOnly[2]) : NaN;
 
     if (!Number.isInteger(recruitNo) || recruitNo < 0 || recruitNo > 99) {
@@ -56,25 +58,32 @@ export async function POST(req: NextRequest) {
           reply:
             "[K-LOL.GG 구인구직 반영 실패]\n\n" +
             `모집번호 #${recruitNo} 파티를 찾지 못했습니다.\n` +
-            "먼저 /자랭구인구직 12 형식으로 파티를 생성해주세요.",
+            "먼저 /자랭구인 형식으로 파티를 생성해주세요.",
         },
         { status: 404 },
       );
     }
 
-    const parsed = parsePartyForm(message, String(party.type), party.maxMembers);
+    const parsed = parsePartyForm(
+      message,
+      String(party.type),
+      party.maxMembers,
+    );
     if (!parsed) {
       return NextResponse.json(
         {
           ok: false,
           formatVersion: PARTY_RECRUIT_FORMAT_VERSION,
-          reply: "[K-LOL.GG 구인구직 반영 실패]\n반영 가능한 양식을 찾지 못했습니다.",
+          reply:
+            "[K-LOL.GG 구인구직 반영 실패]\n반영 가능한 양식을 찾지 못했습니다.",
         },
         { status: 400 },
       );
     }
 
-    const previousActiveCount = party.members.filter((member) => !member.isSubstitute).length;
+    const previousActiveCount = party.members.filter(
+      (member) => !member.isSubstitute,
+    ).length;
 
     const updated = await prisma.$transaction(async (tx) => {
       await tx.recruitPartyMember.deleteMany({ where: { partyId: party.id } });
@@ -99,7 +108,9 @@ export async function POST(req: NextRequest) {
           playStyle: parsed.playStyle ?? party.playStyle,
           roomName: roomName ?? party.roomName,
         },
-        include: { members: { orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }] } },
+        include: {
+          members: { orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }] },
+        },
       });
 
       await writeAdminLog({
