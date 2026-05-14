@@ -86,14 +86,6 @@ async function handleMessage(message: string) {
     return jsonReply(getKakaoHelpMessage());
   }
 
-  if (command.type === "status") {
-    return jsonReply([
-      "[K-LOL.GG 내전현황 안내]",
-      "내전현황은 카카오봇에서 /api/kakao/recruit/season-apply/status 또는 /api/kakao/scheduled-notice로 연결해야 최신 현황이 출력됩니다.",
-      "카카오봇 스크립트의 내전현황 분기와 API_URL을 확인해주세요.",
-    ].join("\n"));
-  }
-
   if (command.type === "ranking") {
     const rows = await getRankingForKakao();
     return jsonReply(formatRankingMessage(rows));

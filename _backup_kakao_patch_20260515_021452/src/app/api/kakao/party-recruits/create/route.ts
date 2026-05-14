@@ -1,40 +1,22 @@
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import {
   buildCreateReply,
-  getActiveMemberCount,
   getKakaoRecruitTodayRange,
   parseCreateRecruitCommand,
 } from "@/lib/kakao/party-recruit";
 import {
+  PARTY_RECRUIT_FORMAT_VERSION,
   getBodyRoom,
   getBodySender,
   getBodyText,
-  partyRecruitJson,
   readJsonBody,
   rejectIfInvalidPartySecret,
 } from "../_shared";
-
-const CREATE_HELP = [
-  "[K-LOL.GG 구인구직 생성 실패]",
-  "",
-  "명령어 형식이 올바르지 않습니다.",
-  "",
-  "사용 가능 명령어",
-  "자랭구인",
-  "일반구인",
-  "솔랭구인",
-  "칼바람구인",
-  "증바람구인",
-  "기타게임구인",
-  "롤체일반구인",
-  "롤체랭크구인",
-  "더블업구인",
-].join("\n");
 
 export async function POST(req: NextRequest) {
   try {
@@ -50,7 +32,26 @@ export async function POST(req: NextRequest) {
     const parsed = parseCreateRecruitCommand(message);
 
     if (!parsed) {
-      return partyRecruitJson({ reply: CREATE_HELP }, 400);
+      return NextResponse.json(
+        {
+          ok: false,
+          formatVersion: PARTY_RECRUIT_FORMAT_VERSION,
+          reply:
+            "[K-LOL.GG 구인구직 생성 실패]\n\n" +
+            "명령어 형식이 올바르지 않습니다.\n\n" +
+            "예시\n" +
+            "자랭구인\n" +
+            "일반구인\n" +
+            "솔랭구인\n" +
+            "칼바람구인\n" +
+            "증바람구인\n" +
+            "기타게임구인\n" +
+            "롤체일반구인\n" +
+            "롤체랭크구인\n" +
+            "더블업구인",
+        },
+        { status: 400 },
+      );
     }
 
     const recruitNo = parsed.recruitNo ?? (await getNextRecruitNo());
@@ -72,42 +73,40 @@ export async function POST(req: NextRequest) {
     ]);
 
     if (existing) {
-      const activeCount = getActiveMemberCount(existing.members);
-      return partyRecruitJson(
+      const activeCount = existing.members.filter(
+        (member) => !member.isSubstitute && member.name.trim() !== "",
+      ).length;
+      return NextResponse.json(
         {
-          reply: [
-            "[K-LOL.GG 구인구직 안내]",
-            "",
-            `모집번호 #${recruitNo}는 이미 진행 중입니다.`,
-            "",
-            `현재 #${recruitNo} 상태:`,
-            existing.title,
-            `현재 인원: ${activeCount}/${existing.maxMembers}`,
-            "",
-            "새 구인글은 번호를 직접 지정하지 않고 생성해주세요.",
+          ok: false,
+          formatVersion: PARTY_RECRUIT_FORMAT_VERSION,
+          reply:
+            "[K-LOL.GG 구인구직 안내]\n\n" +
+            `모집번호 #${recruitNo}는 이미 진행 중입니다.\n\n` +
+            `현재 #${recruitNo} 상태:\n` +
+            `${existing.title}\n` +
+            `현재 인원: ${activeCount}/${existing.maxMembers}\n\n` +
+            "새 구인글은 번호를 직접 지정하지 않고 생성해주세요.\n" +
             "예: 자랭구인",
-          ].join("\n"),
         },
-        409,
+        { status: 409 },
       );
     }
 
     if (parsed.recruitNo !== null && finishedLog) {
-      return partyRecruitJson(
+      return NextResponse.json(
         {
-          reply: [
-            "[K-LOL.GG 구인구직 안내]",
-            "",
-            `모집번호 #${recruitNo}는 이미 마무리된 번호입니다.`,
-            "",
-            `마무리 기록: ${finishedLog.title || "구인글"}`,
-            `최종 인원: ${finishedLog.memberCount}/${finishedLog.maxMembers}`,
-            "",
-            "새 구인글은 번호 없이 생성하면 다음 번호가 자동 배정됩니다.",
+          ok: false,
+          formatVersion: PARTY_RECRUIT_FORMAT_VERSION,
+          reply:
+            "[K-LOL.GG 구인구직 안내]\n\n" +
+            `모집번호 #${recruitNo}는 이미 마무리된 번호입니다.\n\n` +
+            `마무리 기록: ${finishedLog.title || "구인글"}\n` +
+            `최종 인원: ${finishedLog.memberCount}/${finishedLog.maxMembers}\n\n` +
+            "새 구인글은 번호 없이 생성하면 다음 번호가 자동 배정됩니다.\n" +
             "예: 자랭구인",
-          ].join("\n"),
         },
-        409,
+        { status: 409 },
       );
     }
 
@@ -137,18 +136,22 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return partyRecruitJson({
+    return NextResponse.json({
+      ok: true,
+      formatVersion: PARTY_RECRUIT_FORMAT_VERSION,
       party,
       reply: buildCreateReply(parsed.template, party.recruitNo),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    return partyRecruitJson(
+    return NextResponse.json(
       {
+        ok: false,
+        formatVersion: PARTY_RECRUIT_FORMAT_VERSION,
         reply: `[K-LOL.GG 구인구직 생성 실패]\n${message || "서버 처리 중 오류가 발생했습니다."}`,
         error: message,
       },
-      500,
+      { status: 500 },
     );
   }
 }
@@ -185,7 +188,9 @@ async function getNextRecruitNo() {
     if (!exists) return candidate;
   }
 
-  throw new Error("오늘 사용 가능한 모집번호가 없습니다. 진행중인 구인글을 마무리해주세요.");
+  throw new Error(
+    "오늘 사용 가능한 모집번호가 없습니다. 진행중인 구인글을 마무리해주세요.",
+  );
 }
 
 async function archiveStaleRecruitParties() {
@@ -205,7 +210,7 @@ async function archiveStaleRecruitParties() {
           type: String(party.type),
           title: party.title,
           action: "AUTO_EXPIRED",
-          memberCount: getActiveMemberCount(party.members),
+          memberCount: party.members.filter((member) => !member.isSubstitute && member.name.trim() !== "").length,
           maxMembers: party.maxMembers,
           summary: "일자 변경으로 자동 마감되었습니다.",
           roomName: party.roomName,

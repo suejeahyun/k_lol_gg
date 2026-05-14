@@ -167,7 +167,6 @@ export function parseCreateRecruitCommand(
   if (recruitNo !== null && !isValidRecruitNo(recruitNo)) return null;
 
   const command = match[1];
-
   if (command === "자랭구인") {
     return {
       recruitNo,
@@ -177,6 +176,7 @@ export function parseCreateRecruitCommand(
       template: buildLineTemplate("자랭", recruitNo),
     };
   }
+
 
   if (command === "일반구인") {
     return {
@@ -192,7 +192,7 @@ export function parseCreateRecruitCommand(
     return {
       recruitNo,
       type: "SOLO_RANK",
-      title: "솔랭 하실분!",
+      title: "솔랭하실분!",
       maxMembers: 2,
       template: buildNumberTemplate("솔랭", recruitNo, 2, [
         "》게임 시작 시간 + 티어",
@@ -209,9 +209,16 @@ export function parseCreateRecruitCommand(
       type: "ARAM",
       title: `${label} 하실분!`,
       maxMembers: 5,
-      template: buildNumberTemplate(label, recruitNo, 5, ["》게임 시작 시간"], true),
+      template: buildNumberTemplate(
+        label,
+        recruitNo,
+        5,
+        ["》게임 시작 시간"],
+        true,
+      ),
     };
   }
+
 
   if (command === "롤체일반구인") {
     return {
@@ -251,13 +258,14 @@ export function parseCreateRecruitCommand(
       ]),
     };
   }
-
   return {
     recruitNo,
     type: "OTHER_GAME",
     title: "기타게임 하실분!",
     maxMembers: 8,
-    template: buildNumberTemplate("기타게임", recruitNo, 8, ["》게임 시작 시간"]),
+    template: buildNumberTemplate("기타게임", recruitNo, 8, [
+      "》게임 시작 시간",
+    ]),
   };
 }
 
@@ -304,7 +312,7 @@ function buildNumberTemplate(
   if (includeSubstitute) lines.push("예비.");
   lines.push(
     "",
-    "참여해주실 분은 태그해주세요.",
+    "참여해주실분은 태그해주세요",
     "*상호배려와 존중 부탁드립니다.",
   );
   return lines.join("\n");
@@ -549,17 +557,17 @@ export function buildSyncReply(
     typeof previousActiveCount === "number" &&
     activeCount > previousActiveCount
   ) {
-    return ["[K-LOL.GG 구인구직 등록 완료]", "같이 할사람~"].join("\n");
+    return ["[K-LOL 구인구직 등록 완료]", "같이 할사람~"].join("\n");
   }
 
   if (
     typeof previousActiveCount === "number" &&
     activeCount < previousActiveCount
   ) {
-    return ["[K-LOL.GG 구인구직 반영 완료]", "다음에 또 같이해요."].join("\n");
+    return ["[K-LOL 구인구직 반영 완료]", "다음에 또 같이해요."].join("\n");
   }
 
-  return ["[K-LOL.GG 구인구직 반영 완료]", "변경사항이 반영되었습니다."].join(
+  return ["[K-LOL 구인구직 반영 완료]", "변경사항이 반영되었습니다."].join(
     "\n",
   );
 }
@@ -570,7 +578,7 @@ export function buildCreateReply(template: string, recruitNo?: number) {
       ? template.replace("모집번호: #자동생성", `모집번호: #${recruitNo}`)
       : template;
   return [
-    "[K-LOL.GG 구인구직 등록 완료]",
+    "[K-LOL 구인구직 등록 완료]",
     "같이 할사람~",
     "",
     "아래 양식의 모집번호는 유지해서 작성해주세요.",

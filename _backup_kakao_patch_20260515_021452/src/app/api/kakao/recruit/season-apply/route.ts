@@ -1,6 +1,5 @@
 import { createHash } from "crypto";
-import { NextRequest } from "next/server";
-import { kakaoJsonReply } from "@/lib/kakao/reply-format";
+import { NextRequest, NextResponse } from "next/server";
 import { getRequiredSecretInProduction } from "@/lib/security/secrets";
 import { getKstStartOfDate } from "@/lib/date/kst";
 import { writeAdminLog } from "@/lib/admin-log";
@@ -360,12 +359,13 @@ function rejectIfInvalidSecret(req: NextRequest, bodySecret: unknown) {
     return null;
   }
 
-  return kakaoJsonReply(
+  return NextResponse.json(
     {
+      ok: false,
       formatVersion: FORMAT_VERSION,
-      reply: "[K-LOL.GG 참가 신청 등록 실패]\n인증값이 올바르지 않습니다.",
+      reply: "[참가 신청 등록 실패]\n인증값이 올바르지 않습니다.",
     },
-    401,
+    { status: 401 },
   );
 }
 
@@ -467,7 +467,8 @@ export async function POST(req: NextRequest) {
         sender,
       });
 
-      return kakaoJsonReply({
+      return NextResponse.json({
+        ok: true,
         formatVersion: FORMAT_VERSION,
         command: "TODAY_SEASON_APPLY_RESET",
         season: reset.season,
@@ -485,10 +486,11 @@ export async function POST(req: NextRequest) {
     const parsed = parseRecruitMessage(message);
 
     if (parsed.participants.length < 1) {
-      return kakaoJsonReply({
+      return NextResponse.json({
+        ok: false,
         formatVersion: FORMAT_VERSION,
         reply:
-          "[K-LOL.GG 구인구직방 참가 자동 등록]\n\n" +
+          "[K-LOL.GG 참가 자동 등록]\n\n" +
           "등록 가능한 참가자를 찾지 못했습니다.\n\n" +
           "양식 예시\n" +
           "1.정민/m/m/ad sup",
@@ -507,7 +509,8 @@ export async function POST(req: NextRequest) {
     const updated = applied.results.filter((item) => item.status === "UPDATED").length;
     const pending = applied.results.filter((item) => item.status === "PENDING").length;
 
-    return kakaoJsonReply({
+    return NextResponse.json({
+      ok: true,
       formatVersion: FORMAT_VERSION,
       season: applied.season,
       applyDate: parsed.applyDate,
@@ -527,13 +530,14 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
 
-    return kakaoJsonReply(
+    return NextResponse.json(
       {
+        ok: false,
         formatVersion: FORMAT_VERSION,
-        reply: `[K-LOL.GG 참가 신청 등록 실패]\n${message || "서버 처리 중 오류가 발생했습니다."}`,
+        reply: `[참가 신청 등록 실패]\n${message || "서버 처리 중 오류가 발생했습니다."}`,
         error: message,
       },
-      500,
+      { status: 500 },
     );
   }
 }

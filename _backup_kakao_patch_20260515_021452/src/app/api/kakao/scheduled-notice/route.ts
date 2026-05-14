@@ -32,13 +32,11 @@ function jsonReply(
 ) {
   return NextResponse.json(
     {
-      ok: status >= 200 && status < 300,
-      statusCode: status,
       reply,
       ...extra,
     },
     {
-      status: 200,
+      status,
       headers: {
         "Cache-Control": "no-store",
       },

@@ -1,4 +1,4 @@
-export type KakaoOpenchatCommandType = "record" | "recent" | "ranking" | "help" | "status" | "unknown";
+export type KakaoOpenchatCommandType = "record" | "recent" | "ranking" | "help" | "unknown";
 
 export type ParsedKakaoOpenchatCommand = {
   type: KakaoOpenchatCommandType;
@@ -31,9 +31,6 @@ const COMMAND_ALIASES: Record<string, KakaoOpenchatCommandType> = {
   "!rank": "ranking",
   "/rank": "ranking",
 
-  "내전현황": "status",
-  "시즌내전현황": "status",
-
   "도움말": "help",
   "!도움말": "help",
   "/도움말": "help",
@@ -43,10 +40,6 @@ const COMMAND_ALIASES: Record<string, KakaoOpenchatCommandType> = {
   "help": "help",
   "!help": "help",
   "/help": "help",
-
-  "status": "status",
-  "!status": "status",
-  "/status": "status",
 };
 
 export function parseKakaoCommand(message: unknown): ParsedKakaoOpenchatCommand {
@@ -74,21 +67,13 @@ export function parseKakaoCommand(message: unknown): ParsedKakaoOpenchatCommand 
 
 export function getKakaoHelpMessage() {
   return [
-    "[K-LOL.GG 카카오 명령어]",
+    "📌 K-LOL.GG 명령어",
     "",
-    "LOL - K방",
     "전적 닉네임#태그",
     "최근 닉네임#태그",
     "랭킹",
-    "내전현황",
+    "도움말",
     "내전참가",
-    "",
-    "구인구직방",
-    "자랭구인 / 일반구인 / 솔랭구인",
-    "칼바람구인 / 증바람구인",
-    "롤체일반구인 / 롤체랭크구인 / 더블업구인",
-    "구인현황",
-    "12 쫑 또는 12 ㅉ",
     "",
     "예시: 전적 sax0ph0ne#99단굵묵",
   ].join("\n");

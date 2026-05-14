@@ -1,9 +1,10 @@
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { buildRecruitStatusReply, getKakaoRecruitTodayRange } from "@/lib/kakao/party-recruit";
-import { partyRecruitJson } from "../_shared";
+import { PARTY_RECRUIT_FORMAT_VERSION } from "../_shared";
 
 export async function GET() {
   try {
@@ -18,19 +19,23 @@ export async function GET() {
       take: 20,
     });
 
-    return partyRecruitJson({
+    return NextResponse.json({
+      ok: true,
+      formatVersion: PARTY_RECRUIT_FORMAT_VERSION,
       empty: parties.length === 0,
       parties,
       reply: buildRecruitStatusReply(parties),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    return partyRecruitJson(
+    return NextResponse.json(
       {
+        ok: false,
+        formatVersion: PARTY_RECRUIT_FORMAT_VERSION,
         reply: `[K-LOL.GG 구인구직 현황 실패]\n${message || "서버 처리 중 오류가 발생했습니다."}`,
         error: message,
       },
-      500,
+      { status: 500 },
     );
   }
 }

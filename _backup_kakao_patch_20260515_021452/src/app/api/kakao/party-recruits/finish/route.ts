@@ -1,15 +1,15 @@
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import { formatRecruitPartyBlock, getActiveMemberCount, getKakaoRecruitTodayRange, parseFinishRecruitCommand } from "@/lib/kakao/party-recruit";
 import {
+  PARTY_RECRUIT_FORMAT_VERSION,
   getBodyRoom,
   getBodySender,
   getBodyText,
-  partyRecruitJson,
   readJsonBody,
   rejectIfInvalidPartySecret,
 } from "../_shared";
@@ -26,11 +26,13 @@ export async function POST(req: NextRequest) {
     const parsed = parseFinishRecruitCommand(message);
 
     if (!parsed) {
-      return partyRecruitJson(
+      return NextResponse.json(
         {
-          reply: "[K-LOL.GG 구인구직 마무리 실패]\n명령어 형식이 올바르지 않습니다. 예: 12 쫑 또는 12 ㅉ",
+          ok: false,
+          formatVersion: PARTY_RECRUIT_FORMAT_VERSION,
+          reply: "[K-LOL.GG 구인구직 마무리 실패]\n명령어 형식이 올바르지 않습니다. 예: /12 쫑 또는 /12 ㅉ",
         },
-        400,
+        { status: 400 },
       );
     }
 
@@ -47,18 +49,20 @@ export async function POST(req: NextRequest) {
         select: { title: true, memberCount: true, maxMembers: true },
       });
 
-      return partyRecruitJson(
+      return NextResponse.json(
         {
+          ok: false,
+          formatVersion: PARTY_RECRUIT_FORMAT_VERSION,
           reply: finishedLog
             ? [
-                "[K-LOL.GG 구인구직 마무리]",
+                "[K-LOL 구인구직 마무리]",
                 `모집번호 #${parsed.recruitNo}는 이미 마무리된 구인글입니다.`,
                 `기록: ${finishedLog.title || "구인글"}`,
                 `최종 인원: ${finishedLog.memberCount}/${finishedLog.maxMembers}`,
               ].join("\n")
             : `[K-LOL.GG 구인구직 마무리]\n\n모집번호 #${parsed.recruitNo} 파티를 찾지 못했습니다.`,
         },
-        404,
+        { status: 404 },
       );
     }
 
@@ -94,21 +98,25 @@ export async function POST(req: NextRequest) {
       });
     });
 
-    return partyRecruitJson({
+    return NextResponse.json({
+      ok: true,
+      formatVersion: PARTY_RECRUIT_FORMAT_VERSION,
       reply: [
-        "[K-LOL.GG 구인구직 마무리]",
+        "[K-LOL 구인구직 마무리]",
         `모집번호 #${party.recruitNo} 마무리 완료`,
         "다음에 또 같이해요.",
       ].join("\n"),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    return partyRecruitJson(
+    return NextResponse.json(
       {
+        ok: false,
+        formatVersion: PARTY_RECRUIT_FORMAT_VERSION,
         reply: `[K-LOL.GG 구인구직 마무리 실패]\n${message || "서버 처리 중 오류가 발생했습니다."}`,
         error: message,
       },
-      500,
+      { status: 500 },
     );
   }
 }

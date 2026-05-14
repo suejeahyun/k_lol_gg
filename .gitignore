@@ -42,19 +42,3 @@ pnpm-debug.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-# local env
-
-# build/cache
-.next/
-node_modules/
-tsconfig.tsbuildinfo
-
-# temporary backups
-_backup_*/
-*.zip
-*.7z
-*.rar
-*.log
-*.tmp
-*.bak
