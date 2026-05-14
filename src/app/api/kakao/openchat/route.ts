@@ -11,7 +11,6 @@ import {
   getPlayerRecordForKakao,
   getRankingForKakao,
 } from "@/features/player/services/getPlayerRecordForKakao";
-import { generateOperationNotice } from "@/lib/operation-ai/addons/analytics";
 
 type KakaoOpenchatBody = {
   message?: string;
@@ -25,10 +24,12 @@ type KakaoOpenchatBody = {
 };
 
 function jsonReply(reply: string, status = 200) {
+  // 카카오봇 Jsoup .post().text()는 400/404/500 응답에서 HttpStatusException을 던질 수 있습니다.
+  // 봇 안정성을 위해 명령어 처리 결과는 HTTP 200으로 반환하고, 실제 상태는 ok/statusCode에 담습니다.
   return NextResponse.json(
-    { reply },
+    { ok: status >= 200 && status < 300, statusCode: status, reply },
     {
-      status,
+      status: 200,
       headers: {
         "Cache-Control": "no-store",
       },
@@ -64,9 +65,19 @@ async function handleMessage(message: string) {
   const trimmedMessage = message.trim();
 
   if (/^(AI공지|자동공지|공지생성)(\s+(12|15|18|20))?$/i.test(trimmedMessage)) {
-    const slot = trimmedMessage.match(/(12|15|18|20)/)?.[1] ?? null;
-    const notice = await generateOperationNotice({ slot });
-    return jsonReply(notice.text);
+    return jsonReply([
+      "[명령어 변경 안내]",
+      "AI공지는 내전현황으로 변경되었습니다.",
+      "앞으로는 내전현황을 입력해주세요.",
+    ].join("\n"));
+  }
+
+  if (/^(내전현황|\/내전현황|시즌내전현황|\/시즌내전현황)$/i.test(trimmedMessage)) {
+    return jsonReply([
+      "[내전현황 안내]",
+      "내전현황은 LOL-K방 전용 카카오봇에서 처리합니다.",
+      "카카오봇 코드가 최신인지 확인해주세요.",
+    ].join("\n"));
   }
 
   const command = parseKakaoCommand(message);
@@ -86,7 +97,7 @@ async function handleMessage(message: string) {
         "닉네임#태그 형식으로 입력해주세요.",
         "",
         "예시: 전적 sax0ph0ne#99단굵묵"
-      ].join("\n"), 400);
+      ].join("\n"));
     }
 
     const record = await getPlayerRecordForKakao(command.query);
@@ -97,7 +108,7 @@ async function handleMessage(message: string) {
         "닉네임#태그를 확인해주세요.",
         "",
         "예시: 전적 sax0ph0ne#99단굵묵"
-      ].join("\n"), 404);
+      ].join("\n"));
     }
 
     return jsonReply(
@@ -121,7 +132,7 @@ export async function POST(req: NextRequest) {
       limit: 60,
       windowSeconds: 60,
     });
-    if (rateLimitRejected) return rateLimitRejected;
+    if (rateLimitRejected) return jsonReply("요청이 너무 많습니다. 잠시 후 다시 시도해주세요.");
 
     const body = (await req.json().catch(() => ({}))) as KakaoOpenchatBody;
     return handleMessage(extractMessage(body));
@@ -131,21 +142,31 @@ export async function POST(req: NextRequest) {
     return jsonReply([
       "전적 조회 중 오류가 발생했습니다.",
       "잠시 후 다시 시도해주세요.",
-    ].join("\n"), 500);
+      error instanceof Error ? error.message : String(error),
+    ].join("\n"));
   }
 }
 
 export async function GET(req: NextRequest) {
-  const secretRejected = rejectIfInvalidSecret(req);
-  if (secretRejected) return secretRejected;
+  try {
+    const secretRejected = rejectIfInvalidSecret(req);
+    if (secretRejected) return secretRejected;
 
-  const rateLimitRejected = await rejectIfRateLimited(req, {
-    action: "KAKAO_OPENCHAT",
-    limit: 60,
-    windowSeconds: 60,
-  });
-  if (rateLimitRejected) return rateLimitRejected;
+    const rateLimitRejected = await rejectIfRateLimited(req, {
+      action: "KAKAO_OPENCHAT",
+      limit: 60,
+      windowSeconds: 60,
+    });
+    if (rateLimitRejected) return jsonReply("요청이 너무 많습니다. 잠시 후 다시 시도해주세요.");
 
-  const message = req.nextUrl.searchParams.get("message") ?? "도움말";
-  return handleMessage(message);
+    const message = req.nextUrl.searchParams.get("message") ?? "도움말";
+    return handleMessage(message);
+  } catch (error) {
+    console.error("[KAKAO_OPENCHAT_GET_ERROR]", error);
+    return jsonReply([
+      "전적 조회 중 오류가 발생했습니다.",
+      "잠시 후 다시 시도해주세요.",
+      error instanceof Error ? error.message : String(error),
+    ].join("\n"));
+  }
 }
