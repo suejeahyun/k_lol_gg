@@ -159,7 +159,7 @@ export function parseCreateRecruitCommand(
 ): CreateRecruitCommand | null {
   const text = normalizeText(message).trim();
   const match = text.match(
-    /^\/?(자랭구인|일반구인|솔랭구인|칼바람구인|증바람구인|기타게임구인)(?:\s+(\d{1,2}))?\s*$/,
+    /^\/?(자랭구인|일반구인|솔랭구인|칼바람구인|증바람구인|기타게임구인|롤체일반구인|롤체랭크구인|더블업구인)(?:\s+(\d{1,2}))?\s*$/,
   );
   if (!match) return null;
 
@@ -219,6 +219,45 @@ export function parseCreateRecruitCommand(
     };
   }
 
+
+  if (command === "롤체일반구인") {
+    return {
+      recruitNo,
+      type: "OTHER_GAME",
+      title: "롤체 일반 하실분!",
+      maxMembers: 8,
+      template: buildNumberTemplate("롤체 일반", recruitNo, 8, [
+        "》게임 시작 시간",
+        "》즐겜 & 빡겜 중에 선택",
+      ]),
+    };
+  }
+
+  if (command === "롤체랭크구인") {
+    return {
+      recruitNo,
+      type: "OTHER_GAME",
+      title: "롤체 랭크 하실분!",
+      maxMembers: 3,
+      template: buildNumberTemplate("롤체 랭크", recruitNo, 3, [
+        "》게임 시작 시간 + 티어",
+        "》즐겜 & 빡겜 중에 선택",
+      ]),
+    };
+  }
+
+  if (command === "더블업구인") {
+    return {
+      recruitNo,
+      type: "OTHER_GAME",
+      title: "더블업 하실분!",
+      maxMembers: 2,
+      template: buildNumberTemplate("더블업", recruitNo, 2, [
+        "》게임 시작 시간",
+        "》즐겜 & 빡겜 중에 선택",
+      ]),
+    };
+  }
   return {
     recruitNo,
     type: "OTHER_GAME",
