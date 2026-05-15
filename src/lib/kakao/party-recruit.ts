@@ -667,7 +667,14 @@ function parseNumberMembers(
       continue;
     }
 
-    const match = line.match(/^(\d{1,2})(?:[.)]|\s+)(.*)$/);
+    if (/^\d{1,2}\s*인\s*/.test(line)) continue;
+    if (/^현재\s*인원\s*[:：]/.test(line)) continue;
+    if (/^모집번호\s*[:：]/.test(line)) continue;
+    if (/^현황\s*보기\s*[:：]?/.test(line)) continue;
+    if (/^https?:\/\//i.test(line)) continue;
+    if (/^[-]{5,}$/.test(line)) continue;
+
+    const match = line.match(/^(\d{1,2})(?:[.)]|\s+)\s*(.*)$/);
     if (!match) continue;
 
     const slotNo = Number(match[1]);
