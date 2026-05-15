@@ -135,11 +135,28 @@ function formatPositions(mainPosition: unknown, subPositions: unknown) {
   return positions.length > 0 ? positions.join(" ") : "-";
 }
 
+function formatSeasonRecruitDateTime(dateKey: string, applies: Array<{ applyTimeText: string | null }>) {
+  const timeText = applies.find((apply) => apply.applyTimeText)?.applyTimeText;
+  const dateText = getKstDisplayDate(dateKey);
+
+  if (!timeText) return dateText;
+
+  const [hourText, minuteText] = timeText.split(":");
+  const hour = Number(hourText);
+  const minute = Number(minuteText || "0");
+
+  if (!Number.isFinite(hour) || hour < 0 || hour > 23) return dateText;
+  if (Number.isFinite(minute) && minute > 0) return `${dateText} ${hour}시 ${minute}분`;
+
+  return `${dateText} ${hour}시`;
+}
+
 function buildSeasonRecruitStatusTemplate(params: {
   dateKey: string;
   applies: Array<{
     mainPosition: string | null;
     subPositions: string[];
+    applyTimeText: string | null;
     player: {
       name: string;
       currentTier: string | null;
@@ -150,7 +167,7 @@ function buildSeasonRecruitStatusTemplate(params: {
   const lines: string[] = [];
 
   lines.push("📢 협곡내전하실분");
-  lines.push(` 》${getKstDisplayDate(params.dateKey)}`);
+  lines.push(` 》${formatSeasonRecruitDateTime(params.dateKey, params.applies)}`);
   lines.push("");
   lines.push("*참가 신청 양식*");
   lines.push("이름/현티어/최고티어/주,부라인");
@@ -213,6 +230,7 @@ async function createStatusReply(req: NextRequest, body?: ApplyStatusBody) {
       mainPosition: true,
       subPositions: true,
       sourceSlotNo: true,
+      applyTimeText: true,
       createdAt: true,
       player: {
         select: {
@@ -245,6 +263,7 @@ async function createStatusReply(req: NextRequest, body?: ApplyStatusBody) {
   const reply = buildSeasonRecruitStatusTemplate({
     dateKey,
     applies: applies.map((apply) => ({
+      applyTimeText: apply.applyTimeText,
       mainPosition: apply.mainPosition,
       subPositions: apply.subPositions,
       player: apply.player,

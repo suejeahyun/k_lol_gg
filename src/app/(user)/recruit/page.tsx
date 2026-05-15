@@ -9,6 +9,7 @@ import {
   getRecruitStatusLabel,
   getRecruitTypeLabel,
   isLinePartyType,
+  isSoloRankPartyType,
 } from "@/lib/kakao/party-recruit";
 
 type RecruitPageMember = {
@@ -29,6 +30,8 @@ type RecruitPageParty = {
   roomName: string | null;
   hostName: string | null;
   startTimeText: string | null;
+  tierText: string | null;
+  preferredLineText: string | null;
   playStyle: string | null;
   note: string | null;
   maxMembers: number;
@@ -125,6 +128,7 @@ export default async function RecruitPage() {
             const statusLabel = getRecruitStatusLabel(party);
             const typeLabel = getRecruitTypeLabel(party.type);
             const isFull = activeCount >= party.maxMembers;
+            const isSoloRank = isSoloRankPartyType(party.type);
 
             return (
               <article key={party.id} className={`recruit-card${isFull ? " recruit-card--full" : ""}`}>
@@ -140,7 +144,9 @@ export default async function RecruitPage() {
                   <span>{statusLabel}</span>
                   <span>{activeCount}/{party.maxMembers}</span>
                   {party.startTimeText ? <span>{party.startTimeText}</span> : null}
-                  {party.playStyle ? <span>{party.playStyle}</span> : null}
+                  {isSoloRank && party.tierText ? <span>{party.tierText}</span> : null}
+                  {isSoloRank && party.playStyle ? <span>{party.playStyle}</span> : null}
+                  {isSoloRank && party.preferredLineText ? <span>{party.preferredLineText} 선호</span> : null}
                 </div>
 
                 <div className="recruit-slots">{renderSlots(party)}</div>

@@ -571,6 +571,7 @@ model SeasonParticipationApply {
   sourceSender      String?
   sourceMessageHash String?
   sourceSlotNo      Int?
+  applyTimeText     String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -942,9 +943,11 @@ model RecruitParty {
   title       String
   roomName    String?
   hostName    String?
-  startTimeText String?
-  playStyle     String?
-  note          String?
+  startTimeText     String?
+  tierText          String?
+  preferredLineText String?
+  playStyle         String?
+  note              String?
   maxMembers Int
 
   createdAt DateTime @default(now())

@@ -304,6 +304,7 @@ async function applyParticipants(params: {
           sourceSender: params.sender,
           sourceMessageHash,
           sourceSlotNo: participant.slotNumber,
+          applyTimeText: params.parsed.applyTime,
         },
         update: {
           mainPosition: participant.mainPosition,
@@ -314,6 +315,7 @@ async function applyParticipants(params: {
           sourceSender: params.sender,
           sourceMessageHash,
           sourceSlotNo: participant.slotNumber,
+          applyTimeText: params.parsed.applyTime,
         },
       });
 

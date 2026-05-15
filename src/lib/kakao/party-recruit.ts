@@ -27,6 +27,8 @@ export type RecruitPartyLike = {
   roomName: string | null;
   hostName: string | null;
   startTimeText: string | null;
+  tierText?: string | null;
+  preferredLineText?: string | null;
   playStyle: string | null;
   note: string | null;
   maxMembers: number;
@@ -50,6 +52,8 @@ export type FinishRecruitCommand = {
 export type ParsedPartyForm = {
   recruitNo: number;
   startTimeText: string | null;
+  tierText: string | null;
+  preferredLineText: string | null;
   playStyle: string | null;
   members: RecruitMemberLike[];
 };
@@ -80,6 +84,69 @@ const POSITION_ALIASES: Record<string, RecruitLinePosition> = {
   서폿: "SUP",
   서포터: "SUP",
 };
+
+const TIER_WORDS = [
+  "아이언",
+  "브론즈",
+  "실버",
+  "골드",
+  "플래티넘",
+  "플래",
+  "플레",
+  "에메랄드",
+  "에메",
+  "다이아몬드",
+  "다이아",
+  "마스터",
+  "그랜드마스터",
+  "그마",
+  "챌린저",
+  "언랭",
+  "언랭크",
+  "IRON",
+  "BRONZE",
+  "SILVER",
+  "GOLD",
+  "PLATINUM",
+  "PLAT",
+  "EMERALD",
+  "DIAMOND",
+  "MASTER",
+  "GRANDMASTER",
+  "CHALLENGER",
+  "UNRANKED",
+  "I",
+  "B",
+  "S",
+  "G",
+  "P",
+  "E",
+  "D",
+  "M",
+  "GM",
+  "C",
+  "U",
+];
+
+const POSITION_WORDS = [
+  "탑",
+  "정글",
+  "미드",
+  "원딜",
+  "바텀",
+  "서폿",
+  "서포터",
+  "TOP",
+  "JUG",
+  "JGL",
+  "JG",
+  "MID",
+  "ADC",
+  "AD",
+  "SUP",
+  "SPT",
+  "SUPPORT",
+];
 
 
 export function getKakaoRecruitDateKey(now = new Date()) {
@@ -171,6 +238,10 @@ export function isLinePartyType(type: string) {
   return type === "FLEX_RANK" || type === "NORMAL_GAME";
 }
 
+export function isSoloRankPartyType(type: string) {
+  return type === "SOLO_RANK";
+}
+
 export function parseCreateRecruitCommand(
   message: string,
 ): CreateRecruitCommand | null {
@@ -236,10 +307,7 @@ export function parseCreateRecruitCommand(
       type: "TFT_NORMAL",
       title: "롤체 일반 하실분!",
       maxMembers: 8,
-      template: buildNumberTemplate("롤체 일반", recruitNo, 8, [
-        "》게임 시작 시간",
-        "》즐겜 & 빡겜 중에 선택",
-      ]),
+      template: buildNumberTemplate("롤체 일반", recruitNo, 8, ["》게임 시작 시간"]),
     };
   }
 
@@ -249,10 +317,7 @@ export function parseCreateRecruitCommand(
       type: "TFT_RANK",
       title: "롤체 랭크 하실분!",
       maxMembers: 3,
-      template: buildNumberTemplate("롤체 랭크", recruitNo, 3, [
-        "》게임 시작 시간 + 티어",
-        "》즐겜 & 빡겜 중에 선택",
-      ]),
+      template: buildNumberTemplate("롤체 랭크", recruitNo, 3, ["》게임 시작 시간"]),
     };
   }
 
@@ -262,10 +327,7 @@ export function parseCreateRecruitCommand(
       type: "DOUBLE_UP",
       title: "더블업 하실분!",
       maxMembers: 2,
-      template: buildNumberTemplate("더블업", recruitNo, 2, [
-        "》게임 시작 시간",
-        "》즐겜 & 빡겜 중에 선택",
-      ]),
+      template: buildNumberTemplate("더블업", recruitNo, 2, ["》게임 시작 시간"]),
     };
   }
 
@@ -288,7 +350,6 @@ function buildLineTemplate(label: string, recruitNo: number | null) {
     formatRecruitNoLine(recruitNo),
     "",
     "》게임 시작 시간",
-    "》즐겜 & 빡겜 중에 선택",
     "",
     "TOP.",
     "JUG.",
@@ -370,38 +431,101 @@ export function parsePartyForm(
   const recruitNo = extractRecruitNoFromForm(text);
   if (recruitNo === null) return null;
 
+  const meta = parseRecruitFormMetadata(text);
+  const isSoloRank = isSoloRankPartyType(String(partyType));
+
   return {
     recruitNo,
-    startTimeText: parseStartTimeText(text),
-    playStyle: parsePlayStyle(text),
+    startTimeText: meta.startTimeText,
+    tierText: isSoloRank ? meta.tierText : null,
+    preferredLineText: isSoloRank ? meta.preferredLineText : null,
+    playStyle: isSoloRank ? meta.playStyle : null,
     members: isLinePartyType(partyType)
       ? parseLineMembers(text)
       : parseNumberMembers(text, maxMembers),
   };
 }
 
-function parseStartTimeText(text: string) {
-  const lines = normalizeText(text).split("\n");
-  for (const rawLine of lines) {
-    const line = rawLine.trim();
-    if (line.indexOf("게임 시작 시간") < 0) continue;
-    const cleaned = line
-      .replace(/[》>]/g, "")
-      .replace(/게임\s*시작\s*시간/g, "")
-      .replace(/\+\s*티어/g, "")
-      .replace(/[:：]/g, "")
-      .trim();
-    return cleaned || null;
-  }
-  return null;
+function cleanGuideValue(line: string, labelPattern: RegExp) {
+  return line
+    .replace(/[》>]/g, "")
+    .replace(labelPattern, "")
+    .replace(/[:：]/g, "")
+    .trim();
 }
 
-function parsePlayStyle(text: string) {
-  const compact = normalizeText(text);
-  if (compact.includes("즐겜") && compact.includes("빡겜")) return null;
-  if (compact.includes("즐겜")) return "즐겜";
-  if (compact.includes("빡겜")) return "빡겜";
-  return null;
+function parseStartTimeAndTier(value: string) {
+  let cleaned = value.replace(/\+\s*티어/g, "").trim();
+  let tierText: string | null = null;
+
+  for (const tier of TIER_WORDS) {
+    const escaped = tier.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const match = cleaned.match(new RegExp(`(?:^|\\s)(${escaped})(?:\\s*)$`, "i"));
+    if (!match) continue;
+
+    tierText = match[1].trim();
+    cleaned = cleaned.slice(0, match.index).trim();
+    break;
+  }
+
+  return {
+    startTimeText: cleaned || null,
+    tierText,
+  };
+}
+
+function parsePreferredLineValue(value: string) {
+  const cleaned = value
+    .replace(/선호(?:하는)?\s*라인/g, "")
+    .replace(/라인/g, "")
+    .trim();
+
+  if (!cleaned) return null;
+
+  const matched = POSITION_WORDS.find((position) =>
+    new RegExp(`(^|\\s)${position}($|\\s)`, "i").test(cleaned),
+  );
+
+  return matched || cleaned;
+}
+
+function parseRecruitFormMetadata(text: string) {
+  const lines = normalizeText(text).split("\n");
+  let startTimeText: string | null = null;
+  let tierText: string | null = null;
+  let preferredLineText: string | null = null;
+  let playStyle: string | null = null;
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+
+    if (line.indexOf("게임 시작 시간") >= 0) {
+      const value = cleanGuideValue(line, /게임\s*시작\s*시간/g);
+      const parsed = parseStartTimeAndTier(value);
+      startTimeText = parsed.startTimeText ?? startTimeText;
+      tierText = parsed.tierText ?? tierText;
+      continue;
+    }
+
+    if (line.indexOf("즐겜") >= 0 || line.indexOf("빡겜") >= 0) {
+      const value = cleanGuideValue(line, /즐겜\s*&\s*빡겜\s*중에\s*선택/g);
+      if (/즐겜/.test(value) && !/빡겜/.test(value)) playStyle = "즐겜";
+      if (/빡겜/.test(value) && !/즐겜/.test(value)) playStyle = "빡겜";
+      continue;
+    }
+
+    if (line.indexOf("선호") >= 0 && line.indexOf("라인") >= 0) {
+      const value = cleanGuideValue(line, /듀오\s*선호(?:하는)?\s*라인/g);
+      preferredLineText = parsePreferredLineValue(value) ?? preferredLineText;
+    }
+  }
+
+  return {
+    startTimeText,
+    tierText,
+    preferredLineText,
+    playStyle,
+  };
 }
 
 function parseLineMembers(text: string): RecruitMemberLike[] {
@@ -501,9 +625,22 @@ export function formatRecruitPartyBlock(party: RecruitPartyLike) {
   const subMembers = party.members.filter((member) => member.isSubstitute);
   const lines: string[] = [];
 
+  const isSoloRank = isSoloRankPartyType(String(party.type));
+
   lines.push(`${titleLabel} ${statusLabel}`);
+  if (party.startTimeText) lines.push(`시간 : ${party.startTimeText}`);
+  if (isSoloRank && party.tierText) lines.push(`티어 : ${party.tierText}`);
+  if (isSoloRank && (party.playStyle || party.preferredLineText)) {
+    const detail = [
+      party.playStyle,
+      party.preferredLineText ? `${party.preferredLineText} 선호` : null,
+    ]
+      .filter(Boolean)
+      .join(" ㅣ ");
+    if (detail) lines.push(detail);
+  }
+  lines.push("");
   lines.push(`모집번호: #${party.recruitNo}`);
-  if (party.startTimeText) lines.push(`게임 시작 시간: ${party.startTimeText}`);
   lines.push(`현재 인원: ${activeCount}/${party.maxMembers}`);
   if (subMembers.length > 0) lines.push(`예비: ${subMembers.length}명`);
   lines.push("");
@@ -511,18 +648,18 @@ export function formatRecruitPartyBlock(party: RecruitPartyLike) {
   if (isLinePartyType(String(party.type))) {
     for (const position of LINE_POSITIONS) {
       const member = party.members.find((item) => item.position === position);
-      lines.push(`${position}. ${member?.name || "-"}`);
+      lines.push(`${position}. ${member?.name || ""}`);
     }
   } else {
     for (let slotNo = 1; slotNo <= party.maxMembers; slotNo += 1) {
       const member = party.members.find(
         (item) => !item.isSubstitute && item.slotNo === slotNo,
       );
-      lines.push(`${slotNo}. ${member?.name || "-"}`);
+      lines.push(`${slotNo}. ${member?.name || ""}`);
     }
     if (String(party.type) === "ARAM" || subMembers.length > 0) {
       lines.push(
-        `예비. ${subMembers.map((item) => item.name).join(", ") || "-"}`,
+        `예비. ${subMembers.map((item) => item.name).join(", ") || ""}`,
       );
     }
   }

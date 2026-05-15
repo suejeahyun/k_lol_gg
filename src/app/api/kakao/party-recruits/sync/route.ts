@@ -4,7 +4,13 @@ export const revalidate = 0;
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
-import { buildSyncReply, getKakaoRecruitDateKey, getKakaoRecruitTodayRange, parsePartyForm } from "@/lib/kakao/party-recruit";
+import {
+  buildSyncReply,
+  getKakaoRecruitDateKey,
+  getKakaoRecruitTodayRange,
+  isSoloRankPartyType,
+  parsePartyForm,
+} from "@/lib/kakao/party-recruit";
 import {
   getBodyRoom,
   getBodySender,
@@ -101,6 +107,7 @@ export async function POST(req: NextRequest) {
     const previousActiveCount = party.members.filter(
       (member) => !member.isSubstitute && member.name.trim() !== "",
     ).length;
+    const isSoloRank = isSoloRankPartyType(String(party.type));
 
     const updated = await prisma.$transaction(async (tx) => {
       await tx.recruitPartyMember.deleteMany({ where: { partyId: party.id } });
@@ -122,7 +129,9 @@ export async function POST(req: NextRequest) {
         where: { id: party.id },
         data: {
           startTimeText: parsed.startTimeText ?? party.startTimeText,
-          playStyle: parsed.playStyle ?? party.playStyle,
+          tierText: isSoloRank ? parsed.tierText : null,
+          preferredLineText: isSoloRank ? parsed.preferredLineText : null,
+          playStyle: isSoloRank ? parsed.playStyle : null,
           roomName: roomName ?? party.roomName,
         },
         include: {
