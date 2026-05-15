@@ -3,12 +3,35 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import GalleryImageDeleteButton from "@/features/gallery/GalleryImageDeleteButton";
 import { coerceGalleryImageUrls } from "@/lib/gallery/winner-image-paths";
+import Pagination from "@/components/Pagination";
 export const dynamic = "force-dynamic";
 
+type AdminImagesPageProps = {
+  searchParams: Promise<{ page?: string }>;
+};
 
-export default async function AdminImagesPage() {
+const PAGE_SIZE = 10;
+
+export default async function AdminImagesPage({ searchParams }: AdminImagesPageProps) {
+  const resolvedSearchParams = await searchParams;
+  const currentPage = Math.max(1, Number(resolvedSearchParams.page ?? "1") || 1);
+
+  const totalCount = await prisma.galleryImage.count();
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+
   const images = await prisma.galleryImage.findMany({
     orderBy: [{ createdAt: "desc" }],
+    skip: (safeCurrentPage - 1) * PAGE_SIZE,
+    take: PAGE_SIZE,
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      imageUrl: true,
+      showOnHome: true,
+      createdAt: true,
+    },
   });
 
   return (
@@ -17,7 +40,7 @@ export default async function AdminImagesPage() {
         <div>
           <h1 className="admin-page__title">멸망전 우승팀 관리</h1>
           <p className="admin-page__description">
-            메인 화면에 노출할 우승팀 이미지를 선택할 수 있습니다.
+            메인 화면에 노출할 우승팀 이미지를 선택할 수 있습니다. 총 {totalCount}개
           </p>
         </div>
 
@@ -77,26 +100,16 @@ export default async function AdminImagesPage() {
                 </div>
 
                 <div className="gallery-admin-card__actions">
-                  <form
-                    action={`/api/gallery-images/${image.id}/home-display`}
-                    method="post"
-                  >
+                  <form action={`/api/gallery-images/${image.id}/home-display`} method="post">
                     <button
                       type="submit"
-                      className={
-                        image.showOnHome
-                          ? "chip-button chip-button--home-active"
-                          : "chip-button"
-                      }
+                      className={image.showOnHome ? "chip-button chip-button--home-active" : "chip-button"}
                     >
                       {image.showOnHome ? "메인 해제" : "메인 표시"}
                     </button>
                   </form>
 
-                  <Link
-                    href={`/admin/images/${image.id}/edit`}
-                    className="chip-button"
-                  >
+                  <Link href={`/admin/images/${image.id}/edit`} className="chip-button">
                     수정
                   </Link>
 
@@ -107,6 +120,8 @@ export default async function AdminImagesPage() {
           })
         )}
       </div>
+
+      <Pagination currentPage={safeCurrentPage} totalPages={totalPages} basePath="/admin/images" />
     </div>
   );
 }

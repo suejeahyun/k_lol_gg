@@ -4,7 +4,7 @@ export const revalidate = 0;
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
-import { formatRecruitPartyBlock, getActiveMemberCount, getKakaoRecruitDateKey, getKakaoRecruitTodayRange, parseFinishRecruitCommand } from "@/lib/kakao/party-recruit";
+import { formatRecruitPartyBlock, getActiveMemberCount, getKakaoRecruitDateKey, parseFinishRecruitCommand } from "@/lib/kakao/party-recruit";
 import {
   getBodyRoom,
   getBodySender,
@@ -35,7 +35,6 @@ export async function POST(req: NextRequest) {
     }
 
     const recruitDate = getKakaoRecruitDateKey();
-    const todayRange = getKakaoRecruitTodayRange();
     const party = await prisma.recruitParty.findFirst({
       where: { recruitNo: parsed.recruitNo, recruitDate },
       include: { members: { orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }] } },
@@ -43,7 +42,7 @@ export async function POST(req: NextRequest) {
 
     if (!party) {
       const finishedLog = await prisma.recruitPartyLog.findFirst({
-        where: { recruitNo: parsed.recruitNo, action: { in: ["FINISHED", "AUTO_EXPIRED"] }, createdAt: todayRange },
+        where: { recruitNo: parsed.recruitNo, recruitDate, action: { in: ["FINISHED", "AUTO_EXPIRED"] } },
         orderBy: { createdAt: "desc" },
         select: { title: true, memberCount: true, maxMembers: true },
       });
@@ -67,6 +66,7 @@ export async function POST(req: NextRequest) {
       await tx.recruitPartyLog.create({
         data: {
           recruitNo: party.recruitNo,
+          recruitDate: party.recruitDate,
           type: String(party.type),
           title: party.title,
           action: "FINISHED",

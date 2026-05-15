@@ -32,7 +32,7 @@ export default async function ImageDetailPage({
   const imageList = coerceGalleryImageUrls(image.imageUrl);
 
   return (
-    <div className="gallery-detail">
+    <div className="gallery-detail gallery-detail--image-page">
       <div className="gallery-detail__header">
         <h1 className="gallery-detail__title">{image.title}</h1>
 

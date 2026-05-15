@@ -7,7 +7,6 @@ import { writeAdminLog } from "@/lib/admin-log";
 import {
   buildSyncReply,
   getKakaoRecruitDateKey,
-  getKakaoRecruitTodayRange,
   isSoloRankPartyType,
   parsePartyForm,
 } from "@/lib/kakao/party-recruit";
@@ -60,7 +59,6 @@ export async function POST(req: NextRequest) {
     }
 
     const recruitDate = getKakaoRecruitDateKey();
-    const todayRange = getKakaoRecruitTodayRange();
     const party = await prisma.recruitParty.findFirst({
       where: { recruitNo, recruitDate },
       include: { members: true },
@@ -68,7 +66,7 @@ export async function POST(req: NextRequest) {
 
     if (!party) {
       const finishedLog = await prisma.recruitPartyLog.findFirst({
-        where: { recruitNo, action: { in: ["FINISHED", "AUTO_EXPIRED"] }, createdAt: todayRange },
+        where: { recruitNo, recruitDate, action: { in: ["FINISHED", "AUTO_EXPIRED"] } },
         orderBy: { createdAt: "desc" },
         select: { title: true, memberCount: true, maxMembers: true },
       });

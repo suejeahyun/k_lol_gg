@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma/client";
 import type { KakaoPlayerRecordSummary } from "@/lib/kakao/formatPlayerRecordMessage";
+import { getPublicBaseUrl } from "@/lib/http/base-url";
 
 type PlayerRow = {
   id: number;
@@ -67,15 +68,7 @@ function parseNicknameTag(query: string) {
 }
 
 function getBaseUrl() {
-  if (process.env.NEXT_PUBLIC_SITE_URL) {
-    return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
-  }
-
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
-  }
-
-  return "http://localhost:3000";
+  return getPublicBaseUrl();
 }
 
 export async function getPlayerRecordForKakao(query: string): Promise<KakaoPlayerRecordSummary | null> {

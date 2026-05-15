@@ -6,6 +6,7 @@ import { writeAdminLog } from "@/lib/admin-log";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { normalizeGalleryImageUrls } from "@/lib/gallery/winner-image-paths";
 import { PUBLIC_SHORT_CACHE_HEADER } from "@/lib/http/cache";
+import { getPaginationMeta, getSafePagination } from "@/lib/http/pagination";
 
 type CreateGalleryImageBody = {
   title: string;
@@ -14,18 +15,60 @@ type CreateGalleryImageBody = {
   showOnHome?: boolean;
 };
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const images = await prisma.galleryImage.findMany({
-      orderBy: [{ createdAt: "desc" }],
-      take: 100,
+    const wantsMeta =
+      req.nextUrl.searchParams.has("page") ||
+      req.nextUrl.searchParams.has("pageSize") ||
+      req.nextUrl.searchParams.has("meta");
+
+    const pagination = getSafePagination({
+      page: req.nextUrl.searchParams.get("page"),
+      pageSize: req.nextUrl.searchParams.get("pageSize"),
+      defaultPageSize: 30,
+      maxPageSize: 100,
     });
 
-    return NextResponse.json(images, {
-      headers: {
-        "Cache-Control": PUBLIC_SHORT_CACHE_HEADER,
+    const [images, totalCount] = await Promise.all([
+      prisma.galleryImage.findMany({
+        orderBy: [{ createdAt: "desc" }],
+        skip: pagination.skip,
+        take: pagination.take,
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          imageUrl: true,
+          showOnHome: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      }),
+      prisma.galleryImage.count(),
+    ]);
+
+    const meta = getPaginationMeta(totalCount, pagination);
+
+    if (!wantsMeta) {
+      return NextResponse.json(images, {
+        headers: {
+          "Cache-Control": PUBLIC_SHORT_CACHE_HEADER,
+          "X-Total-Count": String(totalCount),
+          "X-Page": String(meta.page),
+          "X-Page-Size": String(meta.pageSize),
+          "X-Total-Pages": String(meta.totalPages),
+        },
+      });
+    }
+
+    return NextResponse.json(
+      { data: images, meta },
+      {
+        headers: {
+          "Cache-Control": PUBLIC_SHORT_CACHE_HEADER,
+        },
       },
-    });
+    );
   } catch (error) {
     console.error("[GALLERY_IMAGES_GET_ERROR]", error);
 

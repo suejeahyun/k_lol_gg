@@ -71,7 +71,6 @@ export async function POST(req: NextRequest) {
 
     const recruitDate = getKakaoRecruitDateKey();
     const recruitNo = parsed.recruitNo ?? (await getNextRecruitNo(recruitDate));
-    const todayRange = getKakaoRecruitTodayRange();
 
     const [existing, finishedLog] = await Promise.all([
       prisma.recruitParty.findFirst({
@@ -86,8 +85,8 @@ export async function POST(req: NextRequest) {
       prisma.recruitPartyLog.findFirst({
         where: {
           recruitNo,
+          recruitDate,
           action: "FINISHED",
-          createdAt: todayRange,
         },
         orderBy: {
           createdAt: "desc",
@@ -195,8 +194,6 @@ export async function POST(req: NextRequest) {
 }
 
 async function getNextRecruitNo(recruitDate = getKakaoRecruitDateKey()) {
-  const todayRange = getKakaoRecruitTodayRange();
-
   const [latestActive, latestLog] = await Promise.all([
     prisma.recruitParty.findFirst({
       where: {
@@ -211,7 +208,7 @@ async function getNextRecruitNo(recruitDate = getKakaoRecruitDateKey()) {
     }),
     prisma.recruitPartyLog.findFirst({
       where: {
-        createdAt: todayRange,
+        recruitDate,
         action: {
           in: ["FINISHED", "AUTO_EXPIRED"],
         },
@@ -285,6 +282,7 @@ async function archiveStaleRecruitParties() {
       await tx.recruitPartyLog.create({
         data: {
           recruitNo: party.recruitNo,
+          recruitDate: party.recruitDate,
           type: String(party.type),
           title: party.title,
           action: "AUTO_EXPIRED",

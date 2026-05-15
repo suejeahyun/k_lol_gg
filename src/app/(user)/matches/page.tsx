@@ -101,38 +101,64 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
       : {}),
   };
 
-  const matches = await prisma.matchSeries.findMany({
-    where,
-    include: {
-      season: {
-        select: {
-          id: true,
-          name: true,
-          isActive: true,
+  const orderBy =
+    sort === "title"
+      ? { title: order }
+      : sort === "season"
+        ? { season: { name: order } }
+        : { matchDate: order };
+
+  const totalCount = await prisma.matchSeries.count({ where });
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+
+  const [matches, totalSetCount, latestMatchRecord] = await Promise.all([
+    prisma.matchSeries.findMany({
+      where,
+      orderBy,
+      skip: sort === "games" ? undefined : (safeCurrentPage - 1) * PAGE_SIZE,
+      take: sort === "games" ? Math.min(totalCount, 200) : PAGE_SIZE,
+      include: {
+        season: {
+          select: {
+            id: true,
+            name: true,
+            isActive: true,
+          },
         },
-      },
-      games: {
-        orderBy: {
-          gameNumber: "asc",
-        },
-        select: {
-          id: true,
-          gameNumber: true,
-          winnerTeam: true,
-          participants: {
-            select: {
-              playerId: true,
+        games: {
+          orderBy: {
+            gameNumber: "asc",
+          },
+          select: {
+            id: true,
+            gameNumber: true,
+            winnerTeam: true,
+            participants: {
+              select: {
+                playerId: true,
+              },
             },
           },
         },
-      },
-      _count: {
-        select: {
-          games: true,
+        _count: {
+          select: {
+            games: true,
+          },
         },
       },
-    },
-  });
+    }),
+    prisma.matchGame.count({
+      where: {
+        series: where,
+      },
+    }),
+    prisma.matchSeries.findFirst({
+      where,
+      orderBy: { matchDate: "desc" },
+      select: { id: true, title: true, matchDate: true },
+    }),
+  ]);
 
   const enrichedMatches = matches.map((match) => {
     const blueWins = match.games.filter(
@@ -160,35 +186,20 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
     };
   });
 
-  const sortedMatches = [...enrichedMatches].sort((a, b) => {
-    let result = 0;
+  const sortedMatches =
+    sort === "games"
+      ? [...enrichedMatches]
+          .sort((a, b) =>
+            order === "asc"
+              ? a._count.games - b._count.games
+              : b._count.games - a._count.games,
+          )
+          .slice((safeCurrentPage - 1) * PAGE_SIZE, safeCurrentPage * PAGE_SIZE)
+      : enrichedMatches;
 
-    if (sort === "title") result = a.title.localeCompare(b.title);
-    if (sort === "season") result = a.season.name.localeCompare(b.season.name);
-    if (sort === "games") result = a._count.games - b._count.games;
-    if (sort === "matchDate") {
-      result = a.matchDate.getTime() - b.matchDate.getTime();
-    }
+  const pagedMatches = sortedMatches;
 
-    return order === "asc" ? result : -result;
-  });
-
-  const totalPages = Math.max(1, Math.ceil(sortedMatches.length / PAGE_SIZE));
-  const safeCurrentPage = Math.min(currentPage, totalPages);
-
-  const pagedMatches = sortedMatches.slice(
-    (safeCurrentPage - 1) * PAGE_SIZE,
-    safeCurrentPage * PAGE_SIZE
-  );
-
-  const totalSetCount = enrichedMatches.reduce(
-    (sum, match) => sum + match._count.games,
-    0
-  );
-
-  const latestMatch = [...enrichedMatches].sort(
-    (a, b) => b.matchDate.getTime() - a.matchDate.getTime()
-  )[0];
+  const latestMatch = latestMatchRecord;
 
   const activeSeason =
     seasons.find((season) => season.isActive) ?? seasons[0] ?? null;
@@ -238,7 +249,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
 
           <div className="match-summary-card match-summary-card--count">
             <span>총 내전 수</span>
-            <strong>{enrichedMatches.length}</strong>
+            <strong>{totalCount}</strong>
           </div>
 
           <div className="match-summary-card match-summary-card--count">
@@ -255,7 +266,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
             </div>
 
             <div className="match-list-board__meta">
-              <span>검색 결과 {sortedMatches.length}개</span>
+              <span>검색 결과 {totalCount}개</span>
               <span>{order === "desc" ? "내림차순" : "오름차순"}</span>
             </div>
           </div>

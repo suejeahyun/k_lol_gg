@@ -20,7 +20,7 @@ type Props = {
 };
 
 const MAX_IMAGE_COUNT = 5;
-const LARGE_IMAGE_WARNING_TEXT = "권장: WebP, 1600px 이하, 파일 1개당 1MB 안팎. 3MB 이상 PNG 원본은 목록/모바일 로딩을 느리게 만들 수 있습니다.";
+const LARGE_IMAGE_WARNING_TEXT = "신규 우승 이미지는 Google Drive 공유 링크 사용을 권장합니다. 로컬 public 경로는 배경/아이콘처럼 공통 UI에 필요한 정적 자산에만 사용하세요.";
 
 export default function GalleryImageForm({
   mode,
@@ -161,10 +161,8 @@ export default function GalleryImageForm({
 
       <div className="admin-form__group gallery-local-path-box">
         <div className="admin-form__label-row">
-          <label className="admin-form__label">public 멸망전 이미지 자동 입력</label>
-          <span className="admin-form__helper">
-            /public/images/winners/destruction
-          </span>
+          <label className="admin-form__label">이미지 경로 / Google Drive 링크 입력</label>
+          <span className="admin-form__helper">Drive 권장 · 로컬 경로 보조</span>
         </div>
 
         <div className="gallery-local-path-box__row">
@@ -200,9 +198,9 @@ export default function GalleryImageForm({
         </div>
 
         <p className="gallery-local-path-box__help">
-          2~4회는 1장, 5회부터는 기본 5장으로 입력됩니다. 파일명은
-          <code>/images/winners/destruction/5/1.webp</code> 형식을 사용합니다.
-          Google Drive 공유 링크를 입력해도 저장 시 thumbnail 주소로 자동 변환됩니다. 가능하면 .webp 경로를 우선 사용하세요.
+          기존 public 이미지를 계속 사용할 때만 자동 입력을 사용하세요.
+          신규 이미지는 Google Drive 파일 공유 링크를 입력하면 저장 시
+          <code>https://drive.google.com/thumbnail?id=...&amp;sz=w1600</code> 형식으로 자동 변환됩니다.
         </p>
       </div>
 
@@ -224,7 +222,7 @@ export default function GalleryImageForm({
                 className="admin-form__input"
                 value={url}
                 onChange={(e) => handleChangeImageUrl(index, e.target.value)}
-                placeholder={`/images/winners/destruction/5/${index + 1}.webp`}
+                placeholder="Google Drive 공유 링크 또는 /images/... 경로"
               />
 
               <button
