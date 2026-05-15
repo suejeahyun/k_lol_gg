@@ -392,7 +392,11 @@ export function parseFinishRecruitCommand(
   message: string,
 ): FinishRecruitCommand | null {
   const text = normalizeText(message).trim();
-  const match = text.match(/^\/?(\d{1,2})\s*(쫑|ㅉ)\s*$/);
+
+  const shortMatch = text.match(/^\/?(\d{1,2})\s*(쫑|ㅉ)\s*$/);
+  const commandMatch = text.match(/^\/?구인(?:마감|쫑|종료)\s*#?\s*(\d{1,2})\s*$/);
+  const match = shortMatch || commandMatch;
+
   if (!match) return null;
 
   const recruitNo = Number(match[1]);

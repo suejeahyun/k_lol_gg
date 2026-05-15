@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     if (!parsed) {
       return partyRecruitJson(
         {
-          reply: "[K-LOL.GG 구인구직 마무리 실패]\n명령어 형식이 올바르지 않습니다. 예: 12 쫑 또는 12 ㅉ",
+          reply: "[K-LOL.GG 구인구직 마무리 실패]\n명령어 형식이 올바르지 않습니다. 예: /12 쫑, /12 ㅉ, /구인마감 #12",
         },
         400,
       );
