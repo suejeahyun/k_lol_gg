@@ -984,7 +984,7 @@ model RecruitPartyMember {
 model RecruitPartyLog {
   id          Int      @id @default(autoincrement())
   recruitNo   Int
-  recruitDate String
+  recruitDate String   @default("")
   type        String
   title       String
   action      String
@@ -996,7 +996,7 @@ model RecruitPartyLog {
   createdAt   DateTime @default(now())
 
   @@index([recruitDate, recruitNo])
-  @@index([recruitDate, action])
+  @@index([recruitDate, action, createdAt])
   @@index([recruitNo])
   @@index([action, createdAt])
   @@index([createdAt])

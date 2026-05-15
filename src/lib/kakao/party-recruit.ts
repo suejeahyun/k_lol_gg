@@ -667,7 +667,7 @@ function parseNumberMembers(
       continue;
     }
 
-    const match = line.match(/^(\d{1,2})\s*[.)]?\s*(.*)$/);
+    const match = line.match(/^(\d{1,2})(?:[.)]|\s+)(.*)$/);
     if (!match) continue;
 
     const slotNo = Number(match[1]);

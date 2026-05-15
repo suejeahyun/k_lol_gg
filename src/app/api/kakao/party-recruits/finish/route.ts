@@ -5,6 +5,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import { formatRecruitPartyBlock, getActiveMemberCount, getKakaoRecruitDateKey, parseFinishRecruitCommand } from "@/lib/kakao/party-recruit";
+import { getLatestRecruitResetLog } from "@/lib/kakao/recruit-reset";
 import {
   getBodyRoom,
   getBodySender,
@@ -35,6 +36,8 @@ export async function POST(req: NextRequest) {
     }
 
     const recruitDate = getKakaoRecruitDateKey();
+    const latestReset = await getLatestRecruitResetLog(recruitDate);
+    const createdAfterLatestReset = latestReset ? { gt: latestReset.createdAt } : undefined;
     const party = await prisma.recruitParty.findFirst({
       where: { recruitNo: parsed.recruitNo, recruitDate },
       include: { members: { orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }] } },
@@ -42,7 +45,12 @@ export async function POST(req: NextRequest) {
 
     if (!party) {
       const finishedLog = await prisma.recruitPartyLog.findFirst({
-        where: { recruitNo: parsed.recruitNo, recruitDate, action: { in: ["FINISHED", "AUTO_EXPIRED"] } },
+        where: {
+          recruitNo: parsed.recruitNo,
+          recruitDate,
+          action: { in: ["FINISHED", "AUTO_EXPIRED"] },
+          ...(createdAfterLatestReset ? { createdAt: createdAfterLatestReset } : {}),
+        },
         orderBy: { createdAt: "desc" },
         select: { title: true, memberCount: true, maxMembers: true },
       });

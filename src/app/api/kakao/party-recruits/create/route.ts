@@ -12,6 +12,12 @@ import {
   parseCreateRecruitCommand,
 } from "@/lib/kakao/party-recruit";
 import {
+  buildRecruitResetReply,
+  getLatestRecruitResetLog,
+  isRecruitResetCommand,
+  resetRecruitNumbers,
+} from "@/lib/kakao/recruit-reset";
+import {
   getBodyRoom,
   getBodySender,
   getBodyText,
@@ -44,6 +50,9 @@ const CREATE_HELP = [
   "롤체랭크구인 또는 /롤체랭크구인",
   "더블업구인 또는 /더블업구인",
   "",
+  "관리 명령어",
+  "모집번호초기화 또는 /모집번호초기화",
+  "",
   "예시",
   "/2인파티",
   "/5인협곡파티",
@@ -63,6 +72,15 @@ export async function POST(req: NextRequest) {
     const message = getBodyText(body);
     const roomName = getBodyRoom(body);
     const sender = getBodySender(body);
+
+    if (isRecruitResetCommand(message)) {
+      const result = await resetRecruitNumbers({ roomName, sender });
+      return partyRecruitJson({
+        result,
+        reply: buildRecruitResetReply(result),
+      });
+    }
+
     const parsed = parseCreateRecruitCommand(message);
 
     if (!parsed) {
@@ -71,6 +89,8 @@ export async function POST(req: NextRequest) {
 
     const recruitDate = getKakaoRecruitDateKey();
     const recruitNo = parsed.recruitNo ?? (await getNextRecruitNo(recruitDate));
+    const latestReset = await getLatestRecruitResetLog(recruitDate);
+    const createdAfterLatestReset = latestReset ? { gt: latestReset.createdAt } : undefined;
 
     const [existing, finishedLog] = await Promise.all([
       prisma.recruitParty.findFirst({
@@ -87,6 +107,7 @@ export async function POST(req: NextRequest) {
           recruitNo,
           recruitDate,
           action: "FINISHED",
+          ...(createdAfterLatestReset ? { createdAt: createdAfterLatestReset } : {}),
         },
         orderBy: {
           createdAt: "desc",
@@ -194,6 +215,9 @@ export async function POST(req: NextRequest) {
 }
 
 async function getNextRecruitNo(recruitDate = getKakaoRecruitDateKey()) {
+  const latestReset = await getLatestRecruitResetLog(recruitDate);
+  const createdAfterLatestReset = latestReset ? { gt: latestReset.createdAt } : undefined;
+
   const [latestActive, latestLog] = await Promise.all([
     prisma.recruitParty.findFirst({
       where: {
@@ -212,6 +236,7 @@ async function getNextRecruitNo(recruitDate = getKakaoRecruitDateKey()) {
         action: {
           in: ["FINISHED", "AUTO_EXPIRED"],
         },
+        ...(createdAfterLatestReset ? { createdAt: createdAfterLatestReset } : {}),
       },
       orderBy: {
         recruitNo: "desc",
@@ -245,7 +270,7 @@ async function getNextRecruitNo(recruitDate = getKakaoRecruitDateKey()) {
     }
   }
 
-  throw new Error("오늘 사용 가능한 모집번호가 없습니다. 진행 중인 구인글을 마무리해주세요.");
+  throw new Error("오늘 사용 가능한 모집번호가 없습니다. 진행 중인 구인글을 마무리하거나 모집번호초기화를 실행해주세요.");
 }
 
 async function archiveStaleRecruitParties() {
