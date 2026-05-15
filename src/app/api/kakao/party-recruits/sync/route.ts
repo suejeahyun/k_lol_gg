@@ -132,6 +132,7 @@ export async function POST(req: NextRequest) {
           tierText: isSoloRank ? parsed.tierText : null,
           preferredLineText: isSoloRank ? parsed.preferredLineText : null,
           playStyle: isSoloRank ? parsed.playStyle : null,
+          note: parsed.note ?? party.note,
           roomName: roomName ?? party.roomName,
         },
         include: {

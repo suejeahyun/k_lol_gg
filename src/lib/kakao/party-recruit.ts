@@ -6,6 +6,8 @@ export type RecruitPartyType =
   | "TFT_NORMAL"
   | "TFT_RANK"
   | "DOUBLE_UP"
+  | "PARTY_NUMBER"
+  | "PARTY_RIFT"
   | "OTHER_GAME";
 export type RecruitPartyStatus = "IN_PROGRESS" | "CANCELED";
 export type RecruitLinePosition = "TOP" | "JUG" | "MID" | "ADC" | "SUP";
@@ -55,6 +57,7 @@ export type ParsedPartyForm = {
   tierText: string | null;
   preferredLineText: string | null;
   playStyle: string | null;
+  note: string | null;
   members: RecruitMemberLike[];
 };
 
@@ -217,6 +220,8 @@ export function getRecruitTypeLabel(type: string) {
   if (type === "TFT_NORMAL") return "롤체 일반";
   if (type === "TFT_RANK") return "롤체 랭크";
   if (type === "DOUBLE_UP") return "더블업";
+  if (type === "PARTY_NUMBER") return "파티";
+  if (type === "PARTY_RIFT") return "협곡파티";
   if (type === "OTHER_GAME") return "기타게임";
   return "구인구직";
 }
@@ -235,7 +240,7 @@ export function getActiveMemberCount(members: RecruitMemberLike[]) {
 }
 
 export function isLinePartyType(type: string) {
-  return type === "FLEX_RANK" || type === "NORMAL_GAME";
+  return type === "FLEX_RANK" || type === "NORMAL_GAME" || type === "PARTY_RIFT";
 }
 
 export function isSoloRankPartyType(type: string) {
@@ -246,6 +251,36 @@ export function parseCreateRecruitCommand(
   message: string,
 ): CreateRecruitCommand | null {
   const text = normalizeText(message).trim();
+  const partyMatch = text.match(
+    /^\/?(2|3|4|5|8|10)\s*인\s*(협곡)?\s*파티(?:\s+(\d{1,2}))?\s*$/,
+  );
+
+  if (partyMatch) {
+    const memberCount = Number(partyMatch[1]);
+    const isRiftParty = Boolean(partyMatch[2]);
+    const recruitNo = partyMatch[3] ? Number(partyMatch[3]) : null;
+    if (recruitNo !== null && !isValidRecruitNo(recruitNo)) return null;
+    if (isRiftParty && memberCount !== 5) return null;
+
+    if (isRiftParty) {
+      return {
+        recruitNo,
+        type: "PARTY_RIFT",
+        title: "5인 협곡 파티 구인",
+        maxMembers: 5,
+        template: buildLinePartyTemplate("5인 협곡 파티 구인", recruitNo),
+      };
+    }
+
+    return {
+      recruitNo,
+      type: "PARTY_NUMBER",
+      title: `${memberCount}인 파티 구인`,
+      maxMembers: memberCount,
+      template: buildNumberPartyTemplate(`${memberCount}인 파티 구인`, recruitNo, memberCount),
+    };
+  }
+
   const match = text.match(
     /^\/?(자랭구인|일반구인|솔랭구인|칼바람구인|증바람구인|기타게임구인|롤체일반구인|롤체랭크구인|더블업구인)(?:\s+(\d{1,2}))?\s*$/,
   );
@@ -282,11 +317,7 @@ export function parseCreateRecruitCommand(
       type: "SOLO_RANK",
       title: "솔랭 하실분!",
       maxMembers: 2,
-      template: buildNumberTemplate("솔랭", recruitNo, 2, [
-        "》게임 시작 시간 + 티어",
-        "》즐겜 & 빡겜 중에 선택",
-        "》듀오 선호하는 라인",
-      ]),
+      template: buildNumberTemplate("솔랭", recruitNo, 2, ["》게임정보 :"]),
     };
   }
 
@@ -297,7 +328,7 @@ export function parseCreateRecruitCommand(
       type: "ARAM",
       title: `${label} 하실분!`,
       maxMembers: 5,
-      template: buildNumberTemplate(label, recruitNo, 5, ["》게임 시작 시간"], true),
+      template: buildNumberTemplate(label, recruitNo, 5, ["》게임정보 :"], true),
     };
   }
 
@@ -307,7 +338,7 @@ export function parseCreateRecruitCommand(
       type: "TFT_NORMAL",
       title: "롤체 일반 하실분!",
       maxMembers: 8,
-      template: buildNumberTemplate("롤체 일반", recruitNo, 8, ["》게임 시작 시간"]),
+      template: buildNumberTemplate("롤체 일반", recruitNo, 8, ["》게임정보 :"]),
     };
   }
 
@@ -317,7 +348,7 @@ export function parseCreateRecruitCommand(
       type: "TFT_RANK",
       title: "롤체 랭크 하실분!",
       maxMembers: 3,
-      template: buildNumberTemplate("롤체 랭크", recruitNo, 3, ["》게임 시작 시간"]),
+      template: buildNumberTemplate("롤체 랭크", recruitNo, 3, ["》게임정보 :"]),
     };
   }
 
@@ -327,7 +358,7 @@ export function parseCreateRecruitCommand(
       type: "DOUBLE_UP",
       title: "더블업 하실분!",
       maxMembers: 2,
-      template: buildNumberTemplate("더블업", recruitNo, 2, ["》게임 시작 시간"]),
+      template: buildNumberTemplate("더블업", recruitNo, 2, ["》게임정보 :"]),
     };
   }
 
@@ -336,7 +367,7 @@ export function parseCreateRecruitCommand(
     type: "OTHER_GAME",
     title: "기타게임 하실분!",
     maxMembers: 8,
-    template: buildNumberTemplate("기타게임", recruitNo, 8, ["》게임 시작 시간"]),
+    template: buildNumberTemplate("기타게임", recruitNo, 8, ["》게임정보 :"]),
   };
 }
 
@@ -349,7 +380,7 @@ function buildLineTemplate(label: string, recruitNo: number | null) {
     `📢 ${label} 하실분!`,
     formatRecruitNoLine(recruitNo),
     "",
-    "》게임 시작 시간",
+    "》게임정보 :",
     "",
     "TOP.",
     "JUG.",
@@ -360,6 +391,47 @@ function buildLineTemplate(label: string, recruitNo: number | null) {
     "마지막 참가자가 전체 태그 해주세요.",
     "*상호배려와 존중 부탁드립니다.",
   ].join("\n");
+}
+
+function buildLinePartyTemplate(title: string, recruitNo: number | null) {
+  return [
+    `📢 ${title}`,
+    formatRecruitNoLine(recruitNo),
+    "",
+    "》게임정보 :",
+    "",
+    "TOP.",
+    "JUG.",
+    "MID.",
+    "ADC.",
+    "SUP.",
+    "",
+    "마지막 참가자가 전체 태그 해주세요.",
+    "*상호배려와 존중 부탁드립니다.",
+  ].join("\n");
+}
+
+function buildNumberPartyTemplate(
+  title: string,
+  recruitNo: number | null,
+  maxMembers: number,
+) {
+  const lines = [
+    `📢 ${title}`,
+    formatRecruitNoLine(recruitNo),
+    "",
+    "》게임정보 :",
+    "",
+  ];
+  for (let slotNo = 1; slotNo <= maxMembers; slotNo += 1) {
+    lines.push(`${slotNo}.`);
+  }
+  lines.push(
+    "",
+    "참여해주실 분은 태그해주세요.",
+    "*상호배려와 존중 부탁드립니다.",
+  );
+  return lines.join("\n");
 }
 
 function buildNumberTemplate(
@@ -444,6 +516,7 @@ export function parsePartyForm(
     tierText: isSoloRank ? meta.tierText : null,
     preferredLineText: isSoloRank ? meta.preferredLineText : null,
     playStyle: isSoloRank ? meta.playStyle : null,
+    note: meta.note,
     members: isLinePartyType(partyType)
       ? parseLineMembers(text)
       : parseNumberMembers(text, maxMembers),
@@ -454,7 +527,7 @@ function cleanGuideValue(line: string, labelPattern: RegExp) {
   return line
     .replace(/[》>]/g, "")
     .replace(labelPattern, "")
-    .replace(/[:：]/g, "")
+    .replace(/^\s*[:：]\s*/, "")
     .trim();
 }
 
@@ -499,9 +572,16 @@ function parseRecruitFormMetadata(text: string) {
   let tierText: string | null = null;
   let preferredLineText: string | null = null;
   let playStyle: string | null = null;
+  let note: string | null = null;
 
   for (const rawLine of lines) {
     const line = rawLine.trim();
+
+    if (line.indexOf("게임정보") >= 0 || line.indexOf("게임 정보") >= 0) {
+      const value = cleanGuideValue(line, /게임\s*정보/g);
+      note = value || note;
+      continue;
+    }
 
     if (line.indexOf("게임 시작 시간") >= 0) {
       const value = cleanGuideValue(line, /게임\s*시작\s*시간/g);
@@ -529,6 +609,7 @@ function parseRecruitFormMetadata(text: string) {
     tierText,
     preferredLineText,
     playStyle,
+    note,
   };
 }
 
@@ -629,20 +710,14 @@ export function formatRecruitPartyBlock(party: RecruitPartyLike) {
   const subMembers = party.members.filter((member) => member.isSubstitute);
   const lines: string[] = [];
 
-  const isSoloRank = isSoloRankPartyType(String(party.type));
-
   lines.push(`${titleLabel} ${statusLabel}`);
-  if (party.startTimeText) lines.push(`시간 : ${party.startTimeText}`);
-  if (isSoloRank && party.tierText) lines.push(`티어 : ${party.tierText}`);
-  if (isSoloRank && (party.playStyle || party.preferredLineText)) {
-    const detail = [
-      party.playStyle,
-      party.preferredLineText ? `${party.preferredLineText} 선호` : null,
-    ]
-      .filter(Boolean)
-      .join(" ㅣ ");
-    if (detail) lines.push(detail);
+
+  const gameInfo = buildGameInfoText(party);
+  if (gameInfo) {
+    lines.push("");
+    lines.push(`>게임정보 : ${gameInfo}`);
   }
+
   lines.push("");
   lines.push(`모집번호: #${party.recruitNo}`);
   lines.push(`현재 인원: ${activeCount}/${party.maxMembers}`);
@@ -669,6 +744,19 @@ export function formatRecruitPartyBlock(party: RecruitPartyLike) {
   }
 
   return lines.join("\n");
+}
+
+export function buildGameInfoText(party: Pick<RecruitPartyLike, "note" | "startTimeText" | "tierText" | "playStyle" | "preferredLineText">) {
+  if (party.note && party.note.trim()) return party.note.trim();
+
+  const legacyParts = [
+    party.startTimeText,
+    party.tierText,
+    party.playStyle,
+    party.preferredLineText ? `${party.preferredLineText} 선호` : null,
+  ].filter(Boolean);
+
+  return legacyParts.join(" / ").trim() || null;
 }
 
 export function buildRecruitStatusReply(parties: RecruitPartyLike[]) {

@@ -3,13 +3,13 @@ export const revalidate = 0;
 
 import { prisma } from "@/lib/prisma/client";
 import {
+  buildGameInfoText,
   formatRecruitPartyBlock,
   getActiveMemberCount,
   getKakaoRecruitDateKey,
   getRecruitStatusLabel,
   getRecruitTypeLabel,
   isLinePartyType,
-  isSoloRankPartyType,
 } from "@/lib/kakao/party-recruit";
 
 type RecruitPageMember = {
@@ -106,11 +106,11 @@ export default async function RecruitPage() {
         <p className="page-kicker">KAKAO RECRUIT</p>
         <h1>구인구직 현황</h1>
         <p>
-          카카오톡 구인구직방에서 생성된 자랭, 일반게임, 솔랭, 칼바람, 종합게임 파티 현황입니다.
+          카카오톡 구인구직방에서 생성된 2인/3인/5인/5인협곡/롤체 파티 현황입니다.
         </p>
         <div className="recruit-command-box">
-          <span>/자랭구인구직 12</span>
-          <span>/일반게임구인구직 13</span>
+          <span>/2인파티</span>
+          <span>/5인협곡파티</span>
           <span>/구인현황</span>
           <span>/12 쫑</span>
         </div>
@@ -128,7 +128,7 @@ export default async function RecruitPage() {
             const statusLabel = getRecruitStatusLabel(party);
             const typeLabel = getRecruitTypeLabel(party.type);
             const isFull = activeCount >= party.maxMembers;
-            const isSoloRank = isSoloRankPartyType(party.type);
+            const gameInfo = buildGameInfoText(party);
 
             return (
               <article key={party.id} className={`recruit-card${isFull ? " recruit-card--full" : ""}`}>
@@ -143,10 +143,7 @@ export default async function RecruitPage() {
                 <div className="recruit-card__meta">
                   <span>{statusLabel}</span>
                   <span>{activeCount}/{party.maxMembers}</span>
-                  {party.startTimeText ? <span>{party.startTimeText}</span> : null}
-                  {isSoloRank && party.tierText ? <span>{party.tierText}</span> : null}
-                  {isSoloRank && party.playStyle ? <span>{party.playStyle}</span> : null}
-                  {isSoloRank && party.preferredLineText ? <span>{party.preferredLineText} 선호</span> : null}
+                  {gameInfo ? <span>게임정보: {gameInfo}</span> : null}
                 </div>
 
                 <div className="recruit-slots">{renderSlots(party)}</div>

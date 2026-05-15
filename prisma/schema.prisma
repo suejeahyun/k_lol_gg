@@ -925,6 +925,8 @@ enum RecruitPartyType {
   TFT_NORMAL
   TFT_RANK
   DOUBLE_UP
+  PARTY_NUMBER
+  PARTY_RIFT
   OTHER_GAME
 }
 
