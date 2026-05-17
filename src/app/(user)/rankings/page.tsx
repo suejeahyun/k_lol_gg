@@ -42,7 +42,7 @@ type SortType = "name" | "totalGames" | "winRate" | "mvpCount";
 type OrderType = "asc" | "desc";
 
 const PAGE_SIZE = 10;
-const MIN_PARTICIPATION_FOR_TOP3 = 10;
+const MIN_PARTICIPATION_FOR_RANKING = 10;
 
 function getSort(sort?: string): SortType {
   if (
@@ -196,7 +196,11 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
     }),
   ]);
 
-  const sortedRankings = [...data.rankings].sort((a, b) => {
+  const eligibleRankings = data.rankings.filter(
+    (player) => player.participationCount >= MIN_PARTICIPATION_FOR_RANKING,
+  );
+
+  const sortedRankings = [...eligibleRankings].sort((a, b) => {
     let result = 0;
 
     if (sort === "name") result = a.name.localeCompare(b.name);
@@ -207,8 +211,7 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
     return order === "asc" ? result : -result;
   });
 
-  const topWinRate = [...data.rankings]
-    .filter((player) => player.participationCount >= MIN_PARTICIPATION_FOR_TOP3)
+  const topWinRate = [...eligibleRankings]
     .sort((a, b) => {
       return (
         b.winRate - a.winRate ||
@@ -219,8 +222,7 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
     })
     .slice(0, 3);
 
-  const topParticipation = [...data.rankings]
-    .filter((player) => player.participationCount >= MIN_PARTICIPATION_FOR_TOP3)
+  const topParticipation = [...eligibleRankings]
     .sort((a, b) => {
       return (
         b.participationCount - a.participationCount ||
@@ -231,8 +233,8 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
     })
     .slice(0, 3);
 
-  const topMvp = [...data.rankings]
-    .filter((player) => player.participationCount >= MIN_PARTICIPATION_FOR_TOP3 && player.mvpCount > 0)
+  const topMvp = [...eligibleRankings]
+    .filter((player) => player.mvpCount > 0)
     .sort((a, b) => {
       return (
         b.mvpCount - a.mvpCount ||
@@ -284,7 +286,7 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
             metricLabel="승률"
             metricValue={(player) => formatPercent(player.winRate)}
             subMetricValue={(player) => `참여 ${player.participationCount}회`}
-            emptyText={`내전 참여 ${MIN_PARTICIPATION_FOR_TOP3}회 이상 플레이어가 없습니다.`}
+            emptyText={`내전 참여 ${MIN_PARTICIPATION_FOR_RANKING}회 이상 플레이어가 없습니다.`}
           />
 
           <TopRankingCard
@@ -293,7 +295,7 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
             players={topParticipation}
             metricLabel="참가 횟수"
             metricValue={(player) => `${player.participationCount}회`}
-            emptyText={`내전 참여 ${MIN_PARTICIPATION_FOR_TOP3}회 이상 플레이어가 없습니다.`}
+            emptyText={`내전 참여 ${MIN_PARTICIPATION_FOR_RANKING}회 이상 플레이어가 없습니다.`}
           />
 
           <TopRankingCard
@@ -303,7 +305,7 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
             metricLabel="MVP"
             metricValue={(player) => `${player.mvpCount}회`}
             subMetricValue={(player) => `승률 ${formatPercent(player.winRate)}`}
-            emptyText={`내전 참여 ${MIN_PARTICIPATION_FOR_TOP3}회 이상 MVP 기록이 없습니다.`}
+            emptyText={`내전 참여 ${MIN_PARTICIPATION_FOR_RANKING}회 이상 MVP 기록이 없습니다.`}
           />
         </section>
 
@@ -318,12 +320,12 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
 
             <div className="ranking-board__summary">
               <span>총 {sortedRankings.length}명</span>
-              <span>TOP3 기준 내전 참여 {MIN_PARTICIPATION_FOR_TOP3}회 이상</span>
+              <span>전체 랭킹 기준 내전 참여 {MIN_PARTICIPATION_FOR_RANKING}회 이상</span>
             </div>
           </div>
 
           {sortedRankings.length === 0 ? (
-            <p className="ranking-empty">랭킹 데이터가 없습니다.</p>
+            <p className="ranking-empty">내전 참여 {MIN_PARTICIPATION_FOR_RANKING}회 이상 랭킹 데이터가 없습니다.</p>
           ) : (
             <>
               <div className="ranking-row-header">
