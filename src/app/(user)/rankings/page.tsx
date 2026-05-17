@@ -42,7 +42,7 @@ type SortType = "name" | "totalGames" | "winRate" | "mvpCount";
 type OrderType = "asc" | "desc";
 
 const PAGE_SIZE = 10;
-const MIN_GAMES_FOR_TOP_RATE = 3;
+const MIN_PARTICIPATION_FOR_TOP3 = 10;
 
 function getSort(sort?: string): SortType {
   if (
@@ -208,7 +208,7 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
   });
 
   const topWinRate = [...data.rankings]
-    .filter((player) => player.totalGames >= MIN_GAMES_FOR_TOP_RATE)
+    .filter((player) => player.participationCount >= MIN_PARTICIPATION_FOR_TOP3)
     .sort((a, b) => {
       return (
         b.winRate - a.winRate ||
@@ -220,6 +220,7 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
     .slice(0, 3);
 
   const topParticipation = [...data.rankings]
+    .filter((player) => player.participationCount >= MIN_PARTICIPATION_FOR_TOP3)
     .sort((a, b) => {
       return (
         b.participationCount - a.participationCount ||
@@ -232,7 +233,7 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
     .slice(0, 3);
 
   const topMvp = [...data.rankings]
-    .filter((player) => player.mvpCount > 0)
+    .filter((player) => player.participationCount >= MIN_PARTICIPATION_FOR_TOP3 && player.mvpCount > 0)
     .sort((a, b) => {
       return (
         b.mvpCount - a.mvpCount ||
@@ -283,7 +284,8 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
             players={topWinRate}
             metricLabel="승률"
             metricValue={(player) => formatPercent(player.winRate)}
-            emptyText={`최소 ${MIN_GAMES_FOR_TOP_RATE}경기 이상 플레이어가 없습니다.`}
+            subMetricValue={(player) => `참여 ${player.participationCount}회 / 세트 ${player.totalGames}경기`}
+            emptyText={`내전 참여 ${MIN_PARTICIPATION_FOR_TOP3}회 이상 플레이어가 없습니다.`}
           />
 
           <TopRankingCard
@@ -293,7 +295,7 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
             metricLabel="참가"
             metricValue={(player) => `${player.participationCount}회`}
             subMetricValue={(player) => `세트 ${player.totalGames}경기`}
-            emptyText="참여 기록이 없습니다."
+            emptyText={`내전 참여 ${MIN_PARTICIPATION_FOR_TOP3}회 이상 플레이어가 없습니다.`}
           />
 
           <TopRankingCard
@@ -303,7 +305,7 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
             metricLabel="MVP"
             metricValue={(player) => `${player.mvpCount}회`}
             subMetricValue={(player) => `승률 ${formatPercent(player.winRate)}`}
-            emptyText="MVP 기록이 없습니다."
+            emptyText={`내전 참여 ${MIN_PARTICIPATION_FOR_TOP3}회 이상 MVP 기록이 없습니다.`}
           />
         </section>
 
@@ -318,7 +320,7 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
 
             <div className="ranking-board__summary">
               <span>총 {sortedRankings.length}명</span>
-              <span>승률 TOP 기준 {MIN_GAMES_FOR_TOP_RATE}경기 이상</span>
+              <span>TOP3 기준 내전 참여 {MIN_PARTICIPATION_FOR_TOP3}회 이상</span>
             </div>
           </div>
 

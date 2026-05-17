@@ -87,16 +87,17 @@ export function formatRecentGamesMessage(record: KakaoPlayerRecordSummary) {
   return [`[${playerLabel} 최근 경기]`, "", ...lines, "", `${record.baseUrl}/players/${record.playerId}`].join("\n");
 }
 
-export function formatRankingMessage(rows: Array<{ nickname: string; tag: string; winRate: number; totalGames: number; kda: number }>) {
+export function formatRankingMessage(rows: Array<{ nickname: string; tag: string; winRate: number; totalGames: number; participationCount: number; kda: number }>) {
   if (!rows.length) {
-    return "랭킹 데이터가 없습니다.";
+    return "랭킹 데이터가 없습니다.\n기준: 내전 참여 10회 이상";
   }
 
   return [
     "🏆 K-LOL.GG 랭킹 TOP 5",
+    "기준: 내전 참여 10회 이상",
     "",
     ...rows.slice(0, 5).map((row, index) => {
-      return `${index + 1}. ${row.nickname}#${row.tag} | 승률 ${formatNumber(row.winRate)}% | ${row.totalGames}세트 | KDA ${formatKda(row.kda)}`;
+      return `${index + 1}. ${row.nickname}#${row.tag} | 승률 ${formatNumber(row.winRate)}% | 참여 ${row.participationCount}회 | ${row.totalGames}세트 | KDA ${formatKda(row.kda)}`;
     }),
   ].join("\n");
 }

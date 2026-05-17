@@ -42,6 +42,7 @@ type RankingRow = {
   nickname: string;
   tag: string;
   totalGames: bigint | number | null;
+  participationCount: bigint | number | null;
   wins: bigint | number | null;
   kills: bigint | number | null;
   deaths: bigint | number | null;
@@ -221,6 +222,7 @@ export async function getRankingForKakao() {
       p.nickname,
       p.tag,
       COUNT(mp.id) AS "totalGames",
+      COUNT(DISTINCT ms.id) AS "participationCount",
       COALESCE(SUM(CASE WHEN mp.team = mg."winnerTeam" THEN 1 ELSE 0 END), 0) AS wins,
       COALESCE(SUM(mp.kills), 0) AS kills,
       COALESCE(SUM(mp.deaths), 0) AS deaths,
@@ -231,14 +233,16 @@ export async function getRankingForKakao() {
     JOIN "MatchSeries" ms ON ms.id = mg."seriesId"
     WHERE (${season?.id ?? null}::int IS NULL OR ms."seasonId" = ${season?.id ?? null})
     GROUP BY p.id, p.nickname, p.tag
-    HAVING COUNT(mp.id) > 0
+    HAVING COUNT(DISTINCT ms.id) >= 10
     ORDER BY (COALESCE(SUM(CASE WHEN mp.team = mg."winnerTeam" THEN 1 ELSE 0 END), 0)::float / COUNT(mp.id)) DESC,
+             COUNT(DISTINCT ms.id) DESC,
              COUNT(mp.id) DESC
     LIMIT 5
   `;
 
   return rows.map((row) => {
     const totalGames = toNumber(row.totalGames);
+    const participationCount = toNumber(row.participationCount);
     const wins = toNumber(row.wins);
     const kills = toNumber(row.kills);
     const deaths = toNumber(row.deaths);
@@ -248,6 +252,7 @@ export async function getRankingForKakao() {
       nickname: row.nickname,
       tag: row.tag,
       totalGames,
+      participationCount,
       winRate: totalGames > 0 ? (wins / totalGames) * 100 : 0,
       kda: deaths > 0 ? (kills + assists) / deaths : kills + assists,
     };
