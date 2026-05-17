@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+const MIN_TOP3_PARTICIPATIONS = 10;
+
 type TopPlayerDto = {
   playerId: number;
   name: string;
@@ -57,7 +59,13 @@ const slides: RankingSlide[] = [
 ];
 
 function getSortedPlayers(players: TopPlayerDto[], type: RankingType) {
-  return [...players]
+  return players
+    .filter((player) => {
+      if (player.participation < MIN_TOP3_PARTICIPATIONS) return false;
+      if (type === "mvpCount" && player.mvpCount <= 0) return false;
+
+      return true;
+    })
     .sort((a, b) => {
       if (type === "winRate") {
         if (b.winRate !== a.winRate) return b.winRate - a.winRate;
@@ -121,7 +129,7 @@ export default function Top3Slider({
             <div>
               <h3 className="top3-slide-header__title">{activeSlide.title}</h3>
               <p className="top3-slide-header__description">
-                {activeSlide.label} 기준 상위 3명
+                {activeSlide.label} 기준 상위 3명 · 내전 참여 {MIN_TOP3_PARTICIPATIONS}회 이상
               </p>
             </div>
 
@@ -130,11 +138,16 @@ export default function Top3Slider({
             </span>
           </div>
 
-          <div className="top3-list">
-            {topPlayers.map((player, index) => {
-              const subValue = activeSlide.getSubValue(player);
+          {topPlayers.length === 0 ? (
+            <div className="top3-card__empty">
+              내전 참여 {MIN_TOP3_PARTICIPATIONS}회 이상 조건을 충족한 데이터가 없습니다.
+            </div>
+          ) : (
+            <div className="top3-list">
+              {topPlayers.map((player, index) => {
+                const subValue = activeSlide.getSubValue(player);
 
-              return (
+                return (
                 <Link
                   key={`${activeSlide.key}-${player.playerId}`}
                   href={`/players/${player.playerId}`}
@@ -154,9 +167,10 @@ export default function Top3Slider({
                     {subValue && <span>{subValue}</span>}
                   </div>
                 </Link>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
 
           <div className="top3-pagination">
             {slides.map((slide, index) => (

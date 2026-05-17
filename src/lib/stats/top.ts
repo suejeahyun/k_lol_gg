@@ -2,6 +2,8 @@ import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma/client";
 import { getWinRate } from "@/lib/stats/season-performance";
 
+export const MIN_TOP3_PARTICIPATIONS = 10;
+
 export type StatsTopSeasonDto = {
   id: number;
   name: string;
@@ -69,8 +71,16 @@ function sortByMvp(a: StatsTopPlayerDto, b: StatsTopPlayerDto) {
 function mergeTopPlayers(players: StatsTopPlayerDto[]) {
   const topPlayerMap = new Map<number, StatsTopPlayerDto>();
 
-  const addTop3 = (sorter: (a: StatsTopPlayerDto, b: StatsTopPlayerDto) => number) => {
-    [...players]
+  const eligiblePlayers = players.filter(
+    (player) => player.participationCount >= MIN_TOP3_PARTICIPATIONS,
+  );
+
+  const addTop3 = (
+    sorter: (a: StatsTopPlayerDto, b: StatsTopPlayerDto) => number,
+    filter?: (player: StatsTopPlayerDto) => boolean,
+  ) => {
+    eligiblePlayers
+      .filter(filter ?? (() => true))
       .sort(sorter)
       .slice(0, 3)
       .forEach((player) => {
@@ -80,7 +90,7 @@ function mergeTopPlayers(players: StatsTopPlayerDto[]) {
 
   addTop3(sortByWinRate);
   addTop3(sortByParticipation);
-  addTop3(sortByMvp);
+  addTop3(sortByMvp, (player) => player.mvpCount > 0);
 
   return Array.from(topPlayerMap.values());
 }
@@ -179,7 +189,7 @@ export async function getStatsTopData(): Promise<StatsTopData> {
 
 export const getCachedStatsTopData = unstable_cache(
   getStatsTopData,
-  ["stats-top-data-v2"],
+  ["stats-top-data-v3-min-10-participations"],
   {
     revalidate: 60,
     tags: ["stats-top"],
