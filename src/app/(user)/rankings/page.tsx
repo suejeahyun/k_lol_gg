@@ -212,7 +212,7 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
     .sort((a, b) => {
       return (
         b.winRate - a.winRate ||
-        b.totalGames - a.totalGames ||
+        b.participationCount - a.participationCount ||
         b.mvpCount - a.mvpCount ||
         a.name.localeCompare(b.name)
       );
@@ -224,7 +224,6 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
     .sort((a, b) => {
       return (
         b.participationCount - a.participationCount ||
-        b.totalGames - a.totalGames ||
         b.winRate - a.winRate ||
         b.mvpCount - a.mvpCount ||
         a.name.localeCompare(b.name)
@@ -284,7 +283,7 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
             players={topWinRate}
             metricLabel="승률"
             metricValue={(player) => formatPercent(player.winRate)}
-            subMetricValue={(player) => `참여 ${player.participationCount}회 / 세트 ${player.totalGames}경기`}
+            subMetricValue={(player) => `참여 ${player.participationCount}회`}
             emptyText={`내전 참여 ${MIN_PARTICIPATION_FOR_TOP3}회 이상 플레이어가 없습니다.`}
           />
 
@@ -292,9 +291,9 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
             eyebrow="PARTICIPATION"
             title="최다참여 TOP 3"
             players={topParticipation}
-            metricLabel="참가"
+            metricLabel="참여"
             metricValue={(player) => `${player.participationCount}회`}
-            subMetricValue={(player) => `세트 ${player.totalGames}경기`}
+            subMetricValue={(player) => `참여 ${player.participationCount}회`}
             emptyText={`내전 참여 ${MIN_PARTICIPATION_FOR_TOP3}회 이상 플레이어가 없습니다.`}
           />
 
