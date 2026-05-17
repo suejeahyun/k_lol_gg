@@ -1,15 +1,13 @@
 export const dynamic = "force-dynamic";
 
 import Image from "next/image";
-import SafeChampionImage from "@/components/SafeChampionImage";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import GalleryWinnerSlider from "@/components/GalleryWinnerSlider";
 import Top3Slider from "@/components/Top3Slider";
+import RecentMvpSlider from "@/components/RecentMvpSlider";
 import { calculateMvpScore, getGameMvpParticipant } from "@/lib/mvp";
 import { getCachedStatsTopData } from "@/lib/stats/top";
-
-
 
 function getEventStatusLabel(status: string) {
   const labels: Record<string, string> = {
@@ -73,6 +71,26 @@ function formatDate(date: Date): string {
   return new Date(date).toLocaleDateString("ko-KR");
 }
 
+function getKoreaDayRange(date: Date) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+
+  const year = Number(parts.find((part) => part.type === "year")?.value ?? "0");
+  const month = Number(
+    parts.find((part) => part.type === "month")?.value ?? "1",
+  );
+  const day = Number(parts.find((part) => part.type === "day")?.value ?? "1");
+
+  const start = new Date(Date.UTC(year, month - 1, day, -9, 0, 0, 0));
+  const end = new Date(Date.UTC(year, month - 1, day + 1, -9, 0, 0, 0));
+
+  return { start, end };
+}
+
 function formatDateTime(date: Date): string {
   return new Date(date).toLocaleString("ko-KR");
 }
@@ -85,6 +103,7 @@ export default async function HomePage() {
     notices,
     latestEvent,
     latestDestruction,
+    latestMvpSeries,
   ] = await Promise.all([
     getCachedStatsTopData(),
 
@@ -182,9 +201,77 @@ export default async function HomePage() {
         matches: true,
       },
     }),
+
+    prisma.matchSeries.findFirst({
+      where: {
+        games: {
+          some: {
+            participants: {
+              some: {},
+            },
+          },
+        },
+      },
+      orderBy: {
+        matchDate: "desc",
+      },
+      select: {
+        matchDate: true,
+      },
+    }),
   ]);
 
   const currentSeasonId = topData.currentSeason?.id ?? null;
+  const latestMvpDateRange = latestMvpSeries
+    ? getKoreaDayRange(latestMvpSeries.matchDate)
+    : null;
+
+  const latestMvpMatches = latestMvpDateRange
+    ? await prisma.matchSeries.findMany({
+        where: {
+          matchDate: {
+            gte: latestMvpDateRange.start,
+            lt: latestMvpDateRange.end,
+          },
+          games: {
+            some: {
+              participants: {
+                some: {},
+              },
+            },
+          },
+        },
+        orderBy: [{ matchDate: "desc" }, { id: "desc" }],
+        include: {
+          games: {
+            orderBy: {
+              gameNumber: "asc",
+            },
+            include: {
+              participants: {
+                include: {
+                  player: {
+                    select: {
+                      id: true,
+                      name: true,
+                      nickname: true,
+                      tag: true,
+                    },
+                  },
+                  champion: {
+                    select: {
+                      id: true,
+                      name: true,
+                      imageUrl: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      })
+    : [];
 
   const [seasonMatchCount, seasonGameCount, seasonParticipantCount] =
     currentSeasonId
@@ -219,7 +306,7 @@ export default async function HomePage() {
         ])
       : [0, 0, []];
 
-  const recentMvpCandidates = recentMatches.flatMap((match) =>
+  const recentMvpSlides = latestMvpMatches.flatMap((match) =>
     match.games.flatMap((game) => {
       const storedMvpPlayerId = game.mvpPlayerId ?? null;
       const gameMvp = storedMvpPlayerId
@@ -238,9 +325,10 @@ export default async function HomePage() {
       return game.participants
         .filter((participant) => participant.player.id === gameMvp?.playerId)
         .map((participant) => ({
+          key: `${match.id}-${game.id}-${participant.player.id}`,
           matchId: match.id,
           matchTitle: match.title,
-          matchDate: match.matchDate,
+          matchDate: match.matchDate.toISOString(),
           gameNumber: game.gameNumber,
           playerId: participant.player.id,
           name: participant.player.name,
@@ -262,17 +350,12 @@ export default async function HomePage() {
             }),
           isWin: participant.team === game.winnerTeam,
         }));
-    })
+    }),
   );
 
-  const recentMvp =
-    recentMvpCandidates.length > 0
-      ? recentMvpCandidates.sort((a, b) => {
-          if (b.mvpScore !== a.mvpScore) return b.mvpScore - a.mvpScore;
-          if (b.kills !== a.kills) return b.kills - a.kills;
-          return b.assists - a.assists;
-        })[0]
-      : null;
+  const recentMvpDateLabel = latestMvpSeries
+    ? formatDate(latestMvpSeries.matchDate)
+    : null;
 
   return (
     <main className="page-container home-page">
@@ -282,12 +365,10 @@ export default async function HomePage() {
             <p className="home-eyebrow">KOREA LOL CUSTOM STATS</p>
             <h1 className="home-main-title">K-LOL.GG</h1>
             <p className="home-main-description">
-              모든 규정은 공정한 운영과 원활한 진행을 위한 기준입니다.
-              구성원 모두의 협조를 바랍니다.
+              모든 규정은 공정한 운영과 원활한 진행을 위한 기준입니다. 구성원
+              모두의 협조를 바랍니다.
             </p>
-            <p>
-              
-            </p>
+            <p></p>
           </div>
 
           <div className="social-link-row">
@@ -409,10 +490,7 @@ export default async function HomePage() {
                 </p>
               </Link>
 
-              <Link
-                href="/progress/destruction"
-                className="home-progress-item"
-              >
+              <Link href="/progress/destruction" className="home-progress-item">
                 <div className="home-progress-item__top">
                   <strong>멸망전</strong>
                   <span>
@@ -426,7 +504,7 @@ export default async function HomePage() {
                   <div
                     style={{
                       width: getDestructionProgressPercent(
-                        latestDestruction?.status
+                        latestDestruction?.status,
                       ),
                     }}
                   />
@@ -450,60 +528,10 @@ export default async function HomePage() {
       </section>
 
       <section className="section-block">
-        <div className="card home-mvp-card">
-          <div className="home-section-head">
-            <div>
-              <p className="home-eyebrow">RECENT MVP</p>
-              <h2 className="home-section-title">최근 MVP</h2>
-            </div>
-
-            {recentMvp ? (
-              <Link
-                href={`/matches/${recentMvp.matchId}`}
-                className="chip-button"
-              >
-                경기 보기
-              </Link>
-            ) : null}
-          </div>
-
-          {recentMvp ? (
-            <div className="home-mvp-content">
-              <div className="home-mvp-champion">
-                <SafeChampionImage
-                  src={recentMvp.championImageUrl}
-                  alt={recentMvp.championName}
-                  width={72}
-                  height={72}
-                  className="home-mvp-champion__image"
-                  fallbackClassName="home-mvp-champion__fallback"
-                />
-              </div>
-
-              <div className="home-mvp-info">
-                <div className="home-mvp-name">
-                  {recentMvp.nickname}
-                  <span>#{recentMvp.tag}</span>
-                </div>
-
-                <div className="home-mvp-meta">
-                  {recentMvp.matchTitle} · {recentMvp.gameNumber}세트 ·{" "}
-                  {recentMvp.championName}
-                </div>
-              </div>
-
-              <div className="home-mvp-score">
-                <strong>{recentMvp.mvpScore.toFixed(1)}</strong>
-                <span>
-                  {recentMvp.kills}/{recentMvp.deaths}/{recentMvp.assists}
-                </span>
-                <em>{recentMvp.isWin ? "WIN" : "LOSE"}</em>
-              </div>
-            </div>
-          ) : (
-            <div className="empty-box">최근 MVP 데이터가 없습니다.</div>
-          )}
-        </div>
+        <RecentMvpSlider
+          items={recentMvpSlides}
+          dateLabel={recentMvpDateLabel}
+        />
       </section>
 
       <section className="section-block">

@@ -1030,3 +1030,20 @@
     font-size: clamp(38px, 13vw, 54px) !important;
   }
 }
+
+@media (max-width: 768px) {
+  .home-mvp-slider-footer {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    justify-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .home-mvp-pagination {
+    order: -1 !important;
+  }
+
+  .home-mvp-nav-button {
+    width: 100% !important;
+  }
+}
