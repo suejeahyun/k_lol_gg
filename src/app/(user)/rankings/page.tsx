@@ -124,7 +124,7 @@ function TopRankingCard({
   players: RankingPlayer[];
   metricLabel: string;
   metricValue: (player: RankingPlayer) => string;
-  subMetricValue?: (player: RankingPlayer) => string;
+  subMetricValue?: (player: RankingPlayer) => string | null;
   emptyText: string;
 }) {
   return (
@@ -161,9 +161,9 @@ function TopRankingCard({
                     {metricLabel} <b>{metricValue(player)}</b>
                   </span>
 
-                  <span>
-                    {subMetricValue ? subMetricValue(player) : `총 ${player.totalGames}경기`}
-                  </span>
+                  {subMetricValue ? (
+                    <span>{subMetricValue(player)}</span>
+                  ) : null}
 
                   <span>MVP {player.mvpCount}회</span>
                 </div>
@@ -291,9 +291,8 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
             eyebrow="PARTICIPATION"
             title="최다참여 TOP 3"
             players={topParticipation}
-            metricLabel="참여"
+            metricLabel="참가 횟수"
             metricValue={(player) => `${player.participationCount}회`}
-            subMetricValue={(player) => `참여 ${player.participationCount}회`}
             emptyText={`내전 참여 ${MIN_PARTICIPATION_FOR_TOP3}회 이상 플레이어가 없습니다.`}
           />
 
