@@ -15,14 +15,21 @@ export async function getLatestRecruitResetLog(recruitDate = getKakaoRecruitDate
       recruitDate,
       action: RECRUIT_RESET_ACTION,
     },
-    orderBy: {
-      createdAt: "desc",
-    },
+    orderBy: [
+      { resetSeq: "desc" },
+      { createdAt: "desc" },
+    ],
     select: {
       id: true,
+      resetSeq: true,
       createdAt: true,
     },
   });
+}
+
+export async function getCurrentRecruitResetSeq(recruitDate = getKakaoRecruitDateKey()) {
+  const latestReset = await getLatestRecruitResetLog(recruitDate);
+  return latestReset?.resetSeq ?? 0;
 }
 
 type ResetRecruitNumberOptions = {
@@ -35,15 +42,27 @@ export async function resetRecruitNumbers(options: ResetRecruitNumberOptions = {
   const recruitDate = options.recruitDate ?? getKakaoRecruitDateKey();
 
   return prisma.$transaction(async (tx) => {
-    const activeBeforeReset = await tx.recruitParty.count({
+    const latestReset = await tx.recruitPartyLog.findFirst({
       where: {
         recruitDate,
+        action: RECRUIT_RESET_ACTION,
+      },
+      orderBy: [
+        { resetSeq: "desc" },
+        { createdAt: "desc" },
+      ],
+      select: {
+        resetSeq: true,
       },
     });
 
-    await tx.recruitParty.deleteMany({
+    const previousResetSeq = latestReset?.resetSeq ?? 0;
+    const nextResetSeq = previousResetSeq + 1;
+
+    const activeKeptCount = await tx.recruitParty.count({
       where: {
         recruitDate,
+        status: "IN_PROGRESS",
       },
     });
 
@@ -51,12 +70,13 @@ export async function resetRecruitNumbers(options: ResetRecruitNumberOptions = {
       data: {
         recruitNo: 0,
         recruitDate,
+        resetSeq: nextResetSeq,
         type: "SYSTEM",
         title: "모집번호 초기화",
         action: RECRUIT_RESET_ACTION,
         memberCount: 0,
         maxMembers: 0,
-        summary: `${recruitDate} 모집번호를 초기화했습니다. 다음 구인글은 #1부터 생성됩니다.`,
+        summary: `${recruitDate} 모집번호를 초기화했습니다. 진행 중 구인글은 유지하고 다음 구인글은 #1부터 생성됩니다.`,
         roomName: options.roomName ?? null,
         sender: options.sender ?? null,
       },
@@ -64,12 +84,14 @@ export async function resetRecruitNumbers(options: ResetRecruitNumberOptions = {
 
     await writeAdminLog({
       action: "KAKAO_PARTY_RECRUIT_RESET",
-      message: `카카오 구인구직 모집번호 초기화: ${recruitDate}`,
+      message: `카카오 구인구직 모집번호 초기화: ${recruitDate}, 회차 ${nextResetSeq}`,
       targetType: "RecruitParty",
       targetId: resetLog.id,
       afterJson: {
         recruitDate,
-        activeBeforeReset,
+        previousResetSeq,
+        resetSeq: nextResetSeq,
+        activeKeptCount,
         roomName: options.roomName ?? null,
         sender: options.sender ?? null,
       },
@@ -78,19 +100,23 @@ export async function resetRecruitNumbers(options: ResetRecruitNumberOptions = {
 
     return {
       recruitDate,
-      activeBeforeReset,
+      previousResetSeq,
+      resetSeq: nextResetSeq,
+      activeKeptCount,
       resetLogId: resetLog.id,
     };
   });
 }
 
-export function buildRecruitResetReply(result: { recruitDate: string; activeBeforeReset: number }) {
+export function buildRecruitResetReply(result: { recruitDate: string; resetSeq: number; activeKeptCount: number }) {
   return [
     "[K-LOL.GG 구인구직 모집번호 초기화 완료]",
     "",
     `기준일: ${result.recruitDate}`,
-    `초기화된 진행 중 구인글: ${result.activeBeforeReset}개`,
+    `현재 번호 회차: ${result.resetSeq}`,
+    `유지된 진행 중 구인글: ${result.activeKeptCount}개`,
     "",
+    "기존 구인글은 삭제하지 않습니다.",
     "다음 구인 생성부터 모집번호 #1부터 다시 사용됩니다.",
   ].join("\n");
 }

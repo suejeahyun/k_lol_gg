@@ -8,11 +8,11 @@ import {
   buildCreateReply,
   getActiveMemberCount,
   getKakaoRecruitDateKey,
-  getKakaoRecruitTodayRange,
   parseCreateRecruitCommand,
 } from "@/lib/kakao/party-recruit";
 import {
   buildRecruitResetReply,
+  getCurrentRecruitResetSeq,
   getLatestRecruitResetLog,
   isRecruitResetCommand,
   resetRecruitNumbers,
@@ -67,7 +67,8 @@ export async function POST(req: NextRequest) {
       return secretRejected;
     }
 
-    await archiveStaleRecruitParties();
+    // 날짜가 바뀌어도 진행 중 구인글은 유지합니다.
+    // 모집번호만 날짜/회차 기준으로 다시 #1부터 배정합니다.
 
     const message = getBodyText(body);
     const roomName = getBodyRoom(body);
@@ -88,7 +89,8 @@ export async function POST(req: NextRequest) {
     }
 
     const recruitDate = getKakaoRecruitDateKey();
-    const recruitNo = parsed.recruitNo ?? (await getNextRecruitNo(recruitDate));
+    const resetSeq = await getCurrentRecruitResetSeq(recruitDate);
+    const recruitNo = parsed.recruitNo ?? (await getNextRecruitNo(recruitDate, resetSeq));
     const latestReset = await getLatestRecruitResetLog(recruitDate);
     const createdAfterLatestReset = latestReset ? { gt: latestReset.createdAt } : undefined;
 
@@ -97,6 +99,7 @@ export async function POST(req: NextRequest) {
         where: {
           recruitNo,
           recruitDate,
+          resetSeq,
         },
         include: {
           members: true,
@@ -106,6 +109,7 @@ export async function POST(req: NextRequest) {
         where: {
           recruitNo,
           recruitDate,
+          resetSeq,
           action: "FINISHED",
           ...(createdAfterLatestReset ? { createdAt: createdAfterLatestReset } : {}),
         },
@@ -167,6 +171,7 @@ export async function POST(req: NextRequest) {
       data: {
         recruitNo,
         recruitDate,
+        resetSeq,
         type: parsed.type,
         status: "IN_PROGRESS",
         title: parsed.title,
@@ -187,6 +192,7 @@ export async function POST(req: NextRequest) {
       afterJson: {
         recruitNo: party.recruitNo,
         recruitDate: party.recruitDate,
+        resetSeq: party.resetSeq,
         type: party.type,
         roomName,
         sender,
@@ -214,7 +220,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function getNextRecruitNo(recruitDate = getKakaoRecruitDateKey()) {
+async function getNextRecruitNo(recruitDate = getKakaoRecruitDateKey(), resetSeq = 0) {
   const latestReset = await getLatestRecruitResetLog(recruitDate);
   const createdAfterLatestReset = latestReset ? { gt: latestReset.createdAt } : undefined;
 
@@ -222,6 +228,7 @@ async function getNextRecruitNo(recruitDate = getKakaoRecruitDateKey()) {
     prisma.recruitParty.findFirst({
       where: {
         recruitDate,
+        resetSeq,
       },
       orderBy: {
         recruitNo: "desc",
@@ -233,6 +240,7 @@ async function getNextRecruitNo(recruitDate = getKakaoRecruitDateKey()) {
     prisma.recruitPartyLog.findFirst({
       where: {
         recruitDate,
+        resetSeq,
         action: {
           in: ["FINISHED", "AUTO_EXPIRED"],
         },
@@ -259,6 +267,7 @@ async function getNextRecruitNo(recruitDate = getKakaoRecruitDateKey()) {
       where: {
         recruitNo: candidate,
         recruitDate,
+        resetSeq,
       },
       select: {
         id: true,
@@ -271,59 +280,4 @@ async function getNextRecruitNo(recruitDate = getKakaoRecruitDateKey()) {
   }
 
   throw new Error("오늘 사용 가능한 모집번호가 없습니다. 진행 중인 구인글을 마무리하거나 모집번호초기화를 실행해주세요.");
-}
-
-async function archiveStaleRecruitParties() {
-  const todayRange = getKakaoRecruitTodayRange();
-  const recruitDate = getKakaoRecruitDateKey();
-
-  const staleParties = await prisma.recruitParty.findMany({
-    where: {
-      OR: [
-        { recruitDate: { not: recruitDate } },
-        { createdAt: { lt: todayRange.gte } },
-      ],
-    },
-    include: {
-      members: {
-        orderBy: [
-          {
-            slotNo: "asc",
-          },
-          {
-            createdAt: "asc",
-          },
-        ],
-      },
-    },
-  });
-
-  if (staleParties.length === 0) {
-    return;
-  }
-
-  await prisma.$transaction(async (tx) => {
-    for (const party of staleParties) {
-      await tx.recruitPartyLog.create({
-        data: {
-          recruitNo: party.recruitNo,
-          recruitDate: party.recruitDate,
-          type: String(party.type),
-          title: party.title,
-          action: "AUTO_EXPIRED",
-          memberCount: getActiveMemberCount(party.members),
-          maxMembers: party.maxMembers,
-          summary: "날짜 변경으로 자동 마감되었습니다.",
-          roomName: party.roomName,
-          sender: "system",
-        },
-      });
-
-      await tx.recruitParty.delete({
-        where: {
-          id: party.id,
-        },
-      });
-    }
-  });
 }

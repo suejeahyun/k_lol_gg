@@ -11,6 +11,7 @@ import {
   isSoloRankPartyType,
   parsePartyForm,
 } from "@/lib/kakao/party-recruit";
+import { getCurrentRecruitResetSeq } from "@/lib/kakao/recruit-reset";
 import {
   getBodyRoom,
   getBodySender,
@@ -74,18 +75,19 @@ async function syncOneRecruit(params: {
   roomName: string | null;
   sender: string | null;
   recruitDate: string;
+  resetSeq: number;
   todayRange: { gte: Date; lt: Date };
 }) {
-  const { recruitNo, message, roomName, sender, recruitDate, todayRange } = params;
+  const { recruitNo, message, roomName, sender, recruitDate, resetSeq, todayRange } = params;
 
   const party = await prisma.recruitParty.findFirst({
-    where: { recruitNo, recruitDate },
+    where: { recruitNo, recruitDate, resetSeq },
     include: { members: true },
   });
 
   if (!party) {
     const finishedLog = await prisma.recruitPartyLog.findFirst({
-      where: { recruitNo, recruitDate, action: { in: ["FINISHED", "AUTO_EXPIRED"] }, createdAt: todayRange },
+      where: { recruitNo, recruitDate, resetSeq, action: { in: ["FINISHED", "AUTO_EXPIRED"] }, createdAt: todayRange },
       orderBy: { createdAt: "desc" },
       select: { title: true, memberCount: true, maxMembers: true },
     });
@@ -165,6 +167,7 @@ async function syncOneRecruit(params: {
       afterJson: {
         recruitNo: result.recruitNo,
         recruitDate: result.recruitDate,
+        resetSeq: result.resetSeq,
         roomName,
         sender,
         members: result.members,
@@ -222,6 +225,7 @@ export async function POST(req: NextRequest) {
     const roomName = getBodyRoom(body);
     const sender = getBodySender(body);
     const recruitDate = getKakaoRecruitDateKey();
+    const resetSeq = await getCurrentRecruitResetSeq(recruitDate);
     const todayRange = getKakaoRecruitTodayRange();
     const recruitNos = extractRecruitNos(message);
     const statusBlocks = splitRecruitStatusBlocks(message);
@@ -236,6 +240,7 @@ export async function POST(req: NextRequest) {
             roomName,
             sender,
             recruitDate,
+            resetSeq,
             todayRange,
           }),
         );
@@ -292,6 +297,7 @@ export async function POST(req: NextRequest) {
       roomName,
       sender,
       recruitDate,
+      resetSeq,
       todayRange,
     });
 

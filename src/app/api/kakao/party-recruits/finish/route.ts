@@ -5,7 +5,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import { formatRecruitPartyBlock, getActiveMemberCount, getKakaoRecruitDateKey, parseFinishRecruitCommand } from "@/lib/kakao/party-recruit";
-import { getLatestRecruitResetLog } from "@/lib/kakao/recruit-reset";
+import { getCurrentRecruitResetSeq, getLatestRecruitResetLog } from "@/lib/kakao/recruit-reset";
 import {
   getBodyRoom,
   getBodySender,
@@ -36,10 +36,11 @@ export async function POST(req: NextRequest) {
     }
 
     const recruitDate = getKakaoRecruitDateKey();
+    const resetSeq = await getCurrentRecruitResetSeq(recruitDate);
     const latestReset = await getLatestRecruitResetLog(recruitDate);
     const createdAfterLatestReset = latestReset ? { gt: latestReset.createdAt } : undefined;
     const party = await prisma.recruitParty.findFirst({
-      where: { recruitNo: parsed.recruitNo, recruitDate },
+      where: { recruitNo: parsed.recruitNo, recruitDate, resetSeq },
       include: { members: { orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }] } },
     });
 
@@ -48,6 +49,7 @@ export async function POST(req: NextRequest) {
         where: {
           recruitNo: parsed.recruitNo,
           recruitDate,
+          resetSeq,
           action: { in: ["FINISHED", "AUTO_EXPIRED"] },
           ...(createdAfterLatestReset ? { createdAt: createdAfterLatestReset } : {}),
         },
@@ -75,6 +77,7 @@ export async function POST(req: NextRequest) {
         data: {
           recruitNo: party.recruitNo,
           recruitDate: party.recruitDate,
+          resetSeq: party.resetSeq,
           type: String(party.type),
           title: party.title,
           action: "FINISHED",
@@ -96,6 +99,7 @@ export async function POST(req: NextRequest) {
         afterJson: {
           recruitNo: party.recruitNo,
           recruitDate: party.recruitDate,
+          resetSeq: party.resetSeq,
           roomName,
           sender,
           memberCount: getActiveMemberCount(party.members),

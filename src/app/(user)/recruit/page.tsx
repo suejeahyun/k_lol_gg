@@ -6,7 +6,6 @@ import {
   buildGameInfoText,
   formatRecruitPartyBlock,
   getActiveMemberCount,
-  getKakaoRecruitDateKey,
   getRecruitStatusLabel,
   getRecruitTypeLabel,
   isLinePartyType,
@@ -24,6 +23,7 @@ type RecruitPageParty = {
   id: number;
   recruitNo: number;
   recruitDate: string;
+  resetSeq: number;
   type: string;
   status: string;
   title: string;
@@ -91,13 +91,13 @@ function renderSlots(party: RecruitPageParty) {
 
 export default async function RecruitPage() {
   const parties = await prisma.recruitParty.findMany({
-    where: { status: "IN_PROGRESS", recruitDate: getKakaoRecruitDateKey() },
+    where: { status: "IN_PROGRESS" },
     include: {
       members: {
         orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }],
       },
     },
-    orderBy: [{ recruitNo: "asc" }],
+    orderBy: [{ recruitDate: "desc" }, { resetSeq: "desc" }, { recruitNo: "asc" }],
   });
 
   return (
@@ -142,6 +142,7 @@ export default async function RecruitPage() {
 
                 <div className="recruit-card__meta">
                   <span>{statusLabel}</span>
+                  <span>{party.recruitDate} · 회차 {party.resetSeq}</span>
                   <span>{activeCount}/{party.maxMembers}</span>
                   {gameInfo ? <span>게임정보: {gameInfo}</span> : null}
                 </div>

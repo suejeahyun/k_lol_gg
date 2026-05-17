@@ -23,6 +23,7 @@ export type RecruitPartyLike = {
   id: number;
   recruitNo: number;
   recruitDate: string;
+  resetSeq?: number;
   type: RecruitPartyType | string;
   status: RecruitPartyStatus | string;
   title: string;
@@ -727,6 +728,7 @@ export function formatRecruitPartyBlock(party: RecruitPartyLike) {
 
   lines.push("");
   lines.push(`모집번호: #${party.recruitNo}`);
+  lines.push(`기준: ${party.recruitDate}${typeof party.resetSeq === "number" ? ` · 회차 ${party.resetSeq}` : ""}`);
   lines.push(`현재 인원: ${activeCount}/${party.maxMembers}`);
   if (subMembers.length > 0) lines.push(`예비: ${subMembers.length}명`);
   lines.push("");

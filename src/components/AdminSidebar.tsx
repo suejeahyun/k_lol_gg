@@ -75,6 +75,7 @@ const menuGroups: AdminSidebarGroup[] = [
   {
     title: "운영 기록",
     items: [
+      { href: "/admin/recruits", label: "구인구직 관리", code: "REC" },
       { href: "/admin/logs", label: "관리자 로그", code: "LOG" },
       { href: "/api/admin/backup/players.csv", label: "백업 CSV", code: "CSV", access: "SUPER", external: true },
     ],

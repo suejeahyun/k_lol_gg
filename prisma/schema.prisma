@@ -939,6 +939,7 @@ model RecruitParty {
   id          Int                @id @default(autoincrement())
   recruitNo   Int
   recruitDate String
+  resetSeq    Int                @default(0)
   type        RecruitPartyType
   status      RecruitPartyStatus @default(IN_PROGRESS)
 
@@ -957,10 +958,10 @@ model RecruitParty {
 
   members RecruitPartyMember[]
 
-  @@unique([recruitDate, recruitNo])
+  @@unique([recruitDate, resetSeq, recruitNo])
   @@index([type])
   @@index([status, updatedAt])
-  @@index([recruitDate, status])
+  @@index([recruitDate, resetSeq, status])
   @@index([createdAt])
 }
 
@@ -985,6 +986,7 @@ model RecruitPartyLog {
   id          Int      @id @default(autoincrement())
   recruitNo   Int
   recruitDate String   @default("")
+  resetSeq    Int      @default(0)
   type        String
   title       String
   action      String
@@ -995,8 +997,8 @@ model RecruitPartyLog {
   sender      String?
   createdAt   DateTime @default(now())
 
-  @@index([recruitDate, recruitNo])
-  @@index([recruitDate, action, createdAt])
+  @@index([recruitDate, resetSeq, recruitNo])
+  @@index([recruitDate, resetSeq, action, createdAt])
   @@index([recruitNo])
   @@index([action, createdAt])
   @@index([createdAt])
