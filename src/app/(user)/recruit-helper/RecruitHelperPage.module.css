@@ -1,0 +1,585 @@
+.page {
+  min-height: 100vh;
+  overflow-x: hidden;
+  padding: clamp(32px, 5vw, 56px) clamp(14px, 3vw, 28px) 80px;
+  color: #eef3ff;
+  background:
+    radial-gradient(circle at top, rgba(92, 108, 255, 0.22), transparent 34%),
+    linear-gradient(180deg, #080b12 0%, #10141d 100%);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+.hero {
+  max-width: 1180px;
+  margin: 0 auto 30px;
+  text-align: center;
+}
+
+.hero p {
+  margin: 0 0 10px;
+  color: #7f8cff;
+  font-size: clamp(12px, 2.8vw, 14px);
+  font-weight: 800;
+  letter-spacing: 0.28em;
+}
+
+.hero h1 {
+  margin: 0;
+  color: #6878ff;
+  font-size: clamp(38px, 9vw, 82px);
+  font-weight: 900;
+  line-height: 0.95;
+  letter-spacing: 0.06em;
+  text-shadow: 0 0 30px rgba(88, 104, 255, 0.45);
+  word-break: keep-all;
+}
+
+.hero span {
+  display: block;
+  margin-top: 16px;
+  color: #9ba7ba;
+  font-size: clamp(14px, 3vw, 17px);
+  line-height: 1.55;
+  word-break: keep-all;
+}
+
+.alert,
+.lineGuide,
+.summary {
+  width: 100%;
+  max-width: 1180px;
+  margin-right: auto;
+  margin-left: auto;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(16, 22, 34, 0.84);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.28);
+}
+
+.alert {
+  margin-bottom: 28px;
+  padding: clamp(16px, 3vw, 22px);
+  border-color: rgba(104, 120, 255, 0.38);
+  border-radius: 18px;
+}
+
+.alert strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #ffffff;
+  font-size: clamp(16px, 3vw, 17px);
+}
+
+.alert p,
+.lineGuide p {
+  margin: 0;
+  color: #b9c3d8;
+  line-height: 1.7;
+  word-break: keep-all;
+}
+
+.stepGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(260px, 1fr));
+  gap: 22px;
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.stepCard {
+  min-width: 0;
+  padding: clamp(20px, 2.5vw, 24px) clamp(16px, 2.2vw, 20px);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(24, 30, 42, 0.96), rgba(14, 18, 27, 0.96));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 20px 70px rgba(0, 0, 0, 0.36);
+}
+
+.stepBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  color: #ffffff;
+  background: linear-gradient(135deg, #5b6cff, #7280ff);
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  box-shadow: 0 10px 30px rgba(91, 108, 255, 0.35);
+}
+
+.stepCard h2,
+.summary h2,
+.lineGuide h2 {
+  margin: 0;
+  color: #ffffff;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  word-break: keep-all;
+}
+
+.stepCard h2 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  font-size: clamp(24px, 4vw, 28px);
+}
+
+.stepCard h2 span {
+  flex: 0 0 auto;
+  color: #6575ff;
+  font-size: clamp(26px, 4vw, 30px);
+}
+
+.description {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 22px;
+  padding-left: 20px;
+  color: #aeb9cc;
+  line-height: 1.65;
+  font-size: clamp(14px, 3vw, 15px);
+  word-break: keep-all;
+}
+
+.description li::marker {
+  color: #7280ff;
+  font-weight: 800;
+}
+
+.exampleList {
+  display: grid;
+  gap: 18px;
+}
+
+.commandBox {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid rgba(114, 128, 255, 0.28);
+  border-radius: 16px;
+  background: rgba(9, 13, 22, 0.68);
+}
+
+.commandBox code {
+  display: inline-flex;
+  max-width: 100%;
+  padding: 7px 11px;
+  border-radius: 10px;
+  color: #ffffff;
+  background: rgba(101, 117, 255, 0.24);
+  font-size: 15px;
+  font-weight: 800;
+  white-space: normal;
+  word-break: keep-all;
+}
+
+.commandBox p {
+  margin: 10px 0 0;
+  color: #aeb9cc;
+  line-height: 1.6;
+  word-break: keep-all;
+}
+
+.mockPhone {
+  overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+  border: 1px solid rgba(164, 184, 210, 0.26);
+  border-radius: 18px;
+  background: #b9cce0;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.32);
+}
+
+.mockHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 12px;
+  color: #1e293b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.mockHeader span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mockHeader b {
+  flex: 0 0 auto;
+  padding: 4px 7px;
+  border-radius: 7px;
+  color: #1e293b;
+  background: #ffd900;
+  font-size: 11px;
+}
+
+.mockBubble,
+.mockBubbleInput {
+  margin: 0 12px 12px;
+  padding: clamp(12px, 3vw, 15px);
+  border-radius: 10px;
+  color: #202838;
+  font-size: clamp(12px, 2.8vw, 13px);
+  line-height: 1.55;
+  word-break: keep-all;
+}
+
+.mockBubble {
+  background: #ffffff;
+}
+
+.mockBubbleInput {
+  background: #ffe500;
+}
+
+.mockBubble strong,
+.mockBubbleInput strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #1d4ed8;
+}
+
+.mockBubble p,
+.mockBubbleInput p {
+  margin: 0 0 10px;
+}
+
+.mockNotice {
+  margin: 10px 0;
+  padding: 9px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+  color: #7c5a00;
+  font-weight: 800;
+}
+
+.mockBubble h3,
+.mockBubbleInput h3 {
+  margin: 14px 0 10px;
+  color: #111827;
+  font-size: clamp(15px, 3.5vw, 17px);
+  line-height: 1.35;
+}
+
+.mockBubble dl,
+.mockBubbleInput dl {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 12px;
+}
+
+.mockBubble dl div,
+.mockBubbleInput dl div {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: 8px;
+}
+
+.mockBubble dt,
+.mockBubbleInput dt {
+  color: #64748b;
+  font-weight: 800;
+}
+
+.mockBubble dd,
+.mockBubbleInput dd {
+  min-width: 0;
+  margin: 0;
+  color: #111827;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.highlight {
+  margin: 12px 0;
+  padding: 9px;
+  border-left: 4px solid #5b6cff;
+  border-radius: 8px;
+  background: #eef2ff;
+  color: #3730a3;
+  font-weight: 800;
+}
+
+.memberList {
+  display: grid;
+  gap: 5px;
+  margin: 12px 0;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(248, 250, 252, 0.88);
+  list-style: none;
+}
+
+.memberList li {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  min-height: 22px;
+  border-bottom: 1px dashed #d8dee9;
+}
+
+.memberList li:last-child {
+  border-bottom: 0;
+}
+
+.memberList span,
+.lineList span {
+  color: #64748b;
+  font-weight: 800;
+}
+
+.memberList em,
+.lineList em {
+  min-width: 0;
+  color: #111827;
+  font-style: normal;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.lineList {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(248, 250, 252, 0.88);
+}
+
+.lineList div {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  min-height: 24px;
+  border-bottom: 1px dashed #d8dee9;
+}
+
+.lineList div:last-child {
+  border-bottom: 0;
+}
+
+.mockFooter {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #e2e8f0;
+  color: #2563eb;
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.lineGuide {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+  gap: 28px;
+  align-items: center;
+  margin-top: 34px;
+  padding: clamp(20px, 3vw, 28px);
+  border-radius: 24px;
+}
+
+.sectionKicker {
+  margin: 0 0 10px !important;
+  color: #7f8cff !important;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+}
+
+.lineGuide h2 {
+  margin-bottom: 12px;
+  font-size: clamp(24px, 4vw, 30px);
+}
+
+.summary {
+  margin-top: 34px;
+  padding: clamp(20px, 3vw, 28px);
+  border-radius: 24px;
+}
+
+.summary h2 {
+  margin-bottom: 18px;
+  font-size: clamp(24px, 4vw, 28px);
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 1280px) {
+  .stepGrid {
+    grid-template-columns: repeat(2, minmax(280px, 1fr));
+    max-width: 980px;
+  }
+
+  .summaryGrid {
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+  }
+
+  .lineGuide {
+    grid-template-columns: 1fr;
+    max-width: 980px;
+  }
+}
+
+@media (max-width: 860px) {
+  .stepGrid {
+    grid-template-columns: 1fr;
+    max-width: 620px;
+  }
+
+  .stepCard {
+    border-radius: 20px;
+  }
+
+  .summaryGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .page {
+    padding: 32px 12px 56px;
+  }
+
+  .hero {
+    margin-bottom: 22px;
+  }
+
+  .hero p {
+    letter-spacing: 0.2em;
+  }
+
+  .hero h1 {
+    font-size: clamp(34px, 10vw, 42px);
+    letter-spacing: 0.03em;
+  }
+
+  .hero span {
+    margin-top: 12px;
+  }
+
+  .alert,
+  .summary,
+  .lineGuide {
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .stepCard {
+    padding: 18px 14px;
+    border-radius: 18px;
+  }
+
+  .stepBadge {
+    margin-bottom: 14px;
+    padding: 7px 13px;
+    font-size: 12px;
+  }
+
+  .stepCard h2 {
+    gap: 9px;
+    margin-bottom: 14px;
+    font-size: 23px;
+  }
+
+  .description {
+    margin-bottom: 18px;
+    padding-left: 18px;
+    line-height: 1.6;
+  }
+
+  .exampleList {
+    gap: 14px;
+  }
+
+  .lineGuide {
+    gap: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: 26px 10px 46px;
+  }
+
+  .hero h1 {
+    font-size: 34px;
+  }
+
+  .alert p,
+  .lineGuide p,
+  .description,
+  .commandBox p {
+    font-size: 13px;
+  }
+
+  .stepCard {
+    padding: 16px 12px;
+  }
+
+  .commandBox {
+    padding: 13px;
+  }
+
+  .commandBox code {
+    font-size: 13px;
+  }
+
+  .mockHeader {
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+
+  .mockBubble,
+  .mockBubbleInput {
+    margin: 0 9px 9px;
+    padding: 11px;
+    font-size: 12px;
+  }
+
+  .mockBubble dl div,
+  .mockBubbleInput dl div {
+    grid-template-columns: 64px minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .memberList,
+  .lineList {
+    padding: 10px;
+  }
+
+  .summary {
+    margin-top: 24px;
+  }
+}
+
+@media (max-width: 360px) {
+  .page {
+    padding-right: 8px;
+    padding-left: 8px;
+  }
+
+  .hero h1 {
+    font-size: 30px;
+  }
+
+  .stepCard h2 {
+    font-size: 21px;
+  }
+
+  .mockBubble dl div,
+  .mockBubbleInput dl div {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+}

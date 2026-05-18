@@ -61,8 +61,24 @@ function extractMessage(body: KakaoOpenchatBody) {
   );
 }
 
+function getRecruitHelperGuideMessage() {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://k-lol-gg.vercel.app";
+
+  return [
+    "[K-LOL.GG 구인도우미]",
+    "",
+    "구인 글 작성, 참여, 이름 지우기, 구인 글 지우기 방법은 아래 페이지에서 확인해주세요.",
+    "",
+    `${baseUrl}/recruit-helper`,
+  ].join("\n");
+}
+
 async function handleMessage(message: string) {
   const trimmedMessage = message.trim();
+
+  if (/^\/?구인도우미$/i.test(trimmedMessage)) {
+    return jsonReply(getRecruitHelperGuideMessage());
+  }
 
   if (/^(AI공지|자동공지|공지생성)(\s+(12|15|18|20))?$/i.test(trimmedMessage)) {
     return jsonReply([
