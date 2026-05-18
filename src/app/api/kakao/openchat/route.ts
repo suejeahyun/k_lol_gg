@@ -61,23 +61,26 @@ function extractMessage(body: KakaoOpenchatBody) {
   );
 }
 
-function getRecruitHelperGuideMessage() {
+function getRecruitHelperLinkMessage() {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://k-lol-gg.vercel.app";
 
   return [
     "[K-LOL.GG 구인도우미]",
     "",
-    "구인 글 작성, 참여, 이름 지우기, 구인 글 지우기 방법은 아래 페이지에서 확인해주세요.",
+    "현재 사용 중인 카카오톡 명령어 전체 설명은 아래 페이지에서 확인해주세요.",
     "",
     `${baseUrl}/recruit-helper`,
+    "",
+    "구인현황 바로가기:",
+    `${baseUrl}/recruit`,
   ].join("\n");
 }
 
 async function handleMessage(message: string) {
   const trimmedMessage = message.trim();
 
-  if (/^\/?구인도우미$/i.test(trimmedMessage)) {
-    return jsonReply(getRecruitHelperGuideMessage());
+  if (/^(구인도우미|\/구인도우미|구인웹도우미|\/구인웹도우미|구인매뉴얼|\/구인매뉴얼|명령어페이지|\/명령어페이지)$/i.test(trimmedMessage)) {
+    return jsonReply(getRecruitHelperLinkMessage());
   }
 
   if (/^(AI공지|자동공지|공지생성)(\s+(12|15|18|20))?$/i.test(trimmedMessage)) {
