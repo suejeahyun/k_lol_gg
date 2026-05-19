@@ -3,6 +3,7 @@ export const revalidate = 0;
 
 import type { Prisma } from "@prisma/client";
 import Pagination from "@/components/Pagination";
+import AdminRecruitResetAllButton from "./AdminRecruitResetAllButton";
 import { prisma } from "@/lib/prisma/client";
 import {
   buildGameInfoText,
@@ -158,7 +159,7 @@ export default async function AdminRecruitsPage({ searchParams }: PageProps) {
         <input name="q" defaultValue={q} placeholder="제목, 방, 생성자, 참가자 검색" className="admin-input" />
         <input name="date" defaultValue={date} type="date" className="admin-input" />
         <button className="admin-button" type="submit">조회</button>
-        <a className="admin-button admin-button--ghost" href="/admin/recruits">초기화</a>
+        <a className="admin-button admin-button--ghost" href="/admin/recruits">검색조건 초기화</a>
       </form>
 
       <section className="admin-card">
@@ -167,6 +168,7 @@ export default async function AdminRecruitsPage({ searchParams }: PageProps) {
             <h2>진행 중 구인글</h2>
             <p className="admin-muted">총 {totalCount.toLocaleString("ko-KR")}개 · 번호 중복은 날짜/회차로 구분합니다.</p>
           </div>
+          <AdminRecruitResetAllButton />
         </div>
 
         <div className="admin-table-wrap">
