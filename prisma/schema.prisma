@@ -933,6 +933,7 @@ enum RecruitPartyType {
 enum RecruitPartyStatus {
   IN_PROGRESS
   CANCELED
+  RESET
 }
 
 model RecruitParty {

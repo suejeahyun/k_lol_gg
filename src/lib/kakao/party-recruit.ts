@@ -9,7 +9,7 @@ export type RecruitPartyType =
   | "PARTY_NUMBER"
   | "PARTY_RIFT"
   | "OTHER_GAME";
-export type RecruitPartyStatus = "IN_PROGRESS" | "CANCELED";
+export type RecruitPartyStatus = "IN_PROGRESS" | "CANCELED" | "RESET";
 export type RecruitLinePosition = "TOP" | "JUG" | "MID" | "ADC" | "SUP";
 
 export type RecruitMemberLike = {
