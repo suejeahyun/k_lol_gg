@@ -283,3 +283,50 @@
     width: 100%;
   }
 }
+
+.admin-recruit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.admin-inline-setting {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.62);
+}
+
+.admin-inline-setting__check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: rgba(226, 232, 240, 0.9);
+  white-space: nowrap;
+}
+
+.admin-inline-setting__number {
+  width: 74px;
+  min-height: 34px;
+  padding: 6px 8px;
+}
+
+@media (max-width: 860px) {
+  .admin-recruit-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .admin-inline-setting {
+    width: 100%;
+    border-radius: 18px;
+    justify-content: flex-start;
+  }
+}

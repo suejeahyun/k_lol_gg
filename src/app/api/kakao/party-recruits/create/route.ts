@@ -12,12 +12,10 @@ import {
   parseCreateRecruitCommand,
 } from "@/lib/kakao/party-recruit";
 import {
-  buildRecruitResetReply,
   getCurrentRecruitResetSeq,
   getLatestRecruitResetLog,
-  isRecruitResetCommand,
-  resetRecruitNumbers,
 } from "@/lib/kakao/recruit-reset";
+import { runRecruitIdleAutoResetIfNeeded } from "@/lib/kakao/recruit-auto-reset";
 import {
   getBodyRoom,
   getBodySender,
@@ -51,9 +49,6 @@ const CREATE_HELP = [
   "롤체랭크구인 또는 /롤체랭크구인",
   "더블업구인 또는 /더블업구인",
   "",
-  "관리 명령어",
-  "모집번호초기화 또는 /모집번호초기화",
-  "",
   "예시",
   "/2인파티",
   "/5인협곡파티",
@@ -75,19 +70,13 @@ export async function POST(req: NextRequest) {
     const roomName = getBodyRoom(body);
     const sender = getBodySender(body);
 
-    if (isRecruitResetCommand(message)) {
-      const result = await resetRecruitNumbers({ roomName, sender });
-      return partyRecruitJson({
-        result,
-        reply: buildRecruitResetReply(result),
-      });
-    }
-
     const parsed = parseCreateRecruitCommand(message);
 
     if (!parsed) {
       return partyRecruitJson({ reply: CREATE_HELP }, 400);
     }
+
+    await runRecruitIdleAutoResetIfNeeded({ roomName, sender });
 
     const recruitDate = getKakaoRecruitDateKey();
     const resetSeq = await getCurrentRecruitResetSeq(recruitDate);
@@ -282,5 +271,5 @@ async function getNextRecruitNo(recruitDate = getKakaoRecruitDateKey(), resetSeq
     }
   }
 
-  throw new Error("오늘 사용 가능한 모집번호가 없습니다. 진행 중인 구인글을 마무리하거나 모집번호초기화를 실행해주세요.");
+  throw new Error("오늘 사용 가능한 모집번호가 없습니다. 진행 중인 구인글을 마무리하거나 관리자 페이지에서 모집번호를 초기화해주세요.");
 }

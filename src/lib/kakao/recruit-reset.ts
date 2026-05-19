@@ -3,6 +3,7 @@ import { writeAdminLog } from "@/lib/admin-log";
 import { getKakaoRecruitDateKey } from "@/lib/kakao/party-recruit";
 
 export const RECRUIT_RESET_ACTION = "RESET";
+export const RECRUIT_RESET_ACTIONS = ["RESET", "AUTO_IDLE_RESET", "ADMIN_RESET_ALL"] as const;
 
 export function isRecruitResetCommand(message: string) {
   const text = message.trim().replace(/^\/+/, "");
@@ -13,7 +14,7 @@ export async function getLatestRecruitResetLog(recruitDate = getKakaoRecruitDate
   return prisma.recruitPartyLog.findFirst({
     where: {
       recruitDate,
-      action: RECRUIT_RESET_ACTION,
+      action: { in: [...RECRUIT_RESET_ACTIONS] },
     },
     orderBy: [
       { resetSeq: "desc" },
@@ -36,6 +37,9 @@ type ResetRecruitNumberOptions = {
   roomName?: string | null;
   sender?: string | null;
   recruitDate?: string;
+  action?: string;
+  title?: string;
+  summary?: string;
 };
 
 export async function resetRecruitNumbers(options: ResetRecruitNumberOptions = {}) {
@@ -45,7 +49,7 @@ export async function resetRecruitNumbers(options: ResetRecruitNumberOptions = {
     const latestReset = await tx.recruitPartyLog.findFirst({
       where: {
         recruitDate,
-        action: RECRUIT_RESET_ACTION,
+        action: { in: [...RECRUIT_RESET_ACTIONS] },
       },
       orderBy: [
         { resetSeq: "desc" },
@@ -72,19 +76,19 @@ export async function resetRecruitNumbers(options: ResetRecruitNumberOptions = {
         recruitDate,
         resetSeq: nextResetSeq,
         type: "SYSTEM",
-        title: "모집번호 초기화",
-        action: RECRUIT_RESET_ACTION,
+        title: options.title ?? "모집번호 초기화",
+        action: options.action ?? RECRUIT_RESET_ACTION,
         memberCount: 0,
         maxMembers: 0,
-        summary: `${recruitDate} 모집번호를 초기화했습니다. 진행 중 구인글은 유지하고 다음 구인글은 #1부터 생성하되, 진행 중인 번호와 겹치면 다음 빈 번호를 사용합니다.`,
+        summary: options.summary ?? `${recruitDate} 모집번호를 초기화했습니다. 진행 중 구인글은 유지하고 다음 구인글은 #1부터 생성하되, 진행 중인 번호와 겹치면 다음 빈 번호를 사용합니다.`,
         roomName: options.roomName ?? null,
         sender: options.sender ?? null,
       },
     });
 
     await writeAdminLog({
-      action: "KAKAO_PARTY_RECRUIT_RESET",
-      message: `카카오 구인구직 모집번호 초기화: ${recruitDate}, 회차 ${nextResetSeq}`,
+      action: options.action === "AUTO_IDLE_RESET" ? "KAKAO_PARTY_RECRUIT_AUTO_IDLE_RESET" : "KAKAO_PARTY_RECRUIT_RESET",
+      message: `${options.action === "AUTO_IDLE_RESET" ? "카카오 구인구직 활동 없음 자동 모집번호 초기화" : "카카오 구인구직 모집번호 초기화"}: ${recruitDate}, 회차 ${nextResetSeq}`,
       targetType: "RecruitParty",
       targetId: resetLog.id,
       afterJson: {
