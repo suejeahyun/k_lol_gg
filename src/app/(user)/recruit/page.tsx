@@ -24,6 +24,7 @@ type RecruitPageParty = {
   recruitNo: number;
   recruitDate: string;
   resetSeq: number;
+  recruitCode: string | null;
   type: string;
   status: string;
   title: string;
@@ -143,6 +144,7 @@ export default async function RecruitPage() {
                 <div className="recruit-card__meta">
                   <span>{statusLabel}</span>
                   <span>{party.recruitDate} · 회차 {party.resetSeq}</span>
+                  <span>관리번호 {party.recruitCode || `${party.recruitDate}-${party.maxMembers}-${party.recruitNo}`}</span>
                   <span>{activeCount}/{party.maxMembers}</span>
                   {gameInfo ? <span>게임정보: {gameInfo}</span> : null}
                 </div>

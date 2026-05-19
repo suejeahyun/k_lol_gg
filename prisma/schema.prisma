@@ -940,6 +940,7 @@ model RecruitParty {
   recruitNo   Int
   recruitDate String
   resetSeq    Int                @default(0)
+  recruitCode String?
   type        RecruitPartyType
   status      RecruitPartyStatus @default(IN_PROGRESS)
 
@@ -959,6 +960,7 @@ model RecruitParty {
   members RecruitPartyMember[]
 
   @@unique([recruitDate, resetSeq, recruitNo])
+  @@index([recruitCode])
   @@index([type])
   @@index([status, updatedAt])
   @@index([recruitDate, resetSeq, status])

@@ -20,6 +20,7 @@ const menuGroups: AdminSidebarGroup[] = [
   {
     title: "내전 운영",
     items: [
+      { href: "/admin", label: "관리자 홈", code: "ADM" },
       { href: "/admin/matches/new", label: "시즌 내전 등록", code: "REG" },
       { href: "/admin/matches", label: "시즌 내전 관리", code: "MAT" },
     ],

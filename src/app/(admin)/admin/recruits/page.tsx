@@ -47,6 +47,7 @@ function buildPartyWhere(searchParams: PageSearchParams): Prisma.RecruitPartyWhe
     and.push({
       OR: [
         { title: { contains: q, mode: "insensitive" } },
+        { recruitCode: { contains: q, mode: "insensitive" } },
         { roomName: { contains: q, mode: "insensitive" } },
         { hostName: { contains: q, mode: "insensitive" } },
         { members: { some: { name: { contains: q, mode: "insensitive" } } } },
@@ -174,6 +175,7 @@ export default async function AdminRecruitsPage({ searchParams }: PageProps) {
               <tr>
                 <th>날짜/회차</th>
                 <th>번호</th>
+                <th>관리번호</th>
                 <th>유형</th>
                 <th>제목</th>
                 <th>인원</th>
@@ -185,7 +187,7 @@ export default async function AdminRecruitsPage({ searchParams }: PageProps) {
             <tbody>
               {parties.length === 0 ? (
                 <tr>
-                  <td colSpan={8}>조건에 맞는 진행 중 구인글이 없습니다.</td>
+                  <td colSpan={9}>조건에 맞는 진행 중 구인글이 없습니다.</td>
                 </tr>
               ) : (
                 parties.map((party) => {
@@ -196,6 +198,7 @@ export default async function AdminRecruitsPage({ searchParams }: PageProps) {
                     <tr key={party.id}>
                       <td>{party.recruitDate} / {party.resetSeq}</td>
                       <td>#{party.recruitNo}</td>
+                      <td>{party.recruitCode || `${party.recruitDate}-${party.maxMembers}-${party.recruitNo}`}</td>
                       <td>{getRecruitTypeLabel(party.type)}</td>
                       <td>
                         <strong>{party.title}</strong>

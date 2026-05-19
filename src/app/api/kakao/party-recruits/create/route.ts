@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import {
   buildCreateReply,
+  buildRecruitPartyCode,
   getActiveMemberCount,
   getKakaoRecruitDateKey,
   parseCreateRecruitCommand,
@@ -91,6 +92,11 @@ export async function POST(req: NextRequest) {
     const recruitDate = getKakaoRecruitDateKey();
     const resetSeq = await getCurrentRecruitResetSeq(recruitDate);
     const recruitNo = parsed.recruitNo ?? (await getNextRecruitNo(recruitDate, resetSeq));
+    const recruitCode = buildRecruitPartyCode({
+      recruitDate,
+      maxMembers: parsed.maxMembers,
+      recruitNo,
+    });
     const latestReset = await getLatestRecruitResetLog(recruitDate);
     const createdAfterLatestReset = latestReset ? { gt: latestReset.createdAt } : undefined;
 
@@ -99,7 +105,7 @@ export async function POST(req: NextRequest) {
         where: {
           recruitNo,
           recruitDate,
-          resetSeq,
+          status: "IN_PROGRESS",
         },
         include: {
           members: true,
@@ -172,6 +178,7 @@ export async function POST(req: NextRequest) {
         recruitNo,
         recruitDate,
         resetSeq,
+        recruitCode,
         type: parsed.type,
         status: "IN_PROGRESS",
         title: parsed.title,
@@ -193,6 +200,7 @@ export async function POST(req: NextRequest) {
         recruitNo: party.recruitNo,
         recruitDate: party.recruitDate,
         resetSeq: party.resetSeq,
+        recruitCode: party.recruitCode,
         type: party.type,
         roomName,
         sender,
@@ -224,57 +232,52 @@ async function getNextRecruitNo(recruitDate = getKakaoRecruitDateKey(), resetSeq
   const latestReset = await getLatestRecruitResetLog(recruitDate);
   const createdAfterLatestReset = latestReset ? { gt: latestReset.createdAt } : undefined;
 
-  const [latestActive, latestLog] = await Promise.all([
-    prisma.recruitParty.findFirst({
-      where: {
-        recruitDate,
-        resetSeq,
+  const latestLog = await prisma.recruitPartyLog.findFirst({
+    where: {
+      recruitDate,
+      resetSeq,
+      action: {
+        in: ["FINISHED", "AUTO_EXPIRED"],
       },
-      orderBy: {
-        recruitNo: "desc",
-      },
-      select: {
-        recruitNo: true,
-      },
-    }),
-    prisma.recruitPartyLog.findFirst({
-      where: {
-        recruitDate,
-        resetSeq,
-        action: {
-          in: ["FINISHED", "AUTO_EXPIRED"],
-        },
-        ...(createdAfterLatestReset ? { createdAt: createdAfterLatestReset } : {}),
-      },
-      orderBy: {
-        recruitNo: "desc",
-      },
-      select: {
-        recruitNo: true,
-      },
-    }),
-  ]);
+      ...(createdAfterLatestReset ? { createdAt: createdAfterLatestReset } : {}),
+    },
+    orderBy: {
+      recruitNo: "desc",
+    },
+    select: {
+      recruitNo: true,
+    },
+  });
 
-  const lastNo = Math.max(
-    latestActive?.recruitNo ?? 0,
-    latestLog?.recruitNo ?? 0,
-  );
+  const lastNo = latestLog?.recruitNo ?? 0;
 
   for (let offset = 1; offset <= 99; offset += 1) {
     const candidate = ((lastNo + offset - 1) % 99) + 1;
 
-    const exists = await prisma.recruitParty.findFirst({
-      where: {
-        recruitNo: candidate,
-        recruitDate,
-        resetSeq,
-      },
-      select: {
-        id: true,
-      },
-    });
+    const [existsInCurrentSeq, existsActiveToday] = await Promise.all([
+      prisma.recruitParty.findFirst({
+        where: {
+          recruitNo: candidate,
+          recruitDate,
+          resetSeq,
+        },
+        select: {
+          id: true,
+        },
+      }),
+      prisma.recruitParty.findFirst({
+        where: {
+          recruitNo: candidate,
+          recruitDate,
+          status: "IN_PROGRESS",
+        },
+        select: {
+          id: true,
+        },
+      }),
+    ]);
 
-    if (!exists) {
+    if (!existsInCurrentSeq && !existsActiveToday) {
       return candidate;
     }
   }

@@ -48,6 +48,39 @@ function extractRecruitNos(message: string) {
   return result;
 }
 
+
+async function findActiveRecruitParty(params: {
+  recruitNo: number;
+  recruitDate: string;
+  resetSeq: number;
+}) {
+  const { recruitNo, recruitDate, resetSeq } = params;
+
+  const currentSeqParty = await prisma.recruitParty.findFirst({
+    where: {
+      recruitNo,
+      recruitDate,
+      resetSeq,
+      status: "IN_PROGRESS",
+    },
+    include: { members: true },
+  });
+
+  if (currentSeqParty) {
+    return currentSeqParty;
+  }
+
+  return prisma.recruitParty.findFirst({
+    where: {
+      recruitNo,
+      recruitDate,
+      status: "IN_PROGRESS",
+    },
+    orderBy: [{ resetSeq: "desc" }, { updatedAt: "desc" }],
+    include: { members: true },
+  });
+}
+
 function splitRecruitStatusBlocks(message: string) {
   const sections = message
     .replace(/\r/g, "\n")
@@ -80,15 +113,12 @@ async function syncOneRecruit(params: {
 }) {
   const { recruitNo, message, roomName, sender, recruitDate, resetSeq, todayRange } = params;
 
-  const party = await prisma.recruitParty.findFirst({
-    where: { recruitNo, recruitDate, resetSeq },
-    include: { members: true },
-  });
+  const party = await findActiveRecruitParty({ recruitNo, recruitDate, resetSeq });
 
   if (!party) {
     const finishedLog = await prisma.recruitPartyLog.findFirst({
-      where: { recruitNo, recruitDate, resetSeq, action: { in: ["FINISHED", "AUTO_EXPIRED"] }, createdAt: todayRange },
-      orderBy: { createdAt: "desc" },
+      where: { recruitNo, recruitDate, action: { in: ["FINISHED", "AUTO_EXPIRED"] }, createdAt: todayRange },
+      orderBy: [{ resetSeq: "desc" }, { createdAt: "desc" }],
       select: { title: true, memberCount: true, maxMembers: true },
     });
 

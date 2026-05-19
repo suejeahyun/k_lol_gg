@@ -15,6 +15,39 @@ import {
   rejectIfInvalidPartySecret,
 } from "../_shared";
 
+
+async function findActiveRecruitParty(params: {
+  recruitNo: number;
+  recruitDate: string;
+  resetSeq: number;
+}) {
+  const { recruitNo, recruitDate, resetSeq } = params;
+
+  const currentSeqParty = await prisma.recruitParty.findFirst({
+    where: {
+      recruitNo,
+      recruitDate,
+      resetSeq,
+      status: "IN_PROGRESS",
+    },
+    include: { members: { orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }] } },
+  });
+
+  if (currentSeqParty) {
+    return currentSeqParty;
+  }
+
+  return prisma.recruitParty.findFirst({
+    where: {
+      recruitNo,
+      recruitDate,
+      status: "IN_PROGRESS",
+    },
+    orderBy: [{ resetSeq: "desc" }, { updatedAt: "desc" }],
+    include: { members: { orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }] } },
+  });
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await readJsonBody(req);
@@ -39,9 +72,10 @@ export async function POST(req: NextRequest) {
     const resetSeq = await getCurrentRecruitResetSeq(recruitDate);
     const latestReset = await getLatestRecruitResetLog(recruitDate);
     const createdAfterLatestReset = latestReset ? { gt: latestReset.createdAt } : undefined;
-    const party = await prisma.recruitParty.findFirst({
-      where: { recruitNo: parsed.recruitNo, recruitDate, resetSeq },
-      include: { members: { orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }] } },
+    const party = await findActiveRecruitParty({
+      recruitNo: parsed.recruitNo,
+      recruitDate,
+      resetSeq,
     });
 
     if (!party) {
@@ -49,11 +83,10 @@ export async function POST(req: NextRequest) {
         where: {
           recruitNo: parsed.recruitNo,
           recruitDate,
-          resetSeq,
           action: { in: ["FINISHED", "AUTO_EXPIRED"] },
           ...(createdAfterLatestReset ? { createdAt: createdAfterLatestReset } : {}),
         },
-        orderBy: { createdAt: "desc" },
+        orderBy: [{ resetSeq: "desc" }, { createdAt: "desc" }],
         select: { title: true, memberCount: true, maxMembers: true },
       });
 

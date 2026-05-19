@@ -32,6 +32,7 @@ const menuGroups: UserSidebarGroup[] = [
       { href: "/", label: "홈", code: "HOM" },
       { href: "/players", label: "플레이어", code: "PLY" },
       { href: "/rankings", label: "랭킹", code: "RNK" },
+      { href: "/me/player", label: "내 플레이어", code: "MY", auth: true },
     ],
   },
   {
@@ -39,6 +40,7 @@ const menuGroups: UserSidebarGroup[] = [
     items: [
       { href: "/matches", label: "내전 목록", code: "MAT" },
       { href: "/recruit", label: "구인구직 현황", code: "REC" },
+      { href: "/recruit-helper", label: "구인도우미", code: "HELP" },
       { href: "/progress", label: "이벤트 / 멸망전", code: "EVT" },
       { href: "/highlights", label: "하이라이트", code: "VID" },
       { href: "/participation", label: "참가하기", code: "JOIN", auth: true, approvedOnly: true },
@@ -50,6 +52,7 @@ const menuGroups: UserSidebarGroup[] = [
       { href: "/ai-balance", label: "AI 밸런스", code: "AI" },
       { href: "/ai-balance/players", label: "AI MMR", code: "MMR" },
       { href: "/players/balance", label: "팀 밸런스", code: "BAL", auth: true, approvedOnly: true },
+      { href: "/players/balance/drafts", label: "저장 밸런스", code: "DRF", auth: true, approvedOnly: true },
     ],
   },
   {
@@ -57,6 +60,8 @@ const menuGroups: UserSidebarGroup[] = [
     items: [
       { href: "/notices", label: "공지사항", code: "NOT" },
       { href: "/event-notices", label: "이벤트 공지", code: "EVN" },
+      { href: "/images", label: "우승 이미지", code: "IMG" },
+      { href: "/kakao", label: "카카오봇", code: "KAK" },
       { href: "/account/password", label: "비밀번호 변경", code: "PWD", auth: true },
     ],
   },

@@ -24,6 +24,7 @@ export type RecruitPartyLike = {
   recruitNo: number;
   recruitDate: string;
   resetSeq?: number;
+  recruitCode?: string | null;
   type: RecruitPartyType | string;
   status: RecruitPartyStatus | string;
   title: string;
@@ -211,6 +212,15 @@ function trimName(value: string) {
 
 function isValidRecruitNo(value: number) {
   return Number.isInteger(value) && value >= 1 && value <= 99;
+}
+
+
+export function buildRecruitPartyCode(params: {
+  recruitDate: string;
+  maxMembers: number;
+  recruitNo: number;
+}) {
+  return `${params.recruitDate}-${params.maxMembers}-${params.recruitNo}`;
 }
 
 export function getRecruitTypeLabel(type: string) {

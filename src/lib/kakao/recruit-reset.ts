@@ -76,7 +76,7 @@ export async function resetRecruitNumbers(options: ResetRecruitNumberOptions = {
         action: RECRUIT_RESET_ACTION,
         memberCount: 0,
         maxMembers: 0,
-        summary: `${recruitDate} 모집번호를 초기화했습니다. 진행 중 구인글은 유지하고 다음 구인글은 #1부터 생성됩니다.`,
+        summary: `${recruitDate} 모집번호를 초기화했습니다. 진행 중 구인글은 유지하고 다음 구인글은 #1부터 생성하되, 진행 중인 번호와 겹치면 다음 빈 번호를 사용합니다.`,
         roomName: options.roomName ?? null,
         sender: options.sender ?? null,
       },
@@ -117,6 +117,6 @@ export function buildRecruitResetReply(result: { recruitDate: string; resetSeq: 
     `유지된 진행 중 구인글: ${result.activeKeptCount}개`,
     "",
     "기존 구인글은 삭제하지 않습니다.",
-    "다음 구인 생성부터 모집번호 #1부터 다시 사용됩니다.",
+    "다음 구인 생성부터 #1부터 확인하되, 진행 중인 번호와 겹치면 다음 빈 번호를 사용합니다.",
   ].join("\n");
 }
