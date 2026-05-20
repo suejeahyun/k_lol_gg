@@ -1,4 +1,4 @@
-export type KakaoOpenchatCommandType = "record" | "recent" | "ranking" | "help" | "status" | "unknown";
+export type KakaoOpenchatCommandType = "record" | "recent" | "ranking" | "help" | "recruitHelp" | "status" | "unknown";
 
 export type ParsedKakaoOpenchatCommand = {
   type: KakaoOpenchatCommandType;
@@ -37,9 +37,15 @@ const COMMAND_ALIASES: Record<string, KakaoOpenchatCommandType> = {
   "도움말": "help",
   "!도움말": "help",
   "/도움말": "help",
-  "구인도움말": "help",
-  "!구인도움말": "help",
-  "/구인도움말": "help",
+  "구인도움말": "recruitHelp",
+  "!구인도움말": "recruitHelp",
+  "/구인도움말": "recruitHelp",
+  "구인구직도움말": "recruitHelp",
+  "!구인구직도움말": "recruitHelp",
+  "/구인구직도움말": "recruitHelp",
+  "구인명령어": "recruitHelp",
+  "!구인명령어": "recruitHelp",
+  "/구인명령어": "recruitHelp",
   "명령어": "help",
   "!명령어": "help",
   "/명령어": "help",
@@ -77,7 +83,7 @@ export function parseKakaoCommand(message: unknown): ParsedKakaoOpenchatCommand 
 
 export function getKakaoHelpMessage() {
   return [
-    '[K-LOL.GG 통합 카카오봇 도움말]',
+    '[K-LOL.GG 일반 도움말]',
     '',
     'LOL-K 기능',
     '- 내전현황 : 현재 시즌내전 신청 현황',
@@ -87,7 +93,19 @@ export function getKakaoHelpMessage() {
     '- 최근 닉네임#태그 : 최근 경기 조회',
     '- 랭킹 : 랭킹 조회',
     '',
-    '구인구직 파티 생성',
+    '구인구직 명령어는 구인도움말을 입력해주세요.',
+    '',
+    '참고',
+    '- 모든 명령어 앞에 /를 붙여도 사용할 수 있습니다.',
+    '- 예) /내전현황, /전적 닉네임#태그, /구인도움말',
+  ].join("\n");
+}
+
+export function getKakaoRecruitHelpMessage() {
+  return [
+    '[K-LOL.GG 구인구직 도움말]',
+    '',
+    '파티 생성',
     '- 2인파티',
     '- 3인파티',
     '- 4인파티',
@@ -95,21 +113,22 @@ export function getKakaoHelpMessage() {
     '- 8인파티',
     '- 10인파티',
     '',
-    '인원수에 따른 양식 생성 후 게임정보란에 게임 종류, 시작시간 등을 작성',
+    '작성 규칙',
+    '- 게임정보란에 게임 종류, 시작시간 등을 작성',
+    '- 모집번호는 지우지 말고 그대로 사용',
     '',
     '구인구직 기능',
     '- 구인도우미 : 명령어 전체 설명 페이지',
     '- 구인현황 / 현황',
-    '- 모집번호 + 쫑 or 모집번호 + ㅉ',
+    '- 모집번호 + 쫑 또는 모집번호 + ㅉ',
     '- 구인마감 #번호',
-    '- 구인도움말',
     '',
     '내전 구인구직방 기능',
     '- 내전구인',
     '- 내전구인구직',
     '',
     '참고',
-    '- 모든 명령어 앞에 /를 붙여도 사용할 수 있습니다.',
-    '- 예) /5인협곡파티, /구인현황, /도움말',
+    '- 구인도움말도 /구인도움말로 사용 가능',
+    '- 예) /5인파티, /구인현황, /구인마감 #12',
   ].join("\n");
 }

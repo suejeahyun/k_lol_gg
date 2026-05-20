@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
 import { getRequiredSecretInProduction } from "@/lib/security/secrets";
-import { getKakaoHelpMessage, parseKakaoCommand } from "@/lib/kakao/parseKakaoCommand";
+import { getKakaoHelpMessage, getKakaoRecruitHelpMessage, parseKakaoCommand } from "@/lib/kakao/parseKakaoCommand";
 import {
   formatPlayerRecordMessage,
   formatRankingMessage,
@@ -103,6 +103,10 @@ async function handleMessage(message: string) {
 
   if (command.type === "help") {
     return jsonReply(getKakaoHelpMessage());
+  }
+
+  if (command.type === "recruitHelp") {
+    return jsonReply(getKakaoRecruitHelpMessage());
   }
 
   if (command.type === "status") {
