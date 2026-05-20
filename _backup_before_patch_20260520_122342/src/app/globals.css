@@ -1,0 +1,46 @@
+@import url("../styles/base/reset.css");
+@import url("../styles/base/variables.css");
+@import url("../styles/base/typography.css");
+
+@import url("../styles/layout/app-shell.css");
+@import url("../styles/layout/topbar.css");
+@import url("../styles/layout/sidebar.css");
+@import url("../styles/layout/background.css");
+
+@import url("../styles/shared/buttons.css");
+@import url("../styles/shared/cards.css");
+@import url("../styles/shared/forms.css");
+@import url("../styles/shared/tables.css");
+@import url("../styles/shared/pagination.css");
+@import url("../styles/shared/badges.css");
+
+@import url("../styles/pages/home.css");
+@import url("../styles/pages/players.css");
+@import url("../styles/pages/matches.css");
+@import url("../styles/pages/rankings.css");
+@import url("../styles/pages/notices.css");
+@import url("../styles/pages/gallery.css");
+@import url("../styles/pages/highlights.css");
+@import url("../styles/pages/balance.css");
+@import url("../styles/pages/progress.css");
+@import url("../styles/pages/participation.css");
+@import url("../styles/pages/recruit.css");
+
+@import url("../styles/admin/admin-layout.css");
+@import url("../styles/admin/admin-dashboard.css");
+@import url("../styles/admin/admin-forms.css");
+@import url("../styles/admin/admin-tables.css");
+@import url("../styles/admin/admin-events.css");
+@import url("../styles/admin/admin-operation-ai.css");
+
+@import url("../styles/features/auth.css");
+@import url("../styles/features/kakao.css");
+@import url("../styles/features/champion.css");
+@import url("../styles/features/event-notices.css");
+@import url("../styles/features/destruction.css");
+@import url("../styles/features/animations.css");
+@import url("../styles/features/ai-balance.css");
+
+@import url("../styles/theme-overrides.css");
+@import url("../styles/responsive.css");
+@import url("../styles/mobile-browser.css");

@@ -1,0 +1,1008 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Team {
+  BLUE
+  RED
+}
+
+enum Position {
+  TOP
+  JGL
+  MID
+  ADC
+  SUP
+}
+
+enum EventMatchStatus {
+  PLANNED
+  RECRUITING
+  TEAM_BUILDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum EventMatchMode {
+  POSITION
+  ARAM
+}
+
+enum EventTournamentStage {
+  ROUND_OF_32
+  ROUND_OF_16
+  QUARTER_FINAL
+  SEMI_FINAL
+  FINAL
+}
+
+enum DestructionStatus {
+  PLANNED
+  RECRUITING
+  TEAM_BUILDING
+  PRELIMINARY
+  TOURNAMENT
+  COMPLETED
+  CANCELLED
+}
+
+enum DestructionStage {
+  PRELIMINARY
+  SEMI_FINAL
+  FINAL
+}
+
+enum ApplyPosition {
+  TOP
+  JGL
+  MID
+  ADC
+  SUP
+  ALL
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum UserStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ParticipationApplyStatus {
+  APPLIED
+  CANCELLED
+}
+
+enum OperationAiRequestStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+  FAILED
+}
+
+enum EventNoticeType {
+  EVENT_MATCH
+  DESTRUCTION
+  ETC
+}
+
+model Player {
+  id          Int      @id @default(autoincrement())
+  name        String
+  nickname    String
+  tag         String
+  peakTier      String?
+  currentTier   String?
+  balanceOverrideScore  Float   @default(0)
+  balanceOverrideReason String?
+  isActive      Boolean   @default(true)
+  deactivatedAt DateTime?
+  createdAt     DateTime  @default(now())
+
+  userAccountId Int?         @unique
+  userAccount   UserAccount? @relation(fields: [userAccountId], references: [id], onDelete: SetNull)
+
+  participants  MatchParticipant[]
+  seasonStats   PlayerSeasonStat[]
+  championStats PlayerChampionStat[]
+  positionStats PlayerPositionStat[]
+  seasonResults SeasonResult[]
+
+  seasonParticipationApplies      SeasonParticipationApply[]
+  eventParticipationApplies       EventParticipationApply[]
+  destructionParticipationApplies DestructionParticipationApply[]
+
+  eventParticipants EventParticipant[]
+
+  destructionCaptainTeams DestructionTeam[]
+  destructionParticipants DestructionParticipant[]
+  teamBalanceDraftPlayers TeamBalanceDraftPlayer[]
+
+  riotAccount      PlayerRiotAccount?
+  soloRankSnapshot PlayerSoloRankSnapshot?
+  soloMatches      PlayerSoloMatch[]
+
+  balanceProfile      PlayerBalanceProfile?
+  balanceMatchResults PlayerBalanceMatchResult[]
+
+  @@unique([nickname, tag])
+  @@index([isActive, createdAt])
+  @@index([name])
+  @@index([nickname])
+  @@index([tag])
+}
+
+model UserAccount {
+  id           Int        @id @default(autoincrement())
+  userId       String     @unique
+  passwordHash String
+  role         UserRole   @default(USER)
+  status       UserStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  player Player?
+}
+
+model Champion {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  imageUrl  String
+  createdAt DateTime @default(now())
+
+  participants  MatchParticipant[]
+  championStats PlayerChampionStat[]
+}
+
+model Season {
+  id        Int      @id @default(autoincrement())
+  name      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  matches              MatchSeries[]
+  seasonStats          PlayerSeasonStat[]
+  championStats        PlayerChampionStat[]
+  positionStats        PlayerPositionStat[]
+  seasonResults        SeasonResult[]
+  participationApplies SeasonParticipationApply[]
+  teamBalanceDrafts    TeamBalanceDraft[]
+}
+
+model MatchSeries {
+  id        Int      @id @default(autoincrement())
+  title     String
+  matchDate DateTime
+  seasonId  Int
+  createdAt DateTime @default(now())
+
+  season Season      @relation(fields: [seasonId], references: [id])
+  games  MatchGame[]
+
+  balanceReviews       BalanceMatchReview[]
+  balanceMatchResults  PlayerBalanceMatchResult[]
+
+  @@index([seasonId, matchDate])
+}
+
+model MatchGame {
+  id          Int  @id @default(autoincrement())
+  seriesId    Int
+  gameNumber  Int
+  durationMin Int
+  winnerTeam  Team
+  mvpPlayerId Int?
+  mvpScore    Float?
+
+  series       MatchSeries        @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  participants MatchParticipant[]
+
+  @@unique([seriesId, gameNumber])
+  @@index([seriesId, gameNumber])
+  @@index([mvpPlayerId])
+}
+
+model MatchParticipant {
+  id         Int      @id @default(autoincrement())
+  gameId     Int
+  playerId   Int
+  championId Int
+  team       Team
+  position   Position
+
+  kills   Int
+  deaths  Int
+  assists Int
+
+  game     MatchGame @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  player   Player    @relation(fields: [playerId], references: [id])
+  champion Champion  @relation(fields: [championId], references: [id])
+
+  @@index([gameId])
+  @@index([playerId])
+  @@index([championId])
+}
+
+model PlayerSeasonStat {
+  id       Int @id @default(autoincrement())
+  playerId Int
+  seasonId Int
+
+  totalGames         Int
+  participationCount Int   @default(0)
+  wins               Int
+  losses             Int
+  mvpCount           Int   @default(0)
+
+  player Player @relation(fields: [playerId], references: [id])
+  season Season @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, seasonId])
+  @@index([seasonId, totalGames])
+  @@index([seasonId, wins])
+  @@index([seasonId, mvpCount])
+}
+
+model PlayerChampionStat {
+  id         Int @id @default(autoincrement())
+  playerId   Int
+  seasonId   Int
+  championId Int
+
+  games    Int
+  wins     Int
+  mvpCount Int @default(0)
+
+  player   Player   @relation(fields: [playerId], references: [id])
+  season   Season   @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  champion Champion @relation(fields: [championId], references: [id])
+
+  @@unique([playerId, seasonId, championId])
+  @@index([seasonId])
+  @@index([championId])
+  @@index([playerId, seasonId, games])
+}
+
+model PlayerPositionStat {
+  id       Int      @id @default(autoincrement())
+  playerId Int
+  seasonId Int
+  position Position
+
+  games Int
+  wins  Int
+
+  player Player @relation(fields: [playerId], references: [id])
+  season Season @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, seasonId, position])
+  @@index([seasonId])
+  @@index([playerId, seasonId, games])
+}
+
+model SeasonResult {
+  id       Int    @id @default(autoincrement())
+  seasonId Int
+  category String
+  playerId Int
+  value    Float
+
+  season Season @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  player Player @relation(fields: [playerId], references: [id])
+
+  @@unique([seasonId, category, playerId])
+  @@index([seasonId, category, value])
+}
+
+model RateLimitLog {
+  id        Int      @id @default(autoincrement())
+  key       String
+  action    String
+  createdAt DateTime @default(now())
+
+  @@index([key, action, createdAt])
+}
+
+model AdminLog {
+  id         Int      @id @default(autoincrement())
+  action     String
+  message    String
+  actorId    Int?
+  actorType  String?
+  actorUserId String?
+  targetType String?
+  targetId   Int?
+  beforeJson Json?
+  afterJson  Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([action])
+  @@index([actorId])
+  @@index([targetType, targetId])
+  @@index([createdAt])
+}
+
+model Notice {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String   @db.Text
+  isPinned  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+model Highlight {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String   @db.Text
+  youtubeUrl  String
+  youtubeId   String
+  thumbnailUrl String?
+  isPublished Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isPublished, sortOrder, createdAt])
+}
+
+model GalleryImage {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String   @db.Text
+  imageUrl    String[]
+  showOnHome  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  eventMatches           EventMatch[]
+  destructionTournaments DestructionTournament[]
+
+  @@index([showOnHome, createdAt])
+}
+
+model EventMatch {
+  id          Int     @id @default(autoincrement())
+  title       String
+  description String? @db.Text
+
+  status EventMatchStatus @default(PLANNED)
+  mode   EventMatchMode   @default(POSITION)
+
+  eventDate   DateTime
+  recruitFrom DateTime?
+  recruitTo   DateTime?
+
+  winnerTeamId   Int?
+  mvpPlayerId    Int?
+  galleryImageId Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  galleryImage GalleryImage? @relation(fields: [galleryImageId], references: [id])
+
+  teams                EventTeam[]
+  participants         EventParticipant[]
+  matches              EventTournamentMatch[]
+  participationApplies EventParticipationApply[]
+
+  @@index([status, eventDate])
+  @@index([galleryImageId])
+}
+
+model EventTeam {
+  id      Int    @id @default(autoincrement())
+  eventId Int
+  name    String
+  seed    Int?
+  score   Float  @default(0)
+
+  event EventMatch @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  members EventParticipant[]
+
+  matchesA EventTournamentMatch[] @relation("EventTeamA")
+  matchesB EventTournamentMatch[] @relation("EventTeamB")
+
+  @@unique([eventId, name])
+  @@index([eventId, seed])
+}
+
+model EventParticipant {
+  id       Int       @id @default(autoincrement())
+  eventId  Int
+  teamId   Int?
+  playerId Int
+  position Position?
+
+  balanceScore Float @default(0)
+
+  event  EventMatch @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  team   EventTeam? @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  player Player     @relation(fields: [playerId], references: [id])
+
+  @@unique([eventId, playerId])
+  @@index([eventId, teamId])
+}
+
+model EventTournamentMatch {
+  id      Int                  @id @default(autoincrement())
+  eventId Int
+  stage   EventTournamentStage
+  round   Int
+
+  teamAId      Int
+  teamBId      Int
+  winnerTeamId Int?
+  matchDate    DateTime?
+  mvpPlayerId  Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  event EventMatch @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  teamA EventTeam  @relation("EventTeamA", fields: [teamAId], references: [id])
+  teamB EventTeam  @relation("EventTeamB", fields: [teamBId], references: [id])
+
+  @@unique([eventId, stage, round])
+  @@index([eventId, winnerTeamId])
+}
+
+model DestructionTournament {
+  id          Int               @id @default(autoincrement())
+  title       String
+  description String?           @db.Text
+  status      DestructionStatus @default(PLANNED)
+
+  startDate DateTime?
+  endDate   DateTime?
+
+  winnerTeamId   Int?
+  mvpPlayerId    Int?
+  galleryImageId Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  galleryImage GalleryImage? @relation(fields: [galleryImageId], references: [id])
+
+  teams                DestructionTeam[]
+  participants         DestructionParticipant[]
+  matches              DestructionMatch[]
+  participationApplies DestructionParticipationApply[]
+
+  @@index([status, startDate])
+  @@index([galleryImageId])
+}
+
+model DestructionTeam {
+  id           Int    @id @default(autoincrement())
+  tournamentId Int
+  name         String
+  captainId    Int
+
+  points Int @default(0)
+  wins   Int @default(0)
+  losses Int @default(0)
+
+  tournament DestructionTournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  captain    Player                @relation(fields: [captainId], references: [id])
+
+  members DestructionParticipant[]
+
+  matchesA DestructionMatch[] @relation("DestructionTeamA")
+  matchesB DestructionMatch[] @relation("DestructionTeamB")
+
+  @@unique([tournamentId, name])
+  @@index([tournamentId, points, wins, losses])
+}
+
+model DestructionParticipant {
+  id           Int      @id @default(autoincrement())
+  tournamentId Int
+  teamId       Int?
+  playerId     Int
+  position     Position
+
+  balanceScore Float @default(0)
+
+  tournament DestructionTournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  team       DestructionTeam?      @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  player     Player                @relation(fields: [playerId], references: [id])
+
+  @@unique([tournamentId, playerId])
+  @@index([tournamentId, teamId])
+}
+
+model DestructionMatch {
+  id           Int              @id @default(autoincrement())
+  tournamentId Int
+  stage        DestructionStage
+  round        Int
+
+  teamAId      Int
+  teamBId      Int
+  winnerTeamId Int?
+  mvpPlayerId  Int?
+
+  isReplay  Boolean   @default(false)
+  matchDate DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tournament DestructionTournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  teamA DestructionTeam @relation("DestructionTeamA", fields: [teamAId], references: [id])
+  teamB DestructionTeam @relation("DestructionTeamB", fields: [teamBId], references: [id])
+
+  @@unique([tournamentId, stage, round])
+  @@index([tournamentId, winnerTeamId])
+}
+
+model SeasonParticipationApply {
+  id        Int      @id @default(autoincrement())
+  seasonId  Int
+  playerId  Int
+  applyDate DateTime
+
+  mainPosition ApplyPosition?
+  subPositions ApplyPosition[]
+
+  status ParticipationApplyStatus @default(APPLIED)
+
+  source            String  @default("SITE")
+  sourceRoom        String?
+  sourceSender      String?
+  sourceMessageHash String?
+  sourceSlotNo      Int?
+  applyTimeText     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  season Season @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([seasonId, playerId, applyDate])
+  @@index([seasonId, applyDate, status])
+  @@index([seasonId, applyDate, source, status])
+  @@index([sourceMessageHash])
+}
+
+model EventParticipationApply {
+  id       Int @id @default(autoincrement())
+  eventId  Int
+  playerId Int
+
+  mainPosition ApplyPosition?
+  subPositions ApplyPosition[]
+
+  status ParticipationApplyStatus @default(APPLIED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  event  EventMatch @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  player Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, playerId])
+}
+
+model DestructionParticipationApply {
+  id           Int @id @default(autoincrement())
+  tournamentId Int
+  playerId     Int
+
+  mainPosition ApplyPosition
+  subPositions ApplyPosition[]
+
+  isCaptain Boolean                  @default(false)
+  status    ParticipationApplyStatus @default(APPLIED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tournament DestructionTournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  player     Player                @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([tournamentId, playerId])
+}
+
+model TeamBalanceDraft {
+  id        Int      @id @default(autoincrement())
+  title     String
+  seasonId  Int?
+  applyDate DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  optionType  String?
+  formulaVersion String? @default("v3.0.0")
+  isOfficial Boolean @default(false)
+  redTotal    Float?
+  blueTotal   Float?
+  diff        Float?
+  balanceCost Float?
+
+  season  Season?                  @relation(fields: [seasonId], references: [id], onDelete: SetNull)
+  players TeamBalanceDraftPlayer[]
+  balanceReviews BalanceMatchReview[]
+
+  @@index([createdAt])
+  @@index([applyDate])
+  @@index([isOfficial, createdAt])
+}
+
+model TeamBalanceDraftPlayer {
+  id       Int @id @default(autoincrement())
+  draftId  Int
+  playerId Int
+
+  team     Team
+  position Position
+
+  roleType      String?
+  score         Float?
+  baseScore     Float?
+  soloBonus     Float?
+  positionBonus Float?
+  rolePenalty   Float?
+
+  createdAt DateTime @default(now())
+
+  draft  TeamBalanceDraft @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  player Player           @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([draftId, playerId])
+}
+
+model PlayerBalanceProfile {
+  id       Int @id @default(autoincrement())
+  playerId Int @unique
+
+  overallMmr Float @default(50)
+  topMmr     Float @default(50)
+  jungleMmr  Float @default(50)
+  midMmr     Float @default(50)
+  adcMmr     Float @default(50)
+  supportMmr Float @default(50)
+
+  confidence      Float @default(0)
+  matchesAnalyzed Int   @default(0)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  lastUpdatedAt DateTime @default(now())
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([overallMmr])
+  @@index([confidence])
+}
+
+model BalanceMatchReview {
+  id Int @id @default(autoincrement())
+
+  matchSeriesId Int
+  draftId       Int?
+
+  selectedOptionType String?
+  predictedRedWinRate  Float?
+  predictedBlueWinRate Float?
+  actualWinner Team?
+
+  redTotal    Float?
+  blueTotal   Float?
+  diff        Float?
+  maxLineDiff Float?
+  midJglDiff  Float?
+  bottomDiff  Float?
+  autoCount   Int?
+  highTierOffRoleCount Int?
+  qualityScore Float?
+
+  aiVerdict String?
+  aiRiskLevel String?
+  aiConfidence Float?
+  aiInferredWinner Team?
+  aiReasoning String? @db.Text
+  aiRiskFactors String? @db.Text
+  aiFormulaVersion String? @default("v2.0.0")
+
+  feedbackRating String?
+  feedbackProblemTeam Team?
+  feedbackProblemLine Position?
+  feedbackMemo String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  matchSeries MatchSeries @relation(fields: [matchSeriesId], references: [id], onDelete: Cascade)
+  draft TeamBalanceDraft? @relation(fields: [draftId], references: [id], onDelete: SetNull)
+
+  @@index([matchSeriesId])
+  @@index([draftId])
+  @@index([actualWinner])
+}
+
+model PlayerBalanceMatchResult {
+  id Int @id @default(autoincrement())
+
+  matchSeriesId Int
+  gameId        Int?
+  playerId      Int
+  championId    Int?
+
+  team     Team
+  position Position
+  kills    Int @default(0)
+  deaths   Int @default(0)
+  assists  Int @default(0)
+  win      Boolean @default(false)
+
+  expectedScoreBefore   Float?
+  actualPerformanceScore Float?
+  mmrDelta              Float @default(0)
+  positionMmrDelta      Float @default(0)
+
+  createdAt DateTime @default(now())
+
+  matchSeries MatchSeries @relation(fields: [matchSeriesId], references: [id], onDelete: Cascade)
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([matchSeriesId])
+  @@index([playerId])
+  @@index([position])
+}
+
+model EventNotice {
+  id      Int             @id @default(autoincrement())
+  title   String
+  content String          @db.Text
+  type    EventNoticeType
+
+  recruitInfo String?   @db.Text
+  rule        String?   @db.Text
+  startDate   DateTime?
+
+  isPinned  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+model RiotApiStatus {
+  id          Int      @id @default(autoincrement())
+  scope       String   @unique
+  statusCode  Int?
+  statusText  String?
+  message     String?  @db.Text
+  retryAfterSec Int?
+  requestCount Int     @default(0)
+  failureCount Int     @default(0)
+  lastSuccessAt DateTime?
+  lastFailureAt DateTime?
+  updatedAt   DateTime @updatedAt
+
+  @@index([statusCode])
+  @@index([lastFailureAt])
+}
+
+model PlayerRiotAccount {
+  id       Int @id @default(autoincrement())
+  playerId Int @unique
+
+  gameName String
+  tagLine  String
+  puuid    String @unique
+
+  summonerId    String?
+  accountId     String?
+  profileIconId Int?
+  summonerLevel Int?
+
+  lastSyncedAt DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([gameName, tagLine])
+}
+
+model PlayerSoloRankSnapshot {
+  id       Int @id @default(autoincrement())
+  playerId Int @unique
+
+  queueType    String  @default("RANKED_SOLO_5x5")
+  tier         String?
+  rank         String?
+  leaguePoints Int     @default(0)
+  wins         Int     @default(0)
+  losses       Int     @default(0)
+  winRate      Float   @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+}
+
+model PlayerSoloMatch {
+  id       Int @id @default(autoincrement())
+  playerId Int
+
+  matchId String
+  queueId Int    @default(420)
+
+  championId   Int
+  championName String
+
+  position String?
+  role     String?
+
+  kills   Int @default(0)
+  deaths  Int @default(0)
+  assists Int @default(0)
+
+  win          Boolean
+  gameDuration Int
+  gameCreation DateTime
+
+  summonerSpell1 Int?
+  summonerSpell2 Int?
+
+  primaryRuneId Int?
+  subRuneId     Int?
+
+  item0 Int?
+  item1 Int?
+  item2 Int?
+  item3 Int?
+  item4 Int?
+  item5 Int?
+  item6 Int?
+
+  totalDamageDealtToChampions Int @default(0)
+  totalDamageTaken            Int @default(0)
+  visionScore                 Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, matchId])
+  @@index([playerId])
+  @@index([championId])
+  @@index([gameCreation])
+}
+
+model OperationAiRequest {
+  id              Int                      @id @default(autoincrement())
+  taskType        String                   @default("PARTICIPATION_PARSE")
+  status          OperationAiRequestStatus @default(PENDING)
+
+  prompt          String
+  rawText         String?
+  parsedJson      Json?
+  resultJson      Json?
+  errorMessage    String?
+
+  createdByUserId String?
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+
+  @@index([taskType])
+  @@index([status])
+  @@index([createdAt])
+}
+
+
+
+enum RecruitPartyType {
+  FLEX_RANK
+  NORMAL_GAME
+  SOLO_RANK
+  ARAM
+  TFT_NORMAL
+  TFT_RANK
+  DOUBLE_UP
+  PARTY_NUMBER
+  PARTY_RIFT
+  OTHER_GAME
+}
+
+enum RecruitPartyStatus {
+  IN_PROGRESS
+  CANCELED
+  RESET
+}
+
+model RecruitParty {
+  id          Int                @id @default(autoincrement())
+  recruitNo   Int
+  recruitDate String
+  resetSeq    Int                @default(0)
+  recruitCode String?
+  type        RecruitPartyType
+  status      RecruitPartyStatus @default(IN_PROGRESS)
+
+  title       String
+  roomName    String?
+  hostName    String?
+  startTimeText     String?
+  tierText          String?
+  preferredLineText String?
+  playStyle         String?
+  note              String?
+  maxMembers Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members RecruitPartyMember[]
+
+  @@unique([recruitDate, resetSeq, recruitNo])
+  @@index([recruitCode])
+  @@index([type])
+  @@index([status, updatedAt])
+  @@index([recruitDate, resetSeq, status])
+  @@index([createdAt])
+}
+
+model RecruitPartyMember {
+  id        Int          @id @default(autoincrement())
+  partyId   Int
+  party     RecruitParty @relation(fields: [partyId], references: [id], onDelete: Cascade)
+
+  name         String
+  position     String?
+  slotNo       Int?
+  isSubstitute Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@unique([partyId, position])
+  @@unique([partyId, slotNo, isSubstitute])
+  @@index([partyId])
+}
+
+model RecruitPartyLog {
+  id          Int      @id @default(autoincrement())
+  recruitNo   Int
+  recruitDate String   @default("")
+  resetSeq    Int      @default(0)
+  type        String
+  title       String
+  action      String
+  memberCount Int
+  maxMembers  Int
+  summary     String?  @db.Text
+  roomName    String?
+  sender      String?
+  createdAt   DateTime @default(now())
+
+  @@index([recruitDate, resetSeq, recruitNo])
+  @@index([recruitDate, resetSeq, action, createdAt])
+  @@index([recruitNo])
+  @@index([action, createdAt])
+  @@index([createdAt])
+}

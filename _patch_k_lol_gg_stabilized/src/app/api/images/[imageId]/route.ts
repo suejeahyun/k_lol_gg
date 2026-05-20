@@ -1,0 +1,171 @@
+export const dynamic = "force-dynamic";
+
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma/client";
+import { writeAdminLog } from "@/lib/admin-log";
+import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { normalizeGalleryImageUrls } from "@/lib/gallery/winner-image-paths";
+
+type RouteContext = {
+  params: Promise<{
+    imageId: string;
+  }>;
+};
+
+type UpdateGalleryImageBody = {
+  title: string;
+  description: string;
+  imageUrl: string[];
+};
+
+export async function GET(_: NextRequest, context: RouteContext) {
+  try {
+    const { imageId } = await context.params;
+    const id = Number(imageId);
+
+    if (Number.isNaN(id)) {
+      return NextResponse.json(
+        { message: "올바른 이미지 ID가 아닙니다." },
+        { status: 400 }
+      );
+    }
+
+    const image = await prisma.galleryImage.findUnique({
+      where: { id },
+    });
+
+    if (!image) {
+      return NextResponse.json(
+        { message: "이미지를 찾을 수 없습니다." },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(image);
+  } catch (error) {
+    console.error("[GALLERY_IMAGE_GET_ERROR]", error);
+    return NextResponse.json(
+      { message: "이미지 조회 중 오류가 발생했습니다." },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(req: NextRequest, context: RouteContext) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
+  try {
+    const { imageId } = await context.params;
+    const id = Number(imageId);
+
+    if (Number.isNaN(id)) {
+      return NextResponse.json(
+        { message: "올바른 이미지 ID가 아닙니다." },
+        { status: 400 }
+      );
+    }
+
+    const body = (await req.json()) as UpdateGalleryImageBody;
+    const title = body.title?.trim();
+    const description = body.description?.trim();
+    const imageUrl = Array.isArray(body.imageUrl)
+      ? normalizeGalleryImageUrls(body.imageUrl)
+      : [];
+
+    if (!title) {
+      return NextResponse.json(
+        { message: "제목을 입력해주세요." },
+        { status: 400 }
+      );
+    }
+
+    if (!description) {
+      return NextResponse.json(
+        { message: "설명을 입력해주세요." },
+        { status: 400 }
+      );
+    }
+
+    if (imageUrl.length === 0) {
+      return NextResponse.json(
+        { message: "이미지를 최소 1개 이상 입력해주세요." },
+        { status: 400 }
+      );
+    }
+
+    if (imageUrl.length > 5) {
+      return NextResponse.json(
+        { message: "이미지는 최대 5개까지 등록할 수 있습니다." },
+        { status: 400 }
+      );
+    }
+
+    const updated = await prisma.galleryImage.update({
+      where: { id },
+      data: {
+        title,
+        description,
+        imageUrl,
+      },
+    });
+
+    await writeAdminLog({
+      action: "GALLERY_IMAGE_UPDATE",
+      message: `우승 이미지 수정: #${id} ${updated.title}`,
+    });
+
+    return NextResponse.json(updated);
+  } catch (error) {
+    console.error("[GALLERY_IMAGE_PATCH_ERROR]", error);
+    return NextResponse.json(
+      { message: "이미지 수정 중 오류가 발생했습니다." },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(_: NextRequest, context: RouteContext) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
+  try {
+    const { imageId } = await context.params;
+    const id = Number(imageId);
+
+    if (Number.isNaN(id)) {
+      return NextResponse.json(
+        { message: "올바른 이미지 ID가 아닙니다." },
+        { status: 400 }
+      );
+    }
+
+    const existingImage = await prisma.galleryImage.findUnique({
+      where: { id },
+    });
+
+    if (!existingImage) {
+      return NextResponse.json(
+        { message: "이미지를 찾을 수 없습니다." },
+        { status: 404 }
+      );
+    }
+
+    await prisma.galleryImage.delete({
+      where: { id },
+    });
+
+    await writeAdminLog({
+      action: "GALLERY_IMAGE_DELETE",
+      message: `우승 이미지 삭제: #${id} ${existingImage.title}`,
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("[GALLERY_IMAGE_DELETE_ERROR]", error);
+    return NextResponse.json(
+      { message: "이미지 삭제 중 오류가 발생했습니다." },
+      { status: 500 }
+    );
+  }
+}

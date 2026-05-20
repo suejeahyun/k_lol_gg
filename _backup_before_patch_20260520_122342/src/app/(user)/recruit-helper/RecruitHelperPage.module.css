@@ -1,0 +1,677 @@
+.page {
+  min-height: 100vh;
+  padding: 42px 22px 96px;
+  color: #eef3ff;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(254, 229, 0, 0.12), transparent 30%),
+    radial-gradient(circle at 92% 8%, rgba(91, 108, 255, 0.28), transparent 34%),
+    linear-gradient(180deg, #070912 0%, #0d1422 52%, #080b12 100%);
+}
+
+.hero,
+.ruleCard,
+.quickGrid,
+.commandStrip,
+.groupList {
+  width: min(1480px, 100%);
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.hero {
+  margin-bottom: 22px;
+}
+
+.heroPanel {
+  overflow: hidden;
+  position: relative;
+  padding: clamp(30px, 5vw, 62px);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 34px;
+  background:
+    linear-gradient(135deg, rgba(22, 29, 45, 0.96), rgba(9, 13, 24, 0.94)),
+    radial-gradient(circle at top right, rgba(254, 229, 0, 0.15), transparent 32%);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.38);
+}
+
+.heroPanel::after {
+  content: "";
+  position: absolute;
+  right: -90px;
+  top: -90px;
+  width: 240px;
+  height: 240px;
+  border-radius: 999px;
+  background: rgba(254, 229, 0, 0.12);
+  filter: blur(2px);
+}
+
+.eyebrow {
+  position: relative;
+  z-index: 1;
+  margin: 0 0 14px;
+  color: #fee500;
+  font-size: 13px;
+  font-weight: 950;
+  letter-spacing: 0.24em;
+}
+
+.hero h1 {
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(36px, 5.8vw, 76px);
+  font-weight: 950;
+  line-height: 1.02;
+  letter-spacing: -0.065em;
+  text-shadow: 0 0 34px rgba(91, 108, 255, 0.34);
+}
+
+.heroText {
+  position: relative;
+  z-index: 1;
+  max-width: 850px;
+  margin: 20px 0 0;
+  color: #b7c2d8;
+  font-size: 17px;
+  line-height: 1.72;
+}
+
+.heroActions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 26px;
+}
+
+.heroActions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid rgba(254, 229, 0, 0.34);
+  border-radius: 999px;
+  color: #111827;
+  background: #fee500;
+  font-size: 14px;
+  font-weight: 950;
+  text-decoration: none;
+}
+
+.heroActions a + a {
+  color: #eef3ff;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(148, 163, 184, 0.28);
+}
+
+.ruleCard {
+  margin-bottom: 18px;
+  padding: 18px 20px;
+  border: 1px solid rgba(254, 229, 0, 0.26);
+  border-radius: 22px;
+  background: rgba(17, 24, 39, 0.82);
+  box-shadow: 0 18px 56px rgba(0, 0, 0, 0.22);
+}
+
+.ruleCard strong {
+  display: block;
+  margin-bottom: 7px;
+  color: #ffffff;
+  font-size: 17px;
+  font-weight: 950;
+}
+
+.ruleCard p {
+  margin: 0;
+  color: #c4cde0;
+  line-height: 1.75;
+}
+
+.ruleCard b {
+  color: #fee500;
+}
+
+.quickGrid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.quickCard {
+  display: grid;
+  gap: 8px;
+  min-height: 86px;
+  padding: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.20);
+  border-radius: 18px;
+  color: #eef3ff;
+  background: rgba(12, 18, 31, 0.86);
+  text-decoration: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.quickCard span {
+  color: #9da9c2;
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.quickCard strong {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.commandStrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-bottom: 30px;
+  padding: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 20px;
+  background: rgba(7, 10, 18, 0.56);
+}
+
+.commandStrip code,
+.commandBar code {
+  display: inline-flex;
+  align-items: center;
+  min-height: 31px;
+  padding: 6px 10px;
+  border: 1px solid rgba(132, 146, 255, 0.26);
+  border-radius: 999px;
+  color: #eef2ff;
+  background: rgba(91, 108, 255, 0.16);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.groupList {
+  display: grid;
+  gap: 34px;
+}
+
+.groupSection {
+  scroll-margin-top: 24px;
+}
+
+.groupTitle {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  margin: 0 0 14px;
+}
+
+.groupTitle span {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 11px;
+  border-radius: 999px;
+  color: #111827;
+  background: #fee500;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.groupTitle h2 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 28px;
+  font-weight: 950;
+  letter-spacing: -0.04em;
+}
+
+.groupTitle p {
+  margin: 0 0 4px;
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.scenarioGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.scenarioCard {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 26px;
+  background:
+    linear-gradient(180deg, rgba(25, 31, 45, 0.98), rgba(10, 15, 25, 0.98));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 22px 62px rgba(0, 0, 0, 0.34);
+}
+
+.scenarioCard.guide { border-color: rgba(254, 229, 0, 0.28); }
+.scenarioCard.search { border-color: rgba(96, 165, 250, 0.28); }
+.scenarioCard.season { border-color: rgba(52, 211, 153, 0.26); }
+.scenarioCard.create { border-color: rgba(168, 85, 247, 0.28); }
+.scenarioCard.sync { border-color: rgba(45, 212, 191, 0.28); }
+.scenarioCard.reset { border-color: rgba(251, 146, 60, 0.30); }
+.scenarioCard.silent { border-color: rgba(148, 163, 184, 0.30); }
+
+.scenarioTop {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  margin-bottom: 13px;
+}
+
+.groupBadge,
+.resultBadge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  height: 27px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.groupBadge {
+  margin-bottom: 10px;
+  color: #111827;
+  background: #fee500;
+}
+
+.resultBadge {
+  color: #dff7ff;
+  background: rgba(14, 165, 233, 0.16);
+  border: 1px solid rgba(125, 211, 252, 0.22);
+  white-space: nowrap;
+}
+
+.scenarioTop h3 {
+  margin: 0 0 8px;
+  color: #ffffff;
+  font-size: 21px;
+  font-weight: 950;
+  line-height: 1.25;
+  letter-spacing: -0.04em;
+}
+
+.scenarioTop p {
+  margin: 0;
+  color: #aab6c9;
+  font-size: 14px;
+  line-height: 1.62;
+}
+
+.commandBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.noteBox {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-left: 4px solid #fee500;
+  border-radius: 12px;
+  color: #fef3c7;
+  background: rgba(133, 77, 14, 0.24);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.phoneShell {
+  overflow: hidden;
+  border: 1px solid rgba(15, 23, 42, 0.36);
+  border-radius: 24px;
+  background: #b7c8dc;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
+}
+
+.statusBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 14px 5px;
+  color: #111827;
+  background: #b7c8dc;
+  font-size: 11px;
+  font-weight: 950;
+}
+
+.kakaoHeader {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) 28px;
+  align-items: center;
+  gap: 8px;
+  min-height: 50px;
+  padding: 8px 12px;
+  color: #152033;
+  background: #aebfd2;
+  border-top: 1px solid rgba(255, 255, 255, 0.24);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.10);
+}
+
+.kakaoHeader strong {
+  display: block;
+  overflow: hidden;
+  color: #121a2a;
+  font-size: 14px;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kakaoHeader small {
+  display: block;
+  margin-top: 2px;
+  color: #526176;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.backIcon,
+.menuIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1f2937;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.menuIcon {
+  font-size: 18px;
+}
+
+.dateDivider {
+  width: fit-content;
+  margin: 12px auto 0;
+  padding: 5px 10px;
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(82, 96, 116, 0.54);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.chatScreen {
+  display: grid;
+  gap: 12px;
+  padding: 12px 12px 16px;
+  background:
+    linear-gradient(180deg, rgba(183, 200, 220, 0.98), rgba(171, 190, 212, 0.98));
+}
+
+.chatRow {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+}
+
+.chatRow.me {
+  grid-template-columns: minmax(0, 1fr) 34px;
+}
+
+.chatRow.me .avatar {
+  grid-column: 2;
+  grid-row: 1;
+  color: #ffffff;
+  background: #3b4658;
+}
+
+.chatRow.me .chatContent {
+  grid-column: 1;
+  grid-row: 1;
+  align-items: flex-end;
+}
+
+.chatRow.system .avatar {
+  color: #ffffff;
+  background: #64748b;
+}
+
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 13px;
+  color: #111827;
+  background: #fee500;
+  font-size: 11px;
+  font-weight: 950;
+  box-shadow: 0 6px 12px rgba(15, 23, 42, 0.12);
+}
+
+.chatContent {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.chatMeta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 4px;
+  color: #3d4b60;
+  font-size: 11px;
+}
+
+.chatMeta strong {
+  color: #172033;
+  font-weight: 950;
+}
+
+.chatMeta span {
+  color: #58687e;
+  font-weight: 750;
+}
+
+.chatBubble {
+  position: relative;
+  max-width: 100%;
+  margin: 0;
+  padding: 12px 13px;
+  border-radius: 5px 16px 16px 16px;
+  color: #111827;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 12.5px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.10);
+}
+
+.bot .chatBubble::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -6px;
+  border-top: 7px solid #ffffff;
+  border-left: 7px solid transparent;
+}
+
+.me .chatBubble {
+  border-radius: 16px 5px 16px 16px;
+  background: #fee500;
+}
+
+.me .chatBubble::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: -6px;
+  border-top: 7px solid #fee500;
+  border-right: 7px solid transparent;
+}
+
+.system .chatBubble {
+  color: #f8fafc;
+  background: #475569;
+}
+
+.system .chatBubble::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -6px;
+  border-top: 7px solid #475569;
+  border-left: 7px solid transparent;
+}
+
+.doneBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  margin-top: 6px;
+  padding: 0 8px;
+  border-radius: 999px;
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.68);
+  font-size: 11px;
+  font-weight: 950;
+}
+
+@media (max-width: 1320px) {
+  .quickGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .scenarioGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 820px) {
+  .page {
+    padding: 24px 12px 64px;
+  }
+
+  .heroPanel {
+    padding: 26px 18px;
+    border-radius: 26px;
+  }
+
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.16em;
+  }
+
+  .hero h1 {
+    font-size: 33px;
+  }
+
+  .heroText {
+    font-size: 14px;
+  }
+
+  .heroActions a {
+    width: 100%;
+  }
+
+  .quickGrid,
+  .scenarioGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .commandStrip {
+    padding: 12px;
+  }
+
+  .commandStrip code,
+  .commandBar code {
+    white-space: normal;
+  }
+
+  .groupTitle {
+    display: grid;
+    gap: 7px;
+    align-items: start;
+  }
+
+  .groupTitle h2 {
+    font-size: 24px;
+  }
+
+  .scenarioCard {
+    padding: 14px;
+    border-radius: 22px;
+  }
+
+  .scenarioTop {
+    grid-template-columns: 1fr;
+  }
+
+  .resultBadge {
+    justify-self: start;
+  }
+
+  .kakaoHeader strong {
+    font-size: 13px;
+  }
+
+  .chatScreen {
+    padding: 10px 10px 14px;
+  }
+
+  .chatRow {
+    grid-template-columns: 30px minmax(0, 1fr);
+    gap: 7px;
+  }
+
+  .chatRow.me {
+    grid-template-columns: minmax(0, 1fr) 30px;
+  }
+
+  .avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 11px;
+    font-size: 10px;
+  }
+
+  .chatBubble {
+    padding: 10px 11px;
+    font-size: 12px;
+    line-height: 1.52;
+  }
+}
+
+@media (max-width: 380px) {
+  .page {
+    padding-right: 8px;
+    padding-left: 8px;
+  }
+
+  .hero h1 {
+    font-size: 29px;
+  }
+
+  .scenarioCard {
+    padding: 10px;
+  }
+
+  .phoneShell {
+    border-radius: 20px;
+  }
+
+  .chatBubble {
+    font-size: 11.5px;
+  }
+}

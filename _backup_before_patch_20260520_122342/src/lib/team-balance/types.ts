@@ -1,0 +1,210 @@
+export type Team = "RED" | "BLUE";
+export type Position = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
+export type RoleType = "MAIN" | "SUB" | "AUTO";
+
+export type ScoreBreakdown = {
+  currentTierScore: number;
+  peakTierScore: number;
+  inhouseScore: number;
+  tierBaseScore: number;
+  adjustedScore: number;
+  internalRankBaseScore: number;
+  rankGapFromLowest: number;
+  rankAddedScore: number;
+  rankScore: number;
+  tierWeight: number;
+  internalRankWeight: number;
+  mixedBaseScore: number;
+  sTierBonus: number;
+  finalBaseScore: number;
+  roleMultiplier: number;
+  roleLoss: number;
+  rolePenalty: number;
+  soloRecentFormBonus: number;
+  soloApplyPositionMatchBonus: number;
+  internalPositionBonus: number;
+  soloPositionBonus: number;
+  positionSkillBonus: number;
+  mmrBonus: number;
+  balanceOverrideScore: number;
+  finalScore: number;
+};
+
+export type PlayerInput = {
+  playerId?: number | null;
+  name: string;
+  nickname?: string;
+  tag?: string;
+  mainPosition: Position | null;
+  mainPositions: Position[];
+  subPositions: Position[];
+};
+
+export type RequestBody = {
+  players: PlayerInput[];
+  syncSoloRank?: boolean;
+};
+
+export type ResolvedPlayer = {
+  id: number;
+  name: string;
+  nickname: string;
+  tag: string;
+  peakTier: string;
+  currentTier: string;
+  winRate: number;
+  inhouseScore: number;
+  adjustedScore: number;
+  rankScore: number;
+  rankBaseScore: number;
+  rankAddedScore: number;
+  rankGapFromLowest: number;
+  tierWeight: number;
+  internalRankWeight: number;
+  mixedBaseScore: number;
+  bonus: number;
+  finalBaseScore: number;
+  balanceOverrideScore: number;
+  balanceOverrideReason: string | null;
+  balanceMmr: number;
+  positionMmrs: Record<Position, number>;
+  mmrConfidence: number;
+  soloRecentGames: number;
+  soloRecentWins: number;
+  soloRecentWinRate: number | null;
+  soloRecentKda: number | null;
+  soloRecentMainPosition: Position | null;
+  soloRecentSubPosition: Position | null;
+  soloRecentPositionConfidence: number;
+  soloRecentAvgDamage: number | null;
+  soloRecentAvgVisionScore: number | null;
+  mainPosition: Position | null;
+  mainPositions: Position[];
+  subPositions: Position[];
+};
+
+export type Assignment = {
+  playerId: number;
+  name: string;
+  nickname: string;
+  tag: string;
+  team: Team;
+  position: Position;
+  roleType: RoleType;
+  score: number;
+  peakTier: string;
+  currentTier: string;
+  tierLabel: string;
+  winRate: number;
+  inhouseScore: number;
+  adjustedScore: number;
+  rankScore: number;
+  rankBaseScore: number;
+  rankAddedScore: number;
+  rankGapFromLowest: number;
+  tierWeight: number;
+  internalRankWeight: number;
+  mixedBaseScore: number;
+  bonus: number;
+  finalBaseScore: number;
+  balanceOverrideScore: number;
+  balanceOverrideReason: string | null;
+  balanceMmr: number;
+  assignedPositionMmr: number;
+  mmrConfidence: number;
+  soloRecentGames: number;
+  soloRecentWins: number;
+  soloRecentWinRate: number | null;
+  soloRecentKda: number | null;
+  soloRecentMainPosition: Position | null;
+  soloRecentSubPosition: Position | null;
+  soloRecentPositionConfidence: number;
+  soloRecentAvgDamage: number | null;
+  soloRecentAvgVisionScore: number | null;
+  internalPositionBonus: number;
+  soloPositionBonus: number;
+  soloApplyPositionMatchBonus: number;
+  positionSkillBonus: number;
+  mmrBonus: number;
+  rolePenalty: number;
+  soloRecentFormBonus: number;
+  mainPositions: Position[];
+  subPositions: Position[];
+  currentTierScore: number;
+  peakTierScore: number;
+  baseTierScore: number;
+  scoreBreakdown: ScoreBreakdown;
+  explanation: string[];
+};
+
+export type TeamBestResult = {
+  total: number;
+  assignments: Assignment[];
+  mainAssignedCount: number;
+  subAssignedCount: number;
+  autoAssignedCount: number;
+};
+
+export type CandidateSnapshot = {
+  redTotal: number;
+  blueTotal: number;
+  diff: number;
+  totalScore: number;
+  lineDiffTotal: number;
+  maxLineDiff: number;
+  topPlayerDiff: number;
+  topRankStackPenalty: number;
+  sTierStackPenalty: number;
+  weightedLineDiff: number;
+  frontSideDiff: number;
+  midJglDiff: number;
+  bottomDiff: number;
+  autoLinePenalty: number;
+  mainImbalancePenalty: number;
+  dataReliabilityPenalty: number;
+  stompPenalty: number;
+  highTierPriorityPenalty: number;
+  remainingMainPriorityPenalty: number;
+  balanceCost: number;
+  qualityScore: number;
+  recommendationScore: number;
+  warningMessages: string[];
+  mainAssignedCount: number;
+  subAssignedCount: number;
+  autoAssignedCount: number;
+  assignments: Assignment[];
+};
+
+export type AiBalanceJudgement = {
+  selectedOptionNo: number | null;
+  selectedOptionTitle: string | null;
+  confidence: number;
+  riskLevel: "LOW" | "MEDIUM" | "HIGH";
+  verdict: string;
+  inferredWinner: Team | "EVEN";
+  predictedRedWinRate: number;
+  predictedBlueWinRate: number;
+  reasoning: string[];
+  riskFactors: string[];
+  strengthFactors: string[];
+  improvementSuggestions: string[];
+  laneFocus: string;
+  draftNotes: string[];
+  dataWarnings: string[];
+  overallSummary: string;
+  operatingAdvice: string;
+};
+
+export type TierScoreDetail = {
+  label: string;
+  score: number;
+  source: "tier" | "fallback";
+};
+
+export type PlayerSeasonBalanceStat = {
+  totalGames: number;
+  participationCount: number;
+  wins: number;
+  losses: number;
+  mvpCount: number;
+};

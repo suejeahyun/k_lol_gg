@@ -1,0 +1,149 @@
+/* 카카오 전적 검색 페이지 */
+
+.kakao-search-page {
+  width: 100%;
+  padding: 32px 20px 60px;
+}
+
+.kakao-search-page__inner {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.kakao-search-page__title {
+  margin: 0 0 10px;
+  font-size: 32px;
+  font-weight: 800;
+  color: #111111;
+}
+
+.kakao-search-page__desc {
+  margin: 0 0 24px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #555555;
+}
+
+.kakao-search-form {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.kakao-search-form__input {
+  flex: 1;
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid #d9d9d9;
+  border-radius: 12px;
+  font-size: 15px;
+  outline: none;
+  background: #ffffff;
+  color: #111111;
+}
+
+.kakao-search-form__input:focus {
+  border-color: #111111;
+}
+
+.kakao-search-form__button {
+  min-width: 110px;
+  height: 48px;
+  border: 0;
+  border-radius: 12px;
+  background: #111111;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.kakao-search-form__button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.kakao-search-page__error {
+  margin: 0 0 20px;
+  font-size: 14px;
+  color: #d93025;
+}
+
+.kakao-player-card {
+  border: 1px solid #e5e5e5;
+  border-radius: 18px;
+  background: #ffffff;
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+}
+
+.kakao-player-card__header {
+  margin-bottom: 20px;
+}
+
+.kakao-player-card__title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  color: #111111;
+}
+
+.kakao-player-card__subtitle {
+  margin: 8px 0 0;
+  font-size: 15px;
+  color: #666666;
+}
+
+.kakao-player-card__stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.kakao-player-card__stat {
+  border: 1px solid #efefef;
+  border-radius: 14px;
+  padding: 16px;
+  background: #fafafa;
+}
+
+.kakao-player-card__stat--full {
+  grid-column: 1 / -1;
+}
+
+.kakao-player-card__label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #777777;
+}
+
+.kakao-player-card__value {
+  font-size: 20px;
+  font-weight: 800;
+  color: #111111;
+}
+
+input::placeholder, textarea::placeholder, .app-input::placeholder, .kakao-search-form__input::placeholder {
+  color: #64748b !important;
+}
+
+.app-button, .btn-primary, .admin-page__create-button, .notice-form__submit-button, .gallery-form__submit-button, .admin-player-form__submit, .kakao-search-form__button, .top3-slide-header__badge, .notice-card__badge, .notice-detail__badge, .notice-admin-card__badge, .admin-log-item__type, .balance-input-row__index, .pagination-button.active, .balance-position-button.active, .balance-position-button--main {
+  background: linear-gradient(135deg, #2563eb, #22d3ee) !important;
+  border-color: rgba(96, 165, 250, 0.64) !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 24px rgba(59, 130, 246, 0.28);
+}
+
+.app-button:hover, .btn-primary:hover, .admin-page__create-button:hover, .notice-form__submit-button:hover, .gallery-form__submit-button:hover, .admin-player-form__submit:hover, .kakao-search-form__button:hover, .pagination-button.active:hover, .balance-position-button.active:hover {
+  opacity: 1 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 0 34px rgba(34, 211, 238, 0.34);
+}
+
+.balance-error-box, .notice-form__error, .gallery-form__error, .balance-error-text, .kakao-search-page__error {
+  background: rgba(239, 68, 68, 0.10) !important;
+  border-color: rgba(248, 113, 113, 0.32) !important;
+  color: #fca5a5 !important;
+}

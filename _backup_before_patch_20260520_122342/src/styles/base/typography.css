@@ -1,0 +1,59 @@
+/* 전역 폰트 / body / 텍스트 기본값 */
+
+body::selection {
+  background: rgba(96, 165, 250, 0.36);
+  color: #ffffff;
+}
+
+input, select, textarea, button {
+  font-family: inherit;
+}
+
+.app-body, .app-content {
+  background: transparent !important;
+}
+
+.app-shell, .app-body, .app-content {
+  background: transparent !important;
+}
+
+.top3-card__title *, .top3-panel__title *, .top3-slide-header__title * {
+  color: #ffffff !important;
+}
+
+.match-form-base, .match-form-base *, .match-form-game, .match-form-game *, .match-form-field, .match-form-field *, .match-form-inline-field, .match-form-inline-field * {
+  color: #ffffff !important;
+}
+
+.page-container .player-row-header a, .page-container .player-row-header div, .page-container .player-row-grid > div {
+  min-width: 0 !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-event-card__meta, .admin-event-card__counts {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: var(--k-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: Inter,
+ "Pretendard",
+ "Noto Sans KR",
+ Arial,
+ sans-serif;
+  background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.22), transparent 34%),
+    radial-gradient(circle at top right, rgba(34, 211, 238, 0.12), transparent 30%),
+    linear-gradient(135deg, var(--k-bg), var(--k-bg-2) 46%, #020617);
+  color: var(--k-text);
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
