@@ -167,9 +167,6 @@ function isParticipantNumberLine(line: string) {
   return /^\s*\d{1,2}\s*[.)]\s*/.test(line) || /^\s*예비\s*\d{1,2}\s*[.)]\s*/.test(line);
 }
 
-function isReserveParticipantLine(line: string) {
-  return /^\s*예비\s*\d{1,2}\s*[.)]\s*/.test(line);
-}
 
 function isExampleLine(line: string) {
   const normalized = line.toUpperCase();

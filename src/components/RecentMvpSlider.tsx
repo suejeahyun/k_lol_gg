@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -74,17 +74,17 @@ export default function RecentMvpSlider({
       <div className="home-section-head">
         <div>
           <p className="home-eyebrow">RECENT MVP</p>
-          <h2 className="home-section-title">理쒓렐 MVP</h2>
+          <h2 className="home-section-title">최근 MVP</h2>
           <p className="home-section-subtitle">
             {dateLabel
-              ? `${dateLabel} 湲곗? 紐⑤뱺 ?명듃 MVP`
-              : "媛??理쒓렐 ?댁쟾 ?좎쭨 湲곗?"}
+              ? `${dateLabel} 기준 모든 세트 MVP`
+              : "가장 최근 내전 날짜 기준"}
           </p>
         </div>
 
         {activeItem ? (
           <Link href={`/matches/${activeItem.matchId}`} className="chip-button">
-            寃쎄린 蹂닿린
+            경기 보기
           </Link>
         ) : null}
       </div>
@@ -110,12 +110,11 @@ export default function RecentMvpSlider({
               </div>
 
               <div className="home-mvp-meta">
-                {activeItem.matchTitle} 쨌 {activeItem.gameNumber}?명듃 쨌{" "}
-                {activeItem.championName}
+                {activeItem.matchTitle} · {activeItem.gameNumber}세트 · {activeItem.championName}
               </div>
 
               <div className="home-mvp-date">
-                {formatMvpDate(activeItem.matchDate)} 쨌 {activeItem.name}
+                {formatMvpDate(activeItem.matchDate)} · {activeItem.name}
               </div>
             </div>
 
@@ -140,9 +139,9 @@ export default function RecentMvpSlider({
                 )
               }
               disabled={normalizedItems.length <= 1}
-              aria-label="?댁쟾 MVP 蹂닿린"
+              aria-label="이전 MVP 보기"
             >
-              ?댁쟾
+              이전
             </button>
 
             <div className="home-mvp-pagination">
@@ -156,7 +155,7 @@ export default function RecentMvpSlider({
                       : "home-mvp-pagination__dot"
                   }
                   onClick={() => setActiveIndex(index)}
-                  aria-label={`${item.gameNumber}?명듃 MVP 蹂닿린`}
+                  aria-label={`${item.gameNumber}세트 MVP 보기`}
                 />
               ))}
             </div>
@@ -168,14 +167,14 @@ export default function RecentMvpSlider({
                 setActiveIndex((prev) => (prev + 1) % normalizedItems.length)
               }
               disabled={normalizedItems.length <= 1}
-              aria-label="?ㅼ쓬 MVP 蹂닿린"
+              aria-label="다음 MVP 보기"
             >
-              ?ㅼ쓬
+              다음
             </button>
           </div>
         </>
       ) : (
-        <div className="empty-box">理쒓렐 MVP ?곗씠?곌? ?놁뒿?덈떎.</div>
+        <div className="empty-box">최근 MVP 데이터가 없습니다.</div>
       )}
     </div>
   );

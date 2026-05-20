@@ -1,7 +1,6 @@
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { buildRecruitStatusReply } from "@/lib/kakao/party-recruit";
 import { partyRecruitJson } from "../_shared";
@@ -111,6 +110,6 @@ export async function GET() {
   return handleStatus();
 }
 
-export async function POST(_req: NextRequest) {
+export async function POST() {
   return handleStatus();
 }
