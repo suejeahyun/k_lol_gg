@@ -49,9 +49,19 @@ async function getChampions(version: string): Promise<RiotChampionSummary[]> {
   return Object.values(json.data);
 }
 
+function requireSeedEnv(name: string) {
+  const value = process.env[name];
+
+  if (!value) {
+    throw new Error(`${name} 환경변수가 설정되지 않았습니다.`);
+  }
+
+  return value;
+}
+
 async function seedSuperAdmin() {
-  const userId = process.env.SUPER_ADMIN_ID || process.env.ADMIN_ID || "klol";
-  const password = process.env.SUPER_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD || "7942";
+  const userId = requireSeedEnv("SUPER_ADMIN_ID");
+  const password = requireSeedEnv("SUPER_ADMIN_PASSWORD");
 
   const passwordHash = await hashPassword(password);
 

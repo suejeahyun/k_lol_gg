@@ -10,10 +10,7 @@ function requireEnv(name: string) {
   return value;
 }
 
-const ADMIN_TOKEN_VALUE =
-  process.env.NODE_ENV === "production"
-    ? requireEnv("ADMIN_TOKEN_VALUE")
-    : process.env.ADMIN_TOKEN_VALUE || "klol-local-admin-token";
+const ADMIN_TOKEN_VALUE = requireEnv("ADMIN_TOKEN_VALUE");
 
 export const authConstants = {
   ADMIN_TOKEN_KEY,

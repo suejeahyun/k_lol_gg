@@ -30,15 +30,8 @@ function isAdminRole(role: string) {
 }
 
 async function ensureSuperAdmin(id: string, password: string) {
-  const superAdminId =
-    process.env.NODE_ENV === "production"
-      ? getRequiredEnv("SUPER_ADMIN_ID")
-      : process.env.SUPER_ADMIN_ID || process.env.ADMIN_ID || "klol";
-
-  const superAdminPassword =
-    process.env.NODE_ENV === "production"
-      ? getRequiredEnv("SUPER_ADMIN_PASSWORD")
-      : process.env.SUPER_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD || "7942";
+  const superAdminId = getRequiredEnv("SUPER_ADMIN_ID");
+  const superAdminPassword = getRequiredEnv("SUPER_ADMIN_PASSWORD");
 
   if (id !== superAdminId || password !== superAdminPassword) {
     return null;

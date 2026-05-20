@@ -1,9 +1,14 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { buildRecruitStatusReply } from "@/lib/kakao/party-recruit";
-import { partyRecruitJson } from "../_shared";
+import {
+  partyRecruitJson,
+  readJsonBody,
+  rejectIfInvalidPartySecret,
+} from "../_shared";
 
 const STATUS_QUERY_TIMEOUT_MS = 6500;
 const STATUS_TAKE = 20;
@@ -24,7 +29,10 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number) {
   return Promise.race([
     promise,
     new Promise<T>((_, reject) => {
-      setTimeout(() => reject(new Error("RECRUIT_STATUS_QUERY_TIMEOUT")), timeoutMs);
+      setTimeout(
+        () => reject(new Error("RECRUIT_STATUS_QUERY_TIMEOUT")),
+        timeoutMs,
+      );
     }),
   ]);
 }
@@ -62,7 +70,11 @@ async function getRecruitStatusPayload() {
         orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }],
       },
     },
-    orderBy: [{ recruitDate: "desc" }, { resetSeq: "desc" }, { recruitNo: "asc" }],
+    orderBy: [
+      { recruitDate: "desc" },
+      { resetSeq: "desc" },
+      { recruitNo: "asc" },
+    ],
     take: STATUS_TAKE,
   });
 
@@ -73,7 +85,10 @@ async function getRecruitStatusPayload() {
   };
 }
 
-async function handleStatus() {
+async function handleStatus(req: NextRequest, bodySecret?: unknown) {
+  const rejected = rejectIfInvalidPartySecret(req, bodySecret);
+  if (rejected) return rejected;
+
   try {
     const payload = await withTimeout(
       getRecruitStatusPayload(),
@@ -98,7 +113,9 @@ async function handleStatus() {
 
     return partyRecruitJson(
       {
-        reply: `[K-LOL.GG 구인구직 현황 실패]\n${message || "서버 처리 중 오류가 발생했습니다."}`,
+        reply: `[K-LOL.GG 구인구직 현황 실패]\n${
+          message || "서버 처리 중 오류가 발생했습니다."
+        }`,
         error: message,
       },
       500,
@@ -106,10 +123,11 @@ async function handleStatus() {
   }
 }
 
-export async function GET() {
-  return handleStatus();
+export async function GET(req: NextRequest) {
+  return handleStatus(req);
 }
 
-export async function POST() {
-  return handleStatus();
+export async function POST(req: NextRequest) {
+  const body = await readJsonBody(req);
+  return handleStatus(req, body.secret);
 }
