@@ -131,7 +131,7 @@ async function syncOneRecruit(params: {
             "[K-LOL.GG 구인구직 반영 안내]",
             `모집번호 #${recruitNo}는 이미 마무리된 구인글입니다.`,
             `기록: ${finishedLog.title || "구인글"}`,
-            `최종 인원: ${finishedLog.memberCount}/${finishedLog.maxMembers}`,
+            `최종 인원: ${Math.min(finishedLog.memberCount, finishedLog.maxMembers)}/${finishedLog.maxMembers}`,
             "마무리된 번호에는 인원을 추가할 수 없습니다.",
           ].join("\n")
         : [
@@ -191,7 +191,7 @@ async function syncOneRecruit(params: {
 
     await writeAdminLog({
       action: "KAKAO_PARTY_RECRUIT_SYNC",
-      message: `카카오 구인구직 파티 반영: #${result.recruitNo} ${result.title}, ${result.members.filter((member) => !member.isSubstitute && member.name.trim() !== "").length}/${result.maxMembers}`,
+      message: `카카오 구인구직 파티 반영: #${result.recruitNo} ${result.title}, ${Math.min(result.members.filter((member) => !member.isSubstitute && member.name.trim() !== "").length, result.maxMembers)}/${result.maxMembers}`,
       targetType: "RecruitParty",
       targetId: result.id,
       afterJson: {

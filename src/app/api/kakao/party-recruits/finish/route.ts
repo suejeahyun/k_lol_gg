@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
                 "[K-LOL.GG 구인구직 마무리]",
                 `모집번호 #${parsed.recruitNo}는 이미 마무리된 구인글입니다.`,
                 `기록: ${finishedLog.title || "구인글"}`,
-                `최종 인원: ${finishedLog.memberCount}/${finishedLog.maxMembers}`,
+                `최종 인원: ${Math.min(finishedLog.memberCount, finishedLog.maxMembers)}/${finishedLog.maxMembers}`,
               ].join("\n")
             : `[K-LOL.GG 구인구직 마무리]\n\n모집번호 #${parsed.recruitNo} 파티를 찾지 못했습니다.`,
         },

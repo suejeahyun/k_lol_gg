@@ -9,6 +9,7 @@ import {
   buildCreateReply,
   buildRecruitPartyCode,
   getActiveMemberCount,
+  getDisplayActiveMemberCount,
   getKakaoRecruitDateKey,
   parseCreateRecruitCommand,
 } from "@/lib/kakao/party-recruit";
@@ -123,7 +124,7 @@ export async function POST(req: NextRequest) {
     ]);
 
     if (existing) {
-      const activeCount = getActiveMemberCount(existing.members);
+      const activeCount = getDisplayActiveMemberCount(existing.members, existing.maxMembers);
 
       return partyRecruitJson(
         {
@@ -153,7 +154,7 @@ export async function POST(req: NextRequest) {
             `모집번호 #${recruitNo}은 이미 마무리된 번호입니다.`,
             "",
             `마무리 기록: ${finishedLog.title || "구인글"}`,
-            `최종 인원: ${finishedLog.memberCount}/${finishedLog.maxMembers}`,
+            `최종 인원: ${Math.min(finishedLog.memberCount, finishedLog.maxMembers)}/${finishedLog.maxMembers}`,
             "",
             "새 구인글은 번호 없이 생성하면 다음 번호가 자동 배정됩니다.",
             "예시: /2인파티",

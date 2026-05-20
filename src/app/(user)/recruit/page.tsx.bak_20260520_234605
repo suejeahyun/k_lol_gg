@@ -6,7 +6,6 @@ import {
   buildGameInfoText,
   formatRecruitPartyBlock,
   getActiveMemberCount,
-  getDisplayActiveMemberCount,
   getRecruitStatusLabel,
   getRecruitTypeLabel,
   isLinePartyType,
@@ -68,14 +67,7 @@ function renderSlots(party: RecruitPageParty) {
   }
 
   const slots = [];
-  const maxWrittenSlotNo = Math.max(
-    party.maxMembers,
-    ...party.members
-      .filter((item) => !item.isSubstitute && typeof item.slotNo === "number")
-      .map((item) => Number(item.slotNo)),
-  );
-
-  for (let slotNo = 1; slotNo <= maxWrittenSlotNo; slotNo += 1) {
+  for (let slotNo = 1; slotNo <= party.maxMembers; slotNo += 1) {
     const member = party.members.find((item) => !item.isSubstitute && item.slotNo === slotNo);
     slots.push(
       <div key={slotNo} className="recruit-slot">
@@ -134,7 +126,6 @@ export default async function RecruitPage() {
         <section className="recruit-grid" aria-label="현재 구인구직 파티 목록">
           {parties.map((party) => {
             const activeCount = getActiveMemberCount(party.members);
-            const displayActiveCount = getDisplayActiveMemberCount(party.members, party.maxMembers);
             const statusLabel = getRecruitStatusLabel(party);
             const typeLabel = getRecruitTypeLabel(party.type);
             const isFull = activeCount >= party.maxMembers;
@@ -154,7 +145,7 @@ export default async function RecruitPage() {
                   <span>{statusLabel}</span>
                   <span>{party.recruitDate} · 회차 {party.resetSeq}</span>
                   <span>관리번호 {party.recruitCode || `${party.recruitDate}-${party.maxMembers}-${party.recruitNo}`}</span>
-                  <span>{displayActiveCount}/{party.maxMembers}</span>
+                  <span>{activeCount}/{party.maxMembers}</span>
                   {gameInfo ? <span>게임정보: {gameInfo}</span> : null}
                 </div>
 
