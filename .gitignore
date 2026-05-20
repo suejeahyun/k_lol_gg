@@ -42,3 +42,33 @@ pnpm-debug.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local env
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# dependencies
+node_modules/
+
+# next
+.next/
+out/
+
+# cache
+tsconfig.tsbuildinfo
+*.tsbuildinfo
+
+# patch / backup / zip
+_backup*/
+_patch*/
+*.zip
+
+# logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*

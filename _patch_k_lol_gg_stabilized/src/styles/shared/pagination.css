@@ -1,8 +1,0 @@
-/* 페이지네이션 */
-
-.pagination-wrap {
-  display: flex;
-  justify-content: center;
-  margin-top: 24px;
-  gap: 6px;
-}
