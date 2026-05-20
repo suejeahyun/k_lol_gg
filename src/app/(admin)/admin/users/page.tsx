@@ -209,9 +209,9 @@ export default function AdminUsersPage() {
     <main className="admin-page">
       <div className="admin-page__header">
         <div>
-          <h1 className="admin-page__title">회원 승인 관리</h1>
+          <h1 className="admin-page__title">플레이어 승인 관리</h1>
           <p className="admin-page__description">
-            회원 승인, 관리자 지정, 비밀번호 초기화를 관리합니다.
+            플레이어 계정 승인, 관리자 지정, 비밀번호 초기화를 관리합니다.
           </p>
         </div>
       </div>

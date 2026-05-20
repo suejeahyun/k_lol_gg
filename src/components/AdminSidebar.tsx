@@ -60,7 +60,7 @@ const menuGroups: AdminSidebarGroup[] = [
     title: "기초 데이터",
     items: [
       { href: "/admin/players", label: "플레이어 목록", code: "PLY" },
-      { href: "/admin/users", label: "플레이어 승인", code: "USR", access: "SUPER" },
+      { href: "/admin/player-approvals", label: "플레이어 승인", code: "APR" },
       { href: "/admin/champions", label: "챔피언", code: "CHP" },
       { href: "/admin/seasons", label: "시즌", code: "SSN" },
     ],
