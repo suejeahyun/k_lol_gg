@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 import { NextRequest } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import {
@@ -202,6 +203,23 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return partyRecruitJson(
+        {
+          reply: [
+            "[K-LOL.GG 구인구직 생성 실패]",
+            "",
+            "모집번호 중복 제약 조건이 남아 있어 생성하지 못했습니다.",
+            "",
+            "조치 방법:",
+            "npx prisma migrate deploy 실행 후 다시 시도해주세요.",
+          ].join("\n"),
+          error: message,
+        },
+        409,
+      );
+    }
 
     return partyRecruitJson(
       {
