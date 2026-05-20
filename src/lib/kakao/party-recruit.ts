@@ -666,6 +666,7 @@ function parseNumberMembers(
   text: string,
   maxMembers: number,
 ): RecruitMemberLike[] {
+  void maxMembers;
   const members: RecruitMemberLike[] = [];
   const lines = normalizeText(text).split("\n");
 

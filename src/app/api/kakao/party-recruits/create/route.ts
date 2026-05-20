@@ -8,7 +8,6 @@ import { writeAdminLog } from "@/lib/admin-log";
 import {
   buildCreateReply,
   buildRecruitPartyCode,
-  getActiveMemberCount,
   getDisplayActiveMemberCount,
   getKakaoRecruitDateKey,
   parseCreateRecruitCommand,
