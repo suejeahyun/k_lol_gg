@@ -40,18 +40,24 @@ export default function RecentMvpSlider({
 
   const normalizedItems = useMemo(() => {
     return [...items].sort((a, b) => {
-      if (b.matchDate !== a.matchDate)
+      if (b.matchDate !== a.matchDate) {
         return b.matchDate.localeCompare(a.matchDate);
-      if (a.matchId !== b.matchId) return b.matchId - a.matchId;
+      }
+
+      if (a.matchId !== b.matchId) {
+        return b.matchId - a.matchId;
+      }
+
       return a.gameNumber - b.gameNumber;
     });
   }, [items]);
 
-  const activeItem = normalizedItems[activeIndex] ?? null;
+  const safeActiveIndex =
+    normalizedItems.length === 0
+      ? 0
+      : Math.min(activeIndex, normalizedItems.length - 1);
 
-  useEffect(() => {
-    setActiveIndex(0);
-  }, [normalizedItems.length]);
+  const activeItem = normalizedItems[safeActiveIndex] ?? null;
 
   useEffect(() => {
     if (normalizedItems.length <= 1) return;
@@ -128,7 +134,9 @@ export default function RecentMvpSlider({
               className="home-mvp-nav-button"
               onClick={() =>
                 setActiveIndex((prev) =>
-                  prev === 0 ? normalizedItems.length - 1 : prev - 1,
+                  safeActiveIndex === 0
+                    ? normalizedItems.length - 1
+                    : safeActiveIndex - 1,
                 )
               }
               disabled={normalizedItems.length <= 1}
@@ -143,7 +151,7 @@ export default function RecentMvpSlider({
                   key={item.key}
                   type="button"
                   className={
-                    index === activeIndex
+                    index === safeActiveIndex
                       ? "home-mvp-pagination__dot home-mvp-pagination__dot--active"
                       : "home-mvp-pagination__dot"
                   }
