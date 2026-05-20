@@ -27,6 +27,21 @@ type ApplyStatusBody = {
   secret?: string | null;
 };
 
+type SeasonRecruitStatusEntry = {
+  sourceSlotNo: number | null;
+  reserveSlotNo: number | null;
+  isReserve: boolean;
+  mainPosition: string | null;
+  subPositions: string[];
+  applyTimeText: string | null;
+  createdAt: Date;
+  player: {
+    name: string;
+    currentTier: string | null;
+    peakTier: string | null;
+  };
+};
+
 const TIER_SHORT_LABEL: Record<TierKey, string> = {
   IRON: "I",
   BRONZE: "B",
@@ -135,8 +150,8 @@ function formatPositions(mainPosition: unknown, subPositions: unknown) {
   return positions.length > 0 ? positions.join(" ") : "-";
 }
 
-function formatSeasonRecruitDateTime(dateKey: string, applies: Array<{ applyTimeText: string | null }>) {
-  const timeText = applies.find((apply) => apply.applyTimeText)?.applyTimeText;
+function formatSeasonRecruitDateTime(dateKey: string, entries: Array<{ applyTimeText: string | null }>) {
+  const timeText = entries.find((entry) => entry.applyTimeText)?.applyTimeText;
   const dateText = getKstDisplayDate(dateKey);
 
   if (!timeText) return dateText;
@@ -151,23 +166,60 @@ function formatSeasonRecruitDateTime(dateKey: string, applies: Array<{ applyTime
   return `${dateText} ${hour}시`;
 }
 
+function compareStatusEntry(a: SeasonRecruitStatusEntry, b: SeasonRecruitStatusEntry) {
+  const aSlot = a.isReserve ? a.reserveSlotNo : a.sourceSlotNo;
+  const bSlot = b.isReserve ? b.reserveSlotNo : b.sourceSlotNo;
+
+  if (aSlot != null && bSlot != null && aSlot !== bSlot) return aSlot - bSlot;
+  if (aSlot != null && bSlot == null) return -1;
+  if (aSlot == null && bSlot != null) return 1;
+  return a.createdAt.getTime() - b.createdAt.getTime();
+}
+
+function placeMainEntries(entries: SeasonRecruitStatusEntry[]) {
+  const slots: Array<SeasonRecruitStatusEntry | null> = Array.from({ length: TARGET_COUNT }, () => null);
+  const overflow: SeasonRecruitStatusEntry[] = [];
+
+  for (const entry of entries.sort(compareStatusEntry)) {
+    const slotNo = entry.sourceSlotNo;
+
+    if (slotNo != null && slotNo >= 1 && slotNo <= TARGET_COUNT && !slots[slotNo - 1]) {
+      slots[slotNo - 1] = entry;
+      continue;
+    }
+
+    const emptyIndex = slots.findIndex((item) => !item);
+    if (emptyIndex >= 0) {
+      slots[emptyIndex] = entry;
+    } else {
+      overflow.push(entry);
+    }
+  }
+
+  return { slots, overflow };
+}
+
+function formatEntryLine(prefix: string, entry: SeasonRecruitStatusEntry | null) {
+  if (!entry) return `${prefix}.`;
+
+  const currentTier = normalizeTier(entry.player.currentTier);
+  const peakTier = normalizeTier(entry.player.peakTier);
+  const positionText = formatPositions(entry.mainPosition, entry.subPositions);
+
+  return `${prefix}. ${entry.player.name}/${currentTier}/${peakTier}/${positionText}`;
+}
+
 function buildSeasonRecruitStatusTemplate(params: {
   dateKey: string;
-  applies: Array<{
-    mainPosition: string | null;
-    subPositions: string[];
-    applyTimeText: string | null;
-    player: {
-      name: string;
-      currentTier: string | null;
-      peakTier: string | null;
-    };
-  }>;
+  entries: SeasonRecruitStatusEntry[];
 }) {
   const lines: string[] = [];
+  const mainEntries = params.entries.filter((entry) => !entry.isReserve);
+  const reserveEntries = params.entries.filter((entry) => entry.isReserve).sort(compareStatusEntry);
+  const placed = placeMainEntries(mainEntries);
 
   lines.push("📢 협곡내전하실분");
-  lines.push(` 》${formatSeasonRecruitDateTime(params.dateKey, params.applies)}`);
+  lines.push(` 》${formatSeasonRecruitDateTime(params.dateKey, params.entries)}`);
   lines.push("");
   lines.push("*참가 신청 양식*");
   lines.push("이름/현티어/최고티어/주,부라인");
@@ -175,18 +227,18 @@ function buildSeasonRecruitStatusTemplate(params: {
   lines.push("");
 
   for (let index = 0; index < TARGET_COUNT; index += 1) {
-    const apply = params.applies[index];
+    lines.push(formatEntryLine(String(index + 1), placed.slots[index]));
+  }
 
-    if (!apply) {
-      lines.push(`${index + 1}.`);
-      continue;
-    }
+  for (const overflowEntry of placed.overflow) {
+    lines.push(formatEntryLine(String(lines.length + 1), overflowEntry));
+  }
 
-    const currentTier = normalizeTier(apply.player.currentTier);
-    const peakTier = normalizeTier(apply.player.peakTier);
-    const positionText = formatPositions(apply.mainPosition, apply.subPositions);
-
-    lines.push(`${index + 1}. ${apply.player.name}/${currentTier}/${peakTier}/${positionText}`);
+  if (reserveEntries.length > 0) {
+    lines.push("");
+    reserveEntries.forEach((entry, index) => {
+      lines.push(formatEntryLine(`예비 ${entry.reserveSlotNo || index + 1}`, entry));
+    });
   }
 
   return lines.join("\n");
@@ -216,42 +268,101 @@ async function createStatusReply(req: NextRequest, body?: ApplyStatusBody) {
     });
   }
 
-  const applies = await prisma.seasonParticipationApply.findMany({
-    where: {
-      seasonId: season.id,
-      status: "APPLIED",
-      applyDate: {
-        gte: start,
-        lte: end,
-      },
-    },
-    select: {
-      id: true,
-      mainPosition: true,
-      subPositions: true,
-      sourceSlotNo: true,
-      applyTimeText: true,
-      createdAt: true,
-      player: {
-        select: {
-          name: true,
-          currentTier: true,
-          peakTier: true,
+  const [applies, pendingApplies] = await Promise.all([
+    prisma.seasonParticipationApply.findMany({
+      where: {
+        seasonId: season.id,
+        status: "APPLIED",
+        applyDate: {
+          gte: start,
+          lte: end,
         },
       },
-    },
-    orderBy: [
-      { sourceSlotNo: "asc" },
-      { createdAt: "asc" },
-    ],
-    take: TARGET_COUNT,
-  });
+      select: {
+        id: true,
+        mainPosition: true,
+        subPositions: true,
+        sourceSlotNo: true,
+        applyTimeText: true,
+        createdAt: true,
+        player: {
+          select: {
+            name: true,
+            currentTier: true,
+            peakTier: true,
+          },
+        },
+      },
+      orderBy: [
+        { sourceSlotNo: "asc" },
+        { createdAt: "asc" },
+      ],
+    }),
+    prisma.seasonParticipationPendingApply.findMany({
+      where: {
+        seasonId: season.id,
+        applyDate: {
+          gte: start,
+          lte: end,
+        },
+        source: "KAKAO_RECRUIT",
+      },
+      select: {
+        id: true,
+        name: true,
+        currentTier: true,
+        peakTier: true,
+        mainPosition: true,
+        subPositions: true,
+        isReserve: true,
+        sourceSlotNo: true,
+        reserveSlotNo: true,
+        applyTimeText: true,
+        createdAt: true,
+      },
+      orderBy: [
+        { isReserve: "asc" },
+        { sourceSlotNo: "asc" },
+        { reserveSlotNo: "asc" },
+        { createdAt: "asc" },
+      ],
+    }),
+  ]);
 
-  if (applies.length === 0) {
+  const entries: SeasonRecruitStatusEntry[] = [
+    ...applies.map((apply) => ({
+      sourceSlotNo: apply.sourceSlotNo,
+      reserveSlotNo: null,
+      isReserve: false,
+      mainPosition: apply.mainPosition,
+      subPositions: apply.subPositions,
+      applyTimeText: apply.applyTimeText,
+      createdAt: apply.createdAt,
+      player: apply.player,
+    })),
+    ...pendingApplies.map((apply) => ({
+      sourceSlotNo: apply.sourceSlotNo,
+      reserveSlotNo: apply.reserveSlotNo,
+      isReserve: apply.isReserve,
+      mainPosition: apply.mainPosition,
+      subPositions: apply.subPositions,
+      applyTimeText: apply.applyTimeText,
+      createdAt: apply.createdAt,
+      player: {
+        name: apply.name,
+        currentTier: apply.currentTier,
+        peakTier: apply.peakTier,
+      },
+    })),
+  ];
+
+  if (entries.length === 0) {
     return emptyReply({
       activeSeasonId: season.id,
       seasonName: season.name,
       total: 0,
+      pendingTotal: 0,
+      reserveTotal: 0,
       dateKey,
       dateRange: {
         start: start.toISOString(),
@@ -262,19 +373,17 @@ async function createStatusReply(req: NextRequest, body?: ApplyStatusBody) {
 
   const reply = buildSeasonRecruitStatusTemplate({
     dateKey,
-    applies: applies.map((apply) => ({
-      applyTimeText: apply.applyTimeText,
-      mainPosition: apply.mainPosition,
-      subPositions: apply.subPositions,
-      player: apply.player,
-    })),
+    entries,
   });
 
   return jsonReply(reply, {
     empty: false,
     activeSeasonId: season.id,
     seasonName: season.name,
-    total: applies.length,
+    total: entries.length,
+    appliedTotal: applies.length,
+    pendingTotal: pendingApplies.filter((apply) => !apply.isReserve).length,
+    reserveTotal: pendingApplies.filter((apply) => apply.isReserve).length,
     dateKey,
     dateRange: {
       start: start.toISOString(),

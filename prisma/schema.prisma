@@ -176,8 +176,9 @@ model Season {
   championStats        PlayerChampionStat[]
   positionStats        PlayerPositionStat[]
   seasonResults        SeasonResult[]
-  participationApplies SeasonParticipationApply[]
-  teamBalanceDrafts    TeamBalanceDraft[]
+  participationApplies        SeasonParticipationApply[]
+  pendingParticipationApplies SeasonParticipationPendingApply[]
+  teamBalanceDrafts          TeamBalanceDraft[]
 }
 
 model MatchSeries {
@@ -582,6 +583,41 @@ model SeasonParticipationApply {
   @@unique([seasonId, playerId, applyDate])
   @@index([seasonId, applyDate, status])
   @@index([seasonId, applyDate, source, status])
+  @@index([sourceMessageHash])
+}
+
+model SeasonParticipationPendingApply {
+  id        Int      @id @default(autoincrement())
+  seasonId  Int
+  applyDate DateTime
+
+  name        String
+  currentTier String
+  peakTier    String
+
+  mainPosition ApplyPosition?
+  subPositions ApplyPosition[]
+
+  isReserve     Boolean @default(false)
+  sourceSlotNo  Int?
+  reserveSlotNo Int?
+
+  reason String?
+
+  source            String  @default("KAKAO_RECRUIT")
+  sourceRoom        String?
+  sourceSender      String?
+  sourceMessageHash String?
+  applyTimeText     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  season Season @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+
+  @@unique([seasonId, applyDate, name, isReserve])
+  @@index([seasonId, applyDate, isReserve])
+  @@index([seasonId, applyDate, source])
   @@index([sourceMessageHash])
 }
 

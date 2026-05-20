@@ -14,6 +14,8 @@ export type RecruitTier =
 
 export type ParsedRecruitParticipant = {
   slotNumber: number;
+  reserveSlotNumber: number | null;
+  isReserve: boolean;
   name: string;
   currentTier: RecruitTier;
   peakTier: RecruitTier;
@@ -162,7 +164,11 @@ function normalizeToken(text: string) {
 }
 
 function isParticipantNumberLine(line: string) {
-  return /^\s*\d{1,2}\s*[.)]\s*/.test(line);
+  return /^\s*\d{1,2}\s*[.)]\s*/.test(line) || /^\s*예비\s*\d{1,2}\s*[.)]\s*/.test(line);
+}
+
+function isReserveParticipantLine(line: string) {
+  return /^\s*예비\s*\d{1,2}\s*[.)]\s*/.test(line);
 }
 
 function isExampleLine(line: string) {
@@ -411,13 +417,16 @@ function parseParticipantLine(line: string): {
     return { participant: null, warning: null };
   }
 
-  const slotMatch = trimmed.match(/^\s*(\d{1,2})\s*[.)]\s*(.*)$/);
+  const reserveSlotMatch = trimmed.match(/^\s*예비\s*(\d{1,2})\s*[.)]\s*(.*)$/);
+  const slotMatch = reserveSlotMatch || trimmed.match(/^\s*(\d{1,2})\s*[.)]\s*(.*)$/);
 
   if (!slotMatch) {
     return { participant: null, warning: null };
   }
 
+  const isReserve = Boolean(reserveSlotMatch);
   const slotNumber = Number(slotMatch[1]);
+  const reserveSlotNumber = isReserve ? slotNumber : null;
   const body = slotMatch[2].trim();
 
   if (!body) {
@@ -476,6 +485,8 @@ function parseParticipantLine(line: string): {
   return {
     participant: {
       slotNumber,
+      reserveSlotNumber,
+      isReserve,
       name,
       currentTier,
       peakTier,
@@ -492,7 +503,7 @@ export function parseRecruitMessage(text: string, baseDate = new Date()): Parsed
   const dateResult = extractRecruitApplyDate(normalized, baseDate);
   const warnings = [...dateResult.warnings];
   const participants: ParsedRecruitParticipant[] = [];
-  const seenSlots = new Set<number>();
+  const seenSlots = new Set<string>();
   const seenNames = new Set<string>();
 
   const lines = normalized.split("\n");
@@ -509,10 +520,11 @@ export function parseRecruitMessage(text: string, baseDate = new Date()): Parsed
     }
 
     const participant = result.participant;
-    const nameKey = participant.name.replace(/\s+/g, "").toLowerCase();
+    const nameKey = `${participant.isReserve ? "reserve" : "main"}:${participant.name.replace(/\s+/g, "").toLowerCase()}`;
+    const slotKey = `${participant.isReserve ? "reserve" : "main"}:${participant.slotNumber}`;
 
-    if (seenSlots.has(participant.slotNumber)) {
-      warnings.push(`참가자 ${participant.slotNumber}번이 중복되어 뒤 항목을 제외했습니다.`);
+    if (seenSlots.has(slotKey)) {
+      warnings.push(`${participant.isReserve ? "예비 " : "참가자 "}${participant.slotNumber}번이 중복되어 뒤 항목을 제외했습니다.`);
       continue;
     }
 
@@ -521,12 +533,15 @@ export function parseRecruitMessage(text: string, baseDate = new Date()): Parsed
       continue;
     }
 
-    seenSlots.add(participant.slotNumber);
+    seenSlots.add(slotKey);
     seenNames.add(nameKey);
     participants.push(participant);
   }
 
-  participants.sort((a, b) => a.slotNumber - b.slotNumber);
+  participants.sort((a, b) => {
+    if (a.isReserve !== b.isReserve) return a.isReserve ? 1 : -1;
+    return a.slotNumber - b.slotNumber;
+  });
 
   return {
     applyDate: dateResult.applyDate,

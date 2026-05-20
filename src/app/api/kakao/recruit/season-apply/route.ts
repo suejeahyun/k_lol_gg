@@ -36,7 +36,7 @@ const TIER_SHORT_LABEL: Record<RecruitTier, string> = {
 
 type ApplyResult = {
   participant: ParsedRecruitParticipant;
-  status: "REGISTERED" | "UPDATED" | "PENDING";
+  status: "REGISTERED" | "UPDATED" | "PENDING" | "RESERVE";
   reason?: string;
   player?: {
     id: number;
@@ -106,7 +106,9 @@ function buildRegisterList(results: ApplyResult[]): string {
           ? "등록"
           : result.status === "UPDATED"
             ? "수정"
-            : "보류";
+            : result.status === "RESERVE"
+              ? "예비"
+              : "보류";
 
       return `${index + 1}. [${statusLabel}] ${participant.name} / ${tierText} / ${positionText} / ${playerText}`;
     })
@@ -121,8 +123,9 @@ function buildReply(params: {
   const registered = params.results.filter((item) => item.status === "REGISTERED").length;
   const updated = params.results.filter((item) => item.status === "UPDATED").length;
   const pending = params.results.filter((item) => item.status === "PENDING").length;
+  const reserve = params.results.filter((item) => item.status === "RESERVE").length;
   const appliedParticipants = params.results
-    .filter((item) => item.status !== "PENDING")
+    .filter((item) => item.status !== "PENDING" && item.status !== "RESERVE")
     .map((item) => item.participant);
   const positionCounts = buildPositionCounts(appliedParticipants);
 
@@ -139,6 +142,10 @@ function buildReply(params: {
       ? "\n\n주의\n" + params.parsed.warnings.map((item) => `- ${item}`).join("\n")
       : "";
 
+  const reserveText = reserve > 0
+    ? "\n" + `예비: ${reserve}명`
+    : "";
+
   const pendingText = pending > 0
     ? "\n\n보류 사유\n" +
       params.results
@@ -147,7 +154,7 @@ function buildReply(params: {
         .join("\n")
     : "";
 
-  if (pending === 0 && registered + updated > 0) {
+  if (pending === 0 && reserve === 0 && registered + updated > 0) {
     return (
       "[K-LOL.GG 구인구직방 참가 자동 등록 완료]\n" +
       "내전 시작 10분전에 디스코드 내전 대기방으로 와주세요."
@@ -161,7 +168,9 @@ function buildReply(params: {
     `등록: ${registered}명\n` +
     `수정: ${updated}명\n` +
     "취소: 0명\n" +
-    `보류: ${pending}명\n\n` +
+    `보류: ${pending}명` +
+    reserveText +
+    "\n\n" +
     "포지션 현황\n" +
     `${positionSummary}\n\n` +
     "부족 포지션\n" +
@@ -257,17 +266,77 @@ async function applyParticipants(params: {
   const results: ApplyResult[] = [];
 
   await prisma.$transaction(async (tx) => {
+    await tx.seasonParticipationPendingApply.deleteMany({
+      where: {
+        seasonId: season.id,
+        applyDate,
+        source: "KAKAO_RECRUIT",
+      },
+    });
+
     for (const participant of params.parsed.participants) {
       const matched = await findMatchingPlayer(participant);
+      const pendingReason =
+        matched.status === "duplicate"
+          ? "동명이인 또는 동일 닉네임 후보가 2명 이상입니다. 관리자 확인 필요"
+          : "기존 플레이어와 매칭되지 않았습니다. 관리자 확인 필요";
 
-      if (matched.status !== "matched") {
+      if (participant.isReserve || matched.status !== "matched") {
+        const player = matched.status === "matched" ? matched.players[0] : undefined;
+        const reason = participant.isReserve
+          ? player
+            ? "예비 참가자"
+            : `예비 참가자 / ${pendingReason}`
+          : pendingReason;
+
+        await tx.seasonParticipationPendingApply.upsert({
+          where: {
+            seasonId_applyDate_name_isReserve: {
+              seasonId: season.id,
+              applyDate,
+              name: participant.name,
+              isReserve: participant.isReserve,
+            },
+          },
+          create: {
+            seasonId: season.id,
+            applyDate,
+            name: participant.name,
+            currentTier: participant.currentTier,
+            peakTier: participant.peakTier,
+            mainPosition: participant.mainPosition,
+            subPositions: participant.subPosition ? [participant.subPosition] : [],
+            isReserve: participant.isReserve,
+            sourceSlotNo: participant.isReserve ? null : participant.slotNumber,
+            reserveSlotNo: participant.reserveSlotNumber,
+            reason,
+            source: "KAKAO_RECRUIT",
+            sourceRoom: params.roomName,
+            sourceSender: params.sender,
+            sourceMessageHash,
+            applyTimeText: params.parsed.applyTime,
+          },
+          update: {
+            currentTier: participant.currentTier,
+            peakTier: participant.peakTier,
+            mainPosition: participant.mainPosition,
+            subPositions: participant.subPosition ? [participant.subPosition] : [],
+            sourceSlotNo: participant.isReserve ? null : participant.slotNumber,
+            reserveSlotNo: participant.reserveSlotNumber,
+            reason,
+            source: "KAKAO_RECRUIT",
+            sourceRoom: params.roomName,
+            sourceSender: params.sender,
+            sourceMessageHash,
+            applyTimeText: params.parsed.applyTime,
+          },
+        });
+
         results.push({
           participant,
-          status: "PENDING",
-          reason:
-            matched.status === "duplicate"
-              ? "동명이인 또는 동일 닉네임 후보가 2명 이상입니다. 관리자 확인 필요"
-              : "기존 플레이어와 매칭되지 않았습니다. 관리자 확인 필요",
+          status: participant.isReserve ? "RESERVE" : "PENDING",
+          reason,
+          player,
         });
         continue;
       }
@@ -328,7 +397,7 @@ async function applyParticipants(params: {
 
     await writeAdminLog({
       action: "KAKAO_RECRUIT_SEASON_APPLY",
-      message: `카카오 참가 자동 등록: 시즌 #${season.id} ${season.name}, 등록/수정 ${results.filter((item) => item.status !== "PENDING").length}명, 보류 ${results.filter((item) => item.status === "PENDING").length}명`,
+      message: `카카오 참가 자동 등록: 시즌 #${season.id} ${season.name}, 등록/수정 ${results.filter((item) => item.status === "REGISTERED" || item.status === "UPDATED").length}명, 보류 ${results.filter((item) => item.status === "PENDING").length}명, 예비 ${results.filter((item) => item.status === "RESERVE").length}명`,
       targetType: "Season",
       targetId: season.id,
       afterJson: {
@@ -340,6 +409,8 @@ async function applyParticipants(params: {
           status: item.status,
           reason: item.reason ?? null,
           playerId: item.player?.id ?? null,
+          isReserve: item.participant.isReserve,
+          reserveSlotNumber: item.participant.reserveSlotNumber,
         })),
       },
       db: tx,
@@ -508,6 +579,7 @@ export async function POST(req: NextRequest) {
     const registered = applied.results.filter((item) => item.status === "REGISTERED").length;
     const updated = applied.results.filter((item) => item.status === "UPDATED").length;
     const pending = applied.results.filter((item) => item.status === "PENDING").length;
+    const reserve = applied.results.filter((item) => item.status === "RESERVE").length;
 
     return kakaoJsonReply({
       formatVersion: FORMAT_VERSION,
@@ -518,6 +590,7 @@ export async function POST(req: NextRequest) {
       updated,
       cancelled: 0,
       pending,
+      reserve,
       participants: parsed.participants,
       results: applied.results,
       reply: buildReply({
