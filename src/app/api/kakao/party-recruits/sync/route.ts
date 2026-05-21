@@ -70,13 +70,31 @@ async function findActiveRecruitParty(params: {
     return currentSeqParty;
   }
 
-  return prisma.recruitParty.findFirst({
+  const sameDateParty = await prisma.recruitParty.findFirst({
     where: {
       recruitNo,
       recruitDate,
       status: "IN_PROGRESS",
     },
     orderBy: [{ resetSeq: "desc" }, { updatedAt: "desc" }],
+    include: { members: true },
+  });
+
+  if (sameDateParty) {
+    return sameDateParty;
+  }
+
+  // 구인현황에 표시되는 날짜 지난 진행 중 글도 수정할 수 있도록 최신 활성 글로 보정합니다.
+  return prisma.recruitParty.findFirst({
+    where: {
+      recruitNo,
+      status: "IN_PROGRESS",
+    },
+    orderBy: [
+      { recruitDate: "desc" },
+      { resetSeq: "desc" },
+      { updatedAt: "desc" },
+    ],
     include: { members: true },
   });
 }
@@ -116,9 +134,19 @@ async function syncOneRecruit(params: {
   const party = await findActiveRecruitParty({ recruitNo, recruitDate, resetSeq });
 
   if (!party) {
-    const finishedLog = await prisma.recruitPartyLog.findFirst({
+    const sameDateFinishedLog = await prisma.recruitPartyLog.findFirst({
       where: { recruitNo, recruitDate, action: { in: ["FINISHED", "AUTO_EXPIRED"] }, createdAt: todayRange },
       orderBy: [{ resetSeq: "desc" }, { createdAt: "desc" }],
+      select: { title: true, memberCount: true, maxMembers: true },
+    });
+
+    const finishedLog = sameDateFinishedLog ?? await prisma.recruitPartyLog.findFirst({
+      where: { recruitNo, action: { in: ["FINISHED", "AUTO_EXPIRED"] } },
+      orderBy: [
+        { recruitDate: "desc" },
+        { resetSeq: "desc" },
+        { createdAt: "desc" },
+      ],
       select: { title: true, memberCount: true, maxMembers: true },
     });
 

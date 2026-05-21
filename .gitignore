@@ -74,3 +74,5 @@ yarn-error.log*
 pnpm-debug.log*
 *.bak_*
 ALL.zip
+.vercel
+.env*.local

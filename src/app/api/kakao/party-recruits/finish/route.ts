@@ -37,13 +37,32 @@ async function findActiveRecruitParty(params: {
     return currentSeqParty;
   }
 
-  return prisma.recruitParty.findFirst({
+  const sameDateParty = await prisma.recruitParty.findFirst({
     where: {
       recruitNo,
       recruitDate,
       status: "IN_PROGRESS",
     },
     orderBy: [{ resetSeq: "desc" }, { updatedAt: "desc" }],
+    include: { members: { orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }] } },
+  });
+
+  if (sameDateParty) {
+    return sameDateParty;
+  }
+
+  // 구인현황은 날짜가 지난 진행 중 구인글도 보여줍니다.
+  // 따라서 마감 명령도 오늘 날짜에 없으면 같은 모집번호의 최신 진행 중 글까지 찾아야 합니다.
+  return prisma.recruitParty.findFirst({
+    where: {
+      recruitNo,
+      status: "IN_PROGRESS",
+    },
+    orderBy: [
+      { recruitDate: "desc" },
+      { resetSeq: "desc" },
+      { updatedAt: "desc" },
+    ],
     include: { members: { orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }] } },
   });
 }
@@ -79,7 +98,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (!party) {
-      const finishedLog = await prisma.recruitPartyLog.findFirst({
+      const sameDateFinishedLog = await prisma.recruitPartyLog.findFirst({
         where: {
           recruitNo: parsed.recruitNo,
           recruitDate,
@@ -87,6 +106,19 @@ export async function POST(req: NextRequest) {
           ...(createdAfterLatestReset ? { createdAt: createdAfterLatestReset } : {}),
         },
         orderBy: [{ resetSeq: "desc" }, { createdAt: "desc" }],
+        select: { title: true, memberCount: true, maxMembers: true },
+      });
+
+      const finishedLog = sameDateFinishedLog ?? await prisma.recruitPartyLog.findFirst({
+        where: {
+          recruitNo: parsed.recruitNo,
+          action: { in: ["FINISHED", "AUTO_EXPIRED"] },
+        },
+        orderBy: [
+          { recruitDate: "desc" },
+          { resetSeq: "desc" },
+          { createdAt: "desc" },
+        ],
         select: { title: true, memberCount: true, maxMembers: true },
       });
 
