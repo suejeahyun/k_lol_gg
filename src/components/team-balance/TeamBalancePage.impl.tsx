@@ -479,7 +479,7 @@ export default function PlayersBalancePage() {
       ? `\nAI 판단: ${target.aiJudgement.selectedOptionNo ?? "-"}안 ${target.aiJudgement.selectedOptionTitle ?? ""} / RED ${target.aiJudgement.predictedRedWinRate.toFixed(1)}% vs BLUE ${target.aiJudgement.predictedBlueWinRate.toFixed(1)}%`
       : "";
 
-    return `RED ${formatNames(target.red)}\nBLUE ${formatNames(target.blue)}${aiLine}`;
+    return `BLUE ${formatNames(target.blue)}\nRED ${formatNames(target.red)}${aiLine}`;
   }
 
   function getManualRoleType(
@@ -2349,21 +2349,6 @@ export default function PlayersBalancePage() {
             {renderBalanceAlternatives(result)}
 
             <section className="balance-result-teams balance-result-teams--compact">
-              <div className="balance-team-panel balance-team-panel--red">
-                <div className="balance-team-header">
-                  <h2 className="balance-team-title balance-team-title--red">
-                    RED
-                  </h2>
-                  <span className="balance-team-total">
-                    총점 {result.redTotal.toFixed(1)}
-                  </span>
-                </div>
-
-                <div className="balance-team-list">
-                  {renderTeamRows("RED", result.red)}
-                </div>
-              </div>
-
               <div className="balance-team-panel balance-team-panel--blue">
                 <div className="balance-team-header">
                   <h2 className="balance-team-title balance-team-title--blue">
@@ -2376,6 +2361,21 @@ export default function PlayersBalancePage() {
 
                 <div className="balance-team-list">
                   {renderTeamRows("BLUE", result.blue)}
+                </div>
+              </div>
+
+              <div className="balance-team-panel balance-team-panel--red">
+                <div className="balance-team-header">
+                  <h2 className="balance-team-title balance-team-title--red">
+                    RED
+                  </h2>
+                  <span className="balance-team-total">
+                    총점 {result.redTotal.toFixed(1)}
+                  </span>
+                </div>
+
+                <div className="balance-team-list">
+                  {renderTeamRows("RED", result.red)}
                 </div>
               </div>
 
