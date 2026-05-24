@@ -214,6 +214,10 @@ function isValidRecruitNo(value: number) {
   return Number.isInteger(value) && value >= 1 && value <= 99;
 }
 
+function isValidPartyMemberCount(value: number) {
+  return Number.isInteger(value) && value >= 1 && value <= 99;
+}
+
 
 export function buildRecruitPartyCode(params: {
   recruitDate: string;
@@ -270,13 +274,15 @@ export function parseCreateRecruitCommand(
 ): CreateRecruitCommand | null {
   const text = normalizeText(message).trim();
   const partyMatch = text.match(
-    /^\/?(2|3|4|5|8|10)\s*인\s*(협곡)?\s*파티(?:\s+(\d{1,2}))?\s*$/,
+    /^\/?(\d{1,2})\s*인\s*(협곡)?\s*(?:파티|구인)(?:\s+(\d{1,2}))?\s*$/,
   );
 
   if (partyMatch) {
     const memberCount = Number(partyMatch[1]);
     const isRiftParty = Boolean(partyMatch[2]);
     const recruitNo = partyMatch[3] ? Number(partyMatch[3]) : null;
+
+    if (!isValidPartyMemberCount(memberCount)) return null;
     if (recruitNo !== null && !isValidRecruitNo(recruitNo)) return null;
     if (isRiftParty && memberCount !== 5) return null;
 

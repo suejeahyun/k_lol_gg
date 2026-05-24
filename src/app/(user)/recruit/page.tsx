@@ -115,10 +115,11 @@ export default async function RecruitPage() {
         <p className="page-kicker">KAKAO RECRUIT</p>
         <h1>구인구직 현황</h1>
         <p>
-          카카오톡 구인구직방에서 생성된 2인/3인/5인/5인협곡/롤체 파티 현황입니다.
+          카카오톡 구인구직방에서 생성된 숫자 인원 파티, 5인협곡, 롤체 파티 현황입니다.
         </p>
         <div className="recruit-command-box">
-          <span>/2인파티</span>
+          <span>/6인파티</span>
+          <span>/10인구인</span>
           <span>/5인협곡파티</span>
           <span>/구인현황</span>
           <span>/12 쫑</span>
