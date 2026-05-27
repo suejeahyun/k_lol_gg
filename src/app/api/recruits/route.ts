@@ -3,9 +3,10 @@ export const revalidate = 0;
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { filterRecruitingParties } from "@/lib/kakao/party-recruit";
 
 export async function GET() {
-  const parties = await prisma.recruitParty.findMany({
+  const allParties = await prisma.recruitParty.findMany({
     where: { status: "IN_PROGRESS" },
     include: {
       members: {
@@ -14,6 +15,8 @@ export async function GET() {
     },
     orderBy: [{ recruitDate: "desc" }, { resetSeq: "desc" }, { recruitNo: "asc" }],
   });
+
+  const parties = filterRecruitingParties(allParties);
 
   return NextResponse.json({ ok: true, parties });
 }

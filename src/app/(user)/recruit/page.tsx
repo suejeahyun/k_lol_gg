@@ -5,11 +5,11 @@ import { prisma } from "@/lib/prisma/client";
 import {
   buildGameInfoText,
   formatRecruitPartyBlock,
-  getActiveMemberCount,
   getDisplayActiveMemberCount,
   getRecruitStatusLabel,
   getRecruitTypeLabel,
   isLinePartyType,
+  isRecruitPartyFull,
 } from "@/lib/kakao/party-recruit";
 
 type RecruitPageMember = {
@@ -99,7 +99,7 @@ function renderSlots(party: RecruitPageParty) {
 }
 
 export default async function RecruitPage() {
-  const parties = await prisma.recruitParty.findMany({
+  const allParties = await prisma.recruitParty.findMany({
     where: { status: "IN_PROGRESS" },
     include: {
       members: {
@@ -108,6 +108,7 @@ export default async function RecruitPage() {
     },
     orderBy: [{ recruitDate: "desc" }, { resetSeq: "desc" }, { recruitNo: "asc" }],
   });
+  const parties = allParties.filter((party) => !isRecruitPartyFull(party));
 
   return (
     <main className="page-shell recruit-page">
@@ -128,21 +129,19 @@ export default async function RecruitPage() {
 
       {parties.length === 0 ? (
         <section className="recruit-empty card-panel">
-          <h2>현재 모집중이거나 진행중인 구인글이 없습니다.</h2>
+          <h2>현재 모집 가능한 구인글이 없습니다.</h2>
           <p>카카오톡 구인구직방에서 구인구직 명령어를 입력하면 이 페이지에 표시됩니다.</p>
         </section>
       ) : (
         <section className="recruit-grid" aria-label="현재 구인구직 파티 목록">
           {parties.map((party) => {
-            const activeCount = getActiveMemberCount(party.members);
             const displayActiveCount = getDisplayActiveMemberCount(party.members, party.maxMembers);
             const statusLabel = getRecruitStatusLabel(party);
             const typeLabel = getRecruitTypeLabel(party.type);
-            const isFull = activeCount >= party.maxMembers;
             const gameInfo = buildGameInfoText(party);
 
             return (
-              <article key={party.id} className={`recruit-card${isFull ? " recruit-card--full" : ""}`}>
+              <article key={party.id} className="recruit-card">
                 <div className="recruit-card__head">
                   <div>
                     <div className="recruit-card__type">{typeLabel}</div>

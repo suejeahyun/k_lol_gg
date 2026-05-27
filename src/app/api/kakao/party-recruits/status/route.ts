@@ -1,9 +1,9 @@
-﻿export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma/client";
-import { buildRecruitStatusReply } from "@/lib/kakao/party-recruit";
+import { buildRecruitStatusReply, filterRecruitingParties } from "@/lib/kakao/party-recruit";
 import {
   partyRecruitJson,
   readJsonBody,
@@ -11,7 +11,7 @@ import {
 } from "../_shared";
 
 const STATUS_QUERY_TIMEOUT_MS = 6500;
-const STATUS_TAKE = 20;
+const STATUS_TAKE = 50;
 
 function buildTimeoutReply() {
   return [
@@ -38,7 +38,7 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number) {
 }
 
 async function getRecruitStatusPayload() {
-  const parties = await prisma.recruitParty.findMany({
+  const allParties = await prisma.recruitParty.findMany({
     where: { status: "IN_PROGRESS" },
     select: {
       id: true,
@@ -77,6 +77,8 @@ async function getRecruitStatusPayload() {
     ],
     take: STATUS_TAKE,
   });
+
+  const parties = filterRecruitingParties(allParties).slice(0, 20);
 
   return {
     empty: parties.length === 0,

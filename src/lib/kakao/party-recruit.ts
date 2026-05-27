@@ -261,6 +261,18 @@ export function getDisplayActiveMemberCount(
   return Math.min(getActiveMemberCount(members), maxMembers);
 }
 
+export function isRecruitPartyFull(
+  party: Pick<RecruitPartyLike, "maxMembers" | "members">,
+) {
+  return getActiveMemberCount(party.members) >= party.maxMembers;
+}
+
+export function filterRecruitingParties<T extends Pick<RecruitPartyLike, "maxMembers" | "members">>(
+  parties: T[],
+) {
+  return parties.filter((party) => !isRecruitPartyFull(party));
+}
+
 export function isLinePartyType(type: string) {
   return type === "FLEX_RANK" || type === "NORMAL_GAME" || type === "PARTY_RIFT";
 }
@@ -802,11 +814,13 @@ export function buildGameInfoText(party: Pick<RecruitPartyLike, "note" | "startT
 }
 
 export function buildRecruitStatusReply(parties: RecruitPartyLike[]) {
-  if (parties.length === 0) {
+  const recruitingParties = filterRecruitingParties(parties);
+
+  if (recruitingParties.length === 0) {
     return [
       "[K-LOL.GG 구인구직 현황]",
       "",
-      "현재 모집중이거나 진행중인 구인글이 없습니다.",
+      "현재 모집 가능한 구인글이 없습니다.",
       "",
       "현황 보기:",
       "https://k-lol-gg.vercel.app/recruit",
@@ -816,7 +830,7 @@ export function buildRecruitStatusReply(parties: RecruitPartyLike[]) {
   return [
     "[K-LOL.GG 구인구직 현황]",
     "",
-    parties
+    recruitingParties
       .map(formatRecruitPartyBlock)
       .join("\n\n------------------------------------\n\n"),
     "",
