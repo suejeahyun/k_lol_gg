@@ -115,6 +115,52 @@ function buildRegisterList(results: ApplyResult[]): string {
     .join("\n");
 }
 
+function simplifyPendingReason(reason?: string): string {
+  const reasonText = String(reason || "").trim();
+
+  if (reasonText.indexOf("2명 이상") >= 0 || reasonText.indexOf("동명이인") >= 0) {
+    return "같은 이름/닉네임 후보가 2명 이상 있음";
+  }
+
+  if (reasonText.indexOf("매칭되지") >= 0 || reasonText.indexOf("찾을 수") >= 0) {
+    return "등록된 플레이어를 찾을 수 없음";
+  }
+
+  if (reasonText.indexOf("예비") >= 0) {
+    return "예비 참가자 확인 필요";
+  }
+
+  if (reasonText === "") {
+    return "관리자 확인 필요";
+  }
+
+  return reasonText
+    .replace(/\s*관리자 확인 필요\.?/g, "")
+    .replace(/입니다\.?/g, "")
+    .trim();
+}
+
+function buildPendingSummary(results: ApplyResult[]): string {
+  const pendingResults = results.filter((item) => item.status === "PENDING");
+
+  if (pendingResults.length === 0) {
+    return "";
+  }
+
+  return pendingResults
+    .map((result, index) => {
+      const name = normalizeName(result.participant.name) || `${result.participant.slotNumber || index + 1}번 항목`;
+      const reason = simplifyPendingReason(result.reason);
+
+      if (pendingResults.length === 1) {
+        return `대상: ${name}\n사유: ${reason}`;
+      }
+
+      return `${index + 1}. ${name} - ${reason}`;
+    })
+    .join("\n");
+}
+
 function buildReply(params: {
   parsed: ParsedRecruitMessage;
   seasonName: string;
@@ -126,7 +172,11 @@ function buildReply(params: {
   const reserve = params.results.filter((item) => item.status === "RESERVE").length;
 
   if (pending > 0) {
-    return "[K-LOL.GG 구인구직방 참가 자동 등록 보류]";
+    const pendingSummary = buildPendingSummary(params.results);
+
+    return pendingSummary
+      ? `[K-LOL.GG 구인구직방 참가 자동 등록 보류]\n\n${pendingSummary}`
+      : "[K-LOL.GG 구인구직방 참가 자동 등록 보류]";
   }
 
   if (reserve > 0 && registered + updated === 0) {
