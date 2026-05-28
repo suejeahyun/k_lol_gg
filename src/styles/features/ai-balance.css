@@ -546,175 +546,162 @@
   }
 }
 
-/* Admin K-LOL MMR dashboard readability patch */
-.ai-page--admin-dashboard {
-  max-width: 1280px;
+/* Pick/Ban import flow cleanup */
+.ai-hero--compact {
+  padding: 24px;
 }
 
-.ai-page--admin-dashboard .ai-hero {
-  border-radius: 26px;
-  padding: 30px 32px;
-  margin-bottom: 22px;
+.ai-flow-panel {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
 }
 
-.ai-page--admin-dashboard .ai-hero__content {
-  max-width: none;
-}
-
-.ai-page--admin-dashboard .page-title {
-  margin: 8px 0 0;
-  font-size: clamp(26px, 2.4vw, 38px);
-  letter-spacing: -0.03em;
-}
-
-.ai-page--admin-dashboard .page-description {
-  max-width: 860px;
-  margin-top: 12px;
-  color: rgba(226, 232, 240, 0.72);
-  line-height: 1.65;
-}
-
-.ai-page--admin-dashboard .ai-hero__actions {
-  margin-top: 20px;
-}
-
-.ai-page--admin-dashboard .ai-kpi-grid {
-  grid-template-columns: repeat(5, minmax(150px, 1fr));
-  gap: 16px;
-  margin-top: 0;
-}
-
-.ai-page--admin-dashboard .ai-kpi {
-  min-height: 108px;
-  padding: 18px 20px;
-  border-radius: 20px;
-  background:
-    linear-gradient(180deg, rgba(17, 24, 39, 0.92), rgba(15, 23, 42, 0.68));
-}
-
-.ai-page--admin-dashboard .ai-kpi span {
-  margin-bottom: 10px;
-  font-size: 11px;
-  color: rgba(203, 213, 225, 0.78);
-}
-
-.ai-page--admin-dashboard .ai-kpi strong {
-  font-size: clamp(25px, 2.4vw, 34px);
-  letter-spacing: -0.03em;
-}
-
-.ai-page--admin-dashboard .ai-grid-3 {
-  grid-template-columns: 1.05fr 1fr 1fr;
-  align-items: stretch;
-  gap: 18px;
-}
-
-.ai-page--admin-dashboard .ai-grid-2 {
-  grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
-  align-items: start;
-  gap: 18px;
-}
-
-.ai-page--admin-dashboard .ai-panel {
-  border-radius: 22px;
-  padding: 22px;
-  background:
-    radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 34%),
-    rgba(15, 23, 42, 0.78);
-}
-
-.ai-page--admin-dashboard .ai-panel__head {
-  align-items: center;
-  margin-bottom: 18px;
-}
-
-.ai-page--admin-dashboard .ai-panel__title {
-  font-size: 19px;
-  letter-spacing: -0.02em;
-}
-
-.ai-page--admin-dashboard .ai-panel__desc {
-  font-size: 13px;
-  color: rgba(203, 213, 225, 0.72);
-}
-
-.ai-page--admin-dashboard .ai-list {
-  gap: 12px;
-}
-
-.ai-page--admin-dashboard .ai-list li {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  min-height: 48px;
-  padding: 13px 16px;
-}
-
-.ai-page--admin-dashboard .ai-table-wrap {
+.ai-flow-step {
+  min-height: 74px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
   border-radius: 18px;
-  background: rgba(2, 6, 23, 0.22);
+  padding: 12px;
+  background: rgba(15, 23, 42, 0.52);
+  color: rgba(226, 232, 240, 0.78);
 }
 
-.ai-page--admin-dashboard .ai-table {
-  min-width: 720px;
+.ai-flow-step strong {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  margin-bottom: 8px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.14);
+  color: #e2e8f0;
+  font-size: 12px;
 }
 
-.ai-page--admin-dashboard .ai-table th {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  padding: 14px 16px;
-  background: rgba(15, 23, 42, 0.96);
+.ai-flow-step span {
+  display: block;
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.ai-flow-step--active {
+  border-color: rgba(34, 211, 238, 0.38);
+  background: linear-gradient(135deg, rgba(8, 145, 178, 0.28), rgba(15, 23, 42, 0.72));
+  color: #f8fafc;
+}
+
+.ai-flow-step--active strong {
+  background: rgba(34, 211, 238, 0.22);
+  color: #cffafe;
+}
+
+.ai-kpi-grid--compact {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.ai-import-list {
+  display: grid;
+  gap: 12px;
+}
+
+.ai-import-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(260px, 0.75fr) auto;
+  gap: 14px;
+  align-items: center;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 20px;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.46);
+}
+
+.ai-import-card__main {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.ai-import-card__main h3 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 16px;
+  font-weight: 850;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ai-import-card__main p {
+  margin: 4px 0 0;
+  color: rgba(203, 213, 225, 0.72);
+  font-size: 13px;
+}
+
+.ai-import-card__badges,
+.ai-import-card__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.ai-import-card__stats span {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 999px;
+  padding: 4px 9px;
+  background: rgba(2, 6, 23, 0.26);
   color: rgba(226, 232, 240, 0.82);
+  font-size: 12px;
+  font-weight: 750;
 }
 
-.ai-page--admin-dashboard .ai-table td {
-  padding: 15px 16px;
-  line-height: 1.45;
+.ai-import-card .ai-actions {
+  margin-top: 0;
+  justify-content: flex-end;
+  white-space: nowrap;
 }
 
-.ai-page--admin-dashboard .ai-table tbody tr:hover td {
-  background: rgba(59, 130, 246, 0.06);
+.ai-page .ai-table-wrap {
+  scrollbar-width: thin;
 }
 
-.ai-page--admin-dashboard .ai-player-name {
-  gap: 3px;
+.ai-page .ai-table td strong,
+.ai-page .ai-table a {
+  color: #f8fafc;
+  font-weight: 850;
 }
 
-.ai-page--admin-dashboard .button-primary,
-.ai-page--admin-dashboard .button-secondary {
-  min-height: 38px;
-  padding: 9px 14px;
+.ai-page .ai-table td:first-child,
+.ai-page .ai-table th:first-child {
+  white-space: nowrap;
 }
 
-@media (max-width: 1120px) {
-  .ai-page--admin-dashboard .ai-kpi-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+@media (max-width: 1280px) {
+  .ai-flow-panel {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .ai-page--admin-dashboard .ai-grid-2,
-  .ai-page--admin-dashboard .ai-grid-3 {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 640px) {
-  .ai-page--admin-dashboard .ai-hero {
-    padding: 22px;
-  }
-
-  .ai-page--admin-dashboard .ai-kpi-grid {
+  .ai-import-card {
     grid-template-columns: 1fr;
   }
 
-  .ai-page--admin-dashboard .ai-panel {
-    padding: 18px;
+  .ai-import-card .ai-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 760px) {
+  .ai-flow-panel,
+  .ai-kpi-grid--compact {
+    grid-template-columns: 1fr;
   }
 
-  .ai-page--admin-dashboard .ai-panel__head,
-  .ai-page--admin-dashboard .ai-list li {
-    align-items: flex-start;
-    flex-direction: column;
+  .ai-import-card__main h3 {
+    white-space: normal;
   }
 }

@@ -1,0 +1,596 @@
+/* K-LOL.GG final visual unity layer
+   Purpose: one final, predictable override layer for page rhythm, hero cards,
+   cards, tables, notice, recruit, progress, MMR, balance and pickban pages. */
+
+:root {
+  --klol-bg: #030817;
+  --klol-surface: rgba(10, 19, 38, 0.88);
+  --klol-surface-strong: rgba(13, 25, 49, 0.96);
+  --klol-surface-soft: rgba(9, 18, 36, 0.74);
+  --klol-line: rgba(93, 151, 210, 0.22);
+  --klol-line-strong: rgba(76, 188, 255, 0.38);
+  --klol-text: #f4f8ff;
+  --klol-muted: #aab8cc;
+  --klol-dim: #6f8097;
+  --klol-cyan: #28c7ff;
+  --klol-blue: #2f85ff;
+  --klol-purple: #7348ff;
+  --klol-gold: #e7c968;
+  --klol-red: #ff506d;
+  --klol-green: #4be2a1;
+  --klol-radius-lg: 28px;
+  --klol-radius-md: 20px;
+  --klol-radius-sm: 12px;
+  --klol-shadow: 0 26px 80px rgba(0, 0, 0, 0.35);
+  --klol-page-width: 1120px;
+}
+
+/* ---------- Page frame ---------- */
+.page-container,
+.page-shell,
+.notice-page,
+.gallery-page,
+.kakao-search-page,
+.ai-page,
+.recruit-page,
+.progress-page,
+.highlights-page,
+.matches-page-v2,
+.players-page-v2,
+.ranking-page,
+.admin-page,
+.admin-content,
+.admin-main {
+  width: min(var(--klol-page-width), calc(100vw - 64px));
+  margin-inline: auto !important;
+  padding-inline: 0 !important;
+}
+
+.page-container,
+.page-shell,
+.notice-page,
+.gallery-page,
+.ai-page,
+.recruit-page,
+.progress-page,
+.highlights-page,
+.matches-page-v2,
+.players-page-v2 {
+  padding-top: clamp(28px, 4vw, 64px) !important;
+  padding-bottom: 96px !important;
+}
+
+/* ---------- Unified hero cards ---------- */
+.page-header,
+.page-hero,
+.ai-hero,
+.admin-page-header,
+.admin-header,
+.gallery-page__header,
+.kakao-search-page__inner > h1:first-child,
+.player-hero,
+.recruit-hero {
+  position: relative !important;
+  overflow: hidden !important;
+  isolation: isolate;
+  border: 1px solid rgba(85, 165, 255, 0.28) !important;
+  border-radius: var(--klol-radius-lg) !important;
+  background:
+    radial-gradient(circle at 78% 45%, rgba(91, 59, 230, 0.34), transparent 36%),
+    linear-gradient(135deg, rgba(12, 32, 55, 0.96), rgba(11, 18, 37, 0.96) 48%, rgba(26, 20, 70, 0.92)) !important;
+  box-shadow: var(--klol-shadow) !important;
+  min-height: 156px !important;
+  padding: clamp(30px, 3.4vw, 46px) clamp(32px, 4vw, 48px) !important;
+  margin: 0 0 28px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  text-align: left !important;
+}
+
+.page-header::before,
+.page-hero::before,
+.ai-hero::before,
+.admin-page-header::before,
+.admin-header::before,
+.gallery-page__header::before,
+.player-hero::before,
+.recruit-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  opacity: 0.35;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: linear-gradient(90deg, #000, transparent 78%);
+}
+
+.page-header::after,
+.page-hero::after,
+.ai-hero::after,
+.admin-page-header::after,
+.admin-header::after,
+.gallery-page__header::after,
+.player-hero::after,
+.recruit-hero::after {
+  content: "K-LOL.GG";
+  position: absolute;
+  right: 32px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: -1;
+  font-size: clamp(48px, 7vw, 106px);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: rgba(135, 189, 255, 0.075);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.matches-page-v2 .page-header::after { content: "MATCH"; }
+.recruit-page .page-hero::after { content: "RECRUIT"; }
+.progress-page .page-header::after,
+.event-progress-page .page-header::after,
+.destruction-progress-page .page-header::after { content: "PROGRESS"; }
+.participation-page .page-header::after,
+.participation-detail .page-header::after { content: "JOIN"; }
+.ai-page .ai-hero::after { content: "K-LOL MMR"; }
+.ai-pickban-page .ai-hero::after { content: "PICK · BAN"; }
+.players-page-v2 .page-header::after { content: "PLAYERS"; }
+.ranking-page .page-header::after { content: "RANKING"; }
+.notice-page .page-header::after { content: "NOTICE"; }
+.highlights-page .page-header::after { content: "CLIP"; }
+.gallery-page .gallery-page__header::after { content: "GALLERY"; }
+
+.page-eyebrow,
+.ai-hero__eyebrow,
+.gallery-page__header .page-eyebrow,
+.highlight-section__eyebrow,
+.ranking-board__eyebrow,
+.players-page-v2__eyebrow {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px !important;
+  color: #a9c8e8 !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.2em !important;
+  text-transform: uppercase !important;
+}
+
+.page-eyebrow::before,
+.ai-hero__eyebrow::before,
+.highlight-section__eyebrow::before,
+.ranking-board__eyebrow::before,
+.players-page-v2__eyebrow::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--klol-green);
+  box-shadow: 0 0 14px rgba(75, 226, 161, 0.85);
+}
+
+.page-title,
+.gallery-page__title,
+.kakao-search-page__title,
+.notice-detail__title,
+.ai-hero h1,
+.admin-page-header h1,
+.admin-header h1 {
+  margin: 0 !important;
+  color: var(--klol-text) !important;
+  font-size: clamp(34px, 4.2vw, 56px) !important;
+  line-height: 1.05 !important;
+  font-weight: 950 !important;
+  letter-spacing: -0.045em !important;
+  text-align: left !important;
+}
+
+.page-description,
+.gallery-page__description,
+.kakao-search-page__desc,
+.ai-hero p:not(.ai-hero__eyebrow) {
+  max-width: 760px;
+  color: var(--klol-muted) !important;
+  font-size: 14px !important;
+  line-height: 1.7 !important;
+  margin-top: 12px !important;
+  text-align: left !important;
+}
+
+/* ---------- Cards / panels ---------- */
+.card,
+.card-panel,
+.admin-card,
+.admin-panel,
+.ai-panel,
+.ai-card,
+.balance-card,
+.balance-form-card,
+.notice-card,
+.notice-recommend-card,
+.recruit-card,
+.progress-overview-card,
+.event-progress-card,
+.destruction-progress-card,
+.highlight-card,
+.highlight-winner-image-card,
+.ranking-top-card,
+.ranking-board,
+.players-page-v2__panel,
+.players-page-v2__summary-card,
+.players-page-v2__board,
+.highlight-detail-card,
+.notice-detail,
+.recruit-empty {
+  border: 1px solid var(--klol-line) !important;
+  border-radius: var(--klol-radius-md) !important;
+  background:
+    linear-gradient(180deg, rgba(14, 28, 52, 0.94), rgba(8, 16, 33, 0.94)) !important;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.24) !important;
+}
+
+.card:hover,
+.notice-card:hover,
+.recruit-card:hover,
+.progress-overview-card:hover,
+.event-progress-card:hover,
+.destruction-progress-card:hover,
+.highlight-card:hover,
+.highlight-winner-image-card:hover,
+.players-page-v2__row:hover,
+.ranking-row-card:hover {
+  border-color: var(--klol-line-strong) !important;
+  transform: translateY(-1px);
+}
+
+/* ---------- Grids ---------- */
+.recruit-grid,
+.progress-overview-grid,
+.event-progress-list,
+.destruction-progress-list,
+.highlight-list,
+.highlight-winner-image-list,
+.notice-recommend-grid,
+.ranking-top-grid,
+.players-page-v2__summary,
+.ai-metric-grid,
+.ai-summary-grid,
+.ai-dashboard-grid,
+.admin-dashboard-grid {
+  display: grid !important;
+  gap: 20px !important;
+}
+
+.recruit-grid,
+.notice-recommend-grid,
+.highlight-winner-image-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.highlight-list,
+.progress-overview-grid,
+.event-progress-list,
+.destruction-progress-list {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)) !important;
+}
+
+.players-page-v2__summary,
+.ai-metric-grid,
+.ai-summary-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
+}
+
+/* ---------- Tables / list boards ---------- */
+.table-wrap,
+.admin-table-wrap,
+.responsive-table,
+.ai-table-wrap,
+.players-page-v2__board,
+.ranking-board,
+.ai-panel {
+  overflow-x: auto !important;
+}
+
+table,
+.admin-table,
+.data-table,
+.ai-table {
+  width: 100% !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+th,
+td,
+.admin-table th,
+.admin-table td,
+.data-table th,
+.data-table td,
+.ai-table th,
+.ai-table td {
+  border-bottom: 1px solid rgba(125, 169, 215, 0.13) !important;
+  padding: 14px 16px !important;
+  vertical-align: middle !important;
+  color: var(--klol-text) !important;
+}
+
+th,
+.admin-table th,
+.data-table th,
+.ai-table th {
+  color: #9ed9ff !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  background: rgba(9, 22, 45, 0.75) !important;
+}
+
+/* ---------- Buttons / form controls ---------- */
+button,
+.button,
+.btn,
+.action-button,
+.page-actions a,
+.page-actions button,
+.pagination a,
+.pagination button,
+select,
+input,
+textarea {
+  border-radius: 12px !important;
+}
+
+button,
+.button,
+.btn,
+.action-button,
+.page-actions a,
+.page-actions button {
+  min-height: 36px;
+  font-weight: 900 !important;
+}
+
+input,
+select,
+textarea {
+  border: 1px solid rgba(111, 160, 212, 0.24) !important;
+  background: rgba(4, 12, 27, 0.86) !important;
+  color: var(--klol-text) !important;
+}
+
+/* ---------- Notice pages ---------- */
+.notice-page {
+  max-width: var(--klol-page-width) !important;
+}
+
+.notice-page .page-header {
+  margin-bottom: 34px !important;
+}
+
+.notice-page--recommend .notice-recommend-card {
+  display: block !important;
+  padding: 0 !important;
+  margin: 0 0 48px !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.notice-page--recommend .notice-recommend-card__meta,
+.notice-card__top,
+.notice-detail__meta {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+}
+
+.notice-page--recommend .notice-recommend-card h2,
+.notice-section-head h2,
+.notice-card__title {
+  text-align: left !important;
+  color: var(--klol-text) !important;
+}
+
+.notice-recommend-section {
+  margin-top: 20px !important;
+}
+
+.notice-section-head {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: flex-end !important;
+  gap: 16px !important;
+  margin-bottom: 16px !important;
+}
+
+.notice-card--compact {
+  padding: 24px !important;
+  min-height: 190px;
+}
+
+.notice-card__summary,
+.notice-detail__content {
+  color: #c7d3e4 !important;
+  line-height: 1.72 !important;
+}
+
+/* ---------- Pickban page ---------- */
+.ai-pickban-page {
+  max-width: var(--klol-page-width) !important;
+}
+
+.ai-pickban-page .ai-panel,
+.ai-pickban-page .ai-pickban-board,
+.ai-pickban-page .ai-pickban-grid > section {
+  padding: 22px !important;
+}
+
+.ai-pickban-page .ai-line-card-grid {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+}
+
+.ai-pickban-page .ai-line-card {
+  min-width: 0 !important;
+  padding: 14px !important;
+  border: 1px solid rgba(113, 164, 220, 0.2) !important;
+  border-radius: 16px !important;
+  background: rgba(5, 14, 31, 0.68) !important;
+}
+
+.ai-pickban-page .ai-champion-list,
+.ai-pickban-page .ai-ban-list,
+.ai-pickban-page .ai-pair-list {
+  display: grid !important;
+  gap: 10px !important;
+}
+
+.ai-pickban-page .ai-champion-card,
+.ai-pickban-page .ai-ban-card,
+.ai-pickban-page .ai-pair-card {
+  display: grid !important;
+  grid-template-columns: auto 1fr !important;
+  gap: 10px !important;
+  align-items: center !important;
+  padding: 10px !important;
+  border: 1px solid rgba(113, 164, 220, 0.18) !important;
+  border-radius: 14px !important;
+  background: rgba(3, 11, 25, 0.72) !important;
+}
+
+.ai-pickban-page img {
+  width: 56px !important;
+  height: 56px !important;
+  object-fit: cover !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(255,255,255,0.14) !important;
+}
+
+.ai-pickban-page .ai-pickban-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.74fr) !important;
+  gap: 18px !important;
+  align-items: start !important;
+}
+
+/* ---------- Recruit / progress / highlights rhythm ---------- */
+.recruit-command-box,
+.matches-filter-card,
+.ranking-filter,
+.players-page-v2__search,
+.balance-form-card {
+  border: 1px solid var(--klol-line) !important;
+  border-radius: var(--klol-radius-md) !important;
+  background: rgba(9, 18, 38, 0.82) !important;
+}
+
+.recruit-card {
+  padding: 24px !important;
+}
+
+.recruit-slots {
+  display: grid !important;
+  gap: 8px !important;
+}
+
+.recruit-slot {
+  border: 1px solid rgba(119, 166, 214, 0.15) !important;
+  border-radius: 12px !important;
+  background: rgba(3, 11, 25, 0.45) !important;
+}
+
+.highlight-card__thumb,
+.highlight-winner-image-card__thumb,
+.highlight-card__thumb-wrap,
+.highlight-winner-image-card__thumb-wrap {
+  border-radius: 16px 16px 0 0 !important;
+  overflow: hidden !important;
+}
+
+/* ---------- Sidebar consistency ---------- */
+.sidebar a,
+.sidebar button,
+.user-sidebar a,
+.admin-sidebar a {
+  transition: border-color .16s ease, background .16s ease, color .16s ease, transform .16s ease;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1180px) {
+  .page-container,
+  .page-shell,
+  .notice-page,
+  .gallery-page,
+  .ai-page,
+  .recruit-page,
+  .progress-page,
+  .highlights-page,
+  .matches-page-v2,
+  .players-page-v2,
+  .admin-page,
+  .admin-content,
+  .admin-main {
+    width: min(100% - 32px, var(--klol-page-width)) !important;
+  }
+
+  .ai-pickban-page .ai-line-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .ai-pickban-page .ai-pickban-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .page-header,
+  .page-hero,
+  .ai-hero,
+  .admin-page-header,
+  .admin-header,
+  .gallery-page__header,
+  .player-hero,
+  .recruit-hero {
+    min-height: 132px !important;
+    padding: 26px 22px !important;
+    border-radius: 22px !important;
+  }
+
+  .page-header::after,
+  .page-hero::after,
+  .ai-hero::after,
+  .admin-page-header::after,
+  .admin-header::after,
+  .gallery-page__header::after,
+  .player-hero::after,
+  .recruit-hero::after {
+    right: 18px;
+    font-size: 48px;
+  }
+
+  .recruit-grid,
+  .notice-recommend-grid,
+  .highlight-winner-image-list,
+  .highlight-list,
+  .progress-overview-grid,
+  .event-progress-list,
+  .destruction-progress-list,
+  .ai-pickban-page .ai-line-card-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .notice-section-head {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+  }
+}
