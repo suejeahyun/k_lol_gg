@@ -2,12 +2,17 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 type AppTopBarProps = {
   title: string;
   homeHref: string;
   mode: "user" | "admin";
+};
+
+type TopBarUser = {
+  userId: string;
+  status: "PENDING" | "APPROVED" | "REJECTED";
 };
 
 export default function AppTopBar({
@@ -18,6 +23,37 @@ export default function AppTopBar({
   const router = useRouter();
   const [menu, setMenu] = useState<"players" | "matches">("players");
   const [keyword, setKeyword] = useState("");
+  const [user, setUser] = useState<TopBarUser | null>(null);
+
+  useEffect(() => {
+    if (mode !== "user") {
+      return;
+    }
+
+    async function fetchUser() {
+      try {
+        const res = await fetch("/api/auth/me", {
+          cache: "no-store",
+        });
+
+        if (!res.ok) {
+          setUser(null);
+          return;
+        }
+
+        const data: { user: TopBarUser | null } = await res.json();
+        setUser(data.user ?? null);
+      } catch (error: unknown) {
+        console.error("[APP_TOPBAR_AUTH_ERROR]", error);
+        setUser(null);
+      }
+    }
+
+    fetchUser().catch((error: unknown) => {
+      console.error("[APP_TOPBAR_AUTH_PROMISE_ERROR]", error);
+      setUser(null);
+    });
+  }, [mode]);
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -61,6 +97,25 @@ export default function AppTopBar({
 
         <span className="app-topbar__title">{title}</span>
       </div>
+
+      {mode === "user" ? (
+        <div className="app-topbar__mobile-auth" aria-label="모바일 회원 메뉴">
+          {user ? (
+            <Link href="/me/player" className="app-topbar__auth-link app-topbar__auth-link--primary">
+              내 정보
+            </Link>
+          ) : (
+            <>
+              <Link href="/login" className="app-topbar__auth-link">
+                로그인
+              </Link>
+              <Link href="/signup" className="app-topbar__auth-link app-topbar__auth-link--primary">
+                회원가입
+              </Link>
+            </>
+          )}
+        </div>
+      ) : null}
 
       <form className="app-topbar__search" onSubmit={handleSubmit}>
         <select

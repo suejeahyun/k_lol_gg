@@ -148,7 +148,8 @@
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
-    justify-content: flex-start !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
     width: 100% !important;
     height: auto !important;
     min-height: calc(56px + var(--m-top-safe)) !important;
@@ -163,7 +164,8 @@
   .app-topbar__left {
     display: flex !important;
     align-items: center !important;
-    width: 100% !important;
+    flex: 1 1 auto !important;
+    width: auto !important;
     min-width: 0 !important;
     gap: 8px !important;
     overflow: hidden;
@@ -196,6 +198,21 @@
   .app-topbar__search,
   .admin-topbar-logout {
     display: none !important;
+  }
+
+  .app-topbar__mobile-auth {
+    display: inline-flex !important;
+    flex: 0 0 auto !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 6px !important;
+  }
+
+  .app-topbar__auth-link {
+    min-height: 32px !important;
+    padding: 0 10px !important;
+    border-radius: 999px !important;
+    font-size: 12px !important;
   }
 
   /* 사이드바: 설명/로그인 박스 숨김, 메뉴만 가로 탭 */
@@ -971,7 +988,13 @@
 
   .app-topbar__title,
   .app-topbar__divider {
-    font-size: 12px !important;
+    display: none !important;
+  }
+
+  .app-topbar__auth-link {
+    min-height: 30px !important;
+    padding: 0 9px !important;
+    font-size: 11px !important;
   }
 
   .app-sidebar__link,

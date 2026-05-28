@@ -60,3 +60,30 @@
   left: 0;
   right: 0;
 }
+
+.app-topbar__mobile-auth {
+  display: none;
+}
+
+.app-topbar__auth-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid var(--k-border);
+  border-radius: 999px;
+  background: rgba(2, 6, 23, 0.56);
+  color: var(--k-text) !important;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.app-topbar__auth-link--primary {
+  border-color: rgba(96, 165, 250, 0.64);
+  background: linear-gradient(135deg, #2563eb, #22d3ee);
+  color: #ffffff !important;
+}
