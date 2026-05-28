@@ -461,3 +461,87 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Pick/Ban recommendation pages: layout cleanup */
+.ai-page .ai-panel + .ai-panel {
+  margin-top: 18px;
+}
+
+.ai-actions--push {
+  margin-top: auto;
+}
+
+.ai-sub-panel__spaced-title {
+  margin-top: 18px !important;
+}
+
+.ai-recommendation-grid {
+  align-items: start;
+}
+
+.ai-recommendation-grid .ai-sub-panel {
+  min-height: 100%;
+}
+
+.ai-sub-panel .ai-table-wrap {
+  margin-top: 8px;
+}
+
+.ai-sub-panel .ai-table th,
+.ai-sub-panel .ai-table td {
+  vertical-align: top;
+}
+
+.ai-sub-panel .ai-risk-list,
+.ai-sub-panel .ai-list {
+  margin-top: 8px;
+}
+
+.ai-chip-list {
+  max-width: 100%;
+}
+
+.ai-chip {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ai-draft-card .ai-panel__head {
+  align-items: flex-start;
+}
+
+.ai-draft-card .ai-actions {
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+  padding-top: 12px;
+}
+
+.ai-empty {
+  grid-column: 1 / -1;
+  min-height: 160px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  color: rgba(226, 232, 240, 0.76);
+}
+
+@media (max-width: 720px) {
+  .ai-page .page-title {
+    font-size: clamp(28px, 8vw, 42px);
+  }
+
+  .ai-hero__actions,
+  .ai-actions {
+    flex-direction: column;
+  }
+
+  .ai-hero__actions a,
+  .ai-actions a {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .ai-sub-panel {
+    padding: 14px;
+  }
+}

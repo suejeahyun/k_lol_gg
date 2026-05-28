@@ -10,6 +10,7 @@ type AdminSidebarItem = {
   code: string;
   access?: "SUPER";
   external?: boolean;
+  activePrefixes?: string[];
 };
 
 type AdminSidebarGroup = {
@@ -19,88 +20,72 @@ type AdminSidebarGroup = {
 
 const menuGroups: AdminSidebarGroup[] = [
   {
-    title: "내전 운영",
+    title: "CORE",
     items: [
       { href: "/admin", label: "관리자 홈", code: "ADM" },
-      { href: "/admin/matches/new", label: "시즌 내전 등록", code: "REG" },
-      { href: "/admin/matches", label: "시즌 내전 관리", code: "MAT" },
-    ],
-  },
-  {
-    title: "팀 밸런스",
-    items: [
-      { href: "/admin/balance", label: "팀 밸런스 계산", code: "BAL" },
-      { href: "/admin/balance/drafts", label: "저장 밸런스", code: "DRF" },
-      { href: "/admin/balance/recommendations", label: "밴픽 추천", code: "P/B" },
-    ],
-  },
-  {
-    title: "AI 밸런스",
-    items: [
-      { href: "/admin/balance-ai", label: "AI 밸런스 대시보드", code: "AI" },
-      { href: "/admin/balance-ai/reviews", label: "AI 리뷰 목록", code: "REV" },
-      { href: "/admin/balance-ai/players", label: "AI MMR 랭킹", code: "MMR" },
-      { href: "/admin/balance-ai/recalculate", label: "AI MMR 재계산", code: "CAL" },
-    ],
-  },
-  {
-    title: "운영 AI",
-    items: [
-      { href: "/admin/operation-ai", label: "운영 AI 보조", code: "OPS" },
-      { href: "/admin/operation-ai/addons", label: "운영 AI 확장", code: "AIX" },
-    ],
-  },
-  {
-    title: "대회 운영",
-    items: [
-      { href: "/admin/progress/event", label: "이벤트 내전 관리", code: "EVT" },
-      { href: "/admin/progress/destruction", label: "멸망전 관리", code: "DES" },
-    ],
-  },
-  {
-    title: "기초 데이터",
-    items: [
-      { href: "/admin/players", label: "플레이어 목록", code: "PLY" },
+      { href: "/admin/matches/new", label: "내전 등록", code: "REG" },
+      { href: "/admin/matches", label: "내전 관리", code: "MAT" },
       { href: "/admin/player-approvals", label: "플레이어 승인", code: "APR" },
+    ],
+  },
+  {
+    title: "BALANCE",
+    items: [
+      { href: "/admin/balance", label: "팀 밸런스", code: "BAL" },
+      {
+        href: "/admin/balance/recommendations",
+        label: "저장/밴픽",
+        code: "P/B",
+        activePrefixes: ["/admin/balance/recommendations", "/admin/balance/drafts"],
+      },
+      { href: "/admin/balance-ai", label: "AI 밸런스", code: "AI", activePrefixes: ["/admin/balance-ai"] },
+    ],
+  },
+  {
+    title: "OPERATE",
+    items: [
+      { href: "/admin/recruits", label: "구인구직", code: "REC" },
+      { href: "/admin/progress/event", label: "이벤트/멸망전", code: "EVT", activePrefixes: ["/admin/progress/event", "/admin/progress/destruction"] },
+      { href: "/admin/operation-ai", label: "운영 AI", code: "OPS", activePrefixes: ["/admin/operation-ai"] },
+    ],
+  },
+  {
+    title: "DATA",
+    items: [
+      { href: "/admin/players", label: "플레이어", code: "PLY" },
       { href: "/admin/champions", label: "챔피언", code: "CHP" },
       { href: "/admin/seasons", label: "시즌", code: "SSN" },
     ],
   },
   {
-    title: "콘텐츠",
+    title: "CONTENT",
     items: [
-      { href: "/admin/notices", label: "공지사항", code: "NOT" },
-      { href: "/admin/event-notices", label: "이벤트 공지", code: "EVN" },
-      { href: "/admin/images", label: "우승 이미지", code: "IMG" },
+      { href: "/admin/notices", label: "공지", code: "NOT", activePrefixes: ["/admin/notices", "/admin/event-notices"] },
+      { href: "/admin/images", label: "이미지", code: "IMG" },
       { href: "/admin/highlights", label: "하이라이트", code: "VID" },
     ],
   },
   {
-    title: "운영 기록",
+    title: "SYSTEM",
     items: [
-      { href: "/admin/recruits", label: "구인구직 관리", code: "REC" },
       { href: "/admin/logs", label: "관리자 로그", code: "LOG" },
       { href: "/api/admin/backup/players.csv", label: "백업 CSV", code: "CSV", access: "SUPER", external: true },
     ],
   },
 ];
 
-function isActivePath(pathname: string, href: string) {
-  if (href === "/admin") return pathname === href;
+function isActivePath(pathname: string, item: AdminSidebarItem) {
+  if (item.href === "/admin") return pathname === item.href;
 
-  if (href === "/admin/balance") {
-    return pathname === href;
+  if (item.href === "/admin/balance") {
+    return pathname === item.href;
   }
 
-  if (href === "/admin/balance/drafts") {
-    return pathname === href || (pathname.startsWith(`${href}/`) && !pathname.includes("/recommendations"));
+  if (item.activePrefixes?.length) {
+    return item.activePrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
   }
 
-  if (href === "/admin/balance/recommendations") {
-    return pathname === href || /^\/admin\/balance\/drafts\/[^/]+\/recommendations/.test(pathname);
-  }
-
-  return pathname === href || pathname.startsWith(`${href}/`);
+  return pathname === item.href || pathname.startsWith(`${item.href}/`);
 }
 
 export default function AdminSidebar() {
@@ -150,24 +135,24 @@ export default function AdminSidebar() {
               {group.items
                 .filter((item) => item.access !== "SUPER" || canViewSuper)
                 .map((item) => {
-                const isActive = !item.external && isActivePath(pathname, item.href);
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`app-sidebar__link app-sidebar__link--compact${isActive ? " app-sidebar__link--active" : ""}`}
-                    aria-current={isActive ? "page" : undefined}
-                    target={item.external ? "_blank" : undefined}
-                    rel={item.external ? "noreferrer" : undefined}
-                  >
-                    <span className="app-sidebar__code">{item.code}</span>
-                    <span className="app-sidebar__label">{item.label}</span>
-                    {item.access === "SUPER" ? (
-                      <span className="app-sidebar__access">SUPER</span>
-                    ) : null}
-                  </Link>
-                );
-              })}
+                  const isActive = !item.external && isActivePath(pathname, item);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`app-sidebar__link app-sidebar__link--compact${isActive ? " app-sidebar__link--active" : ""}`}
+                      aria-current={isActive ? "page" : undefined}
+                      target={item.external ? "_blank" : undefined}
+                      rel={item.external ? "noreferrer" : undefined}
+                    >
+                      <span className="app-sidebar__code">{item.code}</span>
+                      <span className="app-sidebar__label">{item.label}</span>
+                      {item.access === "SUPER" ? (
+                        <span className="app-sidebar__access">SUPER</span>
+                      ) : null}
+                    </Link>
+                  );
+                })}
             </div>
           </div>
         ))}

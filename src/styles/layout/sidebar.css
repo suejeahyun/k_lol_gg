@@ -450,3 +450,181 @@
     width: 100%;
   }
 }
+
+/* Sidebar compact pass: keep primary navigation visible */
+.app-shell--admin .app-sidebar--admin,
+.app-shell--user .app-sidebar--user {
+  width: 252px;
+  min-width: 252px;
+  padding: 18px 12px;
+}
+
+.app-shell--admin .app-content,
+.app-shell--user .app-content {
+  width: calc(100% - 252px);
+}
+
+.app-shell--admin .app-sidebar__subtitle,
+.app-shell--user .app-sidebar__subtitle {
+  margin-bottom: 12px;
+}
+
+.app-shell--admin .app-sidebar__group,
+.app-shell--user .app-sidebar__group {
+  padding: 9px 0 10px;
+}
+
+.app-shell--admin .app-sidebar__group-title,
+.app-shell--user .app-sidebar__group-title {
+  min-height: 20px;
+  margin-bottom: 5px;
+  font-size: 10px;
+}
+
+.app-shell--admin .app-sidebar__group-items,
+.app-shell--user .app-sidebar__group-items {
+  gap: 4px;
+}
+
+.app-shell--admin .app-sidebar__link,
+.app-shell--user .app-sidebar__link {
+  min-height: 36px;
+  padding: 7px 9px;
+  border-radius: 11px;
+  font-size: 12.5px;
+}
+
+.app-shell--admin .app-sidebar__code,
+.app-shell--user .app-sidebar__code {
+  min-width: 32px;
+  height: 22px;
+  border-radius: 7px;
+  font-size: 9px;
+}
+
+@media (max-width: 1024px) {
+  .app-shell--admin .app-sidebar--admin,
+  .app-shell--user .app-sidebar--user {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .app-shell--admin .app-content,
+  .app-shell--user .app-content {
+    width: 100%;
+  }
+}
+
+/* Sidebar final compaction and linkage pass */
+.app-shell--admin .app-sidebar--admin,
+.app-shell--user .app-sidebar--user {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-shell--admin .app-sidebar__nav,
+.app-shell--user .app-sidebar__nav {
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.28) transparent;
+}
+
+.app-shell--admin .app-sidebar__nav::-webkit-scrollbar,
+.app-shell--user .app-sidebar__nav::-webkit-scrollbar {
+  width: 5px;
+}
+
+.app-shell--admin .app-sidebar__nav::-webkit-scrollbar-thumb,
+.app-shell--user .app-sidebar__nav::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.26);
+}
+
+.app-shell--admin .app-sidebar__title,
+.app-shell--user .app-sidebar__title {
+  margin-bottom: 8px;
+  line-height: 1.1;
+}
+
+.app-shell--admin .app-sidebar__subtitle,
+.app-shell--user .app-sidebar__subtitle {
+  margin-bottom: 10px;
+  line-height: 1.35;
+}
+
+.app-shell--admin .app-sidebar__group,
+.app-shell--user .app-sidebar__group {
+  margin-top: 0;
+  padding: 7px 0 8px;
+}
+
+.app-shell--admin .app-sidebar__group-title,
+.app-shell--user .app-sidebar__group-title {
+  min-height: 18px;
+  margin-bottom: 4px;
+  padding: 0 7px;
+  opacity: 0.88;
+}
+
+.app-shell--admin .app-sidebar__group-items,
+.app-shell--user .app-sidebar__group-items {
+  gap: 3px;
+}
+
+.app-shell--admin .app-sidebar__link,
+.app-shell--user .app-sidebar__link {
+  min-height: 34px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  letter-spacing: -0.01em;
+}
+
+.app-shell--admin .app-sidebar__link {
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+}
+
+.app-shell--user .app-sidebar__link {
+  grid-template-columns: 36px minmax(0, 1fr);
+}
+
+.app-shell--admin .app-sidebar__code,
+.app-shell--user .app-sidebar__code {
+  min-width: 28px;
+  height: 20px;
+  font-size: 8.5px;
+}
+
+.app-shell--admin .app-sidebar__link--active,
+.app-shell--user .app-sidebar__link--active {
+  box-shadow:
+    inset 3px 0 0 rgba(255, 214, 120, 0.95),
+    0 0 18px rgba(34, 211, 238, 0.12);
+}
+
+.app-shell--user .app-sidebar__bottom {
+  flex: 0 0 auto;
+  margin-top: 10px !important;
+  padding-top: 10px !important;
+}
+
+@media (max-width: 1024px) {
+  .app-shell--admin .app-sidebar--admin,
+  .app-shell--user .app-sidebar--user {
+    position: static;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .app-shell--admin .app-sidebar__nav,
+  .app-shell--user .app-sidebar__nav {
+    overflow: visible;
+  }
+}

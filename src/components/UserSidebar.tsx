@@ -18,6 +18,7 @@ type UserSidebarItem = {
   code: string;
   auth?: boolean;
   approvedOnly?: boolean;
+  activePrefixes?: string[];
 };
 
 type UserSidebarGroup = {
@@ -35,54 +36,51 @@ const menuGroups: UserSidebarGroup[] = [
     ],
   },
   {
-    title: "BATTLE",
+    title: "PLAY",
     items: [
       { href: "/matches", label: "내전 목록", code: "MAT" },
-      { href: "/recruit", label: "구인구직 현황", code: "REC" },
-      { href: "/recruit-helper", label: "구인도우미", code: "HELP" },
-      { href: "/progress", label: "이벤트 / 멸망전", code: "EVT" },
-      { href: "/highlights", label: "하이라이트", code: "VID" },
+      { href: "/recruit", label: "구인구직", code: "REC", activePrefixes: ["/recruit", "/recruit-helper"] },
+      { href: "/progress", label: "이벤트/멸망전", code: "EVT" },
       { href: "/participation", label: "참가하기", code: "JOIN", auth: true, approvedOnly: true },
     ],
   },
   {
-    title: "AI DATA",
+    title: "BALANCE AI",
     items: [
-      { href: "/ai-balance", label: "AI 밸런스", code: "AI" },
-      { href: "/ai-balance/players", label: "AI MMR", code: "MMR" },
-      { href: "/players/balance", label: "팀 밸런스", code: "BAL", auth: true, approvedOnly: true },
-      { href: "/players/balance/drafts", label: "저장 밸런스", code: "DRF", auth: true, approvedOnly: true },
-      { href: "/players/balance/recommendations", label: "밴픽 추천", code: "P/B", auth: true, approvedOnly: true },
+      { href: "/ai-balance", label: "AI 분석", code: "AI", activePrefixes: ["/ai-balance"] },
+      { href: "/players/balance", label: "팀 밸런스", code: "BAL", auth: true, approvedOnly: true, activePrefixes: ["/players/balance"] },
+      {
+        href: "/players/balance/recommendations",
+        label: "저장/밴픽",
+        code: "P/B",
+        auth: true,
+        approvedOnly: true,
+        activePrefixes: ["/players/balance/recommendations", "/players/balance/drafts"],
+      },
     ],
   },
   {
-    title: "SYSTEM",
+    title: "INFO",
     items: [
-      { href: "/notices", label: "공지사항", code: "NOT" },
-      { href: "/event-notices", label: "이벤트 공지", code: "EVN" },
-      { href: "/images", label: "우승 이미지", code: "IMG" },
-      { href: "/kakao", label: "카카오봇", code: "KAK" },
+      { href: "/notices", label: "공지사항", code: "NOT", activePrefixes: ["/notices", "/event-notices"] },
+      { href: "/highlights", label: "하이라이트", code: "VID", activePrefixes: ["/highlights", "/images"] },
       { href: "/account/password", label: "비밀번호 변경", code: "PWD", auth: true },
     ],
   },
 ];
 
-function isActivePath(pathname: string, href: string) {
-  if (href === "/") return pathname === href;
+function isActivePath(pathname: string, item: UserSidebarItem) {
+  if (item.href === "/") return pathname === item.href;
 
-  if (href === "/players/balance") {
-    return pathname === href;
+  if (item.href === "/players/balance") {
+    return pathname === item.href;
   }
 
-  if (href === "/players/balance/drafts") {
-    return pathname === href || (pathname.startsWith(`${href}/`) && !pathname.includes("/recommendations"));
+  if (item.activePrefixes?.length) {
+    return item.activePrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
   }
 
-  if (href === "/players/balance/recommendations") {
-    return pathname === href || /^\/players\/balance\/drafts\/[^/]+\/recommendations/.test(pathname);
-  }
-
-  return pathname === href || pathname.startsWith(`${href}/`);
+  return pathname === item.href || pathname.startsWith(`${item.href}/`);
 }
 
 export default function UserSidebar() {
@@ -134,7 +132,7 @@ export default function UserSidebar() {
                   if (item.auth && !isLoggedIn) return null;
                   if (item.approvedOnly && !isApproved) return null;
 
-                  const isActive = isActivePath(pathname, item.href);
+                  const isActive = isActivePath(pathname, item);
 
                   return (
                     <Link

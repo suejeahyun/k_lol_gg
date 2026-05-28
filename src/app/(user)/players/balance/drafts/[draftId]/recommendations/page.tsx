@@ -134,7 +134,7 @@ export default async function BalanceDraftRecommendationsPage({ params }: Props)
               <ul className="ai-risk-list">
                 {team.plans.map((plan, index) => <li key={`${team.team}-plan-${index}`}>{plan}</li>)}
               </ul>
-              <h3 style={{ marginTop: 18 }}>운영 메모</h3>
+              <h3 className="ai-sub-panel__spaced-title">운영 메모</h3>
               <ul className="ai-list">
                 {team.notes.map((note, index) => <li key={`${team.team}-note-${index}`}>{note}</li>)}
               </ul>

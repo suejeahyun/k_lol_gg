@@ -104,7 +104,7 @@ export default async function AdminBalanceRecommendationsIndexPage({ searchParam
                 <span>점수 차이 {fmt(draft.diff)} · 밸런스 비용 {fmt(draft.balanceCost)}</span>
                 <span>AI 품질 {fmt(review?.qualityScore)} · 플레이어 {draft._count.players}명</span>
               </div>
-              <div className="ai-actions" style={{ marginTop: "auto" }}>
+              <div className="ai-actions ai-actions--push">
                 <Link className="button-primary" href={`/admin/balance/drafts/${draft.id}/recommendations`}>밴픽 추천 보기</Link>
                 <Link className="button-secondary" href={`/admin/balance/drafts/${draft.id}`}>밸런스 상세</Link>
               </div>
