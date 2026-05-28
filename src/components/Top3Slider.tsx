@@ -121,8 +121,8 @@ export default function Top3Slider({
         {seasonName && <span className="top3-card__season">{seasonName}</span>}
       </div>
 
-      {players.length === 0 ? (
-        <div className="top3-card__empty">표시할 데이터가 없습니다.</div>
+      {topPlayers.length === 0 ? (
+        <div className="top3-card__empty">내전 참여 {MIN_TOP3_PARTICIPATIONS}회 이상 기준에 맞는 데이터가 없습니다.</div>
       ) : (
         <>
           <div className="top3-slide-header">

@@ -32,7 +32,6 @@ const menuGroups: UserSidebarGroup[] = [
       { href: "/", label: "홈", code: "HOM" },
       { href: "/players", label: "플레이어", code: "PLY" },
       { href: "/rankings", label: "랭킹", code: "RNK" },
-      { href: "/me/player", label: "내 플레이어", code: "MY", auth: true },
     ],
   },
   {

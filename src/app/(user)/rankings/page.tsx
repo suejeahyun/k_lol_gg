@@ -38,7 +38,7 @@ type RankingPlayer = {
   mvpCount: number;
 };
 
-type SortType = "name" | "totalGames" | "winRate" | "mvpCount";
+type SortType = "name" | "participationCount" | "totalGames" | "winRate" | "mvpCount";
 type OrderType = "asc" | "desc";
 
 const PAGE_SIZE = 10;
@@ -47,6 +47,7 @@ const MIN_PARTICIPATION_FOR_RANKING = 10;
 function getSort(sort?: string): SortType {
   if (
     sort === "name" ||
+    sort === "participationCount" ||
     sort === "totalGames" ||
     sort === "winRate" ||
     sort === "mvpCount"
@@ -165,7 +166,9 @@ function TopRankingCard({
                     <span>{subMetricValue(player)}</span>
                   ) : null}
 
-                  <span>MVP {player.mvpCount}회</span>
+                  {metricLabel !== "MVP" ? (
+                    <span>MVP {player.mvpCount}회</span>
+                  ) : null}
                 </div>
               </div>
             </Link>
@@ -204,6 +207,7 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
     let result = 0;
 
     if (sort === "name") result = a.name.localeCompare(b.name);
+    if (sort === "participationCount") result = a.participationCount - b.participationCount;
     if (sort === "totalGames") result = a.totalGames - b.totalGames;
     if (sort === "winRate") result = a.winRate - b.winRate;
     if (sort === "mvpCount") result = a.mvpCount - b.mvpCount;
@@ -304,7 +308,7 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
             players={topMvp}
             metricLabel="MVP"
             metricValue={(player) => `${player.mvpCount}회`}
-            subMetricValue={(player) => `승률 ${formatPercent(player.winRate)}`}
+            subMetricValue={(player) => `참여 ${player.participationCount}회 · 승률 ${formatPercent(player.winRate)}`}
             emptyText={`내전 참여 ${MIN_PARTICIPATION_FOR_RANKING}회 이상 MVP 기록이 없습니다.`}
           />
         </section>
@@ -332,7 +336,8 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
                 <div>순위</div>
                 <Link href={sortLink("name")}>이름</Link>
                 <div>닉네임#태그</div>
-                <Link href={sortLink("totalGames")}>총 경기</Link>
+                <Link href={sortLink("participationCount")}>참여</Link>
+                <Link href={sortLink("totalGames")}>세트</Link>
                 <Link href={sortLink("winRate")}>승률</Link>
                 <Link href={sortLink("mvpCount")}>MVP</Link>
               </div>
@@ -363,6 +368,8 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
                         <div className="ranking-col ranking-riot">
                           {player.nickname}#{player.tag}
                         </div>
+
+                        <div className="ranking-col">{player.participationCount}회</div>
 
                         <div className="ranking-col">{player.totalGames}</div>
 
