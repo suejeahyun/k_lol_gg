@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import Pagination from "@/components/Pagination";
 import MatchDeleteButton from "./[matchId]/MatchDeleteButton";
+import AdminMatchAiTrainingButton from "./AdminMatchAiTrainingButton";
 export const dynamic = "force-dynamic";
 
 
@@ -76,9 +77,15 @@ export default async function AdminMatchesPage({
           flexWrap: "wrap",
         }}
       >
-        <h1 className="page-title" style={{ marginBottom: 0 }}>
-          관리자 - 내전 목록
-        </h1>
+        <div>
+          <h1 className="page-title" style={{ marginBottom: 6 }}>
+            관리자 - 내전 목록
+          </h1>
+          <p className="page-description" style={{ margin: 0 }}>
+            내전 등록 후 AI 학습을 실행하면 이후 팀 밸런스, MMR, 밴픽 추천 근거가 최신 내전 기록을 기준으로 정리됩니다.
+          </p>
+        </div>
+        <AdminMatchAiTrainingButton />
       </div>
 
       <form
