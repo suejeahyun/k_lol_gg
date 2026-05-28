@@ -622,11 +622,11 @@ export function parseFinishRecruitCommand(
 export function extractRecruitNoFromForm(message: string) {
   const text = normalizeText(message);
   const explicit = text.match(/모집번호\s*[:：]?\s*#?\s*(\d{1,2})/);
-  const fallback = text.match(/(^|\s)#(\d{1,2})(\s|$)/);
+  const compact = text.match(/(^|\s)#\s*(\d{1,2})(?=\s|·|$)/);
   const value = explicit
     ? Number(explicit[1])
-    : fallback
-      ? Number(fallback[2])
+    : compact
+      ? Number(compact[2])
       : NaN;
   return isValidRecruitNo(value) ? value : null;
 }
@@ -819,6 +819,7 @@ function parseNumberMembers(
       continue;
     }
 
+    if (/^#\s*\d{1,2}\s*·/.test(line)) continue;
     if (/^\d{1,3}\s*인\s*/.test(line)) continue;
     if (/^현재\s*인원\s*[:：]/.test(line)) continue;
     if (/^모집번호\s*[:：]/.test(line)) continue;
@@ -862,29 +863,24 @@ function splitNames(value: string) {
 }
 
 export function formatRecruitPartyBlock(party: RecruitPartyLike) {
-  const statusLabel = getRecruitStatusLabel(party);
-  const titleLabel = String(
-    party.title || getRecruitTypeLabel(String(party.type)),
-  ).replace(/!+$/, "");
+  const titleLabel = getCompactRecruitTitleLabel(party);
   const activeCount = getActiveMemberCount(party.members);
   const displayActiveCount = Math.min(activeCount, party.maxMembers);
   const subMembers = party.members.filter((member) => member.isSubstitute);
   const lines: string[] = [];
 
-  lines.push(`${titleLabel} ${statusLabel}`);
-  lines.push("");
-  lines.push(`모집번호: #${party.recruitNo}`);
-  lines.push(`출발시간: ${party.startTimeText?.trim() || "미정"}`);
-  lines.push(`현재 인원: ${displayActiveCount}/${party.maxMembers}`);
+  lines.push(
+    `#${party.recruitNo} · ${titleLabel} · ${displayActiveCount}/${party.maxMembers}`,
+  );
+  lines.push(`출발시간: ${formatStartTimeText(party.startTimeText)}`);
+  lines.push(`》게임정보 : ${formatGameInfoText(buildGameInfoText(party))}`);
   if (subMembers.length > 0) lines.push(`예비: ${subMembers.length}명`);
-  lines.push("");
-  lines.push(`》게임정보 : ${buildGameInfoText(party) || "미입력"}`);
   lines.push("");
 
   if (isLinePartyType(String(party.type))) {
     for (const position of LINE_POSITIONS) {
       const member = party.members.find((item) => item.position === position);
-      lines.push(`${position}. ${member?.name || ""}`);
+      lines.push(`${position}.${member?.name ? ` ${member.name}` : ""}`);
     }
   } else {
     const maxWrittenSlotNo = Math.max(
@@ -898,16 +894,51 @@ export function formatRecruitPartyBlock(party: RecruitPartyLike) {
       const member = party.members.find(
         (item) => !item.isSubstitute && item.slotNo === slotNo,
       );
-      lines.push(`${slotNo}. ${member?.name || ""}`);
+      lines.push(`${slotNo}.${member?.name ? ` ${member.name}` : ""}`);
     }
     if (String(party.type) === "ARAM" || subMembers.length > 0) {
       lines.push(
-        `예비. ${subMembers.map((item) => item.name).join(", ") || ""}`,
+        `예비.${subMembers.length > 0 ? ` ${subMembers.map((item) => item.name).join(", ")}` : ""}`,
       );
     }
   }
 
   return lines.join("\n");
+}
+
+function getCompactRecruitTitleLabel(party: RecruitPartyLike) {
+  const title = String(party.title || getRecruitTypeLabel(String(party.type)))
+    .replace(/!+$/g, "")
+    .replace(/\s*구인\s*$/g, "")
+    .replace(/\s*하실분\s*$/g, "")
+    .trim();
+
+  return title || `${party.maxMembers}인 파티`;
+}
+
+function formatStartTimeText(value: string | null | undefined) {
+  const text = String(value || "").trim();
+  if (!text) return "미정";
+
+  return text
+    .replace(/(\d{1,2})\s*시\s*(\d{1,2})\s*분/g, (_match, hour, minute) => {
+      return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+    })
+    .replace(/(\d{1,2})\s*시(?!\s*간)/g, (_match, hour) => {
+      return `${String(hour).padStart(2, "0")}:00`;
+    })
+    .replace(/(^|\D)0(\d):/g, "$1$2:");
+}
+
+function formatGameInfoText(value: string | null | undefined) {
+  const text = String(value || "").trim();
+  if (!text) return "미입력";
+
+  return text
+    .replace(/수준\s*예상/g, "예상")
+    .replace(/(구합니다|구함|구해요)\s+((?:아이언|브론즈|실버|골드|플래티넘|플래|플레|에메랄드|에메|다이아몬드|다이아|마스터|그랜드마스터|그마|챌린저)[^\n]*)/g, "$1 / $2")
+    .replace(/\s{2,}/g, " ")
+    .trim();
 }
 
 export function buildGameInfoText(
@@ -957,13 +988,11 @@ function formatRecruitPartySummaryLine(party: RecruitPartyLike) {
     party.members,
     party.maxMembers,
   );
-  const titleLabel = String(
-    party.title || getRecruitTypeLabel(String(party.type)),
-  ).replace(/!+$/, "");
-  const info = buildGameInfoText(party) || "게임정보 없음";
-  const startTime = party.startTimeText?.trim() || "시간 미정";
+  const titleLabel = getCompactRecruitTitleLabel(party);
+  const info = formatGameInfoText(buildGameInfoText(party));
+  const startTime = formatStartTimeText(party.startTimeText);
 
-  return `#${party.recruitNo} ${titleLabel.replace(/\s*구인$/, "")} · ${activeCount}/${party.maxMembers} · ${startTime} · ${info}`;
+  return `#${party.recruitNo} · ${titleLabel} · ${activeCount}/${party.maxMembers} · ${startTime} · ${info}`;
 }
 
 export function buildRecruitStatusReply(
