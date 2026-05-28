@@ -92,9 +92,10 @@ export default async function AdminTeamBalanceDraftsPage() {
                     <td>{draft._count.balanceReviews}개</td>
                     <td>{formatDate(draft.createdAt)}</td>
                     <td>
-                      <Link className="button button--sm" href={`/admin/balance/drafts/${draft.id}`}>
-                        상세
-                      </Link>
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                        <Link className="button button--sm" href={`/players/balance/drafts/${draft.id}/recommendations`}>추천</Link>
+                        <Link className="button button--sm" href={`/admin/balance/drafts/${draft.id}`}>상세</Link>
+                      </div>
                     </td>
                   </tr>
                 ))

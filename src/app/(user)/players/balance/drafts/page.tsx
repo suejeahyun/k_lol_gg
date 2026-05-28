@@ -82,6 +82,7 @@ export default async function BalanceDraftsPage({ searchParams }: Props) {
                 <span>AI 품질 {fmt(review?.qualityScore)} · 플레이어 {draft._count.players}명</span>
               </div>
               <div className="ai-actions" style={{ marginTop: "auto" }}>
+                <Link className="button-secondary" href={`/players/balance/drafts/${draft.id}/recommendations`}>밴픽 추천</Link>
                 <Link className="button-primary" href={`/players/balance/drafts/${draft.id}`}>상세 보기</Link>
               </div>
             </article>

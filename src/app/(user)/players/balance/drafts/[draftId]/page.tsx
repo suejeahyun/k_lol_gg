@@ -56,6 +56,7 @@ export default async function BalanceDraftDetailPage({ params }: Props) {
           <p className="page-description">{formatDate(draft.createdAt)} · {draft.optionType ?? "선택안 미지정"}</p>
           <div className="ai-hero__actions">
             <Link className="button-secondary" href="/players/balance/drafts">목록</Link>
+            <Link className="button-secondary" href={`/players/balance/drafts/${draft.id}/recommendations`}>밴픽 추천</Link>
             <Link className="button-primary" href="/admin/matches/new">내전 등록으로 이동</Link>
           </div>
         </div>
