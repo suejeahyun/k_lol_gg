@@ -302,9 +302,9 @@ export function getRecruitStatusLabel(
   party: Pick<RecruitPartyLike, "maxMembers" | "members" | "startTimeText">,
 ) {
   const group = getRecruitDisplayGroup(party);
-  if (group === "WAITING") return "구인 진행중 · 대기중";
-  if (group === "PLAYING") return "구인 진행중 · 진행중";
-  return "구인 진행중 · 구인중";
+  if (group === "WAITING") return "진행중 · 대기중";
+  if (group === "PLAYING") return "진행중 · 진행중";
+  return "진행중 · 구인중";
 }
 
 function getRecruitGroupTitle(group: RecruitDisplayGroup) {
@@ -874,11 +874,11 @@ export function formatRecruitPartyBlock(party: RecruitPartyLike) {
   lines.push(`${titleLabel} ${statusLabel}`);
   lines.push("");
   lines.push(`모집번호: #${party.recruitNo}`);
-  lines.push(`출발시간: ${party.startTimeText?.trim() || ""}`);
+  lines.push(`출발시간: ${party.startTimeText?.trim() || "미정"}`);
   lines.push(`현재 인원: ${displayActiveCount}/${party.maxMembers}`);
   if (subMembers.length > 0) lines.push(`예비: ${subMembers.length}명`);
   lines.push("");
-  lines.push(`》게임정보 : ${buildGameInfoText(party) || ""}`);
+  lines.push(`》게임정보 : ${buildGameInfoText(party) || "미입력"}`);
   lines.push("");
 
   if (isLinePartyType(String(party.type))) {
@@ -1023,29 +1023,43 @@ export function buildRecruitStatusReply(
     return lines.join("\n").trimEnd();
   }
 
-  const blocks: string[] = [];
+  const detailLines: string[] = ["[K-LOL.GG 구인구직 현황]", ""];
+  let printedPartyCount = 0;
+
   for (const group of orderedGroups) {
     const items = grouped[group];
     if (items.length === 0) continue;
-    blocks.push(getRecruitGroupTitle(group));
-    blocks.push("");
-    blocks.push(
-      items
-        .map(formatRecruitPartyBlock)
-        .join("\n\n------------------------------------\n\n"),
-    );
+
+    if (printedPartyCount > 0) {
+      detailLines.push("------------------------------------");
+      detailLines.push("");
+    }
+
+    detailLines.push(getRecruitGroupTitle(group));
+    detailLines.push("");
+
+    items.forEach((party, index) => {
+      if (index > 0) {
+        detailLines.push("");
+        detailLines.push("------------------------------------");
+        detailLines.push("");
+      }
+      detailLines.push(formatRecruitPartyBlock(party));
+      printedPartyCount += 1;
+    });
+
+    detailLines.push("");
   }
 
-  return [
-    "[K-LOL.GG 구인구직 현황]",
-    "",
-    blocks.join("\n\n------------------------------------\n\n"),
-    "",
-    "------------------------------------",
-    "",
-    "현황 보기:",
-    "https://k-lol-gg.vercel.app/recruit",
-  ].join("\n");
+  if (printedPartyCount > 0) {
+    detailLines.push("------------------------------------");
+    detailLines.push("");
+    detailLines.push("마감: 번호+ㅉ");
+    detailLines.push("예) 6ㅉ");
+  }
+
+  return detailLines.join("\n").trimEnd();
+
 }
 
 export function buildSyncReply(
