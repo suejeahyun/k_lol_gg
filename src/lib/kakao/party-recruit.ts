@@ -9,7 +9,11 @@ export type RecruitPartyType =
   | "PARTY_NUMBER"
   | "PARTY_RIFT"
   | "OTHER_GAME";
-export type RecruitPartyStatus = "IN_PROGRESS" | "FINISHED" | "CANCELED" | "RESET";
+export type RecruitPartyStatus =
+  | "IN_PROGRESS"
+  | "FINISHED"
+  | "CANCELED"
+  | "RESET";
 export type RecruitLinePosition = "TOP" | "JUG" | "MID" | "ADC" | "SUP";
 
 export type RecruitMemberLike = {
@@ -153,7 +157,6 @@ const POSITION_WORDS = [
   "SUPPORT",
 ];
 
-
 export function getKakaoRecruitDateKey(now = new Date()) {
   const kstOffsetMs = 9 * 60 * 60 * 1000;
   const kstNow = new Date(now.getTime() + kstOffsetMs);
@@ -167,15 +170,16 @@ export function getKakaoRecruitDateKey(now = new Date()) {
 export function getKakaoRecruitTodayRange(now = new Date()) {
   const kstOffsetMs = 9 * 60 * 60 * 1000;
   const kstNow = new Date(now.getTime() + kstOffsetMs);
-  const startUtcMs = Date.UTC(
-    kstNow.getUTCFullYear(),
-    kstNow.getUTCMonth(),
-    kstNow.getUTCDate(),
-    0,
-    0,
-    0,
-    0,
-  ) - kstOffsetMs;
+  const startUtcMs =
+    Date.UTC(
+      kstNow.getUTCFullYear(),
+      kstNow.getUTCMonth(),
+      kstNow.getUTCDate(),
+      0,
+      0,
+      0,
+      0,
+    ) - kstOffsetMs;
 
   return {
     gte: new Date(startUtcMs),
@@ -218,7 +222,6 @@ function isValidPartyMemberCount(value: number) {
   return Number.isInteger(value) && value >= 1 && value <= 99;
 }
 
-
 export function buildRecruitPartyCode(params: {
   recruitDate: string;
   maxMembers: number;
@@ -241,11 +244,81 @@ export function getRecruitTypeLabel(type: string) {
   return "구인구직";
 }
 
-export function getRecruitStatusLabel(
-  party: Pick<RecruitPartyLike, "type" | "maxMembers" | "members">,
+export type RecruitDisplayGroup =
+  | "RECRUITING"
+  | "WAITING"
+  | "PLAYING"
+  | "LARGE";
+
+function parseKakaoTimeToMinutes(value: string | null | undefined) {
+  const text = String(value || "").trim();
+  if (!text) return null;
+
+  const match = text.match(/(오전|오후)?\s*(\d{1,2})(?:\s*[:시]\s*(\d{1,2}))?/);
+  if (!match) return null;
+
+  let hour = Number(match[2]);
+  const minute = match[3] ? Number(match[3]) : 0;
+
+  if (!Number.isInteger(hour) || !Number.isInteger(minute)) return null;
+  if (hour < 0 || hour > 24 || minute < 0 || minute > 59) return null;
+
+  if (match[1] === "오후" && hour < 12) hour += 12;
+  if (match[1] === "오전" && hour === 12) hour = 0;
+  if (hour === 24) hour = 0;
+
+  return hour * 60 + minute;
+}
+
+function getKakaoNowMinutes(now = new Date()) {
+  const kstOffsetMs = 9 * 60 * 60 * 1000;
+  const kstNow = new Date(now.getTime() + kstOffsetMs);
+  return kstNow.getUTCHours() * 60 + kstNow.getUTCMinutes();
+}
+
+export function isRecruitPartyStarted(
+  party: Pick<RecruitPartyLike, "startTimeText">,
+  now = new Date(),
 ) {
+  const startMinutes = parseKakaoTimeToMinutes(party.startTimeText);
+  if (startMinutes === null) return false;
+
+  return getKakaoNowMinutes(now) >= startMinutes;
+}
+
+export function getRecruitDisplayGroup(
+  party: Pick<RecruitPartyLike, "maxMembers" | "members" | "startTimeText">,
+  now = new Date(),
+): RecruitDisplayGroup {
+  if (isRecruitPartyStarted(party, now)) return "PLAYING";
+
   const activeCount = getActiveMemberCount(party.members);
-  return activeCount >= party.maxMembers ? "진행중" : "진행중 · 구인중";
+  if (activeCount >= party.maxMembers) return "WAITING";
+  if (party.maxMembers >= 6) return "LARGE";
+  return "RECRUITING";
+}
+
+export function getRecruitStatusLabel(
+  party: Pick<RecruitPartyLike, "maxMembers" | "members" | "startTimeText">,
+) {
+  const group = getRecruitDisplayGroup(party);
+  if (group === "WAITING") return "구인 진행중 · 대기중";
+  if (group === "PLAYING") return "구인 진행중 · 진행중";
+  return "구인 진행중 · 구인중";
+}
+
+function getRecruitGroupTitle(group: RecruitDisplayGroup) {
+  if (group === "RECRUITING") return "[구인중]";
+  if (group === "WAITING") return "[대기중]";
+  if (group === "PLAYING") return "[진행중]";
+  return "[대형파티]";
+}
+
+function getRecruitGroupOrder(group: RecruitDisplayGroup) {
+  if (group === "RECRUITING") return 1;
+  if (group === "WAITING") return 2;
+  if (group === "PLAYING") return 3;
+  return 4;
 }
 
 export function getActiveMemberCount(members: RecruitMemberLike[]) {
@@ -267,14 +340,18 @@ export function isRecruitPartyFull(
   return getActiveMemberCount(party.members) >= party.maxMembers;
 }
 
-export function filterRecruitingParties<T extends Pick<RecruitPartyLike, "maxMembers" | "members">>(
-  parties: T[],
-) {
-  return parties.filter((party) => !isRecruitPartyFull(party));
+export function filterRecruitingParties<
+  T extends Pick<RecruitPartyLike, "maxMembers" | "members">,
+>(parties: T[]) {
+  // 구인현황에서는 인원이 가득 찬 파티도 출발 전/진행 중 확인용으로 노출합니다.
+  // 실제 숨김 기준은 RecruitParty.status가 FINISHED/CANCELED/RESET인 경우입니다.
+  return parties;
 }
 
 export function isLinePartyType(type: string) {
-  return type === "FLEX_RANK" || type === "NORMAL_GAME" || type === "PARTY_RIFT";
+  return (
+    type === "FLEX_RANK" || type === "NORMAL_GAME" || type === "PARTY_RIFT"
+  );
 }
 
 export function isSoloRankPartyType(type: string) {
@@ -313,7 +390,11 @@ export function parseCreateRecruitCommand(
       type: "PARTY_NUMBER",
       title: `${memberCount}인 파티 구인`,
       maxMembers: memberCount,
-      template: buildNumberPartyTemplate(`${memberCount}인 파티 구인`, recruitNo, memberCount),
+      template: buildNumberPartyTemplate(
+        `${memberCount}인 파티 구인`,
+        recruitNo,
+        memberCount,
+      ),
     };
   }
 
@@ -353,7 +434,10 @@ export function parseCreateRecruitCommand(
       type: "SOLO_RANK",
       title: "솔랭 하실분!",
       maxMembers: 2,
-      template: buildNumberTemplate("솔랭", recruitNo, 2, ["》게임정보 :"]),
+      template: buildNumberTemplate("솔랭", recruitNo, 2, [
+        "》출발시간 :",
+        "》게임정보 :",
+      ]),
     };
   }
 
@@ -364,7 +448,13 @@ export function parseCreateRecruitCommand(
       type: "ARAM",
       title: `${label} 하실분!`,
       maxMembers: 5,
-      template: buildNumberTemplate(label, recruitNo, 5, ["》게임정보 :"], true),
+      template: buildNumberTemplate(
+        label,
+        recruitNo,
+        5,
+        ["》출발시간 :", "》게임정보 :"],
+        true,
+      ),
     };
   }
 
@@ -374,7 +464,10 @@ export function parseCreateRecruitCommand(
       type: "TFT_NORMAL",
       title: "롤체 일반 하실분!",
       maxMembers: 8,
-      template: buildNumberTemplate("롤체 일반", recruitNo, 8, ["》게임정보 :"]),
+      template: buildNumberTemplate("롤체 일반", recruitNo, 8, [
+        "》출발시간 :",
+        "》게임정보 :",
+      ]),
     };
   }
 
@@ -384,7 +477,10 @@ export function parseCreateRecruitCommand(
       type: "TFT_RANK",
       title: "롤체 랭크 하실분!",
       maxMembers: 3,
-      template: buildNumberTemplate("롤체 랭크", recruitNo, 3, ["》게임정보 :"]),
+      template: buildNumberTemplate("롤체 랭크", recruitNo, 3, [
+        "》출발시간 :",
+        "》게임정보 :",
+      ]),
     };
   }
 
@@ -394,7 +490,10 @@ export function parseCreateRecruitCommand(
       type: "DOUBLE_UP",
       title: "더블업 하실분!",
       maxMembers: 2,
-      template: buildNumberTemplate("더블업", recruitNo, 2, ["》게임정보 :"]),
+      template: buildNumberTemplate("더블업", recruitNo, 2, [
+        "》출발시간 :",
+        "》게임정보 :",
+      ]),
     };
   }
 
@@ -403,7 +502,10 @@ export function parseCreateRecruitCommand(
     type: "OTHER_GAME",
     title: "기타게임 하실분!",
     maxMembers: 8,
-    template: buildNumberTemplate("기타게임", recruitNo, 8, ["》게임정보 :"]),
+    template: buildNumberTemplate("기타게임", recruitNo, 8, [
+      "》출발시간 :",
+      "》게임정보 :",
+    ]),
   };
 }
 
@@ -416,6 +518,7 @@ function buildLineTemplate(label: string, recruitNo: number | null) {
     `📢 ${label} 하실분!`,
     formatRecruitNoLine(recruitNo),
     "",
+    "》출발시간 :",
     "》게임정보 :",
     "",
     "TOP.",
@@ -434,6 +537,7 @@ function buildLinePartyTemplate(title: string, recruitNo: number | null) {
     `📢 ${title}`,
     formatRecruitNoLine(recruitNo),
     "",
+    "》출발시간 :",
     "》게임정보 :",
     "",
     "TOP.",
@@ -456,6 +560,7 @@ function buildNumberPartyTemplate(
     `📢 ${title}`,
     formatRecruitNoLine(recruitNo),
     "",
+    "》출발시간 :",
     "》게임정보 :",
     "",
   ];
@@ -502,7 +607,9 @@ export function parseFinishRecruitCommand(
   const text = normalizeText(message).trim();
 
   const shortMatch = text.match(/^\/?(\d{1,2})\s*(쫑|ㅉ)\s*$/);
-  const commandMatch = text.match(/^\/?구인(?:마감|쫑|종료)\s*#?\s*(\d{1,2})\s*$/);
+  const commandMatch = text.match(
+    /^\/?구인(?:마감|쫑|종료)\s*#?\s*(\d{1,2})\s*$/,
+  );
   const match = shortMatch || commandMatch;
 
   if (!match) return null;
@@ -573,7 +680,9 @@ function parseStartTimeAndTier(value: string) {
 
   for (const tier of TIER_WORDS) {
     const escaped = tier.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const match = cleaned.match(new RegExp(`(?:^|\\s)(${escaped})(?:\\s*)$`, "i"));
+    const match = cleaned.match(
+      new RegExp(`(?:^|\\s)(${escaped})(?:\\s*)$`, "i"),
+    );
     if (!match) continue;
 
     tierText = match[1].trim();
@@ -612,6 +721,12 @@ function parseRecruitFormMetadata(text: string) {
 
   for (const rawLine of lines) {
     const line = rawLine.trim();
+
+    if (line.indexOf("출발시간") >= 0 || line.indexOf("출발 시간") >= 0) {
+      const value = cleanGuideValue(line, /출발\s*시간/g);
+      startTimeText = value || startTimeText;
+      continue;
+    }
 
     if (line.indexOf("게임정보") >= 0 || line.indexOf("게임 정보") >= 0) {
       const value = cleanGuideValue(line, /게임\s*정보/g);
@@ -707,6 +822,7 @@ function parseNumberMembers(
     if (/^\d{1,3}\s*인\s*/.test(line)) continue;
     if (/^현재\s*인원\s*[:：]/.test(line)) continue;
     if (/^모집번호\s*[:：]/.test(line)) continue;
+    if (/^출발\s*시간\s*[:：]/.test(line)) continue;
     if (/^기준\s*[:：]?/.test(line)) continue;
     if (/^현황\s*보기\s*[:：]?/.test(line)) continue;
     if (/^https?:\/\//i.test(line)) continue;
@@ -716,8 +832,7 @@ function parseNumberMembers(
     if (!match) continue;
 
     const slotNo = Number(match[1]);
-    if (!Number.isInteger(slotNo) || slotNo < 1 || slotNo > 99)
-      continue;
+    if (!Number.isInteger(slotNo) || slotNo < 1 || slotNo > 99) continue;
 
     const name = trimName(match[2]);
     if (!name) continue;
@@ -757,18 +872,13 @@ export function formatRecruitPartyBlock(party: RecruitPartyLike) {
   const lines: string[] = [];
 
   lines.push(`${titleLabel} ${statusLabel}`);
-
-  const gameInfo = buildGameInfoText(party);
-  if (gameInfo) {
-    lines.push("");
-    lines.push(`>게임정보 : ${gameInfo}`);
-  }
-
   lines.push("");
   lines.push(`모집번호: #${party.recruitNo}`);
-  lines.push(`기준: ${party.recruitDate}${typeof party.resetSeq === "number" ? ` · 회차 ${party.resetSeq}` : ""}`);
+  lines.push(`출발시간: ${party.startTimeText?.trim() || ""}`);
   lines.push(`현재 인원: ${displayActiveCount}/${party.maxMembers}`);
   if (subMembers.length > 0) lines.push(`예비: ${subMembers.length}명`);
+  lines.push("");
+  lines.push(`》게임정보 : ${buildGameInfoText(party) || ""}`);
   lines.push("");
 
   if (isLinePartyType(String(party.type))) {
@@ -800,11 +910,15 @@ export function formatRecruitPartyBlock(party: RecruitPartyLike) {
   return lines.join("\n");
 }
 
-export function buildGameInfoText(party: Pick<RecruitPartyLike, "note" | "startTimeText" | "tierText" | "playStyle" | "preferredLineText">) {
+export function buildGameInfoText(
+  party: Pick<
+    RecruitPartyLike,
+    "note" | "startTimeText" | "tierText" | "playStyle" | "preferredLineText"
+  >,
+) {
   if (party.note && party.note.trim()) return party.note.trim();
 
   const legacyParts = [
-    party.startTimeText,
     party.tierText,
     party.playStyle,
     party.preferredLineText ? `${party.preferredLineText} 선호` : null,
@@ -813,26 +927,119 @@ export function buildGameInfoText(party: Pick<RecruitPartyLike, "note" | "startT
   return legacyParts.join(" / ").trim() || null;
 }
 
-export function buildRecruitStatusReply(parties: RecruitPartyLike[]) {
-  const recruitingParties = filterRecruitingParties(parties);
+function sortRecruitPartiesForStatus(parties: RecruitPartyLike[]) {
+  return [...parties].sort((a, b) => {
+    const groupDiff =
+      getRecruitGroupOrder(getRecruitDisplayGroup(a)) -
+      getRecruitGroupOrder(getRecruitDisplayGroup(b));
+    if (groupDiff !== 0) return groupDiff;
+    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+  });
+}
 
-  if (recruitingParties.length === 0) {
+function groupRecruitParties(parties: RecruitPartyLike[]) {
+  const grouped: Record<RecruitDisplayGroup, RecruitPartyLike[]> = {
+    RECRUITING: [],
+    WAITING: [],
+    PLAYING: [],
+    LARGE: [],
+  };
+
+  for (const party of sortRecruitPartiesForStatus(parties)) {
+    grouped[getRecruitDisplayGroup(party)].push(party);
+  }
+
+  return grouped;
+}
+
+function formatRecruitPartySummaryLine(party: RecruitPartyLike) {
+  const activeCount = getDisplayActiveMemberCount(
+    party.members,
+    party.maxMembers,
+  );
+  const titleLabel = String(
+    party.title || getRecruitTypeLabel(String(party.type)),
+  ).replace(/!+$/, "");
+  const info = buildGameInfoText(party) || "게임정보 없음";
+  const startTime = party.startTimeText?.trim() || "시간 미정";
+
+  return `#${party.recruitNo} ${titleLabel.replace(/\s*구인$/, "")} · ${activeCount}/${party.maxMembers} · ${startTime} · ${info}`;
+}
+
+export function buildRecruitStatusReply(
+  parties: RecruitPartyLike[],
+  options?: { detailRecruitNo?: number | null; detailThreshold?: number },
+) {
+  const activeParties = filterRecruitingParties(parties);
+  const detailRecruitNo = options?.detailRecruitNo ?? null;
+  const detailThreshold = options?.detailThreshold ?? 4;
+
+  if (activeParties.length === 0) {
     return [
       "[K-LOL.GG 구인구직 현황]",
       "",
-      "현재 모집 가능한 구인글이 없습니다.",
-      "",
-      "현황 보기:",
-      "https://k-lol-gg.vercel.app/recruit",
+      "현재 진행 중인 구인글이 없습니다.",
     ].join("\n");
+  }
+
+  if (detailRecruitNo !== null) {
+    const target = activeParties.find(
+      (party) => party.recruitNo === detailRecruitNo,
+    );
+    if (!target) {
+      return [
+        "[K-LOL.GG 구인상세]",
+        "",
+        `모집번호 #${detailRecruitNo} 구인글을 찾지 못했습니다.`,
+      ].join("\n");
+    }
+
+    return ["[K-LOL.GG 구인상세]", "", formatRecruitPartyBlock(target)].join(
+      "\n",
+    );
+  }
+
+  const grouped = groupRecruitParties(activeParties);
+  const orderedGroups: RecruitDisplayGroup[] = [
+    "RECRUITING",
+    "WAITING",
+    "PLAYING",
+    "LARGE",
+  ];
+  const lines = ["[K-LOL.GG 구인구직 현황]", ""];
+
+  if (activeParties.length > detailThreshold) {
+    for (const group of orderedGroups) {
+      const items = grouped[group];
+      if (items.length === 0) continue;
+      lines.push(getRecruitGroupTitle(group));
+      for (const party of items)
+        lines.push(formatRecruitPartySummaryLine(party));
+      lines.push("");
+    }
+
+    lines.push("상세보기: 구인상세 번호");
+    lines.push("예) 구인상세 8");
+    return lines.join("\n").trimEnd();
+  }
+
+  const blocks: string[] = [];
+  for (const group of orderedGroups) {
+    const items = grouped[group];
+    if (items.length === 0) continue;
+    blocks.push(getRecruitGroupTitle(group));
+    blocks.push("");
+    blocks.push(
+      items
+        .map(formatRecruitPartyBlock)
+        .join("\n\n------------------------------------\n\n"),
+    );
   }
 
   return [
     "[K-LOL.GG 구인구직 현황]",
     "",
-    recruitingParties
-      .map(formatRecruitPartyBlock)
-      .join("\n\n------------------------------------\n\n"),
+    blocks.join("\n\n------------------------------------\n\n"),
     "",
     "------------------------------------",
     "",

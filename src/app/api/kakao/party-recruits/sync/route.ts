@@ -39,7 +39,8 @@ function extractRecruitNos(message: string) {
 
   while ((match = regex.exec(message)) !== null) {
     const recruitNo = Number(match[1]);
-    if (!Number.isInteger(recruitNo) || recruitNo < 1 || recruitNo > 99) continue;
+    if (!Number.isInteger(recruitNo) || recruitNo < 1 || recruitNo > 99)
+      continue;
     if (seen.has(recruitNo)) continue;
     seen.add(recruitNo);
     result.push(recruitNo);
@@ -47,7 +48,6 @@ function extractRecruitNos(message: string) {
 
   return result;
 }
-
 
 async function findActiveRecruitParty(params: {
   recruitNo: number;
@@ -111,13 +111,74 @@ function splitRecruitStatusBlocks(message: string) {
 
   for (const section of sections) {
     const recruitNo = extractRecruitNo(section);
-    if (!Number.isInteger(recruitNo) || recruitNo < 1 || recruitNo > 99) continue;
+    if (!Number.isInteger(recruitNo) || recruitNo < 1 || recruitNo > 99)
+      continue;
     if (seen.has(recruitNo)) continue;
     seen.add(recruitNo);
     blocks.push({ recruitNo, message: section });
   }
 
   return blocks;
+}
+
+function normalizeMemberSnapshot(
+  members: Array<{
+    name: string;
+    position: string | null;
+    slotNo: number | null;
+    isSubstitute: boolean;
+  }>,
+) {
+  return members
+    .filter((member) => member.name.trim() !== "")
+    .map((member) => ({
+      name: member.name.trim(),
+      position: member.position ?? null,
+      slotNo: member.slotNo ?? null,
+      isSubstitute: Boolean(member.isSubstitute),
+    }))
+    .sort((a, b) => {
+      if (a.isSubstitute !== b.isSubstitute) return a.isSubstitute ? 1 : -1;
+      if ((a.slotNo ?? 999) !== (b.slotNo ?? 999))
+        return (a.slotNo ?? 999) - (b.slotNo ?? 999);
+      return a.name.localeCompare(b.name, "ko");
+    });
+}
+
+function sameNullableText(
+  a: string | null | undefined,
+  b: string | null | undefined,
+) {
+  return String(a || "").trim() === String(b || "").trim();
+}
+
+function hasRecruitPartyChanges(params: {
+  party: Awaited<ReturnType<typeof findActiveRecruitParty>>;
+  parsed: NonNullable<ReturnType<typeof parsePartyForm>>;
+  isSoloRank: boolean;
+}) {
+  const { party, parsed, isSoloRank } = params;
+  if (!party) return true;
+
+  if (
+    !sameNullableText(
+      parsed.startTimeText ?? party.startTimeText,
+      party.startTimeText,
+    )
+  )
+    return true;
+  if (!sameNullableText(parsed.note ?? party.note, party.note)) return true;
+
+  if (isSoloRank) {
+    if (!sameNullableText(parsed.tierText, party.tierText)) return true;
+    if (!sameNullableText(parsed.preferredLineText, party.preferredLineText))
+      return true;
+    if (!sameNullableText(parsed.playStyle, party.playStyle)) return true;
+  }
+
+  const before = JSON.stringify(normalizeMemberSnapshot(party.members));
+  const after = JSON.stringify(normalizeMemberSnapshot(parsed.members));
+  return before !== after;
 }
 
 async function syncOneRecruit(params: {
@@ -129,26 +190,45 @@ async function syncOneRecruit(params: {
   resetSeq: number;
   todayRange: { gte: Date; lt: Date };
 }) {
-  const { recruitNo, message, roomName, sender, recruitDate, resetSeq, todayRange } = params;
+  const {
+    recruitNo,
+    message,
+    roomName,
+    sender,
+    recruitDate,
+    resetSeq,
+    todayRange,
+  } = params;
 
-  const party = await findActiveRecruitParty({ recruitNo, recruitDate, resetSeq });
+  const party = await findActiveRecruitParty({
+    recruitNo,
+    recruitDate,
+    resetSeq,
+  });
 
   if (!party) {
     const sameDateFinishedLog = await prisma.recruitPartyLog.findFirst({
-      where: { recruitNo, recruitDate, action: { in: ["FINISHED", "AUTO_EXPIRED"] }, createdAt: todayRange },
+      where: {
+        recruitNo,
+        recruitDate,
+        action: { in: ["FINISHED", "AUTO_EXPIRED"] },
+        createdAt: todayRange,
+      },
       orderBy: [{ resetSeq: "desc" }, { createdAt: "desc" }],
       select: { title: true, memberCount: true, maxMembers: true },
     });
 
-    const finishedLog = sameDateFinishedLog ?? await prisma.recruitPartyLog.findFirst({
-      where: { recruitNo, action: { in: ["FINISHED", "AUTO_EXPIRED"] } },
-      orderBy: [
-        { recruitDate: "desc" },
-        { resetSeq: "desc" },
-        { createdAt: "desc" },
-      ],
-      select: { title: true, memberCount: true, maxMembers: true },
-    });
+    const finishedLog =
+      sameDateFinishedLog ??
+      (await prisma.recruitPartyLog.findFirst({
+        where: { recruitNo, action: { in: ["FINISHED", "AUTO_EXPIRED"] } },
+        orderBy: [
+          { recruitDate: "desc" },
+          { resetSeq: "desc" },
+          { createdAt: "desc" },
+        ],
+        select: { title: true, memberCount: true, maxMembers: true },
+      }));
 
     return {
       ok: false,
@@ -185,6 +265,17 @@ async function syncOneRecruit(params: {
     (member) => !member.isSubstitute && member.name.trim() !== "",
   ).length;
   const isSoloRank = isSoloRankPartyType(String(party.type));
+
+  if (!hasRecruitPartyChanges({ party, parsed, isSoloRank })) {
+    return {
+      ok: true,
+      recruitNo,
+      statusCode: 200,
+      party,
+      noChanged: true,
+      reply: "[K-LOL.GG 구인구직 변경 없음]",
+    };
+  }
 
   const updated = await prisma.$transaction(async (tx) => {
     await tx.recruitPartyMember.deleteMany({ where: { partyId: party.id } });
@@ -245,16 +336,24 @@ async function syncOneRecruit(params: {
   };
 }
 
-function buildBulkSyncReply(results: Awaited<ReturnType<typeof syncOneRecruit>>[]) {
+function buildBulkSyncReply(
+  results: Awaited<ReturnType<typeof syncOneRecruit>>[],
+) {
   const failed = results.filter((result) => !result.ok);
+  const changed = results.filter(
+    (result) => result.ok && !("noChanged" in result && result.noChanged),
+  );
 
   if (failed.length > 0) {
     return "[K-LOL.GG 구인구직 현황 반영 실패]";
   }
 
-  return "[K-LOL.GG 구인구직 현황 반영 완료]";
-}
+  if (changed.length === 0) {
+    return "[K-LOL.GG 구인구직 변경 없음]";
+  }
 
+  return "[K-LOL.GG 구인구직 수정 완료]";
+}
 
 export async function POST(req: NextRequest) {
   try {

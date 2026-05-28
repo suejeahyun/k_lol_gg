@@ -3,7 +3,10 @@ export const revalidate = 0;
 
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma/client";
-import { buildRecruitStatusReply, filterRecruitingParties } from "@/lib/kakao/party-recruit";
+import {
+  buildRecruitStatusReply,
+  filterRecruitingParties,
+} from "@/lib/kakao/party-recruit";
 import {
   partyRecruitJson,
   readJsonBody,
@@ -37,7 +40,18 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number) {
   ]);
 }
 
-async function getRecruitStatusPayload() {
+function extractDetailRecruitNo(message: unknown) {
+  const text = String(message || "").trim();
+  const match = text.match(/^\/?(?:구인상세|상세)\s*#?\s*(\d{1,2})\s*$/);
+  if (!match) return null;
+
+  const recruitNo = Number(match[1]);
+  return Number.isInteger(recruitNo) && recruitNo >= 1 && recruitNo <= 99
+    ? recruitNo
+    : null;
+}
+
+async function getRecruitStatusPayload(detailRecruitNo?: number | null) {
   const allParties = await prisma.recruitParty.findMany({
     where: { status: "IN_PROGRESS" },
     select: {
@@ -83,17 +97,37 @@ async function getRecruitStatusPayload() {
   return {
     empty: parties.length === 0,
     parties,
-    reply: buildRecruitStatusReply(parties),
+    reply: buildRecruitStatusReply(parties, { detailRecruitNo }),
   };
 }
 
-async function handleStatus(req: NextRequest, bodySecret?: unknown) {
+async function handleStatus(
+  req: NextRequest,
+  bodySecret?: unknown,
+  message?: unknown,
+) {
   const rejected = rejectIfInvalidPartySecret(req, bodySecret);
   if (rejected) return rejected;
 
   try {
+    const queryDetailNo = extractDetailRecruitNo(
+      req.nextUrl.searchParams.get("message") ||
+        req.nextUrl.searchParams.get("q") ||
+        req.nextUrl.searchParams.get("detailNo"),
+    );
+    const bodyDetailNo = extractDetailRecruitNo(message);
+    const directDetailNo = Number(req.nextUrl.searchParams.get("detailNo"));
+    const detailRecruitNo =
+      bodyDetailNo ??
+      queryDetailNo ??
+      (Number.isInteger(directDetailNo) &&
+      directDetailNo >= 1 &&
+      directDetailNo <= 99
+        ? directDetailNo
+        : null);
+
     const payload = await withTimeout(
-      getRecruitStatusPayload(),
+      getRecruitStatusPayload(detailRecruitNo),
       STATUS_QUERY_TIMEOUT_MS,
     );
 
@@ -131,5 +165,5 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const body = await readJsonBody(req);
-  return handleStatus(req, body.secret);
+  return handleStatus(req, body.secret, body.message || body.text);
 }
