@@ -1048,7 +1048,6 @@ export function buildRecruitStatusReply(
     }
 
     lines.push("상세보기: 구인상세 번호");
-    lines.push("예) 구인상세 8");
     return lines.join("\n").trimEnd();
   }
 
@@ -1078,13 +1077,6 @@ export function buildRecruitStatusReply(
     });
 
     detailLines.push("");
-  }
-
-  if (printedPartyCount > 0) {
-    detailLines.push("------------------------------------");
-    detailLines.push("");
-    detailLines.push("마감: 번호+ㅉ");
-    detailLines.push("예) 6ㅉ");
   }
 
   return detailLines.join("\n").trimEnd();
