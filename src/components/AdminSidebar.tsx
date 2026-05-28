@@ -31,6 +31,7 @@ const menuGroups: AdminSidebarGroup[] = [
     items: [
       { href: "/admin/balance", label: "팀 밸런스 계산", code: "BAL" },
       { href: "/admin/balance/drafts", label: "저장 밸런스", code: "DRF" },
+      { href: "/admin/balance/recommendations", label: "밴픽 추천", code: "P/B" },
     ],
   },
   {
@@ -86,6 +87,19 @@ const menuGroups: AdminSidebarGroup[] = [
 
 function isActivePath(pathname: string, href: string) {
   if (href === "/admin") return pathname === href;
+
+  if (href === "/admin/balance") {
+    return pathname === href;
+  }
+
+  if (href === "/admin/balance/drafts") {
+    return pathname === href || (pathname.startsWith(`${href}/`) && !pathname.includes("/recommendations"));
+  }
+
+  if (href === "/admin/balance/recommendations") {
+    return pathname === href || /^\/admin\/balance\/drafts\/[^/]+\/recommendations/.test(pathname);
+  }
+
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
