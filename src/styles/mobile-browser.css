@@ -368,8 +368,7 @@
   .player-detail-page,
   .match-detail-page,
   .ai-balance-page,
-  .balance-page,
-  .operation-ai-page {
+  .balance-page {
     display: block !important;
     width: 100% !important;
     max-width: 100% !important;
@@ -427,8 +426,7 @@
   .destruction-progress-card,
   .participation-card,
   .ai-balance-card,
-  .ops-ai-panel,
-  .operation-ai-card {
+  .ops-ai-panel {
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
@@ -533,7 +531,6 @@
   .ai-balance-summary-grid,
   .ai-balance-grid,
   .ops-ai-grid,
-  .operation-ai-grid,
   .balance-result-grid,
   .balance-team-grid,
   .balance-summary-grid,

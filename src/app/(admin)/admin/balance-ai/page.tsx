@@ -77,7 +77,7 @@ export default async function AdminBalanceAiPage() {
   const highRiskRate = reviewCount ? (highRiskCount / reviewCount) * 100 : null;
 
   return (
-    <main className="page-container admin-page ai-page">
+    <main className="page-container admin-page ai-page ai-page--admin-dashboard">
       <section className="ai-hero">
         <div className="ai-hero__content">
           <p className="eyebrow">AI BALANCE CONTROL</p>

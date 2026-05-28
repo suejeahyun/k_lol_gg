@@ -32,6 +32,7 @@ type DraftPostBody = {
   balanceCost?: number | null;
   formulaVersion?: string | null;
   isOfficial?: boolean | null;
+  seasonId?: number | null;
   players?: DraftPlayerInput[];
 };
 
@@ -202,9 +203,19 @@ export async function POST(req: NextRequest) {
       body.title?.trim() ||
       `${getKstDisplayDate(kstDateKey)} ${getOrdinal(existingCount + 1)}`;
 
+    const requestedSeasonId = Number.isInteger(body.seasonId) && Number(body.seasonId) > 0 ? Number(body.seasonId) : null;
+    const activeSeason = requestedSeasonId
+      ? null
+      : await prisma.season.findFirst({
+          where: { isActive: true },
+          orderBy: { createdAt: "desc" },
+          select: { id: true },
+        });
+
     const draft = await prisma.teamBalanceDraft.create({
       data: {
         title,
+        seasonId: requestedSeasonId ?? activeSeason?.id ?? null,
         applyDate,
         optionType: body.optionType?.trim() || null,
         redTotal: typeof body.redTotal === "number" ? body.redTotal : null,

@@ -32,21 +32,15 @@ const menuGroups: AdminSidebarGroup[] = [
     title: "BALANCE",
     items: [
       { href: "/admin/balance", label: "팀 밸런스", code: "BAL" },
-      {
-        href: "/admin/balance/recommendations",
-        label: "저장/밴픽",
-        code: "P/B",
-        activePrefixes: ["/admin/balance/recommendations", "/admin/balance/drafts"],
-      },
-      { href: "/admin/balance-ai", label: "AI 밸런스", code: "AI", activePrefixes: ["/admin/balance-ai"] },
+      { href: "/admin/balance/drafts", label: "AI 밸런스", code: "AIB", activePrefixes: ["/admin/balance/drafts"] },
+      { href: "/admin/balance-ai", label: "K-LOL MMR", code: "MMR", activePrefixes: ["/admin/balance-ai"] },
     ],
   },
   {
     title: "OPERATE",
     items: [
-      { href: "/admin/recruits", label: "구인구직", code: "REC" },
+      { href: "/admin/recruits", label: "구인현황", code: "REC" },
       { href: "/admin/progress/event", label: "이벤트/멸망전", code: "EVT", activePrefixes: ["/admin/progress/event", "/admin/progress/destruction"] },
-      { href: "/admin/operation-ai", label: "운영 AI", code: "OPS", activePrefixes: ["/admin/operation-ai"] },
     ],
   },
   {

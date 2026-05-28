@@ -39,7 +39,7 @@ const menuGroups: UserSidebarGroup[] = [
     title: "PLAY",
     items: [
       { href: "/matches", label: "내전 목록", code: "MAT" },
-      { href: "/recruit", label: "구인구직", code: "REC", activePrefixes: ["/recruit", "/recruit-helper"] },
+      { href: "/recruit", label: "구인현황", code: "REC", activePrefixes: ["/recruit", "/recruit-helper"] },
       { href: "/progress", label: "이벤트/멸망전", code: "EVT" },
       { href: "/participation", label: "참가하기", code: "JOIN", auth: true, approvedOnly: true },
     ],
@@ -47,11 +47,11 @@ const menuGroups: UserSidebarGroup[] = [
   {
     title: "BALANCE AI",
     items: [
-      { href: "/ai-balance", label: "AI 분석", code: "AI", activePrefixes: ["/ai-balance"] },
+      { href: "/ai-balance", label: "K-LOL MMR", code: "MMR", activePrefixes: ["/ai-balance"] },
       { href: "/players/balance", label: "팀 밸런스", code: "BAL", auth: true, approvedOnly: true, activePrefixes: ["/players/balance"] },
       {
         href: "/players/balance/recommendations",
-        label: "저장/밴픽",
+        label: "밴픽 추천",
         code: "P/B",
         auth: true,
         approvedOnly: true,

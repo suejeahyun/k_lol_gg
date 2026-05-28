@@ -9,30 +9,12 @@ import {
   parseRecruitMessage,
   type ParsedRecruitMessage,
   type ParsedRecruitParticipant,
-  type RecruitPosition,
-  type RecruitTier,
 } from "@/lib/kakao/recruit-message-parser";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 const FORMAT_VERSION = "season-apply-format-v3";
-
-const POSITION_ORDER: RecruitPosition[] = ["TOP", "JGL", "MID", "ADC", "SUP"];
-
-const TIER_SHORT_LABEL: Record<RecruitTier, string> = {
-  IRON: "I",
-  BRONZE: "B",
-  SILVER: "S",
-  GOLD: "G",
-  PLATINUM: "P",
-  EMERALD: "E",
-  DIAMOND: "D",
-  MASTER: "M",
-  GRANDMASTER: "GM",
-  CHALLENGER: "C",
-  UNRANKED: "U",
-};
 
 type ApplyResult = {
   participant: ParsedRecruitParticipant;
@@ -45,75 +27,6 @@ type ApplyResult = {
     tag: string;
   };
 };
-
-function formatTierShort(tier: RecruitTier): string {
-  return TIER_SHORT_LABEL[tier] || tier;
-}
-
-function formatApplyDateTime(applyDate: string, applyTime: string | null): string {
-  if (!applyTime) return applyDate;
-
-  const [hourText, minuteText] = applyTime.split(":");
-  const hour = Number(hourText);
-  const minute = Number(minuteText || "0");
-
-  if (!Number.isFinite(hour) || hour < 0 || hour > 23) {
-    return applyDate;
-  }
-
-  if (Number.isFinite(minute) && minute > 0) {
-    return `${applyDate} ${hour}시 ${minute}분`;
-  }
-
-  return `${applyDate} ${hour}시`;
-}
-
-function buildPositionCounts(
-  participants: ParsedRecruitParticipant[],
-): Record<RecruitPosition, number> {
-  const positionCounts: Record<RecruitPosition, number> = {
-    TOP: 0,
-    JGL: 0,
-    MID: 0,
-    ADC: 0,
-    SUP: 0,
-  };
-
-  for (const participant of participants) {
-    positionCounts[participant.mainPosition] += 1;
-  }
-
-  return positionCounts;
-}
-
-function buildRegisterList(results: ApplyResult[]): string {
-  if (results.length === 0) return "없음";
-
-  return results
-    .map((result, index) => {
-      const participant = result.participant;
-      const tierText = `${formatTierShort(participant.currentTier)}-${formatTierShort(
-        participant.peakTier,
-      )}`;
-      const positionText = participant.subPosition
-        ? `${participant.mainPosition}-${participant.subPosition}`
-        : participant.mainPosition;
-      const playerText = result.player
-        ? `${result.player.nickname}#${result.player.tag}`
-        : result.reason || "플레이어 매칭 필요";
-      const statusLabel =
-        result.status === "REGISTERED"
-          ? "등록"
-          : result.status === "UPDATED"
-            ? "수정"
-            : result.status === "RESERVE"
-              ? "예비"
-              : "보류";
-
-      return `${index + 1}. [${statusLabel}] ${participant.name} / ${tierText} / ${positionText} / ${playerText}`;
-    })
-    .join("\n");
-}
 
 function simplifyPendingReason(reason?: string): string {
   const reasonText = String(reason || "").trim();

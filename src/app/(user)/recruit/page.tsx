@@ -108,15 +108,15 @@ export default async function RecruitPage() {
     },
     orderBy: [{ recruitDate: "desc" }, { resetSeq: "desc" }, { recruitNo: "asc" }],
   });
-  const parties = allParties.filter((party) => !isRecruitPartyFull(party));
+  const parties = allParties;
 
   return (
     <main className="page-shell recruit-page">
       <section className="page-hero recruit-hero">
         <p className="page-kicker">KAKAO RECRUIT</p>
-        <h1>구인구직 현황</h1>
+        <h1>구인현황</h1>
         <p>
-          카카오톡 구인구직방에서 생성된 숫자 인원 파티, 5인협곡, 롤체 파티 현황입니다.
+          
         </p>
         <div className="recruit-command-box">
           <span>/6인파티</span>
@@ -129,14 +129,13 @@ export default async function RecruitPage() {
 
       {parties.length === 0 ? (
         <section className="recruit-empty card-panel">
-          <h2>현재 모집 가능한 구인글이 없습니다.</h2>
-          <p>카카오톡 구인구직방에서 구인구직 명령어를 입력하면 이 페이지에 표시됩니다.</p>
+          <h2>현재 표시할 구인현황이 없습니다.</h2>
         </section>
       ) : (
-        <section className="recruit-grid" aria-label="현재 구인구직 파티 목록">
+        <section className="recruit-grid" aria-label="현재 구인현황 목록">
           {parties.map((party) => {
             const displayActiveCount = getDisplayActiveMemberCount(party.members, party.maxMembers);
-            const statusLabel = getRecruitStatusLabel(party);
+            const statusLabel = isRecruitPartyFull(party) ? "마감 임박 · 정원 완료" : getRecruitStatusLabel(party);
             const typeLabel = getRecruitTypeLabel(party.type);
             const gameInfo = buildGameInfoText(party);
 

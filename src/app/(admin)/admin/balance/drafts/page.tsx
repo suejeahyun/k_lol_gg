@@ -1,16 +1,33 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
+import Pagination from "@/components/Pagination";
 import { prisma } from "@/lib/prisma/client";
 
+const PAGE_SIZE = 20;
+
+type Props = {
+  searchParams: Promise<{ page?: string }>;
+};
+
 function formatDate(value: Date) {
-  return new Date(value).toLocaleString("ko-KR", {
+  return new Intl.DateTimeFormat("ko-KR", {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-  });
+    timeZone: "Asia/Seoul",
+  }).format(value);
+}
+
+function formatDateOnly(value: Date) {
+  return new Intl.DateTimeFormat("ko-KR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    timeZone: "Asia/Seoul",
+  }).format(value).replace(/\.\s?/g, "-").replace(/-$/, "");
 }
 
 function formatNumber(value: number | null | undefined, digits = 1) {
@@ -18,50 +35,93 @@ function formatNumber(value: number | null | undefined, digits = 1) {
   return value.toFixed(digits);
 }
 
-export default async function AdminTeamBalanceDraftsPage() {
-  const drafts = await prisma.teamBalanceDraft.findMany({
-    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-    take: 100,
-    include: {
-      season: {
-        select: {
-          name: true,
+function getSeasonName(draftSeasonName: string | undefined, activeSeasonName: string | undefined) {
+  if (draftSeasonName) return draftSeasonName;
+  if (activeSeasonName) return `${activeSeasonName} · 자동`;
+  return "시즌 미연동";
+}
+
+export default async function AdminTeamBalanceDraftsPage({ searchParams }: Props) {
+  const sp = await searchParams;
+  const currentPage = Math.max(1, Number(sp.page ?? "1") || 1);
+  const skip = (currentPage - 1) * PAGE_SIZE;
+
+  const [totalCount, drafts, activeSeason] = await Promise.all([
+    prisma.teamBalanceDraft.count(),
+    prisma.teamBalanceDraft.findMany({
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      skip,
+      take: PAGE_SIZE,
+      include: {
+        season: {
+          select: {
+            name: true,
+          },
+        },
+        _count: {
+          select: {
+            players: true,
+            balanceReviews: true,
+          },
         },
       },
-      _count: {
-        select: {
-          players: true,
-          balanceReviews: true,
-        },
-      },
-    },
-  });
+    }),
+    prisma.season.findFirst({
+      where: { isActive: true },
+      orderBy: { createdAt: "desc" },
+      select: { name: true },
+    }),
+  ]);
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   return (
-    <main className="page-container">
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", flexWrap: "wrap", marginBottom: 20 }}>
-        <div>
-          <p className="page-kicker">ADMIN · TEAM BALANCE</p>
-          <h1 className="page-title" style={{ marginBottom: 8 }}>저장된 팀 밸런스</h1>
-          <p className="page-description" style={{ margin: 0 }}>
-            관리자 기준으로 저장된 팀 밸런스 결과를 확인하고 내전 등록에 사용할 수 있습니다.
-          </p>
+    <main className="page-container ai-page admin-balance-drafts-page">
+      <section className="ai-hero ai-hero--compact">
+        <div className="ai-hero__content">
+          <p className="eyebrow">ADMIN · BALANCE ARCHIVE</p>
+          <h1 className="page-title">AI 밸런스</h1>
+        </div>
+      </section>
+
+      <section className="ai-kpi-grid ai-kpi-grid--compact">
+        <article className="ai-kpi">
+          <span>저장 밸런스</span>
+          <strong>{totalCount}</strong>
+          <small>전체 저장안</small>
+        </article>
+        <article className="ai-kpi">
+          <span>현재 페이지</span>
+          <strong>{currentPage}</strong>
+          <small>전체 {totalPages}페이지</small>
+        </article>
+        <article className="ai-kpi">
+          <span>페이지 표시</span>
+          <strong>{drafts.length}</strong>
+          <small>최신 저장순</small>
+        </article>
+        <article className="ai-kpi">
+          <span>활성 시즌</span>
+          <strong>{activeSeason?.name ?? "-"}</strong>
+          <small>신규 저장 시 자동 연결</small>
+        </article>
+      </section>
+
+      <section className="ai-panel ai-panel--strong admin-balance-drafts-panel">
+        <div className="ai-panel__head">
+          <div>
+            <h2 className="ai-panel__title">저장된 AI 밸런스 목록</h2>
+          </div>
         </div>
 
-        <Link className="button button--primary" href="/admin/balance">
-          새 팀 밸런스 계산
-        </Link>
-      </div>
-
-      <section className="admin-card">
-        <div className="admin-table-wrap">
-          <table className="admin-table">
+        <div className="ai-table-wrap admin-balance-drafts-table-wrap">
+          <table className="ai-table ai-table--wide admin-balance-drafts-table">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>제목</th>
+                <th>번호</th>
+                <th>이름</th>
                 <th>시즌</th>
-                <th>안</th>
+                <th>적용일</th>
                 <th>RED</th>
                 <th>BLUE</th>
                 <th>차이</th>
@@ -74,17 +134,21 @@ export default async function AdminTeamBalanceDraftsPage() {
             <tbody>
               {drafts.length === 0 ? (
                 <tr>
-                  <td colSpan={11} style={{ textAlign: "center", padding: 28 }}>
-                    저장된 팀 밸런스 결과가 없습니다.
+                  <td colSpan={11} className="ai-table-empty">
+                    저장된 AI 밸런스가 없습니다.
                   </td>
                 </tr>
               ) : (
                 drafts.map((draft) => (
                   <tr key={draft.id}>
-                    <td>#{draft.id}</td>
-                    <td>{draft.title}</td>
-                    <td>{draft.season?.name ?? "-"}</td>
-                    <td>{draft.optionType ?? "-"}</td>
+                    <td><span className="ai-rank">#{draft.id}</span></td>
+                    <td>
+                      <Link className="ai-table-main-link" href={`/admin/balance/drafts/${draft.id}`}>
+                        {draft.title}
+                      </Link>
+                    </td>
+                    <td>{getSeasonName(draft.season?.name, activeSeason?.name)}</td>
+                    <td>{formatDateOnly(draft.applyDate)}</td>
                     <td>{formatNumber(draft.redTotal)}</td>
                     <td>{formatNumber(draft.blueTotal)}</td>
                     <td>{formatNumber(draft.diff)}</td>
@@ -92,10 +156,9 @@ export default async function AdminTeamBalanceDraftsPage() {
                     <td>{draft._count.balanceReviews}개</td>
                     <td>{formatDate(draft.createdAt)}</td>
                     <td>
-                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                        <Link className="button button--sm" href={`/admin/balance/drafts/${draft.id}/recommendations`}>추천</Link>
-                        <Link className="button button--sm" href={`/admin/balance/drafts/${draft.id}`}>상세</Link>
-                      </div>
+                      <Link className="button button--sm" href={`/admin/balance/drafts/${draft.id}`}>
+                        상세
+                      </Link>
                     </td>
                   </tr>
                 ))
@@ -103,6 +166,8 @@ export default async function AdminTeamBalanceDraftsPage() {
             </tbody>
           </table>
         </div>
+
+        <Pagination currentPage={currentPage} totalPages={totalPages} basePath="/admin/balance/drafts" />
       </section>
     </main>
   );

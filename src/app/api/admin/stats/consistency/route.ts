@@ -208,7 +208,17 @@ export async function GET(req: NextRequest) {
 
     const eligibleRawPlayers = [...rawMap.values()]
       .filter((player) => player.participationCount >= 10)
-      .map(({ seriesIds, ...player }) => player);
+      .map((player) => ({
+        playerId: player.playerId,
+        name: player.name,
+        nickname: player.nickname,
+        tag: player.tag,
+        totalGames: player.totalGames,
+        participationCount: player.participationCount,
+        wins: player.wins,
+        losses: player.losses,
+        mvpCount: player.mvpCount,
+      }));
 
     return NextResponse.json({
       season,

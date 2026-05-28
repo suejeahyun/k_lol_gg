@@ -1,5 +1,7 @@
-import { redirect } from "next/navigation";
+import TeamBalancePage from "@/components/team-balance/TeamBalancePage";
 
-export default function LegacyTeamBalancePage() {
-  redirect("/admin/balance");
+export const dynamic = "force-dynamic";
+
+export default function UserTeamBalancePage() {
+  return <TeamBalancePage />;
 }

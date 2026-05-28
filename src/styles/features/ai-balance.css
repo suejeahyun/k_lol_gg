@@ -545,3 +545,176 @@
     padding: 14px;
   }
 }
+
+/* Admin K-LOL MMR dashboard readability patch */
+.ai-page--admin-dashboard {
+  max-width: 1280px;
+}
+
+.ai-page--admin-dashboard .ai-hero {
+  border-radius: 26px;
+  padding: 30px 32px;
+  margin-bottom: 22px;
+}
+
+.ai-page--admin-dashboard .ai-hero__content {
+  max-width: none;
+}
+
+.ai-page--admin-dashboard .page-title {
+  margin: 8px 0 0;
+  font-size: clamp(26px, 2.4vw, 38px);
+  letter-spacing: -0.03em;
+}
+
+.ai-page--admin-dashboard .page-description {
+  max-width: 860px;
+  margin-top: 12px;
+  color: rgba(226, 232, 240, 0.72);
+  line-height: 1.65;
+}
+
+.ai-page--admin-dashboard .ai-hero__actions {
+  margin-top: 20px;
+}
+
+.ai-page--admin-dashboard .ai-kpi-grid {
+  grid-template-columns: repeat(5, minmax(150px, 1fr));
+  gap: 16px;
+  margin-top: 0;
+}
+
+.ai-page--admin-dashboard .ai-kpi {
+  min-height: 108px;
+  padding: 18px 20px;
+  border-radius: 20px;
+  background:
+    linear-gradient(180deg, rgba(17, 24, 39, 0.92), rgba(15, 23, 42, 0.68));
+}
+
+.ai-page--admin-dashboard .ai-kpi span {
+  margin-bottom: 10px;
+  font-size: 11px;
+  color: rgba(203, 213, 225, 0.78);
+}
+
+.ai-page--admin-dashboard .ai-kpi strong {
+  font-size: clamp(25px, 2.4vw, 34px);
+  letter-spacing: -0.03em;
+}
+
+.ai-page--admin-dashboard .ai-grid-3 {
+  grid-template-columns: 1.05fr 1fr 1fr;
+  align-items: stretch;
+  gap: 18px;
+}
+
+.ai-page--admin-dashboard .ai-grid-2 {
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+  align-items: start;
+  gap: 18px;
+}
+
+.ai-page--admin-dashboard .ai-panel {
+  border-radius: 22px;
+  padding: 22px;
+  background:
+    radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 34%),
+    rgba(15, 23, 42, 0.78);
+}
+
+.ai-page--admin-dashboard .ai-panel__head {
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.ai-page--admin-dashboard .ai-panel__title {
+  font-size: 19px;
+  letter-spacing: -0.02em;
+}
+
+.ai-page--admin-dashboard .ai-panel__desc {
+  font-size: 13px;
+  color: rgba(203, 213, 225, 0.72);
+}
+
+.ai-page--admin-dashboard .ai-list {
+  gap: 12px;
+}
+
+.ai-page--admin-dashboard .ai-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  padding: 13px 16px;
+}
+
+.ai-page--admin-dashboard .ai-table-wrap {
+  border-radius: 18px;
+  background: rgba(2, 6, 23, 0.22);
+}
+
+.ai-page--admin-dashboard .ai-table {
+  min-width: 720px;
+}
+
+.ai-page--admin-dashboard .ai-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 14px 16px;
+  background: rgba(15, 23, 42, 0.96);
+  color: rgba(226, 232, 240, 0.82);
+}
+
+.ai-page--admin-dashboard .ai-table td {
+  padding: 15px 16px;
+  line-height: 1.45;
+}
+
+.ai-page--admin-dashboard .ai-table tbody tr:hover td {
+  background: rgba(59, 130, 246, 0.06);
+}
+
+.ai-page--admin-dashboard .ai-player-name {
+  gap: 3px;
+}
+
+.ai-page--admin-dashboard .button-primary,
+.ai-page--admin-dashboard .button-secondary {
+  min-height: 38px;
+  padding: 9px 14px;
+}
+
+@media (max-width: 1120px) {
+  .ai-page--admin-dashboard .ai-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ai-page--admin-dashboard .ai-grid-2,
+  .ai-page--admin-dashboard .ai-grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .ai-page--admin-dashboard .ai-hero {
+    padding: 22px;
+  }
+
+  .ai-page--admin-dashboard .ai-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ai-page--admin-dashboard .ai-panel {
+    padding: 18px;
+  }
+
+  .ai-page--admin-dashboard .ai-panel__head,
+  .ai-page--admin-dashboard .ai-list li {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

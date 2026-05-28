@@ -30,24 +30,15 @@ export default async function UserAiMmrPlayersPage() {
     <main className="page-container ai-page ai-page--public">
       <section className="ai-hero">
         <div className="ai-hero__content">
-          <p className="eyebrow">PUBLIC AI MMR</p>
-          <h1 className="page-title">AI MMR 랭킹</h1>
-          <p className="page-description">
-            내전 기록으로 산출한 공개용 AI MMR입니다. 실제 티어, 포지션 숙련도, 내전 결과가 누적되며
-            분석 경기 수와 신뢰도가 낮은 플레이어는 변동폭이 클 수 있습니다.
-          </p>
-          <div className="ai-hero__actions">
-            <Link className="button-primary" href="/ai-balance">AI 밸런스 센터</Link>
-            <Link className="button-secondary" href="/players">플레이어 목록</Link>
-          </div>
+          <p className="eyebrow">K-LOL MMR RANKING</p>
+          <h1 className="page-title">K-LOL MMR 랭킹</h1>
         </div>
       </section>
 
       <section className="ai-panel" style={{ marginTop: 18 }}>
         <div className="ai-panel__head">
           <div>
-            <h2 className="ai-panel__title">공개 MMR 테이블</h2>
-            <p className="ai-panel__desc">관리자용 피드백 메모와 재계산 기능은 제외하고, 플레이어별 공개 지표만 보여줍니다.</p>
+            <h2 className="ai-panel__title">K-LOL MMR 랭킹</h2>
           </div>
         </div>
         <div className="ai-table-wrap">
