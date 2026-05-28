@@ -851,19 +851,17 @@ export function buildSyncReply(
     typeof previousActiveCount === "number" &&
     activeCount > previousActiveCount
   ) {
-    return ["[K-LOL.GG 구인구직 등록 완료]", "같이 할사람~"].join("\n");
+    return "[K-LOL.GG 구인구직 등록 완료]";
   }
 
   if (
     typeof previousActiveCount === "number" &&
     activeCount < previousActiveCount
   ) {
-    return ["[K-LOL.GG 구인구직 반영 완료]", "다음에 또 같이해요."].join("\n");
+    return "[K-LOL.GG 구인구직 수정 완료]";
   }
 
-  return ["[K-LOL.GG 구인구직 반영 완료]", "변경사항이 반영되었습니다."].join(
-    "\n",
-  );
+  return "[K-LOL.GG 구인구직 수정 완료]";
 }
 
 export function buildCreateReply(template: string, recruitNo?: number) {
@@ -872,7 +870,7 @@ export function buildCreateReply(template: string, recruitNo?: number) {
       ? template.replace("모집번호: #자동생성", `모집번호: #${recruitNo}`)
       : template;
   return [
-    "[K-LOL.GG 구인구직 등록 완료]",
+    "[K-LOL.GG 구인구직 양식]",
     "같이 할사람~",
     "",
     "아래 양식의 모집번호는 유지해서 작성해주세요.",

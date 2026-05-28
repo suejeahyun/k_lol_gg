@@ -125,13 +125,8 @@ export async function POST(req: NextRequest) {
       return partyRecruitJson(
         {
           reply: finishedLog
-            ? [
-                "[K-LOL.GG 구인구직 마무리]",
-                `모집번호 #${parsed.recruitNo}는 이미 마무리된 구인글입니다.`,
-                `기록: ${finishedLog.title || "구인글"}`,
-                `최종 인원: ${Math.min(finishedLog.memberCount, finishedLog.maxMembers)}/${finishedLog.maxMembers}`,
-              ].join("\n")
-            : `[K-LOL.GG 구인구직 마무리]\n\n모집번호 #${parsed.recruitNo} 파티를 찾지 못했습니다.`,
+            ? "[K-LOL.GG 구인구직 마무리]"
+            : "[K-LOL.GG 구인구직 마무리 실패]",
         },
         404,
       );
@@ -177,11 +172,7 @@ export async function POST(req: NextRequest) {
     });
 
     return partyRecruitJson({
-      reply: [
-        "[K-LOL.GG 구인구직 마무리]",
-        `모집번호 #${party.recruitNo} 마무리 완료`,
-        "다음에 또 같이해요.",
-      ].join("\n"),
+      reply: "[K-LOL.GG 구인구직 마무리]",
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

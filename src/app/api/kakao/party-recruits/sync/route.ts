@@ -246,32 +246,15 @@ async function syncOneRecruit(params: {
 }
 
 function buildBulkSyncReply(results: Awaited<ReturnType<typeof syncOneRecruit>>[]) {
-  const success = results.filter((result) => result.ok);
   const failed = results.filter((result) => !result.ok);
 
-  const lines = [
-    "[K-LOL.GG 구인구직 현황 반영 완료]",
-    "",
-    `반영 완료: ${success.length}개`,
-    `반영 실패: ${failed.length}개`,
-  ];
-
-  if (success.length > 0) {
-    lines.push("", "완료 목록");
-    for (const result of success) {
-      lines.push(`- #${result.recruitNo}`);
-    }
-  }
-
   if (failed.length > 0) {
-    lines.push("", "실패 목록");
-    for (const result of failed) {
-      lines.push(`- #${result.recruitNo}: ${result.reply.replace(/\n/g, " / ")}`);
-    }
+    return "[K-LOL.GG 구인구직 현황 반영 실패]";
   }
 
-  return lines.join("\n");
+  return "[K-LOL.GG 구인구직 현황 반영 완료]";
 }
+
 
 export async function POST(req: NextRequest) {
   try {

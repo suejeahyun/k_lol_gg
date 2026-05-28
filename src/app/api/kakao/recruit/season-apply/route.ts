@@ -124,62 +124,28 @@ function buildReply(params: {
   const updated = params.results.filter((item) => item.status === "UPDATED").length;
   const pending = params.results.filter((item) => item.status === "PENDING").length;
   const reserve = params.results.filter((item) => item.status === "RESERVE").length;
-  const appliedParticipants = params.results
-    .filter((item) => item.status !== "PENDING" && item.status !== "RESERVE")
-    .map((item) => item.participant);
-  const positionCounts = buildPositionCounts(appliedParticipants);
 
-  const positionSummary = POSITION_ORDER.map(
-    (position) => `${position} ${positionCounts[position]}`,
-  ).join(" · ");
-
-  const missingPositions = POSITION_ORDER.filter(
-    (position) => positionCounts[position] === 0,
-  );
-
-  const warningText =
-    params.parsed.warnings.length > 0
-      ? "\n\n주의\n" + params.parsed.warnings.map((item) => `- ${item}`).join("\n")
-      : "";
-
-  const reserveText = reserve > 0
-    ? "\n" + `예비: ${reserve}명`
-    : "";
-
-  const pendingText = pending > 0
-    ? "\n\n보류 사유\n" +
-      params.results
-        .filter((item) => item.status === "PENDING")
-        .map((item) => `- ${item.participant.name}: ${item.reason || "확인 필요"}`)
-        .join("\n")
-    : "";
-
-  if (pending === 0 && reserve === 0 && registered + updated > 0) {
-    return (
-      "[K-LOL.GG 구인구직방 참가 자동 등록 완료]\n" +
-      "내전 시작 10분전에 디스코드 내전 대기방으로 와주세요."
-    );
+  if (pending > 0) {
+    return "[K-LOL.GG 구인구직방 참가 자동 등록 보류]";
   }
 
-  return (
-    "[K-LOL.GG 구인구직방 참가 자동 등록]\n" +
-    `시즌: ${params.seasonName}\n` +
-    `신청일: ${formatApplyDateTime(params.parsed.applyDate, params.parsed.applyTime)}\n` +
-    `등록: ${registered}명\n` +
-    `수정: ${updated}명\n` +
-    "취소: 0명\n" +
-    `보류: ${pending}명` +
-    reserveText +
-    "\n\n" +
-    "포지션 현황\n" +
-    `${positionSummary}\n\n` +
-    "부족 포지션\n" +
-    `${missingPositions.length > 0 ? missingPositions.join(", ") : "없음"}\n\n` +
-    "처리 목록\n" +
-    buildRegisterList(params.results) +
-    pendingText +
-    warningText
-  );
+  if (reserve > 0 && registered + updated === 0) {
+    return "[K-LOL.GG 구인구직방 참가 예비 등록 완료]";
+  }
+
+  if (registered > 0 && updated > 0) {
+    return "[K-LOL.GG 구인구직방 참가 자동 등록/수정 완료]";
+  }
+
+  if (updated > 0) {
+    return "[K-LOL.GG 구인구직방 참가 자동 수정 완료]";
+  }
+
+  if (registered > 0 || reserve > 0) {
+    return "[K-LOL.GG 구인구직방 참가 자동 등록 완료]";
+  }
+
+  return "[K-LOL.GG 구인구직방 참가 자동 등록 실패]";
 }
 
 function normalizeName(value: string) {
@@ -436,7 +402,7 @@ function rejectIfInvalidSecret(req: NextRequest, bodySecret: unknown) {
   return kakaoJsonReply(
     {
       formatVersion: FORMAT_VERSION,
-      reply: "[K-LOL.GG 참가 신청 등록 실패]\n인증값이 올바르지 않습니다.",
+      reply: "[K-LOL.GG 참가 신청 등록 실패]",
     },
     401,
   );
@@ -546,12 +512,7 @@ export async function POST(req: NextRequest) {
         season: reset.season,
         applyDate: reset.todayText,
         deletedCount: reset.deletedCount,
-        reply:
-          "[K-LOL.GG 구인구직방 참가 초기화]\n" +
-          `시즌: ${reset.season.name}\n` +
-          `신청일: ${reset.todayText}\n` +
-          `삭제: ${reset.deletedCount}명\n\n` +
-          "오늘 내전 참가 신청 기록을 초기화했습니다.",
+        reply: "[K-LOL.GG 구인구직방 참가 초기화]",
       });
     }
 
@@ -560,11 +521,7 @@ export async function POST(req: NextRequest) {
     if (parsed.participants.length < 1) {
       return kakaoJsonReply({
         formatVersion: FORMAT_VERSION,
-        reply:
-          "[K-LOL.GG 구인구직방 참가 자동 등록]\n\n" +
-          "등록 가능한 참가자를 찾지 못했습니다.\n\n" +
-          "양식 예시\n" +
-          "1.정민/m/m/ad sup",
+        reply: "[K-LOL.GG 구인구직방 참가 자동 등록 실패]",
         parsed,
       });
     }
@@ -605,7 +562,7 @@ export async function POST(req: NextRequest) {
     return kakaoJsonReply(
       {
         formatVersion: FORMAT_VERSION,
-        reply: `[K-LOL.GG 참가 신청 등록 실패]\n${message || "서버 처리 중 오류가 발생했습니다."}`,
+        reply: "[K-LOL.GG 참가 신청 등록 실패]",
         error: message,
       },
       500,
