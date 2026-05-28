@@ -21,12 +21,38 @@ export function getWinRate(wins: number, totalGames: number) {
 }
 
 export async function ensureSeasonStats(seasonId: number) {
-  const [statCount, gameCount] = await Promise.all([
+  const [statCount, gameCount, participantCount, statGamesAggregate, zeroParticipationCount, distinctPlayers] = await Promise.all([
     prisma.playerSeasonStat.count({ where: { seasonId } }),
     prisma.matchGame.count({ where: { series: { seasonId } } }),
+    prisma.matchParticipant.count({ where: { game: { series: { seasonId } } } }),
+    prisma.playerSeasonStat.aggregate({
+      where: { seasonId },
+      _sum: { totalGames: true },
+    }),
+    prisma.playerSeasonStat.count({
+      where: {
+        seasonId,
+        totalGames: { gt: 0 },
+        participationCount: { lte: 0 },
+      },
+    }),
+    prisma.matchParticipant.findMany({
+      where: { game: { series: { seasonId } } },
+      distinct: ["playerId"],
+      select: { playerId: true },
+    }),
   ]);
 
-  if (statCount === 0 && gameCount > 0) {
+  const statTotalGames = statGamesAggregate._sum.totalGames ?? 0;
+  const expectedPlayerStatCount = distinctPlayers.length;
+
+  if (
+    gameCount > 0 &&
+    (statCount === 0 ||
+      statCount !== expectedPlayerStatCount ||
+      statTotalGames !== participantCount ||
+      zeroParticipationCount > 0)
+  ) {
     await recalculateSeasonStats(seasonId);
   }
 }
@@ -51,7 +77,7 @@ export async function getSeasonRankingPlayers(seasonId: number): Promise<SeasonR
   });
 
   return stats.map((stat) => {
-    const participationCount = stat.participationCount || stat.totalGames;
+    const participationCount = stat.participationCount ?? 0;
     return {
       playerId: stat.playerId,
       name: stat.player.name,
@@ -70,7 +96,7 @@ export async function getSeasonRankingPlayers(seasonId: number): Promise<SeasonR
 
 export const getCachedSeasonRankingPlayers = unstable_cache(
   async (seasonId: number) => getSeasonRankingPlayers(seasonId),
-  ["season-ranking-players-v1"],
+  ["season-ranking-players-v2-strict-participation-count"],
   {
     revalidate: 60,
     tags: ["rankings"],

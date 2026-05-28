@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { getGameMvpParticipant } from "@/lib/mvp";
+import { ensureSeasonStats, getWinRate } from "@/lib/stats/season-performance";
 
 type RouteContext = {
   params: Promise<{
@@ -39,9 +40,40 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
       );
     }
 
+    const currentSeason = await prisma.season.findFirst({
+      where: { isActive: true },
+      orderBy: { id: "desc" },
+      select: { id: true },
+    });
+
+    if (currentSeason) {
+      await ensureSeasonStats(currentSeason.id);
+    }
+
+    const seasonStat = currentSeason
+      ? await prisma.playerSeasonStat.findFirst({
+          where: { playerId: id, seasonId: currentSeason.id },
+          select: {
+            totalGames: true,
+            wins: true,
+            losses: true,
+            mvpCount: true,
+          },
+        })
+      : null;
+
     const records = await prisma.matchParticipant.findMany({
       where: {
         playerId: id,
+        ...(currentSeason
+          ? {
+              game: {
+                series: {
+                  seasonId: currentSeason.id,
+                },
+              },
+            }
+          : { id: -1 }),
       },
       select: {
         kills: true,
@@ -52,6 +84,7 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
         game: {
           select: {
             winnerTeam: true,
+            mvpPlayerId: true,
             participants: {
               select: {
                 playerId: true,
@@ -70,6 +103,15 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
       by: ["championId"],
       where: {
         playerId: id,
+        ...(currentSeason
+          ? {
+              game: {
+                series: {
+                  seasonId: currentSeason.id,
+                },
+              },
+            }
+          : { id: -1 }),
       },
       _count: {
         championId: true,
@@ -112,25 +154,30 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
       champions.map((champion: ChampionType) => [champion.id, champion])
     );
 
-    const totalGames = records.length;
+    const totalGames = seasonStat?.totalGames ?? records.length;
 
-    const wins = records.filter(
+    const wins = seasonStat?.wins ?? records.filter(
       (record: (typeof records)[number]) =>
         record.team === record.game.winnerTeam
     ).length;
 
-    const losses = totalGames - wins;
+    const losses = seasonStat?.losses ?? totalGames - wins;
 
-    const winRate =
-      totalGames > 0 ? Number(((wins / totalGames) * 100).toFixed(1)) : 0;
+    const winRate = getWinRate(wins, totalGames);
 
-    const mvpCount = records.filter((record) => {
+    const getMvpPlayerId = (record: (typeof records)[number]) => {
+      if (record.game.mvpPlayerId) return record.game.mvpPlayerId;
+
       const mvp = getGameMvpParticipant(
         record.game.participants,
         record.game.winnerTeam,
       );
 
-      return mvp?.playerId === id;
+      return mvp?.playerId ?? null;
+    };
+
+    const mvpCount = seasonStat?.mvpCount ?? records.filter((record) => {
+      return getMvpPlayerId(record) === id;
     }).length;
 
 
@@ -141,12 +188,7 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
         const mvpCount = records.filter((record) => {
           if (record.championId !== item.championId) return false;
 
-          const mvp = getGameMvpParticipant(
-            record.game.participants,
-            record.game.winnerTeam,
-          );
-
-          return mvp?.playerId === id;
+          return getMvpPlayerId(record) === id;
         }).length;
 
         return {

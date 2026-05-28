@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma/client";
 import TierIcon from "@/components/TierIcon";
 import SoloRankSection from "@/components/SoloRankSection";
 import { getGameMvpParticipant } from "@/lib/mvp";
+import { ensureSeasonStats, getWinRate } from "@/lib/stats/season-performance";
 
 type PlayerDetailPageProps = {
   params: Promise<{
@@ -33,10 +34,40 @@ export default async function PlayerDetailPage({
     notFound();
   }
 
+  const currentSeason = await prisma.season.findFirst({
+    where: { isActive: true },
+    orderBy: { id: "desc" },
+    select: { id: true, name: true },
+  });
+
+  if (currentSeason) {
+    await ensureSeasonStats(currentSeason.id);
+  }
+
   const player = await prisma.player.findUnique({
     where: { id },
     include: {
+      seasonStats: {
+        where: { seasonId: currentSeason?.id ?? -1 },
+        select: {
+          totalGames: true,
+          participationCount: true,
+          wins: true,
+          losses: true,
+          mvpCount: true,
+        },
+        take: 1,
+      },
       participants: {
+        where: currentSeason
+          ? {
+              game: {
+                series: {
+                  seasonId: currentSeason.id,
+                },
+              },
+            }
+          : { id: -1 },
         orderBy: {
           game: {
             series: {
@@ -73,22 +104,29 @@ export default async function PlayerDetailPage({
     notFound();
   }
 
-  const totalGames = player.participants.length;
-
-  const wins = player.participants.filter(
+  const seasonStat = player.seasonStats[0] ?? null;
+  const totalGames = seasonStat?.totalGames ?? player.participants.length;
+  const participationCount = seasonStat?.participationCount ?? 0;
+  const wins = seasonStat?.wins ?? player.participants.filter(
     (participant) => participant.game.winnerTeam === participant.team
   ).length;
 
-  const losses = totalGames - wins;
-  const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
+  const losses = seasonStat?.losses ?? totalGames - wins;
+  const winRate = getWinRate(wins, totalGames);
 
-  const mvpCount = player.participants.filter((participant) => {
+  const getMvpPlayerId = (participant: (typeof player.participants)[number]) => {
+    if (participant.game.mvpPlayerId) return participant.game.mvpPlayerId;
+
     const mvp = getGameMvpParticipant(
       participant.game.participants,
       participant.game.winnerTeam,
     );
 
-    return mvp?.playerId === player.id;
+    return mvp?.playerId ?? null;
+  };
+
+  const mvpCount = seasonStat?.mvpCount ?? player.participants.filter((participant) => {
+    return getMvpPlayerId(participant) === player.id;
   }).length;
 
   const championStats = Array.from(
@@ -114,12 +152,7 @@ export default async function PlayerDetailPage({
         prev.deaths += participant.deaths;
         prev.assists += participant.assists;
 
-        const mvp = getGameMvpParticipant(
-          participant.game.participants,
-          participant.game.winnerTeam,
-        );
-
-        if (mvp?.playerId === player.id) {
+        if (getMvpPlayerId(participant) === player.id) {
           prev.mvpCount += 1;
         }
 
@@ -201,12 +234,17 @@ export default async function PlayerDetailPage({
           <div>
             <h2>내전 분석</h2>
             <p className="section-subtitle">
-              K-LOL.GG에 등록된 내전 기록 기준 통계입니다.
+              현재 시즌{currentSeason ? `(${currentSeason.name})` : ""} 내전 기록 기준 통계입니다.
             </p>
           </div>
         </div>
 
         <div className="card-grid player-stat-grid">
+          <article className="stat-card">
+            <span className="stat-card__label">참여 횟수</span>
+            <strong className="stat-card__value">{participationCount}회</strong>
+          </article>
+
           <article className="stat-card">
             <span className="stat-card__label">총 경기</span>
             <strong className="stat-card__value">{totalGames}</strong>

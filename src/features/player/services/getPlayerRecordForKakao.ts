@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma/client";
 import type { KakaoPlayerRecordSummary } from "@/lib/kakao/formatPlayerRecordMessage";
 import { getPublicBaseUrl } from "@/lib/http/base-url";
+import { ensureSeasonStats } from "@/lib/stats/season-performance";
 
 type PlayerRow = {
   id: number;
@@ -106,6 +107,10 @@ export async function getPlayerRecordForKakao(query: string): Promise<KakaoPlaye
   `;
   const season = seasons[0] ?? null;
 
+  if (season) {
+    await ensureSeasonStats(season.id);
+  }
+
   const stats = await prisma.$queryRaw<StatRow[]>`
     SELECT
       COUNT(mp.id) AS "totalGames",
@@ -165,14 +170,14 @@ export async function getPlayerRecordForKakao(query: string): Promise<KakaoPlaye
       mp.deaths,
       mp.assists,
       c.name AS "championName",
-      ms."createdAt"
+      ms."matchDate" AS "createdAt"
     FROM "MatchParticipant" mp
     JOIN "MatchGame" mg ON mg.id = mp."gameId"
     JOIN "MatchSeries" ms ON ms.id = mg."seriesId"
     LEFT JOIN "Champion" c ON c.id = mp."championId"
     WHERE mp."playerId" = ${player.id}
       AND (${season?.id ?? null}::int IS NULL OR ms."seasonId" = ${season?.id ?? null})
-    ORDER BY ms."createdAt" DESC, mg."gameNumber" DESC
+    ORDER BY ms."matchDate" DESC, mg."gameNumber" DESC
     LIMIT 3
   `;
 
@@ -217,26 +222,35 @@ export async function getRankingForKakao() {
   `;
   const season = seasons[0] ?? null;
 
+  if (!season) {
+    return [];
+  }
+
+  await ensureSeasonStats(season.id);
+
   const rows = await prisma.$queryRaw<RankingRow[]>`
     SELECT
       p.nickname,
       p.tag,
-      COUNT(mp.id) AS "totalGames",
-      COUNT(DISTINCT ms.id) AS "participationCount",
-      COALESCE(SUM(CASE WHEN mp.team = mg."winnerTeam" THEN 1 ELSE 0 END), 0) AS wins,
+      pss."totalGames" AS "totalGames",
+      pss."participationCount" AS "participationCount",
+      pss.wins AS wins,
       COALESCE(SUM(mp.kills), 0) AS kills,
       COALESCE(SUM(mp.deaths), 0) AS deaths,
       COALESCE(SUM(mp.assists), 0) AS assists
-    FROM "Player" p
+    FROM "PlayerSeasonStat" pss
+    JOIN "Player" p ON p.id = pss."playerId"
     JOIN "MatchParticipant" mp ON mp."playerId" = p.id
     JOIN "MatchGame" mg ON mg.id = mp."gameId"
-    JOIN "MatchSeries" ms ON ms.id = mg."seriesId"
-    WHERE (${season?.id ?? null}::int IS NULL OR ms."seasonId" = ${season?.id ?? null})
-    GROUP BY p.id, p.nickname, p.tag
-    HAVING COUNT(DISTINCT ms.id) >= 10
-    ORDER BY (COALESCE(SUM(CASE WHEN mp.team = mg."winnerTeam" THEN 1 ELSE 0 END), 0)::float / COUNT(mp.id)) DESC,
-             COUNT(DISTINCT ms.id) DESC,
-             COUNT(mp.id) DESC
+    JOIN "MatchSeries" ms ON ms.id = mg."seriesId" AND ms."seasonId" = pss."seasonId"
+    WHERE pss."seasonId" = ${season.id}
+      AND p."isActive" = true
+      AND pss."participationCount" >= 10
+    GROUP BY p.id, p.nickname, p.tag, pss."totalGames", pss."participationCount", pss.wins, pss."mvpCount"
+    ORDER BY (pss.wins::float / NULLIF(pss."totalGames", 0)) DESC,
+             pss."participationCount" DESC,
+             pss."mvpCount" DESC,
+             p.id ASC
     LIMIT 5
   `;
 

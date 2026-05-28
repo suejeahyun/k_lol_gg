@@ -142,7 +142,7 @@ export async function getSeasonTopPlayers(seasonId: number): Promise<StatsTopPla
   });
 
   const players = stats.map((stat) => {
-    const participationCount = stat.participationCount || stat.totalGames;
+    const participationCount = stat.participationCount ?? 0;
 
     return {
       playerId: stat.playerId,
@@ -189,7 +189,7 @@ export async function getStatsTopData(): Promise<StatsTopData> {
 
 export const getCachedStatsTopData = unstable_cache(
   getStatsTopData,
-  ["stats-top-data-v3-min-10-participations"],
+  ["stats-top-data-v4-strict-participation-count"],
   {
     revalidate: 60,
     tags: ["stats-top"],

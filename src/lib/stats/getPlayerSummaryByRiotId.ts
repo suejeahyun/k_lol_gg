@@ -1,4 +1,5 @@
 import { getGameMvpPlayerId } from "@/lib/mvp";
+import { ensureSeasonStats, getWinRate } from "@/lib/stats/season-performance";
 import { prisma } from "@/lib/prisma/client";
 import { PlayerSummaryResult } from "@/types/kakao";
 
@@ -10,13 +11,42 @@ export async function getPlayerSummaryByRiotId(
   nickname: string,
   tag: string,
 ): Promise<PlayerSummaryResult | null> {
+  const currentSeason = await prisma.season.findFirst({
+    where: { isActive: true },
+    orderBy: { id: "desc" },
+    select: { id: true },
+  });
+
+  if (currentSeason) {
+    await ensureSeasonStats(currentSeason.id);
+  }
+
   const player = await prisma.player.findFirst({
     where: {
       nickname,
       tag,
     },
     include: {
+      seasonStats: {
+        where: { seasonId: currentSeason?.id ?? -1 },
+        select: {
+          totalGames: true,
+          wins: true,
+          losses: true,
+          mvpCount: true,
+        },
+        take: 1,
+      },
       participants: {
+        where: currentSeason
+          ? {
+              game: {
+                series: {
+                  seasonId: currentSeason.id,
+                },
+              },
+            }
+          : { id: -1 },
         select: {
           kills: true,
           deaths: true,
@@ -25,6 +55,7 @@ export async function getPlayerSummaryByRiotId(
           game: {
             select: {
               winnerTeam: true,
+              mvpPlayerId: true,
               participants: {
                 select: {
                   playerId: true,
@@ -46,22 +77,23 @@ export async function getPlayerSummaryByRiotId(
   }
 
   const participants = player.participants ?? [];
-  const totalGames = participants.length;
+  const seasonStat = player.seasonStats[0] ?? null;
+  const totalGames = seasonStat?.totalGames ?? participants.length;
 
   const totalKills = participants.reduce((sum, item) => sum + item.kills, 0);
   const totalDeaths = participants.reduce((sum, item) => sum + item.deaths, 0);
   const totalAssists = participants.reduce((sum, item) => sum + item.assists, 0);
 
-  const wins = participants.filter(
+  const wins = seasonStat?.wins ?? participants.filter(
     (item) => item.team === item.game.winnerTeam,
   ).length;
 
-  const losses = totalGames - wins;
+  const losses = seasonStat?.losses ?? totalGames - wins;
 
-  const winRate = totalGames > 0 ? roundToOne((wins / totalGames) * 100) : 0;
+  const winRate = getWinRate(wins, totalGames);
 
-  const mvpCount = participants.filter((participant) => {
-    const mvpPlayerId = getGameMvpPlayerId(
+  const mvpCount = seasonStat?.mvpCount ?? participants.filter((participant) => {
+    const mvpPlayerId = participant.game.mvpPlayerId ?? getGameMvpPlayerId(
       participant.game.participants,
       participant.game.winnerTeam,
     );

@@ -270,6 +270,7 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
         where: { seasonId: currentSeason?.id ?? -1 },
         select: {
           totalGames: true,
+          participationCount: true,
           wins: true,
           losses: true,
           mvpCount: true,
@@ -295,6 +296,7 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
   const mapped = players.map((player: (typeof players)[number]) => {
     const seasonStat = player.seasonStats[0] ?? null;
     const totalGames = seasonStat?.totalGames ?? 0;
+    const participationCount = seasonStat?.participationCount ?? 0;
     const wins = seasonStat?.wins ?? 0;
     const winRate = getWinRate(wins, totalGames);
     const mvpCount = seasonStat?.mvpCount ?? 0;
@@ -314,6 +316,7 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
       peakTier: player.peakTier ?? null,
       currentTier: player.currentTier ?? null,
       totalGames,
+      participationCount,
       winRate,
       mvpCount,
       primaryPosition,
@@ -343,10 +346,15 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
     (safeCurrentPage - 1) * PAGE_SIZE,
     safeCurrentPage * PAGE_SIZE
   );
-  const mostActivePlayer = [...mapped].sort((a, b) => {
-    if (b.totalGames !== a.totalGames) return b.totalGames - a.totalGames;
-    return b.winRate - a.winRate;
-  })[0];
+  const mostActivePlayer = [...mapped]
+    .filter((player) => player.participationCount > 0)
+    .sort((a, b) => {
+      if (b.participationCount !== a.participationCount) {
+        return b.participationCount - a.participationCount;
+      }
+      if (b.totalGames !== a.totalGames) return b.totalGames - a.totalGames;
+      return b.winRate - a.winRate;
+    })[0];
 
   const highestWinRatePlayer = [...mapped]
     .filter((player) => player.totalGames >= 3)
@@ -401,7 +409,7 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
           <span>최다 참여</span>
           <strong>
             {mostActivePlayer
-              ? `${mostActivePlayer.name} · ${mostActivePlayer.totalGames}전`
+              ? `${mostActivePlayer.name} · ${mostActivePlayer.participationCount}회`
               : "없음"}
           </strong>
         </div>

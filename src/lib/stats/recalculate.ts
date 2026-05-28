@@ -29,6 +29,7 @@ export async function recalculateSeasonStats(seasonId: number, db: DbClient = pr
           id: true,
           seriesId: true,
           winnerTeam: true,
+          mvpPlayerId: true,
         },
       },
     },
@@ -44,6 +45,13 @@ export async function recalculateSeasonStats(seasonId: number, db: DbClient = pr
   }
 
   for (const [gameId, gameParticipants] of participantsByGame.entries()) {
+    const storedMvpPlayerId = gameParticipants[0]?.game.mvpPlayerId ?? null;
+
+    if (storedMvpPlayerId) {
+      mvpPlayerIdByGame.set(gameId, storedMvpPlayerId);
+      continue;
+    }
+
     const mvp = getGameMvpParticipant(
       gameParticipants.map((participant) => ({
         playerId: participant.playerId,

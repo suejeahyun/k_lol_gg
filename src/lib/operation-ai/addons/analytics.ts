@@ -351,7 +351,7 @@ async function buildSeasonReport(seasonId: number) {
     prisma.playerSeasonStat.findMany({
       where: { seasonId },
       include: { player: { select: { id: true, name: true } } },
-      orderBy: [{ totalGames: "desc" }, { wins: "desc" }],
+      orderBy: [{ participationCount: "desc" }, { totalGames: "desc" }, { wins: "desc" }],
       take: 10,
     }),
   ]);
@@ -363,6 +363,7 @@ async function buildSeasonReport(seasonId: number) {
     playerId: stat.playerId,
     name: stat.player.name,
     games: stat.totalGames,
+    participationCount: stat.participationCount,
     wins: stat.wins,
     winRate: stat.totalGames > 0 ? round1((stat.wins / stat.totalGames) * 100) : 0,
   }));
@@ -378,7 +379,7 @@ async function buildSeasonReport(seasonId: number) {
     if (redRate >= 0.6) notes.push(`RED 승률이 ${pct(redRate * 100)}로 높습니다. 진영 편향 또는 배정 쏠림을 점검하세요.`);
     if (redRate <= 0.4) notes.push(`BLUE 승률이 ${pct((1 - redRate) * 100)}로 높습니다. 진영 편향 또는 배정 쏠림을 점검하세요.`);
   }
-  if (topParticipants.length > 0) notes.push(`최다 참여자는 ${topParticipants[0].name}(${topParticipants[0].games}게임)입니다.`);
+  if (topParticipants.length > 0) notes.push(`최다 참여자는 ${topParticipants[0].name}(${topParticipants[0].participationCount}회)입니다.`);
 
   return {
     totalSeries: uniqueSeries.size,
@@ -479,9 +480,9 @@ function buildPlayerTags(active: TodayApply[]): PlayerTag[] {
       tags.push("데이터 부족");
       reasons.push("내전 또는 AI MMR 분석 경기 수가 부족합니다.");
     }
-    if (stat && stat.totalGames >= 10) {
+    if (stat && stat.participationCount >= 10) {
       tags.push("안정 참여");
-      reasons.push(`이번 시즌 ${stat.totalGames}게임 참여 기록이 있습니다.`);
+      reasons.push(`이번 시즌 ${stat.participationCount}회 참여 기록이 있습니다.`);
     }
     if (profile && profile.overallMmr >= 60) {
       tags.push("고영향 유저");

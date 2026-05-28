@@ -77,7 +77,7 @@ export type OperationAiAddonDashboard = {
     totalGames: number;
     redWins: number;
     blueWins: number;
-    topParticipants: Array<{ playerId: number; name: string; games: number; wins: number; winRate: number }>;
+    topParticipants: Array<{ playerId: number; name: string; games: number; participationCount: number; wins: number; winRate: number }>;
     topMvp: Array<{ playerId: number; name: string; mvpCount: number }>;
     notes: string[];
   };
