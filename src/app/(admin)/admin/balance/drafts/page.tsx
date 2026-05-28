@@ -93,7 +93,7 @@ export default async function AdminTeamBalanceDraftsPage() {
                     <td>{formatDate(draft.createdAt)}</td>
                     <td>
                       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                        <Link className="button button--sm" href={`/players/balance/drafts/${draft.id}/recommendations`}>추천</Link>
+                        <Link className="button button--sm" href={`/admin/balance/drafts/${draft.id}/recommendations`}>추천</Link>
                         <Link className="button button--sm" href={`/admin/balance/drafts/${draft.id}`}>상세</Link>
                       </div>
                     </td>

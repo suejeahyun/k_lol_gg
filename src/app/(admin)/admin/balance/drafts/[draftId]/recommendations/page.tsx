@@ -1,8 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
-import { requireApprovedUserOrAdmin } from "@/lib/auth/access";
+import { notFound } from "next/navigation";
 import { getTeamBalanceDraftRecommendations } from "@/lib/team-balance/draft-recommendations";
 
 type Props = { params: Promise<{ draftId: string }> };
@@ -33,23 +32,8 @@ function scoreBadge(score: number) {
   return "ai-badge ai-badge--high";
 }
 
-async function requireAccessOrRedirect(nextPath: string) {
-  try {
-    await requireApprovedUserOrAdmin();
-  } catch (error) {
-    if (error instanceof Error && error.message === "UNAUTHORIZED") {
-      redirect(`/login?next=${encodeURIComponent(nextPath)}`);
-    }
-    if (error instanceof Error && error.message === "NOT_APPROVED") {
-      redirect("/");
-    }
-    throw error;
-  }
-}
-
-export default async function BalanceDraftRecommendationsPage({ params }: Props) {
+export default async function AdminBalanceDraftRecommendationsPage({ params }: Props) {
   const { draftId } = await params;
-  await requireAccessOrRedirect(`/players/balance/drafts/${draftId}/recommendations`);
   const id = Number(draftId);
   if (!Number.isInteger(id) || id <= 0) notFound();
 
@@ -60,15 +44,15 @@ export default async function BalanceDraftRecommendationsPage({ params }: Props)
     <main className="page-container ai-page">
       <section className="ai-hero">
         <div className="ai-hero__content">
-          <p className="eyebrow">DRAFT PICK · BAN RECOMMENDATION</p>
+          <p className="eyebrow">ADMIN · DRAFT PICK · BAN RECOMMENDATION</p>
           <h1 className="page-title">밴픽 추천 · {data.draft.title}</h1>
           <p className="page-description">
             저장된 팀 밸런스 결과를 기준으로 플레이어별 주력 챔피언, 밴 우선순위, 포지션 페어 호흡, 팀 조합 방향을 계산합니다.
           </p>
           <div className="ai-hero__actions">
-            <Link className="button-secondary" href={`/players/balance/drafts/${data.draft.id}`}>밸런스 상세</Link>
-            <Link className="button-secondary" href="/players/balance/drafts">목록</Link>
-            <Link className="button-primary" href="/players/balance">새 계산</Link>
+            <Link className="button-secondary" href={`/admin/balance/drafts/${data.draft.id}`}>밸런스 상세</Link>
+            <Link className="button-secondary" href="/admin/balance/drafts">목록</Link>
+            <Link className="button-primary" href="/admin/balance">새 계산</Link>
           </div>
         </div>
       </section>

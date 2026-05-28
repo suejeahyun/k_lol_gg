@@ -52,6 +52,7 @@ const menuGroups: UserSidebarGroup[] = [
       { href: "/ai-balance/players", label: "AI MMR", code: "MMR" },
       { href: "/players/balance", label: "팀 밸런스", code: "BAL", auth: true, approvedOnly: true },
       { href: "/players/balance/drafts", label: "저장 밸런스", code: "DRF", auth: true, approvedOnly: true },
+      { href: "/players/balance/recommendations", label: "밴픽 추천", code: "P/B", auth: true, approvedOnly: true },
     ],
   },
   {
@@ -68,6 +69,19 @@ const menuGroups: UserSidebarGroup[] = [
 
 function isActivePath(pathname: string, href: string) {
   if (href === "/") return pathname === href;
+
+  if (href === "/players/balance") {
+    return pathname === href;
+  }
+
+  if (href === "/players/balance/drafts") {
+    return pathname === href || (pathname.startsWith(`${href}/`) && !pathname.includes("/recommendations"));
+  }
+
+  if (href === "/players/balance/recommendations") {
+    return pathname === href || /^\/players\/balance\/drafts\/[^/]+\/recommendations/.test(pathname);
+  }
+
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 

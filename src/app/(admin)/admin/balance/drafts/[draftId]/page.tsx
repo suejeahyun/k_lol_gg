@@ -108,7 +108,7 @@ export default async function AdminTeamBalanceDraftDetailPage({ params }: Props)
 
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <Link className="button" href="/admin/balance/drafts">목록</Link>
-          <Link className="button" href={`/players/balance/drafts/${draft.id}/recommendations`}>밴픽 추천</Link>
+          <Link className="button" href={`/admin/balance/drafts/${draft.id}/recommendations`}>밴픽 추천</Link>
           <Link className="button button--primary" href="/admin/matches/new">내전 등록</Link>
         </div>
       </div>

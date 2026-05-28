@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
 import { requireApprovedUserOrAdmin } from "@/lib/auth/access";
 
@@ -26,9 +26,23 @@ function lines(value: string | null | undefined) {
   return (value ?? "").split("\n").map((item) => item.trim()).filter(Boolean);
 }
 
+async function requireAccessOrRedirect(nextPath: string) {
+  try {
+    await requireApprovedUserOrAdmin();
+  } catch (error) {
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      redirect(`/login?next=${encodeURIComponent(nextPath)}`);
+    }
+    if (error instanceof Error && error.message === "NOT_APPROVED") {
+      redirect("/");
+    }
+    throw error;
+  }
+}
+
 export default async function BalanceDraftDetailPage({ params }: Props) {
-  await requireApprovedUserOrAdmin();
   const { draftId } = await params;
+  await requireAccessOrRedirect(`/players/balance/drafts/${draftId}`);
   const id = Number(draftId);
   if (!Number.isInteger(id) || id <= 0) notFound();
 
