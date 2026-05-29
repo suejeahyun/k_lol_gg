@@ -413,16 +413,27 @@ async function resetTodaySeasonApply(params: {
   const applyDate = getKstStartOfDate(todayText);
 
   const result = await prisma.$transaction(async (tx) => {
-    const deleted = await tx.seasonParticipationApply.deleteMany({
-      where: {
-        seasonId: season.id,
-        applyDate,
-      },
-    });
+    const [deletedApplied, deletedPending] = await Promise.all([
+      tx.seasonParticipationApply.deleteMany({
+        where: {
+          seasonId: season.id,
+          applyDate,
+        },
+      }),
+      tx.seasonParticipationPendingApply.deleteMany({
+        where: {
+          seasonId: season.id,
+          applyDate,
+          source: "KAKAO_RECRUIT",
+        },
+      }),
+    ]);
+
+    const deletedCount = deletedApplied.count + deletedPending.count;
 
     await writeAdminLog({
       action: "KAKAO_RECRUIT_SEASON_APPLY_RESET",
-      message: `카카오 구인구직방 오늘 내전 참가 초기화: 시즌 #${season.id} ${season.name}, 신청일 ${todayText}, 삭제 ${deleted.count}명`,
+      message: `카카오 구인구직방 오늘 내전 참가 초기화: 시즌 #${season.id} ${season.name}, 신청일 ${todayText}, 확정 ${deletedApplied.count}명, 보류/예비 ${deletedPending.count}명, 총 ${deletedCount}명 삭제`,
       targetType: "Season",
       targetId: season.id,
       afterJson: {
@@ -431,19 +442,27 @@ async function resetTodaySeasonApply(params: {
         applyDateKst: todayText,
         roomName: params.roomName,
         sender: params.sender,
-        deletedCount: deleted.count,
+        deletedAppliedCount: deletedApplied.count,
+        deletedPendingCount: deletedPending.count,
+        deletedCount,
       },
       db: tx,
     });
 
-    return deleted;
+    return {
+      deletedAppliedCount: deletedApplied.count,
+      deletedPendingCount: deletedPending.count,
+      deletedCount,
+    };
   });
 
   return {
     season,
     todayText,
     applyDate,
-    deletedCount: result.count,
+    deletedAppliedCount: result.deletedAppliedCount,
+    deletedPendingCount: result.deletedPendingCount,
+    deletedCount: result.deletedCount,
   };
 }
 
@@ -474,8 +493,15 @@ export async function POST(req: NextRequest) {
         command: "TODAY_SEASON_APPLY_RESET",
         season: reset.season,
         applyDate: reset.todayText,
+        deletedAppliedCount: reset.deletedAppliedCount,
+        deletedPendingCount: reset.deletedPendingCount,
         deletedCount: reset.deletedCount,
-        reply: "[K-LOL.GG 구인구직방 참가 초기화]",
+        reply:
+          "[K-LOL.GG 오늘내전 초기화 완료]\n" +
+          `날짜: ${reset.todayText}\n` +
+          `확정 참가: ${reset.deletedAppliedCount}명 삭제\n` +
+          `보류/예비: ${reset.deletedPendingCount}명 삭제\n` +
+          `총 ${reset.deletedCount}명 초기화`,
       });
     }
 
