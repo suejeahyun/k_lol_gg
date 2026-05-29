@@ -9,7 +9,6 @@ import {
   getRecruitStatusLabel,
   getRecruitTypeLabel,
   isLinePartyType,
-  isRecruitPartyFull,
 } from "@/lib/kakao/party-recruit";
 
 type RecruitPageMember = {
@@ -61,7 +60,11 @@ function renderSlots(party: RecruitPageParty) {
       return (
         <div key={position} className="recruit-slot">
           <span className="recruit-slot__label">{position}</span>
-          <span className={member ? "recruit-slot__name" : "recruit-slot__empty"}>{member?.name || "-"}</span>
+          <span
+            className={member ? "recruit-slot__name" : "recruit-slot__empty"}
+          >
+            {member?.name || "-"}
+          </span>
         </div>
       );
     });
@@ -76,21 +79,35 @@ function renderSlots(party: RecruitPageParty) {
   );
 
   for (let slotNo = 1; slotNo <= maxWrittenSlotNo; slotNo += 1) {
-    const member = party.members.find((item) => !item.isSubstitute && item.slotNo === slotNo);
+    const member = party.members.find(
+      (item) => !item.isSubstitute && item.slotNo === slotNo,
+    );
     slots.push(
       <div key={slotNo} className="recruit-slot">
         <span className="recruit-slot__label">{slotNo}</span>
-        <span className={member ? "recruit-slot__name" : "recruit-slot__empty"}>{member?.name || "-"}</span>
+        <span className={member ? "recruit-slot__name" : "recruit-slot__empty"}>
+          {member?.name || "-"}
+        </span>
       </div>,
     );
   }
 
-  if (party.type === "ARAM" || party.members.some((item) => item.isSubstitute)) {
-    const subMembers = party.members.filter((item) => item.isSubstitute).map((item) => item.name).join(", ");
+  if (
+    party.type === "ARAM" ||
+    party.members.some((item) => item.isSubstitute)
+  ) {
+    const subMembers = party.members
+      .filter((item) => item.isSubstitute)
+      .map((item) => item.name)
+      .join(", ");
     slots.push(
       <div key="sub" className="recruit-slot recruit-slot--sub">
         <span className="recruit-slot__label">예비</span>
-        <span className={subMembers ? "recruit-slot__name" : "recruit-slot__empty"}>{subMembers || "-"}</span>
+        <span
+          className={subMembers ? "recruit-slot__name" : "recruit-slot__empty"}
+        >
+          {subMembers || "-"}
+        </span>
       </div>,
     );
   }
@@ -99,31 +116,58 @@ function renderSlots(party: RecruitPageParty) {
 }
 
 export default async function RecruitPage() {
-  const allParties = await prisma.recruitParty.findMany({
+  const parties = await prisma.recruitParty.findMany({
     where: { status: "IN_PROGRESS" },
-    include: {
+    select: {
+      id: true,
+      recruitNo: true,
+      recruitDate: true,
+      resetSeq: true,
+      recruitCode: true,
+      type: true,
+      status: true,
+      title: true,
+      roomName: true,
+      hostName: true,
+      startTimeText: true,
+      tierText: true,
+      preferredLineText: true,
+      playStyle: true,
+      note: true,
+      maxMembers: true,
+      createdAt: true,
+      updatedAt: true,
       members: {
+        select: {
+          id: true,
+          name: true,
+          position: true,
+          slotNo: true,
+          isSubstitute: true,
+        },
         orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }],
       },
     },
-    orderBy: [{ recruitDate: "desc" }, { resetSeq: "desc" }, { recruitNo: "asc" }],
+    orderBy: [
+      { recruitDate: "desc" },
+      { resetSeq: "desc" },
+      { recruitNo: "asc" },
+    ],
+    take: 50,
   });
-  const parties = allParties;
 
   return (
     <main className="page-shell recruit-page">
       <section className="page-hero recruit-hero">
         <p className="page-kicker">KAKAO RECRUIT</p>
         <h1>구인현황</h1>
-        <p>
-          
-        </p>
+        <p></p>
         <div className="recruit-command-box">
           <span>/6인파티</span>
           <span>/10인구인</span>
           <span>/5인협곡파티</span>
           <span>/구인현황</span>
-          <span>/12 쫑</span>
+          <span>/12ㅉ</span>
         </div>
       </section>
 
@@ -134,8 +178,11 @@ export default async function RecruitPage() {
       ) : (
         <section className="recruit-grid" aria-label="현재 구인현황 목록">
           {parties.map((party) => {
-            const displayActiveCount = getDisplayActiveMemberCount(party.members, party.maxMembers);
-            const statusLabel = isRecruitPartyFull(party) ? "마감 임박 · 정원 완료" : getRecruitStatusLabel(party);
+            const displayActiveCount = getDisplayActiveMemberCount(
+              party.members,
+              party.maxMembers,
+            );
+            const statusLabel = getRecruitStatusLabel(party);
             const typeLabel = getRecruitTypeLabel(party.type);
             const gameInfo = buildGameInfoText(party);
 
@@ -151,9 +198,17 @@ export default async function RecruitPage() {
 
                 <div className="recruit-card__meta">
                   <span>{statusLabel}</span>
-                  <span>{party.recruitDate} · 회차 {party.resetSeq}</span>
-                  <span>관리번호 {party.recruitCode || `${party.recruitDate}-${party.maxMembers}-${party.recruitNo}`}</span>
-                  <span>{displayActiveCount}/{party.maxMembers}</span>
+                  <span>
+                    {party.recruitDate} · 회차 {party.resetSeq}
+                  </span>
+                  <span>
+                    관리번호{" "}
+                    {party.recruitCode ||
+                      `${party.recruitDate}-${party.maxMembers}-${party.recruitNo}`}
+                  </span>
+                  <span>
+                    {displayActiveCount}/{party.maxMembers}
+                  </span>
                   {gameInfo ? <span>게임정보: {gameInfo}</span> : null}
                 </div>
 

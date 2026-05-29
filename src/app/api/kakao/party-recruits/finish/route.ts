@@ -4,8 +4,16 @@ export const revalidate = 0;
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
-import { formatRecruitPartyBlock, getActiveMemberCount, getKakaoRecruitDateKey, parseFinishRecruitCommand } from "@/lib/kakao/party-recruit";
-import { getCurrentRecruitResetSeq, getLatestRecruitResetLog } from "@/lib/kakao/recruit-reset";
+import {
+  formatRecruitPartyBlock,
+  getActiveMemberCount,
+  getKakaoRecruitDateKey,
+  parseFinishRecruitCommand,
+} from "@/lib/kakao/party-recruit";
+import {
+  getCurrentRecruitResetSeq,
+  getLatestRecruitResetLog,
+} from "@/lib/kakao/recruit-reset";
 import {
   getBodyRoom,
   getBodySender,
@@ -14,7 +22,6 @@ import {
   readJsonBody,
   rejectIfInvalidPartySecret,
 } from "../_shared";
-
 
 async function findActiveRecruitParty(params: {
   recruitNo: number;
@@ -30,7 +37,9 @@ async function findActiveRecruitParty(params: {
       resetSeq,
       status: "IN_PROGRESS",
     },
-    include: { members: { orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }] } },
+    include: {
+      members: { orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }] },
+    },
   });
 
   if (currentSeqParty) {
@@ -44,7 +53,9 @@ async function findActiveRecruitParty(params: {
       status: "IN_PROGRESS",
     },
     orderBy: [{ resetSeq: "desc" }, { updatedAt: "desc" }],
-    include: { members: { orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }] } },
+    include: {
+      members: { orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }] },
+    },
   });
 
   if (sameDateParty) {
@@ -63,7 +74,9 @@ async function findActiveRecruitParty(params: {
       { resetSeq: "desc" },
       { updatedAt: "desc" },
     ],
-    include: { members: { orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }] } },
+    include: {
+      members: { orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }] },
+    },
   });
 }
 
@@ -81,7 +94,8 @@ export async function POST(req: NextRequest) {
     if (!parsed) {
       return partyRecruitJson(
         {
-          reply: "[K-LOL.GG 구인구직 마무리 실패]\n명령어 형식이 올바르지 않습니다. 예: /12 쫑, /12 ㅉ, /구인마감 #12",
+          reply:
+            "[K-LOL.GG 구인구직 마무리 실패]\n명령어 형식이 올바르지 않습니다. 예: 12ㅉ",
         },
         400,
       );
@@ -90,7 +104,9 @@ export async function POST(req: NextRequest) {
     const recruitDate = getKakaoRecruitDateKey();
     const resetSeq = await getCurrentRecruitResetSeq(recruitDate);
     const latestReset = await getLatestRecruitResetLog(recruitDate);
-    const createdAfterLatestReset = latestReset ? { gt: latestReset.createdAt } : undefined;
+    const createdAfterLatestReset = latestReset
+      ? { gt: latestReset.createdAt }
+      : undefined;
     const party = await findActiveRecruitParty({
       recruitNo: parsed.recruitNo,
       recruitDate,
@@ -103,24 +119,28 @@ export async function POST(req: NextRequest) {
           recruitNo: parsed.recruitNo,
           recruitDate,
           action: { in: ["FINISHED", "AUTO_EXPIRED"] },
-          ...(createdAfterLatestReset ? { createdAt: createdAfterLatestReset } : {}),
+          ...(createdAfterLatestReset
+            ? { createdAt: createdAfterLatestReset }
+            : {}),
         },
         orderBy: [{ resetSeq: "desc" }, { createdAt: "desc" }],
         select: { title: true, memberCount: true, maxMembers: true },
       });
 
-      const finishedLog = sameDateFinishedLog ?? await prisma.recruitPartyLog.findFirst({
-        where: {
-          recruitNo: parsed.recruitNo,
-          action: { in: ["FINISHED", "AUTO_EXPIRED"] },
-        },
-        orderBy: [
-          { recruitDate: "desc" },
-          { resetSeq: "desc" },
-          { createdAt: "desc" },
-        ],
-        select: { title: true, memberCount: true, maxMembers: true },
-      });
+      const finishedLog =
+        sameDateFinishedLog ??
+        (await prisma.recruitPartyLog.findFirst({
+          where: {
+            recruitNo: parsed.recruitNo,
+            action: { in: ["FINISHED", "AUTO_EXPIRED"] },
+          },
+          orderBy: [
+            { recruitDate: "desc" },
+            { resetSeq: "desc" },
+            { createdAt: "desc" },
+          ],
+          select: { title: true, memberCount: true, maxMembers: true },
+        }));
 
       return partyRecruitJson(
         {

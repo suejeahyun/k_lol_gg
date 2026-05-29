@@ -13,8 +13,8 @@ import {
   rejectIfInvalidPartySecret,
 } from "../_shared";
 
-const STATUS_QUERY_TIMEOUT_MS = 6500;
-const STATUS_TAKE = 50;
+const STATUS_QUERY_TIMEOUT_MS = 5000;
+const STATUS_TAKE = 30;
 
 function buildTimeoutReply() {
   return [
@@ -97,7 +97,10 @@ async function getRecruitStatusPayload(detailRecruitNo?: number | null) {
   return {
     empty: parties.length === 0,
     parties,
-    reply: buildRecruitStatusReply(parties, { detailRecruitNo }),
+    reply: buildRecruitStatusReply(parties, {
+      detailRecruitNo,
+      detailThreshold: 5,
+    }),
   };
 }
 

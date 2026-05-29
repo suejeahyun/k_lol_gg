@@ -276,10 +276,41 @@ function getKakaoNowMinutes(now = new Date()) {
   return kstNow.getUTCHours() * 60 + kstNow.getUTCMinutes();
 }
 
+function isImmediateStartText(value: string | null | undefined) {
+  const text = normalizeText(String(value || ""))
+    .replace(/\s+/g, "")
+    .toLowerCase();
+
+  if (!text) return false;
+
+  return (
+    text.includes("모바시") ||
+    text.includes("모바") ||
+    text.includes("모이면바로") ||
+    text.includes("모이면시작") ||
+    text.includes("모이면ㄱ") ||
+    text.includes("모이면고") ||
+    text.includes("바로시작") ||
+    text.includes("즉시시작") ||
+    text.includes("지금시작") ||
+    text.includes("지금바로") ||
+    text.includes("지금ㄱ") ||
+    text.includes("롸잇나우") ||
+    text.includes("라잇나우") ||
+    text.includes("라이트나우") ||
+    text.includes("rightnow") ||
+    text === "now" ||
+    text === "ㄱ" ||
+    text === "ㄱㄱ"
+  );
+}
+
 export function isRecruitPartyStarted(
   party: Pick<RecruitPartyLike, "startTimeText">,
   now = new Date(),
 ) {
+  if (isImmediateStartText(party.startTimeText)) return true;
+
   const startMinutes = parseKakaoTimeToMinutes(party.startTimeText);
   if (startMinutes === null) return false;
 
@@ -435,7 +466,7 @@ export function parseCreateRecruitCommand(
       title: "솔랭 하실분!",
       maxMembers: 2,
       template: buildNumberTemplate("솔랭", recruitNo, 2, [
-        "》출발시간 :",
+        "》시작시간 :",
         "》게임정보 :",
       ]),
     };
@@ -452,7 +483,7 @@ export function parseCreateRecruitCommand(
         label,
         recruitNo,
         5,
-        ["》출발시간 :", "》게임정보 :"],
+        ["》시작시간 :", "》게임정보 :"],
         true,
       ),
     };
@@ -465,7 +496,7 @@ export function parseCreateRecruitCommand(
       title: "롤체 일반 하실분!",
       maxMembers: 8,
       template: buildNumberTemplate("롤체 일반", recruitNo, 8, [
-        "》출발시간 :",
+        "》시작시간 :",
         "》게임정보 :",
       ]),
     };
@@ -478,7 +509,7 @@ export function parseCreateRecruitCommand(
       title: "롤체 랭크 하실분!",
       maxMembers: 3,
       template: buildNumberTemplate("롤체 랭크", recruitNo, 3, [
-        "》출발시간 :",
+        "》시작시간 :",
         "》게임정보 :",
       ]),
     };
@@ -491,7 +522,7 @@ export function parseCreateRecruitCommand(
       title: "더블업 하실분!",
       maxMembers: 2,
       template: buildNumberTemplate("더블업", recruitNo, 2, [
-        "》출발시간 :",
+        "》시작시간 :",
         "》게임정보 :",
       ]),
     };
@@ -503,7 +534,7 @@ export function parseCreateRecruitCommand(
     title: "기타게임 하실분!",
     maxMembers: 8,
     template: buildNumberTemplate("기타게임", recruitNo, 8, [
-      "》출발시간 :",
+      "》시작시간 :",
       "》게임정보 :",
     ]),
   };
@@ -518,7 +549,7 @@ function buildLineTemplate(label: string, recruitNo: number | null) {
     `📢 ${label} 하실분!`,
     formatRecruitNoLine(recruitNo),
     "",
-    "》출발시간 :",
+    "》시작시간 :",
     "》게임정보 :",
     "",
     "TOP.",
@@ -537,7 +568,7 @@ function buildLinePartyTemplate(title: string, recruitNo: number | null) {
     `📢 ${title}`,
     formatRecruitNoLine(recruitNo),
     "",
-    "》출발시간 :",
+    "》시작시간 :",
     "》게임정보 :",
     "",
     "TOP.",
@@ -560,7 +591,7 @@ function buildNumberPartyTemplate(
     `📢 ${title}`,
     formatRecruitNoLine(recruitNo),
     "",
-    "》출발시간 :",
+    "》시작시간 :",
     "》게임정보 :",
     "",
   ];
@@ -722,8 +753,21 @@ function parseRecruitFormMetadata(text: string) {
   for (const rawLine of lines) {
     const line = rawLine.trim();
 
-    if (line.indexOf("출발시간") >= 0 || line.indexOf("출발 시간") >= 0) {
-      const value = cleanGuideValue(line, /출발\s*시간/g);
+    if (line.indexOf("게임 시작 시간") >= 0) {
+      const value = cleanGuideValue(line, /게임\s*시작\s*시간/g);
+      const parsed = parseStartTimeAndTier(value);
+      startTimeText = parsed.startTimeText ?? startTimeText;
+      tierText = parsed.tierText ?? tierText;
+      continue;
+    }
+
+    if (
+      line.indexOf("시작시간") >= 0 ||
+      line.indexOf("시작 시간") >= 0 ||
+      line.indexOf("출발시간") >= 0 ||
+      line.indexOf("출발 시간") >= 0
+    ) {
+      const value = cleanGuideValue(line, /(시작|출발)\s*시간/g);
       startTimeText = value || startTimeText;
       continue;
     }
@@ -731,14 +775,6 @@ function parseRecruitFormMetadata(text: string) {
     if (line.indexOf("게임정보") >= 0 || line.indexOf("게임 정보") >= 0) {
       const value = cleanGuideValue(line, /게임\s*정보/g);
       note = value || note;
-      continue;
-    }
-
-    if (line.indexOf("게임 시작 시간") >= 0) {
-      const value = cleanGuideValue(line, /게임\s*시작\s*시간/g);
-      const parsed = parseStartTimeAndTier(value);
-      startTimeText = parsed.startTimeText ?? startTimeText;
-      tierText = parsed.tierText ?? tierText;
       continue;
     }
 
@@ -823,7 +859,7 @@ function parseNumberMembers(
     if (/^\d{1,3}\s*인\s*/.test(line)) continue;
     if (/^현재\s*인원\s*[:：]/.test(line)) continue;
     if (/^모집번호\s*[:：]/.test(line)) continue;
-    if (/^출발\s*시간\s*[:：]/.test(line)) continue;
+    if (/^(시작|출발)\s*시간\s*[:：]/.test(line)) continue;
     if (/^기준\s*[:：]?/.test(line)) continue;
     if (/^현황\s*보기\s*[:：]?/.test(line)) continue;
     if (/^https?:\/\//i.test(line)) continue;
@@ -872,7 +908,7 @@ export function formatRecruitPartyBlock(party: RecruitPartyLike) {
   lines.push(
     `#${party.recruitNo} · ${titleLabel} · ${displayActiveCount}/${party.maxMembers}`,
   );
-  lines.push(`출발시간: ${formatStartTimeText(party.startTimeText)}`);
+  lines.push(`시작시간: ${formatStartTimeText(party.startTimeText)}`);
   lines.push(`》게임정보 : ${formatGameInfoText(buildGameInfoText(party))}`);
   if (subMembers.length > 0) lines.push(`예비: ${subMembers.length}명`);
   lines.push("");
@@ -919,6 +955,7 @@ function getCompactRecruitTitleLabel(party: RecruitPartyLike) {
 function formatStartTimeText(value: string | null | undefined) {
   const text = String(value || "").trim();
   if (!text) return "미정";
+  if (isImmediateStartText(text)) return "바로 시작";
 
   return text
     .replace(/(\d{1,2})\s*시\s*(\d{1,2})\s*분/g, (_match, hour, minute) => {
@@ -936,7 +973,10 @@ function formatGameInfoText(value: string | null | undefined) {
 
   return text
     .replace(/수준\s*예상/g, "예상")
-    .replace(/(구합니다|구함|구해요)\s+((?:아이언|브론즈|실버|골드|플래티넘|플래|플레|에메랄드|에메|다이아몬드|다이아|마스터|그랜드마스터|그마|챌린저)[^\n]*)/g, "$1 / $2")
+    .replace(
+      /(구합니다|구함|구해요)\s+((?:아이언|브론즈|실버|골드|플래티넘|플래|플레|에메랄드|에메|다이아몬드|다이아|마스터|그랜드마스터|그마|챌린저)[^\n]*)/g,
+      "$1 / $2",
+    )
     .replace(/\s{2,}/g, " ")
     .trim();
 }
@@ -983,6 +1023,21 @@ function groupRecruitParties(parties: RecruitPartyLike[]) {
   return grouped;
 }
 
+function formatRecruitMemberSummary(party: RecruitPartyLike) {
+  const activeNames = party.members
+    .filter((member) => !member.isSubstitute && member.name.trim() !== "")
+    .sort((a, b) => Number(a.slotNo ?? 999) - Number(b.slotNo ?? 999))
+    .map((member) => member.name.trim());
+
+  if (activeNames.length === 0) return "참여: 없음";
+
+  if (party.maxMembers <= 5 || activeNames.length <= 5) {
+    return `참여: ${activeNames.join(", ")}`;
+  }
+
+  return `참여: ${activeNames.slice(0, 5).join(", ")} 외 ${activeNames.length - 5}명`;
+}
+
 function formatRecruitPartySummaryLine(party: RecruitPartyLike) {
   const activeCount = getDisplayActiveMemberCount(
     party.members,
@@ -992,7 +1047,10 @@ function formatRecruitPartySummaryLine(party: RecruitPartyLike) {
   const info = formatGameInfoText(buildGameInfoText(party));
   const startTime = formatStartTimeText(party.startTimeText);
 
-  return `#${party.recruitNo} · ${titleLabel} · ${activeCount}/${party.maxMembers} · ${startTime} · ${info}`;
+  return [
+    `#${party.recruitNo} · ${titleLabel} · ${activeCount}/${party.maxMembers} · ${startTime} · ${info}`,
+    formatRecruitMemberSummary(party),
+  ].join("\n");
 }
 
 export function buildRecruitStatusReply(
@@ -1001,7 +1059,7 @@ export function buildRecruitStatusReply(
 ) {
   const activeParties = filterRecruitingParties(parties);
   const detailRecruitNo = options?.detailRecruitNo ?? null;
-  const detailThreshold = options?.detailThreshold ?? 4;
+  const detailThreshold = options?.detailThreshold ?? 5;
 
   if (activeParties.length === 0) {
     return [
@@ -1080,7 +1138,6 @@ export function buildRecruitStatusReply(
   }
 
   return detailLines.join("\n").trimEnd();
-
 }
 
 export function buildSyncReply(
