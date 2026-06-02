@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
+import EventMatchListActions from "./EventMatchListActions";
 
 function formatDate(date: Date | null) {
   if (!date) return "-";
@@ -100,14 +101,10 @@ export default async function AdminEventMatchesPage() {
                 </div>
               </div>
 
-              <div className="admin-event-card__actions">
-                <Link
-                  href={`/admin/progress/event/${event.id}`}
-                  className="chip-button"
-                >
-                  상세/수정
-                </Link>
-              </div>
+              <EventMatchListActions
+                eventId={event.id}
+                eventTitle={event.title}
+              />
             </div>
           ))}
         </div>
