@@ -22,10 +22,26 @@ export async function GET(req: NextRequest) {
     const players = await prisma.player.findMany({
       where: {
         isActive: true,
-        name: {
-          contains: q,
-          mode: "insensitive",
-        },
+        OR: [
+          {
+            name: {
+              contains: q,
+              mode: "insensitive",
+            },
+          },
+          {
+            nickname: {
+              contains: q,
+              mode: "insensitive",
+            },
+          },
+          {
+            tag: {
+              contains: q,
+              mode: "insensitive",
+            },
+          },
+        ],
         ...(excludeIds.length > 0
           ? {
               id: {

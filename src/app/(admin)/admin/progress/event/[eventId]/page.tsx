@@ -10,6 +10,7 @@ import EventBracketGenerator from "@/components/admin/EventBracketGenerator";
 import EventMatchResultForm from "@/components/admin/EventMatchResultForm";
 import EventCompleteForm from "@/components/admin/EventCompleteForm";
 import ImportParticipantsButton from "@/components/admin/ImportParticipantsButton";
+import EventParticipantManualAddForm from "@/components/admin/EventParticipantManualAddForm";
 import AdminTeamDragManager from "@/components/admin/AdminTeamDragManager";
 
 type PageProps = {
@@ -109,10 +110,17 @@ export default async function AdminEventMatchDetailPage({ params }: PageProps) {
           <div>
             <h2 className="admin-event-section-title">참가자 등록</h2>
             <p className="admin-page__description">
-              참가자 가져오기 후 저장된 확정 참가자 목록입니다.
+              참가자 가져오기 또는 관리자 직접 추가로 확정 참가자를 관리합니다.
             </p>
           </div>
         </div>
+
+        <EventParticipantManualAddForm
+          eventId={event.id}
+          mode={event.mode}
+          existingPlayerIds={event.participants.map((participant) => participant.playerId)}
+          disabled={event.teams.length > 0 || hasSubmittedMatchResult}
+        />
 
         {event.participants.length === 0 ? (
           <div className="empty-box">등록된 참가자가 없습니다.</div>
@@ -135,17 +143,27 @@ export default async function AdminEventMatchDetailPage({ params }: PageProps) {
 
                 <span>{participant.team?.name ?? "팀 미배정"}</span>
 
-                <form
-                  action={`/api/admin/event-matches/${event.id}/participants/${participant.id}/delete`}
-                  method="POST"
-                >
+                {event.teams.length > 0 || hasSubmittedMatchResult ? (
                   <button
-                    type="submit"
+                    type="button"
                     className="admin-event-participant-delete-button"
+                    disabled
                   >
-                    삭제
+                    삭제 잠김
                   </button>
-                </form>
+                ) : (
+                  <form
+                    action={`/api/admin/event-matches/${event.id}/participants/${participant.id}/delete`}
+                    method="POST"
+                  >
+                    <button
+                      type="submit"
+                      className="admin-event-participant-delete-button"
+                    >
+                      삭제
+                    </button>
+                  </form>
+                )}
               </div>
             ))}
           </div>

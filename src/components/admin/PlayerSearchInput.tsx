@@ -16,6 +16,7 @@ type Props = {
   onChange: (player: PlayerOption | null, label: string) => void;
   disabled?: boolean;
   placeholder?: string;
+  excludePlayerIds?: number[];
 };
 
 export default function PlayerSearchInput({
@@ -23,6 +24,7 @@ export default function PlayerSearchInput({
   onChange,
   disabled,
   placeholder = "이름 또는 닉네임 검색",
+  excludePlayerIds = [],
 }: Props) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -40,7 +42,13 @@ export default function PlayerSearchInput({
     setSearching(true);
 
     try {
-      const res = await fetch(`/api/players/search?q=${encodeURIComponent(q)}`, {
+      const params = new URLSearchParams({ q });
+
+      if (excludePlayerIds.length > 0) {
+        params.set("exclude", excludePlayerIds.join(","));
+      }
+
+      const res = await fetch(`/api/players/search?${params.toString()}`, {
         cache: "no-store",
       });
 

@@ -24,7 +24,43 @@ export async function POST(req: NextRequest, { params }: Context) {
   if (Number.isNaN(parsedEventId) || Number.isNaN(parsedParticipantId)) {
     return NextResponse.json(
       { message: "잘못된 요청입니다." },
-      { status: 400 }
+      { status: 400 },
+    );
+  }
+
+  const event = await prisma.eventMatch.findUnique({
+    where: { id: parsedEventId },
+    include: {
+      teams: {
+        select: {
+          id: true,
+        },
+      },
+      matches: {
+        select: {
+          id: true,
+          winnerTeamId: true,
+          mvpPlayerId: true,
+        },
+      },
+    },
+  });
+
+  if (!event) {
+    return NextResponse.json(
+      { message: "이벤트 내전을 찾을 수 없습니다." },
+      { status: 404 },
+    );
+  }
+
+  const hasSubmittedMatchResult = event.matches.some(
+    (match) => match.winnerTeamId !== null || match.mvpPlayerId !== null,
+  );
+
+  if (event.teams.length > 0 || hasSubmittedMatchResult) {
+    return NextResponse.json(
+      { message: "팀 생성 또는 결과 저장 후에는 참가자를 삭제할 수 없습니다." },
+      { status: 400 },
     );
   }
 
@@ -44,6 +80,6 @@ export async function POST(req: NextRequest, { params }: Context) {
 
   return NextResponse.redirect(
     new URL(`/admin/progress/event/${parsedEventId}`, req.url),
-    303
+    303,
   );
 }
