@@ -46,6 +46,11 @@ export async function POST(_req: NextRequest, { params }: RouteProps) {
       where: { id },
       include: {
         teams: {
+          include: {
+            members: {
+              select: { id: true },
+            },
+          },
           orderBy: {
             seed: "asc",
           },
@@ -71,6 +76,15 @@ export async function POST(_req: NextRequest, { params }: RouteProps) {
     if (event.matches.length > 0) {
       return NextResponse.json(
         { message: "이미 생성된 대진이 있습니다." },
+        { status: 400 }
+      );
+    }
+
+    const invalidTeam = event.teams.find((team) => team.members.length !== 5);
+
+    if (invalidTeam) {
+      return NextResponse.json(
+        { message: "대진 생성 전 모든 팀은 정확히 5명이어야 합니다." },
         { status: 400 }
       );
     }

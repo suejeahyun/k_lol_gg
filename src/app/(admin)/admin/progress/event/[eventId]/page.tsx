@@ -82,9 +82,13 @@ export default async function AdminEventMatchDetailPage({ params }: PageProps) {
     notFound();
   }
 
+  const hasGeneratedBracket = event.matches.length > 0;
+
   const hasSubmittedMatchResult = event.matches.some(
     (match) => match.winnerTeamId !== null || match.mvpPlayerId !== null,
   );
+
+  const isParticipantEditLocked = hasGeneratedBracket || hasSubmittedMatchResult;
 
   return (
     <main className="admin-page">
@@ -118,8 +122,19 @@ export default async function AdminEventMatchDetailPage({ params }: PageProps) {
         <EventParticipantManualAddForm
           eventId={event.id}
           mode={event.mode}
+          teams={event.teams.map((team) => ({
+            id: team.id,
+            name: team.name,
+            seed: team.seed,
+            score: team.score,
+          }))}
           existingPlayerIds={event.participants.map((participant) => participant.playerId)}
-          disabled={event.teams.length > 0 || hasSubmittedMatchResult}
+          disabled={isParticipantEditLocked}
+          disabledReason={
+            isParticipantEditLocked
+              ? "대진표 또는 결과가 생성된 이벤트는 참가자를 추가할 수 없습니다."
+              : undefined
+          }
         />
 
         {event.participants.length === 0 ? (
@@ -143,7 +158,7 @@ export default async function AdminEventMatchDetailPage({ params }: PageProps) {
 
                 <span>{participant.team?.name ?? "팀 미배정"}</span>
 
-                {event.teams.length > 0 || hasSubmittedMatchResult ? (
+                {isParticipantEditLocked ? (
                   <button
                     type="button"
                     className="admin-event-participant-delete-button"
@@ -175,7 +190,8 @@ export default async function AdminEventMatchDetailPage({ params }: PageProps) {
           <div>
             <h2 className="admin-event-section-title">팀 구성</h2>
             <p className="admin-page__description">
-              참가자 점수를 계산한 뒤 5명 단위로 팀을 자동 생성합니다.
+              자동 생성 또는 참가자 직접 추가 시 선택한 팀 배정을 함께 사용할 수 있습니다.
+              팀 생성 후에도 대진표 생성 전까지 드래그로 수동 조정할 수 있습니다.
             </p>
           </div>
         </div>
