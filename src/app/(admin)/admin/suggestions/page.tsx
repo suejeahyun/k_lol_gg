@@ -11,7 +11,7 @@ export default async function AdminSuggestionsPage() {
     <main className="admin-page community-page">
       <div className="admin-page__header"><div><p className="page-eyebrow">SUGGESTION ADMIN</p><h1>건의사항 관리</h1></div></div>
       <section className="admin-card"><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>ID</th><th>제목</th><th>작성자</th><th>상태</th><th>노출</th><th>작성일</th></tr></thead><tbody>
-        {posts.map((post) => (<tr key={post.id}><td>#{post.id}</td><td><Link href={`/community/posts/${post.id}`}>{post.title}</Link></td><td>{post.author.userId}</td><td><AdminSuggestionStatusSelect postId={post.id} value={post.suggestionStatus} /></td><td>{post.isHidden ? "숨김" : "노출"}</td><td>{formatCommunityDate(post.createdAt)}</td></tr>))}
+        {posts.map((post) => (<tr key={post.id}><td data-label="ID">#{post.id}</td><td data-label="제목"><Link href={`/community/posts/${post.id}`}>{post.title}</Link></td><td data-label="작성자">{post.author.userId}</td><td data-label="상태"><AdminSuggestionStatusSelect postId={post.id} value={post.suggestionStatus} /></td><td data-label="노출">{post.isHidden ? "숨김" : "노출"}</td><td data-label="작성일">{formatCommunityDate(post.createdAt)}</td></tr>))}
       </tbody></table></div></section>
     </main>
   );

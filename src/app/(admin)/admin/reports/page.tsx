@@ -11,7 +11,7 @@ export default async function AdminReportsPage() {
     <main className="admin-page community-page">
       <div className="admin-page__header"><div><p className="page-eyebrow">REPORT ADMIN</p><h1>신고 관리</h1></div></div>
       <section className="admin-card"><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>ID</th><th>대상</th><th>내용</th><th>사유</th><th>신고자</th><th>상태</th><th>일시</th></tr></thead><tbody>
-        {reports.map((report) => (<tr key={report.id}><td>#{report.id}</td><td>{report.targetType === "POST" ? "게시글" : "댓글"}</td><td>{report.post ? <Link href={`/community/posts/${report.post.id}`}>{report.post.title}</Link> : report.comment?.content.slice(0, 40)}</td><td>{report.reason}</td><td>{report.reporter.userId}</td><td><AdminReportStatusSelect reportId={report.id} value={report.status} /></td><td>{formatCommunityDate(report.createdAt)}</td></tr>))}
+        {reports.map((report) => (<tr key={report.id}><td data-label="ID">#{report.id}</td><td data-label="대상">{report.targetType === "POST" ? "게시글" : "댓글"}</td><td data-label="내용">{report.post ? <Link href={`/community/posts/${report.post.id}`}>{report.post.title}</Link> : report.comment?.content.slice(0, 40)}</td><td data-label="사유">{report.reason}</td><td data-label="신고자">{report.reporter.userId}</td><td data-label="상태"><AdminReportStatusSelect reportId={report.id} value={report.status} /></td><td data-label="일시">{formatCommunityDate(report.createdAt)}</td></tr>))}
       </tbody></table></div></section>
     </main>
   );
