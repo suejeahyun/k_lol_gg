@@ -188,6 +188,7 @@ model UserAccount {
   communityLikes CommunityLike[]
   communityReports CommunityReport[]
   matchMvpVotes MatchMvpVote[]
+  communityVisits CommunityVisit[]
 }
 
 model Champion {
@@ -1182,4 +1183,16 @@ model MatchMvpVote {
   @@unique([gameId, voterId])
   @@index([gameId, playerId])
   @@index([voterId, createdAt])
+}
+
+model CommunityVisit {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  visitDate DateTime
+  visitedAt DateTime @default(now())
+
+  user UserAccount @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, visitDate])
+  @@index([visitDate, visitedAt])
 }

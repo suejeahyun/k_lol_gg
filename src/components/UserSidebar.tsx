@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import AuthSection from "./AuthSection";
+import TodayVisitorsBox from "./community/TodayVisitorsBox";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -164,6 +165,7 @@ export default function UserSidebar() {
       </div>
 
       <div className="app-sidebar__bottom">
+        {isLoggedIn ? <TodayVisitorsBox /> : null}
         <AuthSection />
       </div>
     </aside>
