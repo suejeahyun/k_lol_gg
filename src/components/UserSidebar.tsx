@@ -60,6 +60,18 @@ const menuGroups: UserSidebarGroup[] = [
     ],
   },
   {
+    title: "COMMUNITY",
+    items: [
+      { href: "/community", label: "커뮤니티", code: "COM", activePrefixes: ["/community"] },
+      { href: "/community/highlights", label: "유저 하이라이트", code: "UHL", activePrefixes: ["/community/highlights", "/community/posts"] },
+      { href: "/community/suggestions", label: "건의사항", code: "REQ" },
+      { href: "/community/match-reviews", label: "매치 리뷰", code: "REV" },
+      { href: "/community/free", label: "자유게시판", code: "FRD" },
+      { href: "/community/notice-comments", label: "공지 댓글", code: "N/C" },
+      { href: "/community/clips", label: "클립 랭킹", code: "RKG" },
+    ],
+  },
+  {
     title: "INFO",
     items: [
       { href: "/notices", label: "공지사항", code: "NOT", activePrefixes: ["/notices", "/event-notices"] },
