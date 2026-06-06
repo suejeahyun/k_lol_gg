@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { getApprovedUserOrResponse } from "@/lib/community/auth";
 import { getAutoThumbnail, isValidExternalVideoUrl } from "@/lib/community/meta";
+import { parseCommunityTags, sanitizeCommunityHtml } from "@/lib/community/html";
 
 const allowedTypes: CommunityPostType[] = ["HIGHLIGHT", "SUGGESTION", "MATCH_REVIEW", "FREE"];
 
@@ -38,7 +39,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const type = body.type as CommunityPostType;
     const title = String(body.title ?? "").trim();
-    const content = String(body.content ?? "").trim();
+    const content = sanitizeCommunityHtml(String(body.content ?? "").trim());
+    const tags = parseCommunityTags(body.tags);
     const videoUrl = body.videoUrl ? String(body.videoUrl).trim() : null;
     const matchSeriesId = body.matchSeriesId ? Number(body.matchSeriesId) : null;
 
@@ -55,6 +57,7 @@ export async function POST(req: NextRequest) {
         content,
         videoUrl,
         thumbnailUrl: getAutoThumbnail(videoUrl),
+        tags,
         matchSeriesId,
         authorId: user!.userAccountId,
       },

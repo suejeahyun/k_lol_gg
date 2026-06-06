@@ -1,8 +1,12 @@
 "use client";
 
 import { CommunityPostType } from "@prisma/client";
+import Link from "@tiptap/extension-link";
+import Placeholder from "@tiptap/extension-placeholder";
+import { EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
 import { useRouter } from "next/navigation";
-import { FormEvent, useMemo, useRef, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import { communityTypeLabels, communityTypePaths } from "@/lib/community/meta";
 
 type MatchOption = { id: number; title: string };
@@ -15,6 +19,7 @@ type CommunityPostFormProps = {
     content: string;
     videoUrl: string | null;
     matchSeriesId: number | null;
+    tags?: string[];
   };
   matchOptions?: MatchOption[];
   fixedMatchSeriesId?: number;
@@ -28,56 +33,86 @@ const headlineOptions: Record<CommunityPostType, string[]> = {
   NOTICE_COMMENT: ["확인", "질문", "의견"],
 };
 
+function toInitialHtml(value: string) {
+  const raw = value || "";
+  if (/<[a-z][\s\S]*>/i.test(raw)) return raw;
+  return raw
+    .split(/\n{2,}/)
+    .map((block) => `<p>${block.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")}</p>`)
+    .join("");
+}
+
+function normalizeTags(value: string) {
+  return Array.from(
+    new Set(
+      value
+        .split(/[\s,]+/)
+        .map((tag) => tag.trim().replace(/^#+/, ""))
+        .filter(Boolean)
+        .map((tag) => tag.slice(0, 24)),
+    ),
+  ).slice(0, 10);
+}
+
 export default function CommunityPostForm({ type, post, matchOptions = [], fixedMatchSeriesId }: CommunityPostFormProps) {
   const router = useRouter();
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [title, setTitle] = useState(post?.title ?? "");
-  const [content, setContent] = useState(post?.content ?? "");
   const [videoUrl, setVideoUrl] = useState(post?.videoUrl ?? "");
   const [headline, setHeadline] = useState("");
   const [matchSeriesId, setMatchSeriesId] = useState(String(fixedMatchSeriesId ?? post?.matchSeriesId ?? ""));
+  const [tagsText, setTagsText] = useState((post?.tags ?? []).map((tag) => `#${tag}`).join(" "));
   const [allowComment, setAllowComment] = useState(true);
   const [autoLineBreak, setAutoLineBreak] = useState(true);
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const draftKey = useMemo(() => `klol-community-draft:${post?.id ?? "new"}:${type}`, [post?.id, type]);
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        heading: { levels: [2, 3] },
+      }),
+      Link.configure({
+        openOnClick: false,
+        autolink: true,
+        linkOnPaste: true,
+        HTMLAttributes: { rel: "noopener noreferrer", target: "_blank" },
+      }),
+      Placeholder.configure({ placeholder: "내용을 입력하세요." }),
+    ],
+    content: toInitialHtml(post?.content ?? ""),
+    editorProps: {
+      attributes: {
+        class: "community-tiptap__content",
+      },
+    },
+    immediatelyRender: false,
+  });
 
-  function insertFormat(prefix: string, suffix = prefix, placeholder = "텍스트") {
-    const textarea = textareaRef.current;
-    if (!textarea) {
-      setContent((prev) => `${prev}${prefix}${placeholder}${suffix}`);
+  function setLink() {
+    if (!editor) return;
+    const previousUrl = editor.getAttributes("link").href as string | undefined;
+    const url = window.prompt("링크 주소를 입력하세요.", previousUrl ?? "https://");
+    if (url === null) return;
+    if (!url.trim()) {
+      editor.chain().focus().extendMarkRange("link").unsetLink().run();
       return;
     }
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selected = content.slice(start, end) || placeholder;
-    const next = `${content.slice(0, start)}${prefix}${selected}${suffix}${content.slice(end)}`;
-    setContent(next);
-
-    requestAnimationFrame(() => {
-      textarea.focus();
-      textarea.setSelectionRange(start + prefix.length, start + prefix.length + selected.length);
-    });
-  }
-
-  function insertLine(value: string) {
-    const textarea = textareaRef.current;
-    if (!textarea) {
-      setContent((prev) => `${prev}\n${value}`);
-      return;
-    }
-    const start = textarea.selectionStart;
-    const next = `${content.slice(0, start)}${value}${content.slice(start)}`;
-    setContent(next);
-    requestAnimationFrame(() => textarea.focus());
+    editor.chain().focus().extendMarkRange("link").setLink({ href: url.trim() }).run();
   }
 
   function saveDraft() {
     localStorage.setItem(
       draftKey,
-      JSON.stringify({ title, content, videoUrl, headline, matchSeriesId, savedAt: new Date().toISOString() }),
+      JSON.stringify({
+        title,
+        content: editor?.getHTML() ?? "",
+        videoUrl,
+        headline,
+        matchSeriesId,
+        tagsText,
+        savedAt: new Date().toISOString(),
+      }),
     );
     setMessage("임시저장되었습니다.");
   }
@@ -88,12 +123,13 @@ export default function CommunityPostForm({ type, post, matchOptions = [], fixed
       setMessage("저장된 임시글이 없습니다.");
       return;
     }
-    const draft = JSON.parse(raw) as Partial<{ title: string; content: string; videoUrl: string; headline: string; matchSeriesId: string }>;
+    const draft = JSON.parse(raw) as Partial<{ title: string; content: string; videoUrl: string; headline: string; matchSeriesId: string; tagsText: string }>;
     setTitle(draft.title ?? "");
-    setContent(draft.content ?? "");
     setVideoUrl(draft.videoUrl ?? "");
     setHeadline(draft.headline ?? "");
     setMatchSeriesId(draft.matchSeriesId ?? "");
+    setTagsText(draft.tagsText ?? "");
+    editor?.commands.setContent(toInitialHtml(draft.content ?? ""));
     setMessage("임시글을 불러왔습니다.");
   }
 
@@ -102,13 +138,15 @@ export default function CommunityPostForm({ type, post, matchOptions = [], fixed
     setSubmitting(true);
     setMessage("");
 
-    const normalizedContent = autoLineBreak ? content : content.replace(/\n{3,}/g, "\n\n");
+    const html = editor?.getHTML().trim() ?? "";
+    const content = autoLineBreak ? html : html.replace(/(<p><\/p>){2,}/g, "<p></p>");
     const payload = {
       type,
       title: headline ? `[${headline}] ${title}` : title,
-      content: normalizedContent,
+      content,
       videoUrl: videoUrl || null,
       matchSeriesId: matchSeriesId ? Number(matchSeriesId) : null,
+      tags: normalizeTags(tagsText),
     };
 
     const res = await fetch(post ? `/api/community/posts/${post.id}` : "/api/community/posts", {
@@ -171,20 +209,32 @@ export default function CommunityPostForm({ type, post, matchOptions = [], fixed
             </select>
           )}
 
-          <div className="community-editor" aria-label="본문 편집기">
-            <div className="community-editor__toolbar">
-              <button type="button" onClick={() => insertFormat("**", "**")}>굵게</button>
-              <button type="button" onClick={() => insertFormat("_", "_")}>기울임</button>
-              <button type="button" onClick={() => insertFormat("~~", "~~")}>취소선</button>
-              <button type="button" onClick={() => insertLine("\n> 인용문\n")}>인용</button>
-              <button type="button" onClick={() => insertLine("\n---\n")}>구분선</button>
-              <button type="button" onClick={() => insertFormat("[", "](https://)", "링크")}>링크</button>
-              <button type="button" onClick={() => insertLine("\n- 목록\n")}>목록</button>
-              <button type="button" onClick={() => insertLine("\n1. 항목\n")}>번호</button>
-              <button type="button" onClick={() => insertLine("\n`코드`\n")}>코드</button>
+          <div className="community-tiptap" aria-label="본문 편집기">
+            <div className="community-tiptap__toolbar">
+              <button type="button" className={editor?.isActive("bold") ? "is-active" : ""} onClick={() => editor?.chain().focus().toggleBold().run()}>굵게</button>
+              <button type="button" className={editor?.isActive("italic") ? "is-active" : ""} onClick={() => editor?.chain().focus().toggleItalic().run()}>기울임</button>
+              <button type="button" className={editor?.isActive("strike") ? "is-active" : ""} onClick={() => editor?.chain().focus().toggleStrike().run()}>취소선</button>
+              <button type="button" className={editor?.isActive("blockquote") ? "is-active" : ""} onClick={() => editor?.chain().focus().toggleBlockquote().run()}>인용</button>
+              <button type="button" onClick={() => editor?.chain().focus().setHorizontalRule().run()}>구분선</button>
+              <button type="button" className={editor?.isActive("link") ? "is-active" : ""} onClick={setLink}>링크</button>
+              <button type="button" className={editor?.isActive("bulletList") ? "is-active" : ""} onClick={() => editor?.chain().focus().toggleBulletList().run()}>목록</button>
+              <button type="button" className={editor?.isActive("orderedList") ? "is-active" : ""} onClick={() => editor?.chain().focus().toggleOrderedList().run()}>번호</button>
+              <button type="button" className={editor?.isActive("code") ? "is-active" : ""} onClick={() => editor?.chain().focus().toggleCode().run()}>코드</button>
             </div>
+            <EditorContent editor={editor} />
+          </div>
 
-            <textarea ref={textareaRef} value={content} onChange={(event) => setContent(event.target.value)} rows={18} placeholder="내용을 입력하세요." required />
+          <div className="community-tag-input">
+            <label htmlFor="community-tags">태그</label>
+            <input
+              id="community-tags"
+              value={tagsText}
+              onChange={(event) => setTagsText(event.target.value)}
+              placeholder="#바론 #펜타킬 #탑차이 처럼 입력하세요. 최대 10개"
+            />
+            <div className="community-tag-preview">
+              {normalizeTags(tagsText).map((tag) => <span key={tag}>#{tag}</span>)}
+            </div>
           </div>
 
           {message && <p className={message.includes("오류") || message.includes("없습니다") ? "form-error" : "form-help"}>{message}</p>}

@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { getAdminOrResponse, getApprovedUserOrResponse } from "@/lib/community/auth";
 import { getAutoThumbnail, isValidExternalVideoUrl } from "@/lib/community/meta";
+import { parseCommunityTags, sanitizeCommunityHtml } from "@/lib/community/html";
 
 type RouteContext = { params: Promise<{ postId: string }> };
 
@@ -28,7 +29,8 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
 
     const body = await req.json();
     const title = String(body.title ?? "").trim();
-    const content = String(body.content ?? "").trim();
+    const content = sanitizeCommunityHtml(String(body.content ?? "").trim());
+    const tags = parseCommunityTags(body.tags);
     const videoUrl = body.videoUrl ? String(body.videoUrl).trim() : null;
     const matchSeriesId = body.matchSeriesId ? Number(body.matchSeriesId) : null;
     const type = (body.type ?? post.type) as CommunityPostType;
@@ -39,7 +41,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
 
     const updated = await prisma.communityPost.update({
       where: { id },
-      data: { title, content, videoUrl, thumbnailUrl: getAutoThumbnail(videoUrl), matchSeriesId, type },
+      data: { title, content, videoUrl, thumbnailUrl: getAutoThumbnail(videoUrl), tags, matchSeriesId, type },
     });
     return NextResponse.json({ post: updated });
   } catch (error) {

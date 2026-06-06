@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma/client";
 import { getCurrentUser } from "@/lib/auth/session";
 import { communityTypeLabels, communityTypePaths, formatCommunityDate } from "@/lib/community/meta";
 import { CommunityCommentForm, CommunityCommentHideButton, CommunityHideButton, CommunityLikeButton, CommunityReportButton } from "@/components/community/CommunityActions";
+import CommunityRichContent from "@/components/community/CommunityRichContent";
 
 type Props = { params: Promise<{ postId: string }> };
 
@@ -61,7 +62,12 @@ export default async function CommunityPostDetailPage({ params }: Props) {
             <a className="button button--primary" href={post.videoUrl} target="_blank" rel="noreferrer">영상 열기</a>
           </div>
         )}
-        <div className="community-content">{post.content}</div>
+        <CommunityRichContent html={post.content} />
+        {post.tags.length > 0 && (
+          <div className="community-tag-list" aria-label="게시글 태그">
+            {post.tags.map((tag) => <span key={tag}>#{tag}</span>)}
+          </div>
+        )}
         <div className="community-detail-card__actions">
           <CommunityLikeButton postId={post.id} liked={post.likes.length > 0} likeCount={post._count.likes} />
           <CommunityReportButton targetType="POST" postId={post.id} />
