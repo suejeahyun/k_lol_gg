@@ -30,7 +30,6 @@ export function getCommunityTypeFromSlug(slug: string): CommunityPostType | null
     suggestions: "SUGGESTION",
     "match-reviews": "MATCH_REVIEW",
     free: "FREE",
-    "notice-comments": "NOTICE_COMMENT",
   };
   return map[slug] ?? null;
 }

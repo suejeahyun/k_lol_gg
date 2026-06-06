@@ -67,7 +67,6 @@ const menuGroups: UserSidebarGroup[] = [
       { href: "/community/suggestions", label: "건의사항", code: "REQ" },
       { href: "/community/match-reviews", label: "매치 리뷰", code: "REV" },
       { href: "/community/free", label: "자유게시판", code: "FRD" },
-      { href: "/community/notice-comments", label: "공지 댓글", code: "N/C" },
       { href: "/community/clips", label: "클립 랭킹", code: "RKG" },
     ],
   },

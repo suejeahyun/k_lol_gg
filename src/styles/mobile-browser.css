@@ -1067,3 +1067,151 @@
     width: 100% !important;
   }
 }
+
+/* Community mobile patch */
+@media (max-width: 820px) {
+  .community-page {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 18px var(--m-x) 34px !important;
+    overflow-x: hidden !important;
+  }
+
+  .community-page .page-header {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    margin: 0 0 18px !important;
+    padding: 22px 16px !important;
+    border-radius: var(--m-radius) !important;
+    overflow: hidden !important;
+  }
+
+  .community-page .page-title {
+    max-width: 100% !important;
+    font-size: clamp(34px, 11vw, 48px) !important;
+    line-height: 1.05 !important;
+    word-break: keep-all !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .community-page .page-description {
+    max-width: 100% !important;
+    line-height: 1.55 !important;
+    word-break: keep-all !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .community-grid,
+  .community-list,
+  .community-comment-list,
+  .community-comments,
+  .community-match-section,
+  .community-review-list,
+  .community-mvp-grid {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .community-card,
+  .community-list-item,
+  .community-review-item,
+  .community-detail-card,
+  .community-comment,
+  .community-mvp-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .community-list-item,
+  .community-list-item--rank {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .community-list-item__meta {
+    justify-content: flex-start !important;
+    max-width: none !important;
+    text-align: left !important;
+  }
+
+  .community-actions-row,
+  .community-form__actions,
+  .community-detail-card__actions,
+  .community-mvp-vote-row,
+  .community-mvp-box__head {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    width: 100% !important;
+    gap: 10px !important;
+  }
+
+  .community-actions-row > *,
+  .community-form__actions > *,
+  .community-detail-card__actions > *,
+  .community-video-box .button,
+  .community-report-form button,
+  .community-mvp-vote-row button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .community-report-form {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+  }
+
+  .community-form input,
+  .community-form select,
+  .community-form textarea,
+  .community-comment-form textarea,
+  .community-report-form input,
+  .community-report-form select,
+  .community-mvp-vote-row select {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .community-video-box,
+  .community-video-box__thumb,
+  .community-rank-thumb {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .community-content,
+  .community-card p,
+  .community-list-item p,
+  .community-review-item p,
+  .community-comment p {
+    word-break: keep-all !important;
+    overflow-wrap: anywhere !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .community-page .page-title {
+    font-size: clamp(30px, 12vw, 42px) !important;
+  }
+
+  .community-card,
+  .community-list-item,
+  .community-review-item,
+  .community-detail-card,
+  .community-comment,
+  .community-mvp-box {
+    padding: 13px !important;
+    border-radius: 15px !important;
+  }
+}

@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma/client";
 import { getApprovedUserOrResponse } from "@/lib/community/auth";
 import { getAutoThumbnail, isValidExternalVideoUrl } from "@/lib/community/meta";
 
-const allowedTypes: CommunityPostType[] = ["HIGHLIGHT", "SUGGESTION", "MATCH_REVIEW", "FREE", "NOTICE_COMMENT"];
+const allowedTypes: CommunityPostType[] = ["HIGHLIGHT", "SUGGESTION", "MATCH_REVIEW", "FREE"];
 
 export async function GET(req: NextRequest) {
   try {
