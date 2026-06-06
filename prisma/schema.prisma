@@ -391,7 +391,6 @@ model Highlight {
   youtubeUrl  String
   youtubeId   String
   thumbnailUrl String?
-  tags        String[]                    @default([])
   isPublished Boolean  @default(true)
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
