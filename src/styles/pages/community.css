@@ -1520,3 +1520,202 @@
     padding: 0 8px;
   }
 }
+
+/* fix13: community headline select/admin management */
+.community-write__fields {
+  display: grid;
+  grid-template-columns: minmax(150px, 210px) minmax(150px, 210px) minmax(240px, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.community-write__fields select,
+.community-write__fields input,
+.community-write__video,
+.community-write__match,
+.community-tag-input input {
+  min-width: 0;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid rgba(82, 124, 190, 0.5);
+  background: rgba(3, 12, 28, 0.88);
+  color: #eaf2ff;
+  padding: 0 14px;
+  font-size: 14px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.community-write__fields select {
+  appearance: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.community-write__option-card {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
+.community-write__option-card > strong {
+  display: block;
+  color: #eef5ff;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+}
+
+.community-write__check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+  color: #d7e6ff;
+  font-size: 14px;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.community-write__check input {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+
+.community-headline-admin {
+  display: grid;
+  gap: 22px;
+}
+
+.community-headline-admin__create,
+.community-headline-admin__card {
+  border: 1px solid rgba(77, 120, 190, 0.38);
+  border-radius: 18px;
+  background: rgba(5, 15, 33, 0.78);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+  padding: 20px;
+}
+
+.community-headline-admin__create h2,
+.community-headline-admin__card h2 {
+  margin: 0 0 10px;
+  color: #eef5ff;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+}
+
+.community-headline-admin__form {
+  display: grid;
+  grid-template-columns: 180px minmax(220px, 1fr) 120px auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.community-headline-admin__form select,
+.community-headline-admin__form input,
+.community-headline-admin__row input {
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid rgba(82, 124, 190, 0.48);
+  background: rgba(2, 10, 24, 0.9);
+  color: #eaf2ff;
+  padding: 0 12px;
+  font-size: 14px;
+}
+
+.community-headline-admin__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.community-headline-admin__card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid rgba(103, 141, 200, 0.18);
+}
+
+.community-headline-admin__card-head p {
+  margin: 0;
+  color: #9fb0ca;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.community-headline-admin__list {
+  display: grid;
+  gap: 8px;
+}
+
+.community-headline-admin__row {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) 84px 74px auto auto;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+.community-headline-admin__row.is-disabled {
+  opacity: 0.55;
+}
+
+.community-headline-admin__check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #d7e6ff;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.community-headline-admin__empty {
+  margin: 0;
+  color: #8fa3c1;
+  padding: 20px 0;
+  text-align: center;
+}
+
+.community-board__headline,
+.community-post-headline {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-height: 24px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(102, 154, 230, 0.48);
+  background: rgba(20, 47, 88, 0.45);
+  color: #b9d6ff;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+@media (max-width: 1024px) {
+  .community-headline-admin__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 820px) {
+  .community-write__fields,
+  .community-headline-admin__form,
+  .community-headline-admin__row {
+    grid-template-columns: 1fr;
+  }
+
+  .community-headline-admin__card-head {
+    flex-direction: column;
+  }
+
+  .community-write__check,
+  .community-headline-admin__check {
+    justify-content: flex-start;
+  }
+}

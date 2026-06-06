@@ -6,7 +6,7 @@ import Placeholder from "@tiptap/extension-placeholder";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { useRouter } from "next/navigation";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { communityTypeLabels, communityTypePaths } from "@/lib/community/meta";
 
 type MatchOption = { id: number; title: string };
@@ -25,11 +25,11 @@ type CommunityPostFormProps = {
   fixedMatchSeriesId?: number;
 };
 
-const headlineOptions: Record<CommunityPostType, string[]> = {
-  HIGHLIGHT: ["명장면", "슈퍼플레이", "웃긴장면", "역전장면"],
-  SUGGESTION: ["오류", "개선", "기능요청", "운영건의"],
-  MATCH_REVIEW: ["후기", "밴픽", "MVP", "피드백"],
-  FREE: ["잡담", "정보", "질문", "후기"],
+const defaultHeadlineOptions: Record<CommunityPostType, string[]> = {
+  HIGHLIGHT: ["슈퍼플레이", "한타", "솔로킬", "바론·용", "역전", "웃긴장면", "실수", "제보"],
+  SUGGESTION: ["오류", "개선요청", "기능추가", "디자인", "모바일", "카카오봇", "구인구직", "완료요청"],
+  MATCH_REVIEW: ["경기후기", "밴픽", "MVP", "한타", "라인전", "운영", "피드백", "리뷰"],
+  FREE: ["잡담", "질문", "정보", "후기", "모집", "자랑", "유머", "기타"],
   NOTICE_COMMENT: ["확인", "질문", "의견"],
 };
 
@@ -59,6 +59,7 @@ export default function CommunityPostForm({ type, post, matchOptions = [], fixed
   const [title, setTitle] = useState(post?.title ?? "");
   const [videoUrl, setVideoUrl] = useState(post?.videoUrl ?? "");
   const [headline, setHeadline] = useState("");
+  const [headlineOptions, setHeadlineOptions] = useState<string[]>(defaultHeadlineOptions[type] ?? []);
   const [matchSeriesId, setMatchSeriesId] = useState(String(fixedMatchSeriesId ?? post?.matchSeriesId ?? ""));
   const [tagsText, setTagsText] = useState((post?.tags ?? []).map((tag) => `#${tag}`).join(" "));
   const [allowComment, setAllowComment] = useState(true);
@@ -88,6 +89,28 @@ export default function CommunityPostForm({ type, post, matchOptions = [], fixed
     },
     immediatelyRender: false,
   });
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadHeadlines() {
+      setHeadlineOptions(defaultHeadlineOptions[type] ?? []);
+      try {
+        const response = await fetch(`/api/community/headlines?type=${type}`, { cache: "no-store" });
+        if (!response.ok) return;
+        const data = (await response.json()) as { headlines?: Array<{ label: string }> };
+        const labels = (data.headlines ?? []).map((item) => item.label).filter(Boolean);
+        if (!cancelled && labels.length > 0) setHeadlineOptions(labels);
+      } catch {
+        if (!cancelled) setHeadlineOptions(defaultHeadlineOptions[type] ?? []);
+      }
+    }
+
+    loadHeadlines();
+    return () => {
+      cancelled = true;
+    };
+  }, [type]);
 
   function setLink() {
     if (!editor) return;
@@ -188,7 +211,7 @@ export default function CommunityPostForm({ type, post, matchOptions = [], fixed
 
             <select value={headline} onChange={(event) => setHeadline(event.target.value)} aria-label="말머리 선택">
               <option value="">말머리 선택</option>
-              {headlineOptions[type]?.map((item) => (
+              {headlineOptions.map((item) => (
                 <option key={item} value={item}>{item}</option>
               ))}
             </select>
@@ -242,21 +265,17 @@ export default function CommunityPostForm({ type, post, matchOptions = [], fixed
 
         <aside className="community-write__side">
           <div className="community-write__option-card">
-            <strong>공개 설정</strong>
-            <p>승인 완료 유저가 작성한 글은 즉시 노출됩니다.</p>
+            <strong>작성 옵션</strong>
+            <label className="community-write__check">
+              <input type="checkbox" checked={allowComment} onChange={(event) => setAllowComment(event.target.checked)} />
+              댓글 허용
+            </label>
+            <label className="community-write__check">
+              <input type="checkbox" checked={autoLineBreak} onChange={(event) => setAutoLineBreak(event.target.checked)} />
+              자동 줄바꿈 사용
+            </label>
+            <button className="button button--ghost community-write__side-button" type="button" onClick={() => router.push(communityTypePaths[type])}>목록</button>
           </div>
-
-          <label className="community-write__check">
-            <input type="checkbox" checked={allowComment} onChange={(event) => setAllowComment(event.target.checked)} />
-            댓글 허용
-          </label>
-
-          <label className="community-write__check">
-            <input type="checkbox" checked={autoLineBreak} onChange={(event) => setAutoLineBreak(event.target.checked)} />
-            자동 줄바꿈 사용
-          </label>
-
-          <button className="button button--ghost community-write__side-button" type="button" onClick={() => router.push(communityTypePaths[type])}>목록</button>
         </aside>
       </div>
     </form>
