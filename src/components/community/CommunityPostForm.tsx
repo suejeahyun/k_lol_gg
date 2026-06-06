@@ -76,7 +76,7 @@ export default function CommunityPostForm({ type, post, matchOptions = [], fixed
         <div className="form-row">
           <label>영상 링크</label>
           <input value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} placeholder="YouTube / 치지직 / Twitch / Discord / Drive 링크" />
-          <p className="form-help">파일 업로드는 사용하지 않습니다. YouTube 링크는 썸네일이 자동 지정됩니다.</p>
+
         </div>
       )}
 
