@@ -1,123 +1,514 @@
+/* --------------------------------------------------------------------------
+   K-LOL.GG Community Board CSS
+   목표: 일반 게시판 구조 + K-LOL.GG 다크 색상 + 버튼 통일
+   목록 기본 컬럼: 번호 | 제목 | 작성자 | 작성일 | 조회수 | 좋아요
+---------------------------------------------------------------------------- */
+
 .community-page {
   width: 100%;
+  color: var(--k-text, #e5e7eb);
 }
 
+.community-page *,
+.community-page *::before,
+.community-page *::after {
+  box-sizing: border-box;
+}
+
+.community-page a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.community-board-page {
+  display: grid;
+  gap: 18px;
+}
+
+/* --------------------------------------------------------------------------
+   상단 영역: 기존 대형 네온 카드 제거, 일반 게시판 헤더로 정리
+---------------------------------------------------------------------------- */
+.community-board-headline,
 .community-page .page-header,
-.community-section-head,
+.community-section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+  margin: 0 0 6px;
+  padding: 0 0 14px;
+  border: 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+  background: transparent;
+  box-shadow: none;
+}
+
+.community-board-headline > div,
+.community-page .page-header > div,
+.community-section-head > div {
+  min-width: 0;
+}
+
+.community-board-eyebrow,
+.community-page .page-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  color: #5eead4;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.community-board-headline h1,
+.community-page .page-title,
+.community-section-head h2 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: clamp(28px, 4vw, 42px);
+  line-height: 1.05;
+  letter-spacing: -0.055em;
+}
+
+.community-board-headline p,
+.community-page .page-description,
+.community-section-head p {
+  margin: 8px 0 0;
+  color: #94a3b8;
+  font-size: 14px;
+  line-height: 1.55;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+/* --------------------------------------------------------------------------
+   버튼: 일반 게시판형 다크 outline 버튼으로 전체 통일
+   - 파란색 채움 버튼 제거
+   - 기본/목록/수정/글쓰기/커뮤니티 홈: 다크 네이비 + 얇은 블루 outline
+   - 삭제: 다크 레드 + 레드 outline
+---------------------------------------------------------------------------- */
 .community-actions-row,
+.community-form__actions,
 .community-detail-card__actions,
 .community-mvp-vote-row {
   display: flex;
-  justify-content: space-between;
-  gap: 16px;
   align-items: center;
-}
-
-.community-page .page-header {
-  overflow: hidden;
-}
-
-.community-actions-row {
-  flex-wrap: wrap;
   justify-content: flex-end;
+  gap: 10px;
+  min-width: 0;
+  flex-wrap: wrap;
 }
 
+.community-page .button,
+.community-page a.button,
+.community-page button.button,
+.community-page .button--primary,
+.community-page a.button--primary,
+.community-page button.button--primary,
+.community-page .button--ghost,
+.community-page a.button--ghost,
+.community-page button.button--ghost {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 64px;
+  min-height: 42px;
+  padding: 0 18px;
+  border: 1px solid rgba(59, 130, 246, 0.62) !important;
+  border-radius: 9px;
+  background: linear-gradient(180deg, rgba(17, 34, 64, 0.92), rgba(9, 20, 42, 0.96)) !important;
+  background-color: rgba(9, 20, 42, 0.96) !important;
+  color: #e8f1ff !important;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.025em;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.035),
+    0 8px 18px rgba(0, 0, 0, 0.18);
+  transition: background 140ms ease, border-color 140ms ease, color 140ms ease, transform 140ms ease, box-shadow 140ms ease;
+}
+
+.community-page .button:hover,
+.community-page a.button:hover,
+.community-page button.button:hover,
+.community-page .button--primary:hover,
+.community-page a.button--primary:hover,
+.community-page button.button--primary:hover,
+.community-page .button--ghost:hover,
+.community-page a.button--ghost:hover,
+.community-page button.button--ghost:hover {
+  background: linear-gradient(180deg, rgba(21, 44, 82, 0.96), rgba(12, 27, 54, 0.98)) !important;
+  background-color: rgba(12, 27, 54, 0.98) !important;
+  border-color: rgba(96, 165, 250, 0.88) !important;
+  color: #ffffff !important;
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 10px 22px rgba(0, 0, 0, 0.26);
+}
+
+.community-page .button:active,
+.community-page a.button:active,
+.community-page button.button:active {
+  transform: translateY(0);
+}
+
+.community-page .button:disabled,
+.community-page button.button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.community-page .button--danger,
+.community-page a.button--danger,
+.community-page button.button--danger {
+  border-color: rgba(248, 113, 113, 0.62) !important;
+  background: linear-gradient(180deg, rgba(62, 18, 24, 0.88), rgba(33, 10, 14, 0.96)) !important;
+  background-color: rgba(33, 10, 14, 0.96) !important;
+  color: #fecaca !important;
+}
+
+.community-page .button--danger:hover,
+.community-page a.button--danger:hover,
+.community-page button.button--danger:hover {
+  border-color: rgba(252, 165, 165, 0.9) !important;
+  background: linear-gradient(180deg, rgba(90, 26, 30, 0.94), rgba(50, 13, 17, 0.98)) !important;
+  background-color: rgba(50, 13, 17, 0.98) !important;
+  color: #ffffff !important;
+}
+
+/* 폼 내부/상단 링크 버튼이 기존 global primary 스타일을 가져와도 커뮤니티에서는 다크 outline을 우선 적용 */
+.community-page .community-actions-row .button,
+.community-page .community-form__actions .button,
+.community-page .community-detail-card__actions .button,
+.community-page .community-comment-form .button,
+.community-page .community-report-form .button,
+.community-page .community-video-box .button,
+.community-page .community-mvp-vote-row .button {
+  background-image: linear-gradient(180deg, rgba(17, 34, 64, 0.92), rgba(9, 20, 42, 0.96)) !important;
+}
+
+.community-page .community-actions-row .button--danger,
+.community-page .community-form__actions .button--danger,
+.community-page .community-detail-card__actions .button--danger {
+  background-image: linear-gradient(180deg, rgba(62, 18, 24, 0.88), rgba(33, 10, 14, 0.96)) !important;
+}
+
+/* --------------------------------------------------------------------------
+   커뮤니티 홈: 메뉴형 게시판 카드
+---------------------------------------------------------------------------- */
 .community-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 16px;
-  margin-top: 22px;
+  gap: 10px;
+  margin-top: 8px;
 }
 
-.community-card,
-.community-list-item,
-.community-review-item {
-  display: block;
+.community-card {
+  display: grid;
+  gap: 8px;
   min-width: 0;
-  padding: 20px;
-  border: 1px solid rgba(96, 165, 250, 0.18);
-  border-radius: 18px;
-  background: linear-gradient(145deg, rgba(8, 12, 24, 0.86), rgba(10, 20, 38, 0.66));
-  color: inherit;
-  text-decoration: none;
-  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.18);
+  min-height: 118px;
+  padding: 16px;
+  border: 1px solid rgba(30, 64, 175, 0.44);
+  border-radius: 10px;
+  background: rgba(8, 14, 28, 0.72);
+  box-shadow: none;
 }
 
-.community-card:hover,
-.community-list-item:hover,
-.community-review-item:hover {
-  border-color: rgba(56, 189, 248, 0.42);
-  background: linear-gradient(145deg, rgba(10, 22, 42, 0.94), rgba(12, 28, 50, 0.78));
+.community-card:hover {
+  border-color: rgba(96, 165, 250, 0.72);
+  background: rgba(11, 26, 50, 0.88);
+}
+
+.community-card__code,
+.community-board-badge,
+.community-board-notice,
+.community-detail-card .badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  min-height: 22px;
+  padding: 0 8px;
+  border: 1px solid rgba(96, 165, 250, 0.35);
+  border-radius: 999px;
+  background: rgba(30, 64, 175, 0.28);
+  color: #bfdbfe;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.community-board-notice {
+  border-color: rgba(251, 191, 36, 0.45);
+  background: rgba(120, 53, 15, 0.34);
+  color: #fde68a;
 }
 
 .community-card h2,
-.community-list-item h2,
 .community-review-item h3 {
-  margin: 8px 0;
+  margin: 0;
+  color: #f8fafc;
+  font-size: 18px;
+  line-height: 1.35;
+  letter-spacing: -0.04em;
   word-break: keep-all;
   overflow-wrap: anywhere;
 }
 
 .community-card p,
-.community-list-item p,
 .community-review-item p {
-  color: var(--text-muted, #9ca3af);
-  line-height: 1.65;
+  margin: 0;
+  color: #94a3b8;
+  font-size: 13px;
+  line-height: 1.6;
   word-break: keep-all;
   overflow-wrap: anywhere;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+}
+
+/* --------------------------------------------------------------------------
+   게시판 목록: 번호 | 제목 | 작성자 | 작성일 | 조회수 | 좋아요
+---------------------------------------------------------------------------- */
+.community-board-table {
+  display: grid;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(30, 64, 175, 0.42);
+  border-radius: 10px;
+  background: rgba(8, 14, 28, 0.62);
+}
+
+.community-board-row {
+  display: grid;
+  grid-template-columns: 76px minmax(260px, 1fr) 150px 138px 82px 82px;
+  align-items: center;
+  min-width: 0;
+  color: inherit;
+}
+
+.community-board-table--ranking .community-board-row {
+  grid-template-columns: 76px minmax(260px, 1fr) 150px 138px 82px 82px 82px;
+}
+
+.community-board-row--head {
+  min-height: 42px;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.25);
+  background: rgba(15, 23, 42, 0.86);
+}
+
+.community-board-row--body {
+  min-height: 52px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(15, 23, 42, 0.22);
+  transition: background 130ms ease, border-color 130ms ease;
+}
+
+.community-board-row--body:last-child {
+  border-bottom: 0;
+}
+
+.community-board-row--body:hover {
+  background: rgba(30, 64, 175, 0.18);
+  border-color: rgba(96, 165, 250, 0.28);
+}
+
+.community-board-cell {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: inherit;
+  padding: 0 12px;
+  color: #cbd5e1;
+  font-size: 13px;
+  line-height: 1.35;
+  border-right: 1px solid rgba(148, 163, 184, 0.10);
   overflow: hidden;
 }
 
-.community-card__code,
+.community-board-cell:last-child {
+  border-right: 0;
+}
+
+.community-board-row--head .community-board-cell {
+  color: #93a4bd;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: -0.015em;
+  justify-content: center;
+  text-align: center;
+}
+
+.community-board-cell--no,
+.community-board-cell--date,
+.community-board-cell--views,
+.community-board-cell--likes,
+.community-board-cell--score {
+  justify-content: center;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.community-board-cell--author {
+  justify-content: center;
+  text-align: center;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.community-board-cell--title {
+  justify-content: flex-start;
+  color: #e5e7eb;
+}
+
+.community-board-title-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  width: 100%;
+}
+
+.community-board-title-line strong {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #f8fafc;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.community-board-title-line em {
+  flex: 0 0 auto;
+  color: #60a5fa;
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.community-empty-box,
+.empty-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  padding: 22px;
+  border: 1px dashed rgba(59, 130, 246, 0.36);
+  border-radius: 10px;
+  background: rgba(8, 14, 28, 0.58);
+  color: #cbd5e1;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* --------------------------------------------------------------------------
+   과거 카드형 목록 클래스 호환: 혹시 남아있는 화면도 게시판 톤으로 보정
+---------------------------------------------------------------------------- */
+.community-list {
+  display: grid;
+  gap: 0;
+  margin-top: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(30, 64, 175, 0.42);
+  border-radius: 10px;
+  background: rgba(8, 14, 28, 0.62);
+}
+
+.community-list-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+  background: transparent;
+}
+
+.community-list-item:last-child {
+  border-bottom: 0;
+}
+
+.community-list-item:hover {
+  background: rgba(30, 64, 175, 0.16);
+}
+
+.community-list-item__main,
+.community-list-item__badges,
+.community-list-item__meta {
+  min-width: 0;
+}
+
+.community-list-item h2 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 16px;
+  line-height: 1.35;
+  letter-spacing: -0.035em;
+  overflow-wrap: anywhere;
+}
+
+.community-list-item p {
+  margin: 6px 0 0;
+  color: #94a3b8;
+  font-size: 13px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
 .community-list-item__badges,
 .community-list-item__meta,
 .community-comment__head,
 .community-comment__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
   align-items: center;
-  color: var(--text-muted, #9ca3af);
-  font-size: 13px;
-  min-width: 0;
-}
-
-.community-card__code {
-  letter-spacing: 0.08em;
-  font-weight: 800;
-}
-
-.community-list {
-  display: grid;
-  gap: 12px;
-  margin-top: 22px;
-}
-
-.community-list-item {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(220px, auto);
-  gap: 16px;
-}
-
-.community-list-item__main {
-  min-width: 0;
+  gap: 8px;
+  color: #94a3b8;
+  font-size: 12px;
 }
 
 .community-list-item__meta {
   justify-content: flex-end;
-  align-content: start;
-  max-width: 340px;
-  text-align: right;
 }
 
+/* --------------------------------------------------------------------------
+   입력 폼
+---------------------------------------------------------------------------- */
 .community-form,
 .community-comment-form,
 .community-report-form {
   display: grid;
-  gap: 14px;
+  gap: 12px;
+  min-width: 0;
+}
+
+.community-form,
+.community-comment-form,
+.community-report-form,
+.community-detail-card,
+.community-mvp-box {
+  border: 1px solid rgba(30, 64, 175, 0.40);
+  border-radius: 10px;
+  background: rgba(8, 14, 28, 0.62);
+}
+
+.community-form {
+  padding: 18px;
 }
 
 .community-form input,
@@ -136,92 +527,157 @@
   resize: vertical;
 }
 
-.community-form__actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-}
-
+/* --------------------------------------------------------------------------
+   상세 페이지: 일반 게시글 상세형
+---------------------------------------------------------------------------- */
 .community-detail-card {
   display: grid;
   gap: 18px;
+  padding: 20px;
 }
 
 .community-content {
   white-space: pre-wrap;
-  line-height: 1.8;
+  color: #e5e7eb;
+  font-size: 15px;
+  line-height: 1.85;
   word-break: keep-all;
   overflow-wrap: anywhere;
 }
 
 .community-video-box {
   display: grid;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
   max-width: 760px;
 }
 
-.community-video-box__thumb,
-.community-rank-thumb {
-  width: 100%;
-  border-radius: 14px;
-  object-fit: cover;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
+.community-rank-thumb,
 .community-video-box__thumb {
+  display: block;
+  width: 100%;
   aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border: 1px solid rgba(59, 130, 246, 0.30);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.9);
 }
 
+.community-video-box .button {
+  width: fit-content;
+}
+
+.community-detail-card__actions {
+  padding-top: 12px;
+  border-top: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+/* --------------------------------------------------------------------------
+   댓글 / 신고
+---------------------------------------------------------------------------- */
 .community-comments,
 .community-match-section {
   display: grid;
-  gap: 18px;
+  gap: 14px;
   margin-top: 18px;
 }
 
-.community-comment-list {
+.community-comments h2,
+.community-match-section h2,
+.community-mvp-box h3 {
+  margin: 0;
+  color: #f8fafc;
+  letter-spacing: -0.04em;
+}
+
+.community-comment-list,
+.community-review-list {
   display: grid;
-  gap: 12px;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid rgba(30, 64, 175, 0.36);
+  border-radius: 10px;
+  background: rgba(8, 14, 28, 0.44);
 }
 
-.community-comment {
+.community-comment,
+.community-review-item {
+  display: grid;
+  gap: 8px;
   min-width: 0;
-  padding: 14px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+  background: transparent;
 }
 
-.community-comment p {
+.community-comment:last-child,
+.community-review-item:last-child {
+  border-bottom: 0;
+}
+
+.community-comment p,
+.community-review-item p {
+  margin: 0;
+  color: #e5e7eb;
+  line-height: 1.65;
   word-break: keep-all;
   overflow-wrap: anywhere;
 }
 
+.community-comment__head {
+  justify-content: space-between;
+}
+
+.community-comment__actions {
+  justify-content: flex-start;
+}
+
 .community-text-button {
-  border: 0;
-  background: none;
-  color: var(--text-muted, #9ca3af);
-  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
   padding: 0;
+  border: 0;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.community-text-button:hover {
+  color: #bfdbfe;
+  text-decoration: underline;
 }
 
 .community-report-box {
   display: inline-grid;
-  gap: 6px;
+  gap: 8px;
+  min-width: 0;
 }
 
 .community-report-form {
-  grid-template-columns: minmax(120px, 150px) minmax(180px, 1fr) auto;
+  grid-template-columns: minmax(130px, 160px) minmax(180px, 1fr) auto;
   align-items: center;
+  width: min(620px, 100%);
+  padding: 10px;
 }
 
+.community-comment-form {
+  padding: 14px;
+}
+
+.community-comment-form .button {
+  justify-self: end;
+}
+
+/* --------------------------------------------------------------------------
+   MVP 투표 / 매치 리뷰
+---------------------------------------------------------------------------- */
 .community-mvp-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
 }
 
 .community-mvp-box {
@@ -229,29 +685,43 @@
   gap: 12px;
   min-width: 0;
   padding: 16px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .community-mvp-box__head {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
-  color: var(--text-muted, #9ca3af);
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.community-mvp-box__head strong {
+  color: #f8fafc;
 }
 
 .community-mvp-list {
   display: grid;
-  gap: 8px;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 8px;
 }
 
 .community-mvp-item {
   display: grid;
-  grid-template-columns: 72px minmax(0, 1fr) 44px;
+  grid-template-columns: 70px minmax(0, 1fr) 46px;
   gap: 8px;
   align-items: center;
+  min-width: 0;
+  min-height: 34px;
+  padding: 7px 10px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
   font-size: 13px;
+}
+
+.community-mvp-item:last-child {
+  border-bottom: 0;
 }
 
 .community-mvp-item strong {
@@ -263,256 +733,231 @@
 
 .community-mvp-item span,
 .community-mvp-item em {
-  color: var(--text-muted, #9ca3af);
+  color: #94a3b8;
   font-style: normal;
 }
 
-.community-review-list {
-  display: grid;
-  gap: 10px;
+.community-mvp-vote-row select {
+  flex: 1 1 180px;
 }
 
-.community-list-item--rank {
-  grid-template-columns: 64px 140px minmax(0, 1fr) minmax(180px, auto);
-  align-items: center;
+.community-mvp-vote-row .button {
+  flex: 0 0 auto;
 }
 
-.community-rank {
-  font-size: 22px;
+/* --------------------------------------------------------------------------
+   관리자 커뮤니티 표
+---------------------------------------------------------------------------- */
+.admin-page .community-admin-table,
+.admin-page table.community-admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow: hidden;
+  border: 1px solid rgba(30, 64, 175, 0.42);
+  border-radius: 10px;
+  background: rgba(8, 14, 28, 0.62);
 }
 
-.community-rank-thumb {
-  aspect-ratio: 16 / 9;
+.admin-page .community-admin-table th,
+.admin-page .community-admin-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+  text-align: left;
+  vertical-align: middle;
+  font-size: 13px;
+  line-height: 1.45;
 }
 
-@media (max-width: 1024px) {
-  .community-list-item,
-  .community-list-item--rank {
+.admin-page .community-admin-table th {
+  color: #93a4bd;
+  font-weight: 900;
+  background: rgba(15, 23, 42, 0.86);
+}
+
+.admin-page .community-admin-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.admin-page .community-admin-table td {
+  color: #e5e7eb;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+/* --------------------------------------------------------------------------
+   반응형: PC는 게시판 표, 모바일은 카드형 row로 자동 전환
+---------------------------------------------------------------------------- */
+@media (max-width: 1100px) {
+  .community-board-row,
+  .community-board-table--ranking .community-board-row {
+    grid-template-columns: 68px minmax(220px, 1fr) 128px 118px 70px 70px;
+  }
+
+  .community-board-table--ranking .community-board-cell--score,
+  .community-board-table--ranking .community-board-row--head .community-board-cell--score {
+    display: none;
+  }
+}
+
+@media (max-width: 860px) {
+  .community-board-headline,
+  .community-page .page-header,
+  .community-section-head {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .community-actions-row,
+  .community-form__actions,
+  .community-detail-card__actions,
+  .community-mvp-vote-row {
+    justify-content: flex-start;
+  }
+
+  .community-board-table,
+  .community-list,
+  .community-comment-list,
+  .community-review-list {
+    border-radius: 9px;
+  }
+
+  .community-board-row--head {
+    display: none;
+  }
+
+  .community-board-row,
+  .community-board-table--ranking .community-board-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    min-height: 0;
+    padding: 13px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+  }
+
+  .community-board-cell {
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 10px;
+    min-height: 0;
+    padding: 0;
+    border-right: 0;
+    text-align: left;
+    justify-content: stretch;
+    white-space: normal;
+    overflow: visible;
+  }
+
+  .community-board-cell::before {
+    content: attr(data-label);
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  .community-board-cell--title {
     grid-template-columns: 1fr;
   }
 
-  .community-list-item__meta {
-    justify-content: flex-start;
-    max-width: none;
-    text-align: left;
+  .community-board-cell--title::before {
+    display: none;
   }
 
-  .community-rank-thumb {
-    max-width: 360px;
+  .community-board-title-line {
+    align-items: flex-start;
+    flex-wrap: wrap;
   }
-}
 
-@media (max-width: 760px) {
-  .community-page .page-header,
-  .community-section-head,
-  .community-actions-row,
-  .community-detail-card__actions,
-  .community-mvp-vote-row,
-  .community-mvp-box__head {
-    align-items: stretch;
-    flex-direction: column;
+  .community-board-title-line strong {
+    flex: 1 1 100%;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    font-size: 15px;
   }
 
   .community-grid {
     grid-template-columns: 1fr;
-    gap: 12px;
   }
 
-  .community-card,
-  .community-list-item,
-  .community-review-item,
-  .community-comment,
-  .community-mvp-box {
-    border-radius: 16px;
-    padding: 14px;
+  .community-list-item {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .community-list-item__meta {
+    justify-content: flex-start;
   }
 
   .community-report-form {
     grid-template-columns: 1fr;
-  }
-
-  .community-form__actions,
-  .community-actions-row {
-    display: grid;
-    grid-template-columns: 1fr;
-  }
-
-  .community-form__actions > *,
-  .community-actions-row > *,
-  .community-detail-card__actions > *,
-  .community-video-box .button {
     width: 100%;
-    justify-content: center;
-  }
-
-  .community-list-item__meta,
-  .community-list-item__badges,
-  .community-comment__head,
-  .community-comment__actions {
-    gap: 6px;
-    font-size: 12px;
   }
 
   .community-mvp-grid {
     grid-template-columns: 1fr;
   }
-
-  .community-mvp-item {
-    grid-template-columns: 58px minmax(0, 1fr) 38px;
-    font-size: 12px;
-  }
-
-  .community-rank-thumb {
-    max-width: 100%;
-  }
 }
 
-/* --------------------------------------------------------------------------
-   Community button unity patch
-   - 커뮤니티 전용 버튼을 기존 K-LOL.GG app-button / btn-ghost 톤과 맞춤
-   - 클립 랭킹, 커뮤니티 홈, 글쓰기, 목록, 수정, 영상 열기, 댓글 등록, 접수 버튼 공통 적용
----------------------------------------------------------------------------- */
-.community-page .button,
-.community-page button.button,
-.community-page a.button {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 8px !important;
-  min-height: 42px !important;
-  padding: 0 16px !important;
-  border-radius: var(--ui-radius-sm, 12px) !important;
-  border: 1px solid rgba(96, 165, 250, 0.32) !important;
-  background: rgba(2, 6, 23, 0.56) !important;
-  color: var(--k-text, #e5e7eb) !important;
-  font-size: 14px !important;
-  font-weight: 800 !important;
-  line-height: 1 !important;
-  letter-spacing: -0.02em !important;
-  text-decoration: none !important;
-  white-space: nowrap !important;
-  cursor: pointer !important;
-  box-shadow: none !important;
-  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, box-shadow 160ms ease !important;
-}
-
-.community-page .button:hover,
-.community-page button.button:hover,
-.community-page a.button:hover {
-  transform: translateY(-1px) !important;
-  background: rgba(37, 99, 235, 0.24) !important;
-  border-color: var(--k-border-strong, rgba(96, 165, 250, 0.55)) !important;
-  color: #ffffff !important;
-  box-shadow: 0 0 22px rgba(59, 130, 246, 0.22) !important;
-}
-
-.community-page .button:disabled,
-.community-page button.button:disabled {
-  cursor: not-allowed !important;
-  opacity: 0.55 !important;
-  transform: none !important;
-  box-shadow: none !important;
-}
-
-.community-page .button--primary,
-.community-page a.button--primary,
-.community-page button.button--primary {
-  background: linear-gradient(135deg, var(--ui-blue, #2563eb), var(--ui-cyan, #22d3ee)) !important;
-  border-color: rgba(96, 165, 250, 0.64) !important;
-  color: #ffffff !important;
-  box-shadow: 0 0 24px rgba(59, 130, 246, 0.28) !important;
-}
-
-.community-page .button--primary:hover,
-.community-page a.button--primary:hover,
-.community-page button.button--primary:hover {
-  background: linear-gradient(135deg, var(--ui-blue, #2563eb), var(--ui-cyan, #22d3ee)) !important;
-  box-shadow: 0 0 34px rgba(34, 211, 238, 0.34) !important;
-}
-
-.community-page .button--ghost,
-.community-page a.button--ghost,
-.community-page button.button--ghost {
-  background: rgba(2, 6, 23, 0.56) !important;
-  border-color: var(--k-border, rgba(96, 165, 250, 0.26)) !important;
-  color: var(--k-text, #e5e7eb) !important;
-}
-
-.community-page .button--danger,
-.community-page a.button--danger,
-.community-page button.button--danger {
-  background: rgba(127, 29, 29, 0.20) !important;
-  border-color: rgba(248, 113, 113, 0.36) !important;
-  color: #fecaca !important;
-  box-shadow: none !important;
-}
-
-.community-page .button--danger:hover,
-.community-page a.button--danger:hover,
-.community-page button.button--danger:hover {
-  background: rgba(185, 28, 28, 0.28) !important;
-  border-color: rgba(248, 113, 113, 0.58) !important;
-  color: #ffffff !important;
-  box-shadow: 0 0 22px rgba(248, 113, 113, 0.18) !important;
-}
-
-.community-page .page-header > .button,
-.community-page .page-header > a.button,
-.community-actions-row .button,
-.community-form__actions .button,
-.community-comment-form .button,
-.community-report-form .button,
-.community-video-box .button,
-.community-detail-card__actions .button {
-  flex: 0 0 auto !important;
-}
-
-.community-actions-row {
-  align-items: center !important;
-  gap: 10px !important;
-}
-
-.community-comment-form .button {
-  justify-self: end !important;
-  width: auto !important;
-}
-
-.community-report-form .button {
-  min-width: 72px !important;
-  padding-inline: 14px !important;
-}
-
-.community-video-box .button {
-  width: fit-content !important;
-  max-width: 100% !important;
-}
-
-@media (max-width: 760px) {
-  .community-page .button,
-  .community-page button.button,
-  .community-page a.button {
-    min-height: 44px !important;
-    padding: 0 14px !important;
-    font-size: 13px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-
-  .community-page .page-header > .button,
-  .community-page .page-header > a.button,
-  .community-actions-row .button,
-  .community-form__actions .button,
-  .community-comment-form .button,
-  .community-report-form .button,
-  .community-video-box .button,
-  .community-detail-card__actions .button {
-    width: 100% !important;
-    justify-self: stretch !important;
+@media (max-width: 560px) {
+  .community-board-headline h1,
+  .community-page .page-title,
+  .community-section-head h2 {
+    font-size: 30px;
   }
 
   .community-actions-row,
   .community-form__actions,
   .community-detail-card__actions {
-    gap: 8px !important;
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .community-actions-row > *,
+  .community-form__actions > *,
+  .community-detail-card__actions > *,
+  .community-comment-form .button,
+  .community-report-form .button,
+  .community-video-box .button,
+  .community-mvp-vote-row .button,
+  .community-page .button,
+  .community-page a.button,
+  .community-page button.button {
+    width: 100%;
+  }
+
+  .community-form,
+  .community-comment-form,
+  .community-report-form,
+  .community-detail-card,
+  .community-mvp-box,
+  .community-card {
+    padding: 13px;
+    border-radius: 9px;
+  }
+
+  .community-board-row,
+  .community-board-table--ranking .community-board-row,
+  .community-comment,
+  .community-review-item {
+    padding: 12px;
+  }
+
+  .community-content {
+    font-size: 14px;
+    line-height: 1.75;
+  }
+
+  .community-mvp-box__head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .community-mvp-item {
+    grid-template-columns: 58px minmax(0, 1fr) 38px;
+    padding: 7px 8px;
+    font-size: 12px;
   }
 }
