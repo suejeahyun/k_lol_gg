@@ -16,7 +16,7 @@ import {
   isSoloRankMatch,
 } from "@/lib/riot/client";
 
-type RouteContext = { params: Promise<{ draftId: string }> };
+type RouteContext = { params: Promise<Record<string, string | string[] | undefined>> };
 
 const RECENT_SOLO_MATCH_COUNT = 10;
 const SYNC_COOLDOWN_MINUTES = 10;
@@ -201,7 +201,9 @@ export async function POST(req: NextRequest, context: RouteContext) {
     });
     if (rateLimitRejected) return rateLimitRejected;
 
-    const { draftId } = await context.params;
+    const params = await context.params;
+    const rawDraftId = params.draftId ?? params.draftid;
+    const draftId = Array.isArray(rawDraftId) ? rawDraftId[0] : rawDraftId;
     const parsedDraftId = Number(draftId);
 
     if (!Number.isInteger(parsedDraftId) || parsedDraftId <= 0) {
