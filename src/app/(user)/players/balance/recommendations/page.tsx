@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
 import { requireApprovedUserOrAdmin } from "@/lib/auth/access";
 import { getTeamBalanceDraftRecommendations } from "@/lib/team-balance/draft-recommendations";
+import SoloRankDraftSyncButton from "@/components/balance/SoloRankDraftSyncButton";
 
 const RECENT_DRAFT_LIMIT = 20;
 type TeamValue = "RED" | "BLUE";
@@ -50,6 +51,37 @@ function scoreBadge(score: number) {
   return "ai-badge ai-badge--high";
 }
 
+function formatSoloRank(rank: { tier: string | null; rank: string | null; leaguePoints: number } | null | undefined) {
+  if (!rank?.tier) return "솔랭 정보 없음";
+  return `${rank.tier}${rank.rank ? ` ${rank.rank}` : ""} ${rank.leaguePoints}LP`;
+}
+
+function formatDateTime(value: Date | null | undefined) {
+  if (!value) return "갱신 전";
+  return new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(value);
+}
+
+function getRecentSoloSummary(matches: Array<{ win: boolean; kills: number; deaths: number; assists: number }>) {
+  const totalGames = matches.length;
+  const wins = matches.filter((match) => match.win).length;
+  const kills = matches.reduce((sum, match) => sum + match.kills, 0);
+  const deaths = matches.reduce((sum, match) => sum + match.deaths, 0);
+  const assists = matches.reduce((sum, match) => sum + match.assists, 0);
+
+  return {
+    totalGames,
+    wins,
+    winRate: totalGames > 0 ? (wins / totalGames) * 100 : null,
+    kda: deaths > 0 ? (kills + assists) / deaths : kills + assists,
+  };
+}
+
 async function requireAccessOrRedirect(nextPath: string) {
   try {
     await requireApprovedUserOrAdmin();
@@ -87,6 +119,33 @@ export default async function BalanceRecommendationsIndexPage({ searchParams }: 
   const selectedDraftId = drafts.some((draft) => draft.id === requestedId) ? requestedId : drafts[0]?.id ?? null;
   const selectedTeam: TeamValue = sp.team === "BLUE" ? "BLUE" : "RED";
   const data = selectedDraftId ? await getTeamBalanceDraftRecommendations(selectedDraftId) : null;
+  const soloRankPlayers = selectedDraftId
+    ? await prisma.teamBalanceDraftPlayer.findMany({
+        where: { draftId: selectedDraftId },
+        orderBy: [{ team: "asc" }, { position: "asc" }],
+        select: {
+          team: true,
+          position: true,
+          player: {
+            select: {
+              id: true,
+              name: true,
+              nickname: true,
+              tag: true,
+              riotAccount: { select: { lastSyncedAt: true } },
+              soloRankSnapshot: {
+                select: { tier: true, rank: true, leaguePoints: true, wins: true, losses: true, winRate: true },
+              },
+              soloMatches: {
+                orderBy: { gameCreation: "desc" },
+                take: 20,
+                select: { win: true, kills: true, deaths: true, assists: true },
+              },
+            },
+          },
+        },
+      })
+    : [];
   const selectedDraft = drafts.find((draft) => draft.id === selectedDraftId) ?? null;
   const activeTeam = data?.teams.find((team) => team.team === selectedTeam) ?? data?.teams[0] ?? null;
   const oppositeTeam = selectedTeam === "RED" ? "BLUE" : "RED";
@@ -121,11 +180,44 @@ export default async function BalanceRecommendationsIndexPage({ searchParams }: 
             <strong>{getDraftOptionLabel(selectedDraft)}</strong>
             <span>RED {fmt(selectedDraft.redTotal)} / BLUE {fmt(selectedDraft.blueTotal)}</span>
             <span>차이 {fmt(selectedDraft.diff)} · {selectedDraft._count.players}명</span>
+            {selectedDraftId ? <SoloRankDraftSyncButton draftId={selectedDraftId} /> : null}
           </div>
         ) : (
           <div className="ai-import-summary">저장된 팀 밸런스가 없습니다.</div>
         )}
       </section>
+
+      {soloRankPlayers.length > 0 ? (
+        <section className="ai-panel ai-solo-rank-panel">
+          <div className="ai-panel__head">
+            <div>
+              <h2 className="ai-panel__title">최근 솔로 랭크 전적</h2>
+              <p className="ai-panel__desc">현재 저장 밸런스에 포함된 플레이어만 표시합니다.</p>
+            </div>
+          </div>
+          <div className="ai-solo-rank-grid">
+            {soloRankPlayers.map((entry) => {
+              const summary = getRecentSoloSummary(entry.player.soloMatches);
+              return (
+                <article className="ai-solo-rank-card" key={entry.player.id}>
+                  <div className="ai-solo-rank-card__head">
+                    <span className={teamBadge(entry.team as TeamValue)}>{entry.team}</span>
+                    <strong>{entry.position} · {entry.player.name}</strong>
+                  </div>
+                  <small>{entry.player.nickname}#{entry.player.tag}</small>
+                  <div className="ai-solo-rank-card__rank">{formatSoloRank(entry.player.soloRankSnapshot)}</div>
+                  <div className="ai-solo-rank-card__stats">
+                    <span>최근 {summary.totalGames}판</span>
+                    <span>승률 {pct(summary.winRate)}</span>
+                    <span>KDA {fmt(summary.kda, 2)}</span>
+                  </div>
+                  <div className="ai-solo-rank-card__sync">마지막 갱신 {formatDateTime(entry.player.riotAccount?.lastSyncedAt)}</div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
 
       {data && activeTeam ? (
         <>

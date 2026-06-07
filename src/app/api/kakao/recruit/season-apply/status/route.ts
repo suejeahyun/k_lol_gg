@@ -8,7 +8,7 @@ export const revalidate = 0;
 
 const TARGET_COUNT = 10;
 
-type PositionKey = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
+type PositionKey = "TOP" | "JGL" | "MID" | "ADC" | "SUP" | "ALL";
 
 type TierKey =
   | "IRON"
@@ -62,6 +62,7 @@ const POSITION_SHORT_LABEL: Record<PositionKey, string> = {
   MID: "mid",
   ADC: "ad",
   SUP: "sup",
+  ALL: "all",
 };
 
 function jsonReply(reply: string, extra: Record<string, unknown> = {}, status = 200) {
@@ -129,7 +130,7 @@ function normalizeTier(value: string | null | undefined) {
 }
 
 function isPositionKey(value: unknown): value is PositionKey {
-  return value === "TOP" || value === "JGL" || value === "MID" || value === "ADC" || value === "SUP";
+  return value === "TOP" || value === "JGL" || value === "MID" || value === "ADC" || value === "SUP" || value === "ALL";
 }
 
 function formatPositions(mainPosition: unknown, subPositions: unknown) {

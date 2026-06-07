@@ -1,4 +1,4 @@
-export type RecruitPosition = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
+export type RecruitPosition = "TOP" | "JGL" | "MID" | "ADC" | "SUP" | "ALL";
 export type RecruitTier =
   | "IRON"
   | "BRONZE"
@@ -32,6 +32,15 @@ export type ParsedRecruitMessage = {
 };
 
 const POSITION_ALIASES: Record<string, RecruitPosition> = {
+  ALL: "ALL",
+  ANY: "ALL",
+  FILL: "ALL",
+  AUTO: "ALL",
+  전체: "ALL",
+  올: "ALL",
+  아무거나: "ALL",
+  상관없음: "ALL",
+  자유: "ALL",
   TOP: "TOP",
   TOPLINE: "TOP",
   TOPLANE: "TOP",
