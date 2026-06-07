@@ -1076,22 +1076,25 @@ export async function POST(req: Request) {
       topTeamHeaderY: teamHeaderAnchors.topTeamHeaderY,
       bottomTeamHeaderY: teamHeaderAnchors.bottomTeamHeaderY,
     });
+    const shouldSaveDebugImages = process.env.LOL_RESULT_IMPORT_DEBUG === "1";
     const debugRoot =
       process.env.VERCEL === "1"
         ? path.join("/tmp", ".lol-result-debug")
         : path.join(process.cwd(), ".lol-result-debug");
     const debugDir = path.join(debugRoot, requestId);
 
-    try {
-      await mkdir(debugDir, { recursive: true });
-      log("디버그 이미지 저장 폴더", { debugDir });
-    } catch (error) {
-      console.error("[LOL_RESULT_DEBUG_MKDIR_ERROR]", debugDir, error);
+    if (shouldSaveDebugImages) {
+      try {
+        await mkdir(debugDir, { recursive: true });
+        log("디버그 이미지 저장 폴더", { debugDir });
+        await Promise.all([
+          saveDebugImage(path.join(debugDir, "original.png"), originalImageBuffer),
+          saveDebugImage(path.join(debugDir, "normalized.png"), imageBuffer),
+        ]);
+      } catch (error) {
+        console.error("[LOL_RESULT_DEBUG_SAVE_ERROR]", debugDir, error);
+      }
     }
-    await Promise.all([
-      saveDebugImage(path.join(debugDir, "original.png"), originalImageBuffer),
-      saveDebugImage(path.join(debugDir, "normalized.png"), imageBuffer),
-    ]);
 
     const resultHeaderBuffer = await cropBuffer(
       baseImage,
@@ -1128,14 +1131,16 @@ export async function POST(req: Request) {
         { label: `${rowLabel}-name`, rect: geometry.playerName },
         { label: `${rowLabel}-kda`, rect: geometry.kda },
       );
-      await Promise.all([
-        saveDebugImage(
-          path.join(debugDir, `${rowLabel}-champion.png`),
-          championBuffer,
-        ),
-        saveDebugImage(path.join(debugDir, `${rowLabel}-name.png`), nameBuffer),
-        saveDebugImage(path.join(debugDir, `${rowLabel}-kda.png`), kdaBuffer),
-      ]);
+      if (shouldSaveDebugImages) {
+        await Promise.all([
+          saveDebugImage(
+            path.join(debugDir, `${rowLabel}-champion.png`),
+            championBuffer,
+          ),
+          saveDebugImage(path.join(debugDir, `${rowLabel}-name.png`), nameBuffer),
+          saveDebugImage(path.join(debugDir, `${rowLabel}-kda.png`), kdaBuffer),
+        ]);
+      }
 
       const championPreviewDataUrl = `data:image/png;base64,${championBuffer.toString("base64")}`;
 
@@ -1177,18 +1182,20 @@ export async function POST(req: Request) {
       });
     }
 
-    const overlayBuffer = await baseImage
-      .clone()
-      .composite([
-        {
-          input: debugSvgOverlay(imageWidth, imageHeight, debugRects),
-          left: 0,
-          top: 0,
-        },
-      ])
-      .png()
-      .toBuffer();
-    await saveDebugImage(path.join(debugDir, "overlay.png"), overlayBuffer);
+    if (shouldSaveDebugImages) {
+      const overlayBuffer = await baseImage
+        .clone()
+        .composite([
+          {
+            input: debugSvgOverlay(imageWidth, imageHeight, debugRects),
+            left: 0,
+            top: 0,
+          },
+        ])
+        .png()
+        .toBuffer();
+      await saveDebugImage(path.join(debugDir, "overlay.png"), overlayBuffer);
+    }
 
     const response: LolResultImportResponse = {
       resultText,
