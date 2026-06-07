@@ -9,6 +9,12 @@ type SyncResult = {
   skipped?: number;
   failed?: number;
   message?: string;
+  results?: Array<{
+    playerId: number;
+    name: string;
+    status: string;
+    message: string;
+  }>;
 };
 
 export default function SoloRankDraftSyncButton({ draftId }: { draftId: number }) {
@@ -34,9 +40,30 @@ export default function SoloRankDraftSyncButton({ draftId }: { draftId: number }
         return;
       }
 
-      setMessage(
-        `갱신 완료 · 처리 ${data.processed ?? 0}명 / 갱신 ${data.updated ?? 0}명 / 스킵 ${data.skipped ?? 0}명 / 실패 ${data.failed ?? 0}명`,
-      );
+      const failedList = (data.results ?? [])
+        .filter((item) => item.status === "failed")
+        .slice(0, 3)
+        .map((item) => `${item.name}(${item.message})`)
+        .join(", ");
+      const skippedList = (data.results ?? [])
+        .filter((item) => item.status === "skipped")
+        .slice(0, 3)
+        .map((item) => `${item.name}(${item.message})`)
+        .join(", ");
+
+      if ((data.failed ?? 0) > 0) {
+        setMessage(
+          `일부 실패 · 갱신 ${data.updated ?? 0}명 / 스킵 ${data.skipped ?? 0}명 / 실패 ${data.failed ?? 0}명${failedList ? ` · ${failedList}` : ""}`,
+        );
+      } else if ((data.skipped ?? 0) > 0) {
+        setMessage(
+          `갱신 완료 · 갱신 ${data.updated ?? 0}명 / 스킵 ${data.skipped ?? 0}명${skippedList ? ` · ${skippedList}` : ""}`,
+        );
+      } else {
+        setMessage(
+          `갱신 완료 · 처리 ${data.processed ?? 0}명 / 갱신 ${data.updated ?? 0}명`,
+        );
+      }
       router.refresh();
     } catch (error) {
       console.error("[DRAFT_SOLO_RANK_SYNC_BUTTON_ERROR]", error);

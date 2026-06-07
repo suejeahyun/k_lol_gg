@@ -18,7 +18,7 @@ import {
 
 type RouteContext = { params: Promise<{ draftid: string }> };
 
-const RECENT_SOLO_MATCH_COUNT = 20;
+const RECENT_SOLO_MATCH_COUNT = 10;
 const SYNC_COOLDOWN_MINUTES = 10;
 const MAX_DRAFT_PLAYERS = 10;
 

@@ -560,3 +560,295 @@
     flex-direction: column;
   }
 }
+
+.ai-pickban-page .ai-import-summary--with-sync {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.ai-pickban-page .ai-import-summary--with-sync > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ai-pickban-page .ai-solo-sync {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ai-pickban-page .ai-solo-sync__message {
+  color: rgba(226, 232, 240, 0.72);
+  font-size: 12px;
+}
+
+.ai-pickban-page .ai-panel__desc {
+  margin: 8px 0 0;
+  color: rgba(226, 232, 240, 0.68);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.ai-pickban-page .ai-source-section {
+  margin-top: 14px;
+}
+
+.ai-pickban-page .ai-source-section__title {
+  margin-bottom: 8px;
+  color: rgba(226, 232, 240, 0.78);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.ai-pickban-page .ai-source-section--solo .ai-champion-card {
+  border-style: dashed;
+}
+
+.ai-pickban-page .ai-pickban-grid--single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.ai-pickban-page .ai-ban-card small b {
+  color: #e2e8f0;
+  font-weight: 900;
+}
+
+@media (max-width: 720px) {
+  .ai-pickban-page .ai-import-summary--with-sync {
+    align-items: stretch;
+  }
+
+  .ai-pickban-page .ai-solo-sync {
+    width: 100%;
+  }
+
+  .ai-pickban-page .ai-solo-sync .button-secondary {
+    width: 100%;
+  }
+}
+
+/* 2026-06-07: Pick/Ban intent UI cleanup */
+.ai-pickban-page .ai-panel__head--sub {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.ai-pickban-page .ai-ban-section {
+  margin-top: 4px;
+}
+
+.ai-pickban-page .ai-ban-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.ai-pickban-page .ai-ban-grid .ai-ban-card {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  padding: 14px;
+}
+
+.ai-pickban-page .ai-ban-card__top,
+.ai-pickban-page .ai-ban-card__main,
+.ai-pickban-page .ai-ban-card__stats {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ai-pickban-page .ai-ban-card__top {
+  justify-content: space-between;
+}
+
+.ai-pickban-page .ai-ban-card__main {
+  min-width: 0;
+}
+
+.ai-pickban-page .ai-ban-card__main > div {
+  min-width: 0;
+}
+
+.ai-pickban-page .ai-ban-card__main strong {
+  display: block;
+  margin-bottom: 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ai-pickban-page .ai-ban-card__main small,
+.ai-pickban-page .ai-ban-card__reason {
+  display: block;
+  color: #cbd5e1;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.ai-pickban-page .ai-ban-card__stats {
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ai-pickban-page .ai-ban-card__stats span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(15, 23, 42, 0.72);
+  color: #dbeafe;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.ai-pickban-page .ai-ban-card__reason {
+  margin-top: auto;
+  color: rgba(226, 232, 240, 0.72);
+}
+
+@media (max-width: 1180px) {
+  .ai-pickban-page .ai-ban-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .ai-pickban-page .ai-ban-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 2026-06-07: ban candidate card readability fix */
+.ai-pickban-page .ai-ban-section {
+  margin-top: 26px;
+}
+
+.ai-pickban-page .ai-ban-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+  align-items: stretch;
+}
+
+.ai-pickban-page .ai-ban-grid .ai-ban-card {
+  display: flex !important;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 0;
+  min-height: 210px;
+  height: 100%;
+  padding: 14px;
+  overflow: hidden;
+}
+
+.ai-pickban-page .ai-ban-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ai-pickban-page .ai-ban-card__main {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+}
+
+.ai-pickban-page .ai-ban-card__main img,
+.ai-pickban-page .ai-ban-card__main .ai-champion-card__fallback {
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  border-radius: 12px;
+}
+
+.ai-pickban-page .ai-ban-card__main > div {
+  min-width: 0;
+}
+
+.ai-pickban-page .ai-ban-card__main strong {
+  display: block;
+  overflow: hidden;
+  margin-bottom: 5px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ai-pickban-page .ai-ban-card__main small {
+  display: block;
+  overflow: hidden;
+  color: #cbd5e1;
+  font-size: 11px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ai-pickban-page .ai-ban-card__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ai-pickban-page .ai-ban-card__stats span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 23px;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(15, 23, 42, 0.72);
+  color: #dbeafe;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.ai-pickban-page .ai-ban-card__reason {
+  display: -webkit-box;
+  overflow: hidden;
+  margin-top: auto;
+  color: rgba(226, 232, 240, 0.74);
+  font-size: 11px;
+  line-height: 1.45;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+@media (max-width: 1180px) {
+  .ai-pickban-page .ai-ban-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .ai-pickban-page .ai-ban-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ai-pickban-page .ai-ban-grid .ai-ban-card {
+    min-height: 0;
+  }
+}
