@@ -25,6 +25,15 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+
+  serverExternalPackages: ["tesseract.js", "tesseract.js-core"],
+
+  outputFileTracingIncludes: {
+    "/api/matches/import-lol-result": [
+      "./node_modules/tesseract.js/**/*",
+      "./node_modules/tesseract.js-core/**/*",
+    ],
+  },
 };
 
 export default nextConfig;
