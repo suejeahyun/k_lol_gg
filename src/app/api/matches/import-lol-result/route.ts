@@ -1076,9 +1076,18 @@ export async function POST(req: Request) {
       topTeamHeaderY: teamHeaderAnchors.topTeamHeaderY,
       bottomTeamHeaderY: teamHeaderAnchors.bottomTeamHeaderY,
     });
-    const debugDir = path.join(process.cwd(), ".lol-result-debug", requestId);
-    await mkdir(debugDir, { recursive: true });
-    log("디버그 이미지 저장 폴더", { debugDir });
+    const debugRoot =
+      process.env.VERCEL === "1"
+        ? path.join("/tmp", ".lol-result-debug")
+        : path.join(process.cwd(), ".lol-result-debug");
+    const debugDir = path.join(debugRoot, requestId);
+
+    try {
+      await mkdir(debugDir, { recursive: true });
+      log("디버그 이미지 저장 폴더", { debugDir });
+    } catch (error) {
+      console.error("[LOL_RESULT_DEBUG_MKDIR_ERROR]", debugDir, error);
+    }
     await Promise.all([
       saveDebugImage(path.join(debugDir, "original.png"), originalImageBuffer),
       saveDebugImage(path.join(debugDir, "normalized.png"), imageBuffer),
