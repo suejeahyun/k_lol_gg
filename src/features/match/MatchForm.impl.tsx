@@ -1,7 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ClipboardEvent } from "react";
 import { useRouter } from "next/navigation";
+import type {
+  LolChampionCandidate,
+  LolResultImportResponse,
+  LolResultImportRow,
+} from "@/features/match/lol-result-import-types";
+import { extractRiotNameFromPlayerLabel, nicknameSimilarity, participantNameSimilarity } from "@/features/match/lol-result-import-utils";
 
 type Team = "BLUE" | "RED";
 type Position = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
@@ -336,6 +342,10 @@ export default function MatchForm({
   const [activeChampionField, setActiveChampionField] = useState<string | null>(
     null
   );
+  const [lolResultImportingGameIndex, setLolResultImportingGameIndex] = useState<number | null>(null);
+  const [lolResultImportStatus, setLolResultImportStatus] = useState<Record<number, string>>({});
+  const [lolChampionCandidates, setLolChampionCandidates] = useState<Record<string, LolChampionCandidate[]>>({});
+  const [lolChampionPreviews, setLolChampionPreviews] = useState<Record<string, string>>({});
 
   const loadTeamBalanceDrafts = async () => {
     try {
@@ -695,6 +705,605 @@ export default function MatchForm({
     }
   };
 
+  const normalizeMatchToken = (value: string) =>
+    value
+      .replace(/\([^)]*\)/g, " ")
+      .replace(/#[^#\s)]+/g, " ")
+      .replace(/\.\.\.|…/g, " ")
+      .replace(/[£¥₩]/g, " ")
+      .replace(/[|｜ㅣ]/g, " ")
+      .replace(/[^0-9A-Za-z가-힣]/g, "")
+      .toLowerCase()
+      .trim();
+
+  const normalizeRiotToken = (value: string) =>
+    value
+      .replace(/\.\.\.|…/g, "")
+      .replace(/[£¥₩<>()[\]{}|｜ㅣ"'`~!@#$%^&*_+=:;,.?/\\-]/g, " ")
+      .replace(/\b(kr|kr1|kr20|reg|rcn|rta|nid|sid|ary|ory|ow|of|eo|zn|sz|en|ln|ar|ah|ak|ai|he|asr|aber|ase|boc|rla|ms|wa|wia|sag|sol|re|rta|weds|rars|wn|an|st)\b/gi, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/[^0-9A-Za-z가-힣]/g, "")
+      .toLowerCase();
+
+  const compactToken = (value: string) => normalizeRiotToken(value).replace(/\s+/g, "");
+
+  const getParticipantAliases = (participantLabel: string) => {
+    const aliases = new Set<string>();
+    const addAlias = (raw: string | null | undefined) => {
+      if (!raw) return;
+
+      const base = raw.trim();
+      const withoutTag = base.replace(/#[^#\s)]+/g, "").trim();
+      const beforeTag = base.split("#")[0]?.trim() ?? "";
+      const insideParentheses = Array.from(base.matchAll(/\(([^)]*)\)/g)).map((match) => match[1] ?? "");
+
+      for (const candidate of [base, withoutTag, beforeTag, ...insideParentheses]) {
+        const normalized = compactToken(candidate);
+        if (normalized.length >= 2) aliases.add(normalized);
+      }
+    };
+
+    addAlias(participantLabel);
+    addAlias(participantLabel.replace(/\([^)]*\)/g, " "));
+
+    Array.from(participantLabel.matchAll(/\(([^)]*)\)/g)).forEach((match) => {
+      const riotText = match[1] ?? "";
+      addAlias(riotText);
+      addAlias(riotText.split("#")[0]);
+    });
+
+    participantLabel
+      .split(/[\s/·,()#]+/g)
+      .map((token) => token.trim())
+      .filter((token) => token.length >= 2)
+      .forEach(addAlias);
+
+    return Array.from(aliases);
+  };
+
+  const longestCommonSubstringLength = (left: string, right: string) => {
+    if (!left || !right) return 0;
+
+    const shorter = left.length <= right.length ? left : right;
+    const longer = left.length <= right.length ? right : left;
+    let longest = 0;
+
+    for (let start = 0; start < shorter.length; start += 1) {
+      for (let end = start + 2; end <= shorter.length; end += 1) {
+        const part = shorter.slice(start, end);
+        if (longer.includes(part)) longest = Math.max(longest, part.length);
+      }
+    }
+
+    return longest;
+  };
+
+  const levenshteinDistance = (left: string, right: string) => {
+    if (left === right) return 0;
+    if (!left) return right.length;
+    if (!right) return left.length;
+
+    const previous = Array.from({ length: right.length + 1 }, (_, index) => index);
+    const current = Array.from({ length: right.length + 1 }, () => 0);
+
+    for (let i = 1; i <= left.length; i += 1) {
+      current[0] = i;
+      for (let j = 1; j <= right.length; j += 1) {
+        const cost = left[i - 1] === right[j - 1] ? 0 : 1;
+        current[j] = Math.min(
+          previous[j] + 1,
+          current[j - 1] + 1,
+          previous[j - 1] + cost
+        );
+      }
+      previous.splice(0, previous.length, ...current);
+    }
+
+    return previous[right.length];
+  };
+
+  const simpleMatchScore = (ocrName: string, participantLabel: string) => {
+    const rawOcr = compactToken(ocrName);
+    if (!rawOcr) return 0;
+
+    const aliases = getParticipantAliases(participantLabel);
+    let best = 0;
+
+    for (const alias of aliases) {
+      if (!alias) continue;
+      if (rawOcr === alias) return 1;
+
+      if (rawOcr.includes(alias)) {
+        best = Math.max(best, Math.min(0.99, alias.length / Math.max(1, rawOcr.length) + 0.35));
+      }
+
+      if (alias.includes(rawOcr)) {
+        best = Math.max(best, Math.min(0.97, rawOcr.length / Math.max(1, alias.length) + 0.32));
+      }
+
+      const longest = longestCommonSubstringLength(rawOcr, alias);
+      if (longest >= 3) {
+        best = Math.max(best, Math.min(0.96, longest / Math.max(rawOcr.length, alias.length) + 0.35));
+      }
+
+      const distance = levenshteinDistance(rawOcr, alias);
+      const maxLength = Math.max(rawOcr.length, alias.length);
+      const similarity = maxLength > 0 ? 1 - distance / maxLength : 0;
+      if (similarity >= 0.55) {
+        best = Math.max(best, similarity);
+      }
+
+      // 한글 OCR이 1글자만 남는 경우는 순서 fallback을 우선하게 한다.
+      if (rawOcr.length <= 1 || alias.length <= 1) {
+        best = Math.min(best, 0.12);
+      }
+    }
+
+    return best;
+  };
+
+  const getBestParticipantMatch = (
+    participants: ParticipantForm[],
+    playerName: string,
+    usedIndexes: Set<number>,
+    team?: Team | null
+  ): { index: number; score: number } | null => {
+    let bestMatch: { index: number; score: number } | null = null;
+
+    participants.forEach((participant, index) => {
+      if (usedIndexes.has(index)) return;
+      if (team && participant.team !== team) return;
+
+      const score = simpleMatchScore(playerName, participant.playerInput);
+      if (!bestMatch || score > bestMatch.score) {
+        bestMatch = { index, score };
+      }
+    });
+
+    return bestMatch;
+  };
+
+  const getSequentialParticipantFallback = (
+    participants: ParticipantForm[],
+    usedIndexes: Set<number>,
+    team?: Team | null,
+    visualRowIndex?: number
+  ): { index: number; score: number } | null => {
+    const candidates = participants
+      .map((participant, index) => ({ participant, index }))
+      .filter(({ participant, index }) => {
+        if (usedIndexes.has(index)) return false;
+        if (team && participant.team !== team) return false;
+        return Boolean(participant.playerInput.trim());
+      });
+
+    if (candidates.length === 0) return null;
+
+    if (team && typeof visualRowIndex === "number" && visualRowIndex >= 0) {
+      const byVisualOrder = candidates[visualRowIndex];
+      if (byVisualOrder) {
+        return { index: byVisualOrder.index, score: 0.2 };
+      }
+    }
+
+    return { index: candidates[0].index, score: 0.15 };
+  };
+
+  const hasReadableKda = (row: LolResultImportRow) =>
+    row.kills !== null && row.deaths !== null && row.assists !== null;
+
+  const getMatchThreshold = (match: { index: number; score: number } | null) => {
+    if (!match) return false;
+    return match.score >= 0.14;
+  };
+
+  const getClipboardImageFiles = (event: ClipboardEvent<HTMLElement>) => {
+    const items = Array.from(event.clipboardData.items ?? []);
+
+    return items
+      .filter((item) => item.kind === "file" && item.type.startsWith("image/"))
+      .map((item, index) => {
+        const file = item.getAsFile();
+        if (!file) return null;
+
+        const extension = file.type.split("/")[1] || "png";
+        return new File([file], file.name || `lol-result-${Date.now()}-${index}.${extension}`, {
+          type: file.type,
+        });
+      })
+      .filter((file): file is File => Boolean(file));
+  };
+
+  const handleImportLolResult = async (gameIndex: number, file: File | null) => {
+    if (!file) return;
+
+    const targetGame = form.games[gameIndex];
+    if (!targetGame) return;
+
+    const emptyPlayers = targetGame.participants.filter(
+      (participant) => !participant.playerId || !participant.playerInput.trim()
+    );
+
+    if (emptyPlayers.length > 0) {
+      alert("먼저 팀 밸런스 결과를 불러오거나 플레이어 10명을 입력해주세요.");
+      return;
+    }
+
+    let timeoutId: number | null = null;
+    let progressTimerId: number | null = null;
+
+    try {
+      setLolResultImportingGameIndex(gameIndex);
+      setLolResultImportStatus((prev) => ({
+        ...prev,
+        [gameIndex]: "캡쳐 업로드 준비 중...",
+      }));
+
+      const body = new FormData();
+      body.append("image", file);
+
+      const controller = new AbortController();
+      const startedAt = Date.now();
+      timeoutId = window.setTimeout(() => controller.abort(), 90_000);
+      progressTimerId = window.setInterval(() => {
+        const elapsedSeconds = Math.floor((Date.now() - startedAt) / 1000);
+        setLolResultImportStatus((prev) => ({
+          ...prev,
+          [gameIndex]: `서버 분석 중... ${elapsedSeconds}초 경과 · OCR/챔피언 비교 진행 중`,
+        }));
+      }, 1000);
+
+      setLolResultImportStatus((prev) => ({
+        ...prev,
+        [gameIndex]: "서버 분석 요청 중... OCR/챔피언 비교를 시작합니다.",
+      }));
+
+      const response = await fetch("/api/matches/import-lol-result", {
+        method: "POST",
+        body,
+        signal: controller.signal,
+      });
+
+      if (timeoutId !== null) window.clearTimeout(timeoutId);
+      if (progressTimerId !== null) window.clearInterval(progressTimerId);
+
+      setLolResultImportStatus((prev) => ({
+        ...prev,
+        [gameIndex]: "분석 결과를 폼에 적용 중...",
+      }));
+
+      const data = await parseResponse<LolResultImportResponse & { message?: string }>(
+        response
+      );
+
+      if (!response.ok || !data) {
+        alert(data?.message ?? "롤 결과 캡쳐 분석에 실패했습니다.");
+        return;
+      }
+
+      const usedParticipantIndexes = new Set<number>();
+      const championPreviewUpdates: Record<string, string> = {};
+
+      const normalizedRows = data.rows.map((row, visualIndex) => ({
+        ...row,
+        visualIndex,
+        hasKda: row.kills !== null && row.deaths !== null && row.assists !== null,
+      }));
+
+      const teamDetectCandidates = normalizedRows
+        .filter((row) => row.side === "TOP" && row.playerName.trim())
+        .map((row) => ({
+          row,
+          match: getBestParticipantMatch(
+            targetGame.participants,
+            row.playerName,
+            new Set<number>()
+          ),
+        }))
+        .filter((candidate): candidate is typeof candidate & { match: { index: number; score: number } } =>
+          Boolean(candidate.match)
+        )
+        .sort((left, right) => right.match.score - left.match.score);
+
+      const topPlayerMatch = teamDetectCandidates[0]?.match ?? null;
+      const canDetectTeams = Boolean(topPlayerMatch && topPlayerMatch.score >= 0.22);
+      const topImageTeam = canDetectTeams
+        ? targetGame.participants[topPlayerMatch!.index].team
+        : null;
+      const bottomImageTeam: Team | null =
+        topImageTeam === "BLUE" ? "RED" : topImageTeam === "RED" ? "BLUE" : null;
+
+      let appliedCount = 0;
+      let needsCheckCount = 0;
+      const nextGames = [...form.games];
+      const currentGame = nextGames[gameIndex];
+      const nextParticipants = currentGame.participants.map((participant) => ({
+        ...participant,
+      }));
+
+      const applyRowToParticipant = (
+        row: typeof normalizedRows[number],
+        match: { index: number; score: number },
+        reason: string
+      ) => {
+        if (!row.hasKda) return false;
+        if (usedParticipantIndexes.has(match.index)) return false;
+
+        usedParticipantIndexes.add(match.index);
+        const participant = nextParticipants[match.index];
+        if (!participant) return false;
+
+        participant.kills = row.kills ?? participant.kills;
+        participant.deaths = row.deaths ?? participant.deaths;
+        participant.assists = row.assists ?? participant.assists;
+
+        const candidateKey = `${gameIndex}-${match.index}`;
+        if (row.championPreviewDataUrl) {
+          championPreviewUpdates[candidateKey] = row.championPreviewDataUrl;
+        }
+
+        appliedCount += 1;
+        if (process.env.NODE_ENV !== "production") {
+          console.info("[LOL_RESULT_IMPORT_MATCH_APPLY]", {
+            reason,
+            rowPlayerName: row.playerName,
+            rowKda: { kills: row.kills, deaths: row.deaths, assists: row.assists },
+            participantIndex: match.index,
+            participant: participant.playerInput,
+            score: match.score,
+          });
+        }
+        return true;
+      };
+
+      // 1차: 이름/라이엇 닉네임 직접 매칭. 점수가 충분한 행만 먼저 적용한다.
+      for (const row of normalizedRows) {
+        if (!row.hasKda) {
+          needsCheckCount += 1;
+          continue;
+        }
+
+        const targetTeam = canDetectTeams
+          ? row.side === "TOP"
+            ? topImageTeam ?? undefined
+            : bottomImageTeam ?? undefined
+          : undefined;
+
+        const teamMatch = targetTeam
+          ? getBestParticipantMatch(nextParticipants, row.playerName, usedParticipantIndexes, targetTeam)
+          : null;
+        const anyMatch = getBestParticipantMatch(nextParticipants, row.playerName, usedParticipantIndexes);
+        const preferredMatch = getMatchThreshold(teamMatch) ? teamMatch : getMatchThreshold(anyMatch) ? anyMatch : null;
+
+        if (preferredMatch && applyRowToParticipant(row, preferredMatch, "name")) {
+          continue;
+        }
+
+        if (process.env.NODE_ENV !== "production") {
+          console.info("[LOL_RESULT_IMPORT_MATCH_PENDING]", {
+            rowPlayerName: row.playerName,
+            rowKda: { kills: row.kills, deaths: row.deaths, assists: row.assists },
+            targetTeam,
+            teamMatch,
+            anyMatch,
+          });
+        }
+      }
+
+      // 2차: 같은 팀이 판별된 경우, 이름 인식이 무너진 행만 팀 내 남은 순서로 보조 적용한다.
+      for (const row of normalizedRows) {
+        if (!row.hasKda) continue;
+        const alreadyApplied = Array.from(usedParticipantIndexes).some((index) => {
+          const p = nextParticipants[index];
+          return p?.kills === row.kills && p?.deaths === row.deaths && p?.assists === row.assists;
+        });
+        if (alreadyApplied) continue;
+
+        const visualRowIndex = normalizedRows
+          .filter((candidate) => candidate.side === row.side)
+          .findIndex((candidate) => candidate === row);
+        const targetTeam = canDetectTeams
+          ? row.side === "TOP"
+            ? topImageTeam ?? undefined
+            : bottomImageTeam ?? undefined
+          : undefined;
+
+        const fallback = getSequentialParticipantFallback(
+          nextParticipants,
+          usedParticipantIndexes,
+          targetTeam,
+          visualRowIndex
+        );
+
+        if (fallback && fallback.score > 0 && applyRowToParticipant(row, fallback, "sequential")) {
+          continue;
+        }
+
+        needsCheckCount += 1;
+        if (process.env.NODE_ENV !== "production") {
+          console.info("[LOL_RESULT_IMPORT_MATCH_SKIP]", {
+            rowPlayerName: row.playerName,
+            rowKda: { kills: row.kills, deaths: row.deaths, assists: row.assists },
+            targetTeam,
+            fallback,
+          });
+        }
+      }
+
+      // 챔피언은 수동 입력이지만, 캡쳐 아이콘은 항상 보이게 한다.
+      // KDA 매칭이 실패한 행도 같은 팀/화면 순서 기준으로 미리보기 이미지를 배치한다.
+      for (const row of normalizedRows) {
+        if (!row.championPreviewDataUrl) continue;
+
+        const alreadyShown = Object.values(championPreviewUpdates).includes(row.championPreviewDataUrl);
+        if (alreadyShown) continue;
+
+        const visualRowIndex = normalizedRows
+          .filter((candidate) => candidate.side === row.side)
+          .findIndex((candidate) => candidate === row);
+        const targetTeam = canDetectTeams
+          ? row.side === "TOP"
+            ? topImageTeam ?? undefined
+            : bottomImageTeam ?? undefined
+          : undefined;
+
+        const orderedTeamParticipants = nextParticipants
+          .map((participant, index) => ({ participant, index }))
+          .filter(({ participant }) => !targetTeam || participant.team === targetTeam);
+
+        const fallbackIndex = orderedTeamParticipants[visualRowIndex]?.index;
+        if (typeof fallbackIndex === "number") {
+          const key = `${gameIndex}-${fallbackIndex}`;
+          if (!championPreviewUpdates[key]) {
+            championPreviewUpdates[key] = row.championPreviewDataUrl;
+          }
+        }
+      }
+
+      const resultText = (data.resultText ?? "").replace(/\s+/g, "");
+      const resultTextForKorean = resultText.replace(/[^가-힣a-zA-Z]/g, "");
+      const hasWinText =
+        /승리|victory|win/i.test(resultText) || /승.*리/.test(resultTextForKorean);
+      const hasLoseText =
+        /패배|defeat|loss|lose/i.test(resultText) || /패.*배/.test(resultTextForKorean);
+
+      const topKillSum = normalizedRows
+        .filter((row) => row.side === "TOP" && row.hasKda)
+        .reduce((sum, row) => sum + (row.kills ?? 0), 0);
+      const bottomKillSum = normalizedRows
+        .filter((row) => row.side === "BOTTOM" && row.hasKda)
+        .reduce((sum, row) => sum + (row.kills ?? 0), 0);
+      const topValidKdaCount = normalizedRows.filter(
+        (row) => row.side === "TOP" && row.hasKda
+      ).length;
+      const bottomValidKdaCount = normalizedRows.filter(
+        (row) => row.side === "BOTTOM" && row.hasKda
+      ).length;
+
+      let winnerTeam = currentGame.winnerTeam;
+      let winnerDetectReason: "result-title-win" | "result-title-lose" | "team-kill-sum" | "not-detected" =
+        "not-detected";
+
+      if (canDetectTeams && topImageTeam && bottomImageTeam) {
+        if (hasWinText) {
+          // 롤 결과 화면에서 위쪽 팀은 현재 클라이언트 계정이 속한 팀입니다.
+          winnerTeam = topImageTeam;
+          winnerDetectReason = "result-title-win";
+        } else if (hasLoseText) {
+          winnerTeam = bottomImageTeam;
+          winnerDetectReason = "result-title-lose";
+        } else if (
+          topValidKdaCount >= 3 &&
+          bottomValidKdaCount >= 3 &&
+          topKillSum !== bottomKillSum
+        ) {
+          // 승리/패배 OCR이 실패한 경우의 보조값입니다.
+          // 일반적으로 결과 화면에서는 팀 킬이 높은 쪽이 승리팀인 경우가 대부분이므로 자동 선택하되,
+          // 관리자가 저장 전 토글로 수정할 수 있게 유지합니다.
+          winnerTeam = topKillSum > bottomKillSum ? topImageTeam : bottomImageTeam;
+          winnerDetectReason = "team-kill-sum";
+        }
+      }
+
+      if (process.env.NODE_ENV !== "production") {
+        console.info("[LOL_RESULT_IMPORT_WINNER_DETECT]", {
+          resultText,
+          hasWinText,
+          hasLoseText,
+          topImageTeam,
+          bottomImageTeam,
+          topKillSum,
+          bottomKillSum,
+          topValidKdaCount,
+          bottomValidKdaCount,
+          winnerTeam,
+          winnerDetectReason,
+        });
+      }
+
+      nextGames[gameIndex] = {
+        ...currentGame,
+        winnerTeam,
+        participants: nextParticipants,
+      };
+
+      setForm((prev) => ({
+        ...prev,
+        games: prev.games.map((game, index) =>
+          index === gameIndex ? nextGames[gameIndex] : game
+        ),
+      }));
+
+      setLolChampionCandidates((prev) => {
+        const next = { ...prev };
+        for (const participantIndex of targetGame.participants.keys()) {
+          delete next[`${gameIndex}-${participantIndex}`];
+        }
+        return next;
+      });
+      setLolChampionPreviews((prev) => ({
+        ...prev,
+        ...championPreviewUpdates,
+      }));
+
+      const statusText =
+        needsCheckCount > 0
+          ? `${appliedCount}명 KDA 자동 입력, ${needsCheckCount}명 확인 필요`
+          : `${appliedCount}명 KDA 자동 입력 완료`;
+
+      setLolResultImportStatus((prev) => ({
+        ...prev,
+        [gameIndex]: statusText,
+      }));
+      alert(statusText);
+    } catch (error) {
+      console.error("[LOL_RESULT_IMPORT_CLIENT_ERROR]", error);
+
+      const isAbortError =
+        error instanceof DOMException && error.name === "AbortError";
+      const message = isAbortError
+        ? "90초 동안 응답이 없어 분석을 중단했습니다. 캡쳐 범위를 줄이거나 다시 시도해주세요."
+        : "롤 결과 캡쳐 불러오기 중 오류가 발생했습니다.";
+
+      setLolResultImportStatus((prev) => ({
+        ...prev,
+        [gameIndex]: message,
+      }));
+      alert(message);
+    } finally {
+      if (timeoutId !== null) window.clearTimeout(timeoutId);
+      if (progressTimerId !== null) window.clearInterval(progressTimerId);
+      setLolResultImportingGameIndex(null);
+    }
+  };
+
+  const handlePasteLolResults = async (
+    gameIndex: number,
+    event: ClipboardEvent<HTMLElement>
+  ) => {
+    const files = getClipboardImageFiles(event);
+
+    if (files.length === 0) return;
+
+    event.preventDefault();
+
+    if (lolResultImportingGameIndex !== null) {
+      alert("이미 캡쳐 분석이 진행 중입니다. 완료 후 다시 붙여넣어주세요.");
+      return;
+    }
+
+    const availableGameCount = form.games.length - gameIndex;
+    if (files.length > availableGameCount) {
+      alert(`붙여넣은 캡쳐 ${files.length}장 중 ${availableGameCount}장만 적용할 수 있습니다. 세트를 먼저 추가해주세요.`);
+      return;
+    }
+
+    for (const [offset, file] of files.entries()) {
+      await handleImportLolResult(gameIndex + offset, file);
+    }
+  };
+
   const handleSubmit = async () => {
     try {
       const validationMessage = runClientValidation();
@@ -921,6 +1530,33 @@ export default function MatchForm({
               </div>
 
               <div className="match-form-game__controls">
+                <div
+                  className={`app-button--danger-outline match-lol-result-import-button ${
+                    lolResultImportingGameIndex === gameIndex
+                      ? "match-lol-result-import-button--loading"
+                      : ""
+                  }`}
+                  role="button"
+                  tabIndex={0}
+                  aria-disabled={lolResultImportingGameIndex !== null}
+                  title="Windows + Shift + S로 캡쳐 후 이 영역을 클릭하고 Ctrl + V를 누르세요. 여러 장을 붙여넣으면 현재 세트부터 순서대로 적용됩니다."
+                  onPaste={(event) => {
+                    void handlePasteLolResults(gameIndex, event);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.currentTarget.focus();
+                    }
+                  }}
+                >
+                  {lolResultImportingGameIndex === gameIndex
+                    ? "캡쳐 분석 중..."
+                    : "Ctrl + V로 롤 결과 붙여넣기"}
+                  <span className="match-lol-result-import-button__hint">
+                    Win+Shift+S 후 클릭 → Ctrl+V
+                  </span>
+                </div>
+
                 <div className="match-winner-toggle">
                   <span className="match-winner-toggle__label">승리팀</span>
 
@@ -961,6 +1597,12 @@ export default function MatchForm({
               </div>
             </div>
 
+            {lolResultImportStatus[gameIndex] ? (
+              <div className="match-lol-result-import-status">
+                {lolResultImportStatus[gameIndex]}
+              </div>
+            ) : null}
+
             <div className="match-entry-board">
               <div className="match-entry-header">
                 <div>팀</div>
@@ -993,6 +1635,9 @@ export default function MatchForm({
                         participant.championId
                       )
                     : [];
+
+                const importChampionPreview =
+                  lolChampionPreviews[`${gameIndex}-${participantIndex}`] ?? "";
 
                 return (
                   <div
@@ -1075,64 +1720,106 @@ export default function MatchForm({
                     </div>
 
                     <div className="match-autocomplete-cell">
-                      <input
-                        value={participant.championInput}
-                        onFocus={() => setActiveChampionField(championFieldKey)}
-                        onChange={(e) => {
-                          const value = e.target.value;
-
-                          updateParticipantField(
-                            gameIndex,
-                            participantIndex,
-                            "championInput",
-                            value
-                          );
-                          updateParticipantField(
-                            gameIndex,
-                            participantIndex,
-                            "championId",
-                            championMap.get(value.trim().toLowerCase()) ?? 0
-                          );
-                          setActiveChampionField(championFieldKey);
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                          width: "100%",
                         }}
-                        onBlur={() => {
-                          setTimeout(() => setActiveChampionField(null), 150);
-                        }}
-                        className="match-grid-input"
-                        placeholder="챔피언 입력"
-                        autoComplete="off"
-                      />
-
-                      {activeChampionField === championFieldKey &&
-                        championSuggestions.length > 0 && (
-                          <div className="match-autocomplete-list">
-                            {championSuggestions.map((champion) => (
-                              <button
-                                key={champion.id}
-                                type="button"
-                                onMouseDown={(e) => e.preventDefault()}
-                                onClick={() => {
-                                  updateParticipantField(
-                                    gameIndex,
-                                    participantIndex,
-                                    "championInput",
-                                    champion.name
-                                  );
-                                  updateParticipantField(
-                                    gameIndex,
-                                    participantIndex,
-                                    "championId",
-                                    champion.id
-                                  );
-                                  setActiveChampionField(null);
-                                }}
-                                className="match-autocomplete-item"
-                              >
-                                {champion.name}
-                              </button>
-                            ))}
-                          </div>
+                      >
+                        {importChampionPreview ? (
+                          <img
+                            src={importChampionPreview}
+                            alt=""
+                            width={38}
+                            height={38}
+                            style={{
+                              width: 38,
+                              height: 38,
+                              borderRadius: "50%",
+                              border: "1px solid rgba(56, 189, 248, 0.7)",
+                              boxShadow: "0 0 0 2px rgba(15, 23, 42, 0.9)",
+                              objectFit: "cover",
+                              background: "#020617",
+                              flex: "0 0 auto",
+                            }}
+                          />
+                        ) : (
+                          <div
+                            aria-hidden="true"
+                            style={{
+                              width: 38,
+                              height: 38,
+                              borderRadius: "50%",
+                              border: "1px solid rgba(148, 163, 184, 0.18)",
+                              background: "rgba(2, 6, 23, 0.55)",
+                              flex: "0 0 auto",
+                            }}
+                          />
                         )}
+
+                        <div style={{ flex: 1, minWidth: 0, position: "relative" }}>
+                          <input
+                            value={participant.championInput}
+                            onFocus={() => setActiveChampionField(championFieldKey)}
+                            onChange={(e) => {
+                              const value = e.target.value;
+
+                              updateParticipantField(
+                                gameIndex,
+                                participantIndex,
+                                "championInput",
+                                value
+                              );
+                              updateParticipantField(
+                                gameIndex,
+                                participantIndex,
+                                "championId",
+                                championMap.get(value.trim().toLowerCase()) ?? 0
+                              );
+                              setActiveChampionField(championFieldKey);
+                            }}
+                            onBlur={() => {
+                              setTimeout(() => setActiveChampionField(null), 150);
+                            }}
+                            className="match-grid-input"
+                            placeholder="챔피언 입력"
+                            autoComplete="off"
+                          />
+
+                          {activeChampionField === championFieldKey &&
+                            championSuggestions.length > 0 && (
+                              <div className="match-autocomplete-list">
+                                {championSuggestions.map((champion) => (
+                                  <button
+                                    key={champion.id}
+                                    type="button"
+                                    onMouseDown={(e) => e.preventDefault()}
+                                    onClick={() => {
+                                      updateParticipantField(
+                                        gameIndex,
+                                        participantIndex,
+                                        "championInput",
+                                        champion.name
+                                      );
+                                      updateParticipantField(
+                                        gameIndex,
+                                        participantIndex,
+                                        "championId",
+                                        champion.id
+                                      );
+                                      setActiveChampionField(null);
+                                    }}
+                                    className="match-autocomplete-item"
+                                  >
+                                    {champion.name}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                        </div>
+                      </div>
                     </div>
 
                     <div>
@@ -1221,6 +1908,32 @@ export default function MatchForm({
           justify-content: flex-end;
           gap: 10px;
           flex-wrap: wrap;
+        }
+
+        .match-lol-result-import-button {
+          display: inline-flex !important;
+          align-items: center;
+          justify-content: center;
+          min-height: 34px !important;
+          cursor: pointer;
+          user-select: none;
+          white-space: nowrap;
+        }
+
+        .match-lol-result-import-button--loading {
+          opacity: 0.62;
+          pointer-events: none;
+        }
+
+        .match-lol-result-import-status {
+          margin: 10px 0 12px;
+          padding: 9px 12px;
+          border-radius: 12px;
+          border: 1px solid rgba(56, 189, 248, 0.32);
+          background: rgba(8, 47, 73, 0.34);
+          color: #bae6fd;
+          font-size: 12px;
+          font-weight: 800;
         }
 
         .match-winner-toggle {
