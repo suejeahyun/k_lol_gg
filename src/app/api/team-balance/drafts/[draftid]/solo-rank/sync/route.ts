@@ -16,7 +16,7 @@ import {
   isSoloRankMatch,
 } from "@/lib/riot/client";
 
-type RouteContext = { params: Promise<{ draftId: string }> };
+type RouteContext = { params: Promise<{ draftid: string }> };
 
 const RECENT_SOLO_MATCH_COUNT = 20;
 const SYNC_COOLDOWN_MINUTES = 10;
@@ -201,8 +201,8 @@ export async function POST(req: NextRequest, context: RouteContext) {
     });
     if (rateLimitRejected) return rateLimitRejected;
 
-    const { draftId } = await context.params;
-    const parsedDraftId = Number(draftId);
+    const { draftid } = await context.params;
+    const parsedDraftId = Number(draftid);
 
     if (!Number.isInteger(parsedDraftId) || parsedDraftId <= 0) {
       return NextResponse.json({ message: "유효하지 않은 밸런스 ID입니다." }, { status: 400 });
