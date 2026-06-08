@@ -1106,6 +1106,20 @@ model DiscordVoiceEvent {
   previousChannelId String?
   eventType         String
   occurredAt        DateTime @default(now())
+
+  channelName           String?
+  previousChannelName   String?
+  categoryId            String?
+  previousCategoryId    String?
+  categoryName          String?
+  previousCategoryName  String?
+
+  discordUsername       String?
+  discordGlobalName     String?
+  discordServerNickname String?
+  memberDisplayName     String?
+  memberNickname        String?
+
   rawJson           Json?
 
   userAccountId Int?
@@ -1113,6 +1127,8 @@ model DiscordVoiceEvent {
 
   @@index([discordId, occurredAt])
   @@index([channelId, occurredAt])
+  @@index([channelName, occurredAt])
+  @@index([categoryId, occurredAt])
   @@index([eventType, occurredAt])
 }
 

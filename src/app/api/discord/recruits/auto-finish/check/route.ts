@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import { rejectIfInvalidDiscordBotSecret } from "@/lib/discord/secret";
@@ -17,6 +18,32 @@ type Body = {
 
 function normalizeName(value: string) {
   return String(value || "").replace(/\s+/g, "").toLowerCase();
+}
+
+function isNonEmptyName(value: string | null | undefined) {
+  return String(value || "").trim() !== "";
+}
+
+async function hasRecentExpectedActivityInChannel(params: {
+  channelId: string;
+  expectedDiscordIds: string[];
+  since: Date;
+}) {
+  const { channelId, expectedDiscordIds, since } = params;
+  if (expectedDiscordIds.length === 0) return false;
+
+  const count = await prisma.discordVoiceEvent.count({
+    where: {
+      discordId: { in: expectedDiscordIds },
+      occurredAt: { gte: since },
+      OR: [
+        { channelId },
+        { previousChannelId: channelId },
+      ],
+    },
+  });
+
+  return count > 0;
 }
 
 export async function POST(req: NextRequest) {
@@ -40,14 +67,15 @@ export async function POST(req: NextRequest) {
       discordMonitor: true,
     },
     orderBy: [{ updatedAt: "desc" }],
-    take: 50,
+    take: 80,
   });
 
   const now = new Date();
+  const recentSince = new Date(now.getTime() - 6 * 60 * 60 * 1000);
   const results: Array<Record<string, unknown>> = [];
 
   for (const party of parties) {
-    const activeMembers = party.members.filter((member) => member.name.trim() !== "" && !member.isSubstitute);
+    const activeMembers = party.members.filter((member) => isNonEmptyName(member.name) && !member.isSubstitute);
     if (activeMembers.length === 0) continue;
 
     const memberNames = activeMembers.map((member) => member.name.trim());
@@ -64,26 +92,57 @@ export async function POST(req: NextRequest) {
       include: { userAccount: true },
     });
 
-    const expectedDiscordIds = players
+    const expectedDiscordIds = Array.from(new Set(players
       .filter((player) => normalizedMemberNames.has(normalizeName(player.name)) || normalizedMemberNames.has(normalizeName(player.nickname)))
       .map((player) => player.userAccount?.discordId)
-      .filter((id): id is string => Boolean(id));
+      .filter((id): id is string => Boolean(id))));
 
-    if (expectedDiscordIds.length === 0) {
-      results.push({ recruitNo: party.recruitNo, title: party.title, skipped: true, reason: "DISCORD_ID_NOT_LINKED" });
+    const linkedCount = expectedDiscordIds.length;
+    const requiredCount = activeMembers.length;
+
+    if (linkedCount < requiredCount) {
+      results.push({
+        recruitNo: party.recruitNo,
+        title: party.title,
+        skipped: true,
+        reason: "DISCORD_LINK_INCOMPLETE",
+        linkedCount,
+        requiredCount,
+      });
       continue;
     }
 
     const presentExpectedCount = expectedDiscordIds.filter((id) => currentDiscordIds.has(id)).length;
     const nonParticipantCount = [...currentDiscordIds].filter((id) => !expectedDiscordIds.includes(id)).length;
+
+    const currentMonitor = party.discordMonitor;
+    const monitorChannelMatched = currentMonitor?.voiceChannelId === channelId;
+    const hasPresentInThisChannel = presentExpectedCount > 0;
+    const hasRecentActivity = monitorChannelMatched || hasPresentInThisChannel
+      ? true
+      : await hasRecentExpectedActivityInChannel({ channelId, expectedDiscordIds, since: recentSince });
+
+    // 여러 음성방을 감시할 때, 해당 파티가 실제로 사용하지 않은 빈 방 때문에 자동 마감되는 것을 막는다.
+    if (!hasRecentActivity) {
+      results.push({
+        recruitNo: party.recruitNo,
+        title: party.title,
+        skipped: true,
+        reason: "NO_RECENT_ACTIVITY_IN_CHANNEL",
+        channelId,
+      });
+      continue;
+    }
+
     const shouldCandidate = shouldEnterFinishCandidate({
       expectedCount: expectedDiscordIds.length,
       presentExpectedCount,
     });
 
-    const currentMonitor = party.discordMonitor;
     const candidateStartedAt = shouldCandidate
-      ? currentMonitor?.finishCandidateStartedAt ?? now
+      ? currentMonitor?.voiceChannelId === channelId
+        ? currentMonitor?.finishCandidateStartedAt ?? now
+        : now
       : null;
     const elapsedMs = candidateStartedAt ? now.getTime() - candidateStartedAt.getTime() : 0;
     const canAutoFinish = shouldCandidate && elapsedMs >= holdMinutes * 60 * 1000;
@@ -160,7 +219,7 @@ export async function POST(req: NextRequest) {
           message: `디스코드 활동 종료 감지 자동 마감: #${fresh.recruitNo} ${fresh.title}`,
           targetType: "RecruitParty",
           targetId: fresh.id,
-          afterJson: { reason, channelId, expectedCount: expectedDiscordIds.length, presentExpectedCount, nonParticipantCount },
+          afterJson: { reason, channelId, expectedCount: expectedDiscordIds.length, presentExpectedCount, nonParticipantCount } as Prisma.InputJsonValue,
           db: tx,
         });
       });
@@ -175,6 +234,7 @@ export async function POST(req: NextRequest) {
       status: canAutoFinish ? "AUTO_FINISHED" : shouldCandidate ? "FINISH_CANDIDATE" : "ACTIVE",
       autoFinished: canAutoFinish,
       candidateStartedAt: candidateStartedAt?.toISOString() ?? null,
+      voiceChannelId: channelId,
     });
   }
 
