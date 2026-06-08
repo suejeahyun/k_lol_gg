@@ -174,9 +174,21 @@ model Player {
 model UserAccount {
   id           Int        @id @default(autoincrement())
   userId       String     @unique
-  passwordHash String
+  passwordHash String?
   role         UserRole   @default(USER)
   status       UserStatus @default(PENDING)
+
+  discordId             String?   @unique
+  discordUsername       String?
+  discordGlobalName     String?
+  discordServerNickname String?
+  discordAvatar         String?
+  discordLinkedAt       DateTime?
+  discordParsedBirthYear String?
+  discordParsedName      String?
+  discordParsedNickname  String?
+  discordParsedTier      String?
+  discordLinkStatus      String    @default("UNLINKED")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -189,7 +201,9 @@ model UserAccount {
   communityReports CommunityReport[]
   matchMvpVotes MatchMvpVote[]
   communityVisits CommunityVisit[]
+  discordVoiceEvents DiscordVoiceEvent[]
 }
+
 
 model Champion {
   id        Int      @id @default(autoincrement())
@@ -1034,6 +1048,7 @@ model RecruitParty {
   updatedAt DateTime @updatedAt
 
   members RecruitPartyMember[]
+  discordMonitor RecruitPartyDiscordMonitor?
 
   @@unique([recruitDate, resetSeq, recruitNo])
   @@index([recruitCode])
@@ -1082,6 +1097,45 @@ model RecruitPartyLog {
   @@index([createdAt])
 }
 
+
+
+model DiscordVoiceEvent {
+  id                Int      @id @default(autoincrement())
+  discordId         String
+  channelId         String?
+  previousChannelId String?
+  eventType         String
+  occurredAt        DateTime @default(now())
+  rawJson           Json?
+
+  userAccountId Int?
+  userAccount   UserAccount? @relation(fields: [userAccountId], references: [id], onDelete: SetNull)
+
+  @@index([discordId, occurredAt])
+  @@index([channelId, occurredAt])
+  @@index([eventType, occurredAt])
+}
+
+model RecruitPartyDiscordMonitor {
+  id                       Int      @id @default(autoincrement())
+  partyId                  Int      @unique
+  voiceChannelId           String?
+  status                   String   @default("ACTIVE")
+  lastExpectedCount        Int      @default(0)
+  lastPresentExpectedCount Int      @default(0)
+  lastNonParticipantCount  Int      @default(0)
+  finishCandidateStartedAt DateTime?
+  lastScannedAt            DateTime?
+  autoFinishedAt           DateTime?
+  autoFinishReason         String?  @db.Text
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  party RecruitParty @relation(fields: [partyId], references: [id], onDelete: Cascade)
+
+  @@index([voiceChannelId])
+  @@index([status, updatedAt])
+}
 
 model CommunityHeadline {
   id        Int               @id @default(autoincrement())

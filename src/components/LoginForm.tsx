@@ -49,6 +49,10 @@ export default function LoginForm() {
       <form className="auth-card" onSubmit={handleSubmit}>
         <h1 className="auth-title">로그인</h1>
 
+        <a className="auth-button" href="/api/auth/discord/start" style={{ textAlign: "center", textDecoration: "none", marginBottom: 12 }}>
+          Discord로 로그인 / 회원가입
+        </a>
+
         <label className="auth-field">
           <span>아이디</span>
           <input

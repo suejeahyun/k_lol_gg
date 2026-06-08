@@ -62,6 +62,13 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
+    if (!user.passwordHash) {
+      return NextResponse.json(
+        { message: "Discord로 가입한 계정입니다. 관리자에게 비밀번호 초기화를 요청해주세요." },
+        { status: 400 },
+      );
+    }
+
     const isValidPassword = await verifyPassword(currentPassword, user.passwordHash);
 
     if (!isValidPassword) {

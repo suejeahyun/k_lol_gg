@@ -40,6 +40,7 @@ const menuGroups: AdminSidebarGroup[] = [
     title: "OPERATE",
     items: [
       { href: "/admin/recruits", label: "구인현황", code: "REC" },
+      { href: "/admin/discord-monitor", label: "디코 모니터", code: "DC" },
       { href: "/admin/progress/event", label: "이벤트/멸망전", code: "EVT", activePrefixes: ["/admin/progress/event", "/admin/progress/destruction"] },
     ],
   },

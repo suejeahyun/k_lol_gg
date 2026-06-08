@@ -97,6 +97,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (!user.passwordHash) {
+      return NextResponse.json(
+        { message: "비밀번호가 없는 Discord 전용 계정입니다." },
+        { status: 401 },
+      );
+    }
+
     const isValidPassword = await verifyPassword(password, user.passwordHash);
 
     if (!isValidPassword) {

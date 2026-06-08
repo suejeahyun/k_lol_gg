@@ -41,6 +41,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (!user.passwordHash) {
+      return NextResponse.json(
+        { message: "Discord로 가입한 계정입니다. Discord 로그인으로 접속해주세요." },
+        { status: 401 }
+      );
+    }
+
     const isValidPassword = await verifyPassword(password, user.passwordHash);
 
     if (!isValidPassword) {

@@ -21,6 +21,18 @@ type AdminUser = {
     currentTier: string | null;
   } | null;
   linkStatus: "PLAYER_LINKED" | "NO_PLAYER";
+  discord?: {
+    id: string | null;
+    username: string | null;
+    globalName: string | null;
+    serverNickname: string | null;
+    parsedBirthYear: string | null;
+    parsedName: string | null;
+    parsedNickname: string | null;
+    parsedTier: string | null;
+    linkStatus: string;
+    linkedAt: string | null;
+  };
 };
 
 type CurrentAdmin = {
@@ -270,6 +282,7 @@ export default function AdminUsersPage() {
                   <th>상태</th>
                   <th>권한</th>
                   <th>연결</th>
+                  <th>Discord</th>
                   <th>가입일</th>
                   <th>관리</th>
                 </tr>
@@ -287,6 +300,7 @@ export default function AdminUsersPage() {
                     <td>{getStatusLabel(user.status)}</td>
                     <td>{getRoleLabel(user.role)}</td>
                     <td>{getLinkStatusLabel(user.linkStatus)}</td>
+                    <td>{getDiscordLabel(user.discord)}</td>
                     <td>
                       {new Date(user.createdAt).toLocaleDateString("ko-KR")}
                     </td>
@@ -386,4 +400,13 @@ function getRoleLabel(role: UserRole) {
 function getLinkStatusLabel(status: AdminUser["linkStatus"]) {
   if (status === "PLAYER_LINKED") return "Player 연결됨";
   return "Player 없음";
+}
+
+
+function getDiscordLabel(discord: AdminUser["discord"] | undefined) {
+  if (!discord?.id) return "미연동";
+  const parsed = [discord.parsedBirthYear, discord.parsedName, discord.parsedNickname, discord.parsedTier]
+    .filter(Boolean)
+    .join(" ");
+  return parsed || discord.serverNickname || discord.globalName || discord.username || "연동됨";
 }
