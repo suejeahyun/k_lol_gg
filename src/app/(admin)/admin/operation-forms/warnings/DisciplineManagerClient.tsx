@@ -199,45 +199,31 @@ export default function DisciplineManagerClient({ targets, initialRecords }: { t
 
   return (
     <div className="discipline-page-shell">
-      <section className="discipline-rule-card">
-        <h2>운영 경고 기준</h2>
-        <ol>
-          <li>내전은 3판 2선을 기본으로 합니다. 진행이 어려우면 운영진에게 문의합니다.</li>
-          <li>전챗 조롱, 감정표현, 인장 사용은 금지입니다. 실수 시 사과 후 자동 감정표현을 제외합니다.</li>
-          <li>협곡내전은 언랭일 경우 임시티어라도 받은 뒤 캡처를 운영진에게 전달합니다.</li>
-          <li>한숨, 남탓, 욕설, 과도한 훈수, 선을 넘는 발언은 금지입니다.</li>
-          <li>내전 지각 시 주의 1회, 주의 3회 누적 시 경고 1회로 전환합니다.</li>
-          <li>내전 노쇼 시 경고 1회가 부여되며 이벤트 내전 및 멸망전 참가가 제한됩니다.</li>
-          <li>부라인 없이 주라인만 작성하면 예비 인원으로 분류합니다. 특정 라인만 가능하면 운영진 태그가 필요합니다.</li>
-        </ol>
-      </section>
-
       <section className="discipline-summary-grid">
         <div className="discipline-stat"><span>활성 주의</span><strong>{activeCautions}회</strong></div>
         <div className="discipline-stat"><span>활성 경고</span><strong>{activeWarnings}회</strong></div>
         <div className="discipline-stat"><span>사이트 미등록 활성 기록</span><strong>{directActiveCount}건</strong></div>
-        <div className="discipline-stat"><span>주의→경고 기준</span><strong>3회</strong></div>
       </section>
 
       <section className="admin-card discipline-form-card">
         <h2>주의/경고 추가</h2>
-        <p className="admin-muted discipline-help">대상이 사이트에 가입되어 있지 않아도 직접 입력으로 주의/경고를 남길 수 있습니다.</p>
+        <p className="admin-muted discipline-help">대상은 사이트 등록 유저 검색 또는 이름·닉네임 직접 입력으로 등록할 수 있습니다. 사이트에 등록되지 않은 대상도 별도 기록됩니다.</p>
         <div className="discipline-mode-row">
-          <button type="button" className={`admin-button ${targetMode === "REGISTERED" ? "" : "admin-button--secondary"}`} onClick={() => setTargetMode("REGISTERED")}>등록 유저 선택</button>
-          <button type="button" className={`admin-button ${targetMode === "DIRECT" ? "" : "admin-button--secondary"}`} onClick={() => setTargetMode("DIRECT")}>사이트 미등록 직접 입력</button>
+          <button type="button" className={`admin-button ${targetMode === "REGISTERED" ? "" : "admin-button--secondary"}`} onClick={() => setTargetMode("REGISTERED")}>사이트 등록 대상 검색</button>
+          <button type="button" className={`admin-button ${targetMode === "DIRECT" ? "" : "admin-button--secondary"}`} onClick={() => setTargetMode("DIRECT")}>이름·닉네임 직접 등록</button>
         </div>
         <div className="discipline-form-grid">
           {targetMode === "REGISTERED" ? (
             <>
               <label>대상 검색<input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="아이디, 이름, 닉네임 검색" /></label>
-              <label>대상<select value={targetKey} onChange={(e) => setTargetKey(e.target.value)}>{filteredTargets.length === 0 ? <option value="">검색 결과 없음</option> : filteredTargets.map((target) => <option key={`${target.userAccountId || ""}:${target.playerId || ""}`} value={`${target.userAccountId || ""}:${target.playerId || ""}`}>{target.label}</option>)}</select></label>
+              <label>대상<select value={targetKey} onChange={(e) => setTargetKey(e.target.value)}>{filteredTargets.length === 0 ? <option value="">검색 결과 없음 — 직접 등록을 사용하세요</option> : filteredTargets.map((target) => <option key={`${target.userAccountId || ""}:${target.playerId || ""}`} value={`${target.userAccountId || ""}:${target.playerId || ""}`}>{target.label}</option>)}</select></label>
             </>
           ) : (
             <>
               <label>이름<input value={directName} onChange={(e) => setDirectName(e.target.value)} placeholder="예: 정민" /></label>
               <label>닉네임<input value={directNickname} onChange={(e) => setDirectNickname(e.target.value)} placeholder="예: 원죄" /></label>
               <label>태그<input value={directTag} onChange={(e) => setDirectTag(e.target.value)} placeholder="예: KR1 / 미입력 가능" /></label>
-              <div className="discipline-direct-note">사이트 계정·플레이어가 없어도 이름 기준으로 별도 기록됩니다. 이후 가입하면 검색으로 확인 후 수동 정리하면 됩니다.</div>
+              <div className="discipline-direct-note">사이트 계정·플레이어가 없는 대상도 이름과 닉네임으로 기록됩니다. 태그는 알고 있을 때만 입력하면 됩니다.</div>
             </>
           )}
           <label>종류<select value={type} onChange={(e) => setType(e.target.value)}><option value="CAUTION">주의</option><option value="WARNING">경고</option></select></label>

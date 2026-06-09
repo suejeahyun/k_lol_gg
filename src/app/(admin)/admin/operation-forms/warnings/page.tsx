@@ -40,7 +40,6 @@ export default async function AdminWarningsPage() {
           padding-bottom: 64px;
         }
         .discipline-page-shell { display: grid; gap: 22px; }
-        .discipline-rule-card,
         .discipline-form-card,
         .discipline-table-card,
         .discipline-stat {
@@ -49,19 +48,8 @@ export default async function AdminWarningsPage() {
           border-radius: 22px;
           box-shadow: 0 18px 48px rgba(0,0,0,.24);
         }
-        .discipline-rule-card { padding: 24px 28px; }
-        .discipline-rule-card h2,
         .discipline-form-card h2,
         .discipline-table-card h2 { margin: 0 0 14px; letter-spacing: -.02em; }
-        .discipline-rule-card ol {
-          margin: 0;
-          padding-left: 22px;
-          display: grid;
-          gap: 7px;
-          color: rgba(235,245,255,.88);
-          line-height: 1.62;
-          font-size: 14px;
-        }
         .discipline-summary-grid {
           display: grid;
           grid-template-columns: repeat(4, minmax(190px, 1fr));
@@ -163,14 +151,14 @@ export default async function AdminWarningsPage() {
           .discipline-page { width: min(100%, calc(100vw - 20px)); }
           .discipline-form-grid { grid-template-columns: 1fr; }
           .discipline-summary-grid { grid-template-columns: 1fr; }
-          .discipline-rule-card, .discipline-form-card, .discipline-table-card { padding: 18px; }
+          .discipline-form-card, .discipline-table-card { padding: 18px; }
         }
       `}</style>
       <div className="admin-page__header" style={{ marginBottom: 24 }}>
         <div>
           <p className="page-eyebrow">KAKAO OPERATION</p>
           <h1>운영 경고 관리</h1>
-          <p className="admin-page__description">내전 지각, 노쇼, 전챗/감정표현, 욕설/남탓/훈수 등 주의·경고를 관리합니다.</p>
+          <p className="admin-page__description">사이트 등록 유저와 미등록 대상을 이름·닉네임 기준으로 주의·경고 관리합니다.</p>
         </div>
       </div>
       <DisciplineManagerClient targets={targets} initialRecords={records as any} />
