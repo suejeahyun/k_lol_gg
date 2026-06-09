@@ -40,12 +40,16 @@ export default async function AdminWarningsPage() {
         .discipline-rule-card { padding: 24px 28px; }
         .discipline-rule-card h2, .discipline-form-card h2 { margin: 0 0 14px; }
         .discipline-rule-card ol { margin: 0; padding-left: 22px; display: grid; gap: 8px; color: rgba(235,245,255,.86); line-height: 1.6; }
-        .discipline-summary-grid { display: grid; grid-template-columns: repeat(3, minmax(180px, 1fr)); gap: 14px; }
+        .discipline-summary-grid { display: grid; grid-template-columns: repeat(4, minmax(180px, 1fr)); gap: 14px; }
         .discipline-stat { padding: 20px; }
         .discipline-stat span { color: rgba(190,218,255,.75); display:block; margin-bottom: 8px; }
         .discipline-stat strong { font-size: 30px; }
         .discipline-form-card, .discipline-table-card { padding: 24px; }
         .discipline-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-bottom: 18px; }
+        .discipline-help { margin: -4px 0 14px; }
+        .discipline-mode-row { display:flex; flex-wrap:wrap; gap:10px; margin: 0 0 16px; }
+        .discipline-direct-note { border: 1px solid rgba(96,166,255,.22); background: rgba(4,14,32,.62); border-radius: 14px; padding: 13px 14px; color: rgba(210,232,255,.78); line-height: 1.55; }
+        .discipline-direct-badge { display:inline-flex; margin-left:8px; padding:4px 8px; border-radius:999px; border:1px solid rgba(255,216,112,.35); background:rgba(255,196,64,.12); color:#ffe39d; font-size:12px; font-weight:900; vertical-align:middle; }
         .discipline-form-grid label { display: grid; gap: 8px; font-weight: 800; color: #bfe7ff; }
         .discipline-form-grid input, .discipline-form-grid select, .discipline-form-grid textarea { width: 100%; border-radius: 12px; border: 1px solid rgba(96,166,255,.28); background: rgba(2,10,24,.84); color: #f3fbff; padding: 12px 14px; }
         .discipline-form-grid textarea { min-height: 82px; resize: vertical; }

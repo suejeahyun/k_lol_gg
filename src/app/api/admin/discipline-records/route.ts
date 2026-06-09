@@ -17,6 +17,12 @@ function normalizeSource(value: unknown) {
   return VALID_SOURCES.has(source) ? source : "MANUAL";
 }
 
+function cleanText(value: unknown) {
+  const text = String(value || "").trim();
+  if (!text || text === "-" || text === "미입력") return null;
+  return text;
+}
+
 function normalizeSearch(value: string | null) {
   return String(value || "").trim();
 }
@@ -37,9 +43,11 @@ export async function GET(req: NextRequest) {
       { targetNickname: { contains: search, mode: "insensitive" } },
       { targetTag: { contains: search, mode: "insensitive" } },
       { reason: { contains: search, mode: "insensitive" } },
+      { note: { contains: search, mode: "insensitive" } },
       { userAccount: { userId: { contains: search, mode: "insensitive" } } },
       { player: { name: { contains: search, mode: "insensitive" } } },
       { player: { nickname: { contains: search, mode: "insensitive" } } },
+      { player: { tag: { contains: search, mode: "insensitive" } } },
     ];
   }
 
@@ -74,7 +82,7 @@ export async function POST(req: NextRequest) {
   const type = normalizeType(body.type);
   const source = normalizeSource(body.source);
   const reason = String(body.reason || "").trim();
-  const note = String(body.note || "").trim() || null;
+  const note = cleanText(body.note);
 
   if (!reason) return NextResponse.json({ message: "사유가 필요합니다." }, { status: 400 });
 
@@ -85,17 +93,21 @@ export async function POST(req: NextRequest) {
   const player = playerId ? await prisma.player.findUnique({ where: { id: playerId }, include: { userAccount: true } }) : null;
   const targetPlayer = player || user?.player || null;
 
-  if (!user && !targetPlayer && !body.targetName) {
-    return NextResponse.json({ message: "대상 유저 또는 이름이 필요합니다." }, { status: 400 });
+  const directName = cleanText(body.targetName);
+  const directNickname = cleanText(body.targetNickname);
+  const directTag = cleanText(body.targetTag);
+
+  if (!user && !targetPlayer && !directName) {
+    return NextResponse.json({ message: "등록되지 않은 대상은 이름을 직접 입력해야 합니다." }, { status: 400 });
   }
 
   const created = await prisma.userDisciplineRecord.create({
     data: {
       userAccountId: user?.id || targetPlayer?.userAccountId || null,
       playerId: targetPlayer?.id || null,
-      targetName: String(body.targetName || targetPlayer?.name || user?.userId || "대상 미상"),
-      targetNickname: targetPlayer?.nickname || null,
-      targetTag: targetPlayer?.tag || null,
+      targetName: directName || targetPlayer?.name || user?.userId || "대상 미상",
+      targetNickname: directNickname || targetPlayer?.nickname || null,
+      targetTag: directTag || targetPlayer?.tag || null,
       type,
       source,
       reason,
