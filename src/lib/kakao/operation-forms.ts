@@ -188,6 +188,97 @@ function cleanRequiredField(value: string) {
   return text;
 }
 
+
+const LEAVE_SCOPE_OPTIONS = ["소통방", "구인방", "디코", "디스코드"] as const;
+
+function normalizeLeaveScopeToken(value: string) {
+  if (value === "디스코드") return "디코";
+  return value;
+}
+
+function uniqueJoin(values: string[]) {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const value of values) {
+    const clean = normalizeLeaveScopeToken(value.trim());
+    if (!clean || seen.has(clean)) continue;
+    seen.add(clean);
+    out.push(clean);
+  }
+  return out.join(", ");
+}
+
+function isAllScopeGuide(value: string) {
+  const compact = canonical(value);
+  return compact === "소통방구인방디코" || compact === "소통방구인방디스코드";
+}
+
+function extractLeaveScopeCandidates(line: string) {
+  const compact = String(line || "").replace(/\s+/g, "");
+  const found: string[] = [];
+  if (/소통방/.test(compact)) found.push("소통방");
+  if (/구인방/.test(compact)) found.push("구인방");
+  if (/디스코드|디코/.test(compact)) found.push("디코");
+  return found;
+}
+
+export function cleanLeaveScopeField(value: string) {
+  const source = String(value || "")
+    .replace(/\r/g, "\n")
+    .replace(/　/g, " ")
+    .replace(/\u00A0/g, " ")
+    .replace(/：/g, ":")
+    .trim();
+
+  const selected: string[] = [];
+  const fallbackLines: string[] = [];
+
+  for (const rawLine of source.split("\n")) {
+    let line = rawLine.trim();
+    if (!line) continue;
+    if (/^\*\s*특별한\s*사유\s*없이는/i.test(line)) continue;
+    if (/^\*\s*EX\)?/i.test(line)) continue;
+    if (/^\*\s*예시/i.test(line)) continue;
+
+    line = line
+      .replace(/^\s*[:：]\s*/, "")
+      .replace(/^\s*[-]\s*/, "")
+      .trim();
+
+    // 템플릿 안내값: "(소통방,구인방,디코)"만 있는 줄은 선택값이 아닙니다.
+    const leadingGuide = line.match(/^\(?\s*소통방\s*,?\s*구인방\s*,?\s*(?:디코|디스코드)\s*\)?\s*(.*)$/);
+    if (leadingGuide) {
+      const rest = (leadingGuide[1] || "").trim();
+      if (!rest) continue;
+      line = rest;
+    }
+
+    // 사용자가 "(소통방, 디코)"처럼 범위를 괄호 안에 직접 적은 경우는 선택값으로 인정합니다.
+    const parenOnly = line.match(/^\(?\s*([^()（）]+)\s*\)?$/)?.[1]?.trim() || "";
+    if (parenOnly && !isAllScopeGuide(parenOnly)) {
+      selected.push(...extractLeaveScopeCandidates(parenOnly));
+    }
+
+    selected.push(...extractLeaveScopeCandidates(line));
+
+    const cleaned = cleanGuideLines(line);
+    if (cleaned && !isAllScopeGuide(cleaned)) fallbackLines.push(cleaned);
+  }
+
+  const scope = uniqueJoin(selected);
+  if (scope) return scope;
+
+  const fallback = cleanRequiredField(fallbackLines.join("\n"));
+  return fallback || "";
+}
+
+export function extractKakaoLeaveScopeFromText(input: unknown) {
+  const text = normalizeKakaoOperationText(input);
+  if (!text) return "";
+  if (!hasAll(text, ["이름 및 닉네임", "외출기간", "외출사유", "외출범위"])) return "";
+  return cleanLeaveScopeField(readField(text, "외출범위", []));
+}
+
 function parseUsage(value: string) {
   const raw = cleanRequiredField(value.replace(/\*\s*선택\s*:?/g, ""));
   const gameMatch = raw.match(/특정\s*게임\s*[(:：]?\s*([^\n)）]+)?/);
@@ -270,7 +361,7 @@ export function parseKakaoOperationForm(input: unknown): ParsedKakaoOperationFor
     const requesterInfo = cleanRequiredField(readField(text, "이름 및 닉네임", ["외출기간", "외출사유", "외출범위"]));
     const leavePeriod = cleanRequiredField(readField(text, "외출기간", ["외출사유", "외출범위"]));
     const reason = cleanRequiredField(readField(text, "외출사유", ["외출범위"]));
-    const scope = cleanRequiredField(readField(text, "외출범위", [])) || "미입력";
+    const scope = cleanLeaveScopeField(readField(text, "외출범위", [])) || "미입력";
 
     if (!requesterInfo || !leavePeriod || !reason) return null;
 

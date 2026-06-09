@@ -1,5 +1,9 @@
 import { prisma } from "@/lib/prisma/client";
-import { kakaoOperationFormLabels, type KakaoOperationFormType } from "@/lib/kakao/operation-forms";
+import {
+  extractKakaoLeaveScopeFromText,
+  kakaoOperationFormLabels,
+  type KakaoOperationFormType,
+} from "@/lib/kakao/operation-forms";
 import KakaoOperationFormActions from "@/components/admin/KakaoOperationFormActions";
 
 type SearchParams = Promise<{
@@ -126,13 +130,18 @@ async function getRows(type: KakaoOperationFormType): Promise<Row[]> {
   }
 
   const items = await prisma.kakaoLeaveRequest.findMany({ orderBy: { createdAt: "desc" }, take: 200 });
-  return items.map((item) => ({
-    id: item.id,
-    memo: item.memo,
-    rawText: item.rawText,
-    createdAt: item.createdAt,
-    cells: [item.requesterInfo, item.leavePeriod, item.reason, item.scope],
-  }));
+  return items.map((item) => {
+    const parsedScope = extractKakaoLeaveScopeFromText(item.rawText);
+    const displayScope = item.scope && item.scope !== "미입력" ? item.scope : parsedScope || item.scope || "미입력";
+
+    return {
+      id: item.id,
+      memo: item.memo,
+      rawText: item.rawText,
+      createdAt: item.createdAt,
+      cells: [item.requesterInfo, item.leavePeriod, item.reason, displayScope],
+    };
+  });
 }
 
 function ShortText({ value, lines = 2 }: { value: string; lines?: number }) {
