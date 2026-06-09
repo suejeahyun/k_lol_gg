@@ -11,6 +11,12 @@ type Player = {
   peakTier: string | null;
   currentTier: string | null;
   createdAt: string;
+  userAccount: {
+    id: number;
+    userId: string;
+    role: string;
+    status: string;
+  } | null;
 };
 
 type TierType = "basic" | "master" | "high";
@@ -343,6 +349,45 @@ export default function AdminPlayersPage() {
     }
   }
 
+  async function handlePasswordReset(player: Player) {
+    if (!player.userAccount) {
+      alert("이 플레이어와 연결된 사이트 계정이 없습니다.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `${player.name} (${player.nickname}#${player.tag}) 플레이어의 사이트 계정(${player.userAccount.userId}) 비밀번호를 1234로 초기화하겠습니까?`,
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch(`/api/admin/players/${player.id}/password-reset`, {
+        method: "PATCH",
+      });
+
+      const result = await parseResponse<{
+        message?: string;
+        tempPassword?: string;
+        userId?: string;
+      }>(res);
+
+      if (!res.ok) {
+        alert(result?.message ?? "비밀번호 초기화에 실패했습니다.");
+        return;
+      }
+
+      alert(
+        `비밀번호가 초기화되었습니다.
+계정: ${result?.userId ?? player.userAccount.userId}
+임시 비밀번호: ${result?.tempPassword ?? "1234"}`,
+      );
+    } catch (error) {
+      console.error("플레이어 비밀번호 초기화 실패:", error);
+      alert("비밀번호 초기화 중 오류가 발생했습니다.");
+    }
+  }
+
   async function handleSearchSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -633,13 +678,15 @@ export default function AdminPlayersPage() {
         <div
           className="admin-player-row-header"
           style={{
-            gridTemplateColumns: "1.2fr 1.2fr 1fr 1fr 1fr",
+            gridTemplateColumns: "1fr 1.2fr 0.9fr 0.9fr 1.1fr 1.6fr",
           }}
         >
           <div>이름</div>
           <div>닉네임#태그</div>
           <div>최대 티어</div>
           <div>현재 티어</div>
+          <div>사이트 계정</div>
+          <div>관리</div>
         </div>
 
         {loading ? (
@@ -658,7 +705,7 @@ export default function AdminPlayersPage() {
                   <div
                     className="admin-player-row-grid"
                     style={{
-                      gridTemplateColumns: "1.2fr 1.2fr 1fr 1fr 1fr",
+                      gridTemplateColumns: "1fr 1.2fr 0.9fr 0.9fr 1.1fr 1.6fr",
                     }}
                   >
                     <div className="player-col player-name">{player.name}</div>
@@ -669,6 +716,9 @@ export default function AdminPlayersPage() {
                     <div className="player-col">
                       {player.currentTier ?? "-"}
                     </div>
+                    <div className="player-col">
+                      {player.userAccount ? player.userAccount.userId : "미연결"}
+                    </div>
 
                     <div className="admin-player-actions">
                       <button
@@ -677,6 +727,20 @@ export default function AdminPlayersPage() {
                         onClick={() => handleEdit(player)}
                       >
                         수정
+                      </button>
+
+                      <button
+                        type="button"
+                        className="chip-button"
+                        onClick={() => handlePasswordReset(player)}
+                        disabled={!player.userAccount}
+                        title={
+                          player.userAccount
+                            ? "연결된 사이트 계정 비밀번호를 1234로 초기화"
+                            : "연결된 사이트 계정이 없습니다"
+                        }
+                      >
+                        비번초기화
                       </button>
 
                       <button

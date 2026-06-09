@@ -72,6 +72,14 @@ export async function GET(request: NextRequest) {
         peakTier: true,
         currentTier: true,
         createdAt: true,
+        userAccount: {
+          select: {
+            id: true,
+            userId: true,
+            role: true,
+            status: true,
+          },
+        },
       },
     });
 

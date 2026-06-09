@@ -30,7 +30,7 @@ type AdminUser = {
     parsedName: string | null;
     parsedNickname: string | null;
     parsedTier: string | null;
-    linkStatus: string;
+    linkStatus: string | null;
     linkedAt: string | null;
   };
 };
@@ -56,6 +56,28 @@ type AdminUsersResponse = {
 
 const PAGE_SIZE = 20;
 
+const compactCellStyle = {
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+} as const;
+
+const badgeStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  minHeight: 24,
+  borderRadius: 999,
+  padding: "0 10px",
+  border: "1px solid rgba(125, 211, 252, 0.28)",
+  background: "rgba(14, 165, 233, 0.12)",
+  color: "#dff7ff",
+  fontSize: 12,
+  fontWeight: 800,
+  letterSpacing: "-0.02em",
+  whiteSpace: "nowrap",
+} as const;
+
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [currentAdmin, setCurrentAdmin] = useState<CurrentAdmin | null>(null);
@@ -69,7 +91,6 @@ export default function AdminUsersPage() {
   const [searchText, setSearchText] = useState("");
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<UserStatus | "">("PENDING");
-  const [discordStatus, setDiscordStatus] = useState<"" | "LINKED" | "UNLINKED">("");
 
   const isSuperAdmin = currentAdmin?.role === "SUPER_ADMIN";
 
@@ -88,10 +109,6 @@ export default function AdminUsersPage() {
 
         if (status) {
           params.set("status", status);
-        }
-
-        if (discordStatus) {
-          params.set("discordStatus", discordStatus);
         }
 
         const res = await fetch(`/api/admin/users?${params.toString()}`, {
@@ -117,7 +134,7 @@ export default function AdminUsersPage() {
         setLoading(false);
       }
     },
-    [q, status, discordStatus],
+    [q, status],
   );
 
   useEffect(() => {
@@ -203,25 +220,6 @@ export default function AdminUsersPage() {
     }
   };
 
-  const handleDiscordUnlink = async (user: AdminUser) => {
-    if (!user.discord?.id) return;
-    const reason = window.prompt(`${user.userId} 계정의 Discord 연동을 초기화할 사유를 입력하세요.`, "관리자 초기화") ?? "";
-    if (reason === null) return;
-
-    const res = await fetch(`/api/admin/users/${user.id}/discord-unlink`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reason }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (res.ok) {
-      alert("Discord 연동을 초기화했습니다.");
-      void fetchUsers(pagination.page);
-    } else {
-      alert(data.message || "Discord 연동 초기화 실패");
-    }
-  };
-
   const handlePasswordReset = async (user: AdminUser) => {
     const ok = window.confirm(`${user.userId} 계정의 비밀번호를 임시 비밀번호로 초기화하겠습니까?`);
     if (!ok) return;
@@ -242,17 +240,17 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <main className="admin-page admin-users-page">
+    <main className="admin-page" style={{ width: "min(1180px, calc(100vw - 48px))", maxWidth: 1180 }}>
       <div className="admin-page__header">
         <div>
           <h1 className="admin-page__title">플레이어 승인 관리</h1>
           <p className="admin-page__description">
-            플레이어 계정 승인, 관리자 지정, 비밀번호 초기화를 관리합니다.
+            플레이어 계정 승인, 관리자, 비밀번호 초기화를 관리합니다.
           </p>
         </div>
       </div>
 
-      <form className="admin-filter-bar admin-users-filter" onSubmit={handleSearch}>
+      <form className="admin-filter-bar" onSubmit={handleSearch}>
         <input
           value={searchText}
           onChange={(event) => setSearchText(event.target.value)}
@@ -271,148 +269,153 @@ export default function AdminUsersPage() {
           <option value="REJECTED">거절됨</option>
         </select>
 
-        <select
-          value={discordStatus}
-          onChange={(event) => setDiscordStatus(event.target.value as "" | "LINKED" | "UNLINKED")}
-          className="admin-input"
-        >
-          <option value="">Discord 전체</option>
-          <option value="LINKED">Discord 연동됨</option>
-          <option value="UNLINKED">Discord 미연동</option>
-        </select>
-
         <button className="admin-button" type="submit">
           검색
         </button>
       </form>
 
-      <section className="admin-card admin-users-card">
+      <section className="admin-card">
         <div className="admin-section-head">
           <div>
             <h2>회원 목록</h2>
             <p className="admin-muted">
-              총 {pagination.totalCount.toLocaleString("ko-KR")}명 · 현재{" "}
+              총 {pagination.totalCount.toLocaleString("ko-KR")}명 · 현재 {" "}
               {pagination.page} / {pagination.totalPages}페이지
               {currentAdmin ? ` · 현재 권한: ${getRoleLabel(currentAdmin.role)}` : ""}
             </p>
           </div>
         </div>
 
-        <div className="admin-table-wrap admin-users-table-wrap">
+        <div
+          className="admin-table-wrap admin-users-compact-wrap"
+          style={{ overflowX: "hidden", maxWidth: "100%" }}
+        >
           {loading ? (
             <div className="admin-empty">회원 목록을 불러오는 중입니다.</div>
           ) : users.length === 0 ? (
             <div className="admin-empty">조건에 맞는 회원이 없습니다.</div>
           ) : (
-            <table className="admin-table admin-users-table">
+            <table
+              className="admin-table admin-users-compact-table"
+              style={{ width: "100%", tableLayout: "fixed", fontSize: 12 }}
+            >
+              <colgroup>
+                <col style={{ width: "9%" }} />
+                <col style={{ width: "9%" }} />
+                <col style={{ width: "17%" }} />
+                <col style={{ width: "10%" }} />
+                <col style={{ width: "10%" }} />
+                <col style={{ width: "7%" }} />
+                <col style={{ width: "7%" }} />
+                <col style={{ width: "13%" }} />
+                <col style={{ width: "8%" }} />
+                <col style={{ width: "10%" }} />
+              </colgroup>
               <thead>
                 <tr>
                   <th>아이디</th>
                   <th>이름</th>
-                  <th>닉네임</th>
-                  <th>태그</th>
+                  <th>닉네임 #태그</th>
                   <th>최고티어</th>
                   <th>현재티어</th>
                   <th>상태</th>
                   <th>권한</th>
                   <th>연결</th>
-                  <th>Discord</th>
-                  <th>가입일</th>
+                  <th>가입</th>
                   <th>관리</th>
                 </tr>
               </thead>
 
               <tbody>
-                {users.map((user) => (
-                  <tr key={user.id}>
-                    <td>{user.userId}</td>
-                    <td>{user.player?.name ?? "-"}</td>
-                    <td>{user.player?.nickname ?? "-"}</td>
-                    <td>{user.player?.tag ?? "-"}</td>
-                    <td>{user.player?.peakTier ?? "-"}</td>
-                    <td>{user.player?.currentTier ?? "-"}</td>
-                    <td>{getStatusLabel(user.status)}</td>
-                    <td>{getRoleLabel(user.role)}</td>
-                    <td>{getLinkStatusLabel(user.linkStatus)}</td>
-                    <td>{getDiscordLabel(user.discord)}</td>
-                    <td>
-                      {new Date(user.createdAt).toLocaleDateString("ko-KR")}
-                    </td>
-                    <td>
-                      <div className="admin-actions">
-                        {user.status === "PENDING" ? (
-                          <>
-                            <button
-                              type="button"
-                              className="chip-button"
-                              onClick={() => handleApprove(user.id)}
-                            >
-                              승인
-                            </button>
+                {users.map((user) => {
+                  const riotName = formatRiotName(user.player?.nickname, user.player?.tag);
 
-                            <button
-                              type="button"
-                              className="chip-button chip-button--danger"
-                              onClick={() => handleReject(user.id)}
-                            >
-                              거절
-                            </button>
-                          </>
-                        ) : (
-                          <button
-                            type="button"
-                            className="chip-button"
-                            onClick={() => handleReset(user.id)}
-                          >
-                            대기 전환
-                          </button>
-                        )}
-
-                        {isSuperAdmin && user.role !== "SUPER_ADMIN" ? (
-                          <>
-                            {user.role === "ADMIN" ? (
-                              <button
-                                type="button"
-                                className="chip-button chip-button--danger"
-                                onClick={() => handleRoleChange(user, "USER")}
-                              >
-                                관리자 해제
-                              </button>
-                            ) : (
+                  return (
+                    <tr key={user.id}>
+                      <td title={user.userId} style={compactCellStyle}>{maskUserId(user.userId)}</td>
+                      <td title={user.player?.name ?? "-"} style={compactCellStyle}>{user.player?.name ?? "-"}</td>
+                      <td title={riotName} style={compactCellStyle}>{riotName}</td>
+                      <td title={formatTier(user.player?.peakTier)} style={compactCellStyle}>{formatTier(user.player?.peakTier)}</td>
+                      <td title={formatTier(user.player?.currentTier)} style={compactCellStyle}>{formatTier(user.player?.currentTier)}</td>
+                      <td><StatusBadge status={user.status} /></td>
+                      <td><span style={badgeStyle}>{getRoleLabel(user.role)}</span></td>
+                      <td title={getConnectionLabel(user)} style={compactCellStyle}>{getConnectionLabel(user)}</td>
+                      <td style={compactCellStyle}>{formatDate(user.createdAt)}</td>
+                      <td>
+                        <div
+                          className="admin-actions"
+                          style={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                            gap: 4,
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          {user.status === "PENDING" ? (
+                            <>
                               <button
                                 type="button"
                                 className="chip-button"
-                                onClick={() => handleRoleChange(user, "ADMIN")}
-                                disabled={user.status !== "APPROVED"}
-                                title={user.status !== "APPROVED" ? "승인 완료 후 관리자 지정 가능" : undefined}
+                                onClick={() => handleApprove(user.id)}
                               >
-                                관리자 지정
+                                승인
                               </button>
-                            )}
 
-                            <button
-                              type="button"
-                              className="chip-button"
-                              onClick={() => handlePasswordReset(user)}
-                            >
-                              비번 초기화
-                            </button>
-
-                            {user.discord?.id ? (
                               <button
                                 type="button"
                                 className="chip-button chip-button--danger"
-                                onClick={() => handleDiscordUnlink(user)}
+                                onClick={() => handleReject(user.id)}
                               >
-                                Discord 초기화
+                                거절
                               </button>
-                            ) : null}
-                          </>
-                        ) : null}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                            </>
+                          ) : (
+                            <button
+                              type="button"
+                              className="chip-button"
+                              onClick={() => handleReset(user.id)}
+                            >
+                              대기
+                            </button>
+                          )}
+
+                          {isSuperAdmin && user.role !== "SUPER_ADMIN" ? (
+                            <>
+                              {user.role === "ADMIN" ? (
+                                <button
+                                  type="button"
+                                  className="chip-button chip-button--danger"
+                                  onClick={() => handleRoleChange(user, "USER")}
+                                >
+                                  일반
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  className="chip-button"
+                                  onClick={() => handleRoleChange(user, "ADMIN")}
+                                  disabled={user.status !== "APPROVED"}
+                                  title={user.status !== "APPROVED" ? "승인 완료 후 관리자 가능" : undefined}
+                                >
+                                  관리자
+                                </button>
+                              )}
+
+                              <button
+                                type="button"
+                                className="chip-button"
+                                onClick={() => handlePasswordReset(user)}
+                              >
+                                비번
+                              </button>
+                            </>
+                          ) : null}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}
@@ -428,29 +431,83 @@ export default function AdminUsersPage() {
   );
 }
 
+function StatusBadge({ status }: { status: UserStatus }) {
+  const label = getStatusLabel(status);
+  const danger = status === "REJECTED";
+  const pending = status === "PENDING";
+
+  return (
+    <span
+      style={{
+        ...badgeStyle,
+        borderColor: danger
+          ? "rgba(248, 113, 113, 0.36)"
+          : pending
+            ? "rgba(250, 204, 21, 0.36)"
+            : "rgba(45, 212, 191, 0.34)",
+        background: danger
+          ? "rgba(239, 68, 68, 0.14)"
+          : pending
+            ? "rgba(234, 179, 8, 0.12)"
+            : "rgba(20, 184, 166, 0.13)",
+      }}
+    >
+      {label}
+    </span>
+  );
+}
+
+function maskUserId(userId: string) {
+  const value = String(userId ?? "").trim();
+  if (!value) return "-";
+  if (value.length <= 3) return value;
+  return `${value.slice(0, 3)}***`;
+}
+
+function formatRiotName(nickname?: string | null, tag?: string | null) {
+  const nick = String(nickname ?? "").trim();
+  const riotTag = String(tag ?? "").trim();
+  if (!nick && !riotTag) return "-";
+  if (!riotTag) return nick || "-";
+  if (!nick) return `#${riotTag}`;
+  return `${nick} #${riotTag}`;
+}
+
+function formatTier(tier?: string | null) {
+  const value = String(tier ?? "").trim();
+  return value || "-";
+}
+
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
+    year: "2-digit",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(value));
+}
+
 function getStatusLabel(status: UserStatus) {
-  if (status === "PENDING") return "승인 대기";
-  if (status === "APPROVED") return "승인 완료";
-  if (status === "REJECTED") return "거절됨";
+  if (status === "PENDING") return "대기";
+  if (status === "APPROVED") return "승인";
+  if (status === "REJECTED") return "거절";
   return status;
 }
 
 function getRoleLabel(role: UserRole) {
-  if (role === "SUPER_ADMIN") return "최고 관리자";
-  if (role === "ADMIN") return "관리자";
-  return "일반 유저";
+  if (role === "SUPER_ADMIN" || role === "ADMIN") return "관리자";
+  return "일반";
 }
 
-function getLinkStatusLabel(status: AdminUser["linkStatus"]) {
-  if (status === "PLAYER_LINKED") return "Player 연결됨";
-  return "Player 없음";
-}
+function getConnectionLabel(user: AdminUser) {
+  const playerLinked = user.linkStatus === "PLAYER_LINKED" && Boolean(user.player);
+  const discordLinked = Boolean(user.discord?.id);
 
+  if (playerLinked && discordLinked) return "모두 연동";
 
-function getDiscordLabel(discord: AdminUser["discord"] | undefined) {
-  if (!discord?.id) return "미연동";
-  const parsed = [discord.parsedBirthYear, discord.parsedName, discord.parsedNickname, discord.parsedTier]
-    .filter(Boolean)
-    .join(" ");
-  return parsed || discord.serverNickname || discord.globalName || discord.username || "연동됨";
+  const missing: string[] = [];
+  if (!playerLinked) missing.push("Player 미연동");
+  if (!discordLinked) missing.push("Discord 미연동");
+
+  return missing.join(" / ") || "-";
 }
