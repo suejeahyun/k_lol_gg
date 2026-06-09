@@ -1,9 +1,5 @@
 import { prisma } from "@/lib/prisma/client";
-import {
-  kakaoOperationFormLabels,
-  kakaoOperationFormStatusLabels,
-  type KakaoOperationFormType,
-} from "@/lib/kakao/operation-forms";
+import { kakaoOperationFormLabels, type KakaoOperationFormType } from "@/lib/kakao/operation-forms";
 import KakaoOperationFormActions from "@/components/admin/KakaoOperationFormActions";
 
 type SearchParams = Promise<{
@@ -17,14 +13,44 @@ type Props = {
 
 type Row = {
   id: number;
-  status: string;
   memo: string | null;
   rawText: string;
-  roomName: string | null;
-  sender: string | null;
   createdAt: Date;
-  updatedAt: Date;
-  columns: { label: string; value: string | null }[];
+  cells: string[];
+};
+
+type PageConfig = {
+  title: string;
+  description: string;
+  headers: string[];
+  emptyColSpan: number;
+};
+
+const pageConfigs: Record<KakaoOperationFormType, PageConfig> = {
+  leaves: {
+    title: "외출 신청",
+    description: "외출기간, 외출사유, 외출범위를 확인합니다.",
+    headers: ["ID", "이름 및 닉네임", "외출기간", "외출사유", "외출범위", "정보", "메모", "관리", "원문보기"],
+    emptyColSpan: 9,
+  },
+  meetups: {
+    title: "오프라인 모임",
+    description: "주최자, 일자, 장소, 참여자 명단을 확인합니다.",
+    headers: ["ID", "주최자 이름 및 닉네임", "일자", "장소", "참여자 명단", "정보", "메모", "관리", "원문보기"],
+    emptyColSpan: 9,
+  },
+  suggestions: {
+    title: "건의",
+    description: "작성자, 건의 사유, 건의 내용을 확인합니다.",
+    headers: ["ID", "본인 이름 및 닉네임", "건의 사유", "건의 내용", "정보", "메모", "관리", "원문보기"],
+    emptyColSpan: 8,
+  },
+  friends: {
+    title: "디스코드 초대",
+    description: "지인 이름, 지인 닉네임, 이용기간, 디스코드 닉네임 변경명을 확인합니다.",
+    headers: ["ID", "지인 이름", "지인 닉네임", "이용기간", "디스코드 닉네임 변경", "정보", "메모", "관리", "원문보기"],
+    emptyColSpan: 9,
+  },
 };
 
 function formatDate(value: Date) {
@@ -38,172 +64,174 @@ function formatDate(value: Date) {
   }).format(value);
 }
 
-async function getRows(type: KakaoOperationFormType, status?: string): Promise<Row[]> {
-  const where = status ? { status } : undefined;
-
+async function getRows(type: KakaoOperationFormType): Promise<Row[]> {
   if (type === "friends") {
-    const items = await prisma.kakaoFriendApplication.findMany({ where, orderBy: { createdAt: "desc" }, take: 200 });
+    const items = await prisma.kakaoFriendApplication.findMany({ orderBy: { createdAt: "desc" }, take: 200 });
     return items.map((item) => ({
       id: item.id,
-      status: item.status,
       memo: item.memo,
       rawText: item.rawText,
-      roomName: item.roomName,
-      sender: item.sender,
       createdAt: item.createdAt,
-      updatedAt: item.updatedAt,
-      columns: [
-        { label: "지인 이름", value: item.friendName },
-        { label: "지인 닉네임", value: item.friendNickname },
-        { label: "이용기간", value: item.gameName ? `${item.usageType} · ${item.gameName}` : item.usageType },
-        { label: "디코 닉변", value: item.discordNicknameChange },
+      cells: [
+        item.friendName,
+        item.friendNickname,
+        item.gameName ? `${item.usageType} · ${item.gameName}` : item.usageType,
+        item.discordNicknameChange || "-",
       ],
     }));
   }
 
   if (type === "suggestions") {
-    const items = await prisma.kakaoSuggestionRequest.findMany({ where, orderBy: { createdAt: "desc" }, take: 200 });
+    const items = await prisma.kakaoSuggestionRequest.findMany({ orderBy: { createdAt: "desc" }, take: 200 });
     return items.map((item) => ({
       id: item.id,
-      status: item.status,
       memo: item.memo,
       rawText: item.rawText,
-      roomName: item.roomName,
-      sender: item.sender,
       createdAt: item.createdAt,
-      updatedAt: item.updatedAt,
-      columns: [
-        { label: "작성자", value: item.requesterInfo },
-        { label: "사유", value: item.reason },
-        { label: "내용", value: item.content },
-      ],
+      cells: [item.requesterInfo, item.reason, item.content],
     }));
   }
 
   if (type === "meetups") {
-    const items = await prisma.kakaoMeetupRecord.findMany({ where, orderBy: { createdAt: "desc" }, take: 200 });
+    const items = await prisma.kakaoMeetupRecord.findMany({ orderBy: { createdAt: "desc" }, take: 200 });
     return items.map((item) => ({
       id: item.id,
-      status: item.status,
       memo: item.memo,
       rawText: item.rawText,
-      roomName: item.roomName,
-      sender: item.sender,
       createdAt: item.createdAt,
-      updatedAt: item.updatedAt,
-      columns: [
-        { label: "주최자", value: item.hostInfo },
-        { label: "일자", value: item.eventDateText },
-        { label: "장소", value: item.place },
-        { label: "참여자", value: item.participants },
-      ],
+      cells: [item.hostInfo, item.eventDateText, item.place, item.participants],
     }));
   }
 
-  const items = await prisma.kakaoLeaveRequest.findMany({ where, orderBy: { createdAt: "desc" }, take: 200 });
+  const items = await prisma.kakaoLeaveRequest.findMany({ orderBy: { createdAt: "desc" }, take: 200 });
   return items.map((item) => ({
     id: item.id,
-    status: item.status,
     memo: item.memo,
     rawText: item.rawText,
-    roomName: item.roomName,
-    sender: item.sender,
     createdAt: item.createdAt,
-    updatedAt: item.updatedAt,
-    columns: [
-      { label: "신청자", value: item.requesterInfo },
-      { label: "외출기간", value: item.leavePeriod },
-      { label: "외출사유", value: item.reason },
-      { label: "외출범위", value: item.scope },
-    ],
+    cells: [item.requesterInfo, item.leavePeriod, item.reason, item.scope],
   }));
 }
 
-export default async function KakaoOperationFormAdminPage({ type, searchParams }: Props) {
-  const params = searchParams ? await searchParams : {};
-  const status = params.status?.trim() || undefined;
-  const rows = await getRows(type, status);
-  const title = kakaoOperationFormLabels[type];
+function ShortText({ value }: { value: string }) {
+  return (
+    <span
+      style={{
+        display: "-webkit-box",
+        WebkitLineClamp: 2,
+        WebkitBoxOrient: "vertical",
+        overflow: "hidden",
+        lineHeight: 1.55,
+        maxWidth: 320,
+      }}
+    >
+      {value || "-"}
+    </span>
+  );
+}
+
+export default async function KakaoOperationFormAdminPage({ type }: Props) {
+  const rows = await getRows(type);
+  const config = pageConfigs[type] || {
+    title: kakaoOperationFormLabels[type],
+    description: "카카오톡 봇이 인식해 저장한 운영 양식을 확인합니다.",
+    headers: ["ID", "내용", "정보", "메모", "관리", "원문보기"],
+    emptyColSpan: 6,
+  };
 
   return (
-    <main className="admin-page">
-      <div className="admin-page__header">
-        <div>
-          <p className="page-eyebrow">KAKAO OPERATION FORMS</p>
-          <h1>{title}</h1>
-          <p className="admin-page__description">카카오톡 봇이 인식해 저장한 운영 양식을 확인하고 상태, 메모, 삭제를 관리합니다.</p>
-        </div>
-      </div>
-
-      {type === "leaves" ? (
-        <section className="admin-card" style={{ marginBottom: 16 }}>
-          <strong>외출 신청 원칙</strong>
-          <p style={{ margin: "8px 0 0" }}>특별한 사유 없이는 구인방, 디스코드 외출은 승인하지 않는 것을 기본 원칙으로 합니다.</p>
-        </section>
-      ) : null}
-
-      <section className="admin-card">
-        <div className="admin-card__header">
+    <main className="admin-page" style={{ width: "100%" }}>
+      <div style={{ width: "100%", maxWidth: 1360, margin: "0 auto" }}>
+        <div className="admin-page__header" style={{ marginBottom: 20 }}>
           <div>
-            <h2>접수 목록</h2>
-            <p>최근 200건 기준 · 현재 표시 {rows.length}건</p>
+            <p className="page-eyebrow">KAKAO OPERATION FORMS</p>
+            <h1>{config.title}</h1>
+            <p className="admin-page__description">{config.description}</p>
           </div>
         </div>
 
-        <div className="admin-table-wrap">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>상태</th>
-                <th>내용</th>
-                <th>원문</th>
-                <th>접수 정보</th>
-                <th>메모</th>
-                <th>관리</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.length === 0 ? (
+        {type === "leaves" ? (
+          <section
+            className="admin-card"
+            style={{
+              marginBottom: 16,
+              padding: 18,
+              border: "1px solid rgba(34, 211, 238, 0.22)",
+              background: "rgba(8, 13, 28, 0.78)",
+            }}
+          >
+            <strong>외출 신청 원칙</strong>
+            <p style={{ margin: "8px 0 0", color: "rgba(226, 232, 240, 0.78)" }}>
+              특별한 사유 없이는 구인방, 디스코드 외출은 승인하지 않는 것을 기본 원칙으로 합니다.
+            </p>
+          </section>
+        ) : null}
+
+        <section className="admin-card" style={{ padding: 20, overflow: "hidden" }}>
+          <div className="admin-card__header" style={{ marginBottom: 16 }}>
+            <div>
+              <h2>접수 목록</h2>
+              <p>최근 200건 기준 · 현재 표시 {rows.length}건</p>
+            </div>
+          </div>
+
+          <div className="admin-table-wrap" style={{ overflowX: "auto" }}>
+            <table className="admin-table" style={{ minWidth: type === "suggestions" ? 1040 : 1180 }}>
+              <thead>
                 <tr>
-                  <td colSpan={7}>등록된 항목이 없습니다.</td>
+                  {config.headers.map((header) => (
+                    <th key={header}>{header}</th>
+                  ))}
                 </tr>
-              ) : (
-                rows.map((row) => (
-                  <tr key={row.id}>
-                    <td data-label="ID">#{row.id}</td>
-                    <td data-label="상태">{kakaoOperationFormStatusLabels[row.status] || row.status}</td>
-                    <td data-label="내용">
-                      <div style={{ display: "grid", gap: 6 }}>
-                        {row.columns.map((column) => (
-                          <div key={column.label}>
-                            <strong>{column.label}</strong>: {column.value || "-"}
-                          </div>
-                        ))}
-                      </div>
-                    </td>
-                    <td data-label="원문">
-                      <details>
-                        <summary>원문 보기</summary>
-                        <pre style={{ whiteSpace: "pre-wrap", maxWidth: 360 }}>{row.rawText}</pre>
-                      </details>
-                    </td>
-                    <td data-label="접수 정보">
-                      <div>등록: {formatDate(row.createdAt)}</div>
-                      <div>방: {row.roomName || "-"}</div>
-                      <div>작성자: {row.sender || "-"}</div>
-                    </td>
-                    <td data-label="메모">{row.memo || "-"}</td>
-                    <td data-label="관리">
-                      <KakaoOperationFormActions formType={type} id={row.id} status={row.status} memo={row.memo} />
-                    </td>
+              </thead>
+              <tbody>
+                {rows.length === 0 ? (
+                  <tr>
+                    <td colSpan={config.emptyColSpan}>등록된 항목이 없습니다.</td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
+                ) : (
+                  rows.map((row) => (
+                    <tr key={row.id}>
+                      <td data-label="ID">#{row.id}</td>
+                      {row.cells.map((cell, index) => (
+                        <td key={`${row.id}-${index}`} data-label={config.headers[index + 1]}>
+                          <ShortText value={cell} />
+                        </td>
+                      ))}
+                      <td data-label="정보">등록 {formatDate(row.createdAt)}</td>
+                      <td data-label="메모">
+                        <ShortText value={row.memo || "-"} />
+                      </td>
+                      <td data-label="관리">
+                        <KakaoOperationFormActions formType={type} id={row.id} memo={row.memo} />
+                      </td>
+                      <td data-label="원문보기">
+                        <details>
+                          <summary style={{ cursor: "pointer", whiteSpace: "nowrap" }}>보기</summary>
+                          <pre
+                            style={{
+                              whiteSpace: "pre-wrap",
+                              minWidth: 260,
+                              maxWidth: 420,
+                              margin: "10px 0 0",
+                              padding: 12,
+                              borderRadius: 12,
+                              background: "rgba(2, 6, 23, 0.7)",
+                              border: "1px solid rgba(148, 163, 184, 0.2)",
+                            }}
+                          >
+                            {row.rawText}
+                          </pre>
+                        </details>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
     </main>
   );
 }

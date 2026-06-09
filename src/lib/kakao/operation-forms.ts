@@ -35,7 +35,7 @@ export type ParsedKakaoOperationForm =
     };
 
 export const kakaoOperationFormLabels: Record<KakaoOperationFormType, string> = {
-  friends: "지인 신청",
+  friends: "디스코드 초대",
   suggestions: "건의",
   meetups: "오프라인 모임",
   leaves: "외출 신청",
@@ -167,19 +167,20 @@ export function parseKakaoOperationForm(input: unknown): ParsedKakaoOperationFor
 
 export function getKakaoOperationFormReply(type: KakaoOperationFormType) {
   if (type === "friends") {
-    return "[K-LOL.GG 지인 신청 접수 완료]\n\n지인 신청이 운영진에게 전달되었습니다.\n운영진 확인 후 안내됩니다.";
+    return "[K-LOL.GG 지인 신청 접수 완료]";
   }
 
   if (type === "suggestions") {
-    return "[K-LOL.GG 건의 접수 완료]\n\n건의 내용이 운영진에게 전달되었습니다.\n확인 후 필요 시 답변드리겠습니다.";
+    return "[K-LOL.GG 건의 접수 완료]";
   }
 
   if (type === "meetups") {
-    return "[K-LOL.GG 모임 등록 접수 완료]\n\n오프라인 모임 정보가 운영진에게 전달되었습니다.\n운영진 확인 후 관리됩니다.";
+    return "[K-LOL.GG 모임 등록 접수 완료]";
   }
 
-  return "[K-LOL.GG 외출 신청 접수 완료]\n\n외출 신청이 운영진에게 전달되었습니다.\n특별한 사유 없이는 구인방, 디스코드 외출은 제한될 수 있습니다.";
+  return "[K-LOL.GG 외출 신청 접수 완료]";
 }
+
 
 export function isKakaoOperationFormStatus(value: unknown): value is (typeof kakaoOperationFormStatuses)[number] {
   return typeof value === "string" && kakaoOperationFormStatuses.includes(value as (typeof kakaoOperationFormStatuses)[number]);
