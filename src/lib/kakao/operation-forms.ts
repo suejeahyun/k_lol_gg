@@ -67,6 +67,8 @@ export function normalizeKakaoOperationText(value: unknown) {
     .replace(/　/g, " ")
     .replace(/\u00A0/g, " ")
     .replace(/：/g, ":")
+    .replace(/／/g, "/")
+    .replace(/，/g, ",")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
@@ -78,9 +80,29 @@ function stripFieldPrefix(line: string) {
     .trim();
 }
 
+function canonical(value: string) {
+  return String(value || "")
+    .replace(/\s+/g, "")
+    .replace(/[.:：()（）\[\]{}<>·ㆍ,，/\\_-]/g, "")
+    .trim();
+}
+
+function escapeRegExp(value: string) {
+  return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function labelPrefixRegex(label: string) {
+  const pattern = String(label || "")
+    .replace(/\s+/g, "")
+    .split("")
+    .map((char) => escapeRegExp(char))
+    .join("\\s*");
+
+  return new RegExp("^\\s*" + pattern + "\\s*");
+}
+
 function lineStartsWithLabel(line: string, label: string) {
-  const text = stripFieldPrefix(line);
-  return text.startsWith(label);
+  return canonical(stripFieldPrefix(line)).startsWith(canonical(label));
 }
 
 function hasAll(text: string, labels: string[]) {
@@ -92,6 +114,10 @@ function isNextLabelLine(line: string, labels: string[]) {
   return labels.some((label) => lineStartsWithLabel(line, label));
 }
 
+function removeLabelPrefix(line: string, label: string) {
+  return stripFieldPrefix(line).replace(labelPrefixRegex(label), "").trim();
+}
+
 function readField(text: string, label: string, nextLabels: string[]) {
   const lines = text.split("\n");
   const out: string[] = [];
@@ -101,8 +127,8 @@ function readField(text: string, label: string, nextLabels: string[]) {
     const line = stripFieldPrefix(sourceLine);
 
     if (!collecting) {
-      if (line.startsWith(label)) {
-        out.push(line.slice(label.length));
+      if (lineStartsWithLabel(line, label)) {
+        out.push(removeLabelPrefix(line, label));
         collecting = true;
       }
       continue;
@@ -127,6 +153,7 @@ function cleanGuideLines(value: string) {
         .replace(/^\s*[:：]\s*/, "")
         .replace(/^\s*[-]\s*/, "")
         .replace(/^\s*\([^)]*\)\s*/, "")
+        .replace(/^\s*（[^）]*）\s*/, "")
         .replace(/^\s*[:：]\s*/, "")
         .replace(/^\s*[-]\s*/, "")
         .trim(),
@@ -157,7 +184,7 @@ function cleanGuideLines(value: string) {
 function cleanRequiredField(value: string) {
   const text = cleanGuideLines(value);
   if (!text) return "";
-  if (/^[.:：\-_/()\[\]{}\s]+$/.test(text)) return "";
+  if (/^[.:：\-_/()（）\[\]{}\s]+$/.test(text)) return "";
   return text;
 }
 
@@ -243,9 +270,9 @@ export function parseKakaoOperationForm(input: unknown): ParsedKakaoOperationFor
     const requesterInfo = cleanRequiredField(readField(text, "이름 및 닉네임", ["외출기간", "외출사유", "외출범위"]));
     const leavePeriod = cleanRequiredField(readField(text, "외출기간", ["외출사유", "외출범위"]));
     const reason = cleanRequiredField(readField(text, "외출사유", ["외출범위"]));
-    const scope = cleanRequiredField(readField(text, "외출범위", []));
+    const scope = cleanRequiredField(readField(text, "외출범위", [])) || "미입력";
 
-    if (!requesterInfo || !leavePeriod || !reason || !scope) return null;
+    if (!requesterInfo || !leavePeriod || !reason) return null;
 
     return {
       type: "leaves",
@@ -275,7 +302,6 @@ export function getKakaoOperationFormReply(type: KakaoOperationFormType) {
 
   return "[K-LOL.GG 외출 신청 접수 완료]";
 }
-
 
 export function isKakaoOperationFormStatus(value: unknown): value is (typeof kakaoOperationFormStatuses)[number] {
   return typeof value === "string" && kakaoOperationFormStatuses.includes(value as (typeof kakaoOperationFormStatuses)[number]);
