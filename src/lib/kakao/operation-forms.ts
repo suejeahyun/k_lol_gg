@@ -71,45 +71,98 @@ export function normalizeKakaoOperationText(value: unknown) {
     .trim();
 }
 
-function normalizeLabel(label: string) {
-  return label
-    .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-    .replace(/\s+/g, "\\s*");
+function stripFieldPrefix(line: string) {
+  return String(line || "")
+    .trim()
+    .replace(/^\s*\d+\s*[.)]\s*/, "")
+    .trim();
+}
+
+function lineStartsWithLabel(line: string, label: string) {
+  const text = stripFieldPrefix(line);
+  return text.startsWith(label);
+}
+
+function hasAll(text: string, labels: string[]) {
+  const lines = text.split("\n");
+  return labels.every((label) => lines.some((line) => lineStartsWithLabel(line, label)));
+}
+
+function isNextLabelLine(line: string, labels: string[]) {
+  return labels.some((label) => lineStartsWithLabel(line, label));
 }
 
 function readField(text: string, label: string, nextLabels: string[]) {
-  const escapedLabel = normalizeLabel(label);
-  const escapedNext = nextLabels.map(normalizeLabel).join("|");
-  const pattern = escapedNext
-    ? new RegExp(`(?:^|\\n)\\s*(?:\\d+\\.\\s*)?${escapedLabel}\\s*:?\\s*([\\s\\S]*?)(?=\\n\\s*(?:\\d+\\.\\s*)?(?:${escapedNext})\\s*:?|$)`, "i")
-    : new RegExp(`(?:^|\\n)\\s*(?:\\d+\\.\\s*)?${escapedLabel}\\s*:?\\s*([\\s\\S]*)$`, "i");
+  const lines = text.split("\n");
+  const out: string[] = [];
+  let collecting = false;
 
-  const match = text.match(pattern);
-  return match ? match[1].trim() : "";
+  for (const sourceLine of lines) {
+    const line = stripFieldPrefix(sourceLine);
+
+    if (!collecting) {
+      if (line.startsWith(label)) {
+        out.push(line.slice(label.length));
+        collecting = true;
+      }
+      continue;
+    }
+
+    if (isNextLabelLine(line, nextLabels)) {
+      break;
+    }
+
+    out.push(line);
+  }
+
+  return out.join("\n").trim();
 }
 
 function cleanGuideLines(value: string) {
   return String(value || "")
     .split("\n")
     .map((line) => line.trim())
+    .map((line) =>
+      line
+        .replace(/^\s*[:：]\s*/, "")
+        .replace(/^\s*[-]\s*/, "")
+        .replace(/^\s*\([^)]*\)\s*/, "")
+        .replace(/^\s*[:：]\s*/, "")
+        .replace(/^\s*[-]\s*/, "")
+        .trim(),
+    )
+    .map((line) =>
+      line
+        .replace(/\s*\*\s*EX\)?[\s\S]*$/i, "")
+        .replace(/\s*\*\s*예시[\s\S]*$/i, "")
+        .replace(/\s*\*\s*선택\s*:?[\s\S]*$/i, "")
+        .replace(/\s*\*\s*특별한\s*사유\s*없이는[\s\S]*$/i, "")
+        .trim(),
+    )
     .filter((line) => {
       if (!line) return false;
       if (/^\*\s*EX\)?/i.test(line)) return false;
-      if (/^\*\s*예시/.test(line)) return false;
-      if (/^\*\s*선택\s*:?/.test(line)) return false;
-      if (/^\*\s*특별한\s*사유\s*없이는/.test(line)) return false;
+      if (/^\*\s*예시/i.test(line)) return false;
+      if (/^\*\s*선택\s*:?/i.test(line)) return false;
+      if (/^\*\s*특별한\s*사유\s*없이는/i.test(line)) return false;
+      if (/^\(?\s*소통방\s*,\s*구인방\s*,\s*디코\s*\)?$/.test(line)) return false;
+      if (/^\(?\s*게임명\s*적기\s*\)?$/.test(line)) return false;
+      if (/^\(?\s*장기\s*,\s*단기\s*,\s*특정\s*게임.*\)?$/.test(line)) return false;
       return true;
     })
     .join("\n")
     .trim();
 }
 
-function hasAll(text: string, labels: string[]) {
-  return labels.every((label) => new RegExp(`(?:^|\\n)\\s*(?:\\d+\\.\\s*)?${normalizeLabel(label)}\\s*:?`, "i").test(text));
+function cleanRequiredField(value: string) {
+  const text = cleanGuideLines(value);
+  if (!text) return "";
+  if (/^[.:：\-_/()\[\]{}\s]+$/.test(text)) return "";
+  return text;
 }
 
 function parseUsage(value: string) {
-  const raw = value.replace(/\*\s*선택\s*:?/g, "").trim();
+  const raw = cleanRequiredField(value.replace(/\*\s*선택\s*:?/g, ""));
   const gameMatch = raw.match(/특정\s*게임\s*[(:：]?\s*([^\n)）]+)?/);
 
   if (/장기/.test(raw)) {
@@ -134,46 +187,72 @@ export function parseKakaoOperationForm(input: unknown): ParsedKakaoOperationFor
   if (!text) return null;
 
   if (hasAll(text, ["지인 이름", "지인 닉네임", "이용기간", "디스코드 닉네임 변경"])) {
+    const friendName = cleanRequiredField(readField(text, "지인 이름", ["지인 닉네임", "이용기간", "디스코드 닉네임 변경"]));
+    const friendNickname = cleanRequiredField(readField(text, "지인 닉네임", ["이용기간", "디스코드 닉네임 변경"]));
     const usage = parseUsage(readField(text, "이용기간", ["디스코드 닉네임 변경"]));
+    const discordNicknameChange = cleanGuideLines(readField(text, "디스코드 닉네임 변경", [])) || null;
+
+    if (!friendName || !friendNickname || !usage.usageType || usage.usageType === "미입력") return null;
+
     return {
       type: "friends",
-      friendName: readField(text, "지인 이름", ["지인 닉네임", "이용기간", "디스코드 닉네임 변경"]),
-      friendNickname: readField(text, "지인 닉네임", ["이용기간", "디스코드 닉네임 변경"]),
+      friendName,
+      friendNickname,
       usageType: usage.usageType,
       gameName: usage.gameName,
-      discordNicknameChange: cleanGuideLines(readField(text, "디스코드 닉네임 변경", [])) || null,
+      discordNicknameChange,
       rawText: text,
     };
   }
 
   if (hasAll(text, ["본인 이름 및 닉네임", "건의 사유", "건의 내용"])) {
+    const requesterInfo = cleanRequiredField(readField(text, "본인 이름 및 닉네임", ["건의 사유", "건의 내용"]));
+    const reason = cleanRequiredField(readField(text, "건의 사유", ["건의 내용"]));
+    const content = cleanRequiredField(readField(text, "건의 내용", []));
+
+    if (!requesterInfo || !reason || !content) return null;
+
     return {
       type: "suggestions",
-      requesterInfo: readField(text, "본인 이름 및 닉네임", ["건의 사유", "건의 내용"]),
-      reason: readField(text, "건의 사유", ["건의 내용"]),
-      content: readField(text, "건의 내용", []),
+      requesterInfo,
+      reason,
+      content,
       rawText: text,
     };
   }
 
   if (hasAll(text, ["주최자 이름 및 닉네임", "일자", "장소", "참여자 명단"])) {
+    const hostInfo = cleanRequiredField(readField(text, "주최자 이름 및 닉네임", ["일자", "장소", "참여자 명단"]));
+    const eventDateText = cleanRequiredField(readField(text, "일자", ["장소", "참여자 명단"]));
+    const place = cleanRequiredField(readField(text, "장소", ["참여자 명단"]));
+    const participants = cleanRequiredField(readField(text, "참여자 명단", []));
+
+    if (!hostInfo || !eventDateText || !place || !participants) return null;
+
     return {
       type: "meetups",
-      hostInfo: readField(text, "주최자 이름 및 닉네임", ["일자", "장소", "참여자 명단"]),
-      eventDateText: readField(text, "일자", ["장소", "참여자 명단"]),
-      place: readField(text, "장소", ["참여자 명단"]),
-      participants: readField(text, "참여자 명단", []),
+      hostInfo,
+      eventDateText,
+      place,
+      participants,
       rawText: text,
     };
   }
 
   if (hasAll(text, ["이름 및 닉네임", "외출기간", "외출사유", "외출범위"])) {
+    const requesterInfo = cleanRequiredField(readField(text, "이름 및 닉네임", ["외출기간", "외출사유", "외출범위"]));
+    const leavePeriod = cleanRequiredField(readField(text, "외출기간", ["외출사유", "외출범위"]));
+    const reason = cleanRequiredField(readField(text, "외출사유", ["외출범위"]));
+    const scope = cleanRequiredField(readField(text, "외출범위", []));
+
+    if (!requesterInfo || !leavePeriod || !reason || !scope) return null;
+
     return {
       type: "leaves",
-      requesterInfo: readField(text, "이름 및 닉네임", ["외출기간", "외출사유", "외출범위"]),
-      leavePeriod: readField(text, "외출기간", ["외출사유", "외출범위"]),
-      reason: readField(text, "외출사유", ["외출범위"]),
-      scope: cleanGuideLines(readField(text, "외출범위", [])),
+      requesterInfo,
+      leavePeriod,
+      reason,
+      scope,
       rawText: text,
     };
   }
