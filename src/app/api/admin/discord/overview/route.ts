@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { requireAdminRequest } from "@/lib/auth/requireAdmin";
 import { getDiscordOperationSettings } from "@/lib/discord/settings";
+import { getTodayKstRange, getKstDateKey } from "@/lib/date/kst";
 
 function normalizeName(value: string | null | undefined) {
   return String(value || "")
@@ -64,6 +65,10 @@ export async function GET() {
   if (!admin) return NextResponse.json({ message: "관리자 권한이 필요합니다." }, { status: 401 });
 
   const now = new Date();
+  const { start: todayStart, end: todayEnd } = getTodayKstRange();
+  const matchStartAt = new Date(`${getKstDateKey()}T20:00:00+09:00`);
+  const lateAfter = new Date(matchStartAt.getTime() + 5 * 60 * 1000);
+  const absentAfter = new Date(matchStartAt.getTime() + 10 * 60 * 1000);
   const recentSince = new Date(now.getTime() - 1000 * 60 * 60 * 6);
   const settings = await getDiscordOperationSettings();
   const staleSince = new Date(now.getTime() - settings.staleHeartbeatSeconds * 1000);
@@ -77,6 +82,7 @@ export async function GET() {
     activeMonitors,
     linkLogs,
     inProgressParties,
+    activeSeason,
   ] = await Promise.all([
     prisma.userAccount.count({ where: { status: "APPROVED" } }),
     prisma.userAccount.count({ where: { discordId: { not: null } } }),
@@ -119,6 +125,7 @@ export async function GET() {
         discordMonitor: true,
       },
     }),
+    prisma.season.findFirst({ where: { isActive: true }, select: { id: true, name: true } }),
   ]);
 
   const lastByDiscord = new Map<string, (typeof recentEvents)[number]>();
@@ -150,6 +157,123 @@ export async function GET() {
       if (key && !playerByKey.has(key)) playerByKey.set(key, player);
     }
   }
+
+
+
+  const todayApplies = activeSeason ? await prisma.seasonParticipationApply.findMany({
+    where: {
+      seasonId: activeSeason.id,
+      applyDate: { gte: todayStart, lte: todayEnd },
+      status: "APPLIED",
+    },
+    include: {
+      player: { include: { userAccount: true } },
+    },
+    orderBy: { createdAt: "asc" },
+  }) : [];
+
+  const todayEvents = await prisma.discordVoiceEvent.findMany({
+    where: { occurredAt: { gte: todayStart, lte: todayEnd } },
+    orderBy: { occurredAt: "desc" },
+    take: 1500,
+    include: { userAccount: { select: { id: true, userId: true } } },
+  });
+
+  const todayJoinByDiscordId = new Map<string, Date>();
+  for (const event of todayEvents) {
+    if (event.eventType === "JOIN" || event.eventType === "MOVE") {
+      if (!todayJoinByDiscordId.has(event.discordId)) todayJoinByDiscordId.set(event.discordId, event.occurredAt);
+    }
+  }
+
+  const currentVoiceMembers = currentVoiceUsers.map((event) => ({
+    discordId: event.discordId,
+    displayName: getVoiceUserDisplay(event),
+    channelName: event.channelName,
+    extractedNames: extractPossibleNamesFromDiscordName(getVoiceUserDisplay(event)),
+  }));
+
+  const todayNameCount = new Map<string, number>();
+  for (const apply of todayApplies) {
+    const key = normalizeName(apply.player.name || apply.player.nickname);
+    if (key) todayNameCount.set(key, (todayNameCount.get(key) || 0) + 1);
+  }
+
+  const usedCurrentDiscordIds = new Set<string>();
+  const matchAttendancePlayers = todayApplies.map((apply) => {
+    const player = apply.player;
+    const nameKey = normalizeName(player.name || player.nickname);
+    const linkedDiscordId = player.userAccount?.discordId || null;
+    const linkedEvent = linkedDiscordId ? currentVoiceUsers.find((event) => event.discordId === linkedDiscordId) : null;
+    let present = Boolean(linkedEvent);
+    let matchType = linkedEvent ? "DISCORD_ID" : "NOT_MATCHED";
+    let matchedDisplayName = linkedEvent ? getVoiceUserDisplay(linkedEvent) : null;
+    let channelName = linkedEvent?.channelName || null;
+    let matchedDiscordId = linkedEvent?.discordId || null;
+
+    if (linkedEvent) usedCurrentDiscordIds.add(linkedEvent.discordId);
+
+    if (!present && nameKey && (todayNameCount.get(nameKey) || 0) === 1) {
+      const candidates = currentVoiceMembers.filter((member) => !usedCurrentDiscordIds.has(member.discordId) && member.extractedNames.has(nameKey));
+      if (candidates.length === 1) {
+        const matched = candidates[0];
+        present = true;
+        matchType = "NAME_TOKEN";
+        matchedDisplayName = matched.displayName;
+        channelName = matched.channelName || null;
+        matchedDiscordId = matched.discordId;
+        usedCurrentDiscordIds.add(matched.discordId);
+      } else if (candidates.length > 1) {
+        matchType = "NAME_AMBIGUOUS";
+      }
+    } else if (!present && nameKey) {
+      matchType = "NAME_AMBIGUOUS";
+    }
+
+    const joinedAt = matchedDiscordId ? todayJoinByDiscordId.get(matchedDiscordId) || null : null;
+    let attendanceStatus = "WAITING";
+    if (present) attendanceStatus = joinedAt && joinedAt > lateAfter ? "LATE" : "PRESENT";
+    else if (now >= absentAfter) attendanceStatus = "ABSENT_WARNING";
+
+    return {
+      applyId: apply.id,
+      playerId: player.id,
+      name: player.name || player.nickname,
+      nickname: player.nickname,
+      tag: player.tag,
+      linked: Boolean(linkedDiscordId),
+      present,
+      matchType,
+      attendanceStatus,
+      matchedDisplayName,
+      channelName,
+      joinedAt: joinedAt?.toISOString() || null,
+    };
+  });
+
+  const presentMatchNames = new Set(matchAttendancePlayers.filter((item) => item.present).map((item) => normalizeName(item.name)));
+  const extraVoiceUsers = currentVoiceMembers.filter((member) => {
+    for (const name of member.extractedNames) {
+      if (presentMatchNames.has(name)) return false;
+    }
+    return !matchAttendancePlayers.some((item) => item.matchedDisplayName === member.displayName);
+  }).map((member) => ({ discordId: member.discordId, displayName: member.displayName, channelName: member.channelName || null }));
+
+  const matchAttendance = {
+    season: activeSeason,
+    date: getKstDateKey(),
+    matchStartAt: matchStartAt.toISOString(),
+    lateAfter: lateAfter.toISOString(),
+    absentAfter: absentAfter.toISOString(),
+    totalCount: matchAttendancePlayers.length,
+    presentCount: matchAttendancePlayers.filter((item) => item.present).length,
+    lateCount: matchAttendancePlayers.filter((item) => item.attendanceStatus === "LATE").length,
+    absentWarningCount: matchAttendancePlayers.filter((item) => item.attendanceStatus === "ABSENT_WARNING").length,
+    waitingCount: matchAttendancePlayers.filter((item) => item.attendanceStatus === "WAITING").length,
+    unlinkedCount: matchAttendancePlayers.filter((item) => !item.linked).length,
+    players: matchAttendancePlayers,
+    extraVoiceUsers,
+  };
 
   const recruitVerifications = inProgressParties.map((party) => {
     const activeMembers = party.members.filter((member) => isNonEmptyName(member.name) && !member.isSubstitute);
@@ -271,11 +395,16 @@ export async function GET() {
       healthyBotCount: heartbeats.filter((bot) => bot.updatedAt >= staleSince).length,
       recruitReadyCount: recruitVerifications.filter((item) => ["PARTIAL_ACTIVE", "GATHERING", "ASSEMBLED", "ASSEMBLED_WITH_EXTRA"].includes(item.status)).length,
       recruitNeedsCheckCount: recruitVerifications.filter((item) => ["WAITING", "FINISH_CANDIDATE"].includes(item.status) || item.ambiguousCount > 0).length,
+      matchAttendancePresentCount: matchAttendance.presentCount,
+      matchAttendanceTotalCount: matchAttendance.totalCount,
+      matchAttendanceLateCount: matchAttendance.lateCount,
+      matchAttendanceAbsentWarningCount: matchAttendance.absentWarningCount,
     },
     settings,
     heartbeats,
     currentVoiceUsers,
     recentUnlinkedEvents,
+    matchAttendance,
     activeMonitors,
     recruitVerifications,
     linkLogs,

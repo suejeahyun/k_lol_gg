@@ -46,6 +46,14 @@ function formatNumber(value: number) {
   return new Intl.NumberFormat("ko-KR").format(value);
 }
 
+function formatDurationSeconds(totalSeconds: number) {
+  const value = Math.max(0, Math.floor(totalSeconds));
+  const h = Math.floor(value / 3600);
+  const m = Math.floor((value % 3600) / 60);
+  if (h > 0) return `${h}시간 ${m}분`;
+  return `${m}분`;
+}
+
 function percent(value: number, total: number) {
   if (total <= 0) return 0;
   return Math.round((value / total) * 100);
@@ -265,6 +273,7 @@ export default async function AdminDiscordMonitorPage(props: PageProps) {
     recruitStatusGroups,
     finishedAutoCount,
     linkedDiscordUsers,
+    durationEvents,
   ] = await Promise.all([
     prisma.discordVoiceEvent.count({ where: voiceWhere }),
     prisma.discordVoiceEvent.findMany({
@@ -296,6 +305,12 @@ export default async function AdminDiscordMonitorPage(props: PageProps) {
     prisma.recruitParty.groupBy({ by: ["status"], _count: { _all: true } }),
     prisma.recruitPartyDiscordMonitor.count({ where: { autoFinishedAt: { not: null }, updatedAt: { gte: from } } }),
     prisma.userAccount.count({ where: { discordId: { not: null } } }),
+    prisma.discordVoiceEvent.findMany({
+      where: { occurredAt: { gte: from } },
+      include: { userAccount: { select: { id: true, userId: true, discordUsername: true, discordGlobalName: true, discordServerNickname: true } } },
+      orderBy: [{ occurredAt: "asc" }],
+      take: 5000,
+    }),
   ]);
 
   const topDiscordIds = discordUserGroups.map((item) => item.discordId);
@@ -331,6 +346,97 @@ export default async function AdminDiscordMonitorPage(props: PageProps) {
   const monitorPie = monitorStatusGroups.map((item) => ({ label: labelMonitorStatus(item.status), value: item._count._all }));
   const recruitPie = recruitStatusGroups.map((item) => ({ label: labelRecruitStatus(String(item.status)), value: item._count._all }));
 
+
+  type VoiceSession = {
+    discordId: string;
+    label: string;
+    channelId: string;
+    channelName: string;
+    start: Date;
+    end: Date;
+  };
+
+  const openSessions = new Map<string, { channelId: string; channelName: string; start: Date; label: string }>();
+  const sessions: VoiceSession[] = [];
+  const labelByDiscordId = new Map<string, string>();
+
+  function labelForDurationEvent(event: (typeof durationEvents)[number]) {
+    return getUserLabel(event);
+  }
+
+  function closeSession(discordId: string, end: Date) {
+    const open = openSessions.get(discordId);
+    if (!open) return;
+    if (end > open.start) {
+      sessions.push({ discordId, label: open.label, channelId: open.channelId, channelName: open.channelName, start: open.start, end });
+    }
+    openSessions.delete(discordId);
+  }
+
+  for (const event of durationEvents) {
+    const label = labelForDurationEvent(event);
+    labelByDiscordId.set(event.discordId, label);
+    const currentChannelId = event.channelId || "";
+    const previousChannelId = event.previousChannelId || "";
+    const currentChannelName = event.channelName || getRawString(event.rawJson, "channelName") || currentChannelId || "알 수 없는 음성방";
+    const previousChannelName = event.previousChannelName || getRawString(event.rawJson, "previousChannelName") || previousChannelId || "알 수 없는 음성방";
+
+    if (event.eventType === "JOIN") {
+      if (currentChannelId) openSessions.set(event.discordId, { channelId: currentChannelId, channelName: currentChannelName, start: event.occurredAt, label });
+    } else if (event.eventType === "MOVE") {
+      closeSession(event.discordId, event.occurredAt);
+      if (currentChannelId) openSessions.set(event.discordId, { channelId: currentChannelId, channelName: currentChannelName, start: event.occurredAt, label });
+    } else if (event.eventType === "LEAVE") {
+      if (!openSessions.has(event.discordId) && previousChannelId) {
+        openSessions.set(event.discordId, { channelId: previousChannelId, channelName: previousChannelName, start: from, label });
+      }
+      closeSession(event.discordId, event.occurredAt);
+    }
+  }
+
+  for (const [discordId, open] of openSessions.entries()) {
+    sessions.push({ discordId, label: open.label, channelId: open.channelId, channelName: open.channelName, start: open.start, end: new Date() });
+  }
+
+  const durationByUser = new Map<string, { label: string; seconds: number }>();
+  for (const session of sessions) {
+    const seconds = Math.max(0, Math.floor((session.end.getTime() - session.start.getTime()) / 1000));
+    const prev = durationByUser.get(session.discordId) || { label: session.label, seconds: 0 };
+    prev.seconds += seconds;
+    prev.label = session.label || prev.label;
+    durationByUser.set(session.discordId, prev);
+  }
+
+  const stayTop10 = Array.from(durationByUser.entries())
+    .map(([discordId, item]) => ({ discordId, label: item.label, seconds: item.seconds }))
+    .sort((a, b) => b.seconds - a.seconds)
+    .slice(0, 10);
+
+  const targetIds = q ? Array.from(labelByDiscordId.entries())
+    .filter(([, label]) => label.toLowerCase().includes(q.toLowerCase()))
+    .map(([discordId]) => discordId) : [];
+  const targetIdSet = new Set(targetIds);
+  const targetSessions = sessions.filter((session) => targetIdSet.has(session.discordId));
+  const coPresence = new Map<string, { label: string; seconds: number }>();
+
+  for (const target of targetSessions) {
+    for (const other of sessions) {
+      if (other.discordId === target.discordId) continue;
+      if (other.channelId !== target.channelId) continue;
+      const overlapMs = Math.min(target.end.getTime(), other.end.getTime()) - Math.max(target.start.getTime(), other.start.getTime());
+      if (overlapMs <= 0) continue;
+      const prev = coPresence.get(other.discordId) || { label: other.label, seconds: 0 };
+      prev.seconds += Math.floor(overlapMs / 1000);
+      prev.label = other.label || prev.label;
+      coPresence.set(other.discordId, prev);
+    }
+  }
+
+  const coPresenceTop10 = Array.from(coPresence.entries())
+    .map(([discordId, item]) => ({ discordId, label: item.label, seconds: item.seconds }))
+    .sort((a, b) => b.seconds - a.seconds)
+    .slice(0, 10);
+
   const activeCandidateCount = activeParties.filter((party) => party.discordMonitor?.status === "FINISH_CANDIDATE").length;
   const activeAutoFinishedCount = activeParties.filter((party) => party.discordMonitor?.status === "AUTO_FINISHED").length;
 
@@ -361,7 +467,8 @@ export default async function AdminDiscordMonitorPage(props: PageProps) {
           <div><strong>진행중 구인 자동 ㅉ 상태</strong><span>구인별 감시 채널, 참가자 잔류, 자동 마감 후보 여부를 확인합니다.</span></div>
           <div><strong>최근 디스코드 모니터 기록</strong><span>자동 마감 후보, 자동 마감 완료, 비참가자 잔류 수를 확인합니다.</span></div>
           <div><strong>차트/통계</strong><span>최근 기간 기준 이벤트 비율, 채널별 이벤트, 유저별 이벤트를 보여줍니다.</span></div>
-          <div><strong>검색/기간</strong><span>유저명, 채널명, Discord ID, 이벤트 타입으로 로그를 필터링합니다.</span></div>
+          <div><strong>체류시간 TOP 10</strong><span>선택 기간 동안 음성방에 오래 머문 유저를 계산합니다.</span></div>
+          <div><strong>같이 있던 사람</strong><span>검색어에 유저 이름을 입력하면 같은 음성방에 가장 오래 같이 있던 사람 TOP 10을 보여줍니다.</span></div>
           <div><strong>운영 시스템 설정</strong><span>자동 ㅉ, 감시 채널, 로그 채널, 역할 ID 등 봇 설정을 관리합니다.</span></div>
         </div>
       </section>
@@ -405,6 +512,8 @@ export default async function AdminDiscordMonitorPage(props: PageProps) {
         <PieChart title="구인 상태 분포" items={recruitPie} emptyText="구인 데이터가 없습니다." />
         <HorizontalBarChart title="채널별 이벤트 TOP 10" items={channelChart} emptyText="채널 이벤트가 없습니다." />
         <HorizontalBarChart title="유저별 이벤트 TOP 10" items={userChart} emptyText="유저 이벤트가 없습니다." />
+        <HorizontalBarChart title="체류시간 TOP 10" items={stayTop10.map((item) => ({ label: item.label, value: Math.max(1, Math.round(item.seconds / 60)) }))} emptyText="체류시간 데이터가 없습니다." />
+        <HorizontalBarChart title={q ? `검색 유저와 같이 있던 사람 TOP 10` : "같이 있던 사람 TOP 10"} items={q ? coPresenceTop10.map((item) => ({ label: `${item.label} · ${formatDurationSeconds(item.seconds)}`, value: Math.max(1, Math.round(item.seconds / 60)) })) : []} emptyText="검색창에 유저 이름을 입력하면 같이 있던 사람을 계산합니다." />
         <PieChart title="디스코드 모니터 상태" items={monitorPie} emptyText="모니터 데이터가 없습니다." />
       </section>
 
