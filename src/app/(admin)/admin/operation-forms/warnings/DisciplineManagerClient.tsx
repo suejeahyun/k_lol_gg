@@ -249,7 +249,7 @@ export default function DisciplineManagerClient({ targets, initialRecords }: { t
       </section>
 
       <section className="admin-card discipline-table-card">
-        <div className="admin-section-head"><h2>주의/경고 기록</h2><button className="admin-button admin-button--secondary" onClick={() => void reload()}>새로고침</button></div>
+        <div className="admin-section-head"><div><h2>주의/경고 기록</h2><p className="admin-muted discipline-help">활성 기록이 먼저 표시됩니다. 사이트 미등록 대상도 이름 기준으로 관리할 수 있습니다.</p></div><button className="admin-button admin-button--secondary" onClick={() => void reload()}>새로고침</button></div>
         <div className="admin-table-wrap discipline-table-wrap">
           <table className="admin-table discipline-table">
             <thead><tr><th>상태</th><th>대상</th><th>종류</th><th>사유</th><th>작성</th><th>초기화</th><th>관리</th></tr></thead>
@@ -260,12 +260,12 @@ export default function DisciplineManagerClient({ targets, initialRecords }: { t
                 return (
                   <tr key={record.id}>
                     <td><span className={`discipline-pill ${record.isActive ? "active" : "reset"}`}>{record.isActive ? "활성" : "초기화"}</span></td>
-                    <td><strong>{target.name}</strong>{isDirect ? <span className="discipline-direct-badge">미등록</span> : null}<br /><span className="admin-muted">{target.sub}</span></td>
+                    <td><div className="discipline-target-main"><strong title={target.name}>{target.name}</strong>{isDirect ? <span className="discipline-direct-badge">미등록</span> : null}</div><span className="admin-muted">{target.sub}</span></td>
                     <td><span className={`discipline-type ${record.type.toLowerCase()}`}>{typeLabel(record.type)}</span><br /><span className="admin-muted">{sourceLabel(record.source)}</span></td>
                     <td className="discipline-reason">{record.reason}{record.note ? <><br /><span className="admin-muted">{record.note}</span></> : null}</td>
                     <td>{formatDate(record.createdAt)}<br /><span className="admin-muted">{record.createdBy || "-"}</span></td>
                     <td>{record.resetAt ? formatDate(record.resetAt) : "-"}<br /><span className="admin-muted">{record.resetReason || ""}</span></td>
-                    <td><div className="discipline-actions">{record.isActive ? <button className="admin-button admin-button--secondary" onClick={() => void resetRecord(record.id)}>기록 초기화</button> : null}{record.userAccountId ? <button className="admin-button admin-button--secondary" onClick={() => void resetUser(record.userAccountId)}>유저 전체 초기화</button> : null}{record.isActive && isDirect ? <button className="admin-button admin-button--secondary" onClick={() => void resetDirectTarget(record)}>직접대상 전체 초기화</button> : null}</div></td>
+                    <td><div className="discipline-actions">{record.isActive ? <button className="admin-button admin-button--secondary" onClick={() => void resetRecord(record.id)}>기록 초기화</button> : null}{record.userAccountId ? <button className="admin-button admin-button--secondary" onClick={() => void resetUser(record.userAccountId)}>유저 누적 초기화</button> : null}{record.isActive && isDirect ? <button className="admin-button admin-button--secondary" onClick={() => void resetDirectTarget(record)}>미등록 누적 초기화</button> : null}</div></td>
                   </tr>
                 );
               })}
