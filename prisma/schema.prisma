@@ -1280,3 +1280,77 @@ model CommunityVisit {
   @@unique([userId, visitDate])
   @@index([visitDate, visitedAt])
 }
+
+model KakaoFriendApplication {
+  id                    Int      @id @default(autoincrement())
+  friendName            String
+  friendNickname        String
+  usageType             String
+  gameName              String?
+  discordNicknameChange String?
+  rawText               String   @db.Text
+  roomName              String?
+  sender                String?
+  status                String   @default("PENDING")
+  memo                  String?  @db.Text
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([friendName])
+  @@index([friendNickname])
+}
+
+model KakaoSuggestionRequest {
+  id            Int      @id @default(autoincrement())
+  requesterInfo String
+  reason        String   @db.Text
+  content       String   @db.Text
+  rawText       String   @db.Text
+  roomName      String?
+  sender        String?
+  status        String   @default("PENDING")
+  memo          String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([requesterInfo])
+}
+
+model KakaoMeetupRecord {
+  id           Int      @id @default(autoincrement())
+  hostInfo     String
+  eventDateText String
+  place        String
+  participants String   @db.Text
+  rawText      String   @db.Text
+  roomName     String?
+  sender       String?
+  status       String   @default("PENDING")
+  memo         String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([hostInfo])
+}
+
+model KakaoLeaveRequest {
+  id            Int      @id @default(autoincrement())
+  requesterInfo String
+  leavePeriod   String
+  reason        String   @db.Text
+  scope         String
+  rawText       String   @db.Text
+  roomName      String?
+  sender        String?
+  status        String   @default("PENDING")
+  memo          String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([requesterInfo])
+}
+
