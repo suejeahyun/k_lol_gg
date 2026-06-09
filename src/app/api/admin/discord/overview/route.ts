@@ -100,7 +100,7 @@ export async function GET() {
     prisma.discordVoiceEvent.findMany({ where: { occurredAt: { gte: recentSince }, userAccountId: null }, orderBy: { occurredAt: "desc" }, take: 80 }),
     prisma.discordBotHeartbeat.findMany({ orderBy: { updatedAt: "desc" }, take: 5 }),
     prisma.recruitPartyDiscordMonitor.findMany({
-      where: { status: { in: ["ACTIVE", "GATHERING", "ASSEMBLED", "ASSEMBLED_WITH_EXTRA", "FINISH_CANDIDATE", "DISCORD_LINK_INCOMPLETE", "RECRUIT_NOT_FULL", "WAITING"] } },
+      where: { status: { in: ["ACTIVE", "PARTIAL_ACTIVE", "GATHERING", "ASSEMBLED", "ASSEMBLED_WITH_EXTRA", "FINISH_CANDIDATE", "DISCORD_LINK_INCOMPLETE", "RECRUIT_NOT_FULL", "WAITING"] } },
       orderBy: { updatedAt: "desc" },
       take: 50,
       include: { party: { select: { id: true, recruitNo: true, title: true, type: true, status: true, maxMembers: true } } },
@@ -212,7 +212,7 @@ export async function GET() {
       }
     }
 
-    const partyFilled = activeMembers.length >= party.maxMembers;
+    const recruitFilled = activeMembers.length >= party.maxMembers;
     const presentParticipants = participantChecks.filter((item) => item.present).map((item) => item.matchedByName ? `${item.name} → ${item.matchedDisplayName}` : item.playerLabel || item.name);
     const missingParticipants = participantChecks.filter((item) => !item.present).map((item) => item.playerLabel || item.name);
     const unlinkedParticipants = participantChecks.filter((item) => !item.linked).map((item) => item.name);
@@ -221,10 +221,12 @@ export async function GET() {
     const ambiguousCount = participantChecks.filter((item) => item.matchType === "NAME_AMBIGUOUS").length;
 
     let status = party.discordMonitor?.status || "WAITING";
-    if (!partyFilled) status = "RECRUIT_NOT_FULL";
-    else if (presentCount >= activeMembers.length && activeMembers.length > 0) status = "ASSEMBLED";
-    else if (presentCount > 0) status = "GATHERING";
-    else if (party.discordMonitor?.status === "FINISH_CANDIDATE") status = "FINISH_CANDIDATE";
+    if (party.discordMonitor?.status === "FINISH_CANDIDATE") status = "FINISH_CANDIDATE";
+    else if (presentCount > 0) {
+      if (recruitFilled && presentCount >= activeMembers.length && activeMembers.length > 0) status = "ASSEMBLED";
+      else status = "PARTIAL_ACTIVE";
+    }
+    else status = party.discordMonitor?.status || "WAITING";
 
     return {
       partyId: party.id,
@@ -267,8 +269,8 @@ export async function GET() {
       currentUnlinkedVoiceUserCount: currentVoiceUsers.filter((event) => !event.userAccountId).length,
       activeMonitorCount: activeMonitors.length,
       healthyBotCount: heartbeats.filter((bot) => bot.updatedAt >= staleSince).length,
-      recruitReadyCount: recruitVerifications.filter((item) => item.status === "ASSEMBLED").length,
-      recruitNeedsCheckCount: recruitVerifications.filter((item) => ["GATHERING", "DISCORD_LINK_INCOMPLETE", "RECRUIT_NOT_FULL", "FINISH_CANDIDATE"].includes(item.status)).length,
+      recruitReadyCount: recruitVerifications.filter((item) => ["PARTIAL_ACTIVE", "GATHERING", "ASSEMBLED", "ASSEMBLED_WITH_EXTRA"].includes(item.status)).length,
+      recruitNeedsCheckCount: recruitVerifications.filter((item) => ["WAITING", "FINISH_CANDIDATE"].includes(item.status) || item.ambiguousCount > 0).length,
     },
     settings,
     heartbeats,

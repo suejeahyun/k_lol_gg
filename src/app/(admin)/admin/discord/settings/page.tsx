@@ -203,10 +203,10 @@ export default function AdminDiscordPage() {
             <div className="admin-section-head">
               <div>
                 <h2>구인구직 Discord 모임 검증</h2>
-                <p className="admin-page__description">진행중인 구인이 실제 음성방에 제대로 모였는지 확인합니다. Discord 연동이 없어도 서버 닉네임의 이름 토큰과 카카오톡/구인 참가자 이름이 정확히 같으면 참가로 인정합니다.</p>
+                <p className="admin-page__description">정원이 다 차지 않아도 구인 참가자 중 1명 이상이 디스코드 음성방에서 확인되면 진행중으로 봅니다. 이후 매칭 인원이 모두 나가면 자동 ㅉ 후보로 전환됩니다.</p>
               </div>
             </div>
-            <div className="admin-table-wrap"><table className="admin-table discord-recruit-check-table"><thead><tr><th>구인</th><th>상태</th><th>인원</th><th>현재 접속</th><th>이름매칭</th><th>미접속</th><th>확인필요</th><th>음성방</th><th>갱신</th></tr></thead><tbody>
+            <div className="admin-table-wrap"><table className="admin-table discord-recruit-check-table"><thead><tr><th>구인</th><th>상태</th><th>구인 인원</th><th>Discord 확인</th><th>이름매칭</th><th>미확인</th><th>확인필요</th><th>음성방</th><th>갱신</th></tr></thead><tbody>
               {data.recruitVerifications.length === 0 ? <tr><td colSpan={9}>진행중인 구인이 없습니다.</td></tr> : data.recruitVerifications.map((item) => <tr key={item.partyId}>
                 <td><strong>#{item.recruitNo}</strong> · {item.title}</td>
                 <td><span className={`discord-status-pill discord-status-${item.status.toLowerCase().replaceAll("_", "-")}`}>{statusLabel(item.status)}</span></td>
@@ -255,7 +255,7 @@ export default function AdminDiscordPage() {
         .discord-status-pill { display: inline-flex; align-items: center; justify-content: center; min-width: 74px; padding: 4px 8px; border-radius: 999px; font-size: 12px; font-weight: 800; border: 1px solid rgba(148, 163, 184, 0.24); background: rgba(15, 23, 42, 0.7); color: #dbeafe; white-space: nowrap; }
         .discord-status-assembled { border-color: rgba(34, 197, 94, .45); color: #bbf7d0; background: rgba(22, 101, 52, .25); }
         .discord-status-assembled-with-extra { border-color: rgba(250, 204, 21, .45); color: #fef08a; background: rgba(113, 63, 18, .25); }
-        .discord-status-gathering { border-color: rgba(59, 130, 246, .45); color: #bfdbfe; background: rgba(30, 64, 175, .25); }
+        .discord-status-gathering, .discord-status-partial-active { border-color: rgba(59, 130, 246, .45); color: #bfdbfe; background: rgba(30, 64, 175, .25); }
         .discord-status-finish-candidate { border-color: rgba(248, 113, 113, .45); color: #fecaca; background: rgba(127, 29, 29, .28); }
         .discord-status-auto-finished { border-color: rgba(20, 184, 166, .45); color: #ccfbf1; background: rgba(19, 78, 74, .28); }
         .discord-status-discord-link-incomplete, .discord-status-recruit-not-full { border-color: rgba(251, 146, 60, .45); color: #fed7aa; background: rgba(124, 45, 18, .25); }
@@ -269,9 +269,10 @@ function statusLabel(status: string) {
   const map: Record<string, string> = {
     ASSEMBLED: "모임 완료",
     ASSEMBLED_WITH_EXTRA: "모임 완료+외부",
-    GATHERING: "모이는 중",
+    GATHERING: "진행중 확인",
+    PARTIAL_ACTIVE: "부분 진행",
     WAITING: "대기",
-    RECRUIT_NOT_FULL: "구인 미충족",
+    RECRUIT_NOT_FULL: "대기",
     DISCORD_LINK_INCOMPLETE: "연동 부족",
     FINISH_CANDIDATE: "ㅉ 후보",
     AUTO_FINISHED: "자동 ㅉ 완료",

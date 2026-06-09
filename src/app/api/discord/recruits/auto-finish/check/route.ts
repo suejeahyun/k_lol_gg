@@ -166,21 +166,37 @@ async function hasRecentExpectedActivityInChannel(params: {
 }
 
 function getVerificationStatus(params: {
-  partyFilled: boolean;
+  recruitFilled: boolean;
   expectedCount: number;
   presentExpectedCount: number;
   nonParticipantCount: number;
   canAutoFinish: boolean;
   shouldCandidate: boolean;
 }) {
-  const { partyFilled, expectedCount, presentExpectedCount, nonParticipantCount, canAutoFinish, shouldCandidate } = params;
-  if (!partyFilled) return "RECRUIT_NOT_FULL";
+  const { recruitFilled, expectedCount, presentExpectedCount, nonParticipantCount, canAutoFinish, shouldCandidate } = params;
   if (canAutoFinish) return "AUTO_FINISHED";
   if (shouldCandidate) return "FINISH_CANDIDATE";
-  if (expectedCount > 0 && presentExpectedCount >= expectedCount && nonParticipantCount === 0) return "ASSEMBLED";
-  if (expectedCount > 0 && presentExpectedCount >= expectedCount && nonParticipantCount > 0) return "ASSEMBLED_WITH_EXTRA";
-  if (presentExpectedCount > 0) return "GATHERING";
+
+  // 실운영 기준: 구인 정원이 다 차지 않아도, 구인 참가자 중 1명 이상이
+  // 디스코드 음성방에서 확인되면 실제 진행 가능 상태로 봅니다.
+  if (presentExpectedCount > 0) {
+    if (recruitFilled && expectedCount > 0 && presentExpectedCount >= expectedCount && nonParticipantCount === 0) return "ASSEMBLED";
+    if (recruitFilled && expectedCount > 0 && presentExpectedCount >= expectedCount && nonParticipantCount > 0) return "ASSEMBLED_WITH_EXTRA";
+    return "PARTIAL_ACTIVE";
+  }
+
   return "WAITING";
+}
+
+function isPreviouslyActiveRecruitStatus(status: string | null | undefined) {
+  return [
+    "PARTIAL_ACTIVE",
+    "GATHERING",
+    "ASSEMBLED",
+    "ASSEMBLED_WITH_EXTRA",
+    "FINISH_CANDIDATE",
+    "AUTO_FINISHED",
+  ].includes(String(status || ""));
 }
 
 export async function POST(req: NextRequest) {
@@ -219,7 +235,7 @@ export async function POST(req: NextRequest) {
     const activeMembers = party.members.filter((member) => isNonEmptyName(member.name) && !member.isSubstitute);
     if (activeMembers.length === 0) continue;
 
-    const partyFilled = activeMembers.length >= party.maxMembers;
+    const recruitFilled = activeMembers.length >= party.maxMembers;
     const memberNames = activeMembers.map((member) => member.name.trim());
     const normalizedMemberNames = new Set(memberNames.map(normalizeName));
     const nameCount = new Map<string, number>();
@@ -339,13 +355,16 @@ export async function POST(req: NextRequest) {
       continue;
     }
 
-    const wasFullyAssembled = Boolean(
+    const hasEverActiveMatch = Boolean(
       monitorChannelMatched
       && requiredCount > 0
-      && (currentMonitor?.status === "ASSEMBLED" || currentMonitor?.status === "ASSEMBLED_WITH_EXTRA" || (currentMonitor?.lastPresentExpectedCount ?? 0) >= requiredCount)
+      && (isPreviouslyActiveRecruitStatus(currentMonitor?.status) || (currentMonitor?.lastPresentExpectedCount ?? 0) > 0)
     );
-    const allExpectedLeftAfterAssembled = partyFilled && wasFullyAssembled && presentExpectedCount === 0 && nonParticipantCount === 0;
-    const shouldCandidate = partyFilled && wasFullyAssembled && presentExpectedCount === 0 && nonParticipantCount === 0;
+
+    // 자동 ㅉ 기준 변경:
+    // - 정원 전원 모임이 아니라, 구인 참가자 중 1명 이상 디스코드 확인된 적이 있으면 진행 흔적으로 인정
+    // - 이후 해당 구인 참가자 매칭 인원이 0명이 되면 종료 후보
+    const shouldCandidate = hasEverActiveMatch && presentExpectedCount === 0;
 
     const candidateStartedAt = shouldCandidate
       ? currentMonitor?.voiceChannelId === channelId
@@ -354,10 +373,10 @@ export async function POST(req: NextRequest) {
       : null;
     const elapsedMs = candidateStartedAt ? now.getTime() - candidateStartedAt.getTime() : 0;
     const holdReached = shouldCandidate && elapsedMs >= holdMinutes * 60 * 1000;
-    const canAutoFinish = allExpectedLeftAfterAssembled || holdReached;
+    const canAutoFinish = holdReached;
 
     const status = getVerificationStatus({
-      partyFilled,
+      recruitFilled,
       expectedCount: requiredCount,
       presentExpectedCount,
       nonParticipantCount,
@@ -380,8 +399,8 @@ export async function POST(req: NextRequest) {
       confidence: item.confidence,
     }));
 
-    const reason = allExpectedLeftAfterAssembled
-      ? `#${party.recruitNo} ${party.title} · 참가자 전원 모임 확인 후 음성방 전원 퇴장 · 자동 ㅉ`
+    const reason = canAutoFinish
+      ? `#${party.recruitNo} ${party.title} · 구인 참가자 ${requiredCount}명 중 일부 이상 디스코드 진행 확인 후 매칭 인원 전원 퇴장 · ${holdMinutes}분 보류 경과 · 자동 ㅉ`
       : getAutoFinishReason({
           recruitNo: party.recruitNo,
           title: party.title,
@@ -492,9 +511,8 @@ export async function POST(req: NextRequest) {
       voiceChannelId: channelId,
       voiceChannelName: channelName,
       source,
-      partyFilled,
-      wasFullyAssembled,
-      allExpectedLeftAfterAssembled,
+      recruitFilled,
+      hasEverActiveMatch,
       matchedByNameCount,
       ambiguousCount,
       missingParticipants,
