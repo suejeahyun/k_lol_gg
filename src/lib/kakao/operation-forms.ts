@@ -88,6 +88,22 @@ function readField(text: string, label: string, nextLabels: string[]) {
   return match ? match[1].trim() : "";
 }
 
+function cleanGuideLines(value: string) {
+  return String(value || "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => {
+      if (!line) return false;
+      if (/^\*\s*EX\)?/i.test(line)) return false;
+      if (/^\*\s*예시/.test(line)) return false;
+      if (/^\*\s*선택\s*:?/.test(line)) return false;
+      if (/^\*\s*특별한\s*사유\s*없이는/.test(line)) return false;
+      return true;
+    })
+    .join("\n")
+    .trim();
+}
+
 function hasAll(text: string, labels: string[]) {
   return labels.every((label) => new RegExp(`(?:^|\\n)\\s*(?:\\d+\\.\\s*)?${normalizeLabel(label)}\\s*:?`, "i").test(text));
 }
@@ -125,7 +141,7 @@ export function parseKakaoOperationForm(input: unknown): ParsedKakaoOperationFor
       friendNickname: readField(text, "지인 닉네임", ["이용기간", "디스코드 닉네임 변경"]),
       usageType: usage.usageType,
       gameName: usage.gameName,
-      discordNicknameChange: readField(text, "디스코드 닉네임 변경", []) || null,
+      discordNicknameChange: cleanGuideLines(readField(text, "디스코드 닉네임 변경", [])) || null,
       rawText: text,
     };
   }
@@ -157,7 +173,7 @@ export function parseKakaoOperationForm(input: unknown): ParsedKakaoOperationFor
       requesterInfo: readField(text, "이름 및 닉네임", ["외출기간", "외출사유", "외출범위"]),
       leavePeriod: readField(text, "외출기간", ["외출사유", "외출범위"]),
       reason: readField(text, "외출사유", ["외출범위"]),
-      scope: readField(text, "외출범위", []),
+      scope: cleanGuideLines(readField(text, "외출범위", [])),
       rawText: text,
     };
   }

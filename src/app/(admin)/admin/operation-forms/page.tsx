@@ -47,7 +47,7 @@ export default async function AdminOperationFormsPage() {
 
   return (
     <main className="admin-page" style={{ width: "100%" }}>
-      <div style={{ width: "100%", maxWidth: 1180, margin: "0 auto" }}>
+      <div style={{ width: "min(100%, 1500px)", maxWidth: "calc(100vw - 40px)", margin: "0 auto" }}>
         <div className="admin-page__header" style={{ marginBottom: 24 }}>
           <div>
             <p className="page-eyebrow">KAKAO OPERATION</p>
@@ -61,7 +61,7 @@ export default async function AdminOperationFormsPage() {
         <section
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+            gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
             gap: 18,
             width: "100%",
           }}

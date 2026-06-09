@@ -30,38 +30,55 @@ const pageConfigs: Record<KakaoOperationFormType, PageConfig> = {
   leaves: {
     title: "외출 신청",
     description: "외출기간, 외출사유, 외출범위를 확인합니다.",
-    headers: ["ID", "이름 및 닉네임", "외출기간", "외출사유", "외출범위", "정보", "메모", "관리", "원문보기"],
+    headers: ["ID", "이름 및 닉네임", "외출기간", "외출사유", "외출범위", "등록 일시", "메모", "관리", "원문보기"],
     emptyColSpan: 9,
   },
   meetups: {
     title: "오프라인 모임",
     description: "주최자, 일자, 장소, 참여자 명단을 확인합니다.",
-    headers: ["ID", "주최자 이름 및 닉네임", "일자", "장소", "참여자 명단", "정보", "메모", "관리", "원문보기"],
+    headers: ["ID", "주최자 이름 및 닉네임", "일자", "장소", "참여자 명단", "등록 일시", "메모", "관리", "원문보기"],
     emptyColSpan: 9,
   },
   suggestions: {
     title: "건의",
     description: "작성자, 건의 사유, 건의 내용을 확인합니다.",
-    headers: ["ID", "본인 이름 및 닉네임", "건의 사유", "건의 내용", "정보", "메모", "관리", "원문보기"],
+    headers: ["ID", "본인 이름 및 닉네임", "건의 사유", "건의 내용", "등록 일시", "메모", "관리", "원문보기"],
     emptyColSpan: 8,
   },
   friends: {
     title: "디스코드 초대",
     description: "지인 이름, 지인 닉네임, 이용기간, 디스코드 닉네임 변경명을 확인합니다.",
-    headers: ["ID", "지인 이름", "지인 닉네임", "이용기간", "디스코드 닉네임 변경", "정보", "메모", "관리", "원문보기"],
+    headers: ["ID", "지인 이름", "지인 닉네임", "이용기간", "디스코드 닉네임 변경", "등록 일시", "메모", "관리", "원문보기"],
     emptyColSpan: 9,
   },
 };
 
+function pad2(value: number) {
+  return String(value).padStart(2, "0");
+}
+
 function formatDate(value: Date) {
-  return new Intl.DateTimeFormat("ko-KR", {
+  const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Seoul",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-  }).format(value);
+    hour12: false,
+    hourCycle: "h23",
+  }).formatToParts(value);
+
+  const get = (type: string) => parts.find((part) => part.type === type)?.value || "";
+  const year = get("year");
+  const month = get("month");
+  const day = get("day");
+  const hour24 = Number(get("hour")) % 24;
+  const minute = get("minute");
+  const marker = hour24 >= 12 ? "PM" : "AM";
+  const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
+
+  return `${year}. ${month}. ${day}. ${marker} ${pad2(hour12)}:${minute}`;
 }
 
 async function getRows(type: KakaoOperationFormType): Promise<Row[]> {
@@ -135,13 +152,13 @@ export default async function KakaoOperationFormAdminPage({ type }: Props) {
   const config = pageConfigs[type] || {
     title: kakaoOperationFormLabels[type],
     description: "카카오톡 봇이 인식해 저장한 운영 양식을 확인합니다.",
-    headers: ["ID", "내용", "정보", "메모", "관리", "원문보기"],
+    headers: ["ID", "내용", "등록 일시", "메모", "관리", "원문보기"],
     emptyColSpan: 6,
   };
 
   return (
     <main className="admin-page" style={{ width: "100%" }}>
-      <div style={{ width: "100%", maxWidth: 1360, margin: "0 auto" }}>
+      <div style={{ width: "min(100%, 1600px)", maxWidth: "calc(100vw - 40px)", margin: "0 auto" }}>
         <div className="admin-page__header" style={{ marginBottom: 20 }}>
           <div>
             <p className="page-eyebrow">KAKAO OPERATION FORMS</p>
@@ -162,7 +179,7 @@ export default async function KakaoOperationFormAdminPage({ type }: Props) {
           >
             <strong>외출 신청 원칙</strong>
             <p style={{ margin: "8px 0 0", color: "rgba(226, 232, 240, 0.78)" }}>
-              특별한 사유 없이는 구인방, 디스코드 외출은 승인하지 않는 것을 기본 원칙으로 합니다.
+              특별한 사유 없이는 구인방, 디스코드 외출은 금지됩니다.
             </p>
           </section>
         ) : null}
@@ -175,8 +192,8 @@ export default async function KakaoOperationFormAdminPage({ type }: Props) {
             </div>
           </div>
 
-          <div className="admin-table-wrap" style={{ overflowX: "auto" }}>
-            <table className="admin-table" style={{ minWidth: type === "suggestions" ? 1040 : 1180 }}>
+          <div className="admin-table-wrap" style={{ overflowX: "auto", width: "100%" }}>
+            <table className="admin-table" style={{ minWidth: type === "suggestions" ? 1120 : 1320, tableLayout: "auto" }}>
               <thead>
                 <tr>
                   {config.headers.map((header) => (
@@ -198,7 +215,7 @@ export default async function KakaoOperationFormAdminPage({ type }: Props) {
                           <ShortText value={cell} />
                         </td>
                       ))}
-                      <td data-label="정보">등록 {formatDate(row.createdAt)}</td>
+                      <td data-label="등록 일시">{formatDate(row.createdAt)}</td>
                       <td data-label="메모">
                         <ShortText value={row.memo || "-"} />
                       </td>
