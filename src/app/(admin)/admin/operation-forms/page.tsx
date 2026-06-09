@@ -32,10 +32,10 @@ const cards = [
 
 export default async function AdminOperationFormsPage() {
   const [leaves, meetups, suggestions, friends] = await Promise.all([
-    prisma.kakaoLeaveRequest.count({ where: { status: "PENDING" } }),
-    prisma.kakaoMeetupRecord.count({ where: { status: "PENDING" } }),
-    prisma.kakaoSuggestionRequest.count({ where: { status: "PENDING" } }),
-    prisma.kakaoFriendApplication.count({ where: { status: "PENDING" } }),
+    prisma.kakaoLeaveRequest.count(),
+    prisma.kakaoMeetupRecord.count(),
+    prisma.kakaoSuggestionRequest.count(),
+    prisma.kakaoFriendApplication.count(),
   ]);
 
   const counts: Record<(typeof cards)[number]["key"], number> = {
@@ -86,7 +86,7 @@ export default async function AdminOperationFormsPage() {
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
                 <h2 style={{ margin: 0 }}>{card.title}</h2>
                 <span className="page-eyebrow" style={{ margin: 0, whiteSpace: "nowrap" }}>
-                  PENDING {counts[card.key]}
+                  총 {counts[card.key]}건
                 </span>
               </div>
               <p style={{ margin: "18px 0 0", color: "rgba(226, 232, 240, 0.78)", lineHeight: 1.6 }}>
