@@ -163,6 +163,7 @@ model Player {
   balanceProfile      PlayerBalanceProfile?
   balanceMatchResults PlayerBalanceMatchResult[]
   receivedMvpVotes MatchMvpVote[]
+  disciplineRecords UserDisciplineRecord[]
 
   @@unique([nickname, tag])
   @@index([isActive, createdAt])
@@ -203,6 +204,7 @@ model UserAccount {
   communityVisits CommunityVisit[]
   discordVoiceEvents DiscordVoiceEvent[]
   discordAccountLinkLogs DiscordAccountLinkLog[]
+  disciplineRecords UserDisciplineRecord[]
 }
 
 
@@ -1154,62 +1156,6 @@ model RecruitPartyDiscordMonitor {
   @@index([status, updatedAt])
 }
 
-
-
-model DiscordAccountLinkLog {
-  id             Int      @id @default(autoincrement())
-  userAccountId  Int?
-  action         String
-  discordId      String?
-  discordUsername String?
-  discordGlobalName String?
-  discordServerNickname String?
-  actorId        Int?
-  actorType      String?
-  reason         String?  @db.Text
-  beforeJson     Json?
-  afterJson      Json?
-  createdAt      DateTime @default(now())
-
-  userAccount UserAccount? @relation(fields: [userAccountId], references: [id], onDelete: SetNull)
-
-  @@index([userAccountId, createdAt])
-  @@index([discordId, createdAt])
-  @@index([action, createdAt])
-}
-
-model DiscordBotHeartbeat {
-  id                   Int      @id @default(autoincrement())
-  botId                String   @unique
-  status               String   @default("ONLINE")
-  botUsername          String?
-  guildId              String?
-  uptimeSeconds        Int      @default(0)
-  memoryRssMb          Float?
-  watchedChannelCount  Int      @default(0)
-  voiceMemberCount     Int      @default(0)
-  autoFinishEnabled    Boolean  @default(false)
-  lastAutoFinishCheckAt DateTime?
-  lastError            String?  @db.Text
-  rawJson              Json?
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-
-  @@index([status, updatedAt])
-}
-
-model DiscordOperationSetting {
-  id          Int      @id @default(autoincrement())
-  key         String   @unique
-  value       Json
-  description String?  @db.Text
-  updatedById Int?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([updatedAt])
-}
-
 model CommunityHeadline {
   id        Int               @id @default(autoincrement())
   type      CommunityPostType
@@ -1409,5 +1355,217 @@ model KakaoLeaveRequest {
 
   @@index([status, createdAt])
   @@index([requesterInfo])
+}
+
+
+
+model UserDisciplineRecord {
+  id            Int      @id @default(autoincrement())
+  userAccountId Int?
+  playerId      Int?
+
+  targetName    String
+  targetNickname String?
+  targetTag     String?
+
+  type          String   @default("CAUTION")
+  reason        String   @db.Text
+  source        String   @default("MANUAL")
+  note          String?  @db.Text
+
+  isActive      Boolean  @default(true)
+  resetAt       DateTime?
+  resetReason   String?  @db.Text
+  resetBy       String?
+
+  createdBy     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  userAccount   UserAccount? @relation(fields: [userAccountId], references: [id], onDelete: SetNull)
+  player        Player?      @relation(fields: [playerId], references: [id], onDelete: SetNull)
+
+  @@index([userAccountId, isActive])
+  @@index([playerId, isActive])
+  @@index([type, isActive])
+  @@index([createdAt])
+}
+
+model DiscordOperationSetting {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique
+  value       Json
+  description String?  @db.Text
+  updatedById Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([updatedAt])
+}
+
+model DiscordBotHeartbeat {
+  id                    Int      @id @default(autoincrement())
+  botId                 String   @unique
+  status                String   @default("ONLINE")
+  botUsername           String?
+  guildId               String?
+  uptimeSeconds         Int      @default(0)
+  memoryRssMb           Float?
+  watchedChannelCount   Int      @default(0)
+  voiceMemberCount      Int      @default(0)
+  autoFinishEnabled     Boolean  @default(false)
+  remoteSettingsEnabled Boolean  @default(false)
+  watchAllVoiceChannels Boolean  @default(false)
+  watchChannelCount     Int      @default(0)
+  lastAutoFinishCheckAt DateTime?
+  lastAutoFinishAt      DateTime?
+  lastVoiceEventAt      DateTime?
+  lastError             String?  @db.Text
+  rawJson               Json?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([updatedAt])
+  @@index([status, updatedAt])
+}
+
+model DiscordAccountLinkLog {
+  id                  Int      @id @default(autoincrement())
+  userAccountId       Int?
+  action              String
+  discordId           String?
+  discordUsername     String?
+  discordGlobalName   String?
+  discordServerNickname String?
+  actorUserId         String?
+  actorRole           String?
+  actorId             Int?
+  actorType           String?
+  reason              String?  @db.Text
+  rawJson             Json?
+  beforeJson          Json?
+  afterJson           Json?
+  createdAt           DateTime @default(now())
+
+  userAccount UserAccount? @relation(fields: [userAccountId], references: [id], onDelete: SetNull)
+
+  @@index([userAccountId, createdAt])
+  @@index([discordId, createdAt])
+  @@index([action, createdAt])
+}
+
+model DiscordRoleSyncLog {
+  id            Int      @id @default(autoincrement())
+  userAccountId Int?
+  discordId     String?
+  action        String
+  roleId        String?
+  roleName      String?
+  status        String   @default("PENDING")
+  errorMessage  String?  @db.Text
+  rawJson       Json?
+  createdAt     DateTime @default(now())
+
+  @@index([userAccountId, createdAt])
+  @@index([discordId, createdAt])
+  @@index([status, createdAt])
+}
+
+model DiscordNotificationLog {
+  id          Int      @id @default(autoincrement())
+  type        String
+  channelId   String?
+  title       String?
+  message     String?  @db.Text
+  status      String   @default("PENDING")
+  errorMessage String? @db.Text
+  rawJson     Json?
+  createdAt   DateTime @default(now())
+
+  @@index([type, createdAt])
+  @@index([status, createdAt])
+}
+
+model DiscordAdminActionLog {
+  id            Int      @id @default(autoincrement())
+  actorUserId   String?
+  actorRole     String?
+  action        String
+  targetType    String?
+  targetId      String?
+  description   String?  @db.Text
+  rawJson       Json?
+  createdAt     DateTime @default(now())
+
+  @@index([actorUserId, createdAt])
+  @@index([action, createdAt])
+  @@index([targetType, targetId])
+}
+
+model DiscordNicknameHistory {
+  id              Int      @id @default(autoincrement())
+  discordId       String
+  oldDisplayName  String?
+  newDisplayName  String?
+  channelId       String?
+  rawJson         Json?
+  createdAt       DateTime @default(now())
+
+  @@index([discordId, createdAt])
+}
+
+model DiscordAttendanceSnapshot {
+  id            Int      @id @default(autoincrement())
+  snapshotType  String
+  targetId      String?
+  discordId     String?
+  displayName   String?
+  channelId     String?
+  channelName   String?
+  matchedName   String?
+  matchType     String?
+  rawJson       Json?
+  createdAt     DateTime @default(now())
+
+  @@index([snapshotType, createdAt])
+  @@index([targetId, createdAt])
+  @@index([discordId, createdAt])
+}
+
+model DiscordRecruitVerification {
+  id              Int      @id @default(autoincrement())
+  recruitPartyId  Int
+  status          String   @default("WAITING")
+  channelId       String?
+  channelName     String?
+  participantCount Int     @default(0)
+  matchedCount    Int      @default(0)
+  externalCount   Int      @default(0)
+  missingCount    Int      @default(0)
+  ambiguousCount  Int      @default(0)
+  rawJson         Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([recruitPartyId, updatedAt])
+  @@index([status, updatedAt])
+}
+
+model DiscordMatchAttendanceCheck {
+  id              Int      @id @default(autoincrement())
+  seasonId        Int?
+  matchDate       DateTime?
+  status          String   @default("WAITING")
+  totalCount      Int      @default(0)
+  presentCount    Int      @default(0)
+  lateCount       Int      @default(0)
+  absentCount     Int      @default(0)
+  warningCount    Int      @default(0)
+  rawJson         Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([seasonId, matchDate])
+  @@index([status, updatedAt])
 }
 

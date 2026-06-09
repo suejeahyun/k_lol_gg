@@ -28,14 +28,21 @@ const cards = [
     title: "디스코드 초대",
     description: "지인 이름 · 닉네임 · 이용기간 · 디코 닉변",
   },
+  {
+    key: "warnings",
+    href: "/admin/operation-forms/warnings",
+    title: "운영 경고 관리",
+    description: "주의 · 경고 · 지각 · 노쇼 · 개별 초기화",
+  },
 ] as const;
 
 export default async function AdminOperationFormsPage() {
-  const [leaves, meetups, suggestions, friends] = await Promise.all([
+  const [leaves, meetups, suggestions, friends, warnings] = await Promise.all([
     prisma.kakaoLeaveRequest.count(),
     prisma.kakaoMeetupRecord.count(),
     prisma.kakaoSuggestionRequest.count(),
     prisma.kakaoFriendApplication.count(),
+    prisma.userDisciplineRecord.count({ where: { isActive: true } }),
   ]);
 
   const counts: Record<(typeof cards)[number]["key"], number> = {
@@ -43,6 +50,7 @@ export default async function AdminOperationFormsPage() {
     meetups,
     suggestions,
     friends,
+    warnings,
   };
 
   return (

@@ -20,8 +20,8 @@ export async function POST(req: NextRequest) {
   const previousChannelId = textOrNull(body.previousChannelId);
   const eventType = String(body.eventType || "").trim().toUpperCase();
 
-  if (!discordId || !["JOIN", "LEAVE", "MOVE"].includes(eventType)) {
-    return NextResponse.json({ message: "discordId와 eventType(JOIN/LEAVE/MOVE)이 필요합니다." }, { status: 400 });
+  if (!discordId || !["JOIN", "LEAVE", "MOVE", "SNAPSHOT"].includes(eventType)) {
+    return NextResponse.json({ message: "discordId와 eventType(JOIN/LEAVE/MOVE/SNAPSHOT)이 필요합니다." }, { status: 400 });
   }
 
   const user = await prisma.userAccount.findUnique({ where: { discordId }, select: { id: true } });

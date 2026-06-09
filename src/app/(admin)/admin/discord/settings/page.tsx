@@ -1,140 +1,22 @@
 "use client";
+import DiscordOpsStyles from "../_DiscordOpsStyles";
+import DiscordOpsNav from "../_DiscordOpsNav";
 
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
+import type { DiscordSettings } from "../_DiscordOverviewTypes";
+import { formatDate, secondsToText, useDiscordOverview } from "../_DiscordClientUtils";
 
-type Overview = {
-  summary: {
-    approvedUsers: number;
-    linkedUsers: number;
-    unlinkedApprovedUsers: number;
-    linkRate: number;
-    recentEventCount: number;
-    currentVoiceUserCount: number;
-    currentLinkedVoiceUserCount: number;
-    currentUnlinkedVoiceUserCount: number;
-    activeMonitorCount: number;
-    healthyBotCount: number;
-    recruitReadyCount: number;
-    recruitNeedsCheckCount: number;
-    matchAttendancePresentCount: number;
-    matchAttendanceTotalCount: number;
-    matchAttendanceLateCount: number;
-    matchAttendanceAbsentWarningCount: number;
-  };
-  settings: DiscordSettings;
-  heartbeats: Array<{ botId: string; status: string; botUsername: string | null; updatedAt: string; uptimeSeconds: number; memoryRssMb: number | null; voiceMemberCount: number; autoFinishEnabled: boolean; lastError: string | null }>;
-  currentVoiceUsers: Array<{ id: number; discordId: string; eventType: string; channelName: string | null; memberDisplayName: string | null; memberNickname: string | null; discordUsername: string | null; discordGlobalName: string | null; occurredAt: string; userAccountId: number | null; userAccount?: { userId: string; discordServerNickname: string | null; discordGlobalName: string | null; discordUsername: string | null; player: { name: string | null; nickname: string; tag: string } | null } | null }>;
-  recentUnlinkedEvents: Array<{ id: number; discordId: string; eventType: string; channelName: string | null; memberDisplayName: string | null; memberNickname: string | null; discordUsername: string | null; discordGlobalName: string | null; occurredAt: string }>;
-  matchAttendance: {
-    season: { id: number; name: string } | null;
-    date: string;
-    matchStartAt: string;
-    lateAfter: string;
-    absentAfter: string;
-    totalCount: number;
-    presentCount: number;
-    lateCount: number;
-    absentWarningCount: number;
-    waitingCount: number;
-    unlinkedCount: number;
-    players: Array<{ applyId: number; playerId: number; name: string; nickname: string; tag: string; linked: boolean; present: boolean; matchType: string; attendanceStatus: string; matchedDisplayName: string | null; channelName: string | null; joinedAt: string | null }>;
-    extraVoiceUsers: Array<{ discordId: string; displayName: string; channelName: string | null }>;
-  };
-  activeMonitors: Array<{ id: number; status: string; voiceChannelId: string | null; lastExpectedCount: number; lastPresentExpectedCount: number; lastNonParticipantCount: number; updatedAt: string; party: { id: number; recruitNo: number; title: string; type: string; status: string } }>;
-  recruitVerifications: Array<{
-    partyId: number;
-    recruitNo: number;
-    title: string;
-    type: string;
-    status: string;
-    partyStatus: string;
-    maxMembers: number;
-    activeMemberCount: number;
-    linkedCount: number;
-    presentCount: number;
-    matchedByNameCount: number;
-    ambiguousCount: number;
-    missingCount: number;
-    unlinkedCount: number;
-    voiceChannelId: string | null;
-    monitorStatus: string | null;
-    lastScannedAt: string | null;
-    finishCandidateStartedAt: string | null;
-    autoFinishedAt: string | null;
-    autoFinishReason: string | null;
-    presentParticipants: string[];
-    missingParticipants: string[];
-    unlinkedParticipants: string[];
-  }>;
-  linkLogs: Array<{ id: number; action: string; discordId: string | null; discordServerNickname: string | null; discordGlobalName: string | null; discordUsername: string | null; reason: string | null; createdAt: string; userAccount: { userId: string; player: { name: string | null; nickname: string; tag: string } | null } | null }>;
-};
+function split(value: string) { return value.split(",").map((item) => item.trim()).filter(Boolean); }
+function Input({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) { return <label><span>{label}</span><input className="admin-input" value={value} onChange={(e) => onChange(e.target.value.trim())} /></label>; }
+function TextArea({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) { return <label><span>{label}</span><textarea className="admin-input" value={value} onChange={(e) => onChange(e.target.value)} rows={3} /></label>; }
 
-type DiscordSettings = {
-  autoFinishEnabled: boolean;
-  autoFinishHoldMinutes: number;
-  watchAllVoiceChannels: boolean;
-  watchChannelIds: string[];
-  watchCategoryIds: string[];
-  adminLogChannelId: string | null;
-  noticeChannelId: string | null;
-  recruitLogChannelId: string | null;
-  approvedRoleId: string | null;
-  topRoleId: string | null;
-  jglRoleId: string | null;
-  midRoleId: string | null;
-  adcRoleId: string | null;
-  supRoleId: string | null;
-  heartbeatIntervalSeconds: number;
-  staleHeartbeatSeconds: number;
-};
-
-function formatDate(value: string | null | undefined) {
-  if (!value) return "-";
-  return new Intl.DateTimeFormat("ko-KR", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-  }).format(new Date(value));
-}
-
-function userLabel(event: Overview["currentVoiceUsers"][number] | Overview["recentUnlinkedEvents"][number]) {
-  if ("userAccount" in event && event.userAccount) {
-    const player = event.userAccount.player;
-    return player ? `${player.name || "-"} / ${player.nickname}#${player.tag}` : event.userAccount.userId;
-  }
-  return event.memberDisplayName || event.memberNickname || event.discordGlobalName || event.discordUsername || `Discord ${event.discordId.slice(-4)}`;
-}
-
-function secondsToText(value: number) {
-  const h = Math.floor(value / 3600);
-  const m = Math.floor((value % 3600) / 60);
-  if (h > 0) return `${h}시간 ${m}분`;
-  return `${m}분`;
-}
-
-export default function AdminDiscordPage() {
-  const [data, setData] = useState<Overview | null>(null);
+export default function DiscordSettingsPage() {
+  const { data, loading, load } = useDiscordOverview();
   const [settings, setSettings] = useState<DiscordSettings | null>(null);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  async function load() {
-    setLoading(true);
-    const res = await fetch("/api/admin/discord/overview", { cache: "no-store" });
-    const json = await res.json();
-    if (!res.ok) throw new Error(json.message || "Discord 운영 현황 조회 실패");
-    setData(json);
-    setSettings(json.settings);
-    setLoading(false);
-  }
-
-  useEffect(() => { void load().catch((error) => { console.error(error); setLoading(false); }); }, []);
+  useEffect(() => { if (data?.settings) setSettings(data.settings); }, [data]);
 
   const handleSave = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -161,205 +43,56 @@ export default function AdminDiscordPage() {
     alert(json.message || (res.ok ? "요청 완료" : "요청 실패"));
   };
 
+  const latestBot = data?.heartbeats?.[0];
+
   return (
-    <main className="admin-page discord-operation-page">
-      <div className="admin-page__header">
-        <div>
-          <h1 className="admin-page__title">Discord 운영 시스템 설정</h1>
-          <p className="admin-page__description">봇 상태, 현재 음성방, 구인 검증, 운영 설정을 관리합니다. 상세 로그는 메인 화면에서 확인합니다.</p>
-        </div>
-        <div className="admin-actions">
-          <button className="admin-button" type="button" onClick={() => void load()}>새로고침</button>
-          <Link className="admin-button admin-button--secondary" href="/admin/discord">상세 로그 메인</Link>
-        </div>
+    <main className="admin-page discord-ops-page">
+      <DiscordOpsStyles />
+      <div className="admin-page__header discord-ops-header">
+        <div><h1 className="admin-page__title">Discord 운영 설정</h1><p className="admin-page__description">자동화 설정만 관리합니다. Discord 계정 연동은 선택사항이며, 구인·내전 확인은 이름매칭을 함께 사용합니다.</p></div>
+        <div className="admin-actions"><Link className="admin-button admin-button--secondary" href="/admin/discord">대시보드</Link><button className="admin-button" type="button" onClick={() => void load()}>새로고침</button></div>
       </div>
+      <DiscordOpsNav active="settings" />
+      <div className="discord-ops-notice">연동 역할 자동화는 선택 기능입니다. 구인/내전 확인은 Discord ID 연동이 없어도 서버 닉네임 이름 토큰으로 처리됩니다.</div>
 
-      {loading || !data || !settings ? <section className="admin-card"><div className="admin-empty">Discord 운영 현황을 불러오는 중입니다.</div></section> : (
+      {loading || !data || !settings ? <section className="admin-card"><div className="admin-empty">설정을 불러오는 중입니다.</div></section> : (
         <>
-          <section className="admin-card discord-help-card">
-            <div className="admin-section-head"><h2>설정 화면 기능 설명</h2></div>
-            <div className="discord-help-grid">
-              <div><strong>봇 상태</strong><span>Heartbeat 기준으로 봇이 살아있는지, 마지막 신호, 메모리, 자동 ㅉ 상태를 확인합니다.</span></div>
-              <div><strong>현재 음성방 접속자</strong><span>최근 JOIN/MOVE/LEAVE 로그를 기준으로 현재 접속 중으로 추정되는 유저를 보여줍니다.</span></div>
-              <div><strong>내전 Discord 확인</strong><span>오늘 내전 참가자가 디스코드 음성방에 들어왔는지 확인하고 늦참/불참 경고를 표시합니다.</span></div>
-              <div><strong>구인 Discord 검증</strong><span>구인 참가자가 일부라도 실제 디스코드 음성방에 모였는지, 이후 모두 나갔는지 확인합니다.</span></div>
-              <div><strong>Discord 운영 설정</strong><span>자동 ㅉ, 감시 채널, 로그 채널, 승인 역할 ID를 저장합니다. 봇은 설정 조회 주기에 반영합니다.</span></div>
-              <div><strong>감사 로그</strong><span>Discord 계정 연동, 해제, 관리자 강제 해제 같은 계정 관련 기록입니다.</span></div>
-            </div>
-          </section>
-
-          <section className="discord-stat-grid">
-            <Stat label="봇 정상" value={`${data.summary.healthyBotCount}개`} caption="heartbeat 기준" />
-            <Stat label="연동률" value={`${data.summary.linkRate}%`} caption={`${data.summary.linkedUsers}/${data.summary.approvedUsers}명`} />
-            <Stat label="현재 음성방" value={`${data.summary.currentVoiceUserCount}명`} caption={`연동 ${data.summary.currentLinkedVoiceUserCount} / 전체 ${data.summary.currentVoiceUserCount}`} />
-            <Stat label="구인 감시" value={`${data.summary.activeMonitorCount}건`} caption="ACTIVE / 후보" />
-            <Stat label="내전 모임" value={`${data.summary.matchAttendancePresentCount || 0}/${data.summary.matchAttendanceTotalCount || 0}명`} caption={`늦참 ${data.summary.matchAttendanceLateCount || 0} / 불참경고 ${data.summary.matchAttendanceAbsentWarningCount || 0}`} />
-            <Stat label="구인 모임 확인" value={`${data.summary.recruitReadyCount || 0}건`} caption={`확인 필요 ${data.summary.recruitNeedsCheckCount || 0}건`} />
-            <Stat label="최근 이벤트" value={`${data.summary.recentEventCount}건`} caption="최근 6시간" />
-          </section>
-
-          <section className="admin-card">
+<section className="admin-card discord-ops-panel">
             <div className="admin-section-head"><h2>봇 상태</h2><button type="button" className="chip-button" onClick={handleRoleSync}>역할 동기화 요청</button></div>
-            <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>봇</th><th>상태</th><th>마지막 신호</th><th>Uptime</th><th>메모리</th><th>음성 인원</th><th>자동 ㅉ</th><th>오류</th></tr></thead><tbody>
-              {data.heartbeats.length === 0 ? <tr><td colSpan={8}>heartbeat 기록이 없습니다.</td></tr> : data.heartbeats.map((bot) => <tr key={bot.botId}><td>{bot.botUsername || bot.botId}</td><td>{bot.status}</td><td>{formatDate(bot.updatedAt)}</td><td>{secondsToText(bot.uptimeSeconds)}</td><td>{bot.memoryRssMb ? `${bot.memoryRssMb.toFixed(1)}MB` : "-"}</td><td>{bot.voiceMemberCount}</td><td>{bot.autoFinishEnabled ? "ON" : "OFF"}</td><td>{bot.lastError || "-"}</td></tr>)}
-            </tbody></table></div>
+            {latestBot ? <div className="discord-ops-kv">
+              <div><span>봇</span><strong>{latestBot.botUsername || latestBot.botId}</strong></div>
+              <div><span>상태</span><strong>{latestBot.status}</strong></div>
+              <div><span>마지막 신호</span><strong>{formatDate(latestBot.updatedAt)}</strong></div>
+              <div><span>Uptime</span><strong>{secondsToText(latestBot.uptimeSeconds)}</strong></div>
+              <div><span>메모리</span><strong>{latestBot.memoryRssMb ? `${latestBot.memoryRssMb.toFixed(1)}MB` : "-"}</strong></div>
+              <div><span>자동 ㅉ</span><strong>{latestBot.autoFinishEnabled ? "ON" : "OFF"}</strong></div>
+            </div> : <p className="admin-muted">heartbeat 기록이 없습니다.</p>}
           </section>
 
-          <section className="admin-card">
-            <h2>현재 음성방 접속자</h2>
-            <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>유저</th><th>연동</th><th>채널</th><th>마지막 이벤트</th><th>일시</th></tr></thead><tbody>
-              {data.currentVoiceUsers.length === 0 ? <tr><td colSpan={5}>현재 추정 접속자가 없습니다.</td></tr> : data.currentVoiceUsers.map((event) => <tr key={`${event.discordId}-${event.id}`}><td>{userLabel(event)}</td><td>{event.userAccountId ? "연동" : "미연동"}</td><td>{event.channelName || "-"}</td><td>{event.eventType}</td><td>{formatDate(event.occurredAt)}</td></tr>)}
-            </tbody></table></div>
-          </section>
-
-          <section className="admin-card">
-            <div className="admin-section-head">
-              <div>
-                <h2>오늘 내전 Discord 모임 확인</h2>
-                <p className="admin-page__description">내전 시작 기준 20:00, 늦참 기준 5분, 불참 경고 기준 10분입니다. Discord 연동 ID를 우선 사용하고, 미연동 유저는 서버 닉네임의 이름 토큰으로 비교합니다.</p>
-              </div>
-            </div>
-            <div className="discord-attendance-summary">
-              <span>참가 {data.matchAttendance.totalCount}명</span>
-              <span>확인 {data.matchAttendance.presentCount}명</span>
-              <span>늦참 {data.matchAttendance.lateCount}명</span>
-              <span>불참 경고 {data.matchAttendance.absentWarningCount}명</span>
-              <span>미연동 {data.matchAttendance.unlinkedCount}명</span>
-            </div>
-            <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>참가자</th><th>상태</th><th>매칭</th><th>Discord</th><th>음성방</th><th>입장</th></tr></thead><tbody>
-              {data.matchAttendance.players.length === 0 ? <tr><td colSpan={6}>오늘 내전 참가자가 없습니다.</td></tr> : data.matchAttendance.players.map((player) => <tr key={player.applyId}>
-                <td>{player.name} · {player.nickname}#{player.tag}</td>
-                <td><span className={`discord-status-pill discord-status-${player.attendanceStatus.toLowerCase().replaceAll("_", "-")}`}>{attendanceStatusLabel(player.attendanceStatus)}</span></td>
-                <td>{matchTypeLabel(player.matchType)}</td>
-                <td>{player.matchedDisplayName || "-"}</td>
-                <td>{player.channelName || "-"}</td>
-                <td>{formatDate(player.joinedAt)}</td>
-              </tr>)}
-            </tbody></table></div>
-            {data.matchAttendance.extraVoiceUsers.length > 0 ? <p className="admin-muted discord-extra-users">참가 신청 없이 음성방에 있는 유저: {data.matchAttendance.extraVoiceUsers.slice(0, 8).map((user) => `${user.displayName}${user.channelName ? `(${user.channelName})` : ""}`).join(", ")}</p> : null}
-          </section>
-
-          <section className="admin-card">
-            <div className="admin-section-head">
-              <div>
-                <h2>구인구직 Discord 모임 검증</h2>
-                <p className="admin-page__description">정원이 다 차지 않아도 구인 참가자 중 1명 이상이 디스코드 음성방에서 확인되면 진행중으로 봅니다. 이후 매칭 인원이 모두 나가면 자동 ㅉ 후보로 전환됩니다.</p>
-              </div>
-            </div>
-            <div className="admin-table-wrap"><table className="admin-table discord-recruit-check-table"><thead><tr><th>구인</th><th>상태</th><th>구인 인원</th><th>Discord 확인</th><th>이름매칭</th><th>미확인</th><th>확인필요</th><th>음성방</th><th>갱신</th></tr></thead><tbody>
-              {data.recruitVerifications.length === 0 ? <tr><td colSpan={9}>진행중인 구인이 없습니다.</td></tr> : data.recruitVerifications.map((item) => <tr key={item.partyId}>
-                <td><strong>#{item.recruitNo}</strong> · {item.title}</td>
-                <td><span className={`discord-status-pill discord-status-${item.status.toLowerCase().replaceAll("_", "-")}`}>{statusLabel(item.status)}</span></td>
-                <td>{item.activeMemberCount}/{item.maxMembers}</td>
-                <td title={item.presentParticipants.join("\n")}>{item.presentCount}명</td>
-                <td>{item.matchedByNameCount > 0 ? `${item.matchedByNameCount}명` : "-"}</td>
-                <td title={item.missingParticipants.join("\n")}>{item.missingCount > 0 ? item.missingParticipants.slice(0, 2).join(", ") + (item.missingParticipants.length > 2 ? ` 외 ${item.missingParticipants.length - 2}` : "") : "-"}</td>
-                <td title={item.unlinkedParticipants.join("\n")}>{item.ambiguousCount > 0 ? `동명이인 ${item.ambiguousCount}` : item.unlinkedCount > 0 ? item.unlinkedParticipants.slice(0, 2).join(", ") + (item.unlinkedParticipants.length > 2 ? ` 외 ${item.unlinkedParticipants.length - 2}` : "") : "-"}</td>
-                <td>{item.voiceChannelId || "-"}</td>
-                <td>{formatDate(item.lastScannedAt)}</td>
-              </tr>)}
-            </tbody></table></div>
-          </section>
-
-          <section className="admin-card">
-            <h2>Discord 운영 설정</h2>
-            <form className="discord-settings-form" onSubmit={handleSave}>
+          <section className="admin-card discord-ops-panel">
+            <div className="admin-section-head"><div><h2>자동화 설정</h2><p className="admin-muted">저장 후 봇이 원격 설정 조회 주기에 자동 반영합니다.</p></div></div>
+            <form className="discord-settings-form discord-settings-form--readable" onSubmit={handleSave}>
               <label><span>자동 ㅉ</span><select className="admin-input" value={settings.autoFinishEnabled ? "true" : "false"} onChange={(e) => setSettings({ ...settings, autoFinishEnabled: e.target.value === "true" })}><option value="true">ON</option><option value="false">OFF</option></select></label>
-              <label><span>자동 ㅉ 후보 유지 분</span><input className="admin-input" type="number" value={settings.autoFinishHoldMinutes} onChange={(e) => setSettings({ ...settings, autoFinishHoldMinutes: Number(e.target.value) })} /></label>
+              <label><span>자동 ㅉ 후보 유지 분</span><input className="admin-input" type="number" min="1" max="120" value={settings.autoFinishHoldMinutes} onChange={(e) => setSettings({ ...settings, autoFinishHoldMinutes: Number(e.target.value) })} /></label>
               <label><span>전체 음성방 감시</span><select className="admin-input" value={settings.watchAllVoiceChannels ? "true" : "false"} onChange={(e) => setSettings({ ...settings, watchAllVoiceChannels: e.target.value === "true" })}><option value="true">ON</option><option value="false">OFF</option></select></label>
+              <label><span>Heartbeat 주기 초</span><input className="admin-input" type="number" min="10" value={settings.heartbeatIntervalSeconds} onChange={(e) => setSettings({ ...settings, heartbeatIntervalSeconds: Number(e.target.value) })} /></label>
+              <label><span>Heartbeat 지연 경고 초</span><input className="admin-input" type="number" min="30" value={settings.staleHeartbeatSeconds} onChange={(e) => setSettings({ ...settings, staleHeartbeatSeconds: Number(e.target.value) })} /></label>
               <TextArea label="감시 채널 ID" value={settings.watchChannelIds.join(",")} onChange={(v) => setSettings({ ...settings, watchChannelIds: split(v) })} />
               <TextArea label="감시 카테고리 ID" value={settings.watchCategoryIds.join(",")} onChange={(v) => setSettings({ ...settings, watchCategoryIds: split(v) })} />
               <Input label="관리자 로그 채널 ID" value={settings.adminLogChannelId || ""} onChange={(v) => setSettings({ ...settings, adminLogChannelId: v || null })} />
               <Input label="공지 채널 ID" value={settings.noticeChannelId || ""} onChange={(v) => setSettings({ ...settings, noticeChannelId: v || null })} />
               <Input label="구인 로그 채널 ID" value={settings.recruitLogChannelId || ""} onChange={(v) => setSettings({ ...settings, recruitLogChannelId: v || null })} />
               <Input label="승인 역할 ID" value={settings.approvedRoleId || ""} onChange={(v) => setSettings({ ...settings, approvedRoleId: v || null })} />
-              <button className="admin-button" type="submit" disabled={saving}>{saving ? "저장 중" : "설정 저장"}</button>
+              <Input label="TOP 역할 ID" value={settings.topRoleId || ""} onChange={(v) => setSettings({ ...settings, topRoleId: v || null })} />
+              <Input label="JGL 역할 ID" value={settings.jglRoleId || ""} onChange={(v) => setSettings({ ...settings, jglRoleId: v || null })} />
+              <Input label="MID 역할 ID" value={settings.midRoleId || ""} onChange={(v) => setSettings({ ...settings, midRoleId: v || null })} />
+              <Input label="ADC 역할 ID" value={settings.adcRoleId || ""} onChange={(v) => setSettings({ ...settings, adcRoleId: v || null })} />
+              <Input label="SUP 역할 ID" value={settings.supRoleId || ""} onChange={(v) => setSettings({ ...settings, supRoleId: v || null })} />
+              <div className="discord-settings-actions"><button className="admin-button" type="submit" disabled={saving}>{saving ? "저장 중" : "설정 저장"}</button></div>
             </form>
-          </section>
-
-          <section className="admin-card">
-            <h2>최근 Discord 연동 감사 로그</h2>
-            <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>일시</th><th>작업</th><th>계정</th><th>Discord</th><th>사유</th></tr></thead><tbody>
-              {data.linkLogs.map((log) => <tr key={log.id}><td>{formatDate(log.createdAt)}</td><td>{log.action}</td><td>{log.userAccount?.player ? `${log.userAccount.player.name || "-"} / ${log.userAccount.player.nickname}#${log.userAccount.player.tag}` : log.userAccount?.userId || "-"}</td><td>{log.discordServerNickname || log.discordGlobalName || log.discordUsername || log.discordId || "-"}</td><td>{log.reason || "-"}</td></tr>)}
-            </tbody></table></div>
           </section>
         </>
       )}
-      <style>{`
-        .discord-help-card { margin-bottom: 16px; }
-        .discord-help-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-        .discord-help-grid div { display: grid; gap: 6px; padding: 14px; border: 1px solid rgba(148, 163, 184, 0.22); border-radius: 14px; background: rgba(2, 6, 23, 0.34); }
-        .discord-help-grid strong { color: #e5e7eb; font-size: 13px; }
-        .discord-help-grid span { color: #94a3b8; font-size: 12px; line-height: 1.55; }
-        .discord-recruit-check-table td { vertical-align: top; }
-        .discord-status-pill { display: inline-flex; align-items: center; justify-content: center; min-width: 74px; padding: 4px 8px; border-radius: 999px; font-size: 12px; font-weight: 800; border: 1px solid rgba(148, 163, 184, 0.24); background: rgba(15, 23, 42, 0.7); color: #dbeafe; white-space: nowrap; }
-        .discord-status-assembled { border-color: rgba(34, 197, 94, .45); color: #bbf7d0; background: rgba(22, 101, 52, .25); }
-        .discord-status-assembled-with-extra { border-color: rgba(250, 204, 21, .45); color: #fef08a; background: rgba(113, 63, 18, .25); }
-        .discord-status-gathering, .discord-status-partial-active { border-color: rgba(59, 130, 246, .45); color: #bfdbfe; background: rgba(30, 64, 175, .25); }
-        .discord-status-finish-candidate { border-color: rgba(248, 113, 113, .45); color: #fecaca; background: rgba(127, 29, 29, .28); }
-        .discord-status-auto-finished { border-color: rgba(20, 184, 166, .45); color: #ccfbf1; background: rgba(19, 78, 74, .28); }
-        .discord-status-present { border-color: rgba(34, 197, 94, .45); color: #bbf7d0; background: rgba(22, 101, 52, .25); }
-        .discord-status-late { border-color: rgba(250, 204, 21, .45); color: #fef08a; background: rgba(113, 63, 18, .25); }
-        .discord-status-absent-warning { border-color: rgba(248, 113, 113, .45); color: #fecaca; background: rgba(127, 29, 29, .28); }
-        .discord-status-waiting { border-color: rgba(148, 163, 184, .3); color: #cbd5e1; background: rgba(15, 23, 42, .55); }
-        .discord-attendance-summary { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
-        .discord-attendance-summary span { padding: 7px 10px; border: 1px solid rgba(148, 163, 184, .22); border-radius: 999px; background: rgba(15, 23, 42, .55); font-size: 12px; font-weight: 800; color: #dbeafe; }
-        .discord-extra-users { margin-top: 10px; }
-        .discord-status-discord-link-incomplete, .discord-status-recruit-not-full { border-color: rgba(251, 146, 60, .45); color: #fed7aa; background: rgba(124, 45, 18, .25); }
-        @media (max-width: 1100px) { .discord-help-grid { grid-template-columns: 1fr; } }
-      `}</style>
     </main>
   );
-}
-
-function statusLabel(status: string) {
-  const map: Record<string, string> = {
-    ASSEMBLED: "모임 완료",
-    ASSEMBLED_WITH_EXTRA: "모임 완료+외부",
-    GATHERING: "진행중 확인",
-    PARTIAL_ACTIVE: "부분 진행",
-    WAITING: "대기",
-    RECRUIT_NOT_FULL: "대기",
-    DISCORD_LINK_INCOMPLETE: "연동 부족",
-    FINISH_CANDIDATE: "ㅉ 후보",
-    AUTO_FINISHED: "자동 ㅉ 완료",
-    ACTIVE: "감시 중",
-  };
-  return map[status] || status;
-}
-
-function attendanceStatusLabel(status: string) {
-  const map: Record<string, string> = {
-    PRESENT: "참석",
-    LATE: "늦참",
-    ABSENT_WARNING: "불참 경고",
-    WAITING: "대기",
-  };
-  return map[status] || status;
-}
-
-function matchTypeLabel(type: string) {
-  const map: Record<string, string> = {
-    DISCORD_ID: "연동",
-    NAME_TOKEN: "이름",
-    NAME_AMBIGUOUS: "확인필요",
-    NOT_MATCHED: "미확인",
-  };
-  return map[type] || type;
-}
-
-function Stat({ label, value, caption }: { label: string; value: string; caption: string }) {
-  return <div className="discord-stat-card"><div className="discord-stat-label">{label}</div><div className="discord-stat-value">{value}</div><div className="discord-stat-caption">{caption}</div></div>;
-}
-
-function Input({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
-  return <label><span>{label}</span><input className="admin-input" value={value} onChange={(e) => onChange(e.target.value.trim())} /></label>;
-}
-
-function TextArea({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
-  return <label><span>{label}</span><textarea className="admin-input" value={value} onChange={(e) => onChange(e.target.value)} rows={3} /></label>;
-}
-
-function split(value: string) {
-  return value.split(",").map((item) => item.trim()).filter(Boolean);
 }

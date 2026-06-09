@@ -182,6 +182,7 @@ function getVerificationStatus(params: {
   if (presentExpectedCount > 0) {
     if (recruitFilled && expectedCount > 0 && presentExpectedCount >= expectedCount && nonParticipantCount === 0) return "ASSEMBLED";
     if (recruitFilled && expectedCount > 0 && presentExpectedCount >= expectedCount && nonParticipantCount > 0) return "ASSEMBLED_WITH_EXTRA";
+    if (nonParticipantCount > 0) return "PARTIAL_ACTIVE_WITH_EXTRA";
     return "PARTIAL_ACTIVE";
   }
 
@@ -191,6 +192,7 @@ function getVerificationStatus(params: {
 function isPreviouslyActiveRecruitStatus(status: string | null | undefined) {
   return [
     "PARTIAL_ACTIVE",
+    "PARTIAL_ACTIVE_WITH_EXTRA",
     "GATHERING",
     "ASSEMBLED",
     "ASSEMBLED_WITH_EXTRA",
@@ -330,35 +332,54 @@ export async function POST(req: NextRequest) {
     const requiredCount = activeMembers.length;
     const linkedCount = linkedDiscordIds.length;
     const presentExpectedCount = participantChecks.filter((item) => item.present).length;
-    const nonParticipantDiscordIds = [...currentDiscordIds].filter((id) => !matchedDiscordIds.includes(id));
-    const nonParticipantCount = nonParticipantDiscordIds.length;
+    const rawNonParticipantDiscordIds = [...currentDiscordIds].filter((id) => !matchedDiscordIds.includes(id));
+    const nonParticipantDiscordIds = rawNonParticipantDiscordIds;
+    let nonParticipantCount = nonParticipantDiscordIds.length;
+    let nonParticipantDisplayNames = nonParticipantDiscordIds.map((id) => currentMemberById.get(id)?.displayName || `Discord ${id.slice(-4)}`);
     const matchedByNameCount = participantChecks.filter((item) => item.matchType === "NAME_TOKEN").length;
     const ambiguousCount = participantChecks.filter((item) => item.matchType === "NAME_AMBIGUOUS").length;
 
     const currentMonitor = party.discordMonitor;
     const monitorChannelMatched = currentMonitor?.voiceChannelId === channelId;
     const hasPresentInThisChannel = presentExpectedCount > 0;
+    const previouslyActiveForThisParty = Boolean(
+      requiredCount > 0
+      && (isPreviouslyActiveRecruitStatus(currentMonitor?.status) || (currentMonitor?.lastPresentExpectedCount ?? 0) > 0)
+    );
     const hasRecentActivity = monitorChannelMatched || hasPresentInThisChannel
       ? true
       : await hasRecentExpectedActivityInChannel({ channelId, expectedDiscordIds: linkedDiscordIds, since: recentSince });
 
-    if (!hasRecentActivity && linkedDiscordIds.length > 0) {
+    // 핵심 보정:
+    // 해당 채널에 구인 참가자 매칭이 0명이고, 과거에 이 구인이 이 채널에서 진행된 흔적도 없으면
+    // 외부/관전 인원만 있는 방으로 판단하고 모니터 연결/자동 ㅉ 판단에서 제외합니다.
+    // 예: 2인 구인인데 다른 방에 3명이 놀고 있는 경우, 구인 참가자가 없으면 이 방을 구인방으로 잡지 않습니다.
+    const shouldTrackThisChannel = hasPresentInThisChannel || monitorChannelMatched || hasRecentActivity;
+    if (!shouldTrackThisChannel) {
       results.push({
         recruitNo: party.recruitNo,
         title: party.title,
         skipped: true,
-        reason: "NO_RECENT_ACTIVITY_IN_CHANNEL",
+        reason: "NO_PARTICIPANT_MATCH_IN_CHANNEL",
         channelId,
         requiredCount,
         linkedCount,
+        presentExpectedCount,
+        nonParticipantCount,
       });
       continue;
     }
 
+    const ignoreExternalOnlyChannel = monitorChannelMatched && !hasPresentInThisChannel && !previouslyActiveForThisParty;
+
+    if (ignoreExternalOnlyChannel) {
+      nonParticipantCount = 0;
+      nonParticipantDisplayNames = [];
+    }
+
     const hasEverActiveMatch = Boolean(
       monitorChannelMatched
-      && requiredCount > 0
-      && (isPreviouslyActiveRecruitStatus(currentMonitor?.status) || (currentMonitor?.lastPresentExpectedCount ?? 0) > 0)
+      && previouslyActiveForThisParty
     );
 
     // 자동 ㅉ 기준 변경:
@@ -482,6 +503,7 @@ export async function POST(req: NextRequest) {
             linkedCount,
             presentExpectedCount,
             nonParticipantCount,
+            nonParticipantDisplayNames,
             matchedByNameCount,
             ambiguousCount,
             missingParticipants,
@@ -519,7 +541,9 @@ export async function POST(req: NextRequest) {
       unlinkedParticipants,
       presentParticipants,
       nonParticipantDiscordIds,
+      nonParticipantDisplayNames,
       matchDetails,
+      scenario: presentExpectedCount > 0 && nonParticipantCount > 0 ? "PARTICIPANTS_WITH_SPECTATORS" : presentExpectedCount > 0 ? "PARTIAL_ACTIVITY_CONFIRMED" : shouldCandidate ? "LEFT_AFTER_ACTIVITY" : "WAITING_FOR_ACTIVITY",
     });
   }
 
