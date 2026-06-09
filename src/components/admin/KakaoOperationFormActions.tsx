@@ -60,11 +60,23 @@ export default function KakaoOperationFormActions({ formType, id, memo }: Props)
   }
 
   return (
-    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", minWidth: 150 }}>
-      <button className="admin-button admin-button--secondary" type="button" disabled={pending} onClick={updateMemo}>
-        메모수정
+    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", minWidth: 0 }}>
+      <button
+        className="admin-button admin-button--secondary"
+        type="button"
+        disabled={pending}
+        onClick={updateMemo}
+        style={{ whiteSpace: "nowrap", padding: "8px 9px", fontSize: "0.78rem", lineHeight: 1.1 }}
+      >
+        메모
       </button>
-      <button className="admin-button admin-button--danger" type="button" disabled={pending} onClick={deleteItem}>
+      <button
+        className="admin-button admin-button--danger"
+        type="button"
+        disabled={pending}
+        onClick={deleteItem}
+        style={{ whiteSpace: "nowrap", padding: "8px 9px", fontSize: "0.78rem", lineHeight: 1.1 }}
+      >
         삭제
       </button>
     </div>

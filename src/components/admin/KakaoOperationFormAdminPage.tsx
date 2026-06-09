@@ -24,6 +24,7 @@ type PageConfig = {
   description: string;
   headers: string[];
   emptyColSpan: number;
+  columnWidths: string[];
 };
 
 const pageConfigs: Record<KakaoOperationFormType, PageConfig> = {
@@ -32,24 +33,28 @@ const pageConfigs: Record<KakaoOperationFormType, PageConfig> = {
     description: "외출기간, 외출사유, 외출범위를 확인합니다.",
     headers: ["ID", "이름 및 닉네임", "외출기간", "외출사유", "외출범위", "등록 일시", "메모", "관리", "원문보기"],
     emptyColSpan: 9,
+    columnWidths: ["6%", "13%", "12%", "15%", "15%", "15%", "8%", "8%", "8%"],
   },
   meetups: {
     title: "오프라인 모임",
     description: "주최자, 일자, 장소, 참여자 명단을 확인합니다.",
     headers: ["ID", "주최자 이름 및 닉네임", "일자", "장소", "참여자 명단", "등록 일시", "메모", "관리", "원문보기"],
     emptyColSpan: 9,
+    columnWidths: ["6%", "15%", "9%", "11%", "18%", "15%", "8%", "8%", "10%"],
   },
   suggestions: {
     title: "건의",
     description: "작성자, 건의 사유, 건의 내용을 확인합니다.",
     headers: ["ID", "본인 이름 및 닉네임", "건의 사유", "건의 내용", "등록 일시", "메모", "관리", "원문보기"],
     emptyColSpan: 8,
+    columnWidths: ["6%", "15%", "20%", "23%", "15%", "7%", "7%", "7%"],
   },
   friends: {
     title: "디스코드 초대",
     description: "지인 이름, 지인 닉네임, 이용기간, 디스코드 닉네임 변경명을 확인합니다.",
     headers: ["ID", "지인 이름", "지인 닉네임", "이용기간", "디스코드 닉네임 변경", "등록 일시", "메모", "관리", "원문보기"],
     emptyColSpan: 9,
+    columnWidths: ["6%", "11%", "11%", "11%", "22%", "15%", "8%", "8%", "8%"],
   },
 };
 
@@ -130,16 +135,18 @@ async function getRows(type: KakaoOperationFormType): Promise<Row[]> {
   }));
 }
 
-function ShortText({ value }: { value: string }) {
+function ShortText({ value, lines = 2 }: { value: string; lines?: number }) {
   return (
     <span
+      title={value}
       style={{
         display: "-webkit-box",
-        WebkitLineClamp: 2,
+        WebkitLineClamp: lines,
         WebkitBoxOrient: "vertical",
         overflow: "hidden",
-        lineHeight: 1.55,
-        maxWidth: 320,
+        lineHeight: 1.45,
+        wordBreak: "break-word",
+        color: "#f8fafc",
       }}
     >
       {value || "-"}
@@ -154,12 +161,13 @@ export default async function KakaoOperationFormAdminPage({ type }: Props) {
     description: "카카오톡 봇이 인식해 저장한 운영 양식을 확인합니다.",
     headers: ["ID", "내용", "등록 일시", "메모", "관리", "원문보기"],
     emptyColSpan: 6,
+    columnWidths: ["8%", "40%", "18%", "12%", "10%", "12%"],
   };
 
   return (
     <main className="admin-page" style={{ width: "100%" }}>
-      <div style={{ width: "min(100%, 1600px)", maxWidth: "calc(100vw - 40px)", margin: "0 auto" }}>
-        <div className="admin-page__header" style={{ marginBottom: 20 }}>
+      <div style={{ width: "min(100%, 1720px)", maxWidth: "calc(100vw - 40px)", margin: "0 auto" }}>
+        <div className="admin-page__header" style={{ marginBottom: 22 }}>
           <div>
             <p className="page-eyebrow">KAKAO OPERATION FORMS</p>
             <h1>{config.title}</h1>
@@ -171,70 +179,153 @@ export default async function KakaoOperationFormAdminPage({ type }: Props) {
           <section
             className="admin-card"
             style={{
-              marginBottom: 16,
-              padding: 18,
-              border: "1px solid rgba(34, 211, 238, 0.22)",
-              background: "rgba(8, 13, 28, 0.78)",
+              marginBottom: 18,
+              padding: "16px 18px",
+              border: "1px solid rgba(34, 211, 238, 0.20)",
+              background: "rgba(8, 13, 28, 0.8)",
             }}
           >
-            <strong>외출 신청 원칙</strong>
-            <p style={{ margin: "8px 0 0", color: "rgba(226, 232, 240, 0.78)" }}>
+            <strong style={{ display: "block", marginBottom: 8, fontSize: "1.02rem" }}>외출 신청 원칙</strong>
+            <p style={{ margin: 0, color: "rgba(226, 232, 240, 0.85)", lineHeight: 1.65 }}>
               특별한 사유 없이는 구인방, 디스코드 외출은 금지됩니다.
             </p>
           </section>
         ) : null}
 
-        <section className="admin-card" style={{ padding: 20, overflow: "hidden" }}>
-          <div className="admin-card__header" style={{ marginBottom: 16 }}>
+        <section className="admin-card" style={{ padding: 22, overflow: "hidden" }}>
+          <div
+            className="admin-card__header"
+            style={{
+              marginBottom: 18,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 16,
+              flexWrap: "wrap",
+            }}
+          >
             <div>
               <h2>접수 목록</h2>
               <p>최근 200건 기준 · 현재 표시 {rows.length}건</p>
             </div>
+            <div
+              style={{
+                padding: "10px 14px",
+                borderRadius: 999,
+                border: "1px solid rgba(34, 211, 238, 0.18)",
+                background: "rgba(15, 23, 42, 0.7)",
+                color: "#dbeafe",
+                fontWeight: 700,
+                whiteSpace: "nowrap",
+              }}
+            >
+              총 {rows.length}건
+            </div>
           </div>
 
-          <div className="admin-table-wrap" style={{ overflowX: "auto", width: "100%" }}>
-            <table className="admin-table" style={{ minWidth: type === "suggestions" ? 1120 : 1320, tableLayout: "auto" }}>
+          <div className="admin-table-wrap" style={{ overflowX: "visible", width: "100%" }}>
+            <table
+              className="admin-table"
+              style={{
+                width: "100%",
+                minWidth: 0,
+                tableLayout: "fixed",
+                borderCollapse: "separate",
+                borderSpacing: 0,
+              }}
+            >
+              <colgroup>
+                {config.columnWidths.map((width, index) => (
+                  <col key={`${config.title}-${index}`} style={{ width }} />
+                ))}
+              </colgroup>
               <thead>
                 <tr>
                   {config.headers.map((header) => (
-                    <th key={header}>{header}</th>
+                    <th
+                      key={header}
+                      style={{
+                        whiteSpace: "nowrap",
+                        textAlign: "left",
+                        fontSize: "0.82rem",
+                        padding: "12px 10px",
+                        color: "#93c5fd",
+                        background: "rgba(7, 18, 38, 0.92)",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {header}
+                    </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {rows.length === 0 ? (
                   <tr>
-                    <td colSpan={config.emptyColSpan}>등록된 항목이 없습니다.</td>
+                    <td colSpan={config.emptyColSpan} style={{ padding: 28, textAlign: "center" }}>
+                      등록된 항목이 없습니다.
+                    </td>
                   </tr>
                 ) : (
                   rows.map((row) => (
                     <tr key={row.id}>
-                      <td data-label="ID">#{row.id}</td>
+                      <td data-label="ID" style={{ padding: "14px 10px", fontWeight: 700, whiteSpace: "nowrap" }}>
+                        #{row.id}
+                      </td>
                       {row.cells.map((cell, index) => (
-                        <td key={`${row.id}-${index}`} data-label={config.headers[index + 1]}>
-                          <ShortText value={cell} />
+                        <td
+                          key={`${row.id}-${index}`}
+                          data-label={config.headers[index + 1]}
+                          style={{ padding: "14px 10px", verticalAlign: "top" }}
+                        >
+                          <ShortText value={cell} lines={index === row.cells.length - 1 && type !== "suggestions" ? 2 : 2} />
                         </td>
                       ))}
-                      <td data-label="등록 일시">{formatDate(row.createdAt)}</td>
-                      <td data-label="메모">
-                        <ShortText value={row.memo || "-"} />
+                      <td
+                        data-label="등록 일시"
+                        style={{
+                          padding: "14px 10px",
+                          whiteSpace: "normal",
+                          verticalAlign: "top",
+                          fontSize: "0.86rem",
+                          lineHeight: 1.45,
+                        }}
+                      >
+                        {formatDate(row.createdAt)}
                       </td>
-                      <td data-label="관리">
+                      <td data-label="메모" style={{ padding: "14px 10px", verticalAlign: "top" }}>
+                        <ShortText value={row.memo || "-"} lines={1} />
+                      </td>
+                      <td data-label="관리" style={{ padding: "12px 8px", verticalAlign: "top" }}>
                         <KakaoOperationFormActions formType={type} id={row.id} memo={row.memo} />
                       </td>
-                      <td data-label="원문보기">
+                      <td data-label="원문보기" style={{ padding: "12px 8px", verticalAlign: "top" }}>
                         <details>
-                          <summary style={{ cursor: "pointer", whiteSpace: "nowrap" }}>보기</summary>
+                          <summary
+                            style={{
+                              cursor: "pointer",
+                              whiteSpace: "nowrap",
+                              fontWeight: 700,
+                              color: "#7dd3fc",
+                              fontSize: "0.86rem",
+                            }}
+                          >
+                            원문
+                          </summary>
                           <pre
                             style={{
                               whiteSpace: "pre-wrap",
-                              minWidth: 260,
-                              maxWidth: 420,
+                              minWidth: 220,
                               margin: "10px 0 0",
                               padding: 12,
                               borderRadius: 12,
                               background: "rgba(2, 6, 23, 0.7)",
                               border: "1px solid rgba(148, 163, 184, 0.2)",
+                              lineHeight: 1.6,
+                              color: "#e2e8f0",
+                              position: "relative",
+                              zIndex: 5,
                             }}
                           >
                             {row.rawText}
