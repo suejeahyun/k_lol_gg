@@ -3,8 +3,10 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { authConstants } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth/session";
 import { signAuthToken } from "@/lib/auth/token";
 import { writeAdminLog } from "@/lib/admin-log";
+import { writeDiscordAccountLinkLog, toDiscordSnapshot } from "@/lib/discord/account-link";
 import { buildDiscordAvatarUrl, parseDiscordCommunityNickname, scorePlayerDiscordMatch } from "@/lib/discord/nickname";
 
 function getBaseUrl(req: NextRequest) {
@@ -12,13 +14,17 @@ function getBaseUrl(req: NextRequest) {
 }
 
 function parseState(value: string | null) {
-  if (!value) return { next: "/" };
+  if (!value) return { next: "/", mode: "login", userAccountId: null, nonce: null, issuedAt: 0 } as const;
   try {
     const parsed = JSON.parse(Buffer.from(value, "base64url").toString("utf8"));
     const next = typeof parsed.next === "string" && parsed.next.startsWith("/") ? parsed.next : "/";
-    return { next };
+    const mode = parsed.mode === "link" ? "link" : "login";
+    const userAccountId = Number.isFinite(Number(parsed.userAccountId)) ? Number(parsed.userAccountId) : null;
+    const nonce = typeof parsed.nonce === "string" ? parsed.nonce : null;
+    const issuedAt = Number.isFinite(Number(parsed.issuedAt)) ? Number(parsed.issuedAt) : 0;
+    return { next, mode, userAccountId, nonce, issuedAt } as const;
   } catch {
-    return { next: "/" };
+    return { next: "/", mode: "login", userAccountId: null, nonce: null, issuedAt: 0 } as const;
   }
 }
 
@@ -49,10 +55,7 @@ async function fetchDiscordUser(params: { code: string; redirectUri: string }) {
     cache: "no-store",
   });
 
-  if (!tokenRes.ok) {
-    throw new Error(`Discord 토큰 요청 실패: ${tokenRes.status}`);
-  }
-
+  if (!tokenRes.ok) throw new Error(`Discord 토큰 요청 실패: ${tokenRes.status}`);
   const tokenData = (await tokenRes.json()) as { access_token?: string; token_type?: string };
   if (!tokenData.access_token) throw new Error("Discord access token이 없습니다.");
 
@@ -61,10 +64,7 @@ async function fetchDiscordUser(params: { code: string; redirectUri: string }) {
     cache: "no-store",
   });
 
-  if (!userRes.ok) {
-    throw new Error(`Discord 사용자 조회 실패: ${userRes.status}`);
-  }
-
+  if (!userRes.ok) throw new Error(`Discord 사용자 조회 실패: ${userRes.status}`);
   return (await userRes.json()) as DiscordUserPayload;
 }
 
@@ -73,31 +73,86 @@ async function findBestPlayerCandidate(parsed: ReturnType<typeof parseDiscordCom
     parsed.name ? { name: { equals: parsed.name, mode: "insensitive" as const } } : null,
     parsed.nickname ? { nickname: { equals: parsed.nickname, mode: "insensitive" as const } } : null,
   ].filter((item): item is NonNullable<typeof item> => Boolean(item));
-
   if (orConditions.length === 0) return null;
 
   const players = await prisma.player.findMany({
-    where: {
-      isActive: true,
-      OR: orConditions,
-    },
+    where: { isActive: true, OR: orConditions },
     include: { userAccount: true },
     take: 10,
   });
 
-  const scored = players
-    .map((player) => ({
+  const scored = players.map((player) => ({
+    player,
+    score: scorePlayerDiscordMatch({
+      parsedName: parsed.name,
+      parsedNickname: parsed.nickname,
+      parsedTier: parsed.tier,
       player,
-      score: scorePlayerDiscordMatch({
-        parsedName: parsed.name,
-        parsedNickname: parsed.nickname,
-        parsedTier: parsed.tier,
-        player,
-      }),
-    }))
-    .sort((a, b) => b.score - a.score);
+    }),
+  })).sort((a, b) => b.score - a.score);
 
   return scored[0] && scored[0].score >= 80 ? scored[0] : null;
+}
+
+function buildDiscordData(discordUser: DiscordUserPayload) {
+  const displayName = discordUser.global_name || discordUser.username;
+  const parsed = parseDiscordCommunityNickname(displayName);
+  return {
+    displayName,
+    parsed,
+    data: {
+      discordId: discordUser.id,
+      discordUsername: discordUser.username,
+      discordGlobalName: discordUser.global_name || null,
+      discordServerNickname: displayName,
+      discordAvatar: buildDiscordAvatarUrl(discordUser.id, discordUser.avatar),
+      discordLinkedAt: new Date(),
+      discordParsedBirthYear: parsed.birthYear,
+      discordParsedName: parsed.name,
+      discordParsedNickname: parsed.nickname,
+      discordParsedTier: parsed.tier,
+      discordLinkStatus: "LINKED",
+    },
+  };
+}
+
+async function handleLinkMode(req: NextRequest, discordUser: DiscordUserPayload, state: ReturnType<typeof parseState>, baseUrl: string) {
+  const cookieNonce = req.cookies.get("discord_oauth_state")?.value;
+  const currentUser = await getCurrentUser();
+  const isExpired = !state.issuedAt || Date.now() - state.issuedAt > 10 * 60 * 1000;
+  if (!state.nonce || cookieNonce !== state.nonce || isExpired) {
+    return NextResponse.redirect(`${baseUrl}/account?discord=invalid_state`);
+  }
+  if (!currentUser?.userAccountId || currentUser.userAccountId !== state.userAccountId) {
+    return NextResponse.redirect(`${baseUrl}/login?next=/account`);
+  }
+
+  const duplicate = await prisma.userAccount.findFirst({
+    where: { discordId: discordUser.id, id: { not: currentUser.userAccountId } },
+    select: { id: true, userId: true },
+  });
+  if (duplicate) return NextResponse.redirect(`${baseUrl}/account?discord=duplicate`);
+
+  const { data } = buildDiscordData(discordUser);
+  const updated = await prisma.$transaction(async (tx) => {
+    const before = await tx.userAccount.findUniqueOrThrow({ where: { id: currentUser.userAccountId } });
+    const user = await tx.userAccount.update({ where: { id: currentUser.userAccountId }, data });
+    await writeDiscordAccountLinkLog({
+      userAccountId: user.id,
+      action: "DISCORD_LINKED_BY_USER",
+      actorId: user.id,
+      actorType: "USER",
+      before: toDiscordSnapshot(before),
+      after: toDiscordSnapshot(user),
+      db: tx,
+    });
+    return user;
+  });
+
+  const res = NextResponse.redirect(`${baseUrl}${state.next || "/account"}?discord=linked`);
+  res.cookies.set("discord_oauth_state", "", { path: "/", maxAge: 0 });
+  if (currentUser.userAccountId === updated.id) return res;
+  return res;
 }
 
 export async function GET(req: NextRequest) {
@@ -106,30 +161,17 @@ export async function GET(req: NextRequest) {
   const baseUrl = getBaseUrl(req);
   const redirectUri = process.env.DISCORD_REDIRECT_URI || `${baseUrl}/api/auth/discord/callback`;
 
-  if (!code) {
-    return NextResponse.redirect(`${baseUrl}/login?discord=missing_code`);
-  }
+  if (!code) return NextResponse.redirect(`${baseUrl}/login?discord=missing_code`);
 
   try {
     const discordUser = await fetchDiscordUser({ code, redirectUri });
-    const displayName = discordUser.global_name || discordUser.username;
-    const parsed = parseDiscordCommunityNickname(displayName);
-    const avatarUrl = buildDiscordAvatarUrl(discordUser.id, discordUser.avatar);
+    if (state.mode === "link") return handleLinkMode(req, discordUser, state, baseUrl);
 
+    const { displayName, parsed, data } = buildDiscordData(discordUser);
     const discordGeneratedUserId = `discord_${discordUser.id}`;
-
-    let user = await prisma.userAccount.findUnique({
-      where: { discordId: discordUser.id },
-      include: { player: true },
-    });
+    let user = await prisma.userAccount.findUnique({ where: { discordId: discordUser.id }, include: { player: true } });
 
     if (!user) {
-      /*
-       * 기존 운영 중 수동 연결/이전 과정에서 discordId는 비어 있지만
-       * discordUsername 또는 discordGlobalName만 기존 계정에 남아 있는 경우가 있습니다.
-       * 이 경우 새 계정을 만들면 userId=discord_<id> 중복 또는 승인대기 계정 분리 문제가 생기므로,
-       * 먼저 기존 계정 후보를 찾아 discordId를 붙입니다.
-       */
       user = await prisma.userAccount.findFirst({
         where: {
           discordId: null,
@@ -145,12 +187,7 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    if (!user) {
-      user = await prisma.userAccount.findUnique({
-        where: { userId: discordGeneratedUserId },
-        include: { player: true },
-      });
-    }
+    if (!user) user = await prisma.userAccount.findUnique({ where: { userId: discordGeneratedUserId }, include: { player: true } });
 
     if (!user) {
       const candidate = await findBestPlayerCandidate(parsed);
@@ -161,29 +198,14 @@ export async function GET(req: NextRequest) {
             passwordHash: null,
             role: "USER",
             status: "PENDING",
-            discordId: discordUser.id,
-            discordUsername: discordUser.username,
-            discordGlobalName: discordUser.global_name || null,
-            discordServerNickname: displayName,
-            discordAvatar: avatarUrl,
-            discordLinkedAt: new Date(),
-            discordParsedBirthYear: parsed.birthYear,
-            discordParsedName: parsed.name,
-            discordParsedNickname: parsed.nickname,
-            discordParsedTier: parsed.tier,
+            ...data,
             discordLinkStatus: candidate ? "CANDIDATE" : "UNMATCHED",
           },
         });
 
         if (candidate?.player && !candidate.player.userAccountId) {
-          await tx.player.update({
-            where: { id: candidate.player.id },
-            data: { userAccountId: created.id },
-          });
-          created = await tx.userAccount.update({
-            where: { id: created.id },
-            data: { discordLinkStatus: "PENDING_ADMIN_CONFIRM" },
-          });
+          await tx.player.update({ where: { id: candidate.player.id }, data: { userAccountId: created.id } });
+          created = await tx.userAccount.update({ where: { id: created.id }, data: { discordLinkStatus: "PENDING_ADMIN_CONFIRM" } });
         }
 
         await writeAdminLog({
@@ -194,53 +216,27 @@ export async function GET(req: NextRequest) {
           afterJson: { parsed, candidatePlayerId: candidate?.player.id ?? null, score: candidate?.score ?? null },
           db: tx,
         });
-
+        await writeDiscordAccountLinkLog({ userAccountId: created.id, action: "DISCORD_LOGIN_ACCOUNT_CREATED", after: toDiscordSnapshot(created), db: tx });
         return tx.userAccount.findUniqueOrThrow({ where: { id: created.id }, include: { player: true } });
       });
     } else {
-      user = await prisma.userAccount.update({
-        where: { id: user.id },
-        data: {
-          discordId: discordUser.id,
-          discordUsername: discordUser.username,
-          discordGlobalName: discordUser.global_name || null,
-          discordServerNickname: displayName,
-          discordAvatar: avatarUrl,
-          discordLinkedAt: user.discordLinkedAt ?? new Date(),
-          discordParsedBirthYear: parsed.birthYear,
-          discordParsedName: parsed.name,
-          discordParsedNickname: parsed.nickname,
-          discordParsedTier: parsed.tier,
-          discordLinkStatus: user.discordLinkStatus || "LINKED",
-        },
-        include: { player: true },
+      user = await prisma.$transaction(async (tx) => {
+        const before = await tx.userAccount.findUniqueOrThrow({ where: { id: user!.id } });
+        const updated = await tx.userAccount.update({
+          where: { id: user!.id },
+          data: { ...data, discordLinkedAt: before.discordLinkedAt ?? new Date(), discordLinkStatus: before.discordLinkStatus || "LINKED" },
+          include: { player: true },
+        });
+        await writeDiscordAccountLinkLog({ userAccountId: updated.id, action: "DISCORD_LOGIN_REFRESHED", before: toDiscordSnapshot(before), after: toDiscordSnapshot(updated), db: tx });
+        return updated;
       });
     }
 
-    const token = signAuthToken({
-      userAccountId: user.id,
-      userId: user.userId,
-      role: user.role,
-      status: user.status,
-      playerId: user.player?.id ?? null,
-    });
-
+    const token = signAuthToken({ userAccountId: user.id, userId: user.userId, role: user.role, status: user.status, playerId: user.player?.id ?? null });
     const res = NextResponse.redirect(`${baseUrl}${state.next}`);
-    res.cookies.set("user_token", token, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7,
-    });
-    res.cookies.set(authConstants.ADMIN_TOKEN_KEY, "", {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: 0,
-    });
-
+    res.cookies.set("user_token", token, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 60 * 60 * 24 * 7 });
+    res.cookies.set(authConstants.ADMIN_TOKEN_KEY, "", { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 0 });
+    res.cookies.set("discord_oauth_state", "", { path: "/", maxAge: 0 });
     return res;
   } catch (error) {
     console.error("[DISCORD_AUTH_CALLBACK_ERROR]", error);

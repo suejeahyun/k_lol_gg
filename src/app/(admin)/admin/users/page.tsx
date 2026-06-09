@@ -69,6 +69,7 @@ export default function AdminUsersPage() {
   const [searchText, setSearchText] = useState("");
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<UserStatus | "">("PENDING");
+  const [discordStatus, setDiscordStatus] = useState<"" | "LINKED" | "UNLINKED">("");
 
   const isSuperAdmin = currentAdmin?.role === "SUPER_ADMIN";
 
@@ -87,6 +88,10 @@ export default function AdminUsersPage() {
 
         if (status) {
           params.set("status", status);
+        }
+
+        if (discordStatus) {
+          params.set("discordStatus", discordStatus);
         }
 
         const res = await fetch(`/api/admin/users?${params.toString()}`, {
@@ -112,7 +117,7 @@ export default function AdminUsersPage() {
         setLoading(false);
       }
     },
-    [q, status],
+    [q, status, discordStatus],
   );
 
   useEffect(() => {
@@ -198,6 +203,25 @@ export default function AdminUsersPage() {
     }
   };
 
+  const handleDiscordUnlink = async (user: AdminUser) => {
+    if (!user.discord?.id) return;
+    const reason = window.prompt(`${user.userId} 계정의 Discord 연동을 초기화할 사유를 입력하세요.`, "관리자 초기화") ?? "";
+    if (reason === null) return;
+
+    const res = await fetch(`/api/admin/users/${user.id}/discord-unlink`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reason }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      alert("Discord 연동을 초기화했습니다.");
+      void fetchUsers(pagination.page);
+    } else {
+      alert(data.message || "Discord 연동 초기화 실패");
+    }
+  };
+
   const handlePasswordReset = async (user: AdminUser) => {
     const ok = window.confirm(`${user.userId} 계정의 비밀번호를 임시 비밀번호로 초기화하겠습니까?`);
     if (!ok) return;
@@ -245,6 +269,16 @@ export default function AdminUsersPage() {
           <option value="PENDING">승인 대기</option>
           <option value="APPROVED">승인 완료</option>
           <option value="REJECTED">거절됨</option>
+        </select>
+
+        <select
+          value={discordStatus}
+          onChange={(event) => setDiscordStatus(event.target.value as "" | "LINKED" | "UNLINKED")}
+          className="admin-input"
+        >
+          <option value="">Discord 전체</option>
+          <option value="LINKED">Discord 연동됨</option>
+          <option value="UNLINKED">Discord 미연동</option>
         </select>
 
         <button className="admin-button" type="submit">
@@ -363,6 +397,16 @@ export default function AdminUsersPage() {
                             >
                               비번 초기화
                             </button>
+
+                            {user.discord?.id ? (
+                              <button
+                                type="button"
+                                className="chip-button chip-button--danger"
+                                onClick={() => handleDiscordUnlink(user)}
+                              >
+                                Discord 초기화
+                              </button>
+                            ) : null}
                           </>
                         ) : null}
                       </div>

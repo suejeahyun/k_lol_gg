@@ -23,6 +23,7 @@ export async function GET(req: NextRequest) {
     const statusParam = String(
       req.nextUrl.searchParams.get("status") ?? "",
     ).trim();
+    const discordStatus = String(req.nextUrl.searchParams.get("discordStatus") ?? "").trim();
 
     const safePage = Number.isNaN(page) || page < 1 ? 1 : page;
     const safePageSize =
@@ -36,6 +37,8 @@ export async function GET(req: NextRequest) {
 
     const where = {
       ...(status ? { status } : {}),
+      ...(discordStatus === "LINKED" ? { discordId: { not: null } } : {}),
+      ...(discordStatus === "UNLINKED" ? { discordId: null } : {}),
       ...(q
         ? {
             OR: [

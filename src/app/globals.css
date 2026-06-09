@@ -145,3 +145,122 @@
   margin-top: 4px;
   color: rgba(191, 219, 254, 0.92) !important;
 }
+
+/* Discord Operation System */
+.discord-operation-page .discord-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.discord-stat-card {
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 16px;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.72);
+}
+
+.discord-stat-label {
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+
+.discord-stat-value {
+  margin-top: 8px;
+  color: #f8fafc;
+  font-size: 28px;
+  font-weight: 900;
+}
+
+.discord-stat-caption {
+  margin-top: 6px;
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.discord-settings-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.discord-settings-form label,
+.discord-detail-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.discord-settings-form label > span,
+.discord-detail-grid span {
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.discord-settings-form button {
+  align-self: end;
+}
+
+.account-page .account-card {
+  margin-bottom: 16px;
+}
+
+.discord-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.discord-detail-grid strong {
+  color: #f8fafc;
+}
+
+.discord-profile-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 18px;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.58);
+}
+
+.discord-profile-card img,
+.discord-avatar-placeholder {
+  width: 72px;
+  height: 72px;
+  border-radius: 999px;
+  object-fit: cover;
+  flex: 0 0 auto;
+}
+
+.discord-avatar-placeholder {
+  display: grid;
+  place-items: center;
+  background: #5865f2;
+  color: #fff;
+  font-weight: 900;
+  font-size: 28px;
+}
+
+.discord-profile-card h3 {
+  margin: 0 0 8px;
+  color: #f8fafc;
+}
+
+.discord-profile-card p {
+  margin: 4px 0;
+  color: #cbd5e1;
+}
+
+@media (max-width: 1100px) {
+  .discord-operation-page .discord-stat-grid,
+  .discord-settings-form,
+  .discord-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
