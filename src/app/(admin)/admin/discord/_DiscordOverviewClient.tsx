@@ -61,12 +61,12 @@ function statusLabel(status: string) {
 }
 
 const navItems = [
-  { href: "/admin/discord/settings", title: "운영 설정", desc: "자동 ㅉ, 감시 범위, 로그 채널, 역할 ID" },
   { href: "/admin/discord/recruits", title: "구인 검증", desc: "구인 참가자 모임 상태, 부분 진행, 자동 ㅉ 후보" },
   { href: "/admin/discord/matches", title: "내전 확인", desc: "오늘 내전 참석, 늦참, 미접속 경고" },
-  { href: "/admin/discord/diagnostics", title: "오류 점검", desc: "봇 heartbeat, 감시 범위, API 오류 상태" },
-  { href: "/admin/discord/logs", title: "상세 로그", desc: "음성방 입장·이동·퇴장 원본 로그" },
   { href: "/admin/discord/stats", title: "체류 통계", desc: "체류시간 TOP 10, 같이 있던 사람 TOP 10" },
+  { href: "/admin/discord/logs", title: "상세 로그", desc: "음성방 입장·이동·퇴장 원본 로그" },
+  { href: "/admin/discord/diagnostics", title: "오류 점검", desc: "봇 heartbeat, 감시 범위, API 오류 상태" },
+  { href: "/admin/discord/settings", title: "운영 설정", desc: "자동 ㅉ, 감시 범위, 로그 채널, 역할 ID" },
 ];
 
 export default function DiscordOverviewClient() {

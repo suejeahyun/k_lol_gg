@@ -245,17 +245,21 @@ export function cleanLeaveScopeField(value: string) {
       .replace(/^\s*[-]\s*/, "")
       .trim();
 
-    // 템플릿 안내값: "(소통방,구인방,디코)"만 있는 줄은 선택값이 아닙니다.
+    // 운영 기준: 제출 본문에서 외출범위 줄에 괄호 선택지만 남아 있어도
+    // 실제 선택값으로 인정합니다. 예) "4. 외출범위 (소통방,구인방,디코)" → 전체 범위
     const leadingGuide = line.match(/^\(?\s*소통방\s*,?\s*구인방\s*,?\s*(?:디코|디스코드)\s*\)?\s*(.*)$/);
     if (leadingGuide) {
       const rest = (leadingGuide[1] || "").trim();
-      if (!rest) continue;
+      if (!rest) {
+        selected.push("소통방", "구인방", "디코");
+        continue;
+      }
       line = rest;
     }
 
-    // 사용자가 "(소통방, 디코)"처럼 범위를 괄호 안에 직접 적은 경우는 선택값으로 인정합니다.
+    // 사용자가 "(소통방, 디코)", "(구인방,디코)", "소통방디코"처럼 적은 경우도 선택값으로 인정합니다.
     const parenOnly = line.match(/^\(?\s*([^()（）]+)\s*\)?$/)?.[1]?.trim() || "";
-    if (parenOnly && !isAllScopeGuide(parenOnly)) {
+    if (parenOnly) {
       selected.push(...extractLeaveScopeCandidates(parenOnly));
     }
 

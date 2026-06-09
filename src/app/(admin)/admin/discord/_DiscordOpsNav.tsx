@@ -1,21 +1,33 @@
 import Link from "next/link";
 
-const items = [
-  { href: "/admin/discord", key: "overview", label: "요약", desc: "전체 현황" },
-  { href: "/admin/discord/settings", key: "settings", label: "설정", desc: "감시/알림" },
-  { href: "/admin/discord/recruits", key: "recruits", label: "구인", desc: "모임 검증" },
-  { href: "/admin/discord/matches", key: "matches", label: "내전", desc: "참석/늦참" },
-  { href: "/admin/discord/diagnostics", key: "diagnostics", label: "오류", desc: "자동화 점검" },
-  { href: "/admin/discord/logs", key: "logs", label: "로그", desc: "음성 이벤트" },
-  { href: "/admin/discord/stats", key: "stats", label: "통계", desc: "체류/동행" },
+type DiscordOpsNavKey = "overview" | "recruits" | "matches" | "stats" | "logs" | "diagnostics" | "settings";
+
+const DISCORD_OPS_NAV: Array<{
+  key: DiscordOpsNavKey;
+  href: string;
+  title: string;
+  desc: string;
+}> = [
+  { key: "overview", href: "/admin/discord", title: "요약", desc: "전체 현황" },
+  { key: "recruits", href: "/admin/discord/recruits", title: "구인", desc: "모임 검증" },
+  { key: "matches", href: "/admin/discord/matches", title: "내전", desc: "참석/늦참" },
+  { key: "stats", href: "/admin/discord/stats", title: "통계", desc: "체류/동행" },
+  { key: "logs", href: "/admin/discord/logs", title: "로그", desc: "음성 이벤트" },
+  { key: "diagnostics", href: "/admin/discord/diagnostics", title: "오류", desc: "자동화 점검" },
+  { key: "settings", href: "/admin/discord/settings", title: "설정", desc: "감시/알림" },
 ];
 
-export default function DiscordOpsNav({ active }: { active?: string }) {
+export default function DiscordOpsNav({ active }: { active: DiscordOpsNavKey }) {
   return (
     <nav className="discord-ops-tabs" aria-label="Discord 운영 메뉴">
-      {items.map((item) => (
-        <Link key={item.key} className={`discord-ops-tab ${active === item.key ? "is-active" : ""}`} href={item.href}>
-          <strong>{item.label}</strong>
+      {DISCORD_OPS_NAV.map((item) => (
+        <Link
+          key={item.key}
+          href={item.href}
+          className={active === item.key ? "is-active" : ""}
+          aria-current={active === item.key ? "page" : undefined}
+        >
+          <strong>{item.title}</strong>
           <span>{item.desc}</span>
         </Link>
       ))}
