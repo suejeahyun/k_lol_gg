@@ -15,12 +15,39 @@ type Overview = {
     currentUnlinkedVoiceUserCount: number;
     activeMonitorCount: number;
     healthyBotCount: number;
+    recruitReadyCount: number;
+    recruitNeedsCheckCount: number;
   };
   settings: DiscordSettings;
   heartbeats: Array<{ botId: string; status: string; botUsername: string | null; updatedAt: string; uptimeSeconds: number; memoryRssMb: number | null; voiceMemberCount: number; autoFinishEnabled: boolean; lastError: string | null }>;
   currentVoiceUsers: Array<{ id: number; discordId: string; eventType: string; channelName: string | null; memberDisplayName: string | null; memberNickname: string | null; discordUsername: string | null; discordGlobalName: string | null; occurredAt: string; userAccountId: number | null; userAccount?: { userId: string; discordServerNickname: string | null; discordGlobalName: string | null; discordUsername: string | null; player: { name: string | null; nickname: string; tag: string } | null } | null }>;
   recentUnlinkedEvents: Array<{ id: number; discordId: string; eventType: string; channelName: string | null; memberDisplayName: string | null; memberNickname: string | null; discordUsername: string | null; discordGlobalName: string | null; occurredAt: string }>;
   activeMonitors: Array<{ id: number; status: string; voiceChannelId: string | null; lastExpectedCount: number; lastPresentExpectedCount: number; lastNonParticipantCount: number; updatedAt: string; party: { id: number; recruitNo: number; title: string; type: string; status: string } }>;
+  recruitVerifications: Array<{
+    partyId: number;
+    recruitNo: number;
+    title: string;
+    type: string;
+    status: string;
+    partyStatus: string;
+    maxMembers: number;
+    activeMemberCount: number;
+    linkedCount: number;
+    presentCount: number;
+    matchedByNameCount: number;
+    ambiguousCount: number;
+    missingCount: number;
+    unlinkedCount: number;
+    voiceChannelId: string | null;
+    monitorStatus: string | null;
+    lastScannedAt: string | null;
+    finishCandidateStartedAt: string | null;
+    autoFinishedAt: string | null;
+    autoFinishReason: string | null;
+    presentParticipants: string[];
+    missingParticipants: string[];
+    unlinkedParticipants: string[];
+  }>;
   linkLogs: Array<{ id: number; action: string; discordId: string | null; discordServerNickname: string | null; discordGlobalName: string | null; discordUsername: string | null; reason: string | null; createdAt: string; userAccount: { userId: string; player: { name: string | null; nickname: string; tag: string } | null } | null }>;
 };
 
@@ -136,7 +163,7 @@ export default function AdminDiscordPage() {
               <div><strong>봇 상태</strong><span>Heartbeat 기준으로 봇이 살아있는지, 마지막 신호, 메모리, 자동 ㅉ 상태를 확인합니다.</span></div>
               <div><strong>현재 음성방 접속자</strong><span>최근 JOIN/MOVE/LEAVE 로그를 기준으로 현재 접속 중으로 추정되는 유저를 보여줍니다.</span></div>
               <div><strong>미연동 Discord 접속자</strong><span>음성방 기록은 있지만 사이트 계정과 연결되지 않은 Discord 유저입니다.</span></div>
-              <div><strong>구인 Discord 검증</strong><span>구인별 감시 음성방, 예상 참가자 수, 현재 잔류 인원, 비참가자 수를 확인합니다.</span></div>
+              <div><strong>구인 Discord 검증</strong><span>구인 참가자가 실제 디스코드 음성방에 모였는지, 누가 미접속인지, 전원 퇴장 후 자동 ㅉ 후보인지 확인합니다.</span></div>
               <div><strong>Discord 운영 설정</strong><span>자동 ㅉ, 감시 채널, 로그 채널, 승인 역할 ID를 저장합니다. 봇은 설정 조회 주기에 반영합니다.</span></div>
               <div><strong>감사 로그</strong><span>Discord 계정 연동, 해제, 관리자 강제 해제 같은 계정 관련 기록입니다.</span></div>
             </div>
@@ -147,6 +174,7 @@ export default function AdminDiscordPage() {
             <Stat label="연동률" value={`${data.summary.linkRate}%`} caption={`${data.summary.linkedUsers}/${data.summary.approvedUsers}명`} />
             <Stat label="현재 음성방" value={`${data.summary.currentVoiceUserCount}명`} caption={`연동 ${data.summary.currentLinkedVoiceUserCount} / 미연동 ${data.summary.currentUnlinkedVoiceUserCount}`} />
             <Stat label="구인 감시" value={`${data.summary.activeMonitorCount}건`} caption="ACTIVE / 후보" />
+            <Stat label="구인 모임 확인" value={`${data.summary.recruitReadyCount || 0}건`} caption={`확인 필요 ${data.summary.recruitNeedsCheckCount || 0}건`} />
             <Stat label="최근 이벤트" value={`${data.summary.recentEventCount}건`} caption="최근 6시간" />
           </section>
 
@@ -172,9 +200,24 @@ export default function AdminDiscordPage() {
           </section>
 
           <section className="admin-card">
-            <h2>구인 Discord 검증</h2>
-            <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>구인</th><th>상태</th><th>음성방</th><th>참가자</th><th>현재</th><th>비참가자</th><th>갱신</th></tr></thead><tbody>
-              {data.activeMonitors.length === 0 ? <tr><td colSpan={7}>감시 중인 구인 Discord 모니터가 없습니다.</td></tr> : data.activeMonitors.map((monitor) => <tr key={monitor.id}><td>#{monitor.party.recruitNo} · {monitor.party.title}</td><td>{monitor.status}</td><td>{monitor.voiceChannelId || "-"}</td><td>{monitor.lastExpectedCount}</td><td>{monitor.lastPresentExpectedCount}</td><td>{monitor.lastNonParticipantCount}</td><td>{formatDate(monitor.updatedAt)}</td></tr>)}
+            <div className="admin-section-head">
+              <div>
+                <h2>구인구직 Discord 모임 검증</h2>
+                <p className="admin-page__description">진행중인 구인이 실제 음성방에 제대로 모였는지 확인합니다. Discord 연동이 없어도 서버 닉네임의 이름 토큰과 카카오톡/구인 참가자 이름이 정확히 같으면 참가로 인정합니다.</p>
+              </div>
+            </div>
+            <div className="admin-table-wrap"><table className="admin-table discord-recruit-check-table"><thead><tr><th>구인</th><th>상태</th><th>인원</th><th>현재 접속</th><th>이름매칭</th><th>미접속</th><th>확인필요</th><th>음성방</th><th>갱신</th></tr></thead><tbody>
+              {data.recruitVerifications.length === 0 ? <tr><td colSpan={9}>진행중인 구인이 없습니다.</td></tr> : data.recruitVerifications.map((item) => <tr key={item.partyId}>
+                <td><strong>#{item.recruitNo}</strong> · {item.title}</td>
+                <td><span className={`discord-status-pill discord-status-${item.status.toLowerCase().replaceAll("_", "-")}`}>{statusLabel(item.status)}</span></td>
+                <td>{item.activeMemberCount}/{item.maxMembers}</td>
+                <td title={item.presentParticipants.join("\n")}>{item.presentCount}명</td>
+                <td>{item.matchedByNameCount > 0 ? `${item.matchedByNameCount}명` : "-"}</td>
+                <td title={item.missingParticipants.join("\n")}>{item.missingCount > 0 ? item.missingParticipants.slice(0, 2).join(", ") + (item.missingParticipants.length > 2 ? ` 외 ${item.missingParticipants.length - 2}` : "") : "-"}</td>
+                <td title={item.unlinkedParticipants.join("\n")}>{item.ambiguousCount > 0 ? `동명이인 ${item.ambiguousCount}` : item.unlinkedCount > 0 ? item.unlinkedParticipants.slice(0, 2).join(", ") + (item.unlinkedParticipants.length > 2 ? ` 외 ${item.unlinkedParticipants.length - 2}` : "") : "-"}</td>
+                <td>{item.voiceChannelId || "-"}</td>
+                <td>{formatDate(item.lastScannedAt)}</td>
+              </tr>)}
             </tbody></table></div>
           </section>
 
@@ -208,10 +251,33 @@ export default function AdminDiscordPage() {
         .discord-help-grid div { display: grid; gap: 6px; padding: 14px; border: 1px solid rgba(148, 163, 184, 0.22); border-radius: 14px; background: rgba(2, 6, 23, 0.34); }
         .discord-help-grid strong { color: #e5e7eb; font-size: 13px; }
         .discord-help-grid span { color: #94a3b8; font-size: 12px; line-height: 1.55; }
+        .discord-recruit-check-table td { vertical-align: top; }
+        .discord-status-pill { display: inline-flex; align-items: center; justify-content: center; min-width: 74px; padding: 4px 8px; border-radius: 999px; font-size: 12px; font-weight: 800; border: 1px solid rgba(148, 163, 184, 0.24); background: rgba(15, 23, 42, 0.7); color: #dbeafe; white-space: nowrap; }
+        .discord-status-assembled { border-color: rgba(34, 197, 94, .45); color: #bbf7d0; background: rgba(22, 101, 52, .25); }
+        .discord-status-assembled-with-extra { border-color: rgba(250, 204, 21, .45); color: #fef08a; background: rgba(113, 63, 18, .25); }
+        .discord-status-gathering { border-color: rgba(59, 130, 246, .45); color: #bfdbfe; background: rgba(30, 64, 175, .25); }
+        .discord-status-finish-candidate { border-color: rgba(248, 113, 113, .45); color: #fecaca; background: rgba(127, 29, 29, .28); }
+        .discord-status-auto-finished { border-color: rgba(20, 184, 166, .45); color: #ccfbf1; background: rgba(19, 78, 74, .28); }
+        .discord-status-discord-link-incomplete, .discord-status-recruit-not-full { border-color: rgba(251, 146, 60, .45); color: #fed7aa; background: rgba(124, 45, 18, .25); }
         @media (max-width: 1100px) { .discord-help-grid { grid-template-columns: 1fr; } }
       `}</style>
     </main>
   );
+}
+
+function statusLabel(status: string) {
+  const map: Record<string, string> = {
+    ASSEMBLED: "모임 완료",
+    ASSEMBLED_WITH_EXTRA: "모임 완료+외부",
+    GATHERING: "모이는 중",
+    WAITING: "대기",
+    RECRUIT_NOT_FULL: "구인 미충족",
+    DISCORD_LINK_INCOMPLETE: "연동 부족",
+    FINISH_CANDIDATE: "ㅉ 후보",
+    AUTO_FINISHED: "자동 ㅉ 완료",
+    ACTIVE: "감시 중",
+  };
+  return map[status] || status;
 }
 
 function Stat({ label, value, caption }: { label: string; value: string; caption: string }) {
