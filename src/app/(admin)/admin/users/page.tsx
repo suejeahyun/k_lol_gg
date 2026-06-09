@@ -242,7 +242,7 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <main className="admin-page">
+    <main className="admin-page admin-users-page">
       <div className="admin-page__header">
         <div>
           <h1 className="admin-page__title">플레이어 승인 관리</h1>
@@ -252,7 +252,7 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
-      <form className="admin-filter-bar" onSubmit={handleSearch}>
+      <form className="admin-filter-bar admin-users-filter" onSubmit={handleSearch}>
         <input
           value={searchText}
           onChange={(event) => setSearchText(event.target.value)}
@@ -286,7 +286,7 @@ export default function AdminUsersPage() {
         </button>
       </form>
 
-      <section className="admin-card">
+      <section className="admin-card admin-users-card">
         <div className="admin-section-head">
           <div>
             <h2>회원 목록</h2>
@@ -298,13 +298,13 @@ export default function AdminUsersPage() {
           </div>
         </div>
 
-        <div className="admin-table-wrap">
+        <div className="admin-table-wrap admin-users-table-wrap">
           {loading ? (
             <div className="admin-empty">회원 목록을 불러오는 중입니다.</div>
           ) : users.length === 0 ? (
             <div className="admin-empty">조건에 맞는 회원이 없습니다.</div>
           ) : (
-            <table className="admin-table">
+            <table className="admin-table admin-users-table">
               <thead>
                 <tr>
                   <th>아이디</th>

@@ -1,0 +1,384 @@
+/* Account / My Player / Admin Users UI correction patch */
+
+.account-page--compact,
+.my-player-page,
+.admin-users-page {
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  padding-inline: clamp(16px, 3vw, 32px);
+}
+
+.account-page--compact .admin-card,
+.my-player-page .admin-form,
+.my-player-page .my-community-card,
+.admin-users-card {
+  border: 1px solid rgba(96, 165, 250, 0.24);
+  background: rgba(15, 23, 42, 0.76);
+  box-shadow: 0 18px 40px rgba(2, 8, 23, 0.28);
+}
+
+.account-page__header,
+.my-player-page .admin-page__header,
+.admin-users-page .admin-page__header {
+  margin-bottom: 22px;
+}
+
+.account-summary-card,
+.account-discord-card {
+  overflow: hidden;
+}
+
+.account-info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.account-info-grid > div {
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 14px;
+  background: rgba(2, 8, 23, 0.32);
+}
+
+.account-info-grid span,
+.discord-profile-meta dt {
+  display: block;
+  color: #93c5fd;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+}
+
+.account-info-grid strong {
+  display: block;
+  margin-top: 7px;
+  overflow: hidden;
+  color: #f8fafc;
+  font-size: 15px;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-discord-card__head {
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.account-discord-card__button,
+.account-discord-card .admin-button,
+.account-discord-card button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.discord-profile-card--compact {
+  align-items: flex-start;
+  padding: 18px;
+}
+
+.discord-profile-card--compact img,
+.discord-profile-card--compact .discord-avatar-placeholder {
+  width: 64px;
+  height: 64px;
+}
+
+.discord-profile-card__body {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.discord-profile-card__title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.discord-profile-card__title-row h3 {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.discord-status-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 4px 9px;
+  border: 1px solid rgba(34, 197, 94, 0.32);
+  border-radius: 999px;
+  background: rgba(22, 163, 74, 0.14);
+  color: #bbf7d0;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.discord-profile-meta {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.75fr) minmax(160px, 0.65fr) minmax(180px, 1fr);
+  gap: 10px;
+  margin: 0;
+}
+
+.discord-profile-meta > div {
+  min-width: 0;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(2, 8, 23, 0.28);
+}
+
+.discord-profile-meta dd {
+  margin: 6px 0 0;
+  overflow: hidden;
+  color: #e5efff;
+  font-size: 13px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-discord-empty {
+  padding: 18px;
+  border: 1px dashed rgba(96, 165, 250, 0.28);
+  border-radius: 16px;
+  background: rgba(2, 8, 23, 0.32);
+}
+
+.account-discord-empty strong {
+  color: #f8fafc;
+  font-size: 15px;
+}
+
+.account-discord-empty p {
+  margin: 7px 0 0;
+  color: #cbd5e1;
+}
+
+.my-player-page {
+  max-width: 1080px;
+}
+
+.my-player-page .admin-page__title,
+.account-page--compact .user-page__title,
+.admin-users-page .admin-page__title {
+  letter-spacing: -0.04em;
+}
+
+.my-player-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  padding: clamp(18px, 3vw, 28px);
+}
+
+.my-player-form .auth-field,
+.my-player-form .auth-tier-section {
+  min-width: 0;
+  margin: 0;
+}
+
+.my-player-form .auth-field input,
+.my-player-form .auth-tier-row select,
+.my-player-form .auth-tier-row input {
+  width: 100%;
+  min-height: 48px;
+}
+
+.my-player-form .auth-tier-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.my-player-form__submit {
+  grid-column: 1 / -1;
+  min-height: 52px;
+  margin-top: 6px;
+}
+
+.my-player-community {
+  margin-top: 34px;
+}
+
+.my-community-section__head {
+  margin-bottom: 16px;
+}
+
+.my-community-section__head h2 {
+  margin-bottom: 8px;
+  color: #f8fafc;
+}
+
+.my-community-section__head p {
+  color: #cbd5e1;
+}
+
+.my-community-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.my-community-card {
+  min-width: 0;
+  padding: 18px;
+  border-radius: 18px;
+}
+
+.my-community-card h3 {
+  margin: 0 0 14px;
+  color: #f8fafc;
+}
+
+.my-community-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.my-community-list a {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 12px;
+  background: rgba(2, 8, 23, 0.28);
+  color: inherit;
+  text-decoration: none;
+}
+
+.my-community-list strong,
+.my-community-list em {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.my-community-list em,
+.my-community-empty {
+  color: #cbd5e1;
+  font-style: normal;
+}
+
+.my-community-badge {
+  width: fit-content;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.16);
+  color: #bfdbfe;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.admin-users-page {
+  width: min(100%, 1440px);
+  max-width: none;
+}
+
+.admin-users-filter {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(150px, 190px) minmax(160px, 210px) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.admin-users-card {
+  overflow: hidden;
+}
+
+.admin-users-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-radius: 14px;
+  scrollbar-color: rgba(96, 165, 250, 0.55) rgba(15, 23, 42, 0.8);
+}
+
+.admin-users-table {
+  min-width: 1320px;
+  table-layout: fixed;
+}
+
+.admin-users-table th,
+.admin-users-table td {
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.admin-users-table th:nth-child(1),
+.admin-users-table td:nth-child(1) { width: 120px; }
+.admin-users-table th:nth-child(2),
+.admin-users-table td:nth-child(2) { width: 82px; }
+.admin-users-table th:nth-child(3),
+.admin-users-table td:nth-child(3) { width: 140px; }
+.admin-users-table th:nth-child(4),
+.admin-users-table td:nth-child(4) { width: 100px; }
+.admin-users-table th:nth-child(5),
+.admin-users-table td:nth-child(5),
+.admin-users-table th:nth-child(6),
+.admin-users-table td:nth-child(6) { width: 110px; }
+.admin-users-table th:nth-child(7),
+.admin-users-table td:nth-child(7),
+.admin-users-table th:nth-child(8),
+.admin-users-table td:nth-child(8),
+.admin-users-table th:nth-child(9),
+.admin-users-table td:nth-child(9) { width: 88px; }
+.admin-users-table th:nth-child(10),
+.admin-users-table td:nth-child(10) { width: 190px; }
+.admin-users-table th:nth-child(11),
+.admin-users-table td:nth-child(11) { width: 105px; }
+.admin-users-table th:nth-child(12),
+.admin-users-table td:nth-child(12) { width: 250px; }
+
+.admin-users-table td:nth-child(1),
+.admin-users-table td:nth-child(3),
+.admin-users-table td:nth-child(4),
+.admin-users-table td:nth-child(10) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-users-table .admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-start;
+  min-width: 0;
+}
+
+.admin-users-table .chip-button {
+  min-height: 28px;
+  padding: 5px 8px;
+  font-size: 11px;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .account-info-grid,
+  .discord-profile-meta,
+  .my-player-form,
+  .my-community-grid,
+  .admin-users-filter {
+    grid-template-columns: 1fr;
+  }
+
+  .account-discord-card__head,
+  .discord-profile-card--compact {
+    flex-direction: column;
+  }
+
+  .account-discord-card__button,
+  .account-discord-card .admin-button,
+  .account-discord-card button {
+    width: 100%;
+  }
+}

@@ -203,12 +203,12 @@ export default function MyPlayerPage() {
   }
 
   return (
-    <div className="admin-page">
+    <div className="admin-page my-player-page">
       <div className="admin-page__header">
         <h1 className="admin-page__title">내 플레이어 정보</h1>
       </div>
 
-      <form className="admin-form" onSubmit={handleSubmit}>
+      <form className="admin-form my-player-form" onSubmit={handleSubmit}>
         <label className="auth-field">
           <span>닉네임</span>
           <input value={nickname} onChange={(e) => setNickname(e.target.value)} />
@@ -243,12 +243,12 @@ export default function MyPlayerPage() {
           onDetailChange={setCurrentDetail}
         />
 
-        <button className="auth-button" type="submit" disabled={saving}>
+        <button className="auth-button my-player-form__submit" type="submit" disabled={saving}>
           {saving ? "저장 중..." : "저장"}
         </button>
       </form>
 
-      <section className="my-community-section">
+      <section className="my-community-section my-player-community">
         <div className="my-community-section__head">
           <h2>내 커뮤니티 활동</h2>
           <p>내가 쓴 글과 댓글을 최근순으로 확인합니다.</p>
