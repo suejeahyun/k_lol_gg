@@ -273,3 +273,303 @@
     font-size: 10px;
   }
 }
+
+/* Mobile full page rebuild v3: prevent legacy desktop grids from leaking into phone layout. */
+@media (max-width: 768px) {
+  .app-shell--admin,
+  .app-shell--user {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  .app-shell--admin .app-topbar,
+  .app-shell--user .app-topbar {
+    height: auto;
+    min-height: calc(58px + env(safe-area-inset-top, 0px));
+    padding: calc(8px + env(safe-area-inset-top, 0px)) 14px 8px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.16) !important;
+    background: rgba(2, 6, 23, 0.94);
+  }
+
+  .app-shell--admin .app-topbar__left,
+  .app-shell--user .app-topbar__left {
+    min-width: 0;
+  }
+
+  .app-shell--admin .app-topbar__home,
+  .app-shell--user .app-topbar__home {
+    display: inline-flex;
+    max-width: 150px;
+    min-height: 36px;
+    align-items: center;
+    overflow: hidden;
+    font-size: 22px !important;
+    line-height: 1 !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .app-shell--admin .app-topbar__divider,
+  .app-shell--admin .app-topbar__title,
+  .app-shell--admin .app-topbar__search,
+  .app-shell--user .app-topbar__divider,
+  .app-shell--user .app-topbar__title,
+  .app-shell--user .app-topbar__search {
+    display: none !important;
+  }
+
+  .app-shell--admin .app-body,
+  .app-shell--user .app-body {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    overflow-x: clip !important;
+  }
+
+  .app-shell--admin .app-sidebar,
+  .app-shell--admin .app-sidebar--admin,
+  .app-shell--user .app-sidebar,
+  .app-shell--user .app-sidebar--user {
+    display: none !important;
+    width: 0 !important;
+    min-width: 0 !important;
+  }
+
+  .app-shell--admin .app-content,
+  .app-shell--user .app-content {
+    box-sizing: border-box;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: calc(72px + env(safe-area-inset-top, 0px)) 12px calc(112px + env(safe-area-inset-bottom, 0px)) !important;
+    overflow-x: clip !important;
+  }
+
+  .app-shell--admin .app-content > *,
+  .app-shell--user .app-content > *,
+  .app-shell--admin main,
+  .app-shell--user main,
+  .app-shell--admin section,
+  .app-shell--user section,
+  .app-shell--admin article,
+  .app-shell--user article,
+  .app-shell--admin form,
+  .app-shell--user form {
+    box-sizing: border-box;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .app-shell--user .home-hero-grid,
+  .app-shell--user .home-top3-grid,
+  .app-shell--user .ranking-top-grid,
+  .app-shell--user .match-summary-grid,
+  .app-shell--user .progress-overview-grid,
+  .app-shell--user .participation-grid,
+  .app-shell--user .community-grid,
+  .app-shell--user .notice-recommend-grid,
+  .app-shell--user .my-community-grid,
+  .app-shell--user .account-info-grid,
+  .app-shell--user .info-grid,
+  .app-shell--user .player-stat-grid,
+  .app-shell--user .champion-stat-grid,
+  .app-shell--user .ai-kpi-grid,
+  .app-shell--user .ai-line-card-grid,
+  .app-shell--user .ai-ban-grid,
+  .app-shell--user .destruction-detail-summary-grid,
+  .app-shell--user .destruction-final-grid,
+  .app-shell--user .destruction-team-grid,
+  .app-shell--user .event-detail-summary-grid,
+  .app-shell--user .event-final-grid,
+  .app-shell--user .event-detail-team-grid,
+  .app-shell--admin .admin-dashboard-grid,
+  .app-shell--admin .admin-card-grid,
+  .app-shell--admin .admin-form__grid,
+  .app-shell--admin .admin-kpi-grid,
+  .app-shell--admin .admin-team-dnd__grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+    width: 100% !important;
+  }
+
+  .app-shell--user .home-main-card,
+  .app-shell--user .home-season-card,
+  .app-shell--user .home-mvp-card,
+  .app-shell--user .home-progress-card,
+  .app-shell--user .top3-card,
+  .app-shell--user .top3-panel,
+  .app-shell--user .winner-slider,
+  .app-shell--user .ranking-board,
+  .app-shell--user .ranking-top-card,
+  .app-shell--user .recruit-card,
+  .app-shell--user .page-header,
+  .app-shell--user .content-section,
+  .app-shell--user .detail-header-card,
+  .app-shell--user .detail-board,
+  .app-shell--admin .admin-card,
+  .app-shell--admin .admin-panel,
+  .app-shell--admin .content-section,
+  .app-shell--admin .page-header {
+    box-sizing: border-box;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden;
+  }
+
+  .app-shell--user .home-main-title {
+    font-size: clamp(32px, 12vw, 46px) !important;
+    line-height: 1.03 !important;
+    word-break: keep-all;
+  }
+
+  .app-shell--user .home-main-description,
+  .app-shell--user .page-description,
+  .app-shell--user p {
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
+
+  .app-shell--user .winner-slider {
+    min-height: 360px !important;
+  }
+
+  .app-shell--user .winner-slider__content {
+    min-height: 360px !important;
+    max-width: 100% !important;
+    padding: 22px !important;
+  }
+
+  .app-shell--user .home-section-head,
+  .app-shell--user .top3-card__header,
+  .app-shell--user .top3-slide-header,
+  .app-shell--user .recruit-card__head,
+  .app-shell--user .page-header,
+  .app-shell--user .page-actions {
+    flex-wrap: wrap !important;
+  }
+
+  .app-shell--user .home-mvp-content,
+  .app-shell--user .top3-player,
+  .app-shell--user .ranking-top-player {
+    grid-template-columns: 42px minmax(0, 1fr) !important;
+  }
+
+  .app-shell--user .home-mvp-score,
+  .app-shell--user .top3-player__result {
+    grid-column: 1 / -1;
+    align-items: flex-start !important;
+  }
+
+  .app-shell--user .match-row-header,
+  .app-shell--user .ranking-row-header {
+    display: none !important;
+  }
+
+  .app-shell--user .match-row-grid,
+  .app-shell--user .ranking-row-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    gap: 7px !important;
+  }
+
+  .app-shell--user .match-row-card,
+  .app-shell--user .ranking-row-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .app-shell--user .match-row-card [class*="__"],
+  .app-shell--user .ranking-row-card [class*="__"],
+  .app-shell--user .ranking-col,
+  .app-shell--user .match-col {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow-wrap: anywhere;
+  }
+
+  .app-shell--user .recruit-command-box {
+    overflow-x: auto;
+    flex-wrap: nowrap !important;
+    padding-bottom: 4px;
+  }
+
+  .app-shell--user .recruit-command-box span {
+    flex: 0 0 auto;
+  }
+
+  .app-shell--user .recruit-card__meta span,
+  .app-shell--user .badge,
+  .app-shell--user .chip,
+  .app-shell--user [class*="badge"],
+  .app-shell--user [class*="chip"] {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .app-shell--admin table,
+  .app-shell--user table {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  .app-shell--admin .admin-table-wrap,
+  .app-shell--admin .table-wrap,
+  .app-shell--user .table-wrap,
+  .app-shell--user .ranking-table-wrap {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .app-shell--admin .admin-floating-logout {
+    right: 14px !important;
+    bottom: calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+    z-index: 1300;
+  }
+}
+
+@media (max-width: 430px) {
+  .app-shell--admin .app-content,
+  .app-shell--user .app-content {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .app-shell--user .home-main-card,
+  .app-shell--user .home-season-card,
+  .app-shell--user .home-mvp-card,
+  .app-shell--user .home-progress-card,
+  .app-shell--user .top3-card,
+  .app-shell--user .top3-panel,
+  .app-shell--user .ranking-board,
+  .app-shell--user .ranking-top-card,
+  .app-shell--user .recruit-card,
+  .app-shell--user .page-header,
+  .app-shell--user .content-section,
+  .app-shell--admin .admin-card,
+  .app-shell--admin .admin-panel,
+  .app-shell--admin .content-section,
+  .app-shell--admin .page-header {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    border-radius: 18px !important;
+  }
+
+  .app-shell--user .ranking-top-player,
+  .app-shell--user .top3-player,
+  .app-shell--user .home-mvp-content {
+    grid-template-columns: 38px minmax(0, 1fr) !important;
+    gap: 10px !important;
+  }
+}
