@@ -46,6 +46,7 @@
 @import url("../styles/pages/pick-ban-fix.css");
 @import url("../styles/pages/account-player-admin-ui-fix.css");
 @import url("../styles/app-mobile.css");
+@import url("../styles/mobile-app-page-fix.css");
 /* Fix: pick/ban solo-rank refresh panel */
 .ai-solo-sync {
   display: flex;
