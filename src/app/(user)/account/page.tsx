@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
 import { getCurrentUser } from "@/lib/auth/session";
 import DiscordUnlinkButton from "./DiscordUnlinkButton";
-import UserLogoutButton from "@/components/UserLogoutButton";
 
 function formatDate(value: Date | string | null | undefined) {
   if (!value) return "-";
@@ -47,16 +46,15 @@ export default async function AccountPage() {
       <div className="user-page__header account-page__header">
         <div>
           <h1 className="user-page__title">내 계정</h1>
-                  </div>
+          <p className="user-page__description">K-LOL.GG 계정과 Discord 연동 상태를 관리합니다.</p>
+        </div>
       </div>
 
       <section className="admin-card account-card account-summary-card">
-        <div className="admin-section-head account-section-head--mobile-stack">
+        <div className="admin-section-head">
           <div>
             <h2>계정 정보</h2>
-          </div>
-          <div className="account-action-row">
-            <UserLogoutButton />
+            <p className="admin-muted">아이디 {user.userId} · 상태 {user.status} · 권한 {user.role}</p>
           </div>
         </div>
 
@@ -80,7 +78,8 @@ export default async function AccountPage() {
         <div className="admin-section-head account-discord-card__head">
           <div>
             <h2>Discord 계정 연동</h2>
-                      </div>
+            <p className="admin-muted">음성방 검증, 구인 자동화, 역할 동기화 기준으로 사용됩니다.</p>
+          </div>
           {user.discordId ? (
             <DiscordUnlinkButton />
           ) : (
@@ -121,7 +120,7 @@ export default async function AccountPage() {
         ) : (
           <div className="account-discord-empty">
             <strong>Discord 계정이 아직 연동되지 않았습니다.</strong>
-            
+            <p>연동하면 음성방 기록과 사이트 계정을 정확히 매칭할 수 있습니다.</p>
           </div>
         )}
       </section>

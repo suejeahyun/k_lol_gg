@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import DiscordOpsStyles from "./_DiscordOpsStyles";
+import DiscordOpsNav from "./_DiscordOpsNav";
 import { useEffect, useState } from "react";
 
 type Diagnostic = { level: "OK" | "INFO" | "WARN" | "ERROR"; code: string; title: string; message: string; action?: string };
@@ -59,6 +60,14 @@ function statusLabel(status: string) {
   return map[status] || status;
 }
 
+const navItems = [
+  { href: "/admin/discord/recruits", title: "구인 검증", desc: "구인 참가자 모임 상태, 부분 진행, 자동 ㅉ 후보" },
+  { href: "/admin/discord/matches", title: "내전 확인", desc: "오늘 내전 참석, 늦참, 미접속 경고" },
+  { href: "/admin/discord/stats", title: "체류 통계", desc: "체류시간 TOP 10, 같이 있던 사람 TOP 10" },
+  { href: "/admin/discord/logs", title: "상세 로그", desc: "음성방 입장·이동·퇴장 원본 로그" },
+  { href: "/admin/discord/diagnostics", title: "오류 점검", desc: "봇 heartbeat, 감시 범위, API 오류 상태" },
+  { href: "/admin/discord/settings", title: "운영 설정", desc: "자동 ㅉ, 감시 범위, 로그 채널, 역할 ID" },
+];
 
 export default function DiscordOverviewClient() {
   const [data, setData] = useState<Overview | null>(null);
@@ -89,12 +98,23 @@ export default function DiscordOverviewClient() {
         </div>
         <div className="admin-actions">
           <button className="admin-button" type="button" onClick={() => void load()}>새로고침</button>
+          <Link className="admin-button admin-button--secondary" href="/admin/discord/settings">운영 설정</Link>
         </div>
       </div>
+
+      <DiscordOpsNav active="overview" />
 
 
       {loading || !data ? <section className="admin-card"><div className="admin-empty">Discord 운영 현황을 불러오는 중입니다.</div></section> : (
         <>
+          <section className="discord-ops-nav-grid">
+            {navItems.map((item) => (
+              <Link className="discord-ops-nav-card" key={item.href} href={item.href}>
+                <strong>{item.title}</strong>
+              </Link>
+            ))}
+          </section>
+
           <section className="discord-ops-stat-grid">
             <Stat label="봇 상태" value={data.summary.healthyBotCount > 0 ? "정상" : "확인 필요"} caption={latestBot ? `마지막 신호 ${formatDate(latestBot.updatedAt)}` : "heartbeat 없음"} />
             <Stat label="자동화 오류" value={`${errors} / ${warns}`} caption="ERROR / WARN" />
@@ -120,7 +140,7 @@ export default function DiscordOverviewClient() {
             </div>
 
             <div className="admin-card discord-ops-panel">
-              <div className="admin-section-head"><h2>최근 구인 모니터</h2></div>
+              <div className="admin-section-head"><h2>최근 구인 모니터</h2><Link className="chip-button" href="/admin/discord/recruits">전체 보기</Link></div>
               <div className="discord-ops-list">
                 {recentRecruits.length === 0 ? <p className="admin-muted">진행중 구인 기록이 없습니다.</p> : recentRecruits.map((item) => (
                   <div className="discord-ops-list-row" key={item.partyId}>

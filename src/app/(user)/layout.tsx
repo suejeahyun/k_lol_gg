@@ -1,7 +1,6 @@
 import { ReactNode } from "react";
 import AppTopBar from "@/components/AppTopBar";
 import UserSidebar from "@/components/UserSidebar";
-import UserMobileNav from "@/components/UserMobileNav";
 
 type UserLayoutProps = {
   children: ReactNode;
@@ -16,8 +15,6 @@ export default function UserLayout({ children }: UserLayoutProps) {
         <UserSidebar />
         <div className="app-content">{children}</div>
       </div>
-
-      <UserMobileNav />
     </div>
   );
 }

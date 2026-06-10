@@ -1,8 +1,10 @@
 export const dynamic = "force-dynamic";
 
+import Link from "next/link";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma/client";
 import RankingSeasonFilter from "@/components/RankingSeasonFilter";
+import Pagination from "@/components/Pagination";
 
 type RankingsPageProps = {
   searchParams: Promise<{
@@ -10,7 +12,6 @@ type RankingsPageProps = {
     sort?: string;
     order?: string;
     page?: string;
-    q?: string;
   }>;
 };
 
@@ -139,8 +140,9 @@ function TopRankingCard({
       ) : (
         <div className="ranking-top-card__list">
           {players.map((player, index) => (
-            <article
+            <Link
               key={`${title}-${player.playerId}`}
+              href={`/players/${player.playerId}`}
               className={`ranking-top-player ranking-top-player--${index + 1}`}
             >
               <div className="ranking-top-player__rank">
@@ -169,7 +171,7 @@ function TopRankingCard({
                   ) : null}
                 </div>
               </div>
-            </article>
+            </Link>
           ))}
         </div>
       )}
@@ -184,7 +186,6 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
   const sort = getSort(resolvedSearchParams.sort);
   const order = getOrder(resolvedSearchParams.order);
   const currentPage = Math.max(1, Number(resolvedSearchParams.page ?? "1") || 1);
-  const query = resolvedSearchParams.q?.trim() ?? "";
 
   const [data, seasons] = await Promise.all([
     getRankings(seasonId),
@@ -213,21 +214,6 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
 
     return order === "asc" ? result : -result;
   });
-
-  const rankedRankings = sortedRankings.map((player, index) => ({
-    ...player,
-    rank: index + 1,
-  }));
-
-  const searchedRankings = query
-    ? rankedRankings.filter((player) => {
-        const keyword = query.toLowerCase();
-        return [player.name, player.nickname, player.tag, `${player.nickname}#${player.tag}`]
-          .join(" ")
-          .toLowerCase()
-          .includes(keyword);
-      })
-    : [];
 
   const topWinRate = [...eligibleRankings]
     .sort((a, b) => {
@@ -262,6 +248,24 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
     })
     .slice(0, 3);
 
+  const totalPages = Math.max(1, Math.ceil(sortedRankings.length / PAGE_SIZE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const pagedRankings = sortedRankings.slice(
+    (safeCurrentPage - 1) * PAGE_SIZE,
+    safeCurrentPage * PAGE_SIZE,
+  );
+
+  function sortLink(field: SortType) {
+    const nextOrder = sort === field && order === "desc" ? "asc" : "desc";
+    const params = new URLSearchParams();
+
+    if (seasonId) params.set("seasonId", seasonId);
+    params.set("sort", field);
+    params.set("order", nextOrder);
+    params.set("page", "1");
+
+    return `/rankings?${params.toString()}`;
+  }
 
   return (
     <main className="page-container">
@@ -309,48 +313,88 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
           />
         </section>
 
-        <div className="ranking-board ranking-board--simple">
+        <div className="ranking-board">
           <div className="ranking-board__head">
             <div>
-              <p className="ranking-board__eyebrow">SEARCH RANK</p>
-              <h2 className="ranking-board__title">이름으로 순위 검색</h2>
+              <p className="ranking-board__eyebrow">CURRENT SEASON</p>
+              <h2 className="ranking-board__title">
+                기준 시즌: {data.season ? data.season.name : "없음"}
+              </h2>
             </div>
 
             <div className="ranking-board__summary">
               <span>총 {sortedRankings.length}명</span>
-              <span>기준 {MIN_PARTICIPATION_FOR_RANKING}회 이상</span>
+              <span>전체 랭킹 기준 내전 참여 {MIN_PARTICIPATION_FOR_RANKING}회 이상</span>
             </div>
           </div>
 
-          <form className="ranking-search-form" action="/rankings">
-            {seasonId ? <input type="hidden" name="seasonId" value={seasonId} /> : null}
-            <input
-              name="q"
-              defaultValue={query}
-              placeholder="이름 또는 닉네임 검색"
-              aria-label="랭킹 이름 검색"
-            />
-            <button type="submit">검색</button>
-          </form>
-
-          {!query ? (
-            <p className="ranking-empty ranking-empty--compact">이름을 검색하면 해당 플레이어의 순위만 표시됩니다.</p>
-          ) : searchedRankings.length === 0 ? (
-            <p className="ranking-empty ranking-empty--compact">검색 결과가 없습니다.</p>
+          {sortedRankings.length === 0 ? (
+            <p className="ranking-empty">내전 참여 {MIN_PARTICIPATION_FOR_RANKING}회 이상 랭킹 데이터가 없습니다.</p>
           ) : (
-            <div className="ranking-search-list">
-              {searchedRankings.slice(0, 10).map((player) => (
-                <article
-                  key={player.playerId}
-                  className="ranking-search-card"
-                >
-                  <strong>{player.rank}등</strong>
-                  <span>{player.name}</span>
-                  <small>{player.nickname}#{player.tag}</small>
-                  <em>승률 {formatPercent(player.winRate)} · 참여 {player.participationCount}회 · MVP {player.mvpCount}회</em>
-                </article>
-              ))}
-            </div>
+            <>
+              <div className="ranking-row-header">
+                <div>순위</div>
+                <Link href={sortLink("name")}>이름</Link>
+                <div>닉네임#태그</div>
+                <Link href={sortLink("participationCount")}>참여</Link>
+                <Link href={sortLink("totalGames")}>세트</Link>
+                <Link href={sortLink("winRate")}>승률</Link>
+                <Link href={sortLink("mvpCount")}>MVP</Link>
+              </div>
+
+              <div className="ranking-list">
+                {pagedRankings.map((player, index) => {
+                  const rank = (safeCurrentPage - 1) * PAGE_SIZE + index + 1;
+
+                  return (
+                    <Link
+                      key={player.playerId}
+                      href={`/players/${player.playerId}`}
+                      className="ranking-row-card"
+                    >
+                      <div className="ranking-row-grid">
+                        <div
+                          className={`ranking-col ranking-rank ${
+                            rank <= 3 ? `ranking-rank--top-${rank}` : ""
+                          }`}
+                        >
+                          {rank}
+                        </div>
+
+                        <div className="ranking-col ranking-name">
+                          {player.name}
+                        </div>
+
+                        <div className="ranking-col ranking-riot">
+                          {player.nickname}#{player.tag}
+                        </div>
+
+                        <div className="ranking-col">{player.participationCount}회</div>
+
+                        <div className="ranking-col">{player.totalGames}</div>
+
+                        <div className="ranking-col">
+                          {formatPercent(player.winRate)}
+                        </div>
+
+                        <div className="ranking-col">{player.mvpCount}</div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+
+              <Pagination
+                currentPage={safeCurrentPage}
+                totalPages={totalPages}
+                basePath="/rankings"
+                query={{
+                  seasonId,
+                  sort,
+                  order,
+                }}
+              />
+            </>
           )}
         </div>
       </section>
