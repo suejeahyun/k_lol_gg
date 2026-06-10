@@ -1,12 +1,11 @@
 import Link from "next/link";
 import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
 import { AppEmpty, AppSection } from "@/components/app-mobile/AppCards";
-import { getAppHomeSummary } from "@/lib/app/home-summary";
 import { prisma } from "@/lib/prisma/client";
 
 export const dynamic = "force-dynamic";
 
-type AppHomePageProps = {
+type AppPlayersPageProps = {
   searchParams?: Promise<{
     q?: string;
   }>;
@@ -16,7 +15,15 @@ function normalizeSearch(value?: string) {
   return value?.trim().slice(0, 40) ?? "";
 }
 
-async function getAppHomePlayers(q: string) {
+function getWinRate(wins: number, totalGames: number) {
+  if (totalGames <= 0) return 0;
+  return Math.round((wins / totalGames) * 1000) / 10;
+}
+
+export default async function AppPlayersPage({ searchParams }: AppPlayersPageProps) {
+  const params = await searchParams;
+  const q = normalizeSearch(params?.q);
+
   const where = q
     ? {
         isActive: true,
@@ -30,8 +37,8 @@ async function getAppHomePlayers(q: string) {
 
   const players = await prisma.player.findMany({
     where,
-    orderBy: q ? [{ name: "asc" }, { nickname: "asc" }] : [{ id: "desc" }],
-    take: 10,
+    orderBy: q ? [{ name: "asc" }, { nickname: "asc" }] : [{ name: "asc" }, { nickname: "asc" }],
+    take: 80,
     select: {
       id: true,
       name: true,
@@ -46,38 +53,21 @@ async function getAppHomePlayers(q: string) {
           totalGames: true,
           participationCount: true,
           wins: true,
-          losses: true,
           mvpCount: true,
         },
       },
     },
   });
 
-  return players;
-}
-
-function getWinRate(wins: number, totalGames: number) {
-  if (totalGames <= 0) return 0;
-  return Math.round((wins / totalGames) * 1000) / 10;
-}
-
-export default async function AppHomePage({ searchParams }: AppHomePageProps) {
-  const params = await searchParams;
-  const q = normalizeSearch(params?.q);
-  const [{ activeRecruitCount, matchCount, playerCount }, players] = await Promise.all([
-    getAppHomeSummary(),
-    getAppHomePlayers(q),
-  ]);
-
   return (
-    <AppMobileShell subtitle="K-LOL.GG APP">
+    <AppMobileShell subtitle="플레이어">
       <section className="klol-app-hero">
-        <div className="klol-app-kicker">K-LOL.GG APP</div>
-        <h1 className="klol-app-title">K-LOL.GG APP</h1>
+        <div className="klol-app-kicker">PLAYER</div>
+        <h1 className="klol-app-title">플레이어 목록</h1>
       </section>
 
-      <AppSection title="플레이어 검색" caption="앱 안에서만 이동합니다.">
-        <form className="klol-app-search" action="/app" method="get">
+      <AppSection title="검색">
+        <form className="klol-app-search" action="/app/players" method="get">
           <input
             name="q"
             defaultValue={q}
@@ -86,16 +76,17 @@ export default async function AppHomePage({ searchParams }: AppHomePageProps) {
           />
           <button type="submit">검색</button>
         </form>
+      </AppSection>
 
+      <AppSection title={q ? `검색 결과 ${players.length}명` : `전체 ${players.length}명`}>
         <div className="klol-app-list klol-app-player-list">
           {players.length === 0 ? (
-            <AppEmpty>검색 결과가 없습니다.</AppEmpty>
+            <AppEmpty>플레이어가 없습니다.</AppEmpty>
           ) : (
             players.map((player) => {
               const stat = player.seasonStats[0];
               const totalGames = stat?.totalGames ?? 0;
-              const wins = stat?.wins ?? 0;
-              const winRate = getWinRate(wins, totalGames);
+              const winRate = getWinRate(stat?.wins ?? 0, totalGames);
 
               return (
                 <Link key={player.id} href={`/app/players/${player.id}`} className="klol-app-list-card klol-app-player-card">
@@ -108,12 +99,16 @@ export default async function AppHomePage({ searchParams }: AppHomePageProps) {
                   </div>
                   <div className="klol-app-meta-grid klol-app-meta-grid--player">
                     <div className="klol-app-meta">
-                      <span>현재 티어</span>
+                      <span>현재</span>
                       <strong>{player.currentTier ?? "미입력"}</strong>
                     </div>
                     <div className="klol-app-meta">
                       <span>참여</span>
                       <strong>{stat?.participationCount ?? 0}회</strong>
+                    </div>
+                    <div className="klol-app-meta">
+                      <span>MVP</span>
+                      <strong>{stat?.mvpCount ?? 0}회</strong>
                     </div>
                     <div className="klol-app-meta">
                       <span>승률</span>
@@ -124,27 +119,6 @@ export default async function AppHomePage({ searchParams }: AppHomePageProps) {
               );
             })
           )}
-        </div>
-
-        <Link className="klol-app-secondary klol-app-full-link" href={q ? `/app/players?q=${encodeURIComponent(q)}` : "/app/players"}>
-          플레이어 목록 전체 보기
-        </Link>
-      </AppSection>
-
-      <AppSection title="현재 상태">
-        <div className="klol-app-meta-grid">
-          <div className="klol-app-meta">
-            <span>진행 구인</span>
-            <strong>{activeRecruitCount}개</strong>
-          </div>
-          <div className="klol-app-meta">
-            <span>등록 내전</span>
-            <strong>{matchCount}개</strong>
-          </div>
-          <div className="klol-app-meta">
-            <span>활성 유저</span>
-            <strong>{playerCount}명</strong>
-          </div>
         </div>
       </AppSection>
     </AppMobileShell>

@@ -896,3 +896,119 @@
   background: rgba(127, 29, 29, 0.26) !important;
   color: #fecaca !important;
 }
+
+/* v22: app-only player search, list, and detail pages. */
+.klol-app-search {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 82px;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.klol-app-search input {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 13px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 16px;
+  background: rgba(2, 6, 23, 0.72);
+  color: #f8fafc;
+  font-size: 14px;
+  font-weight: 800;
+  outline: none;
+}
+
+.klol-app-search input::placeholder {
+  color: rgba(148, 163, 184, 0.72);
+}
+
+.klol-app-search input:focus {
+  border-color: rgba(250, 204, 21, 0.45);
+  box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.1);
+}
+
+.klol-app-search button {
+  min-height: 46px;
+  border: 1px solid rgba(250, 204, 21, 0.34);
+  border-radius: 16px;
+  background: linear-gradient(135deg, #facc15, #f97316);
+  color: #111827;
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.klol-app-full-link {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.klol-app-player-list {
+  margin-top: 6px;
+}
+
+.klol-app-player-card,
+.klol-app-plain-card,
+.klol-app-match-mini {
+  min-height: auto;
+}
+
+.klol-app-meta-grid--player {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.klol-app-meta-grid--player-detail {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.klol-app-meta-grid--player-detail .klol-app-meta:first-child:last-child,
+.klol-app-meta-grid--player-detail .klol-app-meta:nth-child(3):last-child,
+.klol-app-meta-grid--player-detail .klol-app-meta:nth-child(5):last-child {
+  grid-column: 1 / -1;
+}
+
+.klol-app-player-kda {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 9px 10px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 14px;
+  background: rgba(2, 6, 23, 0.36);
+}
+
+.klol-app-player-kda span,
+.klol-app-player-kda strong,
+.klol-app-player-kda b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.klol-app-player-kda span {
+  color: #facc15;
+  font-size: 11px;
+  font-weight: 950;
+}
+
+.klol-app-player-kda strong {
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.klol-app-player-kda b {
+  color: #e2e8f0;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+@media (max-width: 380px) {
+  .klol-app-meta-grid--player {
+    grid-template-columns: 1fr;
+  }
+
+  .klol-app-player-kda {
+    grid-template-columns: 1fr;
+  }
+}
