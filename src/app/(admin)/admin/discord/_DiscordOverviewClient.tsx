@@ -95,7 +95,6 @@ export default function DiscordOverviewClient() {
       <div className="admin-page__header discord-ops-header">
         <div>
           <h1 className="admin-page__title">Discord 운영 대시보드</h1>
-          <p className="admin-page__description">기능을 목적별 페이지로 분리했습니다. Discord 계정 연동은 선택사항이며, 구인·내전 확인은 서버 닉네임의 이름 토큰도 함께 사용합니다.</p>
         </div>
         <div className="admin-actions">
           <button className="admin-button" type="button" onClick={() => void load()}>새로고침</button>
@@ -105,7 +104,6 @@ export default function DiscordOverviewClient() {
 
       <DiscordOpsNav active="overview" />
 
-      <div className="discord-ops-notice">Discord 계정 연동은 필수가 아닙니다. ID 연동이 있으면 우선 사용하고, 연동이 없어도 Discord 서버 닉네임의 이름 토큰과 구인/내전 참가자 이름을 비교해 참석 여부를 확인합니다.</div>
 
       {loading || !data ? <section className="admin-card"><div className="admin-empty">Discord 운영 현황을 불러오는 중입니다.</div></section> : (
         <>
@@ -113,7 +111,6 @@ export default function DiscordOverviewClient() {
             {navItems.map((item) => (
               <Link className="discord-ops-nav-card" key={item.href} href={item.href}>
                 <strong>{item.title}</strong>
-                <span>{item.desc}</span>
               </Link>
             ))}
           </section>

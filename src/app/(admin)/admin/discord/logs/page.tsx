@@ -43,7 +43,7 @@ export default async function DiscordLogsPage(props: PageProps) {
   return (
     <main className="admin-page discord-ops-page">
       <DiscordOpsStyles />
-      <div className="admin-page__header discord-ops-header"><div><h1 className="admin-page__title">Discord 상세 로그</h1><p className="admin-page__description">음성방 입장·이동·퇴장·스냅샷 로그입니다. ID 연동 여부와 무관하게 Discord 표시명 기준으로 확인합니다.</p></div><div className="admin-actions"><Link className="admin-button admin-button--secondary" href="/admin/discord">대시보드</Link></div></div>
+      <div className="admin-page__header discord-ops-header"><div><h1 className="admin-page__title">Discord 상세 로그</h1></div><div className="admin-actions"><Link className="admin-button admin-button--secondary" href="/admin/discord">대시보드</Link></div></div>
       <DiscordOpsNav active="logs" />
       <div className="discord-ops-notice">이 로그는 원본 이벤트 확인용입니다. 구인/내전 판정은 ID 연동과 이름매칭을 함께 사용하므로, 연동되지 않은 Discord 사용자도 운영 검증에 포함될 수 있습니다.</div>
       <form className="discord-filter-card" method="get"><label>검색<input name="q" defaultValue={q} placeholder="유저명, 채널명, Discord ID" /></label><label>기간<select name="days" defaultValue={String(days)}><option value="1">최근 1일</option><option value="3">최근 3일</option><option value="7">최근 7일</option><option value="30">최근 30일</option><option value="90">최근 90일</option></select></label><label>페이지 크기<select name="pageSize" defaultValue={String(pageSize)}>{PAGE_SIZE_OPTIONS.map((option) => <option key={option} value={option}>{option}개</option>)}</select></label><button className="admin-button" type="submit">조회</button></form>

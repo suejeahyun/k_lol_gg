@@ -12,7 +12,7 @@ export default function DiscordMatchPage() {
     <main className="admin-page discord-ops-page">
       <DiscordOpsStyles />
       <div className="admin-page__header discord-ops-header">
-        <div><h1 className="admin-page__title">내전 Discord 모임 확인</h1><p className="admin-page__description">오늘 내전 참가자의 참석, 10분 전 도착 여부, 시작 후 미접속 경고를 확인합니다. Discord 연동은 선택사항이며, 내전/대기 음성방에 있는 유저만 참석으로 계산합니다.</p></div>
+        <div><h1 className="admin-page__title">내전 Discord 모임 확인</h1></div>
         <div className="admin-actions"><Link className="admin-button admin-button--secondary" href="/admin/discord">대시보드</Link><button className="admin-button" type="button" onClick={() => void load()}>새로고침</button></div>
       </div>
       <DiscordOpsNav active="matches" />

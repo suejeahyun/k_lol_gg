@@ -158,7 +158,6 @@ export default async function AdminWarningsPage() {
         <div>
           <p className="page-eyebrow">KAKAO OPERATION</p>
           <h1>운영 경고 관리</h1>
-          <p className="admin-page__description">사이트 등록 유저와 미등록 대상을 이름·닉네임 기준으로 주의·경고 관리합니다.</p>
         </div>
       </div>
       <DisciplineManagerClient targets={targets} initialRecords={records as any} />

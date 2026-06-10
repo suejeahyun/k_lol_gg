@@ -25,7 +25,6 @@ type Row = {
 
 type PageConfig = {
   title: string;
-  description: string;
   headers: string[];
   emptyColSpan: number;
   columnWidths: string[];
@@ -34,28 +33,24 @@ type PageConfig = {
 const pageConfigs: Record<KakaoOperationFormType, PageConfig> = {
   leaves: {
     title: "외출 신청",
-    description: "외출기간, 외출사유, 외출범위를 확인합니다.",
     headers: ["ID", "이름 및 닉네임", "외출기간", "외출사유", "외출범위", "등록 일시", "메모", "관리", "원문보기"],
     emptyColSpan: 9,
     columnWidths: ["6%", "13%", "12%", "15%", "15%", "15%", "8%", "8%", "8%"],
   },
   meetups: {
     title: "오프라인 모임",
-    description: "주최자, 일자, 장소, 참여자 명단을 확인합니다.",
     headers: ["ID", "주최자 이름 및 닉네임", "일자", "장소", "참여자 명단", "등록 일시", "메모", "관리", "원문보기"],
     emptyColSpan: 9,
     columnWidths: ["6%", "15%", "9%", "11%", "18%", "15%", "8%", "8%", "10%"],
   },
   suggestions: {
     title: "건의",
-    description: "작성자, 건의 사유, 건의 내용을 확인합니다.",
     headers: ["ID", "본인 이름 및 닉네임", "건의 사유", "건의 내용", "등록 일시", "메모", "관리", "원문보기"],
     emptyColSpan: 8,
     columnWidths: ["6%", "15%", "20%", "23%", "15%", "7%", "7%", "7%"],
   },
   friends: {
     title: "디스코드 초대",
-    description: "지인 이름, 지인 닉네임, 이용기간, 디스코드 닉네임 변경명을 확인합니다.",
     headers: ["ID", "지인 이름", "지인 닉네임", "이용기간", "디스코드 닉네임 변경", "등록 일시", "메모", "관리", "원문보기"],
     emptyColSpan: 9,
     columnWidths: ["6%", "11%", "11%", "11%", "22%", "15%", "8%", "8%", "8%"],
@@ -167,7 +162,6 @@ export default async function KakaoOperationFormAdminPage({ type }: Props) {
   const rows = await getRows(type);
   const config = pageConfigs[type] || {
     title: kakaoOperationFormLabels[type],
-    description: "카카오톡 봇이 인식해 저장한 운영 양식을 확인합니다.",
     headers: ["ID", "내용", "등록 일시", "메모", "관리", "원문보기"],
     emptyColSpan: 6,
     columnWidths: ["8%", "40%", "18%", "12%", "10%", "12%"],
@@ -180,26 +174,9 @@ export default async function KakaoOperationFormAdminPage({ type }: Props) {
           <div>
             <p className="page-eyebrow">KAKAO OPERATION FORMS</p>
             <h1>{config.title}</h1>
-            <p className="admin-page__description">{config.description}</p>
           </div>
         </div>
 
-        {type === "leaves" ? (
-          <section
-            className="admin-card"
-            style={{
-              marginBottom: 18,
-              padding: "16px 18px",
-              border: "1px solid rgba(34, 211, 238, 0.20)",
-              background: "rgba(8, 13, 28, 0.8)",
-            }}
-          >
-            <strong style={{ display: "block", marginBottom: 8, fontSize: "1.02rem" }}>외출 신청 원칙</strong>
-            <p style={{ margin: 0, color: "rgba(226, 232, 240, 0.85)", lineHeight: 1.65 }}>
-              특별한 사유 없이는 구인방, 디스코드 외출은 금지됩니다.
-            </p>
-          </section>
-        ) : null}
 
         <section className="admin-card" style={{ padding: 22, overflow: "hidden" }}>
           <div

@@ -8,31 +8,26 @@ const cards = [
     key: "leaves",
     href: "/admin/operation-forms/leaves",
     title: "외출 신청",
-    description: "외출기간 · 외출사유 · 외출범위",
   },
   {
     key: "meetups",
     href: "/admin/operation-forms/meetups",
     title: "오프라인 모임",
-    description: "주최자 · 일자 · 장소 · 참여자 명단",
   },
   {
     key: "suggestions",
     href: "/admin/operation-forms/suggestions",
     title: "건의",
-    description: "건의 사유 · 상세 내용",
   },
   {
     key: "friends",
     href: "/admin/operation-forms/friends",
     title: "디스코드 초대",
-    description: "지인 이름 · 닉네임 · 이용기간 · 디코 닉변",
   },
   {
     key: "warnings",
     href: "/admin/operation-forms/warnings",
     title: "운영 경고 관리",
-    description: "주의 · 경고 · 지각 · 노쇼 · 개별 초기화",
   },
 ] as const;
 
@@ -60,9 +55,6 @@ export default async function AdminOperationFormsPage() {
           <div>
             <p className="page-eyebrow">KAKAO OPERATION</p>
             <h1>운영 신청 관리</h1>
-            <p className="admin-page__description">
-              카카오톡 봇으로 접수된 외출, 모임, 건의, 디스코드 초대 신청을 관리합니다.
-            </p>
           </div>
         </div>
 
@@ -121,17 +113,6 @@ export default async function AdminOperationFormsPage() {
                     총 {counts[card.key]}건
                   </span>
                 </div>
-                <p
-                  style={{
-                    margin: 0,
-                    color: "rgba(226, 232, 240, 0.84)",
-                    lineHeight: 1.7,
-                    fontSize: "1rem",
-                    wordBreak: "keep-all",
-                  }}
-                >
-                  {card.description}
-                </p>
               </div>
 
               <div

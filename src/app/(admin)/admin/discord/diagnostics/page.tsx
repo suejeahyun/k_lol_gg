@@ -12,7 +12,7 @@ export default function DiscordDiagnosticsPage() {
     <main className="admin-page discord-ops-page">
       <DiscordOpsStyles />
       <div className="admin-page__header discord-ops-header">
-        <div><h1 className="admin-page__title">Discord 자동화 오류 점검</h1><p className="admin-page__description">봇 heartbeat, 감시 범위, 자동 ㅉ 설정, 구인 모니터 갱신 지연 등 실제 작동 문제만 분리해서 확인합니다. Discord ID 미연동은 오류로 보지 않습니다.</p></div>
+        <div><h1 className="admin-page__title">Discord 자동화 오류 점검</h1></div>
         <div className="admin-actions"><Link className="admin-button admin-button--secondary" href="/admin/discord">대시보드</Link><button className="admin-button" type="button" onClick={() => void load()}>새로고침</button></div>
       </div>
       <DiscordOpsNav active="diagnostics" />

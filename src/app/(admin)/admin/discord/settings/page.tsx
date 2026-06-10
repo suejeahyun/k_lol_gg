@@ -49,7 +49,7 @@ export default function DiscordSettingsPage() {
     <main className="admin-page discord-ops-page">
       <DiscordOpsStyles />
       <div className="admin-page__header discord-ops-header">
-        <div><h1 className="admin-page__title">Discord 운영 설정</h1><p className="admin-page__description">자동화 설정만 관리합니다. Discord 계정 연동은 선택사항이며, 구인·내전 확인은 이름매칭을 함께 사용합니다.</p></div>
+        <div><h1 className="admin-page__title">Discord 운영 설정</h1></div>
         <div className="admin-actions"><Link className="admin-button admin-button--secondary" href="/admin/discord">대시보드</Link><button className="admin-button" type="button" onClick={() => void load()}>새로고침</button></div>
       </div>
       <DiscordOpsNav active="settings" />

@@ -25,22 +25,57 @@ function ChannelList({ items, fallback = "-" }: { items?: string[]; fallback?: s
   return <ListAll items={items} />;
 }
 
+function formatDateOnly(value?: string | null) {
+  if (!value) return "날짜 미상";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
+function groupAutoFinishedByDate(items: NonNullable<ReturnType<typeof useDiscordOverview>["data"]>["autoFinishedRecruitMonitors"]) {
+  const groups = new Map<string, typeof items>();
+  for (const item of items || []) {
+    const key = item.recruitDate || formatDateOnly(item.autoFinishedAt || item.updatedAt);
+    const current = groups.get(key) || [];
+    current.push(item);
+    groups.set(key, current);
+  }
+  return Array.from(groups.entries()).sort((a, b) => String(b[0]).localeCompare(String(a[0])));
+}
+
+function simpleReason(value?: string | null) {
+  const raw = String(value || "").trim();
+  if (!raw) return "자동 종료";
+  if (raw.includes("all_left") || raw.includes("ALL_LEFT")) return "참가자 퇴장 확인";
+  if (raw.length > 28) return `${raw.slice(0, 28)}...`;
+  return raw;
+}
+
+function displayVoiceRoomName(item: NonNullable<ReturnType<typeof useDiscordOverview>["data"]>["autoFinishedRecruitMonitors"][number]) {
+  return item.voiceChannelName || "음성방 이름 미확인";
+}
+
 export default function DiscordRecruitPage() {
   const { data, loading, load } = useDiscordOverview();
+  const autoFinishedGroups = data ? groupAutoFinishedByDate(data.autoFinishedRecruitMonitors || []) : [];
+
   return (
     <main className="admin-page discord-ops-page">
       <DiscordOpsStyles />
       <div className="admin-page__header discord-ops-header">
         <div>
           <h1 className="admin-page__title">구인 Discord 검증</h1>
-          <p className="admin-page__description">구인 등록 전 이미 음성방에 들어와 있던 경우, 일부만 모인 경우, 구경 인원이 있는 경우까지 분리해서 확인합니다.</p>
         </div>
         <div className="admin-actions"><Link className="admin-button admin-button--secondary" href="/admin/discord">대시보드</Link><button className="admin-button" type="button" onClick={() => void load()}>새로고침</button></div>
       </div>
       <DiscordOpsNav active="recruits" />
       <section className="admin-card discord-ops-panel">
         <div className="admin-section-head"><h2>구인구직 Discord 모임 검증</h2></div>
-        <p className="admin-muted" style={{ marginTop: -6 }}>자동 ㅉ은 “같은 음성방에서 구인 참가자 1명 이상 확인 → 이후 해당 방에서 매칭 인원 0명 → 보류 시간 경과” 기준입니다. 다른 방 인원은 합산하지 않고, 관전/외부 인원은 참가자로 계산하지 않습니다.</p>
         {loading || !data ? <div className="admin-empty">불러오는 중입니다.</div> : <div className="admin-table-wrap"><table className="admin-table discord-compact-table"><thead><tr><th>구인</th><th>상태</th><th>구인 인원</th><th>Discord 확인</th><th>구경/외부</th><th>미확인</th><th>오류/예외</th><th>음성방</th><th>갱신</th></tr></thead><tbody>
           {data.recruitVerifications.length === 0 ? <tr><td colSpan={9}>진행중인 구인이 없습니다.</td></tr> : data.recruitVerifications.map((item) => <tr key={item.partyId}>
             <td><strong>#{item.recruitNo}</strong><br /><span className="admin-muted">{item.title}</span><div className="discord-scenario-list">{item.scenarioLabels?.map((label) => <span className="discord-scenario-chip" key={label}>{label}</span>)}</div></td>
@@ -54,6 +89,57 @@ export default function DiscordRecruitPage() {
             <td>{formatDate(item.lastScannedAt)}</td>
           </tr>)}
         </tbody></table></div>}
+      </section>
+      <section className="admin-card discord-ops-panel">
+        <div className="admin-section-head"><h2>자동 종료</h2></div>
+        {loading || !data ? (
+          <div className="admin-empty">불러오는 중입니다.</div>
+        ) : autoFinishedGroups.length === 0 ? (
+          <div className="admin-empty">자동 종료된 구인이 없습니다.</div>
+        ) : (
+          <div className="discord-auto-finish-history">
+            {autoFinishedGroups.map(([dateKey, items]) => (
+              <div className="discord-auto-finish-day" key={dateKey}>
+                <div className="discord-auto-finish-day__head">
+                  <strong>{dateKey}</strong>
+                  <span>{items.length}건</span>
+                </div>
+                <div className="discord-auto-finish-cards">
+                  {items.map((item) => (
+                    <article className="discord-auto-finish-card" key={`${dateKey}-${item.monitorId}`}>
+                      <div className="discord-auto-finish-card__main">
+                        <div className="discord-auto-finish-field discord-auto-finish-field--no">
+                          <span>구인 번호</span>
+                          <strong># {item.recruitNo}</strong>
+                        </div>
+                        <div className="discord-auto-finish-field discord-auto-finish-field--members">
+                          <span>파티 인원 이름</span>
+                          <ListAll items={item.participantNames} empty="등록된 이름 없음" />
+                        </div>
+                        <div className="discord-auto-finish-field">
+                          <span>확인 인원</span>
+                          <strong>{item.lastPresentExpectedCount}/{item.lastExpectedCount || item.participantNames.length || item.maxMembers}</strong>
+                        </div>
+                        <div className="discord-auto-finish-field">
+                          <span>음성방</span>
+                          <strong title={displayVoiceRoomName(item)}>{displayVoiceRoomName(item)}</strong>
+                        </div>
+                        <div className="discord-auto-finish-field">
+                          <span>자동종료</span>
+                          <strong>{formatDate(item.autoFinishedAt || item.updatedAt)}</strong>
+                        </div>
+                        <div className="discord-auto-finish-field">
+                          <span>사유</span>
+                          <strong>{simpleReason(item.autoFinishReason)}</strong>
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
     </main>
   );

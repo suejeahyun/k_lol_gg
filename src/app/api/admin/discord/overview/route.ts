@@ -229,6 +229,7 @@ export async function GET() {
     recentUnlinkedEvents,
     heartbeats,
     activeMonitors,
+    recentAutoFinishedMonitors,
     linkLogs,
     inProgressParties,
     activeSeason,
@@ -259,6 +260,35 @@ export async function GET() {
       orderBy: { updatedAt: "desc" },
       take: 50,
       include: { party: { select: { id: true, recruitNo: true, title: true, type: true, status: true, maxMembers: true } } },
+    }),
+    prisma.recruitPartyDiscordMonitor.findMany({
+      where: {
+        OR: [
+          { status: "AUTO_FINISHED" },
+          { autoFinishedAt: { not: null } },
+        ],
+      },
+      orderBy: [{ autoFinishedAt: "desc" }, { updatedAt: "desc" }],
+      take: 120,
+      include: {
+        party: {
+          select: {
+            id: true,
+            recruitNo: true,
+            title: true,
+            type: true,
+            status: true,
+            maxMembers: true,
+            recruitDate: true,
+            startTimeText: true,
+            members: {
+              where: { isSubstitute: false },
+              orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }],
+              select: { name: true, slotNo: true },
+            },
+          },
+        },
+      },
     }),
     getDiscordAccountLinkLogsSafe(),
     prisma.recruitParty.findMany({
@@ -639,6 +669,39 @@ export async function GET() {
     };
   });
 
+
+  const autoFinishedRecruitMonitors = recentAutoFinishedMonitors.map((monitor) => {
+    const voiceEvent = monitor.voiceChannelId
+      ? recentEvents.find((event) => event.channelId === monitor.voiceChannelId && event.channelName)
+      : null;
+    const participantNames = (monitor.party?.members || [])
+      .map((member) => String(member.name || "").trim())
+      .filter(Boolean);
+
+    return {
+      monitorId: monitor.id,
+      partyId: monitor.partyId,
+      recruitNo: monitor.party?.recruitNo ?? 0,
+      title: monitor.party?.title || `구인 #${monitor.partyId}`,
+      type: monitor.party ? String(monitor.party.type) : "UNKNOWN",
+      partyStatus: monitor.party ? String(monitor.party.status) : "UNKNOWN",
+      maxMembers: monitor.party?.maxMembers ?? 0,
+      recruitDate: monitor.party?.recruitDate || null,
+      startTimeText: monitor.party?.startTimeText || null,
+      participantNames,
+      voiceChannelId: monitor.voiceChannelId || null,
+      voiceChannelName: voiceEvent?.channelName || null,
+      status: monitor.status,
+      lastExpectedCount: monitor.lastExpectedCount,
+      lastPresentExpectedCount: monitor.lastPresentExpectedCount,
+      lastNonParticipantCount: monitor.lastNonParticipantCount,
+      finishCandidateStartedAt: monitor.finishCandidateStartedAt?.toISOString() || null,
+      autoFinishedAt: monitor.autoFinishedAt?.toISOString() || monitor.updatedAt.toISOString(),
+      autoFinishReason: monitor.autoFinishReason || null,
+      updatedAt: monitor.updatedAt.toISOString(),
+    };
+  });
+
   const healthyBotCount = heartbeats.filter((bot) => bot.updatedAt >= staleSince).length;
   const diagnostics: Array<{ level: "OK" | "INFO" | "WARN" | "ERROR"; code: string; title: string; message: string; action?: string }> = [];
 
@@ -738,6 +801,7 @@ export async function GET() {
     matchAttendance,
     activeMonitors,
     recruitVerifications,
+    autoFinishedRecruitMonitors,
     linkLogs,
     diagnostics,
     serverTime: now.toISOString(),

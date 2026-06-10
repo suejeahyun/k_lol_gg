@@ -195,9 +195,6 @@ export default async function AdminRecruitsPage({ searchParams }: PageProps) {
         <div>
           <p className="admin-page__kicker">KAKAO RECRUIT</p>
           <h1>카카오 구인구직 관리</h1>
-          <p className="admin-page__description">
-            날짜가 바뀌어도 진행 중 구인글은 유지되며, 모집번호는 날짜/회차 기준으로 다시 #1부터 사용됩니다.
-          </p>
         </div>
         <a className="admin-button admin-button--ghost" href="/recruit" target="_blank" rel="noreferrer">
           유저 현황 보기

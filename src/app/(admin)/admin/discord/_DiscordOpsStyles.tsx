@@ -245,6 +245,27 @@ export default function DiscordOpsStyles() {
         .discord-ops-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .discord-ops-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       }
+
+      .discord-auto-finish-history { display: grid; gap: 16px; }
+      .discord-auto-finish-day { border: 1px solid rgba(148, 163, 184, 0.22); border-radius: 14px; overflow: hidden; background: rgba(15, 23, 42, 0.18); }
+      .discord-auto-finish-day__head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 14px; border-bottom: 1px solid rgba(148, 163, 184, 0.18); background: rgba(15, 23, 42, 0.28); }
+      .discord-auto-finish-day__head span { color: var(--muted, #94a3b8); font-size: 0.88rem; }
+      .discord-auto-finish-cards { display: grid; gap: 12px; padding: 12px; }
+      .discord-auto-finish-card { border: 1px solid rgba(96, 165, 250, .18); border-radius: 14px; background: rgba(2, 6, 23, .36); overflow: hidden; }
+      .discord-auto-finish-card__main { display: grid; grid-template-columns: 110px minmax(180px, 1.4fr) 96px minmax(170px, 1fr) 150px minmax(110px, .8fr); gap: 10px; padding: 12px; align-items: start; }
+      .discord-auto-finish-field { min-width: 0; display: grid; gap: 6px; }
+      .discord-auto-finish-field > span { color: #94a3b8; font-size: 11px; font-weight: 900; }
+      .discord-auto-finish-field > strong { min-width: 0; color: #e5e7eb; font-size: 13px; line-height: 1.45; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .discord-auto-finish-field--no strong { color: #bfdbfe; font-size: 18px; }
+      .discord-auto-finish-field--members .discord-inline-list { gap: 3px; }
+      .discord-auto-finish-field--members .discord-inline-list__text { white-space: normal; }
+      .admin-text-ellipsis { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      @media (max-width: 1320px) {
+        .discord-auto-finish-card__main { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      }
+      @media (max-width: 860px) {
+        .discord-auto-finish-card__main { grid-template-columns: 1fr; }
+      }
     `}</style>
   );
 }

@@ -72,7 +72,7 @@ export default async function DiscordStatsPage(props: PageProps) {
   return (
     <main className="admin-page discord-ops-page">
       <DiscordOpsStyles />
-      <div className="admin-page__header discord-ops-header"><div><h1 className="admin-page__title">Discord 체류 통계</h1><p className="admin-page__description">체류시간 TOP 10과 이름 검색 기준 같이 있던 사람 TOP 10입니다. ID 연동 여부와 무관하게 Discord 표시명을 사용합니다.</p></div><div className="admin-actions"><Link className="admin-button admin-button--secondary" href="/admin/discord">대시보드</Link></div></div>
+      <div className="admin-page__header discord-ops-header"><div><h1 className="admin-page__title">Discord 체류 통계</h1></div><div className="admin-actions"><Link className="admin-button admin-button--secondary" href="/admin/discord">대시보드</Link></div></div>
       <DiscordOpsNav active="stats" />
       <div className="discord-ops-notice">검색어는 이름 일부로 입력하면 됩니다. 같이 있던 사람은 같은 음성방에 겹쳐 있던 시간을 합산합니다.</div>
       <form className="discord-filter-card" method="get"><label>이름 검색<input name="q" defaultValue={q} placeholder="예: 재현" /></label><label>기간<select name="days" defaultValue={String(days)}><option value="1">최근 1일</option><option value="3">최근 3일</option><option value="7">최근 7일</option><option value="30">최근 30일</option><option value="90">최근 90일</option></select></label><button className="admin-button" type="submit">조회</button></form>

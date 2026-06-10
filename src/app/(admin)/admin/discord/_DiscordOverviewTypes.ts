@@ -52,6 +52,28 @@ export type Overview = {
     players: Array<{ applyId: number; playerId: number; name: string; nickname: string; tag: string; linked: boolean; present: boolean; matchType: string; attendanceStatus: string; matchedDisplayName: string | null; channelName: string | null; joinedAt: string | null }>;
     extraVoiceUsers: Array<{ discordId: string; displayName: string; channelName: string | null }>;
   };
+  autoFinishedRecruitMonitors: Array<{
+    monitorId: number;
+    partyId: number;
+    recruitNo: number;
+    title: string;
+    type: string;
+    partyStatus: string;
+    maxMembers: number;
+    recruitDate: string | null;
+    startTimeText: string | null;
+    participantNames: string[];
+    voiceChannelId: string | null;
+    voiceChannelName: string | null;
+    status: string;
+    lastExpectedCount: number;
+    lastPresentExpectedCount: number;
+    lastNonParticipantCount: number;
+    finishCandidateStartedAt: string | null;
+    autoFinishedAt: string | null;
+    autoFinishReason: string | null;
+    updatedAt: string;
+  }>;
   recruitVerifications: Array<{
     partyId: number;
     recruitNo: number;
