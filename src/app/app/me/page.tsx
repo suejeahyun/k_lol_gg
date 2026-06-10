@@ -11,7 +11,9 @@ function isAdminRole(role?: string | null) {
   return role === "ADMIN" || role === "SUPER_ADMIN";
 }
 
-type AppMeUser = NonNullable<Awaited<ReturnType<typeof prisma.userAccount.findUnique>>> & { player?: Awaited<ReturnType<typeof prisma.player.findUnique>> | null };
+type AppMeUser = NonNullable<Awaited<ReturnType<typeof prisma.userAccount.findUnique>>> & {
+  player?: Awaited<ReturnType<typeof prisma.player.findUnique>> | null;
+};
 
 function formatDiscordName(user: AppMeUser | null) {
   if (!user) return "-";
@@ -28,10 +30,10 @@ export default async function AppMePage() {
     session = await getCurrentUser();
     if (!session) throw new Error("UNAUTHORIZED");
 
-    user = await prisma.userAccount.findUnique({
+    user = (await prisma.userAccount.findUnique({
       where: { id: session.userAccountId },
       include: { player: true },
-    }) as AppMeUser | null;
+    })) as AppMeUser | null;
 
     player = user?.player ?? null;
   } catch {
@@ -54,9 +56,9 @@ export default async function AppMePage() {
         </p>
         <div className="klol-app-actions klol-app-actions--keep">
           {!user ? (
-            <Link className="klol-app-primary" href="/login">로그인</Link>
+            <Link className="klol-app-primary" href="/login?next=/app/me">로그인</Link>
           ) : (
-            <Link className="klol-app-primary" href="/account">계정 관리</Link>
+            <Link className="klol-app-primary" href="/app/account">계정 관리</Link>
           )}
         </div>
       </section>
@@ -103,11 +105,10 @@ export default async function AppMePage() {
             <p>{discordLinked ? discordName : "Discord 계정을 연결하면 음성방/구인 확인에 사용할 수 있습니다."}</p>
           </div>
           <div className="klol-app-actions klol-app-actions--keep klol-app-actions--inline">
-            <AppDiscordLinkButton linked={discordLinked} disabled={!user} next="/app/me" />
+            <AppDiscordLinkButton linked={discordLinked} disabled={!user} next="/app/account" />
           </div>
         </div>
       </AppSection>
-
     </AppMobileShell>
   );
 }
