@@ -314,7 +314,6 @@ export default async function AdminRecruitsPage({ searchParams }: PageProps) {
                 <th>시간</th>
                 <th>날짜/회차</th>
                 <th>번호</th>
-                <th>액션</th>
                 <th>제목</th>
                 <th>인원</th>
                 <th>방/처리자</th>
@@ -323,7 +322,7 @@ export default async function AdminRecruitsPage({ searchParams }: PageProps) {
             <tbody>
               {recentLogs.length === 0 ? (
                 <tr>
-                  <td colSpan={7}>구인구직 기록이 없습니다.</td>
+                  <td colSpan={6}>구인구직 기록이 없습니다.</td>
                 </tr>
               ) : (
                 recentLogs.map((log) => (
@@ -331,7 +330,6 @@ export default async function AdminRecruitsPage({ searchParams }: PageProps) {
                     <td>{formatKstDateTime(log.createdAt)}</td>
                     <td>{log.recruitDate || "-"} / {log.resetSeq}</td>
                     <td>{log.recruitNo > 0 ? `#${log.recruitNo}` : "-"}</td>
-                    <td><span className="admin-log-action-pill">{log.action}</span></td>
                     <td>{log.title}</td>
                     <td>{log.memberCount}/{log.maxMembers}</td>
                     <td>

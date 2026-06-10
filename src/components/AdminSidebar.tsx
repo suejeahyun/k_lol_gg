@@ -23,7 +23,6 @@ const menuGroups: AdminSidebarGroup[] = [
     title: "CORE",
     items: [
       { href: "/admin", label: "관리자 홈", code: "ADM" },
-      { href: "/admin/matches/new", label: "내전 등록", code: "REG" },
       { href: "/admin/matches", label: "내전 관리", code: "MAT" },
       { href: "/admin/player-approvals", label: "플레이어 승인", code: "APR" },
     ],

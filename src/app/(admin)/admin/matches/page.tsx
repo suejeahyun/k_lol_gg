@@ -2,9 +2,8 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import Pagination from "@/components/Pagination";
 import MatchDeleteButton from "./[matchId]/MatchDeleteButton";
-import AdminMatchAiTrainingButton from "./AdminMatchAiTrainingButton";
-export const dynamic = "force-dynamic";
 
+export const dynamic = "force-dynamic";
 
 type AdminMatchesPageProps = {
   searchParams: Promise<{
@@ -13,15 +12,9 @@ type AdminMatchesPageProps = {
   }>;
 };
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 12;
 
-function formatDate(date: Date): string {
-  return new Date(date).toLocaleString("ko-KR");
-}
-
-export default async function AdminMatchesPage({
-  searchParams,
-}: AdminMatchesPageProps) {
+export default async function AdminMatchesPage({ searchParams }: AdminMatchesPageProps) {
   const resolvedSearchParams = await searchParams;
   const currentPage = Math.max(1, Number(resolvedSearchParams.page ?? "1") || 1);
   const query = resolvedSearchParams.q?.trim() ?? "";
@@ -30,138 +23,93 @@ export default async function AdminMatchesPage({
     ? {
         OR: [
           { title: { contains: query, mode: "insensitive" as const } },
-          {
-            season: {
-              name: { contains: query, mode: "insensitive" as const },
-            },
-          },
+          { season: { name: { contains: query, mode: "insensitive" as const } } },
         ],
       }
     : {};
 
   const totalCount = await prisma.matchSeries.count({ where });
-
   const matches = await prisma.matchSeries.findMany({
     where,
-    orderBy: {
-      matchDate: "desc",
-    },
+    orderBy: { matchDate: "desc" },
     skip: (currentPage - 1) * PAGE_SIZE,
     take: PAGE_SIZE,
-    include: {
-      season: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-      _count: {
-        select: {
-          games: true,
-        },
+    select: {
+      id: true,
+      title: true,
+      games: {
+        orderBy: { gameNumber: "asc" },
+        select: { winnerTeam: true },
       },
     },
   });
-
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
   return (
-    <main className="page-container">
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: "12px",
-          marginBottom: "24px",
-          flexWrap: "wrap",
-        }}
-      >
+    <main className="admin-page admin-mobile-simple-page admin-matches-simple-page">
+      <div className="admin-page__header admin-mobile-simple-header">
         <div>
-          <h1 className="page-title" style={{ marginBottom: 6 }}>
-            관리자 - 내전 목록
-          </h1>
-          <p className="page-description" style={{ margin: 0 }}>
-            내전 등록 후 AI 학습을 실행하면 이후 팀 밸런스, MMR, 밴픽 추천 근거가 최신 내전 기록을 기준으로 정리됩니다.
-          </p>
+          <p className="admin-page__kicker">MATCH ADMIN</p>
+          <h1 className="admin-page__title">관리자 내전</h1>
+          <p className="admin-page__description">내전명과 관리 버튼만 표시합니다.</p>
         </div>
-        <AdminMatchAiTrainingButton />
       </div>
 
-      <form
-        method="get"
-        className="section-search"
-        style={{
-          display: "flex",
-          gap: "8px",
-          alignItems: "center",
-          flexWrap: "wrap",
-        }}
-      >
+      <form method="get" className="admin-filter-bar admin-mobile-simple-filter">
         <input
           type="text"
           name="q"
           defaultValue={query}
-          placeholder="제목 / 시즌명 검색"
-          className="app-input"
+          placeholder="내전명 검색"
+          className="admin-input"
         />
-        <button type="submit" className="app-button">
-          검색
-        </button>
+        <button type="submit" className="admin-button">검색</button>
       </form>
 
-      {matches.length === 0 ? (
-        <p>등록된 내전이 없습니다.</p>
-      ) : (
-        <>
-          <div className="admin-match-row-header">
-            <div>제목</div>
-            <div>날짜</div>
-            <div>시즌</div>
-            <div>세트 수</div>
+      <section className="admin-card admin-mobile-simple-card">
+        <div className="admin-section-head">
+          <div>
+            <h2>내전 목록</h2>
+            <p className="admin-muted">총 {totalCount.toLocaleString("ko-KR")}개</p>
           </div>
+        </div>
 
-          <div className="card-grid">
-            {matches.map((match: (typeof matches)[number]) => (
-              <div key={match.id} className="admin-player-row-card">
-                <div className="admin-match-row-grid">
-                  <div className="player-col player-name">{match.title}</div>
-                  <div className="player-col">
-                    {formatDate(match.matchDate)}
-                  </div>
-                  <div className="player-col">{match.season.name}</div>
-                  <div className="player-col">{match._count.games}</div>
-
-                  <div className="admin-player-actions">
-                    <Link href={`/matches/${match.id}`} className="chip-button">
-                      상세
-                    </Link>
-
-                    <Link
-                      href={`/admin/matches/${match.id}/edit`}
-                      className="chip-button"
-                    >
-                      수정
-                    </Link>
-
-                    <MatchDeleteButton
-                      matchId={match.id}
-                      matchTitle={match.title}
-                    />
-                  </div>
+        {matches.length === 0 ? (
+          <div className="admin-empty">등록된 내전이 없습니다.</div>
+        ) : (
+          <div className="admin-simple-list admin-simple-match-list">
+            {matches.map((match) => (
+              <article key={match.id} className="admin-simple-list-row admin-simple-match-row">
+                <div className="admin-simple-list-row__main">
+                  <strong className="admin-simple-list-row__title">{match.title}</strong>
+                  <span className="admin-simple-list-row__sub">승리팀 {summarizeWinnerTeam(match.games)}</span>
                 </div>
-              </div>
+                <div className="admin-simple-actions">
+                  <Link href={`/matches/${match.id}`} className="chip-button">상세</Link>
+                  <Link href={`/admin/matches/${match.id}/edit`} className="chip-button">수정</Link>
+                  <MatchDeleteButton matchId={match.id} matchTitle={match.title} />
+                </div>
+              </article>
             ))}
           </div>
+        )}
 
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            basePath="/admin/matches"
-            query={query ? { q: query } : undefined}
-          />
-        </>
-      )}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          basePath="/admin/matches"
+          query={query ? { q: query } : undefined}
+        />
+      </section>
     </main>
   );
+}
+
+function summarizeWinnerTeam(games: Array<{ winnerTeam: string }>) {
+  if (!games.length) return "미정";
+  const blue = games.filter((game) => game.winnerTeam === "BLUE").length;
+  const red = games.filter((game) => game.winnerTeam === "RED").length;
+
+  if (blue === red) return "미정";
+  return blue > red ? `블루 ${blue}:${red}` : `레드 ${red}:${blue}`;
 }

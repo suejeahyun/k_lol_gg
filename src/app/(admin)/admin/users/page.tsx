@@ -164,7 +164,9 @@ export default function AdminUsersPage() {
   };
 
   const handleReject = async (userAccountId: number) => {
-    const reason = window.prompt("거절 사유를 입력하세요. 비워두면 사유 없이 처리됩니다.") ?? "";
+    const reason =
+      window.prompt("거절 사유를 입력하세요. 비워두면 사유 없이 처리됩니다.") ??
+      "";
     const res = await fetch(`/api/admin/users/${userAccountId}/reject`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -195,7 +197,10 @@ export default function AdminUsersPage() {
     }
   };
 
-  const handleRoleChange = async (user: AdminUser, nextRole: "USER" | "ADMIN") => {
+  const handleRoleChange = async (
+    user: AdminUser,
+    nextRole: "USER" | "ADMIN",
+  ) => {
     const message =
       nextRole === "ADMIN"
         ? `${user.userId} 계정을 관리자로 지정하겠습니까?`
@@ -221,7 +226,9 @@ export default function AdminUsersPage() {
   };
 
   const handlePasswordReset = async (user: AdminUser) => {
-    const ok = window.confirm(`${user.userId} 계정의 비밀번호를 임시 비밀번호로 초기화하겠습니까?`);
+    const ok = window.confirm(
+      `${user.userId} 계정의 비밀번호를 임시 비밀번호로 초기화하겠습니까?`,
+    );
     if (!ok) return;
 
     const res = await fetch(`/api/admin/users/${user.id}/password-reset`, {
@@ -233,28 +240,34 @@ export default function AdminUsersPage() {
     const data = await res.json();
 
     if (res.ok) {
-      window.alert(`임시 비밀번호: ${data.tempPassword}\n해당 유저에게 전달 후 로그인 뒤 비밀번호 변경을 안내하세요.`);
+      window.alert(
+        `임시 비밀번호: ${data.tempPassword}\n해당 유저에게 전달 후 로그인 뒤 비밀번호 변경을 안내하세요.`,
+      );
     } else {
       alert(data.message || "비밀번호 초기화 실패");
     }
   };
 
   return (
-    <main className="admin-page" style={{ width: "min(1180px, calc(100vw - 48px))", maxWidth: 1180 }}>
-      <div className="admin-page__header">
+    <main className="admin-page admin-mobile-simple-page admin-users-simple-page">
+      <div className="admin-page__header admin-mobile-simple-header">
         <div>
-          <h1 className="admin-page__title">플레이어 승인 관리</h1>
+          <p className="admin-page__kicker">USER ADMIN</p>
+          <h1 className="admin-page__title">회원 목록</h1>
           <p className="admin-page__description">
-            플레이어 계정 승인, 관리자, 비밀번호 초기화를 관리합니다.
+            이름, 닉네임, 태그와 관리 버튼만 표시합니다.
           </p>
         </div>
       </div>
 
-      <form className="admin-filter-bar" onSubmit={handleSearch}>
+      <form
+        className="admin-filter-bar admin-mobile-simple-filter"
+        onSubmit={handleSearch}
+      >
         <input
           value={searchText}
           onChange={(event) => setSearchText(event.target.value)}
-          placeholder="아이디, 이름, 닉네임, 태그 검색"
+          placeholder="이름, 닉네임, 태그 검색"
           className="admin-input"
         />
 
@@ -274,152 +287,115 @@ export default function AdminUsersPage() {
         </button>
       </form>
 
-      <section className="admin-card">
+      <section className="admin-card admin-mobile-simple-card">
         <div className="admin-section-head">
           <div>
             <h2>회원 목록</h2>
             <p className="admin-muted">
-              총 {pagination.totalCount.toLocaleString("ko-KR")}명 · 현재 {" "}
+              총 {pagination.totalCount.toLocaleString("ko-KR")}명 ·{" "}
               {pagination.page} / {pagination.totalPages}페이지
-              {currentAdmin ? ` · 현재 권한: ${getRoleLabel(currentAdmin.role)}` : ""}
+              {currentAdmin
+                ? ` · 현재 권한: ${getRoleLabel(currentAdmin.role)}`
+                : ""}
             </p>
           </div>
         </div>
 
-        <div
-          className="admin-table-wrap admin-users-compact-wrap"
-          style={{ overflowX: "hidden", maxWidth: "100%" }}
-        >
-          {loading ? (
-            <div className="admin-empty">회원 목록을 불러오는 중입니다.</div>
-          ) : users.length === 0 ? (
-            <div className="admin-empty">조건에 맞는 회원이 없습니다.</div>
-          ) : (
-            <table
-              className="admin-table admin-users-compact-table"
-              style={{ width: "100%", tableLayout: "fixed", fontSize: 12 }}
-            >
-              <colgroup>
-                <col style={{ width: "9%" }} />
-                <col style={{ width: "9%" }} />
-                <col style={{ width: "17%" }} />
-                <col style={{ width: "10%" }} />
-                <col style={{ width: "10%" }} />
-                <col style={{ width: "7%" }} />
-                <col style={{ width: "7%" }} />
-                <col style={{ width: "13%" }} />
-                <col style={{ width: "8%" }} />
-                <col style={{ width: "10%" }} />
-              </colgroup>
-              <thead>
-                <tr>
-                  <th>아이디</th>
-                  <th>이름</th>
-                  <th>닉네임 #태그</th>
-                  <th>최고티어</th>
-                  <th>현재티어</th>
-                  <th>상태</th>
-                  <th>권한</th>
-                  <th>연결</th>
-                  <th>가입</th>
-                  <th>관리</th>
-                </tr>
-              </thead>
+        {loading ? (
+          <div className="admin-empty">회원 목록을 불러오는 중입니다.</div>
+        ) : users.length === 0 ? (
+          <div className="admin-empty">조건에 맞는 회원이 없습니다.</div>
+        ) : (
+          <div className="admin-simple-list admin-simple-user-list">
+            {users.map((user) => {
+              const riotName = formatRiotName(
+                user.player?.nickname,
+                user.player?.tag,
+              );
 
-              <tbody>
-                {users.map((user) => {
-                  const riotName = formatRiotName(user.player?.nickname, user.player?.tag);
+              return (
+                <article
+                  key={user.id}
+                  className="admin-simple-list-row admin-simple-user-row"
+                >
+                  <div className="admin-simple-list-row__main">
+                    <strong className="admin-simple-list-row__title">
+                      {user.player?.name ?? "-"}
+                    </strong>
+                    <span className="admin-simple-list-row__sub">
+                      {riotName}
+                    </span>
+                  </div>
 
-                  return (
-                    <tr key={user.id}>
-                      <td title={user.userId} style={compactCellStyle}>{maskUserId(user.userId)}</td>
-                      <td title={user.player?.name ?? "-"} style={compactCellStyle}>{user.player?.name ?? "-"}</td>
-                      <td title={riotName} style={compactCellStyle}>{riotName}</td>
-                      <td title={formatTier(user.player?.peakTier)} style={compactCellStyle}>{formatTier(user.player?.peakTier)}</td>
-                      <td title={formatTier(user.player?.currentTier)} style={compactCellStyle}>{formatTier(user.player?.currentTier)}</td>
-                      <td><StatusBadge status={user.status} /></td>
-                      <td><span style={badgeStyle}>{getRoleLabel(user.role)}</span></td>
-                      <td title={getConnectionLabel(user)} style={compactCellStyle}>{getConnectionLabel(user)}</td>
-                      <td style={compactCellStyle}>{formatDate(user.createdAt)}</td>
-                      <td>
-                        <div
-                          className="admin-actions"
-                          style={{
-                            display: "flex",
-                            flexWrap: "wrap",
-                            gap: 4,
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
+                  <div className="admin-simple-actions admin-simple-user-actions">
+                    {user.status === "PENDING" ? (
+                      <>
+                        <button
+                          type="button"
+                          className="chip-button"
+                          onClick={() => handleApprove(user.id)}
                         >
-                          {user.status === "PENDING" ? (
-                            <>
-                              <button
-                                type="button"
-                                className="chip-button"
-                                onClick={() => handleApprove(user.id)}
-                              >
-                                승인
-                              </button>
+                          승인
+                        </button>
+                        <button
+                          type="button"
+                          className="chip-button chip-button--danger"
+                          onClick={() => handleReject(user.id)}
+                        >
+                          거절
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        className="chip-button"
+                        onClick={() => handleReset(user.id)}
+                      >
+                        대기
+                      </button>
+                    )}
 
-                              <button
-                                type="button"
-                                className="chip-button chip-button--danger"
-                                onClick={() => handleReject(user.id)}
-                              >
-                                거절
-                              </button>
-                            </>
-                          ) : (
-                            <button
-                              type="button"
-                              className="chip-button"
-                              onClick={() => handleReset(user.id)}
-                            >
-                              대기
-                            </button>
-                          )}
+                    {isSuperAdmin && user.role !== "SUPER_ADMIN" ? (
+                      <>
+                        {user.role === "ADMIN" ? (
+                          <button
+                            type="button"
+                            className="chip-button chip-button--danger"
+                            onClick={() => handleRoleChange(user, "USER")}
+                          >
+                            일반
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            className="chip-button"
+                            onClick={() => handleRoleChange(user, "ADMIN")}
+                            disabled={user.status !== "APPROVED"}
+                            title={
+                              user.status !== "APPROVED"
+                                ? "승인 완료 후 관리자 가능"
+                                : undefined
+                            }
+                          >
+                            관리자
+                          </button>
+                        )}
 
-                          {isSuperAdmin && user.role !== "SUPER_ADMIN" ? (
-                            <>
-                              {user.role === "ADMIN" ? (
-                                <button
-                                  type="button"
-                                  className="chip-button chip-button--danger"
-                                  onClick={() => handleRoleChange(user, "USER")}
-                                >
-                                  일반
-                                </button>
-                              ) : (
-                                <button
-                                  type="button"
-                                  className="chip-button"
-                                  onClick={() => handleRoleChange(user, "ADMIN")}
-                                  disabled={user.status !== "APPROVED"}
-                                  title={user.status !== "APPROVED" ? "승인 완료 후 관리자 가능" : undefined}
-                                >
-                                  관리자
-                                </button>
-                              )}
-
-                              <button
-                                type="button"
-                                className="chip-button"
-                                onClick={() => handlePasswordReset(user)}
-                              >
-                                비번
-                              </button>
-                            </>
-                          ) : null}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
-        </div>
+                        <button
+                          type="button"
+                          className="chip-button"
+                          onClick={() => handlePasswordReset(user)}
+                        >
+                          비번
+                        </button>
+                      </>
+                    ) : null}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
 
         <Pagination
           currentPage={pagination.page}
@@ -500,7 +476,8 @@ function getRoleLabel(role: UserRole) {
 }
 
 function getConnectionLabel(user: AdminUser) {
-  const playerLinked = user.linkStatus === "PLAYER_LINKED" && Boolean(user.player);
+  const playerLinked =
+    user.linkStatus === "PLAYER_LINKED" && Boolean(user.player);
   const discordLinked = Boolean(user.discord?.id);
 
   if (playerLinked && discordLinked) return "모두 연동";

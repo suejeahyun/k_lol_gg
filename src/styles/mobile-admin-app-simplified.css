@@ -488,3 +488,182 @@
     gap: 12px !important;
   }
 }
+
+/* v7: 관리자 모바일 최소 정보 모드 */
+@media (max-width: 768px) {
+  .admin-mobile-nav {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  }
+
+  .admin-mobile-nav__link {
+    min-width: 0 !important;
+  }
+
+  .admin-mobile-simple-page,
+  .admin-matches-simple-page,
+  .admin-users-simple-page {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 18px 16px calc(120px + env(safe-area-inset-bottom)) !important;
+    overflow-x: hidden !important;
+  }
+
+  .admin-mobile-simple-header {
+    display: block !important;
+    margin-bottom: 14px !important;
+  }
+
+  .admin-mobile-simple-header .admin-page__title {
+    font-size: clamp(30px, 9vw, 44px) !important;
+    line-height: 1.05 !important;
+    word-break: keep-all !important;
+    overflow-wrap: normal !important;
+  }
+
+  .admin-mobile-simple-filter {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    margin: 0 0 14px !important;
+  }
+
+  .admin-mobile-simple-filter .admin-input,
+  .admin-mobile-simple-filter .admin-button,
+  .admin-mobile-simple-filter button,
+  .admin-mobile-simple-filter select,
+  .admin-mobile-simple-filter input {
+    width: 100% !important;
+    min-height: 48px !important;
+    font-size: 16px !important;
+  }
+
+  .admin-mobile-simple-card {
+    padding: 18px 14px !important;
+    border-radius: 24px !important;
+    overflow: hidden !important;
+  }
+
+  .admin-simple-list {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .admin-simple-list-row {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    width: 100% !important;
+    padding: 16px !important;
+    border: 1px solid rgba(45, 212, 191, 0.22) !important;
+    border-radius: 20px !important;
+    background: rgba(5, 12, 28, 0.72) !important;
+    box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.08) !important;
+    overflow: hidden !important;
+  }
+
+  .admin-simple-list-row__main {
+    min-width: 0 !important;
+  }
+
+  .admin-simple-list-row__title,
+  .admin-simple-list-row__sub {
+    display: block !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    word-break: keep-all !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .admin-simple-list-row__title {
+    color: #f8fbff !important;
+    font-size: 20px !important;
+    line-height: 1.25 !important;
+    font-weight: 900 !important;
+  }
+
+  .admin-simple-list-row__sub {
+    margin-top: 6px !important;
+    color: #9fb0c9 !important;
+    font-size: 14px !important;
+    line-height: 1.35 !important;
+    font-weight: 800 !important;
+  }
+
+  .admin-simple-actions {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+  }
+
+  .admin-simple-actions .chip-button,
+  .admin-simple-actions button,
+  .admin-simple-actions a {
+    min-height: 40px !important;
+    padding: 0 14px !important;
+    border-radius: 999px !important;
+    white-space: nowrap !important;
+  }
+
+  .admin-recruit-actions {
+    display: none !important;
+  }
+
+  .admin-recruit-log-action,
+  .admin-log-action-pill {
+    display: none !important;
+  }
+
+  .admin-users-compact-table,
+  .admin-users-compact-wrap {
+    display: none !important;
+  }
+
+  .discord-ops-nav-grid,
+  .discord-ops-page .discord-ops-nav,
+  .discord-ops-page .admin-button[href*="/admin/discord/settings"],
+  .discord-ops-page a[href*="/admin/discord/recruits"],
+  .discord-ops-page a[href*="/admin/discord/matches"],
+  .discord-ops-page a[href*="/admin/discord/stats"],
+  .discord-ops-page a[href*="/admin/discord/logs"],
+  .discord-ops-page a[href*="/admin/discord/diagnostics"],
+  .discord-ops-page a[href*="/admin/discord/settings"] {
+    display: none !important;
+  }
+
+  .discord-ops-stat-grid,
+  .discord-ops-two-col {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .discord-ops-stat,
+  .discord-ops-panel,
+  .discord-ops-list-row,
+  .discord-ops-kv > div {
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .discord-ops-stat strong,
+  .discord-ops-stat span,
+  .discord-ops-stat em,
+  .discord-ops-list-row strong,
+  .discord-ops-list-row span,
+  .discord-ops-kv strong,
+  .discord-ops-kv span {
+    white-space: normal !important;
+    word-break: keep-all !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .admin-table th,
+  .admin-table td {
+    white-space: normal !important;
+    word-break: keep-all !important;
+    overflow-wrap: anywhere !important;
+  }
+}
