@@ -1,6 +1,5 @@
 export const dynamic = "force-dynamic";
 
-import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import Pagination from "@/components/Pagination";
 import MatchSearchBox from "./MatchSearchBox";
@@ -204,19 +203,6 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
   const activeSeason =
     seasons.find((season) => season.isActive) ?? seasons[0] ?? null;
 
-  function sortLink(field: SortType) {
-    const nextOrder = sort === field && order === "desc" ? "asc" : "desc";
-    const params = new URLSearchParams();
-
-    if (query) params.set("q", query);
-    if (selectedSeasonId) params.set("seasonId", String(selectedSeasonId));
-
-    params.set("sort", field);
-    params.set("order", nextOrder);
-    params.set("page", "1");
-
-    return `/matches?${params.toString()}`;
-  }
 
   return (
     <main className="page-container matches-page-v2">
@@ -276,21 +262,15 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
           ) : (
             <>
               <div className="match-row-header matches-list-v4__header matches-list-v4__header--simple">
-                <Link
-                  href={sortLink("title")}
-                  className="matches-list-v4__head-title"
-                >
-                  내전명
-                </Link>
+                <div className="matches-list-v4__head-title">내전명</div>
 
                 <div className="matches-list-v4__head-winner">승리팀</div>
               </div>
 
               <div className="match-list matches-list-v4__list">
                 {pagedMatches.map((match) => (
-                  <Link
+                  <article
                     key={match.id}
-                    href={`/matches/${match.id}`}
                     className="match-row-card matches-list-v4__card"
                   >
                     <div className="match-row-grid matches-list-v4__row matches-list-v4__row--simple">
@@ -312,7 +292,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                         </span>
                       </div>
                     </div>
-                  </Link>
+                  </article>
                 ))}
               </div>
 

@@ -51,7 +51,6 @@ export default async function AdminMatchesPage({ searchParams }: AdminMatchesPag
         <div>
           <p className="admin-page__kicker">MATCH ADMIN</p>
           <h1 className="admin-page__title">관리자 내전</h1>
-          <p className="admin-page__description">내전명과 관리 버튼만 표시합니다.</p>
         </div>
       </div>
 
@@ -85,7 +84,13 @@ export default async function AdminMatchesPage({ searchParams }: AdminMatchesPag
                   <span className="admin-simple-list-row__sub">승리팀 {summarizeWinnerTeam(match.games)}</span>
                 </div>
                 <div className="admin-simple-actions">
-                  <Link href={`/matches/${match.id}`} className="chip-button">상세</Link>
+                  <details className="admin-inline-detail">
+                    <summary className="chip-button">상세</summary>
+                    <div className="admin-inline-detail__body">
+                      <span>세트 {match.games.length}개</span>
+                      <span>{summarizeWinnerTeam(match.games)}</span>
+                    </div>
+                  </details>
                   <Link href={`/admin/matches/${match.id}/edit`} className="chip-button">수정</Link>
                   <MatchDeleteButton matchId={match.id} matchTitle={match.title} />
                 </div>

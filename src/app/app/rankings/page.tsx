@@ -15,7 +15,7 @@ export default async function AppRankingsPage() {
         where: { seasonId: season.id, participationCount: { gte: 1 } },
         include: { player: true },
         orderBy: [{ wins: "desc" }, { mvpCount: "desc" }, { totalGames: "desc" }],
-        take: 20,
+        take: 3,
       })
     : [];
 
@@ -33,13 +33,9 @@ export default async function AppRankingsPage() {
         <div className="klol-app-kicker">RANKING</div>
         <h1 className="klol-app-title">랭킹</h1>
         <p className="klol-app-subtitle">{season ? season.name : "활성 시즌 없음"}</p>
-        <div className="klol-app-actions">
-          <a className="klol-app-primary" href="/rankings">상세 랭킹</a>
-          <a className="klol-app-secondary" href="/players">플레이어 검색</a>
-        </div>
       </section>
 
-      <AppSection title="상위 20명" caption="승률 우선">
+      <AppSection title="TOP 3">
         {sorted.length === 0 ? (
           <AppEmpty>표시할 랭킹 데이터가 없습니다.</AppEmpty>
         ) : (
@@ -47,14 +43,14 @@ export default async function AppRankingsPage() {
             {sorted.map((stat, index) => {
               const winRate = stat.totalGames ? Math.round((stat.wins / stat.totalGames) * 1000) / 10 : 0;
               return (
-                <a className="klol-app-list-card klol-app-rank-row" href={`/players/${stat.playerId}`} key={stat.id}>
+                <article className="klol-app-list-card klol-app-rank-row" key={stat.id}>
                   <span className="klol-app-rank-no">{index + 1}</span>
                   <span className="klol-app-list-title">
                     <strong>{stat.player.name || stat.player.nickname}</strong>
                     <span>{stat.player.nickname}#{stat.player.tag}</span>
                   </span>
                   <span className="klol-app-stat-value">{winRate}%</span>
-                </a>
+                </article>
               );
             })}
           </div>

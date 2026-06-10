@@ -24,18 +24,18 @@ export function AppMenuCard({
   href,
   title,
   description,
-  caption = "열기",
+  caption,
 }: {
   href: string;
   title: string;
-  description: string;
+  description?: string;
   caption?: string;
 }) {
   return (
     <Link className="klol-app-card" href={href}>
       <strong>{title}</strong>
-      <span>{description}</span>
-      <small>{caption}</small>
+      {description ? <span>{description}</span> : null}
+      {caption ? <small>{caption}</small> : null}
     </Link>
   );
 }

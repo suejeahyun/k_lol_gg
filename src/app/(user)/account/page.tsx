@@ -47,17 +47,20 @@ export default async function AccountPage() {
       <div className="user-page__header account-page__header">
         <div>
           <h1 className="user-page__title">내 계정</h1>
-          <p className="user-page__description">K-LOL.GG 계정과 Discord 연동 상태를 관리합니다.</p>
-        </div>
+                  </div>
       </div>
 
       <section className="admin-card account-card account-summary-card">
         <div className="admin-section-head account-section-head--mobile-stack">
           <div>
             <h2>계정 정보</h2>
-            <p className="admin-muted">아이디 {user.userId} · 상태 {user.status} · 권한 {user.role}</p>
           </div>
-          <UserLogoutButton />
+          <div className="account-action-row">
+            {(user.role === "ADMIN" || user.role === "SUPER_ADMIN") ? (
+              <Link className="admin-button account-admin-link" href="/admin">관리자 페이지</Link>
+            ) : null}
+            <UserLogoutButton />
+          </div>
         </div>
 
         <div className="account-info-grid">
@@ -80,8 +83,7 @@ export default async function AccountPage() {
         <div className="admin-section-head account-discord-card__head">
           <div>
             <h2>Discord 계정 연동</h2>
-            <p className="admin-muted">음성방 검증, 구인 자동화, 역할 동기화 기준으로 사용됩니다.</p>
-          </div>
+                      </div>
           {user.discordId ? (
             <DiscordUnlinkButton />
           ) : (
@@ -122,7 +124,7 @@ export default async function AccountPage() {
         ) : (
           <div className="account-discord-empty">
             <strong>Discord 계정이 아직 연동되지 않았습니다.</strong>
-            <p>연동하면 음성방 기록과 사이트 계정을 정확히 매칭할 수 있습니다.</p>
+            
           </div>
         )}
       </section>

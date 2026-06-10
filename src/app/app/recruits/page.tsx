@@ -30,11 +30,6 @@ export default async function AppRecruitsPage() {
       <section className="klol-app-hero">
         <div className="klol-app-kicker">RECRUIT</div>
         <h1 className="klol-app-title">구인 현황</h1>
-        <p className="klol-app-subtitle">현재 모집 중인 파티만 앱 카드 형태로 표시합니다.</p>
-        <div className="klol-app-actions">
-          <a className="klol-app-primary" href="/recruit">기존 구인 화면</a>
-          <a className="klol-app-secondary" href="/admin/recruits">관리자 관리</a>
-        </div>
       </section>
 
       <AppSection title="모집 중" caption={`${parties.length}개`}>

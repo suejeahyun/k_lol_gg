@@ -14,6 +14,7 @@ type MobileNavItem = {
 type MobileNavUser = {
   userId: string;
   status: "PENDING" | "APPROVED" | "REJECTED";
+  role?: "USER" | "ADMIN" | "SUPER_ADMIN" | string;
 };
 
 const baseItems: MobileNavItem[] = [
@@ -74,6 +75,15 @@ export default function UserMobileNav() {
         label: "로그인",
         code: "LOG",
         match: ["/login", "/signup", "/forgot-password"],
+      };
+    }
+
+    if ((user.role === "ADMIN" || user.role === "SUPER_ADMIN") && user.status === "APPROVED") {
+      return {
+        href: "/admin",
+        label: "관리자",
+        code: "ADM",
+        match: ["/admin", "/account", "/me"],
       };
     }
 

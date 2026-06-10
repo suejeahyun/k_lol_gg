@@ -117,9 +117,6 @@ export default function AdminHomePage() {
       <div className="admin-dashboard-header">
         <div>
           <h1 className="page-title">관리자 대시보드</h1>
-          <p className="admin-dashboard-subtitle">
-            현재 시즌, 전체 데이터 현황, 최근 내전 및 운영 로그를 확인합니다.
-          </p>
         </div>
         <div className="admin-dashboard-actions admin-dashboard-actions--mobile-primary">
           <a className="admin-button" href="/admin/recruits">구인 현황</a>
@@ -211,9 +208,6 @@ export default function AdminHomePage() {
           <div className="admin-log-section__header">
             <div>
               <h2 className="admin-section-title">최근 오류/실패 기록</h2>
-              <p className="admin-section-description">
-                운영자가 먼저 확인해야 할 최근 실패 로그입니다.
-              </p>
             </div>
           </div>
 
@@ -235,9 +229,6 @@ export default function AdminHomePage() {
         <div className="admin-log-section__header">
           <div>
             <h2 className="admin-section-title">전체 로그</h2>
-            <p className="admin-section-description">
-              관리자 페이지에서 발생한 주요 작업 기록입니다.
-            </p>
           </div>
 
           <div className="admin-log-count">

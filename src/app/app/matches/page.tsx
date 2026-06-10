@@ -24,11 +24,6 @@ export default async function AppMatchesPage() {
       <section className="klol-app-hero">
         <div className="klol-app-kicker">MATCHES</div>
         <h1 className="klol-app-title">최근 내전</h1>
-        <p className="klol-app-subtitle">최근 등록된 내전을 앱 카드로 확인합니다.</p>
-        <div className="klol-app-actions">
-          <a className="klol-app-primary" href="/matches">전체 목록</a>
-          <a className="klol-app-secondary" href="/admin/matches/new">내전 등록</a>
-        </div>
       </section>
 
       <AppSection title="최근 20개">
@@ -37,7 +32,7 @@ export default async function AppMatchesPage() {
         ) : (
           <div className="klol-app-list">
             {matches.map((match) => (
-              <a className="klol-app-list-card" href={`/matches/${match.id}`} key={match.id}>
+              <article className="klol-app-list-card" key={match.id}>
                 <div className="klol-app-list-top">
                   <div className="klol-app-list-title">
                     <strong>{match.title}</strong>
@@ -45,7 +40,7 @@ export default async function AppMatchesPage() {
                   </div>
                   <span className="klol-app-badge klol-app-badge--warn">{match.games.length}세트</span>
                 </div>
-              </a>
+              </article>
             ))}
           </div>
         )}

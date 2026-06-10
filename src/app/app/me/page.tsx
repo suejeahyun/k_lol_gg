@@ -1,24 +1,21 @@
 import { prisma } from "@/lib/prisma/client";
-import { requireApprovedUser } from "@/lib/auth/session";
+import { getCurrentUser } from "@/lib/auth/session";
 import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
 import { AppMenuCard, AppSection } from "@/components/app-mobile/AppCards";
 
 export const dynamic = "force-dynamic";
 
 export default async function AppMePage() {
-  let user: Awaited<ReturnType<typeof requireApprovedUser>> | null = null;
+  let user: Awaited<ReturnType<typeof getCurrentUser>> | null = null;
   let player: Awaited<ReturnType<typeof prisma.player.findUnique>> | null = null;
   let errorMessage = "";
 
   try {
-    user = await requireApprovedUser();
+    user = await getCurrentUser();
+    if (!user) throw new Error("UNAUTHORIZED");
     player = await prisma.player.findUnique({ where: { userAccountId: user.userAccountId } });
   } catch (error) {
-    if (error instanceof Error && error.message === "NOT_APPROVED") {
-      errorMessage = "관리자 승인 후 이용 가능합니다.";
-    } else {
-      errorMessage = "로그인이 필요합니다.";
-    }
+    errorMessage = "로그인이 필요합니다.";
   }
 
   return (
@@ -32,8 +29,7 @@ export default async function AppMePage() {
             : errorMessage || "계정 정보를 확인합니다."}
         </p>
         <div className="klol-app-actions">
-          <a className="klol-app-primary" href={user ? "/account" : "/login"}>{user ? "계정 관리" : "로그인"}</a>
-          <a className="klol-app-secondary" href="/signup">회원가입</a>
+          <a className="klol-app-primary" href={user ? ((user.role === "ADMIN" || user.role === "SUPER_ADMIN") ? "/admin" : "/account") : "/login"}>{user ? ((user.role === "ADMIN" || user.role === "SUPER_ADMIN") ? "관리자" : "계정") : "로그인"}</a>
         </div>
       </section>
 
@@ -54,12 +50,13 @@ export default async function AppMePage() {
         </div>
       </AppSection>
 
-      <AppSection title="바로가기">
+      <AppSection title="메뉴">
         <div className="klol-app-grid">
-          <AppMenuCard href="/account" title="계정/Discord" description="계정 연결 상태와 Discord 연동 관리" />
-          <AppMenuCard href="/participation" title="참가 신청" description="시즌 참가 신청 및 상태 확인" />
-          <AppMenuCard href="/balance" title="팀 밸런스" description="내전 팀 밸런스 도구로 이동" />
-          <AppMenuCard href="/community" title="커뮤니티" description="게시판과 건의사항 확인" />
+          {(user?.role === "ADMIN" || user?.role === "SUPER_ADMIN") ? (
+            <AppMenuCard href="/admin" title="관리자 페이지" />
+          ) : (
+            <AppMenuCard href="/account" title="계정" />
+          )}
         </div>
       </AppSection>
     </AppMobileShell>

@@ -1,10 +1,8 @@
 export const dynamic = "force-dynamic";
 
-import Link from "next/link";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma/client";
 import RankingSeasonFilter from "@/components/RankingSeasonFilter";
-import Pagination from "@/components/Pagination";
 
 type RankingsPageProps = {
   searchParams: Promise<{
@@ -141,9 +139,8 @@ function TopRankingCard({
       ) : (
         <div className="ranking-top-card__list">
           {players.map((player, index) => (
-            <Link
+            <article
               key={`${title}-${player.playerId}`}
-              href={`/players/${player.playerId}`}
               className={`ranking-top-player ranking-top-player--${index + 1}`}
             >
               <div className="ranking-top-player__rank">
@@ -172,7 +169,7 @@ function TopRankingCard({
                   ) : null}
                 </div>
               </div>
-            </Link>
+            </article>
           ))}
         </div>
       )}
@@ -343,16 +340,15 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
           ) : (
             <div className="ranking-search-list">
               {searchedRankings.slice(0, 10).map((player) => (
-                <Link
+                <article
                   key={player.playerId}
-                  href={`/players/${player.playerId}`}
                   className="ranking-search-card"
                 >
                   <strong>{player.rank}등</strong>
                   <span>{player.name}</span>
                   <small>{player.nickname}#{player.tag}</small>
                   <em>승률 {formatPercent(player.winRate)} · 참여 {player.participationCount}회 · MVP {player.mvpCount}회</em>
-                </Link>
+                </article>
               ))}
             </div>
           )}
