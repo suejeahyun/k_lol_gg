@@ -199,7 +199,30 @@ export default function MyPlayerPage() {
   }
 
   if (!player) {
-    return <div className="admin-empty">플레이어 정보가 없습니다.</div>;
+    return (
+      <main className="user-page account-page account-page--compact my-player-empty-page">
+        <section className="admin-card account-card my-player-empty-card">
+          <div className="admin-section-head">
+            <div>
+              <h1>로그인/계정 확인이 먼저 필요합니다</h1>
+              <p className="admin-muted">
+                내 플레이어 정보는 승인된 계정과 플레이어가 연결된 뒤 표시됩니다.
+                먼저 로그인 상태와 계정 연결 상태를 확인하세요.
+              </p>
+            </div>
+          </div>
+
+          <div className="my-player-empty-actions">
+            <Link className="admin-button" href="/account">
+              계정 확인
+            </Link>
+            <Link className="admin-button admin-button--ghost" href="/login?next=/account">
+              로그인
+            </Link>
+          </div>
+        </section>
+      </main>
+    );
   }
 
   return (

@@ -573,3 +573,345 @@
     gap: 10px !important;
   }
 }
+
+/* Mobile full page rebuild v4: admin dashboard and account/login entry fixes. */
+@media (max-width: 768px) {
+  .app-shell--admin .page-container,
+  .app-shell--admin .admin-page,
+  .app-shell--admin .user-page,
+  .app-shell--admin .account-page {
+    box-sizing: border-box;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .app-shell--admin .admin-dashboard-header {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+    width: 100% !important;
+    margin: 0 0 18px !important;
+  }
+
+  .app-shell--admin .admin-dashboard-subtitle {
+    max-width: 100% !important;
+    margin-top: 10px !important;
+    color: rgba(203, 213, 225, 0.72) !important;
+    font-size: 14px !important;
+    line-height: 1.65 !important;
+    word-break: keep-all !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .app-shell--admin .admin-dashboard-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+    width: 100% !important;
+    justify-content: stretch !important;
+  }
+
+  .app-shell--admin .admin-dashboard-actions > :first-child {
+    grid-column: 1 / -1;
+  }
+
+  .app-shell--admin .admin-button,
+  .app-shell--admin .btn-primary,
+  .app-shell--admin .auth-button,
+  .app-shell--admin button,
+  .app-shell--admin a.admin-button {
+    max-width: 100% !important;
+    min-width: 0 !important;
+    min-height: 44px !important;
+    justify-content: center !important;
+    white-space: normal !important;
+    word-break: keep-all !important;
+    overflow-wrap: anywhere !important;
+    text-align: center !important;
+    line-height: 1.2 !important;
+  }
+
+  .app-shell--admin .admin-summary-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    width: 100% !important;
+    margin: 0 0 18px !important;
+  }
+
+  .app-shell--admin .admin-summary-card {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-areas:
+      "label value"
+      "meta value" !important;
+    align-items: center !important;
+    gap: 6px 12px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 16px !important;
+    overflow: hidden !important;
+    border-radius: 18px !important;
+  }
+
+  .app-shell--admin .admin-summary-card__label {
+    grid-area: label;
+    margin: 0 !important;
+    color: #22d3ee !important;
+    font-size: 12px !important;
+    font-weight: 950 !important;
+    letter-spacing: 0.02em !important;
+    white-space: normal !important;
+  }
+
+  .app-shell--admin .admin-summary-card__value {
+    grid-area: value;
+    min-width: 0 !important;
+    max-width: 155px !important;
+    color: #f8fafc !important;
+    font-size: clamp(24px, 8vw, 34px) !important;
+    line-height: 1.05 !important;
+    text-align: right !important;
+    word-break: keep-all !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .app-shell--admin .admin-summary-card__value--small {
+    font-size: clamp(18px, 5.4vw, 24px) !important;
+  }
+
+  .app-shell--admin .admin-summary-card__meta {
+    grid-area: meta;
+    margin: 0 !important;
+    color: rgba(203, 213, 225, 0.68) !important;
+    font-size: 12px !important;
+    line-height: 1.45 !important;
+    word-break: keep-all !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .app-shell--admin .admin-log-section {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin-top: 14px !important;
+    padding: 16px !important;
+    overflow: hidden !important;
+    border-radius: 18px !important;
+  }
+
+  .app-shell--admin .admin-log-section__header,
+  .app-shell--admin .admin-section-head,
+  .app-shell--admin .admin-panel__head,
+  .app-shell--admin .admin-card__head {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .app-shell--admin .admin-section-title,
+  .app-shell--admin .admin-section-head h2,
+  .app-shell--admin .admin-card h2,
+  .app-shell--admin .admin-panel h2 {
+    font-size: clamp(19px, 6vw, 26px) !important;
+    line-height: 1.15 !important;
+    word-break: keep-all !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .app-shell--admin .admin-section-description,
+  .app-shell--admin .admin-muted,
+  .app-shell--admin .admin-card p,
+  .app-shell--admin .admin-panel p {
+    color: rgba(203, 213, 225, 0.68) !important;
+    font-size: 13px !important;
+    line-height: 1.55 !important;
+    word-break: keep-all !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .app-shell--admin .admin-log-count {
+    width: fit-content !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+  }
+
+  .app-shell--admin .admin-log-list {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  .app-shell--admin .admin-log-item {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 14px !important;
+    overflow: hidden !important;
+    align-items: start !important;
+  }
+
+  .app-shell--admin .admin-log-item__left {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .app-shell--admin .admin-log-item__type {
+    display: inline-flex !important;
+    width: fit-content !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+    line-height: 1.2 !important;
+  }
+
+  .app-shell--admin .admin-log-item__message,
+  .app-shell--admin .admin-log-item__date {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    white-space: normal !important;
+    word-break: keep-all !important;
+    overflow-wrap: anywhere !important;
+    line-height: 1.55 !important;
+  }
+
+  .app-shell--admin .admin-log-item__date {
+    color: rgba(148, 163, 184, 0.82) !important;
+    text-align: left !important;
+  }
+
+  .app-shell--admin .admin-filter-bar,
+  .app-shell--admin .admin-filter-bar--grid,
+  .app-shell--admin .admin-recruit-actions,
+  .app-shell--admin .admin-actions,
+  .app-shell--admin .page-actions,
+  .app-shell--admin .admin-form__actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    width: 100% !important;
+    justify-content: stretch !important;
+  }
+
+  .app-shell--admin .admin-input,
+  .app-shell--admin .admin-select,
+  .app-shell--admin .admin-textarea,
+  .app-shell--admin input,
+  .app-shell--admin select,
+  .app-shell--admin textarea {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    font-size: 16px !important;
+  }
+
+  .app-shell--admin .admin-table-wrap {
+    border-radius: 16px !important;
+  }
+
+  .app-shell--admin .admin-table,
+  .app-shell--admin table {
+    min-width: 720px !important;
+  }
+
+  .app-shell--admin .admin-floating-logout {
+    min-width: 0 !important;
+    min-height: 40px !important;
+    padding: 0 14px !important;
+    border-radius: 14px !important;
+    font-size: 13px !important;
+  }
+
+  .app-shell--user .account-page,
+  .app-shell--user .my-player-page {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .app-shell--user .account-info-grid,
+  .app-shell--user .discord-profile-meta,
+  .app-shell--user .discord-profile-card,
+  .app-shell--user .my-community-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    width: 100% !important;
+  }
+
+  .app-shell--user .admin-empty {
+    display: grid !important;
+    place-items: center !important;
+    min-height: calc(100dvh - 220px) !important;
+    padding: 24px !important;
+    color: rgba(226, 232, 240, 0.76) !important;
+    text-align: center !important;
+    word-break: keep-all !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .app-shell--admin .admin-dashboard-actions {
+    grid-template-columns: 1fr !important;
+  }
+
+  .app-shell--admin .admin-summary-card {
+    grid-template-columns: 1fr !important;
+    grid-template-areas:
+      "label"
+      "value"
+      "meta" !important;
+  }
+
+  .app-shell--admin .admin-summary-card__value {
+    max-width: 100% !important;
+    text-align: left !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-shell--user .my-player-empty-card {
+    display: grid !important;
+    gap: 16px !important;
+    width: 100% !important;
+    padding: 20px !important;
+    border-radius: 20px !important;
+  }
+
+  .app-shell--user .my-player-empty-card h1 {
+    margin: 0 !important;
+    font-size: clamp(24px, 7vw, 34px) !important;
+    line-height: 1.12 !important;
+    word-break: keep-all !important;
+  }
+
+  .app-shell--user .my-player-empty-actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  .app-shell--user .my-player-empty-actions .admin-button {
+    justify-content: center !important;
+    min-height: 46px !important;
+    text-align: center !important;
+    text-decoration: none !important;
+  }
+}

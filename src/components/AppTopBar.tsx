@@ -101,8 +101,8 @@ export default function AppTopBar({
       {mode === "user" ? (
         <div className="app-topbar__mobile-auth" aria-label="모바일 회원 메뉴">
           {user ? (
-            <Link href="/me/player" className="app-topbar__auth-link app-topbar__auth-link--primary">
-              내 정보
+            <Link href="/account" className="app-topbar__auth-link app-topbar__auth-link--primary">
+              계정
             </Link>
           ) : (
             <>
