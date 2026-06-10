@@ -125,6 +125,32 @@ export default function AdminHomePage() {
         </div>
       </div>
 
+
+      <section className="admin-mobile-link-section">
+        <h2 className="admin-section-title">관리 메뉴</h2>
+        <div className="admin-mobile-link-grid">
+          <a className="admin-mobile-link-card" href="/admin/recruits">구인 현황</a>
+          <a className="admin-mobile-link-card" href="/admin/matches">내전 관리</a>
+          <a className="admin-mobile-link-card" href="/admin/discord">Discord 운영</a>
+          <a className="admin-mobile-link-card" href="/admin/users">회원 목록</a>
+          <a className="admin-mobile-link-card" href="/admin/player-approvals">플레이어 승인</a>
+          <a className="admin-mobile-link-card" href="/admin/players">플레이어</a>
+          <a className="admin-mobile-link-card" href="/admin/balance">팀 밸런스</a>
+          <a className="admin-mobile-link-card" href="/admin/balance/drafts">AI 밸런스</a>
+          <a className="admin-mobile-link-card" href="/admin/balance-ai">K-LOL MMR</a>
+          <a className="admin-mobile-link-card" href="/admin/operation-forms">운영 신청</a>
+          <a className="admin-mobile-link-card" href="/admin/progress/event">이벤트</a>
+          <a className="admin-mobile-link-card" href="/admin/progress/destruction">멸망전</a>
+          <a className="admin-mobile-link-card" href="/admin/champions">챔피언</a>
+          <a className="admin-mobile-link-card" href="/admin/seasons">시즌</a>
+          <a className="admin-mobile-link-card" href="/admin/notices">공지</a>
+          <a className="admin-mobile-link-card" href="/admin/community/headlines">말머리</a>
+          <a className="admin-mobile-link-card" href="/admin/images">이미지</a>
+          <a className="admin-mobile-link-card" href="/admin/highlights">하이라이트</a>
+          <a className="admin-mobile-link-card" href="/admin/logs">관리자 로그</a>
+        </div>
+      </section>
+
       <section className="admin-summary-grid">
         <div className="admin-summary-card">
           <div className="admin-summary-card__label">현재 시즌</div>

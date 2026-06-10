@@ -12,10 +12,10 @@ export default async function AppHomePage() {
   ]);
 
   return (
-    <AppMobileShell subtitle="내전·구인·랭킹 앱 화면">
+    <AppMobileShell subtitle="K-LOL.GG APP">
       <section className="klol-app-hero">
         <div className="klol-app-kicker">K-LOL.GG APP</div>
-        <h1 className="klol-app-title">필요한 기능만 빠르게 보는 앱 화면</h1>
+        <h1 className="klol-app-title">K-LOL.GG APP</h1>
       </section>
 
       <AppSection title="현재 상태">

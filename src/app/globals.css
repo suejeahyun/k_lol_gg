@@ -51,6 +51,7 @@
 @import url("../styles/mobile-admin-app-simplified.css");
 @import url("../styles/mobile-admin-app-v8.css");
 @import url("../styles/mobile-unified-v9.css");
+@import url("../styles/mobile-app-admin-v10.css");
 /* Fix: pick/ban solo-rank refresh panel */
 .ai-solo-sync {
   display: flex;

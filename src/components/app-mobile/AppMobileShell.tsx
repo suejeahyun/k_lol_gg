@@ -3,7 +3,7 @@ import { AppBottomNav } from "./AppBottomNav";
 
 export function AppMobileShell({
   title = "K-LOL.GG",
-  subtitle = "내전 운영 앱",
+  subtitle = "K-LOL.GG APP",
   children,
 }: {
   title?: string;
@@ -17,9 +17,6 @@ export function AppMobileShell({
           <Link className="klol-app-brand" href="/app" aria-label="K-LOL.GG 앱 홈">
             <strong>{title}</strong>
             <span>{subtitle}</span>
-          </Link>
-          <Link className="klol-app-header-action" href="/">
-            PC 화면
           </Link>
         </header>
         {children}
