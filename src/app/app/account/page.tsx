@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -158,11 +157,11 @@ export default async function AppAccountPage() {
             {myPosts.length > 0 ? (
               <div className="klol-app-list">
                 {myPosts.map((post) => (
-                  <Link key={post.id} className="klol-app-list-item" href={`/community/${post.id}`}>
+                  <div key={post.id} className="klol-app-list-item">
                     <span>{formatCommunityType(post.type)}</span>
                     <strong>{post.title}</strong>
                     <small>조회 {post.viewCount} · 댓글 {post._count.comments} · 좋아요 {post._count.likes}</small>
-                  </Link>
+                  </div>
                 ))}
               </div>
             ) : (
@@ -175,11 +174,11 @@ export default async function AppAccountPage() {
             {myComments.length > 0 ? (
               <div className="klol-app-list">
                 {myComments.map((comment) => (
-                  <Link key={comment.id} className="klol-app-list-item" href={`/community/${comment.post.id}`}>
+                  <div key={comment.id} className="klol-app-list-item">
                     <span>{comment.post.title}</span>
                     <strong>{comment.content.length > 48 ? `${comment.content.slice(0, 48)}...` : comment.content}</strong>
                     <small>{formatDate(comment.createdAt)}</small>
-                  </Link>
+                  </div>
                 ))}
               </div>
             ) : (
