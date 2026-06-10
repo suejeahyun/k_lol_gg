@@ -3,10 +3,6 @@ export const revalidate = 0;
 
 import type { Prisma } from "@prisma/client";
 import Pagination from "@/components/Pagination";
-import AdminRecruitAutoResetSettings from "./AdminRecruitAutoResetSettings";
-import AdminRecruitNumberResetButton from "./AdminRecruitNumberResetButton";
-import AdminRecruitResetAllButton from "./AdminRecruitResetAllButton";
-import { getRecruitAutoResetSettings } from "@/lib/kakao/recruit-auto-reset";
 import { prisma } from "@/lib/prisma/client";
 import {
   buildGameInfoText,
@@ -151,7 +147,7 @@ export default async function AdminRecruitsPage({ searchParams }: PageProps) {
   const where = buildPartyWhere(resolvedSearchParams);
   const logWhere = buildLogWhere(resolvedSearchParams);
 
-  const [totalCount, activeCount, fullCount, logTotalCount, parties, recentLogs, autoResetSettings] = await Promise.all([
+  const [totalCount, activeCount, fullCount, logTotalCount, parties, recentLogs] = await Promise.all([
     prisma.recruitParty.count({ where }),
     prisma.recruitParty.count({ where: { status: "IN_PROGRESS" } }),
     prisma.recruitParty.count({
@@ -178,7 +174,6 @@ export default async function AdminRecruitsPage({ searchParams }: PageProps) {
       skip: (safeLogPage - 1) * LOG_PAGE_SIZE,
       take: LOG_PAGE_SIZE,
     }),
-    getRecruitAutoResetSettings(),
   ]);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
@@ -227,18 +222,9 @@ export default async function AdminRecruitsPage({ searchParams }: PageProps) {
         <div className="admin-section-head">
           <div>
             <h2>진행 중 구인글</h2>
-            <p className="admin-muted">
-              총 {totalCount.toLocaleString("ko-KR")}개 · 번호 중복은 날짜/회차로 구분합니다. 자동 초기화는 진행 중 구인글이 0개일 때만 동작합니다.
-            </p>
+
           </div>
-          <div className="admin-recruit-actions">
-            <AdminRecruitAutoResetSettings
-              initialEnabled={autoResetSettings.enabled}
-              initialIdleHours={autoResetSettings.idleHours}
-            />
-            <AdminRecruitNumberResetButton />
-            <AdminRecruitResetAllButton />
-          </div>
+
         </div>
 
         <div className="admin-table-wrap">

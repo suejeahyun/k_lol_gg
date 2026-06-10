@@ -69,7 +69,7 @@ export default async function AppRankingsPage() {
 
   const stats = season
     ? await prisma.playerSeasonStat.findMany({
-        where: { seasonId: season.id, participationCount: { gte: 1 } },
+        where: { seasonId: season.id, participationCount: { gte: 10 } },
         include: { player: true },
       })
     : [];
@@ -97,10 +97,10 @@ export default async function AppRankingsPage() {
       <section className="klol-app-hero">
         <div className="klol-app-kicker">RANKING</div>
         <h1 className="klol-app-title">랭킹 TOP 3</h1>
-        <p className="klol-app-subtitle">{season ? season.name : "활성 시즌 없음"}</p>
+        <p className="klol-app-subtitle">내전 10회 이상 참여 기준</p>
       </section>
 
-      <RankingMiniList title="승률 TOP 3" rows={topWinRate} metric={formatWinRate} />
+      <RankingMiniList title="승률 TOP 3" rows={topWinRate} metric={(stat) => `${formatWinRate(stat)} · ${stat.participationCount}회`} />
       <RankingMiniList title="최다참여 TOP 3" rows={topParticipation} metric={(stat) => `${stat.participationCount}회`} />
       <RankingMiniList title="MVP TOP 3" rows={topMvp} metric={(stat) => `${stat.mvpCount}회`} />
     </AppMobileShell>
