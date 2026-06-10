@@ -30,10 +30,10 @@ export default async function AppAdminPage() {
     <AppMobileShell subtitle="K-LOL.GG APP" mode="admin">
       <section className="klol-app-hero">
         <div className="klol-app-kicker">ADMIN</div>
-        <h1 className="klol-app-title">전체 로그</h1>
+        <h1 className="klol-app-title">관리자 HOME</h1>
       </section>
 
-      <AppSection title="최근 로그">
+      <AppSection title="전체 로그">
         {logs.length === 0 ? (
           <AppEmpty>표시할 로그가 없습니다.</AppEmpty>
         ) : (

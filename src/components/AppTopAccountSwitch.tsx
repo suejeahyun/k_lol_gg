@@ -78,7 +78,7 @@ export default function AppTopAccountSwitch({
   if (!checked || !isAdmin(user)) return null;
 
   return (
-    <Link href="/admin" className="app-topbar__switch-link app-topbar__switch-link--admin">
+    <Link href="/app/admin" className="app-topbar__switch-link app-topbar__switch-link--admin">
       관리자 HOME
     </Link>
   );
