@@ -12,8 +12,8 @@ export function AppInstallActions() {
   const [message, setMessage] = useState("");
 
   const appUrl = useMemo(() => {
-    if (typeof window === "undefined") return "https://k-lol-gg.vercel.app/app/install";
-    return `${window.location.origin}/app/install`;
+    if (typeof window === "undefined") return "https://k-lol-gg.vercel.app/install";
+    return `${window.location.origin}/install`;
   }, []);
 
   useEffect(() => {

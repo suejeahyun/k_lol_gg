@@ -568,3 +568,325 @@
   color: #facc15;
   text-align: center;
 }
+
+/* K-LOL.GG public install guide */
+.klol-install-page {
+  min-height: 100dvh;
+  padding: 18px 14px 28px;
+  background:
+    radial-gradient(circle at top left, rgba(250, 204, 21, 0.18), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.14), transparent 30%),
+    #050816;
+  color: #f8fafc;
+}
+
+.klol-install-hero-card,
+.klol-install-panel,
+.klol-install-actions-panel {
+  width: min(100%, 560px);
+  margin: 0 auto 14px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 26px;
+  background: rgba(15, 23, 42, 0.88);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.32);
+}
+
+.klol-install-hero-card {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  padding: 22px 16px 16px;
+  text-align: center;
+}
+
+.klol-install-app-mark {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  border: 1px solid rgba(250, 204, 21, 0.34);
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.96), rgba(245, 158, 11, 0.92));
+  color: #111827;
+  font-size: 30px;
+  font-weight: 1000;
+  letter-spacing: -0.08em;
+}
+
+.klol-install-kicker,
+.klol-install-lead,
+.klol-install-panel-head p,
+.klol-install-step-copy p,
+.klol-install-step-copy small,
+.klol-install-warning-list p,
+.klol-install-message {
+  margin: 0;
+}
+
+.klol-install-kicker {
+  color: #facc15;
+  font-size: 12px;
+  font-weight: 1000;
+  letter-spacing: 0.12em;
+}
+
+.klol-install-hero-card h1,
+.klol-install-panel h2 {
+  margin: 0;
+  letter-spacing: -0.04em;
+}
+
+.klol-install-hero-card h1 {
+  font-size: 26px;
+  font-weight: 1000;
+}
+
+.klol-install-lead,
+.klol-install-panel-head p {
+  color: rgba(226, 232, 240, 0.82);
+  font-size: 13px;
+  font-weight: 850;
+  line-height: 1.55;
+}
+
+.klol-install-select {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 6px;
+  padding: 5px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 18px;
+  background: rgba(2, 6, 23, 0.54);
+}
+
+.klol-install-select button,
+.klol-install-primary,
+.klol-install-secondary {
+  min-height: 46px;
+  border: 0;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 1000;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.klol-install-select button {
+  background: transparent;
+  color: rgba(203, 213, 225, 0.78);
+}
+
+.klol-install-select button.is-active {
+  background: #facc15;
+  color: #111827;
+  box-shadow: 0 10px 22px rgba(250, 204, 21, 0.18);
+}
+
+.klol-install-panel {
+  padding: 15px;
+}
+
+.klol-install-panel-head {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+
+.klol-install-panel-head span {
+  justify-self: start;
+  padding: 5px 9px;
+  border: 1px solid rgba(250, 204, 21, 0.24);
+  border-radius: 999px;
+  background: rgba(250, 204, 21, 0.11);
+  color: #facc15;
+  font-size: 11px;
+  font-weight: 1000;
+}
+
+.klol-install-panel h2 {
+  font-size: 20px;
+  font-weight: 1000;
+}
+
+.klol-install-photo-list {
+  display: grid;
+  gap: 12px;
+}
+
+.klol-install-photo-card {
+  display: grid;
+  grid-template-columns: 108px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 22px;
+  background: rgba(2, 6, 23, 0.42);
+}
+
+.klol-install-phone-shot {
+  display: grid;
+  gap: 5px;
+  min-height: 152px;
+  padding: 8px;
+  border: 2px solid rgba(226, 232, 240, 0.16);
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.84));
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.8), 0 12px 26px rgba(0, 0, 0, 0.32);
+}
+
+.klol-install-phone-top {
+  justify-self: center;
+  width: 34px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.36);
+}
+
+.klol-install-phone-screen {
+  position: relative;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  min-height: 126px;
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, rgba(250, 204, 21, 0.18), transparent 42%),
+    rgba(15, 23, 42, 0.9);
+  text-align: center;
+}
+
+.klol-install-step-number {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 999px;
+  background: #facc15;
+  color: #111827;
+  font-size: 12px;
+  font-weight: 1000;
+}
+
+.klol-install-phone-screen strong {
+  color: #facc15;
+  font-size: 31px;
+  font-weight: 1000;
+  letter-spacing: -0.08em;
+}
+
+.klol-install-phone-screen em {
+  max-width: 78px;
+  color: rgba(248, 250, 252, 0.92);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 950;
+  line-height: 1.2;
+}
+
+.klol-install-step-copy {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.klol-install-step-copy b {
+  color: #f8fafc;
+  font-size: 14px;
+  font-weight: 1000;
+  letter-spacing: -0.02em;
+}
+
+.klol-install-step-copy p {
+  color: rgba(226, 232, 240, 0.86);
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1.5;
+}
+
+.klol-install-step-copy small {
+  padding: 8px 9px;
+  border-radius: 12px;
+  background: rgba(250, 204, 21, 0.08);
+  color: rgba(254, 243, 199, 0.92);
+  font-size: 11px;
+  font-weight: 850;
+  line-height: 1.42;
+}
+
+.klol-install-warning-panel {
+  border-color: rgba(250, 204, 21, 0.22);
+  background: rgba(49, 46, 12, 0.42);
+}
+
+.klol-install-warning-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.klol-install-warning-list p {
+  padding: 10px 11px;
+  border: 1px solid rgba(250, 204, 21, 0.16);
+  border-radius: 14px;
+  background: rgba(2, 6, 23, 0.3);
+  color: rgba(254, 243, 199, 0.92);
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1.5;
+}
+
+.klol-install-actions-panel {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+}
+
+.klol-install-primary,
+.klol-install-secondary {
+  display: grid;
+  place-items: center;
+  padding: 0 14px;
+}
+
+.klol-install-primary {
+  background: #facc15;
+  color: #111827;
+}
+
+.klol-install-secondary {
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(15, 23, 42, 0.85);
+  color: #e2e8f0;
+}
+
+.klol-install-message {
+  color: #facc15;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.45;
+  text-align: center;
+}
+
+@media (max-width: 380px) {
+  .klol-install-photo-card {
+    grid-template-columns: 94px minmax(0, 1fr);
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .klol-install-phone-shot {
+    min-height: 138px;
+  }
+
+  .klol-install-phone-screen {
+    min-height: 112px;
+  }
+}
