@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
 import { AppEmpty, AppSection } from "@/components/app-mobile/AppCards";
@@ -32,7 +33,7 @@ export default async function AppMatchesPage() {
         ) : (
           <div className="klol-app-list">
             {matches.map((match) => (
-              <article className="klol-app-list-card" key={match.id}>
+              <Link className="klol-app-list-card" href={`/app/matches/${match.id}`} key={match.id}>
                 <div className="klol-app-list-top">
                   <div className="klol-app-list-title">
                     <strong>{match.title}</strong>
@@ -40,7 +41,7 @@ export default async function AppMatchesPage() {
                   </div>
                   <span className="klol-app-badge klol-app-badge--warn">{match.games.length}세트</span>
                 </div>
-              </article>
+              </Link>
             ))}
           </div>
         )}

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma/client";
 import { requireAdminRequest } from "@/lib/auth/requireAdmin";
 import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
 import { AppEmpty, AppSection } from "@/components/app-mobile/AppCards";
+import { AppAdminUserActions } from "@/components/app-mobile/AppAdminUserActions";
 
 export const dynamic = "force-dynamic";
 
@@ -60,6 +61,11 @@ export default async function AppAdminUsersPage() {
                     <strong>{user.discordServerNickname ? "연동" : "미연동"}</strong>
                   </div>
                 </div>
+                <AppAdminUserActions
+                  userAccountId={user.id}
+                  status={user.status}
+                  canApprove={Boolean(user.player)}
+                />
               </article>
             ))}
           </div>

@@ -381,3 +381,105 @@
   display: grid;
   gap: 10px;
 }
+
+.klol-app-user-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.klol-app-mini-button {
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 13px;
+  background: rgba(15, 23, 42, 0.82);
+  color: #e2e8f0;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.klol-app-mini-button--primary {
+  border-color: rgba(250, 204, 21, 0.38);
+  background: linear-gradient(135deg, #facc15, #f97316);
+  color: #111827;
+}
+
+.klol-app-mini-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.klol-app-action-message {
+  flex-basis: 100%;
+  margin: 0;
+  color: rgba(203, 213, 225, 0.75);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.klol-app-action-message--warn {
+  color: #fbbf24;
+}
+
+.klol-app-participant-list {
+  display: grid;
+  gap: 6px;
+}
+
+.klol-app-participant-row {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  min-height: 36px;
+  padding: 8px 9px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 13px;
+  background: rgba(2, 6, 23, 0.36);
+}
+
+.klol-app-participant-row[data-team="BLUE"] {
+  border-left: 3px solid rgba(59, 130, 246, 0.82);
+}
+
+.klol-app-participant-row[data-team="RED"] {
+  border-left: 3px solid rgba(239, 68, 68, 0.82);
+}
+
+.klol-app-participant-row span,
+.klol-app-participant-row em,
+.klol-app-participant-row b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.klol-app-participant-row span {
+  color: #facc15;
+  font-size: 11px;
+  font-weight: 950;
+}
+
+.klol-app-participant-row strong {
+  overflow: hidden;
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.klol-app-participant-row em {
+  color: rgba(203, 213, 225, 0.76);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.klol-app-participant-row b {
+  color: #e2e8f0;
+  font-size: 11px;
+  font-weight: 950;
+}
