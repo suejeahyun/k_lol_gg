@@ -308,6 +308,8 @@ model PlayerSeasonStat {
   @@index([seasonId, totalGames])
   @@index([seasonId, wins])
   @@index([seasonId, mvpCount])
+  @@index([seasonId, participationCount])
+  @@index([seasonId, totalGames, participationCount])
 }
 
 model PlayerChampionStat {
@@ -1569,3 +1571,13 @@ model DiscordMatchAttendanceCheck {
   @@index([status, updatedAt])
 }
 
+
+model AppDataCache {
+  key       String   @id
+  value     Json
+  version   Int      @default(1)
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@index([updatedAt])
+}

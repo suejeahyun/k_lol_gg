@@ -1,4 +1,5 @@
 import { unstable_cache } from "next/cache";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { recalculateSeasonStats } from "@/lib/stats/recalculate";
 
@@ -20,7 +21,49 @@ export function getWinRate(wins: number, totalGames: number) {
   return totalGames > 0 ? Number(((wins / totalGames) * 100).toFixed(1)) : 0;
 }
 
+const SEASON_STATS_VALIDATE_TTL_MS = 5 * 60 * 1000;
+
+type SeasonStatsValidateCache = {
+  seasonId: number;
+  statCount: number;
+  checkedAt: string;
+};
+
+function isSeasonStatsValidateCache(value: unknown, seasonId: number): value is SeasonStatsValidateCache {
+  if (!value || typeof value !== "object") return false;
+  const data = value as Partial<SeasonStatsValidateCache>;
+  return data.seasonId === seasonId && typeof data.statCount === "number" && typeof data.checkedAt === "string";
+}
+
+async function saveSeasonStatsValidateCache(seasonId: number, statCount: number) {
+  await (prisma as any).appDataCache.upsert({
+    where: { key: `season:stats:validated:${seasonId}` },
+    update: {
+      value: { seasonId, statCount, checkedAt: new Date().toISOString() } as Prisma.InputJsonValue,
+      version: 13,
+    },
+    create: {
+      key: `season:stats:validated:${seasonId}`,
+      value: { seasonId, statCount, checkedAt: new Date().toISOString() } as Prisma.InputJsonValue,
+      version: 13,
+    },
+  });
+}
+
 export async function ensureSeasonStats(seasonId: number) {
+  const validationCache = await (prisma as any).appDataCache.findUnique({
+    where: { key: `season:stats:validated:${seasonId}` },
+    select: { value: true, updatedAt: true },
+  });
+
+  if (
+    validationCache &&
+    Date.now() - validationCache.updatedAt.getTime() < SEASON_STATS_VALIDATE_TTL_MS &&
+    isSeasonStatsValidateCache(validationCache.value, seasonId)
+  ) {
+    return;
+  }
+
   const [statCount, gameCount, participantCount, statGamesAggregate, zeroParticipationCount, distinctPlayers] = await Promise.all([
     prisma.playerSeasonStat.count({ where: { seasonId } }),
     prisma.matchGame.count({ where: { series: { seasonId } } }),
@@ -45,16 +88,20 @@ export async function ensureSeasonStats(seasonId: number) {
 
   const statTotalGames = statGamesAggregate._sum.totalGames ?? 0;
   const expectedPlayerStatCount = distinctPlayers.length;
-
-  if (
+  const isInvalid =
     gameCount > 0 &&
     (statCount === 0 ||
       statCount !== expectedPlayerStatCount ||
       statTotalGames !== participantCount ||
-      zeroParticipationCount > 0)
-  ) {
-    await recalculateSeasonStats(seasonId);
+      zeroParticipationCount > 0);
+
+  if (isInvalid) {
+    const result = await recalculateSeasonStats(seasonId);
+    await saveSeasonStatsValidateCache(seasonId, result.playerStats);
+    return;
   }
+
+  await saveSeasonStatsValidateCache(seasonId, statCount);
 }
 
 export async function getSeasonRankingPlayers(seasonId: number): Promise<SeasonRankingPlayer[]> {

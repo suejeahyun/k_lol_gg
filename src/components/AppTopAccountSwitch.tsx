@@ -16,11 +16,25 @@ function isAdmin(user: AccountSwitchUser) {
   );
 }
 
-export default function AppTopAccountSwitch({ mode }: { mode: "user" | "admin" }) {
-  const [user, setUser] = useState<AccountSwitchUser>(null);
-  const [checked, setChecked] = useState(false);
+export default function AppTopAccountSwitch({
+  mode,
+  user: providedUser,
+  checked: providedChecked,
+}: {
+  mode: "user" | "admin";
+  user?: AccountSwitchUser;
+  checked?: boolean;
+}) {
+  const [user, setUser] = useState<AccountSwitchUser>(providedUser ?? null);
+  const [checked, setChecked] = useState(Boolean(providedChecked));
 
   useEffect(() => {
+    if (providedChecked !== undefined) {
+      setUser(providedUser ?? null);
+      setChecked(providedChecked);
+      return;
+    }
+
     let mounted = true;
 
     async function fetchUser() {
@@ -51,7 +65,7 @@ export default function AppTopAccountSwitch({ mode }: { mode: "user" | "admin" }
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [providedChecked, providedUser]);
 
   if (mode === "admin") {
     return (

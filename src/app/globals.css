@@ -46,14 +46,7 @@
 @import url("../styles/pages/pick-ban-fix.css");
 @import url("../styles/pages/account-player-admin-ui-fix.css");
 @import url("../styles/app-mobile.css");
-@import url("../styles/mobile-app-page-fix.css");
-@import url("../styles/mobile-admin-final.css");
-@import url("../styles/mobile-admin-app-simplified.css");
-@import url("../styles/mobile-admin-app-v8.css");
-@import url("../styles/mobile-unified-v9.css");
-@import url("../styles/mobile-app-admin-v10.css");
-@import url("../styles/mobile-app-admin-v11.css");
-@import url("../styles/mobile-unified-v12.css");
+@import url("../styles/mobile-unified-v13.css");
 /* Fix: pick/ban solo-rank refresh panel */
 .ai-solo-sync {
   display: flex;

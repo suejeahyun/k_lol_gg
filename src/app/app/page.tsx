@@ -1,15 +1,11 @@
-import { prisma } from "@/lib/prisma/client";
 import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
 import { AppSection } from "@/components/app-mobile/AppCards";
+import { getAppHomeSummary } from "@/lib/app/home-summary";
 
 export const dynamic = "force-dynamic";
 
 export default async function AppHomePage() {
-  const [activeRecruitCount, matchCount, playerCount] = await Promise.all([
-    prisma.recruitParty.count({ where: { status: "IN_PROGRESS" } }).catch(() => 0),
-    prisma.matchSeries.count().catch(() => 0),
-    prisma.player.count({ where: { isActive: true } }).catch(() => 0),
-  ]);
+  const { activeRecruitCount, matchCount, playerCount } = await getAppHomeSummary();
 
   return (
     <AppMobileShell subtitle="K-LOL.GG APP">

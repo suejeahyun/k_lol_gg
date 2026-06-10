@@ -26,6 +26,7 @@ export default function AppTopBar({
   const [menu, setMenu] = useState<"players" | "matches">("players");
   const [keyword, setKeyword] = useState("");
   const [user, setUser] = useState<TopBarUser | null>(null);
+  const [authChecked, setAuthChecked] = useState(mode === "admin");
 
   useEffect(() => {
     if (mode !== "user") {
@@ -40,20 +41,24 @@ export default function AppTopBar({
 
         if (!res.ok) {
           setUser(null);
+          setAuthChecked(true);
           return;
         }
 
         const data: { user: TopBarUser | null } = await res.json();
         setUser(data.user ?? null);
+        setAuthChecked(true);
       } catch (error: unknown) {
         console.error("[APP_TOPBAR_AUTH_ERROR]", error);
         setUser(null);
+        setAuthChecked(true);
       }
     }
 
     fetchUser().catch((error: unknown) => {
       console.error("[APP_TOPBAR_AUTH_PROMISE_ERROR]", error);
       setUser(null);
+      setAuthChecked(true);
     });
   }, [mode]);
 
@@ -101,7 +106,7 @@ export default function AppTopBar({
       </div>
 
       <div className="app-topbar__mobile-auth" aria-label="모바일 회원 메뉴">
-        <AppTopAccountSwitch mode={mode} />
+        <AppTopAccountSwitch mode={mode} user={user} checked={authChecked} />
         {mode === "user" ? (
           user ? (
             <Link href="/account" className="app-topbar__auth-link app-topbar__auth-link--primary">

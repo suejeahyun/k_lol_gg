@@ -1,8 +1,16 @@
 import { unstable_cache } from "next/cache";
+import type { Prisma, PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
-import { getWinRate } from "@/lib/stats/season-performance";
+
+type DbClient = PrismaClient | Prisma.TransactionClient;
 
 export const MIN_TOP3_PARTICIPATIONS = 10;
+function getWinRate(wins: number, totalGames: number) {
+  return totalGames > 0 ? Number(((wins / totalGames) * 100).toFixed(1)) : 0;
+}
+
+const STATS_TOP_CACHE_KEY = "stats:top:v13";
+const STATS_TOP_CACHE_TTL_MS = 5 * 60 * 1000;
 
 export type StatsTopSeasonDto = {
   id: number;
@@ -39,6 +47,12 @@ type SeasonRow = {
   createdAt: Date;
 };
 
+function isStatsTopData(value: unknown): value is StatsTopData {
+  if (!value || typeof value !== "object") return false;
+  const data = value as Partial<StatsTopData>;
+  return Array.isArray(data.currentPlayers) && Array.isArray(data.previousPlayers);
+}
+
 function toSeasonDto(season: SeasonRow | null): StatsTopSeasonDto {
   if (!season) return null;
 
@@ -70,10 +84,7 @@ function sortByMvp(a: StatsTopPlayerDto, b: StatsTopPlayerDto) {
 
 function mergeTopPlayers(players: StatsTopPlayerDto[]) {
   const topPlayerMap = new Map<number, StatsTopPlayerDto>();
-
-  const eligiblePlayers = players.filter(
-    (player) => player.participationCount >= MIN_TOP3_PARTICIPATIONS,
-  );
+  const eligiblePlayers = players.filter((player) => player.participationCount >= MIN_TOP3_PARTICIPATIONS);
 
   const addTop3 = (
     sorter: (a: StatsTopPlayerDto, b: StatsTopPlayerDto) => number,
@@ -95,8 +106,8 @@ function mergeTopPlayers(players: StatsTopPlayerDto[]) {
   return Array.from(topPlayerMap.values());
 }
 
-async function getCurrentAndPreviousSeasonForTop() {
-  const seasons = await prisma.season.findMany({
+async function getCurrentAndPreviousSeasonForTop(db: DbClient = prisma) {
+  const seasons = await db.season.findMany({
     orderBy: [{ isActive: "desc" }, { createdAt: "desc" }],
     take: 2,
     select: {
@@ -108,21 +119,18 @@ async function getCurrentAndPreviousSeasonForTop() {
   });
 
   const currentSeason = seasons.find((season) => season.isActive) ?? seasons[0] ?? null;
-  const previousSeason = currentSeason
-    ? seasons.find((season) => season.id !== currentSeason.id) ?? null
-    : null;
+  const previousSeason = currentSeason ? seasons.find((season) => season.id !== currentSeason.id) ?? null : null;
 
   return { currentSeason, previousSeason };
 }
 
-export async function getSeasonTopPlayers(seasonId: number): Promise<StatsTopPlayerDto[]> {
-  const stats = await prisma.playerSeasonStat.findMany({
+export async function getSeasonTopPlayers(seasonId: number, db: DbClient = prisma): Promise<StatsTopPlayerDto[]> {
+  const stats = await db.playerSeasonStat.findMany({
     where: {
       seasonId,
       totalGames: { gt: 0 },
-      player: {
-        isActive: true,
-      },
+      participationCount: { gte: MIN_TOP3_PARTICIPATIONS },
+      player: { isActive: true },
     },
     select: {
       playerId: true,
@@ -162,8 +170,8 @@ export async function getSeasonTopPlayers(seasonId: number): Promise<StatsTopPla
   return mergeTopPlayers(players);
 }
 
-export async function getStatsTopData(): Promise<StatsTopData> {
-  const { currentSeason, previousSeason } = await getCurrentAndPreviousSeasonForTop();
+export async function buildStatsTopData(db: DbClient = prisma): Promise<StatsTopData> {
+  const { currentSeason, previousSeason } = await getCurrentAndPreviousSeasonForTop(db);
 
   if (!currentSeason) {
     return {
@@ -175,8 +183,8 @@ export async function getStatsTopData(): Promise<StatsTopData> {
   }
 
   const [currentPlayers, previousPlayers] = await Promise.all([
-    getSeasonTopPlayers(currentSeason.id),
-    previousSeason ? getSeasonTopPlayers(previousSeason.id) : Promise.resolve([]),
+    getSeasonTopPlayers(currentSeason.id, db),
+    previousSeason ? getSeasonTopPlayers(previousSeason.id, db) : Promise.resolve([]),
   ]);
 
   return {
@@ -187,9 +195,38 @@ export async function getStatsTopData(): Promise<StatsTopData> {
   };
 }
 
+export async function refreshStatsTopDataCache(db: DbClient = prisma): Promise<StatsTopData> {
+  const data = await buildStatsTopData(db);
+
+  await (db as any).appDataCache.upsert({
+    where: { key: STATS_TOP_CACHE_KEY },
+    update: { value: data as unknown as Prisma.InputJsonValue, version: 13 },
+    create: { key: STATS_TOP_CACHE_KEY, value: data as unknown as Prisma.InputJsonValue, version: 13 },
+  });
+
+  return data;
+}
+
+export async function getStatsTopData(): Promise<StatsTopData> {
+  const cached = await (prisma as any).appDataCache.findUnique({
+    where: { key: STATS_TOP_CACHE_KEY },
+    select: { value: true, updatedAt: true },
+  });
+
+  if (
+    cached &&
+    Date.now() - cached.updatedAt.getTime() < STATS_TOP_CACHE_TTL_MS &&
+    isStatsTopData(cached.value)
+  ) {
+    return cached.value;
+  }
+
+  return refreshStatsTopDataCache(prisma);
+}
+
 export const getCachedStatsTopData = unstable_cache(
   getStatsTopData,
-  ["stats-top-data-v4-strict-participation-count"],
+  ["stats-top-data-v13-db-cache"],
   {
     revalidate: 60,
     tags: ["stats-top"],

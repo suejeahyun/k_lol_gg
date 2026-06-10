@@ -2,6 +2,7 @@ import { revalidateTag } from "next/cache";
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { getGameMvpParticipant } from "@/lib/mvp";
+import { refreshStatsTopDataCache } from "@/lib/stats/top";
 
 type DbClient = PrismaClient | Prisma.TransactionClient;
 
@@ -175,6 +176,8 @@ export async function recalculateSeasonStats(seasonId: number, db: DbClient = pr
       })),
     });
   }
+
+  await refreshStatsTopDataCache(db);
 
   revalidateTag("rankings", "max");
   revalidateTag("stats-top", "max");
