@@ -483,3 +483,88 @@
   font-size: 11px;
   font-weight: 950;
 }
+
+.klol-app-install-hero {
+  gap: 12px;
+}
+
+.klol-app-install-lead {
+  margin: 0;
+  color: rgba(226, 232, 240, 0.82);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.55;
+}
+
+.klol-app-install-cta-row,
+.klol-app-install-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.klol-app-install-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 14px;
+  border: 1px solid rgba(250, 204, 21, 0.28);
+  border-radius: 16px;
+  background: rgba(250, 204, 21, 0.1);
+  color: #facc15;
+  font-size: 13px;
+  font-weight: 950;
+  text-align: center;
+  text-decoration: none;
+}
+
+.klol-app-install-steps {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.klol-app-install-steps li {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 16px;
+  background: rgba(2, 6, 23, 0.32);
+}
+
+.klol-app-install-steps strong {
+  color: #f8fafc;
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.klol-app-install-steps span,
+.klol-app-warning-list p,
+.klol-app-install-message {
+  margin: 0;
+  color: rgba(203, 213, 225, 0.78);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.55;
+}
+
+.klol-app-warning-list {
+  display: grid;
+  gap: 8px;
+}
+
+.klol-app-warning-list p {
+  padding: 10px 11px;
+  border: 1px solid rgba(251, 191, 36, 0.18);
+  border-radius: 14px;
+  background: rgba(251, 191, 36, 0.08);
+  color: rgba(254, 243, 199, 0.9);
+}
+
+.klol-app-install-message {
+  color: #facc15;
+  text-align: center;
+}
