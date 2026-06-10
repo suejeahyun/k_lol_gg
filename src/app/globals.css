@@ -47,6 +47,7 @@
 @import url("../styles/pages/account-player-admin-ui-fix.css");
 @import url("../styles/app-mobile.css");
 @import url("../styles/mobile-app-page-fix.css");
+@import url("../styles/mobile-admin-final.css");
 /* Fix: pick/ban solo-rank refresh panel */
 .ai-solo-sync {
   display: flex;

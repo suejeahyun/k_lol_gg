@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import AppTopBar from "./AppTopBar";
 import AdminSidebar from "./AdminSidebar";
 import AdminLogoutButton from "./AdminLogoutButton";
+import AdminMobileNav from "./AdminMobileNav";
 
 type AdminShellProps = {
   children: ReactNode;
@@ -34,6 +35,8 @@ export default function AdminShell({ children }: AdminShellProps) {
       <div className="admin-floating-logout">
         <AdminLogoutButton />
       </div>
+
+      <AdminMobileNav />
     </div>
   );
 }
