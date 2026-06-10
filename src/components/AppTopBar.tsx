@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import AppTopAccountSwitch from "./AppTopAccountSwitch";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 
@@ -13,6 +14,7 @@ type AppTopBarProps = {
 type TopBarUser = {
   userId: string;
   status: "PENDING" | "APPROVED" | "REJECTED";
+  role?: "USER" | "ADMIN" | "SUPER_ADMIN" | string;
 };
 
 export default function AppTopBar({
@@ -98,9 +100,10 @@ export default function AppTopBar({
         <span className="app-topbar__title">{title}</span>
       </div>
 
-      {mode === "user" ? (
-        <div className="app-topbar__mobile-auth" aria-label="모바일 회원 메뉴">
-          {user ? (
+      <div className="app-topbar__mobile-auth" aria-label="모바일 회원 메뉴">
+        <AppTopAccountSwitch mode={mode} />
+        {mode === "user" ? (
+          user ? (
             <Link href="/account" className="app-topbar__auth-link app-topbar__auth-link--primary">
               계정
             </Link>
@@ -113,9 +116,9 @@ export default function AppTopBar({
                 회원가입
               </Link>
             </>
-          )}
-        </div>
-      ) : null}
+          )
+        ) : null}
+      </div>
 
       <form className="app-topbar__search" onSubmit={handleSubmit}>
         <select

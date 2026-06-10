@@ -27,7 +27,7 @@ export default async function AppAdminPage() {
     .catch(() => []);
 
   return (
-    <AppMobileShell subtitle="K-LOL.GG APP">
+    <AppMobileShell subtitle="K-LOL.GG APP" mode="admin">
       <section className="klol-app-hero">
         <div className="klol-app-kicker">ADMIN</div>
         <h1 className="klol-app-title">전체 로그</h1>

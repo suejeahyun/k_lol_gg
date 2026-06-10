@@ -1,13 +1,16 @@
 import Link from "next/link";
 import { AppBottomNav } from "./AppBottomNav";
+import AppTopAccountSwitch from "@/components/AppTopAccountSwitch";
 
 export function AppMobileShell({
   title = "K-LOL.GG",
   subtitle = "K-LOL.GG APP",
+  mode = "user",
   children,
 }: {
   title?: string;
   subtitle?: string;
+  mode?: "user" | "admin";
   children: React.ReactNode;
 }) {
   return (
@@ -18,6 +21,7 @@ export function AppMobileShell({
             <strong>{title}</strong>
             <span>{subtitle}</span>
           </Link>
+          <AppTopAccountSwitch mode={mode} />
         </header>
         {children}
       </div>

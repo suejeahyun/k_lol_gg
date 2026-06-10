@@ -53,6 +53,7 @@
 @import url("../styles/mobile-unified-v9.css");
 @import url("../styles/mobile-app-admin-v10.css");
 @import url("../styles/mobile-app-admin-v11.css");
+@import url("../styles/mobile-unified-v12.css");
 /* Fix: pick/ban solo-rank refresh panel */
 .ai-solo-sync {
   display: flex;

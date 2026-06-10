@@ -56,9 +56,6 @@ export default async function AccountPage() {
             <h2>계정 정보</h2>
           </div>
           <div className="account-action-row">
-            {(user.role === "ADMIN" || user.role === "SUPER_ADMIN") ? (
-              <Link className="admin-button account-admin-link" href="/admin">관리자 페이지</Link>
-            ) : null}
             <UserLogoutButton />
           </div>
         </div>

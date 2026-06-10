@@ -54,8 +54,6 @@ export default async function AppMePage() {
         <div className="klol-app-actions klol-app-actions--keep">
           {!user ? (
             <Link className="klol-app-primary" href="/login">로그인</Link>
-          ) : isAdmin ? (
-            <Link className="klol-app-primary" href="/admin">관리자 HOME</Link>
           ) : (
             <Link className="klol-app-primary" href="/account">계정 관리</Link>
           )}
@@ -117,16 +115,6 @@ export default async function AppMePage() {
         </div>
       </AppSection>
 
-      {isAdmin ? (
-        <AppSection title="관리자">
-          <div className="klol-app-admin-grid">
-            <Link className="klol-app-card" href="/admin"><strong>관리자 HOME</strong></Link>
-            <Link className="klol-app-card" href="/admin/recruits"><strong>구인 현황</strong></Link>
-            <Link className="klol-app-card" href="/admin/matches"><strong>내전 관리</strong></Link>
-            <Link className="klol-app-card" href="/admin/users"><strong>유저 관리</strong></Link>
-          </div>
-        </AppSection>
-      ) : null}
     </AppMobileShell>
   );
 }

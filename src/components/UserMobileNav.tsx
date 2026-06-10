@@ -78,15 +78,6 @@ export default function UserMobileNav() {
       };
     }
 
-    if ((user.role === "ADMIN" || user.role === "SUPER_ADMIN") && user.status === "APPROVED") {
-      return {
-        href: "/admin",
-        label: "관리자",
-        code: "ADM",
-        match: ["/admin", "/account", "/me"],
-      };
-    }
-
     return {
       href: "/account",
       label: "계정",
