@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma/client";
 import { getCurrentUser } from "@/lib/auth/session";
 import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
 import { AppSection } from "@/components/app-mobile/AppCards";
+import { AppDiscordLinkButton } from "@/components/app-mobile/AppDiscordLinkButton";
 
 export const dynamic = "force-dynamic";
 
@@ -102,15 +103,7 @@ export default async function AppMePage() {
             <p>{discordLinked ? discordName : "Discord 계정을 연결하면 음성방/구인 확인에 사용할 수 있습니다."}</p>
           </div>
           <div className="klol-app-actions klol-app-actions--keep klol-app-actions--inline">
-            {user ? (
-              discordLinked ? (
-                <Link className="klol-app-primary" href="/account">Discord 관리</Link>
-              ) : (
-                <Link className="klol-app-primary" href="/api/auth/discord/start?mode=link&next=/app/me">Discord 연동</Link>
-              )
-            ) : (
-              <Link className="klol-app-primary" href="/login?next=/app/me">로그인</Link>
-            )}
+            <AppDiscordLinkButton linked={discordLinked} disabled={!user} next="/app/me" />
           </div>
         </div>
       </AppSection>

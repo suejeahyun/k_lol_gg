@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
 import { getCurrentUser } from "@/lib/auth/session";
 import DiscordUnlinkButton from "./DiscordUnlinkButton";
+import AccountPlayerCommunityPanel from "@/components/AccountPlayerCommunityPanel";
+import UserLogoutButton from "@/components/UserLogoutButton";
 
 function formatDate(value: Date | string | null | undefined) {
   if (!value) return "-";
@@ -48,6 +50,7 @@ export default async function AccountPage() {
           <h1 className="user-page__title">내 계정</h1>
           <p className="user-page__description">K-LOL.GG 계정과 Discord 연동 상태를 관리합니다.</p>
         </div>
+        <UserLogoutButton />
       </div>
 
       <section className="admin-card account-card account-summary-card">
@@ -124,6 +127,8 @@ export default async function AccountPage() {
           </div>
         )}
       </section>
+
+      <AccountPlayerCommunityPanel />
     </main>
   );
 }
