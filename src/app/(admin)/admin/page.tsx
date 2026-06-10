@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Pagination from "@/components/Pagination";
-import RecalculateStatsButton from "@/components/admin/RecalculateStatsButton";
 
 type DashboardData = {
   currentSeason: {
@@ -122,11 +121,10 @@ export default function AdminHomePage() {
             현재 시즌, 전체 데이터 현황, 최근 내전 및 운영 로그를 확인합니다.
           </p>
         </div>
-        <div className="admin-dashboard-actions">
-          <RecalculateStatsButton seasonId={data.currentSeason?.id ?? null} />
-          <a className="admin-button admin-button--ghost" href="/api/admin/backup/players.csv">플레이어 CSV</a>
-          <a className="admin-button admin-button--ghost" href="/api/admin/backup/matches.csv">내전 CSV</a>
-          <a className="admin-button admin-button--ghost" href="/api/logs?download=csv">로그 CSV</a>
+        <div className="admin-dashboard-actions admin-dashboard-actions--mobile-primary">
+          <a className="admin-button" href="/admin/recruits">구인 현황</a>
+          <a className="admin-button admin-button--ghost" href="/admin/matches">내전 관리</a>
+          <a className="admin-button admin-button--ghost" href="/admin/users">유저 관리</a>
         </div>
       </div>
 

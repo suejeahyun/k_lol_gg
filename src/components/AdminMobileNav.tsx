@@ -12,15 +12,16 @@ type AdminMobileNavItem = {
 
 const adminMobileItems: AdminMobileNavItem[] = [
   { href: "/admin", label: "홈", code: "ADM", match: ["/admin"] },
-  { href: "/admin/recruits", label: "구인", code: "REC", match: ["/admin/recruits"] },
+  { href: "/admin/recruits", label: "구인현황", code: "REC", match: ["/admin/recruits"] },
   { href: "/admin/matches", label: "내전", code: "MAT", match: ["/admin/matches"] },
+  { href: "/admin/matches/new", label: "등록", code: "NEW", match: ["/admin/matches/new"] },
   { href: "/admin/discord", label: "디코", code: "DC", match: ["/admin/discord", "/admin/discord-monitor"] },
   { href: "/admin/users", label: "유저", code: "USR", match: ["/admin/users", "/admin/player-approvals"] },
-  { href: "/admin/logs", label: "로그", code: "LOG", match: ["/admin/logs"] },
 ];
 
 function isActive(pathname: string, item: AdminMobileNavItem) {
   if (item.href === "/admin") return pathname === "/admin";
+  if (item.href === "/admin/matches") return pathname === "/admin/matches";
   return item.match.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 }
 

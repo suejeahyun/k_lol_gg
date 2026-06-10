@@ -48,6 +48,7 @@
 @import url("../styles/app-mobile.css");
 @import url("../styles/mobile-app-page-fix.css");
 @import url("../styles/mobile-admin-final.css");
+@import url("../styles/mobile-admin-app-simplified.css");
 /* Fix: pick/ban solo-rank refresh panel */
 .ai-solo-sync {
   display: flex;

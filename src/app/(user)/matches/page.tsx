@@ -275,7 +275,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
             <p className="match-empty">검색 결과가 없습니다.</p>
           ) : (
             <>
-              <div className="match-row-header matches-list-v4__header">
+              <div className="match-row-header matches-list-v4__header matches-list-v4__header--simple">
                 <Link
                   href={sortLink("title")}
                   className="matches-list-v4__head-title"
@@ -283,30 +283,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                   내전명
                 </Link>
 
-                <Link
-                  href={sortLink("season")}
-                  className="matches-list-v4__head-season"
-                >
-                  시즌
-                </Link>
-
-                <Link
-                  href={sortLink("matchDate")}
-                  className="matches-list-v4__head-date"
-                >
-                  날짜
-                </Link>
-
-                <div className="matches-list-v4__head-score">스코어</div>
-
                 <div className="matches-list-v4__head-winner">승리팀</div>
-
-                <Link
-                  href={sortLink("games")}
-                  className="matches-list-v4__head-set"
-                >
-                  세트수
-                </Link>
               </div>
 
               <div className="match-list matches-list-v4__list">
@@ -316,29 +293,9 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                     href={`/matches/${match.id}`}
                     className="match-row-card matches-list-v4__card"
                   >
-                    <div className="match-row-grid matches-list-v4__row">
+                    <div className="match-row-grid matches-list-v4__row matches-list-v4__row--simple">
                       <div className="match-col matches-list-v4__title">
                         <strong>{match.title}</strong>
-                      </div>
-
-                      <div className="match-col matches-list-v4__season">
-                        <strong>{match.season.name}</strong>
-                      </div>
-
-                      <div className="match-col matches-list-v4__date">
-                        {formatDate(match.matchDate)}
-                      </div>
-
-                      <div className="match-col matches-list-v4__score-cell">
-                        <div className="matches-list-v4__score">
-                          <span className="matches-list-v4__score-blue">
-                            BLUE {match.blueWins}
-                          </span>
-                          <b>:</b>
-                          <span className="matches-list-v4__score-red">
-                            {match.redWins} RED
-                          </span>
-                        </div>
                       </div>
 
                       <div className="match-col matches-list-v4__winner">
@@ -351,12 +308,8 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                                 : "matches-list-v4__winner-badge--pending"
                           }`}
                         >
-                          승리팀 {getWinnerLabel(match.winnerTeam)}
+                          {getWinnerLabel(match.winnerTeam)}
                         </span>
-                      </div>
-
-                      <div className="match-col matches-list-v4__set">
-                        <span>세트수 {match._count.games}</span>
                       </div>
                     </div>
                   </Link>

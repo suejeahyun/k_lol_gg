@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
 import { getCurrentUser } from "@/lib/auth/session";
 import DiscordUnlinkButton from "./DiscordUnlinkButton";
+import UserLogoutButton from "@/components/UserLogoutButton";
 
 function formatDate(value: Date | string | null | undefined) {
   if (!value) return "-";
@@ -51,11 +52,12 @@ export default async function AccountPage() {
       </div>
 
       <section className="admin-card account-card account-summary-card">
-        <div className="admin-section-head">
+        <div className="admin-section-head account-section-head--mobile-stack">
           <div>
             <h2>계정 정보</h2>
             <p className="admin-muted">아이디 {user.userId} · 상태 {user.status} · 권한 {user.role}</p>
           </div>
+          <UserLogoutButton />
         </div>
 
         <div className="account-info-grid">
