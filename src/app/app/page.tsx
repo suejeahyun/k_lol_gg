@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma/client";
 import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
-import { AppMenuCard, AppSection } from "@/components/app-mobile/AppCards";
+import { AppSection } from "@/components/app-mobile/AppCards";
 
 export const dynamic = "force-dynamic";
 
@@ -16,10 +16,6 @@ export default async function AppHomePage() {
       <section className="klol-app-hero">
         <div className="klol-app-kicker">K-LOL.GG APP</div>
         <h1 className="klol-app-title">필요한 기능만 빠르게 보는 앱 화면</h1>
-        <div className="klol-app-actions">
-          <a className="klol-app-primary" href="/app/recruits">구인</a>
-          <a className="klol-app-secondary" href="/app/admin">운영</a>
-        </div>
       </section>
 
       <AppSection title="현재 상태">
@@ -36,15 +32,6 @@ export default async function AppHomePage() {
             <span>활성 유저</span>
             <strong>{playerCount}명</strong>
           </div>
-        </div>
-      </AppSection>
-
-      <AppSection title="바로가기">
-        <div className="klol-app-grid">
-          <AppMenuCard href="/app/recruits" title="구인 현황" />
-          <AppMenuCard href="/app/matches" title="내전 기록" />
-          <AppMenuCard href="/app/rankings" title="랭킹" />
-          <AppMenuCard href="/app/me" title="내 정보" />
         </div>
       </AppSection>
     </AppMobileShell>
