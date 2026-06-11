@@ -7,6 +7,7 @@ import {
   buildRecruitStatusReply,
   filterRecruitingParties,
 } from "@/lib/kakao/party-recruit";
+import { runRecruitIdleAutoFinishIfNeeded } from "@/lib/kakao/recruit-idle-auto-finish";
 import {
   partyRecruitJson,
   readJsonBody,
@@ -128,6 +129,8 @@ async function handleStatus(
       directDetailNo <= 99
         ? directDetailNo
         : null);
+
+    await runRecruitIdleAutoFinishIfNeeded({ source: "kakao-status" });
 
     const payload = await withTimeout(
       getRecruitStatusPayload(detailRecruitNo),

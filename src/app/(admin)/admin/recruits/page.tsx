@@ -4,9 +4,11 @@ export const revalidate = 0;
 import type { Prisma } from "@prisma/client";
 import Pagination from "@/components/Pagination";
 import AdminRecruitAutoResetSettings from "./AdminRecruitAutoResetSettings";
+import AdminRecruitAutoFinishSettings from "./AdminRecruitAutoFinishSettings";
 import AdminRecruitNumberResetButton from "./AdminRecruitNumberResetButton";
 import AdminRecruitResetAllButton from "./AdminRecruitResetAllButton";
 import { getRecruitAutoResetSettings } from "@/lib/kakao/recruit-auto-reset";
+import { getRecruitIdleAutoFinishSettings, runRecruitIdleAutoFinishIfNeeded } from "@/lib/kakao/recruit-idle-auto-finish";
 import { prisma } from "@/lib/prisma/client";
 import {
   buildGameInfoText,
@@ -148,10 +150,12 @@ export default async function AdminRecruitsPage({ searchParams }: PageProps) {
   const safeLogPage = Number.isNaN(logPage) || logPage < 1 ? 1 : logPage;
   const q = resolvedSearchParams.q ?? "";
   const date = resolvedSearchParams.date ?? "";
+  await runRecruitIdleAutoFinishIfNeeded({ source: "admin-recruits-page", roomName: "admin", sender: "admin" });
+
   const where = buildPartyWhere(resolvedSearchParams);
   const logWhere = buildLogWhere(resolvedSearchParams);
 
-  const [totalCount, activeCount, fullCount, logTotalCount, parties, recentLogs, autoResetSettings] = await Promise.all([
+  const [totalCount, activeCount, fullCount, logTotalCount, parties, recentLogs, autoResetSettings, autoFinishSettings] = await Promise.all([
     prisma.recruitParty.count({ where }),
     prisma.recruitParty.count({ where: { status: "IN_PROGRESS" } }),
     prisma.recruitParty.count({
@@ -179,6 +183,7 @@ export default async function AdminRecruitsPage({ searchParams }: PageProps) {
       take: LOG_PAGE_SIZE,
     }),
     getRecruitAutoResetSettings(),
+    getRecruitIdleAutoFinishSettings(),
   ]);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
@@ -228,13 +233,17 @@ export default async function AdminRecruitsPage({ searchParams }: PageProps) {
           <div>
             <h2>진행 중 구인글</h2>
             <p className="admin-muted">
-              총 {totalCount.toLocaleString("ko-KR")}개 · 번호 중복은 날짜/회차로 구분합니다. 자동 초기화는 진행 중 구인글이 0개일 때만 동작합니다.
+              총 {totalCount.toLocaleString("ko-KR")}개 · 번호 중복은 날짜/회차로 구분합니다. 자동 초기화는 진행 중 구인글이 0개일 때만 동작합니다. 자동 구인종료는 마지막 수정일 기준으로 동작합니다.
             </p>
           </div>
           <div className="admin-recruit-actions">
             <AdminRecruitAutoResetSettings
               initialEnabled={autoResetSettings.enabled}
               initialIdleHours={autoResetSettings.idleHours}
+            />
+            <AdminRecruitAutoFinishSettings
+              initialEnabled={autoFinishSettings.enabled}
+              initialIdleHours={autoFinishSettings.idleHours}
             />
             <AdminRecruitNumberResetButton />
             <AdminRecruitResetAllButton />

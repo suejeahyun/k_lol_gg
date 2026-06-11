@@ -17,6 +17,7 @@ import {
   getLatestRecruitResetLog,
 } from "@/lib/kakao/recruit-reset";
 import { runRecruitIdleAutoResetIfNeeded } from "@/lib/kakao/recruit-auto-reset";
+import { runRecruitIdleAutoFinishIfNeeded } from "@/lib/kakao/recruit-idle-auto-finish";
 import {
   getBodyRoom,
   getBodySender,
@@ -76,6 +77,7 @@ export async function POST(req: NextRequest) {
       return partyRecruitJson({ reply: CREATE_HELP }, 400);
     }
 
+    await runRecruitIdleAutoFinishIfNeeded({ source: "kakao-create", roomName, sender });
     await runRecruitIdleAutoResetIfNeeded({ roomName, sender });
 
     const recruitDate = getKakaoRecruitDateKey();
