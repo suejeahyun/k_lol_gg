@@ -3,10 +3,11 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
-import { requireApprovedUser } from "@/lib/auth/session";
+import { applyDestructionRecruitmentAutoReserve } from "@/lib/destruction/recruitment-auto-reserve";
+import { getCurrentUser, requireApprovedUser } from "@/lib/auth/session";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
 
-const APPLY_POSITIONS = ["TOP", "JGL", "MID", "ADC", "SUP", "ALL"] as const;
+const APPLY_POSITIONS = ["TOP", "JGL", "MID", "ADC", "SUP"] as const;
 
 type RouteContext = {
   params: Promise<{
@@ -23,10 +24,10 @@ function isApplyPosition(value: unknown): value is ApplyPositionValue {
   );
 }
 
-function parseSubPositions(value: unknown): ApplyPositionValue[] {
-  if (!Array.isArray(value)) return [];
-
-  return value.filter(isApplyPosition);
+function parseCaptainPreference(body: Record<string, unknown>) {
+  if (body.captainPreference === "PREFERRED") return true;
+  if (body.captainPreference === "NOT_PREFERRED") return false;
+  return Boolean(body.isCaptain);
 }
 
 export async function GET(_req: NextRequest, { params }: RouteContext) {
@@ -37,30 +38,35 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
     if (Number.isNaN(id)) {
       return NextResponse.json(
         { message: "잘못된 멸망전 ID입니다." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const tournament = await prisma.destructionTournament.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        title: true,
-        status: true,
-      },
-    });
+    const [tournament, currentUser] = await Promise.all([
+      prisma.destructionTournament.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          title: true,
+          status: true,
+        },
+      }),
+      getCurrentUser(),
+    ]);
 
     if (!tournament) {
       return NextResponse.json(
         { message: "멸망전을 찾을 수 없습니다." },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     const applies = await prisma.destructionParticipationApply.findMany({
       where: {
         tournamentId: id,
-        status: "APPLIED",
+        status: {
+          in: ["APPLIED", "CONFIRMED", "RESERVE"],
+        },
       },
       include: {
         player: {
@@ -79,8 +85,26 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
       },
     });
 
+    const currentApply = currentUser?.playerId
+      ? await prisma.destructionParticipationApply.findUnique({
+          where: {
+            tournamentId_playerId: {
+              tournamentId: id,
+              playerId: currentUser.playerId,
+            },
+          },
+          select: {
+            id: true,
+            status: true,
+            mainPosition: true,
+            isCaptain: true,
+          },
+        })
+      : null;
+
     return NextResponse.json({
       tournament,
+      currentApply,
       players: applies.map((apply) => ({
         id: apply.player.id,
         name: apply.player.name,
@@ -89,8 +113,9 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
         peakTier: apply.player.peakTier,
         currentTier: apply.player.currentTier,
         mainPosition: apply.mainPosition,
-        subPositions: apply.subPositions,
+        subPositions: [],
         isCaptain: apply.isCaptain,
+        status: apply.status,
       })),
     });
   } catch (error: unknown) {
@@ -98,7 +123,7 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
 
     return NextResponse.json(
       { message: "멸망전 참가자 조회 중 오류가 발생했습니다." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -117,7 +142,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     if (!user.playerId) {
       return NextResponse.json(
         { message: "연결된 플레이어 정보가 없습니다." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -127,19 +152,18 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     if (Number.isNaN(id)) {
       return NextResponse.json(
         { message: "잘못된 멸망전 ID입니다." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const body = await req.json().catch(() => ({}));
+    const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
     const mainPosition = body.mainPosition;
-    const subPositions = parseSubPositions(body.subPositions);
-    const isCaptain = Boolean(body.isCaptain);
+    const isCaptain = parseCaptainPreference(body);
 
     if (!isApplyPosition(mainPosition)) {
       return NextResponse.json(
-        { message: "주라인을 선택해주세요." },
-        { status: 400 }
+        { message: "주 포지션을 선택해주세요." },
+        { status: 400 },
       );
     }
 
@@ -155,14 +179,14 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     if (!tournament) {
       return NextResponse.json(
         { message: "멸망전을 찾을 수 없습니다." },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     if (tournament.status !== "RECRUITING") {
       return NextResponse.json(
         { message: "현재 모집 중인 멸망전이 아닙니다." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -175,7 +199,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
       },
       update: {
         mainPosition,
-        subPositions,
+        subPositions: [],
         isCaptain,
         status: "APPLIED",
       },
@@ -183,15 +207,17 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
         tournamentId: id,
         playerId: user.playerId,
         mainPosition,
-        subPositions,
+        subPositions: [],
         isCaptain,
         status: "APPLIED",
       },
     });
 
+    await applyDestructionRecruitmentAutoReserve(id);
+
     await writeAdminLog({
       action: "DESTRUCTION_PARTICIPATION_APPLY",
-      message: `멸망전 참가 신청: 멸망전 #${id} ${tournament.title}, 플레이어 #${user.playerId}, 신청 #${apply.id}`,
+      message: `멸망전 참가 신청: 멸망전 #${id} ${tournament.title}, 플레이어 #${user.playerId}, 신청 #${apply.id}, 팀장선호 ${isCaptain ? "Y" : "N"}`,
     });
 
     return NextResponse.json({
@@ -203,14 +229,14 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
       if (error.message === "UNAUTHORIZED") {
         return NextResponse.json(
           { message: "로그인이 필요합니다." },
-          { status: 401 }
+          { status: 401 },
         );
       }
 
       if (error.message === "NOT_APPROVED") {
         return NextResponse.json(
           { message: "관리자 승인 후 참가 신청이 가능합니다." },
-          { status: 403 }
+          { status: 403 },
         );
       }
     }
@@ -219,7 +245,124 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
 
     return NextResponse.json(
       { message: "멸망전 참가 신청 중 오류가 발생했습니다." },
-      { status: 500 }
+      { status: 500 },
+    );
+  }
+}
+
+export async function DELETE(req: NextRequest, { params }: RouteContext) {
+  try {
+    const rateLimitRejected = await rejectIfRateLimited(req, {
+      action: "DESTRUCTION_PARTICIPATION_CANCEL",
+      limit: 12,
+      windowSeconds: 600,
+    });
+    if (rateLimitRejected) return rateLimitRejected;
+
+    const user = await requireApprovedUser();
+
+    if (!user.playerId) {
+      return NextResponse.json(
+        { message: "연결된 플레이어 정보가 없습니다." },
+        { status: 400 },
+      );
+    }
+
+    const { tournamentId } = await params;
+    const id = Number(tournamentId);
+
+    if (Number.isNaN(id)) {
+      return NextResponse.json(
+        { message: "잘못된 멸망전 ID입니다." },
+        { status: 400 },
+      );
+    }
+
+    const tournament = await prisma.destructionTournament.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        title: true,
+        status: true,
+      },
+    });
+
+    if (!tournament) {
+      return NextResponse.json(
+        { message: "멸망전을 찾을 수 없습니다." },
+        { status: 404 },
+      );
+    }
+
+    if (tournament.status !== "RECRUITING") {
+      return NextResponse.json(
+        { message: "모집 중일 때만 참가 신청을 취소할 수 있습니다." },
+        { status: 400 },
+      );
+    }
+
+    const apply = await prisma.destructionParticipationApply.findUnique({
+      where: {
+        tournamentId_playerId: {
+          tournamentId: id,
+          playerId: user.playerId,
+        },
+      },
+      select: {
+        id: true,
+        status: true,
+      },
+    });
+
+    if (!apply || apply.status === "CANCELLED") {
+      return NextResponse.json(
+        { message: "취소할 참가 신청이 없습니다." },
+        { status: 404 },
+      );
+    }
+
+    const cancelled = await prisma.destructionParticipationApply.update({
+      where: {
+        id: apply.id,
+      },
+      data: {
+        status: "CANCELLED",
+      },
+    });
+
+    await applyDestructionRecruitmentAutoReserve(id);
+
+    await writeAdminLog({
+      action: "DESTRUCTION_PARTICIPATION_CANCEL",
+      message: `멸망전 참가 취소: 멸망전 #${id} ${tournament.title}, 플레이어 #${user.playerId}, 신청 #${apply.id}`,
+    });
+
+    return NextResponse.json({
+      message: "멸망전 참가 신청이 취소되었습니다.",
+      apply: cancelled,
+    });
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      if (error.message === "UNAUTHORIZED") {
+        return NextResponse.json(
+          { message: "로그인이 필요합니다." },
+          { status: 401 },
+        );
+      }
+
+      if (error.message === "NOT_APPROVED") {
+        return NextResponse.json(
+          { message: "관리자 승인 후 참가 신청 취소가 가능합니다." },
+          { status: 403 },
+        );
+      }
+    }
+
+    console.error("[DESTRUCTION_PARTICIPATION_DELETE_ERROR]", error);
+
+    return NextResponse.json(
+      { message: "멸망전 참가 취소 중 오류가 발생했습니다." },
+      { status: 500 },
     );
   }
 }

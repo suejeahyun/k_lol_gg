@@ -1,3 +1,4 @@
+
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -12,7 +13,7 @@ type RouteContext = {
 
 type RealPosition = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
 
-function toRealPosition(position: string | null): RealPosition {
+function toRealPosition(position: string | null): RealPosition | null {
   if (
     position === "TOP" ||
     position === "JGL" ||
@@ -23,7 +24,7 @@ function toRealPosition(position: string | null): RealPosition {
     return position;
   }
 
-  return "TOP";
+  return null;
 }
 
 export async function POST(_req: NextRequest, { params }: RouteContext) {
@@ -37,18 +38,21 @@ export async function POST(_req: NextRequest, { params }: RouteContext) {
     if (Number.isNaN(id)) {
       return NextResponse.json(
         { message: "잘못된 멸망전 ID입니다." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const applies = await prisma.destructionParticipationApply.findMany({
       where: {
         tournamentId: id,
-        status: "APPLIED",
+        status: {
+          in: ["APPLIED", "CONFIRMED"],
+        },
       },
       select: {
         playerId: true,
         mainPosition: true,
+        isCaptain: true,
       },
     });
 
@@ -57,6 +61,14 @@ export async function POST(_req: NextRequest, { params }: RouteContext) {
         message: "가져올 참가 신청자가 없습니다.",
         count: 0,
       });
+    }
+
+    const invalid = applies.find((apply) => !toRealPosition(apply.mainPosition));
+    if (invalid) {
+      return NextResponse.json(
+        { message: "모든 신청자는 TOP/JGL/MID/ADC/SUP 중 하나의 주 포지션이 필요합니다." },
+        { status: 400 },
+      );
     }
 
     await prisma.$transaction([
@@ -69,15 +81,31 @@ export async function POST(_req: NextRequest, { params }: RouteContext) {
             },
           },
           update: {
-            position: toRealPosition(apply.mainPosition),
+            position: toRealPosition(apply.mainPosition) ?? "TOP",
+            isCaptain: false,
+            auctionStatus: "PENDING",
+            teamId: null,
           },
           create: {
             tournamentId: id,
             playerId: apply.playerId,
-            position: toRealPosition(apply.mainPosition),
+            position: toRealPosition(apply.mainPosition) ?? "TOP",
+            isCaptain: false,
+            auctionStatus: "PENDING",
           },
-        })
+        }),
       ),
+      prisma.destructionParticipationApply.updateMany({
+        where: {
+          tournamentId: id,
+          playerId: {
+            in: applies.map((apply) => apply.playerId),
+          },
+        },
+        data: {
+          status: "CONFIRMED",
+        },
+      }),
       prisma.adminLog.create({
         data: {
           action: "DESTRUCTION_PARTICIPANTS_IMPORT",
@@ -95,7 +123,7 @@ export async function POST(_req: NextRequest, { params }: RouteContext) {
 
     return NextResponse.json(
       { message: "멸망전 참가자 가져오기 중 오류가 발생했습니다." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

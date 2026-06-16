@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
@@ -197,7 +197,7 @@ export async function GET(req: NextRequest) {
             userId: discordGeneratedUserId,
             passwordHash: null,
             role: "USER",
-            status: "PENDING",
+            status: "APPROVED",
             ...data,
             discordLinkStatus: candidate ? "CANDIDATE" : "UNMATCHED",
           },
@@ -243,3 +243,4 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(`${baseUrl}/login?discord=failed`);
   }
 }
+

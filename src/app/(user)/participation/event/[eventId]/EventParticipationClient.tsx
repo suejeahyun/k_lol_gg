@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const POSITIONS = ["TOP", "JGL", "MID", "ADC", "SUP", "ALL"] as const;
 
@@ -20,6 +20,19 @@ type Player = {
 type EventParticipationClientProps = {
   eventId: string;
 };
+
+function getPositionLabel(position: ApplyPosition) {
+  const labels: Record<ApplyPosition, string> = {
+    TOP: "탑",
+    JGL: "정글",
+    MID: "미드",
+    ADC: "원딜",
+    SUP: "서폿",
+    ALL: "올라운더",
+  };
+
+  return labels[position];
+}
 
 export default function EventParticipationClient({
   eventId,
@@ -46,6 +59,19 @@ export default function EventParticipationClient({
       console.error("[EVENT_PARTICIPATION_FETCH_ERROR]", error);
     });
   }, [eventId]);
+
+  const positionCounts = useMemo(() => {
+    const counts = new Map<ApplyPosition, number>();
+    for (const position of POSITIONS) counts.set(position, 0);
+
+    for (const player of players) {
+      if (player.mainPosition) {
+        counts.set(player.mainPosition, (counts.get(player.mainPosition) ?? 0) + 1);
+      }
+    }
+
+    return counts;
+  }, [players]);
 
   const toggleSubPosition = (position: ApplyPosition) => {
     setSubPositions((prev) =>
@@ -93,43 +119,65 @@ export default function EventParticipationClient({
   };
 
   return (
-    <div className="page-container participation-detail">
-      <div className="page-header">
-        <h1 className="page-title">이벤트 내전 참가</h1>
-        <p className="page-description">
-          이벤트 내전에 참가 신청합니다. 주라인은 1개, 부라인은 여러 개 선택할 수 있습니다.
-        </p>
-      </div>
+    <div className="page-container participation-detail event-participation-page">
+      <section className="event-user-hero event-participation-hero">
+        <div>
+          <p className="page-eyebrow">EVENT MATCH APPLY</p>
+          <h1>이벤트 내전 참가</h1>
+          <p>
+            주라인과 부라인을 선택해 참가 신청합니다. 신청 후 관리자가 참가자를 확정합니다.
+          </p>
+        </div>
+      </section>
 
-      <div className="participation-box">
-        <SinglePositionSelector
-          title="주라인"
-          value={mainPosition}
-          onChange={setMainPosition}
-          required
-        />
+      <section className="event-user-summary-grid">
+        <div className="event-user-summary-card">
+          <span>현재 신청</span>
+          <strong>{players.length}명</strong>
+        </div>
+        {POSITIONS.slice(0, 5).map((position) => (
+          <div key={position} className="event-user-summary-card">
+            <span>{position}</span>
+            <strong>{positionCounts.get(position) ?? 0}명</strong>
+          </div>
+        ))}
+      </section>
 
-        <MultiPositionSelector
-          title="부라인"
-          values={subPositions}
-          onToggle={toggleSubPosition}
-        />
+      <section className="event-apply-layout">
+        <div className="event-apply-panel">
+          <div className="section-header">
+            <h2>참가 신청</h2>
+          </div>
 
-        <button
-          type="button"
-          className="participation-apply-button"
-          onClick={() => {
-            handleApply().catch((error: unknown) => {
-              console.error("[EVENT_APPLY_PROMISE_ERROR]", error);
-            });
-          }}
-          disabled={loading}
-        >
-          {loading ? "신청 중..." : "참가하기"}
-        </button>
-      </div>
+          <SinglePositionSelector
+            title="주라인"
+            value={mainPosition}
+            onChange={setMainPosition}
+            required
+          />
 
-      <ParticipationList players={players} />
+          <MultiPositionSelector
+            title="부라인"
+            values={subPositions}
+            onToggle={toggleSubPosition}
+          />
+
+          <button
+            type="button"
+            className="participation-apply-button event-apply-submit"
+            onClick={() => {
+              handleApply().catch((error: unknown) => {
+                console.error("[EVENT_APPLY_PROMISE_ERROR]", error);
+              });
+            }}
+            disabled={loading}
+          >
+            {loading ? "신청 중..." : "참가하기"}
+          </button>
+        </div>
+
+        <ParticipationList players={players} />
+      </section>
     </div>
   );
 }
@@ -146,13 +194,13 @@ function SinglePositionSelector({
   required?: boolean;
 }) {
   return (
-    <div className="participation-position-section">
+    <div className="participation-position-section event-position-section">
       <div className="participation-position-title">
         {title}
         {required ? <span>필수</span> : <span>선택</span>}
       </div>
 
-      <div className="participation-position-group">
+      <div className="participation-position-group event-position-group">
         {!required ? (
           <button
             type="button"
@@ -178,7 +226,8 @@ function SinglePositionSelector({
             }
             onClick={() => onChange(pos)}
           >
-            {pos}
+            <strong>{pos}</strong>
+            <span>{getPositionLabel(pos)}</span>
           </button>
         ))}
       </div>
@@ -196,13 +245,13 @@ function MultiPositionSelector({
   onToggle: (value: ApplyPosition) => void;
 }) {
   return (
-    <div className="participation-position-section">
+    <div className="participation-position-section event-position-section">
       <div className="participation-position-title">
         {title}
         <span>다중 선택</span>
       </div>
 
-      <div className="participation-position-group">
+      <div className="participation-position-group event-position-group">
         {POSITIONS.map((pos) => (
           <button
             key={pos}
@@ -214,7 +263,8 @@ function MultiPositionSelector({
             }
             onClick={() => onToggle(pos)}
           >
-            {pos}
+            <strong>{pos}</strong>
+            <span>{getPositionLabel(pos)}</span>
           </button>
         ))}
       </div>
@@ -224,39 +274,48 @@ function MultiPositionSelector({
 
 function ParticipationList({ players }: { players: Player[] }) {
   return (
-    <div className="participation-list">
-      <h2>현재 참가자</h2>
-
-      <div className="participation-header">
-        <span></span>
-        <span>이름</span>
-        <span>닉네임#태그</span>
-        <span>현재티어</span>
-        <span>최고티어</span>
-        <span>주라인</span>
-        <span>부라인</span>
+    <div className="participation-list event-apply-list">
+      <div className="section-header">
+        <h2>현재 참가 신청자</h2>
       </div>
 
       {players.length === 0 ? (
         <div className="admin-empty">참가 신청자가 없습니다.</div>
       ) : (
-        players.map((player, index) => (
-          <div key={player.id} className="participation-item">
-            <span>{index + 1}</span>
-            <strong>{player.name}</strong>
-            <em>
-              {player.nickname}#{player.tag}
-            </em>
-            <span>{player.currentTier ?? "-"}</span>
-            <span>{player.peakTier ?? "-"}</span>
-            <span>{player.mainPosition ?? "-"}</span>
-            <span>
-              {player.subPositions.length > 0
-                ? player.subPositions.join(", ")
-                : "-"}
-            </span>
-          </div>
-        ))
+        <div className="event-user-table-wrap">
+          <table className="event-user-table">
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>이름</th>
+                <th>닉네임#태그</th>
+                <th>현재티어</th>
+                <th>최고티어</th>
+                <th>주라인</th>
+                <th>부라인</th>
+              </tr>
+            </thead>
+            <tbody>
+              {players.map((player, index) => (
+                <tr key={player.id}>
+                  <td>{index + 1}</td>
+                  <td>{player.name}</td>
+                  <td>
+                    {player.nickname}#{player.tag}
+                  </td>
+                  <td>{player.currentTier ?? "-"}</td>
+                  <td>{player.peakTier ?? "-"}</td>
+                  <td>{player.mainPosition ?? "-"}</td>
+                  <td>
+                    {player.subPositions.length > 0
+                      ? player.subPositions.join(", ")
+                      : "-"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

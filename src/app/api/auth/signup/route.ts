@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
         data: {
           userId: normalizedUserId,
           passwordHash,
-          status: "PENDING",
+          status: "APPROVED",
           role: "USER",
         },
       });
@@ -121,7 +121,7 @@ export async function POST(req: NextRequest) {
 
       await writeAdminLog({
         action: existingPlayer ? "USER_SIGNUP_PLAYER_LINK" : "USER_SIGNUP",
-        message: `회원가입 신청: #${user.id} ${user.userId} / 플레이어 #${player.id} ${player.nickname}#${player.tag}`,
+        message: `회원가입 자동 승인: #${user.id} ${user.userId} / 플레이어 #${player.id} ${player.nickname}#${player.tag}`,
         db: tx,
       });
     });
@@ -129,7 +129,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         message:
-          "회원가입 신청이 완료되었습니다. 관리자 승인 후 이용할 수 있습니다.",
+          "회원가입이 완료되었습니다. 바로 이용할 수 있습니다.",
       },
       { status: 201 },
     );
@@ -142,3 +142,6 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+
+

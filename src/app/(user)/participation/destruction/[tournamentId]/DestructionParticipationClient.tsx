@@ -2,9 +2,13 @@
 
 import { useEffect, useState } from "react";
 
-const POSITIONS = ["TOP", "JGL", "MID", "ADC", "SUP", "ALL"] as const;
+const POSITIONS = ["TOP", "JGL", "MID", "ADC", "SUP"] as const;
+
+const ACTIVE_APPLY_STATUSES = ["APPLIED", "CONFIRMED", "RESERVE"] as const;
 
 type ApplyPosition = (typeof POSITIONS)[number];
+type CaptainPreference = "PREFERRED" | "NOT_PREFERRED";
+type ApplyStatus = "APPLIED" | "CONFIRMED" | "REJECTED" | "RESERVE" | "CANCELLED";
 
 type Player = {
   id: number;
@@ -14,22 +18,57 @@ type Player = {
   peakTier: string | null;
   currentTier: string | null;
   mainPosition: ApplyPosition | null;
-  subPositions: ApplyPosition[];
   isCaptain: boolean;
+  status?: ApplyStatus | string;
 };
+
+type CurrentApply = {
+  id: number;
+  status: ApplyStatus | string;
+  mainPosition: ApplyPosition | null;
+  isCaptain: boolean;
+} | null;
+
+type Tournament = {
+  id: number;
+  title: string;
+  status: string;
+} | null;
 
 type DestructionParticipationClientProps = {
   tournamentId: string;
 };
 
+const POSITION_LABELS: Record<ApplyPosition, string> = {
+  TOP: "TOP",
+  JGL: "JGL",
+  MID: "MID",
+  ADC: "ADC",
+  SUP: "SUP",
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  APPLIED: "신청",
+  CONFIRMED: "확정",
+  RESERVE: "보류",
+  CANCELLED: "취소",
+  REJECTED: "제외",
+};
+
+function isActiveApplyStatus(status: string | undefined) {
+  return Boolean(status && (ACTIVE_APPLY_STATUSES as readonly string[]).includes(status));
+}
+
 export default function DestructionParticipationClient({
   tournamentId,
 }: DestructionParticipationClientProps) {
   const [players, setPlayers] = useState<Player[]>([]);
+  const [tournament, setTournament] = useState<Tournament>(null);
+  const [currentApply, setCurrentApply] = useState<CurrentApply>(null);
   const [mainPosition, setMainPosition] = useState<ApplyPosition | "">("");
-  const [subPositions, setSubPositions] = useState<ApplyPosition[]>([]);
-  const [isCaptain, setIsCaptain] = useState(false);
+  const [captainPreference, setCaptainPreference] = useState<CaptainPreference>("NOT_PREFERRED");
   const [loading, setLoading] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
 
   const fetchPlayers = async (targetId: string) => {
     const res = await fetch(`/api/participation/destruction/${targetId}`, {
@@ -39,7 +78,17 @@ export default function DestructionParticipationClient({
     const data = await res.json();
 
     if (res.ok) {
+      setTournament(data.tournament ?? null);
       setPlayers(data.players || []);
+      setCurrentApply(data.currentApply ?? null);
+
+      if (data.currentApply?.mainPosition) {
+        setMainPosition(data.currentApply.mainPosition);
+      }
+
+      if (typeof data.currentApply?.isCaptain === "boolean") {
+        setCaptainPreference(data.currentApply.isCaptain ? "PREFERRED" : "NOT_PREFERRED");
+      }
     }
   };
 
@@ -49,17 +98,9 @@ export default function DestructionParticipationClient({
     });
   }, [tournamentId]);
 
-  const toggleSubPosition = (position: ApplyPosition) => {
-    setSubPositions((prev) =>
-      prev.includes(position)
-        ? prev.filter((item) => item !== position)
-        : [...prev, position]
-    );
-  };
-
   const handleApply = async () => {
     if (!mainPosition) {
-      alert("주라인을 선택해주세요.");
+      alert("주 포지션을 선택해주세요.");
       return;
     }
 
@@ -75,10 +116,9 @@ export default function DestructionParticipationClient({
           },
           body: JSON.stringify({
             mainPosition,
-            subPositions,
-            isCaptain,
+            captainPreference,
           }),
-        }
+        },
       );
 
       const data = await res.json();
@@ -88,7 +128,7 @@ export default function DestructionParticipationClient({
         return;
       }
 
-      alert("멸망전 참가 신청이 완료되었습니다.");
+      alert(currentApply && isActiveApplyStatus(String(currentApply.status)) ? "멸망전 참가 신청이 수정되었습니다." : "멸망전 참가 신청이 완료되었습니다.");
       await fetchPlayers(tournamentId);
     } catch (error: unknown) {
       console.error("[DESTRUCTION_APPLY_ERROR]", error);
@@ -98,50 +138,132 @@ export default function DestructionParticipationClient({
     }
   };
 
+  const handleCancel = async () => {
+    if (!confirm("멸망전 참가 신청을 취소하시겠습니까?")) return;
+
+    try {
+      setCancelLoading(true);
+
+      const res = await fetch(`/api/participation/destruction/${tournamentId}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "참가 취소 실패");
+        return;
+      }
+
+      alert("멸망전 참가 신청이 취소되었습니다.");
+      setMainPosition("");
+      setCaptainPreference("NOT_PREFERRED");
+      await fetchPlayers(tournamentId);
+    } catch (error: unknown) {
+      console.error("[DESTRUCTION_CANCEL_ERROR]", error);
+      alert("참가 취소 중 오류가 발생했습니다.");
+    } finally {
+      setCancelLoading(false);
+    }
+  };
+
+  const isRecruiting = tournament?.status === "RECRUITING";
+  const hasCurrentActiveApply = isActiveApplyStatus(String(currentApply?.status ?? ""));
+  const applyButtonText = loading
+    ? "처리 중..."
+    : hasCurrentActiveApply
+      ? "신청 수정하기"
+      : "참가하기";
+
   return (
     <div className="page-container participation-detail">
       <div className="page-header">
         <h1 className="page-title">멸망전 참가</h1>
         <p className="page-description">
-          멸망전에 참가 신청합니다. 주라인은 1개, 부라인은 여러 개 선택할 수 있습니다.
+          주 포지션 1개와 팀장 선호 여부만 선택합니다. 최종 팀장은 관리자 지정 기준으로 확정됩니다.
         </p>
       </div>
 
+      {currentApply ? (
+        <div className="empty-box" style={{ marginBottom: 16 }}>
+          <strong>내 신청 상태: {STATUS_LABELS[String(currentApply.status)] ?? currentApply.status}</strong>
+          <p className="page-description" style={{ margin: "8px 0 0" }}>
+            주 포지션 {currentApply.mainPosition ?? "-"} · {currentApply.isCaptain ? "팀장 선호" : "팀장 비선호"}
+            {currentApply.status === "RESERVE" ? " · 현재 관리자가 보류 인원으로 분류했습니다." : ""}
+          </p>
+        </div>
+      ) : null}
+
       <div className="participation-box">
         <SinglePositionSelector
-          title="주라인"
+          title="주 포지션"
           value={mainPosition}
           onChange={setMainPosition}
-          required
         />
 
-        <MultiPositionSelector
-          title="부라인"
-          values={subPositions}
-          onToggle={toggleSubPosition}
-        />
+        <div className="participation-position-section">
+          <div className="participation-position-title">
+            팀장 여부
+            <span>필수</span>
+          </div>
 
-        <label className="participation-checkbox">
-          <input
-            type="checkbox"
-            checked={isCaptain}
-            onChange={(event) => setIsCaptain(event.target.checked)}
-          />
-          <span>주장으로 신청합니다</span>
-        </label>
+          <div className="participation-position-group">
+            <button
+              type="button"
+              className={
+                captainPreference === "PREFERRED"
+                  ? "participation-position-button active"
+                  : "participation-position-button"
+              }
+              onClick={() => setCaptainPreference("PREFERRED")}
+              disabled={!isRecruiting}
+            >
+              팀장 선호
+            </button>
+            <button
+              type="button"
+              className={
+                captainPreference === "NOT_PREFERRED"
+                  ? "participation-position-button active"
+                  : "participation-position-button"
+              }
+              onClick={() => setCaptainPreference("NOT_PREFERRED")}
+              disabled={!isRecruiting}
+            >
+              팀장 비선호
+            </button>
+          </div>
+        </div>
 
-        <button
-          type="button"
-          className="participation-apply-button"
-          onClick={() => {
-            handleApply().catch((error: unknown) => {
-              console.error("[DESTRUCTION_APPLY_PROMISE_ERROR]", error);
-            });
-          }}
-          disabled={loading}
-        >
-          {loading ? "신청 중..." : "참가하기"}
-        </button>
+        <div className="admin-form__actions" style={{ justifyContent: "space-between" }}>
+          <button
+            type="button"
+            className="participation-apply-button"
+            onClick={() => {
+              handleApply().catch((error: unknown) => {
+                console.error("[DESTRUCTION_APPLY_PROMISE_ERROR]", error);
+              });
+            }}
+            disabled={loading || !isRecruiting}
+          >
+            {applyButtonText}
+          </button>
+
+          {hasCurrentActiveApply && isRecruiting ? (
+            <button
+              type="button"
+              className="chip-button danger"
+              onClick={() => {
+                handleCancel().catch((error: unknown) => {
+                  console.error("[DESTRUCTION_CANCEL_PROMISE_ERROR]", error);
+                });
+              }}
+              disabled={cancelLoading}
+            >
+              {cancelLoading ? "취소 중..." : "참가 취소하기"}
+            </button>
+          ) : null}
+        </div>
       </div>
 
       <ParticipationList players={players} />
@@ -153,35 +275,19 @@ function SinglePositionSelector({
   title,
   value,
   onChange,
-  required = false,
 }: {
   title: string;
   value: ApplyPosition | "";
   onChange: (value: ApplyPosition | "") => void;
-  required?: boolean;
 }) {
   return (
     <div className="participation-position-section">
       <div className="participation-position-title">
         {title}
-        {required ? <span>필수</span> : <span>선택</span>}
+        <span>필수</span>
       </div>
 
       <div className="participation-position-group">
-        {!required ? (
-          <button
-            type="button"
-            className={
-              value === ""
-                ? "participation-position-button active"
-                : "participation-position-button"
-            }
-            onClick={() => onChange("")}
-          >
-            선택 안함
-          </button>
-        ) : null}
-
         {POSITIONS.map((pos) => (
           <button
             key={pos}
@@ -193,43 +299,7 @@ function SinglePositionSelector({
             }
             onClick={() => onChange(pos)}
           >
-            {pos}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function MultiPositionSelector({
-  title,
-  values,
-  onToggle,
-}: {
-  title: string;
-  values: ApplyPosition[];
-  onToggle: (value: ApplyPosition) => void;
-}) {
-  return (
-    <div className="participation-position-section">
-      <div className="participation-position-title">
-        {title}
-        <span>다중 선택</span>
-      </div>
-
-      <div className="participation-position-group">
-        {POSITIONS.map((pos) => (
-          <button
-            key={pos}
-            type="button"
-            className={
-              values.includes(pos)
-                ? "participation-position-button active"
-                : "participation-position-button"
-            }
-            onClick={() => onToggle(pos)}
-          >
-            {pos}
+            {POSITION_LABELS[pos]}
           </button>
         ))}
       </div>
@@ -238,9 +308,31 @@ function MultiPositionSelector({
 }
 
 function ParticipationList({ players }: { players: Player[] }) {
+  const positionCounts = POSITIONS.map((position) => ({
+    position,
+    count: players.filter((player) => player.mainPosition === position && player.status !== "RESERVE").length,
+  }));
+  const activePlayers = players.filter((player) => player.status !== "RESERVE");
+  const reservePlayers = players.filter((player) => player.status === "RESERVE");
+  const captainPreferredCount = activePlayers.filter((player) => player.isCaptain).length;
+
   return (
     <div className="participation-list">
-      <h2>현재 참가자</h2>
+      <div className="page-header" style={{ marginTop: 24 }}>
+        <h2>현재 참가 신청자</h2>
+        <p className="page-description">
+          확정 후보 {activePlayers.length}명 · 보류 {reservePlayers.length}명 · 팀장 선호 {captainPreferredCount}명 · 팀장 비선호 {activePlayers.length - captainPreferredCount}명
+        </p>
+      </div>
+
+      <div className="admin-event-detail-grid" style={{ marginBottom: 16 }}>
+        {positionCounts.map((item) => (
+          <div key={item.position} className="admin-event-detail-card">
+            <span>{item.position}</span>
+            <strong>{item.count}명</strong>
+          </div>
+        ))}
+      </div>
 
       <div className="participation-header participation-header--captain">
         <span></span>
@@ -248,9 +340,8 @@ function ParticipationList({ players }: { players: Player[] }) {
         <span>닉네임#태그</span>
         <span>현재티어</span>
         <span>최고티어</span>
-        <span>주라인</span>
-        <span>부라인</span>
-        <span>주장신청</span>
+        <span>주 포지션</span>
+        <span>상태</span>
       </div>
 
       {players.length === 0 ? (
@@ -270,11 +361,9 @@ function ParticipationList({ players }: { players: Player[] }) {
             <span>{player.peakTier ?? "-"}</span>
             <span>{player.mainPosition ?? "-"}</span>
             <span>
-              {player.subPositions.length > 0
-                ? player.subPositions.join(", ")
-                : "-"}
+              {STATUS_LABELS[String(player.status)] ?? player.status ?? "신청"}
+              {player.isCaptain ? " · 팀장 선호" : " · 팀장 비선호"}
             </span>
-            <span>{player.isCaptain ? "주장 신청" : "일반 참가"}</span>
           </div>
         ))
       )}

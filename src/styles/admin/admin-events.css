@@ -1,4 +1,4 @@
-/* 이벤트 내전 관리자 / 진행 UI */
+﻿/* 이벤트 내전 관리자 / 진행 UI */
 
 .admin-event-list {
   display: flex;
@@ -1240,3 +1240,493 @@
     grid-column: auto;
   }
 }
+
+/* K-LOL.GG event user UI rework */
+.event-user-page,
+.event-user-detail-page,
+.event-participation-page {
+  width: min(1180px, calc(100vw - 40px));
+  margin-inline: auto;
+}
+
+.event-user-hero,
+.event-user-detail-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 30px 34px;
+  border: 1px solid rgba(96, 165, 250, 0.34);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 88% 20%, rgba(124, 58, 237, 0.22), transparent 38%),
+    linear-gradient(135deg, rgba(8, 23, 46, 0.96), rgba(15, 23, 42, 0.94));
+  box-shadow: 0 0 42px rgba(37, 99, 235, 0.16);
+  overflow: hidden;
+}
+
+.event-user-hero h1,
+.event-user-detail-hero h1 {
+  margin: 0;
+  color: #f8fbff;
+  font-size: clamp(34px, 4vw, 58px);
+  font-weight: 1000;
+  letter-spacing: -0.06em;
+}
+
+.event-user-hero p,
+.event-user-detail-hero p {
+  margin: 10px 0 0;
+  color: rgba(226, 236, 255, 0.76);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.65;
+}
+
+.event-user-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.event-user-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.event-user-summary-card {
+  display: grid;
+  gap: 8px;
+  min-height: 78px;
+  padding: 16px;
+  border: 1px solid rgba(96, 165, 250, 0.24);
+  border-radius: 16px;
+  background: rgba(15, 30, 52, 0.82);
+  box-shadow: inset 0 0 20px rgba(59, 130, 246, 0.08);
+}
+
+.event-user-summary-card span {
+  color: rgba(203, 213, 225, 0.72);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.event-user-summary-card strong {
+  color: #f8fbff;
+  font-size: 20px;
+  font-weight: 1000;
+}
+
+.event-progress-list--wide {
+  grid-template-columns: 1fr;
+}
+
+.event-progress-card--with-image {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 20px;
+  align-items: stretch;
+}
+
+.event-progress-card__preview {
+  min-height: 170px;
+  border: 1px solid rgba(96, 165, 250, 0.22);
+  border-radius: 18px;
+  background: rgba(2, 6, 23, 0.58);
+  overflow: hidden;
+}
+
+.event-progress-card__preview-image,
+.event-progress-card__preview-empty {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 170px;
+  align-items: center;
+  justify-content: center;
+}
+
+.event-progress-card__preview-image {
+  display: block;
+  object-fit: cover;
+}
+
+.event-progress-card__preview-empty {
+  padding: 16px;
+  color: rgba(203, 213, 225, 0.72);
+  font-size: 13px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.event-progress-card__content {
+  min-width: 0;
+}
+
+.event-progress-card__meta--user {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.event-progress-card__actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.event-progress-card__actions span,
+.event-progress-card__actions em {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 950;
+  font-style: normal;
+}
+
+.event-progress-card__actions span {
+  border: 1px solid rgba(96, 165, 250, 0.26);
+  color: rgba(219, 234, 254, 0.9);
+  background: rgba(15, 23, 42, 0.65);
+}
+
+.event-progress-card__actions em {
+  color: #e0f2fe;
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.9), rgba(14, 165, 233, 0.9));
+}
+
+.event-detail-summary-grid--user {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.event-user-section,
+.event-user-final-section,
+.event-apply-panel,
+.event-apply-list {
+  border: 1px solid rgba(96, 165, 250, 0.24);
+  border-radius: 20px;
+  background: rgba(15, 30, 52, 0.82);
+  box-shadow: 0 0 30px rgba(37, 99, 235, 0.12);
+}
+
+.event-user-team-matrix {
+  display: grid;
+  gap: 8px;
+  overflow-x: auto;
+}
+
+.event-user-team-matrix__header,
+.event-user-team-matrix__row {
+  display: grid;
+  grid-template-columns: 84px repeat(var(--event-team-count, 4), minmax(170px, 1fr));
+  gap: 8px;
+  min-width: 720px;
+}
+
+.event-user-team-matrix__header > span,
+.event-user-team-matrix__header > strong,
+.event-user-team-matrix__row > strong,
+.event-user-team-matrix__cell {
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  border-radius: 12px;
+  background: rgba(2, 6, 23, 0.42);
+}
+
+.event-user-team-matrix__header > span,
+.event-user-team-matrix__header > strong,
+.event-user-team-matrix__row > strong {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  color: #f8fbff;
+  font-size: 12px;
+  font-weight: 1000;
+}
+
+.event-user-team-matrix__cell {
+  display: grid;
+  gap: 4px;
+  min-height: 58px;
+  padding: 10px 12px;
+}
+
+.event-user-team-matrix__cell b {
+  color: #f8fbff;
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.event-user-team-matrix__cell span,
+.event-user-team-matrix__cell em {
+  color: rgba(203, 213, 225, 0.74);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 750;
+}
+
+.event-user-bracket-stage-list,
+.event-user-bracket-stage {
+  display: grid;
+  gap: 14px;
+}
+
+.event-user-bracket-stage h3 {
+  margin: 0;
+  color: #f8fbff;
+  font-size: 16px;
+  font-weight: 1000;
+}
+
+.event-user-match-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
+}
+
+.event-user-match-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(96, 165, 250, 0.18);
+  border-radius: 14px;
+  background: rgba(2, 6, 23, 0.42);
+}
+
+.event-user-match-card div {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.event-user-match-card span,
+.event-user-match-card em {
+  color: rgba(203, 213, 225, 0.72);
+  font-size: 12px;
+  font-weight: 850;
+  font-style: normal;
+}
+
+.event-user-match-card strong {
+  color: #f8fbff;
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.event-user-table-wrap {
+  overflow-x: auto;
+}
+
+.event-user-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px;
+  min-width: 720px;
+}
+
+.event-user-table th {
+  padding: 0 12px 6px;
+  color: rgba(203, 213, 225, 0.72);
+  font-size: 12px;
+  font-weight: 900;
+  text-align: left;
+}
+
+.event-user-table td {
+  padding: 12px;
+  border-block: 1px solid rgba(96, 165, 250, 0.18);
+  background: rgba(2, 6, 23, 0.42);
+  color: rgba(226, 236, 255, 0.9);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.event-user-table td:first-child {
+  border-left: 1px solid rgba(96, 165, 250, 0.18);
+  border-radius: 12px 0 0 12px;
+}
+
+.event-user-table td:last-child {
+  border-right: 1px solid rgba(96, 165, 250, 0.18);
+  border-radius: 0 12px 12px 0;
+}
+
+.event-apply-layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.9fr) minmax(0, 1.4fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.event-apply-panel,
+.event-apply-list {
+  padding: 18px;
+}
+
+.event-position-group .participation-position-button {
+  display: grid;
+  gap: 2px;
+  min-height: 54px;
+}
+
+.event-position-group .participation-position-button strong {
+  color: inherit;
+  font-size: 13px;
+  font-weight: 1000;
+}
+
+.event-position-group .participation-position-button span {
+  color: rgba(203, 213, 225, 0.7);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.event-apply-submit {
+  margin-top: 16px;
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .event-user-page,
+  .event-user-detail-page,
+  .event-participation-page {
+    width: min(100%, calc(100vw - 24px));
+  }
+
+  .event-user-hero,
+  .event-user-detail-hero {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 24px;
+  }
+
+  .event-user-hero__actions {
+    justify-content: flex-start;
+  }
+
+  .event-progress-card--with-image,
+  .event-apply-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .event-progress-card__meta--user {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* K-LOL.GG event user list layout fix */
+.event-user-page.page-container,
+.event-user-detail-page.page-container,
+.event-participation-page.page-container {
+  width: min(1180px, calc(100vw - 40px)) !important;
+  max-width: 1180px !important;
+  margin-inline: auto !important;
+}
+
+.event-user-page .event-progress-list,
+.event-user-page .event-progress-list.event-progress-list--wide {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 18px !important;
+  width: 100% !important;
+}
+
+.event-user-page .event-progress-card.event-progress-card--with-image {
+  display: grid !important;
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr) !important;
+  gap: 22px !important;
+  align-items: stretch !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  padding: 18px !important;
+  writing-mode: horizontal-tb !important;
+}
+
+.event-user-page .event-progress-card__preview {
+  min-width: 0 !important;
+  min-height: 190px !important;
+  max-height: 230px !important;
+}
+
+.event-user-page .event-progress-card__preview-image,
+.event-user-page .event-progress-card__preview-empty {
+  min-height: 190px !important;
+  max-height: 230px !important;
+}
+
+.event-user-page .event-progress-card__content,
+.event-user-page .event-progress-card__content * {
+  min-width: 0 !important;
+  writing-mode: horizontal-tb !important;
+  text-orientation: mixed !important;
+  word-break: keep-all !important;
+  overflow-wrap: anywhere !important;
+}
+
+.event-user-page .event-progress-card__content {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+}
+
+.event-user-page .event-progress-card__top {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+}
+
+.event-user-page .event-progress-card__content h2 {
+  margin: 0 !important;
+  color: #f8fbff !important;
+  font-size: clamp(20px, 2.4vw, 30px) !important;
+  line-height: 1.25 !important;
+  letter-spacing: -0.045em !important;
+  white-space: normal !important;
+}
+
+.event-user-page .event-progress-card__content p {
+  display: block !important;
+  margin: 0 !important;
+  max-width: 760px !important;
+  color: rgba(226, 236, 255, 0.74) !important;
+  font-size: 13px !important;
+  line-height: 1.7 !important;
+}
+
+.event-user-page .event-progress-card__meta.event-progress-card__meta--user {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(100px, 1fr)) !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+
+.event-user-page .event-progress-card__actions {
+  flex-wrap: wrap !important;
+}
+
+@media (max-width: 860px) {
+  .event-user-page.page-container,
+  .event-user-detail-page.page-container,
+  .event-participation-page.page-container {
+    width: min(100%, calc(100vw - 24px)) !important;
+  }
+
+  .event-user-page .event-progress-card.event-progress-card--with-image {
+    grid-template-columns: 1fr !important;
+  }
+
+  .event-user-page .event-progress-card__meta.event-progress-card__meta--user {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
