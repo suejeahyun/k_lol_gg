@@ -896,11 +896,8 @@ export default function DestructionAuctionManager({
 
       setDrawPhase("SELECTING");
       playAuctionSound("select", soundEnabledRef.current);
-      await wait(resultTierRank >= 8 ? 560 : 480);
-
-      setDrawPhase("APPROACHING");
+      await wait(resultTierRank >= 8 ? 920 : resultTierRank >= 5 ? 860 : 780);
       playAuctionSound("confirm", soundEnabledRef.current);
-      await wait(resultTierRank <= 4 ? 500 : resultTierRank >= 8 ? 760 : 640);
 
       setDrawPhase("TIER_ASCENDING");
       if (resultTierRank <= 4) {
@@ -2349,7 +2346,175 @@ export default function DestructionAuctionManager({
         .gacha-overlay.phase-shuffling.gold-below .gacha-deck-cluster { animation-duration: 1.35s !important; }
         .gacha-overlay.phase-shuffling.ascent-tier .gacha-deck-cluster { animation-duration: 1.50s !important; }
         .gacha-overlay.phase-shuffling.master-plus .gacha-deck-cluster { animation-duration: 1.65s !important; }
-      `}</style>
+      
+
+
+        /* K-LOL.GG auction ordered smooth clean final v1
+           Goals:
+           1) no tier-colored border on the card back before reveal
+           2) one clean pick motion instead of double pop/approach
+           3) revealed card front uses tier-colored full-card background
+           4) smoother motion through transform/opacity only in selection phase */
+        @keyframes klolCleanOnePickIn {
+          0% {
+            opacity: 0;
+            transform: translate3d(0, 92px, 0) scale(.72) rotate(-3deg);
+          }
+          34% {
+            opacity: 1;
+            transform: translate3d(0, 20px, 0) scale(.92) rotate(-1deg);
+          }
+          72% {
+            opacity: 1;
+            transform: translate3d(0, -8px, 0) scale(1.018) rotate(.8deg);
+          }
+          100% {
+            opacity: 1;
+            transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+          }
+        }
+
+        @keyframes klolCleanDeckAfterPick {
+          0% {
+            opacity: 1;
+            transform: translate3d(0, 0, 0) scale(1);
+          }
+          42% {
+            opacity: .66;
+            transform: translate3d(0, 18px, 0) scale(.94);
+          }
+          100% {
+            opacity: 0;
+            transform: translate3d(0, 56px, 0) scale(.84);
+          }
+        }
+
+        @keyframes klolCleanTierHold {
+          0% { transform: translate3d(0, 0, 0) scale(1); }
+          100% { transform: translate3d(0, -3px, 0) scale(1.004); }
+        }
+
+        .gacha-overlay.phase-shuffling .gacha-picked-card {
+          opacity: 0 !important;
+          animation: none !important;
+          transform: translate3d(0, 92px, 0) scale(.72) rotate(0deg) !important;
+          filter: none !important;
+        }
+
+        .gacha-overlay.phase-selecting .gacha-picked-card {
+          opacity: 1 !important;
+          animation: klolCleanOnePickIn .78s cubic-bezier(.18,.88,.18,1) both !important;
+          filter: none !important;
+          will-change: transform, opacity !important;
+        }
+
+        .gacha-overlay.phase-selecting .gacha-deck-cluster {
+          opacity: 1 !important;
+          animation: klolCleanDeckAfterPick .72s cubic-bezier(.22,.82,.2,1) both !important;
+          filter: none !important;
+          will-change: transform, opacity !important;
+        }
+
+        .gacha-overlay.phase-selecting .gacha-card-back {
+          filter: none !important;
+          will-change: transform, opacity !important;
+        }
+
+        .gacha-overlay.phase-selecting .gacha-light-burst,
+        .gacha-overlay.phase-selecting .gacha-shockwave,
+        .gacha-overlay.phase-selecting .gacha-sparkles span {
+          animation: none !important;
+          opacity: .16 !important;
+          filter: none !important;
+        }
+
+        .gacha-overlay.phase-approaching .gacha-picked-card,
+        .gacha-overlay.phase-tier_ascending .gacha-picked-card,
+        .gacha-overlay.phase-special_tension .gacha-picked-card,
+        .gacha-overlay.phase-flipping .gacha-picked-card,
+        .gacha-overlay.revealed .gacha-picked-card {
+          opacity: 1 !important;
+          transform: translate3d(0, 0, 0) scale(1) rotate(0deg) !important;
+        }
+
+        .gacha-overlay.phase-tier_ascending .gacha-picked-card {
+          animation: klolCleanTierHold 1.3s ease-in-out infinite alternate !important;
+          filter: none !important;
+        }
+
+        .gacha-overlay.phase-special_tension .gacha-picked-card,
+        .gacha-overlay.phase-flipping .gacha-picked-card,
+        .gacha-overlay.revealed .gacha-picked-card {
+          animation: none !important;
+        }
+
+        .gacha-overlay.phase-tier_ascending .gacha-deck-cluster,
+        .gacha-overlay.phase-special_tension .gacha-deck-cluster,
+        .gacha-overlay.phase-flipping .gacha-deck-cluster,
+        .gacha-overlay.revealed .gacha-deck-cluster {
+          opacity: 0 !important;
+          transform: translate3d(0, 56px, 0) scale(.84) !important;
+          transition: opacity .22s ease, transform .22s ease !important;
+          filter: none !important;
+        }
+
+        .gacha-card-face.back,
+        .gacha-card-back,
+        .gacha-overlay.phase-tier_ascending .gacha-card-face.back,
+        .gacha-overlay.phase-special_tension .gacha-card-face.back,
+        .gacha-overlay.phase-flipping .gacha-card-face.back {
+          border-color: rgba(125,211,252,.42) !important;
+          background-color: #153a76 !important;
+          background-image: linear-gradient(145deg, #4f8df7 0%, #1e4f9f 48%, #071634 100%) !important;
+          box-shadow:
+            0 26px 58px rgba(0,0,0,.54),
+            inset 0 0 26px rgba(255,255,255,.10),
+            0 0 34px rgba(96,165,250,.30) !important;
+        }
+
+        .gacha-card-face.back::after,
+        .gacha-card-back::after {
+          text-shadow:
+            0 16px 34px rgba(0,0,0,.35),
+            0 0 22px rgba(59,130,246,.34) !important;
+        }
+
+        .gacha-card-face.front {
+          background-color: color-mix(in srgb, var(--card-tier-secondary) 58%, #07101f) !important;
+          background-image:
+            radial-gradient(circle at 76% 16%, color-mix(in srgb, var(--card-tier-primary) 36%, rgba(255,255,255,.12)), transparent 25%),
+            radial-gradient(circle at 18% 0%, color-mix(in srgb, var(--card-tier-glow) 42%, transparent), transparent 32%),
+            radial-gradient(circle at 50% 110%, color-mix(in srgb, var(--card-tier-primary) 26%, transparent), transparent 38%),
+            linear-gradient(155deg,
+              color-mix(in srgb, var(--card-tier-primary) 38%, #10243a) 0%,
+              color-mix(in srgb, var(--card-tier-secondary) 64%, #0b1629) 48%,
+              #050b16 100%) !important;
+          border-color: var(--card-tier-border) !important;
+          box-shadow:
+            0 0 0 1px rgba(255,255,255,.10) inset,
+            0 32px 92px rgba(0,0,0,.72),
+            0 0 66px color-mix(in srgb, var(--card-tier-glow) 84%, transparent) !important;
+        }
+
+        .gacha-card-face.front::before {
+          background-image:
+            linear-gradient(135deg, rgba(255,255,255,.10), transparent 28%, rgba(255,255,255,.035) 58%, transparent 78%),
+            repeating-linear-gradient(120deg, rgba(255,255,255,.045) 0 1px, transparent 1px 16px),
+            radial-gradient(circle at 72% 10%, color-mix(in srgb, var(--card-tier-glow) 72%, transparent), transparent 34%) !important;
+          opacity: .78 !important;
+        }
+
+        .gacha-card-face.front .auction-front-stat {
+          background-color: rgba(5,14,27,.84) !important;
+          background-image:
+            linear-gradient(135deg, rgba(255,255,255,.060), rgba(5,14,27,.94)) !important;
+          border-color: color-mix(in srgb, var(--card-tier-border) 30%, rgba(255,255,255,.10)) !important;
+        }
+
+        .gacha-overlay:not(.revealed):not(.phase-flipping) .gacha-card-face.front::after {
+          content: none !important;
+        }
+`}</style>
 
       <div className="destruction-auction-summary">
         <div className="admin-event-detail-card">
