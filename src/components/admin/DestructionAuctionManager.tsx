@@ -231,28 +231,70 @@ function getTierCriteriaClass(rank: number) {
   return "gold-below";
 }
 
+const AUCTION_SOUND_BASE = "/sounds/destruction-auction";
+const AUCTION_SOUND_VERSION = "dark-cinematic-v3-20260618";
+
+function auctionSoundPath(fileName: string) {
+  return `${AUCTION_SOUND_BASE}/${fileName}?v=${AUCTION_SOUND_VERSION}`;
+}
+
+const AUCTION_SOUNDS = {
+  shuffle: auctionSoundPath("shuffle.wav"),
+  select: auctionSoundPath("select.wav"),
+  approach: auctionSoundPath("approach.wav"),
+  pulse: auctionSoundPath("tier-pulse.wav"),
+  ascendSilver: auctionSoundPath("ascent-silver.wav"),
+  ascendGold: auctionSoundPath("ascent-gold.wav"),
+  ascendPlatinum: auctionSoundPath("ascent-platinum.wav"),
+  ascendEmerald: auctionSoundPath("ascent-emerald.wav"),
+  ascendDiamond: auctionSoundPath("ascent-diamond.wav"),
+  ascendMaster: auctionSoundPath("ascent-master.wav"),
+  ascendGrandmaster: auctionSoundPath("ascent-grandmaster.wav"),
+  ascendChallenger: auctionSoundPath("ascent-challenger.wav"),
+  specialTension: auctionSoundPath("special-tension.wav"),
+  flip: auctionSoundPath("flip.wav"),
+  reveal: auctionSoundPath("reveal.wav"),
+  revealHigh: auctionSoundPath("reveal-high.wav"),
+};
+
+function playAuctionSound(src: string, volume = 0.62) {
+  if (typeof window === "undefined") return;
+
+  try {
+    const audio = new Audio(src);
+    audio.preload = "auto";
+    audio.volume = Math.max(0, Math.min(volume, 1));
+    void audio.play().catch(() => {
+      // 브라우저 자동재생 정책 또는 장치 설정 문제는 경매 진행을 막지 않음.
+    });
+  } catch {
+    // 효과음 실패는 경매 진행을 막지 않음.
+  }
+}
+
 function getTierAscentSteps(maxRank: number, minRank = 3) {
   const steps = [
-    { rank: 3 },
-    { rank: 4 },
-    { rank: 5 },
-    { rank: 6 },
-    { rank: 7 },
-    { rank: 8 },
-    { rank: 9 },
-    { rank: 10 },
+    { rank: 3, src: AUCTION_SOUNDS.ascendSilver },
+    { rank: 4, src: AUCTION_SOUNDS.ascendGold },
+    { rank: 5, src: AUCTION_SOUNDS.ascendPlatinum },
+    { rank: 6, src: AUCTION_SOUNDS.ascendEmerald },
+    { rank: 7, src: AUCTION_SOUNDS.ascendDiamond },
+    { rank: 8, src: AUCTION_SOUNDS.ascendMaster },
+    { rank: 9, src: AUCTION_SOUNDS.ascendGrandmaster },
+    { rank: 10, src: AUCTION_SOUNDS.ascendChallenger },
   ];
 
   return steps.filter((step) => step.rank >= minRank && step.rank <= maxRank);
 }
 
-async function animateTierAscentSequence(maxRank: number, onStep?: (rank: number) => void, minRank = 3) {
+async function playTierAscentSoundSequence(maxRank: number, onStep?: (rank: number) => void, minRank = 3) {
   const steps = getTierAscentSteps(maxRank, minRank);
   const delay = maxRank >= 8 ? 390 : 340;
 
   for (let index = 0; index < steps.length; index += 1) {
     const step = steps[index];
     onStep?.(step.rank);
+    playAuctionSound(step.src, Math.min(0.28 + index * 0.035, 0.52));
     await wait(delay);
   }
 }
@@ -334,21 +376,37 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
   const overlayTierClassName = `tier-${tierVisual.key.toLowerCase()} ${tierCriteriaClassName}`;
   const ascentClassName = ascentRank > 0 ? `ascent-${ascentRank}` : "";
   const isDrawingPhase = drawPhase !== "IDLE" && drawPhase !== "REVEALED";
-  const drawPhaseTitle = drawPhase === "SHUFFLING"
-    ? "카드 라인 셔플 중..."
-    : drawPhase === "SELECTING"
-      ? "카드 선택 중..."
-      : drawPhase === "APPROACHING"
-        ? "선택 카드 접근 중..."
-      : drawPhase === "TIER_ASCENDING"
-        ? tierRank >= 5
-          ? "티어 상승 연출 중..."
-          : "티어 색상 강조 중..."
-        : drawPhase === "SPECIAL_TENSION"
-          ? "뭔가 나온다..."
-          : drawPhase === "FLIPPING"
-            ? "카드 뒤집는 중..."
-            : "카드 공개 완료";
+  const lineShuffleActive = drawPhase === "SHUFFLING" || drawPhase === "SELECTING";
+  const drawPhaseTitle = drawPhase === "IDLE"
+    ? "플레이어 대기 중"
+    : drawPhase === "SHUFFLING"
+      ? "플레이어 추첨 중..."
+      : drawPhase === "SELECTING"
+        ? "플레이어 선택"
+        : drawPhase === "APPROACHING"
+          ? "플레이어 확인 중..."
+          : drawPhase === "TIER_ASCENDING"
+            ? "티어 확인 중..."
+            : drawPhase === "SPECIAL_TENSION"
+              ? "상위 티어 반응"
+              : drawPhase === "FLIPPING"
+                ? "플레이어 공개 중..."
+                : "플레이어 공개 완료";
+  const drawPhaseDescription = drawPhase === "IDLE"
+    ? "추첨을 시작하면 다음 경매 대상이 선택됩니다."
+    : drawPhase === "SHUFFLING"
+      ? "경매 후보를 섞고 있습니다."
+      : drawPhase === "SELECTING"
+        ? "이번 경매 대상이 선택되었습니다."
+        : drawPhase === "APPROACHING"
+          ? "선택된 플레이어 정보를 불러옵니다."
+          : drawPhase === "TIER_ASCENDING"
+            ? "플레이어의 티어 정보가 반영됩니다."
+            : drawPhase === "SPECIAL_TENSION"
+              ? "높은 티어의 플레이어가 감지되었습니다."
+              : drawPhase === "FLIPPING"
+                ? "경매 대상 정보를 공개합니다."
+                : "낙찰 팀과 포인트를 입력하세요.";
 
   const openOverlayForCurrent = () => {
     if (!currentTarget) return;
@@ -385,6 +443,7 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
     setAscentRank(0);
     setIsOverlayOpen(true);
     setDrawPhase("SHUFFLING");
+    playAuctionSound(AUCTION_SOUNDS.shuffle, 0.46);
 
     try {
       const startedAt = Date.now();
@@ -411,34 +470,40 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
       if (elapsed < baseShuffleMs) await wait(baseShuffleMs - elapsed);
 
       setDrawPhase("SELECTING");
+      playAuctionSound(AUCTION_SOUNDS.select, 0.42);
       await wait(resultTierRank >= 8 ? 520 : 430);
 
       setDrawPhase("APPROACHING");
+      playAuctionSound(AUCTION_SOUNDS.approach, resultTierRank >= 8 ? 0.48 : resultTierRank >= 5 ? 0.42 : 0.34);
       await wait(resultTierRank <= 4 ? 470 : resultTierRank >= 8 ? 860 : 690);
 
       setDrawPhase("TIER_ASCENDING");
       if (resultTierRank <= 4) {
         setAscentRank(resultTierRank);
+        playAuctionSound(AUCTION_SOUNDS.pulse, resultTierRank === 4 ? 0.38 : 0.30);
         await wait(resultTierRank === 4 ? 720 : 560);
       } else if (resultTierRank >= 8) {
-        await animateTierAscentSequence(7, setAscentRank);
+        await playTierAscentSoundSequence(7, setAscentRank);
         await wait(240);
       } else {
-        await animateTierAscentSequence(resultTierRank, setAscentRank);
+        await playTierAscentSoundSequence(resultTierRank, setAscentRank);
         await wait(resultTierRank === 7 ? 420 : 300);
       }
 
       if (resultTierRank >= 8) {
         setDrawPhase("SPECIAL_TENSION");
+        playAuctionSound(AUCTION_SOUNDS.specialTension, resultTierRank >= 10 ? 0.56 : resultTierRank >= 9 ? 0.52 : 0.48);
         await wait(620);
-        await animateTierAscentSequence(resultTierRank, setAscentRank, 8);
+        await playTierAscentSoundSequence(resultTierRank, setAscentRank, 8);
         await wait(resultTierRank >= 10 ? 1180 : resultTierRank >= 9 ? 980 : 820);
       }
 
       setDrawPhase("FLIPPING");
+      playAuctionSound(AUCTION_SOUNDS.flip, resultTierRank >= 8 ? 0.52 : resultTierRank >= 5 ? 0.44 : 0.36);
       await wait(resultTierRank >= 8 ? 1850 : resultTierRank >= 5 ? 1450 : 920);
 
       setDrawPhase("REVEALED");
+      playAuctionSound(resultTierRank >= 8 ? AUCTION_SOUNDS.revealHigh : AUCTION_SOUNDS.reveal, resultTierRank >= 8 ? 0.52 : 0.38);
     } catch {
       setError("추첨 중 오류가 발생했습니다.");
       setDrawPhase("IDLE");
@@ -1553,6 +1618,28 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
         @keyframes finalMasterFrame { from { opacity: .34; transform: scale(.94); } to { opacity: .78; transform: scale(1.06); } }
         @keyframes finalCrownSpin { from { transform: rotate(0deg) scale(.96); } to { transform: rotate(360deg) scale(1.08); } }
 
+
+        /* K-LOL.GG: keep line shuffle only in initial player draw phases. */
+        .gacha-overlay.phase-shuffling .gacha-deck-cluster,
+        .gacha-overlay.phase-selecting .gacha-deck-cluster { opacity: 1 !important; }
+        .gacha-overlay.phase-approaching .gacha-deck-cluster,
+        .gacha-overlay.phase-tier_ascending .gacha-deck-cluster,
+        .gacha-overlay.phase-special_tension .gacha-deck-cluster,
+        .gacha-overlay.phase-flipping .gacha-deck-cluster,
+        .gacha-overlay.revealed .gacha-deck-cluster {
+          opacity: 0 !important;
+          animation: none !important;
+          transform: translateY(80px) scale(.76) !important;
+          transition: opacity .28s ease, transform .28s ease !important;
+        }
+        .gacha-overlay.phase-approaching .gacha-card-back,
+        .gacha-overlay.phase-tier_ascending .gacha-card-back,
+        .gacha-overlay.phase-special_tension .gacha-card-back,
+        .gacha-overlay.phase-flipping .gacha-card-back,
+        .gacha-overlay.revealed .gacha-card-back {
+          animation: none !important;
+        }
+
         @media (max-width: 1180px) {
           .destruction-auction-layout { grid-template-columns: 1fr; }
           .destruction-auction-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1623,7 +1710,7 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
           <div className="auction-control-panel">
             <div className="admin-page__header">
               <div>
-                <h3 className="admin-event-section-title">랜덤 카드 추첨</h3>
+                <h3 className="admin-event-section-title">랜덤 플레이어 추첨</h3>
               </div>
             </div>
             <div className="auction-mini-stage">
@@ -1656,7 +1743,7 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
                     onClick={handleDraw}
                     disabled={drawableDisabled}
                   >
-                    {isDrawing ? "카드 셔플 중..." : "카드 추첨"}
+                    {isDrawing ? "플레이어 추첨 중..." : "플레이어 추첨"}
                   </button>
                   {!liveMode ? (
                     <button
@@ -1677,7 +1764,7 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
                     onClick={openOverlayForCurrent}
                     disabled={isDrawing}
                   >
-                    카드 보기
+                    플레이어 보기
                   </button>
                   {!liveMode ? (
                     <button
@@ -1699,7 +1786,7 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
 
       {isOverlayOpen
         ? createPortal(
-            <div className={`gacha-overlay ${overlayTierClassName} ${ascentClassName} phase-${drawPhase.toLowerCase()} ${tierRank >= 8 ? "high-tier" : ""} ${isDrawingPhase ? "animating" : ""} ${drawPhase === "REVEALED" ? "revealed" : ""}`}>
+            <div className={`gacha-overlay ${overlayTierClassName} ${ascentClassName} phase-${drawPhase.toLowerCase()} ${lineShuffleActive ? "line-shuffling" : ""} ${tierRank >= 8 ? "high-tier" : ""} ${isDrawingPhase ? "animating" : ""} ${drawPhase === "REVEALED" ? "revealed" : ""}`}>
           <div className="gacha-overlay-card">
             <button type="button" className="gacha-close" onClick={closeOverlay} aria-label="닫기">×</button>
             <div className="gacha-layout">
@@ -1752,8 +1839,9 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
               </section>
 
               <aside className="gacha-panel">
-                <div className="gacha-panel-chip">🎴 멸망전 경매 카드 오픈</div>
+                <div className="gacha-panel-chip">🎴 멸망전 플레이어 경매</div>
                 <h3 className="gacha-panel-title">{drawPhaseTitle}</h3>
+                <p className="gacha-panel-desc">{drawPhaseDescription}</p>
 
                 <div className={`gacha-right-form ${drawPhase === "REVEALED" ? "is-visible" : "is-hidden"}`}>{renderAuctionFields()}</div>
 
@@ -1775,7 +1863,7 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
               <div className="auction-fullview-panel">
                 <div className="auction-fullview-header">
                   <h2 className="auction-fullview-title">3. 경매 진행 · 선택됨</h2>
-                  <p className="auction-fullview-desc">사이트에서 카드를 섞고 참가자를 추첨한 뒤, 디스코드 채팅 경매 결과를 관리자가 입력합니다.</p>
+                  <p className="auction-fullview-desc">사이트에서 플레이어를 추첨한 뒤, 디스코드 채팅 경매 결과를 관리자가 입력합니다.</p>
                 </div>
 
                 <div className="destruction-auction-summary">
@@ -1821,7 +1909,7 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
                     <div className="auction-control-panel">
                       <div className="admin-page__header">
                         <div>
-                          <h3 className="admin-event-section-title">랜덤 카드 추첨</h3>
+                          <h3 className="admin-event-section-title">랜덤 플레이어 추첨</h3>
                         </div>
                       </div>
                       <div className="auction-mini-stage">
@@ -1848,11 +1936,11 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
                       <div className="auction-stage-button-row">
                         {!currentTarget ? (
                           <button type="button" className="admin-page__create-button" onClick={handleDraw} disabled={drawableDisabled} style={{ width: "100%" }}>
-                            {isDrawing ? "카드 셔플 중..." : "카드 추첨"}
+                            {isDrawing ? "플레이어 추첨 중..." : "플레이어 추첨"}
                           </button>
                         ) : (
                           <button type="button" className="admin-page__create-button auction-card-view-button" onClick={openOverlayForCurrent} disabled={isDrawing} style={{ width: "100%" }}>
-                            카드 보기
+                            플레이어 보기
                           </button>
                         )}
                       </div>
