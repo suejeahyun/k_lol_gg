@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Fragment, useEffect, useMemo, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
@@ -248,11 +248,10 @@ function getTierAscentSteps(maxRank: number, minRank = 3) {
 
 async function animateTierAscentSequence(maxRank: number, onStep?: (rank: number) => void, minRank = 3) {
   const steps = getTierAscentSteps(maxRank, minRank);
-  const delay = maxRank >= 8 ? 390 : 340;
+  const delay = maxRank >= 8 ? 460 : 420;
 
   for (let index = 0; index < steps.length; index += 1) {
-    const step = steps[index];
-    onStep?.(step.rank);
+    onStep?.(steps[index].rank);
     await wait(delay);
   }
 }
@@ -331,10 +330,24 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
     "--position-border": currentTheme.border,
   } as CSSProperties;
 
-  const overlayTierClassName = `tier-${tierVisual.key.toLowerCase()} ${tierCriteriaClassName}`;
+  const shouldRevealTierTheme =
+    drawPhase === "TIER_ASCENDING" ||
+    drawPhase === "SPECIAL_TENSION" ||
+    drawPhase === "FLIPPING" ||
+    drawPhase === "REVEALED";
+
+  const overlayTierClassName = shouldRevealTierTheme
+    ? `tier-${tierVisual.key.toLowerCase()} ${tierCriteriaClassName}`
+    : "";
+
   const ascentClassName = ascentRank > 0 ? `ascent-${ascentRank}` : "";
-  const isDrawingPhase = drawPhase !== "IDLE" && drawPhase !== "REVEALED";
-  const shouldShowDeckLine = drawPhase === "SHUFFLING";
+  const overlayAscentClass =
+    drawPhase === "TIER_ASCENDING" ? ascentClassName : "";
+
+  const overlayHighTierClass =
+    shouldRevealTierTheme && tierRank >= 8 ? "high-tier" : "";
+
+  const isShuffleAnimationPhase = drawPhase === "SHUFFLING";
   const drawPhaseCopy = {
     IDLE: {
       title: "플레이어 대기 중",
@@ -369,7 +382,6 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
       description: "낙찰 팀과 포인트를 입력하세요.",
     },
   } satisfies Record<DrawPhase, { title: string; description: string }>;
-
   const drawPhaseTitle = drawPhaseCopy[drawPhase].title;
   const drawPhaseDescription = drawPhaseCopy[drawPhase].description;
 
@@ -430,36 +442,31 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
 
       const tierForResult = getTierVisual(participant.player.currentTier ?? participant.player.peakTier ?? null);
       const resultTierRank = getTierRankFromKey(tierForResult.key);
-      const baseShuffleMs = resultTierRank >= 8 ? 1650 : resultTierRank >= 5 ? 1500 : 1220;
+      const baseShuffleMs = resultTierRank >= 8 ? 1750 : resultTierRank >= 5 ? 1600 : 1450;
       if (elapsed < baseShuffleMs) await wait(baseShuffleMs - elapsed);
 
       setDrawPhase("SELECTING");
-      await wait(resultTierRank >= 8 ? 520 : 430);
+      await wait(resultTierRank >= 8 ? 720 : 600);
 
       setDrawPhase("APPROACHING");
-      await wait(resultTierRank <= 4 ? 470 : resultTierRank >= 8 ? 860 : 690);
+      await wait(resultTierRank <= 4 ? 680 : resultTierRank >= 8 ? 1050 : 900);
 
       setDrawPhase("TIER_ASCENDING");
       if (resultTierRank <= 4) {
         setAscentRank(resultTierRank);
-        await wait(resultTierRank === 4 ? 720 : 560);
-      } else if (resultTierRank >= 8) {
-        await animateTierAscentSequence(7, setAscentRank);
-        await wait(240);
+        await wait(resultTierRank === 4 ? 680 : 560);
       } else {
         await animateTierAscentSequence(resultTierRank, setAscentRank);
-        await wait(resultTierRank === 7 ? 420 : 300);
+        await wait(resultTierRank >= 8 ? 420 : resultTierRank === 7 ? 460 : 380);
       }
 
       if (resultTierRank >= 8) {
         setDrawPhase("SPECIAL_TENSION");
-        await wait(620);
-        await animateTierAscentSequence(resultTierRank, setAscentRank, 8);
-        await wait(resultTierRank >= 10 ? 1180 : resultTierRank >= 9 ? 980 : 820);
+        await wait(resultTierRank >= 10 ? 1050 : resultTierRank >= 9 ? 940 : 820);
       }
 
       setDrawPhase("FLIPPING");
-      await wait(resultTierRank >= 8 ? 1850 : resultTierRank >= 5 ? 1450 : 920);
+      await wait(resultTierRank >= 8 ? 1580 : resultTierRank >= 5 ? 1320 : 1040);
 
       setDrawPhase("REVEALED");
     } catch {
@@ -1600,45 +1607,208 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
           .gacha-tier-image { width: 86px; height: 86px; }
           .gacha-card-stats { grid-template-columns: 1fr; margin-top: 0; }
         }
-
-
-        /* K-LOL.GG hard fix: deck line appears only during the first shuffle phase. */
-        .gacha-overlay.deck-line-off .gacha-deck-cluster,
-        .gacha-overlay.deck-line-off .gacha-card-back,
-        .gacha-overlay.phase-selecting .gacha-deck-cluster,
-        .gacha-overlay.phase-selecting .gacha-card-back,
-        .gacha-overlay.phase-approaching .gacha-deck-cluster,
-        .gacha-overlay.phase-approaching .gacha-card-back,
-        .gacha-overlay.phase-tier_ascending .gacha-deck-cluster,
-        .gacha-overlay.phase-tier_ascending .gacha-card-back,
-        .gacha-overlay.phase-special_tension .gacha-deck-cluster,
-        .gacha-overlay.phase-special_tension .gacha-card-back,
-        .gacha-overlay.phase-flipping .gacha-deck-cluster,
-        .gacha-overlay.phase-flipping .gacha-card-back,
-        .gacha-overlay.revealed .gacha-deck-cluster,
-        .gacha-overlay.revealed .gacha-card-back {
+        /* K-LOL.GG smooth upper-tier flow hotfix: single shuffle, continuous picked-card motion */
+        .gacha-overlay:not(.phase-shuffling) .gacha-deck-cluster {
           display: none !important;
-          opacity: 0 !important;
-          visibility: hidden !important;
           animation: none !important;
-          transition: none !important;
-          transform: none !important;
-          pointer-events: none !important;
+          opacity: 0 !important;
         }
-        .gacha-overlay.phase-tier_ascending .gacha-picked-card,
-        .gacha-overlay.phase-special_tension .gacha-picked-card,
+        .gacha-overlay:not(.phase-shuffling) .gacha-card-back {
+          animation: none !important;
+        }
+        .gacha-overlay:not(.phase-shuffling):not(.phase-selecting) .gacha-speedlines::before,
+        .gacha-overlay:not(.phase-shuffling):not(.phase-selecting) .gacha-speedlines::after {
+          animation: none !important;
+          opacity: .18 !important;
+        }
+        .gacha-overlay.phase-shuffling .gacha-picked-card {
+          opacity: 0 !important;
+          transform: translate3d(0, 118px, 0) scale(.34) rotate(0deg) !important;
+          animation: none !important;
+        }
+        .gacha-overlay.phase-selecting .gacha-picked-card {
+          opacity: 1 !important;
+          animation: pickedSmoothSelect .52s cubic-bezier(.2,.86,.2,1) both !important;
+        }
+        .gacha-overlay.phase-approaching .gacha-picked-card {
+          opacity: 1 !important;
+          animation: pickedSmoothApproach .72s cubic-bezier(.18,.86,.2,1) both !important;
+        }
+        .gacha-overlay.phase-approaching.master-plus .gacha-picked-card {
+          animation-duration: .86s !important;
+        }
+        .gacha-overlay.phase-tier_ascending .gacha-picked-card {
+          opacity: 1 !important;
+          transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+          animation: pickedSmoothTierHold 1.65s ease-in-out infinite alternate !important;
+        }
+        .gacha-overlay.phase-special_tension.master-plus .gacha-picked-card {
+          opacity: 1 !important;
+          animation: pickedSmoothSpecialHold 1.95s ease-in-out infinite alternate !important;
+        }
         .gacha-overlay.phase-flipping .gacha-picked-card,
         .gacha-overlay.revealed .gacha-picked-card {
           opacity: 1 !important;
-          visibility: visible !important;
+          transform: translate3d(0, 0, 0) scale(1) rotate(0deg) !important;
+          animation: none !important;
         }
-        .gacha-phase-description {
-          margin: 10px 0 0;
-          color: rgba(203, 213, 225, 0.72);
-          font-size: 13px;
-          line-height: 1.6;
-          word-break: keep-all;
+        .gacha-overlay.phase-tier_ascending .gacha-showcase,
+        .gacha-overlay.phase-special_tension .gacha-showcase,
+        .gacha-overlay.phase-flipping .gacha-showcase {
+          transition: background 720ms ease, box-shadow 720ms ease !important;
         }
+        .gacha-overlay.phase-tier_ascending .gacha-light-burst,
+        .gacha-overlay.phase-special_tension .gacha-light-burst {
+          transition: opacity 700ms ease, transform 900ms cubic-bezier(.2,.8,.2,1), background 700ms ease !important;
+        }
+        .gacha-overlay.phase-tier_ascending.master-plus .gacha-showcase::before,
+        .gacha-overlay.phase-special_tension.master-plus .gacha-showcase::before {
+          animation: finalMasterPressureSmooth 2.2s ease-in-out infinite alternate !important;
+        }
+        .gacha-overlay.phase-tier_ascending.master-plus .gacha-picked-shell::before,
+        .gacha-overlay.phase-special_tension.master-plus .gacha-picked-shell::before {
+          animation: finalMasterFrameSmooth 1.9s ease-in-out infinite alternate !important;
+        }
+        @keyframes pickedSmoothSelect {
+          0% { opacity: 0; transform: translate3d(0, 112px, 0) scale(.36) rotate(0deg); }
+          68% { opacity: 1; transform: translate3d(0, -30px, 0) scale(.88) rotate(-2deg); }
+          100% { opacity: 1; transform: translate3d(0, -18px, 0) scale(.84) rotate(1deg); }
+        }
+        @keyframes pickedSmoothApproach {
+          0% { opacity: 1; transform: translate3d(0, -18px, 0) scale(.84) rotate(1deg); }
+          58% { opacity: 1; transform: translate3d(0, -38px, 0) scale(.98) rotate(-.6deg); }
+          100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
+        }
+        @keyframes pickedSmoothTierHold {
+          0% { transform: translate3d(0, 0, 0) scale(1) rotate(-.35deg); filter: drop-shadow(0 0 18px var(--current-stage-glow, var(--card-tier-glow))); }
+          100% { transform: translate3d(0, -5px, 0) scale(1.012) rotate(.35deg); filter: drop-shadow(0 0 30px var(--current-stage-glow, var(--card-tier-glow))); }
+        }
+        @keyframes pickedSmoothSpecialHold {
+          0% { transform: translate3d(0, -2px, 0) scale(1.008); filter: drop-shadow(0 0 30px var(--current-stage-glow, var(--card-tier-glow))); }
+          100% { transform: translate3d(0, -10px, 0) scale(1.026); filter: drop-shadow(0 0 52px var(--current-stage-glow, var(--card-tier-glow))); }
+        }
+        @keyframes finalMasterPressureSmooth {
+          0% { opacity: .22; transform: scale(.98); }
+          100% { opacity: .42; transform: scale(1.04); }
+        }
+        @keyframes finalMasterFrameSmooth {
+          0% { opacity: .36; transform: scale(.985); }
+          100% { opacity: .72; transform: scale(1.025); }
+        }
+
+
+        /* K-LOL.GG final pacing/opacity pass: slow first spread, no transparent artifacts */
+        .gacha-overlay.phase-shuffling.gold-below .gacha-deck-cluster { animation-duration: 1.35s !important; }
+        .gacha-overlay.phase-shuffling.ascent-tier .gacha-deck-cluster { animation-duration: 1.50s !important; }
+        .gacha-overlay.phase-shuffling.master-plus .gacha-deck-cluster { animation-duration: 1.65s !important; }
+        .gacha-overlay.phase-shuffling .gacha-card-back {
+          opacity: 1 !important;
+          background-color: #0b1730 !important;
+          background-image: linear-gradient(145deg, #14264a 0%, #0b1730 54%, #050a16 100%) !important;
+          border-color: rgba(191,219,254,.44) !important;
+          box-shadow: 0 22px 46px rgba(0,0,0,.58), 0 0 22px rgba(59,130,246,.22) !important;
+          backdrop-filter: none !important;
+        }
+        .gacha-overlay.phase-selecting .gacha-deck-cluster {
+          display: block !important;
+          opacity: .72 !important;
+          animation: none !important;
+          transform: translate3d(0, 24px, 0) scale(.9) !important;
+          filter: blur(.35px) saturate(.9) !important;
+          transition: opacity .72s ease, transform .72s cubic-bezier(.2,.78,.22,1), filter .72s ease !important;
+        }
+        .gacha-overlay.phase-selecting .gacha-card-back {
+          opacity: .92 !important;
+          animation: none !important;
+          background-color: #0b1730 !important;
+          backdrop-filter: none !important;
+        }
+        .gacha-overlay.phase-approaching .gacha-deck-cluster,
+        .gacha-overlay.phase-tier_ascending .gacha-deck-cluster,
+        .gacha-overlay.phase-special_tension .gacha-deck-cluster,
+        .gacha-overlay.phase-flipping .gacha-deck-cluster,
+        .gacha-overlay.revealed .gacha-deck-cluster {
+          display: none !important;
+          opacity: 0 !important;
+          animation: none !important;
+        }
+        .gacha-overlay.phase-selecting .gacha-picked-card {
+          opacity: 1 !important;
+          animation: finalPickedSelectSmooth .88s cubic-bezier(.16,.88,.2,1) both !important;
+          filter: drop-shadow(0 0 22px var(--current-stage-glow, var(--card-tier-glow))) !important;
+        }
+        .gacha-overlay.phase-approaching .gacha-picked-card {
+          opacity: 1 !important;
+          animation: finalPickedApproachSmooth 1.18s cubic-bezier(.18,.82,.18,1) both !important;
+          filter: drop-shadow(0 0 28px var(--current-stage-glow, var(--card-tier-glow))) !important;
+        }
+        .gacha-overlay.phase-approaching.master-plus .gacha-picked-card {
+          animation-duration: 1.34s !important;
+        }
+        .gacha-overlay.phase-tier_ascending .gacha-picked-card {
+          opacity: 1 !important;
+          transform: translate3d(0, 0, 0) scale(1) rotate(0deg) !important;
+          animation: finalPickedTierFloat 2.1s ease-in-out infinite alternate !important;
+          filter: drop-shadow(0 0 30px var(--current-stage-glow, var(--card-tier-glow))) !important;
+        }
+        .gacha-overlay.phase-special_tension.master-plus .gacha-picked-card {
+          opacity: 1 !important;
+          transform: translate3d(0, 0, 0) scale(1) rotate(0deg) !important;
+          animation: finalPickedSpecialFloat 2.25s ease-in-out infinite alternate !important;
+          filter: drop-shadow(0 0 50px var(--current-stage-glow, var(--card-tier-glow))) !important;
+        }
+        .gacha-card-face.back,
+        .gacha-card-face.front {
+          opacity: 1 !important;
+          backdrop-filter: none !important;
+        }
+        .gacha-card-face.back {
+          background-color: #081326 !important;
+          background-image: radial-gradient(circle at 70% 14%, rgba(96,165,250,.22), transparent 30%), linear-gradient(145deg, #15284d, #081326 58%, #020817) !important;
+        }
+        .gacha-card-face.front {
+          background-color: var(--front-mid, #0f233a) !important;
+        }
+        .gacha-card-face.front .auction-front-stat {
+          opacity: 1 !important;
+          background-color: var(--stat-bottom, #091423) !important;
+        }
+        .gacha-speedlines,
+        .gacha-light-burst,
+        .gacha-ring,
+        .gacha-shockwave,
+        .gacha-sparkles {
+          pointer-events: none !important;
+        }
+        .gacha-overlay.phase-selecting .gacha-light-burst { opacity: .24 !important; }
+        .gacha-overlay.phase-approaching .gacha-light-burst { opacity: .34 !important; transition: opacity .8s ease, transform .9s cubic-bezier(.2,.8,.2,1) !important; }
+        .gacha-overlay.phase-tier_ascending .gacha-light-burst { opacity: .48 !important; transition: opacity .9s ease, transform 1.05s cubic-bezier(.2,.8,.2,1), background .9s ease !important; }
+        .gacha-overlay.phase-special_tension .gacha-light-burst { opacity: .58 !important; transition: opacity .9s ease, transform 1.05s cubic-bezier(.2,.8,.2,1), background .9s ease !important; }
+        @keyframes finalPickedSelectSmooth {
+          0% { opacity: 0; transform: translate3d(0, 118px, 0) scale(.34) rotate(0deg); }
+          58% { opacity: 1; transform: translate3d(0, -26px, 0) scale(.86) rotate(-1.4deg); }
+          100% { opacity: 1; transform: translate3d(0, -18px, 0) scale(.84) rotate(.8deg); }
+        }
+        @keyframes finalPickedApproachSmooth {
+          0% { opacity: 1; transform: translate3d(0, -18px, 0) scale(.84) rotate(.8deg); }
+          44% { opacity: 1; transform: translate3d(0, -36px, 0) scale(.94) rotate(-.5deg); }
+          78% { opacity: 1; transform: translate3d(0, -10px, 0) scale(.99) rotate(.25deg); }
+          100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
+        }
+        @keyframes finalPickedTierFloat {
+          0% { transform: translate3d(0, 0, 0) scale(1) rotate(-.18deg); }
+          100% { transform: translate3d(0, -6px, 0) scale(1.01) rotate(.18deg); }
+        }
+        @keyframes finalPickedSpecialFloat {
+          0% { transform: translate3d(0, -1px, 0) scale(1.006) rotate(-.12deg); }
+          100% { transform: translate3d(0, -10px, 0) scale(1.024) rotate(.12deg); }
+        }
+
+
+        /* K-LOL.GG shorter shuffle timing override */
+        .gacha-overlay.phase-shuffling.gold-below .gacha-deck-cluster { animation-duration: 1.35s !important; }
+        .gacha-overlay.phase-shuffling.ascent-tier .gacha-deck-cluster { animation-duration: 1.50s !important; }
+        .gacha-overlay.phase-shuffling.master-plus .gacha-deck-cluster { animation-duration: 1.65s !important; }
       `}</style>
 
       <div className="destruction-auction-summary">
@@ -1718,7 +1888,7 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
                     onClick={handleDraw}
                     disabled={drawableDisabled}
                   >
-                    {isDrawing ? "카드 셔플 중..." : "플레이어 추첨"}
+                    {isDrawing ? "플레이어 추첨 중..." : "플레이어 추첨"}
                   </button>
                   {!liveMode ? (
                     <button
@@ -1761,7 +1931,7 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
 
       {isOverlayOpen
         ? createPortal(
-            <div className={`gacha-overlay ${overlayTierClassName} ${ascentClassName} phase-${drawPhase.toLowerCase()} ${tierRank >= 8 ? "high-tier" : ""} ${isDrawingPhase ? "animating" : ""} ${shouldShowDeckLine ? "deck-line-on" : "deck-line-off"} ${drawPhase === "REVEALED" ? "revealed" : ""}`}>
+            <div className={`gacha-overlay ${overlayTierClassName} ${ascentClassName} phase-${drawPhase.toLowerCase()} ${tierRank >= 8 ? "high-tier" : ""} ${isShuffleAnimationPhase ? "animating" : ""} ${drawPhase === "REVEALED" ? "revealed" : ""}`}>
           <div className="gacha-overlay-card">
             <button type="button" className="gacha-close" onClick={closeOverlay} aria-label="닫기">×</button>
             <div className="gacha-layout">
@@ -1772,7 +1942,7 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
                   <div className="gacha-ring" />
                   <div className="gacha-shockwave" />
                   <div className="gacha-sparkles" aria-hidden="true"><span /><span /><span /><span /><span /><span /><span /><span /><span /><span /></div>
-                  {shouldShowDeckLine ? (
+                  {drawPhase === "SHUFFLING" || drawPhase === "SELECTING" ? (
                     <div className="gacha-deck-cluster" aria-hidden="true">
                       <div className="gacha-card-back card-1" />
                       <div className="gacha-card-back card-2" />
@@ -1818,7 +1988,7 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
               <aside className="gacha-panel">
                 <div className="gacha-panel-chip">🎴 멸망전 플레이어 경매</div>
                 <h3 className="gacha-panel-title">{drawPhaseTitle}</h3>
-                <p className="gacha-phase-description">{drawPhaseDescription}</p>
+                <p className="gacha-panel-desc">{drawPhaseDescription}</p>
 
                 <div className={`gacha-right-form ${drawPhase === "REVEALED" ? "is-visible" : "is-hidden"}`}>{renderAuctionFields()}</div>
 
@@ -1840,7 +2010,7 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
               <div className="auction-fullview-panel">
                 <div className="auction-fullview-header">
                   <h2 className="auction-fullview-title">3. 경매 진행 · 선택됨</h2>
-                  <p className="auction-fullview-desc">사이트에서 카드를 섞고 참가자를 추첨한 뒤, 디스코드 채팅 경매 결과를 관리자가 입력합니다.</p>
+                  <p className="auction-fullview-desc">사이트에서 플레이어를 추첨한 뒤, 디스코드 채팅 경매 결과를 관리자가 입력합니다.</p>
                 </div>
 
                 <div className="destruction-auction-summary">
@@ -1913,7 +2083,7 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
                       <div className="auction-stage-button-row">
                         {!currentTarget ? (
                           <button type="button" className="admin-page__create-button" onClick={handleDraw} disabled={drawableDisabled} style={{ width: "100%" }}>
-                            {isDrawing ? "카드 셔플 중..." : "플레이어 추첨"}
+                            {isDrawing ? "플레이어 추첨 중..." : "플레이어 추첨"}
                           </button>
                         ) : (
                           <button type="button" className="admin-page__create-button auction-card-view-button" onClick={openOverlayForCurrent} disabled={isDrawing} style={{ width: "100%" }}>
@@ -1932,3 +2102,11 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
     </div>
   );
 }
+
+
+
+
+
+
+
+
