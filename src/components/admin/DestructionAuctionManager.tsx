@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
@@ -784,6 +784,9 @@ export default function DestructionAuctionManager({
   } as CSSProperties;
 
   const isShuffleAnimationPhase = drawPhase === "SHUFFLING";
+  const drawCardClassName = currentTarget
+    ? `draw-card-${((currentTarget.id * 7) % 9) + 1}`
+    : "draw-card-5";
   const drawPhaseCopy = {
     IDLE: {
       title: "플레이어 대기 중",
@@ -896,7 +899,7 @@ export default function DestructionAuctionManager({
 
       setDrawPhase("SELECTING");
       playAuctionSound("select", soundEnabledRef.current);
-      await wait(resultTierRank >= 8 ? 920 : resultTierRank >= 5 ? 860 : 780);
+      await wait(resultTierRank >= 8 ? 2460 : resultTierRank >= 5 ? 2360 : 2260);
       playAuctionSound("confirm", soundEnabledRef.current);
 
       setDrawPhase("TIER_ASCENDING");
@@ -2348,25 +2351,845 @@ export default function DestructionAuctionManager({
         .gacha-overlay.phase-shuffling.master-plus .gacha-deck-cluster { animation-duration: 1.65s !important; }
       
 
+        
 
-        /* K-LOL.GG auction ordered smooth clean final v1
-           Goals:
-           1) no tier-colored border on the card back before reveal
-           2) one clean pick motion instead of double pop/approach
-           3) revealed card front uses tier-colored full-card background
-           4) smoother motion through transform/opacity only in selection phase */
-        @keyframes klolCleanOnePickIn {
+        /* K-LOL.GG auction SVG clean consolidated final v1
+           Cleans accumulated duplicate patch CSS and keeps one final source of truth.
+           Covers: card backs, fan motion, selected card, SVG front slots, text alignment, and certificate badge. */
+
+        .gacha-card-back {
+          position: absolute !important;
+          overflow: hidden !important;
+          border: 0 !important;
+          border-radius: 17px !important;
+          background-color: #102a5f !important;
+          background-image: url("/auction-cards/back-premium.svg") !important;
+          background-size: 100% 100% !important;
+          background-position: center center !important;
+          background-repeat: no-repeat !important;
+          box-shadow:
+            0 16px 34px rgba(0,0,0,.50),
+            0 0 22px rgba(96,165,250,.26) !important;
+          opacity: 1 !important;
+          filter: none !important;
+          backface-visibility: hidden !important;
+          -webkit-backface-visibility: hidden !important;
+          transform-style: preserve-3d !important;
+        }
+
+        .gacha-card-back::before,
+        .gacha-card-back::after {
+          content: none !important;
+          display: none !important;
+        }
+
+        .gacha-overlay.phase-shuffling .gacha-deck-cluster,
+        .gacha-overlay.phase-selecting .gacha-deck-cluster {
+          opacity: 1 !important;
+          filter: none !important;
+          transform: translate3d(0, 0, 0) scale(1) !important;
+          will-change: transform, opacity !important;
+        }
+
+        .gacha-card-back.card-1 { --x: -236px !important; --y: 34px !important; --r: -17deg !important; --d: 0ms !important; }
+        .gacha-card-back.card-2 { --x: -178px !important; --y: 15px !important; --r: -12deg !important; --d: 36ms !important; }
+        .gacha-card-back.card-3 { --x: -120px !important; --y: 2px !important; --r: -8deg !important; --d: 72ms !important; }
+        .gacha-card-back.card-4 { --x: -60px !important; --y: -7px !important; --r: -4deg !important; --d: 108ms !important; }
+        .gacha-card-back.card-5 { --x: 0px !important; --y: -10px !important; --r: 0deg !important; --d: 144ms !important; }
+        .gacha-card-back.card-6 { --x: 60px !important; --y: -7px !important; --r: 4deg !important; --d: 180ms !important; }
+        .gacha-card-back.card-7 { --x: 120px !important; --y: 2px !important; --r: 8deg !important; --d: 216ms !important; }
+        .gacha-card-back.card-8 { --x: 178px !important; --y: 15px !important; --r: 12deg !important; --d: 252ms !important; }
+        .gacha-card-back.card-9 { --x: 236px !important; --y: 34px !important; --r: 17deg !important; --d: 288ms !important; }
+
+        @keyframes klolSvgCleanFanSpread {
+          0% { opacity: 0; transform: translate3d(0, 56px, 0) rotate(0deg) scale(.72); }
+          18% { opacity: .72; transform: translate3d(0, 28px, 0) rotate(0deg) scale(.80); }
+          70% { opacity: .98; transform: translate3d(calc(var(--x) * .94), calc(var(--y) + 4px), 0) rotate(var(--r)) scale(.92); }
+          100% { opacity: 1; transform: translate3d(var(--x), var(--y), 0) rotate(var(--r)) scale(.94); }
+        }
+
+        @keyframes klolSvgCleanRestGather {
+          0% { opacity: 1; transform: translate3d(var(--x), var(--y), 0) rotate(var(--r)) scale(.94); }
+          46% { opacity: .84; transform: translate3d(calc(var(--x) * .52), calc(var(--y) + 15px), 0) rotate(calc(var(--r) * .52)) scale(.84); }
+          100% { opacity: 0; transform: translate3d(0, 48px, 0) rotate(0deg) scale(.66); }
+        }
+
+        @keyframes klolSvgCleanSelected {
+          0% { opacity: 1; transform: translate3d(var(--x), var(--y), 0) rotate(var(--r)) scale(.94); }
+          28% { opacity: 1; transform: translate3d(calc(var(--x) * .76), calc(var(--y) - 30px), 0) rotate(calc(var(--r) * .76)) scale(1.02); }
+          68% { opacity: 1; transform: translate3d(calc(var(--x) * .28), -18px, 0) rotate(calc(var(--r) * .28)) scale(1.08); }
+          100% { opacity: 0; transform: translate3d(0, 0, 0) rotate(0deg) scale(1.12); }
+        }
+
+        @keyframes klolSvgCleanMainBackAppear {
+          0%, 58% { opacity: 0; transform: translate3d(0, -12px, 0) scale(.96) rotate(0deg); }
+          78% { opacity: .72; transform: translate3d(0, -4px, 0) scale(.99) rotate(0deg); }
+          100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
+        }
+
+        .gacha-overlay.phase-shuffling .gacha-card-back {
+          animation: klolSvgCleanFanSpread .92s cubic-bezier(.16,.88,.18,1) both !important;
+          animation-delay: var(--d) !important;
+          transform-origin: center bottom !important;
+        }
+
+        .gacha-overlay.phase-selecting .gacha-card-back {
+          animation: klolSvgCleanRestGather 1.02s cubic-bezier(.22,.84,.2,1) both !important;
+          animation-delay: 300ms !important;
+          transform-origin: center bottom !important;
+        }
+
+        .gacha-overlay.phase-selecting.draw-card-1 .gacha-card-back.card-1,
+        .gacha-overlay.phase-selecting.draw-card-2 .gacha-card-back.card-2,
+        .gacha-overlay.phase-selecting.draw-card-3 .gacha-card-back.card-3,
+        .gacha-overlay.phase-selecting.draw-card-4 .gacha-card-back.card-4,
+        .gacha-overlay.phase-selecting.draw-card-5 .gacha-card-back.card-5,
+        .gacha-overlay.phase-selecting.draw-card-6 .gacha-card-back.card-6,
+        .gacha-overlay.phase-selecting.draw-card-7 .gacha-card-back.card-7,
+        .gacha-overlay.phase-selecting.draw-card-8 .gacha-card-back.card-8,
+        .gacha-overlay.phase-selecting.draw-card-9 .gacha-card-back.card-9 {
+          z-index: 30 !important;
+          animation: klolSvgCleanSelected 1.08s cubic-bezier(.18,.84,.2,1) both !important;
+          animation-delay: 0ms !important;
+          box-shadow:
+            0 22px 52px rgba(0,0,0,.56),
+            0 0 30px rgba(96,165,250,.34) !important;
+        }
+
+        .gacha-overlay.phase-selecting .gacha-picked-card {
+          opacity: 1 !important;
+          animation: klolSvgCleanMainBackAppear 1.24s cubic-bezier(.18,.88,.2,1) both !important;
+          filter: drop-shadow(0 22px 50px rgba(0,0,0,.48)) !important;
+        }
+
+        .gacha-card-face.back.auction-svg-card-back,
+        .gacha-card-face.front.auction-svg-card-front {
+          padding: 0 !important;
+          border: 0 !important;
+          background: transparent !important;
+          box-shadow: none !important;
+          overflow: hidden !important;
+        }
+
+        .gacha-card-face.back.auction-svg-card-back::before,
+        .gacha-card-face.back.auction-svg-card-back::after,
+        .gacha-card-face.front.auction-svg-card-front::before,
+        .gacha-card-face.front.auction-svg-card-front::after {
+          content: none !important;
+          display: none !important;
+        }
+
+        .auction-svg-card-bg {
+          position: absolute !important;
+          inset: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          object-fit: cover !important;
+          z-index: 0 !important;
+          pointer-events: none !important;
+          user-select: none !important;
+        }
+
+        .gacha-overlay.phase-tier_ascending .gacha-picked-shell::before,
+        .gacha-overlay.phase-tier_ascending .gacha-picked-shell::after,
+        .gacha-overlay.phase-special_tension .gacha-picked-shell::before,
+        .gacha-overlay.phase-special_tension .gacha-picked-shell::after,
+        .gacha-overlay.phase-flipping .gacha-picked-shell::before,
+        .gacha-overlay.phase-flipping .gacha-picked-shell::after {
+          content: none !important;
+          display: none !important;
+          animation: none !important;
+        }
+
+        .gacha-overlay.phase-tier_ascending .gacha-picked-card,
+        .gacha-overlay.phase-special_tension .gacha-picked-card,
+        .gacha-overlay.phase-flipping .gacha-picked-card,
+        .gacha-overlay.revealed .gacha-picked-card {
+          filter: drop-shadow(0 24px 54px rgba(0,0,0,.48)) !important;
+        }
+
+        .auction-svg-card-content {
+          position: absolute !important;
+          inset: 0 !important;
+          z-index: 2 !important;
+          display: block !important;
+          padding: 0 !important;
+          color: #fff !important;
+          text-align: center !important;
+          pointer-events: none !important;
+        }
+
+        .auction-svg-player {
+          position: absolute !important;
+          left: 13.5% !important;
+          right: 13.5% !important;
+          top: 15.4% !important;
+          height: 10.2% !important;
+          display: flex !important;
+          flex-direction: column !important;
+          justify-content: center !important;
+          align-items: center !important;
+          gap: 6px !important;
+          min-width: 0 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          text-align: center !important;
+          z-index: 6 !important;
+        }
+
+        .auction-svg-player-name {
+          width: 100% !important;
+          max-width: 100% !important;
+          margin: 0 !important;
+          font-size: clamp(33px, 3vw, 41px) !important;
+          font-weight: 950 !important;
+          line-height: 1.02 !important;
+          letter-spacing: -.045em !important;
+          white-space: nowrap !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+          text-align: center !important;
+          text-shadow:
+            0 4px 14px rgba(0,0,0,.66),
+            0 0 22px rgba(255,255,255,.22) !important;
+        }
+
+        .auction-svg-player-nick {
+          width: 100% !important;
+          max-width: 100% !important;
+          margin: 0 !important;
+          font-size: clamp(13px, 1.15vw, 15px) !important;
+          font-weight: 760 !important;
+          line-height: 1.14 !important;
+          letter-spacing: -.01em !important;
+          color: rgba(239,246,255,.88) !important;
+          white-space: nowrap !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+          text-align: center !important;
+          text-shadow: 0 2px 8px rgba(0,0,0,.58) !important;
+        }
+
+        .auction-svg-tier-emblem {
+          position: absolute !important;
+          left: 50% !important;
+          top: 31.6% !important;
+          width: 184px !important;
+          height: 184px !important;
+          margin: 0 !important;
+          transform: translate(-50%, 0) !important;
+          border-radius: 50% !important;
+          display: grid !important;
+          place-items: center !important;
+          background:
+            radial-gradient(circle at 50% 34%, rgba(255,255,255,.13), transparent 35%),
+            rgba(2,8,23,.30) !important;
+          box-shadow:
+            inset 0 0 24px rgba(255,255,255,.10),
+            0 18px 38px rgba(0,0,0,.24),
+            0 0 34px var(--card-tier-glow) !important;
+          border: 2px solid color-mix(in srgb, var(--card-tier-border) 74%, white 10%) !important;
+          overflow: hidden !important;
+          z-index: 5 !important;
+        }
+
+        .auction-svg-tier-image {
+          width: 160px !important;
+          height: 160px !important;
+          object-fit: contain !important;
+          border-radius: 50% !important;
+          background: transparent !important;
+          mix-blend-mode: screen !important;
+          filter:
+            drop-shadow(0 14px 18px rgba(0,0,0,.30))
+            drop-shadow(0 0 22px var(--card-tier-glow))
+            saturate(1.12) contrast(1.08) brightness(1.04) !important;
+        }
+
+        .auction-svg-stats {
+          position: absolute !important;
+          left: 14.0% !important;
+          right: 14.0% !important;
+          top: 59.4% !important;
+          display: grid !important;
+          grid-template-rows: repeat(2, 56px) !important;
+          gap: 10px !important;
+          width: auto !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          z-index: 5 !important;
+        }
+
+        .auction-svg-stat-row {
+          width: 100% !important;
+          height: 56px !important;
+          min-height: 56px !important;
+          display: grid !important;
+          grid-template-columns: 106px minmax(0, 1fr) !important;
+          align-items: center !important;
+          gap: 15px !important;
+          padding: 0 18px !important;
+          border-radius: 13px !important;
+          box-sizing: border-box !important;
+          text-align: left !important;
+          background: rgba(2,8,23,.68) !important;
+          border: 1px solid color-mix(in srgb, var(--card-tier-border) 48%, rgba(255,255,255,.12)) !important;
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,.11),
+            0 10px 22px rgba(0,0,0,.20) !important;
+          backdrop-filter: blur(1.5px) !important;
+        }
+
+        .auction-svg-stat-row span {
+          display: flex !important;
+          align-items: center !important;
+          height: 100% !important;
+          min-width: 0 !important;
+          font-size: 13px !important;
+          font-weight: 900 !important;
+          line-height: 1 !important;
+          white-space: nowrap !important;
+          color: color-mix(in srgb, var(--card-tier-border) 80%, #cbd5e1 20%) !important;
+        }
+
+        .auction-svg-stat-row strong {
+          display: flex !important;
+          align-items: center !important;
+          height: 100% !important;
+          min-width: 0 !important;
+          font-size: clamp(21px, 1.85vw, 24px) !important;
+          line-height: 1 !important;
+          font-weight: 950 !important;
+          white-space: nowrap !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+          text-align: left !important;
+          color: #fff !important;
+          text-shadow:
+            0 2px 8px rgba(0,0,0,.58),
+            0 0 16px var(--card-tier-text-glow) !important;
+        }
+
+        .auction-svg-cert-badge {
+          position: absolute !important;
+          left: 50% !important;
+          bottom: 9.2% !important;
+          width: 154px !important;
+          height: 62px !important;
+          min-height: 62px !important;
+          margin: 0 !important;
+          padding: 9px 12px !important;
+          transform: translateX(-50%) !important;
+          clip-path: polygon(18% 0, 82% 0, 100% 50%, 82% 100%, 18% 100%, 0 50%) !important;
+          border-radius: 0 !important;
+          display: grid !important;
+          align-content: center !important;
+          justify-items: center !important;
+          gap: 2px !important;
+          box-sizing: border-box !important;
+          color: #fff !important;
+          text-align: center !important;
+          background:
+            radial-gradient(circle at 50% 25%, rgba(255,255,255,.24), transparent 30%),
+            linear-gradient(145deg, color-mix(in srgb, var(--card-tier-primary) 78%, #111827 22%), var(--card-tier-secondary)) !important;
+          border: 0 !important;
+          box-shadow:
+            inset 0 0 0 2px color-mix(in srgb, var(--card-tier-border) 82%, white 8%),
+            0 0 26px var(--card-tier-glow),
+            0 12px 24px rgba(0,0,0,.32) !important;
+          text-shadow: 0 2px 8px rgba(0,0,0,.55) !important;
+          z-index: 6 !important;
+        }
+
+        .auction-svg-cert-badge::before,
+        .auction-svg-cert-badge::after {
+          content: none !important;
+          display: none !important;
+        }
+
+        .auction-svg-cert-badge span,
+        .auction-svg-cert-badge strong {
+          display: block !important;
+          width: 100% !important;
+          line-height: 1.05 !important;
+          text-align: center !important;
+          white-space: nowrap !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+        }
+
+        .auction-svg-cert-badge span {
+          font-size: 11px !important;
+          font-weight: 900 !important;
+          letter-spacing: .04em !important;
+        }
+
+        .auction-svg-cert-badge strong {
+          font-size: 12px !important;
+          font-weight: 950 !important;
+          letter-spacing: .05em !important;
+        }
+
+        @media (max-height: 780px) {
+          .auction-svg-player { top: 15.0% !important; height: 9.8% !important; }
+          .auction-svg-player-name { font-size: clamp(29px, 2.7vw, 36px) !important; }
+          .auction-svg-player-nick { font-size: 13px !important; }
+          .auction-svg-tier-emblem { top: 31.1% !important; width: 160px !important; height: 160px !important; }
+          .auction-svg-tier-image { width: 138px !important; height: 138px !important; }
+          .auction-svg-stats { left: 14.4% !important; right: 14.4% !important; top: 59.8% !important; grid-template-rows: repeat(2, 50px) !important; gap: 9px !important; }
+          .auction-svg-stat-row { height: 50px !important; min-height: 50px !important; grid-template-columns: 96px minmax(0, 1fr) !important; padding: 0 15px !important; }
+          .auction-svg-stat-row span { font-size: 12px !important; }
+          .auction-svg-stat-row strong { font-size: 21px !important; }
+          .auction-svg-cert-badge { bottom: 8.6% !important; width: 136px !important; height: 56px !important; min-height: 56px !important; }
+          .auction-svg-cert-badge span { font-size: 10px !important; }
+          .auction-svg-cert-badge strong { font-size: 11px !important; }
+        }
+
+
+        /* K-LOL.GG auction emblem and badge tier text patch v1
+           Requested changes:
+           - move only the tier emblem slightly upward
+           - certificate badge should show only the tier text
+           - badge text color should be more distinct / premium
+        */
+
+        .auction-svg-tier-emblem {
+          position: absolute !important;
+          left: 50% !important;
+          top: 29.9% !important;
+          transform: translate(-50%, 0) !important;
+          z-index: 5 !important;
+        }
+
+        .auction-svg-cert-badge {
+          display: grid !important;
+          align-content: center !important;
+          justify-items: center !important;
+          gap: 0 !important;
+          padding-top: 0 !important;
+          padding-bottom: 0 !important;
+        }
+
+        .auction-svg-cert-badge span {
+          display: none !important;
+        }
+
+        .auction-svg-cert-badge strong {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          width: 100% !important;
+          height: 100% !important;
+          margin: 0 !important;
+          font-size: 18px !important;
+          font-weight: 1000 !important;
+          line-height: 1 !important;
+          letter-spacing: .08em !important;
+          color: color-mix(in srgb, var(--card-tier-border) 78%, #ffffff 22%) !important;
+          text-shadow:
+            0 2px 10px rgba(0,0,0,.55),
+            0 0 14px color-mix(in srgb, var(--card-tier-glow) 85%, #ffffff 15%) !important;
+          white-space: nowrap !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+          text-transform: uppercase !important;
+        }
+
+        @media (max-height: 780px) {
+          .auction-svg-tier-emblem {
+            top: 29.4% !important;
+          }
+
+          .auction-svg-cert-badge strong {
+            font-size: 16px !important;
+          }
+        }
+
+        /* K-LOL.GG auction emblem up fine tune patch v1
+           Fine-tune only:
+           - move the center tier emblem a little more upward
+           - keep all other current placements unchanged
+        */
+
+        .auction-svg-tier-emblem {
+          position: absolute !important;
+          left: 50% !important;
+          top: 28.7% !important;
+          transform: translate(-50%, 0) !important;
+          z-index: 5 !important;
+        }
+
+        @media (max-height: 780px) {
+          .auction-svg-tier-emblem {
+            top: 28.2% !important;
+          }
+        }
+
+        /* K-LOL.GG auction name emblem motion cleanup patch v1
+           Requested changes:
+           - move name block slightly upward
+           - move tier emblem slightly upward
+           - hide remaining back cards after the fan stage so the back side does not keep showing
+           - soften / smooth the fan and picked-card motion to reduce step-like movement
+        */
+
+        .auction-svg-player {
+          top: 14.6% !important;
+          height: 9.8% !important;
+        }
+
+        .auction-svg-tier-emblem {
+          position: absolute !important;
+          left: 50% !important;
+          top: 27.9% !important;
+          transform: translate(-50%, 0) translateZ(0) !important;
+          z-index: 5 !important;
+          will-change: transform, opacity !important;
+          backface-visibility: hidden !important;
+        }
+
+        .gacha-deck-cluster,
+        .gacha-card-back,
+        .gacha-picked-card,
+        .gacha-card-inner,
+        .gacha-card-face.back,
+        .gacha-card-face.front {
+          backface-visibility: hidden !important;
+          transform-style: preserve-3d !important;
+          will-change: transform, opacity, filter !important;
+        }
+
+        .gacha-picked-card,
+        .gacha-deck-cluster {
+          transform: translateZ(0) !important;
+        }
+
+        .gacha-overlay.phase-tier_ascending .gacha-deck-cluster,
+        .gacha-overlay.phase-special_tension .gacha-deck-cluster,
+        .gacha-overlay.phase-flipping .gacha-deck-cluster,
+        .gacha-overlay.revealed .gacha-deck-cluster {
+          opacity: 0 !important;
+          visibility: hidden !important;
+          pointer-events: none !important;
+          filter: blur(8px) !important;
+          transform: translateY(58px) scale(.74) translateZ(0) !important;
+          transition:
+            opacity .34s ease,
+            transform .42s cubic-bezier(.22,.82,.22,1),
+            filter .34s ease,
+            visibility 0s linear .34s !important;
+        }
+
+        .gacha-overlay.animating .gacha-deck-cluster {
+          animation: lineDeckSweepRefined 5.5s cubic-bezier(.22,.84,.22,1) both !important;
+        }
+
+        .gacha-overlay.animating.high-tier .gacha-deck-cluster {
+          animation-duration: 6.3s !important;
+        }
+
+        .gacha-overlay.animating .gacha-card-back {
+          animation:
+            lineFanOutRefined 1.82s cubic-bezier(.2,.84,.2,1) both,
+            lineCardBreath 1.55s ease-in-out infinite !important;
+          animation-delay: var(--d), calc(1.9s + var(--d)) !important;
+        }
+
+        .gacha-overlay.animating.high-tier .gacha-card-back {
+          animation-duration: 2.0s, 1.16s !important;
+        }
+
+        .gacha-overlay.animating .gacha-picked-card {
+          animation: selectedLineCardRefined 5.5s cubic-bezier(.22,.88,.22,1) forwards !important;
+        }
+
+        .gacha-overlay.animating.high-tier .gacha-picked-card {
+          animation: selectedLineCardHighRefined 6.3s cubic-bezier(.22,.9,.22,1) forwards !important;
+        }
+
+        .gacha-card-inner {
+          transition: transform 1.55s cubic-bezier(.22,.82,.22,1) !important;
+        }
+
+        .gacha-overlay.revealed.high-tier .gacha-card-inner {
+          transition-duration: 2.2s !important;
+        }
+
+        @keyframes lineDeckSweepRefined {
+          0% { transform: translateY(18px) scale(.97) translateZ(0); filter: brightness(.82); }
+          22% { transform: translateY(12px) scale(1) translateZ(0); filter: brightness(.98); }
+          48% { transform: translateY(4px) scale(1.015) translateZ(0); filter: brightness(1.06); }
+          76% { transform: translateY(8px) scale(1) translateZ(0); filter: brightness(1.01); }
+          100% { transform: translateY(18px) scale(.95) translateZ(0); filter: brightness(.82); }
+        }
+
+        @keyframes lineFanOutRefined {
+          0% { opacity: 0; transform: translate(-420px, 86px) rotate(-22deg) scale(.5) translateZ(0); }
+          46% { opacity: 1; transform: translate(calc(var(--x) * .48), 30px) rotate(calc(var(--r) * .46)) scale(.69) translateZ(0); }
+          78% { opacity: .98; transform: translate(var(--x), 8px) rotate(var(--r)) scale(.81) translateZ(0); }
+          100% { opacity: .88; transform: translate(var(--x), 14px) rotate(var(--r)) scale(.77) translateZ(0); }
+        }
+
+        @keyframes selectedLineCardRefined {
+          0% { opacity: 0; transform: translate3d(0, 126px, 0) scale(.34) rotate(0deg); }
+          28% { opacity: 0; transform: translate3d(0, 126px, 0) scale(.34) rotate(0deg); }
+          42% { opacity: 1; transform: translate3d(0, 84px, 0) scale(.5) rotate(0deg); }
+          58% { opacity: 1; transform: translate3d(0, 18px, 0) scale(.73) rotate(-3deg); }
+          74% { opacity: 1; transform: translate3d(0, -40px, 0) scale(.92) rotate(2deg); }
+          88% { opacity: 1; transform: translate3d(0, -18px, 0) scale(1.02) rotate(-1deg); }
+          100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
+        }
+
+        @keyframes selectedLineCardHighRefined {
+          0% { opacity: 0; transform: translate3d(0, 136px, 0) scale(.3) rotate(0deg); }
+          30% { opacity: 0; transform: translate3d(0, 136px, 0) scale(.3) rotate(0deg); }
+          44% { opacity: 1; transform: translate3d(0, 94px, 0) scale(.48) rotate(0deg); }
+          60% { opacity: 1; transform: translate3d(0, 22px, 0) scale(.72) rotate(-4deg); }
+          76% { opacity: 1; transform: translate3d(0, -46px, 0) scale(.95) rotate(3deg); }
+          90% { opacity: 1; transform: translate3d(0, -22px, 0) scale(1.04) rotate(-1.5deg); }
+          100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
+        }
+
+        @media (max-height: 780px) {
+          .auction-svg-player {
+            top: 14.2% !important;
+            height: 9.4% !important;
+          }
+
+          .auction-svg-tier-emblem {
+            top: 27.4% !important;
+          }
+        }
+
+        /* K-LOL.GG auction video state motion back patch v1
+           Current video-state fixes:
+           - move name block slightly upward
+           - move tier emblem slightly upward
+           - make fan-spread back cards visibly use the premium back image
+           - reduce abrupt selected-card pop by using a smoother selected-card path
+           - hide remaining fan cards cleanly after the selected card is promoted
+        */
+
+        .auction-svg-player {
+          top: 13.8% !important;
+          height: 9.8% !important;
+        }
+
+        .auction-svg-tier-emblem {
+          position: absolute !important;
+          left: 50% !important;
+          top: 26.8% !important;
+          transform: translate(-50%, 0) translateZ(0) !important;
+          z-index: 5 !important;
+          will-change: transform, opacity !important;
+          backface-visibility: hidden !important;
+          -webkit-backface-visibility: hidden !important;
+        }
+
+        .gacha-deck-cluster {
+          width: 640px !important;
+          height: 300px !important;
+          opacity: 1 !important;
+          filter: none !important;
+          will-change: transform, opacity, filter !important;
+          transform-style: preserve-3d !important;
+          backface-visibility: hidden !important;
+          -webkit-backface-visibility: hidden !important;
+        }
+
+        .gacha-card-back {
+          position: absolute !important;
+          overflow: hidden !important;
+          border: 0 !important;
+          border-radius: 16px !important;
+          background-color: #163d82 !important;
+          background-image:
+            url("/auction-cards/back-premium.svg"),
+            linear-gradient(145deg, #60a5fa 0%, #1d4ed8 48%, #020817 100%) !important;
+          background-size: 100% 100%, cover !important;
+          background-position: center, center !important;
+          background-repeat: no-repeat, no-repeat !important;
+          opacity: 1 !important;
+          filter: brightness(1.12) saturate(1.08) !important;
+          box-shadow:
+            0 16px 34px rgba(0,0,0,.50),
+            0 0 24px rgba(96,165,250,.30) !important;
+          transform-style: preserve-3d !important;
+          backface-visibility: hidden !important;
+          -webkit-backface-visibility: hidden !important;
+          will-change: transform, opacity, filter !important;
+        }
+
+        .gacha-card-back::before,
+        .gacha-card-back::after {
+          content: none !important;
+          display: none !important;
+        }
+
+        .gacha-card-back.card-1 { --x: -246px !important; --y: 34px !important; --r: -16deg !important; --d: 0ms !important; }
+        .gacha-card-back.card-2 { --x: -184px !important; --y: 17px !important; --r: -12deg !important; --d: 42ms !important; }
+        .gacha-card-back.card-3 { --x: -123px !important; --y: 5px !important; --r: -8deg !important; --d: 84ms !important; }
+        .gacha-card-back.card-4 { --x: -62px !important; --y: -3px !important; --r: -4deg !important; --d: 126ms !important; }
+        .gacha-card-back.card-5 { --x: 0px !important; --y: -6px !important; --r: 0deg !important; --d: 168ms !important; }
+        .gacha-card-back.card-6 { --x: 62px !important; --y: -3px !important; --r: 4deg !important; --d: 210ms !important; }
+        .gacha-card-back.card-7 { --x: 123px !important; --y: 5px !important; --r: 8deg !important; --d: 252ms !important; }
+        .gacha-card-back.card-8 { --x: 184px !important; --y: 17px !important; --r: 12deg !important; --d: 294ms !important; }
+        .gacha-card-back.card-9 { --x: 246px !important; --y: 34px !important; --r: 16deg !important; --d: 336ms !important; }
+
+        .gacha-overlay.phase-shuffling .gacha-card-back,
+        .gacha-overlay.animating .gacha-card-back {
+          background-image:
+            url("/auction-cards/back-premium.svg"),
+            linear-gradient(145deg, #60a5fa 0%, #1d4ed8 48%, #020817 100%) !important;
+          background-size: 100% 100%, cover !important;
+          opacity: 1 !important;
+          filter: brightness(1.16) saturate(1.12) !important;
+          animation:
+            klolFanBackVisibleSmooth 1.72s cubic-bezier(.2,.82,.2,1) both,
+            lineCardBreath 1.58s ease-in-out infinite !important;
+          animation-delay: var(--d), calc(1.82s + var(--d)) !important;
+        }
+
+        .gacha-overlay.animating.high-tier .gacha-card-back {
+          animation-duration: 1.92s, 1.16s !important;
+        }
+
+        .gacha-overlay.phase-selecting .gacha-card-back {
+          background-image:
+            url("/auction-cards/back-premium.svg"),
+            linear-gradient(145deg, #60a5fa 0%, #1d4ed8 48%, #020817 100%) !important;
+          background-size: 100% 100%, cover !important;
+          opacity: .96 !important;
+          filter: brightness(1.14) saturate(1.10) !important;
+          animation: klolFanBackGatherSmooth .86s cubic-bezier(.22,.8,.22,1) both !important;
+        }
+
+        .gacha-overlay.phase-selecting.draw-card-1 .gacha-card-back.card-1,
+        .gacha-overlay.phase-selecting.draw-card-2 .gacha-card-back.card-2,
+        .gacha-overlay.phase-selecting.draw-card-3 .gacha-card-back.card-3,
+        .gacha-overlay.phase-selecting.draw-card-4 .gacha-card-back.card-4,
+        .gacha-overlay.phase-selecting.draw-card-5 .gacha-card-back.card-5,
+        .gacha-overlay.phase-selecting.draw-card-6 .gacha-card-back.card-6,
+        .gacha-overlay.phase-selecting.draw-card-7 .gacha-card-back.card-7,
+        .gacha-overlay.phase-selecting.draw-card-8 .gacha-card-back.card-8,
+        .gacha-overlay.phase-selecting.draw-card-9 .gacha-card-back.card-9 {
+          z-index: 40 !important;
+          opacity: 1 !important;
+          filter: brightness(1.18) saturate(1.14) !important;
+          animation: klolFanPickedToCenterSmooth 1.04s cubic-bezier(.2,.84,.2,1) both !important;
+          box-shadow:
+            0 22px 52px rgba(0,0,0,.56),
+            0 0 32px rgba(96,165,250,.36) !important;
+        }
+
+        .gacha-overlay.phase-tier_ascending .gacha-deck-cluster,
+        .gacha-overlay.phase-special_tension .gacha-deck-cluster,
+        .gacha-overlay.phase-flipping .gacha-deck-cluster,
+        .gacha-overlay.revealed .gacha-deck-cluster {
+          opacity: 0 !important;
+          visibility: hidden !important;
+          pointer-events: none !important;
+          filter: blur(8px) !important;
+          transform: translateY(54px) scale(.72) translateZ(0) !important;
+          transition:
+            opacity .28s ease,
+            transform .38s cubic-bezier(.22,.82,.22,1),
+            filter .28s ease,
+            visibility 0s linear .28s !important;
+        }
+
+        .gacha-overlay.animating .gacha-picked-card {
+          animation: klolPickedCardSmoothPromote 5.35s cubic-bezier(.22,.88,.22,1) forwards !important;
+          filter: drop-shadow(0 22px 50px rgba(0,0,0,.48)) !important;
+          will-change: transform, opacity, filter !important;
+          transform-style: preserve-3d !important;
+          backface-visibility: hidden !important;
+          -webkit-backface-visibility: hidden !important;
+        }
+
+        .gacha-overlay.animating.high-tier .gacha-picked-card {
+          animation: klolPickedCardSmoothPromoteHigh 6.05s cubic-bezier(.22,.9,.22,1) forwards !important;
+        }
+
+        .gacha-card-inner {
+          transition: transform 1.48s cubic-bezier(.22,.82,.22,1) !important;
+          transform-style: preserve-3d !important;
+          will-change: transform !important;
+        }
+
+        @keyframes klolFanBackVisibleSmooth {
           0% {
             opacity: 0;
-            transform: translate3d(0, 92px, 0) scale(.72) rotate(-3deg);
+            transform: translate3d(-380px, 78px, 0) rotate(-20deg) scale(.54);
           }
           34% {
-            opacity: 1;
-            transform: translate3d(0, 20px, 0) scale(.92) rotate(-1deg);
+            opacity: .78;
+            transform: translate3d(calc(var(--x) * .34), 42px, 0) rotate(calc(var(--r) * .34)) scale(.66);
           }
           72% {
             opacity: 1;
-            transform: translate3d(0, -8px, 0) scale(1.018) rotate(.8deg);
+            transform: translate3d(var(--x), calc(var(--y) + 4px), 0) rotate(var(--r)) scale(.80);
+          }
+          100% {
+            opacity: 1;
+            transform: translate3d(var(--x), var(--y), 0) rotate(var(--r)) scale(.78);
+          }
+        }
+
+        @keyframes klolFanBackGatherSmooth {
+          0% {
+            opacity: 1;
+            transform: translate3d(var(--x), var(--y), 0) rotate(var(--r)) scale(.78);
+          }
+          58% {
+            opacity: .74;
+            transform: translate3d(calc(var(--x) * .44), calc(var(--y) + 18px), 0) rotate(calc(var(--r) * .4)) scale(.64);
+          }
+          100% {
+            opacity: 0;
+            transform: translate3d(0, 56px, 0) rotate(0deg) scale(.48);
+          }
+        }
+
+        @keyframes klolFanPickedToCenterSmooth {
+          0% {
+            opacity: 1;
+            transform: translate3d(var(--x), var(--y), 0) rotate(var(--r)) scale(.78);
+          }
+          40% {
+            opacity: 1;
+            transform: translate3d(calc(var(--x) * .62), -30px, 0) rotate(calc(var(--r) * .58)) scale(.90);
+          }
+          78% {
+            opacity: .95;
+            transform: translate3d(calc(var(--x) * .14), -10px, 0) rotate(calc(var(--r) * .16)) scale(1.02);
+          }
+          100% {
+            opacity: 0;
+            transform: translate3d(0, 0, 0) rotate(0deg) scale(1.07);
+          }
+        }
+
+        @keyframes klolPickedCardSmoothPromote {
+          0%, 34% {
+            opacity: 0;
+            transform: translate3d(0, 112px, 0) scale(.36) rotate(0deg);
+          }
+          48% {
+            opacity: .55;
+            transform: translate3d(0, 74px, 0) scale(.52) rotate(0deg);
+          }
+          64% {
+            opacity: .92;
+            transform: translate3d(0, 18px, 0) scale(.76) rotate(-2deg);
+          }
+          80% {
+            opacity: 1;
+            transform: translate3d(0, -24px, 0) scale(.96) rotate(1deg);
+          }
+          92% {
+            opacity: 1;
+            transform: translate3d(0, -8px, 0) scale(1.02) rotate(-.5deg);
           }
           100% {
             opacity: 1;
@@ -2374,77 +3197,138 @@ export default function DestructionAuctionManager({
           }
         }
 
-        @keyframes klolCleanDeckAfterPick {
-          0% {
-            opacity: 1;
-            transform: translate3d(0, 0, 0) scale(1);
+        @keyframes klolPickedCardSmoothPromoteHigh {
+          0%, 36% {
+            opacity: 0;
+            transform: translate3d(0, 126px, 0) scale(.32) rotate(0deg);
           }
-          42% {
-            opacity: .66;
-            transform: translate3d(0, 18px, 0) scale(.94);
+          50% {
+            opacity: .52;
+            transform: translate3d(0, 84px, 0) scale(.50) rotate(0deg);
+          }
+          66% {
+            opacity: .92;
+            transform: translate3d(0, 20px, 0) scale(.76) rotate(-3deg);
+          }
+          82% {
+            opacity: 1;
+            transform: translate3d(0, -30px, 0) scale(.98) rotate(1.5deg);
+          }
+          93% {
+            opacity: 1;
+            transform: translate3d(0, -10px, 0) scale(1.03) rotate(-.7deg);
           }
           100% {
-            opacity: 0;
-            transform: translate3d(0, 56px, 0) scale(.84);
+            opacity: 1;
+            transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
           }
         }
 
-        @keyframes klolCleanTierHold {
-          0% { transform: translate3d(0, 0, 0) scale(1); }
-          100% { transform: translate3d(0, -3px, 0) scale(1.004); }
+        @media (max-height: 780px) {
+          .auction-svg-player {
+            top: 13.4% !important;
+            height: 9.4% !important;
+          }
+
+          .auction-svg-tier-emblem {
+            top: 26.4% !important;
+          }
+        }
+
+        /* K-LOL.GG auction draw stutter fix patch v1
+           Fixes the hard cut around SELECTING -> TIER_ASCENDING.
+           Main cause: previous long picked-card animation was interrupted by the next phase.
+           This patch makes SELECTING settle inside the phase duration, keeps the same final transform,
+           and only then lets tier checking start. */
+
+        .gacha-card-back {
+          background-image:
+            url("/auction-cards/back-premium.svg"),
+            linear-gradient(145deg, #60a5fa 0%, #1d4ed8 48%, #020817 100%) !important;
+          background-size: 100% 100%, cover !important;
+          background-position: center, center !important;
+          background-repeat: no-repeat, no-repeat !important;
+          opacity: 1 !important;
+          filter: brightness(1.12) saturate(1.08) !important;
+          backface-visibility: hidden !important;
+          -webkit-backface-visibility: hidden !important;
+          transform-style: preserve-3d !important;
+          will-change: transform, opacity, filter !important;
+        }
+
+        .gacha-card-back::before,
+        .gacha-card-back::after {
+          content: none !important;
+          display: none !important;
+        }
+
+        .gacha-deck-cluster,
+        .gacha-picked-card,
+        .gacha-card-inner,
+        .gacha-card-face.back,
+        .gacha-card-face.front {
+          backface-visibility: hidden !important;
+          -webkit-backface-visibility: hidden !important;
+          transform-style: preserve-3d !important;
+          will-change: transform, opacity, filter !important;
         }
 
         .gacha-overlay.phase-shuffling .gacha-picked-card {
           opacity: 0 !important;
+          transform: translate3d(0, 112px, 0) scale(.34) rotate(0deg) !important;
           animation: none !important;
-          transform: translate3d(0, 92px, 0) scale(.72) rotate(0deg) !important;
-          filter: none !important;
+        }
+
+        .gacha-overlay.phase-selecting .gacha-card-back {
+          animation: klolDrawGatherBacksSmooth .98s cubic-bezier(.22,.84,.22,1) both !important;
+          animation-delay: 0ms !important;
+          filter: brightness(1.12) saturate(1.08) !important;
+        }
+
+        .gacha-overlay.phase-selecting.draw-card-1 .gacha-card-back.card-1,
+        .gacha-overlay.phase-selecting.draw-card-2 .gacha-card-back.card-2,
+        .gacha-overlay.phase-selecting.draw-card-3 .gacha-card-back.card-3,
+        .gacha-overlay.phase-selecting.draw-card-4 .gacha-card-back.card-4,
+        .gacha-overlay.phase-selecting.draw-card-5 .gacha-card-back.card-5,
+        .gacha-overlay.phase-selecting.draw-card-6 .gacha-card-back.card-6,
+        .gacha-overlay.phase-selecting.draw-card-7 .gacha-card-back.card-7,
+        .gacha-overlay.phase-selecting.draw-card-8 .gacha-card-back.card-8,
+        .gacha-overlay.phase-selecting.draw-card-9 .gacha-card-back.card-9 {
+          z-index: 42 !important;
+          opacity: 1 !important;
+          filter: brightness(1.18) saturate(1.14) !important;
+          animation: klolDrawChosenBackToCenterSmooth 1.02s cubic-bezier(.2,.84,.2,1) both !important;
+          animation-delay: 0ms !important;
+          box-shadow:
+            0 22px 52px rgba(0,0,0,.56),
+            0 0 32px rgba(96,165,250,.36) !important;
         }
 
         .gacha-overlay.phase-selecting .gacha-picked-card {
           opacity: 1 !important;
-          animation: klolCleanOnePickIn .78s cubic-bezier(.18,.88,.18,1) both !important;
-          filter: none !important;
-          will-change: transform, opacity !important;
+          animation: klolDrawMainPickedFadeInSmooth 1.02s cubic-bezier(.22,.84,.22,1) both !important;
+          filter: drop-shadow(0 22px 50px rgba(0,0,0,.48)) !important;
+          transform-origin: center center !important;
         }
 
-        .gacha-overlay.phase-selecting .gacha-deck-cluster {
+        .gacha-overlay.phase-tier_ascending .gacha-picked-card {
           opacity: 1 !important;
-          animation: klolCleanDeckAfterPick .72s cubic-bezier(.22,.82,.2,1) both !important;
-          filter: none !important;
-          will-change: transform, opacity !important;
+          transform: translate3d(0, 0, 0) scale(1) rotate(0deg) !important;
+          animation: klolDrawTierSoftHold 1.35s ease-in-out infinite alternate !important;
+          filter: drop-shadow(0 24px 54px rgba(0,0,0,.48)) !important;
         }
 
-        .gacha-overlay.phase-selecting .gacha-card-back {
-          filter: none !important;
-          will-change: transform, opacity !important;
+        .gacha-overlay.phase-special_tension .gacha-picked-card {
+          opacity: 1 !important;
+          transform: translate3d(0, 0, 0) scale(1) rotate(0deg) !important;
+          animation: klolDrawTierSoftHoldHigh 1.35s ease-in-out infinite alternate !important;
+          filter: drop-shadow(0 24px 54px rgba(0,0,0,.48)) !important;
         }
 
-        .gacha-overlay.phase-selecting .gacha-light-burst,
-        .gacha-overlay.phase-selecting .gacha-shockwave,
-        .gacha-overlay.phase-selecting .gacha-sparkles span {
-          animation: none !important;
-          opacity: .16 !important;
-          filter: none !important;
-        }
-
-        .gacha-overlay.phase-approaching .gacha-picked-card,
-        .gacha-overlay.phase-tier_ascending .gacha-picked-card,
-        .gacha-overlay.phase-special_tension .gacha-picked-card,
         .gacha-overlay.phase-flipping .gacha-picked-card,
         .gacha-overlay.revealed .gacha-picked-card {
           opacity: 1 !important;
           transform: translate3d(0, 0, 0) scale(1) rotate(0deg) !important;
-        }
-
-        .gacha-overlay.phase-tier_ascending .gacha-picked-card {
-          animation: klolCleanTierHold 1.3s ease-in-out infinite alternate !important;
-          filter: none !important;
-        }
-
-        .gacha-overlay.phase-special_tension .gacha-picked-card,
-        .gacha-overlay.phase-flipping .gacha-picked-card,
-        .gacha-overlay.revealed .gacha-picked-card {
           animation: none !important;
         }
 
@@ -2453,68 +3337,1813 @@ export default function DestructionAuctionManager({
         .gacha-overlay.phase-flipping .gacha-deck-cluster,
         .gacha-overlay.revealed .gacha-deck-cluster {
           opacity: 0 !important;
-          transform: translate3d(0, 56px, 0) scale(.84) !important;
-          transition: opacity .22s ease, transform .22s ease !important;
-          filter: none !important;
+          visibility: hidden !important;
+          pointer-events: none !important;
+          filter: blur(8px) !important;
+          transform: translate3d(0, 52px, 0) scale(.72) !important;
+          transition:
+            opacity .24s ease,
+            transform .34s cubic-bezier(.22,.82,.22,1),
+            filter .24s ease,
+            visibility 0s linear .24s !important;
         }
 
-        .gacha-card-face.back,
+        .gacha-card-inner {
+          transition: transform 1.34s cubic-bezier(.22,.82,.22,1) !important;
+        }
+
+        @keyframes klolDrawGatherBacksSmooth {
+          0% {
+            opacity: .96;
+            transform: translate3d(var(--x), var(--y), 0) rotate(var(--r)) scale(.78);
+          }
+          52% {
+            opacity: .62;
+            transform: translate3d(calc(var(--x) * .46), calc(var(--y) + 18px), 0) rotate(calc(var(--r) * .45)) scale(.64);
+          }
+          100% {
+            opacity: 0;
+            transform: translate3d(0, 54px, 0) rotate(0deg) scale(.48);
+          }
+        }
+
+        @keyframes klolDrawChosenBackToCenterSmooth {
+          0% {
+            opacity: 1;
+            transform: translate3d(var(--x), var(--y), 0) rotate(var(--r)) scale(.78);
+          }
+          38% {
+            opacity: 1;
+            transform: translate3d(calc(var(--x) * .62), -24px, 0) rotate(calc(var(--r) * .58)) scale(.90);
+          }
+          72% {
+            opacity: 1;
+            transform: translate3d(calc(var(--x) * .18), -6px, 0) rotate(calc(var(--r) * .16)) scale(1.02);
+          }
+          90% {
+            opacity: .68;
+            transform: translate3d(0, 0, 0) rotate(0deg) scale(1.06);
+          }
+          100% {
+            opacity: 0;
+            transform: translate3d(0, 0, 0) rotate(0deg) scale(1.06);
+          }
+        }
+
+        @keyframes klolDrawMainPickedFadeInSmooth {
+          0%, 58% {
+            opacity: 0;
+            transform: translate3d(0, 0, 0) scale(1.06) rotate(0deg);
+          }
+          74% {
+            opacity: .36;
+            transform: translate3d(0, 0, 0) scale(1.035) rotate(0deg);
+          }
+          92% {
+            opacity: .92;
+            transform: translate3d(0, 0, 0) scale(1.01) rotate(0deg);
+          }
+          100% {
+            opacity: 1;
+            transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+          }
+        }
+
+        @keyframes klolDrawTierSoftHold {
+          from {
+            transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+            filter: drop-shadow(0 22px 50px rgba(0,0,0,.46));
+          }
+          to {
+            transform: translate3d(0, -4px, 0) scale(1.008) rotate(0deg);
+            filter: drop-shadow(0 26px 56px rgba(0,0,0,.50));
+          }
+        }
+
+        @keyframes klolDrawTierSoftHoldHigh {
+          from {
+            transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+            filter: drop-shadow(0 24px 54px rgba(0,0,0,.48)) drop-shadow(0 0 18px var(--card-tier-glow));
+          }
+          to {
+            transform: translate3d(0, -5px, 0) scale(1.012) rotate(0deg);
+            filter: drop-shadow(0 28px 62px rgba(0,0,0,.52)) drop-shadow(0 0 24px var(--card-tier-glow));
+          }
+        }
+
+        /* K-LOL.GG auction draw seamless final patch v1
+           Final draw-flow stabilization:
+           - no blank card at the last/reveal phase
+           - selected back-card bridges smoothly into the main picked card
+           - fan cards gather without a hard cut
+           - phase changes keep identical final transform, so the card does not jump
+        */
+
         .gacha-card-back,
-        .gacha-overlay.phase-tier_ascending .gacha-card-face.back,
-        .gacha-overlay.phase-special_tension .gacha-card-face.back,
-        .gacha-overlay.phase-flipping .gacha-card-face.back {
-          border-color: rgba(125,211,252,.42) !important;
-          background-color: #153a76 !important;
-          background-image: linear-gradient(145deg, #4f8df7 0%, #1e4f9f 48%, #071634 100%) !important;
-          box-shadow:
-            0 26px 58px rgba(0,0,0,.54),
-            inset 0 0 26px rgba(255,255,255,.10),
-            0 0 34px rgba(96,165,250,.30) !important;
-        }
-
-        .gacha-card-face.back::after,
-        .gacha-card-back::after {
-          text-shadow:
-            0 16px 34px rgba(0,0,0,.35),
-            0 0 22px rgba(59,130,246,.34) !important;
-        }
-
-        .gacha-card-face.front {
-          background-color: color-mix(in srgb, var(--card-tier-secondary) 58%, #07101f) !important;
+        .gacha-card-face.back.auction-svg-card-back {
           background-image:
-            radial-gradient(circle at 76% 16%, color-mix(in srgb, var(--card-tier-primary) 36%, rgba(255,255,255,.12)), transparent 25%),
-            radial-gradient(circle at 18% 0%, color-mix(in srgb, var(--card-tier-glow) 42%, transparent), transparent 32%),
-            radial-gradient(circle at 50% 110%, color-mix(in srgb, var(--card-tier-primary) 26%, transparent), transparent 38%),
-            linear-gradient(155deg,
-              color-mix(in srgb, var(--card-tier-primary) 38%, #10243a) 0%,
-              color-mix(in srgb, var(--card-tier-secondary) 64%, #0b1629) 48%,
-              #050b16 100%) !important;
-          border-color: var(--card-tier-border) !important;
-          box-shadow:
-            0 0 0 1px rgba(255,255,255,.10) inset,
-            0 32px 92px rgba(0,0,0,.72),
-            0 0 66px color-mix(in srgb, var(--card-tier-glow) 84%, transparent) !important;
+            url("/auction-cards/back-premium.svg"),
+            linear-gradient(145deg, #60a5fa 0%, #1d4ed8 48%, #020817 100%) !important;
+          background-size: 100% 100%, cover !important;
+          background-position: center, center !important;
+          background-repeat: no-repeat, no-repeat !important;
+          opacity: 1 !important;
+          filter: brightness(1.12) saturate(1.08) !important;
         }
 
-        .gacha-card-face.front::before {
-          background-image:
-            linear-gradient(135deg, rgba(255,255,255,.10), transparent 28%, rgba(255,255,255,.035) 58%, transparent 78%),
-            repeating-linear-gradient(120deg, rgba(255,255,255,.045) 0 1px, transparent 1px 16px),
-            radial-gradient(circle at 72% 10%, color-mix(in srgb, var(--card-tier-glow) 72%, transparent), transparent 34%) !important;
-          opacity: .78 !important;
-        }
-
-        .gacha-card-face.front .auction-front-stat {
-          background-color: rgba(5,14,27,.84) !important;
-          background-image:
-            linear-gradient(135deg, rgba(255,255,255,.060), rgba(5,14,27,.94)) !important;
-          border-color: color-mix(in srgb, var(--card-tier-border) 30%, rgba(255,255,255,.10)) !important;
-        }
-
-        .gacha-overlay:not(.revealed):not(.phase-flipping) .gacha-card-face.front::after {
+        .gacha-card-back::before,
+        .gacha-card-back::after,
+        .gacha-card-face.back.auction-svg-card-back::before,
+        .gacha-card-face.back.auction-svg-card-back::after,
+        .gacha-card-face.front.auction-svg-card-front::before,
+        .gacha-card-face.front.auction-svg-card-front::after {
           content: none !important;
+          display: none !important;
         }
-`}</style>
+
+        .gacha-deck-cluster,
+        .gacha-card-back,
+        .gacha-picked-card,
+        .gacha-card-inner,
+        .gacha-card-face.back,
+        .gacha-card-face.front {
+          backface-visibility: hidden !important;
+          -webkit-backface-visibility: hidden !important;
+          transform-style: preserve-3d !important;
+          will-change: transform, opacity, filter !important;
+        }
+
+        .gacha-card-face.back.auction-svg-card-back,
+        .gacha-card-face.front.auction-svg-card-front {
+          padding: 0 !important;
+          border: 0 !important;
+          background-color: transparent !important;
+          box-shadow: none !important;
+          overflow: hidden !important;
+        }
+
+        .auction-svg-card-bg {
+          position: absolute !important;
+          inset: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          object-fit: cover !important;
+          z-index: 0 !important;
+          pointer-events: none !important;
+          user-select: none !important;
+        }
+
+        .gacha-overlay.phase-shuffling .gacha-picked-card {
+          opacity: 0 !important;
+          visibility: visible !important;
+          transform: translate3d(0, 112px, 0) scale(.34) rotate(0deg) !important;
+          animation: none !important;
+        }
+
+        .gacha-overlay.phase-selecting .gacha-card-back {
+          animation: klolSeamlessFanGather .98s cubic-bezier(.22,.84,.22,1) both !important;
+          animation-delay: 60ms !important;
+          filter: brightness(1.12) saturate(1.08) !important;
+        }
+
+        .gacha-overlay.phase-selecting.draw-card-1 .gacha-card-back.card-1,
+        .gacha-overlay.phase-selecting.draw-card-2 .gacha-card-back.card-2,
+        .gacha-overlay.phase-selecting.draw-card-3 .gacha-card-back.card-3,
+        .gacha-overlay.phase-selecting.draw-card-4 .gacha-card-back.card-4,
+        .gacha-overlay.phase-selecting.draw-card-5 .gacha-card-back.card-5,
+        .gacha-overlay.phase-selecting.draw-card-6 .gacha-card-back.card-6,
+        .gacha-overlay.phase-selecting.draw-card-7 .gacha-card-back.card-7,
+        .gacha-overlay.phase-selecting.draw-card-8 .gacha-card-back.card-8,
+        .gacha-overlay.phase-selecting.draw-card-9 .gacha-card-back.card-9 {
+          z-index: 44 !important;
+          opacity: 1 !important;
+          filter: brightness(1.18) saturate(1.14) !important;
+          animation: klolSeamlessChosenBackBridge 1.16s cubic-bezier(.2,.84,.2,1) both !important;
+          animation-delay: 0ms !important;
+          box-shadow:
+            0 22px 52px rgba(0,0,0,.56),
+            0 0 32px rgba(96,165,250,.36) !important;
+        }
+
+        .gacha-overlay.phase-selecting .gacha-picked-card {
+          opacity: 1 !important;
+          visibility: visible !important;
+          display: block !important;
+          animation: klolSeamlessMainBackBridge 1.16s cubic-bezier(.22,.84,.22,1) both !important;
+          filter: drop-shadow(0 22px 50px rgba(0,0,0,.48)) !important;
+          transform-origin: center center !important;
+        }
+
+        .gacha-overlay.phase-tier_ascending .gacha-picked-card,
+        .gacha-overlay.phase-special_tension .gacha-picked-card {
+          opacity: 1 !important;
+          visibility: visible !important;
+          display: block !important;
+          transform: translate3d(0, 0, 0) scale(1) rotate(0deg) !important;
+          animation: klolSeamlessTierHold 1.35s ease-in-out infinite alternate !important;
+          filter: drop-shadow(0 24px 54px rgba(0,0,0,.48)) !important;
+        }
+
+        .gacha-overlay.phase-tier_ascending .gacha-card-inner,
+        .gacha-overlay.phase-special_tension .gacha-card-inner {
+          transform: rotateY(0deg) !important;
+          transition: transform 1.2s cubic-bezier(.22,.82,.22,1) !important;
+        }
+
+        .gacha-overlay.phase-flipping .gacha-picked-card,
+        .gacha-overlay.revealed .gacha-picked-card {
+          opacity: 1 !important;
+          visibility: visible !important;
+          display: block !important;
+          transform: translate3d(0, 0, 0) scale(1) rotate(0deg) !important;
+          animation: none !important;
+          filter: drop-shadow(0 24px 54px rgba(0,0,0,.48)) !important;
+        }
+
+        .gacha-overlay.phase-flipping .gacha-card-inner,
+        .gacha-overlay.revealed .gacha-card-inner {
+          transform: rotateY(180deg) !important;
+          transition: transform 1.34s cubic-bezier(.22,.82,.22,1) !important;
+        }
+
+        .gacha-overlay.phase-flipping.high-tier .gacha-card-inner,
+        .gacha-overlay.revealed.high-tier .gacha-card-inner {
+          transition-duration: 1.7s !important;
+        }
+
+        .gacha-overlay.phase-flipping .gacha-card-face.front,
+        .gacha-overlay.revealed .gacha-card-face.front {
+          opacity: 1 !important;
+          visibility: visible !important;
+        }
+
+        .gacha-overlay.phase-flipping .gacha-card-face.back,
+        .gacha-overlay.revealed .gacha-card-face.back {
+          visibility: visible !important;
+        }
+
+        .gacha-overlay.phase-tier_ascending .gacha-deck-cluster,
+        .gacha-overlay.phase-special_tension .gacha-deck-cluster,
+        .gacha-overlay.phase-flipping .gacha-deck-cluster,
+        .gacha-overlay.revealed .gacha-deck-cluster {
+          opacity: 0 !important;
+          visibility: hidden !important;
+          pointer-events: none !important;
+          filter: blur(8px) !important;
+          transform: translate3d(0, 52px, 0) scale(.72) !important;
+          transition:
+            opacity .24s ease,
+            transform .34s cubic-bezier(.22,.82,.22,1),
+            filter .24s ease,
+            visibility 0s linear .24s !important;
+        }
+
+        @keyframes klolSeamlessFanGather {
+          0% {
+            opacity: .96;
+            transform: translate3d(var(--x), var(--y), 0) rotate(var(--r)) scale(.78);
+          }
+          56% {
+            opacity: .64;
+            transform: translate3d(calc(var(--x) * .44), calc(var(--y) + 18px), 0) rotate(calc(var(--r) * .45)) scale(.64);
+          }
+          100% {
+            opacity: 0;
+            transform: translate3d(0, 54px, 0) rotate(0deg) scale(.48);
+          }
+        }
+
+        @keyframes klolSeamlessChosenBackBridge {
+          0% {
+            opacity: 1;
+            transform: translate3d(var(--x), var(--y), 0) rotate(var(--r)) scale(.78);
+          }
+          34% {
+            opacity: 1;
+            transform: translate3d(calc(var(--x) * .62), -24px, 0) rotate(calc(var(--r) * .58)) scale(.90);
+          }
+          66% {
+            opacity: 1;
+            transform: translate3d(calc(var(--x) * .18), -6px, 0) rotate(calc(var(--r) * .16)) scale(1.02);
+          }
+          86% {
+            opacity: .94;
+            transform: translate3d(0, 0, 0) rotate(0deg) scale(1.055);
+          }
+          100% {
+            opacity: 0;
+            transform: translate3d(0, 0, 0) rotate(0deg) scale(1.055);
+          }
+        }
+
+        @keyframes klolSeamlessMainBackBridge {
+          0%, 44% {
+            opacity: 0;
+            transform: translate3d(0, 0, 0) scale(1.055) rotate(0deg);
+          }
+          62% {
+            opacity: .32;
+            transform: translate3d(0, 0, 0) scale(1.04) rotate(0deg);
+          }
+          84% {
+            opacity: .88;
+            transform: translate3d(0, 0, 0) scale(1.012) rotate(0deg);
+          }
+          100% {
+            opacity: 1;
+            transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+          }
+        }
+
+        @keyframes klolSeamlessTierHold {
+          from {
+            transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+            filter: drop-shadow(0 22px 50px rgba(0,0,0,.46));
+          }
+          to {
+            transform: translate3d(0, -4px, 0) scale(1.008) rotate(0deg);
+            filter: drop-shadow(0 26px 56px rgba(0,0,0,.50));
+          }
+        }
+
+        /* K-LOL.GG auction final no blank no stutter override v1
+           Fix:
+           - final revealed card invisible issue
+           - selected card transition blank frame
+           - picked card hard cut between SELECTING and TIER_ASCENDING
+           - keep front/back faces visible only through correct 3D rules
+        */
+
+        .gacha-card-inner {
+          backface-visibility: visible !important;
+          -webkit-backface-visibility: visible !important;
+          transform-style: preserve-3d !important;
+          will-change: transform !important;
+        }
+
+        .gacha-card-face,
+        .gacha-card-face.back,
+        .gacha-card-face.front {
+          backface-visibility: hidden !important;
+          -webkit-backface-visibility: hidden !important;
+          transform-style: preserve-3d !important;
+        }
+
+        .gacha-card-face.front.auction-svg-card-front {
+          transform: rotateY(180deg) !important;
+          opacity: 1 !important;
+          visibility: visible !important;
+        }
+
+        .gacha-card-face.back.auction-svg-card-back {
+          transform: rotateY(0deg) !important;
+          opacity: 1 !important;
+          visibility: visible !important;
+        }
+
+        .auction-svg-card-bg,
+        .auction-svg-card-content {
+          opacity: 1 !important;
+          visibility: visible !important;
+        }
+
+        .gacha-card-back {
+          background-image:
+            url("/auction-cards/back-premium.svg"),
+            linear-gradient(145deg, #60a5fa 0%, #1d4ed8 48%, #020817 100%) !important;
+          background-size: 100% 100%, cover !important;
+          background-position: center, center !important;
+          background-repeat: no-repeat, no-repeat !important;
+          opacity: 1 !important;
+          filter: brightness(1.12) saturate(1.08) !important;
+          backface-visibility: hidden !important;
+          -webkit-backface-visibility: hidden !important;
+          transform-style: preserve-3d !important;
+          will-change: transform, opacity, filter !important;
+        }
+
+        .gacha-card-back::before,
+        .gacha-card-back::after {
+          content: none !important;
+          display: none !important;
+        }
+
+        .gacha-overlay.phase-selecting .gacha-picked-card {
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          animation: klolNoBlankMainCardBridge 1.12s cubic-bezier(.22,.84,.22,1) both !important;
+          transform-origin: center center !important;
+          filter: drop-shadow(0 22px 50px rgba(0,0,0,.48)) !important;
+        }
+
+        .gacha-overlay.phase-selecting.draw-card-1 .gacha-card-back.card-1,
+        .gacha-overlay.phase-selecting.draw-card-2 .gacha-card-back.card-2,
+        .gacha-overlay.phase-selecting.draw-card-3 .gacha-card-back.card-3,
+        .gacha-overlay.phase-selecting.draw-card-4 .gacha-card-back.card-4,
+        .gacha-overlay.phase-selecting.draw-card-5 .gacha-card-back.card-5,
+        .gacha-overlay.phase-selecting.draw-card-6 .gacha-card-back.card-6,
+        .gacha-overlay.phase-selecting.draw-card-7 .gacha-card-back.card-7,
+        .gacha-overlay.phase-selecting.draw-card-8 .gacha-card-back.card-8,
+        .gacha-overlay.phase-selecting.draw-card-9 .gacha-card-back.card-9 {
+          z-index: 44 !important;
+          opacity: 1 !important;
+          filter: brightness(1.18) saturate(1.14) !important;
+          animation: klolNoBlankChosenBackBridge 1.12s cubic-bezier(.2,.84,.2,1) both !important;
+          animation-delay: 0ms !important;
+        }
+
+        .gacha-overlay.phase-selecting .gacha-card-back {
+          animation: klolNoBlankRestBackGather .92s cubic-bezier(.22,.84,.22,1) both !important;
+          animation-delay: 80ms !important;
+        }
+
+        .gacha-overlay.phase-tier_ascending .gacha-picked-card,
+        .gacha-overlay.phase-special_tension .gacha-picked-card,
+        .gacha-overlay.phase-flipping .gacha-picked-card,
+        .gacha-overlay.revealed .gacha-picked-card {
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          transform: translate3d(0, 0, 0) scale(1) rotate(0deg) !important;
+          filter: drop-shadow(0 24px 54px rgba(0,0,0,.48)) !important;
+        }
+
+        .gacha-overlay.phase-tier_ascending .gacha-card-inner,
+        .gacha-overlay.phase-special_tension .gacha-card-inner {
+          transform: rotateY(0deg) !important;
+          backface-visibility: visible !important;
+          -webkit-backface-visibility: visible !important;
+        }
+
+        .gacha-overlay.phase-flipping .gacha-card-inner,
+        .gacha-overlay.revealed .gacha-card-inner {
+          transform: rotateY(180deg) !important;
+          backface-visibility: visible !important;
+          -webkit-backface-visibility: visible !important;
+        }
+
+        .gacha-overlay.revealed .gacha-card-face.front.auction-svg-card-front,
+        .gacha-overlay.phase-flipping .gacha-card-face.front.auction-svg-card-front {
+          opacity: 1 !important;
+          visibility: visible !important;
+        }
+
+        .gacha-overlay.revealed .auction-svg-card-bg,
+        .gacha-overlay.revealed .auction-svg-card-content,
+        .gacha-overlay.phase-flipping .auction-svg-card-bg,
+        .gacha-overlay.phase-flipping .auction-svg-card-content {
+          opacity: 1 !important;
+          visibility: visible !important;
+        }
+
+        .gacha-overlay.phase-tier_ascending .gacha-deck-cluster,
+        .gacha-overlay.phase-special_tension .gacha-deck-cluster,
+        .gacha-overlay.phase-flipping .gacha-deck-cluster,
+        .gacha-overlay.revealed .gacha-deck-cluster {
+          opacity: 0 !important;
+          visibility: hidden !important;
+          pointer-events: none !important;
+          filter: blur(8px) !important;
+          transform: translate3d(0, 52px, 0) scale(.72) !important;
+          transition:
+            opacity .24s ease,
+            transform .34s cubic-bezier(.22,.82,.22,1),
+            filter .24s ease,
+            visibility 0s linear .24s !important;
+        }
+
+        @keyframes klolNoBlankChosenBackBridge {
+          0% {
+            opacity: 1;
+            transform: translate3d(var(--x), var(--y), 0) rotate(var(--r)) scale(.78);
+          }
+          36% {
+            opacity: 1;
+            transform: translate3d(calc(var(--x) * .62), -24px, 0) rotate(calc(var(--r) * .58)) scale(.90);
+          }
+          68% {
+            opacity: 1;
+            transform: translate3d(calc(var(--x) * .18), -6px, 0) rotate(calc(var(--r) * .16)) scale(1.02);
+          }
+          88% {
+            opacity: .72;
+            transform: translate3d(0, 0, 0) rotate(0deg) scale(1.055);
+          }
+          100% {
+            opacity: 0;
+            transform: translate3d(0, 0, 0) rotate(0deg) scale(1.055);
+          }
+        }
+
+        @keyframes klolNoBlankMainCardBridge {
+          0%, 42% {
+            opacity: 0;
+            transform: translate3d(0, 0, 0) scale(1.055) rotate(0deg);
+          }
+          62% {
+            opacity: .48;
+            transform: translate3d(0, 0, 0) scale(1.035) rotate(0deg);
+          }
+          82% {
+            opacity: .92;
+            transform: translate3d(0, 0, 0) scale(1.012) rotate(0deg);
+          }
+          100% {
+            opacity: 1;
+            transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+          }
+        }
+
+        @keyframes klolNoBlankRestBackGather {
+          0% {
+            opacity: .96;
+            transform: translate3d(var(--x), var(--y), 0) rotate(var(--r)) scale(.78);
+          }
+          58% {
+            opacity: .62;
+            transform: translate3d(calc(var(--x) * .44), calc(var(--y) + 18px), 0) rotate(calc(var(--r) * .45)) scale(.64);
+          }
+          100% {
+            opacity: 0;
+            transform: translate3d(0, 54px, 0) rotate(0deg) scale(.48);
+          }
+        }
+
+        /* K-LOL.GG auction real draw motion override v1
+           Goal:
+           - 카드가 나열된 뒤 큰 카드가 갑자기 나타나는 느낌 제거
+           - 선택된 작은 뒷장 카드가 실제로 위로 빠져나와 중앙으로 당겨지는 느낌
+           - 중앙 도착 후 큰 카드와 자연스럽게 hand-off
+        */
+
+        .gacha-card-back {
+          background-image:
+            url("/auction-cards/back-premium.svg"),
+            linear-gradient(145deg, #60a5fa 0%, #1d4ed8 48%, #020817 100%) !important;
+          background-size: 100% 100%, cover !important;
+          background-position: center, center !important;
+          background-repeat: no-repeat, no-repeat !important;
+          opacity: 1 !important;
+          filter: brightness(1.12) saturate(1.08) !important;
+          backface-visibility: hidden !important;
+          -webkit-backface-visibility: hidden !important;
+          transform-style: preserve-3d !important;
+          will-change: transform, opacity, filter !important;
+        }
+
+        .gacha-card-back::before,
+        .gacha-card-back::after {
+          content: none !important;
+          display: none !important;
+        }
+
+        .gacha-overlay.phase-selecting .gacha-card-back {
+          animation: klolRealDrawRestCardsGather 1.08s cubic-bezier(.22,.78,.22,1) both !important;
+          animation-delay: 180ms !important;
+          transform-origin: center center !important;
+        }
+
+        .gacha-overlay.phase-selecting.draw-card-1 .gacha-card-back.card-1,
+        .gacha-overlay.phase-selecting.draw-card-2 .gacha-card-back.card-2,
+        .gacha-overlay.phase-selecting.draw-card-3 .gacha-card-back.card-3,
+        .gacha-overlay.phase-selecting.draw-card-4 .gacha-card-back.card-4,
+        .gacha-overlay.phase-selecting.draw-card-5 .gacha-card-back.card-5,
+        .gacha-overlay.phase-selecting.draw-card-6 .gacha-card-back.card-6,
+        .gacha-overlay.phase-selecting.draw-card-7 .gacha-card-back.card-7,
+        .gacha-overlay.phase-selecting.draw-card-8 .gacha-card-back.card-8,
+        .gacha-overlay.phase-selecting.draw-card-9 .gacha-card-back.card-9 {
+          z-index: 80 !important;
+          opacity: 1 !important;
+          filter: brightness(1.2) saturate(1.16) !important;
+          animation: klolRealDrawChosenCard 1.34s cubic-bezier(.18,.88,.18,1) both !important;
+          animation-delay: 0ms !important;
+          box-shadow:
+            0 28px 70px rgba(0,0,0,.62),
+            0 0 42px rgba(96,165,250,.42) !important;
+        }
+
+        .gacha-overlay.phase-selecting .gacha-picked-card {
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          animation: klolRealDrawMainCardHandOff 1.34s cubic-bezier(.22,.84,.22,1) both !important;
+          transform-origin: center center !important;
+          filter: drop-shadow(0 24px 56px rgba(0,0,0,.50)) !important;
+        }
+
+        .gacha-overlay.phase-tier_ascending .gacha-picked-card,
+        .gacha-overlay.phase-special_tension .gacha-picked-card,
+        .gacha-overlay.phase-flipping .gacha-picked-card,
+        .gacha-overlay.revealed .gacha-picked-card {
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          transform: translate3d(0, 0, 0) scale(1) rotate(0deg) !important;
+          filter: drop-shadow(0 24px 56px rgba(0,0,0,.50)) !important;
+        }
+
+        .gacha-overlay.phase-tier_ascending .gacha-card-inner,
+        .gacha-overlay.phase-special_tension .gacha-card-inner {
+          transform: rotateY(0deg) !important;
+          backface-visibility: visible !important;
+          -webkit-backface-visibility: visible !important;
+        }
+
+        .gacha-overlay.phase-flipping .gacha-card-inner,
+        .gacha-overlay.revealed .gacha-card-inner {
+          transform: rotateY(180deg) !important;
+          backface-visibility: visible !important;
+          -webkit-backface-visibility: visible !important;
+        }
+
+        .gacha-overlay.phase-tier_ascending .gacha-deck-cluster,
+        .gacha-overlay.phase-special_tension .gacha-deck-cluster,
+        .gacha-overlay.phase-flipping .gacha-deck-cluster,
+        .gacha-overlay.revealed .gacha-deck-cluster {
+          opacity: 0 !important;
+          visibility: hidden !important;
+          pointer-events: none !important;
+          filter: blur(8px) !important;
+          transform: translate3d(0, 56px, 0) scale(.72) !important;
+          transition:
+            opacity .26s ease,
+            transform .36s cubic-bezier(.22,.82,.22,1),
+            filter .26s ease,
+            visibility 0s linear .26s !important;
+        }
+
+        @keyframes klolRealDrawChosenCard {
+          0% {
+            opacity: 1;
+            transform: translate3d(var(--x), var(--y), 0) rotate(var(--r)) scale(.78);
+          }
+
+          /* 나열된 카드에서 한 장이 먼저 위로 빠져나오는 구간 */
+          22% {
+            opacity: 1;
+            transform:
+              translate3d(calc(var(--x) * .92), calc(var(--y) - 70px), 0)
+              rotate(calc(var(--r) * .72))
+              scale(.92);
+          }
+
+          /* 뽑힌 카드가 중앙 쪽으로 당겨지는 구간 */
+          52% {
+            opacity: 1;
+            transform:
+              translate3d(calc(var(--x) * .42), -54px, 0)
+              rotate(calc(var(--r) * .32))
+              scale(1.46);
+          }
+
+          /* 중앙 큰 카드 크기와 거의 맞추는 구간 */
+          78% {
+            opacity: 1;
+            transform:
+              translate3d(calc(var(--x) * .08), -10px, 0)
+              rotate(calc(var(--r) * .08))
+              scale(2.42);
+          }
+
+          /* 큰 카드와 겹쳐지면서 hand-off */
+          92% {
+            opacity: .86;
+            transform:
+              translate3d(0, 0, 0)
+              rotate(0deg)
+              scale(2.66);
+          }
+
+          100% {
+            opacity: 0;
+            transform:
+              translate3d(0, 0, 0)
+              rotate(0deg)
+              scale(2.66);
+          }
+        }
+
+        @keyframes klolRealDrawMainCardHandOff {
+          0%, 72% {
+            opacity: 0;
+            transform: translate3d(0, 0, 0) scale(.98) rotate(0deg);
+          }
+
+          84% {
+            opacity: .44;
+            transform: translate3d(0, 0, 0) scale(1.015) rotate(0deg);
+          }
+
+          94% {
+            opacity: .92;
+            transform: translate3d(0, 0, 0) scale(1.004) rotate(0deg);
+          }
+
+          100% {
+            opacity: 1;
+            transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+          }
+        }
+
+        @keyframes klolRealDrawRestCardsGather {
+          0% {
+            opacity: .94;
+            transform: translate3d(var(--x), var(--y), 0) rotate(var(--r)) scale(.78);
+          }
+
+          48% {
+            opacity: .66;
+            transform:
+              translate3d(calc(var(--x) * .46), calc(var(--y) + 18px), 0)
+              rotate(calc(var(--r) * .42))
+              scale(.64);
+          }
+
+          100% {
+            opacity: 0;
+            transform: translate3d(0, 58px, 0) rotate(0deg) scale(.48);
+          }
+        }
+
+        /* K-LOL.GG auction real selected draw card class patch v1
+           Fix:
+           - draw-card-N class is now attached to overlay
+           - selected small card actually lifts out from the fan
+           - big card waits until selected small card reaches center
+        */
+
+        .gacha-overlay.phase-selecting .gacha-card-back {
+          animation: klolActualRestCardsGather 1.34s cubic-bezier(.22,.78,.22,1) both !important;
+          animation-delay: 320ms !important;
+          transform-origin: center center !important;
+        }
+
+        .gacha-overlay.phase-selecting.draw-card-1 .gacha-card-back.card-1,
+        .gacha-overlay.phase-selecting.draw-card-2 .gacha-card-back.card-2,
+        .gacha-overlay.phase-selecting.draw-card-3 .gacha-card-back.card-3,
+        .gacha-overlay.phase-selecting.draw-card-4 .gacha-card-back.card-4,
+        .gacha-overlay.phase-selecting.draw-card-5 .gacha-card-back.card-5,
+        .gacha-overlay.phase-selecting.draw-card-6 .gacha-card-back.card-6,
+        .gacha-overlay.phase-selecting.draw-card-7 .gacha-card-back.card-7,
+        .gacha-overlay.phase-selecting.draw-card-8 .gacha-card-back.card-8,
+        .gacha-overlay.phase-selecting.draw-card-9 .gacha-card-back.card-9 {
+          z-index: 100 !important;
+          opacity: 1 !important;
+          visibility: visible !important;
+          filter: brightness(1.24) saturate(1.18) !important;
+          animation: klolActualSelectedCardPulled 1.62s cubic-bezier(.18,.88,.18,1) both !important;
+          animation-delay: 0ms !important;
+          box-shadow:
+            0 32px 84px rgba(0,0,0,.66),
+            0 0 52px rgba(96,165,250,.48) !important;
+        }
+
+        .gacha-overlay.phase-selecting .gacha-picked-card {
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          animation: klolActualMainCardHandoff 1.62s cubic-bezier(.22,.84,.22,1) both !important;
+          transform-origin: center center !important;
+          filter: drop-shadow(0 24px 56px rgba(0,0,0,.50)) !important;
+        }
+
+        .gacha-overlay.phase-tier_ascending .gacha-picked-card,
+        .gacha-overlay.phase-special_tension .gacha-picked-card,
+        .gacha-overlay.phase-flipping .gacha-picked-card,
+        .gacha-overlay.revealed .gacha-picked-card {
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          transform: translate3d(0, 0, 0) scale(1) rotate(0deg) !important;
+          filter: drop-shadow(0 24px 56px rgba(0,0,0,.50)) !important;
+        }
+
+        @keyframes klolActualSelectedCardPulled {
+          0% {
+            opacity: 1;
+            transform:
+              translate3d(var(--x), var(--y), 0)
+              rotate(var(--r))
+              scale(.78);
+          }
+
+          /* 한 장이 카드열에서 위로 빠져나오는 단계 */
+          20% {
+            opacity: 1;
+            transform:
+              translate3d(calc(var(--x) * .96), calc(var(--y) - 82px), 0)
+              rotate(calc(var(--r) * .70))
+              scale(.96);
+          }
+
+          /* 뽑힌 카드가 위에서 잠깐 보이는 단계 */
+          38% {
+            opacity: 1;
+            transform:
+              translate3d(calc(var(--x) * .94), calc(var(--y) - 88px), 0)
+              rotate(calc(var(--r) * .56))
+              scale(1.02);
+          }
+
+          /* 중앙으로 당겨지는 단계 */
+          62% {
+            opacity: 1;
+            transform:
+              translate3d(calc(var(--x) * .36), -54px, 0)
+              rotate(calc(var(--r) * .22))
+              scale(1.56);
+          }
+
+          /* 큰 카드와 크기를 맞춰가는 단계 */
+          84% {
+            opacity: 1;
+            transform:
+              translate3d(calc(var(--x) * .06), -8px, 0)
+              rotate(calc(var(--r) * .05))
+              scale(2.42);
+          }
+
+          94% {
+            opacity: .82;
+            transform:
+              translate3d(0, 0, 0)
+              rotate(0deg)
+              scale(2.66);
+          }
+
+          100% {
+            opacity: 0;
+            transform:
+              translate3d(0, 0, 0)
+              rotate(0deg)
+              scale(2.66);
+          }
+        }
+
+        @keyframes klolActualMainCardHandoff {
+          0%, 78% {
+            opacity: 0;
+            transform: translate3d(0, 0, 0) scale(.99) rotate(0deg);
+          }
+
+          88% {
+            opacity: .38;
+            transform: translate3d(0, 0, 0) scale(1.014) rotate(0deg);
+          }
+
+          96% {
+            opacity: .94;
+            transform: translate3d(0, 0, 0) scale(1.004) rotate(0deg);
+          }
+
+          100% {
+            opacity: 1;
+            transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+          }
+        }
+
+        @keyframes klolActualRestCardsGather {
+          0% {
+            opacity: .94;
+            transform:
+              translate3d(var(--x), var(--y), 0)
+              rotate(var(--r))
+              scale(.78);
+          }
+
+          30% {
+            opacity: .9;
+            transform:
+              translate3d(var(--x), var(--y), 0)
+              rotate(var(--r))
+              scale(.76);
+          }
+
+          66% {
+            opacity: .54;
+            transform:
+              translate3d(calc(var(--x) * .42), calc(var(--y) + 18px), 0)
+              rotate(calc(var(--r) * .38))
+              scale(.62);
+          }
+
+          100% {
+            opacity: 0;
+            transform:
+              translate3d(0, 58px, 0)
+              rotate(0deg)
+              scale(.46);
+          }
+        }
+
+        /* K-LOL.GG auction no overlap draw to big card patch v1
+           Fix:
+           - small pulled card and large picked card were visible together
+           - SELECTING phase now shows only the pulled small card
+           - large card appears only after SELECTING ends, during TIER_ASCENDING
+        */
+
+        .gacha-overlay.phase-selecting .gacha-picked-card {
+          opacity: 0 !important;
+          visibility: hidden !important;
+          animation: none !important;
+          transform: translate3d(0, 0, 0) scale(1) rotate(0deg) !important;
+          pointer-events: none !important;
+        }
+
+        .gacha-overlay.phase-selecting.draw-card-1 .gacha-card-back.card-1,
+        .gacha-overlay.phase-selecting.draw-card-2 .gacha-card-back.card-2,
+        .gacha-overlay.phase-selecting.draw-card-3 .gacha-card-back.card-3,
+        .gacha-overlay.phase-selecting.draw-card-4 .gacha-card-back.card-4,
+        .gacha-overlay.phase-selecting.draw-card-5 .gacha-card-back.card-5,
+        .gacha-overlay.phase-selecting.draw-card-6 .gacha-card-back.card-6,
+        .gacha-overlay.phase-selecting.draw-card-7 .gacha-card-back.card-7,
+        .gacha-overlay.phase-selecting.draw-card-8 .gacha-card-back.card-8,
+        .gacha-overlay.phase-selecting.draw-card-9 .gacha-card-back.card-9 {
+          z-index: 120 !important;
+          opacity: 1 !important;
+          visibility: visible !important;
+          filter: brightness(1.24) saturate(1.18) !important;
+          animation: klolNoOverlapPulledCardOnly 1.58s cubic-bezier(.18,.88,.18,1) both !important;
+          animation-delay: 0ms !important;
+          box-shadow:
+            0 32px 84px rgba(0,0,0,.66),
+            0 0 52px rgba(96,165,250,.48) !important;
+        }
+
+        .gacha-overlay.phase-selecting .gacha-card-back {
+          animation: klolNoOverlapRestCardsGather 1.34s cubic-bezier(.22,.78,.22,1) both !important;
+          animation-delay: 320ms !important;
+          transform-origin: center center !important;
+        }
+
+        .gacha-overlay.phase-tier_ascending .gacha-picked-card,
+        .gacha-overlay.phase-special_tension .gacha-picked-card,
+        .gacha-overlay.phase-flipping .gacha-picked-card,
+        .gacha-overlay.revealed .gacha-picked-card {
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          transform: translate3d(0, 0, 0) scale(1) rotate(0deg) !important;
+          animation: none !important;
+          filter: drop-shadow(0 24px 56px rgba(0,0,0,.50)) !important;
+        }
+
+        .gacha-overlay.phase-tier_ascending .gacha-card-inner,
+        .gacha-overlay.phase-special_tension .gacha-card-inner {
+          transform: rotateY(0deg) !important;
+        }
+
+        .gacha-overlay.phase-flipping .gacha-card-inner,
+        .gacha-overlay.revealed .gacha-card-inner {
+          transform: rotateY(180deg) !important;
+        }
+
+        .gacha-overlay.phase-tier_ascending .gacha-deck-cluster,
+        .gacha-overlay.phase-special_tension .gacha-deck-cluster,
+        .gacha-overlay.phase-flipping .gacha-deck-cluster,
+        .gacha-overlay.revealed .gacha-deck-cluster {
+          opacity: 0 !important;
+          visibility: hidden !important;
+          pointer-events: none !important;
+          filter: blur(8px) !important;
+          transform: translate3d(0, 58px, 0) scale(.72) !important;
+          transition:
+            opacity .22s ease,
+            transform .32s cubic-bezier(.22,.82,.22,1),
+            filter .22s ease,
+            visibility 0s linear .22s !important;
+        }
+
+        @keyframes klolNoOverlapPulledCardOnly {
+          0% {
+            opacity: 1;
+            transform:
+              translate3d(var(--x), var(--y), 0)
+              rotate(var(--r))
+              scale(.78);
+          }
+
+          20% {
+            opacity: 1;
+            transform:
+              translate3d(calc(var(--x) * .96), calc(var(--y) - 84px), 0)
+              rotate(calc(var(--r) * .70))
+              scale(.96);
+          }
+
+          40% {
+            opacity: 1;
+            transform:
+              translate3d(calc(var(--x) * .92), calc(var(--y) - 92px), 0)
+              rotate(calc(var(--r) * .55))
+              scale(1.04);
+          }
+
+          62% {
+            opacity: 1;
+            transform:
+              translate3d(calc(var(--x) * .36), -58px, 0)
+              rotate(calc(var(--r) * .22))
+              scale(1.42);
+          }
+
+          82% {
+            opacity: 1;
+            transform:
+              translate3d(calc(var(--x) * .06), -10px, 0)
+              rotate(calc(var(--r) * .05))
+              scale(1.72);
+          }
+
+          92% {
+            opacity: 1;
+            transform:
+              translate3d(0, 0, 0)
+              rotate(0deg)
+              scale(1.82);
+          }
+
+          100% {
+            opacity: 0;
+            transform:
+              translate3d(0, 0, 0)
+              rotate(0deg)
+              scale(1.82);
+          }
+        }
+
+        @keyframes klolNoOverlapRestCardsGather {
+          0% {
+            opacity: .94;
+            transform:
+              translate3d(var(--x), var(--y), 0)
+              rotate(var(--r))
+              scale(.78);
+          }
+
+          30% {
+            opacity: .9;
+            transform:
+              translate3d(var(--x), var(--y), 0)
+              rotate(var(--r))
+              scale(.76);
+          }
+
+          66% {
+            opacity: .54;
+            transform:
+              translate3d(calc(var(--x) * .42), calc(var(--y) + 18px), 0)
+              rotate(calc(var(--r) * .38))
+              scale(.62);
+          }
+
+          100% {
+            opacity: 0;
+            transform:
+              translate3d(0, 58px, 0)
+              rotate(0deg)
+              scale(.46);
+          }
+        }
+
+        /* K-LOL.GG auction smooth pulled card motion v1
+           Fix:
+           - selected card movement felt stepped / stiff
+           - this uses one continuous curve with softer scale and slower timing
+           - the big card remains hidden during SELECTING to prevent overlap
+        */
+
+        .gacha-overlay.phase-selecting .gacha-picked-card {
+          opacity: 0 !important;
+          visibility: hidden !important;
+          animation: none !important;
+          pointer-events: none !important;
+        }
+
+        .gacha-overlay.phase-selecting .gacha-card-back {
+          animation: klolSmoothRestCardsGather 1.52s cubic-bezier(.18,.72,.18,1) both !important;
+          animation-delay: 420ms !important;
+          transform-origin: center center !important;
+          will-change: transform, opacity, filter !important;
+        }
+
+        .gacha-overlay.phase-selecting.draw-card-1 .gacha-card-back.card-1,
+        .gacha-overlay.phase-selecting.draw-card-2 .gacha-card-back.card-2,
+        .gacha-overlay.phase-selecting.draw-card-3 .gacha-card-back.card-3,
+        .gacha-overlay.phase-selecting.draw-card-4 .gacha-card-back.card-4,
+        .gacha-overlay.phase-selecting.draw-card-5 .gacha-card-back.card-5,
+        .gacha-overlay.phase-selecting.draw-card-6 .gacha-card-back.card-6,
+        .gacha-overlay.phase-selecting.draw-card-7 .gacha-card-back.card-7,
+        .gacha-overlay.phase-selecting.draw-card-8 .gacha-card-back.card-8,
+        .gacha-overlay.phase-selecting.draw-card-9 .gacha-card-back.card-9 {
+          z-index: 140 !important;
+          opacity: 1 !important;
+          visibility: visible !important;
+          filter: brightness(1.2) saturate(1.14) !important;
+          animation: klolSmoothPulledCardMove 1.88s cubic-bezier(.14,.78,.16,1) both !important;
+          animation-delay: 0ms !important;
+          transform-origin: center center !important;
+          backface-visibility: hidden !important;
+          -webkit-backface-visibility: hidden !important;
+          will-change: transform, opacity, filter !important;
+          box-shadow:
+            0 30px 76px rgba(0,0,0,.62),
+            0 0 44px rgba(96,165,250,.42) !important;
+        }
+
+        .gacha-overlay.phase-tier_ascending .gacha-picked-card {
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          transform: translate3d(0, 0, 0) scale(1) rotate(0deg) !important;
+          animation: klolSmoothBigCardEnter .36s cubic-bezier(.2,.82,.22,1) both !important;
+          filter: drop-shadow(0 24px 56px rgba(0,0,0,.50)) !important;
+        }
+
+        .gacha-overlay.phase-special_tension .gacha-picked-card,
+        .gacha-overlay.phase-flipping .gacha-picked-card,
+        .gacha-overlay.revealed .gacha-picked-card {
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          transform: translate3d(0, 0, 0) scale(1) rotate(0deg) !important;
+          filter: drop-shadow(0 24px 56px rgba(0,0,0,.50)) !important;
+        }
+
+        @keyframes klolSmoothPulledCardMove {
+          0% {
+            opacity: 1;
+            transform:
+              translate3d(var(--x), var(--y), 0)
+              rotate(var(--r))
+              scale(.78);
+          }
+
+          12% {
+            opacity: 1;
+            transform:
+              translate3d(calc(var(--x) * .99), calc(var(--y) - 36px), 0)
+              rotate(calc(var(--r) * .86))
+              scale(.84);
+          }
+
+          25% {
+            opacity: 1;
+            transform:
+              translate3d(calc(var(--x) * .94), calc(var(--y) - 76px), 0)
+              rotate(calc(var(--r) * .68))
+              scale(.94);
+          }
+
+          38% {
+            opacity: 1;
+            transform:
+              translate3d(calc(var(--x) * .82), calc(var(--y) - 96px), 0)
+              rotate(calc(var(--r) * .50))
+              scale(1.02);
+          }
+
+          52% {
+            opacity: 1;
+            transform:
+              translate3d(calc(var(--x) * .58), -82px, 0)
+              rotate(calc(var(--r) * .34))
+              scale(1.16);
+          }
+
+          66% {
+            opacity: 1;
+            transform:
+              translate3d(calc(var(--x) * .34), -58px, 0)
+              rotate(calc(var(--r) * .20))
+              scale(1.34);
+          }
+
+          78% {
+            opacity: 1;
+            transform:
+              translate3d(calc(var(--x) * .16), -28px, 0)
+              rotate(calc(var(--r) * .10))
+              scale(1.54);
+          }
+
+          88% {
+            opacity: 1;
+            transform:
+              translate3d(calc(var(--x) * .04), -8px, 0)
+              rotate(calc(var(--r) * .03))
+              scale(1.70);
+          }
+
+          96% {
+            opacity: .74;
+            transform:
+              translate3d(0, 0, 0)
+              rotate(0deg)
+              scale(1.82);
+          }
+
+          100% {
+            opacity: 0;
+            transform:
+              translate3d(0, 0, 0)
+              rotate(0deg)
+              scale(1.82);
+          }
+        }
+
+        @keyframes klolSmoothRestCardsGather {
+          0% {
+            opacity: .94;
+            transform:
+              translate3d(var(--x), var(--y), 0)
+              rotate(var(--r))
+              scale(.78);
+          }
+
+          26% {
+            opacity: .9;
+            transform:
+              translate3d(var(--x), var(--y), 0)
+              rotate(var(--r))
+              scale(.76);
+          }
+
+          54% {
+            opacity: .64;
+            transform:
+              translate3d(calc(var(--x) * .58), calc(var(--y) + 10px), 0)
+              rotate(calc(var(--r) * .52))
+              scale(.66);
+          }
+
+          78% {
+            opacity: .32;
+            transform:
+              translate3d(calc(var(--x) * .24), calc(var(--y) + 34px), 0)
+              rotate(calc(var(--r) * .22))
+              scale(.55);
+          }
+
+          100% {
+            opacity: 0;
+            transform:
+              translate3d(0, 62px, 0)
+              rotate(0deg)
+              scale(.46);
+          }
+        }
+
+        @keyframes klolSmoothBigCardEnter {
+          0% {
+            opacity: 0;
+            transform: translate3d(0, 0, 0) scale(.96) rotate(0deg);
+          }
+
+          72% {
+            opacity: .88;
+            transform: translate3d(0, 0, 0) scale(1.008) rotate(0deg);
+          }
+
+          100% {
+            opacity: 1;
+            transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+          }
+        }
+
+        /* K-LOL.GG auction smooth real draw handoff final v1
+           Video analysis fix:
+           - previous motion looked stiff because the pulled small card and big picked card were separate elements
+           - small card now moves above the fan, pauses briefly, then grows to the exact big-card size
+           - big card fades in underneath only at the final matching position
+           - this removes the "big card suddenly appears" feeling
+        */
+
+        .gacha-overlay.phase-selecting .gacha-deck-cluster {
+          z-index: 8 !important;
+          opacity: 1 !important;
+          visibility: visible !important;
+          pointer-events: none !important;
+        }
+
+        .gacha-overlay.phase-selecting .gacha-picked-shell {
+          z-index: 6 !important;
+        }
+
+        .gacha-overlay.phase-selecting .gacha-picked-card {
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          animation: klolSmoothBigCardUnderHandoff 2.04s cubic-bezier(.18,.82,.18,1) both !important;
+          transform-origin: center center !important;
+          filter: drop-shadow(0 24px 56px rgba(0,0,0,.50)) !important;
+          pointer-events: none !important;
+        }
+
+        .gacha-overlay.phase-selecting .gacha-card-back {
+          animation: klolSmoothRestCardsGatherAfterPull 1.62s cubic-bezier(.2,.76,.18,1) both !important;
+          animation-delay: 460ms !important;
+          transform-origin: center center !important;
+          will-change: transform, opacity, filter !important;
+        }
+
+        .gacha-overlay.phase-selecting.draw-card-1 .gacha-card-back.card-1,
+        .gacha-overlay.phase-selecting.draw-card-2 .gacha-card-back.card-2,
+        .gacha-overlay.phase-selecting.draw-card-3 .gacha-card-back.card-3,
+        .gacha-overlay.phase-selecting.draw-card-4 .gacha-card-back.card-4,
+        .gacha-overlay.phase-selecting.draw-card-5 .gacha-card-back.card-5,
+        .gacha-overlay.phase-selecting.draw-card-6 .gacha-card-back.card-6,
+        .gacha-overlay.phase-selecting.draw-card-7 .gacha-card-back.card-7,
+        .gacha-overlay.phase-selecting.draw-card-8 .gacha-card-back.card-8,
+        .gacha-overlay.phase-selecting.draw-card-9 .gacha-card-back.card-9 {
+          z-index: 180 !important;
+          opacity: 1 !important;
+          visibility: visible !important;
+          filter: brightness(1.22) saturate(1.16) !important;
+          animation: klolSmoothActualPulledCardToBigSize 2.04s cubic-bezier(.13,.78,.15,1) both !important;
+          animation-delay: 0ms !important;
+          transform-origin: center center !important;
+          backface-visibility: hidden !important;
+          -webkit-backface-visibility: hidden !important;
+          will-change: transform, opacity, filter !important;
+          box-shadow:
+            0 34px 88px rgba(0,0,0,.68),
+            0 0 54px rgba(96,165,250,.48) !important;
+        }
+
+        .gacha-overlay.phase-tier_ascending .gacha-picked-card,
+        .gacha-overlay.phase-special_tension .gacha-picked-card,
+        .gacha-overlay.phase-flipping .gacha-picked-card,
+        .gacha-overlay.revealed .gacha-picked-card {
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          transform: translate3d(0, 0, 0) scale(1) rotate(0deg) !important;
+          animation: none !important;
+          filter: drop-shadow(0 24px 56px rgba(0,0,0,.50)) !important;
+        }
+
+        .gacha-overlay.phase-tier_ascending .gacha-card-inner,
+        .gacha-overlay.phase-special_tension .gacha-card-inner {
+          transform: rotateY(0deg) !important;
+          backface-visibility: visible !important;
+          -webkit-backface-visibility: visible !important;
+        }
+
+        .gacha-overlay.phase-flipping .gacha-card-inner,
+        .gacha-overlay.revealed .gacha-card-inner {
+          transform: rotateY(180deg) !important;
+          backface-visibility: visible !important;
+          -webkit-backface-visibility: visible !important;
+        }
+
+        .gacha-overlay.phase-tier_ascending .gacha-deck-cluster,
+        .gacha-overlay.phase-special_tension .gacha-deck-cluster,
+        .gacha-overlay.phase-flipping .gacha-deck-cluster,
+        .gacha-overlay.revealed .gacha-deck-cluster {
+          opacity: 0 !important;
+          visibility: hidden !important;
+          pointer-events: none !important;
+          filter: blur(8px) !important;
+          transform: translate3d(0, 58px, 0) scale(.72) !important;
+          transition:
+            opacity .22s ease,
+            transform .32s cubic-bezier(.22,.82,.22,1),
+            filter .22s ease,
+            visibility 0s linear .22s !important;
+        }
+
+        @keyframes klolSmoothActualPulledCardToBigSize {
+          0% {
+            opacity: 1;
+            transform:
+              translate3d(var(--x), var(--y), 0)
+              rotate(var(--r))
+              scale(.78);
+          }
+
+          10% {
+            opacity: 1;
+            transform:
+              translate3d(calc(var(--x) * .99), calc(var(--y) - 34px), 0)
+              rotate(calc(var(--r) * .86))
+              scale(.84);
+          }
+
+          22% {
+            opacity: 1;
+            transform:
+              translate3d(calc(var(--x) * .94), calc(var(--y) - 78px), 0)
+              rotate(calc(var(--r) * .68))
+              scale(.95);
+          }
+
+          /* 뽑힌 카드가 위에서 잠깐 보이는 구간 */
+          36% {
+            opacity: 1;
+            transform:
+              translate3d(calc(var(--x) * .86), calc(var(--y) - 96px), 0)
+              rotate(calc(var(--r) * .52))
+              scale(1.02);
+          }
+
+          48% {
+            opacity: 1;
+            transform:
+              translate3d(calc(var(--x) * .68), -88px, 0)
+              rotate(calc(var(--r) * .38))
+              scale(1.18);
+          }
+
+          62% {
+            opacity: 1;
+            transform:
+              translate3d(calc(var(--x) * .42), -62px, 0)
+              rotate(calc(var(--r) * .24))
+              scale(1.52);
+          }
+
+          74% {
+            opacity: 1;
+            transform:
+              translate3d(calc(var(--x) * .22), -36px, 0)
+              rotate(calc(var(--r) * .13))
+              scale(1.92);
+          }
+
+          84% {
+            opacity: 1;
+            transform:
+              translate3d(calc(var(--x) * .08), -12px, 0)
+              rotate(calc(var(--r) * .05))
+              scale(2.36);
+          }
+
+          /* 작은 카드의 최종 크기를 큰 카드와 거의 맞춤 */
+          94% {
+            opacity: 1;
+            transform:
+              translate3d(0, 0, 0)
+              rotate(0deg)
+              scale(2.74);
+          }
+
+          99% {
+            opacity: .18;
+            transform:
+              translate3d(0, 0, 0)
+              rotate(0deg)
+              scale(2.74);
+          }
+
+          100% {
+            opacity: 0;
+            transform:
+              translate3d(0, 0, 0)
+              rotate(0deg)
+              scale(2.74);
+          }
+        }
+
+        @keyframes klolSmoothBigCardUnderHandoff {
+          0%, 88% {
+            opacity: 0;
+            transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+          }
+
+          94% {
+            opacity: .24;
+            transform: translate3d(0, 0, 0) scale(1.002) rotate(0deg);
+          }
+
+          98% {
+            opacity: .82;
+            transform: translate3d(0, 0, 0) scale(1.001) rotate(0deg);
+          }
+
+          100% {
+            opacity: 1;
+            transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+          }
+        }
+
+        @keyframes klolSmoothRestCardsGatherAfterPull {
+          0% {
+            opacity: .94;
+            transform:
+              translate3d(var(--x), var(--y), 0)
+              rotate(var(--r))
+              scale(.78);
+          }
+
+          26% {
+            opacity: .9;
+            transform:
+              translate3d(var(--x), var(--y), 0)
+              rotate(var(--r))
+              scale(.76);
+          }
+
+          54% {
+            opacity: .62;
+            transform:
+              translate3d(calc(var(--x) * .58), calc(var(--y) + 10px), 0)
+              rotate(calc(var(--r) * .52))
+              scale(.66);
+          }
+
+          78% {
+            opacity: .3;
+            transform:
+              translate3d(calc(var(--x) * .24), calc(var(--y) + 34px), 0)
+              rotate(calc(var(--r) * .22))
+              scale(.55);
+          }
+
+          100% {
+            opacity: 0;
+            transform:
+              translate3d(0, 62px, 0)
+              rotate(0deg)
+              scale(.46);
+          }
+        }
+
+        /* K-LOL.GG auction one-piece smooth draw motion v1
+           Video-based fix:
+           - big card was visible while the small selected card was being pulled
+           - selected card motion looked segmented because scale/position hand-off happened too early
+           - SELECTING now shows only the selected small card
+           - the selected card moves in one continuous path and grows to the center
+           - big card appears only after SELECTING ends
+        */
+
+        .gacha-card-back {
+          background-image:
+            url("/auction-cards/back-premium.svg"),
+            linear-gradient(145deg, #60a5fa 0%, #1d4ed8 48%, #020817 100%) !important;
+          background-size: 100% 100%, cover !important;
+          background-position: center, center !important;
+          background-repeat: no-repeat, no-repeat !important;
+          opacity: 1 !important;
+          filter: brightness(1.12) saturate(1.08) !important;
+          backface-visibility: hidden !important;
+          -webkit-backface-visibility: hidden !important;
+          transform-style: preserve-3d !important;
+          will-change: transform, opacity, filter !important;
+        }
+
+        .gacha-card-back::before,
+        .gacha-card-back::after {
+          content: none !important;
+          display: none !important;
+        }
+
+        /* SELECTING 중에는 큰 카드가 절대 보이면 안 됨 */
+        .gacha-overlay.phase-selecting .gacha-picked-card {
+          opacity: 0 !important;
+          visibility: hidden !important;
+          display: block !important;
+          animation: none !important;
+          transform: translate3d(0, 0, 0) scale(1) rotate(0deg) !important;
+          pointer-events: none !important;
+        }
+
+        .gacha-overlay.phase-selecting .gacha-picked-shell {
+          opacity: 0 !important;
+          visibility: hidden !important;
+          pointer-events: none !important;
+        }
+
+        /* 나머지 카드들은 선택 카드가 빠져나온 뒤 천천히 모여 사라짐 */
+        .gacha-overlay.phase-selecting .gacha-card-back {
+          animation: klolOnePieceRestCardsGather 1.72s cubic-bezier(.18,.72,.18,1) both !important;
+          animation-delay: 520ms !important;
+          transform-origin: center center !important;
+          will-change: transform, opacity, filter !important;
+        }
+
+        /* 선택된 한 장만 실제로 뽑히는 카드처럼 이동 */
+        .gacha-overlay.phase-selecting.draw-card-1 .gacha-card-back.card-1,
+        .gacha-overlay.phase-selecting.draw-card-2 .gacha-card-back.card-2,
+        .gacha-overlay.phase-selecting.draw-card-3 .gacha-card-back.card-3,
+        .gacha-overlay.phase-selecting.draw-card-4 .gacha-card-back.card-4,
+        .gacha-overlay.phase-selecting.draw-card-5 .gacha-card-back.card-5,
+        .gacha-overlay.phase-selecting.draw-card-6 .gacha-card-back.card-6,
+        .gacha-overlay.phase-selecting.draw-card-7 .gacha-card-back.card-7,
+        .gacha-overlay.phase-selecting.draw-card-8 .gacha-card-back.card-8,
+        .gacha-overlay.phase-selecting.draw-card-9 .gacha-card-back.card-9 {
+          z-index: 220 !important;
+          opacity: 1 !important;
+          visibility: visible !important;
+          filter: brightness(1.22) saturate(1.16) !important;
+          animation: klolOnePiecePulledCardMove 2.22s cubic-bezier(.12,.76,.12,1) both !important;
+          animation-delay: 0ms !important;
+          transform-origin: center center !important;
+          backface-visibility: hidden !important;
+          -webkit-backface-visibility: hidden !important;
+          will-change: transform, opacity, filter !important;
+          box-shadow:
+            0 34px 88px rgba(0,0,0,.68),
+            0 0 54px rgba(96,165,250,.48) !important;
+        }
+
+        /* 큰 카드는 SELECTING이 끝난 뒤 티어 확인 단계에서만 등장 */
+        .gacha-overlay.phase-tier_ascending .gacha-picked-shell,
+        .gacha-overlay.phase-special_tension .gacha-picked-shell,
+        .gacha-overlay.phase-flipping .gacha-picked-shell,
+        .gacha-overlay.revealed .gacha-picked-shell {
+          opacity: 1 !important;
+          visibility: visible !important;
+        }
+
+        .gacha-overlay.phase-tier_ascending .gacha-picked-card {
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          transform: translate3d(0, 0, 0) scale(1) rotate(0deg) !important;
+          animation: klolOnePieceBigCardEnter .42s cubic-bezier(.22,.82,.22,1) both !important;
+          filter: drop-shadow(0 24px 56px rgba(0,0,0,.50)) !important;
+        }
+
+        .gacha-overlay.phase-special_tension .gacha-picked-card,
+        .gacha-overlay.phase-flipping .gacha-picked-card,
+        .gacha-overlay.revealed .gacha-picked-card {
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          transform: translate3d(0, 0, 0) scale(1) rotate(0deg) !important;
+          animation: none !important;
+          filter: drop-shadow(0 24px 56px rgba(0,0,0,.50)) !important;
+        }
+
+        .gacha-overlay.phase-tier_ascending .gacha-card-inner,
+        .gacha-overlay.phase-special_tension .gacha-card-inner {
+          transform: rotateY(0deg) !important;
+          backface-visibility: visible !important;
+          -webkit-backface-visibility: visible !important;
+        }
+
+        .gacha-overlay.phase-flipping .gacha-card-inner,
+        .gacha-overlay.revealed .gacha-card-inner {
+          transform: rotateY(180deg) !important;
+          backface-visibility: visible !important;
+          -webkit-backface-visibility: visible !important;
+        }
+
+        .gacha-overlay.phase-tier_ascending .gacha-deck-cluster,
+        .gacha-overlay.phase-special_tension .gacha-deck-cluster,
+        .gacha-overlay.phase-flipping .gacha-deck-cluster,
+        .gacha-overlay.revealed .gacha-deck-cluster {
+          opacity: 0 !important;
+          visibility: hidden !important;
+          pointer-events: none !important;
+          filter: blur(8px) !important;
+          transform: translate3d(0, 58px, 0) scale(.72) !important;
+        }
+
+        @keyframes klolOnePiecePulledCardMove {
+          0% {
+            opacity: 1;
+            transform:
+              translate3d(var(--x), var(--y), 0)
+              rotate(var(--r))
+              scale(.78);
+          }
+
+          14% {
+            opacity: 1;
+            transform:
+              translate3d(calc(var(--x) * .98), calc(var(--y) - 50px), 0)
+              rotate(calc(var(--r) * .82))
+              scale(.88);
+          }
+
+          28% {
+            opacity: 1;
+            transform:
+              translate3d(calc(var(--x) * .90), calc(var(--y) - 96px), 0)
+              rotate(calc(var(--r) * .62))
+              scale(1.02);
+          }
+
+          42% {
+            opacity: 1;
+            transform:
+              translate3d(calc(var(--x) * .74), -102px, 0)
+              rotate(calc(var(--r) * .46))
+              scale(1.16);
+          }
+
+          56% {
+            opacity: 1;
+            transform:
+              translate3d(calc(var(--x) * .50), -78px, 0)
+              rotate(calc(var(--r) * .30))
+              scale(1.36);
+          }
+
+          70% {
+            opacity: 1;
+            transform:
+              translate3d(calc(var(--x) * .28), -48px, 0)
+              rotate(calc(var(--r) * .17))
+              scale(1.58);
+          }
+
+          82% {
+            opacity: 1;
+            transform:
+              translate3d(calc(var(--x) * .12), -20px, 0)
+              rotate(calc(var(--r) * .07))
+              scale(1.76);
+          }
+
+          92% {
+            opacity: 1;
+            transform:
+              translate3d(calc(var(--x) * .02), -4px, 0)
+              rotate(calc(var(--r) * .02))
+              scale(1.90);
+          }
+
+          98% {
+            opacity: .82;
+            transform:
+              translate3d(0, 0, 0)
+              rotate(0deg)
+              scale(1.96);
+          }
+
+          100% {
+            opacity: 0;
+            transform:
+              translate3d(0, 0, 0)
+              rotate(0deg)
+              scale(1.96);
+          }
+        }
+
+        @keyframes klolOnePieceRestCardsGather {
+          0% {
+            opacity: .94;
+            transform:
+              translate3d(var(--x), var(--y), 0)
+              rotate(var(--r))
+              scale(.78);
+          }
+
+          32% {
+            opacity: .9;
+            transform:
+              translate3d(var(--x), var(--y), 0)
+              rotate(var(--r))
+              scale(.76);
+          }
+
+          58% {
+            opacity: .62;
+            transform:
+              translate3d(calc(var(--x) * .58), calc(var(--y) + 12px), 0)
+              rotate(calc(var(--r) * .52))
+              scale(.66);
+          }
+
+          82% {
+            opacity: .30;
+            transform:
+              translate3d(calc(var(--x) * .24), calc(var(--y) + 36px), 0)
+              rotate(calc(var(--r) * .22))
+              scale(.55);
+          }
+
+          100% {
+            opacity: 0;
+            transform:
+              translate3d(0, 64px, 0)
+              rotate(0deg)
+              scale(.46);
+          }
+        }
+
+        @keyframes klolOnePieceBigCardEnter {
+          0% {
+            opacity: 0;
+            transform: translate3d(0, 0, 0) scale(.985) rotate(0deg);
+          }
+
+          68% {
+            opacity: .86;
+            transform: translate3d(0, 0, 0) scale(1.006) rotate(0deg);
+          }
+
+          100% {
+            opacity: 1;
+            transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+          }
+        }`}</style>
 
       <div className="destruction-auction-summary">
         <div className="admin-event-detail-card">
@@ -2714,7 +5343,7 @@ export default function DestructionAuctionManager({
       {isOverlayOpen
         ? createPortal(
             <div
-              className={`gacha-overlay ${overlayTierClassName} ${overlayAscentClass} phase-${drawPhase.toLowerCase()} ${overlayHighTierClass} ${isShuffleAnimationPhase ? "animating" : ""} ${drawPhase === "REVEALED" ? "revealed" : ""}`}
+              className={`gacha-overlay ${overlayTierClassName} ${overlayAscentClass} phase-${drawPhase.toLowerCase()} ${overlayHighTierClass} ${drawCardClassName} ${isShuffleAnimationPhase ? "animating" : ""} ${drawPhase === "REVEALED" ? "revealed" : ""}`}
             >
               <div className="gacha-overlay-card">
                 <button
@@ -2762,35 +5391,35 @@ export default function DestructionAuctionManager({
                         <div className="gacha-picked-path">
                           <div className="gacha-picked-card">
                             <div className="gacha-card-inner">
-                              <div className="gacha-card-face back" />
-                              <div className="gacha-card-face front">
-                                <div className="gacha-card-visual">
-                                  <div className="gacha-position-float">
-                                    <div className="gacha-position-icon-wrap">
-                                      <img
-                                        className="gacha-position-icon"
-                                        src={positionImagePath}
-                                        alt={
-                                          currentTarget
-                                            ? `${currentTarget.position} 라인`
-                                            : "라인"
-                                        }
-                                      />
+                              <div className="gacha-card-face back auction-svg-card-back">
+                                <img
+                                  className="auction-svg-card-bg"
+                                  src="/auction-cards/back-premium.svg"
+                                  alt=""
+                                  aria-hidden="true"
+                                />
+                              </div>
+                              <div className="gacha-card-face front auction-svg-card-front">
+                                <img
+                                  className="auction-svg-card-bg"
+                                  src={`/auction-cards/front-${tierVisual.key.toLowerCase()}.svg`}
+                                  alt=""
+                                  aria-hidden="true"
+                                />
+
+                                <div className="auction-svg-card-content">
+                                  <div className="auction-svg-player">
+                                    <div className="auction-svg-player-name">
+                                      {getDisplayName(currentTarget)}
+                                    </div>
+                                    <div className="auction-svg-player-nick">
+                                      {getDisplayNickname(currentTarget)}
                                     </div>
                                   </div>
-                                  <div className="gacha-card-head">
-                                    <div className="gacha-card-head-text">
-                                      <div className="gacha-card-head-name">
-                                        {getDisplayName(currentTarget)}
-                                      </div>
-                                      <div className="gacha-card-head-nick">
-                                        {getDisplayNickname(currentTarget)}
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div className="gacha-tier-icon-wrap">
+
+                                  <div className="auction-svg-tier-emblem">
                                     <img
-                                      className="gacha-tier-image"
+                                      className="auction-svg-tier-image"
                                       src={tierImagePath}
                                       alt={
                                         tierReference
@@ -2799,30 +5428,26 @@ export default function DestructionAuctionManager({
                                       }
                                     />
                                   </div>
-                                </div>
-                                <div className="gacha-card-stats">
-                                  <StatTile
-                                    label="포지션"
-                                    value={
-                                      currentTarget
-                                        ? getPositionLabel(
-                                            currentTarget.position,
-                                          )
-                                        : "-"
-                                    }
-                                  />
-                                  <StatTile
-                                    label="현재티어"
-                                    value={
-                                      currentTarget?.player.currentTier ?? "-"
-                                    }
-                                  />
-                                  <StatTile
-                                    label="최고티어"
-                                    value={
-                                      currentTarget?.player.peakTier ?? "-"
-                                    }
-                                  />
+
+                                  <div className="auction-svg-stats">
+                                    <div className="auction-svg-stat-row">
+                                      <span>현재 티어</span>
+                                      <strong>
+                                        {currentTarget?.player.currentTier ?? "-"}
+                                      </strong>
+                                    </div>
+                                    <div className="auction-svg-stat-row">
+                                      <span>최고 티어</span>
+                                      <strong>
+                                        {currentTarget?.player.peakTier ?? "-"}
+                                      </strong>
+                                    </div>
+                                  </div>
+
+                                  <div className="auction-svg-cert-badge">
+                                    <span>인증서</span>
+                                    <strong>{tierVisual.key}</strong>
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -3065,3 +5690,24 @@ export default function DestructionAuctionManager({
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

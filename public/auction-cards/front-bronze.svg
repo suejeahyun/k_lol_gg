@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="1040" viewBox="0 0 720 1040">
+  <defs>
+    <linearGradient id="body" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FED7AA" stop-opacity=".92"/>
+      <stop offset=".20" stop-color="#B87333"/>
+      <stop offset=".55" stop-color="#8A4B1E"/>
+      <stop offset="1" stop-color="#351504"/>
+    </linearGradient>
+    <linearGradient id="frame" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FED7AA"/>
+      <stop offset=".16" stop-color="#F59E0B"/>
+      <stop offset=".48" stop-color="#B87333"/>
+      <stop offset=".76" stop-color="#351504"/>
+      <stop offset="1" stop-color="#FED7AA"/>
+    </linearGradient>
+    <linearGradient id="facetLight" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FED7AA" stop-opacity=".70"/>
+      <stop offset="1" stop-color="#fff" stop-opacity=".03"/>
+    </linearGradient>
+    <linearGradient id="facetMid" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F59E0B" stop-opacity=".36"/>
+      <stop offset="1" stop-color="#B87333" stop-opacity=".03"/>
+    </linearGradient>
+    <linearGradient id="facetDark" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#351504" stop-opacity=".62"/>
+      <stop offset="1" stop-color="#8A4B1E" stop-opacity=".04"/>
+    </linearGradient>
+    <radialGradient id="aura" cx="50%" cy="5%" r="92%">
+      <stop offset="0" stop-color="#FED7AA" stop-opacity=".54"/>
+      <stop offset=".42" stop-color="#B87333" stop-opacity=".22"/>
+      <stop offset="1" stop-color="#351504" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="centerDark" cx="50%" cy="42%" r="46%">
+      <stop offset="0" stop-color="#020617" stop-opacity=".36"/>
+      <stop offset=".62" stop-color="#020617" stop-opacity=".14"/>
+      <stop offset="1" stop-color="#020617" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="shadow" x="-24%" y="-24%" width="148%" height="148%">
+      <feDropShadow dx="0" dy="26" stdDeviation="22" flood-color="#000" flood-opacity=".46"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="18" flood-color="#B87333" flood-opacity=".30"/>
+    </filter>
+    <pattern id="stripe" width="22" height="22" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="22" stroke="#fff" stroke-opacity=".052" stroke-width="2"/>
+    </pattern>
+  </defs>
+
+  <rect x="26" y="26" width="668" height="988" rx="46" fill="url(#body)" filter="url(#shadow)"/>
+  <rect x="26" y="26" width="668" height="988" rx="46" fill="url(#aura)"/>
+  <rect x="26" y="26" width="668" height="988" rx="46" fill="url(#stripe)" opacity=".56"/>
+  <g opacity=".94"><polygon points="538.0,523.0 707.2,434.0 699.1,563.3" fill="url(#facetMid)" opacity="0.139"/>
+<polygon points="531.9,897.2 439.7,1023.5 356.5,845.1" fill="url(#facetDark)" opacity="0.061"/>
+<polygon points="83.4,616.0 41.0,674.3 2.5,621.0 -11.8,563.9 63.4,578.8" fill="url(#facetDark)" opacity="0.159"/>
+<polygon points="141.1,664.8 210.8,906.9 -41.1,901.6 -86.4,696.4" fill="url(#facetDark)" opacity="0.126"/>
+<polygon points="97.4,-73.4 216.3,-35.1 119.6,48.5" fill="#ffffff" opacity="0.157"/>
+<polygon points="798.2,976.2 638.5,903.5 830.6,759.9" fill="url(#facetLight)" opacity="0.046"/>
+<polygon points="661.7,771.7 537.3,845.9 498.2,713.6 599.8,700.3" fill="url(#facetMid)" opacity="0.143"/>
+<polygon points="66.1,80.7 23.9,231.9 -115.4,155.7 -29.7,46.0" fill="url(#facetDark)" opacity="0.119"/>
+<polygon points="185.1,817.0 88.2,772.7 138.4,685.4 215.2,729.0" fill="url(#facetMid)" opacity="0.073"/>
+<polygon points="390.5,1127.7 344.7,942.8 451.1,880.5 516.5,980.9" fill="url(#facetMid)" opacity="0.143"/>
+<polygon points="375.7,666.6 428.0,759.8 336.5,850.1 296.5,795.1 269.0,678.1" fill="url(#facetDark)" opacity="0.126"/>
+<polygon points="288.5,701.0 223.0,651.3 270.8,588.5 351.2,581.8 348.7,694.0" fill="url(#facetMid)" opacity="0.150"/>
+<polygon points="561.3,854.6 377.1,1028.3 368.0,818.2" fill="#ffffff" opacity="0.091"/>
+<polygon points="536.3,958.5 578.5,901.9 656.7,886.1 674.2,943.1 643.7,992.8" fill="#ffffff" opacity="0.059"/>
+<polygon points="389.3,984.9 291.0,1200.0 229.0,951.0" fill="url(#facetLight)" opacity="0.135"/>
+<polygon points="494.3,299.9 747.1,257.0 558.2,462.0" fill="url(#facetDark)" opacity="0.047"/>
+<polygon points="483.8,910.4 503.6,1026.4 397.8,990.1" fill="url(#facetLight)" opacity="0.122"/>
+<polygon points="703.6,333.3 794.2,531.5 571.9,562.0" fill="#ffffff" opacity="0.090"/>
+<polygon points="298.7,100.7 260.1,123.8 200.8,112.8 200.0,32.6 297.8,29.3" fill="url(#facetLight)" opacity="0.147"/>
+<polygon points="710.8,554.4 850.2,713.3 598.6,766.9 518.9,564.9" fill="url(#facetMid)" opacity="0.107"/>
+<polygon points="-11.0,301.0 255.0,268.5 81.5,473.9" fill="#ffffff" opacity="0.122"/>
+<polygon points="691.0,1035.4 501.7,1031.4 549.0,831.7 704.7,863.8" fill="url(#facetMid)" opacity="0.082"/>
+<polygon points="749.2,620.3 799.7,745.5 648.7,776.8 645.1,628.4" fill="#ffffff" opacity="0.054"/>
+<polygon points="3.7,990.5 61.6,1066.2 -16.6,1092.8 -98.4,1091.2 -92.1,996.2" fill="url(#facetMid)" opacity="0.105"/>
+<polygon points="699.1,474.3 703.8,579.5 602.7,530.4" fill="url(#facetMid)" opacity="0.052"/>
+<polygon points="552.0,181.1 665.7,279.2 498.6,361.2" fill="#ffffff" opacity="0.074"/>
+<polygon points="180.4,439.6 100.9,354.6 203.1,304.4" fill="url(#facetMid)" opacity="0.074"/>
+<polygon points="687.7,655.2 637.9,423.8 838.8,562.3" fill="url(#facetLight)" opacity="0.049"/>
+<polygon points="328.9,1078.7 128.3,957.9 350.0,945.8" fill="#ffffff" opacity="0.077"/>
+<polygon points="114.6,713.0 -18.1,965.9 -127.9,776.5" fill="url(#facetDark)" opacity="0.060"/>
+<polygon points="270.7,34.9 298.3,-82.8 432.0,-39.3 406.7,72.1" fill="url(#facetDark)" opacity="0.098"/>
+<polygon points="583.6,155.3 447.8,348.7 384.2,157.9" fill="url(#facetLight)" opacity="0.063"/>
+<polygon points="544.3,439.4 411.0,355.4 542.2,295.0" fill="#ffffff" opacity="0.046"/>
+<polygon points="238.6,-44.7 385.0,-27.8 268.7,85.4" fill="url(#facetLight)" opacity="0.075"/></g>
+  <rect x="26" y="26" width="668" height="988" rx="46" fill="url(#centerDark)"/>
+
+  <rect x="30" y="30" width="660" height="980" rx="43" fill="none" stroke="url(#frame)" stroke-width="9"/>
+  <rect x="48" y="48" width="624" height="944" rx="36" fill="none" stroke="#FED7AA" stroke-opacity=".36" stroke-width="2"/>
+  <rect x="66" y="66" width="588" height="908" rx="27" fill="none" stroke="#351504" stroke-opacity=".34" stroke-width="2"/>
+
+  <g stroke="url(#frame)" stroke-width="4.5" stroke-linecap="round" fill="none" opacity=".96">
+    <path d="M70 142 L70 70 L142 70"/>
+    <path d="M578 70 L650 70 L650 142"/>
+    <path d="M70 898 L70 970 L142 970"/>
+    <path d="M578 970 L650 970 L650 898"/>
+    <path d="M96 172 C110 126 126 110 172 96"/>
+    <path d="M548 96 C594 110 610 126 624 172"/>
+    <path d="M96 868 C110 914 126 930 172 944"/>
+    <path d="M548 944 C594 930 610 914 624 868"/>
+  </g>
+
+  <g opacity=".85">
+    <path d="M360 315 C450 315 512 371 512 452 C512 533 450 589 360 589 C270 589 208 533 208 452 C208 371 270 315 360 315Z" fill="#020617" opacity=".24"/>
+    <circle cx="360" cy="452" r="151" fill="none" stroke="url(#frame)" stroke-width="4" opacity=".82"/>
+    <circle cx="360" cy="452" r="128" fill="none" stroke="#FED7AA" stroke-opacity=".36" stroke-width="2"/>
+    <path d="M209 452 H154" stroke="url(#frame)" stroke-width="5" stroke-linecap="round"/>
+    <path d="M511 452 H566" stroke="url(#frame)" stroke-width="5" stroke-linecap="round"/>
+    <rect x="140" y="432" width="40" height="40" rx="6" transform="rotate(45 160 452)" fill="url(#frame)" stroke="#FED7AA" stroke-opacity=".74" stroke-width="2"/>
+    <rect x="540" y="432" width="40" height="40" rx="6" transform="rotate(45 560 452)" fill="url(#frame)" stroke="#FED7AA" stroke-opacity=".74" stroke-width="2"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="316" y="16" width="88" height="88" rx="18" transform="rotate(45 360 60)" fill="url(#frame)" stroke="#FED7AA" stroke-opacity=".92" stroke-width="3"/>
+    <rect x="337" y="37" width="46" height="46" rx="10" transform="rotate(45 360 60)" fill="#351504" opacity=".82"/>
+    <circle cx="346" cy="48" r="13" fill="#fff" opacity=".26"/>
+  </g>
+
+  <g opacity=".22">
+    <rect x="100" y="632" width="520" height="70" rx="16" fill="#020617" stroke="#FED7AA" stroke-opacity=".20"/>
+    <rect x="100" y="720" width="520" height="70" rx="16" fill="#020617" stroke="#FED7AA" stroke-opacity=".18"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <path d="M268 874 L316 823 H404 L452 874 L404 935 H316 Z" fill="url(#frame)" stroke="#FED7AA" stroke-opacity=".78" stroke-width="3"/>
+    <path d="M294 874 L330 840 H390 L426 874 L390 918 H330 Z" fill="#351504" opacity=".80"/>
+    <path d="M250 878 C238 846 242 812 258 786" stroke="url(#frame)" stroke-width="5" stroke-linecap="round" fill="none" opacity=".78"/>
+    <path d="M470 878 C482 846 478 812 462 786" stroke="url(#frame)" stroke-width="5" stroke-linecap="round" fill="none" opacity=".78"/>
+  </g>
+</svg>
