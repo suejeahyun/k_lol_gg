@@ -1,13 +1,21 @@
-﻿"use client";
+"use client";
 
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 
 type Position = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
 type AuctionStatus = "PENDING" | "DRAWN" | "SOLD" | "HOLD" | "ASSIGNED";
-type DrawPhase = "IDLE" | "SHUFFLING" | "SELECTING" | "APPROACHING" | "TIER_ASCENDING" | "SPECIAL_TENSION" | "FLIPPING" | "REVEALED";
+type DrawPhase =
+  | "IDLE"
+  | "SHUFFLING"
+  | "SELECTING"
+  | "APPROACHING"
+  | "TIER_ASCENDING"
+  | "SPECIAL_TENSION"
+  | "FLIPPING"
+  | "REVEALED";
 
 type Player = {
   id: number;
@@ -80,6 +88,208 @@ function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+type AuctionSoundName =
+  | "shuffleTick"
+  | "select"
+  | "confirm"
+  | "tierStep"
+  | "diamondTension"
+  | "masterTension"
+  | "flip"
+  | "reveal";
+
+type AuctionSoundWindow = typeof window & {
+  __klolAuctionAudioContext?: AudioContext;
+  __klolAuctionAssetCache?: Partial<Record<AuctionSoundName, HTMLAudioElement>>;
+};
+
+const AUCTION_SOUND_PATHS: Record<AuctionSoundName, string> = {
+  shuffleTick: "/sounds/auction/auction-shuffle-whoosh.wav",
+  select: "/sounds/auction/auction-player-select.wav",
+  confirm: "/sounds/auction/auction-player-confirm.wav",
+  tierStep: "/sounds/auction/auction-tier-step.wav",
+  diamondTension: "/sounds/auction/auction-diamond-tension.wav",
+  masterTension: "/sounds/auction/auction-master-tension.wav",
+  flip: "/sounds/auction/auction-card-flip.wav",
+  reveal: "/sounds/auction/auction-reveal-impact.wav",
+};
+
+const AUCTION_SOUND_VOLUME: Record<AuctionSoundName, number> = {
+  shuffleTick: 0.2,
+  select: 0.22,
+  confirm: 0.14,
+  tierStep: 0.14,
+  diamondTension: 0.12,
+  masterTension: 0.1,
+  flip: 0.18,
+  reveal: 0.22,
+};
+
+function getAudioContext() {
+  if (typeof window === "undefined") return null;
+  const AudioContextCtor =
+    window.AudioContext ||
+    (window as typeof window & { webkitAudioContext?: typeof AudioContext })
+      .webkitAudioContext;
+  if (!AudioContextCtor) return null;
+  const soundWindow = window as AuctionSoundWindow;
+  if (!soundWindow.__klolAuctionAudioContext)
+    soundWindow.__klolAuctionAudioContext = new AudioContextCtor();
+  return soundWindow.__klolAuctionAudioContext;
+}
+
+function preloadAuctionSoundAssets() {
+  if (typeof window === "undefined") return;
+  const soundWindow = window as AuctionSoundWindow;
+  if (!soundWindow.__klolAuctionAssetCache) soundWindow.__klolAuctionAssetCache = {};
+
+  (Object.keys(AUCTION_SOUND_PATHS) as AuctionSoundName[]).forEach((name) => {
+    if (soundWindow.__klolAuctionAssetCache?.[name]) return;
+    const audio = new Audio(AUCTION_SOUND_PATHS[name]);
+    audio.preload = "auto";
+    audio.volume = AUCTION_SOUND_VOLUME[name];
+    soundWindow.__klolAuctionAssetCache![name] = audio;
+    audio.load();
+  });
+}
+
+async function unlockAuctionAudio() {
+  preloadAuctionSoundAssets();
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  if (ctx.state === "suspended") await ctx.resume().catch(() => undefined);
+}
+
+function playTone(
+  ctx: AudioContext,
+  at: number,
+  frequency: number,
+  duration: number,
+  gainValue: number,
+  type: OscillatorType = "sine",
+  destination: AudioNode = ctx.destination,
+) {
+  const oscillator = ctx.createOscillator();
+  const gain = ctx.createGain();
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(frequency, at);
+  gain.gain.setValueAtTime(0.0001, at);
+  gain.gain.exponentialRampToValueAtTime(
+    Math.max(gainValue, 0.0001),
+    at + 0.012,
+  );
+  gain.gain.exponentialRampToValueAtTime(0.0001, at + duration);
+  oscillator.connect(gain);
+  gain.connect(destination);
+  oscillator.start(at);
+  oscillator.stop(at + duration + 0.025);
+}
+
+function playNoise(
+  ctx: AudioContext,
+  at: number,
+  duration: number,
+  gainValue: number,
+  filterFrequency: number,
+) {
+  const bufferSize = Math.max(1, Math.floor(ctx.sampleRate * duration));
+  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i += 1)
+    data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+  const source = ctx.createBufferSource();
+  const filter = ctx.createBiquadFilter();
+  const gain = ctx.createGain();
+  filter.type = "highpass";
+  filter.frequency.setValueAtTime(filterFrequency, at);
+  gain.gain.setValueAtTime(0.0001, at);
+  gain.gain.exponentialRampToValueAtTime(
+    Math.max(gainValue, 0.0001),
+    at + 0.008,
+  );
+  gain.gain.exponentialRampToValueAtTime(0.0001, at + duration);
+  source.buffer = buffer;
+  source.connect(filter);
+  filter.connect(gain);
+  gain.connect(ctx.destination);
+  source.start(at);
+  source.stop(at + duration + 0.02);
+}
+
+function playGeneratedAuctionSound(name: AuctionSoundName, enabled = true) {
+  if (!enabled) return;
+  const ctx = getAudioContext();
+  if (!ctx || ctx.state === "suspended") return;
+  const now = ctx.currentTime;
+
+  if (name === "shuffleTick") {
+    playNoise(ctx, now, 0.18, 0.006, 2800);
+    playNoise(ctx, now + 0.08, 0.16, 0.005, 3200);
+    playNoise(ctx, now + 0.16, 0.14, 0.0045, 3600);
+    return;
+  }
+  if (name === "select") {
+    playNoise(ctx, now, 0.16, 0.007, 2600);
+    playNoise(ctx, now + 0.16, 0.05, 0.006, 4200);
+    return;
+  }
+  if (name === "confirm") {
+    playNoise(ctx, now, 0.06, 0.006, 2400);
+    return;
+  }
+  if (name === "tierStep") {
+    playTone(ctx, now, 1175, 0.12, 0.007, "sine");
+    playTone(ctx, now + 0.025, 1760, 0.14, 0.004, "triangle");
+    return;
+  }
+  if (name === "diamondTension") {
+    playNoise(ctx, now, 0.5, 0.004, 4200);
+    playTone(ctx, now + 0.12, 659, 0.42, 0.004, "sine");
+    return;
+  }
+  if (name === "masterTension") {
+    playTone(ctx, now, 220, 0.72, 0.006, "sine");
+    playTone(ctx, now + 0.12, 330, 0.62, 0.004, "sine");
+    playNoise(ctx, now + 0.08, 0.52, 0.003, 4800);
+    return;
+  }
+  if (name === "flip") {
+    playNoise(ctx, now, 0.14, 0.008, 3400);
+    playNoise(ctx, now + 0.18, 0.06, 0.006, 5200);
+    return;
+  }
+  if (name === "reveal") {
+    playTone(ctx, now, 880, 0.34, 0.007, "sine");
+    playTone(ctx, now + 0.04, 1320, 0.42, 0.005, "sine");
+    playTone(ctx, now + 0.1, 1760, 0.5, 0.0035, "triangle");
+    playNoise(ctx, now + 0.04, 0.22, 0.004, 5200);
+  }
+}
+
+function playAuctionAssetSound(name: AuctionSoundName) {
+  if (typeof window === "undefined") return false;
+  const src = AUCTION_SOUND_PATHS[name];
+  if (!src) return false;
+
+  try {
+    const soundWindow = window as AuctionSoundWindow;
+    const cached = soundWindow.__klolAuctionAssetCache?.[name];
+    const audio = cached ? (cached.cloneNode(true) as HTMLAudioElement) : new Audio(src);
+    audio.volume = AUCTION_SOUND_VOLUME[name];
+    audio.currentTime = 0;
+    void audio.play().catch(() => playGeneratedAuctionSound(name, true));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function playAuctionSound(name: AuctionSoundName, enabled = true) {
+  if (!enabled) return;
+  const playedAsset = playAuctionAssetSound(name);
+  if (!playedAsset) playGeneratedAuctionSound(name, true);
+}
+
 function getMemberForPosition(team: Team, position: Position) {
   return team.members.find((member) => member.position === position) ?? null;
 }
@@ -139,37 +349,43 @@ function getPositionTheme(position?: Position | null) {
       return {
         glow: "rgba(248,113,113,0.45)",
         border: "rgba(248,113,113,0.88)",
-        badge: "linear-gradient(135deg, rgba(239,68,68,0.95), rgba(249,115,22,0.88))",
+        badge:
+          "linear-gradient(135deg, rgba(239,68,68,0.95), rgba(249,115,22,0.88))",
       };
     case "JGL":
       return {
         glow: "rgba(52,211,153,0.45)",
         border: "rgba(52,211,153,0.88)",
-        badge: "linear-gradient(135deg, rgba(16,185,129,0.95), rgba(34,197,94,0.88))",
+        badge:
+          "linear-gradient(135deg, rgba(16,185,129,0.95), rgba(34,197,94,0.88))",
       };
     case "MID":
       return {
         glow: "rgba(167,139,250,0.45)",
         border: "rgba(167,139,250,0.88)",
-        badge: "linear-gradient(135deg, rgba(139,92,246,0.95), rgba(99,102,241,0.88))",
+        badge:
+          "linear-gradient(135deg, rgba(139,92,246,0.95), rgba(99,102,241,0.88))",
       };
     case "ADC":
       return {
         glow: "rgba(250,204,21,0.45)",
         border: "rgba(250,204,21,0.88)",
-        badge: "linear-gradient(135deg, rgba(250,204,21,0.95), rgba(245,158,11,0.88))",
+        badge:
+          "linear-gradient(135deg, rgba(250,204,21,0.95), rgba(245,158,11,0.88))",
       };
     case "SUP":
       return {
         glow: "rgba(56,189,248,0.45)",
         border: "rgba(56,189,248,0.88)",
-        badge: "linear-gradient(135deg, rgba(14,165,233,0.95), rgba(59,130,246,0.88))",
+        badge:
+          "linear-gradient(135deg, rgba(14,165,233,0.95), rgba(59,130,246,0.88))",
       };
     default:
       return {
         glow: "rgba(96,165,250,0.42)",
         border: "rgba(96,165,250,0.8)",
-        badge: "linear-gradient(135deg, rgba(59,130,246,0.95), rgba(37,99,235,0.88))",
+        badge:
+          "linear-gradient(135deg, rgba(59,130,246,0.95), rgba(37,99,235,0.88))",
       };
   }
 }
@@ -177,51 +393,191 @@ function getPositionTheme(position?: Position | null) {
 function getTierVisual(tierText?: string | null): TierVisual {
   const value = String(tierText ?? "").toLowerCase();
   if (!value) {
-    return { key: "UNRANKED", primary: "#3b82f6", secondary: "#0f172a", glow: "rgba(59,130,246,0.42)", border: "rgba(96,165,250,0.85)", textGlow: "rgba(59,130,246,0.34)", accent: "rgba(255,255,255,0.14)", highTier: false };
+    return {
+      key: "UNRANKED",
+      primary: "#3b82f6",
+      secondary: "#0f172a",
+      glow: "rgba(59,130,246,0.42)",
+      border: "rgba(96,165,250,0.85)",
+      textGlow: "rgba(59,130,246,0.34)",
+      accent: "rgba(255,255,255,0.14)",
+      highTier: false,
+    };
   }
-  if (value.includes("챌린저")) return { key: "CHALLENGER", primary: "#f8fafc", secondary: "#60a5fa", glow: "rgba(125,211,252,0.58)", border: "rgba(224,242,254,0.95)", textGlow: "rgba(147,197,253,0.55)", accent: "rgba(255,255,255,0.26)", highTier: true };
-  if (value.includes("그랜드마스터")) return { key: "GRANDMASTER", primary: "#ef4444", secondary: "#7f1d1d", glow: "rgba(239,68,68,0.56)", border: "rgba(252,165,165,0.95)", textGlow: "rgba(248,113,113,0.48)", accent: "rgba(255,255,255,0.18)", highTier: true };
-  if (value.includes("마스터")) return { key: "MASTER", primary: "#c084fc", secondary: "#581c87", glow: "rgba(192,132,252,0.52)", border: "rgba(221,214,254,0.95)", textGlow: "rgba(196,181,253,0.48)", accent: "rgba(255,255,255,0.16)", highTier: true };
-  if (value.includes("다이아")) return { key: "DIAMOND", primary: "#38bdf8", secondary: "#1d4ed8", glow: "rgba(56,189,248,0.54)", border: "rgba(125,211,252,0.95)", textGlow: "rgba(125,211,252,0.42)", accent: "rgba(255,255,255,0.16)", highTier: true };
-  if (value.includes("에메랄드")) return { key: "EMERALD", primary: "#10b981", secondary: "#065f46", glow: "rgba(16,185,129,0.42)", border: "rgba(110,231,183,0.88)", textGlow: "rgba(110,231,183,0.32)", accent: "rgba(255,255,255,0.12)", highTier: false };
-  if (value.includes("플래티넘")) return { key: "PLATINUM", primary: "#2dd4bf", secondary: "#155e75", glow: "rgba(45,212,191,0.42)", border: "rgba(153,246,228,0.88)", textGlow: "rgba(94,234,212,0.3)", accent: "rgba(255,255,255,0.12)", highTier: false };
-  if (value.includes("골드")) return { key: "GOLD", primary: "#fbbf24", secondary: "#92400e", glow: "rgba(251,191,36,0.42)", border: "rgba(253,224,71,0.88)", textGlow: "rgba(252,211,77,0.32)", accent: "rgba(255,255,255,0.12)", highTier: false };
-  if (value.includes("실버")) return { key: "SILVER", primary: "#cbd5e1", secondary: "#475569", glow: "rgba(203,213,225,0.38)", border: "rgba(226,232,240,0.8)", textGlow: "rgba(226,232,240,0.28)", accent: "rgba(255,255,255,0.12)", highTier: false };
-  if (value.includes("브론즈")) return { key: "BRONZE", primary: "#b45309", secondary: "#451a03", glow: "rgba(180,83,9,0.38)", border: "rgba(251,191,36,0.62)", textGlow: "rgba(245,158,11,0.26)", accent: "rgba(255,255,255,0.1)", highTier: false };
-  if (value.includes("아이언")) return { key: "IRON", primary: "#6b7280", secondary: "#111827", glow: "rgba(107,114,128,0.34)", border: "rgba(156,163,175,0.68)", textGlow: "rgba(209,213,219,0.22)", accent: "rgba(255,255,255,0.08)", highTier: false };
-  return { key: "UNRANKED", primary: "#3b82f6", secondary: "#0f172a", glow: "rgba(59,130,246,0.42)", border: "rgba(96,165,250,0.85)", textGlow: "rgba(59,130,246,0.34)", accent: "rgba(255,255,255,0.14)", highTier: false };
+  if (value.includes("챌린저"))
+    return {
+      key: "CHALLENGER",
+      primary: "#f8fafc",
+      secondary: "#60a5fa",
+      glow: "rgba(125,211,252,0.58)",
+      border: "rgba(224,242,254,0.95)",
+      textGlow: "rgba(147,197,253,0.55)",
+      accent: "rgba(255,255,255,0.26)",
+      highTier: true,
+    };
+  if (value.includes("그랜드마스터"))
+    return {
+      key: "GRANDMASTER",
+      primary: "#ef4444",
+      secondary: "#7f1d1d",
+      glow: "rgba(239,68,68,0.56)",
+      border: "rgba(252,165,165,0.95)",
+      textGlow: "rgba(248,113,113,0.48)",
+      accent: "rgba(255,255,255,0.18)",
+      highTier: true,
+    };
+  if (value.includes("마스터"))
+    return {
+      key: "MASTER",
+      primary: "#c084fc",
+      secondary: "#581c87",
+      glow: "rgba(192,132,252,0.52)",
+      border: "rgba(221,214,254,0.95)",
+      textGlow: "rgba(196,181,253,0.48)",
+      accent: "rgba(255,255,255,0.16)",
+      highTier: true,
+    };
+  if (value.includes("다이아"))
+    return {
+      key: "DIAMOND",
+      primary: "#38bdf8",
+      secondary: "#1d4ed8",
+      glow: "rgba(56,189,248,0.54)",
+      border: "rgba(125,211,252,0.95)",
+      textGlow: "rgba(125,211,252,0.42)",
+      accent: "rgba(255,255,255,0.16)",
+      highTier: true,
+    };
+  if (value.includes("에메랄드"))
+    return {
+      key: "EMERALD",
+      primary: "#10b981",
+      secondary: "#065f46",
+      glow: "rgba(16,185,129,0.42)",
+      border: "rgba(110,231,183,0.88)",
+      textGlow: "rgba(110,231,183,0.32)",
+      accent: "rgba(255,255,255,0.12)",
+      highTier: false,
+    };
+  if (value.includes("플래티넘"))
+    return {
+      key: "PLATINUM",
+      primary: "#2dd4bf",
+      secondary: "#155e75",
+      glow: "rgba(45,212,191,0.42)",
+      border: "rgba(153,246,228,0.88)",
+      textGlow: "rgba(94,234,212,0.3)",
+      accent: "rgba(255,255,255,0.12)",
+      highTier: false,
+    };
+  if (value.includes("골드"))
+    return {
+      key: "GOLD",
+      primary: "#fbbf24",
+      secondary: "#92400e",
+      glow: "rgba(251,191,36,0.42)",
+      border: "rgba(253,224,71,0.88)",
+      textGlow: "rgba(252,211,77,0.32)",
+      accent: "rgba(255,255,255,0.12)",
+      highTier: false,
+    };
+  if (value.includes("실버"))
+    return {
+      key: "SILVER",
+      primary: "#cbd5e1",
+      secondary: "#475569",
+      glow: "rgba(203,213,225,0.38)",
+      border: "rgba(226,232,240,0.8)",
+      textGlow: "rgba(226,232,240,0.28)",
+      accent: "rgba(255,255,255,0.12)",
+      highTier: false,
+    };
+  if (value.includes("브론즈"))
+    return {
+      key: "BRONZE",
+      primary: "#b45309",
+      secondary: "#451a03",
+      glow: "rgba(180,83,9,0.38)",
+      border: "rgba(251,191,36,0.62)",
+      textGlow: "rgba(245,158,11,0.26)",
+      accent: "rgba(255,255,255,0.1)",
+      highTier: false,
+    };
+  if (value.includes("아이언"))
+    return {
+      key: "IRON",
+      primary: "#6b7280",
+      secondary: "#111827",
+      glow: "rgba(107,114,128,0.34)",
+      border: "rgba(156,163,175,0.68)",
+      textGlow: "rgba(209,213,219,0.22)",
+      accent: "rgba(255,255,255,0.08)",
+      highTier: false,
+    };
+  return {
+    key: "UNRANKED",
+    primary: "#3b82f6",
+    secondary: "#0f172a",
+    glow: "rgba(59,130,246,0.42)",
+    border: "rgba(96,165,250,0.85)",
+    textGlow: "rgba(59,130,246,0.34)",
+    accent: "rgba(255,255,255,0.14)",
+    highTier: false,
+  };
 }
 
 function getTierImagePath(tierText?: string | null) {
   const key = getTierVisual(tierText).key.toLowerCase();
   switch (key) {
-    case "challenger": return "/images/tiers/challenger.webp";
-    case "grandmaster": return "/images/tiers/grandmaster.webp";
-    case "master": return "/images/tiers/master.webp";
-    case "diamond": return "/images/tiers/diamond.webp";
-    case "emerald": return "/images/tiers/emerald.webp";
-    case "platinum": return "/images/tiers/platinum.webp";
-    case "gold": return "/images/tiers/gold.webp";
-    case "silver": return "/images/tiers/silver.webp";
-    case "bronze": return "/images/tiers/bronze.webp";
-    case "iron": return "/images/tiers/iron.webp";
-    default: return "/images/tiers/silver.webp";
+    case "challenger":
+      return "/images/tiers/challenger.webp";
+    case "grandmaster":
+      return "/images/tiers/grandmaster.webp";
+    case "master":
+      return "/images/tiers/master.webp";
+    case "diamond":
+      return "/images/tiers/diamond.webp";
+    case "emerald":
+      return "/images/tiers/emerald.webp";
+    case "platinum":
+      return "/images/tiers/platinum.webp";
+    case "gold":
+      return "/images/tiers/gold.webp";
+    case "silver":
+      return "/images/tiers/silver.webp";
+    case "bronze":
+      return "/images/tiers/bronze.webp";
+    case "iron":
+      return "/images/tiers/iron.webp";
+    default:
+      return "/images/tiers/silver.webp";
   }
 }
 
 function getTierRankFromKey(key: string) {
   switch (key.toUpperCase()) {
-    case "IRON": return 1;
-    case "BRONZE": return 2;
-    case "SILVER": return 3;
-    case "GOLD": return 4;
-    case "PLATINUM": return 5;
-    case "EMERALD": return 6;
-    case "DIAMOND": return 7;
-    case "MASTER": return 8;
-    case "GRANDMASTER": return 9;
-    case "CHALLENGER": return 10;
-    default: return 3;
+    case "IRON":
+      return 1;
+    case "BRONZE":
+      return 2;
+    case "SILVER":
+      return 3;
+    case "GOLD":
+      return 4;
+    case "PLATINUM":
+      return 5;
+    case "EMERALD":
+      return 6;
+    case "DIAMOND":
+      return 7;
+    case "MASTER":
+      return 8;
+    case "GRANDMASTER":
+      return 9;
+    case "CHALLENGER":
+      return 10;
+    default:
+      return 3;
   }
 }
 
@@ -246,13 +602,19 @@ function getTierAscentSteps(maxRank: number, minRank = 3) {
   return steps.filter((step) => step.rank >= minRank && step.rank <= maxRank);
 }
 
-async function animateTierAscentSequence(maxRank: number, onStep?: (rank: number) => void, minRank = 3) {
+async function animateTierAscentSequence(
+  maxRank: number,
+  onStep?: (rank: number) => void,
+  minRank = 3,
+) {
   const steps = getTierAscentSteps(maxRank, minRank);
-  const delay = maxRank >= 8 ? 460 : 420;
 
   for (let index = 0; index < steps.length; index += 1) {
-    onStep?.(steps[index].rank);
-    await wait(delay);
+    const rank = steps[index].rank;
+    onStep?.(rank);
+    const progressiveDelay =
+      190 + index * 38 + (rank >= 7 ? 90 : 0) + (rank >= 8 ? 130 : 0);
+    await wait(progressiveDelay);
   }
 }
 
@@ -265,7 +627,13 @@ function StatTile({ label, value }: { label: string; value: ReactNode }) {
   );
 }
 
-export default function DestructionAuctionManager({ tournamentId, teams, participants, hasMatches, liveMode = false }: Props) {
+export default function DestructionAuctionManager({
+  tournamentId,
+  teams,
+  participants,
+  hasMatches,
+  liveMode = false,
+}: Props) {
   const router = useRouter();
   const [selectedParticipantId, setSelectedParticipantId] = useState("");
   const [selectedTeamId, setSelectedTeamId] = useState("");
@@ -278,57 +646,107 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
   const [ascentRank, setAscentRank] = useState(0);
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   const [isPreviewFullscreenOpen, setIsPreviewFullscreenOpen] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const soundEnabledRef = useRef(true);
+  const lastShuffleTickRef = useRef(0);
 
-  const activeDrawn = useMemo(() => participants.find((participant) => !participant.isCaptain && participant.auctionStatus === "DRAWN"), [participants]);
+  const activeDrawn = useMemo(
+    () =>
+      participants.find(
+        (participant) =>
+          !participant.isCaptain && participant.auctionStatus === "DRAWN",
+      ),
+    [participants],
+  );
   const selectedParticipant = useMemo(() => {
-    const id = Number(selectedParticipantId || activeDrawn?.id || drawnPreview?.id || 0);
-    return participants.find((participant) => participant.id === id) ?? drawnPreview ?? null;
+    const id = Number(
+      selectedParticipantId || activeDrawn?.id || drawnPreview?.id || 0,
+    );
+    return (
+      participants.find((participant) => participant.id === id) ??
+      drawnPreview ??
+      null
+    );
   }, [participants, selectedParticipantId, activeDrawn, drawnPreview]);
 
-  const pendingCount = participants.filter((participant) => !participant.isCaptain && participant.auctionStatus === "PENDING").length;
-  const holdCount = participants.filter((participant) => !participant.isCaptain && participant.auctionStatus === "HOLD").length;
-  const drawnCount = participants.filter((participant) => !participant.isCaptain && participant.auctionStatus === "DRAWN").length;
-  const soldCount = participants.filter((participant) => !participant.isCaptain && participant.auctionStatus === "SOLD").length;
-  const totalAuctionTargets = participants.filter((participant) => !participant.isCaptain).length;
-  const auctionTargetPoolLabel = pendingCount > 0 ? "일반 미추첨" : holdCount > 0 ? "보류자 재추첨" : "추첨 완료";
+  const pendingCount = participants.filter(
+    (participant) =>
+      !participant.isCaptain && participant.auctionStatus === "PENDING",
+  ).length;
+  const holdCount = participants.filter(
+    (participant) =>
+      !participant.isCaptain && participant.auctionStatus === "HOLD",
+  ).length;
+  const drawnCount = participants.filter(
+    (participant) =>
+      !participant.isCaptain && participant.auctionStatus === "DRAWN",
+  ).length;
+  const soldCount = participants.filter(
+    (participant) =>
+      !participant.isCaptain && participant.auctionStatus === "SOLD",
+  ).length;
+  const totalAuctionTargets = participants.filter(
+    (participant) => !participant.isCaptain,
+  ).length;
+  const auctionTargetPoolLabel =
+    pendingCount > 0
+      ? "일반 미추첨"
+      : holdCount > 0
+        ? "보류자 재추첨"
+        : "추첨 완료";
 
   const selectedTeam = teams.find((team) => team.id === Number(selectedTeamId));
   const currentTarget = activeDrawn ?? selectedParticipant;
   const currentTheme = getPositionTheme(currentTarget?.position);
-  const tierReference = currentTarget?.player.currentTier ?? currentTarget?.player.peakTier ?? null;
+  const tierReference =
+    currentTarget?.player.currentTier ?? currentTarget?.player.peakTier ?? null;
   const tierVisual = getTierVisual(tierReference);
   const tierRank = getTierRankFromKey(tierVisual.key);
   const tierCriteriaClassName = getTierCriteriaClass(tierRank);
   const tierImagePath = getTierImagePath(tierReference);
   const positionImagePath = getPositionImagePath(currentTarget?.position);
-  const selectedTeamHasSamePosition = Boolean(selectedTeam && currentTarget && getMemberForPosition(selectedTeam, currentTarget.position));
-  const selectedTeamIsFull = Boolean(selectedTeam && selectedTeam.members.length >= 5);
+  const selectedTeamHasSamePosition = Boolean(
+    selectedTeam &&
+    currentTarget &&
+    getMemberForPosition(selectedTeam, currentTarget.position),
+  );
+  const selectedTeamIsFull = Boolean(
+    selectedTeam && selectedTeam.members.length >= 5,
+  );
 
   useEffect(() => {
     if (!isOverlayOpen && !isPreviewFullscreenOpen) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = previousOverflow; };
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
   }, [isOverlayOpen, isPreviewFullscreenOpen]);
 
-  const baseVisual = SHUFFLE_NEUTRAL_TIER_VISUAL;
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const saved = window.localStorage.getItem("klolAuctionSoundEnabled");
+    if (saved === "0") {
+      soundEnabledRef.current = false;
+      setSoundEnabled(false);
+    }
+  }, []);
 
-  const visualVars = {
-    "--tier-primary": baseVisual.primary,
-    "--tier-secondary": baseVisual.secondary,
-    "--tier-glow": baseVisual.glow,
-    "--tier-border": baseVisual.border,
-    "--tier-text-glow": baseVisual.textGlow,
-    "--tier-accent": baseVisual.accent,
-    "--card-tier-primary": tierVisual.primary,
-    "--card-tier-secondary": tierVisual.secondary,
-    "--card-tier-glow": tierVisual.glow,
-    "--card-tier-border": tierVisual.border,
-    "--card-tier-text-glow": tierVisual.textGlow,
-    "--card-tier-accent": tierVisual.accent,
-    "--position-glow": currentTheme.glow,
-    "--position-border": currentTheme.border,
-  } as CSSProperties;
+  useEffect(() => {
+    soundEnabledRef.current = soundEnabled;
+    if (typeof window !== "undefined")
+      window.localStorage.setItem(
+        "klolAuctionSoundEnabled",
+        soundEnabled ? "1" : "0",
+      );
+  }, [soundEnabled]);
+
+  useEffect(() => {
+    // 추첨 중 반복 저음/드럼처럼 들리는 현상을 막기 위해
+    // 카드 펼침 효과음은 handleDraw 시작 시 1회만 재생합니다.
+  }, [drawPhase, isOverlayOpen, soundEnabled]);
+
+  const baseVisual = SHUFFLE_NEUTRAL_TIER_VISUAL;
 
   const shouldRevealTierTheme =
     drawPhase === "TIER_ASCENDING" ||
@@ -346,6 +764,24 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
 
   const overlayHighTierClass =
     shouldRevealTierTheme && tierRank >= 8 ? "high-tier" : "";
+  const effectiveCardVisual = shouldRevealTierTheme ? tierVisual : baseVisual;
+
+  const visualVars = {
+    "--tier-primary": baseVisual.primary,
+    "--tier-secondary": baseVisual.secondary,
+    "--tier-glow": baseVisual.glow,
+    "--tier-border": baseVisual.border,
+    "--tier-text-glow": baseVisual.textGlow,
+    "--tier-accent": baseVisual.accent,
+    "--card-tier-primary": effectiveCardVisual.primary,
+    "--card-tier-secondary": effectiveCardVisual.secondary,
+    "--card-tier-glow": effectiveCardVisual.glow,
+    "--card-tier-border": effectiveCardVisual.border,
+    "--card-tier-text-glow": effectiveCardVisual.textGlow,
+    "--card-tier-accent": effectiveCardVisual.accent,
+    "--position-glow": currentTheme.glow,
+    "--position-border": currentTheme.border,
+  } as CSSProperties;
 
   const isShuffleAnimationPhase = drawPhase === "SHUFFLING";
   const drawPhaseCopy = {
@@ -401,7 +837,11 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
 
   const openLiveAuctionScreen = () => {
     if (typeof window === "undefined") return;
-    window.open(`/destruction-auction-live/${tournamentId}`, "_blank", "noopener,noreferrer");
+    window.open(
+      `/destruction-auction-live/${tournamentId}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
   };
 
   const closeOverlay = () => {
@@ -411,6 +851,7 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
   };
 
   const handleDraw = async () => {
+    await unlockAuctionAudio();
     setError("");
     setIsDrawing(true);
     setDrawnPreview(null);
@@ -420,10 +861,15 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
     setAscentRank(0);
     setIsOverlayOpen(true);
     setDrawPhase("SHUFFLING");
+    lastShuffleTickRef.current = Date.now();
+    playAuctionSound("shuffleTick", soundEnabledRef.current);
 
     try {
       const startedAt = Date.now();
-      const res = await fetch(`/api/destruction-tournaments/${tournamentId}/auction/draw`, { method: "POST" });
+      const res = await fetch(
+        `/api/destruction-tournaments/${tournamentId}/auction/draw`,
+        { method: "POST" },
+      );
       const data = await res.json();
       const elapsed = Date.now() - startedAt;
 
@@ -440,35 +886,53 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
       setSelectedTeamId("");
       setPurchasePoint("1");
 
-      const tierForResult = getTierVisual(participant.player.currentTier ?? participant.player.peakTier ?? null);
+      const tierForResult = getTierVisual(
+        participant.player.currentTier ?? participant.player.peakTier ?? null,
+      );
       const resultTierRank = getTierRankFromKey(tierForResult.key);
-      const baseShuffleMs = resultTierRank >= 8 ? 1750 : resultTierRank >= 5 ? 1600 : 1450;
+      const baseShuffleMs =
+        resultTierRank >= 8 ? 1750 : resultTierRank >= 5 ? 1600 : 1450;
       if (elapsed < baseShuffleMs) await wait(baseShuffleMs - elapsed);
 
       setDrawPhase("SELECTING");
-      await wait(resultTierRank >= 8 ? 720 : 600);
+      playAuctionSound("select", soundEnabledRef.current);
+      await wait(resultTierRank >= 8 ? 560 : 480);
 
       setDrawPhase("APPROACHING");
-      await wait(resultTierRank <= 4 ? 680 : resultTierRank >= 8 ? 1050 : 900);
+      playAuctionSound("confirm", soundEnabledRef.current);
+      await wait(resultTierRank <= 4 ? 500 : resultTierRank >= 8 ? 760 : 640);
 
       setDrawPhase("TIER_ASCENDING");
       if (resultTierRank <= 4) {
         setAscentRank(resultTierRank);
-        await wait(resultTierRank === 4 ? 680 : 560);
+        playAuctionSound("tierStep", soundEnabledRef.current);
+        await wait(resultTierRank === 4 ? 560 : 460);
       } else {
-        await animateTierAscentSequence(resultTierRank, setAscentRank);
-        await wait(resultTierRank >= 8 ? 420 : resultTierRank === 7 ? 460 : 380);
+        await animateTierAscentSequence(resultTierRank, (rank) => {
+          setAscentRank(rank);
+          playAuctionSound("tierStep", soundEnabledRef.current);
+        });
+        if (resultTierRank >= 7) {
+          playAuctionSound("diamondTension", soundEnabledRef.current);
+        }
+        await wait(
+          resultTierRank >= 8 ? 560 : resultTierRank === 7 ? 520 : 360,
+        );
       }
 
       if (resultTierRank >= 8) {
         setDrawPhase("SPECIAL_TENSION");
-        await wait(resultTierRank >= 10 ? 1050 : resultTierRank >= 9 ? 940 : 820);
+        playAuctionSound("masterTension", soundEnabledRef.current);
+        await wait(resultTierRank >= 9 ? 900 : 780);
       }
 
       setDrawPhase("FLIPPING");
-      await wait(resultTierRank >= 8 ? 1580 : resultTierRank >= 5 ? 1320 : 1040);
+      playAuctionSound("flip", soundEnabledRef.current);
+      await wait(resultTierRank >= 8 ? 1180 : resultTierRank >= 5 ? 980 : 820);
 
       setDrawPhase("REVEALED");
+      playAuctionSound("reveal", soundEnabledRef.current);
+      await wait(1500);
     } catch {
       setError("추첨 중 오류가 발생했습니다.");
       setDrawPhase("IDLE");
@@ -480,25 +944,40 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
 
   const handleResolve = async (action: "SOLD" | "HOLD") => {
     setError("");
-    const targetParticipantId = Number(selectedParticipantId || activeDrawn?.id || drawnPreview?.id);
+    const targetParticipantId = Number(
+      selectedParticipantId || activeDrawn?.id || drawnPreview?.id,
+    );
     if (!targetParticipantId) {
       setError("처리할 추첨 참가자가 없습니다.");
       return;
     }
     if (action === "SOLD") {
       if (!selectedTeamId) return void setError("낙찰 팀을 선택해주세요.");
-      if (!Number.isInteger(Number(purchasePoint)) || Number(purchasePoint) < 1) return void setError("낙찰 포인트는 최소 1포인트 이상이어야 합니다.");
-      if (selectedTeamHasSamePosition) return void setError(`선택한 팀에는 이미 ${currentTarget?.position} 포지션이 있습니다.`);
-      if (selectedTeamIsFull) return void setError("선택한 팀은 이미 5명입니다.");
+      if (!Number.isInteger(Number(purchasePoint)) || Number(purchasePoint) < 1)
+        return void setError("낙찰 포인트는 최소 1포인트 이상이어야 합니다.");
+      if (selectedTeamHasSamePosition)
+        return void setError(
+          `선택한 팀에는 이미 ${currentTarget?.position} 포지션이 있습니다.`,
+        );
+      if (selectedTeamIsFull)
+        return void setError("선택한 팀은 이미 5명입니다.");
     }
 
     setIsResolving(true);
     try {
-      const res = await fetch(`/api/destruction-tournaments/${tournamentId}/auction/resolve`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ participantId: targetParticipantId, action, teamId: selectedTeamId ? Number(selectedTeamId) : undefined, purchasePoint: purchasePoint ? Number(purchasePoint) : undefined }),
-      });
+      const res = await fetch(
+        `/api/destruction-tournaments/${tournamentId}/auction/resolve`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            participantId: targetParticipantId,
+            action,
+            teamId: selectedTeamId ? Number(selectedTeamId) : undefined,
+            purchasePoint: purchasePoint ? Number(purchasePoint) : undefined,
+          }),
+        },
+      );
       const data = await res.json();
       if (!res.ok) return void setError(data.message ?? "경매 결과 처리 실패");
       setSelectedParticipantId("");
@@ -516,20 +995,36 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
     }
   };
 
-  const drawableDisabled = hasMatches || isDrawing || Boolean(activeDrawn) || teams.length === 0;
+  const drawableDisabled =
+    hasMatches || isDrawing || Boolean(activeDrawn) || teams.length === 0;
 
   const renderAuctionFields = (compact = false) => (
-    <div className={compact ? "auction-front-form compact" : "auction-front-form"}>
+    <div
+      className={compact ? "auction-front-form compact" : "auction-front-form"}
+    >
       <label className="admin-form__field">
         <span className="admin-form__label">선택된 팀</span>
-        <select className="admin-form__input" value={selectedTeamId} onChange={(event) => setSelectedTeamId(event.target.value)} disabled={hasMatches || isResolving}>
+        <select
+          className="admin-form__input"
+          value={selectedTeamId}
+          onChange={(event) => setSelectedTeamId(event.target.value)}
+          disabled={hasMatches || isResolving}
+        >
           <option value="">팀 선택</option>
           {teams.map((team) => {
-            const blockedByPosition = currentTarget ? Boolean(getMemberForPosition(team, currentTarget.position)) : false;
+            const blockedByPosition = currentTarget
+              ? Boolean(getMemberForPosition(team, currentTarget.position))
+              : false;
             const blockedByFull = team.members.length >= 5;
             return (
-              <option key={team.id} value={team.id} disabled={blockedByPosition || blockedByFull}>
-                {team.name} · 남은 {team.remainingAuctionPoints}P{blockedByPosition ? ` · ${currentTarget?.position} 보유` : ""}{blockedByFull ? " · 정원" : ""}
+              <option
+                key={team.id}
+                value={team.id}
+                disabled={blockedByPosition || blockedByFull}
+              >
+                {team.name} · 남은 {team.remainingAuctionPoints}P
+                {blockedByPosition ? ` · ${currentTarget?.position} 보유` : ""}
+                {blockedByFull ? " · 정원" : ""}
               </option>
             );
           })}
@@ -537,17 +1032,45 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
       </label>
       <label className="admin-form__field">
         <span className="admin-form__label">포인트 입력</span>
-        <input className="admin-form__input" type="number" min="1" value={purchasePoint} onChange={(event) => setPurchasePoint(event.target.value)} disabled={hasMatches || isResolving} />
+        <input
+          className="admin-form__input"
+          type="number"
+          min="1"
+          value={purchasePoint}
+          onChange={(event) => setPurchasePoint(event.target.value)}
+          disabled={hasMatches || isResolving}
+        />
       </label>
       <div className="admin-form__actions auction-front-actions">
-        <button type="button" className="admin-page__create-button" onClick={() => handleResolve("SOLD")} disabled={hasMatches || isResolving || !currentTarget}>{isResolving ? "처리 중..." : "낙찰 저장"}</button>
-        <button type="button" className="chip-button" onClick={() => handleResolve("HOLD")} disabled={hasMatches || isResolving || !currentTarget}>낙찰 보류</button>
+        <button
+          type="button"
+          className="admin-page__create-button"
+          onClick={() => handleResolve("SOLD")}
+          disabled={hasMatches || isResolving || !currentTarget}
+        >
+          {isResolving ? "처리 중..." : "낙찰 저장"}
+        </button>
+        <button
+          type="button"
+          className="chip-button"
+          onClick={() => handleResolve("HOLD")}
+          disabled={hasMatches || isResolving || !currentTarget}
+        >
+          낙찰 보류
+        </button>
       </div>
     </div>
   );
 
   return (
-    <div className={liveMode ? "destruction-auction-manager destruction-admin-panel-wide is-live-mode" : "destruction-auction-manager destruction-admin-panel-wide"} style={visualVars}>
+    <div
+      className={
+        liveMode
+          ? "destruction-auction-manager destruction-admin-panel-wide is-live-mode"
+          : "destruction-auction-manager destruction-admin-panel-wide"
+      }
+      style={visualVars}
+    >
       <style>{`
         .destruction-admin-panel-wide { width: 100%; }
         .destruction-auction-summary { display: grid; grid-template-columns: repeat(5, minmax(120px, 1fr)); gap: 10px; margin-bottom: 18px; }
@@ -1252,7 +1775,7 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
           100% { transform: rotate(360deg); opacity: .18; }
         }
 
-        /* K-LOL.GG staged reveal + external sound patch */
+        /* K-LOL.GG staged reveal + card-foley sound patch */
         .gacha-overlay.phase-flipping .gacha-picked-card,
         .gacha-overlay.revealed .gacha-picked-card {
           opacity: 1 !important;
@@ -1583,6 +2106,23 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
         @keyframes finalMasterFrame { from { opacity: .34; transform: scale(.94); } to { opacity: .78; transform: scale(1.06); } }
         @keyframes finalCrownSpin { from { transform: rotate(0deg) scale(.96); } to { transform: rotate(360deg) scale(1.08); } }
 
+
+        .gacha-sound-toggle {
+          width: fit-content;
+          border: 1px solid rgba(96,165,250,.34);
+          border-radius: 999px;
+          padding: 8px 12px;
+          color: #dbeafe;
+          background: rgba(15,23,42,.72);
+          font-size: 12px;
+          font-weight: 800;
+          letter-spacing: .02em;
+          cursor: pointer;
+          box-shadow: 0 10px 24px rgba(0,0,0,.24);
+        }
+        .gacha-sound-toggle.is-on { border-color: rgba(125,211,252,.56); color: #ecfeff; }
+        .gacha-sound-toggle.is-off { opacity: .72; }
+
         @media (max-width: 1180px) {
           .destruction-auction-layout { grid-template-columns: 1fr; }
           .destruction-auction-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1812,37 +2352,77 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
       `}</style>
 
       <div className="destruction-auction-summary">
-        <div className="admin-event-detail-card"><span>미추첨</span><strong>{pendingCount}명</strong></div>
-        <div className="admin-event-detail-card"><span>현재 추첨</span><strong>{drawnCount}명</strong></div>
-        <div className="admin-event-detail-card"><span>보류</span><strong>{holdCount}명</strong></div>
-        <div className="admin-event-detail-card"><span>낙찰</span><strong>{soldCount} / {totalAuctionTargets}명</strong></div>
-        <div className="admin-event-detail-card"><span>현재 풀</span><strong>{auctionTargetPoolLabel}</strong></div>
+        <div className="admin-event-detail-card">
+          <span>미추첨</span>
+          <strong>{pendingCount}명</strong>
+        </div>
+        <div className="admin-event-detail-card">
+          <span>현재 추첨</span>
+          <strong>{drawnCount}명</strong>
+        </div>
+        <div className="admin-event-detail-card">
+          <span>보류</span>
+          <strong>{holdCount}명</strong>
+        </div>
+        <div className="admin-event-detail-card">
+          <span>낙찰</span>
+          <strong>
+            {soldCount} / {totalAuctionTargets}명
+          </strong>
+        </div>
+        <div className="admin-event-detail-card">
+          <span>현재 풀</span>
+          <strong>{auctionTargetPoolLabel}</strong>
+        </div>
       </div>
 
       <div className="destruction-auction-layout">
         <section className="destruction-team-matrix">
           <div className="destruction-team-matrix-grid">
-            <div className="matrix-cell matrix-header matrix-team-header">팀</div>
+            <div className="matrix-cell matrix-header matrix-team-header">
+              팀
+            </div>
             {POSITIONS.map((position) => (
-              <div key={`header-${position}`} className="matrix-cell matrix-header matrix-position">{position}</div>
+              <div
+                key={`header-${position}`}
+                className="matrix-cell matrix-header matrix-position"
+              >
+                {position}
+              </div>
             ))}
 
             {teams.map((team) => (
               <Fragment key={team.id}>
                 <div className="matrix-cell matrix-team-name">
                   <strong>{team.name}</strong>
-                  <span className="matrix-team-point">잔여 {team.remainingAuctionPoints}P</span>
+                  <span className="matrix-team-point">
+                    잔여 {team.remainingAuctionPoints}P
+                  </span>
                 </div>
                 {POSITIONS.map((position) => {
                   const status = getTeamPositionStatus(team, position);
                   return (
                     <div key={`${team.id}-${position}`} className="matrix-cell">
                       {status.filled ? (
-                        <div className={status.isCaptain ? "matrix-filled is-captain" : "matrix-filled"}>
-                          <div className="matrix-player-name">{status.label}</div>
-                          {status.subLabel ? <div className="matrix-player-sub">{status.subLabel}</div> : null}
+                        <div
+                          className={
+                            status.isCaptain
+                              ? "matrix-filled is-captain"
+                              : "matrix-filled"
+                          }
+                        >
+                          <div className="matrix-player-name">
+                            {status.label}
+                          </div>
+                          {status.subLabel ? (
+                            <div className="matrix-player-sub">
+                              {status.subLabel}
+                            </div>
+                          ) : null}
                         </div>
-                      ) : <div className="matrix-empty">대기</div>}
+                      ) : (
+                        <div className="matrix-empty">대기</div>
+                      )}
                     </div>
                   );
                 })}
@@ -1855,7 +2435,9 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
           <div className="auction-control-panel">
             <div className="admin-page__header">
               <div>
-                <h3 className="admin-event-section-title">랜덤 플레이어 추첨</h3>
+                <h3 className="admin-event-section-title">
+                  랜덤 플레이어 추첨
+                </h3>
               </div>
             </div>
             <div className="auction-mini-stage">
@@ -1864,24 +2446,53 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
                   <div className="auction-current-preview">
                     <div className="auction-front-header">
                       <div>
-                        <div className="auction-front-name">{getDisplayName(currentTarget)}</div>
-                        <div className="auction-front-sub">{getDisplayNickname(currentTarget)}</div>
+                        <div className="auction-front-name">
+                          {getDisplayName(currentTarget)}
+                        </div>
+                        <div className="auction-front-sub">
+                          {getDisplayNickname(currentTarget)}
+                        </div>
                       </div>
-                      <span className="auction-position-badge" style={{ background: getPositionTheme(currentTarget.position).badge }}>{getPositionLabel(currentTarget.position)}</span>
+                      <span
+                        className="auction-position-badge"
+                        style={{
+                          background: getPositionTheme(currentTarget.position)
+                            .badge,
+                        }}
+                      >
+                        {getPositionLabel(currentTarget.position)}
+                      </span>
                     </div>
                     <div className="auction-front-grid">
-                      <StatTile label="현재티어" value={currentTarget.player.currentTier ?? "-"} />
-                      <StatTile label="최고티어" value={currentTarget.player.peakTier ?? "-"} />
+                      <StatTile
+                        label="현재티어"
+                        value={currentTarget.player.currentTier ?? "-"}
+                      />
+                      <StatTile
+                        label="최고티어"
+                        value={currentTarget.player.peakTier ?? "-"}
+                      />
                     </div>
                   </div>
                 ) : (
-                  <div className="mini-card-stack" aria-hidden="true"><span /><span /><span /><div className="mini-card-logo">K</div></div>
+                  <div className="mini-card-stack" aria-hidden="true">
+                    <span />
+                    <span />
+                    <span />
+                    <div className="mini-card-logo">K</div>
+                  </div>
                 )}
               </div>
             </div>
             <div className="auction-stage-button-row">
               {!currentTarget ? (
-                <div className={liveMode ? "auction-card-action-grid is-single" : "auction-card-action-grid"}>
+                <div
+                  className={
+                    liveMode
+                      ? "auction-card-action-grid is-single"
+                      : "auction-card-action-grid"
+                  }
+                >
                   <button
                     type="button"
                     className="admin-page__create-button auction-card-view-button"
@@ -1902,7 +2513,13 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
                   ) : null}
                 </div>
               ) : (
-                <div className={liveMode ? "auction-card-action-grid is-single" : "auction-card-action-grid"}>
+                <div
+                  className={
+                    liveMode
+                      ? "auction-card-action-grid is-single"
+                      : "auction-card-action-grid"
+                  }
+                >
                   <button
                     type="button"
                     className="admin-page__create-button auction-card-view-button"
@@ -1931,73 +2548,158 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
 
       {isOverlayOpen
         ? createPortal(
-            <div className={`gacha-overlay ${overlayTierClassName} ${ascentClassName} phase-${drawPhase.toLowerCase()} ${tierRank >= 8 ? "high-tier" : ""} ${isShuffleAnimationPhase ? "animating" : ""} ${drawPhase === "REVEALED" ? "revealed" : ""}`}>
-          <div className="gacha-overlay-card">
-            <button type="button" className="gacha-close" onClick={closeOverlay} aria-label="닫기">×</button>
-            <div className="gacha-layout">
-              <section className="gacha-showcase">
-                <div className="gacha-showcase-stage">
-                  <div className="gacha-speedlines" />
-                  <div className="gacha-light-burst" />
-                  <div className="gacha-ring" />
-                  <div className="gacha-shockwave" />
-                  <div className="gacha-sparkles" aria-hidden="true"><span /><span /><span /><span /><span /><span /><span /><span /><span /><span /></div>
-                  {drawPhase === "SHUFFLING" || drawPhase === "SELECTING" ? (
-                    <div className="gacha-deck-cluster" aria-hidden="true">
-                      <div className="gacha-card-back card-1" />
-                      <div className="gacha-card-back card-2" />
-                      <div className="gacha-card-back card-3" />
-                      <div className="gacha-card-back card-4" />
-                      <div className="gacha-card-back card-5" />
-                      <div className="gacha-card-back card-6" />
-                      <div className="gacha-card-back card-7" />
-                      <div className="gacha-card-back card-8" />
-                      <div className="gacha-card-back card-9" />
-                    </div>
-                  ) : null}
-                  <div className="gacha-picked-shell">
-                    <div className="gacha-picked-path">
-                      <div className="gacha-picked-card">
-                        <div className="gacha-card-inner">
-                          <div className="gacha-card-face back" />
-                          <div className="gacha-card-face front">
-                            <div className="gacha-card-visual">
-                              <div className="gacha-position-float"><div className="gacha-position-icon-wrap"><img className="gacha-position-icon" src={positionImagePath} alt={currentTarget ? `${currentTarget.position} 라인` : "라인"} /></div></div>
-                              <div className="gacha-card-head">
-                                <div className="gacha-card-head-text">
-                                  <div className="gacha-card-head-name">{getDisplayName(currentTarget)}</div>
-                                  <div className="gacha-card-head-nick">{getDisplayNickname(currentTarget)}</div>
+            <div
+              className={`gacha-overlay ${overlayTierClassName} ${overlayAscentClass} phase-${drawPhase.toLowerCase()} ${overlayHighTierClass} ${isShuffleAnimationPhase ? "animating" : ""} ${drawPhase === "REVEALED" ? "revealed" : ""}`}
+            >
+              <div className="gacha-overlay-card">
+                <button
+                  type="button"
+                  className="gacha-close"
+                  onClick={closeOverlay}
+                  aria-label="닫기"
+                >
+                  ×
+                </button>
+                <div className="gacha-layout">
+                  <section className="gacha-showcase">
+                    <div className="gacha-showcase-stage">
+                      <div className="gacha-speedlines" />
+                      <div className="gacha-light-burst" />
+                      <div className="gacha-ring" />
+                      <div className="gacha-shockwave" />
+                      <div className="gacha-sparkles" aria-hidden="true">
+                        <span />
+                        <span />
+                        <span />
+                        <span />
+                        <span />
+                        <span />
+                        <span />
+                        <span />
+                        <span />
+                        <span />
+                      </div>
+                      {drawPhase === "SHUFFLING" ||
+                      drawPhase === "SELECTING" ? (
+                        <div className="gacha-deck-cluster" aria-hidden="true">
+                          <div className="gacha-card-back card-1" />
+                          <div className="gacha-card-back card-2" />
+                          <div className="gacha-card-back card-3" />
+                          <div className="gacha-card-back card-4" />
+                          <div className="gacha-card-back card-5" />
+                          <div className="gacha-card-back card-6" />
+                          <div className="gacha-card-back card-7" />
+                          <div className="gacha-card-back card-8" />
+                          <div className="gacha-card-back card-9" />
+                        </div>
+                      ) : null}
+                      <div className="gacha-picked-shell">
+                        <div className="gacha-picked-path">
+                          <div className="gacha-picked-card">
+                            <div className="gacha-card-inner">
+                              <div className="gacha-card-face back" />
+                              <div className="gacha-card-face front">
+                                <div className="gacha-card-visual">
+                                  <div className="gacha-position-float">
+                                    <div className="gacha-position-icon-wrap">
+                                      <img
+                                        className="gacha-position-icon"
+                                        src={positionImagePath}
+                                        alt={
+                                          currentTarget
+                                            ? `${currentTarget.position} 라인`
+                                            : "라인"
+                                        }
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="gacha-card-head">
+                                    <div className="gacha-card-head-text">
+                                      <div className="gacha-card-head-name">
+                                        {getDisplayName(currentTarget)}
+                                      </div>
+                                      <div className="gacha-card-head-nick">
+                                        {getDisplayNickname(currentTarget)}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="gacha-tier-icon-wrap">
+                                    <img
+                                      className="gacha-tier-image"
+                                      src={tierImagePath}
+                                      alt={
+                                        tierReference
+                                          ? `${tierReference} 티어`
+                                          : "티어"
+                                      }
+                                    />
+                                  </div>
+                                </div>
+                                <div className="gacha-card-stats">
+                                  <StatTile
+                                    label="포지션"
+                                    value={
+                                      currentTarget
+                                        ? getPositionLabel(
+                                            currentTarget.position,
+                                          )
+                                        : "-"
+                                    }
+                                  />
+                                  <StatTile
+                                    label="현재티어"
+                                    value={
+                                      currentTarget?.player.currentTier ?? "-"
+                                    }
+                                  />
+                                  <StatTile
+                                    label="최고티어"
+                                    value={
+                                      currentTarget?.player.peakTier ?? "-"
+                                    }
+                                  />
                                 </div>
                               </div>
-                              <div className="gacha-tier-icon-wrap"><img className="gacha-tier-image" src={tierImagePath} alt={tierReference ? `${tierReference} 티어` : "티어"} /></div>
-                            </div>
-                            <div className="gacha-card-stats">
-                              <StatTile label="포지션" value={currentTarget ? getPositionLabel(currentTarget.position) : "-"} />
-                              <StatTile label="현재티어" value={currentTarget?.player.currentTier ?? "-"} />
-                              <StatTile label="최고티어" value={currentTarget?.player.peakTier ?? "-"} />
                             </div>
                           </div>
                         </div>
+                        <div className="gacha-flip-flash" />
                       </div>
                     </div>
-                    <div className="gacha-flip-flash" />
-                  </div>
+                  </section>
+
+                  <aside className="gacha-panel">
+                    <div className="gacha-panel-chip">
+                      🎴 멸망전 플레이어 경매
+                    </div>
+                    <button
+                      type="button"
+                      className={`gacha-sound-toggle ${soundEnabled ? "is-on" : "is-off"}`}
+                      onClick={() => setSoundEnabled((value) => !value)}
+                    >
+                      효과음 {soundEnabled ? "ON" : "OFF"}
+                    </button>
+                    <h3 className="gacha-panel-title">{drawPhaseTitle}</h3>
+                    <p className="gacha-panel-desc">{drawPhaseDescription}</p>
+
+                    <div
+                      className={`gacha-right-form ${drawPhase === "REVEALED" ? "is-visible" : "is-hidden"}`}
+                    >
+                      {renderAuctionFields()}
+                    </div>
+
+                    <div
+                      className="auction-front-grid"
+                      style={{ marginTop: 16 }}
+                    >
+                      <StatTile
+                        label="남은 경매"
+                        value={`${totalAuctionTargets - soldCount}명`}
+                      />
+                    </div>
+                  </aside>
                 </div>
-              </section>
-
-              <aside className="gacha-panel">
-                <div className="gacha-panel-chip">🎴 멸망전 플레이어 경매</div>
-                <h3 className="gacha-panel-title">{drawPhaseTitle}</h3>
-                <p className="gacha-panel-desc">{drawPhaseDescription}</p>
-
-                <div className={`gacha-right-form ${drawPhase === "REVEALED" ? "is-visible" : "is-hidden"}`}>{renderAuctionFields()}</div>
-
-                <div className="auction-front-grid" style={{ marginTop: 16 }}>
-                  <StatTile label="남은 경매" value={`${totalAuctionTargets - soldCount}명`} />
-                </div>
-              </aside>
-            </div>
-          </div>
+              </div>
             </div>,
             document.body,
           )
@@ -2006,44 +2708,98 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
       {isPreviewFullscreenOpen
         ? createPortal(
             <div className="auction-fullview-overlay">
-              <button type="button" className="auction-fullview-close" onClick={closePreviewFullscreen} aria-label="닫기">×</button>
+              <button
+                type="button"
+                className="auction-fullview-close"
+                onClick={closePreviewFullscreen}
+                aria-label="닫기"
+              >
+                ×
+              </button>
               <div className="auction-fullview-panel">
                 <div className="auction-fullview-header">
-                  <h2 className="auction-fullview-title">3. 경매 진행 · 선택됨</h2>
-                  <p className="auction-fullview-desc">사이트에서 플레이어를 추첨한 뒤, 디스코드 채팅 경매 결과를 관리자가 입력합니다.</p>
+                  <h2 className="auction-fullview-title">
+                    3. 경매 진행 · 선택됨
+                  </h2>
+                  <p className="auction-fullview-desc">
+                    사이트에서 플레이어를 추첨한 뒤, 디스코드 채팅 경매 결과를
+                    관리자가 입력합니다.
+                  </p>
                 </div>
 
                 <div className="destruction-auction-summary">
-                  <div className="admin-event-detail-card"><span>미추첨</span><strong>{pendingCount}명</strong></div>
-                  <div className="admin-event-detail-card"><span>현재 추첨</span><strong>{drawnCount}명</strong></div>
-                  <div className="admin-event-detail-card"><span>보류</span><strong>{holdCount}명</strong></div>
-                  <div className="admin-event-detail-card"><span>낙찰</span><strong>{soldCount} / {totalAuctionTargets}명</strong></div>
-                  <div className="admin-event-detail-card"><span>현재 풀</span><strong>{auctionTargetPoolLabel}</strong></div>
+                  <div className="admin-event-detail-card">
+                    <span>미추첨</span>
+                    <strong>{pendingCount}명</strong>
+                  </div>
+                  <div className="admin-event-detail-card">
+                    <span>현재 추첨</span>
+                    <strong>{drawnCount}명</strong>
+                  </div>
+                  <div className="admin-event-detail-card">
+                    <span>보류</span>
+                    <strong>{holdCount}명</strong>
+                  </div>
+                  <div className="admin-event-detail-card">
+                    <span>낙찰</span>
+                    <strong>
+                      {soldCount} / {totalAuctionTargets}명
+                    </strong>
+                  </div>
+                  <div className="admin-event-detail-card">
+                    <span>현재 풀</span>
+                    <strong>{auctionTargetPoolLabel}</strong>
+                  </div>
                 </div>
 
                 <div className="destruction-auction-layout">
                   <section className="destruction-team-matrix">
                     <div className="destruction-team-matrix-grid">
-                      <div className="matrix-cell matrix-header matrix-team-header">팀</div>
+                      <div className="matrix-cell matrix-header matrix-team-header">
+                        팀
+                      </div>
                       {POSITIONS.map((position) => (
-                        <div key={`fullscreen-header-${position}`} className="matrix-cell matrix-header matrix-position">{position}</div>
+                        <div
+                          key={`fullscreen-header-${position}`}
+                          className="matrix-cell matrix-header matrix-position"
+                        >
+                          {position}
+                        </div>
                       ))}
 
                       {teams.map((team) => (
                         <Fragment key={`fullscreen-${team.id}`}>
                           <div className="matrix-cell matrix-team-name">
                             <strong>{team.name}</strong>
-                            <span className="matrix-team-point">잔여 {team.remainingAuctionPoints}P</span>
+                            <span className="matrix-team-point">
+                              잔여 {team.remainingAuctionPoints}P
+                            </span>
                           </div>
                           {POSITIONS.map((position) => {
-                            const status = getTeamPositionStatus(team, position);
+                            const status = getTeamPositionStatus(
+                              team,
+                              position,
+                            );
                             return (
-                              <div key={`fullscreen-${team.id}-${position}`} className="matrix-cell">
+                              <div
+                                key={`fullscreen-${team.id}-${position}`}
+                                className="matrix-cell"
+                              >
                                 {status.filled ? (
-                                  <div className={status.isCaptain ? "matrix-filled is-captain" : "matrix-filled"}>
-                                    <div className="matrix-player-name">{status.label}</div>
+                                  <div
+                                    className={
+                                      status.isCaptain
+                                        ? "matrix-filled is-captain"
+                                        : "matrix-filled"
+                                    }
+                                  >
+                                    <div className="matrix-player-name">
+                                      {status.label}
+                                    </div>
                                   </div>
-                                ) : <div className="matrix-empty">대기</div>}
+                                ) : (
+                                  <div className="matrix-empty">대기</div>
+                                )}
                               </div>
                             );
                           })}
@@ -2056,7 +2812,9 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
                     <div className="auction-control-panel">
                       <div className="admin-page__header">
                         <div>
-                          <h3 className="admin-event-section-title">랜덤 플레이어 추첨</h3>
+                          <h3 className="admin-event-section-title">
+                            랜덤 플레이어 추첨
+                          </h3>
                         </div>
                       </div>
                       <div className="auction-mini-stage">
@@ -2065,28 +2823,68 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
                             <div className="auction-current-preview">
                               <div className="auction-front-header">
                                 <div>
-                                  <div className="auction-front-name">{getDisplayName(currentTarget)}</div>
-                                  <div className="auction-front-sub">{getDisplayNickname(currentTarget)}</div>
+                                  <div className="auction-front-name">
+                                    {getDisplayName(currentTarget)}
+                                  </div>
+                                  <div className="auction-front-sub">
+                                    {getDisplayNickname(currentTarget)}
+                                  </div>
                                 </div>
-                                <span className="auction-position-badge" style={{ background: getPositionTheme(currentTarget.position).badge }}>{getPositionLabel(currentTarget.position)}</span>
+                                <span
+                                  className="auction-position-badge"
+                                  style={{
+                                    background: getPositionTheme(
+                                      currentTarget.position,
+                                    ).badge,
+                                  }}
+                                >
+                                  {getPositionLabel(currentTarget.position)}
+                                </span>
                               </div>
                               <div className="auction-front-grid">
-                                <StatTile label="현재티어" value={currentTarget.player.currentTier ?? "-"} />
-                                <StatTile label="최고티어" value={currentTarget.player.peakTier ?? "-"} />
+                                <StatTile
+                                  label="현재티어"
+                                  value={
+                                    currentTarget.player.currentTier ?? "-"
+                                  }
+                                />
+                                <StatTile
+                                  label="최고티어"
+                                  value={currentTarget.player.peakTier ?? "-"}
+                                />
                               </div>
                             </div>
                           ) : (
-                            <div className="mini-card-stack" aria-hidden="true"><span /><span /><span /><div className="mini-card-logo">K</div></div>
+                            <div className="mini-card-stack" aria-hidden="true">
+                              <span />
+                              <span />
+                              <span />
+                              <div className="mini-card-logo">K</div>
+                            </div>
                           )}
                         </div>
                       </div>
                       <div className="auction-stage-button-row">
                         {!currentTarget ? (
-                          <button type="button" className="admin-page__create-button" onClick={handleDraw} disabled={drawableDisabled} style={{ width: "100%" }}>
-                            {isDrawing ? "플레이어 추첨 중..." : "플레이어 추첨"}
+                          <button
+                            type="button"
+                            className="admin-page__create-button"
+                            onClick={handleDraw}
+                            disabled={drawableDisabled}
+                            style={{ width: "100%" }}
+                          >
+                            {isDrawing
+                              ? "플레이어 추첨 중..."
+                              : "플레이어 추첨"}
                           </button>
                         ) : (
-                          <button type="button" className="admin-page__create-button auction-card-view-button" onClick={openOverlayForCurrent} disabled={isDrawing} style={{ width: "100%" }}>
+                          <button
+                            type="button"
+                            className="admin-page__create-button auction-card-view-button"
+                            onClick={openOverlayForCurrent}
+                            disabled={isDrawing}
+                            style={{ width: "100%" }}
+                          >
                             플레이어 보기
                           </button>
                         )}
@@ -2102,11 +2900,3 @@ export default function DestructionAuctionManager({ tournamentId, teams, partici
     </div>
   );
 }
-
-
-
-
-
-
-
-
