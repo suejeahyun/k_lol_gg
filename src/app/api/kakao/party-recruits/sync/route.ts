@@ -299,11 +299,13 @@ async function syncOneRecruit(params: {
 
   const nextStartTimeText = parsed.startTimeText ?? party.startTimeText;
   const startTimeChanged = !sameNullableText(nextStartTimeText, party.startTimeText);
+  const parsedScheduledStartAt = parseRecruitScheduledStartAt(nextStartTimeText, new Date());
   const nextScheduledStartAt = startTimeChanged
-    ? parseRecruitScheduledStartAt(nextStartTimeText, new Date())
-    : party.scheduledStartAt;
+    ? parsedScheduledStartAt
+    : (party.scheduledStartAt ?? parsedScheduledStartAt);
+  const shouldBackfillScheduledStartAt = Boolean(!party.scheduledStartAt && nextScheduledStartAt);
 
-  if (!hasRecruitPartyChanges({ party, parsed, isSoloRank })) {
+  if (!hasRecruitPartyChanges({ party, parsed, isSoloRank }) && !shouldBackfillScheduledStartAt) {
     return {
       ok: true,
       recruitNo,

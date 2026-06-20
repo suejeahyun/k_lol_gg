@@ -266,10 +266,15 @@ function parseRelativeStartTime(text: string, base: Date) {
 }
 
 function parseAbsoluteStartTime(text: string, base: Date) {
-  const source = normalizeText(text);
+  const source = normalizeText(text)
+    .replace(/쯤/g, "")
+    .replace(/정도/g, "")
+    .replace(/경/g, "")
+    .replace(/께/g, "")
+    .replace(/정각/g, "");
   const compact = source.replace(/\s+/g, "");
   const match = compact.match(
-    /(오늘|내일|낼|익일)?(오전|오후|아침|낮|저녁|밤|새벽)?(\d{1,2})(?:[:시](\d{1,2})?분?|시반)?/,
+    /(오늘|내일|낼|익일)?(오전|오후|아침|낮|저녁|밤|새벽)?(\d{1,2})(?:(?::|시)(\d{1,2})?분?|시반)?/,
   );
 
   if (!match) return null;
