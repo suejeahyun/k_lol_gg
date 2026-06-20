@@ -651,15 +651,58 @@ export function parseFinishRecruitCommand(
 }
 
 export function extractRecruitNoFromForm(message: string) {
+  return extractRecruitNosFromForm(message)[0] ?? null;
+}
+
+export function extractRecruitNosFromForm(message: string) {
   const text = normalizeText(message);
-  const explicit = text.match(/모집번호\s*[:：]?\s*#?\s*(\d{1,2})/);
-  const compact = text.match(/(^|\s)#\s*(\d{1,2})(?=\s|·|$)/);
-  const value = explicit
-    ? Number(explicit[1])
-    : compact
-      ? Number(compact[2])
-      : NaN;
-  return isValidRecruitNo(value) ? value : null;
+  const result: number[] = [];
+  const seen = new Set<number>();
+
+  const pushRecruitNo = (rawValue: string | undefined) => {
+    const value = Number(rawValue);
+    if (!isValidRecruitNo(value)) return;
+    if (seen.has(value)) return;
+    seen.add(value);
+    result.push(value);
+  };
+
+  for (const match of text.matchAll(/모집번호\s*[:：]?\s*#?\s*(\d{1,2})/g)) {
+    pushRecruitNo(match[1]);
+  }
+
+  for (const match of text.matchAll(/(^|\s)#\s*(\d{1,2})(?=\s|·|$)/g)) {
+    pushRecruitNo(match[2]);
+  }
+
+  return result;
+}
+
+export function findNumberedSlotsAboveMaxMembers(
+  message: string,
+  maxMembers: number,
+) {
+  const text = normalizeText(message);
+  const result: number[] = [];
+  const seen = new Set<number>();
+
+  for (const rawLine of text.split("\n")) {
+    const line = rawLine.trim();
+    const match = line.match(/^(\d{1,3})(?:[.)]|\s+)\s*(.*)$/);
+    if (!match) continue;
+
+    const slotNo = Number(match[1]);
+    const name = trimName(match[2]);
+    if (!Number.isInteger(slotNo) || slotNo < 1) continue;
+    if (!name) continue;
+    if (slotNo <= maxMembers) continue;
+    if (seen.has(slotNo)) continue;
+
+    seen.add(slotNo);
+    result.push(slotNo);
+  }
+
+  return result.sort((a, b) => a - b);
 }
 
 export function looksLikeRecruitPartyForm(message: string) {
@@ -835,7 +878,6 @@ function parseNumberMembers(
   text: string,
   maxMembers: number,
 ): RecruitMemberLike[] {
-  void maxMembers;
   const members: RecruitMemberLike[] = [];
   const lines = normalizeText(text).split("\n");
 
@@ -870,6 +912,7 @@ function parseNumberMembers(
 
     const slotNo = Number(match[1]);
     if (!Number.isInteger(slotNo) || slotNo < 1 || slotNo > 99) continue;
+    if (slotNo > maxMembers) continue;
 
     const name = trimName(match[2]);
     if (!name) continue;
@@ -919,12 +962,7 @@ export function formatRecruitPartyBlock(party: RecruitPartyLike) {
       lines.push(`${position}.${member?.name ? ` ${member.name}` : ""}`);
     }
   } else {
-    const maxWrittenSlotNo = Math.max(
-      party.maxMembers,
-      ...party.members
-        .filter((item) => !item.isSubstitute && typeof item.slotNo === "number")
-        .map((item) => Number(item.slotNo)),
-    );
+    const maxWrittenSlotNo = party.maxMembers;
 
     for (let slotNo = 1; slotNo <= maxWrittenSlotNo; slotNo += 1) {
       const member = party.members.find(

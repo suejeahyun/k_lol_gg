@@ -6,8 +6,12 @@ import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import {
   buildSyncReply,
+  extractRecruitNoFromForm,
+  extractRecruitNosFromForm,
+  findNumberedSlotsAboveMaxMembers,
   getKakaoRecruitDateKey,
   getKakaoRecruitTodayRange,
+  isLinePartyType,
   isSoloRankPartyType,
   parsePartyForm,
 } from "@/lib/kakao/party-recruit";
@@ -20,34 +24,6 @@ import {
   readJsonBody,
   rejectIfInvalidPartySecret,
 } from "../_shared";
-
-function extractRecruitNo(message: string) {
-  const explicit = message.match(/모집번호\s*[:：]?\s*#?\s*(\d{1,2})/);
-  if (explicit) return Number(explicit[1]);
-
-  const hash = message.match(/(^|\s)#(\d{1,2})(\s|$)/);
-  if (hash) return Number(hash[2]);
-
-  return NaN;
-}
-
-function extractRecruitNos(message: string) {
-  const result: number[] = [];
-  const seen = new Set<number>();
-  const regex = /모집번호\s*[:：]?\s*#?\s*(\d{1,2})/g;
-  let match: RegExpExecArray | null;
-
-  while ((match = regex.exec(message)) !== null) {
-    const recruitNo = Number(match[1]);
-    if (!Number.isInteger(recruitNo) || recruitNo < 1 || recruitNo > 99)
-      continue;
-    if (seen.has(recruitNo)) continue;
-    seen.add(recruitNo);
-    result.push(recruitNo);
-  }
-
-  return result;
-}
 
 async function findActiveRecruitParty(params: {
   recruitNo: number;
@@ -110,7 +86,7 @@ function splitRecruitStatusBlocks(message: string) {
   const seen = new Set<number>();
 
   for (const section of sections) {
-    const recruitNo = extractRecruitNo(section);
+    const recruitNo = extractRecruitNoFromForm(section);
     if (!Number.isInteger(recruitNo) || recruitNo < 1 || recruitNo > 99)
       continue;
     if (seen.has(recruitNo)) continue;
@@ -261,6 +237,60 @@ async function syncOneRecruit(params: {
     };
   }
 
+  if (parsed.recruitNo !== recruitNo) {
+    return {
+      ok: false,
+      recruitNo,
+      statusCode: 400,
+      reply: [
+        "[K-LOL.GG 구인구직 반영 실패]",
+        "",
+        `요청 모집번호 #${recruitNo}와 양식 모집번호 #${parsed.recruitNo}가 다릅니다.`,
+        "수정할 모집번호 한 개의 블록만 다시 보내주세요.",
+      ].join("\n"),
+    };
+  }
+
+  if (!isLinePartyType(String(party.type))) {
+    const excessSlotNos = findNumberedSlotsAboveMaxMembers(
+      message,
+      party.maxMembers,
+    );
+
+    if (excessSlotNos.length > 0) {
+      return {
+        ok: false,
+        recruitNo,
+        statusCode: 400,
+        reply: [
+          "[K-LOL.GG 구인구직 반영 실패]",
+          "",
+          `모집번호 #${recruitNo}는 ${party.maxMembers}인 파티입니다.`,
+          `${excessSlotNos.join(", ")}번 칸은 사용할 수 없습니다.`,
+          "구인현황 전체가 아니라 해당 모집번호 블록만 보내주세요.",
+        ].join("\n"),
+      };
+    }
+  }
+
+  const activeParsedMemberCount = parsed.members.filter(
+    (member) => !member.isSubstitute && member.name.trim() !== "",
+  ).length;
+
+  if (activeParsedMemberCount > party.maxMembers) {
+    return {
+      ok: false,
+      recruitNo,
+      statusCode: 400,
+      reply: [
+        "[K-LOL.GG 구인구직 반영 실패]",
+        "",
+        `모집번호 #${recruitNo}는 최대 ${party.maxMembers}명까지 등록할 수 있습니다.`,
+        `현재 입력 인원: ${activeParsedMemberCount}명`,
+      ].join("\n"),
+    };
+  }
+
   const previousActiveCount = party.members.filter(
     (member) => !member.isSubstitute && member.name.trim() !== "",
   ).length;
@@ -336,25 +366,6 @@ async function syncOneRecruit(params: {
   };
 }
 
-function buildBulkSyncReply(
-  results: Awaited<ReturnType<typeof syncOneRecruit>>[],
-) {
-  const failed = results.filter((result) => !result.ok);
-  const changed = results.filter(
-    (result) => result.ok && !("noChanged" in result && result.noChanged),
-  );
-
-  if (failed.length > 0) {
-    return "[K-LOL.GG 구인구직 현황 반영 실패]";
-  }
-
-  if (changed.length === 0) {
-    return "[K-LOL.GG 구인구직 변경 없음]";
-  }
-
-  return "[K-LOL.GG 구인구직 수정 완료]";
-}
-
 export async function POST(req: NextRequest) {
   try {
     const body = await readJsonBody(req);
@@ -367,52 +378,25 @@ export async function POST(req: NextRequest) {
     const recruitDate = getKakaoRecruitDateKey();
     const resetSeq = await getCurrentRecruitResetSeq(recruitDate);
     const todayRange = getKakaoRecruitTodayRange();
-    const recruitNos = extractRecruitNos(message);
+    const recruitNos = extractRecruitNosFromForm(message);
     const statusBlocks = splitRecruitStatusBlocks(message);
 
-    if (recruitNos.length > 1 && statusBlocks.length > 1) {
-      const results = [];
-      for (const block of statusBlocks) {
-        results.push(
-          await syncOneRecruit({
-            recruitNo: block.recruitNo,
-            message: block.message,
-            roomName,
-            sender,
-            recruitDate,
-            resetSeq,
-            todayRange,
-          }),
-        );
-      }
-
-      const hasSuccess = results.some((result) => result.ok);
-      return partyRecruitJson(
-        {
-          bulk: true,
-          results,
-          reply: buildBulkSyncReply(results),
-        },
-        hasSuccess ? 200 : 400,
-      );
-    }
-
-    if (recruitNos.length > 1) {
+    if (recruitNos.length > 1 || statusBlocks.length > 1) {
       return partyRecruitJson(
         {
           reply: [
             "[K-LOL.GG 구인구직 반영 실패]",
             "",
             "하나의 메시지에서 모집번호가 여러 개 발견되었습니다.",
-            "구인현황 전체를 수정해 붙여넣을 때는 구분선이 필요합니다.",
-            "가능하면 수정할 모집번호의 블록만 복사해서 붙여넣어주세요.",
+            "구인현황 전체 복사본은 반영하지 않습니다.",
+            "수정할 모집번호 한 개의 블록만 복사해서 붙여넣어주세요.",
           ].join("\n"),
         },
         400,
       );
     }
 
-    const recruitNo = extractRecruitNo(message);
+    const recruitNo = extractRecruitNoFromForm(message);
     if (!Number.isInteger(recruitNo) || recruitNo < 1 || recruitNo > 99) {
       return partyRecruitJson(
         {
