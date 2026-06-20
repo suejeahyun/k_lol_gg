@@ -14,6 +14,7 @@ import {
   isLinePartyType,
   isSoloRankPartyType,
   parsePartyForm,
+  parseRecruitScheduledStartAt,
 } from "@/lib/kakao/party-recruit";
 import { getCurrentRecruitResetSeq } from "@/lib/kakao/recruit-reset";
 import {
@@ -296,6 +297,12 @@ async function syncOneRecruit(params: {
   ).length;
   const isSoloRank = isSoloRankPartyType(String(party.type));
 
+  const nextStartTimeText = parsed.startTimeText ?? party.startTimeText;
+  const startTimeChanged = !sameNullableText(nextStartTimeText, party.startTimeText);
+  const nextScheduledStartAt = startTimeChanged
+    ? parseRecruitScheduledStartAt(nextStartTimeText, new Date())
+    : party.scheduledStartAt;
+
   if (!hasRecruitPartyChanges({ party, parsed, isSoloRank })) {
     return {
       ok: true,
@@ -326,7 +333,8 @@ async function syncOneRecruit(params: {
     const result = await tx.recruitParty.update({
       where: { id: party.id },
       data: {
-        startTimeText: parsed.startTimeText ?? party.startTimeText,
+        startTimeText: nextStartTimeText,
+        scheduledStartAt: nextScheduledStartAt,
         tierText: isSoloRank ? parsed.tierText : null,
         preferredLineText: isSoloRank ? parsed.preferredLineText : null,
         playStyle: isSoloRank ? parsed.playStyle : null,
@@ -349,6 +357,7 @@ async function syncOneRecruit(params: {
         resetSeq: result.resetSeq,
         roomName,
         sender,
+        scheduledStartAt: result.scheduledStartAt?.toISOString() ?? null,
         members: result.members,
       },
       db: tx,
@@ -364,6 +373,25 @@ async function syncOneRecruit(params: {
     party: updated,
     reply: buildSyncReply(updated, previousActiveCount),
   };
+}
+
+function buildBulkSyncReply(
+  results: Awaited<ReturnType<typeof syncOneRecruit>>[],
+) {
+  const failed = results.filter((result) => !result.ok);
+  const changed = results.filter(
+    (result) => result.ok && !("noChanged" in result && result.noChanged),
+  );
+
+  if (failed.length > 0) {
+    return "[K-LOL.GG 구인구직 현황 반영 실패]";
+  }
+
+  if (changed.length === 0) {
+    return "[K-LOL.GG 구인구직 변경 없음]";
+  }
+
+  return "[K-LOL.GG 구인구직 수정 완료]";
 }
 
 export async function POST(req: NextRequest) {

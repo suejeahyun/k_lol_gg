@@ -1082,6 +1082,7 @@ model RecruitParty {
   roomName    String?
   hostName    String?
   startTimeText     String?
+  scheduledStartAt DateTime?
   tierText          String?
   preferredLineText String?
   playStyle         String?
@@ -1098,6 +1099,7 @@ model RecruitParty {
   @@index([recruitCode])
   @@index([type])
   @@index([status, updatedAt])
+  @@index([scheduledStartAt])
   @@index([recruitDate, resetSeq, status])
   @@index([createdAt])
 }

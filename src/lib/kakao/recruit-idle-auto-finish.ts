@@ -1,6 +1,11 @@
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
-import { formatRecruitPartyBlock, getActiveMemberCount, getKakaoRecruitDateKey } from "@/lib/kakao/party-recruit";
+import {
+  formatRecruitPartyBlock,
+  getActiveMemberCount,
+  getKakaoRecruitDateKey,
+  getRecruitAutoFinishProtectionUntil,
+} from "@/lib/kakao/party-recruit";
 import { getLatestRecruitResetLog } from "@/lib/kakao/recruit-reset";
 
 export const AUTO_IDLE_FINISH_CONFIG_ACTION = "AUTO_IDLE_FINISH_CONFIG";
@@ -116,8 +121,27 @@ export async function runRecruitIdleAutoFinishIfNeeded(params: {
   }
 
   const finished = [] as Array<{ id: number; recruitNo: number; title: string; updatedAt: Date }>;
+  const protectedRecruits = [] as Array<{
+    id: number;
+    recruitNo: number;
+    title: string;
+    startTimeText: string | null;
+    protectionUntil: Date;
+  }>;
 
   for (const party of parties) {
+    const protectionUntil = getRecruitAutoFinishProtectionUntil(party);
+    if (protectionUntil && now.getTime() < protectionUntil.getTime()) {
+      protectedRecruits.push({
+        id: party.id,
+        recruitNo: party.recruitNo,
+        title: party.title,
+        startTimeText: party.startTimeText,
+        protectionUntil,
+      });
+      continue;
+    }
+
     const activeMemberCount = getActiveMemberCount(party.members);
     const summary = [
       `활동 없음 자동종료: ${settings.idleHours}시간 이상 업데이트 없음`,
@@ -126,6 +150,8 @@ export async function runRecruitIdleAutoFinishIfNeeded(params: {
       "",
       formatRecruitPartyBlock(party),
     ].join("\n");
+
+    let didFinish = false;
 
     await prisma.$transaction(async (tx) => {
       const current = await tx.recruitParty.findFirst({
@@ -138,6 +164,9 @@ export async function runRecruitIdleAutoFinishIfNeeded(params: {
       });
 
       if (!current) return;
+
+      const freshProtectionUntil = getRecruitAutoFinishProtectionUntil(party);
+      if (freshProtectionUntil && now.getTime() < freshProtectionUntil.getTime()) return;
 
       await tx.recruitPartyLog.create({
         data: {
@@ -175,22 +204,28 @@ export async function runRecruitIdleAutoFinishIfNeeded(params: {
         },
         db: tx,
       });
+
+      didFinish = true;
     });
 
-    finished.push({
-      id: party.id,
-      recruitNo: party.recruitNo,
-      title: party.title,
-      updatedAt: party.updatedAt,
-    });
+    if (didFinish) {
+      finished.push({
+        id: party.id,
+        recruitNo: party.recruitNo,
+        title: party.title,
+        updatedAt: party.updatedAt,
+      });
+    }
   }
 
   return {
-    executed: true,
-    reason: "auto_idle_finish" as const,
+    executed: finished.length > 0,
+    reason: finished.length > 0 ? "auto_idle_finish" as const : "scheduled_protected" as const,
     settings,
     thresholdAt,
     finishedCount: finished.length,
     finished,
+    protectedCount: protectedRecruits.length,
+    protectedRecruits,
   };
 }

@@ -6,7 +6,11 @@ import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import { rejectIfInvalidDiscordBotSecret } from "@/lib/discord/secret";
 import { DEFAULT_AUTO_FINISH_HOLD_MINUTES, getAutoFinishReason } from "@/lib/discord/finish-policy";
-import { formatRecruitPartyBlock, getActiveMemberCount } from "@/lib/kakao/party-recruit";
+import {
+  formatRecruitPartyBlock,
+  getActiveMemberCount,
+  getRecruitAutoFinishProtectionUntil,
+} from "@/lib/kakao/party-recruit";
 
 type CurrentVoiceMember = {
   id?: string;
@@ -236,6 +240,22 @@ export async function POST(req: NextRequest) {
   for (const party of parties) {
     const activeMembers = party.members.filter((member) => isNonEmptyName(member.name) && !member.isSubstitute);
     if (activeMembers.length === 0) continue;
+
+    const protectionUntil = getRecruitAutoFinishProtectionUntil(party);
+    if (protectionUntil && now.getTime() < protectionUntil.getTime()) {
+      results.push({
+        recruitNo: party.recruitNo,
+        partyId: party.id,
+        title: party.title,
+        skipped: true,
+        reason: "SCHEDULED_RECRUIT_PROTECTED",
+        startTimeText: party.startTimeText,
+        scheduledStartAt: party.scheduledStartAt?.toISOString() ?? null,
+        protectionUntil: protectionUntil.toISOString(),
+        channelId,
+      });
+      continue;
+    }
 
     const recruitFilled = activeMembers.length >= party.maxMembers;
     const memberNames = activeMembers.map((member) => member.name.trim());

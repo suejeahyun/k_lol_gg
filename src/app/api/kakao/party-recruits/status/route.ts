@@ -67,6 +67,7 @@ async function getRecruitStatusPayload(detailRecruitNo?: number | null) {
       roomName: true,
       hostName: true,
       startTimeText: true,
+      scheduledStartAt: true,
       tierText: true,
       preferredLineText: true,
       playStyle: true,

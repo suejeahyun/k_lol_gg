@@ -35,6 +35,7 @@ export type RecruitPartyLike = {
   roomName: string | null;
   hostName: string | null;
   startTimeText: string | null;
+  scheduledStartAt?: Date | null;
   tierText?: string | null;
   preferredLineText?: string | null;
   playStyle: string | null;
@@ -44,6 +45,11 @@ export type RecruitPartyLike = {
   updatedAt: Date;
   members: RecruitMemberLike[];
 };
+
+export type RecruitPartyScheduleLike = Pick<RecruitPartyLike, "startTimeText"> &
+  Partial<
+    Pick<RecruitPartyLike, "scheduledStartAt" | "createdAt" | "updatedAt">
+  >;
 
 export type CreateRecruitCommand = {
   recruitNo: number | null;
@@ -187,6 +193,202 @@ export function getKakaoRecruitTodayRange(now = new Date()) {
   };
 }
 
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+const MINUTE_MS = 60 * 1000;
+const HOUR_MS = 60 * MINUTE_MS;
+export const RECRUIT_SCHEDULED_START_GRACE_MINUTES = 60;
+
+function getKstDateParts(value: Date) {
+  const kst = new Date(value.getTime() + KST_OFFSET_MS);
+  return {
+    year: kst.getUTCFullYear(),
+    month: kst.getUTCMonth() + 1,
+    day: kst.getUTCDate(),
+    hour: kst.getUTCHours(),
+    minute: kst.getUTCMinutes(),
+  };
+}
+
+function buildDateFromKstParts(params: {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+}) {
+  return new Date(
+    Date.UTC(
+      params.year,
+      params.month - 1,
+      params.day,
+      params.hour,
+      params.minute,
+      0,
+      0,
+    ) - KST_OFFSET_MS,
+  );
+}
+
+function addDaysInKst(base: Date, dayOffset: number) {
+  const parts = getKstDateParts(base);
+  return buildDateFromKstParts({
+    year: parts.year,
+    month: parts.month,
+    day: parts.day + dayOffset,
+    hour: 0,
+    minute: 0,
+  });
+}
+
+function parseRelativeStartTime(text: string, base: Date) {
+  const compact = normalizeText(text).replace(/\s+/g, "");
+
+  const hourMinuteMatch = compact.match(
+    /(?:(\d{1,2})시간)?(?:(\d{1,2})분)?(?:뒤|후)/,
+  );
+  if (hourMinuteMatch && (hourMinuteMatch[1] || hourMinuteMatch[2])) {
+    const hours = hourMinuteMatch[1] ? Number(hourMinuteMatch[1]) : 0;
+    const minutes = hourMinuteMatch[2] ? Number(hourMinuteMatch[2]) : 0;
+    if (
+      Number.isInteger(hours) &&
+      Number.isInteger(minutes) &&
+      hours >= 0 &&
+      hours <= 48 &&
+      minutes >= 0 &&
+      minutes <= 59 &&
+      hours + minutes > 0
+    ) {
+      return new Date(base.getTime() + hours * HOUR_MS + minutes * MINUTE_MS);
+    }
+  }
+
+  return null;
+}
+
+function parseAbsoluteStartTime(text: string, base: Date) {
+  const source = normalizeText(text);
+  const compact = source.replace(/\s+/g, "");
+  const match = compact.match(
+    /(오늘|내일|낼|익일)?(오전|오후|아침|낮|저녁|밤|새벽)?(\d{1,2})(?:[:시](\d{1,2})?분?|시반)?/,
+  );
+
+  if (!match) return null;
+
+  const dayWord = match[1] || "";
+  const meridiem = match[2] || "";
+  const rawHour = Number(match[3]);
+  const rawMinute = match[4] ? Number(match[4]) : compact.includes(`${match[3]}시반`) ? 30 : 0;
+
+  if (!Number.isInteger(rawHour) || !Number.isInteger(rawMinute)) return null;
+  if (rawHour < 0 || rawHour > 24 || rawMinute < 0 || rawMinute > 59) return null;
+
+  const dayOffset = dayWord === "내일" || dayWord === "낼" || dayWord === "익일" ? 1 : 0;
+  const baseDay = addDaysInKst(base, dayOffset);
+  const baseParts = getKstDateParts(baseDay);
+  const hourCandidates: number[] = [];
+
+  const pushHour = (value: number) => {
+    const normalized = value === 24 ? 0 : value;
+    if (normalized < 0 || normalized > 23) return;
+    if (!hourCandidates.includes(normalized)) hourCandidates.push(normalized);
+  };
+
+  if (meridiem === "오후" || meridiem === "저녁" || meridiem === "밤") {
+    pushHour(rawHour < 12 ? rawHour + 12 : rawHour);
+  } else if (meridiem === "오전" || meridiem === "아침" || meridiem === "새벽") {
+    pushHour(rawHour === 12 ? 0 : rawHour);
+  } else if (meridiem === "낮") {
+    pushHour(rawHour < 12 ? rawHour + 12 : rawHour);
+  } else if (rawHour >= 1 && rawHour <= 11) {
+    pushHour(rawHour);
+    pushHour(rawHour + 12);
+  } else {
+    pushHour(rawHour);
+  }
+
+  const candidates: Date[] = [];
+  for (const hour of hourCandidates) {
+    candidates.push(
+      buildDateFromKstParts({
+        year: baseParts.year,
+        month: baseParts.month,
+        day: baseParts.day,
+        hour,
+        minute: rawMinute,
+      }),
+    );
+    if (!dayOffset) {
+      candidates.push(
+        buildDateFromKstParts({
+          year: baseParts.year,
+          month: baseParts.month,
+          day: baseParts.day + 1,
+          hour,
+          minute: rawMinute,
+        }),
+      );
+    }
+  }
+
+  const futureToleranceAt = new Date(base.getTime() - 10 * MINUTE_MS);
+  const future = candidates
+    .filter((candidate) => candidate.getTime() >= futureToleranceAt.getTime())
+    .sort((a, b) => a.getTime() - b.getTime())[0];
+  if (future) return future;
+
+  const recentPastAt = new Date(base.getTime() - 6 * HOUR_MS);
+  const recentPast = candidates
+    .filter(
+      (candidate) =>
+        candidate.getTime() >= recentPastAt.getTime() &&
+        candidate.getTime() <= base.getTime(),
+    )
+    .sort((a, b) => b.getTime() - a.getTime())[0];
+  if (recentPast) return recentPast;
+
+  return candidates.sort((a, b) => a.getTime() - b.getTime())[0] ?? null;
+}
+
+export function parseRecruitScheduledStartAt(
+  startTimeText: string | null | undefined,
+  base = new Date(),
+) {
+  const text = normalizeText(String(startTimeText || "")).trim();
+  if (!text) return null;
+  if (isImmediateStartText(text)) return null;
+
+  return parseRelativeStartTime(text, base) ?? parseAbsoluteStartTime(text, base);
+}
+
+export function resolveRecruitScheduledStartAt(
+  party: RecruitPartyScheduleLike,
+  fallbackBase = new Date(),
+) {
+  if (party.scheduledStartAt) return new Date(party.scheduledStartAt);
+  return parseRecruitScheduledStartAt(
+    party.startTimeText,
+    party.updatedAt ?? party.createdAt ?? fallbackBase,
+  );
+}
+
+export function getRecruitAutoFinishProtectionUntil(
+  party: RecruitPartyScheduleLike,
+  graceMinutes = RECRUIT_SCHEDULED_START_GRACE_MINUTES,
+) {
+  const scheduledStartAt = resolveRecruitScheduledStartAt(party);
+  if (!scheduledStartAt) return null;
+  return new Date(scheduledStartAt.getTime() + graceMinutes * MINUTE_MS);
+}
+
+export function isRecruitAutoFinishProtected(
+  party: RecruitPartyScheduleLike,
+  now = new Date(),
+  graceMinutes = RECRUIT_SCHEDULED_START_GRACE_MINUTES,
+) {
+  const protectionUntil = getRecruitAutoFinishProtectionUntil(party, graceMinutes);
+  return Boolean(protectionUntil && now.getTime() < protectionUntil.getTime());
+}
+
 function normalizeText(value: string) {
   return String(value || "")
     .replace(/\r/g, "\n")
@@ -306,10 +508,13 @@ function isImmediateStartText(value: string | null | undefined) {
 }
 
 export function isRecruitPartyStarted(
-  party: Pick<RecruitPartyLike, "startTimeText">,
+  party: RecruitPartyScheduleLike,
   now = new Date(),
 ) {
   if (isImmediateStartText(party.startTimeText)) return true;
+
+  const scheduledStartAt = resolveRecruitScheduledStartAt(party, now);
+  if (scheduledStartAt) return now.getTime() >= scheduledStartAt.getTime();
 
   const startMinutes = parseKakaoTimeToMinutes(party.startTimeText);
   if (startMinutes === null) return false;
@@ -318,7 +523,7 @@ export function isRecruitPartyStarted(
 }
 
 export function getRecruitDisplayGroup(
-  party: Pick<RecruitPartyLike, "maxMembers" | "members" | "startTimeText">,
+  party: Pick<RecruitPartyLike, "maxMembers" | "members"> & RecruitPartyScheduleLike,
   now = new Date(),
 ): RecruitDisplayGroup {
   if (isRecruitPartyStarted(party, now)) return "PLAYING";
@@ -330,7 +535,7 @@ export function getRecruitDisplayGroup(
 }
 
 export function getRecruitStatusLabel(
-  party: Pick<RecruitPartyLike, "maxMembers" | "members" | "startTimeText">,
+  party: Pick<RecruitPartyLike, "maxMembers" | "members"> & RecruitPartyScheduleLike,
 ) {
   const group = getRecruitDisplayGroup(party);
   if (group === "WAITING") return "진행중 · 대기중";
