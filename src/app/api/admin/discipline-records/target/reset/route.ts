@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { requireAdminRequest } from "@/lib/auth/requireAdmin";
 
@@ -23,7 +24,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: "직접 등록 대상 초기화에는 이름이 필요합니다." }, { status: 400 });
   }
 
-  const where: any = {
+  const where: Prisma.UserDisciplineRecordWhereInput = {
     isActive: true,
     userAccountId: null,
     playerId: null,

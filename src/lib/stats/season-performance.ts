@@ -36,7 +36,7 @@ function isSeasonStatsValidateCache(value: unknown, seasonId: number): value is 
 }
 
 async function saveSeasonStatsValidateCache(seasonId: number, statCount: number) {
-  await (prisma as any).appDataCache.upsert({
+  await prisma.appDataCache.upsert({
     where: { key: `season:stats:validated:${seasonId}` },
     update: {
       value: { seasonId, statCount, checkedAt: new Date().toISOString() } as Prisma.InputJsonValue,
@@ -51,7 +51,7 @@ async function saveSeasonStatsValidateCache(seasonId: number, statCount: number)
 }
 
 export async function ensureSeasonStats(seasonId: number) {
-  const validationCache = await (prisma as any).appDataCache.findUnique({
+  const validationCache = await prisma.appDataCache.findUnique({
     where: { key: `season:stats:validated:${seasonId}` },
     select: { value: true, updatedAt: true },
   });

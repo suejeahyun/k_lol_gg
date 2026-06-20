@@ -198,7 +198,7 @@ export async function buildStatsTopData(db: DbClient = prisma): Promise<StatsTop
 export async function refreshStatsTopDataCache(db: DbClient = prisma): Promise<StatsTopData> {
   const data = await buildStatsTopData(db);
 
-  await (db as any).appDataCache.upsert({
+  await db.appDataCache.upsert({
     where: { key: STATS_TOP_CACHE_KEY },
     update: { value: data as unknown as Prisma.InputJsonValue, version: 13 },
     create: { key: STATS_TOP_CACHE_KEY, value: data as unknown as Prisma.InputJsonValue, version: 13 },
@@ -208,7 +208,7 @@ export async function refreshStatsTopDataCache(db: DbClient = prisma): Promise<S
 }
 
 export async function getStatsTopData(): Promise<StatsTopData> {
-  const cached = await (prisma as any).appDataCache.findUnique({
+  const cached = await prisma.appDataCache.findUnique({
     where: { key: STATS_TOP_CACHE_KEY },
     select: { value: true, updatedAt: true },
   });

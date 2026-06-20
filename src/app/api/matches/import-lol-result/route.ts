@@ -743,10 +743,10 @@ async function extractRectWithPadding(
   const requestedRight = Math.round(rect.left + rect.width);
   const requestedBottom = Math.round(rect.top + rect.height);
 
-  let sourceLeft = Math.max(0, Math.min(sourceWidth - 1, requestedLeft));
-  let sourceTop = Math.max(0, Math.min(sourceHeight - 1, requestedTop));
-  let sourceRight = Math.max(sourceLeft + 1, Math.min(sourceWidth, requestedRight));
-  let sourceBottom = Math.max(sourceTop + 1, Math.min(sourceHeight, requestedBottom));
+  const sourceLeft = Math.max(0, Math.min(sourceWidth - 1, requestedLeft));
+  const sourceTop = Math.max(0, Math.min(sourceHeight - 1, requestedTop));
+  const sourceRight = Math.max(sourceLeft + 1, Math.min(sourceWidth, requestedRight));
+  const sourceBottom = Math.max(sourceTop + 1, Math.min(sourceHeight, requestedBottom));
 
   let extractWidth = sourceRight - sourceLeft;
   let extractHeight = sourceBottom - sourceTop;

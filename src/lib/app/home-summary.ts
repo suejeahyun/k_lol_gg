@@ -36,7 +36,7 @@ export async function refreshAppHomeSummary(): Promise<AppHomeSummary> {
     updatedAt: new Date().toISOString(),
   };
 
-  await (prisma as any).appDataCache.upsert({
+  await prisma.appDataCache.upsert({
     where: { key: APP_HOME_SUMMARY_KEY },
     update: { value: summary as Prisma.InputJsonValue, version: 13 },
     create: { key: APP_HOME_SUMMARY_KEY, value: summary as Prisma.InputJsonValue, version: 13 },
@@ -46,7 +46,7 @@ export async function refreshAppHomeSummary(): Promise<AppHomeSummary> {
 }
 
 export async function getAppHomeSummary(): Promise<AppHomeSummary> {
-  const cached = await (prisma as any).appDataCache.findUnique({
+  const cached = await prisma.appDataCache.findUnique({
     where: { key: APP_HOME_SUMMARY_KEY },
     select: { value: true, updatedAt: true },
   });

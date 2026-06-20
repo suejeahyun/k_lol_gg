@@ -590,7 +590,7 @@ export async function GET() {
       .filter((item) => item.presentCount > 0)
       .sort((a, b) => b.score - a.score || b.presentCount - a.presentCount || a.nonParticipantCount - b.nonParticipantCount)[0] || null;
 
-    let selected = bestEval || monitorEval || evaluateGroup(emptyGroup);
+    const selected = bestEval || monitorEval || evaluateGroup(emptyGroup);
     const monitorHadWrongChannel = Boolean(
       party.discordMonitor?.voiceChannelId
       && bestEval

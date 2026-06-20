@@ -26,7 +26,8 @@ export default async function DiscordLogsPage(props: PageProps) {
   const days = clamp(getNumber(params, "days", 7), 1, 365);
   const page = clamp(getNumber(params, "page", 1), 1, 99999);
   const pageSize = PAGE_SIZE_OPTIONS.includes(getNumber(params, "pageSize", 50)) ? getNumber(params, "pageSize", 50) : 50;
-  const from = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  const now = new Date();
+  const from = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
   const voiceWhere: Prisma.DiscordVoiceEventWhereInput = {
     occurredAt: { gte: from },
     ...(q ? { OR: [

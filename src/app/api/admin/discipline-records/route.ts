@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { requireAdminRequest } from "@/lib/auth/requireAdmin";
 
@@ -34,7 +35,7 @@ export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const search = normalizeSearch(url.searchParams.get("q"));
   const activeParam = url.searchParams.get("active");
-  const where: any = {};
+  const where: Prisma.UserDisciplineRecordWhereInput = {};
   if (activeParam === "true") where.isActive = true;
   if (activeParam === "false") where.isActive = false;
   if (search) {

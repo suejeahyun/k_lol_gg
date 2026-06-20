@@ -17,6 +17,14 @@ type DrawPhase =
   | "FLIPPING"
   | "REVEALED";
 
+type FlipDrawBridgeState = {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+  cardIndex: number;
+  rotation: number;
+};
 type Player = {
   id: number;
   name: string;
@@ -649,6 +657,10 @@ export default function DestructionAuctionManager({
   const [soundEnabled, setSoundEnabled] = useState(true);
   const soundEnabledRef = useRef(true);
   const lastShuffleTickRef = useRef(0);
+  const deckCardRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const pickedShellRef = useRef<HTMLDivElement | null>(null);
+  const flipBridgeRef = useRef<HTMLDivElement | null>(null);
+  const [flipBridge, setFlipBridge] = useState<FlipDrawBridgeState | null>(null);
 
   const activeDrawn = useMemo(
     () =>
@@ -784,9 +796,15 @@ export default function DestructionAuctionManager({
   } as CSSProperties;
 
   const isShuffleAnimationPhase = drawPhase === "SHUFFLING";
-  const drawCardClassName = currentTarget
-    ? `draw-card-${((currentTarget.id * 7) % 9) + 1}`
-    : "draw-card-5";
+  const getDrawCardIndexForParticipant = (participant: Participant | null) =>
+    participant ? ((participant.id * 7) % 9) + 1 : 5;
+
+  const getDrawCardRotation = (cardIndex: number) => {
+    const rotations = [-16, -12, -8, -4, 0, 4, 8, 12, 16];
+    return rotations[Math.max(0, Math.min(8, cardIndex - 1))] ?? 0;
+  };
+
+  const drawCardClassName = `draw-card-${getDrawCardIndexForParticipant(currentTarget)}`;
   const drawPhaseCopy = {
     IDLE: {
       title: "플레이어 대기 중",
@@ -851,8 +869,132 @@ export default function DestructionAuctionManager({
     if (isDrawing || isResolving) return;
     setIsOverlayOpen(false);
     if (!currentTarget) setDrawPhase("IDLE");
+    setFlipBridge(null);
   };
 
+  const waitForNextPaint = () =>
+    new Promise<void>((resolve) => {
+      if (typeof window === "undefined") {
+        resolve();
+        return;
+      }
+
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => resolve());
+      });
+    });
+
+  const runFlipDrawAnimation = async (
+    participant: Participant,
+    resultTierRank: number,
+  ) => {
+    const cardIndex = getDrawCardIndexForParticipant(participant);
+    setDrawPhase("SELECTING");
+    playAuctionSound("select", soundEnabledRef.current);
+
+    await waitForNextPaint();
+
+    const source = deckCardRefs.current[cardIndex - 1];
+    const target = pickedShellRef.current;
+
+    if (
+      typeof window === "undefined" ||
+      !source ||
+      !target ||
+      !source.getBoundingClientRect ||
+      !target.getBoundingClientRect
+    ) {
+      await wait(resultTierRank >= 8 ? 1240 : resultTierRank >= 5 ? 1180 : 1120);
+      return;
+    }
+
+    const sourceRect = source.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+
+    if (
+      sourceRect.width <= 0 ||
+      sourceRect.height <= 0 ||
+      targetRect.width <= 0 ||
+      targetRect.height <= 0
+    ) {
+      await wait(resultTierRank >= 8 ? 1240 : resultTierRank >= 5 ? 1180 : 1120);
+      return;
+    }
+
+    const sourceCenterX = sourceRect.left + sourceRect.width / 2;
+    const sourceCenterY = sourceRect.top + sourceRect.height / 2;
+    const targetCenterX = targetRect.left + targetRect.width / 2;
+    const targetCenterY = targetRect.top + targetRect.height / 2;
+
+    const dx = targetCenterX - sourceCenterX;
+    const dy = targetCenterY - sourceCenterY;
+    const rotation = getDrawCardRotation(cardIndex);
+
+    setFlipBridge({
+      left: sourceRect.left,
+      top: sourceRect.top,
+      width: sourceRect.width,
+      height: sourceRect.height,
+      cardIndex,
+      rotation,
+    });
+
+    await waitForNextPaint();
+
+    const bridge = flipBridgeRef.current;
+    if (!bridge || !bridge.animate) {
+      setFlipBridge(null);
+      await wait(resultTierRank >= 8 ? 1240 : resultTierRank >= 5 ? 1180 : 1120);
+      return;
+    }
+
+    const duration = resultTierRank >= 8 ? 1320 : resultTierRank >= 5 ? 1240 : 1180;
+    const lift = Math.max(72, Math.min(108, Math.abs(dy) * 0.22 + 64));
+    const finalScale = 1.18;
+
+    const animation = bridge.animate(
+      [
+        {
+          offset: 0,
+          opacity: 1,
+          transform: `translate3d(0px, 0px, 0) rotate(${rotation}deg) scale(1)`,
+        },
+        {
+          offset: 0.28,
+          opacity: 1,
+          transform: `translate3d(${dx * 0.12}px, ${dy * 0.10 - lift}px, 0) rotate(${rotation * 0.58}deg) scale(1.06)`,
+        },
+        {
+          offset: 0.68,
+          opacity: 1,
+          transform: `translate3d(${dx * 0.68}px, ${dy * 0.76 - lift * 0.18}px, 0) rotate(${rotation * 0.18}deg) scale(1.13)`,
+        },
+        {
+          offset: 0.94,
+          opacity: 1,
+          transform: `translate3d(${dx}px, ${dy}px, 0) rotate(0deg) scale(${finalScale})`,
+        },
+        {
+          offset: 1,
+          opacity: 0,
+          transform: `translate3d(${dx}px, ${dy}px, 0) rotate(0deg) scale(${finalScale})`,
+        },
+      ],
+      {
+        duration,
+        easing: "cubic-bezier(.16,.82,.18,1)",
+        fill: "forwards",
+      },
+    );
+
+    try {
+      await animation.finished;
+    } catch {
+      // Animation can be cancelled by closing overlay or route refresh.
+    } finally {
+      setFlipBridge(null);
+    }
+  };
   const handleDraw = async () => {
     await unlockAuctionAudio();
     setError("");
@@ -862,6 +1004,7 @@ export default function DestructionAuctionManager({
     setSelectedTeamId("");
     setPurchasePoint("1");
     setAscentRank(0);
+    setFlipBridge(null);
     setIsOverlayOpen(true);
     setDrawPhase("SHUFFLING");
     lastShuffleTickRef.current = Date.now();
@@ -897,9 +1040,7 @@ export default function DestructionAuctionManager({
         resultTierRank >= 8 ? 1750 : resultTierRank >= 5 ? 1600 : 1450;
       if (elapsed < baseShuffleMs) await wait(baseShuffleMs - elapsed);
 
-      setDrawPhase("SELECTING");
-      playAuctionSound("select", soundEnabledRef.current);
-      await wait(resultTierRank >= 8 ? 2460 : resultTierRank >= 5 ? 2360 : 2260);
+      await runFlipDrawAnimation(participant, resultTierRank);
       playAuctionSound("confirm", soundEnabledRef.current);
 
       setDrawPhase("TIER_ASCENDING");
@@ -5143,6 +5284,301 @@ export default function DestructionAuctionManager({
             opacity: 1;
             transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
           }
+        }
+
+        /* K-LOL.GG auction bridge draw motion only v1
+           Scope:
+           - 기존 빛/링/충격파/티어 효과는 유지
+           - SELECTING 단계의 카드 뽑힘 모션만 브릿지 카드로 처리
+           - 큰 카드가 뽑히는 중에 보이는 문제 방지
+           - 원본 선택 카드와 브릿지 카드 중복 방지
+        */
+
+        .gacha-overlay.draw-card-1 { --bridge-x: -246px; --bridge-y: 34px; --bridge-r: -16deg; }
+        .gacha-overlay.draw-card-2 { --bridge-x: -184px; --bridge-y: 17px; --bridge-r: -12deg; }
+        .gacha-overlay.draw-card-3 { --bridge-x: -123px; --bridge-y: 5px; --bridge-r: -8deg; }
+        .gacha-overlay.draw-card-4 { --bridge-x: -62px; --bridge-y: -3px; --bridge-r: -4deg; }
+        .gacha-overlay.draw-card-5 { --bridge-x: 0px; --bridge-y: -6px; --bridge-r: 0deg; }
+        .gacha-overlay.draw-card-6 { --bridge-x: 62px; --bridge-y: -3px; --bridge-r: 4deg; }
+        .gacha-overlay.draw-card-7 { --bridge-x: 123px; --bridge-y: 5px; --bridge-r: 8deg; }
+        .gacha-overlay.draw-card-8 { --bridge-x: 184px; --bridge-y: 17px; --bridge-r: 12deg; }
+        .gacha-overlay.draw-card-9 { --bridge-x: 246px; --bridge-y: 34px; --bridge-r: 16deg; }
+
+        .gacha-draw-bridge {
+          position: absolute;
+          left: calc(50% - 76px);
+          top: calc(50% - 108px);
+          width: 152px;
+          height: 216px;
+          z-index: 260;
+          pointer-events: none;
+          transform: translateZ(0);
+          will-change: transform, opacity;
+        }
+
+        .gacha-draw-bridge-x,
+        .gacha-draw-bridge-y {
+          width: 100%;
+          height: 100%;
+          transform-style: preserve-3d;
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
+          will-change: transform, opacity;
+        }
+
+        .gacha-draw-bridge-x {
+          transform: translate3d(var(--bridge-x), 0, 0);
+          animation: klolBridgeDrawX 2.08s cubic-bezier(.12,.76,.12,1) both;
+        }
+
+        .gacha-draw-bridge-y {
+          transform: translate3d(0, var(--bridge-y), 0) rotate(var(--bridge-r)) scale(.94);
+          animation: klolBridgeDrawY 2.08s cubic-bezier(.12,.76,.12,1) both;
+        }
+
+        .gacha-draw-bridge-img {
+          width: 100%;
+          height: 100%;
+          display: block;
+          border-radius: 16px;
+          object-fit: cover;
+          box-shadow:
+            0 34px 88px rgba(0,0,0,.68),
+            0 0 54px rgba(96,165,250,.48);
+          transform: translateZ(0);
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
+        }
+
+        /* SELECTING 중 큰 카드는 절대 보이지 않게 처리 */
+        .gacha-overlay.phase-selecting .gacha-picked-shell,
+        .gacha-overlay.phase-selecting .gacha-picked-card {
+          opacity: 0 !important;
+          visibility: hidden !important;
+          pointer-events: none !important;
+          animation: none !important;
+        }
+
+        /* 선택된 원본 카드 1장은 숨기고, 같은 위치의 브릿지 카드가 대신 움직임 */
+        .gacha-overlay.phase-selecting.draw-card-1 .gacha-card-back.card-1,
+        .gacha-overlay.phase-selecting.draw-card-2 .gacha-card-back.card-2,
+        .gacha-overlay.phase-selecting.draw-card-3 .gacha-card-back.card-3,
+        .gacha-overlay.phase-selecting.draw-card-4 .gacha-card-back.card-4,
+        .gacha-overlay.phase-selecting.draw-card-5 .gacha-card-back.card-5,
+        .gacha-overlay.phase-selecting.draw-card-6 .gacha-card-back.card-6,
+        .gacha-overlay.phase-selecting.draw-card-7 .gacha-card-back.card-7,
+        .gacha-overlay.phase-selecting.draw-card-8 .gacha-card-back.card-8,
+        .gacha-overlay.phase-selecting.draw-card-9 .gacha-card-back.card-9 {
+          opacity: 0 !important;
+          visibility: hidden !important;
+          animation: none !important;
+        }
+
+        /* 나머지 카드만 뒤로 모여서 사라짐 */
+        .gacha-overlay.phase-selecting .gacha-card-back {
+          animation: klolBridgeRestCardsGather 1.48s cubic-bezier(.18,.72,.18,1) both !important;
+          animation-delay: .46s !important;
+        }
+
+        .gacha-overlay.phase-tier_ascending .gacha-picked-shell,
+        .gacha-overlay.phase-special_tension .gacha-picked-shell,
+        .gacha-overlay.phase-flipping .gacha-picked-shell,
+        .gacha-overlay.revealed .gacha-picked-shell {
+          opacity: 1 !important;
+          visibility: visible !important;
+        }
+
+        .gacha-overlay.phase-tier_ascending .gacha-picked-card {
+          opacity: 1 !important;
+          visibility: visible !important;
+          animation: klolBridgeBigCardEnter .28s cubic-bezier(.22,.82,.22,1) both !important;
+          transform: translate3d(0, 0, 0) scale(1) rotate(0deg) !important;
+        }
+
+        @keyframes klolBridgeDrawX {
+          0% {
+            transform: translate3d(var(--bridge-x), 0, 0);
+          }
+
+          100% {
+            transform: translate3d(0, 0, 0);
+          }
+        }
+
+        @keyframes klolBridgeDrawY {
+          0% {
+            opacity: 1;
+            transform: translate3d(0, var(--bridge-y), 0) rotate(var(--bridge-r)) scale(.94);
+          }
+
+          24% {
+            opacity: 1;
+            transform: translate3d(0, calc(var(--bridge-y) - 92px), 0) rotate(calc(var(--bridge-r) * .62)) scale(1.04);
+          }
+
+          54% {
+            opacity: 1;
+            transform: translate3d(0, -78px, 0) rotate(calc(var(--bridge-r) * .26)) scale(1.34);
+          }
+
+          78% {
+            opacity: 1;
+            transform: translate3d(0, -26px, 0) rotate(calc(var(--bridge-r) * .08)) scale(1.68);
+          }
+
+          94% {
+            opacity: 1;
+            transform: translate3d(0, -4px, 0) rotate(0deg) scale(1.86);
+          }
+
+          100% {
+            opacity: 0;
+            transform: translate3d(0, 0, 0) rotate(0deg) scale(1.90);
+          }
+        }
+
+        @keyframes klolBridgeRestCardsGather {
+          0% {
+            opacity: .94;
+            transform: translate3d(var(--x), var(--y), 0) rotate(var(--r)) scale(.78);
+          }
+
+          45% {
+            opacity: .68;
+            transform: translate3d(calc(var(--x) * .54), calc(var(--y) + 14px), 0) rotate(calc(var(--r) * .46)) scale(.66);
+          }
+
+          100% {
+            opacity: 0;
+            transform: translate3d(0, 62px, 0) rotate(0deg) scale(.48);
+          }
+        }
+
+        @keyframes klolBridgeBigCardEnter {
+          0% {
+            opacity: 0;
+            transform: translate3d(0, 0, 0) scale(.99);
+          }
+
+          100% {
+            opacity: 1;
+            transform: translate3d(0, 0, 0) scale(1);
+          }
+        }
+
+        /* K-LOL.GG auction true FLIP draw motion v1
+           Real FLIP:
+           - selected deck card rect is measured with getBoundingClientRect()
+           - bridge card is positioned with fixed viewport coordinates
+           - Web Animations API moves it to the measured picked-card center
+           - original light/ring/shockwave/tier effects are preserved
+        */
+
+        .gacha-flip-bridge-card {
+          position: fixed;
+          z-index: 999999;
+          pointer-events: none;
+          transform-origin: center center;
+          will-change: transform, opacity;
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
+          transform-style: preserve-3d;
+        }
+
+        .gacha-flip-bridge-card-img {
+          width: 100%;
+          height: 100%;
+          display: block;
+          border-radius: 16px;
+          object-fit: cover;
+          box-shadow:
+            0 30px 78px rgba(0,0,0,.64),
+            0 0 46px rgba(96,165,250,.42);
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
+          transform: translateZ(0);
+        }
+
+        .gacha-overlay.phase-selecting .gacha-picked-shell,
+        .gacha-overlay.phase-selecting .gacha-picked-card {
+          opacity: 0 !important;
+          visibility: hidden !important;
+          pointer-events: none !important;
+          animation: none !important;
+        }
+
+        .gacha-overlay.phase-selecting.draw-card-1 .gacha-card-back.card-1,
+        .gacha-overlay.phase-selecting.draw-card-2 .gacha-card-back.card-2,
+        .gacha-overlay.phase-selecting.draw-card-3 .gacha-card-back.card-3,
+        .gacha-overlay.phase-selecting.draw-card-4 .gacha-card-back.card-4,
+        .gacha-overlay.phase-selecting.draw-card-5 .gacha-card-back.card-5,
+        .gacha-overlay.phase-selecting.draw-card-6 .gacha-card-back.card-6,
+        .gacha-overlay.phase-selecting.draw-card-7 .gacha-card-back.card-7,
+        .gacha-overlay.phase-selecting.draw-card-8 .gacha-card-back.card-8,
+        .gacha-overlay.phase-selecting.draw-card-9 .gacha-card-back.card-9 {
+          opacity: 0 !important;
+          visibility: hidden !important;
+          animation: none !important;
+        }
+
+        .gacha-overlay.phase-tier_ascending .gacha-picked-shell,
+        .gacha-overlay.phase-special_tension .gacha-picked-shell,
+        .gacha-overlay.phase-flipping .gacha-picked-shell,
+        .gacha-overlay.revealed .gacha-picked-shell {
+          opacity: 1 !important;
+          visibility: visible !important;
+        }
+
+        .gacha-overlay.phase-tier_ascending .gacha-picked-card {
+          opacity: 1 !important;
+          visibility: visible !important;
+          animation: klolFlipBigCardEnter .24s cubic-bezier(.22,.82,.22,1) both !important;
+          transform: translate3d(0, 0, 0) scale(1) rotate(0deg) !important;
+        }
+
+        .gacha-overlay.phase-special_tension .gacha-picked-card,
+        .gacha-overlay.phase-flipping .gacha-picked-card,
+        .gacha-overlay.revealed .gacha-picked-card {
+          opacity: 1 !important;
+          visibility: visible !important;
+          transform: translate3d(0, 0, 0) scale(1) rotate(0deg) !important;
+        }
+
+        .gacha-card-back::before,
+        .gacha-card-back::after,
+        .gacha-card-face.back::before,
+        .gacha-card-face.back::after,
+        .gacha-card-face.back.auction-svg-card-back::before,
+        .gacha-card-face.back.auction-svg-card-back::after {
+          content: none !important;
+          display: none !important;
+        }
+
+        .gacha-card-face.back.auction-svg-card-back {
+          background: transparent !important;
+          background-image: none !important;
+        }
+
+        .auction-svg-tier-emblem {
+          top: 24.8% !important;
+        }
+
+        @media (max-height: 780px) {
+          .auction-svg-tier-emblem {
+            top: 24.3% !important;
+          }
+        }
+
+        @keyframes klolFlipBigCardEnter {
+          0% {
+            opacity: 0;
+            transform: translate3d(0, 0, 0) scale(.985);
+          }
+
+          100% {
+            opacity: 1;
+            transform: translate3d(0, 0, 0) scale(1);
+          }
         }`}</style>
 
       <div className="destruction-auction-summary">
@@ -5373,21 +5809,53 @@ export default function DestructionAuctionManager({
                         <span />
                         <span />
                       </div>
-                      {drawPhase === "SHUFFLING" ||
+                      {flipBridge ? (
+                        <div
+                          ref={flipBridgeRef}
+                          className="gacha-flip-bridge-card"
+                          style={{
+                            left: flipBridge.left,
+                            top: flipBridge.top,
+                            width: flipBridge.width,
+                            height: flipBridge.height,
+                          }}
+                          aria-hidden="true"
+                        >
+                          <img
+                            className="gacha-flip-bridge-card-img"
+                            src="/auction-cards/back-premium.svg"
+                            alt=""
+                            aria-hidden="true"
+                          />
+                        </div>
+                      ) : null}                      {drawPhase === "SHUFFLING" ||
                       drawPhase === "SELECTING" ? (
                         <div className="gacha-deck-cluster" aria-hidden="true">
-                          <div className="gacha-card-back card-1" />
-                          <div className="gacha-card-back card-2" />
-                          <div className="gacha-card-back card-3" />
-                          <div className="gacha-card-back card-4" />
-                          <div className="gacha-card-back card-5" />
-                          <div className="gacha-card-back card-6" />
-                          <div className="gacha-card-back card-7" />
-                          <div className="gacha-card-back card-8" />
-                          <div className="gacha-card-back card-9" />
+                          <div ref={(node) => { deckCardRefs.current[0] = node; }} className="gacha-card-back card-1" />
+                          <div ref={(node) => { deckCardRefs.current[1] = node; }} className="gacha-card-back card-2" />
+                          <div ref={(node) => { deckCardRefs.current[2] = node; }} className="gacha-card-back card-3" />
+                          <div ref={(node) => { deckCardRefs.current[3] = node; }} className="gacha-card-back card-4" />
+                          <div ref={(node) => { deckCardRefs.current[4] = node; }} className="gacha-card-back card-5" />
+                          <div ref={(node) => { deckCardRefs.current[5] = node; }} className="gacha-card-back card-6" />
+                          <div ref={(node) => { deckCardRefs.current[6] = node; }} className="gacha-card-back card-7" />
+                          <div ref={(node) => { deckCardRefs.current[7] = node; }} className="gacha-card-back card-8" />
+                          <div ref={(node) => { deckCardRefs.current[8] = node; }} className="gacha-card-back card-9" />
                         </div>
                       ) : null}
-                      <div className="gacha-picked-shell">
+                      {drawPhase === "SELECTING" ? (
+                        <div className="gacha-draw-bridge" aria-hidden="true">
+                          <div className="gacha-draw-bridge-x">
+                            <div className="gacha-draw-bridge-y">
+                              <img
+                                className="gacha-draw-bridge-img"
+                                src="/auction-cards/back-premium.svg"
+                                alt=""
+                                aria-hidden="true"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ) : null}                      <div ref={pickedShellRef} className="gacha-picked-shell">
                         <div className="gacha-picked-path">
                           <div className="gacha-picked-card">
                             <div className="gacha-card-inner">
@@ -5690,6 +6158,8 @@ export default function DestructionAuctionManager({
     </div>
   );
 }
+
+
 
 
 

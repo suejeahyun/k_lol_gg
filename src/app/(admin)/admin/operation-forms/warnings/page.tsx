@@ -31,6 +31,12 @@ export default async function AdminWarningsPage() {
     label: `${user.player?.name || user.userId}${user.player ? ` · ${user.player.nickname}#${user.player.tag}` : ""} · ${user.userId}`,
   }));
 
+  const initialRecords = records.map((record) => ({
+    ...record,
+    createdAt: record.createdAt.toISOString(),
+    resetAt: record.resetAt ? record.resetAt.toISOString() : null,
+  }));
+
   return (
     <main className="admin-page discipline-page">
       <style>{`
@@ -160,7 +166,7 @@ export default async function AdminWarningsPage() {
           <h1>운영 경고 관리</h1>
         </div>
       </div>
-      <DisciplineManagerClient targets={targets} initialRecords={records as any} />
+      <DisciplineManagerClient targets={targets} initialRecords={initialRecords} />
     </main>
   );
 }

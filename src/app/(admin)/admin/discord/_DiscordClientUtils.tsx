@@ -14,7 +14,11 @@ export function useDiscordOverview() {
     setData(json);
     setLoading(false);
   }
-  useEffect(() => { void load().catch((error) => { console.error(error); setLoading(false); }); }, []);
+  useEffect(() => {
+    // Initial dashboard hydration must fetch external state once on mount.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void load().catch((error) => { console.error(error); setLoading(false); });
+  }, []);
   return { data, loading, load, setData };
 }
 

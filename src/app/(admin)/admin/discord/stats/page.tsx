@@ -20,7 +20,8 @@ export default async function DiscordStatsPage(props: PageProps) {
   const params = await props.searchParams ?? {};
   const q = getString(params, "q", "").trim();
   const days = clamp(getNumber(params, "days", 7), 1, 365);
-  const from = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  const now = new Date();
+  const from = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
   const events = await prisma.discordVoiceEvent.findMany({ where: { occurredAt: { gte: from } }, include: { userAccount: { select: { id: true, userId: true, discordUsername: true, discordGlobalName: true, discordServerNickname: true } } }, orderBy: [{ occurredAt: "asc" }], take: 5000 });
 
   const open = new Map<string, VoiceSession>();
@@ -43,7 +44,6 @@ export default async function DiscordStatsPage(props: PageProps) {
       open.delete(key);
     }
   }
-  const now = new Date();
   for (const session of open.values()) sessions.push({ ...session, end: now });
 
   const durationByUser = new Map<string, { label: string; seconds: number }>();

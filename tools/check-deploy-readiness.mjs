@@ -1,4 +1,7 @@
-﻿import "dotenv/config";
+﻿import dotenv from "dotenv";
+
+dotenv.config({ path: process.env.DOTENV_CONFIG_PATH || ".env.local", override: false, quiet: true });
+dotenv.config({ path: ".env", override: false, quiet: true });
 const requiredEnv = [
   "DATABASE_URL",
   "NEXT_PUBLIC_BASE_URL",

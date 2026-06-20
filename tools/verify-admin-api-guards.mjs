@@ -29,7 +29,8 @@ for (const file of files) {
     source.includes("rejectIfNotAdmin") ||
     source.includes("rejectIfNotSuperAdmin") ||
     source.includes("requireAdminRequest") ||
-    source.includes("requireSuperAdminRequest");
+    source.includes("requireSuperAdminRequest") ||
+    source.includes("getAdminOrResponse");
 
   if (!hasGuard) missing.push(relative(root, file));
 }

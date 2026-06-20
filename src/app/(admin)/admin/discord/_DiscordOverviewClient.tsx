@@ -82,7 +82,11 @@ export default function DiscordOverviewClient() {
     setLoading(false);
   }
 
-  useEffect(() => { void load().catch((error) => { console.error(error); setLoading(false); }); }, []);
+  useEffect(() => {
+    // Initial dashboard hydration must fetch external state once on mount.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void load().catch((error) => { console.error(error); setLoading(false); });
+  }, []);
 
   const latestBot = data?.heartbeats?.[0];
   const errors = data?.diagnostics?.filter((item) => item.level === "ERROR").length || 0;

@@ -76,3 +76,5 @@ pnpm-debug.log*
 ALL.zip
 .vercel
 .env*.local
+.env.vercel.production
+.env*.production
