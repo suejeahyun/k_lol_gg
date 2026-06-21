@@ -232,8 +232,85 @@ export default function DiscordOpsStyles() {
       .discord-pagination a.is-disabled { opacity: .4; pointer-events: none; }
       .mono-cell { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 11px; color: #cbd5e1; }
       .text-muted-compact { color: #94a3b8; font-size: 12px; line-height: 1.45; }
+
+      .discord-ops-stat-grid--ops { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+      .discord-ops-stat--ok { border-color: rgba(34, 197, 94, .30); background: linear-gradient(135deg, rgba(22, 101, 52, .24), rgba(15, 23, 42, .64)); }
+      .discord-ops-stat--warn { border-color: rgba(250, 204, 21, .32); background: linear-gradient(135deg, rgba(113, 63, 18, .24), rgba(15, 23, 42, .64)); }
+      .discord-ops-stat--error { border-color: rgba(248, 113, 113, .34); background: linear-gradient(135deg, rgba(127, 29, 29, .25), rgba(15, 23, 42, .64)); }
+      .discord-chart-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+        margin: 18px 0;
+      }
+      .discord-chart-card {
+        min-width: 0;
+        overflow: hidden;
+        border-color: rgba(96, 165, 250, .18);
+        background: linear-gradient(180deg, rgba(15, 23, 42, .76), rgba(2, 6, 23, .48));
+      }
+      .discord-chart-card--wide { grid-column: span 1; }
+      .discord-chart-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+      .discord-chart-head h2 { margin: 0; color: #f8fafc; font-size: 15px; letter-spacing: -.01em; }
+      .discord-chart-head span { color: #94a3b8; font-size: 12px; line-height: 1.45; text-align: right; }
+      .discord-donut-layout { display: grid; grid-template-columns: 132px minmax(0, 1fr); align-items: center; gap: 16px; }
+      .discord-donut {
+        width: 132px;
+        height: 132px;
+        border-radius: 999px;
+        background: var(--discord-donut);
+        position: relative;
+        display: grid;
+        place-items: center;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.06), 0 18px 40px rgba(2,6,23,.26);
+      }
+      .discord-donut::after {
+        content: "";
+        position: absolute;
+        inset: 22px;
+        border-radius: 999px;
+        background: rgba(2, 6, 23, .86);
+        border: 1px solid rgba(148, 163, 184, .18);
+      }
+      .discord-donut strong, .discord-donut span { position: relative; z-index: 1; }
+      .discord-donut strong { color: #f8fafc; font-size: 24px; line-height: 1; }
+      .discord-donut span { margin-top: 28px; color: #94a3b8; font-size: 10px; font-weight: 900; text-transform: uppercase; }
+      .discord-chart-legend { display: grid; gap: 8px; min-width: 0; }
+      .discord-chart-legend div { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto auto; align-items: center; gap: 8px; min-width: 0; }
+      .discord-chart-legend i { width: 10px; height: 10px; border-radius: 999px; box-shadow: 0 0 0 3px rgba(255,255,255,.04); }
+      .discord-chart-legend span { color: #cbd5e1; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .discord-chart-legend strong { color: #f8fafc; font-size: 12px; }
+      .discord-chart-legend em { color: #94a3b8; font-size: 11px; font-style: normal; }
+      .discord-chart-legend--inline { display: flex; gap: 16px; margin-top: 8px; }
+      .discord-chart-legend--inline div { display: flex; }
+      .discord-bar-chart { display: grid; gap: 10px; }
+      .discord-bar-row { display: grid; grid-template-columns: minmax(92px, 1fr) 1.4fr 48px; align-items: center; gap: 10px; }
+      .discord-bar-row > span { min-width: 0; color: #cbd5e1; font-size: 12px; font-weight: 900; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .discord-bar-row > div { height: 11px; border-radius: 999px; overflow: hidden; background: rgba(51, 65, 85, .62); border: 1px solid rgba(148, 163, 184, .10); }
+      .discord-bar-row i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--discord-chart-1), var(--discord-chart-2)); }
+      .discord-bar-row strong { color: #f8fafc; font-size: 12px; text-align: right; white-space: nowrap; }
+      .discord-trend-chart { width: 100%; height: 150px; overflow: visible; }
+      .discord-trend-chart line { stroke: rgba(148, 163, 184, .20); stroke-width: 1; }
+      .discord-trend-line { fill: none; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+      .discord-trend-line--recruit { stroke: var(--discord-chart-1); }
+      .discord-trend-line--late { stroke: var(--discord-chart-3); }
+      .discord-trend-dot--recruit { fill: var(--discord-chart-1); }
+      .discord-trend-dot--late { fill: var(--discord-chart-3); }
+      .discord-trend-labels { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin-top: 2px; }
+      .discord-trend-labels span { min-width: 0; color: #cbd5e1; font-size: 10px; font-weight: 900; text-align: center; }
+      .discord-trend-labels em { display: block; margin-top: 2px; color: #64748b; font-style: normal; font-size: 9px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .discord-late-warning-panel { margin-top: 18px; }
+      :root {
+        --discord-chart-1: #60a5fa;
+        --discord-chart-2: #22c55e;
+        --discord-chart-3: #f59e0b;
+        --discord-chart-4: #f97316;
+        --discord-chart-5: #a78bfa;
+      }
+
       @media (max-width: 1320px) {
         .discord-ops-stat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .discord-chart-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .discord-ops-nav-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .discord-ops-tabs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
         .discord-ops-kv { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -244,6 +321,9 @@ export default function DiscordOpsStyles() {
         .discord-ops-nav-grid, .discord-ops-two-col, .discord-settings-form--readable, .discord-filter-card { grid-template-columns: 1fr; }
         .discord-ops-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .discord-ops-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .discord-chart-grid, .discord-donut-layout { grid-template-columns: 1fr; }
+        .discord-donut { margin: 0 auto; }
+        .discord-bar-row { grid-template-columns: minmax(78px, 1fr) 1fr 42px; }
       }
 
       .discord-auto-finish-history { display: grid; gap: 16px; }
@@ -260,6 +340,7 @@ export default function DiscordOpsStyles() {
       .discord-auto-finish-field--members .discord-inline-list { gap: 3px; }
       .discord-auto-finish-field--members .discord-inline-list__text { white-space: normal; }
       .admin-text-ellipsis { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
       @media (max-width: 1320px) {
         .discord-auto-finish-card__main { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       }

@@ -1083,6 +1083,7 @@ model RecruitParty {
   hostName    String?
   startTimeText     String?
   scheduledStartAt DateTime?
+  protectedUntil DateTime?
   tierText          String?
   preferredLineText String?
   playStyle         String?
@@ -1100,6 +1101,7 @@ model RecruitParty {
   @@index([type])
   @@index([status, updatedAt])
   @@index([scheduledStartAt])
+  @@index([protectedUntil])
   @@index([recruitDate, resetSeq, status])
   @@index([createdAt])
 }

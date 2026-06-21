@@ -1,10 +1,11 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { requireAdminRequest } from "@/lib/auth/requireAdmin";
 import { getDiscordOperationSettings } from "@/lib/discord/settings";
-import { getTodayKstRange, getKstDateKey } from "@/lib/date/kst";
+import { addDays, getTodayKstRange, getKstDateKey } from "@/lib/date/kst";
 
 function normalizeName(value: string | null | undefined) {
   return String(value || "")
@@ -199,6 +200,32 @@ function formatKstHourMinute(date: Date) {
   }).format(date);
 }
 
+function formatKstMonthDay(dateKey: string) {
+  const [, month, day] = dateKey.split("-");
+  return `${Number(month)}월 ${Number(day)}일`;
+}
+
+function lateWarningWhere(createdAt?: { gte?: Date; lte?: Date }): Prisma.UserDisciplineRecordWhereInput {
+  const sourceFilter: Prisma.UserDisciplineRecordWhereInput = {
+    OR: [
+      { sourceRefType: "RECRUIT_LATE" },
+      { sourceRefKey: { startsWith: "RECRUIT_LATE:" } },
+    ],
+  };
+  if (!createdAt) return sourceFilter;
+  return { AND: [sourceFilter, { createdAt }] };
+}
+
+function toStatusBucket(status: string) {
+  if (["ASSEMBLED", "ASSEMBLED_WITH_EXTRA"].includes(status)) return "모임 완료";
+  if (["PARTIAL_ACTIVE", "PARTIAL_ACTIVE_WITH_EXTRA", "GATHERING"].includes(status)) return "진행 확인";
+  if (["FINISH_CANDIDATE"].includes(status)) return "자동종료 후보";
+  if (["WAITING", "RECRUIT_NOT_FULL"].includes(status)) return "대기";
+  if (["DISCORD_LINK_INCOMPLETE"].includes(status)) return "이름 확인";
+  return "기타";
+}
+
+
 function isMatchVoiceChannelName(channelName: string | null | undefined, categoryName: string | null | undefined) {
   const text = `${channelName || ""} ${categoryName || ""}`.toLowerCase();
   if (!text.trim()) return false;
@@ -301,6 +328,56 @@ export async function GET() {
       },
     }),
     prisma.season.findFirst({ where: { isActive: true }, select: { id: true, name: true } }),
+  ]);
+
+  const sevenDaysStart = addDays(todayStart, -6);
+  const thirtyDaysStart = addDays(todayStart, -29);
+
+  const [
+    todayRecruitCount,
+    todayInProgressRecruitCount,
+    todayScheduledMissingRecruitCount,
+    autoFinishedTodayCount,
+    lateWarningTodayRecords,
+    lateWarning7dRecords,
+    lateWarning30dRecords,
+    recruitTrendRows,
+    recentLateWarnings,
+  ] = await Promise.all([
+    prisma.recruitParty.count({ where: { createdAt: { gte: todayStart, lte: todayEnd } } }),
+    prisma.recruitParty.count({ where: { status: "IN_PROGRESS" } }),
+    prisma.recruitParty.count({ where: { status: "IN_PROGRESS", scheduledStartAt: null } }),
+    prisma.recruitPartyDiscordMonitor.count({ where: { autoFinishedAt: { gte: todayStart, lte: todayEnd } } }),
+    prisma.userDisciplineRecord.findMany({
+      where: lateWarningWhere({ gte: todayStart, lte: todayEnd }),
+      select: { id: true, targetName: true, targetNickname: true, targetTag: true, discordDmStatus: true, createdAt: true, reason: true, sourceRefId: true },
+      orderBy: { createdAt: "desc" },
+      take: 200,
+    }),
+    prisma.userDisciplineRecord.findMany({
+      where: lateWarningWhere({ gte: sevenDaysStart, lte: todayEnd }),
+      select: { id: true, targetName: true, discordDmStatus: true, createdAt: true },
+      orderBy: { createdAt: "desc" },
+      take: 1000,
+    }),
+    prisma.userDisciplineRecord.findMany({
+      where: lateWarningWhere({ gte: thirtyDaysStart, lte: todayEnd }),
+      select: { id: true, targetName: true, discordDmStatus: true, createdAt: true },
+      orderBy: { createdAt: "desc" },
+      take: 2500,
+    }),
+    prisma.recruitParty.findMany({
+      where: { createdAt: { gte: sevenDaysStart, lte: todayEnd } },
+      select: { id: true, status: true, createdAt: true },
+      orderBy: { createdAt: "asc" },
+      take: 3000,
+    }),
+    prisma.userDisciplineRecord.findMany({
+      where: lateWarningWhere({ gte: thirtyDaysStart, lte: todayEnd }),
+      select: { id: true, targetName: true, targetNickname: true, targetTag: true, discordDmStatus: true, createdAt: true, reason: true, sourceRefId: true },
+      orderBy: { createdAt: "desc" },
+      take: 12,
+    }),
   ]);
 
   const lastByDiscord = new Map<string, (typeof recentEvents)[number]>();
@@ -774,6 +851,90 @@ export async function GET() {
     pushDiag("INFO", "VOICE_EVENT_EMPTY", "최근 음성 이벤트 없음", "최근 6시간 동안 Discord 음성 이벤트가 없습니다.", "테스트하려면 감시 대상 음성방에 들어갔다가 나와서 JOIN/LEAVE 로그가 쌓이는지 확인하세요.");
   }
 
+  const voiceByChannel = new Map<string, { channelId: string | null; channelName: string; count: number; linkedCount: number; unlinkedCount: number }>();
+  for (const event of currentVoiceUsers) {
+    const key = event.channelId || event.channelName || "unknown";
+    const item = voiceByChannel.get(key) || {
+      channelId: event.channelId || null,
+      channelName: event.channelName || "알 수 없는 음성방",
+      count: 0,
+      linkedCount: 0,
+      unlinkedCount: 0,
+    };
+    item.count += 1;
+    if (event.userAccountId) item.linkedCount += 1;
+    else item.unlinkedCount += 1;
+    voiceByChannel.set(key, item);
+  }
+
+  const dayKeys = Array.from({ length: 7 }, (_, index) => getKstDateKey(addDays(sevenDaysStart, index)));
+  const recruitCountByDay = new Map(dayKeys.map((key) => [key, 0]));
+  const lateCountByDay = new Map(dayKeys.map((key) => [key, 0]));
+  for (const row of recruitTrendRows) {
+    const key = getKstDateKey(row.createdAt);
+    if (recruitCountByDay.has(key)) recruitCountByDay.set(key, (recruitCountByDay.get(key) || 0) + 1);
+  }
+  for (const row of lateWarning7dRecords) {
+    const key = getKstDateKey(row.createdAt);
+    if (lateCountByDay.has(key)) lateCountByDay.set(key, (lateCountByDay.get(key) || 0) + 1);
+  }
+
+  const dmStatusCounts = new Map<string, number>();
+  for (const row of lateWarning30dRecords) {
+    const key = row.discordDmStatus || "UNKNOWN";
+    dmStatusCounts.set(key, (dmStatusCounts.get(key) || 0) + 1);
+  }
+
+  const lateTargetCounts = new Map<string, { name: string; count: number }>();
+  for (const row of lateWarning30dRecords) {
+    const name = String(row.targetName || "이름 없음").trim() || "이름 없음";
+    const key = normalizeName(name) || name;
+    const item = lateTargetCounts.get(key) || { name, count: 0 };
+    item.count += 1;
+    lateTargetCounts.set(key, item);
+  }
+
+  const recruitStatusCounts = new Map<string, number>();
+  for (const item of recruitVerifications) {
+    const bucket = toStatusBucket(item.status);
+    recruitStatusCounts.set(bucket, (recruitStatusCounts.get(bucket) || 0) + 1);
+  }
+
+  const operationStats = {
+    cards: {
+      todayRecruitCount,
+      todayInProgressRecruitCount,
+      todayScheduledMissingRecruitCount,
+      autoFinishedTodayCount,
+      lateWarningTodayCount: lateWarningTodayRecords.length,
+      lateWarning7dCount: lateWarning7dRecords.length,
+      lateWarningDmFailed30dCount: lateWarning30dRecords.filter((row) => ["FAILED", "SKIPPED"].includes(row.discordDmStatus || "")).length,
+      currentVoiceLinkedCount: currentVoiceUsers.filter((event) => event.userAccountId).length,
+      currentVoiceUnlinkedCount: currentVoiceUsers.filter((event) => !event.userAccountId).length,
+    },
+    voiceComposition: [
+      { label: "연동", value: currentVoiceUsers.filter((event) => event.userAccountId).length },
+      { label: "미연동", value: currentVoiceUsers.filter((event) => !event.userAccountId).length },
+    ],
+    channelOccupancy: Array.from(voiceByChannel.values())
+      .sort((a, b) => b.count - a.count || a.channelName.localeCompare(b.channelName))
+      .slice(0, 8),
+    recruitStatusDistribution: Array.from(recruitStatusCounts.entries()).map(([label, value]) => ({ label, value })),
+    lateWarningDmStatus30d: Array.from(dmStatusCounts.entries()).map(([label, value]) => ({ label, value })),
+    lateWarningTopTargets30d: Array.from(lateTargetCounts.values()).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name)).slice(0, 10),
+    trend7d: dayKeys.map((key) => ({ dateKey: key, label: formatKstMonthDay(key), recruitCount: recruitCountByDay.get(key) || 0, lateWarningCount: lateCountByDay.get(key) || 0 })),
+    recentLateWarnings: recentLateWarnings.map((row) => ({
+      id: row.id,
+      targetName: row.targetName,
+      targetNickname: row.targetNickname,
+      targetTag: row.targetTag,
+      discordDmStatus: row.discordDmStatus || null,
+      reason: row.reason,
+      sourceRefId: row.sourceRefId,
+      createdAt: row.createdAt.toISOString(),
+    })),
+  };
+
   return NextResponse.json({
     ok: true,
     summary: {
@@ -804,6 +965,7 @@ export async function GET() {
     autoFinishedRecruitMonitors,
     linkLogs,
     diagnostics,
+    operationStats,
     serverTime: now.toISOString(),
   });
 }
