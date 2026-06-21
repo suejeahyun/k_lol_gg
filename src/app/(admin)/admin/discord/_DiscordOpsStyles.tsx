@@ -294,6 +294,8 @@ export default function DiscordOpsStyles() {
       .discord-trend-line { fill: none; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
       .discord-trend-line--recruit { stroke: var(--discord-chart-1); }
       .discord-trend-line--late { stroke: var(--discord-chart-3); }
+      .discord-trend-line--error { stroke: var(--discord-chart-4); }
+      .discord-trend-line--auto { stroke: var(--discord-chart-2); }
       .discord-trend-dot--recruit { fill: var(--discord-chart-1); }
       .discord-trend-dot--late { fill: var(--discord-chart-3); }
       .discord-trend-labels { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin-top: 2px; }

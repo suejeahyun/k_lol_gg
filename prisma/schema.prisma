@@ -1488,6 +1488,30 @@ model DiscordBotHeartbeat {
   @@index([status, updatedAt])
 }
 
+
+model DiscordOperationLog {
+  id          Int      @id @default(autoincrement())
+  type        String
+  source      String?
+  endpoint    String?
+  status      String
+  httpStatus  Int?
+  channelId   String?
+  channelName String?
+  recruitId   Int?
+  recruitNo   Int?
+  discordId   String?
+  message     String?  @db.Text
+  rawJson     Json?
+  createdAt   DateTime @default(now())
+
+  @@index([type, createdAt])
+  @@index([endpoint, createdAt])
+  @@index([status, createdAt])
+  @@index([channelId, createdAt])
+  @@index([createdAt])
+}
+
 model DiscordAccountLinkLog {
   id                  Int      @id @default(autoincrement())
   userAccountId       Int?

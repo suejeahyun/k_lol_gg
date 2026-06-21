@@ -1,110 +1,151 @@
 import DiscordOpsStyles from "../_DiscordOpsStyles";
 import DiscordOpsNav from "../_DiscordOpsNav";
 import Link from "next/link";
-import { Prisma } from "@prisma/client";
 import type { CSSProperties } from "react";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
-import { addDays, getKstDateKey, getKstStartOfDate } from "@/lib/date/kst";
 
 export const dynamic = "force-dynamic";
 
 type PageProps = { searchParams?: Promise<Record<string, string | string[] | undefined>> };
-function getString(params: Record<string, string | string[] | undefined>, key: string, fallback = "") { const value = params[key]; return Array.isArray(value) ? value[0] ?? fallback : value ?? fallback; }
-function getNumber(params: Record<string, string | string[] | undefined>, key: string, fallback: number) { const value = Number(getString(params, key, String(fallback))); return Number.isFinite(value) && value > 0 ? value : fallback; }
-function clamp(value: number, min: number, max: number) { return Math.max(min, Math.min(max, value)); }
-function formatDurationSeconds(totalSeconds: number) { const value = Math.max(0, Math.floor(totalSeconds)); const h = Math.floor(value / 3600); const m = Math.floor((value % 3600) / 60); if (h > 0) return `${h}시간 ${m}분`; return `${m}분`; }
-function getRawString(rawJson: Prisma.JsonValue | null | undefined, key: string) { if (!rawJson || typeof rawJson !== "object" || Array.isArray(rawJson)) return null; const value = (rawJson as Record<string, unknown>)[key]; return typeof value === "string" && value.trim() ? value : null; }
-function label(event: { discordId: string; memberDisplayName?: string | null; memberNickname?: string | null; discordUsername?: string | null; discordGlobalName?: string | null; rawJson?: Prisma.JsonValue | null; userAccount: null | { userId: string; discordUsername: string | null; discordGlobalName: string | null; discordServerNickname?: string | null } }) { return event.memberDisplayName || event.memberNickname || getRawString(event.rawJson, "memberDisplayName") || getRawString(event.rawJson, "memberNickname") || event.userAccount?.discordServerNickname || event.userAccount?.discordGlobalName || event.userAccount?.discordUsername || event.discordGlobalName || event.discordUsername || event.userAccount?.userId || `Discord 사용자 ${event.discordId.slice(-4)}`; }
-function getKstHour(date: Date) { return Number(new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Seoul", hour: "2-digit", hour12: false, hourCycle: "h23" }).format(date)); }
-function formatKstMonthDay(dateKey: string) { const [, month, day] = dateKey.split("-"); return `${Number(month)}/${Number(day)}`; }
-function normalizeName(value: string | null | undefined) { return String(value || "").replace(/[\u200B-\u200D\uFEFF]/g, "").replace(/[\s#·ㆍ_\-\.\/\\|()[\]{}]+/g, "").toLowerCase(); }
-function lateWarningWhere(createdAt?: { gte?: Date; lte?: Date }): Prisma.UserDisciplineRecordWhereInput {
-  const sourceFilter: Prisma.UserDisciplineRecordWhereInput = { OR: [{ sourceRefType: "RECRUIT_LATE" }, { sourceRefKey: { startsWith: "RECRUIT_LATE:" } }] };
-  if (!createdAt) return sourceFilter;
-  return { AND: [sourceFilter, { createdAt }] };
-}
-function dmStatusLabel(status?: string | null) { const map: Record<string, string> = { SENT: "DM 성공", FAILED: "DM 실패", SKIPPED: "DM 불가", PENDING: "대기", UNKNOWN: "미확인" }; return map[status || "UNKNOWN"] || status || "미확인"; }
-
-type VoiceSession = { discordId: string; label: string; channelId: string; channelName: string | null; start: Date; end: Date };
 type ChartItem = { label: string; value: number };
+type TrendPoint = { dateKey: string; label: string; recruitCount: number; lateWarningCount: number; errorCount: number; autoFinishCount: number };
+type VoiceSession = { discordId: string; label: string; channelId: string; channelName: string | null; start: Date; end: Date };
+
+function getString(params: Record<string, string | string[] | undefined>, key: string, fallback = "") {
+  const value = params[key];
+  return Array.isArray(value) ? value[0] ?? fallback : value ?? fallback;
+}
+function getNumber(params: Record<string, string | string[] | undefined>, key: string, fallback: number) {
+  const value = Number(getString(params, key, String(fallback)));
+  return Number.isFinite(value) && value > 0 ? value : fallback;
+}
+function clamp(value: number, min: number, max: number) { return Math.max(min, Math.min(max, value)); }
+function formatDurationSeconds(totalSeconds: number) {
+  const value = Math.max(0, Math.floor(totalSeconds));
+  const h = Math.floor(value / 3600);
+  const m = Math.floor((value % 3600) / 60);
+  if (h > 0) return `${h}시간 ${m}분`;
+  return `${m}분`;
+}
+function getRawString(rawJson: Prisma.JsonValue | null | undefined, key: string) {
+  if (!rawJson || typeof rawJson !== "object" || Array.isArray(rawJson)) return null;
+  const value = (rawJson as Record<string, unknown>)[key];
+  return typeof value === "string" && value.trim() ? value : null;
+}
+function label(event: { discordId: string; memberDisplayName?: string | null; memberNickname?: string | null; discordUsername?: string | null; discordGlobalName?: string | null; rawJson?: Prisma.JsonValue | null; userAccount: null | { userId: string; discordUsername: string | null; discordGlobalName: string | null; discordServerNickname?: string | null } }) {
+  return event.memberDisplayName || event.memberNickname || getRawString(event.rawJson, "memberDisplayName") || getRawString(event.rawJson, "memberNickname") || event.userAccount?.discordServerNickname || event.userAccount?.discordGlobalName || event.userAccount?.discordUsername || event.discordGlobalName || event.discordUsername || event.userAccount?.userId || `Discord 사용자 ${event.discordId.slice(-4)}`;
+}
+function normalizeName(value: string | null | undefined) {
+  return String(value || "").replace(/[\u200B-\u200D\uFEFF]/g, "").replace(/[\s#·ㆍ_\-\.\/\\|()[\]{}]+/g, "").toLowerCase();
+}
+function addDays(date: Date, days: number) { const next = new Date(date); next.setDate(next.getDate() + days); return next; }
+function getKstDateKey(date: Date) {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
+}
+function formatKstMonthDay(key: string) {
+  const [, month, day] = key.split("-");
+  return `${Number(month)}.${Number(day)}`;
+}
+function getKstHour(date: Date) {
+  return Number(new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Seoul", hour: "2-digit", hour12: false }).format(date));
+}
+function formatKstDateTime(date: Date | string | null | undefined) {
+  if (!date) return "-";
+  const value = typeof date === "string" ? new Date(date) : date;
+  return new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false }).format(value);
+}
+function lateWarningWhere(createdAt?: { gte?: Date; lte?: Date }): Prisma.UserDisciplineRecordWhereInput {
+  return {
+    ...(createdAt ? { createdAt } : {}),
+    OR: [
+      { sourceRefType: "RECRUIT_LATE" },
+      { sourceRefKey: { startsWith: "RECRUIT_LATE:" } },
+      { source: "LATE" },
+      { reason: { contains: "지각" } },
+    ],
+  };
+}
+function dmStatusLabel(status?: string | null) {
+  const map: Record<string, string> = { SENT: "DM 성공", FAILED: "DM 실패", SKIPPED: "DM 불가", PENDING: "대기", UNKNOWN: "미확인" };
+  return map[status || "UNKNOWN"] || status || "미확인";
+}
+function statusKo(status?: string | null) {
+  const value = String(status || "UNKNOWN").toUpperCase();
+  const map: Record<string, string> = { SUCCESS: "성공", ERROR: "오류", FAILED: "실패", SENT: "성공", SKIPPED: "불가", INFO: "정보", UNKNOWN: "미확인" };
+  return map[value] || value;
+}
+function typeKo(type?: string | null) {
+  const value = String(type || "UNKNOWN");
+  const map: Record<string, string> = {
+    AUTO_FINISH_CHECK_SUCCESS: "자동종료 검사 성공",
+    AUTO_FINISH_CHECK_ERROR: "자동종료 검사 오류",
+    RECRUIT_LATE_WARNING_CHECK_SUCCESS: "지각 검사 성공",
+    RECRUIT_LATE_WARNING_CHECK_ERROR: "지각 검사 오류",
+    DM_SEND_SUCCESS: "DM 성공",
+    DM_SEND_FAILED: "DM 실패",
+    DM_SEND_SKIPPED: "DM 불가",
+    ADMIN_LOG_SEND_SUCCESS: "관리자 로그 성공",
+    ADMIN_LOG_SEND_FAILED: "관리자 로그 실패",
+    REMOTE_SETTINGS_APPLIED: "설정 반영",
+    REMOTE_SETTINGS_ERROR: "설정 반영 오류",
+    HEARTBEAT_ERROR: "하트비트 오류",
+    BOT_START: "봇 시작",
+    BOT_SHUTDOWN: "봇 종료",
+  };
+  return map[value] || value;
+}
+function countBy<T>(rows: T[], getKey: (row: T) => string | null | undefined) {
+  const map = new Map<string, number>();
+  for (const row of rows) {
+    const key = getKey(row) || "미확인";
+    map.set(key, (map.get(key) || 0) + 1);
+  }
+  return Array.from(map.entries()).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value || a.label.localeCompare(b.label));
+}
+function Metric({ label, value, caption, tone = "default" }: { label: string; value: string | number; caption: string; tone?: "default" | "ok" | "warn" | "error" }) {
+  return <div className={`discord-ops-stat discord-ops-stat--${tone}`}><span>{label}</span><strong>{value}</strong><em>{caption}</em></div>;
+}
 const chartVars = ["var(--discord-chart-1)", "var(--discord-chart-2)", "var(--discord-chart-3)", "var(--discord-chart-4)", "var(--discord-chart-5)"];
-
-function Metric({ label, value, caption }: { label: string; value: string | number; caption: string }) {
-  return <div className="discord-ops-stat"><span>{label}</span><strong>{value}</strong><em>{caption}</em></div>;
-}
-
-function BarChartCard({ title, caption, items, suffix = "" }: { title: string; caption: string; items: ChartItem[]; suffix?: string }) {
-  const max = Math.max(1, ...items.map((item) => item.value));
-  return (
-    <div className="admin-card discord-chart-card">
-      <div className="discord-chart-head"><h2>{title}</h2><span>{caption}</span></div>
-      <div className="discord-bar-chart">
-        {items.length === 0 ? <p className="admin-muted">표시할 데이터가 없습니다.</p> : items.map((item, index) => (
-          <div className="discord-bar-row" key={`${item.label}-${index}`}>
-            <span title={item.label}>{item.label}</span>
-            <div><i style={{ width: `${Math.max(3, (item.value / max) * 100)}%` }} /></div>
-            <strong>{item.value}{suffix}</strong>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function DonutChartCard({ title, caption, items }: { title: string; caption: string; items: ChartItem[] }) {
   const total = items.reduce((sum, item) => sum + Math.max(0, item.value), 0);
   let acc = 0;
   const segments = total > 0 ? items.map((item, index) => { const start = acc; const end = acc + (Math.max(0, item.value) / total) * 360; acc = end; return `${chartVars[index % chartVars.length]} ${start}deg ${end}deg`; }).join(", ") : "rgba(51, 65, 85, .65) 0deg 360deg";
-  const style = { "--discord-donut": `conic-gradient(${segments})` } as CSSProperties;
-  return (
-    <div className="admin-card discord-chart-card">
-      <div className="discord-chart-head"><h2>{title}</h2><span>{caption}</span></div>
-      <div className="discord-donut-layout">
-        <div className="discord-donut" style={style}><strong>{total}</strong><span>total</span></div>
-        <div className="discord-chart-legend">
-          {items.map((item, index) => { const pct = total > 0 ? Math.round((item.value / total) * 100) : 0; return <div key={item.label}><i style={{ background: chartVars[index % chartVars.length] }} /><span>{item.label}</span><strong>{item.value}</strong><em>{pct}%</em></div>; })}
-        </div>
-      </div>
-    </div>
-  );
+  return <div className="admin-card discord-chart-card"><div className="discord-chart-head"><h2>{title}</h2><span>{caption}</span></div><div className="discord-donut-layout"><div className="discord-donut" style={{ "--discord-donut": `conic-gradient(${segments})` } as CSSProperties}><strong>{total}</strong><span>total</span></div><div className="discord-chart-legend">{items.map((item, index) => { const pct = total > 0 ? Math.round((item.value / total) * 100) : 0; return <div key={item.label}><i style={{ background: chartVars[index % chartVars.length] }} /><span>{item.label}</span><strong>{item.value}</strong><em>{pct}%</em></div>; })}</div></div></div>;
 }
-
-function TrendChartCard({ title, caption, data }: { title: string; caption: string; data: Array<{ dateKey: string; label: string; recruitCount: number; lateWarningCount: number }> }) {
-  const w = 560; const h = 150; const padX = 22; const padY = 18;
-  const max = Math.max(1, ...data.flatMap((item) => [item.recruitCount, item.lateWarningCount]));
+function BarChartCard({ title, caption, items, suffix = "" }: { title: string; caption: string; items: ChartItem[]; suffix?: string }) {
+  const max = Math.max(1, ...items.map((item) => item.value));
+  return <div className="admin-card discord-chart-card"><div className="discord-chart-head"><h2>{title}</h2><span>{caption}</span></div><div className="discord-bar-chart">{items.length === 0 ? <p className="admin-muted">표시할 데이터가 없습니다.</p> : items.map((item, index) => <div className="discord-bar-row" key={`${item.label}-${index}`}><span title={item.label}>{item.label}</span><div><i style={{ width: `${Math.max(3, (item.value / max) * 100)}%` }} /></div><strong>{item.value}{suffix}</strong></div>)}</div></div>;
+}
+function TrendChartCard({ title, caption, data }: { title: string; caption: string; data: TrendPoint[] }) {
+  const w = 420, h = 170, padX = 25, padY = 20;
+  const max = Math.max(1, ...data.flatMap((item) => [item.recruitCount, item.lateWarningCount, item.errorCount, item.autoFinishCount]));
   const point = (value: number, index: number) => { const x = data.length <= 1 ? w / 2 : padX + ((w - padX * 2) * index) / (data.length - 1); const y = h - padY - ((h - padY * 2) * value) / max; return `${x},${y}`; };
-  return (
-    <div className="admin-card discord-chart-card discord-chart-card--wide">
-      <div className="discord-chart-head"><h2>{title}</h2><span>{caption}</span></div>
-      <svg className="discord-trend-chart" viewBox={`0 0 ${w} ${h}`} role="img" aria-label={title}>
-        <line x1={padX} y1={h - padY} x2={w - padX} y2={h - padY} />
-        <polyline className="discord-trend-line discord-trend-line--recruit" points={data.map((item, index) => point(item.recruitCount, index)).join(" ")} />
-        <polyline className="discord-trend-line discord-trend-line--late" points={data.map((item, index) => point(item.lateWarningCount, index)).join(" ")} />
-      </svg>
-      <div className="discord-trend-labels" style={{ gridTemplateColumns: `repeat(${data.length}, minmax(0, 1fr))` }}>
-        {data.map((item) => <span key={item.dateKey}>{item.label}<em>구인 {item.recruitCount} · 지각 {item.lateWarningCount}</em></span>)}
-      </div>
-      <div className="discord-chart-legend discord-chart-legend--inline"><div><i style={{ background: "var(--discord-chart-1)" }} /><span>구인</span></div><div><i style={{ background: "var(--discord-chart-3)" }} /><span>지각</span></div></div>
-    </div>
-  );
+  const recruitPoints = data.map((item, index) => point(item.recruitCount, index)).join(" ");
+  const latePoints = data.map((item, index) => point(item.lateWarningCount, index)).join(" ");
+  const errorPoints = data.map((item, index) => point(item.errorCount, index)).join(" ");
+  const autoPoints = data.map((item, index) => point(item.autoFinishCount, index)).join(" ");
+  return <div className="admin-card discord-chart-card discord-chart-card--wide"><div className="discord-chart-head"><h2>{title}</h2><span>{caption}</span></div><svg className="discord-trend-chart" viewBox={`0 0 ${w} ${h}`} role="img" aria-label={title}><line x1={padX} y1={h - padY} x2={w - padX} y2={h - padY} /><polyline className="discord-trend-line discord-trend-line--recruit" points={recruitPoints} /><polyline className="discord-trend-line discord-trend-line--late" points={latePoints} /><polyline className="discord-trend-line discord-trend-line--error" points={errorPoints} /><polyline className="discord-trend-line discord-trend-line--auto" points={autoPoints} /></svg><div className="discord-trend-labels">{data.map((item) => <span key={item.dateKey}>{item.label}<em>구인 {item.recruitCount} · 지각 {item.lateWarningCount} · 오류 {item.errorCount}</em></span>)}</div><div className="discord-chart-legend discord-chart-legend--inline"><div><i style={{ background: "var(--discord-chart-1)" }} /><span>구인</span></div><div><i style={{ background: "var(--discord-chart-3)" }} /><span>지각</span></div><div><i style={{ background: "var(--discord-chart-4)" }} /><span>오류</span></div><div><i style={{ background: "var(--discord-chart-2)" }} /><span>자동종료</span></div></div></div>;
 }
 
 export default async function DiscordStatsPage(props: PageProps) {
   const params = await props.searchParams ?? {};
   const q = getString(params, "q", "").trim();
-  const days = clamp(getNumber(params, "days", 7), 1, 90);
+  const days = clamp(getNumber(params, "days", 7), 1, 365);
   const now = new Date();
-  const todayStart = getKstStartOfDate(getKstDateKey(now));
-  const rangeEnd = addDays(todayStart, 1);
-  const from = addDays(rangeEnd, -days);
-  const events = await prisma.discordVoiceEvent.findMany({ where: { occurredAt: { gte: from, lte: rangeEnd } }, include: { userAccount: { select: { id: true, userId: true, discordUsername: true, discordGlobalName: true, discordServerNickname: true } } }, orderBy: [{ occurredAt: "asc" }], take: 8000 });
+  const from = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+  const rangeEnd = now;
 
-  const [recruits, lateWarnings, linkedUsers, approvedUsers, autoFinishedCount] = await Promise.all([
-    prisma.recruitParty.findMany({ where: { createdAt: { gte: from, lte: rangeEnd } }, select: { id: true, status: true, createdAt: true, scheduledStartAt: true } }),
-    prisma.userDisciplineRecord.findMany({ where: lateWarningWhere({ gte: from, lte: rangeEnd }), select: { id: true, targetName: true, discordDmStatus: true, createdAt: true }, orderBy: { createdAt: "desc" }, take: 5000 }),
+  const [events, recruits, monitors, lateWarnings, allWarnings, linkedUsers, approvedUsers, operationLogs, heartbeats] = await Promise.all([
+    prisma.discordVoiceEvent.findMany({ where: { occurredAt: { gte: from } }, include: { userAccount: { select: { id: true, userId: true, discordUsername: true, discordGlobalName: true, discordServerNickname: true } } }, orderBy: [{ occurredAt: "asc" }], take: 12000 }),
+    prisma.recruitParty.findMany({ where: { createdAt: { gte: from, lte: rangeEnd } }, select: { id: true, recruitNo: true, status: true, type: true, maxMembers: true, createdAt: true, scheduledStartAt: true, protectedUntil: true, members: { select: { id: true, name: true, isSubstitute: true } } } }),
+    prisma.recruitPartyDiscordMonitor.findMany({ where: { updatedAt: { gte: from } }, select: { id: true, status: true, lastExpectedCount: true, lastPresentExpectedCount: true, lastNonParticipantCount: true, autoFinishedAt: true, createdAt: true, updatedAt: true, partyId: true } }),
+    prisma.userDisciplineRecord.findMany({ where: lateWarningWhere({ gte: from, lte: rangeEnd }), select: { id: true, targetName: true, discordDmStatus: true, createdAt: true, type: true, source: true }, orderBy: { createdAt: "desc" }, take: 5000 }),
+    prisma.userDisciplineRecord.findMany({ where: { createdAt: { gte: from, lte: rangeEnd } }, select: { id: true, targetName: true, type: true, source: true, createdBy: true, isActive: true, createdAt: true }, orderBy: { createdAt: "desc" }, take: 5000 }),
     prisma.userAccount.count({ where: { discordId: { not: null } } }),
     prisma.userAccount.count({ where: { status: "APPROVED" } }),
-    prisma.recruitPartyDiscordMonitor.count({ where: { autoFinishedAt: { gte: from, lte: rangeEnd } } }),
+    prisma.discordOperationLog.findMany({ where: { createdAt: { gte: from, lte: rangeEnd } }, orderBy: { createdAt: "desc" }, take: 10000 }),
+    prisma.discordBotHeartbeat.findMany({ orderBy: { updatedAt: "desc" }, take: 5 }),
   ]);
 
   const open = new Map<string, VoiceSession>();
@@ -158,59 +199,110 @@ export default async function DiscordStatsPage(props: PageProps) {
   }
   const coPresenceTop10 = Array.from(coPresence.entries()).map(([discordId, item]) => ({ discordId, label: item.label, seconds: item.seconds })).sort((a, b) => b.seconds - a.seconds).slice(0, 10);
 
-  const dayKeys = Array.from({ length: Math.min(days, 30) }, (_, index) => getKstDateKey(addDays(rangeEnd, -Math.min(days, 30) + index)));
+  const trendDays = Math.min(days, 30);
+  const dayKeys = Array.from({ length: trendDays }, (_, index) => getKstDateKey(addDays(rangeEnd, -trendDays + 1 + index)));
   const recruitByDay = new Map(dayKeys.map((key) => [key, 0]));
   const lateByDay = new Map(dayKeys.map((key) => [key, 0]));
+  const errorByDay = new Map(dayKeys.map((key) => [key, 0]));
+  const autoByDay = new Map(dayKeys.map((key) => [key, 0]));
   for (const row of recruits) { const key = getKstDateKey(row.createdAt); if (recruitByDay.has(key)) recruitByDay.set(key, (recruitByDay.get(key) || 0) + 1); }
   for (const row of lateWarnings) { const key = getKstDateKey(row.createdAt); if (lateByDay.has(key)) lateByDay.set(key, (lateByDay.get(key) || 0) + 1); }
-  const trend = dayKeys.map((key) => ({ dateKey: key, label: formatKstMonthDay(key), recruitCount: recruitByDay.get(key) || 0, lateWarningCount: lateByDay.get(key) || 0 }));
+  for (const row of operationLogs) { const key = getKstDateKey(row.createdAt); if (errorByDay.has(key) && ["ERROR", "FAILED"].includes(String(row.status).toUpperCase())) errorByDay.set(key, (errorByDay.get(key) || 0) + 1); if (autoByDay.has(key) && String(row.type).startsWith("AUTO_FINISH") && String(row.status).toUpperCase() === "SUCCESS") autoByDay.set(key, (autoByDay.get(key) || 0) + 1); }
+  const trend = dayKeys.map((key) => ({ dateKey: key, label: formatKstMonthDay(key), recruitCount: recruitByDay.get(key) || 0, lateWarningCount: lateByDay.get(key) || 0, errorCount: errorByDay.get(key) || 0, autoFinishCount: autoByDay.get(key) || 0 }));
 
-  const dmCounts = new Map<string, number>();
+  const recruitStatusItems = countBy(recruits, (row) => String(row.status));
+  const recruitTypeItems = countBy(recruits, (row) => String(row.type));
+  const recruitSizeItems = countBy(recruits, (row) => `${row.maxMembers}인`);
+  const monitorStatusItems = countBy(monitors, (row) => String(row.status));
+  const dmItems = countBy(lateWarnings, (row) => dmStatusLabel(row.discordDmStatus));
+  const warningTypeItems = countBy(allWarnings, (row) => String(row.type || "기타"));
+  const warningSourceItems = countBy(allWarnings, (row) => String(row.source || "MANUAL"));
+  const operationTypeItems = countBy(operationLogs, (row) => typeKo(row.type)).slice(0, 10);
+  const operationStatusItems = countBy(operationLogs, (row) => statusKo(row.status));
+  const endpointErrorItems = countBy(operationLogs.filter((row) => ["ERROR", "FAILED"].includes(String(row.status).toUpperCase())), (row) => row.endpoint || row.type).slice(0, 10);
+  const httpStatusItems = countBy(operationLogs.filter((row) => row.httpStatus), (row) => String(row.httpStatus)).slice(0, 8);
+  const channelErrorItems = countBy(operationLogs.filter((row) => ["ERROR", "FAILED"].includes(String(row.status).toUpperCase()) && row.channelId), (row) => row.channelName || row.channelId).slice(0, 10);
+
   const lateTargets = new Map<string, { name: string; count: number }>();
-  for (const row of lateWarnings) {
-    const dm = row.discordDmStatus || "UNKNOWN";
-    dmCounts.set(dm, (dmCounts.get(dm) || 0) + 1);
-    const name = row.targetName || "이름 없음";
-    const key = normalizeName(name) || name;
-    const item = lateTargets.get(key) || { name, count: 0 };
-    item.count += 1;
-    lateTargets.set(key, item);
-  }
+  for (const row of lateWarnings) { const name = row.targetName || "이름 없음"; const key = normalizeName(name) || name; const item = lateTargets.get(key) || { name, count: 0 }; item.count += 1; lateTargets.set(key, item); }
   const lateTargetBars = Array.from(lateTargets.values()).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name)).slice(0, 10).map((item) => ({ label: item.name, value: item.count }));
-  const dmItems = Array.from(dmCounts.entries()).map(([labelText, value]) => ({ label: dmStatusLabel(labelText), value }));
+
+  const warningTargets = new Map<string, { name: string; count: number }>();
+  for (const row of allWarnings) { const name = row.targetName || "이름 없음"; const key = normalizeName(name) || name; const item = warningTargets.get(key) || { name, count: 0 }; item.count += 1; warningTargets.set(key, item); }
+  const warningTargetBars = Array.from(warningTargets.values()).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name)).slice(0, 10).map((item) => ({ label: item.name, value: item.count }));
 
   const recruitHourCounts = new Map<number, number>();
-  for (const row of recruits) {
-    const hour = getKstHour(row.createdAt);
-    recruitHourCounts.set(hour, (recruitHourCounts.get(hour) || 0) + 1);
-  }
-  const hourBars = Array.from(recruitHourCounts.entries()).sort((a, b) => a[0] - b[0]).map(([hour, value]) => ({ label: `${String(hour).padStart(2, "0")}시`, value }));
+  const lateHourCounts = new Map<number, number>();
+  const voiceHourCounts = new Map<number, number>();
+  for (const row of recruits) { const hour = getKstHour(row.createdAt); recruitHourCounts.set(hour, (recruitHourCounts.get(hour) || 0) + 1); }
+  for (const row of lateWarnings) { const hour = getKstHour(row.createdAt); lateHourCounts.set(hour, (lateHourCounts.get(hour) || 0) + 1); }
+  for (const row of events) { const hour = getKstHour(row.occurredAt); voiceHourCounts.set(hour, (voiceHourCounts.get(hour) || 0) + 1); }
+  const hourBars = Array.from({ length: 24 }, (_, hour) => ({ label: `${String(hour).padStart(2, "0")}시`, value: recruitHourCounts.get(hour) || 0 })).filter((item) => item.value > 0);
+  const lateHourBars = Array.from({ length: 24 }, (_, hour) => ({ label: `${String(hour).padStart(2, "0")}시`, value: lateHourCounts.get(hour) || 0 })).filter((item) => item.value > 0);
+  const voiceHourBars = Array.from({ length: 24 }, (_, hour) => ({ label: `${String(hour).padStart(2, "0")}시`, value: voiceHourCounts.get(hour) || 0 })).filter((item) => item.value > 0);
+
+  const operationErrors = operationLogs.filter((row) => ["ERROR", "FAILED"].includes(String(row.status).toUpperCase()));
+  const autoFinishLogs = operationLogs.filter((row) => String(row.type).startsWith("AUTO_FINISH"));
+  const lateCheckLogs = operationLogs.filter((row) => String(row.type).startsWith("RECRUIT_LATE_WARNING"));
+  const dmLogs = operationLogs.filter((row) => String(row.type).startsWith("DM_SEND"));
+  const adminLogLogs = operationLogs.filter((row) => String(row.type).startsWith("ADMIN_LOG"));
   const linkRate = approvedUsers > 0 ? Math.round((linkedUsers / approvedUsers) * 1000) / 10 : 0;
+  const activeWarnings = allWarnings.filter((row) => row.isActive).length;
+  const scheduledMissing = recruits.filter((item) => !item.scheduledStartAt).length;
+  const protectedCount = recruits.filter((item) => item.protectedUntil && item.protectedUntil > now).length;
 
   return (
     <main className="admin-page discord-ops-page">
       <DiscordOpsStyles />
-      <div className="admin-page__header discord-ops-header"><div><h1 className="admin-page__title">Discord 운영 상세 통계</h1><p className="admin-muted">구인·음성방·지각 경고를 기간별로 비교합니다.</p></div><div className="admin-actions"><Link className="admin-button admin-button--secondary" href="/admin/discord">대시보드</Link></div></div>
+      <div className="admin-page__header discord-ops-header"><div><h1 className="admin-page__title">Discord 운영 상세 통계</h1><p className="admin-muted">구인·음성방·지각·자동종료·봇/API 오류를 운영 관점에서 통합 확인합니다.</p></div><div className="admin-actions"><Link className="admin-button admin-button--secondary" href="/admin/discord">대시보드</Link></div></div>
       <DiscordOpsNav active="stats" />
-      <div className="discord-ops-notice">검색어는 이름 일부로 입력하면 됩니다. 같이 있던 사람은 같은 음성방에 겹쳐 있던 시간을 합산합니다.</div>
+      <div className="discord-ops-notice">기간 필터는 생성/발생 시각 기준입니다. 오류 통계는 봇 서버가 저장한 DiscordOperationLog 기준으로 집계됩니다.</div>
       <form className="discord-filter-card" method="get"><label>이름 검색<input name="q" defaultValue={q} placeholder="예: 재현" /></label><label>기간<select name="days" defaultValue={String(days)}><option value="1">오늘</option><option value="7">최근 7일</option><option value="30">최근 30일</option><option value="90">최근 90일</option></select></label><button className="admin-button" type="submit">조회</button></form>
 
-      <section className="discord-ops-stat-grid">
+      <section className="discord-ops-stat-grid discord-ops-stat-grid--ops">
         <Metric label="기간 내 구인" value={`${recruits.length}건`} caption={`진행중 ${recruits.filter((item) => String(item.status) === "IN_PROGRESS").length}건`} />
-        <Metric label="지각 경고" value={`${lateWarnings.length}건`} caption="자동 지각 경고 기준" />
-        <Metric label="자동종료" value={`${autoFinishedCount}건`} caption="Discord 모니터 autoFinishedAt 기준" />
-        <Metric label="음성 이벤트" value={`${events.length}건`} caption={`세션 ${sessions.length}개 계산`} />
+        <Metric label="지각 경고" value={`${lateWarnings.length}건`} caption="자동 지각 경고 기준" tone={lateWarnings.length > 0 ? "warn" : "ok"} />
+        <Metric label="전체 경고" value={`${allWarnings.length}건`} caption={`활성 ${activeWarnings}건`} />
+        <Metric label="자동종료" value={`${monitors.filter((item) => item.autoFinishedAt).length}건`} caption="Discord 모니터 기준" />
+        <Metric label="API 오류" value={`${operationErrors.length}건`} caption={`최근 로그 ${operationLogs.length}건`} tone={operationErrors.length > 0 ? "error" : "ok"} />
         <Metric label="Discord 연동률" value={`${linkRate}%`} caption={`${linkedUsers}/${approvedUsers}명`} />
-        <Metric label="시작시간 누락" value={`${recruits.filter((item) => !item.scheduledStartAt).length}건`} caption="검증/지각 대상 제외 가능" />
+        <Metric label="음성 이벤트" value={`${events.length}건`} caption={`세션 ${sessions.length}개 계산`} />
+        <Metric label="시작시간 누락" value={`${scheduledMissing}건`} caption="지각 자동화 제외 가능" tone={scheduledMissing > 0 ? "warn" : "ok"} />
+        <Metric label="보호중 구인" value={`${protectedCount}건`} caption="protectedUntil 기준" />
+        <Metric label="봇 하트비트" value={`${heartbeats.length ? "정상" : "없음"}`} caption={heartbeats[0] ? formatKstDateTime(heartbeats[0].updatedAt) : "최근 기록 없음"} tone={heartbeats.length ? "ok" : "error"} />
       </section>
 
       <section className="discord-chart-grid">
-        <TrendChartCard title="구인 · 지각 추이" caption={`최근 ${Math.min(days, 30)}일 일별 흐름`} data={trend} />
-        <DonutChartCard title="지각 경고 DM 상태" caption="선택 기간 자동 지각 경고 기준" items={dmItems} />
-        <BarChartCard title="시간대별 구인 수" caption="카카오톡 구인 생성 시간 기준" items={hourBars} suffix="건" />
+        <TrendChartCard title="운영 핵심 추이" caption={`최근 ${trendDays}일 구인·지각·오류·자동종료`} data={trend} />
+        <DonutChartCard title="Discord 연동률" caption="승인 유저 기준" items={[{ label: "연동", value: linkedUsers }, { label: "미연동", value: Math.max(0, approvedUsers - linkedUsers) }]} />
+        <DonutChartCard title="구인 상태 비율" caption="선택 기간 생성 구인 기준" items={recruitStatusItems} />
+        <DonutChartCard title="지각 DM 상태" caption="자동 지각 경고 기준" items={dmItems} />
+        <DonutChartCard title="운영 로그 상태" caption="봇/API/DM/관리자 로그 결과" items={operationStatusItems} />
+        <DonutChartCard title="전체 경고 유형" caption="선택 기간 전체 경고 기준" items={warningTypeItems} />
+        <BarChartCard title="API 오류 경로 TOP" caption="오류/실패 상태 로그 기준" items={endpointErrorItems} suffix="건" />
+        <BarChartCard title="운영 로그 유형 TOP" caption="봇 서버에서 저장한 작업 유형" items={operationTypeItems} suffix="건" />
+        <BarChartCard title="HTTP 상태코드" caption="오류 응답 코드 분포" items={httpStatusItems} suffix="건" />
+        <BarChartCard title="채널별 오류 TOP" caption="채널 ID/이름 기준 오류 집계" items={channelErrorItems} suffix="건" />
+        <BarChartCard title="구인 시간대" caption="카카오톡 구인 생성 시간" items={hourBars} suffix="건" />
+        <BarChartCard title="지각 시간대" caption="지각 경고 생성 시간" items={lateHourBars} suffix="건" />
+        <BarChartCard title="음성 이벤트 시간대" caption="입장·이동·퇴장 이벤트" items={voiceHourBars} suffix="건" />
         <BarChartCard title="체류시간 TOP 10" caption="유저별 음성방 총 체류시간" items={stayTopBars} suffix="분" />
         <BarChartCard title="음성방 사용 TOP 10" caption="채널별 누적 체류시간" items={channelTopBars} suffix="분" />
         <BarChartCard title="지각 경고 TOP 10" caption="반복 지각 대상 확인" items={lateTargetBars} suffix="건" />
+        <BarChartCard title="전체 경고 TOP 10" caption="수동+자동 경고 누적" items={warningTargetBars} suffix="건" />
+        <BarChartCard title="구인 인원별" caption="2인/3인/5인 등 maxMembers 기준" items={recruitSizeItems} suffix="건" />
+        <BarChartCard title="구인 유형별" caption="게임 종류/파티 유형 기준" items={recruitTypeItems} suffix="건" />
+        <BarChartCard title="자동종료 상태" caption="RecruitPartyDiscordMonitor status" items={monitorStatusItems} suffix="건" />
+        <DonutChartCard title="경고 출처" caption="수동/자동 경고 비율" items={warningSourceItems} />
+        <DonutChartCard title="자동종료 로그 결과" caption="봇 운영 로그 기준" items={countBy(autoFinishLogs, (row) => statusKo(row.status))} />
+        <DonutChartCard title="지각 검사 로그 결과" caption="봇 운영 로그 기준" items={countBy(lateCheckLogs, (row) => statusKo(row.status))} />
+        <DonutChartCard title="DM 발송 로그 결과" caption="봇 운영 로그 기준" items={countBy(dmLogs, (row) => statusKo(row.status))} />
+        <DonutChartCard title="관리자 로그 발송" caption="봇 운영 로그 기준" items={countBy(adminLogLogs, (row) => statusKo(row.status))} />
+      </section>
+
+      <section className="discord-ops-two-col">
+        <div className="admin-card discord-ops-panel"><div className="admin-section-head"><h2>최근 운영 오류</h2></div><div className="discord-ops-list discord-stats-list">{operationErrors.slice(0, 15).length === 0 ? <p className="admin-muted">선택 기간 오류 로그가 없습니다.</p> : operationErrors.slice(0, 15).map((item) => <div className="discord-ops-list-row" key={item.id}><strong>{typeKo(item.type)} · {item.endpoint || item.channelName || item.channelId || "공통"}</strong><span>{formatKstDateTime(item.createdAt)}</span><em className="text-muted-compact">{item.message || `${statusKo(item.status)} ${item.httpStatus || ""}`}</em></div>)}</div></div>
+        <div className="admin-card discord-ops-panel"><div className="admin-section-head"><h2>최근 운영 로그</h2></div><div className="discord-ops-list discord-stats-list">{operationLogs.slice(0, 15).map((item) => <div className="discord-ops-list-row" key={item.id}><strong>{typeKo(item.type)} · {statusKo(item.status)}</strong><span>{formatKstDateTime(item.createdAt)}</span><em className="text-muted-compact">{item.endpoint || item.channelName || item.channelId || item.message || "-"}</em></div>)}</div></div>
       </section>
 
       <section className="discord-ops-two-col">

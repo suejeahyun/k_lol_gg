@@ -169,21 +169,6 @@ export default function UserSidebar() {
             </div>
           ))}
         
-        <a
-          href="/random-team"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "10px 12px",
-            borderRadius: 10,
-            color: "inherit",
-            textDecoration: "none",
-          }}
-        >
-          <span aria-hidden="true">🎲</span>
-          <span>랜덤 팀</span>
-        </a>
       </nav>
       </div>
 
