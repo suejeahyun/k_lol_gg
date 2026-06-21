@@ -78,3 +78,6 @@ ALL.zip
 .env*.local
 .env.vercel.production
 .env*.production
+
+# Local patch backups
+_backup_*

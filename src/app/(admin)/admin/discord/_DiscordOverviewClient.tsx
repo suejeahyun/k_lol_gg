@@ -232,38 +232,70 @@ export default function DiscordOverviewClient() {
 
       <DiscordOpsNav active="overview" />
 
+      <section className="discord-readability-hero">
+        <div>
+          <strong>대시보드 확인 순서</strong>
+          <p>봇 상태와 오류를 먼저 보고, 진행중 구인·지각 경고·DM 상태를 이어서 확인하세요.</p>
+        </div>
+        <nav className="discord-anchor-nav" aria-label="Discord 운영 바로가기">
+          <a href="/admin/discord/recruits">구인 검증</a>
+          <a href="/admin/discord/stats">상세 통계</a>
+          <a href="/admin/operation-forms/warnings">경고</a>
+          <a href="/admin/discord/settings">설정</a>
+        </nav>
+      </section>
+
       {loading || !data ? <section className="admin-card"><div className="admin-empty">Discord 운영 현황을 불러오는 중입니다.</div></section> : (
         <>
-          <section className="discord-ops-nav-grid">
+          <section className="discord-readable-section discord-readable-section--compact">
+            <div className="discord-readable-section__head">
+              <div><span className="discord-readable-section__eyebrow">Quick actions</span><h2>빠른 이동</h2><p>자주 확인하는 운영 페이지를 기능별로 분리했습니다.</p></div>
+            </div>
+            <div className="discord-ops-nav-grid">
             {navItems.map((item) => (
               <Link className="discord-ops-nav-card" key={item.href} href={item.href}>
                 <strong>{item.title}</strong>
                 <span>{item.desc}</span>
               </Link>
             ))}
+            </div>
           </section>
 
-          <section className="discord-ops-stat-grid discord-ops-stat-grid--ops">
+          <section className="discord-readable-section discord-readable-section--compact">
+            <div className="discord-readable-section__head">
+              <div><span className="discord-readable-section__eyebrow">Live summary</span><h2>운영 요약</h2><p>현재 상태를 판단하는 핵심 카드입니다.</p></div>
+            </div>
+            <div className="discord-ops-stat-grid discord-ops-stat-grid--ops discord-ops-stat-grid--readable">
             <Stat label="봇 상태" value={data.summary.healthyBotCount > 0 ? "정상" : "확인 필요"} caption={latestBot ? `마지막 신호 ${formatDate(latestBot.updatedAt)}` : "heartbeat 없음"} tone={data.summary.healthyBotCount > 0 ? "ok" : "error"} />
             <Stat label="현재 음성방" value={`${data.summary.currentVoiceUserCount}명`} caption={`연동 ${stats?.cards.currentVoiceLinkedCount ?? data.summary.currentLinkedVoiceUserCount ?? 0} / 미연동 ${stats?.cards.currentVoiceUnlinkedCount ?? data.summary.currentUnlinkedVoiceUserCount ?? 0}`} />
             <Stat label="진행중 구인" value={`${stats?.cards.todayInProgressRecruitCount ?? data.summary.activeMonitorCount}건`} caption={`시작시간 미입력 ${stats?.cards.todayScheduledMissingRecruitCount ?? 0}건`} tone={(stats?.cards.todayScheduledMissingRecruitCount || 0) > 0 ? "warn" : "default"} />
             <Stat label="오늘 구인" value={`${stats?.cards.todayRecruitCount ?? 0}건`} caption={`자동종료 ${stats?.cards.autoFinishedTodayCount ?? 0}건`} />
             <Stat label="지각 경고" value={`${stats?.cards.lateWarningTodayCount ?? 0}건`} caption={`최근 7일 ${stats?.cards.lateWarning7dCount ?? 0}건`} tone={(stats?.cards.lateWarningTodayCount || 0) > 0 ? "warn" : "default"} />
             <Stat label="자동화 오류" value={`${errors} / ${warns}`} caption="ERROR / WARN" tone={errors > 0 ? "error" : warns > 0 ? "warn" : "ok"} />
+            </div>
           </section>
 
           {stats && (
-            <section className="discord-chart-grid">
+            <section className="discord-readable-section discord-readable-section--compact">
+              <div className="discord-readable-section__head">
+                <div><span className="discord-readable-section__eyebrow">Charts</span><h2>그래프 요약</h2><p>연동률, 음성방 구성, 지각 추이를 한눈에 확인합니다.</p></div>
+              </div>
+              <div className="discord-chart-grid discord-chart-grid--readable">
               <DonutChartCard title="Discord 연동률" caption={`${data.summary.linkedUsers}/${data.summary.approvedUsers}명 · 승인 유저 기준`} items={[{ label: "연동", value: data.summary.linkedUsers }, { label: "미연동", value: Math.max(0, data.summary.approvedUsers - data.summary.linkedUsers) }]} />
               <DonutChartCard title="현재 음성방 구성" caption="감시 대상 음성방 현재 상태" items={stats.voiceComposition} />
               <TrendChartCard title="최근 7일 구인 · 지각 추이" caption="일별 구인 수와 자동 지각 경고 수" data={stats.trend7d} />
               <BarChartCard title="음성방별 현재 인원" caption="현재 접속자 기준 TOP 음성방" items={channelBars} suffix="명" />
               <BarChartCard title="최근 30일 지각 TOP" caption="자동 지각 경고가 많은 대상" items={lateTopBars} suffix="건" />
               <DonutChartCard title="지각 경고 DM 상태" caption="최근 30일 자동 지각 경고 기준" items={stats.lateWarningDmStatus30d.map((item) => ({ label: dmStatusLabel(item.label), value: item.value }))} />
+              </div>
             </section>
           )}
 
-          <section className="discord-ops-two-col">
+          <section className="discord-readable-section discord-readable-section--compact">
+            <div className="discord-readable-section__head">
+              <div><span className="discord-readable-section__eyebrow">Operations</span><h2>최근 운영 상태</h2><p>봇 작동 상태와 최근 구인 모니터를 분리해 확인합니다.</p></div>
+            </div>
+            <div className="discord-ops-two-col">
             <div className="admin-card discord-ops-panel">
               <div className="admin-section-head"><h2>봇 작동 상태</h2></div>
               {latestBot ? (
@@ -288,6 +320,7 @@ export default function DiscordOverviewClient() {
                   </div>
                 ))}
               </div>
+            </div>
             </div>
           </section>
 

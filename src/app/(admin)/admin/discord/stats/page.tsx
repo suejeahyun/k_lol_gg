@@ -1,7 +1,7 @@
 import DiscordOpsStyles from "../_DiscordOpsStyles";
 import DiscordOpsNav from "../_DiscordOpsNav";
 import Link from "next/link";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 
@@ -105,6 +105,32 @@ function countBy<T>(rows: T[], getKey: (row: T) => string | null | undefined) {
 }
 function Metric({ label, value, caption, tone = "default" }: { label: string; value: string | number; caption: string; tone?: "default" | "ok" | "warn" | "error" }) {
   return <div className={`discord-ops-stat discord-ops-stat--${tone}`}><span>{label}</span><strong>{value}</strong><em>{caption}</em></div>;
+}
+
+function Section({ id, title, caption, children }: { id: string; title: string; caption: string; children: ReactNode }) {
+  return (
+    <section className="discord-readable-section" id={id}>
+      <div className="discord-readable-section__head">
+        <div>
+          <span className="discord-readable-section__eyebrow">운영 통계</span>
+          <h2>{title}</h2>
+          <p>{caption}</p>
+        </div>
+        <a className="discord-readable-section__top" href="#top">상단</a>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function InsightCard({ title, value, caption, tone = "default" }: { title: string; value: string | number; caption: string; tone?: "default" | "ok" | "warn" | "error" }) {
+  return (
+    <div className={`discord-insight-card discord-insight-card--${tone}`}>
+      <span>{title}</span>
+      <strong>{value}</strong>
+      <p>{caption}</p>
+    </div>
+  );
 }
 const chartVars = ["var(--discord-chart-1)", "var(--discord-chart-2)", "var(--discord-chart-3)", "var(--discord-chart-4)", "var(--discord-chart-5)"];
 function DonutChartCard({ title, caption, items }: { title: string; caption: string; items: ChartItem[] }) {
@@ -251,64 +277,130 @@ export default async function DiscordStatsPage(props: PageProps) {
   const scheduledMissing = recruits.filter((item) => !item.scheduledStartAt).length;
   const protectedCount = recruits.filter((item) => item.protectedUntil && item.protectedUntil > now).length;
 
-  return (
-    <main className="admin-page discord-ops-page">
-      <DiscordOpsStyles />
-      <div className="admin-page__header discord-ops-header"><div><h1 className="admin-page__title">Discord 운영 상세 통계</h1><p className="admin-muted">구인·음성방·지각·자동종료·봇/API 오류를 운영 관점에서 통합 확인합니다.</p></div><div className="admin-actions"><Link className="admin-button admin-button--secondary" href="/admin/discord">대시보드</Link></div></div>
-      <DiscordOpsNav active="stats" />
-      <div className="discord-ops-notice">기간 필터는 생성/발생 시각 기준입니다. 오류 통계는 봇 서버가 저장한 DiscordOperationLog 기준으로 집계됩니다.</div>
-      <form className="discord-filter-card" method="get"><label>이름 검색<input name="q" defaultValue={q} placeholder="예: 재현" /></label><label>기간<select name="days" defaultValue={String(days)}><option value="1">오늘</option><option value="7">최근 7일</option><option value="30">최근 30일</option><option value="90">최근 90일</option></select></label><button className="admin-button" type="submit">조회</button></form>
+  const dmNeedsCheckCount = lateWarnings.filter((row) => ["FAILED", "SKIPPED", "PENDING"].includes(String(row.discordDmStatus || "UNKNOWN").toUpperCase())).length;
+  const operationErrorTone = operationErrors.length > 0 ? "error" : "ok";
+  const scheduledTone = scheduledMissing > 0 ? "warn" : "ok";
+  const lateTone = lateWarnings.length > 0 ? "warn" : "ok";
+  const dmTone = dmNeedsCheckCount > 0 ? "warn" : "ok";
+  const heartbeatTone = heartbeats.length ? "ok" : "error";
 
-      <section className="discord-ops-stat-grid discord-ops-stat-grid--ops">
+  return (
+    <main className="admin-page discord-ops-page" id="top">
+      <DiscordOpsStyles />
+      <div className="admin-page__header discord-ops-header discord-ops-header--readable">
+        <div>
+          <p className="page-eyebrow">Discord Operation Center</p>
+          <h1 className="admin-page__title">Discord 운영 상세 통계</h1>
+          <p className="admin-muted">구인·음성방·지각·자동종료·봇/API 오류를 운영 판단 순서대로 정리했습니다.</p>
+        </div>
+        <div className="admin-actions">
+          <Link className="admin-button admin-button--secondary" href="/admin/discord">대시보드</Link>
+          <Link className="admin-button" href="/admin/discord/settings">운영 설정</Link>
+        </div>
+      </div>
+
+      <DiscordOpsNav active="stats" />
+
+      <section className="discord-readability-hero">
+        <div>
+          <strong>확인 순서</strong>
+          <p>오류 → 구인 자동화 → 지각/DM → 음성방 활동 → 상세 로그 순서로 보면 됩니다.</p>
+        </div>
+        <nav className="discord-anchor-nav" aria-label="Discord 통계 바로가기">
+          <a href="#summary">요약</a>
+          <a href="#recruit">구인</a>
+          <a href="#warning">지각·경고</a>
+          <a href="#voice">음성방</a>
+          <a href="#bot">봇/API</a>
+          <a href="#details">상세</a>
+        </nav>
+      </section>
+
+      <form className="discord-filter-card discord-filter-card--readable" method="get">
+        <label>이름 검색<input name="q" defaultValue={q} placeholder="같이 있던 사람 분석용 · 예: 재현" /></label>
+        <label>기간<select name="days" defaultValue={String(days)}><option value="1">오늘</option><option value="7">최근 7일</option><option value="30">최근 30일</option><option value="90">최근 90일</option></select></label>
+        <button className="admin-button" type="submit">통계 조회</button>
+      </form>
+
+      <section className="discord-insight-grid" id="summary">
+        <InsightCard title="API 오류" value={`${operationErrors.length}건`} caption={operationErrors.length > 0 ? "봇/API 오류 섹션에서 원인을 먼저 확인하세요." : "선택 기간 오류 로그가 없습니다."} tone={operationErrorTone} />
+        <InsightCard title="구인 자동화 준비" value={`${scheduledMissing}건 누락`} caption={scheduledMissing > 0 ? "시작시간 미입력 구인은 지각 자동화에서 제외될 수 있습니다." : "시작시간 입력 상태가 양호합니다."} tone={scheduledTone} />
+        <InsightCard title="지각 관리" value={`${lateWarnings.length}건`} caption={lateWarnings.length > 0 ? "반복 대상과 시간대를 확인하세요." : "선택 기간 자동 지각 경고가 없습니다."} tone={lateTone} />
+        <InsightCard title="DM 확인" value={`${dmNeedsCheckCount}건`} caption={dmNeedsCheckCount > 0 ? "DM 실패·불가 대상은 수동 안내가 필요합니다." : "DM 발송 상태가 양호합니다."} tone={dmTone} />
+        <InsightCard title="Discord 연동률" value={`${linkRate}%`} caption={`${linkedUsers}/${approvedUsers}명 연동 · 자동화 정확도 기준`} />
+        <InsightCard title="봇 하트비트" value={heartbeats.length ? "정상" : "없음"} caption={heartbeats[0] ? formatKstDateTime(heartbeats[0].updatedAt) : "최근 기록이 없습니다."} tone={heartbeatTone} />
+      </section>
+
+      <section className="discord-ops-stat-grid discord-ops-stat-grid--ops discord-ops-stat-grid--readable">
         <Metric label="기간 내 구인" value={`${recruits.length}건`} caption={`진행중 ${recruits.filter((item) => String(item.status) === "IN_PROGRESS").length}건`} />
-        <Metric label="지각 경고" value={`${lateWarnings.length}건`} caption="자동 지각 경고 기준" tone={lateWarnings.length > 0 ? "warn" : "ok"} />
+        <Metric label="지각 경고" value={`${lateWarnings.length}건`} caption="자동 지각 경고 기준" tone={lateTone} />
         <Metric label="전체 경고" value={`${allWarnings.length}건`} caption={`활성 ${activeWarnings}건`} />
         <Metric label="자동종료" value={`${monitors.filter((item) => item.autoFinishedAt).length}건`} caption="Discord 모니터 기준" />
-        <Metric label="API 오류" value={`${operationErrors.length}건`} caption={`최근 로그 ${operationLogs.length}건`} tone={operationErrors.length > 0 ? "error" : "ok"} />
-        <Metric label="Discord 연동률" value={`${linkRate}%`} caption={`${linkedUsers}/${approvedUsers}명`} />
+        <Metric label="API 오류" value={`${operationErrors.length}건`} caption={`최근 로그 ${operationLogs.length}건`} tone={operationErrorTone} />
         <Metric label="음성 이벤트" value={`${events.length}건`} caption={`세션 ${sessions.length}개 계산`} />
-        <Metric label="시작시간 누락" value={`${scheduledMissing}건`} caption="지각 자동화 제외 가능" tone={scheduledMissing > 0 ? "warn" : "ok"} />
         <Metric label="보호중 구인" value={`${protectedCount}건`} caption="protectedUntil 기준" />
-        <Metric label="봇 하트비트" value={`${heartbeats.length ? "정상" : "없음"}`} caption={heartbeats[0] ? formatKstDateTime(heartbeats[0].updatedAt) : "최근 기록 없음"} tone={heartbeats.length ? "ok" : "error"} />
       </section>
 
-      <section className="discord-chart-grid">
-        <TrendChartCard title="운영 핵심 추이" caption={`최근 ${trendDays}일 구인·지각·오류·자동종료`} data={trend} />
-        <DonutChartCard title="Discord 연동률" caption="승인 유저 기준" items={[{ label: "연동", value: linkedUsers }, { label: "미연동", value: Math.max(0, approvedUsers - linkedUsers) }]} />
-        <DonutChartCard title="구인 상태 비율" caption="선택 기간 생성 구인 기준" items={recruitStatusItems} />
-        <DonutChartCard title="지각 DM 상태" caption="자동 지각 경고 기준" items={dmItems} />
-        <DonutChartCard title="운영 로그 상태" caption="봇/API/DM/관리자 로그 결과" items={operationStatusItems} />
-        <DonutChartCard title="전체 경고 유형" caption="선택 기간 전체 경고 기준" items={warningTypeItems} />
-        <BarChartCard title="API 오류 경로 TOP" caption="오류/실패 상태 로그 기준" items={endpointErrorItems} suffix="건" />
-        <BarChartCard title="운영 로그 유형 TOP" caption="봇 서버에서 저장한 작업 유형" items={operationTypeItems} suffix="건" />
-        <BarChartCard title="HTTP 상태코드" caption="오류 응답 코드 분포" items={httpStatusItems} suffix="건" />
-        <BarChartCard title="채널별 오류 TOP" caption="채널 ID/이름 기준 오류 집계" items={channelErrorItems} suffix="건" />
-        <BarChartCard title="구인 시간대" caption="카카오톡 구인 생성 시간" items={hourBars} suffix="건" />
-        <BarChartCard title="지각 시간대" caption="지각 경고 생성 시간" items={lateHourBars} suffix="건" />
-        <BarChartCard title="음성 이벤트 시간대" caption="입장·이동·퇴장 이벤트" items={voiceHourBars} suffix="건" />
-        <BarChartCard title="체류시간 TOP 10" caption="유저별 음성방 총 체류시간" items={stayTopBars} suffix="분" />
-        <BarChartCard title="음성방 사용 TOP 10" caption="채널별 누적 체류시간" items={channelTopBars} suffix="분" />
-        <BarChartCard title="지각 경고 TOP 10" caption="반복 지각 대상 확인" items={lateTargetBars} suffix="건" />
-        <BarChartCard title="전체 경고 TOP 10" caption="수동+자동 경고 누적" items={warningTargetBars} suffix="건" />
-        <BarChartCard title="구인 인원별" caption="2인/3인/5인 등 maxMembers 기준" items={recruitSizeItems} suffix="건" />
-        <BarChartCard title="구인 유형별" caption="게임 종류/파티 유형 기준" items={recruitTypeItems} suffix="건" />
-        <BarChartCard title="자동종료 상태" caption="RecruitPartyDiscordMonitor status" items={monitorStatusItems} suffix="건" />
-        <DonutChartCard title="경고 출처" caption="수동/자동 경고 비율" items={warningSourceItems} />
-        <DonutChartCard title="자동종료 로그 결과" caption="봇 운영 로그 기준" items={countBy(autoFinishLogs, (row) => statusKo(row.status))} />
-        <DonutChartCard title="지각 검사 로그 결과" caption="봇 운영 로그 기준" items={countBy(lateCheckLogs, (row) => statusKo(row.status))} />
-        <DonutChartCard title="DM 발송 로그 결과" caption="봇 운영 로그 기준" items={countBy(dmLogs, (row) => statusKo(row.status))} />
-        <DonutChartCard title="관리자 로그 발송" caption="봇 운영 로그 기준" items={countBy(adminLogLogs, (row) => statusKo(row.status))} />
-      </section>
+      <Section id="trend" title="핵심 추이" caption="최근 흐름을 먼저 확인합니다. 구인 증가와 지각·오류 증가가 같이 움직이는지 보는 영역입니다.">
+        <div className="discord-chart-grid discord-chart-grid--featured">
+          <TrendChartCard title="운영 핵심 추이" caption={`최근 ${trendDays}일 구인·지각·오류·자동종료`} data={trend} />
+          <DonutChartCard title="운영 로그 상태" caption="봇/API/DM/관리자 로그 결과" items={operationStatusItems} />
+        </div>
+      </Section>
 
-      <section className="discord-ops-two-col">
-        <div className="admin-card discord-ops-panel"><div className="admin-section-head"><h2>최근 운영 오류</h2></div><div className="discord-ops-list discord-stats-list">{operationErrors.slice(0, 15).length === 0 ? <p className="admin-muted">선택 기간 오류 로그가 없습니다.</p> : operationErrors.slice(0, 15).map((item) => <div className="discord-ops-list-row" key={item.id}><strong>{typeKo(item.type)} · {item.endpoint || item.channelName || item.channelId || "공통"}</strong><span>{formatKstDateTime(item.createdAt)}</span><em className="text-muted-compact">{item.message || `${statusKo(item.status)} ${item.httpStatus || ""}`}</em></div>)}</div></div>
-        <div className="admin-card discord-ops-panel"><div className="admin-section-head"><h2>최근 운영 로그</h2></div><div className="discord-ops-list discord-stats-list">{operationLogs.slice(0, 15).map((item) => <div className="discord-ops-list-row" key={item.id}><strong>{typeKo(item.type)} · {statusKo(item.status)}</strong><span>{formatKstDateTime(item.createdAt)}</span><em className="text-muted-compact">{item.endpoint || item.channelName || item.channelId || item.message || "-"}</em></div>)}</div></div>
-      </section>
+      <Section id="recruit" title="구인 운영" caption="구인 상태, 인원, 시간대, 자동종료 상태를 묶어서 봅니다.">
+        <div className="discord-chart-grid discord-chart-grid--readable">
+          <DonutChartCard title="구인 상태 비율" caption="선택 기간 생성 구인 기준" items={recruitStatusItems} />
+          <BarChartCard title="구인 시간대" caption="카카오톡 구인 생성 시간" items={hourBars} suffix="건" />
+          <BarChartCard title="구인 인원별" caption="2인/3인/5인 등 maxMembers 기준" items={recruitSizeItems} suffix="건" />
+          <BarChartCard title="구인 유형별" caption="게임 종류/파티 유형 기준" items={recruitTypeItems} suffix="건" />
+          <BarChartCard title="자동종료 상태" caption="RecruitPartyDiscordMonitor status" items={monitorStatusItems} suffix="건" />
+          <DonutChartCard title="자동종료 로그 결과" caption="봇 운영 로그 기준" items={countBy(autoFinishLogs, (row) => statusKo(row.status))} />
+        </div>
+      </Section>
 
-      <section className="discord-ops-two-col">
-        <div className="admin-card discord-ops-panel"><div className="admin-section-head"><h2>체류시간 상세 TOP 10</h2></div><div className="discord-ops-list discord-stats-list">{stayTop10.length === 0 ? <p className="admin-muted">체류시간 데이터가 없습니다.</p> : stayTop10.map((item, index) => <div className="discord-ops-list-row" key={item.discordId}><strong>{index + 1}. {item.label}</strong><span>{formatDurationSeconds(item.seconds)}</span></div>)}</div></div>
-        <div className="admin-card discord-ops-panel"><div className="admin-section-head"><h2>같이 있던 사람 TOP 10</h2></div>{!q ? <p className="admin-muted">검색어에 이름을 입력하면 같은 음성방에 가장 오래 같이 있던 사람을 계산합니다.</p> : <div className="discord-ops-list discord-stats-list">{coPresenceTop10.length === 0 ? <p className="admin-muted">같이 있던 사람 데이터가 없습니다.</p> : coPresenceTop10.map((item, index) => <div className="discord-ops-list-row" key={item.discordId}><strong>{index + 1}. {item.label}</strong><span>{formatDurationSeconds(item.seconds)}</span></div>)}</div>}</div>
-      </section>
+      <Section id="warning" title="지각 · 경고 · DM" caption="반복 지각자, 경고 출처, DM 실패 대상을 운영자가 바로 확인하는 영역입니다.">
+        <div className="discord-chart-grid discord-chart-grid--readable">
+          <DonutChartCard title="지각 DM 상태" caption="자동 지각 경고 기준" items={dmItems} />
+          <BarChartCard title="지각 경고 TOP 10" caption="반복 지각 대상 확인" items={lateTargetBars} suffix="건" />
+          <BarChartCard title="지각 시간대" caption="지각 경고 생성 시간" items={lateHourBars} suffix="건" />
+          <BarChartCard title="전체 경고 TOP 10" caption="수동+자동 경고 누적" items={warningTargetBars} suffix="건" />
+          <DonutChartCard title="전체 경고 유형" caption="선택 기간 전체 경고 기준" items={warningTypeItems} />
+          <DonutChartCard title="경고 출처" caption="수동/자동 경고 비율" items={warningSourceItems} />
+          <DonutChartCard title="지각 검사 로그 결과" caption="봇 운영 로그 기준" items={countBy(lateCheckLogs, (row) => statusKo(row.status))} />
+          <DonutChartCard title="DM 발송 로그 결과" caption="봇 운영 로그 기준" items={countBy(dmLogs, (row) => statusKo(row.status))} />
+        </div>
+      </Section>
+
+      <Section id="voice" title="음성방 이용" caption="현재 운영에서 누가 오래 머물고 어떤 방이 많이 쓰이는지 확인합니다.">
+        <div className="discord-chart-grid discord-chart-grid--readable">
+          <BarChartCard title="음성 이벤트 시간대" caption="입장·이동·퇴장 이벤트" items={voiceHourBars} suffix="건" />
+          <BarChartCard title="체류시간 TOP 10" caption="유저별 음성방 총 체류시간" items={stayTopBars} suffix="분" />
+          <BarChartCard title="음성방 사용 TOP 10" caption="채널별 누적 체류시간" items={channelTopBars} suffix="분" />
+          <DonutChartCard title="Discord 연동률" caption="승인 유저 기준" items={[{ label: "연동", value: linkedUsers }, { label: "미연동", value: Math.max(0, approvedUsers - linkedUsers) }]} />
+        </div>
+      </Section>
+
+      <Section id="bot" title="봇 · API 안정성" caption="HTTP 오류, API 실패, 관리자 로그 발송 상태를 모아서 봅니다.">
+        <div className="discord-chart-grid discord-chart-grid--readable">
+          <BarChartCard title="API 오류 경로 TOP" caption="오류/실패 상태 로그 기준" items={endpointErrorItems} suffix="건" />
+          <BarChartCard title="운영 로그 유형 TOP" caption="봇 서버에서 저장한 작업 유형" items={operationTypeItems} suffix="건" />
+          <BarChartCard title="HTTP 상태코드" caption="오류 응답 코드 분포" items={httpStatusItems} suffix="건" />
+          <BarChartCard title="채널별 오류 TOP" caption="채널 ID/이름 기준 오류 집계" items={channelErrorItems} suffix="건" />
+          <DonutChartCard title="관리자 로그 발송" caption="봇 운영 로그 기준" items={countBy(adminLogLogs, (row) => statusKo(row.status))} />
+        </div>
+      </Section>
+
+      <Section id="details" title="상세 로그" caption="문제 발생 시 마지막으로 확인하는 원본성 리스트입니다.">
+        <div className="discord-ops-two-col">
+          <div className="admin-card discord-ops-panel"><div className="admin-section-head"><h2>최근 운영 오류</h2></div><div className="discord-ops-list discord-stats-list">{operationErrors.slice(0, 15).length === 0 ? <p className="admin-muted">선택 기간 오류 로그가 없습니다.</p> : operationErrors.slice(0, 15).map((item) => <div className="discord-ops-list-row" key={item.id}><strong>{typeKo(item.type)} · {item.endpoint || item.channelName || item.channelId || "공통"}</strong><span>{formatKstDateTime(item.createdAt)}</span><em className="text-muted-compact">{item.message || `${statusKo(item.status)} ${item.httpStatus || ""}`}</em></div>)}</div></div>
+          <div className="admin-card discord-ops-panel"><div className="admin-section-head"><h2>최근 운영 로그</h2></div><div className="discord-ops-list discord-stats-list">{operationLogs.slice(0, 15).map((item) => <div className="discord-ops-list-row" key={item.id}><strong>{typeKo(item.type)} · {statusKo(item.status)}</strong><span>{formatKstDateTime(item.createdAt)}</span><em className="text-muted-compact">{item.endpoint || item.channelName || item.channelId || item.message || "-"}</em></div>)}</div></div>
+        </div>
+
+        <div className="discord-ops-two-col discord-readable-detail-row">
+          <div className="admin-card discord-ops-panel"><div className="admin-section-head"><h2>체류시간 상세 TOP 10</h2></div><div className="discord-ops-list discord-stats-list">{stayTop10.length === 0 ? <p className="admin-muted">체류시간 데이터가 없습니다.</p> : stayTop10.map((item, index) => <div className="discord-ops-list-row" key={item.discordId}><strong>{index + 1}. {item.label}</strong><span>{formatDurationSeconds(item.seconds)}</span></div>)}</div></div>
+          <div className="admin-card discord-ops-panel"><div className="admin-section-head"><h2>같이 있던 사람 TOP 10</h2></div>{!q ? <p className="admin-muted">검색어에 이름을 입력하면 같은 음성방에 가장 오래 같이 있던 사람을 계산합니다.</p> : <div className="discord-ops-list discord-stats-list">{coPresenceTop10.length === 0 ? <p className="admin-muted">같이 있던 사람 데이터가 없습니다.</p> : coPresenceTop10.map((item, index) => <div className="discord-ops-list-row" key={item.discordId}><strong>{index + 1}. {item.label}</strong><span>{formatDurationSeconds(item.seconds)}</span></div>)}</div>}</div>
+        </div>
+      </Section>
     </main>
-  );
-}
+  );}
