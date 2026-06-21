@@ -4,6 +4,9 @@ import { prisma } from "@/lib/prisma/client";
 export type DiscordOperationSettings = {
   autoFinishEnabled: boolean;
   autoFinishHoldMinutes: number;
+  recruitLateWarningEnabled: boolean;
+  recruitLateWarningGraceMinutes: number;
+  recruitLateWarningDmEnabled: boolean;
   watchAllVoiceChannels: boolean;
   watchChannelIds: string[];
   watchCategoryIds: string[];
@@ -23,6 +26,9 @@ export type DiscordOperationSettings = {
 export const DEFAULT_DISCORD_OPERATION_SETTINGS: DiscordOperationSettings = {
   autoFinishEnabled: true,
   autoFinishHoldMinutes: Number(process.env.DISCORD_AUTO_FINISH_HOLD_MINUTES || 10),
+  recruitLateWarningEnabled: process.env.DISCORD_RECRUIT_LATE_WARNING_ENABLED !== "false",
+  recruitLateWarningGraceMinutes: Number(process.env.DISCORD_RECRUIT_LATE_WARNING_GRACE_MINUTES || 5),
+  recruitLateWarningDmEnabled: process.env.DISCORD_RECRUIT_LATE_WARNING_DM_ENABLED !== "false",
   watchAllVoiceChannels: process.env.DISCORD_WATCH_ALL_VOICE_CHANNELS === "true",
   watchChannelIds: splitEnv(process.env.DISCORD_WATCH_CHANNEL_IDS),
   watchCategoryIds: splitEnv(process.env.DISCORD_WATCH_CATEGORY_IDS),
@@ -73,6 +79,9 @@ export function normalizeDiscordOperationSettings(value: Partial<DiscordOperatio
   return {
     autoFinishEnabled: normalizeBoolean(value.autoFinishEnabled, DEFAULT_DISCORD_OPERATION_SETTINGS.autoFinishEnabled),
     autoFinishHoldMinutes: normalizeNumber(value.autoFinishHoldMinutes, DEFAULT_DISCORD_OPERATION_SETTINGS.autoFinishHoldMinutes, 1, 120),
+    recruitLateWarningEnabled: normalizeBoolean(value.recruitLateWarningEnabled, DEFAULT_DISCORD_OPERATION_SETTINGS.recruitLateWarningEnabled),
+    recruitLateWarningGraceMinutes: normalizeNumber(value.recruitLateWarningGraceMinutes, DEFAULT_DISCORD_OPERATION_SETTINGS.recruitLateWarningGraceMinutes, 0, 120),
+    recruitLateWarningDmEnabled: normalizeBoolean(value.recruitLateWarningDmEnabled, DEFAULT_DISCORD_OPERATION_SETTINGS.recruitLateWarningDmEnabled),
     watchAllVoiceChannels: normalizeBoolean(value.watchAllVoiceChannels, DEFAULT_DISCORD_OPERATION_SETTINGS.watchAllVoiceChannels),
     watchChannelIds: normalizeStringArray(value.watchChannelIds),
     watchCategoryIds: normalizeStringArray(value.watchCategoryIds),

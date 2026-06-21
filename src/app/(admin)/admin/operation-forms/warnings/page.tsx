@@ -35,6 +35,8 @@ export default async function AdminWarningsPage() {
     ...record,
     createdAt: record.createdAt.toISOString(),
     resetAt: record.resetAt ? record.resetAt.toISOString() : null,
+    discordAdminNotifiedAt: record.discordAdminNotifiedAt ? record.discordAdminNotifiedAt.toISOString() : null,
+    discordDmSentAt: record.discordDmSentAt ? record.discordDmSentAt.toISOString() : null,
   }));
 
   return (
@@ -105,16 +107,17 @@ export default async function AdminWarningsPage() {
           font-size: 13px;
         }
         .discipline-table-wrap { overflow-x: auto; border-radius: 18px; }
-        .discipline-table { min-width: 1120px; table-layout: fixed; }
+        .discipline-table { min-width: 1320px; table-layout: fixed; }
         .discipline-table th,
         .discipline-table td { vertical-align: middle; padding: 14px 14px; }
         .discipline-table th:nth-child(1), .discipline-table td:nth-child(1) { width: 86px; }
         .discipline-table th:nth-child(2), .discipline-table td:nth-child(2) { width: 210px; }
         .discipline-table th:nth-child(3), .discipline-table td:nth-child(3) { width: 140px; }
         .discipline-table th:nth-child(4), .discipline-table td:nth-child(4) { width: auto; }
-        .discipline-table th:nth-child(5), .discipline-table td:nth-child(5) { width: 170px; }
+        .discipline-table th:nth-child(5), .discipline-table td:nth-child(5) { width: 180px; }
         .discipline-table th:nth-child(6), .discipline-table td:nth-child(6) { width: 170px; }
-        .discipline-table th:nth-child(7), .discipline-table td:nth-child(7) { width: 190px; }
+        .discipline-table th:nth-child(7), .discipline-table td:nth-child(7) { width: 170px; }
+        .discipline-table th:nth-child(8), .discipline-table td:nth-child(8) { width: 190px; }
         .discipline-reason { white-space: normal; line-height: 1.55; word-break: keep-all; overflow-wrap: anywhere; }
         .discipline-target-main { display:flex; align-items:center; gap:8px; min-width: 0; }
         .discipline-target-main strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -142,6 +145,35 @@ export default async function AdminWarningsPage() {
           min-width: 58px;
           font-size: 12px;
         }
+
+        .discipline-source-ref {
+          display:inline-flex;
+          margin-bottom:6px;
+          padding:4px 8px;
+          border-radius:999px;
+          border:1px solid rgba(56,189,248,.32);
+          background:rgba(14,165,233,.12);
+          color:#b8edff;
+          font-size:12px;
+          font-weight:900;
+        }
+        .discipline-dm {
+          display:inline-flex;
+          align-items:center;
+          justify-content:center;
+          border-radius:999px;
+          padding:5px 9px;
+          border:1px solid rgba(255,255,255,.12);
+          background:rgba(148,163,184,.12);
+          color:#dbeafe;
+          font-size:12px;
+          font-weight:900;
+          margin-bottom:5px;
+        }
+        .discipline-dm.sent { color:#9fffc7; background:rgba(24,180,95,.14); border-color:rgba(82,255,160,.35); }
+        .discipline-dm.failed { color:#ffb3b3; background:rgba(255,76,76,.14); border-color:rgba(255,120,120,.35); }
+        .discipline-dm.pending { color:#ffe58f; background:rgba(255,185,60,.14); border-color:rgba(255,214,102,.35); }
+        .discipline-dm.skipped, .discipline-dm.disabled { color:#bdd1ea; background:rgba(120,140,170,.12); }
         .discipline-pill.active { color:#9fffc7; background: rgba(24,180,95,.14); border-color: rgba(82,255,160,.35); }
         .discipline-pill.reset { color:#bdd1ea; background: rgba(120,140,170,.12); }
         .discipline-type.caution { color:#ffe58f; background: rgba(255,185,60,.14); border-color: rgba(255,214,102,.35); }

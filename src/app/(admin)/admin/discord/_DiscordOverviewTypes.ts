@@ -2,6 +2,9 @@ export type Diagnostic = { level: "OK" | "INFO" | "WARN" | "ERROR"; code: string
 export type DiscordSettings = {
   autoFinishEnabled: boolean;
   autoFinishHoldMinutes: number;
+  recruitLateWarningEnabled: boolean;
+  recruitLateWarningGraceMinutes: number;
+  recruitLateWarningDmEnabled: boolean;
   watchAllVoiceChannels: boolean;
   watchChannelIds: string[];
   watchCategoryIds: string[];

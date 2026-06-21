@@ -1416,6 +1416,17 @@ model UserDisciplineRecord {
   source        String   @default("MANUAL")
   note          String?  @db.Text
 
+  sourceRefType String?
+  sourceRefId   String?
+  sourceRefKey  String? @unique
+  sourceMeta    Json?
+
+  discordUserId String?
+  discordAdminNotifiedAt DateTime?
+  discordDmStatus String?
+  discordDmSentAt DateTime?
+  discordDmError String? @db.Text
+
   isActive      Boolean  @default(true)
   resetAt       DateTime?
   resetReason   String?  @db.Text
@@ -1431,6 +1442,9 @@ model UserDisciplineRecord {
   @@index([userAccountId, isActive])
   @@index([playerId, isActive])
   @@index([type, isActive])
+  @@index([sourceRefType, sourceRefId])
+  @@index([discordUserId])
+  @@index([discordDmStatus])
   @@index([createdAt])
 }
 
