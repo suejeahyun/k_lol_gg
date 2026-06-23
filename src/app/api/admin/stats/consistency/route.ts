@@ -6,6 +6,9 @@ import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { getGameMvpParticipant } from "@/lib/mvp";
 import { getCurrentSeasonId } from "@/lib/stats/recalculate";
 
+const MAX_CONSISTENCY_PARTICIPANTS = Number(process.env.ADMIN_STATS_CONSISTENCY_PARTICIPANT_LIMIT ?? "20000");
+const MAX_CONSISTENCY_STORED_STATS = Number(process.env.ADMIN_STATS_CONSISTENCY_STORED_STAT_LIMIT ?? "5000");
+
 type RawPlayerStat = {
   playerId: number;
   name: string;
@@ -72,6 +75,8 @@ export async function GET(req: NextRequest) {
       }),
       prisma.matchParticipant.findMany({
         where: { game: { series: { seasonId } } },
+        orderBy: { id: "asc" },
+        take: Number.isFinite(MAX_CONSISTENCY_PARTICIPANTS) && MAX_CONSISTENCY_PARTICIPANTS > 0 ? MAX_CONSISTENCY_PARTICIPANTS : 20000,
         include: {
           player: { select: { id: true, name: true, nickname: true, tag: true } },
           game: {
@@ -86,6 +91,8 @@ export async function GET(req: NextRequest) {
       }),
       prisma.playerSeasonStat.findMany({
         where: { seasonId },
+        orderBy: { id: "asc" },
+        take: Number.isFinite(MAX_CONSISTENCY_STORED_STATS) && MAX_CONSISTENCY_STORED_STATS > 0 ? MAX_CONSISTENCY_STORED_STATS : 5000,
         include: {
           player: { select: { id: true, name: true, nickname: true, tag: true } },
         },
@@ -228,6 +235,12 @@ export async function GET(req: NextRequest) {
         : "저장 통계와 원본 참가 데이터가 다른 플레이어가 있습니다. 관리자 통계 재계산을 실행하세요.",
       diffCount: diffs.length,
       diffs,
+      limits: {
+        participantLimit: Number.isFinite(MAX_CONSISTENCY_PARTICIPANTS) && MAX_CONSISTENCY_PARTICIPANTS > 0 ? MAX_CONSISTENCY_PARTICIPANTS : 20000,
+        storedStatLimit: Number.isFinite(MAX_CONSISTENCY_STORED_STATS) && MAX_CONSISTENCY_STORED_STATS > 0 ? MAX_CONSISTENCY_STORED_STATS : 5000,
+        participantLimitReached: participants.length >= (Number.isFinite(MAX_CONSISTENCY_PARTICIPANTS) && MAX_CONSISTENCY_PARTICIPANTS > 0 ? MAX_CONSISTENCY_PARTICIPANTS : 20000),
+        storedStatLimitReached: storedStats.length >= (Number.isFinite(MAX_CONSISTENCY_STORED_STATS) && MAX_CONSISTENCY_STORED_STATS > 0 ? MAX_CONSISTENCY_STORED_STATS : 5000),
+      },
       rawTop3: {
         winRate: [...eligibleRawPlayers]
           .sort((a, b) => (b.wins / Math.max(1, b.totalGames)) - (a.wins / Math.max(1, a.totalGames)) || b.participationCount - a.participationCount || b.mvpCount - a.mvpCount)

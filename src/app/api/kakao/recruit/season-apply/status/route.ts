@@ -298,6 +298,7 @@ async function createStatusReply(req: NextRequest, body?: ApplyStatusBody) {
         { sourceSlotNo: "asc" },
         { createdAt: "asc" },
       ],
+      take: 50,
     }),
     prisma.seasonParticipationPendingApply.findMany({
       where: {
@@ -327,6 +328,7 @@ async function createStatusReply(req: NextRequest, body?: ApplyStatusBody) {
         { reserveSlotNo: "asc" },
         { createdAt: "asc" },
       ],
+      take: 50,
     }),
   ]);
 

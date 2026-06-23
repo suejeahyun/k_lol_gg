@@ -5,6 +5,8 @@ import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { getKstDateKey, getTodayKstRange } from "@/lib/date/kst";
 import { prisma } from "@/lib/prisma/client";
 
+const MAX_DAILY_SEASON_APPLIES = 100;
+
 export async function GET() {
   const rejected = await rejectIfNotAdmin();
   if (rejected) return rejected;
@@ -53,6 +55,7 @@ export async function GET() {
       orderBy: {
         createdAt: "asc",
       },
+      take: MAX_DAILY_SEASON_APPLIES,
     });
 
     return NextResponse.json({

@@ -503,6 +503,7 @@ async function loadChampionImages() {
   const champions = await prisma.champion.findMany({
     select: { id: true, name: true, imageUrl: true },
     orderBy: { id: "asc" },
+    take: 250,
   });
 
   const loaded: ChampionImage[] = [];

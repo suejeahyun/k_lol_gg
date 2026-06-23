@@ -6,6 +6,8 @@ import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { rebuildInternalMmr } from "@/lib/balance/internal-mmr";
 
+const MAX_TRAINING_GAMES = Number(process.env.BALANCE_RECOMMENDATION_TRAIN_GAME_LIMIT ?? "10000");
+
 const CORE_ROLE_PAIRS = [
   ["ADC", "SUP"],
   ["JGL", "MID"],
@@ -47,6 +49,8 @@ async function getRecommendationSourceStats() {
       _count: { _all: true },
     }),
     prisma.matchGame.findMany({
+      orderBy: { id: "desc" },
+      take: Number.isFinite(MAX_TRAINING_GAMES) && MAX_TRAINING_GAMES > 0 ? MAX_TRAINING_GAMES : 10000,
       select: {
         participants: {
           select: {
