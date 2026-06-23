@@ -14,7 +14,7 @@ import {
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-const FORMAT_VERSION = "season-apply-format-v4";
+const FORMAT_VERSION = "season-apply-format-v5";
 const SEASON_RECRUIT_TARGET_COUNT = 10;
 
 type ApplyResult = {
@@ -851,10 +851,12 @@ export async function POST(req: NextRequest) {
 
     const parsed = parseRecruitMessage(message);
 
-    if (parsed.participants.length < 1 && !isRecruitSnapshotMessage(message)) {
+    if (parsed.participants.length < 1) {
       return kakaoJsonReply({
         formatVersion: FORMAT_VERSION,
-        reply: "[K-LOL.GG 구인구직방 참가 자동 등록 실패]",
+        reply: isRecruitSnapshotMessage(message)
+          ? "[K-LOL.GG 내전 명단 업데이트 실패]\n참가자 이름이 1명 이상 있어야 최신 명단으로 반영됩니다."
+          : "[K-LOL.GG 구인구직방 참가 자동 등록 실패]",
         parsed,
       });
     }
