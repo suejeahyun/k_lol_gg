@@ -293,6 +293,7 @@ function groupEntriesByRecruitNo(entries: SeasonRecruitStatusEntry[]) {
 
 function buildSeasonRecruitListReply(dateKey: string, grouped: Map<number, SeasonRecruitStatusEntry[]>) {
   const lines: string[] = [];
+  const recruitNos: number[] = [];
 
   lines.push("[K-LOL.GG 내전현황]");
   lines.push("");
@@ -303,15 +304,14 @@ function buildSeasonRecruitListReply(dateKey: string, grouped: Map<number, Seaso
       const mainCount = entries.filter((entry) => !entry.isReserve).length;
       const reserveCount = entries.filter((entry) => entry.isReserve).length;
       const dateTimeText = formatSeasonRecruitDateTime(dateKey, entries);
+      const reserveText = reserveCount > 0 ? ` / 예비 ${reserveCount}` : "";
 
-      lines.push(`#${recruitNo} 협곡내전`);
-      lines.push(`시간: ${dateTimeText}`);
-      lines.push(`현재: ${mainCount}/${TARGET_COUNT}${reserveCount > 0 ? ` / 예비 ${reserveCount}` : ""}`);
-      lines.push("");
+      recruitNos.push(recruitNo);
+      lines.push(`#${recruitNo} ${dateTimeText} (${mainCount}/${TARGET_COUNT}${reserveText})`);
     });
 
-  lines.push("상세 확인: 내전현황 번호");
-  lines.push("예) 내전현황 2");
+  lines.push("");
+  lines.push(`상세/복사용: ${recruitNos.map((recruitNo) => `내전현황 ${recruitNo}`).join(" / ")}`);
 
   return lines.join("\n").trim();
 }
