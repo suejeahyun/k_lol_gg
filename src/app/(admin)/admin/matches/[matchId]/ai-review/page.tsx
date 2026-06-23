@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import MatchAiReanalyzeButton from "@/components/admin/MatchAiReanalyzeButton";
+import BalanceFeedbackForm from "@/components/admin/BalanceFeedbackForm";
 import { prisma } from "@/lib/prisma/client";
 
 type Props = { params: Promise<{ matchId: string }> };
@@ -35,7 +36,11 @@ export default async function AdminMatchAiReviewPage({ params }: Props) {
 
   const match = await prisma.matchSeries.findUnique({
     where: { id },
-    include: { season: true, games: { include: { participants: true } } },
+    include: {
+      season: true,
+      teamBalanceDraft: { select: { id: true, title: true } },
+      games: { include: { participants: true } },
+    },
   });
   if (!match) notFound();
 
@@ -58,6 +63,11 @@ export default async function AdminMatchAiReviewPage({ params }: Props) {
           </p>
           <div className="ai-hero__actions">
             <Link className="button-secondary" href={`/admin/matches/${id}/edit`}>내전 수정</Link>
+            {match.teamBalanceDraft ? (
+              <Link className="button-secondary" href={`/admin/balance/drafts/${match.teamBalanceDraft.id}`}>
+                연결 밸런스 #{match.teamBalanceDraft.id}
+              </Link>
+            ) : null}
             <Link className="button-secondary" href="/admin/balance-ai/reviews">AI 리뷰 목록</Link>
           </div>
         </div>
@@ -96,6 +106,16 @@ export default async function AdminMatchAiReviewPage({ params }: Props) {
               <MatchAiReanalyzeButton matchId={id} />
             </article>
           </section>
+
+          <BalanceFeedbackForm
+            matchSeriesId={id}
+            draftId={review.draftId ?? match.teamBalanceDraftId ?? null}
+            selectedOptionType={review.selectedOptionType}
+            initialRating={review.feedbackRating}
+            initialProblemTeam={review.feedbackProblemTeam}
+            initialProblemLine={review.feedbackProblemLine}
+            initialMemo={review.feedbackMemo}
+          />
         </>
       ) : (
         <section className="ai-panel ai-warning">

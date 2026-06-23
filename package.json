@@ -31,11 +31,13 @@
     "@tiptap/extension-placeholder": "^3.26.0",
     "@tiptap/react": "^3.26.0",
     "@tiptap/starter-kit": "^3.26.0",
+    "@vercel/speed-insights": "^2.0.0",
     "bcryptjs": "^3.0.3",
     "bmp-js": "^0.1.0",
     "discord.js": "^14.26.4",
     "dotenv": "^17.4.2",
     "jsonwebtoken": "^9.0.3",
+    "lottie-web": "^5.12.2",
     "lucide-react": "^1.11.0",
     "next": "16.2.6",
     "pg": "^8.20.0",
@@ -45,8 +47,7 @@
     "sharp": "^0.34.2",
     "tesseract.js": "^6.0.1",
     "ts-node": "^10.9.2",
-    "tsx": "^4.21.0",
-    "lottie-web": "^5.12.2"
+    "tsx": "^4.21.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

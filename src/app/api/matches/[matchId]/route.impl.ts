@@ -1,4 +1,4 @@
-﻿export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
@@ -32,6 +32,7 @@ type UpdateMatchInput = {
   seasonId: number;
   title: string;
   matchDate: string;
+  teamBalanceDraftId?: number | null;
   games: UpdateGameInput[];
 };
 
@@ -60,6 +61,14 @@ function validatePayload(body: unknown):
   }
 
   const payload = body as Partial<UpdateMatchInput>;
+
+  if (
+    payload.teamBalanceDraftId !== undefined &&
+    payload.teamBalanceDraftId !== null &&
+    (!Number.isInteger(payload.teamBalanceDraftId) || payload.teamBalanceDraftId <= 0)
+  ) {
+    return { success: false, message: "팀 밸런스 결과 ID가 올바르지 않습니다." };
+  }
 
   if (
     typeof payload.seasonId !== "number" ||
@@ -244,6 +253,7 @@ function validatePayload(body: unknown):
       seasonId: payload.seasonId,
       title: payload.title.trim(),
       matchDate: payload.matchDate,
+      teamBalanceDraftId: payload.teamBalanceDraftId ?? null,
       games: payload.games,
     },
   };
@@ -399,12 +409,29 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
         },
       });
 
+      const teamBalanceDraftId =
+        Number.isInteger(data.teamBalanceDraftId) && Number(data.teamBalanceDraftId) > 0
+          ? Number(data.teamBalanceDraftId)
+          : null;
+
+      if (teamBalanceDraftId) {
+        const linkedDraft = await tx.teamBalanceDraft.findUnique({
+          where: { id: teamBalanceDraftId },
+          select: { id: true },
+        });
+
+        if (!linkedDraft) {
+          throw new Error("TEAM_BALANCE_DRAFT_NOT_FOUND");
+        }
+      }
+
       const matchSeries = await tx.matchSeries.update({
         where: { id: matchIdNumber },
         data: {
           seasonId: data.seasonId,
           title: data.title,
           matchDate: parseKstDateTime(data.matchDate)!,
+          teamBalanceDraftId,
         },
       });
 
@@ -455,6 +482,13 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
       match: updatedMatch,
     });
   } catch (error) {
+    if (error instanceof Error && error.message === "TEAM_BALANCE_DRAFT_NOT_FOUND") {
+      return NextResponse.json(
+        { message: "연결할 팀 밸런스 결과를 찾을 수 없습니다." },
+        { status: 400 },
+      );
+    }
+
     logServerError("[MATCH_PATCH_ERROR]", error);
     return NextResponse.json(
       { message: "내전 수정 중 오류가 발생했습니다." },

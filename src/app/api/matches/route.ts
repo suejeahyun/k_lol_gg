@@ -1,4 +1,4 @@
-﻿export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
@@ -34,6 +34,7 @@ type CreateMatchInput = {
   seasonId: number;
   title: string;
   matchDate: string;
+  teamBalanceDraftId?: number | null;
   games: CreateGameInput[];
 };
 
@@ -121,6 +122,25 @@ export async function POST(req: Request) {
       select: { id: true, name: true },
     });
 
+    const teamBalanceDraftId =
+      Number.isInteger(body.teamBalanceDraftId) && Number(body.teamBalanceDraftId) > 0
+        ? Number(body.teamBalanceDraftId)
+        : null;
+
+    const linkedTeamBalanceDraft = teamBalanceDraftId
+      ? await prisma.teamBalanceDraft.findUnique({
+          where: { id: teamBalanceDraftId },
+          select: { id: true, title: true },
+        })
+      : null;
+
+    if (teamBalanceDraftId && !linkedTeamBalanceDraft) {
+      return NextResponse.json(
+        { message: "연결할 팀 밸런스 결과를 찾을 수 없습니다." },
+        { status: 400 },
+      );
+    }
+
     if (!season) {
       return NextResponse.json(
         { message: "존재하지 않는 시즌입니다." },
@@ -207,6 +227,7 @@ export async function POST(req: Request) {
           title: body.title.trim(),
           matchDate: parsedMatchDate,
           seasonId: body.seasonId,
+          teamBalanceDraftId,
           games: {
             create: body.games.map((game) => {
               const mvpFields = getStoredGameMvpFields(game.participants, game.winnerTeam as Team);
@@ -244,7 +265,7 @@ export async function POST(req: Request) {
       await tx.adminLog.create({
         data: {
           action: "MATCH_CREATE",
-          message: `내전 등록: ${match.title} / 시즌: ${match.season.name} / 세트: ${match.games.length}개`,
+          message: `내전 등록: ${match.title} / 시즌: ${match.season.name} / 세트: ${match.games.length}개${teamBalanceDraftId ? ` / 팀밸런스 #${teamBalanceDraftId}` : ""}`,
         },
       });
 

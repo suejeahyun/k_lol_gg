@@ -81,12 +81,21 @@ export function getPredictedWinRates(redTotal: number, blueTotal: number) {
   };
 }
 
+function getEvaluationOptionLabel(optionNo?: number | null, optionTitle?: string | null) {
+  if (optionNo === 0) return optionTitle || "AI 전체탐색 최고안";
+  if (typeof optionNo === "number") {
+    return `${optionNo}안${optionTitle ? ` ${optionTitle}` : ""}`;
+  }
+  return optionTitle || "수동 조정안";
+}
+
 export function evaluateBalanceLayout(params: {
   assignments: BalanceEvaluatePlayer[];
   optionNo?: number | null;
   optionTitle?: string | null;
 }): BalanceEvaluationResult {
   const assignments = params.assignments;
+  const optionLabel = getEvaluationOptionLabel(params.optionNo, params.optionTitle);
   const redPlayers = assignments.filter((player) => player.team === "RED");
   const bluePlayers = assignments.filter((player) => player.team === "BLUE");
   const redTotal = round(redPlayers.reduce((sum, player) => sum + scoreOf(player), 0));
@@ -217,7 +226,7 @@ export function evaluateBalanceLayout(params: {
       predictedRedWinRate: winRates.red,
       predictedBlueWinRate: winRates.blue,
       reasoning: [
-        `${params.optionNo ?? "수동"}안 ${params.optionTitle ?? "수동 조정안"}을 현재 배치 기준으로 다시 평가했습니다.`,
+        `${optionLabel}을 현재 배치 기준으로 다시 평가했습니다.`,
         `예상 승률은 RED ${winRates.red.toFixed(1)}% / BLUE ${winRates.blue.toFixed(1)}%입니다.`,
         `총점 차이 ${diff.toFixed(1)}점, 최대 라인 차이 ${maxLineDiff.toFixed(1)}점, 미드-정글 차이 ${midJglDiff.toFixed(1)}점을 함께 판단했습니다.`,
       ],

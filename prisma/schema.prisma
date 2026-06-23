@@ -262,9 +262,11 @@ model MatchSeries {
   title     String
   matchDate DateTime
   seasonId  Int
+  teamBalanceDraftId Int?
   createdAt DateTime @default(now())
 
   season Season      @relation(fields: [seasonId], references: [id])
+  teamBalanceDraft TeamBalanceDraft? @relation(fields: [teamBalanceDraftId], references: [id], onDelete: SetNull)
   games  MatchGame[]
 
   balanceReviews       BalanceMatchReview[]
@@ -272,6 +274,7 @@ model MatchSeries {
   communityPosts       CommunityPost[]
 
   @@index([seasonId, matchDate])
+  @@index([teamBalanceDraftId])
 }
 
 model MatchGame {
@@ -779,6 +782,7 @@ model TeamBalanceDraft {
 
   season  Season?                  @relation(fields: [seasonId], references: [id], onDelete: SetNull)
   players TeamBalanceDraftPlayer[]
+  matchSeries MatchSeries[]
   balanceReviews BalanceMatchReview[]
 
   @@index([createdAt])

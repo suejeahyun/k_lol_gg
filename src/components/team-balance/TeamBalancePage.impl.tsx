@@ -42,6 +42,8 @@ export default function PlayersBalancePage() {
   const [selectedResultIndex, setSelectedResultIndex] = useState(0);
   const [importLoading, setImportLoading] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
+  const [manualRecalcLoading, setManualRecalcLoading] = useState(false);
+  const [manualRecalcMessage, setManualRecalcMessage] = useState("");
   const [draggingPlayerId, setDraggingPlayerId] = useState<number | null>(null);
   const [seasonApplyGroups, setSeasonApplyGroups] = useState<
     SeasonApplyGroup[]
@@ -140,6 +142,7 @@ export default function PlayersBalancePage() {
     setRows(createInitialRows());
     setResult(null);
     setErrorMessage("");
+    setManualRecalcMessage("");
   }
   function normalizeApplyPositions(
     mainPosition: ApplyPosition | null,
@@ -276,6 +279,11 @@ export default function PlayersBalancePage() {
   async function handleSaveBalanceDraft() {
     if (!result) {
       alert("저장할 팀 밸런스 결과가 없습니다. 먼저 팀 밸런스를 계산해주세요.");
+      return;
+    }
+
+    if (result.serverEvaluationMode === "MANUAL_ESTIMATE") {
+      alert("수동 조정안 서버 재평가가 끝난 뒤 저장해주세요.");
       return;
     }
 
@@ -468,6 +476,18 @@ export default function PlayersBalancePage() {
     );
   }
 
+  function getOptionLabel(optionNo?: number | null, optionTitle?: string | null) {
+    if (optionNo === 0) return optionTitle || "AI 전체탐색 최고안";
+    if (typeof optionNo === "number") return `${optionNo}안 ${optionTitle ?? ""}`.trim();
+    return optionTitle || "수동 조정안";
+  }
+
+  function getSoloSyncNameByPlayerId(playerId?: number | null) {
+    if (!playerId) return "알 수 없음";
+    const row = rows.find((item) => item.playerId === playerId);
+    return row?.name || `#${playerId}`;
+  }
+
   function buildCopyText(target: BalanceResponse) {
     const formatNames = (players: AssignedPlayer[]) => {
       return sortByPosition(players)
@@ -476,7 +496,7 @@ export default function PlayersBalancePage() {
     };
 
     const aiLine = target.aiJudgement
-      ? `\nAI 판단: ${target.aiJudgement.selectedOptionNo ?? "-"}안 ${target.aiJudgement.selectedOptionTitle ?? ""} / RED ${target.aiJudgement.predictedRedWinRate.toFixed(1)}% vs BLUE ${target.aiJudgement.predictedBlueWinRate.toFixed(1)}%`
+      ? `\n밸런스 판단: ${getOptionLabel(target.aiJudgement.selectedOptionNo, target.aiJudgement.selectedOptionTitle)} / RED ${target.aiJudgement.predictedRedWinRate.toFixed(1)}% vs BLUE ${target.aiJudgement.predictedBlueWinRate.toFixed(1)}%`
       : "";
 
     return `BLUE ${formatNames(target.blue)}\nRED ${formatNames(target.red)}${aiLine}`;
@@ -662,10 +682,11 @@ export default function PlayersBalancePage() {
     return {
       ...manualResult,
       soloSync: baseResult?.soloSync ?? null,
-      recommendedAlternative: baseResult?.recommendedAlternative ?? null,
+      recommendedAlternative: null,
       aiBestAlternative: baseResult?.aiBestAlternative ?? null,
       aiCandidateCount: baseResult?.aiCandidateCount,
       aiSearchScope: baseResult?.aiSearchScope,
+      serverEvaluationMode: "MANUAL_ESTIMATE",
       alternatives: baseResult?.alternatives,
     };
   }
@@ -697,10 +718,21 @@ export default function PlayersBalancePage() {
   }
 
   function getBalanceGrade(target: BalanceResponse) {
-    if (target.diff <= 2) return { grade: "S", label: "매우 균형" };
-    if (target.diff <= 5) return { grade: "A", label: "좋은 밸런스" };
-    if (target.diff <= 8) return { grade: "B", label: "무난함" };
-    if (target.diff <= 12) return { grade: "C", label: "일부 조정 필요" };
+    const quality = Number(target.qualityScore ?? 0);
+    const maxLineDiff = Number(target.maxLineDiff ?? Math.max(...getLineComparisons(target).map((line) => line.diff), 0));
+    const midJglDiff = Number(target.midJglDiff ?? 0);
+    const autoCount = Number(target.autoAssignedCount ?? 0);
+
+    if (quality >= 85 && target.diff <= 3 && maxLineDiff <= 5 && midJglDiff <= 6 && autoCount === 0) {
+      return { grade: "S", label: "매우 균형" };
+    }
+    if (quality >= 75 && target.diff <= 6 && maxLineDiff <= 8 && autoCount <= 1) {
+      return { grade: "A", label: "좋은 밸런스" };
+    }
+    if (quality >= 65 && target.diff <= 9 && maxLineDiff <= 10) {
+      return { grade: "B", label: "무난함" };
+    }
+    if (quality >= 50 && target.diff <= 13) return { grade: "C", label: "일부 조정 필요" };
     return { grade: "D", label: "수동 조정 권장" };
   }
 
@@ -1201,7 +1233,7 @@ export default function PlayersBalancePage() {
     if (alternatives.length === 0) return null;
 
     const recommendedNo = target.recommendedAlternative?.optionNo;
-    if (recommendedNo) {
+    if (typeof recommendedNo === "number" && recommendedNo > 0) {
       const recommendedIndex = alternatives.findIndex(
         (option) => option.optionNo === recommendedNo,
       );
@@ -1268,7 +1300,7 @@ export default function PlayersBalancePage() {
       <section className="balance-ai-judgement-card">
         <div className="balance-ai-judgement-head">
           <div>
-            <strong>AI 판단</strong>
+            <strong>{target.serverEvaluationMode === "MANUAL_RECALCULATED" ? "수동 조정 서버 판단" : target.serverEvaluationMode === "MANUAL_ESTIMATE" ? "수동 조정 임시 판단" : "밸런스 판단"}</strong>
             <span>
               공식 개선 제안이 아니라, 현재 RED / BLUE 배치를 실제 운영 리스크
               기준으로 추론한 결과입니다.
@@ -1905,49 +1937,81 @@ export default function PlayersBalancePage() {
     );
   }
 
-  function swapResultPlayers(sourcePlayerId: number, targetPlayerId: number) {
-    if (sourcePlayerId === targetPlayerId) return;
+  async function recalculateManualLayoutOnServer(nextResult: BalanceResponse, baseResult: BalanceResponse) {
+    try {
+      setManualRecalcLoading(true);
+      setManualRecalcMessage("수동 조정안 서버 재평가 중...");
 
-    setSelectedResultIndex(-1);
-
-    setResult((prev) => {
-      if (!prev) return prev;
-
-      const allPlayers = [...prev.red, ...prev.blue];
-      const source = allPlayers.find(
-        (player) => player.playerId === sourcePlayerId,
-      );
-      const target = allPlayers.find(
-        (player) => player.playerId === targetPlayerId,
-      );
-
-      if (!source || !target) return prev;
-
-      const nextPlayers = allPlayers.map((player) => {
-        if (player.playerId === source.playerId) {
-          return {
-            ...player,
-            team: target.team,
-            position: target.position,
-          };
-        }
-
-        if (player.playerId === target.playerId) {
-          return {
-            ...player,
-            team: source.team,
-            position: source.position,
-          };
-        }
-
-        return player;
+      const response = await fetch("/api/team-balance/recalculate-layout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          assignments: [...nextResult.red, ...nextResult.blue].map((player) => ({
+            playerId: player.playerId,
+            team: player.team,
+            position: player.position,
+            mainPositions: player.mainPositions ?? [],
+            subPositions: player.subPositions ?? [],
+          })),
+        }),
       });
 
-      const nextRed = nextPlayers.filter((player) => player.team === "RED");
-      const nextBlue = nextPlayers.filter((player) => player.team === "BLUE");
+      const data = (await response.json()) as BalanceResponse | ErrorResponse;
 
-      return normalizeResult(nextRed, nextBlue, prev);
+      if (!response.ok) {
+        const message = "message" in data ? data.message : "서버 재평가에 실패했습니다.";
+        setManualRecalcMessage(`서버 재평가 실패: ${message}`);
+        return;
+      }
+
+      const recalculated = data as BalanceResponse;
+      setResult({
+        ...recalculated,
+        soloSync: baseResult.soloSync ?? null,
+        aiBestAlternative: baseResult.aiBestAlternative ?? null,
+        aiCandidateCount: baseResult.aiCandidateCount,
+        aiSearchScope: baseResult.aiSearchScope,
+        alternatives: baseResult.alternatives,
+        recommendedAlternative: null,
+        serverEvaluationMode: "MANUAL_RECALCULATED",
+      });
+      setManualRecalcMessage("수동 조정안 서버 재평가 완료");
+    } catch (error) {
+      console.error("[MANUAL_BALANCE_RECALCULATE_ERROR]", error);
+      setManualRecalcMessage("서버 재평가 중 오류가 발생했습니다. 현재 화면은 임시 계산값입니다.");
+    } finally {
+      setManualRecalcLoading(false);
+    }
+  }
+
+  async function swapResultPlayers(sourcePlayerId: number, targetPlayerId: number) {
+    if (sourcePlayerId === targetPlayerId || !result) return;
+
+    const allPlayers = [...result.red, ...result.blue];
+    const source = allPlayers.find((player) => player.playerId === sourcePlayerId);
+    const target = allPlayers.find((player) => player.playerId === targetPlayerId);
+
+    if (!source || !target) return;
+
+    const nextPlayers = allPlayers.map((player) => {
+      if (player.playerId === source.playerId) {
+        return { ...player, team: target.team, position: target.position };
+      }
+
+      if (player.playerId === target.playerId) {
+        return { ...player, team: source.team, position: source.position };
+      }
+
+      return player;
     });
+
+    const nextRed = nextPlayers.filter((player) => player.team === "RED");
+    const nextBlue = nextPlayers.filter((player) => player.team === "BLUE");
+    const nextResult = normalizeResult(nextRed, nextBlue, result);
+
+    setSelectedResultIndex(-1);
+    setResult(nextResult);
+    void recalculateManualLayoutOnServer(nextResult, result);
   }
 
   async function handleCopy() {
@@ -2024,14 +2088,11 @@ export default function PlayersBalancePage() {
       }
 
       const balanceData = data as BalanceResponse;
-      const optionIndex = Math.max(
-        0,
-        (balanceData.optionNo ??
-          balanceData.aiJudgement?.selectedOptionNo ??
-          1) - 1,
-      );
+      const selectedOptionNo = balanceData.optionNo ?? balanceData.aiJudgement?.selectedOptionNo ?? 1;
+      const optionIndex = selectedOptionNo === 0 ? -1 : Math.max(0, selectedOptionNo - 1);
       setSelectedResultIndex(optionIndex);
-      setResult(balanceData);
+      setManualRecalcMessage("");
+      setResult({ ...balanceData, serverEvaluationMode: "AUTO" });
     } catch (error) {
       console.error(error);
       setErrorMessage("팀 밸런스 계산 중 오류가 발생했습니다.");
@@ -2073,10 +2134,10 @@ export default function PlayersBalancePage() {
             event.preventDefault();
             const sourceId = Number(event.dataTransfer.getData("text/plain"));
             if (!Number.isInteger(sourceId)) return;
-            swapResultPlayers(sourceId, player.playerId);
+            void swapResultPlayers(sourceId, player.playerId);
             setDraggingPlayerId(null);
           }}
-          title="선수 카드를 다른 선수 카드 위로 드래그하면 팀/라인이 교체되고 점수가 즉시 재계산됩니다."
+          title="선수 카드를 다른 선수 카드 위로 드래그하면 팀/라인이 교체되고 서버 기준으로 다시 계산됩니다."
         >
           <div className="balance-player-compact-head">
             <div className="balance-position-badge">{player.position}</div>
@@ -2306,17 +2367,37 @@ export default function PlayersBalancePage() {
                     <div className="balance-form-head__desc">
                       품질 점수 {Number(result.qualityScore ?? 0).toFixed(1)}점
                       {result.recommendedAlternative
-                        ? ` · 추천: ${result.recommendedAlternative.optionNo}안 ${result.recommendedAlternative.optionTitle ?? ""}`
+                        ? ` · 추천: ${getOptionLabel(result.recommendedAlternative.optionNo, result.recommendedAlternative.optionTitle)}`
                         : ""}
                       {result.warningMessages?.length
                         ? ` · 주의: ${result.warningMessages.join(" / ")}`
                         : ""}
                     </div>
+                    {manualRecalcMessage ? (
+                      <div className="balance-form-head__desc">
+                        {manualRecalcMessage}
+                      </div>
+                    ) : null}
+                    {result.serverEvaluationMode === "MANUAL_ESTIMATE" ? (
+                      <div className="balance-form-head__desc">
+                        현재 화면은 임시 계산값입니다. 서버 재평가 완료 후 저장하는 것을 권장합니다.
+                      </div>
+                    ) : null}
                     {result.soloSync ? (
                       <div className="balance-form-head__desc">
                         솔로랭 갱신: 성공 {result.soloSync.synced}명 / 스킵{" "}
                         {result.soloSync.skipped}명 / 실패{" "}
                         {result.soloSync.failed}명
+                        {result.soloSync.results?.filter((item) => item.status === "failed" || item.status === "skipped").length ? (
+                          <span>
+                            {" · 확인: "}
+                            {result.soloSync.results
+                              .filter((item) => item.status === "failed" || item.status === "skipped")
+                              .slice(0, 5)
+                              .map((item) => getSoloSyncNameByPlayerId(item.playerId))
+                              .join(", ")}
+                          </span>
+                        ) : null}
                       </div>
                     ) : null}
                   </div>
@@ -2385,8 +2466,8 @@ export default function PlayersBalancePage() {
                     계산 결과 요약
                   </div>
                   <div className="balance-form-head__desc">
-                    선수 카드를 드래그해 교체하면 포지션 기준에 따라 개인 점수와
-                    팀 총점이 즉시 재계산됩니다.
+                    선수 카드를 드래그해 교체하면 먼저 임시 계산을 표시한 뒤, 서버 DB 기준으로
+                    개인 점수와 팀 총점을 다시 평가합니다.
                   </div>
 
                   <div className="balance-summary-list balance-summary-list--compact">
@@ -2415,9 +2496,9 @@ export default function PlayersBalancePage() {
                         type="button"
                         className="app-button balance-compact-button"
                         onClick={handleSaveBalanceDraft}
-                        disabled={saveLoading || !result}
+                        disabled={saveLoading || manualRecalcLoading || !result}
                       >
-                        {saveLoading ? "저장 중..." : "결과 저장"}
+                        {saveLoading ? "저장 중..." : manualRecalcLoading ? "재평가 중..." : "결과 저장"}
                       </button>
 
                       <button

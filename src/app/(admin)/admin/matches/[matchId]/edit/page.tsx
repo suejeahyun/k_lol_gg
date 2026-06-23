@@ -100,6 +100,7 @@ export default async function EditMatchPage({ params }: EditMatchPageProps) {
     seasonId: match.seasonId,
     title: match.title,
     matchDate,
+    teamBalanceDraftId: match.teamBalanceDraftId ?? null,
     games: formGames,
   };
 

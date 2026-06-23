@@ -1,9 +1,10 @@
-﻿export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { writeAdminLog } from "@/lib/admin-log";
+import { applyBalanceFeedbackToProfiles } from "@/lib/balance/feedback-learning";
 import { logServerError } from "@/lib/server/safe-log";
 
 type FeedbackBody = {
@@ -30,24 +31,54 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const review = await prisma.balanceMatchReview.create({
-      data: {
-        matchSeriesId: body.matchSeriesId,
-        draftId: Number.isInteger(body.draftId) && body.draftId ? body.draftId : null,
-        selectedOptionType: body.selectedOptionType?.trim() || null,
-        feedbackRating: body.feedbackRating?.trim() || null,
-        feedbackProblemTeam: body.feedbackProblemTeam ?? null,
-        feedbackProblemLine: body.feedbackProblemLine ?? null,
-        feedbackMemo: body.feedbackMemo?.trim() || null,
-      },
+    const matchSeriesId = Number(body.matchSeriesId);
+    const targetDraftId = Number.isInteger(body.draftId) && body.draftId ? Number(body.draftId) : null;
+    const feedbackData = {
+      feedbackRating: body.feedbackRating?.trim() || null,
+      feedbackProblemTeam: body.feedbackProblemTeam ?? null,
+      feedbackProblemLine: body.feedbackProblemLine ?? null,
+      feedbackMemo: body.feedbackMemo?.trim() || null,
+    };
+
+    const result = await prisma.$transaction(async (tx) => {
+      const existingReview = await tx.balanceMatchReview.findFirst({
+        where: {
+          matchSeriesId,
+          ...(targetDraftId ? { draftId: targetDraftId } : {}),
+        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      const review = existingReview
+        ? await tx.balanceMatchReview.update({
+            where: { id: existingReview.id },
+            data: feedbackData,
+          })
+        : await tx.balanceMatchReview.create({
+            data: {
+              matchSeriesId,
+              draftId: targetDraftId,
+              selectedOptionType: body.selectedOptionType?.trim() || null,
+              ...feedbackData,
+            },
+          });
+
+      const learning = await applyBalanceFeedbackToProfiles(tx, {
+        matchSeriesId,
+        feedbackRating: feedbackData.feedbackRating,
+        feedbackProblemTeam: feedbackData.feedbackProblemTeam,
+        feedbackProblemLine: feedbackData.feedbackProblemLine,
+      });
+
+      return { review, learning };
     });
 
     await writeAdminLog({
-      action: "BALANCE_FEEDBACK_CREATE",
-      message: `팀 밸런스 피드백 저장: 내전 #${body.matchSeriesId}, 리뷰 #${review.id}`,
+      action: "BALANCE_FEEDBACK_SAVE",
+      message: `팀 밸런스 피드백 저장: 내전 #${matchSeriesId}, 리뷰 #${result.review.id}, MMR 보정 ${result.learning.adjustedPlayers}명`,
     });
 
-    return NextResponse.json({ review });
+    return NextResponse.json(result);
   } catch (error) {
     logServerError("[TEAM_BALANCE_FEEDBACK_POST_ERROR]", error);
     return NextResponse.json(

@@ -86,6 +86,7 @@ type MatchFormData = {
   seasonId: number;
   title: string;
   matchDate: string;
+  teamBalanceDraftId?: number | null;
   games: GameForm[];
 };
 
@@ -337,7 +338,7 @@ export default function MatchForm({
   const [importLoading, setImportLoading] = useState(false);
   const [draftListLoading, setDraftListLoading] = useState(false);
   const [teamBalanceDrafts, setTeamBalanceDrafts] = useState<TeamBalanceDraftListItem[]>([]);
-  const [selectedTeamBalanceDraftId, setSelectedTeamBalanceDraftId] = useState("");
+  const [selectedTeamBalanceDraftId, setSelectedTeamBalanceDraftId] = useState(initialData.teamBalanceDraftId ? String(initialData.teamBalanceDraftId) : "");
   const [activePlayerField, setActivePlayerField] = useState<string | null>(null);
   const [activeChampionField, setActiveChampionField] = useState<string | null>(
     null
@@ -366,10 +367,18 @@ export default function MatchForm({
 
       const drafts = data?.drafts ?? [];
       setTeamBalanceDrafts(drafts);
+      const queryDraftId =
+        typeof window !== "undefined"
+          ? new URLSearchParams(window.location.search).get("teamBalanceDraftId") ?? ""
+          : "";
 
       setSelectedTeamBalanceDraftId((prev) => {
         if (prev && drafts.some((draft) => String(draft.id) === prev)) {
           return prev;
+        }
+
+        if (queryDraftId && drafts.some((draft) => String(draft.id) === queryDraftId)) {
+          return queryDraftId;
         }
 
         return drafts[0]?.id ? String(drafts[0].id) : "";
@@ -478,6 +487,10 @@ export default function MatchForm({
       seasonId: form.seasonId,
       title: form.title.trim(),
       matchDate: form.matchDate,
+      teamBalanceDraftId:
+        Number.isInteger(Number(selectedTeamBalanceDraftId)) && Number(selectedTeamBalanceDraftId) > 0
+          ? Number(selectedTeamBalanceDraftId)
+          : null,
       games: form.games.map((game) => ({
         gameNumber: game.gameNumber,
         winnerTeam: game.winnerTeam,

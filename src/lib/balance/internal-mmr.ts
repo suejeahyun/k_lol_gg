@@ -1,9 +1,11 @@
 import type { Prisma, Position, Team } from "@prisma/client";
+import { evaluateBalanceLayout, type BalanceEvaluatePlayer } from "@/lib/balance/ai-evaluation";
 
 type Tx = Prisma.TransactionClient;
 
 type MatchLike = {
   id: number;
+  teamBalanceDraftId?: number | null;
   games: Array<{
     id: number;
     winnerTeam: Team;
@@ -189,6 +191,33 @@ export function getMmrBonus(params: {
   return round(clamp(raw, -6, 6));
 }
 
+async function getLinkedDraftEvaluation(tx: Tx, draftId?: number | null) {
+  if (!draftId) return null;
+
+  const draft = await tx.teamBalanceDraft.findUnique({
+    where: { id: draftId },
+    include: { players: true },
+  });
+
+  if (!draft || draft.players.length !== 10) return null;
+
+  const assignments: BalanceEvaluatePlayer[] = draft.players.map((item) => ({
+    playerId: item.playerId,
+    team: item.team,
+    position: item.position,
+    roleType: (item.roleType as BalanceEvaluatePlayer["roleType"]) ?? null,
+    score: item.score ?? 0,
+  }));
+
+  const evaluation = evaluateBalanceLayout({
+    assignments,
+    optionNo: null,
+    optionTitle: draft.optionType || "저장 밸런스",
+  });
+
+  return { draft, evaluation };
+}
+
 export async function updateInternalMmrAfterMatch(tx: Tx, match: MatchLike) {
   const playerIds = [
     ...new Set(match.games.flatMap((game) => game.participants.map((participant) => participant.playerId))),
@@ -200,6 +229,7 @@ export async function updateInternalMmrAfterMatch(tx: Tx, match: MatchLike) {
     where: { playerId: { in: playerIds } },
   });
   const profileByPlayerId = new Map(existingProfiles.map((profile) => [profile.playerId, profile]));
+  const linkedDraftEvaluation = await getLinkedDraftEvaluation(tx, match.teamBalanceDraftId ?? null);
 
   const allResults: Array<{
     matchSeriesId: number;
@@ -314,34 +344,46 @@ export async function updateInternalMmrAfterMatch(tx: Tx, match: MatchLike) {
     const midJglGap = round(gameReviews.reduce((sum, item) => sum + item.midJglGap, 0) / gameReviews.length);
     const bottomGap = round(gameReviews.reduce((sum, item) => sum + item.bottomGap, 0) / gameReviews.length);
     const actualWinner = getSeriesActualWinner(match.games);
+    const reviewRedTotal = linkedDraftEvaluation?.evaluation.redTotal ?? averageRedTotal;
+    const reviewBlueTotal = linkedDraftEvaluation?.evaluation.blueTotal ?? averageBlueTotal;
+    const reviewPredictedRedWinRate = linkedDraftEvaluation?.evaluation.aiJudgement.predictedRedWinRate ?? predictedRedWinRate;
+    const reviewPredictedBlueWinRate = linkedDraftEvaluation?.evaluation.aiJudgement.predictedBlueWinRate ?? predictedBlueWinRate;
+    const reviewMaxLineGap = linkedDraftEvaluation?.evaluation.maxLineDiff ?? maxLineGap;
+    const reviewMidJglGap = linkedDraftEvaluation?.evaluation.midJglDiff ?? midJglGap;
+    const reviewBottomGap = linkedDraftEvaluation?.evaluation.bottomDiff ?? bottomGap;
     const aiInference = getAiMatchInference({
-      predictedRedWinRate,
-      predictedBlueWinRate,
+      predictedRedWinRate: reviewPredictedRedWinRate,
+      predictedBlueWinRate: reviewPredictedBlueWinRate,
       actualWinner,
-      averageRedTotal,
-      averageBlueTotal,
-      maxLineGap,
-      midJglGap,
-      bottomGap,
+      averageRedTotal: reviewRedTotal,
+      averageBlueTotal: reviewBlueTotal,
+      maxLineGap: reviewMaxLineGap,
+      midJglGap: reviewMidJglGap,
+      bottomGap: reviewBottomGap,
     });
 
     await tx.balanceMatchReview.create({
       data: {
         matchSeriesId: match.id,
-        selectedOptionType: "AI_INFERRED_MMR",
-        predictedRedWinRate,
-        predictedBlueWinRate,
+        draftId: linkedDraftEvaluation?.draft.id ?? null,
+        selectedOptionType: linkedDraftEvaluation?.draft.optionType ?? "AI_INFERRED_MMR",
+        predictedRedWinRate: reviewPredictedRedWinRate,
+        predictedBlueWinRate: reviewPredictedBlueWinRate,
         actualWinner: actualWinner ?? undefined,
-        redTotal: averageRedTotal,
-        blueTotal: averageBlueTotal,
-        diff: round(Math.abs(averageRedTotal - averageBlueTotal)),
-        maxLineDiff: maxLineGap,
-        midJglDiff: midJglGap,
-        bottomDiff: bottomGap,
-        autoCount: 0,
+        redTotal: reviewRedTotal,
+        blueTotal: reviewBlueTotal,
+        diff: round(Math.abs(reviewRedTotal - reviewBlueTotal)),
+        maxLineDiff: reviewMaxLineGap,
+        midJglDiff: reviewMidJglGap,
+        bottomDiff: reviewBottomGap,
+        autoCount: linkedDraftEvaluation?.evaluation.autoAssignedCount ?? 0,
         highTierOffRoleCount: 0,
-        qualityScore: aiInference.aiConfidence,
+        qualityScore: linkedDraftEvaluation?.evaluation.qualityScore ?? aiInference.aiConfidence,
         ...aiInference,
+        aiReasoning: linkedDraftEvaluation
+          ? `저장 밸런스 #${linkedDraftEvaluation.draft.id} (${linkedDraftEvaluation.draft.title}) 기준으로 실제 결과를 비교했습니다.
+${aiInference.aiReasoning}`
+          : aiInference.aiReasoning,
       },
     });
   }

@@ -58,13 +58,23 @@ function extractLp(raw: string): number | null {
 }
 
 function extractDivision(raw: string): number | null {
-  const compact = raw.replace(/\s/g, "");
-  const tierMatch = compact.match(
-    /(다이아|다이아몬드|에메랄드|플래티넘|플레|골드|실버|브론즈|아이언)([1-4])/,
-  );
+  const compact = raw.replace(/\s/g, "").toLowerCase();
+  const patterns = [
+    /(?:다이아몬드|다이아|다|diamond|d)([1-4])$/,
+    /(?:에메랄드|에메|에|emerald|e)([1-4])$/,
+    /(?:플래티넘|플레티넘|플레|플|platinum|p)([1-4])$/,
+    /(?:골드|골|gold|g)([1-4])$/,
+    /(?:실버|실|silver|s)([1-4])$/,
+    /(?:브론즈|브|bronze|b)([1-4])$/,
+    /(?:아이언|아|iron|i)([1-4])$/,
+  ];
 
-  if (!tierMatch) return null;
-  return Number(tierMatch[2]);
+  for (const pattern of patterns) {
+    const tierMatch = compact.match(pattern);
+    if (tierMatch) return Number(tierMatch[1]);
+  }
+
+  return null;
 }
 
 function extractFloor(raw: string): number | null {
@@ -111,6 +121,10 @@ function getLpBonus(raw: string, unit = 100, maxBonus = 10) {
   return Math.min(maxBonus, Math.floor(lp / unit));
 }
 
+function matchesTierAlias(compact: string, aliases: string[]) {
+  return aliases.some((alias) => compact === alias || compact.startsWith(alias));
+}
+
 function getTierScoreDetail(raw: string): TierScoreDetail | null {
   const value = raw.trim();
   const compact = value.replace(/\s/g, "").toLowerCase();
@@ -119,7 +133,7 @@ function getTierScoreDetail(raw: string): TierScoreDetail | null {
   const division = extractDivision(value);
   const floor = extractFloor(value);
 
-  if (compact.includes("챌린저") || compact.includes("challenger")) {
+  if (matchesTierAlias(compact, ["챌린저", "챌", "challenger", "ch", "c"])) {
     return {
       label: value,
       score: 118 + getLpBonus(value, 200, 7),
@@ -127,7 +141,7 @@ function getTierScoreDetail(raw: string): TierScoreDetail | null {
     };
   }
 
-  if (compact.includes("그랜드마스터") || compact.includes("grandmaster")) {
+  if (matchesTierAlias(compact, ["그랜드마스터", "그마", "grandmaster", "gm"])) {
     return {
       label: value,
       score: 112 + getLpBonus(value, 200, 4),
@@ -135,7 +149,7 @@ function getTierScoreDetail(raw: string): TierScoreDetail | null {
     };
   }
 
-  if (compact.includes("마스터") || compact.includes("master")) {
+  if (matchesTierAlias(compact, ["마스터", "마", "master", "m"])) {
     const parsedFloor =
       floor ??
       (() => {
@@ -153,7 +167,7 @@ function getTierScoreDetail(raw: string): TierScoreDetail | null {
     };
   }
 
-  if (compact.includes("다이아") || compact.includes("diamond")) {
+  if (matchesTierAlias(compact, ["다이아몬드", "다이아", "다", "diamond", "d"])) {
     return {
       label: value,
       score: 70 + getDivisionBonus(division),
@@ -161,7 +175,7 @@ function getTierScoreDetail(raw: string): TierScoreDetail | null {
     };
   }
 
-  if (compact.includes("에메랄드") || compact.includes("emerald")) {
+  if (matchesTierAlias(compact, ["에메랄드", "에메", "에", "emerald", "e"])) {
     return {
       label: value,
       score: 60 + getDivisionBonus(division),
@@ -169,11 +183,7 @@ function getTierScoreDetail(raw: string): TierScoreDetail | null {
     };
   }
 
-  if (
-    compact.includes("플래티넘") ||
-    compact.includes("플레") ||
-    compact.includes("platinum")
-  ) {
+  if (matchesTierAlias(compact, ["플래티넘", "플레티넘", "플레", "플", "platinum", "p"])) {
     return {
       label: value,
       score: 50 + getDivisionBonus(division),
@@ -181,7 +191,7 @@ function getTierScoreDetail(raw: string): TierScoreDetail | null {
     };
   }
 
-  if (compact.includes("골드") || compact.includes("gold")) {
+  if (matchesTierAlias(compact, ["골드", "골", "gold", "g"])) {
     return {
       label: value,
       score: 40 + getDivisionBonus(division),
@@ -189,7 +199,7 @@ function getTierScoreDetail(raw: string): TierScoreDetail | null {
     };
   }
 
-  if (compact.includes("실버") || compact.includes("silver")) {
+  if (matchesTierAlias(compact, ["실버", "실", "silver", "s"])) {
     return {
       label: value,
       score: 30 + getDivisionBonus(division),
@@ -197,7 +207,7 @@ function getTierScoreDetail(raw: string): TierScoreDetail | null {
     };
   }
 
-  if (compact.includes("브론즈") || compact.includes("bronze")) {
+  if (matchesTierAlias(compact, ["브론즈", "브", "bronze", "b"])) {
     return {
       label: value,
       score: 20 + getDivisionBonus(division),
@@ -205,7 +215,7 @@ function getTierScoreDetail(raw: string): TierScoreDetail | null {
     };
   }
 
-  if (compact.includes("아이언") || compact.includes("iron")) {
+  if (matchesTierAlias(compact, ["아이언", "아", "iron", "i"])) {
     return {
       label: value,
       score: 10 + getDivisionBonus(division),
@@ -292,12 +302,10 @@ function getTierLabel(currentTier: string, peakTier: string) {
 }
 
 function getSTierBonus(peakTier: string) {
-  const compact = peakTier.replace(/\s/g, "");
-
-  if (compact.includes("챌린저")) return 10;
-  if (compact.includes("그랜드마스터")) return 8;
-  if (compact.includes("마스터")) return 5;
-
+  const score = getTierScoreDetail(peakTier || "")?.score ?? 0;
+  if (score >= 118) return 10;
+  if (score >= 112) return 8;
+  if (score >= MASTER_TIER_SCORE) return 5;
   return 0;
 }
 
@@ -354,8 +362,8 @@ function getScoreExplanation(params: {
     `기준점수는 최고티어 ${scoreBreakdown.peakTierScore.toFixed(1)}점 × 60% + 현재티어 ${scoreBreakdown.currentTierScore.toFixed(1)}점 × 30% + 내전지표 ${scoreBreakdown.inhouseScore.toFixed(1)}점 × 10% = ${scoreBreakdown.adjustedScore.toFixed(1)}점입니다.`,
     `내전지표는 현재 시즌 기준 승률, 참여수, MVP 비중을 0~100점으로 환산해 반영합니다. 데이터가 없으면 중립값 50점을 적용합니다.`,
     `최종 기준점수는 기준점수 ${scoreBreakdown.adjustedScore.toFixed(1)}점입니다. 최고티어 비중이 이미 높기 때문에 별도 S급 가산점은 팀 분산 평가에만 사용합니다.`,
-    `${position} 배정은 ${roleLabel} 기준이므로 포지션 반영률 ${(scoreBreakdown.roleMultiplier * 100).toFixed(0)}%가 적용되었습니다.`,
-    `최종 반영점수는 ${scoreBreakdown.finalBaseScore.toFixed(1)} × ${scoreBreakdown.roleMultiplier.toFixed(2)} = ${scoreBreakdown.finalScore.toFixed(1)}점입니다.`,
+    `${position} 배정은 ${roleLabel} 기준입니다. 반영률이 아니라 배정 감점 ${scoreBreakdown.rolePenalty.toFixed(1)}점으로 처리합니다.`,
+    `최종 반영점수는 기준점수 ${scoreBreakdown.finalBaseScore.toFixed(1)}점 + 솔랭폼 ${scoreBreakdown.soloRecentFormBonus.toFixed(1)}점 + 포지션숙련 ${scoreBreakdown.positionSkillBonus.toFixed(1)}점 + 내부MMR ${scoreBreakdown.mmrBonus.toFixed(1)}점 + 관리자보정 ${scoreBreakdown.balanceOverrideScore.toFixed(1)}점 - 배정감점 ${scoreBreakdown.rolePenalty.toFixed(1)}점 = ${scoreBreakdown.finalScore.toFixed(1)}점입니다.`,
   ];
 
   if (!player.currentTier && player.peakTier) {
@@ -372,7 +380,7 @@ function getScoreExplanation(params: {
 
   if (roleType === "AUTO") {
     explanations.push(
-      "선택한 주/부 포지션이 아니므로 자동배정 반영률이 적용되었습니다.",
+      "선택한 주/부 포지션이 아니므로 자동배정 감점이 적용되었습니다.",
     );
   }
 

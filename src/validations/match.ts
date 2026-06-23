@@ -23,6 +23,7 @@ type MatchCreateInput = {
   seasonId: number;
   title: string;
   matchDate: string;
+  teamBalanceDraftId?: number | null;
   games: GameInput[];
 };
 
@@ -55,6 +56,14 @@ export function validateMatchCreateInput(
 
   if (typeof data.matchDate !== "string" || !data.matchDate.trim()) {
     return { ok: false, message: "내전 일시를 입력해주세요." };
+  }
+
+  if (
+    data.teamBalanceDraftId !== undefined &&
+    data.teamBalanceDraftId !== null &&
+    (!Number.isInteger(data.teamBalanceDraftId) || data.teamBalanceDraftId <= 0)
+  ) {
+    return { ok: false, message: "팀 밸런스 결과 ID가 올바르지 않습니다." };
   }
 
   const parsedDate = parseKstDateTime(data.matchDate);

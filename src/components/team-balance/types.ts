@@ -167,6 +167,7 @@ export type BalanceResponse = {
     synced: number;
     skipped: number;
     failed: number;
+    results?: Array<{ playerId?: number; status?: string; reason?: string; message?: string }>;
   } | null;
   recommendedAlternative?: {
     optionNo?: number;
@@ -197,6 +198,7 @@ export type BalanceResponse = {
   aiBestAlternative?: BalanceResponse | null;
   aiCandidateCount?: number;
   aiSearchScope?: "ALL_CANDIDATES" | "THREE_OPTIONS";
+  serverEvaluationMode?: "AUTO" | "MANUAL_RECALCULATED" | "MANUAL_ESTIMATE";
   alternatives?: BalanceResponse[];
 };
 export type ApplyPosition = Position | "ALL";

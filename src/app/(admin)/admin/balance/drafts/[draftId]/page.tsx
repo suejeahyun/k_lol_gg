@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
+import BalanceFeedbackForm from "@/components/admin/BalanceFeedbackForm";
 
 const POSITION_ORDER: Record<string, number> = {
   TOP: 0,
@@ -78,6 +79,11 @@ export default async function AdminTeamBalanceDraftDetailPage({ params }: Props)
           qualityScore: true,
           aiRiskLevel: true,
           aiVerdict: true,
+          draftId: true,
+          feedbackRating: true,
+          feedbackProblemTeam: true,
+          feedbackProblemLine: true,
+          feedbackMemo: true,
           createdAt: true,
         },
       },
@@ -108,7 +114,7 @@ export default async function AdminTeamBalanceDraftDetailPage({ params }: Props)
 
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <Link className="button" href="/admin/balance/drafts">목록</Link>
-          <Link className="button button--primary" href="/admin/matches/new">내전 등록</Link>
+          <Link className="button button--primary" href={`/admin/matches/new?teamBalanceDraftId=${draft.id}`}>이 밸런스로 내전 등록</Link>
         </div>
       </div>
 
@@ -208,6 +214,18 @@ export default async function AdminTeamBalanceDraftDetailPage({ params }: Props)
           </table>
         </div>
       </section>
+
+      {draft.balanceReviews[0] ? (
+        <BalanceFeedbackForm
+          matchSeriesId={draft.balanceReviews[0].matchSeriesId}
+          draftId={draft.id}
+          selectedOptionType={draft.balanceReviews[0].selectedOptionType}
+          initialRating={draft.balanceReviews[0].feedbackRating}
+          initialProblemTeam={draft.balanceReviews[0].feedbackProblemTeam}
+          initialProblemLine={draft.balanceReviews[0].feedbackProblemLine}
+          initialMemo={draft.balanceReviews[0].feedbackMemo}
+        />
+      ) : null}
     </main>
   );
 }
