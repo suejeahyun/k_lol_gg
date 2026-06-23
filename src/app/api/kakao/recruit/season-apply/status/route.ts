@@ -251,10 +251,16 @@ function buildSeasonRecruitStatusTemplate(params: {
 
 function extractRequestedRecruitNo(value: unknown) {
   const text = String(value || "").trim();
+  const directNo = Number(text);
+
+  if (/^\d{1,3}$/.test(text) && Number.isInteger(directNo) && directNo >= 1 && directNo <= 999) {
+    return directNo;
+  }
   const patterns = [
     /(?:내전현황|AI공지|시즌내전현황)\s*#?\s*(\d{1,3})/i,
     /(?:내전\s*(?:번호|NO|No|no)\s*[:：]?\s*#?\s*)(\d{1,3})/i,
     /#\s*(\d{1,3})\s*(?:협곡\s*내전|협곡내전|내전)/i,
+    /(?:협곡\s*내전|협곡내전|내전)\s*(?:하실분|하실\s*분|구인|모집)?\s*#\s*(\d{1,3})/i,
     /(?:협곡\s*내전|협곡내전|내전)\s*#\s*(\d{1,3})/i,
     /^#?\s*(\d{1,3})$/,
   ];
