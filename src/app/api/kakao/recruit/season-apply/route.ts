@@ -14,11 +14,12 @@ import {
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-const FORMAT_VERSION = "season-apply-format-v3";
+const FORMAT_VERSION = "season-apply-format-v4";
+const SEASON_RECRUIT_TARGET_COUNT = 10;
 
 type ApplyResult = {
   participant: ParsedRecruitParticipant;
-  status: "REGISTERED" | "UPDATED" | "PENDING" | "RESERVE";
+  status: "REGISTERED" | "UPDATED" | "UNCHANGED" | "PENDING" | "RESERVE";
   reason?: string;
   player?: {
     id: number;
@@ -74,41 +75,112 @@ function buildPendingSummary(results: ApplyResult[]): string {
     .join("\n");
 }
 
+type ApplyChangeSummary = {
+  added: string[];
+  updated: string[];
+  removed: string[];
+  pending: string[];
+  reserve: string[];
+  currentMainCount: number;
+  currentReserveCount: number;
+};
+
+type PreviousSeasonApplyEntry = {
+  key: string;
+  label: string;
+  name: string;
+  isReserve: boolean;
+  slotNo: number | null;
+  reserveSlotNo: number | null;
+  mainPosition: unknown;
+  subPositions: unknown;
+  currentTier?: string | null;
+  peakTier?: string | null;
+  applyTimeText: string | null;
+};
+
+function createEmptyChangeSummary(params?: {
+  currentMainCount?: number;
+  currentReserveCount?: number;
+}): ApplyChangeSummary {
+  return {
+    added: [],
+    updated: [],
+    removed: [],
+    pending: [],
+    reserve: [],
+    currentMainCount: params?.currentMainCount ?? 0,
+    currentReserveCount: params?.currentReserveCount ?? 0,
+  };
+}
+
+function hasApplyChanges(changes: ApplyChangeSummary) {
+  return (
+    changes.added.length > 0 ||
+    changes.updated.length > 0 ||
+    changes.removed.length > 0 ||
+    changes.pending.length > 0 ||
+    changes.reserve.length > 0
+  );
+}
+
+function compactChangeList(items: string[], maxItems = 6) {
+  const normalizedItems = items
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  if (normalizedItems.length === 0) return "";
+  if (normalizedItems.length <= maxItems) return normalizedItems.join(", ");
+
+  return `${normalizedItems.slice(0, maxItems).join(", ")} 외 ${normalizedItems.length - maxItems}명`;
+}
+
+function pushChangeLine(lines: string[], label: string, items: string[]) {
+  const text = compactChangeList(items);
+  if (!text) return;
+  lines.push(`${label}: ${text}`);
+}
+
 function buildReply(params: {
   parsed: ParsedRecruitMessage;
   seasonName: string;
   results: ApplyResult[];
+  cancelledCount: number;
+  changes: ApplyChangeSummary;
 }) {
-  const registered = params.results.filter((item) => item.status === "REGISTERED").length;
-  const updated = params.results.filter((item) => item.status === "UPDATED").length;
-  const pending = params.results.filter((item) => item.status === "PENDING").length;
-  const reserve = params.results.filter((item) => item.status === "RESERVE").length;
+  const { changes } = params;
+  const lines: string[] = [];
+  const pendingResults = params.results.filter((item) => item.status === "PENDING");
 
-  if (pending > 0) {
+  if (!hasApplyChanges(changes)) {
+    return [
+      "[K-LOL.GG 내전 명단 변경 없음]",
+      `현재: ${changes.currentMainCount}/${SEASON_RECRUIT_TARGET_COUNT}`,
+    ].join("\n");
+  }
+
+  lines.push(
+    pendingResults.length > 0
+      ? "[K-LOL.GG 내전 명단 업데이트/보류]"
+      : "[K-LOL.GG 내전 명단 업데이트]",
+  );
+
+  pushChangeLine(lines, "추가", changes.added);
+  pushChangeLine(lines, "수정", changes.updated);
+  pushChangeLine(lines, "제외", changes.removed);
+  pushChangeLine(lines, "보류", changes.pending);
+  pushChangeLine(lines, "예비", changes.reserve);
+
+  lines.push(`현재: ${changes.currentMainCount}/${SEASON_RECRUIT_TARGET_COUNT}`);
+
+  if (pendingResults.length > 0 && changes.pending.length > 0) {
     const pendingSummary = buildPendingSummary(params.results);
-
-    return pendingSummary
-      ? `[K-LOL.GG 구인구직방 참가 자동 등록 보류]\n\n${pendingSummary}`
-      : "[K-LOL.GG 구인구직방 참가 자동 등록 보류]";
+    if (pendingSummary) {
+      lines.push("", pendingSummary);
+    }
   }
 
-  if (reserve > 0 && registered + updated === 0) {
-    return "[K-LOL.GG 구인구직방 참가 예비 등록 완료]";
-  }
-
-  if (registered > 0 && updated > 0) {
-    return "[K-LOL.GG 구인구직방 참가 자동 등록/수정 완료]";
-  }
-
-  if (updated > 0) {
-    return "[K-LOL.GG 구인구직방 참가 자동 수정 완료]";
-  }
-
-  if (registered > 0 || reserve > 0) {
-    return "[K-LOL.GG 구인구직방 참가 자동 등록 완료]";
-  }
-
-  return "[K-LOL.GG 구인구직방 참가 자동 등록 실패]";
+  return lines.join("\n");
 }
 
 function normalizeName(value: string) {
@@ -174,6 +246,167 @@ async function findMatchingPlayer(participant: ParsedRecruitParticipant) {
   return { status: "none" as const, players };
 }
 
+function normalizeNameKey(value: string) {
+  return normalizeName(value).replace(/\s+/g, "").toLowerCase();
+}
+
+function getMatchedApplyKey(playerId: number) {
+  return `APPLIED:${playerId}`;
+}
+
+function getPendingApplyKey(name: string, isReserve: boolean) {
+  return `PENDING:${isReserve ? "RESERVE" : "MAIN"}:${normalizeNameKey(name)}`;
+}
+
+function normalizeStringArray(value: unknown) {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item) => String(item || "").trim())
+    .filter(Boolean)
+    .sort();
+}
+
+function sameStringArray(a: unknown, b: unknown) {
+  const left = normalizeStringArray(a);
+  const right = normalizeStringArray(b);
+
+  if (left.length !== right.length) return false;
+  return left.every((item, index) => item === right[index]);
+}
+
+function sameNullableText(a: unknown, b: unknown) {
+  return String(a || "").trim() === String(b || "").trim();
+}
+
+function participantSubPositions(participant: ParsedRecruitParticipant) {
+  return participant.subPosition ? [participant.subPosition] : [];
+}
+
+function getParticipantSlotLabel(participant: ParsedRecruitParticipant) {
+  if (participant.isReserve) {
+    return `예비 ${participant.reserveSlotNumber || participant.slotNumber}`;
+  }
+
+  return String(participant.slotNumber);
+}
+
+function formatParticipantChangeLabel(
+  participant: ParsedRecruitParticipant,
+  player?: { name: string } | null,
+) {
+  const name = normalizeName(player?.name || participant.name);
+  return `${getParticipantSlotLabel(participant)}. ${name}`;
+}
+
+function formatPreviousEntryLabel(entry: PreviousSeasonApplyEntry) {
+  if (entry.isReserve) {
+    const reserveSlotText = entry.reserveSlotNo ?? entry.slotNo ?? "";
+    return `예비 ${reserveSlotText}. ${entry.name}`.replace(/\s+\./, ".");
+  }
+
+  return entry.slotNo ? `${entry.slotNo}. ${entry.name}` : entry.name;
+}
+
+function hasVisibleParticipantChange(
+  previous: PreviousSeasonApplyEntry,
+  participant: ParsedRecruitParticipant,
+  applyTimeText: string | null,
+) {
+  const nextSlotNo = participant.isReserve ? null : participant.slotNumber;
+  const nextReserveSlotNo = participant.isReserve ? participant.reserveSlotNumber : null;
+
+  if (previous.isReserve !== participant.isReserve) return true;
+  if (previous.slotNo !== nextSlotNo) return true;
+  if (previous.reserveSlotNo !== nextReserveSlotNo) return true;
+  if (!sameNullableText(previous.mainPosition, participant.mainPosition)) return true;
+  if (!sameStringArray(previous.subPositions, participantSubPositions(participant))) return true;
+  if (!sameNullableText(previous.applyTimeText, applyTimeText)) return true;
+
+  if (previous.currentTier !== undefined && !sameNullableText(previous.currentTier, participant.currentTier)) {
+    return true;
+  }
+
+  if (previous.peakTier !== undefined && !sameNullableText(previous.peakTier, participant.peakTier)) {
+    return true;
+  }
+
+  return false;
+}
+
+function buildPreviousApplyEntryMap(
+  applied: Array<{
+    playerId: number;
+    mainPosition: unknown;
+    subPositions: unknown;
+    sourceSlotNo: number | null;
+    applyTimeText: string | null;
+    player: { name: string };
+  }>,
+  pending: Array<{
+    name: string;
+    currentTier: string;
+    peakTier: string;
+    mainPosition: unknown;
+    subPositions: unknown;
+    isReserve: boolean;
+    sourceSlotNo: number | null;
+    reserveSlotNo: number | null;
+    applyTimeText: string | null;
+  }>,
+) {
+  const map = new Map<string, PreviousSeasonApplyEntry>();
+
+  for (const item of applied) {
+    const entry: PreviousSeasonApplyEntry = {
+      key: getMatchedApplyKey(item.playerId),
+      label: "",
+      name: normalizeName(item.player.name),
+      isReserve: false,
+      slotNo: item.sourceSlotNo,
+      reserveSlotNo: null,
+      mainPosition: item.mainPosition,
+      subPositions: item.subPositions,
+      applyTimeText: item.applyTimeText,
+    };
+    entry.label = formatPreviousEntryLabel(entry);
+    map.set(entry.key, entry);
+  }
+
+  for (const item of pending) {
+    const entry: PreviousSeasonApplyEntry = {
+      key: getPendingApplyKey(item.name, item.isReserve),
+      label: "",
+      name: normalizeName(item.name),
+      isReserve: item.isReserve,
+      slotNo: item.sourceSlotNo,
+      reserveSlotNo: item.reserveSlotNo,
+      mainPosition: item.mainPosition,
+      subPositions: item.subPositions,
+      currentTier: item.currentTier,
+      peakTier: item.peakTier,
+      applyTimeText: item.applyTimeText,
+    };
+    entry.label = formatPreviousEntryLabel(entry);
+    map.set(entry.key, entry);
+  }
+
+  return map;
+}
+
+function getParticipantSnapshotKey(params: {
+  participant: ParsedRecruitParticipant;
+  matched: Awaited<ReturnType<typeof findMatchingPlayer>>;
+}) {
+  const { participant, matched } = params;
+
+  if (!participant.isReserve && matched.status === "matched") {
+    return getMatchedApplyKey(matched.players[0].id);
+  }
+
+  return getPendingApplyKey(participant.name, participant.isReserve);
+}
+
 async function applyParticipants(params: {
   parsed: ParsedRecruitMessage;
   message: string;
@@ -193,18 +426,105 @@ async function applyParticipants(params: {
   const applyDate = getKstStartOfDate(params.parsed.applyDate);
   const sourceMessageHash = getMessageHash(params.message);
   const results: ApplyResult[] = [];
+  const changes = createEmptyChangeSummary({
+    currentMainCount: params.parsed.participants.filter((participant) => !participant.isReserve).length,
+    currentReserveCount: params.parsed.participants.filter((participant) => participant.isReserve).length,
+  });
+  let cancelledCount = 0;
+
+  const participantMatches = await Promise.all(
+    params.parsed.participants.map(async (participant) => ({
+      participant,
+      matched: await findMatchingPlayer(participant),
+    })),
+  );
+
+  const nextEntryKeys = new Set(
+    participantMatches.map(({ participant, matched }) =>
+      getParticipantSnapshotKey({ participant, matched }),
+    ),
+  );
+
+  const activeMatchedPlayerIds = participantMatches
+    .filter(({ participant, matched }) => !participant.isReserve && matched.status === "matched")
+    .map(({ matched }) => matched.players[0].id);
 
   await prisma.$transaction(async (tx) => {
-    await tx.seasonParticipationPendingApply.deleteMany({
-      where: {
-        seasonId: season.id,
-        applyDate,
-        source: "KAKAO_RECRUIT",
-      },
-    });
+    const [previousApplied, previousPending] = await Promise.all([
+      tx.seasonParticipationApply.findMany({
+        where: {
+          seasonId: season.id,
+          applyDate,
+          status: "APPLIED",
+        },
+        select: {
+          playerId: true,
+          mainPosition: true,
+          subPositions: true,
+          sourceSlotNo: true,
+          applyTimeText: true,
+          player: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      }),
+      tx.seasonParticipationPendingApply.findMany({
+        where: {
+          seasonId: season.id,
+          applyDate,
+          source: "KAKAO_RECRUIT",
+        },
+        select: {
+          name: true,
+          currentTier: true,
+          peakTier: true,
+          mainPosition: true,
+          subPositions: true,
+          isReserve: true,
+          sourceSlotNo: true,
+          reserveSlotNo: true,
+          applyTimeText: true,
+        },
+      }),
+    ]);
 
-    for (const participant of params.parsed.participants) {
-      const matched = await findMatchingPlayer(participant);
+    const previousEntries = buildPreviousApplyEntryMap(previousApplied, previousPending);
+
+    for (const entry of previousEntries.values()) {
+      if (nextEntryKeys.has(entry.key)) continue;
+      changes.removed.push(entry.label);
+    }
+
+    await Promise.all([
+      tx.seasonParticipationApply.deleteMany({
+        where: {
+          seasonId: season.id,
+          applyDate,
+          status: "APPLIED",
+          ...(activeMatchedPlayerIds.length > 0
+            ? { playerId: { notIn: activeMatchedPlayerIds } }
+            : {}),
+        },
+      }),
+      tx.seasonParticipationPendingApply.deleteMany({
+        where: {
+          seasonId: season.id,
+          applyDate,
+          source: "KAKAO_RECRUIT",
+        },
+      }),
+    ]);
+
+    cancelledCount = changes.removed.length;
+
+    for (const { participant, matched } of participantMatches) {
+      const entryKey = getParticipantSnapshotKey({ participant, matched });
+      const previousEntry = previousEntries.get(entryKey);
+      const visiblyChanged = previousEntry
+        ? hasVisibleParticipantChange(previousEntry, participant, params.parsed.applyTime)
+        : true;
       const pendingReason =
         matched.status === "duplicate"
           ? "동명이인 또는 동일 닉네임 후보가 2명 이상입니다. 관리자 확인 필요"
@@ -217,6 +537,7 @@ async function applyParticipants(params: {
             ? "예비 참가자"
             : `예비 참가자 / ${pendingReason}`
           : pendingReason;
+        const label = formatParticipantChangeLabel(participant, player);
 
         await tx.seasonParticipationPendingApply.upsert({
           where: {
@@ -261,6 +582,14 @@ async function applyParticipants(params: {
           },
         });
 
+        if (visiblyChanged) {
+          if (participant.isReserve) {
+            changes.reserve.push(label);
+          } else {
+            changes.pending.push(label);
+          }
+        }
+
         results.push({
           participant,
           status: participant.isReserve ? "RESERVE" : "PENDING",
@@ -271,16 +600,6 @@ async function applyParticipants(params: {
       }
 
       const player = matched.players[0];
-      const existing = await tx.seasonParticipationApply.findUnique({
-        where: {
-          seasonId_playerId_applyDate: {
-            seasonId: season.id,
-            playerId: player.id,
-            applyDate,
-          },
-        },
-        select: { id: true, status: true },
-      });
 
       await tx.seasonParticipationApply.upsert({
         where: {
@@ -317,21 +636,37 @@ async function applyParticipants(params: {
         },
       });
 
+      const label = formatParticipantChangeLabel(participant, player);
+      const resultStatus: ApplyResult["status"] = !previousEntry
+        ? "REGISTERED"
+        : visiblyChanged
+          ? "UPDATED"
+          : "UNCHANGED";
+
+      if (resultStatus === "REGISTERED") {
+        changes.added.push(label);
+      } else if (resultStatus === "UPDATED") {
+        changes.updated.push(label);
+      }
+
       results.push({
         participant,
-        status: existing ? "UPDATED" : "REGISTERED",
+        status: resultStatus,
         player,
       });
     }
 
     await writeAdminLog({
       action: "KAKAO_RECRUIT_SEASON_APPLY",
-      message: `카카오 참가 자동 등록: 시즌 #${season.id} ${season.name}, 등록/수정 ${results.filter((item) => item.status === "REGISTERED" || item.status === "UPDATED").length}명, 보류 ${results.filter((item) => item.status === "PENDING").length}명, 예비 ${results.filter((item) => item.status === "RESERVE").length}명`,
+      message: `카카오 참가 자동 등록: 시즌 #${season.id} ${season.name}, 추가 ${changes.added.length}명, 수정 ${changes.updated.length}명, 제외 ${changes.removed.length}명, 보류 ${changes.pending.length}명, 예비 ${changes.reserve.length}명`,
       targetType: "Season",
       targetId: season.id,
       afterJson: {
         applyDate: applyDate.toISOString(),
         sourceMessageHash,
+        cancelledCount,
+        activeMatchedPlayerIds,
+        changes,
         results: results.map((item) => ({
           slotNumber: item.participant.slotNumber,
           name: item.participant.name,
@@ -346,7 +681,7 @@ async function applyParticipants(params: {
     });
   });
 
-  return { season, applyDate, results };
+  return { season, applyDate, results, cancelledCount, changes };
 }
 
 function rejectIfInvalidSecret(req: NextRequest, bodySecret: unknown) {
@@ -373,6 +708,15 @@ function rejectIfInvalidSecret(req: NextRequest, bodySecret: unknown) {
 
 function normalizeCommand(value: string) {
   return value.trim().replace(/\s+/g, "");
+}
+
+function isRecruitSnapshotMessage(value: string) {
+  const text = String(value || "").replace(/\r/g, "\n");
+
+  return (
+    /참가\s*신청\s*양식|협곡\s*내전|협곡내전|내전하실분/.test(text) &&
+    /^\s*(?:1|예비\s*1)\s*[.)]/m.test(text)
+  );
 }
 
 function getTodayKstDateText() {
@@ -507,7 +851,7 @@ export async function POST(req: NextRequest) {
 
     const parsed = parseRecruitMessage(message);
 
-    if (parsed.participants.length < 1) {
+    if (parsed.participants.length < 1 && !isRecruitSnapshotMessage(message)) {
       return kakaoJsonReply({
         formatVersion: FORMAT_VERSION,
         reply: "[K-LOL.GG 구인구직방 참가 자동 등록 실패]",
@@ -526,6 +870,7 @@ export async function POST(req: NextRequest) {
     const updated = applied.results.filter((item) => item.status === "UPDATED").length;
     const pending = applied.results.filter((item) => item.status === "PENDING").length;
     const reserve = applied.results.filter((item) => item.status === "RESERVE").length;
+    const unchanged = applied.results.filter((item) => item.status === "UNCHANGED").length;
 
     return kakaoJsonReply({
       formatVersion: FORMAT_VERSION,
@@ -534,15 +879,18 @@ export async function POST(req: NextRequest) {
       applyTime: parsed.applyTime,
       registered,
       updated,
-      cancelled: 0,
+      cancelled: applied.cancelledCount,
       pending,
       reserve,
+      unchanged,
       participants: parsed.participants,
       results: applied.results,
       reply: buildReply({
         parsed,
         seasonName: applied.season.name,
         results: applied.results,
+        cancelledCount: applied.cancelledCount,
+        changes: applied.changes,
       }),
     });
   } catch (error) {
