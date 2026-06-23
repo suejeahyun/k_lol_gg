@@ -1,3 +1,4 @@
+﻿import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -43,7 +44,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true, userAccountId: updated.id });
   } catch (error) {
-    console.error("[ACCOUNT_DISCORD_UNLINK_ERROR]", error);
+    logServerError("[ACCOUNT_DISCORD_UNLINK_ERROR]", error);
     return NextResponse.json({ message: "Discord 연동 해제 중 오류가 발생했습니다." }, { status: 500 });
   }
 }
+

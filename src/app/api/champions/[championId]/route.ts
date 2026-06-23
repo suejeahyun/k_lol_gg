@@ -1,3 +1,4 @@
+﻿import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -37,7 +38,7 @@ export async function GET(
 
     return NextResponse.json(champion);
   } catch (error) {
-    console.error("[CHAMPION_DETAIL_GET_ERROR]", error);
+    logServerError("[CHAMPION_DETAIL_GET_ERROR]", error);
     return NextResponse.json(
       { message: "Failed to fetch champion" },
       { status: 500 }
@@ -90,7 +91,7 @@ export async function PATCH(
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("[CHAMPION_PATCH_ERROR]", error);
+    logServerError("[CHAMPION_PATCH_ERROR]", error);
     return NextResponse.json(
       { message: "Failed to update champion" },
       { status: 500 }
@@ -138,10 +139,11 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("[CHAMPION_DELETE_ERROR]", error);
+    logServerError("[CHAMPION_DELETE_ERROR]", error);
     return NextResponse.json(
       { message: "삭제할 수 없습니다. 경기 기록에 연결되어 있을 수 있습니다." },
       { status: 500 }
     );
   }
 }
+

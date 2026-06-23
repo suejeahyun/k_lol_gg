@@ -1,3 +1,4 @@
+import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { CommunityPostType } from "@prisma/client";
@@ -45,7 +46,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
     });
     return NextResponse.json({ post: updated });
   } catch (error) {
-    console.error("[COMMUNITY_POST_PATCH_ERROR]", error);
+    logServerError("[COMMUNITY_POST_PATCH_ERROR]", error);
     return NextResponse.json({ message: "게시글 수정 중 오류가 발생했습니다." }, { status: 500 });
   }
 }

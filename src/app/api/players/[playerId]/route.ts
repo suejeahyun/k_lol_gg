@@ -1,3 +1,4 @@
+﻿import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -85,7 +86,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 
     return NextResponse.json(player);
   } catch (error) {
-    console.error("[PLAYER_DETAIL_GET_ERROR]", error);
+    logServerError("[PLAYER_DETAIL_GET_ERROR]", error);
 
     return NextResponse.json(
       { message: "플레이어 상세 조회 중 오류가 발생했습니다." },
@@ -198,7 +199,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       player: updatedPlayer,
     });
   } catch (error) {
-    console.error("[PLAYER_DETAIL_PATCH_ERROR]", error);
+    logServerError("[PLAYER_DETAIL_PATCH_ERROR]", error);
 
     return NextResponse.json(
       { message: "플레이어 수정 중 오류가 발생했습니다." },
@@ -267,7 +268,7 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
       message: "플레이어가 비활성화되었습니다. 기존 경기/통계 기록은 보존됩니다.",
     });
   } catch (error) {
-    console.error("[PLAYER_DETAIL_DELETE_ERROR]", error);
+    logServerError("[PLAYER_DETAIL_DELETE_ERROR]", error);
 
     return NextResponse.json(
       { message: "플레이어 비활성화 중 오류가 발생했습니다." },
@@ -275,3 +276,4 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
     );
   }
 }
+

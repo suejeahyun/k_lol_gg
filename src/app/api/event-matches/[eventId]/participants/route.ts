@@ -1,10 +1,11 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { Position } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { calculateBalanceScore } from "@/lib/balance/tierScore";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { logServerError } from "@/lib/server/safe-log";
 
 type RouteProps = {
   params: Promise<{
@@ -202,7 +203,7 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
 
     return NextResponse.json(updatedEvent);
   } catch (error) {
-    console.error("[EVENT_PARTICIPANTS_PUT_ERROR]", error);
+    logServerError("[EVENT_PARTICIPANTS_PUT_ERROR]", error);
 
     return NextResponse.json(
       { message: "이벤트 참가자 등록 실패" },
@@ -210,3 +211,4 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
     );
   }
 }
+

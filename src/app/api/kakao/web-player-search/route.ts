@@ -4,6 +4,7 @@ export const revalidate = 0;
 import { NextRequest, NextResponse } from "next/server";
 import { getPlayerRecordForKakao } from "@/features/player/services/getPlayerRecordForKakao";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
+import { logServerError } from "@/lib/server/safe-log";
 
 function roundOne(value: number) {
   return Number.isFinite(value) ? Number(value.toFixed(1)) : 0;
@@ -51,7 +52,7 @@ export async function GET(req: NextRequest) {
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
-    console.error("[KAKAO_WEB_PLAYER_SEARCH_GET_ERROR]", error);
+    logServerError("[KAKAO_WEB_PLAYER_SEARCH_GET_ERROR]", error, { endpoint: "/api/kakao/web-player-search" });
 
     return NextResponse.json(
       { ok: false, message: "플레이어 조회 중 오류가 발생했습니다." },

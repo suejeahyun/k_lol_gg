@@ -1,8 +1,9 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { requireApprovedUserOrAdmin, getAccessErrorResponseMessage } from "@/lib/auth/access";
 import { evaluateBalanceLayout, type BalanceEvaluatePlayer } from "@/lib/balance/ai-evaluation";
+import { logServerError } from "@/lib/server/safe-log";
 
 type EvaluateBody = {
   optionNo?: number | null;
@@ -30,8 +31,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("[TEAM_BALANCE_EVALUATE_ERROR]", error);
+    logServerError("[TEAM_BALANCE_EVALUATE_ERROR]", error);
     const response = getAccessErrorResponseMessage(error, "팀 밸런스 AI 재평가 중 오류가 발생했습니다.");
     return NextResponse.json({ message: response.message }, { status: response.status });
   }
 }
+

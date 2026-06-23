@@ -1,3 +1,4 @@
+import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -92,7 +93,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       },
     });
   } catch (error) {
-    console.error("[ADMIN_USERS_ROLE_PATCH_ERROR]", error);
+    logServerError("[ADMIN_USERS_ROLE_PATCH_ERROR]", error);
 
     return NextResponse.json(
       { message: "권한 변경 중 오류가 발생했습니다." },

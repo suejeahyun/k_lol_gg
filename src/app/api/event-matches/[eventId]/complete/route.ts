@@ -1,8 +1,9 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { logServerError } from "@/lib/server/safe-log";
 
 type RouteProps = {
   params: Promise<{
@@ -131,7 +132,7 @@ export async function PATCH(req: NextRequest, { params }: RouteProps) {
 
     return NextResponse.json(updatedEvent);
   } catch (error) {
-    console.error("[EVENT_MATCH_COMPLETE_PATCH_ERROR]", error);
+    logServerError("[EVENT_MATCH_COMPLETE_PATCH_ERROR]", error);
 
     return NextResponse.json(
       { message: "이벤트 내전 종료 처리 실패" },
@@ -139,3 +140,4 @@ export async function PATCH(req: NextRequest, { params }: RouteProps) {
     );
   }
 }
+

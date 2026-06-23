@@ -1,7 +1,8 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { logServerError } from "@/lib/server/safe-log";
 
 type RouteContext = {
   params: Promise<{
@@ -96,7 +97,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error("[PLAYER_RECENT_GET_ERROR]", error);
+    logServerError("[PLAYER_RECENT_GET_ERROR]", error);
 
     return NextResponse.json(
       { message: "최근 경기 조회 중 오류가 발생했습니다." },

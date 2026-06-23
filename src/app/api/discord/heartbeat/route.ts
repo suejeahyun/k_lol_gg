@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfInvalidDiscordBotSecret } from "@/lib/discord/secret";
+import { logServerError } from "@/lib/server/safe-log";
 
 type HeartbeatRow = { id: number };
 
@@ -125,7 +126,7 @@ export async function POST(req: NextRequest) {
       serverTime: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("[DISCORD_HEARTBEAT_ERROR]", error);
+    logServerError("[DISCORD_HEARTBEAT_ERROR]", error, { endpoint: "/api/discord/heartbeat" });
     return NextResponse.json(
       {
         ok: false,

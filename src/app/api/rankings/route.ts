@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { getCachedSeasonRankingPlayers } from "@/lib/stats/season-performance";
 import { makeServerTiming, withTiming } from "@/lib/performance";
+import { logServerError } from "@/lib/server/safe-log";
 
 export const dynamic = "force-dynamic";
 
@@ -70,7 +71,7 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("[RANKINGS_GET_ERROR]", error);
+    logServerError("[RANKINGS_GET_ERROR]", error);
 
     return NextResponse.json(
       {
@@ -82,3 +83,4 @@ export async function GET(req: NextRequest) {
     );
   }
 }
+

@@ -1,3 +1,4 @@
+﻿import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -70,7 +71,7 @@ export async function GET(req: NextRequest) {
       },
     );
   } catch (error) {
-    console.error("[GALLERY_IMAGES_GET_ERROR]", error);
+    logServerError("[GALLERY_IMAGES_GET_ERROR]", error);
 
     return NextResponse.json(
       { message: "이미지 목록 조회 중 오류가 발생했습니다." },
@@ -138,7 +139,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(created, { status: 201 });
   } catch (error) {
-    console.error("[GALLERY_IMAGES_POST_ERROR]", error);
+    logServerError("[GALLERY_IMAGES_POST_ERROR]", error);
 
     return NextResponse.json(
       { message: "이미지 등록 중 오류가 발생했습니다." },
@@ -146,3 +147,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+

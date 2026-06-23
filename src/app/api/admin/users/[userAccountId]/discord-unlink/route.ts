@@ -1,3 +1,4 @@
+﻿import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -48,7 +49,8 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ userAcc
     });
     return NextResponse.json({ ok: true, userAccountId: updated.id });
   } catch (error) {
-    console.error("[ADMIN_USER_DISCORD_UNLINK_ERROR]", error);
+    logServerError("[ADMIN_USER_DISCORD_UNLINK_ERROR]", error);
     return NextResponse.json({ message: "Discord 연동 초기화 중 오류가 발생했습니다." }, { status: 500 });
   }
 }
+

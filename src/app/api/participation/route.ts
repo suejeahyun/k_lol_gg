@@ -1,3 +1,4 @@
+﻿import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -66,7 +67,7 @@ export async function GET() {
         : null,
     });
   } catch (error: unknown) {
-    console.error("[PARTICIPATION_GET_ERROR]", error);
+    logServerError("[PARTICIPATION_GET_ERROR]", error);
 
     return NextResponse.json(
       { message: "참가 정보 조회 중 오류 발생" },
@@ -74,3 +75,4 @@ export async function GET() {
     );
   }
 }
+

@@ -1,3 +1,4 @@
+import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -54,7 +55,7 @@ export async function GET() {
       onlineWindowMinutes: ONLINE_WINDOW_MINUTES,
     });
   } catch (error) {
-    console.error("[COMMUNITY_VISITS_GET_ERROR]", error);
+    logServerError("[COMMUNITY_VISITS_GET_ERROR]", error);
     return NextResponse.json({ message: "금일 방문자를 불러오는 중 오류가 발생했습니다." }, { status: 500 });
   }
 }
@@ -82,7 +83,7 @@ export async function POST() {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error("[COMMUNITY_VISITS_POST_ERROR]", error);
+    logServerError("[COMMUNITY_VISITS_POST_ERROR]", error);
     return NextResponse.json({ message: "방문 기록 저장 중 오류가 발생했습니다." }, { status: 500 });
   }
 }

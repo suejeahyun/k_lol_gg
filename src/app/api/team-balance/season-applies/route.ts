@@ -1,8 +1,9 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { requireApprovedUserOrAdmin, getAccessErrorResponseMessage } from "@/lib/auth/access";
+import { logServerError } from "@/lib/server/safe-log";
 
 type ApplyPositionValue = "TOP" | "JGL" | "MID" | "ADC" | "SUP" | "ALL";
 
@@ -192,7 +193,7 @@ export async function GET() {
       );
     }
 
-    console.error("[TEAM_BALANCE_SEASON_APPLIES_GET_ERROR]", error);
+    logServerError("[TEAM_BALANCE_SEASON_APPLIES_GET_ERROR]", error);
 
     return NextResponse.json(
       { message: response.message },
@@ -200,3 +201,4 @@ export async function GET() {
     );
   }
 }
+

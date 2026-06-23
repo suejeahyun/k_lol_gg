@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 
+const MAX_EVENT_TEAM_MEMBERS = 50;
+
 type Context = {
   params: Promise<{
     eventId: string;
@@ -15,6 +17,8 @@ type Context = {
 async function recalculateEventTeamScore(teamId: number) {
   const members = await prisma.eventParticipant.findMany({
     where: { teamId },
+    orderBy: { id: "asc" },
+    take: MAX_EVENT_TEAM_MEMBERS,
     select: { balanceScore: true },
   });
 

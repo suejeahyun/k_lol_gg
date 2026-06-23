@@ -1,9 +1,10 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { DestructionStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { logServerError } from "@/lib/server/safe-log";
 
 type RouteProps = {
   params: Promise<{
@@ -83,7 +84,7 @@ export async function GET(_req: NextRequest, { params }: RouteProps) {
 
     return NextResponse.json(tournament);
   } catch (error) {
-    console.error("[DESTRUCTION_TOURNAMENT_GET_ERROR]", error);
+    logServerError("[DESTRUCTION_TOURNAMENT_GET_ERROR]", error);
 
     return NextResponse.json(
       { message: "멸망전 조회 실패" },
@@ -202,7 +203,7 @@ export async function PATCH(req: NextRequest, { params }: RouteProps) {
 
     return NextResponse.json(tournament);
   } catch (error) {
-    console.error("[DESTRUCTION_TOURNAMENT_PATCH_ERROR]", error);
+    logServerError("[DESTRUCTION_TOURNAMENT_PATCH_ERROR]", error);
 
     return NextResponse.json(
       { message: "멸망전 수정 실패" },
@@ -274,7 +275,7 @@ export async function DELETE(_req: NextRequest, { params }: RouteProps) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error("[DESTRUCTION_TOURNAMENT_DELETE_ERROR]", error);
+    logServerError("[DESTRUCTION_TOURNAMENT_DELETE_ERROR]", error);
 
     return NextResponse.json(
       { message: "멸망전 삭제 실패" },
@@ -282,3 +283,4 @@ export async function DELETE(_req: NextRequest, { params }: RouteProps) {
     );
   }
 }
+

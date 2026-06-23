@@ -1,9 +1,10 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { writeAdminLog } from "@/lib/admin-log";
+import { logServerError } from "@/lib/server/safe-log";
 
 type FeedbackBody = {
   matchSeriesId?: number;
@@ -48,10 +49,11 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ review });
   } catch (error) {
-    console.error("[TEAM_BALANCE_FEEDBACK_POST_ERROR]", error);
+    logServerError("[TEAM_BALANCE_FEEDBACK_POST_ERROR]", error);
     return NextResponse.json(
       { message: "팀 밸런스 피드백 저장 중 오류가 발생했습니다." },
       { status: 500 },
     );
   }
 }
+

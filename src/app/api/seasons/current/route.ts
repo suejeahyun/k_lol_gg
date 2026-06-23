@@ -1,7 +1,8 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { logServerError } from "@/lib/server/safe-log";
 
 export async function GET() {
   try {
@@ -28,7 +29,7 @@ export async function GET() {
       season,
     });
   } catch (error) {
-    console.error("[CURRENT_SEASON_GET_ERROR]", error);
+    logServerError("[CURRENT_SEASON_GET_ERROR]", error);
 
     return NextResponse.json(
       {
@@ -40,3 +41,4 @@ export async function GET() {
     );
   }
 }
+

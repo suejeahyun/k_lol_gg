@@ -1,8 +1,9 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { logServerError } from "@/lib/server/safe-log";
 
 type RouteContext = {
   params: Promise<{
@@ -92,7 +93,7 @@ export async function PATCH(
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("[SEASON_PATCH_ERROR]", error);
+    logServerError("[SEASON_PATCH_ERROR]", error);
 
     return NextResponse.json(
       { message: "Failed to update season" },
@@ -183,7 +184,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("[SEASON_DELETE_ERROR]", error);
+    logServerError("[SEASON_DELETE_ERROR]", error);
 
     return NextResponse.json(
       { message: "Failed to delete season" },
@@ -191,3 +192,4 @@ export async function DELETE(
     );
   }
 }
+

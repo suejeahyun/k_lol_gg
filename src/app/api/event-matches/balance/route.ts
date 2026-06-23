@@ -1,3 +1,4 @@
+﻿import { logServerError } from "@/lib/server/safe-log";
 import { NextRequest, NextResponse } from "next/server";
 import { Position } from "@prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
@@ -233,7 +234,7 @@ export async function POST(req: NextRequest) {
       teams,
     });
   } catch (error) {
-    console.error("[EVENT_MATCH_BALANCE_POST_ERROR]", error);
+    logServerError("[EVENT_MATCH_BALANCE_POST_ERROR]", error);
 
     const message =
       error instanceof Error
@@ -243,3 +244,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message }, { status: 500 });
   }
 }
+

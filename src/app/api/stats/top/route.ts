@@ -1,8 +1,9 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { makeServerTiming, withTiming } from "@/lib/performance";
 import { getCachedStatsTopData } from "@/lib/stats/top";
+import { logServerError } from "@/lib/server/safe-log";
 
 export async function GET() {
   const startedAt = Date.now();
@@ -19,10 +20,11 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error("[STATS_TOP_GET_ERROR]", error);
+    logServerError("[STATS_TOP_GET_ERROR]", error);
     return NextResponse.json(
       { message: "시즌 TOP 데이터 조회 실패" },
       { status: 500 },
     );
   }
 }
+

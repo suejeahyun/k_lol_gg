@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
@@ -9,6 +9,7 @@ import { parseKstDateTime } from "@/lib/date/kst";
 import { updateInternalMmrAfterMatch } from "@/lib/balance/internal-mmr";
 import { getStoredGameMvpFields } from "@/lib/match/mvp";
 import { getPaginationMeta, getSafePagination } from "@/lib/http/pagination";
+import { logServerError } from "@/lib/server/safe-log";
 
 type Team = "BLUE" | "RED";
 type Position = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
@@ -83,7 +84,7 @@ export async function GET(req: NextRequest) {
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
-    console.error("[MATCH_LIST_GET_ERROR]", error);
+    logServerError("[MATCH_LIST_GET_ERROR]", error);
 
     return NextResponse.json(
       { message: "내전 조회 실패" },
@@ -255,7 +256,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json(created);
   } catch (error) {
-    console.error("[MATCH_CREATE_POST_ERROR]", error);
+    logServerError("[MATCH_CREATE_POST_ERROR]", error);
 
     return NextResponse.json(
       { message: "내전 등록 중 오류가 발생했습니다." },
@@ -263,3 +264,4 @@ export async function POST(req: Request) {
     );
   }
 }
+

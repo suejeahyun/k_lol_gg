@@ -1,8 +1,9 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { logServerError } from "@/lib/server/safe-log";
 
 type RouteProps = { params: Promise<{ tournamentId: string }> };
 
@@ -95,7 +96,8 @@ export async function POST(_req: NextRequest, { params }: RouteProps) {
 
     return NextResponse.json({ participant: updated });
   } catch (error) {
-    console.error("[DESTRUCTION_AUCTION_DRAW_ERROR]", error);
+    logServerError("[DESTRUCTION_AUCTION_DRAW_ERROR]", error);
     return NextResponse.json({ message: "경매 추첨 실패" }, { status: 500 });
   }
 }
+

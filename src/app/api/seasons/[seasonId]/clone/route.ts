@@ -1,8 +1,9 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { logServerError } from "@/lib/server/safe-log";
 
 export async function POST(req: NextRequest, context: { params: Promise<{ seasonId: string }> }) {
   const rejected = await rejectIfNotAdmin();
@@ -46,7 +47,8 @@ export async function POST(req: NextRequest, context: { params: Promise<{ season
 
     return NextResponse.json(created, { status: 201 });
   } catch (error) {
-    console.error("[SEASON_CLONE_POST_ERROR]", error);
+    logServerError("[SEASON_CLONE_POST_ERROR]", error);
     return NextResponse.json({ message: "시즌 복제 중 오류가 발생했습니다." }, { status: 500 });
   }
 }
+

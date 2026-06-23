@@ -1,3 +1,4 @@
+import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { CommunityPostType } from "@prisma/client";
@@ -40,7 +41,7 @@ export async function GET(req: NextRequest) {
       })),
     });
   } catch (error) {
-    console.error("[COMMUNITY_HEADLINES_GET_ERROR]", error);
+    logServerError("[COMMUNITY_HEADLINES_GET_ERROR]", error);
     return NextResponse.json({
       headlines: (fallbackHeadlines[type] ?? []).map((label, index) => ({
         id: 0 - index,

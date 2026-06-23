@@ -1,3 +1,4 @@
+import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -255,7 +256,7 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("[ADMIN_STATS_CONSISTENCY_ERROR]", error);
+    logServerError("[ADMIN_STATS_CONSISTENCY_ERROR]", error);
     return NextResponse.json(
       { message: error instanceof Error ? error.message : "통계 일관성 검사 실패" },
       { status: 500 },

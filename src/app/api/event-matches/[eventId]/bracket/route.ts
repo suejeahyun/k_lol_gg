@@ -1,9 +1,10 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { EventMatchMode, EventTournamentStage } from "@prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { logServerError } from "@/lib/server/safe-log";
 
 type RouteProps = {
   params: Promise<{
@@ -225,7 +226,7 @@ export async function POST(req: NextRequest, { params }: RouteProps) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("[EVENT_BRACKET_POST_ERROR]", error);
+    logServerError("[EVENT_BRACKET_POST_ERROR]", error);
 
     return NextResponse.json(
       { message: "이벤트 대진 생성 실패" },
@@ -233,3 +234,4 @@ export async function POST(req: NextRequest, { params }: RouteProps) {
     );
   }
 }
+

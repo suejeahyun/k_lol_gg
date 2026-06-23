@@ -1,3 +1,4 @@
+﻿import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -90,7 +91,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       userId: player.userAccount.userId,
     });
   } catch (error) {
-    console.error("[ADMIN_PLAYER_PASSWORD_RESET_PATCH_ERROR]", error);
+    logServerError("[ADMIN_PLAYER_PASSWORD_RESET_PATCH_ERROR]", error);
 
     return NextResponse.json(
       { message: "비밀번호 초기화 중 오류가 발생했습니다." },
@@ -98,3 +99,4 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     );
   }
 }
+

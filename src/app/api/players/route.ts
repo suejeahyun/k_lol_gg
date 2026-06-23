@@ -1,3 +1,4 @@
+﻿import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -91,7 +92,7 @@ export async function GET(request: NextRequest) {
       pageSize,
     });
   } catch (error) {
-    console.error("[PLAYERS_GET_ERROR]", error);
+    logServerError("[PLAYERS_GET_ERROR]", error);
     return NextResponse.json(
       { message: "플레이어 목록 조회에 실패했습니다." },
       { status: 500 }
@@ -182,10 +183,11 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error("[PLAYER_CREATE_POST_ERROR]", error);
+    logServerError("[PLAYER_CREATE_POST_ERROR]", error);
     return NextResponse.json(
       { message: "플레이어 등록에 실패했습니다." },
       { status: 500 }
     );
   }
 }
+

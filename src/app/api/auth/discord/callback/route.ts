@@ -1,4 +1,5 @@
-﻿export const dynamic = "force-dynamic";
+﻿import { logServerError } from "@/lib/server/safe-log";
+export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
@@ -239,8 +240,9 @@ export async function GET(req: NextRequest) {
     res.cookies.set("discord_oauth_state", "", { path: "/", maxAge: 0 });
     return res;
   } catch (error) {
-    console.error("[DISCORD_AUTH_CALLBACK_ERROR]", error);
+    logServerError("[DISCORD_AUTH_CALLBACK_ERROR]", error);
     return NextResponse.redirect(`${baseUrl}/login?discord=failed`);
   }
 }
+
 

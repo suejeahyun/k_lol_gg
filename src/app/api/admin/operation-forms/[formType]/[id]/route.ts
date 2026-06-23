@@ -1,3 +1,4 @@
+import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -66,7 +67,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
 
     return NextResponse.json({ ok: true, item: updated });
   } catch (error) {
-    console.error("[ADMIN_OPERATION_FORM_PATCH_ERROR]", error);
+    logServerError("[ADMIN_OPERATION_FORM_PATCH_ERROR]", error);
     return NextResponse.json({ message: "운영 양식 수정에 실패했습니다." }, { status: 500 });
   }
 }
@@ -92,7 +93,7 @@ export async function DELETE(_: NextRequest, context: RouteContext) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error("[ADMIN_OPERATION_FORM_DELETE_ERROR]", error);
+    logServerError("[ADMIN_OPERATION_FORM_DELETE_ERROR]", error);
     return NextResponse.json({ message: "운영 양식 삭제에 실패했습니다." }, { status: 500 });
   }
 }

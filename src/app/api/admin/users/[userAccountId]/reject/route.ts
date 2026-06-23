@@ -1,3 +1,4 @@
+import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -72,7 +73,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
         }
     }
 
-    console.error("[ERROR]", error);
+    logServerError("[ERROR]", error);
 
     return NextResponse.json(
         { message: "오류 발생" },

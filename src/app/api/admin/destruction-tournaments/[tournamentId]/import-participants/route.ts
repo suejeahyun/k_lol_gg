@@ -4,12 +4,15 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { logServerError } from "@/lib/server/safe-log";
 
 type RouteContext = {
   params: Promise<{
     tournamentId: string;
   }>;
 };
+
+const MAX_IMPORT_PARTICIPANTS = 200;
 
 type RealPosition = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
 
@@ -49,12 +52,21 @@ export async function POST(_req: NextRequest, { params }: RouteContext) {
           in: ["APPLIED", "CONFIRMED"],
         },
       },
+      orderBy: { id: "asc" },
+      take: MAX_IMPORT_PARTICIPANTS + 1,
       select: {
         playerId: true,
         mainPosition: true,
         isCaptain: true,
       },
     });
+
+    if (applies.length > MAX_IMPORT_PARTICIPANTS) {
+      return NextResponse.json(
+        { message: `한 번에 가져올 수 있는 참가자는 최대 ${MAX_IMPORT_PARTICIPANTS}명입니다.` },
+        { status: 400 },
+      );
+    }
 
     if (applies.length === 0) {
       return NextResponse.json({
@@ -119,7 +131,7 @@ export async function POST(_req: NextRequest, { params }: RouteContext) {
       count: applies.length,
     });
   } catch (error: unknown) {
-    console.error("[ADMIN_DESTRUCTION_IMPORT_PARTICIPANTS_ERROR]", error);
+    logServerError("ADMIN_DESTRUCTION_IMPORT_PARTICIPANTS_ERROR", error);
 
     return NextResponse.json(
       { message: "멸망전 참가자 가져오기 중 오류가 발생했습니다." },

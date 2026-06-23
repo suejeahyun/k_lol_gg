@@ -1,3 +1,4 @@
+﻿import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -94,7 +95,7 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
       })),
     });
   } catch (error: unknown) {
-    console.error("[EVENT_PARTICIPATION_GET_ERROR]", error);
+    logServerError("[EVENT_PARTICIPATION_GET_ERROR]", error);
 
     return NextResponse.json(
       { message: "이벤트 내전 참가자 조회 중 오류가 발생했습니다." },
@@ -212,7 +213,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
       }
     }
 
-    console.error("[EVENT_PARTICIPATION_POST_ERROR]", error);
+    logServerError("[EVENT_PARTICIPATION_POST_ERROR]", error);
 
     return NextResponse.json(
       { message: "이벤트 내전 참가 신청 중 오류가 발생했습니다." },

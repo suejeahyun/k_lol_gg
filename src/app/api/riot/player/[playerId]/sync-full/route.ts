@@ -1,3 +1,4 @@
+﻿import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -262,7 +263,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
         savedMatchCount += 1;
       } catch (error) {
         failedMatchCount += 1;
-        console.error("[RIOT_FULL_SYNC_MATCH_SAVE_ERROR]", {
+        logServerError("[RIOT_FULL_SYNC_MATCH_SAVE_ERROR]", {
           matchId,
           error,
         });
@@ -371,7 +372,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
     });
   } catch (error) {
     await recordRiotApiStatus(getRiotStatusFromError("RIOT_SOLO_FULL_SYNC", error));
-    console.error("[RIOT_PLAYER_SOLO_FULL_SYNC_POST_ERROR]", error);
+    logServerError("[RIOT_PLAYER_SOLO_FULL_SYNC_POST_ERROR]", error);
 
     if (error instanceof Error) {
       if (error.message.includes("RIOT_API_KEY")) {
@@ -393,3 +394,4 @@ export async function POST(req: NextRequest, context: RouteContext) {
     );
   }
 }
+

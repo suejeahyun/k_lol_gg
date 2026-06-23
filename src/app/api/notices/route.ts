@@ -1,3 +1,4 @@
+﻿import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -38,7 +39,7 @@ export async function GET(req: NextRequest) {
       },
     );
   } catch (error) {
-    console.error("[NOTICES_GET_ERROR]", error);
+    logServerError("[NOTICES_GET_ERROR]", error);
 
     return NextResponse.json(
       { message: "공지사항 목록 조회에 실패했습니다." },
@@ -77,7 +78,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(notice, { status: 201 });
   } catch (error) {
-    console.error("[NOTICE_POST_ERROR]", error);
+    logServerError("[NOTICE_POST_ERROR]", error);
 
     return NextResponse.json(
       { message: "공지사항 등록에 실패했습니다." },
@@ -85,3 +86,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+

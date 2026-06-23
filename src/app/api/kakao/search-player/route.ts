@@ -7,6 +7,7 @@ import { formatPlayerRecordMessage } from "@/lib/kakao/formatPlayerRecordMessage
 import { createSimpleText } from "@/lib/kakao/response";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
 import { getOptionalSecret } from "@/lib/security/secrets";
+import { logServerError } from "@/lib/server/safe-log";
 
 function kakaoText(text: string, status = 200) {
   return NextResponse.json(createSimpleText(text), {
@@ -113,7 +114,7 @@ export async function POST(req: NextRequest) {
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
     return handleSearch(req, extractQueryFromBody(body));
   } catch (error) {
-    console.error("[KAKAO_SEARCH_PLAYER_ERROR]", error);
+    logServerError("[KAKAO_SEARCH_PLAYER_ERROR]", error, { endpoint: "/api/kakao/search-player", method: "POST" });
 
     return kakaoText([
       "전적 검색 중 오류가 발생했습니다.",
@@ -126,7 +127,7 @@ export async function GET(req: NextRequest) {
   try {
     return handleSearch(req, req.nextUrl.searchParams.get("q") ?? "");
   } catch (error) {
-    console.error("[KAKAO_SEARCH_PLAYER_GET_ERROR]", error);
+    logServerError("[KAKAO_SEARCH_PLAYER_GET_ERROR]", error, { endpoint: "/api/kakao/search-player", method: "GET" });
 
     return kakaoText([
       "전적 검색 중 오류가 발생했습니다.",

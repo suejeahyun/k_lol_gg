@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Position } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { logServerError } from "@/lib/server/safe-log";
 
 type RouteProps = {
   params: Promise<{
@@ -17,6 +18,7 @@ type ParticipantInput = {
 };
 
 const POSITIONS: Position[] = ["TOP", "JGL", "MID", "ADC", "SUP"];
+const MAX_DESTRUCTION_PARTICIPANTS = 100;
 
 function isValidPosition(position: unknown): position is Position {
   return typeof position === "string" && POSITIONS.includes(position as Position);
@@ -53,6 +55,13 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
     if (participants.length % 4 !== 0) {
       return NextResponse.json(
         { message: "일반 참가자는 4명 단위로 등록해야 합니다." },
+        { status: 400 }
+      );
+    }
+
+    if (participants.length > MAX_DESTRUCTION_PARTICIPANTS) {
+      return NextResponse.json(
+        { message: `일반 참가자는 최대 ${MAX_DESTRUCTION_PARTICIPANTS}명까지 등록할 수 있습니다.` },
         { status: 400 }
       );
     }
@@ -144,6 +153,7 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
       select: {
         id: true,
       },
+      take: Math.max(playerIds.length, 1),
     });
 
     if (existingPlayers.length !== playerIds.length) {
@@ -222,7 +232,7 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
 
     return NextResponse.json(updatedTournament);
   } catch (error) {
-    console.error("[DESTRUCTION_PARTICIPANTS_PUT_ERROR]", error);
+    logServerError("DESTRUCTION_PARTICIPANTS_PUT_ERROR", error);
 
     return NextResponse.json(
       { message: "멸망전 참가자 등록 실패" },

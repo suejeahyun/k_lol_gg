@@ -1,9 +1,10 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { getGameMvpParticipant } from "@/lib/mvp";
 import { ensureSeasonStats, getWinRate } from "@/lib/stats/season-performance";
+import { logServerError } from "@/lib/server/safe-log";
 
 type RouteContext = {
   params: Promise<{
@@ -213,7 +214,7 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
       mostChampions,
     });
   } catch (error) {
-    console.error("[PLAYER_SUMMARY_GET_ERROR]", error);
+    logServerError("[PLAYER_SUMMARY_GET_ERROR]", error);
 
     return NextResponse.json(
       { message: "Failed to fetch player summary" },

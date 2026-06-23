@@ -1,8 +1,9 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { logServerError } from "@/lib/server/safe-log";
 
 export async function PATCH(_req: NextRequest, context: { params: Promise<{ seasonId: string }> }) {
   const rejected = await rejectIfNotAdmin();
@@ -35,7 +36,8 @@ export async function PATCH(_req: NextRequest, context: { params: Promise<{ seas
 
     return NextResponse.json({ message: "시즌이 종료되었습니다.", season: updated });
   } catch (error) {
-    console.error("[SEASON_END_PATCH_ERROR]", error);
+    logServerError("[SEASON_END_PATCH_ERROR]", error);
     return NextResponse.json({ message: "시즌 종료 중 오류가 발생했습니다." }, { status: 500 });
   }
 }
+

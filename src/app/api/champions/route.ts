@@ -1,3 +1,4 @@
+﻿import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -24,7 +25,7 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error("[CHAMPIONS_GET_ERROR]", error);
+    logServerError("[CHAMPIONS_GET_ERROR]", error);
     return NextResponse.json(
       { message: "Failed to fetch champions" },
       { status: 500 }
@@ -63,10 +64,11 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(created, { status: 201 });
   } catch (error) {
-    console.error("[CHAMPION_CREATE_POST_ERROR]", error);
+    logServerError("[CHAMPION_CREATE_POST_ERROR]", error);
     return NextResponse.json(
       { message: "Failed to create champion" },
       { status: 500 }
     );
   }
 }
+

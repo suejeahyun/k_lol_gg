@@ -1,3 +1,4 @@
+import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -53,7 +54,7 @@ export async function GET() {
     if (message === "NOT_APPROVED") {
       return NextResponse.json({ message: "승인 완료 유저만 확인할 수 있습니다." }, { status: 403 });
     }
-    console.error("[COMMUNITY_MY_ACTIVITY_GET_ERROR]", error);
+    logServerError("[COMMUNITY_MY_ACTIVITY_GET_ERROR]", error);
     return NextResponse.json({ message: "내 커뮤니티 활동을 불러오는 중 오류가 발생했습니다." }, { status: 500 });
   }
 }

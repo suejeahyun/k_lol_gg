@@ -1,3 +1,4 @@
+﻿import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -80,7 +81,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
 
     return NextResponse.redirect(new URL(REDIRECT_PATH, req.url), 303);
   } catch (error) {
-    console.error("[GALLERY_HOME_DISPLAY_POST_ERROR]", error);
+    logServerError("[GALLERY_HOME_DISPLAY_POST_ERROR]", error);
 
     return NextResponse.redirect(new URL(REDIRECT_PATH, req.url), 303);
   }
@@ -153,7 +154,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
 
     return NextResponse.json(updatedImage);
   } catch (error) {
-    console.error("[GALLERY_HOME_DISPLAY_PATCH_ERROR]", error);
+    logServerError("[GALLERY_HOME_DISPLAY_PATCH_ERROR]", error);
 
     return NextResponse.json(
       { message: "메인 노출 상태 변경 중 오류가 발생했습니다." },
@@ -161,3 +162,4 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     );
   }
 }
+

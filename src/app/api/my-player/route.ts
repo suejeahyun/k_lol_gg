@@ -1,3 +1,4 @@
+﻿import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -33,7 +34,7 @@ export async function GET() {
       }
     }
 
-    console.error("[MY_PLAYER_GET_ERROR]", error);
+    logServerError("[MY_PLAYER_GET_ERROR]", error);
 
     return NextResponse.json(
       { message: "내 정보 조회 중 오류 발생" },
@@ -108,7 +109,7 @@ export async function PATCH(req: NextRequest) {
       }
     }
 
-    console.error("[MY_PLAYER_PATCH_ERROR]", error);
+    logServerError("[MY_PLAYER_PATCH_ERROR]", error);
 
     return NextResponse.json(
       { message: "내 정보 수정 중 오류 발생" },

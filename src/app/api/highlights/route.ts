@@ -1,3 +1,4 @@
+﻿import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -30,7 +31,7 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error("[HIGHLIGHTS_GET_ERROR]", error);
+    logServerError("[HIGHLIGHTS_GET_ERROR]", error);
     return NextResponse.json(
       { message: "하이라이트 목록 조회 중 오류가 발생했습니다." },
       { status: 500 },
@@ -92,10 +93,11 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(created, { status: 201 });
   } catch (error) {
-    console.error("[HIGHLIGHTS_POST_ERROR]", error);
+    logServerError("[HIGHLIGHTS_POST_ERROR]", error);
     return NextResponse.json(
       { message: "하이라이트 등록 중 오류가 발생했습니다." },
       { status: 500 },
     );
   }
 }
+

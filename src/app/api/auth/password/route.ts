@@ -1,3 +1,4 @@
+﻿import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -112,7 +113,7 @@ export async function PATCH(req: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error("[AUTH_PASSWORD_PATCH_ERROR]", error);
+    logServerError("[AUTH_PASSWORD_PATCH_ERROR]", error);
 
     return NextResponse.json(
       { message: "비밀번호 변경 중 오류가 발생했습니다." },
@@ -120,3 +121,4 @@ export async function PATCH(req: NextRequest) {
     );
   }
 }
+

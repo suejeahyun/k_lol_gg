@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { DestructionAuctionStatus, Position } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { logServerError } from "@/lib/server/safe-log";
 
 type RouteProps = {
   params: Promise<{
@@ -278,7 +279,7 @@ export async function POST(req: NextRequest, { params }: RouteProps) {
 
     return NextResponse.json(createdTeams);
   } catch (error) {
-    console.error("[DESTRUCTION_TEAMS_POST_ERROR]", error);
+    logServerError("[DESTRUCTION_TEAMS_POST_ERROR]", error);
 
     return NextResponse.json(
       { message: "멸망전 팀장 지정 및 팀 생성 실패" },
@@ -286,4 +287,5 @@ export async function POST(req: NextRequest, { params }: RouteProps) {
     );
   }
 }
+
 

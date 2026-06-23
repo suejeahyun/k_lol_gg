@@ -1,3 +1,4 @@
+﻿import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -55,7 +56,7 @@ export async function GET(_: NextRequest, context: RouteContext) {
 
     return NextResponse.json(highlight);
   } catch (error) {
-    console.error("[HIGHLIGHT_GET_ERROR]", error);
+    logServerError("[HIGHLIGHT_GET_ERROR]", error);
     return NextResponse.json(
       { message: "하이라이트 조회 중 오류가 발생했습니다." },
       { status: 500 },
@@ -127,7 +128,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("[HIGHLIGHT_PATCH_ERROR]", error);
+    logServerError("[HIGHLIGHT_PATCH_ERROR]", error);
     return NextResponse.json(
       { message: "하이라이트 수정 중 오류가 발생했습니다." },
       { status: 500 },
@@ -171,10 +172,11 @@ export async function DELETE(_: NextRequest, context: RouteContext) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("[HIGHLIGHT_DELETE_ERROR]", error);
+    logServerError("[HIGHLIGHT_DELETE_ERROR]", error);
     return NextResponse.json(
       { message: "하이라이트 삭제 중 오류가 발생했습니다." },
       { status: 500 },
     );
   }
 }
+

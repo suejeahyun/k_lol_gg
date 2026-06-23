@@ -1,9 +1,10 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { logServerError } from "@/lib/server/safe-log";
 
 type RouteContext = {
   params: Promise<{
@@ -271,7 +272,7 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
 
     return NextResponse.json({ message: "팀 구성을 저장했습니다." });
   } catch (error) {
-    console.error("[EVENT_TEAM_DRAG_UPDATE_ERROR]", error);
+    logServerError("[EVENT_TEAM_DRAG_UPDATE_ERROR]", error);
 
     return NextResponse.json(
       { message: "팀 구성 저장 중 오류가 발생했습니다." },
@@ -475,7 +476,7 @@ for (const participant of sortedParticipants) {
       teamCount,
     });
   } catch (error) {
-    console.error("[EVENT_TEAM_GENERATE_ERROR]", error);
+    logServerError("[EVENT_TEAM_GENERATE_ERROR]", error);
 
     return NextResponse.json(
       { message: "팀 자동 생성 중 오류가 발생했습니다." },
@@ -483,3 +484,4 @@ for (const participant of sortedParticipants) {
     );
   }
 }
+

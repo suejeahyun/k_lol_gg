@@ -1,3 +1,4 @@
+import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest) {
       result,
     });
   } catch (error) {
-    console.error("[ADMIN_RECRUITS_RESET_NUMBER_ERROR]", error);
+    logServerError("[ADMIN_RECRUITS_RESET_NUMBER_ERROR]", error);
     return NextResponse.json(
       {
         ok: false,

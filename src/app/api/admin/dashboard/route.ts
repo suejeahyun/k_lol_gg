@@ -1,3 +1,4 @@
+import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -132,7 +133,7 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("[ADMIN_DASHBOARD_GET_ERROR]", error);
+    logServerError("[ADMIN_DASHBOARD_GET_ERROR]", error);
 
     return NextResponse.json(
       { message: "관리자 대시보드 조회 실패" },

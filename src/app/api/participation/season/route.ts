@@ -1,3 +1,4 @@
+﻿import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -125,7 +126,7 @@ export async function GET(req: NextRequest) {
       })),
     });
   } catch (error: unknown) {
-    console.error("[SEASON_PARTICIPATION_GET_ERROR]", error);
+    logServerError("[SEASON_PARTICIPATION_GET_ERROR]", error);
 
     return NextResponse.json(
       { message: "참가자 조회 중 오류가 발생했습니다." },
@@ -216,7 +217,7 @@ export async function POST(req: NextRequest) {
       message: "참가 신청이 완료되었습니다.",
     });
   } catch (error: unknown) {
-    console.error("[SEASON_PARTICIPATION_POST_ERROR]", error);
+    logServerError("[SEASON_PARTICIPATION_POST_ERROR]", error);
 
     return NextResponse.json(
       { message: "참가 신청 중 오류가 발생했습니다." },
@@ -305,7 +306,7 @@ export async function DELETE(req: NextRequest) {
       message: "참가가 취소되었습니다.",
     });
   } catch (error: unknown) {
-    console.error("[SEASON_PARTICIPATION_DELETE_ERROR]", error);
+    logServerError("[SEASON_PARTICIPATION_DELETE_ERROR]", error);
 
     return NextResponse.json(
       { message: "참가 취소 중 오류가 발생했습니다." },
@@ -313,3 +314,4 @@ export async function DELETE(req: NextRequest) {
     );
   }
 }
+

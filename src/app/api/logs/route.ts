@@ -1,3 +1,4 @@
+﻿import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -137,7 +138,7 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("[ADMIN_LOG_GET_ERROR]", error);
+    logServerError("[ADMIN_LOG_GET_ERROR]", error);
 
     return NextResponse.json(
       { message: "로그 조회 중 오류가 발생했습니다." },
@@ -167,7 +168,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true }, { status: 201 });
   } catch (error) {
-    console.error("[ADMIN_LOG_CREATE_ERROR]", error);
+    logServerError("[ADMIN_LOG_CREATE_ERROR]", error);
 
     return NextResponse.json(
       { message: "로그 저장 중 오류가 발생했습니다." },
@@ -175,3 +176,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+

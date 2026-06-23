@@ -1,8 +1,9 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { logServerError } from "@/lib/server/safe-log";
 
 type RouteContext = {
   params: Promise<{
@@ -76,7 +77,7 @@ export async function PATCH(_req: NextRequest, { params }: RouteContext) {
       seasonId: id,
     });
   } catch (error) {
-    console.error("[SEASON_ACTIVATE_PATCH_ERROR]", error);
+    logServerError("[SEASON_ACTIVATE_PATCH_ERROR]", error);
 
     return NextResponse.json(
       { message: "Failed to activate season" },
@@ -84,3 +85,4 @@ export async function PATCH(_req: NextRequest, { params }: RouteContext) {
     );
   }
 }
+

@@ -1,3 +1,4 @@
+import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -68,7 +69,7 @@ export async function GET() {
       players: applies.map((apply) => apply.player),
     });
   } catch (error: unknown) {
-    console.error("[ADMIN_SEASON_PARTICIPATION_APPLIES_GET_ERROR]", error);
+    logServerError("[ADMIN_SEASON_PARTICIPATION_APPLIES_GET_ERROR]", error);
 
     return NextResponse.json(
       { message: "시즌내전 참가 신청자 조회 중 오류가 발생했습니다." },

@@ -1,3 +1,4 @@
+import { logServerError } from "@/lib/server/safe-log";
 ﻿export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -134,7 +135,7 @@ export async function POST(req: NextRequest) {
       { status: 201 },
     );
   } catch (error) {
-    console.error("[AUTH_SIGNUP_POST_ERROR]", error);
+    logServerError("[AUTH_SIGNUP_POST_ERROR]", error);
 
     return NextResponse.json(
       { message: "회원가입 처리 중 오류가 발생했습니다." },

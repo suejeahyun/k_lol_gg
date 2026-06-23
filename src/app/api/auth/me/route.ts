@@ -1,3 +1,4 @@
+import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -47,7 +48,7 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error("[AUTH_ME_GET_ERROR]", error);
+    logServerError("[AUTH_ME_GET_ERROR]", error);
 
     return NextResponse.json(
       { message: "유저 정보를 불러오는 중 오류가 발생했습니다." },

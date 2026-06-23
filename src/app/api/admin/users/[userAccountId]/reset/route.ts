@@ -1,3 +1,4 @@
+import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -37,7 +38,7 @@ export async function PATCH(_req: NextRequest, { params }: RouteContext) {
 
     return NextResponse.json({ message: "회원 상태가 승인 대기로 변경되었습니다." });
   } catch (error) {
-    console.error("[ADMIN_USER_RESET_ERROR]", error);
+    logServerError("[ADMIN_USER_RESET_ERROR]", error);
     return NextResponse.json({ message: "회원 상태 초기화 실패" }, { status: 500 });
   }
 }

@@ -1,3 +1,12 @@
+﻿import { logServerError } from "@/lib/server/safe-log";
+function logImportLolResultConsoleReplacement(...args: unknown[]) {
+  const [tag, error, ...details] = args;
+  logServerError(
+    typeof tag === "string" ? tag : "[MATCH_IMPORT_LOL_RESULT_ERROR]",
+    details.length > 0 ? { error, details } : error,
+  );
+}
+
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
@@ -100,7 +109,7 @@ async function recognizeText(
 
     return result.data.text.replace(/\s+/g, " ").trim();
   } catch (error) {
-    console.error("[LOL_RESULT_OCR_ERROR]", error);
+    logServerError("[LOL_RESULT_OCR_ERROR]", error);
     return "";
   }
 }
@@ -520,7 +529,7 @@ async function loadChampionImages() {
         const signature = await makeChampionSignature(Buffer.from(arrayBuffer));
         loaded.push({ ...champion, ...signature });
       } catch (error) {
-        console.error(
+        logImportLolResultConsoleReplacement(
           "[LOL_RESULT_CHAMPION_IMAGE_LOAD_ERROR]",
           champion.name,
           error,
@@ -601,7 +610,7 @@ async function detectResultTitleTop(
     if (!candidate) return null;
     return cropTop + candidate.top;
   } catch (error) {
-    console.error("[LOL_RESULT_TITLE_ANCHOR_ERROR]", error);
+    logServerError("[LOL_RESULT_TITLE_ANCHOR_ERROR]", error);
     return null;
   }
 }
@@ -716,7 +725,7 @@ async function detectTeamHeaderAnchors(
 
     return { topTeamHeaderY, bottomTeamHeaderY };
   } catch (error) {
-    console.error("[LOL_RESULT_TEAM_HEADER_ANCHOR_ERROR]", error);
+    logServerError("[LOL_RESULT_TEAM_HEADER_ANCHOR_ERROR]", error);
     return { topTeamHeaderY: null, bottomTeamHeaderY: null };
   }
 }
@@ -963,7 +972,7 @@ async function saveDebugImage(filePath: string, buffer: Buffer) {
   try {
     await writeFile(filePath, buffer);
   } catch (error) {
-    console.error("[LOL_RESULT_DEBUG_SAVE_ERROR]", filePath, error);
+    logServerError("[LOL_RESULT_DEBUG_SAVE_ERROR]", error);
   }
 }
 
@@ -1017,11 +1026,11 @@ export async function POST(req: Request) {
   const requestId = Math.random().toString(36).slice(2, 8);
   const log = (message: string, extra?: unknown) => {
     if (extra === undefined) {
-      console.log(`[LOL_RESULT_IMPORT:${requestId}] ${message}`);
+      void requestId; void message;
       return;
     }
 
-    console.log(`[LOL_RESULT_IMPORT:${requestId}] ${message}`, extra);
+    void requestId; void message; void extra;
   };
 
   try {
@@ -1093,7 +1102,7 @@ export async function POST(req: Request) {
           saveDebugImage(path.join(debugDir, "normalized.png"), imageBuffer),
         ]);
       } catch (error) {
-        console.error("[LOL_RESULT_DEBUG_SAVE_ERROR]", debugDir, error);
+        logServerError("[LOL_RESULT_DEBUG_SAVE_ERROR]", error);
       }
     }
 
@@ -1208,7 +1217,7 @@ export async function POST(req: Request) {
     log("응답 반환", { rows: rows.length });
     return NextResponse.json(response);
   } catch (error) {
-    console.error("[LOL_RESULT_IMPORT_POST_ERROR]", error);
+    logServerError("[LOL_RESULT_IMPORT_POST_ERROR]", error);
 
     return NextResponse.json(
       { message: "롤 결과 캡쳐 분석 중 오류가 발생했습니다." },
@@ -1216,3 +1225,5 @@ export async function POST(req: Request) {
     );
   }
 }
+
+

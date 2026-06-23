@@ -1,3 +1,4 @@
+import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -122,7 +123,7 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error: unknown) {
-    console.error("[ADMIN_USERS_GET_ERROR]", error);
+    logServerError("[ADMIN_USERS_GET_ERROR]", error);
 
     return NextResponse.json(
       { message: "회원 목록 조회 중 오류가 발생했습니다." },

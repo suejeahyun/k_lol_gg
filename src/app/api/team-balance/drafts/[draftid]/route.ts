@@ -1,8 +1,9 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { requireApprovedUserOrAdmin, getAccessErrorResponseMessage } from "@/lib/auth/access";
+import { logServerError } from "@/lib/server/safe-log";
 
 type RouteContext = {
   params: Promise<Record<string, string>>;
@@ -105,7 +106,7 @@ export async function GET(_req: Request, { params }: RouteContext) {
       },
     });
   } catch (error) {
-    console.error("[TEAM_BALANCE_DRAFT_DETAIL_GET_ERROR]", error);
+    logServerError("[TEAM_BALANCE_DRAFT_DETAIL_GET_ERROR]", error);
     const response = getAccessErrorResponseMessage(
       error,
       "팀 밸런스 결과 조회 중 오류가 발생했습니다.",

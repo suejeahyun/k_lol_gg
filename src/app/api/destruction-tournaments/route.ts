@@ -1,9 +1,10 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { DestructionPreliminaryFormat } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { logServerError } from "@/lib/server/safe-log";
 
 const MAX_ADMIN_DESTRUCTION_TOURNAMENTS = 50;
 
@@ -53,7 +54,7 @@ export async function GET() {
 
     return NextResponse.json(tournaments);
   } catch (error) {
-    console.error("[DESTRUCTION_TOURNAMENTS_GET_ERROR]", error);
+    logServerError("[DESTRUCTION_TOURNAMENTS_GET_ERROR]", error);
 
     return NextResponse.json(
       { message: "멸망전 목록 조회 실패" },
@@ -119,7 +120,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(tournament, { status: 201 });
   } catch (error) {
-    console.error("[DESTRUCTION_TOURNAMENTS_POST_ERROR]", error);
+    logServerError("[DESTRUCTION_TOURNAMENTS_POST_ERROR]", error);
 
     return NextResponse.json(
       { message: "멸망전 생성 실패" },
@@ -127,3 +128,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+

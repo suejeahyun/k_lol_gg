@@ -1,8 +1,9 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { logServerError } from "@/lib/server/safe-log";
 
 type RouteProps = {
   params: Promise<{
@@ -185,7 +186,7 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
 
     return NextResponse.json(updatedTournament);
   } catch (error) {
-    console.error("[DESTRUCTION_ASSIGN_TEAMS_PUT_ERROR]", error);
+    logServerError("[DESTRUCTION_ASSIGN_TEAMS_PUT_ERROR]", error);
 
     return NextResponse.json(
       { message: "멸망전 팀 배정 실패" },
@@ -193,3 +194,4 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
     );
   }
 }
+

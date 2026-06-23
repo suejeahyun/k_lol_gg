@@ -1,10 +1,11 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { requireApprovedUserOrAdmin } from "@/lib/auth/access";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
 import { getRiotStatusFromError, recordRiotApiStatus } from "@/lib/riot/status";
+import { logServerError } from "@/lib/server/safe-log";
 import {
   calculateWinRate,
   findParticipantByPuuid,
@@ -270,7 +271,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
     });
   } catch (error) {
     await recordRiotApiStatus(getRiotStatusFromError("DRAFT_SOLO_RANK_SYNC", error));
-    console.error("[DRAFT_SOLO_RANK_SYNC_POST_ERROR]", error);
+    logServerError("[DRAFT_SOLO_RANK_SYNC_POST_ERROR]", error);
 
     if (error instanceof Error) {
       if (error.message === "UNAUTHORIZED") return NextResponse.json({ message: "로그인이 필요합니다." }, { status: 401 });
@@ -281,3 +282,4 @@ export async function POST(req: NextRequest, context: RouteContext) {
     return NextResponse.json({ message: "저장 밸런스 솔랭 전적 갱신 중 알 수 없는 오류가 발생했습니다." }, { status: 500 });
   }
 }
+

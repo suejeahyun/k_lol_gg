@@ -1,8 +1,9 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { logServerError } from "@/lib/server/safe-log";
 
 type CreateSeasonBody = {
   name: string;
@@ -24,7 +25,7 @@ export async function GET() {
 
     return NextResponse.json(seasons);
   } catch (error) {
-    console.error("[SEASONS_GET_ERROR]", error);
+    logServerError("[SEASONS_GET_ERROR]", error);
 
     return NextResponse.json(
       { message: "Failed to fetch seasons" },
@@ -87,7 +88,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(created, { status: 201 });
   } catch (error) {
-    console.error("[SEASON_CREATE_POST_ERROR]", error);
+    logServerError("[SEASON_CREATE_POST_ERROR]", error);
 
     return NextResponse.json(
       { message: "Failed to create season" },
@@ -95,3 +96,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+

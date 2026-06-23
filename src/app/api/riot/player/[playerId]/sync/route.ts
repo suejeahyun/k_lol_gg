@@ -1,3 +1,4 @@
+﻿import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -342,7 +343,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
     });
   } catch (error) {
     await recordRiotApiStatus(getRiotStatusFromError("RIOT_SOLO_SYNC", error));
-    console.error("[RIOT_PLAYER_SOLO_SYNC_POST_ERROR]", error);
+    logServerError("[RIOT_PLAYER_SOLO_SYNC_POST_ERROR]", error);
 
     if (error instanceof Error) {
       if (error.message === "UNAUTHORIZED") {

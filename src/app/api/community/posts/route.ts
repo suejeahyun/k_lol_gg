@@ -1,3 +1,4 @@
+import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { CommunityPostType } from "@prisma/client";
@@ -26,7 +27,7 @@ export async function GET(req: NextRequest) {
     });
     return NextResponse.json({ posts });
   } catch (error) {
-    console.error("[COMMUNITY_POSTS_GET_ERROR]", error);
+    logServerError("[COMMUNITY_POSTS_GET_ERROR]", error);
     return NextResponse.json({ message: "게시글 목록 조회 중 오류가 발생했습니다." }, { status: 500 });
   }
 }
@@ -65,7 +66,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ post }, { status: 201 });
   } catch (error) {
-    console.error("[COMMUNITY_POSTS_POST_ERROR]", error);
+    logServerError("[COMMUNITY_POSTS_POST_ERROR]", error);
     return NextResponse.json({ message: "게시글 등록 중 오류가 발생했습니다." }, { status: 500 });
   }
 }

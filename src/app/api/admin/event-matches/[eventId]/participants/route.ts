@@ -1,3 +1,4 @@
+import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -306,7 +307,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
       }
     }
 
-    console.error("[ADMIN_EVENT_PARTICIPANT_MANUAL_ADD_ERROR]", error);
+    logServerError("[ADMIN_EVENT_PARTICIPANT_MANUAL_ADD_ERROR]", error);
 
     return NextResponse.json(
       { message: "참가자 직접 추가 중 오류가 발생했습니다." },

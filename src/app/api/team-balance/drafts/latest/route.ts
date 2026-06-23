@@ -1,8 +1,9 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { requireApprovedUserOrAdmin, getAccessErrorResponseMessage } from "@/lib/auth/access";
+import { logServerError } from "@/lib/server/safe-log";
 
 export async function GET() {
   try {
@@ -90,7 +91,7 @@ export async function GET() {
       },
     });
   } catch (error: unknown) {
-    console.error("[TEAM_BALANCE_DRAFT_LATEST_GET_ERROR]", error);
+    logServerError("[TEAM_BALANCE_DRAFT_LATEST_GET_ERROR]", error);
     const response = getAccessErrorResponseMessage(
       error,
       "최신 팀 밸런스 결과 조회 중 오류가 발생했습니다.",
@@ -102,3 +103,4 @@ export async function GET() {
     );
   }
 }
+

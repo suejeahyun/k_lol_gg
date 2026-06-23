@@ -1,3 +1,4 @@
+import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -138,7 +139,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       application: updated,
     });
   } catch (error: unknown) {
-    console.error("[ADMIN_DESTRUCTION_APPLICATION_STATUS_PATCH_ERROR]", error);
+    logServerError("[ADMIN_DESTRUCTION_APPLICATION_STATUS_PATCH_ERROR]", error);
 
     return NextResponse.json(
       { message: "참가 신청 상태 변경 중 오류가 발생했습니다." },

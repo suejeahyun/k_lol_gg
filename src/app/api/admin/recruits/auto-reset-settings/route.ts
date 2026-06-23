@@ -1,3 +1,4 @@
+import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -62,7 +63,7 @@ export async function POST(req: NextRequest) {
       settings: { enabled, idleHours },
     });
   } catch (error) {
-    console.error("[ADMIN_RECRUITS_AUTO_RESET_SETTINGS_ERROR]", error);
+    logServerError("[ADMIN_RECRUITS_AUTO_RESET_SETTINGS_ERROR]", error);
     return NextResponse.json(
       {
         ok: false,

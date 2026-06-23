@@ -1,9 +1,10 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { DestructionPreliminaryFormat } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { logServerError } from "@/lib/server/safe-log";
 
 type RouteProps = {
   params: Promise<{
@@ -233,7 +234,7 @@ export async function POST(_req: NextRequest, { params }: RouteProps) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("[DESTRUCTION_PRELIMINARY_POST_ERROR]", error);
+    logServerError("[DESTRUCTION_PRELIMINARY_POST_ERROR]", error);
 
     return NextResponse.json(
       { message: "멸망전 예선 생성 실패" },
@@ -241,3 +242,4 @@ export async function POST(_req: NextRequest, { params }: RouteProps) {
     );
   }
 }
+

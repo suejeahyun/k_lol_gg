@@ -1,9 +1,10 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { EventMatchMode, EventMatchStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { logServerError } from "@/lib/server/safe-log";
 
 type RouteProps = {
   params: Promise<{
@@ -88,7 +89,7 @@ export async function GET(_req: NextRequest, { params }: RouteProps) {
 
     return NextResponse.json(event);
   } catch (error) {
-    console.error("[EVENT_MATCH_GET_ERROR]", error);
+    logServerError("[EVENT_MATCH_GET_ERROR]", error);
 
     return NextResponse.json(
       { message: "이벤트 내전 조회 실패" },
@@ -219,7 +220,7 @@ export async function PATCH(req: NextRequest, { params }: RouteProps) {
 
     return NextResponse.json(event);
   } catch (error) {
-    console.error("[EVENT_MATCH_PATCH_ERROR]", error);
+    logServerError("[EVENT_MATCH_PATCH_ERROR]", error);
 
     return NextResponse.json(
       { message: "이벤트 내전 수정 실패" },
@@ -277,7 +278,7 @@ export async function DELETE(_req: NextRequest, { params }: RouteProps) {
       message: "이벤트 내전이 삭제되었습니다.",
     });
   } catch (error) {
-    console.error("[EVENT_MATCH_DELETE_ERROR]", error);
+    logServerError("[EVENT_MATCH_DELETE_ERROR]", error);
 
     return NextResponse.json(
       { message: "이벤트 내전 삭제 실패" },
@@ -285,3 +286,4 @@ export async function DELETE(_req: NextRequest, { params }: RouteProps) {
     );
   }
 }
+

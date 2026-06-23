@@ -5,6 +5,7 @@ import { rejectIfRateLimited } from "@/lib/rate-limit";
 import { getTodayKstRange } from "@/lib/date/kst";
 import { getRequiredSecretInProduction } from "@/lib/security/secrets";
 import { prisma } from "@/lib/prisma/client";
+import { logServerError } from "@/lib/server/safe-log";
 
 type PositionKey = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
 
@@ -223,7 +224,7 @@ export async function GET(req: NextRequest) {
   try {
     return await createNotice(req);
   } catch (error) {
-    console.error("[KAKAO_SCHEDULED_NOTICE_GET_ERROR]", error);
+    logServerError("[KAKAO_SCHEDULED_NOTICE_GET_ERROR]", error, { endpoint: "/api/kakao/scheduled-notice", method: "GET" });
 
     if (error instanceof Error && error.message.includes("KAKAO_OPENCHAT_SECRET")) {
       return jsonReply("서버 인증 환경변수가 설정되지 않았습니다.", {}, 500);
@@ -244,7 +245,7 @@ export async function POST(req: NextRequest) {
     const body = (await req.json().catch(() => ({}))) as NoticeBody;
     return await createNotice(req, body);
   } catch (error) {
-    console.error("[KAKAO_SCHEDULED_NOTICE_POST_ERROR]", error);
+    logServerError("[KAKAO_SCHEDULED_NOTICE_POST_ERROR]", error, { endpoint: "/api/kakao/scheduled-notice", method: "POST" });
 
     if (error instanceof Error && error.message.includes("KAKAO_OPENCHAT_SECRET")) {
       return jsonReply("서버 인증 환경변수가 설정되지 않았습니다.", {}, 500);

@@ -1,3 +1,4 @@
+﻿import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -320,7 +321,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error("[RIOT_PLAYER_SOLO_SUMMARY_GET_ERROR]", error);
+    logServerError("[RIOT_PLAYER_SOLO_SUMMARY_GET_ERROR]", error);
 
     if (error instanceof Error) {
       return NextResponse.json(

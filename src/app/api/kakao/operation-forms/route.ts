@@ -9,6 +9,7 @@ import {
   getKakaoOperationFormReply,
   parseKakaoOperationForm,
 } from "@/lib/kakao/operation-forms";
+import { logServerError } from "@/lib/server/safe-log";
 
 async function readJsonBody(req: NextRequest) {
   return req.json().catch(() => ({})) as Promise<Record<string, unknown>>;
@@ -152,7 +153,7 @@ export async function POST(req: NextRequest) {
 
     return kakaoJsonReply({ ok: true, type: parsed.type, id: item.id, reply: getKakaoOperationFormReply(parsed.type) });
   } catch (error) {
-    console.error("[KAKAO_OPERATION_FORM_POST_ERROR]", error);
+    logServerError("[KAKAO_OPERATION_FORM_POST_ERROR]", error, { endpoint: "/api/kakao/operation-forms" });
 
     return kakaoJsonReply(
       {

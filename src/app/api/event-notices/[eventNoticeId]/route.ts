@@ -1,3 +1,4 @@
+﻿import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -41,7 +42,7 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
 
     return NextResponse.json(notice);
   } catch (error) {
-    console.error("[EVENT_NOTICE_GET_ERROR]", error);
+    logServerError("[EVENT_NOTICE_GET_ERROR]", error);
 
     return NextResponse.json(
       { message: "이벤트 공지 조회 중 오류가 발생했습니다." },
@@ -123,7 +124,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
 
     return NextResponse.json(notice);
   } catch (error) {
-    console.error("[EVENT_NOTICE_PATCH_ERROR]", error);
+    logServerError("[EVENT_NOTICE_PATCH_ERROR]", error);
 
     return NextResponse.json(
       { message: "이벤트 공지 수정 중 오류가 발생했습니다." },
@@ -169,7 +170,7 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error("[EVENT_NOTICE_DELETE_ERROR]", error);
+    logServerError("[EVENT_NOTICE_DELETE_ERROR]", error);
 
     return NextResponse.json(
       { message: "이벤트 공지 삭제 중 오류가 발생했습니다." },
@@ -177,3 +178,4 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
     );
   }
 }
+

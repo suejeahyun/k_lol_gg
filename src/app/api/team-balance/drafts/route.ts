@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
@@ -7,6 +7,7 @@ import { addDays, getKstDateKey, getKstDisplayDate, getKstStartOfDate } from "@/
 import { requireApprovedUser } from "@/lib/auth/session";
 import { requireApprovedUserOrAdmin, getAccessErrorResponseMessage } from "@/lib/auth/access";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
+import { logServerError } from "@/lib/server/safe-log";
 
 type TeamValue = "BLUE" | "RED";
 type PositionValue = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
@@ -103,7 +104,7 @@ export async function GET() {
       })),
     });
   } catch (error: unknown) {
-    console.error("[TEAM_BALANCE_DRAFTS_GET_ERROR]", error);
+    logServerError("[TEAM_BALANCE_DRAFTS_GET_ERROR]", error);
     const response = getAccessErrorResponseMessage(
       error,
       "팀 밸런스 결과 목록 조회 중 오류가 발생했습니다.",
@@ -262,7 +263,7 @@ export async function POST(req: NextRequest) {
       count: draft._count.players,
     });
   } catch (error: unknown) {
-    console.error("[TEAM_BALANCE_DRAFTS_POST_ERROR]", error);
+    logServerError("[TEAM_BALANCE_DRAFTS_POST_ERROR]", error);
 
     if (error instanceof Error) {
       if (error.message === "UNAUTHORIZED") {
@@ -286,3 +287,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+

@@ -1,9 +1,10 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { EventMatchMode, Position } from "@prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { logServerError } from "@/lib/server/safe-log";
 
 type ParticipantInput = {
   playerId: number;
@@ -54,7 +55,7 @@ export async function GET() {
 
     return NextResponse.json(events);
   } catch (error) {
-    console.error("[EVENT_MATCHES_GET_ERROR]", error);
+    logServerError("[EVENT_MATCHES_GET_ERROR]", error);
 
     return NextResponse.json(
       { message: "이벤트 내전 목록 조회 실패" },
@@ -181,7 +182,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(event, { status: 201 });
   } catch (error) {
-    console.error("[EVENT_MATCHES_POST_ERROR]", error);
+    logServerError("[EVENT_MATCHES_POST_ERROR]", error);
 
     return NextResponse.json(
       { message: "이벤트 내전 생성 실패" },
@@ -189,3 +190,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
