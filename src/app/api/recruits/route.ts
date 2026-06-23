@@ -5,6 +5,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { filterRecruitingParties } from "@/lib/kakao/party-recruit";
 
+const MAX_PUBLIC_RECRUIT_PARTIES = 200;
+
 export async function GET() {
   const allParties = await prisma.recruitParty.findMany({
     where: { status: "IN_PROGRESS" },
@@ -14,6 +16,7 @@ export async function GET() {
       },
     },
     orderBy: [{ recruitDate: "desc" }, { resetSeq: "desc" }, { recruitNo: "asc" }],
+    take: MAX_PUBLIC_RECRUIT_PARTIES,
   });
 
   const parties = filterRecruitingParties(allParties);

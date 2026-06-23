@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { requireApprovedUserOrAdmin, getAccessErrorResponseMessage } from "@/lib/auth/access";
 
 type ApplyPositionValue = "TOP" | "JGL" | "MID" | "ADC" | "SUP" | "ALL";
 
@@ -28,6 +29,7 @@ type ApplyGroup = {
 
 const GROUP_SIZE = 10;
 const LOOKBACK_DAYS = 3;
+const MAX_RECENT_APPLIES = 200;
 
 function getKstDateKey(date: Date) {
   const formatter = new Intl.DateTimeFormat("en-CA", {
@@ -77,6 +79,7 @@ function getKstStartDateFromLookback() {
 
 export async function GET() {
   try {
+    await requireApprovedUserOrAdmin();
     const currentSeason = await prisma.season.findFirst({
       where: {
         isActive: true,
@@ -129,6 +132,7 @@ export async function GET() {
           id: "asc",
         },
       ],
+      take: MAX_RECENT_APPLIES,
     });
 
     const byDate = new Map<string, typeof applies>();
@@ -176,11 +180,23 @@ export async function GET() {
       players: groups[0]?.players ?? [],
     });
   } catch (error: unknown) {
+    const response = getAccessErrorResponseMessage(
+      error,
+      "참가 신청자 목록 조회 중 오류가 발생했습니다.",
+    );
+
+    if (response.status !== 500) {
+      return NextResponse.json(
+        { message: response.message },
+        { status: response.status },
+      );
+    }
+
     console.error("[TEAM_BALANCE_SEASON_APPLIES_GET_ERROR]", error);
 
     return NextResponse.json(
-      { message: "참가 신청자 목록 조회 중 오류가 발생했습니다." },
-      { status: 500 }
+      { message: response.message },
+      { status: response.status }
     );
   }
 }

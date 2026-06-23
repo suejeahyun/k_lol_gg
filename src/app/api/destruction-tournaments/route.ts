@@ -5,6 +5,8 @@ import { DestructionPreliminaryFormat } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 
+const MAX_ADMIN_DESTRUCTION_TOURNAMENTS = 50;
+
 const PRELIMINARY_FORMATS: DestructionPreliminaryFormat[] = [
   "FULL_ROUND_ROBIN_BO3",
   "FULL_ROUND_ROBIN_BO1",
@@ -29,9 +31,13 @@ function usesRoundCount(format: DestructionPreliminaryFormat) {
 }
 
 export async function GET() {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
   try {
     const tournaments = await prisma.destructionTournament.findMany({
       orderBy: { createdAt: "desc" },
+      take: MAX_ADMIN_DESTRUCTION_TOURNAMENTS,
       include: {
         galleryImage: true,
         teams: {

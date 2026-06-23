@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 
 const allowedTypes: CommunityPostType[] = ["HIGHLIGHT", "SUGGESTION", "MATCH_REVIEW", "FREE"];
+const MAX_HEADLINES_PER_TYPE = 50;
 
 const fallbackHeadlines: Record<CommunityPostType, string[]> = {
   HIGHLIGHT: ["슈퍼플레이", "한타", "솔로킬", "바론·용", "역전", "웃긴장면", "실수", "제보"],
@@ -24,6 +25,7 @@ export async function GET(req: NextRequest) {
     const headlines = await prisma.communityHeadline.findMany({
       where: { type, isActive: true },
       orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+      take: MAX_HEADLINES_PER_TYPE,
       select: { id: true, type: true, label: true, sortOrder: true },
     });
 

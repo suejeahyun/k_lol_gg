@@ -8,12 +8,18 @@ type CreateSeasonBody = {
   name: string;
 };
 
+const MAX_ADMIN_SEASONS = 100;
+
 export async function GET() {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
   try {
     const seasons = await prisma.season.findMany({
       orderBy: {
         id: "desc",
       },
+      take: MAX_ADMIN_SEASONS,
     });
 
     return NextResponse.json(seasons);

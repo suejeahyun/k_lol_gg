@@ -11,16 +11,22 @@ type ParticipantInput = {
   balanceScore?: number;
 };
 
+const MAX_ADMIN_EVENT_MATCHES = 50;
+
 function isValidMode(mode: string): mode is EventMatchMode {
   return mode === "POSITION" || mode === "ARAM";
 }
 
 export async function GET() {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
   try {
     const events = await prisma.eventMatch.findMany({
       orderBy: {
         eventDate: "desc",
       },
+      take: MAX_ADMIN_EVENT_MATCHES,
       include: {
         galleryImage: true,
         teams: {
