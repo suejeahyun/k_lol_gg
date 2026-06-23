@@ -90,6 +90,7 @@ type PreviousSeasonApplyEntry = {
   label: string;
   name: string;
   isReserve: boolean;
+  recruitNo: number;
   slotNo: number | null;
   reserveSlotNo: number | null;
   mainPosition: unknown;
@@ -154,15 +155,15 @@ function buildReply(params: {
 
   if (!hasApplyChanges(changes)) {
     return [
-      "[K-LOL.GG 내전 명단 변경 없음]",
+      `[K-LOL.GG 내전 #${params.parsed.recruitNo} 명단 변경 없음]`,
       `현재: ${changes.currentMainCount}/${SEASON_RECRUIT_TARGET_COUNT}`,
     ].join("\n");
   }
 
   lines.push(
     pendingResults.length > 0
-      ? "[K-LOL.GG 내전 명단 업데이트/보류]"
-      : "[K-LOL.GG 내전 명단 업데이트]",
+      ? `[K-LOL.GG 내전 #${params.parsed.recruitNo} 명단 업데이트/보류]`
+      : `[K-LOL.GG 내전 #${params.parsed.recruitNo} 명단 업데이트]`,
   );
 
   pushChangeLine(lines, "추가", changes.added);
@@ -330,6 +331,7 @@ function hasVisibleParticipantChange(
 function buildPreviousApplyEntryMap(
   applied: Array<{
     playerId: number;
+    recruitNo: number;
     mainPosition: unknown;
     subPositions: unknown;
     sourceSlotNo: number | null;
@@ -338,6 +340,7 @@ function buildPreviousApplyEntryMap(
   }>,
   pending: Array<{
     name: string;
+    recruitNo: number;
     currentTier: string;
     peakTier: string;
     mainPosition: unknown;
@@ -356,6 +359,7 @@ function buildPreviousApplyEntryMap(
       label: "",
       name: normalizeName(item.player.name),
       isReserve: false,
+      recruitNo: item.recruitNo,
       slotNo: item.sourceSlotNo,
       reserveSlotNo: null,
       mainPosition: item.mainPosition,
@@ -372,6 +376,7 @@ function buildPreviousApplyEntryMap(
       label: "",
       name: normalizeName(item.name),
       isReserve: item.isReserve,
+      recruitNo: item.recruitNo,
       slotNo: item.sourceSlotNo,
       reserveSlotNo: item.reserveSlotNo,
       mainPosition: item.mainPosition,
@@ -449,9 +454,11 @@ async function applyParticipants(params: {
           seasonId: season.id,
           applyDate,
           status: "APPLIED",
+          recruitNo: params.parsed.recruitNo,
         },
         select: {
           playerId: true,
+          recruitNo: true,
           mainPosition: true,
           subPositions: true,
           sourceSlotNo: true,
@@ -468,9 +475,11 @@ async function applyParticipants(params: {
           seasonId: season.id,
           applyDate,
           source: "KAKAO_RECRUIT",
+          recruitNo: params.parsed.recruitNo,
         },
         select: {
           name: true,
+          recruitNo: true,
           currentTier: true,
           peakTier: true,
           mainPosition: true,
@@ -496,6 +505,7 @@ async function applyParticipants(params: {
           seasonId: season.id,
           applyDate,
           status: "APPLIED",
+          recruitNo: params.parsed.recruitNo,
           ...(activeMatchedPlayerIds.length > 0
             ? { playerId: { notIn: activeMatchedPlayerIds } }
             : {}),
@@ -506,6 +516,7 @@ async function applyParticipants(params: {
           seasonId: season.id,
           applyDate,
           source: "KAKAO_RECRUIT",
+          recruitNo: params.parsed.recruitNo,
         },
       }),
     ]);
@@ -534,9 +545,10 @@ async function applyParticipants(params: {
 
         await tx.seasonParticipationPendingApply.upsert({
           where: {
-            seasonId_applyDate_name_isReserve: {
+            seasonId_applyDate_recruitNo_name_isReserve: {
               seasonId: season.id,
               applyDate,
+              recruitNo: params.parsed.recruitNo,
               name: participant.name,
               isReserve: participant.isReserve,
             },
@@ -544,6 +556,7 @@ async function applyParticipants(params: {
           create: {
             seasonId: season.id,
             applyDate,
+            recruitNo: params.parsed.recruitNo,
             name: participant.name,
             currentTier: participant.currentTier,
             peakTier: participant.peakTier,
@@ -596,16 +609,18 @@ async function applyParticipants(params: {
 
       await tx.seasonParticipationApply.upsert({
         where: {
-          seasonId_playerId_applyDate: {
+          seasonId_playerId_applyDate_recruitNo: {
             seasonId: season.id,
             playerId: player.id,
             applyDate,
+            recruitNo: params.parsed.recruitNo,
           },
         },
         create: {
           seasonId: season.id,
           playerId: player.id,
           applyDate,
+          recruitNo: params.parsed.recruitNo,
           mainPosition: participant.mainPosition,
           subPositions: participant.subPosition ? [participant.subPosition] : [],
           status: "APPLIED",
@@ -651,11 +666,12 @@ async function applyParticipants(params: {
 
     await writeAdminLog({
       action: "KAKAO_RECRUIT_SEASON_APPLY",
-      message: `카카오 참가 자동 등록: 시즌 #${season.id} ${season.name}, 추가 ${changes.added.length}명, 수정 ${changes.updated.length}명, 제외 ${changes.removed.length}명, 보류 ${changes.pending.length}명, 예비 ${changes.reserve.length}명`,
+      message: `카카오 내전 #${params.parsed.recruitNo} 참가 자동 등록: 시즌 #${season.id} ${season.name}, 추가 ${changes.added.length}명, 수정 ${changes.updated.length}명, 제외 ${changes.removed.length}명, 보류 ${changes.pending.length}명, 예비 ${changes.reserve.length}명`,
       targetType: "Season",
       targetId: season.id,
       afterJson: {
         applyDate: applyDate.toISOString(),
+        recruitNo: params.parsed.recruitNo,
         sourceMessageHash,
         cancelledCount,
         activeMatchedPlayerIds,
@@ -703,6 +719,38 @@ function normalizeCommand(value: string) {
   return value.trim().replace(/\s+/g, "");
 }
 
+function extractRequestedRecruitNo(value: string) {
+  const text = String(value || "").trim();
+  const patterns = [
+    /(?:내전현황|오늘내전초기화|내전초기화)\s*#?\s*(\d{1,3})/i,
+    /(?:내전\s*(?:번호|NO|No|no)\s*[:：]?\s*#?\s*)(\d{1,3})/i,
+    /#\s*(\d{1,3})\s*(?:협곡\s*내전|협곡내전|내전)/i,
+    /(?:협곡\s*내전|협곡내전|내전)\s*#\s*(\d{1,3})/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (!match) continue;
+
+    const recruitNo = Number(match[1]);
+    if (Number.isInteger(recruitNo) && recruitNo >= 1 && recruitNo <= 999) {
+      return recruitNo;
+    }
+  }
+
+  return null;
+}
+
+function isPartyRecruitLikeMessage(value: string) {
+  const text = String(value || "").replace(/\r/g, "\n");
+
+  return (
+    /\d{1,2}\s*인\s*(?:파티\s*)?구인/.test(text) ||
+    /(?:모집번호|게임정보|시작시간)\s*[:：]/.test(text) ||
+    /(?:자랭|일반|솔랭|칼바람|기타게임|롤체|더블업)\s*하실분/.test(text)
+  );
+}
+
 function isRecruitSnapshotMessage(value: string) {
   const text = String(value || "").replace(/\r/g, "\n");
 
@@ -735,6 +783,7 @@ async function resetTodaySeasonApply(params: {
   message: string;
   roomName: string | null;
   sender: string | null;
+  recruitNo?: number | null;
 }) {
   const season = await prisma.season.findFirst({
     where: { isActive: true },
@@ -755,6 +804,7 @@ async function resetTodaySeasonApply(params: {
         where: {
           seasonId: season.id,
           applyDate,
+          ...(params.recruitNo ? { recruitNo: params.recruitNo } : {}),
         },
       }),
       tx.seasonParticipationPendingApply.deleteMany({
@@ -762,6 +812,7 @@ async function resetTodaySeasonApply(params: {
           seasonId: season.id,
           applyDate,
           source: "KAKAO_RECRUIT",
+          ...(params.recruitNo ? { recruitNo: params.recruitNo } : {}),
         },
       }),
     ]);
@@ -770,7 +821,7 @@ async function resetTodaySeasonApply(params: {
 
     await writeAdminLog({
       action: "KAKAO_RECRUIT_SEASON_APPLY_RESET",
-      message: `카카오 구인구직방 오늘 내전 참가 초기화: 시즌 #${season.id} ${season.name}, 신청일 ${todayText}, 확정 ${deletedApplied.count}명, 보류/예비 ${deletedPending.count}명, 총 ${deletedCount}명 삭제`,
+      message: `카카오 구인구직방 오늘 내전${params.recruitNo ? ` #${params.recruitNo}` : ""} 참가 초기화: 시즌 #${season.id} ${season.name}, 신청일 ${todayText}, 확정 ${deletedApplied.count}명, 보류/예비 ${deletedPending.count}명, 총 ${deletedCount}명 삭제`,
       targetType: "Season",
       targetId: season.id,
       afterJson: {
@@ -779,6 +830,7 @@ async function resetTodaySeasonApply(params: {
         applyDateKst: todayText,
         roomName: params.roomName,
         sender: params.sender,
+        recruitNo: params.recruitNo ?? null,
         deletedAppliedCount: deletedApplied.count,
         deletedPendingCount: deletedPending.count,
         deletedCount,
@@ -818,28 +870,41 @@ export async function POST(req: NextRequest) {
           : null;
     const sender = typeof body.sender === "string" ? body.sender : null;
 
-    if (normalizeCommand(message) === "오늘내전초기화") {
+    if (/^(?:\/?오늘내전초기화|\/?내전초기화)(?:\s*#?\s*\d{1,3})?\s*$/.test(message.trim())) {
+      const requestedRecruitNo = extractRequestedRecruitNo(message);
       const reset = await resetTodaySeasonApply({
         message,
         roomName,
         sender,
+        recruitNo: requestedRecruitNo,
       });
 
       return kakaoJsonReply({
         formatVersion: FORMAT_VERSION,
         command: "TODAY_SEASON_APPLY_RESET",
+        recruitNo: requestedRecruitNo,
         season: reset.season,
         applyDate: reset.todayText,
         deletedAppliedCount: reset.deletedAppliedCount,
         deletedPendingCount: reset.deletedPendingCount,
         deletedCount: reset.deletedCount,
         reply:
-          "[K-LOL.GG 오늘내전 초기화 완료]\n" +
+          `[K-LOL.GG 오늘내전${requestedRecruitNo ? ` #${requestedRecruitNo}` : ""} 초기화 완료]\n` +
           `날짜: ${reset.todayText}\n` +
           `확정 참가: ${reset.deletedAppliedCount}명 삭제\n` +
           `보류/예비: ${reset.deletedPendingCount}명 삭제\n` +
           `총 ${reset.deletedCount}명 초기화`,
       });
+    }
+
+    if (!isRecruitSnapshotMessage(message)) {
+      return kakaoJsonReply(
+        {
+          formatVersion: FORMAT_VERSION,
+          reply: "[K-LOL.GG 내전 명단 업데이트 실패]\n협곡내전 양식만 내전 명단으로 반영됩니다.",
+        },
+        400,
+      );
     }
 
     const parsed = parseRecruitMessage(message);
@@ -872,6 +937,7 @@ export async function POST(req: NextRequest) {
       season: applied.season,
       applyDate: parsed.applyDate,
       applyTime: parsed.applyTime,
+      recruitNo: parsed.recruitNo,
       registered,
       updated,
       cancelled: applied.cancelledCount,

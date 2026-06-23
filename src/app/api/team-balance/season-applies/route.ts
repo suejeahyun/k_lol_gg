@@ -17,18 +17,19 @@ type ApplyPlayer = {
   mainPosition: ApplyPositionValue | null;
   subPositions: ApplyPositionValue[];
   appliedAt: string;
+  recruitNo: number;
 };
 
 type ApplyGroup = {
   key: string;
   label: string;
   applyDate: string;
+  recruitNo: number;
   order: number;
   count: number;
   players: ApplyPlayer[];
 };
 
-const GROUP_SIZE = 10;
 const LOOKBACK_DAYS = 3;
 const MAX_RECENT_APPLIES = 200;
 
@@ -46,25 +47,6 @@ function getKstDateKey(date: Date) {
 function getKstDisplayDate(dateKey: string) {
   const [year, month, day] = dateKey.split("-");
   return `${Number(year)}-${Number(month)}-${Number(day)}`;
-}
-
-function getOrdinal(value: number) {
-  const mod100 = value % 100;
-
-  if (mod100 >= 11 && mod100 <= 13) {
-    return `${value}th`;
-  }
-
-  switch (value % 10) {
-    case 1:
-      return `${value}st`;
-    case 2:
-      return `${value}nd`;
-    case 3:
-      return `${value}rd`;
-    default:
-      return `${value}th`;
-  }
 }
 
 function getKstStartDateFromLookback() {
@@ -127,6 +109,12 @@ export async function GET() {
           applyDate: "asc",
         },
         {
+          recruitNo: "asc",
+        },
+        {
+          sourceSlotNo: "asc",
+        },
+        {
           createdAt: "asc",
         },
         {
@@ -136,43 +124,46 @@ export async function GET() {
       take: MAX_RECENT_APPLIES,
     });
 
-    const byDate = new Map<string, typeof applies>();
+    const byDateAndRecruitNo = new Map<string, typeof applies>();
 
     applies.forEach((apply) => {
       const dateKey = getKstDateKey(apply.applyDate);
-      const list = byDate.get(dateKey) ?? [];
+      const recruitNo = apply.recruitNo || 1;
+      const key = `${dateKey}-${recruitNo}`;
+      const list = byDateAndRecruitNo.get(key) ?? [];
       list.push(apply);
-      byDate.set(dateKey, list);
+      byDateAndRecruitNo.set(key, list);
     });
 
     const groups: ApplyGroup[] = [];
 
-    [...byDate.entries()]
+    [...byDateAndRecruitNo.entries()]
       .sort(([a], [b]) => b.localeCompare(a))
-      .forEach(([dateKey, dateApplies]) => {
-        for (let start = 0; start < dateApplies.length; start += GROUP_SIZE) {
-          const chunk = dateApplies.slice(start, start + GROUP_SIZE);
-          const order = Math.floor(start / GROUP_SIZE) + 1;
+      .forEach(([groupKey, groupApplies]) => {
+        const firstApply = groupApplies[0];
+        const dateKey = firstApply ? getKstDateKey(firstApply.applyDate) : groupKey.slice(0, 10);
+        const recruitNo = firstApply?.recruitNo || 1;
 
-          groups.push({
-            key: `${dateKey}-${order}`,
-            label: `${getKstDisplayDate(dateKey)} ${getOrdinal(order)}`,
-            applyDate: dateKey,
-            order,
-            count: chunk.length,
-            players: chunk.map((apply) => ({
-              playerId: apply.player.id,
-              name: apply.player.name,
-              nickname: apply.player.nickname,
-              tag: apply.player.tag,
-              peakTier: apply.player.peakTier,
-              currentTier: apply.player.currentTier,
-              mainPosition: apply.mainPosition,
-              subPositions: apply.subPositions,
-              appliedAt: apply.createdAt.toISOString(),
-            })),
-          });
-        }
+        groups.push({
+          key: `${dateKey}-${recruitNo}`,
+          label: `${getKstDisplayDate(dateKey)} #${recruitNo} 내전`,
+          applyDate: dateKey,
+          recruitNo,
+          order: recruitNo,
+          count: groupApplies.length,
+          players: groupApplies.map((apply) => ({
+            playerId: apply.player.id,
+            name: apply.player.name,
+            nickname: apply.player.nickname,
+            tag: apply.player.tag,
+            peakTier: apply.player.peakTier,
+            currentTier: apply.player.currentTier,
+            mainPosition: apply.mainPosition,
+            subPositions: apply.subPositions,
+            appliedAt: apply.createdAt.toISOString(),
+            recruitNo: apply.recruitNo || 1,
+          })),
+        });
       });
 
     return NextResponse.json({

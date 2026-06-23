@@ -25,9 +25,12 @@ type TierKey =
 
 type ApplyStatusBody = {
   secret?: string | null;
+  message?: string | null;
+  recruitNo?: number | string | null;
 };
 
 type SeasonRecruitStatusEntry = {
+  recruitNo: number;
   sourceSlotNo: number | null;
   reserveSlotNo: number | null;
   isReserve: boolean;
@@ -211,6 +214,7 @@ function formatEntryLine(prefix: string, entry: SeasonRecruitStatusEntry | null)
 }
 
 function buildSeasonRecruitStatusTemplate(params: {
+  recruitNo: number;
   dateKey: string;
   entries: SeasonRecruitStatusEntry[];
 }) {
@@ -219,7 +223,7 @@ function buildSeasonRecruitStatusTemplate(params: {
   const reserveEntries = params.entries.filter((entry) => entry.isReserve).sort(compareStatusEntry);
   const placed = placeMainEntries(mainEntries);
 
-  lines.push("📢 협곡내전하실분");
+  lines.push(`📢 협곡내전하실분 #${params.recruitNo}`);
   lines.push(` 》${formatSeasonRecruitDateTime(params.dateKey, params.entries)}`);
   lines.push("");
   lines.push("*참가 신청 양식*");
@@ -245,6 +249,67 @@ function buildSeasonRecruitStatusTemplate(params: {
   return lines.join("\n");
 }
 
+function extractRequestedRecruitNo(value: unknown) {
+  const text = String(value || "").trim();
+  const patterns = [
+    /(?:내전현황|AI공지|시즌내전현황)\s*#?\s*(\d{1,3})/i,
+    /(?:내전\s*(?:번호|NO|No|no)\s*[:：]?\s*#?\s*)(\d{1,3})/i,
+    /#\s*(\d{1,3})\s*(?:협곡\s*내전|협곡내전|내전)/i,
+    /(?:협곡\s*내전|협곡내전|내전)\s*#\s*(\d{1,3})/i,
+    /^#?\s*(\d{1,3})$/,
+  ];
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (!match) continue;
+
+    const recruitNo = Number(match[1]);
+    if (Number.isInteger(recruitNo) && recruitNo >= 1 && recruitNo <= 999) {
+      return recruitNo;
+    }
+  }
+
+  return null;
+}
+
+function groupEntriesByRecruitNo(entries: SeasonRecruitStatusEntry[]) {
+  const grouped = new Map<number, SeasonRecruitStatusEntry[]>();
+
+  for (const entry of entries) {
+    const recruitNo = entry.recruitNo || 1;
+    const list = grouped.get(recruitNo) ?? [];
+    list.push(entry);
+    grouped.set(recruitNo, list);
+  }
+
+  return grouped;
+}
+
+function buildSeasonRecruitListReply(dateKey: string, grouped: Map<number, SeasonRecruitStatusEntry[]>) {
+  const lines: string[] = [];
+
+  lines.push("[K-LOL.GG 내전현황]");
+  lines.push("");
+
+  [...grouped.entries()]
+    .sort(([a], [b]) => a - b)
+    .forEach(([recruitNo, entries]) => {
+      const mainCount = entries.filter((entry) => !entry.isReserve).length;
+      const reserveCount = entries.filter((entry) => entry.isReserve).length;
+      const dateTimeText = formatSeasonRecruitDateTime(dateKey, entries);
+
+      lines.push(`#${recruitNo} 협곡내전`);
+      lines.push(`시간: ${dateTimeText}`);
+      lines.push(`현재: ${mainCount}/${TARGET_COUNT}${reserveCount > 0 ? ` / 예비 ${reserveCount}` : ""}`);
+      lines.push("");
+    });
+
+  lines.push("상세 확인: 내전현황 번호");
+  lines.push("예) 내전현황 2");
+
+  return lines.join("\n").trim();
+}
+
 async function createStatusReply(req: NextRequest, body?: ApplyStatusBody) {
   const secretRejected = rejectIfInvalidSecret(req, body?.secret);
   if (secretRejected) return secretRejected;
@@ -253,6 +318,13 @@ async function createStatusReply(req: NextRequest, body?: ApplyStatusBody) {
   const start = getKstStartOfDate(dateKey);
   const end = addDays(start, 1);
   end.setMilliseconds(end.getMilliseconds() - 1);
+
+  const requestedRecruitNo =
+    extractRequestedRecruitNo(body?.recruitNo) ??
+    extractRequestedRecruitNo(body?.message) ??
+    extractRequestedRecruitNo(req.nextUrl.searchParams.get("recruitNo")) ??
+    extractRequestedRecruitNo(req.nextUrl.searchParams.get("no")) ??
+    extractRequestedRecruitNo(req.nextUrl.searchParams.get("message"));
 
   const season = await prisma.season.findFirst({
     where: { isActive: true },
@@ -278,9 +350,11 @@ async function createStatusReply(req: NextRequest, body?: ApplyStatusBody) {
           gte: start,
           lte: end,
         },
+        ...(requestedRecruitNo ? { recruitNo: requestedRecruitNo } : {}),
       },
       select: {
         id: true,
+        recruitNo: true,
         mainPosition: true,
         subPositions: true,
         sourceSlotNo: true,
@@ -295,10 +369,11 @@ async function createStatusReply(req: NextRequest, body?: ApplyStatusBody) {
         },
       },
       orderBy: [
+        { recruitNo: "asc" },
         { sourceSlotNo: "asc" },
         { createdAt: "asc" },
       ],
-      take: 50,
+      take: 200,
     }),
     prisma.seasonParticipationPendingApply.findMany({
       where: {
@@ -308,9 +383,11 @@ async function createStatusReply(req: NextRequest, body?: ApplyStatusBody) {
           lte: end,
         },
         source: "KAKAO_RECRUIT",
+        ...(requestedRecruitNo ? { recruitNo: requestedRecruitNo } : {}),
       },
       select: {
         id: true,
+        recruitNo: true,
         name: true,
         currentTier: true,
         peakTier: true,
@@ -323,17 +400,19 @@ async function createStatusReply(req: NextRequest, body?: ApplyStatusBody) {
         createdAt: true,
       },
       orderBy: [
+        { recruitNo: "asc" },
         { isReserve: "asc" },
         { sourceSlotNo: "asc" },
         { reserveSlotNo: "asc" },
         { createdAt: "asc" },
       ],
-      take: 50,
+      take: 200,
     }),
   ]);
 
   const entries: SeasonRecruitStatusEntry[] = [
     ...applies.map((apply) => ({
+      recruitNo: apply.recruitNo || 1,
       sourceSlotNo: apply.sourceSlotNo,
       reserveSlotNo: null,
       isReserve: false,
@@ -344,6 +423,7 @@ async function createStatusReply(req: NextRequest, body?: ApplyStatusBody) {
       player: apply.player,
     })),
     ...pendingApplies.map((apply) => ({
+      recruitNo: apply.recruitNo || 1,
       sourceSlotNo: apply.sourceSlotNo,
       reserveSlotNo: apply.reserveSlotNo,
       isReserve: apply.isReserve,
@@ -367,6 +447,7 @@ async function createStatusReply(req: NextRequest, body?: ApplyStatusBody) {
       pendingTotal: 0,
       reserveTotal: 0,
       dateKey,
+      recruitNo: requestedRecruitNo,
       dateRange: {
         start: start.toISOString(),
         end: end.toISOString(),
@@ -374,10 +455,18 @@ async function createStatusReply(req: NextRequest, body?: ApplyStatusBody) {
     });
   }
 
-  const reply = buildSeasonRecruitStatusTemplate({
-    dateKey,
-    entries,
-  });
+  const grouped = groupEntriesByRecruitNo(entries);
+  const shouldShowList = !requestedRecruitNo && grouped.size > 1;
+  const targetRecruitNo = requestedRecruitNo ?? [...grouped.keys()].sort((a, b) => a - b)[0];
+  const targetEntries = grouped.get(targetRecruitNo) ?? [];
+
+  const reply = shouldShowList
+    ? buildSeasonRecruitListReply(dateKey, grouped)
+    : buildSeasonRecruitStatusTemplate({
+        recruitNo: targetRecruitNo,
+        dateKey,
+        entries: targetEntries,
+      });
 
   return jsonReply(reply, {
     empty: false,
@@ -387,6 +476,8 @@ async function createStatusReply(req: NextRequest, body?: ApplyStatusBody) {
     appliedTotal: applies.length,
     pendingTotal: pendingApplies.filter((apply) => !apply.isReserve).length,
     reserveTotal: pendingApplies.filter((apply) => apply.isReserve).length,
+    recruitNo: targetRecruitNo,
+    availableRecruitNos: [...grouped.keys()].sort((a, b) => a - b),
     dateKey,
     dateRange: {
       start: start.toISOString(),

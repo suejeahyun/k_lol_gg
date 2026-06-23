@@ -187,16 +187,18 @@ export async function POST(req: NextRequest) {
 
     const apply = await prisma.seasonParticipationApply.upsert({
       where: {
-        seasonId_playerId_applyDate: {
+        seasonId_playerId_applyDate_recruitNo: {
           seasonId: season.id,
           playerId: loginPlayer.id,
           applyDate: start,
+          recruitNo: 1,
         },
       },
       create: {
         seasonId: season.id,
         playerId: loginPlayer.id,
         applyDate: start,
+        recruitNo: 1,
         mainPosition,
         subPositions,
         status: "APPLIED",

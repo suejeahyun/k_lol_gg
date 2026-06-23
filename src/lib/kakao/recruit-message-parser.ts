@@ -27,6 +27,7 @@ export type ParsedRecruitParticipant = {
 export type ParsedRecruitMessage = {
   applyDate: string;
   applyTime: string | null;
+  recruitNo: number;
   participants: ParsedRecruitParticipant[];
   warnings: string[];
 };
@@ -244,6 +245,28 @@ function extractTimeFromHeader(text: string) {
   if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return null;
 
   return `${pad2(hour)}:${pad2(minute)}`;
+}
+
+export function extractRecruitNoFromMessage(text: string) {
+  const headerText = removeParticipantAndExampleLines(normalizeText(text));
+
+  const patterns = [
+    /(?:내전\s*(?:번호|NO|No|no)\s*[:：]?\s*#?\s*)(\d{1,3})/,
+    /#\s*(\d{1,3})\s*(?:협곡\s*내전|협곡내전|내전)/,
+    /(?:협곡\s*내전|협곡내전|내전)\s*#\s*(\d{1,3})/,
+  ];
+
+  for (const pattern of patterns) {
+    const match = headerText.match(pattern);
+    if (!match) continue;
+
+    const recruitNo = Number(match[1]);
+    if (Number.isInteger(recruitNo) && recruitNo >= 1 && recruitNo <= 999) {
+      return recruitNo;
+    }
+  }
+
+  return 1;
 }
 
 export function extractRecruitApplyDate(
@@ -552,6 +575,7 @@ export function parseRecruitMessage(text: string, baseDate = new Date()): Parsed
   return {
     applyDate: dateResult.applyDate,
     applyTime: dateResult.applyTime,
+    recruitNo: extractRecruitNoFromMessage(normalized),
     participants,
     warnings,
   };

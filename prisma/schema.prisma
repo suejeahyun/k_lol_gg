@@ -657,6 +657,7 @@ model SeasonParticipationApply {
   seasonId  Int
   playerId  Int
   applyDate DateTime
+  recruitNo Int      @default(1)
 
   mainPosition ApplyPosition?
   subPositions ApplyPosition[]
@@ -676,8 +677,9 @@ model SeasonParticipationApply {
   season Season @relation(fields: [seasonId], references: [id], onDelete: Cascade)
   player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
-  @@unique([seasonId, playerId, applyDate])
+  @@unique([seasonId, playerId, applyDate, recruitNo], map: "SeasonApply_recruitNo_unique")
   @@index([seasonId, applyDate, status])
+  @@index([seasonId, applyDate, recruitNo, status], map: "SeasonApply_recruitNo_status_idx")
   @@index([seasonId, applyDate, source, status])
   @@index([sourceMessageHash])
 }
@@ -686,6 +688,7 @@ model SeasonParticipationPendingApply {
   id        Int      @id @default(autoincrement())
   seasonId  Int
   applyDate DateTime
+  recruitNo Int      @default(1)
 
   name        String
   currentTier String
@@ -711,8 +714,9 @@ model SeasonParticipationPendingApply {
 
   season Season @relation(fields: [seasonId], references: [id], onDelete: Cascade)
 
-  @@unique([seasonId, applyDate, name, isReserve])
+  @@unique([seasonId, applyDate, recruitNo, name, isReserve], map: "SeasonPending_recruitNo_unique")
   @@index([seasonId, applyDate, isReserve])
+  @@index([seasonId, applyDate, recruitNo, isReserve], map: "SeasonPending_recruitNo_reserve_idx")
   @@index([seasonId, applyDate, source])
   @@index([sourceMessageHash])
 }
