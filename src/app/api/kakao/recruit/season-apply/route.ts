@@ -14,7 +14,7 @@ import {
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-const FORMAT_VERSION = "season-apply-format-v5";
+const FORMAT_VERSION = "season-apply-format-v6";
 const SEASON_RECRUIT_TARGET_COUNT = 10;
 
 type ApplyResult = {
@@ -172,13 +172,6 @@ function buildReply(params: {
   pushChangeLine(lines, "예비", changes.reserve);
 
   lines.push(`현재: ${changes.currentMainCount}/${SEASON_RECRUIT_TARGET_COUNT}`);
-
-  if (pendingResults.length > 0 && changes.pending.length > 0) {
-    const pendingSummary = buildPendingSummary(params.results);
-    if (pendingSummary) {
-      lines.push("", pendingSummary);
-    }
-  }
 
   return lines.join("\n");
 }
