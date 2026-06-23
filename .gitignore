@@ -81,3 +81,10 @@ ALL.zip
 
 # Local patch backups
 _backup_*
+# local archives / temporary server backups
+*.tar.gz
+*.tgz
+.env_backup*
+*_backup_*
+*_temp/
+*_upload/
