@@ -183,7 +183,7 @@ export default async function DestructionParticipantsPage({ params }: PageProps)
                     <span>최고 {apply.player.peakTier ?? "-"}</span>
                   </div>
                   <div className="match-card__damage">
-                    <span>{apply.message ? `각오: ${apply.message}` : "각오 미입력"}</span>
+                    <span>{apply.message?.trim() ? `각오: ${apply.message.trim()}` : "각오 미입력"}</span>
                   </div>
                 </div>
               </Link>

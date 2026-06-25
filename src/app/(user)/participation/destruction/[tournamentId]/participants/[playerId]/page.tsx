@@ -1,10 +1,11 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import SafeChampionImage from "@/components/SafeChampionImage";
 import SoloRankSection from "@/components/SoloRankSection";
 import TierIcon from "@/components/TierIcon";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { getGameMvpParticipant } from "@/lib/mvp";
 import { ensureSeasonStats, getWinRate } from "@/lib/stats/season-performance";
@@ -56,70 +57,61 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
     await ensureSeasonStats(currentSeason.id);
   }
 
-  const apply = await prisma.destructionParticipationApply.findFirst({
-    where: {
-      tournamentId: tournamentNumericId,
-      playerId: playerNumericId,
-      status: {
-        in: ["APPLIED", "CONFIRMED", "RESERVE"],
+  const applyInclude = {
+    tournament: {
+      select: {
+        id: true,
+        title: true,
+        status: true,
       },
     },
-    include: {
-      tournament: {
-        select: {
-          id: true,
-          title: true,
-          status: true,
-        },
-      },
-      player: {
-        include: {
-          seasonStats: {
-            where: { seasonId: currentSeason?.id ?? -1 },
-            select: {
-              totalGames: true,
-              participationCount: true,
-              wins: true,
-              losses: true,
-              mvpCount: true,
-            },
-            take: 1,
+    player: {
+      include: {
+        seasonStats: {
+          where: { seasonId: currentSeason?.id ?? -1 },
+          select: {
+            totalGames: true,
+            participationCount: true,
+            wins: true,
+            losses: true,
+            mvpCount: true,
           },
-          participants: {
-            where: currentSeason
-              ? {
-                  game: {
-                    series: {
-                      seasonId: currentSeason.id,
-                    },
-                  },
-                }
-              : { id: -1 },
-            orderBy: {
-              game: {
-                series: {
-                  matchDate: "desc",
-                },
-              },
-            },
-            take: 20,
-            include: {
-              champion: true,
-              game: {
-                include: {
+          take: 1,
+        },
+        participants: {
+          where: currentSeason
+            ? {
+                game: {
                   series: {
-                    include: {
-                      season: true,
-                    },
+                    seasonId: currentSeason.id,
                   },
-                  participants: {
-                    select: {
-                      playerId: true,
-                      kills: true,
-                      deaths: true,
-                      assists: true,
-                      team: true,
-                    },
+                },
+              }
+            : { id: -1 },
+          orderBy: {
+            game: {
+              series: {
+                matchDate: "desc",
+              },
+            },
+          },
+          take: 20,
+          include: {
+            champion: true,
+            game: {
+              include: {
+                series: {
+                  include: {
+                    season: true,
+                  },
+                },
+                participants: {
+                  select: {
+                    playerId: true,
+                    kills: true,
+                    deaths: true,
+                    assists: true,
+                    team: true,
                   },
                 },
               },
@@ -128,13 +120,44 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
         },
       },
     },
-  });
+  } satisfies Prisma.DestructionParticipationApplyInclude;
+
+  // 이 상세 URL의 마지막 값은 기존 운영 기준상 playerId입니다.
+  // 같은 숫자의 신청 id가 존재할 수 있으므로 playerId 신청을 우선 조회하고,
+  // 과거 공유 링크 호환을 위해 신청 id 조회는 fallback으로만 사용합니다.
+  const apply =
+    (await prisma.destructionParticipationApply.findFirst({
+      where: {
+        tournamentId: tournamentNumericId,
+        playerId: playerNumericId,
+        status: {
+          in: ["APPLIED", "CONFIRMED", "RESERVE"],
+        },
+      },
+      orderBy: [
+        { updatedAt: "desc" },
+        { id: "desc" },
+      ],
+      include: applyInclude,
+    })) ??
+    (await prisma.destructionParticipationApply.findFirst({
+      where: {
+        id: playerNumericId,
+        tournamentId: tournamentNumericId,
+        status: {
+          in: ["APPLIED", "CONFIRMED", "RESERVE"],
+        },
+      },
+      include: applyInclude,
+    }));
 
   if (!apply) {
     notFound();
   }
 
   const player = apply.player;
+  const playerTagText = [player.nickname, player.tag].filter(Boolean).join("#");
+  const applyMessage = typeof apply.message === "string" ? apply.message.trim() : "";
   const seasonStat = player.seasonStats[0] ?? null;
   const totalGames = seasonStat?.totalGames ?? player.participants.length;
   const participationCount = seasonStat?.participationCount ?? 0;
@@ -226,7 +249,7 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
         <div>
           <p className="page-eyebrow">멸망전 참가자 상세</p>
           <h1 className="page-title">
-            {player.name} ({player.nickname}#{player.tag})
+            {player.name}{playerTagText ? ` (${playerTagText})` : ""}
           </h1>
           <p className="page-description">
             {apply.tournament.title} 참가 신청 정보와 기존 내전 기록입니다.
@@ -278,11 +301,44 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
           </div>
         </div>
 
-        <div className="empty-box" style={{ marginTop: 14 }}>
-          <strong>각오 한마디</strong>
-          <p className="page-description" style={{ margin: "8px 0 0" }}>
-            {apply.message || "입력된 각오가 없습니다."}
-          </p>
+        <div
+          style={{
+            marginTop: 16,
+            padding: "18px 20px",
+            borderRadius: 16,
+            border: "1px solid rgba(250, 204, 21, 0.45)",
+            background: "rgba(250, 204, 21, 0.08)",
+            textAlign: "left",
+          }}
+        >
+          <div
+            style={{
+              fontSize: 13,
+              fontWeight: 800,
+              letterSpacing: "-0.01em",
+              color: "#facc15",
+              marginBottom: 10,
+            }}
+          >
+            각오 한마디
+          </div>
+          <div
+            style={{
+              minHeight: 48,
+              padding: "14px 16px",
+              borderRadius: 12,
+              border: "1px solid rgba(255, 255, 255, 0.10)",
+              background: "rgba(15, 23, 42, 0.72)",
+              color: "#f8fafc",
+              fontSize: 16,
+              fontWeight: 700,
+              lineHeight: 1.7,
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
+            }}
+          >
+            {applyMessage || "입력된 각오가 없습니다."}
+          </div>
         </div>
       </section>
 
@@ -454,3 +510,5 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
     </main>
   );
 }
+
+
