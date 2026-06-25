@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 
 import Link from "next/link";
+import DestructionTournamentDeleteButton from "@/components/admin/DestructionTournamentDeleteButton";
 import { prisma } from "@/lib/prisma/client";
 
 function formatDate(date: Date | null) {
@@ -97,6 +98,11 @@ export default async function AdminDestructionTournamentsPage() {
                 >
                   상세/수정
                 </Link>
+
+                <DestructionTournamentDeleteButton
+                  tournamentId={tournament.id}
+                  title={tournament.title}
+                />
               </div>
             </div>
           ))}
