@@ -31,6 +31,21 @@ function parseCaptainPreference(body: Record<string, unknown>) {
   return Boolean(body.isCaptain);
 }
 
+function parseSubPositions(value: unknown, mainPosition: ApplyPositionValue) {
+  if (!Array.isArray(value)) return [];
+
+  return Array.from(new Set(value))
+    .filter((item): item is ApplyPositionValue => isApplyPosition(item))
+    .filter((item) => item !== mainPosition);
+}
+
+function parseMessage(value: unknown) {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return trimmed.slice(0, 500);
+}
+
 export async function GET(_req: NextRequest, { params }: RouteContext) {
   try {
     const { tournamentId } = await params;
@@ -98,7 +113,9 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
             id: true,
             status: true,
             mainPosition: true,
+            subPositions: true,
             isCaptain: true,
+            message: true,
           },
         })
       : null;
@@ -114,8 +131,9 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
         peakTier: apply.player.peakTier,
         currentTier: apply.player.currentTier,
         mainPosition: apply.mainPosition,
-        subPositions: [],
+        subPositions: apply.subPositions,
         isCaptain: apply.isCaptain,
+        message: apply.message,
         status: apply.status,
       })),
     });
@@ -168,6 +186,9 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
       );
     }
 
+    const subPositions = parseSubPositions(body.subPositions, mainPosition);
+    const message = parseMessage(body.message);
+
     const tournament = await prisma.destructionTournament.findUnique({
       where: { id },
       select: {
@@ -200,16 +221,18 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
       },
       update: {
         mainPosition,
-        subPositions: [],
+        subPositions,
         isCaptain,
+        message,
         status: "APPLIED",
       },
       create: {
         tournamentId: id,
         playerId: user.playerId,
         mainPosition,
-        subPositions: [],
+        subPositions,
         isCaptain,
+        message,
         status: "APPLIED",
       },
     });
@@ -218,7 +241,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
 
     await writeAdminLog({
       action: "DESTRUCTION_PARTICIPATION_APPLY",
-      message: `멸망전 참가 신청: 멸망전 #${id} ${tournament.title}, 플레이어 #${user.playerId}, 신청 #${apply.id}, 팀장선호 ${isCaptain ? "Y" : "N"}`,
+      message: `멸망전 참가 신청: 멸망전 #${id} ${tournament.title}, 플레이어 #${user.playerId}, 신청 #${apply.id}, 팀장선호 ${isCaptain ? "Y" : "N"}, 부라인 ${subPositions.join("/") || "-"}, 각오 ${message ? "Y" : "N"}`,
     });
 
     return NextResponse.json({

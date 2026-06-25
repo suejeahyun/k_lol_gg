@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const POSITIONS = ["TOP", "JGL", "MID", "ADC", "SUP"] as const;
@@ -18,7 +19,9 @@ type Player = {
   peakTier: string | null;
   currentTier: string | null;
   mainPosition: ApplyPosition | null;
+  subPositions?: ApplyPosition[];
   isCaptain: boolean;
+  message?: string | null;
   status?: ApplyStatus | string;
 };
 
@@ -26,7 +29,9 @@ type CurrentApply = {
   id: number;
   status: ApplyStatus | string;
   mainPosition: ApplyPosition | null;
+  subPositions?: ApplyPosition[];
   isCaptain: boolean;
+  message?: string | null;
 } | null;
 
 type Tournament = {
@@ -59,6 +64,11 @@ function isActiveApplyStatus(status: string | undefined) {
   return Boolean(status && (ACTIVE_APPLY_STATUSES as readonly string[]).includes(status));
 }
 
+function formatPositions(positions: ApplyPosition[] | undefined) {
+  if (!positions || positions.length === 0) return "-";
+  return positions.join(" / ");
+}
+
 export default function DestructionParticipationClient({
   tournamentId,
 }: DestructionParticipationClientProps) {
@@ -66,7 +76,9 @@ export default function DestructionParticipationClient({
   const [tournament, setTournament] = useState<Tournament>(null);
   const [currentApply, setCurrentApply] = useState<CurrentApply>(null);
   const [mainPosition, setMainPosition] = useState<ApplyPosition | "">("");
+  const [subPositions, setSubPositions] = useState<ApplyPosition[]>([]);
   const [captainPreference, setCaptainPreference] = useState<CaptainPreference>("NOT_PREFERRED");
+  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
 
@@ -84,6 +96,14 @@ export default function DestructionParticipationClient({
 
       if (data.currentApply?.mainPosition) {
         setMainPosition(data.currentApply.mainPosition);
+      }
+
+      if (Array.isArray(data.currentApply?.subPositions)) {
+        setSubPositions(data.currentApply.subPositions);
+      }
+
+      if (typeof data.currentApply?.message === "string") {
+        setMessage(data.currentApply.message);
       }
 
       if (typeof data.currentApply?.isCaptain === "boolean") {
@@ -116,7 +136,9 @@ export default function DestructionParticipationClient({
           },
           body: JSON.stringify({
             mainPosition,
+            subPositions,
             captainPreference,
+            message,
           }),
         },
       );
@@ -157,6 +179,8 @@ export default function DestructionParticipationClient({
 
       alert("멸망전 참가 신청이 취소되었습니다.");
       setMainPosition("");
+      setSubPositions([]);
+      setMessage("");
       setCaptainPreference("NOT_PREFERRED");
       await fetchPlayers(tournamentId);
     } catch (error: unknown) {
@@ -180,17 +204,27 @@ export default function DestructionParticipationClient({
       <div className="page-header">
         <h1 className="page-title">멸망전 참가</h1>
         <p className="page-description">
-          주 포지션 1개와 팀장 선호 여부만 선택합니다. 최종 팀장은 관리자 지정 기준으로 확정됩니다.
+          주 포지션, 부 포지션, 팀장 선호 여부와 각오를 입력합니다. 최종 팀장은 관리자 지정 기준으로 확정됩니다.
         </p>
+        <div className="page-actions" style={{ marginTop: 12 }}>
+          <Link href={`/participation/destruction/${tournamentId}/participants`} className="btn btn-ghost">
+            참가자 명단 보기
+          </Link>
+        </div>
       </div>
 
       {currentApply ? (
         <div className="empty-box" style={{ marginBottom: 16 }}>
           <strong>내 신청 상태: {STATUS_LABELS[String(currentApply.status)] ?? currentApply.status}</strong>
           <p className="page-description" style={{ margin: "8px 0 0" }}>
-            주 포지션 {currentApply.mainPosition ?? "-"} · {currentApply.isCaptain ? "팀장 선호" : "팀장 비선호"}
+            주 포지션 {currentApply.mainPosition ?? "-"} · 부 포지션 {formatPositions(currentApply.subPositions)} · {currentApply.isCaptain ? "팀장 선호" : "팀장 비선호"}
             {currentApply.status === "RESERVE" ? " · 현재 관리자가 보류 인원으로 분류했습니다." : ""}
           </p>
+          {currentApply.message ? (
+            <p className="page-description" style={{ margin: "8px 0 0" }}>
+              각오: {currentApply.message}
+            </p>
+          ) : null}
         </div>
       ) : null}
 
@@ -198,7 +232,18 @@ export default function DestructionParticipationClient({
         <SinglePositionSelector
           title="주 포지션"
           value={mainPosition}
-          onChange={setMainPosition}
+          onChange={(value) => {
+            setMainPosition(value);
+            setSubPositions((prev) => prev.filter((position) => position !== value));
+          }}
+        />
+
+        <MultiPositionSelector
+          title="부 포지션"
+          values={subPositions}
+          mainPosition={mainPosition}
+          onChange={setSubPositions}
+          disabled={!isRecruiting}
         />
 
         <div className="participation-position-section">
@@ -235,6 +280,25 @@ export default function DestructionParticipationClient({
           </div>
         </div>
 
+        <div className="participation-position-section">
+          <div className="participation-position-title">
+            각오 한마디
+            <span>선택</span>
+          </div>
+          <textarea
+            className="admin-form__textarea"
+            value={message}
+            maxLength={500}
+            rows={4}
+            onChange={(event) => setMessage(event.target.value)}
+            placeholder="경매 및 참가자 상세 페이지에서 확인할 각오를 입력하세요."
+            disabled={!isRecruiting}
+          />
+          <p className="page-description" style={{ margin: "6px 0 0", fontSize: 12 }}>
+            {message.length}/500자
+          </p>
+        </div>
+
         <div className="admin-form__actions" style={{ justifyContent: "space-between" }}>
           <button
             type="button"
@@ -266,7 +330,7 @@ export default function DestructionParticipationClient({
         </div>
       </div>
 
-      <ParticipationList players={players} />
+      <ParticipationList tournamentId={tournamentId} players={players} />
     </div>
   );
 }
@@ -307,7 +371,58 @@ function SinglePositionSelector({
   );
 }
 
-function ParticipationList({ players }: { players: Player[] }) {
+function MultiPositionSelector({
+  title,
+  values,
+  mainPosition,
+  onChange,
+  disabled,
+}: {
+  title: string;
+  values: ApplyPosition[];
+  mainPosition: ApplyPosition | "";
+  onChange: (value: ApplyPosition[]) => void;
+  disabled?: boolean;
+}) {
+  const toggle = (position: ApplyPosition) => {
+    if (position === mainPosition) return;
+    if (values.includes(position)) {
+      onChange(values.filter((value) => value !== position));
+      return;
+    }
+    onChange([...values, position]);
+  };
+
+  return (
+    <div className="participation-position-section">
+      <div className="participation-position-title">
+        {title}
+        <span>선택</span>
+      </div>
+
+      <div className="participation-position-group">
+        {POSITIONS.map((pos) => (
+          <button
+            key={pos}
+            type="button"
+            className={
+              values.includes(pos)
+                ? "participation-position-button active"
+                : "participation-position-button"
+            }
+            onClick={() => toggle(pos)}
+            disabled={disabled || pos === mainPosition}
+            title={pos === mainPosition ? "주 포지션과 같은 부 포지션은 선택할 수 없습니다." : undefined}
+          >
+            {POSITION_LABELS[pos]}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ParticipationList({ tournamentId, players }: { tournamentId: string; players: Player[] }) {
   const positionCounts = POSITIONS.map((position) => ({
     position,
     count: players.filter((player) => player.mainPosition === position && player.status !== "RESERVE").length,
@@ -323,6 +438,11 @@ function ParticipationList({ players }: { players: Player[] }) {
         <p className="page-description">
           확정 후보 {activePlayers.length}명 · 보류 {reservePlayers.length}명 · 팀장 선호 {captainPreferredCount}명 · 팀장 비선호 {activePlayers.length - captainPreferredCount}명
         </p>
+        <div className="page-actions" style={{ marginTop: 10 }}>
+          <Link href={`/participation/destruction/${tournamentId}/participants`} className="btn btn-ghost">
+            공개 명단 전체 보기
+          </Link>
+        </div>
       </div>
 
       <div className="admin-event-detail-grid" style={{ marginBottom: 16 }}>
@@ -340,7 +460,7 @@ function ParticipationList({ players }: { players: Player[] }) {
         <span>닉네임#태그</span>
         <span>현재티어</span>
         <span>최고티어</span>
-        <span>주 포지션</span>
+        <span>주/부 포지션</span>
         <span>상태</span>
       </div>
 
@@ -348,9 +468,11 @@ function ParticipationList({ players }: { players: Player[] }) {
         <div className="admin-empty">참가 신청자가 없습니다.</div>
       ) : (
         players.map((player, index) => (
-          <div
+          <Link
             key={player.id}
+            href={`/participation/destruction/${tournamentId}/participants/${player.id}`}
             className="participation-item participation-item--captain"
+            style={{ textDecoration: "none" }}
           >
             <span>{index + 1}</span>
             <strong>{player.name}</strong>
@@ -359,12 +481,12 @@ function ParticipationList({ players }: { players: Player[] }) {
             </em>
             <span>{player.currentTier ?? "-"}</span>
             <span>{player.peakTier ?? "-"}</span>
-            <span>{player.mainPosition ?? "-"}</span>
+            <span>{player.mainPosition ?? "-"} / {formatPositions(player.subPositions)}</span>
             <span>
               {STATUS_LABELS[String(player.status)] ?? player.status ?? "신청"}
               {player.isCaptain ? " · 팀장 선호" : " · 팀장 비선호"}
             </span>
-          </div>
+          </Link>
         ))
       )}
     </div>

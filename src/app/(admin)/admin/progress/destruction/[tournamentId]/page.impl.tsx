@@ -276,8 +276,10 @@ export default async function AdminDestructionTournamentDetailPage({
     id: apply.id,
     playerId: apply.playerId,
     mainPosition: apply.mainPosition,
+    subPositions: apply.subPositions,
     isCaptain: apply.isCaptain,
     status: apply.status,
+    message: apply.message,
     createdAt: apply.createdAt.toISOString(),
     player: {
       id: apply.player.id,
@@ -288,6 +290,26 @@ export default async function AdminDestructionTournamentDetailPage({
       peakTier: apply.player.peakTier,
     },
   }));
+
+
+  const applicationMetaByPlayerId = new Map(
+    tournament.participationApplies.map((apply) => [
+      apply.playerId,
+      {
+        subPositions: apply.subPositions,
+        message: apply.message,
+      },
+    ]),
+  );
+
+  const participantViewModels = tournament.participants.map((participant) => {
+    const meta = applicationMetaByPlayerId.get(participant.playerId);
+    return {
+      ...participant,
+      subPositions: meta?.subPositions ?? [],
+      message: meta?.message ?? null,
+    };
+  });
 
   const activeApplications = applicationViewModels.filter(
     (apply) => apply.status === "APPLIED" || apply.status === "CONFIRMED",
@@ -356,6 +378,9 @@ export default async function AdminDestructionTournamentDetailPage({
         <div className="admin-event-detail-actions">
           <Link href={`/participation/destruction/${tournament.id}`} className="chip-button">
             유저 참가 페이지
+          </Link>
+          <Link href={`/participation/destruction/${tournament.id}/participants`} className="chip-button">
+            참가자 공개 명단
           </Link>
           <Link href="/admin/progress/destruction" className="chip-button">
             목록으로
@@ -496,7 +521,7 @@ export default async function AdminDestructionTournamentDetailPage({
         <DestructionAuctionManager
           tournamentId={tournament.id}
           teams={tournament.teams}
-          participants={tournament.participants}
+          participants={participantViewModels}
           hasMatches={tournament.matches.length > 0}
         />
       </AdminStepSection>
@@ -581,7 +606,7 @@ export default async function AdminDestructionTournamentDetailPage({
                   matchId={match.id}
                   teamA={match.teamA}
                   teamB={match.teamB}
-                  participants={tournament.participants}
+                  participants={participantViewModels}
                   initialWinnerTeamId={match.winnerTeamId}
                   initialMvpPlayerId={match.mvpPlayerId}
                   initialTeamAScore={match.teamAScore}
@@ -675,7 +700,7 @@ export default async function AdminDestructionTournamentDetailPage({
                   matchId={match.id}
                   teamA={match.teamA}
                   teamB={match.teamB}
-                  participants={tournament.participants}
+                  participants={participantViewModels}
                   initialWinnerTeamId={match.winnerTeamId}
                   initialMvpPlayerId={match.mvpPlayerId}
                   initialTeamAScore={match.teamAScore}
@@ -768,7 +793,7 @@ export default async function AdminDestructionTournamentDetailPage({
                   matchId={match.id}
                   teamA={match.teamA}
                   teamB={match.teamB}
-                  participants={tournament.participants}
+                  participants={participantViewModels}
                   initialWinnerTeamId={match.winnerTeamId}
                   initialMvpPlayerId={match.mvpPlayerId}
                   initialTeamAScore={match.teamAScore}
@@ -799,7 +824,7 @@ export default async function AdminDestructionTournamentDetailPage({
         <DestructionCompleteForm
           tournamentId={tournament.id}
           teams={tournament.teams}
-          participants={tournament.participants}
+          participants={participantViewModels}
           galleryImages={galleryImages}
           initialWinnerTeamId={tournament.winnerTeamId}
           initialMvpPlayerId={tournament.mvpPlayerId}

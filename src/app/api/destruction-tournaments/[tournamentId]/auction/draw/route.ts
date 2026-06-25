@@ -50,8 +50,28 @@ export async function POST(_req: NextRequest, { params }: RouteProps) {
     );
 
     if (drawn) {
+      const applyMeta = await prisma.destructionParticipationApply.findUnique({
+        where: {
+          tournamentId_playerId: {
+            tournamentId: id,
+            playerId: drawn.playerId,
+          },
+        },
+        select: {
+          subPositions: true,
+          message: true,
+        },
+      });
+
       return NextResponse.json(
-        { message: "아직 낙찰/보류 처리되지 않은 추첨자가 있습니다.", participant: drawn },
+        {
+          message: "아직 낙찰/보류 처리되지 않은 추첨자가 있습니다.",
+          participant: {
+            ...drawn,
+            subPositions: applyMeta?.subPositions ?? [],
+            message: applyMeta?.message ?? null,
+          },
+        },
         { status: 400 },
       );
     }
@@ -82,6 +102,25 @@ export async function POST(_req: NextRequest, { params }: RouteProps) {
       include: { player: true, team: true },
     });
 
+    const applyMeta = await prisma.destructionParticipationApply.findUnique({
+      where: {
+        tournamentId_playerId: {
+          tournamentId: id,
+          playerId: updated.playerId,
+        },
+      },
+      select: {
+        subPositions: true,
+        message: true,
+      },
+    });
+
+    const participant = {
+      ...updated,
+      subPositions: applyMeta?.subPositions ?? [],
+      message: applyMeta?.message ?? null,
+    };
+
     await prisma.destructionTournament.update({
       where: { id },
       data: { status: "AUCTION" },
@@ -94,7 +133,7 @@ export async function POST(_req: NextRequest, { params }: RouteProps) {
       },
     });
 
-    return NextResponse.json({ participant: updated });
+    return NextResponse.json({ participant });
   } catch (error) {
     logServerError("[DESTRUCTION_AUCTION_DRAW_ERROR]", error);
     return NextResponse.json({ message: "경매 추첨 실패" }, { status: 500 });

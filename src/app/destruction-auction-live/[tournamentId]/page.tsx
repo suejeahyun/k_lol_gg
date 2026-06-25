@@ -62,6 +62,13 @@ export default async function DestructionAuctionLivePage({ params }: PageProps) 
           id: "asc",
         },
       },
+      participationApplies: {
+        select: {
+          playerId: true,
+          subPositions: true,
+          message: true,
+        },
+      },
       matches: {
         select: {
           id: true,
@@ -73,6 +80,25 @@ export default async function DestructionAuctionLivePage({ params }: PageProps) 
   if (!tournament) {
     notFound();
   }
+
+  const applicationMetaByPlayerId = new Map(
+    tournament.participationApplies.map((apply) => [
+      apply.playerId,
+      {
+        subPositions: apply.subPositions,
+        message: apply.message,
+      },
+    ]),
+  );
+
+  const participantViewModels = tournament.participants.map((participant) => {
+    const meta = applicationMetaByPlayerId.get(participant.playerId);
+    return {
+      ...participant,
+      subPositions: meta?.subPositions ?? [],
+      message: meta?.message ?? null,
+    };
+  });
 
   return (
     <main className="destruction-auction-live-page">
@@ -204,7 +230,7 @@ export default async function DestructionAuctionLivePage({ params }: PageProps) 
           <DestructionAuctionManager
             tournamentId={tournament.id}
             teams={tournament.teams}
-            participants={tournament.participants}
+            participants={participantViewModels}
             hasMatches={tournament.matches.length > 0}
             liveMode
           />

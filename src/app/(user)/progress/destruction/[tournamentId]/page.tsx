@@ -92,6 +92,14 @@ export default async function DestructionProgressDetailPage({
           id: "asc",
         },
       },
+      participationApplies: {
+        include: {
+          player: true,
+        },
+        orderBy: {
+          id: "asc",
+        },
+      },
       matches: {
         include: {
           teamA: true,
@@ -142,6 +150,12 @@ export default async function DestructionProgressDetailPage({
         </div>
 
         <div className="page-actions">
+          <Link
+            href={`/participation/destruction/${id}/participants`}
+            className="btn btn-primary"
+          >
+            참가자 명단
+          </Link>
           <Link href="/progress/destruction" className="btn btn-ghost">
             목록으로
           </Link>
@@ -152,6 +166,11 @@ export default async function DestructionProgressDetailPage({
         <div className="destruction-detail-summary-card">
           <span>진행 상태</span>
           <strong>{getStatusLabel(tournament.status)}</strong>
+        </div>
+
+        <div className="destruction-detail-summary-card">
+          <span>신청</span>
+          <strong>{tournament.participationApplies.length}명</strong>
         </div>
 
         <div className="destruction-detail-summary-card">
@@ -178,6 +197,43 @@ export default async function DestructionProgressDetailPage({
           <span>경기</span>
           <strong>{tournament.matches.length}개</strong>
         </div>
+      </section>
+
+      <section className="content-section">
+        <div className="section-header">
+          <h2>참가자 명단</h2>
+          <Link
+            href={`/participation/destruction/${id}/participants`}
+            className="btn btn-ghost"
+          >
+            전체 명단 보기
+          </Link>
+        </div>
+
+        {tournament.participationApplies.length === 0 ? (
+          <div className="empty-box">공개할 참가자 신청 내역이 없습니다.</div>
+        ) : (
+          <div className="destruction-rank-list">
+            {tournament.participationApplies
+              .filter((apply) => !["CANCELLED", "REJECTED"].includes(apply.status))
+              .slice(0, 12)
+              .map((apply, index) => (
+                <Link
+                  key={apply.id}
+                  href={`/participation/destruction/${id}/participants/${apply.playerId}`}
+                  className="destruction-rank-row"
+                >
+                  <strong>{index + 1}</strong>
+                  <span>
+                    {apply.player.nickname}#{apply.player.tag}
+                  </span>
+                  <em>
+                    {apply.mainPosition} · {apply.isCaptain ? "팀장 지원" : "참가"}
+                  </em>
+                </Link>
+              ))}
+          </div>
+        )}
       </section>
 
       {tournament.status === "COMPLETED" ? (
@@ -262,13 +318,17 @@ export default async function DestructionProgressDetailPage({
 
                 <div className="destruction-member-list">
                   {team.members.map((member) => (
-                    <div key={member.id} className="destruction-member-row">
+                    <Link
+                      key={member.id}
+                      href={`/participation/destruction/${id}/participants/${member.playerId}`}
+                      className="destruction-member-row"
+                    >
                       <strong>
                         {member.player.nickname}#{member.player.tag}
                       </strong>
                       <span>{member.position}</span>
                       <em>{member.balanceScore}</em>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               </div>

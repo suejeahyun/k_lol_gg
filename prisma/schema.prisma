@@ -753,6 +753,7 @@ model DestructionParticipationApply {
 
   isCaptain Boolean                  @default(false)
   status    ParticipationApplyStatus @default(APPLIED)
+  message   String?                  @db.Text
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

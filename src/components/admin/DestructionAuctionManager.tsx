@@ -44,6 +44,8 @@ type Participant = {
   auctionStatus: AuctionStatus;
   purchasePoint: number | null;
   drawOrder: number | null;
+  subPositions?: string[];
+  message?: string | null;
   player: Player;
   team?: { id: number; name: string } | null;
 };
@@ -1276,6 +1278,9 @@ export default function DestructionAuctionManager({
         .matrix-empty { color: rgba(199,213,235,0.52); border: 1px dashed rgba(148,163,184,0.20); border-radius: 12px; padding: 10px; text-align: center; width: 100%; }
         .matrix-filled { border-radius: 12px; border: 1px solid rgba(34,197,94,0.26); background: rgba(34,197,94,0.08); padding: 9px; width: 100%; min-height: 48px; display: grid; align-content: center; }
         .matrix-filled.is-captain { border-color: rgba(250,204,21,0.45); background: rgba(250,204,21,0.10); }
+        .auction-message-box { border: 1px solid rgba(96,165,250,.28); border-radius: 14px; background: rgba(15,23,42,.54); padding: 12px; margin-top: 12px; color: #dbeafe; line-height: 1.55; white-space: pre-wrap; word-break: break-word; }
+        .auction-message-box strong { display: block; color: #f8fbff; margin-bottom: 4px; }
+        .auction-message-box span { color: #93a4bd; }
         .matrix-player-name { font-weight: 900; color: #f8fbff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .matrix-player-sub { color: #a8bedb; font-size: 11px; word-break: break-all; line-height: 1.25; }
         .auction-control-panel { border: 1px solid rgba(59,130,246,0.32); border-radius: 18px; background: rgba(7,16,35,0.72); padding: 18px; }
@@ -5935,6 +5940,14 @@ export default function DestructionAuctionManager({
                         label="최고티어"
                         value={currentTarget.player.peakTier ?? "-"}
                       />
+                      <StatTile
+                        label="부라인"
+                        value={currentTarget.subPositions?.length ? currentTarget.subPositions.join(" / ") : "-"}
+                      />
+                    </div>
+                    <div className="auction-message-box">
+                      <strong>각오</strong>
+                      {currentTarget.message ? currentTarget.message : <span>입력된 각오가 없습니다.</span>}
                     </div>
                   </div>
                 ) : (
@@ -6162,6 +6175,13 @@ export default function DestructionAuctionManager({
                     <h3 className="gacha-panel-title">{drawPhaseTitle}</h3>
                     <p className="gacha-panel-desc">{drawPhaseDescription}</p>
 
+                    {currentTarget ? (
+                      <div className="auction-message-box">
+                        <strong>각오</strong>
+                        {currentTarget.message ? currentTarget.message : <span>입력된 각오가 없습니다.</span>}
+                      </div>
+                    ) : null}
+
                     <div
                       className={`gacha-right-form ${drawPhase === "REVEALED" ? "is-visible" : "is-hidden"}`}
                     >
@@ -6332,6 +6352,14 @@ export default function DestructionAuctionManager({
                                   label="최고티어"
                                   value={currentTarget.player.peakTier ?? "-"}
                                 />
+                                <StatTile
+                                  label="부라인"
+                                  value={currentTarget.subPositions?.length ? currentTarget.subPositions.join(" / ") : "-"}
+                                />
+                              </div>
+                              <div className="auction-message-box">
+                                <strong>각오</strong>
+                                {currentTarget.message ? currentTarget.message : <span>입력된 각오가 없습니다.</span>}
                               </div>
                             </div>
                           ) : (

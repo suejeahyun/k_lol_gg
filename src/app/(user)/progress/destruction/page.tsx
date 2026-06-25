@@ -30,100 +30,163 @@ function getStatusLabel(status: string) {
   return labels[status] ?? status;
 }
 
+function getProgressDescription(status: string) {
+  if (status === "RECRUITING") {
+    return "현재 멸망전 참가 신청을 받고 있습니다. 참가자 명단과 신청 현황을 확인할 수 있습니다.";
+  }
+
+  if (status === "AUCTION") {
+    return "경매 진행 단계입니다. 참가자 명단과 경매 현황을 확인할 수 있습니다.";
+  }
+
+  if (status === "PRELIMINARY") {
+    return "예선 진행 단계입니다. 팀 구성, 참가자 명단, 예선 결과를 확인할 수 있습니다.";
+  }
+
+  if (status === "TOURNAMENT") {
+    return "본선 진행 단계입니다. 참가자 명단과 토너먼트 결과를 확인할 수 있습니다.";
+  }
+
+  if (status === "COMPLETED") {
+    return "종료된 멸망전입니다. 최종 결과, 팀 구성, 참가자 명단을 확인할 수 있습니다.";
+  }
+
+  return "멸망전 진행 상태, 팀 구성, 참가자 명단을 확인할 수 있습니다.";
+}
+
 export default async function DestructionProgressPage() {
   const tournaments = await prisma.destructionTournament.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
+    orderBy: [{ startDate: "desc" }, { id: "desc" }],
     include: {
       teams: true,
       participants: true,
       matches: true,
       galleryImage: true,
+      participationApplies: true,
     },
   });
 
+  const recruitingCount = tournaments.filter(
+    (tournament) => tournament.status === "RECRUITING"
+  ).length;
+  const activeCount = tournaments.filter((tournament) =>
+    ["AUCTION", "PRELIMINARY", "TOURNAMENT"].includes(tournament.status)
+  ).length;
+  const completedCount = tournaments.filter(
+    (tournament) => tournament.status === "COMPLETED"
+  ).length;
+
   return (
-    <main className="page-container destruction-progress-page">
-      <div className="page-header">
+    <main className="page-container destruction-progress-page event-user-page">
+      <section className="event-user-hero">
         <div>
           <p className="page-eyebrow">DESTRUCTION MATCH</p>
-          <h1 className="page-title">멸망전</h1>
-          <p className="page-description">
-            멸망전 진행 상태, 팀 구성, 예선 순위, 토너먼트 결과를 확인합니다.
+          <h1>멸망전</h1>
+          <p>
+            멸망전 모집, 참가자 명단, 팀 구성, 경매, 예선·본선 결과를 한 화면에서
+            확인합니다.
           </p>
         </div>
 
-        <div className="page-actions">
+        <div className="event-user-hero__actions">
           <Link href="/progress" className="btn btn-ghost">
             진행현황으로
           </Link>
+          <Link href="/participation" className="btn btn-primary">
+            참가 신청
+          </Link>
         </div>
-      </div>
+      </section>
+
+      <section className="event-user-summary-grid">
+        <div className="event-user-summary-card">
+          <span>전체 멸망전</span>
+          <strong>{tournaments.length}개</strong>
+        </div>
+        <div className="event-user-summary-card">
+          <span>모집중</span>
+          <strong>{recruitingCount}개</strong>
+        </div>
+        <div className="event-user-summary-card">
+          <span>진행중</span>
+          <strong>{activeCount}개</strong>
+        </div>
+        <div className="event-user-summary-card">
+          <span>종료</span>
+          <strong>{completedCount}개</strong>
+        </div>
+      </section>
 
       {tournaments.length === 0 ? (
         <div className="empty-box">등록된 멸망전이 없습니다.</div>
       ) : (
-        <div className="destruction-progress-list">
+        <div className="event-progress-list event-progress-list--wide">
           {tournaments.map((tournament) => {
             const thumbnail = getGalleryThumbnailUrl(tournament.galleryImage?.imageUrl);
+            const totalApplications = tournament.participationApplies.length;
 
             return (
               <Link
                 key={tournament.id}
                 href={`/progress/destruction/${tournament.id}`}
-                className="destruction-progress-card destruction-progress-card--with-image"
+                className="event-progress-card event-progress-card--with-image"
               >
-                <div className="destruction-progress-card__preview">
+                <div className="event-progress-card__preview">
                   {thumbnail ? (
                     <SafeGalleryImage
                       src={thumbnail}
                       alt={`${tournament.title} 대표 이미지`}
                       width={480}
                       height={270}
-                      className="destruction-progress-card__preview-image"
+                      className="event-progress-card__preview-image"
                     />
                   ) : (
-                    <div className="destruction-progress-card__preview-empty">
+                    <div className="event-progress-card__preview-empty">
                       우승 이미지 미등록
                     </div>
                   )}
                 </div>
 
-                <div className="destruction-progress-card__content">
-                  <div className="destruction-progress-card__top">
+                <div className="event-progress-card__content">
+                  <div className="event-progress-card__top">
                     <span>{getStatusLabel(tournament.status)}</span>
+                    {tournament.status !== "CANCELLED" ? <span>참가자 명단</span> : null}
                   </div>
 
                   <h2>{tournament.title}</h2>
 
-                  <p>{tournament.description || "등록된 설명이 없습니다."}</p>
+                  <p>{tournament.description || getProgressDescription(tournament.status)}</p>
 
-                  <div className="destruction-progress-card__meta">
-                <div>
-                  <span>시작일</span>
-                  <strong>{formatDate(tournament.startDate)}</strong>
-                </div>
+                  <div className="event-progress-card__meta event-progress-card__meta--user">
+                    <div>
+                      <span>시작일</span>
+                      <strong>{formatDate(tournament.startDate)}</strong>
+                    </div>
 
-                <div>
-                  <span>종료일</span>
-                  <strong>{formatDate(tournament.endDate)}</strong>
-                </div>
+                    <div>
+                      <span>종료일</span>
+                      <strong>{formatDate(tournament.endDate)}</strong>
+                    </div>
 
-                <div>
-                  <span>팀</span>
-                  <strong>{tournament.teams.length}개</strong>
-                </div>
+                    <div>
+                      <span>신청</span>
+                      <strong>{totalApplications}명</strong>
+                    </div>
 
-                <div>
-                  <span>참가자</span>
-                  <strong>{tournament.participants.length}명</strong>
-                </div>
+                    <div>
+                      <span>참가자</span>
+                      <strong>{tournament.participants.length}명</strong>
+                    </div>
 
-                <div>
-                  <span>경기</span>
-                  <strong>{tournament.matches.length}개</strong>
-                </div>
+                    <div>
+                      <span>팀</span>
+                      <strong>{tournament.teams.length}개</strong>
+                    </div>
+                  </div>
+
+                  <div className="event-progress-card__actions">
+                    <span>상세 보기</span>
+                    <em>참가자 명단 확인 가능</em>
                   </div>
                 </div>
               </Link>
