@@ -216,14 +216,15 @@ export default function PlayersBalancePage() {
       setErrorMessage("");
       setResult(null);
 
-      if (seasonApplyGroups.length === 0) {
-        await loadSeasonApplyGroups();
-      }
+      const latestGroups =
+        seasonApplyGroups.length > 0
+          ? seasonApplyGroups
+          : await loadSeasonApplyGroups();
 
       const targetGroup =
-        seasonApplyGroups.find(
+        latestGroups.find(
           (group) => group.key === selectedSeasonApplyGroupKey,
-        ) ?? seasonApplyGroups[0];
+        ) ?? latestGroups[0];
 
       if (!targetGroup) {
         alert("최근 3일 이내 참가 신청자가 없습니다.");
@@ -341,6 +342,12 @@ export default function PlayersBalancePage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          applyDate: seasonApplyGroups.find(
+            (group) => group.key === selectedSeasonApplyGroupKey,
+          )?.applyDate,
+          recruitNo: seasonApplyGroups.find(
+            (group) => group.key === selectedSeasonApplyGroupKey,
+          )?.recruitNo,
           optionType: result.planType,
           redTotal: result.redTotal,
           blueTotal: result.blueTotal,

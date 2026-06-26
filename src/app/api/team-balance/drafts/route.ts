@@ -26,6 +26,8 @@ type DraftPlayerInput = {
 
 type DraftPostBody = {
   title?: string;
+  applyDate?: string | null;
+  recruitNo?: number | null;
   optionType?: string | null;
   redTotal?: number | null;
   blueTotal?: number | null;
@@ -187,9 +189,17 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const kstDateKey = getKstDateKey();
+    const requestedApplyDateText =
+      typeof body.applyDate === "string" && /^20\d{2}-\d{2}-\d{2}$/.test(body.applyDate.trim())
+        ? body.applyDate.trim()
+        : null;
+    const kstDateKey = requestedApplyDateText ?? getKstDateKey();
     const applyDate = getKstStartOfDate(kstDateKey);
     const nextDate = addDays(applyDate, 1);
+    const requestedRecruitNo =
+      Number.isInteger(body.recruitNo) && Number(body.recruitNo) >= 1 && Number(body.recruitNo) <= 999
+        ? Number(body.recruitNo)
+        : null;
 
     const existingCount = await prisma.teamBalanceDraft.count({
       where: {
@@ -202,7 +212,7 @@ export async function POST(req: NextRequest) {
 
     const title =
       body.title?.trim() ||
-      `${getKstDisplayDate(kstDateKey)} ${getOrdinal(existingCount + 1)}`;
+      `${getKstDisplayDate(kstDateKey)}${requestedRecruitNo ? ` #${requestedRecruitNo} 내전` : ""} ${getOrdinal(existingCount + 1)}`;
 
     const requestedSeasonId = Number.isInteger(body.seasonId) && Number(body.seasonId) > 0 ? Number(body.seasonId) : null;
     const activeSeason = requestedSeasonId

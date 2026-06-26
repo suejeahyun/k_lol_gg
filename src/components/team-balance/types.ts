@@ -218,6 +218,7 @@ export type SeasonApplyGroup = {
   key: string;
   label: string;
   applyDate: string;
+  recruitNo: number;
   order: number;
   count: number;
   players: SeasonApplyPlayer[];

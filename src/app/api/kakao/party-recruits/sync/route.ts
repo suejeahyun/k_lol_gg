@@ -76,6 +76,16 @@ async function findActiveRecruitParty(params: {
   });
 }
 
+function isSeasonRecruitSnapshotMessage(message: string) {
+  const text = String(message || "").replace(/\r/g, "\n");
+
+  return (
+    /(?:참가\s*신청\s*양식|협곡\s*내전|협곡내전|내전하실분)/.test(text) &&
+    /^\s*(?:1|예비\s*1)\s*[.)]/m.test(text) &&
+    /이름\s*\/\s*현티어\s*\/\s*최고티어|현티어|최고티어/.test(text)
+  );
+}
+
 function splitRecruitStatusBlocks(message: string) {
   const sections = message
     .replace(/\r/g, "\n")
@@ -403,6 +413,21 @@ export async function POST(req: NextRequest) {
     if (secretRejected) return secretRejected;
 
     const message = getBodyText(body);
+
+    if (isSeasonRecruitSnapshotMessage(message)) {
+      return partyRecruitJson(
+        {
+          reply: [
+            "[K-LOL.GG 구인구직 반영 실패]",
+            "",
+            "내전 명단 양식은 파티구인으로 반영하지 않습니다.",
+            "내전 명단은 /내전현황 또는 내전 참가 신청 API에서 확인해주세요.",
+          ].join("\n"),
+        },
+        400,
+      );
+    }
+
     const roomName = getBodyRoom(body);
     const sender = getBodySender(body);
     const recruitDate = getKakaoRecruitDateKey();

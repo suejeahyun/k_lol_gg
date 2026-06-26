@@ -138,7 +138,17 @@ export async function GET() {
     const groups: ApplyGroup[] = [];
 
     [...byDateAndRecruitNo.entries()]
-      .sort(([a], [b]) => b.localeCompare(a))
+      .sort(([, leftApplies], [, rightApplies]) => {
+        const leftFirst = leftApplies[0];
+        const rightFirst = rightApplies[0];
+        const leftDate = leftFirst ? getKstDateKey(leftFirst.applyDate) : "";
+        const rightDate = rightFirst ? getKstDateKey(rightFirst.applyDate) : "";
+        const dateCompare = rightDate.localeCompare(leftDate);
+
+        if (dateCompare !== 0) return dateCompare;
+
+        return (leftFirst?.recruitNo || 1) - (rightFirst?.recruitNo || 1);
+      })
       .forEach(([groupKey, groupApplies]) => {
         const firstApply = groupApplies[0];
         const dateKey = firstApply ? getKstDateKey(firstApply.applyDate) : groupKey.slice(0, 10);
