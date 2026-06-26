@@ -58,7 +58,7 @@ export type DestructionCaptainPointDetail = DestructionCaptainPointInput & {
 };
 
 const BASE_LOWEST_TIER_POINT = 2000;
-const MIN_HIGHEST_TIER_POINT = 800;
+const MIN_HIGHEST_TIER_POINT = 0;
 
 const POINT_TABLE: Record<TierKey, PointRow> = {
   MASTER_1800_PLUS: { TOP: 60, JGL: 68, MID: 60.9, ADC: 62.7, SUP: 58.2 },
@@ -308,23 +308,18 @@ export function calculateDestructionCaptainPoints(
 
   const powerValues = details.map((detail) => detail.powerValue);
   const minPower = Math.min(...powerValues);
-  const maxPower = Math.max(...powerValues);
 
-  if (minPower === maxPower) {
+  if (minPower <= 0) {
     return details.map((detail) => ({ ...detail, auctionPoint: basePoint }));
   }
 
-  const minRatio = minPower / maxPower;
-  const pointRange = basePoint - minPoint;
-
   return details.map((detail) => {
-    const rawRatio = minPower / detail.powerValue;
-    const normalizedRatio = (rawRatio - minRatio) / (1 - minRatio);
-    const auctionPoint = Math.round(minPoint + normalizedRatio * pointRange);
+    const rawPoint = Math.round(basePoint * (minPower / detail.powerValue));
+    const auctionPoint = Math.min(basePoint, Math.max(minPoint, rawPoint));
 
     return {
       ...detail,
-      auctionPoint: Math.min(basePoint, Math.max(minPoint, auctionPoint)),
+      auctionPoint,
     };
   });
 }
