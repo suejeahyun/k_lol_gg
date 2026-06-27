@@ -107,8 +107,50 @@ export default async function DestructionParticipantsPage({ params, searchParams
   const applyOrder = new Map(applies.map((apply, index) => [apply.id, index + 1]));
 
   return (
-    <main className="page-shell player-detail-page">
+    <main className="page-shell player-detail-page destruction-participants-page">
       <style>{`
+        .destruction-participants-page {
+          width: min(100%, 1180px);
+          margin: 0 auto;
+          padding-inline: clamp(12px, 3vw, 24px);
+          box-sizing: border-box;
+          overflow-x: hidden;
+        }
+
+        .destruction-participants-page *,
+        .destruction-participants-page *::before,
+        .destruction-participants-page *::after {
+          box-sizing: border-box;
+        }
+
+        .destruction-participants-page .page-header,
+        .destruction-participants-page .content-section,
+        .destruction-participants-page .player-panel {
+          width: 100%;
+          max-width: 100%;
+          min-width: 0;
+        }
+
+        .destruction-participants-page .page-title,
+        .destruction-participants-page .page-description,
+        .destruction-participants-page .section-subtitle {
+          overflow-wrap: anywhere;
+        }
+
+        .destruction-participants-page .page-actions,
+        .destruction-participants-page .section-header--split {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+        }
+
+        .destruction-participants-page .page-actions .btn,
+        .destruction-participants-page .section-header--split .btn {
+          min-width: 0;
+          white-space: normal;
+          text-align: center;
+        }
+
         .destruction-line-filter-grid {
           display: grid;
           grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -402,7 +444,70 @@ export default async function DestructionParticipantsPage({ params, searchParams
           }
 
           .destruction-message-cell {
-            max-width: 210px;
+            max-width: min(210px, 52vw);
+          }
+        }
+
+        @media (max-width: 520px) {
+          .destruction-participants-page {
+            padding-inline: 12px;
+          }
+
+          .destruction-participants-page .page-header,
+          .destruction-participants-page .content-section {
+            padding: 16px;
+            border-radius: 18px;
+          }
+
+          .destruction-participants-page .page-actions,
+          .destruction-participants-page .page-actions .btn,
+          .destruction-participants-page .section-header--split .btn {
+            width: 100%;
+          }
+
+          .destruction-line-filter-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .destruction-line-filter-card {
+            min-height: 58px;
+            padding: 13px 14px;
+          }
+
+          .destruction-filter-chip-row {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            width: 100%;
+          }
+
+          .destruction-filter-chip {
+            width: 100%;
+            padding: 0 8px;
+          }
+
+          .destruction-participant-table tr {
+            padding: 13px;
+          }
+
+          .destruction-participant-table td {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 6px;
+            text-align: left;
+          }
+
+          .destruction-participant-name-link,
+          .destruction-position-cell,
+          .destruction-tier-cell,
+          .destruction-badge-row,
+          .destruction-message-cell,
+          .destruction-date-cell {
+            align-items: flex-start;
+            text-align: left;
+          }
+
+          .destruction-message-cell {
+            max-width: 100%;
           }
         }
       `}</style>

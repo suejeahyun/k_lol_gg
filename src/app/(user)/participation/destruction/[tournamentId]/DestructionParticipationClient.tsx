@@ -200,7 +200,191 @@ export default function DestructionParticipationClient({
       : "참가하기";
 
   return (
-    <div className="page-container participation-detail">
+    <div className="page-container participation-detail destruction-participation-page">
+      <style>{`
+        .destruction-participation-page {
+          width: min(100%, 1120px);
+          margin: 0 auto;
+          padding-inline: clamp(12px, 3vw, 24px);
+          box-sizing: border-box;
+          overflow-x: hidden;
+        }
+
+        .destruction-participation-page *,
+        .destruction-participation-page *::before,
+        .destruction-participation-page *::after {
+          box-sizing: border-box;
+        }
+
+        .destruction-participation-page .page-header,
+        .destruction-participation-page .empty-box,
+        .destruction-participation-page .participation-box,
+        .destruction-participation-page .participation-list {
+          width: 100%;
+          max-width: 100%;
+          min-width: 0;
+        }
+
+        .destruction-participation-page .page-title,
+        .destruction-participation-page .page-description {
+          overflow-wrap: anywhere;
+        }
+
+        .destruction-participation-page .page-actions {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+        }
+
+        .destruction-participation-page .page-actions .btn,
+        .destruction-participation-page .chip-button {
+          min-width: 0;
+          white-space: normal;
+          text-align: center;
+        }
+
+        .destruction-participation-page .participation-box {
+          padding: clamp(16px, 3vw, 24px);
+        }
+
+        .destruction-participation-page .participation-position-group {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+          gap: 10px;
+        }
+
+        .destruction-participation-page .participation-position-button {
+          width: 100%;
+          min-width: 0;
+          white-space: nowrap;
+        }
+
+        .destruction-participation-page .admin-form__textarea {
+          width: 100%;
+          min-width: 0;
+          resize: vertical;
+        }
+
+        .destruction-participation-page .admin-form__actions {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          align-items: stretch;
+          gap: 10px;
+        }
+
+        .destruction-participation-page .participation-list {
+          padding: clamp(14px, 3vw, 22px);
+        }
+
+        .destruction-participation-page .admin-event-detail-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+          gap: 10px;
+        }
+
+        .destruction-participation-page .participation-header--captain,
+        .destruction-participation-page .participation-item--captain {
+          display: grid;
+          grid-template-columns: 42px minmax(72px, 0.7fr) minmax(150px, 1.4fr) minmax(82px, 0.8fr) minmax(82px, 0.8fr) minmax(130px, 1.2fr) minmax(150px, 1.4fr);
+          gap: 10px;
+          align-items: center;
+          width: 100%;
+          min-width: 0;
+        }
+
+        .destruction-participation-page .participation-header--captain {
+          padding: 10px 12px;
+          border: 1px solid rgba(59, 130, 246, 0.28);
+          border-radius: 12px;
+          background: rgba(2, 6, 23, 0.45);
+          color: rgba(125, 211, 252, 0.95);
+          font-size: 12px;
+          font-weight: 900;
+        }
+
+        .destruction-participation-page .participation-item--captain {
+          padding: 14px 12px;
+          border: 1px solid rgba(59, 130, 246, 0.24);
+          border-radius: 14px;
+          background: rgba(15, 23, 42, 0.54);
+          color: inherit;
+        }
+
+        .destruction-participation-page .participation-item--captain > * {
+          min-width: 0;
+          overflow-wrap: anywhere;
+        }
+
+        @media (max-width: 760px) {
+          .destruction-participation-page {
+            padding-inline: 12px;
+          }
+
+          .destruction-participation-page .page-header {
+            padding: 16px;
+          }
+
+          .destruction-participation-page .page-actions .btn,
+          .destruction-participation-page .admin-form__actions > *,
+          .destruction-participation-page .chip-button {
+            width: 100%;
+          }
+
+          .destruction-participation-page .admin-form__actions {
+            grid-template-columns: 1fr;
+          }
+
+          .destruction-participation-page .participation-header--captain {
+            display: none;
+          }
+
+          .destruction-participation-page .participation-item--captain {
+            grid-template-columns: 1fr;
+            gap: 8px;
+            padding: 14px;
+          }
+
+          .destruction-participation-page .participation-item--captain > span,
+          .destruction-participation-page .participation-item--captain > strong,
+          .destruction-participation-page .participation-item--captain > em {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            width: 100%;
+            text-align: right;
+            font-style: normal;
+          }
+
+          .destruction-participation-page .participation-item--captain > span::before,
+          .destruction-participation-page .participation-item--captain > strong::before,
+          .destruction-participation-page .participation-item--captain > em::before {
+            flex: 0 0 auto;
+            color: rgba(148, 163, 184, 0.8);
+            font-size: 12px;
+            font-weight: 900;
+            text-align: left;
+          }
+
+          .destruction-participation-page .participation-item--captain > span:nth-child(1)::before { content: "순번"; }
+          .destruction-participation-page .participation-item--captain > strong::before { content: "이름"; }
+          .destruction-participation-page .participation-item--captain > em::before { content: "닉네임#태그"; }
+          .destruction-participation-page .participation-item--captain > span:nth-child(4)::before { content: "현재티어"; }
+          .destruction-participation-page .participation-item--captain > span:nth-child(5)::before { content: "최고티어"; }
+          .destruction-participation-page .participation-item--captain > span:nth-child(6)::before { content: "포지션"; }
+          .destruction-participation-page .participation-item--captain > span:nth-child(7)::before { content: "상태"; }
+        }
+
+        @media (max-width: 420px) {
+          .destruction-participation-page .participation-position-group {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+
+          .destruction-participation-page .participation-box,
+          .destruction-participation-page .participation-list {
+            border-radius: 16px;
+          }
+        }
+      `}</style>
       <div className="page-header">
         <h1 className="page-title">멸망전 참가</h1>
         <p className="page-description">

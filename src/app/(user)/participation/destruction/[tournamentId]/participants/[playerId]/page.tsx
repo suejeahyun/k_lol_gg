@@ -244,7 +244,103 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
   ).sort((a, b) => b.games - a.games || b.wins - a.wins).slice(0, 10);
 
   return (
-    <main className="page-shell player-detail-page">
+    <main className="page-shell player-detail-page destruction-participant-detail-page">
+      <style>{`
+        .destruction-participant-detail-page {
+          width: min(100%, 1180px);
+          margin: 0 auto;
+          padding-inline: clamp(12px, 3vw, 24px);
+          box-sizing: border-box;
+          overflow-x: hidden;
+        }
+
+        .destruction-participant-detail-page *,
+        .destruction-participant-detail-page *::before,
+        .destruction-participant-detail-page *::after {
+          box-sizing: border-box;
+        }
+
+        .destruction-participant-detail-page .page-header,
+        .destruction-participant-detail-page .content-section,
+        .destruction-participant-detail-page .player-panel,
+        .destruction-participant-detail-page .match-card,
+        .destruction-participant-detail-page .champion-stat-card {
+          width: 100%;
+          max-width: 100%;
+          min-width: 0;
+        }
+
+        .destruction-participant-detail-page .page-title,
+        .destruction-participant-detail-page .page-description,
+        .destruction-participant-detail-page .section-subtitle,
+        .destruction-participant-detail-page .info-card__value {
+          overflow-wrap: anywhere;
+        }
+
+        .destruction-participant-detail-page .page-actions,
+        .destruction-participant-detail-page .section-header--split {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+        }
+
+        .destruction-participant-detail-page .page-actions .btn {
+          min-width: 0;
+          white-space: normal;
+          text-align: center;
+        }
+
+        .destruction-participant-detail-page .info-grid,
+        .destruction-participant-detail-page .player-stat-grid,
+        .destruction-participant-detail-page .admin-event-detail-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+          gap: 10px;
+        }
+
+        .destruction-participant-detail-page .champion-stat-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+          gap: 12px;
+        }
+
+        .destruction-participant-detail-page .match-list {
+          display: grid;
+          gap: 12px;
+        }
+
+        @media (max-width: 640px) {
+          .destruction-participant-detail-page {
+            padding-inline: 12px;
+          }
+
+          .destruction-participant-detail-page .page-header,
+          .destruction-participant-detail-page .content-section {
+            padding: 16px;
+            border-radius: 18px;
+          }
+
+          .destruction-participant-detail-page .page-actions,
+          .destruction-participant-detail-page .page-actions .btn {
+            width: 100%;
+          }
+
+          .destruction-participant-detail-page .match-card__top,
+          .destruction-participant-detail-page .match-card__body,
+          .destruction-participant-detail-page .champion-stat-card,
+          .destruction-participant-detail-page .champion-stat-card__main {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+          }
+
+          .destruction-participant-detail-page .match-card__result,
+          .destruction-participant-detail-page .champion-stat-card__numbers {
+            align-items: flex-start;
+            text-align: left;
+          }
+        }
+      `}</style>
       <div className="page-header player-hero">
         <div>
           <p className="page-eyebrow">멸망전 참가자 상세</p>
