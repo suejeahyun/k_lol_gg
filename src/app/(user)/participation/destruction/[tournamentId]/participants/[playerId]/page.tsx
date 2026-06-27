@@ -1,4 +1,4 @@
-﻿export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -244,103 +244,7 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
   ).sort((a, b) => b.games - a.games || b.wins - a.wins).slice(0, 10);
 
   return (
-    <main className="page-shell player-detail-page destruction-participant-detail-page">
-      <style>{`
-        .destruction-participant-detail-page {
-          width: min(100%, 1180px);
-          margin: 0 auto;
-          padding-inline: clamp(12px, 3vw, 24px);
-          box-sizing: border-box;
-          overflow-x: hidden;
-        }
-
-        .destruction-participant-detail-page *,
-        .destruction-participant-detail-page *::before,
-        .destruction-participant-detail-page *::after {
-          box-sizing: border-box;
-        }
-
-        .destruction-participant-detail-page .page-header,
-        .destruction-participant-detail-page .content-section,
-        .destruction-participant-detail-page .player-panel,
-        .destruction-participant-detail-page .match-card,
-        .destruction-participant-detail-page .champion-stat-card {
-          width: 100%;
-          max-width: 100%;
-          min-width: 0;
-        }
-
-        .destruction-participant-detail-page .page-title,
-        .destruction-participant-detail-page .page-description,
-        .destruction-participant-detail-page .section-subtitle,
-        .destruction-participant-detail-page .info-card__value {
-          overflow-wrap: anywhere;
-        }
-
-        .destruction-participant-detail-page .page-actions,
-        .destruction-participant-detail-page .section-header--split {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-        }
-
-        .destruction-participant-detail-page .page-actions .btn {
-          min-width: 0;
-          white-space: normal;
-          text-align: center;
-        }
-
-        .destruction-participant-detail-page .info-grid,
-        .destruction-participant-detail-page .player-stat-grid,
-        .destruction-participant-detail-page .admin-event-detail-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
-          gap: 10px;
-        }
-
-        .destruction-participant-detail-page .champion-stat-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-          gap: 12px;
-        }
-
-        .destruction-participant-detail-page .match-list {
-          display: grid;
-          gap: 12px;
-        }
-
-        @media (max-width: 640px) {
-          .destruction-participant-detail-page {
-            padding-inline: 12px;
-          }
-
-          .destruction-participant-detail-page .page-header,
-          .destruction-participant-detail-page .content-section {
-            padding: 16px;
-            border-radius: 18px;
-          }
-
-          .destruction-participant-detail-page .page-actions,
-          .destruction-participant-detail-page .page-actions .btn {
-            width: 100%;
-          }
-
-          .destruction-participant-detail-page .match-card__top,
-          .destruction-participant-detail-page .match-card__body,
-          .destruction-participant-detail-page .champion-stat-card,
-          .destruction-participant-detail-page .champion-stat-card__main {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 10px;
-          }
-
-          .destruction-participant-detail-page .match-card__result,
-          .destruction-participant-detail-page .champion-stat-card__numbers {
-            align-items: flex-start;
-            text-align: left;
-          }
-        }
-      `}</style>
+    <main className="page-shell player-detail-page">
       <div className="page-header player-hero">
         <div>
           <p className="page-eyebrow">멸망전 참가자 상세</p>
@@ -348,7 +252,7 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
             {player.name}{playerTagText ? ` (${playerTagText})` : ""}
           </h1>
           <p className="page-description">
-            {apply.tournament.title} 참가 신청 정보와 기존 내전 기록입니다.
+            {apply.tournament.title} 참가 정보입니다.
           </p>
         </div>
 
@@ -362,11 +266,11 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
         </div>
       </div>
 
-      <section className="content-section player-panel">
+      <section className="content-section player-panel destruction-detail-apply-section">
         <div className="section-header section-header--split">
           <div>
-            <h2>멸망전 신청 정보</h2>
-            <p className="section-subtitle">경매 및 팀장 선정 전에 확인할 공개 정보입니다.</p>
+            <h2>신청 정보</h2>
+            <p className="section-subtitle">라인, 팀장 선호, 각오만 우선 확인합니다.</p>
           </div>
         </div>
 
@@ -387,11 +291,11 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
             <span className="info-card__label">팀장 선호</span>
             <strong className="info-card__value">{apply.isCaptain ? "선호" : "비선호"}</strong>
           </div>
-          <div className="info-card">
+          <div className="info-card destruction-detail-date-card">
             <span className="info-card__label">신청일</span>
             <strong className="info-card__value">{formatDateTime(apply.createdAt)}</strong>
           </div>
-          <div className="info-card">
+          <div className="info-card destruction-detail-date-card">
             <span className="info-card__label">수정일</span>
             <strong className="info-card__value">{formatDateTime(apply.updatedAt)}</strong>
           </div>
@@ -438,9 +342,9 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
         </div>
       </section>
 
-      <section className="content-section player-panel">
+      <section className="content-section player-panel destruction-detail-profile-section">
         <div className="section-header">
-          <h2>프로필 카드</h2>
+          <h2>프로필</h2>
         </div>
 
         <div className="info-grid">
@@ -463,10 +367,10 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
         </div>
       </section>
 
-      <section className="content-section player-panel">
+      <section className="content-section player-panel destruction-detail-stats-section">
         <div className="section-header section-header--split">
           <div>
-            <h2>내전 분석</h2>
+            <h2>내전 요약</h2>
             <p className="section-subtitle">
               현재 시즌{currentSeason ? `(${currentSeason.name})` : ""} 내전 기록 기준 통계입니다.
             </p>
@@ -497,7 +401,7 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
         </div>
       </section>
 
-      <section className="content-section player-panel">
+      <section className="content-section player-panel destruction-detail-extra-section">
         <div className="section-header">
           <h2>라인별 기록</h2>
         </div>
@@ -515,7 +419,7 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
         )}
       </section>
 
-      <section className="content-section player-panel champion-section">
+      <section className="content-section player-panel champion-section destruction-detail-extra-section">
         <div className="section-header section-header--split">
           <div>
             <h2>내전 사용 챔피언 통계</h2>
@@ -558,9 +462,11 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
         )}
       </section>
 
-      <SoloRankSection playerId={player.id} />
+      <div className="destruction-detail-extra-section">
+        <SoloRankSection playerId={player.id} />
+      </div>
 
-      <section className="content-section player-panel">
+      <section className="content-section player-panel destruction-detail-extra-section">
         <div className="section-header">
           <h2>내전 최근 기록</h2>
         </div>

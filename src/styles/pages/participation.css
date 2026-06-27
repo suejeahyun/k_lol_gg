@@ -496,3 +496,266 @@
     min-width: 920px;
   }
 }
+/* 멸망전 참가 화면: 모바일 신청 우선 UX */
+.destruction-mobile-copy,
+.destruction-mobile-apply-guide,
+.destruction-mobile-list-cta {
+  display: none;
+}
+
+.destruction-apply-actions {
+  gap: 12px;
+}
+
+.destruction-apply-actions .chip-button.danger {
+  min-height: 52px;
+  padding: 0 18px;
+  border-radius: 14px;
+  white-space: nowrap;
+}
+
+.participation-detail,
+.participation-detail * {
+  min-width: 0;
+}
+
+.participation-detail .page-title,
+.participation-detail .page-description,
+.participation-detail .empty-box,
+.participation-detail .participation-item,
+.participation-detail textarea {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 720px) {
+  .participation-detail.page-container {
+    gap: 14px;
+    padding-inline: 14px;
+  }
+
+  .participation-detail .page-header {
+    gap: 10px;
+    padding: 18px 16px;
+    border-radius: 18px;
+  }
+
+  .participation-detail .page-title {
+    font-size: clamp(24px, 7vw, 32px);
+    line-height: 1.12;
+  }
+
+  .destruction-desktop-copy {
+    display: none !important;
+  }
+
+  .destruction-mobile-copy,
+  .destruction-mobile-apply-guide,
+  .destruction-mobile-list-cta {
+    display: flex;
+  }
+
+  .participation-detail .page-actions {
+    width: 100%;
+  }
+
+  .participation-detail .page-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .destruction-current-apply {
+    margin-bottom: 0 !important;
+    padding: 14px !important;
+    border-radius: 16px !important;
+  }
+
+  .destruction-current-apply .page-description {
+    font-size: 12px !important;
+    line-height: 1.55;
+  }
+
+  .destruction-apply-box {
+    gap: 16px;
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .destruction-mobile-apply-guide {
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 14px;
+    border: 1px solid rgba(34, 211, 238, 0.28);
+    border-radius: 14px;
+    background: rgba(8, 47, 73, 0.28);
+  }
+
+  .destruction-mobile-apply-guide strong {
+    color: #f8fafc;
+    font-size: 15px;
+    font-weight: 950;
+  }
+
+  .destruction-mobile-apply-guide span {
+    color: rgba(203, 213, 225, 0.78);
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.45;
+  }
+
+  .participation-position-title {
+    font-size: 14px;
+  }
+
+  .participation-position-group {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .participation-position-button {
+    width: 100%;
+    min-width: 0;
+    height: 42px;
+    padding: 0 6px;
+    border-radius: 12px;
+    font-size: 12px;
+  }
+
+  .participation-detail textarea.admin-form__textarea {
+    min-height: 92px;
+    font-size: 14px;
+  }
+
+  .destruction-apply-actions {
+    display: grid !important;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .destruction-apply-actions .participation-apply-button,
+  .destruction-apply-actions .chip-button.danger {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 52px;
+    justify-content: center;
+  }
+
+  .participation-detail .participation-list {
+    margin-top: 4px;
+    padding: 14px;
+    border-radius: 18px;
+    overflow: hidden;
+  }
+
+  .participation-detail .participation-list > .page-header {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .participation-detail .participation-list > .page-header h2 {
+    font-size: 17px;
+  }
+
+  .participation-detail .participation-list > .page-header .page-description,
+  .participation-detail .participation-list .destruction-list-actions,
+  .participation-detail .participation-list .participation-header,
+  .participation-detail .participation-list .participation-item,
+  .participation-detail .participation-list .admin-empty {
+    display: none !important;
+  }
+
+  .destruction-mobile-list-cta {
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px;
+    border: 1px solid rgba(59, 130, 246, 0.26);
+    border-radius: 16px;
+    background: rgba(15, 23, 42, 0.54);
+  }
+
+  .destruction-mobile-list-cta strong {
+    color: #f8fafc;
+    font-size: 15px;
+    font-weight: 950;
+  }
+
+  .destruction-mobile-list-cta span {
+    color: rgba(203, 213, 225, 0.74);
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.45;
+  }
+
+  .destruction-mobile-list-cta .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .destruction-position-summary-grid.admin-event-detail-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 6px;
+    margin-bottom: 0 !important;
+  }
+
+  .destruction-position-summary-grid .admin-event-detail-card {
+    min-height: auto;
+    padding: 10px 6px;
+    border-radius: 12px;
+    text-align: center;
+  }
+
+  .destruction-position-summary-grid .admin-event-detail-card span {
+    font-size: 10px;
+  }
+
+  .destruction-position-summary-grid .admin-event-detail-card strong {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 390px) {
+  .participation-position-group,
+  .destruction-position-summary-grid.admin-event-detail-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* 멸망전 참가자 상세: 모바일에서는 핵심 정보만 우선 노출 */
+@media (max-width: 720px) {
+  .player-detail-page .destruction-detail-apply-section,
+  .player-detail-page .destruction-detail-profile-section,
+  .player-detail-page .destruction-detail-stats-section {
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .player-detail-page .destruction-detail-apply-section .section-subtitle,
+  .player-detail-page .destruction-detail-stats-section .section-subtitle {
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .player-detail-page .destruction-detail-apply-section .info-grid,
+  .player-detail-page .destruction-detail-profile-section .info-grid,
+  .player-detail-page .destruction-detail-stats-section .player-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .player-detail-page .destruction-detail-apply-section .info-card,
+  .player-detail-page .destruction-detail-profile-section .info-card,
+  .player-detail-page .destruction-detail-stats-section .stat-card {
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .player-detail-page .destruction-detail-date-card {
+    display: none;
+  }
+
+  .player-detail-page .destruction-detail-extra-section {
+    display: none !important;
+  }
+}

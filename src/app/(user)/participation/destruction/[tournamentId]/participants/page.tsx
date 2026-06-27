@@ -107,50 +107,8 @@ export default async function DestructionParticipantsPage({ params, searchParams
   const applyOrder = new Map(applies.map((apply, index) => [apply.id, index + 1]));
 
   return (
-    <main className="page-shell player-detail-page destruction-participants-page">
+    <main className="page-shell player-detail-page">
       <style>{`
-        .destruction-participants-page {
-          width: min(100%, 1180px);
-          margin: 0 auto;
-          padding-inline: clamp(12px, 3vw, 24px);
-          box-sizing: border-box;
-          overflow-x: hidden;
-        }
-
-        .destruction-participants-page *,
-        .destruction-participants-page *::before,
-        .destruction-participants-page *::after {
-          box-sizing: border-box;
-        }
-
-        .destruction-participants-page .page-header,
-        .destruction-participants-page .content-section,
-        .destruction-participants-page .player-panel {
-          width: 100%;
-          max-width: 100%;
-          min-width: 0;
-        }
-
-        .destruction-participants-page .page-title,
-        .destruction-participants-page .page-description,
-        .destruction-participants-page .section-subtitle {
-          overflow-wrap: anywhere;
-        }
-
-        .destruction-participants-page .page-actions,
-        .destruction-participants-page .section-header--split {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-        }
-
-        .destruction-participants-page .page-actions .btn,
-        .destruction-participants-page .section-header--split .btn {
-          min-width: 0;
-          white-space: normal;
-          text-align: center;
-        }
-
         .destruction-line-filter-grid {
           display: grid;
           grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -192,6 +150,10 @@ export default async function DestructionParticipantsPage({ params, searchParams
           line-height: 1;
         }
 
+
+          .destruction-participants-mobile-note {
+            display: none;
+          }
         .destruction-participants-toolbar {
           display: flex;
           flex-wrap: wrap;
@@ -369,12 +331,72 @@ export default async function DestructionParticipantsPage({ params, searchParams
         }
 
         @media (max-width: 860px) {
-          .destruction-line-filter-grid {
+
+          .destruction-participants-mobile-note {
+            display: block;
+            margin: -2px 0 12px;
+            padding: 12px 14px;
+            border: 1px solid rgba(34, 211, 238, 0.22);
+            border-radius: 14px;
+            background: rgba(8, 47, 73, 0.2);
+            color: rgba(226, 232, 240, 0.82);
+            font-size: 12px;
+            font-weight: 800;
+            line-height: 1.5;
+          }
+
+          .player-detail-page .card-grid.player-stat-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+          }
+
+          .player-detail-page .stat-card {
+            min-height: auto;
+            padding: 12px;
+            border-radius: 14px;
+          }
+
+          .player-detail-page .stat-card__label {
+            font-size: 11px;
+          }
+
+          .player-detail-page .stat-card__value {
+            font-size: 20px;
+          }
+
+          .player-detail-page .section-subtitle {
+            font-size: 12px;
+            line-height: 1.45;
+          }
+
+          .destruction-filter-chip-row {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            width: 100%;
+          }
+
+          .destruction-filter-chip {
+            min-height: 38px;
+            padding: 0 8px;
+          }
+
+          .destruction-line-filter-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
           }
 
           .destruction-line-filter-grid .destruction-line-filter-card:first-child {
-            grid-column: 1 / -1;
+            grid-column: auto;
+          }
+
+          .destruction-line-filter-card {
+            min-height: 58px;
+            padding: 12px 10px;
+            border-radius: 14px;
+          }
+
+          .destruction-line-filter-card strong {
+            font-size: 18px;
           }
 
           .destruction-participant-table-wrap {
@@ -420,6 +442,12 @@ export default async function DestructionParticipantsPage({ params, searchParams
             text-align: right;
           }
 
+          .destruction-participant-table td[data-label="순번"],
+          .destruction-participant-table td[data-label="각오"],
+          .destruction-participant-table td[data-label="신청일"] {
+            display: none;
+          }
+
           .destruction-participant-table td:last-child {
             border-bottom: 0;
           }
@@ -444,70 +472,17 @@ export default async function DestructionParticipantsPage({ params, searchParams
           }
 
           .destruction-message-cell {
-            max-width: min(210px, 52vw);
+            max-width: 210px;
           }
         }
 
-        @media (max-width: 520px) {
-          .destruction-participants-page {
-            padding-inline: 12px;
-          }
-
-          .destruction-participants-page .page-header,
-          .destruction-participants-page .content-section {
-            padding: 16px;
-            border-radius: 18px;
-          }
-
-          .destruction-participants-page .page-actions,
-          .destruction-participants-page .page-actions .btn,
-          .destruction-participants-page .section-header--split .btn {
-            width: 100%;
-          }
-
+        @media (max-width: 420px) {
           .destruction-line-filter-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .destruction-line-filter-card {
-            min-height: 58px;
-            padding: 13px 14px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
           }
 
           .destruction-filter-chip-row {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            width: 100%;
-          }
-
-          .destruction-filter-chip {
-            width: 100%;
-            padding: 0 8px;
-          }
-
-          .destruction-participant-table tr {
-            padding: 13px;
-          }
-
-          .destruction-participant-table td {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 6px;
-            text-align: left;
-          }
-
-          .destruction-participant-name-link,
-          .destruction-position-cell,
-          .destruction-tier-cell,
-          .destruction-badge-row,
-          .destruction-message-cell,
-          .destruction-date-cell {
-            align-items: flex-start;
-            text-align: left;
-          }
-
-          .destruction-message-cell {
-            max-width: 100%;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
           }
         }
       `}</style>
@@ -517,7 +492,7 @@ export default async function DestructionParticipantsPage({ params, searchParams
           <p className="page-eyebrow">멸망전 참가자 명단</p>
           <h1 className="page-title">{tournament.title}</h1>
           <p className="page-description">
-            공개 대상은 신청/확정/보류 상태의 참가자입니다. 라인 요약을 누르면 해당 주 라인 참가자만 볼 수 있습니다.
+            라인을 선택하면 해당 주 라인 참가자만 볼 수 있습니다.
           </p>
         </div>
 
@@ -556,7 +531,7 @@ export default async function DestructionParticipantsPage({ params, searchParams
         <div className="section-header section-header--split">
           <div>
             <h2>라인별 현황</h2>
-            <p className="section-subtitle">전체 또는 주 라인을 선택해 참가자 목록을 필터링합니다.</p>
+            <p className="section-subtitle">라인을 누르면 아래 명단이 바로 바뀝니다.</p>
           </div>
           {selectedLine ? (
             <Link href={lineHref(tournament.id, null)} className="btn btn-ghost">
@@ -564,6 +539,7 @@ export default async function DestructionParticipantsPage({ params, searchParams
             </Link>
           ) : null}
         </div>
+        <div className="destruction-participants-mobile-note">휴대폰에서는 이름, 라인, 티어, 상태만 먼저 표시합니다. 각오와 신청일은 상세 화면에서 확인합니다.</div>
         <div className="destruction-line-filter-grid">
           <Link
             href={lineHref(tournament.id, null)}
@@ -591,8 +567,8 @@ export default async function DestructionParticipantsPage({ params, searchParams
             <h2>{selectedLine ? `${selectedLine} 참가자 목록` : "참가자 목록"}</h2>
             <p className="section-subtitle">
               {selectedLine
-                ? `${selectedLine} 주 라인 참가자 ${filteredApplies.length}명을 표 형태로 정리했습니다.`
-                : `전체 참가자 ${filteredApplies.length}명을 표 형태로 정리했습니다.`}
+                ? `${selectedLine} 주 라인 ${filteredApplies.length}명입니다.`
+                : `전체 참가자 ${filteredApplies.length}명입니다.`}
             </p>
           </div>
           <div className="destruction-filter-chip-row" aria-label="라인 필터">

@@ -200,195 +200,14 @@ export default function DestructionParticipationClient({
       : "참가하기";
 
   return (
-    <div className="page-container participation-detail destruction-participation-page">
-      <style>{`
-        .destruction-participation-page {
-          width: min(100%, 1120px);
-          margin: 0 auto;
-          padding-inline: clamp(12px, 3vw, 24px);
-          box-sizing: border-box;
-          overflow-x: hidden;
-        }
-
-        .destruction-participation-page *,
-        .destruction-participation-page *::before,
-        .destruction-participation-page *::after {
-          box-sizing: border-box;
-        }
-
-        .destruction-participation-page .page-header,
-        .destruction-participation-page .empty-box,
-        .destruction-participation-page .participation-box,
-        .destruction-participation-page .participation-list {
-          width: 100%;
-          max-width: 100%;
-          min-width: 0;
-        }
-
-        .destruction-participation-page .page-title,
-        .destruction-participation-page .page-description {
-          overflow-wrap: anywhere;
-        }
-
-        .destruction-participation-page .page-actions {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-        }
-
-        .destruction-participation-page .page-actions .btn,
-        .destruction-participation-page .chip-button {
-          min-width: 0;
-          white-space: normal;
-          text-align: center;
-        }
-
-        .destruction-participation-page .participation-box {
-          padding: clamp(16px, 3vw, 24px);
-        }
-
-        .destruction-participation-page .participation-position-group {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
-          gap: 10px;
-        }
-
-        .destruction-participation-page .participation-position-button {
-          width: 100%;
-          min-width: 0;
-          white-space: nowrap;
-        }
-
-        .destruction-participation-page .admin-form__textarea {
-          width: 100%;
-          min-width: 0;
-          resize: vertical;
-        }
-
-        .destruction-participation-page .admin-form__actions {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) auto;
-          align-items: stretch;
-          gap: 10px;
-        }
-
-        .destruction-participation-page .participation-list {
-          padding: clamp(14px, 3vw, 22px);
-        }
-
-        .destruction-participation-page .admin-event-detail-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-          gap: 10px;
-        }
-
-        .destruction-participation-page .participation-header--captain,
-        .destruction-participation-page .participation-item--captain {
-          display: grid;
-          grid-template-columns: 42px minmax(72px, 0.7fr) minmax(150px, 1.4fr) minmax(82px, 0.8fr) minmax(82px, 0.8fr) minmax(130px, 1.2fr) minmax(150px, 1.4fr);
-          gap: 10px;
-          align-items: center;
-          width: 100%;
-          min-width: 0;
-        }
-
-        .destruction-participation-page .participation-header--captain {
-          padding: 10px 12px;
-          border: 1px solid rgba(59, 130, 246, 0.28);
-          border-radius: 12px;
-          background: rgba(2, 6, 23, 0.45);
-          color: rgba(125, 211, 252, 0.95);
-          font-size: 12px;
-          font-weight: 900;
-        }
-
-        .destruction-participation-page .participation-item--captain {
-          padding: 14px 12px;
-          border: 1px solid rgba(59, 130, 246, 0.24);
-          border-radius: 14px;
-          background: rgba(15, 23, 42, 0.54);
-          color: inherit;
-        }
-
-        .destruction-participation-page .participation-item--captain > * {
-          min-width: 0;
-          overflow-wrap: anywhere;
-        }
-
-        @media (max-width: 760px) {
-          .destruction-participation-page {
-            padding-inline: 12px;
-          }
-
-          .destruction-participation-page .page-header {
-            padding: 16px;
-          }
-
-          .destruction-participation-page .page-actions .btn,
-          .destruction-participation-page .admin-form__actions > *,
-          .destruction-participation-page .chip-button {
-            width: 100%;
-          }
-
-          .destruction-participation-page .admin-form__actions {
-            grid-template-columns: 1fr;
-          }
-
-          .destruction-participation-page .participation-header--captain {
-            display: none;
-          }
-
-          .destruction-participation-page .participation-item--captain {
-            grid-template-columns: 1fr;
-            gap: 8px;
-            padding: 14px;
-          }
-
-          .destruction-participation-page .participation-item--captain > span,
-          .destruction-participation-page .participation-item--captain > strong,
-          .destruction-participation-page .participation-item--captain > em {
-            display: flex;
-            justify-content: space-between;
-            gap: 12px;
-            width: 100%;
-            text-align: right;
-            font-style: normal;
-          }
-
-          .destruction-participation-page .participation-item--captain > span::before,
-          .destruction-participation-page .participation-item--captain > strong::before,
-          .destruction-participation-page .participation-item--captain > em::before {
-            flex: 0 0 auto;
-            color: rgba(148, 163, 184, 0.8);
-            font-size: 12px;
-            font-weight: 900;
-            text-align: left;
-          }
-
-          .destruction-participation-page .participation-item--captain > span:nth-child(1)::before { content: "순번"; }
-          .destruction-participation-page .participation-item--captain > strong::before { content: "이름"; }
-          .destruction-participation-page .participation-item--captain > em::before { content: "닉네임#태그"; }
-          .destruction-participation-page .participation-item--captain > span:nth-child(4)::before { content: "현재티어"; }
-          .destruction-participation-page .participation-item--captain > span:nth-child(5)::before { content: "최고티어"; }
-          .destruction-participation-page .participation-item--captain > span:nth-child(6)::before { content: "포지션"; }
-          .destruction-participation-page .participation-item--captain > span:nth-child(7)::before { content: "상태"; }
-        }
-
-        @media (max-width: 420px) {
-          .destruction-participation-page .participation-position-group {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
-
-          .destruction-participation-page .participation-box,
-          .destruction-participation-page .participation-list {
-            border-radius: 16px;
-          }
-        }
-      `}</style>
+    <div className="page-container participation-detail">
       <div className="page-header">
         <h1 className="page-title">멸망전 참가</h1>
-        <p className="page-description">
+        <p className="page-description destruction-desktop-copy">
           주 포지션, 부 포지션, 팀장 선호 여부와 각오를 입력합니다. 최종 팀장은 관리자 지정 기준으로 확정됩니다.
+        </p>
+        <p className="page-description destruction-mobile-copy">
+          주 라인 선택 후 바로 참가 신청할 수 있습니다.
         </p>
         <div className="page-actions" style={{ marginTop: 12 }}>
           <Link href={`/participation/destruction/${tournamentId}/participants`} className="btn btn-ghost">
@@ -398,7 +217,7 @@ export default function DestructionParticipationClient({
       </div>
 
       {currentApply ? (
-        <div className="empty-box" style={{ marginBottom: 16 }}>
+        <div className="empty-box destruction-current-apply" style={{ marginBottom: 16 }}>
           <strong>내 신청 상태: {STATUS_LABELS[String(currentApply.status)] ?? currentApply.status}</strong>
           <p className="page-description" style={{ margin: "8px 0 0" }}>
             주 포지션 {currentApply.mainPosition ?? "-"} · 부 포지션 {formatPositions(currentApply.subPositions)} · {currentApply.isCaptain ? "팀장 선호" : "팀장 비선호"}
@@ -412,7 +231,12 @@ export default function DestructionParticipationClient({
         </div>
       ) : null}
 
-      <div className="participation-box">
+      <div className="participation-box destruction-apply-box">
+        <div className="destruction-mobile-apply-guide" aria-label="모바일 참가 순서">
+          <strong>참가 신청</strong>
+          <span>주 라인 선택 → 필요 시 부 라인/각오 입력 → 참가하기</span>
+        </div>
+
         <SinglePositionSelector
           title="주 포지션"
           value={mainPosition}
@@ -483,7 +307,7 @@ export default function DestructionParticipationClient({
           </p>
         </div>
 
-        <div className="admin-form__actions" style={{ justifyContent: "space-between" }}>
+        <div className="admin-form__actions destruction-apply-actions" style={{ justifyContent: "space-between" }}>
           <button
             type="button"
             className="participation-apply-button"
@@ -622,14 +446,22 @@ function ParticipationList({ tournamentId, players }: { tournamentId: string; pl
         <p className="page-description">
           확정 후보 {activePlayers.length}명 · 보류 {reservePlayers.length}명 · 팀장 선호 {captainPreferredCount}명 · 팀장 비선호 {activePlayers.length - captainPreferredCount}명
         </p>
-        <div className="page-actions" style={{ marginTop: 10 }}>
+        <div className="page-actions destruction-list-actions" style={{ marginTop: 10 }}>
           <Link href={`/participation/destruction/${tournamentId}/participants`} className="btn btn-ghost">
             공개 명단 전체 보기
           </Link>
         </div>
       </div>
 
-      <div className="admin-event-detail-grid" style={{ marginBottom: 16 }}>
+      <div className="destruction-mobile-list-cta">
+        <strong>참가자 {activePlayers.length}명 · 보류 {reservePlayers.length}명</strong>
+        <span>휴대폰에서는 신청 편의를 위해 상세 명단을 접었습니다.</span>
+        <Link href={`/participation/destruction/${tournamentId}/participants`} className="btn btn-primary">
+          참가자 명단 보기
+        </Link>
+      </div>
+
+      <div className="admin-event-detail-grid destruction-position-summary-grid" style={{ marginBottom: 16 }}>
         {positionCounts.map((item) => (
           <div key={item.position} className="admin-event-detail-card">
             <span>{item.position}</span>
