@@ -300,7 +300,7 @@ export function calculateDestructionCaptainAuctionPoint(
 ) {
   const basePoint = options?.baseLowestTierPoint ?? DESTRUCTION_CAPTAIN_BASE_POINT;
   const minPoint = options?.minHighestTierPoint ?? MIN_HIGHEST_TIER_POINT;
-  const rawPoint = Math.round(basePoint - powerValue * 10);
+  const rawPoint = Math.round((basePoint - powerValue * 10) / 10) * 10;
 
   return Math.min(basePoint, Math.max(minPoint, rawPoint));
 }

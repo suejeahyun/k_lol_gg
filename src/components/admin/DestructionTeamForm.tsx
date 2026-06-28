@@ -499,7 +499,7 @@ export default function DestructionTeamForm({
           </div>
 
           <div className="captain-status-note" style={{ marginTop: 0 }}>
-            계산식: 2000점 - 티어/라인 기준값 × 10.
+            계산식: 2000점 - 티어/라인 기준값 × 10. 최종 점수는 10단위 반올림 적용.
             <button
               type="button"
               className="chip-button"

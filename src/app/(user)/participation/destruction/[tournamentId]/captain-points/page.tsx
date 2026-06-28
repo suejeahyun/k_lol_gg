@@ -175,7 +175,7 @@ export default async function DestructionCaptainPointTablePage({ params }: PageP
           <p className="page-eyebrow">멸망전 팀장 포인트표</p>
           <h1 className="page-title">{tournament.title}</h1>
           <p className="page-description">
-            팀장 지급 포인트는 기본 {DESTRUCTION_CAPTAIN_BASE_POINT}점에서 티어·라인 기준값의 10배를 차감해 계산합니다.
+            팀장 지급 포인트는 기본 {DESTRUCTION_CAPTAIN_BASE_POINT}점에서 티어·라인 기준값의 10배를 차감한 뒤 10단위로 반올림해 계산합니다.
           </p>
         </div>
 
@@ -193,8 +193,8 @@ export default async function DestructionCaptainPointTablePage({ params }: PageP
         <div className="destruction-point-guide">
           <article className="destruction-point-guide-card">
             <span>계산식</span>
-            <strong>2000 - 기준값 × 10</strong>
-            <p>소수점이 생기면 반올림한 정수 포인트로 적용합니다.</p>
+            <strong>10단위 반올림(2000 - 기준값 × 10)</strong>
+            <p>최종 점수는 1단위가 아니라 10단위로 반올림해 적용합니다.</p>
           </article>
           <article className="destruction-point-guide-card">
             <span>예외 기준</span>
@@ -203,8 +203,8 @@ export default async function DestructionCaptainPointTablePage({ params }: PageP
           </article>
           <article className="destruction-point-guide-card">
             <span>표시 방식</span>
-            <strong>위: 지급 포인트 / 아래: 기준값</strong>
-            <p>관리자 팀장 지정 화면의 자동 포인트와 같은 기준입니다.</p>
+            <strong>최종 지급 포인트만 표시</strong>
+            <p>유저 화면에서는 기준값을 숨기고 실제 지급되는 점수만 보여줍니다.</p>
           </article>
         </div>
       </section>
@@ -223,7 +223,7 @@ export default async function DestructionCaptainPointTablePage({ params }: PageP
               <tr>
                 <th>티어</th>
                 {DESTRUCTION_CAPTAIN_LANES.map((lane) => (
-                  <th key={lane}>{LANE_LABELS[lane]} 지급 / 기준값</th>
+                  <th key={lane}>{LANE_LABELS[lane]} 지급</th>
                 ))}
               </tr>
             </thead>
@@ -233,10 +233,7 @@ export default async function DestructionCaptainPointTablePage({ params }: PageP
                   <td className="destruction-point-tier">{row.tierLabel}</td>
                   {DESTRUCTION_CAPTAIN_LANES.map((lane) => (
                     <td key={lane}>
-                      <span className="destruction-point-cell">
-                        <strong className="destruction-point-result">{row.auctionPoints[lane]}점</strong>
-                        <span className="destruction-point-value">기준값 {row.values[lane]}</span>
-                      </span>
+                      <strong className="destruction-point-result">{row.auctionPoints[lane]}점</strong>
                     </td>
                   ))}
                 </tr>
