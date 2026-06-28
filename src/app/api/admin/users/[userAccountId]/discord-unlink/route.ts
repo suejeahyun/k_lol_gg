@@ -1,10 +1,11 @@
-﻿import { logServerError } from "@/lib/server/safe-log";
+import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { requireAdminRequest } from "@/lib/auth/requireAdmin";
 import { toDiscordSnapshot, writeDiscordAccountLinkLog } from "@/lib/discord/account-link";
+import { writeSecurityAudit } from "@/lib/security/admin-audit";
 
 export async function PATCH(req: NextRequest, props: { params: Promise<{ userAccountId: string }> }) {
   const admin = await requireAdminRequest();
@@ -45,6 +46,17 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ userAcc
         after: toDiscordSnapshot(user),
         db: tx,
       });
+      await writeSecurityAudit({
+        req,
+        admin,
+        action: "USER_DISCORD_UNLINK",
+        message: `회원 Discord 연동 해제: #${user.id} ${user.userId}`,
+        targetType: "UserAccount",
+        targetId: user.id,
+        beforeJson: toDiscordSnapshot(before),
+        afterJson: toDiscordSnapshot(user),
+        db: tx,
+      });
       return user;
     });
     return NextResponse.json({ ok: true, userAccountId: updated.id });
@@ -53,4 +65,3 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ userAcc
     return NextResponse.json({ message: "Discord 연동 초기화 중 오류가 발생했습니다." }, { status: 500 });
   }
 }
-

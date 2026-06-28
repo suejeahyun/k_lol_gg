@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
-import { requireAdminRequest } from "@/lib/auth/requireAdmin";
+import { requireSuperAdminRequest } from "@/lib/auth/requireAdmin";
 
 function cleanText(value: unknown) {
   const text = String(value || "").trim();
@@ -12,8 +12,8 @@ function cleanText(value: unknown) {
 }
 
 export async function POST(req: NextRequest) {
-  const admin = await requireAdminRequest();
-  if (!admin) return NextResponse.json({ message: "관리자 권한이 필요합니다." }, { status: 401 });
+  const admin = await requireSuperAdminRequest();
+  if (!admin) return NextResponse.json({ message: "최고 관리자 권한이 필요합니다." }, { status: 403 });
 
   const body = await req.json().catch(() => ({}));
   const targetName = cleanText(body.targetName);

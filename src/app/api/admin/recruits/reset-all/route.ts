@@ -2,14 +2,14 @@ import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { rejectIfNotSuperAdmin } from "@/lib/auth/requireAdmin";
 import { getRequestAuditFields, writeAdminLog } from "@/lib/admin-log";
 import { prisma } from "@/lib/prisma/client";
 import { getKakaoRecruitDateKey } from "@/lib/kakao/party-recruit";
 import { RECRUIT_RESET_ACTIONS } from "@/lib/kakao/recruit-reset";
 
 export async function POST(req: NextRequest) {
-  const rejected = await rejectIfNotAdmin();
+  const rejected = await rejectIfNotSuperAdmin();
   if (rejected) return rejected;
 
   try {
