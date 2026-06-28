@@ -1,4 +1,4 @@
-import { logServerError } from "@/lib/server/safe-log";
+﻿import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -8,10 +8,12 @@ import { getRequestAuditFields, writeAdminLog } from "@/lib/admin-log";
 import { prisma } from "@/lib/prisma/client";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { signAuthToken } from "@/lib/auth/token";
+import { verifyTotpCode } from "@/lib/security/totp";
 
 type LoginBody = {
   id: string;
   password: string;
+  totpCode?: string;
 };
 
 const ADMIN_ROLES = ["ADMIN", "SUPER_ADMIN"] as const;
@@ -72,6 +74,7 @@ export async function POST(req: NextRequest) {
     const body = (await req.json()) as LoginBody;
     const id = String(body.id ?? "").trim();
     const password = String(body.password ?? "");
+    const totpCode = String(body.totpCode ?? "").replace(/\D/g, "");
 
     if (!id || !password) {
       return NextResponse.json(
@@ -128,6 +131,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (user.adminTotpEnabled) {
+      if (!totpCode || !user.adminTotpSecret) {
+        return NextResponse.json(
+          { ok: false, requiresTwoFactor: true, message: "2단계 인증 코드가 필요합니다." },
+          { status: 401 },
+        );
+      }
+
+      const validTotp = verifyTotpCode(user.adminTotpSecret, totpCode);
+
+      if (!validTotp) {
+        return NextResponse.json(
+          { ok: false, requiresTwoFactor: true, message: "2단계 인증 코드가 올바르지 않습니다." },
+          { status: 401 },
+        );
+      }
+    }
+
     await writeAdminLog({
       action: "ADMIN_LOGIN",
       message: `관리자 로그인: #${user.id} ${user.userId} (${user.role})`,
@@ -155,6 +176,7 @@ export async function POST(req: NextRequest) {
         role: user.role,
         status: user.status,
         playerId: user.player?.id ?? null,
+        adminTotpEnabled: user.adminTotpEnabled,
       },
     });
 
@@ -184,3 +206,5 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+

@@ -199,6 +199,9 @@ model UserAccount {
   id           Int        @id @default(autoincrement())
   userId       String     @unique
   passwordHash String?
+  adminTotpSecret String?
+  adminTotpEnabled Boolean @default(false)
+  adminTotpEnabledAt DateTime?
   role         UserRole   @default(USER)
   status       UserStatus @default(PENDING)
 
