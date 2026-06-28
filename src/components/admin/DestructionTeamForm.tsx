@@ -491,16 +491,15 @@ export default function DestructionTeamForm({
                 지정된 팀장 · 포인트
               </h3>
               <p className="admin-page__description">
-                팀장으로 확정할 사람만 표시합니다. 포인트는 티어/라인 기준
-                역비율 정규화 방식으로 자동 산정되며, 필요 시 수동 수정할 수
-                있습니다.
+                팀장으로 확정할 사람만 표시합니다. 포인트는 2000점에서
+                티어/라인 기준값의 10배를 차감해 자동 산정되며, 필요 시
+                수동 수정할 수 있습니다.
               </p>
             </div>
           </div>
 
           <div className="captain-status-note" style={{ marginTop: 0 }}>
-            낮은 티어/라인 기준값 참가자는 2000점, 높은 티어/라인 기준값
-            참가자는 800점에 가까워지도록 자동 계산합니다.
+            계산식: 2000점 - 티어/라인 기준값 × 10.
             <button
               type="button"
               className="chip-button"

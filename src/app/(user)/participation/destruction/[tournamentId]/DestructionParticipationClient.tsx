@@ -213,6 +213,9 @@ export default function DestructionParticipationClient({
           <Link href={`/participation/destruction/${tournamentId}/participants`} className="btn btn-ghost">
             참가자 명단 보기
           </Link>
+          <Link href={`/participation/destruction/${tournamentId}/captain-points`} className="btn btn-ghost">
+            팀장 포인트표
+          </Link>
         </div>
       </div>
 
@@ -450,6 +453,9 @@ function ParticipationList({ tournamentId, players }: { tournamentId: string; pl
           <Link href={`/participation/destruction/${tournamentId}/participants`} className="btn btn-ghost">
             공개 명단 전체 보기
           </Link>
+          <Link href={`/participation/destruction/${tournamentId}/captain-points`} className="btn btn-ghost">
+            팀장 포인트표
+          </Link>
         </div>
       </div>
 
@@ -458,6 +464,9 @@ function ParticipationList({ tournamentId, players }: { tournamentId: string; pl
         <span>휴대폰에서는 신청 편의를 위해 상세 명단을 접었습니다.</span>
         <Link href={`/participation/destruction/${tournamentId}/participants`} className="btn btn-primary">
           참가자 명단 보기
+        </Link>
+        <Link href={`/participation/destruction/${tournamentId}/captain-points`} className="btn btn-ghost">
+          팀장 포인트표
         </Link>
       </div>
 

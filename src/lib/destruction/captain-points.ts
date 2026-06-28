@@ -1,6 +1,6 @@
 export type DestructionCaptainLane = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
 
-type TierKey =
+export type TierKey =
   | "MASTER_1800_PLUS"
   | "MASTER_1700_1799"
   | "MASTER_1600_1699"
@@ -57,10 +57,12 @@ export type DestructionCaptainPointDetail = DestructionCaptainPointInput & {
   tierLabel: string;
 };
 
-const BASE_LOWEST_TIER_POINT = 2000;
+export const DESTRUCTION_CAPTAIN_BASE_POINT = 2000;
 const MIN_HIGHEST_TIER_POINT = 0;
 
-const POINT_TABLE: Record<TierKey, PointRow> = {
+export const DESTRUCTION_CAPTAIN_LANES: DestructionCaptainLane[] = ["TOP", "JGL", "MID", "ADC", "SUP"];
+
+export const POINT_TABLE: Record<TierKey, PointRow> = {
   MASTER_1800_PLUS: { TOP: 60, JGL: 68, MID: 60.9, ADC: 62.7, SUP: 58.2 },
   MASTER_1700_1799: { TOP: 59.6, JGL: 67.3, MID: 60.4, ADC: 62.2, SUP: 57.8 },
   MASTER_1600_1699: { TOP: 59.2, JGL: 66.8, MID: 60.1, ADC: 61.7, SUP: 57.4 },
@@ -73,35 +75,35 @@ const POINT_TABLE: Record<TierKey, PointRow> = {
   MASTER_900_999: { TOP: 54.6, JGL: 57.4, MID: 54.5, ADC: 57.8, SUP: 52.7 },
   MASTER_800_899: { TOP: 49.9, JGL: 54.9, MID: 53.8, ADC: 52.2, SUP: 49.5 },
   MASTER_700_799: { TOP: 49.4, JGL: 54.3, MID: 50.4, ADC: 52.2, SUP: 47.9 },
-  MASTER_600_699: { TOP: 47.2, JGL: 52.6, MID: 47.9, ADC: 48.8, SUP: 45.5 },
-  MASTER_500_599: { TOP: 45.7, JGL: 50.8, MID: 46.1, ADC: 47.2, SUP: 43.7 },
-  MASTER_400_499: { TOP: 44.5, JGL: 48.4, MID: 46.1, ADC: 42.1, SUP: 41.5 },
-  MASTER_300_399: { TOP: 42.8, JGL: 44.1, MID: 44.8, ADC: 39.5, SUP: 39.7 },
-  MASTER_200_299: { TOP: 40.8, JGL: 42.1, MID: 43, ADC: 37.4, SUP: 38.3 },
-  MASTER_100_199: { TOP: 40.1, JGL: 41.7, MID: 40.5, ADC: 35.9, SUP: 37.2 },
-  MASTER_0_99: { TOP: 37.7, JGL: 39.7, MID: 40.6, ADC: 34.5, SUP: 36.1 },
-  DIAMOND_1: { TOP: 36.2, JGL: 38.2, MID: 39.5, ADC: 33.2, SUP: 35.4 },
-  DIAMOND_2: { TOP: 34.7, JGL: 36.1, MID: 37.1, ADC: 31.2, SUP: 34.5 },
-  DIAMOND_3: { TOP: 32.1, JGL: 33.7, MID: 35.5, ADC: 28.9, SUP: 32.9 },
-  DIAMOND_4: { TOP: 30.4, JGL: 31.8, MID: 33.9, ADC: 26.9, SUP: 31.7 },
-  EMERALD_1: { TOP: 29, JGL: 30.4, MID: 29.8, ADC: 25.1, SUP: 30.3 },
-  EMERALD_2: { TOP: 27.2, JGL: 28.9, MID: 28.1, ADC: 23.8, SUP: 29 },
-  EMERALD_3: { TOP: 25.8, JGL: 27.2, MID: 27.2, ADC: 22.3, SUP: 27.9 },
-  EMERALD_4: { TOP: 24.7, JGL: 25.6, MID: 25.6, ADC: 21.1, SUP: 26.7 },
-  PLATINUM_1: { TOP: 23.1, JGL: 23.7, MID: 23.9, ADC: 19.8, SUP: 25.6 },
-  PLATINUM_2: { TOP: 22.1, JGL: 21.9, MID: 20.8, ADC: 18.3, SUP: 24.5 },
-  PLATINUM_3: { TOP: 21.5, JGL: 19.8, MID: 19.3, ADC: 17.2, SUP: 23.4 },
-  PLATINUM_4: { TOP: 20.7, JGL: 18.5, MID: 17.9, ADC: 16.1, SUP: 22.3 },
-  GOLD_1: { TOP: 19.6, JGL: 17.1, MID: 16.3, ADC: 14.9, SUP: 21.2 },
-  GOLD_2: { TOP: 18, JGL: 15, MID: 14.5, ADC: 13.7, SUP: 19.8 },
-  GOLD_3: { TOP: 17.2, JGL: 14, MID: 12.7, ADC: 12.5, SUP: 18.9 },
-  GOLD_4: { TOP: 16.4, JGL: 12.8, MID: 12.5, ADC: 11.8, SUP: 18 },
-  SILVER_1: { TOP: 15.6, JGL: 12, MID: 11.9, ADC: 10.6, SUP: 17 },
-  SILVER_2: { TOP: 14.8, JGL: 11, MID: 10.8, ADC: 10, SUP: 16 },
-  SILVER_3_BELOW: { TOP: 14, JGL: 10, MID: 10, ADC: 10, SUP: 15 },
+  MASTER_600_699: { TOP: 49.7, JGL: 48.4, MID: 48, ADC: 51.1, SUP: 41.1 },
+  MASTER_500_599: { TOP: 47.9, JGL: 46.3, MID: 46.2, ADC: 48.6, SUP: 39 },
+  MASTER_400_499: { TOP: 45.2, JGL: 44.3, MID: 45.2, ADC: 46.2, SUP: 37.7 },
+  MASTER_300_399: { TOP: 43, JGL: 42.4, MID: 44.7, ADC: 43.5, SUP: 36.1 },
+  MASTER_200_299: { TOP: 41.8, JGL: 40.6, MID: 43, ADC: 40.6, SUP: 35 },
+  MASTER_100_199: { TOP: 39.1, JGL: 39.4, MID: 41.3, ADC: 38.3, SUP: 34 },
+  MASTER_0_99: { TOP: 37.4, JGL: 38.2, MID: 39.8, ADC: 36.1, SUP: 33.1 },
+  DIAMOND_1: { TOP: 35.7, JGL: 36.8, MID: 38.7, ADC: 34, SUP: 32.2 },
+  DIAMOND_2: { TOP: 33.8, JGL: 34.8, MID: 38, ADC: 32.1, SUP: 31.3 },
+  DIAMOND_3: { TOP: 31.6, JGL: 32.5, MID: 37.1, ADC: 29.7, SUP: 30.3 },
+  DIAMOND_4: { TOP: 30.3, JGL: 30.7, MID: 35.4, ADC: 27.6, SUP: 29.3 },
+  EMERALD_1: { TOP: 28.6, JGL: 28.8, MID: 34.6, ADC: 25.7, SUP: 28.2 },
+  EMERALD_2: { TOP: 27.3, JGL: 26.6, MID: 33, ADC: 24.3, SUP: 27 },
+  EMERALD_3: { TOP: 26.5, JGL: 24.8, MID: 31.8, ADC: 22.8, SUP: 26 },
+  EMERALD_4: { TOP: 26, JGL: 23.4, MID: 29.6, ADC: 21.6, SUP: 25.1 },
+  PLATINUM_1: { TOP: 25.2, JGL: 21.9, MID: 27.1, ADC: 20.3, SUP: 24.2 },
+  PLATINUM_2: { TOP: 24.7, JGL: 20.5, MID: 24.3, ADC: 18.7, SUP: 22.8 },
+  PLATINUM_3: { TOP: 24, JGL: 19.3, MID: 22.7, ADC: 17.5, SUP: 22 },
+  PLATINUM_4: { TOP: 21.2, JGL: 18.1, MID: 21.1, ADC: 16.4, SUP: 21.2 },
+  GOLD_1: { TOP: 19, JGL: 16.7, MID: 19.7, ADC: 15.1, SUP: 20.5 },
+  GOLD_2: { TOP: 17.7, JGL: 14.7, MID: 17.8, ADC: 13.4, SUP: 19.1 },
+  GOLD_3: { TOP: 15.9, JGL: 13.8, MID: 16.8, ADC: 12.6, SUP: 18.3 },
+  GOLD_4: { TOP: 14.6, JGL: 12.8, MID: 15.9, ADC: 11.9, SUP: 17.6 },
+  SILVER_1: { TOP: 13, JGL: 11.9, MID: 14.8, ADC: 11.3, SUP: 16.7 },
+  SILVER_2: { TOP: 12, JGL: 11, MID: 13.9, ADC: 10.6, SUP: 15.9 },
+  SILVER_3_BELOW: { TOP: 11, JGL: 10, MID: 13, ADC: 10, SUP: 15 },
 };
 
-const TIER_LABELS: Record<TierKey, string> = {
+export const TIER_LABELS: Record<TierKey, string> = {
   MASTER_1800_PLUS: "마/고/챌 1800 이상",
   MASTER_1700_1799: "마/고/챌 1700~1799",
   MASTER_1600_1699: "마/고/챌 1600~1699",
@@ -289,6 +291,37 @@ export function getDestructionCaptainPowerValue(
   };
 }
 
+export function calculateDestructionCaptainAuctionPoint(
+  powerValue: number,
+  options?: {
+    baseLowestTierPoint?: number;
+    minHighestTierPoint?: number;
+  },
+) {
+  const basePoint = options?.baseLowestTierPoint ?? DESTRUCTION_CAPTAIN_BASE_POINT;
+  const minPoint = options?.minHighestTierPoint ?? MIN_HIGHEST_TIER_POINT;
+  const rawPoint = Math.round(basePoint - powerValue * 10);
+
+  return Math.min(basePoint, Math.max(minPoint, rawPoint));
+}
+
+export function getDestructionCaptainPointTableRows(options?: {
+  baseLowestTierPoint?: number;
+  minHighestTierPoint?: number;
+}) {
+  return (Object.keys(POINT_TABLE) as TierKey[]).map((tierKey) => ({
+    tierKey,
+    tierLabel: TIER_LABELS[tierKey],
+    values: POINT_TABLE[tierKey],
+    auctionPoints: Object.fromEntries(
+      DESTRUCTION_CAPTAIN_LANES.map((lane) => [
+        lane,
+        calculateDestructionCaptainAuctionPoint(POINT_TABLE[tierKey][lane], options),
+      ]),
+    ) as Record<DestructionCaptainLane, number>,
+  }));
+}
+
 export function calculateDestructionCaptainPoints(
   inputs: DestructionCaptainPointInput[],
   options?: {
@@ -296,30 +329,16 @@ export function calculateDestructionCaptainPoints(
     minHighestTierPoint?: number;
   },
 ): DestructionCaptainPointDetail[] {
-  const basePoint = options?.baseLowestTierPoint ?? BASE_LOWEST_TIER_POINT;
-  const minPoint = options?.minHighestTierPoint ?? MIN_HIGHEST_TIER_POINT;
-  const details = inputs.map((input) => ({
-    ...input,
-    ...getDestructionCaptainPowerValue(input),
-    auctionPoint: basePoint,
-  }));
-
-  if (details.length === 0) return [];
-
-  const powerValues = details.map((detail) => detail.powerValue);
-  const minPower = Math.min(...powerValues);
-
-  if (minPower <= 0) {
-    return details.map((detail) => ({ ...detail, auctionPoint: basePoint }));
-  }
-
-  return details.map((detail) => {
-    const rawPoint = Math.round(basePoint * (minPower / detail.powerValue));
-    const auctionPoint = Math.min(basePoint, Math.max(minPoint, rawPoint));
+  return inputs.map((input) => {
+    const powerDetail = getDestructionCaptainPowerValue(input);
 
     return {
-      ...detail,
-      auctionPoint,
+      ...input,
+      ...powerDetail,
+      auctionPoint: calculateDestructionCaptainAuctionPoint(
+        powerDetail.powerValue,
+        options,
+      ),
     };
   });
 }

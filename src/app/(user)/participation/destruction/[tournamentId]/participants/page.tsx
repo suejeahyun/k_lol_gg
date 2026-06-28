@@ -500,6 +500,9 @@ export default async function DestructionParticipantsPage({ params, searchParams
           <Link href={`/participation/destruction/${tournament.id}`} className="btn btn-ghost">
             참가 페이지
           </Link>
+          <Link href={`/participation/destruction/${tournament.id}/captain-points`} className="btn btn-ghost">
+            팀장 포인트표
+          </Link>
           <Link href="/participation" className="btn btn-ghost">
             목록으로
           </Link>
