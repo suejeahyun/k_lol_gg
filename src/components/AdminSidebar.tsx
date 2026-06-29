@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -65,6 +65,7 @@ const menuGroups: AdminSidebarGroup[] = [
   {
     title: "SYSTEM",
     items: [
+      { href: "/admin/security", label: "보안 설정", code: "SEC", activePrefixes: ["/admin/security"] },
       { href: "/admin/logs", label: "관리자 로그", code: "LOG" },
       { href: "/api/admin/backup/players.csv", label: "백업 CSV", code: "CSV", access: "SUPER", external: true },
     ],
@@ -157,3 +158,4 @@ export default function AdminSidebar() {
     </aside>
   );
 }
+
