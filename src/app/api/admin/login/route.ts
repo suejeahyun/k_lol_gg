@@ -64,8 +64,8 @@ async function ensureSuperAdmin(id: string, password: string) {
 export async function POST(req: NextRequest) {
   const rateLimitRejected = await rejectIfRateLimited(req, {
     action: "ADMIN_LOGIN",
-    limit: 5,
-    windowSeconds: 600,
+    limit: 20,
+    windowSeconds: 300,
   });
 
   if (rateLimitRejected) return rateLimitRejected;
@@ -206,5 +206,6 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
 
 
