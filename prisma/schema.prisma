@@ -219,6 +219,7 @@ model UserAccount {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  deletedAt DateTime?
 
   player Player?
 
@@ -231,6 +232,8 @@ model UserAccount {
   discordVoiceEvents DiscordVoiceEvent[]
   discordAccountLinkLogs DiscordAccountLinkLog[]
   disciplineRecords UserDisciplineRecord[]
+
+  @@index([deletedAt])
 }
 
 

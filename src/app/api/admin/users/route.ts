@@ -37,6 +37,7 @@ export async function GET(req: NextRequest) {
       : undefined;
 
     const where = {
+      deletedAt: null,
       ...(status ? { status } : {}),
       ...(discordStatus === "LINKED" ? { discordId: { not: null } } : {}),
       ...(discordStatus === "UNLINKED" ? { discordId: null } : {}),

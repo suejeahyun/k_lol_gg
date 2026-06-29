@@ -12,7 +12,7 @@ type RouteContext = {
   }>;
 };
 
-export async function DELETE(req: NextRequest, context: RouteContext) {
+export async function PATCH(req: NextRequest, context: RouteContext) {
   const admin = await requireAdminRequest();
 
   if (!admin || admin.user.role !== "SUPER_ADMIN") {
@@ -33,45 +33,30 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
       );
     }
 
-    if (admin.user.id === id) {
-      return NextResponse.json(
-        { message: "본인 계정은 삭제할 수 없습니다." },
-        { status: 400 },
-      );
-    }
+    const target = await prisma.userAccount.findUnique({ where: { id } });
 
-    const target = await prisma.userAccount.findUnique({
-      where: { id },
-      include: {
-        player: true,
-      },
-    });
-
-    if (!target || target.deletedAt) {
+    if (!target) {
       return NextResponse.json(
-        { message: "삭제할 회원을 찾을 수 없습니다." },
+        { message: "복구할 회원을 찾을 수 없습니다." },
         { status: 404 },
       );
     }
 
-    if (target.role === "SUPER_ADMIN") {
-      return NextResponse.json(
-        { message: "최고 관리자 계정은 삭제할 수 없습니다." },
-        { status: 403 },
-      );
+    if (!target.deletedAt) {
+      return NextResponse.json({ ok: true, message: "이미 활성 상태입니다." });
     }
 
     await prisma.userAccount.update({
       where: { id: target.id },
       data: {
-        deletedAt: new Date(),
-        status: "REJECTED",
+        deletedAt: null,
+        status: "PENDING",
       },
     });
 
     await writeAdminLog({
-      action: "USER_SOFT_DELETE",
-      message: `회원 삭제 처리: #${target.id} ${target.userId} (${target.role}/${target.status})`,
+      action: "USER_RESTORE",
+      message: `회원 복구: #${target.id} ${target.userId} (${target.role})`,
       actorId: admin.user.id,
       actorType: admin.user.role,
       actorUserId: admin.user.userId,
@@ -82,13 +67,13 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
 
     return NextResponse.json({
       ok: true,
-      message: "회원이 삭제 처리되었습니다. 데이터는 복구 가능하도록 보존됩니다.",
+      message: "회원이 복구되었습니다. 승인 상태는 대기로 변경되었습니다.",
     });
   } catch (error) {
-    logServerError("[ADMIN_USER_SOFT_DELETE_ERROR]", error);
+    logServerError("[ADMIN_USER_RESTORE_ERROR]", error);
 
     return NextResponse.json(
-      { message: "회원 삭제 처리 중 오류가 발생했습니다." },
+      { message: "회원 복구 중 오류가 발생했습니다." },
       { status: 500 },
     );
   }
