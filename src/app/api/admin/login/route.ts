@@ -1,4 +1,4 @@
-﻿import { logServerError } from "@/lib/server/safe-log";
+import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -64,7 +64,7 @@ async function ensureSuperAdmin(id: string, password: string) {
 export async function POST(req: NextRequest) {
   const rateLimitRejected = await rejectIfRateLimited(req, {
     action: "ADMIN_LOGIN",
-    limit: 20,
+    limit: 12,
     windowSeconds: 300,
   });
 

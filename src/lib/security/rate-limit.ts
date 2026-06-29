@@ -29,23 +29,49 @@ function isMutation(method: string) {
   return !["GET", "HEAD", "OPTIONS"].includes(method.toUpperCase());
 }
 
-function getPolicy(pathname: string, method: string): RateLimitPolicy | null {
+function hasServerSecret(request: NextRequest) {
+  return Boolean(
+    request.headers.get("x-discord-bot-secret") ||
+      request.headers.get("x-klol-secret") ||
+      request.headers.get("x-bot-secret") ||
+      request.headers.get("x-kakao-secret") ||
+      request.headers.get("authorization"),
+  );
+}
+
+function getPolicy(pathname: string, method: string, request: NextRequest): RateLimitPolicy | null {
   if (!pathname.startsWith("/api/")) return null;
 
+  // Browser login: strict enough for attack resistance, but not too aggressive during 2FA entry.
   if (pathname === "/api/admin/login" || pathname === "/api/auth/login") {
-    return { name: "login", windowMs: 10 * 60_000, max: 10 };
+    return { name: "login", windowMs: 5 * 60_000, max: 12 };
+  }
+
+  // 2FA setup/status is frequently retried while an admin is registering an authenticator app.
+  if (pathname.startsWith("/api/admin/2fa/")) {
+    if (pathname.endsWith("/enable") || pathname.endsWith("/disable")) {
+      return { name: "admin-2fa-mutation", windowMs: 5 * 60_000, max: 20 };
+    }
+
+    return { name: "admin-2fa-read", windowMs: 60_000, max: 180 };
   }
 
   if (pathname === "/api/auth/signup" || pathname === "/api/auth/password/forgot") {
     return { name: "account-create-recover", windowMs: 60 * 60_000, max: 5 };
   }
 
-  if (pathname.startsWith("/api/admin/")) {
-    return { name: "admin-api", windowMs: 60_000, max: 120 };
+  // Bot calls can be frequent. They are already protected by header secret, so allow higher throughput.
+  if (pathname.startsWith("/api/discord/") || pathname.startsWith("/api/kakao/")) {
+    return hasServerSecret(request)
+      ? { name: "trusted-bot-api", windowMs: 60_000, max: 900 }
+      : { name: "bot-api", windowMs: 60_000, max: 120 };
   }
 
-  if (pathname.startsWith("/api/discord/") || pathname.startsWith("/api/kakao/")) {
-    return { name: "bot-api", windowMs: 60_000, max: 240 };
+  // Admin pages poll lists/details more often. Mutations remain lower than reads.
+  if (pathname.startsWith("/api/admin/")) {
+    return isMutation(method)
+      ? { name: "admin-api-mutation", windowMs: 60_000, max: 120 }
+      : { name: "admin-api-read", windowMs: 60_000, max: 300 };
   }
 
   if (pathname.startsWith("/api/participation/")) {
@@ -73,7 +99,7 @@ function cleanup(now: number) {
 }
 
 export function rejectIfRateLimited(request: NextRequest) {
-  const policy = getPolicy(request.nextUrl.pathname, request.method);
+  const policy = getPolicy(request.nextUrl.pathname, request.method, request);
   if (!policy) return null;
 
   const now = Date.now();
