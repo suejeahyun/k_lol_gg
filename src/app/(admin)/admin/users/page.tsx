@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import Pagination from "@/components/Pagination";
 
@@ -106,21 +107,11 @@ export default function AdminUsersPage() {
         params.set("page", String(targetPage));
         params.set("pageSize", String(PAGE_SIZE));
 
-        if (q.trim()) {
-          params.set("q", q.trim());
-        }
+        if (q.trim()) params.set("q", q.trim());
+        if (status) params.set("status", status);
 
-        if (status) {
-          params.set("status", status);
-        }
-
-        const res = await fetch(`/api/admin/users?${params.toString()}`, {
-          cache: "no-store",
-        });
-
-        const data = (await res.json()) as AdminUsersResponse & {
-          message?: string;
-        };
+        const res = await fetch(`/api/admin/users?${params.toString()}`, { cache: "no-store" });
+        const data = (await res.json()) as AdminUsersResponse & { message?: string };
 
         if (!res.ok) {
           alert(data.message || "회원 목록 조회 실패");
@@ -153,122 +144,39 @@ export default function AdminUsersPage() {
     void fetchUsers(page);
   };
 
-  const handleApprove = async (userAccountId: number) => {
-    const res = await fetch(`/api/admin/users/${userAccountId}/approve`, {
-      method: "PATCH",
-    });
-
-    if (res.ok) {
-      void fetchUsers(pagination.page);
-    } else {
-      const data = await res.json();
-      alert(data.message || "승인 처리 실패");
+  const handleDelete = async (user: AdminUser) => {
+    if (!isSuperAdmin) {
+      alert("최고 관리자만 계정을 삭제할 수 있습니다.");
+      return;
     }
-  };
 
-  const handleReject = async (userAccountId: number) => {
-    const reason = window.prompt("거절 사유를 입력하세요. 비워두면 사유 없이 처리됩니다.") ?? "";
-    const res = await fetch(`/api/admin/users/${userAccountId}/reject`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reason }),
-    });
+    const first = window.confirm(`${user.userId} 계정을 삭제하겠습니까?\n연결된 플레이어 계정 연결은 해제됩니다.`);
+    if (!first) return;
 
-    if (res.ok) {
-      void fetchUsers(pagination.page);
-    } else {
-      const data = await res.json();
-      alert(data.message || "거절 처리 실패");
-    }
-  };
+    const second = window.prompt("삭제하려면 DELETE 를 입력하세요.");
+    if (second !== "DELETE") return;
 
-  const handleReset = async (userAccountId: number) => {
-    const ok = window.confirm("해당 회원 상태를 승인 대기로 되돌리겠습니까?");
-    if (!ok) return;
-
-    const res = await fetch(`/api/admin/users/${userAccountId}/reset`, {
-      method: "PATCH",
-    });
-
-    if (res.ok) {
-      void fetchUsers(pagination.page);
-    } else {
-      const data = await res.json();
-      alert(data.message || "상태 초기화 실패");
-    }
-  };
-
-  const handleRoleChange = async (user: AdminUser, nextRole: "USER" | "ADMIN") => {
-    const message =
-      nextRole === "ADMIN"
-        ? `${user.userId} 계정을 관리자로 지정하겠습니까?`
-        : `${user.userId} 계정의 관리자 권한을 해제하겠습니까?`;
-
-    const ok = window.confirm(message);
-    if (!ok) return;
-
-    const res = await fetch(`/api/admin/users/${user.id}/role`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ role: nextRole }),
-    });
-
-    const data = await res.json();
-
-    if (res.ok) {
-      alert(data.message || "권한이 변경되었습니다.");
-      void fetchUsers(pagination.page);
-    } else {
-      alert(data.message || "권한 변경 실패");
-    }
-  };
-
-  const handlePasswordReset = async (user: AdminUser) => {
-    const ok = window.confirm(`${user.userId} 계정의 비밀번호를 임시 비밀번호로 초기화하겠습니까?`);
-    if (!ok) return;
-
-    const res = await fetch(`/api/admin/users/${user.id}/password-reset`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({}),
-    });
-
-    const data = await res.json();
-
-    if (res.ok) {
-      window.alert(`임시 비밀번호: ${data.tempPassword}\n해당 유저에게 전달 후 로그인 뒤 비밀번호 변경을 안내하세요.`);
-    } else {
-      alert(data.message || "비밀번호 초기화 실패");
-    }
-  };
-
-
-  const handleTwoFactorReset = async (user: AdminUser) => {
-    const ok = window.confirm(`${user.userId} 계정의 2단계 인증을 초기화하겠습니까?\n해당 관리자는 다음 로그인 후 인증앱을 다시 등록해야 합니다.`);
-    if (!ok) return;
-
-    const res = await fetch(`/api/admin/users/${user.id}/2fa-reset`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({}),
+    const res = await fetch(`/api/admin/users/${user.id}/delete`, {
+      method: "DELETE",
     });
 
     const data = await res.json().catch(() => ({}));
 
     if (res.ok) {
-      alert(data.message || "2단계 인증이 초기화되었습니다.");
+      alert(data.message || "계정이 삭제되었습니다.");
       void fetchUsers(pagination.page);
     } else {
-      alert(data.message || "2단계 인증 초기화 실패");
+      alert(data.message || "계정 삭제 실패");
     }
   };
+
   return (
     <main className="admin-page" style={{ width: "min(1180px, calc(100vw - 48px))", maxWidth: 1180 }}>
       <div className="admin-page__header">
         <div>
-          <h1 className="admin-page__title">플레이어 승인 관리</h1>
+          <h1 className="admin-page__title">회원 관리</h1>
           <p className="admin-page__description">
-            플레이어 계정 승인, 관리자, 비밀번호 초기화를 관리합니다.
+            목록에서는 상세 이동과 삭제만 처리합니다. 승인, 권한, 비밀번호, 2FA 관리는 상세 페이지에서 진행합니다.
           </p>
         </div>
       </div>
@@ -292,9 +200,7 @@ export default function AdminUsersPage() {
           <option value="REJECTED">거절됨</option>
         </select>
 
-        <button className="admin-button" type="submit">
-          검색
-        </button>
+        <button className="admin-button" type="submit">검색</button>
       </form>
 
       <section className="admin-card">
@@ -302,38 +208,30 @@ export default function AdminUsersPage() {
           <div>
             <h2>회원 목록</h2>
             <p className="admin-muted">
-              총 {pagination.totalCount.toLocaleString("ko-KR")}명 · 현재 {" "}
-              {pagination.page} / {pagination.totalPages}페이지
+              총 {pagination.totalCount.toLocaleString("ko-KR")}명 · 현재 {pagination.page} / {pagination.totalPages}페이지
               {currentAdmin ? ` · 현재 권한: ${getRoleLabel(currentAdmin.role)}` : ""}
             </p>
           </div>
         </div>
 
-        <div
-          className="admin-table-wrap admin-users-compact-wrap"
-          style={{ overflowX: "hidden", maxWidth: "100%" }}
-        >
+        <div className="admin-table-wrap admin-users-compact-wrap" style={{ overflowX: "hidden", maxWidth: "100%" }}>
           {loading ? (
             <div className="admin-empty">회원 목록을 불러오는 중입니다.</div>
           ) : users.length === 0 ? (
             <div className="admin-empty">조건에 맞는 회원이 없습니다.</div>
           ) : (
-            <table
-              className="admin-table admin-users-compact-table"
-              style={{ width: "100%", tableLayout: "fixed", fontSize: 12 }}
-            >
+            <table className="admin-table admin-users-compact-table" style={{ width: "100%", tableLayout: "fixed", fontSize: 12 }}>
               <colgroup>
-                <col style={{ width: "9%" }} />
-                <col style={{ width: "9%" }} />
-                <col style={{ width: "17%" }} />
-                <col style={{ width: "10%" }} />
-                <col style={{ width: "10%" }} />
-                <col style={{ width: "7%" }} />
-                <col style={{ width: "7%" }} />
                 <col style={{ width: "11%" }} />
-                <col style={{ width: "7%" }} />
-                <col style={{ width: "7%" }} />
                 <col style={{ width: "10%" }} />
+                <col style={{ width: "18%" }} />
+                <col style={{ width: "10%" }} />
+                <col style={{ width: "10%" }} />
+                <col style={{ width: "8%" }} />
+                <col style={{ width: "8%" }} />
+                <col style={{ width: "12%" }} />
+                <col style={{ width: "7%" }} />
+                <col style={{ width: "6%" }} />
               </colgroup>
               <thead>
                 <tr>
@@ -345,7 +243,6 @@ export default function AdminUsersPage() {
                   <th>상태</th>
                   <th>권한</th>
                   <th>연결</th>
-                  <th>가입</th>
                   <th>2FA</th>
                   <th>관리</th>
                 </tr>
@@ -363,89 +260,14 @@ export default function AdminUsersPage() {
                       <td title={formatTier(user.player?.peakTier)} style={compactCellStyle}>{formatTier(user.player?.peakTier)}</td>
                       <td title={formatTier(user.player?.currentTier)} style={compactCellStyle}>{formatTier(user.player?.currentTier)}</td>
                       <td><StatusBadge status={user.status} /></td>
-                      <td><span style={badgeStyle}>{getRoleLabel(user.role)}</span></td>
+                      <td><RoleBadge role={user.role} /></td>
                       <td title={getConnectionLabel(user)} style={compactCellStyle}>{getConnectionLabel(user)}</td>
-                      <td style={compactCellStyle}>{formatDate(user.createdAt)}</td>
                       <td><TwoFactorBadge user={user} /></td>
                       <td>
-                        <div
-                          className="admin-actions"
-                          style={{
-                            display: "flex",
-                            flexWrap: "wrap",
-                            gap: 4,
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          {user.status === "PENDING" ? (
-                            <>
-                              <button
-                                type="button"
-                                className="chip-button"
-                                onClick={() => handleApprove(user.id)}
-                              >
-                                승인
-                              </button>
-
-                              <button
-                                type="button"
-                                className="chip-button chip-button--danger"
-                                onClick={() => handleReject(user.id)}
-                              >
-                                거절
-                              </button>
-                            </>
-                          ) : (
-                            <button
-                              type="button"
-                              className="chip-button"
-                              onClick={() => handleReset(user.id)}
-                            >
-                              대기
-                            </button>
-                          )}
-
+                        <div className="admin-actions" style={{ display: "flex", flexWrap: "wrap", gap: 4, justifyContent: "center" }}>
+                          <Link className="chip-button" href={`/admin/users/${user.id}`}>상세</Link>
                           {isSuperAdmin && user.role !== "SUPER_ADMIN" ? (
-                            <>
-                              {user.role === "ADMIN" ? (
-                                <button
-                                  type="button"
-                                  className="chip-button chip-button--danger"
-                                  onClick={() => handleRoleChange(user, "USER")}
-                                >
-                                  일반
-                                </button>
-                              ) : (
-                                <button
-                                  type="button"
-                                  className="chip-button"
-                                  onClick={() => handleRoleChange(user, "ADMIN")}
-                                  disabled={user.status !== "APPROVED"}
-                                  title={user.status !== "APPROVED" ? "승인 완료 후 관리자 가능" : undefined}
-                                >
-                                  관리자
-                                </button>
-                              )}
-
-                              <button
-                                type="button"
-                                className="chip-button"
-                                onClick={() => handlePasswordReset(user)}
-                              >
-                                비번
-                              </button>
-
-                              {(user.adminTotpEnabled || user.adminTotpSetupPending) ? (
-                                <button
-                                  type="button"
-                                  className="chip-button chip-button--danger"
-                                  onClick={() => handleTwoFactorReset(user)}
-                                >
-                                  2FA초기화
-                                </button>
-                              ) : null}
-                            </>
+                            <button type="button" className="chip-button chip-button--danger" onClick={() => handleDelete(user)}>삭제</button>
                           ) : null}
                         </div>
                       </td>
@@ -457,16 +279,11 @@ export default function AdminUsersPage() {
           )}
         </div>
 
-        <Pagination
-          currentPage={pagination.page}
-          totalPages={pagination.totalPages}
-          onPageChange={handlePageChange}
-        />
+        <Pagination currentPage={pagination.page} totalPages={pagination.totalPages} onPageChange={handlePageChange} />
       </section>
     </main>
   );
 }
-
 
 function TwoFactorBadge({ user }: { user: AdminUser }) {
   const label = user.adminTotpEnabled ? "활성" : user.adminTotpSetupPending ? "설정중" : "미사용";
@@ -482,18 +299,12 @@ function TwoFactorBadge({ user }: { user: AdminUser }) {
       : "rgba(15, 23, 42, 0.45)";
 
   return (
-    <span
-      title={user.adminTotpEnabledAt ? `등록일: ${formatDate(user.adminTotpEnabledAt)}` : undefined}
-      style={{
-        ...badgeStyle,
-        borderColor,
-        background,
-      }}
-    >
+    <span title={user.adminTotpEnabledAt ? `등록일: ${formatDate(user.adminTotpEnabledAt)}` : undefined} style={{ ...badgeStyle, borderColor, background }}>
       {label}
     </span>
   );
 }
+
 function StatusBadge({ status }: { status: UserStatus }) {
   const label = getStatusLabel(status);
   const danger = status === "REJECTED";
@@ -503,16 +314,24 @@ function StatusBadge({ status }: { status: UserStatus }) {
     <span
       style={{
         ...badgeStyle,
-        borderColor: danger
-          ? "rgba(248, 113, 113, 0.36)"
-          : pending
-            ? "rgba(250, 204, 21, 0.36)"
-            : "rgba(45, 212, 191, 0.34)",
-        background: danger
-          ? "rgba(239, 68, 68, 0.14)"
-          : pending
-            ? "rgba(234, 179, 8, 0.12)"
-            : "rgba(20, 184, 166, 0.13)",
+        borderColor: danger ? "rgba(248, 113, 113, 0.36)" : pending ? "rgba(250, 204, 21, 0.36)" : "rgba(45, 212, 191, 0.34)",
+        background: danger ? "rgba(239, 68, 68, 0.14)" : pending ? "rgba(234, 179, 8, 0.12)" : "rgba(20, 184, 166, 0.13)",
+      }}
+    >
+      {label}
+    </span>
+  );
+}
+
+function RoleBadge({ role }: { role: UserRole }) {
+  const label = getRoleLabel(role);
+  const crown = role === "SUPER_ADMIN";
+  return (
+    <span
+      style={{
+        ...badgeStyle,
+        borderColor: crown ? "rgba(250, 204, 21, 0.42)" : "rgba(125, 211, 252, 0.28)",
+        background: crown ? "rgba(234, 179, 8, 0.13)" : "rgba(14, 165, 233, 0.12)",
       }}
     >
       {label}
@@ -558,7 +377,8 @@ function getStatusLabel(status: UserStatus) {
 }
 
 function getRoleLabel(role: UserRole) {
-  if (role === "SUPER_ADMIN" || role === "ADMIN") return "관리자";
+  if (role === "SUPER_ADMIN") return "최고관리자";
+  if (role === "ADMIN") return "관리자";
   return "일반";
 }
 
@@ -574,4 +394,3 @@ function getConnectionLabel(user: AdminUser) {
 
   return missing.join(" / ") || "-";
 }
-
