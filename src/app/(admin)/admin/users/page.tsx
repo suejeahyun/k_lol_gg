@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import Pagination from "@/components/Pagination";
@@ -11,8 +11,7 @@ type AdminUser = {
   userId: string;
   role: UserRole;
   status: UserStatus;
-  createdAt: string;
-  player: {
+  createdAt: string;`r`n  adminTotpEnabled: boolean;`r`n  adminTotpEnabledAt: string | null;`r`n  adminTotpSetupPending: boolean;`r`n  player: {
     id: number;
     name?: string;
     nickname: string;
@@ -239,6 +238,26 @@ export default function AdminUsersPage() {
     }
   };
 
+
+  const handleTwoFactorReset = async (user: AdminUser) => {
+    const ok = window.confirm(`${user.userId} 계정의 2단계 인증을 초기화하겠습니까?\n해당 관리자는 다음 로그인 후 인증앱을 다시 등록해야 합니다.`);
+    if (!ok) return;
+
+    const res = await fetch(`/api/admin/users/${user.id}/2fa-reset`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (res.ok) {
+      alert(data.message || "2단계 인증이 초기화되었습니다.");
+      void fetchUsers(pagination.page);
+    } else {
+      alert(data.message || "2단계 인증 초기화 실패");
+    }
+  };
   return (
     <main className="admin-page" style={{ width: "min(1180px, calc(100vw - 48px))", maxWidth: 1180 }}>
       <div className="admin-page__header">
@@ -307,9 +326,7 @@ export default function AdminUsersPage() {
                 <col style={{ width: "10%" }} />
                 <col style={{ width: "7%" }} />
                 <col style={{ width: "7%" }} />
-                <col style={{ width: "13%" }} />
-                <col style={{ width: "8%" }} />
-                <col style={{ width: "10%" }} />
+                <col style={{ width: "11%" }} />`r`n                <col style={{ width: "7%" }} />`r`n                <col style={{ width: "7%" }} />`r`n                <col style={{ width: "10%" }} />
               </colgroup>
               <thead>
                 <tr>
@@ -321,8 +338,7 @@ export default function AdminUsersPage() {
                   <th>상태</th>
                   <th>권한</th>
                   <th>연결</th>
-                  <th>가입</th>
-                  <th>관리</th>
+                  <th>가입</th>`r`n                  <th>2FA</th>`r`n                  <th>관리</th>
                 </tr>
               </thead>
 
@@ -340,8 +356,7 @@ export default function AdminUsersPage() {
                       <td><StatusBadge status={user.status} /></td>
                       <td><span style={badgeStyle}>{getRoleLabel(user.role)}</span></td>
                       <td title={getConnectionLabel(user)} style={compactCellStyle}>{getConnectionLabel(user)}</td>
-                      <td style={compactCellStyle}>{formatDate(user.createdAt)}</td>
-                      <td>
+                      <td style={compactCellStyle}>{formatDate(user.createdAt)}</td>`r`n                      <td><TwoFactorBadge user={user} /></td>`r`n                      <td>
                         <div
                           className="admin-actions"
                           style={{
@@ -402,13 +417,7 @@ export default function AdminUsersPage() {
                                 </button>
                               )}
 
-                              <button
-                                type="button"
-                                className="chip-button"
-                                onClick={() => handlePasswordReset(user)}
-                              >
-                                비번
-                              </button>
+                              <button`r`n                                type="button"`r`n                                className="chip-button"`r`n                                onClick={() => handlePasswordReset(user)}`r`n                              >`r`n                                비번`r`n                              </button>`r`n`r`n                              {(user.adminTotpEnabled || user.adminTotpSetupPending) ? (`r`n                                <button`r`n                                  type="button"`r`n                                  className="chip-button chip-button--danger"`r`n                                  onClick={() => handleTwoFactorReset(user)}`r`n                                >`r`n                                  2FA초기화`r`n                                </button>`r`n                              ) : null}
                             </>
                           ) : null}
                         </div>
@@ -431,6 +440,33 @@ export default function AdminUsersPage() {
   );
 }
 
+
+function TwoFactorBadge({ user }: { user: AdminUser }) {
+  const label = user.adminTotpEnabled ? "활성" : user.adminTotpSetupPending ? "설정중" : "미사용";
+  const borderColor = user.adminTotpEnabled
+    ? "rgba(45, 212, 191, 0.36)"
+    : user.adminTotpSetupPending
+      ? "rgba(250, 204, 21, 0.36)"
+      : "rgba(148, 163, 184, 0.25)";
+  const background = user.adminTotpEnabled
+    ? "rgba(20, 184, 166, 0.13)"
+    : user.adminTotpSetupPending
+      ? "rgba(234, 179, 8, 0.12)"
+      : "rgba(15, 23, 42, 0.45)";
+
+  return (
+    <span
+      title={user.adminTotpEnabledAt ? `등록일: ${formatDate(user.adminTotpEnabledAt)}` : undefined}
+      style={{
+        ...badgeStyle,
+        borderColor,
+        background,
+      }}
+    >
+      {label}
+    </span>
+  );
+}
 function StatusBadge({ status }: { status: UserStatus }) {
   const label = getStatusLabel(status);
   const danger = status === "REJECTED";
@@ -511,3 +547,4 @@ function getConnectionLabel(user: AdminUser) {
 
   return missing.join(" / ") || "-";
 }
+

@@ -1,4 +1,4 @@
-import { logServerError } from "@/lib/server/safe-log";
+﻿import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -90,7 +90,7 @@ export async function GET(req: NextRequest) {
         userId: user.userId,
         role: user.role,
         status: user.status,
-        createdAt: user.createdAt.toISOString(),
+        createdAt: user.createdAt.toISOString(),`r`n        adminTotpEnabled: user.adminTotpEnabled,`r`n        adminTotpEnabledAt: user.adminTotpEnabledAt?.toISOString() ?? null,`r`n        adminTotpSetupPending: Boolean(user.adminTotpSecret && !user.adminTotpEnabled),
         player: user.player
           ? {
               id: user.player.id,
@@ -131,3 +131,4 @@ export async function GET(req: NextRequest) {
     );
   }
 }
+
