@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { readRequestBodyForSignature, verifySignedRequest } from "@/lib/security/hmac";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
@@ -85,6 +86,7 @@ export function getReceivedServerSecret(request: NextRequest) {
     request.headers.get("x-klol-secret") ||
     request.headers.get("x-bot-secret") ||
     request.headers.get("x-discord-bot-secret") ||
+    request.headers.get("x-klol-discord-secret") ||
     request.headers.get("x-kakao-secret") ||
     request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ||
     "";
@@ -108,6 +110,38 @@ export function hasValidServerSecret(request: NextRequest, pathname: string) {
   return received.length > 0 && received === expected;
 }
 
+export async function hasValidServerHmacSignature(request: NextRequest, pathname: string) {
+  const expected = getRequiredHeaderSecret(pathname);
+  if (!expected) return true;
+
+  const timestamp = request.headers.get("x-klol-timestamp");
+  const signature = request.headers.get("x-klol-signature");
+  const body = await readRequestBodyForSignature(request);
+
+  return verifySignedRequest({
+    secret: expected,
+    timestamp,
+    signature,
+    body,
+  });
+}
+
+export async function rejectIfInvalidServerAuth(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  const expected = getRequiredHeaderSecret(pathname);
+  if (!expected) return null;
+
+  const hmacRequired = process.env.SECURITY_REQUIRE_HMAC === "true";
+  const hmacValid = await hasValidServerHmacSignature(request, pathname);
+  if (hmacValid) return null;
+
+  if (!hmacRequired && hasValidServerSecret(request, pathname)) return null;
+
+  return NextResponse.json(
+    { ok: false, message: "서버 인증 정보가 올바르지 않습니다." },
+    { status: 401 },
+  );
+}
 export function rejectIfInvalidServerSecret(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const expected = getRequiredHeaderSecret(pathname);

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { authConstants } from "@/lib/auth";
 import { verifyAuthToken } from "@/lib/auth/token";
 import { applySecurityHeaders } from "@/lib/security-headers";
-import { rejectIfInvalidOrigin, rejectIfInvalidServerSecret } from "@/lib/security/request-guard";
+import { rejectIfInvalidOrigin, rejectIfInvalidServerAuth } from "@/lib/security/request-guard";
 import { rejectIfRateLimited } from "@/lib/security/rate-limit";
 
 const SUPER_ADMIN_API_PATTERNS = [
@@ -62,7 +62,7 @@ function rejectAdminRequest(req: NextRequest, requireSuperAdmin = false) {
   );
 }
 
-export function proxy(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   const rateLimited = rejectIfRateLimited(req);
@@ -71,7 +71,7 @@ export function proxy(req: NextRequest) {
   const originRejected = rejectIfInvalidOrigin(req);
   if (originRejected) return withSecurityHeaders(originRejected);
 
-  const serverSecretRejected = rejectIfInvalidServerSecret(req);
+  const serverSecretRejected = await rejectIfInvalidServerAuth(req);
   if (serverSecretRejected) return withSecurityHeaders(serverSecretRejected);
 
   if (pathname.startsWith("/api/admin")) {
