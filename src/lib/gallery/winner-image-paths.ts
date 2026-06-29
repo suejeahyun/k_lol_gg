@@ -63,8 +63,38 @@ export function buildGoogleDriveThumbnailUrl(fileId: string, size = "w1600"): st
   return `https://drive.google.com/thumbnail?id=${encodeURIComponent(fileId)}&sz=${size}`;
 }
 
+function stripWrappingQuotes(value: string): string {
+  return value.trim().replace(/^['\"]+|['\"]+$/g, "").trim();
+}
+
+function normalizeLocalImagePath(value: string): string {
+  let localPath = value.trim().replace(/\\/g, "/");
+
+  // DB에 운영 도메인 포함 URL이 저장된 경우 /images/... 로 환원합니다.
+  localPath = localPath.replace(/^https?:\/\/[^/]+(?=\/images\/)/, "");
+
+  // DB에 public/images/... 또는 /public/images/... 로 저장된 경우 브라우저 URL로 환원합니다.
+  localPath = localPath.replace(/^\/?public(?=\/images\/)/, "");
+
+  // Windows 절대경로가 저장된 경우 public/images 이후만 사용합니다.
+  const publicImageIndex = localPath.toLowerCase().lastIndexOf("/public/images/");
+  if (publicImageIndex >= 0) {
+    localPath = localPath.slice(publicImageIndex + "/public".length);
+  }
+
+  if (localPath && !localPath.startsWith("/") && localPath.startsWith("images/")) {
+    localPath = `/${localPath}`;
+  }
+
+  if (/^\/images\/winners\/.+\.(?:jpg|jpeg|png)$/i.test(localPath)) {
+    return localPath.replace(/\.(?:jpg|jpeg|png)$/i, ".webp");
+  }
+
+  return localPath;
+}
+
 export function normalizeGalleryImageUrl(url: string): string {
-  const value = url.trim();
+  const value = stripWrappingQuotes(url);
 
   if (!value) {
     return "";
@@ -75,13 +105,7 @@ export function normalizeGalleryImageUrl(url: string): string {
     return buildGoogleDriveThumbnailUrl(googleDriveFileId);
   }
 
-  const localPath = value.replace(/^https?:\/\/[^/]+(?=\/images\/)/, "");
-
-  if (/^\/images\/winners\/.+\.(?:jpg|jpeg|png)$/i.test(localPath)) {
-    return localPath.replace(/\.(?:jpg|jpeg|png)$/i, ".webp");
-  }
-
-  return localPath;
+  return normalizeLocalImagePath(value);
 }
 
 export function normalizeGalleryImageUrls(urls: string[]): string[] {

@@ -5,6 +5,7 @@ import SafeGalleryImage from "@/components/SafeGalleryImage";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import { coerceGalleryImageUrls, getGalleryThumbnailUrl } from "@/lib/gallery/winner-image-paths";
+import { extractYoutubeId } from "@/lib/youtube";
 
 function formatDate(date: Date) {
   return new Date(date).toLocaleDateString("ko-KR", {
@@ -105,7 +106,10 @@ export default async function HighlightsPage() {
           <div className="empty-box">등록된 하이라이트가 없습니다.</div>
         ) : (
           <div className="highlight-list">
-            {highlights.map((highlight) => (
+            {highlights.map((highlight) => {
+              const safeYoutubeId = highlight.youtubeId || extractYoutubeId(highlight.youtubeUrl) || "";
+
+              return (
               <Link
                 key={highlight.id}
                 href={`/highlights/${highlight.id}`}
@@ -113,7 +117,7 @@ export default async function HighlightsPage() {
               >
                 <div className="highlight-card__thumb-wrap">
                   <SafeHighlightThumbnail
-                    youtubeId={highlight.youtubeId}
+                    youtubeId={safeYoutubeId}
                     thumbnailUrl={highlight.thumbnailUrl}
                     alt={highlight.title}
                     width={640}
@@ -132,7 +136,8 @@ export default async function HighlightsPage() {
                   <p>{highlight.description}</p>
                 </div>
               </Link>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>

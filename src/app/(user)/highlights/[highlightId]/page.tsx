@@ -5,6 +5,44 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
 import { getYoutubeEmbedUrl } from "@/lib/youtube";
 
+function toYouTubeEmbedUrl(value: string | null | undefined) {
+  if (!value) return null;
+
+  const raw = value.trim();
+  if (!raw) return null;
+
+  try {
+    const url = new URL(raw);
+    const host = url.hostname.replace(/^www\./, "");
+
+    if (host === "youtube.com" || host === "m.youtube.com" || host === "music.youtube.com") {
+      if (url.pathname.startsWith("/embed/")) {
+        const id = url.pathname.split("/").filter(Boolean)[1];
+        return id ? `https://www.youtube.com/embed/${id}` : null;
+      }
+
+      if (url.pathname === "/watch") {
+        const id = url.searchParams.get("v");
+        return id ? `https://www.youtube.com/embed/${id}` : null;
+      }
+
+      if (url.pathname.startsWith("/shorts/") || url.pathname.startsWith("/live/")) {
+        const id = url.pathname.split("/").filter(Boolean)[1];
+        return id ? `https://www.youtube.com/embed/${id}` : null;
+      }
+    }
+
+    if (host === "youtu.be") {
+      const id = url.pathname.split("/").filter(Boolean)[0];
+      return id ? `https://www.youtube.com/embed/${id}` : null;
+    }
+  } catch {
+    const match = raw.match(/(?:v=|youtu\.be\/|embed\/|shorts\/|live\/)([A-Za-z0-9_-]{6,})/);
+    if (match?.[1]) return `https://www.youtube.com/embed/${match[1]}`;
+  }
+
+  return raw;
+}
 type PageProps = {
   params: Promise<{
     highlightId: string;

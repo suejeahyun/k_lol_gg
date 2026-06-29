@@ -66,10 +66,6 @@ const menuGroups: UserSidebarGroup[] = [
     ],
   },
   {
-    title: "COMMUNITY",
-    items: [    ],
-  },
-  {
     title: "INFO",
     items: [      { href: "/highlights", label: "하이라이트", code: "VID", activePrefixes: ["/highlights", "/images"] },
       { href: "/account", label: "내 계정/Discord", code: "MY", auth: true, activePrefixes: ["/account"] },
@@ -168,5 +164,7 @@ export default function UserSidebar() {
     </aside>
   );
 }
+
+
 
 

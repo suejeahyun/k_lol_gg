@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS "GalleryImage_only_one_home_true_idx";
