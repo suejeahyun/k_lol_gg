@@ -1,17 +1,40 @@
 "use client";
 
+import { FormEvent, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+
+type LoginStep = "PASSWORD" | "TWO_FACTOR";
+
+type AdminLoginResponse = {
+  success?: boolean;
+  ok?: boolean;
+  requiresTwoFactor?: boolean;
+  message?: string;
+};
 
 export default function AdminLoginPage() {
   const router = useRouter();
+  const codeInputRef = useRef<HTMLInputElement | null>(null);
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
+  const [totpCode, setTotpCode] = useState("");
+  const [step, setStep] = useState<LoginStep>("PASSWORD");
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
-  const handleLogin = async () => {
+  const buttonLabel = useMemo(() => {
+    if (loading) return step === "TWO_FACTOR" ? "인증 확인 중..." : "로그인 중...";
+    return step === "TWO_FACTOR" ? "인증 후 로그인" : "로그인";
+  }, [loading, step]);
+
+  const submitLogin = async (event?: FormEvent<HTMLFormElement>) => {
+    event?.preventDefault();
+
+    if (loading) return;
+
     try {
       setLoading(true);
+      setMessage("");
 
       const response = await fetch("/api/admin/login", {
         method: "POST",
@@ -21,13 +44,22 @@ export default function AdminLoginPage() {
         body: JSON.stringify({
           id,
           password,
+          ...(step === "TWO_FACTOR" ? { totpCode } : {}),
         }),
       });
 
-      const data = await response.json();
+      const data = (await response.json().catch(() => ({}))) as AdminLoginResponse;
 
-      if (!response.ok) {
-        alert(data.message ?? "로그인에 실패했습니다.");
+      if (data.requiresTwoFactor) {
+        setStep("TWO_FACTOR");
+        setTotpCode("");
+        setMessage(data.message ?? "2단계 인증 코드를 입력해주세요.");
+        setTimeout(() => codeInputRef.current?.focus(), 0);
+        return;
+      }
+
+      if (!response.ok || !data.success) {
+        setMessage(data.message ?? "로그인에 실패했습니다.");
         return;
       }
 
@@ -35,10 +67,16 @@ export default function AdminLoginPage() {
       router.refresh();
     } catch (error) {
       console.error(error);
-      alert("로그인 중 오류가 발생했습니다.");
+      setMessage("로그인 중 오류가 발생했습니다.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const resetPasswordStep = () => {
+    setStep("PASSWORD");
+    setTotpCode("");
+    setMessage("");
   };
 
   return (
@@ -47,13 +85,16 @@ export default function AdminLoginPage() {
         관리자 로그인
       </h1>
 
-      <div style={{ display: "grid", gap: "16px" }}>
+      <form onSubmit={submitLogin} style={{ display: "grid", gap: "16px" }}>
         <div>
-          <label>아이디</label>
+          <label htmlFor="admin-id">아이디</label>
           <input
+            id="admin-id"
             type="text"
             value={id}
+            disabled={step === "TWO_FACTOR" || loading}
             onChange={(e) => setId(e.target.value)}
+            autoComplete="username"
             style={{
               display: "block",
               width: "100%",
@@ -66,11 +107,14 @@ export default function AdminLoginPage() {
         </div>
 
         <div>
-          <label>비밀번호</label>
+          <label htmlFor="admin-password">비밀번호</label>
           <input
+            id="admin-password"
             type="password"
             value={password}
+            disabled={step === "TWO_FACTOR" || loading}
             onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
             style={{
               display: "block",
               width: "100%",
@@ -82,10 +126,70 @@ export default function AdminLoginPage() {
           />
         </div>
 
+        {step === "TWO_FACTOR" ? (
+          <section
+            aria-label="2단계 인증"
+            style={{
+              display: "grid",
+              gap: "10px",
+              padding: "14px",
+              border: "1px solid rgba(34, 211, 238, 0.35)",
+              borderRadius: "12px",
+              background: "rgba(34, 211, 238, 0.08)",
+            }}
+          >
+            <div style={{ fontWeight: 700 }}>2단계 인증</div>
+            <p style={{ margin: 0, fontSize: "14px", color: "#8aa" }}>
+              Authenticator 앱에 표시된 6자리 코드를 입력하세요.
+            </p>
+            <input
+              ref={codeInputRef}
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={6}
+              value={totpCode}
+              onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              placeholder="000000"
+              autoComplete="one-time-code"
+              style={{
+                display: "block",
+                width: "100%",
+                padding: "12px 14px",
+                border: "1px solid #5eead4",
+                borderRadius: "8px",
+                letterSpacing: "0.2em",
+                fontSize: "18px",
+                textAlign: "center",
+              }}
+            />
+            <button
+              type="button"
+              onClick={resetPasswordStep}
+              disabled={loading}
+              style={{
+                justifySelf: "start",
+                border: 0,
+                background: "transparent",
+                color: "#67e8f9",
+                cursor: "pointer",
+                padding: 0,
+              }}
+            >
+              아이디/비밀번호 다시 입력
+            </button>
+          </section>
+        ) : null}
+
+        {message ? (
+          <p style={{ margin: 0, color: step === "TWO_FACTOR" ? "#67e8f9" : "#f87171" }}>
+            {message}
+          </p>
+        ) : null}
+
         <button
-          type="button"
-          onClick={handleLogin}
-          disabled={loading}
+          type="submit"
+          disabled={loading || !id || !password || (step === "TWO_FACTOR" && totpCode.length !== 6)}
           style={{
             padding: "12px 16px",
             border: "1px solid #333",
@@ -93,12 +197,12 @@ export default function AdminLoginPage() {
             background: "#333",
             color: "#fff",
             cursor: "pointer",
-            opacity: loading ? 0.6 : 1,
+            opacity: loading || !id || !password || (step === "TWO_FACTOR" && totpCode.length !== 6) ? 0.6 : 1,
           }}
         >
-          {loading ? "로그인 중..." : "로그인"}
+          {buttonLabel}
         </button>
-      </div>
+      </form>
     </main>
   );
 }
