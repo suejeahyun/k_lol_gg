@@ -55,11 +55,7 @@ const menuGroups: AdminSidebarGroup[] = [
   },
   {
     title: "CONTENT",
-    items: [
-      { href: "/admin/notices", label: "공지", code: "NOT", activePrefixes: ["/admin/notices", "/admin/event-notices"] },
-      { href: "/admin/community/headlines", label: "말머리 관리", code: "TAG", activePrefixes: ["/admin/community/headlines"] },
-      { href: "/admin/images", label: "이미지", code: "IMG" },
-      { href: "/admin/highlights", label: "하이라이트", code: "VID" },
+    items: [      { href: "/admin/highlights", label: "하이라이트", code: "VID" },
     ],
   },
   {
@@ -158,4 +154,5 @@ export default function AdminSidebar() {
     </aside>
   );
 }
+
 

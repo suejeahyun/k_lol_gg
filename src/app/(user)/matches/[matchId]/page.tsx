@@ -5,10 +5,6 @@ import MatchDetailSlider, {
   MatchDetailSlide,
 } from "@/components/matches/MatchDetailSlider";
 import { prisma } from "@/lib/prisma/client";
-import Link from "next/link";
-import CommunityPostForm from "@/components/community/CommunityPostForm";
-import MatchMvpVoteBox from "@/components/community/MatchMvpVoteBox";
-import { formatCommunityDate } from "@/lib/community/meta";
 
 type MatchDetailPageProps = {
   params: Promise<{
@@ -84,15 +80,6 @@ export default async function MatchDetailPage({
               champion: true,
             },
           },
-          mvpVotes: true,
-        },
-      },
-      communityPosts: {
-        where: { type: "MATCH_REVIEW", isHidden: false },
-        orderBy: { createdAt: "desc" },
-        include: {
-          author: { select: { userId: true, player: { select: { nickname: true, tag: true } } } },
-          _count: { select: { comments: true, likes: true } },
         },
       },
     },
@@ -195,58 +182,6 @@ export default async function MatchDetailPage({
           </div>
 
           <MatchDetailSlider slides={slides} />
-        </div>
-      </section>
-
-      <section className="card community-match-section">
-        <div className="community-section-head">
-          <div>
-            <p className="page-eyebrow">USER MVP</p>
-            <h2>유저 MVP 투표</h2>
-            <p>기존 AI 추천 MVP와 별개로, 해당 매치 참가자만 세트별 MVP를 투표합니다.</p>
-          </div>
-        </div>
-        <div className="community-mvp-grid">
-          {match.games.map((game) => {
-            const voteCountMap = new Map<number, number>();
-            game.mvpVotes.forEach((vote) => {
-              voteCountMap.set(vote.playerId, (voteCountMap.get(vote.playerId) ?? 0) + 1);
-            });
-            const candidates = game.participants.map((participant) => ({
-              playerId: participant.playerId,
-              label: participant.player ? `${participant.player.nickname}#${participant.player.tag}` : `Player #${participant.playerId}`,
-              team: participant.team,
-              position: participant.position,
-              votes: voteCountMap.get(participant.playerId) ?? 0,
-            }));
-            const closed = Date.now() - new Date(match.createdAt).getTime() > 24 * 60 * 60 * 1000;
-            return <MatchMvpVoteBox key={game.id} gameId={game.id} candidates={candidates} closed={closed} />;
-          })}
-        </div>
-      </section>
-
-      <section className="card community-match-section">
-        <div className="community-section-head">
-          <div>
-            <p className="page-eyebrow">MATCH REVIEW</p>
-            <h2>매치 리뷰</h2>
-            <p>이 내전에 대한 후기와 밴픽 평가를 남깁니다.</p>
-          </div>
-          <Link className="button button--ghost" href="/community/match-reviews">전체 리뷰</Link>
-        </div>
-        <CommunityPostForm type="MATCH_REVIEW" fixedMatchSeriesId={match.id} />
-        <div className="community-review-list">
-          {match.communityPosts.length === 0 ? (
-            <div className="empty-box">등록된 매치 리뷰가 없습니다.</div>
-          ) : (
-            match.communityPosts.map((post) => (
-              <Link key={post.id} href={`/community/posts/${post.id}`} className="community-review-item">
-                <h3>{post.title}</h3>
-                <p>{post.content}</p>
-                <span>{post.author.player ? `${post.author.player.nickname}#${post.author.player.tag}` : post.author.userId} · {formatCommunityDate(post.createdAt)} · 좋아요 {post._count.likes} · 댓글 {post._count.comments}</span>
-              </Link>
-            ))
-          )}
         </div>
       </section>
     </main>

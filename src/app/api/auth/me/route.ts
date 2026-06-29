@@ -11,8 +11,13 @@ export async function GET() {
 
     if (!session) {
       return NextResponse.json(
-        { message: "로그인되어 있지 않습니다." },
-        { status: 401 }
+        { user: null },
+        {
+          status: 200,
+          headers: {
+            "Cache-Control": "no-store",
+          },
+        },
       );
     }
 
@@ -25,34 +30,46 @@ export async function GET() {
 
     if (!user) {
       return NextResponse.json(
-        { message: "사용자를 찾을 수 없습니다." },
-        { status: 404 }
+        { user: null },
+        {
+          status: 200,
+          headers: {
+            "Cache-Control": "no-store",
+          },
+        },
       );
     }
 
-    return NextResponse.json({
-      user: {
-        id: user.id,
-        userId: user.userId,
-        role: user.role,
-        status: user.status,
-        player: user.player
-          ? {
-              id: user.player.id,
-              nickname: user.player.nickname,
-              tag: user.player.tag,
-              peakTier: user.player.peakTier,
-              currentTier: user.player.currentTier,
-            }
-          : null,
+    return NextResponse.json(
+      {
+        user: {
+          id: user.id,
+          userId: user.userId,
+          role: user.role,
+          status: user.status,
+          player: user.player
+            ? {
+                id: user.player.id,
+                nickname: user.player.nickname,
+                tag: user.player.tag,
+                peakTier: user.player.peakTier,
+                currentTier: user.player.currentTier,
+              }
+            : null,
+        },
       },
-    });
+      {
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      },
+    );
   } catch (error) {
     logServerError("[AUTH_ME_GET_ERROR]", error);
 
     return NextResponse.json(
       { message: "유저 정보를 불러오는 중 오류가 발생했습니다." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

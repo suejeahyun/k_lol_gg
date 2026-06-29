@@ -9,19 +9,6 @@ import RecentMvpSlider from "@/components/RecentMvpSlider";
 import { calculateMvpScore, getGameMvpParticipant } from "@/lib/mvp";
 import { getCachedStatsTopData } from "@/lib/stats/top";
 
-function getEventStatusLabel(status: string) {
-  const labels: Record<string, string> = {
-    PLANNED: "기획중",
-    RECRUITING: "모집중",
-    TEAM_BUILDING: "팀 구성중",
-    IN_PROGRESS: "진행중",
-    COMPLETED: "종료",
-    CANCELLED: "취소",
-  };
-
-  return labels[status] ?? status;
-}
-
 function getDestructionStatusLabel(status: string) {
   const labels: Record<string, string> = {
     PLANNED: "기획중",
@@ -35,21 +22,6 @@ function getDestructionStatusLabel(status: string) {
   };
 
   return labels[status] ?? status;
-}
-
-function getEventProgressPercent(status?: string | null) {
-  if (!status) return "10%";
-
-  const values: Record<string, string> = {
-    PLANNED: "15%",
-    RECRUITING: "30%",
-    TEAM_BUILDING: "50%",
-    IN_PROGRESS: "70%",
-    COMPLETED: "100%",
-    CANCELLED: "0%",
-  };
-
-  return values[status] ?? "10%";
 }
 
 function getDestructionProgressPercent(status?: string | null) {
@@ -102,8 +74,6 @@ export default async function HomePage() {
     topData,
     winnerImages,
     recentMatches,
-    notices,
-    latestEvent,
     latestDestruction,
     latestMvpSeries,
   ] = await Promise.all([
@@ -167,29 +137,6 @@ export default async function HomePage() {
             games: true,
           },
         },
-      },
-    }),
-
-    prisma.notice.findMany({
-      orderBy: [{ isPinned: "desc" }, { createdAt: "desc" }],
-      take: 5,
-      select: {
-        id: true,
-        title: true,
-        content: true,
-        isPinned: true,
-        createdAt: true,
-      },
-    }),
-
-    prisma.eventMatch.findFirst({
-      orderBy: {
-        eventDate: "desc",
-      },
-      include: {
-        participants: true,
-        teams: true,
-        matches: true,
       },
     }),
 
@@ -360,7 +307,7 @@ export default async function HomePage() {
     : null;
 
   return (
-    <main className="page-container home-page">
+    <main className="page-container home-page klol-v2-home">
       <section className="home-hero-grid">
         <div className="card home-main-card">
           <div>
@@ -467,31 +414,6 @@ export default async function HomePage() {
             </div>
 
             <div className="home-progress-list">
-              <Link href="/progress/event" className="home-progress-item">
-                <div className="home-progress-item__top">
-                  <strong>이벤트 내전</strong>
-                  <span>
-                    {latestEvent
-                      ? getEventStatusLabel(latestEvent.status)
-                      : "준비중"}
-                  </span>
-                </div>
-
-                <div className="home-progress-bar">
-                  <div
-                    style={{
-                      width: getEventProgressPercent(latestEvent?.status),
-                    }}
-                  />
-                </div>
-
-                <p>
-                  {latestEvent
-                    ? `${latestEvent.title} · 참가자 ${latestEvent.participants.length}명 · 팀 ${latestEvent.teams.length}개`
-                    : "등록된 이벤트 내전이 없습니다."}
-                </p>
-              </Link>
-
               <Link href="/progress/destruction" className="home-progress-item">
                 <div className="home-progress-item__top">
                   <strong>멸망전</strong>
@@ -572,53 +494,6 @@ export default async function HomePage() {
                     <strong>{match._count.games}</strong>
                     <span>세트</span>
                   </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      <section className="section-block">
-        <div className="card">
-          <div className="home-section-head">
-            <div>
-              <p className="home-eyebrow">NOTICE</p>
-              <h2 className="home-section-title">공지사항</h2>
-            </div>
-
-            <Link href="/notices" className="chip-button">
-              전체 보기
-            </Link>
-          </div>
-
-          {notices.length === 0 ? (
-            <div className="empty-box">등록된 공지사항이 없습니다.</div>
-          ) : (
-            <div className="home-notice-list">
-              {notices.map((notice) => (
-                <Link
-                  key={notice.id}
-                  href={`/notices/${notice.id}`}
-                  className="notice-card home-notice-card"
-                >
-                  <div className="notice-card__top">
-                    {notice.isPinned ? (
-                      <span className="notice-card__badge">고정</span>
-                    ) : null}
-
-                    <span className="notice-card__date">
-                      {formatDate(notice.createdAt)}
-                    </span>
-                  </div>
-
-                  <h3 className="notice-card__title">{notice.title}</h3>
-
-                  <p className="notice-card__summary">
-                    {notice.content.length > 90
-                      ? `${notice.content.slice(0, 90)}...`
-                      : notice.content}
-                  </p>
                 </Link>
               ))}
             </div>

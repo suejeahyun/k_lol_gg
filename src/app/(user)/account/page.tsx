@@ -1,11 +1,10 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
 import { getCurrentUser } from "@/lib/auth/session";
 import DiscordUnlinkButton from "./DiscordUnlinkButton";
-import AccountPlayerCommunityPanel from "@/components/AccountPlayerCommunityPanel";
 import UserLogoutButton from "@/components/UserLogoutButton";
 
 function formatDate(value: Date | string | null | undefined) {
@@ -127,8 +126,6 @@ export default async function AccountPage() {
           </div>
         )}
       </section>
-
-      <AccountPlayerCommunityPanel />
     </main>
   );
 }

@@ -21,15 +21,6 @@ function formatDate(value: Date | string | null | undefined) {
   }).format(new Date(value));
 }
 
-function formatCommunityType(type: string) {
-  const map: Record<string, string> = {
-    FREE: "자유게시판",
-    HUMOR: "유머",
-    REQUEST: "건의사항",
-    REVIEW: "매치 리뷰",
-  };
-  return map[type] || type;
-}
 
 export default async function AppAccountPage() {
   const session = await getCurrentUser();
@@ -41,21 +32,6 @@ export default async function AppAccountPage() {
   });
 
   if (!user) redirect("/login?next=/app/account");
-
-  const [myPosts, myComments] = await Promise.all([
-    prisma.communityPost.findMany({
-      where: { authorId: user.id, isHidden: false },
-      orderBy: { createdAt: "desc" },
-      take: 3,
-      select: { id: true, type: true, title: true, viewCount: true, createdAt: true, _count: { select: { comments: true, likes: true } } },
-    }),
-    prisma.communityComment.findMany({
-      where: { authorId: user.id, isHidden: false },
-      orderBy: { createdAt: "desc" },
-      take: 3,
-      select: { id: true, content: true, createdAt: true, post: { select: { id: true, title: true } } },
-    }),
-  ]);
 
   const discordLinked = Boolean(user.discordId);
   const discordName = user.discordServerNickname || user.discordGlobalName || user.discordUsername || "연동됨";
@@ -148,44 +124,6 @@ export default async function AppAccountPage() {
         ) : (
           <AppEmpty>연결된 플레이어 정보가 없습니다.</AppEmpty>
         )}
-      </AppSection>
-
-      <AppSection title="내 커뮤니티 활동">
-        <div className="klol-app-two-column">
-          <div className="klol-app-mini-panel">
-            <h3>내가 쓴 글</h3>
-            {myPosts.length > 0 ? (
-              <div className="klol-app-list">
-                {myPosts.map((post) => (
-                  <div key={post.id} className="klol-app-list-item">
-                    <span>{formatCommunityType(post.type)}</span>
-                    <strong>{post.title}</strong>
-                    <small>조회 {post.viewCount} · 댓글 {post._count.comments} · 좋아요 {post._count.likes}</small>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <AppEmpty>작성한 글이 없습니다.</AppEmpty>
-            )}
-          </div>
-
-          <div className="klol-app-mini-panel">
-            <h3>내가 쓴 댓글</h3>
-            {myComments.length > 0 ? (
-              <div className="klol-app-list">
-                {myComments.map((comment) => (
-                  <div key={comment.id} className="klol-app-list-item">
-                    <span>{comment.post.title}</span>
-                    <strong>{comment.content.length > 48 ? `${comment.content.slice(0, 48)}...` : comment.content}</strong>
-                    <small>{formatDate(comment.createdAt)}</small>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <AppEmpty>작성한 댓글이 없습니다.</AppEmpty>
-            )}
-          </div>
-        </div>
       </AppSection>
 
       <AppSection title="로그아웃">

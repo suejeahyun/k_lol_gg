@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
 type TierType = "basic" | "master" | "high";
@@ -13,24 +12,6 @@ type Player = {
   currentTier: string | null;
 };
 
-type MyCommunityPost = {
-  id: number;
-  typeLabel: string;
-  title: string;
-  createdAt: string;
-  viewCount: number;
-  commentCount: number;
-  likeCount: number;
-};
-
-type MyCommunityComment = {
-  id: number;
-  content: string;
-  createdAt: string;
-  postId: number;
-  postTitle: string;
-  postTypeLabel: string;
-};
 
 const BASIC_TIERS = ["아이언", "브론즈", "실버", "골드", "플래티넘", "에메랄드", "다이아"];
 const MASTER_TIERS = ["마스터"];
@@ -86,8 +67,6 @@ export default function MyPlayerPage() {
   const [player, setPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [myPosts, setMyPosts] = useState<MyCommunityPost[]>([]);
-  const [myComments, setMyComments] = useState<MyCommunityComment[]>([]);
 
   const [nickname, setNickname] = useState("");
   const [tag, setTag] = useState("");
@@ -136,19 +115,6 @@ export default function MyPlayerPage() {
   };
 
 
-  const fetchCommunityActivity = async () => {
-    try {
-      const res = await fetch("/api/community/my-activity", { cache: "no-store" });
-      if (!res.ok) return;
-
-      const data: { posts?: MyCommunityPost[]; comments?: MyCommunityComment[] } = await res.json();
-      setMyPosts(data.posts ?? []);
-      setMyComments(data.comments ?? []);
-    } catch (error: unknown) {
-      console.error("[MY_COMMUNITY_ACTIVITY_FETCH_ERROR]", error);
-    }
-  };
-
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -188,9 +154,6 @@ export default function MyPlayerPage() {
   useEffect(() => {
     fetchPlayer().catch((error: unknown) => {
       console.error("[MY_PLAYER_FETCH_PROMISE_ERROR]", error);
-    });
-    fetchCommunityActivity().catch((error: unknown) => {
-      console.error("[MY_COMMUNITY_ACTIVITY_FETCH_PROMISE_ERROR]", error);
     });
   }, []);
 
@@ -247,53 +210,6 @@ export default function MyPlayerPage() {
           {saving ? "저장 중..." : "저장"}
         </button>
       </form>
-
-      <section className="my-community-section my-player-community">
-        <div className="my-community-section__head">
-          <h2>내 커뮤니티 활동</h2>
-          <p>내가 쓴 글과 댓글을 최근순으로 확인합니다.</p>
-        </div>
-
-        <div className="my-community-grid">
-          <article className="my-community-card">
-            <h3>내가 쓴 글</h3>
-            {myPosts.length === 0 ? (
-              <p className="my-community-empty">작성한 글이 없습니다.</p>
-            ) : (
-              <ul className="my-community-list">
-                {myPosts.map((post) => (
-                  <li key={post.id}>
-                    <Link href={`/community/posts/${post.id}`}>
-                      <span className="my-community-badge">{post.typeLabel}</span>
-                      <strong>{post.title}</strong>
-                      <em>조회 {post.viewCount} · 댓글 {post.commentCount} · 좋아요 {post.likeCount}</em>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </article>
-
-          <article className="my-community-card">
-            <h3>내가 쓴 댓글</h3>
-            {myComments.length === 0 ? (
-              <p className="my-community-empty">작성한 댓글이 없습니다.</p>
-            ) : (
-              <ul className="my-community-list">
-                {myComments.map((comment) => (
-                  <li key={comment.id}>
-                    <Link href={`/community/posts/${comment.postId}`}>
-                      <span className="my-community-badge">{comment.postTypeLabel}</span>
-                      <strong>{comment.content}</strong>
-                      <em>{comment.postTitle}</em>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </article>
-        </div>
-      </section>
     </div>
   );
 }

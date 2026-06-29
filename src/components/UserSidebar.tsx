@@ -1,8 +1,7 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import AuthSection from "./AuthSection";
-import TodayVisitorsBox from "./community/TodayVisitorsBox";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -68,20 +67,11 @@ const menuGroups: UserSidebarGroup[] = [
   },
   {
     title: "COMMUNITY",
-    items: [
-      { href: "/community", label: "커뮤니티", code: "COM", activePrefixes: ["/community"] },
-      { href: "/community/highlights", label: "유저 하이라이트", code: "UHL", activePrefixes: ["/community/highlights", "/community/posts"] },
-      { href: "/community/suggestions", label: "건의사항", code: "REQ" },
-      { href: "/community/match-reviews", label: "매치 리뷰", code: "REV" },
-      { href: "/community/free", label: "자유게시판", code: "FRD" },
-      { href: "/community/clips", label: "클립 랭킹", code: "RKG" },
-    ],
+    items: [    ],
   },
   {
     title: "INFO",
-    items: [
-      { href: "/notices", label: "공지사항", code: "NOT", activePrefixes: ["/notices", "/event-notices"] },
-      { href: "/highlights", label: "하이라이트", code: "VID", activePrefixes: ["/highlights", "/images"] },
+    items: [      { href: "/highlights", label: "하이라이트", code: "VID", activePrefixes: ["/highlights", "/images"] },
       { href: "/account", label: "내 계정/Discord", code: "MY", auth: true, activePrefixes: ["/account"] },
       { href: "/account/password", label: "비밀번호 변경", code: "PWD", auth: true },
     ],
@@ -173,9 +163,10 @@ export default function UserSidebar() {
       </div>
 
       <div className="app-sidebar__bottom">
-        {isLoggedIn ? <TodayVisitorsBox /> : null}
         <AuthSection />
       </div>
     </aside>
   );
 }
+
+

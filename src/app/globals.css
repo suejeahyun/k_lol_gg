@@ -18,14 +18,12 @@
 @import url("../styles/pages/players.css");
 @import url("../styles/pages/matches.css");
 @import url("../styles/pages/rankings.css");
-@import url("../styles/pages/notices.css");
 @import url("../styles/pages/gallery.css");
 @import url("../styles/pages/highlights.css");
 @import url("../styles/pages/balance.css");
 @import url("../styles/pages/progress.css");
 @import url("../styles/pages/participation.css");
 @import url("../styles/pages/recruit.css");
-@import url("../styles/pages/community.css");
 
 @import url("../styles/admin/admin-layout.css");
 @import url("../styles/admin/admin-dashboard.css");
@@ -36,7 +34,6 @@
 @import url("../styles/features/auth.css");
 @import url("../styles/features/kakao.css");
 @import url("../styles/features/champion.css");
-@import url("../styles/features/event-notices.css");
 @import url("../styles/features/destruction.css");
 @import url("../styles/features/animations.css");
 @import url("../styles/features/ai-balance.css");

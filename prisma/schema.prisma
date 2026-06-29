@@ -113,40 +113,6 @@ enum OperationAiRequestStatus {
   FAILED
 }
 
-enum EventNoticeType {
-  EVENT_MATCH
-  DESTRUCTION
-  ETC
-}
-
-
-enum CommunityPostType {
-  HIGHLIGHT
-  SUGGESTION
-  MATCH_REVIEW
-  FREE
-  NOTICE_COMMENT
-}
-
-enum CommunitySuggestionStatus {
-  RECEIVED
-  REVIEWING
-  PLANNED
-  COMPLETED
-  HOLD
-}
-
-enum CommunityReportStatus {
-  PENDING
-  RESOLVED
-  REJECTED
-}
-
-enum CommunityReportTargetType {
-  POST
-  COMMENT
-}
-
 model Player {
   id          Int      @id @default(autoincrement())
   name        String
@@ -185,7 +151,6 @@ model Player {
 
   balanceProfile      PlayerBalanceProfile?
   balanceMatchResults PlayerBalanceMatchResult[]
-  receivedMvpVotes MatchMvpVote[]
   disciplineRecords UserDisciplineRecord[]
 
   @@unique([nickname, tag])
@@ -223,12 +188,6 @@ model UserAccount {
 
   player Player?
 
-  communityPosts CommunityPost[]
-  communityComments CommunityComment[]
-  communityLikes CommunityLike[]
-  communityReports CommunityReport[]
-  matchMvpVotes MatchMvpVote[]
-  communityVisits CommunityVisit[]
   discordVoiceEvents DiscordVoiceEvent[]
   discordAccountLinkLogs DiscordAccountLinkLog[]
   disciplineRecords UserDisciplineRecord[]
@@ -277,7 +236,6 @@ model MatchSeries {
 
   balanceReviews       BalanceMatchReview[]
   balanceMatchResults  PlayerBalanceMatchResult[]
-  communityPosts       CommunityPost[]
 
   @@index([seasonId, matchDate])
   @@index([teamBalanceDraftId])
@@ -294,7 +252,6 @@ model MatchGame {
 
   series       MatchSeries        @relation(fields: [seriesId], references: [id], onDelete: Cascade)
   participants MatchParticipant[]
-  mvpVotes MatchMvpVote[]
 
   @@unique([seriesId, gameNumber])
   @@index([seriesId, gameNumber])
@@ -424,16 +381,6 @@ model AdminLog {
   @@index([targetType, targetId])
   @@index([createdAt])
 }
-
-model Notice {
-  id        Int      @id @default(autoincrement())
-  title     String
-  content   String   @db.Text
-  isPinned  Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
 
 model Highlight {
   id          Int      @id @default(autoincrement())
@@ -919,22 +866,6 @@ model PlayerBalanceMatchResult {
   @@index([position])
 }
 
-model EventNotice {
-  id      Int             @id @default(autoincrement())
-  title   String
-  content String          @db.Text
-  type    EventNoticeType
-
-  recruitInfo String?   @db.Text
-  rule        String?   @db.Text
-  startDate   DateTime?
-
-  isPinned  Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-
 model RiotApiStatus {
   id          Int      @id @default(autoincrement())
   scope       String   @unique
@@ -1214,134 +1145,6 @@ model RecruitPartyDiscordMonitor {
 
   @@index([voiceChannelId])
   @@index([status, updatedAt])
-}
-
-model CommunityHeadline {
-  id        Int               @id @default(autoincrement())
-  type      CommunityPostType
-  label     String
-  sortOrder Int               @default(0)
-  isActive  Boolean           @default(true)
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
-
-  @@unique([type, label])
-  @@index([type, isActive, sortOrder])
-}
-
-model CommunityPost {
-  id          Int                         @id @default(autoincrement())
-  type        CommunityPostType
-  title       String
-  content     String                      @db.Text
-  videoUrl    String?
-  thumbnailUrl String?
-  tags        String[]                    @default([])
-  suggestionStatus CommunitySuggestionStatus @default(RECEIVED)
-  isPinned    Boolean                     @default(false)
-  isHidden    Boolean                     @default(false)
-  hiddenAt    DateTime?
-  hiddenReason String?
-  viewCount   Int                         @default(0)
-  createdAt   DateTime                    @default(now())
-  updatedAt   DateTime                    @updatedAt
-
-  authorId    Int
-  author      UserAccount                 @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  matchSeriesId Int?
-  matchSeries   MatchSeries?              @relation(fields: [matchSeriesId], references: [id], onDelete: SetNull)
-
-  comments    CommunityComment[]
-  likes       CommunityLike[]
-  reports     CommunityReport[]
-
-  @@index([type, isHidden, isPinned, createdAt])
-  @@index([authorId, createdAt])
-  @@index([matchSeriesId, createdAt])
-  @@index([suggestionStatus, createdAt])
-}
-
-model CommunityComment {
-  id          Int       @id @default(autoincrement())
-  content     String    @db.Text
-  isHidden    Boolean   @default(false)
-  hiddenAt    DateTime?
-  hiddenReason String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  postId      Int
-  post        CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-  authorId    Int
-  author      UserAccount   @relation(fields: [authorId], references: [id], onDelete: Cascade)
-
-  reports     CommunityReport[]
-
-  @@index([postId, isHidden, createdAt])
-  @@index([authorId, createdAt])
-}
-
-model CommunityLike {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-
-  postId    Int
-  post      CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-  userId    Int
-  user      UserAccount   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([postId, userId])
-  @@index([userId, createdAt])
-}
-
-model CommunityReport {
-  id          Int                       @id @default(autoincrement())
-  targetType  CommunityReportTargetType
-  reason      String
-  detail      String?                   @db.Text
-  status      CommunityReportStatus     @default(PENDING)
-  createdAt   DateTime                  @default(now())
-  resolvedAt  DateTime?
-
-  reporterId  Int
-  reporter    UserAccount               @relation(fields: [reporterId], references: [id], onDelete: Cascade)
-  postId      Int?
-  post        CommunityPost?            @relation(fields: [postId], references: [id], onDelete: Cascade)
-  commentId   Int?
-  comment     CommunityComment?         @relation(fields: [commentId], references: [id], onDelete: Cascade)
-
-  @@index([status, createdAt])
-  @@index([targetType, postId])
-  @@index([targetType, commentId])
-  @@index([reporterId, createdAt])
-}
-
-model MatchMvpVote {
-  id         Int      @id @default(autoincrement())
-  gameId     Int
-  voterId    Int
-  playerId   Int
-  createdAt  DateTime @default(now())
-
-  game        MatchGame   @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  voter       UserAccount @relation(fields: [voterId], references: [id], onDelete: Cascade)
-  player      Player      @relation(fields: [playerId], references: [id], onDelete: Cascade)
-
-  @@unique([gameId, voterId])
-  @@index([gameId, playerId])
-  @@index([voterId, createdAt])
-}
-
-model CommunityVisit {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  visitDate DateTime
-  visitedAt DateTime @default(now())
-
-  user UserAccount @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, visitDate])
-  @@index([visitDate, visitedAt])
 }
 
 model KakaoFriendApplication {
