@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import Pagination from "@/components/Pagination";
@@ -11,7 +11,11 @@ type AdminUser = {
   userId: string;
   role: UserRole;
   status: UserStatus;
-  createdAt: string;`r`n  adminTotpEnabled: boolean;`r`n  adminTotpEnabledAt: string | null;`r`n  adminTotpSetupPending: boolean;`r`n  player: {
+  createdAt: string;
+  adminTotpEnabled: boolean;
+  adminTotpEnabledAt: string | null;
+  adminTotpSetupPending: boolean;
+  player: {
     id: number;
     name?: string;
     nickname: string;
@@ -326,7 +330,10 @@ export default function AdminUsersPage() {
                 <col style={{ width: "10%" }} />
                 <col style={{ width: "7%" }} />
                 <col style={{ width: "7%" }} />
-                <col style={{ width: "11%" }} />`r`n                <col style={{ width: "7%" }} />`r`n                <col style={{ width: "7%" }} />`r`n                <col style={{ width: "10%" }} />
+                <col style={{ width: "11%" }} />
+                <col style={{ width: "7%" }} />
+                <col style={{ width: "7%" }} />
+                <col style={{ width: "10%" }} />
               </colgroup>
               <thead>
                 <tr>
@@ -338,7 +345,9 @@ export default function AdminUsersPage() {
                   <th>상태</th>
                   <th>권한</th>
                   <th>연결</th>
-                  <th>가입</th>`r`n                  <th>2FA</th>`r`n                  <th>관리</th>
+                  <th>가입</th>
+                  <th>2FA</th>
+                  <th>관리</th>
                 </tr>
               </thead>
 
@@ -356,7 +365,9 @@ export default function AdminUsersPage() {
                       <td><StatusBadge status={user.status} /></td>
                       <td><span style={badgeStyle}>{getRoleLabel(user.role)}</span></td>
                       <td title={getConnectionLabel(user)} style={compactCellStyle}>{getConnectionLabel(user)}</td>
-                      <td style={compactCellStyle}>{formatDate(user.createdAt)}</td>`r`n                      <td><TwoFactorBadge user={user} /></td>`r`n                      <td>
+                      <td style={compactCellStyle}>{formatDate(user.createdAt)}</td>
+                      <td><TwoFactorBadge user={user} /></td>
+                      <td>
                         <div
                           className="admin-actions"
                           style={{
@@ -417,7 +428,23 @@ export default function AdminUsersPage() {
                                 </button>
                               )}
 
-                              <button`r`n                                type="button"`r`n                                className="chip-button"`r`n                                onClick={() => handlePasswordReset(user)}`r`n                              >`r`n                                비번`r`n                              </button>`r`n`r`n                              {(user.adminTotpEnabled || user.adminTotpSetupPending) ? (`r`n                                <button`r`n                                  type="button"`r`n                                  className="chip-button chip-button--danger"`r`n                                  onClick={() => handleTwoFactorReset(user)}`r`n                                >`r`n                                  2FA초기화`r`n                                </button>`r`n                              ) : null}
+                              <button
+                                type="button"
+                                className="chip-button"
+                                onClick={() => handlePasswordReset(user)}
+                              >
+                                비번
+                              </button>
+
+                              {(user.adminTotpEnabled || user.adminTotpSetupPending) ? (
+                                <button
+                                  type="button"
+                                  className="chip-button chip-button--danger"
+                                  onClick={() => handleTwoFactorReset(user)}
+                                >
+                                  2FA초기화
+                                </button>
+                              ) : null}
                             </>
                           ) : null}
                         </div>
