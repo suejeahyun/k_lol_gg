@@ -475,3 +475,154 @@
     font-size: 10px;
   }
 }
+
+/* My ranking summary */
+.ranking-my-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ranking-my-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 98px;
+  padding: 16px;
+  border: 1px solid rgba(79, 123, 255, 0.3);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 8% 0%, rgba(79, 123, 255, 0.14), transparent 36%),
+    linear-gradient(180deg, rgba(14, 28, 50, 0.96), rgba(7, 18, 34, 0.98));
+  box-shadow:
+    0 14px 36px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.045);
+}
+
+.ranking-my-card--primary {
+  border-color: rgba(79, 123, 255, 0.56);
+  background:
+    radial-gradient(circle at 8% 0%, rgba(79, 123, 255, 0.24), transparent 40%),
+    linear-gradient(180deg, rgba(17, 38, 72, 0.96), rgba(7, 18, 34, 0.98));
+}
+
+.ranking-my-card span {
+  display: block;
+  color: rgba(148, 163, 184, 0.9);
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0.1em;
+}
+
+.ranking-my-card strong {
+  display: block;
+  margin-top: 9px;
+  color: #f8fbff;
+  font-size: 26px;
+  font-weight: 950;
+  letter-spacing: -0.04em;
+}
+
+.ranking-my-card small {
+  display: block;
+  margin-top: 6px;
+  color: rgba(226, 232, 240, 0.58);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.ranking-top-player--1 .ranking-top-player__rank,
+.ranking-rank--top-1 {
+  color: #dbeafe !important;
+  border-color: rgba(79, 123, 255, 0.58) !important;
+  background: rgba(79, 123, 255, 0.22) !important;
+  text-shadow: 0 0 14px rgba(79, 123, 255, 0.34) !important;
+}
+
+.ranking-top-player--2 .ranking-top-player__rank,
+.ranking-rank--top-2 {
+  color: #d1d5db !important;
+  border-color: rgba(148, 163, 184, 0.42) !important;
+  background: rgba(148, 163, 184, 0.14) !important;
+}
+
+.ranking-top-player--3 .ranking-top-player__rank,
+.ranking-rank--top-3 {
+  color: #fcd34d !important;
+  border-color: rgba(245, 158, 11, 0.4) !important;
+  background: rgba(245, 158, 11, 0.12) !important;
+  text-shadow: none !important;
+}
+
+.ranking-row-card--me {
+  border-color: rgba(79, 123, 255, 0.62);
+  background:
+    radial-gradient(circle at 0% 50%, rgba(79, 123, 255, 0.18), transparent 34%),
+    rgba(13, 31, 56, 0.86);
+}
+
+@media (max-width: 860px) {
+  .ranking-my-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .ranking-board {
+    overflow-x: hidden !important;
+  }
+
+  .ranking-row-header {
+    display: none !important;
+  }
+
+  .ranking-row-card {
+    min-height: 0;
+    padding: 14px !important;
+  }
+
+  .ranking-row-grid {
+    grid-template-columns: 46px minmax(0, 1fr) auto !important;
+    min-width: 0 !important;
+    gap: 8px 12px;
+  }
+
+  .ranking-rank {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border: 1px solid rgba(96, 165, 250, 0.22);
+    border-radius: 13px;
+    background: rgba(2, 8, 23, 0.4);
+  }
+
+  .ranking-name {
+    grid-column: 2 / 4;
+    grid-row: 1;
+    font-size: 15px;
+  }
+
+  .ranking-riot {
+    grid-column: 2 / 4;
+    grid-row: 2;
+    font-size: 12px;
+  }
+
+  .ranking-row-grid .ranking-col:nth-child(4),
+  .ranking-row-grid .ranking-col:nth-child(5),
+  .ranking-row-grid .ranking-col:nth-child(6),
+  .ranking-row-grid .ranking-col:nth-child(7) {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    min-height: 26px;
+    padding: 0 9px;
+    border: 1px solid rgba(96, 165, 250, 0.18);
+    border-radius: 999px;
+    background: rgba(2, 8, 23, 0.32);
+    color: rgba(226, 232, 240, 0.76);
+    font-size: 11px;
+  }
+}

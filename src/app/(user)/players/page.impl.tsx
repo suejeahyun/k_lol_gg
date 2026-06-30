@@ -4,6 +4,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import Pagination from "@/components/Pagination";
 import PlayerSearchBox from "./PlayerSearchBox";
+import SafeChampionImage from "@/components/SafeChampionImage";
 import TierIcon from "@/components/TierIcon";
 import { ensureSeasonStats, getWinRate } from "@/lib/stats/season-performance";
 
@@ -13,6 +14,9 @@ type PlayersPageProps = {
     q?: string;
     sort?: string;
     order?: string;
+    position?: string;
+    tier?: string;
+    status?: string;
   }>;
 };
 
@@ -27,6 +31,38 @@ type SortType =
 type OrderType = "asc" | "desc";
 
 const PAGE_SIZE = 10;
+
+const POSITION_FILTERS = [
+  { value: "ALL", label: "전체" },
+  { value: "TOP", label: "TOP" },
+  { value: "JGL", label: "JGL" },
+  { value: "MID", label: "MID" },
+  { value: "ADC", label: "ADC" },
+  { value: "SUP", label: "SUP" },
+] as const;
+
+const TIER_FILTERS = [
+  { value: "ALL", label: "전체 티어" },
+  { value: "아이언", label: "아이언" },
+  { value: "브론즈", label: "브론즈" },
+  { value: "실버", label: "실버" },
+  { value: "골드", label: "골드" },
+  { value: "플래티넘", label: "플래티넘" },
+  { value: "에메랄드", label: "에메랄드" },
+  { value: "다이아", label: "다이아" },
+  { value: "마스터", label: "마스터" },
+  { value: "그랜드마스터", label: "그마" },
+  { value: "챌린저", label: "챌린저" },
+] as const;
+
+const STATUS_FILTERS = [
+  { value: "ALL", label: "전체 상태" },
+  { value: "ace", label: "ACE" },
+  { value: "stable", label: "STABLE" },
+  { value: "normal", label: "NORMAL" },
+  { value: "slump", label: "SLUMP" },
+  { value: "need-data", label: "NEED DATA" },
+] as const;
 
 function getSort(sort?: string): SortType {
   if (
@@ -45,6 +81,16 @@ function getSort(sort?: string): SortType {
 
 function getOrder(order?: string): OrderType {
   return order === "asc" ? "asc" : "desc";
+}
+
+function getFilterValue<T extends readonly { value: string }[]>(
+  filters: T,
+  value?: string,
+) {
+  const normalized = value?.trim() ?? "ALL";
+  return filters.some((filter) => filter.value === normalized)
+    ? normalized
+    : "ALL";
 }
 
 function buildPlayerSearchWhere(query: string) {
@@ -239,6 +285,18 @@ function getMvpTone(mvpCount: number) {
   return "normal";
 }
 
+function matchesTierFilter(
+  currentTier: string | null,
+  peakTier: string | null,
+  tierFilter: string,
+) {
+  if (tierFilter === "ALL") return true;
+
+  return [currentTier, peakTier].some((tier) =>
+    tier?.trim().startsWith(tierFilter),
+  );
+}
+
 export default async function PlayersPage({ searchParams }: PlayersPageProps) {
   const resolved = await searchParams;
 
@@ -246,6 +304,9 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
   const query = resolved.q?.trim() ?? "";
   const sort = getSort(resolved.sort);
   const order = getOrder(resolved.order);
+  const positionFilter = getFilterValue(POSITION_FILTERS, resolved.position);
+  const tierFilter = getFilterValue(TIER_FILTERS, resolved.tier);
+  const statusFilter = getFilterValue(STATUS_FILTERS, resolved.status);
 
   const currentSeason = await prisma.season.findFirst({
     where: { isActive: true },
@@ -287,6 +348,22 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
           games: "desc",
         },
       },
+      championStats: {
+        where: { seasonId: currentSeason?.id ?? -1 },
+        orderBy: [{ games: "desc" }, { wins: "desc" }],
+        take: 3,
+        select: {
+          games: true,
+          wins: true,
+          mvpCount: true,
+          champion: {
+            select: {
+              name: true,
+              imageUrl: true,
+            },
+          },
+        },
+      },
     },
     orderBy: {
       id: "asc",
@@ -321,10 +398,31 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
       mvpCount,
       primaryPosition,
       status,
+      topChampions: player.championStats.map((stat) => ({
+        name: stat.champion.name,
+        imageUrl: stat.champion.imageUrl,
+        games: stat.games,
+        winRate: getWinRate(stat.wins, stat.games),
+        mvpCount: stat.mvpCount,
+      })),
     };
   });
 
-  const sorted = [...mapped].sort((a, b) => {
+  const filtered = mapped.filter((player) => {
+    const matchesPosition =
+      positionFilter === "ALL" || player.primaryPosition === positionFilter;
+    const matchesTier = matchesTierFilter(
+      player.currentTier,
+      player.peakTier,
+      tierFilter,
+    );
+    const matchesStatus =
+      statusFilter === "ALL" || player.status.className === statusFilter;
+
+    return matchesPosition && matchesTier && matchesStatus;
+  });
+
+  const sorted = [...filtered].sort((a, b) => {
     let result = 0;
 
     if (sort === "name") result = a.name.localeCompare(b.name);
@@ -346,7 +444,7 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
     (safeCurrentPage - 1) * PAGE_SIZE,
     safeCurrentPage * PAGE_SIZE
   );
-  const mostActivePlayer = [...mapped]
+  const mostActivePlayer = [...filtered]
     .filter((player) => player.participationCount > 0)
     .sort((a, b) => {
       if (b.participationCount !== a.participationCount) {
@@ -356,33 +454,57 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
       return b.winRate - a.winRate;
     })[0];
 
-  const highestWinRatePlayer = [...mapped]
+  const highestWinRatePlayer = [...filtered]
     .filter((player) => player.totalGames >= 3)
     .sort((a, b) => {
       if (b.winRate !== a.winRate) return b.winRate - a.winRate;
       return b.totalGames - a.totalGames;
     })[0];
 
-  const highestMvpPlayer = [...mapped]
+  const highestMvpPlayer = [...filtered]
     .sort((a, b) => {
       if (b.mvpCount !== a.mvpCount) return b.mvpCount - a.mvpCount;
       return b.totalGames - a.totalGames;
     })[0];
 
-  const highestTierPlayer = [...mapped].sort(
+  const highestTierPlayer = [...filtered].sort(
     (a, b) => tierRank(b.peakTier) - tierRank(a.peakTier)
   )[0];
 
-  function sortLink(field: SortType) {
-    const nextOrder = sort === field && order === "desc" ? "asc" : "desc";
+  function buildPlayersHref({
+    nextSort = sort,
+    nextOrder = order,
+    nextPosition = positionFilter,
+    nextTier = tierFilter,
+    nextStatus = statusFilter,
+    page = "1",
+  }: {
+    nextSort?: SortType;
+    nextOrder?: OrderType;
+    nextPosition?: string;
+    nextTier?: string;
+    nextStatus?: string;
+    page?: string;
+  } = {}) {
     const params = new URLSearchParams();
 
     if (query) params.set("q", query);
-    params.set("sort", field);
+    if (nextPosition !== "ALL") params.set("position", nextPosition);
+    if (nextTier !== "ALL") params.set("tier", nextTier);
+    if (nextStatus !== "ALL") params.set("status", nextStatus);
+    params.set("sort", nextSort);
     params.set("order", nextOrder);
-    params.set("page", "1");
+    params.set("page", page);
 
     return `/players?${params.toString()}`;
+  }
+
+  function sortLink(field: SortType) {
+    const nextOrder = sort === field && order === "desc" ? "asc" : "desc";
+    return buildPlayersHref({
+      nextSort: field,
+      nextOrder,
+    });
   }
 
   return (
@@ -399,10 +521,69 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
           <PlayerSearchBox initialQuery={query} />
         </div>
 
+        <div className="players-page-v2__filters" aria-label="플레이어 필터">
+          <div className="players-page-v2__filter-group">
+            <span>라인</span>
+            <div>
+              {POSITION_FILTERS.map((filter) => (
+                <Link
+                  key={filter.value}
+                  href={buildPlayersHref({ nextPosition: filter.value })}
+                  className={`players-page-v2__filter-chip ${
+                    positionFilter === filter.value
+                      ? "players-page-v2__filter-chip--active"
+                      : ""
+                  }`}
+                >
+                  {filter.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <div className="players-page-v2__filter-group">
+            <span>티어</span>
+            <div>
+              {TIER_FILTERS.map((filter) => (
+                <Link
+                  key={filter.value}
+                  href={buildPlayersHref({ nextTier: filter.value })}
+                  className={`players-page-v2__filter-chip ${
+                    tierFilter === filter.value
+                      ? "players-page-v2__filter-chip--active"
+                      : ""
+                  }`}
+                >
+                  {filter.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <div className="players-page-v2__filter-group">
+            <span>상태</span>
+            <div>
+              {STATUS_FILTERS.map((filter) => (
+                <Link
+                  key={filter.value}
+                  href={buildPlayersHref({ nextStatus: filter.value })}
+                  className={`players-page-v2__filter-chip ${
+                    statusFilter === filter.value
+                      ? "players-page-v2__filter-chip--active"
+                      : ""
+                  }`}
+                >
+                  {filter.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+
       <section className="players-page-v2__summary" aria-label="플레이어 요약">
         <div className="players-page-v2__summary-card">
-          <span>총 플레이어</span>
-          <strong>{mapped.length}</strong>
+          <span>조회 플레이어</span>
+          <strong>{filtered.length}</strong>
         </div>
 
         <div className="players-page-v2__summary-card players-page-v2__summary-card--wide">
@@ -477,7 +658,30 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
                   className="players-page-v2__row"
                 >
                   <div className="players-page-v2__cell players-page-v2__name">
-                    {player.name}
+                    <strong>{player.name}</strong>
+                    {player.topChampions.length > 0 ? (
+                      <div className="players-page-v2__champions">
+                        {player.topChampions.map((champion) => (
+                          <span
+                            key={champion.name}
+                            className="players-page-v2__champion-pill"
+                            title={`${champion.name} · ${champion.games}회 · 승률 ${formatPercent(
+                              champion.winRate,
+                            )}`}
+                          >
+                            <SafeChampionImage
+                              src={champion.imageUrl}
+                              alt={champion.name}
+                              width={22}
+                              height={22}
+                              className="players-page-v2__champion-image"
+                              fallbackClassName="players-page-v2__champion-image players-page-v2__champion-image--empty"
+                            />
+                            <span>{champion.name}</span>
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
                   </div>
 
                   <div className="players-page-v2__cell players-page-v2__riot">
@@ -544,7 +748,16 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
             currentPage={safeCurrentPage}
             totalPages={totalPages}
             basePath="/players"
-            query={{ q: query, sort, order }}
+            query={{
+              q: query,
+              sort,
+              order,
+              position:
+                positionFilter !== "ALL" ? String(positionFilter) : undefined,
+              tier: tierFilter !== "ALL" ? String(tierFilter) : undefined,
+              status:
+                statusFilter !== "ALL" ? String(statusFilter) : undefined,
+            }}
           />
         </div>
       </section>

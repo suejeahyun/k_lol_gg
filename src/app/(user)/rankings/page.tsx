@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma/client";
+import { getCurrentUser } from "@/lib/auth/session";
 import RankingSeasonFilter from "@/components/RankingSeasonFilter";
 import Pagination from "@/components/Pagination";
 
@@ -187,7 +188,7 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
   const order = getOrder(resolvedSearchParams.order);
   const currentPage = Math.max(1, Number(resolvedSearchParams.page ?? "1") || 1);
 
-  const [data, seasons] = await Promise.all([
+  const [data, seasons, currentUser] = await Promise.all([
     getRankings(seasonId),
     prisma.season.findMany({
       orderBy: { id: "desc" },
@@ -197,6 +198,7 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
         isActive: true,
       },
     }),
+    getCurrentUser(),
   ]);
 
   const eligibleRankings = data.rankings.filter(
@@ -214,6 +216,30 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
 
     return order === "asc" ? result : -result;
   });
+
+  const rankingBasis = [...eligibleRankings].sort((a, b) => {
+    return (
+      b.winRate - a.winRate ||
+      b.participationCount - a.participationCount ||
+      b.mvpCount - a.mvpCount ||
+      a.name.localeCompare(b.name)
+    );
+  });
+
+  const myPlayerId = currentUser?.playerId ?? null;
+  const myRanking = myPlayerId
+    ? data.rankings.find((player) => player.playerId === myPlayerId) ?? null
+    : null;
+  const myRankIndex = myPlayerId
+    ? rankingBasis.findIndex((player) => player.playerId === myPlayerId)
+    : -1;
+  const myRankText = myPlayerId
+    ? myRankIndex >= 0
+      ? `${myRankIndex + 1}위`
+      : myRanking
+        ? "기준 미달"
+        : "기록 없음"
+    : "로그인 필요";
 
   const topWinRate = [...eligibleRankings]
     .sort((a, b) => {
@@ -281,6 +307,32 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
           seasons={seasons}
           selectedSeasonId={seasonId ? Number(seasonId) : data.season?.id}
         />
+
+        <section className="ranking-my-grid" aria-label="내 랭킹 요약">
+          <article className="ranking-my-card ranking-my-card--primary">
+            <span>내 랭킹</span>
+            <strong>{myRankText}</strong>
+            <small>참여 {MIN_PARTICIPATION_FOR_RANKING}회 이상 기준</small>
+          </article>
+
+          <article className="ranking-my-card">
+            <span>내 승률</span>
+            <strong>{myRanking ? formatPercent(myRanking.winRate) : "-"}</strong>
+            <small>
+              {myRanking
+                ? `${myRanking.wins}승 ${myRanking.losses}패`
+                : "연결된 기록 없음"}
+            </small>
+          </article>
+
+          <article className="ranking-my-card">
+            <span>내 참여 내전 횟수</span>
+            <strong>
+              {myRanking ? `${myRanking.participationCount}회` : "-"}
+            </strong>
+            <small>{myRanking ? `총 ${myRanking.totalGames}세트` : "로그인 후 확인"}</small>
+          </article>
+        </section>
 
         <section className="ranking-top-grid" aria-label="랭킹 TOP3">
           <TopRankingCard
@@ -350,7 +402,11 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
                     <Link
                       key={player.playerId}
                       href={`/players/${player.playerId}`}
-                      className="ranking-row-card"
+                      className={`ranking-row-card ${
+                        player.playerId === myPlayerId
+                          ? "ranking-row-card--me"
+                          : ""
+                      }`}
                     >
                       <div className="ranking-row-grid">
                         <div
