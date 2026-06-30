@@ -29,7 +29,6 @@ export default async function AdminDisciplineNewPage() {
         <div>
           <p className="page-eyebrow">DISCIPLINE CREATE</p>
           <h1>주의 등록</h1>
-          <p className="admin-muted" style={{ marginTop: 8 }}>주의/경고 등록은 목록과 분리했습니다.</p>
         </div>
         <Link className="admin-button admin-button--ghost" href="/admin/discipline">목록</Link>
       </div>

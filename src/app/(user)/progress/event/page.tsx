@@ -58,9 +58,6 @@ export default async function EventProgressPage() {
         <div>
           <p className="page-eyebrow">EVENT MATCH</p>
           <h1>이벤트 내전</h1>
-          <p>
-            이벤트 내전 모집, 팀 구성, 대진 결과, 우승 정보를 한 화면에서 확인합니다.
-          </p>
         </div>
 
         <div className="event-user-hero__actions">

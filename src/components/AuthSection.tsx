@@ -83,8 +83,8 @@ export default function AuthSection() {
       </div>
 
       {user.status === "APPROVED" ? (
-        <Link href="/me/player" className="sidebar-auth__button">
-          내 정보
+        <Link href="/account" className="sidebar-auth__button">
+          내정보
         </Link>
       ) : null}
 

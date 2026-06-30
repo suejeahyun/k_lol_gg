@@ -150,9 +150,6 @@ export default async function EventProgressDetailPage({ params }: PageProps) {
         <div>
           <p className="page-eyebrow">EVENT MATCH DETAIL</p>
           <h1>{event.title}</h1>
-          <p>
-            현재 진행 단계에 필요한 정보만 표시합니다. 모집중이면 이 화면에서 바로 참가 신청할 수 있습니다.
-          </p>
         </div>
 
         <div className="event-user-hero__actions">

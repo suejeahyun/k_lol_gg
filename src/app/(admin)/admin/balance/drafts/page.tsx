@@ -90,30 +90,21 @@ export default async function AdminTeamBalanceDraftsPage({ searchParams }: Props
           <strong>{totalCount}</strong>
           <small>전체 저장안</small>
         </article>
-        <article className="ai-kpi">
-          <span>현재 페이지</span>
-          <strong>{currentPage}</strong>
-          <small>전체 {totalPages}페이지</small>
-        </article>
-        <article className="ai-kpi">
-          <span>페이지 표시</span>
-          <strong>{drafts.length}</strong>
-          <small>최신 저장순</small>
-        </article>
+
         <article className="ai-kpi">
           <span>활성 시즌</span>
           <strong>{activeSeason?.name ?? "-"}</strong>
           <small>신규 저장 시 자동 연결</small>
         </article>
       </section>
-
+<p></p>
+<p></p>
       <section className="ai-panel ai-panel--strong admin-balance-drafts-panel">
         <div className="ai-panel__head">
           <div>
             <h2 className="ai-panel__title">저장된 AI 밸런스 목록</h2>
           </div>
         </div>
-
         <div className="ai-table-wrap admin-balance-drafts-table-wrap">
           <table className="ai-table ai-table--wide admin-balance-drafts-table">
             <thead>
@@ -125,8 +116,7 @@ export default async function AdminTeamBalanceDraftsPage({ searchParams }: Props
                 <th>RED</th>
                 <th>BLUE</th>
                 <th>차이</th>
-                <th>인원</th>
-                <th>AI 리뷰</th>
+                <th>리뷰</th>
                 <th>생성일</th>
                 <th>관리</th>
               </tr>
@@ -152,7 +142,6 @@ export default async function AdminTeamBalanceDraftsPage({ searchParams }: Props
                     <td>{formatNumber(draft.redTotal)}</td>
                     <td>{formatNumber(draft.blueTotal)}</td>
                     <td>{formatNumber(draft.diff)}</td>
-                    <td>{draft._count.players}명</td>
                     <td>{draft._count.balanceReviews}개</td>
                     <td>{formatDate(draft.createdAt)}</td>
                     <td>

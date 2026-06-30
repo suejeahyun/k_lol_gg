@@ -74,9 +74,6 @@ export default async function AdminMatchesPage({
           <h1 className="page-title" style={{ marginBottom: 6 }}>
             관리자 - 내전 관리
           </h1>
-          <p className="page-description" style={{ margin: 0 }}>
-            내전 제목을 날짜 기준으로 사용합니다. 등록 내전 기반 AI 학습은 최신 기록 반영이 필요할 때 실행합니다.
-          </p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <Link href="/admin/matches/new" className="app-button">

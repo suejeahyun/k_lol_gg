@@ -22,14 +22,12 @@ const menuGroups: AdminSidebarGroup[] = [
   {
     title: "CORE",
     items: [
-      { href: "/admin", label: "관리자 홈", code: "ADM" },
       { href: "/admin/matches", label: "내전 관리", code: "MAT" },
     ],
   },
   {
     title: "BALANCE",
     items: [
-      { href: "/admin/balance", label: "팀 밸런스", code: "BAL" },
       { href: "/admin/balance/drafts", label: "AI 밸런스", code: "AIB", activePrefixes: ["/admin/balance/drafts"] },
       { href: "/admin/balance-ai", label: "K-LOL MMR", code: "MMR", activePrefixes: ["/admin/balance-ai"] },
     ],
@@ -61,7 +59,6 @@ const menuGroups: AdminSidebarGroup[] = [
     title: "SYSTEM",
     items: [
       { href: "/admin/security", label: "보안 설정", code: "SEC", activePrefixes: ["/admin/security"] },
-      { href: "/admin/logs", label: "관리자 로그", code: "LOG" },
       { href: "/api/admin/backup/players.csv", label: "백업 CSV", code: "CSV", access: "SUPER", external: true },
     ],
   },

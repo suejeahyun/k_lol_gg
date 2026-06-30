@@ -194,16 +194,6 @@ export default async function DestructionProgressDetailPage({
         </div>
 
         <div className="destruction-detail-summary-card">
-          <span>시작일</span>
-          <strong>{formatDate(tournament.startDate)}</strong>
-        </div>
-
-        <div className="destruction-detail-summary-card">
-          <span>종료일</span>
-          <strong>{formatDate(tournament.endDate)}</strong>
-        </div>
-
-        <div className="destruction-detail-summary-card">
           <span>팀</span>
           <strong>{tournament.teams.length}개</strong>
         </div>

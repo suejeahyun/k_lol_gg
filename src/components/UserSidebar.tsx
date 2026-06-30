@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import AuthSection from "./AuthSection";
@@ -67,8 +67,6 @@ const menuGroups: UserSidebarGroup[] = [
   {
     title: "INFO",
     items: [      { href: "/highlights", label: "하이라이트", code: "VID", activePrefixes: ["/highlights", "/images"] },
-      { href: "/account", label: "내 계정/Discord", code: "MY", auth: true, activePrefixes: ["/account"] },
-      { href: "/account/password", label: "비밀번호 변경", code: "PWD", auth: true },
     ],
   },
 ];

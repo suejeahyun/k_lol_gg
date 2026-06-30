@@ -25,14 +25,8 @@ export default async function AdminLogsPage() {
       <div className="admin-page__header">
         <div>
           <h1 className="admin-page__title">관리자 감사 로그</h1>
-          <p className="admin-page__description">
-            관리자 로그인, 권한 변경, 삭제, 보안 설정 변경 이력을 확인합니다.
-          </p>
         </div>
 
-        <Link className="admin-button" href="/admin">
-          관리자 홈
-        </Link>
       </div>
 
       <section className="admin-card">

@@ -82,10 +82,6 @@ export default async function DestructionProgressPage() {
         <div>
           <p className="page-eyebrow">DESTRUCTION MATCH</p>
           <h1>멸망전</h1>
-          <p>
-            멸망전 모집, 참가자 명단, 팀 구성, 경매, 예선·본선 결과를 한 화면에서
-            확인합니다.
-          </p>
         </div>
 
         <div className="event-user-hero__actions">

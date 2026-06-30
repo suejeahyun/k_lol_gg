@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
@@ -510,8 +510,7 @@ const styles: Record<string, CSSProperties> = {
   page: {
     minHeight: "100vh",
     padding: "32px 16px 56px",
-    background:
-      "radial-gradient(circle at top, rgba(90, 117, 255, 0.16), transparent 34%), #080b12",
+    background: "transparent",
     color: "#f8fafc",
   },
   hero: {
@@ -865,3 +864,4 @@ const styles: Record<string, CSSProperties> = {
     background: "rgba(2, 6, 23, 0.4)",
   },
 };
+

@@ -31,7 +31,6 @@ export default async function AdminDisciplinePage() {
         <div>
           <p className="page-eyebrow">DISCIPLINE</p>
           <h1>운영 경고 관리</h1>
-          <p className="admin-muted" style={{ marginTop: 8 }}>주의/경고는 목록에서 간단히 확인하고, 상세에서 수정·삭제합니다.</p>
         </div>
       </div>
       <div className="discipline-page-shell">
