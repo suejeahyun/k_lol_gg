@@ -301,21 +301,6 @@ export default async function DiscordStatsPage(props: PageProps) {
 
       <DiscordOpsNav active="stats" />
 
-      <section className="discord-readability-hero">
-        <div>
-          <strong>확인 순서</strong>
-          <p>오류 → 구인 자동화 → 지각/DM → 음성방 활동 → 상세 로그 순서로 보면 됩니다.</p>
-        </div>
-        <nav className="discord-anchor-nav" aria-label="Discord 통계 바로가기">
-          <a href="#summary">요약</a>
-          <a href="#recruit">구인</a>
-          <a href="#warning">지각·경고</a>
-          <a href="#voice">음성방</a>
-          <a href="#bot">봇/API</a>
-          <a href="#details">상세</a>
-        </nav>
-      </section>
-
       <form className="discord-filter-card discord-filter-card--readable" method="get">
         <label>이름 검색<input name="q" defaultValue={q} placeholder="같이 있던 사람 분석용 · 예: 재현" /></label>
         <label>기간<select name="days" defaultValue={String(days)}><option value="1">오늘</option><option value="7">최근 7일</option><option value="30">최근 30일</option><option value="90">최근 90일</option></select></label>

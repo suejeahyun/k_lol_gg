@@ -1,4 +1,4 @@
-@import url("../styles/base/reset.css");
+﻿@import url("../styles/base/reset.css");
 @import url("../styles/base/variables.css");
 @import url("../styles/base/typography.css");
 
@@ -292,3 +292,48 @@
   border-color: rgba(248, 113, 113, 0.48);
   background: rgba(127, 29, 29, 0.24);
 }
+
+/* phase6-admin-parent-overflow-guard: prevent admin content from expanding to the right of the sidebar */
+.admin-page,
+.discord-ops-page {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.admin-page > *,
+.discord-ops-page > * {
+  min-width: 0;
+}
+
+/* phase7-admin-layout-overflow-fix: prevent sidebar pages from using viewport width */
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+main,
+.admin-main,
+.admin-content,
+.adminPageMain,
+.adminPageContent,
+[class*="adminMain"],
+[class*="adminContent"],
+[class*="AdminLayout"],
+[class*="layoutMain"] {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+main > *,
+.admin-main > *,
+.admin-content > *,
+.adminPageMain > *,
+.adminPageContent > * {
+  min-width: 0;
+}
+

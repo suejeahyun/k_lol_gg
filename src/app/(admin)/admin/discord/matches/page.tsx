@@ -16,7 +16,6 @@ export default function DiscordMatchPage() {
         <div className="admin-actions"><Link className="admin-button admin-button--secondary" href="/admin/discord">대시보드</Link><button className="admin-button" type="button" onClick={() => void load()}>새로고침</button></div>
       </div>
       <DiscordOpsNav active="matches" />
-      <div className="discord-ops-notice">내전 확인은 ID 연동을 우선 사용하되, 연동이 없어도 내전/대기 음성방의 Discord 닉네임 이름 토큰과 참가자 이름이 같으면 참석으로 봅니다. 다른 게임방/개인방 접속자는 참석으로 계산하지 않습니다. 시작 10분 전 이후 입장은 늦참, 시작 10분 후까지 미확인은 미접속 경고로 표시합니다.</div>
       <section className="discord-ops-stat-grid">
         <div className="discord-ops-stat"><span>참가</span><strong>{match?.totalCount ?? 0}명</strong><em>오늘 내전</em></div>
         <div className="discord-ops-stat"><span>확인</span><strong>{match?.presentCount ?? 0}명</strong><em>Discord 입장 확인</em></div>

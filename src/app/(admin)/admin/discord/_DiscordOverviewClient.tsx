@@ -232,35 +232,10 @@ export default function DiscordOverviewClient() {
 
       <DiscordOpsNav active="overview" />
 
-      <section className="discord-readability-hero">
-        <div>
-          <strong>대시보드 확인 순서</strong>
-          <p>봇 상태와 오류를 먼저 보고, 진행중 구인·지각 경고·DM 상태를 이어서 확인하세요.</p>
-        </div>
-        <nav className="discord-anchor-nav" aria-label="Discord 운영 바로가기">
-          <a href="/admin/discord/recruits">구인 검증</a>
-          <a href="/admin/discord/stats">상세 통계</a>
-          <a href="/admin/operation-forms/warnings">경고</a>
-          <a href="/admin/discord/settings">설정</a>
-        </nav>
-      </section>
+
 
       {loading || !data ? <section className="admin-card"><div className="admin-empty">Discord 운영 현황을 불러오는 중입니다.</div></section> : (
         <>
-          <section className="discord-readable-section discord-readable-section--compact">
-            <div className="discord-readable-section__head">
-              <div><span className="discord-readable-section__eyebrow">Quick actions</span><h2>빠른 이동</h2><p>자주 확인하는 운영 페이지를 기능별로 분리했습니다.</p></div>
-            </div>
-            <div className="discord-ops-nav-grid">
-            {navItems.map((item) => (
-              <Link className="discord-ops-nav-card" key={item.href} href={item.href}>
-                <strong>{item.title}</strong>
-                <span>{item.desc}</span>
-              </Link>
-            ))}
-            </div>
-          </section>
-
           <section className="discord-readable-section discord-readable-section--compact">
             <div className="discord-readable-section__head">
               <div><span className="discord-readable-section__eyebrow">Live summary</span><h2>운영 요약</h2><p>현재 상태를 판단하는 핵심 카드입니다.</p></div>

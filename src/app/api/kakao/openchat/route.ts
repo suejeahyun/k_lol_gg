@@ -5,7 +5,6 @@ import { getKakaoHelpMessage, getKakaoRecruitHelpMessage, parseKakaoCommand } fr
 import { parseRecruitMessage } from "@/lib/kakao/recruit-message-parser";
 import {
   formatPlayerRecordMessage,
-  formatRankingMessage,
   formatRecentGamesMessage,
 } from "@/lib/kakao/formatPlayerRecordMessage";
 import {
@@ -13,6 +12,7 @@ import {
   getRankingForKakao,
 } from "@/features/player/services/getPlayerRecordForKakao";
 import { logServerError } from "@/lib/server/safe-log";
+import { getKakaoOperationSettings, type KakaoOperationSettings } from "@/lib/kakao/settings";
 
 type KakaoOpenchatBody = {
   message?: string;
@@ -31,11 +31,30 @@ type KakaoMessageContext = {
   sender: string | null;
 };
 
-function jsonReply(reply: string, status = 200, extra: Record<string, unknown> = {}) {
-  // 카카오봇 Jsoup .post().text()는 400/404/500 응답에서 HttpStatusException을 던질 수 있습니다.
-  // 봇 안정성을 위해 명령어 처리 결과는 HTTP 200으로 반환하고, 실제 상태는 ok/statusCode에 담습니다.
+type RankingRow = { nickname: string; tag: string; winRate: number; totalGames: number; participationCount: number; kda: number };
+
+function formatNumber(value: number, digits = 1) {
+  if (!Number.isFinite(value)) return "0";
+  return value.toFixed(digits);
+}
+
+function formatKda(value: number) {
+  if (!Number.isFinite(value)) return "Perfect";
+  return value.toFixed(2);
+}
+
+function applyPrefix(reply: string, settings: KakaoOperationSettings) {
+  const prefix = settings.responsePrefix?.trim();
+  if (!prefix) return reply;
+  if (!reply.trim()) return reply;
+  if (reply.startsWith(prefix)) return reply;
+  return `${prefix}\n${reply}`;
+}
+
+function jsonReply(reply: string, status = 200, extra: Record<string, unknown> = {}, settings?: KakaoOperationSettings) {
+  const finalReply = settings ? applyPrefix(reply, settings) : reply;
   return NextResponse.json(
-    { ok: status >= 200 && status < 300, statusCode: status, reply, ...extra },
+    { ok: status >= 200 && status < 300, statusCode: status, reply: finalReply, ...extra },
     {
       status: 200,
       headers: {
@@ -43,6 +62,11 @@ function jsonReply(reply: string, status = 200, extra: Record<string, unknown> =
       },
     },
   );
+}
+
+function disabledReply(settings: KakaoOperationSettings, feature?: string) {
+  const suffix = feature ? `\n대상 기능: ${feature}` : "";
+  return jsonReply(`${settings.disabledFeatureMessage}${suffix}`, 200, {}, settings);
 }
 
 function rejectIfInvalidSecret(req: NextRequest) {
@@ -80,18 +104,28 @@ function extractContext(body: KakaoOpenchatBody): KakaoMessageContext {
   };
 }
 
-function getRecruitHelperLinkMessage() {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://k-lol-gg.vercel.app";
+function getSelfBaseUrl() {
+  const configured = process.env.NEXT_PUBLIC_BASE_URL?.trim();
+  if (configured) return configured.replace(/\/$/, "");
+
+  const vercelUrl = process.env.VERCEL_URL?.trim();
+  if (vercelUrl) return `https://${vercelUrl.replace(/\/$/, "")}`;
+
+  return "http://localhost:3000";
+}
+
+function getRecruitHelperLinkMessage(settings: KakaoOperationSettings) {
+  const baseUrl = getSelfBaseUrl();
 
   return [
-    "[K-LOL.GG 구인도우미]",
+    settings.helperLinkTitle,
     "",
-    "현재 사용 중인 카카오톡 명령어 전체 설명은 아래 페이지에서 확인해주세요.",
+    "현재 사용 중인 카카오톡 구인 관련 설명은 아래 페이지에서 확인해주세요.",
     "",
-    `${baseUrl}/recruit-helper`,
+    `${baseUrl}${settings.recruitHelperPath}`,
     "",
     "구인현황 바로가기:",
-    `${baseUrl}/recruit`,
+    `${baseUrl}${settings.recruitPagePath}`,
   ].join("\n");
 }
 
@@ -102,11 +136,14 @@ function normalizeKakaoText(value: string) {
     .replace(/[０-９]/g, (char) => String.fromCharCode(char.charCodeAt(0) - 0xfee0));
 }
 
-function isLikelyBotSender(sender: string | null) {
-  const text = String(sender || "").trim();
+function includesAny(value: string | null, patterns: string[]) {
+  const text = String(value || "").trim().toLowerCase();
   if (!text) return false;
+  return patterns.some((pattern) => text.includes(pattern.toLowerCase()));
+}
 
-  return /K-LOL|구인구직\s*도우미|구인도우미|오픈채팅봇|봇/i.test(text);
+function isLikelyBotSender(sender: string | null, settings: KakaoOperationSettings) {
+  return includesAny(sender, settings.botSenderPatterns);
 }
 
 function isSeasonRecruitSnapshotMessage(message: string) {
@@ -123,24 +160,43 @@ function isSeasonRecruitSnapshotMessage(message: string) {
   );
 }
 
-function getSelfBaseUrl() {
-  const configured = process.env.NEXT_PUBLIC_BASE_URL?.trim();
-  if (configured) return configured.replace(/\/$/, "");
+function isRoomAllowed(context: KakaoMessageContext, settings: KakaoOperationSettings) {
+  const roomName = context.roomName || settings.defaultRoomName || "";
 
-  const vercelUrl = process.env.VERCEL_URL?.trim();
-  if (vercelUrl) return `https://${vercelUrl.replace(/\/$/, "")}`;
-
-  return "http://localhost:3000";
+  if (includesAny(roomName, settings.blockedRoomNames)) return false;
+  if (settings.allowedRoomNames.length > 0 && !includesAny(roomName, settings.allowedRoomNames)) return false;
+  return true;
 }
 
-async function forwardSeasonRecruitSnapshot(message: string, context: KakaoMessageContext) {
+function isSenderBlocked(context: KakaoMessageContext, settings: KakaoOperationSettings) {
+  if (includesAny(context.sender, settings.blockedSenders)) return true;
+  if (settings.ignoreBotSender && isLikelyBotSender(context.sender, settings)) return true;
+  return false;
+}
+
+function formatRankingMessageWithLimit(rows: RankingRow[], limit: number) {
+  if (!rows.length) {
+    return "랭킹 데이터가 없습니다.\n기준: 내전 참여 10회 이상";
+  }
+
+  return [
+    `🏆 K-LOL.GG 랭킹 TOP ${limit}`,
+    "기준: 내전 참여 10회 이상",
+    "",
+    ...rows.slice(0, limit).map((row, index) => {
+      return `${index + 1}. ${row.nickname}#${row.tag} | 승률 ${formatNumber(row.winRate)}% | 참여 ${row.participationCount}회 | ${row.totalGames}세트 | KDA ${formatKda(row.kda)}`;
+    }),
+  ].join("\n");
+}
+
+async function forwardSeasonRecruitSnapshot(message: string, context: KakaoMessageContext, settings: KakaoOperationSettings) {
   const parsed = parseRecruitMessage(message);
 
   if (parsed.participants.length < 1) {
     return jsonReply([
       "[K-LOL.GG 내전 명단 업데이트 실패]",
       "참가자 이름이 1명 이상 있는 전체 양식만 반영할 수 있습니다.",
-    ].join("\n"));
+    ].join("\n"), 200, {}, settings);
   }
 
   const recruitSecret = process.env.KAKAO_RECRUIT_SECRET?.trim();
@@ -172,133 +228,179 @@ async function forwardSeasonRecruitSnapshot(message: string, context: KakaoMessa
   return jsonReply(reply, response.ok ? 200 : 500, {
     forwardedTo: "season-apply",
     seasonApplyStatusCode: data?.statusCode ?? response.status,
-  });
+  }, settings);
 }
 
-async function handleMessage(message: string, context: KakaoMessageContext = { roomName: null, sender: null }) {
+async function handleMessage(message: string, context: KakaoMessageContext = { roomName: null, sender: null }, settings: KakaoOperationSettings) {
   const trimmedMessage = message.trim();
 
-  if (isSeasonRecruitSnapshotMessage(trimmedMessage) && !isLikelyBotSender(context.sender)) {
-    return forwardSeasonRecruitSnapshot(trimmedMessage, context);
+  if (!settings.globalEnabled || settings.maintenanceMode) {
+    return jsonReply(settings.maintenanceMessage, 200, { reason: "maintenance" }, settings);
+  }
+
+  if (!trimmedMessage) {
+    return jsonReply(settings.unknownCommandMessage || getKakaoHelpMessage(), 200, {}, settings);
+  }
+
+  if (trimmedMessage.length > settings.maxMessageLength) {
+    return jsonReply("[K-LOL.GG]\n메시지가 너무 길어 처리하지 않았습니다.", 200, {}, settings);
+  }
+
+  if (!isRoomAllowed(context, settings)) {
+    return jsonReply(settings.blockedRoomMessage, 200, { reason: "room_blocked" }, settings);
+  }
+
+  if (isSenderBlocked(context, settings)) {
+    return jsonReply("", 200, { reason: "sender_ignored" }, settings);
+  }
+
+  if (isSeasonRecruitSnapshotMessage(trimmedMessage)) {
+    if (!settings.seasonApplyCommandEnabled || !settings.seasonSnapshotForwardEnabled) return disabledReply(settings, "내전 명단 자동 반영");
+    return forwardSeasonRecruitSnapshot(trimmedMessage, context, settings);
   }
 
   if (/^(구인도우미|\/구인도우미|구인웹도우미|\/구인웹도우미|구인매뉴얼|\/구인매뉴얼|명령어페이지|\/명령어페이지)$/i.test(trimmedMessage)) {
-    return jsonReply(getRecruitHelperLinkMessage());
+    if (!settings.recruitCommandEnabled || !settings.recruitHelpCommandEnabled) return disabledReply(settings, "구인 도움말");
+    return jsonReply(getRecruitHelperLinkMessage(settings), 200, {}, settings);
   }
 
   if (/^(AI공지|자동공지|공지생성)(\s+(12|15|18|20))?$/i.test(trimmedMessage)) {
+    if (!settings.aiNoticeRedirectEnabled) return disabledReply(settings, "AI공지 호환 안내");
     return jsonReply([
       "[명령어 변경 안내]",
       "AI공지는 내전현황으로 변경되었습니다.",
       "앞으로는 내전현황을 입력해주세요.",
-    ].join("\n"));
+    ].join("\n"), 200, {}, settings);
   }
 
   if (/^(내전현황|\/내전현황|시즌내전현황|\/시즌내전현황)$/i.test(trimmedMessage)) {
+    if (!settings.seasonApplyCommandEnabled || !settings.seasonStatusCommandEnabled) return disabledReply(settings, "내전현황");
     return jsonReply([
-      "[내전현황 안내]",
-      "내전현황은 LOL-K방 전용 카카오봇에서 처리합니다.",
-      "카카오봇 코드가 최신인지 확인해주세요.",
-    ].join("\n"));
+      "[K-LOL.GG 내전현황 안내]",
+      "내전현황은 카카오봇에서 /api/kakao/recruit/season-apply/status 또는 /api/kakao/scheduled-notice로 연결해야 최신 현황이 출력됩니다.",
+      "카카오봇 스크립트의 내전현황 분기와 API_URL을 확인해주세요.",
+    ].join("\n"), 200, {}, settings);
   }
 
   const command = parseKakaoCommand(message);
 
   if (command.type === "help") {
-    return jsonReply(getKakaoHelpMessage());
+    if (!settings.helpCommandEnabled || !settings.unknownCommandResponseEnabled) return jsonReply("", 200, {}, settings);
+    return jsonReply(settings.unknownCommandMessage || getKakaoHelpMessage(), 200, {}, settings);
   }
 
   if (command.type === "recruitHelp") {
-    return jsonReply(getKakaoRecruitHelpMessage());
+    if (!settings.recruitCommandEnabled || !settings.recruitHelpCommandEnabled) return disabledReply(settings, "구인 도움말");
+    return jsonReply(getKakaoRecruitHelpMessage(), 200, {}, settings);
   }
 
   if (command.type === "status") {
+    if (!settings.seasonApplyCommandEnabled || !settings.seasonStatusCommandEnabled) return disabledReply(settings, "내전현황");
     return jsonReply([
       "[K-LOL.GG 내전현황 안내]",
       "내전현황은 카카오봇에서 /api/kakao/recruit/season-apply/status 또는 /api/kakao/scheduled-notice로 연결해야 최신 현황이 출력됩니다.",
       "카카오봇 스크립트의 내전현황 분기와 API_URL을 확인해주세요.",
-    ].join("\n"));
+    ].join("\n"), 200, {}, settings);
   }
 
   if (command.type === "ranking") {
+    if (!settings.playerRecordSearchEnabled || !settings.rankingCommandEnabled) return disabledReply(settings, "랭킹 조회");
     const rows = await getRankingForKakao();
-    return jsonReply(formatRankingMessage(rows));
+    return jsonReply(formatRankingMessageWithLimit(rows, settings.rankingLimit), 200, {}, settings);
   }
 
   if (command.type === "record" || command.type === "recent") {
+    if (!settings.playerRecordSearchEnabled) return disabledReply(settings, "전적 조회");
+    if (command.type === "record" && !settings.recordCommandEnabled) return disabledReply(settings, "전적 조회");
+    if (command.type === "recent" && !settings.recentCommandEnabled) return disabledReply(settings, "최근 경기 조회");
+
     if (!command.query) {
       return jsonReply([
         "닉네임#태그 형식으로 입력해주세요.",
         "",
         "예시: 전적 sax0ph0ne#99단굵묵"
-      ].join("\n"));
+      ].join("\n"), 200, {}, settings);
     }
 
     const record = await getPlayerRecordForKakao(command.query);
 
     if (!record) {
       return jsonReply([
-        "검색 결과가 없습니다.",
-        "닉네임#태그를 확인해주세요.",
+        settings.notFoundMessage,
         "",
         "예시: 전적 sax0ph0ne#99단굵묵"
-      ].join("\n"));
+      ].join("\n"), 200, {}, settings);
     }
+
+    const limitedRecord = {
+      ...record,
+      recentGames: record.recentGames.slice(0, command.type === "recent" ? settings.recentGamesLimit : Math.min(settings.recentGamesLimit, 5)),
+    };
 
     return jsonReply(
       command.type === "recent"
-        ? formatRecentGamesMessage(record)
-        : formatPlayerRecordMessage(record),
+        ? formatRecentGamesMessage(limitedRecord)
+        : formatPlayerRecordMessage(limitedRecord),
+      200,
+      {},
+      settings,
     );
   }
 
-  // PC 테스트 중 한글 인코딩이 깨진 경우에도 PowerShell이 예외를 던지지 않도록 200으로 도움말을 반환합니다.
-  return jsonReply(getKakaoHelpMessage());
+  if (!settings.unknownCommandResponseEnabled) return jsonReply("", 200, {}, settings);
+  return jsonReply(settings.unknownCommandMessage || getKakaoHelpMessage(), 200, {}, settings);
+}
+
+async function getSettingsAndRejectRateLimit(req: NextRequest) {
+  const settings = await getKakaoOperationSettings();
+  const rateLimitRejected = await rejectIfRateLimited(req, {
+    action: "KAKAO_OPENCHAT",
+    limit: settings.openchatRateLimitPerMinute,
+    windowSeconds: settings.openchatRateLimitWindowSeconds,
+  });
+
+  return { settings, rateLimitRejected };
 }
 
 export async function POST(req: NextRequest) {
+  let settings: KakaoOperationSettings | null = null;
+
   try {
     const secretRejected = rejectIfInvalidSecret(req);
     if (secretRejected) return secretRejected;
 
-    const rateLimitRejected = await rejectIfRateLimited(req, {
-      action: "KAKAO_OPENCHAT",
-      limit: 60,
-      windowSeconds: 60,
-    });
-    if (rateLimitRejected) return jsonReply("요청이 너무 많습니다. 잠시 후 다시 시도해주세요.");
+    const rateLimit = await getSettingsAndRejectRateLimit(req);
+    settings = rateLimit.settings;
+    if (rateLimit.rateLimitRejected) return jsonReply("요청이 너무 많습니다. 잠시 후 다시 시도해주세요.", 200, {}, settings);
 
     const body = (await req.json().catch(() => ({}))) as KakaoOpenchatBody;
-    return handleMessage(extractMessage(body), extractContext(body));
+    return handleMessage(extractMessage(body), extractContext(body), settings);
   } catch (error) {
     logServerError("[KAKAO_OPENCHAT_POST_ERROR]", error, { endpoint: "/api/kakao/openchat", method: "POST" });
 
-    return jsonReply([
-      "전적 조회 중 오류가 발생했습니다.",
-      "잠시 후 다시 시도해주세요.",
-    ].join("\n"));
+    return jsonReply(settings?.errorMessage || "처리 중 오류가 발생했습니다.\n잠시 후 다시 시도해주세요.", 200, {}, settings ?? undefined);
   }
 }
 
 export async function GET(req: NextRequest) {
+  let settings: KakaoOperationSettings | null = null;
+
   try {
     const secretRejected = rejectIfInvalidSecret(req);
     if (secretRejected) return secretRejected;
 
-    const rateLimitRejected = await rejectIfRateLimited(req, {
-      action: "KAKAO_OPENCHAT",
-      limit: 60,
-      windowSeconds: 60,
-    });
-    if (rateLimitRejected) return jsonReply("요청이 너무 많습니다. 잠시 후 다시 시도해주세요.");
+    const rateLimit = await getSettingsAndRejectRateLimit(req);
+    settings = rateLimit.settings;
+    if (rateLimit.rateLimitRejected) return jsonReply("요청이 너무 많습니다. 잠시 후 다시 시도해주세요.", 200, {}, settings);
 
     const message = req.nextUrl.searchParams.get("message") ?? "도움말";
-    return handleMessage(message);
+    const context: KakaoMessageContext = {
+      roomName: req.nextUrl.searchParams.get("roomName") ?? req.nextUrl.searchParams.get("room"),
+      sender: req.nextUrl.searchParams.get("sender"),
+    };
+    return handleMessage(message, context, settings);
   } catch (error) {
     logServerError("[KAKAO_OPENCHAT_GET_ERROR]", error, { endpoint: "/api/kakao/openchat", method: "GET" });
-    return jsonReply([
-      "전적 조회 중 오류가 발생했습니다.",
-      "잠시 후 다시 시도해주세요.",
-    ].join("\n"));
+    return jsonReply(settings?.errorMessage || "처리 중 오류가 발생했습니다.\n잠시 후 다시 시도해주세요.", 200, {}, settings ?? undefined);
   }
 }
