@@ -5,6 +5,7 @@ import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
 import { AppSection, AppEmpty } from "@/components/app-mobile/AppCards";
 import { AppDiscordLinkButton } from "@/components/app-mobile/AppDiscordLinkButton";
 import { AppLogoutButton } from "@/components/app-mobile/AppLogoutButton";
+import DiscordAvatar from "@/components/DiscordAvatar";
 
 export const dynamic = "force-dynamic";
 
@@ -72,11 +73,11 @@ export default async function AppAccountPage() {
       <AppSection title="Discord 계정 연동">
         <div className="klol-app-discord-card klol-app-discord-card--profile">
           <div className="klol-app-discord-profile">
-            {user.discordAvatar ? (
-              <img src={user.discordAvatar} alt="Discord avatar" />
-            ) : (
-              <div className="klol-app-discord-avatar">D</div>
-            )}
+            <DiscordAvatar
+              src={user.discordAvatar}
+              name={discordName}
+              placeholderClassName="klol-app-discord-avatar"
+            />
             <div>
               <span className="klol-app-discord-label">연동 상태</span>
               <strong>{discordLinked ? discordName : "미연동"}</strong>

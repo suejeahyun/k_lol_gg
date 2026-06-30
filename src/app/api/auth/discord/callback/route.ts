@@ -36,20 +36,21 @@ type DiscordUserPayload = {
   avatar?: string | null;
 };
 
-function buildFailureRedirect(baseUrl: string, target: "login" | "account", reason: string) {
-  const path = target === "account" ? "/account" : "/login";
-  return NextResponse.redirect(`${baseUrl}${path}?discord=${encodeURIComponent(reason)}`);
-}
 
-async function readDiscordErrorBody(res: Response) {
-  const text = await res.text().catch(() => "");
-  if (!text) return "";
-  try {
-    const parsed = JSON.parse(text) as { error?: string; error_description?: string; message?: string };
-    return parsed.error_description || parsed.message || parsed.error || text.slice(0, 300);
-  } catch {
-    return text.slice(0, 300);
-  }
+function isReclaimableDiscordAccount(account: {
+  userId: string;
+  passwordHash: string | null;
+  player: { id: number } | null;
+  role: string;
+  status: string;
+  discordLinkStatus: string | null;
+}) {
+  if (account.player) return false;
+  if (account.passwordHash) return false;
+  if (account.role !== "USER") return false;
+  if (account.status === "REJECTED") return false;
+  if (!account.userId.startsWith("discord_")) return false;
+  return ["UNMATCHED", "CANDIDATE", "PENDING_ADMIN_CONFIRM", "LINKED"].includes(account.discordLinkStatus || "");
 }
 
 async function fetchDiscordUser(params: { code: string; redirectUri: string }) {
@@ -72,10 +73,7 @@ async function fetchDiscordUser(params: { code: string; redirectUri: string }) {
     cache: "no-store",
   });
 
-  if (!tokenRes.ok) {
-    const body = await readDiscordErrorBody(tokenRes);
-    throw new Error(`Discord 토큰 요청 실패: ${tokenRes.status}${body ? ` / ${body}` : ""}`);
-  }
+  if (!tokenRes.ok) throw new Error(`Discord 토큰 요청 실패: ${tokenRes.status}`);
   const tokenData = (await tokenRes.json()) as { access_token?: string; token_type?: string };
   if (!tokenData.access_token) throw new Error("Discord access token이 없습니다.");
 
@@ -84,10 +82,7 @@ async function fetchDiscordUser(params: { code: string; redirectUri: string }) {
     cache: "no-store",
   });
 
-  if (!userRes.ok) {
-    const body = await readDiscordErrorBody(userRes);
-    throw new Error(`Discord 사용자 조회 실패: ${userRes.status}${body ? ` / ${body}` : ""}`);
-  }
+  if (!userRes.ok) throw new Error(`Discord 사용자 조회 실패: ${userRes.status}`);
   return (await userRes.json()) as DiscordUserPayload;
 }
 
@@ -152,17 +147,57 @@ async function handleLinkMode(req: NextRequest, discordUser: DiscordUserPayload,
 
   const duplicate = await prisma.userAccount.findFirst({
     where: { discordId: discordUser.id, id: { not: currentUser.userAccountId } },
-    select: { id: true, userId: true },
+    select: {
+      id: true,
+      userId: true,
+      passwordHash: true,
+      role: true,
+      status: true,
+      discordLinkStatus: true,
+      player: { select: { id: true } },
+    },
   });
-  if (duplicate) return NextResponse.redirect(`${baseUrl}/account?discord=duplicate`);
+  const canReclaimDuplicate = duplicate ? isReclaimableDiscordAccount(duplicate) : false;
+  if (duplicate && !canReclaimDuplicate) return NextResponse.redirect(`${baseUrl}/account?discord=duplicate`);
 
   const { data } = buildDiscordData(discordUser);
   const updated = await prisma.$transaction(async (tx) => {
     const before = await tx.userAccount.findUniqueOrThrow({ where: { id: currentUser.userAccountId } });
+
+    if (duplicate && canReclaimDuplicate) {
+      const duplicateBefore = await tx.userAccount.findUniqueOrThrow({ where: { id: duplicate.id } });
+      const duplicateAfter = await tx.userAccount.update({
+        where: { id: duplicate.id },
+        data: {
+          discordId: null,
+          discordUsername: null,
+          discordGlobalName: null,
+          discordServerNickname: null,
+          discordAvatar: null,
+          discordLinkedAt: null,
+          discordParsedBirthYear: null,
+          discordParsedName: null,
+          discordParsedNickname: null,
+          discordParsedTier: null,
+          discordLinkStatus: "RECLAIMED_BY_LINK",
+        },
+      });
+      await writeDiscordAccountLinkLog({
+        userAccountId: duplicateAfter.id,
+        action: "DISCORD_RECLAIMED_FROM_AUTO_ACCOUNT",
+        actorId: before.id,
+        actorType: "USER",
+        reason: `Reclaimed by userAccountId=${before.id}`,
+        before: toDiscordSnapshot(duplicateBefore),
+        after: toDiscordSnapshot(duplicateAfter),
+        db: tx,
+      });
+    }
+
     const user = await tx.userAccount.update({ where: { id: currentUser.userAccountId }, data });
     await writeDiscordAccountLinkLog({
       userAccountId: user.id,
-      action: "DISCORD_LINKED_BY_USER",
+      action: duplicate && canReclaimDuplicate ? "DISCORD_LINKED_BY_USER_AFTER_RECLAIM" : "DISCORD_LINKED_BY_USER",
       actorId: user.id,
       actorType: "USER",
       before: toDiscordSnapshot(before),
@@ -184,16 +219,7 @@ export async function GET(req: NextRequest) {
   const baseUrl = getBaseUrl(req);
   const redirectUri = process.env.DISCORD_REDIRECT_URI || `${baseUrl}/api/auth/discord/callback`;
 
-  const oauthError = req.nextUrl.searchParams.get("error");
-  if (oauthError) {
-    const target = state.mode === "link" ? "account" : "login";
-    const reason = oauthError === "access_denied" ? "cancelled" : `oauth_${oauthError}`;
-    return buildFailureRedirect(baseUrl, target, reason);
-  }
-
-  if (!code) {
-    return buildFailureRedirect(baseUrl, state.mode === "link" ? "account" : "login", "missing_code");
-  }
+  if (!code) return NextResponse.redirect(`${baseUrl}/login?discord=missing_code`);
 
   try {
     const discordUser = await fetchDiscordUser({ code, redirectUri });
@@ -272,7 +298,7 @@ export async function GET(req: NextRequest) {
     return res;
   } catch (error) {
     logServerError("[DISCORD_AUTH_CALLBACK_ERROR]", error);
-    return buildFailureRedirect(baseUrl, state.mode === "link" ? "account" : "login", "failed");
+    return NextResponse.redirect(`${baseUrl}/login?discord=failed`);
   }
 }
 
