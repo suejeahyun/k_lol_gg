@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
@@ -201,15 +201,15 @@ function buildDmMessage(params: {
   const { party, activeWarningCount, graceMinutes } = params;
   const startText = party.startTimeText || (party.scheduledStartAt ? formatKstDateTime(party.scheduledStartAt) : "-");
   return [
-    "[K-LOL.GG 구인 지각 경고 안내]",
+    "[K-LOL.GG 구인 지각 주의 안내]",
     "",
-    "참여한 구인의 시작시간이 지났지만 디스코드 접속이 확인되지 않아 지각 경고가 등록되었습니다.",
+    "참여한 구인의 시작시간이 지났지만 디스코드 접속이 확인되지 않아 지각 주의가 등록되었습니다.",
     "",
     `구인: ${formatPartyTitle(party)}`,
     `시작시간: ${startText}`,
     `판정기준: 시작시간 + ${graceMinutes}분`,
     "",
-    `현재 활성 경고: ${activeWarningCount}개`,
+    `현재 활성 주의: ${activeWarningCount}개`,
     "",
     "오류가 있거나 이미 접속했었다면 운영진에게 확인 요청해주세요.",
   ].join("\n");
@@ -236,7 +236,7 @@ function buildAdminMessage(params: {
     grouped.set(key, [...(grouped.get(key) || []), warning]);
   }
 
-  const lines: string[] = ["[K-LOL.GG 구인 지각 경고]", ""];
+  const lines: string[] = ["[K-LOL.GG 구인 지각 주의]", ""];
   lines.push(`판정기준: 시작시간 + ${params.graceMinutes}분`);
   lines.push("");
 
@@ -246,7 +246,7 @@ function buildAdminMessage(params: {
     lines.push(`${key} · 시작시간: ${startText}`);
     warnings.forEach((warning, index) => {
       const dmText = warning.discordDmStatus === "PENDING" ? "DM 예정" : warning.discordDmStatus === "SKIPPED" ? "DM 불가" : warning.discordDmStatus;
-      lines.push(`${index + 1}. ${warning.targetName} - 활성 경고 ${warning.activeWarningCount}개 / ${dmText}`);
+      lines.push(`${index + 1}. ${warning.targetName} - 활성 주의 ${warning.activeWarningCount}개 / ${dmText}`);
     });
     lines.push("");
   }
@@ -258,18 +258,18 @@ function buildAdminMessage(params: {
     lines.push("");
   }
 
-  lines.push("확인: 관리자 > 운영 신청/경고 > 운영 경고 관리");
+  lines.push("확인: 관리자 > 운영 > 운영 경고 관리");
   return lines.join("\n").slice(0, 1900);
 }
 
 async function getActiveWarningCount(identity: { userAccountId: number | null; playerId: number | null; targetName: string }) {
   if (identity.userAccountId) {
-    return prisma.userDisciplineRecord.count({ where: { isActive: true, type: "WARNING", userAccountId: identity.userAccountId } });
+    return prisma.userDisciplineRecord.count({ where: { isActive: true, type: "CAUTION", userAccountId: identity.userAccountId } });
   }
   if (identity.playerId) {
-    return prisma.userDisciplineRecord.count({ where: { isActive: true, type: "WARNING", playerId: identity.playerId } });
+    return prisma.userDisciplineRecord.count({ where: { isActive: true, type: "CAUTION", playerId: identity.playerId } });
   }
-  return prisma.userDisciplineRecord.count({ where: { isActive: true, type: "WARNING", targetName: identity.targetName } });
+  return prisma.userDisciplineRecord.count({ where: { isActive: true, type: "CAUTION", targetName: identity.targetName } });
 }
 
 function getDuplicateErrorCode(error: unknown) {
@@ -452,7 +452,7 @@ export async function POST(req: NextRequest) {
           partyId: party.id,
           recruitNo: party.recruitNo,
           targetName: check.name,
-          reason: check.skipReason || "매칭 후보가 애매하여 자동 경고에서 제외했습니다.",
+          reason: check.skipReason || "매칭 후보가 애매하여 자동 주의에서 제외했습니다.",
           matchType: check.matchType,
         });
         continue;
@@ -465,7 +465,7 @@ export async function POST(req: NextRequest) {
           partyId: party.id,
           recruitNo: party.recruitNo,
           targetName: check.name,
-          reason: "이미 같은 구인에서 지각 경고가 등록되어 있습니다.",
+          reason: "이미 같은 구인에서 지각 주의가 등록되어 있습니다.",
           matchType: "DUPLICATE",
           recordId: existing.id,
         });
@@ -474,7 +474,7 @@ export async function POST(req: NextRequest) {
 
       const dmStatus = !dmEnabled ? "DISABLED" : check.linkedDiscordId ? "PENDING" : "SKIPPED";
       const reason = `${formatPartyTitle(party)} 시작시간 경과 후 디스코드 접속 미확인 · 시작시간: ${party.startTimeText || (party.scheduledStartAt ? formatKstDateTime(party.scheduledStartAt) : "-")} · 판정기준: 시작시간 + ${graceMinutes}분`;
-      const note = "자동 등록 · 카카오톡 구인 지각 · 디스코드 감시 음성방 기준 미접속";
+      const note = "자동 등록 · 카카오톡 구인 지각 주의 · 디스코드 감시 음성방 기준 미접속";
       const sourceMeta = {
         source,
         partyId: party.id,
@@ -524,7 +524,7 @@ export async function POST(req: NextRequest) {
             targetName: check.name,
             targetNickname: check.targetNickname,
             targetTag: check.targetTag,
-            type: "WARNING",
+            type: "CAUTION",
             source: "LATE",
             reason,
             note,

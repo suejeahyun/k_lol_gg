@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -23,9 +23,7 @@ const menuGroups: AdminSidebarGroup[] = [
     title: "CORE",
     items: [
       { href: "/admin", label: "관리자 홈", code: "ADM" },
-      { href: "/admin/matches/new", label: "내전 등록", code: "REG" },
       { href: "/admin/matches", label: "내전 관리", code: "MAT" },
-      { href: "/admin/player-approvals", label: "플레이어 승인", code: "APR" },
     ],
   },
   {
@@ -41,6 +39,7 @@ const menuGroups: AdminSidebarGroup[] = [
     items: [
       { href: "/admin/recruits", label: "구인현황", code: "REC" },
       { href: "/admin/operation-forms", label: "운영 신청", code: "OPR", activePrefixes: ["/admin/operation-forms"] },
+      { href: "/admin/discipline", label: " 경고 관리", code: "DIS", activePrefixes: ["/admin/discipline"] },
       { href: "/admin/discord", label: "Discord 운영", code: "DC", activePrefixes: ["/admin/discord", "/admin/discord-monitor"] },
       { href: "/admin/progress", label: "이벤트/멸망전", code: "EVT", activePrefixes: ["/admin/progress"] },
     ],
@@ -48,7 +47,7 @@ const menuGroups: AdminSidebarGroup[] = [
   {
     title: "DATA",
     items: [
-      { href: "/admin/players", label: "플레이어", code: "PLY" },
+      { href: "/admin/players", label: "플레이어 관리", code: "PLY", activePrefixes: ["/admin/players"] },
       { href: "/admin/champions", label: "챔피언", code: "CHP" },
       { href: "/admin/seasons", label: "시즌", code: "SSN" },
     ],

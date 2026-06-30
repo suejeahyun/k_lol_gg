@@ -5,7 +5,6 @@ import MatchDeleteButton from "./[matchId]/MatchDeleteButton";
 import AdminMatchAiTrainingButton from "./AdminMatchAiTrainingButton";
 export const dynamic = "force-dynamic";
 
-
 type AdminMatchesPageProps = {
   searchParams: Promise<{
     page?: string;
@@ -14,7 +13,6 @@ type AdminMatchesPageProps = {
 };
 
 const PAGE_SIZE = 10;
-
 
 export default async function AdminMatchesPage({
   searchParams,
@@ -74,13 +72,18 @@ export default async function AdminMatchesPage({
       >
         <div>
           <h1 className="page-title" style={{ marginBottom: 6 }}>
-            관리자 - 내전 목록
+            관리자 - 내전 관리
           </h1>
           <p className="page-description" style={{ margin: 0 }}>
-            내전 등록 후 AI 학습을 실행하면 이후 팀 밸런스, MMR, 밴픽 추천 근거가 최신 내전 기록을 기준으로 정리됩니다.
+            내전 제목을 날짜 기준으로 사용합니다. 등록 내전 기반 AI 학습은 최신 기록 반영이 필요할 때 실행합니다.
           </p>
         </div>
-        <AdminMatchAiTrainingButton />
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <Link href="/admin/matches/new" className="app-button">
+            내전 등록
+          </Link>
+          <AdminMatchAiTrainingButton />
+        </div>
       </div>
 
       <form
@@ -109,16 +112,17 @@ export default async function AdminMatchesPage({
         <p>등록된 내전이 없습니다.</p>
       ) : (
         <>
-          <div className="admin-match-row-header">
+          <div className="admin-match-row-header" style={{ gridTemplateColumns: "1.4fr 1fr 0.6fr 1.3fr" }}>
             <div>제목</div>
             <div>시즌</div>
             <div>세트 수</div>
+            <div>관리</div>
           </div>
 
           <div className="card-grid">
             {matches.map((match: (typeof matches)[number]) => (
               <div key={match.id} className="admin-player-row-card">
-                <div className="admin-match-row-grid">
+                <div className="admin-match-row-grid" style={{ gridTemplateColumns: "1.4fr 1fr 0.6fr 1.3fr" }}>
                   <div className="player-col player-name">{match.title}</div>
                   <div className="player-col">{match.season.name}</div>
                   <div className="player-col">{match._count.games}</div>
