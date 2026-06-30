@@ -15,7 +15,7 @@ function winnerText(games: { winnerTeam: string }[]) {
 
 export default async function AppAdminMatchesPage() {
   const admin = await requireAdminRequest();
-  if (!admin) redirect("/login");
+  if (!admin) redirect("/app/login?next=/app/admin/matches");
 
   const matches = await prisma.matchSeries
     .findMany({

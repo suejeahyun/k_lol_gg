@@ -21,7 +21,7 @@ function formatDate(value?: Date | string | null) {
 
 export default async function AppAdminPage() {
   const admin = await requireAdminRequest();
-  if (!admin) redirect("/login");
+  if (!admin) redirect("/app/login?next=/app/admin");
 
   const [logs, activeRecruitCount, todayVoiceCount] = await Promise.all([
     prisma.adminLog

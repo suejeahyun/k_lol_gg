@@ -1111,3 +1111,171 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* App-only login page */
+.klol-app-root--login {
+  display: grid;
+  place-items: center;
+  padding: env(safe-area-inset-top, 0px) 14px env(safe-area-inset-bottom, 0px);
+}
+
+.klol-app-login-page {
+  display: grid;
+  place-items: center;
+  width: min(100%, 520px);
+  min-height: 100dvh;
+  padding: 24px 0;
+}
+
+.klol-app-login-card {
+  display: grid;
+  gap: 16px;
+  width: 100%;
+  padding: 22px 16px 18px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 28px;
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.94), rgba(30, 41, 59, 0.74));
+  box-shadow: 0 24px 68px rgba(0, 0, 0, 0.36);
+}
+
+.klol-app-login-mark {
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  margin: 0 auto;
+  border: 1px solid rgba(250, 204, 21, 0.36);
+  border-radius: 22px;
+  background: linear-gradient(135deg, #facc15, #f97316);
+  color: #111827;
+  font-size: 34px;
+  font-weight: 1000;
+  letter-spacing: -0.08em;
+}
+
+.klol-app-login-head {
+  display: grid;
+  gap: 6px;
+  text-align: center;
+}
+
+.klol-app-login-head span {
+  color: #facc15;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.1em;
+}
+
+.klol-app-login-head h1 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 28px;
+  font-weight: 950;
+  letter-spacing: -0.05em;
+}
+
+.klol-app-login-head p {
+  margin: 0;
+  color: rgba(203, 213, 225, 0.78);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.55;
+}
+
+.klol-app-login-discord,
+.klol-app-login-form button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 950;
+  text-decoration: none;
+  touch-action: manipulation;
+}
+
+.klol-app-login-discord {
+  border: 1px solid rgba(129, 140, 248, 0.38);
+  background: rgba(79, 70, 229, 0.24);
+  color: #e0e7ff;
+}
+
+.klol-app-login-form {
+  display: grid;
+  gap: 12px;
+}
+
+.klol-app-login-form label {
+  display: grid;
+  gap: 7px;
+}
+
+.klol-app-login-form label span {
+  color: rgba(226, 232, 240, 0.84);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.klol-app-login-form input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 16px;
+  background: rgba(2, 6, 23, 0.62);
+  color: #f8fafc;
+  font-size: 16px;
+  font-weight: 800;
+  outline: none;
+}
+
+.klol-app-login-form input:focus {
+  border-color: rgba(250, 204, 21, 0.54);
+  box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.1);
+}
+
+.klol-app-login-form input::placeholder {
+  color: rgba(148, 163, 184, 0.68);
+}
+
+.klol-app-login-form button {
+  border: 1px solid rgba(250, 204, 21, 0.42);
+  background: linear-gradient(135deg, #facc15, #f97316);
+  color: #111827;
+  cursor: pointer;
+}
+
+.klol-app-login-form button:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.45);
+  opacity: 0.58;
+}
+
+.klol-app-login-message {
+  margin: 0;
+  padding: 10px 11px;
+  border: 1px solid rgba(251, 191, 36, 0.22);
+  border-radius: 14px;
+  background: rgba(251, 191, 36, 0.08);
+  color: #fde68a;
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1.5;
+}
+
+.klol-app-login-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 14px;
+  padding-top: 2px;
+}
+
+.klol-app-login-links a {
+  color: rgba(203, 213, 225, 0.78);
+  font-size: 12px;
+  font-weight: 850;
+  text-decoration: none;
+}

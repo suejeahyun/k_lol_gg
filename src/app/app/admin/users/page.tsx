@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AppAdminUsersPage() {
   const admin = await requireAdminRequest();
-  if (!admin) redirect("/login");
+  if (!admin) redirect("/app/login?next=/app/admin/users");
 
   const users = await prisma.userAccount
     .findMany({

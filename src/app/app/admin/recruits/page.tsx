@@ -16,7 +16,7 @@ function statusText(status: string) {
 
 export default async function AppAdminRecruitsPage() {
   const admin = await requireAdminRequest();
-  if (!admin) redirect("/login");
+  if (!admin) redirect("/app/login?next=/app/admin/recruits");
 
   const parties = await prisma.recruitParty
     .findMany({

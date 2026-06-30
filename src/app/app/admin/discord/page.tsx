@@ -21,7 +21,7 @@ function formatDate(value?: Date | string | null) {
 
 export default async function AppAdminDiscordPage() {
   const admin = await requireAdminRequest();
-  if (!admin) redirect("/login");
+  if (!admin) redirect("/app/login?next=/app/admin/discord");
 
   const [heartbeat, events] = await Promise.all([
     prisma.discordBotHeartbeat
