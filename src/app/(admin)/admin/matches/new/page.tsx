@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 
 import { prisma } from "@/lib/prisma/client";
 import MatchForm from "@/features/match/MatchForm";
+import { toKstDateTimeLocalInputValue } from "@/lib/date/kst";
 
 export default async function NewMatchPage() {
   const [seasons, players, champions] = await Promise.all([
@@ -36,7 +37,7 @@ const currentSeason =
       initialData={{
         seasonId: currentSeason?.id ?? 1,
         title: "",
-        matchDate: new Date().toISOString().slice(0, 16),
+        matchDate: toKstDateTimeLocalInputValue(),
         games: [],
       }}
     />

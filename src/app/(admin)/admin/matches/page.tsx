@@ -15,9 +15,6 @@ type AdminMatchesPageProps = {
 
 const PAGE_SIZE = 10;
 
-function formatDate(date: Date): string {
-  return new Date(date).toLocaleString("ko-KR");
-}
 
 export default async function AdminMatchesPage({
   searchParams,
@@ -43,9 +40,7 @@ export default async function AdminMatchesPage({
 
   const matches = await prisma.matchSeries.findMany({
     where,
-    orderBy: {
-      matchDate: "desc",
-    },
+    orderBy: [{ title: "desc" }, { id: "desc" }],
     skip: (currentPage - 1) * PAGE_SIZE,
     take: PAGE_SIZE,
     include: {
@@ -116,7 +111,6 @@ export default async function AdminMatchesPage({
         <>
           <div className="admin-match-row-header">
             <div>제목</div>
-            <div>날짜</div>
             <div>시즌</div>
             <div>세트 수</div>
           </div>
@@ -126,9 +120,6 @@ export default async function AdminMatchesPage({
               <div key={match.id} className="admin-player-row-card">
                 <div className="admin-match-row-grid">
                   <div className="player-col player-name">{match.title}</div>
-                  <div className="player-col">
-                    {formatDate(match.matchDate)}
-                  </div>
                   <div className="player-col">{match.season.name}</div>
                   <div className="player-col">{match._count.games}</div>
 

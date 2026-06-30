@@ -209,7 +209,6 @@
   grid-template-columns:
     minmax(170px, 1.05fr)
     minmax(220px, 1.25fr)
-    120px
     190px !important;
   grid-template-rows: auto auto !important;
   column-gap: 18px !important;
@@ -276,18 +275,10 @@
   grid-row: 1 !important;
 }
 
-.matches-page-v2 .matches-list-v4__head-date,
-.matches-page-v2 .matches-list-v4__date {
-  grid-column: 3 !important;
-  grid-row: 1 / span 2 !important;
-  width: 120px !important;
-  min-width: 120px !important;
-  max-width: 120px !important;
-}
 
 .matches-page-v2 .matches-list-v4__head-score,
 .matches-page-v2 .matches-list-v4__score-cell {
-  grid-column: 4 !important;
+  grid-column: 3 !important;
   grid-row: 1 / span 2 !important;
   width: 190px !important;
   min-width: 190px !important;

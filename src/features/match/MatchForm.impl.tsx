@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type ClipboardEvent } from "react";
 import { useRouter } from "next/navigation";
+import { getMatchDateTimeLocalFromTitle } from "@/lib/date/kst";
 import type {
   LolChampionCandidate,
   LolResultImportResponse,
@@ -486,7 +487,7 @@ export default function MatchForm({
       id: form.id,
       seasonId: form.seasonId,
       title: form.title.trim(),
-      matchDate: form.matchDate,
+      matchDate: getMatchDateTimeLocalFromTitle(form.title, form.matchDate ? new Date(form.matchDate) : new Date()),
       teamBalanceDraftId:
         Number.isInteger(Number(selectedTeamBalanceDraftId)) && Number(selectedTeamBalanceDraftId) > 0
           ? Number(selectedTeamBalanceDraftId)
@@ -516,13 +517,6 @@ export default function MatchForm({
       return "시즌을 선택해주세요.";
     }
 
-    if (!form.matchDate) {
-      return "내전 일시를 입력해주세요.";
-    }
-
-    if (Number.isNaN(new Date(form.matchDate).getTime())) {
-      return "내전 일시 형식이 올바르지 않습니다.";
-    }
 
     if (form.games.length === 0) {
       return "최소 1세트 이상 추가해주세요.";
@@ -1462,17 +1456,6 @@ export default function MatchForm({
               </option>
             ))}
           </select>
-        </label>
-
-        <label className="match-form-field">
-          <span>일시</span>
-          <input
-            type="datetime-local"
-            value={form.matchDate}
-            onChange={(e) =>
-              setForm((prev) => ({ ...prev, matchDate: e.target.value }))
-            }
-          />
         </label>
       </div>
 
