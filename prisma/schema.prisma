@@ -514,6 +514,12 @@ model DestructionTournament {
   preliminaryRoundCount Int @default(3)
   advanceTeamCount Int @default(4)
 
+  topLaneLimit Int @default(10)
+  jungleLaneLimit Int @default(10)
+  midLaneLimit Int @default(10)
+  adcLaneLimit Int @default(10)
+  supportLaneLimit Int @default(10)
+
   winnerTeamId   Int?
   mvpPlayerId    Int?
   galleryImageId Int?

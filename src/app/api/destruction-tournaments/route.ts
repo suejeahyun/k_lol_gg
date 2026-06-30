@@ -1,10 +1,11 @@
-﻿export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { DestructionPreliminaryFormat } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { logServerError } from "@/lib/server/safe-log";
+import { parseDestructionLaneLimits } from "@/lib/destruction/recruitment-auto-reserve";
 
 const MAX_ADMIN_DESTRUCTION_TOURNAMENTS = 50;
 
@@ -76,6 +77,7 @@ export async function POST(req: NextRequest) {
     const needsRoundCount = usesRoundCount(preliminaryFormat);
     const requestedRoundCount = Number(body.preliminaryRoundCount ?? 3);
     const preliminaryRoundCount = needsRoundCount ? requestedRoundCount : 1;
+    const laneLimits = parseDestructionLaneLimits(body);
 
     if (!title) {
       return NextResponse.json(
@@ -102,6 +104,7 @@ export async function POST(req: NextRequest) {
         preliminaryBestOf: getBestOf(preliminaryFormat),
         preliminaryRoundCount,
         advanceTeamCount: 4,
+        ...laneLimits,
       },
       include: {
         galleryImage: true,

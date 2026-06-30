@@ -25,11 +25,14 @@ type Application = {
   player: Player;
 };
 
+type LaneLimits = Record<Position, number>;
+
 type Props = {
   tournamentId: number;
   applications: Application[];
   hasTeams: boolean;
   hasMatches: boolean;
+  laneLimits: LaneLimits;
 };
 
 const POSITIONS: Position[] = ["TOP", "JGL", "MID", "ADC", "SUP"];
@@ -56,7 +59,7 @@ function formatDate(value: string) {
   return `${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
 }
 
-function getAutoReserveIds(applications: Application[]) {
+function getAutoReserveIds(applications: Application[], laneLimits: LaneLimits) {
   const candidates = applications
     .filter((application) => isManagedStatus(String(application.status)))
     .slice()
@@ -87,9 +90,10 @@ function getAutoReserveIds(applications: Application[]) {
         return a.id - b.id;
       });
 
-    if (samePosition.length <= targetTeamCount) continue;
+    const positionLimit = laneLimits[position];
+    if (samePosition.length <= positionLimit) continue;
 
-    for (const application of samePosition.slice(targetTeamCount)) {
+    for (const application of samePosition.slice(positionLimit)) {
       reserveIds.add(application.id);
     }
   }
@@ -97,7 +101,7 @@ function getAutoReserveIds(applications: Application[]) {
   return reserveIds;
 }
 
-function getReserveReason(application: Application, reserveIds: Set<number>, applications: Application[]) {
+function getReserveReason(application: Application, reserveIds: Set<number>, applications: Application[], laneLimits: LaneLimits) {
   if (!reserveIds.has(application.id) && application.status !== "RESERVE") return "";
 
   const candidates = applications
@@ -124,7 +128,8 @@ function getReserveReason(application: Application, reserveIds: Set<number>, app
     });
   const positionIndex = samePosition.findIndex((item) => item.id === application.id);
 
-  if (positionIndex >= targetTeamCount) return `${application.mainPosition} ${targetTeamCount}명 초과`;
+  const positionLimit = laneLimits[application.mainPosition as Position] ?? 10;
+  if (positionIndex >= positionLimit) return `${application.mainPosition} 최대 ${positionLimit}명 초과`;
 
   return "자동 보류";
 }
@@ -134,6 +139,7 @@ export default function DestructionRecruitmentManager({
   applications,
   hasTeams,
   hasMatches,
+  laneLimits,
 }: Props) {
   const router = useRouter();
   const [keyword, setKeyword] = useState("");
@@ -142,6 +148,8 @@ export default function DestructionRecruitmentManager({
   const [captainFilter, setCaptainFilter] = useState("ALL");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const commonLaneLimit = Math.max(...POSITIONS.map((position) => laneLimits[position] ?? 10));
+  const [laneLimitDraft, setLaneLimitDraft] = useState(String(commonLaneLimit));
 
   const canEdit = !hasTeams && !hasMatches;
   const activeApplications = applications.filter((application) => isActiveStatus(String(application.status)));
@@ -151,13 +159,13 @@ export default function DestructionRecruitmentManager({
   const managedApplicationCount = applications.filter((application) => isManagedStatus(String(application.status))).length;
   const targetTeamCount = managedApplicationCount >= 5 ? Math.floor(managedApplicationCount / 5) : 0;
   const targetActiveCount = targetTeamCount * 5;
-  const autoReserveIds = useMemo(() => getAutoReserveIds(applications), [applications]);
+  const autoReserveIds = useMemo(() => getAutoReserveIds(applications, laneLimits), [applications, laneLimits]);
 
   const positionCounts = POSITIONS.map((position) => ({
     position,
     count: activeApplications.filter((application) => application.mainPosition === position).length,
     reserveCount: reserveApplications.filter((application) => application.mainPosition === position).length,
-    recommendedMax: targetTeamCount,
+    limit: laneLimits[position],
   }));
 
   const filteredApplications = applications.filter((application) => {
@@ -221,12 +229,54 @@ export default function DestructionRecruitmentManager({
     if (ok) router.refresh();
   };
 
+  const handleLaneLimitSave = async () => {
+    setError("");
+
+    const value = Number(laneLimitDraft);
+    if (!Number.isInteger(value) || value < 1 || value > 99) {
+      setError("라인 최대 인원은 1~99 사이의 정수로 입력해주세요.");
+      return;
+    }
+
+    const parsed = Object.fromEntries(POSITIONS.map((position) => [position, value])) as Record<Position, number>;
+
+    setIsSubmitting(true);
+
+    try {
+      const res = await fetch(`/api/destruction-tournaments/${tournamentId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          laneLimits: parsed,
+        }),
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        setError(data?.message ?? "라인별 최대 인원 저장 실패");
+        return;
+      }
+
+      router.refresh();
+    } catch {
+      setError("라인별 최대 인원 저장 중 오류가 발생했습니다.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="destruction-recruitment-manager destruction-admin-panel-wide">
       <style>{`
         .destruction-recruitment-summary { display: grid; grid-template-columns: repeat(5, minmax(120px, 1fr)); gap: 10px; margin-bottom: 14px; }
         .destruction-position-strip { display: grid; grid-template-columns: repeat(5, minmax(90px, 1fr)); gap: 8px; margin-bottom: 16px; }
         .recruitment-toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 14px 0; }
+        .destruction-lane-limit-editor { display: grid; grid-template-columns: minmax(160px, 320px); gap: 8px; margin-bottom: 12px; justify-content: center; }
+        .destruction-lane-limit-field { border: 1px solid rgba(59,130,246,0.28); border-radius: 14px; padding: 10px; background: rgba(15,23,42,0.48); }
+        .destruction-lane-limit-field label { display: block; color: #bfdbfe; font-size: 12px; font-weight: 800; margin-bottom: 6px; }
         .recruitment-auto-note { border: 1px solid rgba(34,211,238,0.28); background: rgba(8,145,178,0.10); color: #c8f5ff; border-radius: 12px; padding: 10px 12px; font-size: 12px; font-weight: 700; }
         .recruitment-table { border: 1px solid rgba(59,130,246,0.30); border-radius: 16px; overflow: hidden; background: rgba(7,16,35,0.72); }
         .recruitment-row { display: grid; grid-template-columns: 52px minmax(90px, 0.8fr) minmax(180px, 1.3fr) 72px 90px 96px 96px minmax(130px, 0.8fr); gap: 10px; align-items: center; padding: 10px 12px; border-bottom: 1px solid rgba(59,130,246,0.18); }
@@ -237,7 +287,7 @@ export default function DestructionRecruitmentManager({
         .recruitment-badge.reserve { border-color: rgba(250,204,21,0.42); background: rgba(250,204,21,0.12); color: #fef3c7; }
         .recruitment-badge.reject { border-color: rgba(248,113,113,0.42); background: rgba(248,113,113,0.12); color: #fecaca; }
         .recruitment-actions { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
-        @media (max-width: 1180px) { .destruction-recruitment-summary, .destruction-position-strip { grid-template-columns: 1fr 1fr; } .recruitment-row { grid-template-columns: 1fr; } .recruitment-row.is-head { display: none; } .recruitment-actions { justify-content: flex-start; } }
+        @media (max-width: 1180px) { .destruction-recruitment-summary, .destruction-position-strip, .destruction-lane-limit-editor { grid-template-columns: 1fr 1fr; } .recruitment-row { grid-template-columns: 1fr; } .recruitment-row.is-head { display: none; } .recruitment-actions { justify-content: flex-start; } }
       `}</style>
 
       <div className="destruction-recruitment-summary">
@@ -263,18 +313,46 @@ export default function DestructionRecruitmentManager({
         </div>
       </div>
 
+
+      <div className="empty-box" style={{ marginBottom: 14 }}>
+        <strong>라인 최대 인원 설정</strong>
+        <p className="admin-page__description" style={{ margin: "8px 0 12px" }}>
+          모든 라인에 같은 최대 인원이 적용됩니다. 주 라인 기준이며, 제한보다 많은 라인은 늦게 신청한 인원부터 자동 보류로 이동합니다. 경매 시작 전까지만 수정할 수 있습니다.
+        </p>
+        <div className="destruction-lane-limit-editor">
+          <div className="destruction-lane-limit-field">
+            <label>라인당 최대 인원</label>
+            <input
+              className="admin-form__input"
+              type="number"
+              min="1"
+              max="99"
+              value={laneLimitDraft}
+              onChange={(event) => setLaneLimitDraft(event.target.value)}
+              disabled={!canEdit || isSubmitting}
+            />
+          </div>
+        </div>
+        <button
+          type="button"
+          className="chip-button"
+          onClick={handleLaneLimitSave}
+          disabled={!canEdit || isSubmitting}
+        >
+          {isSubmitting ? "저장 중..." : "라인 최대 인원 저장 / 자동 보류 재계산"}
+        </button>
+      </div>
+
       <div className="destruction-position-strip">
         {positionCounts.map((item) => {
-          const excessive = item.recommendedMax > 0 && item.count > item.recommendedMax;
+          const excessive = item.count > item.limit;
           return (
             <div key={item.position} className="admin-event-detail-card">
               <span>{item.position}</span>
               <strong>{item.count}명</strong>
-              {item.recommendedMax > 0 ? (
-                <small style={{ color: excessive ? "#ff8b8b" : "#9db4d8" }}>
-                  기준 {item.recommendedMax}명{item.reserveCount > 0 ? ` · 보류 ${item.reserveCount}명` : ""}
-                </small>
-              ) : null}
+              <small style={{ color: excessive ? "#ff8b8b" : "#9db4d8" }}>
+                최대 {item.limit}명{item.reserveCount > 0 ? ` · 보류 ${item.reserveCount}명` : ""}
+              </small>
             </div>
           );
         })}
@@ -283,7 +361,7 @@ export default function DestructionRecruitmentManager({
       <div className="empty-box" style={{ marginBottom: 14 }}>
         <strong>자동 보류 기준</strong>
         <p className="admin-page__description" style={{ margin: "8px 0 0" }}>
-          모집 현황에 들어오거나 참가 신청/취소가 발생하면 자동으로 보류가 계산됩니다. 21명, 22명처럼 5의 배수가 아니면 늦게 신청한 인원이 보류되고, 20명이어도 TOP 6명처럼 특정 포지션이 팀 수보다 많으면 해당 포지션의 늦은 신청자가 자동 보류됩니다.
+          모집 현황에 들어오거나 참가 신청/취소가 발생하면 자동으로 보류가 계산됩니다. 5의 배수가 아니면 늦게 신청한 인원이 보류되고, 특정 라인이 설정한 최대 인원을 초과하면 해당 라인의 늦은 신청자가 자동 보류됩니다.
         </p>
       </div>
 
@@ -347,7 +425,7 @@ export default function DestructionRecruitmentManager({
             <span>관리</span>
           </div>
           {filteredApplications.map((application, index) => {
-            const reason = getReserveReason(application, autoReserveIds, applications);
+            const reason = getReserveReason(application, autoReserveIds, applications, laneLimits);
             const status = String(application.status);
 
             return (

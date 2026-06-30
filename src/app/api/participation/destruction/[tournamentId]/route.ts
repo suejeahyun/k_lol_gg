@@ -1,10 +1,10 @@
-﻿import { logServerError } from "@/lib/server/safe-log";
+import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
-import { applyDestructionRecruitmentAutoReserve } from "@/lib/destruction/recruitment-auto-reserve";
+import { applyDestructionRecruitmentAutoReserve, getDestructionLaneLimits } from "@/lib/destruction/recruitment-auto-reserve";
 import { getCurrentUser, requireApprovedUser } from "@/lib/auth/session";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
 
@@ -65,6 +65,11 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
           id: true,
           title: true,
           status: true,
+          topLaneLimit: true,
+          jungleLaneLimit: true,
+          midLaneLimit: true,
+          adcLaneLimit: true,
+          supportLaneLimit: true,
         },
       }),
       getCurrentUser(),
@@ -121,7 +126,12 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
       : null;
 
     return NextResponse.json({
-      tournament,
+      tournament: {
+        id: tournament.id,
+        title: tournament.title,
+        status: tournament.status,
+        laneLimits: getDestructionLaneLimits(tournament),
+      },
       currentApply,
       players: applies.map((apply) => ({
         id: apply.player.id,

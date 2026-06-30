@@ -56,8 +56,24 @@ const PRELIMINARY_FORMAT_OPTIONS: { value: PreliminaryFormat; label: string; des
   },
 ];
 
+const LANE_LIMIT_KEYS = [
+  "topLaneLimit",
+  "jungleLaneLimit",
+  "midLaneLimit",
+  "adcLaneLimit",
+  "supportLaneLimit",
+] as const;
+
+type LaneLimitKey = (typeof LANE_LIMIT_KEYS)[number];
+
 function usesRoundCount(format: PreliminaryFormat) {
   return format.startsWith("SWISS_ROUND") || format.startsWith("RANDOM_ROUNDS");
+}
+
+function parseLaneLimit(value: string) {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 1 || parsed > 99) return null;
+  return parsed;
 }
 
 export default function AdminDestructionTournamentNewPage() {
@@ -66,6 +82,7 @@ export default function AdminDestructionTournamentNewPage() {
   const [title, setTitle] = useState("");
   const [preliminaryFormat, setPreliminaryFormat] = useState<PreliminaryFormat>("FULL_ROUND_ROBIN_BO3");
   const [preliminaryRoundCount, setPreliminaryRoundCount] = useState("3");
+  const [laneLimit, setLaneLimit] = useState("10");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -92,6 +109,17 @@ export default function AdminDestructionTournamentNewPage() {
       }
     }
 
+    const parsedLaneLimit = parseLaneLimit(laneLimit);
+
+    if (parsedLaneLimit === null) {
+      setError("라인 최대 인원은 1~99 사이의 정수로 입력해주세요.");
+      return;
+    }
+
+    const parsedLaneLimits = Object.fromEntries(
+      LANE_LIMIT_KEYS.map((key) => [key, parsedLaneLimit]),
+    ) as Record<LaneLimitKey, number>;
+
     setIsSubmitting(true);
 
     try {
@@ -106,6 +134,7 @@ export default function AdminDestructionTournamentNewPage() {
           ...(shouldShowRoundCount
             ? { preliminaryRoundCount: Number(preliminaryRoundCount) }
             : {}),
+          ...parsedLaneLimits,
         }),
       });
 
@@ -179,6 +208,22 @@ export default function AdminDestructionTournamentNewPage() {
               </p>
             </div>
           ) : null}
+        </div>
+
+
+        <div className="admin-form__group">
+          <label className="admin-form__label">라인별 최대 인원</label>
+          <input
+            className="admin-form__input"
+            type="number"
+            min="1"
+            max="99"
+            value={laneLimit}
+            onChange={(event) => setLaneLimit(event.target.value)}
+          />
+          <p className="admin-form__help">
+            모든 라인에 같은 최대 인원이 적용됩니다. 기본값은 라인별 10명입니다. 참가 신청은 주 라인 기준으로 계산되며, 초과 인원은 늦게 신청한 순서대로 자동 보류됩니다.
+          </p>
         </div>
 
         <div className="empty-box">

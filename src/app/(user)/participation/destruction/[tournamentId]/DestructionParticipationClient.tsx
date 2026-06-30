@@ -34,10 +34,13 @@ type CurrentApply = {
   message?: string | null;
 } | null;
 
+type LaneLimits = Record<ApplyPosition, number>;
+
 type Tournament = {
   id: number;
   title: string;
   status: string;
+  laneLimits?: LaneLimits;
 } | null;
 
 type DestructionParticipationClientProps = {
@@ -341,7 +344,7 @@ export default function DestructionParticipationClient({
         </div>
       </div>
 
-      <ParticipationList tournamentId={tournamentId} players={players} />
+      <ParticipationList tournamentId={tournamentId} players={players} laneLimits={tournament?.laneLimits} />
     </div>
   );
 }
@@ -433,10 +436,13 @@ function MultiPositionSelector({
   );
 }
 
-function ParticipationList({ tournamentId, players }: { tournamentId: string; players: Player[] }) {
+function ParticipationList({ tournamentId, players, laneLimits }: { tournamentId: string; players: Player[]; laneLimits?: LaneLimits }) {
+  const limits = laneLimits ?? { TOP: 10, JGL: 10, MID: 10, ADC: 10, SUP: 10 };
   const positionCounts = POSITIONS.map((position) => ({
     position,
     count: players.filter((player) => player.mainPosition === position && player.status !== "RESERVE").length,
+    reserveCount: players.filter((player) => player.mainPosition === position && player.status === "RESERVE").length,
+    limit: limits[position],
   }));
   const activePlayers = players.filter((player) => player.status !== "RESERVE");
   const reservePlayers = players.filter((player) => player.status === "RESERVE");
@@ -474,7 +480,10 @@ function ParticipationList({ tournamentId, players }: { tournamentId: string; pl
         {positionCounts.map((item) => (
           <div key={item.position} className="admin-event-detail-card">
             <span>{item.position}</span>
-            <strong>{item.count}명</strong>
+            <strong>{item.count} / {item.limit}명</strong>
+            {item.reserveCount > 0 ? (
+              <small style={{ color: "#fbbf24" }}>보류 {item.reserveCount}명</small>
+            ) : null}
           </div>
         ))}
       </div>
