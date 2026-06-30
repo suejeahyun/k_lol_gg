@@ -19,6 +19,7 @@ type Player = {
 
 type EventParticipationClientProps = {
   eventId: string;
+  embedded?: boolean;
 };
 
 function getPositionLabel(position: ApplyPosition) {
@@ -36,6 +37,7 @@ function getPositionLabel(position: ApplyPosition) {
 
 export default function EventParticipationClient({
   eventId,
+  embedded = false,
 }: EventParticipationClientProps) {
   const [players, setPlayers] = useState<Player[]>([]);
   const [mainPosition, setMainPosition] = useState<ApplyPosition | "">("");
@@ -119,16 +121,18 @@ export default function EventParticipationClient({
   };
 
   return (
-    <div className="page-container participation-detail event-participation-page">
-      <section className="event-user-hero event-participation-hero">
-        <div>
-          <p className="page-eyebrow">EVENT MATCH APPLY</p>
-          <h1>이벤트 내전 참가</h1>
-          <p>
-            주라인과 부라인을 선택해 참가 신청합니다. 신청 후 관리자가 참가자를 확정합니다.
-          </p>
-        </div>
-      </section>
+    <div className={embedded ? "participation-detail event-participation-page participation-detail--embedded" : "page-container participation-detail event-participation-page"}>
+      {!embedded ? (
+        <section className="event-user-hero event-participation-hero">
+          <div>
+            <p className="page-eyebrow">EVENT MATCH APPLY</p>
+            <h1>이벤트 내전 참가</h1>
+            <p>
+              주라인과 부라인을 선택해 참가 신청합니다. 신청 후 관리자가 참가자를 확정합니다.
+            </p>
+          </div>
+        </section>
+      ) : null}
 
       <section className="event-user-summary-grid">
         <div className="event-user-summary-card">

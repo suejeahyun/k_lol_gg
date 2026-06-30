@@ -30,7 +30,6 @@ const menuGroups: UserSidebarGroup[] = [
   {
     title: "LOBBY",
     items: [
-      { href: "/", label: "홈", code: "HOM" },
       { href: "/players", label: "플레이어", code: "PLY" },
       { href: "/rankings", label: "랭킹", code: "RNK" },
     ],
@@ -41,7 +40,6 @@ const menuGroups: UserSidebarGroup[] = [
       { href: "/matches", label: "내전 목록", code: "MAT" },
       { href: "/recruit", label: "구인현황", code: "REC", activePrefixes: ["/recruit", "/recruit-helper"] },
       { href: "/progress", label: "이벤트/멸망전", code: "EVT" },
-      { href: "/participation", label: "참가하기", code: "JOIN", auth: true, approvedOnly: true },
     ],
   },
   {
@@ -49,12 +47,7 @@ const menuGroups: UserSidebarGroup[] = [
     items: [
       { href: "/ai-balance", label: "K-LOL MMR", code: "MMR", activePrefixes: ["/ai-balance"] },
       { href: "/players/balance", label: "팀 밸런스", code: "BAL", auth: true, approvedOnly: true, activePrefixes: ["/players/balance"] },
-      { 
-        href: "/random-team", 
-        label: "랜덤 팀 나누기", 
-        code: "RND", 
-        activePrefixes: ["/random-team"] 
-      },
+
       {
         href: "/players/balance/recommendations",
         label: "밴픽 추천",
@@ -62,6 +55,12 @@ const menuGroups: UserSidebarGroup[] = [
         auth: true,
         approvedOnly: true,
         activePrefixes: ["/players/balance/recommendations", "/players/balance/drafts"],
+      },
+            { 
+        href: "/random-team", 
+        label: "랜덤 팀 나누기", 
+        code: "RND", 
+        activePrefixes: ["/random-team"] 
       },
     ],
   },

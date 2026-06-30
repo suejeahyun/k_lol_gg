@@ -5,6 +5,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
 import { coerceGalleryImageUrls } from "@/lib/gallery/winner-image-paths";
+import EventParticipationClient from "@/app/(user)/participation/event/[eventId]/EventParticipationClient";
 
 const POSITIONS = ["TOP", "JGL", "MID", "ADC", "SUP"] as const;
 
@@ -56,6 +57,12 @@ function getStageLabel(stage: string) {
   };
 
   return labels[stage] ?? stage;
+}
+
+function getWinnerName(match: { winnerTeamId: number | null; teamAId: number; teamBId: number; teamA: { name: string }; teamB: { name: string } }) {
+  if (match.winnerTeamId === match.teamAId) return match.teamA.name;
+  if (match.winnerTeamId === match.teamBId) return match.teamB.name;
+  return "미정";
 }
 
 export default async function EventProgressDetailPage({ params }: PageProps) {
@@ -127,6 +134,16 @@ export default async function EventProgressDetailPage({ params }: PageProps) {
     {}
   );
 
+  const activeApplies = event.participationApplies.filter(
+    (apply) => !["CANCELLED", "REJECTED"].includes(apply.status)
+  );
+
+  const isRecruiting = event.status === "RECRUITING";
+  const isTeamBuilding = event.status === "TEAM_BUILDING";
+  const isInProgress = event.status === "IN_PROGRESS";
+  const isCompleted = event.status === "COMPLETED";
+  const isCancelled = event.status === "CANCELLED";
+
   return (
     <main className="page-container event-progress-detail event-user-detail-page">
       <section className="event-user-detail-hero">
@@ -134,16 +151,11 @@ export default async function EventProgressDetailPage({ params }: PageProps) {
           <p className="page-eyebrow">EVENT MATCH DETAIL</p>
           <h1>{event.title}</h1>
           <p>
-            참가 신청, 팀 구성, 대진 결과, 최종 우승 정보를 확인합니다.
+            현재 진행 단계에 필요한 정보만 표시합니다. 모집중이면 이 화면에서 바로 참가 신청할 수 있습니다.
           </p>
         </div>
 
         <div className="event-user-hero__actions">
-          {event.status === "RECRUITING" ? (
-            <Link href={`/participation/event/${event.id}`} className="btn btn-primary">
-              참가하기
-            </Link>
-          ) : null}
           <Link href="/progress/event" className="btn btn-ghost">
             목록으로
           </Link>
@@ -165,7 +177,7 @@ export default async function EventProgressDetailPage({ params }: PageProps) {
         </div>
         <div className="event-detail-summary-card">
           <span>신청</span>
-          <strong>{event.participationApplies.length}명</strong>
+          <strong>{activeApplies.length}명</strong>
         </div>
         <div className="event-detail-summary-card">
           <span>참가자</span>
@@ -179,10 +191,110 @@ export default async function EventProgressDetailPage({ params }: PageProps) {
         </div>
       </section>
 
-      {event.status === "COMPLETED" ? (
+      {event.status === "PLANNED" ? (
+        <section className="content-section event-user-section">
+          <div className="section-header">
+            <h2>모집 예정</h2>
+          </div>
+          <div className="empty-box">아직 모집이 시작되지 않았습니다. 모집이 열리면 이 화면에서 참가 신청이 가능합니다.</div>
+        </section>
+      ) : null}
+
+      {isRecruiting ? (
+        <section className="content-section event-user-section event-apply-merged-section">
+          <div className="section-header">
+            <h2>참가 신청</h2>
+            <p className="page-description">모집 단계에서는 신청 폼과 신청자 현황만 표시합니다.</p>
+          </div>
+          <EventParticipationClient eventId={String(id)} embedded />
+        </section>
+      ) : null}
+
+      {isTeamBuilding || isInProgress ? (
+        <section className="content-section event-user-section">
+          <div className="section-header">
+            <h2>팀 구성</h2>
+          </div>
+
+          {event.teams.length === 0 ? (
+            <div className="empty-box">아직 팀이 생성되지 않았습니다.</div>
+          ) : (
+            <div className="event-user-team-matrix">
+              <div className="event-user-team-matrix__header">
+                <span>라인</span>
+                {event.teams.map((team) => (
+                  <strong key={team.id}>{team.name}</strong>
+                ))}
+              </div>
+
+              {POSITIONS.map((position) => (
+                <div key={position} className="event-user-team-matrix__row">
+                  <strong>{position}</strong>
+                  {event.teams.map((team) => {
+                    const member = team.members.find(
+                      (teamMember) => teamMember.position === position
+                    );
+
+                    return (
+                      <div key={team.id} className="event-user-team-matrix__cell">
+                        {member ? (
+                          <>
+                            <b>{member.player.name}</b>
+                            <span>
+                              {member.player.nickname}#{member.player.tag}
+                            </span>
+                          </>
+                        ) : (
+                          <em>대기</em>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      ) : null}
+
+      {isInProgress ? (
+        <section className="content-section event-user-section">
+          <div className="section-header">
+            <h2>대진 / 결과</h2>
+          </div>
+
+          {event.matches.length === 0 ? (
+            <div className="empty-box">아직 대진표가 생성되지 않았습니다.</div>
+          ) : (
+            <div className="event-user-bracket-stage-list">
+              {Object.entries(matchesByStage).map(([stage, matches]) => (
+                <div key={stage} className="event-user-bracket-stage">
+                  <h3>{getStageLabel(stage)}</h3>
+                  <div className="event-user-match-grid">
+                    {matches.map((match) => (
+                      <div key={match.id} className="event-user-match-card">
+                        <div>
+                          <span>{match.round}경기</span>
+                          <strong>
+                            {match.teamA.name} vs {match.teamB.name}
+                          </strong>
+                        </div>
+                        <em>승리: {getWinnerName(match)}</em>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      ) : null}
+
+      {isCompleted ? (
         <section className="content-section event-final-section event-user-final-section">
           <div className="section-header">
-            <h2>최종 결과</h2>
+            <h2>최종 요약</h2>
+            <p className="page-description">종료된 이벤트는 우승, MVP, 참가 규모, 대진 결과만 요약해서 표시합니다.</p>
           </div>
 
           <div className="event-final-grid">
@@ -199,7 +311,33 @@ export default async function EventProgressDetailPage({ params }: PageProps) {
                   : "-"}
               </strong>
             </div>
+
+            <div className="event-final-card">
+              <span>참가 / 팀 / 경기</span>
+              <strong>{event.participants.length}명 / {event.teams.length}팀 / {event.matches.length}경기</strong>
+            </div>
           </div>
+
+          {event.matches.length ? (
+            <div className="event-user-bracket-stage-list" style={{ marginTop: 16 }}>
+              {Object.entries(matchesByStage).map(([stage, matches]) => (
+                <div key={stage} className="event-user-bracket-stage">
+                  <h3>{getStageLabel(stage)}</h3>
+                  <div className="event-user-match-grid">
+                    {matches.map((match) => (
+                      <div key={match.id} className="event-user-match-card">
+                        <div>
+                          <span>{match.round}경기</span>
+                          <strong>{match.teamA.name} vs {match.teamB.name}</strong>
+                        </div>
+                        <em>승리: {getWinnerName(match)}</em>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null}
 
           {galleryImageUrls.length ? (
             <div className="event-final-gallery">
@@ -214,139 +352,18 @@ export default async function EventProgressDetailPage({ params }: PageProps) {
                 />
               ))}
             </div>
-          ) : (
-            <div className="empty-box">우승 이미지가 아직 등록되지 않았습니다.</div>
-          )}
+          ) : null}
         </section>
       ) : null}
 
-      <section className="content-section event-user-section">
-        <div className="section-header">
-          <h2>팀 구성</h2>
-        </div>
-
-        {event.teams.length === 0 ? (
-          <div className="empty-box">아직 팀이 생성되지 않았습니다.</div>
-        ) : (
-          <div className="event-user-team-matrix">
-            <div className="event-user-team-matrix__header">
-              <span>라인</span>
-              {event.teams.map((team) => (
-                <strong key={team.id}>{team.name}</strong>
-              ))}
-            </div>
-
-            {POSITIONS.map((position) => (
-              <div key={position} className="event-user-team-matrix__row">
-                <strong>{position}</strong>
-                {event.teams.map((team) => {
-                  const member = team.members.find(
-                    (teamMember) => teamMember.position === position
-                  );
-
-                  return (
-                    <div key={team.id} className="event-user-team-matrix__cell">
-                      {member ? (
-                        <>
-                          <b>{member.player.name}</b>
-                          <span>
-                            {member.player.nickname}#{member.player.tag}
-                          </span>
-                        </>
-                      ) : (
-                        <em>대기</em>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
+      {isCancelled ? (
+        <section className="content-section event-user-section">
+          <div className="section-header">
+            <h2>취소된 이벤트</h2>
           </div>
-        )}
-      </section>
-
-      <section className="content-section event-user-section">
-        <div className="section-header">
-          <h2>대진 / 결과</h2>
-        </div>
-
-        {event.matches.length === 0 ? (
-          <div className="empty-box">아직 대진표가 생성되지 않았습니다.</div>
-        ) : (
-          <div className="event-user-bracket-stage-list">
-            {Object.entries(matchesByStage).map(([stage, matches]) => (
-              <div key={stage} className="event-user-bracket-stage">
-                <h3>{getStageLabel(stage)}</h3>
-                <div className="event-user-match-grid">
-                  {matches.map((match) => {
-                    const winnerName =
-                      match.winnerTeamId === match.teamAId
-                        ? match.teamA.name
-                        : match.winnerTeamId === match.teamBId
-                          ? match.teamB.name
-                          : "미정";
-
-                    return (
-                      <div key={match.id} className="event-user-match-card">
-                        <div>
-                          <span>{match.round}경기</span>
-                          <strong>
-                            {match.teamA.name} vs {match.teamB.name}
-                          </strong>
-                        </div>
-                        <em>승리: {winnerName}</em>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section className="content-section event-user-section">
-        <div className="section-header">
-          <h2>참가 신청 현황</h2>
-        </div>
-
-        {event.participationApplies.length === 0 ? (
-          <div className="empty-box">참가 신청자가 없습니다.</div>
-        ) : (
-          <div className="event-user-table-wrap">
-            <table className="event-user-table">
-              <thead>
-                <tr>
-                  <th>No</th>
-                  <th>이름</th>
-                  <th>닉네임#태그</th>
-                  <th>주라인</th>
-                  <th>부라인</th>
-                  <th>상태</th>
-                </tr>
-              </thead>
-              <tbody>
-                {event.participationApplies.map((apply, index) => (
-                  <tr key={apply.id}>
-                    <td>{index + 1}</td>
-                    <td>{apply.player.name}</td>
-                    <td>
-                      {apply.player.nickname}#{apply.player.tag}
-                    </td>
-                    <td>{apply.mainPosition ?? "-"}</td>
-                    <td>
-                      {apply.subPositions.length > 0
-                        ? apply.subPositions.join(", ")
-                        : "-"}
-                    </td>
-                    <td>{apply.status}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
+          <div className="empty-box">해당 이벤트는 취소되었습니다. 참가 신청과 진행 정보는 표시하지 않습니다.</div>
+        </section>
+      ) : null}
     </main>
   );
 }
