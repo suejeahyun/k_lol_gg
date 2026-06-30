@@ -1,4 +1,4 @@
-﻿import { logServerError } from "@/lib/server/safe-log";
+import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -36,6 +36,22 @@ type DiscordUserPayload = {
   avatar?: string | null;
 };
 
+function buildFailureRedirect(baseUrl: string, target: "login" | "account", reason: string) {
+  const path = target === "account" ? "/account" : "/login";
+  return NextResponse.redirect(`${baseUrl}${path}?discord=${encodeURIComponent(reason)}`);
+}
+
+async function readDiscordErrorBody(res: Response) {
+  const text = await res.text().catch(() => "");
+  if (!text) return "";
+  try {
+    const parsed = JSON.parse(text) as { error?: string; error_description?: string; message?: string };
+    return parsed.error_description || parsed.message || parsed.error || text.slice(0, 300);
+  } catch {
+    return text.slice(0, 300);
+  }
+}
+
 async function fetchDiscordUser(params: { code: string; redirectUri: string }) {
   const clientId = process.env.DISCORD_CLIENT_ID;
   const clientSecret = process.env.DISCORD_CLIENT_SECRET;
@@ -56,7 +72,10 @@ async function fetchDiscordUser(params: { code: string; redirectUri: string }) {
     cache: "no-store",
   });
 
-  if (!tokenRes.ok) throw new Error(`Discord 토큰 요청 실패: ${tokenRes.status}`);
+  if (!tokenRes.ok) {
+    const body = await readDiscordErrorBody(tokenRes);
+    throw new Error(`Discord 토큰 요청 실패: ${tokenRes.status}${body ? ` / ${body}` : ""}`);
+  }
   const tokenData = (await tokenRes.json()) as { access_token?: string; token_type?: string };
   if (!tokenData.access_token) throw new Error("Discord access token이 없습니다.");
 
@@ -65,7 +84,10 @@ async function fetchDiscordUser(params: { code: string; redirectUri: string }) {
     cache: "no-store",
   });
 
-  if (!userRes.ok) throw new Error(`Discord 사용자 조회 실패: ${userRes.status}`);
+  if (!userRes.ok) {
+    const body = await readDiscordErrorBody(userRes);
+    throw new Error(`Discord 사용자 조회 실패: ${userRes.status}${body ? ` / ${body}` : ""}`);
+  }
   return (await userRes.json()) as DiscordUserPayload;
 }
 
@@ -162,7 +184,16 @@ export async function GET(req: NextRequest) {
   const baseUrl = getBaseUrl(req);
   const redirectUri = process.env.DISCORD_REDIRECT_URI || `${baseUrl}/api/auth/discord/callback`;
 
-  if (!code) return NextResponse.redirect(`${baseUrl}/login?discord=missing_code`);
+  const oauthError = req.nextUrl.searchParams.get("error");
+  if (oauthError) {
+    const target = state.mode === "link" ? "account" : "login";
+    const reason = oauthError === "access_denied" ? "cancelled" : `oauth_${oauthError}`;
+    return buildFailureRedirect(baseUrl, target, reason);
+  }
+
+  if (!code) {
+    return buildFailureRedirect(baseUrl, state.mode === "link" ? "account" : "login", "missing_code");
+  }
 
   try {
     const discordUser = await fetchDiscordUser({ code, redirectUri });
@@ -241,7 +272,7 @@ export async function GET(req: NextRequest) {
     return res;
   } catch (error) {
     logServerError("[DISCORD_AUTH_CALLBACK_ERROR]", error);
-    return NextResponse.redirect(`${baseUrl}/login?discord=failed`);
+    return buildFailureRedirect(baseUrl, state.mode === "link" ? "account" : "login", "failed");
   }
 }
 

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useState } from "react";
@@ -39,9 +39,9 @@ export function AppDiscordLinkButton({ linked, disabled, next = "/app/me" }: App
 
   if (!linked) {
     return (
-      <Link className="klol-app-primary" href={`/api/auth/discord/start?mode=link&next=${encodeURIComponent(next)}`}>
+      <a className="klol-app-primary" href={`/api/auth/discord/start?mode=link&next=${encodeURIComponent(next)}`}>
         연동하기
-      </Link>
+      </a>
     );
   }
 
@@ -51,3 +51,4 @@ export function AppDiscordLinkButton({ linked, disabled, next = "/app/me" }: App
     </button>
   );
 }
+

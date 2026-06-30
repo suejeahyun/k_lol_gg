@@ -32,11 +32,7 @@ export default async function AccountTierPage() {
         <div>
           <p className="account-page__kicker">PLAYER</p>
           <h1 className="user-page__title">플레이어 정보 수정</h1>
-          <p className="user-page__description">닉네임/태그와 현재티어/최고티어를 각각 분리해서 수정합니다.</p>
         </div>
-        <Link className="admin-button secondary" href="/account">
-          내정보로 돌아가기
-        </Link>
       </div>
 
       <section className="admin-card account-card account-edit-card">

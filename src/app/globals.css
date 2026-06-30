@@ -263,3 +263,32 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Discord OAuth status messages */
+.account-discord-alert,
+.auth-alert {
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin: 0 0 14px;
+  font-size: 14px;
+  line-height: 1.45;
+  background: rgba(15, 23, 42, 0.72);
+  color: #e5e7eb;
+}
+
+.account-discord-alert--success {
+  border-color: rgba(34, 197, 94, 0.42);
+  background: rgba(20, 83, 45, 0.24);
+}
+
+.account-discord-alert--info {
+  border-color: rgba(59, 130, 246, 0.42);
+  background: rgba(30, 64, 175, 0.2);
+}
+
+.account-discord-alert--error,
+.auth-alert--error {
+  border-color: rgba(248, 113, 113, 0.48);
+  background: rgba(127, 29, 29, 0.24);
+}

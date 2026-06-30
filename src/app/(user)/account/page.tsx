@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -20,7 +20,35 @@ function formatDate(value: Date | string | null | undefined) {
   }).format(new Date(value));
 }
 
-export default async function AccountPage() {
+function getDiscordMessage(code: string | undefined) {
+  switch (code) {
+    case "linked":
+      return { type: "success", text: "Discord 계정 연동이 완료되었습니다." };
+    case "unlinked":
+      return { type: "info", text: "Discord 계정 연동을 해제했습니다." };
+    case "duplicate":
+      return { type: "error", text: "이미 다른 계정에 연동된 Discord 계정입니다. 관리자 페이지에서 기존 연동을 먼저 해제해야 합니다." };
+    case "invalid_state":
+      return { type: "error", text: "Discord 연동 요청이 만료되었습니다. 다시 시도하세요." };
+    case "missing_code":
+      return { type: "error", text: "Discord 인증 코드가 전달되지 않았습니다. OAuth 설정과 Redirect URI를 확인하세요." };
+    case "cancelled":
+      return { type: "info", text: "Discord 연동이 취소되었습니다." };
+    case "failed":
+      return { type: "error", text: "Discord 연동 처리 중 오류가 발생했습니다. 환경변수와 Discord 개발자 포털 Redirect URI를 확인하세요." };
+    default:
+      return null;
+  }
+}
+
+type AccountPageProps = {
+  searchParams?: Promise<{ discord?: string }>;
+};
+
+export default async function AccountPage({ searchParams }: AccountPageProps) {
+  const resolvedSearchParams = searchParams ? await searchParams : {};
+  const discordMessage = getDiscordMessage(resolvedSearchParams.discord);
+
   const session = await getCurrentUser();
   if (!session) redirect("/login?next=/account");
 
@@ -49,6 +77,12 @@ export default async function AccountPage() {
           <h1 className="user-page__title">내 정보</h1>
         </div>
       </div>
+
+      {discordMessage ? (
+        <div className={`account-discord-alert account-discord-alert--${discordMessage.type}`} role="status">
+          {discordMessage.text}
+        </div>
+      ) : null}
 
       <section className="admin-card account-card account-summary-card">
         <div className="admin-section-head">
@@ -83,9 +117,9 @@ export default async function AccountPage() {
           {user.discordId ? (
             <DiscordUnlinkButton />
           ) : (
-            <Link className="admin-button account-discord-card__button" href="/api/auth/discord/start?mode=link&next=/account">
+            <a className="admin-button account-discord-card__button" href="/api/auth/discord/start?mode=link&next=/account">
               Discord 연동하기
-            </Link>
+            </a>
           )}
         </div>
 
@@ -143,3 +177,4 @@ export default async function AccountPage() {
     </main>
   );
 }
+

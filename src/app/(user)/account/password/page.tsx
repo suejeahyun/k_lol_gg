@@ -17,9 +17,7 @@ export default async function AccountPasswordPage() {
           <h1 className="user-page__title">비밀번호 변경</h1>
           <p className="user-page__description">현재 비밀번호를 확인한 뒤 새 비밀번호로 변경합니다. 변경 완료 후 다시 로그인해야 합니다.</p>
         </div>
-        <Link className="admin-button secondary" href="/account">
-          내정보로 돌아가기
-        </Link>
+
       </div>
 
       <section className="admin-card account-card account-edit-card">
