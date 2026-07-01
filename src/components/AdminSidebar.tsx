@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -32,7 +32,7 @@ const menuGroups: AdminSidebarGroup[] = [
     items: [
       { href: "/admin/kakao", label: "카카오톡 요약", code: "KAK", activePrefixes: ["/admin/kakao"] },
       { href: "/admin/kakao/recruits", label: "구인 관리", code: "REC", activePrefixes: ["/admin/kakao/recruits"] },
-      { href: "/admin/kakao/recruits/logs", label: "구인 로그", code: "RLG", activePrefixes: ["/admin/kakao/recruits/logs"] },
+      { href: "/admin/logs/kakao", label: "카카오톡 로그", code: "RLG", activePrefixes: ["/admin/logs/kakao"] },
       { href: "/admin/kakao/season-apply", label: "내전 참가신청", code: "APP", activePrefixes: ["/admin/kakao/season-apply"] },
       { href: "/admin/kakao/operation-forms", label: "운영신청", code: "OPR", activePrefixes: ["/admin/kakao/operation-forms"] },
       { href: "/admin/kakao/settings", label: "카카오톡 설정", code: "SET", activePrefixes: ["/admin/kakao/settings", "/admin/kakao/recruits/settings"] },
@@ -46,8 +46,7 @@ const menuGroups: AdminSidebarGroup[] = [
       { href: "/admin/discord/voice", label: "음성방 모니터", code: "VOC", activePrefixes: ["/admin/discord/voice"] },
       { href: "/admin/discord/recruits", label: "구인 검증", code: "DCR", activePrefixes: ["/admin/discord/recruits"] },
       { href: "/admin/discord/matches", label: "내전 출석", code: "ATM", activePrefixes: ["/admin/discord/matches"] },
-      { href: "/admin/discord/stats", label: "체류 통계", code: "STA", activePrefixes: ["/admin/discord/stats"] },
-      { href: "/admin/discord/logs", label: "로그", code: "LOG", activePrefixes: ["/admin/discord/logs"] },
+      { href: "/admin/logs/discord", label: "디스코드 로그", code: "STA", activePrefixes: ["/admin/logs/discord"] },
       { href: "/admin/discord/settings", label: "설정", code: "SET", activePrefixes: ["/admin/discord/settings"] },
     ],
   },

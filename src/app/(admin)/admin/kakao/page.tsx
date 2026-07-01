@@ -49,7 +49,7 @@ export default async function AdminKakaoPage() {
 
       <section className="card-grid">
         <div className="stat-card"><span className="stat-card__label">진행 중 구인</span><strong className="stat-card__value">{activeRecruits.toLocaleString("ko-KR")}</strong></div>
-        <div className="stat-card"><span className="stat-card__label">오늘 구인 로그</span><strong className="stat-card__value">{todayLogs.toLocaleString("ko-KR")}</strong></div>
+        <div className="stat-card"><span className="stat-card__label">오늘 카카오톡 로그</span><strong className="stat-card__value">{todayLogs.toLocaleString("ko-KR")}</strong></div>
         <div className="stat-card"><span className="stat-card__label">내전 참가신청</span><strong className="stat-card__value">{pendingSeasonApplies.toLocaleString("ko-KR")}</strong></div>
         <div className="stat-card"><span className="stat-card__label">운영신청 보관</span><strong className="stat-card__value">{pendingForms.toLocaleString("ko-KR")}</strong></div>
       </section>
@@ -78,7 +78,7 @@ export default async function AdminKakaoPage() {
             <h2>최근 카카오톡 구인 기록</h2>
             <p className="admin-muted">최근 처리된 카카오톡 구인 이벤트입니다.</p>
           </div>
-          <Link className="admin-button admin-button--ghost" href="/admin/kakao/recruits/logs">전체 로그</Link>
+          <Link className="admin-button admin-button--ghost" href="/admin/logs/kakao">전체 로그</Link>
         </div>
         <div className="admin-table-wrap">
           <table className="admin-table">

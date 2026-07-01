@@ -59,7 +59,7 @@ export default async function AdminKakaoRecruitLogsPage({ searchParams }: PagePr
         <div className={styles.header}>
           <div>
             <p className={styles.kicker}>KAKAO RECRUIT LOG</p>
-            <h1 className={styles.title}>카카오 구인 로그</h1>
+            <h1 className={styles.title}>카카오 카카오톡 로그</h1>
             <p className={styles.desc}>생성, 참가, 마감, 초기화, 자동마감 기록을 한 화면에서 추적합니다. 긴 요약은 셀 안에서 스크롤됩니다.</p>
           </div>
           <div className={styles.actions}>
@@ -74,13 +74,13 @@ export default async function AdminKakaoRecruitLogsPage({ searchParams }: PagePr
           <div className={styles.statCard}><span className={styles.statLabel}>마감 기록</span><strong className={styles.statValue}>{finishedCount.toLocaleString("ko-KR")}</strong><div className={styles.statHint}>FINISH 계열 액션</div></div>
         </section>
 
-        <form className={styles.filterCard} action="/admin/kakao/recruits/logs">
+        <form className={styles.filterCard} action="/admin/logs/kakao">
           <div className={styles.filterGrid}>
             <input name="q" defaultValue={q} placeholder="제목, 액션, 방, 처리자, 요약 검색" className={styles.input} />
             <input name="date" defaultValue={date} type="date" className={styles.input} />
             <input name="action" defaultValue={action} placeholder="액션 필터" className={styles.input} />
             <button className={styles.button} type="submit">조회</button>
-            <a className={styles.secondaryButton} href="/admin/kakao/recruits/logs">초기화</a>
+            <a className={styles.secondaryButton} href="/admin/logs/kakao">초기화</a>
           </div>
         </form>
 
@@ -94,7 +94,7 @@ export default async function AdminKakaoRecruitLogsPage({ searchParams }: PagePr
                 <tr><th className={styles.colTime}>시간</th><th className={styles.colSmall}>회차</th><th className={styles.colSmall}>번호</th><th className={styles.colAction}>액션</th><th className={styles.colTitle}>제목</th><th className={styles.colPeople}>인원</th><th className={styles.colSource}>방/처리자</th><th className={styles.colSummary}>요약</th></tr>
               </thead>
               <tbody>
-                {logs.length === 0 ? <tr><td className={styles.empty} colSpan={8}>구인 로그가 없습니다.</td></tr> : logs.map((log) => {
+                {logs.length === 0 ? <tr><td className={styles.empty} colSpan={8}>카카오톡 로그가 없습니다.</td></tr> : logs.map((log) => {
                   const dateParts = formatDateParts(log.createdAt);
                   return (
                     <tr key={log.id}>
@@ -113,7 +113,7 @@ export default async function AdminKakaoRecruitLogsPage({ searchParams }: PagePr
             </table>
           </div>
           <div className={styles.paginationWrap}>
-            <Pagination currentPage={Math.min(safePage, totalPages)} totalPages={totalPages} basePath="/admin/kakao/recruits/logs" query={{ q: q || undefined, date: date || undefined, action: action || undefined }} />
+            <Pagination currentPage={Math.min(safePage, totalPages)} totalPages={totalPages} basePath="/admin/logs/kakao" query={{ q: q || undefined, date: date || undefined, action: action || undefined }} />
           </div>
         </section>
       </div>

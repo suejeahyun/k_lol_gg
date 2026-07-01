@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import {
   Area,
@@ -9,7 +9,6 @@ import {
   Cell,
   ComposedChart,
   Treemap,
-  흐름Chart,
   LabelList,
   Legend,
   Line,
@@ -24,7 +23,6 @@ import {
   Scatter,
   ScatterChart,
   Tooltip,
-  Treemap,
   XAxis,
   YAxis,
 } from "recharts";
@@ -117,18 +115,68 @@ function EmptyAware({ data, children }: { data: any[]; children: React.ReactNode
 }
 
 function Donut({ data }: { data: any[] }) {
-  return <EmptyAware data={displayData}><ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={displayData} dataKey="value" nameKey="name" innerRadius={62} outerRadius={96} paddingAngle={2}>{displayData.map((_: any, index: number) => <Cell key={index} fill={COLORS[index % COLORS.length]} />)}</Pie><Tooltip formatter={(value: any) => numberFormat(value)} /><Legend /></PieChart></ResponsiveContainer></EmptyAware>;
+  const displayData = localizeList(data ?? []);
+
+  return (
+    <EmptyAware data={displayData}>
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Pie
+            data={displayData}
+            dataKey="value"
+            nameKey="name"
+            innerRadius={48}
+            outerRadius={74}
+            paddingAngle={2}
+          >
+            {displayData.map((entry, index) => (
+              <Cell key={`${entry.name}-${index}`} fill={COLORS[index % COLORS.length]} />
+            ))}
+          </Pie>
+          <Tooltip />
+          <Legend />
+        </PieChart>
+      </ResponsiveContainer>
+    </EmptyAware>
+  );
 }
 
 function TopList({ data }: { data: { name: string; count: number }[] }) {
-  const max = Math.max(1, ...data.map((item) => item.count));
-  return <EmptyAware data={displayData}><div className={styles.topList}>{data.map((item, index) => <div className={styles.topRow} key={`${item.name}-${index}`}><span className={styles.rank}>{index + 1}</span><span className={styles.topName} title={String(item.name)}>{displayLabel(item.name)}</span><div className={styles.barTrack}><i style={{ width: `${Math.max(4, (item.count / max) * 100)}%` }} /></div><strong>{numberFormat(item.count)}</strong></div>)}</div></EmptyAware>;
+  const displayData = localizeList(data ?? []);
+  const max = Math.max(
+    1,
+    ...displayData.map((item) => Number(item.count ?? 0))
+  );
+
+  return (
+    <EmptyAware data={displayData}>
+      <div className={styles.topList}>
+        {displayData.map((item, index) => {
+          const count = Number(item.count ?? 0);
+          const width = Math.max(4, Math.round((count / max) * 100));
+
+          return (
+            <div className={styles.topRow} key={`${item.name}-${index}`}>
+              <div className={styles.topMeta}>
+                <span className={styles.topRank}>{index + 1}</span>
+                <span className={styles.topName}>{item.name}</span>
+                <strong>{count.toLocaleString()}건</strong>
+              </div>
+              <div className={styles.topBarTrack}>
+                <span className={styles.topBar} style={{ width: `${width}%` }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </EmptyAware>
+  );
 }
 
-function 열지도({ data }: { data: { day: string; hour: number; count: number }[] }) {
+function HeatmapGrid({ data }: { data: { day: string; hour: number; count: number }[] }) {
   const max = Math.max(1, ...data.map((item) => item.count));
   const days = ["월", "화", "수", "목", "금", "토", "일"];
-  return <div className={styles.열지도}><div className={styles.열지도Grid}><span />{Array.from({ length: 24 }).map((_, hour) => <b key={hour}>{hour}</b>)}{days.map((day) => <div className={styles.열지도Row} key={day}><strong>{day}</strong>{Array.from({ length: 24 }).map((_, hour) => { const count = data.find((item) => item.day === day && item.hour === hour)?.count ?? 0; const level = Math.ceil((count / max) * 5); return <span key={`${day}-${hour}`} className={styles[`heat${level}`]} title={`${day} ${hour}시: ${count}건`} />; })}</div>)}</div></div>;
+  return <div className={styles.HeatmapGrid}><div className={styles.HeatmapGridGrid}><span />{Array.from({ length: 24 }).map((_, hour) => <b key={hour}>{hour}</b>)}{days.map((day) => <div className={styles.HeatmapGridRow} key={day}><strong>{day}</strong>{Array.from({ length: 24 }).map((_, hour) => { const count = data.find((item) => item.day === day && item.hour === hour)?.count ?? 0; const level = Math.ceil((count / max) * 5); return <span key={`${day}-${hour}`} className={styles[`heat${level}`]} title={`${day} ${hour}시: ${count}건`} />; })}</div>)}</div></div>;
 }
 
 export default function KakaoStatsDashboard({ data }: Props) {
@@ -159,7 +207,7 @@ export default function KakaoStatsDashboard({ data }: Props) {
 
       <section className={styles.gridTwo}>
         <ChartCard title="구인 흐름 흐름" desc="생성→참가→진행→마감→자동처리 흐름입니다.">
-          <EmptyAware data={data.흐름}><ResponsiveContainer width="100%" height="100%"><TreemapChart><Tooltip formatter={(value: any) => numberFormat(value)} /><Treemap dataKey="value" data={data.흐름} isAnimationActive><LabelList position="right" fill="#e5f4ff" stroke="none" dataKey="name" /></Treemap></흐름Chart></ResponsiveContainer></EmptyAware>
+          <EmptyAware data={data.흐름}><ResponsiveContainer width="100%" height="100%"><BarChart><Tooltip formatter={(value: any) => numberFormat(value)} /><Treemap dataKey="value" data={data.흐름} isAnimationActive><LabelList position="right" fill="#e5f4ff" stroke="none" dataKey="name" /></Treemap></BarChart></ResponsiveContainer></EmptyAware>
         </ChartCard>
         <ChartCard title="구인 종류 비율" desc="구인 종류 기준입니다."><Donut data={data.typeDonut} /></ChartCard>
       </section>
@@ -174,13 +222,13 @@ export default function KakaoStatsDashboard({ data }: Props) {
         <ChartCard title="시간대별 활동" desc="카카오 활동이 몰리는 시간입니다.">
           <ResponsiveContainer width="100%" height="100%"><AreaChart data={data.hourlyTrend}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="hour" interval={2} /><YAxis /><Tooltip formatter={(value: any) => numberFormat(value)} /><Area type="monotone" dataKey="count" name="활동" stroke="#38bdf8" fill="#38bdf8" fillOpacity={0.3} /></AreaChart></ResponsiveContainer>
         </ChartCard>
-        <ChartCard title="방별 활동 비중 지도" desc="방별 활동량 비중입니다.">
-          <EmptyAware data={data.room비중 지도}><ResponsiveContainer width="100%" height="100%"><Treemap data={data.room비중 지도} dataKey="size" nameKey="name" stroke="#0f2745" fill="#38bdf8" /></ResponsiveContainer></EmptyAware>
+        <ChartCard title="방별 활동 Treemap" desc="방별 활동량 비중입니다.">
+          <EmptyAware data={data.roomTreemap}><ResponsiveContainer width="100%" height="100%"><Treemap data={data.roomTreemap} dataKey="size" nameKey="name" stroke="#0f2745" fill="#38bdf8" /></ResponsiveContainer></EmptyAware>
         </ChartCard>
       </section>
 
       <section className={styles.gridTwo}>
-        <ChartCard title="요일 × 시간대 열지도" desc="색이 진할수록 활동이 많은 구간입니다."><Treemap data={data.열지도} /></ChartCard>
+        <ChartCard title="요일 × 시간대 HeatmapGrid" desc="색이 진할수록 활동이 많은 구간입니다."><Treemap data={data.HeatmapGrid} /></ChartCard>
         <ChartCard title="방별 활동 성향" desc="상위 방 기준 액션 유형 분포입니다.">
           <EmptyAware data={radarData}><ResponsiveContainer width="100%" height="100%"><RadarChart data={radarData}><PolarGrid /><PolarAngleAxis dataKey="subject" /><PolarRadiusAxis />{radarRooms.slice(0, 5).map((room: any, index) => <Radar key={room} name={room} dataKey={room} stroke={COLORS[index % COLORS.length]} fill={COLORS[index % COLORS.length]} fillOpacity={0.12} />)}<Legend /><Tooltip /></RadarChart></ResponsiveContainer></EmptyAware>
         </ChartCard>
@@ -207,5 +255,13 @@ export default function KakaoStatsDashboard({ data }: Props) {
     </div>
   );
 }
+
+
+
+
+
+
+
+
 
 

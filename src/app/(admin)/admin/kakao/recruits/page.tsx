@@ -104,7 +104,7 @@ export default async function AdminRecruitsPage({ searchParams }: PageProps) {
           <h1>카카오 구인구직 관리</h1>
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <a className="admin-button admin-button--ghost" href="/admin/kakao/recruits/logs">구인 로그</a>
+          <a className="admin-button admin-button--ghost" href="/admin/logs/kakao">카카오톡 로그</a>
           <a className="admin-button admin-button--ghost" href="/admin/kakao/recruits/settings">자동화 설정</a>
           <a className="admin-button admin-button--ghost" href="/recruit" target="_blank" rel="noreferrer">유저 현황 보기</a>
         </div>

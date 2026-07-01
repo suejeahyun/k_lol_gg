@@ -94,9 +94,9 @@ function koLabel(value: string | null | undefined) {
   return raw;
 }
 
-function targetText(log: { targetType: string | null; targetId: string | null }) {
+function targetText(log: { targetType: string | null; targetId: string | number | null }) {
   const type = koLabel(log.targetType);
-  const id = compact(log.targetId, "");
+  const id = compact(log.targetId == null ? null : String(log.targetId), "");
   return id ? `${type} #${id}` : type;
 }
 
@@ -198,7 +198,7 @@ export default async function AdminLogsPage(props: PageProps) {
                   <td className={styles.timeCell} data-label="시간">{formatDate(log.createdAt)}</td>
                   <td data-label="작업"><span className={styles.badge} title={compact(log.action)}>{koLabel(log.action)}</span></td>
                   <td data-label="관리자"><div className={styles.actor}><strong>{compact(log.actorUserId || log.actorType, "시스템")}</strong><span>{compact(log.actorType, "-")}</span></div></td>
-                  <td className={styles.target} data-label="대상">{targetText(log)}</td>
+                  <td className={styles.target} data-label="대상">{targetText({ targetType: log.targetType, targetId: log.targetId == null ? null : String(log.targetId) })}</td>
                   <td className={styles.message} data-label="내용">{compact(log.message)}</td>
                   <td className={styles.ip} data-label="IP">{compact(log.ipAddress)}</td>
                 </tr>

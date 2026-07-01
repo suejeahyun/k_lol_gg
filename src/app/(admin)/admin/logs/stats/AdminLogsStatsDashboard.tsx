@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import {
   Area,
@@ -131,7 +131,10 @@ function EmptyAware({ data, children }: { data: any[]; children: React.ReactNode
   return <>{children}</>;
 }
 
-function Donut({ data }: { data: any[] }) {`n  const displayData = localizeList(data ?? []);`n  return (
+function Donut({ data }: { data: any[] }) {
+  const displayData = localizeList(data ?? []);
+
+  return (
     <EmptyAware data={displayData}>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
@@ -146,16 +149,20 @@ function Donut({ data }: { data: any[] }) {`n  const displayData = localizeList(
   );
 }
 
-function 열지도({ data }: { data: { day: string; hour: number; count: number }[] }) {
-  const max = Math.max(1, ...data.map((item) => item.count));
+function Heatmap({ data }: { data: { day: string; hour: number; count: number }[] }) {
+  const displayData = localizeList(data ?? []);
+  const max = Math.max(
+    1,
+    ...displayData.map((item) => Number(item.count ?? 0))
+  );
   const days = ["월", "화", "수", "목", "금", "토", "일"];
   return (
-    <div className={styles.열지도}>
-      <div className={styles.열지도Grid}>
+    <div className={styles.Heatmap}>
+      <div className={styles.HeatmapGrid}>
         <span />
         {Array.from({ length: 24 }).map((_, hour) => <b key={hour}>{hour}</b>)}
         {days.map((day) => (
-          <div className={styles.열지도Row} key={day}>
+          <div className={styles.HeatmapRow} key={day}>
             <strong>{day}</strong>
             {Array.from({ length: 24 }).map((_, hour) => {
               const count = data.find((item) => item.day === day && item.hour === hour)?.count ?? 0;
@@ -170,11 +177,15 @@ function 열지도({ data }: { data: { day: string; hour: number; count: number 
 }
 
 function TopList({ data }: { data: { name: string; count: number }[] }) {
-  const max = Math.max(1, ...data.map((item) => item.count));
+  const displayData = localizeList(data ?? []);
+  const max = Math.max(
+    1,
+    ...displayData.map((item) => Number(item.count ?? 0))
+  );
   return (
     <EmptyAware data={displayData}>
       <div className={styles.topList}>
-        {data.map((item, index) => (
+        {displayData.map((item, index) => (
           <div className={styles.topRow} key={`${item.name}-${index}`}>
             <span className={styles.rank}>{index + 1}</span>
             <span className={styles.topName} title={String(item.name)}>{displayLabel(item.name)}</span>
@@ -255,8 +266,8 @@ export default function AdminLogsStatsDashboard({ data }: Props) {
       </section>
 
       <section className={styles.gridTwo}>
-        <ChartCard title="요일 × 시간대 열지도" desc="색이 진할수록 로그가 많은 구간입니다.">
-          <Treemap data={data.열지도} />
+        <ChartCard title="요일 × 시간대 Heatmap" desc="색이 진할수록 로그가 많은 구간입니다.">
+          <Treemap data={data.Heatmap} />
         </ChartCard>
         <ChartCard title="관리자별 활동 성향" desc="상위 관리자 기준 작업 유형 분포입니다.">
           <EmptyAware data={radarData}>
@@ -304,7 +315,7 @@ export default function AdminLogsStatsDashboard({ data }: Props) {
 
       <section className={styles.gridTwo}>
         <ChartCard title="IP TOP 10"><TopList data={data.ipTop} /></ChartCard>
-        <ChartCard title="대상 비중 지도" desc="큰 박스일수록 많이 사용된 대상입니다.">
+        <ChartCard title="대상 Treemap" desc="큰 박스일수록 많이 사용된 대상입니다.">
           <EmptyAware data={data.targetTop}>
             <ResponsiveContainer width="100%" height="100%">
               <Treemap data={data.targetTop.map((item: any) => ({ name: displayLabel(item.name), size: item.count }))} dataKey="size" nameKey="name" stroke="#0f2745" fill="#38bdf8" />
@@ -332,5 +343,11 @@ export default function AdminLogsStatsDashboard({ data }: Props) {
     </div>
   );
 }
+
+
+
+
+
+
 
 

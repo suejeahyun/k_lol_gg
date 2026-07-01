@@ -356,3 +356,38 @@
 .chartHeader h2 { color: #f8fbff; }
 .chartHeader p { color: rgba(226, 242, 255, 0.64); }
 .topName { word-break: keep-all; overflow-wrap: anywhere; }
+
+/* phase11-heatmap-visibility-fix */
+.heatmapGrid,
+.heatmap,
+.heatmapMatrix {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  min-height: 220px;
+  align-content: start;
+}
+
+.heatmapCell,
+.heatCell,
+.heatmapBucket {
+  min-width: 16px;
+  min-height: 18px;
+  border-radius: 5px;
+  border: 1px solid rgba(125, 211, 252, 0.16);
+  background: rgba(56, 189, 248, 0.10);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
+.heatmapCell[data-count="0"],
+.heatCell[data-count="0"],
+.heatmapBucket[data-count="0"] {
+  background: rgba(148, 163, 184, 0.08);
+}
+
+.heatmapLabel,
+.heatLabel {
+  color: #9fb0c9;
+  font-size: 11px;
+  line-height: 1.2;
+}
