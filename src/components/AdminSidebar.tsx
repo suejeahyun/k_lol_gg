@@ -24,7 +24,13 @@ const menuGroups: AdminSidebarGroup[] = [
     items: [
       { href: "/admin/matches", label: "내전 관리", code: "MAT", activePrefixes: ["/admin/matches"] },
       { href: "/admin/progress", label: "이벤트/멸망전", code: "EVT", activePrefixes: ["/admin/progress"] },
-      { href: "/admin/discipline", label: "주의/경고 관리", code: "DIS", activePrefixes: ["/admin/discipline"] },
+      { href: "/admin/operation-forms", label: "운영 신청", code: "OPR", activePrefixes: ["/admin/operation-forms"] },
+      {
+        href: "/admin/operation-forms/warnings",
+        label: "주의/경고 관리",
+        code: "DIS",
+        activePrefixes: ["/admin/operation-forms/warnings", "/admin/discipline"],
+      },
     ],
   },
   {
@@ -53,18 +59,15 @@ const menuGroups: AdminSidebarGroup[] = [
   {
     title: "데이터",
     items: [
-      { href: "/admin/players", label: "플레이어 관리", code: "PLY", activePrefixes: ["/admin/players"] },
-      { href: "/admin/champions", label: "챔피언", code: "CHP", activePrefixes: ["/admin/champions"] },
-      { href: "/admin/seasons", label: "시즌", code: "SSN", activePrefixes: ["/admin/seasons"] },
+      { href: "/admin/players", label: "회원/플레이어", code: "PLY", activePrefixes: ["/admin/players", "/admin/users", "/admin/player-approvals"] },
+      { href: "/admin/seasons", label: "시즌 전환", code: "SSN", activePrefixes: ["/admin/seasons"] },
     ],
   },
   {
     title: "AI/콘텐츠",
     items: [
-      { href: "/admin/balance/drafts", label: "AI 밸런스", code: "AIB", activePrefixes: ["/admin/balance/drafts", "/admin/balance/recommendations"] },
-      { href: "/admin/balance-ai", label: "K-LOL MMR", code: "MMR", activePrefixes: ["/admin/balance-ai"] },
-      { href: "/admin/highlights", label: "하이라이트", code: "VID", activePrefixes: ["/admin/highlights"] },
-      { href: "/admin/images", label: "이미지", code: "IMG", activePrefixes: ["/admin/images"] },
+      { href: "/admin/balance-ai", label: "K-LOL 랭킹", code: "MMR", activePrefixes: ["/admin/balance-ai"] },
+      { href: "/admin/highlights", label: "하이라이트 관리", code: "VID", activePrefixes: ["/admin/highlights"] },
     ],
   },
   {

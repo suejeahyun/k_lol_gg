@@ -46,6 +46,7 @@
 @import url("../styles/pages/account-player-admin-ui-fix.css");
 @import url("../styles/app-mobile.css");
 @import url("../styles/overrides/v2-responsive-fix.css");
+@import url("../styles/overrides/page-cleanup-pass.css");
 
 /* Fix: pick/ban solo-rank refresh panel */
 .ai-solo-sync {
