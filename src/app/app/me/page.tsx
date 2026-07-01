@@ -56,7 +56,7 @@ export default async function AppMePage() {
         </p>
         <div className="klol-app-actions klol-app-actions--keep">
           {!user ? (
-            <Link className="klol-app-primary" href="/login?next=/app/me">로그인</Link>
+            <Link className="klol-app-primary" href="/app/login?next=/app/me">로그인</Link>
           ) : (
             <Link className="klol-app-primary" href="/app/account">계정 관리</Link>
           )}

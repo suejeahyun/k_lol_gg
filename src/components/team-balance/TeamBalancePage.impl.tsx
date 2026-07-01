@@ -1292,6 +1292,86 @@ export default function PlayersBalancePage() {
     selectBalanceAlternative(bestIndex);
   }
 
+
+
+  function renderBalanceOverviewCard(target: BalanceResponse) {
+    const grade = getBalanceGrade(target);
+    const lines = getLineComparisons(target);
+
+    return (
+      <section className="balance-overview-card">
+        <div className="balance-overview-main">
+          <div className="balance-grade-badge">
+            <span>{grade.grade}</span>
+            <strong>{grade.label}</strong>
+          </div>
+          <div className="balance-overview-stats">
+            <div>
+              <span>RED</span>
+              <strong>{target.redTotal.toFixed(1)}</strong>
+            </div>
+            <div>
+              <span>BLUE</span>
+              <strong>{target.blueTotal.toFixed(1)}</strong>
+            </div>
+            <div>
+              <span>차이</span>
+              <strong>{target.diff.toFixed(1)}</strong>
+            </div>
+            <div>
+              <span>주/부/AUTO</span>
+              <strong>
+                {target.mainAssignedCount}/{target.subAssignedCount}/
+                {target.autoAssignedCount}
+              </strong>
+            </div>
+          </div>
+          {manualRecalcMessage ? (
+            <div className="balance-form-head__desc">{manualRecalcMessage}</div>
+          ) : null}
+          {target.serverEvaluationMode === "MANUAL_ESTIMATE" ? (
+            <div className="balance-form-head__desc">
+              현재 화면은 임시 계산값입니다. 서버 재평가 완료 후 저장하는 것을 권장합니다.
+            </div>
+          ) : null}
+          {target.soloSync ? (
+            <div className="balance-form-head__desc">
+              솔로랭 갱신: 성공 {target.soloSync.synced}명 / 스킵 {target.soloSync.skipped}명 / 실패 {target.soloSync.failed}명
+              {target.soloSync.results?.filter((item) => item.status === "failed" || item.status === "skipped").length ? (
+                <span>
+                  {" · 확인: "}
+                  {target.soloSync.results
+                    .filter((item) => item.status === "failed" || item.status === "skipped")
+                    .slice(0, 5)
+                    .map((item) => getSoloSyncNameByPlayerId(item.playerId))
+                    .join(", ")}
+                </span>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+        {renderBalanceMetricGrid(target)}
+        <div className="balance-line-strip">
+          {lines.map((line) => (
+            <div key={line.position} className="balance-line-chip">
+              <strong>{line.position}</strong>
+              <span>
+                {line.red?.name ?? "-"} {line.red?.score.toFixed(1) ?? "-"}
+              </span>
+              <em>vs</em>
+              <span>
+                {line.blue?.name ?? "-"} {line.blue?.score.toFixed(1) ?? "-"}
+              </span>
+              <b>
+                {line.diff.toFixed(1)} · {line.status}
+              </b>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
   function renderAiJudgement(target: BalanceResponse) {
     const judgement = target.aiJudgement;
     if (!judgement) return null;
@@ -2339,101 +2419,6 @@ export default function PlayersBalancePage() {
 
         {result ? (
           <>
-            {(() => {
-              const grade = getBalanceGrade(result);
-              const lines = getLineComparisons(result);
-
-              return (
-                <section className="balance-overview-card">
-                  <div className="balance-overview-main">
-                    <div className="balance-grade-badge">
-                      <span>{grade.grade}</span>
-                      <strong>{grade.label}</strong>
-                    </div>
-                    <div className="balance-overview-stats">
-                      <div>
-                        <span>RED</span>
-                        <strong>{result.redTotal.toFixed(1)}</strong>
-                      </div>
-                      <div>
-                        <span>BLUE</span>
-                        <strong>{result.blueTotal.toFixed(1)}</strong>
-                      </div>
-                      <div>
-                        <span>차이</span>
-                        <strong>{result.diff.toFixed(1)}</strong>
-                      </div>
-                      <div>
-                        <span>주/부/AUTO</span>
-                        <strong>
-                          {result.mainAssignedCount}/{result.subAssignedCount}/
-                          {result.autoAssignedCount}
-                        </strong>
-                      </div>
-                    </div>
-                    <div className="balance-form-head__desc">
-                      품질 점수 {Number(result.qualityScore ?? 0).toFixed(1)}점
-                      {result.recommendedAlternative
-                        ? ` · 추천: ${getOptionLabel(result.recommendedAlternative.optionNo, result.recommendedAlternative.optionTitle)}`
-                        : ""}
-                      {result.warningMessages?.length
-                        ? ` · 주의: ${result.warningMessages.join(" / ")}`
-                        : ""}
-                    </div>
-                    {manualRecalcMessage ? (
-                      <div className="balance-form-head__desc">
-                        {manualRecalcMessage}
-                      </div>
-                    ) : null}
-                    {result.serverEvaluationMode === "MANUAL_ESTIMATE" ? (
-                      <div className="balance-form-head__desc">
-                        현재 화면은 임시 계산값입니다. 서버 재평가 완료 후 저장하는 것을 권장합니다.
-                      </div>
-                    ) : null}
-                    {result.soloSync ? (
-                      <div className="balance-form-head__desc">
-                        솔로랭 갱신: 성공 {result.soloSync.synced}명 / 스킵{" "}
-                        {result.soloSync.skipped}명 / 실패{" "}
-                        {result.soloSync.failed}명
-                        {result.soloSync.results?.filter((item) => item.status === "failed" || item.status === "skipped").length ? (
-                          <span>
-                            {" · 확인: "}
-                            {result.soloSync.results
-                              .filter((item) => item.status === "failed" || item.status === "skipped")
-                              .slice(0, 5)
-                              .map((item) => getSoloSyncNameByPlayerId(item.playerId))
-                              .join(", ")}
-                          </span>
-                        ) : null}
-                      </div>
-                    ) : null}
-                  </div>
-                  {renderBalanceMetricGrid(result)}
-                  <div className="balance-line-strip">
-                    {lines.map((line) => (
-                      <div key={line.position} className="balance-line-chip">
-                        <strong>{line.position}</strong>
-                        <span>
-                          {line.red?.name ?? "-"}{" "}
-                          {line.red?.score.toFixed(1) ?? "-"}
-                        </span>
-                        <em>vs</em>
-                        <span>
-                          {line.blue?.name ?? "-"}{" "}
-                          {line.blue?.score.toFixed(1) ?? "-"}
-                        </span>
-                        <b>
-                          {line.diff.toFixed(1)} · {line.status}
-                        </b>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              );
-            })()}
-
-            {renderAiJudgement(result)}
-
             {renderBalanceAlternatives(result)}
 
             <section className="balance-result-teams balance-result-teams--compact">
@@ -2467,7 +2452,9 @@ export default function PlayersBalancePage() {
                 </div>
               </div>
 
-              <div className="balance-result-bottom">
+            </section>
+
+            <section className="balance-result-bottom">
                 <section className="card balance-summary-card balance-summary-card--compact">
                   <div className="balance-summary-card__title">
                     계산 결과 요약
@@ -2527,9 +2514,11 @@ export default function PlayersBalancePage() {
                   </div>
                 </section>
 
-                {renderScoreEvidence(result)}
-              </div>
             </section>
+
+            {renderBalanceOverviewCard(result)}
+
+            {renderAiJudgement(result)}
           </>
         ) : null}
 

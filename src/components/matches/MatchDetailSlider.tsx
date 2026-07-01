@@ -53,47 +53,6 @@ export default function MatchDetailSlider({
 
   return (
     <section className="match-slide">
-      <div className="match-slide__topbar">
-        <div className="match-slide__tabs">
-          {slides.map((slide, index) => (
-            <button
-              key={slide.id}
-              type="button"
-              className={`match-slide__tab ${
-                index === currentIndex ? "match-slide__tab--active" : ""
-              }`}
-              onClick={() => setCurrentIndex(index)}
-            >
-              {slide.gameNumber}세트
-            </button>
-          ))}
-        </div>
-
-        <div className="match-slide__controls">
-          <button
-            type="button"
-            className="match-slide__control"
-            onClick={handlePrev}
-            disabled={currentIndex === 0}
-          >
-            이전
-          </button>
-
-          <span className="match-slide__count">
-            {currentIndex + 1} / {slides.length}
-          </span>
-
-          <button
-            type="button"
-            className="match-slide__control"
-            onClick={handleNext}
-            disabled={currentIndex === slides.length - 1}
-          >
-            다음
-          </button>
-        </div>
-      </div>
-
       <div className="match-slide__viewport">
         <div
           className="match-slide__track"

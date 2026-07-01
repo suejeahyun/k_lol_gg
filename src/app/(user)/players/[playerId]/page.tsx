@@ -193,9 +193,6 @@ export default async function PlayerDetailPage({
         </div>
 
         <div className="page-actions">
-          <Link href="/players" className="btn btn-ghost">
-            목록으로
-          </Link>
         </div>
       </div>
 

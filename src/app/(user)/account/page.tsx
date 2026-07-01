@@ -1,10 +1,11 @@
-﻿export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
 import { getCurrentUser } from "@/lib/auth/session";
 import DiscordUnlinkButton from "./DiscordUnlinkButton";
+import DiscordAvatar from "@/components/DiscordAvatar";
 import UserLogoutButton from "@/components/UserLogoutButton";
 
 function formatDate(value: Date | string | null | undefined) {
@@ -46,10 +47,8 @@ export default async function AccountPage() {
     <main className="user-page account-page account-page--compact">
       <div className="user-page__header account-page__header">
         <div>
-          <h1 className="user-page__title">내 계정</h1>
-          <p className="user-page__description">K-LOL.GG 계정과 Discord 연동 상태를 관리합니다.</p>
+          <h1 className="user-page__title">내 정보</h1>
         </div>
-        <UserLogoutButton />
       </div>
 
       <section className="admin-card account-card account-summary-card">
@@ -85,19 +84,19 @@ export default async function AccountPage() {
           {user.discordId ? (
             <DiscordUnlinkButton />
           ) : (
-            <Link className="admin-button account-discord-card__button" href="/api/auth/discord/start?mode=link&next=/account">
+            <a className="admin-button account-discord-card__button" href="/api/auth/discord/start?mode=link&next=/account">
               Discord 연동하기
-            </Link>
+            </a>
           )}
         </div>
 
         {user.discordId ? (
           <div className="discord-profile-card discord-profile-card--compact">
-            {user.discordAvatar ? (
-              <img src={user.discordAvatar} alt="Discord avatar" />
-            ) : (
-              <div className="discord-avatar-placeholder">D</div>
-            )}
+            <DiscordAvatar
+              src={user.discordAvatar}
+              name={discordName}
+              placeholderClassName="discord-avatar-placeholder"
+            />
             <div className="discord-profile-card__body">
               <div className="discord-profile-card__title-row">
                 <h3>{discordName}</h3>
@@ -125,6 +124,22 @@ export default async function AccountPage() {
             <p>연동하면 음성방 기록과 사이트 계정을 정확히 매칭할 수 있습니다.</p>
           </div>
         )}
+      </section>
+
+      <section className="account-action-grid" aria-label="내정보 수정 메뉴">
+        <Link className="account-action-card" href="/account/tier">
+          <span className="account-action-card__eyebrow">PLAYER</span>
+          <strong>계정 정보 수정</strong>
+          <p>현재티어와 최고티어를 수정합니다.</p>
+          <span className="account-action-card__cta">수정하기</span>
+        </Link>
+
+        <Link className="account-action-card" href="/account/password">
+          <span className="account-action-card__eyebrow">SECURITY</span>
+          <strong>비밀번호 변경</strong>
+          <p>현재 비밀번호 확인 후 새 비밀번호로 변경합니다.</p>
+          <span className="account-action-card__cta">변경하기</span>
+        </Link>
       </section>
     </main>
   );

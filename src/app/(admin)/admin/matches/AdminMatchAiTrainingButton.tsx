@@ -76,7 +76,6 @@ export default function AdminMatchAiTrainingButton() {
         </p>
       ) : (
         <p style={{ maxWidth: 480, margin: 0, color: "rgba(148,163,184,0.82)", fontSize: 12, textAlign: "right" }}>
-          내전 등록 후 실행하면 밸런스 MMR과 밴픽 추천용 원본 표본이 최신 상태로 정리됩니다.
         </p>
       )}
     </div>

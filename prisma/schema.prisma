@@ -514,6 +514,12 @@ model DestructionTournament {
   preliminaryRoundCount Int @default(3)
   advanceTeamCount Int @default(4)
 
+  topLaneLimit Int @default(10)
+  jungleLaneLimit Int @default(10)
+  midLaneLimit Int @default(10)
+  adcLaneLimit Int @default(10)
+  supportLaneLimit Int @default(10)
+
   winnerTeamId   Int?
   mvpPlayerId    Int?
   galleryImageId Int?
@@ -1477,6 +1483,18 @@ model AppDataCache {
   version   Int      @default(1)
   updatedAt DateTime @updatedAt
   createdAt DateTime @default(now())
+
+  @@index([updatedAt])
+}
+
+model KakaoOperationSetting {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique
+  value       Json
+  description String?  @db.Text
+  updatedById Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([updatedAt])
 }

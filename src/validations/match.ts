@@ -1,5 +1,3 @@
-import { parseKstDateTime } from "@/lib/date/kst";
-
 type Team = "BLUE" | "RED";
 type Position = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
 
@@ -22,7 +20,7 @@ type GameInput = {
 type MatchCreateInput = {
   seasonId: number;
   title: string;
-  matchDate: string;
+  matchDate?: string;
   teamBalanceDraftId?: number | null;
   games: GameInput[];
 };
@@ -54,21 +52,12 @@ export function validateMatchCreateInput(
     return { ok: false, message: "내전 제목은 100자 이하로 입력해주세요." };
   }
 
-  if (typeof data.matchDate !== "string" || !data.matchDate.trim()) {
-    return { ok: false, message: "내전 일시를 입력해주세요." };
-  }
-
   if (
     data.teamBalanceDraftId !== undefined &&
     data.teamBalanceDraftId !== null &&
     (!Number.isInteger(data.teamBalanceDraftId) || data.teamBalanceDraftId <= 0)
   ) {
     return { ok: false, message: "팀 밸런스 결과 ID가 올바르지 않습니다." };
-  }
-
-  const parsedDate = parseKstDateTime(data.matchDate);
-  if (!parsedDate) {
-    return { ok: false, message: "내전 일시 형식이 올바르지 않습니다." };
   }
 
   if (!Array.isArray(data.games) || data.games.length === 0) {

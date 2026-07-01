@@ -17,7 +17,6 @@ const BASIC_TIERS = ["아이언", "브론즈", "실버", "골드", "플래티넘
 const MASTER_TIERS = ["마스터"];
 const HIGH_TIERS = ["그랜드마스터", "챌린저"];
 const BASIC_DIVISIONS = ["1", "2", "3", "4"];
-const MASTER_FLOORS = Array.from({ length: 10 }, (_, i) => String(i + 1));
 const ALL_TIERS = [...BASIC_TIERS, ...MASTER_TIERS, ...HIGH_TIERS];
 
 function getTierType(tier: string): TierType {
@@ -29,7 +28,7 @@ function getTierType(tier: string): TierType {
 function buildTierValue(tier: string, detail: string): string {
   if (!tier) return "";
   if (BASIC_TIERS.includes(tier)) return detail ? `${tier} ${detail}` : "";
-  if (MASTER_TIERS.includes(tier)) return detail ? `${tier} ${detail}층` : "";
+  if (MASTER_TIERS.includes(tier)) return detail ? `${tier} ${scoreToMasterFloor(detail)}층` : "";
   if (HIGH_TIERS.includes(tier)) return detail ? `${tier} ${detail}` : "";
   return "";
 }
@@ -48,7 +47,10 @@ function parseTierValue(value?: string | null): {
   }
 
   const [tier, detailRaw] = normalized.split(" ");
-  const detail = detailRaw?.replace("층", "") ?? "";
+  const rawDetail = detailRaw ?? "";
+  const detail = tier === "마스터" && rawDetail.includes("층")
+    ? String(clampNumber(rawDetail.replace(/[^0-9]/g, ""), 1, 10) * 100)
+    : rawDetail.replace("점", "").replace("층", "");
 
   if (![...BASIC_TIERS, ...MASTER_TIERS, ...HIGH_TIERS].includes(tier)) {
     return {
@@ -61,6 +63,17 @@ function parseTierValue(value?: string | null): {
     tier,
     detail,
   };
+}
+
+function clampNumber(value: string, min: number, max: number) {
+  const numeric = Number.parseInt(value, 10);
+  if (!Number.isFinite(numeric)) return min;
+  return Math.max(min, Math.min(max, numeric));
+}
+
+function scoreToMasterFloor(value: string) {
+  const score = clampNumber(value, 0, 999);
+  return Math.max(1, Math.min(10, Math.floor(score / 100)));
 }
 
 export default function MyPlayerPage() {
@@ -255,14 +268,12 @@ function TierSelector({
         ) : null}
 
         {tier && type === "master" ? (
-          <select value={detail} onChange={(e) => onDetailChange(e.target.value)}>
-            <option value="">층 선택</option>
-            {MASTER_FLOORS.map((floor) => (
-              <option key={floor} value={floor}>
-                {floor}층
-              </option>
-            ))}
-          </select>
+          <input
+            value={detail}
+            onChange={(e) => onDetailChange(e.target.value.replace(/[^0-9]/g, ""))}
+            placeholder="점수 입력 예: 720"
+            inputMode="numeric"
+          />
         ) : null}
 
         {tier && type === "high" ? (
@@ -274,6 +285,11 @@ function TierSelector({
           />
         ) : null}
       </div>
+      {tier && type === "master" ? (
+        <p className="admin-muted" style={{ margin: "6px 0 0", fontSize: 12 }}>
+          {detail ? `${detail}점 입력 → DB 저장값: 마스터 ${scoreToMasterFloor(detail)}층` : "마스터 점수를 입력하세요."}
+        </p>
+      ) : null}
     </div>
   );
 }

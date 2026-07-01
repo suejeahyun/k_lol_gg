@@ -312,7 +312,7 @@
 
 .matches-list-v4__head-score,
 .matches-list-v4__score-cell {
-  grid-column: 4 !important;
+  grid-column: 3 !important;
   grid-row: 1 / span 2 !important;
   width: 250px !important;
   min-width: 250px !important;

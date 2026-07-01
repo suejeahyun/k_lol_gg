@@ -128,9 +128,6 @@ export default async function BalanceRecommendationsIndexPage({
           <p className="eyebrow">PICK · BAN</p>
           <h1 className="page-title">밴픽 추천</h1>
           <div className="ai-hero__actions">
-            <Link className="button-secondary" href="/players/balance">
-              팀 밸런스
-            </Link>
           </div>
         </div>
       </section>

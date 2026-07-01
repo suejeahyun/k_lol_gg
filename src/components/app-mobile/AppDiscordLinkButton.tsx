@@ -34,14 +34,14 @@ export function AppDiscordLinkButton({ linked, disabled, next = "/app/me" }: App
   };
 
   if (disabled) {
-    return <Link className="klol-app-primary" href={`/login?next=${encodeURIComponent(next)}`}>로그인</Link>;
+    return <Link className="klol-app-primary" href={`/app/login?next=${encodeURIComponent(next)}`}>로그인</Link>;
   }
 
   if (!linked) {
     return (
-      <Link className="klol-app-primary" href={`/api/auth/discord/start?mode=link&next=${encodeURIComponent(next)}`}>
+       <a className="klol-app-primary" href={`/api/auth/discord/start?mode=link&next=${encodeURIComponent(next)}`}>
         연동하기
-      </Link>
+      </a>
     );
   }
 

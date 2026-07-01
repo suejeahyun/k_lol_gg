@@ -1,4 +1,4 @@
-import DestructionParticipationClient from "./DestructionParticipationClient";
+import { redirect } from "next/navigation";
 
 type PageProps = {
   params: Promise<{
@@ -9,5 +9,5 @@ type PageProps = {
 export default async function DestructionParticipationPage({ params }: PageProps) {
   const { tournamentId } = await params;
 
-  return <DestructionParticipationClient tournamentId={tournamentId} />;
+  redirect(`/progress/destruction/${tournamentId}`);
 }

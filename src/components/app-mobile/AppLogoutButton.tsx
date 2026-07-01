@@ -16,7 +16,7 @@ export function AppLogoutButton() {
         alert("로그아웃 실패");
         return;
       }
-      router.push("/login?next=/app");
+      router.push("/app/login?next=/app");
       router.refresh();
     } finally {
       setLoading(false);

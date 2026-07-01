@@ -18,7 +18,7 @@ type MatchesPageProps = {
   }>;
 };
 
-type SortType = "title" | "matchDate" | "games" | "season";
+type SortType = "title" | "games" | "season";
 type OrderType = "asc" | "desc";
 type WinnerTeam = "BLUE" | "RED" | "미정";
 
@@ -41,27 +41,12 @@ const STATUS_FILTERS = [
   { value: "completed", label: "완료" },
 ] as const;
 
-function formatDate(date: Date): string {
-  return new Date(date).toLocaleString("ko-KR", {
-    year: "numeric",
-    month: "numeric",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
-
 function getSort(sort?: string): SortType {
-  if (
-    sort === "title" ||
-    sort === "matchDate" ||
-    sort === "games" ||
-    sort === "season"
-  ) {
+  if (sort === "title" || sort === "games" || sort === "season") {
     return sort;
   }
 
-  return "matchDate";
+  return "title";
 }
 
 function getOrder(order?: string): OrderType {
@@ -160,11 +145,9 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
   };
 
   const orderBy =
-    sort === "title"
-      ? { title: order }
-      : sort === "season"
-        ? { season: { name: order } }
-        : { matchDate: order };
+    sort === "season"
+      ? { season: { name: order } }
+      : { title: order };
 
   const totalCount = await prisma.matchSeries.count({ where });
   const needsClientPaging =
@@ -215,8 +198,8 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
     }),
     prisma.matchSeries.findFirst({
       where,
-      orderBy: { matchDate: "desc" },
-      select: { id: true, title: true, matchDate: true },
+      orderBy: [{ title: "desc" }, { id: "desc" }],
+      select: { id: true, title: true },
     }),
   ]);
 
@@ -452,13 +435,6 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                   시즌
                 </Link>
 
-                <Link
-                  href={sortLink("matchDate")}
-                  className="matches-list-v4__head-date"
-                >
-                  날짜
-                </Link>
-
                 <div className="matches-list-v4__head-score">스코어</div>
 
                 <div className="matches-list-v4__head-winner">승리팀</div>
@@ -485,10 +461,6 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
 
                       <div className="match-col matches-list-v4__season">
                         <strong>{match.season.name}</strong>
-                      </div>
-
-                      <div className="match-col matches-list-v4__date">
-                        {formatDate(match.matchDate)}
                       </div>
 
                       <div className="match-col matches-list-v4__score-cell">

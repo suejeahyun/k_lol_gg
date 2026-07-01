@@ -24,14 +24,14 @@ function formatDate(value: Date | string | null | undefined) {
 
 export default async function AppAccountPage() {
   const session = await getCurrentUser();
-  if (!session) redirect("/login?next=/app/account");
+  if (!session) redirect("/app/login?next=/app/account");
 
   const user = await prisma.userAccount.findUnique({
     where: { id: session.userAccountId },
     include: { player: true },
   });
 
-  if (!user) redirect("/login?next=/app/account");
+  if (!user) redirect("/app/login?next=/app/account");
 
   const discordLinked = Boolean(user.discordId);
   const discordName = user.discordServerNickname || user.discordGlobalName || user.discordUsername || "연동됨";

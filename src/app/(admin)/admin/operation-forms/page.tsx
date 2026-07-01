@@ -8,36 +8,34 @@ const cards = [
     key: "leaves",
     href: "/admin/operation-forms/leaves",
     title: "외출 신청",
+    description: "외출 기간, 사유, 범위를 확인하고 관리자 메모를 보관합니다.",
   },
   {
     key: "meetups",
     href: "/admin/operation-forms/meetups",
     title: "오프라인 모임",
+    description: "오프라인 모임 신청 내용을 확인하고 기록용으로 관리합니다.",
   },
   {
     key: "suggestions",
     href: "/admin/operation-forms/suggestions",
     title: "건의",
+    description: "건의 사유와 내용을 확인하고 내부 처리 메모를 남깁니다.",
   },
   {
     key: "friends",
     href: "/admin/operation-forms/friends",
     title: "디스코드 초대",
-  },
-  {
-    key: "warnings",
-    href: "/admin/operation-forms/warnings",
-    title: "운영 경고 관리",
+    description: "수동 초대 대상 정보를 확인하고 보관합니다.",
   },
 ] as const;
 
 export default async function AdminOperationFormsPage() {
-  const [leaves, meetups, suggestions, friends, warnings] = await Promise.all([
-    prisma.kakaoLeaveRequest.count(),
-    prisma.kakaoMeetupRecord.count(),
-    prisma.kakaoSuggestionRequest.count(),
-    prisma.kakaoFriendApplication.count(),
-    prisma.userDisciplineRecord.count({ where: { isActive: true } }),
+  const [leaves, meetups, suggestions, friends] = await Promise.all([
+    prisma.kakaoLeaveRequest.count({ where: { status: { not: "CANCELLED" } } }),
+    prisma.kakaoMeetupRecord.count({ where: { status: { not: "CANCELLED" } } }),
+    prisma.kakaoSuggestionRequest.count({ where: { status: { not: "CANCELLED" } } }),
+    prisma.kakaoFriendApplication.count({ where: { status: { not: "CANCELLED" } } }),
   ]);
 
   const counts: Record<(typeof cards)[number]["key"], number> = {
@@ -45,7 +43,6 @@ export default async function AdminOperationFormsPage() {
     meetups,
     suggestions,
     friends,
-    warnings,
   };
 
   return (
@@ -55,7 +52,14 @@ export default async function AdminOperationFormsPage() {
           <div>
             <p className="page-eyebrow">KAKAO OPERATION</p>
             <h1>운영 신청 관리</h1>
+            <p className="admin-muted" style={{ marginTop: 8 }}>
+              외출신청, 오프라인모임, 건의, 디스코드 초대는 정보 확인 및 보관용으로 관리합니다.
+              운영 경고 관리는 별도 메뉴에서 기존 규칙 그대로 처리합니다.
+            </p>
           </div>
+          <Link className="admin-button admin-button--ghost" href="/admin/discipline">
+            운영 경고 관리
+          </Link>
         </div>
 
         <section
@@ -93,7 +97,7 @@ export default async function AdminOperationFormsPage() {
                     alignItems: "flex-start",
                     justifyContent: "space-between",
                     gap: 16,
-                    marginBottom: 18,
+                    marginBottom: 14,
                   }}
                 >
                   <h2 style={{ margin: 0, fontSize: "2rem", lineHeight: 1.2, wordBreak: "keep-all" }}>{card.title}</h2>
@@ -113,6 +117,7 @@ export default async function AdminOperationFormsPage() {
                     총 {counts[card.key]}건
                   </span>
                 </div>
+                <p className="admin-muted" style={{ lineHeight: 1.6 }}>{card.description}</p>
               </div>
 
               <div
@@ -126,7 +131,7 @@ export default async function AdminOperationFormsPage() {
                   fontSize: "0.98rem",
                 }}
               >
-                바로 보기 <span aria-hidden="true">→</span>
+                목록 보기 <span aria-hidden="true">→</span>
               </div>
             </Link>
           ))}

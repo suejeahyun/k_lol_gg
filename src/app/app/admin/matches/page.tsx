@@ -6,14 +6,6 @@ import { AppEmpty, AppSection } from "@/components/app-mobile/AppCards";
 
 export const dynamic = "force-dynamic";
 
-function formatDate(value: Date) {
-  return new Intl.DateTimeFormat("ko-KR", {
-    timeZone: "Asia/Seoul",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(value);
-}
-
 function winnerText(games: { winnerTeam: string }[]) {
   const red = games.filter((game) => game.winnerTeam === "RED").length;
   const blue = games.filter((game) => game.winnerTeam === "BLUE").length;
@@ -23,16 +15,15 @@ function winnerText(games: { winnerTeam: string }[]) {
 
 export default async function AppAdminMatchesPage() {
   const admin = await requireAdminRequest();
-  if (!admin) redirect("/login");
+  if (!admin) redirect("/app/login?next=/app/admin/matches");
 
   const matches = await prisma.matchSeries
     .findMany({
-      orderBy: { matchDate: "desc" },
+      orderBy: [{ title: "desc" }, { id: "desc" }],
       take: 30,
       select: {
         id: true,
         title: true,
-        matchDate: true,
         games: { select: { winnerTeam: true }, orderBy: { gameNumber: "asc" } },
       },
     })
@@ -55,7 +46,7 @@ export default async function AppAdminMatchesPage() {
                 <div className="klol-app-list-top">
                   <span className="klol-app-list-title">
                     <strong>{match.title}</strong>
-                    <span>{formatDate(match.matchDate)} · {match.games.length}세트</span>
+                    <span>{match.games.length}세트</span>
                   </span>
                   <span className="klol-app-badge klol-app-badge--warn">{winnerText(match.games)}</span>
                 </div>

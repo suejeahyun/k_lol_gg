@@ -1,4 +1,4 @@
-import EventParticipationClient from "./EventParticipationClient";
+import { redirect } from "next/navigation";
 
 type PageProps = {
   params: Promise<{
@@ -9,5 +9,5 @@ type PageProps = {
 export default async function EventParticipationPage({ params }: PageProps) {
   const { eventId } = await params;
 
-  return <EventParticipationClient eventId={eventId} />;
+  redirect(`/progress/event/${eventId}`);
 }

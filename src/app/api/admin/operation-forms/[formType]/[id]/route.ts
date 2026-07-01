@@ -28,11 +28,8 @@ async function updateItem(type: KakaoOperationFormType, id: number, data: { stat
   return prisma.kakaoLeaveRequest.update({ where: { id }, data });
 }
 
-async function deleteItem(type: KakaoOperationFormType, id: number) {
-  if (type === "friends") return prisma.kakaoFriendApplication.delete({ where: { id } });
-  if (type === "suggestions") return prisma.kakaoSuggestionRequest.delete({ where: { id } });
-  if (type === "meetups") return prisma.kakaoMeetupRecord.delete({ where: { id } });
-  return prisma.kakaoLeaveRequest.delete({ where: { id } });
+async function archiveItem(type: KakaoOperationFormType, id: number) {
+  return updateItem(type, id, { status: "CANCELLED" });
 }
 
 export async function PATCH(req: NextRequest, context: RouteContext) {
@@ -84,16 +81,16 @@ export async function DELETE(_: NextRequest, context: RouteContext) {
       return NextResponse.json({ message: "올바르지 않은 운영 양식 ID입니다." }, { status: 400 });
     }
 
-    await deleteItem(formType, id);
+    await archiveItem(formType, id);
 
     await writeAdminLog({
-      action: "KAKAO_OPERATION_FORM_DELETE",
-      message: `카카오 운영 양식 삭제: ${formType} #${id}`,
+      action: "KAKAO_OPERATION_FORM_ARCHIVE",
+      message: `카카오 운영 양식 숨김 처리: ${formType} #${id}`,
     });
 
     return NextResponse.json({ ok: true });
   } catch (error) {
     logServerError("[ADMIN_OPERATION_FORM_DELETE_ERROR]", error);
-    return NextResponse.json({ message: "운영 양식 삭제에 실패했습니다." }, { status: 500 });
+    return NextResponse.json({ message: "운영 양식 삭제 처리에 실패했습니다." }, { status: 500 });
   }
 }

@@ -3,7 +3,14 @@ import { prisma } from "@/lib/prisma/client";
 const POSITIONS = ["TOP", "JGL", "MID", "ADC", "SUP"] as const;
 const AUTO_MANAGED_STATUSES = ["APPLIED", "CONFIRMED", "RESERVE"] as const;
 
+const DEFAULT_LANE_LIMIT = 10;
+const MIN_LANE_LIMIT = 1;
+const MAX_LANE_LIMIT = 99;
+
 type AutoManagedStatus = (typeof AUTO_MANAGED_STATUSES)[number];
+type PositionValue = (typeof POSITIONS)[number];
+
+export type DestructionLaneLimits = Record<PositionValue, number>;
 
 type ApplicationForAutoReserve = {
   id: number;
@@ -12,11 +19,67 @@ type ApplicationForAutoReserve = {
   createdAt: Date;
 };
 
+type TournamentLaneLimitSource = {
+  topLaneLimit?: number | null;
+  jungleLaneLimit?: number | null;
+  midLaneLimit?: number | null;
+  adcLaneLimit?: number | null;
+  supportLaneLimit?: number | null;
+};
+
+export const DEFAULT_DESTRUCTION_LANE_LIMITS: DestructionLaneLimits = {
+  TOP: DEFAULT_LANE_LIMIT,
+  JGL: DEFAULT_LANE_LIMIT,
+  MID: DEFAULT_LANE_LIMIT,
+  ADC: DEFAULT_LANE_LIMIT,
+  SUP: DEFAULT_LANE_LIMIT,
+};
+
+export function normalizeDestructionLaneLimit(value: unknown, fallback = DEFAULT_LANE_LIMIT) {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed)) return fallback;
+  if (parsed < MIN_LANE_LIMIT) return MIN_LANE_LIMIT;
+  if (parsed > MAX_LANE_LIMIT) return MAX_LANE_LIMIT;
+  return parsed;
+}
+
+export function getDestructionLaneLimits(source?: TournamentLaneLimitSource | null): DestructionLaneLimits {
+  return {
+    TOP: normalizeDestructionLaneLimit(source?.topLaneLimit, DEFAULT_LANE_LIMIT),
+    JGL: normalizeDestructionLaneLimit(source?.jungleLaneLimit, DEFAULT_LANE_LIMIT),
+    MID: normalizeDestructionLaneLimit(source?.midLaneLimit, DEFAULT_LANE_LIMIT),
+    ADC: normalizeDestructionLaneLimit(source?.adcLaneLimit, DEFAULT_LANE_LIMIT),
+    SUP: normalizeDestructionLaneLimit(source?.supportLaneLimit, DEFAULT_LANE_LIMIT),
+  };
+}
+
+export function parseDestructionLaneLimits(body: Record<string, unknown>, fallback?: TournamentLaneLimitSource | null) {
+  const source = body.laneLimits && typeof body.laneLimits === "object"
+    ? (body.laneLimits as Record<string, unknown>)
+    : body;
+  const fallbackLimits = getDestructionLaneLimits(fallback);
+
+  return {
+    topLaneLimit: normalizeDestructionLaneLimit(source.topLaneLimit ?? source.TOP, fallbackLimits.TOP),
+    jungleLaneLimit: normalizeDestructionLaneLimit(source.jungleLaneLimit ?? source.JGL, fallbackLimits.JGL),
+    midLaneLimit: normalizeDestructionLaneLimit(source.midLaneLimit ?? source.MID, fallbackLimits.MID),
+    adcLaneLimit: normalizeDestructionLaneLimit(source.adcLaneLimit ?? source.ADC, fallbackLimits.ADC),
+    supportLaneLimit: normalizeDestructionLaneLimit(source.supportLaneLimit ?? source.SUP, fallbackLimits.SUP),
+  };
+}
+
+export function isBeforeDestructionAuction(status: string) {
+  return status === "PLANNED" || status === "RECRUITING" || status === "TEAM_BUILDING";
+}
+
 function isAutoManagedStatus(status: string): status is AutoManagedStatus {
   return (AUTO_MANAGED_STATUSES as readonly string[]).includes(status);
 }
 
-function calculateReserveIds(applications: ApplicationForAutoReserve[]) {
+export function calculateDestructionReserveIds(
+  applications: ApplicationForAutoReserve[],
+  laneLimits: DestructionLaneLimits = DEFAULT_DESTRUCTION_LANE_LIMITS,
+) {
   const candidates = applications
     .filter((application) => isAutoManagedStatus(String(application.status)))
     .slice()
@@ -53,9 +116,10 @@ function calculateReserveIds(applications: ApplicationForAutoReserve[]) {
         return a.id - b.id;
       });
 
-    if (samePosition.length <= teamCount) continue;
+    const positionLimit = laneLimits[position];
+    if (samePosition.length <= positionLimit) continue;
 
-    for (const application of samePosition.slice(teamCount)) {
+    for (const application of samePosition.slice(positionLimit)) {
       reserveIds.add(application.id);
     }
   }
@@ -86,6 +150,11 @@ export async function applyDestructionRecruitmentAutoReserve(tournamentId: numbe
     select: {
       id: true,
       status: true,
+      topLaneLimit: true,
+      jungleLaneLimit: true,
+      midLaneLimit: true,
+      adcLaneLimit: true,
+      supportLaneLimit: true,
       _count: {
         select: {
           teams: true,
@@ -106,10 +175,10 @@ export async function applyDestructionRecruitmentAutoReserve(tournamentId: numbe
     };
   }
 
-  if (tournament.status !== "RECRUITING" || tournament._count.teams > 0 || tournament._count.matches > 0) {
+  if (!isBeforeDestructionAuction(tournament.status) || tournament._count.teams > 0 || tournament._count.matches > 0) {
     return {
       skipped: true,
-      reason: "NOT_RECRUITING_OR_ALREADY_STARTED",
+      reason: "NOT_BEFORE_AUCTION_OR_ALREADY_STARTED",
       changedCount: 0,
       teamCount: 0,
       capacity: 0,
@@ -136,7 +205,8 @@ export async function applyDestructionRecruitmentAutoReserve(tournamentId: numbe
     ],
   });
 
-  const { teamCount, capacity, reserveIds } = calculateReserveIds(applications);
+  const laneLimits = getDestructionLaneLimits(tournament);
+  const { teamCount, capacity, reserveIds } = calculateDestructionReserveIds(applications, laneLimits);
   const toReserveIds: number[] = [];
   const toActiveIds: number[] = [];
 

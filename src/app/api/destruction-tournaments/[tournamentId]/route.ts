@@ -1,16 +1,41 @@
-﻿export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { DestructionStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { logServerError } from "@/lib/server/safe-log";
+import { applyDestructionRecruitmentAutoReserve, isBeforeDestructionAuction, parseDestructionLaneLimits } from "@/lib/destruction/recruitment-auto-reserve";
 
 type RouteProps = {
   params: Promise<{
     tournamentId: string;
   }>;
 };
+
+
+
+function parseOptionalDate(value: unknown) {
+  if (value === undefined || value === null || value === "") return undefined;
+  if (typeof value === "string" || typeof value === "number") return new Date(value);
+  return undefined;
+}
+
+function hasLaneLimitPayload(body: Record<string, unknown>) {
+  if (body.laneLimits && typeof body.laneLimits === "object") return true;
+  return (
+    body.topLaneLimit !== undefined ||
+    body.jungleLaneLimit !== undefined ||
+    body.midLaneLimit !== undefined ||
+    body.adcLaneLimit !== undefined ||
+    body.supportLaneLimit !== undefined ||
+    body.TOP !== undefined ||
+    body.JGL !== undefined ||
+    body.MID !== undefined ||
+    body.ADC !== undefined ||
+    body.SUP !== undefined
+  );
+}
 
 function isValidStatus(status: string): status is DestructionStatus {
   return (
@@ -108,7 +133,7 @@ export async function PATCH(req: NextRequest, { params }: RouteProps) {
       );
     }
 
-    const body = await req.json();
+    const body = (await req.json()) as Record<string, unknown>;
 
     const title =
       typeof body.title === "string" ? body.title.trim() : undefined;
@@ -119,8 +144,8 @@ export async function PATCH(req: NextRequest, { params }: RouteProps) {
     const status =
       typeof body.status === "string" ? String(body.status) : undefined;
 
-    const startDate = body.startDate ? new Date(body.startDate) : undefined;
-    const endDate = body.endDate ? new Date(body.endDate) : undefined;
+    const startDate = parseOptionalDate(body.startDate);
+    const endDate = parseOptionalDate(body.endDate);
 
     const winnerTeamId =
       body.winnerTeamId === null
@@ -171,6 +196,43 @@ export async function PATCH(req: NextRequest, { params }: RouteProps) {
       );
     }
 
+    const existingTournament = hasLaneLimitPayload(body)
+      ? await prisma.destructionTournament.findUnique({
+          where: { id },
+          select: {
+            id: true,
+            status: true,
+            topLaneLimit: true,
+            jungleLaneLimit: true,
+            midLaneLimit: true,
+            adcLaneLimit: true,
+            supportLaneLimit: true,
+            _count: {
+              select: {
+                teams: true,
+                matches: true,
+              },
+            },
+          },
+        })
+      : null;
+
+    if (hasLaneLimitPayload(body) && !existingTournament) {
+      return NextResponse.json(
+        { message: "멸망전을 찾을 수 없습니다." },
+        { status: 404 }
+      );
+    }
+
+    if (existingTournament && (!isBeforeDestructionAuction(existingTournament.status) || existingTournament._count.teams > 0 || existingTournament._count.matches > 0)) {
+      return NextResponse.json(
+        { message: "라인별 최대 인원은 경매 시작 전까지만 수정할 수 있습니다." },
+        { status: 400 }
+      );
+    }
+
+    const laneLimitData = existingTournament ? parseDestructionLaneLimits(body, existingTournament) : null;
+
     const tournament = await prisma.destructionTournament.update({
       where: {
         id,
@@ -185,6 +247,7 @@ export async function PATCH(req: NextRequest, { params }: RouteProps) {
         ...(mvpPlayerId !== undefined ? { mvpPlayerId } : {}),
         ...(galleryImageId === null ? { galleryImage: { disconnect: true } } : {}),
         ...(typeof galleryImageId === "number" ? { galleryImage: { connect: { id: galleryImageId } } } : {}),
+        ...(laneLimitData ? laneLimitData : {}),
       },
       include: {
         galleryImage: true,
@@ -194,10 +257,14 @@ export async function PATCH(req: NextRequest, { params }: RouteProps) {
       },
     });
 
+    if (laneLimitData) {
+      await applyDestructionRecruitmentAutoReserve(id);
+    }
+
     await prisma.adminLog.create({
       data: {
         action: "DESTRUCTION_TOURNAMENT_UPDATE",
-        message: `멸망전 수정: ${tournament.title}`,
+        message: `멸망전 수정: ${tournament.title}${laneLimitData ? " / 라인별 최대 인원 수정" : ""}`,
       },
     });
 

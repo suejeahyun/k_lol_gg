@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
 import TierIcon from "@/components/TierIcon";
+import { getDestructionLaneLimits } from "@/lib/destruction/recruitment-auto-reserve";
 
 type PageProps = {
   params: Promise<{
@@ -66,6 +67,11 @@ export default async function DestructionParticipantsPage({ params, searchParams
       id: true,
       title: true,
       status: true,
+      topLaneLimit: true,
+      jungleLaneLimit: true,
+      midLaneLimit: true,
+      adcLaneLimit: true,
+      supportLaneLimit: true,
       participationApplies: {
         where: {
           status: {
@@ -93,6 +99,7 @@ export default async function DestructionParticipantsPage({ params, searchParams
     notFound();
   }
 
+  const laneLimits = getDestructionLaneLimits(tournament);
   const applies = tournament.participationApplies;
   const activeApplies = applies.filter((apply) => apply.status !== "RESERVE");
   const reserveApplies = applies.filter((apply) => apply.status === "RESERVE");
@@ -100,6 +107,8 @@ export default async function DestructionParticipantsPage({ params, searchParams
   const positionCounts = POSITIONS.map((position) => ({
     position,
     count: activeApplies.filter((apply) => apply.mainPosition === position).length,
+    reserveCount: reserveApplies.filter((apply) => apply.mainPosition === position).length,
+    limit: laneLimits[position],
   }));
   const filteredApplies = selectedLine
     ? applies.filter((apply) => apply.mainPosition === selectedLine)
@@ -558,7 +567,10 @@ export default async function DestructionParticipantsPage({ params, searchParams
               className={`destruction-line-filter-card${selectedLine === item.position ? " destruction-line-filter-card--active" : ""}`}
             >
               <span>{item.position}</span>
-              <strong>{item.count}명</strong>
+              <strong>{item.count}/{item.limit}명</strong>
+              {item.reserveCount > 0 ? (
+                <small style={{ color: "#fbbf24", fontSize: 11, fontWeight: 800 }}>보류 {item.reserveCount}명</small>
+              ) : null}
             </Link>
           ))}
         </div>

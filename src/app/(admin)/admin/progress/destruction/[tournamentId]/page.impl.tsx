@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
-import { applyDestructionRecruitmentAutoReserve } from "@/lib/destruction/recruitment-auto-reserve";
+import { applyDestructionRecruitmentAutoReserve, getDestructionLaneLimits } from "@/lib/destruction/recruitment-auto-reserve";
 import DestructionTeamForm from "@/components/admin/DestructionTeamForm";
 import DestructionPreliminaryGenerator from "@/components/admin/DestructionPreliminaryGenerator";
 import DestructionMatchResultForm from "@/components/admin/DestructionMatchResultForm";
@@ -311,6 +311,8 @@ export default async function AdminDestructionTournamentDetailPage({
     };
   });
 
+  const laneLimits = getDestructionLaneLimits(tournament);
+
   const activeApplications = applicationViewModels.filter(
     (apply) => apply.status === "APPLIED" || apply.status === "CONFIRMED",
   );
@@ -466,6 +468,7 @@ export default async function AdminDestructionTournamentDetailPage({
           applications={applicationViewModels}
           hasTeams={tournament.teams.length > 0}
           hasMatches={tournament.matches.length > 0}
+          laneLimits={laneLimits}
         />
       </AdminStepSection>
       ) : null}

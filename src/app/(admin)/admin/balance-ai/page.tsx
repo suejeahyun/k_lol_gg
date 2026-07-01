@@ -82,10 +82,6 @@ export default async function AdminBalanceAiPage() {
         <div className="ai-hero__content">
           <p className="eyebrow">AI BALANCE CONTROL</p>
           <h1 className="page-title">AI 밸런스 대시보드</h1>
-          <p className="page-description">
-            현재 등록된 내전 기록을 기반으로 내부 MMR, AI 리뷰, 예측 적중률, 미분석 내전을 확인합니다.
-            팀 밸런스가 실제 경기 결과와 얼마나 맞았는지 추적하는 운영 화면입니다.
-          </p>
           <div className="ai-hero__actions">
             <Link className="button-primary" href="/admin/balance-ai/reviews">AI 리뷰 보기</Link>
             <Link className="button-secondary" href="/admin/balance-ai/players">MMR 랭킹</Link>
@@ -99,7 +95,7 @@ export default async function AdminBalanceAiPage() {
         <article className="ai-kpi"><span>AI 리뷰</span><strong>{reviewCount}</strong><small>분석 완료 리뷰</small></article>
         <article className="ai-kpi"><span>미분석</span><strong>{unanalyzedMatches}</strong><small>재계산 대상</small></article>
         <article className="ai-kpi"><span>예측 적중률</span><strong>{hitRate === null ? "-" : `${fmt(hitRate)}%`}</strong><small>최근 리뷰 기준</small></article>
-        <article className="ai-kpi"><span>평균 품질</span><strong>{fmt(avgQuality)}</strong><small>품질 점수 평균</small></article>
+
       </section>
 
       <section className="ai-grid-3">
@@ -177,13 +173,11 @@ export default async function AdminBalanceAiPage() {
           </div>
           <div className="ai-table-wrap">
             <table className="ai-table">
-              <thead><tr><th>내전</th><th>위험</th><th>품질</th><th>예상</th><th></th></tr></thead>
+              <thead><tr><th>내전</th><th>예상</th><th></th></tr></thead>
               <tbody>
                 {latestReviews.map((review) => (
                   <tr key={review.id}>
                     <td><Link href={`/admin/matches/${review.matchSeriesId}/ai-review`}>{review.matchSeries.title}</Link><br /><small>{formatDate(review.matchSeries.matchDate)}</small></td>
-                    <td><span className={riskClass(review.aiRiskLevel)}>{review.aiRiskLevel ?? "-"}</span></td>
-                    <td>{fmt(review.qualityScore)}</td>
                     <td>R {fmt(review.predictedRedWinRate)} / B {fmt(review.predictedBlueWinRate)}</td>
                     <td><Link href={`/admin/balance-ai/reviews/${review.id}`}>상세</Link></td>
                   </tr>

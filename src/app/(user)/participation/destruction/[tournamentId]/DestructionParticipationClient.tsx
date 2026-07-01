@@ -34,14 +34,18 @@ type CurrentApply = {
   message?: string | null;
 } | null;
 
+type LaneLimits = Record<ApplyPosition, number>;
+
 type Tournament = {
   id: number;
   title: string;
   status: string;
+  laneLimits?: LaneLimits;
 } | null;
 
 type DestructionParticipationClientProps = {
   tournamentId: string;
+  embedded?: boolean;
 };
 
 const POSITION_LABELS: Record<ApplyPosition, string> = {
@@ -71,6 +75,7 @@ function formatPositions(positions: ApplyPosition[] | undefined) {
 
 export default function DestructionParticipationClient({
   tournamentId,
+  embedded = false,
 }: DestructionParticipationClientProps) {
   const [players, setPlayers] = useState<Player[]>([]);
   const [tournament, setTournament] = useState<Tournament>(null);
@@ -200,24 +205,26 @@ export default function DestructionParticipationClient({
       : "참가하기";
 
   return (
-    <div className="page-container participation-detail">
-      <div className="page-header">
-        <h1 className="page-title">멸망전 참가</h1>
-        <p className="page-description destruction-desktop-copy">
-          주 포지션, 부 포지션, 팀장 선호 여부와 각오를 입력합니다. 최종 팀장은 관리자 지정 기준으로 확정됩니다.
-        </p>
-        <p className="page-description destruction-mobile-copy">
-          주 라인 선택 후 바로 참가 신청할 수 있습니다.
-        </p>
-        <div className="page-actions" style={{ marginTop: 12 }}>
-          <Link href={`/participation/destruction/${tournamentId}/participants`} className="btn btn-ghost">
-            참가자 명단 보기
-          </Link>
-          <Link href={`/participation/destruction/${tournamentId}/captain-points`} className="btn btn-ghost">
-            팀장 포인트표
-          </Link>
+    <div className={embedded ? "participation-detail participation-detail--embedded" : "page-container participation-detail"}>
+      {!embedded ? (
+        <div className="page-header">
+          <h1 className="page-title">멸망전 참가</h1>
+          <p className="page-description destruction-desktop-copy">
+            주 포지션, 부 포지션, 팀장 선호 여부와 각오를 입력합니다. 최종 팀장은 관리자 지정 기준으로 확정됩니다.
+          </p>
+          <p className="page-description destruction-mobile-copy">
+            주 라인 선택 후 바로 참가 신청할 수 있습니다.
+          </p>
+          <div className="page-actions" style={{ marginTop: 12 }}>
+            <Link href={`/participation/destruction/${tournamentId}/participants`} className="btn btn-ghost">
+              참가자 명단 보기
+            </Link>
+            <Link href={`/participation/destruction/${tournamentId}/captain-points`} className="btn btn-ghost">
+              팀장 포인트표
+            </Link>
+          </div>
         </div>
-      </div>
+      ) : null}
 
       {currentApply ? (
         <div className="empty-box destruction-current-apply" style={{ marginBottom: 16 }}>
@@ -341,7 +348,7 @@ export default function DestructionParticipationClient({
         </div>
       </div>
 
-      <ParticipationList tournamentId={tournamentId} players={players} />
+      <ParticipationList tournamentId={tournamentId} players={players} laneLimits={tournament?.laneLimits} />
     </div>
   );
 }
@@ -433,10 +440,13 @@ function MultiPositionSelector({
   );
 }
 
-function ParticipationList({ tournamentId, players }: { tournamentId: string; players: Player[] }) {
+function ParticipationList({ tournamentId, players, laneLimits }: { tournamentId: string; players: Player[]; laneLimits?: LaneLimits }) {
+  const limits = laneLimits ?? { TOP: 10, JGL: 10, MID: 10, ADC: 10, SUP: 10 };
   const positionCounts = POSITIONS.map((position) => ({
     position,
     count: players.filter((player) => player.mainPosition === position && player.status !== "RESERVE").length,
+    reserveCount: players.filter((player) => player.mainPosition === position && player.status === "RESERVE").length,
+    limit: limits[position],
   }));
   const activePlayers = players.filter((player) => player.status !== "RESERVE");
   const reservePlayers = players.filter((player) => player.status === "RESERVE");
@@ -474,7 +484,10 @@ function ParticipationList({ tournamentId, players }: { tournamentId: string; pl
         {positionCounts.map((item) => (
           <div key={item.position} className="admin-event-detail-card">
             <span>{item.position}</span>
-            <strong>{item.count}명</strong>
+            <strong>{item.count} / {item.limit}명</strong>
+            {item.reserveCount > 0 ? (
+              <small style={{ color: "#fbbf24" }}>보류 {item.reserveCount}명</small>
+            ) : null}
           </div>
         ))}
       </div>

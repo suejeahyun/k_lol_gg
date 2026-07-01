@@ -1,4 +1,4 @@
-﻿import { logServerError } from "@/lib/server/safe-log";
+import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -35,6 +35,23 @@ type DiscordUserPayload = {
   global_name?: string | null;
   avatar?: string | null;
 };
+
+
+function isReclaimableDiscordAccount(account: {
+  userId: string;
+  passwordHash: string | null;
+  player: { id: number } | null;
+  role: string;
+  status: string;
+  discordLinkStatus: string | null;
+}) {
+  if (account.player) return false;
+  if (account.passwordHash) return false;
+  if (account.role !== "USER") return false;
+  if (account.status === "REJECTED") return false;
+  if (!account.userId.startsWith("discord_")) return false;
+  return ["UNMATCHED", "CANDIDATE", "PENDING_ADMIN_CONFIRM", "LINKED"].includes(account.discordLinkStatus || "");
+}
 
 async function fetchDiscordUser(params: { code: string; redirectUri: string }) {
   const clientId = process.env.DISCORD_CLIENT_ID;
@@ -130,17 +147,57 @@ async function handleLinkMode(req: NextRequest, discordUser: DiscordUserPayload,
 
   const duplicate = await prisma.userAccount.findFirst({
     where: { discordId: discordUser.id, id: { not: currentUser.userAccountId } },
-    select: { id: true, userId: true },
+    select: {
+      id: true,
+      userId: true,
+      passwordHash: true,
+      role: true,
+      status: true,
+      discordLinkStatus: true,
+      player: { select: { id: true } },
+    },
   });
-  if (duplicate) return NextResponse.redirect(`${baseUrl}/account?discord=duplicate`);
+  const canReclaimDuplicate = duplicate ? isReclaimableDiscordAccount(duplicate) : false;
+  if (duplicate && !canReclaimDuplicate) return NextResponse.redirect(`${baseUrl}/account?discord=duplicate`);
 
   const { data } = buildDiscordData(discordUser);
   const updated = await prisma.$transaction(async (tx) => {
     const before = await tx.userAccount.findUniqueOrThrow({ where: { id: currentUser.userAccountId } });
+
+    if (duplicate && canReclaimDuplicate) {
+      const duplicateBefore = await tx.userAccount.findUniqueOrThrow({ where: { id: duplicate.id } });
+      const duplicateAfter = await tx.userAccount.update({
+        where: { id: duplicate.id },
+        data: {
+          discordId: null,
+          discordUsername: null,
+          discordGlobalName: null,
+          discordServerNickname: null,
+          discordAvatar: null,
+          discordLinkedAt: null,
+          discordParsedBirthYear: null,
+          discordParsedName: null,
+          discordParsedNickname: null,
+          discordParsedTier: null,
+          discordLinkStatus: "RECLAIMED_BY_LINK",
+        },
+      });
+      await writeDiscordAccountLinkLog({
+        userAccountId: duplicateAfter.id,
+        action: "DISCORD_RECLAIMED_FROM_AUTO_ACCOUNT",
+        actorId: before.id,
+        actorType: "USER",
+        reason: `Reclaimed by userAccountId=${before.id}`,
+        before: toDiscordSnapshot(duplicateBefore),
+        after: toDiscordSnapshot(duplicateAfter),
+        db: tx,
+      });
+    }
+
     const user = await tx.userAccount.update({ where: { id: currentUser.userAccountId }, data });
     await writeDiscordAccountLinkLog({
       userAccountId: user.id,
-      action: "DISCORD_LINKED_BY_USER",
+      action: duplicate && canReclaimDuplicate ? "DISCORD_LINKED_BY_USER_AFTER_RECLAIM" : "DISCORD_LINKED_BY_USER",
       actorId: user.id,
       actorType: "USER",
       before: toDiscordSnapshot(before),

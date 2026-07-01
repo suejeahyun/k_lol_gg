@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma/client";
 import { validateMatchCreateInput } from "@/validations/match";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { recalculateSeasonStats } from "@/lib/stats/recalculate";
-import { parseKstDateTime } from "@/lib/date/kst";
+import { getMatchDateTimeLocalFromTitle, parseKstDateTime } from "@/lib/date/kst";
 import { updateInternalMmrAfterMatch } from "@/lib/balance/internal-mmr";
 import { getStoredGameMvpFields } from "@/lib/match/mvp";
 import { getPaginationMeta, getSafePagination } from "@/lib/http/pagination";
@@ -33,7 +33,7 @@ type CreateGameInput = {
 type CreateMatchInput = {
   seasonId: number;
   title: string;
-  matchDate: string;
+  matchDate?: string;
   teamBalanceDraftId?: number | null;
   games: CreateGameInput[];
 };
@@ -109,10 +109,11 @@ export async function POST(req: Request) {
       );
     }
 
-    const parsedMatchDate = parseKstDateTime(body.matchDate);
+    const effectiveMatchDate = getMatchDateTimeLocalFromTitle(body.title);
+    const parsedMatchDate = parseKstDateTime(effectiveMatchDate);
     if (!parsedMatchDate) {
       return NextResponse.json(
-        { message: "내전 일시 형식이 올바르지 않습니다." },
+        { message: "내전 제목의 날짜 형식이 올바르지 않습니다. 예: 2026-06-29 1st" },
         { status: 400 }
       );
     }
@@ -152,7 +153,6 @@ export async function POST(req: Request) {
       where: {
         seasonId: body.seasonId,
         title: body.title.trim(),
-        matchDate: parsedMatchDate,
       },
       select: { id: true, title: true },
     });
@@ -161,7 +161,7 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           message:
-            "같은 시즌, 제목, 일시로 등록된 내전이 이미 있습니다. 중복 등록 여부를 확인해주세요.",
+            "같은 시즌과 제목으로 등록된 내전이 이미 있습니다. 중복 등록 여부를 확인해주세요.",
           duplicateMatchId: duplicateMatch.id,
         },
         { status: 409 },
