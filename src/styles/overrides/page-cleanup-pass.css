@@ -328,6 +328,14 @@ tbody tr:hover,
   color: #93c5fd !important;
 }
 
+.ai-page--admin-dashboard .ai-hero::after {
+  content: "K-LOL RANKING" !important;
+}
+
+.ai-page--ranking .ai-hero::after {
+  content: "K-LOL RANKING" !important;
+}
+
 @media (min-width: 1440px) {
   .page-container,
   .page-shell,

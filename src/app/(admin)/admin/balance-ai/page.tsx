@@ -7,13 +7,6 @@ function fmt(value: number | null | undefined, digits = 1) {
   return typeof value === "number" ? value.toFixed(digits) : "-";
 }
 
-function riskClass(level: string | null | undefined) {
-  if (level === "HIGH") return "ai-badge ai-badge--high";
-  if (level === "MEDIUM") return "ai-badge ai-badge--medium";
-  if (level === "LOW") return "ai-badge ai-badge--low";
-  return "ai-badge";
-}
-
 function formatDate(value: Date | null | undefined) {
   if (!value) return "-";
   return new Intl.DateTimeFormat("ko-KR", {
@@ -26,9 +19,6 @@ function formatDate(value: Date | null | undefined) {
 export default async function AdminBalanceAiPage() {
   const [
     reviewCount,
-    highRiskCount,
-    mediumRiskCount,
-    lowRiskCount,
     profileCount,
     totalMatches,
     unanalyzedMatches,
@@ -38,9 +28,6 @@ export default async function AdminBalanceAiPage() {
     recent,
   ] = await Promise.all([
     prisma.balanceMatchReview.count(),
-    prisma.balanceMatchReview.count({ where: { aiRiskLevel: "HIGH" } }),
-    prisma.balanceMatchReview.count({ where: { aiRiskLevel: "MEDIUM" } }),
-    prisma.balanceMatchReview.count({ where: { aiRiskLevel: "LOW" } }),
     prisma.playerBalanceProfile.count(),
     prisma.matchSeries.count(),
     prisma.matchSeries.count({ where: { balanceReviews: { none: {} } } }),
@@ -63,7 +50,7 @@ export default async function AdminBalanceAiPage() {
     prisma.balanceMatchReview.findMany({
       orderBy: { createdAt: "desc" },
       take: 50,
-      select: { actualWinner: true, aiInferredWinner: true, qualityScore: true, aiRiskLevel: true },
+      select: { actualWinner: true, aiInferredWinner: true },
     }),
   ]);
 
@@ -71,58 +58,40 @@ export default async function AdminBalanceAiPage() {
   const hitRate = predicted.length
     ? (predicted.filter((item) => item.actualWinner === item.aiInferredWinner).length / predicted.length) * 100
     : null;
-  const avgQuality = recent.length
-    ? recent.reduce((sum, item) => sum + (item.qualityScore ?? 0), 0) / recent.length
-    : null;
-  const highRiskRate = reviewCount ? (highRiskCount / reviewCount) * 100 : null;
 
   return (
     <main className="page-container admin-page ai-page ai-page--admin-dashboard">
       <section className="ai-hero">
         <div className="ai-hero__content">
-          <p className="eyebrow">AI BALANCE CONTROL</p>
-          <h1 className="page-title">AI 밸런스 대시보드</h1>
+          <p className="eyebrow">K-LOL RANKING CONTROL</p>
+          <h1 className="page-title">K-LOL 랭킹 대시보드</h1>
           <div className="ai-hero__actions">
-            <Link className="button-primary" href="/admin/balance-ai/reviews">AI 리뷰 보기</Link>
-            <Link className="button-secondary" href="/admin/balance-ai/players">MMR 랭킹</Link>
+            <Link className="button-primary" href="/admin/balance-ai/reviews">랭킹 리뷰 보기</Link>
+            <Link className="button-secondary" href="/admin/balance-ai/players">플레이어 랭킹</Link>
             <Link className="button-secondary" href="/admin/balance-ai/recalculate">등록 내전 재계산</Link>
           </div>
         </div>
       </section>
 
-      <section className="ai-kpi-grid" aria-label="AI 밸런스 요약">
+      <section className="ai-kpi-grid" aria-label="K-LOL 랭킹 요약">
         <article className="ai-kpi"><span>등록 내전</span><strong>{totalMatches}</strong><small>전체 MatchSeries</small></article>
-        <article className="ai-kpi"><span>AI 리뷰</span><strong>{reviewCount}</strong><small>분석 완료 리뷰</small></article>
+        <article className="ai-kpi"><span>랭킹 리뷰</span><strong>{reviewCount}</strong><small>분석 완료 리뷰</small></article>
         <article className="ai-kpi"><span>미분석</span><strong>{unanalyzedMatches}</strong><small>재계산 대상</small></article>
         <article className="ai-kpi"><span>예측 적중률</span><strong>{hitRate === null ? "-" : `${fmt(hitRate)}%`}</strong><small>최근 리뷰 기준</small></article>
 
       </section>
 
-      <section className="ai-grid-3">
+      <section className="ai-grid-2">
         <article className="ai-panel ai-panel--strong">
           <div className="ai-panel__head">
             <div>
-              <h2 className="ai-panel__title">위험도 분포</h2>
-              <p className="ai-panel__desc">AI가 판단한 내전 밸런스 리스크입니다.</p>
-            </div>
-          </div>
-          <ul className="ai-list">
-            <li><span className="ai-badge ai-badge--high">HIGH</span> {highRiskCount}개 · {highRiskRate === null ? "-" : `${fmt(highRiskRate)}%`}</li>
-            <li><span className="ai-badge ai-badge--medium">MEDIUM</span> {mediumRiskCount}개</li>
-            <li><span className="ai-badge ai-badge--low">LOW</span> {lowRiskCount}개</li>
-          </ul>
-        </article>
-
-        <article className="ai-panel ai-panel--strong">
-          <div className="ai-panel__head">
-            <div>
-              <h2 className="ai-panel__title">MMR 프로필</h2>
-              <p className="ai-panel__desc">경기 결과로 학습된 플레이어 내부 MMR 수입니다.</p>
+              <h2 className="ai-panel__title">플레이어 랭킹 프로필</h2>
+              <p className="ai-panel__desc">경기 결과로 학습된 K-LOL 랭킹 기준 플레이어 수입니다.</p>
             </div>
             <strong className="ai-badge">{profileCount}명</strong>
           </div>
           <div className="ai-actions">
-            <Link className="button-secondary" href="/admin/balance-ai/players">라인별 MMR 확인</Link>
+            <Link className="button-secondary" href="/admin/balance-ai/players">라인별 랭킹 확인</Link>
           </div>
         </article>
 
@@ -130,7 +99,7 @@ export default async function AdminBalanceAiPage() {
           <div className="ai-panel__head">
             <div>
               <h2 className="ai-panel__title">기존 등록 내전 분석</h2>
-              <p className="ai-panel__desc">기존에 등록된 내전이 AI 리뷰에 반영됐는지 확인합니다.</p>
+              <p className="ai-panel__desc">기존에 등록된 내전이 K-LOL 랭킹 리뷰에 반영됐는지 확인합니다.</p>
             </div>
             <span className={unanalyzedMatches > 0 ? "ai-badge ai-badge--medium" : "ai-badge ai-badge--low"}>
               {unanalyzedMatches > 0 ? "분석 필요" : "정상"}
@@ -146,8 +115,8 @@ export default async function AdminBalanceAiPage() {
         <section className="ai-panel ai-warning" style={{ marginTop: 18 }}>
           <div className="ai-panel__head">
             <div>
-              <h2 className="ai-panel__title">AI 리뷰가 없는 기존 내전</h2>
-              <p className="ai-panel__desc">아래 내전은 현재 등록되어 있지만 AI 리뷰가 없습니다. 전체 재계산 또는 개별 AI 리뷰에서 재분석하세요.</p>
+              <h2 className="ai-panel__title">랭킹 리뷰가 없는 기존 내전</h2>
+              <p className="ai-panel__desc">아래 내전은 현재 등록되어 있지만 랭킹 리뷰가 없습니다. 전체 재계산 또는 개별 리뷰에서 재분석하세요.</p>
             </div>
             <Link className="button-primary" href="/admin/balance-ai/recalculate">재계산 페이지</Link>
           </div>
@@ -166,8 +135,8 @@ export default async function AdminBalanceAiPage() {
         <section className="ai-panel">
           <div className="ai-panel__head">
             <div>
-              <h2 className="ai-panel__title">최근 AI 리뷰</h2>
-              <p className="ai-panel__desc">실제 경기 결과와 AI 판단이 저장된 최신 리뷰입니다.</p>
+              <h2 className="ai-panel__title">최근 랭킹 리뷰</h2>
+              <p className="ai-panel__desc">실제 경기 결과와 K-LOL 랭킹 판단이 저장된 최신 리뷰입니다.</p>
             </div>
             <Link className="button-secondary" href="/admin/balance-ai/reviews">전체</Link>
           </div>
@@ -182,7 +151,7 @@ export default async function AdminBalanceAiPage() {
                     <td><Link href={`/admin/balance-ai/reviews/${review.id}`}>상세</Link></td>
                   </tr>
                 ))}
-                {latestReviews.length === 0 && <tr><td colSpan={5}>AI 리뷰가 없습니다. 기존 내전을 재계산하면 리뷰가 생성됩니다.</td></tr>}
+                {latestReviews.length === 0 && <tr><td colSpan={5}>랭킹 리뷰가 없습니다. 기존 내전을 재계산하면 리뷰가 생성됩니다.</td></tr>}
               </tbody>
             </table>
           </div>
@@ -191,8 +160,8 @@ export default async function AdminBalanceAiPage() {
         <section className="ai-panel">
           <div className="ai-panel__head">
             <div>
-              <h2 className="ai-panel__title">내부 MMR 상위</h2>
-              <p className="ai-panel__desc">현재 AI가 강하게 평가하는 플레이어입니다.</p>
+              <h2 className="ai-panel__title">K-LOL 랭킹 상위</h2>
+              <p className="ai-panel__desc">현재 랭킹 모델이 강하게 평가하는 플레이어입니다.</p>
             </div>
             <Link className="button-secondary" href="/admin/balance-ai/players">전체</Link>
           </div>
@@ -208,7 +177,7 @@ export default async function AdminBalanceAiPage() {
                     <td><Link href={`/admin/players/${profile.playerId}/balance`}>상세</Link></td>
                   </tr>
                 ))}
-                {topProfiles.length === 0 && <tr><td colSpan={4}>MMR 프로필이 없습니다.</td></tr>}
+                {topProfiles.length === 0 && <tr><td colSpan={4}>랭킹 프로필이 없습니다.</td></tr>}
               </tbody>
             </table>
           </div>
