@@ -184,13 +184,7 @@ export default async function KakaoOperationFormAdminPage({ type }: Props) {
           <div>
             <p className="page-eyebrow">KAKAO OPERATION FORMS</p>
             <h1>{config.title}</h1>
-            <p className="admin-muted" style={{ marginTop: 8 }}>
-              정보 확인 및 보관용 목록입니다. 답변/자동 완료/자동 초대 처리는 하지 않습니다.
-            </p>
           </div>
-          <Link className="admin-button admin-button--ghost" href="/admin/operation-forms">
-            운영 신청 홈
-          </Link>
         </div>
 
         <section className="admin-card" style={{ padding: 22, overflow: "hidden" }}>
@@ -207,7 +201,7 @@ export default async function KakaoOperationFormAdminPage({ type }: Props) {
           >
             <div>
               <h2>접수 목록</h2>
-              <p>최근 200건 기준 · 현재 표시 {rows.length}건</p>
+              <p>현재 표시 {rows.length}건</p>
             </div>
             <div
               style={{
@@ -267,7 +261,9 @@ export default async function KakaoOperationFormAdminPage({ type }: Props) {
                         #{row.id}
                       </td>
                       <td data-label={config.summaryLabel} style={{ padding: "14px 8px", verticalAlign: "top" }}>
-                        <ShortText value={row.summary} />
+                        <Link className="admin-operation-list-link" href={`/admin/operation-forms/${type}/${row.id}`}>
+                          <ShortText value={row.summary} />
+                        </Link>
                       </td>
                       <td data-label={config.subSummaryLabel} style={{ padding: "14px 8px", verticalAlign: "top" }}>
                         <ShortText value={row.subSummary} />

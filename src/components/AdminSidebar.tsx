@@ -37,10 +37,10 @@ const menuGroups: AdminSidebarGroup[] = [
     title: "카카오톡",
     items: [
       { href: "/admin/kakao", label: "카카오톡 요약", code: "KAK", activePrefixes: ["/admin/kakao"] },
-      { href: "/admin/kakao/recruits", label: "구인 관리", code: "REC", activePrefixes: ["/admin/kakao/recruits"] },
-      { href: "/admin/logs/kakao", label: "카카오톡 로그", code: "RLG", activePrefixes: ["/admin/logs/kakao"] },
+      { href: "/admin/recruits", label: "구인 관리", code: "REC", activePrefixes: ["/admin/recruits"] },
+      { href: "/admin/recruits/logs", label: "구인 기록", code: "RLG", activePrefixes: ["/admin/recruits/logs"] },
+      { href: "/admin/recruits/settings", label: "구인 설정", code: "RST", activePrefixes: ["/admin/recruits/settings"] },
       { href: "/admin/kakao/season-apply", label: "내전 참가신청", code: "APP", activePrefixes: ["/admin/kakao/season-apply"] },
-      { href: "/admin/kakao/operation-forms", label: "운영신청", code: "OPR", activePrefixes: ["/admin/kakao/operation-forms"] },
       { href: "/admin/kakao/settings", label: "카카오톡 설정", code: "SET", activePrefixes: ["/admin/kakao/settings", "/admin/kakao/recruits/settings"] },
     ],
   },
@@ -81,7 +81,7 @@ const menuGroups: AdminSidebarGroup[] = [
 ];
 
 function isActivePath(pathname: string, item: AdminSidebarItem) {
-  if (["/admin", "/admin/kakao", "/admin/kakao/recruits", "/admin/discord"].includes(item.href)) return pathname === item.href;
+  if (["/admin", "/admin/kakao", "/admin/recruits", "/admin/discord"].includes(item.href)) return pathname === item.href;
 
   if (item.activePrefixes?.length) {
     return item.activePrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
