@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
 import TierIcon from "@/components/TierIcon";
-import { getDestructionLaneLimits } from "@/lib/destruction/recruitment-auto-reserve";
+import { calculateDestructionPublicApplicationIds, getDestructionLaneLimits } from "@/lib/destruction/recruitment-auto-reserve";
 
 type PageProps = {
   params: Promise<{
@@ -21,7 +21,7 @@ type Position = (typeof POSITIONS)[number];
 const STATUS_LABELS: Record<string, string> = {
   APPLIED: "신청",
   CONFIRMED: "확정",
-  RESERVE: "보류",
+  RESERVE: "자동보류",
   CANCELLED: "취소",
   REJECTED: "제외",
 };
@@ -90,7 +90,7 @@ export default async function DestructionParticipantsPage({ params, searchParams
             },
           },
         },
-        orderBy: [{ status: "asc" }, { createdAt: "asc" }],
+        orderBy: [{ createdAt: "asc" }, { id: "asc" }],
       },
     },
   });
@@ -101,19 +101,32 @@ export default async function DestructionParticipantsPage({ params, searchParams
 
   const laneLimits = getDestructionLaneLimits(tournament);
   const applies = tournament.participationApplies;
-  const activeApplies = applies.filter((apply) => apply.status !== "RESERVE");
-  const reserveApplies = applies.filter((apply) => apply.status === "RESERVE");
-  const captainPreferredCount = activeApplies.filter((apply) => apply.isCaptain).length;
+  const { capacity, capacityOverflowIds, laneOverflowIds } = calculateDestructionPublicApplicationIds(applies, laneLimits);
+  const participantApplies = applies.filter((apply) => !capacityOverflowIds.has(apply.id) && !laneOverflowIds.has(apply.id));
+  const overflowApplies = applies.filter((apply) => capacityOverflowIds.has(apply.id) || laneOverflowIds.has(apply.id));
+  const laneAutoReserveApplies = participantApplies.filter((apply) => apply.status === "RESERVE");
+  const captainPreferredCount = participantApplies.filter((apply) => apply.isCaptain).length;
   const positionCounts = POSITIONS.map((position) => ({
     position,
-    count: activeApplies.filter((apply) => apply.mainPosition === position).length,
-    reserveCount: reserveApplies.filter((apply) => apply.mainPosition === position).length,
+    count: participantApplies.filter((apply) => apply.mainPosition === position).length,
+    reserveCount: laneAutoReserveApplies.filter((apply) => apply.mainPosition === position).length,
+    overflowCount: overflowApplies.filter((apply) => apply.mainPosition === position).length,
     limit: laneLimits[position],
   }));
   const filteredApplies = selectedLine
-    ? applies.filter((apply) => apply.mainPosition === selectedLine)
-    : applies;
-  const applyOrder = new Map(applies.map((apply, index) => [apply.id, index + 1]));
+    ? participantApplies.filter((apply) => apply.mainPosition === selectedLine)
+    : participantApplies;
+  const filteredOverflowApplies = selectedLine
+    ? overflowApplies.filter((apply) => apply.mainPosition === selectedLine)
+    : overflowApplies;
+  const applyOrder = new Map(participantApplies.map((apply, index) => [apply.id, index + 1]));
+  const overflowOrder = new Map(overflowApplies.map((apply, index) => [apply.id, index + 1]));
+  const getPublicStatusLabel = (apply: { status: string; id: number }) => {
+    if (capacityOverflowIds.has(apply.id)) return "정원 초과";
+    if (laneOverflowIds.has(apply.id)) return "라인 초과";
+    if (apply.status === "RESERVE") return "자동보류";
+    return STATUS_LABELS[apply.status] ?? apply.status;
+  };
 
   return (
     <main className="page-shell player-detail-page">
@@ -521,19 +534,19 @@ export default async function DestructionParticipantsPage({ params, searchParams
       <section className="content-section player-panel">
         <div className="card-grid player-stat-grid">
           <article className="stat-card">
-            <span className="stat-card__label">확정 후보</span>
-            <strong className="stat-card__value">{activeApplies.length}명</strong>
+            <span className="stat-card__label">참가</span>
+            <strong className="stat-card__value">{participantApplies.length}명</strong>
           </article>
           <article className="stat-card">
-            <span className="stat-card__label">보류</span>
-            <strong className="stat-card__value">{reserveApplies.length}명</strong>
+            <span className="stat-card__label">자동보류</span>
+            <strong className="stat-card__value">{laneAutoReserveApplies.length}명</strong>
           </article>
           <article className="stat-card">
-            <span className="stat-card__label">팀장 선호</span>
-            <strong className="stat-card__value">{captainPreferredCount}명</strong>
+            <span className="stat-card__label">초과</span>
+            <strong className="stat-card__value">{overflowApplies.length}명</strong>
           </article>
           <article className="stat-card">
-            <span className="stat-card__label">총 공개 인원</span>
+            <span className="stat-card__label">총 신청 인원</span>
             <strong className="stat-card__value">{applies.length}명</strong>
           </article>
         </div>
@@ -553,13 +566,7 @@ export default async function DestructionParticipantsPage({ params, searchParams
         </div>
         <div className="destruction-participants-mobile-note">휴대폰에서는 이름, 라인, 티어, 상태만 먼저 표시합니다. 각오와 신청일은 상세 화면에서 확인합니다.</div>
         <div className="destruction-line-filter-grid">
-          <Link
-            href={lineHref(tournament.id, null)}
-            className={`destruction-line-filter-card${!selectedLine ? " destruction-line-filter-card--active" : ""}`}
-          >
-            <span>ALL</span>
-            <strong>{activeApplies.length}명</strong>
-          </Link>
+
           {positionCounts.map((item) => (
             <Link
               key={item.position}
@@ -568,11 +575,16 @@ export default async function DestructionParticipantsPage({ params, searchParams
             >
               <span>{item.position}</span>
               <strong>{item.count}/{item.limit}명</strong>
-              {item.reserveCount > 0 ? (
-                <small style={{ color: "#fbbf24", fontSize: 11, fontWeight: 800 }}>보류 {item.reserveCount}명</small>
-              ) : null}
+              {null}
             </Link>
           ))}
+                    <Link
+            href={lineHref(tournament.id, null)}
+            className={`destruction-line-filter-card${!selectedLine ? " destruction-line-filter-card--active" : ""}`}
+          >
+            <span>ALL</span>
+            <strong>{participantApplies.length}명</strong>
+          </Link>
         </div>
       </section>
 
@@ -582,8 +594,8 @@ export default async function DestructionParticipantsPage({ params, searchParams
             <h2>{selectedLine ? `${selectedLine} 참가자 목록` : "참가자 목록"}</h2>
             <p className="section-subtitle">
               {selectedLine
-                ? `${selectedLine} 주 라인 ${filteredApplies.length}명입니다.`
-                : `전체 참가자 ${filteredApplies.length}명입니다.`}
+                ? `${selectedLine} 주 라인 참가 ${filteredApplies.length}명 · 초과 ${filteredOverflowApplies.length}명입니다.`
+                : `전체 참가 ${filteredApplies.length}명 · 초과 ${filteredOverflowApplies.length}명입니다.`}
             </p>
           </div>
           <div className="destruction-filter-chip-row" aria-label="라인 필터">
@@ -655,7 +667,7 @@ export default async function DestructionParticipantsPage({ params, searchParams
                       </td>
                       <td data-label="신청 상태">
                         <div className="destruction-badge-row">
-                          <span className="destruction-badge">{STATUS_LABELS[apply.status] ?? apply.status}</span>
+                          <span className="destruction-badge">{getPublicStatusLabel(apply)}</span>
                           <span className={`destruction-badge${apply.isCaptain ? " destruction-badge--captain" : ""}`}>
                             {apply.isCaptain ? "팀장 선호" : "팀장 비선호"}
                           </span>
@@ -677,6 +689,81 @@ export default async function DestructionParticipantsPage({ params, searchParams
           </div>
         )}
       </section>
+
+      {filteredOverflowApplies.length > 0 ? (
+        <section className="content-section player-panel">
+          <div className="section-header section-header--split">
+            <div>
+              <h2>{selectedLine ? `${selectedLine} 초과 신청자` : "초과 신청자"}</h2>
+              <p className="section-subtitle">라인 제한 또는 전체 정원을 초과한 신청자입니다. 참가자 명단과 분리해서 표시합니다.</p>
+            </div>
+          </div>
+
+          <div className="destruction-participant-table-wrap">
+            <table className="destruction-participant-table">
+              <thead>
+                <tr>
+                  <th>대기순번</th>
+                  <th>참가자</th>
+                  <th>포지션</th>
+                  <th>티어</th>
+                  <th>신청 상태</th>
+                  <th>각오</th>
+                  <th>신청일</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredOverflowApplies.map((apply) => {
+                  const detailHref = `/participation/destruction/${tournament.id}/participants/${apply.playerId}`;
+                  const message = apply.message?.trim() || "각오 미입력";
+
+                  return (
+                    <tr key={apply.id}>
+                      <td data-label="대기순번">
+                        <span className="destruction-participant-order">초과 #{overflowOrder.get(apply.id) ?? "-"}</span>
+                      </td>
+                      <td data-label="참가자">
+                        <Link href={detailHref} className="destruction-participant-name-link">
+                          <strong>{apply.player.name}</strong>
+                          <span>{apply.player.nickname}#{apply.player.tag}</span>
+                        </Link>
+                      </td>
+                      <td data-label="포지션">
+                        <div className="destruction-position-cell">
+                          <strong className="destruction-main-position">주 {apply.mainPosition}</strong>
+                          <span className="destruction-sub-position">부 {formatPositions(apply.subPositions)}</span>
+                        </div>
+                      </td>
+                      <td data-label="티어">
+                        <div className="destruction-tier-cell">
+                          <TierIcon tier={apply.player.currentTier} size={24} showText />
+                          <span className="destruction-tier-peak">최고 {apply.player.peakTier ?? "-"}</span>
+                        </div>
+                      </td>
+                      <td data-label="신청 상태">
+                        <div className="destruction-badge-row">
+                          <span className="destruction-badge">{getPublicStatusLabel(apply)}</span>
+                          <span className={`destruction-badge${apply.isCaptain ? " destruction-badge--captain" : ""}`}>
+                            {apply.isCaptain ? "팀장 선호" : "팀장 비선호"}
+                          </span>
+                        </div>
+                      </td>
+                      <td data-label="각오">
+                        <div className="destruction-message-cell">
+                          <span className="destruction-message-clamp">{message}</span>
+                        </div>
+                      </td>
+                      <td data-label="신청일">
+                        <span className="destruction-date-cell">{formatDateTime(apply.createdAt)}</span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      ) : null}
     </main>
   );
 }

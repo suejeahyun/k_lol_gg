@@ -19,6 +19,19 @@ type ApplicationForAutoReserve = {
   createdAt: Date;
 };
 
+type ApplicationForCapacityOverflow = {
+  id: number;
+  status: AutoManagedStatus | string;
+  createdAt: Date;
+};
+
+type ApplicationForPublicClassification = {
+  id: number;
+  status: AutoManagedStatus | string;
+  mainPosition: string;
+  createdAt: Date;
+};
+
 type TournamentLaneLimitSource = {
   topLaneLimit?: number | null;
   jungleLaneLimit?: number | null;
@@ -128,6 +141,99 @@ export function calculateDestructionReserveIds(
     teamCount,
     capacity,
     reserveIds,
+  };
+}
+
+
+export function getDestructionTotalCapacity(laneLimits: DestructionLaneLimits = DEFAULT_DESTRUCTION_LANE_LIMITS) {
+  return POSITIONS.reduce((sum, position) => sum + laneLimits[position], 0);
+}
+
+export function calculateDestructionCapacityOverflowIds(
+  applications: ApplicationForCapacityOverflow[],
+  laneLimits: DestructionLaneLimits = DEFAULT_DESTRUCTION_LANE_LIMITS,
+) {
+  const candidates = applications
+    .filter((application) => isAutoManagedStatus(String(application.status)))
+    .slice()
+    .sort((a, b) => {
+      const createdAtDiff = a.createdAt.getTime() - b.createdAt.getTime();
+      if (createdAtDiff !== 0) return createdAtDiff;
+      return a.id - b.id;
+    });
+
+  const capacity = getDestructionTotalCapacity(laneLimits);
+  const teamCount = Math.floor(Math.min(candidates.length, capacity) / 5);
+  const overflowIds = new Set<number>();
+
+  if (capacity <= 0 || candidates.length <= capacity) {
+    return {
+      teamCount,
+      capacity,
+      overflowIds,
+    };
+  }
+
+  for (const application of candidates.slice(capacity)) {
+    overflowIds.add(application.id);
+  }
+
+  return {
+    teamCount,
+    capacity,
+    overflowIds,
+  };
+}
+
+
+export function calculateDestructionPublicApplicationIds(
+  applications: ApplicationForPublicClassification[],
+  laneLimits: DestructionLaneLimits = DEFAULT_DESTRUCTION_LANE_LIMITS,
+) {
+  const candidates = applications
+    .filter((application) => isAutoManagedStatus(String(application.status)))
+    .slice()
+    .sort((a, b) => {
+      const createdAtDiff = a.createdAt.getTime() - b.createdAt.getTime();
+      if (createdAtDiff !== 0) return createdAtDiff;
+      return a.id - b.id;
+    });
+
+  const capacity = getDestructionTotalCapacity(laneLimits);
+  const teamCount = Math.floor(Math.min(candidates.length, capacity) / 5);
+  const capacityOverflowIds = new Set<number>();
+  const laneOverflowIds = new Set<number>();
+
+  if (capacity > 0 && candidates.length > capacity) {
+    for (const application of candidates.slice(capacity)) {
+      capacityOverflowIds.add(application.id);
+    }
+  }
+
+  const publicParticipantPool = candidates.filter((application) => !capacityOverflowIds.has(application.id));
+
+  for (const position of POSITIONS) {
+    const samePosition = publicParticipantPool
+      .filter((application) => application.mainPosition === position)
+      .sort((a, b) => {
+        const createdAtDiff = a.createdAt.getTime() - b.createdAt.getTime();
+        if (createdAtDiff !== 0) return createdAtDiff;
+        return a.id - b.id;
+      });
+
+    const positionLimit = laneLimits[position];
+    if (samePosition.length <= positionLimit) continue;
+
+    for (const application of samePosition.slice(positionLimit)) {
+      laneOverflowIds.add(application.id);
+    }
+  }
+
+  return {
+    teamCount,
+    capacity,
+    capacityOverflowIds,
+    laneOverflowIds,
   };
 }
 

@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
-import { applyDestructionRecruitmentAutoReserve, getDestructionLaneLimits } from "@/lib/destruction/recruitment-auto-reserve";
+import { applyDestructionRecruitmentAutoReserve, calculateDestructionPublicApplicationIds, getDestructionLaneLimits } from "@/lib/destruction/recruitment-auto-reserve";
 import { getCurrentUser, requireApprovedUser } from "@/lib/auth/session";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
 
@@ -125,6 +125,9 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
         })
       : null;
 
+    const laneLimits = getDestructionLaneLimits(tournament);
+    const { capacity, capacityOverflowIds, laneOverflowIds } = calculateDestructionPublicApplicationIds(applies, laneLimits);
+
     return NextResponse.json({
       tournament: {
         id: tournament.id,
@@ -132,7 +135,14 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
         status: tournament.status,
         laneLimits: getDestructionLaneLimits(tournament),
       },
-      currentApply,
+      currentApply: currentApply
+        ? {
+            ...currentApply,
+            isCapacityOverflow: capacityOverflowIds.has(currentApply.id),
+            isLaneOverflow: laneOverflowIds.has(currentApply.id),
+          }
+        : null,
+      capacity,
       players: applies.map((apply) => ({
         id: apply.player.id,
         name: apply.player.name,
@@ -145,6 +155,8 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
         isCaptain: apply.isCaptain,
         message: apply.message,
         status: apply.status,
+        isCapacityOverflow: capacityOverflowIds.has(apply.id),
+        isLaneOverflow: laneOverflowIds.has(apply.id),
       })),
     });
   } catch (error: unknown) {

@@ -23,6 +23,8 @@ type Player = {
   isCaptain: boolean;
   message?: string | null;
   status?: ApplyStatus | string;
+  isCapacityOverflow?: boolean;
+  isLaneOverflow?: boolean;
 };
 
 type CurrentApply = {
@@ -32,6 +34,8 @@ type CurrentApply = {
   subPositions?: ApplyPosition[];
   isCaptain: boolean;
   message?: string | null;
+  isCapacityOverflow?: boolean;
+  isLaneOverflow?: boolean;
 } | null;
 
 type LaneLimits = Record<ApplyPosition, number>;
@@ -59,10 +63,17 @@ const POSITION_LABELS: Record<ApplyPosition, string> = {
 const STATUS_LABELS: Record<string, string> = {
   APPLIED: "신청",
   CONFIRMED: "확정",
-  RESERVE: "보류",
+  RESERVE: "자동보류",
   CANCELLED: "취소",
   REJECTED: "제외",
 };
+
+function getPublicStatusLabel(status: string | undefined, isCapacityOverflow?: boolean, isLaneOverflow?: boolean) {
+  if (isCapacityOverflow) return "정원 초과";
+  if (isLaneOverflow) return "라인 초과";
+  if (status === "RESERVE") return "자동보류";
+  return status ? (STATUS_LABELS[status] ?? status) : "신청";
+}
 
 function isActiveApplyStatus(status: string | undefined) {
   return Boolean(status && (ACTIVE_APPLY_STATUSES as readonly string[]).includes(status));
@@ -228,10 +239,10 @@ export default function DestructionParticipationClient({
 
       {currentApply ? (
         <div className="empty-box destruction-current-apply" style={{ marginBottom: 16 }}>
-          <strong>내 신청 상태: {STATUS_LABELS[String(currentApply.status)] ?? currentApply.status}</strong>
+          <strong>내 신청 상태: {getPublicStatusLabel(String(currentApply.status), currentApply.isCapacityOverflow, currentApply.isLaneOverflow)}</strong>
           <p className="page-description" style={{ margin: "8px 0 0" }}>
             주 포지션 {currentApply.mainPosition ?? "-"} · 부 포지션 {formatPositions(currentApply.subPositions)} · {currentApply.isCaptain ? "팀장 선호" : "팀장 비선호"}
-            {currentApply.status === "RESERVE" ? " · 현재 관리자가 보류 인원으로 분류했습니다." : ""}
+            {currentApply.isCapacityOverflow ? " · 현재 최대 참가 가능 인원을 초과한 대기 인원입니다." : currentApply.isLaneOverflow ? " · 현재 선택 라인이 정원을 초과한 상태입니다." : ""}
           </p>
           {currentApply.message ? (
             <p className="page-description" style={{ margin: "8px 0 0" }}>
@@ -442,22 +453,24 @@ function MultiPositionSelector({
 
 function ParticipationList({ tournamentId, players, laneLimits }: { tournamentId: string; players: Player[]; laneLimits?: LaneLimits }) {
   const limits = laneLimits ?? { TOP: 10, JGL: 10, MID: 10, ADC: 10, SUP: 10 };
+  const participantPlayers = players.filter((player) => !player.isCapacityOverflow && !player.isLaneOverflow);
+  const overflowPlayers = players.filter((player) => player.isCapacityOverflow || player.isLaneOverflow);
+  const laneAutoReservePlayers = participantPlayers.filter((player) => player.status === "RESERVE");
   const positionCounts = POSITIONS.map((position) => ({
     position,
-    count: players.filter((player) => player.mainPosition === position && player.status !== "RESERVE").length,
-    reserveCount: players.filter((player) => player.mainPosition === position && player.status === "RESERVE").length,
+    count: participantPlayers.filter((player) => player.mainPosition === position).length,
+    reserveCount: laneAutoReservePlayers.filter((player) => player.mainPosition === position).length,
+    overflowCount: overflowPlayers.filter((player) => player.mainPosition === position).length,
     limit: limits[position],
   }));
-  const activePlayers = players.filter((player) => player.status !== "RESERVE");
-  const reservePlayers = players.filter((player) => player.status === "RESERVE");
-  const captainPreferredCount = activePlayers.filter((player) => player.isCaptain).length;
+  const captainPreferredCount = participantPlayers.filter((player) => player.isCaptain).length;
 
   return (
     <div className="participation-list">
       <div className="page-header" style={{ marginTop: 24 }}>
         <h2>현재 참가 신청자</h2>
         <p className="page-description">
-          확정 후보 {activePlayers.length}명 · 보류 {reservePlayers.length}명 · 팀장 선호 {captainPreferredCount}명 · 팀장 비선호 {activePlayers.length - captainPreferredCount}명
+          참가 {participantPlayers.length}명 · 초과 {overflowPlayers.length}명 · 팀장 선호 {captainPreferredCount}명 · 팀장 비선호 {participantPlayers.length - captainPreferredCount}명
         </p>
         <div className="page-actions destruction-list-actions" style={{ marginTop: 10 }}>
           <Link href={`/participation/destruction/${tournamentId}/participants`} className="btn btn-ghost">
@@ -470,7 +483,7 @@ function ParticipationList({ tournamentId, players, laneLimits }: { tournamentId
       </div>
 
       <div className="destruction-mobile-list-cta">
-        <strong>참가자 {activePlayers.length}명 · 보류 {reservePlayers.length}명</strong>
+        <strong>참가자 {participantPlayers.length}명 · 초과 {overflowPlayers.length}명</strong>
         <span>휴대폰에서는 신청 편의를 위해 상세 명단을 접었습니다.</span>
         <Link href={`/participation/destruction/${tournamentId}/participants`} className="btn btn-primary">
           참가자 명단 보기
@@ -485,9 +498,7 @@ function ParticipationList({ tournamentId, players, laneLimits }: { tournamentId
           <div key={item.position} className="admin-event-detail-card">
             <span>{item.position}</span>
             <strong>{item.count} / {item.limit}명</strong>
-            {item.reserveCount > 0 ? (
-              <small style={{ color: "#fbbf24" }}>보류 {item.reserveCount}명</small>
-            ) : null}
+            {null}
           </div>
         ))}
       </div>
@@ -502,10 +513,10 @@ function ParticipationList({ tournamentId, players, laneLimits }: { tournamentId
         <span>상태</span>
       </div>
 
-      {players.length === 0 ? (
+      {participantPlayers.length === 0 ? (
         <div className="admin-empty">참가 신청자가 없습니다.</div>
       ) : (
-        players.map((player, index) => (
+        participantPlayers.map((player, index) => (
           <Link
             key={player.id}
             href={`/participation/destruction/${tournamentId}/participants/${player.id}`}
@@ -521,12 +532,42 @@ function ParticipationList({ tournamentId, players, laneLimits }: { tournamentId
             <span>{player.peakTier ?? "-"}</span>
             <span>{player.mainPosition ?? "-"} / {formatPositions(player.subPositions)}</span>
             <span>
-              {STATUS_LABELS[String(player.status)] ?? player.status ?? "신청"}
+              {getPublicStatusLabel(String(player.status), player.isCapacityOverflow, player.isLaneOverflow)}
               {player.isCaptain ? " · 팀장 선호" : " · 팀장 비선호"}
             </span>
           </Link>
         ))
       )}
+
+      {overflowPlayers.length > 0 ? (
+        <>
+          <div className="page-header" style={{ marginTop: 20 }}>
+            <h3 style={{ margin: 0 }}>초과 신청자</h3>
+            <p className="page-description">라인 제한 또는 전체 정원을 초과한 신청자입니다. 참가자와 분리해서 표시합니다.</p>
+          </div>
+          {overflowPlayers.map((player, index) => (
+            <Link
+              key={player.id}
+              href={`/participation/destruction/${tournamentId}/participants/${player.id}`}
+              className="participation-item participation-item--captain"
+              style={{ textDecoration: "none" }}
+            >
+              <span>초과 {index + 1}</span>
+              <strong>{player.name}</strong>
+              <em>
+                {player.nickname}#{player.tag}
+              </em>
+              <span>{player.currentTier ?? "-"}</span>
+              <span>{player.peakTier ?? "-"}</span>
+              <span>{player.mainPosition ?? "-"} / {formatPositions(player.subPositions)}</span>
+              <span>
+                {getPublicStatusLabel(String(player.status), player.isCapacityOverflow, player.isLaneOverflow)}
+                {player.isCaptain ? " · 팀장 선호" : " · 팀장 비선호"}
+              </span>
+            </Link>
+          ))}
+        </>
+      ) : null}
     </div>
   );
 }

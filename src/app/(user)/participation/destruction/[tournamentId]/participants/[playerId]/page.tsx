@@ -7,6 +7,7 @@ import SoloRankSection from "@/components/SoloRankSection";
 import TierIcon from "@/components/TierIcon";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
+import { calculateDestructionPublicApplicationIds, getDestructionLaneLimits } from "@/lib/destruction/recruitment-auto-reserve";
 import { getGameMvpParticipant } from "@/lib/mvp";
 import { ensureSeasonStats, getWinRate } from "@/lib/stats/season-performance";
 
@@ -20,7 +21,7 @@ type PageProps = {
 const STATUS_LABELS: Record<string, string> = {
   APPLIED: "신청",
   CONFIRMED: "확정",
-  RESERVE: "보류",
+  RESERVE: "자동보류",
   CANCELLED: "취소",
   REJECTED: "제외",
 };
@@ -63,6 +64,11 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
         id: true,
         title: true,
         status: true,
+        topLaneLimit: true,
+        jungleLaneLimit: true,
+        midLaneLimit: true,
+        adcLaneLimit: true,
+        supportLaneLimit: true,
       },
     },
     player: {
@@ -154,6 +160,41 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
   if (!apply) {
     notFound();
   }
+
+  const applyStatusCandidates = await prisma.destructionParticipationApply.findMany({
+    where: {
+      tournamentId: tournamentNumericId,
+      status: {
+        in: ["APPLIED", "CONFIRMED", "RESERVE"],
+      },
+    },
+    select: {
+      id: true,
+      status: true,
+      mainPosition: true,
+      createdAt: true,
+    },
+    orderBy: [
+      { createdAt: "asc" },
+      { id: "asc" },
+    ],
+  });
+  const laneLimits = getDestructionLaneLimits(apply.tournament);
+  const { capacityOverflowIds, laneOverflowIds } = calculateDestructionPublicApplicationIds(applyStatusCandidates, laneLimits);
+  const isCapacityOverflow = capacityOverflowIds.has(apply.id);
+  const isLaneOverflow = laneOverflowIds.has(apply.id);
+
+  if (isLaneOverflow && !isCapacityOverflow) {
+    notFound();
+  }
+
+  const publicStatusLabel = isCapacityOverflow
+    ? "정원 초과"
+    : isLaneOverflow
+      ? "라인 초과"
+      : apply.status === "RESERVE"
+        ? "보류"
+        : (STATUS_LABELS[apply.status] ?? apply.status);
 
   const player = apply.player;
   const playerTagText = [player.nickname, player.tag].filter(Boolean).join("#");
@@ -277,7 +318,7 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
         <div className="info-grid">
           <div className="info-card">
             <span className="info-card__label">신청 상태</span>
-            <strong className="info-card__value">{STATUS_LABELS[apply.status] ?? apply.status}</strong>
+            <strong className="info-card__value">{publicStatusLabel}</strong>
           </div>
           <div className="info-card">
             <span className="info-card__label">주 포지션</span>
