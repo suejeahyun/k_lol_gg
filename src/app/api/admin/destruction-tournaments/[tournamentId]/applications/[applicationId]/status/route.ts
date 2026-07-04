@@ -2,7 +2,7 @@ import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { ParticipationApplyStatus } from "@prisma/client";
+import { ApplyPosition, ParticipationApplyStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { applyDestructionRecruitmentAutoReserve } from "@/lib/destruction/recruitment-auto-reserve";
@@ -16,13 +16,24 @@ type RouteContext = {
 
 const ALLOWED_STATUSES: ParticipationApplyStatus[] = [
   "APPLIED",
+  "CONFIRMED",
   "RESERVE",
   "REJECTED",
   "CANCELLED",
 ];
 
+const ALLOWED_POSITIONS: ApplyPosition[] = ["TOP", "JGL", "MID", "ADC", "SUP"];
+
 function isAllowedStatus(value: unknown): value is ParticipationApplyStatus {
   return typeof value === "string" && ALLOWED_STATUSES.includes(value as ParticipationApplyStatus);
+}
+
+function isAllowedPosition(value: unknown): value is ApplyPosition {
+  return typeof value === "string" && ALLOWED_POSITIONS.includes(value as ApplyPosition);
+}
+
+function hasOwnValue(body: Record<string, unknown>, key: string) {
+  return Object.prototype.hasOwnProperty.call(body, key) && body[key] !== undefined;
 }
 
 export async function PATCH(req: NextRequest, { params }: RouteContext) {
@@ -42,11 +53,28 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     }
 
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+    const shouldUpdateStatus = hasOwnValue(body, "status");
+    const shouldUpdatePosition = hasOwnValue(body, "mainPosition");
     const status = body.status;
+    const mainPosition = body.mainPosition;
 
-    if (!isAllowedStatus(status)) {
+    if (!shouldUpdateStatus && !shouldUpdatePosition) {
+      return NextResponse.json(
+        { message: "변경할 상태 또는 라인을 선택해주세요." },
+        { status: 400 },
+      );
+    }
+
+    if (shouldUpdateStatus && !isAllowedStatus(status)) {
       return NextResponse.json(
         { message: "변경할 수 없는 신청 상태입니다." },
+        { status: 400 },
+      );
+    }
+
+    if (shouldUpdatePosition && !isAllowedPosition(mainPosition)) {
+      return NextResponse.json(
+        { message: "TOP/JGL/MID/ADC/SUP 중 하나의 라인으로만 변경할 수 있습니다." },
         { status: 400 },
       );
     }
@@ -81,7 +109,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
 
     if (tournament.status !== "RECRUITING" || tournament.teams.length > 0 || tournament.matches.length > 0) {
       return NextResponse.json(
-        { message: "모집 단계에서만 참가 신청 상태를 변경할 수 있습니다." },
+        { message: "모집 단계에서만 참가 신청 상태와 라인을 변경할 수 있습니다." },
         { status: 400 },
       );
     }
@@ -109,13 +137,23 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       );
     }
 
+    const nextStatus = shouldUpdateStatus && isAllowedStatus(status) ? status : application.status;
+    const nextMainPosition = shouldUpdatePosition && isAllowedPosition(mainPosition)
+      ? mainPosition
+      : application.mainPosition;
+    const nextSubPositions = shouldUpdatePosition
+      ? application.subPositions.filter((position) => position !== nextMainPosition)
+      : application.subPositions;
+
     const updated = await prisma.$transaction(async (tx) => {
       const next = await tx.destructionParticipationApply.update({
         where: {
           id: applicationNumberId,
         },
         data: {
-          status,
+          status: nextStatus,
+          mainPosition: nextMainPosition,
+          subPositions: nextSubPositions,
         },
         include: {
           player: true,
@@ -124,8 +162,8 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
 
       await tx.adminLog.create({
         data: {
-          action: "DESTRUCTION_APPLICATION_STATUS_UPDATE",
-          message: `멸망전 신청 상태 변경: ${tournament.title}, ${application.player.name}(${application.player.nickname}#${application.player.tag}) ${application.status} → ${status}`,
+          action: "DESTRUCTION_APPLICATION_MANAGE",
+          message: `멸망전 신청 관리: ${tournament.title}, ${application.player.name}(${application.player.nickname}#${application.player.tag}) 상태 ${application.status} → ${nextStatus}, 라인 ${application.mainPosition} → ${nextMainPosition}`,
         },
       });
 
@@ -135,14 +173,14 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     await applyDestructionRecruitmentAutoReserve(tournamentNumberId);
 
     return NextResponse.json({
-      message: "참가 신청 상태가 변경되었습니다.",
+      message: "참가 신청 정보가 변경되었습니다.",
       application: updated,
     });
   } catch (error: unknown) {
-    logServerError("[ADMIN_DESTRUCTION_APPLICATION_STATUS_PATCH_ERROR]", error);
+    logServerError("[ADMIN_DESTRUCTION_APPLICATION_MANAGE_PATCH_ERROR]", error);
 
     return NextResponse.json(
-      { message: "참가 신청 상태 변경 중 오류가 발생했습니다." },
+      { message: "참가 신청 정보 변경 중 오류가 발생했습니다." },
       { status: 500 },
     );
   }

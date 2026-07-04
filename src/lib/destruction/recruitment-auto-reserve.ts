@@ -1,33 +1,35 @@
 import { prisma } from "@/lib/prisma/client";
 
 const POSITIONS = ["TOP", "JGL", "MID", "ADC", "SUP"] as const;
-const AUTO_MANAGED_STATUSES = ["APPLIED", "CONFIRMED", "RESERVE"] as const;
+const AUTO_MANAGED_STATUSES = ["APPLIED", "RESERVE"] as const;
+const RECRUITMENT_POOL_STATUSES = ["APPLIED", "CONFIRMED", "RESERVE"] as const;
 
 const DEFAULT_LANE_LIMIT = 10;
 const MIN_LANE_LIMIT = 1;
 const MAX_LANE_LIMIT = 99;
 
 type AutoManagedStatus = (typeof AUTO_MANAGED_STATUSES)[number];
+type RecruitmentPoolStatus = (typeof RECRUITMENT_POOL_STATUSES)[number];
 type PositionValue = (typeof POSITIONS)[number];
 
 export type DestructionLaneLimits = Record<PositionValue, number>;
 
 type ApplicationForAutoReserve = {
   id: number;
-  status: AutoManagedStatus | string;
+  status: RecruitmentPoolStatus | string;
   mainPosition: string;
   createdAt: Date;
 };
 
 type ApplicationForCapacityOverflow = {
   id: number;
-  status: AutoManagedStatus | string;
+  status: RecruitmentPoolStatus | string;
   createdAt: Date;
 };
 
 type ApplicationForPublicClassification = {
   id: number;
-  status: AutoManagedStatus | string;
+  status: RecruitmentPoolStatus | string;
   mainPosition: string;
   createdAt: Date;
 };
@@ -89,20 +91,41 @@ function isAutoManagedStatus(status: string): status is AutoManagedStatus {
   return (AUTO_MANAGED_STATUSES as readonly string[]).includes(status);
 }
 
+function isRecruitmentPoolStatus(status: string): status is RecruitmentPoolStatus {
+  return (RECRUITMENT_POOL_STATUSES as readonly string[]).includes(status);
+}
+
+function sortByApplyOrder<T extends { id: number; createdAt: Date }>(items: T[]) {
+  return items.slice().sort((a, b) => {
+    const createdAtDiff = a.createdAt.getTime() - b.createdAt.getTime();
+    if (createdAtDiff !== 0) return createdAtDiff;
+    return a.id - b.id;
+  });
+}
+
+function countConfirmedByPosition(applications: ApplicationForAutoReserve[]) {
+  const counts = Object.fromEntries(POSITIONS.map((position) => [position, 0])) as Record<PositionValue, number>;
+
+  for (const application of applications) {
+    if (application.status !== "CONFIRMED") continue;
+    if (!POSITIONS.includes(application.mainPosition as PositionValue)) continue;
+    counts[application.mainPosition as PositionValue] += 1;
+  }
+
+  return counts;
+}
+
 export function calculateDestructionReserveIds(
   applications: ApplicationForAutoReserve[],
   laneLimits: DestructionLaneLimits = DEFAULT_DESTRUCTION_LANE_LIMITS,
 ) {
-  const candidates = applications
-    .filter((application) => isAutoManagedStatus(String(application.status)))
-    .slice()
-    .sort((a, b) => {
-      const createdAtDiff = a.createdAt.getTime() - b.createdAt.getTime();
-      if (createdAtDiff !== 0) return createdAtDiff;
-      return a.id - b.id;
-    });
+  const pool = sortByApplyOrder(
+    applications.filter((application) => isRecruitmentPoolStatus(String(application.status))),
+  );
+  const confirmedApplications = pool.filter((application) => application.status === "CONFIRMED");
+  const candidates = pool.filter((application) => isAutoManagedStatus(String(application.status)));
 
-  const teamCount = candidates.length >= 5 ? Math.floor(candidates.length / 5) : 0;
+  const teamCount = pool.length >= 5 ? Math.floor(pool.length / 5) : 0;
   const capacity = teamCount * 5;
   const reserveIds = new Set<number>();
 
@@ -114,11 +137,14 @@ export function calculateDestructionReserveIds(
     };
   }
 
-  for (const application of candidates.slice(capacity)) {
+  const availableCapacity = Math.max(0, capacity - confirmedApplications.length);
+
+  for (const application of candidates.slice(availableCapacity)) {
     reserveIds.add(application.id);
   }
 
   const positionPool = candidates.filter((application) => !reserveIds.has(application.id));
+  const confirmedByPosition = countConfirmedByPosition(pool);
 
   for (const position of POSITIONS) {
     const samePosition = positionPool
@@ -129,7 +155,7 @@ export function calculateDestructionReserveIds(
         return a.id - b.id;
       });
 
-    const positionLimit = laneLimits[position];
+    const positionLimit = Math.max(0, laneLimits[position] - confirmedByPosition[position]);
     if (samePosition.length <= positionLimit) continue;
 
     for (const application of samePosition.slice(positionLimit)) {
@@ -144,7 +170,6 @@ export function calculateDestructionReserveIds(
   };
 }
 
-
 export function getDestructionTotalCapacity(laneLimits: DestructionLaneLimits = DEFAULT_DESTRUCTION_LANE_LIMITS) {
   return POSITIONS.reduce((sum, position) => sum + laneLimits[position], 0);
 }
@@ -153,20 +178,18 @@ export function calculateDestructionCapacityOverflowIds(
   applications: ApplicationForCapacityOverflow[],
   laneLimits: DestructionLaneLimits = DEFAULT_DESTRUCTION_LANE_LIMITS,
 ) {
-  const candidates = applications
-    .filter((application) => isAutoManagedStatus(String(application.status)))
-    .slice()
-    .sort((a, b) => {
-      const createdAtDiff = a.createdAt.getTime() - b.createdAt.getTime();
-      if (createdAtDiff !== 0) return createdAtDiff;
-      return a.id - b.id;
-    });
+  const pool = sortByApplyOrder(
+    applications.filter((application) => isRecruitmentPoolStatus(String(application.status))),
+  );
+  const confirmedApplications = pool.filter((application) => application.status === "CONFIRMED");
+  const candidates = pool.filter((application) => isAutoManagedStatus(String(application.status)));
 
   const capacity = getDestructionTotalCapacity(laneLimits);
-  const teamCount = Math.floor(Math.min(candidates.length, capacity) / 5);
+  const teamCount = Math.floor(Math.min(pool.length, capacity) / 5);
   const overflowIds = new Set<number>();
+  const availableCapacity = Math.max(0, capacity - confirmedApplications.length);
 
-  if (capacity <= 0 || candidates.length <= capacity) {
+  if (capacity <= 0 || candidates.length <= availableCapacity) {
     return {
       teamCount,
       capacity,
@@ -174,7 +197,7 @@ export function calculateDestructionCapacityOverflowIds(
     };
   }
 
-  for (const application of candidates.slice(capacity)) {
+  for (const application of candidates.slice(availableCapacity)) {
     overflowIds.add(application.id);
   }
 
@@ -185,32 +208,30 @@ export function calculateDestructionCapacityOverflowIds(
   };
 }
 
-
 export function calculateDestructionPublicApplicationIds(
   applications: ApplicationForPublicClassification[],
   laneLimits: DestructionLaneLimits = DEFAULT_DESTRUCTION_LANE_LIMITS,
 ) {
-  const candidates = applications
-    .filter((application) => isAutoManagedStatus(String(application.status)))
-    .slice()
-    .sort((a, b) => {
-      const createdAtDiff = a.createdAt.getTime() - b.createdAt.getTime();
-      if (createdAtDiff !== 0) return createdAtDiff;
-      return a.id - b.id;
-    });
+  const pool = sortByApplyOrder(
+    applications.filter((application) => isRecruitmentPoolStatus(String(application.status))),
+  );
+  const confirmedApplications = pool.filter((application) => application.status === "CONFIRMED");
+  const candidates = pool.filter((application) => isAutoManagedStatus(String(application.status)));
 
   const capacity = getDestructionTotalCapacity(laneLimits);
-  const teamCount = Math.floor(Math.min(candidates.length, capacity) / 5);
+  const teamCount = Math.floor(Math.min(pool.length, capacity) / 5);
   const capacityOverflowIds = new Set<number>();
   const laneOverflowIds = new Set<number>();
+  const availableCapacity = Math.max(0, capacity - confirmedApplications.length);
 
-  if (capacity > 0 && candidates.length > capacity) {
-    for (const application of candidates.slice(capacity)) {
+  if (capacity > 0 && candidates.length > availableCapacity) {
+    for (const application of candidates.slice(availableCapacity)) {
       capacityOverflowIds.add(application.id);
     }
   }
 
   const publicParticipantPool = candidates.filter((application) => !capacityOverflowIds.has(application.id));
+  const confirmedByPosition = countConfirmedByPosition(pool);
 
   for (const position of POSITIONS) {
     const samePosition = publicParticipantPool
@@ -221,7 +242,7 @@ export function calculateDestructionPublicApplicationIds(
         return a.id - b.id;
       });
 
-    const positionLimit = laneLimits[position];
+    const positionLimit = Math.max(0, laneLimits[position] - confirmedByPosition[position]);
     if (samePosition.length <= positionLimit) continue;
 
     for (const application of samePosition.slice(positionLimit)) {
@@ -317,6 +338,8 @@ export async function applyDestructionRecruitmentAutoReserve(tournamentId: numbe
   const toActiveIds: number[] = [];
 
   for (const application of applications) {
+    if (application.status === "CONFIRMED") continue;
+
     const shouldReserve = reserveIds.has(application.id);
 
     if (shouldReserve && application.status !== "RESERVE") {

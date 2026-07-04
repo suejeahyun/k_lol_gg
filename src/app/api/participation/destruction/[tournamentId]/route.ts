@@ -234,6 +234,19 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
       );
     }
 
+    const existingApply = await prisma.destructionParticipationApply.findUnique({
+      where: {
+        tournamentId_playerId: {
+          tournamentId: id,
+          playerId: user.playerId,
+        },
+      },
+      select: {
+        status: true,
+      },
+    });
+    const nextStatus = existingApply?.status === "CONFIRMED" ? "CONFIRMED" : "APPLIED";
+
     const apply = await prisma.destructionParticipationApply.upsert({
       where: {
         tournamentId_playerId: {
@@ -246,7 +259,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
         subPositions,
         isCaptain,
         message,
-        status: "APPLIED",
+        status: nextStatus,
       },
       create: {
         tournamentId: id,
