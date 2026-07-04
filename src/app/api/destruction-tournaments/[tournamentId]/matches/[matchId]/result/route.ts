@@ -69,6 +69,13 @@ export async function PATCH(req: NextRequest, { params }: RouteProps) {
       );
     }
 
+    if (match.stage === "PRELIMINARY" && !match.isConfirmed) {
+      return NextResponse.json(
+        { message: "확정 전 예선 경기에는 결과를 입력할 수 없습니다. 먼저 예선 편성을 확정해주세요." },
+        { status: 400 }
+      );
+    }
+
     const validWinner =
       winnerTeamId === match.teamAId || winnerTeamId === match.teamBId;
 

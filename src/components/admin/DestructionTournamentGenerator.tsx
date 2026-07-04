@@ -37,7 +37,7 @@ export default function DestructionTournamentGenerator({
     }
 
     if (unfinishedPreliminaryCount > 0) {
-      setError("모든 예선 경기 결과를 먼저 등록해주세요.");
+      setError("예선 편성 확정과 모든 예선 경기 결과 등록을 먼저 완료해주세요.");
       return;
     }
 
@@ -85,7 +85,7 @@ export default function DestructionTournamentGenerator({
           tournamentMatchCount > 0
         }
       >
-        {isGenerating ? "토너먼트 생성 중..." : "상위 4팀 토너먼트 생성"}
+        {isGenerating ? "토너먼트 생성 중..." : "본선 4강 생성"}
       </button>
 
       {tournamentMatchCount > 0 ? (

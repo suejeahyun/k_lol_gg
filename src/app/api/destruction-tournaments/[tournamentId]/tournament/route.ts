@@ -1,4 +1,4 @@
-﻿export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
@@ -18,7 +18,50 @@ type MatchCreateInput = {
   teamAId: number;
   teamBId: number;
   bestOf: number;
+  isConfirmed?: boolean;
 };
+
+type RankedTeam = {
+  id: number;
+  preliminaryGroup?: string | null;
+  points: number;
+  wins: number;
+  losses: number;
+};
+
+function compareRankedTeams(a: RankedTeam, b: RankedTeam) {
+  if (b.points !== a.points) return b.points - a.points;
+  if (b.wins !== a.wins) return b.wins - a.wins;
+  if (a.losses !== b.losses) return a.losses - b.losses;
+  return a.id - b.id;
+}
+
+function resolveSemiFinalTeams(teams: RankedTeam[]) {
+  const groupedTeams = new Map<string, RankedTeam[]>();
+
+  teams.forEach((team) => {
+    if (!team.preliminaryGroup) return;
+
+    const current = groupedTeams.get(team.preliminaryGroup) ?? [];
+    current.push(team);
+    groupedTeams.set(team.preliminaryGroup, current);
+  });
+
+  const groups = Array.from(groupedTeams.entries())
+    .filter(([, groupTeams]) => groupTeams.length >= 2)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([group, groupTeams]) => ({
+      group,
+      teams: groupTeams.slice().sort(compareRankedTeams),
+    }));
+
+  if (groups.length === 2) {
+    const [groupA, groupB] = groups;
+    return [groupA.teams[0], groupB.teams[0], groupA.teams[1], groupB.teams[1]];
+  }
+
+  return teams.slice().sort(compareRankedTeams).slice(0, 4);
+}
 
 export async function POST(_req: NextRequest, { params }: RouteProps) {
   const rejected = await rejectIfNotAdmin();
@@ -85,6 +128,17 @@ export async function POST(_req: NextRequest, { params }: RouteProps) {
       );
     }
 
+    const hasUnconfirmedPreliminary = preliminaryMatches.some(
+      (match) => !match.isConfirmed
+    );
+
+    if (hasUnconfirmedPreliminary) {
+      return NextResponse.json(
+        { message: "예선 편성을 먼저 확정해주세요." },
+        { status: 400 }
+      );
+    }
+
     const hasUnfinishedPreliminary = preliminaryMatches.some(
       (match) => !match.winnerTeamId
     );
@@ -107,7 +161,14 @@ export async function POST(_req: NextRequest, { params }: RouteProps) {
       );
     }
 
-    const topTeams = tournament.teams.slice(0, 4);
+    const topTeams = resolveSemiFinalTeams(tournament.teams).slice(0, 4);
+
+    if (topTeams.length < 4) {
+      return NextResponse.json(
+        { message: "본선 4강에 올릴 팀을 4개 확정할 수 없습니다." },
+        { status: 400 }
+      );
+    }
 
     const matchData: MatchCreateInput[] = [
       {
@@ -117,6 +178,7 @@ export async function POST(_req: NextRequest, { params }: RouteProps) {
         teamAId: topTeams[0].id,
         teamBId: topTeams[3].id,
         bestOf: 3,
+        isConfirmed: true,
       },
       {
         tournamentId: id,
@@ -125,6 +187,7 @@ export async function POST(_req: NextRequest, { params }: RouteProps) {
         teamAId: topTeams[1].id,
         teamBId: topTeams[2].id,
         bestOf: 3,
+        isConfirmed: true,
       },
     ];
 

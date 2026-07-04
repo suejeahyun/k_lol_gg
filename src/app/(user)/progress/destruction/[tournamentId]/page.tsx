@@ -111,7 +111,7 @@ export default async function DestructionProgressDetailPage({
           teamA: true,
           teamB: true,
         },
-        orderBy: [{ stage: "asc" }, { round: "asc" }],
+        orderBy: [{ stage: "asc" }, { preliminaryGroup: "asc" }, { round: "asc" }],
       },
     },
   });
@@ -134,9 +134,30 @@ export default async function DestructionProgressDetailPage({
     (apply) => !["CANCELLED", "REJECTED"].includes(apply.status)
   );
 
-  const preliminaryMatches = tournament.matches.filter(
-    (match) => match.stage === "PRELIMINARY"
-  );
+  const unconfirmedPreliminaryCount = tournament.matches.filter(
+    (match) => match.stage === "PRELIMINARY" && !match.isConfirmed,
+  ).length;
+
+  const publicMatchCount = tournament.matches.filter(
+    (match) => match.stage !== "PRELIMINARY" || match.isConfirmed,
+  ).length;
+
+  const preliminaryMatches = tournament.matches
+    .filter((match) => match.stage === "PRELIMINARY" && match.isConfirmed)
+    .sort((a, b) => {
+      const groupCompare = (a.preliminaryGroup ?? "").localeCompare(b.preliminaryGroup ?? "");
+      if (groupCompare !== 0) return groupCompare;
+      return a.round - b.round;
+    });
+
+  const preliminaryRankTeams = tournament.teams.slice().sort((a, b) => {
+    const groupCompare = (a.preliminaryGroup ?? "").localeCompare(b.preliminaryGroup ?? "");
+    if (groupCompare !== 0) return groupCompare;
+    if (b.points !== a.points) return b.points - a.points;
+    if (b.wins !== a.wins) return b.wins - a.wins;
+    if (a.losses !== b.losses) return a.losses - b.losses;
+    return a.id - b.id;
+  });
 
   const semiFinalMatches = tournament.matches.filter(
     (match) => match.stage === "SEMI_FINAL"
@@ -205,7 +226,7 @@ export default async function DestructionProgressDetailPage({
 
         <div className="destruction-detail-summary-card">
           <span>경기</span>
-          <strong>{tournament.matches.length}개</strong>
+          <strong>{publicMatchCount}개</strong>
         </div>
       </section>
 
@@ -280,10 +301,10 @@ export default async function DestructionProgressDetailPage({
               <div className="empty-box">등록된 팀이 없습니다.</div>
             ) : (
               <div className="destruction-rank-list">
-                {tournament.teams.map((team, index) => (
+                {preliminaryRankTeams.map((team, index) => (
                   <div key={team.id} className="destruction-rank-row">
                     <strong>{index + 1}위</strong>
-                    <span>{team.name}</span>
+                    <span>{team.preliminaryGroup ? `${team.preliminaryGroup}조 · ` : ""}{team.name}</span>
                     <em>
                       {team.points}점 · {team.wins}승 {team.losses}패
                     </em>
@@ -295,16 +316,16 @@ export default async function DestructionProgressDetailPage({
 
           <section className="content-section">
             <div className="section-header">
-              <h2>예선 풀리그</h2>
+              <h2>예선 경기</h2>
             </div>
 
             {preliminaryMatches.length === 0 ? (
-              <div className="empty-box">예선 경기가 없습니다.</div>
+              <div className="empty-box">{unconfirmedPreliminaryCount > 0 ? "예선 편성 확인 중입니다. 확정 후 공개됩니다." : "예선 경기가 없습니다."}</div>
             ) : (
               <div className="destruction-match-list">
                 {preliminaryMatches.map((match) => (
                   <div key={match.id} className="destruction-match-row">
-                    <span>{getStageLabel(match.stage)}</span>
+                    <span>{match.preliminaryGroup ? `${match.preliminaryGroup}조` : getStageLabel(match.stage)}</span>
                     <strong>
                       {match.teamA.name} vs {match.teamB.name}
                     </strong>
@@ -392,7 +413,7 @@ export default async function DestructionProgressDetailPage({
 
             <div className="destruction-final-card">
               <span>참가 / 팀 / 경기</span>
-              <strong>{tournament.participants.length}명 / {tournament.teams.length}팀 / {tournament.matches.length}경기</strong>
+              <strong>{tournament.participants.length}명 / {tournament.teams.length}팀 / {publicMatchCount}경기</strong>
             </div>
           </div>
 

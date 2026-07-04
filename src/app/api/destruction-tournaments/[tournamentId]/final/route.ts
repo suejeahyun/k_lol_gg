@@ -96,6 +96,7 @@ export async function POST(_req: NextRequest, { params }: RouteProps) {
           teamAId: firstWinnerTeamId,
           teamBId: secondWinnerTeamId,
           bestOf: 3,
+          isConfirmed: true,
         },
         include: {
           teamA: true,

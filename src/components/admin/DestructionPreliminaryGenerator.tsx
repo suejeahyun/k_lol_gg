@@ -77,11 +77,11 @@ export default function DestructionPreliminaryGenerator({
           preliminaryMatchCount > 0
         }
       >
-        {isGenerating ? "예선 생성 중..." : "예선 생성"}
+        {isGenerating ? "예선 생성 중..." : "예선 확정 전 편성 생성"}
       </button>
 
       {preliminaryMatchCount > 0 ? (
-        <div className="empty-box">이미 생성된 예선 경기가 있습니다.</div>
+        <div className="empty-box">이미 저장된 예선 편성이 있습니다. 수정은 위의 수동 조 / 예선 편성 영역에서 진행하세요.</div>
       ) : null}
 
       {error ? <p className="notice-form__error">{error}</p> : null}

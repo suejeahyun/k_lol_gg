@@ -1,4 +1,4 @@
-﻿export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { DestructionPreliminaryFormat } from "@prisma/client";
@@ -18,9 +18,11 @@ type MatchCreateInput = {
   tournamentId: number;
   stage: "PRELIMINARY";
   round: number;
+  preliminaryGroup?: string | null;
   teamAId: number;
   teamBId: number;
   bestOf: number;
+  isConfirmed?: boolean;
 };
 
 function getBestOf(format: DestructionPreliminaryFormat) {
@@ -42,22 +44,30 @@ function pushPair(
   teamAId: number,
   teamBId: number,
   bestOf: number,
+  preliminaryGroup: string | null = null,
 ) {
   matches.push({
     tournamentId,
     stage: "PRELIMINARY",
     round: matches.length + 1,
+    preliminaryGroup,
     teamAId,
     teamBId,
     bestOf,
+    isConfirmed: false,
   });
 }
 
-function buildRoundRobinMatches(tournamentId: number, teams: Team[], bestOf: number) {
+function buildRoundRobinMatches(
+  tournamentId: number,
+  teams: Team[],
+  bestOf: number,
+  preliminaryGroup: string | null = null,
+) {
   const matches: MatchCreateInput[] = [];
   for (let i = 0; i < teams.length; i += 1) {
     for (let j = i + 1; j < teams.length; j += 1) {
-      pushPair(matches, tournamentId, teams[i].id, teams[j].id, bestOf);
+      pushPair(matches, tournamentId, teams[i].id, teams[j].id, bestOf, preliminaryGroup);
     }
   }
   return matches;
@@ -67,8 +77,8 @@ function buildGroupRoundRobinMatches(tournamentId: number, teams: Team[], bestOf
   const groupA = teams.filter((_, index) => index % 2 === 0);
   const groupB = teams.filter((_, index) => index % 2 === 1);
   return [
-    ...buildRoundRobinMatches(tournamentId, groupA, bestOf),
-    ...buildRoundRobinMatches(tournamentId, groupB, bestOf),
+    ...buildRoundRobinMatches(tournamentId, groupA, bestOf, "A"),
+    ...buildRoundRobinMatches(tournamentId, groupB, bestOf, "B"),
   ].map((match, index) => ({ ...match, round: index + 1 }));
 }
 
@@ -210,8 +220,23 @@ export async function POST(_req: NextRequest, { params }: RouteProps) {
       );
     }
 
+    const teamGroupById = new Map<number, string | null>();
+    tournament.teams.forEach((team) => teamGroupById.set(team.id, null));
+    matchData.forEach((match) => {
+      if (!match.preliminaryGroup) return;
+      teamGroupById.set(match.teamAId, match.preliminaryGroup);
+      teamGroupById.set(match.teamBId, match.preliminaryGroup);
+    });
+
     const result = await prisma.$transaction(async (tx) => {
       await tx.destructionMatch.createMany({ data: matchData });
+
+      for (const [teamId, preliminaryGroup] of teamGroupById.entries()) {
+        await tx.destructionTeam.update({
+          where: { id: teamId },
+          data: { preliminaryGroup },
+        });
+      }
 
       await tx.destructionTournament.update({
         where: { id },
@@ -220,15 +245,15 @@ export async function POST(_req: NextRequest, { params }: RouteProps) {
 
       await tx.adminLog.create({
         data: {
-          action: "DESTRUCTION_PRELIMINARY_CREATE",
-          message: `멸망전 예선 생성: ${tournament.title} / ${tournament.preliminaryFormat}`,
+          action: "DESTRUCTION_PRELIMINARY_DRAFT_CREATE",
+          message: `멸망전 예선 확정 전 편성 생성: ${tournament.title} / ${tournament.preliminaryFormat}`,
         },
       });
 
       return tx.destructionMatch.findMany({
         where: { tournamentId: id, stage: "PRELIMINARY" },
         include: { teamA: true, teamB: true },
-        orderBy: { round: "asc" },
+        orderBy: [{ preliminaryGroup: "asc" }, { round: "asc" }],
       });
     });
 

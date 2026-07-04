@@ -543,6 +543,7 @@ model DestructionTeam {
   tournamentId Int
   name         String
   captainId    Int
+  preliminaryGroup String?
 
   points Int @default(0)
   wins   Int @default(0)
@@ -561,6 +562,7 @@ model DestructionTeam {
 
   @@unique([tournamentId, name])
   @@index([tournamentId, points, wins, losses])
+  @@index([tournamentId, preliminaryGroup])
 }
 
 model DestructionParticipant {
@@ -590,6 +592,7 @@ model DestructionMatch {
   tournamentId Int
   stage        DestructionStage
   round        Int
+  preliminaryGroup String?
 
   teamAId      Int
   teamBId      Int
@@ -597,6 +600,7 @@ model DestructionMatch {
   mvpPlayerId  Int?
 
   isReplay  Boolean   @default(false)
+  isConfirmed Boolean @default(false)
   matchDate DateTime?
   bestOf Int @default(1)
   teamAScore Int @default(0)
@@ -612,6 +616,7 @@ model DestructionMatch {
 
   @@unique([tournamentId, stage, round])
   @@index([tournamentId, winnerTeamId])
+  @@index([tournamentId, stage, preliminaryGroup])
 }
 
 model SeasonParticipationApply {
