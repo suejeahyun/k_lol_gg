@@ -6,6 +6,7 @@ import { getRequiredSecretInProduction } from "@/lib/security/secrets";
 import { kakaoJsonReply } from "@/lib/kakao/reply-format";
 import {
   buildScrimStatusReply,
+  buildScrimFormFromData,
   formatScrimLine,
   getScrimRecruitDateKey,
 } from "@/lib/kakao/destruction-scrim-recruit";
@@ -152,7 +153,13 @@ export async function getScrimStatusPayload(detailScrimNo?: number | null) {
     empty: scrims.length === 0,
     scrims,
     reply: detailScrimNo && scrims[0]
-      ? ["[K-LOL.GG 멸망전 스크림 상세]", "", formatScrimLine(scrims[0])].join("\n")
+      ? [
+          "[K-LOL.GG 멸망전 스크림 상세]",
+          "",
+          formatScrimLine(scrims[0]),
+          "",
+          buildScrimFormFromData(scrims[0]),
+        ].join("\n")
       : buildScrimStatusReply(scrims),
   };
 }

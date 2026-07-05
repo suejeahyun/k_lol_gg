@@ -408,13 +408,13 @@ export function getScrimStatusLabel(status: string) {
 }
 
 function lineupToText(lineup: ScrimLineup | null | undefined) {
-  if (!lineup || !hasScrimLineupValue(lineup)) return "";
+  const safeLineup = lineup || EMPTY_LINEUP;
   return [
-    `TOP: ${lineup.top || ""}`,
-    `JUG: ${lineup.jungle || ""}`,
-    `MID: ${lineup.mid || ""}`,
-    `ADC: ${lineup.adc || ""}`,
-    `SUP: ${lineup.support || ""}`,
+    `TOP: ${safeLineup.top || ""}`,
+    `JUG: ${safeLineup.jungle || ""}`,
+    `MID: ${safeLineup.mid || ""}`,
+    `ADC: ${safeLineup.adc || ""}`,
+    `SUP: ${safeLineup.support || ""}`,
   ].join("\n");
 }
 
