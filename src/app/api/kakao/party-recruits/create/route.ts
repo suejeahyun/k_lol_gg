@@ -12,6 +12,7 @@ import {
   getKakaoRecruitDateKey,
   parseCreateRecruitCommand,
 } from "@/lib/kakao/party-recruit";
+import { classifyKakaoRecruitMessage, buildWrongRecruitApiReply } from "@/lib/kakao/recruit-message-kind";
 import {
   getCurrentRecruitResetSeq,
   getLatestRecruitResetLog,
@@ -68,6 +69,14 @@ export async function POST(req: NextRequest) {
     // 모집번호만 날짜/회차 기준으로 다시 #1부터 배정합니다.
 
     const message = getBodyText(body);
+    const classification = classifyKakaoRecruitMessage(message);
+    if (classification.kind !== "PARTY_RECRUIT") {
+      return partyRecruitJson(
+        { reply: buildWrongRecruitApiReply({ expected: "파티구인", actual: classification.kind }) },
+        400,
+      );
+    }
+
     const roomName = getBodyRoom(body);
     const sender = getBodySender(body);
 

@@ -32,6 +32,7 @@ const menuGroups: AdminSidebarGroup[] = [
     items: [
       { href: "/admin/kakao", label: "카카오톡 요약", code: "KAK", activePrefixes: ["/admin/kakao"] },
       { href: "/admin/kakao/recruits", label: "구인 관리", code: "REC", activePrefixes: ["/admin/kakao/recruits"] },
+      { href: "/admin/kakao/scrims", label: "스크림구인", code: "SCR", activePrefixes: ["/admin/kakao/scrims"] },
       { href: "/admin/logs/kakao", label: "카카오톡 로그", code: "RLG", activePrefixes: ["/admin/logs/kakao"] },
       { href: "/admin/kakao/season-apply", label: "내전 참가신청", code: "APP", activePrefixes: ["/admin/kakao/season-apply"] },
       { href: "/admin/kakao/operation-forms", label: "운영신청", code: "OPR", activePrefixes: ["/admin/kakao/operation-forms"] },

@@ -10,6 +10,7 @@ import {
   getKakaoRecruitDateKey,
   parseFinishRecruitCommand,
 } from "@/lib/kakao/party-recruit";
+import { classifyKakaoRecruitMessage, buildWrongRecruitApiReply } from "@/lib/kakao/recruit-message-kind";
 import {
   getCurrentRecruitResetSeq,
   getLatestRecruitResetLog,
@@ -87,6 +88,14 @@ export async function POST(req: NextRequest) {
     if (secretRejected) return secretRejected;
 
     const message = getBodyText(body);
+    const classification = classifyKakaoRecruitMessage(message);
+    if (classification.kind !== "PARTY_RECRUIT") {
+      return partyRecruitJson(
+        { reply: buildWrongRecruitApiReply({ expected: "파티구인", actual: classification.kind }) },
+        400,
+      );
+    }
+
     const roomName = getBodyRoom(body);
     const sender = getBodySender(body);
     const parsed = parseFinishRecruitCommand(message);

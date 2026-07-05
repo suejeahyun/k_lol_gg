@@ -7,6 +7,7 @@ import {
   buildRecruitStatusReply,
   filterRecruitingParties,
 } from "@/lib/kakao/party-recruit";
+import { classifyKakaoRecruitMessage, buildWrongRecruitApiReply } from "@/lib/kakao/recruit-message-kind";
 import { runRecruitIdleAutoFinishIfNeeded } from "@/lib/kakao/recruit-idle-auto-finish";
 import {
   partyRecruitJson,
@@ -113,6 +114,14 @@ async function handleStatus(
 ) {
   const rejected = rejectIfInvalidPartySecret(req, bodySecret);
   if (rejected) return rejected;
+
+  const classification = classifyKakaoRecruitMessage(String(message || req.nextUrl.searchParams.get("message") || req.nextUrl.searchParams.get("q") || "구인현황"));
+  if (classification.kind !== "PARTY_RECRUIT") {
+    return partyRecruitJson(
+      { reply: buildWrongRecruitApiReply({ expected: "파티구인", actual: classification.kind }) },
+      400,
+    );
+  }
 
   try {
     const queryDetailNo = extractDetailRecruitNo(

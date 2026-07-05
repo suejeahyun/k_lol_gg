@@ -533,6 +533,7 @@ model DestructionTournament {
   participants         DestructionParticipant[]
   matches              DestructionMatch[]
   participationApplies DestructionParticipationApply[]
+  scrimRecruits        DestructionScrimRecruit[]
 
   @@index([status, startDate])
   @@index([galleryImageId])
@@ -559,6 +560,8 @@ model DestructionTeam {
 
   matchesA DestructionMatch[] @relation("DestructionTeamA")
   matchesB DestructionMatch[] @relation("DestructionTeamB")
+  scrimRequesterRecruits DestructionScrimRecruit[] @relation("ScrimRequesterTeam")
+  scrimOpponentRecruits  DestructionScrimRecruit[] @relation("ScrimOpponentTeam")
 
   @@unique([tournamentId, name])
   @@index([tournamentId, points, wins, losses])
@@ -1024,6 +1027,72 @@ enum RecruitPartyStatus {
   FINISHED
   CANCELED
   RESET
+}
+
+enum DestructionScrimRecruitStatus {
+  RECRUITING
+  MATCHED
+  CONFIRMED
+  COMPLETED
+  CANCELED
+}
+
+model DestructionScrimRecruit {
+  id          Int    @id @default(autoincrement())
+  scrimNo     Int
+  recruitDate String
+
+  tournamentId Int
+  requesterTeamId Int?
+  opponentTeamId  Int?
+
+  requesterTeamName String?
+  opponentTeamName  String?
+
+  title       String
+  scheduledAt DateTime?
+  startTimeText String?
+  gameCount   Int?
+  memo        String? @db.Text
+
+  status DestructionScrimRecruitStatus @default(RECRUITING)
+
+  roomName String?
+  sender   String?
+  sourceMessage String? @db.Text
+  sourceMessageHash String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tournament DestructionTournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  requesterTeam DestructionTeam? @relation("ScrimRequesterTeam", fields: [requesterTeamId], references: [id], onDelete: SetNull)
+  opponentTeam  DestructionTeam? @relation("ScrimOpponentTeam", fields: [opponentTeamId], references: [id], onDelete: SetNull)
+
+  @@unique([recruitDate, scrimNo])
+  @@index([tournamentId, status])
+  @@index([status, updatedAt])
+  @@index([scheduledAt])
+  @@index([sourceMessageHash])
+}
+
+model DestructionScrimRecruitLog {
+  id          Int      @id @default(autoincrement())
+  scrimNo     Int
+  recruitDate String
+  tournamentId Int?
+
+  action      String
+  title       String
+  summary     String? @db.Text
+  roomName    String?
+  sender      String?
+
+  createdAt   DateTime @default(now())
+
+  @@index([recruitDate, scrimNo])
+  @@index([tournamentId])
+  @@index([action, createdAt])
 }
 
 model RecruitParty {

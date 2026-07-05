@@ -10,6 +10,7 @@ import {
   type ParsedRecruitMessage,
   type ParsedRecruitParticipant,
 } from "@/lib/kakao/recruit-message-parser";
+import { classifyKakaoRecruitMessage, buildWrongRecruitApiReply } from "@/lib/kakao/recruit-message-kind";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -875,6 +876,17 @@ export async function POST(req: NextRequest) {
           ? body.room
           : null;
     const sender = typeof body.sender === "string" ? body.sender : null;
+
+    const classification = classifyKakaoRecruitMessage(message);
+    if (classification.kind !== "SEASON_RECRUIT" && !/^(?:\/?오늘내전초기화|\/?내전초기화)(?:\s*#?\s*\d{1,3})?\s*$/.test(message.trim())) {
+      return kakaoJsonReply(
+        {
+          formatVersion: FORMAT_VERSION,
+          reply: buildWrongRecruitApiReply({ expected: "내전구인", actual: classification.kind }),
+        },
+        400,
+      );
+    }
 
     if (/^(?:\/?오늘내전초기화|\/?내전초기화)(?:\s*#?\s*\d{1,3})?\s*$/.test(message.trim())) {
       const requestedRecruitNo = extractRequestedRecruitNo(message);
