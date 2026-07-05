@@ -1,4 +1,4 @@
-﻿import { logServerError } from "@/lib/server/safe-log";
+import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -65,7 +65,7 @@ export async function PATCH(req: NextRequest) {
 
     if (!user.passwordHash) {
       return NextResponse.json(
-        { message: "Discord로 가입한 계정입니다. 관리자에게 비밀번호 초기화를 요청해주세요." },
+        { message: "비밀번호가 설정되지 않은 계정입니다. 관리자에게 비밀번호 초기화를 요청해주세요." },
         { status: 400 },
       );
     }

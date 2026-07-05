@@ -1,15 +1,6 @@
-export type KakaoOperationFormType = "friends" | "suggestions" | "meetups" | "leaves";
+export type KakaoOperationFormType = "suggestions" | "meetups" | "leaves";
 
 export type ParsedKakaoOperationForm =
-  | {
-      type: "friends";
-      friendName: string;
-      friendNickname: string;
-      usageType: string;
-      gameName: string | null;
-      discordNicknameChange: string | null;
-      rawText: string;
-    }
   | {
       type: "suggestions";
       requesterInfo: string;
@@ -35,7 +26,6 @@ export type ParsedKakaoOperationForm =
     };
 
 export const kakaoOperationFormLabels: Record<KakaoOperationFormType, string> = {
-  friends: "디스코드 초대",
   suggestions: "건의",
   meetups: "오프라인 모임",
   leaves: "외출 신청",
@@ -172,7 +162,6 @@ function cleanGuideLines(value: string) {
       if (/^\*\s*예시/i.test(line)) return false;
       if (/^\*\s*선택\s*:?/i.test(line)) return false;
       if (/^\*\s*특별한\s*사유\s*없이는/i.test(line)) return false;
-      if (/^\(?\s*소통방\s*,\s*구인방\s*,\s*디코\s*\)?$/.test(line)) return false;
       if (/^\(?\s*게임명\s*적기\s*\)?$/.test(line)) return false;
       if (/^\(?\s*장기\s*,\s*단기\s*,\s*특정\s*게임.*\)?$/.test(line)) return false;
       return true;
@@ -189,10 +178,9 @@ function cleanRequiredField(value: string) {
 }
 
 
-const LEAVE_SCOPE_OPTIONS = ["소통방", "구인방", "디코", "디스코드"] as const;
+const LEAVE_SCOPE_OPTIONS = ["소통방", "구인방"] as const;
 
 function normalizeLeaveScopeToken(value: string) {
-  if (value === "디스코드") return "디코";
   return value;
 }
 
@@ -210,7 +198,7 @@ function uniqueJoin(values: string[]) {
 
 function isAllScopeGuide(value: string) {
   const compact = canonical(value);
-  return compact === "소통방구인방디코" || compact === "소통방구인방디스코드";
+  return compact === "소통방구인방";
 }
 
 function extractLeaveScopeCandidates(line: string) {
@@ -218,7 +206,6 @@ function extractLeaveScopeCandidates(line: string) {
   const found: string[] = [];
   if (/소통방/.test(compact)) found.push("소통방");
   if (/구인방/.test(compact)) found.push("구인방");
-  if (/디스코드|디코/.test(compact)) found.push("디코");
   return found;
 }
 
@@ -246,18 +233,16 @@ export function cleanLeaveScopeField(value: string) {
       .trim();
 
     // 운영 기준: 제출 본문에서 외출범위 줄에 괄호 선택지만 남아 있어도
-    // 실제 선택값으로 인정합니다. 예) "4. 외출범위 (소통방,구인방,디코)" → 전체 범위
-    const leadingGuide = line.match(/^\(?\s*소통방\s*,?\s*구인방\s*,?\s*(?:디코|디스코드)\s*\)?\s*(.*)$/);
+    const leadingGuide = line.match(/^\(?\s*소통방\s*,?\s*구인방\s*\)?\s*(.*)$/);
     if (leadingGuide) {
       const rest = (leadingGuide[1] || "").trim();
       if (!rest) {
-        selected.push("소통방", "구인방", "디코");
+        selected.push("소통방", "구인방");
         continue;
       }
       line = rest;
     }
 
-    // 사용자가 "(소통방, 디코)", "(구인방,디코)", "소통방디코"처럼 적은 경우도 선택값으로 인정합니다.
     const parenOnly = line.match(/^\(?\s*([^()（）]+)\s*\)?$/)?.[1]?.trim() || "";
     if (parenOnly) {
       selected.push(...extractLeaveScopeCandidates(parenOnly));
@@ -307,25 +292,6 @@ export function parseKakaoOperationForm(input: unknown): ParsedKakaoOperationFor
   const text = normalizeKakaoOperationText(input);
 
   if (!text) return null;
-
-  if (hasAll(text, ["지인 이름", "지인 닉네임", "이용기간", "디스코드 닉네임 변경"])) {
-    const friendName = cleanRequiredField(readField(text, "지인 이름", ["지인 닉네임", "이용기간", "디스코드 닉네임 변경"]));
-    const friendNickname = cleanRequiredField(readField(text, "지인 닉네임", ["이용기간", "디스코드 닉네임 변경"]));
-    const usage = parseUsage(readField(text, "이용기간", ["디스코드 닉네임 변경"]));
-    const discordNicknameChange = cleanGuideLines(readField(text, "디스코드 닉네임 변경", [])) || null;
-
-    if (!friendName || !friendNickname || !usage.usageType || usage.usageType === "미입력") return null;
-
-    return {
-      type: "friends",
-      friendName,
-      friendNickname,
-      usageType: usage.usageType,
-      gameName: usage.gameName,
-      discordNicknameChange,
-      rawText: text,
-    };
-  }
 
   if (hasAll(text, ["본인 이름 및 닉네임", "건의 사유", "건의 내용"])) {
     const requesterInfo = cleanRequiredField(readField(text, "본인 이름 및 닉네임", ["건의 사유", "건의 내용"]));

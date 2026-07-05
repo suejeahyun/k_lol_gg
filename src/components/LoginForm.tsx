@@ -1,30 +1,13 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 
-function getDiscordLoginMessage(code: string | null) {
-  switch (code) {
-    case "missing_code":
-      return "Discord 인증 코드가 전달되지 않았습니다. OAuth Redirect URI 설정을 확인하세요.";
-    case "cancelled":
-      return "Discord 로그인이 취소되었습니다.";
-    case "failed":
-      return "Discord 로그인 처리 중 오류가 발생했습니다. 서버 환경변수와 Redirect URI를 확인하세요.";
-    default:
-      return null;
-  }
-}
 
 export default function LoginForm() {
-  const [discordMessage, setDiscordMessage] = useState<string | null>(null);
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    setDiscordMessage(getDiscordLoginMessage(params.get("discord")));
-  }, []);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -68,15 +51,6 @@ export default function LoginForm() {
       <form className="auth-card" onSubmit={handleSubmit}>
         <h1 className="auth-title">로그인</h1>
 
-        {discordMessage ? (
-          <div className="auth-alert auth-alert--error" role="status">
-            {discordMessage}
-          </div>
-        ) : null}
-
-        <a className="auth-button" href="/api/auth/discord/start?next=/" style={{ textAlign: "center", textDecoration: "none", marginBottom: 12 }}>
-          Discord로 로그인 / 회원가입
-        </a>
 
         <label className="auth-field">
           <span>아이디</span>

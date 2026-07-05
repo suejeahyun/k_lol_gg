@@ -14,7 +14,6 @@ const adminMobileItems: AdminMobileNavItem[] = [
   { href: "/admin", label: "홈", code: "ADM", match: ["/admin"] },
   { href: "/admin/recruits", label: "구인", code: "REC", match: ["/admin/recruits"] },
   { href: "/admin/matches", label: "내전", code: "MAT", match: ["/admin/matches"] },
-  { href: "/admin/discord", label: "디코", code: "DC", match: ["/admin/discord", "/admin/discord-monitor"] },
   { href: "/admin/players", label: "플레이어", code: "PLY", match: ["/admin/players"] },
 ];
 

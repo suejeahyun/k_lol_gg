@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -39,18 +39,6 @@ const menuGroups: AdminSidebarGroup[] = [
     ],
   },
   {
-    title: "디스코드",
-    items: [
-      { href: "/admin/discord", label: "디스코드 요약", code: "DC", activePrefixes: ["/admin/discord"] },
-      { href: "/admin/discord/bot", label: "봇 상태", code: "BOT", activePrefixes: ["/admin/discord/bot", "/admin/discord/diagnostics"] },
-      { href: "/admin/discord/voice", label: "음성방 모니터", code: "VOC", activePrefixes: ["/admin/discord/voice"] },
-      { href: "/admin/discord/recruits", label: "구인 검증", code: "DCR", activePrefixes: ["/admin/discord/recruits"] },
-      { href: "/admin/discord/matches", label: "내전 출석", code: "ATM", activePrefixes: ["/admin/discord/matches"] },
-      { href: "/admin/logs/discord", label: "디스코드 로그", code: "STA", activePrefixes: ["/admin/logs/discord"] },
-      { href: "/admin/discord/settings", label: "설정", code: "SET", activePrefixes: ["/admin/discord/settings"] },
-    ],
-  },
-  {
     title: "데이터",
     items: [
       { href: "/admin/players", label: "플레이어 관리", code: "PLY", activePrefixes: ["/admin/players"] },
@@ -78,7 +66,7 @@ const menuGroups: AdminSidebarGroup[] = [
 ];
 
 function isActivePath(pathname: string, item: AdminSidebarItem) {
-  if (["/admin", "/admin/kakao", "/admin/kakao/recruits", "/admin/discord"].includes(item.href)) return pathname === item.href;
+  if (["/admin", "/admin/kakao", "/admin/kakao/recruits"].includes(item.href)) return pathname === item.href;
 
   if (item.activePrefixes?.length) {
     return item.activePrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
@@ -123,7 +111,7 @@ export default function AdminSidebar() {
   return (
     <aside className="app-sidebar app-sidebar--admin" aria-label="관리자 메뉴">
       <div className="app-sidebar__title">관리자</div>
-      <div className="app-sidebar__subtitle">운영 · 카카오톡 · 디스코드</div>
+      <div className="app-sidebar__subtitle">운영 · 카카오톡</div>
 
       <nav className="app-sidebar__nav">
         {menuGroups.map((group) => (

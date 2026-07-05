@@ -32,14 +32,6 @@ export default async function AppAdminRecruitsPage() {
         roomName: true,
         hostName: true,
         members: { select: { id: true } },
-        discordMonitor: {
-          select: {
-            status: true,
-            lastPresentExpectedCount: true,
-            lastExpectedCount: true,
-            lastScannedAt: true,
-          },
-        },
       },
     })
     .catch(() => []);
@@ -73,10 +65,6 @@ export default async function AppAdminRecruitsPage() {
                   <div className="klol-app-meta">
                     <span>시간</span>
                     <strong>{party.startTimeText || "미정"}</strong>
-                  </div>
-                  <div className="klol-app-meta">
-                    <span>디코</span>
-                    <strong>{party.discordMonitor?.lastPresentExpectedCount ?? 0}/{party.discordMonitor?.lastExpectedCount ?? 0}</strong>
                   </div>
                 </div>
               </article>

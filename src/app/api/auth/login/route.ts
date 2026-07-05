@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
 
     if (!user.passwordHash) {
       return NextResponse.json(
-        { message: "Discord로 가입한 계정입니다. Discord 로그인으로 접속해주세요." },
+        { message: "비밀번호가 설정되지 않은 계정입니다. 관리자에게 비밀번호 초기화를 요청해주세요." },
         { status: 401 }
       );
     }

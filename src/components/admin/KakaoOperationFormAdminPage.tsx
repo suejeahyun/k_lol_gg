@@ -52,12 +52,6 @@ const pageConfigs: Record<KakaoOperationFormType, PageConfig> = {
     subSummaryLabel: "건의 사유",
     detailLabel: "건의 내용",
   },
-  friends: {
-    title: "디스코드 초대",
-    summaryLabel: "지인 이름",
-    subSummaryLabel: "지인 닉네임",
-    detailLabel: "이용 정보",
-  },
 };
 
 function pad2(value: number) {
@@ -90,21 +84,6 @@ function formatDate(value: Date) {
 
 async function getRows(type: KakaoOperationFormType): Promise<Row[]> {
   const visibleWhere = { status: { not: "CANCELLED" } };
-
-  if (type === "friends") {
-    const items = await prisma.kakaoFriendApplication.findMany({ where: visibleWhere, orderBy: { createdAt: "desc" }, take: 200 });
-    return items.map((item) => ({
-      id: item.id,
-      status: item.status,
-      rawText: item.rawText,
-      createdAt: item.createdAt,
-      summary: item.friendName,
-      subSummary: item.friendNickname,
-      detail: [item.usageType, item.gameName, item.discordNicknameChange ? `디스코드 닉네임 변경: ${item.discordNicknameChange}` : null]
-        .filter(Boolean)
-        .join(" · "),
-    }));
-  }
 
   if (type === "suggestions") {
     const items = await prisma.kakaoSuggestionRequest.findMany({ where: visibleWhere, orderBy: { createdAt: "desc" }, take: 200 });

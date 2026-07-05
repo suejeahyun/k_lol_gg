@@ -25,18 +25,6 @@ type AdminUser = {
     currentTier: string | null;
   } | null;
   linkStatus: "PLAYER_LINKED" | "NO_PLAYER";
-  discord?: {
-    id: string | null;
-    username: string | null;
-    globalName: string | null;
-    serverNickname: string | null;
-    parsedBirthYear: string | null;
-    parsedName: string | null;
-    parsedNickname: string | null;
-    parsedTier: string | null;
-    linkStatus: string | null;
-    linkedAt: string | null;
-  };
 };
 
 type CurrentAdmin = {
@@ -195,7 +183,6 @@ export default function AdminUserDetailPage() {
       ["최고 티어", formatTier(user.player?.peakTier)],
       ["현재 티어", formatTier(user.player?.currentTier)],
       ["가입일", formatDate(user.createdAt)],
-      ["Discord", user.discord?.id ? "연동됨" : "미연동"],
     ];
   }, [user]);
 

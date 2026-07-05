@@ -27,11 +27,6 @@ type RecordItem = {
   sourceRefId: string | null;
   sourceRefKey: string | null;
   sourceMeta: unknown | null;
-  discordUserId: string | null;
-  discordAdminNotifiedAt: string | null;
-  discordDmStatus: string | null;
-  discordDmSentAt: string | null;
-  discordDmError: string | null;
   isActive: boolean;
   resetAt: string | null;
   resetReason: string | null;
@@ -73,18 +68,6 @@ function sourceLabel(source: string) {
 }
 
 
-function dmStatusLabel(record: RecordItem) {
-  const status = String(record.discordDmStatus || "").toUpperCase();
-  if (!status && !record.discordUserId && !record.discordAdminNotifiedAt) return "-";
-  const dmMap: Record<string, string> = {
-    PENDING: "DM 대기",
-    SENT: "DM 성공",
-    FAILED: "DM 실패",
-    SKIPPED: "DM 불가",
-    DISABLED: "DM 꺼짐",
-  };
-  return dmMap[status] || status || "-";
-}
 
 function sourceRefBadge(record: RecordItem) {
   if (record.sourceRefType === "RECRUIT_LATE") return "구인 지각 자동";
@@ -266,9 +249,9 @@ export default function DisciplineManagerClient({ targets, initialRecords }: { t
         <div className="admin-section-head"><div><h2>주의/경고 기록</h2><p className="admin-muted discipline-help">활성 기록이 먼저 표시됩니다. 사이트 미등록 대상도 이름 기준으로 관리할 수 있습니다.</p></div><button className="admin-button admin-button--secondary" onClick={() => void reload()}>새로고침</button></div>
         <div className="admin-table-wrap discipline-table-wrap">
           <table className="admin-table discipline-table">
-            <thead><tr><th>상태</th><th>대상</th><th>종류</th><th>사유</th><th>알림</th><th>작성</th><th>초기화</th><th>관리</th></tr></thead>
+            <thead><tr><th>상태</th><th>대상</th><th>종류</th><th>사유</th><th>작성</th><th>초기화</th><th>관리</th></tr></thead>
             <tbody>
-              {records.length === 0 ? <tr><td colSpan={8}>기록이 없습니다.</td></tr> : records.map((record) => {
+              {records.length === 0 ? <tr><td colSpan={7}>기록이 없습니다.</td></tr> : records.map((record) => {
                 const target = recordTargetLabel(record);
                 const isDirect = !record.userAccountId && !record.playerId;
                 return (
@@ -277,7 +260,6 @@ export default function DisciplineManagerClient({ targets, initialRecords }: { t
                     <td><div className="discipline-target-main"><strong title={target.name}>{target.name}</strong>{isDirect ? <span className="discipline-direct-badge">미등록</span> : null}</div><span className="admin-muted">{target.sub}</span></td>
                     <td><span className={`discipline-type ${record.type.toLowerCase()}`}>{typeLabel(record.type)}</span><br /><span className="admin-muted">{sourceLabel(record.source)}</span></td>
                     <td className="discipline-reason">{sourceRefBadge(record) ? <><span className="discipline-source-ref">{sourceRefBadge(record)}</span><br /></> : null}{record.reason}{record.note ? <><br /><span className="admin-muted">{record.note}</span></> : null}</td>
-                    <td><span className={`discipline-dm ${String(record.discordDmStatus || "none").toLowerCase()}`}>{dmStatusLabel(record)}</span><br /><span className="admin-muted">관리자 로그: {record.discordAdminNotifiedAt ? "완료" : record.sourceRefType === "RECRUIT_LATE" ? "대기/실패" : "-"}</span>{record.discordDmSentAt ? <><br /><span className="admin-muted">{formatDate(record.discordDmSentAt)}</span></> : null}{record.discordDmError ? <><br /><span className="admin-muted" title={record.discordDmError}>{record.discordDmError.slice(0, 42)}</span></> : null}</td>
                     <td>{formatDate(record.createdAt)}<br /><span className="admin-muted">{record.createdBy || "-"}</span></td>
                     <td>{record.resetAt ? formatDate(record.resetAt) : "-"}<br /><span className="admin-muted">{record.resetReason || ""}</span></td>
                     <td><div className="discipline-actions">{record.isActive ? <button className="admin-button admin-button--secondary" onClick={() => void resetRecord(record.id)}>기록 초기화</button> : null}{record.userAccountId ? <button className="admin-button admin-button--secondary" onClick={() => void resetUser(record.userAccountId)}>유저 누적 초기화</button> : null}{record.isActive && isDirect ? <button className="admin-button admin-button--secondary" onClick={() => void resetDirectTarget(record)}>미등록 누적 초기화</button> : null}</div></td>

@@ -34,7 +34,6 @@ export type KakaoOperationSettings = {
   leaveRequestEnabled: boolean;
   meetupRecordEnabled: boolean;
   suggestionRequestEnabled: boolean;
-  discordInviteRequestEnabled: boolean;
 
   helpCommandEnabled: boolean;
   unknownCommandResponseEnabled: boolean;
@@ -97,7 +96,6 @@ export const DEFAULT_KAKAO_OPERATION_SETTINGS: KakaoOperationSettings = {
   leaveRequestEnabled: true,
   meetupRecordEnabled: true,
   suggestionRequestEnabled: true,
-  discordInviteRequestEnabled: true,
 
   helpCommandEnabled: true,
   unknownCommandResponseEnabled: true,
@@ -206,7 +204,6 @@ export function normalizeKakaoOperationSettings(value: Partial<KakaoOperationSet
     leaveRequestEnabled: normalizeBoolean(merged.leaveRequestEnabled, DEFAULT_KAKAO_OPERATION_SETTINGS.leaveRequestEnabled),
     meetupRecordEnabled: normalizeBoolean(merged.meetupRecordEnabled, DEFAULT_KAKAO_OPERATION_SETTINGS.meetupRecordEnabled),
     suggestionRequestEnabled: normalizeBoolean(merged.suggestionRequestEnabled, DEFAULT_KAKAO_OPERATION_SETTINGS.suggestionRequestEnabled),
-    discordInviteRequestEnabled: normalizeBoolean(merged.discordInviteRequestEnabled, DEFAULT_KAKAO_OPERATION_SETTINGS.discordInviteRequestEnabled),
 
     helpCommandEnabled: normalizeBoolean(merged.helpCommandEnabled, DEFAULT_KAKAO_OPERATION_SETTINGS.helpCommandEnabled),
     unknownCommandResponseEnabled: normalizeBoolean(merged.unknownCommandResponseEnabled, DEFAULT_KAKAO_OPERATION_SETTINGS.unknownCommandResponseEnabled),

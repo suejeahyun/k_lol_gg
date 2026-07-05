@@ -2481,7 +2481,7 @@ export default function PlayersBalancePage() {
                         결과 활용
                       </div>
                       <div className="balance-result-utility__desc">
-                        저장하거나 디스코드에 복사할 수 있습니다.
+                        저장하거나 복사할 수 있습니다.
                       </div>
                     </div>
 

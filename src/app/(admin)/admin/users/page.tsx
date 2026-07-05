@@ -25,18 +25,6 @@ type AdminUser = {
     currentTier: string | null;
   } | null;
   linkStatus: "PLAYER_LINKED" | "NO_PLAYER";
-  discord?: {
-    id: string | null;
-    username: string | null;
-    globalName: string | null;
-    serverNickname: string | null;
-    parsedBirthYear: string | null;
-    parsedName: string | null;
-    parsedNickname: string | null;
-    parsedTier: string | null;
-    linkStatus: string | null;
-    linkedAt: string | null;
-  };
 };
 
 type CurrentAdmin = {
@@ -383,14 +371,5 @@ function getRoleLabel(role: UserRole) {
 }
 
 function getConnectionLabel(user: AdminUser) {
-  const playerLinked = user.linkStatus === "PLAYER_LINKED" && Boolean(user.player);
-  const discordLinked = Boolean(user.discord?.id);
-
-  if (playerLinked && discordLinked) return "모두 연동";
-
-  const missing: string[] = [];
-  if (!playerLinked) missing.push("Player 미연동");
-  if (!discordLinked) missing.push("Discord 미연동");
-
-  return missing.join(" / ") || "-";
+  return user.linkStatus === "PLAYER_LINKED" && Boolean(user.player) ? "Player 연동" : "Player 미연동";
 }

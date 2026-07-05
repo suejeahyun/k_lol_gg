@@ -4,22 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
 import { getCurrentUser } from "@/lib/auth/session";
-import DiscordUnlinkButton from "./DiscordUnlinkButton";
-import DiscordAvatar from "@/components/DiscordAvatar";
-import UserLogoutButton from "@/components/UserLogoutButton";
 
-function formatDate(value: Date | string | null | undefined) {
-  if (!value) return "-";
-  return new Intl.DateTimeFormat("ko-KR", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  }).format(new Date(value));
-}
 
 export default async function AccountPage() {
   const session = await getCurrentUser();
@@ -33,15 +18,6 @@ export default async function AccountPage() {
   });
   if (!user) redirect("/login?next=/account");
 
-  const discordName = user.discordServerNickname || user.discordGlobalName || user.discordUsername || "연동됨";
-  const parsedDiscordName = [
-    user.discordParsedBirthYear,
-    user.discordParsedName,
-    user.discordParsedNickname,
-    user.discordParsedTier,
-  ]
-    .filter(Boolean)
-    .join(" ");
 
   return (
     <main className="user-page account-page account-page--compact">
@@ -73,57 +49,6 @@ export default async function AccountPage() {
             <strong>{user.player?.peakTier || "-"}</strong>
           </div>
         </div>
-      </section>
-
-      <section className="admin-card account-card account-discord-card">
-        <div className="admin-section-head account-discord-card__head">
-          <div>
-            <h2>Discord 계정 연동</h2>
-            <p className="admin-muted">음성방 검증, 구인 자동화, 역할 동기화 기준으로 사용됩니다.</p>
-          </div>
-          {user.discordId ? (
-            <DiscordUnlinkButton />
-          ) : (
-            <a className="admin-button account-discord-card__button" href="/api/auth/discord/start?mode=link&next=/account">
-              Discord 연동하기
-            </a>
-          )}
-        </div>
-
-        {user.discordId ? (
-          <div className="discord-profile-card discord-profile-card--compact">
-            <DiscordAvatar
-              src={user.discordAvatar}
-              name={discordName}
-              placeholderClassName="discord-avatar-placeholder"
-            />
-            <div className="discord-profile-card__body">
-              <div className="discord-profile-card__title-row">
-                <h3>{discordName}</h3>
-                <span className="discord-status-pill">연동됨</span>
-              </div>
-              <dl className="discord-profile-meta">
-                <div>
-                  <dt>Discord ID</dt>
-                  <dd>{user.discordId}</dd>
-                </div>
-                <div>
-                  <dt>연동일</dt>
-                  <dd>{formatDate(user.discordLinkedAt)}</dd>
-                </div>
-                <div>
-                  <dt>파싱 정보</dt>
-                  <dd>{parsedDiscordName || "-"}</dd>
-                </div>
-              </dl>
-            </div>
-          </div>
-        ) : (
-          <div className="account-discord-empty">
-            <strong>Discord 계정이 아직 연동되지 않았습니다.</strong>
-            <p>연동하면 음성방 기록과 사이트 계정을 정확히 매칭할 수 있습니다.</p>
-          </div>
-        )}
       </section>
 
       <section className="account-action-grid" aria-label="내정보 수정 메뉴">

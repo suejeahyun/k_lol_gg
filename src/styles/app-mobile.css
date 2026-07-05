@@ -1013,37 +1013,10 @@
   }
 }
 /* v23 app account additions */
-.klol-app-discord-card--profile {
-  display: grid;
-  gap: 16px;
-}
 
-.klol-app-discord-profile {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  min-width: 0;
-}
 
-.klol-app-discord-profile img,
-.klol-app-discord-avatar {
-  width: 56px;
-  height: 56px;
-  border-radius: 999px;
-  flex: 0 0 auto;
-}
 
-.klol-app-discord-profile img {
-  object-fit: cover;
-}
 
-.klol-app-discord-avatar {
-  display: grid;
-  place-items: center;
-  color: #fff;
-  background: linear-gradient(135deg, #2563eb, #22d3ee);
-  font-weight: 900;
-}
 
 .klol-app-meta-grid--compact {
   grid-template-columns: 1fr;
@@ -1182,24 +1155,7 @@
   line-height: 1.55;
 }
 
-.klol-app-login-discord,
-.klol-app-login-form button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 48px;
-  border-radius: 16px;
-  font-size: 14px;
-  font-weight: 950;
-  text-decoration: none;
-  touch-action: manipulation;
-}
 
-.klol-app-login-discord {
-  border: 1px solid rgba(129, 140, 248, 0.38);
-  background: rgba(79, 70, 229, 0.24);
-  color: #e0e7ff;
-}
 
 .klol-app-login-form {
   display: grid;

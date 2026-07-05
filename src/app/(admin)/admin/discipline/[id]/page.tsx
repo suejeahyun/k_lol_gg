@@ -24,8 +24,6 @@ export default async function AdminDisciplineDetailPage({ params }: { params: Pr
     createdAt: record.createdAt.toISOString(),
     updatedAt: record.updatedAt.toISOString(),
     resetAt: record.resetAt ? record.resetAt.toISOString() : null,
-    discordAdminNotifiedAt: record.discordAdminNotifiedAt ? record.discordAdminNotifiedAt.toISOString() : null,
-    discordDmSentAt: record.discordDmSentAt ? record.discordDmSentAt.toISOString() : null,
   };
 
   return (

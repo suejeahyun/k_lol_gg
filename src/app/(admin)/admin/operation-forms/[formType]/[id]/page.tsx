@@ -17,34 +17,10 @@ type Props = {
 };
 
 function isFormType(value: string): value is KakaoOperationFormType {
-  return ["friends", "suggestions", "meetups", "leaves"].includes(value);
+  return ["suggestions", "meetups", "leaves"].includes(value);
 }
 
 async function getItem(type: KakaoOperationFormType, id: number) {
-  if (type === "friends") {
-    const item = await prisma.kakaoFriendApplication.findUnique({ where: { id } });
-    if (!item) return null;
-    return {
-      id: item.id,
-      type,
-      title: kakaoOperationFormLabels[type],
-      status: item.status,
-      memo: item.memo,
-      rawText: item.rawText,
-      roomName: item.roomName,
-      sender: item.sender,
-      createdAt: item.createdAt.toISOString(),
-      updatedAt: item.updatedAt.toISOString(),
-      fields: [
-        { label: "지인 이름", value: item.friendName },
-        { label: "지인 닉네임", value: item.friendNickname },
-        { label: "이용 기간/유형", value: item.usageType },
-        { label: "게임명", value: item.gameName || "-" },
-        { label: "디스코드 닉네임 변경", value: item.discordNicknameChange || "-" },
-      ],
-    };
-  }
-
   if (type === "suggestions") {
     const item = await prisma.kakaoSuggestionRequest.findUnique({ where: { id } });
     if (!item) return null;

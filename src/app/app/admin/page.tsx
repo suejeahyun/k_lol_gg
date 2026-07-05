@@ -23,7 +23,7 @@ export default async function AppAdminPage() {
   const admin = await requireAdminRequest();
   if (!admin) redirect("/app/login?next=/app/admin");
 
-  const [logs, activeRecruitCount, todayVoiceCount] = await Promise.all([
+  const [logs, activeRecruitCount] = await Promise.all([
     prisma.adminLog
       .findMany({
         orderBy: { createdAt: "desc" },
@@ -32,15 +32,6 @@ export default async function AppAdminPage() {
       })
       .catch(() => []),
     prisma.recruitParty.count({ where: { status: "IN_PROGRESS" } }).catch(() => 0),
-    prisma.discordVoiceEvent
-      .count({
-        where: {
-          occurredAt: {
-            gte: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }).split(",")[0]),
-          },
-        },
-      })
-      .catch(() => 0),
   ]);
 
   return (
@@ -55,10 +46,6 @@ export default async function AppAdminPage() {
           <div className="klol-app-meta">
             <span>진행 구인</span>
             <strong>{activeRecruitCount}개</strong>
-          </div>
-          <div className="klol-app-meta">
-            <span>음성 로그</span>
-            <strong>{todayVoiceCount}건</strong>
           </div>
           <div className="klol-app-meta">
             <span>관리자</span>

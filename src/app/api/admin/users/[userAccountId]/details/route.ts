@@ -55,18 +55,6 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ userAc
             }
           : null,
         linkStatus: user.player ? "PLAYER_LINKED" : "NO_PLAYER",
-        discord: {
-          id: user.discordId,
-          username: user.discordUsername,
-          globalName: user.discordGlobalName,
-          serverNickname: user.discordServerNickname,
-          parsedBirthYear: user.discordParsedBirthYear,
-          parsedName: user.discordParsedName,
-          parsedNickname: user.discordParsedNickname,
-          parsedTier: user.discordParsedTier,
-          linkStatus: user.discordLinkStatus,
-          linkedAt: user.discordLinkedAt?.toISOString() ?? null,
-        },
       },
     });
   } catch (error) {

@@ -43,9 +43,6 @@ function displayLabel(value: unknown) {
     ADMIN_LOGIN: "관리자 로그인",
     USER_LOGIN: "유저 로그인",
     USER_LOGOUT: "유저 로그아웃",
-    DISCORD_LOGIN_REFRESHED: "디스코드 로그인 갱신",
-    DISCORD_LINKED_BY_USER: "디스코드 계정 연동",
-    DISCORD_UNLINKED_BY_USER: "디스코드 연동 해제",
     KAKAO_PARTY_RECRUIT_SYNC: "카카오 구인 동기화",
     KAKAO_PARTY_RECRUIT_CREATE: "카카오 구인 생성",
     KAKAO_PARTY_RECRUIT_FINISH: "카카오 구인 마감",
@@ -86,7 +83,6 @@ function displayLabel(value: unknown) {
   if (exact[raw]) return exact[raw];
   if (exact[key]) return exact[key];
   if (key.includes("KAKAO")) return "카카오톡 작업";
-  if (key.includes("DISCORD")) return "디스코드 작업";
   if (key.includes("LOGIN")) return "로그인";
   if (key.includes("LOGOUT")) return "로그아웃";
   if (key.includes("CREATE") || key.includes("APPLY")) return "생성/신청";

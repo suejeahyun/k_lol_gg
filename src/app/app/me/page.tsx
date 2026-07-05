@@ -3,7 +3,6 @@ import { prisma } from "@/lib/prisma/client";
 import { getCurrentUser } from "@/lib/auth/session";
 import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
 import { AppSection } from "@/components/app-mobile/AppCards";
-import { AppDiscordLinkButton } from "@/components/app-mobile/AppDiscordLinkButton";
 
 export const dynamic = "force-dynamic";
 
@@ -14,11 +13,6 @@ function isAdminRole(role?: string | null) {
 type AppMeUser = NonNullable<Awaited<ReturnType<typeof prisma.userAccount.findUnique>>> & {
   player?: Awaited<ReturnType<typeof prisma.player.findUnique>> | null;
 };
-
-function formatDiscordName(user: AppMeUser | null) {
-  if (!user) return "-";
-  return user.discordServerNickname || user.discordGlobalName || user.discordUsername || "연동됨";
-}
 
 export default async function AppMePage() {
   let session: Awaited<ReturnType<typeof getCurrentUser>> | null = null;
@@ -41,9 +35,6 @@ export default async function AppMePage() {
   }
 
   const isAdmin = isAdminRole(user?.role ?? session?.role);
-  const discordLinked = Boolean(user?.discordId);
-  const discordName = formatDiscordName(user);
-
   return (
     <AppMobileShell subtitle="K-LOL.GG APP">
       <section className="klol-app-hero">
@@ -93,19 +84,6 @@ export default async function AppMePage() {
           <div className="klol-app-meta">
             <span>현재 티어</span>
             <strong>{player?.currentTier || "-"}</strong>
-          </div>
-        </div>
-      </AppSection>
-
-      <AppSection title="Discord">
-        <div className="klol-app-discord-card">
-          <div>
-            <span className="klol-app-discord-label">연동 상태</span>
-            <strong>{discordLinked ? "연동됨" : "미연동"}</strong>
-            <p>{discordLinked ? discordName : "Discord 계정을 연결하면 음성방/구인 확인에 사용할 수 있습니다."}</p>
-          </div>
-          <div className="klol-app-actions klol-app-actions--keep klol-app-actions--inline">
-            <AppDiscordLinkButton linked={discordLinked} disabled={!user} next="/app/account" />
           </div>
         </div>
       </AppSection>

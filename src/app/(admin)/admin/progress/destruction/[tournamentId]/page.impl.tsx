@@ -539,7 +539,7 @@ export default async function AdminDestructionTournamentDetailPage({
         step="AUCTION"
         currentStep={selectedStep}
         title="3. 경매 진행"
-        description="사이트에서 카드를 섞고 참가자를 추첨한 뒤, 디스코드 채팅 경매 결과를 관리자가 입력합니다."
+        description="사이트에서 카드를 섞고 참가자를 추첨한 뒤, 채팅 경매 결과를 관리자가 입력합니다."
       >
         <DestructionAuctionManager
           tournamentId={tournament.id}
