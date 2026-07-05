@@ -105,6 +105,12 @@ export function parseScrimScheduledAt(text: string, base = new Date()) {
   return { text: `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`, date };
 }
 
+
+export function isScrimTemplateLoadingMessage(message: string) {
+  const normalized = compact(message).replace(/^\//, "");
+  return /^(스크림구인|스크림모집|멸망전스크림구인|멸망전스크림모집)양식불러오는중/.test(normalized);
+}
+
 export function isScrimTemplateRequest(message: string) {
   const normalized = compact(message).replace(/^\//, "");
   return normalized === "스크림구인" || normalized === "스크림모집" || normalized === "멸망전스크림구인" || normalized === "멸망전스크림모집";

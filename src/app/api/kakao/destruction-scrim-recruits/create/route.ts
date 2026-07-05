@@ -10,6 +10,7 @@ import {
   getScrimStatusLabel,
   hasScrimLineupValue,
   isValidScrimTeamName,
+  isScrimTemplateLoadingMessage,
   parseScrimCreateCommand,
   type ScrimLineup,
 } from "@/lib/kakao/destruction-scrim-recruit";
@@ -269,6 +270,11 @@ export async function POST(req: NextRequest) {
     if (rejected) return rejected;
 
     const message = getBodyText(body);
+
+    if (isScrimTemplateLoadingMessage(message)) {
+      return scrimRecruitJson({ reply: "", ignored: true, reason: "scrim_template_loading_message" });
+    }
+
     const parsed = parseScrimCreateCommand(message);
 
     if (parsed?.isTemplateRequest) {
@@ -427,18 +433,7 @@ export async function POST(req: NextRequest) {
 
     return scrimRecruitJson({
       scrim,
-      reply: [
-        "[K-LOL.GG 스크림 등록 완료]",
-        "",
-        `번호: #${scrim.scrimNo}`,
-        `우리팀: ${scrim.requesterTeamName || "미정"}`,
-        `상대팀: ${scrim.opponentTeamName || "상대구함"}`,
-        `일시: ${scrim.startTimeText || "미정"}`,
-        `방식: ${scrim.seriesRuleText || (scrim.gameCount ? `${scrim.gameCount}판` : "미정")}`,
-        `상태: ${getScrimStatusLabel(scrim.status)}`,
-        "",
-        buildScrimFormFromData(scrim),
-      ].join("\n"),
+      reply: "[K-LOL.GG 스크림 등록 완료]",
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
