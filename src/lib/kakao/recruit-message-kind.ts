@@ -40,21 +40,26 @@ function compact(value: string) {
   return normalizeText(value).replace(/\s+/g, "");
 }
 
-export function isScrimRecruitMessage(message: string) {
+function isScrimFormMessage(message: string) {
   const text = normalizeText(message);
   const normalized = compact(text);
 
-  if (/^\/?스크림(?:구인|모집|현황|상세|참가|신청|확정|완료|마감|취소)(?:\s|$|#?\d)/.test(text)) {
-    return true;
-  }
+  if (/\[?K-?LOL\.GG멸망전스크림구인양식\]?/.test(normalized)) return true;
+  if (/스크림번호\s*[:：]/.test(text) && /(우리팀|아군팀|요청팀)/.test(text) && /상대팀/.test(text)) return true;
+  if (/멸망전\s*(번호|ID)\s*[:：]/.test(text) && /일시\s*[:：]/.test(text) && /(우리팀|아군팀|요청팀)/.test(text) && /상대팀/.test(text)) return true;
 
-  if (/^\/?멸망전스크림(?:구인|모집|현황|상세|참가|신청|확정|완료|마감|취소)?/.test(normalized)) {
-    return true;
-  }
+  return false;
+}
 
-  if (/\bSCRIM\b/i.test(text) && /(멸망전|팀|상대|연습|구인|모집)/.test(text)) {
-    return true;
-  }
+export function isScrimRecruitMessage(message: string) {
+  const text = normalizeText(message);
+  const normalized = compact(text).replace(/^\//, "");
+
+  if (isScrimFormMessage(text)) return true;
+  if (/^스크림(?:구인|모집|현황|목록|상세|참가|신청|확정|완료|마감|취소)(?:\s|$|#?\d)/.test(text.replace(/^\//, ""))) return true;
+  if (/^스크림(?:구인|모집|현황|목록|상세|참가|신청|확정|완료|마감|취소)/.test(normalized)) return true;
+  if (/^멸망전스크림(?:구인|모집|현황|목록|상세|참가|신청|확정|완료|마감|취소)?/.test(normalized)) return true;
+  if (/\bSCRIM\b/i.test(text) && /(멸망전|팀|상대|연습|구인|모집)/.test(text)) return true;
 
   return false;
 }
@@ -74,7 +79,7 @@ export function isSeasonRecruitCommandMessage(message: string) {
   const text = compact(message);
   if (isScrimRecruitMessage(message)) return false;
 
-  return /^\/?(?:내전구인구직|내전구인|내전현황|시즌내전현황|AI공지|오늘내전초기화|내전초기화)(?:#?\d{1,3})?$/.test(text);
+  return /^\/?.*(?:내전구인구직|내전구인|내전현황|시즌내전현황|AI공지|오늘내전초기화|내전초기화)(?:#?\d{1,3})?$/.test(text);
 }
 
 export function isPartyRecruitCommandMessage(message: string) {
@@ -85,9 +90,9 @@ export function isPartyRecruitCommandMessage(message: string) {
 
   return (
     /^\/?\d{1,2}\s*인\s*(?:협곡\s*)?(?:파티|구인)(?:\s+\d{1,2})?\s*$/.test(text) ||
-    /^\/?(?:칼바람구인|증바람구인|솔랭구인|자랭구인|일반구인|기타게임구인|롤체일반구인|롤체랭크구인|더블업구인|5인협곡파티)(?:\s+\d{1,2})?\s*$/.test(text) ||
-    /^\/?(?:현재구인구직현황|현재구인현황|구인구직현황|구인현황|현황|구인상세|상세)(?:#?\d{1,2})?$/.test(normalized) ||
-    /^\/?(?:구인마감|구인쫑|구인종료)#?\d{1,2}$/.test(normalized) ||
+    /^\/?.*(?:칼바람구인|증바람구인|솔랭구인|자랭구인|일반구인|기타게임구인|롤체일반구인|롤체랭크구인|더블업구인|5인협곡파티)(?:\s+\d{1,2})?$/.test(text) ||
+    /^\/?.*(?:현재구인구직현황|현재구인현황|구인구직현황|구인현황|현황|구인상세|상세)(?:#?\d{1,2})?$/.test(normalized) ||
+    /^\/?.*(?:구인마감|구인쫑|구인종료)#?\d{1,2}$/.test(normalized) ||
     /^\/?#?\d{1,2}(?:쫑|ㅉ)$/.test(normalized)
   );
 }

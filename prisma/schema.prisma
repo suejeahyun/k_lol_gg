@@ -1,4 +1,4 @@
-generator client {
+﻿generator client {
   provider = "prisma-client-js"
 }
 
@@ -1054,6 +1054,9 @@ model DestructionScrimRecruit {
   startTimeText String?
   gameCount   Int?
   memo        String? @db.Text
+  requesterLineupJson Json?
+  opponentLineupJson  Json?
+  seriesRuleText      String?
 
   status DestructionScrimRecruitStatus @default(RECRUITING)
 
@@ -1239,6 +1242,9 @@ model KakaoFriendApplication {
   sender                String?
   status                String   @default("PENDING")
   memo                  String?  @db.Text
+  requesterLineupJson Json?
+  opponentLineupJson  Json?
+  seriesRuleText      String?
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
@@ -1257,6 +1263,9 @@ model KakaoSuggestionRequest {
   sender        String?
   status        String   @default("PENDING")
   memo          String?  @db.Text
+  requesterLineupJson Json?
+  opponentLineupJson  Json?
+  seriesRuleText      String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -1275,6 +1284,9 @@ model KakaoMeetupRecord {
   sender       String?
   status       String   @default("PENDING")
   memo         String?  @db.Text
+  requesterLineupJson Json?
+  opponentLineupJson  Json?
+  seriesRuleText      String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -1293,6 +1305,9 @@ model KakaoLeaveRequest {
   sender        String?
   status        String   @default("PENDING")
   memo          String?  @db.Text
+  requesterLineupJson Json?
+  opponentLineupJson  Json?
+  seriesRuleText      String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -1572,3 +1587,4 @@ model KakaoOperationSetting {
 
   @@index([updatedAt])
 }
+
