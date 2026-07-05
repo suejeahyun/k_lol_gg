@@ -114,9 +114,17 @@ export function isScrimRecruitFormMessage(message: string) {
   const text = normalizeScrimMultiline(message);
   const normalized = compact(text);
 
+  if (/\[?K-?LOL\.GG스크림구인양식\]?/.test(normalized)) return true;
   if (/\[?K-?LOL\.GG멸망전스크림구인양식\]?/.test(normalized)) return true;
+
+  const hasBaseFields = /일시\s*[:：]/.test(text) && /방식\s*[:：]/.test(text);
+  const hasTeams = /(우리팀|아군팀|요청팀)\s*[:：]/.test(text) && /상대팀\s*[:：]/.test(text);
+  const hasLanes = /(^|\n)\s*(TOP|JUG|JGL|JG|MID|ADC|AD|SUP|탑|정글|미드|원딜|서폿|서포터)\s*[.:：]/i.test(text);
+  if (hasBaseFields && hasTeams && hasLanes) return true;
+
+  // Backward compatibility for the previous template while older bot code may still be installed.
   if (/스크림번호\s*[:：]/.test(text) && /(우리팀|아군팀|요청팀)/.test(text) && /상대팀/.test(text)) return true;
-  if (/멸망전\s*(번호|ID)\s*[:：]/.test(text) && /일시\s*[:：]/.test(text) && /(우리팀|아군팀|요청팀)/.test(text) && /상대팀/.test(text)) return true;
+  if (/멸망전\s*(번호|ID)\s*[:：]/.test(text) && hasBaseFields && hasTeams) return true;
 
   return false;
 }
@@ -257,19 +265,17 @@ function parseFormCreateCommand(message: string): ScrimCreateCommand | null {
   const opponentTeamName = cleanValue(readField(text, ["상대팀명", "상대 팀명", "상대팀"]));
   const timeRaw = readField(text, ["일시", "시간", "시작시간", "스크림일시"]);
   const ruleRaw = readField(text, ["방식", "판수", "게임수", "진행방식"]);
-  const memo = readField(text, ["메모", "비고", "요청사항"]);
-
   const schedule = parseScrimScheduledAt(timeRaw || text);
   const gameRule = parseGameRule(ruleRaw || text);
 
   const requesterBlock = extractSection(
     text,
-    [/^\s*(우리팀|아군팀|요청팀)\s*(라인업|명단)?\s*[:：]?\s*$/i],
-    [/^\s*상대팀\s*(라인업|명단)?\s*[:：]?\s*$/i, /^\s*(메모|비고|요청사항)\s*[:：]/i],
+    [/^\s*(우리팀|아군팀|요청팀)(?:명|\s*라인업|\s*명단)?\s*[:：]/i, /^\s*(우리팀|아군팀|요청팀)\s*(라인업|명단)\s*$/i],
+    [/^\s*상대팀(?:명|\s*라인업|\s*명단)?\s*[:：]/i, /^\s*상대팀\s*(라인업|명단)\s*$/i, /^\s*(메모|비고|요청사항)\s*[:：]/i],
   );
   const opponentBlock = extractSection(
     text,
-    [/^\s*상대팀\s*(라인업|명단)?\s*[:：]?\s*$/i],
+    [/^\s*상대팀(?:명|\s*라인업|\s*명단)?\s*[:：]/i, /^\s*상대팀\s*(라인업|명단)\s*$/i],
     [/^\s*(메모|비고|요청사항)\s*[:：]/i],
   );
 
@@ -298,7 +304,7 @@ function parseFormCreateCommand(message: string): ScrimCreateCommand | null {
     scheduledAt: schedule.date,
     gameCount: gameRule.gameCount,
     seriesRuleText: gameRule.seriesRuleText || ruleRaw || null,
-    memo: memo || text,
+    memo: null,
   };
 }
 
@@ -414,36 +420,27 @@ function lineupToText(lineup: ScrimLineup | null | undefined) {
 
 export function buildScrimRecruitTemplate() {
   return [
-    "[K-LOL.GG 멸망전 스크림 구인 양식]",
+    "[K-LOL.GG 스크림 구인 양식]",
     "",
-    "스크림번호: 신규",
-    "멸망전번호: ",
     "일시: ",
     "방식: 3판2선",
     "",
-    "우리팀명: ",
-    "우리팀 라인업:",
+    "우리팀: ",
     "TOP: ",
     "JUG: ",
     "MID: ",
     "ADC: ",
     "SUP: ",
     "",
-    "상대팀명: ",
-    "상대팀 라인업:",
+    "상대팀: ",
     "TOP: ",
     "JUG: ",
     "MID: ",
     "ADC: ",
     "SUP: ",
-    "",
-    "메모: ",
-    "",
-    "사용법:",
-    "1) 처음 등록은 스크림번호를 신규로 둡니다.",
-    "2) 상대가 신청할 때는 스크림번호를 #번호로 바꾸고 상대팀 라인업을 입력합니다.",
   ].join("\n");
 }
+
 
 export function buildScrimFormFromData(scrim: {
   scrimNo: number;
@@ -461,24 +458,17 @@ export function buildScrimFormFromData(scrim: {
   const requesterLineup = (scrim.requesterLineupJson || EMPTY_LINEUP) as ScrimLineup;
   const opponentLineup = (scrim.opponentLineupJson || EMPTY_LINEUP) as ScrimLineup;
   return [
-    "[K-LOL.GG 멸망전 스크림 구인 양식]",
-    "",
-    `스크림번호: #${scrim.scrimNo}`,
-    `멸망전번호: ${scrim.tournamentId}`,
     `일시: ${formatScrimTime(scrim.scheduledAt, scrim.startTimeText)}`,
     `방식: ${scrim.seriesRuleText || (scrim.gameCount ? `${scrim.gameCount}판` : "")}`,
     "",
-    `우리팀명: ${scrim.requesterTeamName || ""}`,
-    "우리팀 라인업:",
-    lineupToText(requesterLineup),
+    `우리팀: ${scrim.requesterTeamName || ""}`,
+    lineupToText(requesterLineup || EMPTY_LINEUP),
     "",
-    `상대팀명: ${scrim.opponentTeamName || ""}`,
-    "상대팀 라인업:",
+    `상대팀: ${scrim.opponentTeamName || ""}`,
     lineupToText(opponentLineup || EMPTY_LINEUP),
-    "",
-    `메모: ${scrim.memo || ""}`,
   ].join("\n");
 }
+
 
 export function formatScrimLine(scrim: {
   scrimNo: number;
@@ -499,22 +489,15 @@ export function formatScrimLine(scrim: {
 export function buildScrimStatusReply(scrims: Array<Parameters<typeof formatScrimLine>[0]>) {
   if (scrims.length === 0) {
     return [
-      "[K-LOL.GG 멸망전 스크림 현황]",
+      "[K-LOL.GG 스크림 현황]",
       "",
       "현재 모집중/확정된 스크림이 없습니다.",
-      "",
-      "양식 호출: /스크림구인",
     ].join("\n");
   }
 
   return [
-    "[K-LOL.GG 멸망전 스크림 현황]",
+    "[K-LOL.GG 스크림 현황]",
     "",
     ...scrims.map(formatScrimLine),
-    "",
-    "양식 호출: /스크림구인",
-    "상대 신청: 스크림번호를 #번호로 바꾸고 상대팀 라인업 입력 후 전송",
-    "확정: /스크림확정 번호",
-    "완료: /스크림완료 번호",
   ].join("\n");
 }

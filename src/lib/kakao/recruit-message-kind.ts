@@ -44,9 +44,16 @@ function isScrimFormMessage(message: string) {
   const text = normalizeText(message);
   const normalized = compact(text);
 
+  if (/\[?K-?LOL\.GG스크림구인양식\]?/.test(normalized)) return true;
   if (/\[?K-?LOL\.GG멸망전스크림구인양식\]?/.test(normalized)) return true;
+
+  const hasBaseFields = /일시\s*[:：]/.test(text) && /방식\s*[:：]/.test(text);
+  const hasTeams = /(우리팀|아군팀|요청팀)\s*[:：]/.test(text) && /상대팀\s*[:：]/.test(text);
+  const hasLanes = /(^|\n)\s*(TOP|JUG|JGL|JG|MID|ADC|AD|SUP|탑|정글|미드|원딜|서폿|서포터)\s*[.:：]/i.test(text);
+  if (hasBaseFields && hasTeams && hasLanes) return true;
+
   if (/스크림번호\s*[:：]/.test(text) && /(우리팀|아군팀|요청팀)/.test(text) && /상대팀/.test(text)) return true;
-  if (/멸망전\s*(번호|ID)\s*[:：]/.test(text) && /일시\s*[:：]/.test(text) && /(우리팀|아군팀|요청팀)/.test(text) && /상대팀/.test(text)) return true;
+  if (/멸망전\s*(번호|ID)\s*[:：]/.test(text) && hasBaseFields && hasTeams) return true;
 
   return false;
 }
