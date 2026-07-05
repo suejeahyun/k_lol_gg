@@ -1,9 +1,9 @@
-﻿export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 import { NextRequest } from "next/server";
 import { writeAdminLog } from "@/lib/admin-log";
-import { parseScrimNumberCommand } from "@/lib/kakao/destruction-scrim-recruit";
+import { getScrimStatusLabel, parseScrimNumberCommand } from "@/lib/kakao/destruction-scrim-recruit";
 import { classifyKakaoRecruitMessage, buildWrongRecruitApiReply } from "@/lib/kakao/recruit-message-kind";
 import { DestructionScrimRecruitStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
@@ -19,8 +19,8 @@ import {
 
 const ACTION = "FINISH";
 const NEXT_STATUS: DestructionScrimRecruitStatus = "COMPLETED";
-const TITLE = "스크림완료";
-const HELP = "[K-LOL.GG 스크림완료 실패]\n예: /스크림완료 3";
+const TITLE = "스크림종료";
+const HELP = "[K-LOL.GG 스크림종료 실패]\n예: /스크림1ㅉ, /스크림쫑1, /스크림종료 1";
 
 export async function POST(req: NextRequest) {
   try {
@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
         `번호: #${updated.scrimNo}`,
         `요청팀: ${updated.requesterTeamName || "미정"}`,
         `상대팀: ${updated.opponentTeamName || "상대구함"}`,
-        `상태: ${updated.status}`,
+        `상태: ${getScrimStatusLabel(updated.status)}`,
       ].join("\n"),
     });
   } catch (error) {

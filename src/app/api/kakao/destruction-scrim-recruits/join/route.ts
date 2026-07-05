@@ -1,9 +1,9 @@
-﻿export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 import { NextRequest } from "next/server";
 import { writeAdminLog } from "@/lib/admin-log";
-import { parseScrimNumberCommand } from "@/lib/kakao/destruction-scrim-recruit";
+import { getScrimStatusLabel, parseScrimNumberCommand } from "@/lib/kakao/destruction-scrim-recruit";
 import { classifyKakaoRecruitMessage, buildWrongRecruitApiReply } from "@/lib/kakao/recruit-message-kind";
 import { DestructionScrimRecruitStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
         `번호: #${updated.scrimNo}`,
         `요청팀: ${updated.requesterTeamName || "미정"}`,
         `상대팀: ${updated.opponentTeamName || "상대구함"}`,
-        `상태: ${updated.status}`,
+        `상태: ${getScrimStatusLabel(updated.status)}`,
       ].join("\n"),
     });
   } catch (error) {

@@ -6,7 +6,10 @@ import { writeAdminLog } from "@/lib/admin-log";
 import {
   buildScrimFormFromData,
   buildScrimRecruitTemplate,
+  countScrimLineupValues,
+  getScrimStatusLabel,
   hasScrimLineupValue,
+  isValidScrimTeamName,
   parseScrimCreateCommand,
   type ScrimLineup,
 } from "@/lib/kakao/destruction-scrim-recruit";
@@ -112,6 +115,28 @@ function mergeLineup(existing: ScrimLineup, incoming: ScrimLineup) {
 
 function hasLineupOrName(params: { teamName?: string | null; lineup: ScrimLineup }) {
   return Boolean(params.teamName || hasScrimLineupValue(params.lineup));
+}
+
+function hasRequesterCreateData(parsed: NonNullable<ReturnType<typeof parseScrimCreateCommand>>) {
+  return Boolean(isValidScrimTeamName(parsed.requesterTeamName) && countScrimLineupValues(parsed.requesterLineup) > 0);
+}
+
+function validateNewScrimForm(parsed: NonNullable<ReturnType<typeof parseScrimCreateCommand>>) {
+  const errors: string[] = [];
+
+  if (!isValidScrimTeamName(parsed.requesterTeamName)) errors.push("우리팀 이름을 입력해주세요.");
+  if (!parsed.startTimeText) errors.push("일시를 입력해주세요.");
+  if (!parsed.seriesRuleText && !parsed.gameCount) errors.push("방식을 입력해주세요.");
+  if (countScrimLineupValues(parsed.requesterLineup) === 0) errors.push("우리팀 라인별 정보를 1명 이상 입력해주세요.");
+
+  return errors;
+}
+
+async function findSameDateScrimByNoAnyStatus(scrimNo: number, recruitDate = kstDateKey()) {
+  return prisma.destructionScrimRecruit.findFirst({
+    where: { scrimNo, recruitDate },
+    orderBy: [{ updatedAt: "desc" }],
+  });
 }
 
 async function findSameRequesterScrim(params: {
@@ -230,7 +255,7 @@ async function applyOpponentLineupToExisting(params: {
       "",
       `번호: #${updated.scrimNo}`,
       `반영 라인: ${merge.changed.length > 0 ? merge.changed.join(", ") : "변경 없음"}`,
-      `상태: ${updated.status}`,
+      `상태: ${getScrimStatusLabel(updated.status)}`,
       "",
       buildScrimFormFromData(updated),
     ].join("\n"),
@@ -247,7 +272,8 @@ export async function POST(req: NextRequest) {
     const parsed = parseScrimCreateCommand(message);
 
     if (parsed?.isTemplateRequest) {
-      return scrimRecruitJson({ reply: buildScrimRecruitTemplate(), templateOnly: true });
+      const scrimNo = parsed.scrimNo ?? await getNextScrimNo();
+      return scrimRecruitJson({ reply: buildScrimRecruitTemplate(scrimNo), templateOnly: true, scrimNo });
     }
 
     const classification = classifyKakaoRecruitMessage(message);
@@ -266,11 +292,44 @@ export async function POST(req: NextRequest) {
 
     if (parsed.scrimNo) {
       const scrim = await findActiveScrim(parsed.scrimNo);
-      if (!scrim) {
-        return scrimRecruitJson({ reply: `[K-LOL.GG 스크림구인 수정 실패]\n스크림 #${parsed.scrimNo}을 찾지 못했습니다.` }, 404);
+      if (scrim) {
+        const result = await applyOpponentLineupToExisting({ scrim, parsed, roomName, sender, message });
+        if (result) return result;
+      } else {
+        const inactiveScrim = await findSameDateScrimByNoAnyStatus(parsed.scrimNo);
+        if (inactiveScrim) {
+          return scrimRecruitJson({
+            reply: [
+              "[K-LOL.GG 스크림구인 수정 실패]",
+              `스크림 #${parsed.scrimNo}은 현재 ${getScrimStatusLabel(inactiveScrim.status)} 상태입니다.`,
+              "종료/취소된 스크림은 수정할 수 없습니다.",
+            ].join("\n"),
+          }, 409);
+        }
+
+        if (!hasRequesterCreateData(parsed)) {
+          return scrimRecruitJson({
+            reply: [
+              "[K-LOL.GG 스크림구인 수정 실패]",
+              `스크림 #${parsed.scrimNo}을 찾지 못했습니다.`,
+              "먼저 /스크림구인 양식의 우리팀 정보를 채워 등록해주세요.",
+            ].join("\n"),
+          }, 404);
+        }
       }
-      const result = await applyOpponentLineupToExisting({ scrim, parsed, roomName, sender, message });
-      if (result) return result;
+    }
+
+    const createValidationErrors = validateNewScrimForm(parsed);
+    if (createValidationErrors.length > 0) {
+      return scrimRecruitJson({
+        reply: [
+          "[K-LOL.GG 스크림구인 등록 실패]",
+          "",
+          ...createValidationErrors,
+          "",
+          "등록 순서: /스크림구인 → 번호가 포함된 양식 작성 → 상대팀이 같은 번호 양식에 입력",
+        ].join("\n"),
+      }, 400);
     }
 
     const tournament = await findTargetTournament(parsed.tournamentId);
@@ -314,7 +373,7 @@ export async function POST(req: NextRequest) {
 
     const requesterTeam = await findTeamByName(tournament.id, parsed.requesterTeamName);
     const opponentTeam = await findTeamByName(tournament.id, parsed.opponentTeamName);
-    const scrimNo = await getNextScrimNo();
+    const scrimNo = parsed.scrimNo ?? await getNextScrimNo();
     const title = `${requesterTeam?.name || parsed.requesterTeamName || "요청팀"} 스크림 구인`;
     const initialStatus = hasLineupOrName({ teamName: parsed.opponentTeamName, lineup: parsed.opponentLineup })
       ? "MATCHED"
@@ -376,7 +435,7 @@ export async function POST(req: NextRequest) {
         `상대팀: ${scrim.opponentTeamName || "상대구함"}`,
         `일시: ${scrim.startTimeText || "미정"}`,
         `방식: ${scrim.seriesRuleText || (scrim.gameCount ? `${scrim.gameCount}판` : "미정")}`,
-        `상태: ${scrim.status}`,
+        `상태: ${getScrimStatusLabel(scrim.status)}`,
         "",
         buildScrimFormFromData(scrim),
       ].join("\n"),

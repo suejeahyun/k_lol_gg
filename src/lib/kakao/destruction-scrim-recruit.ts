@@ -139,7 +139,9 @@ export function parseScrimAction(message: string): ScrimAction | null {
   if (/^(스크림상세|멸망전스크림상세)/.test(normalized)) return "DETAIL";
   if (/^(스크림참가|스크림신청|멸망전스크림참가|멸망전스크림신청)/.test(normalized)) return "JOIN";
   if (/^(스크림확정|멸망전스크림확정)/.test(normalized)) return "CONFIRM";
-  if (/^(스크림완료|스크림마감|멸망전스크림완료|멸망전스크림마감)/.test(normalized)) return "FINISH";
+  if (/^(스크림완료|스크림마감|스크림종료|스크림쫑|스크림ㅉ|멸망전스크림완료|멸망전스크림마감|멸망전스크림종료|멸망전스크림쫑|멸망전스크림ㅉ)/.test(normalized)) return "FINISH";
+  if (/^스크림\d{1,3}(쫑|ㅉ)$/.test(normalized)) return "FINISH";
+  if (/^스크림(쫑|ㅉ)\d{1,3}$/.test(normalized)) return "FINISH";
   if (/^(스크림취소|멸망전스크림취소)/.test(normalized)) return "CANCEL";
 
   return null;
@@ -192,8 +194,23 @@ function extractSection(text: string, startLabels: RegExp[], stopLabels: RegExp[
 function cleanValue(value: string | null | undefined) {
   const text = String(value || "").trim();
   if (!text) return null;
-  if (/^(미정|없음|상대구함|상대 구함|비워두기|공란|-)$/.test(text)) return null;
+  if (/^(미정|없음|상대구함|상대 구함|모집중|모집중!!|비워두기|공란|-)$/.test(text)) return null;
   return text;
+}
+
+function isBadScrimTeamName(value: string | null | undefined) {
+  const normalized = String(value || "").replace(/\s+/g, "").trim();
+  if (!normalized) return false;
+  return /^(양식|우리팀|아군팀|요청팀|상대팀|상대구함|모집중|미정|없음|-)$/.test(normalized);
+}
+
+export function isValidScrimTeamName(value: string | null | undefined) {
+  const text = cleanValue(value);
+  return Boolean(text && !isBadScrimTeamName(text));
+}
+
+export function countScrimLineupValues(lineup: ScrimLineup) {
+  return [lineup.top, lineup.jungle, lineup.mid, lineup.adc, lineup.support].filter((value) => Boolean(cleanValue(value))).length;
 }
 
 export function hasScrimLineupValue(lineup: ScrimLineup) {
@@ -256,8 +273,13 @@ function parseGameRule(text: string) {
 }
 
 function parseFormCreateCommand(message: string): ScrimCreateCommand | null {
-  const text = normalizeScrimMultiline(message);
-  const scrimNo = parseScrimNo(readField(text, ["스크림번호", "스크림 번호", "번호"]));
+  const rawText = normalizeScrimMultiline(message);
+  const explicitScrimNo = parseScrimNo(readField(rawText, ["스크림번호", "스크림 번호", "번호"]));
+  const headerScrimNo = parseScrimNo(rawText.match(/(?:^|\n)\s*#\s*(\d{1,3})\b/)?.[1] || null);
+  const scrimNo = explicitScrimNo ?? headerScrimNo;
+  const starts = Array.from(rawText.matchAll(/(^|\n)\s*일시\s*:/g));
+  const lastStart = starts.length > 0 ? starts[starts.length - 1].index ?? -1 : -1;
+  const text = lastStart >= 0 ? rawText.slice(lastStart).replace(/^\n/, "") : rawText;
   const tournamentRaw = readField(text, ["멸망전번호", "멸망전 번호", "대회번호", "대회 번호", "tournamentId"]);
   const tournamentIdMatch = tournamentRaw?.match(/\d{1,4}/);
   const tournamentId = tournamentIdMatch ? Number(tournamentIdMatch[0]) : null;
@@ -296,8 +318,8 @@ function parseFormCreateCommand(message: string): ScrimCreateCommand | null {
     isTemplateRequest: false,
     scrimNo,
     tournamentId,
-    requesterTeamName,
-    opponentTeamName,
+    requesterTeamName: isBadScrimTeamName(requesterTeamName) ? null : requesterTeamName,
+    opponentTeamName: isBadScrimTeamName(opponentTeamName) ? null : opponentTeamName,
     requesterLineup,
     opponentLineup,
     startTimeText: schedule.text || timeRaw || null,
@@ -372,7 +394,9 @@ export function parseScrimCreateCommand(message: string): ScrimCreateCommand | n
 
 export function parseScrimNumberCommand(message: string): ScrimNumberCommand | null {
   let text = normalizeScrimText(message).replace(/^\//, "");
-  text = text.replace(/^(스크림\s*상세|스크림\s*참가|스크림\s*신청|스크림\s*확정|스크림\s*완료|스크림\s*마감|스크림\s*취소|멸망전\s*스크림\s*상세|멸망전\s*스크림\s*참가|멸망전\s*스크림\s*신청|멸망전\s*스크림\s*확정|멸망전\s*스크림\s*완료|멸망전\s*스크림\s*마감|멸망전\s*스크림\s*취소)\s*/i, "").trim();
+  text = text.replace(/^(스크림\s*상세|스크림\s*참가|스크림\s*신청|스크림\s*확정|스크림\s*완료|스크림\s*마감|스크림\s*종료|스크림\s*쫑|스크림\s*ㅉ|스크림\s*취소|멸망전\s*스크림\s*상세|멸망전\s*스크림\s*참가|멸망전\s*스크림\s*신청|멸망전\s*스크림\s*확정|멸망전\s*스크림\s*완료|멸망전\s*스크림\s*마감|멸망전\s*스크림\s*종료|멸망전\s*스크림\s*쫑|멸망전\s*스크림\s*ㅉ|멸망전\s*스크림\s*취소)\s*/i, "").trim();
+  text = text.replace(/^스크림\s*(\d{1,3})\s*(?:쫑|ㅉ)$/i, "$1");
+  text = text.replace(/^스크림\s*(?:쫑|ㅉ)\s*(\d{1,3})$/i, "$1");
 
   const match = text.match(/^#?\s*(\d{1,3})(?:\s+(.+))?$/);
   if (!match) return null;
@@ -400,7 +424,7 @@ export function formatScrimTime(value: Date | string | null | undefined, fallbac
 
 export function getScrimStatusLabel(status: string) {
   if (status === "RECRUITING") return "모집중";
-  if (status === "MATCHED") return "상대 신청";
+  if (status === "MATCHED") return "매칭완료";
   if (status === "CONFIRMED") return "확정";
   if (status === "COMPLETED") return "완료";
   if (status === "CANCELED") return "취소";
@@ -418,10 +442,11 @@ function lineupToText(lineup: ScrimLineup | null | undefined) {
   ].join("\n");
 }
 
-export function buildScrimRecruitTemplate() {
+export function buildScrimRecruitTemplate(scrimNo?: number | null) {
   return [
     "[K-LOL.GG 스크림 구인 양식]",
     "",
+    ...(scrimNo ? [`번호: #${scrimNo}`, ""] : []),
     "일시: ",
     "방식: 3판2선",
     "",
@@ -458,6 +483,7 @@ export function buildScrimFormFromData(scrim: {
   const requesterLineup = (scrim.requesterLineupJson || EMPTY_LINEUP) as ScrimLineup;
   const opponentLineup = (scrim.opponentLineupJson || EMPTY_LINEUP) as ScrimLineup;
   return [
+    `번호: #${scrim.scrimNo}`,
     `일시: ${formatScrimTime(scrim.scheduledAt, scrim.startTimeText)}`,
     `방식: ${scrim.seriesRuleText || (scrim.gameCount ? `${scrim.gameCount}판` : "")}`,
     "",
