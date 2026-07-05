@@ -1,4 +1,4 @@
-import { logServerError } from "@/lib/server/safe-log";
+﻿import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -22,7 +22,6 @@ function isFormType(value: string): value is KakaoOperationFormType {
 }
 
 async function updateItem(type: KakaoOperationFormType, id: number, data: { status?: string; memo?: string | null }) {
-  if (type === "friends") return prisma.kakaoFriendApplication.update({ where: { id }, data });
   if (type === "suggestions") return prisma.kakaoSuggestionRequest.update({ where: { id }, data });
   if (type === "meetups") return prisma.kakaoMeetupRecord.update({ where: { id }, data });
   return prisma.kakaoLeaveRequest.update({ where: { id }, data });
@@ -94,3 +93,4 @@ export async function DELETE(_: NextRequest, context: RouteContext) {
     return NextResponse.json({ message: "운영 양식 삭제 처리에 실패했습니다." }, { status: 500 });
   }
 }
+

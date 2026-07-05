@@ -1,4 +1,4 @@
-export type KakaoOperationFormType = "suggestions" | "meetups" | "leaves";
+﻿export type KakaoOperationFormType = "suggestions" | "meetups" | "leaves";
 
 export type ParsedKakaoOperationForm =
   | {
@@ -349,10 +349,6 @@ export function parseKakaoOperationForm(input: unknown): ParsedKakaoOperationFor
 }
 
 export function getKakaoOperationFormReply(type: KakaoOperationFormType) {
-  if (type === "friends") {
-    return "[K-LOL.GG 지인 신청 접수 완료]";
-  }
-
   if (type === "suggestions") {
     return "[K-LOL.GG 건의 접수 완료]";
   }
@@ -367,3 +363,4 @@ export function getKakaoOperationFormReply(type: KakaoOperationFormType) {
 export function isKakaoOperationFormStatus(value: unknown): value is (typeof kakaoOperationFormStatuses)[number] {
   return typeof value === "string" && kakaoOperationFormStatuses.includes(value as (typeof kakaoOperationFormStatuses)[number]);
 }
+
