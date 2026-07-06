@@ -1,0 +1,919 @@
+/* Dark modern final layer.
+   This file is intentionally loaded last so restored V1 routes keep their
+   behavior while sharing the V2 visual frame. */
+
+:root {
+  --dm-bg: #050914;
+  --dm-bg-deep: #020611;
+  --dm-surface: rgba(8, 15, 30, 0.96);
+  --dm-surface-raised: rgba(12, 23, 43, 0.96);
+  --dm-card: rgba(13, 25, 46, 0.92);
+  --dm-card-soft: rgba(8, 17, 34, 0.82);
+  --dm-card-hover: rgba(17, 33, 58, 0.98);
+  --dm-line: rgba(84, 150, 232, 0.24);
+  --dm-line-strong: rgba(82, 170, 255, 0.46);
+  --dm-text: #edf6ff;
+  --dm-text-soft: #b8c9df;
+  --dm-muted: #8295ad;
+  --dm-dim: #516278;
+  --dm-blue: #2f7dff;
+  --dm-blue-2: #4aa3ff;
+  --dm-cyan: #27c8ff;
+  --dm-green: #36d399;
+  --dm-gold: #d6b05c;
+  --dm-red: #ff5a72;
+  --dm-warning: #f6b94d;
+  --dm-sidebar: 252px;
+  --dm-content-max: 1440px;
+  --dm-radius-sm: 10px;
+  --dm-radius-md: 14px;
+  --dm-radius-lg: 18px;
+  --dm-shadow: 0 22px 60px rgba(0, 0, 0, 0.36);
+  --dm-shadow-soft: 0 14px 34px rgba(0, 0, 0, 0.24);
+
+  --k-bg: var(--dm-bg);
+  --k-bg-2: #071122;
+  --k-bg-3: #0b1830;
+  --k-panel: var(--dm-card);
+  --k-panel-solid: #0d192e;
+  --k-panel-2: var(--dm-surface-raised);
+  --k-border: var(--dm-line);
+  --k-border-strong: var(--dm-line-strong);
+  --k-text: var(--dm-text-soft);
+  --k-text-strong: var(--dm-text);
+  --k-muted: var(--dm-muted);
+  --k-muted-2: var(--dm-dim);
+  --k-blue: var(--dm-blue);
+  --k-blue-2: var(--dm-blue-2);
+  --k-cyan: var(--dm-cyan);
+  --k-red: var(--dm-red);
+  --k-gold: var(--dm-gold);
+  --klol-page-width: var(--dm-content-max);
+  --v2-bg: var(--dm-bg);
+  --v2-card: var(--dm-card);
+  --v2-surface: var(--dm-surface);
+  --v2-surface-raised: var(--dm-surface-raised);
+  --v2-primary: var(--dm-blue);
+  --v2-primary-hover: var(--dm-blue-2);
+  --v2-text-primary: var(--dm-text);
+  --v2-text-secondary: var(--dm-text-soft);
+  --v2-text-muted: var(--dm-muted);
+  --v2-border: var(--dm-line);
+  --v2-border-strong: var(--dm-line-strong);
+}
+
+html,
+body {
+  background: var(--dm-bg-deep) !important;
+  color: var(--dm-text);
+}
+
+body {
+  text-rendering: geometricPrecision;
+}
+
+.app-background-root {
+  min-height: 100vh;
+  background:
+    linear-gradient(180deg, rgba(6, 14, 29, 0.98) 0%, rgba(2, 6, 17, 0.98) 58%, #020611 100%),
+    linear-gradient(90deg, rgba(47, 125, 255, 0.12), transparent 30%, transparent 70%, rgba(39, 200, 255, 0.09)) !important;
+  color: var(--dm-text);
+}
+
+.app-background-side,
+.app-background-image {
+  top: 64px !important;
+  bottom: 0 !important;
+  filter: brightness(0.56) saturate(0.95) contrast(1.06) !important;
+  opacity: 0.46 !important;
+}
+
+.app-background-side {
+  width: clamp(190px, 22vw, 340px) !important;
+  min-width: 190px !important;
+}
+
+.app-background-side--left {
+  left: var(--dm-sidebar) !important;
+}
+
+.app-background-side--right {
+  right: 0 !important;
+}
+
+.app-background-overlay {
+  top: 64px !important;
+  left: var(--dm-sidebar) !important;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(2, 6, 17, 0.52) 0%,
+      rgba(2, 6, 17, 0.82) 20%,
+      rgba(2, 6, 17, 0.94) 43%,
+      rgba(2, 6, 17, 0.94) 57%,
+      rgba(2, 6, 17, 0.82) 80%,
+      rgba(2, 6, 17, 0.52) 100%
+    ),
+    linear-gradient(180deg, rgba(2, 6, 17, 0.18), rgba(2, 6, 17, 0.84)) !important;
+}
+
+.app-content::before {
+  left: var(--dm-sidebar) !important;
+  top: 64px !important;
+  background-image:
+    linear-gradient(rgba(101, 174, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(101, 174, 255, 0.045) 1px, transparent 1px) !important;
+  background-size: 40px 40px !important;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.62), transparent 72%) !important;
+}
+
+.app-topbar {
+  height: 64px !important;
+  border-bottom: 1px solid rgba(86, 150, 225, 0.22) !important;
+  background: rgba(2, 7, 18, 0.9) !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.34) !important;
+}
+
+.app-topbar__home {
+  color: #f7fbff !important;
+  letter-spacing: 0 !important;
+  text-shadow: none !important;
+}
+
+.app-topbar__title {
+  color: rgba(184, 201, 223, 0.82) !important;
+}
+
+.app-topbar__search select,
+.app-topbar__search input,
+.app-topbar__search button {
+  height: 38px !important;
+}
+
+.app-shell,
+.app-body,
+.app-content,
+.page-container,
+.page-shell,
+.home-page,
+.admin-page,
+.account-page,
+.progress-page,
+.event-progress-page,
+.destruction-progress-page,
+.participation-page,
+.matches-page-v2,
+.players-page-v2,
+.ranking-page,
+.recruit-page,
+.ai-page,
+.highlights-page {
+  background: transparent !important;
+}
+
+.app-content {
+  width: calc(100% - var(--dm-sidebar)) !important;
+  padding: 28px 32px 88px !important;
+  padding-top: 92px !important;
+}
+
+.page-container,
+.page-shell,
+.home-page,
+.admin-page,
+.account-page,
+.progress-page,
+.event-progress-page,
+.destruction-progress-page,
+.participation-page,
+.matches-page-v2,
+.players-page-v2,
+.ranking-page,
+.recruit-page,
+.ai-page,
+.highlights-page,
+.kakao-search-page,
+.notice-page,
+.gallery-page {
+  width: min(100%, var(--dm-content-max)) !important;
+  max-width: var(--dm-content-max) !important;
+  margin-inline: auto !important;
+  padding-inline: 0 !important;
+  padding-top: 0 !important;
+}
+
+.app-shell--admin .app-sidebar--admin,
+.app-shell--user .app-sidebar--user {
+  width: var(--dm-sidebar) !important;
+  min-width: var(--dm-sidebar) !important;
+  border-right: 1px solid rgba(86, 150, 225, 0.18) !important;
+  background:
+    linear-gradient(180deg, rgba(3, 9, 21, 0.98), rgba(2, 6, 16, 0.99)),
+    linear-gradient(90deg, rgba(47, 125, 255, 0.09), transparent 62%) !important;
+}
+
+.app-shell--admin .app-sidebar--admin {
+  background:
+    linear-gradient(180deg, rgba(5, 10, 20, 0.99), rgba(3, 7, 15, 0.99)),
+    linear-gradient(90deg, rgba(214, 176, 92, 0.05), transparent 62%) !important;
+}
+
+.app-sidebar__title {
+  color: #f7fbff !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+.app-shell--admin .app-sidebar__group-title,
+.app-shell--user .app-sidebar__group-title {
+  color: rgba(184, 201, 223, 0.72) !important;
+  letter-spacing: 0.12em !important;
+}
+
+.app-shell--admin .app-sidebar__link,
+.app-shell--user .app-sidebar__link {
+  border-color: transparent !important;
+  color: rgba(237, 246, 255, 0.84) !important;
+  background: transparent !important;
+}
+
+.app-shell--admin .app-sidebar__code,
+.app-shell--user .app-sidebar__code {
+  background: rgba(126, 165, 217, 0.12) !important;
+  color: rgba(198, 219, 255, 0.86) !important;
+}
+
+.app-shell--admin .app-sidebar__link:hover,
+.app-shell--user .app-sidebar__link:hover {
+  border-color: rgba(74, 163, 255, 0.36) !important;
+  background: rgba(47, 125, 255, 0.1) !important;
+  box-shadow: none !important;
+}
+
+.app-shell--admin .app-sidebar__link--active,
+.app-shell--user .app-sidebar__link--active {
+  border-color: rgba(74, 163, 255, 0.48) !important;
+  background: linear-gradient(90deg, rgba(47, 125, 255, 0.22), rgba(39, 200, 255, 0.08)) !important;
+  box-shadow: inset 3px 0 0 var(--dm-blue-2) !important;
+}
+
+.app-shell--admin .app-sidebar__link--active .app-sidebar__code,
+.app-shell--user .app-sidebar__link--active .app-sidebar__code {
+  background: rgba(74, 163, 255, 0.22) !important;
+  color: #dff0ff !important;
+}
+
+.sidebar-auth__button,
+.app-topbar__auth-link {
+  border-color: rgba(74, 163, 255, 0.32) !important;
+  background: rgba(8, 18, 36, 0.88) !important;
+  color: var(--dm-text) !important;
+}
+
+.sidebar-auth__button.secondary,
+.app-topbar__auth-link--primary {
+  border-color: rgba(74, 163, 255, 0.68) !important;
+  background: linear-gradient(135deg, var(--dm-blue), var(--dm-cyan)) !important;
+}
+
+.page-header,
+.page-hero,
+.ai-hero,
+.admin-page__header,
+.admin-page-header,
+.admin-header,
+.gallery-page__header,
+.player-hero,
+.recruit-hero {
+  min-height: 132px !important;
+  margin-bottom: 22px !important;
+  padding: 24px 28px !important;
+  border: 1px solid rgba(82, 170, 255, 0.24) !important;
+  border-radius: var(--dm-radius-lg) !important;
+  background:
+    linear-gradient(135deg, rgba(14, 31, 56, 0.96), rgba(8, 16, 33, 0.96) 58%, rgba(9, 23, 42, 0.94)),
+    linear-gradient(90deg, rgba(47, 125, 255, 0.16), transparent 52%) !important;
+  box-shadow: var(--dm-shadow-soft) !important;
+}
+
+.page-header::before,
+.page-hero::before,
+.ai-hero::before,
+.admin-page__header::before,
+.admin-page-header::before,
+.admin-header::before,
+.gallery-page__header::before,
+.player-hero::before,
+.recruit-hero::before {
+  background-image:
+    linear-gradient(rgba(113, 183, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(113, 183, 255, 0.055) 1px, transparent 1px) !important;
+  background-size: 32px 32px !important;
+}
+
+.page-header::after,
+.page-hero::after,
+.ai-hero::after,
+.admin-page__header::after,
+.admin-page-header::after,
+.admin-header::after,
+.gallery-page__header::after,
+.player-hero::after,
+.recruit-hero::after {
+  color: rgba(121, 182, 255, 0.06) !important;
+  font-size: 78px !important;
+  letter-spacing: 0 !important;
+}
+
+.page-title,
+.admin-page__title,
+.gallery-page__title,
+.kakao-search-page__title,
+.notice-detail__title,
+.ai-hero h1,
+.admin-page-header h1,
+.admin-header h1,
+.home-main-title {
+  color: var(--dm-text) !important;
+  letter-spacing: 0 !important;
+}
+
+.page-title,
+.admin-page__title,
+.ai-hero h1,
+.admin-page-header h1,
+.admin-header h1 {
+  font-size: 30px !important;
+  line-height: 1.18 !important;
+}
+
+.page-description,
+.admin-page__description,
+.gallery-page__description,
+.kakao-search-page__desc,
+.ai-hero p:not(.ai-hero__eyebrow),
+.home-main-description,
+.home-section-subtitle {
+  color: var(--dm-text-soft) !important;
+}
+
+.page-eyebrow,
+.ai-hero__eyebrow,
+.home-eyebrow,
+.top3-card__eyebrow,
+.ranking-board__eyebrow,
+.players-page-v2__eyebrow,
+.admin-page__kicker {
+  color: var(--dm-cyan) !important;
+  letter-spacing: 0.14em !important;
+  text-shadow: none !important;
+}
+
+.card,
+.list-card,
+.detail-header-card,
+.content-section,
+.admin-card,
+.admin-panel,
+.admin-card:has(table),
+.info-card,
+.stat-card,
+.table-card,
+.empty-box,
+.ai-panel,
+.ai-card,
+.balance-card,
+.balance-form-card,
+.account-card,
+.discord-stat-card,
+.top3-card,
+.top3-panel,
+.home-main-card,
+.home-season-card,
+.home-mvp-card,
+.home-progress-card,
+.winner-slider,
+.ranking-board,
+.ranking-row-card,
+.players-page-v2__panel,
+.players-page-v2__board,
+.players-page-v2__summary-card,
+.recruit-card,
+.progress-overview-card,
+.event-progress-card,
+.destruction-progress-card,
+.highlight-card,
+.highlight-winner-image-card,
+.notice-card,
+.notice-recommend-card,
+.notice-detail {
+  border: 1px solid var(--dm-line) !important;
+  border-radius: var(--dm-radius-lg) !important;
+  background:
+    linear-gradient(180deg, rgba(13, 25, 46, 0.94), rgba(7, 15, 31, 0.94)),
+    linear-gradient(90deg, rgba(47, 125, 255, 0.06), transparent 52%) !important;
+  color: var(--dm-text) !important;
+  box-shadow: var(--dm-shadow-soft) !important;
+  backdrop-filter: blur(12px);
+}
+
+.app-shell--admin .admin-card,
+.app-shell--admin .admin-panel,
+.app-shell--admin .admin-card:has(table),
+.app-shell--admin .content-section,
+.app-shell--admin .stat-card,
+.app-shell--admin .table-card {
+  background:
+    linear-gradient(180deg, rgba(12, 22, 39, 0.94), rgba(7, 13, 25, 0.94)),
+    linear-gradient(90deg, rgba(214, 176, 92, 0.025), transparent 55%) !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22) !important;
+}
+
+.card:hover,
+.list-card:hover,
+.admin-card:hover,
+.top3-card:hover,
+.recruit-card:hover,
+.progress-overview-card:hover,
+.event-progress-card:hover,
+.destruction-progress-card:hover,
+.ranking-row-card:hover,
+.players-page-v2__row:hover,
+.highlight-card:hover {
+  border-color: var(--dm-line-strong) !important;
+  background:
+    linear-gradient(180deg, rgba(17, 33, 58, 0.98), rgba(8, 18, 36, 0.98)),
+    linear-gradient(90deg, rgba(47, 125, 255, 0.08), transparent 52%) !important;
+}
+
+.home-page {
+  gap: 24px !important;
+}
+
+.home-hero-grid {
+  grid-template-columns: minmax(0, 1.55fr) minmax(330px, 0.82fr) !important;
+  gap: 22px !important;
+}
+
+.home-main-card {
+  min-height: 300px !important;
+  padding: 30px !important;
+}
+
+.home-main-card::before {
+  background:
+    linear-gradient(90deg, rgba(47, 125, 255, 0.18), transparent 48%),
+    linear-gradient(135deg, rgba(39, 200, 255, 0.08), transparent 55%) !important;
+}
+
+.home-main-title {
+  font-size: 46px !important;
+  line-height: 1.08 !important;
+  text-shadow: none !important;
+}
+
+.home-season-grid {
+  gap: 12px !important;
+}
+
+.home-stat-box,
+.top3-slide-header,
+.top3-player,
+.home-mvp-content,
+.home-progress-item,
+.home-recent-match-card,
+.home-recent-match-count,
+.recruit-slot,
+.ai-line-card,
+.ai-champion-card,
+.ai-ban-card,
+.ai-pair-card {
+  border-color: rgba(84, 150, 232, 0.2) !important;
+  background: rgba(4, 12, 27, 0.58) !important;
+  color: var(--dm-text) !important;
+}
+
+.home-stat-box strong,
+.top3-player__name,
+.top3-player__result strong,
+.home-section-title,
+.list-card__title,
+.section-header h2,
+.section-title,
+.stat-card__value,
+.info-card__value {
+  color: var(--dm-text) !important;
+}
+
+.home-stat-box span,
+.top3-player__nickname,
+.top3-player__result,
+.list-card__meta,
+.stat-card__sub,
+.info-card__label,
+.home-progress-item p {
+  color: var(--dm-muted) !important;
+}
+
+.winner-slider {
+  min-height: 392px !important;
+  aspect-ratio: 21 / 9;
+  overflow: hidden !important;
+}
+
+.winner-slider__content {
+  min-height: 392px !important;
+}
+
+.winner-slider__overlay {
+  background:
+    linear-gradient(90deg, rgba(2, 6, 17, 0.9), rgba(2, 6, 17, 0.58) 46%, rgba(2, 6, 17, 0.2)),
+    linear-gradient(180deg, rgba(2, 6, 17, 0.08), rgba(2, 6, 17, 0.7)) !important;
+}
+
+.top3-player__rank {
+  border-color: rgba(84, 150, 232, 0.22) !important;
+  background: rgba(47, 125, 255, 0.14) !important;
+  color: #bfdbff !important;
+}
+
+.top3-player--rank-1 .top3-player__rank {
+  background: linear-gradient(135deg, #f0c65f, #ad7f23) !important;
+  color: #100c05 !important;
+  box-shadow: 0 0 20px rgba(214, 176, 92, 0.26) !important;
+}
+
+.top3-player--rank-2 .top3-player__rank {
+  background: linear-gradient(135deg, #d6dee9, #738399) !important;
+  color: #081120 !important;
+}
+
+.top3-player--rank-3 .top3-player__rank {
+  background: linear-gradient(135deg, #d4864b, #8c4722) !important;
+  color: #fff3ea !important;
+}
+
+.top3-pagination__dot--active,
+.winner-slider__dot--active,
+.home-mvp-pagination__dot--active,
+.chip-button--home-active {
+  background: linear-gradient(135deg, var(--dm-blue), var(--dm-cyan)) !important;
+  box-shadow: 0 0 16px rgba(47, 125, 255, 0.28) !important;
+}
+
+button,
+.button,
+.btn,
+.action-button,
+.admin-button,
+.admin-page__create-button,
+.auth-button,
+.chip-button,
+.page-actions a,
+.page-actions button,
+.pagination a,
+.pagination button,
+.home-mvp-nav-button,
+.top3-slider__button {
+  border: 1px solid rgba(74, 163, 255, 0.36) !important;
+  border-radius: var(--dm-radius-sm) !important;
+  background: rgba(10, 24, 46, 0.88) !important;
+  color: var(--dm-text) !important;
+  box-shadow: none !important;
+  letter-spacing: 0 !important;
+}
+
+.button.primary,
+.btn-primary,
+.admin-button--primary,
+.admin-page__create-button,
+.auth-button,
+.chip-button--active,
+.page-actions a:first-child,
+.page-actions button:first-child {
+  border-color: rgba(74, 163, 255, 0.68) !important;
+  background: linear-gradient(135deg, var(--dm-blue), var(--dm-cyan)) !important;
+  color: #ffffff !important;
+}
+
+.button.secondary,
+.btn-secondary,
+.admin-button--ghost,
+.chip-button.secondary,
+.page-actions .secondary {
+  background: rgba(9, 19, 37, 0.88) !important;
+  border-color: rgba(126, 165, 217, 0.22) !important;
+}
+
+.button.danger,
+.btn-danger,
+.admin-button--danger,
+.admin-button.danger,
+.chip-button.danger {
+  border-color: rgba(255, 90, 114, 0.44) !important;
+  background: rgba(255, 90, 114, 0.14) !important;
+  color: #ffd3da !important;
+}
+
+button:hover,
+.button:hover,
+.btn:hover,
+.action-button:hover,
+.admin-button:hover,
+.admin-page__create-button:hover,
+.chip-button:hover,
+.page-actions a:hover,
+.page-actions button:hover {
+  border-color: rgba(74, 163, 255, 0.66) !important;
+  background: rgba(47, 125, 255, 0.18) !important;
+}
+
+input,
+select,
+textarea,
+.admin-input,
+.auth-field input,
+.auth-tier-row select,
+.auth-tier-row input {
+  min-height: 38px;
+  border: 1px solid rgba(126, 165, 217, 0.26) !important;
+  border-radius: var(--dm-radius-sm) !important;
+  background: rgba(3, 10, 23, 0.88) !important;
+  color: var(--dm-text) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(130, 149, 173, 0.76) !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+.admin-input:focus,
+.auth-field input:focus {
+  border-color: rgba(74, 163, 255, 0.7) !important;
+  box-shadow: 0 0 0 3px rgba(47, 125, 255, 0.18) !important;
+}
+
+.table-wrapper,
+.admin-table-wrapper,
+.data-table-wrapper,
+.admin-card:has(table),
+.card:has(table),
+.table-wrap,
+.admin-table-wrap,
+.responsive-table,
+.ai-table-wrap {
+  overflow-x: auto !important;
+  border-radius: var(--dm-radius-lg);
+}
+
+table,
+.admin-table,
+.data-table,
+.ai-table {
+  color: var(--dm-text) !important;
+}
+
+th,
+td,
+.admin-table th,
+.admin-table td,
+.data-table th,
+.data-table td,
+.ai-table th,
+.ai-table td {
+  border-bottom-color: rgba(126, 165, 217, 0.14) !important;
+  color: var(--dm-text) !important;
+}
+
+th,
+.admin-table th,
+.data-table th,
+.ai-table th,
+thead th,
+.summary-table-header,
+.most-table-header,
+.recent-table-header,
+.admin-player-row-header,
+.admin-match-row-header {
+  background: rgba(6, 16, 33, 0.88) !important;
+  color: #9fd4ff !important;
+  letter-spacing: 0.08em !important;
+}
+
+tbody tr,
+.summary-table-row,
+.most-table-row,
+.recent-table-row,
+.admin-player-row-card,
+.match-row-card,
+.ranking-row-card,
+.players-page-v2__row,
+.list-item {
+  background: rgba(7, 16, 32, 0.68) !important;
+  border-color: rgba(126, 165, 217, 0.14) !important;
+}
+
+tbody tr:hover,
+.summary-table-row:hover,
+.most-table-row:hover,
+.recent-table-row:hover,
+.admin-player-row-card:hover,
+.match-row-card:hover,
+.ranking-row-card:hover,
+.players-page-v2__row:hover,
+.list-item:hover {
+  background: rgba(14, 30, 55, 0.9) !important;
+}
+
+.badge,
+.status-badge,
+.tier-badge,
+.role-badge,
+.line-badge {
+  border-radius: 999px !important;
+  border: 1px solid rgba(126, 165, 217, 0.22) !important;
+  background: rgba(47, 125, 255, 0.12) !important;
+  color: #cfe7ff !important;
+}
+
+.empty-box,
+.empty-state,
+.loading-state,
+.error-state,
+.notice-empty,
+.table-empty {
+  border-color: rgba(126, 165, 217, 0.24) !important;
+  background: rgba(6, 14, 29, 0.66) !important;
+  color: var(--dm-text-soft) !important;
+}
+
+.auth-page {
+  min-height: calc(100vh - 120px) !important;
+}
+
+.auth-card {
+  border-color: rgba(82, 170, 255, 0.28) !important;
+  background:
+    linear-gradient(180deg, rgba(13, 25, 46, 0.96), rgba(7, 15, 31, 0.96)),
+    linear-gradient(90deg, rgba(47, 125, 255, 0.08), transparent 52%) !important;
+}
+
+.auth-title {
+  color: var(--dm-text) !important;
+  letter-spacing: 0 !important;
+}
+
+@media (min-width: 1680px) {
+  :root {
+    --dm-content-max: 1500px;
+  }
+}
+
+@media (max-width: 1280px) {
+  .app-content {
+    padding-inline: 24px !important;
+  }
+
+  .home-hero-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .app-content {
+    width: 100% !important;
+    padding: 24px 18px 84px !important;
+    padding-top: 82px !important;
+  }
+
+  .app-background-side,
+  .app-background-image {
+    opacity: 0.22 !important;
+  }
+
+  .app-background-side--left,
+  .app-background-overlay,
+  .app-content::before {
+    left: 0 !important;
+  }
+
+  .app-shell--admin .app-sidebar--admin,
+  .app-shell--user .app-sidebar--user {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .app-topbar {
+    height: 58px !important;
+    padding: 0 14px !important;
+  }
+
+  .app-content {
+    padding: 70px 14px 86px !important;
+  }
+
+  .app-background-side,
+  .app-background-image {
+    display: none !important;
+  }
+
+  .app-background-overlay {
+    top: 58px !important;
+    left: 0 !important;
+  }
+
+  .page-container,
+  .page-shell,
+  .home-page,
+  .admin-page,
+  .account-page,
+  .progress-page,
+  .event-progress-page,
+  .destruction-progress-page,
+  .participation-page,
+  .matches-page-v2,
+  .players-page-v2,
+  .ranking-page,
+  .recruit-page,
+  .ai-page,
+  .highlights-page {
+    max-width: 100% !important;
+  }
+
+  .page-header,
+  .page-hero,
+  .ai-hero,
+  .admin-page__header,
+  .admin-page-header,
+  .admin-header,
+  .gallery-page__header,
+  .player-hero,
+  .recruit-hero {
+    min-height: 104px !important;
+    padding: 18px !important;
+    border-radius: 16px !important;
+  }
+
+  .page-header::after,
+  .page-hero::after,
+  .ai-hero::after,
+  .admin-page__header::after,
+  .admin-page-header::after,
+  .admin-header::after,
+  .gallery-page__header::after,
+  .player-hero::after,
+  .recruit-hero::after {
+    display: none !important;
+  }
+
+  .page-title,
+  .admin-page__title,
+  .ai-hero h1,
+  .admin-page-header h1,
+  .admin-header h1 {
+    font-size: 24px !important;
+  }
+
+  .home-main-title {
+    font-size: 36px !important;
+  }
+
+  .home-main-card {
+    min-height: auto !important;
+    padding: 20px !important;
+  }
+
+  .winner-slider,
+  .winner-slider__content {
+    min-height: 260px !important;
+  }
+
+  .home-mvp-content {
+    grid-template-columns: 58px minmax(0, 1fr) !important;
+  }
+
+  .home-mvp-score {
+    grid-column: 1 / -1;
+    align-items: flex-start !important;
+  }
+
+  .card-grid,
+  .info-grid,
+  .stats-grid,
+  .home-section-grid,
+  .home-mvp-grid,
+  .home-link-grid,
+  .recruit-grid,
+  .progress-overview-grid,
+  .event-progress-list,
+  .destruction-progress-list,
+  .highlight-list,
+  .highlight-winner-image-list {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}

@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { rejectIfNotAdmin, requireAdminRequest } from "@/lib/auth/requireAdmin";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
 import { getRiotFeatureDisabledPayload, isRiotFeatureEnabled } from "@/lib/riot/feature";
-import { getAdminFullRiotSyncCooldownMinutes, syncPlayerSoloRankBestEffort } from "@/lib/riot/solo-sync";
+import { getAdminRiotSyncCooldownMinutes, syncPlayerSoloRankBestEffort } from "@/lib/riot/solo-sync";
 import { logServerError } from "@/lib/server/safe-log";
 
 type RouteContext = {
@@ -25,12 +25,10 @@ export async function POST(req: NextRequest, context: RouteContext) {
     const rejected = await rejectIfNotAdmin();
     if (rejected) return rejected;
 
-    const admin = await requireAdminRequest();
-
     const rateLimitRejected = await rejectIfRateLimited(req, {
-      action: "RIOT_FULL_SYNC",
-      limit: 2,
-      windowSeconds: 60 * 60,
+      action: "ADMIN_RIOT_SINGLE_SYNC",
+      limit: 20,
+      windowSeconds: 10 * 60,
     });
     if (rateLimitRejected) return rateLimitRejected;
 
@@ -41,15 +39,20 @@ export async function POST(req: NextRequest, context: RouteContext) {
       return NextResponse.json({ message: "유효하지 않은 플레이어 ID입니다." }, { status: 400 });
     }
 
+    const body = (await req.json().catch(() => ({}))) as { force?: unknown; matchCount?: unknown; rankOnly?: unknown };
+    const admin = await requireAdminRequest();
+    const matchCount = Number(body.matchCount);
+    const normalizedMatchCount = Number.isFinite(matchCount) && matchCount > 0 ? Math.min(200, Math.floor(matchCount)) : undefined;
+
     const result = await syncPlayerSoloRankBestEffort(parsedPlayerId, {
       actorUserAccountId: admin?.user.id ?? null,
-      source: "ADMIN_FULL_SOLO_SYNC",
-      jobType: "ADMIN_FULL_PLAYER",
+      source: "ADMIN_SINGLE_SOLO_SYNC",
+      jobType: "ADMIN_SINGLE_PLAYER",
       createJob: true,
-      cooldownMinutes: getAdminFullRiotSyncCooldownMinutes(),
-      matchCount: 200,
-      includeMatches: true,
-      force: false,
+      cooldownMinutes: getAdminRiotSyncCooldownMinutes(),
+      matchCount: normalizedMatchCount,
+      includeMatches: body.rankOnly !== true,
+      force: body.force === true,
     });
 
     if (result.status === "failed") {
@@ -66,17 +69,17 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
     return NextResponse.json({ message: result.message, result });
   } catch (error) {
-    logServerError("[RIOT_PLAYER_SOLO_SYNC_FULL_POST_ERROR]", error);
+    logServerError("[ADMIN_RIOT_PLAYER_SYNC_POST_ERROR]", error);
 
     if (error instanceof Error) {
       return NextResponse.json(
-        { message: "솔랭 전체 동기화 중 오류가 발생했습니다.", error: error.message },
+        { message: "관리자 Riot 동기화 중 오류가 발생했습니다.", error: error.message },
         { status: 500 },
       );
     }
 
     return NextResponse.json(
-      { message: "솔랭 전체 동기화 중 알 수 없는 오류가 발생했습니다." },
+      { message: "관리자 Riot 동기화 중 알 수 없는 오류가 발생했습니다." },
       { status: 500 },
     );
   }

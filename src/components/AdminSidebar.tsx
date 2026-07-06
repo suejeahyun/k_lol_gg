@@ -40,6 +40,7 @@ const menuGroups: AdminSidebarGroup[] = [
       { href: "/admin/recruits", label: "구인 관리", code: "REC", activePrefixes: ["/admin/recruits"] },
       { href: "/admin/recruits/logs", label: "구인 기록", code: "RLG", activePrefixes: ["/admin/recruits/logs"] },
       { href: "/admin/recruits/settings", label: "구인 설정", code: "RST", activePrefixes: ["/admin/recruits/settings"] },
+      { href: "/admin/kakao/scrims", label: "스크림 구인", code: "SCR", activePrefixes: ["/admin/kakao/scrims"] },
       { href: "/admin/kakao/season-apply", label: "내전 참가신청", code: "APP", activePrefixes: ["/admin/kakao/season-apply"] },
       { href: "/admin/kakao/settings", label: "카카오톡 설정", code: "SET", activePrefixes: ["/admin/kakao/settings", "/admin/kakao/recruits/settings"] },
     ],
@@ -60,6 +61,7 @@ const menuGroups: AdminSidebarGroup[] = [
     title: "데이터",
     items: [
       { href: "/admin/players", label: "회원/플레이어", code: "PLY", activePrefixes: ["/admin/players", "/admin/users", "/admin/player-approvals"] },
+      { href: "/admin/riot", label: "Riot 연동", code: "RIT", activePrefixes: ["/admin/riot"] },
       { href: "/admin/seasons", label: "시즌 전환", code: "SSN", activePrefixes: ["/admin/seasons"] },
     ],
   },

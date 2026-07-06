@@ -1,8 +1,13 @@
-const RIOT_API_KEY = process.env.RIOT_API_KEY;
+import { recordRiotApiRequestLog } from "@/lib/riot/audit";
+import {
+  assertRiotFeatureEnabled,
+  getRiotPlatformRegion,
+  getRiotRegionalRoute,
+} from "@/lib/riot/feature";
 
-const ACCOUNT_REGION = "asia";
-const MATCH_REGION = "asia";
-const PLATFORM_REGION = "kr";
+const ACCOUNT_REGION = getRiotRegionalRoute();
+const MATCH_REGION = getRiotRegionalRoute();
+const PLATFORM_REGION = getRiotPlatformRegion();
 
 const SOLO_RANK_QUEUE_ID = 420;
 const SOLO_RANK_QUEUE_TYPE = "RANKED_SOLO_5x5";
@@ -124,27 +129,84 @@ class RiotApiError extends Error {
 }
 
 function getRiotApiKey() {
-  if (!RIOT_API_KEY) {
+  assertRiotFeatureEnabled();
+
+  const riotApiKey = process.env.RIOT_API_KEY?.trim();
+
+  if (!riotApiKey) {
     throw new Error("RIOT_API_KEY 환경변수가 설정되지 않았습니다.");
   }
 
-  return RIOT_API_KEY;
+  return riotApiKey;
 }
 
 function normalizeTagLine(tagLine: string) {
   return tagLine.replace(/^#/, "").trim();
 }
 
+function getRiotEndpointName(url: string) {
+  try {
+    const { pathname } = new URL(url);
+
+    if (pathname.includes("/riot/account/v1/accounts/by-riot-id/")) return "ACCOUNT_BY_RIOT_ID";
+    if (pathname.includes("/lol/summoner/v4/summoners/by-puuid/")) return "SUMMONER_BY_PUUID";
+    if (pathname.includes("/lol/league/v4/entries/by-summoner/")) return "LEAGUE_BY_SUMMONER_ID";
+    if (pathname.includes("/lol/league/v4/entries/by-puuid/")) return "LEAGUE_BY_PUUID";
+    if (pathname.includes("/lol/match/v5/matches/by-puuid/")) return "MATCH_IDS_BY_PUUID";
+    if (pathname.includes("/lol/match/v5/matches/")) return "MATCH_BY_ID";
+
+    return pathname;
+  } catch {
+    return "UNKNOWN_RIOT_ENDPOINT";
+  }
+}
+
+function getRiotRequestTarget(url: string) {
+  try {
+    const { pathname } = new URL(url);
+    const parts = pathname.split("/").filter(Boolean);
+    return parts.at(-1);
+  } catch {
+    return undefined;
+  }
+}
+
+function getRiotErrorCode(status: number) {
+  if (status === 401) return "RIOT_KEY_INVALID";
+  if (status === 403) return "RIOT_KEY_FORBIDDEN_OR_EXPIRED";
+  if (status === 404) return "RIOT_NOT_FOUND";
+  if (status === 429) return "RIOT_RATE_LIMITED";
+  if (status >= 500) return "RIOT_SERVER_ERROR";
+  return "RIOT_REQUEST_FAILED";
+}
+
 async function riotFetch<T>(url: string): Promise<T> {
   const apiKey = getRiotApiKey();
+  const startedAt = Date.now();
+  const endpoint = getRiotEndpointName(url);
+  const target = getRiotRequestTarget(url);
 
-  const response = await fetch(url, {
-    method: "GET",
-    headers: {
-      "X-Riot-Token": apiKey,
-    },
-    cache: "no-store",
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "X-Riot-Token": apiKey,
+      },
+      cache: "no-store",
+    });
+  } catch (error) {
+    await recordRiotApiRequestLog({
+      endpoint,
+      target,
+      source: "RIOT_CLIENT",
+      durationMs: Date.now() - startedAt,
+      errorCode: "RIOT_FETCH_ERROR",
+      message: error instanceof Error ? error.message : String(error ?? "UNKNOWN_ERROR"),
+    });
+    throw error;
+  }
 
   if (!response.ok) {
     let message = `Riot API 요청 실패: ${response.status}`;
@@ -161,10 +223,30 @@ async function riotFetch<T>(url: string): Promise<T> {
       // Riot API가 JSON이 아닌 응답을 줄 수도 있으므로 무시
     }
 
+    await recordRiotApiRequestLog({
+      endpoint,
+      target,
+      source: "RIOT_CLIENT",
+      statusCode: response.status,
+      durationMs: Date.now() - startedAt,
+      errorCode: getRiotErrorCode(response.status),
+      message,
+    });
+
     throw new RiotApiError(message, response.status, url);
   }
 
-  return response.json() as Promise<T>;
+  const data = (await response.json()) as T;
+
+  await recordRiotApiRequestLog({
+    endpoint,
+    target,
+    source: "RIOT_CLIENT",
+    statusCode: response.status,
+    durationMs: Date.now() - startedAt,
+  });
+
+  return data;
 }
 
 export async function getRiotAccountByRiotId(

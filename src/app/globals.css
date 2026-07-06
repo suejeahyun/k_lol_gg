@@ -47,6 +47,7 @@
 @import url("../styles/app-mobile.css");
 @import url("../styles/overrides/v2-responsive-fix.css");
 @import url("../styles/overrides/page-cleanup-pass.css");
+@import url("../styles/overrides/dark-modern-final.css");
 
 /* Fix: pick/ban solo-rank refresh panel */
 .ai-solo-sync {
