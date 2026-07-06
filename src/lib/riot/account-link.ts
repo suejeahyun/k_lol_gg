@@ -74,7 +74,7 @@ type PlayerWithRiotStatus = {
     isVerified: boolean;
     verificationMethod: string;
     verifiedByUserAccountId: number | null;
-    verifiedAt: string | null;
+    verifiedAt: Date | null;
     linkedByUserAccountId: number | null;
     linkedAt: Date | null;
     unlinkedAt: Date | null;
