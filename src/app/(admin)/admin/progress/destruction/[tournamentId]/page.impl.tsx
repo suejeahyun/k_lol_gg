@@ -15,6 +15,10 @@ import DestructionFinalGenerator from "@/components/admin/DestructionFinalGenera
 import DestructionCompleteForm from "@/components/admin/DestructionCompleteForm";
 import DestructionAuctionManager from "@/components/admin/DestructionAuctionManager";
 import DestructionRecruitmentManager from "@/components/admin/DestructionRecruitmentManager";
+import {
+  getRiotDestructionVerification,
+  summarizeRiotDestructionVerifications,
+} from "@/lib/riot/destruction-verification";
 
 type PageProps = {
   params: Promise<{
@@ -204,7 +208,12 @@ export default async function AdminDestructionTournamentDetailPage({
             },
           },
           include: {
-            player: true,
+            player: {
+              include: {
+                riotAccount: true,
+                soloRankSnapshot: true,
+              },
+            },
           },
           orderBy: {
             createdAt: "asc",
@@ -298,7 +307,18 @@ export default async function AdminDestructionTournamentDetailPage({
       currentTier: apply.player.currentTier,
       peakTier: apply.player.peakTier,
     },
+    riotVerification: getRiotDestructionVerification({
+      currentTier: apply.player.currentTier,
+      riotAccount: apply.player.riotAccount,
+      soloRankSnapshot: apply.player.soloRankSnapshot,
+    }),
   }));
+
+  const riotVerificationSummary = summarizeRiotDestructionVerifications(
+    applicationViewModels
+      .filter((apply) => apply.status === "APPLIED" || apply.status === "CONFIRMED" || apply.status === "RESERVE")
+      .map((apply) => apply.riotVerification),
+  );
 
 
   const applicationMetaByPlayerId = new Map(
@@ -434,6 +454,16 @@ export default async function AdminDestructionTournamentDetailPage({
         </div>
 
         <div className="admin-event-detail-card">
+          <span>Riot 정상</span>
+          <strong>{riotVerificationSummary.verified}명</strong>
+        </div>
+
+        <div className="admin-event-detail-card">
+          <span>Riot 확인</span>
+          <strong>{riotVerificationSummary.needsAdminReview}명</strong>
+        </div>
+
+        <div className="admin-event-detail-card">
           <span>팀장</span>
           <strong>
             {tournament.teams.length}명
@@ -489,6 +519,7 @@ export default async function AdminDestructionTournamentDetailPage({
           hasTeams={tournament.teams.length > 0}
           hasMatches={tournament.matches.length > 0}
           laneLimits={laneLimits}
+          riotVerificationSummary={riotVerificationSummary}
         />
       </AdminStepSection>
       ) : null}

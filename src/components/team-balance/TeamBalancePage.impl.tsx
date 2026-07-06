@@ -5,6 +5,30 @@ import type { Position, Team, RoleType, SearchPlayer, PlayerRow, AssignedPlayer,
 
 const POSITIONS: Position[] = ["TOP", "JGL", "MID", "ADC", "SUP"];
 
+type RiotBalanceMode = "server" | "withoutRiot" | "formOnly";
+
+const RIOT_BALANCE_MODE_OPTIONS: Array<{
+  value: RiotBalanceMode;
+  label: string;
+  description: string;
+}> = [
+  {
+    value: "server",
+    label: "서버 기준",
+    description: "현재 계산 결과를 그대로 사용합니다.",
+  },
+  {
+    value: "withoutRiot",
+    label: "Riot 제외",
+    description: "최근 솔랭 폼과 솔랭 라인 보정을 제외해 비교합니다.",
+  },
+  {
+    value: "formOnly",
+    label: "최근 폼만",
+    description: "최근 솔랭 폼은 반영하고, 솔랭 라인 보정은 제외합니다.",
+  },
+];
+
 function createInitialRows(): PlayerRow[] {
   return Array.from({ length: 10 }, () => ({
     playerId: null,
@@ -40,6 +64,8 @@ export default function PlayersBalancePage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [result, setResult] = useState<BalanceResponse | null>(null);
   const [selectedResultIndex, setSelectedResultIndex] = useState(0);
+  const [riotBalanceMode, setRiotBalanceMode] =
+    useState<RiotBalanceMode>("server");
   const [importLoading, setImportLoading] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
   const [manualRecalcLoading, setManualRecalcLoading] = useState(false);
@@ -1105,6 +1131,361 @@ export default function PlayersBalancePage() {
   function formatDecimal(value?: number | null, digits = 1) {
     if (typeof value !== "number" || Number.isNaN(value)) return "-";
     return value.toFixed(digits);
+  }
+
+  function getRiotRecentGames(player: AssignedPlayer) {
+    return Math.max(0, Number(player.soloRecentGames ?? 0));
+  }
+
+  function getRiotRecentWinRateText(player: AssignedPlayer) {
+    return typeof player.soloRecentWinRate === "number"
+      ? `${player.soloRecentWinRate.toFixed(1)}%`
+      : "-";
+  }
+
+  function getRiotPositionConfidenceText(player: AssignedPlayer) {
+    return typeof player.soloRecentPositionConfidence === "number" &&
+      player.soloRecentPositionConfidence > 0
+      ? `${Math.round(player.soloRecentPositionConfidence * 100)}%`
+      : "-";
+  }
+
+  function getRiotLineStatus(player: AssignedPlayer) {
+    const games = getRiotRecentGames(player);
+    const main = player.soloRecentMainPosition ?? null;
+    const sub = player.soloRecentSubPosition ?? null;
+    const confidence = player.soloRecentPositionConfidence ?? 0;
+
+    if (games <= 0) {
+      return {
+        status: "missing" as const,
+        label: "솔랭 없음",
+        detail: "최근 솔랭 캐시 데이터가 없습니다.",
+      };
+    }
+
+    if (games < 5) {
+      return {
+        status: "low" as const,
+        label: "표본 부족",
+        detail: `최근 ${games}전만 있어 라인 판단 신뢰도가 낮습니다.`,
+      };
+    }
+
+    if (main === player.position) {
+      return {
+        status: "good" as const,
+        label: "주라인 일치",
+        detail: `최근 솔랭 주라인 ${main}, 배정 ${player.position}이 일치합니다.`,
+      };
+    }
+
+    if (sub === player.position) {
+      return {
+        status: "warn" as const,
+        label: "부라인 일치",
+        detail: `최근 솔랭 부라인 ${sub}, 배정 ${player.position}입니다.`,
+      };
+    }
+
+    if (games >= 10 && confidence >= 0.5) {
+      return {
+        status: "danger" as const,
+        label: "라인 확인",
+        detail: `최근 솔랭 주라인 ${main ?? "-"} 비중 ${getRiotPositionConfidenceText(player)}로 배정 ${player.position}과 다릅니다.`,
+      };
+    }
+
+    return {
+      status: "low" as const,
+      label: "보조 확인",
+      detail: `최근 솔랭 주라인 ${main ?? "-"}, 배정 ${player.position}입니다.`,
+    };
+  }
+
+  function getRiotFormStatus(player: AssignedPlayer) {
+    const bonus =
+      player.soloRecentFormBonus ?? player.scoreBreakdown?.soloRecentFormBonus ?? 0;
+
+    if (bonus >= 2) return { status: "good" as const, label: `폼 +${bonus.toFixed(1)}` };
+    if (bonus <= -2) return { status: "danger" as const, label: `폼 ${bonus.toFixed(1)}` };
+    if (bonus !== 0) return { status: "warn" as const, label: `폼 ${bonus > 0 ? "+" : ""}${bonus.toFixed(1)}` };
+    return { status: "low" as const, label: "폼 0.0" };
+  }
+
+  function getRiotAssistSummary(target: BalanceResponse) {
+    const players = [...target.red, ...target.blue];
+    const withRecent = players.filter((player) => getRiotRecentGames(player) > 0);
+    const reliable = players.filter((player) => getRiotRecentGames(player) >= 10);
+    const lineStatuses = players.map((player) => ({
+      player,
+      line: getRiotLineStatus(player),
+    }));
+    const lineMatched = lineStatuses.filter(
+      (item) => item.line.status === "good" || item.line.status === "warn",
+    );
+    const lineWarnings = lineStatuses.filter(
+      (item) => item.line.status === "danger",
+    );
+    const totalFormBonus = players.reduce(
+      (sum, player) =>
+        sum +
+        (player.soloRecentFormBonus ??
+          player.scoreBreakdown?.soloRecentFormBonus ??
+          0),
+      0,
+    );
+    const totalPositionBonus = players.reduce(
+      (sum, player) =>
+        sum +
+        (player.positionSkillBonus ??
+          player.scoreBreakdown?.positionSkillBonus ??
+          0),
+      0,
+    );
+
+    return {
+      players,
+      withRecent,
+      reliable,
+      lineMatched,
+      lineWarnings,
+      totalFormBonus: Number(totalFormBonus.toFixed(1)),
+      totalPositionBonus: Number(totalPositionBonus.toFixed(1)),
+    };
+  }
+
+  function getPlayerRiotScoreParts(player: AssignedPlayer) {
+    const formBonus =
+      player.soloRecentFormBonus ??
+      player.scoreBreakdown?.soloRecentFormBonus ??
+      0;
+    const soloPositionBonus = player.soloPositionBonus ?? 0;
+    const soloApplyPositionMatchBonus =
+      player.soloApplyPositionMatchBonus ??
+      player.scoreBreakdown?.soloApplyPositionMatchBonus ??
+      0;
+    const positionBonus = soloPositionBonus + soloApplyPositionMatchBonus;
+
+    return {
+      formBonus: Number(formBonus.toFixed(2)),
+      positionBonus: Number(positionBonus.toFixed(2)),
+      totalBonus: Number((formBonus + positionBonus).toFixed(2)),
+    };
+  }
+
+  function getRiotBalanceModeDelta(
+    player: AssignedPlayer,
+    mode: RiotBalanceMode = riotBalanceMode,
+  ) {
+    const parts = getPlayerRiotScoreParts(player);
+
+    if (mode === "withoutRiot") {
+      return Number((-parts.totalBonus).toFixed(2));
+    }
+
+    if (mode === "formOnly") {
+      return Number((-parts.positionBonus).toFixed(2));
+    }
+
+    return 0;
+  }
+
+  function getPlayerDisplayScore(
+    player: AssignedPlayer,
+    mode: RiotBalanceMode = riotBalanceMode,
+  ) {
+    return Number(
+      Math.max(0, player.score + getRiotBalanceModeDelta(player, mode)).toFixed(2),
+    );
+  }
+
+  function getTeamDisplayTotal(
+    players: AssignedPlayer[],
+    mode: RiotBalanceMode = riotBalanceMode,
+  ) {
+    return Number(
+      players
+        .reduce((sum, player) => sum + getPlayerDisplayScore(player, mode), 0)
+        .toFixed(2),
+    );
+  }
+
+  function getRiotBalanceModeSummary(
+    target: BalanceResponse,
+    mode: RiotBalanceMode = riotBalanceMode,
+  ) {
+    const redTotal = getTeamDisplayTotal(target.red, mode);
+    const blueTotal = getTeamDisplayTotal(target.blue, mode);
+    const diff = Number(Math.abs(redTotal - blueTotal).toFixed(2));
+    const serverDiff = Number(Math.abs(target.redTotal - target.blueTotal).toFixed(2));
+    const allPlayers = [...target.red, ...target.blue];
+    const totalFormBonus = allPlayers.reduce(
+      (sum, player) => sum + getPlayerRiotScoreParts(player).formBonus,
+      0,
+    );
+    const totalPositionBonus = allPlayers.reduce(
+      (sum, player) => sum + getPlayerRiotScoreParts(player).positionBonus,
+      0,
+    );
+    const adjustedPlayers = allPlayers.filter(
+      (player) => Math.abs(getRiotBalanceModeDelta(player, mode)) > 0.01,
+    );
+
+    return {
+      redTotal,
+      blueTotal,
+      diff,
+      serverDiff,
+      deltaFromServer: Number((diff - serverDiff).toFixed(2)),
+      totalFormBonus: Number(totalFormBonus.toFixed(1)),
+      totalPositionBonus: Number(totalPositionBonus.toFixed(1)),
+      adjustedPlayers,
+    };
+  }
+
+  function renderRiotBalanceModePanel(target: BalanceResponse) {
+    const summary = getRiotBalanceModeSummary(target);
+    const selectedOption =
+      RIOT_BALANCE_MODE_OPTIONS.find((option) => option.value === riotBalanceMode) ??
+      RIOT_BALANCE_MODE_OPTIONS[0];
+
+    return (
+      <section className="balance-riot-mode-card">
+        <div className="balance-riot-mode-head">
+          <div>
+            <strong>Riot 보정 선택 반영</strong>
+            <span>
+              운영자가 Riot 최근 폼/라인 보정을 어느 수준까지 볼지 선택합니다.
+              팀 배치는 그대로 두고 점수 영향만 즉시 비교합니다.
+            </span>
+          </div>
+          <b>{selectedOption.label}</b>
+        </div>
+
+        <div className="balance-riot-mode-buttons" role="group" aria-label="Riot 보정 반영 방식">
+          {RIOT_BALANCE_MODE_OPTIONS.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              className={riotBalanceMode === option.value ? "is-active" : ""}
+              onClick={() => setRiotBalanceMode(option.value)}
+            >
+              <strong>{option.label}</strong>
+              <span>{option.description}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="balance-riot-mode-grid">
+          <div>
+            <span>표시 RED</span>
+            <strong>{summary.redTotal.toFixed(1)}</strong>
+            <small>서버 {target.redTotal.toFixed(1)}</small>
+          </div>
+          <div>
+            <span>표시 BLUE</span>
+            <strong>{summary.blueTotal.toFixed(1)}</strong>
+            <small>서버 {target.blueTotal.toFixed(1)}</small>
+          </div>
+          <div>
+            <span>표시 점수차</span>
+            <strong>{summary.diff.toFixed(1)}</strong>
+            <small>서버 대비 {summary.deltaFromServer > 0 ? "+" : ""}{summary.deltaFromServer.toFixed(1)}</small>
+          </div>
+          <div>
+            <span>보정 대상</span>
+            <strong>{summary.adjustedPlayers.length}명</strong>
+            <small>폼 {summary.totalFormBonus > 0 ? "+" : ""}{summary.totalFormBonus.toFixed(1)} · 라인 {summary.totalPositionBonus > 0 ? "+" : ""}{summary.totalPositionBonus.toFixed(1)}</small>
+          </div>
+        </div>
+
+        <p className="balance-riot-mode-note">
+          이 선택은 현재 화면의 비교 점수와 팀 카드 표시값에만 반영됩니다.
+          저장, 수동 재계산, 서버 추천안 산출은 기존 서버 계산 결과를 기준으로 유지됩니다.
+        </p>
+      </section>
+    );
+  }
+
+  function renderRiotAssistPanel(target: BalanceResponse) {
+    const summary = getRiotAssistSummary(target);
+
+    return (
+      <section className="balance-riot-assist-card">
+        <div className="balance-riot-assist-head">
+          <div>
+            <strong>Riot 솔랭 보조 정보</strong>
+            <span>
+              실제 Riot API를 직접 호출하지 않고 DB에 저장된 최근 솔랭 캐시만 표시합니다.
+              현재 단계에서는 밸런스 판단 보조용이며, 운영자가 최종 판단해야 합니다.
+            </span>
+          </div>
+          <b>
+            최근 데이터 {summary.withRecent.length}/10명 · 신뢰 표본 {summary.reliable.length}/10명
+          </b>
+        </div>
+
+        <div className="balance-riot-kpi-grid">
+          <div>
+            <span>라인 일치</span>
+            <strong>{summary.lineMatched.length}명</strong>
+            <small>주라인 또는 부라인 기준</small>
+          </div>
+          <div>
+            <span>확인 필요</span>
+            <strong>{summary.lineWarnings.length}명</strong>
+            <small>최근 주라인과 배정 라인 불일치</small>
+          </div>
+          <div>
+            <span>솔랭 폼 영향</span>
+            <strong>{summary.totalFormBonus > 0 ? "+" : ""}{summary.totalFormBonus.toFixed(1)}</strong>
+            <small>10명 합산 보정값</small>
+          </div>
+          <div>
+            <span>포지션 숙련 영향</span>
+            <strong>{summary.totalPositionBonus > 0 ? "+" : ""}{summary.totalPositionBonus.toFixed(1)}</strong>
+            <small>내전·솔랭 라인 숙련 보조</small>
+          </div>
+        </div>
+
+        <div className="balance-riot-player-grid">
+          {summary.players.map((player) => {
+            const line = getRiotLineStatus(player);
+            const form = getRiotFormStatus(player);
+            const games = getRiotRecentGames(player);
+
+            return (
+              <article
+                key={`riot-assist-${player.team}-${player.playerId}`}
+                className={`balance-riot-player-card balance-riot-player-card--${line.status}`}
+              >
+                <div>
+                  <strong>
+                    {player.team} · {player.position} · {player.name}
+                  </strong>
+                  <span>
+                    {games > 0
+                      ? `${games}전 · 승률 ${getRiotRecentWinRateText(player)} · KDA ${formatDecimal(player.soloRecentKda, 2)}`
+                      : "최근 솔랭 데이터 없음"}
+                  </span>
+                </div>
+                <div className="balance-riot-player-tags">
+                  <em className={`balance-riot-tag balance-riot-tag--${line.status}`}>{line.label}</em>
+                  <em className={`balance-riot-tag balance-riot-tag--${form.status}`}>{form.label}</em>
+                  {player.soloRecentMainPosition ? (
+                    <em className="balance-riot-tag">
+                      주 {player.soloRecentMainPosition} {getRiotPositionConfidenceText(player)}
+                    </em>
+                  ) : null}
+                </div>
+                <p>{line.detail}</p>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+    );
   }
 
   function getScoreCalculationParts(player: AssignedPlayer) {
@@ -2240,11 +2621,30 @@ export default function PlayersBalancePage() {
                 <span>{roleText}</span>
                 <span>현재 {player.currentTier || "미등록"}</span>
                 <span>최고 {player.peakTier || "미등록"}</span>
+                {getRiotRecentGames(player) > 0 ? (
+                  <>
+                    <span className="balance-player-riot-chip">
+                      솔랭 {getRiotRecentGames(player)}전 {getRiotRecentWinRateText(player)}
+                    </span>
+                    <span
+                      className={`balance-player-riot-chip balance-player-riot-chip--${getRiotLineStatus(player).status}`}
+                    >
+                      {getRiotLineStatus(player).label}
+                    </span>
+                  </>
+                ) : (
+                  <span className="balance-player-riot-chip balance-player-riot-chip--missing">
+                    솔랭 없음
+                  </span>
+                )}
               </div>
             </div>
             <div className="balance-player-score-box">
-              <span>점수</span>
-              <strong>{player.score.toFixed(1)}</strong>
+              <span>{riotBalanceMode === "server" ? "점수" : "표시점수"}</span>
+              <strong>{getPlayerDisplayScore(player).toFixed(1)}</strong>
+              {riotBalanceMode !== "server" ? (
+                <small>서버 {player.score.toFixed(1)}</small>
+              ) : null}
             </div>
           </div>
         </div>
@@ -2428,7 +2828,7 @@ export default function PlayersBalancePage() {
                     BLUE
                   </h2>
                   <span className="balance-team-total">
-                    총점 {result.blueTotal.toFixed(1)}
+                    총점 {getTeamDisplayTotal(result.blue).toFixed(1)}
                   </span>
                 </div>
 
@@ -2443,7 +2843,7 @@ export default function PlayersBalancePage() {
                     RED
                   </h2>
                   <span className="balance-team-total">
-                    총점 {result.redTotal.toFixed(1)}
+                    총점 {getTeamDisplayTotal(result.red).toFixed(1)}
                   </span>
                 </div>
 
@@ -2465,11 +2865,11 @@ export default function PlayersBalancePage() {
                   </div>
 
                   <div className="balance-summary-list balance-summary-list--compact">
-                    <div>RED 총점: {result.redTotal.toFixed(1)}</div>
+                    <div>RED 총점: {getTeamDisplayTotal(result.red).toFixed(1)}</div>
                     <div>주 포지션 배정 수: {result.mainAssignedCount}명</div>
-                    <div>BLUE 총점: {result.blueTotal.toFixed(1)}</div>
+                    <div>BLUE 총점: {getTeamDisplayTotal(result.blue).toFixed(1)}</div>
                     <div>부 포지션 배정 수: {result.subAssignedCount}명</div>
-                    <div>점수 차이: {result.diff.toFixed(1)}</div>
+                    <div>점수 차이: {getRiotBalanceModeSummary(result).diff.toFixed(1)}</div>
                     <div>자동 배정 수: {result.autoAssignedCount}명</div>
                   </div>
                 </section>
@@ -2516,6 +2916,10 @@ export default function PlayersBalancePage() {
 
             </section>
 
+            {renderRiotAssistPanel(result)}
+
+            {renderRiotBalanceModePanel(result)}
+
             {renderBalanceOverviewCard(result)}
 
             {renderAiJudgement(result)}
@@ -2523,6 +2927,315 @@ export default function PlayersBalancePage() {
         ) : null}
 
         <style jsx global>{`
+          .balance-riot-mode-card {
+            margin-top: 20px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.92));
+            border-radius: 22px;
+            padding: 22px;
+            box-shadow: 0 18px 50px rgba(15, 23, 42, 0.18);
+          }
+
+          .balance-riot-mode-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 18px;
+          }
+
+          .balance-riot-mode-head strong {
+            display: block;
+            color: #f8fafc;
+            font-size: 18px;
+            font-weight: 900;
+            margin-bottom: 6px;
+          }
+
+          .balance-riot-mode-head span {
+            display: block;
+            color: #cbd5e1;
+            font-size: 13px;
+            line-height: 1.55;
+          }
+
+          .balance-riot-mode-head b {
+            flex: 0 0 auto;
+            border-radius: 999px;
+            padding: 8px 12px;
+            background: rgba(59, 130, 246, 0.18);
+            color: #bfdbfe;
+            font-size: 12px;
+            font-weight: 900;
+          }
+
+          .balance-riot-mode-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 14px;
+          }
+
+          .balance-riot-mode-buttons button {
+            border: 1px solid rgba(148, 163, 184, 0.28);
+            background: rgba(15, 23, 42, 0.72);
+            color: #e2e8f0;
+            border-radius: 16px;
+            padding: 13px 14px;
+            text-align: left;
+            cursor: pointer;
+            transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+          }
+
+          .balance-riot-mode-buttons button:hover {
+            transform: translateY(-1px);
+            border-color: rgba(96, 165, 250, 0.55);
+          }
+
+          .balance-riot-mode-buttons button.is-active {
+            border-color: rgba(59, 130, 246, 0.9);
+            background: rgba(37, 99, 235, 0.22);
+          }
+
+          .balance-riot-mode-buttons strong {
+            display: block;
+            font-size: 13px;
+            font-weight: 900;
+            margin-bottom: 4px;
+          }
+
+          .balance-riot-mode-buttons span {
+            display: block;
+            color: #cbd5e1;
+            font-size: 12px;
+            line-height: 1.4;
+          }
+
+          .balance-riot-mode-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+          }
+
+          .balance-riot-mode-grid div {
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            background: rgba(15, 23, 42, 0.72);
+            border-radius: 16px;
+            padding: 14px;
+          }
+
+          .balance-riot-mode-grid span,
+          .balance-riot-mode-grid small {
+            display: block;
+            color: #94a3b8;
+            font-size: 12px;
+            line-height: 1.4;
+          }
+
+          .balance-riot-mode-grid strong {
+            display: block;
+            margin: 5px 0;
+            color: #f8fafc;
+            font-size: 23px;
+            font-weight: 950;
+          }
+
+          .balance-riot-mode-note {
+            margin: 12px 0 0;
+            color: #cbd5e1;
+            font-size: 12px;
+            line-height: 1.55;
+          }
+
+          .balance-riot-assist-card {
+            margin-top: 22px;
+            padding: 20px;
+            border-radius: 22px;
+            border: 1px solid rgba(34, 211, 238, 0.28);
+            background:
+              radial-gradient(
+                circle at 12% 0%,
+                rgba(34, 211, 238, 0.14),
+                transparent 34%
+              ),
+              linear-gradient(
+                145deg,
+                rgba(8, 22, 43, 0.96),
+                rgba(9, 24, 48, 0.96)
+              );
+            box-shadow: 0 16px 38px rgba(0, 0, 0, 0.28);
+          }
+
+          .balance-riot-assist-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 14px;
+          }
+
+          .balance-riot-assist-head strong {
+            display: block;
+            color: #e0f2fe;
+            font-size: 17px;
+            font-weight: 950;
+          }
+
+          .balance-riot-assist-head span {
+            display: block;
+            max-width: 760px;
+            margin-top: 5px;
+            color: #94a3b8;
+            font-size: 12px;
+            line-height: 1.6;
+          }
+
+          .balance-riot-assist-head b {
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: rgba(14, 165, 233, 0.14);
+            border: 1px solid rgba(125, 211, 252, 0.3);
+            color: #bae6fd;
+            font-size: 12px;
+            white-space: nowrap;
+          }
+
+          .balance-riot-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 14px;
+          }
+
+          .balance-riot-kpi-grid div {
+            display: grid;
+            gap: 4px;
+            min-width: 0;
+            padding: 12px;
+            border-radius: 16px;
+            background: rgba(2, 6, 23, 0.42);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+          }
+
+          .balance-riot-kpi-grid span {
+            color: #94a3b8;
+            font-size: 11px;
+            font-weight: 900;
+          }
+
+          .balance-riot-kpi-grid strong {
+            color: #f8fafc;
+            font-size: 18px;
+            font-weight: 950;
+          }
+
+          .balance-riot-kpi-grid small {
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 800;
+            line-height: 1.35;
+          }
+
+          .balance-riot-player-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+          }
+
+          .balance-riot-player-card {
+            display: grid;
+            gap: 8px;
+            min-width: 0;
+            padding: 12px;
+            border-radius: 16px;
+            background: rgba(15, 23, 42, 0.62);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+          }
+
+          .balance-riot-player-card--good {
+            border-color: rgba(74, 222, 128, 0.34);
+          }
+          .balance-riot-player-card--warn {
+            border-color: rgba(250, 204, 21, 0.36);
+          }
+          .balance-riot-player-card--danger {
+            border-color: rgba(248, 113, 113, 0.44);
+          }
+
+          .balance-riot-player-card strong {
+            display: block;
+            overflow: hidden;
+            color: #f8fafc;
+            font-size: 13px;
+            font-weight: 950;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+
+          .balance-riot-player-card span,
+          .balance-riot-player-card p {
+            margin: 0;
+            color: #94a3b8;
+            font-size: 11px;
+            font-weight: 750;
+            line-height: 1.45;
+          }
+
+          .balance-riot-player-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+          }
+
+          .balance-riot-tag,
+          .balance-player-riot-chip {
+            display: inline-flex;
+            align-items: center;
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding: 2px 7px;
+            border-radius: 999px;
+            background: rgba(59, 130, 246, 0.14);
+            border: 1px solid rgba(96, 165, 250, 0.22);
+            color: #bfdbfe;
+            font-size: 10px;
+            font-style: normal;
+            font-weight: 900;
+            line-height: 1.25;
+          }
+
+          .balance-riot-tag--good,
+          .balance-player-riot-chip--good {
+            background: rgba(34, 197, 94, 0.13);
+            border-color: rgba(74, 222, 128, 0.28);
+            color: #bbf7d0;
+          }
+
+          .balance-riot-tag--warn,
+          .balance-player-riot-chip--warn {
+            background: rgba(250, 204, 21, 0.13);
+            border-color: rgba(250, 204, 21, 0.3);
+            color: #fde68a;
+          }
+
+          .balance-riot-tag--danger,
+          .balance-player-riot-chip--danger {
+            background: rgba(239, 68, 68, 0.13);
+            border-color: rgba(248, 113, 113, 0.34);
+            color: #fecaca;
+          }
+
+          .balance-riot-tag--low,
+          .balance-riot-tag--missing,
+          .balance-player-riot-chip--low,
+          .balance-player-riot-chip--missing {
+            background: rgba(100, 116, 139, 0.13);
+            border-color: rgba(148, 163, 184, 0.22);
+            color: #cbd5e1;
+          }
+
           .balance-ai-judgement-card {
             margin-top: 22px;
             padding: 22px;
@@ -3311,6 +4024,14 @@ export default function PlayersBalancePage() {
             font-weight: 900 !important;
           }
 
+          .balance-player-score-box small {
+            display: block;
+            margin-top: 2px;
+            color: #94a3b8;
+            font-size: 11px;
+            font-weight: 800;
+          }
+
           .balance-player-score-box strong {
             color: #dbeafe !important;
             font-size: 18px !important;
@@ -3597,6 +4318,13 @@ export default function PlayersBalancePage() {
           }
 
           @media (max-width: 900px) {
+            .balance-riot-mode-head {
+              flex-direction: column;
+            }
+            .balance-riot-mode-buttons,
+            .balance-riot-mode-grid {
+              grid-template-columns: 1fr;
+            }
             .balance-overview-main {
               grid-template-columns: 1fr !important;
             }

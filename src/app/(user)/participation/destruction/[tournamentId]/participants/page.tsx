@@ -5,6 +5,10 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
 import TierIcon from "@/components/TierIcon";
 import { calculateDestructionPublicApplicationIds, getDestructionLaneLimits } from "@/lib/destruction/recruitment-auto-reserve";
+import {
+  getRiotDestructionVerification,
+  summarizeRiotDestructionVerifications,
+} from "@/lib/riot/destruction-verification";
 
 type PageProps = {
   params: Promise<{
@@ -87,6 +91,28 @@ export default async function DestructionParticipantsPage({ params, searchParams
               tag: true,
               currentTier: true,
               peakTier: true,
+              riotAccount: {
+                select: {
+                  gameName: true,
+                  tagLine: true,
+                  isVerified: true,
+                  syncStatus: true,
+                  lastSyncedAt: true,
+                  updatedAt: true,
+                  unlinkedAt: true,
+                },
+              },
+              soloRankSnapshot: {
+                select: {
+                  tier: true,
+                  rank: true,
+                  leaguePoints: true,
+                  wins: true,
+                  losses: true,
+                  winRate: true,
+                  updatedAt: true,
+                },
+              },
             },
           },
         },
@@ -121,6 +147,19 @@ export default async function DestructionParticipantsPage({ params, searchParams
     : overflowApplies;
   const applyOrder = new Map(participantApplies.map((apply, index) => [apply.id, index + 1]));
   const overflowOrder = new Map(overflowApplies.map((apply, index) => [apply.id, index + 1]));
+  const riotVerificationByApplyId = new Map(
+    applies.map((apply) => [
+      apply.id,
+      getRiotDestructionVerification({
+        currentTier: apply.player.currentTier,
+        riotAccount: apply.player.riotAccount,
+        soloRankSnapshot: apply.player.soloRankSnapshot,
+      }),
+    ]),
+  );
+  const riotVerificationSummary = summarizeRiotDestructionVerifications(
+    participantApplies.map((apply) => riotVerificationByApplyId.get(apply.id)).filter(Boolean) as NonNullable<ReturnType<typeof getRiotDestructionVerification>>[],
+  );
   const getPublicStatusLabel = (apply: { status: string; id: number }) => {
     if (capacityOverflowIds.has(apply.id)) return "정원 초과";
     if (laneOverflowIds.has(apply.id)) return "라인 초과";
@@ -332,6 +371,44 @@ export default async function DestructionParticipantsPage({ params, searchParams
           background: rgba(37, 99, 235, 0.2);
         }
 
+        .destruction-badge--riot-ok {
+          border-color: rgba(34, 197, 94, 0.48);
+          color: #bbf7d0;
+          background: rgba(34, 197, 94, 0.14);
+        }
+
+        .destruction-badge--riot-warn {
+          border-color: rgba(250, 204, 21, 0.48);
+          color: #fef3c7;
+          background: rgba(250, 204, 21, 0.13);
+        }
+
+        .destruction-badge--riot-danger {
+          border-color: rgba(248, 113, 113, 0.52);
+          color: #fecaca;
+          background: rgba(248, 113, 113, 0.14);
+        }
+
+        .destruction-badge--riot-muted {
+          border-color: rgba(148, 163, 184, 0.28);
+          color: rgba(203, 213, 225, 0.72);
+          background: rgba(15, 23, 42, 0.54);
+        }
+
+        .destruction-riot-cell {
+          display: flex;
+          flex-direction: column;
+          gap: 5px;
+          max-width: 210px;
+          color: rgba(226, 232, 240, 0.82);
+          font-size: 12px;
+          line-height: 1.45;
+        }
+
+        .destruction-riot-cell small {
+          color: rgba(203, 213, 225, 0.7);
+        }
+
         .destruction-message-cell {
           max-width: 300px;
           color: rgba(226, 232, 240, 0.82);
@@ -487,6 +564,7 @@ export default async function DestructionParticipantsPage({ params, searchParams
           .destruction-position-cell,
           .destruction-tier-cell,
           .destruction-badge-row,
+          .destruction-riot-cell,
           .destruction-message-cell,
           .destruction-date-cell {
             align-items: flex-end;
@@ -548,6 +626,14 @@ export default async function DestructionParticipantsPage({ params, searchParams
           <article className="stat-card">
             <span className="stat-card__label">총 신청 인원</span>
             <strong className="stat-card__value">{applies.length}명</strong>
+          </article>
+          <article className="stat-card">
+            <span className="stat-card__label">Riot 정상</span>
+            <strong className="stat-card__value">{riotVerificationSummary.verified}명</strong>
+          </article>
+          <article className="stat-card">
+            <span className="stat-card__label">Riot 확인</span>
+            <strong className="stat-card__value">{riotVerificationSummary.needsAdminReview}명</strong>
           </article>
         </div>
       </section>
@@ -630,6 +716,7 @@ export default async function DestructionParticipantsPage({ params, searchParams
                   <th>참가자</th>
                   <th>포지션</th>
                   <th>티어</th>
+                  <th>Riot 검증</th>
                   <th>신청 상태</th>
                   <th>각오</th>
                   <th>신청일</th>
@@ -639,6 +726,10 @@ export default async function DestructionParticipantsPage({ params, searchParams
                 {filteredApplies.map((apply) => {
                   const detailHref = `/participation/destruction/${tournament.id}/participants/${apply.playerId}`;
                   const message = apply.message?.trim() || "각오 미입력";
+                  const riotVerification = riotVerificationByApplyId.get(apply.id);
+                  const riotClassName = riotVerification
+                    ? `destruction-badge destruction-badge--riot-${riotVerification.severity}`
+                    : "destruction-badge destruction-badge--riot-muted";
 
                   return (
                     <tr key={apply.id}>
@@ -663,6 +754,13 @@ export default async function DestructionParticipantsPage({ params, searchParams
                         <div className="destruction-tier-cell">
                           <TierIcon tier={apply.player.currentTier} size={24} showText />
                           <span className="destruction-tier-peak">최고 {apply.player.peakTier ?? "-"}</span>
+                        </div>
+                      </td>
+                      <td data-label="Riot 검증">
+                        <div className="destruction-riot-cell">
+                          <span className={riotClassName}>{riotVerification?.shortLabel ?? "미확인"}</span>
+                          <small>Riot {riotVerification?.riotTierLabel ?? "-"}</small>
+                          <small>{riotVerification?.lastSyncedAtLabel ? `갱신 ${riotVerification.lastSyncedAtLabel}` : "갱신 -"}</small>
                         </div>
                       </td>
                       <td data-label="신청 상태">
@@ -707,6 +805,7 @@ export default async function DestructionParticipantsPage({ params, searchParams
                   <th>참가자</th>
                   <th>포지션</th>
                   <th>티어</th>
+                  <th>Riot 검증</th>
                   <th>신청 상태</th>
                   <th>각오</th>
                   <th>신청일</th>
@@ -716,6 +815,10 @@ export default async function DestructionParticipantsPage({ params, searchParams
                 {filteredOverflowApplies.map((apply) => {
                   const detailHref = `/participation/destruction/${tournament.id}/participants/${apply.playerId}`;
                   const message = apply.message?.trim() || "각오 미입력";
+                  const riotVerification = riotVerificationByApplyId.get(apply.id);
+                  const riotClassName = riotVerification
+                    ? `destruction-badge destruction-badge--riot-${riotVerification.severity}`
+                    : "destruction-badge destruction-badge--riot-muted";
 
                   return (
                     <tr key={apply.id}>
@@ -738,6 +841,13 @@ export default async function DestructionParticipantsPage({ params, searchParams
                         <div className="destruction-tier-cell">
                           <TierIcon tier={apply.player.currentTier} size={24} showText />
                           <span className="destruction-tier-peak">최고 {apply.player.peakTier ?? "-"}</span>
+                        </div>
+                      </td>
+                      <td data-label="Riot 검증">
+                        <div className="destruction-riot-cell">
+                          <span className={riotClassName}>{riotVerification?.shortLabel ?? "미확인"}</span>
+                          <small>Riot {riotVerification?.riotTierLabel ?? "-"}</small>
+                          <small>{riotVerification?.lastSyncedAtLabel ? `갱신 ${riotVerification.lastSyncedAtLabel}` : "갱신 -"}</small>
                         </div>
                       </td>
                       <td data-label="신청 상태">

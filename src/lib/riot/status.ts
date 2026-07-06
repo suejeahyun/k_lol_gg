@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma/client";
+import { recordRiotApiRequestLog } from "@/lib/riot/audit";
 
 type RiotStatusInput = {
   scope: string;
@@ -69,6 +70,14 @@ export async function recordRiotApiStatus(input: RiotStatusInput) {
         lastSuccessAt: input.ok ? now : null,
         lastFailureAt: input.ok ? null : now,
       },
+    });
+
+    await recordRiotApiRequestLog({
+      endpoint: input.scope,
+      statusCode: input.statusCode,
+      source: "RIOT_STATUS",
+      errorCode: input.ok ? undefined : input.statusText ?? "RIOT_STATUS_FAILURE",
+      message: input.message,
     });
   } catch (statusError) {
     console.error("[RIOT_API_STATUS_RECORD_ERROR]", statusError);

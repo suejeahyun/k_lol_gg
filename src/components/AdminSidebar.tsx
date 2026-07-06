@@ -43,6 +43,7 @@ const menuGroups: AdminSidebarGroup[] = [
     title: "데이터",
     items: [
       { href: "/admin/players", label: "플레이어 관리", code: "PLY", activePrefixes: ["/admin/players"] },
+      { href: "/admin/riot", label: "Riot 연동", code: "RIT", activePrefixes: ["/admin/riot"] },
       { href: "/admin/champions", label: "챔피언", code: "CHP", activePrefixes: ["/admin/champions"] },
       { href: "/admin/seasons", label: "시즌", code: "SSN", activePrefixes: ["/admin/seasons"] },
     ],

@@ -66,7 +66,9 @@ const menuGroups: UserSidebarGroup[] = [
   },
   {
     title: "INFO",
-    items: [      { href: "/highlights", label: "하이라이트", code: "VID", activePrefixes: ["/highlights", "/images"] },
+    items: [
+      { href: "/highlights", label: "하이라이트", code: "VID", activePrefixes: ["/highlights", "/images"] },
+      { href: "/riot-api", label: "Riot API 안내", code: "RIT", activePrefixes: ["/riot-api", "/me/riot"] },
     ],
   },
 ];

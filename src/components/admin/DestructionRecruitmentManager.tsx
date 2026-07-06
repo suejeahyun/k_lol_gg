@@ -15,6 +15,30 @@ type Player = {
   peakTier?: string | null;
 };
 
+type RiotVerification = {
+  status: string;
+  severity: "ok" | "warn" | "danger" | "muted";
+  label: string;
+  shortLabel: string;
+  message: string;
+  siteTierLabel: string;
+  riotTierLabel: string;
+  riotIdLabel: string;
+  diffDivisions: number | null;
+  lastSyncedAtLabel: string;
+  rankWinRateLabel: string;
+  needsAdminReview: boolean;
+};
+
+type RiotVerificationSummary = {
+  total: number;
+  verified: number;
+  checkRequired: number;
+  syncRequired: number;
+  notLinked: number;
+  needsAdminReview: number;
+};
+
 type Application = {
   id: number;
   playerId: number;
@@ -23,6 +47,7 @@ type Application = {
   status: ApplyStatus | string;
   createdAt: string;
   player: Player;
+  riotVerification?: RiotVerification;
 };
 
 type LaneLimits = Record<Position, number>;
@@ -38,6 +63,7 @@ type Props = {
   hasTeams: boolean;
   hasMatches: boolean;
   laneLimits: LaneLimits;
+  riotVerificationSummary?: RiotVerificationSummary;
 };
 
 const POSITIONS: Position[] = ["TOP", "JGL", "MID", "ADC", "SUP"];
@@ -181,18 +207,28 @@ function getStatusBadgeClass(status: string) {
   return "recruitment-badge";
 }
 
+function getRiotBadgeClass(verification?: RiotVerification) {
+  if (!verification) return "recruitment-badge riot-muted";
+  if (verification.severity === "ok") return "recruitment-badge riot-ok";
+  if (verification.severity === "danger") return "recruitment-badge riot-danger";
+  if (verification.severity === "warn") return "recruitment-badge riot-warn";
+  return "recruitment-badge riot-muted";
+}
+
 export default function DestructionRecruitmentManager({
   tournamentId,
   applications,
   hasTeams,
   hasMatches,
   laneLimits,
+  riotVerificationSummary,
 }: Props) {
   const router = useRouter();
   const [keyword, setKeyword] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [positionFilter, setPositionFilter] = useState("ALL");
   const [captainFilter, setCaptainFilter] = useState("ALL");
+  const [riotFilter, setRiotFilter] = useState("ALL");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const commonLaneLimit = Math.max(...POSITIONS.map((position) => laneLimits[position] ?? 10));
@@ -208,6 +244,14 @@ export default function DestructionRecruitmentManager({
   const managedApplicationCount = applications.filter((application) => isRecruitmentPoolStatus(String(application.status))).length;
   const targetTeamCount = managedApplicationCount >= 5 ? Math.floor(managedApplicationCount / 5) : 0;
   const targetActiveCount = targetTeamCount * 5;
+  const riotSummary = riotVerificationSummary ?? {
+    total: applications.length,
+    verified: applications.filter((application) => application.riotVerification?.status === "VERIFIED").length,
+    checkRequired: applications.filter((application) => application.riotVerification?.status === "CHECK_REQUIRED" || application.riotVerification?.status === "UNKNOWN_TIER").length,
+    syncRequired: applications.filter((application) => application.riotVerification?.status === "SYNC_REQUIRED" || application.riotVerification?.status === "NO_RANK").length,
+    notLinked: applications.filter((application) => application.riotVerification?.status === "NOT_LINKED" || !application.riotVerification).length,
+    needsAdminReview: applications.filter((application) => application.riotVerification?.needsAdminReview || !application.riotVerification).length,
+  };
   const autoReserveIds = useMemo(() => getAutoReserveIds(applications, laneLimits), [applications, laneLimits]);
 
   const positionCounts = POSITIONS.map((position) => ({
@@ -222,6 +266,8 @@ export default function DestructionRecruitmentManager({
     if (positionFilter !== "ALL" && application.mainPosition !== positionFilter) return false;
     if (captainFilter === "PREFERRED" && !application.isCaptain) return false;
     if (captainFilter === "NOT_PREFERRED" && application.isCaptain) return false;
+    if (riotFilter === "NEEDS_REVIEW" && !application.riotVerification?.needsAdminReview) return false;
+    if (riotFilter !== "ALL" && riotFilter !== "NEEDS_REVIEW" && application.riotVerification?.status !== riotFilter) return false;
 
     const value = keyword.trim().toLowerCase();
     if (!value) return true;
@@ -233,6 +279,10 @@ export default function DestructionRecruitmentManager({
       `${application.player.nickname}#${application.player.tag}`,
       application.mainPosition,
       application.status,
+      application.riotVerification?.label,
+      application.riotVerification?.riotTierLabel,
+      application.riotVerification?.riotIdLabel,
+      application.riotVerification?.message,
     ]
       .filter(Boolean)
       .join(" ")
@@ -333,7 +383,7 @@ export default function DestructionRecruitmentManager({
         .destruction-lane-limit-field label { display: block; color: #bfdbfe; font-size: 12px; font-weight: 800; margin-bottom: 6px; }
         .recruitment-auto-note { border: 1px solid rgba(34,211,238,0.28); background: rgba(8,145,178,0.10); color: #c8f5ff; border-radius: 12px; padding: 10px 12px; font-size: 12px; font-weight: 700; }
         .recruitment-table { border: 1px solid rgba(59,130,246,0.30); border-radius: 16px; overflow: hidden; background: rgba(7,16,35,0.72); }
-        .recruitment-row { display: grid; grid-template-columns: 52px minmax(90px, 0.8fr) minmax(180px, 1.3fr) 104px 90px 104px 96px minmax(190px, 1fr); gap: 10px; align-items: center; padding: 10px 12px; border-bottom: 1px solid rgba(59,130,246,0.18); }
+        .recruitment-row { display: grid; grid-template-columns: 48px minmax(86px, 0.8fr) minmax(156px, 1.05fr) 96px 74px minmax(160px, 1.15fr) 100px 86px minmax(180px, 1fr); gap: 10px; align-items: center; padding: 10px 12px; border-bottom: 1px solid rgba(59,130,246,0.18); }
         .recruitment-row:last-child { border-bottom: 0; }
         .recruitment-row.is-head { background: rgba(15,36,72,0.92); color: #dbeafe; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; }
         .recruitment-row.is-reserve { background: rgba(250,204,21,0.045); }
@@ -342,6 +392,12 @@ export default function DestructionRecruitmentManager({
         .recruitment-badge.confirmed { border-color: rgba(34,197,94,0.45); background: rgba(34,197,94,0.12); color: #bbf7d0; }
         .recruitment-badge.reserve { border-color: rgba(250,204,21,0.42); background: rgba(250,204,21,0.12); color: #fef3c7; }
         .recruitment-badge.reject { border-color: rgba(248,113,113,0.42); background: rgba(248,113,113,0.12); color: #fecaca; }
+        .recruitment-badge.riot-ok { border-color: rgba(34,197,94,0.46); background: rgba(34,197,94,0.12); color: #bbf7d0; }
+        .recruitment-badge.riot-warn { border-color: rgba(250,204,21,0.44); background: rgba(250,204,21,0.12); color: #fef3c7; }
+        .recruitment-badge.riot-danger { border-color: rgba(248,113,113,0.48); background: rgba(248,113,113,0.13); color: #fecaca; }
+        .recruitment-badge.riot-muted { border-color: rgba(148,163,184,0.30); background: rgba(15,23,42,0.48); color: rgba(203,213,225,0.76); }
+        .recruitment-riot-cell { display: grid; gap: 4px; color: #cbd5e1; font-size: 12px; line-height: 1.4; }
+        .recruitment-riot-cell small { color: rgba(203,213,225,0.72); }
         .recruitment-actions { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
         .recruitment-position-select { min-width: 92px; padding: 7px 8px; }
         @media (max-width: 1180px) { .destruction-position-strip, .destruction-lane-limit-editor { grid-template-columns: 1fr 1fr; } .recruitment-row { grid-template-columns: 1fr; } .recruitment-row.is-head { display: none; } .recruitment-actions { justify-content: flex-start; } }
@@ -371,6 +427,14 @@ export default function DestructionRecruitmentManager({
         <div className="admin-event-detail-card">
           <span>현재 기준 팀 수</span>
           <strong>{targetTeamCount > 0 ? `${targetTeamCount}팀 · ${targetActiveCount}명` : "산정 불가"}</strong>
+        </div>
+        <div className="admin-event-detail-card">
+          <span>Riot 정상</span>
+          <strong>{riotSummary.verified}명</strong>
+        </div>
+        <div className="admin-event-detail-card">
+          <span>Riot 확인 필요</span>
+          <strong>{riotSummary.needsAdminReview}명</strong>
         </div>
       </div>
 
@@ -421,7 +485,7 @@ export default function DestructionRecruitmentManager({
       <div className="empty-box" style={{ marginBottom: 14 }}>
         <strong>관리 기준</strong>
         <p className="admin-page__description" style={{ margin: "8px 0 0" }}>
-          라인은 모집 현황에서 바로 변경할 수 있습니다. 보류 인원을 반드시 참가시키려면 관리에서 <b>확정</b>으로 변경하세요. 확정 상태는 자동 보류 재계산으로 다시 보류되지 않습니다.
+          라인은 모집 현황에서 바로 변경할 수 있습니다. Riot 검증은 현재티어와 연동된 솔랭 티어를 비교하는 보조 지표입니다. 보류 인원을 반드시 참가시키려면 관리에서 <b>확정</b>으로 변경하세요. 확정 상태는 자동 보류 재계산으로 다시 보류되지 않습니다.
         </p>
       </div>
 
@@ -467,6 +531,21 @@ export default function DestructionRecruitmentManager({
           <option value="PREFERRED">선호</option>
           <option value="NOT_PREFERRED">비선호</option>
         </select>
+        <select
+          className="admin-form__input"
+          value={riotFilter}
+          onChange={(event) => setRiotFilter(event.target.value)}
+          style={{ minWidth: 150 }}
+        >
+          <option value="ALL">Riot 전체</option>
+          <option value="NEEDS_REVIEW">확인 필요 전체</option>
+          <option value="VERIFIED">정상</option>
+          <option value="CHECK_REQUIRED">티어 차이</option>
+          <option value="SYNC_REQUIRED">갱신 필요</option>
+          <option value="NO_RANK">랭크 없음</option>
+          <option value="NOT_LINKED">미연동</option>
+          <option value="UNKNOWN_TIER">수동 확인</option>
+        </select>
         <span className="recruitment-auto-note">확정은 보류 대상에서 제외됩니다.</span>
       </div>
 
@@ -480,6 +559,7 @@ export default function DestructionRecruitmentManager({
             <span>닉네임#태그</span>
             <span>라인 변경</span>
             <span>팀장</span>
+            <span>Riot 검증</span>
             <span>상태</span>
             <span>신청</span>
             <span>관리</span>
@@ -512,6 +592,14 @@ export default function DestructionRecruitmentManager({
                   </select>
                 </span>
                 <span>{application.isCaptain ? "선호" : "비선호"}</span>
+                <span className="recruitment-riot-cell">
+                  <span className={getRiotBadgeClass(application.riotVerification)}>
+                    {application.riotVerification?.shortLabel ?? "미확인"}
+                  </span>
+                  <small>사이트 {application.riotVerification?.siteTierLabel ?? application.player.currentTier ?? "-"}</small>
+                  <small>Riot {application.riotVerification?.riotTierLabel ?? "-"}</small>
+                  <small>{application.riotVerification?.message ?? "Riot 검증 데이터 없음"}</small>
+                </span>
                 <span>
                   <span className={getStatusBadgeClass(status)}>
                     {STATUS_LABELS[status] ?? status}

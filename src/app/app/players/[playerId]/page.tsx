@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
 import { AppEmpty, AppSection } from "@/components/app-mobile/AppCards";
 import { prisma } from "@/lib/prisma/client";
+import { formatRiotPosition, formatRiotTier } from "@/lib/riot/player-analysis";
 
 export const dynamic = "force-dynamic";
 
@@ -76,6 +77,39 @@ export default async function AppPlayerDetailPage({ params }: AppPlayerDetailPag
           },
         },
       },
+      riotAccount: {
+        select: {
+          gameName: true,
+          tagLine: true,
+          lastSyncedAt: true,
+          syncStatus: true,
+        },
+      },
+      soloRankSnapshot: {
+        select: {
+          tier: true,
+          rank: true,
+          leaguePoints: true,
+          wins: true,
+          losses: true,
+          winRate: true,
+          updatedAt: true,
+        },
+      },
+      soloMatches: {
+        orderBy: { gameCreation: "desc" },
+        take: 20,
+        select: {
+          championName: true,
+          position: true,
+          kills: true,
+          deaths: true,
+          assists: true,
+          win: true,
+          totalDamageDealtToChampions: true,
+          visionScore: true,
+        },
+      },
       participants: {
         where: currentSeason
           ? {
@@ -137,6 +171,30 @@ export default async function AppPlayerDetailPage({ params }: AppPlayerDetailPag
   const mvpCount = stat?.mvpCount ?? 0;
   const winRate = getWinRate(wins, totalGames);
 
+  const soloMatches = player.soloMatches;
+  const soloGames = soloMatches.length;
+  const soloWins = soloMatches.filter((match) => match.win).length;
+  const soloLosses = soloGames - soloWins;
+  const soloWinRate = getWinRate(soloWins, soloGames);
+  const soloKills = soloMatches.reduce((sum, match) => sum + match.kills, 0);
+  const soloDeaths = soloMatches.reduce((sum, match) => sum + match.deaths, 0);
+  const soloAssists = soloMatches.reduce((sum, match) => sum + match.assists, 0);
+  const soloKda = soloDeaths <= 0
+    ? Number((soloKills + soloAssists).toFixed(2))
+    : Number(((soloKills + soloAssists) / soloDeaths).toFixed(2));
+  const mainSoloPosition = Array.from(
+    soloMatches
+      .reduce((map, match) => {
+        const key = match.position || "UNKNOWN";
+        map.set(key, (map.get(key) ?? 0) + 1);
+        return map;
+      }, new Map<string, number>())
+      .entries(),
+  ).sort((a, b) => b[1] - a[1])[0] ?? null;
+  const averageSoloDamage = soloGames > 0
+    ? Math.round(soloMatches.reduce((sum, match) => sum + match.totalDamageDealtToChampions, 0) / soloGames)
+    : 0;
+
   return (
     <AppMobileShell subtitle="플레이어 상세">
       <section className="klol-app-hero">
@@ -188,6 +246,47 @@ export default async function AppPlayerDetailPage({ params }: AppPlayerDetailPag
             <strong>{mvpCount}회</strong>
           </div>
         </div>
+      </AppSection>
+
+      <AppSection title="Riot 솔랭 요약" caption={player.riotAccount ? `${player.riotAccount.gameName}#${player.riotAccount.tagLine}` : "Riot 미연동"}>
+        <div className="klol-app-meta-grid klol-app-meta-grid--player-detail">
+          <div className="klol-app-meta">
+            <span>솔로랭크</span>
+            <strong>
+              {formatRiotTier(
+                player.soloRankSnapshot?.tier,
+                player.soloRankSnapshot?.rank,
+                player.soloRankSnapshot?.leaguePoints,
+              )}
+            </strong>
+          </div>
+          <div className="klol-app-meta">
+            <span>최근 승률</span>
+            <strong>{soloWinRate}%</strong>
+          </div>
+          <div className="klol-app-meta">
+            <span>최근 승패</span>
+            <strong>{soloWins}승 {soloLosses}패</strong>
+          </div>
+          <div className="klol-app-meta">
+            <span>최근 KDA</span>
+            <strong>{soloKda}</strong>
+          </div>
+          <div className="klol-app-meta">
+            <span>주 라인</span>
+            <strong>{formatRiotPosition(mainSoloPosition?.[0])}</strong>
+          </div>
+          <div className="klol-app-meta">
+            <span>평균 딜량</span>
+            <strong>{averageSoloDamage.toLocaleString("ko-KR")}</strong>
+          </div>
+        </div>
+        <p className="klol-app-muted" style={{ marginTop: 10 }}>
+          Riot 데이터는 저장된 캐시 기준입니다. 실제 API 호출은 동기화 버튼 또는 관리자 동기화에서만 실행됩니다.
+        </p>
+        <Link className="klol-app-secondary klol-app-full-link" href={`/players/${player.id}/riot`}>
+          PC Riot 상세 보기
+        </Link>
       </AppSection>
 
       <AppSection title="주요 챔피언">

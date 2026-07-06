@@ -59,6 +59,13 @@ export default async function AccountPage() {
           <span className="account-action-card__cta">수정하기</span>
         </Link>
 
+        <Link className="account-action-card" href="/me/riot">
+          <span className="account-action-card__eyebrow">RIOT</span>
+          <strong>Riot 계정 연동</strong>
+          <p>Production API 승인 전까지는 준비 중 화면으로 표시됩니다.</p>
+          <span className="account-action-card__cta">확인하기</span>
+        </Link>
+
         <Link className="account-action-card" href="/account/password">
           <span className="account-action-card__eyebrow">SECURITY</span>
           <strong>비밀번호 변경</strong>

@@ -896,6 +896,63 @@ model RiotApiStatus {
   @@index([lastFailureAt])
 }
 
+model RiotAccountLinkLog {
+  id            Int      @id @default(autoincrement())
+  playerId      Int?
+  userAccountId Int?
+  action        String
+  actorType     String   @default("SYSTEM")
+  gameName      String?
+  tagLine       String?
+  puuid         String?
+  ipAddress     String?
+  userAgent     String?  @db.Text
+  message       String?  @db.Text
+  createdAt     DateTime @default(now())
+
+  @@index([playerId, createdAt])
+  @@index([userAccountId, createdAt])
+  @@index([action, createdAt])
+}
+
+model RiotApiRequestLog {
+  id            Int      @id @default(autoincrement())
+  endpoint      String
+  method        String   @default("GET")
+  statusCode    Int?
+  target        String?
+  source        String   @default("RIOT_CLIENT")
+  userAccountId Int?
+  playerId      Int?
+  durationMs    Int?
+  errorCode     String?
+  message       String?  @db.Text
+  createdAt     DateTime @default(now())
+
+  @@index([source, createdAt])
+  @@index([playerId, createdAt])
+  @@index([userAccountId, createdAt])
+  @@index([statusCode, createdAt])
+}
+
+model RiotSyncJob {
+  id                       Int       @id @default(autoincrement())
+  type                     String
+  status                   String
+  requestedByUserAccountId Int?
+  totalCount               Int       @default(0)
+  successCount             Int       @default(0)
+  failedCount              Int       @default(0)
+  message                  String?   @db.Text
+  startedAt                DateTime?
+  finishedAt               DateTime?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+
+  @@index([type, status, createdAt])
+  @@index([requestedByUserAccountId, createdAt])
+}
+
 model PlayerRiotAccount {
   id       Int @id @default(autoincrement())
   playerId Int @unique
@@ -909,6 +966,14 @@ model PlayerRiotAccount {
   profileIconId Int?
   summonerLevel Int?
 
+  isVerified               Boolean   @default(false)
+  linkedByUserAccountId    Int?
+  linkedAt                 DateTime?
+  unlinkedAt               DateTime?
+  syncStatus               String    @default("IDLE")
+  lastErrorMessage         String?   @db.Text
+  lastErrorAt              DateTime?
+
   lastSyncedAt DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
@@ -916,6 +981,8 @@ model PlayerRiotAccount {
   player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
   @@index([gameName, tagLine])
+  @@index([syncStatus, lastSyncedAt])
+  @@index([isVerified])
 }
 
 model PlayerSoloRankSnapshot {

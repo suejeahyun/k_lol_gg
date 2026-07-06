@@ -1,3 +1,5 @@
+import { assertRiotFeatureEnabled } from "@/lib/riot/feature";
+
 type RiotAccountDto = {
   puuid: string;
   gameName: string;
@@ -110,17 +112,20 @@ export type RiotPlayerOverview = {
   opggUrl: string;
 };
 
-const RIOT_API_KEY = process.env.RIOT_API_KEY;
-const RIOT_LOL_REGION = process.env.RIOT_LOL_REGION ?? "kr";
-const RIOT_ACCOUNT_REGION = process.env.RIOT_ACCOUNT_REGION ?? "asia";
+const RIOT_LOL_REGION = process.env.RIOT_PLATFORM ?? process.env.RIOT_LOL_REGION ?? "kr";
+const RIOT_ACCOUNT_REGION = process.env.RIOT_REGION ?? process.env.RIOT_ACCOUNT_REGION ?? "asia";
 
 function getHeaders() {
-  if (!RIOT_API_KEY) {
+  assertRiotFeatureEnabled();
+
+  const riotApiKey = process.env.RIOT_API_KEY?.trim();
+
+  if (!riotApiKey) {
     throw new Error("RIOT_API_KEY가 설정되지 않았습니다.");
   }
 
   return {
-    "X-Riot-Token": RIOT_API_KEY,
+    "X-Riot-Token": riotApiKey,
   };
 }
 

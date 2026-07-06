@@ -1,0 +1,243 @@
+.stack {
+  display: grid;
+  gap: 16px;
+}
+
+.card {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.54);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.header strong {
+  display: block;
+  color: #f8fafc;
+  font-size: 16px;
+}
+
+.header p {
+  margin: 6px 0 0;
+  color: #94a3b8;
+  line-height: 1.55;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.grid label {
+  display: grid;
+  gap: 6px;
+  color: #cbd5e1;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.grid input {
+  width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  border-radius: 12px;
+  background: rgba(2, 6, 23, 0.66);
+  color: #f8fafc;
+  padding: 11px 12px;
+}
+
+.grid input:disabled {
+  opacity: 0.55;
+}
+
+.checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  color: #cbd5e1;
+  font-size: 13px;
+}
+
+.checks label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.buttonRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.button,
+.secondaryButton,
+.dangerButton {
+  width: fit-content;
+  border: 0;
+  border-radius: 12px;
+  color: #fff;
+  padding: 11px 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.button {
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+}
+
+.secondaryButton {
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(30, 41, 59, 0.86);
+}
+
+.dangerButton {
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  background: rgba(127, 29, 29, 0.72);
+}
+
+.button:disabled,
+.secondaryButton:disabled,
+.dangerButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.badgeGreen,
+.badgeYellow {
+  flex: none;
+  border-radius: 999px;
+  padding: 6px 9px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.badgeGreen {
+  background: rgba(34, 197, 94, 0.16);
+  color: #86efac;
+}
+
+.badgeYellow {
+  background: rgba(245, 158, 11, 0.16);
+  color: #fcd34d;
+}
+
+.message,
+.error,
+.note,
+.bulkSummary {
+  border-radius: 12px;
+  padding: 11px 12px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.message {
+  border: 1px solid rgba(34, 197, 94, 0.28);
+  background: rgba(34, 197, 94, 0.1);
+  color: #bbf7d0;
+}
+
+.error {
+  border: 1px solid rgba(248, 113, 113, 0.28);
+  background: rgba(248, 113, 113, 0.1);
+  color: #fecaca;
+}
+
+.note {
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(15, 23, 42, 0.42);
+  color: #94a3b8;
+}
+
+.bulkSummary {
+  border: 1px solid rgba(59, 130, 246, 0.26);
+  background: rgba(59, 130, 246, 0.1);
+  color: #bfdbfe;
+}
+
+.bulkSummary strong {
+  display: block;
+  color: #dbeafe;
+  margin-bottom: 9px;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.summaryGrid span {
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.44);
+  padding: 8px 10px;
+  color: #dbeafe;
+}
+
+.resultList {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.resultList li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-top: 1px solid rgba(148, 163, 184, 0.16);
+  padding-top: 7px;
+}
+
+.resultList span {
+  color: #e2e8f0;
+}
+
+.resultList em {
+  flex: none;
+  color: #93c5fd;
+  font-style: normal;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+@media (max-width: 720px) {
+  .header,
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .header {
+    display: grid;
+  }
+
+  .button,
+  .secondaryButton,
+  .dangerButton {
+    width: 100%;
+  }
+
+  .buttonRow {
+    display: grid;
+  }
+
+  .summaryGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .resultList li {
+    display: grid;
+  }
+}
