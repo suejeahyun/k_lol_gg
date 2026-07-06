@@ -67,6 +67,7 @@ export default async function AdminRiotPage() {
         </div>
         <div className={styles.actions}>
           <Link className={styles.primaryButton} href="/admin/riot/accounts">계정 목록</Link>
+          <Link className={styles.secondaryButton} href="/admin/riot/accounts/bulk-link">일괄 연결</Link>
           <Link className={styles.secondaryButton} href="/admin/riot/logs">API 로그</Link>
           <Link className={styles.secondaryButton} href="/admin/riot/sync">동기화 이력</Link>
           <Link className={styles.secondaryButton} href="/admin/riot/application">신청 자료</Link>
@@ -152,6 +153,7 @@ export default async function AdminRiotPage() {
 
       <section className={styles.quickGrid}>
         <Link className={styles.quickCard} href="/admin/riot/accounts"><strong>계정 현황</strong><span>연결된 Riot ID, PUUID 마스킹, 솔랭 캐시, 실패 계정을 확인합니다.</span></Link>
+        <Link className={styles.quickCard} href="/admin/riot/accounts/bulk-link"><strong>일괄 연결</strong><span>미연동 플레이어를 닉네임#태그 기준으로 30명 단위 연결합니다.</span></Link>
         <Link className={styles.quickCard} href="/admin/riot/logs"><strong>API/연동 로그</strong><span>Riot API 호출 결과와 계정 연동/해제 감사 로그를 확인합니다.</span></Link>
         <Link className={styles.quickCard} href="/admin/riot/sync"><strong>동기화 관리</strong><span>동기화 작업 이력과 Production 승인 후 활성화 순서를 확인합니다.</span></Link>
         <Link className={styles.quickCard} href="/admin/riot/application"><strong>Production 신청 자료</strong><span>Developer Portal 신청용 영문 설명, 보안 설명, 시연 흐름, 체크리스트를 확인합니다.</span></Link>

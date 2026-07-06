@@ -92,6 +92,7 @@ export default async function AdminRiotAccountsPage(props: PageProps) {
           <p className={styles.desc}>플레이어와 연결된 Riot ID, 솔랭 캐시, 검증 상태, 동기화 실패 사유를 확인합니다. PUUID는 화면에서 마스킹합니다.</p>
         </div>
         <div className={styles.actions}>
+          <Link className={styles.primaryButton} href="/admin/riot/accounts/bulk-link">일괄 연결</Link>
           <Link className={styles.secondaryButton} href="/admin/riot">대시보드</Link>
           <Link className={styles.secondaryButton} href="/admin/riot/logs">로그</Link>
           <Link className={styles.secondaryButton} href="/admin/riot/sync">동기화</Link>
