@@ -967,6 +967,10 @@ model PlayerRiotAccount {
   summonerLevel Int?
 
   isVerified               Boolean   @default(false)
+  verificationMethod       String    @default("DIRECT_LINK")
+  verifiedByUserAccountId  Int?
+  verifiedAt               DateTime?
+  rsoSubject               String?
   linkedByUserAccountId    Int?
   linkedAt                 DateTime?
   unlinkedAt               DateTime?
@@ -983,6 +987,24 @@ model PlayerRiotAccount {
   @@index([gameName, tagLine])
   @@index([syncStatus, lastSyncedAt])
   @@index([isVerified])
+  @@index([verificationMethod, verifiedAt])
+  @@index([verifiedByUserAccountId, verifiedAt])
+}
+
+model RiotRsoVerificationState {
+  id            Int       @id @default(autoincrement())
+  userAccountId Int
+  playerId      Int
+  state         String    @unique
+  returnTo      String?
+  expiresAt     DateTime
+  consumedAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([userAccountId, createdAt])
+  @@index([playerId, createdAt])
+  @@index([expiresAt, consumedAt])
 }
 
 model PlayerSoloRankSnapshot {

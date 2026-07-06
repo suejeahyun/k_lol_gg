@@ -380,7 +380,6 @@ export async function syncPlayerSoloRankBestEffort(
         accountId: summoner.accountId ?? account.accountId,
         profileIconId: summoner.profileIconId ?? account.profileIconId,
         summonerLevel: summoner.summonerLevel ?? account.summonerLevel,
-        isVerified: true,
         syncStatus: "SUCCESS",
         lastErrorMessage: null,
         lastErrorAt: null,

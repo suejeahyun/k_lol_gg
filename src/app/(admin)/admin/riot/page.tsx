@@ -87,7 +87,7 @@ export default async function AdminRiotPage() {
       <section className={styles.kpiGrid}>
         <div className={styles.kpiCard}><span>활성 플레이어</span><strong>{formatNumber(totalPlayers)}</strong><em>isActive 기준</em></div>
         <div className={styles.kpiCard}><span>Riot 연결</span><strong>{formatNumber(linkedAccounts)}</strong><em>연결률 {linkedRate}%</em></div>
-        <div className={styles.kpiCard}><span>검증 완료</span><strong>{formatNumber(verifiedAccounts)}</strong><em>isVerified 기준</em></div>
+        <div className={styles.kpiCard}><span>RSO 인증 완료</span><strong>{formatNumber(verifiedAccounts)}</strong><em>본인 소유 인증 기준</em></div>
         <div className={styles.kpiCard}><span>동기화 실패</span><strong>{formatNumber(failedAccounts)}</strong><em>확인 필요 계정</em></div>
       </section>
 

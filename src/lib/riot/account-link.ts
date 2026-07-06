@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { getRiotFeatureStatus } from "@/lib/riot/feature";
+import { getRiotRsoStatus } from "@/lib/riot/rso";
 import { recordRiotAccountLinkLog } from "@/lib/riot/audit";
 import { getRiotAccountByRiotId, getSummonerByPuuid } from "@/lib/riot/client";
 
@@ -8,6 +9,7 @@ export type RiotAccountActorType = "USER" | "ADMIN" | "SYSTEM";
 
 export type RiotAccountStatusPayload = {
   feature: ReturnType<typeof getRiotFeatureStatus>;
+  rso: ReturnType<typeof getRiotRsoStatus>;
   player: {
     id: number;
     name: string;
@@ -27,6 +29,9 @@ export type RiotAccountStatusPayload = {
     profileIconId: number | null;
     summonerLevel: number | null;
     isVerified: boolean;
+    verificationMethod: string;
+    verifiedByUserAccountId: number | null;
+    verifiedAt: string | null;
     linkedByUserAccountId: number | null;
     linkedAt: string | null;
     unlinkedAt: string | null;
@@ -67,6 +72,9 @@ type PlayerWithRiotStatus = {
     profileIconId: number | null;
     summonerLevel: number | null;
     isVerified: boolean;
+    verificationMethod: string;
+    verifiedByUserAccountId: number | null;
+    verifiedAt: string | null;
     linkedByUserAccountId: number | null;
     linkedAt: Date | null;
     unlinkedAt: Date | null;
@@ -204,6 +212,9 @@ async function findPlayerWithRiotStatus(playerId: number): Promise<PlayerWithRio
           profileIconId: true,
           summonerLevel: true,
           isVerified: true,
+          verificationMethod: true,
+          verifiedByUserAccountId: true,
+          verifiedAt: true,
           linkedByUserAccountId: true,
           linkedAt: true,
           unlinkedAt: true,
@@ -237,6 +248,7 @@ export async function getPlayerRiotAccountStatus(playerId: number): Promise<Riot
 
   return {
     feature: getRiotFeatureStatus(),
+    rso: getRiotRsoStatus(),
     player: {
       id: player.id,
       name: player.name,
@@ -257,6 +269,9 @@ export async function getPlayerRiotAccountStatus(playerId: number): Promise<Riot
           profileIconId: player.riotAccount.profileIconId,
           summonerLevel: player.riotAccount.summonerLevel,
           isVerified: player.riotAccount.isVerified,
+          verificationMethod: player.riotAccount.verificationMethod,
+          verifiedByUserAccountId: player.riotAccount.verifiedByUserAccountId,
+          verifiedAt: toIso(player.riotAccount.verifiedAt),
           linkedByUserAccountId: player.riotAccount.linkedByUserAccountId,
           linkedAt: toIso(player.riotAccount.linkedAt),
           unlinkedAt: toIso(player.riotAccount.unlinkedAt),
@@ -344,7 +359,11 @@ export async function linkPlayerRiotAccount(input: LinkInput) {
       accountId: summoner.accountId ?? null,
       profileIconId: summoner.profileIconId ?? null,
       summonerLevel: summoner.summonerLevel ?? null,
-      isVerified: true,
+      isVerified: false,
+      verificationMethod: `${input.actorType}_DIRECT_LINK`,
+      verifiedByUserAccountId: null,
+      verifiedAt: null,
+      rsoSubject: null,
       linkedByUserAccountId: input.actorUserAccountId ?? null,
       linkedAt: now,
       unlinkedAt: null,
@@ -361,7 +380,11 @@ export async function linkPlayerRiotAccount(input: LinkInput) {
       accountId: summoner.accountId ?? null,
       profileIconId: summoner.profileIconId ?? null,
       summonerLevel: summoner.summonerLevel ?? null,
-      isVerified: true,
+      isVerified: false,
+      verificationMethod: `${input.actorType}_DIRECT_LINK`,
+      verifiedByUserAccountId: null,
+      verifiedAt: null,
+      rsoSubject: null,
       linkedByUserAccountId: input.actorUserAccountId ?? null,
       linkedAt: now,
       syncStatus: "IDLE",
@@ -384,7 +407,7 @@ export async function linkPlayerRiotAccount(input: LinkInput) {
   return {
     ok: true as const,
     status: 200,
-    message: "Riot 계정 연결이 완료되었습니다.",
+    message: "Riot 계정 연결이 완료되었습니다. 본인 소유 인증은 Riot 로그인 인증으로 별도 완료해야 합니다.",
     data: await getPlayerRiotAccountStatus(player.id),
   };
 }

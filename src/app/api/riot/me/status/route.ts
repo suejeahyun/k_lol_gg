@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { requireApprovedUser } from "@/lib/auth/session";
 import { getPlayerRiotAccountStatus } from "@/lib/riot/account-link";
 import { getRiotFeatureStatus } from "@/lib/riot/feature";
+import { getRiotRsoStatus } from "@/lib/riot/rso";
 
 export async function GET() {
   try {
@@ -13,6 +14,7 @@ export async function GET() {
     if (!user.playerId) {
       return NextResponse.json({
         feature: getRiotFeatureStatus(),
+        rso: getRiotRsoStatus(),
         player: null,
         account: null,
         soloRank: null,
@@ -25,6 +27,7 @@ export async function GET() {
     if (!status) {
       return NextResponse.json({
         feature: getRiotFeatureStatus(),
+        rso: getRiotRsoStatus(),
         player: null,
         account: null,
         soloRank: null,

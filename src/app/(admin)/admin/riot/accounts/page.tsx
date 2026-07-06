@@ -65,6 +65,16 @@ function statusBadge(status: string | null | undefined) {
   return <span className={styles.badge}>대기</span>;
 }
 
+function ownershipBadge(account: { isVerified: boolean; verificationMethod: string; verifiedAt: Date | null }) {
+  if (account.isVerified && account.verificationMethod === "RSO") {
+    return <div className={styles.stack}><span className={styles.badgeGreen}>RSO 인증</span><span>{formatDate(account.verifiedAt)}</span></div>;
+  }
+  if (account.verificationMethod.includes("ADMIN")) {
+    return <div className={styles.stack}><span className={styles.badgeYellow}>관리자 연결</span><span>소유 미인증</span></div>;
+  }
+  return <div className={styles.stack}><span className={styles.badgeYellow}>소유 미인증</span><span>{account.verificationMethod}</span></div>;
+}
+
 export default async function AdminRiotAccountsPage(props: PageProps) {
   const params = (await props.searchParams) ?? {};
   const q = getString(params, "q").trim();
@@ -102,7 +112,7 @@ export default async function AdminRiotAccountsPage(props: PageProps) {
       <section className={styles.kpiGrid}>
         <div className={styles.kpiCard}><span>검색 결과</span><strong>{total.toLocaleString("ko-KR")}</strong><em>현재 필터 기준</em></div>
         <div className={styles.kpiCard}><span>전체 연결</span><strong>{totalLinked.toLocaleString("ko-KR")}</strong><em>PlayerRiotAccount</em></div>
-        <div className={styles.kpiCard}><span>검증 완료</span><strong>{verifiedCount.toLocaleString("ko-KR")}</strong><em>isVerified=true</em></div>
+        <div className={styles.kpiCard}><span>검증 완료</span><strong>{verifiedCount.toLocaleString("ko-KR")}</strong><em>RSO 본인 인증 기준</em></div>
         <div className={styles.kpiCard}><span>실패 계정</span><strong>{failedCount.toLocaleString("ko-KR")}</strong><em>syncStatus=FAILED</em></div>
       </section>
 
@@ -124,7 +134,7 @@ export default async function AdminRiotAccountsPage(props: PageProps) {
         <div className={styles.tableWrap}>
           <table className={styles.table}>
             <colgroup><col style={{ width: "190px" }} /><col style={{ width: "190px" }} /><col style={{ width: "150px" }} /><col style={{ width: "150px" }} /><col style={{ width: "120px" }} /><col style={{ width: "130px" }} /><col /><col style={{ width: "110px" }} /></colgroup>
-            <thead><tr><th>플레이어</th><th>Riot ID</th><th>PUUID</th><th>솔랭 캐시</th><th>검증</th><th>상태</th><th>최근 정보</th><th>관리</th></tr></thead>
+            <thead><tr><th>플레이어</th><th>Riot ID</th><th>PUUID</th><th>솔랭 캐시</th><th>소유 인증</th><th>상태</th><th>최근 정보</th><th>관리</th></tr></thead>
             <tbody>
               {accounts.length === 0 ? (
                 <tr><td colSpan={8}><div className={styles.empty}>조건에 맞는 Riot 계정이 없습니다.</div></td></tr>
@@ -136,7 +146,7 @@ export default async function AdminRiotAccountsPage(props: PageProps) {
                     <td><div className={styles.stack}><strong>{account.gameName}#{account.tagLine}</strong><span>{account.unlinkedAt ? "연동 해제됨" : "연동 중"}</span></div></td>
                     <td className={styles.mono}>{mask(account.puuid)}</td>
                     <td>{rank?.tier ? <div className={styles.stack}><strong>{rank.tier} {rank.rank} {rank.leaguePoints}LP</strong><span>{rank.wins}승 {rank.losses}패 · {rank.winRate.toFixed(1)}%</span></div> : <span className={styles.badgeMuted}>없음</span>}</td>
-                    <td>{account.isVerified ? <span className={styles.badgeGreen}>검증됨</span> : <span className={styles.badgeYellow}>미검증</span>}</td>
+                    <td>{ownershipBadge(account)}</td>
                     <td>{statusBadge(account.syncStatus)}</td>
                     <td><div className={styles.stack}><strong>{formatDate(account.lastSyncedAt ?? account.updatedAt)}</strong><span>{compact(account.lastErrorMessage, account.lastErrorAt ? "오류 메시지 없음" : "오류 없음")}</span></div></td>
                     <td><Link className={styles.secondaryButton} href={`/admin/players/${account.playerId}/riot`}>관리</Link></td>

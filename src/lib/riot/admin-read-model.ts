@@ -26,6 +26,9 @@ export type RiotAccountView = {
   profileIconId: number | null;
   summonerLevel: number | null;
   isVerified: boolean;
+  verificationMethod: string;
+  verifiedByUserAccountId: number | null;
+  verifiedAt: Date | null;
   linkedByUserAccountId: number | null;
   linkedAt: Date | null;
   unlinkedAt: Date | null;
@@ -191,6 +194,9 @@ function mapAccountRow(row: any): RiotAccountView {
     profileIconId: row.profileIconId == null ? null : toNumber(row.profileIconId),
     summonerLevel: row.summonerLevel == null ? null : toNumber(row.summonerLevel),
     isVerified: toBoolean(row.isVerified),
+    verificationMethod: String(row.verificationMethod ?? "DIRECT_LINK"),
+    verifiedByUserAccountId: row.verifiedByUserAccountId == null ? null : toNumber(row.verifiedByUserAccountId),
+    verifiedAt: row.verifiedAt ?? null,
     linkedByUserAccountId: row.linkedByUserAccountId == null ? null : toNumber(row.linkedByUserAccountId),
     linkedAt: row.linkedAt ?? null,
     unlinkedAt: row.unlinkedAt ?? null,

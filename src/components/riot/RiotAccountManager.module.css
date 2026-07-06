@@ -200,6 +200,7 @@
 }
 
 .primaryButton,
+.rsoButton,
 .dangerButton,
 .secondaryButton {
   display: inline-flex;
@@ -219,6 +220,12 @@
   background: #2563eb;
 }
 
+.rsoButton {
+  color: #e0f2fe;
+  border-color: rgba(56, 189, 248, 0.34);
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.86), rgba(30, 64, 175, 0.86));
+}
+
 .dangerButton {
   color: #fecaca;
   border-color: rgba(239, 68, 68, 0.32);
@@ -232,6 +239,7 @@
 }
 
 .primaryButton:disabled,
+.rsoButton:disabled,
 .dangerButton:disabled,
 .secondaryButton:disabled {
   opacity: 0.48;

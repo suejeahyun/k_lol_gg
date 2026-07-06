@@ -5,6 +5,7 @@ import styles from "./RiotAccountManager.module.css";
 
 type RiotAccountStatusPayload = {
   feature: { enabled: boolean; message: string };
+  rso?: { enabled: boolean; message: string; missing: string[] };
   player: {
     id: number;
     name: string;
@@ -22,6 +23,9 @@ type RiotAccountStatusPayload = {
     profileIconId: number | null;
     summonerLevel: number | null;
     isVerified: boolean;
+    verificationMethod: string;
+    verifiedByUserAccountId: number | null;
+    verifiedAt: string | null;
     linkedAt: string | null;
     unlinkedAt: string | null;
     syncStatus: string;
@@ -76,6 +80,23 @@ function statusBadge(status: string | null | undefined) {
   if (key === "SYNCING") return <span className={styles.badgeYellow}>동기화중</span>;
   if (key === "SKIPPED") return <span className={styles.badgeMuted}>건너뜀</span>;
   return <span className={styles.badge}>대기</span>;
+}
+
+function ownershipBadge(account: RiotAccountStatusPayload["account"]) {
+  if (!account) return <span className={styles.badgeMuted}>없음</span>;
+  if (account.isVerified && account.verificationMethod === "RSO") {
+    return <span className={styles.badgeGreen}>RSO 본인 인증</span>;
+  }
+  if (account.isVerified) return <span className={styles.badgeYellow}>이전 검증값</span>;
+  if (account.verificationMethod?.includes("ADMIN")) return <span className={styles.badgeYellow}>관리자 연결</span>;
+  return <span className={styles.badgeYellow}>소유 미인증</span>;
+}
+
+function ownershipText(account: RiotAccountStatusPayload["account"]) {
+  if (!account) return "연결 없음";
+  if (account.isVerified && account.verificationMethod === "RSO") return `Riot 로그인 인증 완료 · ${formatDate(account.verifiedAt)}`;
+  if (account.verificationMethod?.includes("ADMIN")) return "관리자가 Riot ID 기준으로 연결했습니다. 유저 Riot 로그인 인증은 아직 필요합니다.";
+  return "Riot ID 조회로 연결됐지만, 본인 소유 인증은 아직 완료되지 않았습니다.";
 }
 
 async function readJson(response: Response) {
@@ -204,9 +225,18 @@ export default function RiotAccountManager({
     }
   }
 
+
+  function handleRsoStart() {
+    if (mode !== "me") return;
+    const returnTo = typeof window !== "undefined" ? window.location.pathname : "/me/riot";
+    window.location.href = `/api/riot/rso/start?returnTo=${encodeURIComponent(returnTo)}`;
+  }
+
   const featureEnabled = Boolean(status?.feature.enabled);
+  const rsoStatus = status?.rso;
   const canSubmit = featureEnabled && !submitting && gameName.trim().length > 0 && tagLine.trim().length > 0;
   const canSync = featureEnabled && !submitting && Boolean(status?.account);
+  const canRsoVerify = mode === "me" && featureEnabled && Boolean(rsoStatus?.enabled) && !submitting;
   const account = status?.account ?? null;
   const player = status?.player ?? null;
   const soloRank = status?.soloRank ?? null;
@@ -250,14 +280,21 @@ export default function RiotAccountManager({
                 <input value={tagLine} onChange={(event) => setTagLine(event.target.value.replace(/^#/, ""))} placeholder="예: KR1" disabled={!featureEnabled || submitting} />
               </label>
             </div>
-            <p className={styles.help}>닉네임#태그 기준으로 PUUID를 확인합니다. API Key는 서버에서만 사용되며 브라우저에는 노출되지 않습니다.</p>
+            <p className={styles.help}>닉네임#태그 입력은 Riot ID 조회 연결입니다. 본인 소유 인증은 아래 Riot 로그인 인증 버튼으로 별도 완료합니다.</p>
             <div className={styles.actions}>
               <button className={styles.primaryButton} type="submit" disabled={!canSubmit}>{submitting ? "처리 중" : account ? "Riot 계정 다시 연결" : "Riot 계정 연결"}</button>
+              {mode === "me" && (
+                <button className={styles.rsoButton} type="button" onClick={handleRsoStart} disabled={!canRsoVerify}>
+                  Riot 로그인으로 본인 인증
+                </button>
+              )}
               <button className={styles.secondaryButton} type="button" onClick={handleSync} disabled={!canSync}>{submitting ? "처리 중" : "솔랭 동기화"}</button>
               <button className={styles.dangerButton} type="button" onClick={handleUnlink} disabled={!account || submitting}>연동 해제</button>
               <button className={styles.secondaryButton} type="button" onClick={() => void loadStatus()} disabled={loading || submitting}>상태 새로고침</button>
             </div>
             {!featureEnabled && <div className={styles.error}>현재는 Production API 승인 전 단계라 실제 Riot 계정 연결 호출이 차단됩니다.</div>}
+            {mode === "me" && rsoStatus && !rsoStatus.enabled && <div className={styles.error}>{rsoStatus.message}</div>}
+            {mode === "me" && rsoStatus?.enabled && <div className={styles.message}>Riot 로그인 본인 인증을 사용할 수 있습니다.</div>}
             {message && <div className={styles.message}>{message}</div>}
             {error && <div className={styles.error}>{error}</div>}
           </form>
@@ -269,13 +306,15 @@ export default function RiotAccountManager({
               <h2>연동 상태</h2>
               <p>{loading ? "상태를 불러오는 중입니다." : "현재 저장된 Riot 계정과 솔랭 캐시입니다."}</p>
             </div>
-            {account ? (account.isVerified ? <span className={styles.badgeGreen}>검증됨</span> : <span className={styles.badgeYellow}>미검증</span>) : <span className={styles.badgeMuted}>없음</span>}
+            {ownershipBadge(account)}
           </div>
 
           <ul className={styles.infoList}>
             <li><span>플레이어</span><strong>{player ? `${player.name} · ${player.nickname}#${player.tag}` : "-"}</strong></li>
             <li><span>Riot ID</span><strong>{account ? `${account.gameName}#${account.tagLine}` : "연결 없음"}</strong></li>
             <li><span>PUUID</span><strong className={styles.mono}>{account?.puuidMasked ?? "-"}</strong></li>
+            <li><span>소유 인증</span><strong>{ownershipText(account)}</strong></li>
+            <li><span>인증 방식</span><strong>{compactText(account?.verificationMethod, "-")}</strong></li>
             <li><span>소환사 레벨</span><strong>{compactText(account?.summonerLevel)}</strong></li>
             <li><span>동기화 상태</span><strong>{statusBadge(account?.syncStatus)}</strong></li>
             <li><span>마지막 갱신</span><strong>{formatDate(account?.lastSyncedAt ?? account?.updatedAt)}</strong></li>
@@ -288,8 +327,8 @@ export default function RiotAccountManager({
       {!compact && (
         <section className={styles.noticeGrid}>
           <div className={styles.notice}><strong>보안 구조</strong><p>Riot API 호출은 서버 Route Handler에서만 수행하고 결과는 DB 캐시로 표시합니다.</p></div>
+          <div className={styles.notice}><strong>본인 소유 인증</strong><p>Riot 로그인 인증은 OAuth/RSO 흐름으로 처리하며, Riot 비밀번호는 K-LOL.GG에 입력하거나 저장하지 않습니다.</p></div>
           <div className={styles.notice}><strong>연동 해제</strong><p>해제 시 Riot 계정 정보, 솔랭 스냅샷, 최근 솔랭 경기 캐시를 삭제합니다.</p></div>
-          <div className={styles.notice}><strong>동기화 기준</strong><p>솔랭 동기화는 Player 닉네임#태그가 아니라 연결된 Riot 계정의 PUUID 기준으로 수행합니다.</p></div>
         </section>
       )}
     </main>
