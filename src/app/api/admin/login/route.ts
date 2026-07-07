@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
 
     if (!user.passwordHash) {
       return NextResponse.json(
-        { message: "비밀번호가 없는 Discord 전용 계정입니다." },
+        { message: "비밀번호가 설정되지 않은 계정입니다." },
         { status: 401 },
       );
     }

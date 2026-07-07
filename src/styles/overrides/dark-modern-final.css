@@ -30,6 +30,19 @@
   --dm-radius-lg: 18px;
   --dm-shadow: 0 22px 60px rgba(0, 0, 0, 0.36);
   --dm-shadow-soft: 0 14px 34px rgba(0, 0, 0, 0.24);
+  --dm-img-page: url("/images/theme/dark-modern/dark-wide-emblem.png");
+  --dm-img-page-crystal: url("/images/theme/dark-modern/dark-arena.png");
+  --dm-img-grid:
+    linear-gradient(rgba(101, 174, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(101, 174, 255, 0.045) 1px, transparent 1px);
+  --dm-img-hero: url("/images/theme/dark-modern/dark-trophy.png");
+  --dm-img-header: url("/images/theme/dark-modern/dark-wide-emblem.png");
+  --dm-img-ranking: url("/images/theme/dark-modern/dark-trophy.png");
+  --dm-img-match: url("/images/theme/dark-modern/dark-arena.png");
+  --dm-img-profile: url("/images/theme/dark-modern/dark-wide-emblem.png");
+  --dm-img-scrim: url("/images/theme/dark-modern/dark-arena.png");
+  --dm-img-auction: url("/images/theme/dark-modern/dark-arena.png");
+  --dm-img-auth: url("/images/theme/dark-modern/dark-trophy.png");
 
   --k-bg: var(--dm-bg);
   --k-bg-2: #071122;
@@ -75,8 +88,33 @@ body {
 .app-background-root {
   min-height: 100vh;
   background:
+    linear-gradient(180deg, rgba(2, 6, 17, 0.76), rgba(2, 6, 17, 0.94) 58%, #020611 100%),
+    radial-gradient(circle at 15% 0%, rgba(47, 125, 255, 0.2), transparent 32%),
+    radial-gradient(circle at 86% 8%, rgba(39, 200, 255, 0.12), transparent 30%),
+    var(--dm-img-grid),
+    var(--dm-img-page),
+    var(--dm-img-page-crystal),
     linear-gradient(180deg, rgba(6, 14, 29, 0.98) 0%, rgba(2, 6, 17, 0.98) 58%, #020611 100%),
     linear-gradient(90deg, rgba(47, 125, 255, 0.12), transparent 30%, transparent 70%, rgba(39, 200, 255, 0.09)) !important;
+  background-size:
+    cover,
+    cover,
+    cover,
+    520px 520px,
+    cover,
+    cover,
+    cover,
+    cover !important;
+  background-position:
+    center,
+    center,
+    center,
+    center,
+    center top,
+    center top,
+    center,
+    center !important;
+  background-attachment: fixed, fixed, fixed, fixed, fixed, fixed, scroll, scroll;
   color: var(--dm-text);
 }
 
@@ -291,9 +329,52 @@ body {
   border: 1px solid rgba(82, 170, 255, 0.24) !important;
   border-radius: var(--dm-radius-lg) !important;
   background:
+    linear-gradient(90deg, rgba(6, 13, 27, 0.98) 0%, rgba(6, 13, 27, 0.88) 43%, rgba(6, 13, 27, 0.5) 100%),
+    var(--dm-header-art, var(--dm-img-header)),
     linear-gradient(135deg, rgba(14, 31, 56, 0.96), rgba(8, 16, 33, 0.96) 58%, rgba(9, 23, 42, 0.94)),
     linear-gradient(90deg, rgba(47, 125, 255, 0.16), transparent 52%) !important;
+  background-size: cover, cover, cover, cover !important;
+  background-position: center, right center, center, center !important;
+  background-repeat: no-repeat !important;
   box-shadow: var(--dm-shadow-soft) !important;
+}
+
+.matches-page-v2 .page-header {
+  --dm-header-art: var(--dm-img-match);
+}
+
+.ranking-page .page-header {
+  --dm-header-art: var(--dm-img-ranking);
+}
+
+.players-page-v2 .page-header,
+.player-hero {
+  --dm-header-art: var(--dm-img-profile);
+}
+
+.recruit-page .page-header,
+.recruit-hero {
+  --dm-header-art: var(--dm-img-scrim);
+}
+
+.progress-page .page-header,
+.event-progress-page .page-header,
+.destruction-progress-page .page-header,
+.participation-page .page-header {
+  --dm-header-art: var(--dm-img-auction);
+}
+
+.ai-page .ai-hero,
+.admin-page__header,
+.admin-page-header,
+.admin-header {
+  --dm-header-art: var(--dm-img-ranking);
+}
+
+.gallery-page__header,
+.highlights-page .page-header,
+.notice-page .page-header {
+  --dm-header-art: var(--dm-img-header);
 }
 
 .page-header::before,
@@ -385,7 +466,6 @@ body {
 .balance-card,
 .balance-form-card,
 .account-card,
-.discord-stat-card,
 .top3-card,
 .top3-panel,
 .home-main-card,
@@ -458,6 +538,13 @@ body {
 .home-main-card {
   min-height: 300px !important;
   padding: 30px !important;
+  background:
+    linear-gradient(90deg, rgba(7, 16, 32, 0.98) 0%, rgba(7, 16, 32, 0.9) 48%, rgba(7, 16, 32, 0.42) 100%),
+    var(--dm-img-hero),
+    linear-gradient(180deg, rgba(13, 25, 46, 0.94), rgba(7, 15, 31, 0.94)) !important;
+  background-size: cover, cover, cover !important;
+  background-position: center, right center, center !important;
+  background-repeat: no-repeat !important;
 }
 
 .home-main-card::before {
@@ -474,6 +561,50 @@ body {
 
 .home-season-grid {
   gap: 12px !important;
+}
+
+.home-season-card {
+  background:
+    linear-gradient(180deg, rgba(13, 25, 46, 0.94), rgba(7, 15, 31, 0.96)),
+    var(--dm-img-ranking) !important;
+  background-size: cover, cover !important;
+  background-position: center, right center !important;
+}
+
+.top3-card,
+.ranking-board {
+  background:
+    linear-gradient(180deg, rgba(13, 25, 46, 0.94), rgba(7, 15, 31, 0.96)),
+    var(--dm-img-ranking) !important;
+  background-size: cover, cover !important;
+  background-position: center, right top !important;
+}
+
+.match-row-card,
+.home-recent-match-card {
+  background:
+    linear-gradient(90deg, rgba(7, 16, 32, 0.9), rgba(7, 16, 32, 0.72)),
+    var(--dm-img-match) !important;
+  background-size: cover, auto 110% !important;
+  background-position: center, right center !important;
+}
+
+.balance-form-card,
+.balance-card,
+.ai-panel {
+  background:
+    linear-gradient(180deg, rgba(13, 25, 46, 0.94), rgba(7, 15, 31, 0.96)),
+    var(--dm-img-profile) !important;
+  background-size: cover, cover !important;
+  background-position: center, right top !important;
+}
+
+.destruction-auction-live-page {
+  background:
+    linear-gradient(180deg, rgba(2, 6, 17, 0.7), rgba(2, 6, 17, 0.94)),
+    var(--dm-img-auction) !important;
+  background-size: cover !important;
+  background-position: center !important;
 }
 
 .home-stat-box,

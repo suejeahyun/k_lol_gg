@@ -20,7 +20,6 @@ export default async function AppAdminUsersPage() {
         userId: true,
         role: true,
         status: true,
-        discordServerNickname: true,
         player: { select: { name: true, nickname: true, tag: true } },
       },
     })
@@ -42,7 +41,7 @@ export default async function AppAdminUsersPage() {
               <article className="klol-app-list-card" key={user.id}>
                 <div className="klol-app-list-top">
                   <span className="klol-app-list-title">
-                    <strong>{user.player?.name || user.discordServerNickname || user.userId}</strong>
+                    <strong>{user.player?.name || user.userId}</strong>
                     <span>{user.player ? `${user.player.nickname}#${user.player.tag}` : "플레이어 미연결"}</span>
                   </span>
                   <span className="klol-app-badge">{user.status}</span>
@@ -55,10 +54,6 @@ export default async function AppAdminUsersPage() {
                   <div className="klol-app-meta">
                     <span>계정</span>
                     <strong>{user.userId}</strong>
-                  </div>
-                  <div className="klol-app-meta">
-                    <span>디코</span>
-                    <strong>{user.discordServerNickname ? "연동" : "미연동"}</strong>
                   </div>
                 </div>
                 <AppAdminUserActions

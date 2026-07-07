@@ -6222,7 +6222,7 @@ export default function DestructionAuctionManager({
                     3. 경매 진행 · 선택됨
                   </h2>
                   <p className="auction-fullview-desc">
-                    사이트에서 플레이어를 추첨한 뒤, 디스코드 채팅 경매 결과를
+                    사이트에서 플레이어를 추첨한 뒤, 채팅 경매 결과를
                     관리자가 입력합니다.
                   </p>
                 </div>

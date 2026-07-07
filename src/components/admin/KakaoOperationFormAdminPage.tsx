@@ -52,12 +52,6 @@ const pageConfigs: Record<KakaoOperationFormType, PageConfig> = {
     subSummaryLabel: "건의 사유",
     detailLabel: "건의 내용",
   },
-  friends: {
-    title: "디스코드 초대",
-    summaryLabel: "지인 이름",
-    subSummaryLabel: "지인 닉네임",
-    detailLabel: "이용 정보",
-  },
 };
 
 function pad2(value: number) {
@@ -90,21 +84,6 @@ function formatDate(value: Date) {
 
 async function getRows(type: KakaoOperationFormType): Promise<Row[]> {
   const visibleWhere = { status: { not: "CANCELLED" } };
-
-  if (type === "friends") {
-    const items = await prisma.kakaoFriendApplication.findMany({ where: visibleWhere, orderBy: { createdAt: "desc" }, take: 200 });
-    return items.map((item) => ({
-      id: item.id,
-      status: item.status,
-      rawText: item.rawText,
-      createdAt: item.createdAt,
-      summary: item.friendName,
-      subSummary: item.friendNickname,
-      detail: [item.usageType, item.gameName, item.discordNicknameChange ? `디스코드 닉네임 변경: ${item.discordNicknameChange}` : null]
-        .filter(Boolean)
-        .join(" · "),
-    }));
-  }
 
   if (type === "suggestions") {
     const items = await prisma.kakaoSuggestionRequest.findMany({ where: visibleWhere, orderBy: { createdAt: "desc" }, take: 200 });
@@ -184,7 +163,13 @@ export default async function KakaoOperationFormAdminPage({ type }: Props) {
           <div>
             <p className="page-eyebrow">KAKAO OPERATION FORMS</p>
             <h1>{config.title}</h1>
+            <p className="admin-muted" style={{ marginTop: 8 }}>
+              정보 확인 및 보관용 목록입니다. 답변/자동 완료/자동 초대 처리는 하지 않습니다.
+            </p>
           </div>
+          <Link className="admin-button admin-button--ghost" href="/admin/operation-forms">
+            운영 신청 홈
+          </Link>
         </div>
 
         <section className="admin-card" style={{ padding: 22, overflow: "hidden" }}>
@@ -201,7 +186,7 @@ export default async function KakaoOperationFormAdminPage({ type }: Props) {
           >
             <div>
               <h2>접수 목록</h2>
-              <p>현재 표시 {rows.length}건</p>
+              <p>최근 200건 기준 · 현재 표시 {rows.length}건</p>
             </div>
             <div
               style={{
@@ -261,9 +246,7 @@ export default async function KakaoOperationFormAdminPage({ type }: Props) {
                         #{row.id}
                       </td>
                       <td data-label={config.summaryLabel} style={{ padding: "14px 8px", verticalAlign: "top" }}>
-                        <Link className="admin-operation-list-link" href={`/admin/operation-forms/${type}/${row.id}`}>
-                          <ShortText value={row.summary} />
-                        </Link>
+                        <ShortText value={row.summary} />
                       </td>
                       <td data-label={config.subSummaryLabel} style={{ padding: "14px 8px", verticalAlign: "top" }}>
                         <ShortText value={row.subSummary} />

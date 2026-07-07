@@ -75,27 +75,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (parsed.type === "friends") {
-      if (!parsed.friendName || !parsed.friendNickname || !parsed.usageType) {
-        return kakaoJsonReply({ ok: false, reply: "[지인 신청 접수 실패]\n필수 항목이 비어 있습니다." }, 400);
-      }
-
-      const item = await prisma.kakaoFriendApplication.create({
-        data: {
-          friendName: parsed.friendName,
-          friendNickname: parsed.friendNickname,
-          usageType: parsed.usageType,
-          gameName: parsed.gameName,
-          discordNicknameChange: parsed.discordNicknameChange,
-          rawText: parsed.rawText,
-          roomName,
-          sender,
-        },
-      });
-
-      return kakaoJsonReply({ ok: true, type: parsed.type, id: item.id, reply: getKakaoOperationFormReply(parsed.type) });
-    }
-
     if (parsed.type === "suggestions") {
       if (!parsed.requesterInfo || !parsed.reason || !parsed.content) {
         return kakaoJsonReply({ ok: false, reply: "[건의 접수 실패]\n필수 항목이 비어 있습니다." }, 400);

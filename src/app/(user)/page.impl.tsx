@@ -336,22 +336,6 @@ export default async function HomePage() {
               />
               <span>카카오톡</span>
             </a>
-
-            <a
-              href="https://discord.com/invite/bgHV4nqwN9"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="social-link-card"
-            >
-              <Image
-                src="/discord.webp"
-                alt="디스코드"
-                width={52}
-                height={52}
-                className="social-link-image"
-              />
-              <span>디스코드</span>
-            </a>
           </div>
         </div>
 

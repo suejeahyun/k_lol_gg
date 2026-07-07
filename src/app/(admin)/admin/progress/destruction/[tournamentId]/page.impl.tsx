@@ -8,12 +8,17 @@ import { prisma } from "@/lib/prisma/client";
 import { applyDestructionRecruitmentAutoReserve, getDestructionLaneLimits } from "@/lib/destruction/recruitment-auto-reserve";
 import DestructionTeamForm from "@/components/admin/DestructionTeamForm";
 import DestructionPreliminaryGenerator from "@/components/admin/DestructionPreliminaryGenerator";
+import DestructionPreliminaryManualManager from "@/components/admin/DestructionPreliminaryManualManager";
 import DestructionMatchResultForm from "@/components/admin/DestructionMatchResultForm";
 import DestructionTournamentGenerator from "@/components/admin/DestructionTournamentGenerator";
 import DestructionFinalGenerator from "@/components/admin/DestructionFinalGenerator";
 import DestructionCompleteForm from "@/components/admin/DestructionCompleteForm";
 import DestructionAuctionManager from "@/components/admin/DestructionAuctionManager";
 import DestructionRecruitmentManager from "@/components/admin/DestructionRecruitmentManager";
+import {
+  getRiotDestructionVerification,
+  summarizeRiotDestructionVerifications,
+} from "@/lib/riot/destruction-verification";
 
 type PageProps = {
   params: Promise<{
@@ -203,7 +208,12 @@ export default async function AdminDestructionTournamentDetailPage({
             },
           },
           include: {
-            player: true,
+            player: {
+              include: {
+                riotAccount: true,
+                soloRankSnapshot: true,
+              },
+            },
           },
           orderBy: {
             createdAt: "asc",
@@ -214,7 +224,7 @@ export default async function AdminDestructionTournamentDetailPage({
             teamA: true,
             teamB: true,
           },
-          orderBy: [{ stage: "asc" }, { round: "asc" }],
+          orderBy: [{ stage: "asc" }, { preliminaryGroup: "asc" }, { round: "asc" }],
         },
       },
     }),
@@ -244,9 +254,13 @@ export default async function AdminDestructionTournamentDetailPage({
       )
     : null;
 
-  const preliminaryMatches = tournament.matches.filter(
-    (match) => match.stage === "PRELIMINARY",
-  );
+  const preliminaryMatches = tournament.matches
+    .filter((match) => match.stage === "PRELIMINARY")
+    .sort((a, b) => {
+      const groupCompare = (a.preliminaryGroup ?? "").localeCompare(b.preliminaryGroup ?? "");
+      if (groupCompare !== 0) return groupCompare;
+      return a.round - b.round;
+    });
 
   const semiFinalMatches = tournament.matches.filter(
     (match) => match.stage === "SEMI_FINAL",
@@ -261,7 +275,11 @@ export default async function AdminDestructionTournamentDetailPage({
   );
 
   const unfinishedPreliminaryCount = preliminaryMatches.filter(
-    (match) => !match.winnerTeamId,
+    (match) => !match.isConfirmed || !match.winnerTeamId,
+  ).length;
+
+  const unconfirmedPreliminaryCount = preliminaryMatches.filter(
+    (match) => !match.isConfirmed,
   ).length;
 
   const unfinishedSemiFinalCount = semiFinalMatches.filter(
@@ -289,7 +307,18 @@ export default async function AdminDestructionTournamentDetailPage({
       currentTier: apply.player.currentTier,
       peakTier: apply.player.peakTier,
     },
+    riotVerification: getRiotDestructionVerification({
+      currentTier: apply.player.currentTier,
+      riotAccount: apply.player.riotAccount,
+      soloRankSnapshot: apply.player.soloRankSnapshot,
+    }),
   }));
+
+  const riotVerificationSummary = summarizeRiotDestructionVerifications(
+    applicationViewModels
+      .filter((apply) => apply.status === "APPLIED" || apply.status === "CONFIRMED" || apply.status === "RESERVE")
+      .map((apply) => apply.riotVerification),
+  );
 
 
   const applicationMetaByPlayerId = new Map(
@@ -350,6 +379,12 @@ export default async function AdminDestructionTournamentDetailPage({
   const selectedStep = STEP_ORDER.includes(requestedStep as StepKey)
     ? (requestedStep as StepKey)
     : currentStep;
+
+  const preliminaryGroupCount = new Set(
+    tournament.teams
+      .map((team) => team.preliminaryGroup)
+      .filter((group): group is string => Boolean(group)),
+  ).size;
 
 
   return (
@@ -419,6 +454,16 @@ export default async function AdminDestructionTournamentDetailPage({
         </div>
 
         <div className="admin-event-detail-card">
+          <span>Riot 정상</span>
+          <strong>{riotVerificationSummary.verified}명</strong>
+        </div>
+
+        <div className="admin-event-detail-card">
+          <span>Riot 확인</span>
+          <strong>{riotVerificationSummary.needsAdminReview}명</strong>
+        </div>
+
+        <div className="admin-event-detail-card">
           <span>팀장</span>
           <strong>
             {tournament.teams.length}명
@@ -431,6 +476,11 @@ export default async function AdminDestructionTournamentDetailPage({
           <strong>
             낙찰 {soldAuctionCount}명 · 미완료 {unresolvedAuctionCount}명
           </strong>
+        </div>
+
+        <div className="admin-event-detail-card">
+          <span>예선 조</span>
+          <strong>{preliminaryGroupCount > 0 ? `${preliminaryGroupCount}개 조` : "미지정"}</strong>
         </div>
       </section>
 
@@ -469,6 +519,7 @@ export default async function AdminDestructionTournamentDetailPage({
           hasTeams={tournament.teams.length > 0}
           hasMatches={tournament.matches.length > 0}
           laneLimits={laneLimits}
+          riotVerificationSummary={riotVerificationSummary}
         />
       </AdminStepSection>
       ) : null}
@@ -519,7 +570,7 @@ export default async function AdminDestructionTournamentDetailPage({
         step="AUCTION"
         currentStep={selectedStep}
         title="3. 경매 진행"
-        description="사이트에서 카드를 섞고 참가자를 추첨한 뒤, 디스코드 채팅 경매 결과를 관리자가 입력합니다."
+        description="사이트에서 카드를 섞고 참가자를 추첨한 뒤, 채팅 경매 결과를 관리자가 입력합니다."
       >
         <DestructionAuctionManager
           tournamentId={tournament.id}
@@ -535,14 +586,26 @@ export default async function AdminDestructionTournamentDetailPage({
         step="PRELIMINARY"
         currentStep={selectedStep}
         title="4. 예선"
-        description="선택한 예선 방식으로 경기를 생성합니다. 기본값은 전체 풀리그 BO3, 승리 1점/패배 0점입니다."
+        description="조 편성과 예선 경기 순서를 수동 저장하고, 확정 전 상태에서 최종 확인 후 결과 입력을 시작합니다. 승리 1점/패배 0점입니다."
       >
+        <DestructionPreliminaryManualManager
+          tournamentId={tournament.id}
+          teams={tournament.teams}
+          matches={preliminaryMatches}
+          preliminaryBestOf={tournament.preliminaryBestOf}
+          hasInvalidTeamSize={hasInvalidTeamSize || unresolvedAuctionCount > 0}
+        />
+
         <DestructionPreliminaryGenerator
           tournamentId={tournament.id}
           teamCount={tournament.teams.length}
           preliminaryMatchCount={preliminaryMatches.length}
           hasInvalidTeamSize={hasInvalidTeamSize || unresolvedAuctionCount > 0}
         />
+
+        {unconfirmedPreliminaryCount > 0 ? (
+          <div className="empty-box">확정 전 예선 경기가 {unconfirmedPreliminaryCount}개 있습니다. 편성 확정 전에는 결과 입력이 잠겨 있습니다.</div>
+        ) : null}
 
         {preliminaryMatches.length === 0 ? (
           <div className="empty-box">생성된 예선 경기가 없습니다.</div>
@@ -582,7 +645,7 @@ export default async function AdminDestructionTournamentDetailPage({
                         fontWeight: 800,
                       }}
                     >
-                      {getStageLabel(match.stage)} · {match.round}경기
+                      {match.preliminaryGroup ? `${match.preliminaryGroup}조 · ` : ""}{getStageLabel(match.stage)} · {match.round}경기
                     </span>
                     <h3 style={{ margin: 0, color: "#e5f3ff", fontSize: 18 }}>
                       {match.teamA.name} vs {match.teamB.name}
@@ -593,29 +656,41 @@ export default async function AdminDestructionTournamentDetailPage({
                     style={{
                       padding: "7px 10px",
                       borderRadius: 999,
-                      border: match.winnerTeamId ? "1px solid rgba(34, 211, 238, 0.55)" : "1px solid rgba(148, 163, 184, 0.28)",
-                      background: match.winnerTeamId ? "rgba(14, 165, 233, 0.16)" : "rgba(15, 23, 42, 0.5)",
-                      color: match.winnerTeamId ? "#7dd3fc" : "#cbd5e1",
+                      border: match.winnerTeamId
+                        ? "1px solid rgba(34, 211, 238, 0.55)"
+                        : match.isConfirmed
+                          ? "1px solid rgba(148, 163, 184, 0.28)"
+                          : "1px solid rgba(250, 204, 21, 0.45)",
+                      background: match.winnerTeamId
+                        ? "rgba(14, 165, 233, 0.16)"
+                        : match.isConfirmed
+                          ? "rgba(15, 23, 42, 0.5)"
+                          : "rgba(250, 204, 21, 0.08)",
+                      color: match.winnerTeamId ? "#7dd3fc" : match.isConfirmed ? "#cbd5e1" : "#fde68a",
                       fontSize: 12,
                       fontWeight: 800,
                     }}
                   >
-                    {match.winnerTeamId ? "결과 입력 완료" : "결과 대기"}
+                    {match.winnerTeamId ? "결과 입력 완료" : match.isConfirmed ? "결과 대기" : "확정 전"}
                   </span>
                 </div>
 
-                <DestructionMatchResultForm
-                  tournamentId={tournament.id}
-                  matchId={match.id}
-                  teamA={match.teamA}
-                  teamB={match.teamB}
-                  participants={participantViewModels}
-                  initialWinnerTeamId={match.winnerTeamId}
-                  initialMvpPlayerId={match.mvpPlayerId}
-                  initialTeamAScore={match.teamAScore}
-                  initialTeamBScore={match.teamBScore}
-                  bestOf={match.bestOf}
-                />
+                {match.isConfirmed ? (
+                  <DestructionMatchResultForm
+                    tournamentId={tournament.id}
+                    matchId={match.id}
+                    teamA={match.teamA}
+                    teamB={match.teamB}
+                    participants={participantViewModels}
+                    initialWinnerTeamId={match.winnerTeamId}
+                    initialMvpPlayerId={match.mvpPlayerId}
+                    initialTeamAScore={match.teamAScore}
+                    initialTeamBScore={match.teamBScore}
+                    bestOf={match.bestOf}
+                  />
+                ) : (
+                  <div className="empty-box">확정 전 경기입니다. 상단의 예선 편성 확정 후 결과 입력이 가능합니다.</div>
+                )}
               </article>
             ))}
           </div>
@@ -628,7 +703,7 @@ export default async function AdminDestructionTournamentDetailPage({
         step="TOURNAMENT"
         currentStep={selectedStep}
         title="5. 본선 4강"
-        description="예선 결과 기준 상위 4팀으로 4강 토너먼트를 생성합니다. 본선 진출은 4팀 고정입니다."
+        description="예선 결과 기준으로 4강 토너먼트를 생성합니다. A/B 조가 있으면 각 조 1·2위 교차 대진, 조가 없으면 전체 상위 4팀 기준입니다."
       >
         <DestructionTournamentGenerator
           tournamentId={tournament.id}
@@ -676,7 +751,7 @@ export default async function AdminDestructionTournamentDetailPage({
                         fontWeight: 800,
                       }}
                     >
-                      {getStageLabel(match.stage)} · {match.round}경기
+                      {match.preliminaryGroup ? `${match.preliminaryGroup}조 · ` : ""}{getStageLabel(match.stage)} · {match.round}경기
                     </span>
                     <h3 style={{ margin: 0, color: "#e5f3ff", fontSize: 18 }}>
                       {match.teamA.name} vs {match.teamB.name}
@@ -769,7 +844,7 @@ export default async function AdminDestructionTournamentDetailPage({
                         fontWeight: 800,
                       }}
                     >
-                      {getStageLabel(match.stage)} · {match.round}경기
+                      {match.preliminaryGroup ? `${match.preliminaryGroup}조 · ` : ""}{getStageLabel(match.stage)} · {match.round}경기
                     </span>
                     <h3 style={{ margin: 0, color: "#e5f3ff", fontSize: 18 }}>
                       {match.teamA.name} vs {match.teamB.name}

@@ -57,9 +57,6 @@ function koLabel(value: string | null | undefined) {
     ADMIN_LOGIN: "관리자 로그인",
     USER_LOGIN: "유저 로그인",
     USER_LOGOUT: "유저 로그아웃",
-    DISCORD_LOGIN_REFRESHED: "디스코드 로그인 갱신",
-    DISCORD_LINKED_BY_USER: "디스코드 계정 연동",
-    DISCORD_UNLINKED_BY_USER: "디스코드 연동 해제",
     KAKAO_PARTY_RECRUIT_SYNC: "카카오 구인 동기화",
     KAKAO_PARTY_RECRUIT_CREATE: "카카오 구인 생성",
     KAKAO_PARTY_RECRUIT_FINISH: "카카오 구인 마감",
@@ -83,7 +80,6 @@ function koLabel(value: string | null | undefined) {
   if (exact[key]) return exact[key];
   if (key.includes("LOGIN")) return "로그인";
   if (key.includes("LOGOUT")) return "로그아웃";
-  if (key.includes("DISCORD")) return "디스코드 작업";
   if (key.includes("KAKAO")) return "카카오톡 작업";
   if (key.includes("CREATE")) return "생성";
   if (key.includes("UPDATE") || key.includes("EDIT")) return "수정";
@@ -156,7 +152,7 @@ export default async function AdminLogsPage(props: PageProps) {
         <div>
           <p className={styles.eyebrow}>시스템 감사</p>
           <h1 className={styles.title}>관리자 감사 로그</h1>
-          <p className={styles.desc}>운영 작업, 로그인, 카카오톡/디스코드 연동 기록을 확인합니다. 자주 쓰는 통계는 별도 대시보드에서 확인할 수 있습니다.</p>
+          <p className={styles.desc}>운영 작업, 로그인, 카카오톡 연동 기록을 확인합니다. 자주 쓰는 통계는 별도 대시보드에서 확인할 수 있습니다.</p>
         </div>
         <div className={styles.actions}>
           <Link className={styles.primaryButton} href="/admin/logs/stats">로그 통계 보기</Link>

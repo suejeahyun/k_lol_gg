@@ -18,11 +18,10 @@ type RouteContext = {
 };
 
 function isFormType(value: string): value is KakaoOperationFormType {
-  return ["friends", "suggestions", "meetups", "leaves"].includes(value);
+  return ["suggestions", "meetups", "leaves"].includes(value);
 }
 
 async function updateItem(type: KakaoOperationFormType, id: number, data: { status?: string; memo?: string | null }) {
-  if (type === "friends") return prisma.kakaoFriendApplication.update({ where: { id }, data });
   if (type === "suggestions") return prisma.kakaoSuggestionRequest.update({ where: { id }, data });
   if (type === "meetups") return prisma.kakaoMeetupRecord.update({ where: { id }, data });
   return prisma.kakaoLeaveRequest.update({ where: { id }, data });

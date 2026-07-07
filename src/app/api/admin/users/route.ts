@@ -24,7 +24,6 @@ export async function GET(req: NextRequest) {
     const statusParam = String(
       req.nextUrl.searchParams.get("status") ?? "",
     ).trim();
-    const discordStatus = String(req.nextUrl.searchParams.get("discordStatus") ?? "").trim();
 
     const safePage = Number.isNaN(page) || page < 1 ? 1 : page;
     const safePageSize =
@@ -39,8 +38,6 @@ export async function GET(req: NextRequest) {
     const where = {
       deletedAt: null,
       ...(status ? { status } : {}),
-      ...(discordStatus === "LINKED" ? { discordId: { not: null } } : {}),
-      ...(discordStatus === "UNLINKED" ? { discordId: null } : {}),
       ...(q
         ? {
             OR: [
@@ -106,18 +103,6 @@ export async function GET(req: NextRequest) {
             }
           : null,
         linkStatus: user.player ? "PLAYER_LINKED" : "NO_PLAYER",
-        discord: {
-          id: user.discordId,
-          username: user.discordUsername,
-          globalName: user.discordGlobalName,
-          serverNickname: user.discordServerNickname,
-          parsedBirthYear: user.discordParsedBirthYear,
-          parsedName: user.discordParsedName,
-          parsedNickname: user.discordParsedNickname,
-          parsedTier: user.discordParsedTier,
-          linkStatus: user.discordLinkStatus,
-          linkedAt: user.discordLinkedAt?.toISOString() ?? null,
-        },
       })),
       pagination: {
         page: currentPage,

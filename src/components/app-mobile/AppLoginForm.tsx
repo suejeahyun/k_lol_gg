@@ -18,7 +18,6 @@ export function AppLoginForm({ next = "/app" }: { next?: string }) {
   const [message, setMessage] = useState("");
 
   const nextPath = useMemo(() => safeNextPath(next), [next]);
-  const discordHref = `/api/auth/discord/start?next=${encodeURIComponent(nextPath)}`;
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -73,9 +72,6 @@ export function AppLoginForm({ next = "/app" }: { next?: string }) {
           <p>앱 화면으로 바로 이동하기 위한 전용 로그인입니다.</p>
         </div>
 
-        <a className="klol-app-login-discord" href={discordHref}>
-          Discord로 로그인 / 회원가입
-        </a>
 
         <form className="klol-app-login-form" onSubmit={handleSubmit}>
           <label>

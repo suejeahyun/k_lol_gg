@@ -18,10 +18,6 @@ type DetailRecord = {
   sourceRefType: string | null;
   sourceRefId: string | null;
   sourceRefKey: string | null;
-  discordAdminNotifiedAt: string | null;
-  discordDmStatus: string | null;
-  discordDmSentAt: string | null;
-  discordDmError: string | null;
   isActive: boolean;
   resetAt: string | null;
   resetReason: string | null;
@@ -157,8 +153,6 @@ export default function DisciplineRecordDetailClient({ record }: { record: Detai
           <div><strong>초기화:</strong> {record.resetAt ? `${formatDate(record.resetAt)} · ${record.resetBy || "-"}` : "-"}</div>
           <div><strong>초기화 사유:</strong> {record.resetReason || "-"}</div>
           <div><strong>출처:</strong> {record.sourceRefType || "-"} {record.sourceRefId ? `#${record.sourceRefId}` : ""}</div>
-          <div><strong>DM 상태:</strong> {record.discordDmStatus || "-"} {record.discordDmSentAt ? `· ${formatDate(record.discordDmSentAt)}` : ""}</div>
-          {record.discordDmError ? <div><strong>DM 오류:</strong> {record.discordDmError}</div> : null}
         </div>
       </section>
     </main>

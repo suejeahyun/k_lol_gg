@@ -45,7 +45,7 @@ const menuGroups: UserSidebarGroup[] = [
   {
     title: "BALANCE AI",
     items: [
-      { href: "/ai-balance", label: "K-LOL 랭킹", code: "RNK", activePrefixes: ["/ai-balance"] },
+      { href: "/ai-balance", label: "K-LOL MMR", code: "MMR", activePrefixes: ["/ai-balance"] },
       { href: "/players/balance", label: "팀 밸런스", code: "BAL", auth: true, approvedOnly: true, activePrefixes: ["/players/balance"] },
 
       {
@@ -67,7 +67,7 @@ const menuGroups: UserSidebarGroup[] = [
   {
     title: "INFO",
     items: [
-      { href: "/highlights", label: "하이라이트", code: "VID", activePrefixes: ["/highlights"] },
+      { href: "/highlights", label: "하이라이트", code: "VID", activePrefixes: ["/highlights", "/images"] },
       { href: "/riot-api", label: "Riot API 안내", code: "RIT", activePrefixes: ["/riot-api", "/me/riot"] },
     ],
   },

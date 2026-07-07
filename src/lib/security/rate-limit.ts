@@ -31,7 +31,6 @@ function isMutation(method: string) {
 
 function hasServerSecret(request: NextRequest) {
   return Boolean(
-    request.headers.get("x-discord-bot-secret") ||
       request.headers.get("x-klol-secret") ||
       request.headers.get("x-bot-secret") ||
       request.headers.get("x-kakao-secret") ||
@@ -61,7 +60,7 @@ function getPolicy(pathname: string, method: string, request: NextRequest): Rate
   }
 
   // Bot calls can be frequent. They are already protected by header secret, so allow higher throughput.
-  if (pathname.startsWith("/api/discord/") || pathname.startsWith("/api/kakao/")) {
+  if (pathname.startsWith("/api/kakao/")) {
     return hasServerSecret(request)
       ? { name: "trusted-bot-api", windowMs: 60_000, max: 900 }
       : { name: "bot-api", windowMs: 60_000, max: 120 };

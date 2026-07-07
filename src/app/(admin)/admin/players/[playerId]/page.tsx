@@ -40,12 +40,6 @@ export default async function AdminPlayerDetailPage({ params }: Props) {
           createdAt: true,
           adminTotpEnabled: true,
           adminTotpEnabledAt: true,
-          discordId: true,
-          discordUsername: true,
-          discordGlobalName: true,
-          discordServerNickname: true,
-          discordLinkedAt: true,
-          discordLinkStatus: true,
         },
       },
       _count: {
@@ -75,7 +69,6 @@ export default async function AdminPlayerDetailPage({ params }: Props) {
               createdAt: player.userAccount.createdAt.toISOString(),
               adminTotpEnabledAt: player.userAccount.adminTotpEnabledAt?.toISOString() ?? null,
               adminTotpSetupPending: false,
-              discordLinkedAt: player.userAccount.discordLinkedAt?.toISOString() ?? null,
             }
           : null,
       }}

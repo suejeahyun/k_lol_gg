@@ -19,7 +19,6 @@ export default async function AppRecruitsPage() {
     where: { status: "IN_PROGRESS" },
     include: {
       members: { orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }] },
-      discordMonitor: true,
     },
     orderBy: [{ recruitDate: "desc" }, { resetSeq: "desc" }, { recruitNo: "asc" }],
   });
@@ -39,7 +38,6 @@ export default async function AppRecruitsPage() {
           <div className="klol-app-list">
             {parties.map((party) => {
               const memberCount = party.members.length;
-              const monitor = party.discordMonitor;
               return (
                 <article className="klol-app-list-card" key={party.id}>
                   <div className="klol-app-list-top">
@@ -53,14 +51,6 @@ export default async function AppRecruitsPage() {
                     <div className="klol-app-meta">
                       <span>파티</span>
                       <strong>{typeLabel(party.type)}</strong>
-                    </div>
-                    <div className="klol-app-meta">
-                      <span>음성방</span>
-                      <strong>{monitor?.voiceChannelId ? "연결" : "미표시"}</strong>
-                    </div>
-                    <div className="klol-app-meta">
-                      <span>자동종료</span>
-                      <strong>{monitor?.autoFinishedAt ? "완료" : monitor ? "감시중" : "대기"}</strong>
                     </div>
                   </div>
                   <p className="klol-app-muted">

@@ -22,27 +22,19 @@ const cards = [
     title: "건의",
     description: "건의 사유와 내용을 확인하고 내부 처리 메모를 남깁니다.",
   },
-  {
-    key: "friends",
-    href: "/admin/kakao/operation-forms/friends",
-    title: "디스코드 초대",
-    description: "수동 초대 대상 정보를 확인하고 보관합니다.",
-  },
 ] as const;
 
 export default async function AdminOperationFormsPage() {
-  const [leaves, meetups, suggestions, friends] = await Promise.all([
+  const [leaves, meetups, suggestions] = await Promise.all([
     prisma.kakaoLeaveRequest.count({ where: { status: { not: "CANCELLED" } } }),
     prisma.kakaoMeetupRecord.count({ where: { status: { not: "CANCELLED" } } }),
     prisma.kakaoSuggestionRequest.count({ where: { status: { not: "CANCELLED" } } }),
-    prisma.kakaoFriendApplication.count({ where: { status: { not: "CANCELLED" } } }),
   ]);
 
   const counts: Record<(typeof cards)[number]["key"], number> = {
     leaves,
     meetups,
     suggestions,
-    friends,
   };
 
   return (
@@ -53,7 +45,7 @@ export default async function AdminOperationFormsPage() {
             <p className="page-eyebrow">KAKAO FORMS</p>
             <h1>카카오 운영신청</h1>
             <p className="admin-muted" style={{ marginTop: 8 }}>
-              외출신청, 오프라인모임, 건의, 디스코드 초대는 정보 확인 및 보관용으로 관리합니다.
+              외출신청, 오프라인모임, 건의는 정보 확인 및 보관용으로 관리합니다.
               운영 경고 관리는 별도 메뉴에서 기존 규칙 그대로 처리합니다.
             </p>
           </div>

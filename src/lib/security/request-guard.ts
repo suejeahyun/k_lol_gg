@@ -50,7 +50,7 @@ export function rejectIfInvalidOrigin(request: NextRequest) {
 
   const origin = getRequestOrigin(request);
 
-  // Server-to-server requests such as Discord/Kakao bot calls may not include Origin.
+  // Server-to-server requests such as Kakao bot calls may not include Origin.
   // Browser cross-site requests include Origin and are blocked unless explicitly allowed.
   if (!origin) return null;
 
@@ -63,7 +63,6 @@ export function rejectIfInvalidOrigin(request: NextRequest) {
 }
 
 export function getRequiredHeaderSecret(pathname: string) {
-  if (pathname.startsWith("/api/discord")) return process.env.DISCORD_BOT_API_SECRET || null;
 
   if (pathname.startsWith("/api/kakao") && process.env.SECURITY_REQUIRE_KAKAO_SECRET === "true") {
     return (
@@ -85,8 +84,6 @@ export function getReceivedServerSecret(request: NextRequest) {
   const headerSecret =
     request.headers.get("x-klol-secret") ||
     request.headers.get("x-bot-secret") ||
-    request.headers.get("x-discord-bot-secret") ||
-    request.headers.get("x-klol-discord-secret") ||
     request.headers.get("x-kakao-secret") ||
     request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ||
     "";

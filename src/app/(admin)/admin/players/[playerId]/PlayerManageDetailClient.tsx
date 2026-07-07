@@ -65,12 +65,6 @@ type PlayerDetail = {
     adminTotpEnabled: boolean;
     adminTotpEnabledAt: string | null;
     adminTotpSetupPending: boolean;
-    discordId: string | null;
-    discordUsername: string | null;
-    discordGlobalName: string | null;
-    discordServerNickname: string | null;
-    discordLinkedAt: string | null;
-    discordLinkStatus: string;
   } | null;
   _count: {
     participants: number;
@@ -407,19 +401,6 @@ export default function PlayerManageDetailClient({
               <Summary label="권한" value={getRoleLabel(account.role)} />
               <Summary label="가입일" value={formatDate(account.createdAt)} />
               <Summary
-                label="Discord"
-                value={account.discordId ? "연동됨" : "미연동"}
-              />
-              <Summary
-                label="Discord 닉네임"
-                value={
-                  account.discordServerNickname ||
-                  account.discordGlobalName ||
-                  account.discordUsername ||
-                  "-"
-                }
-              />
-              <Summary
                 label="2FA"
                 value={
                   account.adminTotpEnabled
@@ -428,10 +409,6 @@ export default function PlayerManageDetailClient({
                       ? "설정중"
                       : "미사용"
                 }
-              />
-              <Summary
-                label="Discord 상태"
-                value={account.discordLinkStatus || "-"}
               />
             </div>
             <p className="admin-muted" style={{ marginTop: 12 }}>

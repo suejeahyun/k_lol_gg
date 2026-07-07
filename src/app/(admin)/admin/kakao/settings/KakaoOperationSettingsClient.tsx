@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState } from "react";
 import type { KakaoOperationSettings } from "@/lib/kakao/settings";
@@ -57,7 +57,6 @@ const CLIENT_DEFAULT_SETTINGS: KakaoOperationSettings = {
   leaveRequestEnabled: true,
   meetupRecordEnabled: true,
   suggestionRequestEnabled: true,
-  discordInviteRequestEnabled: true,
   helpCommandEnabled: true,
   unknownCommandResponseEnabled: true,
   aiNoticeRedirectEnabled: true,
@@ -145,7 +144,6 @@ const sections: Array<{
       { key: "leaveRequestEnabled", label: "외출 신청", desc: "외출/휴식 신청 접수를 허용합니다." },
       { key: "meetupRecordEnabled", label: "오프라인 모임", desc: "모임 신청/기록 접수를 허용합니다." },
       { key: "suggestionRequestEnabled", label: "건의사항", desc: "건의 접수를 허용합니다." },
-      { key: "discordInviteRequestEnabled", label: "디스코드 초대", desc: "디스코드 초대 요청 접수를 허용합니다." },
     ],
   },
   {
