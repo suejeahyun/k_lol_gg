@@ -4,6 +4,19 @@ import RandomBackgroundLayout from "../components/RandomBackgroundLayout";
 
 const appName = "K-LOL.GG";
 const appDescription = "K-LOL.GG 내전 전적, 구인, 랭킹, 팀 밸런스, 운영 도구";
+const themeBootScript = `
+(() => {
+  try {
+    const allowed = ["dark-modern", "neon-cyber", "black-gold", "clean-light"];
+    const saved = window.localStorage.getItem("klol-theme");
+    const theme = allowed.includes(saved || "") ? saved : "dark-modern";
+    document.documentElement.dataset.theme = theme || "dark-modern";
+    document.documentElement.style.colorScheme = theme === "clean-light" ? "light" : "dark";
+  } catch (error) {
+    document.documentElement.dataset.theme = "dark-modern";
+  }
+})();
+`;
 
 export const metadata: Metadata = {
   applicationName: appName,
@@ -42,7 +55,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko">
+    <html lang="ko" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
+      </head>
       <body className="theme-lol-gold">
         <RandomBackgroundLayout>{children}</RandomBackgroundLayout>
       </body>

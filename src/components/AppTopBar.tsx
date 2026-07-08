@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
+import ThemeSwitcher from "./ThemeSwitcher";
 
 type AppTopBarProps = {
   title: string;
@@ -117,32 +118,36 @@ export default function AppTopBar({
         </div>
       ) : null}
 
-      <form className="app-topbar__search" onSubmit={handleSubmit}>
-        <select
-          className="app-select"
-          value={menu}
-          onChange={(e) => setMenu(e.target.value as "players" | "matches")}
-        >
-          <option value="players">
-            {mode === "admin" ? "플레이어" : "플레이어"}
-          </option>
-          <option value="matches">
-            {mode === "admin" ? "내전" : "내전"}
-          </option>
-        </select>
+      <div className="app-topbar__right">
+        <ThemeSwitcher />
 
-        <input
-          className="app-input"
-          type="text"
-          value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
-          placeholder="검색"
-        />
+        <form className="app-topbar__search" onSubmit={handleSubmit}>
+          <select
+            className="app-select"
+            value={menu}
+            onChange={(e) => setMenu(e.target.value as "players" | "matches")}
+          >
+            <option value="players">
+              {mode === "admin" ? "플레이어" : "플레이어"}
+            </option>
+            <option value="matches">
+              {mode === "admin" ? "내전" : "내전"}
+            </option>
+          </select>
 
-        <button className="app-button" type="submit">
-          검색
-        </button>
-      </form>
+          <input
+            className="app-input"
+            type="text"
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            placeholder="검색"
+          />
+
+          <button className="app-button" type="submit">
+            검색
+          </button>
+        </form>
+      </div>
     </header>
   );
 }

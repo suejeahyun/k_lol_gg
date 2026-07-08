@@ -1350,3 +1350,28 @@
   background: rgba(47, 125, 255, 0.08);
   color: #bfdbfe;
 }
+
+.klol-app-home-hero {
+  min-height: 238px;
+  align-content: end;
+}
+
+.klol-app-home-summary {
+  padding: 16px;
+  border: 1px solid rgba(84, 150, 232, 0.22);
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, rgba(13, 25, 46, 0.86), rgba(7, 15, 31, 0.9)),
+    radial-gradient(circle at 86% 0%, rgba(47, 125, 255, 0.2), transparent 44%);
+}
+
+.klol-app-meta-grid--home {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.klol-app-home-mvp {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}

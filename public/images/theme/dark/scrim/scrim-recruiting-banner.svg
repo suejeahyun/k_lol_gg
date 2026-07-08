@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="500" viewBox="0 0 1600 500" role="img" aria-label="Scrim Recruiting Banner">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#020617"/><stop offset="50%" stop-color="#07111f"/><stop offset="100%" stop-color="#0f172a"/></linearGradient>
+    <radialGradient id="glow" cx="50%" cy="38%" r="70%"><stop offset="0%" stop-color="#3b82f6" stop-opacity="0.42"/><stop offset="40%" stop-color="#3b82f6" stop-opacity="0.14"/><stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/></radialGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" fill="none" stroke="#ffffff" stroke-opacity="0.10" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="1600" height="500" fill="url(#bg)"/>
+  <rect width="1600" height="500" fill="url(#grid)"/>
+  <rect x="-120" y="-120" width="1840" height="740" fill="url(#glow)"/>
+  <path d="M0 360 C 320 300, 576 450, 864 360 S 1280 230, 1600 300" fill="none" stroke="#3b82f6" stroke-opacity="0.28" stroke-width="7"/>
+  
+        <g opacity="0.65">
+          <ellipse cx="1056.0" cy="330.0" rx="448.00000000000006" ry="80.0" fill="none" stroke="#3b82f6" stroke-width="10"/>
+          <ellipse cx="1056.0" cy="330.0" rx="320.0" ry="50.0" fill="none" stroke="#3b82f6" stroke-width="5" opacity=".55"/>
+          <path d="M624.0 310.0 C880.0000000000001 240.0, 1248.0 240.0, 1504.0 310.0" fill="none" stroke="#fff" stroke-opacity=".16" stroke-width="3"/>
+        </g>
+  <g transform="translate(64,64)">
+    <rect x="-24" y="-22" rx="24" ry="24" width="620" height="168" fill="#020617" fill-opacity="0.40" stroke="#3b82f6" stroke-opacity="0.25"/>
+    <text x="0" y="30" fill="#e5f2ff" font-family="Inter, Arial, sans-serif" font-size="40" font-weight="800">Scrim Recruiting Banner</text>
+    <text x="0" y="80" fill="#8aa4c7" font-family="Inter, Arial, sans-serif" font-size="22">DARK · scrim</text>
+    <text x="0" y="120" fill="#8aa4c7" font-family="Inter, Arial, sans-serif" font-size="18">K-LOL.GG theme asset placeholder</text>
+  </g>
+</svg>
