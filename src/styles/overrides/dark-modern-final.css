@@ -35,7 +35,7 @@
   --dm-img-grid:
     linear-gradient(rgba(101, 174, 255, 0.045) 1px, transparent 1px),
     linear-gradient(90deg, rgba(101, 174, 255, 0.045) 1px, transparent 1px);
-  --dm-img-hero: url("/images/theme/dark-modern/dark-trophy.png");
+  --dm-img-hero: url("/images/theme/dark-modern/home-hero-structured-v1.png");
   --dm-img-header: url("/images/theme/dark-modern/dark-wide-emblem.png");
   --dm-img-ranking: url("/images/theme/dark-modern/dark-trophy.png");
   --dm-img-match: url("/images/theme/dark-modern/dark-arena.png");
@@ -547,9 +547,9 @@ body {
     radial-gradient(circle at 72% 12%, rgba(47, 125, 255, 0.18), transparent 26%),
     linear-gradient(180deg, rgba(2, 6, 17, 0.14), rgba(2, 6, 17, 0.92)),
     var(--dm-img-hero);
-  background-position: center, center, center, right -56px top -42px;
+  background-position: center, center, center, center top;
   background-repeat: no-repeat;
-  background-size: cover, cover, cover, auto clamp(440px, 36vw, 660px);
+  background-size: cover, cover, cover, 100% auto;
   box-shadow:
     0 28px 78px rgba(0, 0, 0, 0.44),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
@@ -1566,8 +1566,8 @@ tbody tr:hover,
   }
 
   .home-dark-showcase {
-    background-position: center, center, center, right -32px top -48px !important;
-    background-size: cover, cover, cover, auto clamp(520px, 30vw, 700px) !important;
+    background-position: center, center, center, center top !important;
+    background-size: cover, cover, cover, 100% auto !important;
   }
 
   .home-dark-showcase-grid {
