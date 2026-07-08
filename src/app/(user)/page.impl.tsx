@@ -476,24 +476,6 @@ export default async function HomePage() {
                 플레이어 검색
               </Link>
             </div>
-
-            <div className="social-link-row home-dark-social-row">
-              <a
-                href="https://open.kakao.com/o/gGQ80Ucf"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="social-link-card"
-              >
-                <Image
-                  src="/kakao.webp"
-                  alt="카카오톡"
-                  width={52}
-                  height={52}
-                  className="social-link-image"
-                />
-                <span>카카오톡</span>
-              </a>
-            </div>
           </div>
         </div>
 

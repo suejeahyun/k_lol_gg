@@ -24,7 +24,7 @@
   --dm-red: #ff5a72;
   --dm-warning: #f6b94d;
   --dm-sidebar: 252px;
-  --dm-content-max: 1440px;
+  --dm-content-max: clamp(1120px, 76vw, 1680px);
   --dm-radius-sm: 10px;
   --dm-radius-md: 14px;
   --dm-radius-lg: 18px;
@@ -122,13 +122,13 @@ body {
 .app-background-image {
   top: 64px !important;
   bottom: 0 !important;
-  filter: brightness(0.56) saturate(0.95) contrast(1.06) !important;
-  opacity: 0.46 !important;
+  filter: brightness(0.42) saturate(0.78) contrast(1.03) !important;
+  opacity: 0.24 !important;
 }
 
 .app-background-side {
-  width: clamp(190px, 22vw, 340px) !important;
-  min-width: 190px !important;
+  width: clamp(150px, 16vw, 280px) !important;
+  min-width: 150px !important;
 }
 
 .app-background-side--left {
@@ -145,12 +145,12 @@ body {
   background:
     linear-gradient(
       90deg,
-      rgba(2, 6, 17, 0.52) 0%,
-      rgba(2, 6, 17, 0.82) 20%,
-      rgba(2, 6, 17, 0.94) 43%,
-      rgba(2, 6, 17, 0.94) 57%,
-      rgba(2, 6, 17, 0.82) 80%,
-      rgba(2, 6, 17, 0.52) 100%
+      rgba(2, 6, 17, 0.72) 0%,
+      rgba(2, 6, 17, 0.88) 22%,
+      rgba(2, 6, 17, 0.96) 43%,
+      rgba(2, 6, 17, 0.96) 57%,
+      rgba(2, 6, 17, 0.88) 78%,
+      rgba(2, 6, 17, 0.72) 100%
     ),
     linear-gradient(180deg, rgba(2, 6, 17, 0.18), rgba(2, 6, 17, 0.84)) !important;
 }
@@ -537,17 +537,19 @@ body {
 .home-dark-showcase {
   position: relative;
   display: grid;
-  gap: 22px;
+  gap: clamp(18px, 1.3vw, 24px);
   overflow: hidden;
   border: 1px solid rgba(84, 150, 232, 0.3);
   border-radius: 24px;
-  padding: 30px;
+  padding: clamp(22px, 1.8vw, 34px);
   background:
-    linear-gradient(90deg, rgba(3, 8, 19, 0.96) 0%, rgba(5, 12, 28, 0.86) 42%, rgba(5, 12, 28, 0.36) 100%),
-    linear-gradient(180deg, rgba(2, 6, 17, 0.08), rgba(2, 6, 17, 0.88)),
+    linear-gradient(90deg, rgba(3, 8, 19, 0.98) 0%, rgba(5, 12, 28, 0.9) 45%, rgba(5, 12, 28, 0.56) 100%),
+    radial-gradient(circle at 72% 12%, rgba(47, 125, 255, 0.18), transparent 26%),
+    linear-gradient(180deg, rgba(2, 6, 17, 0.14), rgba(2, 6, 17, 0.92)),
     var(--dm-img-hero);
-  background-position: center, center, right center;
-  background-size: cover, cover, cover;
+  background-position: center, center, center, right -56px top -42px;
+  background-repeat: no-repeat;
+  background-size: cover, cover, cover, auto clamp(440px, 36vw, 660px);
   box-shadow:
     0 28px 78px rgba(0, 0, 0, 0.44),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
@@ -559,8 +561,8 @@ body {
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(circle at 72% 18%, rgba(47, 125, 255, 0.2), transparent 34%),
-    linear-gradient(90deg, rgba(74, 163, 255, 0.12), transparent 38%);
+    radial-gradient(circle at 74% 20%, rgba(47, 125, 255, 0.16), transparent 34%),
+    linear-gradient(90deg, rgba(74, 163, 255, 0.1), transparent 38%);
 }
 
 .home-dark-showcase > * {
@@ -570,22 +572,49 @@ body {
 
 .home-dark-showcase-hero {
   display: flex;
-  align-items: center;
-  min-height: 250px;
+  align-items: flex-start;
+  min-height: clamp(204px, 13vw, 272px);
+  padding-bottom: clamp(10px, 1.4vw, 24px);
 }
 
 .home-dark-showcase .home-dark-hero-copy {
-  max-width: 690px;
+  max-width: min(720px, 54%);
   min-height: auto;
 }
 
 .home-dark-showcase-grid {
+  position: relative;
   display: grid;
   grid-template-areas:
     "top3 top3"
     "recent season";
   grid-template-columns: minmax(0, 1.08fr) minmax(330px, 0.92fr);
-  gap: 16px;
+  gap: clamp(14px, 1vw, 18px);
+  overflow: hidden;
+  border: 1px solid rgba(84, 150, 232, 0.22);
+  border-radius: 20px;
+  padding: clamp(16px, 1.2vw, 22px);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(74, 163, 255, 0.12), transparent 42%),
+    linear-gradient(180deg, rgba(7, 18, 38, 0.86), rgba(3, 10, 24, 0.82)),
+    var(--dm-img-grid);
+  background-size: cover, cover, 42px 42px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.home-dark-showcase-grid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 52% 18%, rgba(47, 125, 255, 0.12), transparent 40%),
+    linear-gradient(90deg, rgba(47, 125, 255, 0.06), transparent 36%, transparent 64%, rgba(39, 200, 255, 0.05));
+}
+
+.home-dark-showcase-grid > * {
+  position: relative;
+  z-index: 1;
 }
 
 .home-dark-showcase .home-dark-top3-panel {
@@ -619,12 +648,12 @@ body {
 }
 
 .home-dark-showcase .home-dark-rank-card {
-  min-height: 178px;
-  padding: 18px;
+  min-height: clamp(160px, 10vw, 190px);
+  padding: clamp(16px, 1vw, 18px);
 }
 
 .home-dark-showcase .home-dark-rank-card--gold {
-  min-height: 212px;
+  min-height: clamp(188px, 12vw, 224px);
 }
 
 .home-feature-stack {
@@ -885,10 +914,10 @@ body {
   padding: 20px;
   background:
     radial-gradient(circle at 50% 0%, rgba(74, 163, 255, 0.16), transparent 42%),
-    linear-gradient(180deg, rgba(10, 24, 48, 0.92), rgba(5, 13, 29, 0.96)),
-    var(--dm-img-ranking);
-  background-position: center, right top;
-  background-size: cover, cover;
+    radial-gradient(circle at 50% 80%, rgba(39, 200, 255, 0.08), transparent 42%),
+    linear-gradient(180deg, rgba(10, 24, 48, 0.9), rgba(5, 13, 29, 0.96));
+  background-position: center;
+  background-size: cover;
 }
 
 .home-dark-podium {
@@ -1528,13 +1557,31 @@ tbody tr:hover,
 
 @media (min-width: 1680px) {
   :root {
-    --dm-content-max: 1500px;
+    --dm-content-max: clamp(1280px, 78vw, 1760px);
+  }
+
+  .app-background-side,
+  .app-background-image {
+    opacity: 0.18 !important;
+  }
+
+  .home-dark-showcase {
+    background-position: center, center, center, right -32px top -48px !important;
+    background-size: cover, cover, cover, auto clamp(520px, 30vw, 700px) !important;
+  }
+
+  .home-dark-showcase-grid {
+    grid-template-columns: minmax(0, 1.12fr) minmax(360px, 0.88fr);
   }
 }
 
 @media (max-width: 1280px) {
   .app-content {
     padding-inline: 24px !important;
+  }
+
+  .home-dark-showcase .home-dark-hero-copy {
+    max-width: min(720px, 72%) !important;
   }
 
   .home-dark-hero-card,
@@ -1699,6 +1746,10 @@ tbody tr:hover,
 
   .home-dark-hero-copy {
     min-height: 250px !important;
+  }
+
+  .home-dark-showcase .home-dark-hero-copy {
+    max-width: 100% !important;
   }
 
   .home-dark-hero-title {
