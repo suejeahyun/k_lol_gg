@@ -1099,15 +1099,15 @@
 /* 상단 요약 */
 .players-page-v2__summary {
   display: grid;
-  grid-template-columns: 120px repeat(4, minmax(180px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .players-page-v2__summary-card {
   position: relative;
   overflow: hidden;
-  min-height: 94px;
-  padding: 16px;
+  min-height: 84px;
+  padding: 14px;
   border: 1px solid rgba(59, 130, 246, 0.32);
   border-radius: 18px;
   background:
@@ -1144,7 +1144,7 @@
   display: block;
   overflow: hidden;
   color: #f8fbff;
-  font-size: 24px;
+  font-size: clamp(18px, 1.55vw, 24px);
   font-weight: 950;
   letter-spacing: -0.04em;
   text-overflow: ellipsis;
@@ -1152,7 +1152,7 @@
 }
 
 .players-page-v2__summary-card--wide strong {
-  font-size: 20px;
+  font-size: clamp(16px, 1.25vw, 20px);
 }
 
 /* 보드 */
@@ -1254,12 +1254,13 @@
 }
 
 .players-page-v2__row {
+  position: relative;
   min-height: 64px;
   padding: 10px 16px;
-  border: 1px solid rgba(59, 130, 246, 0.28);
+  border: 1px solid rgba(59, 130, 246, 0.24);
   border-radius: 16px;
   background:
-    linear-gradient(90deg, rgba(13, 31, 56, 0.88), rgba(8, 20, 38, 0.84));
+    linear-gradient(90deg, rgba(13, 31, 56, 0.9), rgba(8, 20, 38, 0.84));
   color: #f8fbff;
   text-decoration: none;
   transition:
@@ -1267,6 +1268,23 @@
     border-color 150ms ease,
     background 150ms ease,
     box-shadow 150ms ease;
+}
+
+.players-page-v2__row::before {
+  content: "";
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
+  left: 10px;
+  width: 3px;
+  min-height: 40px;
+  border-radius: 999px;
+  background: linear-gradient(
+    180deg,
+    rgba(34, 211, 238, 0.9),
+    rgba(79, 123, 255, 0.24)
+  );
+  opacity: 0.72;
 }
 
 .players-page-v2__row:hover {
@@ -1466,7 +1484,7 @@
   }
 
   .players-page-v2__summary {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .players-page-v2__board-head {
@@ -1476,6 +1494,16 @@
 
   .players-page-v2__meta {
     justify-content: flex-start;
+  }
+}
+
+@media (max-width: 520px) {
+  .players-page-v2__summary {
+    grid-template-columns: 1fr;
+  }
+
+  .players-page-v2__summary-card {
+    min-height: 76px;
   }
 }
 
@@ -1573,9 +1601,10 @@
   max-width: 120px;
   gap: 6px;
   padding: 4px 7px 4px 4px;
-  border: 1px solid rgba(96, 165, 250, 0.2);
+  border: 1px solid rgba(96, 165, 250, 0.24);
   border-radius: 999px;
-  background: rgba(2, 8, 23, 0.38);
+  background:
+    linear-gradient(90deg, rgba(59, 130, 246, 0.12), rgba(2, 8, 23, 0.42));
   color: rgba(226, 232, 240, 0.74);
   font-size: 11px;
   font-weight: 850;
@@ -1591,9 +1620,10 @@
   width: 22px;
   height: 22px;
   flex: 0 0 22px;
-  border: 1px solid rgba(96, 165, 250, 0.34);
+  border: 1px solid rgba(147, 197, 253, 0.46);
   border-radius: 999px;
   object-fit: cover;
+  box-shadow: 0 0 0 2px rgba(2, 8, 23, 0.85);
 }
 
 .players-page-v2__champion-image--empty {
