@@ -1,80 +1,16 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
-
-type TierType = "basic" | "master" | "high";
+import Link from "next/link";
+import { FormEvent, useEffect, useState } from "react";
 
 type Player = {
   id: number;
+  name: string;
   nickname: string;
   tag: string;
   peakTier: string | null;
   currentTier: string | null;
 };
-
-
-const BASIC_TIERS = ["아이언", "브론즈", "실버", "골드", "플래티넘", "에메랄드", "다이아"];
-const MASTER_TIERS = ["마스터"];
-const HIGH_TIERS = ["그랜드마스터", "챌린저"];
-const BASIC_DIVISIONS = ["1", "2", "3", "4"];
-const ALL_TIERS = [...BASIC_TIERS, ...MASTER_TIERS, ...HIGH_TIERS];
-
-function getTierType(tier: string): TierType {
-  if (BASIC_TIERS.includes(tier)) return "basic";
-  if (MASTER_TIERS.includes(tier)) return "master";
-  return "high";
-}
-
-function buildTierValue(tier: string, detail: string): string {
-  if (!tier) return "";
-  if (BASIC_TIERS.includes(tier)) return detail ? `${tier} ${detail}` : "";
-  if (MASTER_TIERS.includes(tier)) return detail ? `${tier} ${scoreToMasterFloor(detail)}층` : "";
-  if (HIGH_TIERS.includes(tier)) return detail ? `${tier} ${detail}` : "";
-  return "";
-}
-
-function parseTierValue(value?: string | null): {
-  tier: string;
-  detail: string;
-} {
-  const normalized = value?.trim() ?? "";
-
-  if (!normalized) {
-    return {
-      tier: "",
-      detail: "",
-    };
-  }
-
-  const [tier, detailRaw] = normalized.split(" ");
-  const rawDetail = detailRaw ?? "";
-  const detail = tier === "마스터" && rawDetail.includes("층")
-    ? String(clampNumber(rawDetail.replace(/[^0-9]/g, ""), 1, 10) * 100)
-    : rawDetail.replace("점", "").replace("층", "");
-
-  if (![...BASIC_TIERS, ...MASTER_TIERS, ...HIGH_TIERS].includes(tier)) {
-    return {
-      tier: "",
-      detail: "",
-    };
-  }
-
-  return {
-    tier,
-    detail,
-  };
-}
-
-function clampNumber(value: string, min: number, max: number) {
-  const numeric = Number.parseInt(value, 10);
-  if (!Number.isFinite(numeric)) return min;
-  return Math.max(min, Math.min(max, numeric));
-}
-
-function scoreToMasterFloor(value: string) {
-  const score = clampNumber(value, 0, 999);
-  return Math.max(1, Math.min(10, Math.floor(score / 100)));
-}
 
 export default function MyPlayerPage() {
   const [player, setPlayer] = useState<Player | null>(null);
@@ -83,14 +19,6 @@ export default function MyPlayerPage() {
 
   const [nickname, setNickname] = useState("");
   const [tag, setTag] = useState("");
-
-  const [peakTier, setPeakTier] = useState("");
-  const [peakDetail, setPeakDetail] = useState("");
-  const [currentTier, setCurrentTier] = useState("");
-  const [currentDetail, setCurrentDetail] = useState("");
-
-  const peakType = useMemo(() => getTierType(peakTier), [peakTier]);
-  const currentType = useMemo(() => getTierType(currentTier), [currentTier]);
 
   const fetchPlayer = async () => {
     try {
@@ -110,14 +38,6 @@ export default function MyPlayerPage() {
       if (data.player) {
         setNickname(data.player.nickname);
         setTag(data.player.tag);
-
-        const parsedPeak = parseTierValue(data.player.peakTier);
-        setPeakTier(parsedPeak.tier);
-        setPeakDetail(parsedPeak.detail);
-
-        const parsedCurrent = parseTierValue(data.player.currentTier);
-        setCurrentTier(parsedCurrent.tier);
-        setCurrentDetail(parsedCurrent.detail);
       }
     } catch (error: unknown) {
       console.error("[MY_PLAYER_FETCH_ERROR]", error);
@@ -126,7 +46,6 @@ export default function MyPlayerPage() {
       setLoading(false);
     }
   };
-
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -142,8 +61,6 @@ export default function MyPlayerPage() {
         body: JSON.stringify({
           nickname,
           tag,
-          peakTier: buildTierValue(peakTier, peakDetail),
-          currentTier: buildTierValue(currentTier, currentDetail),
         }),
       });
 
@@ -154,7 +71,7 @@ export default function MyPlayerPage() {
         return;
       }
 
-      alert("수정 완료");
+      alert("플레이어 정보가 수정되었습니다. 티어는 Riot 동기화 후 자동 반영됩니다.");
       await fetchPlayer();
     } catch (error: unknown) {
       console.error("[MY_PLAYER_UPDATE_ERROR]", error);
@@ -179,117 +96,81 @@ export default function MyPlayerPage() {
   }
 
   return (
-    <div className="admin-page my-player-page">
+    <div className="admin-page my-player-page my-player-page--riot-auto">
       <div className="admin-page__header">
-        <h1 className="admin-page__title">내 플레이어 정보</h1>
+        <div>
+          <p className="admin-page__kicker">MY PLAYER</p>
+          <h1 className="admin-page__title">내 플레이어 정보</h1>
+          <p className="admin-page__description">
+            이름과 Riot ID를 확인합니다. 티어는 Riot API 솔랭 동기화 결과로 자동 적용됩니다.
+          </p>
+        </div>
+        <div className="admin-dashboard-actions">
+          <Link className="admin-button" href="/me/riot">Riot 연동</Link>
+          <Link className="admin-button admin-button--ghost" href={`/players/${player.id}/riot`}>솔랭 분석</Link>
+        </div>
       </div>
 
-      <form className="admin-form my-player-form" onSubmit={handleSubmit}>
-        <label className="auth-field">
-          <span>닉네임</span>
-          <input value={nickname} onChange={(e) => setNickname(e.target.value)} />
-        </label>
+      <section className="admin-card my-player-riot-summary">
+        <div>
+          <span>플레이어</span>
+          <strong>{player.name}</strong>
+          <em>{player.nickname}#{player.tag}</em>
+        </div>
+        <div>
+          <span>현재 티어</span>
+          <strong>{player.currentTier || "Riot 동기화 필요"}</strong>
+          <em>솔랭 스냅샷 기준</em>
+        </div>
+        <div>
+          <span>최고 티어</span>
+          <strong>{player.peakTier || "자동 보정 대기"}</strong>
+          <em>현재 티어가 기존 최고보다 높으면 자동 갱신</em>
+        </div>
+      </section>
 
-        <label className="auth-field">
-          <span>태그</span>
-          <input value={tag} onChange={(e) => setTag(e.target.value)} />
-        </label>
+      <div className="my-player-two-column">
+        <form className="admin-form my-player-form" onSubmit={handleSubmit}>
+          <div className="admin-section-head">
+            <div>
+              <h2>Riot ID 확인</h2>
+              <p className="admin-muted">검색과 연동에 사용할 닉네임과 태그만 수정합니다.</p>
+            </div>
+          </div>
 
-        <TierSelector
-          title="최고 티어"
-          tier={peakTier}
-          detail={peakDetail}
-          type={peakType}
-          onTierChange={(value) => {
-            setPeakTier(value);
-            setPeakDetail("");
-          }}
-          onDetailChange={setPeakDetail}
-        />
+          <label className="auth-field">
+            <span>닉네임</span>
+            <input value={nickname} onChange={(e) => setNickname(e.target.value)} />
+          </label>
 
-        <TierSelector
-          title="현재 티어"
-          tier={currentTier}
-          detail={currentDetail}
-          type={currentType}
-          onTierChange={(value) => {
-            setCurrentTier(value);
-            setCurrentDetail("");
-          }}
-          onDetailChange={setCurrentDetail}
-        />
+          <label className="auth-field">
+            <span>태그</span>
+            <input value={tag} onChange={(e) => setTag(e.target.value.replace(/^#/, ""))} />
+          </label>
 
-        <button className="auth-button my-player-form__submit" type="submit" disabled={saving}>
-          {saving ? "저장 중..." : "저장"}
-        </button>
-      </form>
-    </div>
-  );
-}
+          <button className="auth-button my-player-form__submit" type="submit" disabled={saving}>
+            {saving ? "저장 중..." : "닉네임#태그 저장"}
+          </button>
+        </form>
 
-function TierSelector({
-  title,
-  tier,
-  detail,
-  type,
-  onTierChange,
-  onDetailChange,
-}: {
-  title: string;
-  tier: string;
-  detail: string;
-  type: TierType;
-  onTierChange: (value: string) => void;
-  onDetailChange: (value: string) => void;
-}) {
-  return (
-    <div className="auth-tier-section">
-      <div className="auth-tier-title">{title}</div>
-
-      <div className="auth-tier-row">
-        <select value={tier} onChange={(e) => onTierChange(e.target.value)}>
-          <option value="">선택 안함</option>
-          {ALL_TIERS.map((tierName) => (
-            <option key={tierName} value={tierName}>
-              {tierName}
-            </option>
-          ))}
-        </select>
-
-        {tier && type === "basic" ? (
-          <select value={detail} onChange={(e) => onDetailChange(e.target.value)}>
-            <option value="">단계 선택</option>
-            {BASIC_DIVISIONS.map((division) => (
-              <option key={division} value={division}>
-                {division}
-              </option>
-            ))}
-          </select>
-        ) : null}
-
-        {tier && type === "master" ? (
-          <input
-            value={detail}
-            onChange={(e) => onDetailChange(e.target.value.replace(/[^0-9]/g, ""))}
-            placeholder="점수 입력 예: 720"
-            inputMode="numeric"
-          />
-        ) : null}
-
-        {tier && type === "high" ? (
-          <input
-            value={detail}
-            onChange={(e) => onDetailChange(e.target.value.replace(/[^0-9]/g, ""))}
-            placeholder="LP 입력"
-            inputMode="numeric"
-          />
-        ) : null}
+        <section className="admin-card account-tier-auto-card my-player-auto-tier-card">
+          <p className="admin-page__kicker">AUTO TIER FLOW</p>
+          <h2>수동 티어 입력은 사용하지 않습니다.</h2>
+          <p>
+            Riot 계정을 연결한 뒤 솔랭 동기화를 실행하면 현재 티어가 자동 갱신됩니다.
+            팀 밸런스, 멸망전 참가자 분석, 플레이어 목록은 이 값을 우선 사용합니다.
+          </p>
+          <div className="account-tier-auto-card__steps">
+            <span>Riot ID 검증</span>
+            <span>솔랭 스냅샷 저장</span>
+            <span>현재 티어 자동 적용</span>
+          </div>
+          <div className="account-tier-auto-card__actions">
+            <Link className="admin-button" href="/me/riot">Riot 계정 연동</Link>
+            <Link className="admin-button admin-button--ghost" href="/riot-api">Riot API 안내</Link>
+          </div>
+        </section>
       </div>
-      {tier && type === "master" ? (
-        <p className="admin-muted" style={{ margin: "6px 0 0", fontSize: 12 }}>
-          {detail ? `${detail}점 입력 → DB 저장값: 마스터 ${scoreToMasterFloor(detail)}층` : "마스터 점수를 입력하세요."}
-        </p>
-      ) : null}
     </div>
   );
 }

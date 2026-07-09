@@ -45,12 +45,14 @@
   --dm-img-admin: url("/images/theme/dark-modern/pro-admin-control-v1.png");
   --dm-img-auth: url("/images/theme/dark-modern/dark-trophy.png");
   --dm-global-backdrop:
-    linear-gradient(180deg, rgba(2, 6, 17, 0.34), rgba(2, 6, 17, 0.88) 64%, #020611 100%),
-    radial-gradient(circle at 18% 0%, rgba(47, 125, 255, 0.16), transparent 32%),
+    linear-gradient(180deg, rgba(2, 6, 17, 0.12), rgba(2, 6, 17, 0.58) 62%, #020611 100%),
+    radial-gradient(circle at 12% 18%, rgba(47, 125, 255, 0.26), transparent 30%),
+    radial-gradient(circle at 89% 18%, rgba(39, 200, 255, 0.18), transparent 28%),
+    linear-gradient(90deg, rgba(47, 125, 255, 0.12), transparent 24%, transparent 76%, rgba(39, 200, 255, 0.12)),
     url("/images/theme/dark-modern/klol-global-stage-v1.png"),
     linear-gradient(180deg, #050914, #020611);
-  --dm-global-backdrop-size: cover, cover, cover, cover;
-  --dm-global-backdrop-position: center, center, center top, center;
+  --dm-global-backdrop-size: cover, cover, cover, cover, cover, cover;
+  --dm-global-backdrop-position: center, center, center, center, center top, center;
 
   --k-bg: var(--dm-bg);
   --k-bg-2: #071122;
@@ -96,15 +98,17 @@ body {
 .app-background-root {
   min-height: 100vh;
   background:
-    linear-gradient(180deg, rgba(2, 6, 17, 0.76), rgba(2, 6, 17, 0.94) 58%, #020611 100%),
-    radial-gradient(circle at 15% 0%, rgba(47, 125, 255, 0.2), transparent 32%),
-    radial-gradient(circle at 86% 8%, rgba(39, 200, 255, 0.12), transparent 30%),
+    linear-gradient(180deg, rgba(2, 6, 17, 0.26), rgba(2, 6, 17, 0.76) 60%, #020611 100%),
+    radial-gradient(circle at 12% 12%, rgba(47, 125, 255, 0.26), transparent 34%),
+    radial-gradient(circle at 88% 12%, rgba(39, 200, 255, 0.18), transparent 31%),
+    linear-gradient(90deg, rgba(47, 125, 255, 0.12), transparent 26%, transparent 74%, rgba(39, 200, 255, 0.11)),
     var(--dm-img-grid),
     var(--dm-img-page),
     var(--dm-img-page-crystal),
     linear-gradient(180deg, rgba(6, 14, 29, 0.98) 0%, rgba(2, 6, 17, 0.98) 58%, #020611 100%),
     linear-gradient(90deg, rgba(47, 125, 255, 0.12), transparent 30%, transparent 70%, rgba(39, 200, 255, 0.09)) !important;
   background-size:
+    cover,
     cover,
     cover,
     cover,
@@ -118,11 +122,12 @@ body {
     center,
     center,
     center,
+    center,
     center top,
     center top,
     center,
     center !important;
-  background-attachment: fixed, fixed, fixed, fixed, fixed, fixed, scroll, scroll;
+  background-attachment: fixed, fixed, fixed, fixed, fixed, fixed, fixed, scroll, scroll;
   color: var(--dm-text);
 }
 
@@ -137,6 +142,7 @@ body {
   background-repeat: no-repeat !important;
   pointer-events: none;
   transform: translateZ(0);
+  filter: saturate(1.18) brightness(1.08) contrast(1.03);
 }
 
 .app-background-root::after {
@@ -145,11 +151,15 @@ body {
   inset: 0;
   z-index: 0;
   background:
+    radial-gradient(ellipse at 8% 52%, rgba(47, 125, 255, 0.24), transparent 28%),
+    radial-gradient(ellipse at 94% 50%, rgba(39, 200, 255, 0.18), transparent 27%),
+    radial-gradient(ellipse at 50% 14%, rgba(47, 125, 255, 0.08), transparent 34%),
     linear-gradient(rgba(101, 174, 255, 0.026) 1px, transparent 1px),
     linear-gradient(90deg, rgba(101, 174, 255, 0.026) 1px, transparent 1px);
-  background-size: 48px 48px;
+  background-size: cover, cover, cover, 48px 48px, 48px 48px;
+  background-position: center, center, center, center, center;
   mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.85), transparent 82%);
-  opacity: 0.7;
+  opacity: 0.82;
   pointer-events: none;
 }
 
@@ -181,14 +191,14 @@ body {
   background:
     linear-gradient(
       90deg,
-      rgba(2, 6, 17, 0.72) 0%,
-      rgba(2, 6, 17, 0.88) 22%,
-      rgba(2, 6, 17, 0.96) 43%,
-      rgba(2, 6, 17, 0.96) 57%,
-      rgba(2, 6, 17, 0.88) 78%,
-      rgba(2, 6, 17, 0.72) 100%
+      rgba(2, 6, 17, 0.34) 0%,
+      rgba(2, 6, 17, 0.54) 22%,
+      rgba(2, 6, 17, 0.68) 43%,
+      rgba(2, 6, 17, 0.68) 57%,
+      rgba(2, 6, 17, 0.54) 78%,
+      rgba(2, 6, 17, 0.34) 100%
     ),
-    linear-gradient(180deg, rgba(2, 6, 17, 0.18), rgba(2, 6, 17, 0.84)) !important;
+    linear-gradient(180deg, rgba(2, 6, 17, 0.08), rgba(2, 6, 17, 0.58)) !important;
 }
 
 .app-content::before {
@@ -224,6 +234,133 @@ body {
   height: 38px !important;
 }
 
+.auth-riot-note,
+.account-tier-auto-card,
+.my-player-riot-summary,
+.my-player-auto-tier-card {
+  border: 1px solid rgba(82, 170, 255, 0.26);
+  border-radius: var(--dm-radius-lg);
+  background:
+    radial-gradient(circle at 18% 0%, rgba(47, 125, 255, 0.16), transparent 34%),
+    linear-gradient(150deg, rgba(11, 25, 49, 0.95), rgba(5, 12, 26, 0.94));
+  box-shadow: var(--dm-shadow-soft);
+}
+
+.auth-riot-note {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  color: var(--dm-text-soft);
+}
+
+.auth-riot-note strong {
+  color: var(--dm-text);
+  font-size: 14px;
+}
+
+.auth-riot-note p {
+  margin: 0;
+  color: var(--dm-muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.account-tier-auto-card {
+  display: grid;
+  gap: 14px;
+  min-height: 100%;
+  padding: 22px;
+}
+
+.account-tier-auto-card h2 {
+  margin: 0;
+  color: var(--dm-text);
+  font-size: 21px;
+  letter-spacing: -0.02em;
+}
+
+.account-tier-auto-card p {
+  margin: 0;
+  color: var(--dm-text-soft);
+  line-height: 1.7;
+}
+
+.account-tier-auto-card__steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.account-tier-auto-card__steps span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  border: 1px solid rgba(82, 170, 255, 0.24);
+  border-radius: 999px;
+  background: rgba(7, 17, 34, 0.76);
+  color: var(--dm-text-soft);
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.account-tier-auto-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.my-player-page--riot-auto {
+  display: grid;
+  gap: 18px;
+}
+
+.my-player-riot-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 18px;
+}
+
+.my-player-riot-summary > div {
+  min-width: 0;
+  border: 1px solid rgba(82, 170, 255, 0.2);
+  border-radius: var(--dm-radius-md);
+  background: rgba(4, 12, 26, 0.66);
+  padding: 14px 16px;
+}
+
+.my-player-riot-summary span,
+.my-player-riot-summary em {
+  display: block;
+  color: var(--dm-muted);
+  font-size: 12px;
+  font-style: normal;
+  line-height: 1.45;
+}
+
+.my-player-riot-summary strong {
+  display: block;
+  margin: 5px 0;
+  color: var(--dm-text);
+  font-size: 20px;
+  line-height: 1.2;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.my-player-two-column {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.78fr) minmax(360px, 1fr);
+  gap: 18px;
+}
+
+.my-player-auto-tier-card {
+  min-height: auto;
+}
+
 .app-shell,
 .app-body,
 .app-content,
@@ -249,6 +386,10 @@ body {
   width: calc(100% - var(--dm-sidebar)) !important;
   padding: 28px 32px 88px !important;
   padding-top: 92px !important;
+}
+
+.app-shell--admin .app-content {
+  padding-inline: clamp(24px, 3vw, 56px) !important;
 }
 
 .page-container,
@@ -290,6 +431,60 @@ body {
   background:
     linear-gradient(180deg, rgba(5, 10, 20, 0.99), rgba(3, 7, 15, 0.99)),
     linear-gradient(90deg, rgba(214, 176, 92, 0.05), transparent 62%) !important;
+}
+
+.app-shell--admin .admin-page,
+.app-shell--admin .page-container {
+  width: min(100%, var(--dm-content-max)) !important;
+  max-width: var(--dm-content-max) !important;
+}
+
+.admin-dashboard-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.admin-dashboard-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.admin-summary-card {
+  min-height: 112px;
+  border: 1px solid rgba(82, 170, 255, 0.22) !important;
+  border-radius: var(--dm-radius-lg) !important;
+  background:
+    radial-gradient(circle at 92% 8%, rgba(47, 125, 255, 0.14), transparent 32%),
+    linear-gradient(160deg, rgba(11, 25, 49, 0.95), rgba(5, 12, 26, 0.94)) !important;
+  box-shadow: var(--dm-shadow-soft) !important;
+}
+
+.admin-summary-card__label {
+  color: var(--dm-muted) !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+}
+
+.admin-summary-card__value {
+  color: var(--dm-text) !important;
+  font-size: clamp(22px, 2vw, 30px) !important;
+}
+
+.admin-summary-card__meta {
+  color: var(--dm-text-soft) !important;
 }
 
 .app-sidebar__title {
@@ -1616,6 +1811,10 @@ tbody tr:hover,
     padding-inline: 24px !important;
   }
 
+  .my-player-two-column {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .home-dark-showcase .home-dark-hero-copy {
     max-width: min(720px, 72%) !important;
   }
@@ -1734,6 +1933,27 @@ tbody tr:hover,
   .admin-page-header h1,
   .admin-header h1 {
     font-size: 24px !important;
+  }
+
+  .admin-dashboard-header,
+  .admin-dashboard-actions,
+  .account-tier-auto-card__actions {
+    align-items: stretch !important;
+    flex-direction: column !important;
+  }
+
+  .admin-dashboard-actions > *,
+  .account-tier-auto-card__actions > * {
+    width: 100%;
+  }
+
+  .account-tier-auto-card__steps,
+  .my-player-riot-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .account-tier-auto-card {
+    padding: 18px;
   }
 
   .home-main-title {
@@ -2110,14 +2330,15 @@ html[data-theme="neon-cyber"] .klol-app-login-form button {
 
 html[data-theme="dark-modern"] .app-background-root {
   background:
-    linear-gradient(180deg, rgba(2, 6, 17, 0.44), rgba(2, 6, 17, 0.9) 58%, #020611 100%),
-    radial-gradient(circle at 15% 0%, rgba(47, 125, 255, 0.18), transparent 32%),
-    radial-gradient(circle at 86% 8%, rgba(39, 200, 255, 0.1), transparent 30%),
+    linear-gradient(180deg, rgba(2, 6, 17, 0.2), rgba(2, 6, 17, 0.74) 60%, #020611 100%),
+    radial-gradient(circle at 12% 8%, rgba(47, 125, 255, 0.24), transparent 34%),
+    radial-gradient(circle at 88% 8%, rgba(39, 200, 255, 0.16), transparent 31%),
+    linear-gradient(90deg, rgba(47, 125, 255, 0.12), transparent 26%, transparent 74%, rgba(39, 200, 255, 0.11)),
     var(--dm-img-grid),
     var(--dm-img-page),
-    linear-gradient(180deg, rgba(6, 14, 29, 0.98) 0%, rgba(2, 6, 17, 0.98) 58%, #020611 100%) !important;
-  background-size: cover, cover, cover, 520px 520px, cover, cover !important;
-  background-position: center, center, center, center, center top, center !important;
+    linear-gradient(180deg, rgba(6, 14, 29, 0.82) 0%, rgba(2, 6, 17, 0.94) 68%, #020611 100%) !important;
+  background-size: cover, cover, cover, cover, 520px 520px, cover, cover !important;
+  background-position: center, center, center, center, center, center top, center !important;
 }
 
 html[data-theme="neon-cyber"] .app-background-root {

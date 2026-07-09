@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    const { userId, password, name, nickname, tag, peakTier, currentTier } = body;
+    const { userId, password, name, nickname, tag } = body;
 
     if (!userId || !password || !name || !nickname || !tag) {
       return NextResponse.json(
@@ -102,8 +102,6 @@ export async function POST(req: NextRequest) {
             where: { id: existingPlayer.id },
             data: {
               name: existingPlayer.name || normalizedName,
-              peakTier: existingPlayer.peakTier ?? peakTier ?? null,
-              currentTier: existingPlayer.currentTier ?? currentTier ?? null,
               userAccountId: user.id,
               isActive: true,
               deactivatedAt: null,
@@ -114,8 +112,6 @@ export async function POST(req: NextRequest) {
               name: normalizedName,
               nickname: normalizedNickname,
               tag: normalizedTag,
-              peakTier: peakTier || null,
-              currentTier: currentTier || null,
               userAccountId: user.id,
             },
           });

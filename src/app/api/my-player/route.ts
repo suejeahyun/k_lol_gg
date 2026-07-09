@@ -51,8 +51,6 @@ export async function PATCH(req: NextRequest) {
 
     const nickname = typeof body.nickname === "string" ? body.nickname.trim() : player.nickname;
     const tag = typeof body.tag === "string" ? body.tag.trim() : player.tag;
-    const peakTier = typeof body.peakTier === "string" ? body.peakTier.trim() : body.peakTier ?? player.peakTier;
-    const currentTier = typeof body.currentTier === "string" ? body.currentTier.trim() : body.currentTier ?? player.currentTier;
 
     if (!nickname || !tag) {
       return NextResponse.json({ message: "닉네임과 태그는 필수입니다." }, { status: 400 });
@@ -79,8 +77,6 @@ export async function PATCH(req: NextRequest) {
       data: {
         nickname,
         tag,
-        peakTier: peakTier || null,
-        currentTier: currentTier || null,
       },
     });
 

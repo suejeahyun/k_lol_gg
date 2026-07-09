@@ -1,124 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
-
-const RANK_TIERS = [
-  "아이언",
-  "브론즈",
-  "실버",
-  "골드",
-  "플래티넘",
-  "에메랄드",
-  "다이아",
-  "마스터",
-  "그랜드마스터",
-  "챌린저",
-] as const;
-
-const DIVISIONS = ["4", "3", "2", "1"] as const;
-const MASTER_FLOORS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"] as const;
-
-type Tier = (typeof RANK_TIERS)[number];
-
-function buildTierValue(tier: Tier | "", division: string, lp: string) {
-  if (!tier) return "";
-
-  if (tier === "마스터") {
-    return division ? `${tier} ${division}층` : "";
-  }
-
-  if (tier === "그랜드마스터" || tier === "챌린저") {
-    return lp ? `${tier} ${lp}LP` : "";
-  }
-
-  return division ? `${tier} ${division}` : "";
-}
-
-type TierSelectorProps = {
-  label: string;
-  tier: Tier | "";
-  setTier: (value: Tier | "") => void;
-  division: string;
-  setDivision: (value: string) => void;
-  lp: string;
-  setLp: (value: string) => void;
-};
-
-function TierSelector({
-  label,
-  tier,
-  setTier,
-  division,
-  setDivision,
-  lp,
-  setLp,
-}: TierSelectorProps) {
-  const isMaster = tier === "마스터";
-  const isLpTier = tier === "그랜드마스터" || tier === "챌린저";
-  const isDivisionTier = tier && !isMaster && !isLpTier;
-
-  return (
-    <label className="auth-field">
-      <span>{label}</span>
-
-      <div className="auth-tier-row">
-        <select
-          value={tier}
-          onChange={(e) => {
-            const nextTier = e.target.value as Tier | "";
-            setTier(nextTier);
-            setDivision("");
-            setLp("");
-          }}
-        >
-          <option value="">티어 선택</option>
-          {RANK_TIERS.map((rankTier) => (
-            <option key={rankTier} value={rankTier}>
-              {rankTier}
-            </option>
-          ))}
-        </select>
-
-        {isDivisionTier ? (
-          <select
-            value={division}
-            onChange={(e) => setDivision(e.target.value)}
-          >
-            <option value="">단계</option>
-            {DIVISIONS.map((value) => (
-              <option key={value} value={value}>
-                {value}
-              </option>
-            ))}
-          </select>
-        ) : null}
-
-        {isMaster ? (
-          <select
-            value={division}
-            onChange={(e) => setDivision(e.target.value)}
-          >
-            <option value="">층수</option>
-            {MASTER_FLOORS.map((value) => (
-              <option key={value} value={value}>
-                {value}층
-              </option>
-            ))}
-          </select>
-        ) : null}
-
-        {isLpTier ? (
-          <input
-            value={lp}
-            onChange={(e) => setLp(e.target.value.replace(/[^0-9]/g, ""))}
-            placeholder="LP"
-            inputMode="numeric"
-          />
-        ) : null}
-      </div>
-    </label>
-  );
-}
+import { FormEvent, useState } from "react";
 
 export default function SignupForm() {
   const [userId, setUserId] = useState("");
@@ -128,25 +10,7 @@ export default function SignupForm() {
   const [nickname, setNickname] = useState("");
   const [tag, setTag] = useState("");
 
-  const [currentTier, setCurrentTier] = useState<Tier | "">("");
-  const [currentDivision, setCurrentDivision] = useState("");
-  const [currentLp, setCurrentLp] = useState("");
-
-  const [peakTier, setPeakTier] = useState<Tier | "">("");
-  const [peakDivision, setPeakDivision] = useState("");
-  const [peakLp, setPeakLp] = useState("");
-
   const [loading, setLoading] = useState(false);
-
-  const currentTierValue = useMemo(
-    () => buildTierValue(currentTier, currentDivision, currentLp),
-    [currentTier, currentDivision, currentLp]
-  );
-
-  const peakTierValue = useMemo(
-    () => buildTierValue(peakTier, peakDivision, peakLp),
-    [peakTier, peakDivision, peakLp]
-  );
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -165,8 +29,6 @@ export default function SignupForm() {
           name,
           nickname,
           tag,
-          currentTier: currentTierValue,
-          peakTier: peakTierValue,
         }),
       });
 
@@ -219,25 +81,10 @@ export default function SignupForm() {
           />
         </label>
 
-        <TierSelector
-          label="현재 티어"
-          tier={currentTier}
-          setTier={setCurrentTier}
-          division={currentDivision}
-          setDivision={setCurrentDivision}
-          lp={currentLp}
-          setLp={setCurrentLp}
-        />
-
-        <TierSelector
-          label="최고 티어"
-          tier={peakTier}
-          setTier={setPeakTier}
-          division={peakDivision}
-          setDivision={setPeakDivision}
-          lp={peakLp}
-          setLp={setPeakLp}
-        />
+        <div className="auth-riot-note">
+          <strong>티어는 가입 후 Riot API로 자동 반영됩니다.</strong>
+          <p>닉네임#태그로 계정을 만든 뒤 내 정보에서 Riot 연동과 솔랭 동기화를 진행하세요.</p>
+        </div>
 
         <label className="auth-field">
           <span>아이디</span>

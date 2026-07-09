@@ -8,7 +8,8 @@
 
 ## 이번 패치 완료
 
-- 다크모던 기반 테마 시스템 추가: `다크`, `네온`, `골드`, `라이트`
+- 다크모던 기반 테마 시스템 추가: `다크`, `네온`, `골드`
+- 라이트 테마 제거 유지. 다크/네온/골드는 서로 다른 색상·표면·배경 질감을 사용
 - 테마 버튼을 PC 상단바와 모바일 앱 헤더에 추가
 - 테마 선택값을 `localStorage`에 저장하고 초기 렌더 전에 적용
 - 고품질 사이트 장식 이미지 6종 추가
@@ -19,6 +20,14 @@
   - 관리자 컨트롤룸 배경
   - 라이브/경매 스테이지 배경
 - `/app` 모바일 홈을 검색 페이지가 아닌 모바일 홈 요약형으로 재구성
+- 와이드 화면 배경 오버레이를 재조정해 검정 바탕 느낌을 줄이고, 좌우/상단에 다크모던 경기장 조명 노출
+- 모바일 폭에서는 `/app` 안내/이동 게이트 적용
+- 사용자 티어 수동 입력 제거: 회원가입, 내 플레이어 정보, `/account/tier`에서 Riot 연동/동기화 흐름으로 전환
+- 레거시 수동 티어 편집 컴포넌트와 내 정보 저장 payload의 티어 잔여값 제거
+- Riot API 키가 있으면 Riot 기능 활성화. 명시적으로 `RIOT_FEATURE_ENABLED=false`일 때만 비활성화
+- Riot 솔랭 동기화 성공 시 `Player.currentTier` 자동 갱신, 기존 최고 티어보다 현재 Riot 티어가 높으면 `Player.peakTier`도 자동 보정
+- 관리자 대시보드 자동 승인 정책 문구 반영
+- 관리자 Riot 페이지 문구와 상태를 자동 티어 동기화 중심으로 정리
 - PC 홈, 플레이어 목록, 모바일 홈 대표 화면 캡처 검증
 - `npm run build` 통과
 
@@ -37,6 +46,9 @@
 | `/` | 통과 | 히어로, TOP3, 최근 내전, 시즌 요약, 멸망전 우승, 최근 MVP, 진행현황 배치 확인 |
 | `/players` | 통과 | 와이드에서 테이블형 데이터 보드 유지, 수평 넘침 없음 |
 | `/app` | 통과 | 모바일 홈 요약형으로 변경, 구인/내전/TOP3/MVP 노출 |
+| `/admin` | 통과 | 자동 승인 카드, 운영 로그, 와이드 수평 넘침 없음 |
+| `/admin/riot` | 통과 | Riot 기능 활성 상태, 연결/솔랭 캐시/동기화 작업 요약 확인 |
+| `/signup` | 통과 | 수동 티어 입력 제거, Riot API 자동 반영 안내 노출 |
 
 ## 유지/삭제 정책
 
@@ -53,7 +65,7 @@
 4. `/players/balance/recommendations`: 추천안 A/B/C 비교 UI 재구성
 5. `/progress/event/*`, `/progress/destruction/*`: 탭형 상세 구조 최종 검수
 6. `/participation/*`: 시즌/이벤트/멸망전 신청 흐름 정리
-7. `/admin/*`: 운영 대시보드, 회원/플레이어 통합 관리, 카카오 관리, 경고/주의 관리 순서로 재정리
+7. `/admin/*`: 회원/플레이어 통합 관리 세부 UX, 카카오 관리, 경고/주의 관리 순서로 추가 정리
 
 ## 빌드 결과
 
@@ -67,6 +79,9 @@ npm run build
 ✓ Generated static pages successfully
 
 npx eslint src/components/ThemeSwitcher.tsx
+✓ Passed
+
+npx eslint 'src/app/(admin)/admin/page.tsx' 'src/app/(admin)/admin/riot/page.tsx' 'src/app/(admin)/admin/users/page.tsx' 'src/app/(user)/account/page.tsx' 'src/app/(user)/account/tier/page.tsx' 'src/app/(user)/me/player/page.tsx' 'src/app/(user)/me/riot/page.tsx' src/app/api/auth/signup/route.ts src/app/api/my-player/route.ts src/components/AccountProfileEditForm.tsx src/components/SignupForm.tsx src/components/riot/RiotAccountManager.tsx src/lib/riot/feature.ts src/lib/riot/solo-sync.ts
 ✓ Passed
 ```
 

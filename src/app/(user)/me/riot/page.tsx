@@ -11,7 +11,7 @@ export default function MeRiotPage() {
       mode="me"
       eyebrow="MY RIOT ACCOUNT"
       title="Riot 계정 연동"
-      description="내 K-LOL.GG 플레이어와 Riot ID를 연결하는 화면입니다. Production API 승인 전에는 실제 연결 호출이 차단되며, 승인 후 서버 검증 방식으로 활성화됩니다."
+      description="닉네임#태그로 Riot 계정을 검증하고 솔랭 데이터를 동기화합니다. 동기화가 완료되면 현재 티어가 플레이어 정보와 팀 밸런스에 자동 반영됩니다."
     />
   );
 }
