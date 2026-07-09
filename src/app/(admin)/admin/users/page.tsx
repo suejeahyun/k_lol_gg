@@ -82,7 +82,7 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
   const [q, setQ] = useState("");
-  const [status, setStatus] = useState<UserStatus | "">("PENDING");
+  const [status, setStatus] = useState<UserStatus | "">("");
 
   const isSuperAdmin = currentAdmin?.role === "SUPER_ADMIN";
 
@@ -159,7 +159,7 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <main className="admin-page" style={{ width: "min(1180px, calc(100vw - 48px))", maxWidth: 1180 }}>
+    <main className="admin-page admin-users-page">
       <div className="admin-page__header">
         <div>
           <h1 className="admin-page__title">회원 관리</h1>

@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
-import { getRiotDashboardData } from "@/lib/riot/admin-read-model";
+import { getDateDaysAgo, getRiotDashboardData } from "@/lib/riot/admin-read-model";
 import { getRiotFeatureStatus } from "@/lib/riot/feature";
 import styles from "./page.module.css";
 
@@ -37,7 +37,7 @@ function syncStatusBadge(status: string | null | undefined) {
 
 export default async function AdminRiotPage() {
   const feature = getRiotFeatureStatus();
-  const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const since24h = getDateDaysAgo(1);
 
   const {
     totalPlayers,
@@ -62,7 +62,7 @@ export default async function AdminRiotPage() {
           <p className={styles.eyebrow}>RIOT PRODUCTION CONTROL</p>
           <h1 className={styles.title}>Riot 연동 관리</h1>
           <p className={styles.desc}>
-            Riot 계정 연결 현황, 솔랭 캐시, API 호출 로그, 동기화 작업 이력을 한 곳에서 확인합니다. Production 승인 전에는 실제 호출이 기능 플래그로 차단됩니다.
+            Riot 계정 연결 현황, 솔랭 캐시, API 호출 로그, 동기화 작업 이력을 한 곳에서 확인합니다. 솔랭 동기화 성공 시 플레이어 현재 티어가 자동 반영됩니다.
           </p>
         </div>
         <div className={styles.actions}>

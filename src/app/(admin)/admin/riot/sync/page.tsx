@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import AdminRiotSyncControls from "@/components/riot/AdminRiotSyncControls";
-import { getRiotSyncData } from "@/lib/riot/admin-read-model";
+import { getRiotSyncData, isOlderThanDays } from "@/lib/riot/admin-read-model";
 import { getRiotFeatureStatus } from "@/lib/riot/feature";
 import styles from "../page.module.css";
 
@@ -85,8 +85,7 @@ export default async function AdminRiotSyncPage(props: PageProps) {
 
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
   const staleCount = recentAccounts.filter((account) => {
-    if (!account.lastSyncedAt) return true;
-    return Date.now() - new Date(account.lastSyncedAt).getTime() > 24 * 60 * 60 * 1000;
+    return isOlderThanDays(account.lastSyncedAt, 1);
   }).length;
 
   return (

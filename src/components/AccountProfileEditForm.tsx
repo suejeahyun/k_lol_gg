@@ -7,8 +7,6 @@ type AccountProfileEditFormProps = {
   player: {
     nickname: string;
     tag: string;
-    peakTier: string | null;
-    currentTier: string | null;
   } | null;
 };
 
@@ -45,8 +43,6 @@ export default function AccountProfileEditForm({ player }: AccountProfileEditFor
         body: JSON.stringify({
           nickname: nextNickname,
           tag: nextTag,
-          peakTier: player.peakTier,
-          currentTier: player.currentTier,
         }),
       });
 

@@ -68,8 +68,6 @@ export function getRiotRsoStatus(): RiotRsoStatus {
   if (!cleanText(process.env.RIOT_RSO_CLIENT_ID)) missing.push("RIOT_RSO_CLIENT_ID");
   if (!cleanText(process.env.RIOT_RSO_CLIENT_SECRET)) missing.push("RIOT_RSO_CLIENT_SECRET");
 
-  const enabled = isRiotFeatureEnabled() && isTrue(process.env.RIOT_RSO_ENABLED) && missing.length === 0;
-
   if (!isRiotFeatureEnabled()) {
     return {
       enabled: false,

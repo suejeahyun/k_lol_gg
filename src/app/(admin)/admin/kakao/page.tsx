@@ -1,7 +1,6 @@
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import { getKakaoOperationSettings } from "@/lib/kakao/settings";
 
@@ -43,7 +42,6 @@ export default async function AdminKakaoPage() {
         <div>
           <p className="admin-page__kicker">KAKAO CENTER</p>
           <h1>카카오톡 운영센터</h1>
-          <p className="admin-muted">카카오톡 구인, 내전 참가신청, 운영신청 상태를 요약합니다. 페이지 이동은 좌측 사이드바에서만 사용합니다.</p>
         </div>
       </div>
 
@@ -58,7 +56,6 @@ export default async function AdminKakaoPage() {
         <div className="admin-section-head">
           <div>
             <h2>카카오톡 설정 요약</h2>
-            <p className="admin-muted">자세한 설정 변경은 좌측 사이드바의 카카오톡 설정에서 처리합니다.</p>
           </div>
         </div>
         <div className="admin-table-wrap">
@@ -76,9 +73,7 @@ export default async function AdminKakaoPage() {
         <div className="admin-section-head">
           <div>
             <h2>최근 카카오톡 구인 기록</h2>
-            <p className="admin-muted">최근 처리된 카카오톡 구인 이벤트입니다.</p>
           </div>
-          <Link className="admin-button admin-button--ghost" href="/admin/logs/kakao">전체 로그</Link>
         </div>
         <div className="admin-table-wrap">
           <table className="admin-table">

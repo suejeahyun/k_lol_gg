@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AppBottomNav } from "./AppBottomNav";
 import { AppAdminBottomNav } from "./AppAdminBottomNav";
 import AppTopAccountSwitch from "@/components/AppTopAccountSwitch";
+import ThemeSwitcher from "@/components/ThemeSwitcher";
 
 export function AppMobileShell({
   title = "K-LOL.GG",
@@ -22,7 +23,10 @@ export function AppMobileShell({
             <strong>{title}</strong>
             <span>{subtitle}</span>
           </Link>
-          <AppTopAccountSwitch mode={mode} />
+          <div className="klol-app-header-tools">
+            <ThemeSwitcher compact />
+            <AppTopAccountSwitch mode={mode} />
+          </div>
         </header>
         {children}
       </div>

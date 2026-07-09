@@ -101,9 +101,6 @@ export default function KakaoOperationFormDetailClient({ item }: { item: DetailI
         <div>
           <p className="page-eyebrow">KAKAO OPERATION DETAIL</p>
           <h1>{item.title} #{item.id}</h1>
-          <p className="admin-muted" style={{ marginTop: 8 }}>
-            정보 확인 및 보관용 상세입니다. 메모와 내부 상태만 관리합니다.
-          </p>
         </div>
         <Link className="admin-button admin-button--ghost" href={`/admin/operation-forms/${item.type}`}>
           목록으로

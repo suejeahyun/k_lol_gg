@@ -54,9 +54,16 @@ export default async function AccountPage() {
       <section className="account-action-grid" aria-label="내정보 수정 메뉴">
         <Link className="account-action-card" href="/account/tier">
           <span className="account-action-card__eyebrow">PLAYER</span>
-          <strong>계정 정보 수정</strong>
-          <p>현재티어와 최고티어를 수정합니다.</p>
-          <span className="account-action-card__cta">수정하기</span>
+          <strong>Riot ID / 플레이어 정보</strong>
+          <p>닉네임과 태그를 확인하고, 티어는 Riot API 동기화로 자동 반영합니다.</p>
+          <span className="account-action-card__cta">관리하기</span>
+        </Link>
+
+        <Link className="account-action-card" href="/me/riot">
+          <span className="account-action-card__eyebrow">RIOT</span>
+          <strong>Riot 계정 연동</strong>
+          <p>닉네임#태그 검증 후 솔랭 티어와 최근 전적을 자동 동기화합니다.</p>
+          <span className="account-action-card__cta">확인하기</span>
         </Link>
 
         <Link className="account-action-card" href="/me/riot">

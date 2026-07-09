@@ -160,12 +160,12 @@ export default function AdminHomePage() {
 
 
         <div className="admin-summary-card">
-          <div className="admin-summary-card__label">승인 대기</div>
+          <div className="admin-summary-card__label">자동 승인</div>
           <div className="admin-summary-card__value">
-            {data.pendingUserCount.toLocaleString()}명
+            {data.pendingUserCount > 0 ? `${data.pendingUserCount.toLocaleString()}명` : "ON"}
           </div>
           <div className="admin-summary-card__meta">
-            처리해야 할 회원가입 신청
+            {data.pendingUserCount > 0 ? "예외 승인 대기 확인 필요" : "회원가입 즉시 사용 가능"}
           </div>
         </div>
 

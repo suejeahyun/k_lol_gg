@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
-import { getRiotLogsData } from "@/lib/riot/admin-read-model";
+import { getDateDaysAgo, getRiotLogsData } from "@/lib/riot/admin-read-model";
 import styles from "../page.module.css";
 
 type SearchParams = Record<string, string | string[] | undefined>;
@@ -65,7 +65,7 @@ export default async function AdminRiotLogsPage(props: PageProps) {
   const days = getNumber(params, "days", 30, 1, 3650);
   const page = getNumber(params, "page", 1, 1, 99999);
   const pageSize = getNumber(params, "pageSize", 50, 20, 200);
-  const from = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  const from = getDateDaysAgo(days);
 
   const { logs, total, failTotal, linkLogs } = await getRiotLogsData({
     q,

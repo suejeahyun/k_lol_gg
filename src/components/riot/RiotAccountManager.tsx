@@ -264,7 +264,7 @@ export default function RiotAccountManager({
           <div className={styles.cardHeader}>
             <div>
               <h2>Riot ID 연결</h2>
-              <p>Production API 승인 후 Riot ID를 검증하고 플레이어와 연결합니다.</p>
+              <p>닉네임#태그로 Riot ID를 검증하고 플레이어와 연결합니다.</p>
             </div>
             {account ? <span className={styles.badgeGreen}>연결됨</span> : <span className={styles.badgeMuted}>미연결</span>}
           </div>
@@ -280,7 +280,7 @@ export default function RiotAccountManager({
                 <input value={tagLine} onChange={(event) => setTagLine(event.target.value.replace(/^#/, ""))} placeholder="예: KR1" disabled={!featureEnabled || submitting} />
               </label>
             </div>
-            <p className={styles.help}>닉네임#태그 입력은 Riot ID 조회 연결입니다. 본인 소유 인증은 아래 Riot 로그인 인증 버튼으로 별도 완료합니다.</p>
+            <p className={styles.help}>닉네임#태그 입력 후 연결하고, 솔랭 동기화를 실행하면 현재 티어가 자동 반영됩니다. 본인 소유 인증은 Riot 로그인 인증으로 별도 완료할 수 있습니다.</p>
             <div className={styles.actions}>
               <button className={styles.primaryButton} type="submit" disabled={!canSubmit}>{submitting ? "처리 중" : account ? "Riot 계정 다시 연결" : "Riot 계정 연결"}</button>
               {mode === "me" && (
@@ -292,7 +292,7 @@ export default function RiotAccountManager({
               <button className={styles.dangerButton} type="button" onClick={handleUnlink} disabled={!account || submitting}>연동 해제</button>
               <button className={styles.secondaryButton} type="button" onClick={() => void loadStatus()} disabled={loading || submitting}>상태 새로고침</button>
             </div>
-            {!featureEnabled && <div className={styles.error}>현재는 Production API 승인 전 단계라 실제 Riot 계정 연결 호출이 차단됩니다.</div>}
+            {!featureEnabled && <div className={styles.error}>Riot API 키가 없거나 기능 플래그가 꺼져 있어 계정 연결 호출이 차단됩니다.</div>}
             {mode === "me" && rsoStatus && !rsoStatus.enabled && <div className={styles.error}>{rsoStatus.message}</div>}
             {mode === "me" && rsoStatus?.enabled && <div className={styles.message}>Riot 로그인 본인 인증을 사용할 수 있습니다.</div>}
             {message && <div className={styles.message}>{message}</div>}
@@ -326,7 +326,7 @@ export default function RiotAccountManager({
 
       {!compact && (
         <section className={styles.noticeGrid}>
-          <div className={styles.notice}><strong>보안 구조</strong><p>Riot API 호출은 서버 Route Handler에서만 수행하고 결과는 DB 캐시로 표시합니다.</p></div>
+          <div className={styles.notice}><strong>자동 티어 반영</strong><p>솔랭 동기화 성공 시 현재 티어가 플레이어 정보와 팀 밸런스 기준값에 자동 반영됩니다.</p></div>
           <div className={styles.notice}><strong>본인 소유 인증</strong><p>Riot 로그인 인증은 OAuth/RSO 흐름으로 처리하며, Riot 비밀번호는 K-LOL.GG에 입력하거나 저장하지 않습니다.</p></div>
           <div className={styles.notice}><strong>연동 해제</strong><p>해제 시 Riot 계정 정보, 솔랭 스냅샷, 최근 솔랭 경기 캐시를 삭제합니다.</p></div>
         </section>

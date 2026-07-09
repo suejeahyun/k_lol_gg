@@ -18,7 +18,7 @@ type RouteContext = {
 };
 
 function isFormType(value: string): value is KakaoOperationFormType {
-  return ["friends", "suggestions", "meetups", "leaves"].includes(value);
+  return ["suggestions", "meetups", "leaves"].includes(value);
 }
 
 async function updateItem(type: KakaoOperationFormType, id: number, data: { status?: string; memo?: string | null }) {

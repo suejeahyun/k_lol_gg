@@ -22,7 +22,7 @@
   --klol-radius-md: 20px;
   --klol-radius-sm: 12px;
   --klol-shadow: 0 26px 80px rgba(0, 0, 0, 0.35);
-  --klol-page-width: 1120px;
+  --klol-page-width: clamp(1120px, 76vw, 1680px);
 }
 
 /* ---------- Page frame ---------- */
@@ -285,6 +285,29 @@
 .ai-metric-grid,
 .ai-summary-grid {
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
+}
+
+.players-page-v2__summary {
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+@media (max-width: 1180px) {
+  .players-page-v2__summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .players-page-v2__summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .players-page-v2__summary {
+    grid-template-columns: 1fr !important;
+  }
 }
 
 /* ---------- Tables / list boards ---------- */

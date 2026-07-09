@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma/client";
 type SqlFragment = ReturnType<typeof Prisma.sql>;
 
 type CountRow = { count: number | bigint | string | null };
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 type RiotRankView = {
   tier: string | null;
@@ -13,6 +14,59 @@ type RiotRankView = {
   losses: number;
   winRate: number;
   updatedAt: Date | null;
+};
+
+type RawRiotAccountRow = {
+  id: unknown;
+  playerId: unknown;
+  gameName: unknown;
+  tagLine: unknown;
+  puuid: unknown;
+  summonerId: string | null;
+  accountId: string | null;
+  profileIconId: unknown;
+  summonerLevel: unknown;
+  isVerified: unknown;
+  verificationMethod: unknown;
+  verifiedByUserAccountId: unknown;
+  verifiedAt: Date | null;
+  linkedByUserAccountId: unknown;
+  linkedAt: Date | null;
+  unlinkedAt: Date | null;
+  syncStatus: unknown;
+  lastErrorMessage: string | null;
+  lastErrorAt: Date | null;
+  lastSyncedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  playerName: unknown;
+  playerNickname: unknown;
+  playerTag: unknown;
+  playerCurrentTier: string | null;
+  playerPeakTier: string | null;
+  playerIsActive: unknown;
+  rankTier: string | null;
+  rankRank: string | null;
+  rankLeaguePoints: unknown;
+  rankWins: unknown;
+  rankLosses: unknown;
+  rankWinRate: unknown;
+  rankUpdatedAt: Date | null;
+};
+
+type RawRiotSyncJobRow = {
+  id: unknown;
+  type: unknown;
+  status: unknown;
+  requestedByUserAccountId: unknown;
+  totalCount: unknown;
+  successCount: unknown;
+  failedCount: unknown;
+  message: string | null;
+  startedAt: Date | null;
+  finishedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 export type RiotAccountView = {
@@ -114,6 +168,15 @@ async function countBySql(sql: SqlFragment): Promise<number> {
   return toNumber(rows[0]?.count);
 }
 
+export function getDateDaysAgo(days: number): Date {
+  return new Date(Date.now() - days * MS_PER_DAY);
+}
+
+export function isOlderThanDays(value: Date | string | null | undefined, days: number): boolean {
+  if (!value) return true;
+  return new Date(value).getTime() < getDateDaysAgo(days).getTime();
+}
+
 function whereClause(conditions: SqlFragment[]): SqlFragment {
   if (conditions.length === 0) return Prisma.empty;
   let merged = conditions[0];
@@ -170,7 +233,7 @@ function syncJobWhere(params: { status?: string; type?: string }): SqlFragment {
   return whereClause(conditions);
 }
 
-function mapAccountRow(row: any): RiotAccountView {
+function mapAccountRow(row: RawRiotAccountRow): RiotAccountView {
   const rank: RiotRankView | null = row.rankTier
     ? {
         tier: row.rankTier,
@@ -219,7 +282,7 @@ function mapAccountRow(row: any): RiotAccountView {
   };
 }
 
-function mapSyncJobRow(row: any): RiotSyncJobView {
+function mapSyncJobRow(row: RawRiotSyncJobRow): RiotSyncJobView {
   return {
     id: toNumber(row.id),
     type: String(row.type ?? ""),
@@ -257,7 +320,7 @@ export async function getRiotDashboardData(since24h: Date) {
     countBySql(Prisma.sql`SELECT COUNT(*)::int AS count FROM "PlayerSoloMatch"`),
     countBySql(Prisma.sql`SELECT COUNT(*)::int AS count FROM "RiotApiRequestLog" WHERE "createdAt" >= ${since24h}`),
     countBySql(Prisma.sql`SELECT COUNT(*)::int AS count FROM "RiotApiRequestLog" WHERE "createdAt" >= ${since24h} AND "statusCode" >= 400`),
-    prisma.$queryRaw<any[]>(Prisma.sql`
+    prisma.$queryRaw<RawRiotAccountRow[]>(Prisma.sql`
       SELECT
         a.*,
         p."name" AS "playerName",
@@ -279,7 +342,7 @@ export async function getRiotDashboardData(since24h: Date) {
       ORDER BY a."updatedAt" DESC, a."id" DESC
       LIMIT 8
     `),
-    prisma.$queryRaw<any[]>(Prisma.sql`
+    prisma.$queryRaw<RawRiotSyncJobRow[]>(Prisma.sql`
       SELECT * FROM "RiotSyncJob"
       ORDER BY "createdAt" DESC, "id" DESC
       LIMIT 6
@@ -311,7 +374,7 @@ export async function getRiotAccountsData(params: {
   const offset = (params.page - 1) * params.pageSize;
 
   const [accountRows, total, totalLinked, failedCount, verifiedCount] = await Promise.all([
-    prisma.$queryRaw<any[]>(Prisma.sql`
+    prisma.$queryRaw<RawRiotAccountRow[]>(Prisma.sql`
       SELECT
         a.*,
         p."name" AS "playerName",
@@ -396,7 +459,7 @@ export async function getRiotSyncData(params: {
   const offset = (params.page - 1) * params.pageSize;
 
   const [jobRows, total, runningCount, failedCount, recentAccountRows] = await Promise.all([
-    prisma.$queryRaw<any[]>(Prisma.sql`
+    prisma.$queryRaw<RawRiotSyncJobRow[]>(Prisma.sql`
       SELECT * FROM "RiotSyncJob"
       ${where}
       ORDER BY "createdAt" DESC, "id" DESC
@@ -406,7 +469,7 @@ export async function getRiotSyncData(params: {
     countBySql(Prisma.sql`SELECT COUNT(*)::int AS count FROM "RiotSyncJob" ${where}`),
     countBySql(Prisma.sql`SELECT COUNT(*)::int AS count FROM "RiotSyncJob" WHERE "status" = 'RUNNING'`),
     countBySql(Prisma.sql`SELECT COUNT(*)::int AS count FROM "RiotSyncJob" WHERE "status" = 'FAILED'`),
-    prisma.$queryRaw<any[]>(Prisma.sql`
+    prisma.$queryRaw<RawRiotAccountRow[]>(Prisma.sql`
       SELECT
         a.*,
         p."name" AS "playerName",

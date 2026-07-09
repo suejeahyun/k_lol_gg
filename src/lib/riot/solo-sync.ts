@@ -18,6 +18,7 @@ import {
 } from "@/lib/riot/client";
 import { getRiotMatchFetchLimit } from "@/lib/riot/feature";
 import { getRiotStatusFromError, recordRiotApiStatus } from "@/lib/riot/status";
+import { getTierScore } from "@/lib/balance/tierScore";
 
 export type SoloSyncStatus = "synced" | "skipped" | "failed";
 
@@ -57,6 +58,8 @@ type PlayerForRiotSync = {
   name: string;
   nickname: string;
   tag: string;
+  currentTier: string | null;
+  peakTier: string | null;
   riotAccount: {
     id: number;
     playerId: number;
@@ -134,6 +137,51 @@ function getSubRuneId(participant: RiotMatchParticipantDto) {
 
 function formatRiotId(account: NonNullable<PlayerForRiotSync["riotAccount"]>) {
   return `${account.gameName}#${account.tagLine}`;
+}
+
+const RIOT_TIER_LABELS: Record<string, string> = {
+  IRON: "아이언",
+  BRONZE: "브론즈",
+  SILVER: "실버",
+  GOLD: "골드",
+  PLATINUM: "플래티넘",
+  EMERALD: "에메랄드",
+  DIAMOND: "다이아",
+  MASTER: "마스터",
+  GRANDMASTER: "그랜드마스터",
+  CHALLENGER: "챌린저",
+};
+
+const RIOT_RANK_DIVISIONS: Record<string, string> = {
+  I: "1",
+  II: "2",
+  III: "3",
+  IV: "4",
+};
+
+function formatRiotSoloTier(entry: RiotLeagueEntryDto | null) {
+  if (!entry?.tier) return null;
+
+  const tier = entry.tier.toUpperCase();
+  const tierLabel = RIOT_TIER_LABELS[tier] ?? tier;
+  const lp = Number.isFinite(entry.leaguePoints) ? entry.leaguePoints : 0;
+
+  if (tier === "MASTER" || tier === "GRANDMASTER" || tier === "CHALLENGER") {
+    return `${tierLabel} ${lp}LP`;
+  }
+
+  const division = entry.rank ? RIOT_RANK_DIVISIONS[entry.rank.toUpperCase()] : null;
+  return division ? `${tierLabel} ${division}` : tierLabel;
+}
+
+function resolvePeakTierFromRiot(currentTier: string | null, previousPeakTier: string | null) {
+  if (!currentTier) return previousPeakTier;
+  if (!previousPeakTier) return currentTier;
+
+  const currentScore = getTierScore(currentTier);
+  const peakScore = getTierScore(previousPeakTier);
+
+  return currentScore > peakScore ? currentTier : previousPeakTier;
 }
 
 async function collectRankedMatchIds(puuid: string, matchCount: number) {
@@ -232,6 +280,8 @@ async function findPlayerForRiotSync(playerId: number): Promise<PlayerForRiotSyn
       name: true,
       nickname: true,
       tag: true,
+      currentTier: true,
+      peakTier: true,
       riotAccount: {
         select: {
           id: true,
@@ -344,6 +394,8 @@ export async function syncPlayerSoloRankBestEffort(
     const summoner = await getSummonerByPuuid(account.puuid);
     const soloRankEntry = await getSoloRankEntryByPuuid(account.puuid);
     const soloRank = await saveSoloRankSnapshot(player.id, soloRankEntry);
+    const riotCurrentTier = formatRiotSoloTier(soloRankEntry);
+    const riotPeakTier = resolvePeakTierFromRiot(riotCurrentTier, player.peakTier);
 
     let savedMatchCount = 0;
     let skippedMatchCount = 0;
@@ -387,12 +439,20 @@ export async function syncPlayerSoloRankBestEffort(
       },
     });
 
+    await prisma.player.update({
+      where: { id: player.id },
+      data: {
+        currentTier: riotCurrentTier,
+        peakTier: riotPeakTier,
+      },
+    });
+
     await recordRiotApiStatus({ scope: source, ok: true });
 
     const result = {
       playerId: player.id,
       status: "synced" as const,
-      message: `${player.name}(${formatRiotId(account)}) 솔랭 데이터 동기화가 완료되었습니다.`,
+      message: `${player.name}(${formatRiotId(account)}) 솔랭 데이터와 현재 티어 동기화가 완료되었습니다.`,
       requestedMatchCount,
       savedMatchCount,
       skippedMatchCount,
