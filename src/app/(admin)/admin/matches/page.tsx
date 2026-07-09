@@ -59,24 +59,16 @@ export default async function AdminMatchesPage({
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
   return (
-    <main className="page-container">
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: "12px",
-          marginBottom: "24px",
-          flexWrap: "wrap",
-        }}
-      >
+    <main className="page-container admin-matches-page">
+      <div className="admin-matches-header">
         <div>
-          <h1 className="page-title" style={{ marginBottom: 6 }}>
+          <p className="page-eyebrow">MATCH CONTROL</p>
+          <h1 className="page-title">
             관리자 - 내전 관리
           </h1>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-          <Link href="/admin/matches/new" className="app-button">
+        <div className="admin-matches-actions">
+          <Link href="/admin/matches/new" className="admin-match-action admin-match-action--primary">
             내전 등록
           </Link>
           <AdminMatchAiTrainingButton />

@@ -4,8 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { requireAdminRequest } from "@/lib/auth/requireAdmin";
 
-const VALID_TYPES = new Set(["CAUTION", "WARNING"]);
-const VALID_SOURCES = new Set(["MANUAL", "LATE", "NO_SHOW", "CHAT_ABUSE", "TOXICITY", "LINE_FORM", "OTHER"]);
+const VALID_TYPES = new Set(["CAUTION", "WARNING", "BAN"]);
+const VALID_SOURCES = new Set(["MANUAL", "LATE", "NO_SHOW", "CHAT_ABUSE", "TOXICITY", "LINE_FORM", "KICK", "BAN", "OTHER"]);
 
 function normalizeType(value: unknown) {
   const type = String(value || "CAUTION").toUpperCase();

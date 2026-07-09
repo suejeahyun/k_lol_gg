@@ -38,6 +38,7 @@ function formatDate(value: string | null | undefined) {
 
 function typeLabel(type: string) {
   if (type === "WARNING") return "경고";
+  if (type === "BAN") return "벤/강퇴";
   return "주의";
 }
 
@@ -84,7 +85,7 @@ export default function DisciplineRecordListClient({ initialRecords }: { initial
   }, [records]);
 
   async function deleteRecord(id: number) {
-    if (!window.confirm(`#${id} 기록을 삭제 처리하겠습니까? 활성 주의/경고 카운트에서 제외됩니다.`)) return;
+    if (!window.confirm(`#${id} 기록을 삭제 처리하겠습니까? 활성 징계 카운트에서 제외됩니다.`)) return;
     setBusyId(id);
     try {
       const response = await fetch(`/api/admin/discipline-records/${id}`, { method: "DELETE" });
@@ -103,8 +104,8 @@ export default function DisciplineRecordListClient({ initialRecords }: { initial
     <section className="admin-card discipline-table-card">
       <div className="admin-section-head" style={{ alignItems: "flex-end", gap: 16 }}>
         <div>
-          <h2>주의/경고 목록</h2>
-          <p className="admin-muted discipline-help">기본값은 활성 기록입니다. 상태 필터로 삭제/초기화 기록과 전체 기록을 나눠 확인합니다.</p>
+          <h2>주의/경고/벤 목록</h2>
+          <p className="admin-muted discipline-help">기본값은 활성 기록입니다. 벤/강퇴 기록도 같은 목록에서 관리하며, 상태 필터로 삭제/초기화 기록과 전체 기록을 나눠 확인합니다.</p>
         </div>
         <div style={{ display: "grid", justifyItems: "end", gap: 10 }}>
           <div className="discipline-status-tabs" role="tablist" aria-label="경고 상태 필터">
@@ -138,7 +139,7 @@ export default function DisciplineRecordListClient({ initialRecords }: { initial
               placeholder="플레이어 이름 또는 닉네임 검색"
               style={{ minWidth: 260, minHeight: 42 }}
             />
-            <Link className="admin-button" href="/admin/discipline/new">주의 등록</Link>
+            <Link className="admin-button" href="/admin/discipline/new">징계 등록</Link>
           </div>
         </div>
       </div>

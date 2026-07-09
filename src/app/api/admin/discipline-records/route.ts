@@ -5,8 +5,8 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { requireAdminRequest } from "@/lib/auth/requireAdmin";
 
-const VALID_TYPES = new Set(["CAUTION", "WARNING"]);
-const VALID_SOURCES = new Set(["MANUAL", "LATE", "NO_SHOW", "CHAT_ABUSE", "TOXICITY", "LINE_FORM", "OTHER"]);
+const VALID_TYPES = new Set(["CAUTION", "WARNING", "BAN"]);
+const VALID_SOURCES = new Set(["MANUAL", "LATE", "NO_SHOW", "CHAT_ABUSE", "TOXICITY", "LINE_FORM", "KICK", "BAN", "OTHER"]);
 
 function normalizeType(value: unknown) {
   const type = String(value || "CAUTION").toUpperCase();
@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
     ];
   }
 
-  const [records, activeWarnings, activeCautions] = await Promise.all([
+  const [records, activeWarnings, activeCautions, activeBans] = await Promise.all([
     prisma.userDisciplineRecord.findMany({
       where,
       orderBy: [{ isActive: "desc" }, { createdAt: "desc" }],
@@ -64,11 +64,12 @@ export async function GET(req: NextRequest) {
     }),
     prisma.userDisciplineRecord.count({ where: { isActive: true, type: "WARNING" } }),
     prisma.userDisciplineRecord.count({ where: { isActive: true, type: "CAUTION" } }),
+    prisma.userDisciplineRecord.count({ where: { isActive: true, type: "BAN" } }),
   ]);
 
   return NextResponse.json({
     ok: true,
-    summary: { activeWarnings, activeCautions },
+    summary: { activeWarnings, activeCautions, activeBans },
     records,
   });
 }

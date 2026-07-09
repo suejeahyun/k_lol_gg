@@ -1,6 +1,6 @@
 import { createHash } from "crypto";
 import { NextRequest } from "next/server";
-import { DestructionScrimRecruitStatus, DestructionStatus, Prisma } from "@prisma/client";
+import { DestructionScrimRecruitStatus, DestructionStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { getRequiredSecretInProduction } from "@/lib/security/secrets";
 import { kakaoJsonReply } from "@/lib/kakao/reply-format";
@@ -101,10 +101,12 @@ export async function findTeamByName(tournamentId: number, teamName?: string | n
   });
 }
 
-export async function getNextScrimNo(recruitDate = getScrimRecruitDateKey()) {
+export async function getNextScrimNo(_recruitDate = getScrimRecruitDateKey()) {
+  // 스크림 번호는 카카오톡 명령어에서 날짜 없이 사용됩니다.
+  // 날짜별로 #1을 재사용하면 `스크림상세 1`이 과거 완료 건을 잡을 수 있으므로
+  // 완료/취소 여부와 관계없이 전체 스크림 중 가장 큰 번호 다음 번호를 발급합니다.
   const latest = await prisma.destructionScrimRecruit.findFirst({
-    where: { recruitDate },
-    orderBy: { scrimNo: "desc" },
+    orderBy: [{ scrimNo: "desc" }, { id: "desc" }],
     select: { scrimNo: true },
   });
 
@@ -138,28 +140,74 @@ export async function findActiveScrim(scrimNo: number, recruitDate = getScrimRec
   });
 }
 
+async function findScrimForDetail(scrimNo: number, recruitDate = getScrimRecruitDateKey()) {
+  const currentActive = await prisma.destructionScrimRecruit.findFirst({
+    where: {
+      scrimNo,
+      recruitDate,
+      status: { in: ACTIVE_SCRIM_STATUSES },
+    },
+    orderBy: [{ updatedAt: "desc" }],
+  });
+
+  if (currentActive) return currentActive;
+
+  const latestActive = await prisma.destructionScrimRecruit.findFirst({
+    where: {
+      scrimNo,
+      status: { in: ACTIVE_SCRIM_STATUSES },
+    },
+    orderBy: [{ recruitDate: "desc" }, { updatedAt: "desc" }],
+  });
+
+  if (latestActive) return latestActive;
+
+  const currentAnyStatus = await prisma.destructionScrimRecruit.findFirst({
+    where: { scrimNo, recruitDate },
+    orderBy: [{ updatedAt: "desc" }],
+  });
+
+  if (currentAnyStatus) return currentAnyStatus;
+
+  return prisma.destructionScrimRecruit.findFirst({
+    where: { scrimNo },
+    orderBy: [{ recruitDate: "desc" }, { updatedAt: "desc" }],
+  });
+}
+
 export async function getScrimStatusPayload(detailScrimNo?: number | null) {
-  const where: Prisma.DestructionScrimRecruitWhereInput = detailScrimNo
-    ? { scrimNo: detailScrimNo }
-    : { status: { in: ACTIVE_SCRIM_STATUSES } };
+  if (detailScrimNo) {
+    const scrim = await findScrimForDetail(detailScrimNo);
+    const scrims = scrim ? [scrim] : [];
+
+    return {
+      empty: scrims.length === 0,
+      scrims,
+      reply: scrim
+        ? [
+            "[K-LOL.GG 멸망전 스크림 상세]",
+            "",
+            formatScrimLine(scrim),
+            "",
+            buildScrimFormFromData(scrim),
+          ].join("\n")
+        : [
+            "[K-LOL.GG 멸망전 스크림 상세]",
+            "",
+            `스크림 #${detailScrimNo}을 찾지 못했습니다.`,
+          ].join("\n"),
+    };
+  }
 
   const scrims = await prisma.destructionScrimRecruit.findMany({
-    where,
+    where: { status: { in: ACTIVE_SCRIM_STATUSES } },
     orderBy: [{ scheduledAt: "asc" }, { updatedAt: "desc" }],
-    take: detailScrimNo ? 1 : 20,
+    take: 20,
   });
 
   return {
     empty: scrims.length === 0,
     scrims,
-    reply: detailScrimNo && scrims[0]
-      ? [
-          "[K-LOL.GG 멸망전 스크림 상세]",
-          "",
-          formatScrimLine(scrims[0]),
-          "",
-          buildScrimFormFromData(scrims[0]),
-        ].join("\n")
-      : buildScrimStatusReply(scrims),
+    reply: buildScrimStatusReply(scrims),
   };
 }

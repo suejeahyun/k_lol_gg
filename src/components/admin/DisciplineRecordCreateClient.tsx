@@ -20,6 +20,8 @@ const sourceOptions = [
   ["CHAT_ABUSE", "전챗/감정표현"],
   ["TOXICITY", "욕설/남탓/훈수"],
   ["LINE_FORM", "라인 기재 문제"],
+  ["KICK", "강퇴 처리"],
+  ["BAN", "벤 처리"],
   ["OTHER", "기타"],
 ];
 
@@ -93,8 +95,8 @@ export default function DisciplineRecordCreateClient({ targets }: { targets: Tar
 
   return (
     <section className="admin-card discipline-form-card">
-      <h2>주의/경고 등록</h2>
-      <p className="admin-muted discipline-help">대상은 사이트 등록 유저 검색 또는 이름·닉네임 직접 입력으로 등록할 수 있습니다.</p>
+      <h2>주의/경고/벤 등록</h2>
+      <p className="admin-muted discipline-help">대상은 사이트 등록 유저 검색 또는 이름·닉네임 직접 입력으로 등록할 수 있습니다. 벤/강퇴 기록은 BAN 타입으로 남겨 추후 운영 이력을 추적합니다.</p>
       <div className="discipline-mode-row">
         <button type="button" className={`admin-button ${targetMode === "REGISTERED" ? "" : "admin-button--secondary"}`} onClick={() => setTargetMode("REGISTERED")}>사이트 등록 대상 검색</button>
         <button type="button" className={`admin-button ${targetMode === "DIRECT" ? "" : "admin-button--secondary"}`} onClick={() => setTargetMode("DIRECT")}>이름·닉네임 직접 등록</button>
@@ -113,7 +115,7 @@ export default function DisciplineRecordCreateClient({ targets }: { targets: Tar
             <div className="discipline-direct-note">사이트 계정·플레이어가 없는 대상도 이름과 닉네임으로 기록됩니다.</div>
           </>
         )}
-        <label>종류<select value={type} onChange={(e) => setType(e.target.value)}><option value="CAUTION">주의</option><option value="WARNING">경고</option></select></label>
+        <label>종류<select value={type} onChange={(e) => setType(e.target.value)}><option value="CAUTION">주의</option><option value="WARNING">경고</option><option value="BAN">벤/강퇴</option></select></label>
         <label>사유 유형<select value={source} onChange={(e) => setSource(e.target.value)}>{sourceOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
         <label className="discipline-wide">사유<textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="예: 내전 시작 10분 전 미입장 / 노쇼 / 전챗 조롱" /></label>
         <label className="discipline-wide">메모<textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="운영진 내부 참고 메모" /></label>

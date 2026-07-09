@@ -60,10 +60,10 @@ export default function AdminMatchAiTrainingButton() {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
+    <div className="admin-match-ai-train">
       <button
         type="button"
-        className="app-button"
+        className="admin-match-action admin-match-action--ai"
         onClick={runTraining}
         disabled={loading}
         title="등록된 내전 기록을 기준으로 AI MMR과 밸런스 리뷰를 재계산합니다."
@@ -71,12 +71,11 @@ export default function AdminMatchAiTrainingButton() {
         {loading ? "AI 학습 중..." : "등록 내전 AI 학습"}
       </button>
       {message ? (
-        <p style={{ maxWidth: 520, margin: 0, color: "rgba(226,232,240,0.82)", fontSize: 13, textAlign: "right" }}>
+        <p className="admin-match-ai-train__message">
           {message}
         </p>
       ) : (
-        <p style={{ maxWidth: 480, margin: 0, color: "rgba(148,163,184,0.82)", fontSize: 12, textAlign: "right" }}>
-        </p>
+        <p className="admin-match-ai-train__hint" />
       )}
     </div>
   );

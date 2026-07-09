@@ -6,6 +6,114 @@
   margin-bottom: 24px;
 }
 
+/* Admin match list action polish */
+.admin-matches-page {
+  width: min(1480px, calc(100vw - 56px));
+}
+
+.admin-matches-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.admin-matches-header .page-title {
+  margin-bottom: 6px;
+}
+
+.admin-matches-actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-match-action {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid rgba(82, 164, 255, 0.28);
+  border-radius: 14px;
+  padding: 0 15px;
+  color: #eaf4ff;
+  background: rgba(8, 23, 46, 0.78);
+  font-size: 13px;
+  font-weight: 900;
+  text-decoration: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 10px 26px rgba(0, 0, 0, 0.22);
+  transition: border-color 0.15s ease, transform 0.15s ease, background 0.15s ease;
+}
+
+.admin-match-action:hover {
+  transform: translateY(-1px);
+  border-color: rgba(82, 164, 255, 0.5);
+}
+
+.admin-match-action--primary {
+  border-color: rgba(56, 189, 248, 0.42);
+  background: linear-gradient(135deg, #1d6eff, #24c6f5);
+  color: #fff;
+}
+
+.admin-match-action--ai {
+  border-color: rgba(168, 85, 247, 0.36);
+  background: linear-gradient(135deg, rgba(70, 30, 130, 0.88), rgba(15, 74, 128, 0.84));
+}
+
+.admin-match-action:disabled {
+  cursor: wait;
+  opacity: 0.68;
+  transform: none;
+}
+
+.admin-match-ai-train {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+  max-width: 540px;
+}
+
+.admin-match-ai-train__message,
+.admin-match-ai-train__hint {
+  max-width: 520px;
+  margin: 0;
+  color: rgba(226, 232, 240, 0.82);
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: right;
+}
+
+.admin-match-ai-train__hint {
+  color: rgba(148, 163, 184, 0.78);
+}
+
+@media (max-width: 860px) {
+  .admin-matches-page {
+    width: min(100%, calc(100vw - 20px));
+  }
+
+  .admin-matches-actions,
+  .admin-match-ai-train {
+    width: 100%;
+    justify-items: stretch;
+  }
+
+  .admin-match-action {
+    width: 100%;
+  }
+
+  .admin-match-ai-train__message,
+  .admin-match-ai-train__hint {
+    text-align: left;
+  }
+}
+
 .admin-player-form__grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

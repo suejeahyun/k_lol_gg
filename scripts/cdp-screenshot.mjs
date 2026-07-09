@@ -79,17 +79,30 @@ await send("Runtime.enable");
 await send("Network.enable");
 
 if (shouldAdminLogin) {
-  const envText = await readFile(".env", "utf8");
-  const env = Object.fromEntries(
-    envText
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter((line) => line && !line.startsWith("#") && line.includes("="))
-      .map((line) => {
-        const index = line.indexOf("=");
-        return [line.slice(0, index), line.slice(index + 1)];
-      }),
-  );
+  const parseEnvFile = async (file) => {
+    try {
+      const envText = await readFile(file, "utf8");
+      return Object.fromEntries(
+        envText
+          .split(/\r?\n/)
+          .map((line) => line.trim())
+          .filter((line) => line && !line.startsWith("#") && line.includes("="))
+          .map((line) => {
+            const index = line.indexOf("=");
+            const key = line.slice(0, index).trim();
+            const value = line.slice(index + 1).trim().replace(/^["']|["']$/g, "");
+            return [key, value];
+          }),
+      );
+    } catch {
+      return {};
+    }
+  };
+  const env = {
+    ...(await parseEnvFile(".env")),
+    ...(await parseEnvFile(".env.local")),
+    ...process.env,
+  };
   const loginRes = await fetch(`${targetOrigin}/api/admin/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

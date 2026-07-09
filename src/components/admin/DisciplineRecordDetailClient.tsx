@@ -36,6 +36,8 @@ const sourceOptions = [
   ["CHAT_ABUSE", "전챗/감정표현"],
   ["TOXICITY", "욕설/남탓/훈수"],
   ["LINE_FORM", "라인 기재 문제"],
+  ["KICK", "강퇴 처리"],
+  ["BAN", "벤 처리"],
   ["OTHER", "기타"],
 ];
 
@@ -94,7 +96,7 @@ export default function DisciplineRecordDetailClient({ record }: { record: Detai
   }
 
   async function deleteRecord() {
-    if (!window.confirm(`#${record.id} 기록을 삭제 처리하겠습니까? 활성 주의/경고 카운트에서 제외됩니다.`)) return;
+    if (!window.confirm(`#${record.id} 기록을 삭제 처리하겠습니까? 활성 징계 카운트에서 제외됩니다.`)) return;
     setPending(true);
     try {
       const response = await fetch(`/api/admin/discipline-records/${record.id}`, { method: "DELETE" });
@@ -114,7 +116,7 @@ export default function DisciplineRecordDetailClient({ record }: { record: Detai
       <div className="admin-page__header" style={{ marginBottom: 24 }}>
         <div>
           <p className="page-eyebrow">DISCIPLINE DETAIL</p>
-          <h1>주의/경고 상세 #{record.id}</h1>
+          <h1>징계 상세 #{record.id}</h1>
           <p className="admin-muted" style={{ marginTop: 8 }}>상세에서 사유, 메모, 종류, 활성 상태를 수정합니다.</p>
         </div>
         <Link className="admin-button admin-button--ghost" href="/admin/discipline">목록</Link>
@@ -136,7 +138,7 @@ export default function DisciplineRecordDetailClient({ record }: { record: Detai
         <h2>수정</h2>
         <div className="discipline-form-grid">
           <label>상태<select value={isActive ? "ACTIVE" : "RESET"} onChange={(e) => setIsActive(e.target.value === "ACTIVE")}><option value="ACTIVE">활성</option><option value="RESET">삭제/초기화</option></select></label>
-          <label>종류<select value={type} onChange={(e) => setType(e.target.value)}><option value="CAUTION">주의</option><option value="WARNING">경고</option></select></label>
+          <label>종류<select value={type} onChange={(e) => setType(e.target.value)}><option value="CAUTION">주의</option><option value="WARNING">경고</option><option value="BAN">벤/강퇴</option></select></label>
           <label>사유 유형<select value={source} onChange={(e) => setSource(e.target.value)}>{sourceOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
           <label className="discipline-wide">사유<textarea value={reason} onChange={(e) => setReason(e.target.value)} /></label>
           <label className="discipline-wide">관리자 메모<textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="운영진 내부 참고 메모" /></label>

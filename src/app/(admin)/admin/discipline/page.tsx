@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma/client";
 import DisciplineRecordListClient from "@/components/admin/DisciplineRecordListClient";
 
 export default async function AdminDisciplinePage() {
-  const [records, activeWarnings, activeCautions] = await Promise.all([
+  const [records, activeWarnings, activeCautions, activeBans] = await Promise.all([
     prisma.userDisciplineRecord.findMany({
       orderBy: [{ isActive: "desc" }, { createdAt: "desc" }],
       take: 300,
@@ -16,6 +16,7 @@ export default async function AdminDisciplinePage() {
     }),
     prisma.userDisciplineRecord.count({ where: { isActive: true, type: "WARNING" } }),
     prisma.userDisciplineRecord.count({ where: { isActive: true, type: "CAUTION" } }),
+    prisma.userDisciplineRecord.count({ where: { isActive: true, type: "BAN" } }),
   ]);
 
   const initialRecords = records.map((record) => ({
@@ -30,13 +31,14 @@ export default async function AdminDisciplinePage() {
       <div className="admin-page__header" style={{ marginBottom: 24 }}>
         <div>
           <p className="page-eyebrow">DISCIPLINE</p>
-          <h1>운영 경고 관리</h1>
+          <h1>운영 징계 관리</h1>
         </div>
       </div>
       <div className="discipline-page-shell">
         <section className="discipline-summary-grid">
           <div className="discipline-stat"><span>활성 주의</span><strong>{activeCautions}회</strong></div>
           <div className="discipline-stat"><span>활성 경고</span><strong>{activeWarnings}회</strong></div>
+          <div className="discipline-stat discipline-stat--ban"><span>활성 벤/강퇴</span><strong>{activeBans}건</strong></div>
           <div className="discipline-stat"><span>전체 기록</span><strong>{records.length}건</strong></div>
         </section>
         <DisciplineRecordListClient initialRecords={initialRecords} />
@@ -55,8 +57,9 @@ function DisciplineStyles() {
       border-radius: 22px;
       box-shadow: 0 18px 48px rgba(0,0,0,.24);
     }
-    .discipline-summary-grid { display: grid; grid-template-columns: repeat(3, minmax(190px, 1fr)); gap: 14px; }
+    .discipline-summary-grid { display: grid; grid-template-columns: repeat(4, minmax(180px, 1fr)); gap: 14px; }
     .discipline-stat { padding: 20px 22px; min-height: 106px; display: grid; align-content: center; }
+    .discipline-stat--ban { border-color: rgba(255, 104, 104, .34); background: linear-gradient(180deg, rgba(66, 14, 28, .82), rgba(5, 15, 34, .76)); }
     .discipline-stat span { color: rgba(190,218,255,.75); display:block; margin-bottom: 8px; font-size: 13px; }
     .discipline-stat strong { font-size: 32px; line-height: 1; letter-spacing: -.03em; }
     .discipline-table-card, .discipline-form-card { padding: 24px; }
@@ -76,6 +79,7 @@ function DisciplineStyles() {
     .discipline-pill.reset { color:#bdd1ea; background: rgba(120,140,170,.12); }
     .discipline-type.caution { color:#ffe58f; background: rgba(255,185,60,.14); border-color: rgba(255,214,102,.35); }
     .discipline-type.warning { color:#ffb3b3; background: rgba(255,76,76,.14); border-color: rgba(255,120,120,.35); }
+    .discipline-type.ban { color:#fecaca; background: rgba(185,28,28,.22); border-color: rgba(248,113,113,.46); }
     .discipline-actions { display:flex; gap:8px; flex-wrap:wrap; }
     .discipline-actions .admin-button { min-height: 36px; padding: 8px 10px; border-radius: 12px; white-space: nowrap; }
     @media (max-width: 860px) { .discipline-page { width: min(100%, calc(100vw - 20px)); } .discipline-summary-grid { grid-template-columns: 1fr; } .discipline-table-card, .discipline-form-card { padding: 18px; } }

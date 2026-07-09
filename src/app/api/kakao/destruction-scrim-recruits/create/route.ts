@@ -282,6 +282,25 @@ async function findSameDateScrimByNoAnyStatus(
   });
 }
 
+async function isScrimNoAlreadyUsed(scrimNo: number) {
+  const existing = await prisma.destructionScrimRecruit.findFirst({
+    where: { scrimNo },
+    select: { id: true },
+  });
+
+  return Boolean(existing);
+}
+
+async function resolveCreateScrimNo(parsedScrimNo: number | null) {
+  if (!parsedScrimNo) return getNextScrimNo();
+
+  // 이미 사용된 번호는 과거 완료 건과 상세/종료 명령이 충돌하므로 재사용하지 않습니다.
+  // 단, 활성 스크림 수정/상대 등록은 위쪽 findActiveScrim 분기에서 먼저 처리됩니다.
+  if (await isScrimNoAlreadyUsed(parsedScrimNo)) return getNextScrimNo();
+
+  return parsedScrimNo;
+}
+
 async function findSameRequesterScrim(params: {
   tournamentId: number;
   requesterTeamName: string | null;
@@ -596,7 +615,7 @@ export async function POST(req: NextRequest) {
       tournament.id,
       parsed.opponentTeamName,
     );
-    const scrimNo = parsed.scrimNo ?? (await getNextScrimNo());
+    const scrimNo = await resolveCreateScrimNo(parsed.scrimNo);
     const title = `${requesterTeam?.name || parsed.requesterTeamName || "요청팀"} 스크림 구인`;
     const initialStatus = hasLineupOrName({
       teamName: parsed.opponentTeamName,

@@ -17,6 +17,12 @@ type Props = {
 
 const POSITIONS: Position[] = ["TOP", "JGL", "MID", "ADC", "SUP"];
 
+const RATING_LABELS: Record<string, string> = {
+  GOOD: "좋음",
+  NORMAL: "보통",
+  BAD: "나쁨",
+};
+
 export default function BalanceFeedbackForm({
   matchSeriesId,
   draftId,
@@ -70,19 +76,25 @@ export default function BalanceFeedbackForm({
   }
 
   return (
-    <section className="ai-panel" style={{ marginTop: 16 }}>
-      <div className="ai-panel__head">
+    <section className="ai-panel ai-feedback-panel">
+      <div className="ai-panel__head ai-feedback-panel__head">
         <div>
           <h2 className="ai-panel__title">운영자 밸런스 피드백</h2>
           <p className="ai-panel__desc">
             내전 후 체감 밸런스를 남깁니다. 나쁨/BAD로 저장하고 문제 팀·라인을 지정하면 다음 팀 밸런스 계산에 쓰이는 내부 MMR이 약하게 보정됩니다.
           </p>
         </div>
+        <div className="ai-feedback-summary" aria-label="현재 피드백 선택값">
+          <span>{feedbackRating ? RATING_LABELS[feedbackRating] ?? feedbackRating : "평가 미선택"}</span>
+          <strong>
+            {[feedbackProblemTeam, feedbackProblemLine].filter(Boolean).join(" · ") || "보정 대상 없음"}
+          </strong>
+        </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 12 }}>
-        <label>
-          <span style={{ display: "block", fontSize: 12, opacity: 0.74, marginBottom: 6 }}>평가</span>
+      <div className="ai-feedback-grid">
+        <label className="ai-feedback-field">
+          <span>평가</span>
           <select className="input" value={feedbackRating} onChange={(event) => setFeedbackRating(event.target.value)}>
             <option value="">선택 없음</option>
             <option value="GOOD">좋음</option>
@@ -90,16 +102,16 @@ export default function BalanceFeedbackForm({
             <option value="BAD">나쁨 / 보정 반영</option>
           </select>
         </label>
-        <label>
-          <span style={{ display: "block", fontSize: 12, opacity: 0.74, marginBottom: 6 }}>문제/과대평가 팀</span>
+        <label className="ai-feedback-field">
+          <span>문제/과대평가 팀</span>
           <select className="input" value={feedbackProblemTeam} onChange={(event) => setFeedbackProblemTeam(event.target.value as Team | "")}>
             <option value="">없음</option>
             <option value="RED">RED</option>
             <option value="BLUE">BLUE</option>
           </select>
         </label>
-        <label>
-          <span style={{ display: "block", fontSize: 12, opacity: 0.74, marginBottom: 6 }}>문제 라인</span>
+        <label className="ai-feedback-field">
+          <span>문제 라인</span>
           <select className="input" value={feedbackProblemLine} onChange={(event) => setFeedbackProblemLine(event.target.value as Position | "")}>
             <option value="">없음</option>
             {POSITIONS.map((position) => (
@@ -107,24 +119,23 @@ export default function BalanceFeedbackForm({
             ))}
           </select>
         </label>
+        <label className="ai-feedback-field ai-feedback-field--memo">
+          <span>메모</span>
+          <textarea
+            className="input"
+            rows={3}
+            value={feedbackMemo}
+            onChange={(event) => setFeedbackMemo(event.target.value)}
+            placeholder="예: RED MID가 계산보다 강했고, JGL-MID 차이 때문에 초반이 크게 벌어짐"
+          />
+        </label>
       </div>
 
-      <label style={{ display: "block", marginTop: 12 }}>
-        <span style={{ display: "block", fontSize: 12, opacity: 0.74, marginBottom: 6 }}>메모</span>
-        <textarea
-          className="input"
-          rows={3}
-          value={feedbackMemo}
-          onChange={(event) => setFeedbackMemo(event.target.value)}
-          placeholder="예: RED MID가 계산보다 강했고, JGL-MID 차이 때문에 초반이 크게 벌어짐"
-        />
-      </label>
-
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12 }}>
+      <div className="ai-feedback-actions">
         <button type="button" className="button-primary" onClick={submitFeedback} disabled={saving}>
           {saving ? "저장 중..." : "피드백 저장"}
         </button>
-        {message ? <span style={{ fontSize: 13, opacity: 0.78 }}>{message}</span> : null}
+        {message ? <span className="ai-feedback-message">{message}</span> : null}
       </div>
     </section>
   );

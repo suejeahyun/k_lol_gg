@@ -4,6 +4,8 @@ export const revalidate = 0;
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
+import { getScrimStatusLabel } from "@/lib/kakao/destruction-scrim-recruit";
+import { findActiveScrim as findActiveDestructionScrim } from "../../destruction-scrim-recruits/_shared";
 import {
   formatRecruitPartyBlock,
   getActiveMemberCount,
@@ -81,6 +83,65 @@ async function findActiveRecruitParty(params: {
   });
 }
 
+async function finishActiveScrimFromPlainCloseCommand(params: {
+  scrimNo: number;
+  roomName: string | null;
+  sender: string | null;
+  message: string;
+}) {
+  const scrim = await findActiveDestructionScrim(params.scrimNo);
+  if (!scrim) return null;
+
+  const updated = await prisma.destructionScrimRecruit.update({
+    where: { id: scrim.id },
+    data: {
+      status: "COMPLETED",
+      roomName: params.roomName ?? scrim.roomName,
+    },
+  });
+
+  await prisma.destructionScrimRecruitLog.create({
+    data: {
+      scrimNo: updated.scrimNo,
+      recruitDate: updated.recruitDate,
+      tournamentId: updated.tournamentId,
+      action: "FINISH",
+      title: updated.title,
+      summary: params.message,
+      roomName: params.roomName,
+      sender: params.sender,
+    },
+  });
+
+  await writeAdminLog({
+    action: "KAKAO_DESTRUCTION_SCRIM_FINISH_FROM_PLAIN_CLOSE",
+    message: `카카오 스크림 일반 ㅉ 명령 종료: #${updated.scrimNo} ${updated.title}`,
+    targetType: "DestructionScrimRecruit",
+    targetId: updated.id,
+    afterJson: {
+      scrimNo: updated.scrimNo,
+      status: updated.status,
+      roomName: params.roomName,
+      sender: params.sender,
+    },
+  });
+
+  return partyRecruitJson({
+    reply: [
+      "[K-LOL.GG 스크림종료]",
+      "",
+      `번호: #${updated.scrimNo}`,
+      `요청팀: ${updated.requesterTeamName || "미정"}`,
+      `상대팀: ${updated.opponentTeamName || "상대구함"}`,
+      `상태: ${getScrimStatusLabel(updated.status)}`,
+      "",
+      "일반 구인구직이 아닌 스크림으로 종료 처리했습니다.",
+    ].join("\n"),
+    forwardedTo: "destruction-scrim-recruits/finish",
+    scrim: updated,
+  });
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await readJsonBody(req);
@@ -123,6 +184,14 @@ export async function POST(req: NextRequest) {
     });
 
     if (!party) {
+      const scrimFinishReply = await finishActiveScrimFromPlainCloseCommand({
+        scrimNo: parsed.recruitNo,
+        roomName,
+        sender,
+        message,
+      });
+      if (scrimFinishReply) return scrimFinishReply;
+
       const sameDateFinishedLog = await prisma.recruitPartyLog.findFirst({
         where: {
           recruitNo: parsed.recruitNo,
