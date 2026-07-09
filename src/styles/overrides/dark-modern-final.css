@@ -44,6 +44,13 @@
   --dm-img-auction: url("/images/theme/dark-modern/pro-live-stage-v1.png");
   --dm-img-admin: url("/images/theme/dark-modern/pro-admin-control-v1.png");
   --dm-img-auth: url("/images/theme/dark-modern/dark-trophy.png");
+  --dm-global-backdrop:
+    linear-gradient(180deg, rgba(2, 6, 17, 0.34), rgba(2, 6, 17, 0.88) 64%, #020611 100%),
+    radial-gradient(circle at 18% 0%, rgba(47, 125, 255, 0.16), transparent 32%),
+    url("/images/theme/dark-modern/klol-global-stage-v1.png"),
+    linear-gradient(180deg, #050914, #020611);
+  --dm-global-backdrop-size: cover, cover, cover, cover;
+  --dm-global-backdrop-position: center, center, center top, center;
 
   --k-bg: var(--dm-bg);
   --k-bg-2: #071122;
@@ -117,6 +124,33 @@ body {
     center !important;
   background-attachment: fixed, fixed, fixed, fixed, fixed, fixed, scroll, scroll;
   color: var(--dm-text);
+}
+
+.app-background-root::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: var(--dm-global-backdrop) !important;
+  background-size: var(--dm-global-backdrop-size) !important;
+  background-position: var(--dm-global-backdrop-position) !important;
+  background-repeat: no-repeat !important;
+  pointer-events: none;
+  transform: translateZ(0);
+}
+
+.app-background-root::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    linear-gradient(rgba(101, 174, 255, 0.026) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(101, 174, 255, 0.026) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.85), transparent 82%);
+  opacity: 0.7;
+  pointer-events: none;
 }
 
 .app-background-side,
@@ -1957,6 +1991,15 @@ html[data-theme="neon-cyber"] {
   --dm-img-profile: url("/images/theme/dark/profile/player-profile-general.svg");
   --dm-img-scrim: url("/images/theme/dark/scrim/scrim-board-bg.svg");
   --dm-img-auction: url("/images/theme/dark/auction/auction-stage.svg");
+  --dm-global-backdrop:
+    linear-gradient(180deg, rgba(4, 5, 18, 0.72), rgba(3, 4, 11, 0.98) 72%),
+    radial-gradient(circle at 18% 8%, rgba(255, 70, 220, 0.34), transparent 34%),
+    radial-gradient(circle at 84% 7%, rgba(0, 216, 255, 0.3), transparent 32%),
+    url("/images/theme/dark/backgrounds/page-bg-grid.svg"),
+    linear-gradient(135deg, rgba(255, 70, 220, 0.14), transparent 30%, rgba(0, 216, 255, 0.14) 72%, transparent),
+    linear-gradient(180deg, #060713, #03040b);
+  --dm-global-backdrop-size: cover, cover, cover, 760px 760px, cover, cover;
+  --dm-global-backdrop-position: center, center, center, center, center, center;
   --dm-bg: #060713;
   --dm-bg-deep: #03040b;
   --dm-surface: rgba(10, 10, 30, 0.96);
@@ -1996,6 +2039,15 @@ html[data-theme="black-gold"] {
   --dm-img-profile: url("/images/theme/dark/profile/player-profile-master.svg");
   --dm-img-scrim: url("/images/theme/dark/scrim/scrim-board-bg.svg");
   --dm-img-auction: url("/images/theme/dark/auction/auction-podium.svg");
+  --dm-global-backdrop:
+    linear-gradient(180deg, rgba(7, 6, 3, 0.74), rgba(4, 3, 2, 0.98) 72%),
+    radial-gradient(circle at 50% -4%, rgba(255, 209, 102, 0.28), transparent 36%),
+    radial-gradient(circle at 14% 12%, rgba(151, 103, 28, 0.2), transparent 30%),
+    radial-gradient(circle at 88% 18%, rgba(255, 209, 102, 0.14), transparent 28%),
+    linear-gradient(135deg, rgba(255, 209, 102, 0.13), transparent 26%, rgba(184, 135, 45, 0.12) 78%, transparent),
+    linear-gradient(180deg, #090806, #040302);
+  --dm-global-backdrop-size: cover;
+  --dm-global-backdrop-position: center;
   --dm-bg: #090806;
   --dm-bg-deep: #040302;
   --dm-surface: rgba(18, 14, 8, 0.96);
@@ -2025,63 +2077,6 @@ html[data-theme="black-gold"] {
   --v2-primary-hover: var(--dm-blue-2);
 }
 
-html[data-theme="clean-light"] {
-  --dm-img-page: url("/images/theme/dark-modern/light-ice-wide.png");
-  --dm-img-page-crystal: url("/images/theme/dark-modern/light-ice-wide.png");
-  --dm-img-hero: url("/images/theme/dark-modern/light-trophy.png");
-  --dm-img-header: url("/images/theme/dark-modern/light-ice-wide.png");
-  --dm-img-ranking: url("/images/theme/dark-modern/light-trophy.png");
-  --dm-img-match: url("/images/theme/dark-modern/light-ice-wide.png");
-  --dm-img-profile: url("/images/theme/dark-modern/light-trophy.png");
-  --dm-img-scrim: url("/images/theme/dark-modern/light-ice-wide.png");
-  --dm-img-auction: url("/images/theme/dark-modern/pro-live-stage-v1.png");
-  --dm-bg: #eef5ff;
-  --dm-bg-deep: #e7f0ff;
-  --dm-surface: rgba(247, 250, 255, 0.96);
-  --dm-surface-raised: rgba(255, 255, 255, 0.96);
-  --dm-card: rgba(255, 255, 255, 0.9);
-  --dm-card-soft: rgba(247, 250, 255, 0.82);
-  --dm-card-hover: rgba(255, 255, 255, 0.98);
-  --dm-line: rgba(37, 99, 235, 0.18);
-  --dm-line-strong: rgba(37, 99, 235, 0.34);
-  --dm-text: #0f172a;
-  --dm-text-soft: #334155;
-  --dm-muted: #64748b;
-  --dm-dim: #94a3b8;
-  --dm-blue: #2563eb;
-  --dm-blue-2: #0ea5e9;
-  --dm-cyan: #0284c7;
-  --dm-green: #16a34a;
-  --dm-gold: #b7791f;
-  --dm-red: #dc2626;
-  --dm-warning: #d97706;
-  --k-bg: var(--dm-bg);
-  --k-panel: var(--dm-card);
-  --k-panel-2: var(--dm-surface-raised);
-  --k-border: var(--dm-line);
-  --k-border-strong: var(--dm-line-strong);
-  --k-text: var(--dm-text-soft);
-  --k-text-strong: var(--dm-text);
-  --k-muted: var(--dm-muted);
-  --k-muted-2: var(--dm-dim);
-  --k-blue: var(--dm-blue);
-  --k-blue-2: var(--dm-blue-2);
-  --k-cyan: var(--dm-cyan);
-  --k-red: var(--dm-red);
-  --k-gold: var(--dm-gold);
-  --v2-bg: var(--dm-bg);
-  --v2-card: var(--dm-card);
-  --v2-surface: var(--dm-surface);
-  --v2-surface-raised: var(--dm-surface-raised);
-  --v2-primary: var(--dm-blue);
-  --v2-primary-hover: var(--dm-blue-2);
-  --v2-text-primary: var(--dm-text);
-  --v2-text-secondary: var(--dm-text-soft);
-  --v2-text-muted: var(--dm-muted);
-  --v2-border: var(--dm-line);
-  --v2-border-strong: var(--dm-line-strong);
-}
-
 html[data-theme="neon-cyber"] .app-background-root,
 html[data-theme="black-gold"] .app-background-root {
   background:
@@ -2091,85 +2086,6 @@ html[data-theme="black-gold"] .app-background-root {
     var(--dm-img-grid),
     var(--dm-img-page-crystal),
     linear-gradient(180deg, var(--dm-bg) 0%, var(--dm-bg-deep) 74%) !important;
-}
-
-html[data-theme="clean-light"] body,
-html[data-theme="clean-light"] .app-background-root {
-  color: var(--dm-text) !important;
-}
-
-html[data-theme="clean-light"] .app-background-root {
-  background:
-    linear-gradient(180deg, rgba(241, 247, 255, 0.82), rgba(230, 240, 255, 0.95)),
-    radial-gradient(circle at 20% 0%, rgba(37, 99, 235, 0.12), transparent 34%),
-    radial-gradient(circle at 86% 8%, rgba(14, 165, 233, 0.12), transparent 30%),
-    var(--dm-img-grid),
-    var(--dm-img-page),
-    linear-gradient(180deg, #f8fbff, #eaf3ff) !important;
-}
-
-html[data-theme="clean-light"] .app-background-overlay {
-  background:
-    linear-gradient(
-      90deg,
-      rgba(238, 245, 255, 0.72) 0%,
-      rgba(238, 245, 255, 0.9) 24%,
-      rgba(246, 250, 255, 0.96) 50%,
-      rgba(238, 245, 255, 0.9) 76%,
-      rgba(238, 245, 255, 0.72) 100%
-    ) !important;
-}
-
-html[data-theme="clean-light"] .app-topbar,
-html[data-theme="clean-light"] .app-shell--admin .app-sidebar--admin,
-html[data-theme="clean-light"] .app-shell--user .app-sidebar--user {
-  background: rgba(248, 251, 255, 0.92) !important;
-  border-color: rgba(37, 99, 235, 0.18) !important;
-}
-
-html[data-theme="clean-light"] .app-topbar__home,
-html[data-theme="clean-light"] .app-sidebar__title,
-html[data-theme="clean-light"] .page-title,
-html[data-theme="clean-light"] .admin-page__title,
-html[data-theme="clean-light"] .admin-page-header h1,
-html[data-theme="clean-light"] .home-dark-hero-title,
-html[data-theme="clean-light"] .home-dark-rank-card__name {
-  color: #0f172a !important;
-}
-
-html[data-theme="clean-light"] .app-sidebar__link,
-html[data-theme="clean-light"] .app-topbar__title,
-html[data-theme="clean-light"] .home-dark-hero-copy p,
-html[data-theme="clean-light"] .home-dark-rank-card__nickname,
-html[data-theme="clean-light"] .home-dark-summary-strip span {
-  color: #475569 !important;
-}
-
-html[data-theme="clean-light"] .page-header,
-html[data-theme="clean-light"] .admin-page-header,
-html[data-theme="clean-light"] .home-dark-showcase,
-html[data-theme="clean-light"] .home-dark-hero-card,
-html[data-theme="clean-light"] .home-dark-top3-panel,
-html[data-theme="clean-light"] .home-dark-recent-panel,
-html[data-theme="clean-light"] .card,
-html[data-theme="clean-light"] .panel,
-html[data-theme="clean-light"] .v2-card,
-html[data-theme="clean-light"] .klol-app-card,
-html[data-theme="clean-light"] .klol-app-list-card,
-html[data-theme="clean-light"] .klol-app-empty {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(241, 247, 255, 0.84)),
-    var(--dm-header-art, var(--dm-img-header)) !important;
-  color: #0f172a !important;
-  border-color: rgba(37, 99, 235, 0.18) !important;
-}
-
-html[data-theme="clean-light"] .theme-switcher,
-html[data-theme="clean-light"] .theme-switcher--compact,
-html[data-theme="clean-light"] .app-input,
-html[data-theme="clean-light"] .app-select {
-  background: rgba(255, 255, 255, 0.78) !important;
-  color: #0f172a !important;
 }
 
 html[data-theme="black-gold"] .theme-switcher__option[aria-pressed="true"],
@@ -2190,16 +2106,6 @@ html[data-theme="neon-cyber"] .klol-app-mini-button--primary,
 html[data-theme="neon-cyber"] .klol-app-login-form button {
   background: linear-gradient(135deg, #00d8ff, #ff46dc) !important;
   box-shadow: 0 0 24px rgba(255, 70, 220, 0.22) !important;
-}
-
-html[data-theme="clean-light"] .theme-switcher__option[aria-pressed="true"],
-html[data-theme="clean-light"] .app-button,
-html[data-theme="clean-light"] .home-dark-primary-action,
-html[data-theme="clean-light"] .klol-app-primary,
-html[data-theme="clean-light"] .klol-app-mini-button--primary,
-html[data-theme="clean-light"] .klol-app-login-form button {
-  color: #ffffff !important;
-  background: linear-gradient(135deg, #2563eb, #0ea5e9) !important;
 }
 
 html[data-theme="dark-modern"] .app-background-root {
@@ -2305,46 +2211,6 @@ html[data-theme="black-gold"] .home-dark-section-kicker,
 html[data-theme="black-gold"] .admin-section-kicker {
   color: #ffd166 !important;
   text-shadow: 0 0 12px rgba(255, 209, 102, 0.28) !important;
-}
-
-html[data-theme="clean-light"] .app-background-side,
-html[data-theme="clean-light"] .app-background-image {
-  display: none !important;
-}
-
-html[data-theme="clean-light"] .app-background-root {
-  background:
-    linear-gradient(180deg, rgba(250, 253, 255, 0.9), rgba(232, 242, 255, 0.96)),
-    radial-gradient(circle at 18% 0%, rgba(37, 99, 235, 0.12), transparent 34%),
-    radial-gradient(circle at 88% 10%, rgba(14, 165, 233, 0.1), transparent 28%),
-    var(--dm-img-page),
-    linear-gradient(180deg, #f9fcff, #eaf3ff) !important;
-  background-size: cover, cover, cover, cover, cover !important;
-  background-position: center, center, center, center top, center !important;
-}
-
-html[data-theme="clean-light"] .app-background-content::before,
-html[data-theme="clean-light"] .app-content::before {
-  opacity: 0.16 !important;
-}
-
-html[data-theme="clean-light"] .page-header,
-html[data-theme="clean-light"] .admin-page-header,
-html[data-theme="clean-light"] .home-dark-showcase,
-html[data-theme="clean-light"] .home-dark-hero-card,
-html[data-theme="clean-light"] .home-dark-top3-panel,
-html[data-theme="clean-light"] .home-dark-recent-panel,
-html[data-theme="clean-light"] .card,
-html[data-theme="clean-light"] .panel,
-html[data-theme="clean-light"] .v2-card,
-html[data-theme="clean-light"] .klol-app-card,
-html[data-theme="clean-light"] .klol-app-list-card,
-html[data-theme="clean-light"] .klol-app-empty {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(241, 247, 255, 0.9)) !important;
-  color: #0f172a !important;
-  border-color: rgba(37, 99, 235, 0.16) !important;
-  box-shadow: 0 18px 38px rgba(37, 99, 235, 0.09) !important;
 }
 
 .mobile-app-gate {
@@ -2454,20 +2320,9 @@ html[data-theme="black-gold"] .klol-app-root {
     url("/images/theme/dark/auction/auction-podium.svg") center top / cover fixed !important;
 }
 
-html[data-theme="clean-light"] .klol-app-root {
-  background:
-    linear-gradient(180deg, rgba(250, 253, 255, 0.86), rgba(232, 242, 255, 0.97)),
-    radial-gradient(circle at 16% 0%, rgba(37, 99, 235, 0.1), transparent 30%),
-    url("/images/theme/dark-modern/light-ice-wide.png") center top / cover fixed !important;
-}
-
 html[data-theme] .klol-app-header {
   background: color-mix(in srgb, var(--dm-bg-deep) 82%, transparent) !important;
   border-color: var(--dm-line) !important;
-}
-
-html[data-theme="clean-light"] .klol-app-header {
-  background: rgba(248, 251, 255, 0.86) !important;
 }
 
 html[data-theme] .klol-app-brand strong {

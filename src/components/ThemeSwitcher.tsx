@@ -3,7 +3,7 @@
 import { Palette } from "lucide-react";
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 
-export type KlolTheme = "dark-modern" | "neon-cyber" | "black-gold" | "clean-light";
+export type KlolTheme = "dark-modern" | "neon-cyber" | "black-gold";
 
 const THEME_STORAGE_KEY = "klol-theme";
 
@@ -31,12 +31,6 @@ const themes: Array<{
     shortLabel: "골드",
     description: "블랙 골드 프리미엄 테마",
   },
-  {
-    id: "clean-light",
-    label: "라이트",
-    shortLabel: "라이트",
-    description: "밝은 클린 라이트 테마",
-  },
 ];
 
 function isKlolTheme(value: string | null): value is KlolTheme {
@@ -45,8 +39,7 @@ function isKlolTheme(value: string | null): value is KlolTheme {
 
 function applyTheme(theme: KlolTheme) {
   document.documentElement.dataset.theme = theme;
-  document.documentElement.style.colorScheme =
-    theme === "clean-light" ? "light" : "dark";
+  document.documentElement.style.colorScheme = "dark";
 }
 
 function readStoredTheme(): KlolTheme {
