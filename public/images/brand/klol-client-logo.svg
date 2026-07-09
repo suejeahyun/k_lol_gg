@@ -1,0 +1,36 @@
+<svg width="275" height="275" viewBox="0 0 275 275" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="37%" r="70%">
+      <stop offset="0%" stop-color="#123a75"/>
+      <stop offset="48%" stop-color="#07172f"/>
+      <stop offset="100%" stop-color="#020712"/>
+    </radialGradient>
+    <linearGradient id="ring" x1="41" y1="28" x2="229" y2="244" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#57d6ff"/>
+      <stop offset="0.48" stop-color="#2f7dff"/>
+      <stop offset="1" stop-color="#0a2e70"/>
+    </linearGradient>
+    <linearGradient id="glyph" x1="87" y1="69" x2="194" y2="205" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffffff"/>
+      <stop offset="0.42" stop-color="#dbeafe"/>
+      <stop offset="1" stop-color="#38bdf8"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="15" stdDeviation="16" flood-color="#000a1a" flood-opacity="0.72"/>
+    </filter>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <circle cx="137.5" cy="137.5" r="125.5" fill="url(#bg)" filter="url(#shadow)"/>
+  <circle cx="137.5" cy="137.5" r="124" stroke="rgba(255,255,255,0.86)" stroke-width="4"/>
+  <circle cx="137.5" cy="137.5" r="112" stroke="url(#ring)" stroke-width="5"/>
+  <path d="M137.5 32L158.5 78.5L204.5 97.5L158.5 116.5L137.5 163L116.5 116.5L70.5 97.5L116.5 78.5L137.5 32Z" fill="#1fb6ff" opacity="0.18" filter="url(#glow)"/>
+  <path d="M88 70H118V119L164 70H202L151 124L206 205H168L130 146L118 159V205H88V70Z" fill="url(#glyph)"/>
+  <path d="M91 219H184" stroke="#38bdf8" stroke-width="8" stroke-linecap="round"/>
+  <path d="M203 219H217" stroke="#ffffff" stroke-width="8" stroke-linecap="round" opacity="0.92"/>
+</svg>
