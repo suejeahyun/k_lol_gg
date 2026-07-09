@@ -28,6 +28,12 @@
 - Riot 솔랭 동기화 성공 시 `Player.currentTier` 자동 갱신, 기존 최고 티어보다 현재 Riot 티어가 높으면 `Player.peakTier`도 자동 보정
 - 관리자 대시보드 자동 승인 정책 문구 반영
 - 관리자 Riot 페이지 문구와 상태를 자동 티어 동기화 중심으로 정리
+- `0.k_lol_gg` 최신 main과 최종 비교
+  - page/api/layout 라우트 수 동일 확인: page 140, api 160, layout 5
+  - `0`에만 있던 최신 Prisma migration 6개를 `2`에 반영
+  - Riot Production/RSO 환경변수 예시와 신청 문서를 `2`에 반영
+  - Riot 도메인 검증 파일 `public/riot.txt`를 `0` 최신 값으로 동기화
+  - 코드에서 참조되지 않는 light theme 이미지 자산 제거 유지
 - PC 홈, 플레이어 목록, 모바일 홈 대표 화면 캡처 검증
 - `npm run build` 통과
 
@@ -54,6 +60,7 @@
 
 - 게시판, 클립, 사진첩, 공지사항, 이벤트 공지는 삭제 유지
 - Discord 관련 UI/기능은 삭제 유지
+- Light theme UI/자산은 삭제 유지. 테마는 dark/neon/gold만 유지
 - 카카오/Riot/내전/랭킹/팀밸런스/멸망전/이벤트 중심으로 정리
 - 관리자 화면은 유저 화면보다 절제된 다크모던 운영 도구 톤 유지
 
