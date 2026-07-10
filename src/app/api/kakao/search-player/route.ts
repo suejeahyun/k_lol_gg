@@ -1,3 +1,4 @@
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -110,6 +111,9 @@ async function handleSearch(req: NextRequest, rawQuery: string) {
 }
 
 export async function POST(req: NextRequest) {
+  const premiumLock = await requireSiteFeature("kakao");
+  if (premiumLock) return premiumLock;
+
   try {
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
     return handleSearch(req, extractQueryFromBody(body));
@@ -124,6 +128,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
+  const premiumLock = await requireSiteFeature("kakao");
+  if (premiumLock) return premiumLock;
+
   try {
     return handleSearch(req, req.nextUrl.searchParams.get("q") ?? "");
   } catch (error) {

@@ -1,3 +1,4 @@
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -55,6 +56,9 @@ function getOptionalText(value: unknown) {
 }
 
 export async function POST(req: NextRequest) {
+  const premiumLock = await requireSiteFeature("kakao");
+  if (premiumLock) return premiumLock;
+
   try {
     const body = await readJsonBody(req);
     const rejected = rejectIfInvalidSecret(req, body.secret);

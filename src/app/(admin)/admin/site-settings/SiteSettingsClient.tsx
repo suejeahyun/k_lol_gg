@@ -1,0 +1,172 @@
+"use client";
+
+import { FormEvent, useState } from "react";
+import type { SiteSettings, SitePlanStatus } from "@/lib/site/settings";
+
+type SaveState = "idle" | "saving" | "saved" | "error";
+
+type SiteSettingsClientProps = {
+  initialSettings: SiteSettings;
+};
+
+export default function SiteSettingsClient({ initialSettings }: SiteSettingsClientProps) {
+  const [settings, setSettings] = useState<SiteSettings>(initialSettings);
+  const [saveState, setSaveState] = useState<SaveState>("idle");
+  const [message, setMessage] = useState("");
+
+  function update<K extends keyof SiteSettings>(key: K, value: SiteSettings[K]) {
+    setSettings((current) => ({ ...current, [key]: value }));
+    setSaveState("idle");
+    setMessage("");
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSaveState("saving");
+    setMessage("");
+
+    try {
+      const response = await fetch("/api/admin/site-settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(settings),
+      });
+      const result = await response.json();
+
+      if (!response.ok || !result.ok) {
+        throw new Error(result?.message || "저장하지 못했습니다.");
+      }
+
+      setSettings(result.settings);
+      setSaveState("saved");
+      setMessage("사이트 설정을 저장했습니다.");
+    } catch (error) {
+      setSaveState("error");
+      setMessage(error instanceof Error ? error.message : "저장 중 오류가 발생했습니다.");
+    }
+  }
+
+  return (
+    <form className="admin-card site-settings-form" onSubmit={handleSubmit}>
+      <div className="site-settings-grid">
+        <label className="site-settings-field">
+          <span>사이트 이름</span>
+          <input
+            className="admin-input"
+            value={settings.siteName}
+            onChange={(event) => update("siteName", event.target.value)}
+            placeholder="K-LOL.GG"
+          />
+        </label>
+
+        <label className="site-settings-field">
+          <span>오픈채팅방 이름</span>
+          <input
+            className="admin-input"
+            value={settings.roomName ?? ""}
+            onChange={(event) => update("roomName", event.target.value || null)}
+            placeholder="예: A방 내전"
+          />
+        </label>
+
+        <label className="site-settings-field">
+          <span>유료 상태</span>
+          <select
+            className="admin-input"
+            value={settings.planStatus}
+            onChange={(event) => update("planStatus", event.target.value as SitePlanStatus)}
+          >
+            <option value="ACTIVE">유료 활성화</option>
+            <option value="LOCKED">유료 잠금</option>
+          </select>
+        </label>
+
+        <label className="site-settings-field">
+          <span>문의처</span>
+          <input
+            className="admin-input"
+            value={settings.supportContact ?? ""}
+            onChange={(event) => update("supportContact", event.target.value || null)}
+            placeholder="카카오톡 ID 또는 관리자 연락처"
+          />
+        </label>
+      </div>
+
+      <section className="site-settings-switches" aria-label="기능 오픈 설정">
+        <label>
+          <input
+            type="checkbox"
+            checked={settings.kakaoEnabled}
+            onChange={(event) => update("kakaoEnabled", event.target.checked)}
+          />
+          <span>카카오톡 운영 기능</span>
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={settings.recruitEnabled}
+            onChange={(event) => update("recruitEnabled", event.target.checked)}
+          />
+          <span>구인현황 기능</span>
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={settings.balanceAiEnabled}
+            onChange={(event) => update("balanceAiEnabled", event.target.checked)}
+          />
+          <span>K-LOL 랭킹 / AI 밸런스 기능</span>
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={settings.randomTeamEnabled}
+            onChange={(event) => update("randomTeamEnabled", event.target.checked)}
+          />
+          <span>랜덤 팀 나누기 기능</span>
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={settings.riotEnabled}
+            onChange={(event) => update("riotEnabled", event.target.checked)}
+          />
+          <span>Riot 연동 / 솔랭 관리 기능</span>
+        </label>
+      </section>
+
+      <div className="site-settings-grid site-settings-grid--notice">
+        <label className="site-settings-field">
+          <span>잠금 제목</span>
+          <input
+            className="admin-input"
+            value={settings.premiumNoticeTitle}
+            onChange={(event) => update("premiumNoticeTitle", event.target.value)}
+          />
+        </label>
+
+        <label className="site-settings-field site-settings-field--wide">
+          <span>잠금 안내 문구</span>
+          <textarea
+            className="admin-input site-settings-textarea"
+            value={settings.premiumNoticeMessage}
+            onChange={(event) => update("premiumNoticeMessage", event.target.value)}
+          />
+        </label>
+      </div>
+
+      <div className="site-settings-footer">
+        {message ? (
+          <p className={`site-settings-message site-settings-message--${saveState}`}>
+            {message}
+          </p>
+        ) : (
+          <p className="site-settings-message">저장 후 각 페이지의 잠금 상태가 즉시 반영됩니다.</p>
+        )}
+        <button className="admin-button admin-button--primary" type="submit" disabled={saveState === "saving"}>
+          {saveState === "saving" ? "저장 중..." : "설정 저장"}
+        </button>
+      </div>
+    </form>
+  );
+}

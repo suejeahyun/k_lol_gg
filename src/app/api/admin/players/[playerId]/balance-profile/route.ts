@@ -1,3 +1,4 @@
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -7,6 +8,9 @@ import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 type RouteContext = { params: Promise<{ playerId: string }> };
 
 export async function GET(_request: Request, { params }: RouteContext) {
+  const premiumLock = await requireSiteFeature("balanceAi");
+  if (premiumLock) return premiumLock;
+
   const rejected = await rejectIfNotAdmin();
   if (rejected) return rejected;
   const { playerId } = await params;

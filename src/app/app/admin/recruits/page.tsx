@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma/client";
 import { requireAdminRequest } from "@/lib/auth/requireAdmin";
 import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
 import { AppEmpty, AppSection } from "@/components/app-mobile/AppCards";
+import PremiumFeatureGate from "@/components/PremiumFeatureGate";
+import { getSiteSettings } from "@/lib/site/settings";
 
 export const dynamic = "force-dynamic";
 
@@ -18,23 +20,26 @@ export default async function AppAdminRecruitsPage() {
   const admin = await requireAdminRequest();
   if (!admin) redirect("/app/login?next=/app/admin/recruits");
 
-  const parties = await prisma.recruitParty
-    .findMany({
-      orderBy: [{ status: "asc" }, { updatedAt: "desc" }],
-      take: 30,
-      select: {
-        id: true,
-        recruitNo: true,
-        title: true,
-        status: true,
-        maxMembers: true,
-        startTimeText: true,
-        roomName: true,
-        hostName: true,
-        members: { select: { id: true } },
-      },
-    })
-    .catch(() => []);
+  const [parties, siteSettings] = await Promise.all([
+    prisma.recruitParty
+      .findMany({
+        orderBy: [{ status: "asc" }, { updatedAt: "desc" }],
+        take: 30,
+        select: {
+          id: true,
+          recruitNo: true,
+          title: true,
+          status: true,
+          maxMembers: true,
+          startTimeText: true,
+          roomName: true,
+          hostName: true,
+          members: { select: { id: true } },
+        },
+      })
+      .catch(() => []),
+    getSiteSettings(),
+  ]);
 
   return (
     <AppMobileShell subtitle="K-LOL.GG APP" mode="admin">
@@ -43,35 +48,37 @@ export default async function AppAdminRecruitsPage() {
         <h1 className="klol-app-title">구인 현황</h1>
       </section>
 
-      <AppSection title="최근 구인">
-        {parties.length === 0 ? (
-          <AppEmpty>표시할 구인이 없습니다.</AppEmpty>
-        ) : (
-          <div className="klol-app-list">
-            {parties.map((party) => (
-              <article className="klol-app-list-card" key={party.id}>
-                <div className="klol-app-list-top">
-                  <span className="klol-app-list-title">
-                    <strong>#{party.recruitNo} {party.title || "구인"}</strong>
-                    <span>{party.hostName || "주최자 미입력"} · {party.roomName || "음성방 미정"}</span>
-                  </span>
-                  <span className="klol-app-badge">{statusText(party.status)}</span>
-                </div>
-                <div className="klol-app-meta-grid">
-                  <div className="klol-app-meta">
-                    <span>인원</span>
-                    <strong>{party.members.length}/{party.maxMembers}</strong>
+      <PremiumFeatureGate feature="recruit" settings={siteSettings}>
+        <AppSection title="최근 구인">
+          {parties.length === 0 ? (
+            <AppEmpty>표시할 구인이 없습니다.</AppEmpty>
+          ) : (
+            <div className="klol-app-list">
+              {parties.map((party) => (
+                <article className="klol-app-list-card" key={party.id}>
+                  <div className="klol-app-list-top">
+                    <span className="klol-app-list-title">
+                      <strong>#{party.recruitNo} {party.title || "구인"}</strong>
+                      <span>{party.hostName || "주최자 미입력"} · {party.roomName || "음성방 미정"}</span>
+                    </span>
+                    <span className="klol-app-badge">{statusText(party.status)}</span>
                   </div>
-                  <div className="klol-app-meta">
-                    <span>시간</span>
-                    <strong>{party.startTimeText || "미정"}</strong>
+                  <div className="klol-app-meta-grid">
+                    <div className="klol-app-meta">
+                      <span>인원</span>
+                      <strong>{party.members.length}/{party.maxMembers}</strong>
+                    </div>
+                    <div className="klol-app-meta">
+                      <span>시간</span>
+                      <strong>{party.startTimeText || "미정"}</strong>
+                    </div>
                   </div>
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
-      </AppSection>
+                </article>
+              ))}
+            </div>
+          )}
+        </AppSection>
+      </PremiumFeatureGate>
     </AppMobileShell>
   );
 }

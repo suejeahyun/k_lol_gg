@@ -1,3 +1,4 @@
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -221,6 +222,9 @@ function getFallbackReply() {
 }
 
 export async function GET(req: NextRequest) {
+  const premiumLock = await requireSiteFeature("kakao");
+  if (premiumLock) return premiumLock;
+
   try {
     return await createNotice(req);
   } catch (error) {
@@ -241,6 +245,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const premiumLock = await requireSiteFeature("kakao");
+  if (premiumLock) return premiumLock;
+
   try {
     const body = (await req.json().catch(() => ({}))) as NoticeBody;
     return await createNotice(req, body);

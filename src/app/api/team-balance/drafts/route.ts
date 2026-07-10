@@ -1,3 +1,4 @@
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 ﻿export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -69,6 +70,9 @@ function startOfTodayKst() {
 }
 
 export async function GET() {
+  const premiumLock = await requireSiteFeature("balanceAi");
+  if (premiumLock) return premiumLock;
+
   try {
     await requireApprovedUserOrAdmin();
     const from = addDays(startOfTodayKst(), -(LOOKBACK_DAYS - 1));
@@ -120,6 +124,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const premiumLock = await requireSiteFeature("balanceAi");
+  if (premiumLock) return premiumLock;
+
   try {
     const rateLimitRejected = await rejectIfRateLimited(req, {
       action: "TEAM_BALANCE_DRAFT_CREATE",

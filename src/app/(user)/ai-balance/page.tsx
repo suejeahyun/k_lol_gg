@@ -2,6 +2,8 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
+import PremiumFeatureGate from "@/components/PremiumFeatureGate";
+import { getSiteSettings } from "@/lib/site/settings";
 
 function fmt(value: number | null | undefined, digits = 1) {
   return typeof value === "number" ? value.toFixed(digits) : "-";
@@ -17,6 +19,7 @@ function formatDate(value: Date | null | undefined) {
 }
 
 export default async function UserAiBalancePage() {
+  const siteSettings = await getSiteSettings();
   const [
     reviewCount,
     profileCount,
@@ -67,6 +70,7 @@ export default async function UserAiBalancePage() {
     : null;
 
   return (
+    <PremiumFeatureGate feature="balanceAi" settings={siteSettings}>
     <main className="page-container ai-page ai-page--public ai-page--ranking">
       <section className="ai-hero ai-hero--compact">
         <div className="ai-hero__content">
@@ -79,12 +83,21 @@ export default async function UserAiBalancePage() {
         <article className="ai-kpi"><span>랭킹 리뷰</span><strong>{reviewCount}</strong><small>분석된 내전</small></article>
         <article className="ai-kpi"><span>랭킹 프로필</span><strong>{profileCount}</strong><small>프로필 생성</small></article>
         <article className="ai-kpi"><span>예측 적중률</span><strong>{hitRate === null ? "-" : `${fmt(hitRate)}%`}</strong><small>최근 50개 기준</small></article>
+        <article className="ai-kpi ai-kpi--status">
+          <span>최근 업데이트</span>
+          <strong>{latestReviews[0]?.matchSeries.title ?? "-"}</strong>
+          <small>{latestReviews[0] ? formatDate(latestReviews[0].matchSeries.matchDate) : "분석 기록 없음"}</small>
+        </article>
       </section>
 
       <section className="ai-panel ai-panel--ranking">
         <div className="ai-panel__head">
           <div>
             <h2 className="ai-panel__title">K-LOL 랭킹 보드</h2>
+          </div>
+          <div className="ai-panel__meta">
+            <span>상위 {topProfiles.length}명</span>
+            <span>신뢰도 · 라인별 MMR 기준</span>
           </div>
         </div>
         <div className="ai-table-wrap">
@@ -152,5 +165,6 @@ export default async function UserAiBalancePage() {
         </div>
       </section>
     </main>
+    </PremiumFeatureGate>
   );
 }

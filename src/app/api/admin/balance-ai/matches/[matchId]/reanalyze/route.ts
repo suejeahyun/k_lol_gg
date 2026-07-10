@@ -1,3 +1,4 @@
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -8,6 +9,9 @@ import { updateInternalMmrAfterMatch } from "@/lib/balance/internal-mmr";
 type RouteContext = { params: Promise<{ matchId: string }> };
 
 export async function POST(_request: Request, { params }: RouteContext) {
+  const premiumLock = await requireSiteFeature("balanceAi");
+  if (premiumLock) return premiumLock;
+
   const rejected = await rejectIfNotAdmin();
   if (rejected) return rejected;
   const { matchId } = await params;

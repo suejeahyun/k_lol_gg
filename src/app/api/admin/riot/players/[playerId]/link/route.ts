@@ -1,4 +1,5 @@
 import { logServerError } from "@/lib/server/safe-log";
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -11,6 +12,9 @@ export async function POST(
   req: NextRequest,
   context: { params: Promise<{ playerId: string }> },
 ) {
+  const premiumLock = await requireSiteFeature("riot");
+  if (premiumLock) return premiumLock;
+
   if (!isRiotFeatureEnabled()) {
     return NextResponse.json(getRiotFeatureDisabledPayload(), { status: 503 });
   }

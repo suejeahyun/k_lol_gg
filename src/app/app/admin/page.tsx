@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma/client";
 import { requireAdminRequest } from "@/lib/auth/requireAdmin";
 import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
 import { AppEmpty, AppSection } from "@/components/app-mobile/AppCards";
+import PremiumFeatureGate from "@/components/PremiumFeatureGate";
+import { getSiteSettings, isSiteFeatureEnabled } from "@/lib/site/settings";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +25,7 @@ export default async function AppAdminPage() {
   const admin = await requireAdminRequest();
   if (!admin) redirect("/app/login?next=/app/admin");
 
-  const [logs, activeRecruitCount] = await Promise.all([
+  const [logs, activeRecruitCount, siteSettings] = await Promise.all([
     prisma.adminLog
       .findMany({
         orderBy: { createdAt: "desc" },
@@ -32,7 +34,9 @@ export default async function AppAdminPage() {
       })
       .catch(() => []),
     prisma.recruitParty.count({ where: { status: "IN_PROGRESS" } }).catch(() => 0),
+    getSiteSettings(),
   ]);
+  const recruitFeatureEnabled = isSiteFeatureEnabled(siteSettings, "recruit");
 
   return (
     <AppMobileShell subtitle="K-LOL.GG APP" mode="admin">
@@ -45,7 +49,7 @@ export default async function AppAdminPage() {
         <div className="klol-app-meta-grid">
           <div className="klol-app-meta">
             <span>진행 구인</span>
-            <strong>{activeRecruitCount}개</strong>
+            <strong>{recruitFeatureEnabled ? `${activeRecruitCount}개` : "잠금"}</strong>
           </div>
           <div className="klol-app-meta">
             <span>관리자</span>
@@ -53,6 +57,17 @@ export default async function AppAdminPage() {
           </div>
         </div>
       </AppSection>
+
+      <PremiumFeatureGate feature="recruit" settings={siteSettings}>
+        <AppSection title="구인 기능">
+          <div className="klol-app-list-card">
+            <span className="klol-app-list-title">
+              <strong>카카오 구인현황</strong>
+              <span>방별 유료 설정에 따라 모바일 관리자에서도 표시됩니다.</span>
+            </span>
+          </div>
+        </AppSection>
+      </PremiumFeatureGate>
 
       <AppSection title="전체 로그">
         {logs.length === 0 ? (

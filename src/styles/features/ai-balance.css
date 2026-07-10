@@ -378,11 +378,60 @@
 }
 
 .ai-page--public .ai-kpi-grid {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .ai-table--wide {
   min-width: 1040px;
+}
+
+.ai-page--ranking .ai-kpi-grid--mmr-summary {
+  align-items: stretch;
+  margin-top: 22px;
+  margin-bottom: 26px;
+}
+
+.ai-page--ranking .ai-kpi {
+  min-height: 126px;
+}
+
+.ai-page--ranking .ai-kpi--status {
+  background:
+    radial-gradient(circle at 92% 16%, rgba(214, 176, 92, 0.16), transparent 34%),
+    linear-gradient(180deg, rgba(15, 28, 52, 0.82), rgba(8, 17, 34, 0.66));
+}
+
+.ai-page--ranking .ai-kpi--status strong {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: clamp(17px, 1.4vw, 22px);
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ai-page--ranking .ai-panel--ranking {
+  margin-top: 0;
+}
+
+.ai-panel__meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.ai-panel__meta span {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  border: 1px solid rgba(126, 165, 217, 0.18);
+  border-radius: 999px;
+  padding: 5px 10px;
+  background: rgba(2, 8, 23, 0.34);
+  color: rgba(226, 232, 240, 0.74);
+  font-size: 12px;
+  font-weight: 850;
 }
 
 .ai-rank {

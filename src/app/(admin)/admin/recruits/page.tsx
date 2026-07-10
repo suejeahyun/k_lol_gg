@@ -3,9 +3,11 @@ export const revalidate = 0;
 
 import type { Prisma } from "@prisma/client";
 import Pagination from "@/components/Pagination";
+import PremiumFeatureGate from "@/components/PremiumFeatureGate";
 import AdminRecruitResetAllButton from "./AdminRecruitResetAllButton";
 import { runRecruitIdleAutoFinishIfNeeded } from "@/lib/kakao/recruit-idle-auto-finish";
 import { prisma } from "@/lib/prisma/client";
+import { getSiteSettings } from "@/lib/site/settings";
 import {
   buildGameInfoText,
   getActiveMemberCount,
@@ -86,6 +88,7 @@ function buildLogWhere(searchParams: PageSearchParams): Prisma.RecruitPartyLogWh
 }
 
 export default async function AdminRecruitsPage({ searchParams }: PageProps) {
+  const siteSettings = await getSiteSettings();
   const resolvedSearchParams = await searchParams;
   const page = Number(resolvedSearchParams.page ?? "1");
   const safePage = Number.isNaN(page) || page < 1 ? 1 : page;
@@ -131,6 +134,7 @@ export default async function AdminRecruitsPage({ searchParams }: PageProps) {
   };
 
   return (
+    <PremiumFeatureGate feature="recruit" settings={siteSettings}>
     <main className="admin-page">
       <div className="admin-page__header">
         <div>
@@ -282,5 +286,6 @@ export default async function AdminRecruitsPage({ searchParams }: PageProps) {
         </div>
       </section>
     </main>
+    </PremiumFeatureGate>
   );
 }

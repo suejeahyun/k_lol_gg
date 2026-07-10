@@ -1,3 +1,4 @@
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -36,10 +37,16 @@ async function handle(req: NextRequest, bodySecret?: unknown) {
 }
 
 export async function GET(req: NextRequest) {
+  const premiumLock = await requireSiteFeature("recruit");
+  if (premiumLock) return premiumLock;
+
   return handle(req);
 }
 
 export async function POST(req: NextRequest) {
+  const premiumLock = await requireSiteFeature("recruit");
+  if (premiumLock) return premiumLock;
+
   const body = await readJsonBody(req);
   return handle(req, body.secret);
 }

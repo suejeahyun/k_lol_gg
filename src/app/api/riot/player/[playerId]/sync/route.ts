@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 import { writeAdminLog } from "@/lib/admin-log";
 import { requireApprovedUser } from "@/lib/auth/session";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
@@ -18,6 +19,9 @@ function parsePlayerId(raw: string) {
 }
 
 export async function POST(req: NextRequest, context: RouteContext) {
+  const premiumLock = await requireSiteFeature("riot");
+  if (premiumLock) return premiumLock;
+
   if (!isRiotFeatureEnabled()) {
     return NextResponse.json(getRiotFeatureDisabledPayload(), { status: 503 });
   }

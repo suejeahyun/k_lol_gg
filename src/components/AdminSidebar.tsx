@@ -18,6 +18,10 @@ type AdminSidebarGroup = {
   items: AdminSidebarItem[];
 };
 
+type PublicSiteSettings = {
+  siteName?: string;
+};
+
 const menuGroups: AdminSidebarGroup[] = [
   {
     title: "핵심 운영",
@@ -60,6 +64,7 @@ const menuGroups: AdminSidebarGroup[] = [
   {
     title: "시스템",
     items: [
+      { href: "/admin/site-settings", label: "사이트 설정", code: "STE", access: "SUPER", activePrefixes: ["/admin/site-settings"] },
       { href: "/admin/security", label: "보안 설정", code: "SEC", activePrefixes: ["/admin/security"] },
       { href: "/admin/logs", label: "감사 로그", code: "AUD", activePrefixes: ["/admin/logs"] },
       { href: "/api/admin/backup/players.csv", label: "백업 CSV", code: "CSV", access: "SUPER", external: true },
@@ -80,6 +85,7 @@ function isActivePath(pathname: string, item: AdminSidebarItem) {
 export default function AdminSidebar() {
   const pathname = usePathname();
   const [canViewSuper, setCanViewSuper] = useState(false);
+  const [siteName, setSiteName] = useState("K-LOL.GG");
 
   useEffect(() => {
     let cancelled = false;
@@ -110,10 +116,25 @@ export default function AdminSidebar() {
     };
   }, []);
 
+  useEffect(() => {
+    async function loadSiteSettings() {
+      try {
+        const response = await fetch("/api/site-settings", { cache: "no-store" });
+        if (!response.ok) return;
+        const data = (await response.json()) as { settings?: PublicSiteSettings };
+        if (data.settings?.siteName) setSiteName(data.settings.siteName);
+      } catch {
+        setSiteName("K-LOL.GG");
+      }
+    }
+
+    loadSiteSettings();
+  }, []);
+
   return (
     <aside className="app-sidebar app-sidebar--admin" aria-label="관리자 메뉴">
       <div className="app-sidebar__title">관리자</div>
-      <div className="app-sidebar__subtitle">운영 · 카카오톡</div>
+      <div className="app-sidebar__subtitle">{siteName} · 운영</div>
 
       <nav className="app-sidebar__nav">
         {menuGroups.map((group) => (

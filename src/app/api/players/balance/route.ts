@@ -1,3 +1,4 @@
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -5,6 +6,9 @@ import { requireApprovedUserOrAdmin, getAccessErrorResponseMessage } from "@/lib
 import { handlePlayersBalanceRequest } from "@/lib/team-balance/calculate";
 
 export async function POST(request: NextRequest) {
+  const premiumLock = await requireSiteFeature("balanceAi");
+  if (premiumLock) return premiumLock;
+
   try {
     await requireApprovedUserOrAdmin();
   } catch (error) {

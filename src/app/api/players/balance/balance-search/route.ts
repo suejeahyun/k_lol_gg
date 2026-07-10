@@ -1,3 +1,4 @@
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 ﻿import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
@@ -5,6 +6,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 
 export async function GET(req: NextRequest) {
+  const premiumLock = await requireSiteFeature("balanceAi");
+  if (premiumLock) return premiumLock;
+
   try {
     const q = req.nextUrl.searchParams.get("q")?.trim() ?? "";
     const exclude = req.nextUrl.searchParams.get("exclude")?.trim() ?? "";

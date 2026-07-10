@@ -1,3 +1,4 @@
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 import { createHash } from "crypto";
 import { NextRequest } from "next/server";
 import { kakaoJsonReply } from "@/lib/kakao/reply-format";
@@ -863,6 +864,9 @@ async function resetTodaySeasonApply(params: {
 }
 
 export async function POST(req: NextRequest) {
+  const premiumLock = await requireSiteFeature("recruit");
+  if (premiumLock) return premiumLock;
+
   try {
     const body = await req.json().catch(() => ({}));
     const secretRejected = rejectIfInvalidSecret(req, body.secret);

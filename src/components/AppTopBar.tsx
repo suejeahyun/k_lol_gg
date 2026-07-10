@@ -16,6 +16,10 @@ type TopBarUser = {
   status: "PENDING" | "APPROVED" | "REJECTED";
 };
 
+type PublicSiteSettings = {
+  siteName?: string;
+};
+
 export default function AppTopBar({
   title,
   homeHref,
@@ -25,6 +29,7 @@ export default function AppTopBar({
   const [menu, setMenu] = useState<"players" | "matches">("players");
   const [keyword, setKeyword] = useState("");
   const [user, setUser] = useState<TopBarUser | null>(null);
+  const [siteName, setSiteName] = useState("K-LOL.GG");
 
   useEffect(() => {
     if (mode !== "user") {
@@ -55,6 +60,21 @@ export default function AppTopBar({
       setUser(null);
     });
   }, [mode]);
+
+  useEffect(() => {
+    async function fetchSiteSettings() {
+      try {
+        const res = await fetch("/api/site-settings", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = (await res.json()) as { settings?: PublicSiteSettings };
+        if (data.settings?.siteName) setSiteName(data.settings.siteName);
+      } catch {
+        setSiteName("K-LOL.GG");
+      }
+    }
+
+    fetchSiteSettings();
+  }, []);
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -91,7 +111,7 @@ export default function AppTopBar({
     <header className="app-topbar">
       <div className="app-topbar__left">
         <Link href={homeHref} className="app-topbar__home">
-          K-LOL.GG
+          {siteName}
         </Link>
 
         <span className="app-topbar__divider">|</span>

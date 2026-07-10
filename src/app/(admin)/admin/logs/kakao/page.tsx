@@ -1,5 +1,7 @@
 import Link from "next/link";
+import PremiumFeatureGate from "@/components/PremiumFeatureGate";
 import { prisma } from "@/lib/prisma/client";
+import { getSiteSettings } from "@/lib/site/settings";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -140,12 +142,14 @@ async function getKakaoLogs(): Promise<LogRow[]> {
 }
 
 export default async function AdminKakaoOnlyLogsPage() {
+  const siteSettings = await getSiteSettings();
   const logs = await getKakaoLogs();
   const recent24h = logs.filter((log) => Date.now() - log.createdAt.getTime() <= 24 * 60 * 60 * 1000).length;
   const sources = new Set(logs.map((log) => log.source)).size;
   const actions = new Set(logs.map((log) => log.action)).size;
 
   return (
+    <PremiumFeatureGate feature="kakao" settings={siteSettings}>
     <main className={styles.page}>
       <header className={styles.header}>
         <div>
@@ -206,5 +210,6 @@ export default async function AdminKakaoOnlyLogsPage() {
         )}
       </section>
     </main>
+    </PremiumFeatureGate>
   );
 }

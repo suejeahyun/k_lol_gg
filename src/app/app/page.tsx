@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
 import { AppEmpty, AppSection } from "@/components/app-mobile/AppCards";
+import PremiumFeatureGate from "@/components/PremiumFeatureGate";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getAppHomeSummary } from "@/lib/app/home-summary";
 import { prisma } from "@/lib/prisma/client";
+import { getSiteSettings, isSiteFeatureEnabled } from "@/lib/site/settings";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +43,7 @@ function teamLabel(winner?: string | null) {
 }
 
 export default async function AppHomePage() {
-  const [session, summary, season] = await Promise.all([
+  const [session, summary, season, siteSettings] = await Promise.all([
     getCurrentUser(),
     getAppHomeSummary(),
     prisma.season.findFirst({
@@ -49,7 +51,9 @@ export default async function AppHomePage() {
       orderBy: { id: "desc" },
       select: { id: true, name: true },
     }),
+    getSiteSettings(),
   ]);
+  const recruitFeatureEnabled = isSiteFeatureEnabled(siteSettings, "recruit");
 
   const [myStat, myKda, recentRecruits, recentMatches, topStats, recentMvp] = await Promise.all([
     session?.playerId && season
@@ -146,8 +150,14 @@ export default async function AppHomePage() {
         </div>
         <div className="klol-app-meta-grid klol-app-meta-grid--home">
           <div className="klol-app-meta">
-            <span>{session?.playerId ? "내전 참가" : "진행 구인"}</span>
-            <strong>{session?.playerId ? `${myStat?.participationCount ?? 0}회` : `${summary.activeRecruitCount}개`}</strong>
+            <span>{session?.playerId ? "내전 참가" : recruitFeatureEnabled ? "진행 구인" : "등록 내전"}</span>
+            <strong>
+              {session?.playerId
+                ? `${myStat?.participationCount ?? 0}회`
+                : recruitFeatureEnabled
+                  ? `${summary.activeRecruitCount}개`
+                  : `${summary.matchCount}개`}
+            </strong>
           </div>
           <div className="klol-app-meta">
             <span>{session?.playerId ? "평균 KDA" : "등록 내전"}</span>
@@ -166,28 +176,30 @@ export default async function AppHomePage() {
         </div>
       </section>
 
-      <AppSection title="활성 구인" caption="전체 보기">
-        {recentRecruits.length === 0 ? (
-          <AppEmpty>현재 모집 중인 구인이 없습니다.</AppEmpty>
-        ) : (
-          <div className="klol-app-list">
-            {recentRecruits.map((party) => (
-              <Link className="klol-app-list-card" href="/app/recruits" key={party.id}>
-                <div className="klol-app-list-top">
-                  <div className="klol-app-list-title">
-                    <strong>#{party.recruitNo} · {party.title || typeLabel(party.type)}</strong>
-                    <span>{party.startTimeText || "시간 미정"} · {party.note || party.tierText || "정보 입력 대기"}</span>
+      <PremiumFeatureGate feature="recruit" settings={siteSettings}>
+        <AppSection title="활성 구인" caption="전체 보기">
+          {recentRecruits.length === 0 ? (
+            <AppEmpty>현재 모집 중인 구인이 없습니다.</AppEmpty>
+          ) : (
+            <div className="klol-app-list">
+              {recentRecruits.map((party) => (
+                <Link className="klol-app-list-card" href="/app/recruits" key={party.id}>
+                  <div className="klol-app-list-top">
+                    <div className="klol-app-list-title">
+                      <strong>#{party.recruitNo} · {party.title || typeLabel(party.type)}</strong>
+                      <span>{party.startTimeText || "시간 미정"} · {party.note || party.tierText || "정보 입력 대기"}</span>
+                    </div>
+                    <span className="klol-app-badge">{party.members.length}/{party.maxMembers}</span>
                   </div>
-                  <span className="klol-app-badge">{party.members.length}/{party.maxMembers}</span>
-                </div>
-                <p className="klol-app-muted">
-                  {party.members.map((member) => member.name).join(" · ") || "참가자 없음"}
-                </p>
-              </Link>
-            ))}
-          </div>
-        )}
-      </AppSection>
+                  <p className="klol-app-muted">
+                    {party.members.map((member) => member.name).join(" · ") || "참가자 없음"}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          )}
+        </AppSection>
+      </PremiumFeatureGate>
 
       <AppSection title="최근 내전" caption="전체 보기">
         {recentMatches.length === 0 ? (

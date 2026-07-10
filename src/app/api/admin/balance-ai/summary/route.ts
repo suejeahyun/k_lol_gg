@@ -1,3 +1,4 @@
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -5,6 +6,9 @@ import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 
 export async function GET() {
+  const premiumLock = await requireSiteFeature("balanceAi");
+  if (premiumLock) return premiumLock;
+
   const rejected = await rejectIfNotAdmin();
   if (rejected) return rejected;
 

@@ -3,9 +3,12 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import PremiumFeatureGate from "@/components/PremiumFeatureGate";
+import PremiumLockedPreview from "@/components/PremiumLockedPreview";
 import SoloRankDraftSyncButton from "@/components/balance/SoloRankDraftSyncButton";
 import { prisma } from "@/lib/prisma/client";
 import { requireApprovedUserOrAdmin } from "@/lib/auth/access";
+import { getSiteSettings, isSiteFeatureEnabled } from "@/lib/site/settings";
 import { getTeamBalanceDraftRecommendations } from "@/lib/team-balance/draft-recommendations";
 
 const RECENT_DRAFT_LIMIT = 20;
@@ -88,6 +91,31 @@ export default async function BalanceRecommendationsIndexPage({
   searchParams,
 }: Props) {
   await requireAccessOrRedirect("/players/balance/recommendations");
+  const siteSettings = await getSiteSettings();
+
+  if (!isSiteFeatureEnabled(siteSettings, "balanceAi")) {
+    return (
+      <PremiumFeatureGate
+        feature="balanceAi"
+        settings={siteSettings}
+        lockedPreview={
+          <PremiumLockedPreview
+            eyebrow="PICK · BAN"
+            title="밴픽 추천"
+            description="저장된 팀 밸런스 기반 밴픽 추천은 방별 프리미엄 설정에서 활성화할 수 있습니다."
+            items={[
+              { label: "저장 밸런스", value: "잠금" },
+              { label: "챔피언 추천", value: "잠금" },
+              { label: "상대 밴 후보", value: "잠금" },
+            ]}
+          />
+        }
+        renderLockedContent={false}
+      >
+        <main className="page-container ai-page ai-pickban-page" />
+      </PremiumFeatureGate>
+    );
+  }
 
   const sp = await searchParams;
   const drafts = await prisma.teamBalanceDraft.findMany({

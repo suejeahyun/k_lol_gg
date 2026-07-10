@@ -12,6 +12,10 @@ type User = {
   status: UserStatus;
 };
 
+type PublicSiteSettings = {
+  siteName?: string;
+};
+
 type UserSidebarItem = {
   href: string;
   label: string;
@@ -90,6 +94,7 @@ function isActivePath(pathname: string, item: UserSidebarItem) {
 export default function UserSidebar() {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
+  const [siteName, setSiteName] = useState("K-LOL.GG");
 
   useEffect(() => {
     async function fetchUser() {
@@ -117,13 +122,28 @@ export default function UserSidebar() {
     });
   }, [pathname]);
 
+  useEffect(() => {
+    async function fetchSiteSettings() {
+      try {
+        const res = await fetch("/api/site-settings", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = (await res.json()) as { settings?: PublicSiteSettings };
+        if (data.settings?.siteName) setSiteName(data.settings.siteName);
+      } catch {
+        setSiteName("K-LOL.GG");
+      }
+    }
+
+    fetchSiteSettings();
+  }, []);
+
   const isLoggedIn = Boolean(user);
   const isApproved = user?.status === "APPROVED";
 
   return (
     <aside className="app-sidebar app-sidebar--user" aria-label="유저 메뉴">
       <div className="app-sidebar__top">
-        <div className="app-sidebar__title">K-LOL.GG</div>
+        <div className="app-sidebar__title">{siteName}</div>
         <div className="app-sidebar__subtitle">내전 · 랭킹 · AI 데이터</div>
 
         <nav className="app-sidebar__nav">
@@ -163,7 +183,6 @@ export default function UserSidebar() {
     </aside>
   );
 }
-
 
 
 

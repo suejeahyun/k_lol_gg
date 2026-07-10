@@ -1,3 +1,4 @@
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 ﻿export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -10,6 +11,9 @@ type RouteContext = {
 };
 
 export async function GET(_req: Request, { params }: RouteContext) {
+  const premiumLock = await requireSiteFeature("balanceAi");
+  if (premiumLock) return premiumLock;
+
   try {
     await requireApprovedUserOrAdmin();
     const resolvedParams = await params;

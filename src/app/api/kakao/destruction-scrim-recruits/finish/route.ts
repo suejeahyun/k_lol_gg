@@ -1,3 +1,4 @@
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -23,6 +24,9 @@ const TITLE = "스크림종료";
 const HELP = "[K-LOL.GG 스크림종료 실패]\n예: /스크림1ㅉ, /스크림쫑1, /스크림종료 1";
 
 export async function POST(req: NextRequest) {
+  const premiumLock = await requireSiteFeature("recruit");
+  if (premiumLock) return premiumLock;
+
   try {
     const body = await readJsonBody(req);
     const rejected = rejectIfInvalidScrimSecret(req, body.secret);

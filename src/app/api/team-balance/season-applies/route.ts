@@ -1,3 +1,4 @@
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 ﻿export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -61,6 +62,9 @@ function getKstStartDateFromLookback() {
 }
 
 export async function GET() {
+  const premiumLock = await requireSiteFeature("balanceAi");
+  if (premiumLock) return premiumLock;
+
   try {
     await requireApprovedUserOrAdmin();
     const currentSeason = await prisma.season.findFirst({

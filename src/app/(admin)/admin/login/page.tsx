@@ -80,14 +80,19 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <main style={{ padding: "24px", maxWidth: "480px", margin: "0 auto" }}>
-      <h1 style={{ fontSize: "28px", fontWeight: 700, marginBottom: "24px" }}>
-        관리자 로그인
-      </h1>
+    <main className="admin-login-page">
+      <section className="admin-login-card" aria-labelledby="admin-login-title">
+        <div className="admin-login-brand">
+          <span>K</span>
+          <div>
+            <p>ADMIN CONTROL</p>
+            <h1 id="admin-login-title">관리자 로그인</h1>
+          </div>
+        </div>
 
-      <form onSubmit={submitLogin} style={{ display: "grid", gap: "16px" }}>
-        <div>
-          <label htmlFor="admin-id">아이디</label>
+        <form onSubmit={submitLogin} className="admin-login-form">
+          <label className="admin-login-field" htmlFor="admin-id">
+            <span>아이디</span>
           <input
             id="admin-id"
             type="text"
@@ -95,19 +100,11 @@ export default function AdminLoginPage() {
             disabled={step === "TWO_FACTOR" || loading}
             onChange={(e) => setId(e.target.value)}
             autoComplete="username"
-            style={{
-              display: "block",
-              width: "100%",
-              marginTop: "8px",
-              padding: "10px 12px",
-              border: "1px solid #ccc",
-              borderRadius: "8px",
-            }}
           />
-        </div>
+          </label>
 
-        <div>
-          <label htmlFor="admin-password">비밀번호</label>
+          <label className="admin-login-field" htmlFor="admin-password">
+            <span>비밀번호</span>
           <input
             id="admin-password"
             type="password"
@@ -115,33 +112,15 @@ export default function AdminLoginPage() {
             disabled={step === "TWO_FACTOR" || loading}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="current-password"
-            style={{
-              display: "block",
-              width: "100%",
-              marginTop: "8px",
-              padding: "10px 12px",
-              border: "1px solid #ccc",
-              borderRadius: "8px",
-            }}
           />
-        </div>
+          </label>
 
         {step === "TWO_FACTOR" ? (
           <section
             aria-label="2단계 인증"
-            style={{
-              display: "grid",
-              gap: "10px",
-              padding: "14px",
-              border: "1px solid rgba(34, 211, 238, 0.35)",
-              borderRadius: "12px",
-              background: "rgba(34, 211, 238, 0.08)",
-            }}
+              className="admin-login-two-factor"
           >
-            <div style={{ fontWeight: 700 }}>2단계 인증</div>
-            <p style={{ margin: 0, fontSize: "14px", color: "#8aa" }}>
-              Authenticator 앱에 표시된 6자리 코드를 입력하세요.
-            </p>
+              <strong>2단계 인증</strong>
             <input
               ref={codeInputRef}
               type="text"
@@ -152,29 +131,13 @@ export default function AdminLoginPage() {
               onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
               placeholder="000000"
               autoComplete="one-time-code"
-              style={{
-                display: "block",
-                width: "100%",
-                padding: "12px 14px",
-                border: "1px solid #5eead4",
-                borderRadius: "8px",
-                letterSpacing: "0.2em",
-                fontSize: "18px",
-                textAlign: "center",
-              }}
+                className="admin-login-code"
             />
             <button
               type="button"
               onClick={resetPasswordStep}
               disabled={loading}
-              style={{
-                justifySelf: "start",
-                border: 0,
-                background: "transparent",
-                color: "#67e8f9",
-                cursor: "pointer",
-                padding: 0,
-              }}
+                className="admin-login-link-button"
             >
               아이디/비밀번호 다시 입력
             </button>
@@ -182,7 +145,7 @@ export default function AdminLoginPage() {
         ) : null}
 
         {message ? (
-          <p style={{ margin: 0, color: step === "TWO_FACTOR" ? "#67e8f9" : "#f87171" }}>
+            <p className={`admin-login-message admin-login-message--${step === "TWO_FACTOR" ? "info" : "error"}`}>
             {message}
           </p>
         ) : null}
@@ -190,19 +153,12 @@ export default function AdminLoginPage() {
         <button
           type="submit"
           disabled={loading || !id || !password || (step === "TWO_FACTOR" && totpCode.length !== 6)}
-          style={{
-            padding: "12px 16px",
-            border: "1px solid #333",
-            borderRadius: "8px",
-            background: "#333",
-            color: "#fff",
-            cursor: "pointer",
-            opacity: loading || !id || !password || (step === "TWO_FACTOR" && totpCode.length !== 6) ? 0.6 : 1,
-          }}
+            className="admin-login-submit"
         >
           {buttonLabel}
         </button>
       </form>
+      </section>
     </main>
   );
 }

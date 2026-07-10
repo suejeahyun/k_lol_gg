@@ -1,6 +1,8 @@
 import styles from "./RecruitHelperPage.module.css";
+import PremiumFeatureGate from "@/components/PremiumFeatureGate";
+import { getSiteSettings } from "@/lib/site/settings";
 
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
 
 type MessageSide = "me" | "bot" | "system";
 
@@ -360,8 +362,11 @@ function CommandOverview() {
   );
 }
 
-export default function RecruitHelperPage() {
+export default async function RecruitHelperPage() {
+  const siteSettings = await getSiteSettings();
+
   return (
+    <PremiumFeatureGate feature="kakao" settings={siteSettings}>
     <main className={styles.page}>
       <section className={styles.hero}>
         <div className={styles.heroPanel}>
@@ -419,5 +424,6 @@ export default function RecruitHelperPage() {
         })}
       </section>
     </main>
+    </PremiumFeatureGate>
   );
 }

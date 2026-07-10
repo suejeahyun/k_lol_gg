@@ -2,6 +2,8 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 import { prisma } from "@/lib/prisma/client";
+import PremiumFeatureGate from "@/components/PremiumFeatureGate";
+import { getSiteSettings } from "@/lib/site/settings";
 import {
   buildGameInfoText,
   formatRecruitPartyBlock,
@@ -116,6 +118,7 @@ function renderSlots(party: RecruitPageParty) {
 }
 
 export default async function RecruitPage() {
+  const siteSettings = await getSiteSettings();
   const parties = await prisma.recruitParty.findMany({
     where: { status: "IN_PROGRESS" },
     select: {
@@ -157,77 +160,79 @@ export default async function RecruitPage() {
   });
 
   return (
-    <main className="page-shell recruit-page">
-      <section className="page-hero recruit-hero">
-        <p className="page-kicker">KAKAO RECRUIT</p>
-        <h1>구인현황</h1>
-        <p></p>
-        <div className="recruit-command-box">
-          <span>/6인파티</span>
-          <span>/10인구인</span>
-          <span>/5인협곡파티</span>
-          <span>/구인현황</span>
-          <span>/12ㅉ</span>
-        </div>
-      </section>
-
-      {parties.length === 0 ? (
-        <section className="recruit-empty card-panel">
-          <h2>현재 표시할 구인현황이 없습니다.</h2>
+    <PremiumFeatureGate feature="recruit" settings={siteSettings}>
+      <main className="page-shell recruit-page">
+        <section className="page-hero recruit-hero">
+          <p className="page-kicker">KAKAO RECRUIT</p>
+          <h1>구인현황</h1>
+          <p></p>
+          <div className="recruit-command-box">
+            <span>/6인파티</span>
+            <span>/10인구인</span>
+            <span>/5인협곡파티</span>
+            <span>/구인현황</span>
+            <span>/12ㅉ</span>
+          </div>
         </section>
-      ) : (
-        <section className="recruit-grid" aria-label="현재 구인현황 목록">
-          {parties.map((party) => {
-            const displayActiveCount = getDisplayActiveMemberCount(
-              party.members,
-              party.maxMembers,
-            );
-            const statusLabel = getRecruitStatusLabel(party);
-            const typeLabel = getRecruitTypeLabel(party.type);
-            const gameInfo = buildGameInfoText(party);
 
-            return (
-              <article key={party.id} className="recruit-card">
-                <div className="recruit-card__head">
-                  <div>
-                    <div className="recruit-card__type">{typeLabel}</div>
-                    <h2>{party.title.replace(/!$/, "")}</h2>
+        {parties.length === 0 ? (
+          <section className="recruit-empty card-panel">
+            <h2>현재 표시할 구인현황이 없습니다.</h2>
+          </section>
+        ) : (
+          <section className="recruit-grid" aria-label="현재 구인현황 목록">
+            {parties.map((party) => {
+              const displayActiveCount = getDisplayActiveMemberCount(
+                party.members,
+                party.maxMembers,
+              );
+              const statusLabel = getRecruitStatusLabel(party);
+              const typeLabel = getRecruitTypeLabel(party.type);
+              const gameInfo = buildGameInfoText(party);
+
+              return (
+                <article key={party.id} className="recruit-card">
+                  <div className="recruit-card__head">
+                    <div>
+                      <div className="recruit-card__type">{typeLabel}</div>
+                      <h2>{party.title.replace(/!$/, "")}</h2>
+                    </div>
+                    <div className="recruit-card__no">#{party.recruitNo}</div>
                   </div>
-                  <div className="recruit-card__no">#{party.recruitNo}</div>
-                </div>
 
-                <div className="recruit-card__meta">
-                  <span>{statusLabel}</span>
-                  <span>
-                    {party.recruitDate} · 회차 {party.resetSeq}
-                  </span>
-                  <span>
-                    관리번호{" "}
-                    {party.recruitCode ||
-                      `${party.recruitDate}-${party.maxMembers}-${party.recruitNo}`}
-                  </span>
-                  <span>
-                    {displayActiveCount}/{party.maxMembers}
-                  </span>
-                  {gameInfo ? <span>게임정보: {gameInfo}</span> : null}
-                </div>
+                  <div className="recruit-card__meta">
+                    <span>{statusLabel}</span>
+                    <span>
+                      {party.recruitDate} · 회차 {party.resetSeq}
+                    </span>
+                    <span>
+                      관리번호{" "}
+                      {party.recruitCode ||
+                        `${party.recruitDate}-${party.maxMembers}-${party.recruitNo}`}
+                    </span>
+                    <span>
+                      {displayActiveCount}/{party.maxMembers}
+                    </span>
+                    {gameInfo ? <span>게임정보: {gameInfo}</span> : null}
+                  </div>
 
-                <div className="recruit-slots">{renderSlots(party)}</div>
+                  <div className="recruit-slots">{renderSlots(party)}</div>
 
-                <div className="recruit-card__foot">
-                  <span>최근 반영 {formatDate(party.updatedAt)}</span>
-                  {party.hostName ? <span>생성자 {party.hostName}</span> : null}
-                </div>
+                  <div className="recruit-card__foot">
+                    <span>최근 반영 {formatDate(party.updatedAt)}</span>
+                    {party.hostName ? <span>생성자 {party.hostName}</span> : null}
+                  </div>
 
-                <details className="recruit-raw">
-                  <summary>카톡 현황 문구 보기</summary>
-                  <pre>{formatRecruitPartyBlock(party)}</pre>
-                </details>
-              </article>
-            );
-          })}
-        </section>
-      )}
-    </main>
+                  <details className="recruit-raw">
+                    <summary>카톡 현황 문구 보기</summary>
+                    <pre>{formatRecruitPartyBlock(party)}</pre>
+                  </details>
+                </article>
+              );
+            })}
+          </section>
+        )}
+      </main>
+    </PremiumFeatureGate>
   );
 }

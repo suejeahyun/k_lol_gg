@@ -1,4 +1,5 @@
 import { logServerError } from "@/lib/server/safe-log";
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
@@ -12,6 +13,9 @@ function redirectTo(req: NextRequest, path: string) {
 }
 
 export async function GET(req: NextRequest) {
+  const premiumLock = await requireSiteFeature("riot");
+  if (premiumLock) return premiumLock;
+
   const code = req.nextUrl.searchParams.get("code")?.trim() ?? "";
   const state = req.nextUrl.searchParams.get("state")?.trim() ?? "";
   const error = req.nextUrl.searchParams.get("error")?.trim() ?? "";

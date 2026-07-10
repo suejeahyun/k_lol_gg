@@ -1,3 +1,4 @@
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,9 @@ function parseIdleHours(value: unknown) {
 }
 
 export async function GET() {
+  const premiumLock = await requireSiteFeature("recruit");
+  if (premiumLock) return premiumLock;
+
   const rejected = await rejectIfNotAdmin();
   if (rejected) return rejected;
 
@@ -26,6 +30,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const premiumLock = await requireSiteFeature("recruit");
+  if (premiumLock) return premiumLock;
+
   const rejected = await rejectIfNotAdmin();
   if (rejected) return rejected;
 

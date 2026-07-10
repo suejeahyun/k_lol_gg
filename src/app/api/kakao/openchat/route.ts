@@ -1,3 +1,4 @@
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
 import { getRequiredSecretInProduction } from "@/lib/security/secrets";
@@ -363,6 +364,9 @@ async function getSettingsAndRejectRateLimit(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const premiumLock = await requireSiteFeature("kakao");
+  if (premiumLock) return premiumLock;
+
   let settings: KakaoOperationSettings | null = null;
 
   try {
@@ -383,6 +387,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
+  const premiumLock = await requireSiteFeature("kakao");
+  if (premiumLock) return premiumLock;
+
   let settings: KakaoOperationSettings | null = null;
 
   try {

@@ -301,9 +301,6 @@ export default async function PlayerDetailPage({
           <Link className="btn btn-primary" href={`/players/${player.id}/riot`}>
             Riot 솔랭 상세
           </Link>
-          <Link className="btn btn-ghost" href="/me/riot">
-            내 Riot 연동
-          </Link>
         </div>
       </div>
 

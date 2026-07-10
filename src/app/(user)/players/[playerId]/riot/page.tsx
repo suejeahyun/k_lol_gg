@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import PremiumFeatureGate from "@/components/PremiumFeatureGate";
+import PremiumLockedPreview from "@/components/PremiumLockedPreview";
+import { getSiteSettings, isSiteFeatureEnabled } from "@/lib/site/settings";
 import {
   formatGameDuration,
   formatKstDateTime,
@@ -21,12 +24,43 @@ function formatNumber(value: number) {
   return value.toLocaleString("ko-KR");
 }
 
+const DDRAGON_VERSION = "15.24.1";
+
+function getChampionImageUrl(championName: string) {
+  return `https://ddragon.leagueoflegends.com/cdn/${DDRAGON_VERSION}/img/champion/${championName}.png`;
+}
+
+function getShare(value: number, max: number) {
+  if (max <= 0) return 0;
+  return Math.max(6, Math.round((value / max) * 100));
+}
+
 export default async function PlayerRiotDetailPage({ params }: PlayerRiotDetailPageProps) {
   const { playerId } = await params;
   const id = Number(playerId);
+  const settings = await getSiteSettings();
 
   if (!Number.isInteger(id) || id <= 0) {
     notFound();
+  }
+
+  if (!isSiteFeatureEnabled(settings, "riot")) {
+    return (
+      <PremiumFeatureGate
+        feature="riot"
+        settings={settings}
+        lockedPreview={
+          <PremiumLockedPreview
+            eyebrow="RIOT ANALYSIS PREMIUM"
+            title="Riot 솔랭 분석"
+            description="플레이어별 Riot 솔랭 분석, 최근 전적, 챔피언/라인 통계는 방별 유료 기능입니다."
+          />
+        }
+        renderLockedContent={false}
+      >
+        <div />
+      </PremiumFeatureGate>
+    );
   }
 
   const analysis = await getRiotPlayerAnalysis(id);
@@ -38,18 +72,29 @@ export default async function PlayerRiotDetailPage({ params }: PlayerRiotDetailP
   const riotId = analysis.riotAccount
     ? `${analysis.riotAccount.gameName}#${analysis.riotAccount.tagLine}`
     : analysis.player.riotId;
+  const recentForm = analysis.recentMatches.slice(0, 20);
+  const maxPositionGames = Math.max(
+    ...analysis.positionStats.map((position) => position.games),
+    1,
+  );
+  const maxRecentChampionGames = Math.max(
+    ...analysis.recentChampions.map((champion) => champion.games),
+    1,
+  );
+  const maxMostChampionGames = Math.max(
+    ...analysis.mostChampions.map((champion) => champion.games),
+    1,
+  );
+  const bestRecentChampion = analysis.recentChampions[0] ?? null;
 
   return (
-    <div className={`page-shell ${styles.riotDetailPage}`}>
+    <div className={`page-shell player-riot-detail-page ${styles.riotDetailPage}`}>
       <div className="page-header player-hero">
         <div>
           <p className="page-eyebrow">Riot 솔랭 분석</p>
           <h1 className="page-title">
             {analysis.player.name} ({analysis.player.nickname}#{analysis.player.tag})
           </h1>
-          <p className="page-description">
-            Riot 계정 연결, 솔로랭크, 최근 20게임, 라인/챔피언 지표를 분리해서 확인합니다.
-          </p>
           <div className={styles.heroMeta}>
             <span className={`${styles.badge} ${analysis.riotAccount ? styles.badgeSuccess : styles.badgeWarn}`}>
               {analysis.riotAccount ? "Riot 연동됨" : "Riot 미연동"}
@@ -64,9 +109,6 @@ export default async function PlayerRiotDetailPage({ params }: PlayerRiotDetailP
         <div className="page-actions">
           <Link className="btn btn-ghost" href={`/players/${analysis.player.id}`}>
             플레이어 상세로
-          </Link>
-          <Link className="btn btn-primary" href="/me/riot">
-            내 Riot 연동
           </Link>
         </div>
       </div>
@@ -86,7 +128,6 @@ export default async function PlayerRiotDetailPage({ params }: PlayerRiotDetailP
         <div className="section-header section-header--split">
           <div>
             <h2>솔랭 요약</h2>
-            <p className="section-subtitle">저장된 Riot 캐시 데이터를 기준으로 표시합니다. 페이지 접속만으로 Riot API를 직접 호출하지 않습니다.</p>
           </div>
         </div>
 
@@ -155,6 +196,75 @@ export default async function PlayerRiotDetailPage({ params }: PlayerRiotDetailP
         </div>
       </section>
 
+      <section className={`content-section player-panel ${styles.visualPanel}`}>
+        <div className={styles.visualGrid}>
+          <article className={styles.formCard}>
+            <span className={styles.visualEyebrow}>RECENT FORM</span>
+            <strong>최근 20게임 흐름</strong>
+            <div className={styles.formTrack} aria-label="최근 20게임 승패 흐름">
+              {recentForm.length === 0 ? (
+                <span className={styles.formEmpty}>기록 없음</span>
+              ) : (
+                recentForm.map((match) => (
+                  <span
+                    key={match.id}
+                    className={`${styles.formDot} ${match.win ? styles.formDotWin : styles.formDotLoss}`}
+                    title={`${match.win ? "승리" : "패배"} · ${match.championNameKo}`}
+                  />
+                ))
+              )}
+            </div>
+            <div className={styles.formSummary}>
+              <span>{analysis.recentSummary.wins}승</span>
+              <span>{analysis.recentSummary.losses}패</span>
+              <span>승률 {analysis.recentSummary.winRate}%</span>
+            </div>
+          </article>
+
+          <article className={styles.focusChampionCard}>
+            <span className={styles.visualEyebrow}>BEST CHAMPION</span>
+            {bestRecentChampion ? (
+              <div className={styles.focusChampionMain}>
+                <img
+                  src={getChampionImageUrl(bestRecentChampion.championName)}
+                  alt=""
+                  className={styles.focusChampionImage}
+                  loading="lazy"
+                />
+                <div>
+                  <strong>{bestRecentChampion.championNameKo}</strong>
+                  <span>
+                    {bestRecentChampion.games}게임 · 승률 {bestRecentChampion.winRate}% · 평점 {bestRecentChampion.kda}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className={styles.emptyState}>최근 챔피언 기록이 없습니다.</div>
+            )}
+          </article>
+
+          <article className={styles.positionMiniChart}>
+            <span className={styles.visualEyebrow}>POSITION SHARE</span>
+            <strong>라인 점유율</strong>
+            <div className={styles.positionMiniRows}>
+              {analysis.positionStats.length === 0 ? (
+                <span className={styles.formEmpty}>기록 없음</span>
+              ) : (
+                analysis.positionStats.slice(0, 5).map((position) => (
+                  <div key={position.position} className={styles.miniBarRow}>
+                    <span>{position.label}</span>
+                    <div>
+                      <i style={{ width: `${getShare(position.games, maxPositionGames)}%` }} />
+                    </div>
+                    <b>{position.games}</b>
+                  </div>
+                ))
+              )}
+            </div>
+          </article>
+        </div>
+      </section>
+
       <div className={styles.twoColumn}>
         <section className="content-section player-panel">
           <div className="section-header">
@@ -176,6 +286,9 @@ export default async function PlayerRiotDetailPage({ params }: PlayerRiotDetailP
                     <strong>{position.winRate}%</strong>
                     <span>평점 {position.kda}</span>
                   </div>
+                  <div className={styles.rowBar} aria-hidden="true">
+                    <span style={{ width: `${getShare(position.games, maxPositionGames)}%` }} />
+                  </div>
                 </article>
               ))}
             </div>
@@ -195,12 +308,23 @@ export default async function PlayerRiotDetailPage({ params }: PlayerRiotDetailP
                 <article key={champion.championId} className={styles.rowCard}>
                   <span className={styles.rowRank}>{index + 1}</span>
                   <div className={styles.rowMain}>
-                    <strong>{champion.championNameKo}</strong>
+                    <span className={styles.championTitle}>
+                      <img
+                        src={getChampionImageUrl(champion.championName)}
+                        alt=""
+                        className={styles.championAvatar}
+                        loading="lazy"
+                      />
+                      <strong>{champion.championNameKo}</strong>
+                    </span>
                     <span>{champion.games}게임 · {champion.wins}승 {champion.losses}패</span>
                   </div>
                   <div className={styles.rowNumber}>
                     <strong>{champion.winRate}%</strong>
                     <span>평점 {champion.kda}</span>
+                  </div>
+                  <div className={styles.rowBar} aria-hidden="true">
+                    <span style={{ width: `${getShare(champion.games, maxRecentChampionGames)}%` }} />
                   </div>
                 </article>
               ))}
@@ -213,7 +337,6 @@ export default async function PlayerRiotDetailPage({ params }: PlayerRiotDetailP
         <div className="section-header section-header--split">
           <div>
             <h2>전체 저장 기준 모스트 TOP 10</h2>
-            <p className="section-subtitle">전체 갱신으로 저장된 솔랭 기록까지 포함합니다.</p>
           </div>
         </div>
 
@@ -225,12 +348,23 @@ export default async function PlayerRiotDetailPage({ params }: PlayerRiotDetailP
               <article key={champion.championId} className={styles.rowCard}>
                 <span className={styles.rowRank}>{index + 1}</span>
                 <div className={styles.rowMain}>
-                  <strong>{champion.championNameKo}</strong>
+                  <span className={styles.championTitle}>
+                    <img
+                      src={getChampionImageUrl(champion.championName)}
+                      alt=""
+                      className={styles.championAvatar}
+                      loading="lazy"
+                    />
+                    <strong>{champion.championNameKo}</strong>
+                  </span>
                   <span>{champion.games}게임 · {champion.wins}승 {champion.losses}패 · {champion.averageKills} / {champion.averageDeaths} / {champion.averageAssists}</span>
                 </div>
                 <div className={styles.rowNumber}>
                   <strong>{champion.winRate}%</strong>
                   <span>평점 {champion.kda}</span>
+                </div>
+                <div className={styles.rowBar} aria-hidden="true">
+                  <span style={{ width: `${getShare(champion.games, maxMostChampionGames)}%` }} />
                 </div>
               </article>
             ))}
@@ -242,7 +376,6 @@ export default async function PlayerRiotDetailPage({ params }: PlayerRiotDetailP
         <div className="section-header section-header--split">
           <div>
             <h2>최근 솔랭 20게임</h2>
-            <p className="section-subtitle">매치 상세는 DB에 저장된 캐시 기준입니다.</p>
           </div>
         </div>
 
@@ -261,8 +394,16 @@ export default async function PlayerRiotDetailPage({ params }: PlayerRiotDetailP
                   <small>{formatGameDuration(match.gameDuration)}</small>
                 </div>
                 <div className={styles.matchChampion}>
-                  <strong>{match.championNameKo}</strong>
-                  <span>{formatRiotPosition(match.position)}</span>
+                  <img
+                    src={getChampionImageUrl(match.championName)}
+                    alt=""
+                    className={styles.matchChampionImage}
+                    loading="lazy"
+                  />
+                  <div>
+                    <strong>{match.championNameKo}</strong>
+                    <span>{formatRiotPosition(match.position)}</span>
+                  </div>
                 </div>
                 <div className={styles.matchKda}>
                   <strong>{match.kills} / {match.deaths} / {match.assists}</strong>

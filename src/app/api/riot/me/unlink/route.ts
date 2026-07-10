@@ -1,4 +1,5 @@
 import { logServerError } from "@/lib/server/safe-log";
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -6,6 +7,9 @@ import { requireApprovedUser } from "@/lib/auth/session";
 import { getRiotRequestMeta, unlinkPlayerRiotAccount } from "@/lib/riot/account-link";
 
 export async function POST(req: NextRequest) {
+  const premiumLock = await requireSiteFeature("riot");
+  if (premiumLock) return premiumLock;
+
   try {
     const user = await requireApprovedUser();
 

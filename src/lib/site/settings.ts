@@ -1,0 +1,165 @@
+import type { Prisma } from "@prisma/client";
+import { prisma } from "@/lib/prisma/client";
+
+export const SITE_SETTINGS_CACHE_KEY = "site.settings";
+
+export type SiteFeatureKey = "kakao" | "recruit" | "balanceAi" | "randomTeam" | "riot";
+
+export type SitePlanStatus = "ACTIVE" | "LOCKED";
+
+export type SiteSettings = {
+  siteName: string;
+  roomName: string | null;
+  planStatus: SitePlanStatus;
+  kakaoEnabled: boolean;
+  recruitEnabled: boolean;
+  balanceAiEnabled: boolean;
+  randomTeamEnabled: boolean;
+  riotEnabled: boolean;
+  premiumNoticeTitle: string;
+  premiumNoticeMessage: string;
+  supportContact: string | null;
+  updatedAt?: string | null;
+};
+
+export type PublicSiteSettings = Pick<
+  SiteSettings,
+  | "siteName"
+  | "roomName"
+  | "planStatus"
+  | "kakaoEnabled"
+  | "recruitEnabled"
+  | "balanceAiEnabled"
+  | "randomTeamEnabled"
+  | "riotEnabled"
+>;
+
+function envBoolean(name: string, fallback: boolean) {
+  const value = process.env[name];
+  if (value == null || value === "") return fallback;
+  return ["1", "true", "yes", "on"].includes(value.toLowerCase());
+}
+
+export const DEFAULT_SITE_SETTINGS: SiteSettings = {
+  siteName: process.env.NEXT_PUBLIC_SITE_NAME || "K-LOL.GG",
+  roomName: process.env.NEXT_PUBLIC_ROOM_NAME || null,
+  planStatus: envBoolean("SITE_PREMIUM_ACCESS_DEFAULT", true) ? "ACTIVE" : "LOCKED",
+  kakaoEnabled: envBoolean("SITE_FEATURE_KAKAO_DEFAULT", true),
+  recruitEnabled: envBoolean("SITE_FEATURE_RECRUIT_DEFAULT", true),
+  balanceAiEnabled: envBoolean("SITE_FEATURE_BALANCE_AI_DEFAULT", true),
+  randomTeamEnabled: envBoolean("SITE_FEATURE_RANDOM_TEAM_DEFAULT", false),
+  riotEnabled: envBoolean("SITE_FEATURE_RIOT_DEFAULT", false),
+  premiumNoticeTitle: "프리미엄 기능입니다.",
+  premiumNoticeMessage:
+    "이 기능은 카카오톡 오픈채팅방 운영 자동화와 K-LOL 랭킹 고급 기능을 포함합니다. 이용을 원하면 방 운영자 또는 슈퍼어드민에게 문의하세요.",
+  supportContact: null,
+  updatedAt: null,
+};
+
+function normalizeBoolean(value: unknown, fallback: boolean) {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") return ["1", "true", "yes", "on"].includes(value.toLowerCase());
+  if (typeof value === "number") return value === 1;
+  return fallback;
+}
+
+function normalizeString(value: unknown, fallback: string) {
+  const text = String(value ?? "").trim();
+  return text || fallback;
+}
+
+function normalizeNullableString(value: unknown) {
+  const text = String(value ?? "").trim();
+  return text || null;
+}
+
+function normalizePlanStatus(value: unknown, fallback: SitePlanStatus): SitePlanStatus {
+  return value === "LOCKED" || value === "ACTIVE" ? value : fallback;
+}
+
+export function normalizeSiteSettings(value: unknown, updatedAt?: Date | string | null): SiteSettings {
+  const raw = value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+
+  return {
+    siteName: normalizeString(raw.siteName, DEFAULT_SITE_SETTINGS.siteName),
+    roomName: normalizeNullableString(raw.roomName),
+    planStatus: normalizePlanStatus(raw.planStatus, DEFAULT_SITE_SETTINGS.planStatus),
+    kakaoEnabled: normalizeBoolean(raw.kakaoEnabled, DEFAULT_SITE_SETTINGS.kakaoEnabled),
+    recruitEnabled: normalizeBoolean(raw.recruitEnabled, DEFAULT_SITE_SETTINGS.recruitEnabled),
+    balanceAiEnabled: normalizeBoolean(raw.balanceAiEnabled, DEFAULT_SITE_SETTINGS.balanceAiEnabled),
+    randomTeamEnabled: normalizeBoolean(raw.randomTeamEnabled, DEFAULT_SITE_SETTINGS.randomTeamEnabled),
+    riotEnabled: normalizeBoolean(raw.riotEnabled, DEFAULT_SITE_SETTINGS.riotEnabled),
+    premiumNoticeTitle: normalizeString(raw.premiumNoticeTitle, DEFAULT_SITE_SETTINGS.premiumNoticeTitle),
+    premiumNoticeMessage: normalizeString(raw.premiumNoticeMessage, DEFAULT_SITE_SETTINGS.premiumNoticeMessage),
+    supportContact: normalizeNullableString(raw.supportContact),
+    updatedAt: updatedAt ? new Date(updatedAt).toISOString() : null,
+  };
+}
+
+export async function getSiteSettings() {
+  const record = await prisma.appDataCache
+    .findUnique({ where: { key: SITE_SETTINGS_CACHE_KEY } })
+    .catch(() => null);
+
+  if (!record) return DEFAULT_SITE_SETTINGS;
+  return normalizeSiteSettings(record.value, record.updatedAt);
+}
+
+export function getPublicSiteSettings(settings: SiteSettings): PublicSiteSettings {
+  return {
+    siteName: settings.siteName,
+    roomName: settings.roomName,
+    planStatus: settings.planStatus,
+    kakaoEnabled: settings.kakaoEnabled,
+    recruitEnabled: settings.recruitEnabled,
+    balanceAiEnabled: settings.balanceAiEnabled,
+    randomTeamEnabled: settings.randomTeamEnabled,
+    riotEnabled: settings.riotEnabled,
+  };
+}
+
+export function isSitePremiumActive(settings: SiteSettings) {
+  return settings.planStatus === "ACTIVE";
+}
+
+export function isSiteFeatureEnabled(settings: SiteSettings, feature: SiteFeatureKey) {
+  if (!isSitePremiumActive(settings)) return false;
+  if (feature === "kakao") return settings.kakaoEnabled;
+  if (feature === "recruit") return settings.kakaoEnabled && settings.recruitEnabled;
+  if (feature === "balanceAi") return settings.balanceAiEnabled;
+  if (feature === "randomTeam") return settings.randomTeamEnabled;
+  return settings.riotEnabled;
+}
+
+export function getSiteFeatureLabel(feature: SiteFeatureKey) {
+  if (feature === "kakao") return "카카오톡 운영";
+  if (feature === "recruit") return "구인현황";
+  if (feature === "balanceAi") return "K-LOL 랭킹";
+  if (feature === "randomTeam") return "랜덤 팀 나누기";
+  return "Riot 연동";
+}
+
+export async function saveSiteSettings(input: Partial<SiteSettings>) {
+  const current = await getSiteSettings();
+  const next = normalizeSiteSettings({
+    ...current,
+    ...input,
+  });
+
+  const saved = await prisma.appDataCache.upsert({
+    where: { key: SITE_SETTINGS_CACHE_KEY },
+    create: {
+      key: SITE_SETTINGS_CACHE_KEY,
+      value: next as unknown as Prisma.InputJsonValue,
+      version: 1,
+    },
+    update: {
+      value: next as unknown as Prisma.InputJsonValue,
+      version: { increment: 1 },
+    },
+  });
+
+  return normalizeSiteSettings(saved.value, saved.updatedAt);
+}

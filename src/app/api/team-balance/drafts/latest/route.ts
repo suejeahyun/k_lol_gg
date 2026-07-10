@@ -1,3 +1,4 @@
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 ﻿export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -6,6 +7,9 @@ import { requireApprovedUserOrAdmin, getAccessErrorResponseMessage } from "@/lib
 import { logServerError } from "@/lib/server/safe-log";
 
 export async function GET() {
+  const premiumLock = await requireSiteFeature("balanceAi");
+  if (premiumLock) return premiumLock;
+
   try {
     await requireApprovedUserOrAdmin();
     const draft = await prisma.teamBalanceDraft.findFirst({

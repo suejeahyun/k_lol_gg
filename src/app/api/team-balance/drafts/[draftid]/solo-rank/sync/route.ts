@@ -1,3 +1,4 @@
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -14,6 +15,9 @@ const RECENT_SOLO_MATCH_COUNT = 10;
 const MAX_DRAFT_PLAYERS = 10;
 
 export async function POST(req: NextRequest, context: RouteContext) {
+  const premiumLock = await requireSiteFeature("balanceAi");
+  if (premiumLock) return premiumLock;
+
   if (!isRiotFeatureEnabled()) {
     return NextResponse.json(getRiotFeatureDisabledPayload(), { status: 503 });
   }

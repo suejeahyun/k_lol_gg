@@ -1,3 +1,4 @@
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -6,6 +7,9 @@ import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { rebuildInternalMmr } from "@/lib/balance/internal-mmr";
 
 export async function POST() {
+  const premiumLock = await requireSiteFeature("balanceAi");
+  if (premiumLock) return premiumLock;
+
   const rejected = await rejectIfNotAdmin();
   if (rejected) return rejected;
 

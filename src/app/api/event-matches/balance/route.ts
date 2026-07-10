@@ -1,3 +1,4 @@
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 ﻿import { logServerError } from "@/lib/server/safe-log";
 import { NextRequest, NextResponse } from "next/server";
 import { Position } from "@prisma/client";
@@ -118,6 +119,9 @@ function buildPositionTeams(participants: ParticipantInput[]): BalancedTeam[] {
 }
 
 export async function POST(req: NextRequest) {
+  const premiumLock = await requireSiteFeature("balanceAi");
+  if (premiumLock) return premiumLock;
+
   const rejected = await rejectIfNotAdmin();
   if (rejected) return rejected;
 

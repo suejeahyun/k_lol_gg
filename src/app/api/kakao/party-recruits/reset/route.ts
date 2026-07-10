@@ -1,9 +1,13 @@
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 import { partyRecruitJson } from "../_shared";
 
 export async function POST() {
+  const premiumLock = await requireSiteFeature("recruit");
+  if (premiumLock) return premiumLock;
+
   return partyRecruitJson(
     {
       reply: [

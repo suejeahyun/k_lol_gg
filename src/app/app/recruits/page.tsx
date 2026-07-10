@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma/client";
 import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
 import { AppEmpty, AppSection } from "@/components/app-mobile/AppCards";
+import PremiumFeatureGate from "@/components/PremiumFeatureGate";
+import { getSiteSettings } from "@/lib/site/settings";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +17,7 @@ function typeLabel(type: string) {
 }
 
 export default async function AppRecruitsPage() {
+  const siteSettings = await getSiteSettings();
   const allParties = await prisma.recruitParty.findMany({
     where: { status: "IN_PROGRESS" },
     include: {
@@ -26,42 +29,44 @@ export default async function AppRecruitsPage() {
 
   return (
     <AppMobileShell subtitle="구인 현황">
-      <section className="klol-app-hero">
-        <div className="klol-app-kicker">RECRUIT</div>
-        <h1 className="klol-app-title">구인 현황</h1>
-      </section>
+      <PremiumFeatureGate feature="recruit" settings={siteSettings}>
+        <section className="klol-app-hero">
+          <div className="klol-app-kicker">RECRUIT</div>
+          <h1 className="klol-app-title">구인 현황</h1>
+        </section>
 
-      <AppSection title="모집 중" caption={`${parties.length}개`}>
-        {parties.length === 0 ? (
-          <AppEmpty>현재 표시할 구인이 없습니다.</AppEmpty>
-        ) : (
-          <div className="klol-app-list">
-            {parties.map((party) => {
-              const memberCount = party.members.length;
-              return (
-                <article className="klol-app-list-card" key={party.id}>
-                  <div className="klol-app-list-top">
-                    <div className="klol-app-list-title">
-                      <strong>#{party.recruitNo} · {party.title || typeLabel(party.type)}</strong>
-                      <span>{party.startTimeText || "시간 미정"} · {party.note || party.tierText || "내용 미입력"}</span>
+        <AppSection title="모집 중" caption={`${parties.length}개`}>
+          {parties.length === 0 ? (
+            <AppEmpty>현재 표시할 구인이 없습니다.</AppEmpty>
+          ) : (
+            <div className="klol-app-list">
+              {parties.map((party) => {
+                const memberCount = party.members.length;
+                return (
+                  <article className="klol-app-list-card" key={party.id}>
+                    <div className="klol-app-list-top">
+                      <div className="klol-app-list-title">
+                        <strong>#{party.recruitNo} · {party.title || typeLabel(party.type)}</strong>
+                        <span>{party.startTimeText || "시간 미정"} · {party.note || party.tierText || "내용 미입력"}</span>
+                      </div>
+                      <span className="klol-app-badge">{memberCount}/{party.maxMembers}</span>
                     </div>
-                    <span className="klol-app-badge">{memberCount}/{party.maxMembers}</span>
-                  </div>
-                  <div className="klol-app-meta-grid">
-                    <div className="klol-app-meta">
-                      <span>파티</span>
-                      <strong>{typeLabel(party.type)}</strong>
+                    <div className="klol-app-meta-grid">
+                      <div className="klol-app-meta">
+                        <span>파티</span>
+                        <strong>{typeLabel(party.type)}</strong>
+                      </div>
                     </div>
-                  </div>
-                  <p className="klol-app-muted">
-                    {party.members.map((member) => member.name).join(" · ") || "참가자 없음"}
-                  </p>
-                </article>
-              );
-            })}
-          </div>
-        )}
-      </AppSection>
+                    <p className="klol-app-muted">
+                      {party.members.map((member) => member.name).join(" · ") || "참가자 없음"}
+                    </p>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </AppSection>
+      </PremiumFeatureGate>
     </AppMobileShell>
   );
 }

@@ -1,13 +1,16 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
+import PremiumFeatureGate from "@/components/PremiumFeatureGate";
 import { prisma } from "@/lib/prisma/client";
+import { getSiteSettings } from "@/lib/site/settings";
 
 function fmt(value: number | null | undefined, digits = 1) {
   return typeof value === "number" ? value.toFixed(digits) : "-";
 }
 
 export default async function UserAiMmrPlayersPage() {
+  const siteSettings = await getSiteSettings();
   const profiles = await prisma.playerBalanceProfile.findMany({
     orderBy: [{ overallMmr: "desc" }, { matchesAnalyzed: "desc" }],
     take: 80,
@@ -27,6 +30,7 @@ export default async function UserAiMmrPlayersPage() {
   });
 
   return (
+    <PremiumFeatureGate feature="balanceAi" settings={siteSettings}>
     <main className="page-container ai-page ai-page--public">
       <section className="ai-hero">
         <div className="ai-hero__content">
@@ -82,5 +86,6 @@ export default async function UserAiMmrPlayersPage() {
         </div>
       </section>
     </main>
+    </PremiumFeatureGate>
   );
 }

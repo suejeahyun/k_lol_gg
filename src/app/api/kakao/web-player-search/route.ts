@@ -1,3 +1,4 @@
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -11,6 +12,9 @@ function roundOne(value: number) {
 }
 
 export async function GET(req: NextRequest) {
+  const premiumLock = await requireSiteFeature("kakao");
+  if (premiumLock) return premiumLock;
+
   const rateLimitRejected = await rejectIfRateLimited(req, {
     action: "KAKAO_WEB_PLAYER_SEARCH",
     limit: 30,

@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 import { requireAdminRequest } from "@/lib/auth/requireAdmin";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
 import { getRiotFeatureDisabledPayload, isRiotFeatureEnabled } from "@/lib/riot/feature";
@@ -8,6 +9,9 @@ import { parseRiotBulkSyncBody, runRiotBulkSoloSync } from "@/lib/riot/bulk-sync
 import { logServerError } from "@/lib/server/safe-log";
 
 export async function POST(req: NextRequest) {
+  const premiumLock = await requireSiteFeature("riot");
+  if (premiumLock) return premiumLock;
+
   if (!isRiotFeatureEnabled()) {
     return NextResponse.json(getRiotFeatureDisabledPayload(), { status: 503 });
   }

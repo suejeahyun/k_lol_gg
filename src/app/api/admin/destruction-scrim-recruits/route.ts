@@ -1,3 +1,4 @@
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -6,6 +7,9 @@ import { DestructionScrimRecruitStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 
 export async function GET(req: NextRequest) {
+  const premiumLock = await requireSiteFeature("recruit");
+  if (premiumLock) return premiumLock;
+
   const status = req.nextUrl.searchParams.get("status");
   const q = req.nextUrl.searchParams.get("q")?.trim();
 

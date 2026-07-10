@@ -1,3 +1,4 @@
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 import { logServerError } from "@/lib/server/safe-log";
 export const dynamic = "force-dynamic";
 
@@ -9,6 +10,9 @@ import { getKakaoRecruitDateKey } from "@/lib/kakao/party-recruit";
 import { RECRUIT_RESET_ACTIONS } from "@/lib/kakao/recruit-reset";
 
 export async function POST(req: NextRequest) {
+  const premiumLock = await requireSiteFeature("recruit");
+  if (premiumLock) return premiumLock;
+
   const rejected = await rejectIfNotSuperAdmin();
   if (rejected) return rejected;
 

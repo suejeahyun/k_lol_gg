@@ -1,3 +1,4 @@
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -7,6 +8,9 @@ import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 const SORT_FIELDS = new Set(["overallMmr", "topMmr", "jungleMmr", "midMmr", "adcMmr", "supportMmr", "confidence", "matchesAnalyzed"]);
 
 export async function GET(request: NextRequest) {
+  const premiumLock = await requireSiteFeature("balanceAi");
+  if (premiumLock) return premiumLock;
+
   const rejected = await rejectIfNotAdmin();
   if (rejected) return rejected;
   const { searchParams } = new URL(request.url);

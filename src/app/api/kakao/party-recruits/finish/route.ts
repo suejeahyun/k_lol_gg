@@ -1,3 +1,4 @@
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -143,6 +144,9 @@ async function finishActiveScrimFromPlainCloseCommand(params: {
 }
 
 export async function POST(req: NextRequest) {
+  const premiumLock = await requireSiteFeature("recruit");
+  if (premiumLock) return premiumLock;
+
   try {
     const body = await readJsonBody(req);
     const secretRejected = rejectIfInvalidPartySecret(req, body.secret);

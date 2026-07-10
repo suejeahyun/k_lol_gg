@@ -1,3 +1,4 @@
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { addDays, getKstDateKey, getKstDisplayDate, getKstStartOfDate } from "@/lib/date/kst";
 import { prisma } from "@/lib/prisma/client";
@@ -493,6 +494,9 @@ async function createStatusReply(req: NextRequest, body?: ApplyStatusBody) {
 }
 
 export async function GET(req: NextRequest) {
+  const premiumLock = await requireSiteFeature("recruit");
+  if (premiumLock) return premiumLock;
+
   try {
     return await createStatusReply(req);
   } catch (error) {
@@ -502,6 +506,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const premiumLock = await requireSiteFeature("recruit");
+  if (premiumLock) return premiumLock;
+
   try {
     const body = (await req.json().catch(() => ({}))) as ApplyStatusBody;
     return await createStatusReply(req, body);

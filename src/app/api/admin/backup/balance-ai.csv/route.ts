@@ -1,3 +1,4 @@
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -11,6 +12,9 @@ function csvEscape(value: unknown) {
 }
 
 export async function GET(req: Request) {
+  const premiumLock = await requireSiteFeature("balanceAi");
+  if (premiumLock) return premiumLock;
+
   const admin = await requireSuperAdminRequest();
   if (!admin) {
     return Response.json({ message: "최고 관리자 권한이 필요합니다." }, { status: 403 });

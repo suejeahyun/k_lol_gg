@@ -1,4 +1,5 @@
-﻿import { logServerError } from "@/lib/server/safe-log";
+import { logServerError } from "@/lib/server/safe-log";
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -215,6 +216,9 @@ function formatRecentMatch(
 }
 
 export async function GET(_request: Request, context: RouteContext) {
+  const premiumLock = await requireSiteFeature("riot");
+  if (premiumLock) return premiumLock;
+
   try {
     const { playerId } = await context.params;
     const parsedPlayerId = Number(playerId);

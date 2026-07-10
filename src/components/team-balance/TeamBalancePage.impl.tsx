@@ -6,6 +6,11 @@ import type { Position, Team, RoleType, SearchPlayer, PlayerRow, AssignedPlayer,
 const POSITIONS: Position[] = ["TOP", "JGL", "MID", "ADC", "SUP"];
 
 type RiotBalanceMode = "server" | "withoutRiot" | "formOnly";
+type PremiumLockResponse = {
+  error?: string;
+  message?: string;
+  featureLabel?: string;
+};
 
 const RIOT_BALANCE_MODE_OPTIONS: Array<{
   value: RiotBalanceMode;
@@ -214,11 +219,22 @@ export default function PlayersBalancePage() {
     });
 
     const data = (await response.json()) as {
+      error?: string;
       message?: string;
+      featureLabel?: string;
       groups?: SeasonApplyGroup[];
     };
 
     if (!response.ok) {
+      if (data.error === "PREMIUM_FEATURE_LOCKED") {
+        const lockedData = data as PremiumLockResponse;
+        const label = lockedData.featureLabel || "K-LOL 랭킹";
+        setSeasonApplyGroups([]);
+        setSelectedSeasonApplyGroupKey("");
+        setErrorMessage(lockedData.message || `${label} 기능은 현재 이 사이트에서 비활성화되어 있습니다.`);
+        return [];
+      }
+
       throw new Error(data.message || "참가 신청자 그룹 조회 실패");
     }
 

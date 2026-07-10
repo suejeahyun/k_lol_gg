@@ -70,12 +70,38 @@ function formatPercent(value: number) {
   return Number.isInteger(rounded) ? `${rounded}%` : `${rounded.toFixed(1)}%`;
 }
 
-function getRankLabel(index: number) {
-  if (index === 0) return "1";
-  if (index === 1) return "2";
-  if (index === 2) return "3";
+function getRankMedalSrc(rank: number) {
+  if (rank >= 1 && rank <= 3) {
+    return `/images/rank-medals/rank-medal-${rank}.png`;
+  }
 
-  return String(index + 1);
+  return null;
+}
+
+function RankMedal({
+  rank,
+  compact = false,
+}: {
+  rank: number;
+  compact?: boolean;
+}) {
+  const medalSrc = getRankMedalSrc(rank);
+
+  if (!medalSrc) {
+    return <>{rank}</>;
+  }
+
+  return (
+    <span
+      className={`ranking-medal ranking-medal--rank-${rank}${
+        compact ? " ranking-medal--compact" : ""
+      }`}
+      aria-label={`${rank}위`}
+      title={`${rank}위`}
+    >
+      <img src={medalSrc} alt="" aria-hidden="true" className="ranking-medal__image" />
+    </span>
+  );
 }
 
 async function getRankings(seasonId?: string): Promise<RankingApiResponse> {
@@ -147,7 +173,7 @@ function TopRankingCard({
               className={`ranking-top-player ranking-top-player--${index + 1}`}
             >
               <div className="ranking-top-player__rank">
-                {getRankLabel(index)}
+                <RankMedal rank={index + 1} />
               </div>
 
               <div className="ranking-top-player__content">
@@ -414,7 +440,7 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
                             rank <= 3 ? `ranking-rank--top-${rank}` : ""
                           }`}
                         >
-                          {rank}
+                          <RankMedal rank={rank} compact />
                         </div>
 
                         <div className="ranking-col ranking-name">

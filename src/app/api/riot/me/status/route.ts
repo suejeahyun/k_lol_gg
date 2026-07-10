@@ -1,4 +1,5 @@
 import { logServerError } from "@/lib/server/safe-log";
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
@@ -8,6 +9,9 @@ import { getRiotFeatureStatus } from "@/lib/riot/feature";
 import { getRiotRsoStatus } from "@/lib/riot/rso";
 
 export async function GET() {
+  const premiumLock = await requireSiteFeature("riot");
+  if (premiumLock) return premiumLock;
+
   try {
     const user = await requireApprovedUser();
 

@@ -1,3 +1,4 @@
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -6,6 +7,9 @@ import { writeAdminLog } from "@/lib/admin-log";
 import { getKakaoOperationSettings, saveKakaoOperationSettings } from "@/lib/kakao/settings";
 
 export async function GET() {
+  const premiumLock = await requireSiteFeature("kakao");
+  if (premiumLock) return premiumLock;
+
   const admin = await requireAdminRequest();
   if (!admin) return NextResponse.json({ message: "관리자 권한이 필요합니다." }, { status: 401 });
 
@@ -14,6 +18,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const premiumLock = await requireSiteFeature("kakao");
+  if (premiumLock) return premiumLock;
+
   const admin = await requireAdminRequest();
   if (!admin) return NextResponse.json({ message: "관리자 권한이 필요합니다." }, { status: 401 });
 
