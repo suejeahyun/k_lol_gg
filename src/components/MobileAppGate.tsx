@@ -6,6 +6,7 @@ import { useEffect, useMemo, useSyncExternalStore } from "react";
 
 const MOBILE_QUERY = "(max-width: 820px)";
 const SESSION_KEY = "klol-mobile-pc-view";
+const REDIRECT_DELAY_MS = 650;
 
 function toAppPath(pathname: string) {
   if (pathname === "/" || pathname === "") return "/app";
@@ -51,7 +52,11 @@ function subscribeToPcChoice(callback: () => void) {
 
 function readPcChoice() {
   if (typeof window === "undefined") return false;
-  return window.sessionStorage.getItem(SESSION_KEY) === "1";
+  try {
+    return window.sessionStorage.getItem(SESSION_KEY) === "1";
+  } catch {
+    return false;
+  }
 }
 
 export default function MobileAppGate() {
@@ -64,11 +69,28 @@ export default function MobileAppGate() {
   const shouldShow = isMobile && !pcChoice && !pathname.startsWith("/app");
 
   useEffect(() => {
+    if (pathname.startsWith("/app")) return;
+    if (!readIsMobile() || readPcChoice()) return;
+
+    const timeoutId = window.setTimeout(() => {
+      window.location.replace(appPath);
+    }, REDIRECT_DELAY_MS);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [appPath, pathname]);
+
+  useEffect(() => {
     if (!shouldShow) return;
 
     const timeoutId = window.setTimeout(() => {
-      router.replace(appPath);
-    }, 2500);
+      try {
+        router.replace(appPath);
+      } catch {
+        window.location.replace(appPath);
+      }
+    }, REDIRECT_DELAY_MS);
 
     return () => {
       window.clearTimeout(timeoutId);
@@ -80,7 +102,11 @@ export default function MobileAppGate() {
   }
 
   const continuePc = () => {
-    window.sessionStorage.setItem(SESSION_KEY, "1");
+    try {
+      window.sessionStorage.setItem(SESSION_KEY, "1");
+    } catch {
+      // Storage can be unavailable in restricted mobile browser contexts.
+    }
     window.dispatchEvent(new Event("klol-mobile-pc-choice"));
   };
 

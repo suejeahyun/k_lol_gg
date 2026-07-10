@@ -3187,6 +3187,59 @@ html[data-theme] .klol-app-bottom-nav a[data-active="true"] {
   }
 }
 
+/* Final alignment pass: detail heroes should read centered even with right actions. */
+@media (min-width: 981px) {
+  .player-detail-page > .player-hero > div:first-child,
+  .player-riot-detail-page > .player-hero > div:first-child {
+    transform: translateX(clamp(14px, 1vw, 26px)) !important;
+  }
+
+  .destruction-detail-page > .page-header:has(> .page-actions) {
+    position: relative !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    place-items: center !important;
+    min-height: 150px !important;
+    padding-inline: clamp(260px, 17vw, 380px) !important;
+    text-align: center !important;
+  }
+
+  .destruction-detail-page > .page-header:has(> .page-actions) > div:first-child {
+    position: static !important;
+    width: min(980px, 100%) !important;
+    max-width: 100% !important;
+    margin-inline: auto !important;
+    transform: none !important;
+  }
+
+  .destruction-detail-page > .page-header:has(> .page-actions) .page-title {
+    max-width: 100% !important;
+    margin-inline: auto !important;
+    overflow-wrap: anywhere;
+    text-align: center !important;
+  }
+
+  .destruction-detail-page > .page-header:has(> .page-actions) .page-actions {
+    position: absolute !important;
+    top: 50% !important;
+    right: clamp(18px, 2.4vw, 34px) !important;
+    width: auto !important;
+    max-width: 330px !important;
+    transform: translateY(-50%) !important;
+  }
+}
+
+@media (max-width: 980px) {
+  .player-detail-page > .player-hero > div:first-child,
+  .player-riot-detail-page > .player-hero > div:first-child {
+    transform: none !important;
+  }
+
+  .destruction-detail-page > .page-header:has(> .page-actions) {
+    text-align: left !important;
+  }
+}
+
 /* Final subdued accent pass: keep blue, remove electric saturation. */
 html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .app-button,
 html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .btn-primary,
@@ -3261,4 +3314,35 @@ html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .ranking-top-
 html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .ranking-row-header {
   border-color: rgba(126, 165, 217, 0.16) !important;
   color: rgba(111, 194, 218, 0.86) !important;
+}
+
+/* Final copy-density pass: keep screens operational and remove long helper prose. */
+.page-description,
+.admin-page__description,
+.admin-section-description,
+.section-subtitle,
+.ai-panel__desc,
+.auth-description,
+.home-main-description,
+.home-section-subtitle,
+.gallery-page__description,
+.winner-slider__description,
+.top3-slide-header__description,
+[class*="_desc__"],
+[class*="_description__"],
+[class*="__desc"],
+[class*="__description"] {
+  display: none !important;
+}
+
+/* Final premium/login accent pass: reduce electric blue without losing affordance. */
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .mobile-app-gate__primary,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .klol-app-primary,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .klol-app-mini-button--primary,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .klol-app-search button,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .klol-install-primary {
+  border-color: rgba(111, 194, 218, 0.42) !important;
+  background: linear-gradient(135deg, rgba(56, 111, 184, 0.92), rgba(91, 141, 185, 0.76)) !important;
+  color: #f8fbff !important;
+  box-shadow: 0 12px 26px rgba(24, 68, 124, 0.2) !important;
 }

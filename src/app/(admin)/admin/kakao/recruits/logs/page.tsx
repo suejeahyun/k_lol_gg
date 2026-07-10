@@ -43,11 +43,13 @@ export default async function AdminKakaoRecruitLogsPage({ searchParams }: PagePr
   const date = resolved.date ?? "";
   const action = resolved.action ?? "";
   const where = buildWhere(resolved);
+  const recentCutoff = new Date();
+  recentCutoff.setHours(recentCutoff.getHours() - 24);
 
   const [totalCount, logs, recentCount, autoCount, finishedCount] = await Promise.all([
     prisma.recruitPartyLog.count({ where }),
     prisma.recruitPartyLog.findMany({ where, orderBy: [{ createdAt: "desc" }], skip: (safePage - 1) * PAGE_SIZE, take: PAGE_SIZE }),
-    prisma.recruitPartyLog.count({ where: { createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } } }),
+    prisma.recruitPartyLog.count({ where: { createdAt: { gte: recentCutoff } } }),
     prisma.recruitPartyLog.count({ where: { action: { contains: "AUTO", mode: "insensitive" } } }),
     prisma.recruitPartyLog.count({ where: { action: { contains: "FINISH", mode: "insensitive" } } }),
   ]);

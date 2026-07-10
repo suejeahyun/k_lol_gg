@@ -13,16 +13,6 @@ type PageProps = {
   }>;
 };
 
-function formatDate(date: Date | null) {
-  if (!date) return "-";
-
-  return new Date(date).toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
-}
-
 function getStatusLabel(status: string) {
   const labels: Record<string, string> = {
     PLANNED: "기획중",

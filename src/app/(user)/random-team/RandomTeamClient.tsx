@@ -221,48 +221,38 @@ export default function PublicRandomTeamPage() {
   const canTierShuffle = canShuffle && selectedTierCount === 10;
 
   useEffect(() => {
-    const validSlotMap = names.reduce<Record<number, TierId | "">>((acc, _name, index) => {
-      if (tierBySlot[index]) acc[index] = tierBySlot[index];
-      return acc;
-    }, {});
+    const timeoutId = window.setTimeout(() => {
+      if (names.length !== 10) {
+        setResult(null);
+        lastAutoShuffleKeyRef.current = "";
+        return;
+      }
 
-    const before = JSON.stringify(tierBySlot);
-    const after = JSON.stringify(validSlotMap);
+      if (mode === "random") {
+        const key = `random|${names.join("\u0000")}`;
+        if (lastAutoShuffleKeyRef.current === key) return;
 
-    if (before !== after) {
-      setTierBySlot(validSlotMap);
-    }
-  }, [names, tierBySlot]);
+        setResult(shuffleNames(names));
+        setCopyMessage("");
+        lastAutoShuffleKeyRef.current = key;
+        return;
+      }
 
-  useEffect(() => {
-    if (names.length !== 10) {
-      setResult(null);
-      lastAutoShuffleKeyRef.current = "";
-      return;
-    }
+      if (!canTierShuffle) {
+        setResult(null);
+        lastAutoShuffleKeyRef.current = "";
+        return;
+      }
 
-    if (mode === "random") {
-      const key = `random|${names.join("\u0000")}`;
+      const key = `tier|${players.map((player) => `${player.name}:${player.tierId}`).join("\u0000")}`;
       if (lastAutoShuffleKeyRef.current === key) return;
 
-      setResult(shuffleNames(names));
+      setResult(buildTierBalancedTeams(players));
       setCopyMessage("");
       lastAutoShuffleKeyRef.current = key;
-      return;
-    }
+    }, 0);
 
-    if (!canTierShuffle) {
-      setResult(null);
-      lastAutoShuffleKeyRef.current = "";
-      return;
-    }
-
-    const key = `tier|${players.map((player) => `${player.name}:${player.tierId}`).join("\u0000")}`;
-    if (lastAutoShuffleKeyRef.current === key) return;
-
-    setResult(buildTierBalancedTeams(players));
-    setCopyMessage("");
-    lastAutoShuffleKeyRef.current = key;
+    return () => window.clearTimeout(timeoutId);
   }, [canTierShuffle, mode, names, players]);
 
   const statusText = (() => {

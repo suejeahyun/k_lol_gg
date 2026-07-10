@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { getRequiredSecretInProduction } from "@/lib/security/secrets";
+import { getRequiredSecretInProduction, matchesRequestSecret } from "@/lib/security/secrets";
 import { kakaoJsonReply } from "@/lib/kakao/reply-format";
 
 export const PARTY_RECRUIT_FORMAT_VERSION = "party-recruit-v2";
@@ -30,7 +30,14 @@ export function rejectIfInvalidPartySecret(req: NextRequest, bodySecret: unknown
   const querySecret = req.nextUrl.searchParams.get("secret");
   const secretText = typeof bodySecret === "string" ? bodySecret : null;
 
-  if (headerSecret === secret || bearer === secret || querySecret === secret || secretText === secret) {
+  if (
+    matchesRequestSecret(secret, {
+      headers: [headerSecret],
+      bearer,
+      body: secretText,
+      query: querySecret,
+    })
+  ) {
     return null;
   }
 

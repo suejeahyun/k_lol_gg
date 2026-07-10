@@ -17,6 +17,16 @@ type LogRow = {
   ip?: string | null;
 };
 
+type DynamicDelegate = {
+  findMany: (args?: unknown) => Promise<unknown>;
+};
+
+type DynamicDatabase = {
+  adminLog?: DynamicDelegate;
+  recruitPartyLog?: DynamicDelegate;
+  seasonParticipationPendingApply?: DynamicDelegate;
+};
+
 const ACTION_LABELS: Record<string, string> = {
   KAKAO_PARTY_RECRUIT_CREATE: "카카오 구인 생성",
   KAKAO_PARTY_RECRUIT_JOIN: "카카오 구인 참가",
@@ -56,7 +66,7 @@ function fmt(date: Date) {
 }
 
 function asDate(value: unknown): Date {
-  const date = value instanceof Date ? value : new Date(String(value ?? Date.now()));
+  const date = value instanceof Date ? value : new Date(String(value ?? ""));
   return Number.isNaN(date.getTime()) ? new Date() : date;
 }
 
@@ -66,11 +76,11 @@ function text(value: unknown, fallback = "-") {
 }
 
 async function getKakaoLogs(): Promise<LogRow[]> {
-  const db = prisma as any;
+  const db = prisma as unknown as DynamicDatabase;
   const rows: LogRow[] = [];
 
   if (db.adminLog?.findMany) {
-    const adminLogs = await db.adminLog.findMany({
+    const adminLogs = (await db.adminLog.findMany({
       where: {
         OR: [
           { action: { contains: "KAKAO", mode: "insensitive" } },
@@ -82,7 +92,7 @@ async function getKakaoLogs(): Promise<LogRow[]> {
       },
       orderBy: { createdAt: "desc" },
       take: 120,
-    }).catch(() => []);
+    }).catch(() => [])) as Record<string, unknown>[];
 
     for (const item of adminLogs) {
       rows.push({
@@ -93,16 +103,16 @@ async function getKakaoLogs(): Promise<LogRow[]> {
         actor: text(item.actorName ?? item.actorEmail ?? item.adminName ?? item.userName),
         target: text(item.targetName ?? item.targetType ?? item.targetId),
         message: text(item.message ?? item.detail ?? item.description ?? item.summary),
-        ip: item.ip ?? item.ipAddress ?? null,
+        ip: item.ip || item.ipAddress ? text(item.ip ?? item.ipAddress) : null,
       });
     }
   }
 
   if (db.recruitPartyLog?.findMany) {
-    const recruitLogs = await db.recruitPartyLog.findMany({
+    const recruitLogs = (await db.recruitPartyLog.findMany({
       orderBy: { createdAt: "desc" },
       take: 120,
-    }).catch(() => []);
+    }).catch(() => [])) as Record<string, unknown>[];
 
     for (const item of recruitLogs) {
       rows.push({
@@ -119,10 +129,10 @@ async function getKakaoLogs(): Promise<LogRow[]> {
   }
 
   if (db.seasonParticipationPendingApply?.findMany) {
-    const applies = await db.seasonParticipationPendingApply.findMany({
+    const applies = (await db.seasonParticipationPendingApply.findMany({
       orderBy: { createdAt: "desc" },
       take: 80,
-    }).catch(() => []);
+    }).catch(() => [])) as Record<string, unknown>[];
 
     for (const item of applies) {
       rows.push({
@@ -144,7 +154,10 @@ async function getKakaoLogs(): Promise<LogRow[]> {
 export default async function AdminKakaoOnlyLogsPage() {
   const siteSettings = await getSiteSettings();
   const logs = await getKakaoLogs();
-  const recent24h = logs.filter((log) => Date.now() - log.createdAt.getTime() <= 24 * 60 * 60 * 1000).length;
+  const recentCutoff = new Date();
+  recentCutoff.setHours(recentCutoff.getHours() - 24);
+  const recentCutoffMs = recentCutoff.getTime();
+  const recent24h = logs.filter((log) => log.createdAt.getTime() >= recentCutoffMs).length;
   const sources = new Set(logs.map((log) => log.source)).size;
   const actions = new Set(logs.map((log) => log.action)).size;
 

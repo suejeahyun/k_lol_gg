@@ -38,6 +38,8 @@ export default async function AdminKakaoSeasonApplyPage({ searchParams }: PagePr
       { sourceSender: { contains: q, mode: "insensitive" } },
     ];
   }
+  const recentCutoff = new Date();
+  recentCutoff.setHours(recentCutoff.getHours() - 24);
 
   const [totalCount, applies, todayCount, reserveCount] = await Promise.all([
     prisma.seasonParticipationPendingApply.count({ where }),
@@ -48,7 +50,7 @@ export default async function AdminKakaoSeasonApplyPage({ searchParams }: PagePr
       skip: (safePage - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
     }),
-    prisma.seasonParticipationPendingApply.count({ where: { createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } } }),
+    prisma.seasonParticipationPendingApply.count({ where: { createdAt: { gte: recentCutoff } } }),
     prisma.seasonParticipationPendingApply.count({ where: { isReserve: true } }),
   ]);
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));

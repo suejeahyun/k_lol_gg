@@ -22,6 +22,35 @@ const themeBootScript = `
   }
 })();
 `;
+const mobileAppBootScript = `
+(() => {
+  try {
+    const path = window.location.pathname || "/";
+    if (path.startsWith("/app")) return;
+    if (!window.matchMedia("(max-width: 820px)").matches) return;
+    if (window.sessionStorage.getItem("klol-mobile-pc-view") === "1") return;
+
+    const toAppPath = (pathname) => {
+      if (pathname === "/" || pathname === "") return "/app";
+      if (pathname.startsWith("/admin")) return "/app/admin";
+      if (pathname.startsWith("/players/")) return pathname.replace("/players", "/app/players");
+      if (pathname === "/players") return "/app/players";
+      if (pathname.startsWith("/matches/")) return pathname.replace("/matches", "/app/matches");
+      if (pathname === "/matches") return "/app/matches";
+      if (pathname === "/rankings") return "/app/rankings";
+      if (pathname === "/recruit") return "/app/recruits";
+      if (pathname.startsWith("/account") || pathname.startsWith("/me")) return "/app/me";
+      return "/app";
+    };
+
+    window.location.replace(toAppPath(path) + window.location.search);
+  } catch {
+    if (!window.location.pathname.startsWith("/app")) {
+      window.location.replace("/app");
+    }
+  }
+})();
+`;
 
 export const metadata: Metadata = {
   applicationName: appName,
@@ -63,6 +92,7 @@ export default function RootLayout({
     <html lang="ko" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
+        <script dangerouslySetInnerHTML={{ __html: mobileAppBootScript }} />
       </head>
       <body className="theme-lol-gold">
         <RandomBackgroundLayout>

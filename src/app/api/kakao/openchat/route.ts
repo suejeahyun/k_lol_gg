@@ -1,7 +1,7 @@
 import { requireSiteFeature } from "@/lib/site/feature-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
-import { getRequiredSecretInProduction } from "@/lib/security/secrets";
+import { getRequiredSecretInProduction, matchesRequestSecret } from "@/lib/security/secrets";
 import { getKakaoHelpMessage, getKakaoRecruitHelpMessage, parseKakaoCommand } from "@/lib/kakao/parseKakaoCommand";
 import { parseRecruitMessage } from "@/lib/kakao/recruit-message-parser";
 import {
@@ -78,7 +78,14 @@ function rejectIfInvalidSecret(req: NextRequest) {
   const headerSecret = req.headers.get("x-kakao-openchat-secret");
   const bearer = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
 
-  if (headerSecret === secret || bearer === secret) return null;
+  if (
+    matchesRequestSecret(secret, {
+      headers: [headerSecret],
+      bearer,
+    })
+  ) {
+    return null;
+  }
 
   return jsonReply("인증되지 않은 요청입니다.", 401);
 }

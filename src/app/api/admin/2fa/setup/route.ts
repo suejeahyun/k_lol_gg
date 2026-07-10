@@ -1,20 +1,20 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/auth/session";
+import { requireAdminRequest } from "@/lib/auth/requireAdmin";
 import { prisma } from "@/lib/prisma/client";
 import { buildTotpOtpAuthUrl, generateTotpSecret } from "@/lib/security/totp";
 import { getRequestAuditFields, writeAdminLog } from "@/lib/admin-log";
 import type { NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {
-  const currentUser = await getCurrentUser();
-  if (!currentUser || currentUser.status !== "APPROVED" || (currentUser.role !== "ADMIN" && currentUser.role !== "SUPER_ADMIN")) {
+  const currentUser = await requireAdminRequest();
+  if (!currentUser?.user.id) {
     return NextResponse.json({ ok: false, message: "관리자 권한이 필요합니다." }, { status: 401 });
   }
 
   const existing = await prisma.userAccount.findUnique({
-    where: { id: currentUser.userAccountId },
+    where: { id: currentUser.user.id },
     select: { id: true, userId: true, role: true, adminTotpEnabled: true, adminTotpSecret: true },
   });
 

@@ -1,15 +1,22 @@
 ﻿import { prisma } from "@/lib/prisma/client";
 
-type AnyRecord = Record<string, any>;
+type AnyRecord = Record<string, unknown>;
+type DynamicDelegate = {
+  findMany: (args?: unknown) => Promise<unknown>;
+  count?: (args?: unknown) => Promise<unknown>;
+};
+type DynamicDatabase = Record<string, unknown>;
 
 type SeriesPoint = Record<string, string | number>;
 
 const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
 
-function getDelegate(db: any, name: string) {
+function getDelegate(db: DynamicDatabase, name: string): DynamicDelegate | null {
   const delegate = db?.[name];
-  if (!delegate || typeof delegate.findMany !== "function") return null;
-  return delegate;
+  if (!delegate || typeof delegate !== "object") return null;
+  const candidate = delegate as Partial<DynamicDelegate>;
+  if (typeof candidate.findMany !== "function") return null;
+  return candidate as DynamicDelegate;
 }
 
 function toDate(value: unknown): Date | null {
@@ -96,7 +103,7 @@ export async function getAdminLogsStatsDashboardData(input?: { days?: number }) 
   from.setDate(from.getDate() - days);
   from.setHours(0, 0, 0, 0);
 
-  const delegate = getDelegate(prisma as any, "adminLog");
+  const delegate = getDelegate(prisma as unknown as DynamicDatabase, "adminLog");
   if (!delegate) {
     return buildEmptyAdminLogsStats(days, "AdminLog delegate가 없습니다.");
   }

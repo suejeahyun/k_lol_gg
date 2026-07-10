@@ -177,9 +177,6 @@ function cleanRequiredField(value: string) {
   return text;
 }
 
-
-const LEAVE_SCOPE_OPTIONS = ["소통방", "구인방"] as const;
-
 function normalizeLeaveScopeToken(value: string) {
   return value;
 }
@@ -266,26 +263,6 @@ export function extractKakaoLeaveScopeFromText(input: unknown) {
   if (!text) return "";
   if (!hasAll(text, ["이름 및 닉네임", "외출기간", "외출사유", "외출범위"])) return "";
   return cleanLeaveScopeField(readField(text, "외출범위", []));
-}
-
-function parseUsage(value: string) {
-  const raw = cleanRequiredField(value.replace(/\*\s*선택\s*:?/g, ""));
-  const gameMatch = raw.match(/특정\s*게임\s*[(:：]?\s*([^\n)）]+)?/);
-
-  if (/장기/.test(raw)) {
-    return { usageType: "장기", gameName: null };
-  }
-
-  if (/단기/.test(raw)) {
-    return { usageType: "단기", gameName: null };
-  }
-
-  if (/특정\s*게임/.test(raw)) {
-    const gameName = gameMatch?.[1]?.replace(/게임명\s*적기/g, "").trim() || null;
-    return { usageType: "특정 게임", gameName };
-  }
-
-  return { usageType: raw || "미입력", gameName: null };
 }
 
 export function parseKakaoOperationForm(input: unknown): ParsedKakaoOperationForm | null {

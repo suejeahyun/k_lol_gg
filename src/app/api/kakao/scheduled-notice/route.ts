@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
 import { getTodayKstRange } from "@/lib/date/kst";
-import { getRequiredSecretInProduction } from "@/lib/security/secrets";
+import { getRequiredSecretInProduction, matchesRequestSecret } from "@/lib/security/secrets";
 import { prisma } from "@/lib/prisma/client";
 import { logServerError } from "@/lib/server/safe-log";
 
@@ -56,7 +56,13 @@ function rejectIfInvalidSecret(req: NextRequest) {
   const bearer = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
   const querySecret = req.nextUrl.searchParams.get("secret");
 
-  if (headerSecret === secret || bearer === secret || querySecret === secret) {
+  if (
+    matchesRequestSecret(secret, {
+      headers: [headerSecret],
+      bearer,
+      query: querySecret,
+    })
+  ) {
     return null;
   }
 

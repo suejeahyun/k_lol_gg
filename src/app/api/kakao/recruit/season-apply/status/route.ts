@@ -2,7 +2,7 @@ import { requireSiteFeature } from "@/lib/site/feature-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { addDays, getKstDateKey, getKstDisplayDate, getKstStartOfDate } from "@/lib/date/kst";
 import { prisma } from "@/lib/prisma/client";
-import { getRequiredSecretInProduction } from "@/lib/security/secrets";
+import { getRequiredSecretInProduction, matchesRequestSecret } from "@/lib/security/secrets";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -100,7 +100,14 @@ function rejectIfInvalidSecret(req: NextRequest, bodySecret: unknown) {
   const querySecret = req.nextUrl.searchParams.get("secret");
   const secretText = typeof bodySecret === "string" ? bodySecret : null;
 
-  if (headerSecret === secret || bearer === secret || querySecret === secret || secretText === secret) {
+  if (
+    matchesRequestSecret(secret, {
+      headers: [headerSecret],
+      bearer,
+      body: secretText,
+      query: querySecret,
+    })
+  ) {
     return null;
   }
 

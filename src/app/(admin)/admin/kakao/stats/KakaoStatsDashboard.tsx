@@ -30,7 +30,44 @@ import styles from "./page.module.css";
 
 const COLORS = ["#38bdf8", "#60a5fa", "#818cf8", "#2dd4bf", "#a78bfa", "#f59e0b", "#f87171", "#34d399"];
 
-type Props = { data: any };
+type ChartDatum = Record<string, string | number>;
+type NamedCount = { name: string; count: number };
+type NamedValue = { name: string; value: number };
+type SizedValue = { name: string; size: number };
+type HeatmapCell = { day: string; hour: number; count: number };
+type RoomRadarItem = { subject: string; room: string; value: number };
+type RecentActivity = { time: string; source: string; action: string; room: string; sender: string; summary: string };
+type KakaoStatsData = {
+  days: number;
+  summary: {
+    totalActivities: number;
+    recruitCreates: number;
+    autoFinishes: number;
+    seasonApply: number;
+    reserveApply: number;
+    operationForms: number;
+    activeRooms: number;
+    uniqueSenders: number;
+  };
+  dailyTrend: ChartDatum[];
+  hourlyTrend: ChartDatum[];
+  statusDonut: NamedValue[];
+  typeDonut: NamedValue[];
+  actionTop: NamedCount[];
+  roomTop: NamedCount[];
+  senderTop: NamedCount[];
+  roomTreemap: SizedValue[];
+  operationStatusTop: NamedCount[];
+  statusStackedByDay: ChartDatum[];
+  statusStackedKeys: string[];
+  heatmap: HeatmapCell[];
+  roomRadar: RoomRadarItem[];
+  scatter: ChartDatum[];
+  funnel: NamedValue[];
+  recentActivities: RecentActivity[];
+};
+
+type Props = { data: KakaoStatsData };
 
 function numberFormat(value: number) {
   return new Intl.NumberFormat("ko-KR").format(Number(value || 0));
@@ -105,12 +142,12 @@ function ChartCard({ title, desc, children, tall = false }: { title: string; des
   return <section className={`${styles.chartCard} ${tall ? styles.tall : ""}`}><div className={styles.chartHeader}><h2>{title}</h2>{desc ? <p>{desc}</p> : null}</div><div className={styles.chartBody}>{children}</div></section>;
 }
 
-function EmptyAware({ data, children }: { data: any[]; children: React.ReactNode }) {
+function EmptyAware({ data, children }: { data: unknown[]; children: React.ReactNode }) {
   if (!Array.isArray(data) || data.length === 0) return <div className={styles.empty}>표시할 데이터가 없습니다.</div>;
   return <>{children}</>;
 }
 
-function Donut({ data }: { data: any[] }) {
+function Donut({ data }: { data: NamedValue[] }) {
   const displayData = localizeList(data ?? []);
 
   return (
@@ -177,9 +214,15 @@ function HeatmapGrid({ data }: { data: { day: string; hour: number; count: numbe
 
 export default function KakaoStatsDashboard({ data }: Props) {
   const statusKeys: string[] = data.statusStackedKeys ?? [];
-  const radarSubjects = Array.from(new Set((data.roomRadar ?? []).map((item: any) => item.subject)));
-  const radarRooms = Array.from(new Set((data.roomRadar ?? []).map((item: any) => item.room)));
-  const radarData = radarSubjects.map((subject: any) => { const row: any = { subject }; radarRooms.forEach((room: any) => { row[room] = (data.roomRadar ?? []).find((item: any) => item.subject === subject && item.room === room)?.value ?? 0; }); return row; });
+  const radarSubjects = Array.from(new Set((data.roomRadar ?? []).map((item) => item.subject)));
+  const radarRooms = Array.from(new Set((data.roomRadar ?? []).map((item) => item.room)));
+  const radarData: ChartDatum[] = radarSubjects.map((subject) => {
+    const row: ChartDatum = { subject };
+    radarRooms.forEach((room) => {
+      row[room] = (data.roomRadar ?? []).find((item) => item.subject === subject && item.room === room)?.value ?? 0;
+    });
+    return row;
+  });
 
   return (
     <div className={styles.dashboard}>
@@ -196,14 +239,26 @@ export default function KakaoStatsDashboard({ data }: Props) {
 
       <section className={styles.gridTwoWide}>
         <ChartCard title="일자별 카카오 활동" desc="전체 활동, 구인, 자동 처리를 함께 표시합니다." tall>
-          <ResponsiveContainer width="100%" height="100%"><ComposedChart data={data.dailyTrend}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="date" /><YAxis /><Tooltip formatter={(value: any) => numberFormat(value)} /><Legend /><Bar dataKey="count" name="전체 활동" fill="#38bdf8" radius={[6, 6, 0, 0]} /><Line type="monotone" dataKey="recruits" name="구인" stroke="#f59e0b" strokeWidth={2} /><Area type="monotone" dataKey="auto" name="자동처리" stroke="#818cf8" fill="#818cf8" fillOpacity={0.18} /></ComposedChart></ResponsiveContainer>
+          <ResponsiveContainer width="100%" height="100%"><ComposedChart data={data.dailyTrend}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="date" /><YAxis /><Tooltip formatter={(value: unknown) => numberFormat(Number(value))} /><Legend /><Bar dataKey="count" name="전체 활동" fill="#38bdf8" radius={[6, 6, 0, 0]} /><Line type="monotone" dataKey="recruits" name="구인" stroke="#f59e0b" strokeWidth={2} /><Area type="monotone" dataKey="auto" name="자동처리" stroke="#818cf8" fill="#818cf8" fillOpacity={0.18} /></ComposedChart></ResponsiveContainer>
         </ChartCard>
         <ChartCard title="구인 상태 비율" desc="구인 상태 기준입니다." tall><Donut data={data.statusDonut} /></ChartCard>
       </section>
 
       <section className={styles.gridTwo}>
         <ChartCard title="구인 흐름 흐름" desc="생성→참가→진행→마감→자동처리 흐름입니다.">
-          <EmptyAware data={data.흐름}><ResponsiveContainer width="100%" height="100%"><BarChart><Tooltip formatter={(value: any) => numberFormat(value)} /><Treemap dataKey="value" data={data.흐름} isAnimationActive><LabelList position="right" fill="#e5f4ff" stroke="none" dataKey="name" /></Treemap></BarChart></ResponsiveContainer></EmptyAware>
+          <EmptyAware data={data.funnel}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={data.funnel} layout="vertical" margin={{ left: 12, right: 36 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                <XAxis type="number" hide />
+                <YAxis type="category" dataKey="name" width={78} />
+                <Tooltip formatter={(value: unknown) => numberFormat(Number(value))} />
+                <Bar dataKey="value" name="건수" fill="#38bdf8" radius={[0, 8, 8, 0]}>
+                  <LabelList dataKey="value" position="right" fill="#e5f4ff" stroke="none" formatter={(value: unknown) => numberFormat(Number(value))} />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </EmptyAware>
         </ChartCard>
         <ChartCard title="구인 종류 비율" desc="구인 종류 기준입니다."><Donut data={data.typeDonut} /></ChartCard>
       </section>
@@ -216,7 +271,7 @@ export default function KakaoStatsDashboard({ data }: Props) {
 
       <section className={styles.gridTwo}>
         <ChartCard title="시간대별 활동" desc="카카오 활동이 몰리는 시간입니다.">
-          <ResponsiveContainer width="100%" height="100%"><AreaChart data={data.hourlyTrend}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="hour" interval={2} /><YAxis /><Tooltip formatter={(value: any) => numberFormat(value)} /><Area type="monotone" dataKey="count" name="활동" stroke="#38bdf8" fill="#38bdf8" fillOpacity={0.3} /></AreaChart></ResponsiveContainer>
+          <ResponsiveContainer width="100%" height="100%"><AreaChart data={data.hourlyTrend}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="hour" interval={2} /><YAxis /><Tooltip formatter={(value: unknown) => numberFormat(Number(value))} /><Area type="monotone" dataKey="count" name="활동" stroke="#38bdf8" fill="#38bdf8" fillOpacity={0.3} /></AreaChart></ResponsiveContainer>
         </ChartCard>
         <ChartCard title="방별 활동 Treemap" desc="방별 활동량 비중입니다.">
           <EmptyAware data={data.roomTreemap}><ResponsiveContainer width="100%" height="100%"><Treemap data={data.roomTreemap} dataKey="size" nameKey="name" stroke="#0f2745" fill="#38bdf8" /></ResponsiveContainer></EmptyAware>
@@ -224,15 +279,15 @@ export default function KakaoStatsDashboard({ data }: Props) {
       </section>
 
       <section className={styles.gridTwo}>
-        <ChartCard title="요일 × 시간대 HeatmapGrid" desc="색이 진할수록 활동이 많은 구간입니다."><Treemap data={data.HeatmapGrid} /></ChartCard>
+        <ChartCard title="요일 × 시간대 Heatmap" desc="색이 진할수록 활동이 많은 구간입니다."><HeatmapGrid data={data.heatmap} /></ChartCard>
         <ChartCard title="방별 활동 성향" desc="상위 방 기준 액션 유형 분포입니다.">
-          <EmptyAware data={radarData}><ResponsiveContainer width="100%" height="100%"><RadarChart data={radarData}><PolarGrid /><PolarAngleAxis dataKey="subject" /><PolarRadiusAxis />{radarRooms.slice(0, 5).map((room: any, index) => <Radar key={room} name={room} dataKey={room} stroke={COLORS[index % COLORS.length]} fill={COLORS[index % COLORS.length]} fillOpacity={0.12} />)}<Legend /><Tooltip /></RadarChart></ResponsiveContainer></EmptyAware>
+          <EmptyAware data={radarData}><ResponsiveContainer width="100%" height="100%"><RadarChart data={radarData}><PolarGrid /><PolarAngleAxis dataKey="subject" /><PolarRadiusAxis />{radarRooms.slice(0, 5).map((room, index) => <Radar key={room} name={room} dataKey={room} stroke={COLORS[index % COLORS.length]} fill={COLORS[index % COLORS.length]} fillOpacity={0.12} />)}<Legend /><Tooltip /></RadarChart></ResponsiveContainer></EmptyAware>
         </ChartCard>
       </section>
 
       <section className={styles.gridTwo}>
         <ChartCard title="날짜별 구인 상태 구성" desc="상위 status가 날짜별로 어떻게 쌓였는지 표시합니다.">
-          <ResponsiveContainer width="100%" height="100%"><BarChart data={data.statusStackedByDay}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="date" /><YAxis /><Tooltip formatter={(value: any) => numberFormat(value)} /><Legend />{statusKeys.map((key, index) => <Bar key={key} dataKey={key} name={displayLabel(key)} stackId="a" fill={COLORS[index % COLORS.length]} />)}</BarChart></ResponsiveContainer>
+          <ResponsiveContainer width="100%" height="100%"><BarChart data={data.statusStackedByDay}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="date" /><YAxis /><Tooltip formatter={(value: unknown) => numberFormat(Number(value))} /><Legend />{statusKeys.map((key, index) => <Bar key={key} dataKey={key} name={displayLabel(key)} stackId="a" fill={COLORS[index % COLORS.length]} />)}</BarChart></ResponsiveContainer>
         </ChartCard>
         <ChartCard title="활동량 × 활성 방" desc="x=활동량, y=활성 방 수입니다.">
           <ResponsiveContainer width="100%" height="100%"><ScatterChart><CartesianGrid /><XAxis type="number" dataKey="x" name="활동량" /><YAxis type="number" dataKey="y" name="방 수" /><Tooltip cursor={{ strokeDasharray: "3 3" }} /><Scatter name="일자" data={data.scatter} fill="#38bdf8" /></ScatterChart></ResponsiveContainer>
@@ -241,17 +296,16 @@ export default function KakaoStatsDashboard({ data }: Props) {
 
       <section className={styles.gridTwo}>
         <ChartCard title="운영신청 상태"><TopList data={data.operationStatusTop} /></ChartCard>
-        <ChartCard title="구인 상태 TOP"><TopList data={(data.statusDonut ?? []).map((item: any) => ({ name: item.name, count: item.value }))} /></ChartCard>
+        <ChartCard title="구인 상태 TOP"><TopList data={(data.statusDonut ?? []).map((item) => ({ name: item.name, count: item.value }))} /></ChartCard>
       </section>
 
       <section className={styles.tableCard}>
         <div className={styles.chartHeader}><h2>최근 카카오 활동</h2><p>구인 로그, 참가신청, 운영신청을 통합해 최근 20개를 표시합니다.</p></div>
-        <div className={styles.tableWrap}><table><thead><tr><th>시간</th><th>출처</th><th>액션</th><th>방</th><th>발신자</th><th>요약</th></tr></thead><tbody>{data.recentActivities.map((row: any, index: number) => <tr key={index}><td>{row.time}</td><td>{displayLabel(row.source)}</td><td>{displayLabel(row.action)}</td><td>{row.room}</td><td>{row.sender}</td><td>{row.summary}</td></tr>)}</tbody></table></div>
+        <div className={styles.tableWrap}><table><thead><tr><th>시간</th><th>출처</th><th>액션</th><th>방</th><th>발신자</th><th>요약</th></tr></thead><tbody>{data.recentActivities.map((row, index) => <tr key={index}><td>{row.time}</td><td>{displayLabel(row.source)}</td><td>{displayLabel(row.action)}</td><td>{row.room}</td><td>{row.sender}</td><td>{row.summary}</td></tr>)}</tbody></table></div>
       </section>
     </div>
   );
 }
-
 
 
 

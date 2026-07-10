@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 type TwoFactorStatus = {
   ok: boolean;
@@ -53,6 +53,15 @@ function buildQrImageUrl(otpauthUrl?: string) {
   return `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(otpauthUrl)}`;
 }
 
+async function readJson<T>(response: Response): Promise<T> {
+  const data = (await response.json().catch(() => ({}))) as T;
+  if (!response.ok) {
+    const fallback = `요청 실패: HTTP ${response.status}`;
+    throw new Error((data as { message?: string })?.message || fallback);
+  }
+  return data;
+}
+
 export default function AdminSecurityTwoFactorClient() {
   const [status, setStatus] = useState<TwoFactorStatus | null>(null);
   const [setup, setSetup] = useState<TwoFactorSetup | null>(null);
@@ -64,25 +73,16 @@ export default function AdminSecurityTwoFactorClient() {
 
   const qrImageUrl = useMemo(() => buildQrImageUrl(setup?.otpauthUrl), [setup?.otpauthUrl]);
 
-  async function readJson<T>(response: Response): Promise<T> {
-    const data = (await response.json().catch(() => ({}))) as T;
-    if (!response.ok) {
-      const fallback = `요청 실패: HTTP ${response.status}`;
-      throw new Error((data as { message?: string })?.message || fallback);
-    }
-    return data;
-  }
-
-  async function loadStatus() {
+  const loadStatus = useCallback(async () => {
     setError(null);
     const response = await fetch("/api/admin/2fa/status", { cache: "no-store" });
     const data = await readJson<TwoFactorStatus>(response);
     setStatus(data);
-  }
+  }, []);
 
   useEffect(() => {
     loadStatus().catch((err) => setError(err instanceof Error ? err.message : "2단계 인증 상태를 불러오지 못했습니다."));
-  }, []);
+  }, [loadStatus]);
 
   async function startSetup() {
     setLoading(true);

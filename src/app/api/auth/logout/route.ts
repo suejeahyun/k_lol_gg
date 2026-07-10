@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { writeAdminLog } from "@/lib/admin-log";
 import { authConstants } from "@/lib/auth";
+import { USER_TOKEN_COOKIE, clearAuthCookieOptions } from "@/lib/auth/cookies";
 
 export async function POST() {
   await writeAdminLog({
@@ -12,21 +13,8 @@ export async function POST() {
     message: "로그아웃되었습니다.",
   });
 
-  res.cookies.set("user_token", "", {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 0,
-  });
-
-  res.cookies.set(authConstants.ADMIN_TOKEN_KEY, "", {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 0,
-  });
+  res.cookies.set(USER_TOKEN_COOKIE, "", clearAuthCookieOptions());
+  res.cookies.set(authConstants.ADMIN_TOKEN_KEY, "", clearAuthCookieOptions());
 
   return res;
 }

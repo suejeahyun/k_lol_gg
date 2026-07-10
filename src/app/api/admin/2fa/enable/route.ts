@@ -1,7 +1,7 @@
-﻿export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic";
 
 import { NextResponse, type NextRequest } from "next/server";
-import { getCurrentUser } from "@/lib/auth/session";
+import { requireAdminRequest } from "@/lib/auth/requireAdmin";
 import { prisma } from "@/lib/prisma/client";
 import { verifyTotpCode } from "@/lib/security/totp";
 import { getRequestAuditFields, writeAdminLog } from "@/lib/admin-log";
@@ -9,14 +9,14 @@ import { getRequestAuditFields, writeAdminLog } from "@/lib/admin-log";
 type Body = { code?: string };
 
 export async function POST(req: NextRequest) {
-  const currentUser = await getCurrentUser();
-  if (!currentUser || currentUser.status !== "APPROVED" || (currentUser.role !== "ADMIN" && currentUser.role !== "SUPER_ADMIN")) {
+  const currentUser = await requireAdminRequest();
+  if (!currentUser?.user.id) {
     return NextResponse.json({ ok: false, message: "관리자 권한이 필요합니다." }, { status: 401 });
   }
 
   const body = (await req.json().catch(() => ({}))) as Body;
   const user = await prisma.userAccount.findUnique({
-    where: { id: currentUser.userAccountId },
+    where: { id: currentUser.user.id },
     select: { id: true, userId: true, role: true, adminTotpSecret: true, adminTotpEnabled: true },
   });
 
@@ -33,7 +33,8 @@ export async function POST(req: NextRequest) {
     where: { id: user.id },
     data: {
       adminTotpEnabled: true,
-      adminTotpEnabledAt: new Date(),    },
+      adminTotpEnabledAt: new Date(),
+    },
   });
 
   await writeAdminLog({
@@ -49,4 +50,3 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ ok: true, enabled: true });
 }
-

@@ -1,17 +1,17 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/auth/session";
+import { requireAdminRequest } from "@/lib/auth/requireAdmin";
 import { prisma } from "@/lib/prisma/client";
 
 export async function GET() {
-  const currentUser = await getCurrentUser();
-  if (!currentUser || currentUser.status !== "APPROVED" || (currentUser.role !== "ADMIN" && currentUser.role !== "SUPER_ADMIN")) {
+  const currentUser = await requireAdminRequest();
+  if (!currentUser) {
     return NextResponse.json({ ok: false, message: "관리자 권한이 필요합니다." }, { status: 401 });
   }
 
   const user = await prisma.userAccount.findUnique({
-    where: { id: currentUser.userAccountId },
+    where: { id: currentUser.user.id ?? -1 },
     select: {
       id: true,
       userId: true,

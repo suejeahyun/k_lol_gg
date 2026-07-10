@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readRequestBodyForSignature, verifySignedRequest } from "@/lib/security/hmac";
+import { readRequestBodyForSignature, safeEqualText, verifySignedRequest } from "@/lib/security/hmac";
+import { allowQueryStringSecret } from "@/lib/security/secrets";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+const DEFAULT_MAX_BODY_BYTES = 1024 * 1024;
+const JSON_IMPORT_MAX_BODY_BYTES = 10 * 1024 * 1024;
+const BOT_MAX_BODY_BYTES = 256 * 1024;
 
 function normalizeOrigin(value: string | null) {
   if (!value) return null;
@@ -76,10 +80,6 @@ export function getRequiredHeaderSecret(pathname: string) {
   return null;
 }
 
-function allowLegacyQuerySecret() {
-  return process.env.SECURITY_ALLOW_QUERY_SECRET === "true" || process.env.NODE_ENV !== "production";
-}
-
 export function getReceivedServerSecret(request: NextRequest) {
   const headerSecret =
     request.headers.get("x-klol-secret") ||
@@ -92,7 +92,7 @@ export function getReceivedServerSecret(request: NextRequest) {
 
   // Query string secrets are easy to leak through logs, browser history, proxies, and analytics.
   // Keep this only as a temporary local/development compatibility path.
-  if (allowLegacyQuerySecret()) {
+  if (allowQueryStringSecret()) {
     return request.nextUrl.searchParams.get("secret") || "";
   }
 
@@ -104,7 +104,43 @@ export function hasValidServerSecret(request: NextRequest, pathname: string) {
   if (!expected) return true;
 
   const received = getReceivedServerSecret(request);
-  return received.length > 0 && received === expected;
+  return received.length > 0 && safeEqualText(received, expected);
+}
+
+function getMaxBodyBytes(pathname: string) {
+  if (pathname === "/api/matches/import-lol-result") return JSON_IMPORT_MAX_BODY_BYTES;
+  if (pathname.startsWith("/api/images") || pathname.startsWith("/api/gallery-images")) {
+    return JSON_IMPORT_MAX_BODY_BYTES;
+  }
+  if (pathname.startsWith("/api/kakao/")) return BOT_MAX_BODY_BYTES;
+  return DEFAULT_MAX_BODY_BYTES;
+}
+
+export function rejectIfBodyTooLarge(request: NextRequest) {
+  if (SAFE_METHODS.has(request.method)) return null;
+
+  const rawLength = request.headers.get("content-length");
+  if (!rawLength) return null;
+
+  const contentLength = Number(rawLength);
+  if (!Number.isFinite(contentLength) || contentLength < 0) {
+    return NextResponse.json(
+      { ok: false, message: "요청 본문 크기가 올바르지 않습니다." },
+      { status: 400 },
+    );
+  }
+
+  const maxBytes = getMaxBodyBytes(request.nextUrl.pathname);
+  if (contentLength <= maxBytes) return null;
+
+  return NextResponse.json(
+    {
+      ok: false,
+      message: "요청 본문이 너무 큽니다.",
+      maxBytes,
+    },
+    { status: 413 },
+  );
 }
 
 export async function hasValidServerHmacSignature(request: NextRequest, pathname: string) {

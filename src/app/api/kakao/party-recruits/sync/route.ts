@@ -389,25 +389,6 @@ async function syncOneRecruit(params: {
   };
 }
 
-function buildBulkSyncReply(
-  results: Awaited<ReturnType<typeof syncOneRecruit>>[],
-) {
-  const failed = results.filter((result) => !result.ok);
-  const changed = results.filter(
-    (result) => result.ok && !("noChanged" in result && result.noChanged),
-  );
-
-  if (failed.length > 0) {
-    return "[K-LOL.GG 구인구직 현황 반영 실패]";
-  }
-
-  if (changed.length === 0) {
-    return "[K-LOL.GG 구인구직 변경 없음]";
-  }
-
-  return "[K-LOL.GG 구인구직 수정 완료]";
-}
-
 export async function POST(req: NextRequest) {
   const premiumLock = await requireSiteFeature("recruit");
   if (premiumLock) return premiumLock;

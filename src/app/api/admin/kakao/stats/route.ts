@@ -1,10 +1,14 @@
-import { requireSiteFeature } from "@/lib/site/feature-guard";
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { getKakaoStatsDashboardData } from "@/lib/kakao/kakao-stats-dashboard-data";
+import { requireSiteFeature } from "@/lib/site/feature-guard";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
   const premiumLock = await requireSiteFeature("kakao");
   if (premiumLock) return premiumLock;
 

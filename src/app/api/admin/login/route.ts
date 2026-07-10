@@ -8,6 +8,7 @@ import { getRequestAuditFields, writeAdminLog } from "@/lib/admin-log";
 import { prisma } from "@/lib/prisma/client";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { signAuthToken } from "@/lib/auth/token";
+import { USER_TOKEN_COOKIE, authCookieOptions, clearAuthCookieOptions } from "@/lib/auth/cookies";
 import { verifyTotpCode } from "@/lib/security/totp";
 
 type LoginBody = {
@@ -180,21 +181,8 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    response.cookies.set(authConstants.ADMIN_TOKEN_KEY, "", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 0,
-    });
-
-    response.cookies.set("user_token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7,
-    });
+    response.cookies.set(authConstants.ADMIN_TOKEN_KEY, "", clearAuthCookieOptions());
+    response.cookies.set(USER_TOKEN_COOKIE, token, authCookieOptions(60 * 60 * 24 * 7));
 
     return response;
   } catch (error) {
@@ -206,6 +194,5 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-
 
 

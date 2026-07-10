@@ -7,7 +7,7 @@ import { getPlayerRecordForKakao } from "@/features/player/services/getPlayerRec
 import { formatPlayerRecordMessage } from "@/lib/kakao/formatPlayerRecordMessage";
 import { createSimpleText } from "@/lib/kakao/response";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
-import { getOptionalSecret } from "@/lib/security/secrets";
+import { getOptionalSecret, matchesRequestSecret } from "@/lib/security/secrets";
 import { logServerError } from "@/lib/server/safe-log";
 
 function kakaoText(text: string, status = 200) {
@@ -37,7 +37,13 @@ function rejectIfInvalidSecret(req: NextRequest) {
   const bearer = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
   const querySecret = req.nextUrl.searchParams.get("secret");
 
-  if ([headerSecret, openchatSecret, bearer, querySecret].includes(secret)) {
+  if (
+    matchesRequestSecret(secret, {
+      headers: [headerSecret, openchatSecret],
+      bearer,
+      query: querySecret,
+    })
+  ) {
     return null;
   }
 

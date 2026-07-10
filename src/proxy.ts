@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { authConstants } from "@/lib/auth";
 import { verifyAuthToken } from "@/lib/auth/token";
 import { applySecurityHeaders } from "@/lib/security-headers";
-import { rejectIfInvalidOrigin, rejectIfInvalidServerAuth } from "@/lib/security/request-guard";
+import { rejectIfBodyTooLarge, rejectIfInvalidOrigin, rejectIfInvalidServerAuth } from "@/lib/security/request-guard";
 import { rejectIfRateLimited } from "@/lib/security/rate-limit";
 
 const SUPER_ADMIN_API_PATTERNS = [
@@ -67,6 +67,9 @@ export async function proxy(req: NextRequest) {
 
   const rateLimited = rejectIfRateLimited(req);
   if (rateLimited) return withSecurityHeaders(rateLimited);
+
+  const bodyTooLarge = rejectIfBodyTooLarge(req);
+  if (bodyTooLarge) return withSecurityHeaders(bodyTooLarge);
 
   const originRejected = rejectIfInvalidOrigin(req);
   if (originRejected) return withSecurityHeaders(originRejected);

@@ -1,6 +1,19 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 
+type KakaoOperationSettingDelegate = {
+  findUnique?: (args: unknown) => Promise<{ value?: unknown } | null>;
+  upsert?: (args: unknown) => Promise<unknown>;
+};
+
+type KakaoOperationSettingReadDelegate = KakaoOperationSettingDelegate & {
+  findUnique: (args: unknown) => Promise<{ value?: unknown } | null>;
+};
+
+type KakaoOperationSettingDatabase = {
+  kakaoOperationSetting?: KakaoOperationSettingDelegate;
+};
+
 export type KakaoOperationSettings = {
   globalEnabled: boolean;
   maintenanceMode: boolean;
@@ -234,10 +247,10 @@ export function normalizeKakaoOperationSettings(value: Partial<KakaoOperationSet
   };
 }
 
-function getDelegate(db: typeof prisma | Prisma.TransactionClient) {
-  const delegate = (db as any).kakaoOperationSetting;
+function getDelegate(db: typeof prisma | Prisma.TransactionClient): KakaoOperationSettingReadDelegate | null {
+  const delegate = (db as unknown as KakaoOperationSettingDatabase).kakaoOperationSetting;
   if (!delegate || typeof delegate.findUnique !== "function") return null;
-  return delegate;
+  return delegate as KakaoOperationSettingReadDelegate;
 }
 
 export async function getKakaoOperationSettings(db: typeof prisma | Prisma.TransactionClient = prisma) {
@@ -256,13 +269,14 @@ export async function saveKakaoOperationSettings(params: {
   updatedById?: number | null;
 }) {
   const normalized = normalizeKakaoOperationSettings(params.value);
-  const delegate = (prisma as any).kakaoOperationSetting;
+  const delegate = (prisma as unknown as KakaoOperationSettingDatabase).kakaoOperationSetting;
 
   if (!delegate || typeof delegate.upsert !== "function") {
     return normalized;
   }
+  const upsert = delegate.upsert;
 
-  await delegate.upsert({
+  await upsert({
     where: { key: "kakao.operation" },
     create: {
       key: "kakao.operation",

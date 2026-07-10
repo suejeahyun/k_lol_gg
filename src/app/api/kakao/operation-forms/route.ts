@@ -5,7 +5,7 @@ export const revalidate = 0;
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { kakaoJsonReply } from "@/lib/kakao/reply-format";
-import { getRequiredSecretInProduction } from "@/lib/security/secrets";
+import { getRequiredSecretInProduction, matchesRequestSecret } from "@/lib/security/secrets";
 import {
   getKakaoOperationFormReply,
   parseKakaoOperationForm,
@@ -27,11 +27,12 @@ function rejectIfInvalidSecret(req: NextRequest, bodySecret: unknown) {
   const secretText = typeof bodySecret === "string" ? bodySecret : null;
 
   if (
-    headerSecret === secret ||
-    fallbackHeaderSecret === secret ||
-    bearer === secret ||
-    querySecret === secret ||
-    secretText === secret
+    matchesRequestSecret(secret, {
+      headers: [headerSecret, fallbackHeaderSecret],
+      bearer,
+      body: secretText,
+      query: querySecret,
+    })
   ) {
     return null;
   }

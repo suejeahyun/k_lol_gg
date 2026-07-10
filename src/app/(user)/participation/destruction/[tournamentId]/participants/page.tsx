@@ -127,11 +127,10 @@ export default async function DestructionParticipantsPage({ params, searchParams
 
   const laneLimits = getDestructionLaneLimits(tournament);
   const applies = tournament.participationApplies;
-  const { capacity, capacityOverflowIds, laneOverflowIds } = calculateDestructionPublicApplicationIds(applies, laneLimits);
+  const { capacityOverflowIds, laneOverflowIds } = calculateDestructionPublicApplicationIds(applies, laneLimits);
   const participantApplies = applies.filter((apply) => !capacityOverflowIds.has(apply.id) && !laneOverflowIds.has(apply.id));
   const overflowApplies = applies.filter((apply) => capacityOverflowIds.has(apply.id) || laneOverflowIds.has(apply.id));
   const laneAutoReserveApplies = participantApplies.filter((apply) => apply.status === "RESERVE");
-  const captainPreferredCount = participantApplies.filter((apply) => apply.isCaptain).length;
   const positionCounts = POSITIONS.map((position) => ({
     position,
     count: participantApplies.filter((apply) => apply.mainPosition === position).length,

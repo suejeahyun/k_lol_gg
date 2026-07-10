@@ -157,18 +157,42 @@ export default function MatchDetailSlider({
         </div>
       </div>
 
-      <div className="match-slide__dots">
-        {slides.map((slide, index) => (
-          <button
-            key={slide.id}
-            type="button"
-            className={`match-slide__dot ${
-              index === currentIndex ? "match-slide__dot--active" : ""
-            }`}
-            onClick={() => setCurrentIndex(index)}
-            aria-label={`${slide.gameNumber}세트로 이동`}
-          />
-        ))}
+      <div className="match-slide__controls">
+        <button
+          type="button"
+          className="match-slide__control"
+          onClick={handlePrev}
+          disabled={currentIndex === 0}
+        >
+          이전
+        </button>
+
+        <div className="match-slide__dots">
+          {slides.map((slide, index) => (
+            <button
+              key={slide.id}
+              type="button"
+              className={`match-slide__dot ${
+                index === currentIndex ? "match-slide__dot--active" : ""
+              }`}
+              onClick={() => setCurrentIndex(index)}
+              aria-label={`${slide.gameNumber}세트로 이동`}
+            />
+          ))}
+        </div>
+
+        <span className="match-slide__count">
+          {currentIndex + 1} / {slides.length}
+        </span>
+
+        <button
+          type="button"
+          className="match-slide__control"
+          onClick={handleNext}
+          disabled={currentIndex === slides.length - 1}
+        >
+          다음
+        </button>
       </div>
     </section>
   );

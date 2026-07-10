@@ -30,7 +30,40 @@ import styles from "./page.module.css";
 const COLORS = ["#38bdf8", "#60a5fa", "#818cf8", "#2dd4bf", "#a78bfa", "#f59e0b", "#f87171", "#34d399"];
 
 type Props = {
-  data: any;
+  data: AdminLogsStatsData;
+};
+
+type ChartDatum = Record<string, string | number>;
+type NamedCount = { name: string; count: number };
+type NamedValue = { name: string; value: number };
+type HeatmapCell = { day: string; hour: number; count: number };
+type ActorRadarItem = { subject: string; actor: string; value: number };
+type RecentLog = { id: string; time: string; action: string; targetType: string; actor: string; ip: string; summary: string };
+type AdminLogsStatsData = {
+  notice?: string;
+  days: number;
+  summary: {
+    total: number;
+    last24h: number;
+    uniqueActors: number;
+    actionTypes: number;
+    targetTypes: number;
+    allTimeTotal: number;
+  };
+  dailyTrend: ChartDatum[];
+  hourlyTrend: ChartDatum[];
+  actionTop: NamedCount[];
+  targetTop: NamedCount[];
+  actorTop: NamedCount[];
+  ipTop: NamedCount[];
+  actionDonut: NamedValue[];
+  targetDonut: NamedValue[];
+  actionStackedByDay: ChartDatum[];
+  stackedKeys: string[];
+  heatmap: HeatmapCell[];
+  actorRadar: ActorRadarItem[];
+  scatter: ChartDatum[];
+  recentLogs: RecentLog[];
 };
 
 function numberFormat(value: number) {
@@ -120,14 +153,14 @@ function ChartCard({ title, desc, children, tall = false }: { title: string; des
   );
 }
 
-function EmptyAware({ data, children }: { data: any[]; children: React.ReactNode }) {
+function EmptyAware({ data, children }: { data: unknown[]; children: React.ReactNode }) {
   if (!Array.isArray(data) || data.length === 0) {
     return <div className={styles.empty}>표시할 데이터가 없습니다.</div>;
   }
   return <>{children}</>;
 }
 
-function Donut({ data }: { data: any[] }) {
+function Donut({ data }: { data: NamedValue[] }) {
   const displayData = localizeList(data ?? []);
 
   return (
@@ -135,9 +168,9 @@ function Donut({ data }: { data: any[] }) {
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie data={displayData} dataKey="value" nameKey="name" innerRadius={62} outerRadius={96} paddingAngle={2}>
-            {displayData.map((_: any, index: number) => <Cell key={index} fill={COLORS[index % COLORS.length]} />)}
+            {displayData.map((entry, index) => <Cell key={`${entry.name}-${index}`} fill={COLORS[index % COLORS.length]} />)}
           </Pie>
-          <Tooltip formatter={(value: any) => numberFormat(value)} />
+          <Tooltip formatter={(value: unknown) => numberFormat(Number(value))} />
           <Legend />
         </PieChart>
       </ResponsiveContainer>
@@ -196,12 +229,12 @@ function TopList({ data }: { data: { name: string; count: number }[] }) {
 
 export default function AdminLogsStatsDashboard({ data }: Props) {
   const stackedKeys: string[] = data.stackedKeys ?? [];
-  const radarSubjects = Array.from(new Set((data.actorRadar ?? []).map((item: any) => item.subject)));
-  const radarActors = Array.from(new Set((data.actorRadar ?? []).map((item: any) => item.actor)));
-  const radarData = radarSubjects.map((subject: any) => {
-    const row: any = { subject };
-    radarActors.forEach((actor: any) => {
-      row[actor] = (data.actorRadar ?? []).find((item: any) => item.subject === subject && item.actor === actor)?.value ?? 0;
+  const radarSubjects = Array.from(new Set((data.actorRadar ?? []).map((item) => item.subject)));
+  const radarActors = Array.from(new Set((data.actorRadar ?? []).map((item) => item.actor)));
+  const radarData: ChartDatum[] = radarSubjects.map((subject) => {
+    const row: ChartDatum = { subject };
+    radarActors.forEach((actor) => {
+      row[actor] = (data.actorRadar ?? []).find((item) => item.subject === subject && item.actor === actor)?.value ?? 0;
     });
     return row;
   });
@@ -215,7 +248,7 @@ export default function AdminLogsStatsDashboard({ data }: Props) {
         <KpiCard label="최근 24시간" value={data.summary.last24h} hint="운영 작업량" />
         <KpiCard label="활성 관리자" value={data.summary.uniqueActors} hint="actor 기준" />
         <KpiCard label="작업 종류" value={data.summary.actionTypes} hint="작업 기준" />
-        <KpiCard label="대상 종류" value={data.summary.대상s} hint="대상 기준" />
+        <KpiCard label="대상 종류" value={data.summary.targetTypes} hint="대상 기준" />
         <KpiCard label="전체 누적" value={data.summary.allTimeTotal} hint="AdminLog 전체" />
       </section>
 
@@ -226,7 +259,7 @@ export default function AdminLogsStatsDashboard({ data }: Props) {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" />
               <YAxis />
-              <Tooltip formatter={(value: any) => numberFormat(value)} />
+              <Tooltip formatter={(value: unknown) => numberFormat(Number(value))} />
               <Legend />
               <Bar dataKey="count" name="일별 로그" fill="#38bdf8" radius={[6, 6, 0, 0]} />
               <Line type="monotone" dataKey="cumulative" name="누적" stroke="#f59e0b" strokeWidth={2} dot={false} />
@@ -251,7 +284,7 @@ export default function AdminLogsStatsDashboard({ data }: Props) {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="hour" interval={2} />
               <YAxis />
-              <Tooltip formatter={(value: any) => numberFormat(value)} />
+              <Tooltip formatter={(value: unknown) => numberFormat(Number(value))} />
               <Area type="monotone" dataKey="count" name="로그" stroke="#38bdf8" fill="#38bdf8" fillOpacity={0.3} />
             </AreaChart>
           </ResponsiveContainer>
@@ -263,7 +296,7 @@ export default function AdminLogsStatsDashboard({ data }: Props) {
 
       <section className={styles.gridTwo}>
         <ChartCard title="요일 × 시간대 Heatmap" desc="색이 진할수록 로그가 많은 구간입니다.">
-          <Treemap data={data.Heatmap} />
+          <Heatmap data={data.heatmap} />
         </ChartCard>
         <ChartCard title="관리자별 활동 성향" desc="상위 관리자 기준 작업 유형 분포입니다.">
           <EmptyAware data={radarData}>
@@ -272,7 +305,7 @@ export default function AdminLogsStatsDashboard({ data }: Props) {
                 <PolarGrid />
                 <PolarAngleAxis dataKey="subject" />
                 <PolarRadiusAxis />
-                {radarActors.slice(0, 5).map((actor: any, index) => (
+                {radarActors.slice(0, 5).map((actor, index) => (
                   <Radar key={actor} name={actor} dataKey={actor} stroke={COLORS[index % COLORS.length]} fill={COLORS[index % COLORS.length]} fillOpacity={0.12} />
                 ))}
                 <Legend />
@@ -290,7 +323,7 @@ export default function AdminLogsStatsDashboard({ data }: Props) {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" />
               <YAxis />
-              <Tooltip formatter={(value: any) => numberFormat(value)} />
+              <Tooltip formatter={(value: unknown) => numberFormat(Number(value))} />
               <Legend />
               {stackedKeys.map((key, index) => <Bar key={key} dataKey={key} name={displayLabel(key)} stackId="a" fill={COLORS[index % COLORS.length]} />)}
             </BarChart>
@@ -314,7 +347,7 @@ export default function AdminLogsStatsDashboard({ data }: Props) {
         <ChartCard title="대상 Treemap" desc="큰 박스일수록 많이 사용된 대상입니다.">
           <EmptyAware data={data.targetTop}>
             <ResponsiveContainer width="100%" height="100%">
-              <Treemap data={data.targetTop.map((item: any) => ({ name: displayLabel(item.name), size: item.count }))} dataKey="size" nameKey="name" stroke="#0f2745" fill="#38bdf8" />
+              <Treemap data={data.targetTop.map((item) => ({ name: displayLabel(item.name), size: item.count }))} dataKey="size" nameKey="name" stroke="#0f2745" fill="#38bdf8" />
             </ResponsiveContainer>
           </EmptyAware>
         </ChartCard>
@@ -329,8 +362,8 @@ export default function AdminLogsStatsDashboard({ data }: Props) {
           <table>
             <thead><tr><th>시간</th><th>작업</th><th>대상</th><th>관리자</th><th>IP</th><th>요약</th></tr></thead>
             <tbody>
-              {data.recentLogs.map((row: any, index: number) => (
-                <tr key={`${row.id}-${index}`}><td>{row.time}</td><td>{displayLabel(row.action)}</td><td>{displayLabel(row.대상)}</td><td>{row.actor}</td><td>{row.ip}</td><td>{row.summary}</td></tr>
+              {data.recentLogs.map((row, index) => (
+                <tr key={`${row.id}-${index}`}><td>{row.time}</td><td>{displayLabel(row.action)}</td><td>{displayLabel(row.targetType)}</td><td>{row.actor}</td><td>{row.ip}</td><td>{row.summary}</td></tr>
               ))}
             </tbody>
           </table>
@@ -339,7 +372,6 @@ export default function AdminLogsStatsDashboard({ data }: Props) {
     </div>
   );
 }
-
 
 
 

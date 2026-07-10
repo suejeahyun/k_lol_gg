@@ -3,9 +3,16 @@ import { NextRequest } from "next/server";
 
 const DEFAULT_TOLERANCE_SECONDS = 300;
 
-function safeEqual(a: string, b: string) {
+export function safeEqualHex(a: string, b: string) {
   const left = Buffer.from(a, "hex");
   const right = Buffer.from(b, "hex");
+  if (left.length !== right.length) return false;
+  return crypto.timingSafeEqual(left, right);
+}
+
+export function safeEqualText(a: string, b: string) {
+  const left = Buffer.from(a, "utf8");
+  const right = Buffer.from(b, "utf8");
   if (left.length !== right.length) return false;
   return crypto.timingSafeEqual(left, right);
 }
@@ -47,7 +54,7 @@ export function verifySignedRequest(params: {
     body: params.body,
   });
 
-  return safeEqual(expected, signature);
+  return safeEqualHex(expected, signature);
 }
 
 export async function readRequestBodyForSignature(req: NextRequest) {

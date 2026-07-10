@@ -91,6 +91,7 @@ export async function GET() {
         },
       },
       orderBy: [{ applyDate: "desc" }, { createdAt: "desc" }, { id: "desc" }],
+      take: 50,
     });
 
     return NextResponse.json({
@@ -304,4 +305,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-

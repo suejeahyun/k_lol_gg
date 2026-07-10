@@ -1,14 +1,20 @@
 ﻿import { prisma } from "@/lib/prisma/client";
 
-type AnyRecord = Record<string, any>;
+type AnyRecord = Record<string, unknown>;
+type DynamicDelegate = {
+  findMany: (args?: unknown) => Promise<unknown>;
+};
+type DynamicDatabase = Record<string, unknown>;
 type SeriesPoint = Record<string, string | number>;
 
 const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
 
-function getDelegate(db: any, name: string) {
+function getDelegate(db: DynamicDatabase, name: string): DynamicDelegate | null {
   const delegate = db?.[name];
-  if (!delegate || typeof delegate.findMany !== "function") return null;
-  return delegate;
+  if (!delegate || typeof delegate !== "object") return null;
+  const candidate = delegate as Partial<DynamicDelegate>;
+  if (typeof candidate.findMany !== "function") return null;
+  return candidate as DynamicDelegate;
 }
 
 function toDate(value: unknown): Date | null {
@@ -62,7 +68,7 @@ function buildEmptyHeatmap() {
 }
 
 async function safeFindMany(delegateName: string, args: AnyRecord) {
-  const delegate = getDelegate(prisma as any, delegateName);
+  const delegate = getDelegate(prisma as unknown as DynamicDatabase, delegateName);
   if (!delegate) return [];
   try {
     const rows = await delegate.findMany(args);

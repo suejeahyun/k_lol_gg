@@ -327,23 +327,6 @@ function getPositionLabel(position: Position) {
   return position;
 }
 
-function getPositionImagePath(position?: Position | null) {
-  switch (position) {
-    case "TOP":
-      return "/images/positions/position-top.webp";
-    case "JGL":
-      return "/images/positions/position-jungle.webp";
-    case "MID":
-      return "/images/positions/position-mid.webp";
-    case "ADC":
-      return "/images/positions/position-adc.webp";
-    case "SUP":
-      return "/images/positions/position-sup.webp";
-    default:
-      return "/images/positions/position-mid.webp";
-  }
-}
-
 function getDisplayName(participant: Participant | null) {
   if (!participant) return "미정";
   return participant.player.name || participant.player.nickname;
@@ -720,7 +703,6 @@ export default function DestructionAuctionManager({
   const tierRank = getTierRankFromKey(tierVisual.key);
   const tierCriteriaClassName = getTierCriteriaClass(tierRank);
   const tierImagePath = getTierImagePath(tierReference);
-  const positionImagePath = getPositionImagePath(currentTarget?.position);
   const selectedTeamHasSamePosition = Boolean(
     selectedTeam &&
     currentTarget &&
@@ -5978,14 +5960,24 @@ export default function DestructionAuctionManager({
                     {isDrawing ? "플레이어 추첨 중..." : "플레이어 추첨"}
                   </button>
                   {!liveMode ? (
-                    <button
-                      type="button"
-                      className="auction-preview-fullscreen-button"
-                      onClick={openLiveAuctionScreen}
-                      disabled={isDrawing}
-                    >
-                      경매 전용 화면
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        className="auction-preview-fullscreen-button"
+                        onClick={openPreviewFullscreen}
+                        disabled={isDrawing}
+                      >
+                        운영 확대
+                      </button>
+                      <button
+                        type="button"
+                        className="auction-preview-fullscreen-button"
+                        onClick={openLiveAuctionScreen}
+                        disabled={isDrawing}
+                      >
+                        경매 전용 화면
+                      </button>
+                    </>
                   ) : null}
                 </div>
               ) : (
@@ -6005,14 +5997,24 @@ export default function DestructionAuctionManager({
                     플레이어 보기
                   </button>
                   {!liveMode ? (
-                    <button
-                      type="button"
-                      className="auction-preview-fullscreen-button"
-                      onClick={openLiveAuctionScreen}
-                      disabled={isDrawing}
-                    >
-                      경매 전용 화면
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        className="auction-preview-fullscreen-button"
+                        onClick={openPreviewFullscreen}
+                        disabled={isDrawing}
+                      >
+                        운영 확대
+                      </button>
+                      <button
+                        type="button"
+                        className="auction-preview-fullscreen-button"
+                        onClick={openLiveAuctionScreen}
+                        disabled={isDrawing}
+                      >
+                        경매 전용 화면
+                      </button>
+                    </>
                   ) : null}
                 </div>
               )}
@@ -6408,8 +6410,6 @@ export default function DestructionAuctionManager({
     </div>
   );
 }
-
-
 
 
 

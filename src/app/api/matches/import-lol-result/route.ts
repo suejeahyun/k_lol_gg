@@ -1,12 +1,4 @@
 ﻿import { logServerError } from "@/lib/server/safe-log";
-function logImportLolResultConsoleReplacement(...args: unknown[]) {
-  const [tag, error, ...details] = args;
-  logServerError(
-    typeof tag === "string" ? tag : "[MATCH_IMPORT_LOL_RESULT_ERROR]",
-    details.length > 0 ? { error, details } : error,
-  );
-}
-
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
@@ -15,7 +7,6 @@ import sharp from "sharp";
 import Tesseract from "tesseract.js";
 import path from "node:path";
 import { mkdir, writeFile } from "node:fs/promises";
-import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import type {
   LolResultImportResponse,
@@ -28,17 +19,6 @@ type Rect = {
   width: number;
   height: number;
 };
-
-type ChampionImage = {
-  id: number;
-  name: string;
-  imageUrl: string;
-  colorFingerprint: Buffer;
-  hashBits: string;
-};
-
-const CHAMPION_COMPARE_SIZE = 24;
-const MIN_CHAMPION_CONFIDENCE = 0.97;
 
 const TESSERACT_WORKER_PATH = path.join(
   process.cwd(),
@@ -403,142 +383,6 @@ async function recognizeKda(buffer: Buffer) {
       .join(" | "),
     kda: emptyKda(),
   };
-}
-
-async function makeChampionCenterBuffer(buffer: Buffer) {
-  const normalized = await sharp(buffer, { failOn: "none" })
-    .rotate()
-    .resize(64, 64, {
-      fit: "cover",
-      position: "centre",
-      withoutEnlargement: false,
-    })
-    .png()
-    .toBuffer();
-
-  // Sharp의 operation 순서 때문에 원본 이미지가 작거나 경고가 있는 경우
-  // resize().extract() 체인이 extract_area 오류를 낼 수 있다.
-  // 먼저 64x64로 확정 변환한 뒤 다시 extract해서 항상 유효한 영역만 자른다.
-  return sharp(normalized, { failOn: "none" })
-    .extract({ left: 8, top: 8, width: 48, height: 48 })
-    .png()
-    .toBuffer();
-}
-
-async function makeChampionColorFingerprint(buffer: Buffer) {
-  const centerBuffer = await makeChampionCenterBuffer(buffer);
-
-  return sharp(centerBuffer, { failOn: "none" })
-    .normalize()
-    .resize(CHAMPION_COMPARE_SIZE, CHAMPION_COMPARE_SIZE, { fit: "fill" })
-    .removeAlpha()
-    .raw()
-    .toBuffer();
-}
-
-async function makeDifferenceHash(buffer: Buffer) {
-  const width = 9;
-  const height = 8;
-  const centerBuffer = await makeChampionCenterBuffer(buffer);
-  const pixels = await sharp(centerBuffer, { failOn: "none" })
-    .grayscale()
-    .normalize()
-    .resize(width, height, { fit: "fill" })
-    .raw()
-    .toBuffer();
-
-  let bits = "";
-  for (let y = 0; y < height; y += 1) {
-    for (let x = 0; x < width - 1; x += 1) {
-      const left = pixels[y * width + x] ?? 0;
-      const right = pixels[y * width + x + 1] ?? 0;
-      bits += left > right ? "1" : "0";
-    }
-  }
-
-  return bits;
-}
-
-async function makeChampionSignature(buffer: Buffer) {
-  const [colorFingerprint, hashBits] = await Promise.all([
-    makeChampionColorFingerprint(buffer),
-    makeDifferenceHash(buffer),
-  ]);
-
-  return { colorFingerprint, hashBits };
-}
-
-function compareColorFingerprints(a: Buffer, b: Buffer) {
-  const length = Math.min(a.length, b.length);
-  if (length === 0) return 0;
-
-  let diff = 0;
-  for (let index = 0; index < length; index += 1) {
-    diff += Math.abs(a[index] - b[index]);
-  }
-
-  const maxDiff = length * 255;
-  return Math.max(0, 1 - diff / maxDiff);
-}
-
-function compareHashBits(a: string, b: string) {
-  const length = Math.min(a.length, b.length);
-  if (length === 0) return 0;
-
-  let same = 0;
-  for (let index = 0; index < length; index += 1) {
-    if (a[index] === b[index]) same += 1;
-  }
-
-  return same / length;
-}
-
-function compareChampionSignatures(
-  captured: Awaited<ReturnType<typeof makeChampionSignature>>,
-  champion: ChampionImage,
-) {
-  const colorScore = compareColorFingerprints(
-    captured.colorFingerprint,
-    champion.colorFingerprint,
-  );
-  const hashScore = compareHashBits(captured.hashBits, champion.hashBits);
-
-  // 색상만 비교하면 비슷한 팔레트 챔피언끼리 자주 틀린다.
-  // 구조 해시를 섞어서 원형 테두리/축소 이미지에서도 후보 순위를 더 안정화한다.
-  return colorScore * 0.58 + hashScore * 0.42;
-}
-
-async function loadChampionImages() {
-  const champions = await prisma.champion.findMany({
-    select: { id: true, name: true, imageUrl: true },
-    orderBy: { id: "asc" },
-    take: 250,
-  });
-
-  const loaded: ChampionImage[] = [];
-
-  await Promise.all(
-    champions.map(async (champion) => {
-      try {
-        const response = await fetch(champion.imageUrl, {
-          cache: "force-cache",
-        });
-        if (!response.ok) return;
-
-        const arrayBuffer = await response.arrayBuffer();
-        const signature = await makeChampionSignature(Buffer.from(arrayBuffer));
-        loaded.push({ ...champion, ...signature });
-      } catch (error) {
-        logImportLolResultConsoleReplacement(
-          "[LOL_RESULT_CHAMPION_IMAGE_LOAD_ERROR]",
-          champion.name,
-          error,
-        );
-      }
-    }),
-  );
-
-  return loaded;
 }
 
 async function detectResultTitleTop(
@@ -974,40 +818,6 @@ async function saveDebugImage(filePath: string, buffer: Buffer) {
   } catch (error) {
     logServerError("[LOL_RESULT_DEBUG_SAVE_ERROR]", error);
   }
-}
-
-async function findChampionCandidates(
-  iconBuffer: Buffer,
-  championImages: ChampionImage[],
-) {
-  if (championImages.length === 0) {
-    return {
-      championName: null,
-      confidence: 0,
-      candidates: [] as Array<{ championName: string; confidence: number }>,
-    };
-  }
-
-  const capturedSignature = await makeChampionSignature(iconBuffer);
-  const candidates = championImages
-    .map((champion) => ({
-      championName: champion.name,
-      confidence: compareChampionSignatures(capturedSignature, champion),
-    }))
-    .sort((left, right) => right.confidence - left.confidence)
-    .slice(0, 8)
-    .map((candidate) => ({
-      championName: candidate.championName,
-      confidence: Number(candidate.confidence.toFixed(4)),
-    }));
-
-  const best = candidates[0] ?? { championName: null, confidence: 0 };
-
-  return {
-    championName: best.championName,
-    confidence: best.confidence,
-    candidates,
-  };
 }
 
 async function preprocessForOcr(buffer: Buffer) {

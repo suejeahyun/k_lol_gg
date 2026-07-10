@@ -20,6 +20,9 @@ function getWinRate(wins: number, totalGames: number) {
   return Math.round((wins / totalGames) * 1000) / 10;
 }
 
+const DEFAULT_VISIBLE_PLAYERS = 12;
+const SEARCH_VISIBLE_PLAYERS = 80;
+
 export default async function AppPlayersPage({ searchParams }: AppPlayersPageProps) {
   const params = await searchParams;
   const q = normalizeSearch(params?.q);
@@ -35,29 +38,33 @@ export default async function AppPlayersPage({ searchParams }: AppPlayersPagePro
       }
     : { isActive: true };
 
-  const players = await prisma.player.findMany({
-    where,
-    orderBy: q ? [{ name: "asc" }, { nickname: "asc" }] : [{ name: "asc" }, { nickname: "asc" }],
-    take: 80,
-    select: {
-      id: true,
-      name: true,
-      nickname: true,
-      tag: true,
-      currentTier: true,
-      peakTier: true,
-      seasonStats: {
-        orderBy: { seasonId: "desc" },
-        take: 1,
-        select: {
-          totalGames: true,
-          participationCount: true,
-          wins: true,
-          mvpCount: true,
+  const take = q ? SEARCH_VISIBLE_PLAYERS : DEFAULT_VISIBLE_PLAYERS;
+  const [players, totalCount] = await Promise.all([
+    prisma.player.findMany({
+      where,
+      orderBy: [{ name: "asc" }, { nickname: "asc" }],
+      take,
+      select: {
+        id: true,
+        name: true,
+        nickname: true,
+        tag: true,
+        currentTier: true,
+        peakTier: true,
+        seasonStats: {
+          orderBy: { seasonId: "desc" },
+          take: 1,
+          select: {
+            totalGames: true,
+            participationCount: true,
+            wins: true,
+            mvpCount: true,
+          },
         },
       },
-    },
-  });
+    }),
+    prisma.player.count({ where }),
+  ]);
 
   return (
     <AppMobileShell subtitle="플레이어">
@@ -78,7 +85,13 @@ export default async function AppPlayersPage({ searchParams }: AppPlayersPagePro
         </form>
       </AppSection>
 
-      <AppSection title={q ? `검색 결과 ${players.length}명` : `전체 ${players.length}명`}>
+      <AppSection
+        title={
+          q
+            ? `검색 결과 ${totalCount}명`
+            : `전체 ${totalCount}명 · ${players.length}명 표시`
+        }
+      >
         <div className="klol-app-list klol-app-player-list">
           {players.length === 0 ? (
             <AppEmpty>플레이어가 없습니다.</AppEmpty>

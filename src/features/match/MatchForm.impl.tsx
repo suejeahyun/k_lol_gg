@@ -4,11 +4,8 @@ import { useEffect, useMemo, useState, type ClipboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import { getMatchDateTimeLocalFromTitle } from "@/lib/date/kst";
 import type {
-  LolChampionCandidate,
   LolResultImportResponse,
-  LolResultImportRow,
 } from "@/features/match/lol-result-import-types";
-import { extractRiotNameFromPlayerLabel, nicknameSimilarity, participantNameSimilarity } from "@/features/match/lol-result-import-utils";
 
 type Team = "BLUE" | "RED";
 type Position = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
@@ -346,7 +343,6 @@ export default function MatchForm({
   );
   const [lolResultImportingGameIndex, setLolResultImportingGameIndex] = useState<number | null>(null);
   const [lolResultImportStatus, setLolResultImportStatus] = useState<Record<number, string>>({});
-  const [lolChampionCandidates, setLolChampionCandidates] = useState<Record<string, LolChampionCandidate[]>>({});
   const [lolChampionPreviews, setLolChampionPreviews] = useState<Record<string, string>>({});
 
   const loadTeamBalanceDrafts = async () => {
@@ -712,17 +708,6 @@ export default function MatchForm({
     }
   };
 
-  const normalizeMatchToken = (value: string) =>
-    value
-      .replace(/\([^)]*\)/g, " ")
-      .replace(/#[^#\s)]+/g, " ")
-      .replace(/\.\.\.|…/g, " ")
-      .replace(/[£¥₩]/g, " ")
-      .replace(/[|｜ㅣ]/g, " ")
-      .replace(/[^0-9A-Za-z가-힣]/g, "")
-      .toLowerCase()
-      .trim();
-
   const normalizeRiotToken = (value: string) =>
     value
       .replace(/\.\.\.|…/g, "")
@@ -896,9 +881,6 @@ export default function MatchForm({
 
     return { index: candidates[0].index, score: 0.15 };
   };
-
-  const hasReadableKda = (row: LolResultImportRow) =>
-    row.kills !== null && row.deaths !== null && row.assists !== null;
 
   const getMatchThreshold = (match: { index: number; score: number } | null) => {
     if (!match) return false;
@@ -1242,13 +1224,6 @@ export default function MatchForm({
         ),
       }));
 
-      setLolChampionCandidates((prev) => {
-        const next = { ...prev };
-        for (const participantIndex of targetGame.participants.keys()) {
-          delete next[`${gameIndex}-${participantIndex}`];
-        }
-        return next;
-      });
       setLolChampionPreviews((prev) => ({
         ...prev,
         ...championPreviewUpdates,

@@ -8,6 +8,7 @@ import { getRequestAuditFields, writeAdminLog } from "@/lib/admin-log";
 import { verifyPassword } from "@/lib/auth/password";
 import { authConstants } from "@/lib/auth";
 import { signAuthToken } from "@/lib/auth/token";
+import { USER_TOKEN_COOKIE, authCookieOptions, clearAuthCookieOptions } from "@/lib/auth/cookies";
 
 export async function POST(req: NextRequest) {
   const rateLimitRejected = await rejectIfRateLimited(req, {
@@ -91,21 +92,8 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    res.cookies.set("user_token", token, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7,
-    });
-
-    res.cookies.set(authConstants.ADMIN_TOKEN_KEY, "", {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: 0,
-    });
+    res.cookies.set(USER_TOKEN_COOKIE, token, authCookieOptions(60 * 60 * 24 * 7));
+    res.cookies.set(authConstants.ADMIN_TOKEN_KEY, "", clearAuthCookieOptions());
 
     return res;
   } catch (error) {

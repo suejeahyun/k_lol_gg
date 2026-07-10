@@ -104,7 +104,9 @@ export default async function AdminLogsPage(props: PageProps) {
   const days = getNumber(params, "days", 30, 1, 3650);
   const page = getNumber(params, "page", 1, 1, 99999);
   const pageSize = getNumber(params, "pageSize", 50, 20, 200);
-  const from = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  const now = new Date();
+  const from = new Date(now);
+  from.setDate(from.getDate() - days);
 
   const and: Prisma.AdminLogWhereInput[] = [{ createdAt: { gte: from } }];
   if (q) {
@@ -123,7 +125,7 @@ export default async function AdminLogsPage(props: PageProps) {
   if (targetType) and.push({ targetType });
   const where: Prisma.AdminLogWhereInput = { AND: and };
 
-  const [logs, total, recentForStats, totalAll] = await Promise.all([
+  const [logs, total, recentForStats] = await Promise.all([
     prisma.adminLog.findMany({
       where,
       orderBy: { createdAt: "desc" },
@@ -137,11 +139,12 @@ export default async function AdminLogsPage(props: PageProps) {
       take: 2000,
       select: { action: true, targetType: true, actorType: true, actorUserId: true, createdAt: true },
     }),
-    prisma.adminLog.count(),
   ]);
 
-  const last24From = Date.now() - 24 * 60 * 60 * 1000;
-  const last24Count = recentForStats.filter((log) => new Date(log.createdAt).getTime() >= last24From).length;
+  const last24From = new Date(now);
+  last24From.setHours(last24From.getHours() - 24);
+  const last24FromMs = last24From.getTime();
+  const last24Count = recentForStats.filter((log) => new Date(log.createdAt).getTime() >= last24FromMs).length;
   const uniqueActionCount = new Set(recentForStats.map((log) => log.action)).size;
   const uniqueActorCount = new Set(recentForStats.map((log) => log.actorUserId || log.actorType).filter(Boolean)).size;
   const pageCount = Math.max(1, Math.ceil(total / pageSize));

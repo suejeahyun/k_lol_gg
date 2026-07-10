@@ -147,7 +147,9 @@
 .match-slide__controls {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .match-slide__control {
@@ -452,7 +454,7 @@
   display: flex;
   justify-content: center;
   gap: 8px;
-  padding-top: 2px;
+  padding-top: 0;
 }
 
 .match-slide__dot {

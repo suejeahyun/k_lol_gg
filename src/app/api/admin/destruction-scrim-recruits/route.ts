@@ -1,12 +1,16 @@
+import { DestructionScrimRecruitStatus } from "@prisma/client";
+import { NextRequest, NextResponse } from "next/server";
+import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { prisma } from "@/lib/prisma/client";
 import { requireSiteFeature } from "@/lib/site/feature-guard";
+
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-import { NextRequest, NextResponse } from "next/server";
-import { DestructionScrimRecruitStatus } from "@prisma/client";
-import { prisma } from "@/lib/prisma/client";
-
 export async function GET(req: NextRequest) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
   const premiumLock = await requireSiteFeature("recruit");
   if (premiumLock) return premiumLock;
 

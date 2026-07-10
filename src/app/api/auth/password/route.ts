@@ -7,6 +7,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { writeAdminLog } from "@/lib/admin-log";
 import { authConstants } from "@/lib/auth";
+import { USER_TOKEN_COOKIE, clearAuthCookieOptions } from "@/lib/auth/cookies";
 
 export async function PATCH(req: NextRequest) {
   try {
@@ -95,21 +96,8 @@ export async function PATCH(req: NextRequest) {
       message: "비밀번호가 변경되었습니다. 다시 로그인해주세요.",
     });
 
-    response.cookies.set("user_token", "", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 0,
-    });
-
-    response.cookies.set(authConstants.ADMIN_TOKEN_KEY, "", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 0,
-    });
+    response.cookies.set(USER_TOKEN_COOKIE, "", clearAuthCookieOptions());
+    response.cookies.set(authConstants.ADMIN_TOKEN_KEY, "", clearAuthCookieOptions());
 
     return response;
   } catch (error) {
@@ -121,4 +109,3 @@ export async function PATCH(req: NextRequest) {
     );
   }
 }
-

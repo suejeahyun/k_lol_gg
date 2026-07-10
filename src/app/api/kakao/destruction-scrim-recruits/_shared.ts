@@ -2,7 +2,7 @@ import { createHash } from "crypto";
 import { NextRequest } from "next/server";
 import { DestructionScrimRecruitStatus, DestructionStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
-import { getRequiredSecretInProduction } from "@/lib/security/secrets";
+import { getRequiredSecretInProduction, matchesRequestSecret } from "@/lib/security/secrets";
 import { kakaoJsonReply } from "@/lib/kakao/reply-format";
 import {
   buildScrimStatusReply,
@@ -37,7 +37,14 @@ export function rejectIfInvalidScrimSecret(req: NextRequest, bodySecret: unknown
   const querySecret = req.nextUrl.searchParams.get("secret");
   const secretText = typeof bodySecret === "string" ? bodySecret : null;
 
-  if (headerSecret === secret || bearer === secret || querySecret === secret || secretText === secret) {
+  if (
+    matchesRequestSecret(secret, {
+      headers: [headerSecret],
+      bearer,
+      body: secretText,
+      query: querySecret,
+    })
+  ) {
     return null;
   }
 
@@ -101,7 +108,7 @@ export async function findTeamByName(tournamentId: number, teamName?: string | n
   });
 }
 
-export async function getNextScrimNo(_recruitDate = getScrimRecruitDateKey()) {
+export async function getNextScrimNo() {
   // 스크림 번호는 카카오톡 명령어에서 날짜 없이 사용됩니다.
   // 날짜별로 #1을 재사용하면 `스크림상세 1`이 과거 완료 건을 잡을 수 있으므로
   // 완료/취소 여부와 관계없이 전체 스크림 중 가장 큰 번호 다음 번호를 발급합니다.

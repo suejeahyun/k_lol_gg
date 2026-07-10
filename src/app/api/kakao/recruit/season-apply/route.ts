@@ -2,7 +2,7 @@ import { requireSiteFeature } from "@/lib/site/feature-guard";
 import { createHash } from "crypto";
 import { NextRequest } from "next/server";
 import { kakaoJsonReply } from "@/lib/kakao/reply-format";
-import { getRequiredSecretInProduction } from "@/lib/security/secrets";
+import { getRequiredSecretInProduction, matchesRequestSecret } from "@/lib/security/secrets";
 import { getKstStartOfDate } from "@/lib/date/kst";
 import { writeAdminLog } from "@/lib/admin-log";
 import { prisma } from "@/lib/prisma/client";
@@ -30,52 +30,6 @@ type ApplyResult = {
     tag: string;
   };
 };
-
-function simplifyPendingReason(reason?: string): string {
-  const reasonText = String(reason || "").trim();
-
-  if (reasonText.indexOf("2명 이상") >= 0 || reasonText.indexOf("동명이인") >= 0) {
-    return "같은 이름/닉네임 후보가 2명 이상 있음";
-  }
-
-  if (reasonText.indexOf("매칭되지") >= 0 || reasonText.indexOf("찾을 수") >= 0) {
-    return "등록된 플레이어를 찾을 수 없음";
-  }
-
-  if (reasonText.indexOf("예비") >= 0) {
-    return "예비 참가자 확인 필요";
-  }
-
-  if (reasonText === "") {
-    return "관리자 확인 필요";
-  }
-
-  return reasonText
-    .replace(/\s*관리자 확인 필요\.?/g, "")
-    .replace(/입니다\.?/g, "")
-    .trim();
-}
-
-function buildPendingSummary(results: ApplyResult[]): string {
-  const pendingResults = results.filter((item) => item.status === "PENDING");
-
-  if (pendingResults.length === 0) {
-    return "";
-  }
-
-  return pendingResults
-    .map((result, index) => {
-      const name = normalizeName(result.participant.name) || `${result.participant.slotNumber || index + 1}번 항목`;
-      const reason = simplifyPendingReason(result.reason);
-
-      if (pendingResults.length === 1) {
-        return `대상: ${name}\n사유: ${reason}`;
-      }
-
-      return `${index + 1}. ${name} - ${reason}`;
-    })
-    .join("\n");
-}
 
 type ApplyChangeSummary = {
   added: string[];
@@ -704,7 +658,13 @@ function rejectIfInvalidSecret(req: NextRequest, bodySecret: unknown) {
   const bearer = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
   const secretText = typeof bodySecret === "string" ? bodySecret : null;
 
-  if (headerSecret === secret || bearer === secret || secretText === secret) {
+  if (
+    matchesRequestSecret(secret, {
+      headers: [headerSecret],
+      bearer,
+      body: secretText,
+    })
+  ) {
     return null;
   }
 
@@ -715,10 +675,6 @@ function rejectIfInvalidSecret(req: NextRequest, bodySecret: unknown) {
     },
     401,
   );
-}
-
-function normalizeCommand(value: string) {
-  return value.trim().replace(/\s+/g, "");
 }
 
 function extractRequestedRecruitNo(value: unknown) {
@@ -747,16 +703,6 @@ function extractRequestedRecruitNo(value: unknown) {
   }
 
   return null;
-}
-
-function isPartyRecruitLikeMessage(value: string) {
-  const text = String(value || "").replace(/\r/g, "\n");
-
-  return (
-    /\d{1,2}\s*인\s*(?:파티\s*)?구인/.test(text) ||
-    /(?:모집번호|게임정보|시작시간)\s*[:：]/.test(text) ||
-    /(?:자랭|일반|솔랭|칼바람|기타게임|롤체|더블업)\s*하실분/.test(text)
-  );
 }
 
 function isRecruitSnapshotMessage(value: string) {
