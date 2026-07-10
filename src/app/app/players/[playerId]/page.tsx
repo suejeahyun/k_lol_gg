@@ -281,12 +281,6 @@ export default async function AppPlayerDetailPage({ params }: AppPlayerDetailPag
             <strong>{averageSoloDamage.toLocaleString("ko-KR")}</strong>
           </div>
         </div>
-        <p className="klol-app-muted" style={{ marginTop: 10 }}>
-          Riot 데이터는 저장된 캐시 기준입니다. 실제 API 호출은 동기화 버튼 또는 관리자 동기화에서만 실행됩니다.
-        </p>
-        <Link className="klol-app-secondary klol-app-full-link" href={`/players/${player.id}/riot`}>
-          PC Riot 상세 보기
-        </Link>
       </AppSection>
 
       <AppSection title="주요 챔피언">

@@ -100,3 +100,68 @@ npm run build
 - `next/image`로 전환 가능한 정적 이미지부터 단계적으로 최적화
 - `/players/[id]/riot` 전체 높이가 긴 편이므로 최근 20게임 분석을 탭/접힘 섹션으로 더 줄이는 후속 개선 가능
 - 관리자 상세 페이지들은 기능은 통과했지만, 운영 빈도에 따라 고급 설정/일반 작업 메뉴를 더 분리하면 사이드바 밀도가 낮아짐
+
+## 모바일 앱 전환 패치 검증
+
+- PC 공통 CSS 안전장치 추가: 모든 주요 컨테이너 `min-width: 0`, 와이드/노트북 폭별 content max 보정, 테이블 래퍼 수평 스크롤 보정
+- 모바일 게이트 확장:
+  - `/players` → `/app/players`
+  - `/players/[id]` → `/app/players/[id]`
+  - `/players/balance`, `/balance`, `/random-team` → `/app`
+  - `/matches/[id]` → `/app/matches/[id]`
+  - `/recruit`, `/kakao`, `/recruit-helper` → `/app/recruits`
+  - `/progress/*`, `/participation/*` → `/app/matches?tab=events`
+  - `/ai-balance` → `/app/rankings`
+  - `/admin/*` → `/app/admin`
+- `/app/matches` 재구성: 내전 / 구인 / 랭킹 / 이벤트 탭 허브화
+- `/app/recruits` 재구성: 전체 / 진행중 / 마감 / 취소 / 초기화 상태 필터, 기본 16개 노출
+- `/app/rankings` 재구성: TOP3 섹션 + 전체 랭킹, 플레이어 상세 링크 연결
+- `/app/me` 재구성: 로그인 전/후 분기, 내 시즌 요약, Riot 연동/솔랭 요약, 관리자 바로가기
+- `/app/matches/[id]`: 챔피언 원형 아이콘 추가
+- `/app/admin`: 운영 상태, 빠른 확인, 로그 요약 보강
+
+브라우저 확인:
+
+| 기준 | Route | 결과 |
+| --- | --- | --- |
+| PC 2293x960 | `/`, `/players`, `/rankings`, `/matches`, `/progress/destruction/16` | 수평 overflow 없음 |
+| PC 2293x960 | `/app`, `/app/matches?tab=events`, `/app/recruits`, `/app/me` | 수평 overflow 없음 |
+| Mobile 390x844 | `/players` | `/app/players` 이동, 수평 overflow 없음 |
+| Mobile 390x844 | `/players/38` | `/app/players/38` 이동, 수평 overflow 없음 |
+| Mobile 390x844 | `/players/balance` | `/app` 이동, 수평 overflow 없음 |
+| Mobile 390x844 | `/matches/39` | `/app/matches/39` 이동, 수평 overflow 없음 |
+| Mobile 390x844 | `/recruit` | `/app/recruits` 이동, 수평 overflow 없음 |
+| Mobile 390x844 | `/progress/destruction/16` | `/app/matches?tab=events` 이동, 수평 overflow 없음 |
+| Mobile 390x844 | `/ai-balance` | `/app/rankings` 이동, 수평 overflow 없음 |
+| Mobile 390x844 | `/admin` | `/app/admin` 이동, 수평 overflow 없음 |
+
+검증 명령:
+
+```txt
+npm run typecheck
+✓ passed
+
+npm run lint
+✓ 0 errors
+! 11 warnings: existing next/image recommendations
+
+npm run prisma:validate
+✓ schema valid
+
+npm run check:admin-guards
+✓ 63 admin routes checked
+
+npm run check:secrets
+✓ no exposed secret detected
+
+npm audit --audit-level=high
+✓ found 0 vulnerabilities
+
+npm run build
+✓ compiled successfully
+```
+
+배포 준비:
+
+- `npm run check:deploy-readiness`는 로컬 `SUPER_ADMIN_ID` 누락으로 실패
+- Vercel 방별 프로젝트마다 `SUPER_ADMIN_ID`, DB URL, Riot/Kakao/env를 별도로 지정해야 함

@@ -25,7 +25,6 @@ export default async function AppAccountPage() {
       <section className="klol-app-hero">
         <div className="klol-app-kicker">ACCOUNT</div>
         <h1 className="klol-app-title">계정관리</h1>
-        <p className="klol-app-subtitle">계정과 플레이어 정보를 앱에서 관리합니다.</p>
       </section>
 
       <AppSection title="계정 정보">

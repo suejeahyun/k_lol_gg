@@ -3346,3 +3346,164 @@ html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .klol-install
   color: #f8fbff !important;
   box-shadow: 0 12px 26px rgba(24, 68, 124, 0.2) !important;
 }
+
+/* Final responsive safety net for PC routes.
+   Mobile widths are handled by MobileAppGate and /app, so PC pages only need to
+   avoid overflow and keep their content centered across laptop/ultrawide sizes. */
+html,
+body {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+body {
+  min-width: 0;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+img,
+svg,
+canvas,
+video,
+table {
+  max-width: 100%;
+}
+
+.app-shell,
+.app-body,
+.app-content,
+.page-container,
+.page-shell,
+.admin-page,
+.home-page,
+.account-page,
+.progress-page,
+.event-progress-page,
+.destruction-progress-page,
+.participation-page,
+.matches-page-v2,
+.players-page-v2,
+.ranking-page,
+.recruit-page,
+.ai-page,
+.kakao-search-page,
+.notice-page,
+.gallery-page {
+  min-width: 0 !important;
+}
+
+.app-content {
+  max-width: calc(100vw - var(--dm-sidebar)) !important;
+  overflow-x: clip;
+}
+
+.page-container,
+.page-shell,
+.admin-page,
+.home-page,
+.account-page,
+.progress-page,
+.event-progress-page,
+.destruction-progress-page,
+.participation-page,
+.matches-page-v2,
+.players-page-v2,
+.ranking-page,
+.recruit-page,
+.ai-page,
+.kakao-search-page,
+.notice-page,
+.gallery-page {
+  width: min(100%, var(--dm-content-max), calc(100vw - var(--dm-sidebar) - 64px)) !important;
+}
+
+.content-section,
+.admin-card,
+.admin-panel,
+.table-card,
+.stat-card,
+.page-header,
+.page-hero,
+.player-hero {
+  min-width: 0 !important;
+}
+
+.data-table,
+.admin-table,
+table {
+  width: 100%;
+}
+
+.table-card,
+.data-table-wrap,
+.admin-table-wrap,
+.overflow-x-auto {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+@media (min-width: 1900px) {
+  :root {
+    --dm-content-max: min(1680px, calc(100vw - var(--dm-sidebar) - 128px));
+  }
+}
+
+@media (max-width: 1280px) and (min-width: 821px) {
+  :root {
+    --dm-content-max: min(1180px, calc(100vw - var(--dm-sidebar) - 40px));
+  }
+
+  .app-content {
+    padding-inline: 20px !important;
+  }
+
+  .page-container,
+  .page-shell,
+  .admin-page,
+  .home-page,
+  .account-page,
+  .progress-page,
+  .event-progress-page,
+  .destruction-progress-page,
+  .participation-page,
+  .matches-page-v2,
+  .players-page-v2,
+  .ranking-page,
+  .recruit-page,
+  .ai-page,
+  .kakao-search-page,
+  .notice-page,
+  .gallery-page {
+    width: min(100%, calc(100vw - var(--dm-sidebar) - 40px)) !important;
+  }
+
+  .page-header:has(> .page-actions),
+  .player-hero:has(> .page-actions) {
+    min-height: 154px !important;
+    padding-inline: 24px !important;
+    padding-bottom: 76px !important;
+  }
+
+  .page-header:has(> .page-actions) > div:first-child,
+  .player-hero:has(> .page-actions) > div:first-child {
+    position: static !important;
+    width: min(820px, 100%) !important;
+    transform: none !important;
+  }
+
+  .page-header:has(> .page-actions) .page-actions,
+  .player-hero:has(> .page-actions) .page-actions {
+    top: auto !important;
+    right: 24px !important;
+    bottom: 22px !important;
+    left: 24px !important;
+    max-width: none !important;
+    justify-content: center !important;
+    transform: none !important;
+  }
+}

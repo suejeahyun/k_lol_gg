@@ -484,6 +484,23 @@
   font-weight: 950;
 }
 
+.klol-app-participant-row--champion {
+  grid-template-columns: 36px 28px minmax(0, 1fr) minmax(0, 0.9fr) auto;
+}
+
+.klol-app-participant-row--champion img,
+.klol-app-participant-row--champion i {
+  display: block;
+  width: 26px;
+  height: 26px;
+  border: 1px solid rgba(84, 150, 232, 0.34);
+  border-radius: 999px;
+  background: rgba(2, 8, 20, 0.76);
+  background-position: center;
+  background-size: cover;
+  object-fit: cover;
+}
+
 .klol-app-install-hero {
   gap: 12px;
 }
@@ -1374,4 +1391,124 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+
+/* Current mobile app IA: tabs, dense lists, and closed-state cards. */
+.klol-app-header-tools {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+  min-width: 0;
+}
+
+.klol-app-subtabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 2px;
+  padding: 5px;
+  border: 1px solid rgba(84, 150, 232, 0.18);
+  border-radius: 18px;
+  background: rgba(2, 8, 20, 0.54);
+}
+
+.klol-app-subtabs--scroll {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.klol-app-subtabs--scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.klol-app-subtabs a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 0;
+  min-height: 38px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  color: rgba(203, 213, 225, 0.78);
+  font-size: 12px;
+  font-weight: 950;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.klol-app-subtabs a[data-active="true"] {
+  border-color: rgba(74, 163, 255, 0.42);
+  background: linear-gradient(135deg, rgba(47, 125, 255, 0.22), rgba(34, 211, 238, 0.1));
+  color: #edf6ff;
+}
+
+.klol-app-subtabs small {
+  display: inline-grid;
+  min-width: 18px;
+  height: 18px;
+  place-items: center;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: rgba(2, 8, 20, 0.58);
+  color: #bfdbfe;
+  font-size: 10px;
+  font-weight: 950;
+}
+
+.klol-app-list-card[data-muted="true"] {
+  border-color: rgba(84, 150, 232, 0.12);
+  background:
+    linear-gradient(180deg, rgba(9, 15, 26, 0.86), rgba(5, 10, 20, 0.88)),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.035), transparent 58%);
+  opacity: 0.78;
+}
+
+.klol-app-badge--muted {
+  border-color: rgba(148, 163, 184, 0.2);
+  background: rgba(148, 163, 184, 0.08);
+  color: rgba(203, 213, 225, 0.82);
+}
+
+.klol-app-rank-no[data-rank="1"] {
+  border: 1px solid rgba(214, 176, 92, 0.48);
+  background: radial-gradient(circle at 35% 30%, rgba(255, 247, 181, 0.38), transparent 34%), rgba(214, 176, 92, 0.18);
+  color: #f8e6a6;
+}
+
+.klol-app-rank-no[data-rank="2"] {
+  border: 1px solid rgba(180, 199, 221, 0.38);
+  background: radial-gradient(circle at 35% 30%, rgba(237, 246, 255, 0.28), transparent 34%), rgba(148, 163, 184, 0.16);
+  color: #dbeafe;
+}
+
+.klol-app-rank-no[data-rank="3"] {
+  border: 1px solid rgba(190, 122, 62, 0.42);
+  background: radial-gradient(circle at 35% 30%, rgba(255, 205, 146, 0.26), transparent 34%), rgba(180, 83, 9, 0.15);
+  color: #fed7aa;
+}
+
+@media (max-width: 420px) {
+  .klol-app-shell {
+    padding-inline: 12px;
+  }
+
+  .klol-app-title {
+    font-size: 25px;
+  }
+
+  .klol-app-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .klol-app-subtabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .klol-app-meta-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }

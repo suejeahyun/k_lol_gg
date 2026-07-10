@@ -30,20 +30,43 @@ const mobileAppBootScript = `
     if (!window.matchMedia("(max-width: 820px)").matches) return;
     if (window.sessionStorage.getItem("klol-mobile-pc-view") === "1") return;
 
-    const toAppPath = (pathname) => {
-      if (pathname === "/" || pathname === "") return "/app";
-      if (pathname.startsWith("/admin")) return "/app/admin";
-      if (pathname.startsWith("/players/")) return pathname.replace("/players", "/app/players");
-      if (pathname === "/players") return "/app/players";
-      if (pathname.startsWith("/matches/")) return pathname.replace("/matches", "/app/matches");
-      if (pathname === "/matches") return "/app/matches";
-      if (pathname === "/rankings") return "/app/rankings";
-      if (pathname === "/recruit") return "/app/recruits";
-      if (pathname.startsWith("/account") || pathname.startsWith("/me")) return "/app/me";
-      return "/app";
+    const appendSearch = (target, search) => {
+      if (!search) return target;
+      return target.includes("?") ? target + "&" + search : target + "?" + search;
     };
 
-    window.location.replace(toAppPath(path) + window.location.search);
+    const detailTarget = (pathname, sourcePrefix, appPrefix) => {
+      const match = pathname.slice(sourcePrefix.length).match(/^\\/(\\d+)/);
+      return match ? appPrefix + "/" + match[1] : appPrefix;
+    };
+
+    const toAppPath = (pathname, search) => {
+      let target = "/app";
+      if (pathname === "/" || pathname === "") target = "/app";
+      else if (pathname.startsWith("/admin")) target = "/app/admin";
+      else if (
+        pathname.startsWith("/players/balance") ||
+        pathname.startsWith("/balance") ||
+        pathname.startsWith("/random-team")
+      ) target = "/app";
+      else if (pathname.startsWith("/players/")) target = detailTarget(pathname, "/players", "/app/players");
+      else if (pathname === "/players") target = "/app/players";
+      else if (pathname.startsWith("/matches/")) target = detailTarget(pathname, "/matches", "/app/matches");
+      else if (pathname === "/matches") target = "/app/matches";
+      else if (pathname === "/rankings" || pathname.startsWith("/ai-balance")) target = "/app/rankings";
+      else if (
+        pathname.startsWith("/recruit") ||
+        pathname.startsWith("/kakao") ||
+        pathname.startsWith("/recruit-helper")
+      ) target = "/app/recruits";
+      else if (pathname.startsWith("/progress") || pathname.startsWith("/participation")) target = "/app/matches?tab=events";
+      else if (pathname.startsWith("/riot-api")) target = "/app/me";
+      else if (pathname.startsWith("/account") || pathname.startsWith("/me")) target = "/app/me";
+      else if (pathname.startsWith("/login") || pathname.startsWith("/signup")) target = "/app/login";
+      return appendSearch(target, search);
+    };
+
+    window.location.replace(toAppPath(path, window.location.search.slice(1)));
   } catch {
     if (!window.location.pathname.startsWith("/app")) {
       window.location.replace("/app");

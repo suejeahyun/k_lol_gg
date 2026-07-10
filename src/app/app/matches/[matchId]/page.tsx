@@ -48,7 +48,7 @@ export default async function AppMatchDetailPage({ params }: PageProps) {
           participants: {
             include: {
               player: { select: { name: true, nickname: true, tag: true } },
-              champion: { select: { name: true } },
+              champion: { select: { name: true, imageUrl: true } },
             },
           },
         },
@@ -92,8 +92,13 @@ export default async function AppMatchDetailPage({ params }: PageProps) {
 
                   <div className="klol-app-participant-list">
                     {participants.map((participant) => (
-                      <div className="klol-app-participant-row" key={participant.id} data-team={participant.team}>
+                      <div className="klol-app-participant-row klol-app-participant-row--champion" key={participant.id} data-team={participant.team}>
                         <span>{participant.position}</span>
+                        <i
+                          className="klol-app-champion-avatar"
+                          style={participant.champion?.imageUrl ? { backgroundImage: `url(${participant.champion.imageUrl})` } : undefined}
+                          aria-hidden="true"
+                        />
                         <strong>{participant.player?.name || participant.player?.nickname || "-"}</strong>
                         <em>{participant.champion?.name || "-"}</em>
                         <b>{participant.kills}/{participant.deaths}/{participant.assists}</b>

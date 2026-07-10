@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
 import { AppEmpty, AppSection } from "@/components/app-mobile/AppCards";
@@ -46,14 +47,14 @@ function RankingMiniList({
       ) : (
         <div className="klol-app-list">
           {rows.map((stat, index) => (
-            <article className="klol-app-list-card klol-app-rank-row" key={`${title}-${stat.id}`}>
-              <span className="klol-app-rank-no">{index + 1}</span>
+            <Link className="klol-app-list-card klol-app-rank-row" href={`/app/players/${stat.player.id}`} key={`${title}-${stat.id}`}>
+              <span className="klol-app-rank-no" data-rank={index + 1}>{index + 1}</span>
               <span className="klol-app-list-title">
                 <strong>{getPlayerName(stat)}</strong>
                 <span>{stat.player.nickname}#{stat.player.tag}</span>
               </span>
               <span className="klol-app-stat-value">{metric(stat)}</span>
-            </article>
+            </Link>
           ))}
         </div>
       )}
@@ -92,17 +93,39 @@ export default async function AppRankingsPage() {
     .sort((a, b) => b.mvpCount - a.mvpCount || b.participationCount - a.participationCount || b.wins - a.wins)
     .slice(0, 3);
 
+  const overall = [...stats]
+    .sort((a, b) => b.wins - a.wins || b.participationCount - a.participationCount || b.mvpCount - a.mvpCount)
+    .slice(0, 30);
+
   return (
     <AppMobileShell subtitle="시즌 랭킹">
       <section className="klol-app-hero">
         <div className="klol-app-kicker">RANKING</div>
         <h1 className="klol-app-title">랭킹 TOP 3</h1>
-        <p className="klol-app-subtitle">내전 10회 이상 참여 기준</p>
       </section>
 
       <RankingMiniList title="승률 TOP 3" rows={topWinRate} metric={(stat) => `${formatWinRate(stat)} · ${stat.participationCount}회`} />
       <RankingMiniList title="최다참여 TOP 3" rows={topParticipation} metric={(stat) => `${stat.participationCount}회`} />
       <RankingMiniList title="MVP TOP 3" rows={topMvp} metric={(stat) => `${stat.mvpCount}회`} />
+
+      <AppSection title="전체 랭킹" caption={season?.name}>
+        {overall.length === 0 ? (
+          <AppEmpty>랭킹 데이터가 없습니다.</AppEmpty>
+        ) : (
+          <div className="klol-app-list">
+            {overall.map((stat, index) => (
+              <Link className="klol-app-list-card klol-app-rank-row" href={`/app/players/${stat.player.id}`} key={`overall-${stat.id}`}>
+                <span className="klol-app-rank-no" data-rank={index + 1}>{index + 1}</span>
+                <span className="klol-app-list-title">
+                  <strong>{getPlayerName(stat)}</strong>
+                  <span>{stat.player.nickname}#{stat.player.tag}</span>
+                </span>
+                <span className="klol-app-stat-value">{stat.wins}승</span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </AppSection>
     </AppMobileShell>
   );
 }
