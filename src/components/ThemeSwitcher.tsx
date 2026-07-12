@@ -48,7 +48,10 @@ function readStoredTheme(): KlolTheme {
   }
 
   const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-  return isKlolTheme(savedTheme) ? savedTheme : "dark-modern";
+  if (isKlolTheme(savedTheme)) return savedTheme;
+
+  const runtimeTheme = document.documentElement.dataset.theme ?? null;
+  return isKlolTheme(runtimeTheme) ? runtimeTheme : "dark-modern";
 }
 
 function subscribeToThemeChanges(callback: () => void) {

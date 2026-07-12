@@ -229,7 +229,8 @@ export default async function PlayerRiotDetailPage({ params }: PlayerRiotDetailP
                   src={getChampionImageUrl(bestRecentChampion.championName)}
                   alt=""
                   className={styles.focusChampionImage}
-                  loading="lazy"
+                  loading="eager"
+                  decoding="async"
                 />
                 <div>
                   <strong>{bestRecentChampion.championNameKo}</strong>
@@ -313,7 +314,8 @@ export default async function PlayerRiotDetailPage({ params }: PlayerRiotDetailP
                         src={getChampionImageUrl(champion.championName)}
                         alt=""
                         className={styles.championAvatar}
-                        loading="lazy"
+                        loading="eager"
+                        decoding="async"
                       />
                       <strong>{champion.championNameKo}</strong>
                     </span>
@@ -353,7 +355,8 @@ export default async function PlayerRiotDetailPage({ params }: PlayerRiotDetailP
                       src={getChampionImageUrl(champion.championName)}
                       alt=""
                       className={styles.championAvatar}
-                      loading="lazy"
+                      loading="eager"
+                      decoding="async"
                     />
                     <strong>{champion.championNameKo}</strong>
                   </span>
@@ -398,7 +401,8 @@ export default async function PlayerRiotDetailPage({ params }: PlayerRiotDetailP
                     src={getChampionImageUrl(match.championName)}
                     alt=""
                     className={styles.matchChampionImage}
-                    loading="lazy"
+                    loading="eager"
+                    decoding="async"
                   />
                   <div>
                     <strong>{match.championNameKo}</strong>

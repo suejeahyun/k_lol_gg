@@ -303,12 +303,6 @@ export default async function HomePage() {
     })
     .slice(0, 3);
 
-  const podiumSlots = [
-    { rank: 2, player: seasonTopThree[1], tone: "silver" },
-    { rank: 1, player: seasonTopThree[0], tone: "gold" },
-    { rank: 3, player: seasonTopThree[2], tone: "bronze" },
-  ];
-
   const topPlayerTiers =
     seasonTopThree.length > 0
       ? await prisma.player.findMany({
@@ -331,6 +325,21 @@ export default async function HomePage() {
       player.currentTier ?? player.peakTier ?? null,
     ]),
   );
+
+  const topThreeCards = seasonTopThree.map((player, index) => {
+    const rank = index + 1;
+    const tierName = topPlayerTierMap.get(player.playerId) ?? "Unranked";
+
+    return {
+      player,
+      rank,
+      tierName,
+      tierImageSrc: getTierImageSrc(tierName),
+      tone: rank === 1 ? "gold" : rank === 2 ? "silver" : "bronze",
+    };
+  });
+  const seasonAce = topThreeCards[0] ?? null;
+  const seasonChasers = topThreeCards.slice(1);
 
   const mySeasonParticipants =
     currentSeasonId && currentUser?.playerId
@@ -495,67 +504,80 @@ export default async function HomePage() {
               <div className="empty-box">
                 내전 참여 10회 이상 기준에 맞는 랭킹 데이터가 없습니다.
               </div>
-            ) : (
-              <div className="home-dark-podium">
-                {podiumSlots.map((slot) => {
-                  if (!slot.player) return null;
+            ) : seasonAce ? (
+              <div className="home-top3-arena">
+                <Link
+                  href={`/players/${seasonAce.player.playerId}`}
+                  className="home-top3-ace"
+                >
+                  <span className="home-top3-ace__glow" aria-hidden="true" />
+                  <span className="home-top3-ace__visual">
+                    <Image
+                      src={seasonAce.tierImageSrc}
+                      alt={seasonAce.tierName}
+                      width={116}
+                      height={116}
+                    />
+                    <span className="home-top3-medal home-top3-medal--gold" aria-hidden="true">
+                      1
+                    </span>
+                  </span>
 
-                  const tierName =
-                    topPlayerTierMap.get(slot.player.playerId) ?? "Unranked";
-                  const tierImageSrc = getTierImageSrc(tierName);
+                  <span className="home-top3-ace__meta">SEASON ACE</span>
+                  <strong className="home-top3-ace__name">
+                    {seasonAce.player.name}
+                  </strong>
+                  <small className="home-top3-ace__nickname">
+                    {seasonAce.player.nickname}#{seasonAce.player.tag}
+                  </small>
 
-                  return (
+                  <div className="home-top3-scoreline">
+                    <span>
+                      <b>{seasonAce.player.winRate}%</b>
+                      <small>승률</small>
+                    </span>
+                    <span>
+                      <b>{seasonAce.player.wins}</b>
+                      <small>승</small>
+                    </span>
+                    <span>
+                      <b>{seasonAce.player.mvpCount}</b>
+                      <small>MVP</small>
+                    </span>
+                  </div>
+                </Link>
+
+                <div className="home-top3-chasers" aria-label="시즌 TOP 3 추격자">
+                  {seasonChasers.map((slot) => (
                     <Link
                       key={slot.rank}
                       href={`/players/${slot.player.playerId}`}
-                    className={`home-dark-rank-card home-dark-rank-card--${slot.tone}`}
-                  >
-                    <span className="home-dark-rank-card__halo" />
-                      <span className="home-dark-rank-card__rank">
+                      className={`home-top3-chaser home-top3-chaser--${slot.tone}`}
+                    >
+                      <span className="home-top3-chaser__rank" aria-hidden="true">
                         {slot.rank}
                       </span>
-                      {slot.rank === 1 && (
-                        <span
-                          className="home-dark-rank-card__crown"
-                          aria-hidden="true"
-                        />
-                      )}
-                      <span className="home-dark-rank-card__emblem">
+                      <span className="home-top3-chaser__tier">
                         <Image
-                          src={tierImageSrc}
-                          alt={tierName}
-                          width={86}
-                          height={86}
+                          src={slot.tierImageSrc}
+                          alt={slot.tierName}
+                          width={54}
+                          height={54}
                         />
                       </span>
-                      <span className="home-dark-rank-card__label">
-                        {slot.rank === 1 ? "SEASON ACE" : `${slot.rank} RANK`}
+                      <span className="home-top3-chaser__body">
+                        <strong>{slot.player.name}</strong>
+                        <small>{slot.player.nickname}#{slot.player.tag}</small>
                       </span>
-                    <strong className="home-dark-rank-card__name">
-                      {slot.player.name}
-                    </strong>
-                    <small className="home-dark-rank-card__nickname">
-                      {slot.player.nickname}#{slot.player.tag}
-                    </small>
-                    <div className="home-dark-rank-card__stats">
-                      <span>
+                      <span className="home-top3-chaser__stats">
                         <b>{slot.player.winRate}%</b>
-                        <small>승률</small>
+                        <small>{slot.player.wins}승 · MVP {slot.player.mvpCount}</small>
                       </span>
-                      <span>
-                        <b>{slot.player.wins}</b>
-                        <small>승</small>
-                      </span>
-                      <span>
-                        <b>{slot.player.mvpCount}</b>
-                        <small>MVP</small>
-                      </span>
-                    </div>
-                  </Link>
-                  );
-                })}
+                    </Link>
+                  ))}
+                </div>
               </div>
-            )}
+            ) : null}
           </div>
 
           <aside

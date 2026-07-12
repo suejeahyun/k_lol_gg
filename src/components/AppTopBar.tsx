@@ -18,6 +18,7 @@ type TopBarUser = {
 
 type PublicSiteSettings = {
   siteName?: string;
+  siteLogoUrl?: string | null;
 };
 
 export default function AppTopBar({
@@ -30,6 +31,7 @@ export default function AppTopBar({
   const [keyword, setKeyword] = useState("");
   const [user, setUser] = useState<TopBarUser | null>(null);
   const [siteName, setSiteName] = useState("K-LOL.GG");
+  const [siteLogoUrl, setSiteLogoUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (mode !== "user") {
@@ -68,8 +70,10 @@ export default function AppTopBar({
         if (!res.ok) return;
         const data = (await res.json()) as { settings?: PublicSiteSettings };
         if (data.settings?.siteName) setSiteName(data.settings.siteName);
+        setSiteLogoUrl(data.settings?.siteLogoUrl ?? null);
       } catch {
         setSiteName("K-LOL.GG");
+        setSiteLogoUrl(null);
       }
     }
 
@@ -111,6 +115,13 @@ export default function AppTopBar({
     <header className="app-topbar">
       <div className="app-topbar__left">
         <Link href={homeHref} className="app-topbar__home">
+          {siteLogoUrl ? (
+            <span
+              className="app-brand-logo app-brand-logo--topbar"
+              aria-hidden="true"
+              style={{ backgroundImage: `url("${siteLogoUrl}")` }}
+            />
+          ) : null}
           {siteName}
         </Link>
 
@@ -122,7 +133,7 @@ export default function AppTopBar({
       {mode === "user" ? (
         <div className="app-topbar__mobile-auth" aria-label="모바일 회원 메뉴">
           {user ? (
-            <Link href="/me/player" className="app-topbar__auth-link app-topbar__auth-link--primary">
+            <Link href="/account/tier" className="app-topbar__auth-link app-topbar__auth-link--primary">
               내 정보
             </Link>
           ) : (

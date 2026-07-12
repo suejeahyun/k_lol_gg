@@ -20,6 +20,7 @@ type AdminSidebarGroup = {
 
 type PublicSiteSettings = {
   siteName?: string;
+  siteLogoUrl?: string | null;
 };
 
 const menuGroups: AdminSidebarGroup[] = [
@@ -86,6 +87,7 @@ export default function AdminSidebar() {
   const pathname = usePathname();
   const [canViewSuper, setCanViewSuper] = useState(false);
   const [siteName, setSiteName] = useState("K-LOL.GG");
+  const [siteLogoUrl, setSiteLogoUrl] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -123,8 +125,10 @@ export default function AdminSidebar() {
         if (!response.ok) return;
         const data = (await response.json()) as { settings?: PublicSiteSettings };
         if (data.settings?.siteName) setSiteName(data.settings.siteName);
+        setSiteLogoUrl(data.settings?.siteLogoUrl ?? null);
       } catch {
         setSiteName("K-LOL.GG");
+        setSiteLogoUrl(null);
       }
     }
 
@@ -133,7 +137,16 @@ export default function AdminSidebar() {
 
   return (
     <aside className="app-sidebar app-sidebar--admin" aria-label="관리자 메뉴">
-      <div className="app-sidebar__title">관리자</div>
+      <div className="app-sidebar__title app-sidebar__title--brand">
+        {siteLogoUrl ? (
+          <span
+            className="app-brand-logo app-brand-logo--sidebar"
+            aria-hidden="true"
+            style={{ backgroundImage: `url("${siteLogoUrl}")` }}
+          />
+        ) : null}
+        <span>관리자</span>
+      </div>
       <div className="app-sidebar__subtitle">{siteName} · 운영</div>
 
       <nav className="app-sidebar__nav">

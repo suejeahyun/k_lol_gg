@@ -68,7 +68,6 @@ export default function AccountProfileEditForm({ player }: AccountProfileEditFor
       <div className="account-form-section__title">
         <span>PROFILE</span>
         <strong>닉네임 / 태그 변경</strong>
-        <p>사이트에서 표시되는 닉네임과 Riot 태그를 수정합니다.</p>
       </div>
 
       <div className="account-profile-form__grid">
@@ -95,9 +94,7 @@ export default function AccountProfileEditForm({ player }: AccountProfileEditFor
 
       {!player ? (
         <p className="account-profile-form__notice">연결된 플레이어가 없어 수정할 수 없습니다. 관리자에게 플레이어 연결을 요청하세요.</p>
-      ) : (
-        <p className="account-profile-form__notice">이미 사용 중인 닉네임#태그는 저장할 수 없습니다.</p>
-      )}
+      ) : null}
 
       <div className="account-profile-form__actions">
         <button className="admin-button" type="submit" disabled={disabled}>

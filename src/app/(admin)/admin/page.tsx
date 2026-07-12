@@ -15,6 +15,32 @@ type DashboardData = {
   pendingUserCount: number;
   todayParticipationCount: number;
   riotFailureCount: number;
+  activeRecruitCount: number;
+  todayKakaoLogCount: number;
+  siteSettings: {
+    siteName: string;
+    roomName: string | null;
+    planStatus: "ACTIVE" | "LOCKED";
+    themePreset: "dark-modern" | "neon-cyber" | "black-gold";
+    trialEndsAt: string | null;
+    billingOwner: string | null;
+    lockedFeatureCount: number;
+    featureStates: {
+      feature: "kakao" | "recruit" | "balanceAi" | "randomTeam" | "riot";
+      enabled: boolean;
+    }[];
+    envReady: {
+      superAdmin: boolean;
+      database: boolean;
+      riotKey: boolean;
+      deployReady: boolean;
+      deployWarnings: {
+        key: string;
+        level: "missing" | "weak";
+        message: string;
+      }[];
+    };
+  };
   latestMatch: {
     id: number;
     title: string | null;
@@ -128,6 +154,26 @@ export default function AdminHomePage() {
       </div>
 
       <section className="admin-summary-grid">
+        <div className="admin-summary-card admin-summary-card--premium">
+          <div className="admin-summary-card__label">운영 사이트</div>
+          <div className="admin-summary-card__value admin-summary-card__value--small">
+            {data.siteSettings.siteName}
+          </div>
+          <div className="admin-summary-card__meta">
+            {data.siteSettings.roomName || "방 이름 미설정"} · {data.siteSettings.planStatus === "ACTIVE" ? "유료 활성" : "유료 잠금"}
+          </div>
+        </div>
+
+        <div className="admin-summary-card">
+          <div className="admin-summary-card__label">잠긴 기능</div>
+          <div className="admin-summary-card__value">
+            {data.siteSettings.lockedFeatureCount.toLocaleString()}개
+          </div>
+          <div className="admin-summary-card__meta">
+            카카오·구인·랭킹·랜덤팀·Riot 기준
+          </div>
+        </div>
+
         <div className="admin-summary-card">
           <div className="admin-summary-card__label">현재 시즌</div>
           <div className="admin-summary-card__value">
@@ -190,6 +236,26 @@ export default function AdminHomePage() {
         </div>
 
         <div className="admin-summary-card">
+          <div className="admin-summary-card__label">활성 구인</div>
+          <div className="admin-summary-card__value">
+            {data.activeRecruitCount.toLocaleString()}개
+          </div>
+          <div className="admin-summary-card__meta">
+            진행 중인 카카오 구인
+          </div>
+        </div>
+
+        <div className="admin-summary-card">
+          <div className="admin-summary-card__label">오늘 구인 로그</div>
+          <div className="admin-summary-card__value">
+            {data.todayKakaoLogCount.toLocaleString()}건
+          </div>
+          <div className="admin-summary-card__meta">
+            카카오 파싱/종료/초기화 기록
+          </div>
+        </div>
+
+        <div className="admin-summary-card">
           <div className="admin-summary-card__label">최근 내전</div>
           <div className="admin-summary-card__value admin-summary-card__value--small">
             {data.latestMatch
@@ -203,6 +269,70 @@ export default function AdminHomePage() {
           </div>
         </div>
       </section>
+
+      <section className="admin-log-section admin-dashboard-control">
+        <div className="admin-log-section__header">
+          <div>
+            <h2 className="admin-section-title">방별 운영 설정</h2>
+          </div>
+          <a className="admin-button admin-button--ghost" href="/admin/site-settings">
+            설정 열기
+          </a>
+        </div>
+
+        <div className="admin-control-grid">
+          {data.siteSettings.featureStates.map((item) => (
+            <div className="admin-control-card" data-enabled={item.enabled ? "true" : "false"} key={item.feature}>
+              <span>
+                {item.feature === "kakao"
+                  ? "카카오톡"
+                  : item.feature === "recruit"
+                    ? "구인현황"
+                    : item.feature === "balanceAi"
+                      ? "K-LOL 랭킹"
+                      : item.feature === "randomTeam"
+                        ? "랜덤 팀"
+                        : "Riot 연동"}
+              </span>
+              <strong>{item.enabled ? "오픈" : "잠금"}</strong>
+            </div>
+          ))}
+        </div>
+
+        <div className="admin-env-grid">
+          <div data-ready={data.siteSettings.envReady.database ? "true" : "false"}>DB 연결</div>
+          <div data-ready={data.siteSettings.envReady.superAdmin ? "true" : "false"}>슈퍼어드민 ENV</div>
+          <div data-ready={data.siteSettings.envReady.riotKey ? "true" : "false"}>Riot API KEY</div>
+          <div data-ready={data.siteSettings.envReady.deployReady ? "true" : "false"}>배포 보안</div>
+        </div>
+      </section>
+
+      {data.siteSettings.envReady.deployWarnings.length > 0 && (
+        <section className="admin-log-section admin-log-section--alert admin-env-warning-section">
+          <div className="admin-log-section__header">
+            <div>
+              <h2 className="admin-section-title">배포 전 보안 점검</h2>
+            </div>
+            <a className="admin-button admin-button--ghost" href="/admin/site-settings">
+              설정 확인
+            </a>
+          </div>
+
+          <div className="admin-env-warning-list">
+            {data.siteSettings.envReady.deployWarnings.slice(0, 9).map((warning) => (
+              <div
+                className="admin-env-warning-item"
+                data-level={warning.level}
+                key={`${warning.key}-${warning.message}`}
+              >
+                <span>{warning.level === "missing" ? "필수 누락" : "값 강화 필요"}</span>
+                <strong>{warning.key}</strong>
+                <em>{warning.message}</em>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
 
       {data.recentErrors.length > 0 && (

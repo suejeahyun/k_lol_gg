@@ -131,6 +131,59 @@ body {
   color: var(--dm-text);
 }
 
+html[data-site-background="custom"] .app-background-root {
+  background:
+    linear-gradient(180deg, rgba(2, 6, 17, 0.34), rgba(2, 6, 17, 0.8) 62%, #020611 100%),
+    radial-gradient(circle at 12% 10%, color-mix(in srgb, var(--dm-blue) 20%, transparent), transparent 34%),
+    radial-gradient(circle at 88% 10%, color-mix(in srgb, var(--dm-cyan) 14%, transparent), transparent 31%),
+    var(--dm-img-grid),
+    var(--site-background-image),
+    linear-gradient(180deg, rgba(6, 14, 29, 0.94) 0%, rgba(2, 6, 17, 0.98) 74%, #020611 100%) !important;
+  background-size: cover, cover, cover, 520px 520px, cover, cover !important;
+  background-position: center, center, center, center, center top, center !important;
+}
+
+html[data-site-background="custom"] .app-background-root::before {
+  background:
+    linear-gradient(90deg, rgba(2, 6, 17, 0.78), transparent 18%, transparent 82%, rgba(2, 6, 17, 0.78)),
+    linear-gradient(180deg, rgba(2, 6, 17, 0.44), rgba(2, 6, 17, 0.78) 76%, #020611),
+    var(--site-background-image) !important;
+  background-size: cover !important;
+  background-position: center top !important;
+  filter: saturate(1.06) brightness(0.78) contrast(1.02);
+}
+
+.app-brand-logo {
+  display: inline-block;
+  flex: 0 0 auto;
+  border: 1px solid color-mix(in srgb, var(--dm-line-strong) 70%, transparent);
+  border-radius: 10px;
+  background-color: rgba(3, 8, 20, 0.72);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.app-brand-logo--topbar {
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
+}
+
+.app-brand-logo--sidebar {
+  width: 28px;
+  height: 28px;
+  margin-right: 8px;
+}
+
+.app-sidebar__title--brand,
+.app-topbar__home {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+
 .app-background-root::before {
   content: "";
   position: fixed;
@@ -2770,13 +2823,73 @@ html[data-theme] .klol-app-bottom-nav a[data-active="true"] {
   margin-top: 24px;
 }
 
+.site-settings-status-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.site-settings-status-strip > div,
+.admin-control-card,
+.admin-env-grid > div {
+  border: 1px solid rgba(96, 165, 250, 0.18);
+  border-radius: 16px;
+  padding: 14px;
+  background:
+    linear-gradient(135deg, rgba(47, 125, 255, 0.08), transparent 40%),
+    rgba(2, 8, 23, 0.44);
+}
+
+.site-settings-status-strip span,
+.admin-control-card span {
+  display: block;
+  margin-bottom: 7px;
+  color: rgba(148, 163, 184, 0.92);
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.site-settings-status-strip strong,
+.admin-control-card strong {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  color: #eef6ff;
+  font-size: 15px;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.site-settings-status-strip [data-state="active"],
+.admin-control-card[data-enabled="true"],
+.admin-env-grid > div[data-ready="true"] {
+  border-color: rgba(54, 211, 153, 0.28);
+  background:
+    linear-gradient(135deg, rgba(54, 211, 153, 0.12), transparent 42%),
+    rgba(2, 8, 23, 0.44);
+}
+
+.site-settings-status-strip [data-state="locked"],
+.admin-control-card[data-enabled="false"],
+.admin-env-grid > div[data-ready="false"] {
+  border-color: rgba(246, 185, 77, 0.28);
+  background:
+    linear-gradient(135deg, rgba(246, 185, 77, 0.12), transparent 42%),
+    rgba(2, 8, 23, 0.44);
+}
+
 .site-settings-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
 }
 
-.site-settings-grid--notice {
+.site-settings-grid--notice,
+.site-settings-grid--visual {
   margin-top: 18px;
 }
 
@@ -2876,6 +2989,38 @@ html[data-theme] .klol-app-bottom-nav a[data-active="true"] {
   color: #93c5fd;
 }
 
+.admin-dashboard-control {
+  margin-top: 24px;
+}
+
+.admin-control-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.admin-env-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.admin-env-grid > div {
+  min-height: 38px;
+  padding: 10px 13px;
+  color: rgba(226, 232, 240, 0.88);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.admin-summary-card--premium {
+  border-color: rgba(214, 176, 92, 0.24) !important;
+  background:
+    linear-gradient(135deg, rgba(214, 176, 92, 0.12), transparent 42%),
+    rgba(9, 19, 36, 0.92) !important;
+}
+
 @media (max-width: 1180px) {
   .theme-switcher:not(.theme-switcher--compact) {
     max-width: 112px;
@@ -2915,7 +3060,9 @@ html[data-theme] .klol-app-bottom-nav a[data-active="true"] {
   }
 
   .site-settings-grid,
-  .site-settings-switches {
+  .site-settings-switches,
+  .site-settings-status-strip,
+  .admin-control-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -3505,5 +3652,1626 @@ table {
     max-width: none !important;
     justify-content: center !important;
     transform: none !important;
+  }
+}
+
+/* Final audit pass: harden detail hero centering after action buttons are added. */
+@media (min-width: 981px) {
+  .player-detail-page > .player-hero,
+  .player-riot-detail-page > .player-hero,
+  .destruction-detail-page > .page-header:has(> .page-actions) {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    place-items: center !important;
+    min-height: 176px !important;
+    text-align: center !important;
+  }
+
+  .player-detail-page > .player-hero,
+  .player-riot-detail-page > .player-hero {
+    padding-left: clamp(260px, 18vw, 420px) !important;
+    padding-right: clamp(180px, 14vw, 320px) !important;
+  }
+
+  .player-detail-page > .player-hero > div:first-child,
+  .player-riot-detail-page > .player-hero > div:first-child {
+    position: relative !important;
+    top: 0 !important;
+    bottom: auto !important;
+    left: clamp(24px, 2vw, 54px) !important;
+    width: min(980px, 100%) !important;
+    transform: none !important;
+  }
+
+  .destruction-detail-page > .page-header:has(> .page-actions) {
+    padding-left: clamp(280px, 18vw, 430px) !important;
+    padding-right: clamp(280px, 18vw, 430px) !important;
+  }
+
+  .destruction-detail-page > .page-header:has(> .page-actions) > div:first-child {
+    position: relative !important;
+    top: 0 !important;
+    bottom: auto !important;
+    left: 0 !important;
+    width: min(980px, 100%) !important;
+    transform: none !important;
+  }
+
+  .destruction-detail-page > .page-header:has(> .page-actions) .page-actions {
+    right: clamp(22px, 2.6vw, 42px) !important;
+  }
+}
+
+/* Final ranking medal pass: image medals should behave like framed avatars, not number pills. */
+.ranking-top-player__rank:has(.ranking-medal),
+.ranking-rank:has(.ranking-medal),
+.ranking-top-player--1 .ranking-top-player__rank:has(.ranking-medal),
+.ranking-top-player--2 .ranking-top-player__rank:has(.ranking-medal),
+.ranking-top-player--3 .ranking-top-player__rank:has(.ranking-medal),
+.ranking-rank--top-1:has(.ranking-medal),
+.ranking-rank--top-2:has(.ranking-medal),
+.ranking-rank--top-3:has(.ranking-medal) {
+  color: transparent !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+.ranking-medal {
+  overflow: hidden !important;
+  border-radius: 999px !important;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.12), transparent 42%),
+    rgba(2, 8, 23, 0.86) !important;
+}
+
+.ranking-medal::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.ranking-medal--rank-1 {
+  border-color: rgba(214, 176, 92, 0.86) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 0 0 3px rgba(214, 176, 92, 0.12),
+    0 14px 26px rgba(0, 0, 0, 0.38) !important;
+}
+
+.ranking-medal--rank-2 {
+  border-color: rgba(188, 201, 218, 0.78) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 0 0 3px rgba(188, 201, 218, 0.1),
+    0 14px 26px rgba(0, 0, 0, 0.36) !important;
+}
+
+.ranking-medal--rank-3 {
+  border-color: rgba(202, 129, 71, 0.82) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 0 0 3px rgba(202, 129, 71, 0.11),
+    0 14px 26px rgba(0, 0, 0, 0.36) !important;
+}
+
+.ranking-medal__image {
+  inset: 6px !important;
+  width: calc(100% - 12px) !important;
+  height: calc(100% - 12px) !important;
+  border-radius: 999px !important;
+  object-fit: contain !important;
+  transform: none !important;
+}
+
+.ranking-medal--compact .ranking-medal__image {
+  inset: 4px !important;
+  width: calc(100% - 8px) !important;
+  height: calc(100% - 8px) !important;
+}
+
+.admin-env-warning-section {
+  border-color: rgba(246, 185, 77, 0.28) !important;
+  background:
+    linear-gradient(135deg, rgba(246, 185, 77, 0.1), transparent 44%),
+    rgba(9, 19, 36, 0.94) !important;
+}
+
+.admin-env-warning-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.admin-env-warning-item {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  border: 1px solid rgba(246, 185, 77, 0.2);
+  border-radius: 14px;
+  padding: 12px;
+  background: rgba(2, 8, 23, 0.44);
+}
+
+.admin-env-warning-item span {
+  color: rgba(246, 185, 77, 0.9);
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+}
+
+.admin-env-warning-item strong {
+  overflow: hidden;
+  color: #f8fbff;
+  font-size: 13px;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-env-warning-item em {
+  color: rgba(226, 232, 240, 0.72);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+@media (max-width: 1180px) {
+  .admin-env-warning-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .admin-env-warning-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Account/Riot cleanup + home TOP3 medal pass. */
+.account-action-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)) !important;
+}
+
+.account-tier-auto-card__actions {
+  justify-content: flex-start !important;
+}
+
+.home-dark-rank-card__rank,
+.home-dark-rank-card--gold .home-dark-rank-card__rank,
+.home-dark-rank-card--silver .home-dark-rank-card__rank,
+.home-dark-rank-card--bronze .home-dark-rank-card__rank {
+  top: 12px !important;
+  display: inline-flex !important;
+  width: clamp(50px, 4vw, 64px) !important;
+  height: clamp(50px, 4vw, 64px) !important;
+  overflow: hidden !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 1px solid rgba(132, 183, 255, 0.28) !important;
+  border-radius: 999px !important;
+  padding: 4px !important;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.14), transparent 48%),
+    rgba(1, 7, 19, 0.82) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 10px 22px rgba(0, 0, 0, 0.36) !important;
+  color: transparent !important;
+}
+
+.home-dark-rank-card--gold .home-dark-rank-card__rank {
+  top: 8px !important;
+  width: clamp(58px, 4.8vw, 74px) !important;
+  height: clamp(58px, 4.8vw, 74px) !important;
+  border-color: rgba(228, 187, 88, 0.82) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 0 0 4px rgba(228, 187, 88, 0.12),
+    0 14px 30px rgba(0, 0, 0, 0.42) !important;
+}
+
+.home-dark-rank-card--silver .home-dark-rank-card__rank {
+  border-color: rgba(198, 213, 232, 0.62) !important;
+}
+
+.home-dark-rank-card--bronze .home-dark-rank-card__rank {
+  border-color: rgba(212, 135, 72, 0.66) !important;
+}
+
+.home-dark-rank-card__rank img {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 999px !important;
+  object-fit: contain !important;
+}
+
+.home-dark-rank-card__emblem {
+  margin-top: clamp(38px, 4vw, 58px) !important;
+}
+
+.home-dark-rank-card--gold .home-dark-rank-card__emblem {
+  margin-top: clamp(48px, 4.8vw, 68px) !important;
+}
+
+.home-dark-rank-card__stats {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  width: min(100%, 260px) !important;
+  align-items: stretch !important;
+}
+
+.home-dark-rank-card__stats span {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  padding: 7px 4px !important;
+}
+
+.home-dark-rank-card__stats b {
+  display: block !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  font-size: clamp(13px, 0.8vw, 16px) !important;
+  line-height: 1.05 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.home-dark-rank-card__stats small {
+  display: block !important;
+  overflow: hidden !important;
+  font-size: 9px !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* Home TOP3: rank medal is a small badge on the tier emblem, not a second emblem. */
+.home-dark-rank-card__emblem {
+  position: relative !important;
+  overflow: visible !important;
+  margin-top: clamp(30px, 3.4vw, 48px) !important;
+}
+
+.home-dark-rank-card__emblem > img {
+  border-radius: 999px !important;
+}
+
+.home-dark-rank-card__emblem .home-dark-rank-card__rank,
+.home-dark-rank-card--gold .home-dark-rank-card__emblem .home-dark-rank-card__rank,
+.home-dark-rank-card--silver .home-dark-rank-card__emblem .home-dark-rank-card__rank,
+.home-dark-rank-card--bronze .home-dark-rank-card__emblem .home-dark-rank-card__rank {
+  top: -12px !important;
+  right: -10px !important;
+  left: auto !important;
+  width: clamp(30px, 2.3vw, 42px) !important;
+  height: clamp(30px, 2.3vw, 42px) !important;
+  padding: 3px !important;
+  transform: none !important;
+  z-index: 5 !important;
+}
+
+.home-dark-rank-card--gold .home-dark-rank-card__emblem .home-dark-rank-card__rank {
+  top: -14px !important;
+  right: -12px !important;
+  width: clamp(36px, 2.8vw, 48px) !important;
+  height: clamp(36px, 2.8vw, 48px) !important;
+}
+
+.home-dark-rank-card__label {
+  margin-top: 2px !important;
+}
+
+.account-action-card p,
+.account-form-section__title p,
+.account-tier-auto-card p,
+.account-tier-auto-card__steps,
+.my-player-auto-tier-card {
+  display: none !important;
+}
+
+.account-edit-panel--single {
+  width: min(760px, 100%) !important;
+  margin: 18px auto 0 !important;
+}
+
+/* Home TOP3 redesign: one season ace plus two readable challengers. */
+.home-top3-arena {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.1fr);
+  gap: clamp(14px, 1.2vw, 20px);
+  align-items: stretch;
+}
+
+.home-top3-ace,
+.home-top3-chaser {
+  color: var(--dm-text) !important;
+  text-decoration: none !important;
+}
+
+.home-top3-ace {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  min-height: clamp(260px, 15vw, 330px);
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(214, 176, 92, 0.44);
+  border-radius: 18px;
+  padding: clamp(22px, 1.6vw, 30px);
+  background:
+    radial-gradient(circle at 50% 28%, rgba(214, 176, 92, 0.2), transparent 42%),
+    radial-gradient(circle at 50% 82%, rgba(74, 163, 255, 0.1), transparent 46%),
+    linear-gradient(180deg, rgba(28, 25, 18, 0.78), rgba(3, 10, 24, 0.92));
+  box-shadow:
+    inset 0 0 50px rgba(214, 176, 92, 0.08),
+    0 18px 42px rgba(0, 0, 0, 0.24);
+  text-align: center;
+}
+
+.home-top3-ace::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 22%),
+    radial-gradient(circle at 50% 0%, rgba(255, 231, 170, 0.16), transparent 36%);
+}
+
+.home-top3-ace__glow {
+  position: absolute;
+  top: 22px;
+  left: 50%;
+  width: min(68%, 340px);
+  height: min(68%, 260px);
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(214, 176, 92, 0.24), transparent 68%);
+  filter: blur(10px);
+}
+
+.home-top3-ace__visual {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  width: clamp(108px, 7vw, 140px);
+  height: clamp(108px, 7vw, 140px);
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  border: 1px solid rgba(214, 176, 92, 0.42);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(214, 176, 92, 0.2), transparent 58%),
+    rgba(1, 7, 19, 0.7);
+  box-shadow:
+    inset 0 0 24px rgba(255, 255, 255, 0.06),
+    0 14px 34px rgba(0, 0, 0, 0.34);
+}
+
+.home-top3-ace__visual > img {
+  width: 82% !important;
+  height: 82% !important;
+  object-fit: contain !important;
+  filter: drop-shadow(0 16px 16px rgba(0, 0, 0, 0.36));
+}
+
+.home-top3-medal {
+  position: absolute;
+  right: -8px;
+  top: -10px;
+  display: inline-flex;
+  width: clamp(42px, 3vw, 56px);
+  height: clamp(42px, 3vw, 56px);
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid rgba(214, 176, 92, 0.78);
+  border-radius: 999px;
+  padding: 4px;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.16), transparent 44%),
+    rgba(2, 8, 23, 0.88);
+  box-shadow:
+    0 0 0 4px rgba(214, 176, 92, 0.12),
+    0 12px 22px rgba(0, 0, 0, 0.38);
+}
+
+.home-top3-medal img,
+.home-top3-chaser__rank img,
+.home-top3-chaser__tier img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
+
+.home-top3-ace__meta {
+  z-index: 1;
+  border: 1px solid rgba(214, 176, 92, 0.34);
+  border-radius: 999px;
+  padding: 5px 10px;
+  background: rgba(2, 8, 23, 0.5);
+  color: #ffe08a !important;
+  font-size: 10px !important;
+  font-weight: 950 !important;
+  letter-spacing: 0.14em;
+}
+
+.home-top3-ace__name {
+  z-index: 1;
+  overflow: hidden;
+  max-width: 100%;
+  margin-top: 12px;
+  color: #f8fbff;
+  font-size: clamp(24px, 1.8vw, 34px);
+  font-weight: 950;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-top3-ace__nickname {
+  z-index: 1;
+  overflow: hidden;
+  max-width: 100%;
+  margin-top: 6px;
+  color: rgba(178, 196, 222, 0.82);
+  font-size: 12px;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-top3-scoreline {
+  z-index: 1;
+  display: grid;
+  width: min(100%, 360px);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.home-top3-scoreline span {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+  border: 1px solid rgba(214, 176, 92, 0.2);
+  border-radius: 12px;
+  padding: 9px 6px;
+  background: rgba(2, 8, 23, 0.54);
+}
+
+.home-top3-scoreline b,
+.home-top3-chaser__stats b {
+  overflow: hidden;
+  color: #ffe08a;
+  font-weight: 950;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-top3-scoreline b {
+  font-size: clamp(15px, 1vw, 18px);
+}
+
+.home-top3-scoreline small,
+.home-top3-chaser__stats small {
+  overflow: hidden;
+  color: rgba(148, 163, 184, 0.9);
+  font-size: 10px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-top3-chasers {
+  display: grid;
+  min-width: 0;
+  gap: 12px;
+}
+
+.home-top3-chaser {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: clamp(38px, 3vw, 50px) clamp(50px, 3.6vw, 64px) minmax(0, 1fr) minmax(92px, auto);
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(84, 150, 232, 0.22);
+  border-radius: 16px;
+  padding: clamp(12px, 1vw, 16px);
+  background:
+    linear-gradient(90deg, rgba(9, 22, 45, 0.9), rgba(4, 12, 28, 0.9)),
+    radial-gradient(circle at 12% 50%, rgba(74, 163, 255, 0.14), transparent 34%);
+  transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+
+.home-top3-chaser:hover {
+  transform: translateX(3px);
+  border-color: rgba(111, 194, 218, 0.4);
+}
+
+.home-top3-chaser--silver {
+  border-color: rgba(198, 213, 232, 0.3);
+}
+
+.home-top3-chaser--bronze {
+  border-color: rgba(212, 135, 72, 0.32);
+}
+
+.home-top3-chaser__rank,
+.home-top3-chaser__tier {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(2, 8, 23, 0.68);
+}
+
+.home-top3-chaser__rank {
+  aspect-ratio: 1;
+  border: 1px solid rgba(132, 183, 255, 0.22);
+  padding: 3px;
+}
+
+.home-top3-chaser__tier {
+  aspect-ratio: 1;
+  border: 1px solid rgba(84, 150, 232, 0.2);
+  padding: 5px;
+}
+
+.home-top3-chaser__body {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.home-top3-chaser__body strong {
+  overflow: hidden;
+  color: #f8fbff;
+  font-size: clamp(15px, 1vw, 18px);
+  font-weight: 950;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-top3-chaser__body small {
+  overflow: hidden;
+  color: rgba(148, 163, 184, 0.9);
+  font-size: 11px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-top3-chaser__stats {
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+  min-width: 0;
+  text-align: right;
+}
+
+.home-top3-chaser__stats b {
+  color: #63d6ff;
+  font-size: clamp(16px, 1vw, 20px);
+}
+
+@media (max-width: 980px) {
+  .home-top3-arena {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .home-top3-ace {
+    min-height: 240px;
+  }
+}
+
+@media (max-width: 720px) {
+  .home-top3-chaser {
+    grid-template-columns: 38px 48px minmax(0, 1fr);
+  }
+
+  .home-top3-chaser__stats {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-items: stretch;
+    text-align: left;
+  }
+}
+
+/* Generated visual system: project-local AI assets applied across user/admin/mobile pages. */
+:root {
+  --klol-gen-global: url("/images/generated/klol-global-bg.png");
+  --klol-gen-banner: url("/images/generated/klol-page-banner-bg.png");
+  --klol-gen-card: url("/images/generated/klol-card-texture.png");
+  --klol-gen-section: url("/images/generated/klol-section-texture.png");
+  --klol-gen-mobile: url("/images/generated/klol-mobile-app-bg.png");
+  --klol-gen-top3: url("/images/generated/klol-top3-arena-bg.png");
+  --klol-gen-admin: url("/images/generated/klol-admin-ops-bg.png");
+  --klol-gen-balance: url("/images/generated/klol-team-balance-bg.png");
+  --klol-gen-match: url("/images/generated/klol-match-analysis-bg.png");
+  --klol-gen-auction: url("/images/generated/klol-destruction-auction-bg.png");
+}
+
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]),
+html[data-theme="dark-modern"] {
+  --dm-img-page: var(--klol-gen-global);
+  --dm-img-page-crystal: var(--klol-gen-global);
+  --dm-img-header: var(--klol-gen-banner);
+  --dm-img-ranking: var(--klol-gen-top3);
+  --dm-img-match: var(--klol-gen-match);
+  --dm-img-profile: var(--klol-gen-banner);
+  --dm-img-scrim: var(--klol-gen-balance);
+  --dm-img-auction: var(--klol-gen-auction);
+  --dm-img-admin: var(--klol-gen-admin);
+  --dm-global-backdrop:
+    linear-gradient(180deg, rgba(2, 6, 17, 0.18), rgba(2, 6, 17, 0.74) 58%, #020611 100%),
+    radial-gradient(circle at 12% 8%, rgba(56, 111, 184, 0.22), transparent 34%),
+    radial-gradient(circle at 88% 8%, rgba(101, 180, 210, 0.14), transparent 31%),
+    linear-gradient(90deg, rgba(5, 9, 20, 0.82), transparent 26%, transparent 74%, rgba(5, 9, 20, 0.78)),
+    var(--dm-img-grid),
+    var(--klol-gen-global),
+    linear-gradient(180deg, rgba(6, 14, 29, 0.86) 0%, rgba(2, 6, 17, 0.96) 72%, #020611 100%);
+  --dm-global-backdrop-size: cover, cover, cover, cover, 520px 520px, cover, cover;
+  --dm-global-backdrop-position: center, center, center, center, center, center top, center;
+}
+
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .app-background-root,
+html[data-theme="dark-modern"] .app-background-root {
+  background:
+    linear-gradient(180deg, rgba(2, 6, 17, 0.18), rgba(2, 6, 17, 0.72) 60%, #020611 100%),
+    radial-gradient(circle at 12% 8%, rgba(56, 111, 184, 0.22), transparent 34%),
+    radial-gradient(circle at 88% 8%, rgba(101, 180, 210, 0.14), transparent 31%),
+    linear-gradient(90deg, rgba(5, 9, 20, 0.78), transparent 24%, transparent 76%, rgba(5, 9, 20, 0.76)),
+    var(--dm-img-grid),
+    var(--klol-gen-global),
+    linear-gradient(180deg, rgba(6, 14, 29, 0.86) 0%, rgba(2, 6, 17, 0.96) 72%, #020611 100%) !important;
+  background-size: cover, cover, cover, cover, 520px 520px, cover, cover !important;
+  background-position: center, center, center, center, center, center top, center !important;
+}
+
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .app-background-root::before,
+html[data-theme="dark-modern"] .app-background-root::before {
+  opacity: 0.92;
+  filter: saturate(1.05) brightness(0.92) contrast(1.04);
+}
+
+.matches-page-v2,
+.ranking-page,
+.players-page-v2,
+.account-page,
+.ai-page,
+.balance-page,
+.admin-page,
+.destruction-detail-page,
+.participation-page,
+.participation-detail,
+.event-progress-page,
+.destruction-progress-page,
+.progress-page,
+.klol-app-shell {
+  position: relative;
+  isolation: isolate;
+}
+
+.matches-page-v2::before,
+.ranking-page::before,
+.players-page-v2::before,
+.account-page::before,
+.ai-page::before,
+.balance-page::before,
+.admin-page::before,
+.destruction-detail-page::before,
+.participation-page::before,
+.participation-detail::before,
+.event-progress-page::before,
+.destruction-progress-page::before,
+.progress-page::before {
+  content: "";
+  position: absolute;
+  inset: -42px -28px auto;
+  z-index: -1;
+  height: clamp(280px, 36vh, 520px);
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, rgba(2, 6, 17, 0.22), rgba(2, 6, 17, 0.9)),
+    var(--klol-page-art, var(--klol-gen-section));
+  background-size: cover;
+  background-position: center top;
+  opacity: 0.18;
+  pointer-events: none;
+  filter: saturate(1.08) contrast(1.02);
+}
+
+.players-page-v2,
+.account-page {
+  --klol-page-art: var(--klol-gen-banner);
+}
+
+.ranking-page {
+  --klol-page-art: var(--klol-gen-top3);
+}
+
+.matches-page-v2,
+.ai-page--ranking,
+.ai-page--public {
+  --klol-page-art: var(--klol-gen-match);
+}
+
+.balance-page,
+.ai-pickban-page,
+.admin-balance-drafts-page {
+  --klol-page-art: var(--klol-gen-balance);
+}
+
+.admin-page {
+  --klol-page-art: var(--klol-gen-admin);
+}
+
+.progress-page,
+.event-progress-page,
+.destruction-progress-page,
+.destruction-detail-page,
+.participation-page,
+.participation-detail,
+.destruction-admin-detail-page,
+.event-admin-detail-page {
+  --klol-page-art: var(--klol-gen-auction);
+}
+
+.balance-page .page-header,
+.ai-pickban-page .page-header,
+.admin-balance-drafts-page .page-header {
+  --dm-header-art: var(--klol-gen-balance);
+}
+
+.matches-page-v2 .page-header,
+.matches-page-v2 .page-hero,
+.ai-page--ranking .ai-hero,
+.ai-page--public .ai-hero {
+  --dm-header-art: var(--klol-gen-match);
+}
+
+.ranking-page .page-header {
+  --dm-header-art: var(--klol-gen-top3);
+}
+
+.admin-page .admin-page__header,
+.admin-page .admin-page-header,
+.admin-page .admin-header {
+  --dm-header-art: var(--klol-gen-admin);
+}
+
+.progress-page .page-header,
+.event-progress-page .page-header,
+.destruction-progress-page .page-header,
+.destruction-detail-page > .page-header,
+.participation-page .page-header,
+.participation-detail .page-header,
+.destruction-admin-detail-page .admin-page__header,
+.event-admin-detail-page .admin-page__header {
+  --dm-header-art: var(--klol-gen-auction);
+}
+
+.page-header,
+.page-hero,
+.ai-hero,
+.admin-page__header,
+.admin-page-header,
+.admin-header,
+.player-hero,
+.recruit-hero,
+.user-page__header,
+.account-page__header,
+.klol-app-hero {
+  position: relative;
+  overflow: hidden;
+}
+
+.page-header::before,
+.page-hero::before,
+.ai-hero::before,
+.admin-page__header::before,
+.admin-page-header::before,
+.admin-header::before,
+.player-hero::before,
+.recruit-hero::before,
+.user-page__header::before,
+.account-page__header::before,
+.klol-app-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.07) 44%, transparent 58%),
+    linear-gradient(rgba(113, 183, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(113, 183, 255, 0.035) 1px, transparent 1px) !important;
+  background-size: 180% 100%, 32px 32px, 32px 32px !important;
+  opacity: 0.72;
+}
+
+.page-header::after,
+.page-hero::after,
+.ai-hero::after,
+.admin-page__header::after,
+.admin-page-header::after,
+.admin-header::after,
+.player-hero::after,
+.recruit-hero::after,
+.user-page__header::after,
+.account-page__header::after,
+.klol-app-hero::after {
+  content: "";
+  position: absolute;
+  inset: auto -8% -38% 42%;
+  height: 72%;
+  pointer-events: none;
+  background: radial-gradient(ellipse, color-mix(in srgb, var(--dm-blue-2) 18%, transparent), transparent 68%);
+  opacity: 0.58;
+  filter: blur(10px);
+}
+
+.card,
+.panel,
+.v2-card,
+.balance-card,
+.balance-form-card,
+.ranking-page-card,
+.ranking-board,
+.ranking-top-card,
+.ranking-top-player,
+.ranking-row-card,
+.players-page-v2__panel,
+.players-page-v2__summary-card,
+.players-page-v2__board,
+.account-action-card,
+.account-form-section,
+.account-edit-panel,
+.home-dark-recent-panel,
+.home-dark-season-summary,
+.home-feature-stack__winner,
+.home-feature-stack__mvp,
+.home-feature-stack__progress,
+.home-feature-bottom-grid > *,
+.admin-page__card,
+.admin-card,
+.admin-list,
+.admin-form-card,
+.destruction-progress-card,
+.destruction-step-body,
+.event-operation-panel,
+.klol-app-card,
+.klol-app-list-card,
+.klol-app-meta,
+.klol-app-empty,
+.klol-app-login-card {
+  background-image:
+    linear-gradient(180deg, rgba(12, 24, 44, 0.88), rgba(4, 10, 23, 0.92)),
+    var(--klol-gen-card) !important;
+  background-size: cover !important;
+  background-position: center !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.045),
+    0 18px 46px rgba(0, 0, 0, 0.24) !important;
+}
+
+.card:hover,
+.panel:hover,
+.v2-card:hover,
+.balance-card:hover,
+.ranking-top-player:hover,
+.ranking-row-card:hover,
+.players-page-v2__row:hover,
+.account-action-card:hover,
+.home-dark-recent-panel:hover,
+.home-feature-stack__winner:hover,
+.home-feature-stack__mvp:hover,
+.home-feature-stack__progress:hover,
+.destruction-progress-card:hover,
+.klol-app-card:hover,
+.klol-app-list-card:hover {
+  border-color: color-mix(in srgb, var(--dm-line-strong) 78%, transparent) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 22px 54px rgba(0, 0, 0, 0.3),
+    0 0 26px color-mix(in srgb, var(--dm-blue) 10%, transparent) !important;
+}
+
+.home-dark-top3-panel,
+.home-top3-arena {
+  background:
+    linear-gradient(180deg, rgba(6, 17, 35, 0.82), rgba(3, 9, 22, 0.94)),
+    var(--klol-gen-top3) !important;
+  background-size: cover !important;
+  background-position: center !important;
+}
+
+.home-top3-ace {
+  background:
+    radial-gradient(circle at 48% 28%, rgba(214, 176, 92, 0.24), transparent 38%),
+    linear-gradient(180deg, rgba(31, 26, 17, 0.72), rgba(3, 10, 24, 0.9)),
+    var(--klol-gen-top3) !important;
+  background-size: cover !important;
+  background-position: center left !important;
+}
+
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .home-dark-showcase,
+html[data-theme="dark-modern"] .home-dark-showcase {
+  background:
+    linear-gradient(90deg, rgba(3, 8, 19, 0.96) 0%, rgba(5, 12, 28, 0.84) 45%, rgba(5, 12, 28, 0.48) 100%),
+    var(--klol-gen-banner) right top / cover no-repeat,
+    linear-gradient(180deg, rgba(5, 12, 28, 0.96), rgba(3, 8, 19, 0.98)) !important;
+}
+
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .home-dark-season-summary,
+html[data-theme="dark-modern"] .home-dark-season-summary,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .players-page-v2 .players-page-v2__panel,
+html[data-theme="dark-modern"] .players-page-v2 .players-page-v2__panel,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .players-page-v2 .players-page-v2__summary-card,
+html[data-theme="dark-modern"] .players-page-v2 .players-page-v2__summary-card,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .players-page-v2 .players-page-v2__board,
+html[data-theme="dark-modern"] .players-page-v2 .players-page-v2__board,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .ranking-page .ranking-page-card,
+html[data-theme="dark-modern"] .ranking-page .ranking-page-card,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .ranking-page .balance-form-card,
+html[data-theme="dark-modern"] .ranking-page .balance-form-card,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .ranking-page-card,
+html[data-theme="dark-modern"] .ranking-page-card,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .ranking-top-card,
+html[data-theme="dark-modern"] .ranking-top-card,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .ranking-board,
+html[data-theme="dark-modern"] .ranking-board {
+  background:
+    linear-gradient(180deg, rgba(12, 24, 44, 0.9), rgba(4, 10, 23, 0.94)),
+    var(--klol-gen-card) center / cover no-repeat !important;
+}
+
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .players-page-v2 .players-page-v2__row,
+html[data-theme="dark-modern"] .players-page-v2 .players-page-v2__row,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .ranking-page .ranking-row-card,
+html[data-theme="dark-modern"] .ranking-page .ranking-row-card,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .ranking-row-card,
+html[data-theme="dark-modern"] .ranking-row-card {
+  background:
+    linear-gradient(90deg, rgba(8, 20, 39, 0.9), rgba(4, 10, 23, 0.94)),
+    var(--klol-gen-section) center / cover no-repeat !important;
+}
+
+.home-top3-ace__visual > img,
+.home-top3-chaser__tier img {
+  -webkit-mask-image: radial-gradient(circle at center, #000 64%, transparent 68%);
+  mask-image: radial-gradient(circle at center, #000 64%, transparent 68%);
+}
+
+.home-top3-medal img,
+.home-top3-chaser__rank img,
+.ranking-rank-medal img,
+.ranking-top-player__medal img {
+  border-radius: 999px !important;
+}
+
+.destruction-auction-live-page {
+  background:
+    linear-gradient(180deg, rgba(2, 6, 17, 0.24), rgba(2, 6, 17, 0.88)),
+    var(--klol-gen-auction) center / cover fixed !important;
+}
+
+.balance-page .balance-card,
+.balance-page .balance-form-card,
+.ai-pickban-page .balance-card,
+.ai-pickban-page .balance-form-card {
+  background-image:
+    linear-gradient(90deg, rgba(7, 20, 42, 0.9), rgba(4, 10, 23, 0.92)),
+    var(--klol-gen-balance) !important;
+}
+
+.matches-page-v2 .balance-form-card,
+.matches-page-v2 .card,
+.match-detail-page .card {
+  background-image:
+    linear-gradient(180deg, rgba(8, 20, 39, 0.88), rgba(4, 10, 23, 0.94)),
+    var(--klol-gen-match) !important;
+}
+
+.admin-page .admin-page__header,
+.admin-page .admin-page-header,
+.admin-page .admin-card,
+.admin-page .card,
+.admin-page .panel {
+  background-image:
+    linear-gradient(180deg, rgba(8, 17, 34, 0.9), rgba(4, 10, 23, 0.94)),
+    var(--klol-gen-admin) !important;
+}
+
+.klol-app-root,
+body:has(.klol-app-root) {
+  background:
+    linear-gradient(180deg, rgba(2, 6, 17, 0.52), rgba(2, 6, 17, 0.94)),
+    var(--klol-gen-mobile) center top / cover fixed !important;
+}
+
+.klol-app-shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(74, 163, 255, 0.18), transparent 38%),
+    var(--klol-gen-mobile) center top / cover no-repeat;
+  opacity: 0.48;
+}
+
+.klol-app-hero {
+  background:
+    linear-gradient(180deg, rgba(10, 25, 50, 0.9), rgba(4, 10, 23, 0.94)),
+    var(--klol-gen-mobile) center / cover !important;
+}
+
+/* Generated visual coverage pass: detail/admin route-specific surfaces. */
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .player-detail-page .player-panel,
+html[data-theme="dark-modern"] .player-detail-page .player-panel,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .player-detail-page .info-card,
+html[data-theme="dark-modern"] .player-detail-page .info-card,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .player-analysis-shell,
+html[data-theme="dark-modern"] .player-analysis-shell,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .player-analysis-panel,
+html[data-theme="dark-modern"] .player-analysis-panel,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .civil-radar-card,
+html[data-theme="dark-modern"] .civil-radar-card,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .civil-kpi-board,
+html[data-theme="dark-modern"] .civil-kpi-board,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .civil-detail-grid,
+html[data-theme="dark-modern"] .civil-detail-grid,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .champion-stat-card,
+html[data-theme="dark-modern"] .champion-stat-card,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .player-riot-detail-page .player-panel,
+html[data-theme="dark-modern"] .player-riot-detail-page .player-panel,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .player-riot-detail-page [class*="__panel"],
+html[data-theme="dark-modern"] .player-riot-detail-page [class*="__panel"],
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .match-series-detail,
+html[data-theme="dark-modern"] .match-series-detail,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .match-slide,
+html[data-theme="dark-modern"] .match-slide,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .match-slide__panel,
+html[data-theme="dark-modern"] .match-slide__panel,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .match-slide__row,
+html[data-theme="dark-modern"] .match-slide__row,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .destruction-detail-summary-card,
+html[data-theme="dark-modern"] .destruction-detail-summary-card,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .destruction-rank-list,
+html[data-theme="dark-modern"] .destruction-rank-list,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .destruction-rank-row,
+html[data-theme="dark-modern"] .destruction-rank-row,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .destruction-match-list,
+html[data-theme="dark-modern"] .destruction-match-list,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .destruction-match-row,
+html[data-theme="dark-modern"] .destruction-match-row,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .card-grid,
+html[data-theme="dark-modern"] .card-grid,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .player-stat-grid,
+html[data-theme="dark-modern"] .player-stat-grid,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .stat-card,
+html[data-theme="dark-modern"] .stat-card,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .destruction-line-filter-card,
+html[data-theme="dark-modern"] .destruction-line-filter-card,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .destruction-participant-table-wrap,
+html[data-theme="dark-modern"] .destruction-participant-table-wrap,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .admin-dashboard-header,
+html[data-theme="dark-modern"] .admin-dashboard-header,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .admin-summary-card,
+html[data-theme="dark-modern"] .admin-summary-card,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .admin-log-section,
+html[data-theme="dark-modern"] .admin-log-section,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .admin-matches-header,
+html[data-theme="dark-modern"] .admin-matches-header,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .section-search,
+html[data-theme="dark-modern"] .section-search,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .admin-player-row-card,
+html[data-theme="dark-modern"] .admin-player-row-card,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .admin-event-detail-card,
+html[data-theme="dark-modern"] .admin-event-detail-card,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .destruction-step-section,
+html[data-theme="dark-modern"] .destruction-step-section,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .destruction-step-body,
+html[data-theme="dark-modern"] .destruction-step-body,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .admin-form,
+html[data-theme="dark-modern"] .admin-form,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .app-shell--admin [class*="__panel"],
+html[data-theme="dark-modern"] .app-shell--admin [class*="__panel"],
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .app-shell--admin [class*="__tableWrap"],
+html[data-theme="dark-modern"] .app-shell--admin [class*="__tableWrap"],
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .app-shell--admin [class*="__list"],
+html[data-theme="dark-modern"] .app-shell--admin [class*="__list"] {
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(12, 24, 44, 0.9), rgba(4, 10, 23, 0.94)),
+    var(--klol-gen-card) center / cover no-repeat !important;
+  border-color: color-mix(in srgb, var(--dm-line) 88%, transparent) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.045),
+    0 18px 46px rgba(0, 0, 0, 0.24) !important;
+}
+
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .player-analysis-panel,
+html[data-theme="dark-modern"] .player-analysis-panel,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .civil-radar-card,
+html[data-theme="dark-modern"] .civil-radar-card,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .civil-kpi-board,
+html[data-theme="dark-modern"] .civil-kpi-board,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .player-riot-detail-page [class*="__panel"],
+html[data-theme="dark-modern"] .player-riot-detail-page [class*="__panel"],
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .match-series-detail,
+html[data-theme="dark-modern"] .match-series-detail,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .match-slide,
+html[data-theme="dark-modern"] .match-slide,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .match-slide__panel,
+html[data-theme="dark-modern"] .match-slide__panel {
+  background:
+    linear-gradient(180deg, rgba(8, 20, 39, 0.9), rgba(4, 10, 23, 0.95)),
+    var(--klol-gen-match) center / cover no-repeat !important;
+}
+
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .destruction-detail-summary-card,
+html[data-theme="dark-modern"] .destruction-detail-summary-card,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .destruction-rank-list,
+html[data-theme="dark-modern"] .destruction-rank-list,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .destruction-rank-row,
+html[data-theme="dark-modern"] .destruction-rank-row,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .destruction-match-list,
+html[data-theme="dark-modern"] .destruction-match-list,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .destruction-match-row,
+html[data-theme="dark-modern"] .destruction-match-row,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .destruction-step-section,
+html[data-theme="dark-modern"] .destruction-step-section,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .destruction-step-body,
+html[data-theme="dark-modern"] .destruction-step-body,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .destruction-participant-table-wrap,
+html[data-theme="dark-modern"] .destruction-participant-table-wrap {
+  background:
+    linear-gradient(180deg, rgba(9, 18, 36, 0.88), rgba(4, 10, 23, 0.95)),
+    var(--klol-gen-auction) center / cover no-repeat !important;
+}
+
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .admin-dashboard-header,
+html[data-theme="dark-modern"] .admin-dashboard-header,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .admin-matches-header,
+html[data-theme="dark-modern"] .admin-matches-header,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .admin-page__header,
+html[data-theme="dark-modern"] .admin-page__header,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .destruction-admin-hero,
+html[data-theme="dark-modern"] .destruction-admin-hero {
+  background:
+    linear-gradient(90deg, rgba(6, 13, 27, 0.96), rgba(6, 13, 27, 0.72)),
+    var(--klol-gen-admin) center / cover no-repeat !important;
+}
+
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .admin-player-row-card,
+html[data-theme="dark-modern"] .admin-player-row-card,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .admin-summary-card,
+html[data-theme="dark-modern"] .admin-summary-card,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .admin-card,
+html[data-theme="dark-modern"] .admin-card,
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .admin-log-section,
+html[data-theme="dark-modern"] .admin-log-section {
+  background:
+    linear-gradient(180deg, rgba(8, 17, 34, 0.91), rgba(4, 10, 23, 0.95)),
+    var(--klol-gen-section) center / cover no-repeat !important;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .page-header::before,
+  .page-hero::before,
+  .ai-hero::before,
+  .admin-page__header::before,
+  .admin-page-header::before,
+  .admin-header::before,
+  .player-hero::before,
+  .recruit-hero::before,
+  .user-page__header::before,
+  .account-page__header::before,
+  .klol-app-hero::before {
+    animation: klol-header-sheen 9s ease-in-out infinite;
+  }
+
+  .home-top3-ace__glow {
+    animation: klol-top3-glow 4.8s ease-in-out infinite;
+  }
+}
+
+@keyframes klol-header-sheen {
+  0%,
+  46% {
+    background-position: 120% 0, 0 0, 0 0;
+  }
+  100% {
+    background-position: -80% 0, 0 0, 0 0;
+  }
+}
+
+@keyframes klol-top3-glow {
+  0%,
+  100% {
+    opacity: 0.72;
+    transform: translateX(-50%) scale(1);
+  }
+  50% {
+    opacity: 0.95;
+    transform: translateX(-50%) scale(1.06);
+  }
+}
+
+@media (max-width: 768px) {
+  html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .app-background-root,
+  html[data-theme="dark-modern"] .app-background-root,
+  .klol-app-root,
+  body:has(.klol-app-root) {
+    background:
+      linear-gradient(180deg, rgba(2, 6, 17, 0.48), rgba(2, 6, 17, 0.94)),
+      var(--klol-gen-mobile) center top / cover scroll !important;
+  }
+
+  .matches-page-v2::before,
+  .ranking-page::before,
+  .players-page-v2::before,
+  .account-page::before,
+  .ai-page::before,
+  .balance-page::before,
+  .admin-page::before,
+  .destruction-detail-page::before,
+  .participation-page::before,
+  .participation-detail::before,
+  .event-progress-page::before,
+  .destruction-progress-page::before,
+  .progress-page::before {
+    inset: -24px -16px auto;
+    height: 320px;
+    opacity: 0.16;
+  }
+}
+
+/* Purpose-based visual QA pass: home safe background, TOP3 single-emblem layout,
+   BLUE/RED balance stage, and destruction auction card-draw stage. */
+:root {
+  --klol-gen-team-versus: url("/images/generated/klol-team-balance-versus-bg.png");
+  --klol-home-hero-safe: url("/images/theme/dark-modern/home-hero-structured-v1.png");
+}
+
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .home-dark-showcase,
+html[data-theme="dark-modern"] .home-dark-showcase {
+  overflow: hidden !important;
+  background:
+    linear-gradient(180deg, rgba(3, 8, 19, 0.72) 0%, rgba(3, 8, 19, 0.34) 28%, rgba(3, 8, 19, 0.9) 100%),
+    linear-gradient(90deg, rgba(3, 8, 19, 0.98) 0%, rgba(3, 8, 19, 0.78) 40%, rgba(3, 8, 19, 0.24) 72%, rgba(3, 8, 19, 0.88) 100%),
+    var(--klol-home-hero-safe) right -8px / clamp(760px, 56vw, 1180px) auto no-repeat,
+    linear-gradient(180deg, rgba(5, 12, 28, 0.96), rgba(3, 8, 19, 0.98)) !important;
+}
+
+html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .home-dark-showcase::before,
+html[data-theme="dark-modern"] .home-dark-showcase::before {
+  opacity: 0.28 !important;
+  background:
+    radial-gradient(circle at 70% 18%, rgba(74, 163, 255, 0.22), transparent 34%),
+    linear-gradient(180deg, transparent, rgba(1, 6, 17, 0.82) 74%) !important;
+}
+
+.home-dark-showcase-hero {
+  min-height: clamp(220px, 16vw, 330px) !important;
+}
+
+.home-dark-showcase-grid {
+  margin-top: clamp(6px, 1vw, 16px) !important;
+  background:
+    linear-gradient(180deg, rgba(8, 20, 40, 0.9), rgba(3, 9, 22, 0.95)),
+    var(--klol-gen-top3) left center / cover no-repeat !important;
+}
+
+.home-dark-top3-panel,
+.home-top3-arena {
+  background:
+    linear-gradient(180deg, rgba(7, 18, 36, 0.88), rgba(3, 9, 22, 0.96)),
+    var(--klol-gen-top3) left center / cover no-repeat !important;
+}
+
+.home-top3-arena {
+  grid-template-columns: minmax(320px, 0.86fr) minmax(360px, 1.14fr) !important;
+  gap: clamp(18px, 1.35vw, 26px) !important;
+}
+
+.home-top3-ace {
+  min-height: clamp(300px, 18vw, 390px) !important;
+  background:
+    radial-gradient(circle at 50% 25%, rgba(244, 196, 96, 0.22), transparent 34%),
+    linear-gradient(180deg, rgba(42, 36, 24, 0.78), rgba(2, 8, 22, 0.92)),
+    var(--klol-gen-top3) left center / cover no-repeat !important;
+}
+
+.home-top3-ace__visual > img,
+.home-top3-chaser__tier img {
+  border-radius: 999px !important;
+  clip-path: circle(46% at 50% 50%) !important;
+  -webkit-mask-image: radial-gradient(circle at center, #000 61%, transparent 67%) !important;
+  mask-image: radial-gradient(circle at center, #000 61%, transparent 67%) !important;
+}
+
+.home-top3-medal img,
+.home-top3-chaser__rank img {
+  display: none !important;
+}
+
+.home-top3-medal,
+.home-top3-chaser__rank {
+  display: inline-grid !important;
+  place-items: center !important;
+  color: #08111f !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.22) !important;
+}
+
+.home-top3-medal {
+  width: clamp(30px, 2vw, 42px) !important;
+  height: clamp(30px, 2vw, 42px) !important;
+  right: -2px !important;
+  top: -4px !important;
+  border-color: rgba(255, 226, 132, 0.82) !important;
+  background:
+    radial-gradient(circle at 38% 28%, #fff4b4, transparent 28%),
+    linear-gradient(145deg, #ffd56a, #b68119 72%, #5e3f0a) !important;
+  font-size: clamp(13px, 1vw, 17px) !important;
+  box-shadow:
+    0 0 0 4px rgba(214, 176, 92, 0.14),
+    0 12px 24px rgba(0, 0, 0, 0.42) !important;
+}
+
+.home-top3-chaser__rank {
+  width: clamp(30px, 2.1vw, 42px) !important;
+  height: clamp(30px, 2.1vw, 42px) !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(214, 226, 245, 0.42) !important;
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.7), transparent 28%),
+    linear-gradient(145deg, #dce8f6, #73849b 70%, #273142) !important;
+  font-size: clamp(12px, 0.9vw, 15px) !important;
+}
+
+.home-top3-chaser--bronze .home-top3-chaser__rank {
+  border-color: rgba(219, 151, 78, 0.55) !important;
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255, 219, 176, 0.72), transparent 28%),
+    linear-gradient(145deg, #e78b3d, #9a4f1c 72%, #44200e) !important;
+}
+
+.home-top3-chaser__tier {
+  width: clamp(52px, 3.7vw, 68px) !important;
+  height: clamp(52px, 3.7vw, 68px) !important;
+  border-color: rgba(93, 146, 198, 0.32) !important;
+  box-shadow:
+    inset 0 0 20px rgba(255, 255, 255, 0.04),
+    0 10px 24px rgba(0, 0, 0, 0.3) !important;
+}
+
+.home-top3-chaser {
+  min-height: clamp(118px, 7vw, 150px) !important;
+  grid-template-columns: clamp(30px, 2.1vw, 42px) clamp(52px, 3.7vw, 68px) minmax(0, 1fr) minmax(112px, auto) !important;
+}
+
+.home-top3-chaser__stats {
+  padding-left: 8px !important;
+}
+
+.home-top3-chaser__stats b {
+  max-width: 100% !important;
+  color: #63d6ff !important;
+  font-size: clamp(16px, 1.05vw, 22px) !important;
+}
+
+.home-top3-scoreline b {
+  color: #ffe08a !important;
+}
+
+.balance-result-teams--compact {
+  position: relative !important;
+  isolation: isolate !important;
+  overflow: hidden !important;
+  gap: clamp(16px, 1.4vw, 24px) !important;
+  padding: clamp(18px, 1.45vw, 26px) !important;
+  border: 1px solid rgba(96, 165, 250, 0.28) !important;
+  border-radius: 26px !important;
+  background:
+    linear-gradient(90deg, rgba(4, 12, 30, 0.55) 0%, rgba(3, 8, 20, 0.9) 44%, rgba(3, 8, 20, 0.9) 56%, rgba(28, 8, 12, 0.54) 100%),
+    linear-gradient(180deg, rgba(2, 6, 17, 0.2), rgba(2, 6, 17, 0.68)),
+    var(--klol-gen-team-versus) center / cover no-repeat !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 24px 70px rgba(0, 0, 0, 0.34) !important;
+}
+
+.balance-result-teams--compact::before {
+  content: "";
+  position: absolute;
+  top: 12%;
+  bottom: 12%;
+  left: 50%;
+  z-index: -1;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(226, 232, 240, 0.22), transparent);
+  box-shadow:
+    -28vw 0 110px rgba(74, 163, 255, 0.2),
+    28vw 0 110px rgba(255, 80, 109, 0.17);
+}
+
+.balance-result-teams--compact .balance-team-panel {
+  overflow: hidden !important;
+  border-width: 1px !important;
+  background:
+    linear-gradient(180deg, rgba(4, 12, 28, 0.74), rgba(3, 8, 20, 0.86)) !important;
+  -webkit-backdrop-filter: blur(4px) saturate(1.05);
+  backdrop-filter: blur(4px) saturate(1.05);
+}
+
+.balance-result-teams--compact .balance-team-panel--blue {
+  border-color: rgba(74, 163, 255, 0.46) !important;
+  box-shadow: inset 4px 0 0 rgba(74, 163, 255, 0.42), 0 18px 44px rgba(0, 0, 0, 0.24) !important;
+}
+
+.balance-result-teams--compact .balance-team-panel--red {
+  border-color: rgba(255, 90, 114, 0.44) !important;
+  box-shadow: inset -4px 0 0 rgba(255, 90, 114, 0.38), 0 18px 44px rgba(0, 0, 0, 0.24) !important;
+}
+
+.balance-result-teams--compact .balance-team-title {
+  letter-spacing: 0.18em !important;
+}
+
+.balance-result-teams--compact .balance-team-title--blue {
+  color: #8fd2ff !important;
+}
+
+.balance-result-teams--compact .balance-team-title--red {
+  color: #ff9ba9 !important;
+}
+
+.balance-result-teams--compact .balance-player-card--compact {
+  border-color: rgba(148, 163, 184, 0.18) !important;
+  background:
+    linear-gradient(90deg, rgba(4, 12, 28, 0.82), rgba(5, 15, 33, 0.72)) !important;
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+}
+
+.balance-result-teams--compact .balance-team-panel--blue .balance-position-badge {
+  border-color: rgba(74, 163, 255, 0.36) !important;
+  color: #9ed9ff !important;
+  background: rgba(14, 43, 82, 0.72) !important;
+}
+
+.balance-result-teams--compact .balance-team-panel--red .balance-position-badge {
+  border-color: rgba(255, 90, 114, 0.34) !important;
+  color: #ffb3bd !important;
+  background: rgba(83, 16, 27, 0.66) !important;
+}
+
+.ai-pickban-page .ai-panel,
+.ai-pickban-page .ai-pickban-board,
+.ai-pickban-page .ai-pickban-grid > section,
+.ai-pickban-page .ai-recommendation-grid .ai-sub-panel {
+  background:
+    linear-gradient(90deg, rgba(4, 14, 34, 0.9), rgba(4, 10, 23, 0.94), rgba(34, 8, 16, 0.88)),
+    var(--klol-gen-team-versus) center / cover no-repeat !important;
+}
+
+.destruction-auction-manager .auction-mini-stage,
+.destruction-auction-manager .gacha-overlay-card,
+.destruction-auction-manager .gacha-showcase {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(96, 165, 250, 0.18), transparent 40%),
+    linear-gradient(180deg, rgba(4, 10, 23, 0.62), rgba(1, 5, 14, 0.92)),
+    var(--klol-gen-auction) center / cover no-repeat !important;
+}
+
+.destruction-auction-manager .gacha-overlay-card::before {
+  background:
+    radial-gradient(circle at 50% 46%, rgba(96, 165, 250, 0.2), transparent 42%),
+    linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.055), transparent),
+    var(--klol-gen-card) center / cover no-repeat !important;
+  opacity: 0.65 !important;
+}
+
+.destruction-auction-manager .auction-mini-stage::after {
+  content: "";
+  position: absolute;
+  inset: auto 12% 14px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(125, 211, 252, 0.62), transparent);
+  box-shadow: 0 -22px 80px rgba(74, 163, 255, 0.22);
+  pointer-events: none;
+}
+
+.destruction-auction-manager .gacha-card-back,
+.destruction-auction-manager .gacha-card-face.back {
+  border-color: rgba(125, 211, 252, 0.5) !important;
+  background-color: #0e2d61 !important;
+  background-image:
+    radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.18), transparent 24%),
+    linear-gradient(145deg, #4b8ff4 0%, #174b9b 45%, #06142e 100%) !important;
+  box-shadow:
+    0 26px 70px rgba(0, 0, 0, 0.62),
+    inset 0 0 28px rgba(255, 255, 255, 0.12),
+    0 0 42px rgba(96, 165, 250, 0.4) !important;
+}
+
+.destruction-auction-manager .mini-card-stack-card {
+  filter:
+    drop-shadow(0 28px 36px rgba(0, 0, 0, 0.64))
+    drop-shadow(0 0 30px rgba(96, 165, 250, 0.32)) !important;
+}
+
+.destruction-auction-manager .mini-card-status {
+  border-color: rgba(125, 211, 252, 0.42) !important;
+  background:
+    linear-gradient(135deg, rgba(7, 17, 37, 0.9), rgba(10, 28, 58, 0.76)) !important;
+  color: #d9f3ff !important;
+}
+
+.destruction-auction-manager .gacha-card-face.front {
+  background-image:
+    radial-gradient(circle at 68% 18%, rgba(255, 255, 255, 0.14), transparent 24%),
+    linear-gradient(165deg, rgba(18, 58, 80, 0.96) 0%, rgba(10, 35, 61, 0.98) 46%, rgba(4, 10, 23, 1) 100%),
+    var(--klol-gen-card) center / cover no-repeat !important;
+}
+
+@media (min-width: 1800px) {
+  .home-dark-showcase-hero {
+    min-height: clamp(240px, 14vw, 360px) !important;
+  }
+
+  .home-top3-arena {
+    grid-template-columns: minmax(420px, 0.82fr) minmax(520px, 1.18fr) !important;
+  }
+}
+
+@media (max-width: 980px) {
+  html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .home-dark-showcase,
+  html[data-theme="dark-modern"] .home-dark-showcase {
+    background:
+      linear-gradient(180deg, rgba(3, 8, 19, 0.66), rgba(3, 8, 19, 0.92)),
+      var(--klol-home-hero-safe) center top / 820px auto no-repeat,
+      linear-gradient(180deg, rgba(5, 12, 28, 0.96), rgba(3, 8, 19, 0.98)) !important;
+  }
+
+  .home-dark-showcase-hero {
+    min-height: 220px !important;
+  }
+
+  .home-top3-arena,
+  .balance-result-teams--compact {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .balance-result-teams--compact::before {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .home-top3-chaser {
+    grid-template-columns: 34px 52px minmax(0, 1fr) !important;
+  }
+
+  .home-top3-chaser__stats {
+    grid-column: 2 / -1 !important;
+    justify-items: start !important;
+    text-align: left !important;
+    padding-left: 0 !important;
   }
 }

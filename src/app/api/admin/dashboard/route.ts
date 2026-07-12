@@ -4,6 +4,12 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import {
+  getSiteSettings,
+  isSiteFeatureEnabled,
+  type SiteFeatureKey,
+} from "@/lib/site/settings";
+import { getDeployEnvWarnings } from "@/lib/security/deploy-env";
 
 const LOG_PAGE_SIZE = 30;
 
@@ -24,9 +30,12 @@ export async function GET(req: NextRequest) {
       pendingUserCount,
       todayParticipationCount,
       riotFailureCount,
+      activeRecruitCount,
+      todayKakaoLogCount,
       recentErrors,
       logs,
       totalLogCount,
+      siteSettings,
     ] = await Promise.all([
       prisma.season.findFirst({
         where: { isActive: true },
@@ -70,6 +79,21 @@ export async function GET(req: NextRequest) {
         },
       }),
 
+      prisma.recruitParty.count({
+        where: {
+          status: "IN_PROGRESS",
+        },
+      }).catch(() => 0),
+
+      prisma.recruitPartyLog.count({
+        where: {
+          createdAt: {
+            gte: new Date(new Date().setHours(0, 0, 0, 0)),
+            lte: new Date(new Date().setHours(23, 59, 59, 999)),
+          },
+        },
+      }).catch(() => 0),
+
       prisma.adminLog.findMany({
         where: {
           OR: [
@@ -97,7 +121,16 @@ export async function GET(req: NextRequest) {
       }),
 
       prisma.adminLog.count(),
+
+      getSiteSettings(),
     ]);
+
+    const featureKeys: SiteFeatureKey[] = ["kakao", "recruit", "balanceAi", "randomTeam", "riot"];
+    const featureStates = featureKeys.map((feature) => ({
+      feature,
+      enabled: isSiteFeatureEnabled(siteSettings, feature),
+    }));
+    const deployWarnings = getDeployEnvWarnings();
 
     return NextResponse.json({
       currentSeason,
@@ -106,6 +139,25 @@ export async function GET(req: NextRequest) {
       pendingUserCount,
       todayParticipationCount,
       riotFailureCount,
+      activeRecruitCount,
+      todayKakaoLogCount,
+      siteSettings: {
+        siteName: siteSettings.siteName,
+        roomName: siteSettings.roomName,
+        planStatus: siteSettings.planStatus,
+        themePreset: siteSettings.themePreset,
+        trialEndsAt: siteSettings.trialEndsAt,
+        billingOwner: siteSettings.billingOwner,
+        featureStates,
+        lockedFeatureCount: featureStates.filter((item) => !item.enabled).length,
+        envReady: {
+          superAdmin: Boolean(process.env.SUPER_ADMIN_ID),
+          database: Boolean(process.env.DATABASE_URL),
+          riotKey: Boolean(process.env.RIOT_API_KEY || process.env.RIOT_API_TOKEN),
+          deployReady: deployWarnings.length === 0,
+          deployWarnings,
+        },
+      },
       recentErrors: recentErrors.map((log) => ({
         id: log.id,
         action: log.action,

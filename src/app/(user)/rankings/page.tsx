@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
+import Image from "next/image";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma/client";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -99,7 +100,14 @@ function RankMedal({
       aria-label={`${rank}위`}
       title={`${rank}위`}
     >
-      <img src={medalSrc} alt="" aria-hidden="true" className="ranking-medal__image" />
+      <Image
+        src={medalSrc}
+        alt=""
+        aria-hidden="true"
+        width={96}
+        height={96}
+        className="ranking-medal__image"
+      />
     </span>
   );
 }

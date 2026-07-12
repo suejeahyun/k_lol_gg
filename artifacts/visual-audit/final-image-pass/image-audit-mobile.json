@@ -1,0 +1,114 @@
+[
+  {
+    "route": "/app",
+    "file": "E:\\k-LOL.GG\\0.k_lol_gg\\artifacts\\visual-audit\\final-image-pass\\app-mobile-full.png",
+    "metrics": {
+      "bgCount": 15,
+      "broken": [],
+      "clientW": 390,
+      "docH": 1453,
+      "docW": 390,
+      "overflowX": false,
+      "pending": [],
+      "text": "K-LOL.GG\n모바일 홈\n다크\n관리자 HOME\nK-LOL.GG APP\n내전 운영 홈\n\n구인, 최근 내전, 랭킹을 빠르게 확인합니다.\n\n구인 보기\n플레이어 검색\n시즌 요약\n\nK-LOL Season 1: Genesis\n\n진행 구인\n0개\n등록 내전\n41개\n활성 유저\n101명\n활성 구인\n\n전",
+      "url": "/app",
+      "visibleImgs": 0
+    }
+  },
+  {
+    "route": "/app/players",
+    "file": "E:\\k-LOL.GG\\0.k_lol_gg\\artifacts\\visual-audit\\final-image-pass\\app-players-mobile-full.png",
+    "metrics": {
+      "bgCount": 64,
+      "broken": [],
+      "clientW": 390,
+      "docH": 2892,
+      "docW": 390,
+      "overflowX": false,
+      "pending": [],
+      "text": "K-LOL.GG\n플레이어\n다크\n관리자 HOME\nPLAYER\n플레이어 목록\n검색\n검색\n전체 101명 · 12명 표시\n02정민\n원딜은죄인이다#1234\n상세\n현재\n마스터 1층\n참여\n17회\nMVP\n11회\n승률\n68.6%\n04규민\n네꿈개꿈이야#내꿈도\n상세\n현재\n다이아 4\n참여\n7회\nMVP\n0회\n",
+      "url": "/app/players",
+      "visibleImgs": 0
+    }
+  },
+  {
+    "route": "/app/matches",
+    "file": "E:\\k-LOL.GG\\0.k_lol_gg\\artifacts\\visual-audit\\final-image-pass\\app-matches-mobile-full.png",
+    "metrics": {
+      "bgCount": 44,
+      "broken": [],
+      "clientW": 390,
+      "docH": 3308,
+      "docW": 390,
+      "overflowX": false,
+      "pending": [],
+      "text": "K-LOL.GG\n내전 허브\n다크\n관리자 HOME\nPLAY HUB\n내전·구인·랭킹\n내전\n구인\n랭킹\n이벤트\n최근 내전\n\n20개\n\n2026-07-01 2nd\n07. 01. · K-LOL Season 1: Genesis\n진행\n세트\n2세트\n2026-07-01 1st\n07. 01. · K-LOL ",
+      "url": "/app/matches",
+      "visibleImgs": 0
+    }
+  },
+  {
+    "route": "/app/recruits",
+    "file": "E:\\k-LOL.GG\\0.k_lol_gg\\artifacts\\visual-audit\\final-image-pass\\app-recruits-mobile-full.png",
+    "metrics": {
+      "bgCount": 68,
+      "broken": [],
+      "clientW": 390,
+      "docH": 4129,
+      "docW": 390,
+      "overflowX": false,
+      "pending": [],
+      "text": "K-LOL.GG\n구인 현황\n다크\n관리자 HOME\nRECRUIT\n구인 현황\n전체\n716\n진행중\n0\n마감\n707\n취소\n0\n초기화\n9\n전체\n\n16개\n\n#1 · 4인 파티 구인\n96 근열 근텐 U(D) · 모바시\n마감\n인원\n2/4\n게임\n번호 구인\n음성방\nK롤방 구인구직방\n\nFILL 근열 · F",
+      "url": "/app/recruits",
+      "visibleImgs": 0
+    }
+  },
+  {
+    "route": "/app/rankings",
+    "file": "E:\\k-LOL.GG\\0.k_lol_gg\\artifacts\\visual-audit\\final-image-pass\\app-rankings-mobile-full.png",
+    "metrics": {
+      "bgCount": 28,
+      "broken": [],
+      "clientW": 390,
+      "docH": 2398,
+      "docW": 390,
+      "overflowX": false,
+      "pending": [],
+      "text": "K-LOL.GG\n시즌 랭킹\n다크\n관리자 HOME\nRANKING\n랭킹 TOP 3\n승률 TOP 3\n1\n정우\nAmdusias#72악마\n69.2% · 12회\n2\n02정민\n원딜은죄인이다#1234\n68.6% · 17회\n3\n박범찬\nPeyz#ADC1\n63.3% · 16회\n최다참여 TOP 3\n1\n동연\n",
+      "url": "/app/rankings",
+      "visibleImgs": 0
+    }
+  },
+  {
+    "route": "/app/me",
+    "file": "E:\\k-LOL.GG\\0.k_lol_gg\\artifacts\\visual-audit\\final-image-pass\\app-me-mobile-full.png",
+    "metrics": {
+      "bgCount": 16,
+      "broken": [],
+      "clientW": 390,
+      "docH": 1015,
+      "docW": 390,
+      "overflowX": false,
+      "pending": [],
+      "text": "K-LOL.GG\n내 정보\n다크\n관리자 HOME\nMY PAGE\n내정보\n계정 관리\n관리자\n계정\n아이디\nadmin\n권한\n관리자\n상태\nAPPROVED\n플레이어\n닉네임#태그\n-\n내전 티어\n-\nRiot 솔랭\n연동 대기\nRiot 연동\n미연동\n내 시즌 요약\n\nK-LOL Season 1: Genesis",
+      "url": "/app/me",
+      "visibleImgs": 0
+    }
+  },
+  {
+    "route": "/app/admin",
+    "file": "E:\\k-LOL.GG\\0.k_lol_gg\\artifacts\\visual-audit\\final-image-pass\\app-admin-mobile-full.png",
+    "metrics": {
+      "bgCount": 33,
+      "broken": [],
+      "clientW": 390,
+      "docH": 3260,
+      "docW": 390,
+      "overflowX": false,
+      "pending": [],
+      "text": "K-LOL.GG\nK-LOL.GG APP\n다크\n유저 HOME\nADMIN\n관리자 HOME\n운영 상태\n진행 구인\n0개\n내전\n41개\n회원\n122명\n관리자\nSUPER_ADMIN\n빠른 확인\n내전\n41개\n구인\n0개 진행\n회원\n122명\nPC 관리자\n전체 운영\n구인 기능\n카카오 구인현황\n0개 진행중\n전",
+      "url": "/app/admin",
+      "visibleImgs": 0
+    }
+  }
+]

@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import type { SiteSettings, SitePlanStatus } from "@/lib/site/settings";
+import type { SiteSettings, SitePlanStatus, SiteThemePreset } from "@/lib/site/settings";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 
@@ -48,6 +48,25 @@ export default function SiteSettingsClient({ initialSettings }: SiteSettingsClie
 
   return (
     <form className="admin-card site-settings-form" onSubmit={handleSubmit}>
+      <div className="site-settings-status-strip" aria-label="현재 사이트 운영 상태">
+        <div>
+          <span>운영 사이트</span>
+          <strong>{settings.siteName}</strong>
+        </div>
+        <div>
+          <span>오픈채팅방</span>
+          <strong>{settings.roomName || "방 이름 미설정"}</strong>
+        </div>
+        <div data-state={settings.planStatus === "ACTIVE" ? "active" : "locked"}>
+          <span>유료 상태</span>
+          <strong>{settings.planStatus === "ACTIVE" ? "활성" : "잠금"}</strong>
+        </div>
+        <div>
+          <span>기본 테마</span>
+          <strong>{settings.themePreset === "black-gold" ? "블랙 골드" : settings.themePreset === "neon-cyber" ? "네온" : "다크모던"}</strong>
+        </div>
+      </div>
+
       <div className="site-settings-grid">
         <label className="site-settings-field">
           <span>사이트 이름</span>
@@ -70,6 +89,19 @@ export default function SiteSettingsClient({ initialSettings }: SiteSettingsClie
         </label>
 
         <label className="site-settings-field">
+          <span>기본 테마</span>
+          <select
+            className="admin-input"
+            value={settings.themePreset}
+            onChange={(event) => update("themePreset", event.target.value as SiteThemePreset)}
+          >
+            <option value="dark-modern">다크모던 블루</option>
+            <option value="neon-cyber">네온 사이버</option>
+            <option value="black-gold">블랙 골드</option>
+          </select>
+        </label>
+
+        <label className="site-settings-field">
           <span>유료 상태</span>
           <select
             className="admin-input"
@@ -88,6 +120,48 @@ export default function SiteSettingsClient({ initialSettings }: SiteSettingsClie
             value={settings.supportContact ?? ""}
             onChange={(event) => update("supportContact", event.target.value || null)}
             placeholder="카카오톡 ID 또는 관리자 연락처"
+          />
+        </label>
+
+        <label className="site-settings-field">
+          <span>결제/계약 담당</span>
+          <input
+            className="admin-input"
+            value={settings.billingOwner ?? ""}
+            onChange={(event) => update("billingOwner", event.target.value || null)}
+            placeholder="예: A방 운영자"
+          />
+        </label>
+
+        <label className="site-settings-field">
+          <span>체험 종료일</span>
+          <input
+            className="admin-input"
+            type="date"
+            value={settings.trialEndsAt ?? ""}
+            onChange={(event) => update("trialEndsAt", event.target.value || null)}
+          />
+        </label>
+      </div>
+
+      <div className="site-settings-grid site-settings-grid--visual">
+        <label className="site-settings-field">
+          <span>사이트 로고 URL</span>
+          <input
+            className="admin-input"
+            value={settings.siteLogoUrl ?? ""}
+            onChange={(event) => update("siteLogoUrl", event.target.value || null)}
+            placeholder="/images/logo.png 또는 https://..."
+          />
+        </label>
+
+        <label className="site-settings-field">
+          <span>페이지 배경 URL</span>
+          <input
+            className="admin-input"
+            value={settings.homeBackgroundUrl ?? ""}
+            onChange={(event) => update("homeBackgroundUrl", event.target.value || null)}
+            placeholder="/images/theme/dark-modern/klol-global-stage-v1.png"
           />
         </label>
       </div>
@@ -151,6 +225,16 @@ export default function SiteSettingsClient({ initialSettings }: SiteSettingsClie
             className="admin-input site-settings-textarea"
             value={settings.premiumNoticeMessage}
             onChange={(event) => update("premiumNoticeMessage", event.target.value)}
+          />
+        </label>
+
+        <label className="site-settings-field site-settings-field--wide">
+          <span>슈퍼어드민 운영 메모</span>
+          <textarea
+            className="admin-input site-settings-textarea"
+            value={settings.premiumMemo ?? ""}
+            onChange={(event) => update("premiumMemo", event.target.value || null)}
+            placeholder="방별 계약 조건, 열어둘 기능, 다음 점검일 등을 기록합니다."
           />
         </label>
       </div>

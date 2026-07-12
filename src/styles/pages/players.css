@@ -1197,6 +1197,16 @@
 .solo-match-champion-image {
   border-radius: 16px;
   border: 1px solid rgba(96, 165, 250, 0.42);
+  object-fit: cover;
+  background:
+    radial-gradient(circle at 50% 38%, rgba(74, 163, 255, 0.24), transparent 58%),
+    var(--klol-gen-card, rgba(2, 8, 23, 0.82)) center / cover no-repeat,
+    rgba(2, 8, 23, 0.82);
+  box-shadow:
+    0 0 0 3px rgba(4, 12, 28, 0.68),
+    0 0 18px rgba(74, 163, 255, 0.12);
+  color: transparent;
+  font-size: 0;
 }
 
 .solo-match-champion strong {

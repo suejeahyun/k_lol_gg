@@ -1,6 +1,5 @@
 export const dynamic = "force-dynamic";
 
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -48,31 +47,9 @@ export default async function AccountTierPage() {
           </div>
         </div>
 
-        <div className="account-edit-split-grid">
-          <section className="account-edit-panel account-edit-panel--profile">
-            <AccountProfileEditForm player={editablePlayer} />
-          </section>
-
-          <section className="account-edit-panel account-edit-panel--tier">
-            <div className="account-tier-auto-card">
-              <p className="account-page__kicker">RIOT AUTO TIER</p>
-              <h2>티어는 Riot API로 자동 반영됩니다.</h2>
-              <p>
-                현재 티어와 솔로랭크 전적은 닉네임#태그를 기준으로 Riot 계정을 연결한 뒤
-                솔랭 동기화를 실행하면 자동으로 갱신됩니다. 수동 티어 입력은 더 이상 사용하지 않습니다.
-              </p>
-              <div className="account-tier-auto-card__steps">
-                <span>1. 닉네임#태그 확인</span>
-                <span>2. Riot 계정 연결</span>
-                <span>3. 솔랭 동기화</span>
-              </div>
-              <div className="account-tier-auto-card__actions">
-                <Link className="admin-button" href="/me/riot">Riot 연동하기</Link>
-                <Link className="admin-button admin-button--ghost" href="/me/player">내 플레이어 정보</Link>
-              </div>
-            </div>
-          </section>
-        </div>
+        <section className="account-edit-panel account-edit-panel--profile account-edit-panel--single">
+          <AccountProfileEditForm player={editablePlayer} />
+        </section>
       </section>
     </main>
   );

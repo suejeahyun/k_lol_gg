@@ -318,13 +318,22 @@
 }
 
 .championAvatar {
+  display: block;
   width: 34px;
   height: 34px;
   flex: 0 0 auto;
-  border: 1px solid rgba(96, 165, 250, 0.36);
+  border: 1px solid rgba(96, 165, 250, 0.42);
   border-radius: 999px;
   object-fit: cover;
-  background: rgba(2, 8, 23, 0.72);
+  background:
+    radial-gradient(circle at 50% 38%, rgba(74, 163, 255, 0.28), transparent 58%),
+    var(--klol-gen-card, rgba(2, 8, 23, 0.82)) center / cover no-repeat,
+    rgba(2, 8, 23, 0.82);
+  box-shadow:
+    0 0 0 3px rgba(4, 12, 28, 0.72),
+    0 0 16px rgba(74, 163, 255, 0.16);
+  color: transparent;
+  font-size: 0;
 }
 
 .rowNumber {
@@ -417,13 +426,22 @@
 }
 
 .matchChampionImage {
+  display: block;
   width: 44px;
   height: 44px;
   flex: 0 0 auto;
-  border: 1px solid rgba(96, 165, 250, 0.34);
+  border: 1px solid rgba(96, 165, 250, 0.42);
   border-radius: 999px;
   object-fit: cover;
-  background: rgba(2, 8, 23, 0.72);
+  background:
+    radial-gradient(circle at 50% 38%, rgba(74, 163, 255, 0.26), transparent 58%),
+    var(--klol-gen-card, rgba(2, 8, 23, 0.82)) center / cover no-repeat,
+    rgba(2, 8, 23, 0.82);
+  box-shadow:
+    0 0 0 3px rgba(4, 12, 28, 0.7),
+    0 0 18px rgba(74, 163, 255, 0.14);
+  color: transparent;
+  font-size: 0;
 }
 
 .emptyState {

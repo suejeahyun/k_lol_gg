@@ -693,6 +693,37 @@ export default function DestructionAuctionManager({
       : holdCount > 0
         ? "보류자 재추첨"
         : "추첨 완료";
+  const auctionMiniStageState =
+    pendingCount > 0 || holdCount > 0 ? "ready" : "complete";
+  const auctionMiniStageLabel =
+    pendingCount > 0
+      ? `${pendingCount}명 대기`
+      : holdCount > 0
+        ? `${holdCount}명 보류`
+        : "경매 추첨 완료";
+  const renderMiniCardStack = () => (
+    <div
+      className={`mini-card-stack mini-card-stack--${auctionMiniStageState}`}
+      aria-hidden="true"
+    >
+      <img
+        className="mini-card-stack-card mini-card-stack-card--back-left"
+        src="/auction-cards/back-premium.svg"
+        alt=""
+      />
+      <img
+        className="mini-card-stack-card mini-card-stack-card--back-right"
+        src="/auction-cards/back-premium.svg"
+        alt=""
+      />
+      <img
+        className="mini-card-stack-card mini-card-stack-card--front"
+        src="/auction-cards/back-premium.svg"
+        alt=""
+      />
+      <div className="mini-card-status">{auctionMiniStageLabel}</div>
+    </div>
+  );
 
   const selectedTeam = teams.find((team) => team.id === Number(selectedTeamId));
   const currentTarget = activeDrawn ?? selectedParticipant;
@@ -1023,7 +1054,6 @@ export default function DestructionAuctionManager({
     }
   };
   const handleDraw = async () => {
-    await unlockAuctionAudio();
     setError("");
     setIsDrawing(true);
     setDrawnPreview(null);
@@ -1035,6 +1065,7 @@ export default function DestructionAuctionManager({
     setIsOverlayOpen(true);
     setDrawPhase("SHUFFLING");
     lastShuffleTickRef.current = Date.now();
+    void unlockAuctionAudio();
     playAuctionSound("shuffleTick", soundEnabledRef.current);
 
     try {
@@ -1269,12 +1300,14 @@ export default function DestructionAuctionManager({
         .auction-mini-stage { position: relative; min-height: 304px; border-radius: 22px; border: 1px solid color-mix(in srgb, var(--tier-border) 70%, rgba(96,165,250,0.3)); overflow: hidden; background: radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--tier-primary) 38%, rgba(37,99,235,0.28)), rgba(2,8,23,0.42) 55%, rgba(0,0,0,0.22)); }
         .auction-mini-stage::before { content: ""; position: absolute; inset: -30% -10%; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--tier-accent) 80%, rgba(255,255,255,0.1)), transparent); animation: auctionMiniSweep 4s linear infinite; }
         .auction-mini-center { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; min-height: 304px; padding: 24px; }
-        .mini-card-stack { position: relative; width: 170px; height: 230px; }
-        .mini-card-stack span { position: absolute; inset: 0; border-radius: 20px; border: 1px solid rgba(255,255,255,0.16); background: linear-gradient(145deg, color-mix(in srgb, var(--tier-primary) 90%, #fff), color-mix(in srgb, var(--tier-secondary) 80%, #1e3a8a) 52%, rgba(15,23,42,0.98)); box-shadow: 0 18px 40px rgba(0,0,0,0.34), 0 0 26px color-mix(in srgb, var(--tier-glow) 40%, transparent); }
-        .mini-card-stack span:nth-child(1) { transform: translate(-18px, 10px) rotate(-10deg); opacity: 0.7; }
-        .mini-card-stack span:nth-child(2) { transform: translate(16px, 12px) rotate(9deg); opacity: 0.78; }
-        .mini-card-stack span:nth-child(3) { transform: translate(0, 0) rotate(-1deg); }
-        .mini-card-logo { position: absolute; inset: 0; display: grid; place-items: center; font-size: 46px; font-weight: 900; color: rgba(255,255,255,0.9); letter-spacing: 0.04em; text-shadow: 0 8px 22px rgba(0,0,0,0.35), 0 0 18px var(--tier-text-glow); }
+        .mini-card-stack { position: relative; width: 230px; height: 292px; perspective: 1200px; display: grid; place-items: center; }
+        .mini-card-stack-card { position: absolute; width: 168px; height: 238px; object-fit: contain; filter: drop-shadow(0 28px 34px rgba(0,0,0,0.56)) drop-shadow(0 0 28px color-mix(in srgb, var(--tier-glow) 44%, transparent)); transform-origin: 50% 82%; transition: transform 220ms ease, opacity 220ms ease; }
+        .mini-card-stack-card--back-left { transform: translate(-42px, 19px) rotate(-13deg) scale(.94); opacity: .72; }
+        .mini-card-stack-card--back-right { transform: translate(42px, 18px) rotate(13deg) scale(.94); opacity: .72; }
+        .mini-card-stack-card--front { transform: translateY(-3px) rotate(-1deg); opacity: .98; }
+        .mini-card-stack--complete .mini-card-stack-card { filter: grayscale(.35) drop-shadow(0 22px 28px rgba(0,0,0,.48)); opacity: .48; }
+        .mini-card-logo { position: absolute; inset: 0; display: grid; place-items: center; font-size: 46px; font-weight: 900; color: rgba(255,255,255,0.92); letter-spacing: 0.04em; text-shadow: 0 8px 22px rgba(0,0,0,0.35), 0 0 18px var(--tier-text-glow); }
+        .mini-card-status { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); min-width: 132px; text-align: center; border-radius: 999px; border: 1px solid rgba(125,211,252,.36); background: rgba(4,12,28,.78); color: #d9f3ff; font-size: 12px; font-weight: 900; letter-spacing: .08em; padding: 8px 12px; box-shadow: 0 14px 34px rgba(0,0,0,.34), 0 0 22px rgba(56,189,248,.16); }
         .auction-current-preview { width: min(100%, 360px); border-radius: 24px; border: 1px solid var(--tier-border); background: linear-gradient(160deg, color-mix(in srgb, var(--tier-secondary) 38%, rgba(14,24,48,0.95)), rgba(19,35,62,0.96)); padding: 20px; box-shadow: 0 16px 40px rgba(0,0,0,0.32), 0 0 30px color-mix(in srgb, var(--tier-glow) 32%, transparent); }
         .auction-front-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
         .auction-position-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 72px; padding: 8px 12px; border-radius: 999px; color: #fff; font-weight: 900; font-size: 13px; letter-spacing: 0.06em; box-shadow: 0 10px 22px rgba(0,0,0,0.24); }
@@ -5799,6 +5832,91 @@ export default function DestructionAuctionManager({
             transform: translate3d(0, 58px, 0) rotate(0deg) scale(.50);
           }
         }
+
+        /* K-LOL.GG auction stage draw art v1
+           Uses the generated stage image as the actual draw scene while keeping the existing
+           card refs and draw logic intact. */
+        .gacha-overlay {
+          --klol-auction-stage-draw-bg: url("/images/generated/klol-auction-stage-draw-cards.png");
+        }
+
+        .gacha-overlay .gacha-overlay-card {
+          background:
+            radial-gradient(circle at 50% 38%, rgba(74, 163, 255, 0.16), transparent 42%),
+            linear-gradient(180deg, rgba(1, 5, 14, 0.72), rgba(1, 5, 14, 0.94)) !important;
+        }
+
+        .gacha-overlay .gacha-showcase {
+          overflow: hidden !important;
+          min-height: min(74vh, 800px) !important;
+          border: 1px solid rgba(125, 211, 252, 0.26) !important;
+          border-radius: 30px !important;
+          background:
+            radial-gradient(circle at 50% 50%, rgba(125, 211, 252, 0.10), transparent 36%),
+            linear-gradient(180deg, rgba(0, 5, 14, 0.02), rgba(0, 5, 14, 0.28) 56%, rgba(0, 5, 14, 0.62) 100%),
+            linear-gradient(90deg, rgba(1, 5, 14, 0.28), transparent 22%, transparent 78%, rgba(1, 5, 14, 0.28)),
+            var(--klol-auction-stage-draw-bg) center center / cover no-repeat !important;
+          box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.08),
+            inset 0 -70px 120px rgba(0, 0, 0, 0.42),
+            0 28px 90px rgba(0, 0, 0, 0.52) !important;
+        }
+
+        .gacha-overlay .gacha-showcase-stage {
+          width: min(100%, 1180px) !important;
+          min-height: min(66vh, 700px) !important;
+          overflow: visible !important;
+        }
+
+        .gacha-overlay.phase-shuffling .gacha-deck-cluster,
+        .gacha-overlay.phase-selecting .gacha-deck-cluster {
+          left: 50% !important;
+          top: 60% !important;
+          width: min(760px, 72vw) !important;
+          height: 320px !important;
+          margin-left: max(-380px, -36vw) !important;
+          margin-top: -150px !important;
+        }
+
+        .gacha-overlay.phase-shuffling .gacha-card-back,
+        .gacha-overlay.phase-selecting .gacha-card-back {
+          filter:
+            brightness(1.08)
+            saturate(1.08)
+            drop-shadow(0 18px 24px rgba(0, 0, 0, 0.62))
+            drop-shadow(0 0 22px rgba(125, 211, 252, 0.28)) !important;
+        }
+
+        .gacha-overlay.phase-selecting.draw-card-1 .gacha-card-back.card-1,
+        .gacha-overlay.phase-selecting.draw-card-2 .gacha-card-back.card-2,
+        .gacha-overlay.phase-selecting.draw-card-3 .gacha-card-back.card-3,
+        .gacha-overlay.phase-selecting.draw-card-4 .gacha-card-back.card-4,
+        .gacha-overlay.phase-selecting.draw-card-5 .gacha-card-back.card-5,
+        .gacha-overlay.phase-selecting.draw-card-6 .gacha-card-back.card-6,
+        .gacha-overlay.phase-selecting.draw-card-7 .gacha-card-back.card-7,
+        .gacha-overlay.phase-selecting.draw-card-8 .gacha-card-back.card-8,
+        .gacha-overlay.phase-selecting.draw-card-9 .gacha-card-back.card-9 {
+          filter:
+            brightness(1.28)
+            saturate(1.18)
+            drop-shadow(0 26px 38px rgba(0, 0, 0, 0.7))
+            drop-shadow(0 0 38px rgba(125, 211, 252, 0.5)) !important;
+        }
+
+        @media (max-width: 900px) {
+          .gacha-overlay .gacha-showcase {
+            min-height: 520px !important;
+            background-position: center bottom !important;
+          }
+
+          .gacha-overlay.phase-shuffling .gacha-deck-cluster,
+          .gacha-overlay.phase-selecting .gacha-deck-cluster {
+            top: 62% !important;
+            width: min(580px, 88vw) !important;
+            margin-left: max(-290px, -44vw) !important;
+            transform: scale(.82) !important;
+          }
+        }
 `}</style>
 
       <div className="destruction-auction-summary">
@@ -5933,12 +6051,7 @@ export default function DestructionAuctionManager({
                     </div>
                   </div>
                 ) : (
-                  <div className="mini-card-stack" aria-hidden="true">
-                    <span />
-                    <span />
-                    <span />
-                    <div className="mini-card-logo">K</div>
-                  </div>
+                  renderMiniCardStack()
                 )}
               </div>
             </div>
@@ -6365,12 +6478,7 @@ export default function DestructionAuctionManager({
                               </div>
                             </div>
                           ) : (
-                            <div className="mini-card-stack" aria-hidden="true">
-                              <span />
-                              <span />
-                              <span />
-                              <div className="mini-card-logo">K</div>
-                            </div>
+                            renderMiniCardStack()
                           )}
                         </div>
                       </div>
@@ -6410,10 +6518,6 @@ export default function DestructionAuctionManager({
     </div>
   );
 }
-
-
-
-
 
 
 

@@ -233,7 +233,7 @@ export default async function AppHomePage() {
           <div className="klol-app-list">
             {topStats.map((stat, index) => (
               <Link className="klol-app-list-card klol-app-rank-row" href={`/app/players/${stat.player.id}`} key={stat.id}>
-                <span className="klol-app-rank-no">{index + 1}</span>
+                <span className="klol-app-rank-no" data-rank={index + 1}>{index + 1}</span>
                 <span className="klol-app-list-title">
                   <strong>{stat.player.name}</strong>
                   <span>{stat.player.nickname}#{stat.player.tag}</span>

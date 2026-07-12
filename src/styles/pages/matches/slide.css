@@ -407,9 +407,18 @@
 }
 
 .match-slide__champion-image {
-  border: 1px solid rgba(96, 165, 250, 0.24);
+  display: block;
+  border: 1px solid rgba(96, 165, 250, 0.36);
   object-fit: cover;
-  background: #020617;
+  background:
+    radial-gradient(circle at 50% 38%, rgba(74, 163, 255, 0.24), transparent 58%),
+    var(--klol-gen-card, #020617) center / cover no-repeat,
+    #020617;
+  box-shadow:
+    0 0 0 2px rgba(4, 12, 28, 0.68),
+    0 0 14px rgba(74, 163, 255, 0.12);
+  color: transparent;
+  font-size: 0;
 }
 
 .match-slide__champion-fallback {

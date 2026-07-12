@@ -6,16 +6,23 @@ export const SITE_SETTINGS_CACHE_KEY = "site.settings";
 export type SiteFeatureKey = "kakao" | "recruit" | "balanceAi" | "randomTeam" | "riot";
 
 export type SitePlanStatus = "ACTIVE" | "LOCKED";
+export type SiteThemePreset = "dark-modern" | "neon-cyber" | "black-gold";
 
 export type SiteSettings = {
   siteName: string;
   roomName: string | null;
+  siteLogoUrl: string | null;
+  homeBackgroundUrl: string | null;
+  themePreset: SiteThemePreset;
   planStatus: SitePlanStatus;
   kakaoEnabled: boolean;
   recruitEnabled: boolean;
   balanceAiEnabled: boolean;
   randomTeamEnabled: boolean;
   riotEnabled: boolean;
+  billingOwner: string | null;
+  trialEndsAt: string | null;
+  premiumMemo: string | null;
   premiumNoticeTitle: string;
   premiumNoticeMessage: string;
   supportContact: string | null;
@@ -26,6 +33,9 @@ export type PublicSiteSettings = Pick<
   SiteSettings,
   | "siteName"
   | "roomName"
+  | "siteLogoUrl"
+  | "homeBackgroundUrl"
+  | "themePreset"
   | "planStatus"
   | "kakaoEnabled"
   | "recruitEnabled"
@@ -43,12 +53,20 @@ function envBoolean(name: string, fallback: boolean) {
 export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   siteName: process.env.NEXT_PUBLIC_SITE_NAME || "K-LOL.GG",
   roomName: process.env.NEXT_PUBLIC_ROOM_NAME || null,
+  siteLogoUrl: process.env.NEXT_PUBLIC_SITE_LOGO_URL || null,
+  homeBackgroundUrl:
+    process.env.NEXT_PUBLIC_SITE_BACKGROUND_URL ||
+    "/images/theme/dark-modern/klol-global-stage-v1.png",
+  themePreset: "dark-modern",
   planStatus: envBoolean("SITE_PREMIUM_ACCESS_DEFAULT", true) ? "ACTIVE" : "LOCKED",
   kakaoEnabled: envBoolean("SITE_FEATURE_KAKAO_DEFAULT", true),
   recruitEnabled: envBoolean("SITE_FEATURE_RECRUIT_DEFAULT", true),
   balanceAiEnabled: envBoolean("SITE_FEATURE_BALANCE_AI_DEFAULT", true),
   randomTeamEnabled: envBoolean("SITE_FEATURE_RANDOM_TEAM_DEFAULT", false),
   riotEnabled: envBoolean("SITE_FEATURE_RIOT_DEFAULT", false),
+  billingOwner: null,
+  trialEndsAt: null,
+  premiumMemo: null,
   premiumNoticeTitle: "프리미엄 기능입니다.",
   premiumNoticeMessage:
     "이 기능은 카카오톡 오픈채팅방 운영 자동화와 K-LOL 랭킹 고급 기능을 포함합니다. 이용을 원하면 방 운영자 또는 슈퍼어드민에게 문의하세요.",
@@ -73,8 +91,22 @@ function normalizeNullableString(value: unknown) {
   return text || null;
 }
 
+function normalizeUrl(value: unknown) {
+  const text = normalizeNullableString(value);
+  if (!text) return null;
+  if (text.startsWith("/") || text.startsWith("https://") || text.startsWith("http://")) {
+    return text;
+  }
+  return null;
+}
+
 function normalizePlanStatus(value: unknown, fallback: SitePlanStatus): SitePlanStatus {
   return value === "LOCKED" || value === "ACTIVE" ? value : fallback;
+}
+
+function normalizeThemePreset(value: unknown, fallback: SiteThemePreset): SiteThemePreset {
+  if (value === "dark-modern" || value === "neon-cyber" || value === "black-gold") return value;
+  return fallback;
 }
 
 export function normalizeSiteSettings(value: unknown, updatedAt?: Date | string | null): SiteSettings {
@@ -85,12 +117,18 @@ export function normalizeSiteSettings(value: unknown, updatedAt?: Date | string 
   return {
     siteName: normalizeString(raw.siteName, DEFAULT_SITE_SETTINGS.siteName),
     roomName: normalizeNullableString(raw.roomName),
+    siteLogoUrl: normalizeUrl(raw.siteLogoUrl) ?? DEFAULT_SITE_SETTINGS.siteLogoUrl,
+    homeBackgroundUrl: normalizeUrl(raw.homeBackgroundUrl) ?? DEFAULT_SITE_SETTINGS.homeBackgroundUrl,
+    themePreset: normalizeThemePreset(raw.themePreset, DEFAULT_SITE_SETTINGS.themePreset),
     planStatus: normalizePlanStatus(raw.planStatus, DEFAULT_SITE_SETTINGS.planStatus),
     kakaoEnabled: normalizeBoolean(raw.kakaoEnabled, DEFAULT_SITE_SETTINGS.kakaoEnabled),
     recruitEnabled: normalizeBoolean(raw.recruitEnabled, DEFAULT_SITE_SETTINGS.recruitEnabled),
     balanceAiEnabled: normalizeBoolean(raw.balanceAiEnabled, DEFAULT_SITE_SETTINGS.balanceAiEnabled),
     randomTeamEnabled: normalizeBoolean(raw.randomTeamEnabled, DEFAULT_SITE_SETTINGS.randomTeamEnabled),
     riotEnabled: normalizeBoolean(raw.riotEnabled, DEFAULT_SITE_SETTINGS.riotEnabled),
+    billingOwner: normalizeNullableString(raw.billingOwner),
+    trialEndsAt: normalizeNullableString(raw.trialEndsAt),
+    premiumMemo: normalizeNullableString(raw.premiumMemo),
     premiumNoticeTitle: normalizeString(raw.premiumNoticeTitle, DEFAULT_SITE_SETTINGS.premiumNoticeTitle),
     premiumNoticeMessage: normalizeString(raw.premiumNoticeMessage, DEFAULT_SITE_SETTINGS.premiumNoticeMessage),
     supportContact: normalizeNullableString(raw.supportContact),
@@ -111,6 +149,9 @@ export function getPublicSiteSettings(settings: SiteSettings): PublicSiteSetting
   return {
     siteName: settings.siteName,
     roomName: settings.roomName,
+    siteLogoUrl: settings.siteLogoUrl,
+    homeBackgroundUrl: settings.homeBackgroundUrl,
+    themePreset: settings.themePreset,
     planStatus: settings.planStatus,
     kakaoEnabled: settings.kakaoEnabled,
     recruitEnabled: settings.recruitEnabled,

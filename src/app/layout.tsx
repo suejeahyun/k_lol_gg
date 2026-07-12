@@ -2,6 +2,7 @@ import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import RandomBackgroundLayout from "../components/RandomBackgroundLayout";
 import MobileAppGate from "@/components/MobileAppGate";
+import SiteRuntimeSettings from "@/components/SiteRuntimeSettings";
 
 const appName = "K-LOL.GG";
 const appDescription = "K-LOL.GG 내전 전적, 구인, 랭킹, 팀 밸런스, 운영 도구";
@@ -118,6 +119,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: mobileAppBootScript }} />
       </head>
       <body className="theme-lol-gold">
+        <SiteRuntimeSettings />
         <RandomBackgroundLayout>
           {children}
           <MobileAppGate />

@@ -14,6 +14,7 @@ type User = {
 
 type PublicSiteSettings = {
   siteName?: string;
+  siteLogoUrl?: string | null;
 };
 
 type UserSidebarItem = {
@@ -95,6 +96,7 @@ export default function UserSidebar() {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [siteName, setSiteName] = useState("K-LOL.GG");
+  const [siteLogoUrl, setSiteLogoUrl] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchUser() {
@@ -129,8 +131,10 @@ export default function UserSidebar() {
         if (!res.ok) return;
         const data = (await res.json()) as { settings?: PublicSiteSettings };
         if (data.settings?.siteName) setSiteName(data.settings.siteName);
+        setSiteLogoUrl(data.settings?.siteLogoUrl ?? null);
       } catch {
         setSiteName("K-LOL.GG");
+        setSiteLogoUrl(null);
       }
     }
 
@@ -143,7 +147,16 @@ export default function UserSidebar() {
   return (
     <aside className="app-sidebar app-sidebar--user" aria-label="유저 메뉴">
       <div className="app-sidebar__top">
-        <div className="app-sidebar__title">{siteName}</div>
+        <div className="app-sidebar__title app-sidebar__title--brand">
+          {siteLogoUrl ? (
+            <span
+              className="app-brand-logo app-brand-logo--sidebar"
+              aria-hidden="true"
+              style={{ backgroundImage: `url("${siteLogoUrl}")` }}
+            />
+          ) : null}
+          <span>{siteName}</span>
+        </div>
         <div className="app-sidebar__subtitle">내전 · 랭킹 · AI 데이터</div>
 
         <nav className="app-sidebar__nav">
@@ -183,6 +196,5 @@ export default function UserSidebar() {
     </aside>
   );
 }
-
 
 

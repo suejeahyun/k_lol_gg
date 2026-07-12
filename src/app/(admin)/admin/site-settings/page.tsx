@@ -30,8 +30,18 @@ export default async function AdminSiteSettingsPage() {
           <strong className="stat-card__value">{settings.siteName}</strong>
         </div>
         <div className="stat-card">
+          <span className="stat-card__label">방 이름</span>
+          <strong className="stat-card__value">{settings.roomName || "미설정"}</strong>
+        </div>
+        <div className="stat-card">
           <span className="stat-card__label">유료 상태</span>
           <strong className="stat-card__value">{settings.planStatus === "ACTIVE" ? "활성" : "잠금"}</strong>
+        </div>
+        <div className="stat-card">
+          <span className="stat-card__label">기본 테마</span>
+          <strong className="stat-card__value">
+            {settings.themePreset === "black-gold" ? "골드" : settings.themePreset === "neon-cyber" ? "네온" : "다크"}
+          </strong>
         </div>
         <div className="stat-card">
           <span className="stat-card__label">카카오/구인</span>
@@ -56,6 +66,10 @@ export default async function AdminSiteSettingsPage() {
           <strong className="stat-card__value">
             {isSiteFeatureEnabled(settings, "riot") ? "오픈" : "잠금"}
           </strong>
+        </div>
+        <div className="stat-card">
+          <span className="stat-card__label">체험 종료</span>
+          <strong className="stat-card__value">{settings.trialEndsAt || "없음"}</strong>
         </div>
       </section>
 
