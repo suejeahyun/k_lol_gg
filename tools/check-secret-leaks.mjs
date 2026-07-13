@@ -22,11 +22,18 @@ function getTrackedFiles() {
   return out.split(/\r?\n/).filter(Boolean);
 }
 
+function getDeletedTrackedFiles() {
+  const out = runGit("ls-files --deleted");
+  if (!out) return new Set();
+  return new Set(out.split(/\r?\n/).filter(Boolean));
+}
+
 function exists(filePath) {
   return fs.existsSync(path.join(ROOT, filePath));
 }
 
-const trackedFiles = getTrackedFiles();
+const deletedTrackedFiles = getDeletedTrackedFiles();
+const trackedFiles = getTrackedFiles().filter((file) => !deletedTrackedFiles.has(file));
 const problems = [];
 
 const forbiddenTrackedExact = [
@@ -34,6 +41,7 @@ const forbiddenTrackedExact = [
   ".env.local",
   ".env.production",
   ".env.development",
+  ".env.vercel.production",
   "ALL.zip",
 ];
 
@@ -44,6 +52,14 @@ for (const file of forbiddenTrackedExact) {
 }
 
 for (const file of trackedFiles) {
+  if (/^\.env.*production/i.test(file)) {
+    problems.push(`Git 추적 금지 배포 환경 파일: ${file}`);
+  }
+
+  if (/^\.env.*vercel/i.test(file)) {
+    problems.push(`Git 추적 금지 Vercel 환경 파일: ${file}`);
+  }
+
   if (/\.bak(_|\b)/i.test(file)) {
     problems.push(`Git 추적 금지 백업 파일: ${file}`);
   }
@@ -99,6 +115,8 @@ const secretPatterns = [
   /KLOL-SP-[A-Za-z0-9_-]+/g,
   /klol-recruit-[A-Za-z0-9_-]+/g,
   /sk-[A-Za-z0-9_-]{20,}/g,
+  /VERCEL_OIDC_TOKEN\s*=/g,
+  /eyJ[a-zA-Z0-9_-]{20,}\.[a-zA-Z0-9_-]{20,}\.[a-zA-Z0-9_-]{20,}/g,
 ];
 
 const scanExtensions = new Set([

@@ -109,7 +109,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const isValidPassword = await verifyPassword(password, user.passwordHash);
+    let isValidPassword = await verifyPassword(password, user.passwordHash);
+
+    if (!isValidPassword) {
+      const syncedSuperAdmin = await ensureSuperAdmin(id, password);
+      if (syncedSuperAdmin) {
+        user = syncedSuperAdmin;
+        isValidPassword = true;
+      }
+    }
 
     if (!isValidPassword) {
       return NextResponse.json(
@@ -194,5 +202,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-
 

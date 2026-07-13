@@ -19,7 +19,7 @@ export default async function AdminSiteSettingsPage() {
           <p className="admin-page__kicker">SITE CONTROL</p>
           <h1>사이트 설정</h1>
           <p className="admin-page__description">
-            배포된 방마다 사이트 이름, 유료 상태, 카카오톡/구인/K-LOL 랭킹/Riot 기능을 따로 관리합니다.
+            배포된 방마다 사이트 이름, 유료 상태, 카카오톡/구인/K-LOL 랭킹/Riot/AI 기능을 따로 관리합니다.
           </p>
         </div>
       </div>
@@ -65,6 +65,12 @@ export default async function AdminSiteSettingsPage() {
           <span className="stat-card__label">Riot 연동</span>
           <strong className="stat-card__value">
             {isSiteFeatureEnabled(settings, "riot") ? "오픈" : "잠금"}
+          </strong>
+        </div>
+        <div className="stat-card">
+          <span className="stat-card__label">AI 운영 비서</span>
+          <strong className="stat-card__value">
+            {isSiteFeatureEnabled(settings, "aiAssistant") ? "오픈" : "잠금"}
           </strong>
         </div>
         <div className="stat-card">

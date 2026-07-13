@@ -33,6 +33,7 @@ export async function PUT(request: Request) {
     balanceAiEnabled: body.balanceAiEnabled,
     randomTeamEnabled: body.randomTeamEnabled,
     riotEnabled: body.riotEnabled,
+    aiAssistantEnabled: body.aiAssistantEnabled,
     billingOwner: body.billingOwner,
     trialEndsAt: body.trialEndsAt,
     premiumMemo: body.premiumMemo,

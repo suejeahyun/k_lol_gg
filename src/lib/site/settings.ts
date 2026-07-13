@@ -3,7 +3,13 @@ import { prisma } from "@/lib/prisma/client";
 
 export const SITE_SETTINGS_CACHE_KEY = "site.settings";
 
-export type SiteFeatureKey = "kakao" | "recruit" | "balanceAi" | "randomTeam" | "riot";
+export type SiteFeatureKey =
+  | "kakao"
+  | "recruit"
+  | "balanceAi"
+  | "randomTeam"
+  | "riot"
+  | "aiAssistant";
 
 export type SitePlanStatus = "ACTIVE" | "LOCKED";
 export type SiteThemePreset = "dark-modern" | "neon-cyber" | "black-gold";
@@ -20,6 +26,7 @@ export type SiteSettings = {
   balanceAiEnabled: boolean;
   randomTeamEnabled: boolean;
   riotEnabled: boolean;
+  aiAssistantEnabled: boolean;
   billingOwner: string | null;
   trialEndsAt: string | null;
   premiumMemo: string | null;
@@ -42,6 +49,7 @@ export type PublicSiteSettings = Pick<
   | "balanceAiEnabled"
   | "randomTeamEnabled"
   | "riotEnabled"
+  | "aiAssistantEnabled"
 >;
 
 function envBoolean(name: string, fallback: boolean) {
@@ -64,6 +72,7 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   balanceAiEnabled: envBoolean("SITE_FEATURE_BALANCE_AI_DEFAULT", true),
   randomTeamEnabled: envBoolean("SITE_FEATURE_RANDOM_TEAM_DEFAULT", false),
   riotEnabled: envBoolean("SITE_FEATURE_RIOT_DEFAULT", false),
+  aiAssistantEnabled: envBoolean("SITE_FEATURE_AI_ASSISTANT_DEFAULT", false),
   billingOwner: null,
   trialEndsAt: null,
   premiumMemo: null,
@@ -126,6 +135,7 @@ export function normalizeSiteSettings(value: unknown, updatedAt?: Date | string 
     balanceAiEnabled: normalizeBoolean(raw.balanceAiEnabled, DEFAULT_SITE_SETTINGS.balanceAiEnabled),
     randomTeamEnabled: normalizeBoolean(raw.randomTeamEnabled, DEFAULT_SITE_SETTINGS.randomTeamEnabled),
     riotEnabled: normalizeBoolean(raw.riotEnabled, DEFAULT_SITE_SETTINGS.riotEnabled),
+    aiAssistantEnabled: normalizeBoolean(raw.aiAssistantEnabled, DEFAULT_SITE_SETTINGS.aiAssistantEnabled),
     billingOwner: normalizeNullableString(raw.billingOwner),
     trialEndsAt: normalizeNullableString(raw.trialEndsAt),
     premiumMemo: normalizeNullableString(raw.premiumMemo),
@@ -158,6 +168,7 @@ export function getPublicSiteSettings(settings: SiteSettings): PublicSiteSetting
     balanceAiEnabled: settings.balanceAiEnabled,
     randomTeamEnabled: settings.randomTeamEnabled,
     riotEnabled: settings.riotEnabled,
+    aiAssistantEnabled: settings.aiAssistantEnabled,
   };
 }
 
@@ -171,7 +182,8 @@ export function isSiteFeatureEnabled(settings: SiteSettings, feature: SiteFeatur
   if (feature === "recruit") return settings.kakaoEnabled && settings.recruitEnabled;
   if (feature === "balanceAi") return settings.balanceAiEnabled;
   if (feature === "randomTeam") return settings.randomTeamEnabled;
-  return settings.riotEnabled;
+  if (feature === "riot") return settings.riotEnabled;
+  return settings.aiAssistantEnabled;
 }
 
 export function getSiteFeatureLabel(feature: SiteFeatureKey) {
@@ -179,7 +191,8 @@ export function getSiteFeatureLabel(feature: SiteFeatureKey) {
   if (feature === "recruit") return "구인현황";
   if (feature === "balanceAi") return "K-LOL 랭킹";
   if (feature === "randomTeam") return "랜덤 팀 나누기";
-  return "Riot 연동";
+  if (feature === "riot") return "Riot 연동";
+  return "AI 운영 비서";
 }
 
 export async function saveSiteSettings(input: Partial<SiteSettings>) {

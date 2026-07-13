@@ -1,4 +1,8 @@
 import { writeFileSync } from "node:fs";
+import dotenv from "dotenv";
+
+dotenv.config({ path: process.env.DOTENV_CONFIG_PATH || ".env.local", override: false, quiet: true });
+dotenv.config({ path: ".env", override: false, quiet: true });
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.BASE_URL || "https://k-lol-gg.vercel.app";
 const recruitSecret = process.env.KAKAO_RECRUIT_SECRET;
@@ -31,6 +35,14 @@ const checks = [
 
 const results = [];
 
+function parseJson(text) {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
 for (const check of checks) {
   const startedAt = Date.now();
   try {
@@ -40,10 +52,15 @@ for (const check of checks) {
       body: check.body,
     });
     const text = await res.text();
+    const json = parseJson(text);
+    const appStatusCode = typeof json?.statusCode === "number" ? json.statusCode : null;
+    const appFailed = json?.ok === false && (appStatusCode === null || appStatusCode >= 400);
+
     results.push({
       name: check.name,
-      ok: res.ok,
+      ok: res.ok && !appFailed,
       status: res.status,
+      appStatusCode,
       elapsedMs: Date.now() - startedAt,
       bodyPreview: text.slice(0, 1200),
     });

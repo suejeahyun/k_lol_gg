@@ -4,6 +4,7 @@ export const revalidate = 0;
 
 import { NextRequest } from "next/server";
 import { parseScrimNumberCommand } from "@/lib/kakao/destruction-scrim-recruit";
+import { classifyKakaoRecruitMessage, buildWrongRecruitApiReply } from "@/lib/kakao/recruit-message-kind";
 import {
   getBodyText,
   getScrimStatusPayload,
@@ -24,7 +25,16 @@ async function handleStatus(req: NextRequest, bodySecret?: unknown, message?: st
   if (rejected) return rejected;
 
   try {
-    const detailNo = extractDetailNo(message || req.nextUrl.searchParams.get("message") || "");
+    const messageText = message || req.nextUrl.searchParams.get("message") || "스크림현황";
+    const classification = classifyKakaoRecruitMessage(messageText);
+    if (classification.kind !== "SCRIM_RECRUIT") {
+      return scrimRecruitJson(
+        { reply: buildWrongRecruitApiReply({ expected: "스크림구인", actual: classification.kind }) },
+        400,
+      );
+    }
+
+    const detailNo = extractDetailNo(messageText);
     const payload = await getScrimStatusPayload(detailNo);
     return scrimRecruitJson(payload);
   } catch (error) {

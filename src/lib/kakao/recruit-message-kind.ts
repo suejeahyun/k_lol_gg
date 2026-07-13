@@ -97,12 +97,20 @@ export function isPartyRecruitCommandMessage(message: string) {
 
   if (isScrimRecruitMessage(text) || isSeasonRecruitSnapshotMessage(text)) return false;
 
+  const isStatusCommand =
+    /^\/?(?:현재구인구직현황|현재구인현황|구인구직현황|구인현황|현황)$/.test(normalized) ||
+    /^\/?(?:구인상세|상세)#?\d{1,2}$/.test(normalized);
+
+  const isFinishCommand =
+    /^\/?#?\d{1,2}(?:쫑|ㅉ)$/.test(normalized) ||
+    /^\/?#?\d{1,2}(?:번|인)?(?:파티|구인)?(?:쫑|ㅉ|마감|종료)$/.test(normalized) ||
+    /^\/?(?:구인마감|구인쫑|구인종료)#?\d{1,2}$/.test(normalized);
+
   return (
     /^\/?\d{1,2}\s*인\s*(?:협곡\s*)?(?:파티|구인)(?:\s+\d{1,2})?\s*$/.test(text) ||
     /^\/?.*(?:칼바람구인|증바람구인|솔랭구인|자랭구인|일반구인|기타게임구인|롤체일반구인|롤체랭크구인|더블업구인|5인협곡파티)(?:\s+\d{1,2})?$/.test(text) ||
-    /^\/?.*(?:현재구인구직현황|현재구인현황|구인구직현황|구인현황|현황|구인상세|상세)(?:#?\d{1,2})?$/.test(normalized) ||
-    /^\/?.*(?:구인마감|구인쫑|구인종료)#?\d{1,2}$/.test(normalized) ||
-    /^\/?#?\d{1,2}(?:쫑|ㅉ)$/.test(normalized)
+    isStatusCommand ||
+    isFinishCommand
   );
 }
 

@@ -846,12 +846,16 @@ export function parseFinishRecruitCommand(
   message: string,
 ): FinishRecruitCommand | null {
   const text = normalizeText(message).trim();
+  const normalized = text.replace(/\s+/g, "");
 
-  const shortMatch = text.match(/^\/?(\d{1,2})\s*(쫑|ㅉ)\s*$/);
+  const shortMatch = text.match(/^\/?#?\s*(\d{1,2})\s*(쫑|ㅉ)\s*$/);
+  const partyMatch = normalized.match(
+    /^\/?#?(\d{1,2})(?:번|인)?(?:파티|구인)?(?:쫑|ㅉ|마감|종료)$/,
+  );
   const commandMatch = text.match(
     /^\/?구인(?:마감|쫑|종료)\s*#?\s*(\d{1,2})\s*$/,
   );
-  const match = shortMatch || commandMatch;
+  const match = shortMatch || partyMatch || commandMatch;
 
   if (!match) return null;
 

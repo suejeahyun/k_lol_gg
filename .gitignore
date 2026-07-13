@@ -11,6 +11,9 @@
 # testing
 /coverage
 
+# local visual QA artifacts
+/artifacts/
+
 # next.js
 /.next/
 /out/

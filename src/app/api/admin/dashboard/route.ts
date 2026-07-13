@@ -125,7 +125,14 @@ export async function GET(req: NextRequest) {
       getSiteSettings(),
     ]);
 
-    const featureKeys: SiteFeatureKey[] = ["kakao", "recruit", "balanceAi", "randomTeam", "riot"];
+    const featureKeys: SiteFeatureKey[] = [
+      "kakao",
+      "recruit",
+      "balanceAi",
+      "randomTeam",
+      "riot",
+      "aiAssistant",
+    ];
     const featureStates = featureKeys.map((feature) => ({
       feature,
       enabled: isSiteFeatureEnabled(siteSettings, feature),

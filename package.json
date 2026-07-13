@@ -11,6 +11,7 @@
     "prisma:validate": "prisma validate",
     "migrate:status": "prisma migrate status",
     "check:admin-guards": "node tools/verify-admin-api-guards.mjs",
+    "check:kakao-recruit": "tsx tools/check-kakao-recruit-routing.ts",
     "check:findmany": "node tools/check-unbounded-prisma-findmany.mjs",
     "css:unused": "node tools/find-unused-css.mjs",
     "css:delete-unused": "node tools/delete-unused-css.mjs",

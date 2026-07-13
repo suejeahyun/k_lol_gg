@@ -207,6 +207,14 @@ export default function SiteSettingsClient({ initialSettings }: SiteSettingsClie
           />
           <span>Riot 연동 / 솔랭 관리 기능</span>
         </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={settings.aiAssistantEnabled}
+            onChange={(event) => update("aiAssistantEnabled", event.target.checked)}
+          />
+          <span>AI 운영 비서 기능</span>
+        </label>
       </section>
 
       <div className="site-settings-grid site-settings-grid--notice">

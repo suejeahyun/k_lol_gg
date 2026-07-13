@@ -815,11 +815,11 @@ export default function DestructionAuctionManager({
 
   const isShuffleAnimationPhase = drawPhase === "SHUFFLING";
   const getDrawCardIndexForParticipant = (participant: Participant | null) =>
-    participant ? ((participant.id * 7) % 9) + 1 : 5;
+    participant ? ((participant.id * 7) % 5) + 1 : 3;
 
   const getDrawCardRotation = (cardIndex: number) => {
-    const rotations = [-16, -12, -8, -4, 0, 4, 8, 12, 16];
-    return rotations[Math.max(0, Math.min(8, cardIndex - 1))] ?? 0;
+    const rotations = [-10, -5, 0, 5, 10];
+    return rotations[Math.max(0, Math.min(4, cardIndex - 1))] ?? 0;
   };
 
   const drawCardClassName = `draw-card-${getDrawCardIndexForParticipant(currentTarget)}`;
@@ -1306,7 +1306,6 @@ export default function DestructionAuctionManager({
         .mini-card-stack-card--back-right { transform: translate(42px, 18px) rotate(13deg) scale(.94); opacity: .72; }
         .mini-card-stack-card--front { transform: translateY(-3px) rotate(-1deg); opacity: .98; }
         .mini-card-stack--complete .mini-card-stack-card { filter: grayscale(.35) drop-shadow(0 22px 28px rgba(0,0,0,.48)); opacity: .48; }
-        .mini-card-logo { position: absolute; inset: 0; display: grid; place-items: center; font-size: 46px; font-weight: 900; color: rgba(255,255,255,0.92); letter-spacing: 0.04em; text-shadow: 0 8px 22px rgba(0,0,0,0.35), 0 0 18px var(--tier-text-glow); }
         .mini-card-status { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); min-width: 132px; text-align: center; border-radius: 999px; border: 1px solid rgba(125,211,252,.36); background: rgba(4,12,28,.78); color: #d9f3ff; font-size: 12px; font-weight: 900; letter-spacing: .08em; padding: 8px 12px; box-shadow: 0 14px 34px rgba(0,0,0,.34), 0 0 22px rgba(56,189,248,.16); }
         .auction-current-preview { width: min(100%, 360px); border-radius: 24px; border: 1px solid var(--tier-border); background: linear-gradient(160deg, color-mix(in srgb, var(--tier-secondary) 38%, rgba(14,24,48,0.95)), rgba(19,35,62,0.96)); padding: 20px; box-shadow: 0 16px 40px rgba(0,0,0,0.32), 0 0 30px color-mix(in srgb, var(--tier-glow) 32%, transparent); }
         .auction-front-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -5871,11 +5870,49 @@ export default function DestructionAuctionManager({
         .gacha-overlay.phase-shuffling .gacha-deck-cluster,
         .gacha-overlay.phase-selecting .gacha-deck-cluster {
           left: 50% !important;
-          top: 60% !important;
-          width: min(760px, 72vw) !important;
-          height: 320px !important;
-          margin-left: max(-380px, -36vw) !important;
-          margin-top: -150px !important;
+          top: 65% !important;
+          width: min(500px, 58vw) !important;
+          height: 220px !important;
+          margin-left: max(-250px, -29vw) !important;
+          margin-top: -110px !important;
+        }
+
+        .gacha-overlay.phase-shuffling .gacha-card-back,
+        .gacha-overlay.phase-selecting .gacha-card-back {
+          left: calc(50% - 58px) !important;
+          top: calc(50% - 81px) !important;
+          width: 116px !important;
+          height: 162px !important;
+        }
+
+        .gacha-overlay .gacha-card-back.card-1 {
+          --x: -148px !important;
+          --y: 18px !important;
+          --r: -10deg !important;
+        }
+
+        .gacha-overlay .gacha-card-back.card-2 {
+          --x: -74px !important;
+          --y: 4px !important;
+          --r: -5deg !important;
+        }
+
+        .gacha-overlay .gacha-card-back.card-3 {
+          --x: 0px !important;
+          --y: -2px !important;
+          --r: 0deg !important;
+        }
+
+        .gacha-overlay .gacha-card-back.card-4 {
+          --x: 74px !important;
+          --y: 4px !important;
+          --r: 5deg !important;
+        }
+
+        .gacha-overlay .gacha-card-back.card-5 {
+          --x: 148px !important;
+          --y: 18px !important;
+          --r: 10deg !important;
         }
 
         .gacha-overlay.phase-shuffling .gacha-card-back,
@@ -5912,10 +5949,23 @@ export default function DestructionAuctionManager({
           .gacha-overlay.phase-shuffling .gacha-deck-cluster,
           .gacha-overlay.phase-selecting .gacha-deck-cluster {
             top: 62% !important;
-            width: min(580px, 88vw) !important;
-            margin-left: max(-290px, -44vw) !important;
+            width: min(420px, 88vw) !important;
+            margin-left: max(-210px, -44vw) !important;
             transform: scale(.82) !important;
           }
+
+          .gacha-overlay.phase-shuffling .gacha-card-back,
+          .gacha-overlay.phase-selecting .gacha-card-back {
+            left: calc(50% - 46px) !important;
+            top: calc(50% - 64px) !important;
+            width: 92px !important;
+            height: 128px !important;
+          }
+
+          .gacha-overlay .gacha-card-back.card-1 { --x: -116px !important; --y: 16px !important; }
+          .gacha-overlay .gacha-card-back.card-2 { --x: -58px !important; --y: 5px !important; }
+          .gacha-overlay .gacha-card-back.card-4 { --x: 58px !important; --y: 5px !important; }
+          .gacha-overlay .gacha-card-back.card-5 { --x: 116px !important; --y: 16px !important; }
         }
 `}</style>
 
@@ -6194,15 +6244,15 @@ export default function DestructionAuctionManager({
                       {drawPhase === "SHUFFLING" ||
                       drawPhase === "SELECTING" ? (
                         <div className="gacha-deck-cluster" aria-hidden="true">
-                          <div ref={(node) => { deckCardRefs.current[0] = node; }} className="gacha-card-back card-1" />
-                          <div ref={(node) => { deckCardRefs.current[1] = node; }} className="gacha-card-back card-2" />
-                          <div ref={(node) => { deckCardRefs.current[2] = node; }} className="gacha-card-back card-3" />
-                          <div ref={(node) => { deckCardRefs.current[3] = node; }} className="gacha-card-back card-4" />
-                          <div ref={(node) => { deckCardRefs.current[4] = node; }} className="gacha-card-back card-5" />
-                          <div ref={(node) => { deckCardRefs.current[5] = node; }} className="gacha-card-back card-6" />
-                          <div ref={(node) => { deckCardRefs.current[6] = node; }} className="gacha-card-back card-7" />
-                          <div ref={(node) => { deckCardRefs.current[7] = node; }} className="gacha-card-back card-8" />
-                          <div ref={(node) => { deckCardRefs.current[8] = node; }} className="gacha-card-back card-9" />
+                          {Array.from({ length: 5 }, (_, index) => (
+                            <div
+                              key={`draw-card-${index + 1}`}
+                              ref={(node) => {
+                                deckCardRefs.current[index] = node;
+                              }}
+                              className={`gacha-card-back card-${index + 1}`}
+                            />
+                          ))}
                         </div>
                       ) : null}
                       <div ref={pickedShellRef} className="gacha-picked-shell">
@@ -6518,9 +6568,6 @@ export default function DestructionAuctionManager({
     </div>
   );
 }
-
-
-
 
 
 

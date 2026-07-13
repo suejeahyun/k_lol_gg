@@ -79,7 +79,11 @@ function isScrimCreateSystemEcho(message: string) {
   return (
     /스크림구인양식불러오는중/.test(text) ||
     /스크림구인양식불러오는중[.…]*/.test(text) ||
-    /스크림현황불러오는중/.test(text)
+    /스크림현황불러오는중/.test(text) ||
+    /scrim_system_echo_message/.test(text) ||
+    /"reason":"scrim_system_echo_message"/.test(text) ||
+    /\[스크림구인서버응답확인필요\]/.test(text) ||
+    /\[스크림구인API오류\]/.test(text)
   );
 }
 

@@ -58,6 +58,7 @@ const menuGroups: AdminSidebarGroup[] = [
     items: [
       { href: "/admin/balance/drafts", label: "AI 밸런스", code: "AIB", activePrefixes: ["/admin/balance/drafts", "/admin/balance/recommendations"] },
       { href: "/admin/balance-ai", label: "K-LOL MMR", code: "MMR", activePrefixes: ["/admin/balance-ai"] },
+      { href: "/admin/ai-requests", label: "AI 로그", code: "AIL", activePrefixes: ["/admin/ai-requests"] },
       { href: "/admin/highlights", label: "하이라이트", code: "VID", activePrefixes: ["/admin/highlights"] },
       { href: "/admin/images", label: "이미지", code: "IMG", activePrefixes: ["/admin/images"] },
     ],

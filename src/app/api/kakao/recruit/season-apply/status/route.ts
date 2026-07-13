@@ -2,6 +2,7 @@ import { requireSiteFeature } from "@/lib/site/feature-guard";
 import { NextRequest, NextResponse } from "next/server";
 import { addDays, getKstDateKey, getKstDisplayDate, getKstStartOfDate } from "@/lib/date/kst";
 import { prisma } from "@/lib/prisma/client";
+import { classifyKakaoRecruitMessage, buildWrongRecruitApiReply } from "@/lib/kakao/recruit-message-kind";
 import { getRequiredSecretInProduction, matchesRequestSecret } from "@/lib/security/secrets";
 
 export const dynamic = "force-dynamic";
@@ -327,6 +328,22 @@ function buildSeasonRecruitListReply(dateKey: string, grouped: Map<number, Seaso
 async function createStatusReply(req: NextRequest, body?: ApplyStatusBody) {
   const secretRejected = rejectIfInvalidSecret(req, body?.secret);
   if (secretRejected) return secretRejected;
+
+  const rawMessage =
+    body?.message ??
+    req.nextUrl.searchParams.get("message") ??
+    req.nextUrl.searchParams.get("q") ??
+    "";
+  if (String(rawMessage || "").trim()) {
+    const classification = classifyKakaoRecruitMessage(String(rawMessage));
+    if (classification.kind !== "SEASON_RECRUIT") {
+      return jsonReply(
+        buildWrongRecruitApiReply({ expected: "내전구인", actual: classification.kind }),
+        {},
+        400,
+      );
+    }
+  }
 
   const dateKey = getKstDateKey();
   const start = getKstStartOfDate(dateKey);

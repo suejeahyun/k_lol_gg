@@ -18,6 +18,7 @@ const optionalEnv = [
   "DIRECT_URL",
   "RIOT_API_KEY",
   "OPENAI_API_KEY",
+  "OPENAI_MODEL",
   "OPENAI_VISION_MODEL",
 ];
 
@@ -42,6 +43,13 @@ if (weakValues.length > 0) {
   process.exit(1);
 }
 
+const aiAssistantDefaultEnabled = /^(1|true|yes|on)$/i.test(
+  process.env.SITE_FEATURE_AI_ASSISTANT_DEFAULT || "",
+);
+if (aiAssistantDefaultEnabled && !process.env.OPENAI_API_KEY?.trim()) {
+  console.error("AI 운영 비서 기본 활성화 상태지만 OPENAI_API_KEY가 없습니다.");
+  process.exit(1);
+}
+
 console.log("배포 필수 환경변수 점검 완료");
 console.log(`선택 환경변수: ${optionalEnv.map((key) => `${key}=${process.env[key] ? "설정됨" : "미설정"}`).join(", ")}`);
-
