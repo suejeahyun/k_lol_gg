@@ -70,6 +70,12 @@ function getResultMode(value: Prisma.JsonValue | null) {
   return mode === "openai" || mode === "fallback" ? mode : "unknown";
 }
 
+function getResultModel(value: Prisma.JsonValue | null) {
+  const result = jsonObject(value);
+  const model = result.model;
+  return typeof model === "string" && model.trim() ? model.trim() : "-";
+}
+
 function getPagePath(value: Prisma.JsonValue | null) {
   const parsed = jsonObject(value);
   const page = nestedObject(parsed.page);
@@ -89,6 +95,12 @@ function statusLabel(status: string) {
   if (status === "FAILED") return "실패";
   if (status === "REJECTED") return "거절";
   return "대기";
+}
+
+function modeLabel(mode: string) {
+  if (mode === "openai") return "정밀 응답";
+  if (mode === "fallback") return "기본 응답";
+  return "-";
 }
 
 export default async function AdminAiRequestsPage(props: PageProps) {
@@ -167,16 +179,16 @@ export default async function AdminAiRequestsPage(props: PageProps) {
 
       <section className={styles.kpiGrid}>
         <div className={styles.kpiCard}><span>검색 결과</span><strong>{total.toLocaleString()}건</strong><em>최근 {days}일 기준</em></div>
-        <div className={styles.kpiCard}><span>OpenAI 응답</span><strong>{openAiCount.toLocaleString()}건</strong><em>실제 모델 호출</em></div>
-        <div className={styles.kpiCard}><span>Fallback</span><strong>{fallbackCount.toLocaleString()}건</strong><em>DB 요약 응답</em></div>
-        <div className={styles.kpiCard}><span>실패/사용자</span><strong>{failedCount.toLocaleString()} / {uniqueUserCount.toLocaleString()}</strong><em>실패 건수 · 요청자</em></div>
+        <div className={styles.kpiCard}><span>정밀 응답</span><strong>{openAiCount.toLocaleString()}건</strong><em>확장 분석 응답</em></div>
+        <div className={styles.kpiCard}><span>기본 응답</span><strong>{fallbackCount.toLocaleString()}건</strong><em>사이트 데이터 요약</em></div>
+        <div className={styles.kpiCard}><span>점검/사용자</span><strong>{failedCount.toLocaleString()} / {uniqueUserCount.toLocaleString()}</strong><em>점검 건수 · 요청자</em></div>
       </section>
 
       <form className={styles.filterCard} method="get">
         <div className={styles.filterGrid}>
           <label>검색<input name="q" defaultValue={q} placeholder="질문, 요청자, 오류" /></label>
           <label>상태<select name="status" defaultValue={status}><option value="">전체</option><option value="CONFIRMED">완료</option><option value="FAILED">실패</option><option value="PENDING">대기</option><option value="REJECTED">거절</option></select></label>
-          <label>응답 모드<select name="mode" defaultValue={mode}><option value="">전체</option><option value="openai">OpenAI</option><option value="fallback">Fallback</option></select></label>
+          <label>응답 모드<select name="mode" defaultValue={mode}><option value="">전체</option><option value="openai">정밀 응답</option><option value="fallback">기본 응답</option></select></label>
           <label>기간<select name="days" defaultValue={String(days)}><option value="1">최근 1일</option><option value="7">최근 7일</option><option value="30">최근 30일</option><option value="90">최근 90일</option><option value="365">최근 1년</option></select></label>
           <label>페이지<select name="pageSize" defaultValue={String(pageSize)}><option value="10">10개</option><option value="30">30개</option><option value="50">50개</option><option value="100">100개</option></select></label>
           <button className={styles.primaryButton} type="submit">조회</button>
@@ -197,6 +209,7 @@ export default async function AdminAiRequestsPage(props: PageProps) {
               <col style={{ width: "118px" }} />
               <col style={{ width: "90px" }} />
               <col style={{ width: "100px" }} />
+              <col style={{ width: "130px" }} />
               <col style={{ width: "120px" }} />
               <col style={{ width: "190px" }} />
               <col />
@@ -207,6 +220,7 @@ export default async function AdminAiRequestsPage(props: PageProps) {
                 <th>시간</th>
                 <th>상태</th>
                 <th>모드</th>
+                <th>모델</th>
                 <th>요청자</th>
                 <th>페이지</th>
                 <th>질문</th>
@@ -215,16 +229,18 @@ export default async function AdminAiRequestsPage(props: PageProps) {
             </thead>
             <tbody>
               {filteredRequests.length === 0 ? (
-                <tr><td colSpan={7}><div className={styles.empty}>표시할 AI 요청 로그가 없습니다.</div></td></tr>
+                <tr><td colSpan={8}><div className={styles.empty}>표시할 AI 요청 로그가 없습니다.</div></td></tr>
               ) : filteredRequests.map((request) => {
                 const resultMode = getResultMode(request.resultJson);
+                const resultModel = getResultModel(request.resultJson);
                 const pagePath = getPagePath(request.parsedJson);
                 const contextPage = getContextPage(request.parsedJson);
                 return (
                   <tr key={request.id}>
                     <td className={styles.timeCell} data-label="시간">{formatDate(request.createdAt)}</td>
                     <td data-label="상태"><span className={styles.badge}>{statusLabel(request.status)}</span></td>
-                    <td data-label="모드"><span className={styles.badge}>{resultMode === "openai" ? "OpenAI" : resultMode === "fallback" ? "Fallback" : "-"}</span></td>
+                    <td data-label="모드"><span className={styles.badge}>{modeLabel(resultMode)}</span></td>
+                    <td data-label="모델"><span className={styles.badge}>{compact(resultModel, 28)}</span></td>
                     <td data-label="요청자">{compact(request.createdByUserId)}</td>
                     <td data-label="페이지">{pagePath !== "-" ? <Link href={pagePath}>{compact(pagePath, 46)}</Link> : "-"}</td>
                     <td className={styles.message} data-label="질문">{compact(request.prompt, 220)}</td>

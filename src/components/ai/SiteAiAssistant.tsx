@@ -216,11 +216,6 @@ export default function SiteAiAssistant() {
               messages.map((message, index) => (
                 <div className={styles.bubble} data-role={message.role} key={`${message.role}-${index}`}>
                   {message.content}
-                  {message.role === "assistant" && message.mode ? (
-                    <span className={styles.meta}>
-                      {message.mode === "openai" ? "OpenAI 응답" : "DB 요약 fallback"}
-                    </span>
-                  ) : null}
                 </div>
               ))
             )}

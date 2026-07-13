@@ -541,13 +541,10 @@ function fallbackAnswer(message: string, context: SiteAiContext) {
       ];
 
   return [
-    `요약: 현재 질문은 ${isAdmin ? focus : "K-LOL 코치"} 관점으로 볼 수 있습니다.`,
     isAdmin
-      ? `판단: 활성 시즌은 ${context.season}이며, 플레이어 ${context.counts.players}명 / 내전 ${context.counts.matches}건 기준입니다.`
-      : `판단: 활성 시즌은 ${context.season}이며, 공개 기록과 내 플레이어 연결 정보 기준으로 답변합니다.`,
-    context.page ? `현재 페이지 기준: ${context.page.summary}` : null,
-    `추천 행동: ${recommendations.join(" ")}`,
-    "확인 필요: OPENAI_API_KEY가 설정되면 더 정교한 문맥 판단과 운영 제안이 활성화됩니다.",
+      ? `${focus} 기준으로 확인했습니다. 활성 시즌은 ${context.season}, 플레이어 ${context.counts.players}명, 내전 ${context.counts.matches}건 기준입니다.`
+      : `현재 ${context.season} 기준으로 확인했습니다.`,
+    recommendations.slice(0, 2).join(" "),
   ].filter(Boolean).join("\n\n");
 }
 
@@ -641,10 +638,33 @@ async function saveAiRequestLog(params: {
     .catch(() => null);
 }
 
+function isLikelyOpenAiApiKey(value: string) {
+  return /^sk-[A-Za-z0-9_-]+$/.test(value);
+}
+
+function sanitizeOpenAiError(message: string) {
+  const lower = message.toLowerCase();
+  if (
+    lower.includes("insufficient_quota") ||
+    lower.includes("quota") ||
+    lower.includes("billing") ||
+    lower.includes("payment") ||
+    lower.includes("credit")
+  ) {
+    return "AI_PROVIDER_RESPONSE_UNAVAILABLE";
+  }
+  if (lower.includes("invalid_api_key") || lower.includes("incorrect api key") || lower.includes("api key")) {
+    return "AI_PROVIDER_CONFIGURATION_UNAVAILABLE";
+  }
+  return message
+    .replace(/sk-[A-Za-z0-9_-]+/g, "sk-***")
+    .replace(/Incorrect API key provided:[^.]+/i, "Incorrect API key provided: <redacted>");
+}
+
 export async function runSiteAiAssistant(input: RunSiteAiAssistantInput) {
   const context = await collectSiteAiContext(input);
-  const model = process.env.OPENAI_MODEL || process.env.OPENAI_VISION_MODEL || DEFAULT_MODEL;
-  const apiKey = process.env.OPENAI_API_KEY;
+  const model = (process.env.OPENAI_MODEL || process.env.OPENAI_VISION_MODEL || DEFAULT_MODEL).trim() || DEFAULT_MODEL;
+  const apiKey = process.env.OPENAI_API_KEY?.trim() ?? "";
 
   if (!apiKey) {
     const answer = fallbackAnswer(input.message, context);
@@ -664,6 +684,31 @@ export async function runSiteAiAssistant(input: RunSiteAiAssistantInput) {
       model,
       context,
       requestId: requestLog?.id ?? null,
+    };
+  }
+
+  if (!isLikelyOpenAiApiKey(apiKey)) {
+    const message = "AI_PROVIDER_CONFIGURATION_UNAVAILABLE";
+    const answer = fallbackAnswer(input.message, context);
+
+    const requestLog = await saveAiRequestLog({
+      input,
+      context,
+      answer,
+      mode: "fallback",
+      model,
+      status: "FAILED",
+      errorMessage: message,
+    });
+
+    return {
+      ok: true,
+      answer,
+      mode: "fallback" as const,
+      model,
+      context,
+      requestId: requestLog?.id ?? null,
+      warning: message,
     };
   }
 
@@ -713,11 +758,10 @@ export async function runSiteAiAssistant(input: RunSiteAiAssistantInput) {
       requestId: requestLog?.id ?? null,
     };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "AI 응답 생성 중 오류가 발생했습니다.";
-    const answer = [
-      "요약: AI 모델 호출에 실패해 DB 요약 기반 fallback으로 답변합니다.",
-      fallbackAnswer(input.message, context),
-    ].join("\n\n");
+    const message = sanitizeOpenAiError(
+      error instanceof Error ? error.message : "AI 응답 생성 중 오류가 발생했습니다.",
+    );
+    const answer = fallbackAnswer(input.message, context);
 
     const requestLog = await saveAiRequestLog({
       input,
