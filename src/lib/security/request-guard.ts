@@ -72,7 +72,7 @@ export function getRequiredHeaderSecret(pathname: string) {
     return (
       process.env.KAKAO_RECRUIT_SECRET ||
       process.env.KAKAO_OPENCHAT_SECRET ||
-      process.env.KAKAO_SEARCH_LAYER_SECRET ||
+      process.env.KAKAO_SEARCH_PLAYER_SECRET ||
       null
     );
   }

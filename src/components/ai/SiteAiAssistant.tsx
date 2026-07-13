@@ -70,6 +70,7 @@ export default function SiteAiAssistant() {
   const [role, setRole] = useState<string | null>(null);
   const messagesRef = useRef<HTMLDivElement | null>(null);
   const adminMode = isAdminRole(role ?? undefined);
+  const isAdminPath = pathname?.startsWith("/admin") ?? false;
   const assistantTitle = adminMode ? "AI 운영 비서" : "K-LOL 코치";
   const assistantEyebrow = adminMode ? "SITE AI OPERATOR" : "K-LOL PERSONAL COACH";
   const quickPrompts = adminMode ? adminQuickPrompts : userQuickPrompts;
@@ -180,7 +181,10 @@ export default function SiteAiAssistant() {
   if (!bootChecked || !enabled) return null;
 
   return (
-    <aside className={styles.root} aria-label="AI 운영 비서">
+    <aside
+      className={`${styles.root}${isAdminPath ? ` ${styles.adminRoot}` : ""}`}
+      aria-label={assistantTitle}
+    >
       {open ? (
         <div className={styles.panel}>
           <header className={styles.header}>
