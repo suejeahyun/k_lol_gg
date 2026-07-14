@@ -1,5 +1,605 @@
 /* 멸망전 관련 UI */
 
+.destruction-coin-toss {
+  position: relative;
+  display: grid;
+  gap: 14px;
+  overflow: hidden;
+  padding: 16px;
+  border: 1px solid rgba(96, 165, 250, 0.24);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 50% -10%, rgba(96, 165, 250, 0.24), transparent 34%),
+    radial-gradient(circle at 8% 55%, rgba(37, 99, 235, 0.14), transparent 38%),
+    radial-gradient(circle at 92% 55%, rgba(239, 68, 68, 0.12), transparent 38%),
+    linear-gradient(135deg, rgba(6, 17, 36, 0.92), rgba(2, 8, 23, 0.92));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 18px 46px rgba(0, 0, 0, 0.24),
+    0 0 30px rgba(37, 99, 235, 0.14);
+  isolation: isolate;
+}
+
+.destruction-coin-toss::before,
+.destruction-coin-toss::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.destruction-coin-toss::before {
+  background-image:
+    linear-gradient(rgba(125, 211, 252, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(125, 211, 252, 0.05) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
+  opacity: 0.52;
+}
+
+.destruction-coin-toss::after {
+  background:
+    linear-gradient(100deg, transparent 0%, rgba(125, 211, 252, 0.12) 46%, rgba(250, 204, 21, 0.14) 50%, transparent 56%),
+    url("/images/theme/dark/auction/auction-bracket-bg.svg") center/cover no-repeat;
+  opacity: 0.18;
+  transform: scale(1.08);
+}
+
+.destruction-coin-toss__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  min-width: 0;
+}
+
+.destruction-coin-toss__eyebrow {
+  display: block;
+  color: var(--k-cyan);
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0.16em;
+}
+
+.destruction-coin-toss__header h4 {
+  margin: 5px 0 0;
+  color: var(--k-text-strong);
+  font-size: 17px;
+  font-weight: 950;
+}
+
+.destruction-coin-toss__result {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  max-width: 100%;
+  padding: 8px 12px;
+  border: 1px solid rgba(125, 211, 252, 0.22);
+  border-radius: 999px;
+  background: rgba(2, 8, 23, 0.56);
+  color: #dbeafe;
+  font-size: 12px;
+  font-weight: 900;
+  text-align: right;
+  word-break: keep-all;
+}
+
+.destruction-coin-toss__stage {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) 124px minmax(180px, 1fr);
+  gap: 14px;
+  align-items: center;
+  min-height: 188px;
+  padding-block: 18px 10px;
+  perspective: 1200px;
+}
+
+.destruction-coin-toss__team {
+  position: relative;
+  overflow: hidden;
+  min-height: 104px;
+  padding: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 18px;
+  background: rgba(2, 8, 23, 0.58);
+  transition:
+    border-color 240ms ease,
+    box-shadow 240ms ease,
+    transform 240ms ease;
+}
+
+.destruction-coin-toss__team::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.52;
+  transition: opacity 240ms ease;
+}
+
+.destruction-coin-toss__team--blue::before {
+  background:
+    radial-gradient(circle at 0% 50%, rgba(37, 99, 235, 0.34), transparent 52%),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.12), transparent);
+}
+
+.destruction-coin-toss__team--red::before {
+  background:
+    radial-gradient(circle at 100% 50%, rgba(239, 68, 68, 0.28), transparent 52%),
+    linear-gradient(270deg, rgba(239, 68, 68, 0.10), transparent);
+}
+
+.destruction-coin-toss__team span,
+.destruction-coin-toss__team strong {
+  position: relative;
+  z-index: 1;
+  display: block;
+}
+
+.destruction-coin-toss__team span {
+  color: var(--k-muted);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.destruction-coin-toss__team strong {
+  margin-top: 12px;
+  color: var(--k-text-strong);
+  font-size: clamp(18px, 2vw, 24px);
+  font-weight: 950;
+  line-height: 1.15;
+  word-break: keep-all;
+}
+
+.destruction-coin-toss.winner-a .destruction-coin-toss__team--blue,
+.destruction-coin-toss.winner-b .destruction-coin-toss__team--red {
+  border-color: rgba(250, 204, 21, 0.62);
+  box-shadow:
+    inset 0 0 0 1px rgba(250, 204, 21, 0.12),
+    0 0 32px rgba(250, 204, 21, 0.14);
+  transform: translateY(-1px);
+}
+
+.destruction-coin-toss.winner-a .destruction-coin-toss__team--blue::before,
+.destruction-coin-toss.winner-b .destruction-coin-toss__team--red::before {
+  opacity: 1;
+}
+
+.destruction-coin-toss__coin {
+  position: relative;
+  width: 112px;
+  height: 112px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  perspective: 900px;
+  cursor: pointer;
+  justify-self: center;
+  transform-origin: 50% 100%;
+}
+
+.destruction-coin-toss__coin:disabled {
+  cursor: wait;
+}
+
+.destruction-coin-toss__coin::before {
+  content: "";
+  position: absolute;
+  inset: -12px;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle, rgba(125, 211, 252, 0.42), rgba(37, 99, 235, 0.16) 38%, transparent 68%);
+  opacity: 0.7;
+  filter: blur(8px);
+  animation: coinTossAura 2.2s ease-in-out infinite;
+}
+
+.destruction-coin-toss__coin::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -26px;
+  width: 86px;
+  height: 16px;
+  border-radius: 999px;
+  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.52), rgba(0, 0, 0, 0.06) 72%, transparent);
+  filter: blur(2px);
+  opacity: 0.56;
+  transform: translateX(-50%) scale(1);
+  transform-origin: center;
+}
+
+.destruction-coin-toss.is-spinning .destruction-coin-toss__coin {
+  animation: coinTossFlight 2.78s cubic-bezier(0.18, 0.78, 0.22, 1) both;
+}
+
+.destruction-coin-toss.is-spinning .destruction-coin-toss__coin::after {
+  animation: coinTossShadow 2.78s cubic-bezier(0.18, 0.78, 0.22, 1) both;
+}
+
+.destruction-coin-toss__coin-disc {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 520ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.destruction-coin-toss.is-spinning .destruction-coin-toss__coin-disc {
+  animation: coinTossFlip 2.78s cubic-bezier(0.18, 0.78, 0.22, 1) both;
+}
+
+.destruction-coin-toss.winner-b.is-revealed .destruction-coin-toss__coin-disc {
+  transform: rotateY(180deg);
+}
+
+.destruction-coin-toss__coin-face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(250, 204, 21, 0.52);
+  background:
+    radial-gradient(circle at 32% 24%, rgba(255, 255, 255, 0.34), transparent 18%),
+    radial-gradient(circle at 50% 50%, rgba(250, 204, 21, 0.72), rgba(161, 98, 7, 0.96) 58%, rgba(20, 12, 4, 0.98));
+  box-shadow:
+    inset 0 0 0 7px rgba(2, 8, 23, 0.42),
+    inset 0 0 24px rgba(255, 255, 255, 0.13),
+    0 18px 34px rgba(0, 0, 0, 0.42);
+  color: #fff7d6;
+  backface-visibility: hidden;
+}
+
+.destruction-coin-toss__coin-face--back {
+  transform: rotateY(180deg);
+  border-color: rgba(125, 211, 252, 0.54);
+  background:
+    radial-gradient(circle at 32% 24%, rgba(255, 255, 255, 0.26), transparent 18%),
+    radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.84), rgba(30, 64, 175, 0.98) 58%, rgba(2, 8, 23, 0.98));
+  color: #eaf6ff;
+}
+
+.destruction-coin-toss__coin-face span {
+  display: block;
+  font-size: 28px;
+  font-weight: 950;
+  line-height: 1;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.34);
+}
+
+.destruction-coin-toss__coin-face small {
+  display: block;
+  margin-top: -28px;
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  opacity: 0.74;
+}
+
+.destruction-coin-toss__inputs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.destruction-coin-toss__inputs label {
+  display: grid;
+  gap: 6px;
+}
+
+.destruction-coin-toss__inputs span {
+  color: var(--k-muted);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+.destruction-coin-toss__inputs input {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid rgba(125, 211, 252, 0.2);
+  border-radius: 13px;
+  background: rgba(2, 8, 23, 0.62);
+  color: var(--k-text-strong);
+  padding: 0 12px;
+  font-weight: 850;
+  outline: none;
+}
+
+.destruction-coin-toss__inputs input:focus {
+  border-color: rgba(125, 211, 252, 0.54);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.12);
+}
+
+.destruction-coin-toss__actions {
+  display: grid;
+  grid-template-columns: minmax(140px, 1.2fr) repeat(2, minmax(100px, 0.82fr)) minmax(100px, 0.72fr);
+  gap: 10px;
+}
+
+.destruction-coin-toss__primary,
+.destruction-coin-toss__choice,
+.destruction-coin-toss__copy {
+  min-height: 40px;
+  border-radius: 13px;
+  border: 1px solid rgba(125, 211, 252, 0.22);
+  background: rgba(2, 8, 23, 0.58);
+  color: #dbeafe;
+  font-size: 13px;
+  font-weight: 900;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.destruction-coin-toss__primary {
+  border-color: rgba(250, 204, 21, 0.42);
+  background:
+    linear-gradient(135deg, rgba(161, 98, 7, 0.56), rgba(15, 23, 42, 0.76)),
+    rgba(2, 8, 23, 0.64);
+  color: #fff7d6;
+  box-shadow: 0 0 22px rgba(250, 204, 21, 0.12);
+}
+
+.destruction-coin-toss__choice.is-active {
+  border-color: rgba(34, 211, 238, 0.55);
+  background: rgba(14, 165, 233, 0.18);
+  color: #e0f7ff;
+  box-shadow: 0 0 22px rgba(14, 165, 233, 0.14);
+}
+
+.coin-toss-page {
+  width: min(1120px, calc(100vw - 40px));
+  margin-inline: auto;
+}
+
+.coin-toss-hero {
+  min-height: 150px;
+  align-items: center;
+  background:
+    linear-gradient(90deg, rgba(2, 8, 23, 0.86), rgba(8, 20, 39, 0.42)),
+    url("/images/theme/dark/auction/auction-stage.svg") center 48% / cover no-repeat;
+}
+
+.destruction-coin-toss--standalone {
+  min-height: 500px;
+  padding: clamp(18px, 2.2vw, 28px);
+}
+
+.destruction-coin-toss--standalone .destruction-coin-toss__stage {
+  min-height: 270px;
+}
+
+.destruction-coin-toss--standalone .destruction-coin-toss__coin {
+  width: 140px;
+  height: 140px;
+}
+
+.destruction-coin-toss--standalone .destruction-coin-toss__coin-face span {
+  font-size: 36px;
+}
+
+.klol-app-coin-toss-section {
+  display: grid;
+  gap: 12px;
+}
+
+.destruction-coin-toss--app {
+  padding: 14px;
+  border-radius: 18px;
+}
+
+.destruction-coin-toss--app .destruction-coin-toss__header {
+  display: grid;
+}
+
+.destruction-coin-toss--app .destruction-coin-toss__result {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.destruction-coin-toss--app .destruction-coin-toss__stage {
+  grid-template-columns: 1fr;
+  min-height: auto;
+  padding-block: 12px;
+}
+
+.destruction-coin-toss--app .destruction-coin-toss__coin {
+  order: -1;
+  width: 112px;
+  height: 112px;
+}
+
+.destruction-coin-toss--app .destruction-coin-toss__team {
+  min-height: 82px;
+}
+
+.destruction-coin-toss--app .destruction-coin-toss__actions {
+  grid-template-columns: 1fr 1fr;
+}
+
+.destruction-coin-toss__primary:not(:disabled):hover,
+.destruction-coin-toss__choice:not(:disabled):hover,
+.destruction-coin-toss__copy:not(:disabled):hover {
+  transform: translateY(-1px);
+  border-color: rgba(125, 211, 252, 0.46);
+  background-color: rgba(15, 30, 52, 0.82);
+}
+
+.destruction-coin-toss__primary:disabled,
+.destruction-coin-toss__choice:disabled,
+.destruction-coin-toss__copy:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@keyframes coinTossFlip {
+  0% {
+    transform: rotateY(0deg) rotateX(0deg) rotateZ(0deg);
+  }
+  16% {
+    transform: rotateY(520deg) rotateX(86deg) rotateZ(-8deg);
+  }
+  38% {
+    transform: rotateY(1280deg) rotateX(210deg) rotateZ(12deg);
+  }
+  58% {
+    transform: rotateY(1960deg) rotateX(336deg) rotateZ(-10deg);
+  }
+  72% {
+    transform: rotateY(2380deg) rotateX(410deg) rotateZ(8deg);
+  }
+  84% {
+    transform: rotateY(2610deg) rotateX(456deg) rotateZ(-5deg);
+  }
+  92% {
+    transform: rotateY(2760deg) rotateX(500deg) rotateZ(3deg);
+  }
+  100% {
+    transform: rotateY(2880deg) rotateX(540deg) rotateZ(0deg);
+  }
+}
+
+@keyframes coinTossFlight {
+  0% {
+    transform: translate3d(0, 0, 0) rotateZ(0deg) scale(1);
+  }
+  14% {
+    transform: translate3d(-8px, -108px, 0) rotateZ(-5deg) scale(1.04);
+  }
+  38% {
+    transform: translate3d(16px, -168px, 0) rotateZ(8deg) scale(1.08);
+  }
+  58% {
+    transform: translate3d(-6px, -72px, 0) rotateZ(-4deg) scale(1.02);
+  }
+  68% {
+    transform: translate3d(0, 15px, 0) rotateZ(0deg) scale(0.98);
+  }
+  75% {
+    transform: translate3d(5px, -36px, 0) rotateZ(5deg) scale(1.01);
+  }
+  82% {
+    transform: translate3d(0, 9px, 0) rotateZ(0deg) scale(0.99);
+  }
+  88% {
+    transform: translate3d(-2px, -18px, 0) rotateZ(-3deg) scale(1);
+  }
+  94% {
+    transform: translate3d(0, 5px, 0) rotateZ(0deg) scale(0.995);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) rotateZ(0deg) scale(1);
+  }
+}
+
+@keyframes coinTossShadow {
+  0%,
+  100% {
+    opacity: 0.58;
+    transform: translateX(-50%) scale(1);
+  }
+  14% {
+    opacity: 0.22;
+    transform: translateX(-50%) scale(0.62);
+  }
+  38% {
+    opacity: 0.12;
+    transform: translateX(-50%) scale(0.45);
+  }
+  58% {
+    opacity: 0.34;
+    transform: translateX(-50%) scale(0.82);
+  }
+  68% {
+    opacity: 0.82;
+    transform: translateX(-50%) scale(1.22);
+  }
+  75% {
+    opacity: 0.38;
+    transform: translateX(-50%) scale(0.76);
+  }
+  82% {
+    opacity: 0.72;
+    transform: translateX(-50%) scale(1.12);
+  }
+  88% {
+    opacity: 0.48;
+    transform: translateX(-50%) scale(0.92);
+  }
+  94% {
+    opacity: 0.66;
+    transform: translateX(-50%) scale(1.06);
+  }
+}
+
+@keyframes coinTossAura {
+  0%,
+  100% {
+    opacity: 0.48;
+    transform: scale(0.94);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.05);
+  }
+}
+
+@media (max-width: 920px) {
+  .destruction-coin-toss__stage {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .destruction-coin-toss__coin {
+    justify-self: center;
+    order: -1;
+  }
+
+  .destruction-coin-toss__actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .destruction-coin-toss__inputs {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .destruction-coin-toss {
+    padding: 13px;
+    border-radius: 16px;
+  }
+
+  .destruction-coin-toss__header {
+    display: grid;
+  }
+
+  .destruction-coin-toss__result {
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .destruction-coin-toss__actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .destruction-coin-toss.is-spinning .destruction-coin-toss__coin-disc,
+  .destruction-coin-toss.is-spinning .destruction-coin-toss__coin,
+  .destruction-coin-toss.is-spinning .destruction-coin-toss__coin::after,
+  .destruction-coin-toss__coin::before {
+    animation: none;
+  }
+}
+
 .destruction-status-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

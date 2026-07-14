@@ -46,6 +46,7 @@ const menuGroups: UserSidebarGroup[] = [
       { href: "/matches", label: "내전 목록", code: "MAT" },
       { href: "/recruit", label: "구인현황", code: "REC", activePrefixes: ["/recruit", "/recruit-helper"] },
       { href: "/progress", label: "이벤트/멸망전", code: "EVT" },
+      { href: "/coin-toss", label: "코인토스", code: "TOS" },
     ],
   },
   {
@@ -200,4 +201,3 @@ export default function UserSidebar() {
     </aside>
   );
 }
-

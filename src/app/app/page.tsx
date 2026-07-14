@@ -184,6 +184,7 @@ export default async function AppHomePage() {
         <div className="klol-app-actions">
           <Link className="klol-app-primary" href="/app/recruits">구인 보기</Link>
           <Link className="klol-app-secondary" href="/app/players">플레이어 검색</Link>
+          <Link className="klol-app-secondary" href="/app/coin-toss">코인토스</Link>
         </div>
       </section>
 
