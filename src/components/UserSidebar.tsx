@@ -14,6 +14,7 @@ type User = {
 
 type PublicSiteSettings = {
   siteName?: string;
+  siteTagline?: string | null;
   siteLogoUrl?: string | null;
 };
 
@@ -96,6 +97,7 @@ export default function UserSidebar() {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [siteName, setSiteName] = useState("K-LOL.GG");
+  const [siteTagline, setSiteTagline] = useState("내전 · 랭킹 · AI 데이터");
   const [siteLogoUrl, setSiteLogoUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -131,9 +133,11 @@ export default function UserSidebar() {
         if (!res.ok) return;
         const data = (await res.json()) as { settings?: PublicSiteSettings };
         if (data.settings?.siteName) setSiteName(data.settings.siteName);
+        setSiteTagline(data.settings?.siteTagline || "내전 · 랭킹 · AI 데이터");
         setSiteLogoUrl(data.settings?.siteLogoUrl ?? null);
       } catch {
         setSiteName("K-LOL.GG");
+        setSiteTagline("내전 · 랭킹 · AI 데이터");
         setSiteLogoUrl(null);
       }
     }
@@ -157,7 +161,7 @@ export default function UserSidebar() {
           ) : null}
           <span>{siteName}</span>
         </div>
-        <div className="app-sidebar__subtitle">내전 · 랭킹 · AI 데이터</div>
+        <div className="app-sidebar__subtitle">{siteTagline}</div>
 
         <nav className="app-sidebar__nav">
           {menuGroups.map((group) => (
@@ -196,5 +200,4 @@ export default function UserSidebar() {
     </aside>
   );
 }
-
 

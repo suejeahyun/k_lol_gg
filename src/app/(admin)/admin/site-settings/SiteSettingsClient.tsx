@@ -79,12 +79,129 @@ export default function SiteSettingsClient({ initialSettings }: SiteSettingsClie
         </label>
 
         <label className="site-settings-field">
+          <span>사이트 한 줄 설명</span>
+          <input
+            className="admin-input"
+            value={settings.siteTagline ?? ""}
+            onChange={(event) => update("siteTagline", event.target.value || null)}
+            placeholder="내전 · 랭킹 · AI 데이터"
+          />
+        </label>
+
+        <label className="site-settings-field">
           <span>오픈채팅방 이름</span>
           <input
             className="admin-input"
             value={settings.roomName ?? ""}
             onChange={(event) => update("roomName", event.target.value || null)}
             placeholder="예: A방 내전"
+          />
+        </label>
+      </div>
+
+      <div className="site-settings-section-title">홈 화면 문구</div>
+
+      <div className="site-settings-grid site-settings-grid--home">
+        <label className="site-settings-field">
+          <span>상단 라벨</span>
+          <input
+            className="admin-input"
+            value={settings.homeEyebrow}
+            onChange={(event) => update("homeEyebrow", event.target.value)}
+            placeholder="KOREA LOL CUSTOM STATS"
+          />
+        </label>
+
+        <label className="site-settings-field">
+          <span>제목</span>
+          <input
+            className="admin-input"
+            value={settings.homeHeroTitle}
+            onChange={(event) => update("homeHeroTitle", event.target.value)}
+            placeholder="실력을"
+          />
+        </label>
+
+        <label className="site-settings-field">
+          <span>제목 강조</span>
+          <input
+            className="admin-input"
+            value={settings.homeHeroAccent}
+            onChange={(event) => update("homeHeroAccent", event.target.value)}
+            placeholder="증명하라"
+          />
+        </label>
+
+        <label className="site-settings-field">
+          <span>첫 번째 버튼 문구</span>
+          <input
+            className="admin-input"
+            value={settings.homePrimaryCtaLabel}
+            onChange={(event) => update("homePrimaryCtaLabel", event.target.value)}
+            placeholder="내전 보러가기"
+          />
+        </label>
+
+        <label className="site-settings-field">
+          <span>첫 번째 버튼 경로</span>
+          <input
+            className="admin-input"
+            value={settings.homePrimaryCtaHref}
+            onChange={(event) => update("homePrimaryCtaHref", event.target.value)}
+            placeholder="/matches"
+          />
+        </label>
+
+        <label className="site-settings-field">
+          <span>두 번째 버튼 문구</span>
+          <input
+            className="admin-input"
+            value={settings.homeSecondaryCtaLabel}
+            onChange={(event) => update("homeSecondaryCtaLabel", event.target.value)}
+            placeholder="플레이어 검색"
+          />
+        </label>
+
+        <label className="site-settings-field">
+          <span>두 번째 버튼 경로</span>
+          <input
+            className="admin-input"
+            value={settings.homeSecondaryCtaHref}
+            onChange={(event) => update("homeSecondaryCtaHref", event.target.value)}
+            placeholder="/players"
+          />
+        </label>
+
+        <label className="site-settings-field site-settings-field--wide">
+          <span>홈 설명</span>
+          <textarea
+            className="admin-input site-settings-textarea site-settings-textarea--compact"
+            value={settings.homeHeroDescription}
+            onChange={(event) => update("homeHeroDescription", event.target.value)}
+          />
+        </label>
+      </div>
+
+      <div className="site-settings-section-title">운영 표시</div>
+
+      <div className="site-settings-grid">
+        <label className="site-settings-field">
+          <span>유저 AI 비서 이름</span>
+          <input
+            className="admin-input"
+            value={settings.userAssistantName}
+            onChange={(event) => update("userAssistantName", event.target.value)}
+            placeholder="K-LOL 코치"
+          />
+        </label>
+
+        <label className="site-settings-field">
+          <span>관리자 AI 비서 이름</span>
+          <input
+            className="admin-input"
+            value={settings.adminAssistantName}
+            onChange={(event) => update("adminAssistantName", event.target.value)}
+            placeholder="AI 운영 비서"
           />
         </label>
 
@@ -152,6 +269,16 @@ export default function SiteSettingsClient({ initialSettings }: SiteSettingsClie
             value={settings.siteLogoUrl ?? ""}
             onChange={(event) => update("siteLogoUrl", event.target.value || null)}
             placeholder="/images/logo.png 또는 https://..."
+          />
+        </label>
+
+        <label className="site-settings-field">
+          <span>카카오 오픈채팅 URL</span>
+          <input
+            className="admin-input"
+            value={settings.kakaoOpenChatUrl ?? ""}
+            onChange={(event) => update("kakaoOpenChatUrl", event.target.value || null)}
+            placeholder="https://open.kakao.com/..."
           />
         </label>
 

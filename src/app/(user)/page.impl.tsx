@@ -2,11 +2,13 @@ export const dynamic = "force-dynamic";
 
 import Image from "next/image";
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import { prisma } from "@/lib/prisma/client";
 import GalleryWinnerSlider from "@/components/GalleryWinnerSlider";
 import RecentMvpSlider from "@/components/RecentMvpSlider";
 import { getCurrentUser } from "@/lib/auth/session";
 import { calculateMvpScore, getGameMvpParticipant } from "@/lib/mvp";
+import { getSiteSettings } from "@/lib/site/settings";
 import { getCachedStatsTopData } from "@/lib/stats/top";
 
 function getDestructionStatusLabel(status: string) {
@@ -113,6 +115,7 @@ export default async function HomePage() {
     latestDestruction,
     latestMvpSeries,
     currentUser,
+    siteSettings,
   ] = await Promise.all([
     getCachedStatsTopData(),
 
@@ -207,6 +210,8 @@ export default async function HomePage() {
     }),
 
     getCurrentUser(),
+
+    getSiteSettings(),
   ]);
 
   const currentSeasonId = topData.currentSeason?.id ?? null;
@@ -294,21 +299,107 @@ export default async function HomePage() {
         ])
       : [0, 0, []];
 
-  const seasonTopThree = [...topData.currentPlayers]
-    .filter((player) => player.participation >= 10)
-    .sort((a, b) => {
-      if (b.winRate !== a.winRate) return b.winRate - a.winRate;
-      if (b.mvpCount !== a.mvpCount) return b.mvpCount - a.mvpCount;
-      return b.participation - a.participation;
-    })
-    .slice(0, 3);
+  type HomeTop3Player = (typeof topData.currentPlayers)[number];
+  type HomeTop3ModeId = "winrate" | "mvp" | "participation";
+
+  const eligibleSeasonPlayers = [...topData.currentPlayers].filter(
+    (player) => player.participation >= 10,
+  );
+
+  const top3Modes: {
+    id: HomeTop3ModeId;
+    label: string;
+    eyebrow: string;
+    title: string;
+    aceLabel: string;
+    metricLabel: string;
+    value: (player: HomeTop3Player) => number;
+    displayValue: (player: HomeTop3Player) => string;
+    rankLine: (player: HomeTop3Player) => string;
+    secondStat: (player: HomeTop3Player) => { label: string; value: string };
+    thirdStat: (player: HomeTop3Player) => { label: string; value: string };
+    players: HomeTop3Player[];
+  }[] = [
+    {
+      id: "winrate",
+      label: "승률",
+      eyebrow: "WIN RATE",
+      title: "승률 TOP 3",
+      aceLabel: "WIN RATE ACE",
+      metricLabel: "승률",
+      value: (player) => player.winRate,
+      displayValue: (player) => `${player.winRate}%`,
+      rankLine: (player) =>
+        `승률 ${player.winRate}% · ${player.participation}회 참여 · ${player.wins}승 ${player.losses}패`,
+      secondStat: (player) => ({ label: "참여", value: `${player.participation}` }),
+      thirdStat: (player) => ({ label: "MVP", value: `${player.mvpCount}` }),
+      players: [...eligibleSeasonPlayers]
+        .sort((a, b) => {
+          if (b.winRate !== a.winRate) return b.winRate - a.winRate;
+          if (b.mvpCount !== a.mvpCount) return b.mvpCount - a.mvpCount;
+          return b.participation - a.participation;
+        })
+        .slice(0, 3),
+    },
+    {
+      id: "mvp",
+      label: "MVP",
+      eyebrow: "MVP",
+      title: "MVP TOP 3",
+      aceLabel: "MVP ACE",
+      metricLabel: "MVP",
+      value: (player) => player.mvpCount,
+      displayValue: (player) => `${player.mvpCount}`,
+      rankLine: (player) =>
+        `MVP ${player.mvpCount}회 · ${player.participation}회 참여 · 승률 ${player.winRate}%`,
+      secondStat: (player) => ({ label: "참여", value: `${player.participation}` }),
+      thirdStat: (player) => ({ label: "승률", value: `${player.winRate}%` }),
+      players: [...eligibleSeasonPlayers]
+        .filter((player) => player.mvpCount > 0)
+        .sort((a, b) => {
+          if (b.mvpCount !== a.mvpCount) return b.mvpCount - a.mvpCount;
+          if (b.winRate !== a.winRate) return b.winRate - a.winRate;
+          return b.participation - a.participation;
+        })
+        .slice(0, 3),
+    },
+    {
+      id: "participation",
+      label: "최다참여",
+      eyebrow: "PARTICIPATION",
+      title: "최다참여 TOP 3",
+      aceLabel: "IRON PLAYER",
+      metricLabel: "참여",
+      value: (player) => player.participation,
+      displayValue: (player) => `${player.participation}`,
+      rankLine: (player) =>
+        `내전 ${player.participation}회 참여 · ${player.wins}승 ${player.losses}패 · MVP ${player.mvpCount}회`,
+      secondStat: (player) => ({ label: "승률", value: `${player.winRate}%` }),
+      thirdStat: (player) => ({ label: "MVP", value: `${player.mvpCount}` }),
+      players: [...eligibleSeasonPlayers]
+        .sort((a, b) => {
+          if (b.participation !== a.participation) return b.participation - a.participation;
+          if (b.winRate !== a.winRate) return b.winRate - a.winRate;
+          return b.mvpCount - a.mvpCount;
+        })
+        .slice(0, 3),
+    },
+  ];
+
+  const top3PlayerIds = Array.from(
+    new Set(
+      top3Modes.flatMap((mode) =>
+        mode.players.map((player) => player.playerId),
+      ),
+    ),
+  );
 
   const topPlayerTiers =
-    seasonTopThree.length > 0
+    top3PlayerIds.length > 0
       ? await prisma.player.findMany({
           where: {
             id: {
-              in: seasonTopThree.map((player) => player.playerId),
+              in: top3PlayerIds,
             },
           },
           select: {
@@ -326,20 +417,37 @@ export default async function HomePage() {
     ]),
   );
 
-  const topThreeCards = seasonTopThree.map((player, index) => {
-    const rank = index + 1;
-    const tierName = topPlayerTierMap.get(player.playerId) ?? "Unranked";
+  const homeTop3Modes = top3Modes.map((mode) => {
+    const leaderScore = Math.max(1, mode.players[0] ? mode.value(mode.players[0]) : 1);
+    const cards = mode.players.map((player, index) => {
+      const rank = index + 1;
+      const tierName = topPlayerTierMap.get(player.playerId) ?? "Unranked";
+      const score = mode.value(player);
+
+      return {
+        player,
+        rank,
+        tierName,
+        tierImageSrc: getTierImageSrc(tierName),
+        tone: rank === 1 ? "gold" : rank === 2 ? "silver" : "bronze",
+        relativeScore: Math.max(8, Math.min(100, (score / leaderScore) * 100)),
+        winRateMeter: Math.max(0, Math.min(100, player.winRate)),
+        displayValue: mode.displayValue(player),
+        rankLine: mode.rankLine(player),
+        secondStat: mode.secondStat(player),
+        thirdStat: mode.thirdStat(player),
+      };
+    });
 
     return {
-      player,
-      rank,
-      tierName,
-      tierImageSrc: getTierImageSrc(tierName),
-      tone: rank === 1 ? "gold" : rank === 2 ? "silver" : "bronze",
+      ...mode,
+      cards,
+      ace: cards[0] ?? null,
+      chasers: cards.slice(1),
     };
   });
-  const seasonAce = topThreeCards[0] ?? null;
-  const seasonChasers = topThreeCards.slice(1);
+
+  const hasHomeTop3Data = homeTop3Modes.some((mode) => mode.cards.length > 0);
 
   const mySeasonParticipants =
     currentSeasonId && currentUser?.playerId
@@ -467,22 +575,20 @@ export default async function HomePage() {
       <section className="home-dark-showcase" aria-label="K-LOL.GG 메인">
         <div className="home-dark-showcase-hero">
           <div className="home-dark-hero-copy">
-            <p className="home-eyebrow">KOREA LOL CUSTOM STATS</p>
+            <p className="home-eyebrow">{siteSettings.homeEyebrow}</p>
             <h1 className="home-dark-hero-title">
-              실력을 <span>증명하라</span>
+              {siteSettings.homeHeroTitle} <span>{siteSettings.homeHeroAccent}</span>
             </h1>
             <p className="home-main-description">
-              내전 기록, 시즌 랭킹, 멸망전 진행과 MVP까지 한 화면에서
-              확인하세요. K-LOL.GG는 카카오톡 오픈채팅방 내전 운영을 위한 기록
-              허브입니다.
+              {siteSettings.homeHeroDescription}
             </p>
 
             <div className="home-dark-actions">
-              <Link href="/matches" className="home-dark-primary-action">
-                내전 보러가기
+              <Link href={siteSettings.homePrimaryCtaHref} className="home-dark-primary-action">
+                {siteSettings.homePrimaryCtaLabel}
               </Link>
-              <Link href="/players" className="home-dark-secondary-action">
-                플레이어 검색
+              <Link href={siteSettings.homeSecondaryCtaHref} className="home-dark-secondary-action">
+                {siteSettings.homeSecondaryCtaLabel}
               </Link>
             </div>
           </div>
@@ -500,84 +606,152 @@ export default async function HomePage() {
               </Link>
             </div>
 
-            {seasonTopThree.length === 0 ? (
+            {!hasHomeTop3Data ? (
               <div className="empty-box">
                 내전 참여 10회 이상 기준에 맞는 랭킹 데이터가 없습니다.
               </div>
-            ) : seasonAce ? (
-              <div className="home-top3-arena">
-                <Link
-                  href={`/players/${seasonAce.player.playerId}`}
-                  className="home-top3-ace"
-                >
-                  <span className="home-top3-ace__glow" aria-hidden="true" />
-                  <span className="home-top3-ace__visual">
-                    <Image
-                      src={seasonAce.tierImageSrc}
-                      alt={seasonAce.tierName}
-                      width={116}
-                      height={116}
-                    />
-                    <span className="home-top3-medal home-top3-medal--gold" aria-hidden="true">
-                      1
-                    </span>
-                  </span>
+            ) : (
+              <div className="home-top3-mode-shell">
+                {homeTop3Modes.map((mode, index) => (
+                  <input
+                    key={mode.id}
+                    id={`home-top3-mode-${mode.id}`}
+                    className="home-top3-mode-input"
+                    type="radio"
+                    name="home-top3-mode"
+                    defaultChecked={index === 0}
+                  />
+                ))}
 
-                  <span className="home-top3-ace__meta">SEASON ACE</span>
-                  <strong className="home-top3-ace__name">
-                    {seasonAce.player.name}
-                  </strong>
-                  <small className="home-top3-ace__nickname">
-                    {seasonAce.player.nickname}#{seasonAce.player.tag}
-                  </small>
-
-                  <div className="home-top3-scoreline">
-                    <span>
-                      <b>{seasonAce.player.winRate}%</b>
-                      <small>승률</small>
-                    </span>
-                    <span>
-                      <b>{seasonAce.player.wins}</b>
-                      <small>승</small>
-                    </span>
-                    <span>
-                      <b>{seasonAce.player.mvpCount}</b>
-                      <small>MVP</small>
-                    </span>
-                  </div>
-                </Link>
-
-                <div className="home-top3-chasers" aria-label="시즌 TOP 3 추격자">
-                  {seasonChasers.map((slot) => (
-                    <Link
-                      key={slot.rank}
-                      href={`/players/${slot.player.playerId}`}
-                      className={`home-top3-chaser home-top3-chaser--${slot.tone}`}
+                <div className="home-top3-mode-tabs" role="tablist" aria-label="TOP3 기준 선택">
+                  {homeTop3Modes.map((mode) => (
+                    <label
+                      key={mode.id}
+                      htmlFor={`home-top3-mode-${mode.id}`}
+                      className="home-top3-mode-tab"
                     >
-                      <span className="home-top3-chaser__rank" aria-hidden="true">
-                        {slot.rank}
-                      </span>
-                      <span className="home-top3-chaser__tier">
-                        <Image
-                          src={slot.tierImageSrc}
-                          alt={slot.tierName}
-                          width={54}
-                          height={54}
-                        />
-                      </span>
-                      <span className="home-top3-chaser__body">
-                        <strong>{slot.player.name}</strong>
-                        <small>{slot.player.nickname}#{slot.player.tag}</small>
-                      </span>
-                      <span className="home-top3-chaser__stats">
-                        <b>{slot.player.winRate}%</b>
-                        <small>{slot.player.wins}승 · MVP {slot.player.mvpCount}</small>
-                      </span>
-                    </Link>
+                      <span>{mode.eyebrow}</span>
+                      <strong>{mode.label}</strong>
+                    </label>
+                  ))}
+                </div>
+
+                <div className="home-top3-mode-panels">
+                  {homeTop3Modes.map((mode) => (
+                    <div
+                      key={mode.id}
+                      className={`home-top3-mode-panel home-top3-mode-panel--${mode.id}`}
+                    >
+                      {mode.ace ? (
+                        <div className="home-top3-arena home-top3-arena--dynamic">
+                          <span className="home-top3-arena__beam home-top3-arena__beam--left" aria-hidden="true" />
+                          <span className="home-top3-arena__beam home-top3-arena__beam--right" aria-hidden="true" />
+                          <Link
+                            href={`/players/${mode.ace.player.playerId}`}
+                            className="home-top3-ace"
+                            style={{
+                              "--top3-score": `${mode.ace.relativeScore}%`,
+                              "--top3-fill": `${mode.ace.winRateMeter}%`,
+                              "--top3-winrate": `${mode.ace.winRateMeter}%`,
+                            } as CSSProperties}
+                          >
+                            <span className="home-top3-ace__ordinal" aria-hidden="true">
+                              01
+                            </span>
+                            <span className="home-top3-ace__orbit" aria-hidden="true" />
+                            <span className="home-top3-ace__glow" aria-hidden="true" />
+                            <span className="home-top3-ace__visual">
+                              <Image
+                                src={mode.ace.tierImageSrc}
+                                alt={mode.ace.tierName}
+                                width={116}
+                                height={116}
+                              />
+                              <span className="home-top3-medal home-top3-medal--gold" aria-hidden="true">
+                                {mode.ace.rank}
+                              </span>
+                            </span>
+
+                            <span className="home-top3-ace__meta">{mode.aceLabel}</span>
+                            <span className="home-top3-ace__rankline">
+                              {mode.ace.rankLine}
+                            </span>
+                            <strong className="home-top3-ace__name">
+                              {mode.ace.player.name}
+                            </strong>
+                            <small className="home-top3-ace__nickname">
+                              {mode.ace.player.nickname}#{mode.ace.player.tag}
+                            </small>
+
+                            <div className="home-top3-scoreline">
+                              <span>
+                                <b>{mode.ace.displayValue}</b>
+                                <small>{mode.metricLabel}</small>
+                              </span>
+                              <span>
+                                <b>{mode.ace.secondStat.value}</b>
+                                <small>{mode.ace.secondStat.label}</small>
+                              </span>
+                              <span>
+                                <b>{mode.ace.thirdStat.value}</b>
+                                <small>{mode.ace.thirdStat.label}</small>
+                              </span>
+                            </div>
+                            <span className="home-top3-meter" aria-hidden="true">
+                              <span />
+                            </span>
+                          </Link>
+
+                          <div className="home-top3-chasers" aria-label={`${mode.title} 추격자`}>
+                            {mode.chasers.map((slot) => (
+                              <Link
+                                key={`${mode.id}-${slot.rank}`}
+                                href={`/players/${slot.player.playerId}`}
+                                className={`home-top3-chaser home-top3-chaser--${slot.tone}`}
+                                style={{
+                                  "--top3-score": `${slot.relativeScore}%`,
+                                  "--top3-fill": `${slot.winRateMeter}%`,
+                                  "--top3-winrate": `${slot.winRateMeter}%`,
+                                } as CSSProperties}
+                              >
+                                <span className="home-top3-chaser__rank" aria-hidden="true">
+                                  {slot.rank}
+                                </span>
+                                <span className="home-top3-chaser__tier">
+                                  <Image
+                                    src={slot.tierImageSrc}
+                                    alt={slot.tierName}
+                                    width={54}
+                                    height={54}
+                                  />
+                                </span>
+                                <span className="home-top3-chaser__body">
+                                  <strong>{slot.player.name}</strong>
+                                  <small>{slot.player.nickname}#{slot.player.tag}</small>
+                                </span>
+                                <span className="home-top3-chaser__stats">
+                                  <b>{slot.displayValue}</b>
+                                  <small>
+                                    {slot.secondStat.label} {slot.secondStat.value} · {slot.thirdStat.label} {slot.thirdStat.value}
+                                  </small>
+                                </span>
+                                <span className="home-top3-meter home-top3-meter--mini" aria-hidden="true">
+                                  <span />
+                                </span>
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="empty-box">
+                          {mode.title} 기준에 맞는 랭킹 데이터가 없습니다.
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </div>
               </div>
-            ) : null}
+            )}
           </div>
 
           <aside

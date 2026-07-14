@@ -16,10 +16,22 @@ export type SiteThemePreset = "dark-modern" | "neon-cyber" | "black-gold";
 
 export type SiteSettings = {
   siteName: string;
+  siteTagline: string | null;
   roomName: string | null;
   siteLogoUrl: string | null;
   homeBackgroundUrl: string | null;
   themePreset: SiteThemePreset;
+  homeEyebrow: string;
+  homeHeroTitle: string;
+  homeHeroAccent: string;
+  homeHeroDescription: string;
+  homePrimaryCtaLabel: string;
+  homePrimaryCtaHref: string;
+  homeSecondaryCtaLabel: string;
+  homeSecondaryCtaHref: string;
+  kakaoOpenChatUrl: string | null;
+  userAssistantName: string;
+  adminAssistantName: string;
   planStatus: SitePlanStatus;
   kakaoEnabled: boolean;
   recruitEnabled: boolean;
@@ -39,10 +51,22 @@ export type SiteSettings = {
 export type PublicSiteSettings = Pick<
   SiteSettings,
   | "siteName"
+  | "siteTagline"
   | "roomName"
   | "siteLogoUrl"
   | "homeBackgroundUrl"
   | "themePreset"
+  | "homeEyebrow"
+  | "homeHeroTitle"
+  | "homeHeroAccent"
+  | "homeHeroDescription"
+  | "homePrimaryCtaLabel"
+  | "homePrimaryCtaHref"
+  | "homeSecondaryCtaLabel"
+  | "homeSecondaryCtaHref"
+  | "kakaoOpenChatUrl"
+  | "userAssistantName"
+  | "adminAssistantName"
   | "planStatus"
   | "kakaoEnabled"
   | "recruitEnabled"
@@ -60,12 +84,26 @@ function envBoolean(name: string, fallback: boolean) {
 
 export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   siteName: process.env.NEXT_PUBLIC_SITE_NAME || "K-LOL.GG",
+  siteTagline: process.env.NEXT_PUBLIC_SITE_TAGLINE || "내전 · 랭킹 · AI 데이터",
   roomName: process.env.NEXT_PUBLIC_ROOM_NAME || null,
   siteLogoUrl: process.env.NEXT_PUBLIC_SITE_LOGO_URL || null,
   homeBackgroundUrl:
     process.env.NEXT_PUBLIC_SITE_BACKGROUND_URL ||
     "/images/theme/dark-modern/klol-global-stage-v1.png",
   themePreset: "dark-modern",
+  homeEyebrow: process.env.NEXT_PUBLIC_HOME_EYEBROW || "KOREA LOL CUSTOM STATS",
+  homeHeroTitle: process.env.NEXT_PUBLIC_HOME_HERO_TITLE || "실력을",
+  homeHeroAccent: process.env.NEXT_PUBLIC_HOME_HERO_ACCENT || "증명하라",
+  homeHeroDescription:
+    process.env.NEXT_PUBLIC_HOME_HERO_DESCRIPTION ||
+    "내전 기록, 시즌 랭킹, 멸망전 진행과 MVP까지 한 화면에서 확인하세요. K-LOL.GG는 카카오톡 오픈채팅방 내전 운영을 위한 기록 허브입니다.",
+  homePrimaryCtaLabel: process.env.NEXT_PUBLIC_HOME_PRIMARY_CTA_LABEL || "내전 보러가기",
+  homePrimaryCtaHref: process.env.NEXT_PUBLIC_HOME_PRIMARY_CTA_HREF || "/matches",
+  homeSecondaryCtaLabel: process.env.NEXT_PUBLIC_HOME_SECONDARY_CTA_LABEL || "플레이어 검색",
+  homeSecondaryCtaHref: process.env.NEXT_PUBLIC_HOME_SECONDARY_CTA_HREF || "/players",
+  kakaoOpenChatUrl: process.env.NEXT_PUBLIC_KAKAO_OPENCHAT_URL || null,
+  userAssistantName: process.env.NEXT_PUBLIC_USER_ASSISTANT_NAME || "K-LOL 코치",
+  adminAssistantName: process.env.NEXT_PUBLIC_ADMIN_ASSISTANT_NAME || "AI 운영 비서",
   planStatus: envBoolean("SITE_PREMIUM_ACCESS_DEFAULT", true) ? "ACTIVE" : "LOCKED",
   kakaoEnabled: envBoolean("SITE_FEATURE_KAKAO_DEFAULT", true),
   recruitEnabled: envBoolean("SITE_FEATURE_RECRUIT_DEFAULT", true),
@@ -109,6 +147,14 @@ function normalizeUrl(value: unknown) {
   return null;
 }
 
+function normalizeHref(value: unknown, fallback: string) {
+  const text = normalizeNullableString(value);
+  if (!text) return fallback;
+  if (text.startsWith("/") && !text.startsWith("//")) return text;
+  if (text.startsWith("https://") || text.startsWith("http://")) return text;
+  return fallback;
+}
+
 function normalizePlanStatus(value: unknown, fallback: SitePlanStatus): SitePlanStatus {
   return value === "LOCKED" || value === "ACTIVE" ? value : fallback;
 }
@@ -125,10 +171,22 @@ export function normalizeSiteSettings(value: unknown, updatedAt?: Date | string 
 
   return {
     siteName: normalizeString(raw.siteName, DEFAULT_SITE_SETTINGS.siteName),
+    siteTagline: normalizeString(raw.siteTagline, DEFAULT_SITE_SETTINGS.siteTagline ?? ""),
     roomName: normalizeNullableString(raw.roomName),
     siteLogoUrl: normalizeUrl(raw.siteLogoUrl) ?? DEFAULT_SITE_SETTINGS.siteLogoUrl,
     homeBackgroundUrl: normalizeUrl(raw.homeBackgroundUrl) ?? DEFAULT_SITE_SETTINGS.homeBackgroundUrl,
     themePreset: normalizeThemePreset(raw.themePreset, DEFAULT_SITE_SETTINGS.themePreset),
+    homeEyebrow: normalizeString(raw.homeEyebrow, DEFAULT_SITE_SETTINGS.homeEyebrow),
+    homeHeroTitle: normalizeString(raw.homeHeroTitle, DEFAULT_SITE_SETTINGS.homeHeroTitle),
+    homeHeroAccent: normalizeString(raw.homeHeroAccent, DEFAULT_SITE_SETTINGS.homeHeroAccent),
+    homeHeroDescription: normalizeString(raw.homeHeroDescription, DEFAULT_SITE_SETTINGS.homeHeroDescription),
+    homePrimaryCtaLabel: normalizeString(raw.homePrimaryCtaLabel, DEFAULT_SITE_SETTINGS.homePrimaryCtaLabel),
+    homePrimaryCtaHref: normalizeHref(raw.homePrimaryCtaHref, DEFAULT_SITE_SETTINGS.homePrimaryCtaHref),
+    homeSecondaryCtaLabel: normalizeString(raw.homeSecondaryCtaLabel, DEFAULT_SITE_SETTINGS.homeSecondaryCtaLabel),
+    homeSecondaryCtaHref: normalizeHref(raw.homeSecondaryCtaHref, DEFAULT_SITE_SETTINGS.homeSecondaryCtaHref),
+    kakaoOpenChatUrl: normalizeUrl(raw.kakaoOpenChatUrl),
+    userAssistantName: normalizeString(raw.userAssistantName, DEFAULT_SITE_SETTINGS.userAssistantName),
+    adminAssistantName: normalizeString(raw.adminAssistantName, DEFAULT_SITE_SETTINGS.adminAssistantName),
     planStatus: normalizePlanStatus(raw.planStatus, DEFAULT_SITE_SETTINGS.planStatus),
     kakaoEnabled: normalizeBoolean(raw.kakaoEnabled, DEFAULT_SITE_SETTINGS.kakaoEnabled),
     recruitEnabled: normalizeBoolean(raw.recruitEnabled, DEFAULT_SITE_SETTINGS.recruitEnabled),
@@ -158,10 +216,22 @@ export async function getSiteSettings() {
 export function getPublicSiteSettings(settings: SiteSettings): PublicSiteSettings {
   return {
     siteName: settings.siteName,
+    siteTagline: settings.siteTagline,
     roomName: settings.roomName,
     siteLogoUrl: settings.siteLogoUrl,
     homeBackgroundUrl: settings.homeBackgroundUrl,
     themePreset: settings.themePreset,
+    homeEyebrow: settings.homeEyebrow,
+    homeHeroTitle: settings.homeHeroTitle,
+    homeHeroAccent: settings.homeHeroAccent,
+    homeHeroDescription: settings.homeHeroDescription,
+    homePrimaryCtaLabel: settings.homePrimaryCtaLabel,
+    homePrimaryCtaHref: settings.homePrimaryCtaHref,
+    homeSecondaryCtaLabel: settings.homeSecondaryCtaLabel,
+    homeSecondaryCtaHref: settings.homeSecondaryCtaHref,
+    kakaoOpenChatUrl: settings.kakaoOpenChatUrl,
+    userAssistantName: settings.userAssistantName,
+    adminAssistantName: settings.adminAssistantName,
     planStatus: settings.planStatus,
     kakaoEnabled: settings.kakaoEnabled,
     recruitEnabled: settings.recruitEnabled,

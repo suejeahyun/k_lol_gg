@@ -13,6 +13,8 @@ type Message = {
 type PublicSiteSettings = {
   planStatus: "ACTIVE" | "LOCKED";
   aiAssistantEnabled?: boolean;
+  userAssistantName?: string;
+  adminAssistantName?: string;
 };
 
 type AuthMeResponse = {
@@ -68,10 +70,14 @@ export default function SiteAiAssistant() {
   const [loading, setLoading] = useState(false);
   const [bootChecked, setBootChecked] = useState(false);
   const [role, setRole] = useState<string | null>(null);
+  const [assistantNames, setAssistantNames] = useState({
+    user: "K-LOL 코치",
+    admin: "AI 운영 비서",
+  });
   const messagesRef = useRef<HTMLDivElement | null>(null);
   const adminMode = isAdminRole(role ?? undefined);
   const isAdminPath = pathname?.startsWith("/admin") ?? false;
-  const assistantTitle = adminMode ? "AI 운영 비서" : "K-LOL 코치";
+  const assistantTitle = adminMode ? assistantNames.admin : assistantNames.user;
   const assistantEyebrow = adminMode ? "SITE AI OPERATOR" : "K-LOL PERSONAL COACH";
   const quickPrompts = adminMode ? adminQuickPrompts : userQuickPrompts;
 
@@ -98,6 +104,10 @@ export default function SiteAiAssistant() {
         if (cancelled) return;
         const approved = authData.user?.status === "APPROVED";
         setRole(approved ? authData.user?.role ?? "USER" : null);
+        setAssistantNames({
+          user: data.settings?.userAssistantName || "K-LOL 코치",
+          admin: data.settings?.adminAssistantName || "AI 운영 비서",
+        });
         setEnabled(Boolean(approved && data.settings?.planStatus === "ACTIVE" && data.settings?.aiAssistantEnabled));
       } catch {
         if (!cancelled) setEnabled(false);

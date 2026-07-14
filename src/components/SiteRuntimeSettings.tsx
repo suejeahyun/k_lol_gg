@@ -5,6 +5,7 @@ import type { SiteThemePreset } from "@/lib/site/settings";
 
 type PublicSiteSettings = {
   siteName?: string;
+  siteTagline?: string | null;
   homeBackgroundUrl?: string | null;
   themePreset?: SiteThemePreset;
 };
@@ -36,6 +37,13 @@ export default function SiteRuntimeSettings() {
 
         if (settings.siteName) {
           root.style.setProperty("--site-name-length", String(settings.siteName.length));
+          if (document.title.includes("K-LOL.GG")) {
+            document.title = document.title.replaceAll("K-LOL.GG", settings.siteName);
+          } else if (!document.title) {
+            document.title = settings.siteTagline
+              ? `${settings.siteName} | ${settings.siteTagline}`
+              : settings.siteName;
+          }
         }
 
         if (settings.homeBackgroundUrl) {

@@ -91,6 +91,7 @@ function walk(dir, acc = []) {
       ![
         ".git",
         ".next",
+        "artifacts",
         "node_modules",
         ".vercel",
         "dist",

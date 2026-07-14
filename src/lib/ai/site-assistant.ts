@@ -507,7 +507,9 @@ function fallbackAnswer(message: string, context: SiteAiContext) {
       ? "멸망전"
       : lower.includes("랭킹") || lower.includes("밸런스")
         ? "랭킹/밸런스"
-        : "운영 요약";
+        : lower.includes("내전") || lower.includes("경기")
+          ? "내전"
+          : "운영 요약";
 
   if (!isAdmin && isAdminOnlyQuestion(message)) {
     return [
@@ -516,36 +518,71 @@ function fallbackAnswer(message: string, context: SiteAiContext) {
     ].join("\n\n");
   }
 
-  const recommendations = isAdmin
-    ? [
-        context.counts.activeRecruits > 0
-          ? `진행중 구인이 ${context.counts.activeRecruits}건 있으니 마감/진행 상태를 먼저 확인하세요.`
-          : "현재 진행중 구인이 없으니 신규 모집 또는 다음 내전 공지를 준비할 수 있습니다.",
-        context.recentMatches.length
-          ? `최근 내전은 ${context.recentMatches[0]} 입니다.`
-          : "최근 내전 데이터가 없어 등록 누락 여부를 확인하세요.",
-        context.destruction.length
-          ? `가장 최근 멸망전 상태는 ${context.destruction[0]} 입니다.`
-          : "진행중인 멸망전 데이터가 없습니다.",
-      ]
-    : [
-        context.requester.playerSummary
-          ? `내 정보 기준으로는 ${context.requester.playerSummary} 입니다.`
-          : "내 플레이어가 연결되어 있지 않으면 개인 기록 분석은 제한됩니다.",
-        context.recentMatches.length
-          ? `최근 내전은 ${context.recentMatches[0]} 입니다.`
-          : "최근 내전 데이터가 없어 공개 내전 목록을 먼저 확인하세요.",
-        context.topPlayers.length
-          ? `현재 상위권 흐름은 ${context.topPlayers.slice(0, 3).join(" | ")} 입니다.`
-          : "랭킹 데이터가 아직 충분하지 않습니다.",
-      ];
+  const lines: string[] = [];
 
-  return [
-    isAdmin
-      ? `${focus} 기준으로 확인했습니다. 활성 시즌은 ${context.season}, 플레이어 ${context.counts.players}명, 내전 ${context.counts.matches}건 기준입니다.`
-      : `현재 ${context.season} 기준으로 확인했습니다.`,
-    recommendations.slice(0, 2).join(" "),
-  ].filter(Boolean).join("\n\n");
+  if (isAdmin) {
+    lines.push(`${focus} 기준으로 확인했습니다. 현재 ${context.season}, 플레이어 ${context.counts.players}명, 내전 ${context.counts.matches}건 기준입니다.`);
+
+    if (focus === "구인 현황") {
+      lines.push(
+        context.counts.activeRecruits > 0
+          ? `진행중 구인 ${context.counts.activeRecruits}건이 있습니다. 최근 항목: ${context.recruits.slice(0, 2).join(" / ") || "상세 없음"}.`
+          : "진행중 구인은 없습니다. 다음 내전 전에는 모집 시작 여부와 자동 종료 설정을 먼저 확인하면 됩니다.",
+      );
+    } else if (focus === "멸망전") {
+      lines.push(
+        context.destruction.length
+          ? `최근 멸망전: ${context.destruction.slice(0, 2).join(" / ")}.`
+          : "진행중이거나 최근 갱신된 멸망전이 없습니다.",
+      );
+    } else if (focus === "랭킹/밸런스") {
+      lines.push(
+        context.topPlayers.length
+          ? `상위권 흐름: ${context.topPlayers.slice(0, 3).join(" / ")}.`
+          : "랭킹 데이터가 충분하지 않습니다. 최근 내전 등록 여부를 먼저 확인하세요.",
+      );
+    } else {
+      lines.push(
+        context.recentMatches.length
+          ? `최근 내전: ${context.recentMatches[0]}.`
+          : "최근 내전 데이터가 없습니다. 내전 등록 누락 여부를 먼저 확인하세요.",
+      );
+      if (context.counts.activeRecruits > 0) lines.push(`구인은 ${context.counts.activeRecruits}건 진행중입니다.`);
+    }
+  } else {
+    lines.push(`현재 ${context.season} 기준으로 확인했습니다.`);
+
+    if (lower.includes("내 ") || lower.includes("기록") || lower.includes("나의")) {
+      lines.push(
+        context.requester.playerSummary
+          ? `내 기록: ${context.requester.playerSummary}.`
+          : "내 플레이어가 연결되어 있지 않으면 개인 기록은 제한됩니다.",
+      );
+    } else if (focus === "랭킹/밸런스") {
+      lines.push(
+        context.topPlayers.length
+          ? `상위권 흐름: ${context.topPlayers.slice(0, 3).join(" / ")}.`
+          : "랭킹 데이터가 아직 충분하지 않습니다.",
+      );
+    } else if (focus === "멸망전") {
+      lines.push(
+        context.destruction.length
+          ? `공개 멸망전 흐름: ${context.destruction.slice(0, 2).join(" / ")}.`
+          : "현재 확인 가능한 멸망전 진행 데이터가 없습니다.",
+      );
+    } else {
+      if (context.requester.playerSummary) lines.push(`내 기록: ${context.requester.playerSummary}.`);
+      lines.push(
+        context.recentMatches.length
+          ? `최근 내전: ${context.recentMatches[0]}.`
+          : "최근 내전 데이터가 아직 없습니다.",
+      );
+    }
+  }
+
+  if (context.page?.summary) lines.push(`현재 페이지 기준: ${context.page.summary}`);
+
+  return lines.slice(0, 4).join("\n\n");
 }
 
 export function isAdminOnlyQuestion(message: string) {
