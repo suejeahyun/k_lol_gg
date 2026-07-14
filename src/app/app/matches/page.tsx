@@ -49,11 +49,15 @@ function recruitStatusText(status: string) {
 }
 
 function eventStatusText(status: string) {
+  if (status === "PLANNED") return "예정";
   if (status === "RECRUITING") return "모집중";
-  if (status === "TEAMING") return "팀 구성";
+  if (status === "TEAM_BUILDING") return "팀 구성";
+  if (status === "AUCTION") return "경매";
+  if (status === "PRELIMINARY") return "예선";
+  if (status === "TOURNAMENT") return "본선";
   if (status === "IN_PROGRESS") return "진행중";
   if (status === "COMPLETED") return "완료";
-  if (status === "CANCELED") return "취소";
+  if (status === "CANCELLED") return "취소";
   return status;
 }
 
@@ -224,7 +228,7 @@ export default async function AppMatchesPage({ searchParams }: AppMatchesPagePro
             ) : (
               <div className="klol-app-list">
                 {events.map((event) => (
-                  <article className="klol-app-list-card" key={`event-${event.id}`}>
+                  <Link className="klol-app-list-card klol-app-event-card" href={`/app/progress/event/${event.id}`} key={`event-${event.id}`}>
                     <div className="klol-app-list-top">
                       <span className="klol-app-list-title">
                         <strong>{event.title}</strong>
@@ -232,7 +236,7 @@ export default async function AppMatchesPage({ searchParams }: AppMatchesPagePro
                       </span>
                       <span className="klol-app-badge">{eventStatusText(event.status)}</span>
                     </div>
-                  </article>
+                  </Link>
                 ))}
               </div>
             )}
@@ -244,7 +248,7 @@ export default async function AppMatchesPage({ searchParams }: AppMatchesPagePro
             ) : (
               <div className="klol-app-list">
                 {destructions.map((tournament) => (
-                  <article className="klol-app-list-card" key={`destruction-${tournament.id}`}>
+                  <Link className="klol-app-list-card klol-app-event-card klol-app-event-card--destruction" href={`/app/progress/destruction/${tournament.id}`} key={`destruction-${tournament.id}`}>
                     <div className="klol-app-list-top">
                       <span className="klol-app-list-title">
                         <strong>{tournament.title}</strong>
@@ -252,7 +256,7 @@ export default async function AppMatchesPage({ searchParams }: AppMatchesPagePro
                       </span>
                       <span className="klol-app-badge klol-app-badge--warn">{eventStatusText(tournament.status)}</span>
                     </div>
-                  </article>
+                  </Link>
                 ))}
               </div>
             )}

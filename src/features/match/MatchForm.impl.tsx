@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useState, type ClipboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import { getMatchDateTimeLocalFromTitle } from "@/lib/date/kst";
@@ -1700,11 +1701,12 @@ export default function MatchForm({
                         }}
                       >
                         {importChampionPreview ? (
-                          <img
+                          <Image
                             src={importChampionPreview}
                             alt=""
                             width={38}
                             height={38}
+                            unoptimized
                             style={{
                               width: 38,
                               height: 38,

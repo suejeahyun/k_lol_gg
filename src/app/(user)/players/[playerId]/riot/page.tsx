@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import PremiumFeatureGate from "@/components/PremiumFeatureGate";
 import PremiumLockedPreview from "@/components/PremiumLockedPreview";
@@ -225,12 +226,13 @@ export default async function PlayerRiotDetailPage({ params }: PlayerRiotDetailP
             <span className={styles.visualEyebrow}>BEST CHAMPION</span>
             {bestRecentChampion ? (
               <div className={styles.focusChampionMain}>
-                <img
+                <Image
                   src={getChampionImageUrl(bestRecentChampion.championName)}
                   alt=""
+                  width={76}
+                  height={76}
                   className={styles.focusChampionImage}
-                  loading="eager"
-                  decoding="async"
+                  priority
                 />
                 <div>
                   <strong>{bestRecentChampion.championNameKo}</strong>
@@ -310,12 +312,12 @@ export default async function PlayerRiotDetailPage({ params }: PlayerRiotDetailP
                   <span className={styles.rowRank}>{index + 1}</span>
                   <div className={styles.rowMain}>
                     <span className={styles.championTitle}>
-                      <img
+                      <Image
                         src={getChampionImageUrl(champion.championName)}
                         alt=""
+                        width={34}
+                        height={34}
                         className={styles.championAvatar}
-                        loading="eager"
-                        decoding="async"
                       />
                       <strong>{champion.championNameKo}</strong>
                     </span>
@@ -351,12 +353,12 @@ export default async function PlayerRiotDetailPage({ params }: PlayerRiotDetailP
                 <span className={styles.rowRank}>{index + 1}</span>
                 <div className={styles.rowMain}>
                   <span className={styles.championTitle}>
-                    <img
+                    <Image
                       src={getChampionImageUrl(champion.championName)}
                       alt=""
+                      width={34}
+                      height={34}
                       className={styles.championAvatar}
-                      loading="eager"
-                      decoding="async"
                     />
                     <strong>{champion.championNameKo}</strong>
                   </span>
@@ -397,12 +399,12 @@ export default async function PlayerRiotDetailPage({ params }: PlayerRiotDetailP
                   <small>{formatGameDuration(match.gameDuration)}</small>
                 </div>
                 <div className={styles.matchChampion}>
-                  <img
+                  <Image
                     src={getChampionImageUrl(match.championName)}
                     alt=""
+                    width={44}
+                    height={44}
                     className={styles.matchChampionImage}
-                    loading="eager"
-                    decoding="async"
                   />
                   <div>
                     <strong>{match.championNameKo}</strong>

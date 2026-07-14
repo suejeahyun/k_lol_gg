@@ -1409,6 +1409,135 @@
   gap: 12px;
 }
 
+.klol-app-event-list {
+  gap: 12px;
+}
+
+.klol-app-event-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 86px;
+  isolation: isolate;
+}
+
+.klol-app-event-card::before,
+.klol-app-event-card::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.klol-app-event-card::before {
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(circle at 86% 18%, rgba(34, 211, 238, 0.22), transparent 34%),
+    radial-gradient(circle at 10% 90%, rgba(59, 130, 246, 0.13), transparent 36%),
+    linear-gradient(135deg, rgba(12, 31, 61, 0.72), rgba(3, 9, 24, 0.9));
+}
+
+.klol-app-event-card::after {
+  right: -32px;
+  bottom: -38px;
+  z-index: -1;
+  width: 118px;
+  height: 118px;
+  border: 1px solid rgba(125, 211, 252, 0.16);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, rgba(56, 189, 248, 0.2), transparent 58%),
+    conic-gradient(from 160deg, transparent, rgba(125, 211, 252, 0.3), transparent);
+  opacity: 0.82;
+}
+
+.klol-app-event-card--destruction {
+  border-color: rgba(214, 176, 92, 0.26);
+}
+
+.klol-app-event-card--destruction::before {
+  background:
+    radial-gradient(circle at 84% 18%, rgba(239, 68, 68, 0.18), transparent 34%),
+    radial-gradient(circle at 14% 88%, rgba(245, 158, 11, 0.15), transparent 36%),
+    linear-gradient(135deg, rgba(45, 17, 24, 0.72), rgba(4, 9, 23, 0.92));
+}
+
+.klol-app-event-card--destruction::after {
+  border-color: rgba(245, 158, 11, 0.18);
+  background:
+    radial-gradient(circle, rgba(245, 158, 11, 0.2), transparent 58%),
+    conic-gradient(from 160deg, transparent, rgba(239, 68, 68, 0.3), transparent);
+}
+
+.klol-app-event-detail-hero,
+.klol-app-admin-hero {
+  position: relative;
+  overflow: hidden;
+  min-height: 190px;
+  align-content: end;
+  isolation: isolate;
+}
+
+.klol-app-event-detail-hero::before,
+.klol-app-admin-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background:
+    linear-gradient(90deg, rgba(4, 9, 23, 0.94), rgba(4, 9, 23, 0.42) 54%, rgba(4, 9, 23, 0.78)),
+    radial-gradient(circle at 74% 38%, rgba(59, 130, 246, 0.24), transparent 38%),
+    url("/images/generated/klol-page-banner-bg.png") center / cover no-repeat;
+}
+
+.klol-app-event-detail-hero::after,
+.klol-app-admin-hero::after {
+  content: "";
+  position: absolute;
+  inset: auto 18px 18px auto;
+  z-index: -1;
+  width: 110px;
+  height: 110px;
+  border: 1px solid rgba(125, 211, 252, 0.12);
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(74, 163, 255, 0.18), transparent 66%);
+  filter: blur(1px);
+}
+
+.klol-app-event-detail-hero--destruction::before {
+  background:
+    linear-gradient(90deg, rgba(4, 9, 23, 0.96), rgba(4, 9, 23, 0.38) 52%, rgba(15, 5, 9, 0.86)),
+    radial-gradient(circle at 83% 38%, rgba(239, 68, 68, 0.22), transparent 38%),
+    url("/images/generated/klol-team-balance-versus-bg.png") center / cover no-repeat;
+}
+
+.klol-app-event-team {
+  border-left: 3px solid rgba(56, 189, 248, 0.62);
+}
+
+.klol-app-event-card--destruction.klol-app-event-team,
+.klol-app-event-detail-hero--destruction ~ .klol-app-section .klol-app-event-team {
+  border-left-color: rgba(245, 158, 11, 0.7);
+}
+
+.klol-app-admin-hero::before {
+  background:
+    linear-gradient(90deg, rgba(4, 9, 23, 0.96), rgba(4, 9, 23, 0.5) 52%, rgba(4, 9, 23, 0.88)),
+    radial-gradient(circle at 78% 26%, rgba(45, 212, 191, 0.16), transparent 34%),
+    url("/images/generated/klol-admin-ops-bg.png") center / cover no-repeat;
+}
+
+.klol-app-admin-status-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.klol-app-admin-status-grid .klol-app-meta:nth-child(5),
+.klol-app-admin-status-grid .klol-app-meta:nth-child(6) {
+  border-color: rgba(214, 176, 92, 0.22);
+  background:
+    linear-gradient(180deg, rgba(22, 18, 9, 0.82), rgba(5, 10, 20, 0.88)),
+    radial-gradient(circle at 86% 14%, rgba(245, 158, 11, 0.13), transparent 46%);
+}
+
 /* Current mobile app IA: tabs, dense lists, and closed-state cards. */
 .klol-app-header-tools {
   display: inline-flex;

@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 
@@ -706,20 +707,26 @@ export default function DestructionAuctionManager({
       className={`mini-card-stack mini-card-stack--${auctionMiniStageState}`}
       aria-hidden="true"
     >
-      <img
+      <Image
         className="mini-card-stack-card mini-card-stack-card--back-left"
         src="/auction-cards/back-premium.svg"
         alt=""
+        width={72}
+        height={104}
       />
-      <img
+      <Image
         className="mini-card-stack-card mini-card-stack-card--back-right"
         src="/auction-cards/back-premium.svg"
         alt=""
+        width={72}
+        height={104}
       />
-      <img
+      <Image
         className="mini-card-stack-card mini-card-stack-card--front"
         src="/auction-cards/back-premium.svg"
         alt=""
+        width={72}
+        height={104}
       />
       <div className="mini-card-status">{auctionMiniStageLabel}</div>
     </div>
@@ -6233,11 +6240,13 @@ export default function DestructionAuctionManager({
                           }}
                           aria-hidden="true"
                         >
-                          <img
+                          <Image
                             className="gacha-flip-bridge-card-img"
                             src="/auction-cards/back-premium.svg"
                             alt=""
                             aria-hidden="true"
+                            width={180}
+                            height={252}
                           />
                         </div>
                       ) : null}
@@ -6260,19 +6269,23 @@ export default function DestructionAuctionManager({
                           <div className="gacha-picked-card">
                             <div className="gacha-card-inner">
                               <div className="gacha-card-face back auction-svg-card-back">
-                                <img
+                                <Image
                                   className="auction-svg-card-bg"
                                   src="/auction-cards/back-premium.svg"
                                   alt=""
                                   aria-hidden="true"
+                                  width={360}
+                                  height={504}
                                 />
                               </div>
                               <div className="gacha-card-face front auction-svg-card-front">
-                                <img
+                                <Image
                                   className="auction-svg-card-bg"
                                   src={`/auction-cards/front-${tierVisual.key.toLowerCase()}.svg`}
                                   alt=""
                                   aria-hidden="true"
+                                  width={360}
+                                  height={504}
                                 />
 
                                 <div className="auction-svg-card-content">
@@ -6286,7 +6299,7 @@ export default function DestructionAuctionManager({
                                   </div>
 
                                   <div className="auction-svg-tier-emblem">
-                                    <img
+                                    <Image
                                       className="auction-svg-tier-image"
                                       src={tierImagePath}
                                       alt={
@@ -6294,6 +6307,8 @@ export default function DestructionAuctionManager({
                                           ? `${tierReference} 티어`
                                           : "티어"
                                       }
+                                      width={128}
+                                      height={128}
                                     />
                                   </div>
 
@@ -6568,7 +6583,6 @@ export default function DestructionAuctionManager({
     </div>
   );
 }
-
 
 
 

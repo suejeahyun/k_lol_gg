@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 type TwoFactorStatus = {
@@ -244,7 +245,17 @@ export default function AdminSecurityTwoFactorClient() {
                 {setup?.ok ? (
                   <div className="setupResult">
                     <div className="qrBox">
-                      {qrImageUrl ? <img src={qrImageUrl} alt="2단계 인증 QR 코드" width={220} height={220} /> : <span>QR 코드 없음</span>}
+                      {qrImageUrl ? (
+                        <Image
+                          src={qrImageUrl}
+                          alt="2단계 인증 QR 코드"
+                          width={220}
+                          height={220}
+                          unoptimized
+                        />
+                      ) : (
+                        <span>QR 코드 없음</span>
+                      )}
                     </div>
                     <div className="setupFields">
                       <label>

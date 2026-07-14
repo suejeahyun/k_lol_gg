@@ -42,6 +42,19 @@ function teamLabel(winner?: string | null) {
   return "진행";
 }
 
+function eventStatusText(status: string) {
+  if (status === "PLANNED") return "예정";
+  if (status === "RECRUITING") return "모집중";
+  if (status === "TEAM_BUILDING") return "팀 구성";
+  if (status === "AUCTION") return "경매";
+  if (status === "PRELIMINARY") return "예선";
+  if (status === "TOURNAMENT") return "본선";
+  if (status === "IN_PROGRESS") return "진행중";
+  if (status === "COMPLETED") return "완료";
+  if (status === "CANCELLED") return "취소";
+  return status;
+}
+
 export default async function AppHomePage() {
   const [session, summary, season, siteSettings] = await Promise.all([
     getCurrentUser(),
@@ -55,7 +68,16 @@ export default async function AppHomePage() {
   ]);
   const recruitFeatureEnabled = isSiteFeatureEnabled(siteSettings, "recruit");
 
-  const [myStat, myKda, recentRecruits, recentMatches, topStats, recentMvp] = await Promise.all([
+  const [
+    myStat,
+    myKda,
+    recentRecruits,
+    recentMatches,
+    topStats,
+    recentMvp,
+    activeEvents,
+    activeDestructions,
+  ] = await Promise.all([
     session?.playerId && season
       ? prisma.playerSeasonStat.findUnique({
           where: {
@@ -121,6 +143,28 @@ export default async function AppHomePage() {
         participants: { include: { player: true, champion: true } },
       },
       orderBy: { id: "desc" },
+    }),
+    prisma.eventMatch.findMany({
+      orderBy: [{ eventDate: "desc" }, { id: "desc" }],
+      take: 2,
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        eventDate: true,
+        _count: { select: { participants: true, teams: true, matches: true } },
+      },
+    }),
+    prisma.destructionTournament.findMany({
+      orderBy: [{ startDate: "desc" }, { id: "desc" }],
+      take: 2,
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        startDate: true,
+        _count: { select: { participants: true, teams: true, matches: true } },
+      },
     }),
   ]);
 
@@ -222,6 +266,45 @@ export default async function AppHomePage() {
                 </Link>
               );
             })}
+          </div>
+        )}
+      </AppSection>
+
+      <AppSection title="이벤트·멸망전" caption="진행 보기">
+        {activeEvents.length === 0 && activeDestructions.length === 0 ? (
+          <AppEmpty>진행 중인 이벤트/멸망전이 없습니다.</AppEmpty>
+        ) : (
+          <div className="klol-app-list klol-app-event-list">
+            {activeEvents.map((event) => (
+              <Link
+                className="klol-app-list-card klol-app-event-card"
+                href={`/app/progress/event/${event.id}`}
+                key={`event-${event.id}`}
+              >
+                <div className="klol-app-list-top">
+                  <div className="klol-app-list-title">
+                    <strong>{event.title}</strong>
+                    <span>{dateFormatter.format(event.eventDate)} · {event._count.participants}명 · {event._count.teams}팀</span>
+                  </div>
+                  <span className="klol-app-badge">{eventStatusText(event.status)}</span>
+                </div>
+              </Link>
+            ))}
+            {activeDestructions.map((tournament) => (
+              <Link
+                className="klol-app-list-card klol-app-event-card klol-app-event-card--destruction"
+                href={`/app/progress/destruction/${tournament.id}`}
+                key={`destruction-${tournament.id}`}
+              >
+                <div className="klol-app-list-top">
+                  <div className="klol-app-list-title">
+                    <strong>{tournament.title}</strong>
+                    <span>{tournament.startDate ? dateFormatter.format(tournament.startDate) : "일정 미정"} · {tournament._count.participants}명 · {tournament._count.teams}팀</span>
+                  </div>
+                  <span className="klol-app-badge klol-app-badge--warn">{eventStatusText(tournament.status)}</span>
+                </div>
+              </Link>
+            ))}
           </div>
         )}
       </AppSection>
