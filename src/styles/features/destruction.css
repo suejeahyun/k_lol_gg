@@ -46,6 +46,24 @@
   transform: scale(1.08);
 }
 
+.destruction-coin-toss--video {
+  background:
+    linear-gradient(180deg, rgba(2, 8, 23, 0.64), rgba(2, 8, 23, 0.9)),
+    radial-gradient(circle at 50% 12%, rgba(56, 189, 248, 0.2), transparent 42%),
+    radial-gradient(circle at 50% 100%, rgba(250, 204, 21, 0.14), transparent 36%),
+    url("/images/generated/klol-auction-stage-draw-cards.png") center 58% / cover no-repeat,
+    linear-gradient(135deg, rgba(6, 17, 36, 0.94), rgba(2, 8, 23, 0.96));
+}
+
+.destruction-coin-toss--video::after {
+  background:
+    linear-gradient(100deg, transparent 0%, rgba(125, 211, 252, 0.10) 45%, rgba(250, 204, 21, 0.12) 50%, transparent 58%),
+    radial-gradient(circle at 50% 42%, rgba(56, 189, 248, 0.16), transparent 28%),
+    url("/images/generated/klol-auction-stage-draw-cards.png") center 58% / cover no-repeat;
+  opacity: 0.2;
+  transform: scale(1.02);
+}
+
 .destruction-coin-toss__header {
   display: flex;
   align-items: flex-start;
@@ -94,6 +112,146 @@
   min-height: 188px;
   padding-block: 18px 10px;
   perspective: 1200px;
+}
+
+.destruction-coin-toss--simple .destruction-coin-toss__stage {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  min-height: 228px;
+  gap: 18px;
+}
+
+.destruction-coin-toss--video .destruction-coin-toss__stage {
+  min-height: auto;
+  padding-block: 8px 4px;
+}
+
+.destruction-coin-toss__video-frame {
+  position: relative;
+  overflow: hidden;
+  width: min(100%, 980px);
+  aspect-ratio: 864 / 496;
+  border: 1px solid rgba(125, 211, 252, 0.24);
+  border-radius: 20px;
+  background:
+    linear-gradient(180deg, rgba(2, 8, 23, 0.18), rgba(2, 8, 23, 0.76)),
+    radial-gradient(circle at 50% 15%, rgba(56, 189, 248, 0.20), transparent 42%),
+    url("/images/generated/klol-auction-stage-draw-cards.png") center 56% / cover no-repeat,
+    linear-gradient(135deg, rgba(2, 8, 23, 0.96), rgba(8, 20, 42, 0.94));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 18px 38px rgba(0, 0, 0, 0.34),
+    0 0 42px rgba(14, 165, 233, 0.12);
+}
+
+.destruction-coin-toss--standalone .destruction-coin-toss__video-frame {
+  width: min(100%, 1040px);
+}
+
+.destruction-coin-toss--app .destruction-coin-toss__video-frame {
+  width: 100%;
+}
+
+.destruction-coin-toss__video-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 22%),
+    radial-gradient(circle at 50% 110%, rgba(56, 189, 248, 0.16), transparent 44%);
+  mix-blend-mode: screen;
+  opacity: 0.72;
+}
+
+.destruction-coin-toss__video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #020817;
+}
+
+.destruction-coin-toss__fullscreen {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 3;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid rgba(191, 219, 254, 0.26);
+  border-radius: 999px;
+  background: rgba(2, 8, 23, 0.72);
+  color: #dbeafe;
+  font-size: 12px;
+  font-weight: 900;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.destruction-coin-toss__fullscreen:hover {
+  border-color: rgba(125, 211, 252, 0.55);
+  background: rgba(14, 22, 39, 0.86);
+  transform: translateY(-1px);
+}
+
+.destruction-coin-toss__video-placeholder {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-content: center;
+  gap: 8px;
+  overflow: hidden;
+  isolation: isolate;
+  border: 0;
+  background: rgba(2, 8, 23, 0.36);
+  color: #f8fafc;
+  cursor: pointer;
+}
+
+.destruction-coin-toss__video-placeholder::before,
+.destruction-coin-toss__video-placeholder::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.destruction-coin-toss__video-placeholder::before {
+  background: url("/images/generated/klol-auction-stage-draw-cards.png") center 56% / cover no-repeat;
+  opacity: 0.74;
+  transform: scale(1.015);
+}
+
+.destruction-coin-toss__video-placeholder::after {
+  background:
+    linear-gradient(180deg, rgba(2, 8, 23, 0.12), rgba(2, 8, 23, 0.58)),
+    radial-gradient(circle at 50% 46%, rgba(250, 204, 21, 0.22), transparent 23%),
+    radial-gradient(circle at 50% 44%, rgba(56, 189, 248, 0.26), transparent 44%);
+}
+
+.destruction-coin-toss__video-placeholder span {
+  position: relative;
+  z-index: 1;
+  color: var(--k-cyan);
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0.22em;
+}
+
+.destruction-coin-toss__video-placeholder strong {
+  position: relative;
+  z-index: 1;
+  font-size: clamp(22px, 3.5vw, 34px);
+  font-weight: 950;
+  letter-spacing: -0.01em;
 }
 
 .destruction-coin-toss__team {
@@ -232,7 +390,7 @@
   animation: coinTossFlip 2.78s cubic-bezier(0.18, 0.78, 0.22, 1) both;
 }
 
-.destruction-coin-toss.winner-b.is-revealed .destruction-coin-toss__coin-disc {
+.destruction-coin-toss.winner-back.is-revealed .destruction-coin-toss__coin-disc {
   transform: rotateY(180deg);
 }
 
@@ -280,6 +438,42 @@
   opacity: 0.74;
 }
 
+.destruction-coin-toss__side-row {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px;
+  border: 1px solid rgba(125, 211, 252, 0.16);
+  border-radius: 999px;
+  background: rgba(2, 8, 23, 0.54);
+}
+
+.destruction-coin-toss__side-row span {
+  min-width: 64px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  color: var(--k-muted);
+  font-size: 12px;
+  font-weight: 950;
+  text-align: center;
+  letter-spacing: 0.08em;
+  transition:
+    background 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.destruction-coin-toss__side-row span.is-active {
+  background:
+    linear-gradient(135deg, rgba(250, 204, 21, 0.26), rgba(14, 165, 233, 0.16)),
+    rgba(15, 23, 42, 0.84);
+  color: #fff7d6;
+  box-shadow:
+    inset 0 0 0 1px rgba(250, 204, 21, 0.24),
+    0 0 20px rgba(250, 204, 21, 0.14);
+}
+
 .destruction-coin-toss__inputs {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -321,6 +515,10 @@
   gap: 10px;
 }
 
+.destruction-coin-toss--simple .destruction-coin-toss__actions {
+  grid-template-columns: minmax(160px, 1fr) minmax(110px, 0.38fr);
+}
+
 .destruction-coin-toss__primary,
 .destruction-coin-toss__choice,
 .destruction-coin-toss__copy {
@@ -355,8 +553,41 @@
 }
 
 .coin-toss-page {
+  position: relative;
+  isolation: isolate;
   width: min(1120px, calc(100vw - 40px));
   margin-inline: auto;
+}
+
+.coin-toss-page::before,
+.coin-toss-page::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.coin-toss-page::before {
+  background:
+    linear-gradient(90deg, rgba(2, 8, 23, 0.96), rgba(2, 8, 23, 0.7) 45%, rgba(2, 8, 23, 0.96)),
+    radial-gradient(circle at 50% 18%, rgba(56, 189, 248, 0.18), transparent 34%),
+    url("/images/generated/klol-auction-stage-draw-cards.png") center top / cover no-repeat;
+  opacity: 0.34;
+}
+
+.coin-toss-page::after {
+  background-image:
+    linear-gradient(rgba(125, 211, 252, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(125, 211, 252, 0.04) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
+  opacity: 0.68;
+}
+
+.coin-toss-page > * {
+  position: relative;
+  z-index: 1;
 }
 
 .coin-toss-hero {
@@ -364,7 +595,7 @@
   align-items: center;
   background:
     linear-gradient(90deg, rgba(2, 8, 23, 0.86), rgba(8, 20, 39, 0.42)),
-    url("/images/theme/dark/auction/auction-stage.svg") center 48% / cover no-repeat;
+    url("/images/generated/klol-auction-stage-draw-cards.png") center 46% / cover no-repeat;
 }
 
 .destruction-coin-toss--standalone {
@@ -386,8 +617,14 @@
 }
 
 .klol-app-coin-toss-section {
+  position: relative;
+  overflow: hidden;
   display: grid;
   gap: 12px;
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(2, 8, 23, 0.18), rgba(2, 8, 23, 0.72)),
+    url("/images/generated/klol-auction-stage-draw-cards.png") center / cover no-repeat;
 }
 
 .destruction-coin-toss--app {

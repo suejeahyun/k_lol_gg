@@ -1,37 +1,39 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 type Team = {
   id: number;
   name: string;
 };
 
-type TossSide = "A" | "B";
-type TossPhase = "idle" | "spinning" | "revealed";
-type SideChoice = "FIRST" | "SECOND";
+type TossSide = "front" | "back";
+type TossPhase = "idle" | "playing" | "revealed";
 
 type Props = {
-  teamA: Team;
-  teamB: Team;
+  teamA?: Team;
+  teamB?: Team;
   editableTeams?: boolean;
   className?: string;
 };
 
 const SOUND_PATHS = {
-  shuffle: "/sounds/auction/auction-shuffle-whoosh.wav",
-  flip: "/sounds/auction/auction-card-flip.wav",
   reveal: "/sounds/auction/auction-reveal-impact.wav",
+};
+
+const VIDEO_PATHS: Record<TossSide, string> = {
+  front: "/videos/coin-toss/coin-front.mp4",
+  back: "/videos/coin-toss/coin-back.mp4",
 };
 
 function randomSide(): TossSide {
   if (typeof window === "undefined" || !window.crypto?.getRandomValues) {
-    return Math.random() < 0.5 ? "A" : "B";
+    return Math.random() < 0.5 ? "front" : "back";
   }
 
   const value = new Uint32Array(1);
   window.crypto.getRandomValues(value);
-  return value[0] % 2 === 0 ? "A" : "B";
+  return value[0] % 2 === 0 ? "front" : "back";
 }
 
 function playSound(path: string, volume = 0.42) {
@@ -44,94 +46,57 @@ function playSound(path: string, volume = 0.42) {
   }
 }
 
-function getChoiceLabel(choice: SideChoice | null) {
-  if (choice === "FIRST") return "선공";
-  if (choice === "SECOND") return "후공";
-  return "선택 대기";
+function sideLabel(side: TossSide | null) {
+  if (side === "front") return "앞면";
+  if (side === "back") return "뒷면";
+  return "대기";
 }
 
-export default function DestructionCoinTossPanel({ teamA, teamB, editableTeams = false, className = "" }: Props) {
+export default function DestructionCoinTossPanel({ className = "" }: Props) {
   const [phase, setPhase] = useState<TossPhase>("idle");
   const [winnerSide, setWinnerSide] = useState<TossSide | null>(null);
-  const [choice, setChoice] = useState<SideChoice | null>(null);
+  const [activeVideoSrc, setActiveVideoSrc] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [teamAName, setTeamAName] = useState(teamA.name);
-  const [teamBName, setTeamBName] = useState(teamB.name);
-  const timers = useRef<number[]>([]);
+  const frameRef = useRef<HTMLDivElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
-  useEffect(() => {
-    return () => {
-      timers.current.forEach((timer) => window.clearTimeout(timer));
-    };
-  }, []);
-
-  const displayTeamA = useMemo(() => ({ ...teamA, name: teamAName.trim() || "앞면 팀" }), [teamA, teamAName]);
-  const displayTeamB = useMemo(() => ({ ...teamB, name: teamBName.trim() || "뒷면 팀" }), [teamB, teamBName]);
-
-  const winnerTeam = useMemo(() => {
-    if (winnerSide === "A") return displayTeamA;
-    if (winnerSide === "B") return displayTeamB;
-    return null;
-  }, [displayTeamA, displayTeamB, winnerSide]);
-
-  const tossLabel = winnerSide === "A" ? "앞면" : winnerSide === "B" ? "뒷면" : "대기";
   const resultText =
-    phase === "spinning"
-      ? "동전이 떨어지는 중..."
-      : winnerTeam
-        ? `${winnerTeam.name} ${getChoiceLabel(choice)}`
+    phase === "playing"
+      ? "결과를 확인하는 중..."
+      : winnerSide
+        ? `${sideLabel(winnerSide)}이 나왔습니다.`
         : "코인토스를 실행해주세요.";
 
   const handleToss = () => {
-    timers.current.forEach((timer) => window.clearTimeout(timer));
-    timers.current = [];
+    const nextWinner = randomSide();
+    const nextVideoSrc = VIDEO_PATHS[nextWinner];
+
     setCopied(false);
-    setChoice(null);
-    setWinnerSide(null);
-    setPhase("spinning");
-    playSound(SOUND_PATHS.shuffle, 0.25);
+    setWinnerSide(nextWinner);
+    setActiveVideoSrc(nextVideoSrc);
+    setPhase("playing");
 
-    timers.current.push(
-      window.setTimeout(() => {
-        playSound(SOUND_PATHS.flip, 0.38);
-      }, 520),
-    );
+    window.requestAnimationFrame(() => {
+      const video = videoRef.current;
+      if (!video) return;
 
-    timers.current.push(
-      window.setTimeout(() => {
-        playSound(SOUND_PATHS.flip, 0.24);
-      }, 1780),
-    );
+      video.pause();
+      video.src = nextVideoSrc;
+      video.currentTime = 0;
+      video.load();
 
-    timers.current.push(
-      window.setTimeout(() => {
-        const nextWinner = randomSide();
-        setWinnerSide(nextWinner);
+      void video.play().catch(() => {
         setPhase("revealed");
-        playSound(SOUND_PATHS.reveal, 0.42);
-      }, 2860),
-    );
-  };
-
-  const handleChoice = (nextChoice: SideChoice) => {
-    if (!winnerTeam) return;
-    setChoice(nextChoice);
-    setCopied(false);
-    playSound(SOUND_PATHS.flip, 0.18);
+        playSound(SOUND_PATHS.reveal, 0.32);
+      });
+    });
   };
 
   const handleCopy = async () => {
-    if (!winnerTeam) return;
-
-    const text = [
-      "[K-LOL 코인토스]",
-      `${displayTeamA.name} vs ${displayTeamB.name}`,
-      `결과: ${winnerTeam.name} (${tossLabel})`,
-      `선택: ${getChoiceLabel(choice)}`,
-    ].join("\n");
+    if (!winnerSide) return;
 
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(["[K-LOL 코인토스]", `결과: ${sideLabel(winnerSide)}`].join("\n"));
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1600);
     } catch {
@@ -139,12 +104,27 @@ export default function DestructionCoinTossPanel({ teamA, teamB, editableTeams =
     }
   };
 
+  const handleFullscreen = async () => {
+    const frame = frameRef.current;
+    if (!frame) return;
+
+    try {
+      if (frame.requestFullscreen) {
+        await frame.requestFullscreen();
+      }
+    } catch {
+      // Fullscreen can be blocked by the browser; normal playback remains available.
+    }
+  };
+
   const panelClassName = [
     "destruction-coin-toss",
+    "destruction-coin-toss--simple",
+    "destruction-coin-toss--video",
     className,
     `is-${phase}`,
-    winnerSide === "A" ? "winner-a" : "",
-    winnerSide === "B" ? "winner-b" : "",
+    winnerSide === "front" ? "winner-front" : "",
+    winnerSide === "back" ? "winner-back" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -154,62 +134,49 @@ export default function DestructionCoinTossPanel({ teamA, teamB, editableTeams =
       <div className="destruction-coin-toss__header">
         <div>
           <span className="destruction-coin-toss__eyebrow">COIN TOSS</span>
-          <h4>선후공 코인토스</h4>
+          <h4>코인토스</h4>
         </div>
         <strong className="destruction-coin-toss__result">{resultText}</strong>
       </div>
 
-      {editableTeams ? (
-        <div className="destruction-coin-toss__inputs" aria-label="코인토스 팀명 설정">
-          <label>
-            <span>앞면</span>
-            <input
-              value={teamAName}
-              onChange={(event) => setTeamAName(event.target.value)}
-              placeholder="앞면 팀"
-              maxLength={24}
-            />
-          </label>
-          <label>
-            <span>뒷면</span>
-            <input
-              value={teamBName}
-              onChange={(event) => setTeamBName(event.target.value)}
-              placeholder="뒷면 팀"
-              maxLength={24}
-            />
-          </label>
-        </div>
-      ) : null}
-
       <div className="destruction-coin-toss__stage">
-        <div className="destruction-coin-toss__team destruction-coin-toss__team--blue">
-          <span>앞면</span>
-          <strong>{displayTeamA.name}</strong>
+        <div className="destruction-coin-toss__video-frame" ref={frameRef}>
+          <video
+            ref={videoRef}
+            className="destruction-coin-toss__video"
+            src={activeVideoSrc ?? undefined}
+            playsInline
+            preload="auto"
+            onEnded={() => {
+              setPhase("revealed");
+              playSound(SOUND_PATHS.reveal, 0.24);
+            }}
+            onError={() => setPhase("revealed")}
+          />
+          <button
+            type="button"
+            className="destruction-coin-toss__fullscreen"
+            onClick={handleFullscreen}
+            aria-label="코인토스 무대 전체 화면으로 보기"
+          >
+            전체 화면
+          </button>
+          {!activeVideoSrc && (
+            <button
+              type="button"
+              className="destruction-coin-toss__video-placeholder"
+              onClick={handleToss}
+              aria-label="앞면 또는 뒷면 코인토스 실행"
+            >
+              <span>COIN TOSS</span>
+              <strong>앞면 / 뒷면</strong>
+            </button>
+          )}
         </div>
 
-        <button
-          type="button"
-          className="destruction-coin-toss__coin"
-          onClick={handleToss}
-          disabled={phase === "spinning"}
-          aria-label={`${displayTeamA.name} 앞면, ${displayTeamB.name} 뒷면 코인토스 실행`}
-        >
-          <span className="destruction-coin-toss__coin-disc">
-            <span className="destruction-coin-toss__coin-face destruction-coin-toss__coin-face--front">
-              <span>K</span>
-              <small>앞</small>
-            </span>
-            <span className="destruction-coin-toss__coin-face destruction-coin-toss__coin-face--back">
-              <span>LOL</span>
-              <small>뒤</small>
-            </span>
-          </span>
-        </button>
-
-        <div className="destruction-coin-toss__team destruction-coin-toss__team--red">
-          <span>뒷면</span>
-          <strong>{displayTeamB.name}</strong>
+        <div className="destruction-coin-toss__side-row" aria-hidden="true">
+          <span className={phase === "revealed" && winnerSide === "front" ? "is-active" : ""}>앞면</span>
+          <span className={phase === "revealed" && winnerSide === "back" ? "is-active" : ""}>뒷면</span>
         </div>
       </div>
 
@@ -218,31 +185,15 @@ export default function DestructionCoinTossPanel({ teamA, teamB, editableTeams =
           type="button"
           className="destruction-coin-toss__primary"
           onClick={handleToss}
-          disabled={phase === "spinning"}
+          disabled={phase === "playing"}
         >
-          {phase === "spinning" ? "던지는 중..." : winnerTeam ? "다시 던지기" : "코인토스 실행"}
-        </button>
-        <button
-          type="button"
-          className={choice === "FIRST" ? "destruction-coin-toss__choice is-active" : "destruction-coin-toss__choice"}
-          onClick={() => handleChoice("FIRST")}
-          disabled={!winnerTeam || phase === "spinning"}
-        >
-          선공 선택
-        </button>
-        <button
-          type="button"
-          className={choice === "SECOND" ? "destruction-coin-toss__choice is-active" : "destruction-coin-toss__choice"}
-          onClick={() => handleChoice("SECOND")}
-          disabled={!winnerTeam || phase === "spinning"}
-        >
-          후공 선택
+          {phase === "playing" ? "재생 중..." : winnerSide ? "다시 던지기" : "코인토스 실행"}
         </button>
         <button
           type="button"
           className="destruction-coin-toss__copy"
           onClick={handleCopy}
-          disabled={!winnerTeam}
+          disabled={!winnerSide}
         >
           {copied ? "복사됨" : "결과 복사"}
         </button>

@@ -12,12 +12,7 @@ export default function CoinTossPage() {
         </div>
       </section>
 
-      <DestructionCoinTossPanel
-        teamA={{ id: 1, name: "BLUE 팀" }}
-        teamB={{ id: 2, name: "RED 팀" }}
-        editableTeams
-        className="destruction-coin-toss--standalone"
-      />
+      <DestructionCoinTossPanel className="destruction-coin-toss--standalone" />
     </main>
   );
 }

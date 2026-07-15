@@ -9,7 +9,6 @@ import { applyDestructionRecruitmentAutoReserve, getDestructionLaneLimits } from
 import DestructionTeamForm from "@/components/admin/DestructionTeamForm";
 import DestructionPreliminaryGenerator from "@/components/admin/DestructionPreliminaryGenerator";
 import DestructionPreliminaryManualManager from "@/components/admin/DestructionPreliminaryManualManager";
-import DestructionCoinTossPanel from "@/components/admin/DestructionCoinTossPanel";
 import DestructionMatchResultForm from "@/components/admin/DestructionMatchResultForm";
 import DestructionTournamentGenerator from "@/components/admin/DestructionTournamentGenerator";
 import DestructionFinalGenerator from "@/components/admin/DestructionFinalGenerator";
@@ -677,21 +676,18 @@ export default async function AdminDestructionTournamentDetailPage({
                 </div>
 
                 {match.isConfirmed ? (
-                  <>
-                    <DestructionCoinTossPanel teamA={match.teamA} teamB={match.teamB} />
-                    <DestructionMatchResultForm
-                      tournamentId={tournament.id}
-                      matchId={match.id}
-                      teamA={match.teamA}
-                      teamB={match.teamB}
-                      participants={participantViewModels}
-                      initialWinnerTeamId={match.winnerTeamId}
-                      initialMvpPlayerId={match.mvpPlayerId}
-                      initialTeamAScore={match.teamAScore}
-                      initialTeamBScore={match.teamBScore}
-                      bestOf={match.bestOf}
-                    />
-                  </>
+                  <DestructionMatchResultForm
+                    tournamentId={tournament.id}
+                    matchId={match.id}
+                    teamA={match.teamA}
+                    teamB={match.teamB}
+                    participants={participantViewModels}
+                    initialWinnerTeamId={match.winnerTeamId}
+                    initialMvpPlayerId={match.mvpPlayerId}
+                    initialTeamAScore={match.teamAScore}
+                    initialTeamBScore={match.teamBScore}
+                    bestOf={match.bestOf}
+                  />
                 ) : (
                   <div className="empty-box">확정 전 경기입니다. 상단의 예선 편성 확정 후 결과 입력이 가능합니다.</div>
                 )}
@@ -777,7 +773,6 @@ export default async function AdminDestructionTournamentDetailPage({
                   </span>
                 </div>
 
-                <DestructionCoinTossPanel teamA={match.teamA} teamB={match.teamB} />
                 <DestructionMatchResultForm
                   tournamentId={tournament.id}
                   matchId={match.id}
@@ -871,7 +866,6 @@ export default async function AdminDestructionTournamentDetailPage({
                   </span>
                 </div>
 
-                <DestructionCoinTossPanel teamA={match.teamA} teamB={match.teamB} />
                 <DestructionMatchResultForm
                   tournamentId={tournament.id}
                   matchId={match.id}
