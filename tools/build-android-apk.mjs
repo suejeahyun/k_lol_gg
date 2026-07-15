@@ -160,6 +160,47 @@ function resolveBuildNumber() {
   return value;
 }
 
+function resolveReleaseSigningEnv() {
+  if (mode !== "release") return {};
+
+  const keystorePath = process.env.KLOL_ANDROID_KEYSTORE_PATH?.trim();
+  const keystorePassword = process.env.KLOL_ANDROID_KEYSTORE_PASSWORD?.trim();
+  const keyAlias = process.env.KLOL_ANDROID_KEY_ALIAS?.trim();
+  const explicitKeyPassword = process.env.KLOL_ANDROID_KEY_PASSWORD?.trim();
+  const keyPassword = explicitKeyPassword || keystorePassword;
+
+  const missing = [
+    ["KLOL_ANDROID_KEYSTORE_PATH", keystorePath],
+    ["KLOL_ANDROID_KEYSTORE_PASSWORD", keystorePassword],
+    ["KLOL_ANDROID_KEY_ALIAS", keyAlias],
+  ]
+    .filter(([, value]) => !value)
+    .map(([name]) => name);
+
+  if (missing.length > 0) {
+    throw new Error(
+      [
+        "Release APK signing is not configured.",
+        `Missing env: ${missing.join(", ")}`,
+        "Set these variables in your local PowerShell session before running npm run android:build:release.",
+        "Never commit keystore files or passwords.",
+      ].join(" "),
+    );
+  }
+
+  const absoluteKeystorePath = resolve(keystorePath);
+  if (!existsSync(absoluteKeystorePath)) {
+    throw new Error(`KLOL_ANDROID_KEYSTORE_PATH does not exist: ${absoluteKeystorePath}`);
+  }
+
+  return {
+    KLOL_ANDROID_KEYSTORE_PATH: absoluteKeystorePath,
+    KLOL_ANDROID_KEYSTORE_PASSWORD: keystorePassword,
+    KLOL_ANDROID_KEY_ALIAS: keyAlias,
+    KLOL_ANDROID_KEY_PASSWORD: keyPassword,
+  };
+}
+
 function writeLatest(apkFileName, apkSize) {
   const isRelease = mode === "release";
   const notes = isRelease
@@ -176,6 +217,7 @@ function writeLatest(apkFileName, apkSize) {
 
   const metadata = {
     available: true,
+    channel: mode,
     version: packageJson.version,
     buildNumber: resolveBuildNumber(),
     apkUrl: `/downloads/android/${apkFileName}`,
@@ -192,18 +234,20 @@ if (!existsSync(androidDir)) {
   run("npx", ["cap", "add", "android"]);
 }
 
+const androidBuildNumber = String(resolveBuildNumber());
+const androidVersionName = process.env.KLOL_ANDROID_VERSION_NAME || packageJson.version;
+const releaseSigningEnv = resolveReleaseSigningEnv();
+
 if (!args.has("--skip-sync")) {
   run("npx", ["cap", "sync", "android"]);
 }
-
-const androidBuildNumber = String(resolveBuildNumber());
-const androidVersionName = process.env.KLOL_ANDROID_VERSION_NAME || packageJson.version;
 
 run(process.platform === "win32" ? "gradlew.bat" : "./gradlew", [task], {
   cwd: androidDir,
   env: withAndroidEnv(withJavaEnv({
     KLOL_ANDROID_BUILD_NUMBER: androidBuildNumber,
     KLOL_ANDROID_VERSION_NAME: androidVersionName,
+    ...releaseSigningEnv,
   })),
 });
 

@@ -94,7 +94,10 @@ export default function MobileAppGate() {
   const isMobile = useSyncExternalStore(subscribeToMobile, readIsMobile, () => false);
   const pcChoice = useSyncExternalStore(subscribeToPcChoice, readPcChoice, () => false);
 
-  const appPath = useMemo(() => toAppPath(pathname), [pathname]);
+  const appPath = useMemo(() => {
+    const search = typeof window === "undefined" ? "" : window.location.search.slice(1);
+    return toAppPath(pathname, search);
+  }, [pathname]);
   const shouldShow = isMobile && !pcChoice && !pathname.startsWith("/app") && !isInstallPage;
 
   useEffect(() => {

@@ -69,11 +69,30 @@ public/downloads/android/latest.json
 운영 배포 전에는 release 빌드를 권장합니다. 단, release APK는 반드시 서명 키 설정이 먼저 필요합니다.
 서명 없이 만들어진 `app-release-unsigned.apk`는 휴대폰에 설치할 수 없으므로 배포 메타데이터에 올리지 않습니다.
 
+최초 1회만 로컬에서 서명 키를 만듭니다. 출력되는 비밀번호와 환경변수는 개인 메모장이나 암호 관리 도구에만 보관하고, 저장소에는 절대 올리지 않습니다.
+
+```powershell
+npm run android:create-keystore
+```
+
+이 명령이 출력하는 값을 같은 PowerShell 창에 넣은 뒤 release APK를 빌드합니다.
+
 ```powershell
 $env:CAPACITOR_SERVER_URL="https://k-lol-gg.vercel.app/app"
 $env:KLOL_ANDROID_BUILD_NUMBER="2"
 $env:KLOL_ANDROID_VERSION_NAME="0.1.0"
+$env:KLOL_ANDROID_KEYSTORE_PATH="E:\k-LOL.GG\0.k_lol_gg\android\secure\klol-release.keystore"
+$env:KLOL_ANDROID_KEYSTORE_PASSWORD="위 명령이 출력한 값"
+$env:KLOL_ANDROID_KEY_ALIAS="klol-release"
+$env:KLOL_ANDROID_KEY_PASSWORD="위 명령이 출력한 값"
 npm run android:build:release
+```
+
+성공하면 다음 파일이 갱신됩니다.
+
+```text
+public/downloads/android/klol-<version>-release.apk
+public/downloads/android/latest.json
 ```
 
 서명 키 설정 전에는 내부 테스트용 debug APK만 사용하세요. 서명 키는 절대 저장소에 커밋하지 않습니다.

@@ -12,6 +12,7 @@ type BeforeInstallPromptEvent = Event & {
 
 type ReleaseInfo = {
   available: boolean;
+  channel?: "debug" | "release" | string;
   version: string;
   buildNumber: number;
   apkUrl: string | null;
@@ -23,6 +24,7 @@ type ReleaseInfo = {
 
 const fallbackRelease: ReleaseInfo = {
   available: false,
+  channel: "none",
   version: "준비 중",
   buildNumber: 0,
   apkUrl: null,
@@ -285,7 +287,9 @@ export default function KlolInstallGuide() {
 
       <section className="klol-install-release-card">
         <div>
-          <span className={release.available ? "is-live" : ""}>{release.available ? "APK READY" : "APK 준비 중"}</span>
+          <span className={release.available ? "is-live" : ""}>
+            {release.available ? `APK ${release.channel === "release" ? "RELEASE" : "TEST"}` : "APK 준비 중"}
+          </span>
           <h2>Android APK 배포 상태</h2>
           <p>
             최신 버전 {release.version} · 빌드 {release.buildNumber || "-"} · {release.apkSize ?? "파일 없음"}

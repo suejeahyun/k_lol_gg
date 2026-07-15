@@ -2,6 +2,11 @@ apply plugin: 'com.android.application'
 
 def klolVersionCode = (System.getenv("KLOL_ANDROID_BUILD_NUMBER") ?: "1").toInteger()
 def klolVersionName = System.getenv("KLOL_ANDROID_VERSION_NAME") ?: "0.1.0"
+def klolKeystorePath = System.getenv("KLOL_ANDROID_KEYSTORE_PATH")
+def klolKeystorePassword = System.getenv("KLOL_ANDROID_KEYSTORE_PASSWORD")
+def klolKeyAlias = System.getenv("KLOL_ANDROID_KEY_ALIAS")
+def klolKeyPassword = System.getenv("KLOL_ANDROID_KEY_PASSWORD") ?: klolKeystorePassword
+def klolReleaseSigningEnabled = klolKeystorePath && klolKeystorePassword && klolKeyAlias && klolKeyPassword
 
 android {
     namespace = "gg.klol.app"
@@ -19,8 +24,21 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        if (klolReleaseSigningEnabled) {
+            release {
+                storeFile file(klolKeystorePath)
+                storePassword klolKeystorePassword
+                keyAlias klolKeyAlias
+                keyPassword klolKeyPassword
+            }
+        }
+    }
     buildTypes {
         release {
+            if (klolReleaseSigningEnabled) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

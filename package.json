@@ -28,6 +28,7 @@
     "android:sync": "npx cap sync android",
     "android:open": "npx cap open android",
     "android:check-env": "node tools/check-android-build-env.mjs",
+    "android:create-keystore": "node tools/create-android-release-keystore.mjs",
     "android:build:debug": "node tools/build-android-apk.mjs --mode=debug",
     "android:build:release": "node tools/build-android-apk.mjs --mode=release",
     "assets:app": "node tools/generate-app-assets.mjs"
