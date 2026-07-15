@@ -1,13 +1,18 @@
 import { randomBytes } from "node:crypto";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readdirSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 
 const args = new Set(process.argv.slice(2));
 const keystorePath = resolve(process.env.KLOL_ANDROID_KEYSTORE_PATH || "android/secure/klol-release.keystore");
+const signingEnvPath = resolve(process.env.KLOL_ANDROID_SIGNING_ENV_PATH || "android/secure/release-signing.local.ps1");
 const keyAlias = process.env.KLOL_ANDROID_KEY_ALIAS || "klol-release";
 const storePassword = process.env.KLOL_ANDROID_KEYSTORE_PASSWORD || randomBytes(24).toString("base64url");
 const keyPassword = process.env.KLOL_ANDROID_KEY_PASSWORD || storePassword;
+
+function psQuote(value) {
+  return String(value).replaceAll("`", "``").replaceAll('"', '`"');
+}
 
 function getKeytoolExecutableName() {
   return process.platform === "win32" ? "keytool.exe" : "keytool";
@@ -84,14 +89,26 @@ run(findKeytool(), [
   "-noprompt",
 ]);
 
+writeFileSync(
+  signingEnvPath,
+  [
+    "# K-LOL.GG Android release signing env",
+    "# Local only. Do not commit this file.",
+    `$env:KLOL_ANDROID_KEYSTORE_PATH="${psQuote(keystorePath)}"`,
+    `$env:KLOL_ANDROID_KEYSTORE_PASSWORD="${psQuote(storePassword)}"`,
+    `$env:KLOL_ANDROID_KEY_ALIAS="${psQuote(keyAlias)}"`,
+    `$env:KLOL_ANDROID_KEY_PASSWORD="${psQuote(keyPassword)}"`,
+    "",
+  ].join("\n"),
+  "utf8",
+);
+
 console.log("");
 console.log("Android release keystore created.");
 console.log(`Keystore: ${keystorePath}`);
+console.log(`Local signing env: ${signingEnvPath}`);
 console.log("");
-console.log("Save these PowerShell env commands in your private notes:");
-console.log(`$env:KLOL_ANDROID_KEYSTORE_PATH="${keystorePath}"`);
-console.log(`$env:KLOL_ANDROID_KEYSTORE_PASSWORD="${storePassword}"`);
-console.log(`$env:KLOL_ANDROID_KEY_ALIAS="${keyAlias}"`);
-console.log(`$env:KLOL_ANDROID_KEY_PASSWORD="${keyPassword}"`);
+console.log("Load signing env in PowerShell before release builds:");
+console.log(`. "${signingEnvPath}"`);
 console.log("");
-console.log("Do not commit the keystore file or passwords.");
+console.log("Do not commit android/secure files. Keep a private backup of the keystore and local env file.");

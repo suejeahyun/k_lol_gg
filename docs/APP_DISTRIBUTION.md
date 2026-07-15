@@ -75,16 +75,20 @@ public/downloads/android/latest.json
 npm run android:create-keystore
 ```
 
-이 명령이 출력하는 값을 같은 PowerShell 창에 넣은 뒤 release APK를 빌드합니다.
+이 명령은 다음 두 파일을 만듭니다. 둘 다 `android/secure/` 아래에 있으며 Git에 올라가면 안 됩니다.
+
+```text
+android/secure/klol-release.keystore
+android/secure/release-signing.local.ps1
+```
+
+release APK를 만들 때는 같은 PowerShell 창에서 로컬 서명 env 파일을 먼저 불러옵니다.
 
 ```powershell
+. "E:\k-LOL.GG\0.k_lol_gg\android\secure\release-signing.local.ps1"
 $env:CAPACITOR_SERVER_URL="https://k-lol-gg.vercel.app/app"
 $env:KLOL_ANDROID_BUILD_NUMBER="2"
 $env:KLOL_ANDROID_VERSION_NAME="0.1.0"
-$env:KLOL_ANDROID_KEYSTORE_PATH="E:\k-LOL.GG\0.k_lol_gg\android\secure\klol-release.keystore"
-$env:KLOL_ANDROID_KEYSTORE_PASSWORD="위 명령이 출력한 값"
-$env:KLOL_ANDROID_KEY_ALIAS="klol-release"
-$env:KLOL_ANDROID_KEY_PASSWORD="위 명령이 출력한 값"
 npm run android:build:release
 ```
 
@@ -93,6 +97,12 @@ npm run android:build:release
 ```text
 public/downloads/android/klol-<version>-release.apk
 public/downloads/android/latest.json
+```
+
+배포 전에 APK 메타데이터가 실제 release 파일을 가리키는지 확인합니다.
+
+```powershell
+npm run android:verify-release
 ```
 
 서명 키 설정 전에는 내부 테스트용 debug APK만 사용하세요. 서명 키는 절대 저장소에 커밋하지 않습니다.

@@ -1,4 +1,4 @@
-const CACHE_NAME = "klol-app-shell-v1";
+const CACHE_NAME = "klol-app-shell-v2";
 const PRECACHE_URLS = [
   "/manifest.json",
   "/icons/icon-192.png",

@@ -26,6 +26,7 @@
 *.pem
 *.jks
 *.keystore
+android/secure/
 android/key.properties
 android/keystore.properties
 android/signing.properties

@@ -15,11 +15,15 @@ export async function GET(request: Request) {
     const metadata = JSON.parse(await readFile(metadataPath, "utf8")) as AndroidReleaseInfo;
 
     if (metadata.available && metadata.apkUrl?.startsWith("/downloads/android/")) {
-      return NextResponse.redirect(new URL(metadata.apkUrl, request.url));
+      const response = NextResponse.redirect(new URL(metadata.apkUrl, request.url));
+      response.headers.set("Cache-Control", "no-store, max-age=0");
+      return response;
     }
   } catch {
     // Fall through to the install guide when no APK metadata exists.
   }
 
-  return NextResponse.redirect(new URL("/install", request.url));
+  const response = NextResponse.redirect(new URL("/install", request.url));
+  response.headers.set("Cache-Control", "no-store, max-age=0");
+  return response;
 }

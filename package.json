@@ -31,6 +31,7 @@
     "android:create-keystore": "node tools/create-android-release-keystore.mjs",
     "android:build:debug": "node tools/build-android-apk.mjs --mode=debug",
     "android:build:release": "node tools/build-android-apk.mjs --mode=release",
+    "android:verify-release": "node tools/verify-android-apk-release.mjs",
     "assets:app": "node tools/generate-app-assets.mjs"
   },
   "dependencies": {
