@@ -90,14 +90,16 @@ function readPcChoice() {
 export default function MobileAppGate() {
   const pathname = usePathname();
   const router = useRouter();
+  const isInstallPage = pathname === "/install" || pathname.startsWith("/install/");
   const isMobile = useSyncExternalStore(subscribeToMobile, readIsMobile, () => false);
   const pcChoice = useSyncExternalStore(subscribeToPcChoice, readPcChoice, () => false);
 
   const appPath = useMemo(() => toAppPath(pathname), [pathname]);
-  const shouldShow = isMobile && !pcChoice && !pathname.startsWith("/app");
+  const shouldShow = isMobile && !pcChoice && !pathname.startsWith("/app") && !isInstallPage;
 
   useEffect(() => {
     if (pathname.startsWith("/app")) return;
+    if (isInstallPage) return;
     if (!readIsMobile() || readPcChoice()) return;
 
     const timeoutId = window.setTimeout(() => {
@@ -107,7 +109,7 @@ export default function MobileAppGate() {
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [pathname]);
+  }, [isInstallPage, pathname]);
 
   useEffect(() => {
     if (!shouldShow) return;

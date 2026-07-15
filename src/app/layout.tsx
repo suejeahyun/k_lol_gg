@@ -4,6 +4,7 @@ import RandomBackgroundLayout from "../components/RandomBackgroundLayout";
 import MobileAppGate from "@/components/MobileAppGate";
 import SiteRuntimeSettings from "@/components/SiteRuntimeSettings";
 import SiteAiAssistant from "@/components/ai/SiteAiAssistant";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 
 const appName = "K-LOL.GG";
 const appDescription = "K-LOL.GG 내전 전적, 구인, 랭킹, 팀 밸런스, 운영 도구";
@@ -29,6 +30,7 @@ const mobileAppBootScript = `
   try {
     const path = window.location.pathname || "/";
     if (path.startsWith("/app")) return;
+    if (path === "/install" || path.startsWith("/install/")) return;
     if (!window.matchMedia("(max-width: 820px)").matches) return;
     if (window.sessionStorage.getItem("klol-mobile-pc-view") === "1") return;
 
@@ -121,6 +123,7 @@ export default function RootLayout({
       </head>
       <body className="theme-lol-gold">
         <SiteRuntimeSettings />
+        <ServiceWorkerRegister />
         <RandomBackgroundLayout>
           {children}
           <SiteAiAssistant />

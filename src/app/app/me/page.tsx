@@ -166,6 +166,12 @@ export default async function AppMePage() {
                   <span>비밀번호와 로그인 정보</span>
                 </span>
               </Link>
+              <Link className="klol-app-list-card" href="/install">
+                <span className="klol-app-list-title">
+                  <strong>앱 설치</strong>
+                  <span>Android APK 다운로드와 iPhone 홈 화면 추가</span>
+                </span>
+              </Link>
             </div>
           </AppSection>
         </>

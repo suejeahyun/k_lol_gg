@@ -50,8 +50,11 @@ export function AppInstallActions() {
   return (
     <div className="klol-app-install-actions">
       <button type="button" className="klol-app-primary" onClick={install}>
-        Android 앱 설치 시도
+        홈 화면 설치 시도
       </button>
+      <a className="klol-app-install-link" href="/install">
+        Android APK / iPhone 설치 안내
+      </a>
       <button type="button" className="klol-app-secondary" onClick={copy}>
         설치 링크 복사
       </button>

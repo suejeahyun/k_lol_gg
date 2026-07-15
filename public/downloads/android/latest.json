@@ -1,0 +1,14 @@
+{
+  "available": true,
+  "version": "0.1.0",
+  "buildNumber": 1,
+  "apkUrl": "/downloads/android/klol-0.1.0-debug.apk",
+  "apkSize": "5.64 MB",
+  "updatedAt": "2026-07-15T10:10:32.505Z",
+  "minAndroidVersion": "Android 8.0+",
+  "notes": [
+    "디버그 테스트용 APK입니다. 실제 방 배포 전 release 빌드를 권장합니다.",
+    "설치 중 보안 안내가 나오면 ‘알 수 없는 앱 설치 허용’을 켜주세요.",
+    "APK 안에는 DB, Riot, OpenAI, Kakao 같은 민감한 키가 포함되지 않습니다."
+  ]
+}
