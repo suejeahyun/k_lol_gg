@@ -24,6 +24,76 @@
   font-size: 15px;
 }
 
+.admin-dashboard-command-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 24px;
+}
+
+.admin-dashboard-command-card {
+  position: relative;
+  display: grid;
+  gap: 7px;
+  min-height: 86px;
+  padding: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(96, 165, 250, 0.24);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 85% 12%, rgba(56, 111, 184, 0.2), transparent 34%),
+    rgba(8, 16, 32, 0.84);
+  color: var(--k-text-strong, #f8fafc);
+  text-decoration: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    background 0.16s ease;
+}
+
+.admin-dashboard-command-card::after {
+  content: "";
+  position: absolute;
+  inset: auto 14px 12px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(111, 194, 218, 0.78), transparent);
+  opacity: 0.58;
+}
+
+.admin-dashboard-command-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(111, 194, 218, 0.48);
+  background:
+    radial-gradient(circle at 85% 12%, rgba(56, 111, 184, 0.28), transparent 38%),
+    rgba(10, 24, 46, 0.92);
+}
+
+.admin-dashboard-command-card span {
+  color: rgba(103, 232, 249, 0.92);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.admin-dashboard-command-card strong {
+  position: relative;
+  z-index: 1;
+  color: var(--k-text-strong, #f8fafc);
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1.35;
+}
+
+.admin-dashboard-command-card[data-tone="primary"] {
+  border-color: rgba(214, 176, 92, 0.32);
+  background:
+    radial-gradient(circle at 88% 16%, rgba(214, 176, 92, 0.18), transparent 36%),
+    linear-gradient(135deg, rgba(18, 31, 53, 0.94), rgba(8, 16, 32, 0.9));
+}
+
 .admin-summary-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -176,4 +246,22 @@
 
 .admin-log-item--alert .admin-log-item__type {
   color: #ffb7c4;
+}
+
+@media (max-width: 1280px) {
+  .admin-dashboard-command-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .admin-dashboard-command-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-dashboard-command-grid {
+    grid-template-columns: 1fr;
+  }
 }

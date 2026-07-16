@@ -27,6 +27,7 @@
 *.jks
 *.keystore
 android/secure/
+public/downloads/android/*-debug.apk
 android/key.properties
 android/keystore.properties
 android/signing.properties

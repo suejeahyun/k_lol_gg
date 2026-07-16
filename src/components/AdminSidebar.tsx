@@ -25,40 +25,38 @@ type PublicSiteSettings = {
 
 const menuGroups: AdminSidebarGroup[] = [
   {
-    title: "핵심 운영",
+    title: "오늘 운영",
     items: [
       { href: "/admin/matches", label: "내전 관리", code: "MAT", activePrefixes: ["/admin/matches"] },
       { href: "/admin/progress", label: "이벤트/멸망전", code: "EVT", activePrefixes: ["/admin/progress"] },
-      { href: "/admin/discipline", label: "주의/경고 관리", code: "DIS", activePrefixes: ["/admin/discipline"] },
-    ],
-  },
-  {
-    title: "카카오톡",
-    items: [
-      { href: "/admin/kakao", label: "카카오톡 요약", code: "KAK", activePrefixes: ["/admin/kakao"] },
       { href: "/admin/kakao/recruits", label: "구인 관리", code: "REC", activePrefixes: ["/admin/kakao/recruits"] },
       { href: "/admin/kakao/scrims", label: "스크림구인", code: "SCR", activePrefixes: ["/admin/kakao/scrims"] },
-      { href: "/admin/logs/kakao", label: "카카오톡 로그", code: "RLG", activePrefixes: ["/admin/logs/kakao"] },
       { href: "/admin/kakao/season-apply", label: "내전 참가신청", code: "APP", activePrefixes: ["/admin/kakao/season-apply"] },
+    ],
+  },
+  {
+    title: "회원/징계",
+    items: [
+      { href: "/admin/players", label: "회원/플레이어", code: "PLY", activePrefixes: ["/admin/players", "/admin/users"] },
+      { href: "/admin/discipline", label: "주의/경고/벤", code: "DIS", activePrefixes: ["/admin/discipline"] },
       { href: "/admin/kakao/operation-forms", label: "운영신청", code: "OPR", activePrefixes: ["/admin/kakao/operation-forms"] },
-      { href: "/admin/kakao/settings", label: "카카오톡 설정", code: "SET", activePrefixes: ["/admin/kakao/settings", "/admin/kakao/recruits/settings"] },
+      { href: "/admin/users", label: "계정 목록", code: "USR", activePrefixes: ["/admin/users"] },
     ],
   },
   {
-    title: "데이터",
+    title: "자동화",
     items: [
-      { href: "/admin/players", label: "플레이어 관리", code: "PLY", activePrefixes: ["/admin/players"] },
+      { href: "/admin/kakao", label: "카카오톡 요약", code: "KAK", activePrefixes: ["/admin/kakao"] },
+      { href: "/admin/logs/kakao", label: "카카오톡 로그", code: "RLG", activePrefixes: ["/admin/logs/kakao"] },
       { href: "/admin/riot", label: "Riot 연동", code: "RIT", activePrefixes: ["/admin/riot"] },
-      { href: "/admin/champions", label: "챔피언", code: "CHP", activePrefixes: ["/admin/champions"] },
-      { href: "/admin/seasons", label: "시즌", code: "SSN", activePrefixes: ["/admin/seasons"] },
-    ],
-  },
-  {
-    title: "AI/콘텐츠",
-    items: [
-      { href: "/admin/balance/drafts", label: "AI 밸런스", code: "AIB", activePrefixes: ["/admin/balance/drafts", "/admin/balance/recommendations"] },
       { href: "/admin/balance-ai", label: "K-LOL MMR", code: "MMR", activePrefixes: ["/admin/balance-ai"] },
       { href: "/admin/ai-requests", label: "AI 로그", code: "AIL", activePrefixes: ["/admin/ai-requests"] },
+    ],
+  },
+  {
+    title: "콘텐츠",
+    items: [
+      { href: "/admin/balance/drafts", label: "AI 밸런스", code: "AIB", activePrefixes: ["/admin/balance/drafts", "/admin/balance/recommendations"] },
       { href: "/admin/highlights", label: "하이라이트", code: "VID", activePrefixes: ["/admin/highlights"] },
       { href: "/admin/images", label: "이미지", code: "IMG", activePrefixes: ["/admin/images"] },
     ],
@@ -67,7 +65,10 @@ const menuGroups: AdminSidebarGroup[] = [
     title: "시스템",
     items: [
       { href: "/admin/site-settings", label: "사이트 설정", code: "STE", access: "SUPER", activePrefixes: ["/admin/site-settings"] },
+      { href: "/admin/kakao/settings", label: "카카오톡 설정", code: "SET", activePrefixes: ["/admin/kakao/settings", "/admin/kakao/recruits/settings"] },
       { href: "/admin/security", label: "보안 설정", code: "SEC", activePrefixes: ["/admin/security"] },
+      { href: "/admin/seasons", label: "시즌", code: "SSN", activePrefixes: ["/admin/seasons"] },
+      { href: "/admin/champions", label: "챔피언", code: "CHP", activePrefixes: ["/admin/champions"] },
       { href: "/admin/logs", label: "감사 로그", code: "AUD", activePrefixes: ["/admin/logs"] },
       { href: "/api/admin/backup/players.csv", label: "백업 CSV", code: "CSV", access: "SUPER", external: true },
     ],

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import Pagination from "@/components/Pagination";
 import RecalculateStatsButton from "@/components/admin/RecalculateStatsButton";
 
@@ -143,15 +144,41 @@ export default function AdminHomePage() {
     <div className="page-container">
       <div className="admin-dashboard-header">
         <div>
-          <h1 className="page-title">관리자 대시보드</h1>
+          <h1 className="page-title">운영자 콘솔</h1>
         </div>
         <div className="admin-dashboard-actions">
+          <Link className="admin-button admin-button--primary" href="/admin/matches/new">내전 등록</Link>
+          <Link className="admin-button admin-button--ghost" href="/admin/kakao/recruits">구인 관리</Link>
           <RecalculateStatsButton seasonId={data.currentSeason?.id ?? null} />
-          <a className="admin-button admin-button--ghost" href="/api/admin/backup/players.csv">플레이어 CSV</a>
-          <a className="admin-button admin-button--ghost" href="/api/admin/backup/matches.csv">내전 CSV</a>
-          <a className="admin-button admin-button--ghost" href="/api/logs?download=csv">로그 CSV</a>
         </div>
       </div>
+
+      <section className="admin-dashboard-command-grid" aria-label="관리자 주요 기능">
+        <Link className="admin-dashboard-command-card" data-tone="primary" href="/admin/matches/new">
+          <span>내전</span>
+          <strong>새 내전 등록</strong>
+        </Link>
+        <Link className="admin-dashboard-command-card" href="/admin/progress">
+          <span>진행</span>
+          <strong>이벤트·멸망전</strong>
+        </Link>
+        <Link className="admin-dashboard-command-card" href="/admin/kakao/recruits">
+          <span>구인</span>
+          <strong>카카오 구인 관리</strong>
+        </Link>
+        <Link className="admin-dashboard-command-card" href="/admin/kakao/season-apply">
+          <span>신청</span>
+          <strong>참가 신청 확인</strong>
+        </Link>
+        <Link className="admin-dashboard-command-card" href="/admin/discipline">
+          <span>징계</span>
+          <strong>주의·경고·벤</strong>
+        </Link>
+        <Link className="admin-dashboard-command-card" href="/admin/site-settings">
+          <span>설정</span>
+          <strong>방별 사이트 설정</strong>
+        </Link>
+      </section>
 
       <section className="admin-summary-grid">
         <div className="admin-summary-card admin-summary-card--premium">
@@ -340,9 +367,6 @@ export default function AdminHomePage() {
           <div className="admin-log-section__header">
             <div>
               <h2 className="admin-section-title">최근 오류/실패 기록</h2>
-              <p className="admin-section-description">
-                운영자가 먼저 확인해야 할 최근 실패 로그입니다.
-              </p>
             </div>
           </div>
 
@@ -364,9 +388,6 @@ export default function AdminHomePage() {
         <div className="admin-log-section__header">
           <div>
             <h2 className="admin-section-title">전체 로그</h2>
-            <p className="admin-section-description">
-              관리자 페이지에서 발생한 주요 작업 기록입니다.
-            </p>
           </div>
 
           <div className="admin-log-count">

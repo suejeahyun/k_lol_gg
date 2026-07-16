@@ -42,6 +42,7 @@ export default async function AppAdminPage() {
     activeRecruitCount,
     matchCount,
     userCount,
+    pendingUserCount,
     siteSettings,
     activeEventCount,
     activeDestructionCount,
@@ -53,6 +54,7 @@ export default async function AppAdminPage() {
     prisma.recruitParty.count({ where: { status: "IN_PROGRESS" } }).catch(() => 0),
     prisma.matchSeries.count().catch(() => 0),
     prisma.userAccount.count({ where: { deletedAt: null } }).catch(() => 0),
+    prisma.userAccount.count({ where: { deletedAt: null, status: "PENDING" } }).catch(() => 0),
     getSiteSettings(),
     prisma.eventMatch.count({ where: { status: { in: ["RECRUITING", "TEAM_BUILDING", "IN_PROGRESS"] } } }).catch(() => 0),
     prisma.destructionTournament.count({ where: { status: { in: ["PLANNED", "RECRUITING", "TEAM_BUILDING", "AUCTION", "PRELIMINARY", "TOURNAMENT"] } } }).catch(() => 0),
@@ -87,9 +89,24 @@ export default async function AppAdminPage() {
         <div className="klol-app-admin-hero-actions">
           <Link href="/app/admin/recruits">구인</Link>
           <Link href="/app/admin/matches">내전</Link>
-          <Link href="/admin">전체</Link>
+          <Link href="/admin">PC 관리</Link>
         </div>
       </section>
+
+      <div className="klol-app-admin-health-panel">
+        <Link href="/admin/site-settings" className="klol-app-admin-health-item" data-state={recruitFeatureEnabled ? "ok" : "locked"}>
+          <span>구인 기능</span>
+          <strong>{recruitFeatureEnabled ? "오픈" : "잠금"}</strong>
+        </Link>
+        <Link href="/admin/site-settings" className="klol-app-admin-health-item" data-state={balanceAiFeatureEnabled ? "ok" : "locked"}>
+          <span>K-LOL MMR</span>
+          <strong>{balanceAiFeatureEnabled ? "오픈" : "잠금"}</strong>
+        </Link>
+        <Link href="/app/matches?tab=events" className="klol-app-admin-health-item" data-state={activeProgressCount > 0 ? "warn" : "ok"}>
+          <span>진행 이벤트</span>
+          <strong>{activeProgressCount}</strong>
+        </Link>
+      </div>
 
       <AppSection title="오늘 처리">
         <div className="klol-app-admin-command-grid">
@@ -113,6 +130,16 @@ export default async function AppAdminPage() {
             <strong>{balanceAiFeatureEnabled ? "ON" : "잠금"}</strong>
             <small>유료 기능</small>
           </Link>
+          <Link className="klol-app-admin-command-card" href="/app/admin/users" data-urgent={pendingUserCount > 0}>
+            <span>회원 점검</span>
+            <strong>{pendingUserCount > 0 ? pendingUserCount : userCount}</strong>
+            <small>{pendingUserCount > 0 ? "승인 대기" : "전체 회원"}</small>
+          </Link>
+          <Link className="klol-app-admin-command-card" href="/admin/riot">
+            <span>Riot 연동</span>
+            <strong>체크</strong>
+            <small>동기화 상태</small>
+          </Link>
         </div>
       </AppSection>
 
@@ -125,6 +152,10 @@ export default async function AppAdminPage() {
           <Link href="/app/admin/users">
             <strong>회원</strong>
             <span>{userCount}명</span>
+          </Link>
+          <Link href="/admin/discipline">
+            <strong>징계</strong>
+            <span>주의·벤</span>
           </Link>
           <Link href="/admin/site-settings">
             <strong>설정</strong>
