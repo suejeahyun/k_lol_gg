@@ -1,8 +1,10 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
+import { requireSuperAdminRequest } from "@/lib/auth/requireAdmin";
 import styles from "./page.module.css";
 
 type SearchParams = Record<string, string | string[] | undefined>;
@@ -97,6 +99,9 @@ function targetText(log: { targetType: string | null; targetId: string | number 
 }
 
 export default async function AdminLogsPage(props: PageProps) {
+  const admin = await requireSuperAdminRequest();
+  if (!admin) redirect("/admin");
+
   const params = (await props.searchParams) ?? {};
   const q = getString(params, "q").trim();
   const action = getString(params, "action").trim();

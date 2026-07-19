@@ -4,6 +4,7 @@ import Link from "next/link";
 import AdminRiotSyncControls from "@/components/riot/AdminRiotSyncControls";
 import { getRiotSyncData, isOlderThanDays } from "@/lib/riot/admin-read-model";
 import { getRiotFeatureStatus } from "@/lib/riot/feature";
+import { requireAdminRequest } from "@/lib/auth/requireAdmin";
 import styles from "../page.module.css";
 
 type SearchParams = Record<string, string | string[] | undefined>;
@@ -69,6 +70,8 @@ function durationText(startedAt: Date | null, finishedAt: Date | null) {
 }
 
 export default async function AdminRiotSyncPage(props: PageProps) {
+  const admin = await requireAdminRequest();
+  const isSuperAdmin = admin?.user.role === "SUPER_ADMIN";
   const params = (await props.searchParams) ?? {};
   const status = getString(params, "status").trim();
   const type = getString(params, "type").trim();
@@ -132,7 +135,7 @@ export default async function AdminRiotSyncPage(props: PageProps) {
         <article className={styles.noticeCard}>
           <h2>단일 동기화 실행</h2>
           <p>전체 동기화는 서버리스 타임아웃을 피하기 위해 배치 단위로 처리합니다. 먼저 단일 1명 테스트 후 5명, 10명, 20명 단위로 늘리는 순서를 권장합니다.</p>
-          <AdminRiotSyncControls featureEnabled={feature.enabled} />
+          <AdminRiotSyncControls featureEnabled={feature.enabled} isSuperAdmin={isSuperAdmin} />
         </article>
       </section>
 

@@ -7,8 +7,11 @@ import AdminRecruitNumberResetButton from "../../../recruits/AdminRecruitNumberR
 import AdminRecruitResetAllButton from "../../../recruits/AdminRecruitResetAllButton";
 import { getRecruitAutoResetSettings } from "@/lib/kakao/recruit-auto-reset";
 import { getRecruitIdleAutoFinishSettings } from "@/lib/kakao/recruit-idle-auto-finish";
+import { requireAdminRequest } from "@/lib/auth/requireAdmin";
 
 export default async function AdminKakaoRecruitSettingsPage() {
+  const admin = await requireAdminRequest();
+  const isSuperAdmin = admin?.user.role === "SUPER_ADMIN";
   const [autoResetSettings, autoFinishSettings] = await Promise.all([
     getRecruitAutoResetSettings(),
     getRecruitIdleAutoFinishSettings(),
@@ -33,13 +36,13 @@ export default async function AdminKakaoRecruitSettingsPage() {
         </div>
       </section>
 
-      <section className="admin-card">
+      {isSuperAdmin ? <section className="admin-card">
         <div className="admin-section-head"><div><h2>수동 초기화</h2><p className="admin-muted">번호 초기화와 전체 구인 초기화는 영향 범위가 크므로 이 페이지에서만 처리합니다.</p></div></div>
         <div className="admin-recruit-actions" style={{ justifyContent: "flex-start" }}>
           <AdminRecruitNumberResetButton />
           <AdminRecruitResetAllButton />
         </div>
-      </section>
+      </section> : null}
     </main>
   );
 }

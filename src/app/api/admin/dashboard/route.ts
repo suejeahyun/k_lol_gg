@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
-import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { requireAdminRequest } from "@/lib/auth/requireAdmin";
 import {
   getSiteSettings,
   isSiteFeatureEnabled,
@@ -14,8 +14,11 @@ import { getDeployEnvWarnings } from "@/lib/security/deploy-env";
 const LOG_PAGE_SIZE = 30;
 
 export async function GET(req: NextRequest) {
-  const rejected = await rejectIfNotAdmin();
-  if (rejected) return rejected;
+  const admin = await requireAdminRequest();
+  if (!admin) {
+    return NextResponse.json({ message: "관리자 권한이 필요합니다." }, { status: 401 });
+  }
+  const isSuperAdmin = admin.user.role === "SUPER_ADMIN";
 
   try {
     const pageParam = req.nextUrl.searchParams.get("page");
@@ -94,7 +97,7 @@ export async function GET(req: NextRequest) {
         },
       }).catch(() => 0),
 
-      prisma.adminLog.findMany({
+      isSuperAdmin ? prisma.adminLog.findMany({
         where: {
           OR: [
             { action: { contains: "ERROR", mode: "insensitive" } },
@@ -106,9 +109,9 @@ export async function GET(req: NextRequest) {
         orderBy: { createdAt: "desc" },
         take: 5,
         select: { id: true, action: true, message: true, createdAt: true },
-      }),
+      }) : Promise.resolve([]),
 
-      prisma.adminLog.findMany({
+      isSuperAdmin ? prisma.adminLog.findMany({
         orderBy: { createdAt: "desc" },
         skip,
         take: LOG_PAGE_SIZE,
@@ -118,9 +121,9 @@ export async function GET(req: NextRequest) {
           message: true,
           createdAt: true,
         },
-      }),
+      }) : Promise.resolve([]),
 
-      prisma.adminLog.count(),
+      isSuperAdmin ? prisma.adminLog.count() : Promise.resolve(0),
 
       getSiteSettings(),
     ]);
@@ -137,9 +140,10 @@ export async function GET(req: NextRequest) {
       feature,
       enabled: isSiteFeatureEnabled(siteSettings, feature),
     }));
-    const deployWarnings = getDeployEnvWarnings();
+    const deployWarnings = isSuperAdmin ? getDeployEnvWarnings() : [];
 
     return NextResponse.json({
+      currentAdminRole: admin.user.role,
       currentSeason,
       playerCount,
       matchCount,
@@ -151,19 +155,19 @@ export async function GET(req: NextRequest) {
       siteSettings: {
         siteName: siteSettings.siteName,
         roomName: siteSettings.roomName,
-        planStatus: siteSettings.planStatus,
+        planStatus: isSuperAdmin ? siteSettings.planStatus : null,
         themePreset: siteSettings.themePreset,
-        trialEndsAt: siteSettings.trialEndsAt,
-        billingOwner: siteSettings.billingOwner,
+        trialEndsAt: isSuperAdmin ? siteSettings.trialEndsAt : null,
+        billingOwner: isSuperAdmin ? siteSettings.billingOwner : null,
         featureStates,
         lockedFeatureCount: featureStates.filter((item) => !item.enabled).length,
-        envReady: {
+        envReady: isSuperAdmin ? {
           superAdmin: Boolean(process.env.SUPER_ADMIN_ID),
           database: Boolean(process.env.DATABASE_URL),
           riotKey: Boolean(process.env.RIOT_API_KEY || process.env.RIOT_API_TOKEN),
           deployReady: deployWarnings.length === 0,
           deployWarnings,
-        },
+        } : null,
       },
       recentErrors: recentErrors.map((log) => ({
         id: log.id,

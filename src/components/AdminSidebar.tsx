@@ -50,7 +50,7 @@ const menuGroups: AdminSidebarGroup[] = [
       { href: "/admin/logs/kakao", label: "카카오톡 로그", code: "RLG", activePrefixes: ["/admin/logs/kakao"] },
       { href: "/admin/riot", label: "Riot 연동", code: "RIT", activePrefixes: ["/admin/riot"] },
       { href: "/admin/balance-ai", label: "K-LOL MMR", code: "MMR", activePrefixes: ["/admin/balance-ai"] },
-      { href: "/admin/ai-requests", label: "AI 로그", code: "AIL", activePrefixes: ["/admin/ai-requests"] },
+      { href: "/admin/ai-requests", label: "AI 로그", code: "AIL", access: "SUPER", activePrefixes: ["/admin/ai-requests"] },
     ],
   },
   {
@@ -69,7 +69,7 @@ const menuGroups: AdminSidebarGroup[] = [
       { href: "/admin/security", label: "보안 설정", code: "SEC", activePrefixes: ["/admin/security"] },
       { href: "/admin/seasons", label: "시즌", code: "SSN", activePrefixes: ["/admin/seasons"] },
       { href: "/admin/champions", label: "챔피언", code: "CHP", activePrefixes: ["/admin/champions"] },
-      { href: "/admin/logs", label: "감사 로그", code: "AUD", activePrefixes: ["/admin/logs"] },
+      { href: "/admin/logs", label: "감사 로그", code: "AUD", access: "SUPER", activePrefixes: ["/admin/logs"] },
       { href: "/api/admin/backup/players.csv", label: "백업 CSV", code: "CSV", access: "SUPER", external: true },
     ],
   },

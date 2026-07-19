@@ -5,6 +5,7 @@ import styles from "./AdminRiotSyncControls.module.css";
 
 type Props = {
   featureEnabled: boolean;
+  isSuperAdmin: boolean;
 };
 
 type BulkResult = {
@@ -65,7 +66,7 @@ function getBulkSummary(result: BulkResult | null) {
   );
 }
 
-export default function AdminRiotSyncControls({ featureEnabled }: Props) {
+export default function AdminRiotSyncControls({ featureEnabled, isSuperAdmin }: Props) {
   const [playerId, setPlayerId] = useState("");
   const [matchCount, setMatchCount] = useState("20");
   const [rankOnly, setRankOnly] = useState(false);
@@ -189,7 +190,7 @@ export default function AdminRiotSyncControls({ featureEnabled }: Props) {
         {error && <div className={styles.error}>{error}</div>}
       </form>
 
-      <section className={styles.card}>
+      {isSuperAdmin ? <section className={styles.card}>
         <div className={styles.header}>
           <div>
             <strong>배치 동기화 / 실패 재시도</strong>
@@ -241,7 +242,7 @@ export default function AdminRiotSyncControls({ featureEnabled }: Props) {
         {bulkMessage && <div className={styles.message}>{bulkMessage}</div>}
         {bulkError && <div className={styles.error}>{bulkError}</div>}
         {getBulkSummary(bulkResult)}
-      </section>
+      </section> : null}
     </div>
   );
 }

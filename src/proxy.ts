@@ -19,6 +19,13 @@ const SUPER_ADMIN_API_PATTERNS = [
   /^\/api\/admin\/maintenance\//,
 ];
 
+const SUPER_ADMIN_PAGE_PATTERNS = [
+  /^\/admin\/site-settings(?:\/|$)/,
+  /^\/admin\/ai-requests(?:\/|$)/,
+  /^\/admin\/logs(?:\/stats)?\/?$/,
+  /^\/admin\/riot\/accounts\/bulk-link(?:\/|$)/,
+];
+
 function isLegacyAdminTokenEnabled() {
   return process.env.NODE_ENV !== "production" || process.env.ALLOW_LEGACY_ADMIN_TOKEN === "true";
 }
@@ -46,6 +53,10 @@ async function getApprovedAdminRole(token?: string) {
 
 function isSuperAdminApi(pathname: string) {
   return SUPER_ADMIN_API_PATTERNS.some((pattern) => pattern.test(pathname));
+}
+
+function isSuperAdminPage(pathname: string) {
+  return SUPER_ADMIN_PAGE_PATTERNS.some((pattern) => pattern.test(pathname));
 }
 
 function withSecurityHeaders(response: NextResponse) {
@@ -112,10 +123,11 @@ export async function proxy(req: NextRequest) {
     return withSecurityHeaders(NextResponse.next());
   }
 
-  const rejected = await rejectAdminRequest(req, false);
+  const requireSuperAdmin = isSuperAdminPage(pathname);
+  const rejected = await rejectAdminRequest(req, requireSuperAdmin);
   if (!rejected) return withSecurityHeaders(NextResponse.next());
 
-  return withSecurityHeaders(NextResponse.redirect(new URL("/admin/login", req.url)));
+  return withSecurityHeaders(NextResponse.redirect(new URL(requireSuperAdmin ? "/admin" : "/admin/login", req.url)));
 }
 
 export const config = {

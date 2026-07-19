@@ -218,7 +218,7 @@ export default function AdminUsersPage() {
                 <col style={{ width: "8%" }} />
                 <col style={{ width: "8%" }} />
                 <col style={{ width: "12%" }} />
-                <col style={{ width: "7%" }} />
+                {isSuperAdmin ? <col style={{ width: "7%" }} /> : null}
                 <col style={{ width: "6%" }} />
               </colgroup>
               <thead>
@@ -231,7 +231,7 @@ export default function AdminUsersPage() {
                   <th>상태</th>
                   <th>권한</th>
                   <th>연결</th>
-                  <th>2FA</th>
+                  {isSuperAdmin ? <th>2FA</th> : null}
                   <th>관리</th>
                 </tr>
               </thead>
@@ -250,7 +250,7 @@ export default function AdminUsersPage() {
                       <td><StatusBadge status={user.status} /></td>
                       <td><RoleBadge role={user.role} /></td>
                       <td title={getConnectionLabel(user)} style={compactCellStyle}>{getConnectionLabel(user)}</td>
-                      <td><TwoFactorBadge user={user} /></td>
+                      {isSuperAdmin ? <td><TwoFactorBadge user={user} /></td> : null}
                       <td>
                         <div className="admin-actions" style={{ display: "flex", flexWrap: "wrap", gap: 4, justifyContent: "center" }}>
                           <Link className="chip-button" href={`/admin/users/${user.id}`}>상세</Link>

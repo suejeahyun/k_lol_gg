@@ -9,8 +9,11 @@ import AdminRecruitAutoFinishSettings from "../../recruits/AdminRecruitAutoFinis
 import AdminRecruitNumberResetButton from "../../recruits/AdminRecruitNumberResetButton";
 import AdminRecruitResetAllButton from "../../recruits/AdminRecruitResetAllButton";
 import KakaoOperationSettingsClient from "./KakaoOperationSettingsClient";
+import { requireAdminRequest } from "@/lib/auth/requireAdmin";
 
 export default async function AdminKakaoSettingsPage() {
+  const admin = await requireAdminRequest();
+  const isSuperAdmin = admin?.user.role === "SUPER_ADMIN";
   const [settings, autoResetSettings, idleFinishSettings] = await Promise.all([
     getKakaoOperationSettings(),
     getRecruitAutoResetSettings(),
@@ -42,7 +45,7 @@ export default async function AdminKakaoSettingsPage() {
         </div>
       </section>
 
-      <section className="admin-card" style={{ marginTop: 24 }}>
+      {isSuperAdmin ? <section className="admin-card" style={{ marginTop: 24 }}>
         <div className="admin-section-head">
           <div>
             <h2>수동 초기화</h2>
@@ -53,7 +56,7 @@ export default async function AdminKakaoSettingsPage() {
           <AdminRecruitNumberResetButton />
           <AdminRecruitResetAllButton />
         </div>
-      </section>
+      </section> : null}
     </main>
   );
 }

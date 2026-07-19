@@ -223,11 +223,11 @@ export default function AdminUserDetailPage() {
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             <StatusBadge status={user.status} />
             <RoleBadge role={user.role} />
-            <TwoFactorBadge user={user} />
+            {isSuperAdmin ? <TwoFactorBadge user={user} /> : null}
           </div>
-          <p className="admin-muted" style={{ marginTop: 14 }}>
+          {isSuperAdmin ? <p className="admin-muted" style={{ marginTop: 14 }}>
             2FA 등록일: {user.adminTotpEnabledAt ? formatDate(user.adminTotpEnabledAt) : "-"}
-          </p>
+          </p> : null}
         </div>
       </section>
 
@@ -236,7 +236,7 @@ export default function AdminUserDetailPage() {
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
           <button className="admin-button" type="button" disabled={busy || user.status === "APPROVED"} onClick={handleApprove}>승인</button>
           <button className="admin-button admin-button--danger" type="button" disabled={busy || user.status === "REJECTED"} onClick={handleReject}>거절</button>
-          <button className="admin-button admin-button--ghost" type="button" disabled={busy || user.status === "PENDING"} onClick={handleResetStatus}>승인 대기로</button>
+          {isSuperAdmin ? <button className="admin-button admin-button--ghost" type="button" disabled={busy || user.status === "PENDING"} onClick={handleResetStatus}>승인 대기로</button> : null}
         </div>
       </section>
 

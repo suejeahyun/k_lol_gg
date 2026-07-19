@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
-import { requireAdminRequest } from "@/lib/auth/requireAdmin";
+import { requireSuperAdminRequest } from "@/lib/auth/requireAdmin";
 import { prisma } from "@/lib/prisma/client";
 import styles from "../logs/page.module.css";
 
@@ -104,8 +104,8 @@ function modeLabel(mode: string) {
 }
 
 export default async function AdminAiRequestsPage(props: PageProps) {
-  const admin = await requireAdminRequest();
-  if (!admin) redirect("/admin/login");
+  const admin = await requireSuperAdminRequest();
+  if (!admin) redirect("/admin");
 
   const params = (await props.searchParams) ?? {};
   const q = getString(params, "q").trim();

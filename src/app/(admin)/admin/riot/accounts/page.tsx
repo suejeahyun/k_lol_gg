@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { getRiotAccountsData } from "@/lib/riot/admin-read-model";
+import { requireAdminRequest } from "@/lib/auth/requireAdmin";
 import styles from "../page.module.css";
 
 type SearchParams = Record<string, string | string[] | undefined>;
@@ -76,6 +77,8 @@ function ownershipBadge(account: { isVerified: boolean; verificationMethod: stri
 }
 
 export default async function AdminRiotAccountsPage(props: PageProps) {
+  const admin = await requireAdminRequest();
+  const isSuperAdmin = admin?.user.role === "SUPER_ADMIN";
   const params = (await props.searchParams) ?? {};
   const q = getString(params, "q").trim();
   const status = getString(params, "status").trim();
@@ -102,7 +105,7 @@ export default async function AdminRiotAccountsPage(props: PageProps) {
           <p className={styles.desc}>플레이어와 연결된 Riot ID, 솔랭 캐시, 검증 상태, 동기화 실패 사유를 확인합니다. PUUID는 화면에서 마스킹합니다.</p>
         </div>
         <div className={styles.actions}>
-          <Link className={styles.primaryButton} href="/admin/riot/accounts/bulk-link">일괄 연결</Link>
+          {isSuperAdmin ? <Link className={styles.primaryButton} href="/admin/riot/accounts/bulk-link">일괄 연결</Link> : null}
           <Link className={styles.secondaryButton} href="/admin/riot">대시보드</Link>
           <Link className={styles.secondaryButton} href="/admin/riot/logs">로그</Link>
           <Link className={styles.secondaryButton} href="/admin/riot/sync">동기화</Link>

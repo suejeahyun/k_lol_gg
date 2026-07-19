@@ -1,5 +1,7 @@
 ﻿import Link from "next/link";
 import { getAdminLogsStatsDashboardData } from "@/lib/admin/logs-stats-dashboard-data";
+import { redirect } from "next/navigation";
+import { requireSuperAdminRequest } from "@/lib/auth/requireAdmin";
 import AdminLogsStatsDashboard from "./AdminLogsStatsDashboard";
 import styles from "./page.module.css";
 
@@ -10,6 +12,9 @@ type PageProps = {
 };
 
 export default async function AdminLogsStatsPage({ searchParams }: PageProps) {
+  const admin = await requireSuperAdminRequest();
+  if (!admin) redirect("/admin");
+
   const params = await searchParams;
   const days = Number(params?.days ?? "30");
   const data = await getAdminLogsStatsDashboardData({ days });

@@ -3,12 +3,12 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
-import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { rejectIfNotSuperAdmin } from "@/lib/auth/requireAdmin";
 import { writeAdminLog } from "@/lib/admin-log";
 import { getCurrentSeasonId, recalculateSeasonStats } from "@/lib/stats/recalculate";
 
 export async function POST(req: NextRequest) {
-  const rejected = await rejectIfNotAdmin();
+  const rejected = await rejectIfNotSuperAdmin();
   if (rejected) return rejected;
 
   try {

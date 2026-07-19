@@ -6,6 +6,7 @@ import Pagination from "@/components/Pagination";
 import RecalculateStatsButton from "@/components/admin/RecalculateStatsButton";
 
 type DashboardData = {
+  currentAdminRole: "ADMIN" | "SUPER_ADMIN";
   currentSeason: {
     id: number;
     name: string;
@@ -21,7 +22,7 @@ type DashboardData = {
   siteSettings: {
     siteName: string;
     roomName: string | null;
-    planStatus: "ACTIVE" | "LOCKED";
+    planStatus: "ACTIVE" | "LOCKED" | null;
     themePreset: "dark-modern" | "neon-cyber" | "black-gold";
     trialEndsAt: string | null;
     billingOwner: string | null;
@@ -40,7 +41,7 @@ type DashboardData = {
         level: "missing" | "weak";
         message: string;
       }[];
-    };
+    } | null;
   };
   latestMatch: {
     id: number;
@@ -140,6 +141,8 @@ export default function AdminHomePage() {
     );
   }
 
+  const isSuperAdmin = data.currentAdminRole === "SUPER_ADMIN";
+
   return (
     <div className="page-container">
       <div className="admin-dashboard-header">
@@ -149,7 +152,7 @@ export default function AdminHomePage() {
         <div className="admin-dashboard-actions">
           <Link className="admin-button admin-button--primary" href="/admin/matches/new">내전 등록</Link>
           <Link className="admin-button admin-button--ghost" href="/admin/kakao/recruits">구인 관리</Link>
-          <RecalculateStatsButton seasonId={data.currentSeason?.id ?? null} />
+          {isSuperAdmin ? <RecalculateStatsButton seasonId={data.currentSeason?.id ?? null} /> : null}
         </div>
       </div>
 
@@ -174,14 +177,16 @@ export default function AdminHomePage() {
           <span>징계</span>
           <strong>주의·경고·벤</strong>
         </Link>
-        <Link className="admin-dashboard-command-card" href="/admin/site-settings">
-          <span>설정</span>
-          <strong>방별 사이트 설정</strong>
-        </Link>
+        {isSuperAdmin ? (
+          <Link className="admin-dashboard-command-card" href="/admin/site-settings">
+            <span>설정</span>
+            <strong>방별 사이트 설정</strong>
+          </Link>
+        ) : null}
       </section>
 
       <section className="admin-summary-grid">
-        <div className="admin-summary-card admin-summary-card--premium">
+        {isSuperAdmin ? <div className="admin-summary-card admin-summary-card--premium">
           <div className="admin-summary-card__label">운영 사이트</div>
           <div className="admin-summary-card__value admin-summary-card__value--small">
             {data.siteSettings.siteName}
@@ -189,9 +194,9 @@ export default function AdminHomePage() {
           <div className="admin-summary-card__meta">
             {data.siteSettings.roomName || "방 이름 미설정"} · {data.siteSettings.planStatus === "ACTIVE" ? "유료 활성" : "유료 잠금"}
           </div>
-        </div>
+        </div> : null}
 
-        <div className="admin-summary-card">
+        {isSuperAdmin ? <div className="admin-summary-card">
           <div className="admin-summary-card__label">잠긴 기능</div>
           <div className="admin-summary-card__value">
             {data.siteSettings.lockedFeatureCount.toLocaleString()}개
@@ -199,7 +204,7 @@ export default function AdminHomePage() {
           <div className="admin-summary-card__meta">
             카카오·구인·랭킹·랜덤팀·Riot 기준
           </div>
-        </div>
+        </div> : null}
 
         <div className="admin-summary-card">
           <div className="admin-summary-card__label">현재 시즌</div>
@@ -297,7 +302,7 @@ export default function AdminHomePage() {
         </div>
       </section>
 
-      <section className="admin-log-section admin-dashboard-control">
+      {isSuperAdmin && data.siteSettings.envReady ? <section className="admin-log-section admin-dashboard-control">
         <div className="admin-log-section__header">
           <div>
             <h2 className="admin-section-title">방별 운영 설정</h2>
@@ -332,9 +337,9 @@ export default function AdminHomePage() {
           <div data-ready={data.siteSettings.envReady.riotKey ? "true" : "false"}>Riot API KEY</div>
           <div data-ready={data.siteSettings.envReady.deployReady ? "true" : "false"}>배포 보안</div>
         </div>
-      </section>
+      </section> : null}
 
-      {data.siteSettings.envReady.deployWarnings.length > 0 && (
+      {isSuperAdmin && data.siteSettings.envReady && data.siteSettings.envReady.deployWarnings.length > 0 && (
         <section className="admin-log-section admin-log-section--alert admin-env-warning-section">
           <div className="admin-log-section__header">
             <div>
@@ -362,7 +367,7 @@ export default function AdminHomePage() {
       )}
 
 
-      {data.recentErrors.length > 0 && (
+      {isSuperAdmin && data.recentErrors.length > 0 && (
         <section className="admin-log-section admin-log-section--alert">
           <div className="admin-log-section__header">
             <div>
@@ -384,7 +389,7 @@ export default function AdminHomePage() {
         </section>
       )}
 
-      <section className="admin-log-section">
+      {isSuperAdmin ? <section className="admin-log-section">
         <div className="admin-log-section__header">
           <div>
             <h2 className="admin-section-title">전체 로그</h2>
@@ -429,7 +434,7 @@ export default function AdminHomePage() {
             />
           </>
         )}
-      </section>
+      </section> : null}
     </div>
   );
 }

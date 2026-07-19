@@ -1,7 +1,9 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import AdminRiotBulkLinkControls from "@/components/riot/AdminRiotBulkLinkControls";
+import { requireSuperAdminRequest } from "@/lib/auth/requireAdmin";
 import { getRiotBulkLinkPreview } from "@/lib/riot/bulk-link";
 import { getRiotFeatureStatus } from "@/lib/riot/feature";
 import styles from "../../page.module.css";
@@ -34,6 +36,9 @@ function formatDate(value: Date | string | null | undefined) {
 }
 
 export default async function AdminRiotBulkLinkPage(props: PageProps) {
+  const admin = await requireSuperAdminRequest();
+  if (!admin) redirect("/admin/riot/accounts");
+
   const params = (await props.searchParams) ?? {};
   const q = getString(params, "q").trim();
   const batchSize = getNumber(params, "batchSize", 10, 1, 30);

@@ -41,9 +41,9 @@ export async function GET(_req: NextRequest, context: { params: Promise<{ userAc
         role: user.role,
         status: user.status,
         createdAt: user.createdAt.toISOString(),
-        adminTotpEnabled: user.adminTotpEnabled,
-        adminTotpEnabledAt: user.adminTotpEnabledAt?.toISOString() ?? null,
-        adminTotpSetupPending: Boolean(user.adminTotpSecret && !user.adminTotpEnabled),
+        adminTotpEnabled: admin.user.role === "SUPER_ADMIN" ? user.adminTotpEnabled : false,
+        adminTotpEnabledAt: admin.user.role === "SUPER_ADMIN" ? user.adminTotpEnabledAt?.toISOString() ?? null : null,
+        adminTotpSetupPending: admin.user.role === "SUPER_ADMIN" ? Boolean(user.adminTotpSecret && !user.adminTotpEnabled) : false,
         player: user.player
           ? {
               id: user.player.id,
