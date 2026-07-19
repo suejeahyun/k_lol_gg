@@ -15,6 +15,7 @@ import DestructionFinalGenerator from "@/components/admin/DestructionFinalGenera
 import DestructionCompleteForm from "@/components/admin/DestructionCompleteForm";
 import DestructionAuctionManager from "@/components/admin/DestructionAuctionManager";
 import DestructionRecruitmentManager from "@/components/admin/DestructionRecruitmentManager";
+import DestructionParticipantReplacementManager from "@/components/admin/DestructionParticipantReplacementManager";
 import {
   getRiotDestructionVerification,
   summarizeRiotDestructionVerifications,
@@ -199,6 +200,16 @@ export default async function AdminDestructionTournamentDetailPage({
           },
           orderBy: {
             id: "asc",
+          },
+        },
+        participantReplacements: {
+          include: {
+            team: true,
+            outgoingPlayer: true,
+            incomingPlayer: true,
+          },
+          orderBy: {
+            effectiveAt: "desc",
           },
         },
         participationApplies: {
@@ -505,6 +516,24 @@ export default async function AdminDestructionTournamentDetailPage({
           );
         })}
       </nav>
+
+      {selectedStep === "PRELIMINARY" || selectedStep === "TOURNAMENT" || selectedStep === "FINAL" ? (
+        <DestructionParticipantReplacementManager
+          tournamentId={tournament.id}
+          participants={participantViewModels}
+          replacements={tournament.participantReplacements.map((replacement) => ({
+            id: replacement.id,
+            teamName: replacement.team.name,
+            outgoingPlayerName: `${replacement.outgoingPlayer.nickname}#${replacement.outgoingPlayer.tag}`,
+            incomingPlayerName: `${replacement.incomingPlayer.nickname}#${replacement.incomingPlayer.tag}`,
+            outgoingPosition: replacement.outgoingPosition,
+            incomingPosition: replacement.incomingPosition,
+            reason: replacement.reason,
+            effectiveAt: replacement.effectiveAt.toISOString(),
+          }))}
+          disabled={tournament.status === "COMPLETED" || tournament.status === "CANCELLED"}
+        />
+      ) : null}
 
       {selectedStep === "RECRUITING" ? (
       <AdminStepSection

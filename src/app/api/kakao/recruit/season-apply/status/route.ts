@@ -4,6 +4,7 @@ import { addDays, getKstDateKey, getKstDisplayDate, getKstStartOfDate } from "@/
 import { prisma } from "@/lib/prisma/client";
 import { classifyKakaoRecruitMessage, buildWrongRecruitApiReply } from "@/lib/kakao/recruit-message-kind";
 import { getRequiredSecretInProduction, matchesRequestSecret } from "@/lib/security/secrets";
+import { logServerError } from "@/lib/server/safe-log";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -85,10 +86,6 @@ function jsonReply(reply: string, extra: Record<string, unknown> = {}, status = 
       },
     },
   );
-}
-
-function emptyReply(extra: Record<string, unknown> = {}) {
-  return jsonReply("", { empty: true, ...extra });
 }
 
 function rejectIfInvalidSecret(req: NextRequest, bodySecret: unknown) {
@@ -364,7 +361,8 @@ async function createStatusReply(req: NextRequest, body?: ApplyStatusBody) {
   });
 
   if (!season) {
-    return emptyReply({
+    return jsonReply("[K-LOL.GG 내전현황]\n현재 활성화된 시즌이 없습니다.", {
+      empty: true,
       activeSeasonId: null,
       total: 0,
       warning: "활성 시즌이 없습니다.",
@@ -471,7 +469,8 @@ async function createStatusReply(req: NextRequest, body?: ApplyStatusBody) {
   ];
 
   if (entries.length === 0) {
-    return emptyReply({
+    return jsonReply("[K-LOL.GG 내전현황]\n오늘 등록된 내전 신청이 없습니다.\n\n참가 신청: 내전참가", {
+      empty: true,
       activeSeasonId: season.id,
       seasonName: season.name,
       total: 0,
@@ -524,8 +523,10 @@ export async function GET(req: NextRequest) {
   try {
     return await createStatusReply(req);
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return jsonReply(`[K-LOL.GG 내전현황]\n현황을 불러오지 못했습니다.\n${message}`, {}, 500);
+    logServerError("[KAKAO_SEASON_APPLY_STATUS_GET_ERROR]", error, {
+      endpoint: "/api/kakao/recruit/season-apply/status",
+    });
+    return jsonReply("[K-LOL.GG 내전현황]\n현황을 불러오지 못했습니다.\n잠시 후 다시 시도해주세요.", {}, 500);
   }
 }
 
@@ -537,7 +538,9 @@ export async function POST(req: NextRequest) {
     const body = (await req.json().catch(() => ({}))) as ApplyStatusBody;
     return await createStatusReply(req, body);
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return jsonReply(`[K-LOL.GG 내전현황]\n현황을 불러오지 못했습니다.\n${message}`, {}, 500);
+    logServerError("[KAKAO_SEASON_APPLY_STATUS_POST_ERROR]", error, {
+      endpoint: "/api/kakao/recruit/season-apply/status",
+    });
+    return jsonReply("[K-LOL.GG 내전현황]\n현황을 불러오지 못했습니다.\n잠시 후 다시 시도해주세요.", {}, 500);
   }
 }

@@ -141,9 +141,11 @@ model Player {
 
   eventParticipants EventParticipant[]
 
-  destructionCaptainTeams DestructionTeam[]
-  destructionParticipants DestructionParticipant[]
-  teamBalanceDraftPlayers TeamBalanceDraftPlayer[]
+  destructionCaptainTeams    DestructionTeam[]
+  destructionParticipants    DestructionParticipant[]
+  destructionReplacementsOut DestructionParticipantReplacement[] @relation("DestructionReplacementOutgoingPlayer")
+  destructionReplacementsIn  DestructionParticipantReplacement[] @relation("DestructionReplacementIncomingPlayer")
+  teamBalanceDraftPlayers    TeamBalanceDraftPlayer[]
 
   riotAccount      PlayerRiotAccount?
   soloRankSnapshot PlayerSoloRankSnapshot?
@@ -528,11 +530,12 @@ model DestructionTournament {
 
   galleryImage GalleryImage? @relation(fields: [galleryImageId], references: [id])
 
-  teams                DestructionTeam[]
-  participants         DestructionParticipant[]
-  matches              DestructionMatch[]
-  participationApplies DestructionParticipationApply[]
-  scrimRecruits        DestructionScrimRecruit[]
+  teams                   DestructionTeam[]
+  participants            DestructionParticipant[]
+  matches                 DestructionMatch[]
+  participationApplies    DestructionParticipationApply[]
+  scrimRecruits           DestructionScrimRecruit[]
+  participantReplacements DestructionParticipantReplacement[]
 
   @@index([status, startDate])
   @@index([galleryImageId])
@@ -557,10 +560,11 @@ model DestructionTeam {
 
   members DestructionParticipant[]
 
-  matchesA               DestructionMatch[]        @relation("DestructionTeamA")
-  matchesB               DestructionMatch[]        @relation("DestructionTeamB")
-  scrimRequesterRecruits DestructionScrimRecruit[] @relation("ScrimRequesterTeam")
-  scrimOpponentRecruits  DestructionScrimRecruit[] @relation("ScrimOpponentTeam")
+  matchesA                DestructionMatch[]                  @relation("DestructionTeamA")
+  matchesB                DestructionMatch[]                  @relation("DestructionTeamB")
+  scrimRequesterRecruits  DestructionScrimRecruit[]           @relation("ScrimRequesterTeam")
+  scrimOpponentRecruits   DestructionScrimRecruit[]           @relation("ScrimOpponentTeam")
+  participantReplacements DestructionParticipantReplacement[]
 
   @@unique([tournamentId, name])
   @@index([tournamentId, points, wins, losses])
@@ -581,12 +585,38 @@ model DestructionParticipant {
   drawOrder     Int?
   soldAt        DateTime?
 
-  tournament DestructionTournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
-  team       DestructionTeam?      @relation(fields: [teamId], references: [id], onDelete: SetNull)
-  player     Player                @relation(fields: [playerId], references: [id])
+  tournament   DestructionTournament               @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  team         DestructionTeam?                    @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  player       Player                              @relation(fields: [playerId], references: [id])
+  replacements DestructionParticipantReplacement[]
 
   @@unique([tournamentId, playerId])
   @@index([tournamentId, teamId])
+}
+
+model DestructionParticipantReplacement {
+  id               Int      @id @default(autoincrement())
+  tournamentId     Int
+  teamId           Int
+  participantId    Int
+  outgoingPlayerId Int
+  incomingPlayerId Int
+  outgoingPosition Position
+  incomingPosition Position
+  reason           String   @db.Text
+  effectiveAt      DateTime @default(now())
+  createdAt        DateTime @default(now())
+
+  tournament     DestructionTournament  @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  team           DestructionTeam        @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  participant    DestructionParticipant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  outgoingPlayer Player                 @relation("DestructionReplacementOutgoingPlayer", fields: [outgoingPlayerId], references: [id])
+  incomingPlayer Player                 @relation("DestructionReplacementIncomingPlayer", fields: [incomingPlayerId], references: [id])
+
+  @@index([tournamentId, effectiveAt])
+  @@index([participantId])
+  @@index([outgoingPlayerId])
+  @@index([incomingPlayerId])
 }
 
 model DestructionMatch {

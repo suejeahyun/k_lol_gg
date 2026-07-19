@@ -66,22 +66,45 @@ export function rejectIfInvalidOrigin(request: NextRequest) {
   );
 }
 
-export function getRequiredHeaderSecret(pathname: string) {
+type KakaoSecretKind = "recruit" | "openchat" | "search-player";
 
-  if (pathname.startsWith("/api/kakao") && process.env.SECURITY_REQUIRE_KAKAO_SECRET === "true") {
-    return (
-      process.env.KAKAO_RECRUIT_SECRET ||
-      process.env.KAKAO_OPENCHAT_SECRET ||
-      process.env.KAKAO_SEARCH_PLAYER_SECRET ||
-      null
-    );
+function getKakaoSecretKind(pathname: string): KakaoSecretKind | null {
+  if (!pathname.startsWith("/api/kakao/")) return null;
+
+  if (pathname === "/api/kakao/web-player-search") return null;
+  if (pathname === "/api/kakao/search-player") return "search-player";
+  if (pathname === "/api/kakao/openchat" || pathname === "/api/kakao/scheduled-notice") {
+    return "openchat";
   }
 
-  return null;
+  return "recruit";
+}
+
+function getKakaoSecret(kind: KakaoSecretKind) {
+  if (kind === "recruit") return process.env.KAKAO_RECRUIT_SECRET?.trim() || null;
+  if (kind === "openchat") return process.env.KAKAO_OPENCHAT_SECRET?.trim() || null;
+
+  return (
+    process.env.KAKAO_SEARCH_PLAYER_SECRET?.trim() ||
+    process.env.KAKAO_OPENCHAT_SECRET?.trim() ||
+    null
+  );
+}
+
+export function getRequiredHeaderSecret(pathname: string) {
+  if (process.env.SECURITY_REQUIRE_KAKAO_SECRET !== "true") return null;
+
+  const kind = getKakaoSecretKind(pathname);
+  return kind ? getKakaoSecret(kind) : null;
 }
 
 export function getReceivedServerSecret(request: NextRequest) {
+  const kind = getKakaoSecretKind(request.nextUrl.pathname);
+  const kakaoHeader = kind
+    ? request.headers.get(`x-kakao-${kind}-secret`)
+    : null;
   const headerSecret =
+    kakaoHeader ||
     request.headers.get("x-klol-secret") ||
     request.headers.get("x-bot-secret") ||
     request.headers.get("x-kakao-secret") ||
@@ -168,7 +191,14 @@ export async function rejectIfInvalidServerAuth(request: NextRequest) {
   const hmacValid = await hasValidServerHmacSignature(request, pathname);
   if (hmacValid) return null;
 
-  if (!hmacRequired && hasValidServerSecret(request, pathname)) return null;
+  if (!hmacRequired) {
+    if (hasValidServerSecret(request, pathname)) return null;
+
+    // Several Kakao clients send the legacy secret in a JSON body. The route
+    // handlers validate that value after parsing the body, so do not reject an
+    // otherwise credential-less request here before its route-level guard runs.
+    if (!getReceivedServerSecret(request)) return null;
+  }
 
   return NextResponse.json(
     { ok: false, message: "서버 인증 정보가 올바르지 않습니다." },
