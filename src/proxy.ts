@@ -4,6 +4,7 @@ import { verifyAuthToken } from "@/lib/auth/token";
 import { applySecurityHeaders } from "@/lib/security-headers";
 import { rejectIfBodyTooLarge, rejectIfInvalidOrigin, rejectIfInvalidServerAuth } from "@/lib/security/request-guard";
 import { rejectIfRateLimited } from "@/lib/security/rate-limit";
+import { prisma } from "@/lib/prisma/client";
 
 const SUPER_ADMIN_API_PATTERNS = [
   /^\/api\/admin\/users\/[^/]+\/role$/,
@@ -22,14 +23,25 @@ function isLegacyAdminTokenEnabled() {
   return process.env.NODE_ENV !== "production" || process.env.ALLOW_LEGACY_ADMIN_TOKEN === "true";
 }
 
-function getApprovedAdminRole(token?: string) {
+async function getApprovedAdminRole(token?: string) {
   if (!token) return null;
 
   const payload = verifyAuthToken(token);
 
-  if (!payload || payload.status !== "APPROVED") return null;
-  if (payload.role === "ADMIN" || payload.role === "SUPER_ADMIN") return payload.role;
-  return null;
+  if (!payload?.userAccountId) return null;
+
+  try {
+    const user = await prisma.userAccount.findUnique({
+      where: { id: payload.userAccountId },
+      select: { role: true, status: true, deletedAt: true },
+    });
+
+    if (!user || user.deletedAt || user.status !== "APPROVED") return null;
+    if (user.role === "ADMIN" || user.role === "SUPER_ADMIN") return user.role;
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 function isSuperAdminApi(pathname: string) {
@@ -40,10 +52,10 @@ function withSecurityHeaders(response: NextResponse) {
   return applySecurityHeaders(response);
 }
 
-function rejectAdminRequest(req: NextRequest, requireSuperAdmin = false) {
+async function rejectAdminRequest(req: NextRequest, requireSuperAdmin = false) {
   const legacyAdminToken = req.cookies.get(authConstants.ADMIN_TOKEN_KEY)?.value;
   const userToken = req.cookies.get("user_token")?.value;
-  const role = getApprovedAdminRole(userToken);
+  const role = await getApprovedAdminRole(userToken);
 
   if (role && (!requireSuperAdmin || role === "SUPER_ADMIN")) {
     return null;
@@ -82,7 +94,7 @@ export async function proxy(req: NextRequest) {
       return withSecurityHeaders(NextResponse.next());
     }
 
-    const rejected = rejectAdminRequest(req, isSuperAdminApi(pathname));
+    const rejected = await rejectAdminRequest(req, isSuperAdminApi(pathname));
     if (rejected) return withSecurityHeaders(rejected);
 
     return withSecurityHeaders(NextResponse.next());
@@ -100,7 +112,7 @@ export async function proxy(req: NextRequest) {
     return withSecurityHeaders(NextResponse.next());
   }
 
-  const rejected = rejectAdminRequest(req, false);
+  const rejected = await rejectAdminRequest(req, false);
   if (!rejected) return withSecurityHeaders(NextResponse.next());
 
   return withSecurityHeaders(NextResponse.redirect(new URL("/admin/login", req.url)));

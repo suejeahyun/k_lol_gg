@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { Position } from "@prisma/client";
+import { Position, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { logServerError } from "@/lib/server/safe-log";
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest, { params }: RouteProps) {
       );
     }
 
-    const body = await req.json();
+    const body = await req.json().catch(() => ({}));
     const incomingPlayerId = Number(body.incomingPlayerId);
     const incomingPosition = body.incomingPosition;
     const reason = typeof body.reason === "string" ? body.reason.trim() : "";
@@ -150,13 +150,21 @@ export async function POST(req: NextRequest, { params }: RouteProps) {
         },
       });
 
-      await tx.destructionParticipant.update({
-        where: { id: participant.id },
+      const updatedParticipant = await tx.destructionParticipant.updateMany({
+        where: {
+          id: participant.id,
+          tournamentId: parsedTournamentId,
+          playerId: participant.playerId,
+        },
         data: {
           playerId: incomingPlayerId,
           position: incomingPosition,
         },
       });
+
+      if (updatedParticipant.count !== 1) {
+        throw new Error("PARTICIPANT_REPLACEMENT_CONFLICT");
+      }
 
       if (participant.isCaptain) {
         await tx.destructionTeam.update({
@@ -180,6 +188,27 @@ export async function POST(req: NextRequest, { params }: RouteProps) {
       message: `${participant.player.nickname}#${participant.player.tag} 선수를 ${incomingPlayer.nickname}#${incomingPlayer.tag} 선수로 교체했습니다.`,
     });
   } catch (error) {
+    if (error instanceof Error && error.message === "PARTICIPANT_REPLACEMENT_CONFLICT") {
+      return NextResponse.json(
+        { message: "다른 관리자가 먼저 참가자를 교체했습니다. 새로고침 후 다시 시도해주세요." },
+        { status: 409 },
+      );
+    }
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return NextResponse.json(
+        { message: "신규 플레이어가 이미 이 멸망전에 참가하고 있습니다." },
+        { status: 409 },
+      );
+    }
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2021") {
+      return NextResponse.json(
+        { message: "참가자 교체 기능의 DB 마이그레이션이 아직 적용되지 않았습니다." },
+        { status: 503 },
+      );
+    }
+
     logServerError("DESTRUCTION_PARTICIPANT_REPLACE_ERROR", error);
 
     return NextResponse.json(

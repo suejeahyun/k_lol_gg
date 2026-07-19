@@ -7,8 +7,6 @@ export default function ForgotPasswordForm() {
   const [name, setName] = useState("");
   const [nickname, setNickname] = useState("");
   const [tag, setTag] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -25,23 +23,21 @@ export default function ForgotPasswordForm() {
           name,
           nickname,
           tag,
-          newPassword,
-          confirmPassword,
         }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message || "비밀번호 재설정 실패");
+        alert(data.message || "비밀번호 초기화 요청 실패");
         return;
       }
 
-      alert(data.message || "비밀번호가 재설정되었습니다.");
+      alert(data.message || "비밀번호 초기화 요청이 접수되었습니다.");
       window.location.href = "/login";
     } catch (error) {
       console.error("[FORGOT_PASSWORD_ERROR]", error);
-      alert("비밀번호 재설정 중 오류가 발생했습니다.");
+      alert("비밀번호 초기화 요청 중 오류가 발생했습니다.");
     } finally {
       setLoading(false);
     }
@@ -52,22 +48,23 @@ export default function ForgotPasswordForm() {
       <form className="auth-card" onSubmit={handleSubmit}>
         <h1 className="auth-title">비밀번호 찾기</h1>
         <p className="auth-description">
-          가입 시 입력한 계정 정보와 플레이어 정보가 모두 일치해야 비밀번호를 재설정할 수 있습니다.
+          계정과 플레이어 정보를 제출하면 관리자가 확인 후 임시 비밀번호를 발급합니다.
+          이 화면에서는 새 비밀번호를 직접 입력하지 않습니다.
         </p>
 
         <label className="auth-field">
           <span>아이디</span>
-          <input value={userId} onChange={(e) => setUserId(e.target.value)} />
+          <input value={userId} onChange={(e) => setUserId(e.target.value)} required maxLength={32} />
         </label>
 
         <label className="auth-field">
           <span>이름</span>
-          <input value={name} onChange={(e) => setName(e.target.value)} />
+          <input value={name} onChange={(e) => setName(e.target.value)} required maxLength={50} />
         </label>
 
         <label className="auth-field">
           <span>닉네임</span>
-          <input value={nickname} onChange={(e) => setNickname(e.target.value)} />
+          <input value={nickname} onChange={(e) => setNickname(e.target.value)} required maxLength={100} />
         </label>
 
         <label className="auth-field">
@@ -76,32 +73,13 @@ export default function ForgotPasswordForm() {
             value={tag}
             onChange={(e) => setTag(e.target.value)}
             placeholder="KR1"
-          />
-        </label>
-
-        <label className="auth-field">
-          <span>새 비밀번호</span>
-          <input
-            type="password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            placeholder="8~32자"
-            autoComplete="new-password"
-          />
-        </label>
-
-        <label className="auth-field">
-          <span>새 비밀번호 확인</span>
-          <input
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            autoComplete="new-password"
+            required
+            maxLength={30}
           />
         </label>
 
         <button className="auth-button" type="submit" disabled={loading}>
-          {loading ? "재설정 중..." : "비밀번호 재설정"}
+          {loading ? "요청 중..." : "비밀번호 초기화 요청"}
         </button>
       </form>
     </div>

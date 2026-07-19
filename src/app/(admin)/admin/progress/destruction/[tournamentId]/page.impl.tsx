@@ -2,6 +2,7 @@
 export const dynamic = "force-dynamic";
 
 import type { ReactNode } from "react";
+import { Prisma } from "@prisma/client";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
@@ -61,6 +62,30 @@ const PRELIMINARY_FORMAT_LABELS: Record<string, string> = {
   RANDOM_ROUNDS_BO3: "랜덤 N라운드 BO3",
   RANDOM_ROUNDS_BO1: "랜덤 N라운드 BO1",
 };
+
+async function getParticipantReplacements(tournamentId: number) {
+  try {
+    const items = await prisma.destructionParticipantReplacement.findMany({
+      where: { tournamentId },
+      include: {
+        team: true,
+        outgoingPlayer: true,
+        incomingPlayer: true,
+      },
+      orderBy: {
+        effectiveAt: "desc",
+      },
+    });
+
+    return { ready: true, items };
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2021") {
+      return { ready: false, items: [] };
+    }
+
+    throw error;
+  }
+}
 
 function getStatusLabel(status: string) {
   const labels: Record<string, string> = {
@@ -202,16 +227,6 @@ export default async function AdminDestructionTournamentDetailPage({
             id: "asc",
           },
         },
-        participantReplacements: {
-          include: {
-            team: true,
-            outgoingPlayer: true,
-            incomingPlayer: true,
-          },
-          orderBy: {
-            effectiveAt: "desc",
-          },
-        },
         participationApplies: {
           where: {
             status: {
@@ -254,6 +269,8 @@ export default async function AdminDestructionTournamentDetailPage({
   if (!tournament) {
     notFound();
   }
+
+  const participantReplacementState = await getParticipantReplacements(tournament.id);
 
   const winnerTeam = tournament.winnerTeamId
     ? tournament.teams.find((team) => team.id === tournament.winnerTeamId)
@@ -521,7 +538,7 @@ export default async function AdminDestructionTournamentDetailPage({
         <DestructionParticipantReplacementManager
           tournamentId={tournament.id}
           participants={participantViewModels}
-          replacements={tournament.participantReplacements.map((replacement) => ({
+          replacements={participantReplacementState.items.map((replacement) => ({
             id: replacement.id,
             teamName: replacement.team.name,
             outgoingPlayerName: `${replacement.outgoingPlayer.nickname}#${replacement.outgoingPlayer.tag}`,
@@ -531,7 +548,16 @@ export default async function AdminDestructionTournamentDetailPage({
             reason: replacement.reason,
             effectiveAt: replacement.effectiveAt.toISOString(),
           }))}
-          disabled={tournament.status === "COMPLETED" || tournament.status === "CANCELLED"}
+          disabled={
+            !participantReplacementState.ready ||
+            tournament.status === "COMPLETED" ||
+            tournament.status === "CANCELLED"
+          }
+          unavailableReason={
+            !participantReplacementState.ready
+              ? "DB 마이그레이션 적용 전입니다. 기존 멸망전 관리는 정상 이용할 수 있으며 참가자 교체만 일시적으로 사용할 수 없습니다."
+              : undefined
+          }
         />
       ) : null}
 

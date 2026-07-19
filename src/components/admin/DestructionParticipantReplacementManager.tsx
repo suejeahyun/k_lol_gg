@@ -44,6 +44,7 @@ type Props = {
   participants: Participant[];
   replacements: Replacement[];
   disabled?: boolean;
+  unavailableReason?: string;
 };
 
 const POSITIONS: Position[] = ["TOP", "JGL", "MID", "ADC", "SUP"];
@@ -53,6 +54,7 @@ export default function DestructionParticipantReplacementManager({
   participants,
   replacements,
   disabled = false,
+  unavailableReason,
 }: Props) {
   const router = useRouter();
   const eligibleParticipants = useMemo(
@@ -157,7 +159,9 @@ export default function DestructionParticipantReplacementManager({
       </div>
 
       {disabled ? (
-        <div className="empty-box">종료되거나 취소된 멸망전은 참가자를 교체할 수 없습니다.</div>
+        <div className="empty-box">
+          {unavailableReason ?? "종료되거나 취소된 멸망전은 참가자를 교체할 수 없습니다."}
+        </div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
           <label className="admin-form__field">

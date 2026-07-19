@@ -200,13 +200,22 @@ async function request(check) {
 
     const statusOk = check.expect.includes(response.status);
     const bodyOk = check.json ? json !== null : !isBadHtml(text);
+    const expectedFinalPath =
+      check.expectedFinalPath ??
+      (check.path.startsWith("/admin") && check.path !== "/admin/login"
+        ? "/admin/login"
+        : null);
+    const actualFinalPath = new URL(response.url).pathname;
+    const finalPathOk = !expectedFinalPath || actualFinalPath === expectedFinalPath;
 
     return {
       name: check.name,
       path: check.path,
-      ok: statusOk && bodyOk,
+      ok: statusOk && bodyOk && finalPathOk,
       status: response.status,
       expected: check.expect,
+      expectedFinalPath,
+      actualFinalPath,
       elapsedMs: Date.now() - startedAt,
       contentType: response.headers.get("content-type"),
       bodyPreview: text.slice(0, 500),

@@ -4,6 +4,10 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { Prisma } from "@prisma/client";
+
+const MAX_PAGE_SIZE = 100;
+const MAX_SEARCH_LENGTH = 100;
 
 type CreatePlayerBody = {
   name?: string;
@@ -38,9 +42,18 @@ export async function GET(request: NextRequest) {
     );
     const name = request.nextUrl.searchParams.get("name")?.trim() ?? "";
 
+    if (name.length > MAX_SEARCH_LENGTH) {
+      return NextResponse.json(
+        { message: `검색어는 ${MAX_SEARCH_LENGTH}자 이하로 입력해주세요.` },
+        { status: 400 },
+      );
+    }
+
     const page = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
     const pageSize =
-      Number.isInteger(pageSizeParam) && pageSizeParam > 0 ? pageSizeParam : 10;
+      Number.isInteger(pageSizeParam) && pageSizeParam > 0
+        ? Math.min(pageSizeParam, MAX_PAGE_SIZE)
+        : 10;
 
     const where = name
       ? {
@@ -120,6 +133,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (name.length > 50 || nickname.length > 100 || tag.length > 30) {
+      return NextResponse.json(
+        { message: "이름, 닉네임 또는 태그가 허용 길이를 초과했습니다." },
+        { status: 400 },
+      );
+    }
+
     if (!isValidTierValue(peakTier)) {
       return NextResponse.json(
         {
@@ -183,6 +203,13 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return NextResponse.json(
+        { message: "동일한 닉네임#태그를 가진 플레이어가 이미 존재합니다." },
+        { status: 409 },
+      );
+    }
+
     logServerError("[PLAYER_CREATE_POST_ERROR]", error);
     return NextResponse.json(
       { message: "플레이어 등록에 실패했습니다." },

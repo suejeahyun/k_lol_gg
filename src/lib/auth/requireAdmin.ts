@@ -36,6 +36,7 @@ export async function requireAdminRequest(): Promise<AdminSession | null> {
     const user = await prisma.userAccount.findUnique({
       where: {
         id: payload.userAccountId,
+        deletedAt: null,
       },
       select: {
         id: true,

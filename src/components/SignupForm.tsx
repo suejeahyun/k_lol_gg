@@ -60,6 +60,8 @@ export default function SignupForm() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="대상혁"
+            required
+            maxLength={50}
           />
         </label>
 
@@ -69,6 +71,8 @@ export default function SignupForm() {
             value={nickname}
             onChange={(e) => setNickname(e.target.value)}
             placeholder="Hide On Bush"
+            required
+            maxLength={100}
           />
         </label>
 
@@ -78,6 +82,8 @@ export default function SignupForm() {
             value={tag}
             onChange={(e) => setTag(e.target.value)}
             placeholder="KR1"
+            required
+            maxLength={30}
           />
         </label>
 
@@ -91,7 +97,10 @@ export default function SignupForm() {
           <input
             value={userId}
             onChange={(e) => setUserId(e.target.value)}
-            placeholder="6~20자"
+            placeholder="4~32자"
+            required
+            minLength={4}
+            maxLength={32}
           />
         </label>
 
@@ -102,6 +111,9 @@ export default function SignupForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="8~32자"
+            required
+            minLength={8}
+            maxLength={32}
           />
         </label>
 

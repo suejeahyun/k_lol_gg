@@ -6,6 +6,7 @@ import { rejectIfRateLimited } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import { hashPassword } from "@/lib/auth/password";
+import { Prisma } from "@prisma/client";
 
 export async function POST(req: NextRequest) {
   const rateLimitRejected = await rejectIfRateLimited(req, {
@@ -55,6 +56,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (
+      normalizedName.length > 50 ||
+      normalizedNickname.length > 100 ||
+      normalizedTag.length > 30
+    ) {
+      return NextResponse.json(
+        { message: "이름, 닉네임 또는 태그가 허용 길이를 초과했습니다." },
+        { status: 400 },
+      );
+    }
+
     const existingUser = await prisma.userAccount.findUnique({
       where: { userId: normalizedUserId },
     });
@@ -92,7 +104,7 @@ export async function POST(req: NextRequest) {
         data: {
           userId: normalizedUserId,
           passwordHash,
-          status: "APPROVED",
+          status: "PENDING",
           role: "USER",
         },
       });
@@ -118,19 +130,25 @@ export async function POST(req: NextRequest) {
 
       await writeAdminLog({
         action: existingPlayer ? "USER_SIGNUP_PLAYER_LINK" : "USER_SIGNUP",
-        message: `회원가입 자동 승인: #${user.id} ${user.userId} / 플레이어 #${player.id} ${player.nickname}#${player.tag}`,
+        message: `회원가입 승인 대기: #${user.id} ${user.userId} / 플레이어 #${player.id} ${player.nickname}#${player.tag}`,
         db: tx,
       });
     });
 
     return NextResponse.json(
       {
-        message:
-          "회원가입이 완료되었습니다. 바로 이용할 수 있습니다.",
+        message: "회원가입이 완료되었습니다. 관리자 승인 후 이용할 수 있습니다.",
       },
       { status: 201 },
     );
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return NextResponse.json(
+        { message: "이미 사용 중인 아이디 또는 Riot ID입니다." },
+        { status: 409 },
+      );
+    }
+
     logServerError("[AUTH_SIGNUP_POST_ERROR]", error);
 
     return NextResponse.json(

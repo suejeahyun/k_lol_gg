@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { Prisma } from "@prisma/client";
 
 type RouteContext = {
   params: Promise<{
@@ -141,6 +142,18 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       );
     }
 
+    if (
+      name.length > 50 ||
+      nickname.length > 100 ||
+      tag.length > 30 ||
+      (balanceOverrideReason?.length ?? 0) > 500
+    ) {
+      return NextResponse.json(
+        { message: "플레이어 입력값이 허용 길이를 초과했습니다." },
+        { status: 400 },
+      );
+    }
+
     if (!isValidTierValue(peakTier) || !isValidTierValue(currentTier)) {
       return NextResponse.json(
         {
@@ -199,6 +212,13 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       player: updatedPlayer,
     });
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return NextResponse.json(
+        { message: "동일한 닉네임#태그를 가진 플레이어가 이미 존재합니다." },
+        { status: 409 },
+      );
+    }
+
     logServerError("[PLAYER_DETAIL_PATCH_ERROR]", error);
 
     return NextResponse.json(
