@@ -34,7 +34,7 @@ type Props = {
   mvpManager?: {
     mvpPlayerId: number | null;
     mvpSelectionMethod: "VOTE" | "ADMIN" | null;
-    candidates: Array<{ id: number; nickname: string; tag: string; voteCount: number }>;
+    candidates: Array<{ id: number; name: string; nickname: string; tag: string; voteCount: number }>;
   };
 };
 

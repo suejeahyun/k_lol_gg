@@ -14,12 +14,30 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
     const candidatePlayerId = Number((await req.json()).candidatePlayerId);
     if (!Number.isInteger(matchId) || !Number.isInteger(candidatePlayerId)) return NextResponse.json({ message: "경기 또는 MVP 후보가 올바르지 않습니다." }, { status: 400 });
 
-    const match = await prisma.destructionMatch.findUnique({ where: { id: matchId } });
+    const match = await prisma.destructionMatch.findUnique({
+      where: { id: matchId },
+      include: {
+        tournament: {
+          include: {
+            participants: { select: { playerId: true, teamId: true } },
+          },
+        },
+      },
+    });
     if (!match || !match.winnerTeamId) return NextResponse.json({ message: "결과가 등록된 멸망전 경기를 찾을 수 없습니다." }, { status: 404 });
     if (match.mvpFinalizedAt) return NextResponse.json({ message: "이미 MVP가 확정된 경기입니다." }, { status: 409 });
 
-    const candidate = await prisma.destructionParticipant.findFirst({ where: { tournamentId: match.tournamentId, teamId: match.winnerTeamId, playerId: candidatePlayerId } });
-    if (!candidate) return NextResponse.json({ message: "해당 경기 승리 팀 선수에게만 투표할 수 있습니다." }, { status: 400 });
+    const matchParticipants = match.tournament.participants.filter(
+      (participant) => participant.teamId === match.teamAId || participant.teamId === match.teamBId,
+    );
+    if (matchParticipants.length !== 10) return NextResponse.json({ message: "경기 참가자 10명이 확정되어야 투표할 수 있습니다." }, { status: 409 });
+    if (!user.playerId || !matchParticipants.some((participant) => participant.playerId === user.playerId)) {
+      return NextResponse.json({ message: "해당 경기 참가자 10명만 투표할 수 있습니다." }, { status: 403 });
+    }
+    if (candidatePlayerId === user.playerId) return NextResponse.json({ message: "본인에게는 투표할 수 없습니다." }, { status: 400 });
+    if (!matchParticipants.some((participant) => participant.playerId === candidatePlayerId)) {
+      return NextResponse.json({ message: "해당 경기 참가자에게만 투표할 수 있습니다." }, { status: 400 });
+    }
 
     const vote = await prisma.destructionMatchMvpVote.upsert({
       where: { matchId_voterUserAccountId: { matchId, voterUserAccountId: user.userAccountId } },

@@ -374,9 +374,10 @@ export default async function AdminDestructionTournamentDetailPage({
     mvpPlayerId: match.mvpPlayerId,
     mvpSelectionMethod: match.mvpSelectionMethod,
     candidates: tournament.participants
-      .filter((participant) => participant.teamId === match.winnerTeamId)
+      .filter((participant) => participant.teamId === match.teamAId || participant.teamId === match.teamBId)
       .map((participant) => ({
         id: participant.playerId,
+        name: participant.player.name,
         nickname: participant.player.nickname,
         tag: participant.player.tag,
         voteCount: match.mvpVotes.filter((vote) => vote.candidatePlayerId === participant.playerId).length,

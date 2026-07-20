@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
 import { AppEmpty, AppSection } from "@/components/app-mobile/AppCards";
 import { prisma } from "@/lib/prisma/client";
+import { getCurrentUser } from "@/lib/auth/session";
+import DestructionMvpBallot from "@/components/destruction/DestructionMvpBallot";
 
 export const dynamic = "force-dynamic";
 
@@ -12,34 +14,6 @@ type AppDestructionDetailPageProps = {
   }>;
 };
 
-const dateFormatter = new Intl.DateTimeFormat("ko-KR", {
-  month: "2-digit",
-  day: "2-digit",
-  hour: "2-digit",
-  minute: "2-digit",
-});
-
-function statusText(status: string) {
-  if (status === "PLANNED") return "예정";
-  if (status === "RECRUITING") return "모집중";
-  if (status === "TEAM_BUILDING") return "팀 구성";
-  if (status === "AUCTION") return "경매";
-  if (status === "PRELIMINARY") return "예선";
-  if (status === "TOURNAMENT") return "본선";
-  if (status === "COMPLETED") return "완료";
-  if (status === "CANCELLED") return "취소";
-  return status;
-}
-
-function auctionText(status: string) {
-  if (status === "PENDING") return "대기";
-  if (status === "DRAWN") return "추첨";
-  if (status === "SOLD") return "낙찰";
-  if (status === "HOLD") return "보류";
-  if (status === "ASSIGNED") return "배정";
-  return status;
-}
-
 function positionText(position?: string | null) {
   return position ?? "-";
 }
@@ -48,6 +22,8 @@ export default async function AppDestructionDetailPage({ params }: AppDestructio
   const { tournamentId } = await params;
   const id = Number(tournamentId);
   if (!Number.isInteger(id) || id <= 0) notFound();
+
+  const currentUser = await getCurrentUser();
 
   const tournament = await prisma.destructionTournament.findUnique({
     where: { id },
@@ -68,7 +44,12 @@ export default async function AppDestructionDetailPage({ params }: AppDestructio
         take: 30,
       },
       matches: {
-        include: { teamA: true, teamB: true },
+        include: {
+          teamA: true,
+          teamB: true,
+          mvpPlayer: true,
+          mvpVotes: { where: { voterUserAccountId: currentUser?.userAccountId ?? -1 }, select: { candidatePlayerId: true } },
+        },
         orderBy: [{ stage: "asc" }, { round: "asc" }],
         take: 16,
       },
@@ -77,14 +58,39 @@ export default async function AppDestructionDetailPage({ params }: AppDestructio
 
   if (!tournament) notFound();
 
-  const auctionSummary = tournament.participants.reduce(
-    (acc, participant) => {
-      const key = participant.auctionStatus;
-      acc[key] = (acc[key] ?? 0) + 1;
-      return acc;
-    },
-    {} as Record<string, number>,
-  );
+  const matchesWithResult = tournament.matches.filter((match) => match.winnerTeamId && (match.stage !== "PRELIMINARY" || match.isConfirmed));
+  const renderMvpBallot = (match: (typeof tournament.matches)[number]) => {
+    const matchParticipants = tournament.participants.filter(
+      (participant) => participant.teamId === match.teamAId || participant.teamId === match.teamBId,
+    );
+    const isMatchParticipant = Boolean(currentUser?.playerId && matchParticipants.some((participant) => participant.playerId === currentUser.playerId));
+    const canVote = currentUser?.status === "APPROVED" && isMatchParticipant && matchParticipants.length === 10;
+    const candidates = matchParticipants.filter((participant) => participant.playerId !== currentUser?.playerId).map((participant) => ({
+      id: participant.playerId,
+      name: participant.player.name,
+      nickname: participant.player.nickname,
+      tag: participant.player.tag,
+      position: participant.position,
+      teamSide: participant.teamId === match.teamAId ? "A" as const : "B" as const,
+    }));
+    return (
+      <DestructionMvpBallot
+        matchId={match.id}
+        candidates={candidates}
+        initialVotePlayerId={match.mvpVotes[0]?.candidatePlayerId ?? null}
+        finalizedMvp={match.mvpPlayer ? {
+          id: match.mvpPlayer.id,
+          name: match.mvpPlayer.name,
+          nickname: match.mvpPlayer.nickname,
+          tag: match.mvpPlayer.tag,
+          method: match.mvpSelectionMethod,
+        } : null}
+        canVote={canVote}
+        teamLayout={{ teamAName: match.teamA.name, teamBName: match.teamB.name }}
+        unavailableMessage={!currentUser ? "로그인 후 투표할 수 있습니다." : !isMatchParticipant ? "해당 경기 참가자 10명만 투표할 수 있습니다." : matchParticipants.length !== 10 ? "경기 참가자 10명이 확정되어야 투표할 수 있습니다." : undefined}
+      />
+    );
+  };
 
   return (
     <AppMobileShell subtitle="멸망전">
@@ -97,38 +103,6 @@ export default async function AppDestructionDetailPage({ params }: AppDestructio
           </Link>
         </div>
       </section>
-
-      <AppSection title="진행 요약">
-        <div className="klol-app-meta-grid">
-          <div className="klol-app-meta">
-            <span>상태</span>
-            <strong>{statusText(tournament.status)}</strong>
-          </div>
-          <div className="klol-app-meta">
-            <span>시작</span>
-            <strong>{tournament.startDate ? dateFormatter.format(tournament.startDate) : "미정"}</strong>
-          </div>
-          <div className="klol-app-meta">
-            <span>참가자</span>
-            <strong>{tournament.participants.length}명</strong>
-          </div>
-          <div className="klol-app-meta">
-            <span>팀/경기</span>
-            <strong>{tournament.teams.length}팀 · {tournament.matches.length}경기</strong>
-          </div>
-        </div>
-      </AppSection>
-
-      <AppSection title="경매 현황">
-        <div className="klol-app-meta-grid">
-          {["PENDING", "DRAWN", "SOLD", "HOLD"].map((status) => (
-            <div className="klol-app-meta" key={status}>
-              <span>{auctionText(status)}</span>
-              <strong>{auctionSummary[status] ?? 0}명</strong>
-            </div>
-          ))}
-        </div>
-      </AppSection>
 
       <AppSection title="팀 구성">
         {tournament.teams.length === 0 ? (
@@ -146,33 +120,6 @@ export default async function AppDestructionDetailPage({ params }: AppDestructio
                 </div>
                 <p className="klol-app-muted">
                   {team.members.map((member) => `${positionText(member.position)} ${member.player.name}`).join(" · ") || "팀원 없음"}
-                </p>
-              </article>
-            ))}
-          </div>
-        )}
-      </AppSection>
-
-      <AppSection title="참가자">
-        {tournament.participants.length === 0 ? (
-          <AppEmpty>참가자가 없습니다.</AppEmpty>
-        ) : (
-          <div className="klol-app-list">
-            {tournament.participants.map((participant) => (
-              <article className="klol-app-list-card" key={participant.id}>
-                <div className="klol-app-list-top">
-                  <span className="klol-app-list-title">
-                    <strong>{participant.player.name}</strong>
-                    <span>{participant.player.nickname}#{participant.player.tag}</span>
-                  </span>
-                  <span className="klol-app-badge">
-                    {participant.isCaptain ? "주장" : auctionText(participant.auctionStatus)}
-                  </span>
-                </div>
-                <p className="klol-app-muted">
-                  {positionText(participant.position)}
-                  {participant.purchasePoint ? ` · ${participant.purchasePoint}P` : ""}
-                  {participant.team ? ` · ${participant.team.name}` : ""}
                 </p>
               </article>
             ))}
@@ -201,6 +148,24 @@ export default async function AppDestructionDetailPage({ params }: AppDestructio
           </div>
         )}
       </AppSection>
+
+      {matchesWithResult.length ? (
+        <AppSection title="경기 MVP 투표" caption="참가자 10명 · 본인 제외">
+          <div className="klol-app-list destruction-mvp-mobile-list">
+            {matchesWithResult.map((match) => (
+              <article className="klol-app-list-card destruction-mvp-mobile-card" key={`mvp-${match.id}`}>
+                <div className="klol-app-list-top">
+                  <span className="klol-app-list-title">
+                    <strong>{match.teamA.name} {match.teamAScore}:{match.teamBScore} {match.teamB.name}</strong>
+                    <span>{match.stage} · ROUND {match.round} · 전체 세트 합산</span>
+                  </span>
+                </div>
+                {renderMvpBallot(match)}
+              </article>
+            ))}
+          </div>
+        </AppSection>
+      ) : null}
     </AppMobileShell>
   );
 }

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-type Candidate = { id: number; nickname: string; tag: string; voteCount: number };
+type Candidate = { id: number; name: string; nickname: string; tag: string; voteCount: number };
 
 export default function DestructionMatchMvpManager({ matchId, candidates, initialMvpPlayerId, initialMethod }: {
   matchId: number;
@@ -42,7 +42,7 @@ export default function DestructionMatchMvpManager({ matchId, candidates, initia
         {candidates.map((candidate) => (
           <label key={candidate.id}>
             <input type="radio" name={`mvp-${matchId}`} value={candidate.id} checked={selectedId === candidate.id} onChange={() => setSelectedId(candidate.id)} />
-            <span>{candidate.nickname}#{candidate.tag}</span><b>{candidate.voteCount}표</b>
+            <span>{candidate.name} ({candidate.nickname}#{candidate.tag})</span><b>{candidate.voteCount}표</b>
           </label>
         ))}
       </div>

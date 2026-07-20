@@ -171,16 +171,21 @@ export default async function DestructionProgressDetailPage({
   const isTournamentStage = tournament.status === "TOURNAMENT";
   const isCompleted = tournament.status === "COMPLETED";
   const isCancelled = tournament.status === "CANCELLED";
-  const canVote = currentUser?.status === "APPROVED";
   const matchesWithResult = tournament.matches.filter((match) => match.winnerTeamId && (match.stage !== "PRELIMINARY" || match.isConfirmed));
   const renderMvpBallot = (match: (typeof tournament.matches)[number]) => {
-    const candidates = tournament.participants.filter((participant) => participant.teamId === match.winnerTeamId).map((participant) => ({
-      id: participant.playerId, nickname: participant.player.nickname, tag: participant.player.tag,
+    const matchParticipants = tournament.participants.filter(
+      (participant) => participant.teamId === match.teamAId || participant.teamId === match.teamBId,
+    );
+    const isMatchParticipant = Boolean(currentUser?.playerId && matchParticipants.some((participant) => participant.playerId === currentUser.playerId));
+    const canVote = currentUser?.status === "APPROVED" && isMatchParticipant && matchParticipants.length === 10;
+    const candidates = matchParticipants.filter((participant) => participant.playerId !== currentUser?.playerId).map((participant) => ({
+      id: participant.playerId, name: participant.player.name, nickname: participant.player.nickname, tag: participant.player.tag,
     }));
     return <DestructionMvpBallot matchId={match.id} candidates={candidates}
       initialVotePlayerId={match.mvpVotes[0]?.candidatePlayerId ?? null}
-      finalizedMvp={match.mvpPlayer ? { id: match.mvpPlayer.id, nickname: match.mvpPlayer.nickname, tag: match.mvpPlayer.tag, method: match.mvpSelectionMethod } : null}
-      canVote={canVote} />;
+      finalizedMvp={match.mvpPlayer ? { id: match.mvpPlayer.id, name: match.mvpPlayer.name, nickname: match.mvpPlayer.nickname, tag: match.mvpPlayer.tag, method: match.mvpSelectionMethod } : null}
+      canVote={canVote}
+      unavailableMessage={!currentUser ? "로그인 후 투표할 수 있습니다." : !isMatchParticipant ? "해당 경기 참가자 10명만 투표할 수 있습니다." : matchParticipants.length !== 10 ? "경기 참가자 10명이 확정되어야 투표할 수 있습니다." : undefined} />;
   };
 
   return (
@@ -400,7 +405,7 @@ export default async function DestructionProgressDetailPage({
         <section className="content-section">
           <div className="section-header">
             <h2>경기별 MVP</h2>
-            <p className="page-description">각 경기의 전체 세트 활약을 합산해 MVP 한 명에게 투표합니다.</p>
+            <p className="page-description">경기 참가자 10명만 참여하며, 본인을 제외한 9명 중 한 명에게 투표합니다.</p>
           </div>
           <div className="destruction-mvp-match-list">
             {matchesWithResult.map((match) => (

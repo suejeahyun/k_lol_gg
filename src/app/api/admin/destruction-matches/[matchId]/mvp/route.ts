@@ -16,7 +16,13 @@ export async function PATCH(req: NextRequest, { params }: RouteProps) {
     const method = body.method === "VOTE" ? "VOTE" : body.method === "ADMIN" ? "ADMIN" : null;
     if (!Number.isInteger(matchId) || !method) return NextResponse.json({ message: "경기 또는 선정 방식이 올바르지 않습니다." }, { status: 400 });
 
-    const match = await prisma.destructionMatch.findUnique({ where: { id: matchId }, include: { tournament: true, mvpVotes: true } });
+    const match = await prisma.destructionMatch.findUnique({
+      where: { id: matchId },
+      include: {
+        tournament: { include: { participants: { select: { playerId: true, teamId: true } } } },
+        mvpVotes: true,
+      },
+    });
     if (!match || !match.winnerTeamId) return NextResponse.json({ message: "결과가 등록된 멸망전 경기를 찾을 수 없습니다." }, { status: 404 });
 
     let mvpPlayerId: number;
@@ -34,9 +40,14 @@ export async function PATCH(req: NextRequest, { params }: RouteProps) {
     }
 
     const validCandidate = await prisma.destructionParticipant.findFirst({
-      where: { tournamentId: match.tournamentId, teamId: match.winnerTeamId, playerId: mvpPlayerId }, include: { player: true },
+      where: {
+        tournamentId: match.tournamentId,
+        teamId: { in: [match.teamAId, match.teamBId] },
+        playerId: mvpPlayerId,
+      },
+      include: { player: true },
     });
-    if (!validCandidate) return NextResponse.json({ message: "해당 경기 승리 팀 선수만 MVP로 선정할 수 있습니다." }, { status: 400 });
+    if (!validCandidate) return NextResponse.json({ message: "해당 경기 참가자 10명 중에서 MVP를 선정해주세요." }, { status: 400 });
 
     const updated = await prisma.$transaction(async (tx) => {
       const next = await tx.destructionMatch.update({ where: { id: matchId }, data: { mvpPlayerId, mvpSelectionMethod: method, mvpFinalizedAt: new Date() } });
