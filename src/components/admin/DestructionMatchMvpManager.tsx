@@ -17,13 +17,13 @@ export default function DestructionMatchMvpManager({ matchId, candidates, initia
   const [error, setError] = useState("");
   const totalVotes = candidates.reduce((sum, candidate) => sum + candidate.voteCount, 0);
 
-  const finalize = async (method: "VOTE" | "ADMIN") => {
+  const finalize = async () => {
     setIsSaving(true);
     setError("");
     try {
       const res = await fetch(`/api/admin/destruction-matches/${matchId}/mvp`, {
         method: "PATCH", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ method, mvpPlayerId: selectedId }),
+        body: JSON.stringify({ method: "ADMIN", mvpPlayerId: selectedId }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.message ?? "MVP 확정에 실패했습니다."); return; }
@@ -47,8 +47,7 @@ export default function DestructionMatchMvpManager({ matchId, candidates, initia
         ))}
       </div>
       <div className="destruction-admin-mvp__actions">
-        <button type="button" className="ghost-button" disabled={isSaving || totalVotes === 0} onClick={() => finalize("VOTE")}>투표 1위 확정</button>
-        <button type="button" className="chip-button" disabled={isSaving || !selectedId} onClick={() => finalize("ADMIN")}>선택 선수 직접 지정</button>
+        <button type="button" className="chip-button" disabled={isSaving || !selectedId} onClick={finalize}>선택 선수 직접 지정</button>
       </div>
       {error ? <p className="notice-form__error">{error}</p> : null}
     </div>

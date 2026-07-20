@@ -1,0 +1,2 @@
+ALTER TABLE "UserAccount"
+  ADD COLUMN "authVersion" INTEGER NOT NULL DEFAULT 0;

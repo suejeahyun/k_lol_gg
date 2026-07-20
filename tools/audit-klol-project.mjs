@@ -5,7 +5,7 @@ const root = process.cwd();
 const appDir = join(root, "src", "app");
 const srcDir = join(root, "src");
 
-const ROUTE_FILES = new Set(["page.tsx", "route.ts", "route.impl.ts", "layout.tsx"]);
+const ROUTE_FILES = new Set(["page.tsx", "route.ts", "layout.tsx"]);
 const WATCHLIST_KEYWORDS = ["discord", "board", "clip", "gallery", "notice"];
 const PREMIUM_KEYWORDS = ["kakao", "balance-ai", "ai-balance", "random-team", "riot", "recruit"];
 
@@ -35,7 +35,7 @@ function routeFromFile(file) {
   const route = `/${routeParts.join("/")}`.replace(/\/+/g, "/");
   return {
     route: route === "/" ? "/" : route.replace(/\/$/, ""),
-    kind: fileName === "route.ts" || fileName === "route.impl.ts" ? "api" : fileName?.replace(".tsx", "").replace(".ts", ""),
+    kind: fileName === "route.ts" ? "api" : fileName?.replace(".tsx", "").replace(".ts", ""),
     file: toPosix(relative(root, file)),
   };
 }

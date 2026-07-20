@@ -22,6 +22,7 @@ export async function getCurrentUser() {
       userId: true,
       role: true,
       status: true,
+      authVersion: true,
       player: {
         select: {
           id: true,
@@ -30,7 +31,7 @@ export async function getCurrentUser() {
     },
   });
 
-  if (!user) return null;
+  if (!user || (payload.authVersion ?? 0) !== user.authVersion) return null;
 
   return {
     userAccountId: user.id,

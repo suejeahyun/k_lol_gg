@@ -94,7 +94,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
       }
 
       return NextResponse.json(
-        { message: "솔랭 전적 갱신 중 오류가 발생했습니다.", error: error.message },
+        { message: "솔랭 전적 갱신 중 오류가 발생했습니다." },
         { status: 500 },
       );
     }

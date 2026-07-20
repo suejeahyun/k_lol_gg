@@ -54,7 +54,6 @@ export async function GET(req: NextRequest) {
     return redirectTo(req, result.redirectTo);
   } catch (err: unknown) {
     logServerError("[RIOT_RSO_CALLBACK_ERROR]", err);
-    const message = err instanceof Error ? err.message : "Riot 본인 인증 처리 중 오류가 발생했습니다.";
-    return redirectTo(req, `${fallback}?rso=error&message=${encodeURIComponent(message)}`);
+    return redirectTo(req, `${fallback}?rso=error&message=${encodeURIComponent("Riot 본인 인증 처리 중 오류가 발생했습니다.")}`);
   }
 }

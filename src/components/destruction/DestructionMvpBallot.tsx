@@ -10,11 +10,13 @@ type Candidate = {
   tag: string;
   position?: string | null;
   teamSide?: "A" | "B";
+  selectable?: boolean;
+  unavailableLabel?: string;
 };
 
 const POSITIONS = ["TOP", "JGL", "MID", "ADC", "SUP"] as const;
 
-export default function DestructionMvpBallot({ matchId, candidates, initialVotePlayerId, finalizedMvp, canVote, unavailableMessage, teamLayout }: {
+export default function DestructionMvpBallot({ matchId, candidates, initialVotePlayerId, finalizedMvp, canVote, unavailableMessage, teamLayout, voteRound = 1 }: {
   matchId: number;
   candidates: Candidate[];
   initialVotePlayerId: number | null;
@@ -22,6 +24,7 @@ export default function DestructionMvpBallot({ matchId, candidates, initialVoteP
   canVote: boolean;
   unavailableMessage?: string;
   teamLayout?: { teamAName: string; teamBName: string };
+  voteRound?: number;
 }) {
   const router = useRouter();
   const [selectedId, setSelectedId] = useState(initialVotePlayerId);
@@ -42,8 +45,8 @@ export default function DestructionMvpBallot({ matchId, candidates, initialVoteP
         setMessage(data.message ?? "투표 저장에 실패했습니다.");
         return;
       }
-      setSelectedId(candidatePlayerId);
-      setMessage("투표가 저장되었습니다. 확정 전까지 변경할 수 있습니다.");
+      setSelectedId(data.status === "VOTED" ? candidatePlayerId : null);
+      setMessage(data.message ?? "투표가 저장되었습니다. 확정 전까지 변경할 수 있습니다.");
       router.refresh();
     } catch {
       setMessage("투표 저장 중 오류가 발생했습니다.");
@@ -52,10 +55,19 @@ export default function DestructionMvpBallot({ matchId, candidates, initialVoteP
     }
   };
 
-  const renderCandidate = (candidate: Candidate | undefined, side: "A" | "B", position: string) => {
+  const renderCandidate = (candidate: Candidate | undefined) => {
     if (!candidate) {
-      const hasPosition = candidates.some((item) => item.teamSide === side && item.position === position);
-      return <span className="destruction-mvp-lineup__empty">{hasPosition ? "선택 불가" : "본인 제외"}</span>;
+      return <span className="destruction-mvp-lineup__empty">선수 미정</span>;
+    }
+
+    if (candidate.selectable === false) {
+      return (
+        <span className="destruction-mvp-lineup__empty">
+          <strong>{candidate.name}</strong>
+          <span>({candidate.nickname}#{candidate.tag})</span>
+          <small>{candidate.unavailableLabel ?? "선택 불가"}</small>
+        </span>
+      );
     }
 
     return (
@@ -78,7 +90,11 @@ export default function DestructionMvpBallot({ matchId, candidates, initialVoteP
       </div>
       {!finalizedMvp ? (
         <>
-          <p>전체 세트 활약을 합산해 본인을 제외한 참가자 중 한 명을 선택해주세요. 참가자당 1표입니다.</p>
+          <p>
+            {voteRound > 1
+              ? `${voteRound}차 재투표입니다. 동률 후보 중 본인을 제외한 한 명을 선택해주세요.`
+              : "전체 세트 활약을 합산해 본인을 제외한 참가자 중 한 명을 선택해주세요. 참가자당 1표입니다."}
+          </p>
           {teamLayout ? (
             <div className="destruction-mvp-lineup">
               <div className="destruction-mvp-lineup__header">
@@ -88,9 +104,9 @@ export default function DestructionMvpBallot({ matchId, candidates, initialVoteP
               </div>
               {POSITIONS.map((position) => (
                 <div className="destruction-mvp-lineup__row" key={position}>
-                  {renderCandidate(candidates.find((candidate) => candidate.teamSide === "A" && candidate.position === position), "A", position)}
+                  {renderCandidate(candidates.find((candidate) => candidate.teamSide === "A" && candidate.position === position))}
                   <b>{position}</b>
-                  {renderCandidate(candidates.find((candidate) => candidate.teamSide === "B" && candidate.position === position), "B", position)}
+                  {renderCandidate(candidates.find((candidate) => candidate.teamSide === "B" && candidate.position === position))}
                 </div>
               ))}
             </div>
@@ -98,7 +114,7 @@ export default function DestructionMvpBallot({ matchId, candidates, initialVoteP
             <div className="destruction-mvp-ballot__candidates">
               {candidates.map((candidate) => (
                 <button key={candidate.id} type="button" className={selectedId === candidate.id ? "chip-button" : "ghost-button"}
-                  disabled={!canVote || savingId !== null} onClick={() => vote(candidate.id)}>
+                  disabled={!canVote || savingId !== null || candidate.selectable === false} onClick={() => vote(candidate.id)}>
                   {candidate.name} ({candidate.nickname}#{candidate.tag}){selectedId === candidate.id ? " · 내 선택" : ""}
                 </button>
               ))}

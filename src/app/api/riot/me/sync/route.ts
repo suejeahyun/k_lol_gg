@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
       }
 
       return NextResponse.json(
-        { message: "내 Riot 데이터 동기화 중 오류가 발생했습니다.", error: error.message },
+        { message: "내 Riot 데이터 동기화 중 오류가 발생했습니다." },
         { status: 500 },
       );
     }

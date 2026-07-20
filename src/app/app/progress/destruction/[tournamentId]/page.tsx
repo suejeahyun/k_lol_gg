@@ -59,19 +59,23 @@ export default async function AppDestructionDetailPage({ params }: AppDestructio
   if (!tournament) notFound();
 
   const matchesWithResult = tournament.matches.filter((match) => match.winnerTeamId && (match.stage !== "PRELIMINARY" || match.isConfirmed));
+  const pendingMvpMatches = matchesWithResult.filter((match) => !match.mvpFinalizedAt);
   const renderMvpBallot = (match: (typeof tournament.matches)[number]) => {
     const matchParticipants = tournament.participants.filter(
       (participant) => participant.teamId === match.teamAId || participant.teamId === match.teamBId,
     );
     const isMatchParticipant = Boolean(currentUser?.playerId && matchParticipants.some((participant) => participant.playerId === currentUser.playerId));
     const canVote = currentUser?.status === "APPROVED" && isMatchParticipant && matchParticipants.length === 10;
-    const candidates = matchParticipants.filter((participant) => participant.playerId !== currentUser?.playerId).map((participant) => ({
+    const candidates = matchParticipants.map((participant) => ({
       id: participant.playerId,
       name: participant.player.name,
       nickname: participant.player.nickname,
       tag: participant.player.tag,
       position: participant.position,
       teamSide: participant.teamId === match.teamAId ? "A" as const : "B" as const,
+      selectable: participant.playerId !== currentUser?.playerId &&
+        (match.mvpRevoteCandidateIds.length === 0 || match.mvpRevoteCandidateIds.includes(participant.playerId)),
+      unavailableLabel: participant.playerId === currentUser?.playerId ? "본인 제외" : "재투표 대상 아님",
     }));
     return (
       <DestructionMvpBallot
@@ -87,6 +91,7 @@ export default async function AppDestructionDetailPage({ params }: AppDestructio
         } : null}
         canVote={canVote}
         teamLayout={{ teamAName: match.teamA.name, teamBName: match.teamB.name }}
+        voteRound={match.mvpVoteRound}
         unavailableMessage={!currentUser ? "로그인 후 투표할 수 있습니다." : !isMatchParticipant ? "해당 경기 참가자 10명만 투표할 수 있습니다." : matchParticipants.length !== 10 ? "경기 참가자 10명이 확정되어야 투표할 수 있습니다." : undefined}
       />
     );
@@ -137,7 +142,10 @@ export default async function AppDestructionDetailPage({ params }: AppDestructio
                 <div className="klol-app-list-top">
                   <span className="klol-app-list-title">
                     <strong>{match.teamA.name} vs {match.teamB.name}</strong>
-                    <span>{match.stage} · ROUND {match.round} · BO{match.bestOf}</span>
+                    <span>
+                      {match.stage} · ROUND {match.round} · BO{match.bestOf}
+                      {match.mvpPlayer ? ` · MVP ${match.mvpPlayer.name} (${match.mvpPlayer.nickname}#${match.mvpPlayer.tag})` : ""}
+                    </span>
                   </span>
                   <span className="klol-app-badge">
                     {match.isConfirmed ? `${match.teamAScore}:${match.teamBScore}` : "대기"}
@@ -149,10 +157,10 @@ export default async function AppDestructionDetailPage({ params }: AppDestructio
         )}
       </AppSection>
 
-      {matchesWithResult.length ? (
+      {pendingMvpMatches.length ? (
         <AppSection title="경기 MVP 투표" caption="참가자 10명 · 본인 제외">
           <div className="klol-app-list destruction-mvp-mobile-list">
-            {matchesWithResult.map((match) => (
+            {pendingMvpMatches.map((match) => (
               <article className="klol-app-list-card destruction-mvp-mobile-card" key={`mvp-${match.id}`}>
                 <div className="klol-app-list-top">
                   <span className="klol-app-list-title">

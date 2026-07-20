@@ -41,24 +41,33 @@ async function ensureSuperAdmin(id: string, password: string) {
     return null;
   }
 
+  const existing = await prisma.userAccount.findUnique({
+    where: { userId: superAdminId },
+    include: { player: true },
+  });
   const passwordHash = await hashPassword(superAdminPassword);
 
-  return prisma.userAccount.upsert({
-    where: { userId: superAdminId },
-    update: {
-      passwordHash,
-      role: "SUPER_ADMIN",
-      status: "APPROVED",
-    },
-    create: {
+  if (existing) {
+    return prisma.userAccount.update({
+      where: { id: existing.id },
+      data: {
+        passwordHash,
+        role: "SUPER_ADMIN",
+        status: "APPROVED",
+        authVersion: { increment: 1 },
+      },
+      include: { player: true },
+    });
+  }
+
+  return prisma.userAccount.create({
+    data: {
       userId: superAdminId,
       passwordHash,
       role: "SUPER_ADMIN",
       status: "APPROVED",
     },
-    include: {
-      player: true,
-    },
+    include: { player: true },
   });
 }
 
@@ -72,7 +81,10 @@ export async function POST(req: NextRequest) {
   if (rateLimitRejected) return rateLimitRejected;
 
   try {
-    const body = (await req.json()) as LoginBody;
+    const body = await req.json().catch(() => null) as LoginBody | null;
+    if (!body || typeof body !== "object") {
+      return NextResponse.json({ message: "요청 형식이 올바르지 않습니다." }, { status: 400 });
+    }
     const id = String(body.id ?? "").trim();
     const password = String(body.password ?? "");
     const totpCode = String(body.totpCode ?? "").replace(/\D/g, "");
@@ -90,6 +102,13 @@ export async function POST(req: NextRequest) {
         player: true,
       },
     });
+
+    if (user?.deletedAt) {
+      return NextResponse.json(
+        { message: "아이디 또는 비밀번호가 올바르지 않습니다." },
+        { status: 401 },
+      );
+    }
 
     if (!user) {
       user = await ensureSuperAdmin(id, password);
@@ -175,6 +194,7 @@ export async function POST(req: NextRequest) {
       role: user.role,
       status: user.status,
       playerId: user.player?.id ?? null,
+      authVersion: user.authVersion,
     });
 
     const response = NextResponse.json({
@@ -202,4 +222,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-

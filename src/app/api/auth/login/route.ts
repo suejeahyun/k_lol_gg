@@ -20,7 +20,12 @@ export async function POST(req: NextRequest) {
   if (rateLimitRejected) return rateLimitRejected;
 
   try {
-    const { userId, password } = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object") {
+      return NextResponse.json({ message: "요청 형식이 올바르지 않습니다." }, { status: 400 });
+    }
+    const userId = String(body.userId ?? "").trim();
+    const password = String(body.password ?? "");
 
     if (!userId || !password) {
       return NextResponse.json(
@@ -36,7 +41,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    if (!user) {
+    if (!user || user.deletedAt) {
       return NextResponse.json(
         { message: "아이디 또는 비밀번호가 올바르지 않습니다." },
         { status: 401 }
@@ -76,6 +81,7 @@ export async function POST(req: NextRequest) {
       role: user.role,
       status: user.status,
       playerId: user.player?.id ?? null,
+      authVersion: user.authVersion,
     });
 
     const res = NextResponse.json({

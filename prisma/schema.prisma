@@ -148,8 +148,8 @@ model Player {
 
   destructionCaptainTeams    DestructionTeam[]
   destructionParticipants    DestructionParticipant[]
-  destructionMatchMvps       DestructionMatch[] @relation("DestructionMatchMvp")
-  destructionMatchMvpVotes   DestructionMatchMvpVote[] @relation("DestructionMatchVoteCandidate")
+  destructionMatchMvps       DestructionMatch[]                  @relation("DestructionMatchMvp")
+  destructionMatchMvpVotes   DestructionMatchMvpVote[]           @relation("DestructionMatchVoteCandidate")
   destructionReplacementsOut DestructionParticipantReplacement[] @relation("DestructionReplacementOutgoingPlayer")
   destructionReplacementsIn  DestructionParticipantReplacement[] @relation("DestructionReplacementIncomingPlayer")
   teamBalanceDraftPlayers    TeamBalanceDraftPlayer[]
@@ -178,6 +178,7 @@ model UserAccount {
   adminTotpEnabledAt DateTime?
   role               UserRole   @default(USER)
   status             UserStatus @default(PENDING)
+  authVersion        Int        @default(0)
 
   discordId              String?   @unique
   discordUsername        String?
@@ -197,9 +198,9 @@ model UserAccount {
 
   player Player?
 
-  discordVoiceEvents     DiscordVoiceEvent[]
-  discordAccountLinkLogs DiscordAccountLinkLog[]
-  disciplineRecords      UserDisciplineRecord[]
+  discordVoiceEvents       DiscordVoiceEvent[]
+  discordAccountLinkLogs   DiscordAccountLinkLog[]
+  disciplineRecords        UserDisciplineRecord[]
   destructionMatchMvpVotes DestructionMatchMvpVote[]
 
   @@index([deletedAt])
@@ -634,12 +635,14 @@ model DestructionMatch {
   round            Int
   preliminaryGroup String?
 
-  teamAId      Int
-  teamBId      Int
-  winnerTeamId Int?
-  mvpPlayerId  Int?
-  mvpSelectionMethod DestructionMvpSelectionMethod?
-  mvpFinalizedAt DateTime?
+  teamAId               Int
+  teamBId               Int
+  winnerTeamId          Int?
+  mvpPlayerId           Int?
+  mvpSelectionMethod    DestructionMvpSelectionMethod?
+  mvpFinalizedAt        DateTime?
+  mvpVoteRound          Int                            @default(1)
+  mvpRevoteCandidateIds Int[]                          @default([])
 
   isReplay    Boolean   @default(false)
   isConfirmed Boolean   @default(false)
@@ -653,10 +656,10 @@ model DestructionMatch {
 
   tournament DestructionTournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 
-  teamA DestructionTeam @relation("DestructionTeamA", fields: [teamAId], references: [id])
-  teamB DestructionTeam @relation("DestructionTeamB", fields: [teamBId], references: [id])
-  mvpPlayer Player? @relation("DestructionMatchMvp", fields: [mvpPlayerId], references: [id], onDelete: SetNull)
-  mvpVotes DestructionMatchMvpVote[]
+  teamA     DestructionTeam           @relation("DestructionTeamA", fields: [teamAId], references: [id])
+  teamB     DestructionTeam           @relation("DestructionTeamB", fields: [teamBId], references: [id])
+  mvpPlayer Player?                   @relation("DestructionMatchMvp", fields: [mvpPlayerId], references: [id], onDelete: SetNull)
+  mvpVotes  DestructionMatchMvpVote[]
 
   @@unique([tournamentId, stage, round])
   @@index([tournamentId, winnerTeamId])
@@ -1025,17 +1028,17 @@ model PlayerRiotAccount {
   profileIconId Int?
   summonerLevel Int?
 
-  isVerified               Boolean   @default(false)
-  verificationMethod       String    @default("DIRECT_LINK")
-  verifiedByUserAccountId  Int?
-  verifiedAt               DateTime?
-  rsoSubject               String?
-  linkedByUserAccountId    Int?
-  linkedAt                 DateTime?
-  unlinkedAt               DateTime?
-  syncStatus               String    @default("IDLE")
-  lastErrorMessage         String?   @db.Text
-  lastErrorAt              DateTime?
+  isVerified              Boolean   @default(false)
+  verificationMethod      String    @default("DIRECT_LINK")
+  verifiedByUserAccountId Int?
+  verifiedAt              DateTime?
+  rsoSubject              String?
+  linkedByUserAccountId   Int?
+  linkedAt                DateTime?
+  unlinkedAt              DateTime?
+  syncStatus              String    @default("IDLE")
+  lastErrorMessage        String?   @db.Text
+  lastErrorAt             DateTime?
 
   lastSyncedAt DateTime?
   createdAt    DateTime  @default(now())

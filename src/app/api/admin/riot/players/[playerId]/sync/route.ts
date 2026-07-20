@@ -77,7 +77,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
     if (error instanceof Error) {
       return NextResponse.json(
-        { message: "관리자 Riot 동기화 중 오류가 발생했습니다.", error: error.message },
+        { message: "관리자 Riot 동기화 중 오류가 발생했습니다." },
         { status: 500 },
       );
     }

@@ -67,7 +67,8 @@ export async function GET(req: NextRequest) {
       if (error.message === "NOT_APPROVED") {
         return redirectWithMessage(req, returnTo, { rso: "error", message: "관리자 승인 후 이용 가능합니다." });
       }
-      return redirectWithMessage(req, returnTo, { rso: "error", message: error.message });
+      logServerError("[RIOT_RSO_START_ERROR]", error);
+      return redirectWithMessage(req, returnTo, { rso: "error", message: "Riot 본인 인증 시작 중 오류가 발생했습니다." });
     }
 
     logServerError("[RIOT_RSO_START_ERROR]", error);

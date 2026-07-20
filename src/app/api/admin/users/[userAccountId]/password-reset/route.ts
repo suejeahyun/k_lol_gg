@@ -6,17 +6,13 @@ import { prisma } from "@/lib/prisma/client";
 import { hashPassword } from "@/lib/auth/password";
 import { requireSuperAdminRequest } from "@/lib/auth/requireAdmin";
 import { writeSecurityAudit } from "@/lib/security/admin-audit";
+import { createTemporaryPassword } from "@/lib/auth/temp-password";
 
 type RouteContext = {
   params: Promise<{
     userAccountId: string;
   }>;
 };
-
-function createTempPassword() {
-  const digits = String(Math.floor(100000 + Math.random() * 900000));
-  return `KLOL-${digits}`;
-}
 
 export async function PATCH(req: NextRequest, { params }: RouteContext) {
   const admin = await requireSuperAdminRequest();
@@ -30,7 +26,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     const id = Number(userAccountId);
     const body = await req.json().catch(() => ({}));
     const requestedPassword = String(body.newPassword ?? "").trim();
-    const tempPassword = requestedPassword || createTempPassword();
+    const tempPassword = requestedPassword || createTemporaryPassword();
 
     if (Number.isNaN(id)) {
       return NextResponse.json({ message: "잘못된 유저 ID입니다." }, { status: 400 });
@@ -52,7 +48,10 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
 
     const passwordHash = await hashPassword(tempPassword);
 
-    const updated = await prisma.userAccount.update({ where: { id }, data: { passwordHash } });
+    const updated = await prisma.userAccount.update({
+      where: { id },
+      data: { passwordHash, authVersion: { increment: 1 } },
+    });
 
     await writeSecurityAudit({
       req,

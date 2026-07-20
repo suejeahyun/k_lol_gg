@@ -15,6 +15,7 @@
     "check:routes": "node tools/check-local-routes.mjs",
     "check:kakao-recruit": "tsx tools/check-kakao-recruit-routing.ts",
     "check:kakao-auth": "tsx tools/check-kakao-request-guard.ts",
+    "check:mvp-voting": "tsx tools/check-destruction-mvp-voting.ts",
     "check:env": "node tools/check-deploy-readiness.mjs",
     "check:findmany": "node tools/check-unbounded-prisma-findmany.mjs",
     "css:unused": "node tools/find-unused-css.mjs",

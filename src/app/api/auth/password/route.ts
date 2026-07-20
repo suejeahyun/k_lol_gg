@@ -20,7 +20,10 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object") {
+      return NextResponse.json({ message: "요청 형식이 올바르지 않습니다." }, { status: 400 });
+    }
     const currentPassword = String(body.currentPassword ?? "");
     const newPassword = String(body.newPassword ?? "");
     const confirmPassword = String(body.confirmPassword ?? "");
@@ -84,7 +87,7 @@ export async function PATCH(req: NextRequest) {
 
     await prisma.userAccount.update({
       where: { id: user.id },
-      data: { passwordHash },
+      data: { passwordHash, authVersion: { increment: 1 } },
     });
 
     await writeAdminLog({

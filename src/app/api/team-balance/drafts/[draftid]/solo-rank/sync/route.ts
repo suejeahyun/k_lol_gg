@@ -114,7 +114,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
     if (error instanceof Error) {
       if (error.message === "UNAUTHORIZED") return NextResponse.json({ message: "로그인이 필요합니다." }, { status: 401 });
       if (error.message === "NOT_APPROVED") return NextResponse.json({ message: "승인된 유저만 사용할 수 있습니다." }, { status: 403 });
-      return NextResponse.json({ message: "저장 밸런스 솔랭 전적 갱신 중 오류가 발생했습니다.", error: error.message }, { status: 500 });
+      return NextResponse.json({ message: "저장 밸런스 솔랭 전적 갱신 중 오류가 발생했습니다." }, { status: 500 });
     }
 
     return NextResponse.json({ message: "저장 밸런스 솔랭 전적 갱신 중 알 수 없는 오류가 발생했습니다." }, { status: 500 });

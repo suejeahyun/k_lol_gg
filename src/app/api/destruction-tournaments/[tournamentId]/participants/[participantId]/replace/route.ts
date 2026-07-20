@@ -173,10 +173,33 @@ export async function POST(req: NextRequest, { params }: RouteProps) {
         });
       }
 
+      const openMvpMatches = await tx.destructionMatch.findMany({
+        where: {
+          tournamentId: parsedTournamentId,
+          mvpFinalizedAt: null,
+          OR: [
+            { teamAId: participant.teamId! },
+            { teamBId: participant.teamId! },
+          ],
+        },
+        select: { id: true },
+      });
+      const openMvpMatchIds = openMvpMatches.map((match) => match.id);
+
+      if (openMvpMatchIds.length > 0) {
+        await tx.destructionMatchMvpVote.deleteMany({
+          where: { matchId: { in: openMvpMatchIds } },
+        });
+        await tx.destructionMatch.updateMany({
+          where: { id: { in: openMvpMatchIds } },
+          data: { mvpVoteRound: 1, mvpRevoteCandidateIds: [] },
+        });
+      }
+
       await tx.adminLog.create({
         data: {
           action: "DESTRUCTION_PARTICIPANT_REPLACE",
-          message: `멸망전 참가자 교체: ${tournament.title} / ${participant.team!.name} / ${participant.player.nickname}#${participant.player.tag} → ${incomingPlayer.nickname}#${incomingPlayer.tag} / 사유: ${reason}`,
+          message: `멸망전 참가자 교체: ${tournament.title} / ${participant.team!.name} / ${participant.player.nickname}#${participant.player.tag} → ${incomingPlayer.nickname}#${incomingPlayer.tag} / 미확정 MVP 투표 ${openMvpMatchIds.length}경기 초기화 / 사유: ${reason}`,
         },
       });
 

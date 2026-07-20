@@ -1,0 +1,3 @@
+ALTER TABLE "DestructionMatch"
+  ADD COLUMN "mvpVoteRound" INTEGER NOT NULL DEFAULT 1,
+  ADD COLUMN "mvpRevoteCandidateIds" INTEGER[] NOT NULL DEFAULT ARRAY[]::INTEGER[];

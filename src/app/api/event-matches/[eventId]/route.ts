@@ -113,7 +113,15 @@ export async function PATCH(req: NextRequest, { params }: RouteProps) {
       );
     }
 
-    const body = await req.json();
+    let body: Record<string, unknown>;
+    try {
+      body = (await req.json()) as Record<string, unknown>;
+    } catch {
+      return NextResponse.json(
+        { message: "요청 형식이 올바르지 않습니다." },
+        { status: 400 }
+      );
+    }
 
     const title =
       typeof body.title === "string" ? body.title.trim() : undefined;
@@ -122,38 +130,53 @@ export async function PATCH(req: NextRequest, { params }: RouteProps) {
     const mode = typeof body.mode === "string" ? body.mode : undefined;
     const status = typeof body.status === "string" ? body.status : undefined;
 
-    const eventDate = body.eventDate ? new Date(body.eventDate) : undefined;
+    const eventDate = body.eventDate
+      ? new Date(String(body.eventDate))
+      : undefined;
     const recruitFrom =
       body.recruitFrom === null
         ? null
         : body.recruitFrom
-          ? new Date(body.recruitFrom)
+          ? new Date(String(body.recruitFrom))
           : undefined;
     const recruitTo =
       body.recruitTo === null
         ? null
         : body.recruitTo
-          ? new Date(body.recruitTo)
+          ? new Date(String(body.recruitTo))
           : undefined;
 
     const winnerTeamId =
       body.winnerTeamId === null
         ? null
-        : body.winnerTeamId
+        : body.winnerTeamId !== undefined
           ? Number(body.winnerTeamId)
           : undefined;
     const mvpPlayerId =
       body.mvpPlayerId === null
         ? null
-        : body.mvpPlayerId
+        : body.mvpPlayerId !== undefined
           ? Number(body.mvpPlayerId)
           : undefined;
     const galleryImageId =
       body.galleryImageId === null
         ? null
-        : body.galleryImageId
+        : body.galleryImageId !== undefined
           ? Number(body.galleryImageId)
           : undefined;
+
+    for (const [label, value] of [
+      ["우승팀", winnerTeamId],
+      ["MVP 선수", mvpPlayerId],
+      ["갤러리 이미지", galleryImageId],
+    ] as const) {
+      if (value !== undefined && value !== null && !parseId(String(value))) {
+        return NextResponse.json(
+          { message: `${label} ID가 올바르지 않습니다.` },
+          { status: 400 }
+        );
+      }
+    }
 
     if (title !== undefined && !title) {
       return NextResponse.json(
@@ -189,33 +212,91 @@ export async function PATCH(req: NextRequest, { params }: RouteProps) {
       }
     }
 
-    const event = await prisma.eventMatch.update({
+    const currentEvent = await prisma.eventMatch.findUnique({
       where: { id },
-      data: {
-        ...(title !== undefined ? { title } : {}),
-        ...(description !== undefined ? { description } : {}),
-        ...(mode !== undefined ? { mode } : {}),
-        ...(status !== undefined ? { status } : {}),
-        ...(eventDate !== undefined ? { eventDate } : {}),
-        ...(recruitFrom !== undefined ? { recruitFrom } : {}),
-        ...(recruitTo !== undefined ? { recruitTo } : {}),
-        ...(winnerTeamId !== undefined ? { winnerTeamId } : {}),
-        ...(mvpPlayerId !== undefined ? { mvpPlayerId } : {}),
-        ...(galleryImageId !== undefined ? { galleryImageId } : {}),
-      },
-      include: {
-        galleryImage: true,
-        teams: true,
-        participants: true,
-        matches: true,
+      select: {
+        id: true,
+        teams: { select: { id: true } },
+        participants: { select: { playerId: true } },
       },
     });
 
-    await prisma.adminLog.create({
-      data: {
-        action: "EVENT_MATCH_UPDATE",
-        message: `이벤트 내전 수정: ${event.title}`,
-      },
+    if (!currentEvent) {
+      return NextResponse.json(
+        { message: "이벤트 내전을 찾을 수 없습니다." },
+        { status: 404 }
+      );
+    }
+
+    if (
+      winnerTeamId !== undefined &&
+      winnerTeamId !== null &&
+      !currentEvent.teams.some((team) => team.id === winnerTeamId)
+    ) {
+      return NextResponse.json(
+        { message: "이 이벤트에 속한 팀만 우승팀으로 지정할 수 있습니다." },
+        { status: 400 }
+      );
+    }
+
+    if (
+      mvpPlayerId !== undefined &&
+      mvpPlayerId !== null &&
+      !currentEvent.participants.some(
+        (participant) => participant.playerId === mvpPlayerId
+      )
+    ) {
+      return NextResponse.json(
+        { message: "이 이벤트 참가자만 MVP로 지정할 수 있습니다." },
+        { status: 400 }
+      );
+    }
+
+    if (galleryImageId !== undefined && galleryImageId !== null) {
+      const galleryImage = await prisma.galleryImage.findUnique({
+        where: { id: galleryImageId },
+        select: { id: true },
+      });
+
+      if (!galleryImage) {
+        return NextResponse.json(
+          { message: "갤러리 이미지를 찾을 수 없습니다." },
+          { status: 400 }
+        );
+      }
+    }
+
+    const event = await prisma.$transaction(async (tx) => {
+      const updated = await tx.eventMatch.update({
+        where: { id },
+        data: {
+          ...(title !== undefined ? { title } : {}),
+          ...(description !== undefined ? { description } : {}),
+          ...(mode !== undefined ? { mode } : {}),
+          ...(status !== undefined ? { status } : {}),
+          ...(eventDate !== undefined ? { eventDate } : {}),
+          ...(recruitFrom !== undefined ? { recruitFrom } : {}),
+          ...(recruitTo !== undefined ? { recruitTo } : {}),
+          ...(winnerTeamId !== undefined ? { winnerTeamId } : {}),
+          ...(mvpPlayerId !== undefined ? { mvpPlayerId } : {}),
+          ...(galleryImageId !== undefined ? { galleryImageId } : {}),
+        },
+        include: {
+          galleryImage: true,
+          teams: true,
+          participants: true,
+          matches: true,
+        },
+      });
+
+      await tx.adminLog.create({
+        data: {
+          action: "EVENT_MATCH_UPDATE",
+          message: `이벤트 내전 수정: ${updated.title}`,
+        },
+      });
+
+      return updated;
     });
 
     return NextResponse.json(event);

@@ -331,7 +331,6 @@ export async function GET(_request: Request, context: RouteContext) {
       return NextResponse.json(
         {
           message: "솔랭 분석 데이터를 불러오는 중 오류가 발생했습니다.",
-          error: error.message,
         },
         { status: 500 }
       );

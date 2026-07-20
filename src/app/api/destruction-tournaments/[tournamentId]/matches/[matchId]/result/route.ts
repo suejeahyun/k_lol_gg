@@ -158,6 +158,8 @@ export async function PATCH(req: NextRequest, { params }: RouteProps) {
           mvpPlayerId: beforeMatch?.winnerTeamId && beforeMatch.winnerTeamId !== winnerTeamId ? null : mvpPlayerId,
           mvpSelectionMethod: beforeMatch?.winnerTeamId && beforeMatch.winnerTeamId !== winnerTeamId ? null : undefined,
           mvpFinalizedAt: beforeMatch?.winnerTeamId && beforeMatch.winnerTeamId !== winnerTeamId ? null : undefined,
+          mvpVoteRound: beforeMatch?.winnerTeamId && beforeMatch.winnerTeamId !== winnerTeamId ? 1 : undefined,
+          mvpRevoteCandidateIds: beforeMatch?.winnerTeamId && beforeMatch.winnerTeamId !== winnerTeamId ? [] : undefined,
           mvpVotes: beforeMatch?.winnerTeamId && beforeMatch.winnerTeamId !== winnerTeamId ? { deleteMany: {} } : undefined,
           teamAScore,
           teamBScore,

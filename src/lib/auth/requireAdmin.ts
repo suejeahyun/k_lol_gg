@@ -43,6 +43,7 @@ export async function requireAdminRequest(): Promise<AdminSession | null> {
         userId: true,
         role: true,
         status: true,
+        authVersion: true,
         player: {
           select: {
             id: true,
@@ -51,7 +52,7 @@ export async function requireAdminRequest(): Promise<AdminSession | null> {
       },
     });
 
-    if (user && isAdminRole(user.role) && user.status === "APPROVED") {
+    if (user && (payload.authVersion ?? 0) === user.authVersion && isAdminRole(user.role) && user.status === "APPROVED") {
       return {
         mode: "user-admin",
         user: {

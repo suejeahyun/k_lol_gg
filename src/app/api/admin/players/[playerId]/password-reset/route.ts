@@ -6,14 +6,13 @@ import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog, getRequestAuditFields } from "@/lib/admin-log";
 import { hashPassword } from "@/lib/auth/password";
 import { requireSuperAdminRequest } from "@/lib/auth/requireAdmin";
+import { createTemporaryPassword } from "@/lib/auth/temp-password";
 
 type RouteContext = {
   params: Promise<{
     playerId: string;
   }>;
 };
-
-const DEFAULT_RESET_PASSWORD = "1234";
 
 export async function PATCH(req: NextRequest, { params }: RouteContext) {
   const admin = await requireSuperAdminRequest();
@@ -64,12 +63,13 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       );
     }
 
-    const passwordHash = await hashPassword(DEFAULT_RESET_PASSWORD);
+    const tempPassword = createTemporaryPassword();
+    const passwordHash = await hashPassword(tempPassword);
     const audit = getRequestAuditFields(req);
 
     await prisma.userAccount.update({
       where: { id: player.userAccount.id },
-      data: { passwordHash },
+      data: { passwordHash, authVersion: { increment: 1 } },
     });
 
     await writeAdminLog({
@@ -85,8 +85,8 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     });
 
     return NextResponse.json({
-      message: "비밀번호가 1234로 초기화되었습니다.",
-      tempPassword: DEFAULT_RESET_PASSWORD,
+      message: "임시 비밀번호가 발급되었습니다.",
+      tempPassword,
       userAccountId: player.userAccount.id,
       userId: player.userAccount.userId,
     });

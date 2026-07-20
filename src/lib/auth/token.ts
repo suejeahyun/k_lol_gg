@@ -6,6 +6,7 @@ export type AuthTokenPayload = {
   role?: string;
   status?: string;
   playerId?: number | null;
+  authVersion?: number;
 };
 
 const JWT_ISSUER = "k-lol-gg";
@@ -70,12 +71,20 @@ export function verifyAuthToken(token: string): AuthTokenPayload | null {
           ? Number(rawPlayerId)
           : null;
 
+    const rawAuthVersion = payload.authVersion;
+    const authVersion = typeof rawAuthVersion === "number"
+      ? rawAuthVersion
+      : typeof rawAuthVersion === "string"
+        ? Number(rawAuthVersion)
+        : 0;
+
     return {
       userAccountId,
       userId,
       role: typeof payload.role === "string" ? payload.role : undefined,
       status: typeof payload.status === "string" ? payload.status : undefined,
       playerId: Number.isFinite(playerId) ? playerId : null,
+      authVersion: Number.isInteger(authVersion) && authVersion >= 0 ? authVersion : 0,
     };
   } catch {
     return null;

@@ -172,19 +172,30 @@ export default async function DestructionProgressDetailPage({
   const isCompleted = tournament.status === "COMPLETED";
   const isCancelled = tournament.status === "CANCELLED";
   const matchesWithResult = tournament.matches.filter((match) => match.winnerTeamId && (match.stage !== "PRELIMINARY" || match.isConfirmed));
+  const pendingMvpMatches = matchesWithResult.filter((match) => !match.mvpFinalizedAt);
   const renderMvpBallot = (match: (typeof tournament.matches)[number]) => {
     const matchParticipants = tournament.participants.filter(
       (participant) => participant.teamId === match.teamAId || participant.teamId === match.teamBId,
     );
     const isMatchParticipant = Boolean(currentUser?.playerId && matchParticipants.some((participant) => participant.playerId === currentUser.playerId));
     const canVote = currentUser?.status === "APPROVED" && isMatchParticipant && matchParticipants.length === 10;
-    const candidates = matchParticipants.filter((participant) => participant.playerId !== currentUser?.playerId).map((participant) => ({
-      id: participant.playerId, name: participant.player.name, nickname: participant.player.nickname, tag: participant.player.tag,
+    const candidates = matchParticipants.map((participant) => ({
+      id: participant.playerId,
+      name: participant.player.name,
+      nickname: participant.player.nickname,
+      tag: participant.player.tag,
+      position: participant.position,
+      teamSide: participant.teamId === match.teamAId ? "A" as const : "B" as const,
+      selectable: participant.playerId !== currentUser?.playerId &&
+        (match.mvpRevoteCandidateIds.length === 0 || match.mvpRevoteCandidateIds.includes(participant.playerId)),
+      unavailableLabel: participant.playerId === currentUser?.playerId ? "본인 제외" : "재투표 대상 아님",
     }));
     return <DestructionMvpBallot matchId={match.id} candidates={candidates}
       initialVotePlayerId={match.mvpVotes[0]?.candidatePlayerId ?? null}
       finalizedMvp={match.mvpPlayer ? { id: match.mvpPlayer.id, name: match.mvpPlayer.name, nickname: match.mvpPlayer.nickname, tag: match.mvpPlayer.tag, method: match.mvpSelectionMethod } : null}
       canVote={canVote}
+      teamLayout={{ teamAName: match.teamA.name, teamBName: match.teamB.name }}
+      voteRound={match.mvpVoteRound}
       unavailableMessage={!currentUser ? "로그인 후 투표할 수 있습니다." : !isMatchParticipant ? "해당 경기 참가자 10명만 투표할 수 있습니다." : matchParticipants.length !== 10 ? "경기 참가자 10명이 확정되어야 투표할 수 있습니다." : undefined} />;
   };
 
@@ -343,6 +354,7 @@ export default async function DestructionProgressDetailPage({
                     </strong>
                     <em>{match.round}경기</em>
                     <b>승리: {getWinnerName(match)}</b>
+                    <i className="destruction-match-row__mvp">{match.mvpPlayer ? `MVP: ${match.mvpPlayer.name} (${match.mvpPlayer.nickname}#${match.mvpPlayer.tag})` : ""}</i>
                   </div>
                 ))}
               </div>
@@ -370,6 +382,7 @@ export default async function DestructionProgressDetailPage({
                     </strong>
                     <em>{match.round}경기</em>
                     <b>승리: {getWinnerName(match)}</b>
+                    <i className="destruction-match-row__mvp">{match.mvpPlayer ? `MVP: ${match.mvpPlayer.name} (${match.mvpPlayer.nickname}#${match.mvpPlayer.tag})` : ""}</i>
                   </div>
                 ))}
               </div>
@@ -393,6 +406,7 @@ export default async function DestructionProgressDetailPage({
                     </strong>
                     <em>{match.round}경기</em>
                     <b>승리: {getWinnerName(match)}</b>
+                    <i className="destruction-match-row__mvp">{match.mvpPlayer ? `MVP: ${match.mvpPlayer.name} (${match.mvpPlayer.nickname}#${match.mvpPlayer.tag})` : ""}</i>
                   </div>
                 ))}
               </div>
@@ -401,14 +415,14 @@ export default async function DestructionProgressDetailPage({
         </>
       ) : null}
 
-      {matchesWithResult.length ? (
+      {pendingMvpMatches.length ? (
         <section className="content-section">
           <div className="section-header">
             <h2>경기별 MVP</h2>
             <p className="page-description">경기 참가자 10명만 참여하며, 본인을 제외한 9명 중 한 명에게 투표합니다.</p>
           </div>
           <div className="destruction-mvp-match-list">
-            {matchesWithResult.map((match) => (
+            {pendingMvpMatches.map((match) => (
               <article key={match.id} className="destruction-mvp-match-card">
                 <div className="destruction-mvp-match-card__title">
                   <span>{getStageLabel(match.stage)} · {match.round}경기</span>

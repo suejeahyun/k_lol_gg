@@ -33,10 +33,10 @@ async function getApprovedAdminRole(token?: string) {
   try {
     const user = await prisma.userAccount.findUnique({
       where: { id: payload.userAccountId },
-      select: { role: true, status: true, deletedAt: true },
+      select: { role: true, status: true, deletedAt: true, authVersion: true },
     });
 
-    if (!user || user.deletedAt || user.status !== "APPROVED") return null;
+    if (!user || user.deletedAt || user.status !== "APPROVED" || (payload.authVersion ?? 0) !== user.authVersion) return null;
     if (user.role === "ADMIN" || user.role === "SUPER_ADMIN") return user.role;
     return null;
   } catch {
