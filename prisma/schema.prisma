@@ -58,6 +58,11 @@ enum DestructionStage {
   FINAL
 }
 
+enum DestructionMvpSelectionMethod {
+  VOTE
+  ADMIN
+}
+
 enum ApplyPosition {
   TOP
   JGL
@@ -143,6 +148,8 @@ model Player {
 
   destructionCaptainTeams    DestructionTeam[]
   destructionParticipants    DestructionParticipant[]
+  destructionMatchMvps       DestructionMatch[] @relation("DestructionMatchMvp")
+  destructionMatchMvpVotes   DestructionMatchMvpVote[] @relation("DestructionMatchVoteCandidate")
   destructionReplacementsOut DestructionParticipantReplacement[] @relation("DestructionReplacementOutgoingPlayer")
   destructionReplacementsIn  DestructionParticipantReplacement[] @relation("DestructionReplacementIncomingPlayer")
   teamBalanceDraftPlayers    TeamBalanceDraftPlayer[]
@@ -193,6 +200,7 @@ model UserAccount {
   discordVoiceEvents     DiscordVoiceEvent[]
   discordAccountLinkLogs DiscordAccountLinkLog[]
   disciplineRecords      UserDisciplineRecord[]
+  destructionMatchMvpVotes DestructionMatchMvpVote[]
 
   @@index([deletedAt])
 }
@@ -630,6 +638,8 @@ model DestructionMatch {
   teamBId      Int
   winnerTeamId Int?
   mvpPlayerId  Int?
+  mvpSelectionMethod DestructionMvpSelectionMethod?
+  mvpFinalizedAt DateTime?
 
   isReplay    Boolean   @default(false)
   isConfirmed Boolean   @default(false)
@@ -645,10 +655,29 @@ model DestructionMatch {
 
   teamA DestructionTeam @relation("DestructionTeamA", fields: [teamAId], references: [id])
   teamB DestructionTeam @relation("DestructionTeamB", fields: [teamBId], references: [id])
+  mvpPlayer Player? @relation("DestructionMatchMvp", fields: [mvpPlayerId], references: [id], onDelete: SetNull)
+  mvpVotes DestructionMatchMvpVote[]
 
   @@unique([tournamentId, stage, round])
   @@index([tournamentId, winnerTeamId])
   @@index([tournamentId, stage, preliminaryGroup])
+}
+
+model DestructionMatchMvpVote {
+  id                 Int      @id @default(autoincrement())
+  matchId            Int
+  voterUserAccountId Int
+  candidatePlayerId  Int
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  match     DestructionMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  voter     UserAccount      @relation(fields: [voterUserAccountId], references: [id], onDelete: Cascade)
+  candidate Player           @relation("DestructionMatchVoteCandidate", fields: [candidatePlayerId], references: [id], onDelete: Cascade)
+
+  @@unique([matchId, voterUserAccountId])
+  @@index([matchId, candidatePlayerId])
+  @@index([voterUserAccountId])
 }
 
 model SeasonParticipationApply {

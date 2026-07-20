@@ -1369,3 +1369,22 @@
     grid-template-columns: 1fr;
   }
 }
+.destruction-mvp-match-list { display: grid; gap: 14px; }
+.destruction-mvp-match-card { display: grid; gap: 10px; padding: 16px; border: 1px solid rgba(56, 189, 248, 0.16); border-radius: 16px; background: rgba(8, 18, 34, 0.58); }
+.destruction-mvp-match-card__title { display: grid; gap: 4px; }
+.destruction-mvp-match-card__title span { color: #7dd3fc; font-size: 12px; font-weight: 800; }
+.destruction-mvp-match-card__title strong { color: #e5f3ff; }
+.destruction-mvp-ballot { grid-column: 1 / -1; display: grid; gap: 10px; width: 100%; margin-top: 8px; padding: 14px; border: 1px solid rgba(250, 204, 21, 0.25); border-radius: 14px; background: rgba(30, 22, 6, 0.34); }
+.destruction-mvp-ballot__header, .destruction-admin-mvp__title, .destruction-admin-mvp__actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.destruction-mvp-ballot__header > div { display: grid; gap: 3px; }
+.destruction-mvp-ballot__header span, .destruction-mvp-ballot p, .destruction-mvp-ballot small { color: #aebbd0; font-size: 12px; }
+.destruction-mvp-ballot__header strong { color: #fde68a; }
+.destruction-mvp-ballot__header em { color: #facc15; font-size: 12px; font-style: normal; }
+.destruction-mvp-ballot__candidates { display: flex; flex-wrap: wrap; gap: 8px; }
+.destruction-admin-mvp { display: grid; gap: 10px; padding: 14px; border: 1px solid rgba(250, 204, 21, 0.2); border-radius: 14px; background: rgba(15, 23, 42, 0.45); }
+.destruction-admin-mvp__title strong { color: #fde68a; }
+.destruction-admin-mvp__title span { color: #aebbd0; font-size: 12px; }
+.destruction-admin-mvp__candidates { display: grid; gap: 7px; }
+.destruction-admin-mvp__candidates label { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 9px; align-items: center; padding: 9px 11px; border: 1px solid rgba(148, 163, 184, 0.16); border-radius: 10px; color: #dbeafe; cursor: pointer; }
+.destruction-admin-mvp__candidates b { color: #7dd3fc; font-size: 12px; }
+@media (max-width: 640px) { .destruction-mvp-ballot__candidates > button, .destruction-admin-mvp__actions > button { width: 100%; } }

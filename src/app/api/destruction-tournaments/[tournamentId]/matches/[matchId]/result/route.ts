@@ -32,7 +32,7 @@ export async function PATCH(req: NextRequest, { params }: RouteProps) {
     const body = await req.json();
 
     const winnerTeamId = body.winnerTeamId ? Number(body.winnerTeamId) : null;
-    const mvpPlayerId = body.mvpPlayerId ? Number(body.mvpPlayerId) : null;
+    const mvpPlayerId = body.mvpPlayerId ? Number(body.mvpPlayerId) : undefined;
     const teamAScore = Number(body.teamAScore ?? 0);
     const teamBScore = Number(body.teamBScore ?? 0);
 
@@ -85,6 +85,13 @@ export async function PATCH(req: NextRequest, { params }: RouteProps) {
         { status: 400 }
       );
     }
+
+    const playedGameCount = teamAScore + teamBScore;
+    const requiredWins = Math.floor(match.bestOf / 2) + 1;
+    if (
+      Math.max(teamAScore, teamBScore) !== requiredWins || Math.min(teamAScore, teamBScore) >= requiredWins ||
+      playedGameCount > match.bestOf
+    ) return NextResponse.json({ message: "세트 스코어가 경기 방식과 일치하지 않습니다." }, { status: 400 });
 
     if (mvpPlayerId) {
       const validMvp = await prisma.destructionParticipant.findFirst({
@@ -148,7 +155,10 @@ export async function PATCH(req: NextRequest, { params }: RouteProps) {
         },
         data: {
           winnerTeamId,
-          mvpPlayerId,
+          mvpPlayerId: beforeMatch?.winnerTeamId && beforeMatch.winnerTeamId !== winnerTeamId ? null : mvpPlayerId,
+          mvpSelectionMethod: beforeMatch?.winnerTeamId && beforeMatch.winnerTeamId !== winnerTeamId ? null : undefined,
+          mvpFinalizedAt: beforeMatch?.winnerTeamId && beforeMatch.winnerTeamId !== winnerTeamId ? null : undefined,
+          mvpVotes: beforeMatch?.winnerTeamId && beforeMatch.winnerTeamId !== winnerTeamId ? { deleteMany: {} } : undefined,
           teamAScore,
           teamBScore,
         },
@@ -193,7 +203,7 @@ export async function PATCH(req: NextRequest, { params }: RouteProps) {
           where: { id: parsedTournamentId },
           data: {
             winnerTeamId,
-            mvpPlayerId,
+            mvpPlayerId: beforeMatch?.winnerTeamId && beforeMatch.winnerTeamId !== winnerTeamId ? null : mvpPlayerId,
           },
         });
       }
@@ -218,4 +228,3 @@ export async function PATCH(req: NextRequest, { params }: RouteProps) {
     );
   }
 }
-

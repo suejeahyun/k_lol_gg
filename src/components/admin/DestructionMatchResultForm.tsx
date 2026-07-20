@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import DestructionMatchMvpManager from "@/components/admin/DestructionMatchMvpManager";
 
 type Team = {
   id: number;
@@ -30,6 +31,11 @@ type Props = {
   initialTeamAScore?: number | null;
   initialTeamBScore?: number | null;
   bestOf?: number | null;
+  mvpManager?: {
+    mvpPlayerId: number | null;
+    mvpSelectionMethod: "VOTE" | "ADMIN" | null;
+    candidates: Array<{ id: number; nickname: string; tag: string; voteCount: number }>;
+  };
 };
 
 function normalizeBestOf(bestOf?: number | null) {
@@ -81,6 +87,7 @@ export default function DestructionMatchResultForm({
   initialTeamAScore,
   initialTeamBScore,
   bestOf,
+  mvpManager,
 }: Props) {
   const router = useRouter();
   const normalizedBestOf = normalizeBestOf(bestOf);
@@ -129,7 +136,7 @@ export default function DestructionMatchResultForm({
   const handleSubmit = async () => {
     setError("");
 
-    if (!score.winnerTeamId) {
+    if (!score.winnerTeamId || Math.max(score.teamAScore, score.teamBScore) !== requiredWins || Math.min(score.teamAScore, score.teamBScore) >= requiredWins) {
       setError(`${normalizedBestOf}판 ${requiredWins}선승 결과가 되도록 세트 승리 팀을 선택해주세요.`);
       return;
     }
@@ -335,6 +342,11 @@ export default function DestructionMatchResultForm({
       </div>
 
       {error ? <p className="notice-form__error">{error}</p> : null}
+
+      {mvpManager ? (
+        <DestructionMatchMvpManager matchId={matchId} candidates={mvpManager.candidates}
+          initialMvpPlayerId={mvpManager.mvpPlayerId} initialMethod={mvpManager.mvpSelectionMethod} />
+      ) : null}
     </div>
   );
 }

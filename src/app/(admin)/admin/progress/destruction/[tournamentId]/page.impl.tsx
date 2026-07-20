@@ -249,6 +249,8 @@ export default async function AdminDestructionTournamentDetailPage({
           include: {
             teamA: true,
             teamB: true,
+            mvpPlayer: true,
+            mvpVotes: true,
           },
           orderBy: [{ stage: "asc" }, { preliminaryGroup: "asc" }, { round: "asc" }],
         },
@@ -367,6 +369,19 @@ export default async function AdminDestructionTournamentDetailPage({
       message: meta?.message ?? null,
     };
   });
+
+  const getMvpManager = (match: (typeof tournament.matches)[number]) => match.winnerTeamId ? ({
+    mvpPlayerId: match.mvpPlayerId,
+    mvpSelectionMethod: match.mvpSelectionMethod,
+    candidates: tournament.participants
+      .filter((participant) => participant.teamId === match.winnerTeamId)
+      .map((participant) => ({
+        id: participant.playerId,
+        nickname: participant.player.nickname,
+        tag: participant.player.tag,
+        voteCount: match.mvpVotes.filter((vote) => vote.candidatePlayerId === participant.playerId).length,
+      })),
+  }) : undefined;
 
   const laneLimits = getDestructionLaneLimits(tournament);
 
@@ -742,6 +757,7 @@ export default async function AdminDestructionTournamentDetailPage({
                     initialTeamAScore={match.teamAScore}
                     initialTeamBScore={match.teamBScore}
                     bestOf={match.bestOf}
+                    mvpManager={getMvpManager(match)}
                   />
                 ) : (
                   <div className="empty-box">확정 전 경기입니다. 상단의 예선 편성 확정 후 결과 입력이 가능합니다.</div>
@@ -839,6 +855,7 @@ export default async function AdminDestructionTournamentDetailPage({
                   initialTeamAScore={match.teamAScore}
                   initialTeamBScore={match.teamBScore}
                   bestOf={match.bestOf}
+                  mvpManager={getMvpManager(match)}
                 />
               </article>
             ))}
@@ -932,6 +949,7 @@ export default async function AdminDestructionTournamentDetailPage({
                   initialTeamAScore={match.teamAScore}
                   initialTeamBScore={match.teamBScore}
                   bestOf={match.bestOf}
+                  mvpManager={getMvpManager(match)}
                 />
               </article>
             ))}
