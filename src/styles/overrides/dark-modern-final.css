@@ -7208,3 +7208,91 @@ html[data-theme="dark-modern"] .home-dark-showcase::before {
     text-align: center !important;
   }
 }
+
+/* Final home audit overrides. Keep after every dark-modern composition pass. */
+.winner-slider__pause {
+  margin-left: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  padding: 4px 9px;
+  background: rgba(4, 10, 20, 0.68);
+  color: rgba(255, 255, 255, 0.9);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.winner-slider__pause:hover,
+.winner-slider__pause:focus-visible {
+  border-color: var(--dm-accent, #50e3ff);
+  color: #fff;
+}
+
+.home-top3-mode-tab {
+  appearance: none;
+  font: inherit;
+}
+
+.home-top3-mode-tab[aria-selected="true"] {
+  color: #f8fbff;
+  border-color: rgba(104, 190, 255, 0.45);
+  background:
+    radial-gradient(circle at 18% 18%, rgba(126, 218, 255, 0.24), transparent 30%),
+    linear-gradient(135deg, rgba(38, 116, 210, 0.78), rgba(7, 21, 45, 0.94));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 0 26px rgba(58, 171, 255, 0.18);
+  transform: translateY(-1px);
+}
+
+.home-top3-mode-tab:focus-visible {
+  outline: 2px solid #7dd3fc;
+  outline-offset: 3px;
+}
+
+.home-top3-mode-panel[hidden] {
+  display: none !important;
+}
+
+.home-top3-mode-panel:not([hidden]) {
+  display: block !important;
+}
+
+.home-dark-recent-row em[data-result="무승부"] {
+  color: #facc15;
+}
+
+@media (min-width: 981px) {
+  .home-top3-mode-panel .home-top3-ace {
+    height: clamp(440px, 24vw, 500px) !important;
+    min-height: clamp(360px, 20vw, 460px) !important;
+    max-height: 500px !important;
+    padding: clamp(24px, 1.6vw, 32px) !important;
+  }
+
+  .home-top3-mode-panel .home-top3-chasers {
+    height: clamp(440px, 24vw, 500px) !important;
+    min-height: 0 !important;
+  }
+
+  .home-top3-mode-panel .home-top3-chaser--silver {
+    min-height: clamp(180px, 10vw, 235px) !important;
+  }
+
+  .home-top3-mode-panel .home-top3-chaser--bronze {
+    min-height: clamp(145px, 8vw, 190px) !important;
+  }
+
+  .home-top3-mode-panel .home-top3-ace__visual {
+    width: clamp(142px, 8vw, 190px) !important;
+    height: clamp(142px, 8vw, 190px) !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .app-content {
+    width: 100% !important;
+    max-width: 100vw !important;
+  }
+}

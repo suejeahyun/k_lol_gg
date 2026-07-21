@@ -1,13 +1,19 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
 import { AppEmpty, AppSection } from "@/components/app-mobile/AppCards";
 import PremiumFeatureGate from "@/components/PremiumFeatureGate";
 import { getCurrentUser } from "@/lib/auth/session";
-import { getAppHomeSummary } from "@/lib/app/home-summary";
+import { getCachedAppHomePublicData } from "@/lib/app/home-summary";
 import { prisma } from "@/lib/prisma/client";
-import { getSiteSettings, isSiteFeatureEnabled } from "@/lib/site/settings";
+import { isSiteFeatureEnabled } from "@/lib/site/settings";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "모바일 내전 홈",
+  description: "K-LOL.GG 구인, 최근 내전, 시즌 랭킹과 MVP를 모바일에서 빠르게 확인하세요.",
+};
 
 const dateFormatter = new Intl.DateTimeFormat("ko-KR", {
   month: "2-digit",
@@ -36,10 +42,12 @@ function typeLabel(type: string) {
   return "파티";
 }
 
-function teamLabel(winner?: string | null) {
-  if (winner === "BLUE") return "BLUE 승";
-  if (winner === "RED") return "RED 승";
-  return "진행";
+function seriesResultLabel(games: { winnerTeam: string | null }[]) {
+  const blueWins = games.filter((game) => game.winnerTeam === "BLUE").length;
+  const redWins = games.filter((game) => game.winnerTeam === "RED").length;
+  if (blueWins > redWins) return "BLUE 승";
+  if (redWins > blueWins) return "RED 승";
+  return games.length > 0 ? "무승부" : "결과 없음";
 }
 
 function eventStatusText(status: string) {
@@ -56,28 +64,24 @@ function eventStatusText(status: string) {
 }
 
 export default async function AppHomePage() {
-  const [session, summary, season, siteSettings] = await Promise.all([
+  const [session, publicData] = await Promise.all([
     getCurrentUser(),
-    getAppHomeSummary(),
-    prisma.season.findFirst({
-      where: { isActive: true },
-      orderBy: { id: "desc" },
-      select: { id: true, name: true },
-    }),
-    getSiteSettings(),
+    getCachedAppHomePublicData(),
   ]);
-  const recruitFeatureEnabled = isSiteFeatureEnabled(siteSettings, "recruit");
-
-  const [
-    myStat,
-    myKda,
+  const {
+    summary,
+    season,
+    siteSettings,
     recentRecruits,
     recentMatches,
     topStats,
     recentMvp,
     activeEvents,
     activeDestructions,
-  ] = await Promise.all([
+  } = publicData;
+  const recruitFeatureEnabled = isSiteFeatureEnabled(siteSettings, "recruit");
+
+  const [myStat, myKda] = await Promise.all([
     session?.playerId && season
       ? prisma.playerSeasonStat.findUnique({
           where: {
@@ -112,60 +116,6 @@ export default async function AppHomePage() {
           },
         })
       : Promise.resolve(null),
-    prisma.recruitParty.findMany({
-      where: { status: "IN_PROGRESS" },
-      include: {
-        members: {
-          orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }],
-          take: 6,
-        },
-      },
-      orderBy: [{ recruitDate: "desc" }, { resetSeq: "desc" }, { recruitNo: "asc" }],
-      take: 2,
-    }),
-    prisma.matchSeries.findMany({
-      include: { season: true, games: { orderBy: { gameNumber: "asc" } } },
-      orderBy: [{ matchDate: "desc" }, { id: "desc" }],
-      take: 3,
-    }),
-    season
-      ? prisma.playerSeasonStat.findMany({
-          where: { seasonId: season.id, participationCount: { gte: 1 } },
-          include: { player: true },
-          orderBy: [{ wins: "desc" }, { participationCount: "desc" }, { mvpCount: "desc" }],
-          take: 3,
-        })
-      : Promise.resolve([]),
-    prisma.matchGame.findFirst({
-      where: { mvpPlayerId: { not: null } },
-      include: {
-        series: true,
-        participants: { include: { player: true, champion: true } },
-      },
-      orderBy: { id: "desc" },
-    }),
-    prisma.eventMatch.findMany({
-      orderBy: [{ eventDate: "desc" }, { id: "desc" }],
-      take: 2,
-      select: {
-        id: true,
-        title: true,
-        status: true,
-        eventDate: true,
-        _count: { select: { participants: true, teams: true, matches: true } },
-      },
-    }),
-    prisma.destructionTournament.findMany({
-      orderBy: [{ startDate: "desc" }, { id: "desc" }],
-      take: 2,
-      select: {
-        id: true,
-        title: true,
-        status: true,
-        startDate: true,
-        _count: { select: { participants: true, teams: true, matches: true } },
-      },
-    }),
   ]);
 
   const mvpParticipant = recentMvp?.participants.find(
@@ -223,7 +173,7 @@ export default async function AppHomePage() {
       </section>
 
       <PremiumFeatureGate feature="recruit" settings={siteSettings}>
-        <AppSection title="활성 구인" caption="전체 보기">
+        <AppSection title="활성 구인" caption="전체 보기" captionHref="/app/recruits">
           {recentRecruits.length === 0 ? (
             <AppEmpty>현재 모집 중인 구인이 없습니다.</AppEmpty>
           ) : (
@@ -247,22 +197,21 @@ export default async function AppHomePage() {
         </AppSection>
       </PremiumFeatureGate>
 
-      <AppSection title="최근 내전" caption="전체 보기">
+      <AppSection title="최근 내전" caption="전체 보기" captionHref="/app/matches">
         {recentMatches.length === 0 ? (
           <AppEmpty>등록된 내전이 없습니다.</AppEmpty>
         ) : (
           <div className="klol-app-list">
             {recentMatches.map((match) => {
-              const lastGame = match.games.at(-1);
               return (
                 <Link className="klol-app-list-card" href={`/app/matches/${match.id}`} key={match.id}>
                   <div className="klol-app-list-top">
                     <div className="klol-app-list-title">
                       <strong>{match.title}</strong>
-                      <span>{dateFormatter.format(match.matchDate)} · {match.season?.name ?? "시즌 없음"}</span>
+                      <span>{dateFormatter.format(new Date(match.matchDate))} · {match.season?.name ?? "시즌 없음"}</span>
                     </div>
                     <span className="klol-app-badge klol-app-badge--warn">
-                      {lastGame ? teamLabel(lastGame.winnerTeam) : `${match.games.length}세트`}
+                      {seriesResultLabel(match.games)}
                     </span>
                   </div>
                 </Link>
@@ -272,7 +221,7 @@ export default async function AppHomePage() {
         )}
       </AppSection>
 
-      <AppSection title="이벤트·멸망전" caption="진행 보기">
+      <AppSection title="이벤트·멸망전" caption="진행 중">
         {activeEvents.length === 0 && activeDestructions.length === 0 ? (
           <AppEmpty>진행 중인 이벤트/멸망전이 없습니다.</AppEmpty>
         ) : (
@@ -286,7 +235,7 @@ export default async function AppHomePage() {
                 <div className="klol-app-list-top">
                   <div className="klol-app-list-title">
                     <strong>{event.title}</strong>
-                    <span>{dateFormatter.format(event.eventDate)} · {event._count.participants}명 · {event._count.teams}팀</span>
+                    <span>{dateFormatter.format(new Date(event.eventDate))} · {event._count.participants}명 · {event._count.teams}팀</span>
                   </div>
                   <span className="klol-app-badge">{eventStatusText(event.status)}</span>
                 </div>
@@ -301,7 +250,7 @@ export default async function AppHomePage() {
                 <div className="klol-app-list-top">
                   <div className="klol-app-list-title">
                     <strong>{tournament.title}</strong>
-                    <span>{tournament.startDate ? dateFormatter.format(tournament.startDate) : "일정 미정"} · {tournament._count.participants}명 · {tournament._count.teams}팀</span>
+                    <span>{tournament.startDate ? dateFormatter.format(new Date(tournament.startDate)) : "일정 미정"} · {tournament._count.participants}명 · {tournament._count.teams}팀</span>
                   </div>
                   <span className="klol-app-badge klol-app-badge--warn">{eventStatusText(tournament.status)}</span>
                 </div>

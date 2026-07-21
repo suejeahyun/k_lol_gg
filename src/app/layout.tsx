@@ -5,6 +5,7 @@ import MobileAppGate from "@/components/MobileAppGate";
 import SiteRuntimeSettings from "@/components/SiteRuntimeSettings";
 import SiteAiAssistant from "@/components/ai/SiteAiAssistant";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import { getPublicBaseUrl } from "@/lib/http/base-url";
 
 const appName = "K-LOL.GG";
 const appDescription = "K-LOL.GG 내전 전적, 구인, 랭킹, 팀 밸런스, 운영 도구";
@@ -80,6 +81,7 @@ const mobileAppBootScript = `
 `;
 
 export const metadata: Metadata = {
+  metadataBase: new URL(getPublicBaseUrl()),
   applicationName: appName,
   title: {
     default: appName,
@@ -105,7 +107,6 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
   viewportFit: "cover",
   themeColor: "#05070d",
 };

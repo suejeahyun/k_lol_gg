@@ -3,6 +3,7 @@
 import SafeGalleryImage from "@/components/SafeGalleryImage";
 import { coerceGalleryImageUrls } from "@/lib/gallery/winner-image-paths";
 import { useEffect, useMemo, useState } from "react";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 type GalleryWinnerImage = {
   id: number;
@@ -32,16 +33,18 @@ export default function GalleryWinnerSlider({
   );
 
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
-    if (slideItems.length <= 1) return;
+    if (slideItems.length <= 1 || !isPlaying || prefersReducedMotion) return;
 
     const timer = window.setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % slideItems.length);
     }, 3500);
 
     return () => window.clearInterval(timer);
-  }, [slideItems.length]);
+  }, [isPlaying, prefersReducedMotion, slideItems.length]);
 
   if (slideItems.length === 0) {
     return (
@@ -54,7 +57,7 @@ export default function GalleryWinnerSlider({
   const current = slideItems[currentIndex];
 
   return (
-    <div className="winner-slider">
+    <div className="winner-slider" role="region" aria-label="멸망전 우승팀 이미지 슬라이드">
       <div className="winner-slider__image-wrap">
         <SafeGalleryImage
           src={current.imageUrl}
@@ -90,8 +93,17 @@ export default function GalleryWinnerSlider({
               }
               onClick={() => setCurrentIndex(index)}
               aria-label={`${index + 1}번째 우승팀 이미지 보기`}
+              aria-current={index === currentIndex ? "true" : undefined}
             />
           ))}
+          <button
+            type="button"
+            className="winner-slider__pause"
+            onClick={() => setIsPlaying((playing) => !playing)}
+            aria-label={isPlaying ? "우승팀 이미지 자동 넘김 일시정지" : "우승팀 이미지 자동 넘김 재생"}
+          >
+            {isPlaying ? "일시정지" : "재생"}
+          </button>
         </div>
       )}
     </div>

@@ -36,7 +36,7 @@ function winnerText(games: { winnerTeam: string | null }[]) {
   const blue = games.filter((game) => game.winnerTeam === "BLUE").length;
   const red = games.filter((game) => game.winnerTeam === "RED").length;
   if (!blue && !red) return `${games.length}세트`;
-  if (blue === red) return "진행";
+  if (blue === red) return "무승부";
   return blue > red ? "BLUE 승" : "RED 승";
 }
 

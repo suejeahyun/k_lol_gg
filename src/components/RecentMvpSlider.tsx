@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import SafeChampionImage from "@/components/SafeChampionImage";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 type RecentMvpItem = {
   key: string;
@@ -37,6 +38,8 @@ export default function RecentMvpSlider({
   dateLabel,
 }: RecentMvpSliderProps) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   const normalizedItems = useMemo(() => {
     return [...items].sort((a, b) => {
@@ -60,17 +63,17 @@ export default function RecentMvpSlider({
   const activeItem = normalizedItems[safeActiveIndex] ?? null;
 
   useEffect(() => {
-    if (normalizedItems.length <= 1) return;
+    if (normalizedItems.length <= 1 || !isPlaying || prefersReducedMotion) return;
 
     const timer = window.setInterval(() => {
       setActiveIndex((prev) => (prev + 1) % normalizedItems.length);
     }, 5000);
 
     return () => window.clearInterval(timer);
-  }, [normalizedItems.length]);
+  }, [isPlaying, normalizedItems.length, prefersReducedMotion]);
 
   return (
-    <div className="card home-mvp-card">
+    <div className="card home-mvp-card" role="region" aria-label="최근 MVP 슬라이드">
       <div className="home-section-head">
         <div>
           <p className="home-eyebrow">RECENT MVP</p>
@@ -155,10 +158,22 @@ export default function RecentMvpSlider({
                       : "home-mvp-pagination__dot"
                   }
                   onClick={() => setActiveIndex(index)}
-                  aria-label={`${item.gameNumber}세트 MVP 보기`}
+                  aria-label={`${item.matchTitle} ${item.gameNumber}세트 MVP 보기`}
+                  aria-current={index === safeActiveIndex ? "true" : undefined}
                 />
               ))}
             </div>
+
+            {normalizedItems.length > 1 ? (
+              <button
+                type="button"
+                className="home-mvp-nav-button"
+                onClick={() => setIsPlaying((playing) => !playing)}
+                aria-label={isPlaying ? "MVP 자동 넘김 일시정지" : "MVP 자동 넘김 재생"}
+              >
+                {isPlaying ? "정지" : "재생"}
+              </button>
+            ) : null}
 
             <button
               type="button"

@@ -5,10 +5,15 @@ import Link from "next/link";
 import type { CSSProperties } from "react";
 import { prisma } from "@/lib/prisma/client";
 import GalleryWinnerSlider from "@/components/GalleryWinnerSlider";
+import HomeTop3Tabs from "@/components/HomeTop3Tabs";
 import RecentMvpSlider from "@/components/RecentMvpSlider";
 import { getCurrentUser } from "@/lib/auth/session";
+import {
+  getCachedHomePlayerTiers,
+  getCachedHomePublicData,
+  getCachedHomeSeasonSummary,
+} from "@/lib/home/public-data";
 import { calculateMvpScore, getGameMvpParticipant } from "@/lib/mvp";
-import { getSiteSettings } from "@/lib/site/settings";
 import { getCachedStatsTopData } from "@/lib/stats/top";
 
 function getDestructionStatusLabel(status: string) {
@@ -43,7 +48,7 @@ function getDestructionProgressPercent(status?: string | null) {
   return values[status] ?? "10%";
 }
 
-function formatDate(date: Date): string {
+function formatDate(date: Date | string): string {
   return new Date(date).toLocaleDateString("ko-KR");
 }
 
@@ -87,217 +92,23 @@ function getTierImageSrc(tier?: string | null) {
   return "/images/tiers/silver.webp";
 }
 
-function getKoreaDayRange(date: Date) {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(date);
-
-  const year = Number(parts.find((part) => part.type === "year")?.value ?? "0");
-  const month = Number(
-    parts.find((part) => part.type === "month")?.value ?? "1",
-  );
-  const day = Number(parts.find((part) => part.type === "day")?.value ?? "1");
-
-  const start = new Date(Date.UTC(year, month - 1, day, -9, 0, 0, 0));
-  const end = new Date(Date.UTC(year, month - 1, day + 1, -9, 0, 0, 0));
-
-  return { start, end };
-}
-
 export default async function HomePage() {
-  const [
-    topData,
+  const [topData, publicData, currentUser] = await Promise.all([
+    getCachedStatsTopData(),
+    getCachedHomePublicData(),
+    getCurrentUser(),
+  ]);
+
+  const {
     winnerImages,
     recentMatches,
     latestDestruction,
     latestMvpSeries,
-    currentUser,
+    latestMvpMatches,
     siteSettings,
-  ] = await Promise.all([
-    getCachedStatsTopData(),
-
-    prisma.galleryImage.findMany({
-      where: {
-        showOnHome: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        imageUrl: true,
-      },
-    }),
-
-    prisma.matchSeries.findMany({
-      orderBy: {
-        matchDate: "desc",
-      },
-      take: 5,
-      include: {
-        season: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        games: {
-          orderBy: {
-            gameNumber: "asc",
-          },
-          include: {
-            participants: {
-              include: {
-                player: {
-                  select: {
-                    id: true,
-                    name: true,
-                    nickname: true,
-                    tag: true,
-                  },
-                },
-                champion: {
-                  select: {
-                    id: true,
-                    name: true,
-                    imageUrl: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-        _count: {
-          select: {
-            games: true,
-          },
-        },
-      },
-    }),
-
-    prisma.destructionTournament.findFirst({
-      orderBy: {
-        createdAt: "desc",
-      },
-      include: {
-        participants: true,
-        teams: true,
-        matches: true,
-      },
-    }),
-
-    prisma.matchSeries.findFirst({
-      where: {
-        games: {
-          some: {
-            participants: {
-              some: {},
-            },
-          },
-        },
-      },
-      orderBy: {
-        matchDate: "desc",
-      },
-      select: {
-        matchDate: true,
-      },
-    }),
-
-    getCurrentUser(),
-
-    getSiteSettings(),
-  ]);
+  } = publicData;
 
   const currentSeasonId = topData.currentSeason?.id ?? null;
-  const latestMvpDateRange = latestMvpSeries
-    ? getKoreaDayRange(latestMvpSeries.matchDate)
-    : null;
-
-  const latestMvpMatches = latestMvpDateRange
-    ? await prisma.matchSeries.findMany({
-        where: {
-          matchDate: {
-            gte: latestMvpDateRange.start,
-            lt: latestMvpDateRange.end,
-          },
-          games: {
-            some: {
-              participants: {
-                some: {},
-              },
-            },
-          },
-        },
-        orderBy: [{ matchDate: "desc" }, { id: "desc" }],
-        include: {
-          games: {
-            orderBy: {
-              gameNumber: "asc",
-            },
-            include: {
-              participants: {
-                include: {
-                  player: {
-                    select: {
-                      id: true,
-                      name: true,
-                      nickname: true,
-                      tag: true,
-                    },
-                  },
-                  champion: {
-                    select: {
-                      id: true,
-                      name: true,
-                      imageUrl: true,
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      })
-    : [];
-
-  const [seasonMatchCount, seasonGameCount, seasonParticipantCount] =
-    currentSeasonId
-      ? await Promise.all([
-          prisma.matchSeries.count({
-            where: {
-              seasonId: currentSeasonId,
-            },
-          }),
-
-          prisma.matchGame.count({
-            where: {
-              series: {
-                seasonId: currentSeasonId,
-              },
-            },
-          }),
-
-          prisma.matchParticipant.findMany({
-            where: {
-              game: {
-                series: {
-                  seasonId: currentSeasonId,
-                },
-              },
-            },
-            distinct: ["playerId"],
-            select: {
-              playerId: true,
-            },
-          }),
-        ])
-      : [0, 0, []];
 
   type HomeTop3Player = (typeof topData.currentPlayers)[number];
   type HomeTop3ModeId = "winrate" | "mvp" | "participation";
@@ -330,8 +141,8 @@ export default async function HomePage() {
       value: (player) => player.winRate,
       displayValue: (player) => `${player.winRate}%`,
       rankLine: (player) =>
-        `승률 ${player.winRate}% · ${player.participation}회 참여 · ${player.wins}승 ${player.losses}패`,
-      secondStat: (player) => ({ label: "참여", value: `${player.participation}` }),
+        `승률 ${player.winRate}% · 내전 ${player.participation}회 · 세트 ${player.wins}승 ${player.losses}패`,
+      secondStat: (player) => ({ label: "내전", value: `${player.participation}` }),
       thirdStat: (player) => ({ label: "MVP", value: `${player.mvpCount}` }),
       players: [...eligibleSeasonPlayers]
         .sort((a, b) => {
@@ -351,8 +162,8 @@ export default async function HomePage() {
       value: (player) => player.mvpCount,
       displayValue: (player) => `${player.mvpCount}`,
       rankLine: (player) =>
-        `MVP ${player.mvpCount}회 · ${player.participation}회 참여 · 승률 ${player.winRate}%`,
-      secondStat: (player) => ({ label: "참여", value: `${player.participation}` }),
+        `MVP ${player.mvpCount}회 · 내전 ${player.participation}회 · 승률 ${player.winRate}%`,
+      secondStat: (player) => ({ label: "내전", value: `${player.participation}` }),
       thirdStat: (player) => ({ label: "승률", value: `${player.winRate}%` }),
       players: [...eligibleSeasonPlayers]
         .filter((player) => player.mvpCount > 0)
@@ -373,7 +184,7 @@ export default async function HomePage() {
       value: (player) => player.participation,
       displayValue: (player) => `${player.participation}`,
       rankLine: (player) =>
-        `내전 ${player.participation}회 참여 · ${player.wins}승 ${player.losses}패 · MVP ${player.mvpCount}회`,
+        `내전 ${player.participation}회 · 세트 ${player.wins}승 ${player.losses}패 · MVP ${player.mvpCount}회`,
       secondStat: (player) => ({ label: "승률", value: `${player.winRate}%` }),
       thirdStat: (player) => ({ label: "MVP", value: `${player.mvpCount}` }),
       players: [...eligibleSeasonPlayers]
@@ -394,21 +205,35 @@ export default async function HomePage() {
     ),
   );
 
-  const topPlayerTiers =
-    top3PlayerIds.length > 0
-      ? await prisma.player.findMany({
-          where: {
-            id: {
-              in: top3PlayerIds,
+  const [topPlayerTiers, seasonSummary, mySeasonParticipants, mySeasonMvpCount] =
+    await Promise.all([
+      getCachedHomePlayerTiers(top3PlayerIds),
+      currentSeasonId
+        ? getCachedHomeSeasonSummary(currentSeasonId)
+        : Promise.resolve({ matchCount: 0, gameCount: 0, participantCount: 0 }),
+      currentSeasonId && currentUser?.playerId
+        ? prisma.matchParticipant.findMany({
+            where: {
+              playerId: currentUser.playerId,
+              game: { series: { seasonId: currentSeasonId } },
             },
-          },
-          select: {
-            id: true,
-            currentTier: true,
-            peakTier: true,
-          },
-        })
-      : [];
+            select: {
+              kills: true,
+              deaths: true,
+              assists: true,
+              game: { select: { seriesId: true } },
+            },
+          })
+        : Promise.resolve([]),
+      currentSeasonId && currentUser?.playerId
+        ? prisma.matchGame.count({
+            where: {
+              mvpPlayerId: currentUser.playerId,
+              series: { seasonId: currentSeasonId },
+            },
+          })
+        : Promise.resolve(0),
+    ]);
 
   const topPlayerTierMap = new Map(
     topPlayerTiers.map((player) => [
@@ -449,42 +274,6 @@ export default async function HomePage() {
 
   const hasHomeTop3Data = homeTop3Modes.some((mode) => mode.cards.length > 0);
 
-  const mySeasonParticipants =
-    currentSeasonId && currentUser?.playerId
-      ? await prisma.matchParticipant.findMany({
-          where: {
-            playerId: currentUser.playerId,
-            game: {
-              series: {
-                seasonId: currentSeasonId,
-              },
-            },
-          },
-          select: {
-            kills: true,
-            deaths: true,
-            assists: true,
-            game: {
-              select: {
-                seriesId: true,
-              },
-            },
-          },
-        })
-      : [];
-
-  const mySeasonMvpCount =
-    currentSeasonId && currentUser?.playerId
-      ? await prisma.matchGame.count({
-          where: {
-            mvpPlayerId: currentUser.playerId,
-            series: {
-              seasonId: currentSeasonId,
-            },
-          },
-        })
-      : 0;
-
   const recentMvpSlides = latestMvpMatches.flatMap((match) =>
     match.games.flatMap((game) => {
       const storedMvpPlayerId = game.mvpPlayerId ?? null;
@@ -507,7 +296,7 @@ export default async function HomePage() {
           key: `${match.id}-${game.id}-${participant.player.id}`,
           matchId: match.id,
           matchTitle: match.title,
-          matchDate: match.matchDate.toISOString(),
+          matchDate: match.matchDate,
           gameNumber: game.gameNumber,
           playerId: participant.player.id,
           name: participant.player.name,
@@ -565,9 +354,9 @@ export default async function HomePage() {
       ]
     : [
         { label: "현재 시즌", value: topData.currentSeason?.name ?? "시즌 없음" },
-        { label: "내전 수", value: seasonMatchCount },
-        { label: "세트 수", value: seasonGameCount },
-        { label: "참여 인원", value: seasonParticipantCount.length },
+        { label: "내전 수", value: seasonSummary.matchCount },
+        { label: "세트 수", value: seasonSummary.gameCount },
+        { label: "참여 인원", value: seasonSummary.participantCount },
       ];
 
   return (
@@ -611,37 +400,11 @@ export default async function HomePage() {
                 내전 참여 10회 이상 기준에 맞는 랭킹 데이터가 없습니다.
               </div>
             ) : (
-              <div className="home-top3-mode-shell">
-                {homeTop3Modes.map((mode, index) => (
-                  <input
-                    key={mode.id}
-                    id={`home-top3-mode-${mode.id}`}
-                    className="home-top3-mode-input"
-                    type="radio"
-                    name="home-top3-mode"
-                    defaultChecked={index === 0}
-                  />
-                ))}
-
-                <div className="home-top3-mode-tabs" role="tablist" aria-label="TOP3 기준 선택">
+              <HomeTop3Tabs
+                tabs={homeTop3Modes.map(({ id, eyebrow, label }) => ({ id, eyebrow, label }))}
+              >
                   {homeTop3Modes.map((mode) => (
-                    <label
-                      key={mode.id}
-                      htmlFor={`home-top3-mode-${mode.id}`}
-                      className="home-top3-mode-tab"
-                    >
-                      <span>{mode.eyebrow}</span>
-                      <strong>{mode.label}</strong>
-                    </label>
-                  ))}
-                </div>
-
-                <div className="home-top3-mode-panels">
-                  {homeTop3Modes.map((mode) => (
-                    <div
-                      key={mode.id}
-                      className={`home-top3-mode-panel home-top3-mode-panel--${mode.id}`}
-                    >
+                    <div key={mode.id}>
                       {mode.ace ? (
                         <div className="home-top3-arena home-top3-arena--dynamic">
                           <span className="home-top3-arena__beam home-top3-arena__beam--left" aria-hidden="true" />
@@ -749,8 +512,7 @@ export default async function HomePage() {
                       )}
                     </div>
                   ))}
-                </div>
-              </div>
+              </HomeTop3Tabs>
             )}
           </div>
 
@@ -784,7 +546,7 @@ export default async function HomePage() {
                       ? "BLUE 승"
                       : redWins > blueWins
                         ? "RED 승"
-                        : "진행중";
+                        : "무승부";
 
                   return (
                     <Link
@@ -867,7 +629,7 @@ export default async function HomePage() {
 
                 <p>
                   {latestDestruction
-                    ? `${latestDestruction.title} · 참가자 ${latestDestruction.participants.length}명 · 팀 ${latestDestruction.teams.length}개`
+                    ? `${latestDestruction.title} · 참가자 ${latestDestruction._count.participants}명 · 팀 ${latestDestruction._count.teams}개`
                     : "등록된 멸망전이 없습니다."}
                 </p>
               </Link>

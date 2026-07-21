@@ -152,9 +152,15 @@ export default function AppTopBar({
       <div className="app-topbar__right">
         <ThemeSwitcher />
 
-        <form className="app-topbar__search" onSubmit={handleSubmit}>
+        <form
+          className="app-topbar__search"
+          role="search"
+          aria-label={mode === "admin" ? "관리자 통합 검색" : "사이트 통합 검색"}
+          onSubmit={handleSubmit}
+        >
           <select
             className="app-select"
+            aria-label="검색 대상"
             value={menu}
             onChange={(e) => setMenu(e.target.value as "players" | "matches")}
           >
@@ -169,6 +175,7 @@ export default function AppTopBar({
           <input
             className="app-input"
             type="text"
+            aria-label={menu === "players" ? "플레이어 검색어" : "내전 검색어"}
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             placeholder="검색"

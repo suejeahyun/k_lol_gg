@@ -35,7 +35,7 @@ export async function AppMobileShell({
             <AppTopAccountSwitch mode={mode} />
           </div>
         </header>
-        {children}
+        <main className="klol-app-main">{children}</main>
       </div>
       {mode === "admin" ? <AppAdminBottomNav /> : <AppBottomNav />}
     </div>

@@ -3,17 +3,21 @@ import Link from "next/link";
 export function AppSection({
   title,
   caption,
+  captionHref,
   children,
 }: {
   title: string;
   caption?: string;
+  captionHref?: string;
   children: React.ReactNode;
 }) {
   return (
     <section className="klol-app-section">
       <div className="klol-app-section-head">
         <h2>{title}</h2>
-        {caption ? <p>{caption}</p> : null}
+        {caption ? (
+          captionHref ? <Link href={captionHref}>{caption}</Link> : <p>{caption}</p>
+        ) : null}
       </div>
       {children}
     </section>
