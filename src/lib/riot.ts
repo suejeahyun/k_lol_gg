@@ -136,10 +136,16 @@ async function riotFetch<T>(url: string): Promise<T> {
   });
 
   if (!response.ok) {
-    const text = await response.text().catch(() => "");
-    throw new Error(
-      `[RIOT_API_ERROR] ${response.status} ${response.statusText} ${text}`
-    );
+    let message = `Riot API 요청 실패: ${response.status}`;
+
+    if (response.status === 401) message = "Riot API 키가 올바르지 않습니다.";
+    if (response.status === 403) message = "Riot API 키 권한 또는 만료 상태를 확인해야 합니다.";
+    if (response.status === 404) message = "Riot API에서 대상을 찾을 수 없습니다.";
+    if (response.status === 429) message = "Riot API 호출 제한에 도달했습니다.";
+
+    // 공급자 오류 본문에는 API 키와 기타 민감 식별자가 포함될 수 있다.
+    // 운영 로그와 클라이언트 응답에는 상태 기반의 정규화된 문구만 남긴다.
+    throw new Error(`[RIOT_API_ERROR] ${message}`);
   }
 
   return response.json() as Promise<T>;
