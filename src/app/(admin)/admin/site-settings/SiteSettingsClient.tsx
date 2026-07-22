@@ -48,7 +48,7 @@ export default function SiteSettingsClient({ initialSettings }: SiteSettingsClie
 
   return (
     <form className="admin-card site-settings-form" onSubmit={handleSubmit}>
-      <div className="site-settings-status-strip" aria-label="현재 사이트 운영 상태">
+      <div className="site-settings-status-strip" role="region" aria-label="현재 사이트 운영 상태">
         <div>
           <span>운영 사이트</span>
           <strong>{settings.siteName}</strong>
@@ -288,7 +288,7 @@ export default function SiteSettingsClient({ initialSettings }: SiteSettingsClie
             className="admin-input"
             value={settings.homeBackgroundUrl ?? ""}
             onChange={(event) => update("homeBackgroundUrl", event.target.value || null)}
-            placeholder="/images/theme/dark-modern/klol-global-stage-v1.png"
+            placeholder="/images/theme/dark-modern/klol-global-stage-v1.webp"
           />
         </label>
       </div>

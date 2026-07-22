@@ -1,9 +1,18 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import Link from "next/link";
 import SafeGalleryImage from "@/components/SafeGalleryImage";
 import { prisma } from "@/lib/prisma/client";
 import { getGalleryThumbnailUrl } from "@/lib/gallery/winner-image-paths";
+import Pagination from "@/components/Pagination";
+import { parsePositivePage } from "@/lib/http/pagination";
+
+export const metadata: Metadata = {
+  title: "멸망전 진행 현황",
+  description: "K-LOL.GG 멸망전의 참가자, 팀 구성, 예선과 토너먼트 진행 상황을 확인하세요.",
+  alternates: { canonical: "/progress/destruction" },
+};
 
 function formatDate(date: Date | null) {
   if (!date) return "-";
@@ -12,6 +21,7 @@ function formatDate(date: Date | null) {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
+    timeZone: "Asia/Seoul",
   });
 }
 
@@ -54,27 +64,51 @@ function getProgressDescription(status: string) {
   return "멸망전 진행 상태, 팀 구성, 참가자 명단을 확인할 수 있습니다.";
 }
 
-export default async function DestructionProgressPage() {
+type DestructionProgressPageProps = {
+  searchParams: Promise<{ page?: string }>;
+};
+
+const PAGE_SIZE = 12;
+
+export default async function DestructionProgressPage({ searchParams }: DestructionProgressPageProps) {
+  const resolvedSearchParams = await searchParams;
+  const requestedPage = parsePositivePage(resolvedSearchParams.page);
+  const [totalCount, statusGroups] = await Promise.all([
+    prisma.destructionTournament.count(),
+    prisma.destructionTournament.groupBy({ by: ["status"], _count: { _all: true } }),
+  ]);
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const currentPage = Math.min(requestedPage, totalPages);
+
   const tournaments = await prisma.destructionTournament.findMany({
     orderBy: [{ startDate: "desc" }, { id: "desc" }],
-    include: {
-      teams: true,
-      participants: true,
-      matches: true,
-      galleryImage: true,
-      participationApplies: true,
+    skip: (currentPage - 1) * PAGE_SIZE,
+    take: PAGE_SIZE,
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      status: true,
+      startDate: true,
+      endDate: true,
+      galleryImage: { select: { imageUrl: true } },
+      _count: {
+        select: {
+          teams: true,
+          participants: true,
+          participationApplies: true,
+        },
+      },
     },
   });
 
-  const recruitingCount = tournaments.filter(
-    (tournament) => tournament.status === "RECRUITING"
-  ).length;
-  const activeCount = tournaments.filter((tournament) =>
-    ["AUCTION", "PRELIMINARY", "TOURNAMENT"].includes(tournament.status)
-  ).length;
-  const completedCount = tournaments.filter(
-    (tournament) => tournament.status === "COMPLETED"
-  ).length;
+  const statusCount = new Map(statusGroups.map((group) => [group.status, group._count._all]));
+  const recruitingCount = statusCount.get("RECRUITING") ?? 0;
+  const activeCount = (["AUCTION", "PRELIMINARY", "TOURNAMENT"] as const).reduce(
+    (sum, status) => sum + (statusCount.get(status) ?? 0),
+    0,
+  );
+  const completedCount = statusCount.get("COMPLETED") ?? 0;
 
   return (
     <main className="page-container destruction-progress-page event-user-page">
@@ -97,7 +131,7 @@ export default async function DestructionProgressPage() {
       <section className="event-user-summary-grid">
         <div className="event-user-summary-card">
           <span>전체 멸망전</span>
-          <strong>{tournaments.length}개</strong>
+          <strong>{totalCount}개</strong>
         </div>
         <div className="event-user-summary-card">
           <span>모집중</span>
@@ -119,7 +153,7 @@ export default async function DestructionProgressPage() {
         <div className="event-progress-list event-progress-list--wide">
           {tournaments.map((tournament) => {
             const thumbnail = getGalleryThumbnailUrl(tournament.galleryImage?.imageUrl);
-            const totalApplications = tournament.participationApplies.length;
+            const totalApplications = tournament._count.participationApplies;
 
             return (
               <Link
@@ -171,12 +205,12 @@ export default async function DestructionProgressPage() {
 
                     <div>
                       <span>참가자</span>
-                      <strong>{tournament.participants.length}명</strong>
+                      <strong>{tournament._count.participants}명</strong>
                     </div>
 
                     <div>
                       <span>팀</span>
-                      <strong>{tournament.teams.length}개</strong>
+                      <strong>{tournament._count.teams}개</strong>
                     </div>
                   </div>
 
@@ -190,6 +224,11 @@ export default async function DestructionProgressPage() {
           })}
         </div>
       )}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        basePath="/progress/destruction"
+      />
     </main>
   );
 }

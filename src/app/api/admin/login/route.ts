@@ -6,10 +6,16 @@ import { rejectIfRateLimited } from "@/lib/rate-limit";
 import { authConstants } from "@/lib/auth";
 import { getRequestAuditFields, writeAdminLog } from "@/lib/admin-log";
 import { prisma } from "@/lib/prisma/client";
-import { hashPassword, verifyPassword } from "@/lib/auth/password";
+import { hashPassword, verifyPassword, verifyPasswordOrDummy } from "@/lib/auth/password";
 import { signAuthToken } from "@/lib/auth/token";
 import { USER_TOKEN_COOKIE, authCookieOptions, clearAuthCookieOptions } from "@/lib/auth/cookies";
 import { verifyTotpCode } from "@/lib/security/totp";
+import { safeEqualText } from "@/lib/security/hmac";
+import {
+  decryptTotpSecret,
+  encryptTotpSecret,
+  isEncryptedTotpSecret,
+} from "@/lib/security/totp-secret-storage";
 
 type LoginBody = {
   id: string;
@@ -37,7 +43,7 @@ async function ensureSuperAdmin(id: string, password: string) {
   const superAdminId = getRequiredEnv("SUPER_ADMIN_ID");
   const superAdminPassword = getRequiredEnv("SUPER_ADMIN_PASSWORD");
 
-  if (id !== superAdminId || password !== superAdminPassword) {
+  if (!safeEqualText(id, superAdminId) || !safeEqualText(password, superAdminPassword)) {
     return null;
   }
 
@@ -96,6 +102,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (id.length > 128 || password.length > 256) {
+      return NextResponse.json(
+        { message: "아이디 또는 비밀번호가 올바르지 않습니다." },
+        { status: 401 },
+      );
+    }
+
     let user = await prisma.userAccount.findUnique({
       where: { userId: id },
       include: {
@@ -104,6 +117,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (user?.deletedAt) {
+      await verifyPasswordOrDummy(password, null);
       return NextResponse.json(
         { message: "아이디 또는 비밀번호가 올바르지 않습니다." },
         { status: 401 },
@@ -115,6 +129,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (!user) {
+      await verifyPasswordOrDummy(password, null);
       return NextResponse.json(
         { message: "아이디 또는 비밀번호가 올바르지 않습니다." },
         { status: 401 },
@@ -122,8 +137,9 @@ export async function POST(req: NextRequest) {
     }
 
     if (!user.passwordHash) {
+      await verifyPasswordOrDummy(password, null);
       return NextResponse.json(
-        { message: "비밀번호가 설정되지 않은 계정입니다." },
+        { message: "아이디 또는 비밀번호가 올바르지 않습니다." },
         { status: 401 },
       );
     }
@@ -167,13 +183,22 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      const validTotp = verifyTotpCode(user.adminTotpSecret, totpCode);
+      const plainTotpSecret = decryptTotpSecret(user.adminTotpSecret);
+      const validTotp = verifyTotpCode(plainTotpSecret, totpCode);
 
       if (!validTotp) {
         return NextResponse.json(
           { ok: false, requiresTwoFactor: true, message: "2단계 인증 코드가 올바르지 않습니다." },
           { status: 401 },
         );
+      }
+
+      if (!isEncryptedTotpSecret(user.adminTotpSecret)) {
+        user = await prisma.userAccount.update({
+          where: { id: user.id },
+          data: { adminTotpSecret: encryptTotpSecret(plainTotpSecret) },
+          include: { player: true },
+        });
       }
     }
 

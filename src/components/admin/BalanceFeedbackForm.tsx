@@ -84,7 +84,7 @@ export default function BalanceFeedbackForm({
             내전 후 체감 밸런스를 남깁니다. 나쁨/BAD로 저장하고 문제 팀·라인을 지정하면 다음 팀 밸런스 계산에 쓰이는 내부 MMR이 약하게 보정됩니다.
           </p>
         </div>
-        <div className="ai-feedback-summary" aria-label="현재 피드백 선택값">
+        <div className="ai-feedback-summary" role="group" aria-label="현재 피드백 선택값">
           <span>{feedbackRating ? RATING_LABELS[feedbackRating] ?? feedbackRating : "평가 미선택"}</span>
           <strong>
             {[feedbackProblemTeam, feedbackProblemLine].filter(Boolean).join(" · ") || "보정 대상 없음"}

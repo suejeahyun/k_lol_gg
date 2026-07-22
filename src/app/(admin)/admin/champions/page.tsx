@@ -117,14 +117,14 @@ export default function AdminChampionsPage() {
 
       <div className="card section-block">
         <div className="section-search" style={{ display: "grid", gap: "12px" }}>
-          <input
+          <input aria-label="챔피언 이름"
             className="app-input"
             style={{ width: "100%" }}
             placeholder="챔피언 이름"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
-          <input
+          <input aria-label="이미지 URL"
             className="app-input"
             style={{ width: "100%" }}
             placeholder="이미지 URL"
@@ -165,7 +165,9 @@ export default function AdminChampionsPage() {
 
                 <div className="player-col">
                   {champion.createdAt
-                    ? new Date(champion.createdAt).toLocaleDateString("ko-KR")
+                    ? new Date(champion.createdAt).toLocaleDateString("ko-KR", {
+                        timeZone: "Asia/Seoul",
+                      })
                     : "-"}
                 </div>
 

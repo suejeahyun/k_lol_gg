@@ -5,6 +5,7 @@ export const revalidate = 0;
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { filterRecruitingParties } from "@/lib/kakao/party-recruit";
+import { PUBLIC_REALTIME_CACHE_HEADER } from "@/lib/http/cache";
 
 const MAX_PUBLIC_RECRUIT_PARTIES = 200;
 
@@ -25,5 +26,8 @@ export async function GET() {
 
   const parties = filterRecruitingParties(allParties);
 
-  return NextResponse.json({ ok: true, parties });
+  return NextResponse.json(
+    { ok: true, parties },
+    { headers: { "Cache-Control": PUBLIC_REALTIME_CACHE_HEADER } },
+  );
 }

@@ -8,6 +8,8 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "랜덤 팀 나누기",
+  description: "참가자 명단을 두 팀으로 빠르게 나누고 결과를 복사할 수 있는 K-LOL.GG 랜덤 팀 도구입니다.",
+  alternates: { canonical: "/random-team" },
 };
 
 export default async function PublicRandomTeamPage() {

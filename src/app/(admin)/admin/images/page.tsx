@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma/client";
 import GalleryImageDeleteButton from "@/features/gallery/GalleryImageDeleteButton";
 import { coerceGalleryImageUrls } from "@/lib/gallery/winner-image-paths";
 import Pagination from "@/components/Pagination";
+import { parsePositivePage } from "@/lib/http/pagination";
 export const dynamic = "force-dynamic";
 
 type AdminImagesPageProps = {
@@ -14,7 +15,7 @@ const PAGE_SIZE = 10;
 
 export default async function AdminImagesPage({ searchParams }: AdminImagesPageProps) {
   const resolvedSearchParams = await searchParams;
-  const currentPage = Math.max(1, Number(resolvedSearchParams.page ?? "1") || 1);
+  const currentPage = parsePositivePage(resolvedSearchParams.page);
 
   const totalCount = await prisma.galleryImage.count();
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
@@ -79,7 +80,9 @@ export default async function AdminImagesPage({ searchParams }: AdminImagesPageP
 
                 <div className="gallery-admin-card__content">
                   <div className="gallery-admin-card__date">
-                    {new Date(image.createdAt).toLocaleDateString("ko-KR")}
+                    {new Date(image.createdAt).toLocaleDateString("ko-KR", {
+                      timeZone: "Asia/Seoul",
+                    })}
                   </div>
 
                   <h2 className="gallery-admin-card__title">{image.title}</h2>

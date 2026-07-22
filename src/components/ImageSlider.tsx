@@ -2,6 +2,7 @@
 
 import SafeGalleryImage from "@/components/SafeGalleryImage";
 import { useEffect, useRef, useState } from "react";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 type Props = {
   images: string[];
@@ -10,7 +11,12 @@ type Props = {
 
 export default function ImageSlider({ images, title }: Props) {
   const [index, setIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [allowReducedMotionPlayback, setAllowReducedMotionPlayback] = useState(false);
   const length = images.length;
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const autoPlayActive =
+    isPlaying && (!prefersReducedMotion || allowReducedMotionPlayback);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startXRef = useRef<number | null>(null);
@@ -26,7 +32,7 @@ export default function ImageSlider({ images, title }: Props) {
   };
 
   useEffect(() => {
-    if (length <= 1) return;
+    if (length <= 1 || !autoPlayActive) return;
 
     timerRef.current = setInterval(() => {
       setIndex((prev) => (prev + 1) % length);
@@ -37,7 +43,7 @@ export default function ImageSlider({ images, title }: Props) {
         clearInterval(timerRef.current);
       }
     };
-  }, [length]);
+  }, [autoPlayActive, length]);
 
   const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
     startXRef.current = event.touches[0].clientX;
@@ -65,6 +71,8 @@ export default function ImageSlider({ images, title }: Props) {
   return (
     <div
       className="image-slider"
+      role="region"
+      aria-label={`${title} 이미지 슬라이드`}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
@@ -106,9 +114,26 @@ export default function ImageSlider({ images, title }: Props) {
             ›
           </button>
 
-          <div className="image-slider__indicator">
+          <div className="image-slider__indicator" aria-live="polite">
             {index + 1} / {length}
           </div>
+
+          <button
+            type="button"
+            className="image-slider__autoplay"
+            onClick={() => {
+              if (autoPlayActive) {
+                setIsPlaying(false);
+                return;
+              }
+
+              setAllowReducedMotionPlayback(true);
+              setIsPlaying(true);
+            }}
+            aria-label={autoPlayActive ? "이미지 자동 넘김 일시정지" : "이미지 자동 넘김 재생"}
+          >
+            {autoPlayActive ? "일시정지" : "재생"}
+          </button>
         </>
       ) : null}
     </div>

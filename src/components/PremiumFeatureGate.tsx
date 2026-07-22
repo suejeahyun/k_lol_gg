@@ -28,7 +28,7 @@ export default function PremiumFeatureGate({
   const content = lockedPreview ?? (renderLockedContent ? children : null);
 
   return (
-    <div className="premium-feature-gate" aria-label={`${label} 유료 기능 잠금`}>
+    <div className="premium-feature-gate" role="region" aria-label={`${label} 유료 기능 잠금`}>
       {content ? (
         <div className="premium-feature-gate__content" aria-hidden="true">
           {content}

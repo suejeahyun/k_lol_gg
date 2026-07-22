@@ -3,8 +3,16 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { rejectIfRateLimited } from "@/lib/rate-limit";
 
 export async function GET(req: NextRequest) {
+  const rateLimitRejected = await rejectIfRateLimited(req, {
+    action: "PLAYER_SEARCH",
+    limit: 120,
+    windowSeconds: 60,
+  });
+  if (rateLimitRejected) return rateLimitRejected;
+
   try {
     const q = req.nextUrl.searchParams.get("q")?.trim() ?? "";
     const exclude = req.nextUrl.searchParams.get("exclude")?.trim() ?? "";
@@ -23,8 +31,9 @@ export async function GET(req: NextRequest) {
     const excludeIds = exclude
       ? exclude
           .split(",")
+          .slice(0, 100)
           .map((value) => Number(value))
-          .filter((value) => Number.isFinite(value))
+          .filter((value) => Number.isInteger(value) && value > 0)
       : [];
 
     const players = await prisma.player.findMany({

@@ -43,7 +43,7 @@ export default function SeasonCreateForm() {
       <div className="list-card__title">시즌 생성</div>
 
       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-        <input
+        <input aria-label="예: 2026 Spring"
           className="app-input"
           type="text"
           value={name}

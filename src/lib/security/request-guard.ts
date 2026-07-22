@@ -5,6 +5,7 @@ import { allowQueryStringSecret } from "@/lib/security/secrets";
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const DEFAULT_MAX_BODY_BYTES = 1024 * 1024;
 const JSON_IMPORT_MAX_BODY_BYTES = 10 * 1024 * 1024;
+const SCOREBOARD_MULTIPART_MAX_BODY_BYTES = 13 * 1024 * 1024;
 const BOT_MAX_BODY_BYTES = 256 * 1024;
 
 function normalizeOrigin(value: string | null) {
@@ -131,7 +132,9 @@ export function hasValidServerSecret(request: NextRequest, pathname: string) {
 }
 
 function getMaxBodyBytes(pathname: string) {
-  if (pathname === "/api/matches/import-lol-result") return JSON_IMPORT_MAX_BODY_BYTES;
+  if (pathname === "/api/matches/import-lol-result") {
+    return SCOREBOARD_MULTIPART_MAX_BODY_BYTES;
+  }
   if (pathname.startsWith("/api/images") || pathname.startsWith("/api/gallery-images")) {
     return JSON_IMPORT_MAX_BODY_BYTES;
   }

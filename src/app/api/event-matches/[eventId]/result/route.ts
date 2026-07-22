@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { logServerError } from "@/lib/server/safe-log";
+import { readJsonObject } from "@/lib/http/json-body";
 
 type EventMatchResultRouteProps = {
   params: Promise<{
@@ -22,14 +23,17 @@ export async function PATCH(
     const { eventId } = await params;
     const id = Number(eventId);
 
-    if (Number.isNaN(id)) {
+    if (!Number.isInteger(id) || id <= 0) {
       return NextResponse.json(
         { message: "이벤트 ID가 올바르지 않습니다." },
         { status: 400 }
       );
     }
 
-    const body = await req.json();
+    const body = await readJsonObject<Record<string, unknown>>(req);
+    if (!body) {
+      return NextResponse.json({ message: "올바른 JSON 요청 본문이 필요합니다." }, { status: 400 });
+    }
 
     const winnerTeamId = body.winnerTeamId
       ? Number(body.winnerTeamId)

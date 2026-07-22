@@ -8,6 +8,7 @@ import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { normalizeGalleryImageUrls } from "@/lib/gallery/winner-image-paths";
 import { PUBLIC_SHORT_CACHE_HEADER } from "@/lib/http/cache";
 import { getPaginationMeta, getSafePagination } from "@/lib/http/pagination";
+import { readJsonObject } from "@/lib/http/json-body";
 
 type CreateGalleryImageBody = {
   title: string;
@@ -85,7 +86,13 @@ export async function POST(req: NextRequest) {
   if (rejected) return rejected;
 
   try {
-    const body = (await req.json()) as CreateGalleryImageBody;
+    const body = await readJsonObject<CreateGalleryImageBody>(req);
+    if (!body) {
+      return NextResponse.json(
+        { message: "올바른 JSON 요청 본문이 필요합니다." },
+        { status: 400 },
+      );
+    }
 
     const title = body.title?.trim();
     const description = body.description?.trim();

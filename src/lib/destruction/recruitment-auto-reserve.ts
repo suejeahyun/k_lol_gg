@@ -360,6 +360,7 @@ export async function applyDestructionRecruitmentAutoReserve(tournamentId: numbe
           id: {
             in: toReserveIds,
           },
+          status: "APPLIED",
         },
         data: {
           status: "RESERVE",
@@ -375,6 +376,7 @@ export async function applyDestructionRecruitmentAutoReserve(tournamentId: numbe
           id: {
             in: toActiveIds,
           },
+          status: "RESERVE",
         },
         data: {
           status: "APPLIED",

@@ -99,6 +99,7 @@ export default function EventCompleteForm({
     <div className="event-complete-form">
       <div className="event-complete-form__grid">
         <select
+          aria-label="우승 팀"
           className="admin-form__input"
           value={winnerTeamId}
           onChange={(event) => setWinnerTeamId(event.target.value)}
@@ -112,6 +113,7 @@ export default function EventCompleteForm({
         </select>
 
         <select
+          aria-label="MVP 플레이어"
           className="admin-form__input"
           value={mvpPlayerId}
           onChange={(event) => setMvpPlayerId(event.target.value)}
@@ -125,6 +127,7 @@ export default function EventCompleteForm({
         </select>
 
         <select
+          aria-label="갤러리 이미지"
           className="admin-form__input"
           value={galleryImageId}
           onChange={(event) => setGalleryImageId(event.target.value)}

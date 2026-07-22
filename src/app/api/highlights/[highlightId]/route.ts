@@ -7,6 +7,7 @@ import { writeAdminLog } from "@/lib/admin-log";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { normalizeGalleryImageUrl } from "@/lib/gallery/winner-image-paths";
 import { extractYoutubeId, getYoutubeThumbnailUrl, getYoutubeWatchUrl } from "@/lib/youtube";
+import { readJsonObject } from "@/lib/http/json-body";
 
 type RouteContext = {
   params: Promise<{
@@ -27,7 +28,7 @@ async function getId(context: RouteContext) {
   const { highlightId } = await context.params;
   const id = Number(highlightId);
 
-  if (Number.isNaN(id)) return null;
+  if (!Number.isInteger(id) || id <= 0) return null;
 
   return id;
 }
@@ -78,7 +79,13 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
       );
     }
 
-    const body = (await req.json()) as HighlightBody;
+    const body = await readJsonObject<HighlightBody>(req);
+    if (!body) {
+      return NextResponse.json(
+        { message: "올바른 JSON 요청 본문이 필요합니다." },
+        { status: 400 },
+      );
+    }
 
     const title = body.title?.trim();
     const description = body.description?.trim();

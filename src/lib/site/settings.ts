@@ -89,7 +89,7 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   siteLogoUrl: process.env.NEXT_PUBLIC_SITE_LOGO_URL || null,
   homeBackgroundUrl:
     process.env.NEXT_PUBLIC_SITE_BACKGROUND_URL ||
-    "/images/theme/dark-modern/klol-global-stage-v1.png",
+    "/images/theme/dark-modern/klol-global-stage-v1.webp",
   themePreset: "dark-modern",
   homeEyebrow: process.env.NEXT_PUBLIC_HOME_EYEBROW || "KOREA LOL CUSTOM STATS",
   homeHeroTitle: process.env.NEXT_PUBLIC_HOME_HERO_TITLE || "실력을",

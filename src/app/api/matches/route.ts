@@ -10,6 +10,7 @@ import { updateInternalMmrAfterMatch } from "@/lib/balance/internal-mmr";
 import { getStoredGameMvpFields } from "@/lib/match/mvp";
 import { getPaginationMeta, getSafePagination } from "@/lib/http/pagination";
 import { logServerError } from "@/lib/server/safe-log";
+import { readJsonObject } from "@/lib/http/json-body";
 
 type Team = "BLUE" | "RED";
 type Position = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
@@ -37,6 +38,12 @@ type CreateMatchInput = {
   teamBalanceDraftId?: number | null;
   games: CreateGameInput[];
 };
+
+class DuplicateMatchError extends Error {
+  constructor(readonly duplicateMatchId: number) {
+    super("DUPLICATE_MATCH");
+  }
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -99,7 +106,13 @@ export async function POST(req: Request) {
   if (rejected) return rejected;
 
   try {
-    const body = (await req.json()) as CreateMatchInput;
+    const body = await readJsonObject<CreateMatchInput>(req);
+    if (!body) {
+      return NextResponse.json(
+        { message: "올바른 JSON 요청 본문이 필요합니다." },
+        { status: 400 },
+      );
+    }
 
     const validation = validateMatchCreateInput(body);
     if (!validation.ok) {
@@ -131,7 +144,7 @@ export async function POST(req: Request) {
     const linkedTeamBalanceDraft = teamBalanceDraftId
       ? await prisma.teamBalanceDraft.findUnique({
           where: { id: teamBalanceDraftId },
-          select: { id: true, title: true },
+          select: { id: true, title: true, seasonId: true },
         })
       : null;
 
@@ -146,6 +159,17 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { message: "존재하지 않는 시즌입니다." },
         { status: 400 }
+      );
+    }
+
+    if (
+      linkedTeamBalanceDraft?.seasonId !== null &&
+      linkedTeamBalanceDraft?.seasonId !== undefined &&
+      linkedTeamBalanceDraft.seasonId !== body.seasonId
+    ) {
+      return NextResponse.json(
+        { message: "같은 시즌에서 생성한 팀 밸런스 결과만 연결할 수 있습니다." },
+        { status: 400 },
       );
     }
 
@@ -222,6 +246,20 @@ export async function POST(req: Request) {
     }
 
     const created = await prisma.$transaction(async (tx) => {
+      // 같은 시즌의 내전 생성 요청을 직렬화해 동시 중복 등록을 막는다.
+      await tx.$queryRaw`SELECT "id" FROM "Season" WHERE "id" = ${body.seasonId} FOR UPDATE`;
+
+      const concurrentDuplicate = await tx.matchSeries.findFirst({
+        where: {
+          seasonId: body.seasonId,
+          title: body.title.trim(),
+        },
+        select: { id: true },
+      });
+      if (concurrentDuplicate) {
+        throw new DuplicateMatchError(concurrentDuplicate.id);
+      }
+
       const match = await tx.matchSeries.create({
         data: {
           title: body.title.trim(),
@@ -277,6 +315,17 @@ export async function POST(req: Request) {
 
     return NextResponse.json(created);
   } catch (error) {
+    if (error instanceof DuplicateMatchError) {
+      return NextResponse.json(
+        {
+          message:
+            "같은 시즌과 제목으로 등록된 내전이 이미 있습니다. 중복 등록 여부를 확인해주세요.",
+          duplicateMatchId: error.duplicateMatchId,
+        },
+        { status: 409 },
+      );
+    }
+
     logServerError("[MATCH_CREATE_POST_ERROR]", error);
 
     return NextResponse.json(
@@ -285,4 +334,3 @@ export async function POST(req: Request) {
     );
   }
 }
-

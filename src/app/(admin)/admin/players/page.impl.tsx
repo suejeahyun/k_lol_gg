@@ -159,7 +159,7 @@ export default function AdminPlayersPage() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 16 }}>
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "#ffffff" }}>플레이어 목록</h2>
           <form onSubmit={handleSearchSubmit} style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-            <input
+            <input aria-label="이름으로 검색"
               value={searchNameInput}
               onChange={(e) => setSearchNameInput(e.target.value)}
               placeholder="이름으로 검색"

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
@@ -7,6 +8,11 @@ import { getCurrentUser } from "@/lib/auth/session";
 import DestructionMvpBallot from "@/components/destruction/DestructionMvpBallot";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "모바일 멸망전 상세",
+  description: "멸망전 팀 구성과 예선·본선 결과를 모바일에서 확인하세요.",
+};
 
 type AppDestructionDetailPageProps = {
   params: Promise<{
@@ -23,9 +29,8 @@ export default async function AppDestructionDetailPage({ params }: AppDestructio
   const id = Number(tournamentId);
   if (!Number.isInteger(id) || id <= 0) notFound();
 
-  const currentUser = await getCurrentUser();
-
-  const tournament = await prisma.destructionTournament.findUnique({
+  const currentUserPromise = getCurrentUser();
+  const tournamentPromise = prisma.destructionTournament.findUnique({
     where: { id },
     include: {
       teams: {
@@ -48,7 +53,6 @@ export default async function AppDestructionDetailPage({ params }: AppDestructio
           teamA: true,
           teamB: true,
           mvpPlayer: true,
-          mvpVotes: { where: { voterUserAccountId: currentUser?.userAccountId ?? -1 }, select: { candidatePlayerId: true } },
         },
         orderBy: [{ stage: "asc" }, { round: "asc" }],
         take: 16,
@@ -56,7 +60,25 @@ export default async function AppDestructionDetailPage({ params }: AppDestructio
     },
   });
 
+  const [currentUser, tournament] = await Promise.all([
+    currentUserPromise,
+    tournamentPromise,
+  ]);
+
   if (!tournament) notFound();
+
+  const currentUserVotes = currentUser
+    ? await prisma.destructionMatchMvpVote.findMany({
+        where: {
+          voterUserAccountId: currentUser.userAccountId,
+          match: { tournamentId: id },
+        },
+        select: { matchId: true, candidatePlayerId: true },
+      })
+    : [];
+  const currentUserVoteByMatch = new Map(
+    currentUserVotes.map((vote) => [vote.matchId, vote.candidatePlayerId]),
+  );
 
   const matchesWithResult = tournament.matches.filter((match) => match.winnerTeamId && (match.stage !== "PRELIMINARY" || match.isConfirmed));
   const pendingMvpMatches = matchesWithResult.filter((match) => !match.mvpFinalizedAt);
@@ -81,7 +103,7 @@ export default async function AppDestructionDetailPage({ params }: AppDestructio
       <DestructionMvpBallot
         matchId={match.id}
         candidates={candidates}
-        initialVotePlayerId={match.mvpVotes[0]?.candidatePlayerId ?? null}
+        initialVotePlayerId={currentUserVoteByMatch.get(match.id) ?? null}
         finalizedMvp={match.mvpPlayer ? {
           id: match.mvpPlayer.id,
           name: match.mvpPlayer.name,

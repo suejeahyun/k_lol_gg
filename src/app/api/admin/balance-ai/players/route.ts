@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { parseIntegerInRange, parsePositivePage } from "@/lib/http/pagination";
 
 const SORT_FIELDS = new Set(["overallMmr", "topMmr", "jungleMmr", "midMmr", "adcMmr", "supportMmr", "confidence", "matchesAnalyzed"]);
 
@@ -14,8 +15,8 @@ export async function GET(request: NextRequest) {
   const rejected = await rejectIfNotAdmin();
   if (rejected) return rejected;
   const { searchParams } = new URL(request.url);
-  const page = Math.max(1, Number(searchParams.get("page") ?? "1") || 1);
-  const pageSize = Math.min(100, Math.max(10, Number(searchParams.get("pageSize") ?? "20") || 20));
+  const page = parsePositivePage(searchParams.get("page"));
+  const pageSize = parseIntegerInRange(searchParams.get("pageSize"), 20, 10, 100);
   const sort = searchParams.get("sort") ?? "overallMmr";
   const safeSort = SORT_FIELDS.has(sort) ? sort : "overallMmr";
   const q = searchParams.get("q")?.trim() ?? "";

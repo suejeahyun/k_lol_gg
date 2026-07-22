@@ -4,6 +4,8 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import EventMatchListActions from "./EventMatchListActions";
+import Pagination from "@/components/Pagination";
+import { parsePositivePage } from "@/lib/http/pagination";
 
 function formatDate(date: Date | null) {
   if (!date) return "-";
@@ -37,13 +39,33 @@ function getModeLabel(mode: string) {
   return labels[mode] ?? mode;
 }
 
-export default async function AdminEventMatchesPage() {
+type AdminEventMatchesPageProps = {
+  searchParams: Promise<{ page?: string }>;
+};
+
+const PAGE_SIZE = 20;
+
+export default async function AdminEventMatchesPage({ searchParams }: AdminEventMatchesPageProps) {
+  const resolvedSearchParams = await searchParams;
+  const requestedPage = parsePositivePage(resolvedSearchParams.page);
+  const totalCount = await prisma.eventMatch.count();
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const currentPage = Math.min(requestedPage, totalPages);
+
   const events = await prisma.eventMatch.findMany({
     orderBy: {
       eventDate: "desc",
     },
-    include: {
-      galleryImage: true,
+    skip: (currentPage - 1) * PAGE_SIZE,
+    take: PAGE_SIZE,
+    select: {
+      id: true,
+      title: true,
+      status: true,
+      mode: true,
+      eventDate: true,
+      recruitFrom: true,
+      recruitTo: true,
       _count: {
         select: {
           participants: true,
@@ -109,6 +131,11 @@ export default async function AdminEventMatchesPage() {
           ))}
         </div>
       )}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        basePath="/admin/progress/event"
+      />
     </main>
   );
 }

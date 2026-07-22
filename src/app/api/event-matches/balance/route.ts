@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Position } from "@prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
+import { readJsonObject } from "@/lib/http/json-body";
 
 type BalanceMode = "POSITION" | "ARAM";
 
@@ -141,7 +142,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const body = await req.json();
+    const body = await readJsonObject<Record<string, unknown>>(req);
+    if (!body) {
+      return NextResponse.json({ message: "올바른 JSON 요청 본문이 필요합니다." }, { status: 400 });
+    }
 
     const mode = String(body.mode ?? "POSITION");
     const participants: ParticipantInput[] = Array.isArray(body.participants)
@@ -173,8 +177,8 @@ export async function POST(req: NextRequest) {
       Number(participant.playerId)
     );
 
-    const hasInvalidPlayerId = playerIds.some((playerId) =>
-      Number.isNaN(playerId)
+    const hasInvalidPlayerId = playerIds.some(
+      (playerId) => !Number.isInteger(playerId) || playerId <= 0
     );
 
     if (hasInvalidPlayerId) {

@@ -186,7 +186,7 @@ export default async function AdminDestructionTournamentDetailPage({
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const id = Number(tournamentId);
 
-  if (Number.isNaN(id)) {
+  if (!Number.isInteger(id) || id <= 0) {
     notFound();
   }
 

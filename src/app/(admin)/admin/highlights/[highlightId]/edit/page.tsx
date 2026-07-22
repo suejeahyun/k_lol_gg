@@ -14,7 +14,7 @@ export default async function AdminEditHighlightPage({ params }: PageProps) {
   const { highlightId } = await params;
   const id = Number(highlightId);
 
-  if (Number.isNaN(id)) {
+  if (!Number.isInteger(id) || id <= 0) {
     notFound();
   }
 

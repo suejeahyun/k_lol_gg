@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import Pagination from "@/components/Pagination";
+import { parsePositivePage } from "@/lib/http/pagination";
 import { prisma } from "@/lib/prisma/client";
 
 type Props = { searchParams: Promise<{ page?: string; risk?: string }> };
@@ -25,7 +26,7 @@ function formatDate(value: Date | null | undefined) {
 
 export default async function AdminBalanceAiReviewsPage({ searchParams }: Props) {
   const sp = await searchParams;
-  const page = Math.max(1, Number(sp.page ?? "1") || 1);
+  const page = parsePositivePage(sp.page);
   const risk = sp.risk?.trim();
   const where = risk ? { aiRiskLevel: risk } : {};
 

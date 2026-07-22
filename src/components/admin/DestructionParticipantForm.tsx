@@ -214,6 +214,7 @@ export default function DestructionParticipantForm({
             />
 
             <select
+              aria-label={`${index + 1}번 참가자 포지션`}
               className="admin-form__input"
               value={row.position}
               onChange={(event) =>

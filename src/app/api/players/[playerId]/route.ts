@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { Prisma } from "@prisma/client";
+import { readJsonObject } from "@/lib/http/json-body";
 
 type RouteContext = {
   params: Promise<{
@@ -122,7 +123,13 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       );
     }
 
-    const body = (await request.json()) as UpdatePlayerBody;
+    const body = await readJsonObject<UpdatePlayerBody>(request);
+    if (!body) {
+      return NextResponse.json(
+        { message: "올바른 JSON 요청 본문이 필요합니다." },
+        { status: 400 },
+      );
+    }
 
     const name = body.name?.trim();
     const nickname = body.nickname?.trim();

@@ -40,7 +40,7 @@ export default function AdminChampionCreatePage() {
           <div style={{ display: "grid", gap: "16px" }}>
             <div>
               <label>이름</label>
-              <input
+              <input aria-label="이름"
                 className="app-input"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -50,7 +50,7 @@ export default function AdminChampionCreatePage() {
 
             <div>
               <label>이미지 URL</label>
-              <input
+              <input aria-label="이미지 URL"
                 className="app-input"
                 value={imageUrl}
                 onChange={(e) => setImageUrl(e.target.value)}

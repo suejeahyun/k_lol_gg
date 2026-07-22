@@ -19,7 +19,7 @@ export async function PATCH(_req: NextRequest, { params }: RouteContext) {
     const { seasonId } = await params;
     const id = Number(seasonId);
 
-    if (Number.isNaN(id)) {
+    if (!Number.isInteger(id) || id <= 0) {
       return NextResponse.json(
         { message: "Invalid seasonId" },
         { status: 400 }

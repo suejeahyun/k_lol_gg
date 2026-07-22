@@ -13,7 +13,12 @@ export default function ServiceWorkerRegister() {
       });
     };
 
-    window.addEventListener("load", registerServiceWorker);
+    if (document.readyState === "complete") {
+      registerServiceWorker();
+      return;
+    }
+
+    window.addEventListener("load", registerServiceWorker, { once: true });
     return () => window.removeEventListener("load", registerServiceWorker);
   }, []);
 

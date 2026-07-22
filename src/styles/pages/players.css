@@ -1945,6 +1945,23 @@
   }
 }
 
+/* The fixed desktop sidebar leaves less room than the viewport breakpoint implies. */
+@media (min-width: 1181px) and (max-width: 1400px) {
+  .players-page-v2__header,
+  .players-page-v2__row {
+    grid-template-columns:
+      minmax(68px, 0.68fr)
+      minmax(124px, 1fr)
+      minmax(158px, 1.28fr)
+      70px
+      56px
+      62px
+      56px
+      72px !important;
+    gap: 8px !important;
+  }
+}
+
 /* V2 filter rail + responsive card rows */
 .players-page-v2__filters {
   display: grid;

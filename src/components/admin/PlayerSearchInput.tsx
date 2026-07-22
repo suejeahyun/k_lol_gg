@@ -78,6 +78,7 @@ export default function PlayerSearchInput({
   return (
     <div className="player-search-input">
       <input
+        aria-label={placeholder}
         className="admin-form__input"
         value={value}
         onChange={(event) => handleInputChange(event.target.value)}

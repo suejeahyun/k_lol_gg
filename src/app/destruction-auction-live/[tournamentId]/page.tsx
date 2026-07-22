@@ -1,11 +1,17 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import DestructionAuctionManager from "@/components/admin/DestructionAuctionManager";
 import { requireAdminRequest } from "@/lib/auth/requireAdmin";
 import { applyDestructionRecruitmentAutoReserve } from "@/lib/destruction/recruitment-auto-reserve";
 import { prisma } from "@/lib/prisma/client";
+
+export const metadata: Metadata = {
+  title: "멸망전 실시간 경매",
+  robots: { index: false, follow: false, noarchive: true },
+};
 
 type PageProps = {
   params: Promise<{
@@ -23,7 +29,7 @@ export default async function DestructionAuctionLivePage({ params }: PageProps) 
   const { tournamentId } = await params;
   const id = Number(tournamentId);
 
-  if (Number.isNaN(id)) {
+  if (!Number.isInteger(id) || id <= 0) {
     notFound();
   }
 

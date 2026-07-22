@@ -1,9 +1,15 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import Link from "next/link";
 import PremiumFeatureGate from "@/components/PremiumFeatureGate";
 import { prisma } from "@/lib/prisma/client";
 import { getSiteSettings } from "@/lib/site/settings";
+
+export const metadata: Metadata = {
+  title: "K-LOL MMR 플레이어",
+  description: "K-LOL.GG 플레이어별 포지션 MMR과 분석 신뢰도를 확인하세요.",
+};
 
 function fmt(value: number | null | undefined, digits = 1) {
   return typeof value === "number" ? value.toFixed(digits) : "-";

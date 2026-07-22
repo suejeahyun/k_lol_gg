@@ -74,7 +74,7 @@ export default function HighlightForm({
     <form onSubmit={handleSubmit} className="admin-form">
       <div className="admin-form__group">
         <label className="admin-form__label">제목</label>
-        <input
+        <input aria-label="하이라이트 제목"
           type="text"
           className="admin-form__input"
           value={title}
@@ -86,7 +86,7 @@ export default function HighlightForm({
 
       <div className="admin-form__group">
         <label className="admin-form__label">YouTube URL</label>
-        <input
+        <input aria-label="https://www.youtube.com/watch?v=..."
           type="text"
           className="admin-form__input"
           value={youtubeUrl}
@@ -101,7 +101,7 @@ export default function HighlightForm({
 
       <div className="admin-form__group">
         <label className="admin-form__label">썸네일 URL</label>
-        <input
+        <input aria-label="비워두면 YouTube 기본 썸네일 자동 사용 / Drive 공유 링크도 가능"
           type="text"
           className="admin-form__input"
           value={thumbnailUrl}
@@ -112,7 +112,7 @@ export default function HighlightForm({
 
       <div className="admin-form__group">
         <label className="admin-form__label">설명</label>
-        <textarea
+        <textarea aria-label="하이라이트 설명"
           className="admin-form__textarea"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -124,7 +124,7 @@ export default function HighlightForm({
 
       <div className="admin-form__group">
         <label className="admin-form__label">정렬 순서</label>
-        <input
+        <input aria-label="정렬 순서"
           type="number"
           className="admin-form__input"
           value={sortOrder}

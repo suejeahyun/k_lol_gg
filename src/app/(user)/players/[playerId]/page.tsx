@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 
+import type { Metadata } from "next";
 import Link from "next/link";
 import SafeChampionImage from "@/components/SafeChampionImage";
 import { notFound } from "next/navigation";
@@ -8,7 +9,6 @@ import { prisma } from "@/lib/prisma/client";
 import TierIcon from "@/components/TierIcon";
 import SoloRankSection from "@/components/SoloRankSection";
 import PlayerAnalysisTabs from "@/components/PlayerAnalysisTabs";
-import { getGameMvpParticipant } from "@/lib/mvp";
 import { ensureSeasonStats, getWinRate } from "@/lib/stats/season-performance";
 
 type PlayerDetailPageProps = {
@@ -16,6 +16,15 @@ type PlayerDetailPageProps = {
     playerId: string;
   }>;
 };
+
+export async function generateMetadata({ params }: PlayerDetailPageProps): Promise<Metadata> {
+  const { playerId } = await params;
+  return {
+    title: "플레이어 상세",
+    description: "K-LOL.GG 플레이어의 시즌 전적, 포지션, 챔피언과 최근 경기 기록을 확인하세요.",
+    alternates: { canonical: `/players/${playerId}` },
+  };
+}
 
 function formatDateTime(value: string | number | Date) {
   return new Intl.DateTimeFormat("ko-KR", {
@@ -74,7 +83,7 @@ export default async function PlayerDetailPage({
   const { playerId } = await params;
   const id = Number(playerId);
 
-  if (!Number.isInteger(id)) {
+  if (!Number.isInteger(id) || id <= 0) {
     notFound();
   }
 
@@ -83,10 +92,6 @@ export default async function PlayerDetailPage({
     orderBy: { id: "desc" },
     select: { id: true, name: true },
   });
-
-  if (currentSeason) {
-    await ensureSeasonStats(currentSeason.id);
-  }
 
   const player = await prisma.player.findUnique({
     where: { id },
@@ -119,22 +124,29 @@ export default async function PlayerDetailPage({
             },
           },
         },
-        include: {
-          champion: true,
+        select: {
+          id: true,
+          kills: true,
+          deaths: true,
+          assists: true,
+          team: true,
+          position: true,
+          champion: {
+            select: {
+              id: true,
+              name: true,
+              imageUrl: true,
+            },
+          },
           game: {
-            include: {
+            select: {
+              winnerTeam: true,
+              gameNumber: true,
               series: {
-                include: {
-                  season: true,
-                },
-              },
-              participants: {
                 select: {
-                  playerId: true,
-                  kills: true,
-                  deaths: true,
-                  assists: true,
-                  team: true,
+                  id: true,
+                  title: true,
+                  matchDate: true,
                 },
               },
             },
@@ -148,7 +160,27 @@ export default async function PlayerDetailPage({
     notFound();
   }
 
-  const seasonStat = player.seasonStats[0] ?? null;
+  let seasonStat: (typeof player.seasonStats)[number] | null =
+    player.seasonStats[0] ?? null;
+
+  if (currentSeason && !seasonStat) {
+    await ensureSeasonStats(currentSeason.id);
+    seasonStat = await prisma.playerSeasonStat.findUnique({
+      where: {
+        playerId_seasonId: {
+          playerId: player.id,
+          seasonId: currentSeason.id,
+        },
+      },
+      select: {
+        totalGames: true,
+        participationCount: true,
+        wins: true,
+        losses: true,
+        mvpCount: true,
+      },
+    });
+  }
   const totalGames = seasonStat?.totalGames ?? player.participants.length;
   const participationCount = seasonStat?.participationCount ?? 0;
   const wins = seasonStat?.wins ?? player.participants.filter(
@@ -158,20 +190,7 @@ export default async function PlayerDetailPage({
   const losses = seasonStat?.losses ?? totalGames - wins;
   const winRate = getWinRate(wins, totalGames);
 
-  const getMvpPlayerId = (participant: (typeof player.participants)[number]) => {
-    if (participant.game.mvpPlayerId) return participant.game.mvpPlayerId;
-
-    const mvp = getGameMvpParticipant(
-      participant.game.participants,
-      participant.game.winnerTeam,
-    );
-
-    return mvp?.playerId ?? null;
-  };
-
-  const mvpCount = seasonStat?.mvpCount ?? player.participants.filter((participant) => {
-    return getMvpPlayerId(participant) === player.id;
-  }).length;
+  const mvpCount = seasonStat?.mvpCount ?? 0;
 
   const championStats = Array.from(
     player.participants
@@ -188,17 +207,12 @@ export default async function PlayerDetailPage({
           kills: 0,
           deaths: 0,
           assists: 0,
-          mvpCount: 0,
         };
 
         prev.games += 1;
         prev.kills += participant.kills;
         prev.deaths += participant.deaths;
         prev.assists += participant.assists;
-
-        if (getMvpPlayerId(participant) === player.id) {
-          prev.mvpCount += 1;
-        }
 
         if (isWin) {
           prev.wins += 1;
@@ -217,7 +231,6 @@ export default async function PlayerDetailPage({
           kills: number;
           deaths: number;
           assists: number;
-          mvpCount: number;
         }
       >())
       .values()
@@ -285,7 +298,7 @@ export default async function PlayerDetailPage({
   );
 
   return (
-    <div className="page-shell player-detail-page">
+    <main className="page-shell player-detail-page">
       <div className="page-header player-hero">
         <div>
           <p className="page-eyebrow">플레이어 상세</p>
@@ -575,6 +588,6 @@ export default async function PlayerDetailPage({
           </div>
         }
       />
-    </div>
+    </main>
   );
 }

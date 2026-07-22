@@ -35,7 +35,9 @@ function buildHref(
     });
   }
 
-  params.set("page", String(page));
+  if (page > 1) {
+    params.set("page", String(page));
+  }
 
   const queryString = params.toString();
   return queryString ? `${basePath}?${queryString}` : basePath;
@@ -96,6 +98,7 @@ export default function Pagination(props: PaginationProps) {
           type="button"
           onClick={() => handlePageChange(page)}
           className="chip-button"
+          aria-current={page === currentPage ? "page" : undefined}
           style={{
             fontWeight: page === currentPage ? 700 : 400,
             textDecoration: page === currentPage ? "underline" : "none",
@@ -111,6 +114,7 @@ export default function Pagination(props: PaginationProps) {
         key={`${text}-${page}`}
         href={buildHref(props.basePath, page, props.query)}
         className="chip-button"
+        aria-current={page === currentPage ? "page" : undefined}
         style={{
           fontWeight: page === currentPage ? 700 : 400,
           textDecoration: page === currentPage ? "underline" : "none",
@@ -122,7 +126,8 @@ export default function Pagination(props: PaginationProps) {
   };
 
   return (
-    <div
+    <nav
+      aria-label="페이지 이동"
       style={{
         display: "flex",
         gap: "8px",
@@ -152,6 +157,6 @@ export default function Pagination(props: PaginationProps) {
           다음
         </button>
       )}
-    </div>
+    </nav>
   );
 }

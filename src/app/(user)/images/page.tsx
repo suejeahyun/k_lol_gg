@@ -1,10 +1,18 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import SafeGalleryImage from "@/components/SafeGalleryImage";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import { coerceGalleryImageUrls } from "@/lib/gallery/winner-image-paths";
 import Pagination from "@/components/Pagination";
+import { parsePositivePage } from "@/lib/http/pagination";
+
+export const metadata: Metadata = {
+  title: "우승 이미지 갤러리",
+  description: "K-LOL.GG 멸망전 우승 이미지 갤러리를 확인하세요.",
+  alternates: { canonical: "/images" },
+};
 
 type ImagesPageProps = {
   searchParams: Promise<{ page?: string }>;
@@ -14,7 +22,7 @@ const PAGE_SIZE = 12;
 
 export default async function ImagesPage({ searchParams }: ImagesPageProps) {
   const resolvedSearchParams = await searchParams;
-  const currentPage = Math.max(1, Number(resolvedSearchParams.page ?? "1") || 1);
+  const currentPage = parsePositivePage(resolvedSearchParams.page);
 
   const totalCount = await prisma.galleryImage.count();
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
@@ -34,7 +42,7 @@ export default async function ImagesPage({ searchParams }: ImagesPageProps) {
   });
 
   return (
-    <div className="gallery-page">
+    <main className="gallery-page">
       <div className="gallery-page__header">
         <div>
           <p className="page-eyebrow">WINNER GALLERY</p>
@@ -77,7 +85,7 @@ export default async function ImagesPage({ searchParams }: ImagesPageProps) {
                   <h2 className="gallery-card__title">{image.title}</h2>
 
                   <div className="gallery-card__meta">
-                    {new Date(image.createdAt).toLocaleDateString("ko-KR")} · {imageList.length}장
+                    {new Date(image.createdAt).toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul" })} · {imageList.length}장
                   </div>
 
                   <p className="gallery-card__description">
@@ -93,6 +101,6 @@ export default async function ImagesPage({ searchParams }: ImagesPageProps) {
       </div>
 
       <Pagination currentPage={safeCurrentPage} totalPages={totalPages} basePath="/images" />
-    </div>
+    </main>
   );
 }

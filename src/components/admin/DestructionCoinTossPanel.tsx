@@ -15,6 +15,7 @@ type Props = {
   teamB?: Team;
   editableTeams?: boolean;
   className?: string;
+  headingLevel?: "h1" | "h2";
 };
 
 const SOUND_PATHS = {
@@ -52,7 +53,11 @@ function sideLabel(side: TossSide | null) {
   return "대기";
 }
 
-export default function DestructionCoinTossPanel({ className = "" }: Props) {
+export default function DestructionCoinTossPanel({
+  className = "",
+  headingLevel = "h2",
+}: Props) {
+  const Heading = headingLevel;
   const [phase, setPhase] = useState<TossPhase>("idle");
   const [winnerSide, setWinnerSide] = useState<TossSide | null>(null);
   const [activeVideoSrc, setActiveVideoSrc] = useState<string | null>(null);
@@ -93,7 +98,7 @@ export default function DestructionCoinTossPanel({ className = "" }: Props) {
   };
 
   const handleCopy = async () => {
-    if (!winnerSide) return;
+    if (phase !== "revealed" || !winnerSide) return;
 
     try {
       await navigator.clipboard.writeText(["[K-LOL 코인토스]", `결과: ${sideLabel(winnerSide)}`].join("\n"));
@@ -134,7 +139,7 @@ export default function DestructionCoinTossPanel({ className = "" }: Props) {
       <div className="destruction-coin-toss__header">
         <div>
           <span className="destruction-coin-toss__eyebrow">COIN TOSS</span>
-          <h4>코인토스</h4>
+          <Heading>코인토스</Heading>
         </div>
         <strong className="destruction-coin-toss__result">{resultText}</strong>
       </div>
@@ -193,7 +198,7 @@ export default function DestructionCoinTossPanel({ className = "" }: Props) {
           type="button"
           className="destruction-coin-toss__copy"
           onClick={handleCopy}
-          disabled={!winnerSide}
+          disabled={phase !== "revealed" || !winnerSide}
         >
           {copied ? "복사됨" : "결과 복사"}
         </button>

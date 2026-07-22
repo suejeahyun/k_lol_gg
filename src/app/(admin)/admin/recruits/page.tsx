@@ -3,6 +3,7 @@ export const revalidate = 0;
 
 import type { Prisma } from "@prisma/client";
 import Pagination from "@/components/Pagination";
+import { parsePositivePage } from "@/lib/http/pagination";
 import PremiumFeatureGate from "@/components/PremiumFeatureGate";
 import AdminRecruitResetAllButton from "./AdminRecruitResetAllButton";
 import { requireAdminRequest } from "@/lib/auth/requireAdmin";
@@ -93,8 +94,7 @@ export default async function AdminRecruitsPage({ searchParams }: PageProps) {
   const isSuperAdmin = admin?.user.role === "SUPER_ADMIN";
   const siteSettings = await getSiteSettings();
   const resolvedSearchParams = await searchParams;
-  const page = Number(resolvedSearchParams.page ?? "1");
-  const safePage = Number.isNaN(page) || page < 1 ? 1 : page;
+  const safePage = parsePositivePage(resolvedSearchParams.page);
   const q = resolvedSearchParams.q ?? "";
   const date = resolvedSearchParams.date ?? "";
   await runRecruitIdleAutoFinishIfNeeded({ source: "admin-recruits-page", roomName: "admin", sender: "admin" });
@@ -166,8 +166,8 @@ export default async function AdminRecruitsPage({ searchParams }: PageProps) {
       </section>
 
       <form className="admin-filter-bar admin-filter-bar--grid" action="/admin/recruits">
-        <input name="q" defaultValue={q} placeholder="제목, 방, 생성자, 참가자 검색" className="admin-input" />
-        <input name="date" defaultValue={date} type="date" className="admin-input" />
+        <input aria-label="제목, 방, 생성자, 참가자 검색" name="q" defaultValue={q} placeholder="제목, 방, 생성자, 참가자 검색" className="admin-input" />
+        <input aria-label="조회 날짜" name="date" defaultValue={date} type="date" className="admin-input" />
         <button className="admin-button" type="submit">조회</button>
         <a className="admin-button admin-button--ghost" href="/admin/recruits">검색조건 초기화</a>
       </form>

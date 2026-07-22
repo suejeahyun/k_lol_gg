@@ -28,6 +28,8 @@ type MatchCreateInput = {
 type ValidationResult = { ok: true } | { ok: false; message: string };
 
 const REQUIRED_POSITIONS = ["TOP", "JGL", "MID", "ADC", "SUP"] as const;
+const MAX_GAMES_PER_MATCH = 20;
+const MAX_KDA_VALUE = 999;
 
 function isNonNegativeInteger(value: unknown) {
   return typeof value === "number" && Number.isInteger(value) && value >= 0;
@@ -62,6 +64,13 @@ export function validateMatchCreateInput(
 
   if (!Array.isArray(data.games) || data.games.length === 0) {
     return { ok: false, message: "최소 1세트 이상 필요합니다." };
+  }
+
+  if (data.games.length > MAX_GAMES_PER_MATCH) {
+    return {
+      ok: false,
+      message: `한 내전에는 최대 ${MAX_GAMES_PER_MATCH}세트까지 등록할 수 있습니다.`,
+    };
   }
 
   const gameNumbers = data.games.map((game) => game.gameNumber);
@@ -159,6 +168,13 @@ export function validateMatchCreateInput(
         };
       }
 
+      if (participant.kills > MAX_KDA_VALUE) {
+        return {
+          ok: false,
+          message: `${gameLabel} 킬은 ${MAX_KDA_VALUE} 이하로 입력해주세요.`,
+        };
+      }
+
       if (!isNonNegativeInteger(participant.deaths)) {
         return {
           ok: false,
@@ -166,10 +182,24 @@ export function validateMatchCreateInput(
         };
       }
 
+      if (participant.deaths > MAX_KDA_VALUE) {
+        return {
+          ok: false,
+          message: `${gameLabel} 데스는 ${MAX_KDA_VALUE} 이하로 입력해주세요.`,
+        };
+      }
+
       if (!isNonNegativeInteger(participant.assists)) {
         return {
           ok: false,
           message: `${gameLabel} 어시스트는 0 이상의 정수만 입력할 수 있습니다.`,
+        };
+      }
+
+      if (participant.assists > MAX_KDA_VALUE) {
+        return {
+          ok: false,
+          message: `${gameLabel} 어시스트는 ${MAX_KDA_VALUE} 이하로 입력해주세요.`,
         };
       }
     }

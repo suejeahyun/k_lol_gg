@@ -10,6 +10,7 @@ type SafeChampionImageProps = {
   height: number;
   className?: string;
   fallbackClassName?: string;
+  fallbackText?: string;
 };
 
 function isValidImageSrc(src?: string | null) {
@@ -32,6 +33,7 @@ export default function SafeChampionImage({
   height,
   className,
   fallbackClassName,
+  fallbackText,
 }: SafeChampionImageProps) {
   const [failed, setFailed] = useState(false);
   const normalizedSrc = typeof src === "string" ? src.trim() : "";
@@ -39,10 +41,13 @@ export default function SafeChampionImage({
   if (failed || !isValidImageSrc(normalizedSrc)) {
     return (
       <span
+        role="img"
         aria-label={`${alt} 이미지 없음`}
         className={fallbackClassName ?? className}
         style={{ width, height }}
-      />
+      >
+        {fallbackText}
+      </span>
     );
   }
 

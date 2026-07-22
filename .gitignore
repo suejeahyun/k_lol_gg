@@ -95,6 +95,9 @@ _backup_*
 *.tar.gz
 *.tgz
 .env_backup*
-*_backup_*
+*_backup_*/
 *_temp/
 *_upload/
+
+.vercel
+.env*

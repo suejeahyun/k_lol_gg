@@ -8,6 +8,7 @@ import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { normalizeGalleryImageUrl } from "@/lib/gallery/winner-image-paths";
 import { extractYoutubeId, getYoutubeThumbnailUrl, getYoutubeWatchUrl } from "@/lib/youtube";
 import { PUBLIC_SHORT_CACHE_HEADER } from "@/lib/http/cache";
+import { readJsonObject } from "@/lib/http/json-body";
 
 type HighlightBody = {
   title?: string;
@@ -44,7 +45,13 @@ export async function POST(req: NextRequest) {
   if (rejected) return rejected;
 
   try {
-    const body = (await req.json()) as HighlightBody;
+    const body = await readJsonObject<HighlightBody>(req);
+    if (!body) {
+      return NextResponse.json(
+        { message: "올바른 JSON 요청 본문이 필요합니다." },
+        { status: 400 },
+      );
+    }
 
     const title = body.title?.trim();
     const description = body.description?.trim();

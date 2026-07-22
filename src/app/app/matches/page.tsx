@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
@@ -6,6 +7,11 @@ import PremiumFeatureGate from "@/components/PremiumFeatureGate";
 import { getSiteSettings } from "@/lib/site/settings";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "모바일 내전 목록",
+  description: "K-LOL.GG 최근 내전과 경기 결과를 모바일에서 확인하세요.",
+};
 
 type AppHubTab = "matches" | "recruits" | "rankings" | "events";
 
@@ -25,6 +31,7 @@ const tabItems: Array<{ key: AppHubTab; label: string; href: string }> = [
 const dateFormatter = new Intl.DateTimeFormat("ko-KR", {
   month: "2-digit",
   day: "2-digit",
+  timeZone: "Asia/Seoul",
 });
 
 function normalizeTab(tab?: string): AppHubTab {

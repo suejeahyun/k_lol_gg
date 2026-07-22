@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import Pagination from "@/components/Pagination";
+import { parsePositivePage } from "@/lib/http/pagination";
 import MatchDeleteButton from "./[matchId]/MatchDeleteButton";
 import AdminMatchAiTrainingButton from "./AdminMatchAiTrainingButton";
 export const dynamic = "force-dynamic";
@@ -18,7 +19,7 @@ export default async function AdminMatchesPage({
   searchParams,
 }: AdminMatchesPageProps) {
   const resolvedSearchParams = await searchParams;
-  const currentPage = Math.max(1, Number(resolvedSearchParams.page ?? "1") || 1);
+  const currentPage = parsePositivePage(resolvedSearchParams.page);
   const query = resolvedSearchParams.q?.trim() ?? "";
 
   const where = query
@@ -85,7 +86,7 @@ export default async function AdminMatchesPage({
           flexWrap: "wrap",
         }}
       >
-        <input
+        <input aria-label="제목 / 시즌명 검색"
           type="text"
           name="q"
           defaultValue={query}

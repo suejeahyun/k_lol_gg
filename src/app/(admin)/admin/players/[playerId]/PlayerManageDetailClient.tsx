@@ -296,7 +296,7 @@ export default function PlayerManageDetailClient({
             />
             <div>
               <label style={{ fontWeight: 800 }}>밸런스 보정 사유</label>
-              <textarea
+              <textarea aria-label="예: 최근 내전 체감 실력 +3, 휴면 복귀 -4"
                 className="app-input"
                 value={balanceOverrideReason}
                 onChange={(e) => setBalanceOverrideReason(e.target.value)}
@@ -562,6 +562,7 @@ function TierField({
         }}
       >
         <select
+          aria-label={`${label} 티어`}
           className="app-input"
           value={value.base}
           onChange={(e) => setBase(e.target.value as TierBase)}
@@ -577,7 +578,7 @@ function TierField({
         {value.base ? (
           isMasterPlus ? (
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <input
+              <input aria-label={detailPlaceholder}
                 className="app-input"
                 type="number"
                 min={0}
@@ -593,6 +594,7 @@ function TierField({
             </div>
           ) : (
             <select
+              aria-label={`${label} 단계`}
               className="app-input"
               value={value.detail || "1"}
               onChange={(e) => setDetail(e.target.value)}
@@ -607,6 +609,7 @@ function TierField({
           )
         ) : (
           <input
+            aria-label={`${label} 상세`}
             className="app-input"
             value="-"
             disabled
@@ -709,7 +712,7 @@ function Field({
   return (
     <div>
       <label style={{ fontWeight: 800 }}>{label}</label>
-      <input
+      <input aria-label={placeholder}
         className="app-input"
         type={type}
         value={value}

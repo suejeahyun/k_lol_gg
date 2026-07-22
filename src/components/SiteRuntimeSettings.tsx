@@ -11,6 +11,10 @@ type PublicSiteSettings = {
 };
 
 const allowedThemes: SiteThemePreset[] = ["dark-modern", "neon-cyber", "black-gold"];
+const optimizedBuiltInImages: Record<string, string> = {
+  "/images/theme/dark-modern/klol-global-stage-v1.png":
+    "/images/theme/dark-modern/klol-global-stage-v1.webp",
+};
 
 function isTheme(value: unknown): value is SiteThemePreset {
   return typeof value === "string" && allowedThemes.includes(value as SiteThemePreset);
@@ -47,7 +51,9 @@ export default function SiteRuntimeSettings() {
         }
 
         if (settings.homeBackgroundUrl) {
-          root.style.setProperty("--site-background-image", `url("${safeCssUrl(settings.homeBackgroundUrl)}")`);
+          const backgroundUrl = optimizedBuiltInImages[settings.homeBackgroundUrl]
+            ?? settings.homeBackgroundUrl;
+          root.style.setProperty("--site-background-image", `url("${safeCssUrl(backgroundUrl)}")`);
           root.dataset.siteBackground = "custom";
         } else {
           root.style.removeProperty("--site-background-image");

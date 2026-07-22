@@ -4,6 +4,8 @@ import SafeHighlightThumbnail from "@/components/SafeHighlightThumbnail";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import HighlightDeleteButton from "@/features/highlight/HighlightDeleteButton";
+import Pagination from "@/components/Pagination";
+import { parsePositivePage } from "@/lib/http/pagination";
 
 function formatDate(date: Date) {
   return new Date(date).toLocaleDateString("ko-KR", {
@@ -13,9 +15,23 @@ function formatDate(date: Date) {
   });
 }
 
-export default async function AdminHighlightsPage() {
+type AdminHighlightsPageProps = {
+  searchParams: Promise<{ page?: string }>;
+};
+
+const PAGE_SIZE = 20;
+
+export default async function AdminHighlightsPage({ searchParams }: AdminHighlightsPageProps) {
+  const resolvedSearchParams = await searchParams;
+  const requestedPage = parsePositivePage(resolvedSearchParams.page);
+  const totalCount = await prisma.highlight.count();
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const currentPage = Math.min(requestedPage, totalPages);
+
   const highlights = await prisma.highlight.findMany({
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+    skip: (currentPage - 1) * PAGE_SIZE,
+    take: PAGE_SIZE,
   });
 
   return (
@@ -77,6 +93,11 @@ export default async function AdminHighlightsPage() {
           ))}
         </div>
       )}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        basePath="/admin/highlights"
+      />
     </main>
   );
 }

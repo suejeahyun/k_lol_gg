@@ -49,7 +49,9 @@ function getDestructionProgressPercent(status?: string | null) {
 }
 
 function formatDate(date: Date | string): string {
-  return new Date(date).toLocaleDateString("ko-KR");
+  return new Date(date).toLocaleDateString("ko-KR", {
+    timeZone: "Asia/Seoul",
+  });
 }
 
 function getTierImageSrc(tier?: string | null) {
@@ -465,7 +467,11 @@ export default async function HomePage() {
                             </span>
                           </Link>
 
-                          <div className="home-top3-chasers" aria-label={`${mode.title} 추격자`}>
+                          <div
+                            className="home-top3-chasers"
+                            role="group"
+                            aria-label={`${mode.title} 추격자`}
+                          >
                             {mode.chasers.map((slot) => (
                               <Link
                                 key={`${mode.id}-${slot.rank}`}
@@ -516,14 +522,14 @@ export default async function HomePage() {
             )}
           </div>
 
-          <aside
+          <section
             className="home-dark-recent-panel home-dark-recent-panel--standalone"
-            aria-label="최근 내전"
+            aria-labelledby="recent-matches-title"
           >
             <div className="home-dark-panel-head">
               <div>
                 <p className="home-eyebrow">RECENT MATCHES</p>
-                <h2 className="home-section-title">최근 내전</h2>
+                <h2 className="home-section-title" id="recent-matches-title">최근 내전</h2>
               </div>
               <Link href="/matches" className="home-dark-mini-link">
                 전체 보기
@@ -562,7 +568,7 @@ export default async function HomePage() {
                 })
               )}
             </div>
-          </aside>
+          </section>
 
           <div className="home-season-card home-dark-season-summary">
             <div className="home-section-head">

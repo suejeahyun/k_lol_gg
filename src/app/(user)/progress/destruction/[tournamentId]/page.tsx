@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import SafeGalleryImage from "@/components/SafeGalleryImage";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -14,6 +15,15 @@ type PageProps = {
     tournamentId: string;
   }>;
 };
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { tournamentId } = await params;
+  return {
+    title: "멸망전 상세",
+    description: "멸망전 참가자, 팀 구성, 예선과 본선 경기 결과를 확인하세요.",
+    alternates: { canonical: `/progress/destruction/${tournamentId}` },
+  };
+}
 
 function getStatusLabel(status: string) {
   const labels: Record<string, string> = {
@@ -52,13 +62,12 @@ export default async function DestructionProgressDetailPage({
   const { tournamentId } = await params;
   const id = Number(tournamentId);
 
-  if (Number.isNaN(id)) {
+  if (!Number.isInteger(id) || id <= 0) {
     notFound();
   }
 
-  const currentUser = await getCurrentUser();
-
-  const tournament = await prisma.destructionTournament.findUnique({
+  const currentUserPromise = getCurrentUser();
+  const tournamentPromise = prisma.destructionTournament.findUnique({
     where: {
       id,
     },
@@ -105,16 +114,33 @@ export default async function DestructionProgressDetailPage({
           teamA: true,
           teamB: true,
           mvpPlayer: true,
-          mvpVotes: { where: { voterUserAccountId: currentUser?.userAccountId ?? -1 }, select: { candidatePlayerId: true } },
         },
         orderBy: [{ stage: "asc" }, { preliminaryGroup: "asc" }, { round: "asc" }],
       },
     },
   });
 
+  const [currentUser, tournament] = await Promise.all([
+    currentUserPromise,
+    tournamentPromise,
+  ]);
+
   if (!tournament) {
     notFound();
   }
+
+  const currentUserVotes = currentUser
+    ? await prisma.destructionMatchMvpVote.findMany({
+        where: {
+          voterUserAccountId: currentUser.userAccountId,
+          match: { tournamentId: id },
+        },
+        select: { matchId: true, candidatePlayerId: true },
+      })
+    : [];
+  const currentUserVoteByMatch = new Map(
+    currentUserVotes.map((vote) => [vote.matchId, vote.candidatePlayerId]),
+  );
 
   const winnerTeam = tournament.winnerTeamId
     ? tournament.teams.find((team) => team.id === tournament.winnerTeamId)
@@ -191,7 +217,7 @@ export default async function DestructionProgressDetailPage({
       unavailableLabel: participant.playerId === currentUser?.playerId ? "본인 제외" : "재투표 대상 아님",
     }));
     return <DestructionMvpBallot matchId={match.id} candidates={candidates}
-      initialVotePlayerId={match.mvpVotes[0]?.candidatePlayerId ?? null}
+      initialVotePlayerId={currentUserVoteByMatch.get(match.id) ?? null}
       finalizedMvp={match.mvpPlayer ? { id: match.mvpPlayer.id, name: match.mvpPlayer.name, nickname: match.mvpPlayer.nickname, tag: match.mvpPlayer.tag, method: match.mvpSelectionMethod } : null}
       canVote={canVote}
       teamLayout={{ teamAName: match.teamA.name, teamBName: match.teamB.name }}

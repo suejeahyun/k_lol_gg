@@ -3,7 +3,9 @@ import path from "node:path";
 
 const appRoot = path.resolve("src/app");
 
-const routeFiles = ["page.tsx", "layout.tsx", "route.ts"];
+// Layouts can provide inherited guards, but they are not independently
+// reachable feature endpoints and should not be reported as missing a guard.
+const routeFiles = ["page.tsx", "route.ts"];
 const pageGuardPattern = /PremiumFeatureGate|isSiteFeatureEnabled/;
 const apiGuardPattern = /requireSiteFeature|isSiteFeatureEnabled/;
 

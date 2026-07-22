@@ -30,7 +30,9 @@ type RecentMvpSliderProps = {
 };
 
 function formatMvpDate(value: string) {
-  return new Date(value).toLocaleDateString("ko-KR");
+  return new Date(value).toLocaleDateString("ko-KR", {
+    timeZone: "Asia/Seoul",
+  });
 }
 
 export default function RecentMvpSlider({
@@ -39,7 +41,10 @@ export default function RecentMvpSlider({
 }: RecentMvpSliderProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
+  const [allowReducedMotionPlayback, setAllowReducedMotionPlayback] = useState(false);
   const prefersReducedMotion = usePrefersReducedMotion();
+  const autoPlayActive =
+    isPlaying && (!prefersReducedMotion || allowReducedMotionPlayback);
 
   const normalizedItems = useMemo(() => {
     return [...items].sort((a, b) => {
@@ -63,14 +68,14 @@ export default function RecentMvpSlider({
   const activeItem = normalizedItems[safeActiveIndex] ?? null;
 
   useEffect(() => {
-    if (normalizedItems.length <= 1 || !isPlaying || prefersReducedMotion) return;
+    if (normalizedItems.length <= 1 || !autoPlayActive) return;
 
     const timer = window.setInterval(() => {
       setActiveIndex((prev) => (prev + 1) % normalizedItems.length);
     }, 5000);
 
     return () => window.clearInterval(timer);
-  }, [isPlaying, normalizedItems.length, prefersReducedMotion]);
+  }, [autoPlayActive, normalizedItems.length]);
 
   return (
     <div className="card home-mvp-card" role="region" aria-label="최근 MVP 슬라이드">
@@ -168,10 +173,18 @@ export default function RecentMvpSlider({
               <button
                 type="button"
                 className="home-mvp-nav-button"
-                onClick={() => setIsPlaying((playing) => !playing)}
-                aria-label={isPlaying ? "MVP 자동 넘김 일시정지" : "MVP 자동 넘김 재생"}
+                onClick={() => {
+                  if (autoPlayActive) {
+                    setIsPlaying(false);
+                    return;
+                  }
+
+                  setAllowReducedMotionPlayback(true);
+                  setIsPlaying(true);
+                }}
+                aria-label={autoPlayActive ? "MVP 자동 넘김 일시정지" : "MVP 자동 넘김 재생"}
               >
-                {isPlaying ? "정지" : "재생"}
+                {autoPlayActive ? "정지" : "재생"}
               </button>
             ) : null}
 

@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import Pagination from "@/components/Pagination";
+import { parsePositivePage } from "@/lib/http/pagination";
 import { prisma } from "@/lib/prisma/client";
 
 const PAGE_SIZE = 20;
@@ -43,7 +44,7 @@ function getSeasonName(draftSeasonName: string | undefined, activeSeasonName: st
 
 export default async function AdminTeamBalanceDraftsPage({ searchParams }: Props) {
   const sp = await searchParams;
-  const currentPage = Math.max(1, Number(sp.page ?? "1") || 1);
+  const currentPage = parsePositivePage(sp.page);
   const skip = (currentPage - 1) * PAGE_SIZE;
 
   const [totalCount, drafts, activeSeason] = await Promise.all([

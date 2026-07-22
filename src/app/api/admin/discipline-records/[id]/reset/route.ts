@@ -10,7 +10,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const { id } = await params;
   const body = await req.json().catch(() => ({}));
   const recordId = Number(id);
-  if (!Number.isFinite(recordId)) return NextResponse.json({ message: "잘못된 기록 ID입니다." }, { status: 400 });
+  if (!Number.isInteger(recordId) || recordId <= 0) return NextResponse.json({ message: "잘못된 기록 ID입니다." }, { status: 400 });
 
   const updated = await prisma.userDisciplineRecord.update({
     where: { id: recordId },

@@ -134,7 +134,7 @@ export default async function AdminEventMatchDetailPage({ params, searchParams }
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const id = Number(eventId);
 
-  if (Number.isNaN(id)) {
+  if (!Number.isInteger(id) || id <= 0) {
     notFound();
   }
 

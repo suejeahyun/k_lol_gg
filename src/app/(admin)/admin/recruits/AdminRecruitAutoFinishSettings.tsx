@@ -45,7 +45,7 @@ export default function AdminRecruitAutoFinishSettings({ initialEnabled, initial
   }
 
   return (
-    <div className="admin-inline-setting" aria-label="활동 없음 자동 구인종료 설정">
+    <div className="admin-inline-setting" role="group" aria-label="활동 없음 자동 구인종료 설정">
       <label className="admin-inline-setting__check">
         <input
           type="checkbox"
@@ -54,7 +54,7 @@ export default function AdminRecruitAutoFinishSettings({ initialEnabled, initial
         />
         <span>활동 없음 자동 구인종료</span>
       </label>
-      <input
+      <input aria-label="자동 구인 종료 대기 시간"
         className="admin-input admin-inline-setting__number"
         type="number"
         min="1"

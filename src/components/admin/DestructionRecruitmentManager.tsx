@@ -446,7 +446,7 @@ export default function DestructionRecruitmentManager({
         <div className="destruction-lane-limit-editor">
           <div className="destruction-lane-limit-field">
             <label>라인당 최대 인원</label>
-            <input
+            <input aria-label="라인당 최대 인원"
               className="admin-form__input"
               type="number"
               min="1"
@@ -490,7 +490,7 @@ export default function DestructionRecruitmentManager({
       </div>
 
       <div className="recruitment-toolbar">
-        <input
+        <input aria-label="이름, 닉네임, 포지션, 상태 검색"
           className="admin-form__input"
           value={keyword}
           onChange={(event) => setKeyword(event.target.value)}
@@ -498,6 +498,7 @@ export default function DestructionRecruitmentManager({
           style={{ minWidth: 240, flex: "1 1 260px" }}
         />
         <select
+          aria-label="신청 상태 필터"
           className="admin-form__input"
           value={statusFilter}
           onChange={(event) => setStatusFilter(event.target.value)}
@@ -511,6 +512,7 @@ export default function DestructionRecruitmentManager({
           <option value="REJECTED">제외</option>
         </select>
         <select
+          aria-label="포지션 필터"
           className="admin-form__input"
           value={positionFilter}
           onChange={(event) => setPositionFilter(event.target.value)}
@@ -522,6 +524,7 @@ export default function DestructionRecruitmentManager({
           ))}
         </select>
         <select
+          aria-label="팀장 선호 필터"
           className="admin-form__input"
           value={captainFilter}
           onChange={(event) => setCaptainFilter(event.target.value)}
@@ -532,6 +535,7 @@ export default function DestructionRecruitmentManager({
           <option value="NOT_PREFERRED">비선호</option>
         </select>
         <select
+          aria-label="Riot 검증 상태 필터"
           className="admin-form__input"
           value={riotFilter}
           onChange={(event) => setRiotFilter(event.target.value)}

@@ -54,7 +54,7 @@ export default function KakaoSearchClient() {
     <div className="kakao-search-page">
       <div className="kakao-search-page__inner">
         <h1 className="kakao-search-page__title">카카오 플레이어 조회</h1>
-        <p className="kakao-search-page__desc">
+        <p id="kakao-search-help" className="kakao-search-page__desc">
           닉네임#태그 형식으로 입력하면 총판수, 승률, MVP를 조회합니다.
         </p>
 
@@ -65,6 +65,10 @@ export default function KakaoSearchClient() {
             onChange={(event) => setQuery(event.target.value)}
             placeholder="예: 99년생딸피 단단 굵직 묵직#99단굵묵"
             className="kakao-search-form__input"
+            aria-label="조회할 플레이어 닉네임과 태그"
+            aria-describedby="kakao-search-help"
+            autoComplete="off"
+            required
           />
           <button type="submit" className="kakao-search-form__button" disabled={loading}>
             {loading ? "조회 중..." : "조회"}
@@ -74,6 +78,23 @@ export default function KakaoSearchClient() {
         {error ? <p className="kakao-search-page__error">{error}</p> : null}
 
         {data ? <KakaoPlayerSearchCard data={data} /> : null}
+
+        {!data && !error ? (
+          <section className="kakao-search-guide" aria-label="플레이어 조회 안내">
+            <div>
+              <strong>1. 닉네임 입력</strong>
+              <span>게임 닉네임과 태그를 #으로 이어서 입력하세요.</span>
+            </div>
+            <div>
+              <strong>2. 전적 요약 확인</strong>
+              <span>총판수, 승률, MVP, 평균 K/D/A를 한 번에 확인합니다.</span>
+            </div>
+            <div>
+              <strong>3. 공개 기록만 표시</strong>
+              <span>카카오 조회 명령과 동일한 내전 통계만 보여줍니다.</span>
+            </div>
+          </section>
+        ) : null}
       </div>
     </div>
   );

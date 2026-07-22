@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type LoginStep = "PASSWORD" | "TWO_FACTOR";
@@ -21,6 +21,18 @@ export default function AdminLoginPage() {
   const [step, setStep] = useState<LoginStep>("PASSWORD");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [messageTone, setMessageTone] = useState<"error" | "info">("error");
+
+  useEffect(() => {
+    const security = new URLSearchParams(window.location.search).get("security");
+    if (security === "2fa-enabled") {
+      setMessage("2단계 인증이 활성화되었습니다. 인증앱의 6자리 코드로 다시 로그인해주세요.");
+      setMessageTone("info");
+    } else if (security === "2fa-disabled") {
+      setMessage("2단계 인증이 해제되고 기존 세션이 종료되었습니다. 다시 로그인해주세요.");
+      setMessageTone("info");
+    }
+  }, []);
 
   const buttonLabel = useMemo(() => {
     if (loading) return step === "TWO_FACTOR" ? "인증 확인 중..." : "로그인 중...";
@@ -35,6 +47,7 @@ export default function AdminLoginPage() {
     try {
       setLoading(true);
       setMessage("");
+      setMessageTone("error");
 
       const response = await fetch("/api/admin/login", {
         method: "POST",
@@ -54,6 +67,7 @@ export default function AdminLoginPage() {
         setStep("TWO_FACTOR");
         setTotpCode("");
         setMessage(data.message ?? "2단계 인증 코드를 입력해주세요.");
+        setMessageTone("info");
         setTimeout(() => codeInputRef.current?.focus(), 0);
         return;
       }
@@ -77,6 +91,7 @@ export default function AdminLoginPage() {
     setStep("PASSWORD");
     setTotpCode("");
     setMessage("");
+    setMessageTone("error");
   };
 
   return (
@@ -95,11 +110,14 @@ export default function AdminLoginPage() {
             <span>아이디</span>
           <input
             id="admin-id"
+            name="username"
             type="text"
             value={id}
             disabled={step === "TWO_FACTOR" || loading}
             onChange={(e) => setId(e.target.value)}
             autoComplete="username"
+            maxLength={128}
+            required
           />
           </label>
 
@@ -107,11 +125,14 @@ export default function AdminLoginPage() {
             <span>비밀번호</span>
           <input
             id="admin-password"
+            name="password"
             type="password"
             value={password}
             disabled={step === "TWO_FACTOR" || loading}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="current-password"
+            maxLength={256}
+            required
           />
           </label>
 
@@ -121,7 +142,7 @@ export default function AdminLoginPage() {
               className="admin-login-two-factor"
           >
               <strong>2단계 인증</strong>
-            <input
+            <input aria-label="2단계 인증 코드"
               ref={codeInputRef}
               type="text"
               inputMode="numeric"
@@ -145,7 +166,7 @@ export default function AdminLoginPage() {
         ) : null}
 
         {message ? (
-            <p className={`admin-login-message admin-login-message--${step === "TWO_FACTOR" ? "info" : "error"}`}>
+            <p className={`admin-login-message admin-login-message--${messageTone}`}>
             {message}
           </p>
         ) : null}

@@ -84,7 +84,7 @@ function Field({ label, value, onChange, placeholder }: { label: string; value: 
   return (
     <div>
       <label style={{ fontWeight: 800 }}>{label}</label>
-      <input className="app-input" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} style={{ width: "100%", marginTop: 8 }} />
+      <input aria-label={placeholder} className="app-input" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} style={{ width: "100%", marginTop: 8 }} />
     </div>
   );
 }

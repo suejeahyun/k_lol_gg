@@ -49,7 +49,9 @@ export default async function AdminSeasonsPage() {
 
                   {/* 생성일 */}
                   <div className="player-col">
-                    {new Date(season.createdAt).toLocaleDateString("ko-KR")}
+                    {new Date(season.createdAt).toLocaleDateString("ko-KR", {
+                      timeZone: "Asia/Seoul",
+                    })}
                   </div>
 
                   {/* 버튼 */}

@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import MatchDetailSlider, {
   MatchDetailSlide,
@@ -11,6 +12,15 @@ type MatchDetailPageProps = {
     matchId: string;
   }>;
 };
+
+export async function generateMetadata({ params }: MatchDetailPageProps): Promise<Metadata> {
+  const { matchId } = await params;
+  return {
+    title: "내전 상세",
+    description: "K-LOL.GG 내전의 세트별 결과, 참가자 기록과 MVP를 확인하세요.",
+    alternates: { canonical: `/matches/${matchId}` },
+  };
+}
 
 const positionOrder: Record<string, number> = {
   TOP: 0,
@@ -27,6 +37,7 @@ function formatDate(date: Date) {
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
+    timeZone: "Asia/Seoul",
   });
 }
 
@@ -61,7 +72,7 @@ export default async function MatchDetailPage({
   const { matchId } = await params;
   const id = Number(matchId);
 
-  if (Number.isNaN(id)) {
+  if (!Number.isInteger(id) || id <= 0) {
     notFound();
   }
 

@@ -28,7 +28,10 @@ export async function PATCH(_req: NextRequest, { params }: RouteContext) {
     }
 
     await prisma.$transaction(async (tx) => {
-      await tx.userAccount.update({ where: { id }, data: { status: "PENDING" } });
+      await tx.userAccount.update({
+        where: { id },
+        data: { status: "PENDING", authVersion: { increment: 1 } },
+      });
       await writeAdminLog({
         action: "USER_STATUS_RESET",
         message: `회원 상태 초기화: #${id} ${user.userId} / ${user.status} → PENDING`,

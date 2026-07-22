@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma/client";
 import { getRequestAuditFields, writeAdminLog } from "@/lib/admin-log";
-import { verifyPassword } from "@/lib/auth/password";
+import { PASSWORD_MAX_LENGTH, verifyPasswordOrDummy } from "@/lib/auth/password";
 import { authConstants } from "@/lib/auth";
 import { signAuthToken } from "@/lib/auth/token";
 import { USER_TOKEN_COOKIE, authCookieOptions, clearAuthCookieOptions } from "@/lib/auth/cookies";
@@ -34,6 +34,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (userId.length > 32 || password.length > PASSWORD_MAX_LENGTH) {
+      return NextResponse.json(
+        { message: "아이디 또는 비밀번호가 올바르지 않습니다." },
+        { status: 401 },
+      );
+    }
+
     const user = await prisma.userAccount.findUnique({
       where: { userId },
       include: {
@@ -41,23 +48,10 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    if (!user || user.deletedAt) {
-      return NextResponse.json(
-        { message: "아이디 또는 비밀번호가 올바르지 않습니다." },
-        { status: 401 }
-      );
-    }
+    const passwordHash = user && !user.deletedAt ? user.passwordHash : null;
+    const isValidPassword = await verifyPasswordOrDummy(password, passwordHash);
 
-    if (!user.passwordHash) {
-      return NextResponse.json(
-        { message: "비밀번호가 설정되지 않은 계정입니다. 관리자에게 비밀번호 초기화를 요청해주세요." },
-        { status: 401 }
-      );
-    }
-
-    const isValidPassword = await verifyPassword(password, user.passwordHash);
-
-    if (!isValidPassword) {
+    if (!user || user.deletedAt || !isValidPassword) {
       return NextResponse.json(
         { message: "아이디 또는 비밀번호가 올바르지 않습니다." },
         { status: 401 }

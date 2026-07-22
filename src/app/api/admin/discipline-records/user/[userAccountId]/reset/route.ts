@@ -10,7 +10,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ use
   const { userAccountId } = await params;
   const body = await req.json().catch(() => ({}));
   const id = Number(userAccountId);
-  if (!Number.isFinite(id)) return NextResponse.json({ message: "잘못된 유저 ID입니다." }, { status: 400 });
+  if (!Number.isInteger(id) || id <= 0) return NextResponse.json({ message: "잘못된 유저 ID입니다." }, { status: 400 });
 
   const result = await prisma.userDisciplineRecord.updateMany({
     where: { userAccountId: id, isActive: true },

@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import Pagination from "@/components/Pagination";
+import { parsePositivePage } from "@/lib/http/pagination";
 import { prisma } from "@/lib/prisma/client";
 
 type Props = { searchParams: Promise<{ page?: string; q?: string; sort?: string }> };
@@ -25,7 +26,7 @@ function fmt(value: number | null | undefined) {
 
 export default async function AdminBalanceAiPlayersPage({ searchParams }: Props) {
   const sp = await searchParams;
-  const page = Math.max(1, Number(sp.page ?? "1") || 1);
+  const page = parsePositivePage(sp.page);
   const q = sp.q?.trim() ?? "";
   const sort = SORT_FIELDS.has(sp.sort ?? "") ? sp.sort! : "overallMmr";
   const where = q
@@ -73,8 +74,8 @@ export default async function AdminBalanceAiPlayersPage({ searchParams }: Props)
 
       <section className="ai-panel">
         <form className="ai-toolbar">
-          <input className="form-input" name="q" defaultValue={q} placeholder="플레이어 검색" />
-          <select className="form-input" name="sort" defaultValue={sort}>
+          <input aria-label="플레이어 검색" className="form-input" name="q" defaultValue={q} placeholder="플레이어 검색" />
+          <select aria-label="정렬 기준" className="form-input" name="sort" defaultValue={sort}>
             {[...SORT_FIELDS].map((field) => <option key={field} value={field}>{SORT_LABELS[field] ?? field}</option>)}
           </select>
           <button className="button-primary">검색</button>

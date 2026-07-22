@@ -1,25 +1,49 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import SafeHighlightThumbnail from "@/components/SafeHighlightThumbnail";
 import SafeGalleryImage from "@/components/SafeGalleryImage";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import { coerceGalleryImageUrls, getGalleryThumbnailUrl } from "@/lib/gallery/winner-image-paths";
 import { extractYoutubeId } from "@/lib/youtube";
+import Pagination from "@/components/Pagination";
+import { parsePositivePage } from "@/lib/http/pagination";
+
+export const metadata: Metadata = {
+  title: "하이라이트",
+  description: "K-LOL.GG 멸망전 우승 이미지와 경기 하이라이트 영상을 확인하세요.",
+  alternates: { canonical: "/highlights" },
+};
 
 function formatDate(date: Date) {
   return new Date(date).toLocaleDateString("ko-KR", {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
+    timeZone: "Asia/Seoul",
   });
 }
 
-export default async function HighlightsPage() {
+type HighlightsPageProps = {
+  searchParams: Promise<{ page?: string }>;
+};
+
+const PAGE_SIZE = 12;
+
+export default async function HighlightsPage({ searchParams }: HighlightsPageProps) {
+  const resolvedSearchParams = await searchParams;
+  const requestedPage = parsePositivePage(resolvedSearchParams.page);
+  const totalCount = await prisma.highlight.count({ where: { isPublished: true } });
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const currentPage = Math.min(requestedPage, totalPages);
+
   const [highlights, winnerImages] = await Promise.all([
     prisma.highlight.findMany({
       where: { isPublished: true },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+      skip: (currentPage - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
     }),
     prisma.galleryImage.findMany({
       orderBy: [{ createdAt: "desc" }],
@@ -140,6 +164,7 @@ export default async function HighlightsPage() {
             })}
           </div>
         )}
+        <Pagination currentPage={currentPage} totalPages={totalPages} basePath="/highlights" />
       </section>
 
     </main>

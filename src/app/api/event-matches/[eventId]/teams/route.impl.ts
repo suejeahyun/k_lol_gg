@@ -96,7 +96,7 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
     const { eventId } = await params;
     const parsedEventId = Number(eventId);
 
-    if (Number.isNaN(parsedEventId)) {
+    if (!Number.isInteger(parsedEventId) || parsedEventId <= 0) {
       return NextResponse.json(
         { message: "잘못된 이벤트 ID입니다." },
         { status: 400 },
@@ -289,7 +289,7 @@ export async function POST(_req: NextRequest, { params }: RouteContext) {
     const { eventId } = await params;
     const parsedEventId = Number(eventId);
 
-    if (Number.isNaN(parsedEventId)) {
+    if (!Number.isInteger(parsedEventId) || parsedEventId <= 0) {
       return NextResponse.json(
         { message: "잘못된 이벤트 ID입니다." },
         { status: 400 }

@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma/client";
 import { buildTotpOtpAuthUrl, generateTotpSecret } from "@/lib/security/totp";
 import { getRequestAuditFields, writeAdminLog } from "@/lib/admin-log";
 import type { NextRequest } from "next/server";
+import { decryptTotpSecret, encryptTotpSecret } from "@/lib/security/totp-secret-storage";
 
 export async function POST(req: NextRequest) {
   const currentUser = await requireAdminRequest();
@@ -26,10 +27,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, message: "이미 2단계 인증이 활성화되어 있습니다." }, { status: 409 });
   }
 
-  const secret = existing.adminTotpSecret || generateTotpSecret();
+  const secret = existing.adminTotpSecret
+    ? decryptTotpSecret(existing.adminTotpSecret)
+    : generateTotpSecret();
   await prisma.userAccount.update({
     where: { id: existing.id },
-    data: { adminTotpSecret: secret },
+    data: { adminTotpSecret: encryptTotpSecret(secret) },
   });
 
   await writeAdminLog({

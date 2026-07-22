@@ -73,7 +73,7 @@ export default function AdminEventMatchNewPage() {
       <div className="admin-form">
         <div className="admin-form__group">
           <label className="admin-form__label">이벤트명</label>
-          <input
+          <input aria-label="예: 2026년 6월 이벤트 내전"
             className="admin-form__input"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
@@ -84,7 +84,7 @@ export default function AdminEventMatchNewPage() {
         <div className="admin-event-form-grid">
           <div className="admin-form__group">
             <label className="admin-form__label">진행 방식</label>
-            <select
+            <select aria-label="진행 방식"
               className="admin-form__input"
               value={mode}
               onChange={(event) => setMode(event.target.value as EventMode)}
@@ -96,7 +96,7 @@ export default function AdminEventMatchNewPage() {
 
           <div className="admin-form__group">
             <label className="admin-form__label">진행일</label>
-            <input
+            <input aria-label="진행일"
               className="admin-form__input"
               type="date"
               value={eventDate}

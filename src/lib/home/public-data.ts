@@ -78,6 +78,7 @@ async function loadHomePublicData() {
           games: { some: { participants: { some: {} } } },
         },
         orderBy: [{ matchDate: "desc" }, { id: "desc" }],
+        take: 50,
         select: {
           id: true,
           title: true,

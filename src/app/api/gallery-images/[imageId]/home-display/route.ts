@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { readJsonObject } from "@/lib/http/json-body";
 
 type RouteContext = {
   params: Promise<{
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     const { imageId } = await params;
     const id = Number(imageId);
 
-    if (Number.isNaN(id)) {
+    if (!Number.isInteger(id) || id <= 0) {
       return NextResponse.redirect(new URL(REDIRECT_PATH, req.url), 303);
     }
 
@@ -95,7 +96,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     const { imageId } = await params;
     const id = Number(imageId);
 
-    if (Number.isNaN(id)) {
+    if (!Number.isInteger(id) || id <= 0) {
       return NextResponse.json(
         { message: "올바르지 않은 이미지 ID입니다." },
         { status: 400 }
@@ -116,9 +117,15 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       );
     }
 
-    const body = (await req.json()) as {
+    const body = await readJsonObject<{
       showOnHome?: boolean;
-    };
+    }>(req);
+    if (!body) {
+      return NextResponse.json(
+        { message: "올바른 JSON 요청 본문이 필요합니다." },
+        { status: 400 },
+      );
+    }
 
     const showOnHome = body.showOnHome === true;
 

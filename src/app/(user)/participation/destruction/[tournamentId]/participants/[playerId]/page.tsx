@@ -8,7 +8,6 @@ import TierIcon from "@/components/TierIcon";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { calculateDestructionPublicApplicationIds, getDestructionLaneLimits } from "@/lib/destruction/recruitment-auto-reserve";
-import { getGameMvpParticipant } from "@/lib/mvp";
 import { ensureSeasonStats, getWinRate } from "@/lib/stats/season-performance";
 
 type PageProps = {
@@ -48,15 +47,31 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
     notFound();
   }
 
-  const currentSeason = await prisma.season.findFirst({
-    where: { isActive: true },
-    orderBy: { id: "desc" },
-    select: { id: true, name: true },
-  });
-
-  if (currentSeason) {
-    await ensureSeasonStats(currentSeason.id);
-  }
+  const [currentSeason, applyStatusCandidates] = await Promise.all([
+    prisma.season.findFirst({
+      where: { isActive: true },
+      orderBy: { id: "desc" },
+      select: { id: true, name: true },
+    }),
+    prisma.destructionParticipationApply.findMany({
+      where: {
+        tournamentId: tournamentNumericId,
+        status: {
+          in: ["APPLIED", "CONFIRMED", "RESERVE"],
+        },
+      },
+      select: {
+        id: true,
+        status: true,
+        mainPosition: true,
+        createdAt: true,
+      },
+      orderBy: [
+        { createdAt: "asc" },
+        { id: "asc" },
+      ],
+    }),
+  ]);
 
   const applyInclude = {
     tournament: {
@@ -72,7 +87,13 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
       },
     },
     player: {
-      include: {
+      select: {
+        id: true,
+        name: true,
+        nickname: true,
+        tag: true,
+        currentTier: true,
+        peakTier: true,
         seasonStats: {
           where: { seasonId: currentSeason?.id ?? -1 },
           select: {
@@ -101,23 +122,29 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
               },
             },
           },
-          take: 20,
-          include: {
-            champion: true,
+          select: {
+            id: true,
+            kills: true,
+            deaths: true,
+            assists: true,
+            team: true,
+            position: true,
+            champion: {
+              select: {
+                id: true,
+                name: true,
+                imageUrl: true,
+              },
+            },
             game: {
-              include: {
+              select: {
+                winnerTeam: true,
+                gameNumber: true,
                 series: {
-                  include: {
-                    season: true,
-                  },
-                },
-                participants: {
                   select: {
-                    playerId: true,
-                    kills: true,
-                    deaths: true,
-                    assists: true,
-                    team: true,
+                    id: true,
+                    title: true,
+                    matchDate: true,
                   },
                 },
               },
@@ -161,24 +188,6 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
     notFound();
   }
 
-  const applyStatusCandidates = await prisma.destructionParticipationApply.findMany({
-    where: {
-      tournamentId: tournamentNumericId,
-      status: {
-        in: ["APPLIED", "CONFIRMED", "RESERVE"],
-      },
-    },
-    select: {
-      id: true,
-      status: true,
-      mainPosition: true,
-      createdAt: true,
-    },
-    orderBy: [
-      { createdAt: "asc" },
-      { id: "asc" },
-    ],
-  });
   const laneLimits = getDestructionLaneLimits(apply.tournament);
   const { capacityOverflowIds, laneOverflowIds } = calculateDestructionPublicApplicationIds(applyStatusCandidates, laneLimits);
   const isCapacityOverflow = capacityOverflowIds.has(apply.id);
@@ -199,7 +208,28 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
   const player = apply.player;
   const playerTagText = [player.nickname, player.tag].filter(Boolean).join("#");
   const applyMessage = typeof apply.message === "string" ? apply.message.trim() : "";
-  const seasonStat = player.seasonStats[0] ?? null;
+  let seasonStat: (typeof player.seasonStats)[number] | null =
+    player.seasonStats[0] ?? null;
+
+  if (currentSeason && !seasonStat) {
+    await ensureSeasonStats(currentSeason.id);
+    seasonStat = await prisma.playerSeasonStat.findUnique({
+      where: {
+        playerId_seasonId: {
+          playerId: player.id,
+          seasonId: currentSeason.id,
+        },
+      },
+      select: {
+        totalGames: true,
+        participationCount: true,
+        wins: true,
+        losses: true,
+        mvpCount: true,
+      },
+    });
+  }
+
   const totalGames = seasonStat?.totalGames ?? player.participants.length;
   const participationCount = seasonStat?.participationCount ?? 0;
   const wins = seasonStat?.wins ?? player.participants.filter(
@@ -208,20 +238,8 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
   const losses = seasonStat?.losses ?? totalGames - wins;
   const winRate = getWinRate(wins, totalGames);
 
-  const getMvpPlayerId = (participant: (typeof player.participants)[number]) => {
-    if (participant.game.mvpPlayerId) return participant.game.mvpPlayerId;
-
-    const mvp = getGameMvpParticipant(
-      participant.game.participants,
-      participant.game.winnerTeam,
-    );
-
-    return mvp?.playerId ?? null;
-  };
-
-  const mvpCount = seasonStat?.mvpCount ?? player.participants.filter((participant) => {
-    return getMvpPlayerId(participant) === player.id;
-  }).length;
+  const mvpCount = seasonStat?.mvpCount ?? 0;
+  const recentParticipants = player.participants.slice(0, 20);
 
   const lineStats = Array.from(
     player.participants.reduce((map, participant) => {
@@ -249,17 +267,12 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
           kills: 0,
           deaths: 0,
           assists: 0,
-          mvpCount: 0,
         };
 
         prev.games += 1;
         prev.kills += participant.kills;
         prev.deaths += participant.deaths;
         prev.assists += participant.assists;
-
-        if (getMvpPlayerId(participant) === player.id) {
-          prev.mvpCount += 1;
-        }
 
         if (isWin) {
           prev.wins += 1;
@@ -278,7 +291,6 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
           kills: number;
           deaths: number;
           assists: number;
-          mvpCount: number;
         }
       >())
       .values(),
@@ -489,7 +501,7 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
                     />
                     <div className="champion-stat-card__text">
                       <strong>{champion.championName}</strong>
-                      <span>{champion.wins}승 {championLosses}패 · MVP {champion.mvpCount}회</span>
+                      <span>{champion.wins}승 {championLosses}패</span>
                     </div>
                   </div>
                   <div className="champion-stat-card__numbers">
@@ -512,11 +524,11 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
           <h2>내전 최근 기록</h2>
         </div>
 
-        {player.participants.length === 0 ? (
+        {recentParticipants.length === 0 ? (
           <div className="empty-box">등록된 내전 기록이 없습니다.</div>
         ) : (
           <div className="match-list">
-            {player.participants.map((participant) => {
+            {recentParticipants.map((participant) => {
               const isWin = participant.game.winnerTeam === participant.team;
 
               return (
@@ -541,7 +553,7 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
                       <span>팀 {participant.team}</span>
                     </div>
                     <div className="match-card__damage">
-                      <span>시즌 {participant.game.series.season.name}</span>
+                      <span>시즌 {currentSeason?.name ?? "-"}</span>
                     </div>
                   </div>
                 </article>
@@ -553,5 +565,3 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
     </main>
   );
 }
-
-

@@ -22,7 +22,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     const { userAccountId } = await params;
     const id = Number(userAccountId);
 
-    if (Number.isNaN(id)) {
+    if (!Number.isInteger(id) || id <= 0) {
       return NextResponse.json({ message: "잘못된 유저 ID입니다." }, { status: 400 });
     }
 
@@ -36,7 +36,10 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ message: "최고 관리자는 거절 처리할 수 없습니다." }, { status: 400 });
     }
 
-    const updated = await prisma.userAccount.update({ where: { id }, data: { status: "REJECTED" } });
+    const updated = await prisma.userAccount.update({
+      where: { id },
+      data: { status: "REJECTED", authVersion: { increment: 1 } },
+    });
 
     await writeSecurityAudit({
       req,

@@ -1,12 +1,20 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma/client";
 import { getCurrentUser } from "@/lib/auth/session";
+import { getCachedSeasonRankingPlayers } from "@/lib/stats/season-performance";
 import RankingSeasonFilter from "@/components/RankingSeasonFilter";
 import Pagination from "@/components/Pagination";
+import { parsePositivePage } from "@/lib/http/pagination";
+
+export const metadata: Metadata = {
+  title: "시즌 랭킹",
+  description: "K-LOL.GG 시즌별 승률, 참여, MVP 랭킹을 확인하세요.",
+  alternates: { canonical: "/rankings" },
+};
 
 type RankingsPageProps = {
   searchParams: Promise<{
@@ -97,6 +105,7 @@ function RankMedal({
       className={`ranking-medal ranking-medal--rank-${rank}${
         compact ? " ranking-medal--compact" : ""
       }`}
+      role="img"
       aria-label={`${rank}위`}
       title={`${rank}위`}
     >
@@ -113,29 +122,33 @@ function RankMedal({
 }
 
 async function getRankings(seasonId?: string): Promise<RankingApiResponse> {
-  const headersList = await headers();
+  const parsedSeasonId = Number(seasonId);
+  const selectedSeasonId = Number.isInteger(parsedSeasonId) && parsedSeasonId > 0
+    ? parsedSeasonId
+    : null;
+  const season = selectedSeasonId
+    ? await prisma.season.findUnique({
+        where: { id: selectedSeasonId },
+        select: { id: true, name: true, isActive: true, createdAt: true },
+      })
+    : await prisma.season.findFirst({
+        where: { isActive: true },
+        orderBy: { id: "desc" },
+        select: { id: true, name: true, isActive: true, createdAt: true },
+      });
 
-  const host = headersList.get("host");
-  const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
-
-  const baseUrl = host ? `${protocol}://${host}` : "http://localhost:3000";
-  const query = seasonId ? `?seasonId=${seasonId}` : "";
-
-  const response = await fetch(`${baseUrl}/api/rankings${query}`, {
-    next: {
-      revalidate: 60,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch rankings");
+  if (!season) {
+    return { season: null, rankings: [] };
   }
 
-  const data = (await response.json()) as RankingApiResponse;
+  const rankings = await getCachedSeasonRankingPlayers(season.id);
 
   return {
-    ...data,
-    rankings: data.rankings.map((player) => ({
+    season: {
+      ...season,
+      createdAt: season.createdAt.toISOString(),
+    },
+    rankings: rankings.map((player) => ({
       ...player,
       participationCount:
         typeof player.participationCount === "number"
@@ -220,12 +233,13 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
   const seasonId = resolvedSearchParams.seasonId;
   const sort = getSort(resolvedSearchParams.sort);
   const order = getOrder(resolvedSearchParams.order);
-  const currentPage = Math.max(1, Number(resolvedSearchParams.page ?? "1") || 1);
+  const currentPage = parsePositivePage(resolvedSearchParams.page);
 
   const [data, seasons, currentUser] = await Promise.all([
     getRankings(seasonId),
     prisma.season.findMany({
       orderBy: { id: "desc" },
+      take: 100,
       select: {
         id: true,
         name: true,
@@ -322,7 +336,6 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
     if (seasonId) params.set("seasonId", seasonId);
     params.set("sort", field);
     params.set("order", nextOrder);
-    params.set("page", "1");
 
     return `/rankings?${params.toString()}`;
   }
@@ -480,8 +493,8 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
                 basePath="/rankings"
                 query={{
                   seasonId,
-                  sort,
-                  order,
+                  sort: sort !== "winRate" || order !== "desc" ? sort : undefined,
+                  order: sort !== "winRate" || order !== "desc" ? order : undefined,
                 }}
               />
             </>

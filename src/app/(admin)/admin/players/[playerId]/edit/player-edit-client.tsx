@@ -112,7 +112,7 @@ export default function EditPlayerClient({ player }: Props) {
           <div style={{ display: "grid", gap: "16px" }}>
             <div>
               <label>이름</label>
-              <input
+              <input aria-label="이름"
                 className="app-input"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -122,7 +122,7 @@ export default function EditPlayerClient({ player }: Props) {
 
             <div>
               <label>닉네임</label>
-              <input
+              <input aria-label="닉네임"
                 className="app-input"
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
@@ -132,7 +132,7 @@ export default function EditPlayerClient({ player }: Props) {
 
             <div>
               <label>태그</label>
-              <input
+              <input aria-label="태그"
                 className="app-input"
                 value={tag}
                 onChange={(e) => setTag(e.target.value)}
@@ -142,7 +142,7 @@ export default function EditPlayerClient({ player }: Props) {
 
             <div>
               <label>최고티어</label>
-              <input
+              <input aria-label="예: 다이아 2, 마스터 3층"
                 className="app-input"
                 value={peakTier}
                 onChange={(e) => setPeakTier(e.target.value)}
@@ -153,7 +153,7 @@ export default function EditPlayerClient({ player }: Props) {
 
             <div>
               <label>현재티어</label>
-              <input
+              <input aria-label="예: 에메랄드 1"
                 className="app-input"
                 value={currentTier}
                 onChange={(e) => setCurrentTier(e.target.value)}
@@ -164,7 +164,7 @@ export default function EditPlayerClient({ player }: Props) {
 
             <div>
               <label>밸런스 수동 보정 점수 (-10 ~ +10)</label>
-              <input
+              <input aria-label="밸런스 수동 보정 점수 (-10 ~ +10)"
                 className="app-input"
                 type="number"
                 min={-10}
@@ -178,7 +178,7 @@ export default function EditPlayerClient({ player }: Props) {
 
             <div>
               <label>밸런스 보정 사유</label>
-              <textarea
+              <textarea aria-label="예: 최근 내전 체감 실력 +3, 휴면 복귀 -4"
                 className="app-input"
                 value={balanceOverrideReason}
                 onChange={(e) => setBalanceOverrideReason(e.target.value)}

@@ -1,8 +1,15 @@
 import styles from "./RecruitHelperPage.module.css";
+import type { Metadata } from "next";
 import PremiumFeatureGate from "@/components/PremiumFeatureGate";
 import { getSiteSettings } from "@/lib/site/settings";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "카카오톡 구인 명령어 안내",
+  description: "K-LOL.GG 카카오톡 구인 도우미의 파티 생성, 현황 확인과 마감 명령어를 예시로 확인하세요.",
+  alternates: { canonical: "/recruit-helper" },
+};
 
 type MessageSide = "me" | "bot" | "system";
 

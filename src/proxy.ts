@@ -48,7 +48,34 @@ function isSuperAdminApi(pathname: string) {
   return SUPER_ADMIN_API_PATTERNS.some((pattern) => pattern.test(pathname));
 }
 
-function withSecurityHeaders(response: NextResponse) {
+const PRIVATE_API_PREFIXES = [
+  "/api/my-player",
+  "/api/participation/",
+  "/api/riot/me/",
+  "/api/riot/rso/",
+  "/api/team-balance/",
+  "/api/logs",
+];
+
+function withSecurityHeaders(
+  response: NextResponse,
+  pathname: string,
+  req: NextRequest,
+) {
+  const hasAuthCookie = Boolean(
+    req.cookies.get("user_token")?.value ||
+      req.cookies.get(authConstants.ADMIN_TOKEN_KEY)?.value,
+  );
+  if (
+    hasAuthCookie ||
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/api/admin") ||
+    pathname.startsWith("/api/auth") ||
+    PRIVATE_API_PREFIXES.some((prefix) => pathname.startsWith(prefix))
+  ) {
+    response.headers.set("Cache-Control", "private, no-store, max-age=0");
+  }
+
   return applySecurityHeaders(response);
 }
 
@@ -76,46 +103,48 @@ async function rejectAdminRequest(req: NextRequest, requireSuperAdmin = false) {
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  const secure = (response: NextResponse) =>
+    withSecurityHeaders(response, pathname, req);
 
   const rateLimited = rejectIfRateLimited(req);
-  if (rateLimited) return withSecurityHeaders(rateLimited);
+  if (rateLimited) return secure(rateLimited);
 
   const bodyTooLarge = rejectIfBodyTooLarge(req);
-  if (bodyTooLarge) return withSecurityHeaders(bodyTooLarge);
+  if (bodyTooLarge) return secure(bodyTooLarge);
 
   const originRejected = rejectIfInvalidOrigin(req);
-  if (originRejected) return withSecurityHeaders(originRejected);
+  if (originRejected) return secure(originRejected);
 
   const serverSecretRejected = await rejectIfInvalidServerAuth(req);
-  if (serverSecretRejected) return withSecurityHeaders(serverSecretRejected);
+  if (serverSecretRejected) return secure(serverSecretRejected);
 
   if (pathname.startsWith("/api/admin")) {
     if (pathname === "/api/admin/login" || pathname === "/api/admin/logout") {
-      return withSecurityHeaders(NextResponse.next());
+      return secure(NextResponse.next());
     }
 
     const rejected = await rejectAdminRequest(req, isSuperAdminApi(pathname));
-    if (rejected) return withSecurityHeaders(rejected);
+    if (rejected) return secure(rejected);
 
-    return withSecurityHeaders(NextResponse.next());
+    return secure(NextResponse.next());
   }
 
   if (pathname.startsWith("/api")) {
-    return withSecurityHeaders(NextResponse.next());
+    return secure(NextResponse.next());
   }
 
   if (!pathname.startsWith("/admin")) {
-    return withSecurityHeaders(NextResponse.next());
+    return secure(NextResponse.next());
   }
 
   if (pathname === "/admin/login") {
-    return withSecurityHeaders(NextResponse.next());
+    return secure(NextResponse.next());
   }
 
   const rejected = await rejectAdminRequest(req, false);
-  if (!rejected) return withSecurityHeaders(NextResponse.next());
+  if (!rejected) return secure(NextResponse.next());
 
-  return withSecurityHeaders(NextResponse.redirect(new URL("/admin/login", req.url)));
+  return secure(NextResponse.redirect(new URL("/admin/login", req.url)));
 }
 
 export const config = {

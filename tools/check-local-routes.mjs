@@ -5,11 +5,23 @@ import dotenv from "dotenv";
 dotenv.config({ path: process.env.DOTENV_CONFIG_PATH || ".env.local", override: false, quiet: true });
 dotenv.config({ path: ".env", override: false, quiet: true });
 
-const baseUrl = (process.env.SMOKE_BASE_URL || "http://localhost:3100").replace(/\/$/, "");
+const baseUrl = (process.env.SMOKE_BASE_URL || "http://localhost:3000").replace(/\/$/, "");
 const timeoutMs = Number(process.env.SMOKE_TIMEOUT_MS || 12000);
 
 const baseChecks = [
   { name: "home", path: "/", expect: [200] },
+  {
+    name: "robots",
+    path: "/robots.txt",
+    expect: [200],
+    contains: ["User-Agent:", "Sitemap:"],
+  },
+  {
+    name: "sitemap",
+    path: "/sitemap.xml",
+    expect: [200],
+    contains: ["<urlset", "<loc>"],
+  },
   { name: "account", path: "/account", expect: [200] },
   { name: "account-tier", path: "/account/tier", expect: [200] },
   { name: "login", path: "/login", expect: [200] },
@@ -69,10 +81,35 @@ const baseChecks = [
   { name: "app-recruits", path: "/app/recruits", expect: [200] },
   { name: "app-rankings", path: "/app/rankings", expect: [200] },
   { name: "app-coin-toss", path: "/app/coin-toss", expect: [200] },
+  { name: "app-random-team", path: "/app/random-team", expect: [200, 402] },
   { name: "app-admin", path: "/app/admin", expect: [200] },
+  {
+    name: "health-api",
+    path: "/api/health",
+    expect: [200],
+    json: true,
+    validateJson: (value) => value?.ok === true && value?.status === "ready",
+  },
   { name: "site-settings-api-public", path: "/api/site-settings", expect: [200], json: true },
   { name: "rankings-api", path: "/api/rankings", expect: [200], json: true },
   { name: "stats-top-api", path: "/api/stats/top", expect: [200], json: true },
+  {
+    name: "invalid-player-detail-id",
+    path: "/players/1.5",
+    expect: [200, 404],
+    contains: ["페이지를 찾을 수 없습니다."],
+  },
+  {
+    name: "invalid-match-detail-id",
+    path: "/matches/1.5",
+    expect: [200, 404],
+    contains: ["페이지를 찾을 수 없습니다."],
+  },
+  { name: "invalid-image-api-id", path: "/api/images/1.5", expect: [400], json: true },
+  { name: "invalid-highlight-api-id", path: "/api/highlights/1.5", expect: [400], json: true },
+  { name: "invalid-champion-api-id", path: "/api/champions/1.5", expect: [400], json: true },
+  { name: "invalid-player-summary-api-id", path: "/api/stats/player/1.5/summary", expect: [400], json: true },
+  { name: "invalid-player-recent-api-id", path: "/api/stats/player/1.5/recent", expect: [400], json: true },
   { name: "admin-site-settings-unauthorized", path: "/api/admin/site-settings", expect: [401, 403], json: true },
 ];
 
@@ -199,7 +236,9 @@ async function request(check) {
     }
 
     const statusOk = check.expect.includes(response.status);
-    const bodyOk = check.json ? json !== null : !isBadHtml(text);
+    const containsOk = !check.contains || check.contains.every((item) => text.includes(item));
+    const jsonShapeOk = !check.validateJson || (json !== null && check.validateJson(json));
+    const bodyOk = (check.json ? json !== null : !isBadHtml(text)) && containsOk && jsonShapeOk;
     const expectedFinalPath =
       check.expectedFinalPath ??
       (check.path.startsWith("/admin") && check.path !== "/admin/login"
@@ -220,6 +259,8 @@ async function request(check) {
       contentType: response.headers.get("content-type"),
       bodyPreview: text.slice(0, 500),
       jsonOk: check.json ? json !== null : undefined,
+      containsOk: check.contains ? containsOk : undefined,
+      jsonShapeOk: check.validateJson ? jsonShapeOk : undefined,
     };
   } catch (error) {
     return {

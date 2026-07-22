@@ -8,6 +8,7 @@ import {
   getChampionNameKo,
   getKoreanChampionNameMap,
 } from "@/lib/riot/champion";
+import { PUBLIC_SHORT_CACHE_HEADER } from "@/lib/http/cache";
 
 type RouteContext = {
   params: Promise<{
@@ -42,6 +43,16 @@ type SoloMatchForSummary = {
   totalDamageDealtToChampions: number;
   totalDamageTaken: number;
   visionScore: number;
+};
+
+type ChampionAggregate = {
+  championId: number;
+  championName: string;
+  games: number;
+  wins: number;
+  kills: number;
+  deaths: number;
+  assists: number;
 };
 
 const RECENT_MATCH_LIMIT = 20;
@@ -103,44 +114,11 @@ function getMainPosition(matches: SoloMatchForSummary[]) {
   };
 }
 
-function getMostChampions(
-  matches: SoloMatchForSummary[],
+function formatMostChampions(
+  champions: ChampionAggregate[],
   championNameMap: Map<string, string>
 ) {
-  const championMap = new Map<
-    number,
-    {
-      championId: number;
-      championName: string;
-      games: number;
-      wins: number;
-      kills: number;
-      deaths: number;
-      assists: number;
-    }
-  >();
-
-  for (const match of matches) {
-    const current = championMap.get(match.championId) ?? {
-      championId: match.championId,
-      championName: match.championName,
-      games: 0,
-      wins: 0,
-      kills: 0,
-      deaths: 0,
-      assists: 0,
-    };
-
-    current.games += 1;
-    current.wins += match.win ? 1 : 0;
-    current.kills += match.kills;
-    current.deaths += match.deaths;
-    current.assists += match.assists;
-
-    championMap.set(match.championId, current);
-  }
-
-  return Array.from(championMap.values())
+  return champions
     .map((champion) => ({
       championId: champion.championId,
       championName: champion.championName,
@@ -253,24 +231,46 @@ export async function GET(_request: Request, context: RouteContext) {
       );
     }
 
-    const recentMatches = await prisma.playerSoloMatch.findMany({
-      where: {
-        playerId: parsedPlayerId,
-      },
-      orderBy: {
-        gameCreation: "desc",
-      },
-      take: RECENT_MATCH_LIMIT,
-    });
+    const [recentMatches, championTotals, championWinTotals] = await Promise.all([
+      prisma.playerSoloMatch.findMany({
+        where: { playerId: parsedPlayerId },
+        orderBy: { gameCreation: "desc" },
+        take: RECENT_MATCH_LIMIT,
+      }),
+      prisma.playerSoloMatch.groupBy({
+        by: ["championId", "championName"],
+        where: { playerId: parsedPlayerId },
+        _count: { _all: true },
+        _sum: { kills: true, deaths: true, assists: true },
+      }),
+      prisma.playerSoloMatch.groupBy({
+        by: ["championId"],
+        where: { playerId: parsedPlayerId, win: true },
+        _count: { _all: true },
+      }),
+    ]);
 
-    const allSoloMatches = await prisma.playerSoloMatch.findMany({
-      where: {
-        playerId: parsedPlayerId,
-      },
-      orderBy: {
-        gameCreation: "desc",
-      },
-    });
+    const winsByChampionId = new Map(
+      championWinTotals.map((item) => [item.championId, item._count._all]),
+    );
+    const championAggregateMap = new Map<number, ChampionAggregate>();
+    for (const item of championTotals) {
+      const current = championAggregateMap.get(item.championId) ?? {
+        championId: item.championId,
+        championName: item.championName,
+        games: 0,
+        wins: winsByChampionId.get(item.championId) ?? 0,
+        kills: 0,
+        deaths: 0,
+        assists: 0,
+      };
+      current.games += item._count._all;
+      current.kills += item._sum.kills ?? 0;
+      current.deaths += item._sum.deaths ?? 0;
+      current.assists += item._sum.assists ?? 0;
+      championAggregateMap.set(item.championId, current);
+    }
+    const championAggregates = [...championAggregateMap.values()];
 
     const recentTotalGames = recentMatches.length;
     const recentWins = recentMatches.filter((match) => match.win).length;
@@ -317,13 +317,15 @@ export async function GET(_request: Request, context: RouteContext) {
         averageKda: getAverageKda(recentMatches),
         mainPosition: getMainPosition(recentMatches),
       },
-      mostChampions: getMostChampions(allSoloMatches, championNameMap),
+      mostChampions: formatMostChampions(championAggregates, championNameMap),
       recentMatches: recentMatches.map((match) =>
         formatRecentMatch(match, championNameMap)
       ),
     };
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, {
+      headers: { "Cache-Control": PUBLIC_SHORT_CACHE_HEADER },
+    });
   } catch (error) {
     logServerError("[RIOT_PLAYER_SOLO_SUMMARY_GET_ERROR]", error);
 

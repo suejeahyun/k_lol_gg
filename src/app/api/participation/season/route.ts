@@ -41,10 +41,12 @@ async function findLoginPlayer(req: NextRequest) {
   const user = await prisma.userAccount.findUnique({
     where: {
       id: userAccountId,
+      deletedAt: null,
     },
     select: {
       id: true,
       status: true,
+      authVersion: true,
       player: {
         select: {
           id: true,
@@ -56,7 +58,11 @@ async function findLoginPlayer(req: NextRequest) {
     },
   });
 
-  if (!user || user.status !== "APPROVED") {
+  if (
+    !user ||
+    user.status !== "APPROVED" ||
+    (payload.authVersion ?? 0) !== user.authVersion
+  ) {
     return null;
   }
 
@@ -316,4 +322,3 @@ export async function DELETE(req: NextRequest) {
     );
   }
 }
-

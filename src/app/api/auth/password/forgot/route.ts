@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { getRequestAuditFields, writeAdminLog } from "@/lib/admin-log";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
+import { prisma } from "@/lib/prisma/client";
 
 export async function PATCH(req: NextRequest) {
   const rateLimitRejected = await rejectIfRateLimited(req, {
@@ -15,7 +16,15 @@ export async function PATCH(req: NextRequest) {
   if (rateLimitRejected) return rateLimitRejected;
 
   try {
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+
+    if (!body || typeof body !== "object") {
+      return NextResponse.json(
+        { message: "요청 형식이 올바르지 않습니다." },
+        { status: 400 },
+      );
+    }
+
     const userId = String(body.userId ?? "").trim();
     const name = String(body.name ?? "").trim();
     const nickname = String(body.nickname ?? "").trim();
@@ -35,22 +44,32 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    await writeAdminLog({
-      action: "USER_PASSWORD_RESET_REQUESTED",
-      message: userId
-        ? `비밀번호 초기화 요청: ${userId}`
-        : "비밀번호 초기화 요청: 아이디 미입력",
-      targetType: "UserAccount",
-      actorUserId: userId || null,
-      afterJson: {
-        userId: userId || null,
-        name: name || null,
-        nickname: nickname || null,
-        tag: tag || null,
-        policy: "ADMIN_RESET_REQUIRED",
+    const matchingAccount = await prisma.userAccount.findFirst({
+      where: {
+        userId,
+        deletedAt: null,
+        player: {
+          is: { name, nickname, tag },
+        },
       },
-      ...getRequestAuditFields(req),
+      select: { id: true, userId: true },
     });
+
+    if (matchingAccount) {
+      await writeAdminLog({
+        action: "USER_PASSWORD_RESET_REQUESTED",
+        message: `비밀번호 초기화 요청: ${matchingAccount.userId}`,
+        actorType: "PUBLIC_PASSWORD_RECOVERY",
+        actorUserId: matchingAccount.userId,
+        targetType: "UserAccount",
+        targetId: matchingAccount.id,
+        afterJson: {
+          policy: "ADMIN_RESET_REQUIRED",
+          identityMatched: true,
+        },
+        ...getRequestAuditFields(req),
+      });
+    }
 
     return NextResponse.json(
       {

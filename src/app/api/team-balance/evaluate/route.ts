@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireApprovedUserOrAdmin, getAccessErrorResponseMessage } from "@/lib/auth/access";
 import { evaluateBalanceLayout, type BalanceEvaluatePlayer } from "@/lib/balance/ai-evaluation";
 import { logServerError } from "@/lib/server/safe-log";
+import { readJsonObject } from "@/lib/http/json-body";
 
 type EvaluateBody = {
   optionNo?: number | null;
@@ -18,7 +19,10 @@ export async function POST(request: NextRequest) {
 
   try {
     await requireApprovedUserOrAdmin();
-    const body = (await request.json()) as EvaluateBody;
+    const body = await readJsonObject<EvaluateBody>(request);
+    if (!body) {
+      return NextResponse.json({ message: "올바른 JSON 요청 본문이 필요합니다." }, { status: 400 });
+    }
 
     if (!Array.isArray(body.assignments) || body.assignments.length !== 10) {
       return NextResponse.json(

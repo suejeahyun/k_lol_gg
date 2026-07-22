@@ -4,6 +4,7 @@ export const revalidate = 0;
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import Pagination from "@/components/Pagination";
+import { parsePositivePage } from "@/lib/http/pagination";
 import styles from "../../AdminKakaoReadable.module.css";
 
 type PageSearchParams = { page?: string; q?: string; date?: string; action?: string };
@@ -37,8 +38,7 @@ function buildWhere(searchParams: PageSearchParams): Prisma.RecruitPartyLogWhere
 
 export default async function AdminKakaoRecruitLogsPage({ searchParams }: PageProps) {
   const resolved = await searchParams;
-  const page = Number(resolved.page ?? "1");
-  const safePage = Number.isNaN(page) || page < 1 ? 1 : page;
+  const safePage = parsePositivePage(resolved.page);
   const q = resolved.q ?? "";
   const date = resolved.date ?? "";
   const action = resolved.action ?? "";
@@ -78,9 +78,9 @@ export default async function AdminKakaoRecruitLogsPage({ searchParams }: PagePr
 
         <form className={styles.filterCard} action="/admin/logs/kakao">
           <div className={styles.filterGrid}>
-            <input name="q" defaultValue={q} placeholder="제목, 액션, 방, 처리자, 요약 검색" className={styles.input} />
-            <input name="date" defaultValue={date} type="date" className={styles.input} />
-            <input name="action" defaultValue={action} placeholder="액션 필터" className={styles.input} />
+            <input aria-label="제목, 액션, 방, 처리자, 요약 검색" name="q" defaultValue={q} placeholder="제목, 액션, 방, 처리자, 요약 검색" className={styles.input} />
+            <input aria-label="조회 날짜" name="date" defaultValue={date} type="date" className={styles.input} />
+            <input aria-label="액션 필터" name="action" defaultValue={action} placeholder="액션 필터" className={styles.input} />
             <button className={styles.button} type="submit">조회</button>
             <a className={styles.secondaryButton} href="/admin/logs/kakao">초기화</a>
           </div>

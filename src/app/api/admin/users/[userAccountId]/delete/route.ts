@@ -26,7 +26,7 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
     const { userAccountId } = await context.params;
     const id = Number(userAccountId);
 
-    if (!Number.isFinite(id)) {
+    if (!Number.isInteger(id) || id <= 0) {
       return NextResponse.json(
         { message: "회원 ID가 올바르지 않습니다." },
         { status: 400 },
@@ -66,6 +66,7 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
       data: {
         deletedAt: new Date(),
         status: "REJECTED",
+        authVersion: { increment: 1 },
       },
     });
 

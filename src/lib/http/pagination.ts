@@ -1,3 +1,28 @@
+export function parsePositivePage(value: string | undefined | null) {
+  const parsed = Number(value ?? "1");
+
+  if (!Number.isInteger(parsed)) {
+    return 1;
+  }
+
+  return Math.max(1, parsed);
+}
+
+export function parseIntegerInRange(
+  value: string | undefined | null,
+  fallback: number,
+  min: number,
+  max: number,
+) {
+  const parsed = Number(value ?? "");
+
+  if (!Number.isInteger(parsed)) {
+    return fallback;
+  }
+
+  return parsed >= min && parsed <= max ? parsed : fallback;
+}
+
 export type PaginationInput = {
   page?: string | number | null;
   pageSize?: string | number | null;

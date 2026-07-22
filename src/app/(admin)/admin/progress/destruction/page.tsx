@@ -4,6 +4,8 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import DestructionTournamentDeleteButton from "@/components/admin/DestructionTournamentDeleteButton";
 import { prisma } from "@/lib/prisma/client";
+import Pagination from "@/components/Pagination";
+import { parsePositivePage } from "@/lib/http/pagination";
 
 function formatDate(date: Date | null) {
   if (!date) return "-";
@@ -30,12 +32,31 @@ function getStatusLabel(status: string) {
   return labels[status] ?? status;
 }
 
-export default async function AdminDestructionTournamentsPage() {
+type AdminDestructionTournamentsPageProps = {
+  searchParams: Promise<{ page?: string }>;
+};
+
+const PAGE_SIZE = 20;
+
+export default async function AdminDestructionTournamentsPage({ searchParams }: AdminDestructionTournamentsPageProps) {
+  const resolvedSearchParams = await searchParams;
+  const requestedPage = parsePositivePage(resolvedSearchParams.page);
+  const totalCount = await prisma.destructionTournament.count();
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const currentPage = Math.min(requestedPage, totalPages);
+
   const tournaments = await prisma.destructionTournament.findMany({
     orderBy: {
       createdAt: "desc",
     },
-    include: {
+    skip: (currentPage - 1) * PAGE_SIZE,
+    take: PAGE_SIZE,
+    select: {
+      id: true,
+      title: true,
+      status: true,
+      startDate: true,
+      endDate: true,
       _count: {
         select: {
           teams: true,
@@ -108,6 +129,11 @@ export default async function AdminDestructionTournamentsPage() {
           ))}
         </div>
       )}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        basePath="/admin/progress/destruction"
+      />
     </main>
   );
 }

@@ -20,6 +20,7 @@ export default function PlayerSearchBox({
       <form action="/players" method="get" className="player-search-form">
         <input
           name="q"
+          aria-label="플레이어 이름 또는 닉네임 검색"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="이름 또는 닉네임#태그 검색"

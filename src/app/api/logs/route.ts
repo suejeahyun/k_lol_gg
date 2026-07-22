@@ -6,7 +6,9 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import { createCsvResponse } from "@/lib/csv";
-import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { rejectIfNotSuperAdmin } from "@/lib/auth/requireAdmin";
+import { parseIntegerInRange, parsePositivePage } from "@/lib/http/pagination";
+import { readJsonObject } from "@/lib/http/json-body";
 
 type CreateAdminLogBody = {
   action?: string;
@@ -79,17 +81,18 @@ function buildWhere(req: NextRequest): Prisma.AdminLogWhereInput {
 }
 
 export async function GET(req: NextRequest) {
-  const rejected = await rejectIfNotAdmin();
+  const rejected = await rejectIfNotSuperAdmin();
   if (rejected) return rejected;
 
   try {
-    const page = Number(req.nextUrl.searchParams.get("page") ?? "1");
-    const pageSize = Number(req.nextUrl.searchParams.get("pageSize") ?? "50");
+    const safePage = parsePositivePage(req.nextUrl.searchParams.get("page"));
+    const safePageSize = parseIntegerInRange(
+      req.nextUrl.searchParams.get("pageSize"),
+      50,
+      1,
+      200,
+    );
     const download = req.nextUrl.searchParams.get("download") === "csv";
-
-    const safePage = Number.isNaN(page) || page < 1 ? 1 : page;
-    const safePageSize =
-      Number.isNaN(pageSize) || pageSize < 1 || pageSize > 200 ? 50 : pageSize;
     const where = buildWhere(req);
 
     if (download) {
@@ -148,11 +151,14 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const rejected = await rejectIfNotAdmin();
+  const rejected = await rejectIfNotSuperAdmin();
   if (rejected) return rejected;
 
   try {
-    const body = (await req.json()) as CreateAdminLogBody;
+    const body = await readJsonObject<CreateAdminLogBody>(req);
+    if (!body) {
+      return NextResponse.json({ message: "올바른 JSON 요청 본문이 필요합니다." }, { status: 400 });
+    }
 
     const action = String(body.action ?? "ADMIN_ACTION").trim();
     const message = String(body.message ?? "").trim();

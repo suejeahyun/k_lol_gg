@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
 import ImageSlider from "@/components/ImageSlider";
@@ -11,13 +12,22 @@ type ImageDetailPageProps = {
   }>;
 };
 
+export async function generateMetadata({ params }: ImageDetailPageProps): Promise<Metadata> {
+  const { imageId } = await params;
+  return {
+    title: "우승 이미지 상세",
+    description: "K-LOL.GG 멸망전 우승 이미지와 설명을 확인하세요.",
+    alternates: { canonical: `/images/${imageId}` },
+  };
+}
+
 export default async function ImageDetailPage({
   params,
 }: ImageDetailPageProps) {
   const { imageId } = await params;
   const id = Number(imageId);
 
-  if (Number.isNaN(id)) {
+  if (!Number.isInteger(id) || id <= 0) {
     notFound();
   }
 
@@ -32,12 +42,12 @@ export default async function ImageDetailPage({
   const imageList = coerceGalleryImageUrls(image.imageUrl);
 
   return (
-    <div className="gallery-detail">
+    <main className="gallery-detail">
       <div className="gallery-detail__header">
         <h1 className="gallery-detail__title">{image.title}</h1>
 
         <div className="gallery-detail__meta">
-          {new Date(image.createdAt).toLocaleDateString("ko-KR")}
+          {new Date(image.createdAt).toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul" })}
         </div>
       </div>
 
@@ -56,6 +66,6 @@ export default async function ImageDetailPage({
           <p key={`${image.id}-${index}`}>{line}</p>
         ))}
       </div>
-    </div>
+    </main>
   );
 }

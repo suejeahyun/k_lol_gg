@@ -1,6 +1,8 @@
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+import type { Metadata } from "next";
+import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import PremiumFeatureGate from "@/components/PremiumFeatureGate";
 import { getSiteSettings } from "@/lib/site/settings";
@@ -12,6 +14,12 @@ import {
   getRecruitTypeLabel,
   isLinePartyType,
 } from "@/lib/kakao/party-recruit";
+
+export const metadata: Metadata = {
+  title: "구인 현황",
+  description: "K-LOL.GG에서 현재 진행 중인 내전 구인과 참가 현황을 확인하세요.",
+  alternates: { canonical: "/recruit" },
+};
 
 type RecruitPageMember = {
   id: number;
@@ -165,7 +173,7 @@ export default async function RecruitPage() {
         <section className="page-hero recruit-hero">
           <p className="page-kicker">KAKAO RECRUIT</p>
           <h1>구인현황</h1>
-          <p></p>
+          <p>카카오톡 구인 명령으로 등록된 실시간 모집과 참가 현황을 확인합니다.</p>
           <div className="recruit-command-box">
             <span>/6인파티</span>
             <span>/10인구인</span>
@@ -177,7 +185,15 @@ export default async function RecruitPage() {
 
         {parties.length === 0 ? (
           <section className="recruit-empty card-panel">
-            <h2>현재 표시할 구인현황이 없습니다.</h2>
+            <p className="recruit-empty__eyebrow">NO ACTIVE RECRUIT</p>
+            <h2>현재 모집 중인 구인이 없습니다.</h2>
+            <p>
+              새 구인이 등록되면 이 화면에 참가 인원과 남은 자리가 바로 표시됩니다.
+            </p>
+            <div className="recruit-empty__actions">
+              <Link href="/kakao">카카오 이용 안내</Link>
+              <Link href="/progress">진행 현황 보기</Link>
+            </div>
           </section>
         ) : (
           <section className="recruit-grid" aria-label="현재 구인현황 목록">

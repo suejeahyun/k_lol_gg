@@ -2184,6 +2184,7 @@ export default function PlayersBalancePage() {
           </div>
           <div className="balance-action-row">
             <select
+              aria-label="참가 신청 그룹"
               className="balance-text-input"
               value={selectedSeasonApplyGroupKey}
               onChange={(event) =>
@@ -2220,7 +2221,7 @@ export default function PlayersBalancePage() {
                 <div className="balance-input-row__index">{index + 1}</div>
 
                 <div className="balance-search-block">
-                  <input
+                  <input aria-label="이름 입력"
                     className="balance-text-input"
                     placeholder="이름 입력"
                     value={row.name}

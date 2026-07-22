@@ -4,13 +4,21 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { getCurrentUser } from "@/lib/auth/session";
-import { hashPassword, verifyPassword } from "@/lib/auth/password";
+import { getPasswordValidationMessage, hashPassword, verifyPassword } from "@/lib/auth/password";
 import { writeAdminLog } from "@/lib/admin-log";
 import { authConstants } from "@/lib/auth";
 import { USER_TOKEN_COOKIE, clearAuthCookieOptions } from "@/lib/auth/cookies";
+import { rejectIfRateLimited } from "@/lib/rate-limit";
 
 export async function PATCH(req: NextRequest) {
   try {
+    const rateLimitRejected = await rejectIfRateLimited(req, {
+      action: "AUTH_PASSWORD_CHANGE",
+      limit: 10,
+      windowSeconds: 3600,
+    });
+    if (rateLimitRejected) return rateLimitRejected;
+
     const session = await getCurrentUser();
 
     if (!session) {
@@ -42,9 +50,10 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    if (newPassword.length < 8 || newPassword.length > 32) {
+    const passwordValidationMessage = getPasswordValidationMessage(newPassword);
+    if (passwordValidationMessage) {
       return NextResponse.json(
-        { message: "새 비밀번호는 8~32자로 입력해주세요." },
+        { message: passwordValidationMessage.replace("비밀번호는", "새 비밀번호는") },
         { status: 400 },
       );
     }

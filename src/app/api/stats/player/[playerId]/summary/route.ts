@@ -2,9 +2,9 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
-import { getGameMvpParticipant } from "@/lib/mvp";
 import { ensureSeasonStats, getWinRate } from "@/lib/stats/season-performance";
 import { logServerError } from "@/lib/server/safe-log";
+import { PUBLIC_SHORT_CACHE_HEADER } from "@/lib/http/cache";
 
 type RouteContext = {
   params: Promise<{
@@ -17,7 +17,7 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
     const { playerId } = await params;
     const id = Number(playerId);
 
-    if (Number.isNaN(id)) {
+    if (!Number.isInteger(id) || id <= 0) {
       return NextResponse.json(
         { message: "Invalid playerId" },
         { status: 400 }
@@ -63,156 +63,47 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
         })
       : null;
 
-    const records = await prisma.matchParticipant.findMany({
-      where: {
-        playerId: id,
-        ...(currentSeason
-          ? {
-              game: {
-                series: {
-                  seasonId: currentSeason.id,
-                },
-              },
-            }
-          : { id: -1 }),
-      },
-      select: {
-        kills: true,
-        deaths: true,
-        assists: true,
-        team: true,
-        championId: true,
-        game: {
+    const championStats = currentSeason
+      ? await prisma.playerChampionStat.findMany({
+          where: { playerId: id, seasonId: currentSeason.id },
+          orderBy: [{ games: "desc" }, { wins: "desc" }, { mvpCount: "desc" }],
+          take: 3,
           select: {
-            winnerTeam: true,
-            mvpPlayerId: true,
-            participants: {
-              select: {
-                playerId: true,
-                kills: true,
-                deaths: true,
-                assists: true,
-                team: true,
-              },
+            championId: true,
+            games: true,
+            mvpCount: true,
+            champion: {
+              select: { name: true, imageUrl: true },
             },
-          },
-        },
-      },
-    });
-
-    const championStatsRaw = await prisma.matchParticipant.groupBy({
-      by: ["championId"],
-      where: {
-        playerId: id,
-        ...(currentSeason
-          ? {
-              game: {
-                series: {
-                  seasonId: currentSeason.id,
-                },
-              },
-            }
-          : { id: -1 }),
-      },
-      _count: {
-        championId: true,
-      },
-      _sum: {
-        kills: true,
-        deaths: true,
-        assists: true,
-      },
-      orderBy: {
-        _count: {
-          championId: "desc",
-        },
-      },
-      take: 3,
-    });
-
-    const championIds = championStatsRaw.map(
-      (item: (typeof championStatsRaw)[number]) => item.championId
-    );
-
-    const champions = championIds.length
-      ? await prisma.champion.findMany({
-          where: {
-            id: {
-              in: championIds,
-            },
-          },
-          select: {
-            id: true,
-            name: true,
-            imageUrl: true,
           },
         })
       : [];
 
-    type ChampionType = (typeof champions)[number];
-
-    const championMap = new Map<number, ChampionType>(
-      champions.map((champion: ChampionType) => [champion.id, champion])
-    );
-
-    const totalGames = seasonStat?.totalGames ?? records.length;
-
-    const wins = seasonStat?.wins ?? records.filter(
-      (record: (typeof records)[number]) =>
-        record.team === record.game.winnerTeam
-    ).length;
+    const totalGames = seasonStat?.totalGames ?? 0;
+    const wins = seasonStat?.wins ?? 0;
 
     const losses = seasonStat?.losses ?? totalGames - wins;
 
     const winRate = getWinRate(wins, totalGames);
 
-    const getMvpPlayerId = (record: (typeof records)[number]) => {
-      if (record.game.mvpPlayerId) return record.game.mvpPlayerId;
+    const mvpCount = seasonStat?.mvpCount ?? 0;
 
-      const mvp = getGameMvpParticipant(
-        record.game.participants,
-        record.game.winnerTeam,
-      );
+    const mostChampions = championStats.map((item) => ({
+      championId: item.championId,
+      championName: item.champion.name,
+      championImageUrl: item.champion.imageUrl,
+      games: item.games,
+      mvpCount: item.mvpCount,
+    }));
 
-      return mvp?.playerId ?? null;
-    };
-
-    const mvpCount = seasonStat?.mvpCount ?? records.filter((record) => {
-      return getMvpPlayerId(record) === id;
-    }).length;
-
-
-    const mostChampions = championStatsRaw.map(
-      (item: (typeof championStatsRaw)[number]) => {
-        const champion = championMap.get(item.championId);
-        const games = item._count.championId;
-        const mvpCount = records.filter((record) => {
-          if (record.championId !== item.championId) return false;
-
-          return getMvpPlayerId(record) === id;
-        }).length;
-
-        return {
-          championId: item.championId,
-          championName: champion?.name ?? "Unknown",
-          championImageUrl: champion?.imageUrl ?? "",
-          games,
-          mvpCount,
-        };
-      }
-    );
-
-    return NextResponse.json({
-      player,
-      summary: {
-        totalGames,
-        wins,
-        losses,
-        winRate,
-        mvpCount,
+    return NextResponse.json(
+      {
+        player,
+        summary: { totalGames, wins, losses, winRate, mvpCount },
+        mostChampions,
       },
-      mostChampions,
-    });
+      { headers: { "Cache-Control": PUBLIC_SHORT_CACHE_HEADER } },
+    );
   } catch (error) {
     logServerError("[PLAYER_SUMMARY_GET_ERROR]", error);
 

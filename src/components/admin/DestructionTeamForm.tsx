@@ -417,7 +417,7 @@ export default function DestructionTeamForm({
           </div>
 
           <div className="destruction-candidate-toolbar">
-            <input
+            <input aria-label="이름, 닉네임, 태그, 포지션 검색"
               className="admin-form__input"
               value={searchKeyword}
               onChange={(event) => setSearchKeyword(event.target.value)}
@@ -425,6 +425,7 @@ export default function DestructionTeamForm({
               style={{ minWidth: 220, flex: "1 1 220px" }}
             />
             <select
+              aria-label="팀장 후보 포지션 필터"
               className="admin-form__input"
               value={positionFilter}
               onChange={(event) => setPositionFilter(event.target.value)}
@@ -557,7 +558,7 @@ export default function DestructionTeamForm({
                     </div>
 
                     <div className="captain-selected-card__inputs">
-                      <input
+                      <input aria-label="팀명"
                         className="admin-form__input"
                         value={
                           teamNames[application.playerId] ??
@@ -572,7 +573,7 @@ export default function DestructionTeamForm({
                         disabled={hasMatches || isSubmitting}
                         placeholder="팀명"
                       />
-                      <input
+                      <input aria-label="포인트"
                         className="admin-form__input"
                         type="number"
                         min="0"

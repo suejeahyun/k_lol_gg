@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { logServerError } from "@/lib/server/safe-log";
+import { readJsonObject } from "@/lib/http/json-body";
 
 type RouteProps = {
   params: Promise<{
@@ -17,6 +18,9 @@ type AssignedParticipant = {
   auctionPoint: number;
 };
 
+const MAX_ASSIGNMENTS = 100;
+const MAX_AUCTION_POINT = 1_000_000;
+
 export async function PUT(req: NextRequest, { params }: RouteProps) {
   const rejected = await rejectIfNotAdmin();
   if (rejected) return rejected;
@@ -25,14 +29,17 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
     const { tournamentId } = await params;
     const id = Number(tournamentId);
 
-    if (Number.isNaN(id)) {
+    if (!Number.isInteger(id) || id <= 0) {
       return NextResponse.json(
         { message: "멸망전 ID가 올바르지 않습니다." },
         { status: 400 }
       );
     }
 
-    const body = await req.json();
+    const body = await readJsonObject<Record<string, unknown>>(req);
+    if (!body) {
+      return NextResponse.json({ message: "올바른 JSON 요청 본문이 필요합니다." }, { status: 400 });
+    }
 
     const assignments: AssignedParticipant[] = Array.isArray(body.assignments)
       ? body.assignments
@@ -42,6 +49,27 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
       return NextResponse.json(
         { message: "팀 배정 데이터가 없습니다." },
         { status: 400 }
+      );
+    }
+
+    if (assignments.length > MAX_ASSIGNMENTS) {
+      return NextResponse.json(
+        { message: `한 번에 최대 ${MAX_ASSIGNMENTS}명까지 배정할 수 있습니다.` },
+        { status: 400 },
+      );
+    }
+
+    const hasInvalidAssignmentId = assignments.some(
+      (assignment) =>
+        !Number.isInteger(Number(assignment.participantId)) ||
+        Number(assignment.participantId) <= 0 ||
+        !Number.isInteger(Number(assignment.teamId)) ||
+        Number(assignment.teamId) <= 0,
+    );
+    if (hasInvalidAssignmentId) {
+      return NextResponse.json(
+        { message: "참가자 또는 팀 정보가 올바르지 않습니다." },
+        { status: 400 },
       );
     }
 
@@ -121,13 +149,14 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
       );
     }
 
-    const hasInvalidAuctionPoint = assignments.some((assignment) =>
-      Number.isNaN(Number(assignment.auctionPoint))
-    );
+    const hasInvalidAuctionPoint = assignments.some((assignment) => {
+      const point = Number(assignment.auctionPoint);
+      return !Number.isFinite(point) || point < 0 || point > MAX_AUCTION_POINT;
+    });
 
     if (hasInvalidAuctionPoint) {
       return NextResponse.json(
-        { message: "경매 포인트가 올바르지 않습니다." },
+        { message: `경매 포인트는 0~${MAX_AUCTION_POINT.toLocaleString("ko-KR")} 범위여야 합니다.` },
         { status: 400 }
       );
     }

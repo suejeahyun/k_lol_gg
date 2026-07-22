@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -5,6 +6,11 @@ import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
 import { AppEmpty, AppSection } from "@/components/app-mobile/AppCards";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "모바일 내정보",
+  robots: { index: false, follow: false },
+};
 
 function isAdminRole(role?: string | null) {
   return role === "ADMIN" || role === "SUPER_ADMIN";

@@ -77,11 +77,14 @@ export function AppLoginForm({ next = "/app" }: { next?: string }) {
           <label>
             <span>아이디</span>
             <input
+              name="username"
               value={userId}
               onChange={(event) => setUserId(event.target.value)}
               autoComplete="username"
+              maxLength={32}
               inputMode="text"
               placeholder="아이디 입력"
+              required
             />
           </label>
 
@@ -89,10 +92,13 @@ export function AppLoginForm({ next = "/app" }: { next?: string }) {
             <span>비밀번호</span>
             <input
               type="password"
+              name="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               autoComplete="current-password"
+              maxLength={64}
               placeholder="비밀번호 입력"
+              required
             />
           </label>
 
@@ -107,6 +113,8 @@ export function AppLoginForm({ next = "/app" }: { next?: string }) {
           <Link href="/forgot-password">비밀번호 찾기</Link>
           <Link href="/signup">회원가입</Link>
           <Link href="/app">앱 홈</Link>
+          <Link href="/terms">이용약관</Link>
+          <Link href="/privacy">개인정보</Link>
         </div>
       </section>
     </main>

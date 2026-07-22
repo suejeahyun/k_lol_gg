@@ -15,6 +15,7 @@ type RiotPreparationPanelProps = {
     label: string;
     variant?: "primary" | "secondary";
   }>;
+  showStatus?: boolean;
 };
 
 export default function RiotPreparationPanel({
@@ -23,6 +24,7 @@ export default function RiotPreparationPanel({
   description,
   sections = [],
   actions = [],
+  showStatus = true,
 }: RiotPreparationPanelProps) {
   const status = getRiotFeatureStatus();
 
@@ -33,10 +35,12 @@ export default function RiotPreparationPanel({
         <h1>{title}</h1>
         <p>{description}</p>
 
-        <div className={status.enabled ? styles.statusEnabled : styles.statusDisabled}>
-          <span>{status.enabled ? "활성" : "비활성"}</span>
-          <strong>{status.message}</strong>
-        </div>
+        {showStatus ? (
+          <div className={status.enabled ? styles.statusEnabled : styles.statusDisabled}>
+            <span>{status.enabled ? "활성" : "비활성"}</span>
+            <strong>{status.message}</strong>
+          </div>
+        ) : null}
       </section>
 
       {sections.length > 0 ? (

@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
@@ -6,6 +5,7 @@ import { redirect } from "next/navigation";
 import PremiumFeatureGate from "@/components/PremiumFeatureGate";
 import PremiumLockedPreview from "@/components/PremiumLockedPreview";
 import SoloRankDraftSyncButton from "@/components/balance/SoloRankDraftSyncButton";
+import SafeChampionImage from "@/components/SafeChampionImage";
 import { prisma } from "@/lib/prisma/client";
 import { requireApprovedUserOrAdmin } from "@/lib/auth/access";
 import { getSiteSettings, isSiteFeatureEnabled } from "@/lib/site/settings";
@@ -267,17 +267,14 @@ export default async function BalanceRecommendationsIndexPage({
                             className="ai-champion-card"
                             key={`${player.playerId}-inhouse-${champion.championId}`}
                           >
-                            {champion.imageUrl ? (
-                              <img
-                                src={champion.imageUrl}
-                                alt={champion.championName}
-                                loading="lazy"
-                              />
-                            ) : (
-                              <div className="ai-champion-card__fallback">
-                                {champion.championName.slice(0, 1)}
-                              </div>
-                            )}
+                            <SafeChampionImage
+                              src={champion.imageUrl}
+                              alt={champion.championName}
+                              width={52}
+                              height={52}
+                              fallbackClassName="ai-champion-card__fallback"
+                              fallbackText={champion.championName.slice(0, 1)}
+                            />
                             <div>
                               <strong>{champion.championName}</strong>
                               <small>
@@ -307,17 +304,14 @@ export default async function BalanceRecommendationsIndexPage({
                             className="ai-champion-card"
                             key={`${player.playerId}-solo-${champion.championId}`}
                           >
-                            {champion.imageUrl ? (
-                              <img
-                                src={champion.imageUrl}
-                                alt={champion.championName}
-                                loading="lazy"
-                              />
-                            ) : (
-                              <div className="ai-champion-card__fallback">
-                                {champion.championName.slice(0, 1)}
-                              </div>
-                            )}
+                            <SafeChampionImage
+                              src={champion.imageUrl}
+                              alt={champion.championName}
+                              width={52}
+                              height={52}
+                              fallbackClassName="ai-champion-card__fallback"
+                              fallbackText={champion.championName.slice(0, 1)}
+                            />
                             <div>
                               <strong>{champion.championName}</strong>
                               <small>
@@ -364,17 +358,14 @@ export default async function BalanceRecommendationsIndexPage({
                       </span>
                     </div>
                     <div className="ai-ban-card__main">
-                      {ban.imageUrl ? (
-                        <img
-                          src={ban.imageUrl}
-                          alt={ban.championName}
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="ai-champion-card__fallback">
-                          {ban.championName.slice(0, 1)}
-                        </div>
-                      )}
+                      <SafeChampionImage
+                        src={ban.imageUrl}
+                        alt={ban.championName}
+                        width={52}
+                        height={52}
+                        fallbackClassName="ai-champion-card__fallback"
+                        fallbackText={ban.championName.slice(0, 1)}
+                      />
                       <div>
                         <strong>{ban.championName}</strong>
                         <small>

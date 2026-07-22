@@ -53,7 +53,7 @@ export function verifyAuthToken(token: string): AuthTokenPayload | null {
           ? Number(rawUserAccountId)
           : NaN;
 
-    if (!Number.isFinite(userAccountId)) {
+    if (!Number.isInteger(userAccountId) || userAccountId <= 0) {
       return null;
     }
 
@@ -83,7 +83,10 @@ export function verifyAuthToken(token: string): AuthTokenPayload | null {
       userId,
       role: typeof payload.role === "string" ? payload.role : undefined,
       status: typeof payload.status === "string" ? payload.status : undefined,
-      playerId: Number.isFinite(playerId) ? playerId : null,
+      playerId:
+        playerId !== null && Number.isInteger(playerId) && playerId > 0
+          ? playerId
+          : null,
       authVersion: Number.isInteger(authVersion) && authVersion >= 0 ? authVersion : 0,
     };
   } catch {

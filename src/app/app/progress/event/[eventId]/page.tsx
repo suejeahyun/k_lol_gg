@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
@@ -6,6 +7,11 @@ import { prisma } from "@/lib/prisma/client";
 
 export const dynamic = "force-dynamic";
 
+export const metadata: Metadata = {
+  title: "모바일 이벤트 상세",
+  description: "이벤트 내전의 참가자와 경기 결과를 모바일에서 확인하세요.",
+};
+
 type AppEventDetailPageProps = {
   params: Promise<{
     eventId: string;
@@ -13,10 +19,13 @@ type AppEventDetailPageProps = {
 };
 
 const dateFormatter = new Intl.DateTimeFormat("ko-KR", {
+  year: "numeric",
   month: "2-digit",
   day: "2-digit",
   hour: "2-digit",
   minute: "2-digit",
+  hour12: false,
+  timeZone: "Asia/Seoul",
 });
 
 function eventStatusText(status: string) {
@@ -40,20 +49,44 @@ export default async function AppEventDetailPage({ params }: AppEventDetailPageP
 
   const event = await prisma.eventMatch.findUnique({
     where: { id },
-    include: {
+    select: {
+      title: true,
+      status: true,
+      eventDate: true,
       teams: {
-        include: {
-          members: { include: { player: true }, orderBy: [{ position: "asc" }, { id: "asc" }] },
+        select: {
+          id: true,
+          name: true,
+          seed: true,
+          score: true,
+          members: {
+            select: {
+              position: true,
+              player: { select: { name: true } },
+            },
+            orderBy: [{ position: "asc" }, { id: "asc" }],
+          },
         },
         orderBy: [{ seed: "asc" }, { id: "asc" }],
       },
       participants: {
-        include: { player: true, team: true },
+        select: {
+          id: true,
+          position: true,
+          player: { select: { name: true, nickname: true, tag: true } },
+        },
         orderBy: [{ position: "asc" }, { id: "asc" }],
         take: 20,
       },
       matches: {
-        include: { teamA: true, teamB: true },
+        select: {
+          id: true,
+          stage: true,
+          round: true,
+          winnerTeamId: true,
+          teamA: { select: { name: true } },
+          teamB: { select: { name: true } },
+        },
         orderBy: [{ stage: "asc" }, { round: "asc" }],
         take: 12,
       },

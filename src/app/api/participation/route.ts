@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { PUBLIC_REALTIME_CACHE_HEADER } from "@/lib/http/cache";
 
 export async function GET() {
   try {
@@ -65,7 +66,7 @@ export async function GET() {
             startDate: destruction.startDate,
           }
         : null,
-    });
+    }, { headers: { "Cache-Control": PUBLIC_REALTIME_CACHE_HEADER } });
   } catch (error: unknown) {
     logServerError("[PARTICIPATION_GET_ERROR]", error);
 

@@ -9,9 +9,12 @@ const requiredEnv = [
   "DATABASE_URL",
   "NEXT_PUBLIC_BASE_URL",
   "JWT_SECRET",
+  "TOTP_ENCRYPTION_KEY",
   "ADMIN_TOKEN_VALUE",
   "SUPER_ADMIN_ID",
   "SUPER_ADMIN_PASSWORD",
+  "CRON_SECRET",
+  "PRIVACY_CONTACT",
   "KAKAO_OPENCHAT_SECRET",
   "KAKAO_SEARCH_PLAYER_SECRET",
   "KAKAO_RECRUIT_SECRET",
@@ -79,17 +82,36 @@ for (const key of requiredEnv) {
   const value = process.env[key]?.trim() || "";
   if (!value) continue;
 
-  if (["JWT_SECRET", "ADMIN_TOKEN_VALUE"].includes(key) && value.length < 32) {
+  if (key === "SUPER_ADMIN_PASSWORD" && value.length < 16) {
+    addProblem("SUPER_ADMIN_PASSWORD: 최소 16자 이상의 고유한 비밀번호가 필요합니다.");
+    continue;
+  }
+
+  if (key === "SUPER_ADMIN_PASSWORD" && Buffer.byteLength(value, "utf8") > 72) {
+    addProblem("SUPER_ADMIN_PASSWORD: bcrypt 제한에 따라 UTF-8 기준 72바이트 이하여야 합니다.");
+    continue;
+  }
+
+  if (["JWT_SECRET", "TOTP_ENCRYPTION_KEY", "ADMIN_TOKEN_VALUE"].includes(key) && value.length < 32) {
     addProblem(`${key}: 최소 32자 이상의 랜덤 값이 필요합니다.`);
     continue;
   }
 
-  if (!["SUPER_ADMIN_ID"].includes(key) && value.length < 12) {
+  if (key === "CRON_SECRET" && value.length < 16) {
+    addProblem("CRON_SECRET: 최소 16자 이상의 랜덤 값이 필요합니다.");
+    continue;
+  }
+
+  if (!["SUPER_ADMIN_ID", "PRIVACY_CONTACT"].includes(key) && value.length < 12) {
     addWarning(`${key}: 12자 미만입니다. 운영 배포에서는 더 긴 값이 안전합니다.`);
   }
 
-  if (/^(admin|password|1234|7942|klol|test)$/i.test(value)) {
-    addWarning(`${key}: 추측하기 쉬운 값입니다. 운영 배포에서는 교체를 권장합니다.`);
+  if (key !== "SUPER_ADMIN_ID" && /^(admin|password|1234|7942|klol|test)$/i.test(value)) {
+    if (key === "SUPER_ADMIN_PASSWORD") {
+      addProblem("SUPER_ADMIN_PASSWORD: 추측하기 쉬운 값은 사용할 수 없습니다.");
+    } else {
+      addWarning(`${key}: 추측하기 쉬운 값입니다. 운영 배포에서는 교체를 권장합니다.`);
+    }
   }
 }
 

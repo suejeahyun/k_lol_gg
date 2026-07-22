@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import {
+  getRequiredHeaderSecret,
+  hasValidServerSecret,
+} from "@/lib/security/request-guard";
 
 type RateLimitPolicy = {
   name: string;
@@ -29,12 +33,11 @@ function isMutation(method: string) {
   return !["GET", "HEAD", "OPTIONS"].includes(method.toUpperCase());
 }
 
-function hasServerSecret(request: NextRequest) {
+function hasValidConfiguredServerSecret(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
   return Boolean(
-      request.headers.get("x-klol-secret") ||
-      request.headers.get("x-bot-secret") ||
-      request.headers.get("x-kakao-secret") ||
-      request.headers.get("authorization"),
+    getRequiredHeaderSecret(pathname) &&
+      hasValidServerSecret(request, pathname),
   );
 }
 
@@ -61,7 +64,7 @@ function getPolicy(pathname: string, method: string, request: NextRequest): Rate
 
   // Bot calls can be frequent. They are already protected by header secret, so allow higher throughput.
   if (pathname.startsWith("/api/kakao/")) {
-    return hasServerSecret(request)
+    return hasValidConfiguredServerSecret(request)
       ? { name: "trusted-bot-api", windowMs: 60_000, max: 900 }
       : { name: "bot-api", windowMs: 60_000, max: 120 };
   }

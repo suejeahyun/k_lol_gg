@@ -166,6 +166,7 @@ export default function DestructionTeamAssignmentForm({
               </div>
 
               <select
+                aria-label={`${participant.player.nickname} 배정 팀`}
                 className="admin-form__input"
                 value={assignments[participant.id] ?? ""}
                 onChange={(event) =>
@@ -181,7 +182,7 @@ export default function DestructionTeamAssignmentForm({
                 ))}
               </select>
 
-              <input
+              <input aria-label="경매 포인트"
                 className="admin-form__input"
                 value={auctionPoints[participant.id] ?? "0"}
                 onChange={(event) =>

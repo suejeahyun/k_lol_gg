@@ -7,6 +7,7 @@ import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { writeAdminLog } from "@/lib/admin-log";
 import { applyBalanceFeedbackToProfiles } from "@/lib/balance/feedback-learning";
 import { logServerError } from "@/lib/server/safe-log";
+import { readJsonObject } from "@/lib/http/json-body";
 
 type FeedbackBody = {
   matchSeriesId?: number;
@@ -26,7 +27,10 @@ export async function POST(req: NextRequest) {
   if (rejected) return rejected;
 
   try {
-    const body = (await req.json()) as FeedbackBody;
+    const body = await readJsonObject<FeedbackBody>(req);
+    if (!body) {
+      return NextResponse.json({ message: "올바른 JSON 요청 본문이 필요합니다." }, { status: 400 });
+    }
 
     if (!Number.isInteger(body.matchSeriesId) || !body.matchSeriesId || body.matchSeriesId <= 0) {
       return NextResponse.json(
@@ -91,4 +95,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-

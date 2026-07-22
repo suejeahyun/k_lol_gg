@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
@@ -5,6 +6,11 @@ import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
 import { AppEmpty, AppSection } from "@/components/app-mobile/AppCards";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "모바일 내전 상세",
+  description: "내전 세트 결과와 참가자 기록을 모바일에서 확인하세요.",
+};
 
 type PageProps = {
   params: Promise<{ matchId: string }>;

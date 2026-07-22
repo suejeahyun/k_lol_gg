@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { normalizeGalleryImageUrls } from "@/lib/gallery/winner-image-paths";
+import { readJsonObject } from "@/lib/http/json-body";
 
 type RouteContext = {
   params: Promise<{
@@ -24,7 +25,7 @@ export async function GET(_: NextRequest, context: RouteContext) {
     const { imageId } = await context.params;
     const id = Number(imageId);
 
-    if (Number.isNaN(id)) {
+    if (!Number.isInteger(id) || id <= 0) {
       return NextResponse.json(
         { message: "올바른 이미지 ID가 아닙니다." },
         { status: 400 }
@@ -60,14 +61,20 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     const { imageId } = await context.params;
     const id = Number(imageId);
 
-    if (Number.isNaN(id)) {
+    if (!Number.isInteger(id) || id <= 0) {
       return NextResponse.json(
         { message: "올바른 이미지 ID가 아닙니다." },
         { status: 400 }
       );
     }
 
-    const body = (await req.json()) as UpdateGalleryImageBody;
+    const body = await readJsonObject<UpdateGalleryImageBody>(req);
+    if (!body) {
+      return NextResponse.json(
+        { message: "올바른 JSON 요청 본문이 필요합니다." },
+        { status: 400 },
+      );
+    }
     const title = body.title?.trim();
     const description = body.description?.trim();
     const imageUrl = Array.isArray(body.imageUrl)
@@ -134,7 +141,7 @@ export async function DELETE(_: NextRequest, context: RouteContext) {
     const { imageId } = await context.params;
     const id = Number(imageId);
 
-    if (Number.isNaN(id)) {
+    if (!Number.isInteger(id) || id <= 0) {
       return NextResponse.json(
         { message: "올바른 이미지 ID가 아닙니다." },
         { status: 400 }

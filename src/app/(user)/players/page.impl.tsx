@@ -1,12 +1,14 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma/client";
 import Pagination from "@/components/Pagination";
 import PlayerSearchBox from "./PlayerSearchBox";
 import SafeChampionImage from "@/components/SafeChampionImage";
 import TierIcon from "@/components/TierIcon";
 import { ensureSeasonStats, getWinRate } from "@/lib/stats/season-performance";
+import { parsePositivePage } from "@/lib/http/pagination";
 
 type PlayersPageProps = {
   searchParams: Promise<{
@@ -297,10 +299,74 @@ function matchesTierFilter(
   );
 }
 
+async function getPlayersCatalog(seasonId: number | null, query: string) {
+  if (seasonId) {
+    await ensureSeasonStats(seasonId);
+  }
+
+  return prisma.player.findMany({
+      where: buildPlayerSearchWhere(query),
+      select: {
+        id: true,
+        name: true,
+        nickname: true,
+        tag: true,
+        peakTier: true,
+        currentTier: true,
+        seasonStats: {
+          where: { seasonId: seasonId ?? -1 },
+          select: {
+            totalGames: true,
+            participationCount: true,
+            wins: true,
+            losses: true,
+            mvpCount: true,
+          },
+          take: 1,
+        },
+        positionStats: {
+          where: { seasonId: seasonId ?? -1 },
+          select: {
+            position: true,
+            games: true,
+          },
+          orderBy: {
+            games: "desc",
+          },
+        },
+        championStats: {
+          where: { seasonId: seasonId ?? -1 },
+          orderBy: [{ games: "desc" }, { wins: "desc" }],
+          take: 3,
+          select: {
+            games: true,
+            wins: true,
+            mvpCount: true,
+            champion: {
+              select: {
+                name: true,
+                imageUrl: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        id: "asc",
+      },
+  });
+}
+
+const getCachedPlayersCatalog = unstable_cache(
+  async (seasonId: number | null) => getPlayersCatalog(seasonId, ""),
+  ["players-page-catalog-v1"],
+  { revalidate: 60, tags: ["players", "rankings", "stats-top"] },
+);
+
 export default async function PlayersPage({ searchParams }: PlayersPageProps) {
   const resolved = await searchParams;
 
-  const currentPage = Math.max(1, Number(resolved.page ?? "1") || 1);
+  const currentPage = parsePositivePage(resolved.page);
   const query = resolved.q?.trim() ?? "";
   const sort = getSort(resolved.sort);
   const order = getOrder(resolved.order);
@@ -314,61 +380,10 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
     select: { id: true },
   });
 
-  if (currentSeason) {
-    await ensureSeasonStats(currentSeason.id);
-  }
-
-  const players = await prisma.player.findMany({
-    where: buildPlayerSearchWhere(query),
-    select: {
-      id: true,
-      name: true,
-      nickname: true,
-      tag: true,
-      peakTier: true,
-      currentTier: true,
-      seasonStats: {
-        where: { seasonId: currentSeason?.id ?? -1 },
-        select: {
-          totalGames: true,
-          participationCount: true,
-          wins: true,
-          losses: true,
-          mvpCount: true,
-        },
-        take: 1,
-      },
-      positionStats: {
-        where: { seasonId: currentSeason?.id ?? -1 },
-        select: {
-          position: true,
-          games: true,
-        },
-        orderBy: {
-          games: "desc",
-        },
-      },
-      championStats: {
-        where: { seasonId: currentSeason?.id ?? -1 },
-        orderBy: [{ games: "desc" }, { wins: "desc" }],
-        take: 3,
-        select: {
-          games: true,
-          wins: true,
-          mvpCount: true,
-          champion: {
-            select: {
-              name: true,
-              imageUrl: true,
-            },
-          },
-        },
-      },
-    },
-    orderBy: {
-      id: "asc",
-    },
-  });
+  const seasonId = currentSeason?.id ?? null;
+  const players = query
+    ? await getPlayersCatalog(seasonId, query)
+    : await getCachedPlayersCatalog(seasonId);
 
   const mapped = players.map((player: (typeof players)[number]) => {
     const seasonStat = player.seasonStats[0] ?? null;
@@ -492,11 +507,14 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
     if (nextPosition !== "ALL") params.set("position", nextPosition);
     if (nextTier !== "ALL") params.set("tier", nextTier);
     if (nextStatus !== "ALL") params.set("status", nextStatus);
-    params.set("sort", nextSort);
-    params.set("order", nextOrder);
-    params.set("page", page);
+    if (nextSort !== "winRate" || nextOrder !== "desc") {
+      params.set("sort", nextSort);
+      params.set("order", nextOrder);
+    }
+    if (page !== "1") params.set("page", page);
 
-    return `/players?${params.toString()}`;
+    const queryString = params.toString();
+    return queryString ? `/players?${queryString}` : "/players";
   }
 
   function sortLink(field: SortType) {
@@ -521,7 +539,7 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
           <PlayerSearchBox initialQuery={query} />
         </div>
 
-        <div className="players-page-v2__filters" aria-label="플레이어 필터">
+        <div className="players-page-v2__filters" role="group" aria-label="플레이어 필터">
           <div className="players-page-v2__filter-group">
             <span>라인</span>
             <div>
@@ -750,8 +768,8 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
             basePath="/players"
             query={{
               q: query,
-              sort,
-              order,
+              sort: sort !== "winRate" || order !== "desc" ? sort : undefined,
+              order: sort !== "winRate" || order !== "desc" ? order : undefined,
               position:
                 positionFilter !== "ALL" ? String(positionFilter) : undefined,
               tier: tierFilter !== "ALL" ? String(tierFilter) : undefined,

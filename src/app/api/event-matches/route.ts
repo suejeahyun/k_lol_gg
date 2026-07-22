@@ -5,11 +5,20 @@ import { prisma } from "@/lib/prisma/client";
 import { EventMatchMode, Position } from "@prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { logServerError } from "@/lib/server/safe-log";
+import { readJsonObject } from "@/lib/http/json-body";
 
 type ParticipantInput = {
   playerId: number;
   position?: Position | null;
   balanceScore?: number;
+};
+
+type CreateEventBody = {
+  title?: unknown;
+  mode?: unknown;
+  eventDate?: unknown;
+  galleryImageId?: unknown;
+  participants?: unknown;
 };
 
 const MAX_ADMIN_EVENT_MATCHES = 50;
@@ -69,12 +78,21 @@ export async function POST(req: NextRequest) {
   if (rejected) return rejected;
 
   try {
-    const body = await req.json();
+    const body = await readJsonObject<CreateEventBody>(req);
+    if (!body) {
+      return NextResponse.json(
+        { message: "올바른 JSON 요청 본문이 필요합니다." },
+        { status: 400 },
+      );
+    }
 
     const title = String(body.title ?? "").trim();
     const mode = String(body.mode ?? "POSITION");
 
-    const eventDate = body.eventDate ? new Date(body.eventDate) : null;
+    const eventDate =
+      typeof body.eventDate === "string" || typeof body.eventDate === "number"
+        ? new Date(body.eventDate)
+        : null;
 
     const galleryImageId = body.galleryImageId
       ? Number(body.galleryImageId)

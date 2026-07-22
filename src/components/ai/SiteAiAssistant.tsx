@@ -207,7 +207,7 @@ export default function SiteAiAssistant() {
             </button>
           </header>
 
-          <div className={styles.quickActions} aria-label="빠른 질문">
+          <div className={styles.quickActions} role="group" aria-label="빠른 질문">
             {quickPrompts.map((prompt) => (
               <button key={prompt} type="button" onClick={() => sendMessage(prompt)} disabled={loading}>
                 {prompt}

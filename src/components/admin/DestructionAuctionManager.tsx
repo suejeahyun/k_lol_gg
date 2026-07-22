@@ -5843,7 +5843,7 @@ export default function DestructionAuctionManager({
            Uses the generated stage image as the actual draw scene while keeping the existing
            card refs and draw logic intact. */
         .gacha-overlay {
-          --klol-auction-stage-draw-bg: url("/images/generated/klol-auction-stage-draw-cards.png");
+          --klol-auction-stage-draw-bg: url("/images/generated/klol-auction-stage-draw-cards.webp");
         }
 
         .gacha-overlay .gacha-overlay-card {
@@ -6583,7 +6583,6 @@ export default function DestructionAuctionManager({
     </div>
   );
 }
-
 
 
 

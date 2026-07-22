@@ -16,7 +16,7 @@ export default async function DestructionImagesPage({ params }: PageProps) {
   const { tournamentId } = await params;
   const id = Number(tournamentId);
 
-  if (Number.isNaN(id)) {
+  if (!Number.isInteger(id) || id <= 0) {
     notFound();
   }
 

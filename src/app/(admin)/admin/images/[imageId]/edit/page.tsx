@@ -16,7 +16,7 @@ export default async function AdminEditImagePage({ params }: PageProps) {
   const { imageId } = await params;
   const id = Number(imageId);
 
-  if (Number.isNaN(id)) {
+  if (!Number.isInteger(id) || id <= 0) {
     notFound();
   }
 

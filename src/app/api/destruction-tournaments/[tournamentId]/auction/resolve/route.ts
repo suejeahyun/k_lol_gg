@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { logServerError } from "@/lib/server/safe-log";
+import { readJsonObject } from "@/lib/http/json-body";
 
 type RouteProps = { params: Promise<{ tournamentId: string }> };
 
@@ -21,7 +22,10 @@ export async function PATCH(req: NextRequest, { params }: RouteProps) {
   try {
     const { tournamentId } = await params;
     const id = Number(tournamentId);
-    const body = (await req.json()) as ResolveBody;
+    const body = await readJsonObject<ResolveBody>(req);
+    if (!body) {
+      return NextResponse.json({ message: "올바른 JSON 요청 본문이 필요합니다." }, { status: 400 });
+    }
     const participantId = Number(body.participantId);
     const action = body.action;
 

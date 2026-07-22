@@ -168,7 +168,7 @@ export default function AdminDestructionTournamentNewPage() {
       <div className="admin-form">
         <div className="admin-form__group">
           <label className="admin-form__label">멸망전명</label>
-          <input
+          <input aria-label="예: 2026 K-LOL 멸망전"
             className="admin-form__input"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
@@ -179,7 +179,7 @@ export default function AdminDestructionTournamentNewPage() {
         <div className="admin-event-form-grid">
           <div className="admin-form__group">
             <label className="admin-form__label">예선 방식</label>
-            <select
+            <select aria-label="예선 방식"
               className="admin-form__input"
               value={preliminaryFormat}
               onChange={(event) => setPreliminaryFormat(event.target.value as PreliminaryFormat)}
@@ -195,7 +195,7 @@ export default function AdminDestructionTournamentNewPage() {
           {shouldShowRoundCount ? (
             <div className="admin-form__group">
               <label className="admin-form__label">라운드 수</label>
-              <input
+              <input aria-label="라운드 수"
                 className="admin-form__input"
                 type="number"
                 min="1"
@@ -213,7 +213,7 @@ export default function AdminDestructionTournamentNewPage() {
 
         <div className="admin-form__group">
           <label className="admin-form__label">라인별 최대 인원</label>
-          <input
+          <input aria-label="라인별 최대 인원"
             className="admin-form__input"
             type="number"
             min="1"

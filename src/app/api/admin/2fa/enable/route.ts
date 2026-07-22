@@ -5,6 +5,9 @@ import { requireAdminRequest } from "@/lib/auth/requireAdmin";
 import { prisma } from "@/lib/prisma/client";
 import { verifyTotpCode } from "@/lib/security/totp";
 import { getRequestAuditFields, writeAdminLog } from "@/lib/admin-log";
+import { authConstants } from "@/lib/auth";
+import { USER_TOKEN_COOKIE, clearAuthCookieOptions } from "@/lib/auth/cookies";
+import { decryptTotpSecret } from "@/lib/security/totp-secret-storage";
 
 type Body = { code?: string };
 
@@ -24,7 +27,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, message: "먼저 2단계 인증 설정을 생성하세요." }, { status: 400 });
   }
 
-  const verified = verifyTotpCode(user.adminTotpSecret, body.code);
+  const verified = verifyTotpCode(decryptTotpSecret(user.adminTotpSecret), body.code);
   if (!verified.ok) {
     return NextResponse.json({ ok: false, message: "인증 코드가 올바르지 않습니다." }, { status: 400 });
   }
@@ -34,6 +37,7 @@ export async function POST(req: NextRequest) {
     data: {
       adminTotpEnabled: true,
       adminTotpEnabledAt: new Date(),
+      authVersion: { increment: 1 },
     },
   });
 
@@ -48,5 +52,13 @@ export async function POST(req: NextRequest) {
     ...getRequestAuditFields(req),
   });
 
-  return NextResponse.json({ ok: true, enabled: true });
+  const response = NextResponse.json({
+    ok: true,
+    enabled: true,
+    reauthRequired: true,
+    message: "2단계 인증이 활성화되었습니다. 인증코드로 다시 로그인해주세요.",
+  });
+  response.cookies.set(USER_TOKEN_COOKIE, "", clearAuthCookieOptions());
+  response.cookies.set(authConstants.ADMIN_TOKEN_KEY, "", clearAuthCookieOptions());
+  return response;
 }

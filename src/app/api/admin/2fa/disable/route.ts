@@ -5,6 +5,9 @@ import { requireAdminRequest } from "@/lib/auth/requireAdmin";
 import { prisma } from "@/lib/prisma/client";
 import { verifyTotpCode } from "@/lib/security/totp";
 import { getRequestAuditFields, writeAdminLog } from "@/lib/admin-log";
+import { authConstants } from "@/lib/auth";
+import { USER_TOKEN_COOKIE, clearAuthCookieOptions } from "@/lib/auth/cookies";
+import { decryptTotpSecret } from "@/lib/security/totp-secret-storage";
 
 type Body = { code?: string; targetUserAccountId?: number };
 
@@ -20,7 +23,7 @@ export async function POST(req: NextRequest) {
       ? Number(body.targetUserAccountId)
       : currentUser.user.id;
 
-  if (!Number.isFinite(targetUserAccountId)) {
+  if (!Number.isInteger(targetUserAccountId) || targetUserAccountId <= 0) {
     return NextResponse.json({ ok: false, message: "대상 계정 정보가 올바르지 않습니다." }, { status: 400 });
   }
 
@@ -34,7 +37,10 @@ export async function POST(req: NextRequest) {
   }
 
   if (targetUserAccountId === actor.id && actor.adminTotpEnabled) {
-    const verified = verifyTotpCode(actor.adminTotpSecret, body.code);
+    const verified = verifyTotpCode(
+      actor.adminTotpSecret ? decryptTotpSecret(actor.adminTotpSecret) : null,
+      body.code,
+    );
     if (!verified.ok) {
       return NextResponse.json({ ok: false, message: "인증 코드가 올바르지 않습니다." }, { status: 400 });
     }
@@ -48,6 +54,7 @@ export async function POST(req: NextRequest) {
       adminTotpSecret: null,
       adminTotpEnabled: false,
       adminTotpEnabledAt: null,
+      authVersion: { increment: 1 },
     },
   });
 
@@ -62,5 +69,18 @@ export async function POST(req: NextRequest) {
     ...getRequestAuditFields(req),
   });
 
-  return NextResponse.json({ ok: true, enabled: false });
+  const isSelf = targetUserAccountId === actor.id;
+  const response = NextResponse.json({
+    ok: true,
+    enabled: false,
+    reauthRequired: isSelf,
+    message: isSelf
+      ? "2단계 인증이 해제되었습니다. 다시 로그인해주세요."
+      : "대상 관리자의 2단계 인증을 해제하고 기존 세션을 종료했습니다.",
+  });
+  if (isSelf) {
+    response.cookies.set(USER_TOKEN_COOKIE, "", clearAuthCookieOptions());
+    response.cookies.set(authConstants.ADMIN_TOKEN_KEY, "", clearAuthCookieOptions());
+  }
+  return response;
 }

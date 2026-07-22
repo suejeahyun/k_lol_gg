@@ -54,9 +54,11 @@ export default function PasswordChangeForm({ variant = "page" }: PasswordChangeF
         <span>현재 비밀번호</span>
         <input
           type="password"
+          name="currentPassword"
           value={currentPassword}
           onChange={(e) => setCurrentPassword(e.target.value)}
           autoComplete="current-password"
+          required
         />
       </label>
 
@@ -64,10 +66,14 @@ export default function PasswordChangeForm({ variant = "page" }: PasswordChangeF
         <span>새 비밀번호</span>
         <input
           type="password"
+          name="newPassword"
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
-          placeholder="8~32자"
+          placeholder="8~64자"
           autoComplete="new-password"
+          minLength={8}
+          maxLength={64}
+          required
         />
       </label>
 
@@ -75,14 +81,27 @@ export default function PasswordChangeForm({ variant = "page" }: PasswordChangeF
         <span>새 비밀번호 확인</span>
         <input
           type="password"
+          name="confirmPassword"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           autoComplete="new-password"
+          minLength={8}
+          maxLength={64}
+          required
         />
       </label>
 
       <div className={variant === "embedded" ? "account-password-form__actions" : undefined}>
-        <button className={variant === "embedded" ? "admin-button" : "auth-button"} type="submit" disabled={loading}>
+        <button
+          className={variant === "embedded" ? "admin-button" : "auth-button"}
+          type="submit"
+          disabled={
+            loading ||
+            !currentPassword ||
+            !newPassword ||
+            newPassword !== confirmPassword
+          }
+        >
           {loading ? "변경 중..." : "비밀번호 변경"}
         </button>
       </div>

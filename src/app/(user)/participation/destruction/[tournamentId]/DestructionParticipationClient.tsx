@@ -253,7 +253,7 @@ export default function DestructionParticipationClient({
       ) : null}
 
       <div className="participation-box destruction-apply-box">
-        <div className="destruction-mobile-apply-guide" aria-label="모바일 참가 순서">
+        <div className="destruction-mobile-apply-guide" role="region" aria-label="모바일 참가 순서">
           <strong>참가 신청</strong>
           <span>주 라인 선택 → 필요 시 부 라인/각오 입력 → 참가하기</span>
         </div>
@@ -315,6 +315,7 @@ export default function DestructionParticipationClient({
             <span>선택</span>
           </div>
           <textarea
+            aria-label="각오 한마디"
             className="admin-form__textarea"
             value={message}
             maxLength={500}

@@ -51,7 +51,7 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
     const { tournamentId } = await params;
     const id = Number(tournamentId);
 
-    if (Number.isNaN(id)) {
+    if (!Number.isInteger(id) || id <= 0) {
       return NextResponse.json(
         { message: "잘못된 멸망전 ID입니다." },
         { status: 400 },
@@ -186,11 +186,12 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
         { status: 400 },
       );
     }
+    const playerId = user.playerId;
 
     const { tournamentId } = await params;
     const id = Number(tournamentId);
 
-    if (Number.isNaN(id)) {
+    if (!Number.isInteger(id) || id <= 0) {
       return NextResponse.json(
         { message: "잘못된 멸망전 ID입니다." },
         { status: 400 },
@@ -234,49 +235,50 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
       );
     }
 
-    const existingApply = await prisma.destructionParticipationApply.findUnique({
-      where: {
-        tournamentId_playerId: {
-          tournamentId: id,
-          playerId: user.playerId,
+    const apply = await prisma.$transaction(async (tx) => {
+      const saved = await tx.destructionParticipationApply.upsert({
+        where: {
+          tournamentId_playerId: {
+            tournamentId: id,
+            playerId,
+          },
         },
-      },
-      select: {
-        status: true,
-      },
-    });
-    const nextStatus = existingApply?.status === "CONFIRMED" ? "CONFIRMED" : "APPLIED";
+        update: {
+          mainPosition,
+          subPositions,
+          isCaptain,
+          message,
+        },
+        create: {
+          tournamentId: id,
+          playerId,
+          mainPosition,
+          subPositions,
+          isCaptain,
+          message,
+          status: "APPLIED",
+        },
+      });
 
-    const apply = await prisma.destructionParticipationApply.upsert({
-      where: {
-        tournamentId_playerId: {
-          tournamentId: id,
-          playerId: user.playerId,
+      // 관리자 확정과 재신청이 겹쳐도 CONFIRMED를 사용자 요청이 되돌리지 않는다.
+      await tx.destructionParticipationApply.updateMany({
+        where: {
+          id: saved.id,
+          status: { in: ["APPLIED", "RESERVE", "REJECTED", "CANCELLED"] },
         },
-      },
-      update: {
-        mainPosition,
-        subPositions,
-        isCaptain,
-        message,
-        status: nextStatus,
-      },
-      create: {
-        tournamentId: id,
-        playerId: user.playerId,
-        mainPosition,
-        subPositions,
-        isCaptain,
-        message,
-        status: "APPLIED",
-      },
+        data: { status: "APPLIED" },
+      });
+
+      return tx.destructionParticipationApply.findUniqueOrThrow({
+        where: { id: saved.id },
+      });
     });
 
     await applyDestructionRecruitmentAutoReserve(id);
 
     await writeAdminLog({
       action: "DESTRUCTION_PARTICIPATION_APPLY",
-      message: `멸망전 참가 신청: 멸망전 #${id} ${tournament.title}, 플레이어 #${user.playerId}, 신청 #${apply.id}, 팀장선호 ${isCaptain ? "Y" : "N"}, 부라인 ${subPositions.join("/") || "-"}, 각오 ${message ? "Y" : "N"}`,
+      message: `멸망전 참가 신청: 멸망전 #${id} ${tournament.title}, 플레이어 #${playerId}, 신청 #${apply.id}, 팀장선호 ${isCaptain ? "Y" : "N"}, 부라인 ${subPositions.join("/") || "-"}, 각오 ${message ? "Y" : "N"}`,
     });
 
     return NextResponse.json({
@@ -330,7 +332,7 @@ export async function DELETE(req: NextRequest, { params }: RouteContext) {
     const { tournamentId } = await params;
     const id = Number(tournamentId);
 
-    if (Number.isNaN(id)) {
+    if (!Number.isInteger(id) || id <= 0) {
       return NextResponse.json(
         { message: "잘못된 멸망전 ID입니다." },
         { status: 400 },
@@ -425,4 +427,3 @@ export async function DELETE(req: NextRequest, { params }: RouteContext) {
     );
   }
 }
-

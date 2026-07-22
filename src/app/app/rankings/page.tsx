@@ -1,23 +1,27 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
 import { AppEmpty, AppSection } from "@/components/app-mobile/AppCards";
+import { getCachedSeasonRankingPlayers } from "@/lib/stats/season-performance";
 
 export const dynamic = "force-dynamic";
 
+export const metadata: Metadata = {
+  title: "모바일 시즌 랭킹",
+  description: "K-LOL.GG 시즌 랭킹을 모바일에서 확인하세요.",
+};
+
 type AppRankingStat = {
-  id: number;
+  playerId: number;
   totalGames: number;
   participationCount: number;
   wins: number;
   losses: number;
   mvpCount: number;
-  player: {
-    id: number;
-    name: string;
-    nickname: string;
-    tag: string;
-  };
+  name: string;
+  nickname: string;
+  tag: string;
 };
 
 function formatWinRate(stat: AppRankingStat) {
@@ -28,7 +32,7 @@ function formatWinRate(stat: AppRankingStat) {
 }
 
 function getPlayerName(stat: AppRankingStat) {
-  return stat.player.name || stat.player.nickname || "미입력";
+  return stat.name || stat.nickname || "미입력";
 }
 
 function RankingMiniList({
@@ -47,11 +51,11 @@ function RankingMiniList({
       ) : (
         <div className="klol-app-list">
           {rows.map((stat, index) => (
-            <Link className="klol-app-list-card klol-app-rank-row" href={`/app/players/${stat.player.id}`} key={`${title}-${stat.id}`}>
+            <Link className="klol-app-list-card klol-app-rank-row" href={`/app/players/${stat.playerId}`} key={`${title}-${stat.playerId}`}>
               <span className="klol-app-rank-no" data-rank={index + 1}>{index + 1}</span>
               <span className="klol-app-list-title">
                 <strong>{getPlayerName(stat)}</strong>
-                <span>{stat.player.nickname}#{stat.player.tag}</span>
+                <span>{stat.nickname}#{stat.tag}</span>
               </span>
               <span className="klol-app-stat-value">{metric(stat)}</span>
             </Link>
@@ -69,10 +73,9 @@ export default async function AppRankingsPage() {
   });
 
   const stats = season
-    ? await prisma.playerSeasonStat.findMany({
-        where: { seasonId: season.id, participationCount: { gte: 10 } },
-        include: { player: true },
-      })
+    ? (await getCachedSeasonRankingPlayers(season.id)).filter(
+        (stat) => stat.participationCount >= 10,
+      )
     : [];
 
   const topWinRate = [...stats]
@@ -114,11 +117,11 @@ export default async function AppRankingsPage() {
         ) : (
           <div className="klol-app-list">
             {overall.map((stat, index) => (
-              <Link className="klol-app-list-card klol-app-rank-row" href={`/app/players/${stat.player.id}`} key={`overall-${stat.id}`}>
+              <Link className="klol-app-list-card klol-app-rank-row" href={`/app/players/${stat.playerId}`} key={`overall-${stat.playerId}`}>
                 <span className="klol-app-rank-no" data-rank={index + 1}>{index + 1}</span>
                 <span className="klol-app-list-title">
                   <strong>{getPlayerName(stat)}</strong>
-                  <span>{stat.player.nickname}#{stat.player.tag}</span>
+                  <span>{stat.nickname}#{stat.tag}</span>
                 </span>
                 <span className="klol-app-stat-value">{stat.wins}승</span>
               </Link>

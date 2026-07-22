@@ -1,9 +1,15 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import PremiumFeatureGate from "@/components/PremiumFeatureGate";
 import { getSiteSettings } from "@/lib/site/settings";
+
+export const metadata: Metadata = {
+  title: "K-LOL MMR",
+  description: "K-LOL.GG의 내전 MMR, 밸런스 분석과 최근 예측 결과를 확인하세요.",
+};
 
 function fmt(value: number | null | undefined, digits = 1) {
   return typeof value === "number" ? value.toFixed(digits) : "-";

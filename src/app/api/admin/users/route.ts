@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { requireAdminRequest } from "@/lib/auth/requireAdmin";
+import { parseIntegerInRange, parsePositivePage } from "@/lib/http/pagination";
 
 const USER_STATUSES = ["PENDING", "APPROVED", "REJECTED"] as const;
 
@@ -18,16 +19,18 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const page = Number(req.nextUrl.searchParams.get("page") ?? "1");
-    const pageSize = Number(req.nextUrl.searchParams.get("pageSize") ?? "20");
+    const safePage = parsePositivePage(req.nextUrl.searchParams.get("page"));
+    const safePageSize = parseIntegerInRange(
+      req.nextUrl.searchParams.get("pageSize"),
+      20,
+      1,
+      100,
+    );
     const q = String(req.nextUrl.searchParams.get("q") ?? "").trim();
     const statusParam = String(
       req.nextUrl.searchParams.get("status") ?? "",
     ).trim();
 
-    const safePage = Number.isNaN(page) || page < 1 ? 1 : page;
-    const safePageSize =
-      Number.isNaN(pageSize) || pageSize < 1 || pageSize > 100 ? 20 : pageSize;
 
     const status = USER_STATUSES.includes(
       statusParam as (typeof USER_STATUSES)[number],

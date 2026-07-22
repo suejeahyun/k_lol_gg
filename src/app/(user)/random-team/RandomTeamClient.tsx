@@ -55,7 +55,7 @@ const TIER_OPTIONS: TierOption[] = [
   { id: "BRONZE", label: "브론즈", score: 2 },
   { id: "SILVER", label: "실버", score: 3 },
   { id: "GOLD", label: "골드", score: 4 },
-  { id: "PLATINUM", label: "플레티넘", score: 5 },
+  { id: "PLATINUM", label: "플래티넘", score: 5 },
   { id: "EMERALD", label: "에메랄드", score: 6 },
   { id: "DIAMOND", label: "다이아", score: 7 },
   { id: "MASTER", label: "마스터", score: 8 },
@@ -205,7 +205,7 @@ function formatPlayerWithTier(player: TeamPlayer) {
   return `${player.name}(${TIER_LABEL[player.tierId]})`;
 }
 
-export default function PublicRandomTeamPage() {
+export default function PublicRandomTeamPage({ embedded = false }: { embedded?: boolean }) {
   const [rawText, setRawText] = useState("");
   const [mode, setMode] = useState<TeamMode>("random");
   const [tierBySlot, setTierBySlot] = useState<Record<number, TierId | "">>({});
@@ -320,8 +320,13 @@ export default function PublicRandomTeamPage() {
     }
   };
 
+  const Root = embedded ? "div" : "main";
+
   return (
-    <main style={styles.page}>
+    <Root
+      className={embedded ? "random-team-tool random-team-tool--embedded" : "random-team-tool"}
+      style={styles.page}
+    >
       <section style={styles.hero}>
         <p style={styles.kicker}>K-LOL.GG 공개 도구</p>
         <h1 style={styles.title}>랜덤 팀 나누기</h1>
@@ -363,6 +368,7 @@ export default function PublicRandomTeamPage() {
           </div>
 
           <textarea
+            aria-label="팀을 나눌 참가자 명단"
             value={rawText}
             onChange={(event) => setRawText(event.target.value)}
             placeholder={SAMPLE_TEXT}
@@ -433,7 +439,10 @@ export default function PublicRandomTeamPage() {
                 <p style={styles.teamNames}>{result.blue.map(formatPlayerWithTier).join(" / ")}</p>
               </section>
 
-              <pre style={styles.copyPreview}>{resultText}</pre>
+              <details style={styles.copyPreviewDetails}>
+                <summary style={styles.copyPreviewSummary}>복사 형식 미리보기</summary>
+                <pre style={styles.copyPreview}>{resultText}</pre>
+              </details>
               {copyMessage ? <p style={styles.copyMessage}>{copyMessage}</p> : null}
             </div>
           ) : (
@@ -492,7 +501,7 @@ export default function PublicRandomTeamPage() {
           )}
         </section>
       ) : null}
-    </main>
+    </Root>
   );
 }
 
@@ -749,13 +758,24 @@ const styles: Record<string, CSSProperties> = {
     fontWeight: 800,
     wordBreak: "keep-all",
   },
-  copyPreview: {
+  copyPreviewDetails: {
     margin: 0,
     borderRadius: "16px",
     border: "1px dashed rgba(148, 163, 184, 0.32)",
     background: "rgba(2, 6, 23, 0.68)",
+    padding: "13px 16px",
+  },
+  copyPreviewSummary: {
+    color: "#cbd5e1",
+    cursor: "pointer",
+    fontSize: "14px",
+    fontWeight: 800,
+  },
+  copyPreview: {
+    margin: "12px 0 0",
+    borderTop: "1px solid rgba(148, 163, 184, 0.2)",
     color: "#e2e8f0",
-    padding: "16px",
+    padding: "12px 0 0",
     whiteSpace: "pre-wrap",
     fontFamily:
       "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",

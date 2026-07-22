@@ -38,7 +38,7 @@ export async function POST(_req: NextRequest, { params }: RouteContext) {
     const { tournamentId } = await params;
     const id = Number(tournamentId);
 
-    if (Number.isNaN(id)) {
+    if (!Number.isInteger(id) || id <= 0) {
       return NextResponse.json(
         { message: "잘못된 멸망전 ID입니다." },
         { status: 400 },

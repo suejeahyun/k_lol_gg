@@ -1,7 +1,7 @@
 /* K-LOL.GG explicit app experience. No viewport-size override dependency. */
 .klol-app-root {
   min-height: 100dvh;
-  padding: env(safe-area-inset-top, 0px) 0 calc(84px + env(safe-area-inset-bottom, 0px));
+  padding: env(safe-area-inset-top, 0px) 0 calc(104px + env(safe-area-inset-bottom, 0px));
   background:
     radial-gradient(circle at 20% 0%, rgba(124, 58, 237, 0.22), transparent 32%),
     radial-gradient(circle at 82% 12%, rgba(245, 158, 11, 0.18), transparent 28%),
@@ -60,7 +60,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 42px;
+  min-height: 44px;
   border-radius: 999px;
   text-decoration: none;
   touch-action: manipulation;
@@ -166,6 +166,9 @@
 }
 
 .klol-app-section-head a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   text-decoration: none;
 }
 
@@ -402,7 +405,7 @@
 }
 
 .klol-app-mini-button {
-  min-height: 38px;
+  min-height: 44px;
   padding: 0 12px;
   border: 1px solid rgba(148, 163, 184, 0.24);
   border-radius: 13px;
@@ -611,7 +614,7 @@
     linear-gradient(180deg, rgba(2, 8, 23, 0.42), rgba(2, 8, 23, 0.9)),
     radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 30%),
     radial-gradient(circle at bottom right, rgba(250, 204, 21, 0.14), transparent 28%),
-    url("/images/generated/klol-mobile-app-bg.png") center top / cover no-repeat,
+    url("/images/generated/klol-mobile-app-bg.webp") center top / cover no-repeat,
     #050816;
   color: #f8fafc;
 }
@@ -745,7 +748,7 @@
 .klol-install-release-download a,
 .klol-install-release-download button {
   display: inline-flex;
-  min-height: 40px;
+  min-height: 44px;
   align-items: center;
   justify-content: center;
   border-radius: 14px;
@@ -1042,21 +1045,31 @@
   text-align: center;
 }
 
+.random-team-tool--embedded textarea {
+  min-height: 240px !important;
+}
+
+@media (max-width: 520px) {
+  .klol-install-release-card {
+    display: grid;
+  }
+
+  .klol-install-release-meta {
+    justify-items: start;
+  }
+
+  .klol-install-release-card h2 {
+    word-break: keep-all;
+  }
+}
+
 @media (max-width: 380px) {
   .klol-install-select--three {
     grid-template-columns: 1fr;
   }
 
-  .klol-install-release-card {
-    display: grid;
-  }
-
   .klol-install-release-download {
     grid-template-columns: 1fr;
-  }
-
-  .klol-install-release-meta {
-    justify-items: start;
   }
 
   .klol-install-photo-card {
@@ -1413,6 +1426,10 @@
 }
 
 .klol-app-login-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 10px;
   color: rgba(203, 213, 225, 0.78);
   font-size: 12px;
   font-weight: 850;
@@ -1425,7 +1442,7 @@
     linear-gradient(180deg, rgba(2, 6, 17, 0.92), rgba(2, 6, 17, 0.98) 52%, #020611 100%),
     radial-gradient(circle at 18% 0%, rgba(47, 125, 255, 0.2), transparent 34%),
     radial-gradient(circle at 90% 10%, rgba(39, 200, 255, 0.12), transparent 32%),
-    url("/images/theme/dark-modern/home-hero-structured-v1.png");
+    url("/images/theme/dark-modern/home-hero-structured-v1.webp");
   background-attachment: scroll;
   background-position: center, center, center, 68% top;
   background-repeat: no-repeat;
@@ -1456,7 +1473,7 @@
   border-color: rgba(84, 150, 232, 0.3);
   background:
     linear-gradient(135deg, rgba(8, 20, 42, 0.9), rgba(4, 12, 27, 0.76)),
-    url("/images/theme/dark-modern/home-hero-structured-v1.png");
+    url("/images/theme/dark-modern/home-hero-structured-v1.webp");
   background-position: center, 66% top;
   background-repeat: no-repeat;
   background-size: cover, auto 260px;
@@ -1652,7 +1669,7 @@
   background:
     linear-gradient(90deg, rgba(4, 9, 23, 0.94), rgba(4, 9, 23, 0.42) 54%, rgba(4, 9, 23, 0.78)),
     radial-gradient(circle at 74% 38%, rgba(59, 130, 246, 0.24), transparent 38%),
-    url("/images/generated/klol-page-banner-bg.png") center / cover no-repeat;
+    url("/images/generated/klol-page-banner-bg.webp") center / cover no-repeat;
 }
 
 .klol-app-event-detail-hero::after,
@@ -1673,7 +1690,7 @@
   background:
     linear-gradient(90deg, rgba(4, 9, 23, 0.96), rgba(4, 9, 23, 0.38) 52%, rgba(15, 5, 9, 0.86)),
     radial-gradient(circle at 83% 38%, rgba(239, 68, 68, 0.22), transparent 38%),
-    url("/images/generated/klol-team-balance-versus-bg.png") center / cover no-repeat;
+    url("/images/generated/klol-team-balance-versus-bg.webp") center / cover no-repeat;
 }
 
 .klol-app-event-team {
@@ -1689,7 +1706,7 @@
   background:
     linear-gradient(90deg, rgba(4, 9, 23, 0.96), rgba(4, 9, 23, 0.5) 52%, rgba(4, 9, 23, 0.88)),
     radial-gradient(circle at 78% 26%, rgba(45, 212, 191, 0.16), transparent 34%),
-    url("/images/generated/klol-admin-ops-bg.png") center / cover no-repeat;
+    url("/images/generated/klol-admin-ops-bg.webp") center / cover no-repeat;
 }
 
 .klol-app-admin-hero-actions {
@@ -1701,7 +1718,7 @@
 
 .klol-app-admin-hero-actions a {
   display: inline-flex;
-  min-height: 38px;
+  min-height: 44px;
   align-items: center;
   justify-content: center;
   padding: 0 13px;
@@ -1911,7 +1928,7 @@
 
 .klol-app-mini-link {
   display: inline-flex;
-  min-height: 32px;
+  min-height: 44px;
   align-items: center;
   justify-content: center;
   padding: 0 11px;
@@ -1943,6 +1960,42 @@
   min-width: 0;
 }
 
+.klol-app-pagination {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.klol-app-pagination a,
+.klol-app-pagination span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  border: 1px solid rgba(84, 150, 232, 0.24);
+  border-radius: 14px;
+  color: #dbeafe;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.klol-app-pagination a:last-child,
+.klol-app-pagination span:last-child {
+  justify-self: stretch;
+}
+
+.klol-app-pagination span[aria-disabled="true"] {
+  color: rgba(184, 201, 223, 0.42);
+}
+
+.klol-app-pagination strong {
+  color: rgba(219, 234, 254, 0.78);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
 .klol-app-subtabs {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1970,7 +2023,7 @@
   justify-content: center;
   gap: 5px;
   min-width: 0;
-  min-height: 38px;
+  min-height: 44px;
   padding: 0 10px;
   border: 1px solid transparent;
   border-radius: 14px;

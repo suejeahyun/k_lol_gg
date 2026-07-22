@@ -45,7 +45,7 @@ export default function AdminRecruitAutoResetSettings({ initialEnabled, initialI
   }
 
   return (
-    <div className="admin-inline-setting" aria-label="자동 모집번호 초기화 설정">
+    <div className="admin-inline-setting" role="group" aria-label="자동 모집번호 초기화 설정">
       <label className="admin-inline-setting__check">
         <input
           type="checkbox"
@@ -54,7 +54,7 @@ export default function AdminRecruitAutoResetSettings({ initialEnabled, initialI
         />
         <span>활동 없음 자동 번호 초기화</span>
       </label>
-      <input
+      <input aria-label="자동 번호 초기화 대기 시간"
         className="admin-input admin-inline-setting__number"
         type="number"
         min="1"

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
@@ -6,6 +7,11 @@ import { prisma } from "@/lib/prisma/client";
 import { formatRiotPosition, formatRiotTier } from "@/lib/riot/player-analysis";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "모바일 플레이어 상세",
+  description: "플레이어의 시즌 전적과 Riot 정보를 모바일에서 확인하세요.",
+};
 
 type AppPlayerDetailPageProps = {
   params: Promise<{

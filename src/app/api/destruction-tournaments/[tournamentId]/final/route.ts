@@ -19,7 +19,7 @@ export async function POST(_req: NextRequest, { params }: RouteProps) {
     const { tournamentId } = await params;
     const id = Number(tournamentId);
 
-    if (Number.isNaN(id)) {
+    if (!Number.isInteger(id) || id <= 0) {
       return NextResponse.json(
         { message: "멸망전 ID가 올바르지 않습니다." },
         { status: 400 }
@@ -124,4 +124,3 @@ export async function POST(_req: NextRequest, { params }: RouteProps) {
     );
   }
 }
-

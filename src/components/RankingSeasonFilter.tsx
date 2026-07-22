@@ -34,6 +34,7 @@ export default function RankingSeasonFilter({
     <div className="section-block">
       <select
         className="app-select"
+        aria-label="랭킹 시즌 선택"
         value={selectedSeasonId ? String(selectedSeasonId) : ""}
         onChange={(e) => handleChange(e.target.value)}
       >

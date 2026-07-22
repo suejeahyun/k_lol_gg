@@ -170,7 +170,7 @@ export default function AdminUsersPage() {
       </div>
 
       <form className="admin-filter-bar" onSubmit={handleSearch}>
-        <input
+        <input aria-label="아이디, 이름, 닉네임, 태그 검색"
           value={searchText}
           onChange={(event) => setSearchText(event.target.value)}
           placeholder="아이디, 이름, 닉네임, 태그 검색"
@@ -178,6 +178,7 @@ export default function AdminUsersPage() {
         />
 
         <select
+          aria-label="회원 상태 필터"
           value={status}
           onChange={(event) => setStatus(event.target.value as UserStatus | "")}
           className="admin-input"

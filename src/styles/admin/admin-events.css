@@ -1245,7 +1245,7 @@
 .event-user-page,
 .event-user-detail-page,
 .event-participation-page {
-  width: min(1180px, calc(100vw - 40px));
+  width: min(1180px, calc(100% - 40px));
   margin-inline: auto;
 }
 
@@ -1599,7 +1599,7 @@
   .event-user-page,
   .event-user-detail-page,
   .event-participation-page {
-    width: min(100%, calc(100vw - 24px));
+    width: min(100%, calc(100% - 24px));
   }
 
   .event-user-hero,
@@ -1627,7 +1627,7 @@
 .event-user-page.page-container,
 .event-user-detail-page.page-container,
 .event-participation-page.page-container {
-  width: min(1180px, calc(100vw - 40px)) !important;
+  width: min(1180px, calc(100% - 40px)) !important;
   max-width: 1180px !important;
   margin-inline: auto !important;
 }
@@ -1718,7 +1718,7 @@
   .event-user-page.page-container,
   .event-user-detail-page.page-container,
   .event-participation-page.page-container {
-    width: min(100%, calc(100vw - 24px)) !important;
+    width: min(100%, calc(100% - 24px)) !important;
   }
 
   .event-user-page .event-progress-card.event-progress-card--with-image {

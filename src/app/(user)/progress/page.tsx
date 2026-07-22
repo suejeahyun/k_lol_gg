@@ -1,7 +1,14 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
+
+export const metadata: Metadata = {
+  title: "이벤트·멸망전 진행 현황",
+  description: "K-LOL.GG 이벤트 내전과 멸망전의 모집, 팀 구성, 경기 진행 현황을 확인하세요.",
+  alternates: { canonical: "/progress" },
+};
 
 function formatDate(date: Date | null) {
   if (!date) return "-";
@@ -10,6 +17,7 @@ function formatDate(date: Date | null) {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
+    timeZone: "Asia/Seoul",
   });
 }
 
@@ -54,10 +62,13 @@ export default async function ProgressPage() {
       orderBy: {
         eventDate: "desc",
       },
-      include: {
-        teams: true,
-        participants: true,
-        matches: true,
+      select: {
+        title: true,
+        status: true,
+        eventDate: true,
+        _count: {
+          select: { teams: true, participants: true },
+        },
       },
     }),
 
@@ -73,10 +84,13 @@ export default async function ProgressPage() {
       orderBy: {
         createdAt: "desc",
       },
-      include: {
-        teams: true,
-        participants: true,
-        matches: true,
+      select: {
+        title: true,
+        status: true,
+        startDate: true,
+        _count: {
+          select: { teams: true, participants: true },
+        },
       },
     }),
 
@@ -126,8 +140,8 @@ export default async function ProgressPage() {
               <em>
                 {getEventStatusLabel(latestEvent.status)} ·{" "}
                 {formatDate(latestEvent.eventDate)} · 참가자{" "}
-                {latestEvent.participants.length}명 · 팀{" "}
-                {latestEvent.teams.length}개
+                {latestEvent._count.participants}명 · 팀{" "}
+                {latestEvent._count.teams}개
               </em>
             </div>
           ) : (
@@ -166,8 +180,8 @@ export default async function ProgressPage() {
               <em>
                 {getDestructionStatusLabel(latestDestruction.status)} ·{" "}
                 {formatDate(latestDestruction.startDate)} · 참가자{" "}
-                {latestDestruction.participants.length}명 · 팀{" "}
-                {latestDestruction.teams.length}개
+                {latestDestruction._count.participants}명 · 팀{" "}
+                {latestDestruction._count.teams}개
               </em>
             </div>
           ) : (

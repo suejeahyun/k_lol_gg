@@ -4,9 +4,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { logServerError } from "@/lib/server/safe-log";
+import { readJsonObject } from "@/lib/http/json-body";
 
 type CreateSeasonBody = {
-  name: string;
+  name?: unknown;
 };
 
 const MAX_ADMIN_SEASONS = 100;
@@ -39,8 +40,14 @@ export async function POST(req: NextRequest) {
   if (rejected) return rejected;
 
   try {
-    const body = (await req.json()) as CreateSeasonBody;
-    const name = body.name?.trim();
+    const body = await readJsonObject<CreateSeasonBody>(req);
+    if (!body) {
+      return NextResponse.json(
+        { message: "올바른 JSON 요청 본문이 필요합니다." },
+        { status: 400 },
+      );
+    }
+    const name = typeof body.name === "string" ? body.name.trim() : "";
 
     if (!name) {
       return NextResponse.json(

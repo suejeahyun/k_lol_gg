@@ -132,7 +132,7 @@ export default function DisciplineRecordListClient({ initialRecords }: { initial
             </button>
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", justifyContent: "flex-end" }}>
-            <input
+            <input aria-label="플레이어 이름 또는 닉네임 검색"
               className="app-input"
               value={query}
               onChange={(e) => setQuery(e.target.value)}

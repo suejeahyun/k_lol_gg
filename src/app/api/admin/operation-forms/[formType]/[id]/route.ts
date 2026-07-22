@@ -39,7 +39,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     const { formType, id: idText } = await context.params;
     const id = Number(idText);
 
-    if (!isFormType(formType) || Number.isNaN(id)) {
+    if (!isFormType(formType) || !Number.isInteger(id) || id <= 0) {
       return NextResponse.json({ message: "올바르지 않은 운영 양식 ID입니다." }, { status: 400 });
     }
 
@@ -76,7 +76,7 @@ export async function DELETE(_: NextRequest, context: RouteContext) {
     const { formType, id: idText } = await context.params;
     const id = Number(idText);
 
-    if (!isFormType(formType) || Number.isNaN(id)) {
+    if (!isFormType(formType) || !Number.isInteger(id) || id <= 0) {
       return NextResponse.json({ message: "올바르지 않은 운영 양식 ID입니다." }, { status: 400 });
     }
 

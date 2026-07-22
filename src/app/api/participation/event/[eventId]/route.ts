@@ -35,7 +35,7 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
     const { eventId } = await params;
     const id = Number(eventId);
 
-    if (Number.isNaN(id)) {
+    if (!Number.isInteger(id) || id <= 0) {
       return NextResponse.json(
         { message: "잘못된 이벤트 ID입니다." },
         { status: 400 }
@@ -125,7 +125,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     const { eventId } = await params;
     const id = Number(eventId);
 
-    if (Number.isNaN(id)) {
+    if (!Number.isInteger(id) || id <= 0) {
       return NextResponse.json(
         { message: "잘못된 이벤트 ID입니다." },
         { status: 400 }

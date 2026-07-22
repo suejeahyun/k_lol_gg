@@ -28,7 +28,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     const body = await req.json().catch(() => ({}));
     const role = String(body.role ?? "").trim() as AllowedRole;
 
-    if (Number.isNaN(id)) {
+    if (!Number.isInteger(id) || id <= 0) {
       return NextResponse.json({ message: "잘못된 유저 ID입니다." }, { status: 400 });
     }
 
@@ -54,7 +54,11 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ message: "승인 완료 계정만 관리자로 지정할 수 있습니다." }, { status: 400 });
     }
 
-    const updated = await prisma.userAccount.update({ where: { id }, data: { role }, include: { player: true } });
+    const updated = await prisma.userAccount.update({
+      where: { id },
+      data: { role, authVersion: { increment: 1 } },
+      include: { player: true },
+    });
 
     await writeSecurityAudit({
       req,

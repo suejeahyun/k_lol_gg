@@ -1,9 +1,18 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import Link from "next/link";
 import SafeGalleryImage from "@/components/SafeGalleryImage";
 import { prisma } from "@/lib/prisma/client";
 import { getGalleryThumbnailUrl } from "@/lib/gallery/winner-image-paths";
+import Pagination from "@/components/Pagination";
+import { parsePositivePage } from "@/lib/http/pagination";
+
+export const metadata: Metadata = {
+  title: "이벤트 내전 진행 현황",
+  description: "K-LOL.GG 이벤트 내전의 모집 상태, 팀 구성과 경기 결과를 확인하세요.",
+  alternates: { canonical: "/progress/event" },
+};
 
 function formatDate(date: Date | null) {
   if (!date) return "-";
@@ -12,6 +21,7 @@ function formatDate(date: Date | null) {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
+    timeZone: "Asia/Seoul",
   });
 }
 
@@ -37,20 +47,48 @@ function getModeLabel(mode: string) {
   return labels[mode] ?? mode;
 }
 
-export default async function EventProgressPage() {
+type EventProgressPageProps = {
+  searchParams: Promise<{ page?: string }>;
+};
+
+const PAGE_SIZE = 12;
+
+export default async function EventProgressPage({ searchParams }: EventProgressPageProps) {
+  const resolvedSearchParams = await searchParams;
+  const requestedPage = parsePositivePage(resolvedSearchParams.page);
+  const [totalCount, statusGroups] = await Promise.all([
+    prisma.eventMatch.count(),
+    prisma.eventMatch.groupBy({ by: ["status"], _count: { _all: true } }),
+  ]);
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const currentPage = Math.min(requestedPage, totalPages);
+
   const events = await prisma.eventMatch.findMany({
     orderBy: [{ eventDate: "desc" }, { id: "desc" }],
-    include: {
-      galleryImage: true,
-      teams: true,
-      participants: true,
-      matches: true,
-      participationApplies: true,
+    skip: (currentPage - 1) * PAGE_SIZE,
+    take: PAGE_SIZE,
+    select: {
+      id: true,
+      title: true,
+      status: true,
+      mode: true,
+      eventDate: true,
+      winnerTeamId: true,
+      galleryImage: { select: { imageUrl: true } },
+      teams: { select: { id: true, name: true } },
+      _count: {
+        select: {
+          participants: true,
+          matches: true,
+          participationApplies: true,
+        },
+      },
     },
   });
 
-  const recruitingCount = events.filter((event) => event.status === "RECRUITING").length;
-  const completedCount = events.filter((event) => event.status === "COMPLETED").length;
+  const statusCount = new Map(statusGroups.map((group) => [group.status, group._count._all]));
+  const recruitingCount = statusCount.get("RECRUITING") ?? 0;
+  const completedCount = statusCount.get("COMPLETED") ?? 0;
 
   return (
     <main className="page-container event-progress-page event-user-page">
@@ -73,7 +111,7 @@ export default async function EventProgressPage() {
       <section className="event-user-summary-grid">
         <div className="event-user-summary-card">
           <span>전체 이벤트</span>
-          <strong>{events.length}개</strong>
+          <strong>{totalCount}개</strong>
         </div>
         <div className="event-user-summary-card">
           <span>모집중</span>
@@ -91,7 +129,7 @@ export default async function EventProgressPage() {
         <div className="event-progress-list event-progress-list--wide">
           {events.map((event) => {
             const thumbnail = getGalleryThumbnailUrl(event.galleryImage?.imageUrl);
-            const totalApplications = event.participationApplies.length;
+            const totalApplications = event._count.participationApplies;
             const winnerTeam = event.winnerTeamId
               ? event.teams.find((team) => team.id === event.winnerTeamId)
               : null;
@@ -148,7 +186,7 @@ export default async function EventProgressPage() {
 
                     <div>
                       <span>참가자</span>
-                      <strong>{event.participants.length}명</strong>
+                      <strong>{event._count.participants}명</strong>
                     </div>
 
                     <div>
@@ -158,7 +196,7 @@ export default async function EventProgressPage() {
 
                     <div>
                       <span>경기</span>
-                      <strong>{event.matches.length}경기</strong>
+                      <strong>{event._count.matches}경기</strong>
                     </div>
                   </div>
 
@@ -174,6 +212,11 @@ export default async function EventProgressPage() {
           })}
         </div>
       )}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        basePath="/progress/event"
+      />
     </main>
   );
 }

@@ -134,7 +134,7 @@ export default function SeasonParticipationPage() {
   }, []);
 
   return (
-    <div className="page-container participation-detail">
+    <main className="page-container participation-detail">
       <div className="page-header">
         <h1 className="page-title">시즌내전 참가</h1>
         <p className="page-description">
@@ -190,7 +190,7 @@ export default function SeasonParticipationPage() {
           </button>
         </div>
       ) : null}
-    </div>
+    </main>
   );
 }
 

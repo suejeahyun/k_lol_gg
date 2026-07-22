@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import QRCode from "qrcode";
+import { useCallback, useEffect, useState } from "react";
 
 type TwoFactorStatus = {
   ok: boolean;
@@ -49,11 +50,6 @@ function formatDate(value?: string | null) {
   }
 }
 
-function buildQrImageUrl(otpauthUrl?: string) {
-  if (!otpauthUrl) return null;
-  return `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(otpauthUrl)}`;
-}
-
 async function readJson<T>(response: Response): Promise<T> {
   const data = (await response.json().catch(() => ({}))) as T;
   if (!response.ok) {
@@ -71,8 +67,7 @@ export default function AdminSecurityTwoFactorClient() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  const qrImageUrl = useMemo(() => buildQrImageUrl(setup?.otpauthUrl), [setup?.otpauthUrl]);
+  const [qrImageUrl, setQrImageUrl] = useState<string | null>(null);
 
   const loadStatus = useCallback(async () => {
     setError(null);
@@ -84,6 +79,35 @@ export default function AdminSecurityTwoFactorClient() {
   useEffect(() => {
     loadStatus().catch((err) => setError(err instanceof Error ? err.message : "2단계 인증 상태를 불러오지 못했습니다."));
   }, [loadStatus]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const otpauthUrl = setup?.otpauthUrl;
+
+    if (!otpauthUrl) {
+      setQrImageUrl(null);
+      return;
+    }
+
+    QRCode.toDataURL(otpauthUrl, {
+      width: 220,
+      margin: 1,
+      errorCorrectionLevel: "M",
+    })
+      .then((dataUrl) => {
+        if (!cancelled) setQrImageUrl(dataUrl);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setQrImageUrl(null);
+          setError("QR 코드를 생성하지 못했습니다. 아래 설정 키를 직접 입력해주세요.");
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [setup?.otpauthUrl]);
 
   async function startSetup() {
     setLoading(true);
@@ -123,8 +147,7 @@ export default function AdminSecurityTwoFactorClient() {
       await readJson(response);
       setCode("");
       setSetup(null);
-      await loadStatus();
-      setMessage("2단계 인증이 활성화되었습니다. 다음 로그인부터 인증코드가 필요합니다.");
+      window.location.assign("/admin/login?security=2fa-enabled");
     } catch (err) {
       setError(err instanceof Error ? err.message : "2단계 인증 활성화에 실패했습니다.");
     } finally {
@@ -154,8 +177,7 @@ export default function AdminSecurityTwoFactorClient() {
       await readJson(response);
       setDisableCode("");
       setSetup(null);
-      await loadStatus();
-      setMessage("2단계 인증이 해제되었습니다.");
+      window.location.assign("/admin/login?security=2fa-disabled");
     } catch (err) {
       setError(err instanceof Error ? err.message : "2단계 인증 해제에 실패했습니다.");
     } finally {
@@ -280,7 +302,7 @@ export default function AdminSecurityTwoFactorClient() {
                 <h3>6자리 코드 입력</h3>
                 <p>인증앱에 표시된 6자리 숫자를 입력한 뒤 등록을 완료합니다.</p>
                 <div className="actionRow">
-                  <input value={code} onChange={(event) => setCode(normalizeCode(event.target.value))} inputMode="numeric" autoComplete="one-time-code" placeholder="000000" className="codeInput" />
+                  <input aria-label="2단계 인증 코드" value={code} onChange={(event) => setCode(normalizeCode(event.target.value))} inputMode="numeric" autoComplete="one-time-code" placeholder="000000" className="codeInput" />
                   <button type="button" onClick={enableTwoFactor} disabled={loading || status?.enabled || code.length !== 6} className="confirmButton">
                     등록 완료
                   </button>
@@ -297,7 +319,7 @@ export default function AdminSecurityTwoFactorClient() {
           <p>휴대폰 교체 또는 인증앱 재등록이 필요한 경우에만 사용하세요. 해제 후에는 다시 등록해야 합니다.</p>
         </div>
         <div className="actionRow dangerRow">
-          <input value={disableCode} onChange={(event) => setDisableCode(normalizeCode(event.target.value))} inputMode="numeric" autoComplete="one-time-code" placeholder="현재 6자리 코드" className="codeInput" />
+          <input aria-label="현재 6자리 코드" value={disableCode} onChange={(event) => setDisableCode(normalizeCode(event.target.value))} inputMode="numeric" autoComplete="one-time-code" placeholder="현재 6자리 코드" className="codeInput" />
           <button type="button" onClick={disableTwoFactor} disabled={loading || !status?.enabled || disableCode.length !== 6} className="dangerButton">
             2단계 인증 해제
           </button>

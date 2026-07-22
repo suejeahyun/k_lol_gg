@@ -269,7 +269,13 @@ async function parseResponse<T>(response: Response): Promise<T | null> {
   try {
     return JSON.parse(text) as T;
   } catch (error) {
-    console.error("응답 JSON 파싱 실패:", error, text);
+    console.error("[MATCH_FORM_RESPONSE_PARSE_ERROR]", {
+      status: response.status,
+      statusText: response.statusText,
+      contentType: response.headers.get("content-type"),
+      responseBytes: new TextEncoder().encode(text).byteLength,
+      error,
+    });
     return null;
   }
 }
@@ -1455,6 +1461,7 @@ export default function MatchForm({
             }}
           >
             <select
+              aria-label="팀 밸런스 결과"
               className="match-form-select"
               value={selectedTeamBalanceDraftId}
               onChange={(event) => setSelectedTeamBalanceDraftId(event.target.value)}
@@ -1631,7 +1638,7 @@ export default function MatchForm({
                     </div>
 
                     <div className="match-autocomplete-cell">
-                      <input
+                      <input aria-label="플레이어 이름 검색"
                         value={participant.playerInput}
                         onFocus={() => setActivePlayerField(playerFieldKey)}
                         onChange={(e) => {
@@ -1733,7 +1740,7 @@ export default function MatchForm({
                         )}
 
                         <div style={{ flex: 1, minWidth: 0, position: "relative" }}>
-                          <input
+                          <input aria-label="챔피언 입력"
                             value={participant.championInput}
                             onFocus={() => setActiveChampionField(championFieldKey)}
                             onChange={(e) => {
@@ -1797,6 +1804,7 @@ export default function MatchForm({
 
                     <div>
                       <input
+                        aria-label={`${gameIndex + 1}세트 ${participantIndex + 1}번 참가자 킬`}
                         type="number"
                         min={0}
                         step={1}
@@ -1815,6 +1823,7 @@ export default function MatchForm({
 
                     <div>
                       <input
+                        aria-label={`${gameIndex + 1}세트 ${participantIndex + 1}번 참가자 데스`}
                         type="number"
                         min={0}
                         step={1}
@@ -1833,6 +1842,7 @@ export default function MatchForm({
 
                     <div>
                       <input
+                        aria-label={`${gameIndex + 1}세트 ${participantIndex + 1}번 참가자 어시스트`}
                         type="number"
                         min={0}
                         step={1}

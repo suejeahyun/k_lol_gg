@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma/client";
 import { calculateBalanceScore } from "@/lib/balance/tierScore";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { logServerError } from "@/lib/server/safe-log";
+import { readJsonObject } from "@/lib/http/json-body";
 
 type RouteProps = {
   params: Promise<{
@@ -19,6 +20,7 @@ type ParticipantInput = {
 };
 
 const POSITIONS: Position[] = ["TOP", "JGL", "MID", "ADC", "SUP"];
+const MAX_EVENT_PARTICIPANTS = 160;
 
 function isValidPosition(position: unknown): position is Position {
   return typeof position === "string" && POSITIONS.includes(position as Position);
@@ -32,14 +34,17 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
     const { eventId } = await params;
     const id = Number(eventId);
 
-    if (Number.isNaN(id)) {
+    if (!Number.isInteger(id) || id <= 0) {
       return NextResponse.json(
         { message: "이벤트 ID가 올바르지 않습니다." },
         { status: 400 }
       );
     }
 
-    const body = await req.json();
+    const body = await readJsonObject<Record<string, unknown>>(req);
+    if (!body) {
+      return NextResponse.json({ message: "올바른 JSON 요청 본문이 필요합니다." }, { status: 400 });
+    }
 
     const participants: ParticipantInput[] = Array.isArray(body.participants)
       ? body.participants
@@ -49,6 +54,13 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
       return NextResponse.json(
         { message: "참가자는 최소 10명 이상이어야 합니다." },
         { status: 400 }
+      );
+    }
+
+    if (participants.length > MAX_EVENT_PARTICIPANTS) {
+      return NextResponse.json(
+        { message: `참가자는 최대 ${MAX_EVENT_PARTICIPANTS}명까지 등록할 수 있습니다.` },
+        { status: 400 },
       );
     }
 
@@ -84,7 +96,7 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
       Number(participant.playerId)
     );
 
-    if (playerIds.some((playerId) => Number.isNaN(playerId) || playerId <= 0)) {
+    if (playerIds.some((playerId) => !Number.isInteger(playerId) || playerId <= 0)) {
       return NextResponse.json(
         { message: "플레이어 정보가 올바르지 않습니다." },
         { status: 400 }
@@ -138,6 +150,13 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
     const playerMap = new Map(players.map((player) => [player.id, player]));
 
     const updatedEvent = await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT "id" FROM "EventMatch" WHERE "id" = ${id} FOR UPDATE`;
+
+      const currentTeamCount = await tx.eventTeam.count({ where: { eventId: id } });
+      if (currentTeamCount > 0) {
+        throw new Error("EVENT_TEAMS_EXIST");
+      }
+
       await tx.eventParticipant.deleteMany({
         where: {
           eventId: id,
@@ -203,6 +222,13 @@ export async function PUT(req: NextRequest, { params }: RouteProps) {
 
     return NextResponse.json(updatedEvent);
   } catch (error) {
+    if (error instanceof Error && error.message === "EVENT_TEAMS_EXIST") {
+      return NextResponse.json(
+        { message: "이미 팀이 생성된 이벤트는 참가자를 수정할 수 없습니다." },
+        { status: 409 },
+      );
+    }
+
     logServerError("[EVENT_PARTICIPANTS_PUT_ERROR]", error);
 
     return NextResponse.json(

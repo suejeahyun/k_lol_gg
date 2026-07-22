@@ -30,26 +30,26 @@
   --dm-radius-lg: 18px;
   --dm-shadow: 0 22px 60px rgba(0, 0, 0, 0.36);
   --dm-shadow-soft: 0 14px 34px rgba(0, 0, 0, 0.24);
-  --dm-img-page: url("/images/theme/dark-modern/klol-global-stage-v1.png");
-  --dm-img-page-crystal: url("/images/theme/dark-modern/klol-global-stage-v1.png");
+  --dm-img-page: url("/images/theme/dark-modern/klol-global-stage-v1.webp");
+  --dm-img-page-crystal: url("/images/theme/dark-modern/klol-global-stage-v1.webp");
   --dm-img-grid:
     linear-gradient(rgba(101, 174, 255, 0.045) 1px, transparent 1px),
     linear-gradient(90deg, rgba(101, 174, 255, 0.045) 1px, transparent 1px);
-  --dm-img-hero: url("/images/theme/dark-modern/pro-hero-trophy-v1.png");
-  --dm-img-header: url("/images/theme/dark-modern/pro-header-crystal-v1.png");
-  --dm-img-ranking: url("/images/theme/dark-modern/pro-header-crystal-v1.png");
-  --dm-img-match: url("/images/theme/dark-modern/pro-header-crystal-v1.png");
-  --dm-img-profile: url("/images/theme/dark-modern/pro-header-crystal-v1.png");
-  --dm-img-scrim: url("/images/theme/dark-modern/pro-live-stage-v1.png");
-  --dm-img-auction: url("/images/theme/dark-modern/pro-live-stage-v1.png");
-  --dm-img-admin: url("/images/theme/dark-modern/pro-admin-control-v1.png");
-  --dm-img-auth: url("/images/theme/dark-modern/dark-trophy.png");
+  --dm-img-hero: url("/images/theme/dark-modern/pro-hero-trophy-v1.webp");
+  --dm-img-header: url("/images/theme/dark-modern/pro-header-crystal-v1.webp");
+  --dm-img-ranking: url("/images/theme/dark-modern/pro-header-crystal-v1.webp");
+  --dm-img-match: url("/images/theme/dark-modern/pro-header-crystal-v1.webp");
+  --dm-img-profile: url("/images/theme/dark-modern/pro-header-crystal-v1.webp");
+  --dm-img-scrim: url("/images/theme/dark-modern/pro-live-stage-v1.webp");
+  --dm-img-auction: url("/images/theme/dark-modern/pro-live-stage-v1.webp");
+  --dm-img-admin: url("/images/theme/dark-modern/pro-admin-control-v1.webp");
+  --dm-img-auth: url("/images/theme/dark-modern/dark-trophy.webp");
   --dm-global-backdrop:
     linear-gradient(180deg, rgba(2, 6, 17, 0.12), rgba(2, 6, 17, 0.58) 62%, #020611 100%),
     radial-gradient(circle at 12% 18%, rgba(47, 125, 255, 0.26), transparent 30%),
     radial-gradient(circle at 89% 18%, rgba(39, 200, 255, 0.18), transparent 28%),
     linear-gradient(90deg, rgba(47, 125, 255, 0.12), transparent 24%, transparent 76%, rgba(39, 200, 255, 0.12)),
-    url("/images/theme/dark-modern/klol-global-stage-v1.png"),
+    url("/images/theme/dark-modern/klol-global-stage-v1.webp"),
     linear-gradient(180deg, #050914, #020611);
   --dm-global-backdrop-size: cover, cover, cover, cover, cover, cover;
   --dm-global-backdrop-position: center, center, center, center, center top, center;
@@ -2331,7 +2331,7 @@ tbody tr:hover,
 }
 
 .theme-switcher__option[aria-pressed="true"] {
-  color: #ffffff;
+  color: #03111d;
   background: linear-gradient(135deg, var(--dm-blue), var(--dm-cyan));
   box-shadow: 0 0 18px color-mix(in srgb, var(--dm-blue) 34%, transparent);
 }
@@ -2353,10 +2353,10 @@ tbody tr:hover,
 }
 
 html[data-theme="dark-modern"] {
-  --dm-img-page: url("/images/theme/dark-modern/klol-global-stage-v1.png");
-  --dm-img-page-crystal: url("/images/theme/dark-modern/klol-global-stage-v1.png");
-  --dm-img-hero: url("/images/theme/dark-modern/pro-hero-trophy-v1.png");
-  --dm-img-header: url("/images/theme/dark-modern/pro-header-crystal-v1.png");
+  --dm-img-page: url("/images/theme/dark-modern/klol-global-stage-v1.webp");
+  --dm-img-page-crystal: url("/images/theme/dark-modern/klol-global-stage-v1.webp");
+  --dm-img-hero: url("/images/theme/dark-modern/pro-hero-trophy-v1.webp");
+  --dm-img-header: url("/images/theme/dark-modern/pro-header-crystal-v1.webp");
   --dm-blue: #2f7dff;
   --dm-blue-2: #4aa3ff;
   --dm-cyan: #27c8ff;
@@ -2606,7 +2606,7 @@ html[data-theme="black-gold"] .admin-section-kicker {
   padding: 22px;
   background:
     linear-gradient(180deg, rgba(2, 6, 17, 0.72), rgba(2, 6, 17, 0.94)),
-    url("/images/theme/dark-modern/pro-mobile-crystal-v1.png") center / cover;
+    url("/images/theme/dark-modern/pro-mobile-crystal-v1.webp") center / cover;
   backdrop-filter: blur(14px);
 }
 
@@ -2684,7 +2684,7 @@ html[data-theme] .klol-app-root {
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--dm-bg-deep) 86%, transparent), var(--dm-bg-deep)),
     radial-gradient(circle at 18% 0%, color-mix(in srgb, var(--dm-blue) 18%, transparent), transparent 32%),
-    url("/images/theme/dark-modern/pro-mobile-crystal-v1.png") center top / cover fixed !important;
+    url("/images/theme/dark-modern/pro-mobile-crystal-v1.webp") center top / cover fixed !important;
   color: var(--dm-text) !important;
 }
 
@@ -4315,16 +4315,16 @@ table {
 
 /* Generated visual system: project-local AI assets applied across user/admin/mobile pages. */
 :root {
-  --klol-gen-global: url("/images/generated/klol-global-bg.png");
-  --klol-gen-banner: url("/images/generated/klol-page-banner-bg.png");
-  --klol-gen-card: url("/images/generated/klol-card-texture.png");
-  --klol-gen-section: url("/images/generated/klol-section-texture.png");
-  --klol-gen-mobile: url("/images/generated/klol-mobile-app-bg.png");
-  --klol-gen-top3: url("/images/generated/klol-top3-arena-bg.png");
-  --klol-gen-admin: url("/images/generated/klol-admin-ops-bg.png");
-  --klol-gen-balance: url("/images/generated/klol-team-balance-bg.png");
-  --klol-gen-match: url("/images/generated/klol-match-analysis-bg.png");
-  --klol-gen-auction: url("/images/generated/klol-destruction-auction-bg.png");
+  --klol-gen-global: url("/images/generated/klol-global-bg.webp");
+  --klol-gen-banner: url("/images/generated/klol-page-banner-bg.webp");
+  --klol-gen-card: url("/images/generated/klol-card-texture.webp");
+  --klol-gen-section: url("/images/generated/klol-section-texture.webp");
+  --klol-gen-mobile: url("/images/generated/klol-mobile-app-bg.webp");
+  --klol-gen-top3: url("/images/generated/klol-top3-arena-bg.webp");
+  --klol-gen-admin: url("/images/generated/klol-admin-ops-bg.webp");
+  --klol-gen-balance: url("/images/generated/klol-team-balance-bg.webp");
+  --klol-gen-match: url("/images/generated/klol-match-analysis-bg.webp");
+  --klol-gen-auction: url("/images/generated/klol-destruction-auction-bg.webp");
 }
 
 html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]),
@@ -4968,8 +4968,8 @@ html[data-theme="dark-modern"] .admin-log-section {
 /* Purpose-based visual QA pass: home safe background, TOP3 single-emblem layout,
    BLUE/RED balance stage, and destruction auction card-draw stage. */
 :root {
-  --klol-gen-team-versus: url("/images/generated/klol-team-balance-versus-bg.png");
-  --klol-home-hero-safe: url("/images/theme/dark-modern/home-hero-structured-v1.png");
+  --klol-gen-team-versus: url("/images/generated/klol-team-balance-versus-bg.webp");
+  --klol-home-hero-safe: url("/images/theme/dark-modern/home-hero-structured-v1.webp");
 }
 
 html:not([data-theme="neon-cyber"]):not([data-theme="black-gold"]) .home-dark-showcase,
@@ -7264,7 +7264,15 @@ html[data-theme="dark-modern"] .home-dark-showcase::before {
 }
 
 @media (min-width: 981px) {
+  .home-top3-mode-panel .home-top3-ace__orbit,
+  .home-top3-mode-panel .home-top3-ace__glow {
+    position: absolute !important;
+  }
+
   .home-top3-mode-panel .home-top3-ace {
+    grid-template-rows: repeat(7, auto) !important;
+    align-content: center !important;
+    row-gap: 6px !important;
     height: clamp(440px, 24vw, 500px) !important;
     min-height: clamp(360px, 20vw, 460px) !important;
     max-height: 500px !important;
@@ -7287,6 +7295,15 @@ html[data-theme="dark-modern"] .home-dark-showcase::before {
   .home-top3-mode-panel .home-top3-ace__visual {
     width: clamp(142px, 8vw, 190px) !important;
     height: clamp(142px, 8vw, 190px) !important;
+    margin-bottom: 2px !important;
+  }
+
+  .home-top3-mode-panel .home-top3-ace__rankline,
+  .home-top3-mode-panel .home-top3-ace__name,
+  .home-top3-mode-panel .home-top3-ace__nickname,
+  .home-top3-mode-panel .home-top3-scoreline,
+  .home-top3-mode-panel .home-top3-meter {
+    margin-top: 0 !important;
   }
 }
 
@@ -7295,4 +7312,102 @@ html[data-theme="dark-modern"] .home-dark-showcase::before {
     width: 100% !important;
     max-width: 100vw !important;
   }
+}
+
+/* Keep the desktop shell usable immediately above the mobile-app breakpoint. */
+@media (min-width: 821px) and (max-width: 1024px) {
+  :root {
+    --dm-sidebar: 220px;
+  }
+
+  .app-shell--admin .app-body,
+  .app-shell--user .app-body {
+    padding-left: 0 !important;
+  }
+
+  .app-shell--admin .app-sidebar--admin,
+  .app-shell--user .app-sidebar--user {
+    position: sticky !important;
+    top: 0 !important;
+    display: flex !important;
+    width: var(--dm-sidebar) !important;
+    min-width: var(--dm-sidebar) !important;
+    height: calc(100vh - 64px) !important;
+    overflow: hidden !important;
+  }
+
+  .app-shell--admin .app-sidebar__nav,
+  .app-shell--user .app-sidebar__nav {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+
+  .app-shell--admin .app-content,
+  .app-shell--user .app-content {
+    width: calc(100% - var(--dm-sidebar)) !important;
+    max-width: calc(100vw - var(--dm-sidebar)) !important;
+  }
+
+  .page-container,
+  .page-shell,
+  .admin-page,
+  .home-page,
+  .account-page,
+  .progress-page,
+  .event-progress-page,
+  .destruction-progress-page,
+  .participation-page,
+  .matches-page-v2,
+  .players-page-v2,
+  .ranking-page,
+  .recruit-page,
+  .ai-page,
+  .kakao-search-page,
+  .notice-page,
+  .gallery-page {
+    width: min(100%, calc(100vw - var(--dm-sidebar) - 40px)) !important;
+  }
+
+  .theme-switcher:not(.theme-switcher--compact) {
+    max-width: none;
+    overflow: visible;
+  }
+}
+
+@media (min-width: 821px) and (max-width: 900px) {
+  .app-topbar__divider,
+  .app-topbar__title {
+    display: none !important;
+  }
+
+  .app-topbar__search input {
+    width: min(180px, 22vw) !important;
+  }
+}
+
+@media (min-width: 821px) and (max-width: 1180px) {
+  .theme-switcher:not(.theme-switcher--compact) {
+    max-width: none;
+    overflow: visible;
+  }
+}
+
+/* Essential task guidance must remain visible on lookup and recovery forms. */
+.kakao-search-page__desc,
+.auth-description {
+  display: block !important;
+}
+
+/* A consistent keyboard focus indicator must survive component-level outline resets. */
+:where(
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  summary,
+  [tabindex]:not([tabindex="-1"])
+):focus-visible {
+  outline: 3px solid #f8fafc !important;
+  outline-offset: 3px !important;
 }

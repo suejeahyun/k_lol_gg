@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import SafeGalleryImage from "@/components/SafeGalleryImage";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -15,6 +16,15 @@ type PageProps = {
   }>;
 };
 
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { eventId } = await params;
+  return {
+    title: "이벤트 내전 상세",
+    description: "이벤트 내전의 참가자, 팀 구성, 대진과 결과를 확인하세요.",
+    alternates: { canonical: `/progress/event/${eventId}` },
+  };
+}
+
 function formatDate(date: Date | null) {
   if (!date) return "-";
 
@@ -22,6 +32,7 @@ function formatDate(date: Date | null) {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
+    timeZone: "Asia/Seoul",
   });
 }
 
@@ -69,40 +80,72 @@ export default async function EventProgressDetailPage({ params }: PageProps) {
   const { eventId } = await params;
   const id = Number(eventId);
 
-  if (Number.isNaN(id)) {
+  if (!Number.isInteger(id) || id <= 0) {
     notFound();
   }
 
   const event = await prisma.eventMatch.findUnique({
     where: { id },
-    include: {
-      galleryImage: true,
-      participationApplies: {
-        include: {
-          player: true,
+    select: {
+      id: true,
+      title: true,
+      status: true,
+      mode: true,
+      eventDate: true,
+      winnerTeamId: true,
+      mvpPlayerId: true,
+      galleryImage: {
+        select: {
+          title: true,
+          imageUrl: true,
         },
+      },
+      participationApplies: {
+        select: { status: true },
         orderBy: { createdAt: "asc" },
       },
       participants: {
-        include: {
-          player: true,
-          team: true,
+        select: {
+          playerId: true,
+          player: {
+            select: {
+              nickname: true,
+              tag: true,
+            },
+          },
         },
         orderBy: { id: "asc" },
       },
       teams: {
-        include: {
+        select: {
+          id: true,
+          name: true,
           members: {
-            include: { player: true },
+            select: {
+              position: true,
+              player: {
+                select: {
+                  name: true,
+                  nickname: true,
+                  tag: true,
+                },
+              },
+            },
             orderBy: { id: "asc" },
           },
         },
         orderBy: [{ seed: "asc" }, { id: "asc" }],
       },
       matches: {
-        include: {
-          teamA: true,
-          teamB: true,
+        select: {
+          id: true,
+          stage: true,
+          round: true,
+          teamAId: true,
+          teamBId: true,
+          winnerTeamId: true,
+          teamA: { select: { name: true } },
+          teamB: { select: { name: true } },
         },
         orderBy: [{ stage: "asc" }, { round: "asc" }],
       },

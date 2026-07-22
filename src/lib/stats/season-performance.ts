@@ -29,6 +29,10 @@ type SeasonStatsValidateCache = {
   checkedAt: string;
 };
 
+type DistinctPlayerCountRow = {
+  count: number;
+};
+
 function isSeasonStatsValidateCache(value: unknown, seasonId: number): value is SeasonStatsValidateCache {
   if (!value || typeof value !== "object") return false;
   const data = value as Partial<SeasonStatsValidateCache>;
@@ -64,7 +68,7 @@ export async function ensureSeasonStats(seasonId: number) {
     return;
   }
 
-  const [statCount, gameCount, participantCount, statGamesAggregate, zeroParticipationCount, distinctPlayers] = await Promise.all([
+  const [statCount, gameCount, participantCount, statGamesAggregate, zeroParticipationCount, distinctPlayerCounts] = await Promise.all([
     prisma.playerSeasonStat.count({ where: { seasonId } }),
     prisma.matchGame.count({ where: { series: { seasonId } } }),
     prisma.matchParticipant.count({ where: { game: { series: { seasonId } } } }),
@@ -79,15 +83,17 @@ export async function ensureSeasonStats(seasonId: number) {
         participationCount: { lte: 0 },
       },
     }),
-    prisma.matchParticipant.findMany({
-      where: { game: { series: { seasonId } } },
-      distinct: ["playerId"],
-      select: { playerId: true },
-    }),
+    prisma.$queryRaw<DistinctPlayerCountRow[]>`
+      SELECT COUNT(DISTINCT participant."playerId")::int AS "count"
+      FROM "MatchParticipant" AS participant
+      INNER JOIN "MatchGame" AS game ON game."id" = participant."gameId"
+      INNER JOIN "MatchSeries" AS series ON series."id" = game."seriesId"
+      WHERE series."seasonId" = ${seasonId}
+    `,
   ]);
 
   const statTotalGames = statGamesAggregate._sum.totalGames ?? 0;
-  const expectedPlayerStatCount = distinctPlayers.length;
+  const expectedPlayerStatCount = distinctPlayerCounts[0]?.count ?? 0;
   const isInvalid =
     gameCount > 0 &&
     (statCount === 0 ||
@@ -151,14 +157,22 @@ export const getCachedSeasonRankingPlayers = unstable_cache(
 );
 
 export async function getCurrentAndPreviousSeason() {
-  const seasons = await prisma.season.findMany({
-    orderBy: [{ isActive: "desc" }, { createdAt: "desc" }],
+  const activeSeason = await prisma.season.findFirst({
+    where: { isActive: true },
+    orderBy: { createdAt: "desc" },
     select: { id: true, name: true, isActive: true, createdAt: true },
   });
 
-  const currentSeason = seasons.find((season) => season.isActive) ?? seasons[0] ?? null;
+  const currentSeason = activeSeason ?? await prisma.season.findFirst({
+    orderBy: { createdAt: "desc" },
+    select: { id: true, name: true, isActive: true, createdAt: true },
+  });
   const previousSeason = currentSeason
-    ? seasons.find((season) => season.id !== currentSeason.id) ?? null
+    ? await prisma.season.findFirst({
+        where: { id: { not: currentSeason.id } },
+        orderBy: { createdAt: "desc" },
+        select: { id: true, name: true, isActive: true, createdAt: true },
+      })
     : null;
 
   return { currentSeason, previousSeason };

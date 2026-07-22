@@ -80,8 +80,8 @@ async function loadAppHomePublicData() {
     recentMatches,
     topStats,
     recentMvp,
-    activeEvents,
-    activeDestructions,
+    recentEvents,
+    recentDestructions,
   ] = await Promise.all([
     prisma.recruitParty.findMany({
       where: { status: "IN_PROGRESS" },
@@ -189,11 +189,11 @@ async function loadAppHomePublicData() {
     })),
     topStats,
     recentMvp,
-    activeEvents: activeEvents.map((event) => ({
+    recentEvents: recentEvents.map((event) => ({
       ...event,
       eventDate: event.eventDate.toISOString(),
     })),
-    activeDestructions: activeDestructions.map((tournament) => ({
+    recentDestructions: recentDestructions.map((tournament) => ({
       ...tournament,
       startDate: tournament.startDate?.toISOString() ?? null,
     })),

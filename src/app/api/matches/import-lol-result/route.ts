@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
-import sharp from "sharp";
+import sharp, { type Sharp } from "sharp";
 import Tesseract from "tesseract.js";
 import path from "node:path";
 import { mkdir, writeFile } from "node:fs/promises";
@@ -34,6 +34,17 @@ const NORMALIZED_SCOREBOARD_WIDTH = 1048;
 const NORMALIZED_SCOREBOARD_HEIGHT = 622;
 const NORMALIZED_TOP_TEAM_HEADER_Y = 157;
 const NORMALIZED_RESULT_TITLE_Y = 8;
+const MAX_UPLOAD_BYTES = 12 * 1024 * 1024;
+const MAX_MULTIPART_BYTES = MAX_UPLOAD_BYTES + 1024 * 1024;
+const MAX_INPUT_PIXELS = 40_000_000;
+const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+
+function openImage(buffer: Buffer) {
+  return sharp(buffer, {
+    failOn: "warning",
+    limitInputPixels: MAX_INPUT_PIXELS,
+  });
+}
 
 function clampRect(rect: Rect, imageWidth: number, imageHeight: number): Rect {
   const left = Math.max(0, Math.min(imageWidth - 1, Math.round(rect.left)));
@@ -51,7 +62,7 @@ function clampRect(rect: Rect, imageWidth: number, imageHeight: number): Rect {
 }
 
 async function cropBuffer(
-  image: sharp.Sharp,
+  image: Sharp,
   rect: Rect,
   imageWidth: number,
   imageHeight: number,
@@ -238,7 +249,7 @@ function isParsedKda(value: ReturnType<typeof parseKda>) {
 }
 
 async function preprocessKdaForOcr(buffer: Buffer) {
-  return sharp(buffer)
+  return openImage(buffer)
     .grayscale()
     .resize({
       width: 820,
@@ -254,7 +265,7 @@ async function preprocessKdaForOcr(buffer: Buffer) {
 }
 
 async function preprocessKdaUpscaledForOcr(buffer: Buffer) {
-  return sharp(buffer)
+  return openImage(buffer)
     .grayscale()
     .resize({
       width: 1180,
@@ -272,13 +283,13 @@ async function preprocessKdaUpscaledForOcr(buffer: Buffer) {
 
 async function preprocessKdaYellowMaskForOcr(buffer: Buffer) {
   const scale = 8;
-  const metadata = await sharp(buffer).metadata();
+  const metadata = await openImage(buffer).metadata();
   const baseWidth = Math.max(1, metadata.width ?? 130);
   const baseHeight = Math.max(1, metadata.height ?? 34);
   const width = baseWidth * scale;
   const height = baseHeight * scale;
 
-  const rgb = await sharp(buffer)
+  const rgb = await openImage(buffer)
     .resize(width, height, { fit: "fill", kernel: sharp.kernel.lanczos3 })
     .removeAlpha()
     .raw()
@@ -395,7 +406,7 @@ async function detectResultTitleTop(
     const cropTop = 0;
     const cropWidth = Math.round(imageWidth * 0.32);
     const cropHeight = Math.round(imageHeight * 0.24);
-    const { data, info } = await sharp(imageBuffer)
+    const { data, info } = await openImage(imageBuffer)
       .rotate()
       .extract(
         clampRect(
@@ -479,7 +490,7 @@ async function detectTeamHeaderAnchors(
       imageHeight,
     );
 
-    const { data, info } = await sharp(imageBuffer)
+    const { data, info } = await openImage(imageBuffer)
       .rotate()
       .extract(crop)
       .raw()
@@ -580,7 +591,7 @@ async function extractRectWithPadding(
   outputWidth: number,
   outputHeight: number,
 ) {
-  const source = sharp(imageBuffer).rotate();
+  const source = openImage(imageBuffer).rotate();
   const metadata = await source.metadata();
   const sourceWidth = metadata.width ?? 0;
   const sourceHeight = metadata.height ?? 0;
@@ -625,7 +636,7 @@ async function extractRectWithPadding(
       .toBuffer();
   }
 
-  const extracted = await sharp(imageBuffer)
+  const extracted = await openImage(imageBuffer)
     .rotate()
     .extract({
       left: sourceLeft,
@@ -653,7 +664,7 @@ async function normalizeScoreboardImage(
   imageBuffer: Buffer,
   log: (message: string, extra?: unknown) => void,
 ) {
-  const original = sharp(imageBuffer).rotate();
+  const original = openImage(imageBuffer).rotate();
   const metadata = await original.metadata();
   const originalWidth = metadata.width ?? 0;
   const originalHeight = metadata.height ?? 0;
@@ -821,7 +832,7 @@ async function saveDebugImage(filePath: string, buffer: Buffer) {
 }
 
 async function preprocessForOcr(buffer: Buffer) {
-  return sharp(buffer)
+  return openImage(buffer)
     .grayscale()
     .normalize()
     .resize({ width: 420, withoutEnlargement: false })
@@ -832,6 +843,14 @@ async function preprocessForOcr(buffer: Buffer) {
 export async function POST(req: Request) {
   const rejected = await rejectIfNotAdmin();
   if (rejected) return rejected;
+
+  const contentLength = Number(req.headers.get("content-length"));
+  if (Number.isFinite(contentLength) && contentLength > MAX_MULTIPART_BYTES) {
+    return NextResponse.json(
+      { message: "이미지 크기는 12MB 이하여야 합니다." },
+      { status: 413 },
+    );
+  }
 
   const requestId = Math.random().toString(36).slice(2, 8);
   const log = (message: string, extra?: unknown) => {
@@ -855,14 +874,47 @@ export async function POST(req: Request) {
       );
     }
 
+    if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+      return NextResponse.json(
+        { message: "PNG, JPG 또는 WebP 이미지만 업로드할 수 있습니다." },
+        { status: 415 },
+      );
+    }
+
+    if (file.size <= 0) {
+      return NextResponse.json(
+        { message: "비어 있는 이미지는 업로드할 수 없습니다." },
+        { status: 400 },
+      );
+    }
+
+    if (file.size > MAX_UPLOAD_BYTES) {
+      return NextResponse.json(
+        { message: "이미지 크기는 12MB 이하여야 합니다." },
+        { status: 413 },
+      );
+    }
+
     const originalImageBuffer = Buffer.from(await file.arrayBuffer());
     log("이미지 버퍼 로드", { bytes: originalImageBuffer.length });
+
+    try {
+      const uploadMetadata = await openImage(originalImageBuffer).metadata();
+      if (!uploadMetadata.width || !uploadMetadata.height) {
+        throw new Error("Missing image dimensions");
+      }
+    } catch {
+      return NextResponse.json(
+        { message: "유효하지 않거나 해상도가 너무 큰 이미지입니다." },
+        { status: 400 },
+      );
+    }
 
     const imageBuffer = await normalizeScoreboardImage(
       originalImageBuffer,
       log,
     );
-    const baseImage = sharp(imageBuffer).rotate();
+    const baseImage = openImage(imageBuffer).rotate();
     const metadata = await baseImage.metadata();
     const imageWidth = metadata.width ?? 0;
     const imageHeight = metadata.height ?? 0;

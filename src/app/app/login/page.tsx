@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AppLoginForm } from "@/components/app-mobile/AppLoginForm";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "모바일 로그인",
+  description: "K-LOL.GG 모바일 계정에 로그인합니다.",
+  robots: { index: false, follow: false },
+};
 
 type AppLoginPageProps = {
   searchParams?: Promise<{

@@ -253,7 +253,7 @@ export default function DestructionParticipantReplacementManager({
                 <strong>{replacement.teamName}</strong>{" · "}
                 {replacement.outgoingPlayerName} ({replacement.outgoingPosition}) → {replacement.incomingPlayerName} ({replacement.incomingPosition})
                 <br />
-                <span>{new Date(replacement.effectiveAt).toLocaleString("ko-KR")} · {replacement.reason}</span>
+                <span>{new Date(replacement.effectiveAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })} · {replacement.reason}</span>
               </div>
             ))}
           </div>

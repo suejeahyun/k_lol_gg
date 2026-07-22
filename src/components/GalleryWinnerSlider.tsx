@@ -34,17 +34,20 @@ export default function GalleryWinnerSlider({
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
+  const [allowReducedMotionPlayback, setAllowReducedMotionPlayback] = useState(false);
   const prefersReducedMotion = usePrefersReducedMotion();
+  const autoPlayActive =
+    isPlaying && (!prefersReducedMotion || allowReducedMotionPlayback);
 
   useEffect(() => {
-    if (slideItems.length <= 1 || !isPlaying || prefersReducedMotion) return;
+    if (slideItems.length <= 1 || !autoPlayActive) return;
 
     const timer = window.setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % slideItems.length);
     }, 3500);
 
     return () => window.clearInterval(timer);
-  }, [isPlaying, prefersReducedMotion, slideItems.length]);
+  }, [autoPlayActive, slideItems.length]);
 
   if (slideItems.length === 0) {
     return (
@@ -99,10 +102,18 @@ export default function GalleryWinnerSlider({
           <button
             type="button"
             className="winner-slider__pause"
-            onClick={() => setIsPlaying((playing) => !playing)}
-            aria-label={isPlaying ? "우승팀 이미지 자동 넘김 일시정지" : "우승팀 이미지 자동 넘김 재생"}
+            onClick={() => {
+              if (autoPlayActive) {
+                setIsPlaying(false);
+                return;
+              }
+
+              setAllowReducedMotionPlayback(true);
+              setIsPlaying(true);
+            }}
+            aria-label={autoPlayActive ? "우승팀 이미지 자동 넘김 일시정지" : "우승팀 이미지 자동 넘김 재생"}
           >
-            {isPlaying ? "일시정지" : "재생"}
+            {autoPlayActive ? "일시정지" : "재생"}
           </button>
         </div>
       )}

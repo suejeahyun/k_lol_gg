@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { prisma } from "@/lib/prisma/client";
 import { requireSuperAdminRequest } from "@/lib/auth/requireAdmin";
-import { createCsvResponse } from "@/lib/csv";
+import { createCsvStreamResponse } from "@/lib/csv";
 import { getRequestAuditFields, writeAdminLog } from "@/lib/admin-log";
 
 export async function GET(req: Request) {
@@ -10,11 +10,6 @@ export async function GET(req: Request) {
   if (!admin) {
     return Response.json({ message: "최고 관리자 권한이 필요합니다." }, { status: 403 });
   }
-
-  const players = await prisma.player.findMany({
-    orderBy: { id: "asc" },
-    include: { userAccount: { select: { userId: true, status: true } } },
-  });
 
   await writeAdminLog({
     action: "BACKUP_CSV_DOWNLOAD",
@@ -27,19 +22,46 @@ export async function GET(req: Request) {
     ...getRequestAuditFields(req),
   });
 
-  return createCsvResponse(
+  async function* rows() {
+    let cursorId: number | undefined;
+    while (true) {
+      const players = await prisma.player.findMany({
+        orderBy: { id: "asc" },
+        take: 500,
+        ...(cursorId ? { cursor: { id: cursorId }, skip: 1 } : {}),
+        select: {
+          id: true,
+          name: true,
+          nickname: true,
+          tag: true,
+          currentTier: true,
+          peakTier: true,
+          createdAt: true,
+          userAccount: { select: { userId: true, status: true } },
+        },
+      });
+      for (const player of players) {
+        yield [
+          player.id,
+          player.name,
+          player.nickname,
+          player.tag,
+          player.currentTier ?? "",
+          player.peakTier ?? "",
+          player.userAccount?.userId ?? "",
+          player.userAccount?.status ?? "",
+          player.createdAt.toISOString(),
+        ];
+      }
+      if (players.length < 500) break;
+      cursorId = players.at(-1)?.id;
+      if (!cursorId) break;
+    }
+  }
+
+  return createCsvStreamResponse(
     `players-${new Date().toISOString().slice(0, 10)}.csv`,
     ["id", "name", "nickname", "tag", "currentTier", "peakTier", "userId", "userStatus", "createdAt"],
-    players.map((player) => [
-      player.id,
-      player.name,
-      player.nickname,
-      player.tag,
-      player.currentTier ?? "",
-      player.peakTier ?? "",
-      player.userAccount?.userId ?? "",
-      player.userAccount?.status ?? "",
-      player.createdAt.toISOString(),
-    ]),
+    rows(),
   );
 }

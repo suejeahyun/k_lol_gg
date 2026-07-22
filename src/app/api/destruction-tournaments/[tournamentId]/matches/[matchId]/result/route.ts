@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { logServerError } from "@/lib/server/safe-log";
+import { readJsonObject } from "@/lib/http/json-body";
 
 type RouteProps = {
   params: Promise<{
@@ -22,14 +23,22 @@ export async function PATCH(req: NextRequest, { params }: RouteProps) {
     const parsedTournamentId = Number(tournamentId);
     const parsedMatchId = Number(matchId);
 
-    if (Number.isNaN(parsedTournamentId) || Number.isNaN(parsedMatchId)) {
+    if (
+      !Number.isInteger(parsedTournamentId) ||
+      parsedTournamentId <= 0 ||
+      !Number.isInteger(parsedMatchId) ||
+      parsedMatchId <= 0
+    ) {
       return NextResponse.json(
         { message: "멸망전 또는 경기 ID가 올바르지 않습니다." },
         { status: 400 }
       );
     }
 
-    const body = await req.json();
+    const body = await readJsonObject<Record<string, unknown>>(req);
+    if (!body) {
+      return NextResponse.json({ message: "올바른 JSON 요청 본문이 필요합니다." }, { status: 400 });
+    }
 
     const winnerTeamId = body.winnerTeamId ? Number(body.winnerTeamId) : null;
     const mvpPlayerId = body.mvpPlayerId ? Number(body.mvpPlayerId) : undefined;

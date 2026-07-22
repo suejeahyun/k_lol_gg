@@ -683,7 +683,7 @@ export default async function DestructionParticipantsPage({ params, searchParams
                 : `전체 참가 ${filteredApplies.length}명 · 초과 ${filteredOverflowApplies.length}명입니다.`}
             </p>
           </div>
-          <div className="destruction-filter-chip-row" aria-label="라인 필터">
+          <div className="destruction-filter-chip-row" role="group" aria-label="라인 필터">
             <Link
               href={lineHref(tournament.id, null)}
               className={`destruction-filter-chip${!selectedLine ? " destruction-filter-chip--active" : ""}`}

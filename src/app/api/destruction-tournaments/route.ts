@@ -6,6 +6,9 @@ import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { logServerError } from "@/lib/server/safe-log";
 import { parseDestructionLaneLimits } from "@/lib/destruction/recruitment-auto-reserve";
+import { readJsonObject } from "@/lib/http/json-body";
+
+type CreateTournamentBody = Record<string, unknown>;
 
 const MAX_ADMIN_DESTRUCTION_TOURNAMENTS = 50;
 
@@ -69,7 +72,13 @@ export async function POST(req: NextRequest) {
   if (rejected) return rejected;
 
   try {
-    const body = await req.json();
+    const body = await readJsonObject<CreateTournamentBody>(req);
+    if (!body) {
+      return NextResponse.json(
+        { message: "올바른 JSON 요청 본문이 필요합니다." },
+        { status: 400 },
+      );
+    }
     const title = String(body.title ?? "").trim();
     const preliminaryFormat = isValidPreliminaryFormat(body.preliminaryFormat)
       ? body.preliminaryFormat
@@ -131,4 +140,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-

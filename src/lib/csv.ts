@@ -8,7 +8,7 @@ function escapeCsvCell(value: unknown) {
   const raw = value == null ? "" : value instanceof Date ? value.toISOString() : String(value);
 
   // Excel / Google Sheets formula injection 방어
-  const safe = /^[=+\-@]/.test(raw) ? `'${raw}` : raw;
+  const safe = /^[=+\-@\t\r\n]/.test(raw) ? `'${raw}` : raw;
 
   const escaped = safe.replaceAll('"', '""');
 
@@ -39,6 +39,61 @@ export function toCsvWithHeaders(headers: string[], rows: CsvRowArray[]) {
   );
 
   return [headerLine, ...bodyLines].join("\n");
+}
+
+export function createCsvStreamResponse(
+  filename: string,
+  headers: string[],
+  rows: AsyncIterable<CsvRowArray>,
+) {
+  const encoder = new TextEncoder();
+  const iterator = rows[Symbol.asyncIterator]();
+  const safeFilename = filename.replace(/[^A-Za-z0-9._-]/g, "_");
+
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      try {
+        controller.enqueue(
+          encoder.encode(`\uFEFF${headers.map(escapeCsvCell).join(",")}\n`),
+        );
+
+        let lines: string[] = [];
+        while (true) {
+          const next = await iterator.next();
+          if (next.done) break;
+          lines.push(
+            headers
+              .map((_, index) => escapeCsvCell(next.value[index]))
+              .join(","),
+          );
+
+          if (lines.length >= 100) {
+            controller.enqueue(encoder.encode(`${lines.join("\n")}\n`));
+            lines = [];
+          }
+        }
+
+        if (lines.length > 0) {
+          controller.enqueue(encoder.encode(`${lines.join("\n")}\n`));
+        }
+        controller.close();
+      } catch (error) {
+        controller.error(error);
+      }
+    },
+    async cancel() {
+      await iterator.return?.();
+    },
+  });
+
+  return new Response(stream, {
+    status: 200,
+    headers: {
+      "Content-Type": "text/csv; charset=utf-8",
+      "Content-Disposition": `attachment; filename="${safeFilename}"`,
+      "Cache-Control": "private, no-store, max-age=0",
+    },
+  });
 }
 
 export function createCsvResponse(

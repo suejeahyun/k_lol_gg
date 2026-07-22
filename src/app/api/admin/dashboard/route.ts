@@ -10,6 +10,7 @@ import {
   type SiteFeatureKey,
 } from "@/lib/site/settings";
 import { getDeployEnvWarnings } from "@/lib/security/deploy-env";
+import { parsePositivePage } from "@/lib/http/pagination";
 
 const LOG_PAGE_SIZE = 30;
 
@@ -21,8 +22,7 @@ export async function GET(req: NextRequest) {
   const isSuperAdmin = admin.user.role === "SUPER_ADMIN";
 
   try {
-    const pageParam = req.nextUrl.searchParams.get("page");
-    const page = pageParam ? Math.max(Number(pageParam), 1) : 1;
+    const page = parsePositivePage(req.nextUrl.searchParams.get("page"));
     const skip = (page - 1) * LOG_PAGE_SIZE;
 
     const [

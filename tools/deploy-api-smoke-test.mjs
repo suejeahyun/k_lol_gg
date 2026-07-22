@@ -10,6 +10,10 @@ const openchatSecret = process.env.KAKAO_OPENCHAT_SECRET;
 
 const checks = [
   {
+    name: "GET /api/health",
+    url: `${baseUrl}/api/health`,
+  },
+  {
     name: "GET /api/rankings",
     url: `${baseUrl}/api/rankings`,
   },

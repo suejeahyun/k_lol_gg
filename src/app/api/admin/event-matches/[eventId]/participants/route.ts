@@ -6,6 +6,7 @@ import { Prisma, Position } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { calculateBalanceScore } from "@/lib/balance/tierScore";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { readJsonObject } from "@/lib/http/json-body";
 
 type RouteContext = {
   params: Promise<{
@@ -63,7 +64,10 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
       );
     }
 
-    const body = (await req.json()) as CreateParticipantBody;
+    const body = await readJsonObject<CreateParticipantBody>(req);
+    if (!body) {
+      return NextResponse.json({ message: "올바른 JSON 요청 본문이 필요합니다." }, { status: 400 });
+    }
     const playerId = Number(body.playerId);
     const requestedTeamId = Number(body.teamId);
     const requestedTeamName = body.teamName;
@@ -182,6 +186,15 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     });
 
     const participant = await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT "id" FROM "EventMatch" WHERE "id" = ${parsedEventId} FOR UPDATE`;
+
+      const currentMatchCount = await tx.eventTournamentMatch.count({
+        where: { eventId: parsedEventId },
+      });
+      if (currentMatchCount > 0) {
+        throw new Error("EVENT_LOCKED");
+      }
+
       let targetTeamId: number | null = null;
 
       if (Number.isInteger(requestedTeamId) && requestedTeamId > 0) {
@@ -305,6 +318,21 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
           { status: 400 },
         );
       }
+
+
+      if (error.message === "EVENT_LOCKED") {
+        return NextResponse.json(
+          { message: "이미 대진표가 생성된 이벤트는 참가자를 추가할 수 없습니다." },
+          { status: 409 },
+        );
+      }
+    }
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return NextResponse.json(
+        { message: "이미 등록된 참가자이거나 같은 이름의 팀이 생성되었습니다." },
+        { status: 409 },
+      );
     }
 
     logServerError("[ADMIN_EVENT_PARTICIPANT_MANUAL_ADD_ERROR]", error);

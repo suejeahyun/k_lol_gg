@@ -3,15 +3,19 @@ import PremiumFeatureGate from "@/components/PremiumFeatureGate";
 import PremiumLockedPreview from "@/components/PremiumLockedPreview";
 import RiotPreparationPanel from "@/components/riot/RiotPreparationPanel";
 import { getSiteSettings } from "@/lib/site/settings";
+import { isRiotFeatureEnabled } from "@/lib/riot/feature";
 
 export const metadata: Metadata = {
   title: "Riot API 안내",
+  description: "K-LOL.GG의 Riot API 연동 범위, 계정 인증 방식과 데이터 갱신 정책을 확인하세요.",
+  alternates: { canonical: "/riot-api" },
 };
 
 export const dynamic = "force-dynamic";
 
 export default async function RiotApiPage() {
   const settings = await getSiteSettings();
+  const riotEnabled = isRiotFeatureEnabled();
 
   return (
     <PremiumFeatureGate
@@ -29,7 +33,7 @@ export default async function RiotApiPage() {
       <RiotPreparationPanel
         eyebrow="RIOT API"
         title="Riot API 연동 안내"
-        description="K-LOL.GG는 Production API 승인 후 Riot 계정 연동, 솔랭 티어 동기화, 최근 랭크 경기 분석, 멸망전 참가 검증, 팀 밸런스 보조 기능을 단계적으로 제공할 예정입니다."
+        description="K-LOL.GG는 Riot 계정 연동, 솔랭 티어 동기화, 최근 랭크 경기 분석, 멸망전 참가 검증, 팀 밸런스 보조 기능을 단계적으로 제공합니다."
         sections={[
           {
             title: "연동 목적",
@@ -50,14 +54,18 @@ export default async function RiotApiPage() {
           {
             title: "현재 상태",
             items: [
-              "Production API 승인 전까지 Riot 실시간 동기화는 기능 플래그로 차단됩니다.",
-              "정책 페이지, 보안 구조, 관리자 화면, 유저 연동 화면을 먼저 준비합니다.",
-              "승인 후 Vercel 환경변수에 Production Key를 등록하고 단계적으로 공개합니다.",
+              "Riot 실시간 동기화는 운영 기능 플래그와 서버 인증 정보가 모두 준비된 경우에만 동작합니다.",
+              "현재 공개 여부는 이 페이지 상단의 활성·비활성 상태에서 확인할 수 있습니다.",
+              "Riot API Key와 연동 설정은 Vercel 서버 환경변수에서만 관리합니다.",
             ],
           },
         ]}
         actions={[
-          { href: "/me/riot", label: "내 Riot 연동 준비 화면", variant: "primary" },
+          {
+            href: "/me/riot",
+            label: riotEnabled ? "내 Riot 계정 연결" : "내 Riot 연동 준비 화면",
+            variant: "primary",
+          },
           { href: "/privacy", label: "개인정보처리방침", variant: "secondary" },
         ]}
       />

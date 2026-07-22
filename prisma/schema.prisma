@@ -179,6 +179,8 @@ model UserAccount {
   role               UserRole   @default(USER)
   status             UserStatus @default(PENDING)
   authVersion        Int        @default(0)
+  termsAcceptedAt    DateTime?
+  privacyAcceptedAt  DateTime?
 
   discordId              String?   @unique
   discordUsername        String?
@@ -1133,6 +1135,8 @@ model PlayerSoloMatch {
 
   @@unique([playerId, matchId])
   @@index([playerId])
+  @@index([playerId, gameCreation])
+  @@index([playerId, championId])
   @@index([championId])
   @@index([gameCreation])
 }

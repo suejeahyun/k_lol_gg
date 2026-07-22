@@ -4,10 +4,18 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
+import { rejectIfRateLimited } from "@/lib/rate-limit";
 
 export async function GET(req: NextRequest) {
   const premiumLock = await requireSiteFeature("balanceAi");
   if (premiumLock) return premiumLock;
+
+  const rateLimitRejected = await rejectIfRateLimited(req, {
+    action: "PLAYER_BALANCE_SEARCH",
+    limit: 120,
+    windowSeconds: 60,
+  });
+  if (rateLimitRejected) return rateLimitRejected;
 
   try {
     const q = req.nextUrl.searchParams.get("q")?.trim() ?? "";
@@ -17,11 +25,19 @@ export async function GET(req: NextRequest) {
       return NextResponse.json([]);
     }
 
+    if (q.length > 100) {
+      return NextResponse.json(
+        { message: "검색어는 100자 이하로 입력해주세요." },
+        { status: 400 },
+      );
+    }
+
     const excludeIds = exclude
       ? exclude
           .split(",")
+          .slice(0, 100)
           .map((value) => Number(value))
-          .filter((value) => Number.isFinite(value))
+          .filter((value) => Number.isInteger(value) && value > 0)
       : [];
 
     const players = await prisma.player.findMany({

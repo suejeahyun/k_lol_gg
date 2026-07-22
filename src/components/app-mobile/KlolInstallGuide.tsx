@@ -276,9 +276,15 @@ export default function KlolInstallGuide() {
         <p className="klol-install-lead">
           Android는 APK 직접 설치, iPhone은 Safari 홈 화면 추가를 기본 배포 방식으로 사용합니다.
         </p>
-        <div className="klol-install-select klol-install-select--three" role="tablist" aria-label="설치 방식 선택">
+        <div className="klol-install-select klol-install-select--three" role="group" aria-label="설치 방식 선택">
           {(Object.keys(installTracks) as Platform[]).map((key) => (
-            <button type="button" className={platform === key ? "is-active" : ""} onClick={() => setPlatform(key)} key={key}>
+            <button
+              type="button"
+              className={platform === key ? "is-active" : ""}
+              aria-pressed={platform === key}
+              onClick={() => setPlatform(key)}
+              key={key}
+            >
               {installTracks[key].label}
             </button>
           ))}
@@ -365,7 +371,7 @@ export default function KlolInstallGuide() {
         <button type="button" className="klol-install-secondary" onClick={copyLink}>
           설치 링크 복사
         </button>
-        {message ? <p className="klol-install-message">{message}</p> : null}
+        {message ? <p className="klol-install-message" role="status">{message}</p> : null}
       </section>
     </main>
   );

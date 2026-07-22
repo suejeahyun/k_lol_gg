@@ -9,6 +9,7 @@ import { requireApprovedUser } from "@/lib/auth/session";
 import { requireApprovedUserOrAdmin, getAccessErrorResponseMessage } from "@/lib/auth/access";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
 import { logServerError } from "@/lib/server/safe-log";
+import { readJsonObject } from "@/lib/http/json-body";
 
 type TeamValue = "BLUE" | "RED";
 type PositionValue = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
@@ -138,7 +139,10 @@ export async function POST(req: NextRequest) {
 
     await requireApprovedUser();
 
-    const body = (await req.json()) as DraftPostBody;
+    const body = await readJsonObject<DraftPostBody>(req);
+    if (!body) {
+      return NextResponse.json({ message: "올바른 JSON 요청 본문이 필요합니다." }, { status: 400 });
+    }
     const players = body.players ?? [];
 
     if (!Array.isArray(players) || players.length === 0) {

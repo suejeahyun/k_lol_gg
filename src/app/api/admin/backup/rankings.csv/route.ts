@@ -31,7 +31,19 @@ export async function GET(req: NextRequest) {
   const res = await fetch(`${origin}/api/rankings${seasonId ? `?seasonId=${seasonId}` : ""}`, {
     cache: "no-store",
   });
-  const data = (await res.json()) as RankingResponse;
+  if (!res.ok) {
+    return Response.json(
+      { message: "랭킹 데이터를 불러오지 못해 백업을 생성하지 않았습니다." },
+      { status: 502 },
+    );
+  }
+  const data = (await res.json().catch(() => null)) as RankingResponse | null;
+  if (!data || !Array.isArray(data.rankings)) {
+    return Response.json(
+      { message: "랭킹 응답 형식이 올바르지 않아 백업을 생성하지 않았습니다." },
+      { status: 502 },
+    );
+  }
 
   await writeAdminLog({
     action: "BACKUP_CSV_DOWNLOAD",
@@ -47,7 +59,7 @@ export async function GET(req: NextRequest) {
   return createCsvResponse(
     `rankings-${new Date().toISOString().slice(0, 10)}.csv`,
     ["playerId", "name", "riotId", "totalGames", "participationCount", "wins", "losses", "winRate", "mvpCount"],
-    (data.rankings ?? []).map((player) => [
+    data.rankings.map((player) => [
       player.playerId,
       player.name,
       `${player.nickname}#${player.tag}`,

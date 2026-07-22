@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -12,6 +13,11 @@ import {
   getRiotPlayerAnalysis,
 } from "@/lib/riot/player-analysis";
 import styles from "./page.module.css";
+
+export const metadata: Metadata = {
+  title: "플레이어 Riot 분석",
+  description: "연결된 Riot 계정의 솔로랭크와 최근 경기 분석을 확인하세요.",
+};
 
 export const dynamic = "force-dynamic";
 
@@ -89,7 +95,7 @@ export default async function PlayerRiotDetailPage({ params }: PlayerRiotDetailP
   const bestRecentChampion = analysis.recentChampions[0] ?? null;
 
   return (
-    <div className={`page-shell player-riot-detail-page ${styles.riotDetailPage}`}>
+    <main className={`page-shell player-riot-detail-page ${styles.riotDetailPage}`}>
       <div className="page-header player-hero">
         <div>
           <p className="page-eyebrow">Riot 솔랭 분석</p>
@@ -202,7 +208,7 @@ export default async function PlayerRiotDetailPage({ params }: PlayerRiotDetailP
           <article className={styles.formCard}>
             <span className={styles.visualEyebrow}>RECENT FORM</span>
             <strong>최근 20게임 흐름</strong>
-            <div className={styles.formTrack} aria-label="최근 20게임 승패 흐름">
+            <div className={styles.formTrack} role="img" aria-label="최근 20게임 승패 흐름">
               {recentForm.length === 0 ? (
                 <span className={styles.formEmpty}>기록 없음</span>
               ) : (
@@ -424,6 +430,6 @@ export default async function PlayerRiotDetailPage({ params }: PlayerRiotDetailP
           </div>
         )}
       </section>
-    </div>
+    </main>
   );
 }

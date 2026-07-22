@@ -18,7 +18,7 @@ export default async function DestructionImageDetailPage({ params }: PageProps) 
   const id = Number(tournamentId);
   const index = Number(imageIndex);
 
-  if (Number.isNaN(id) || Number.isNaN(index) || index < 1) {
+  if (!Number.isInteger(id) || id <= 0 || !Number.isInteger(index) || index < 1) {
     notFound();
   }
 

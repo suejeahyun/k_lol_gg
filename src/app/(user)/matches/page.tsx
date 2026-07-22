@@ -1,9 +1,18 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
+import type { Prisma } from "@prisma/client";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import Pagination from "@/components/Pagination";
+import { parsePositivePage } from "@/lib/http/pagination";
 import MatchSearchBox from "./MatchSearchBox";
+
+export const metadata: Metadata = {
+  title: "내전 목록",
+  description: "K-LOL.GG 내전 경기 결과와 세트별 기록을 검색하고 확인하세요.",
+  alternates: { canonical: "/matches" },
+};
 
 type MatchesPageProps = {
   searchParams: Promise<{
@@ -18,9 +27,9 @@ type MatchesPageProps = {
   }>;
 };
 
-type SortType = "title" | "games" | "season";
+type SortType = "date" | "title" | "games" | "season";
 type OrderType = "asc" | "desc";
-type WinnerTeam = "BLUE" | "RED" | "미정";
+type WinnerTeam = "BLUE" | "RED" | "DRAW";
 
 const PAGE_SIZE = 10;
 
@@ -42,11 +51,11 @@ const STATUS_FILTERS = [
 ] as const;
 
 function getSort(sort?: string): SortType {
-  if (sort === "title" || sort === "games" || sort === "season") {
+  if (sort === "date" || sort === "title" || sort === "games" || sort === "season") {
     return sort;
   }
 
-  return "title";
+  return "date";
 }
 
 function getOrder(order?: string): OrderType {
@@ -89,25 +98,27 @@ function getDateRange(rangeFilter: string) {
 function getWinnerTeam(blueWins: number, redWins: number): WinnerTeam {
   if (blueWins > redWins) return "BLUE";
   if (redWins > blueWins) return "RED";
-  return "미정";
+  return "DRAW";
 }
 
 function getWinnerLabel(winnerTeam: WinnerTeam): string {
   if (winnerTeam === "BLUE") return "블루";
   if (winnerTeam === "RED") return "레드";
-  return "미정";
+  return "무승부";
 }
 
 export default async function MatchesPage({ searchParams }: MatchesPageProps) {
   const resolvedSearchParams = await searchParams;
 
-  const currentPage = Math.max(1, Number(resolvedSearchParams.page ?? "1") || 1);
+  const currentPage = parsePositivePage(resolvedSearchParams.page);
   const query = resolvedSearchParams.q?.trim() ?? "";
   const sort = getSort(resolvedSearchParams.sort);
   const order = getOrder(resolvedSearchParams.order);
   const rangeFilter = getFilterValue(RANGE_FILTERS, resolvedSearchParams.range);
   const winnerFilter = getFilterValue(WINNER_FILTERS, resolvedSearchParams.winner);
   const statusFilter = getFilterValue(STATUS_FILTERS, resolvedSearchParams.status);
+  const selectedWinner: "BLUE" | "RED" | null =
+    winnerFilter === "BLUE" || winnerFilter === "RED" ? winnerFilter : null;
   const dateRange = getDateRange(rangeFilter);
 
   const parsedSeasonId = Number(resolvedSearchParams.seasonId);
@@ -116,10 +127,11 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
       ? parsedSeasonId
       : undefined;
 
-  const seasons = await prisma.season.findMany({
+  const seasonsPromise = prisma.season.findMany({
     orderBy: {
       createdAt: "desc",
     },
+    take: 100,
     select: {
       id: true,
       name: true,
@@ -127,7 +139,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
     },
   });
 
-  const where = {
+  const baseWhere: Prisma.MatchSeriesWhereInput = {
     ...(selectedSeasonId ? { seasonId: selectedSeasonId } : {}),
     ...(dateRange ? { matchDate: dateRange } : {}),
     ...(query
@@ -144,14 +156,47 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
       : {}),
   };
 
-  const orderBy =
-    sort === "season"
-      ? { season: { name: order } }
-      : { title: order };
+  const winnerSeriesIds = !selectedWinner
+    ? null
+    : await prisma.matchGame
+        .groupBy({
+          by: ["seriesId", "winnerTeam"],
+          where: { series: baseWhere },
+          _count: { _all: true },
+        })
+        .then((rows) => {
+          const scoreBySeries = new Map<number, { BLUE: number; RED: number }>();
 
-  const totalCount = await prisma.matchSeries.count({ where });
-  const needsClientPaging =
-    sort === "games" || winnerFilter !== "ALL" || statusFilter !== "ALL";
+          for (const row of rows) {
+            const score = scoreBySeries.get(row.seriesId) ?? { BLUE: 0, RED: 0 };
+            score[row.winnerTeam] = row._count._all;
+            scoreBySeries.set(row.seriesId, score);
+          }
+
+          return [...scoreBySeries.entries()]
+            .filter(([, score]) => score[selectedWinner] > score[selectedWinner === "BLUE" ? "RED" : "BLUE"])
+            .map(([seriesId]) => seriesId);
+        });
+
+  const where: Prisma.MatchSeriesWhereInput = {
+    ...baseWhere,
+    ...(statusFilter === "completed" ? { games: { some: {} } } : {}),
+    ...(winnerSeriesIds ? { id: { in: winnerSeriesIds } } : {}),
+  };
+
+  const orderBy: Prisma.MatchSeriesOrderByWithRelationInput[] =
+    sort === "date"
+      ? [{ matchDate: order }, { id: order }]
+      : sort === "season"
+      ? [{ season: { name: order } }, { matchDate: "desc" }, { id: "desc" }]
+      : sort === "games"
+        ? [{ games: { _count: order } }, { matchDate: "desc" }, { id: "desc" }]
+        : [{ title: order }, { id: order }];
+
+  const [seasons, totalCount] = await Promise.all([
+    seasonsPromise,
+    prisma.matchSeries.count({ where }),
+  ]);
   const serverTotalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
   const serverSafeCurrentPage = Math.min(currentPage, serverTotalPages);
 
@@ -159,8 +204,8 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
     prisma.matchSeries.findMany({
       where,
       orderBy,
-      skip: needsClientPaging ? undefined : (serverSafeCurrentPage - 1) * PAGE_SIZE,
-      take: needsClientPaging ? Math.min(Math.max(totalCount, PAGE_SIZE), 500) : PAGE_SIZE,
+      skip: (serverSafeCurrentPage - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
       include: {
         season: {
           select: {
@@ -177,11 +222,6 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
             id: true,
             gameNumber: true,
             winnerTeam: true,
-            participants: {
-              select: {
-                playerId: true,
-              },
-            },
           },
         },
         _count: {
@@ -198,7 +238,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
     }),
     prisma.matchSeries.findFirst({
       where,
-      orderBy: [{ title: "desc" }, { id: "desc" }],
+      orderBy: [{ matchDate: "desc" }, { id: "desc" }],
       select: { id: true, title: true },
     }),
   ]);
@@ -214,52 +254,18 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
 
     const winnerTeam = getWinnerTeam(blueWins, redWins);
 
-    const participantIds = new Set(
-      match.games.flatMap((game) =>
-        game.participants.map((participant) => participant.playerId)
-      )
-    );
-
     return {
       ...match,
       blueWins,
       redWins,
       winnerTeam,
-      participantsCount: participantIds.size,
     };
   });
 
-  const filteredMatches = enrichedMatches.filter((match) => {
-    const matchesWinner =
-      winnerFilter === "ALL" || match.winnerTeam === winnerFilter;
-    const matchesStatus =
-      statusFilter === "ALL" ||
-      (statusFilter === "completed" && match._count.games > 0);
-
-    return matchesWinner && matchesStatus;
-  });
-
-  const orderedMatches =
-    sort === "games"
-      ? [...filteredMatches]
-          .sort((a, b) =>
-            order === "asc"
-              ? a._count.games - b._count.games
-              : b._count.games - a._count.games,
-          )
-      : filteredMatches;
-
-  const effectiveTotalCount = needsClientPaging
-    ? orderedMatches.length
-    : totalCount;
-  const totalPages = Math.max(1, Math.ceil(effectiveTotalCount / PAGE_SIZE));
+  const effectiveTotalCount = totalCount;
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
   const safeCurrentPage = Math.min(currentPage, totalPages);
-  const pagedMatches = needsClientPaging
-    ? orderedMatches.slice(
-        (safeCurrentPage - 1) * PAGE_SIZE,
-        safeCurrentPage * PAGE_SIZE,
-      )
-    : orderedMatches;
+  const pagedMatches = enrichedMatches;
 
   const latestMatch = latestMatchRecord;
 
@@ -289,11 +295,14 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
     if (nextWinner !== "ALL") params.set("winner", nextWinner);
     if (nextStatus !== "ALL") params.set("status", nextStatus);
 
-    params.set("sort", nextSort);
-    params.set("order", nextOrder);
-    params.set("page", page);
+    if (nextSort !== "date" || nextOrder !== "desc") {
+      params.set("sort", nextSort);
+      params.set("order", nextOrder);
+    }
+    if (page !== "1") params.set("page", page);
 
-    return `/matches?${params.toString()}`;
+    const queryString = params.toString();
+    return queryString ? `/matches?${queryString}` : "/matches";
   }
 
   function sortLink(field: SortType) {
@@ -322,7 +331,7 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
           />
         </div>
 
-        <div className="match-filter-rail" aria-label="내전 필터">
+        <div className="match-filter-rail" role="group" aria-label="내전 필터">
           <div className="match-filter-rail__group">
             <span>기간</span>
             <div>
@@ -506,8 +515,8 @@ export default async function MatchesPage({ searchParams }: MatchesPageProps) {
                   seasonId: selectedSeasonId
                     ? String(selectedSeasonId)
                     : undefined,
-                  sort,
-                  order,
+                  sort: sort !== "date" || order !== "desc" ? sort : undefined,
+                  order: sort !== "date" || order !== "desc" ? order : undefined,
                   range: rangeFilter !== "ALL" ? rangeFilter : undefined,
                   winner: winnerFilter !== "ALL" ? winnerFilter : undefined,
                   status: statusFilter !== "ALL" ? statusFilter : undefined,

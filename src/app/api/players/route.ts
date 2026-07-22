@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { Prisma } from "@prisma/client";
+import { readJsonObject } from "@/lib/http/json-body";
 
 const MAX_PAGE_SIZE = 100;
 const MAX_SEARCH_LENGTH = 100;
@@ -118,7 +119,13 @@ export async function POST(req: NextRequest) {
   if (rejected) return rejected;
 
   try {
-    const body = (await req.json()) as CreatePlayerBody;
+    const body = await readJsonObject<CreatePlayerBody>(req);
+    if (!body) {
+      return NextResponse.json(
+        { message: "올바른 JSON 요청 본문이 필요합니다." },
+        { status: 400 },
+      );
+    }
 
     const name = body.name?.trim();
     const nickname = body.nickname?.trim();

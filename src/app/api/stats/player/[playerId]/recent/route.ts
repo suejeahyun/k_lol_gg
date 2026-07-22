@@ -3,6 +3,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { logServerError } from "@/lib/server/safe-log";
+import { parsePositivePage } from "@/lib/http/pagination";
+import { PUBLIC_SHORT_CACHE_HEADER } from "@/lib/http/cache";
 
 type RouteContext = {
   params: Promise<{
@@ -18,17 +20,14 @@ export async function GET(
     const { playerId } = await params;
     const id = Number(playerId);
 
-    if (Number.isNaN(id)) {
+    if (!Number.isInteger(id) || id <= 0) {
       return NextResponse.json(
         { message: "유효하지 않은 playerId 입니다." },
         { status: 400 }
       );
     }
 
-    const page = Math.max(
-      1,
-      Number(req.nextUrl.searchParams.get("page") ?? "1") || 1
-    );
+    const page = parsePositivePage(req.nextUrl.searchParams.get("page"));
     const pageSize = 5;
     const skip = (page - 1) * pageSize;
 
@@ -87,15 +86,18 @@ export async function GET(
       };
     });
 
-    return NextResponse.json({
-      items,
-      pagination: {
-        currentPage: page,
-        pageSize,
-        totalCount,
-        totalPages: Math.max(1, Math.ceil(totalCount / pageSize)),
+    return NextResponse.json(
+      {
+        items,
+        pagination: {
+          currentPage: page,
+          pageSize,
+          totalCount,
+          totalPages: Math.max(1, Math.ceil(totalCount / pageSize)),
+        },
       },
-    });
+      { headers: { "Cache-Control": PUBLIC_SHORT_CACHE_HEADER } },
+    );
   } catch (error) {
     logServerError("[PLAYER_RECENT_GET_ERROR]", error);
 

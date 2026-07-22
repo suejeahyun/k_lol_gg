@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { parseIntegerInRange, parsePositivePage } from "@/lib/http/pagination";
 
 export async function GET(request: NextRequest) {
   const premiumLock = await requireSiteFeature("balanceAi");
@@ -13,8 +14,8 @@ export async function GET(request: NextRequest) {
   if (rejected) return rejected;
 
   const { searchParams } = new URL(request.url);
-  const page = Math.max(1, Number(searchParams.get("page") ?? "1") || 1);
-  const pageSize = Math.min(100, Math.max(10, Number(searchParams.get("pageSize") ?? "20") || 20));
+  const page = parsePositivePage(searchParams.get("page"));
+  const pageSize = parseIntegerInRange(searchParams.get("pageSize"), 20, 10, 100);
   const risk = searchParams.get("risk")?.trim();
   const where = risk ? { aiRiskLevel: risk } : {};
 

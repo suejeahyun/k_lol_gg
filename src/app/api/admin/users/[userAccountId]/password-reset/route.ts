@@ -3,10 +3,11 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
-import { hashPassword } from "@/lib/auth/password";
+import { getPasswordValidationMessage, hashPassword } from "@/lib/auth/password";
 import { requireSuperAdminRequest } from "@/lib/auth/requireAdmin";
 import { writeSecurityAudit } from "@/lib/security/admin-audit";
 import { createTemporaryPassword } from "@/lib/auth/temp-password";
+import { PRIVATE_NO_STORE_HEADER } from "@/lib/http/cache";
 
 type RouteContext = {
   params: Promise<{
@@ -28,12 +29,13 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     const requestedPassword = String(body.newPassword ?? "").trim();
     const tempPassword = requestedPassword || createTemporaryPassword();
 
-    if (Number.isNaN(id)) {
+    if (!Number.isInteger(id) || id <= 0) {
       return NextResponse.json({ message: "잘못된 유저 ID입니다." }, { status: 400 });
     }
 
-    if (tempPassword.length < 8) {
-      return NextResponse.json({ message: "임시 비밀번호는 8자 이상이어야 합니다." }, { status: 400 });
+    const passwordValidationMessage = getPasswordValidationMessage(tempPassword);
+    if (passwordValidationMessage) {
+      return NextResponse.json({ message: passwordValidationMessage }, { status: 400 });
     }
 
     const target = await prisma.userAccount.findUnique({ where: { id } });
@@ -64,7 +66,10 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       afterJson: { id: updated.id, userId: updated.userId, role: updated.role, status: updated.status, passwordHash: "[ROTATED]" },
     });
 
-    return NextResponse.json({ message: "비밀번호가 초기화되었습니다.", tempPassword });
+    return NextResponse.json(
+      { message: "비밀번호가 초기화되었습니다.", tempPassword },
+      { headers: { "Cache-Control": PRIVATE_NO_STORE_HEADER } },
+    );
   } catch (error) {
     logServerError("[ADMIN_USERS_PASSWORD_RESET_PATCH_ERROR]", error);
     return NextResponse.json({ message: "비밀번호 초기화 중 오류가 발생했습니다." }, { status: 500 });

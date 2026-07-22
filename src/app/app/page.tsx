@@ -18,6 +18,7 @@ export const metadata: Metadata = {
 const dateFormatter = new Intl.DateTimeFormat("ko-KR", {
   month: "2-digit",
   day: "2-digit",
+  timeZone: "Asia/Seoul",
 });
 
 function formatWinRate(wins: number, totalGames: number) {
@@ -76,8 +77,8 @@ export default async function AppHomePage() {
     recentMatches,
     topStats,
     recentMvp,
-    activeEvents,
-    activeDestructions,
+    recentEvents,
+    recentDestructions,
   } = publicData;
   const recruitFeatureEnabled = isSiteFeatureEnabled(siteSettings, "recruit");
 
@@ -135,6 +136,7 @@ export default async function AppHomePage() {
           <Link className="klol-app-primary" href="/app/recruits">구인 보기</Link>
           <Link className="klol-app-secondary" href="/app/players">플레이어 검색</Link>
           <Link className="klol-app-secondary" href="/app/coin-toss">코인토스</Link>
+          <Link className="klol-app-secondary" href="/app/random-team">랜덤 팀</Link>
           <Link className="klol-app-secondary" href="/install">앱 설치</Link>
         </div>
       </section>
@@ -221,12 +223,12 @@ export default async function AppHomePage() {
         )}
       </AppSection>
 
-      <AppSection title="이벤트·멸망전" caption="진행 중">
-        {activeEvents.length === 0 && activeDestructions.length === 0 ? (
-          <AppEmpty>진행 중인 이벤트/멸망전이 없습니다.</AppEmpty>
+      <AppSection title="이벤트·멸망전" caption="최근 현황">
+        {recentEvents.length === 0 && recentDestructions.length === 0 ? (
+          <AppEmpty>표시할 이벤트/멸망전이 없습니다.</AppEmpty>
         ) : (
           <div className="klol-app-list klol-app-event-list">
-            {activeEvents.map((event) => (
+            {recentEvents.map((event) => (
               <Link
                 className="klol-app-list-card klol-app-event-card"
                 href={`/app/progress/event/${event.id}`}
@@ -241,7 +243,7 @@ export default async function AppHomePage() {
                 </div>
               </Link>
             ))}
-            {activeDestructions.map((tournament) => (
+            {recentDestructions.map((tournament) => (
               <Link
                 className="klol-app-list-card klol-app-event-card klol-app-event-card--destruction"
                 href={`/app/progress/destruction/${tournament.id}`}

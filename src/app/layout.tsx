@@ -1,5 +1,6 @@
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import RandomBackgroundLayout from "../components/RandomBackgroundLayout";
 import MobileAppGate from "@/components/MobileAppGate";
 import SiteRuntimeSettings from "@/components/SiteRuntimeSettings";
@@ -31,7 +32,14 @@ const mobileAppBootScript = `
   try {
     const path = window.location.pathname || "/";
     if (path.startsWith("/app")) return;
-    if (path === "/install" || path.startsWith("/install/")) return;
+    if (
+      path === "/install" ||
+      path.startsWith("/install/") ||
+      path === "/signup" ||
+      path === "/forgot-password" ||
+      path === "/privacy" ||
+      path === "/terms"
+    ) return;
     if (!window.matchMedia("(max-width: 820px)").matches) return;
     if (window.sessionStorage.getItem("klol-mobile-pc-view") === "1") return;
 
@@ -51,9 +59,9 @@ const mobileAppBootScript = `
       else if (pathname.startsWith("/admin")) target = "/app/admin";
       else if (
         pathname.startsWith("/players/balance") ||
-        pathname.startsWith("/balance") ||
-        pathname.startsWith("/random-team")
+        pathname.startsWith("/balance")
       ) target = "/app";
+      else if (pathname.startsWith("/random-team")) target = "/app/random-team";
       else if (pathname.startsWith("/players/")) target = detailTarget(pathname, "/players", "/app/players");
       else if (pathname === "/players") target = "/app/players";
       else if (pathname.startsWith("/matches/")) target = detailTarget(pathname, "/matches", "/app/matches");
@@ -88,6 +96,27 @@ export const metadata: Metadata = {
     template: `%s | ${appName}`,
   },
   description: appDescription,
+  openGraph: {
+    type: "website",
+    locale: "ko_KR",
+    siteName: appName,
+    title: appName,
+    description: appDescription,
+    images: [
+      {
+        url: "/images/theme/dark-modern/home-hero-structured-v1.png",
+        width: 1915,
+        height: 821,
+        alt: "K-LOL.GG 내전 기록과 시즌 랭킹",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: appName,
+    description: appDescription,
+    images: ["/images/theme/dark-modern/home-hero-structured-v1.png"],
+  },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -130,6 +159,7 @@ export default function RootLayout({
           <SiteAiAssistant />
           <MobileAppGate />
         </RandomBackgroundLayout>
+        {process.env.VERCEL === "1" ? <SpeedInsights sampleRate={0.25} /> : null}
       </body>
     </html>
   );

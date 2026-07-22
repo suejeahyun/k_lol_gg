@@ -39,7 +39,12 @@ export async function POST(req: NextRequest, { params }: Context) {
   const parsedEventId = Number(eventId);
   const parsedParticipantId = Number(participantId);
 
-  if (Number.isNaN(parsedEventId) || Number.isNaN(parsedParticipantId)) {
+  if (
+    !Number.isInteger(parsedEventId) ||
+    parsedEventId <= 0 ||
+    !Number.isInteger(parsedParticipantId) ||
+    parsedParticipantId <= 0
+  ) {
     return NextResponse.json(
       { message: "잘못된 요청입니다." },
       { status: 400 },

@@ -114,7 +114,7 @@ export default function ThemeSwitcher({
   }
 
   return (
-    <div className="theme-switcher" aria-label="테마 선택">
+    <div className="theme-switcher" role="group" aria-label="테마 선택">
       <Palette className="theme-switcher__icon" aria-hidden="true" size={15} />
       {themes.map((theme) => (
         <button

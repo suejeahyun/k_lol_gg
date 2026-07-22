@@ -1,9 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
 import { AppEmpty, AppSection } from "@/components/app-mobile/AppCards";
 import { prisma } from "@/lib/prisma/client";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "모바일 플레이어 목록",
+  description: "K-LOL.GG 플레이어 전적과 티어를 모바일에서 확인하세요.",
+};
 
 type AppPlayersPageProps = {
   searchParams?: Promise<{
@@ -23,10 +30,7 @@ function getWinRate(wins: number, totalGames: number) {
 const DEFAULT_VISIBLE_PLAYERS = 12;
 const SEARCH_VISIBLE_PLAYERS = 80;
 
-export default async function AppPlayersPage({ searchParams }: AppPlayersPageProps) {
-  const params = await searchParams;
-  const q = normalizeSearch(params?.q);
-
+async function getAppPlayers(q: string) {
   const where = q
     ? {
         isActive: true,
@@ -37,34 +41,50 @@ export default async function AppPlayersPage({ searchParams }: AppPlayersPagePro
         ],
       }
     : { isActive: true };
-
   const take = q ? SEARCH_VISIBLE_PLAYERS : DEFAULT_VISIBLE_PLAYERS;
+
   const [players, totalCount] = await Promise.all([
-    prisma.player.findMany({
-      where,
-      orderBy: [{ name: "asc" }, { nickname: "asc" }],
-      take,
-      select: {
-        id: true,
-        name: true,
-        nickname: true,
-        tag: true,
-        currentTier: true,
-        peakTier: true,
-        seasonStats: {
-          orderBy: { seasonId: "desc" },
-          take: 1,
-          select: {
-            totalGames: true,
-            participationCount: true,
-            wins: true,
-            mvpCount: true,
+      prisma.player.findMany({
+        where,
+        orderBy: [{ name: "asc" }, { nickname: "asc" }],
+        take,
+        select: {
+          id: true,
+          name: true,
+          nickname: true,
+          tag: true,
+          currentTier: true,
+          peakTier: true,
+          seasonStats: {
+            orderBy: { seasonId: "desc" },
+            take: 1,
+            select: {
+              totalGames: true,
+              participationCount: true,
+              wins: true,
+              mvpCount: true,
+            },
           },
         },
-      },
-    }),
-    prisma.player.count({ where }),
-  ]);
+      }),
+      prisma.player.count({ where }),
+    ]);
+
+  return { players, totalCount };
+}
+
+const getCachedAppPlayers = unstable_cache(
+  async () => getAppPlayers(""),
+  ["app-players-catalog-v1"],
+  { revalidate: 60, tags: ["players", "rankings", "stats-top"] },
+);
+
+export default async function AppPlayersPage({ searchParams }: AppPlayersPageProps) {
+  const params = await searchParams;
+  const q = normalizeSearch(params?.q);
+  const { players, totalCount } = q
+    ? await getAppPlayers(q)
+    : await getCachedAppPlayers();
 
   return (
     <AppMobileShell subtitle="플레이어">

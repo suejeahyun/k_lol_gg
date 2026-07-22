@@ -131,7 +131,7 @@ export default function AppTopBar({
       </div>
 
       {mode === "user" ? (
-        <div className="app-topbar__mobile-auth" aria-label="모바일 회원 메뉴">
+        <div className="app-topbar__mobile-auth" role="group" aria-label="모바일 회원 메뉴">
           {user ? (
             <Link href="/account/tier" className="app-topbar__auth-link app-topbar__auth-link--primary">
               내 정보

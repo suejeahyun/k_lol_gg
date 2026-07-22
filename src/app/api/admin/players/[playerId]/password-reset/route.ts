@@ -7,6 +7,7 @@ import { writeAdminLog, getRequestAuditFields } from "@/lib/admin-log";
 import { hashPassword } from "@/lib/auth/password";
 import { requireSuperAdminRequest } from "@/lib/auth/requireAdmin";
 import { createTemporaryPassword } from "@/lib/auth/temp-password";
+import { PRIVATE_NO_STORE_HEADER } from "@/lib/http/cache";
 
 type RouteContext = {
   params: Promise<{
@@ -89,6 +90,8 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       tempPassword,
       userAccountId: player.userAccount.id,
       userId: player.userAccount.userId,
+    }, {
+      headers: { "Cache-Control": PRIVATE_NO_STORE_HEADER },
     });
   } catch (error) {
     logServerError("[ADMIN_PLAYER_PASSWORD_RESET_PATCH_ERROR]", error);

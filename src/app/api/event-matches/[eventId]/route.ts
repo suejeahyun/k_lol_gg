@@ -5,6 +5,7 @@ import { EventMatchMode, EventMatchStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { logServerError } from "@/lib/server/safe-log";
+import { readJsonObject } from "@/lib/http/json-body";
 
 type RouteProps = {
   params: Promise<{
@@ -113,10 +114,8 @@ export async function PATCH(req: NextRequest, { params }: RouteProps) {
       );
     }
 
-    let body: Record<string, unknown>;
-    try {
-      body = (await req.json()) as Record<string, unknown>;
-    } catch {
+    const body = await readJsonObject<Record<string, unknown>>(req);
+    if (!body) {
       return NextResponse.json(
         { message: "요청 형식이 올바르지 않습니다." },
         { status: 400 }

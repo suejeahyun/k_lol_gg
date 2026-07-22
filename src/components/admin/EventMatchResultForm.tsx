@@ -96,6 +96,7 @@ export default function EventMatchResultForm({
   return (
     <div className="event-match-result-form">
       <select
+        aria-label="승리 팀"
         className="admin-form__input"
         value={winnerTeamId}
         onChange={(event) => {
@@ -109,6 +110,7 @@ export default function EventMatchResultForm({
       </select>
 
       <select
+        aria-label="MVP 플레이어"
         className="admin-form__input"
         value={mvpPlayerId}
         onChange={(event) => setMvpPlayerId(event.target.value)}

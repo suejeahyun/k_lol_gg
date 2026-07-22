@@ -137,7 +137,7 @@ export default function GalleryImageForm({
     <form onSubmit={handleSubmit} className="admin-form">
       <div className="admin-form__group">
         <label className="admin-form__label">제목</label>
-        <input
+        <input aria-label="예: 제 6회 멸망전 우승"
           type="text"
           className="admin-form__input"
           value={title}
@@ -149,7 +149,7 @@ export default function GalleryImageForm({
 
       <div className="admin-form__group">
         <label className="admin-form__label">설명</label>
-        <textarea
+        <textarea aria-label="설명을 입력해주세요"
           className="admin-form__textarea"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -166,7 +166,7 @@ export default function GalleryImageForm({
         </div>
 
         <div className="gallery-local-path-box__row">
-          <input
+          <input aria-label="회차 예: 5"
             type="number"
             min={1}
             className="admin-form__input"
@@ -217,7 +217,7 @@ export default function GalleryImageForm({
         <div className="gallery-image-input-list">
           {imageUrl.map((url, index) => (
             <div key={index} className="gallery-image-input-row">
-              <input
+              <input aria-label="Google Drive 공유 링크 또는 /images/... 경로"
                 type="text"
                 className="admin-form__input"
                 value={url}

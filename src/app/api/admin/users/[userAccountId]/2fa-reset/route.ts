@@ -26,7 +26,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     const { userAccountId } = await params;
     const id = Number(userAccountId);
 
-    if (!Number.isFinite(id)) {
+    if (!Number.isInteger(id) || id <= 0) {
       return NextResponse.json(
         { ok: false, message: "잘못된 유저 ID입니다." },
         { status: 400 },
@@ -73,6 +73,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
         adminTotpSecret: null,
         adminTotpEnabled: false,
         adminTotpEnabledAt: null,
+        authVersion: { increment: 1 },
       },
       select: {
         id: true,

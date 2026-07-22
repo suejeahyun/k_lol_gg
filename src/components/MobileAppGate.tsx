@@ -26,10 +26,11 @@ function toAppPath(pathname: string, search?: string) {
   else if (pathname.startsWith("/admin")) target = "/app/admin";
   else if (
     pathname.startsWith("/players/balance") ||
-    pathname.startsWith("/balance") ||
-    pathname.startsWith("/random-team")
+    pathname.startsWith("/balance")
   ) {
     target = "/app";
+  } else if (pathname.startsWith("/random-team")) {
+    target = "/app/random-team";
   } else if (pathname.startsWith("/players/")) target = detailTarget(pathname, "/players", "/app/players");
   else if (pathname === "/players") target = "/app/players";
   else if (pathname.startsWith("/matches/")) target = detailTarget(pathname, "/matches", "/app/matches");
@@ -90,7 +91,13 @@ function readPcChoice() {
 export default function MobileAppGate() {
   const pathname = usePathname();
   const router = useRouter();
-  const isInstallPage = pathname === "/install" || pathname.startsWith("/install/");
+  const isStandalonePage =
+    pathname === "/install" ||
+    pathname.startsWith("/install/") ||
+    pathname === "/signup" ||
+    pathname === "/forgot-password" ||
+    pathname === "/privacy" ||
+    pathname === "/terms";
   const isMobile = useSyncExternalStore(subscribeToMobile, readIsMobile, () => false);
   const pcChoice = useSyncExternalStore(subscribeToPcChoice, readPcChoice, () => false);
 
@@ -98,11 +105,11 @@ export default function MobileAppGate() {
     const search = typeof window === "undefined" ? "" : window.location.search.slice(1);
     return toAppPath(pathname, search);
   }, [pathname]);
-  const shouldShow = isMobile && !pcChoice && !pathname.startsWith("/app") && !isInstallPage;
+  const shouldShow = isMobile && !pcChoice && !pathname.startsWith("/app") && !isStandalonePage;
 
   useEffect(() => {
     if (pathname.startsWith("/app")) return;
-    if (isInstallPage) return;
+    if (isStandalonePage) return;
     if (!readIsMobile() || readPcChoice()) return;
 
     const timeoutId = window.setTimeout(() => {
@@ -112,7 +119,7 @@ export default function MobileAppGate() {
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [isInstallPage, pathname]);
+  }, [isStandalonePage, pathname]);
 
   useEffect(() => {
     if (!shouldShow) return;

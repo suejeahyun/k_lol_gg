@@ -40,6 +40,30 @@ function normalizeNullableText(value: string | null | undefined, maxLength: numb
     : normalized;
 }
 
+const SENSITIVE_LOG_KEY =
+  /(password|passphrase|secret|token|authorization|cookie|totp|otp.?auth|api.?key)/i;
+
+function redactSensitiveJson(value: Prisma.InputJsonValue, depth = 0): Prisma.InputJsonValue {
+  if (depth >= 8) return "[TRUNCATED]";
+
+  if (Array.isArray(value)) {
+    return value.map((item) => redactSensitiveJson(item, depth + 1));
+  }
+
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [
+        key,
+        SENSITIVE_LOG_KEY.test(key)
+          ? "[REDACTED]"
+          : redactSensitiveJson(item as Prisma.InputJsonValue, depth + 1),
+      ]),
+    );
+  }
+
+  return value;
+}
+
 export async function writeAdminLog({
   action,
   message,
@@ -67,8 +91,8 @@ export async function writeAdminLog({
         actorUserId: normalizeNullableText(actorUserId, 120),
         targetType: normalizeNullableText(targetType, 80),
         targetId: targetId ?? null,
-        beforeJson: beforeJson ?? undefined,
-        afterJson: afterJson ?? undefined,
+        beforeJson: beforeJson === null ? undefined : redactSensitiveJson(beforeJson),
+        afterJson: afterJson === null ? undefined : redactSensitiveJson(afterJson),
         ipAddress: normalizeNullableText(ipAddress, 80),
         userAgent: normalizeNullableText(userAgent, 240),
       },
@@ -86,4 +110,14 @@ export function getRequestAuditFields(req: Request) {
     ipAddress: forwardedFor || realIp || null,
     userAgent: req.headers.get("user-agent") || null,
   };
+}
+
+export async function cleanupOldAdminLogs(days: number) {
+  const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+  return prisma.adminLog.deleteMany({
+    where: {
+      createdAt: { lt: cutoff },
+    },
+  });
 }

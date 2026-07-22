@@ -5,6 +5,7 @@ import { DestructionAuctionStatus, Position } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { logServerError } from "@/lib/server/safe-log";
+import { readJsonObject } from "@/lib/http/json-body";
 
 type RouteProps = {
   params: Promise<{
@@ -20,6 +21,9 @@ type TeamInput = {
 };
 
 const POSITIONS: Position[] = ["TOP", "JGL", "MID", "ADC", "SUP"];
+const MAX_DESTRUCTION_TEAMS = 99;
+const MAX_TEAM_NAME_LENGTH = 50;
+const MAX_INITIAL_AUCTION_POINTS = 1_000_000;
 
 function isValidPosition(position: unknown): position is Position {
   return typeof position === "string" && POSITIONS.includes(position as Position);
@@ -37,14 +41,17 @@ export async function POST(req: NextRequest, { params }: RouteProps) {
     const { tournamentId } = await params;
     const id = Number(tournamentId);
 
-    if (Number.isNaN(id)) {
+    if (!Number.isInteger(id) || id <= 0) {
       return NextResponse.json(
         { message: "멸망전 ID가 올바르지 않습니다." },
         { status: 400 },
       );
     }
 
-    const body = await req.json();
+    const body = await readJsonObject<Record<string, unknown>>(req);
+    if (!body) {
+      return NextResponse.json({ message: "올바른 JSON 요청 본문이 필요합니다." }, { status: 400 });
+    }
     const teams: TeamInput[] = Array.isArray(body.teams) ? body.teams : [];
 
     if (teams.length < 2) {
@@ -54,9 +61,32 @@ export async function POST(req: NextRequest, { params }: RouteProps) {
       );
     }
 
+    if (teams.length > MAX_DESTRUCTION_TEAMS) {
+      return NextResponse.json(
+        { message: `팀은 최대 ${MAX_DESTRUCTION_TEAMS}개까지 등록할 수 있습니다.` },
+        { status: 400 },
+      );
+    }
+
+    const normalizedTeamNames = teams.map((team, index) =>
+      team.name?.trim() || `${String.fromCharCode(65 + index)}팀`,
+    );
+    if (normalizedTeamNames.some((name) => name.length > MAX_TEAM_NAME_LENGTH)) {
+      return NextResponse.json(
+        { message: `팀 이름은 ${MAX_TEAM_NAME_LENGTH}자 이하로 입력해주세요.` },
+        { status: 400 },
+      );
+    }
+    if (new Set(normalizedTeamNames).size !== normalizedTeamNames.length) {
+      return NextResponse.json(
+        { message: "중복된 팀 이름이 있습니다." },
+        { status: 400 },
+      );
+    }
+
     const captainIds = teams.map((team) => Number(team.captainId));
 
-    if (captainIds.some((captainId) => Number.isNaN(captainId))) {
+    if (captainIds.some((captainId) => !Number.isInteger(captainId) || captainId <= 0)) {
       return NextResponse.json(
         { message: "팀장 정보가 올바르지 않습니다." },
         { status: 400 },
@@ -76,12 +106,12 @@ export async function POST(req: NextRequest, { params }: RouteProps) {
 
     const hasInvalidPoints = teams.some((team) => {
       const points = Number(team.initialAuctionPoints ?? 0);
-      return !Number.isInteger(points) || points < 0;
+      return !Number.isInteger(points) || points < 0 || points > MAX_INITIAL_AUCTION_POINTS;
     });
 
     if (hasInvalidPoints) {
       return NextResponse.json(
-        { message: "팀장 지급 포인트는 0 이상의 정수여야 합니다." },
+        { message: `팀장 지급 포인트는 0~${MAX_INITIAL_AUCTION_POINTS.toLocaleString("ko-KR")} 범위의 정수여야 합니다.` },
         { status: 400 },
       );
     }
@@ -201,7 +231,7 @@ export async function POST(req: NextRequest, { params }: RouteProps) {
         const createdTeam = await tx.destructionTeam.create({
           data: {
             tournamentId: id,
-            name: team.name?.trim() || `${String.fromCharCode(65 + i)}팀`,
+            name: normalizedTeamNames[i],
             captainId,
             initialAuctionPoints: points,
             remainingAuctionPoints: points,

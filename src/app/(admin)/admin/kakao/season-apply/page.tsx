@@ -4,6 +4,7 @@ export const revalidate = 0;
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import Pagination from "@/components/Pagination";
+import { parsePositivePage } from "@/lib/http/pagination";
 import styles from "../AdminKakaoReadable.module.css";
 
 type PageSearchParams = { page?: string; q?: string; date?: string };
@@ -22,8 +23,7 @@ function normalizePosition(value: string | null | undefined) {
 
 export default async function AdminKakaoSeasonApplyPage({ searchParams }: PageProps) {
   const resolved = await searchParams;
-  const page = Number(resolved.page ?? "1");
-  const safePage = Number.isNaN(page) || page < 1 ? 1 : page;
+  const safePage = parsePositivePage(resolved.page);
   const q = String(resolved.q ?? "").trim();
   const date = String(resolved.date ?? "").trim();
 
@@ -78,8 +78,8 @@ export default async function AdminKakaoSeasonApplyPage({ searchParams }: PagePr
 
         <form className={styles.filterCard} action="/admin/kakao/season-apply">
           <div className={styles.filterGridCompact}>
-            <input name="q" defaultValue={q} placeholder="이름, 티어, 방, 보낸 사람 검색" className={styles.input} />
-            <input name="date" defaultValue={date} type="date" className={styles.input} />
+            <input aria-label="이름, 티어, 방, 보낸 사람 검색" name="q" defaultValue={q} placeholder="이름, 티어, 방, 보낸 사람 검색" className={styles.input} />
+            <input aria-label="조회 날짜" name="date" defaultValue={date} type="date" className={styles.input} />
             <button className={styles.button} type="submit">조회</button>
             <a className={styles.secondaryButton} href="/admin/kakao/season-apply">초기화</a>
           </div>

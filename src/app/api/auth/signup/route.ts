@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
-import { hashPassword } from "@/lib/auth/password";
+import { getPasswordValidationMessage, hashPassword } from "@/lib/auth/password";
 import { Prisma } from "@prisma/client";
 
 export async function POST(req: NextRequest) {
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "요청 형식이 올바르지 않습니다." }, { status: 400 });
     }
 
-    const { userId, password, name, nickname, tag } = body;
+    const { userId, password, name, nickname, tag, termsAccepted, privacyAccepted } = body;
 
     if (!userId || !password || !name || !nickname || !tag) {
       return NextResponse.json(
@@ -45,9 +45,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (normalizedPassword.length < 8 || normalizedPassword.length > 32) {
+    const passwordValidationMessage = getPasswordValidationMessage(normalizedPassword);
+    if (passwordValidationMessage) {
       return NextResponse.json(
-        { message: "비밀번호는 8~32자로 입력해주세요." },
+        { message: passwordValidationMessage },
         { status: 400 },
       );
     }
@@ -55,6 +56,13 @@ export async function POST(req: NextRequest) {
     if (!normalizedName || !normalizedNickname || !normalizedTag) {
       return NextResponse.json(
         { message: "이름, 닉네임, 태그를 정확히 입력해주세요." },
+        { status: 400 },
+      );
+    }
+
+    if (termsAccepted !== true || privacyAccepted !== true) {
+      return NextResponse.json(
+        { message: "이용약관과 개인정보처리방침에 동의해주세요." },
         { status: 400 },
       );
     }
@@ -109,6 +117,8 @@ export async function POST(req: NextRequest) {
           passwordHash,
           status: "PENDING",
           role: "USER",
+          termsAcceptedAt: new Date(),
+          privacyAcceptedAt: new Date(),
         },
       });
 

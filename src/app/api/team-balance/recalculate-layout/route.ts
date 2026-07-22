@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma/client";
 import { requireApprovedUserOrAdmin, getAccessErrorResponseMessage } from "@/lib/auth/access";
 import { recalculateManualTeamBalanceLayout, type ManualLayoutAssignmentInput } from "@/lib/team-balance/recalculate-layout";
 import { logServerError } from "@/lib/server/safe-log";
+import { readJsonObject } from "@/lib/http/json-body";
 
 type Body = {
   assignments?: ManualLayoutAssignmentInput[];
@@ -17,7 +18,10 @@ export async function POST(request: NextRequest) {
 
   try {
     await requireApprovedUserOrAdmin();
-    const body = (await request.json()) as Body;
+    const body = await readJsonObject<Body>(request);
+    if (!body) {
+      return NextResponse.json({ message: "올바른 JSON 요청 본문이 필요합니다." }, { status: 400 });
+    }
 
     const result = await recalculateManualTeamBalanceLayout(prisma, body.assignments ?? []);
     return NextResponse.json(result);

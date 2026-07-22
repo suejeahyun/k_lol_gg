@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { readJsonObject } from "@/lib/http/json-body";
 
 type RouteContext = {
   params: Promise<{ championId: string }>;
@@ -18,7 +19,7 @@ export async function GET(
     const { championId } = await params;
     const id = Number(championId);
 
-    if (Number.isNaN(id)) {
+    if (!Number.isInteger(id) || id <= 0) {
       return NextResponse.json(
         { message: "Invalid championId" },
         { status: 400 }
@@ -57,14 +58,20 @@ export async function PATCH(
     const { championId } = await params;
     const id = Number(championId);
 
-    if (Number.isNaN(id)) {
+    if (!Number.isInteger(id) || id <= 0) {
       return NextResponse.json(
         { message: "Invalid championId" },
         { status: 400 }
       );
     }
 
-    const body = await req.json();
+    const body = await readJsonObject<{ name?: unknown; imageUrl?: unknown }>(req);
+    if (!body) {
+      return NextResponse.json(
+        { message: "올바른 JSON 요청 본문이 필요합니다." },
+        { status: 400 },
+      );
+    }
 
     const name = String(body.name ?? "").trim();
     const imageUrl = String(body.imageUrl ?? "").trim();
@@ -110,7 +117,7 @@ export async function DELETE(
     const { championId } = await params;
     const id = Number(championId);
 
-    if (Number.isNaN(id)) {
+    if (!Number.isInteger(id) || id <= 0) {
       return NextResponse.json(
         { message: "Invalid championId" },
         { status: 400 }

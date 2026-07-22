@@ -45,7 +45,12 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     const tournamentNumberId = Number(tournamentId);
     const applicationNumberId = Number(applicationId);
 
-    if (Number.isNaN(tournamentNumberId) || Number.isNaN(applicationNumberId)) {
+    if (
+      !Number.isInteger(tournamentNumberId) ||
+      tournamentNumberId <= 0 ||
+      !Number.isInteger(applicationNumberId) ||
+      applicationNumberId <= 0
+    ) {
       return NextResponse.json(
         { message: "잘못된 요청입니다." },
         { status: 400 },

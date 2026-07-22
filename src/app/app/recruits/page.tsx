@@ -1,19 +1,29 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
 import { AppEmpty, AppSection } from "@/components/app-mobile/AppCards";
 import PremiumFeatureGate from "@/components/PremiumFeatureGate";
 import { getSiteSettings } from "@/lib/site/settings";
+import { parsePositivePage } from "@/lib/http/pagination";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "모바일 구인 현황",
+  description: "K-LOL.GG 내전 구인과 참가 현황을 모바일에서 확인하세요.",
+};
 
 type RecruitStatusFilter = "ALL" | "IN_PROGRESS" | "FINISHED" | "CANCELED" | "RESET";
 
 type AppRecruitsPageProps = {
   searchParams?: Promise<{
     status?: string;
+    page?: string;
   }>;
 };
+
+const PAGE_SIZE = 16;
 
 const statusTabs: Array<{ key: RecruitStatusFilter; label: string }> = [
   { key: "ALL", label: "전체" },
@@ -54,25 +64,46 @@ function typeLabel(type: string) {
   return labels[type] ?? type.replaceAll("_", " ");
 }
 
+function formatRecruitDate(value: string) {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return match ? `${match[1]}. ${match[2]}. ${match[3]}.` : value || "날짜 미정";
+}
+
 export default async function AppRecruitsPage({ searchParams }: AppRecruitsPageProps) {
   const params = await searchParams;
   const activeStatus = normalizeStatus(params?.status);
+  const requestedPage = parsePositivePage(params?.page);
   const siteSettings = await getSiteSettings();
-  const parties = await prisma.recruitParty.findMany({
-    where: activeStatus === "ALL" ? undefined : { status: activeStatus },
-    include: {
-      members: { orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }] },
-    },
-    orderBy: [{ status: "asc" }, { recruitDate: "desc" }, { resetSeq: "desc" }, { recruitNo: "asc" }],
-    take: 16,
-  });
-
   const counts = await prisma.recruitParty.groupBy({
     by: ["status"],
     _count: { _all: true },
   }).catch(() => []);
   const totalCount = counts.reduce((sum, item) => sum + item._count._all, 0);
   const countByStatus = new Map(counts.map((item) => [item.status, item._count._all]));
+  const selectedCount = activeStatus === "ALL"
+    ? totalCount
+    : countByStatus.get(activeStatus) ?? 0;
+  const totalPages = Math.max(1, Math.ceil(selectedCount / PAGE_SIZE));
+  const currentPage = Math.min(requestedPage, totalPages);
+  const parties = await prisma.recruitParty.findMany({
+    where: activeStatus === "ALL" ? undefined : { status: activeStatus },
+    include: {
+      members: { orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }] },
+    },
+    orderBy: [{ status: "asc" }, { recruitDate: "desc" }, { resetSeq: "desc" }, { recruitNo: "asc" }],
+    skip: (currentPage - 1) * PAGE_SIZE,
+    take: PAGE_SIZE,
+  });
+  const rangeStart = selectedCount === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const rangeEnd = Math.min(currentPage * PAGE_SIZE, selectedCount);
+
+  const pageHref = (page: number) => {
+    const query = new URLSearchParams();
+    if (activeStatus !== "ALL") query.set("status", activeStatus);
+    if (page > 1) query.set("page", String(page));
+    const value = query.toString();
+    return value ? `/app/recruits?${value}` : "/app/recruits";
+  };
 
   return (
     <AppMobileShell subtitle="구인 현황">
@@ -94,7 +125,10 @@ export default async function AppRecruitsPage({ searchParams }: AppRecruitsPageP
           </nav>
         </section>
 
-        <AppSection title={statusTabs.find((tab) => tab.key === activeStatus)?.label ?? "구인"} caption={`${parties.length}개`}>
+        <AppSection
+          title={statusTabs.find((tab) => tab.key === activeStatus)?.label ?? "구인"}
+          caption={`전체 ${selectedCount}개 중 ${rangeStart}-${rangeEnd}`}
+        >
           {parties.length === 0 ? (
             <AppEmpty>현재 표시할 구인이 없습니다.</AppEmpty>
           ) : (
@@ -107,7 +141,9 @@ export default async function AppRecruitsPage({ searchParams }: AppRecruitsPageP
                     <div className="klol-app-list-top">
                       <div className="klol-app-list-title">
                         <strong>#{party.recruitNo} · {party.title || typeLabel(party.type)}</strong>
-                        <span>{party.hostName || "호스트 미입력"} · {party.startTimeText || "시간 미정"}</span>
+                        <span>
+                          {formatRecruitDate(party.recruitDate)} · {party.hostName || "호스트 미입력"} · {party.startTimeText || "시간 미정"}
+                        </span>
                       </div>
                       <span className={isClosed ? "klol-app-badge klol-app-badge--muted" : "klol-app-badge"}>
                         {statusText(party.status)}
@@ -135,6 +171,22 @@ export default async function AppRecruitsPage({ searchParams }: AppRecruitsPageP
               })}
             </div>
           )}
+
+          {totalPages > 1 ? (
+            <nav className="klol-app-pagination" aria-label="구인 목록 페이지">
+              {currentPage > 1 ? (
+                <Link href={pageHref(currentPage - 1)}>이전</Link>
+              ) : (
+                <span aria-disabled="true">이전</span>
+              )}
+              <strong>{currentPage} / {totalPages}</strong>
+              {currentPage < totalPages ? (
+                <Link href={pageHref(currentPage + 1)}>다음</Link>
+              ) : (
+                <span aria-disabled="true">다음</span>
+              )}
+            </nav>
+          ) : null}
         </AppSection>
       </PremiumFeatureGate>
     </AppMobileShell>
