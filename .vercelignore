@@ -1,0 +1,11 @@
+# Local secrets must never be included in CLI deployment source archives.
+.env
+.env.*
+!.env.example
+
+# Local deployment metadata and verification artifacts.
+.vercel
+artifacts
+qa-*.png
+KLOL_DEPLOY_SMOKE_*.json
+*.log
