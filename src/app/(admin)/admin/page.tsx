@@ -28,7 +28,7 @@ type DashboardData = {
     billingOwner: string | null;
     lockedFeatureCount: number;
     featureStates: {
-      feature: "kakao" | "recruit" | "balanceAi" | "randomTeam" | "riot";
+      feature: "kakao" | "recruit" | "balanceAi" | "randomTeam" | "riot" | "aiAssistant";
       enabled: boolean;
     }[];
     envReady: {
@@ -121,30 +121,30 @@ export default function AdminHomePage() {
 
   if (loading && !data) {
     return (
-      <div className="page-container">
+      <main className="page-container">
         <h1 className="page-title">관리자 대시보드</h1>
         <div className="admin-dashboard-loading">
           데이터를 불러오는 중입니다.
         </div>
-      </div>
+      </main>
     );
   }
 
   if (!data) {
     return (
-      <div className="page-container">
+      <main className="page-container">
         <h1 className="page-title">관리자 대시보드</h1>
         <div className="admin-dashboard-error">
           대시보드 데이터를 불러오지 못했습니다.
         </div>
-      </div>
+      </main>
     );
   }
 
   const isSuperAdmin = data.currentAdminRole === "SUPER_ADMIN";
 
   return (
-    <div className="page-container">
+    <main className="page-container">
       <div className="admin-dashboard-header">
         <div>
           <h1 className="page-title">운영자 콘솔</h1>
@@ -324,7 +324,9 @@ export default function AdminHomePage() {
                       ? "K-LOL 랭킹"
                       : item.feature === "randomTeam"
                         ? "랜덤 팀"
-                        : "Riot 연동"}
+                        : item.feature === "riot"
+                          ? "Riot 연동"
+                          : "AI 운영 비서"}
               </span>
               <strong>{item.enabled ? "오픈" : "잠금"}</strong>
             </div>
@@ -435,6 +437,6 @@ export default function AdminHomePage() {
           </>
         )}
       </section> : null}
-    </div>
+    </main>
   );
 }

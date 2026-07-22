@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { createHmac } from "node:crypto";
 import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -17,6 +18,45 @@ const isFullPage = captureMode === "full" || captureMode === "fullpage";
 const userDataDir = await mkdtemp(join(tmpdir(), "klol-cdp-shot-"));
 const targetUrl = new URL(url);
 const targetOrigin = targetUrl.origin;
+
+function decodeBase32(value) {
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  const normalized = String(value ?? "").trim().replace(/=+$/g, "").toUpperCase();
+  const bytes = [];
+  let buffer = 0;
+  let bits = 0;
+
+  for (const character of normalized) {
+    const index = alphabet.indexOf(character);
+    if (index < 0) throw new Error("Invalid TOTP Base32 secret");
+    buffer = (buffer << 5) | index;
+    bits += 5;
+
+    if (bits >= 8) {
+      bits -= 8;
+      bytes.push((buffer >>> bits) & 0xff);
+    }
+  }
+
+  return Buffer.from(bytes);
+}
+
+function generateTotpCode(secret, timestamp = Date.now()) {
+  if (!secret) return undefined;
+
+  const counter = BigInt(Math.floor(timestamp / 1000 / 30));
+  const counterBytes = Buffer.alloc(8);
+  counterBytes.writeBigUInt64BE(counter);
+  const digest = createHmac("sha1", decodeBase32(secret)).update(counterBytes).digest();
+  const offset = digest[digest.length - 1] & 0x0f;
+  const binary =
+    ((digest[offset] & 0x7f) << 24)
+    | (digest[offset + 1] << 16)
+    | (digest[offset + 2] << 8)
+    | digest[offset + 3];
+
+  return String(binary % 1_000_000).padStart(6, "0");
+}
 
 const chrome = spawn(chromePath, [
   "--headless=new",
@@ -200,6 +240,9 @@ if (shouldAdminLogin) {
     body: JSON.stringify({
       id: env.SUPER_ADMIN_ID,
       password: env.SUPER_ADMIN_PASSWORD,
+      ...(env.SUPER_ADMIN_TOTP_SECRET
+        ? { totpCode: generateTotpCode(env.SUPER_ADMIN_TOTP_SECRET) }
+        : {}),
     }),
   });
 
