@@ -82,6 +82,10 @@ function envBoolean(name: string, fallback: boolean) {
   return ["1", "true", "yes", "on"].includes(value.toLowerCase());
 }
 
+function isAiAssistantRuntimeConfigured() {
+  return Boolean(process.env.OPENAI_API_KEY?.trim());
+}
+
 export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   siteName: process.env.NEXT_PUBLIC_SITE_NAME || "K-LOL.GG",
   siteTagline: process.env.NEXT_PUBLIC_SITE_TAGLINE || "내전 · 랭킹 · AI 데이터",
@@ -238,7 +242,8 @@ export function getPublicSiteSettings(settings: SiteSettings): PublicSiteSetting
     balanceAiEnabled: settings.balanceAiEnabled,
     randomTeamEnabled: settings.randomTeamEnabled,
     riotEnabled: settings.riotEnabled,
-    aiAssistantEnabled: settings.aiAssistantEnabled,
+    aiAssistantEnabled:
+      settings.aiAssistantEnabled && isAiAssistantRuntimeConfigured(),
   };
 }
 
@@ -253,7 +258,7 @@ export function isSiteFeatureEnabled(settings: SiteSettings, feature: SiteFeatur
   if (feature === "balanceAi") return settings.balanceAiEnabled;
   if (feature === "randomTeam") return settings.randomTeamEnabled;
   if (feature === "riot") return settings.riotEnabled;
-  return settings.aiAssistantEnabled;
+  return settings.aiAssistantEnabled && isAiAssistantRuntimeConfigured();
 }
 
 export function getSiteFeatureLabel(feature: SiteFeatureKey) {
