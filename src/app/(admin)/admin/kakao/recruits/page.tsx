@@ -4,7 +4,6 @@ export const revalidate = 0;
 import type { Prisma } from "@prisma/client";
 import Pagination from "@/components/Pagination";
 import { parsePositivePage } from "@/lib/http/pagination";
-import { runRecruitIdleAutoFinishIfNeeded } from "@/lib/kakao/recruit-idle-auto-finish";
 import { prisma } from "@/lib/prisma/client";
 import {
   buildGameInfoText,
@@ -65,8 +64,6 @@ export default async function AdminRecruitsPage({ searchParams }: PageProps) {
   const safePage = parsePositivePage(resolvedSearchParams.page);
   const q = resolvedSearchParams.q ?? "";
   const date = resolvedSearchParams.date ?? "";
-  await runRecruitIdleAutoFinishIfNeeded({ source: "admin-recruits-page", roomName: "admin", sender: "admin" });
-
   const where = buildPartyWhere(resolvedSearchParams);
   const [totalCount, activeCount, fullCount, parties] = await Promise.all([
     prisma.recruitParty.count({ where }),

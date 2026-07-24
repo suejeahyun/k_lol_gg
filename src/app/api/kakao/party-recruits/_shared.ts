@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { getRequiredSecretInProduction, matchesRequestSecret } from "@/lib/security/secrets";
 import { kakaoJsonReply } from "@/lib/kakao/reply-format";
+import { normalizeKakaoIdentity } from "@/lib/kakao/input-guard";
 
 export const PARTY_RECRUIT_FORMAT_VERSION = "party-recruit-v2";
 
@@ -55,11 +56,9 @@ export function getBodyText(body: Record<string, unknown>) {
 }
 
 export function getBodyRoom(body: Record<string, unknown>) {
-  if (typeof body.roomName === "string") return body.roomName;
-  if (typeof body.room === "string") return body.room;
-  return null;
+  return normalizeKakaoIdentity(body.roomName) ?? normalizeKakaoIdentity(body.room);
 }
 
 export function getBodySender(body: Record<string, unknown>) {
-  return typeof body.sender === "string" ? body.sender : null;
+  return normalizeKakaoIdentity(body.sender);
 }

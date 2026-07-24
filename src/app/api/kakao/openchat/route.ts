@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
 import { getRequiredSecretInProduction, matchesRequestSecret } from "@/lib/security/secrets";
 import { getKakaoHelpMessage, getKakaoRecruitHelpMessage, parseKakaoCommand } from "@/lib/kakao/parseKakaoCommand";
-import { parseRecruitMessage } from "@/lib/kakao/recruit-message-parser";
 import {
   formatPlayerRecordMessage,
   formatRecentGamesMessage,
@@ -198,15 +197,6 @@ function formatRankingMessageWithLimit(rows: RankingRow[], limit: number) {
 }
 
 async function forwardSeasonRecruitSnapshot(message: string, context: KakaoMessageContext, settings: KakaoOperationSettings) {
-  const parsed = parseRecruitMessage(message);
-
-  if (parsed.participants.length < 1) {
-    return jsonReply([
-      "[K-LOL.GG 내전 명단 업데이트 실패]",
-      "참가자 이름이 1명 이상 있는 전체 양식만 반영할 수 있습니다.",
-    ].join("\n"), 200, {}, settings);
-  }
-
   const recruitSecret = process.env.KAKAO_RECRUIT_SECRET?.trim();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -233,7 +223,7 @@ async function forwardSeasonRecruitSnapshot(message: string, context: KakaoMessa
     ? data.reply
     : "[K-LOL.GG 내전 명단 업데이트 실패]\nseason-apply 응답을 읽지 못했습니다.";
 
-  return jsonReply(reply, response.ok ? 200 : 500, {
+  return jsonReply(reply, response.ok ? 200 : response.status, {
     forwardedTo: "season-apply",
     seasonApplyStatusCode: data?.statusCode ?? response.status,
   }, settings);

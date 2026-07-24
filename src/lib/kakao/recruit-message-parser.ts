@@ -534,7 +534,6 @@ export function parseRecruitMessage(text: string, baseDate = new Date()): Parsed
   const warnings = [...dateResult.warnings];
   const participants: ParsedRecruitParticipant[] = [];
   const seenSlots = new Set<string>();
-  const seenNames = new Set<string>();
 
   const lines = normalized.split("\n");
 
@@ -550,7 +549,6 @@ export function parseRecruitMessage(text: string, baseDate = new Date()): Parsed
     }
 
     const participant = result.participant;
-    const nameKey = `${participant.isReserve ? "reserve" : "main"}:${participant.name.replace(/\s+/g, "").toLowerCase()}`;
     const slotKey = `${participant.isReserve ? "reserve" : "main"}:${participant.slotNumber}`;
 
     if (seenSlots.has(slotKey)) {
@@ -558,13 +556,7 @@ export function parseRecruitMessage(text: string, baseDate = new Date()): Parsed
       continue;
     }
 
-    if (seenNames.has(nameKey)) {
-      warnings.push(`${participant.name}님이 중복되어 뒤 항목을 제외했습니다.`);
-      continue;
-    }
-
     seenSlots.add(slotKey);
-    seenNames.add(nameKey);
     participants.push(participant);
   }
 

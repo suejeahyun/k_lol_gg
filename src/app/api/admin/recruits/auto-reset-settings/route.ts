@@ -1,82 +1,18 @@
+import { NextResponse } from "next/server";
+import { rejectIfNotSuperAdmin } from "@/lib/auth/requireAdmin";
 import { requireSiteFeature } from "@/lib/site/feature-guard";
-import { logServerError } from "@/lib/server/safe-log";
+
 export const dynamic = "force-dynamic";
 
-import { NextRequest, NextResponse } from "next/server";
-import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
-import { getRequestAuditFields, writeAdminLog } from "@/lib/admin-log";
-import {
-  MAX_RECRUIT_IDLE_RESET_HOURS,
-  MIN_RECRUIT_IDLE_RESET_HOURS,
-  getRecruitAutoResetSettings,
-  saveRecruitAutoResetSettings,
-} from "@/lib/kakao/recruit-auto-reset";
+export async function POST() {
+  const rejected = await rejectIfNotSuperAdmin();
+  if (rejected) return rejected;
 
-function parseIdleHours(value: unknown) {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed)) return NaN;
-  return Math.floor(parsed);
-}
-
-export async function GET() {
   const premiumLock = await requireSiteFeature("recruit");
   if (premiumLock) return premiumLock;
 
-  const rejected = await rejectIfNotAdmin();
-  if (rejected) return rejected;
-
-  const settings = await getRecruitAutoResetSettings();
-  return NextResponse.json({ ok: true, settings });
-}
-
-export async function POST(req: NextRequest) {
-  const premiumLock = await requireSiteFeature("recruit");
-  if (premiumLock) return premiumLock;
-
-  const rejected = await rejectIfNotAdmin();
-  if (rejected) return rejected;
-
-  try {
-    const body = await req.json().catch(() => ({})) as Record<string, unknown>;
-    const enabled = body.enabled !== false;
-    const idleHours = parseIdleHours(body.idleHours);
-
-    if (!Number.isInteger(idleHours) || idleHours < MIN_RECRUIT_IDLE_RESET_HOURS || idleHours > MAX_RECRUIT_IDLE_RESET_HOURS) {
-      return NextResponse.json(
-        {
-          ok: false,
-          message: `활동 없음 기준 시간은 ${MIN_RECRUIT_IDLE_RESET_HOURS}~${MAX_RECRUIT_IDLE_RESET_HOURS}시간 사이로 입력해야 합니다.`,
-        },
-        { status: 400 },
-      );
-    }
-
-    const audit = getRequestAuditFields(req);
-    const saved = await saveRecruitAutoResetSettings({ enabled, idleHours });
-
-    await writeAdminLog({
-      action: "ADMIN_PARTY_RECRUIT_AUTO_RESET_SETTING_UPDATE",
-      message: `구인구직 자동 모집번호 초기화 설정 변경: ${enabled ? "사용" : "미사용"}, ${idleHours}시간`,
-      targetType: "RecruitPartyLog",
-      targetId: saved.id,
-      afterJson: { enabled, idleHours },
-      ipAddress: audit.ipAddress,
-      userAgent: audit.userAgent,
-    });
-
-    return NextResponse.json({
-      ok: true,
-      message: `자동 모집번호 초기화 설정을 저장했습니다. 현재 설정: ${enabled ? "사용" : "미사용"}, ${idleHours}시간`,
-      settings: { enabled, idleHours },
-    });
-  } catch (error) {
-    logServerError("[ADMIN_RECRUITS_AUTO_RESET_SETTINGS_ERROR]", error);
-    return NextResponse.json(
-      {
-        ok: false,
-        message: error instanceof Error ? error.message : "자동 모집번호 초기화 설정 저장 실패",
-      },
-      { status: 500 },
-    );
-  }
+  return NextResponse.json(
+    { ok: false, message: "자동 모집번호 초기화는 사용하지 않습니다." },
+    { status: 410 },
+  );
 }

@@ -3,15 +3,12 @@ export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import { writeAdminLog } from "@/lib/admin-log";
-import { getScrimRecruitDateKey } from "@/lib/kakao/destruction-scrim-recruit";
-import { prisma } from "@/lib/prisma/client";
+import { repairSafeKakaoRecruitData } from "@/lib/kakao/recruit-health";
 import {
   isCronConfigured,
   isCronRequestAuthorized,
 } from "@/lib/security/cron-auth";
 import { logServerError } from "@/lib/server/safe-log";
-
-const ACTIVE_SCRIM_STATUSES = ["RECRUITING", "MATCHED", "CONFIRMED"] as const;
 
 export async function GET(request: Request) {
   if (!isCronConfigured()) {
@@ -28,31 +25,19 @@ export async function GET(request: Request) {
     );
   }
 
-  const operationDate = getScrimRecruitDateKey();
-
   try {
-    const closedScrims = await prisma.destructionScrimRecruit.updateMany({
-      where: {
-        recruitDate: { not: operationDate },
-        status: { in: [...ACTIVE_SCRIM_STATUSES] },
-      },
-      data: { status: "COMPLETED" },
-    });
+    const repaired = await repairSafeKakaoRecruitData();
 
     await writeAdminLog({
       action: "KAKAO_DAILY_CLOSE",
-      message: "오전 6시 카카오 내전·스크림 운영일 전환을 완료했습니다.",
+      message: "오전 6시 카카오 운영일 전환과 안전 데이터 정리를 완료했습니다.",
       actorType: "SYSTEM",
-      afterJson: {
-        operationDate,
-        completedScrims: closedScrims.count,
-      },
+      afterJson: repaired,
     });
 
     return NextResponse.json({
       ok: true,
-      operationDate,
-      completedScrims: closedScrims.count,
+      ...repaired,
     });
   } catch (error) {
     logServerError("[KAKAO_DAILY_CLOSE_ERROR]", error);

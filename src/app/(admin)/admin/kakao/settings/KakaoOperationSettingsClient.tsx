@@ -43,7 +43,6 @@ const CLIENT_DEFAULT_SETTINGS: KakaoOperationSettings = {
   recruitCreateCommandEnabled: true,
   recruitJoinCommandEnabled: true,
   recruitFinishCommandEnabled: true,
-  recruitResetCommandEnabled: true,
   recruitStatusCommandEnabled: true,
   playerRecordSearchEnabled: true,
   recordCommandEnabled: true,
@@ -101,7 +100,7 @@ const sections: Array<{
   },
   {
     title: "구인 명령",
-    desc: "구인 도움말, 생성, 참가, 마감, 초기화, 현황 계열 명령을 세분화합니다.",
+    desc: "구인 도움말, 생성, 참가, 마감, 현황 계열 명령을 세분화합니다.",
     columns: "grid3",
     fields: [
       { key: "recruitCommandEnabled", label: "구인 명령 전체", desc: "구인 관련 명령의 상위 스위치입니다." },
@@ -109,7 +108,6 @@ const sections: Array<{
       { key: "recruitCreateCommandEnabled", label: "구인 생성", desc: "파티 구인 생성 계열 명령을 허용합니다." },
       { key: "recruitJoinCommandEnabled", label: "구인 참가", desc: "번호+ㅉ 등 참가 계열 명령을 허용합니다." },
       { key: "recruitFinishCommandEnabled", label: "구인 마감", desc: "구인마감/진행 종료 계열 명령을 허용합니다." },
-      { key: "recruitResetCommandEnabled", label: "구인 초기화", desc: "구인 번호/전체 초기화 계열 명령을 허용합니다." },
       { key: "recruitStatusCommandEnabled", label: "구인 현황", desc: "구인현황 출력 계열 명령을 허용합니다." },
     ],
   },
@@ -352,5 +350,3 @@ export default function KakaoOperationSettingsClient({ initialSettings }: Props)
     </div>
   );
 }
-
-

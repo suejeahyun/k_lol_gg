@@ -5,9 +5,7 @@ import type { Prisma } from "@prisma/client";
 import Pagination from "@/components/Pagination";
 import { parsePositivePage } from "@/lib/http/pagination";
 import PremiumFeatureGate from "@/components/PremiumFeatureGate";
-import AdminRecruitResetAllButton from "./AdminRecruitResetAllButton";
 import { requireAdminRequest } from "@/lib/auth/requireAdmin";
-import { runRecruitIdleAutoFinishIfNeeded } from "@/lib/kakao/recruit-idle-auto-finish";
 import { prisma } from "@/lib/prisma/client";
 import { getSiteSettings } from "@/lib/site/settings";
 import {
@@ -90,15 +88,12 @@ function buildLogWhere(searchParams: PageSearchParams): Prisma.RecruitPartyLogWh
 }
 
 export default async function AdminRecruitsPage({ searchParams }: PageProps) {
-  const admin = await requireAdminRequest();
-  const isSuperAdmin = admin?.user.role === "SUPER_ADMIN";
+  await requireAdminRequest();
   const siteSettings = await getSiteSettings();
   const resolvedSearchParams = await searchParams;
   const safePage = parsePositivePage(resolvedSearchParams.page);
   const q = resolvedSearchParams.q ?? "";
   const date = resolvedSearchParams.date ?? "";
-  await runRecruitIdleAutoFinishIfNeeded({ source: "admin-recruits-page", roomName: "admin", sender: "admin" });
-
   const where = buildPartyWhere(resolvedSearchParams);
   const logWhere = buildLogWhere(resolvedSearchParams);
 
@@ -179,7 +174,6 @@ export default async function AdminRecruitsPage({ searchParams }: PageProps) {
             <p className="admin-muted">총 {totalCount.toLocaleString("ko-KR")}개</p>
           </div>
           <div className="admin-recruit-actions">
-            {isSuperAdmin ? <AdminRecruitResetAllButton /> : null}
           </div>
         </div>
 

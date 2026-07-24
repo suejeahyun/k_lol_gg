@@ -4,6 +4,7 @@ import { DestructionScrimRecruitStatus, DestructionStatus } from "@prisma/client
 import { prisma } from "@/lib/prisma/client";
 import { getRequiredSecretInProduction, matchesRequestSecret } from "@/lib/security/secrets";
 import { kakaoJsonReply } from "@/lib/kakao/reply-format";
+import { normalizeKakaoIdentity } from "@/lib/kakao/input-guard";
 import {
   buildScrimStatusReply,
   buildScrimFormFromData,
@@ -57,13 +58,11 @@ export function getBodyText(body: Record<string, unknown>) {
 }
 
 export function getBodyRoom(body: Record<string, unknown>) {
-  if (typeof body.roomName === "string") return body.roomName;
-  if (typeof body.room === "string") return body.room;
-  return null;
+  return normalizeKakaoIdentity(body.roomName) ?? normalizeKakaoIdentity(body.room);
 }
 
 export function getBodySender(body: Record<string, unknown>) {
-  return typeof body.sender === "string" ? body.sender : null;
+  return normalizeKakaoIdentity(body.sender);
 }
 
 export function getMessageHash(message: string) {
@@ -136,37 +135,13 @@ export async function findActiveScrim(scrimNo: number, recruitDate = getScrimRec
 }
 
 async function findScrimForDetail(scrimNo: number, recruitDate = getScrimRecruitDateKey()) {
-  const currentActive = await prisma.destructionScrimRecruit.findFirst({
+  return prisma.destructionScrimRecruit.findFirst({
     where: {
       scrimNo,
       recruitDate,
       status: { in: ACTIVE_SCRIM_STATUSES },
     },
     orderBy: [{ updatedAt: "desc" }],
-  });
-
-  if (currentActive) return currentActive;
-
-  const latestActive = await prisma.destructionScrimRecruit.findFirst({
-    where: {
-      scrimNo,
-      status: { in: ACTIVE_SCRIM_STATUSES },
-    },
-    orderBy: [{ recruitDate: "desc" }, { updatedAt: "desc" }],
-  });
-
-  if (latestActive) return latestActive;
-
-  const currentAnyStatus = await prisma.destructionScrimRecruit.findFirst({
-    where: { scrimNo, recruitDate },
-    orderBy: [{ updatedAt: "desc" }],
-  });
-
-  if (currentAnyStatus) return currentAnyStatus;
-
-  return prisma.destructionScrimRecruit.findFirst({
-    where: { scrimNo },
-    orderBy: [{ recruitDate: "desc" }, { updatedAt: "desc" }],
   });
 }
 
@@ -195,7 +170,10 @@ export async function getScrimStatusPayload(detailScrimNo?: number | null) {
   }
 
   const scrims = await prisma.destructionScrimRecruit.findMany({
-    where: { status: { in: ACTIVE_SCRIM_STATUSES } },
+    where: {
+      recruitDate: getScrimRecruitDateKey(),
+      status: { in: ACTIVE_SCRIM_STATUSES },
+    },
     orderBy: [{ scheduledAt: "asc" }, { updatedAt: "desc" }],
     take: 20,
   });

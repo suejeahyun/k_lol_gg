@@ -747,7 +747,7 @@ model SeasonParticipationPendingApply {
 
   season Season @relation(fields: [seasonId], references: [id], onDelete: Cascade)
 
-  @@unique([seasonId, applyDate, recruitNo, name, isReserve], map: "SeasonPending_recruitNo_unique")
+  @@index([seasonId, applyDate, recruitNo, name, isReserve], map: "SeasonPending_recruitNo_name_idx")
   @@index([seasonId, applyDate, isReserve])
   @@index([seasonId, applyDate, recruitNo, isReserve], map: "SeasonPending_recruitNo_reserve_idx")
   @@index([seasonId, applyDate, source])
@@ -1214,6 +1214,7 @@ model DestructionScrimRecruit {
 
   roomName          String?
   sender            String?
+  requestKey        String? @unique(map: "ScrimRecruit_requestKey_unique")
   sourceMessage     String? @db.Text
   sourceMessageHash String?
 
@@ -1225,10 +1226,10 @@ model DestructionScrimRecruit {
   opponentTeam  DestructionTeam?      @relation("ScrimOpponentTeam", fields: [opponentTeamId], references: [id], onDelete: SetNull)
 
   @@unique([recruitDate, scrimNo])
+  @@unique([recruitDate, sourceMessageHash], map: "ScrimRecruit_date_sourceHash_unique")
   @@index([tournamentId, status])
   @@index([status, updatedAt])
   @@index([scheduledAt])
-  @@index([sourceMessageHash])
 }
 
 model DestructionScrimRecruitLog {
@@ -1256,6 +1257,7 @@ model RecruitParty {
   recruitDate String
   resetSeq    Int                @default(0)
   recruitCode String?
+  requestKey  String? @unique(map: "RecruitParty_requestKey_unique")
   type        RecruitPartyType
   status      RecruitPartyStatus @default(IN_PROGRESS)
 

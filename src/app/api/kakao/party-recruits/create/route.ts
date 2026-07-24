@@ -6,6 +6,8 @@ import { NextRequest } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
+import { normalizeKakaoRequestId } from "@/lib/kakao/request-id";
+import { getKakaoMessageValidationError } from "@/lib/kakao/input-guard";
 import {
   buildCreateReply,
   buildRecruitPartyCode,
@@ -18,8 +20,6 @@ import {
   getCurrentRecruitResetSeq,
   getLatestRecruitResetLog,
 } from "@/lib/kakao/recruit-reset";
-import { runRecruitIdleAutoResetIfNeeded } from "@/lib/kakao/recruit-auto-reset";
-import { runRecruitIdleAutoFinishIfNeeded } from "@/lib/kakao/recruit-idle-auto-finish";
 import {
   getBodyRoom,
   getBodySender,
@@ -32,29 +32,8 @@ import {
 const CREATE_HELP = [
   "[K-LOL.GG 구인구직 생성 실패]",
   "",
-  "명령어 형식이 올바르지 않습니다.",
-  "",
-  "사용 가능한 명령어",
-  "숫자+인파티 또는 /숫자+인파티",
-  "숫자+인구인 또는 /숫자+인구인",
-  "예: /2인파티, /6인파티, /10인구인",
-  "5인협곡파티 또는 /5인협곡파티",
-  "",
-  "기존 명령어",
-  "자랭구인 또는 /자랭구인",
-  "일반구인 또는 /일반구인",
-  "솔랭구인 또는 /솔랭구인",
-  "칼바람구인 또는 /칼바람구인",
-  "증바람구인 또는 /증바람구인",
-  "롤체일반구인 또는 /롤체일반구인",
-  "롤체랭크구인 또는 /롤체랭크구인",
-  "더블업구인 또는 /더블업구인",
-  "",
-  "예시",
-  "/2인파티",
-  "/6인파티",
-  "/10인구인",
-  "/5인협곡파티",
+  "인원수+인파티로 입력해주세요.",
+  "예: 2인파티, 5인파티, 10인파티",
 ].join("\n");
 
 export async function POST(req: NextRequest) {
@@ -73,6 +52,10 @@ export async function POST(req: NextRequest) {
     // 모집번호만 날짜/회차 기준으로 다시 #1부터 배정합니다.
 
     const message = getBodyText(body);
+    const messageError = getKakaoMessageValidationError(message);
+    if (messageError) {
+      return partyRecruitJson({ reply: `[K-LOL.GG 파티구인 생성 실패]\n${messageError}` }, 400);
+    }
     const classification = classifyKakaoRecruitMessage(message);
     if (classification.kind !== "PARTY_RECRUIT") {
       return partyRecruitJson(
@@ -83,6 +66,7 @@ export async function POST(req: NextRequest) {
 
     const roomName = getBodyRoom(body);
     const sender = getBodySender(body);
+    let requestKey = normalizeKakaoRequestId(body.requestId);
 
     const parsed = parseCreateRecruitCommand(message);
 
@@ -90,13 +74,47 @@ export async function POST(req: NextRequest) {
       return partyRecruitJson({ reply: CREATE_HELP }, 400);
     }
 
-    await runRecruitIdleAutoFinishIfNeeded({ source: "kakao-create", roomName, sender });
-    await runRecruitIdleAutoResetIfNeeded({ roomName, sender });
+    if (requestKey) {
+      const repeatedParty = await prisma.recruitParty.findUnique({
+        where: { requestKey },
+        include: { members: true },
+      });
+      if (repeatedParty?.status === "IN_PROGRESS") {
+        return partyRecruitJson({
+          party: repeatedParty,
+          replayed: true,
+          reply: buildCreateReply(parsed.template, repeatedParty.recruitNo),
+        });
+      }
+      if (repeatedParty) requestKey = null;
+    }
+
+    if (roomName && sender) {
+      const recentDuplicate = await prisma.recruitParty.findFirst({
+        where: {
+          roomName,
+          hostName: sender,
+          type: parsed.type,
+          maxMembers: parsed.maxMembers,
+          status: "IN_PROGRESS",
+          createdAt: { gte: new Date(Date.now() - 15_000) },
+        },
+        orderBy: { createdAt: "desc" },
+        include: { members: true },
+      });
+      if (recentDuplicate) {
+        return partyRecruitJson({
+          party: recentDuplicate,
+          replayed: true,
+          reply: buildCreateReply(parsed.template, recentDuplicate.recruitNo),
+        });
+      }
+    }
 
     const recruitDate = getKakaoRecruitDateKey();
     const resetSeq = await getCurrentRecruitResetSeq(recruitDate);
-    const recruitNo = parsed.recruitNo ?? (await getNextRecruitNo(recruitDate, resetSeq));
-    const recruitCode = buildRecruitPartyCode({
+    let recruitNo = parsed.recruitNo ?? (await getNextRecruitNo(recruitDate, resetSeq));
+    let recruitCode = buildRecruitPartyCode({
       recruitDate,
       maxMembers: parsed.maxMembers,
       recruitNo,
@@ -108,9 +126,9 @@ export async function POST(req: NextRequest) {
       prisma.recruitParty.findFirst({
         where: {
           recruitNo,
-          recruitDate,
           status: "IN_PROGRESS",
         },
+        orderBy: [{ recruitDate: "desc" }, { resetSeq: "desc" }, { updatedAt: "desc" }],
         include: {
           members: true,
         },
@@ -177,23 +195,60 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const party = await prisma.recruitParty.create({
-      data: {
-        recruitNo,
-        recruitDate,
-        resetSeq,
-        recruitCode,
-        type: parsed.type,
-        status: "IN_PROGRESS",
-        title: parsed.title,
-        roomName,
-        hostName: sender,
-        maxMembers: parsed.maxMembers,
-      },
-      include: {
-        members: true,
-      },
-    });
+    let party: Awaited<ReturnType<typeof prisma.recruitParty.create>> | null = null;
+    for (let attempt = 0; attempt < 3 && !party; attempt += 1) {
+      try {
+        party = await prisma.recruitParty.create({
+          data: {
+            recruitNo,
+            recruitDate,
+            resetSeq,
+            recruitCode,
+            requestKey,
+            type: parsed.type,
+            status: "IN_PROGRESS",
+            title: parsed.title,
+            roomName,
+            hostName: sender,
+            maxMembers: parsed.maxMembers,
+          },
+          include: {
+            members: true,
+          },
+        });
+      } catch (error) {
+        const isNumberCollision =
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === "P2002";
+        if (requestKey && isNumberCollision) {
+          const repeatedParty = await prisma.recruitParty.findUnique({
+            where: { requestKey },
+            include: { members: true },
+          });
+          if (repeatedParty) {
+            return partyRecruitJson({
+              party: repeatedParty,
+              replayed: true,
+              reply: buildCreateReply(parsed.template, repeatedParty.recruitNo),
+            });
+          }
+        }
+        if (parsed.recruitNo !== null || !isNumberCollision || attempt === 2) {
+          throw error;
+        }
+
+        recruitNo = await getNextRecruitNo(recruitDate, resetSeq);
+        recruitCode = buildRecruitPartyCode({
+          recruitDate,
+          maxMembers: parsed.maxMembers,
+          recruitNo,
+        });
+      }
+    }
+
+    if (!party) {
+      throw new Error("파티 모집번호 자동 배정에 실패했습니다.");
+    }
 
     await writeAdminLog({
       action: "KAKAO_PARTY_RECRUIT_CREATE",
@@ -224,10 +279,8 @@ export async function POST(req: NextRequest) {
           reply: [
             "[K-LOL.GG 구인구직 생성 실패]",
             "",
-            "모집번호 중복 제약 조건이 남아 있어 생성하지 못했습니다.",
-            "",
-            "조치 방법:",
-            "npx prisma migrate deploy 실행 후 다시 시도해주세요.",
+            "같은 모집번호가 동시에 생성되어 반영하지 못했습니다.",
+            "번호를 지정하지 말고 인원수+인파티를 다시 입력해주세요.",
           ].join("\n"),
           error: message,
         },
@@ -275,7 +328,7 @@ async function getNextRecruitNo(recruitDate = getKakaoRecruitDateKey(), resetSeq
   for (let offset = 1; offset <= 99; offset += 1) {
     const candidate = ((lastNo + offset - 1) % 99) + 1;
 
-    const [existsInCurrentSeq, existsActiveToday] = await Promise.all([
+    const [existsInCurrentSeq, existsActive] = await Promise.all([
       prisma.recruitParty.findFirst({
         where: {
           recruitNo: candidate,
@@ -289,7 +342,6 @@ async function getNextRecruitNo(recruitDate = getKakaoRecruitDateKey(), resetSeq
       prisma.recruitParty.findFirst({
         where: {
           recruitNo: candidate,
-          recruitDate,
           status: "IN_PROGRESS",
         },
         select: {
@@ -298,10 +350,10 @@ async function getNextRecruitNo(recruitDate = getKakaoRecruitDateKey(), resetSeq
       }),
     ]);
 
-    if (!existsInCurrentSeq && !existsActiveToday) {
+    if (!existsInCurrentSeq && !existsActive) {
       return candidate;
     }
   }
 
-  throw new Error("오늘 사용 가능한 모집번호가 없습니다. 진행 중인 구인글을 마무리하거나 관리자 페이지에서 모집번호를 초기화해주세요.");
+  throw new Error("사용 가능한 모집번호가 없습니다. 진행 중인 파티를 모집번호+ㅉ으로 마무리해주세요.");
 }

@@ -4,6 +4,13 @@ export const revalidate = 0;
 
 import { NextRequest } from "next/server";
 import { writeAdminLog } from "@/lib/admin-log";
+import { normalizeKakaoRequestId } from "@/lib/kakao/request-id";
+import {
+  getKakaoMessageValidationError,
+  isKakaoNameTooLong,
+  MAX_KAKAO_NAME_LENGTH,
+} from "@/lib/kakao/input-guard";
+import { acquireScrimRecruitLock } from "@/lib/kakao/db-lock";
 import {
   buildScrimFormFromData,
   buildScrimRecruitTemplate,
@@ -284,27 +291,16 @@ async function findSameDateScrimByNoAnyStatus(
   });
 }
 
-async function isScrimNoAlreadyUsed(scrimNo: number) {
-  const existing = await prisma.destructionScrimRecruit.findFirst({
-    where: { scrimNo, recruitDate: getScrimRecruitDateKey() },
-    select: { id: true },
+async function findLatestScrimByNo(scrimNo: number) {
+  return prisma.destructionScrimRecruit.findFirst({
+    where: { scrimNo },
+    orderBy: [{ recruitDate: "desc" }, { updatedAt: "desc" }],
   });
-
-  return Boolean(existing);
-}
-
-async function resolveCreateScrimNo(parsedScrimNo: number | null) {
-  if (!parsedScrimNo) return getNextScrimNo();
-
-  // 같은 운영일에 이미 사용된 번호는 상세 명령과 충돌하므로 재사용하지 않습니다.
-  // 단, 활성 스크림 수정/상대 등록은 위쪽 findActiveScrim 분기에서 먼저 처리됩니다.
-  if (await isScrimNoAlreadyUsed(parsedScrimNo)) return getNextScrimNo();
-
-  return parsedScrimNo;
 }
 
 async function findSameRequesterScrim(params: {
   tournamentId: number;
+  recruitDate: string;
   requesterTeamName: string | null;
   requesterLineup: ScrimLineup;
   startTimeText: string | null;
@@ -322,6 +318,7 @@ async function findSameRequesterScrim(params: {
   const candidates = await prisma.destructionScrimRecruit.findMany({
     where: {
       tournamentId: params.tournamentId,
+      recruitDate: params.recruitDate,
       status: { in: ACTIVE_SCRIM_STATUSES },
       requesterTeamName: {
         equals: params.requesterTeamName,
@@ -456,6 +453,98 @@ async function applyOpponentLineupToExisting(params: {
   });
 }
 
+async function applyFullScrimFormToExisting(params: {
+  scrim: NonNullable<Awaited<ReturnType<typeof findActiveScrim>>>;
+  parsed: NonNullable<ReturnType<typeof parseScrimCreateCommand>>;
+  roomName: string | null;
+  sender: string | null;
+  message: string;
+}) {
+  const requesterTeamName =
+    params.parsed.requesterTeamName ?? params.scrim.requesterTeamName;
+  const opponentTeamName = params.parsed.opponentTeamName;
+  const [requesterTeam, opponentTeam] = await Promise.all([
+    findTeamByName(params.scrim.tournamentId, requesterTeamName),
+    findTeamByName(params.scrim.tournamentId, opponentTeamName),
+  ]);
+  const hasOpponent = hasLineupOrName({
+    teamName: opponentTeamName,
+    lineup: params.parsed.opponentLineup,
+  });
+  const nextStatus: DestructionScrimRecruitStatus = hasOpponent
+    ? params.scrim.status === "CONFIRMED"
+      ? "CONFIRMED"
+      : "MATCHED"
+    : "RECRUITING";
+
+  const updated = await prisma.$transaction(async (tx) => {
+    await acquireScrimRecruitLock(tx, params.scrim.id);
+    const result = await tx.destructionScrimRecruit.update({
+      where: { id: params.scrim.id },
+      data: {
+        requesterTeamId: requesterTeam?.id ?? null,
+        opponentTeamId: opponentTeam?.id ?? null,
+        requesterTeamName: requesterTeam?.name ?? requesterTeamName,
+        opponentTeamName: opponentTeam?.name ?? opponentTeamName,
+        requesterLineupJson: lineupJson(params.parsed.requesterLineup),
+        opponentLineupJson: lineupJson(params.parsed.opponentLineup),
+        startTimeText:
+          params.parsed.startTimeText ?? params.scrim.startTimeText,
+        scheduledAt:
+          params.parsed.scheduledAt ?? params.scrim.scheduledAt,
+        gameCount: params.parsed.gameCount ?? params.scrim.gameCount,
+        seriesRuleText:
+          params.parsed.seriesRuleText ?? params.scrim.seriesRuleText,
+        title: `${requesterTeam?.name || requesterTeamName || "요청팀"} 스크림 구인`,
+        status: nextStatus,
+        roomName: params.roomName ?? params.scrim.roomName,
+        sender: params.sender ?? params.scrim.sender,
+        sourceMessage: params.message,
+        sourceMessageHash: getMessageHash(params.message),
+      },
+    });
+
+    await tx.destructionScrimRecruitLog.create({
+      data: {
+        scrimNo: result.scrimNo,
+        recruitDate: result.recruitDate,
+        tournamentId: result.tournamentId,
+        action: "FORM_REPLACE",
+        title: result.title,
+        summary: params.message,
+        roomName: params.roomName,
+        sender: params.sender,
+      },
+    });
+
+    await writeAdminLog({
+      action: "KAKAO_DESTRUCTION_SCRIM_FORM_REPLACE",
+      message: `카카오 스크림 전체 양식 반영: #${result.scrimNo}`,
+      targetType: "DestructionScrimRecruit",
+      targetId: result.id,
+      afterJson: {
+        scrimNo: result.scrimNo,
+        status: result.status,
+        roomName: params.roomName,
+        sender: params.sender,
+      },
+      db: tx,
+    });
+
+    return result;
+  });
+
+  return scrimRecruitJson({
+    scrim: updated,
+    reply: [
+      `[스크림 #${updated.scrimNo} 반영]`,
+      `상태: ${getScrimStatusLabel(updated.status)}`,
+      "",
+      buildScrimFormFromData(updated),
+    ].join("\n"),
+  });
+}
+
 export async function POST(req: NextRequest) {
   const premiumLock = await requireSiteFeature("recruit");
   if (premiumLock) return premiumLock;
@@ -466,6 +555,10 @@ export async function POST(req: NextRequest) {
     if (rejected) return rejected;
 
     const message = getBodyText(body);
+    const messageError = getKakaoMessageValidationError(message);
+    if (messageError) {
+      return scrimRecruitJson({ reply: `[K-LOL.GG 스크림구인 반영 실패]\n${messageError}` }, 400);
+    }
 
     if (isScrimCreateSystemEcho(message)) {
       return scrimRecruitJson({
@@ -478,12 +571,28 @@ export async function POST(req: NextRequest) {
     const parsed = parseScrimCreateCommand(message);
 
     if (parsed?.isTemplateRequest) {
-      const scrimNo = parsed.scrimNo ?? (await getNextScrimNo());
       return scrimRecruitJson({
-        reply: buildScrimRecruitTemplate(scrimNo),
+        reply: buildScrimRecruitTemplate(),
         templateOnly: true,
-        scrimNo,
+        operationDate: getScrimRecruitDateKey(),
       });
+    }
+
+    if (
+      parsed &&
+      [
+        parsed.requesterTeamName,
+        parsed.opponentTeamName,
+        ...Object.values(parsed.requesterLineup),
+        ...Object.values(parsed.opponentLineup),
+      ].some((value) => isKakaoNameTooLong(value))
+    ) {
+      return scrimRecruitJson(
+        {
+          reply: `[K-LOL.GG 스크림구인 반영 실패]\n팀명과 참가자 이름은 각각 ${MAX_KAKAO_NAME_LENGTH}자 이하로 입력해주세요.`,
+        },
+        400,
+      );
     }
 
     const classification = classifyKakaoRecruitMessage(message);
@@ -501,24 +610,69 @@ export async function POST(req: NextRequest) {
 
     if (!parsed) return scrimRecruitJson({ reply: CREATE_HELP }, 400);
 
+    const operationDate = getScrimRecruitDateKey();
+    if (parsed.scrimNo && !parsed.operationDate) {
+      return scrimRecruitJson(
+        {
+          reply: [
+            "[K-LOL.GG 스크림구인 수정 중단]",
+            "운영일이 없는 이전 스크림 양식은 안전하게 수정할 수 없습니다.",
+            "스크림구인 양식을 다시 불러와주세요.",
+          ].join("\n"),
+        },
+        409,
+      );
+    }
+
+    if (parsed.operationDate && parsed.operationDate !== operationDate) {
+      return scrimRecruitJson(
+        {
+          reply: [
+            "[K-LOL.GG 스크림구인 반영 종료]",
+            `운영일 ${parsed.operationDate} 스크림은 오전 6시에 종료되었습니다.`,
+            "새 스크림은 스크림구인 양식을 다시 불러와주세요.",
+          ].join("\n"),
+        },
+        409,
+      );
+    }
+
     const roomName = getBodyRoom(body);
     const sender = getBodySender(body);
+    const requestKey = normalizeKakaoRequestId(body.requestId);
     const sourceMessageHash = getMessageHash(message);
 
+    if (!parsed.scrimNo && requestKey) {
+      const repeatedScrim = await prisma.destructionScrimRecruit.findUnique({
+        where: { requestKey },
+      });
+      if (repeatedScrim) {
+        return scrimRecruitJson({
+          scrim: repeatedScrim,
+          replayed: true,
+          reply: [
+            `[스크림 #${repeatedScrim.scrimNo} 등록됨]`,
+            "",
+            buildScrimFormFromData(repeatedScrim),
+          ].join("\n"),
+        });
+      }
+    }
+
     if (parsed.scrimNo) {
-      const scrim = await findActiveScrim(parsed.scrimNo);
+      const scrim = await findActiveScrim(parsed.scrimNo, operationDate);
       if (scrim) {
-        const result = await applyOpponentLineupToExisting({
+        return applyFullScrimFormToExisting({
           scrim,
           parsed,
           roomName,
           sender,
           message,
         });
-        if (result) return result;
       } else {
         const inactiveScrim = await findSameDateScrimByNoAnyStatus(
           parsed.scrimNo,
+          operationDate,
         );
         if (inactiveScrim) {
           return scrimRecruitJson(
@@ -527,6 +681,20 @@ export async function POST(req: NextRequest) {
                 "[K-LOL.GG 스크림구인 수정 실패]",
                 `스크림 #${parsed.scrimNo}은 현재 ${getScrimStatusLabel(inactiveScrim.status)} 상태입니다.`,
                 "종료/취소된 스크림은 수정할 수 없습니다.",
+              ].join("\n"),
+            },
+            409,
+          );
+        }
+
+        const historicalScrim = await findLatestScrimByNo(parsed.scrimNo);
+        if (historicalScrim && historicalScrim.recruitDate !== operationDate) {
+          return scrimRecruitJson(
+            {
+              reply: [
+                "[K-LOL.GG 스크림구인 반영 종료]",
+                `스크림 #${parsed.scrimNo}은 이전 운영일에 종료되었습니다.`,
+                "새 스크림은 스크림구인 양식을 다시 불러와주세요.",
               ].join("\n"),
             },
             409,
@@ -577,6 +745,7 @@ export async function POST(req: NextRequest) {
 
     const existingByIdentity = await findSameRequesterScrim({
       tournamentId: tournament.id,
+      recruitDate: operationDate,
       requesterTeamName: parsed.requesterTeamName,
       requesterLineup: parsed.requesterLineup,
       startTimeText: parsed.startTimeText,
@@ -595,7 +764,7 @@ export async function POST(req: NextRequest) {
     }
 
     const existingByHash = await prisma.destructionScrimRecruit.findFirst({
-      where: { sourceMessageHash },
+      where: { sourceMessageHash, recruitDate: operationDate },
     });
 
     if (existingByHash) {
@@ -620,7 +789,6 @@ export async function POST(req: NextRequest) {
       tournament.id,
       parsed.opponentTeamName,
     );
-    const scrimNo = await resolveCreateScrimNo(parsed.scrimNo);
     const title = `${requesterTeam?.name || parsed.requesterTeamName || "요청팀"} 스크림 구인`;
     const initialStatus = hasLineupOrName({
       teamName: parsed.opponentTeamName,
@@ -629,34 +797,85 @@ export async function POST(req: NextRequest) {
       ? "MATCHED"
       : "RECRUITING";
 
-    const scrim = await prisma.destructionScrimRecruit.create({
-      data: {
-        scrimNo,
-        recruitDate: getScrimRecruitDateKey(),
-        tournament: { connect: { id: tournament.id } },
-        ...(requesterTeam
-          ? { requesterTeam: { connect: { id: requesterTeam.id } } }
-          : {}),
-        ...(opponentTeam
-          ? { opponentTeam: { connect: { id: opponentTeam.id } } }
-          : {}),
-        requesterTeamName: requesterTeam?.name ?? parsed.requesterTeamName,
-        opponentTeamName: opponentTeam?.name ?? parsed.opponentTeamName,
-        requesterLineupJson: lineupJson(parsed.requesterLineup),
-        opponentLineupJson: lineupJson(parsed.opponentLineup),
-        title,
-        scheduledAt: parsed.scheduledAt,
-        startTimeText: parsed.startTimeText,
-        gameCount: parsed.gameCount,
-        seriesRuleText: parsed.seriesRuleText,
-        memo: null,
-        status: initialStatus,
-        roomName,
-        sender,
-        sourceMessage: message,
-        sourceMessageHash,
-      },
-    });
+    let scrim: Awaited<ReturnType<typeof prisma.destructionScrimRecruit.create>> | null = null;
+    for (let attempt = 0; attempt < 3 && !scrim; attempt += 1) {
+      const scrimNo = parsed.scrimNo ?? (await getNextScrimNo(operationDate));
+      try {
+        scrim = await prisma.destructionScrimRecruit.create({
+          data: {
+            scrimNo,
+            recruitDate: operationDate,
+            tournament: { connect: { id: tournament.id } },
+            ...(requesterTeam
+              ? { requesterTeam: { connect: { id: requesterTeam.id } } }
+              : {}),
+            ...(opponentTeam
+              ? { opponentTeam: { connect: { id: opponentTeam.id } } }
+              : {}),
+            requesterTeamName: requesterTeam?.name ?? parsed.requesterTeamName,
+            opponentTeamName: opponentTeam?.name ?? parsed.opponentTeamName,
+            requesterLineupJson: lineupJson(parsed.requesterLineup),
+            opponentLineupJson: lineupJson(parsed.opponentLineup),
+            title,
+            scheduledAt: parsed.scheduledAt,
+            startTimeText: parsed.startTimeText,
+            gameCount: parsed.gameCount,
+            seriesRuleText: parsed.seriesRuleText,
+            memo: null,
+            status: initialStatus,
+            roomName,
+            sender,
+            sourceMessage: message,
+            sourceMessageHash,
+            requestKey,
+          },
+        });
+      } catch (error) {
+        const isNumberCollision =
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === "P2002";
+        if (!parsed.scrimNo && requestKey && isNumberCollision) {
+          const repeatedScrim = await prisma.destructionScrimRecruit.findUnique({
+            where: { requestKey },
+          });
+          if (repeatedScrim) {
+            return scrimRecruitJson({
+              scrim: repeatedScrim,
+              replayed: true,
+              reply: [
+                `[스크림 #${repeatedScrim.scrimNo} 등록됨]`,
+                "",
+                buildScrimFormFromData(repeatedScrim),
+              ].join("\n"),
+            });
+          }
+        }
+        if (!parsed.scrimNo && isNumberCollision) {
+          const repeatedScrim = await prisma.destructionScrimRecruit.findFirst({
+            where: {
+              recruitDate: operationDate,
+              sourceMessageHash,
+            },
+          });
+          if (repeatedScrim) {
+            return scrimRecruitJson({
+              scrim: repeatedScrim,
+              replayed: true,
+              reply: [
+                `[스크림 #${repeatedScrim.scrimNo} 등록됨]`,
+                "",
+                buildScrimFormFromData(repeatedScrim),
+              ].join("\n"),
+            });
+          }
+        }
+        if (parsed.scrimNo || !isNumberCollision || attempt === 2) throw error;
+      }
+    }
+
+    if (!scrim) {
+      throw new Error("스크림 번호 자동 배정에 실패했습니다.");
+    }
 
     await prisma.destructionScrimRecruitLog.create({
       data: {

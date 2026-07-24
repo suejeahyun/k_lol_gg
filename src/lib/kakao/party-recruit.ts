@@ -952,28 +952,32 @@ export function parsePartyForm(
     preferredLineText: isSoloRank ? meta.preferredLineText : null,
     playStyle: isSoloRank ? meta.playStyle : null,
     note: meta.note,
-    members: promoteSubstitutesIntoVacancies(
-      parsedMembers,
-      partyType,
-      maxMembers,
-    ),
+    members: parsedMembers,
   };
 }
 
-function promoteSubstitutesIntoVacancies(
-  members: RecruitMemberLike[],
-  partyType: string,
-  maxMembers: number,
-) {
-  const active = members.filter((member) => !member.isSubstitute);
-  const substitutes = members
+export function promotePartySubstitutesAfterRemoval(params: {
+  previousMembers: RecruitMemberLike[];
+  submittedMembers: RecruitMemberLike[];
+  partyType: string;
+  maxMembers: number;
+}) {
+  const active = params.submittedMembers.filter((member) => !member.isSubstitute);
+  const substitutes = params.submittedMembers
     .filter((member) => member.isSubstitute)
     .sort((a, b) => Number(a.slotNo ?? 999) - Number(b.slotNo ?? 999));
 
-  if (isLinePartyType(partyType)) {
+  if (isLinePartyType(params.partyType)) {
+    const previousOccupied = new Set(
+      params.previousMembers
+        .filter((member) => !member.isSubstitute)
+        .map((member) => member.position)
+        .filter(Boolean),
+    );
     const occupied = new Set(active.map((member) => member.position).filter(Boolean));
     for (const position of LINE_POSITIONS) {
-      if (occupied.has(position) || substitutes.length === 0) continue;
+      const wasRemoved = previousOccupied.has(position) && !occupied.has(position);
+      if (!wasRemoved || substitutes.length === 0) continue;
       const promoted = substitutes.shift();
       if (!promoted) break;
       active.push({
@@ -984,13 +988,20 @@ function promoteSubstitutesIntoVacancies(
       });
     }
   } else {
+    const previousOccupied = new Set(
+      params.previousMembers
+        .filter((member) => !member.isSubstitute)
+        .map((member) => member.slotNo)
+        .filter((slotNo): slotNo is number => typeof slotNo === "number"),
+    );
     const occupied = new Set(
       active
         .map((member) => member.slotNo)
         .filter((slotNo): slotNo is number => typeof slotNo === "number"),
     );
-    for (let slotNo = 1; slotNo <= maxMembers; slotNo += 1) {
-      if (occupied.has(slotNo) || substitutes.length === 0) continue;
+    for (let slotNo = 1; slotNo <= params.maxMembers; slotNo += 1) {
+      const wasRemoved = previousOccupied.has(slotNo) && !occupied.has(slotNo);
+      if (!wasRemoved || substitutes.length === 0) continue;
       const promoted = substitutes.shift();
       if (!promoted) break;
       active.push({
@@ -1152,11 +1163,23 @@ function parseSubstituteMembers(text: string): RecruitMemberLike[] {
 
   for (const rawLine of normalizeText(text).split("\n")) {
     const line = rawLine.trim();
-    const match = line.match(/^예비\s*(\d{1,2})?\s*[.:：]?\s*(.*)$/);
-    if (!match) continue;
+    if (/^예비\s*[:：]\s*\d+\s*명\s*$/.test(line)) continue;
 
-    const explicitSlot = match[1] ? Number(match[1]) : null;
-    const names = splitNames(match[2]);
+    const numberedMatch = line.match(/^예비\s*(\d{1,2})\s*[.):：]\s*(.*)$/);
+    const legacyMatch = line.match(/^예비\s*[.:：]\s*(.*)$/);
+    if (!numberedMatch && !legacyMatch) continue;
+
+    let explicitSlot = numberedMatch ? Number(numberedMatch[1]) : null;
+    let rawNames = numberedMatch ? numberedMatch[2] : legacyMatch?.[1] ?? "";
+    const nestedLegacyNumber = rawNames.match(/^(\d{1,2})\s*[.)]\s*(.*)$/);
+    if (nestedLegacyNumber) {
+      explicitSlot = explicitSlot ?? Number(nestedLegacyNumber[1]);
+      rawNames = nestedLegacyNumber[2];
+    }
+
+    const names = splitNames(rawNames)
+      .map(normalizeSubstituteName)
+      .filter(Boolean);
     for (let index = 0; index < names.length; index += 1) {
       const slotNo = explicitSlot !== null
         ? explicitSlot + index
@@ -1178,6 +1201,11 @@ function parseSubstituteMembers(text: string): RecruitMemberLike[] {
   return [...unique.values()].sort(
     (a, b) => Number(a.slotNo ?? 999) - Number(b.slotNo ?? 999),
   );
+}
+
+function normalizeSubstituteName(value: string) {
+  const name = trimName(value).replace(/^\d{1,2}\s*[.)]\s*/, "");
+  return /^\d+\s*명$/.test(name) ? "" : name;
 }
 
 function parseNumberMembers(
@@ -1242,6 +1270,11 @@ export function formatRecruitPartyBlock(party: RecruitPartyLike) {
   const displayActiveCount = Math.min(activeCount, party.maxMembers);
   const subMembers = party.members
     .filter((member) => member.isSubstitute)
+    .map((member) => ({
+      ...member,
+      name: normalizeSubstituteName(member.name),
+    }))
+    .filter((member) => member.name !== "")
     .sort((a, b) => Number(a.slotNo ?? 999) - Number(b.slotNo ?? 999));
   const lines: string[] = [];
 
@@ -1270,14 +1303,9 @@ export function formatRecruitPartyBlock(party: RecruitPartyLike) {
   }
 
   subMembers.forEach((member, index) => {
-    const slotNo = member.slotNo ?? index + 1;
-    lines.push(`예비 ${slotNo}. ${member.name}`);
+    lines.push(`예비 ${index + 1}. ${member.name}`);
   });
-  const nextSubstituteSlot = subMembers.reduce(
-    (max, member) => Math.max(max, Number(member.slotNo ?? 0)),
-    0,
-  ) + 1;
-  lines.push(`예비 ${nextSubstituteSlot}.`);
+  lines.push(`예비 ${subMembers.length + 1}.`);
 
   return lines.join("\n");
 }

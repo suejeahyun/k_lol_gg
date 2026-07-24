@@ -1,6 +1,6 @@
 import { getKstOperationDateKey } from "@/lib/date/kst";
 
-export type ScrimAction = "CREATE" | "STATUS" | "JOIN" | "CONFIRM" | "FINISH" | "CANCEL" | "DETAIL";
+export type ScrimAction = "CREATE" | "STATUS" | "DETAIL";
 
 export type ScrimLineup = {
   top: string | null;
@@ -12,6 +12,7 @@ export type ScrimLineup = {
 
 export type ScrimCreateCommand = {
   isTemplateRequest: boolean;
+  operationDate: string | null;
   scrimNo: number | null;
   tournamentId: number | null;
   requesterTeamName: string | null;
@@ -143,13 +144,6 @@ export function parseScrimAction(message: string): ScrimAction | null {
   if (/^(스크림구인|스크림모집|멸망전스크림구인|멸망전스크림모집)/.test(normalized)) return "CREATE";
   if (/^(스크림현황|스크림목록|멸망전스크림현황|멸망전스크림목록)/.test(normalized)) return "STATUS";
   if (/^(스크림상세|멸망전스크림상세)/.test(normalized)) return "DETAIL";
-  if (/^(스크림참가|스크림신청|멸망전스크림참가|멸망전스크림신청)/.test(normalized)) return "JOIN";
-  if (/^(스크림확정|멸망전스크림확정)/.test(normalized)) return "CONFIRM";
-  if (/^(스크림완료|스크림마감|스크림종료|스크림쫑|스크림ㅉ|멸망전스크림완료|멸망전스크림마감|멸망전스크림종료|멸망전스크림쫑|멸망전스크림ㅉ)/.test(normalized)) return "FINISH";
-  if (/^스크림\d{1,3}(쫑|ㅉ)$/.test(normalized)) return "FINISH";
-  if (/^스크림(쫑|ㅉ)\d{1,3}$/.test(normalized)) return "FINISH";
-  if (/^(스크림취소|멸망전스크림취소)/.test(normalized)) return "CANCEL";
-
   return null;
 }
 
@@ -280,6 +274,10 @@ function parseGameRule(text: string) {
 
 function parseFormCreateCommand(message: string): ScrimCreateCommand | null {
   const rawText = normalizeScrimMultiline(message);
+  const operationDateRaw = readField(rawText, ["운영일", "운영 일자"]);
+  const operationDate = /^\d{4}-\d{2}-\d{2}$/.test(operationDateRaw || "")
+    ? operationDateRaw
+    : null;
   const explicitScrimNo = parseScrimNo(readField(rawText, ["스크림번호", "스크림 번호", "번호"]));
   const headerScrimNo = parseScrimNo(rawText.match(/(?:^|\n)\s*#\s*(\d{1,3})\b/)?.[1] || null);
   const scrimNo = explicitScrimNo ?? headerScrimNo;
@@ -322,6 +320,7 @@ function parseFormCreateCommand(message: string): ScrimCreateCommand | null {
 
   return {
     isTemplateRequest: false,
+    operationDate,
     scrimNo,
     tournamentId,
     requesterTeamName: isBadScrimTeamName(requesterTeamName) ? null : requesterTeamName,
@@ -340,6 +339,7 @@ export function parseScrimCreateCommand(message: string): ScrimCreateCommand | n
   if (isScrimTemplateRequest(message)) {
     return {
       isTemplateRequest: true,
+      operationDate: getScrimRecruitDateKey(),
       scrimNo: null,
       tournamentId: null,
       requesterTeamName: null,
@@ -384,6 +384,7 @@ export function parseScrimCreateCommand(message: string): ScrimCreateCommand | n
 
   return {
     isTemplateRequest: false,
+    operationDate: null,
     scrimNo: null,
     tournamentId,
     requesterTeamName,
@@ -452,7 +453,9 @@ export function buildScrimRecruitTemplate(scrimNo?: number | null) {
   return [
     "[K-LOL.GG 스크림 구인 양식]",
     "",
-    ...(scrimNo ? [`번호: #${scrimNo}`, ""] : []),
+    `운영일: ${getScrimRecruitDateKey()}`,
+    scrimNo ? `번호: #${scrimNo}` : "번호: #자동배정",
+    "",
     "일시: ",
     "방식: 3판2선",
     "",
@@ -475,6 +478,7 @@ export function buildScrimRecruitTemplate(scrimNo?: number | null) {
 
 export function buildScrimFormFromData(scrim: {
   scrimNo: number;
+  recruitDate?: string;
   tournamentId: number;
   requesterTeamName: string | null;
   opponentTeamName: string | null;
@@ -489,6 +493,7 @@ export function buildScrimFormFromData(scrim: {
   const requesterLineup = (scrim.requesterLineupJson || EMPTY_LINEUP) as ScrimLineup;
   const opponentLineup = (scrim.opponentLineupJson || EMPTY_LINEUP) as ScrimLineup;
   return [
+    `운영일: ${scrim.recruitDate || getScrimRecruitDateKey()}`,
     `번호: #${scrim.scrimNo}`,
     `일시: ${formatScrimTime(scrim.scheduledAt, scrim.startTimeText)}`,
     `방식: ${scrim.seriesRuleText || (scrim.gameCount ? `${scrim.gameCount}판` : "")}`,

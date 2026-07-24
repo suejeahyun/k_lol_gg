@@ -6,6 +6,12 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import {
+  getKakaoMessageValidationError,
+  isKakaoNameTooLong,
+  MAX_KAKAO_NAME_LENGTH,
+} from "@/lib/kakao/input-guard";
+import { acquirePartyRecruitLock } from "@/lib/kakao/db-lock";
+import {
   buildSyncReply,
   extractRecruitNoFromForm,
   extractRecruitNosFromForm,
@@ -16,9 +22,9 @@ import {
   isSoloRankPartyType,
   parsePartyForm,
   parseRecruitScheduledStartAt,
+  promotePartySubstitutesAfterRemoval,
 } from "@/lib/kakao/party-recruit";
 import { classifyKakaoRecruitMessage, buildWrongRecruitApiReply } from "@/lib/kakao/recruit-message-kind";
-import { getCurrentRecruitResetSeq } from "@/lib/kakao/recruit-reset";
 import {
   getBodyRoom,
   getBodySender,
@@ -30,41 +36,12 @@ import {
 
 async function findActiveRecruitParty(params: {
   recruitNo: number;
-  recruitDate: string;
-  resetSeq: number;
 }) {
-  const { recruitNo, recruitDate, resetSeq } = params;
+  const { recruitNo } = params;
 
-  const currentSeqParty = await prisma.recruitParty.findFirst({
-    where: {
-      recruitNo,
-      recruitDate,
-      resetSeq,
-      status: "IN_PROGRESS",
-    },
-    include: { members: true },
-  });
-
-  if (currentSeqParty) {
-    return currentSeqParty;
-  }
-
-  const sameDateParty = await prisma.recruitParty.findFirst({
-    where: {
-      recruitNo,
-      recruitDate,
-      status: "IN_PROGRESS",
-    },
-    orderBy: [{ resetSeq: "desc" }, { updatedAt: "desc" }],
-    include: { members: true },
-  });
-
-  if (sameDateParty) {
-    return sameDateParty;
-  }
-
-  // 구인현황에 표시되는 날짜 지난 진행 중 글도 수정할 수 있도록 최신 활성 글로 보정합니다.
-  return prisma.recruitParty.findFirst({
+  // 번호가 전역에서 유일할 때만 수정합니다.
+  // 기존 데이터에 같은 활성 번호가 둘 이상 있으면 잘못된 파티를 덮어쓰지 않습니다.
+  const activeParties = await prisma.recruitParty.findMany({
     where: {
       recruitNo,
       status: "IN_PROGRESS",
@@ -74,8 +51,11 @@ async function findActiveRecruitParty(params: {
       { resetSeq: "desc" },
       { updatedAt: "desc" },
     ],
+    take: 2,
     include: { members: true },
   });
+
+  return activeParties.length === 1 ? activeParties[0] : null;
 }
 
 function isSeasonRecruitSnapshotMessage(message: string) {
@@ -176,7 +156,6 @@ async function syncOneRecruit(params: {
   roomName: string | null;
   sender: string | null;
   recruitDate: string;
-  resetSeq: number;
   todayRange: { gte: Date; lt: Date };
 }) {
   const {
@@ -185,14 +164,11 @@ async function syncOneRecruit(params: {
     roomName,
     sender,
     recruitDate,
-    resetSeq,
     todayRange,
   } = params;
 
   const party = await findActiveRecruitParty({
     recruitNo,
-    recruitDate,
-    resetSeq,
   });
 
   if (!party) {
@@ -250,6 +226,16 @@ async function syncOneRecruit(params: {
     };
   }
 
+  const tooLongMember = parsed.members.find((member) => isKakaoNameTooLong(member.name));
+  if (tooLongMember) {
+    return {
+      ok: false,
+      recruitNo,
+      statusCode: 400,
+      reply: `[K-LOL.GG 구인구직 반영 실패]\n이름은 ${MAX_KAKAO_NAME_LENGTH}자 이하로 입력해주세요.`,
+    };
+  }
+
   if (parsed.recruitNo !== recruitNo) {
     return {
       ok: false,
@@ -263,6 +249,13 @@ async function syncOneRecruit(params: {
       ].join("\n"),
     };
   }
+
+  parsed.members = promotePartySubstitutesAfterRemoval({
+    previousMembers: party.members,
+    submittedMembers: parsed.members,
+    partyType: String(party.type),
+    maxMembers: party.maxMembers,
+  });
 
   if (!isLinePartyType(String(party.type))) {
     const excessSlotNos = findNumberedSlotsAboveMaxMembers(
@@ -326,6 +319,7 @@ async function syncOneRecruit(params: {
   }
 
   const updated = await prisma.$transaction(async (tx) => {
+    await acquirePartyRecruitLock(tx, party.id);
     await tx.recruitPartyMember.deleteMany({ where: { partyId: party.id } });
 
     if (parsed.members.length > 0) {
@@ -396,6 +390,10 @@ export async function POST(req: NextRequest) {
     if (secretRejected) return secretRejected;
 
     const message = getBodyText(body);
+    const messageError = getKakaoMessageValidationError(message);
+    if (messageError) {
+      return partyRecruitJson({ reply: `[K-LOL.GG 파티 명단 반영 실패]\n${messageError}` }, 400);
+    }
     const classification = classifyKakaoRecruitMessage(message);
     if (classification.kind !== "PARTY_RECRUIT") {
       return partyRecruitJson(
@@ -421,7 +419,6 @@ export async function POST(req: NextRequest) {
     const roomName = getBodyRoom(body);
     const sender = getBodySender(body);
     const recruitDate = getKakaoRecruitDateKey();
-    const resetSeq = await getCurrentRecruitResetSeq(recruitDate);
     const todayRange = getKakaoRecruitTodayRange();
     const recruitNos = extractRecruitNosFromForm(message);
     const statusBlocks = splitRecruitStatusBlocks(message);
@@ -466,7 +463,6 @@ export async function POST(req: NextRequest) {
       roomName,
       sender,
       recruitDate,
-      resetSeq,
       todayRange,
     });
 

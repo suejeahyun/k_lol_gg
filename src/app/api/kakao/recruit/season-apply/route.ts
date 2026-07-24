@@ -3,7 +3,14 @@ import { createHash } from "crypto";
 import { NextRequest } from "next/server";
 import { kakaoJsonReply } from "@/lib/kakao/reply-format";
 import { getRequiredSecretInProduction, matchesRequestSecret } from "@/lib/security/secrets";
-import { getKstStartOfDate } from "@/lib/date/kst";
+import { getKstOperationDateKey, getKstStartOfDate } from "@/lib/date/kst";
+import {
+  getKakaoMessageValidationError,
+  isKakaoNameTooLong,
+  MAX_KAKAO_NAME_LENGTH,
+  normalizeKakaoIdentity,
+} from "@/lib/kakao/input-guard";
+import { acquireSeasonRecruitLock } from "@/lib/kakao/db-lock";
 import { writeAdminLog } from "@/lib/admin-log";
 import { prisma } from "@/lib/prisma/client";
 import {
@@ -204,8 +211,14 @@ function getMatchedApplyKey(playerId: number) {
   return `APPLIED:${playerId}`;
 }
 
-function getPendingApplyKey(name: string, isReserve: boolean) {
-  return `PENDING:${isReserve ? "RESERVE" : "MAIN"}:${normalizeNameKey(name)}`;
+function getPendingApplyKey(
+  name: string,
+  isReserve: boolean,
+  sourceSlotNo: number | null,
+  reserveSlotNo: number | null,
+) {
+  const slotNo = isReserve ? reserveSlotNo : sourceSlotNo;
+  return `PENDING:${isReserve ? "RESERVE" : "MAIN"}:${slotNo ?? "UNKNOWN"}:${normalizeNameKey(name)}`;
 }
 
 function normalizeStringArray(value: unknown) {
@@ -328,7 +341,7 @@ function buildPreviousApplyEntryMap(
 
   for (const item of pending) {
     const entry: PreviousSeasonApplyEntry = {
-      key: getPendingApplyKey(item.name, item.isReserve),
+      key: getPendingApplyKey(item.name, item.isReserve, item.sourceSlotNo, item.reserveSlotNo),
       label: "",
       name: normalizeName(item.name),
       isReserve: item.isReserve,
@@ -358,7 +371,12 @@ function getParticipantSnapshotKey(params: {
     return getMatchedApplyKey(matched.players[0].id);
   }
 
-  return getPendingApplyKey(participant.name, participant.isReserve);
+  return getPendingApplyKey(
+    participant.name,
+    participant.isReserve,
+    participant.isReserve ? null : participant.slotNumber,
+    participant.reserveSlotNumber,
+  );
 }
 
 async function applyParticipants(params: {
@@ -404,6 +422,7 @@ async function applyParticipants(params: {
     .map(({ matched }) => matched.players[0].id);
 
   await prisma.$transaction(async (tx) => {
+    await acquireSeasonRecruitLock(tx, applyDate, params.parsed.recruitNo);
     const [previousApplied, previousPending] = await Promise.all([
       tx.seasonParticipationApply.findMany({
         where: {
@@ -499,17 +518,8 @@ async function applyParticipants(params: {
           : pendingReason;
         const label = formatParticipantChangeLabel(participant, player);
 
-        await tx.seasonParticipationPendingApply.upsert({
-          where: {
-            seasonId_applyDate_recruitNo_name_isReserve: {
-              seasonId: season.id,
-              applyDate,
-              recruitNo: params.parsed.recruitNo,
-              name: participant.name,
-              isReserve: participant.isReserve,
-            },
-          },
-          create: {
+        await tx.seasonParticipationPendingApply.create({
+          data: {
             seasonId: season.id,
             applyDate,
             recruitNo: params.parsed.recruitNo,
@@ -519,20 +529,6 @@ async function applyParticipants(params: {
             mainPosition: participant.mainPosition,
             subPositions: participant.subPosition ? [participant.subPosition] : [],
             isReserve: participant.isReserve,
-            sourceSlotNo: participant.isReserve ? null : participant.slotNumber,
-            reserveSlotNo: participant.reserveSlotNumber,
-            reason,
-            source: "KAKAO_RECRUIT",
-            sourceRoom: params.roomName,
-            sourceSender: params.sender,
-            sourceMessageHash,
-            applyTimeText: params.parsed.applyTime,
-          },
-          update: {
-            currentTier: participant.currentTier,
-            peakTier: participant.peakTier,
-            mainPosition: participant.mainPosition,
-            subPositions: participant.subPosition ? [participant.subPosition] : [],
             sourceSlotNo: participant.isReserve ? null : participant.slotNumber,
             reserveSlotNo: participant.reserveSlotNumber,
             reason,
@@ -724,13 +720,19 @@ export async function POST(req: NextRequest) {
     if (secretRejected) return secretRejected;
 
     const message = String(body.message || body.text || body.utterance || "");
+    const messageError = getKakaoMessageValidationError(message);
+    if (messageError) {
+      return kakaoJsonReply(
+        {
+          formatVersion: FORMAT_VERSION,
+          reply: `[K-LOL.GG 내전 명단 반영 실패]\n${messageError}`,
+        },
+        400,
+      );
+    }
     const roomName =
-      typeof body.roomName === "string"
-        ? body.roomName
-        : typeof body.room === "string"
-          ? body.room
-          : null;
-    const sender = typeof body.sender === "string" ? body.sender : null;
+      normalizeKakaoIdentity(body.roomName) ?? normalizeKakaoIdentity(body.room);
+    const sender = normalizeKakaoIdentity(body.sender);
 
     const classification = classifyKakaoRecruitMessage(message);
     if (classification.kind !== "SEASON_RECRUIT") {
@@ -753,7 +755,31 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const parsed = parseRecruitMessage(message);
+    const requestNow = new Date();
+    const parsed = parseRecruitMessage(message, requestNow);
+    if (parsed.participants.some((participant) => isKakaoNameTooLong(participant.name))) {
+      return kakaoJsonReply(
+        {
+          formatVersion: FORMAT_VERSION,
+          reply: `[K-LOL.GG 내전 명단 반영 실패]\n이름은 ${MAX_KAKAO_NAME_LENGTH}자 이하로 입력해주세요.`,
+        },
+        400,
+      );
+    }
+    const operationDate = getKstOperationDateKey(requestNow);
+    if (parsed.applyDate !== operationDate) {
+      return kakaoJsonReply(
+        {
+          formatVersion: FORMAT_VERSION,
+          reply: [
+            `[K-LOL.GG 내전 #${parsed.recruitNo} 반영 종료]`,
+            `운영일 ${parsed.applyDate} 내전은 오전 6시에 종료되었습니다.`,
+            "새 내전은 내전구인 양식을 다시 불러와주세요.",
+          ].join("\n"),
+        },
+        409,
+      );
+    }
     const explicitRecruitNo =
       extractRequestedRecruitNo(body?.recruitNo) ??
       extractRequestedRecruitNo(body?.seasonRecruitNo) ??
@@ -762,16 +788,6 @@ export async function POST(req: NextRequest) {
 
     if (explicitRecruitNo) {
       parsed.recruitNo = explicitRecruitNo;
-    }
-
-    if (parsed.participants.length < 1) {
-      return kakaoJsonReply({
-        formatVersion: FORMAT_VERSION,
-        reply: isRecruitSnapshotMessage(message)
-          ? "[K-LOL.GG 내전 명단 업데이트 실패]\n참가자 이름이 1명 이상 있어야 최신 명단으로 반영됩니다."
-          : "[K-LOL.GG 구인구직방 참가 자동 등록 실패]",
-        parsed,
-      });
     }
 
     const applied = await applyParticipants({

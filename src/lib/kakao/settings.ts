@@ -30,7 +30,6 @@ export type KakaoOperationSettings = {
   recruitCreateCommandEnabled: boolean;
   recruitJoinCommandEnabled: boolean;
   recruitFinishCommandEnabled: boolean;
-  recruitResetCommandEnabled: boolean;
   recruitStatusCommandEnabled: boolean;
 
   playerRecordSearchEnabled: boolean;
@@ -92,7 +91,6 @@ export const DEFAULT_KAKAO_OPERATION_SETTINGS: KakaoOperationSettings = {
   recruitCreateCommandEnabled: true,
   recruitJoinCommandEnabled: true,
   recruitFinishCommandEnabled: true,
-  recruitResetCommandEnabled: true,
   recruitStatusCommandEnabled: true,
 
   playerRecordSearchEnabled: true,
@@ -200,7 +198,6 @@ export function normalizeKakaoOperationSettings(value: Partial<KakaoOperationSet
     recruitCreateCommandEnabled: normalizeBoolean(merged.recruitCreateCommandEnabled, DEFAULT_KAKAO_OPERATION_SETTINGS.recruitCreateCommandEnabled),
     recruitJoinCommandEnabled: normalizeBoolean(merged.recruitJoinCommandEnabled, DEFAULT_KAKAO_OPERATION_SETTINGS.recruitJoinCommandEnabled),
     recruitFinishCommandEnabled: normalizeBoolean(merged.recruitFinishCommandEnabled, DEFAULT_KAKAO_OPERATION_SETTINGS.recruitFinishCommandEnabled),
-    recruitResetCommandEnabled: normalizeBoolean(merged.recruitResetCommandEnabled, DEFAULT_KAKAO_OPERATION_SETTINGS.recruitResetCommandEnabled),
     recruitStatusCommandEnabled: normalizeBoolean(merged.recruitStatusCommandEnabled, DEFAULT_KAKAO_OPERATION_SETTINGS.recruitStatusCommandEnabled),
 
     playerRecordSearchEnabled: normalizeBoolean(merged.playerRecordSearchEnabled, DEFAULT_KAKAO_OPERATION_SETTINGS.playerRecordSearchEnabled),

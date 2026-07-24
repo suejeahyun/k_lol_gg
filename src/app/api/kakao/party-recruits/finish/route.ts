@@ -5,6 +5,8 @@ export const revalidate = 0;
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
+import { getKakaoMessageValidationError } from "@/lib/kakao/input-guard";
+import { acquirePartyRecruitLock } from "@/lib/kakao/db-lock";
 import {
   formatRecruitPartyBlock,
   getActiveMemberCount,
@@ -13,7 +15,6 @@ import {
 } from "@/lib/kakao/party-recruit";
 import { classifyKakaoRecruitMessage, buildWrongRecruitApiReply } from "@/lib/kakao/recruit-message-kind";
 import {
-  getCurrentRecruitResetSeq,
   getLatestRecruitResetLog,
 } from "@/lib/kakao/recruit-reset";
 import {
@@ -27,46 +28,12 @@ import {
 
 async function findActiveRecruitParty(params: {
   recruitNo: number;
-  recruitDate: string;
-  resetSeq: number;
 }) {
-  const { recruitNo, recruitDate, resetSeq } = params;
+  const { recruitNo } = params;
 
-  const currentSeqParty = await prisma.recruitParty.findFirst({
-    where: {
-      recruitNo,
-      recruitDate,
-      resetSeq,
-      status: "IN_PROGRESS",
-    },
-    include: {
-      members: { orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }] },
-    },
-  });
-
-  if (currentSeqParty) {
-    return currentSeqParty;
-  }
-
-  const sameDateParty = await prisma.recruitParty.findFirst({
-    where: {
-      recruitNo,
-      recruitDate,
-      status: "IN_PROGRESS",
-    },
-    orderBy: [{ resetSeq: "desc" }, { updatedAt: "desc" }],
-    include: {
-      members: { orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }] },
-    },
-  });
-
-  if (sameDateParty) {
-    return sameDateParty;
-  }
-
-  // 구인현황은 날짜가 지난 진행 중 구인글도 보여줍니다.
-  // 따라서 마감 명령도 오늘 날짜에 없으면 같은 모집번호의 최신 진행 중 글까지 찾아야 합니다.
-  return prisma.recruitParty.findFirst({
+  // 번호가 전역에서 유일할 때만 종료합니다.
+  // 같은 활성 번호가 둘 이상이면 엉뚱한 파티를 종료하지 않습니다.
+  const activeParties = await prisma.recruitParty.findMany({
     where: {
       recruitNo,
       status: "IN_PROGRESS",
@@ -76,10 +43,13 @@ async function findActiveRecruitParty(params: {
       { resetSeq: "desc" },
       { updatedAt: "desc" },
     ],
+    take: 2,
     include: {
       members: { orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }] },
     },
   });
+
+  return activeParties.length === 1 ? activeParties[0] : null;
 }
 
 export async function POST(req: NextRequest) {
@@ -92,6 +62,10 @@ export async function POST(req: NextRequest) {
     if (secretRejected) return secretRejected;
 
     const message = getBodyText(body);
+    const messageError = getKakaoMessageValidationError(message);
+    if (messageError) {
+      return partyRecruitJson({ reply: `[K-LOL.GG 파티 종료 실패]\n${messageError}` }, 400);
+    }
     const classification = classifyKakaoRecruitMessage(message);
     if (classification.kind !== "PARTY_RECRUIT") {
       return partyRecruitJson(
@@ -115,15 +89,12 @@ export async function POST(req: NextRequest) {
     }
 
     const recruitDate = getKakaoRecruitDateKey();
-    const resetSeq = await getCurrentRecruitResetSeq(recruitDate);
     const latestReset = await getLatestRecruitResetLog(recruitDate);
     const createdAfterLatestReset = latestReset
       ? { gt: latestReset.createdAt }
       : undefined;
     const party = await findActiveRecruitParty({
       recruitNo: parsed.recruitNo,
-      recruitDate,
-      resetSeq,
     });
 
     if (!party) {
@@ -168,7 +139,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await prisma.$transaction(async (tx) => {
+    const didFinish = await prisma.$transaction(async (tx) => {
+      await acquirePartyRecruitLock(tx, party.id);
+      const current = await tx.recruitParty.findUnique({
+        where: { id: party.id },
+        select: { status: true },
+      });
+      if (current?.status !== "IN_PROGRESS") return false;
+
       await tx.recruitPartyLog.create({
         data: {
           recruitNo: party.recruitNo,
@@ -205,7 +183,14 @@ export async function POST(req: NextRequest) {
         },
         db: tx,
       });
+      return true;
     });
+
+    if (!didFinish) {
+      return partyRecruitJson({
+        reply: `[파티 #${party.recruitNo} 종료]\n이미 종료된 파티입니다.`,
+      });
+    }
 
     const activeCount = getActiveMemberCount(party.members);
     const substituteCount = party.members.filter((member) => member.isSubstitute).length;
