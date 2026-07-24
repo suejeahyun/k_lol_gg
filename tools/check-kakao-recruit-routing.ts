@@ -20,6 +20,12 @@ import {
   normalizeKakaoIdentity,
 } from "../src/lib/kakao/input-guard";
 import { normalizeKakaoRequestId } from "../src/lib/kakao/request-id";
+import {
+  acquirePartyRecruitLock,
+  acquireScrimRecruitLock,
+  acquireSeasonRecruitLock,
+} from "../src/lib/kakao/db-lock";
+import type { Prisma } from "@prisma/client";
 
 type ExpectedKind = "PARTY_RECRUIT" | "SCRIM_RECRUIT" | "SEASON_RECRUIT" | "UNKNOWN";
 
@@ -311,9 +317,36 @@ if (getKstOperationDateKey(new Date("2026-07-24T21:00:00.000Z")) !== "2026-07-25
   failures.push("Kakao operation date should roll over at 06:00 KST");
 }
 
-if (failures.length > 0) {
-  console.error(failures.join("\n"));
-  process.exit(1);
+async function checkAdvisoryLockQueries() {
+  const queries: string[] = [];
+  const fakeTx = {
+    $queryRaw(strings: TemplateStringsArray) {
+      queries.push(strings.join("?"));
+      return Promise.resolve([{ acquired: "" }]);
+    },
+  } as unknown as Prisma.TransactionClient;
+
+  await acquirePartyRecruitLock(fakeTx, 1);
+  await acquireSeasonRecruitLock(fakeTx, new Date("2026-07-24T00:00:00.000Z"), 1);
+  await acquireScrimRecruitLock(fakeTx, 1);
+
+  if (queries.length !== 3) {
+    failures.push(`advisory lock: expected 3 lock queries, got ${queries.length}`);
+  }
+  if (queries.some((query) => !query.includes("::text AS acquired"))) {
+    failures.push("advisory lock: void result must be cast to a Prisma-supported type");
+  }
 }
 
-console.log("Kakao recruit routing checks passed.");
+async function finishChecks() {
+  await checkAdvisoryLockQueries();
+
+  if (failures.length > 0) {
+    console.error(failures.join("\n"));
+    process.exit(1);
+  }
+
+  console.log("Kakao recruit routing checks passed.");
+}
+
+void finishChecks();

@@ -9,7 +9,12 @@ async function acquireLock(
   namespace: number,
   resourceId: number,
 ) {
-  await tx.$queryRaw`SELECT pg_advisory_xact_lock(${namespace}, ${resourceId})`;
+  // PostgreSQL returns `void` from pg_advisory_xact_lock(). Prisma cannot
+  // deserialize a raw-query column of that type, so expose only a supported
+  // scalar while still evaluating the locking function.
+  await tx.$queryRaw<Array<{ acquired: string }>>`
+    SELECT pg_advisory_xact_lock(${namespace}, ${resourceId})::text AS acquired
+  `;
 }
 
 export function acquirePartyRecruitLock(
