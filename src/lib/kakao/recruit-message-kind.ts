@@ -63,11 +63,9 @@ export function isScrimRecruitMessage(message: string) {
   const normalized = compact(text).replace(/^\//, "");
 
   if (isScrimFormMessage(text)) return true;
-  if (/^스크림(?:구인|모집|현황|목록|상세|참가|신청|확정|완료|마감|종료|쫑|ㅉ|취소)(?:\s|$|#?\d)/.test(text.replace(/^\//, ""))) return true;
-  if (/^스크림(?:구인|모집|현황|목록|상세|참가|신청|확정|완료|마감|종료|쫑|ㅉ|취소)/.test(normalized)) return true;
-  if (/^스크림\d{1,3}(쫑|ㅉ)$/.test(normalized)) return true;
-  if (/^스크림(쫑|ㅉ)\d{1,3}$/.test(normalized)) return true;
-  if (/^멸망전스크림(?:구인|모집|현황|목록|상세|참가|신청|확정|완료|마감|종료|쫑|ㅉ|취소)?/.test(normalized)) return true;
+  if (/^스크림(?:구인|모집|현황|목록|상세|참가|신청|확정|취소)(?:\s|$|#?\d)/.test(text.replace(/^\//, ""))) return true;
+  if (/^스크림(?:구인|모집|현황|목록|상세|참가|신청|확정|취소)/.test(normalized)) return true;
+  if (/^멸망전스크림(?:구인|모집|현황|목록|상세|참가|신청|확정|취소)?/.test(normalized)) return true;
   if (/\bSCRIM\b/i.test(text) && /(멸망전|팀|상대|연습|구인|모집)/.test(text)) return true;
 
   return false;
@@ -88,7 +86,7 @@ export function isSeasonRecruitCommandMessage(message: string) {
   const text = compact(message);
   if (isScrimRecruitMessage(message)) return false;
 
-  return /^\/?.*(?:내전구인구직|내전구인|내전현황|시즌내전현황|AI공지|오늘내전초기화|내전초기화)(?:#?\d{1,3})?$/.test(text);
+  return /^\/?.*(?:내전구인구직|내전구인|내전현황|시즌내전현황|AI공지)(?:#?\d{1,3})?$/.test(text);
 }
 
 export function isPartyRecruitCommandMessage(message: string) {

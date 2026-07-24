@@ -1,4 +1,4 @@
-import { getKakaoRecruitDateKey } from "@/lib/kakao/party-recruit";
+import { getKstOperationDateKey } from "@/lib/date/kst";
 
 export type ScrimAction = "CREATE" | "STATUS" | "JOIN" | "CONFIRM" | "FINISH" | "CANCEL" | "DETAIL";
 
@@ -65,7 +65,7 @@ function compact(value: string) {
 }
 
 export function getScrimRecruitDateKey(now = new Date()) {
-  return getKakaoRecruitDateKey(now);
+  return getKstOperationDateKey(now);
 }
 
 function toUtcFromKst(params: { month: number; day: number; hour: number; minute: number; base?: Date }) {

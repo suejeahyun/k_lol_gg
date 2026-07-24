@@ -685,7 +685,7 @@ function extractRequestedRecruitNo(value: unknown) {
     return directNo;
   }
   const patterns = [
-    /(?:내전현황|오늘내전초기화|내전초기화)\s*#?\s*(\d{1,3})/i,
+    /내전현황\s*#?\s*(\d{1,3})/i,
     /(?:내전\s*(?:번호|NO|No|no)\s*[:：]?\s*#?\s*)(\d{1,3})/i,
     /#\s*(\d{1,3})\s*(?:협곡\s*내전|협곡내전|내전)/i,
     /(?:협곡\s*내전|협곡내전|내전)\s*(?:하실분|하실\s*분|구인|모집)?\s*#\s*(\d{1,3})/i,
@@ -714,101 +714,6 @@ function isRecruitSnapshotMessage(value: string) {
   );
 }
 
-function getTodayKstDateText() {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(new Date());
-
-  const year = parts.find((part) => part.type === "year")?.value;
-  const month = parts.find((part) => part.type === "month")?.value;
-  const day = parts.find((part) => part.type === "day")?.value;
-
-  if (!year || !month || !day) {
-    throw new Error("오늘 날짜를 계산하지 못했습니다.");
-  }
-
-  return `${year}-${month}-${day}`;
-}
-
-async function resetTodaySeasonApply(params: {
-  message: string;
-  roomName: string | null;
-  sender: string | null;
-  recruitNo?: number | null;
-}) {
-  const season = await prisma.season.findFirst({
-    where: { isActive: true },
-    orderBy: { id: "desc" },
-    select: { id: true, name: true },
-  });
-
-  if (!season) {
-    throw new Error("활성 시즌이 없습니다.");
-  }
-
-  const todayText = getTodayKstDateText();
-  const applyDate = getKstStartOfDate(todayText);
-
-  const result = await prisma.$transaction(async (tx) => {
-    const [deletedApplied, deletedPending] = await Promise.all([
-      tx.seasonParticipationApply.deleteMany({
-        where: {
-          seasonId: season.id,
-          applyDate,
-          ...(params.recruitNo ? { recruitNo: params.recruitNo } : {}),
-        },
-      }),
-      tx.seasonParticipationPendingApply.deleteMany({
-        where: {
-          seasonId: season.id,
-          applyDate,
-          source: "KAKAO_RECRUIT",
-          ...(params.recruitNo ? { recruitNo: params.recruitNo } : {}),
-        },
-      }),
-    ]);
-
-    const deletedCount = deletedApplied.count + deletedPending.count;
-
-    await writeAdminLog({
-      action: "KAKAO_RECRUIT_SEASON_APPLY_RESET",
-      message: `카카오 구인구직방 오늘 내전${params.recruitNo ? ` #${params.recruitNo}` : ""} 참가 초기화: 시즌 #${season.id} ${season.name}, 신청일 ${todayText}, 확정 ${deletedApplied.count}명, 보류/예비 ${deletedPending.count}명, 총 ${deletedCount}명 삭제`,
-      targetType: "Season",
-      targetId: season.id,
-      afterJson: {
-        command: params.message,
-        applyDate: applyDate.toISOString(),
-        applyDateKst: todayText,
-        roomName: params.roomName,
-        sender: params.sender,
-        recruitNo: params.recruitNo ?? null,
-        deletedAppliedCount: deletedApplied.count,
-        deletedPendingCount: deletedPending.count,
-        deletedCount,
-      },
-      db: tx,
-    });
-
-    return {
-      deletedAppliedCount: deletedApplied.count,
-      deletedPendingCount: deletedPending.count,
-      deletedCount,
-    };
-  });
-
-  return {
-    season,
-    todayText,
-    applyDate,
-    deletedAppliedCount: result.deletedAppliedCount,
-    deletedPendingCount: result.deletedPendingCount,
-    deletedCount: result.deletedCount,
-  };
-}
-
 export async function POST(req: NextRequest) {
   const premiumLock = await requireSiteFeature("recruit");
   if (premiumLock) return premiumLock;
@@ -828,7 +733,7 @@ export async function POST(req: NextRequest) {
     const sender = typeof body.sender === "string" ? body.sender : null;
 
     const classification = classifyKakaoRecruitMessage(message);
-    if (classification.kind !== "SEASON_RECRUIT" && !/^(?:\/?오늘내전초기화|\/?내전초기화)(?:\s*#?\s*\d{1,3})?\s*$/.test(message.trim())) {
+    if (classification.kind !== "SEASON_RECRUIT") {
       return kakaoJsonReply(
         {
           formatVersion: FORMAT_VERSION,
@@ -836,33 +741,6 @@ export async function POST(req: NextRequest) {
         },
         400,
       );
-    }
-
-    if (/^(?:\/?오늘내전초기화|\/?내전초기화)(?:\s*#?\s*\d{1,3})?\s*$/.test(message.trim())) {
-      const requestedRecruitNo = extractRequestedRecruitNo(message);
-      const reset = await resetTodaySeasonApply({
-        message,
-        roomName,
-        sender,
-        recruitNo: requestedRecruitNo,
-      });
-
-      return kakaoJsonReply({
-        formatVersion: FORMAT_VERSION,
-        command: "TODAY_SEASON_APPLY_RESET",
-        recruitNo: requestedRecruitNo,
-        season: reset.season,
-        applyDate: reset.todayText,
-        deletedAppliedCount: reset.deletedAppliedCount,
-        deletedPendingCount: reset.deletedPendingCount,
-        deletedCount: reset.deletedCount,
-        reply:
-          `[K-LOL.GG 오늘내전${requestedRecruitNo ? ` #${requestedRecruitNo}` : ""} 초기화 완료]\n` +
-          `날짜: ${reset.todayText}\n` +
-          `확정 참가: ${reset.deletedAppliedCount}명 삭제\n` +
-          `보류/예비: ${reset.deletedPendingCount}명 삭제\n` +
-          `총 ${reset.deletedCount}명 초기화`,
-      });
     }
 
     if (!isRecruitSnapshotMessage(message)) {

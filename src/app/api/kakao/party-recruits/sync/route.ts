@@ -304,9 +304,6 @@ async function syncOneRecruit(params: {
     };
   }
 
-  const previousActiveCount = party.members.filter(
-    (member) => !member.isSubstitute && member.name.trim() !== "",
-  ).length;
   const isSoloRank = isSoloRankPartyType(String(party.type));
 
   const nextStartTimeText = parsed.startTimeText ?? party.startTimeText;
@@ -385,7 +382,7 @@ async function syncOneRecruit(params: {
     recruitNo,
     statusCode: 200,
     party: updated,
-    reply: buildSyncReply(updated, previousActiveCount),
+    reply: buildSyncReply(updated),
   };
 }
 

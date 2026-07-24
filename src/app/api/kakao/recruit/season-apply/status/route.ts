@@ -1,6 +1,6 @@
 import { requireSiteFeature } from "@/lib/site/feature-guard";
 import { NextRequest, NextResponse } from "next/server";
-import { addDays, getKstDateKey, getKstDisplayDate, getKstStartOfDate } from "@/lib/date/kst";
+import { addDays, getKstDisplayDate, getKstOperationDateKey, getKstStartOfDate } from "@/lib/date/kst";
 import { prisma } from "@/lib/prisma/client";
 import { classifyKakaoRecruitMessage, buildWrongRecruitApiReply } from "@/lib/kakao/recruit-message-kind";
 import { getRequiredSecretInProduction, matchesRequestSecret } from "@/lib/security/secrets";
@@ -342,7 +342,7 @@ async function createStatusReply(req: NextRequest, body?: ApplyStatusBody) {
     }
   }
 
-  const dateKey = getKstDateKey();
+  const dateKey = getKstOperationDateKey();
   const start = getKstStartOfDate(dateKey);
   const end = addDays(start, 1);
   end.setMilliseconds(end.getMilliseconds() - 1);

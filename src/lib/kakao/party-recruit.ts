@@ -694,7 +694,6 @@ export function parseCreateRecruitCommand(
         recruitNo,
         5,
         ["》시작시간 :", "》게임정보 :"],
-        true,
       ),
     };
   }
@@ -767,6 +766,7 @@ function buildLineTemplate(label: string, recruitNo: number | null) {
     "MID.",
     "ADC.",
     "SUP.",
+    "예비 1.",
     "",
     "마지막 참가자가 전체 태그 해주세요.",
     "*상호배려와 존중 부탁드립니다.",
@@ -786,6 +786,7 @@ function buildLinePartyTemplate(title: string, recruitNo: number | null) {
     "MID.",
     "ADC.",
     "SUP.",
+    "예비 1.",
     "",
     "마지막 참가자가 전체 태그 해주세요.",
     "*상호배려와 존중 부탁드립니다.",
@@ -808,6 +809,7 @@ function buildNumberPartyTemplate(
   for (let slotNo = 1; slotNo <= maxMembers; slotNo += 1) {
     lines.push(`${slotNo}.`);
   }
+  lines.push("예비 1.");
   lines.push(
     "",
     "참여해주실 분은 태그해주세요.",
@@ -821,7 +823,6 @@ function buildNumberTemplate(
   recruitNo: number | null,
   maxMembers: number,
   guides: string[],
-  includeSubstitute = false,
 ) {
   const lines = [
     `📢 ${label} 하실분!`,
@@ -833,7 +834,7 @@ function buildNumberTemplate(
   for (let slotNo = 1; slotNo <= maxMembers; slotNo += 1) {
     lines.push(`${slotNo}.`);
   }
-  if (includeSubstitute) lines.push("예비.");
+  lines.push("예비 1.");
   lines.push(
     "",
     "참여해주실 분은 태그해주세요.",
@@ -940,6 +941,9 @@ export function parsePartyForm(
 
   const meta = parseRecruitFormMetadata(text);
   const isSoloRank = isSoloRankPartyType(String(partyType));
+  const parsedMembers = isLinePartyType(partyType)
+    ? parseLineMembers(text)
+    : parseNumberMembers(text, maxMembers);
 
   return {
     recruitNo,
@@ -948,10 +952,64 @@ export function parsePartyForm(
     preferredLineText: isSoloRank ? meta.preferredLineText : null,
     playStyle: isSoloRank ? meta.playStyle : null,
     note: meta.note,
-    members: isLinePartyType(partyType)
-      ? parseLineMembers(text)
-      : parseNumberMembers(text, maxMembers),
+    members: promoteSubstitutesIntoVacancies(
+      parsedMembers,
+      partyType,
+      maxMembers,
+    ),
   };
+}
+
+function promoteSubstitutesIntoVacancies(
+  members: RecruitMemberLike[],
+  partyType: string,
+  maxMembers: number,
+) {
+  const active = members.filter((member) => !member.isSubstitute);
+  const substitutes = members
+    .filter((member) => member.isSubstitute)
+    .sort((a, b) => Number(a.slotNo ?? 999) - Number(b.slotNo ?? 999));
+
+  if (isLinePartyType(partyType)) {
+    const occupied = new Set(active.map((member) => member.position).filter(Boolean));
+    for (const position of LINE_POSITIONS) {
+      if (occupied.has(position) || substitutes.length === 0) continue;
+      const promoted = substitutes.shift();
+      if (!promoted) break;
+      active.push({
+        ...promoted,
+        position,
+        slotNo: null,
+        isSubstitute: false,
+      });
+    }
+  } else {
+    const occupied = new Set(
+      active
+        .map((member) => member.slotNo)
+        .filter((slotNo): slotNo is number => typeof slotNo === "number"),
+    );
+    for (let slotNo = 1; slotNo <= maxMembers; slotNo += 1) {
+      if (occupied.has(slotNo) || substitutes.length === 0) continue;
+      const promoted = substitutes.shift();
+      if (!promoted) break;
+      active.push({
+        ...promoted,
+        position: null,
+        slotNo,
+        isSubstitute: false,
+      });
+    }
+  }
+
+  const remainingSubstitutes = substitutes.map((member, index) => ({
+    ...member,
+    position: null,
+    slotNo: index + 1,
+    isSubstitute: true,
+  }));
+
+  return active.concat(remainingSubstitutes);
 }
 
 function cleanGuideValue(line: string, labelPattern: RegExp) {
@@ -1085,6 +1143,40 @@ function parseLineMembers(text: string): RecruitMemberLike[] {
     (a, b) =>
       LINE_POSITIONS.indexOf(a.position as RecruitLinePosition) -
       LINE_POSITIONS.indexOf(b.position as RecruitLinePosition),
+  ).concat(parseSubstituteMembers(text));
+}
+
+function parseSubstituteMembers(text: string): RecruitMemberLike[] {
+  const members: RecruitMemberLike[] = [];
+  let nextLegacySlot = 1;
+
+  for (const rawLine of normalizeText(text).split("\n")) {
+    const line = rawLine.trim();
+    const match = line.match(/^예비\s*(\d{1,2})?\s*[.:：]?\s*(.*)$/);
+    if (!match) continue;
+
+    const explicitSlot = match[1] ? Number(match[1]) : null;
+    const names = splitNames(match[2]);
+    for (let index = 0; index < names.length; index += 1) {
+      const slotNo = explicitSlot !== null
+        ? explicitSlot + index
+        : nextLegacySlot;
+      members.push({
+        name: names[index],
+        position: null,
+        slotNo,
+        isSubstitute: true,
+      });
+      nextLegacySlot = Math.max(nextLegacySlot, slotNo + 1);
+    }
+  }
+
+  const unique = new Map<string, RecruitMemberLike>();
+  for (const member of members) {
+    unique.set(`sub-slot-${member.slotNo}`, member);
+  }
+  return [...unique.values()].sort(
+    (a, b) => Number(a.slotNo ?? 999) - Number(b.slotNo ?? 999),
   );
 }
 
@@ -1097,19 +1189,7 @@ function parseNumberMembers(
 
   for (const rawLine of lines) {
     const line = rawLine.trim();
-    const subMatch = line.match(/^예비\s*[.:：]?\s*(.*)$/);
-    if (subMatch) {
-      const names = splitNames(subMatch[1]);
-      for (const name of names) {
-        members.push({
-          name,
-          position: null,
-          slotNo: null,
-          isSubstitute: true,
-        });
-      }
-      continue;
-    }
+    if (/^예비\s*(?:\d{1,2})?\s*[.:：]?/.test(line)) continue;
 
     if (/^#\s*\d{1,2}\s*·/.test(line)) continue;
     if (/^\d{1,3}\s*인\s*/.test(line)) continue;
@@ -1134,12 +1214,13 @@ function parseNumberMembers(
   }
 
   const unique = new Map<string, RecruitMemberLike>();
-  for (const member of members) {
-    if (member.isSubstitute) {
-      unique.set(`sub-${member.name}`, member);
-    } else {
-      unique.set(`slot-${member.slotNo}`, member);
-    }
+  for (const member of members.concat(parseSubstituteMembers(text))) {
+    unique.set(
+      member.isSubstitute
+        ? `sub-slot-${member.slotNo}`
+        : `slot-${member.slotNo}`,
+      member,
+    );
   }
   return [...unique.values()].sort(
     (a, b) => Number(a.slotNo ?? 999) - Number(b.slotNo ?? 999),
@@ -1159,7 +1240,9 @@ export function formatRecruitPartyBlock(party: RecruitPartyLike) {
   const titleLabel = getCompactRecruitTitleLabel(party);
   const activeCount = getActiveMemberCount(party.members);
   const displayActiveCount = Math.min(activeCount, party.maxMembers);
-  const subMembers = party.members.filter((member) => member.isSubstitute);
+  const subMembers = party.members
+    .filter((member) => member.isSubstitute)
+    .sort((a, b) => Number(a.slotNo ?? 999) - Number(b.slotNo ?? 999));
   const lines: string[] = [];
 
   lines.push(
@@ -1184,12 +1267,17 @@ export function formatRecruitPartyBlock(party: RecruitPartyLike) {
       );
       lines.push(`${slotNo}.${member?.name ? ` ${member.name}` : ""}`);
     }
-    if (String(party.type) === "ARAM" || subMembers.length > 0) {
-      lines.push(
-        `예비.${subMembers.length > 0 ? ` ${subMembers.map((item) => item.name).join(", ")}` : ""}`,
-      );
-    }
   }
+
+  subMembers.forEach((member, index) => {
+    const slotNo = member.slotNo ?? index + 1;
+    lines.push(`예비 ${slotNo}. ${member.name}`);
+  });
+  const nextSubstituteSlot = subMembers.reduce(
+    (max, member) => Math.max(max, Number(member.slotNo ?? 0)),
+    0,
+  ) + 1;
+  lines.push(`예비 ${nextSubstituteSlot}.`);
 
   return lines.join("\n");
 }
@@ -1394,25 +1482,14 @@ export function buildRecruitStatusReply(
 
 export function buildSyncReply(
   party: RecruitPartyLike,
-  previousActiveCount?: number,
 ) {
   const activeCount = getActiveMemberCount(party.members);
 
-  if (
-    typeof previousActiveCount === "number" &&
-    activeCount > previousActiveCount
-  ) {
-    return "[K-LOL.GG 구인구직 등록 완료]";
-  }
-
-  if (
-    typeof previousActiveCount === "number" &&
-    activeCount < previousActiveCount
-  ) {
-    return "[K-LOL.GG 구인구직 수정 완료]";
-  }
-
-  return "[K-LOL.GG 구인구직 수정 완료]";
+  const substituteCount = party.members.filter((member) => member.isSubstitute).length;
+  return [
+    `[파티 #${party.recruitNo} 반영]`,
+    `${Math.min(activeCount, party.maxMembers)}/${party.maxMembers} · 예비 ${substituteCount}명`,
+  ].join("\n");
 }
 
 export function buildCreateReply(template: string, recruitNo?: number) {

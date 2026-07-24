@@ -1,3 +1,5 @@
+import { addDays, getKstOperationDateKey, getKstStartOfDate } from "@/lib/date/kst";
+
 export type RecruitPosition = "TOP" | "JGL" | "MID" | "ADC" | "SUP" | "ALL";
 export type RecruitTier =
   | "IRON"
@@ -278,7 +280,9 @@ export function extractRecruitApplyDate(
   const warnings: string[] = [];
   const normalized = normalizeText(text);
   const headerText = removeParticipantAndExampleLines(normalized);
-  const currentYear = baseDate.getFullYear();
+  const operationDateKey = getKstOperationDateKey(baseDate);
+  const [operationYear, operationMonth, operationDay] = operationDateKey.split("-").map(Number);
+  const currentYear = operationYear;
 
   const explicitAfterMark = headerText.match(
     /[》>▶📢]?\s*(20\d{2})\s*[-./년]\s*(\d{1,2})\s*[-./월]\s*(\d{1,2})\s*(?:일)?/
@@ -369,15 +373,10 @@ export function extractRecruitApplyDate(
   }
 
   if (/내일|익일/.test(headerText)) {
-    const tomorrow = new Date(baseDate);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrow = addDays(getKstStartOfDate(operationDateKey), 1);
 
     return {
-      applyDate: toDateKey(
-        tomorrow.getFullYear(),
-        tomorrow.getMonth() + 1,
-        tomorrow.getDate()
-      ),
+      applyDate: getKstOperationDateKey(tomorrow, 0),
       applyTime: extractTimeFromHeader(headerText),
       warnings,
     };
@@ -385,7 +384,7 @@ export function extractRecruitApplyDate(
 
   if (/오늘|금일|당일/.test(headerText)) {
     return {
-      applyDate: toDateKey(baseDate.getFullYear(), baseDate.getMonth() + 1, baseDate.getDate()),
+      applyDate: toDateKey(operationYear, operationMonth, operationDay),
       applyTime: extractTimeFromHeader(headerText),
       warnings,
     };
@@ -394,7 +393,7 @@ export function extractRecruitApplyDate(
   warnings.push("신청일을 찾지 못해 서버 기준 오늘 날짜로 처리했습니다.");
 
   return {
-    applyDate: toDateKey(baseDate.getFullYear(), baseDate.getMonth() + 1, baseDate.getDate()),
+    applyDate: toDateKey(operationYear, operationMonth, operationDay),
     applyTime: extractTimeFromHeader(headerText),
     warnings,
   };

@@ -25,7 +25,7 @@ type ScenarioGroup =
   | "구인관련 명령어"
   | "내전 관련"
   | "K-LOL 관련"
-  | "무응답";
+  | "입력 확인";
 
 type Scenario = {
   id: string;
@@ -65,12 +65,12 @@ const commandGroups: CommandGroup[] = [
   {
     title: "K-LOL 관련",
     description: "전적, 최근 경기, 랭킹, 공지를 조회합니다.",
-    commands: ["전적 닉네임#태그", "최근 닉네임#태그", "랭킹", "AI공지"],
+    commands: ["전적 닉네임#태그", "최근 닉네임#태그", "랭킹"],
   },
   {
-    title: "무응답 기준",
-    description: "봇이 처리하지 않는 입력입니다.",
-    commands: ["모집번호 없는 수정", "일반 대화", "잘못된 양식"],
+    title: "입력 확인",
+    description: "잘못된 양식에는 고치는 방법을 안내합니다.",
+    commands: ["모집번호 없는 수정", "잘못된 양식"],
   },
 ];
 
@@ -224,10 +224,10 @@ const scenarios: Scenario[] = [
   {
     id: "ranking",
     group: "K-LOL 관련",
-    title: "랭킹 / 공지 확인",
+    title: "랭킹 확인",
     room: "전체 사용 가능",
-    description: "K-LOL 랭킹과 공지를 확인합니다.",
-    commands: ["랭킹", "AI공지"],
+    description: "K-LOL 랭킹을 확인합니다.",
+    commands: ["랭킹"],
     status: "정보 조회",
     tone: "guide",
     messages: [
@@ -243,13 +243,13 @@ const scenarios: Scenario[] = [
   },
   {
     id: "silent-no-number",
-    group: "무응답",
+    group: "입력 확인",
     title: "모집번호 없는 구인 수정",
     room: "K롤방 구인구직방",
-    description: "모집번호가 없으면 기존 구인 수정으로 처리하지 않습니다.",
+    description: "모집번호가 빠졌으면 원본 양식 사용법을 안내합니다.",
     commands: ["모집번호 없는 구인 양식"],
-    status: "무응답",
-    tone: "silent",
+    status: "입력 확인",
+    tone: "guide",
     note: "구인을 수정할 때는 반드시 모집번호: #번호를 유지해야 합니다.",
     messages: [
       {
@@ -259,11 +259,11 @@ const scenarios: Scenario[] = [
         time: "오후 8:50",
       },
       {
-        side: "system",
-        name: "처리 결과",
-        text: "봇 응답 없음\n\n사유: 모집번호가 없어 기존 구인과 연결할 수 없습니다.",
+        side: "bot",
+        name: "K-LOL 구인구직 도우미",
+        text: "[K-LOL.GG 양식 확인 필요]\n모집번호를 찾지 못했습니다.\n\n봇이 출력한 원본 양식의 ‘모집번호: #번호’를 유지해서 다시 보내주세요.",
         time: "오후 8:50",
-        status: "무응답",
+        status: "입력 확인",
       },
     ],
   },
@@ -273,7 +273,7 @@ const groups: ScenarioGroup[] = [
   "구인관련 명령어",
   "내전 관련",
   "K-LOL 관련",
-  "무응답",
+  "입력 확인",
 ];
 
 function ChatMessageView({ message }: { message: ChatMessage }) {
@@ -395,6 +395,8 @@ export default async function RecruitHelperPage() {
         <p>
           구인 참여와 수정은 <b>모집번호</b>로 구분합니다. 기존 구인을 수정할
           때는 반드시 <b>모집번호: #번호</b>를 유지해서 다시 보내주세요.
+          파티 빈자리는 예비 1부터 자동으로 올라가며, 내전과 스크림은 매일
+          오전 6시에 자동 종료됩니다.
         </p>
       </section>
 

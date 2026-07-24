@@ -7,6 +7,13 @@ export function getKstDateKey(date = new Date()) {
   }).format(date);
 }
 
+export function getKstOperationDateKey(date = new Date(), rolloverHour = 6) {
+  const safeHour = Number.isInteger(rolloverHour)
+    ? Math.min(23, Math.max(0, rolloverHour))
+    : 6;
+  return getKstDateKey(new Date(date.getTime() - safeHour * 60 * 60 * 1000));
+}
+
 export function getKstDisplayDate(dateKey: string) {
   const [year, month, day] = dateKey.split("-");
   return `${Number(year)}-${Number(month)}-${Number(day)}`;

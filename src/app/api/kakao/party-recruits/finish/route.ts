@@ -162,7 +162,6 @@ export async function POST(req: NextRequest) {
             : [
                 "[K-LOL.GG 구인구직 마무리 실패]",
                 "해당 번호의 진행 중 파티 구인을 찾지 못했습니다.",
-                "스크림 종료는 반드시 스크림1ㅉ 형식으로 입력해주세요.",
               ].join("\n"),
         },
         404,
@@ -208,8 +207,13 @@ export async function POST(req: NextRequest) {
       });
     });
 
+    const activeCount = getActiveMemberCount(party.members);
+    const substituteCount = party.members.filter((member) => member.isSubstitute).length;
     return partyRecruitJson({
-      reply: "[K-LOL.GG 구인구직 마무리]",
+      reply: [
+        `[파티 #${party.recruitNo} 종료]`,
+        `최종 ${activeCount}명 · 예비 ${substituteCount}명`,
+      ].join("\n"),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

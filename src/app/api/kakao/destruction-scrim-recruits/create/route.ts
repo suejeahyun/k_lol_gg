@@ -8,6 +8,7 @@ import {
   buildScrimFormFromData,
   buildScrimRecruitTemplate,
   countScrimLineupValues,
+  getScrimRecruitDateKey,
   getScrimStatusLabel,
   hasScrimLineupValue,
   isValidScrimTeamName,
@@ -47,10 +48,6 @@ const CREATE_HELP = [
   "",
   "양식 호출: /스크림구인",
 ].join("\n");
-
-function kstDateKey() {
-  return new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" });
-}
 
 function lineupJson(
   lineup: ScrimLineup,
@@ -279,7 +276,7 @@ function validateNewScrimForm(
 
 async function findSameDateScrimByNoAnyStatus(
   scrimNo: number,
-  recruitDate = kstDateKey(),
+  recruitDate = getScrimRecruitDateKey(),
 ) {
   return prisma.destructionScrimRecruit.findFirst({
     where: { scrimNo, recruitDate },
@@ -289,7 +286,7 @@ async function findSameDateScrimByNoAnyStatus(
 
 async function isScrimNoAlreadyUsed(scrimNo: number) {
   const existing = await prisma.destructionScrimRecruit.findFirst({
-    where: { scrimNo },
+    where: { scrimNo, recruitDate: getScrimRecruitDateKey() },
     select: { id: true },
   });
 
@@ -299,7 +296,7 @@ async function isScrimNoAlreadyUsed(scrimNo: number) {
 async function resolveCreateScrimNo(parsedScrimNo: number | null) {
   if (!parsedScrimNo) return getNextScrimNo();
 
-  // 이미 사용된 번호는 과거 완료 건과 상세/종료 명령이 충돌하므로 재사용하지 않습니다.
+  // 같은 운영일에 이미 사용된 번호는 상세 명령과 충돌하므로 재사용하지 않습니다.
   // 단, 활성 스크림 수정/상대 등록은 위쪽 findActiveScrim 분기에서 먼저 처리됩니다.
   if (await isScrimNoAlreadyUsed(parsedScrimNo)) return getNextScrimNo();
 
@@ -635,7 +632,7 @@ export async function POST(req: NextRequest) {
     const scrim = await prisma.destructionScrimRecruit.create({
       data: {
         scrimNo,
-        recruitDate: kstDateKey(),
+        recruitDate: getScrimRecruitDateKey(),
         tournament: { connect: { id: tournament.id } },
         ...(requesterTeam
           ? { requesterTeam: { connect: { id: requesterTeam.id } } }
