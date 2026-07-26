@@ -3,6 +3,7 @@ import { AppBottomNav } from "./AppBottomNav";
 import { AppAdminBottomNav } from "./AppAdminBottomNav";
 import AppTopAccountSwitch from "@/components/AppTopAccountSwitch";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
+import GlobalNavigationPalette from "@/components/GlobalNavigationPalette";
 import { getSiteSettings } from "@/lib/site/settings";
 
 export async function AppMobileShell({
@@ -31,6 +32,7 @@ export async function AppMobileShell({
             <span>{displaySubtitle}</span>
           </Link>
           <div className="klol-app-header-tools">
+            <GlobalNavigationPalette mode={mode} surface="app" compact />
             <ThemeSwitcher compact />
             <AppTopAccountSwitch mode={mode} />
           </div>

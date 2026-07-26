@@ -67,6 +67,10 @@ const mobileAppBootScript = `
       else if (pathname.startsWith("/matches/")) target = detailTarget(pathname, "/matches", "/app/matches");
       else if (pathname === "/matches") target = "/app/matches";
       else if (pathname === "/rankings" || pathname.startsWith("/ai-balance")) target = "/app/rankings";
+      else if (/^\\/progress\\/destruction\\/\\d+\\/mvp-vote/.test(pathname)) {
+        const match = pathname.match(/^\\/progress\\/destruction\\/(\\d+)\\/mvp-vote/);
+        target = match ? "/app/progress/destruction/" + match[1] + "/mvp-vote" : "/app";
+      }
       else if (
         pathname.startsWith("/recruit") ||
         pathname.startsWith("/kakao") ||

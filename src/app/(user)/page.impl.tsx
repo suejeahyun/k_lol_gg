@@ -385,6 +385,29 @@ export default async function HomePage() {
           </div>
         </div>
 
+        <nav className="home-quick-access" aria-label="자주 찾는 기능">
+          <Link href="/recruit">
+            <span>PARTY</span>
+            <strong>구인현황</strong>
+            <small>현재 모집 확인</small>
+          </Link>
+          <Link href="/rankings">
+            <span>RANKING</span>
+            <strong>시즌 랭킹</strong>
+            <small>순위 바로보기</small>
+          </Link>
+          <Link href="/matches">
+            <span>MATCH</span>
+            <strong>최근 내전</strong>
+            <small>결과와 기록</small>
+          </Link>
+          <Link href="/players">
+            <span>PLAYER</span>
+            <strong>플레이어 찾기</strong>
+            <small>프로필 검색</small>
+          </Link>
+        </nav>
+
         <div className="home-dark-showcase-grid">
           <div className="home-dark-top3-panel">
             <div className="home-dark-panel-head">

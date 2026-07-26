@@ -7,8 +7,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
 import { coerceGalleryImageUrls } from "@/lib/gallery/winner-image-paths";
 import DestructionParticipationClient from "@/app/(user)/participation/destruction/[tournamentId]/DestructionParticipationClient";
-import DestructionMvpBallot from "@/components/destruction/DestructionMvpBallot";
-import { getCurrentUser } from "@/lib/auth/session";
+import DestructionStandingsBoard from "@/components/destruction/DestructionStandingsBoard";
 
 type PageProps = {
   params: Promise<{
@@ -66,8 +65,7 @@ export default async function DestructionProgressDetailPage({
     notFound();
   }
 
-  const currentUserPromise = getCurrentUser();
-  const tournamentPromise = prisma.destructionTournament.findUnique({
+  const tournament = await prisma.destructionTournament.findUnique({
     where: {
       id,
     },
@@ -120,27 +118,9 @@ export default async function DestructionProgressDetailPage({
     },
   });
 
-  const [currentUser, tournament] = await Promise.all([
-    currentUserPromise,
-    tournamentPromise,
-  ]);
-
   if (!tournament) {
     notFound();
   }
-
-  const currentUserVotes = currentUser
-    ? await prisma.destructionMatchMvpVote.findMany({
-        where: {
-          voterUserAccountId: currentUser.userAccountId,
-          match: { tournamentId: id },
-        },
-        select: { matchId: true, candidatePlayerId: true },
-      })
-    : [];
-  const currentUserVoteByMatch = new Map(
-    currentUserVotes.map((vote) => [vote.matchId, vote.candidatePlayerId]),
-  );
 
   const winnerTeam = tournament.winnerTeamId
     ? tournament.teams.find((team) => team.id === tournament.winnerTeamId)
@@ -172,15 +152,6 @@ export default async function DestructionProgressDetailPage({
       return a.round - b.round;
     });
 
-  const preliminaryRankTeams = tournament.teams.slice().sort((a, b) => {
-    const groupCompare = (a.preliminaryGroup ?? "").localeCompare(b.preliminaryGroup ?? "");
-    if (groupCompare !== 0) return groupCompare;
-    if (b.points !== a.points) return b.points - a.points;
-    if (b.wins !== a.wins) return b.wins - a.wins;
-    if (a.losses !== b.losses) return a.losses - b.losses;
-    return a.id - b.id;
-  });
-
   const semiFinalMatches = tournament.matches.filter(
     (match) => match.stage === "SEMI_FINAL"
   );
@@ -199,31 +170,9 @@ export default async function DestructionProgressDetailPage({
   const isCancelled = tournament.status === "CANCELLED";
   const matchesWithResult = tournament.matches.filter((match) => match.winnerTeamId && (match.stage !== "PRELIMINARY" || match.isConfirmed));
   const pendingMvpMatches = matchesWithResult.filter((match) => !match.mvpFinalizedAt);
-  const renderMvpBallot = (match: (typeof tournament.matches)[number]) => {
-    const matchParticipants = tournament.participants.filter(
-      (participant) => participant.teamId === match.teamAId || participant.teamId === match.teamBId,
-    );
-    const isMatchParticipant = Boolean(currentUser?.playerId && matchParticipants.some((participant) => participant.playerId === currentUser.playerId));
-    const canVote = currentUser?.status === "APPROVED" && isMatchParticipant && matchParticipants.length === 10;
-    const candidates = matchParticipants.map((participant) => ({
-      id: participant.playerId,
-      name: participant.player.name,
-      nickname: participant.player.nickname,
-      tag: participant.player.tag,
-      position: participant.position,
-      teamSide: participant.teamId === match.teamAId ? "A" as const : "B" as const,
-      selectable: participant.playerId !== currentUser?.playerId &&
-        (match.mvpRevoteCandidateIds.length === 0 || match.mvpRevoteCandidateIds.includes(participant.playerId)),
-      unavailableLabel: participant.playerId === currentUser?.playerId ? "본인 제외" : "재투표 대상 아님",
-    }));
-    return <DestructionMvpBallot matchId={match.id} candidates={candidates}
-      initialVotePlayerId={currentUserVoteByMatch.get(match.id) ?? null}
-      finalizedMvp={match.mvpPlayer ? { id: match.mvpPlayer.id, name: match.mvpPlayer.name, nickname: match.mvpPlayer.nickname, tag: match.mvpPlayer.tag, method: match.mvpSelectionMethod } : null}
-      canVote={canVote}
-      teamLayout={{ teamAName: match.teamA.name, teamBName: match.teamB.name }}
-      voteRound={match.mvpVoteRound}
-      unavailableMessage={!currentUser ? "로그인 후 투표할 수 있습니다." : !isMatchParticipant ? "해당 경기 참가자 10명만 투표할 수 있습니다." : matchParticipants.length !== 10 ? "경기 참가자 10명이 확정되어야 투표할 수 있습니다." : undefined} />;
-  };
+  const showPreliminaryStandings =
+    tournament.teams.length > 0 &&
+    ["PRELIMINARY", "TOURNAMENT", "COMPLETED"].includes(tournament.status);
 
   return (
     <main className="page-container destruction-detail-page">
@@ -339,30 +288,24 @@ export default async function DestructionProgressDetailPage({
         </section>
       ) : null}
 
+      {showPreliminaryStandings ? (
+        <section className="content-section destruction-standings-section">
+          <div className="section-header">
+            <h2>예선 조별 순위</h2>
+            <p className="page-description">
+              매치 전적과 세트 득실, 최근 경기 흐름을 조별로 확인합니다.
+            </p>
+          </div>
+          <DestructionStandingsBoard
+            title={tournament.title}
+            teams={tournament.teams}
+            matches={tournament.matches}
+          />
+        </section>
+      ) : null}
+
       {isPreliminary ? (
         <>
-          <section className="content-section">
-            <div className="section-header">
-              <h2>예선 순위</h2>
-            </div>
-
-            {tournament.teams.length === 0 ? (
-              <div className="empty-box">등록된 팀이 없습니다.</div>
-            ) : (
-              <div className="destruction-rank-list">
-                {preliminaryRankTeams.map((team, index) => (
-                  <div key={team.id} className="destruction-rank-row">
-                    <strong>{index + 1}위</strong>
-                    <span>{team.preliminaryGroup ? `${team.preliminaryGroup}조 · ` : ""}{team.name}</span>
-                    <em>
-                      {team.points}점 · {team.wins}승 {team.losses}패
-                    </em>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-
           <section className="content-section">
             <div className="section-header">
               <h2>예선 경기</h2>
@@ -441,23 +384,22 @@ export default async function DestructionProgressDetailPage({
         </>
       ) : null}
 
-      {pendingMvpMatches.length ? (
-        <section className="content-section">
-          <div className="section-header">
-            <h2>경기별 MVP</h2>
-            <p className="page-description">경기 참가자 10명만 참여하며, 본인을 제외한 9명 중 한 명에게 투표합니다.</p>
+      {matchesWithResult.length ? (
+        <section className="content-section destruction-mvp-vote-cta">
+          <div>
+            <span>MVP VOTE</span>
+            <h2>
+              {pendingMvpMatches.length
+                ? `투표할 경기가 ${pendingMvpMatches.length}개 있습니다.`
+                : "경기별 MVP 결과를 확인하세요."}
+            </h2>
+            <p className="page-description">
+              예선과 본선을 오가지 않고 MVP 투표 전용 페이지에서 한 번에 참여할 수 있습니다.
+            </p>
           </div>
-          <div className="destruction-mvp-match-list">
-            {pendingMvpMatches.map((match) => (
-              <article key={match.id} className="destruction-mvp-match-card">
-                <div className="destruction-mvp-match-card__title">
-                  <span>{getStageLabel(match.stage)} · {match.round}경기</span>
-                  <strong>{match.teamA.name} {match.teamAScore} : {match.teamBScore} {match.teamB.name}</strong>
-                </div>
-                {renderMvpBallot(match)}
-              </article>
-            ))}
-          </div>
+          <Link className="btn btn-primary" href={`/progress/destruction/${id}/mvp-vote`}>
+            {pendingMvpMatches.length ? "MVP 투표하러 가기" : "MVP 결과 보기"}
+          </Link>
         </section>
       ) : null}
 

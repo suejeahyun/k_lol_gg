@@ -34,24 +34,18 @@ type UserSidebarGroup = {
 
 const menuGroups: UserSidebarGroup[] = [
   {
-    title: "LOBBY",
+    title: "바로가기",
     items: [
-      { href: "/players", label: "플레이어", code: "PLY" },
-      { href: "/rankings", label: "랭킹", code: "RNK" },
-    ],
-  },
-  {
-    title: "PLAY",
-    items: [
-      { href: "/matches", label: "내전 목록", code: "MAT" },
+      { href: "/", label: "홈", code: "HOM" },
       { href: "/recruit", label: "구인현황", code: "REC", activePrefixes: ["/recruit", "/recruit-helper"] },
-      { href: "/progress", label: "이벤트/멸망전", code: "EVT" },
-      { href: "/coin-toss", label: "코인토스", code: "TOS" },
+      { href: "/matches", label: "내전 목록", code: "MAT" },
+      { href: "/rankings", label: "시즌 랭킹", code: "RNK" },
     ],
   },
   {
-    title: "BALANCE AI",
+    title: "플레이어·팀",
     items: [
+      { href: "/players", label: "플레이어 찾기", code: "PLY" },
       { href: "/ai-balance", label: "K-LOL MMR", code: "MMR", activePrefixes: ["/ai-balance"] },
       { href: "/players/balance", label: "팀 밸런스", code: "BAL", auth: true, approvedOnly: true, activePrefixes: ["/players/balance"] },
 
@@ -63,17 +57,20 @@ const menuGroups: UserSidebarGroup[] = [
         approvedOnly: true,
         activePrefixes: ["/players/balance/recommendations", "/players/balance/drafts"],
       },
-            { 
-        href: "/random-team", 
-        label: "랜덤 팀 나누기", 
-        code: "RND", 
-        activePrefixes: ["/random-team"] 
+      {
+        href: "/random-team",
+        label: "랜덤 팀 나누기",
+        code: "RND",
+        activePrefixes: ["/random-team"],
       },
     ],
   },
   {
-    title: "INFO",
+    title: "대회·콘텐츠",
     items: [
+      { href: "/progress", label: "이벤트·멸망전", code: "EVT" },
+      { href: "/participation", label: "참가 신청", code: "APP", activePrefixes: ["/participation"] },
+      { href: "/coin-toss", label: "코인토스", code: "TOS" },
       { href: "/install", label: "앱 설치", code: "APP", activePrefixes: ["/install"] },
       { href: "/highlights", label: "하이라이트", code: "VID", activePrefixes: ["/highlights", "/images"] },
       { href: "/riot-api", label: "Riot API 안내", code: "RIT", activePrefixes: ["/riot-api", "/me/riot"] },

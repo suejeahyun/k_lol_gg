@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import ThemeSwitcher from "./ThemeSwitcher";
+import GlobalNavigationPalette from "./GlobalNavigationPalette";
 
 type AppTopBarProps = {
   title: string;
@@ -150,6 +151,7 @@ export default function AppTopBar({
       ) : null}
 
       <div className="app-topbar__right">
+        <GlobalNavigationPalette mode={mode} />
         <ThemeSwitcher />
 
         <form

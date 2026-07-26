@@ -25,17 +25,17 @@ type PublicSiteSettings = {
 
 const menuGroups: AdminSidebarGroup[] = [
   {
-    title: "오늘 운영",
+    title: "운영 바로가기",
     items: [
       { href: "/admin/matches", label: "내전 관리", code: "MAT", activePrefixes: ["/admin/matches"] },
       { href: "/admin/progress", label: "이벤트/멸망전", code: "EVT", activePrefixes: ["/admin/progress"] },
       { href: "/admin/kakao/recruits", label: "구인 관리", code: "REC", activePrefixes: ["/admin/kakao/recruits"] },
       { href: "/admin/kakao/scrims", label: "스크림구인", code: "SCR", activePrefixes: ["/admin/kakao/scrims"] },
-      { href: "/admin/kakao/season-apply", label: "내전 참가신청", code: "APP", activePrefixes: ["/admin/kakao/season-apply"] },
+      { href: "/admin/kakao/season-apply", label: "참가 신청 확인", code: "APP", activePrefixes: ["/admin/kakao/season-apply"] },
     ],
   },
   {
-    title: "회원/징계",
+    title: "사람 관리",
     items: [
       { href: "/admin/players", label: "회원/플레이어", code: "PLY", activePrefixes: ["/admin/players", "/admin/users"] },
       { href: "/admin/discipline", label: "주의/경고/벤", code: "DIS", activePrefixes: ["/admin/discipline"] },
