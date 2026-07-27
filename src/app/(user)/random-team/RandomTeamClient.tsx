@@ -195,7 +195,7 @@ function buildTierBalancedTeams(players: TeamPlayer[]) {
 function formatResult(result: TeamResult | null) {
   if (!result) return "";
 
-  return `🔴 RED 팀\n${result.red.map((player) => player.name).join(" / ")}\n\n🔵 BLUE 팀\n${result.blue
+  return `1팀\n${result.red.map((player) => player.name).join(" / ")}\n\n2팀\n${result.blue
     .map((player) => player.name)
     .join(" / ")}`;
 }
@@ -263,7 +263,7 @@ export default function PublicRandomTeamPage({ embedded = false }: { embedded?: 
       return `10명 확인 완료. 티어 밸런스를 사용하려면 티어 ${10 - selectedTierCount}개를 더 선택해야 합니다.`;
     }
     if (mode === "tier") return "10명과 티어 확인 완료. 티어 점수 차이가 가장 작은 팀이 생성되었습니다.";
-    return "10명 확인 완료. RED / BLUE 팀이 자동으로 생성되었습니다.";
+    return "10명 확인 완료. 1팀 / 2팀이 자동으로 생성되었습니다.";
   })();
 
   const handleModeChange = (nextMode: TeamMode) => {
@@ -331,7 +331,7 @@ export default function PublicRandomTeamPage({ embedded = false }: { embedded?: 
         <p style={styles.kicker}>K-LOL.GG 공개 도구</p>
         <h1 style={styles.title}>랜덤 팀 나누기</h1>
         <p style={styles.description}>
-          10명의 이름을 붙여넣으면 RED 5명, BLUE 5명으로 즉시 분배됩니다. 순수 랜덤과
+          10명의 이름을 붙여넣으면 1팀 5명, 2팀 5명으로 즉시 분배됩니다. 순수 랜덤과
           현재 티어만 반영하는 간단 티어 밸런스를 선택할 수 있습니다.
         </p>
       </section>
@@ -352,7 +352,7 @@ export default function PublicRandomTeamPage({ embedded = false }: { embedded?: 
           티어 밸런스
         </button>
         <p style={styles.modeHelp}>
-          티어 밸런스는 아이언 1점부터 챌린저 10점까지 계산해 RED/BLUE 점수 차이가 가장 작은
+          티어 밸런스는 아이언 1점부터 챌린저 10점까지 계산해 1팀/2팀 점수 차이가 가장 작은
           조합 중 하나를 랜덤으로 선택합니다.
         </p>
       </section>
@@ -423,19 +423,19 @@ export default function PublicRandomTeamPage({ embedded = false }: { embedded?: 
             <div style={styles.resultWrap}>
               {result.mode === "tier" ? (
                 <div style={styles.scoreBox}>
-                  <span>RED {result.redScore}점</span>
-                  <span>BLUE {result.blueScore}점</span>
+                  <span>1팀 {result.redScore}점</span>
+                  <span>2팀 {result.blueScore}점</span>
                   <span>차이 {result.diff}점</span>
                 </div>
               ) : null}
 
               <section style={styles.teamBox}>
-                <h3 style={styles.redTitle}>🔴 RED 팀</h3>
+                <h3 style={styles.teamOneTitle}>1팀</h3>
                 <p style={styles.teamNames}>{result.red.map(formatPlayerWithTier).join(" / ")}</p>
               </section>
 
               <section style={styles.teamBox}>
-                <h3 style={styles.blueTitle}>🔵 BLUE 팀</h3>
+                <h3 style={styles.teamTwoTitle}>2팀</h3>
                 <p style={styles.teamNames}>{result.blue.map(formatPlayerWithTier).join(" / ")}</p>
               </section>
 
@@ -740,12 +740,12 @@ const styles: Record<string, CSSProperties> = {
     background: "rgba(2, 6, 23, 0.55)",
     padding: "16px",
   },
-  redTitle: {
+  teamOneTitle: {
     margin: "0 0 10px",
     color: "#fecaca",
     fontSize: "18px",
   },
-  blueTitle: {
+  teamTwoTitle: {
     margin: "0 0 10px",
     color: "#bae6fd",
     fontSize: "18px",
