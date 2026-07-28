@@ -29,6 +29,7 @@ export default function DestructionTournamentGenerator({
 
   const [error, setError] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const [selectedTeamIds, setSelectedTeamIds] = useState(["", "", "", ""]);
 
   const updateSelectedTeam = (index: number, value: string) => {
@@ -108,6 +109,39 @@ export default function DestructionTournamentGenerator({
     }
   };
 
+  const handleReset = async () => {
+    setError("");
+
+    const confirmed = window.confirm(
+      "현재 4강·결승 대진과 입력된 경기 결과 및 MVP 투표를 모두 삭제하고, 본선 진출팀 지정 전 단계로 되돌릴까요?"
+    );
+    if (!confirmed) return;
+
+    setIsResetting(true);
+
+    try {
+      const res = await fetch(
+        `/api/destruction-tournaments/${tournamentId}/tournament`,
+        {
+          method: "DELETE",
+        }
+      );
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message ?? "본선 대진 초기화 실패");
+        return;
+      }
+
+      setSelectedTeamIds(["", "", "", ""]);
+      router.refresh();
+    } catch {
+      setError("본선 대진 초기화 중 오류가 발생했습니다.");
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   return (
     <div className="destruction-tournament-generator" style={{ display: "grid", gap: 16 }}>
       {tournamentMatchCount === 0 ? (
@@ -143,7 +177,7 @@ export default function DestructionTournamentGenerator({
                       onChange={(event) =>
                         updateSelectedTeam(selectionIndex, event.target.value)
                       }
-                      disabled={isGenerating}
+                      disabled={isGenerating || isResetting}
                     >
                       <option value="">팀 선택</option>
                       {teams.map((team) => {
@@ -177,6 +211,7 @@ export default function DestructionTournamentGenerator({
         onClick={handleGenerate}
         disabled={
           isGenerating ||
+          isResetting ||
           teams.length < 4 ||
           preliminaryMatchCount === 0 ||
           unfinishedPreliminaryCount > 0 ||
@@ -189,7 +224,20 @@ export default function DestructionTournamentGenerator({
       </button>
 
       {tournamentMatchCount > 0 ? (
-        <div className="empty-box">이미 생성된 토너먼트 경기가 있습니다.</div>
+        <>
+          <div className="empty-box">
+            이미 생성된 본선 경기가 있습니다. 진출팀이나 상대를 다시 지정하려면 아래에서
+            초기화하세요.
+          </div>
+          <button
+            type="button"
+            className="chip-button chip-button--danger"
+            onClick={handleReset}
+            disabled={isResetting || isGenerating}
+          >
+            {isResetting ? "본선 대진 초기화 중..." : "본선 4강 초기화 후 다시 지정"}
+          </button>
+        </>
       ) : null}
 
       {error ? <p className="notice-form__error">{error}</p> : null}

@@ -248,3 +248,88 @@ export async function POST(req: NextRequest, { params }: RouteProps) {
     );
   }
 }
+
+export async function DELETE(_req: NextRequest, { params }: RouteProps) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
+  try {
+    const { tournamentId } = await params;
+    const id = Number(tournamentId);
+
+    if (!Number.isInteger(id) || id <= 0) {
+      return NextResponse.json(
+        { message: "멸망전 ID가 올바르지 않습니다." },
+        { status: 400 }
+      );
+    }
+
+    const tournament = await prisma.destructionTournament.findUnique({
+      where: { id },
+      include: {
+        matches: {
+          where: {
+            stage: {
+              in: ["SEMI_FINAL", "FINAL"],
+            },
+          },
+          select: {
+            id: true,
+          },
+        },
+      },
+    });
+
+    if (!tournament) {
+      return NextResponse.json(
+        { message: "멸망전을 찾을 수 없습니다." },
+        { status: 404 }
+      );
+    }
+
+    if (tournament.matches.length === 0) {
+      return NextResponse.json(
+        { message: "초기화할 본선 경기가 없습니다." },
+        { status: 400 }
+      );
+    }
+
+    const deletedMatchCount = tournament.matches.length;
+
+    await prisma.$transaction(async (tx) => {
+      await tx.destructionMatch.deleteMany({
+        where: {
+          tournamentId: id,
+          stage: {
+            in: ["SEMI_FINAL", "FINAL"],
+          },
+        },
+      });
+
+      await tx.destructionTournament.update({
+        where: { id },
+        data: {
+          status: "PRELIMINARY",
+          winnerTeamId: null,
+          mvpPlayerId: null,
+        },
+      });
+
+      await tx.adminLog.create({
+        data: {
+          action: "DESTRUCTION_TOURNAMENT_BRACKET_RESET",
+          message: `멸망전 본선 대진 초기화: ${tournament.title} / 삭제 경기 ${deletedMatchCount}개`,
+        },
+      });
+    });
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    logServerError("[DESTRUCTION_TOURNAMENT_BRACKET_RESET_ERROR]", error);
+
+    return NextResponse.json(
+      { message: "본선 대진 초기화 실패" },
+      { status: 500 }
+    );
+  }
+}
