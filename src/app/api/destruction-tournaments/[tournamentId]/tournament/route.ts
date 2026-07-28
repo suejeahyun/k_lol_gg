@@ -21,49 +21,7 @@ type MatchCreateInput = {
   isConfirmed?: boolean;
 };
 
-type RankedTeam = {
-  id: number;
-  preliminaryGroup?: string | null;
-  points: number;
-  wins: number;
-  losses: number;
-};
-
-function compareRankedTeams(a: RankedTeam, b: RankedTeam) {
-  if (b.points !== a.points) return b.points - a.points;
-  if (b.wins !== a.wins) return b.wins - a.wins;
-  if (a.losses !== b.losses) return a.losses - b.losses;
-  return a.id - b.id;
-}
-
-function resolveSemiFinalTeams(teams: RankedTeam[]) {
-  const groupedTeams = new Map<string, RankedTeam[]>();
-
-  teams.forEach((team) => {
-    if (!team.preliminaryGroup) return;
-
-    const current = groupedTeams.get(team.preliminaryGroup) ?? [];
-    current.push(team);
-    groupedTeams.set(team.preliminaryGroup, current);
-  });
-
-  const groups = Array.from(groupedTeams.entries())
-    .filter(([, groupTeams]) => groupTeams.length >= 2)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([group, groupTeams]) => ({
-      group,
-      teams: groupTeams.slice().sort(compareRankedTeams),
-    }));
-
-  if (groups.length === 2) {
-    const [groupA, groupB] = groups;
-    return [groupA.teams[0], groupB.teams[0], groupA.teams[1], groupB.teams[1]];
-  }
-
-  return teams.slice().sort(compareRankedTeams).slice(0, 4);
-}
-
-export async function POST(_req: NextRequest, { params }: RouteProps) {
+export async function POST(req: NextRequest, { params }: RouteProps) {
   const rejected = await rejectIfNotAdmin();
   if (rejected) return rejected;
 
@@ -161,11 +119,58 @@ export async function POST(_req: NextRequest, { params }: RouteProps) {
       );
     }
 
-    const topTeams = resolveSemiFinalTeams(tournament.teams).slice(0, 4);
-
-    if (topTeams.length < 4) {
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
       return NextResponse.json(
-        { message: "본선 4강에 올릴 팀을 4개 확정할 수 없습니다." },
+        { message: "본선 진출 팀과 4강 대진을 선택해주세요." },
+        { status: 400 }
+      );
+    }
+
+    const semiFinals =
+      body && typeof body === "object" && "semiFinals" in body
+        ? (body as { semiFinals?: unknown }).semiFinals
+        : null;
+
+    if (
+      !Array.isArray(semiFinals) ||
+      semiFinals.length !== 2 ||
+      semiFinals.some(
+        (match) =>
+          !match ||
+          typeof match !== "object" ||
+          !Number.isInteger((match as { teamAId?: unknown }).teamAId) ||
+          !Number.isInteger((match as { teamBId?: unknown }).teamBId)
+      )
+    ) {
+      return NextResponse.json(
+        { message: "4강 1경기와 2경기의 팀을 모두 선택해주세요." },
+        { status: 400 }
+      );
+    }
+
+    const selectedMatches = semiFinals as Array<{
+      teamAId: number;
+      teamBId: number;
+    }>;
+    const selectedTeamIds = selectedMatches.flatMap((match) => [
+      match.teamAId,
+      match.teamBId,
+    ]);
+
+    if (new Set(selectedTeamIds).size !== 4) {
+      return NextResponse.json(
+        { message: "본선 진출 4팀은 서로 다른 팀이어야 합니다." },
+        { status: 400 }
+      );
+    }
+
+    const tournamentTeamIds = new Set(tournament.teams.map((team) => team.id));
+    if (selectedTeamIds.some((teamId) => !tournamentTeamIds.has(teamId))) {
+      return NextResponse.json(
+        { message: "이 멸망전에 참가하지 않은 팀이 포함되어 있습니다." },
         { status: 400 }
       );
     }
@@ -175,8 +180,8 @@ export async function POST(_req: NextRequest, { params }: RouteProps) {
         tournamentId: id,
         stage: "SEMI_FINAL",
         round: 1,
-        teamAId: topTeams[0].id,
-        teamBId: topTeams[3].id,
+        teamAId: selectedMatches[0].teamAId,
+        teamBId: selectedMatches[0].teamBId,
         bestOf: 3,
         isConfirmed: true,
       },
@@ -184,8 +189,8 @@ export async function POST(_req: NextRequest, { params }: RouteProps) {
         tournamentId: id,
         stage: "SEMI_FINAL",
         round: 2,
-        teamAId: topTeams[1].id,
-        teamBId: topTeams[2].id,
+        teamAId: selectedMatches[1].teamAId,
+        teamBId: selectedMatches[1].teamBId,
         bestOf: 3,
         isConfirmed: true,
       },
@@ -208,7 +213,13 @@ export async function POST(_req: NextRequest, { params }: RouteProps) {
       await tx.adminLog.create({
         data: {
           action: "DESTRUCTION_TOURNAMENT_BRACKET_CREATE",
-          message: `멸망전 상위 4팀 토너먼트 생성: ${tournament.title}`,
+          message: `멸망전 운영자 지정 4강 대진 생성: ${tournament.title} (${selectedMatches
+            .map((match) => {
+              const teamA = tournament.teams.find((team) => team.id === match.teamAId);
+              const teamB = tournament.teams.find((team) => team.id === match.teamBId);
+              return `${teamA?.name ?? match.teamAId} vs ${teamB?.name ?? match.teamBId}`;
+            })
+            .join(", ")})`,
         },
       });
 

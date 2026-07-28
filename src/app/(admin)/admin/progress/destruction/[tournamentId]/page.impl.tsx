@@ -775,11 +775,18 @@ export default async function AdminDestructionTournamentDetailPage({
         step="TOURNAMENT"
         currentStep={selectedStep}
         title="5. 본선 4강"
-        description="예선 결과 기준으로 4강 토너먼트를 생성합니다. A/B 조가 있으면 각 조 1·2위 교차 대진, 조가 없으면 전체 상위 4팀 기준입니다."
+        description="예선 결과를 확인한 뒤 운영자가 본선 진출 4팀과 4강 대진을 직접 지정합니다. 동점 팀의 진출 여부도 운영자가 결정합니다."
       >
         <DestructionTournamentGenerator
           tournamentId={tournament.id}
-          teamCount={tournament.teams.length}
+          teams={tournament.teams.map((team) => ({
+            id: team.id,
+            name: team.name,
+            preliminaryGroup: team.preliminaryGroup,
+            points: team.points,
+            wins: team.wins,
+            losses: team.losses,
+          }))}
           preliminaryMatchCount={preliminaryMatches.length}
           unfinishedPreliminaryCount={unfinishedPreliminaryCount}
           tournamentMatchCount={tournamentMatches.length}
