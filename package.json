@@ -19,6 +19,7 @@
     "check:routes": "node tools/check-local-routes.mjs",
     "check:kakao-recruit": "tsx tools/check-kakao-recruit-routing.ts",
     "check:kakao-auth": "tsx tools/check-kakao-request-guard.ts",
+    "check:kakao-operation-forms": "tsx tools/check-kakao-operation-forms.ts",
     "check:security-guard": "tsx tools/check-security-request-guard.ts",
     "check:mvp-voting": "tsx tools/check-destruction-mvp-voting.ts",
     "check:env": "node tools/check-deploy-readiness.mjs",

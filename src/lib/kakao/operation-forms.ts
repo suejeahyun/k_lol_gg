@@ -1,6 +1,15 @@
-﻿export type KakaoOperationFormType = "suggestions" | "meetups" | "leaves";
+﻿export type KakaoOperationFormType = "friends" | "suggestions" | "meetups" | "leaves";
 
 export type ParsedKakaoOperationForm =
+  | {
+      type: "friends";
+      friendName: string;
+      friendNickname: string;
+      usageType: string;
+      gameName: string | null;
+      discordNicknameChange: string | null;
+      rawText: string;
+    }
   | {
       type: "suggestions";
       requesterInfo: string;
@@ -26,6 +35,7 @@ export type ParsedKakaoOperationForm =
     };
 
 export const kakaoOperationFormLabels: Record<KakaoOperationFormType, string> = {
+  friends: "디스코드 초대",
   suggestions: "건의",
   meetups: "오프라인 모임",
   leaves: "외출 신청",
@@ -265,10 +275,51 @@ export function extractKakaoLeaveScopeFromText(input: unknown) {
   return cleanLeaveScopeField(readField(text, "외출범위", []));
 }
 
+function parseUsage(value: string) {
+  const raw = cleanRequiredField(
+    value
+      .split("\n")
+      .filter((line) => !/^\s*-?\s*선택\s*:/.test(line))
+      .join("\n"),
+  );
+  const specificMatch = raw.match(/특정(?:\s*게임)?\s*(?:[(:：]\s*([^)\n）]+)\s*[)）]?|[:：]\s*([^\n]+))?/);
+
+  if (/장기/.test(raw)) return { usageType: "장기", gameName: null };
+  if (/단기/.test(raw)) return { usageType: "단기", gameName: null };
+
+  if (/특정(?:\s*게임)?/.test(raw)) {
+    const gameName = (specificMatch?.[1] || specificMatch?.[2] || "")
+      .replace(/게임명\s*적기/g, "")
+      .trim() || null;
+    return { usageType: "특정 게임", gameName };
+  }
+
+  return { usageType: raw || "미입력", gameName: null };
+}
+
 export function parseKakaoOperationForm(input: unknown): ParsedKakaoOperationForm | null {
   const text = normalizeKakaoOperationText(input);
 
   if (!text) return null;
+
+  if (hasAll(text, ["지인 이름", "지인 닉네임", "이용기간", "디스코드 닉네임 변경"])) {
+    const friendName = cleanRequiredField(readField(text, "지인 이름", ["지인 닉네임", "이용기간", "디스코드 닉네임 변경"]));
+    const friendNickname = cleanRequiredField(readField(text, "지인 닉네임", ["이용기간", "디스코드 닉네임 변경"]));
+    const usage = parseUsage(readField(text, "이용기간", ["디스코드 닉네임 변경"]));
+    const discordNicknameChange = cleanGuideLines(readField(text, "디스코드 닉네임 변경", [])) || null;
+
+    if (!friendName || !friendNickname || usage.usageType === "미입력") return null;
+
+    return {
+      type: "friends",
+      friendName,
+      friendNickname,
+      usageType: usage.usageType,
+      gameName: usage.gameName,
+      discordNicknameChange,
+      rawText: text,
+    };
+  }
 
   if (hasAll(text, ["본인 이름 및 닉네임", "건의 사유", "건의 내용"])) {
     const requesterInfo = cleanRequiredField(readField(text, "본인 이름 및 닉네임", ["건의 사유", "건의 내용"]));
@@ -326,6 +377,10 @@ export function parseKakaoOperationForm(input: unknown): ParsedKakaoOperationFor
 }
 
 export function getKakaoOperationFormReply(type: KakaoOperationFormType) {
+  if (type === "friends") {
+    return "[K-LOL.GG 디스코드 초대 신청 접수 완료]";
+  }
+
   if (type === "suggestions") {
     return "[K-LOL.GG 건의 접수 완료]";
   }
