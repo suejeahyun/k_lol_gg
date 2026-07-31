@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { logServerError } from "@/lib/server/safe-log";
+import { readJsonObject } from "@/lib/http/json-body";
 
 type RouteProps = {
   params: Promise<{
@@ -119,10 +120,8 @@ export async function POST(req: NextRequest, { params }: RouteProps) {
       );
     }
 
-    let body: unknown;
-    try {
-      body = await req.json();
-    } catch {
+    const body = await readJsonObject<Record<string, unknown>>(req);
+    if (!body) {
       return NextResponse.json(
         { message: "본선 진출 팀과 4강 대진을 선택해주세요." },
         { status: 400 }

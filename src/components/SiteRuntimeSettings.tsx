@@ -2,13 +2,7 @@
 
 import { useEffect } from "react";
 import type { SiteThemePreset } from "@/lib/site/settings";
-
-type PublicSiteSettings = {
-  siteName?: string;
-  siteTagline?: string | null;
-  homeBackgroundUrl?: string | null;
-  themePreset?: SiteThemePreset;
-};
+import { loadPublicSiteSettings } from "@/lib/site/public-settings-client";
 
 const allowedThemes: SiteThemePreset[] = ["dark-modern", "neon-cyber", "black-gold"];
 const optimizedBuiltInImages: Record<string, string> = {
@@ -30,14 +24,10 @@ export default function SiteRuntimeSettings() {
 
     async function applySettings() {
       try {
-        const response = await fetch("/api/site-settings", { cache: "no-store" });
-        if (!response.ok) return;
-
-        const data = (await response.json()) as { settings?: PublicSiteSettings };
-        if (cancelled || !data.settings) return;
+        const settings = await loadPublicSiteSettings();
+        if (cancelled) return;
 
         const root = document.documentElement;
-        const settings = data.settings;
 
         if (settings.siteName) {
           root.style.setProperty("--site-name-length", String(settings.siteName.length));

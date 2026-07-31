@@ -3,18 +3,12 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import styles from "./SiteAiAssistant.module.css";
+import { loadPublicSiteSettings } from "@/lib/site/public-settings-client";
 
 type Message = {
   role: "user" | "assistant";
   content: string;
   mode?: "openai" | "fallback";
-};
-
-type PublicSiteSettings = {
-  planStatus: "ACTIVE" | "LOCKED";
-  aiAssistantEnabled?: boolean;
-  userAssistantName?: string;
-  adminAssistantName?: string;
 };
 
 type AuthMeResponse = {
@@ -95,20 +89,19 @@ export default function SiteAiAssistant() {
 
     async function loadSettings() {
       try {
-        const response = await fetch("/api/site-settings", { cache: "no-store" });
-        const data = (await response.json().catch(() => ({}))) as {
-          settings?: PublicSiteSettings;
-        };
-        const authResponse = await fetch("/api/auth/me", { cache: "no-store" });
+        const [settings, authResponse] = await Promise.all([
+          loadPublicSiteSettings(),
+          fetch("/api/auth/me", { cache: "no-store" }),
+        ]);
         const authData = (await authResponse.json().catch(() => ({}))) as AuthMeResponse;
         if (cancelled) return;
         const approved = authData.user?.status === "APPROVED";
         setRole(approved ? authData.user?.role ?? "USER" : null);
         setAssistantNames({
-          user: data.settings?.userAssistantName || "K-LOL 코치",
-          admin: data.settings?.adminAssistantName || "AI 운영 비서",
+          user: settings.userAssistantName || "K-LOL 코치",
+          admin: settings.adminAssistantName || "AI 운영 비서",
         });
-        setEnabled(Boolean(approved && data.settings?.planStatus === "ACTIVE" && data.settings?.aiAssistantEnabled));
+        setEnabled(Boolean(approved && settings.planStatus === "ACTIVE" && settings.aiAssistantEnabled));
       } catch {
         if (!cancelled) setEnabled(false);
       } finally {

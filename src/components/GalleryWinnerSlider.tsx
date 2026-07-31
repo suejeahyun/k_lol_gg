@@ -68,7 +68,8 @@ export default function GalleryWinnerSlider({
           width={960}
           height={540}
           className="winner-slider__image"
-          loading="eager"
+          loading="lazy"
+          fetchPriority="low"
         />
       </div>
 

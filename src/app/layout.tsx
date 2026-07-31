@@ -4,7 +4,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import RandomBackgroundLayout from "../components/RandomBackgroundLayout";
 import MobileAppGate from "@/components/MobileAppGate";
 import SiteRuntimeSettings from "@/components/SiteRuntimeSettings";
-import SiteAiAssistant from "@/components/ai/SiteAiAssistant";
+import SiteAiAssistantLoader from "@/components/ai/SiteAiAssistantLoader";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import { getPublicBaseUrl } from "@/lib/http/base-url";
 
@@ -152,6 +152,7 @@ export default function RootLayout({
   return (
     <html lang="ko" suppressHydrationWarning>
       <head>
+        <link rel="preconnect" href="https://ddragon.leagueoflegends.com" crossOrigin="anonymous" />
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
         <script dangerouslySetInnerHTML={{ __html: mobileAppBootScript }} />
       </head>
@@ -160,7 +161,7 @@ export default function RootLayout({
         <ServiceWorkerRegister />
         <RandomBackgroundLayout>
           {children}
-          <SiteAiAssistant />
+          <SiteAiAssistantLoader />
           <MobileAppGate />
         </RandomBackgroundLayout>
         {process.env.VERCEL === "1" ? <SpeedInsights sampleRate={0.25} /> : null}

@@ -50,18 +50,25 @@ export default function RandomBackgroundLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [images, setImages] = useState<BackgroundPair>({
-    left: FALLBACK_LEFT,
-    right: FALLBACK_RIGHT,
-  });
+  const [images, setImages] = useState<BackgroundPair | null>(null);
 
   useEffect(() => {
-    const animationFrameId = window.requestAnimationFrame(() => {
-      setImages(getRandomPair());
-    });
+    const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+    if (connection?.saveData) return;
+
+    let idleId: number | null = null;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    const loadDecorativeBackgrounds = () => setImages(getRandomPair());
+    if (typeof window.requestIdleCallback === "function") {
+      idleId = window.requestIdleCallback(loadDecorativeBackgrounds, { timeout: 1800 });
+    } else {
+      timeoutId = setTimeout(loadDecorativeBackgrounds, 400);
+    }
 
     return () => {
-      window.cancelAnimationFrame(animationFrameId);
+      if (idleId !== null) window.cancelIdleCallback(idleId);
+      if (timeoutId !== null) window.clearTimeout(timeoutId);
     };
   }, []);
 
@@ -70,14 +77,14 @@ export default function RandomBackgroundLayout({
       <div
         className="app-background-side app-background-side--left"
         style={{
-          backgroundImage: `url("${images.left}")`,
+          backgroundImage: images ? `url("${images.left}")` : "none",
         }}
       />
 
       <div
         className="app-background-side app-background-side--right"
         style={{
-          backgroundImage: `url("${images.right}")`,
+          backgroundImage: images ? `url("${images.right}")` : "none",
         }}
       />
 
