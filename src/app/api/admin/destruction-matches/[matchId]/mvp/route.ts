@@ -57,3 +57,72 @@ export async function PATCH(req: NextRequest, { params }: RouteProps) {
     return NextResponse.json({ message: "경기 MVP 확정에 실패했습니다." }, { status: 500 });
   }
 }
+
+export async function DELETE(_: NextRequest, { params }: RouteProps) {
+  const rejected = await rejectIfNotAdmin();
+  if (rejected) return rejected;
+
+  try {
+    const matchId = Number((await params).matchId);
+    if (!Number.isInteger(matchId) || matchId <= 0) {
+      return NextResponse.json({ message: "경기 ID가 올바르지 않습니다." }, { status: 400 });
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT "id" FROM "DestructionMatch" WHERE "id" = ${matchId} FOR UPDATE`;
+
+      const match = await tx.destructionMatch.findUnique({
+        where: { id: matchId },
+        include: {
+          tournament: { select: { title: true } },
+          teamA: { select: { name: true } },
+          teamB: { select: { name: true } },
+          mvpPlayer: { select: { nickname: true, tag: true } },
+          _count: { select: { mvpVotes: true } },
+        },
+      });
+
+      if (!match) return { status: "NOT_FOUND" as const };
+      const hasMvpState = Boolean(
+        match.mvpPlayerId ||
+        match.mvpFinalizedAt ||
+        match._count.mvpVotes ||
+        match.mvpVoteRound > 1 ||
+        match.mvpRevoteCandidateIds.length,
+      );
+      if (!hasMvpState) return { status: "NOT_ASSIGNED" as const };
+
+      await tx.destructionMatchMvpVote.deleteMany({ where: { matchId } });
+      await tx.destructionMatch.update({
+        where: { id: matchId },
+        data: {
+          mvpPlayerId: null,
+          mvpSelectionMethod: null,
+          mvpFinalizedAt: null,
+          mvpVoteRound: 1,
+          mvpRevoteCandidateIds: [],
+        },
+      });
+      await tx.adminLog.create({
+        data: {
+          action: "DESTRUCTION_MATCH_MVP_RESET",
+          message: `멸망전 경기 MVP 전체 초기화: ${match.tournament.title} / ${match.teamA.name} vs ${match.teamB.name} / 기존 MVP ${match.mvpPlayer ? `${match.mvpPlayer.nickname}#${match.mvpPlayer.tag}` : "없음"} / 삭제 투표 ${match._count.mvpVotes}표`,
+        },
+      });
+
+      return { status: "RESET" as const };
+    });
+
+    if (result.status === "NOT_FOUND") {
+      return NextResponse.json({ message: "멸망전 경기를 찾을 수 없습니다." }, { status: 404 });
+    }
+    if (result.status === "NOT_ASSIGNED") {
+      return NextResponse.json({ message: "초기화할 MVP 지정 또는 투표 내역이 없습니다." }, { status: 409 });
+    }
+
+    return NextResponse.json({ ok: true, message: "MVP 지정과 전체 투표 내역이 초기화되었습니다." });
+  } catch (error) {
+    logServerError("[DESTRUCTION_MATCH_MVP_RESET_ERROR]", error);
+    return NextResponse.json({ message: "경기 MVP 초기화에 실패했습니다." }, { status: 500 });
+  }
+}

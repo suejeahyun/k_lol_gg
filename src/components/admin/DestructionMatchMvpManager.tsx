@@ -32,6 +32,23 @@ export default function DestructionMatchMvpManager({ matchId, candidates, initia
     finally { setIsSaving(false); }
   };
 
+  const reset = async () => {
+    if (!window.confirm("현재 MVP 지정과 1차·재투표를 포함한 전체 투표 내역을 초기화할까요? 초기화 후 참가자 10명이 처음부터 다시 투표해야 합니다.")) return;
+
+    setIsSaving(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/admin/destruction-matches/${matchId}/mvp`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.message ?? "MVP 초기화에 실패했습니다."); return; }
+      setSelectedId(candidates[0]?.id ?? 0);
+      router.refresh();
+    } catch { setError("MVP 초기화 중 오류가 발생했습니다."); }
+    finally { setIsSaving(false); }
+  };
+
   return (
     <div className="destruction-admin-mvp">
       <div className="destruction-admin-mvp__title">
@@ -48,6 +65,9 @@ export default function DestructionMatchMvpManager({ matchId, candidates, initia
       </div>
       <div className="destruction-admin-mvp__actions">
         <button type="button" className="chip-button" disabled={isSaving || !selectedId} onClick={finalize}>선택 선수 직접 지정</button>
+        {initialMvpPlayerId || totalVotes > 0 ? (
+          <button type="button" className="danger-button" disabled={isSaving} onClick={reset}>MVP 전체 초기화</button>
+        ) : null}
       </div>
       {error ? <p className="notice-form__error">{error}</p> : null}
     </div>
