@@ -4,6 +4,7 @@ import SafeGalleryImage from "@/components/SafeGalleryImage";
 import { coerceGalleryImageUrls } from "@/lib/gallery/winner-image-paths";
 import { useEffect, useMemo, useState } from "react";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { useViewportActivity } from "@/hooks/useViewportActivity";
 
 type GalleryWinnerImage = {
   id: number;
@@ -38,16 +39,18 @@ export default function GalleryWinnerSlider({
   const prefersReducedMotion = usePrefersReducedMotion();
   const autoPlayActive =
     isPlaying && (!prefersReducedMotion || allowReducedMotionPlayback);
+  const { ref: sliderRef, isActive: isSliderActive } =
+    useViewportActivity<HTMLDivElement>(autoPlayActive);
 
   useEffect(() => {
-    if (slideItems.length <= 1 || !autoPlayActive) return;
+    if (slideItems.length <= 1 || !autoPlayActive || !isSliderActive) return;
 
     const timer = window.setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % slideItems.length);
     }, 3500);
 
     return () => window.clearInterval(timer);
-  }, [autoPlayActive, slideItems.length]);
+  }, [autoPlayActive, isSliderActive, slideItems.length]);
 
   if (slideItems.length === 0) {
     return (
@@ -60,7 +63,7 @@ export default function GalleryWinnerSlider({
   const current = slideItems[currentIndex];
 
   return (
-    <div className="winner-slider" role="region" aria-label="멸망전 우승팀 이미지 슬라이드">
+    <div ref={sliderRef} className="winner-slider" role="region" aria-label="멸망전 우승팀 이미지 슬라이드">
       <div className="winner-slider__image-wrap">
         <SafeGalleryImage
           src={current.imageUrl}
@@ -95,7 +98,10 @@ export default function GalleryWinnerSlider({
                   ? "winner-slider__dot winner-slider__dot--active"
                   : "winner-slider__dot"
               }
-              onClick={() => setCurrentIndex(index)}
+              onClick={() => {
+                setCurrentIndex(index);
+                setIsPlaying(false);
+              }}
               aria-label={`${index + 1}번째 우승팀 이미지 보기`}
               aria-current={index === currentIndex ? "true" : undefined}
             />

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import SafeChampionImage from "@/components/SafeChampionImage";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { useViewportActivity } from "@/hooks/useViewportActivity";
 
 type RecentMvpItem = {
   key: string;
@@ -45,6 +46,8 @@ export default function RecentMvpSlider({
   const prefersReducedMotion = usePrefersReducedMotion();
   const autoPlayActive =
     isPlaying && (!prefersReducedMotion || allowReducedMotionPlayback);
+  const { ref: sliderRef, isActive: isSliderActive } =
+    useViewportActivity<HTMLDivElement>(autoPlayActive);
 
   const normalizedItems = useMemo(() => {
     return [...items].sort((a, b) => {
@@ -68,17 +71,17 @@ export default function RecentMvpSlider({
   const activeItem = normalizedItems[safeActiveIndex] ?? null;
 
   useEffect(() => {
-    if (normalizedItems.length <= 1 || !autoPlayActive) return;
+    if (normalizedItems.length <= 1 || !autoPlayActive || !isSliderActive) return;
 
     const timer = window.setInterval(() => {
       setActiveIndex((prev) => (prev + 1) % normalizedItems.length);
     }, 5000);
 
     return () => window.clearInterval(timer);
-  }, [autoPlayActive, normalizedItems.length]);
+  }, [autoPlayActive, isSliderActive, normalizedItems.length]);
 
   return (
-    <div className="card home-mvp-card" role="region" aria-label="최근 MVP 슬라이드">
+    <div ref={sliderRef} className="card home-mvp-card" role="region" aria-label="최근 MVP 슬라이드">
       <div className="home-section-head">
         <div>
           <p className="home-eyebrow">RECENT MVP</p>
@@ -139,13 +142,14 @@ export default function RecentMvpSlider({
             <button
               type="button"
               className="home-mvp-nav-button"
-              onClick={() =>
+              onClick={() => {
                 setActiveIndex(
                   safeActiveIndex === 0
                     ? normalizedItems.length - 1
                     : safeActiveIndex - 1,
-                )
-              }
+                );
+                setIsPlaying(false);
+              }}
               disabled={normalizedItems.length <= 1}
               aria-label="이전 MVP 보기"
             >
@@ -162,7 +166,10 @@ export default function RecentMvpSlider({
                       ? "home-mvp-pagination__dot home-mvp-pagination__dot--active"
                       : "home-mvp-pagination__dot"
                   }
-                  onClick={() => setActiveIndex(index)}
+                  onClick={() => {
+                    setActiveIndex(index);
+                    setIsPlaying(false);
+                  }}
                   aria-label={`${item.matchTitle} ${item.gameNumber}세트 MVP 보기`}
                   aria-current={index === safeActiveIndex ? "true" : undefined}
                 />
@@ -191,9 +198,10 @@ export default function RecentMvpSlider({
             <button
               type="button"
               className="home-mvp-nav-button"
-              onClick={() =>
-                setActiveIndex((prev) => (prev + 1) % normalizedItems.length)
-              }
+              onClick={() => {
+                setActiveIndex((prev) => (prev + 1) % normalizedItems.length);
+                setIsPlaying(false);
+              }}
               disabled={normalizedItems.length <= 1}
               aria-label="다음 MVP 보기"
             >

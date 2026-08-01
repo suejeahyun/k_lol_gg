@@ -1,0 +1,58 @@
+/* Keep the premium home visuals without continuously repainting large surfaces. */
+.home-top3-arena--dynamic::after,
+.home-top3-ace,
+.home-top3-ace::before,
+.home-top3-ace__visual,
+.home-top3-ace__visual::before,
+.home-top3-ace__visual > img,
+.home-top3-medal,
+.home-top3-medal::after,
+.home-top3-meter > span,
+.home-top3-scoreline::before,
+.home-top3-chaser,
+.home-top3-chaser::before,
+.home-top3-chaser::after,
+.home-top3-chaser__rank,
+.home-top3-chaser__tier::before,
+.home-top3-chaser__body::before {
+  animation: none !important;
+}
+
+.home-top3-ace__glow {
+  filter: blur(12px) saturate(1.08) !important;
+  opacity: 0.62 !important;
+}
+
+/* Below-the-fold home sections do not need paint/layout work until approached. */
+.home-feature-stack {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 900px;
+}
+
+@media (max-width: 980px), (pointer: coarse) {
+  /* Fixed translucent layers are expensive while scrolling on mobile GPUs. */
+  .app-topbar,
+  .app-sidebar,
+  .user-mobile-nav,
+  .admin-mobile-nav,
+  .home-top3-scoreline span,
+  .home-top3-chaser__stats {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .app-topbar {
+    background: rgb(2 7 18 / 0.97) !important;
+    box-shadow: 0 6px 18px rgb(0 0 0 / 0.24) !important;
+  }
+
+  .user-mobile-nav,
+  .admin-mobile-nav {
+    background: rgb(4 11 25 / 0.97) !important;
+  }
+
+  .home-top3-ace__glow {
+    filter: blur(7px) !important;
+    opacity: 0.46 !important;
+  }
+}
