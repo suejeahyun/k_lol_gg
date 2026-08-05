@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ShieldCheck, ListChecks, Swords, Trophy, UsersRound } from "lucide-react";
+import { ShieldCheck, ListChecks, Menu, Swords, Trophy, UsersRound } from "lucide-react";
 
 const adminNavItems = [
   { href: "/app/admin", label: "홈", icon: ShieldCheck, exact: true },
@@ -28,6 +28,14 @@ export function AppAdminBottomNav() {
             </Link>
           );
         })}
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new Event("klol:open-navigation"))}
+          aria-label="관리자 전체 메뉴 열기"
+        >
+          <Menu aria-hidden="true" />
+          <span>메뉴</span>
+        </button>
       </div>
     </nav>
   );

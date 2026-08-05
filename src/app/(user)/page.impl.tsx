@@ -406,6 +406,16 @@ export default async function HomePage() {
             <strong>플레이어 찾기</strong>
             <small>프로필 검색</small>
           </Link>
+          <Link href="/progress">
+            <span>SCHEDULE</span>
+            <strong>이벤트 일정</strong>
+            <small>멸망전·대회 현황</small>
+          </Link>
+          <Link href="/me/riot">
+            <span>RIOT</span>
+            <strong>내 Riot 티어</strong>
+            <small>계정 연결·동기화</small>
+          </Link>
         </nav>
 
         <div className="home-dark-showcase-grid">

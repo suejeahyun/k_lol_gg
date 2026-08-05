@@ -185,6 +185,32 @@
   gap: 6px;
 }
 
+.app-sidebar__menu-button {
+  width: 100%;
+  margin: 0 0 4px;
+  border-color: rgba(125, 211, 252, 0.34) !important;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.22), rgba(34, 211, 238, 0.1)) !important;
+  color: #f8fafc !important;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+}
+
+.app-sidebar__menu-button:hover,
+.app-sidebar__menu-button:focus-visible {
+  border-color: rgba(125, 211, 252, 0.7) !important;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.4), rgba(34, 211, 238, 0.18)) !important;
+  outline: none;
+}
+
+@media (min-width: 1025px) {
+  .app-sidebar__menu-button {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+}
+
 .app-sidebar__link--compact {
   min-height: 34px;
   padding: 8px 12px;

@@ -163,6 +163,15 @@ export default function UserSidebar() {
         <div className="app-sidebar__subtitle">{siteTagline}</div>
 
         <nav className="app-sidebar__nav">
+          <button
+            className="app-sidebar__link app-sidebar__link--compact app-sidebar__menu-button"
+            type="button"
+            onClick={() => window.dispatchEvent(new Event("klol:open-navigation"))}
+            aria-label="전체 메뉴와 기능 검색 열기"
+          >
+            <span className="app-sidebar__code">ALL</span>
+            <span className="app-sidebar__label">전체 메뉴·기능 검색</span>
+          </button>
           {menuGroups.map((group) => (
             <div key={group.title} className="app-sidebar__group">
               <div className="app-sidebar__group-title">{group.title}</div>

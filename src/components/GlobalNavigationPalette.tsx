@@ -43,7 +43,11 @@ export default function GlobalNavigationPalette({
   const [query, setQuery] = useState("");
   const [recent, setRecent] = useState<string[]>([]);
   const [favorites, setFavorites] = useState<string[]>([]);
-  const catalog = useMemo(() => getNavigationCatalog(mode), [mode]);
+  const [canViewSuper, setCanViewSuper] = useState(false);
+  const catalog = useMemo(
+    () => getNavigationCatalog(mode).filter((item) => item.access !== "SUPER" || canViewSuper),
+    [canViewSuper, mode],
+  );
   const storagePrefix = `klol-navigation-${mode}-${surface}`;
   const recentKey = `${storagePrefix}-recent`;
   const favoritesKey = `${storagePrefix}-favorites`;
@@ -55,13 +59,38 @@ export default function GlobalNavigationPalette({
   }, [favoritesKey, recentKey]);
 
   useEffect(() => {
-    const matchingItem = catalog.find((item) => {
-      const href = getNavigationHref(item, surface).split("?")[0];
-      if (href === "/" || href === "/app" || href === "/admin" || href === "/app/admin") {
-        return pathname === href;
-      }
-      return pathname === href || pathname.startsWith(`${href}/`);
-    });
+    if (mode !== "admin") return;
+    let cancelled = false;
+
+    fetch("/api/auth/me", { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : null)
+      .then((data: { user?: { role?: string; status?: string } } | null) => {
+        if (!cancelled) {
+          setCanViewSuper(data?.user?.role === "SUPER_ADMIN" && data.user.status === "APPROVED");
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setCanViewSuper(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [mode]);
+
+  useEffect(() => {
+    const matchingItem = catalog
+      .filter((item) => {
+        const href = getNavigationHref(item, surface).split("?")[0];
+        if (href === "/" || href === "/app" || href === "/admin" || href === "/app/admin") {
+          return pathname === href;
+        }
+        return pathname === href || pathname.startsWith(`${href}/`);
+      })
+      .sort((a, b) => (
+        getNavigationHref(b, surface).split("?")[0].length
+        - getNavigationHref(a, surface).split("?")[0].length
+      ))[0];
     if (!matchingItem) return;
 
     const nextRecent = [
@@ -150,9 +179,10 @@ export default function GlobalNavigationPalette({
         type="button"
         onClick={showPalette}
         aria-haspopup="dialog"
+        aria-label="전체 메뉴 열기"
       >
         <span aria-hidden="true">⌕</span>
-        <strong>{compact ? "이동" : "빠른 이동"}</strong>
+        <strong>{compact ? "메뉴" : "전체 메뉴"}</strong>
         {!compact ? <kbd>Ctrl K</kbd> : null}
       </button>
 
@@ -172,10 +202,10 @@ export default function GlobalNavigationPalette({
           >
             <header className="global-navigation-dialog__header">
               <div>
-                <span>QUICK NAVIGATION</span>
-                <h2 id="global-navigation-title">어디로 이동할까요?</h2>
+                <span>ALL MENU</span>
+                <h2 id="global-navigation-title">전체 메뉴에서 바로 이동</h2>
               </div>
-              <button type="button" onClick={() => setOpen(false)} aria-label="빠른 이동 닫기">
+              <button type="button" onClick={() => setOpen(false)} aria-label="전체 메뉴 닫기">
                 닫기
               </button>
             </header>
@@ -186,16 +216,18 @@ export default function GlobalNavigationPalette({
                 ref={inputRef}
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="기능이나 메뉴 이름을 입력하세요"
+                placeholder="예: 전적, 참가 신청, 팀 밸런스, 징계"
                 aria-label="이동할 메뉴 검색"
               />
             </label>
 
-            {!query && (favorites.length > 0 || recent.length > 0) ? (
-              <p className="global-navigation-hint">
-                즐겨찾기와 최근 사용 메뉴를 먼저 보여드려요.
-              </p>
-            ) : null}
+            <p className="global-navigation-hint">
+              {query
+                ? `검색 결과 ${visibleItems.length}개`
+                : favorites.length > 0 || recent.length > 0
+                  ? `전체 ${visibleItems.length}개 · 즐겨찾기와 최근 사용 메뉴를 먼저 표시합니다.`
+                  : `전체 ${visibleItems.length}개 메뉴 · 별표를 누르면 즐겨찾기에 고정됩니다.`}
+            </p>
 
             <div className="global-navigation-results">
               {visibleItems.length === 0 ? (

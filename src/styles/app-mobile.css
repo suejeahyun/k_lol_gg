@@ -334,7 +334,7 @@
 
 .klol-app-bottom-nav__inner {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   width: min(100%, 520px);
   gap: 6px;
   padding: 8px;
@@ -346,16 +346,26 @@
   backdrop-filter: blur(18px);
 }
 
-.klol-app-bottom-nav a {
+.klol-app-bottom-nav a,
+.klol-app-bottom-nav button {
   display: grid;
   place-items: center;
   gap: 4px;
   min-height: 54px;
+  padding: 0;
+  border: 0;
   border-radius: 18px;
+  background: transparent;
   color: rgba(203, 213, 225, 0.72);
+  cursor: pointer;
+  font-family: inherit;
   font-size: 10px;
   font-weight: 950;
   text-decoration: none;
+}
+
+.klol-app-bottom-nav span {
+  white-space: nowrap;
 }
 
 .klol-app-bottom-nav a[data-active="true"] {

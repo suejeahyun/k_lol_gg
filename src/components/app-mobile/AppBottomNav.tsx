@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, ListChecks, Swords, Trophy, UserRound } from "lucide-react";
+import { Home, ListChecks, Menu, Swords, Trophy, UserRound } from "lucide-react";
 
 const navItems = [
   { href: "/app", label: "홈", icon: Home, exact: true },
@@ -28,6 +28,14 @@ export function AppBottomNav() {
             </Link>
           );
         })}
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new Event("klol:open-navigation"))}
+          aria-label="전체 메뉴 열기"
+        >
+          <Menu aria-hidden="true" />
+          <span>메뉴</span>
+        </button>
       </div>
     </nav>
   );
