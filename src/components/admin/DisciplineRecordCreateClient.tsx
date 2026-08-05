@@ -25,11 +25,15 @@ const sourceOptions = [
   ["OTHER", "기타"],
 ];
 
+function getTargetKey(target: Target) {
+  return `${target.userAccountId || ""}:${target.playerId || ""}`;
+}
+
 export default function DisciplineRecordCreateClient({ targets }: { targets: Target[] }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [targetMode, setTargetMode] = useState<"REGISTERED" | "DIRECT">("REGISTERED");
-  const [targetKey, setTargetKey] = useState(targets[0] ? `${targets[0].userAccountId || ""}:${targets[0].playerId || ""}` : "");
+  const [targetKey, setTargetKey] = useState(targets[0] ? getTargetKey(targets[0]) : "");
   const [directName, setDirectName] = useState("");
   const [directNickname, setDirectNickname] = useState("");
   const [directTag, setDirectTag] = useState("");
@@ -45,7 +49,17 @@ export default function DisciplineRecordCreateClient({ targets }: { targets: Tar
     return targets.filter((item) => item.label.toLowerCase().includes(q)).slice(0, 80);
   }, [query, targets]);
 
-  const selectedTarget = targets.find((item) => `${item.userAccountId || ""}:${item.playerId || ""}` === targetKey) || null;
+  const selectedTarget = filteredTargets.find((item) => getTargetKey(item) === targetKey) || filteredTargets[0] || null;
+
+  function changeQuery(value: string) {
+    setQuery(value);
+
+    const q = value.trim().toLowerCase();
+    const nextTargets = (q ? targets.filter((item) => item.label.toLowerCase().includes(q)) : targets).slice(0, 80);
+    if (!nextTargets.some((item) => getTargetKey(item) === targetKey)) {
+      setTargetKey(nextTargets[0] ? getTargetKey(nextTargets[0]) : "");
+    }
+  }
 
   async function submit() {
     if (!reason.trim()) {
@@ -104,8 +118,8 @@ export default function DisciplineRecordCreateClient({ targets }: { targets: Tar
       <div className="discipline-form-grid">
         {targetMode === "REGISTERED" ? (
           <>
-            <label>대상 검색<input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="아이디, 이름, 닉네임 검색" /></label>
-            <label>대상<select value={targetKey} onChange={(e) => setTargetKey(e.target.value)}>{filteredTargets.length === 0 ? <option value="">검색 결과 없음 — 직접 등록을 사용하세요</option> : filteredTargets.map((target) => <option key={`${target.userAccountId || ""}:${target.playerId || ""}`} value={`${target.userAccountId || ""}:${target.playerId || ""}`}>{target.label}</option>)}</select></label>
+            <label>대상 검색<input value={query} onChange={(e) => changeQuery(e.target.value)} placeholder="아이디, 이름, 닉네임 검색" /></label>
+            <label>대상<select value={selectedTarget ? getTargetKey(selectedTarget) : ""} onChange={(e) => setTargetKey(e.target.value)}>{filteredTargets.length === 0 ? <option value="">검색 결과 없음 — 직접 등록을 사용하세요</option> : filteredTargets.map((target) => <option key={getTargetKey(target)} value={getTargetKey(target)}>{target.label}</option>)}</select></label>
           </>
         ) : (
           <>
