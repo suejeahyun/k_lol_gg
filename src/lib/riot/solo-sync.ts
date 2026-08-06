@@ -30,6 +30,7 @@ export type SoloSyncResult = {
   requestedMatchCount?: number;
   savedMatchCount?: number;
   skippedMatchCount?: number;
+  matchSyncWarning?: string;
   remainSeconds?: number;
   soloRank?: {
     queueType: string;
@@ -396,66 +397,92 @@ export async function syncPlayerSoloRankBestEffort(
     const soloRank = await saveSoloRankSnapshot(player.id, soloRankEntry);
     const riotCurrentTier = formatRiotSoloTier(soloRankEntry);
     const riotPeakTier = resolvePeakTierFromRiot(riotCurrentTier, player.peakTier);
+    const syncedAt = new Date();
+
+    // 티어 반영은 최근 경기 수집과 독립적으로 완료되어야 합니다.
+    // 경기 API가 호출 제한에 걸리더라도 이미 조회한 솔랭 티어가 유실되지 않도록 먼저 저장합니다.
+    await prisma.$transaction([
+      prisma.player.update({
+        where: { id: player.id },
+        data: {
+          currentTier: riotCurrentTier,
+          peakTier: riotPeakTier,
+        },
+      }),
+      prisma.playerRiotAccount.update({
+        where: { playerId: player.id },
+        data: {
+          summonerId: summoner.id ?? summoner.summonerId ?? summoner.encryptedSummonerId ?? account.summonerId,
+          accountId: summoner.accountId ?? account.accountId,
+          profileIconId: summoner.profileIconId ?? account.profileIconId,
+          summonerLevel: summoner.summonerLevel ?? account.summonerLevel,
+          syncStatus: "SUCCESS",
+          lastErrorMessage: null,
+          lastErrorAt: null,
+          lastSyncedAt: syncedAt,
+        },
+      }),
+    ]);
 
     let savedMatchCount = 0;
     let skippedMatchCount = 0;
     let requestedMatchCount = 0;
+    let matchSyncWarning: string | undefined;
 
     if (includeMatches) {
-      const matchIds = await collectRankedMatchIds(account.puuid, matchCount);
-      requestedMatchCount = matchIds.length;
+      try {
+        const matchIds = await collectRankedMatchIds(account.puuid, matchCount);
+        requestedMatchCount = matchIds.length;
 
-      for (const matchId of matchIds) {
-        const match = await getMatchById(matchId);
+        for (const matchId of matchIds) {
+          const match = await getMatchById(matchId);
 
-        if (!isSoloRankMatch(match)) {
-          skippedMatchCount += 1;
-          continue;
+          if (!isSoloRankMatch(match)) {
+            skippedMatchCount += 1;
+            continue;
+          }
+
+          const participant = findParticipantByPuuid(match, account.puuid);
+
+          if (!participant) {
+            skippedMatchCount += 1;
+            continue;
+          }
+
+          await saveSoloMatch(player.id, matchId, match, participant);
+          savedMatchCount += 1;
         }
+      } catch (matchError) {
+        const matchErrorMessage =
+          matchError instanceof Error ? matchError.message : "알 수 없는 오류가 발생했습니다.";
+        matchSyncWarning = `티어는 반영됐지만 최근 경기 동기화는 완료하지 못했습니다: ${matchErrorMessage}`;
 
-        const participant = findParticipantByPuuid(match, account.puuid);
-
-        if (!participant) {
-          skippedMatchCount += 1;
-          continue;
-        }
-
-        await saveSoloMatch(player.id, matchId, match, participant);
-        savedMatchCount += 1;
+        await prisma.playerRiotAccount.update({
+          where: { playerId: player.id },
+          data: {
+            syncStatus: "SUCCESS",
+            lastErrorMessage: matchSyncWarning,
+            lastErrorAt: new Date(),
+          },
+        });
+        await recordRiotApiStatus(
+          getRiotStatusFromError(`${source}_MATCHES`, matchError),
+        );
       }
     }
-
-    await prisma.playerRiotAccount.update({
-      where: { playerId: player.id },
-      data: {
-        summonerId: summoner.id ?? summoner.summonerId ?? summoner.encryptedSummonerId ?? account.summonerId,
-        accountId: summoner.accountId ?? account.accountId,
-        profileIconId: summoner.profileIconId ?? account.profileIconId,
-        summonerLevel: summoner.summonerLevel ?? account.summonerLevel,
-        syncStatus: "SUCCESS",
-        lastErrorMessage: null,
-        lastErrorAt: null,
-        lastSyncedAt: new Date(),
-      },
-    });
-
-    await prisma.player.update({
-      where: { id: player.id },
-      data: {
-        currentTier: riotCurrentTier,
-        peakTier: riotPeakTier,
-      },
-    });
 
     await recordRiotApiStatus({ scope: source, ok: true });
 
     const result = {
       playerId: player.id,
       status: "synced" as const,
-      message: `${player.name}(${formatRiotId(account)}) 솔랭 데이터와 현재 티어 동기화가 완료되었습니다.`,
+      message: matchSyncWarning
+        ? `${player.name}(${formatRiotId(account)}) 현재 티어 동기화가 완료되었습니다. ${matchSyncWarning}`
+        : `${player.name}(${formatRiotId(account)}) 솔랭 데이터와 현재 티어 동기화가 완료되었습니다.`,
       requestedMatchCount,
       savedMatchCount,
       skippedMatchCount,
+      matchSyncWarning,
       soloRank,
     };
 
