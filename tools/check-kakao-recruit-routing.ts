@@ -26,6 +26,11 @@ import {
   acquireSeasonRecruitLock,
 } from "../src/lib/kakao/db-lock";
 import type { Prisma } from "@prisma/client";
+import {
+  buildInhouseRecruitTemplate,
+  buildInhouseRecruitSelectionReply,
+  parseInhouseRecruitCommand,
+} from "../src/lib/kakao/inhouse-recruit";
 
 type ExpectedKind = "PARTY_RECRUIT" | "SCRIM_RECRUIT" | "SEASON_RECRUIT" | "UNKNOWN";
 
@@ -57,11 +62,64 @@ const cases: Case[] = [
   { name: "destruction scrim cancel disabled", raw: "\\uBA78\\uB9DD\\uC804\\uC2A4\\uD06C\\uB9BC\\uCDE8\\uC18C 1", kind: "UNKNOWN", scrimNo: 1 },
   { name: "scrim status", raw: "\\uC2A4\\uD06C\\uB9BC\\uD604\\uD669", kind: "SCRIM_RECRUIT" },
   { name: "season status", raw: "\\uB0B4\\uC804\\uD604\\uD669", kind: "SEASON_RECRUIT" },
+  { name: "season create rift", raw: "/\\uB0B4\\uC804\\uAD6C\\uC778 \\uD611\\uACE1", kind: "SEASON_RECRUIT" },
+  { name: "season create aram", raw: "/\\uB0B4\\uC804\\uAD6C\\uC778 \\uCE7C\\uBC14\\uB78C", kind: "SEASON_RECRUIT" },
+  { name: "season create augment aram", raw: "/\\uB0B4\\uC804\\uAD6C\\uC778 \\uC99D\\uBC14\\uB78C", kind: "SEASON_RECRUIT" },
   { name: "season reset disabled", raw: "\\uC624\\uB298\\uB0B4\\uC804\\uCD08\\uAE30\\uD654", kind: "UNKNOWN" },
   { name: "unknown free chat", raw: "\\uC548\\uB155\\uD558\\uC138\\uC694", kind: "UNKNOWN" },
 ];
 
 const failures: string[] = [];
+
+const inhouseSelection = parseInhouseRecruitCommand("/내전구인", "2026-08-06");
+if (!inhouseSelection.isCommand || inhouseSelection.mode !== null) {
+  failures.push("inhouse recruit selection: bare command must request a mode");
+}
+if (!buildInhouseRecruitSelectionReply().includes("/내전구인 협곡")) {
+  failures.push("inhouse recruit selection: rift choice is missing");
+}
+
+const riftCommand = parseInhouseRecruitCommand(
+  "/내전구인 협곡 2026-08-07 22:30 #3 12명",
+  "2026-08-06",
+);
+if (
+  riftCommand.mode !== "RIFT" ||
+  riftCommand.dateKey !== "2026-08-07" ||
+  riftCommand.time !== "22:30" ||
+  riftCommand.recruitNo !== 3 ||
+  riftCommand.capacity !== 12
+) {
+  failures.push(`inhouse recruit parser: unexpected rift command ${JSON.stringify(riftCommand)}`);
+}
+
+const riftTemplate = buildInhouseRecruitTemplate({
+  mode: "RIFT",
+  dateKey: "2026-08-06",
+  time: "21:00",
+  recruitNo: 1,
+});
+if (!riftTemplate.includes("》협곡") || !riftTemplate.includes("이름/현티어/최고티어/주라인/부라인")) {
+  failures.push("inhouse recruit template: rift fields are missing");
+}
+if (classifyKakaoRecruitMessage(riftTemplate).kind !== "SEASON_RECRUIT") {
+  failures.push("inhouse recruit template: rift form must be routed to season registration");
+}
+
+for (const mode of ["ARAM", "AUGMENT_ARAM"] as const) {
+  const casualTemplate = buildInhouseRecruitTemplate({
+    mode,
+    dateKey: "2026-08-06",
+    time: "21:00",
+    recruitNo: 1,
+  });
+  if (!casualTemplate.includes("*참가 신청 양식*\n이름\n") || casualTemplate.includes("현티어")) {
+    failures.push(`inhouse recruit template: ${mode} must use a name-only form`);
+  }
+  if (classifyKakaoRecruitMessage(casualTemplate).kind === "SEASON_RECRUIT") {
+    failures.push(`inhouse recruit routing: ${mode} must not register as a season match`);
+  }
+}
 
 for (const item of cases) {
   const message = decode(item.raw);

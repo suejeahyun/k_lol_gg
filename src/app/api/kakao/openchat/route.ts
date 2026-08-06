@@ -13,6 +13,7 @@ import {
 } from "@/features/player/services/getPlayerRecordForKakao";
 import { logServerError } from "@/lib/server/safe-log";
 import { getKakaoOperationSettings, type KakaoOperationSettings } from "@/lib/kakao/settings";
+import { isRiftInhouseRecruitSnapshot } from "@/lib/kakao/inhouse-recruit";
 
 type KakaoOpenchatBody = {
   message?: string;
@@ -161,10 +162,7 @@ function isSeasonRecruitSnapshotMessage(message: string) {
 
   if (numberedLines.length < 3) return false;
 
-  return (
-    /참가\s*신청\s*양식|협곡\s*내전|협곡내전|내전하실분/.test(text) &&
-    /^\s*1\s*[.)]/m.test(text)
-  );
+  return isRiftInhouseRecruitSnapshot(text);
 }
 
 function isRoomAllowed(context: KakaoMessageContext, settings: KakaoOperationSettings) {

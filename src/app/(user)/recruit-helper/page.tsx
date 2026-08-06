@@ -59,8 +59,8 @@ const commandGroups: CommandGroup[] = [
   },
   {
     title: "내전 관련",
-    description: "오늘 내전 상태와 참가 신청을 확인합니다.",
-    commands: ["내전현황", "내전참가", "참가신청", "내전구인"],
+    description: "종목별 내전 모집 양식을 만들고 오늘 참가 상태를 확인합니다.",
+    commands: ["내전구인 협곡", "내전구인 칼바람", "내전구인 증바람", "내전현황"],
   },
   {
     title: "K-LOL 관련",

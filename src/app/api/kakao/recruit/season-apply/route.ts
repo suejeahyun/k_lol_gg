@@ -19,6 +19,7 @@ import {
   type ParsedRecruitParticipant,
 } from "@/lib/kakao/recruit-message-parser";
 import { classifyKakaoRecruitMessage, buildWrongRecruitApiReply } from "@/lib/kakao/recruit-message-kind";
+import { isRiftInhouseRecruitSnapshot } from "@/lib/kakao/inhouse-recruit";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -702,12 +703,7 @@ function extractRequestedRecruitNo(value: unknown) {
 }
 
 function isRecruitSnapshotMessage(value: string) {
-  const text = String(value || "").replace(/\r/g, "\n");
-
-  return (
-    /참가\s*신청\s*양식|협곡\s*내전|협곡내전|내전하실분/.test(text) &&
-    /^\s*(?:1|예비\s*1)\s*[.)]/m.test(text)
-  );
+  return isRiftInhouseRecruitSnapshot(value);
 }
 
 export async function POST(req: NextRequest) {

@@ -3,6 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { addDays, getKstDisplayDate, getKstOperationDateKey, getKstStartOfDate } from "@/lib/date/kst";
 import { prisma } from "@/lib/prisma/client";
 import { classifyKakaoRecruitMessage, buildWrongRecruitApiReply } from "@/lib/kakao/recruit-message-kind";
+import {
+  buildInhouseRecruitSelectionReply,
+  buildInhouseRecruitTemplate,
+  parseInhouseRecruitCommand,
+} from "@/lib/kakao/inhouse-recruit";
 import { getRequiredSecretInProduction, matchesRequestSecret } from "@/lib/security/secrets";
 import { logServerError } from "@/lib/server/safe-log";
 
@@ -157,7 +162,7 @@ function formatPositions(mainPosition: unknown, subPositions: unknown) {
     }
   }
 
-  return positions.length > 0 ? positions.join(" ") : "-";
+  return positions.length > 0 ? positions.join("/") : "-";
 }
 
 function formatSeasonRecruitDateTime(dateKey: string, entries: Array<{ applyTimeText: string | null }>) {
@@ -229,12 +234,14 @@ function buildSeasonRecruitStatusTemplate(params: {
   const reserveEntries = params.entries.filter((entry) => entry.isReserve).sort(compareStatusEntry);
   const placed = placeMainEntries(mainEntries);
 
-  lines.push(`📢 협곡내전하실분 #${params.recruitNo}`);
-  lines.push(` 》${formatSeasonRecruitDateTime(params.dateKey, params.entries)}`);
+  lines.push(`📢 내전하실분 #${params.recruitNo}`);
+  lines.push(" 》협곡");
+  lines.push(` 》${formatSeasonRecruitDateTime(params.dateKey, params.entries)} 시작`);
+  lines.push(`👥 ${mainEntries.length}/${TARGET_COUNT}명`);
   lines.push("");
   lines.push("*참가 신청 양식*");
-  lines.push("이름/현티어/최고티어/주,부라인");
-  lines.push("EX) 1.지후/P/E/AD,MD");
+  lines.push("이름/현티어/최고티어/주라인/부라인");
+  lines.push("EX) 1.지후/P/E/AD/MD");
   lines.push("");
 
   for (let index = 0; index < TARGET_COUNT; index += 1) {
@@ -331,6 +338,33 @@ async function createStatusReply(req: NextRequest, body?: ApplyStatusBody) {
     req.nextUrl.searchParams.get("message") ??
     req.nextUrl.searchParams.get("q") ??
     "";
+  const dateKey = getKstOperationDateKey();
+  const createCommand = parseInhouseRecruitCommand(rawMessage, dateKey);
+
+  if (createCommand.isCommand && !createCommand.mode) {
+    return jsonReply(buildInhouseRecruitSelectionReply(createCommand.invalidMode), {
+      command: "inhouse-recruit-select",
+      availableModes: ["RIFT", "ARAM", "AUGMENT_ARAM"],
+    });
+  }
+
+  if (createCommand.isCommand && createCommand.mode && createCommand.mode !== "RIFT") {
+    return jsonReply(
+      buildInhouseRecruitTemplate({
+        mode: createCommand.mode,
+        dateKey: createCommand.dateKey,
+        time: createCommand.time,
+        recruitNo: createCommand.recruitNo,
+        capacity: createCommand.capacity,
+      }),
+      {
+        command: "inhouse-recruit-create",
+        mode: createCommand.mode,
+        persisted: false,
+      },
+    );
+  }
+
   if (String(rawMessage || "").trim()) {
     const classification = classifyKakaoRecruitMessage(String(rawMessage));
     if (classification.kind !== "SEASON_RECRUIT") {
@@ -342,7 +376,6 @@ async function createStatusReply(req: NextRequest, body?: ApplyStatusBody) {
     }
   }
 
-  const dateKey = getKstOperationDateKey();
   const start = getKstStartOfDate(dateKey);
   const end = addDays(start, 1);
   end.setMilliseconds(end.getMilliseconds() - 1);
@@ -361,6 +394,24 @@ async function createStatusReply(req: NextRequest, body?: ApplyStatusBody) {
   });
 
   if (!season) {
+    if (createCommand.isCommand && createCommand.mode === "RIFT") {
+      return jsonReply(
+        buildInhouseRecruitTemplate({
+          mode: "RIFT",
+          dateKey: createCommand.dateKey,
+          time: createCommand.time,
+          recruitNo: createCommand.recruitNo,
+          capacity: createCommand.capacity,
+        }),
+        {
+          command: "inhouse-recruit-create",
+          mode: "RIFT",
+          persisted: false,
+          warning: "활성 시즌이 없어 제출 전 시즌 설정이 필요합니다.",
+        },
+      );
+    }
+
     return jsonReply("[K-LOL.GG 내전현황]\n현재 활성화된 시즌이 없습니다.", {
       empty: true,
       activeSeasonId: null,
@@ -467,6 +518,27 @@ async function createStatusReply(req: NextRequest, body?: ApplyStatusBody) {
       },
     })),
   ];
+
+  if (createCommand.isCommand && createCommand.mode === "RIFT") {
+    const usedRecruitNos = entries.map((entry) => entry.recruitNo || 1);
+    const nextRecruitNo = usedRecruitNos.length > 0 ? Math.max(...usedRecruitNos) + 1 : 1;
+
+    return jsonReply(
+      buildInhouseRecruitTemplate({
+        mode: "RIFT",
+        dateKey: createCommand.dateKey,
+        time: createCommand.time,
+        recruitNo: createCommand.recruitNo || nextRecruitNo,
+        capacity: createCommand.capacity,
+      }),
+      {
+        command: "inhouse-recruit-create",
+        mode: "RIFT",
+        persisted: true,
+        recruitNo: createCommand.recruitNo || nextRecruitNo,
+      },
+    );
+  }
 
   if (entries.length === 0) {
     return jsonReply("[K-LOL.GG 내전현황]\n오늘 등록된 내전 신청이 없습니다.\n\n참가 신청: 내전참가", {
