@@ -23,6 +23,7 @@ import {
   parsePartyForm,
   parseRecruitScheduledStartAt,
   promotePartySubstitutesAfterRemoval,
+  stripAppendedRecruitStatusSummary,
 } from "@/lib/kakao/party-recruit";
 import { classifyKakaoRecruitMessage, buildWrongRecruitApiReply } from "@/lib/kakao/recruit-message-kind";
 import { appendRecruitStatusSummary } from "@/lib/kakao/recruit-status-summary";
@@ -390,11 +391,12 @@ export async function POST(req: NextRequest) {
     const secretRejected = rejectIfInvalidPartySecret(req, body.secret);
     if (secretRejected) return secretRejected;
 
-    const message = getBodyText(body);
-    const messageError = getKakaoMessageValidationError(message);
+    const rawMessage = getBodyText(body);
+    const messageError = getKakaoMessageValidationError(rawMessage);
     if (messageError) {
       return partyRecruitJson({ reply: `[K-LOL.GG 파티 명단 반영 실패]\n${messageError}` }, 400);
     }
+    const message = stripAppendedRecruitStatusSummary(rawMessage);
     const classification = classifyKakaoRecruitMessage(message);
     if (classification.kind !== "PARTY_RECRUIT") {
       return partyRecruitJson(

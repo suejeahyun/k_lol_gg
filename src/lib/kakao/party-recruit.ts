@@ -1421,6 +1421,14 @@ function formatRecruitPartySummaryLine(party: RecruitPartyLike) {
   ].join("\n");
 }
 
+export function stripAppendedRecruitStatusSummary(message: string) {
+  const normalized = String(message || "").replace(/\r/g, "\n");
+  const markerMatch = /^\s*\[현재 구인현황\]\s*$/m.exec(normalized);
+
+  if (!markerMatch || markerMatch.index <= 0) return normalized;
+  return normalized.slice(0, markerMatch.index).trimEnd();
+}
+
 export function buildRecruitStatusSummaryReply(
   parties: RecruitPartyLike[],
   options?: { limit?: number },
