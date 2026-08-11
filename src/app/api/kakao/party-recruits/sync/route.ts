@@ -25,6 +25,7 @@ import {
   promotePartySubstitutesAfterRemoval,
 } from "@/lib/kakao/party-recruit";
 import { classifyKakaoRecruitMessage, buildWrongRecruitApiReply } from "@/lib/kakao/recruit-message-kind";
+import { appendRecruitStatusSummary } from "@/lib/kakao/recruit-status-summary";
 import {
   getBodyRoom,
   getBodySender,
@@ -469,7 +470,9 @@ export async function POST(req: NextRequest) {
     return partyRecruitJson(
       {
         party: result.ok ? result.party : undefined,
-        reply: result.reply,
+        reply: result.ok
+          ? await appendRecruitStatusSummary(result.reply)
+          : result.reply,
       },
       result.statusCode,
     );

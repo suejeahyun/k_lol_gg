@@ -16,6 +16,7 @@ import {
   parseCreateRecruitCommand,
 } from "@/lib/kakao/party-recruit";
 import { classifyKakaoRecruitMessage, buildWrongRecruitApiReply } from "@/lib/kakao/recruit-message-kind";
+import { appendRecruitStatusSummary } from "@/lib/kakao/recruit-status-summary";
 import {
   getCurrentRecruitResetSeq,
   getLatestRecruitResetLog,
@@ -83,7 +84,9 @@ export async function POST(req: NextRequest) {
         return partyRecruitJson({
           party: repeatedParty,
           replayed: true,
-          reply: buildCreateReply(parsed.template, repeatedParty.recruitNo),
+          reply: await appendRecruitStatusSummary(
+            buildCreateReply(parsed.template, repeatedParty.recruitNo),
+          ),
         });
       }
       if (repeatedParty) requestKey = null;
@@ -106,7 +109,9 @@ export async function POST(req: NextRequest) {
         return partyRecruitJson({
           party: recentDuplicate,
           replayed: true,
-          reply: buildCreateReply(parsed.template, recentDuplicate.recruitNo),
+          reply: await appendRecruitStatusSummary(
+            buildCreateReply(parsed.template, recentDuplicate.recruitNo),
+          ),
         });
       }
     }
@@ -229,7 +234,9 @@ export async function POST(req: NextRequest) {
             return partyRecruitJson({
               party: repeatedParty,
               replayed: true,
-              reply: buildCreateReply(parsed.template, repeatedParty.recruitNo),
+              reply: await appendRecruitStatusSummary(
+                buildCreateReply(parsed.template, repeatedParty.recruitNo),
+              ),
             });
           }
         }
@@ -268,7 +275,9 @@ export async function POST(req: NextRequest) {
 
     return partyRecruitJson({
       party,
-      reply: buildCreateReply(parsed.template, party.recruitNo),
+      reply: await appendRecruitStatusSummary(
+        buildCreateReply(parsed.template, party.recruitNo),
+      ),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

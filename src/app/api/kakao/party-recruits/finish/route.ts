@@ -14,6 +14,7 @@ import {
   parseFinishRecruitCommand,
 } from "@/lib/kakao/party-recruit";
 import { classifyKakaoRecruitMessage, buildWrongRecruitApiReply } from "@/lib/kakao/recruit-message-kind";
+import { appendRecruitStatusSummary } from "@/lib/kakao/recruit-status-summary";
 import {
   getLatestRecruitResetLog,
 } from "@/lib/kakao/recruit-reset";
@@ -195,10 +196,12 @@ export async function POST(req: NextRequest) {
     const activeCount = getActiveMemberCount(party.members);
     const substituteCount = party.members.filter((member) => member.isSubstitute).length;
     return partyRecruitJson({
-      reply: [
-        `[파티 #${party.recruitNo} 종료]`,
-        `최종 ${activeCount}명 · 예비 ${substituteCount}명`,
-      ].join("\n"),
+      reply: await appendRecruitStatusSummary(
+        [
+          `[파티 #${party.recruitNo} 종료]`,
+          `최종 ${activeCount}명 · 예비 ${substituteCount}명`,
+        ].join("\n"),
+      ),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

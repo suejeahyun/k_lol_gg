@@ -1421,6 +1421,34 @@ function formatRecruitPartySummaryLine(party: RecruitPartyLike) {
   ].join("\n");
 }
 
+export function buildRecruitStatusSummaryReply(
+  parties: RecruitPartyLike[],
+  options?: { limit?: number },
+) {
+  const activeParties = filterRecruitingParties(parties);
+  const limit = Math.max(1, options?.limit ?? 10);
+
+  if (activeParties.length === 0) {
+    return [
+      "[현재 구인현황]",
+      "현재 진행 중인 구인글이 없습니다.",
+    ].join("\n");
+  }
+
+  const visibleParties = activeParties.slice(0, limit);
+  const lines = [
+    "[현재 구인현황]",
+    ...visibleParties.map(formatRecruitPartySummaryLine),
+  ];
+
+  if (activeParties.length > visibleParties.length) {
+    lines.push(`외 ${activeParties.length - visibleParties.length}건`);
+  }
+
+  lines.push("상세보기: 구인상세 번호");
+  return lines.join("\n");
+}
+
 export function buildRecruitStatusReply(
   parties: RecruitPartyLike[],
   options?: { detailRecruitNo?: number | null; detailThreshold?: number },
