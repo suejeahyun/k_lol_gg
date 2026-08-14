@@ -1421,6 +1421,17 @@ function formatRecruitPartySummaryLine(party: RecruitPartyLike) {
   ].join("\n");
 }
 
+function appendRecruitDetailGuide(lines: string[], exampleRecruitNo: number) {
+  lines.push(
+    "",
+    "━━━━━━━━━━━━",
+    "🔎 상세 명단 보는 방법",
+    "아래 명령어를 카톡에 그대로 입력하세요.",
+    `👉 구인상세 ${exampleRecruitNo}`,
+    "다른 구인은 숫자만 원하는 모집번호로 바꾸세요.",
+  );
+}
+
 export function stripAppendedRecruitStatusSummary(message: string) {
   const normalized = String(message || "").replace(/\r/g, "\n");
   const markerMatch = /^\s*\[현재 구인현황\]\s*$/m.exec(normalized);
@@ -1453,7 +1464,7 @@ export function buildRecruitStatusSummaryReply(
     lines.push(`외 ${activeParties.length - visibleParties.length}건`);
   }
 
-  lines.push("상세보기: 구인상세 번호");
+  appendRecruitDetailGuide(lines, visibleParties[0].recruitNo);
   return lines.join("\n");
 }
 
@@ -1509,7 +1520,7 @@ export function buildRecruitStatusReply(
       lines.push("");
     }
 
-    lines.push("상세보기: 구인상세 번호");
+    appendRecruitDetailGuide(lines, activeParties[0].recruitNo);
     return lines.join("\n").trimEnd();
   }
 
