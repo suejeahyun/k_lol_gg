@@ -554,6 +554,166 @@
   object-fit: cover;
 }
 
+.home-community-links {
+  position: absolute;
+  right: clamp(18px, 3.2vw, 60px);
+  bottom: clamp(18px, 2.4vw, 42px);
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  width: min(352px, 42%);
+}
+
+.home-community-link {
+  position: relative;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) 16px;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 70px;
+  overflow: hidden;
+  border: 1px solid rgba(125, 170, 231, 0.3);
+  border-radius: 16px;
+  padding: 10px 11px;
+  color: #f8fbff;
+  text-decoration: none;
+  background: rgba(4, 12, 27, 0.82);
+  box-shadow:
+    0 14px 34px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.home-community-link::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.22;
+}
+
+.home-community-link--discord::before {
+  background: linear-gradient(135deg, #5865f2, transparent 64%);
+}
+
+.home-community-link--kakao::before {
+  background: linear-gradient(135deg, #fee500, transparent 64%);
+}
+
+.home-community-link:hover {
+  transform: translateY(-3px);
+  border-color: rgba(125, 211, 252, 0.62);
+  box-shadow:
+    0 18px 38px rgba(0, 0, 0, 0.42),
+    0 0 24px rgba(59, 130, 246, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.home-community-link__image,
+.home-community-link__copy,
+.home-community-link__arrow {
+  position: relative;
+  z-index: 1;
+}
+
+.home-community-link__image {
+  display: block;
+  width: 48px;
+  height: 48px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.home-community-link__image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.home-community-link__copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.home-community-link__copy small {
+  overflow: hidden;
+  color: rgba(191, 219, 254, 0.78);
+  font-size: 10px;
+  font-weight: 750;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-community-link__copy strong {
+  overflow: hidden;
+  color: #f8fbff;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-community-link--kakao .home-community-link__copy small {
+  color: rgba(255, 235, 120, 0.86);
+}
+
+.home-community-link__arrow {
+  color: rgba(226, 236, 255, 0.72);
+  font-size: 15px;
+  font-weight: 900;
+}
+
+@media (max-width: 1120px) {
+  .home-community-links {
+    gap: 9px;
+    width: min(318px, 40%);
+  }
+
+  .home-community-link {
+    grid-template-columns: 42px minmax(0, 1fr);
+    gap: 8px;
+    min-height: 64px;
+    padding: 9px;
+  }
+
+  .home-community-link__image {
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+  }
+
+  .home-community-link__arrow {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .home-community-links {
+    position: static;
+    width: 100%;
+    margin-top: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-community-links {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .home-season-card {
   padding: 24px;
 }

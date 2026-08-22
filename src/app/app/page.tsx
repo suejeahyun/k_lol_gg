@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
 import { AppEmpty, AppSection } from "@/components/app-mobile/AppCards";
+import CommunityLinks from "@/components/CommunityLinks";
 import PremiumFeatureGate from "@/components/PremiumFeatureGate";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getCachedAppHomePublicData } from "@/lib/app/home-summary";
@@ -140,6 +141,8 @@ export default async function AppHomePage() {
           <Link className="klol-app-secondary" href="/install">앱 설치</Link>
         </div>
       </section>
+
+      <CommunityLinks className="klol-app-community-links" />
 
       <section className="klol-app-section klol-app-home-summary">
         <div className="klol-app-section-head">

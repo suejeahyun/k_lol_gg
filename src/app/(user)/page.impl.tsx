@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { CSSProperties } from "react";
 import { prisma } from "@/lib/prisma/client";
 import GalleryWinnerSlider from "@/components/GalleryWinnerSlider";
+import CommunityLinks from "@/components/CommunityLinks";
 import HomeTop3Tabs from "@/components/HomeTop3Tabs";
 import RecentMvpSlider from "@/components/RecentMvpSlider";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -383,6 +384,8 @@ export default async function HomePage() {
               </Link>
             </div>
           </div>
+
+          <CommunityLinks className="home-community-links" />
         </div>
 
         <nav className="home-quick-access" aria-label="자주 찾는 기능">
