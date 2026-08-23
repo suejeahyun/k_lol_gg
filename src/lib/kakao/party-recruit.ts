@@ -971,7 +971,7 @@ export function promotePartySubstitutesAfterRemoval(params: {
   const wasFullBefore =
     getActiveMemberCount(params.previousMembers) >= params.maxMembers;
 
-  if (wasFullBefore && isLinePartyType(params.partyType)) {
+  if (isLinePartyType(params.partyType)) {
     const previousOccupied = new Set(
       params.previousMembers
         .filter((member) => !member.isSubstitute)
