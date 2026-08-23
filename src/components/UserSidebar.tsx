@@ -38,6 +38,7 @@ const menuGroups: UserSidebarGroup[] = [
     items: [
       { href: "/", label: "홈", code: "HOM" },
       { href: "/recruit", label: "구인현황", code: "REC", activePrefixes: ["/recruit", "/recruit-helper"] },
+      { href: "/discipline", label: "운영 징계 현황", code: "DIS" },
       { href: "/matches", label: "내전 목록", code: "MAT" },
       { href: "/rankings", label: "시즌 랭킹", code: "RNK" },
     ],
