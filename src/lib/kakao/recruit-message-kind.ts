@@ -86,7 +86,7 @@ export function isSeasonRecruitCommandMessage(message: string) {
 
   return (
     /^\/?(?:내전구인구직|내전구인)(?:(?:협곡|소환사의협곡|칼바람|칼바람아수라장|증바람|증바|증강칼바람|rift|aram|augmentaram)(?:20\d{2}[-./]\d{1,2}[-./]\d{1,2}|\d{1,2}:\d{2}|\d{1,2}시(?:\d{1,2}분)?|#\d{1,3}|\d{1,2}명)*)?$/i.test(text) ||
-    /^\/?(?:내전현황|시즌내전현황|AI공지)(?:#?\d{1,3})?$/.test(text)
+    /^\/?(?:내전현황|내전상세|시즌내전현황|AI공지)(?:#?\d{1,3})?$/.test(text)
   );
 }
 

@@ -270,7 +270,7 @@ function extractRequestedRecruitNo(value: unknown) {
     return directNo;
   }
   const patterns = [
-    /(?:내전현황|AI공지|시즌내전현황)\s*#?\s*(\d{1,3})/i,
+    /(?:내전현황|내전상세|AI공지|시즌내전현황)\s*#?\s*(\d{1,3})/i,
     /(?:내전\s*(?:번호|NO|No|no)\s*[:：]?\s*#?\s*)(\d{1,3})/i,
     /#\s*(\d{1,3})\s*(?:협곡\s*내전|협곡내전|내전)/i,
     /(?:협곡\s*내전|협곡내전|내전)\s*(?:하실분|하실\s*분|구인|모집)?\s*#\s*(\d{1,3})/i,
@@ -309,6 +309,7 @@ function buildSeasonRecruitListReply(dateKey: string, grouped: Map<number, Seaso
   const recruitNos: number[] = [];
 
   lines.push("[K-LOL.GG 내전현황]");
+  lines.push("🔎 전체 명단: 내전상세 번호");
   lines.push("");
 
   [...grouped.entries()]
@@ -321,10 +322,11 @@ function buildSeasonRecruitListReply(dateKey: string, grouped: Map<number, Seaso
 
       recruitNos.push(recruitNo);
       lines.push(`#${recruitNo} ${dateTimeText} (${mainCount}/${TARGET_COUNT}${reserveText})`);
+      lines.push(`└ 내전상세 ${recruitNo}`);
     });
 
   lines.push("");
-  lines.push(`상세/복사용: ${recruitNos.map((recruitNo) => `내전현황 ${recruitNo}`).join(" / ")}`);
+  lines.push(`상세 명령: ${recruitNos.map((recruitNo) => `내전상세 ${recruitNo}`).join(" / ")}`);
 
   return lines.join("\n").trim();
 }

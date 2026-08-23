@@ -160,6 +160,8 @@ export async function getScrimStatusPayload(detailScrimNo?: number | null) {
             formatScrimLine(scrim),
             "",
             buildScrimFormFromData(scrim),
+            "",
+            "수정: 이 메시지를 복사해 내용을 고친 뒤 전체 전송",
           ].join("\n")
         : [
             "[K-LOL.GG 멸망전 스크림 상세]",

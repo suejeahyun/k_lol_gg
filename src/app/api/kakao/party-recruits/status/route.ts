@@ -102,7 +102,6 @@ async function getRecruitStatusPayload(detailRecruitNo?: number | null) {
     parties,
     reply: buildRecruitStatusReply(parties, {
       detailRecruitNo,
-      detailThreshold: 5,
     }),
   };
 }

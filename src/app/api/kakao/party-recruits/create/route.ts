@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import { normalizeKakaoRequestId } from "@/lib/kakao/request-id";
 import { getKakaoMessageValidationError } from "@/lib/kakao/input-guard";
+import { expirePartyRecruitDrafts } from "@/lib/kakao/recruit-draft";
 import {
   buildCreateReply,
   buildRecruitPartyCode,
@@ -16,7 +17,6 @@ import {
   parseCreateRecruitCommand,
 } from "@/lib/kakao/party-recruit";
 import { classifyKakaoRecruitMessage, buildWrongRecruitApiReply } from "@/lib/kakao/recruit-message-kind";
-import { appendRecruitStatusSummary } from "@/lib/kakao/recruit-status-summary";
 import {
   getCurrentRecruitResetSeq,
   getLatestRecruitResetLog,
@@ -80,13 +80,11 @@ export async function POST(req: NextRequest) {
         where: { requestKey },
         include: { members: true },
       });
-      if (repeatedParty?.status === "IN_PROGRESS") {
+      if (repeatedParty?.status === "IN_PROGRESS" || repeatedParty?.status === "DRAFT") {
         return partyRecruitJson({
           party: repeatedParty,
           replayed: true,
-          reply: await appendRecruitStatusSummary(
-            buildCreateReply(parsed.template, repeatedParty.recruitNo),
-          ),
+          reply: buildCreateReply(parsed.template, repeatedParty.recruitNo),
         });
       }
       if (repeatedParty) requestKey = null;
@@ -99,7 +97,7 @@ export async function POST(req: NextRequest) {
           hostName: sender,
           type: parsed.type,
           maxMembers: parsed.maxMembers,
-          status: "IN_PROGRESS",
+          status: { in: ["DRAFT", "IN_PROGRESS"] },
           createdAt: { gte: new Date(Date.now() - 15_000) },
         },
         orderBy: { createdAt: "desc" },
@@ -109,13 +107,12 @@ export async function POST(req: NextRequest) {
         return partyRecruitJson({
           party: recentDuplicate,
           replayed: true,
-          reply: await appendRecruitStatusSummary(
-            buildCreateReply(parsed.template, recentDuplicate.recruitNo),
-          ),
+          reply: buildCreateReply(parsed.template, recentDuplicate.recruitNo),
         });
       }
     }
 
+    await expirePartyRecruitDrafts();
     const recruitDate = getKakaoRecruitDateKey();
     const resetSeq = await getCurrentRecruitResetSeq(recruitDate);
     let recruitNo = parsed.recruitNo ?? (await getNextRecruitNo(recruitDate, resetSeq));
@@ -131,7 +128,7 @@ export async function POST(req: NextRequest) {
       prisma.recruitParty.findFirst({
         where: {
           recruitNo,
-          status: "IN_PROGRESS",
+          status: { in: ["DRAFT", "IN_PROGRESS"] },
         },
         orderBy: [{ recruitDate: "desc" }, { resetSeq: "desc" }, { updatedAt: "desc" }],
         include: {
@@ -167,13 +164,13 @@ export async function POST(req: NextRequest) {
           reply: [
             "[K-LOL.GG 구인구직 안내]",
             "",
-            `모집번호 #${recruitNo}은 이미 진행 중입니다.`,
+            `모집번호 #${recruitNo}은 ${existing.status === "DRAFT" ? "양식 작성 중" : "이미 진행 중"}입니다.`,
             "",
             `현재 #${recruitNo} 상태:`,
             existing.title,
             `현재 인원: ${activeCount}/${existing.maxMembers}`,
             "",
-            "새 구인글은 번호를 직접 지정하지 않고 생성해주세요.",
+            existing.status === "DRAFT" ? "잠시 후 다시 시도하거나 번호 없이 새 양식을 불러와주세요." : "새 구인글은 번호를 직접 지정하지 않고 생성해주세요.",
             "예시: /6인파티",
           ].join("\n"),
         },
@@ -211,7 +208,7 @@ export async function POST(req: NextRequest) {
             recruitCode,
             requestKey,
             type: parsed.type,
-            status: "IN_PROGRESS",
+            status: "DRAFT",
             title: parsed.title,
             roomName,
             hostName: sender,
@@ -234,9 +231,7 @@ export async function POST(req: NextRequest) {
             return partyRecruitJson({
               party: repeatedParty,
               replayed: true,
-              reply: await appendRecruitStatusSummary(
-                buildCreateReply(parsed.template, repeatedParty.recruitNo),
-              ),
+              reply: buildCreateReply(parsed.template, repeatedParty.recruitNo),
             });
           }
         }
@@ -275,9 +270,7 @@ export async function POST(req: NextRequest) {
 
     return partyRecruitJson({
       party,
-      reply: await appendRecruitStatusSummary(
-        buildCreateReply(parsed.template, party.recruitNo),
-      ),
+      reply: buildCreateReply(parsed.template, party.recruitNo),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -351,7 +344,7 @@ async function getNextRecruitNo(recruitDate = getKakaoRecruitDateKey(), resetSeq
       prisma.recruitParty.findFirst({
         where: {
           recruitNo: candidate,
-          status: "IN_PROGRESS",
+          status: { in: ["DRAFT", "IN_PROGRESS"] },
         },
         select: {
           id: true,

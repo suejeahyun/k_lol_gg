@@ -11,6 +11,7 @@ import {
   MAX_KAKAO_NAME_LENGTH,
 } from "@/lib/kakao/input-guard";
 import { acquirePartyRecruitLock } from "@/lib/kakao/db-lock";
+import { expirePartyRecruitDrafts } from "@/lib/kakao/recruit-draft";
 import {
   buildSyncReply,
   extractRecruitNoFromForm,
@@ -27,6 +28,7 @@ import {
 } from "@/lib/kakao/party-recruit";
 import { classifyKakaoRecruitMessage, buildWrongRecruitApiReply } from "@/lib/kakao/recruit-message-kind";
 import { appendRecruitStatusSummary } from "@/lib/kakao/recruit-status-summary";
+import { POST as applySeasonRecruit } from "../../recruit/season-apply/route";
 import {
   getBodyRoom,
   getBodySender,
@@ -46,7 +48,7 @@ async function findActiveRecruitParty(params: {
   const activeParties = await prisma.recruitParty.findMany({
     where: {
       recruitNo,
-      status: "IN_PROGRESS",
+      status: { in: ["DRAFT", "IN_PROGRESS"] },
     },
     orderBy: [
       { recruitDate: "desc" },
@@ -58,16 +60,6 @@ async function findActiveRecruitParty(params: {
   });
 
   return activeParties.length === 1 ? activeParties[0] : null;
-}
-
-function isSeasonRecruitSnapshotMessage(message: string) {
-  const text = String(message || "").replace(/\r/g, "\n");
-
-  return (
-    /(?:참가\s*신청\s*양식|협곡\s*내전|협곡내전|내전하실분)/.test(text) &&
-    /^\s*(?:1|예비\s*1)\s*[.)]/m.test(text) &&
-    /이름\s*\/\s*현티어\s*\/\s*최고티어|현티어|최고티어/.test(text)
-  );
 }
 
 function splitRecruitStatusBlocks(message: string) {
@@ -309,7 +301,7 @@ async function syncOneRecruit(params: {
     : (party.scheduledStartAt ?? parsedScheduledStartAt);
   const shouldBackfillScheduledStartAt = Boolean(!party.scheduledStartAt && nextScheduledStartAt);
 
-  if (!hasRecruitPartyChanges({ party, parsed, isSoloRank }) && !shouldBackfillScheduledStartAt) {
+  if (party.status === "IN_PROGRESS" && !hasRecruitPartyChanges({ party, parsed, isSoloRank }) && !shouldBackfillScheduledStartAt) {
     return {
       ok: true,
       recruitNo,
@@ -340,6 +332,7 @@ async function syncOneRecruit(params: {
     const result = await tx.recruitParty.update({
       where: { id: party.id },
       data: {
+        status: "IN_PROGRESS",
         startTimeText: nextStartTimeText,
         scheduledStartAt: nextScheduledStartAt,
         tierText: isSoloRank ? parsed.tierText : null,
@@ -391,6 +384,8 @@ export async function POST(req: NextRequest) {
     const secretRejected = rejectIfInvalidPartySecret(req, body.secret);
     if (secretRejected) return secretRejected;
 
+    await expirePartyRecruitDrafts();
+
     const rawMessage = getBodyText(body);
     const messageError = getKakaoMessageValidationError(rawMessage);
     if (messageError) {
@@ -398,23 +393,31 @@ export async function POST(req: NextRequest) {
     }
     const message = stripAppendedRecruitStatusSummary(rawMessage);
     const classification = classifyKakaoRecruitMessage(message);
+
+    // Some legacy Kakao bot rules route every form containing "#번호" to the
+    // party sync endpoint. A clearly identified inhouse snapshot is safe to
+    // hand to the canonical season endpoint; that endpoint performs its own
+    // validation, operation-date checks, locking, and idempotent diff update.
+    if (classification.kind === "SEASON_RECRUIT") {
+      const headers = new Headers(req.headers);
+      headers.set("content-type", "application/json");
+      headers.delete("content-length");
+
+      const forwardedRequest = new NextRequest(
+        new URL("/api/kakao/recruit/season-apply", req.url),
+        {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ ...body, message }),
+        },
+      );
+
+      return applySeasonRecruit(forwardedRequest);
+    }
+
     if (classification.kind !== "PARTY_RECRUIT") {
       return partyRecruitJson(
         { reply: buildWrongRecruitApiReply({ expected: "파티구인", actual: classification.kind }) },
-        400,
-      );
-    }
-
-    if (isSeasonRecruitSnapshotMessage(message)) {
-      return partyRecruitJson(
-        {
-          reply: [
-            "[K-LOL.GG 구인구직 반영 실패]",
-            "",
-            "내전 명단 양식은 파티구인으로 반영하지 않습니다.",
-            "내전 명단은 /내전현황 또는 내전 참가 신청 API에서 확인해주세요.",
-          ].join("\n"),
-        },
         400,
       );
     }

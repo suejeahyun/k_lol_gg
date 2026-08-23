@@ -1175,6 +1175,7 @@ enum RecruitPartyType {
 }
 
 enum RecruitPartyStatus {
+  DRAFT
   IN_PROGRESS
   FINISHED
   CANCELED

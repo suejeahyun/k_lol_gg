@@ -1418,18 +1418,8 @@ function formatRecruitPartySummaryLine(party: RecruitPartyLike) {
   return [
     `#${party.recruitNo} · ${titleLabel} · ${activeCount}/${party.maxMembers} · ${startTime} · ${info}`,
     formatRecruitMemberSummary(party),
+    `└ 상세 ${party.recruitNo}`,
   ].join("\n");
-}
-
-function appendRecruitDetailGuide(lines: string[], exampleRecruitNo: number) {
-  lines.push(
-    "",
-    "━━━━━━━━━━━━",
-    "🔎 상세 명단 보는 방법",
-    "아래 명령어를 카톡에 그대로 입력하세요.",
-    `👉 구인상세 ${exampleRecruitNo}`,
-    "다른 구인은 숫자만 원하는 모집번호로 바꾸세요.",
-  );
 }
 
 export function stripAppendedRecruitStatusSummary(message: string) {
@@ -1457,6 +1447,8 @@ export function buildRecruitStatusSummaryReply(
   const visibleParties = activeParties.slice(0, limit);
   const lines = [
     "[현재 구인현황]",
+    "🔎 전체 명단: 상세 번호",
+    "",
     ...visibleParties.map(formatRecruitPartySummaryLine),
   ];
 
@@ -1464,17 +1456,15 @@ export function buildRecruitStatusSummaryReply(
     lines.push(`외 ${activeParties.length - visibleParties.length}건`);
   }
 
-  appendRecruitDetailGuide(lines, visibleParties[0].recruitNo);
-  return lines.join("\n");
+  return lines.join("\n").trimEnd();
 }
 
 export function buildRecruitStatusReply(
   parties: RecruitPartyLike[],
-  options?: { detailRecruitNo?: number | null; detailThreshold?: number },
+  options?: { detailRecruitNo?: number | null },
 ) {
   const activeParties = filterRecruitingParties(parties);
   const detailRecruitNo = options?.detailRecruitNo ?? null;
-  const detailThreshold = options?.detailThreshold ?? 5;
 
   if (activeParties.length === 0) {
     return [
@@ -1496,9 +1486,14 @@ export function buildRecruitStatusReply(
       ].join("\n");
     }
 
-    return ["[K-LOL.GG 구인상세]", "", formatRecruitPartyBlock(target)].join(
-      "\n",
-    );
+    return [
+      `[K-LOL.GG 구인상세 #${target.recruitNo}]`,
+      "",
+      formatRecruitPartyBlock(target),
+      "",
+      "수정: 이 메시지를 복사해 이름을 고친 뒤 전체 전송",
+      `마감: ${target.recruitNo}ㅉ`,
+    ].join("\n");
   }
 
   const grouped = groupRecruitParties(activeParties);
@@ -1508,51 +1503,22 @@ export function buildRecruitStatusReply(
     "PLAYING",
     "LARGE",
   ];
-  const lines = ["[K-LOL.GG 구인구직 현황]", ""];
-
-  if (activeParties.length > detailThreshold) {
-    for (const group of orderedGroups) {
-      const items = grouped[group];
-      if (items.length === 0) continue;
-      lines.push(getRecruitGroupTitle(group));
-      for (const party of items)
-        lines.push(formatRecruitPartySummaryLine(party));
-      lines.push("");
-    }
-
-    appendRecruitDetailGuide(lines, activeParties[0].recruitNo);
-    return lines.join("\n").trimEnd();
-  }
-
-  const detailLines: string[] = ["[K-LOL.GG 구인구직 현황]", ""];
-  let printedPartyCount = 0;
+  const lines = [
+    "[K-LOL.GG 구인구직 현황]",
+    "🔎 전체 명단: 상세 번호",
+    "",
+  ];
 
   for (const group of orderedGroups) {
     const items = grouped[group];
     if (items.length === 0) continue;
 
-    if (printedPartyCount > 0) {
-      detailLines.push("------------------------------------");
-      detailLines.push("");
-    }
-
-    detailLines.push(getRecruitGroupTitle(group));
-    detailLines.push("");
-
-    items.forEach((party, index) => {
-      if (index > 0) {
-        detailLines.push("");
-        detailLines.push("------------------------------------");
-        detailLines.push("");
-      }
-      detailLines.push(formatRecruitPartyBlock(party));
-      printedPartyCount += 1;
-    });
-
-    detailLines.push("");
+    lines.push(getRecruitGroupTitle(group));
+    for (const party of items) lines.push(formatRecruitPartySummaryLine(party));
+    lines.push("");
   }
 
-  return detailLines.join("\n").trimEnd();
+  return lines.join("\n").trimEnd();
 }
 
 export function buildSyncReply(
@@ -1564,6 +1530,12 @@ export function buildSyncReply(
   return [
     `[파티 #${party.recruitNo} 반영]`,
     `${Math.min(activeCount, party.maxMembers)}/${party.maxMembers} · 예비 ${substituteCount}명`,
+    "",
+    `[파티 #${party.recruitNo} 현재 명단]`,
+    formatRecruitPartyBlock(party),
+    "",
+    "수정: 이 메시지를 복사해 이름을 고친 뒤 전체 전송",
+    `마감: ${party.recruitNo}ㅉ`,
   ].join("\n");
 }
 

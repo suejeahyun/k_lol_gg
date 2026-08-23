@@ -534,7 +534,8 @@ export function buildScrimStatusReply(scrims: Array<Parameters<typeof formatScri
 
   return [
     "[K-LOL.GG 스크림 현황]",
+    "🔎 전체 양식: 스크림상세 번호",
     "",
-    ...scrims.map(formatScrimLine),
+    ...scrims.flatMap((scrim) => [formatScrimLine(scrim), `└ 스크림상세 ${scrim.scrimNo}`]),
   ].join("\n");
 }

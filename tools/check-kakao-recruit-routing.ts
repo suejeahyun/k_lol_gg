@@ -6,6 +6,10 @@ import {
   parseScrimNumberCommand,
 } from "../src/lib/kakao/destruction-scrim-recruit";
 import {
+  buildCreateReply,
+  buildRecruitStatusReply,
+  buildRecruitStatusSummaryReply,
+  buildSyncReply,
   parseFinishRecruitCommand,
   parsePartyForm,
   promotePartySubstitutesAfterRemoval,
@@ -62,6 +66,7 @@ const cases: Case[] = [
   { name: "destruction scrim cancel disabled", raw: "\\uBA78\\uB9DD\\uC804\\uC2A4\\uD06C\\uB9BC\\uCDE8\\uC18C 1", kind: "UNKNOWN", scrimNo: 1 },
   { name: "scrim status", raw: "\\uC2A4\\uD06C\\uB9BC\\uD604\\uD669", kind: "SCRIM_RECRUIT" },
   { name: "season status", raw: "\\uB0B4\\uC804\\uD604\\uD669", kind: "SEASON_RECRUIT" },
+  { name: "season detail", raw: "\\uB0B4\\uC804\\uC0C1\\uC138 3", kind: "SEASON_RECRUIT" },
   { name: "season create rift", raw: "/\\uB0B4\\uC804\\uAD6C\\uC778 \\uD611\\uACE1", kind: "SEASON_RECRUIT" },
   { name: "season create aram", raw: "/\\uB0B4\\uC804\\uAD6C\\uC778 \\uCE7C\\uBC14\\uB78C", kind: "SEASON_RECRUIT" },
   { name: "season create augment aram", raw: "/\\uB0B4\\uC804\\uAD6C\\uC778 \\uC99D\\uBC14\\uB78C", kind: "SEASON_RECRUIT" },
@@ -70,6 +75,68 @@ const cases: Case[] = [
 ];
 
 const failures: string[] = [];
+
+const partyReplyFixture = {
+  id: 1,
+  recruitNo: 3,
+  recruitDate: "2026-08-23",
+  resetSeq: 0,
+  recruitCode: "20260823-3",
+  type: "PARTY_NUMBER",
+  status: "IN_PROGRESS",
+  title: "5인 파티 구인",
+  roomName: "테스트방",
+  hostName: "운영자",
+  startTimeText: "21:00",
+  scheduledStartAt: null,
+  tierText: null,
+  preferredLineText: null,
+  playStyle: null,
+  note: "증바람",
+  maxMembers: 5,
+  createdAt: new Date("2026-08-23T10:00:00.000Z"),
+  updatedAt: new Date("2026-08-23T10:00:00.000Z"),
+  members: [
+    { name: "재현", position: null, slotNo: 1, isSubstitute: false },
+    { name: "근열", position: null, slotNo: 2, isSubstitute: false },
+  ],
+};
+
+const partyTemplateReply = buildCreateReply("모집번호: #자동생성\n1.\n2.", 3);
+if (partyTemplateReply.includes("[현재 구인현황]")) {
+  failures.push("party template reply: status must not be appended to a blank form");
+}
+
+const partyStatusReply = buildRecruitStatusReply([partyReplyFixture]);
+if (!partyStatusReply.includes("🔎 전체 명단: 상세 번호")) {
+  failures.push("party status reply: top detail guide is missing");
+}
+if (!partyStatusReply.includes("└ 상세 3")) {
+  failures.push("party status reply: per-party detail command is missing");
+}
+if (partyStatusReply.includes("1. 재현")) {
+  failures.push("party status reply: status must stay compact even with few parties");
+}
+
+const partyDetailReply = buildRecruitStatusReply([partyReplyFixture], {
+  detailRecruitNo: 3,
+});
+if (!partyDetailReply.includes("1. 재현") || !partyDetailReply.includes("수정: 이 메시지를 복사")) {
+  failures.push("party detail reply: current copyable roster and edit guidance are required");
+}
+if (!partyDetailReply.includes("마감: 3ㅉ")) {
+  failures.push("party detail reply: close command is missing");
+}
+
+const partyApplyReply = buildSyncReply(partyReplyFixture);
+if (!partyApplyReply.includes("[파티 #3 현재 명단]") || !partyApplyReply.includes("1. 재현")) {
+  failures.push("party apply reply: updated roster must be shown before the status summary");
+}
+
+const partySummaryReply = buildRecruitStatusSummaryReply([partyReplyFixture]);
+if (!partySummaryReply.includes("🔎 전체 명단: 상세 번호") || !partySummaryReply.includes("└ 상세 3")) {
+  failures.push("party appended status: compact detail CTA is missing");
+}
 
 const inhouseSelection = parseInhouseRecruitCommand("/내전구인", "2026-08-06");
 if (!inhouseSelection.isCommand || inhouseSelection.mode !== null) {
@@ -104,6 +171,29 @@ if (!riftTemplate.includes("》협곡") || !riftTemplate.includes("이름/현티
 }
 if (classifyKakaoRecruitMessage(riftTemplate).kind !== "SEASON_RECRUIT") {
   failures.push("inhouse recruit template: rift form must be routed to season registration");
+}
+
+const legacyHashtagRiftSnapshot = [
+  "📢 협곡내전하실분 #1",
+  " 》2026-08-10 21시",
+  "",
+  "*참가 신청 양식*",
+  "이름/현티어/최고티어/주,부라인",
+  "EX) 1.지후/P/E/AD,MD",
+  "",
+  "1.02정민/m/m/all",
+  "2.",
+  "3.",
+  "4.",
+  "5.",
+  "6.",
+  "7.",
+  "8.",
+  "9.",
+  "10.",
+].join("\n");
+if (classifyKakaoRecruitMessage(legacyHashtagRiftSnapshot).kind !== "SEASON_RECRUIT") {
+  failures.push("inhouse recruit routing: legacy #number snapshot must stay on the season route");
 }
 
 for (const mode of ["ARAM", "AUGMENT_ARAM"] as const) {
