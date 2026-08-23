@@ -35,6 +35,7 @@ const mobileAppBootScript = `
     if (
       path === "/install" ||
       path.startsWith("/install/") ||
+      path === "/discipline" ||
       path === "/signup" ||
       path === "/forgot-password" ||
       path === "/privacy" ||

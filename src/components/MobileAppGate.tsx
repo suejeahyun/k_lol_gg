@@ -94,6 +94,7 @@ export default function MobileAppGate() {
   const isStandalonePage =
     pathname === "/install" ||
     pathname.startsWith("/install/") ||
+    pathname === "/discipline" ||
     pathname === "/signup" ||
     pathname === "/forgot-password" ||
     pathname === "/privacy" ||

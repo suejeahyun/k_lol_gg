@@ -22,6 +22,7 @@
     "check:kakao-recruit-replies": "node tools/check-kakao-recruit-reply-flow.mjs",
     "check:kakao-auth": "tsx tools/check-kakao-request-guard.ts",
     "check:kakao-operation-forms": "tsx tools/check-kakao-operation-forms.ts",
+    "check:discipline-statistics": "tsx tools/check-discipline-statistics.ts",
     "check:riot-sync": "node tools/check-riot-tier-sync-resilience.mjs",
     "check:security-guard": "tsx tools/check-security-request-guard.ts",
     "check:mvp-voting": "tsx tools/check-destruction-mvp-voting.ts",
