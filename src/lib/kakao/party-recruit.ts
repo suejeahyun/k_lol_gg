@@ -1530,11 +1530,6 @@ export function buildSyncReply(
   return [
     `[파티 #${party.recruitNo} 반영]`,
     `${Math.min(activeCount, party.maxMembers)}/${party.maxMembers} · 예비 ${substituteCount}명`,
-    "",
-    `[파티 #${party.recruitNo} 현재 명단]`,
-    formatRecruitPartyBlock(party),
-    "",
-    "수정: 이 메시지를 복사해 이름을 고친 뒤 전체 전송",
     `마감: ${party.recruitNo}ㅉ`,
   ].join("\n");
 }

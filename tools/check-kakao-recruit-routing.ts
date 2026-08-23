@@ -129,8 +129,11 @@ if (!partyDetailReply.includes("마감: 3ㅉ")) {
 }
 
 const partyApplyReply = buildSyncReply(partyReplyFixture);
-if (!partyApplyReply.includes("[파티 #3 현재 명단]") || !partyApplyReply.includes("1. 재현")) {
-  failures.push("party apply reply: updated roster must be shown before the status summary");
+if (!partyApplyReply.includes("[파티 #3 반영]") || !partyApplyReply.includes("2/5 · 예비 0명")) {
+  failures.push("party apply reply: completion summary is missing");
+}
+if (partyApplyReply.includes("현재 명단") || partyApplyReply.includes("수정: 이 메시지를 복사") || partyApplyReply.includes("1. 재현")) {
+  failures.push("party apply reply: roster and edit guidance must not be included");
 }
 
 const partySummaryReply = buildRecruitStatusSummaryReply([partyReplyFixture]);
