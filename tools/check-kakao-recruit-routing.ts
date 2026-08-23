@@ -323,6 +323,22 @@ if (!submittedPromotionParty) {
   if (shouldStayReserve.some((member) => !member.isSubstitute && member.slotNo === 5)) {
     failures.push("party reserve promotion: pre-existing vacancy must not promote a reserve");
   }
+
+  const partiallyFilledParty = promotePartySubstitutesAfterRemoval({
+    previousMembers: [
+      { name: "기존1", position: null, slotNo: 1, isSubstitute: false },
+      { name: "빠질사람", position: null, slotNo: 2, isSubstitute: false },
+    ],
+    submittedMembers: [
+      { name: "기존1", position: null, slotNo: 1, isSubstitute: false },
+      { name: "첫예비", position: null, slotNo: 1, isSubstitute: true },
+    ],
+    partyType: "PARTY_NUMBER",
+    maxMembers: 10,
+  });
+  if (partiallyFilledParty.some((member) => !member.isSubstitute && member.name === "첫예비")) {
+    failures.push("party reserve promotion: a partially filled party must keep reserves in reserve");
+  }
 }
 
 const clearedReserveParty = parsePartyForm(

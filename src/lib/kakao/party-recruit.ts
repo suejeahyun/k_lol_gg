@@ -966,8 +966,12 @@ export function promotePartySubstitutesAfterRemoval(params: {
   const substitutes = params.submittedMembers
     .filter((member) => member.isSubstitute)
     .sort((a, b) => Number(a.slotNo ?? 999) - Number(b.slotNo ?? 999));
+  // 예비는 정원이 이미 찬 파티에서 기존 참가자가 빠졌을 때만 승격한다.
+  // 모집 중인 파티의 빈 칸을 예비로 자동 채우면 예비 신청 의도와 달라진다.
+  const wasFullBefore =
+    getActiveMemberCount(params.previousMembers) >= params.maxMembers;
 
-  if (isLinePartyType(params.partyType)) {
+  if (wasFullBefore && isLinePartyType(params.partyType)) {
     const previousOccupied = new Set(
       params.previousMembers
         .filter((member) => !member.isSubstitute)
@@ -987,7 +991,7 @@ export function promotePartySubstitutesAfterRemoval(params: {
         isSubstitute: false,
       });
     }
-  } else {
+  } else if (wasFullBefore) {
     const previousOccupied = new Set(
       params.previousMembers
         .filter((member) => !member.isSubstitute)
