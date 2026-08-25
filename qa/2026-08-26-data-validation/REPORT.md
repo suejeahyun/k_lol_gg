@@ -9,17 +9,17 @@
 - 마우스·키보드 입력 없이 운영 API와 데이터베이스 조회만으로 경고·내전 접수를 검증할 수 있다.
 - 생성된 경고 2건과 내전 결과 접수 2건은 데이터베이스에 저장됐고 관리자 사이트에도 동일한 접수번호로 표시됐다.
 - 양식 호출, 접수, 상태 조회, 중복 차단, 사진 수 경계 검사는 정상이다.
-- 유효한 PNG의 실제 저장은 경고와 내전 모두 비공개 이미지 저장소 단계에서 실패한다.
+- Vercel Private Blob 저장소를 생성·연결한 뒤 유효한 PNG의 실제 저장이 경고와 내전 모두 정상 처리된다.
 - 사진 저장 실패 후 사진 수가 증가하거나 불완전한 이미지 레코드가 남지는 않았다.
-- 경고 접수의 생성일이 UTC 기준 `2026-08-25`로 표시되던 원인을 확인해 KST 날짜 변환으로 수정했다. 운영 화면 재확인은 배포 후 수행한다.
+- 경고 접수의 생성일이 UTC 기준 `2026-08-25`로 표시되던 원인을 확인해 KST 날짜 변환으로 수정했고 운영 화면에서 `2026-08-26` 표시를 재확인했다.
 
 ## 원인 및 수정
 
 - 날짜 원인: 관리자 경고 목록이 `toISOString().slice(0, 10)`으로 UTC 날짜를 표시했다.
 - 날짜 수정: 경고 접수와 강퇴 검토 생성일을 공통 `getKstDateKey`로 변환한다.
-- 사진 원인: Blob SDK의 OIDC 인증에는 저장소를 지정하는 `BLOB_STORE_ID`가 필요한데 프로젝트 설정에 없었고, 운영 업로드는 정적 토큰 경로에서 `Access denied`가 발생했다. 즉 현재 정적 토큰이 비공개 저장소와 일치하지 않거나 저장소 프로젝트 연결이 완성되지 않은 상태다.
+- 사진 원인: Vercel 프로젝트의 Storage 목록이 비어 있어 private Blob 저장소와 `BLOB_STORE_ID` 연결이 존재하지 않았다. 운영 업로드는 연결되지 않은 정적 토큰 경로에서 `Access denied`가 발생했다.
 - 사진 코드 수정: 저장·조회·삭제가 동일한 인증 선택을 사용하고, `BLOB_STORE_ID`가 있으면 OIDC를 우선한다. `/admin/kakao`에서 실제 Blob 목록 조회를 통한 연결 진단 결과와 인증 방식을 표시한다.
-- 남은 외부 설정: Vercel에서 private Blob store를 프로젝트에 연결한 뒤 `BLOB_STORE_ID`를 설정하거나, 해당 private store의 올바른 `BLOB_READ_WRITE_TOKEN`으로 교체해야 한다.
+- 외부 설정 완료: `k-lol-gg-blob` private store를 서울 `ICN1`에 생성하고 `k-lol-gg` Production·Preview에 `BLOB_STORE_ID`, `BLOB_WEBHOOK_PUBLIC_KEY`를 연결했다. 정적 read/write 토큰은 만들지 않았다.
 
 ## API 자동 검증 결과
 
@@ -64,7 +64,7 @@
 
 ![관리자 내전 결과 접수 화면](02-inhouse-submissions.png)
 
-## 사진 저장 검증
+## 수정 전 사진 저장 검증
 
 합성 PNG를 경고 `DS767382FD4B`와 내전 `MRF39849EC13`에 각각 전송했다.
 
@@ -79,9 +79,23 @@
 - 수정 커밋: `a0319cf` (`fix: diagnose private blob uploads and use KST dates`)
 - GitHub `main` 푸시: 완료
 - Vercel 배포 상태: `success` (`Deployment has completed`)
-- 배포 후 경고 접수 `DS767382FD4B`에 유효 PNG 재전송: 논리 상태 `500`, 사진 저장 실패
-- 판정: 애플리케이션 패치는 운영에 배포됐으나 Vercel 프로젝트의 private Blob 저장소 권한/연결은 외부 설정에서 아직 해결되지 않았다.
-- Vercel 대시보드는 현재 자동화 브라우저에서 로그인되지 않아 저장소 연결 변경과 운영 관리자 화면의 새 진단 문구 캡처는 수행하지 않았다.
+- Blob 연결 재배포 커밋: `030450f` (`chore: redeploy with private blob connection`)
+- Vercel 배포 상태: `success`
+- 재검증 실행 ID: `20260825232207`
+- 15개 API 자동 검증: 전부 통과
+- 경고 `DS8E5F3795BB`: 실제 PNG 1/1장 저장, 세션 `COMPLETE`, 접수 `PENDING_REVIEW`
+- 내전 `MRF0EB839682`: 실제 PNG 2/2장 저장, 세션 `COMPLETE`, 접수 `PENDING_REVIEW`
+- 내전 `MRE0FAF63444`: 실제 PNG 3/3장 저장, 세션 `COMPLETE`, 접수 `PENDING_REVIEW`
+- 6개 자산 메타데이터의 provider는 모두 `VERCEL_BLOB`이며 파일 크기와 용도가 정상 기록됐다.
+- `/api/admin/private-assets/1`을 관리자 인증 상태에서 열어 `image/png`, 1280×720 원본 조회를 확인했다.
+
+### 최종 관리자 화면
+
+![Blob OIDC 정상 진단](03-blob-health-success.png)
+
+![내전 2장·3장 업로드 완료](04-inhouse-upload-complete.png)
+
+![경고 사진 및 KST 날짜 확인](05-discipline-upload-complete.png)
 
 ## 판정
 
@@ -92,15 +106,14 @@
 | 데이터베이스 저장 | 정상 |
 | 관리자 사이트 표시 | 정상 |
 | 잘못된 이미지 차단 | 정상 |
-| 유효한 이미지의 비공개 저장 | 차단 |
+| 유효한 이미지의 비공개 저장 | 정상 |
 | 실패 시 부분 데이터 방지 | 정상 |
-| 경고 접수 생성일 KST 표시 | 소스 수정·자동 검증 완료, 운영 재확인 필요 |
+| 경고 접수 생성일 KST 표시 | 운영 확인 완료 |
 | 실제 카카오 메신저봇R 사진 이벤트 | 운영 단말 확인 필요 |
 
 ## 남은 조치
 
-1. Vercel Private Blob 연결 또는 OIDC 인증을 정상화한다.
-2. 배포 후 경고 접수 목록의 KST 날짜와 `/admin/kakao` 저장소 진단을 확인한다.
-3. 경고 1장과 내전 2장·3장 전체 업로드를 다시 실행한다.
-4. 업로드 완료 후 `PENDING_REVIEW` 전환과 관리자 비공개 이미지 열람을 확인한다.
-5. 경고 승인 후 일반 10장·내전 15장 차감 인증 완료 흐름을 검증한다.
+1. 테스트 경고·내전 접수 건은 관리자가 승인하지 말고 QA 데이터로 구분해 정리한다.
+2. 실제 카카오 메신저봇R에서 사진 메시지 분리 수신을 1회 확인한다.
+3. 실제 경고 승인 후 일반 10장·내전 15장 차감 인증 완료 흐름을 운영자 입회로 검증한다.
+4. 90일 만료 자산의 실제 Blob 삭제 스케줄을 연결한다.
