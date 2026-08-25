@@ -15,9 +15,9 @@ function cleanBase64(value: unknown) {
 }
 
 export async function POST(req: NextRequest) {
-  const premiumLock = await requireSiteFeature("kakao");
-  if (premiumLock) return premiumLock;
   try {
+    const premiumLock = await requireSiteFeature("kakao");
+    if (premiumLock) return premiumLock;
     const body = await req.json().catch(() => ({})) as Record<string, unknown>;
     if (!isAuthorizedKakaoRequest(req, body.secret)) return kakaoJsonReply({ reply: "[K-LOL.GG 사진 접수 실패]\n인증값이 올바르지 않습니다." }, 401);
     const roomKey = normalizeSessionKey(String(body.roomName || body.room || ""));
