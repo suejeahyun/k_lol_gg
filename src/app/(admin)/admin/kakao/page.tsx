@@ -3,6 +3,7 @@ export const revalidate = 0;
 
 import { prisma } from "@/lib/prisma/client";
 import { getKakaoOperationSettings } from "@/lib/kakao/settings";
+import { getPrivateAssetStorageHealth } from "@/lib/storage/private-assets";
 
 function formatKstDateTime(date: Date) {
   return new Intl.DateTimeFormat("ko-KR", {
@@ -22,8 +23,9 @@ function settingStatus(enabled: boolean) {
 export default async function AdminKakaoPage() {
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(new Date());
 
-  const [settings, activeRecruits, todayLogs, pendingSeasonApplies, pendingForms, recentLogs] = await Promise.all([
+  const [settings, storageHealth, activeRecruits, todayLogs, pendingSeasonApplies, pendingForms, recentLogs] = await Promise.all([
     getKakaoOperationSettings(),
+    getPrivateAssetStorageHealth(),
     prisma.recruitParty.count({ where: { status: "IN_PROGRESS" } }),
     prisma.recruitPartyLog.count({ where: { recruitDate: today } }),
     prisma.seasonParticipationPendingApply.count(),
@@ -63,6 +65,8 @@ export default async function AdminKakaoPage() {
             <tbody>
               <tr><th>구인 명령</th><td>{settingStatus(settings.recruitCommandEnabled)}</td><th>전적 검색</th><td>{settingStatus(settings.playerRecordSearchEnabled)}</td></tr>
               <tr><th>내전 참가신청</th><td>{settingStatus(settings.seasonApplyCommandEnabled)}</td><th>운영신청 접수</th><td>{settingStatus(settings.operationFormsEnabled)}</td></tr>
+              <tr><th>비공개 사진 저장소</th><td>{storageHealth.healthy ? "정상" : "확인 필요"}</td><th>인증 방식</th><td>{storageHealth.authMode}</td></tr>
+              <tr><th>저장소 진단</th><td colSpan={3}>{storageHealth.message}</td></tr>
               <tr><th>명령 쿨다운</th><td>{settings.commandCooldownSeconds}초</td><th>현황 표시 최대 수</th><td>{settings.recruitStatusMaxVisible}개</td></tr>
             </tbody>
           </table>

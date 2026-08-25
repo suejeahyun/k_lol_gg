@@ -6,6 +6,51 @@ const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
 const MAX_IMAGE_PIXELS = 40_000_000;
 const ALLOWED_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
 
+type BlobAuthOptions = { storeId?: string; token?: string };
+
+export type PrivateAssetStorageHealth = {
+  healthy: boolean;
+  authMode: "OIDC" | "READ_WRITE_TOKEN" | "MISSING";
+  message: string;
+};
+
+export function getPrivateBlobAuthOptions(env: Record<string, string | undefined> = process.env): BlobAuthOptions {
+  const storeId = env.BLOB_STORE_ID?.trim();
+  if (storeId) return { storeId };
+  const token = env.BLOB_READ_WRITE_TOKEN?.trim();
+  if (token) return { token };
+  return {};
+}
+
+function getPrivateBlobAuthMode(options: BlobAuthOptions): PrivateAssetStorageHealth["authMode"] {
+  if (options.storeId) return "OIDC";
+  if (options.token) return "READ_WRITE_TOKEN";
+  return "MISSING";
+}
+
+function privateBlobErrorMessage(error: unknown) {
+  const message = error instanceof Error ? error.message : "";
+  if (/access denied|unauthorized|forbidden/i.test(message)) return "비공개 Blob 저장소와 프로젝트 권한이 일치하지 않습니다.";
+  if (/store.*not found|not found.*store/i.test(message)) return "설정된 비공개 Blob 저장소를 찾을 수 없습니다.";
+  if (/no blob credentials|no read-write token|no storeId/i.test(message)) return "Blob 저장소 인증값이 설정되지 않았습니다.";
+  return "비공개 Blob 저장소 연결을 확인할 수 없습니다.";
+}
+
+export async function getPrivateAssetStorageHealth(): Promise<PrivateAssetStorageHealth> {
+  const authOptions = getPrivateBlobAuthOptions();
+  const authMode = getPrivateBlobAuthMode(authOptions);
+  if (authMode === "MISSING") {
+    return { healthy: false, authMode, message: "BLOB_STORE_ID 또는 BLOB_READ_WRITE_TOKEN 설정이 필요합니다." };
+  }
+  try {
+    const { list } = await import("@vercel/blob");
+    await list({ ...authOptions, limit: 1, prefix: "private/" });
+    return { healthy: true, authMode, message: "비공개 사진 저장소 인증이 정상입니다." };
+  } catch (error) {
+    return { healthy: false, authMode, message: privateBlobErrorMessage(error) };
+  }
+}
+
 function inspectPng(buffer: Buffer) {
   const signature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
   if (buffer.length < 24 || !buffer.subarray(0, 8).equals(signature) || buffer.toString("ascii", 12, 16) !== "IHDR") return null;
@@ -85,9 +130,11 @@ export async function storePrivateImage(params: {
   declaredMimeType?: string | null;
 }) {
   const { put } = await import("@vercel/blob");
+  const authOptions = getPrivateBlobAuthOptions();
   const validated = await validatePrivateImage(params.buffer, params.declaredMimeType);
   const storageKey = `private/${params.purpose.toLowerCase()}/${params.publicCode}/${params.imageNumber}-${randomUUID()}.${extensionForMime(validated.mimeType)}`;
   const blob = await put(storageKey, params.buffer, {
+    ...authOptions,
     access: "private",
     contentType: validated.mimeType,
     addRandomSuffix: false,
@@ -112,12 +159,12 @@ export async function storePrivateImage(params: {
 
 export async function downloadPrivateAsset(storageKey: string) {
   const { get } = await import("@vercel/blob");
-  const result = await get(storageKey, { access: "private", useCache: false });
+  const result = await get(storageKey, { ...getPrivateBlobAuthOptions(), access: "private", useCache: false });
   if (!result || result.statusCode !== 200 || !result.stream) throw new Error("비공개 이미지를 찾을 수 없습니다.");
   return Buffer.from(await new Response(result.stream).arrayBuffer());
 }
 
 export async function deletePrivateAsset(storageKey: string) {
   const { del } = await import("@vercel/blob");
-  await del(storageKey);
+  await del(storageKey, getPrivateBlobAuthOptions());
 }

@@ -5,7 +5,12 @@ import { loadEnvConfig } from "@next/env";
 loadEnvConfig(process.cwd());
 
 async function main() {
-  const { validatePrivateImage } = await import("../src/lib/storage/private-assets");
+  const { getPrivateBlobAuthOptions, validatePrivateImage } = await import("../src/lib/storage/private-assets");
+  const { getKstDateKey } = await import("../src/lib/date/kst");
+  assert.deepEqual(getPrivateBlobAuthOptions({ BLOB_STORE_ID: " store_test ", BLOB_READ_WRITE_TOKEN: "token_test" }), { storeId: "store_test" });
+  assert.deepEqual(getPrivateBlobAuthOptions({ BLOB_READ_WRITE_TOKEN: " token_test " }), { token: "token_test" });
+  assert.deepEqual(getPrivateBlobAuthOptions({}), {});
+  assert.equal(getKstDateKey(new Date("2026-08-25T15:00:00.000Z")), "2026-08-26");
   for (const format of ["png", "jpeg", "webp"] as const) {
     const buffer = await sharp({
       create: { width: 320, height: 180, channels: 3, background: "#2563eb" },

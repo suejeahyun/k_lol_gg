@@ -50,10 +50,10 @@ export default async function AdminDisciplinePage() {
           submissions={submissions.map((item) => {
             const data = item.parsedData as Record<string, unknown>;
             const session = issueSessions.find((candidate) => candidate.targetId === item.id);
-            return { id: item.id, publicCode: item.publicCode, status: item.status, targetName: String(data.targetName || "대상 미상"), nicknameTag: String(data.targetNicknameTag || "-"), category: data.category === "INHOUSE" ? "내전" : "일반", issuedDate: String(data.issuedDate || "-"), createdAt: item.createdAt.toISOString().slice(0, 10), assetIds: session?.images.map((image) => image.privateAssetId) ?? [] };
+            return { id: item.id, publicCode: item.publicCode, status: item.status, targetName: String(data.targetName || "대상 미상"), nicknameTag: String(data.targetNicknameTag || "-"), category: data.category === "INHOUSE" ? "내전" : "일반", issuedDate: String(data.issuedDate || "-"), createdAt: getKstDateKey(item.createdAt), assetIds: session?.images.map((image) => image.privateAssetId) ?? [] };
           })}
           tasks={tasks.map((task) => ({ id: task.id, publicCode: task.publicCode, status: task.status, targetName: task.disciplineRecord.targetName, requiredGameCount: task.requiredGameCount, dueAt: getKstDateKey(task.dueAt), assetIds: task.evidence.map((item) => item.privateAssetId) }))}
-          banReviews={banReviews.map((item) => ({ id: item.id, targetName: item.targetName, nicknameTag: item.targetNickname ? `${item.targetNickname}${item.targetTag ? `#${item.targetTag}` : ""}` : "-", warningCount: Array.isArray(item.warningRecordIds) ? item.warningRecordIds.length : 3, createdAt: item.createdAt.toISOString().slice(0, 10) }))}
+          banReviews={banReviews.map((item) => ({ id: item.id, targetName: item.targetName, nicknameTag: item.targetNickname ? `${item.targetNickname}${item.targetTag ? `#${item.targetTag}` : ""}` : "-", warningCount: Array.isArray(item.warningRecordIds) ? item.warningRecordIds.length : 3, createdAt: getKstDateKey(item.createdAt) }))}
         />
         <DisciplineRecordListClient initialRecords={initialRecords} />
       </div>
