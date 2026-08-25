@@ -13,6 +13,12 @@ const filled = rendered
   .replace("경고 부여 근거 사진 수: 0", "경고 부여 근거 사진 수: 2");
 const parsed = parseManagedForm(filled, discipline);
 if (!parsed.ok || parsed.values.warningCategory !== "내전") throw new Error("경고 양식 파싱에 실패했습니다.");
+const zeroEvidence = parseManagedForm(rendered
+  .replace("대상 이름:", "대상 이름: 정민")
+  .replace("대상 닉네임#태그:", "대상 닉네임#태그: 닉네임#KR1")
+  .replace("경고 구분:", "경고 구분: 일반")
+  .replace("부여일: YYYY-MM-DD", "부여일: 2026-08-25"), discipline);
+if (!zeroEvidence.ok || zeroEvidence.values.evidenceImageCount !== "0") throw new Error("경고 근거 사진 0장 양식 파싱에 실패했습니다.");
 if (!parseNicknameTag("닉네임#KR1") || parseNicknameTag("닉네임") !== null) throw new Error("닉네임#태그 검증에 실패했습니다.");
 if (!parseKstDateOnly("2026-08-25") || parseKstDateOnly("2026-02-31") !== null) throw new Error("날짜 검증에 실패했습니다.");
 

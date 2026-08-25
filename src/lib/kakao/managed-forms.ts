@@ -141,7 +141,8 @@ export function parseManagedForm(rawText: string, template: ManagedTemplate) {
   const missing: string[] = [];
   for (const field of template.fields) {
     const value = lines.get(field.label)?.trim() ?? "";
-    const normalized = value === field.placeholder ? "" : value;
+    const numericPlaceholderIsValue = field.type === "NUMBER" && /^-?\d+(?:\.\d+)?$/.test(field.placeholder ?? "");
+    const normalized = value === field.placeholder && !numericPlaceholderIsValue ? "" : value;
     values[field.key] = normalized;
     if (field.required && !normalized) missing.push(field.label);
   }
