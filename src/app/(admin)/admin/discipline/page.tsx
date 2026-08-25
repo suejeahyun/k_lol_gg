@@ -96,6 +96,15 @@ function DisciplineStyles() {
     .discipline-type.ban { color:#fecaca; background: rgba(185,28,28,.22); border-color: rgba(248,113,113,.46); }
     .discipline-actions { display:flex; gap:8px; flex-wrap:wrap; }
     .discipline-actions .admin-button { min-height: 36px; padding: 8px 10px; border-radius: 12px; white-space: nowrap; }
+    .discipline-result { margin: 0; padding: 14px 18px; border: 1px solid rgba(82,255,160,.35); border-radius: 14px; background: rgba(24,180,95,.14); color: #b9ffd5; font-weight: 800; }
+    .discipline-review-backdrop { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 20px; background: rgba(1,7,18,.76); backdrop-filter: blur(8px); }
+    .discipline-review-dialog { width: min(560px, 100%); padding: 24px; border: 1px solid rgba(82,164,255,.38); border-radius: 20px; background: #07152b; box-shadow: 0 28px 80px rgba(0,0,0,.52); }
+    .discipline-review-dialog h2 { margin: 0 0 10px; }
+    .discipline-review-dialog p { margin: 0 0 18px; line-height: 1.55; color: rgba(210,228,255,.82); }
+    .discipline-review-dialog label { display: block; margin-bottom: 8px; font-weight: 800; }
+    .discipline-review-dialog textarea { width: 100%; resize: vertical; min-height: 120px; margin-bottom: 18px; padding: 12px 14px; border: 1px solid rgba(82,164,255,.32); border-radius: 14px; background: rgba(2,10,24,.88); color: #f2f7ff; font: inherit; }
+    .discipline-review-dialog .discipline-actions { justify-content: flex-end; }
+    .discipline-review-error { color: #ffb3b3 !important; }
     @media (max-width: 860px) { .discipline-page { width: min(100%, calc(100vw - 20px)); } .discipline-summary-grid { grid-template-columns: 1fr; } .discipline-table-card, .discipline-form-card { padding: 18px; } }
   `}</style>;
 }
