@@ -34,7 +34,7 @@ const DEFAULT_DISCIPLINE_FIELDS: ManagedField[] = [
   { key: "targetNicknameTag", label: "대상 닉네임#태그", required: true, type: "TEXT" },
   { key: "warningCategory", label: "경고 구분", required: true, type: "SELECT", options: ["일반", "내전"] },
   { key: "issuedDate", label: "부여일", placeholder: "YYYY-MM-DD", required: true, type: "DATE" },
-  { key: "evidenceImageCount", label: "증빙 사진 수", placeholder: "0", required: true, type: "NUMBER" },
+  { key: "evidenceImageCount", label: "경고 부여 근거 사진 수", placeholder: "0", required: true, type: "NUMBER" },
 ];
 
 const DEFAULT_INHOUSE_FIELDS: ManagedField[] = [

@@ -10,7 +10,7 @@ const filled = rendered
   .replace("대상 닉네임#태그:", "대상 닉네임#태그: 닉네임#KR1")
   .replace("경고 구분:", "경고 구분: 내전")
   .replace("부여일: YYYY-MM-DD", "부여일: 2026-08-25")
-  .replace("증빙 사진 수: 0", "증빙 사진 수: 2");
+  .replace("경고 부여 근거 사진 수: 0", "경고 부여 근거 사진 수: 2");
 const parsed = parseManagedForm(filled, discipline);
 if (!parsed.ok || parsed.values.warningCategory !== "내전") throw new Error("경고 양식 파싱에 실패했습니다.");
 if (!parseNicknameTag("닉네임#KR1") || parseNicknameTag("닉네임") !== null) throw new Error("닉네임#태그 검증에 실패했습니다.");

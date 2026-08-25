@@ -39,26 +39,35 @@ export async function POST(req: NextRequest) {
     const validated = await validatePrivateImage(buffer, typeof body.mimeType === "string" ? body.mimeType : null);
     const duplicate = await prisma.kakaoInboundImage.findFirst({ where: { sessionId: session.id, sha256: validated.sha256 } });
     if (duplicate) return kakaoJsonReply({ reply: `[K-LOL.GG 사진 접수]\n같은 사진이 이미 ${duplicate.imageNumber}번으로 접수되었습니다.` });
+    const resolutionTask = session.purpose === "DISCIPLINE_RESOLUTION" ? await prisma.disciplineResolutionTask.findUnique({ where: { id: session.targetId }, include: { _count: { select: { evidence: true } } } }) : null;
+    if (session.purpose === "DISCIPLINE_RESOLUTION" && !resolutionTask) return kakaoJsonReply({ reply: "[K-LOL.GG 사진 접수 실패]\n경고 인증 과제를 찾을 수 없습니다." }, 404);
+    if (resolutionTask?.dueAt && resolutionTask.dueAt <= new Date()) return kakaoJsonReply({ reply: "[K-LOL.GG 사진 접수 실패]\n경고 인증 기한이 지났습니다." }, 409);
+    const priorResolutionDuplicate = session.purpose === "DISCIPLINE_RESOLUTION" ? await prisma.disciplineEvidence.findFirst({ where: { taskId: session.targetId, privateAsset: { sha256: validated.sha256 } }, select: { id: true } }) : null;
+    if (priorResolutionDuplicate) return kakaoJsonReply({ reply: "[K-LOL.GG 사진 접수]\n이 경고 인증에 이미 제출한 사진입니다. 다른 게임 사진을 보내주세요." });
     const imageNumber = session.receivedImageCount + 1;
     if (session.expectedImageCount && imageNumber > session.expectedImageCount) return kakaoJsonReply({ reply: "[K-LOL.GG 사진 접수]\n필요한 사진이 모두 접수되었습니다." });
     const asset = await storePrivateImage({ buffer, purpose: session.purpose as "DISCIPLINE_ISSUE" | "DISCIPLINE_RESOLUTION" | "INHOUSE_RESULT", publicCode: session.publicCode, imageNumber, declaredMimeType: validated.mimeType });
     const complete = !session.expectedImageCount || imageNumber >= session.expectedImageCount;
+    const resolutionTotal = resolutionTask ? resolutionTask._count.evidence + 1 : null;
+    const resolutionComplete = resolutionTask ? resolutionTotal! >= resolutionTask.requiredGameCount : false;
     try {
       await prisma.$transaction(async (tx) => {
       await tx.kakaoInboundImage.create({ data: { sessionId: session.id, privateAssetId: asset.id, imageNumber, sourceEventKey: typeof body.sourceEventKey === "string" ? body.sourceEventKey : null, sha256: validated.sha256 } });
       if (session.purpose === "INHOUSE_RESULT") await tx.inhouseResultImage.create({ data: { submissionId: session.targetId, privateAssetId: asset.id, gameNumber: imageNumber } });
-      if (session.purpose === "DISCIPLINE_RESOLUTION") await tx.disciplineEvidence.create({ data: { taskId: session.targetId, privateAssetId: asset.id } });
+      if (session.purpose === "DISCIPLINE_RESOLUTION") await tx.disciplineEvidence.create({ data: { taskId: session.targetId, privateAssetId: asset.id, claimedGameCount: 1 } });
       await tx.kakaoImageReceiveSession.update({ where: { id: session.id }, data: { receivedImageCount: { increment: 1 }, status: complete ? "COMPLETE" : "ACTIVE" } });
       if (complete && session.purpose === "INHOUSE_RESULT") await tx.inhouseResultSubmission.update({ where: { id: session.targetId }, data: { status: "PENDING_REVIEW" } });
       if (complete && session.purpose === "DISCIPLINE_ISSUE") await tx.disciplineSubmission.update({ where: { id: session.targetId }, data: { status: "PENDING_REVIEW" } });
-      if (complete && session.purpose === "DISCIPLINE_RESOLUTION") await tx.disciplineResolutionTask.update({ where: { id: session.targetId }, data: { status: "PENDING_REVIEW", submittedAt: new Date() } });
+      if (session.purpose === "DISCIPLINE_RESOLUTION" && resolutionTask && resolutionTotal !== null) await tx.disciplineResolutionTask.update({ where: { id: session.targetId }, data: { claimedGameCount: Math.min(resolutionTotal, resolutionTask.requiredGameCount), status: resolutionComplete ? "PENDING_REVIEW" : "AWAITING_UPLOAD", submittedAt: resolutionComplete ? new Date() : null } });
       });
     } catch (transactionError) {
       await deletePrivateAsset(asset.storageKey).catch(() => undefined);
       await prisma.privateAsset.delete({ where: { id: asset.id } }).catch(() => undefined);
       throw transactionError;
     }
-    return kakaoJsonReply({ reply: `[K-LOL.GG 사진 접수 완료]\n접수번호: ${session.publicCode}\n사진: ${imageNumber}/${session.expectedImageCount ?? imageNumber}장${complete ? "\n필요한 사진이 모두 접수되어 관리자 검토 대기로 전환되었습니다." : ""}` });
+    const responseCode = resolutionTask?.publicCode ?? session.publicCode;
+    const progressText = resolutionTask && resolutionTotal !== null ? `${resolutionTotal}/${resolutionTask.requiredGameCount}` : `${imageNumber}/${session.expectedImageCount ?? imageNumber}`;
+    return kakaoJsonReply({ reply: `[K-LOL.GG 사진 접수 완료]\n접수번호: ${responseCode}\n사진: ${progressText}장${resolutionComplete || (complete && session.purpose !== "DISCIPLINE_RESOLUTION") ? "\n필요한 사진이 모두 접수되어 관리자 검토 대기로 전환되었습니다." : ""}` });
   } catch (error) {
     logServerError("[KAKAO_IMAGE_RECEIVE_ERROR]", error);
     const message = error instanceof Error ? error.message : "사진 처리 중 오류가 발생했습니다.";

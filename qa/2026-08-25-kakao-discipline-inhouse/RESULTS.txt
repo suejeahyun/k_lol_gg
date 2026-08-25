@@ -13,6 +13,7 @@ PASS  npm run check:security-guard
 PASS  npm run check:secrets
 PASS  npm run check:findmany
 PASS  npm run build (Next.js 16.2.12, 신규 페이지/API 라우트 생성 확인)
+PASS  2026-08-25 후속 검증: 일반 10장/내전 15장 누적 인증 변경 후 typecheck, lint, build
 
 DEPENDENCY
 - googleapis 직접 의존성 없음 확인

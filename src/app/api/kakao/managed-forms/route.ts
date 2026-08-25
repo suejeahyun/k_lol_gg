@@ -36,9 +36,9 @@ async function statusReply(message: string) {
   if (!code) return null;
   if (command === "/경고현황") {
     const submission = await prisma.disciplineSubmission.findUnique({ where: { publicCode: code.toUpperCase() } });
-    const task = await prisma.disciplineResolutionTask.findUnique({ where: { publicCode: code.toUpperCase() } });
+    const task = await prisma.disciplineResolutionTask.findUnique({ where: { publicCode: code.toUpperCase() }, include: { _count: { select: { evidence: true } } } });
     if (submission) return `[K-LOL.GG 경고 접수 현황]\n접수번호: ${submission.publicCode}\n상태: ${submission.status}`;
-    if (task) return `[K-LOL.GG 경고 차감 현황]\n인증번호: ${task.publicCode}\n상태: ${task.status}\n필요 판수: ${task.requiredGameCount}판\n기한: ${getKstDateKey(task.dueAt)}`;
+    if (task) return `[K-LOL.GG 경고 차감 현황]\n인증번호: ${task.publicCode}\n상태: ${task.status}\n인증 사진: ${task._count.evidence}/${task.requiredGameCount}장\n필요 판수: ${task.requiredGameCount}판\n기한: ${getKstDateKey(task.dueAt)}`;
     return "[K-LOL.GG 경고 현황]\n접수번호를 찾을 수 없습니다.";
   }
   if (command === "/내전등록현황") {
@@ -70,18 +70,24 @@ export async function POST(req: NextRequest) {
       if (!settings.disciplineEvidenceEnabled) return disabled(settings.disabledFeatureMessage);
       if (!roomAllowed(roomName, settings.allowedDisciplineRooms)) return disabled(settings.blockedRoomMessage);
       const code = message.split(/\s+/, 2)[1]?.toUpperCase();
-      const task = code ? await prisma.disciplineResolutionTask.findUnique({ where: { publicCode: code } }) : null;
-      if (!task || !["REQUIRED", "REJECTED"].includes(task.status)) return kakaoJsonReply({ reply: "[K-LOL.GG 경고 인증 실패]\n인증번호가 없거나 현재 사진을 받을 수 없는 상태입니다." }, 404);
+      const task = code ? await prisma.disciplineResolutionTask.findUnique({ where: { publicCode: code }, include: { _count: { select: { evidence: true } } } }) : null;
+      if (!task || !["REQUIRED", "REJECTED", "AWAITING_UPLOAD"].includes(task.status)) return kakaoJsonReply({ reply: "[K-LOL.GG 경고 인증 실패]\n인증번호가 없거나 현재 사진을 받을 수 없는 상태입니다." }, 404);
+      if (task.dueAt <= new Date()) return kakaoJsonReply({ reply: `[K-LOL.GG 경고 인증 실패]\n인증 기한(${getKstDateKey(task.dueAt)})이 지났습니다. 관리자에게 문의해주세요.` }, 409);
+      const remainingImageCount = Math.max(0, task.requiredGameCount - task._count.evidence);
+      if (remainingImageCount === 0) {
+        await prisma.disciplineResolutionTask.update({ where: { id: task.id }, data: { status: "PENDING_REVIEW", submittedAt: task.submittedAt ?? new Date(), claimedGameCount: task.requiredGameCount } });
+        return kakaoJsonReply({ reply: `[K-LOL.GG 경고 인증]\n인증번호: ${task.publicCode}\n사진 ${task.requiredGameCount}/${task.requiredGameCount}장이 모두 접수되어 관리자 검토 대기 중입니다.` });
+      }
       await prisma.$transaction(async (tx) => {
         await tx.kakaoImageReceiveSession.updateMany({ where: { roomKey: normalizeSessionKey(roomName), senderKey: normalizeSessionKey(sender), status: "ACTIVE" }, data: { status: "CANCELLED" } });
-        await tx.kakaoImageReceiveSession.create({ data: { publicCode: makePublicCode("EV"), purpose: "DISCIPLINE_RESOLUTION", targetType: "DisciplineResolutionTask", targetId: task.id, roomKey: normalizeSessionKey(roomName), senderKey: normalizeSessionKey(sender), expectedImageCount: 1, expiresAt: new Date(Date.now() + 30 * 60 * 1000) } });
+        await tx.kakaoImageReceiveSession.create({ data: { publicCode: makePublicCode("EV"), purpose: "DISCIPLINE_RESOLUTION", targetType: "DisciplineResolutionTask", targetId: task.id, roomKey: normalizeSessionKey(roomName), senderKey: normalizeSessionKey(sender), expectedImageCount: remainingImageCount, expiresAt: new Date(Date.now() + 30 * 60 * 1000) } });
         await tx.disciplineResolutionTask.update({ where: { id: task.id }, data: { status: "AWAITING_UPLOAD" } });
       });
-      return kakaoJsonReply({ reply: `[K-LOL.GG 경고 인증 시작]\n인증번호: ${task.publicCode}\n요구 판수: ${task.requiredGameCount}판\n게임 기록이 보이는 인증 사진 1장을 30분 안에 보내주세요.` });
+      return kakaoJsonReply({ reply: `[K-LOL.GG 경고 인증 시작]\n인증번호: ${task.publicCode}\n현재: ${task._count.evidence}/${task.requiredGameCount}장\n남은 사진: ${remainingImageCount}장\n한 판당 사진 1장씩 30분 안에 보내주세요. 시간이 지나면 같은 명령으로 이어서 제출할 수 있습니다.` });
     }
 
     if (message.startsWith("/경고인증완료 ")) {
-      return kakaoJsonReply({ reply: "[K-LOL.GG 경고 인증]\n사진 1장이 접수되면 자동으로 관리자 검토 대기로 전환됩니다. /경고현황 인증번호 로 확인해주세요." });
+      return kakaoJsonReply({ reply: "[K-LOL.GG 경고 인증]\n일반은 10장, 내전은 15장이 모두 접수되면 자동으로 관리자 검토 대기로 전환됩니다. /경고현황 인증번호 로 확인해주세요." });
     }
 
     const currentStatus = settings.disciplineStatusEnabled ? await statusReply(message) : null;
@@ -112,7 +118,7 @@ export async function POST(req: NextRequest) {
       const category = parsed.values.warningCategory === "내전" ? "INHOUSE" : parsed.values.warningCategory === "일반" ? "GENERAL" : null;
       const evidenceCount = Number(parsed.values.evidenceImageCount);
       if (!nicknameTag || !issuedAt || !category || !Number.isInteger(evidenceCount) || evidenceCount < 0 || evidenceCount > 3) {
-        return kakaoJsonReply({ reply: "[K-LOL.GG 경고 접수 실패]\n닉네임#태그, 구분, 날짜 또는 사진 수(0~3)를 확인해주세요." }, 400);
+        return kakaoJsonReply({ reply: "[K-LOL.GG 경고 접수 실패]\n닉네임#태그, 구분, 날짜 또는 경고 부여 근거 사진 수(0~3)를 확인해주세요." }, 400);
       }
       const hash = makeSourceMessageHash("DISCIPLINE", roomName, sender, message);
       const duplicate = await prisma.disciplineSubmission.findUnique({ where: { sourceMessageHash: hash } });
