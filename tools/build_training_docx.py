@@ -12,11 +12,13 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_BREAK, WD_LINE_SPACING
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Inches, Pt, RGBColor
+from PIL import Image
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / "docs" / "KLOL_GG_COMPLETE_TRAINING_GUIDE.md"
 OUTPUT = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "docs" / "KLOL_GG_전체_사용_및_운영_교육자료_2026-08-26.docx"
+SOURCE = Path(sys.argv[2]) if len(sys.argv) > 2 else ROOT / "docs" / "KLOL_GG_COMPLETE_TRAINING_GUIDE.md"
+MODE = str(sys.argv[3]).strip().lower() if len(sys.argv) > 3 else "complete"
 
 FONT = "Malgun Gothic"
 MONO = "Consolas"
@@ -227,6 +229,34 @@ def add_code_block(doc, lines):
         set_run_font(run, name=MONO, size=8.7, color=NAVY)
 
 
+def add_training_image(doc, image_path, caption):
+    path = Path(image_path)
+    if not path.is_absolute():
+        path = ROOT / path
+    if not path.exists():
+        raise FileNotFoundError(f"교육 이미지가 없습니다: {path}")
+    with Image.open(path) as image:
+        width_px, height_px = image.size
+    doc.add_page_break()
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p.paragraph_format.space_after = Pt(5)
+    p.paragraph_format.keep_together = True
+    run = p.add_run()
+    if height_px > width_px:
+        shape = run.add_picture(str(path), height=Inches(6.35))
+    else:
+        shape = run.add_picture(str(path), width=Inches(6.3))
+    shape._inline.docPr.set("descr", caption)
+    shape._inline.docPr.set("title", caption[:120])
+    cp = doc.add_paragraph()
+    cp.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    cp.paragraph_format.space_before = Pt(0)
+    cp.paragraph_format.space_after = Pt(8)
+    cr = cp.add_run(caption)
+    set_run_font(cr, size=9, color=MUTED, italic=True)
+
+
 def add_table(doc, rows):
     if not rows:
         return
@@ -319,7 +349,7 @@ def configure_styles(doc):
         style.paragraph_format.line_spacing = 1.25
 
 
-def configure_sections(doc):
+def configure_sections(doc, running_title):
     for section in doc.sections:
         section.page_width = Inches(8.5)
         section.page_height = Inches(11)
@@ -335,7 +365,7 @@ def configure_sections(doc):
         hp = header.paragraphs[0]
         hp.alignment = WD_ALIGN_PARAGRAPH.LEFT
         hp.paragraph_format.space_after = Pt(0)
-        run = hp.add_run("K-LOL.GG | 전체 사용·운영 교육자료")
+        run = hp.add_run(running_title)
         set_run_font(run, size=8.5, color=MUTED, bold=True)
 
         footer = section.footer
@@ -359,7 +389,9 @@ def build_document():
     lines = SOURCE.read_text(encoding="utf-8").splitlines()
     doc = Document()
     configure_styles(doc)
-    configure_sections(doc)
+    is_admin = MODE == "admin"
+    running_title = "K-LOL.GG | 관리자 기능 교육자료" if is_admin else "K-LOL.GG | 전체 사용·운영 교육자료"
+    configure_sections(doc, running_title)
 
     # editorial_cover opening
     for _ in range(5):
@@ -368,19 +400,23 @@ def build_document():
     kicker = doc.add_paragraph()
     kicker.alignment = WD_ALIGN_PARAGRAPH.CENTER
     kicker.paragraph_format.space_after = Pt(16)
-    run = kicker.add_run("K-LOL.GG OPERATIONS HANDBOOK")
+    run = kicker.add_run("K-LOL.GG ADMIN TRAINING" if is_admin else "K-LOL.GG OPERATIONS HANDBOOK")
     set_run_font(run, size=10, color=GOLD, bold=True)
 
     title = doc.add_paragraph()
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
     title.paragraph_format.space_after = Pt(8)
-    run = title.add_run("K-LOL.GG 전체 사용·운영 교육자료")
+    run = title.add_run("K-LOL.GG 관리자 기능 교육자료" if is_admin else "K-LOL.GG 전체 사용·운영 교육자료")
     set_run_font(run, size=27, color=NAVY, bold=True)
 
     subtitle = doc.add_paragraph()
     subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
     subtitle.paragraph_format.space_after = Pt(24)
-    run = subtitle.add_run("사이트 전체 기능 · 카카오톡 봇 명령어 · 경고 및 내전 결과 운영")
+    run = subtitle.add_run(
+        "신규·기존 관리자 공통 실무 교육 · 시나리오 실습 · 운영 체크리스트"
+        if is_admin else
+        "사이트 전체 기능 · 카카오톡 봇 명령어 · 경고 및 내전 결과 운영"
+    )
     set_run_font(run, size=13.5, color=DARK_BLUE)
 
     meta = doc.add_paragraph()
@@ -394,12 +430,16 @@ def build_document():
     lead.paragraph_format.left_indent = Inches(0.55)
     lead.paragraph_format.right_indent = Inches(0.55)
     lead.paragraph_format.space_after = Pt(12)
-    run = lead.add_run("일반 사용자, 운영진, 최고관리자가 같은 절차와 용어로 사이트와 카카오 자동화를 사용할 수 있도록 정리한 기준 문서입니다.")
+    run = lead.add_run(
+        "관리자가 접수 확인부터 승인·반려, 수기 확정, 로그 점검과 장애 보고까지 같은 기준으로 처리하도록 만든 교육용 실무 교재입니다."
+        if is_admin else
+        "일반 사용자, 운영진, 최고관리자가 같은 절차와 용어로 사이트와 카카오 자동화를 사용할 수 있도록 정리한 기준 문서입니다."
+    )
     set_run_font(run, size=10.5, color=MUTED, italic=True)
 
     status = doc.add_paragraph()
     status.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run = status.add_run("검증 기준 커밋 e214806 · 사진 저장은 Vercel Blob 연결 후 최종 확인 필요")
+    run = status.add_run("교육 중 실제 제재·삭제 금지 · 사진 저장은 Vercel Blob 연결 후 최종 실습")
     set_run_font(run, size=9.5, color=RED, bold=True)
     doc.add_page_break()
 
@@ -431,6 +471,11 @@ def build_document():
             rows, idx = parse_table(lines, idx)
             add_table(doc, rows)
             continue
+        image_match = re.fullmatch(r"!\[([^\]]+)\]\(([^)]+)\)", stripped)
+        if image_match:
+            add_training_image(doc, image_match.group(2), image_match.group(1))
+            idx += 1
+            continue
         if stripped.startswith("### "):
             p = doc.add_paragraph(style="Heading 2")
             add_inline_markdown(p, stripped[4:], size=13, color=BLUE)
@@ -454,8 +499,8 @@ def build_document():
             add_inline_markdown(p, stripped)
         idx += 1
 
-    doc.core_properties.title = "K-LOL.GG 전체 사용·운영 교육자료"
-    doc.core_properties.subject = "사이트와 카카오톡 봇 전체 기능 교육"
+    doc.core_properties.title = "K-LOL.GG 관리자 기능 교육자료" if is_admin else "K-LOL.GG 전체 사용·운영 교육자료"
+    doc.core_properties.subject = "관리자 사이트와 카카오톡 운영 실무 교육" if is_admin else "사이트와 카카오톡 봇 전체 기능 교육"
     doc.core_properties.author = "K-LOL.GG 운영팀"
     doc.core_properties.keywords = "K-LOL.GG, 카카오봇, 경고, 내전, 운영 매뉴얼"
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
