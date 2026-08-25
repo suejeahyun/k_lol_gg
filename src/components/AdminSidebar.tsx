@@ -27,6 +27,7 @@ const menuGroups: AdminSidebarGroup[] = [
   {
     title: "운영 바로가기",
     items: [
+      { href: "/admin/matches/submissions", label: "내전 결과 접수", code: "RES", activePrefixes: ["/admin/matches/submissions"] },
       { href: "/admin/matches", label: "내전 관리", code: "MAT", activePrefixes: ["/admin/matches"] },
       { href: "/admin/progress", label: "이벤트/멸망전", code: "EVT", activePrefixes: ["/admin/progress"] },
       { href: "/admin/kakao/recruits", label: "구인 관리", code: "REC", activePrefixes: ["/admin/kakao/recruits"] },
@@ -39,6 +40,7 @@ const menuGroups: AdminSidebarGroup[] = [
     items: [
       { href: "/admin/players", label: "회원/플레이어", code: "PLY", activePrefixes: ["/admin/players", "/admin/users"] },
       { href: "/admin/discipline", label: "주의/경고/벤", code: "DIS", activePrefixes: ["/admin/discipline"] },
+      { href: "/admin/kakao/forms", label: "경고·내전 양식", code: "FRM", activePrefixes: ["/admin/kakao/forms"] },
       { href: "/admin/kakao/operation-forms", label: "운영신청", code: "OPR", activePrefixes: ["/admin/kakao/operation-forms"] },
       { href: "/admin/users", label: "계정 목록", code: "USR", activePrefixes: ["/admin/users"] },
     ],

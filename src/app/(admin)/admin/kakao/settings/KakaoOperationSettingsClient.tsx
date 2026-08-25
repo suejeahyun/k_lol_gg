@@ -56,6 +56,13 @@ const CLIENT_DEFAULT_SETTINGS: KakaoOperationSettings = {
   leaveRequestEnabled: true,
   meetupRecordEnabled: true,
   suggestionRequestEnabled: true,
+  disciplineFormEnabled: false,
+  disciplineStatusEnabled: true,
+  disciplineEvidenceEnabled: false,
+  inhouseResultFormEnabled: false,
+  inhouseResultImageEnabled: false,
+  allowedDisciplineRooms: [],
+  allowedInhouseResultRooms: [],
   helpCommandEnabled: true,
   unknownCommandResponseEnabled: true,
   aiNoticeRedirectEnabled: true,
@@ -87,6 +94,18 @@ const sections: Array<{
   columns?: "grid2" | "grid3" | "grid4";
   fields: Array<{ key: BooleanSettingKey; label: string; desc: string }>;
 }> = [
+  {
+    title: "경고·내전 결과 접수",
+    desc: "변경 가능한 양식, 사진 수신, 현황 조회 기능을 단계적으로 제어합니다.",
+    columns: "grid3",
+    fields: [
+      { key: "disciplineFormEnabled", label: "경고 양식", desc: "/경고 양식 접수 기능입니다." },
+      { key: "disciplineStatusEnabled", label: "경고 현황", desc: "/경고현황 조회 기능입니다." },
+      { key: "disciplineEvidenceEnabled", label: "경고 사진", desc: "경고 증빙·차감 인증 사진 수신 기능입니다." },
+      { key: "inhouseResultFormEnabled", label: "내전등록 양식", desc: "/내전등록 결과 접수 기능입니다." },
+      { key: "inhouseResultImageEnabled", label: "내전 사진", desc: "세트별 내전 결과 사진 수신 기능입니다." },
+    ],
+  },
   {
     title: "전체 운영 스위치",
     desc: "카카오톡 API 전체 사용 여부와 점검 모드를 제어합니다.",
@@ -187,6 +206,8 @@ const arrayFields: Array<{ key: ArraySettingKey; label: string; desc: string; pl
   { key: "blockedRoomNames", label: "차단 방 이름", desc: "이름이 포함되면 응답하지 않습니다. 한 줄에 하나씩 입력합니다.", placeholder: "테스트방\n구버전방" },
   { key: "blockedSenders", label: "차단 발신자", desc: "해당 닉네임/표현이 포함된 발신자는 처리하지 않습니다.", placeholder: "스팸계정\n테스트봇" },
   { key: "botSenderPatterns", label: "봇 발신자 패턴", desc: "봇 발신 무시 판단에 쓰는 문자열입니다.", placeholder: "K-LOL\n구인도우미\n오픈채팅봇" },
+  { key: "allowedDisciplineRooms", label: "경고 접수 허용 방", desc: "비워두면 전체 허용 방 정책을 따릅니다.", placeholder: "K-LOL 운영진방" },
+  { key: "allowedInhouseResultRooms", label: "내전 결과 허용 방", desc: "비워두면 전체 허용 방 정책을 따릅니다.", placeholder: "K-LOL 내전방" },
 ];
 
 function arrayToText(value: string[]) {

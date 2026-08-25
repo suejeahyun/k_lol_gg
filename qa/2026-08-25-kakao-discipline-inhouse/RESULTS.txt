@@ -1,0 +1,30 @@
+K-LOL.GG 카카오 경고·내전 결과 접수 QA
+실행일: 2026-08-25 KST
+
+PASS  npx prisma validate
+PASS  npm run typecheck
+PASS  npm run lint
+PASS  npm run check:kakao-managed-forms
+PASS  npm run check:discipline-statistics
+PASS  npm run check:admin-guards (관리자 API 72개)
+PASS  npm run check:feature-gates
+PASS  npm run check:security-guard
+PASS  npm run check:secrets
+PASS  npm run check:findmany
+PASS  npm run build (Next.js 16.2.12, 신규 페이지/API 라우트 생성 확인)
+
+DEPENDENCY
+- googleapis 직접 의존성 없음 확인
+- @vercel/blob 2.8.0 설치 확인
+- npm audit --omit=dev: high 4건
+  - Prisma 경유 deepmerge-ts
+  - nanoid
+  - 강제 수정은 Prisma 메이저 다운그레이드를 제안하므로 이번 기능 패치에서 자동 적용하지 않음
+
+NOT EXECUTED
+- 운영 DB prisma migrate deploy
+- Vercel Blob 실제 업로드/다운로드
+- 운영 Vercel 배포
+- 실제 카카오톡/메신저봇R 단말 사진 전송
+
+이유: 요청은 소스 패치와 push이며 운영 적용 권한은 별도로 요청되지 않았다.

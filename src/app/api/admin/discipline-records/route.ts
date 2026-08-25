@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { requireAdminRequest } from "@/lib/auth/requireAdmin";
+import { convertActiveCautions, createWarning } from "@/lib/discipline/workflow";
 
 const VALID_TYPES = new Set(["CAUTION", "WARNING", "BAN"]);
 const VALID_SOURCES = new Set(["MANUAL", "LATE", "NO_SHOW", "CHAT_ABUSE", "TOXICITY", "LINE_FORM", "KICK", "BAN", "OTHER"]);
@@ -103,13 +104,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: "등록되지 않은 대상은 이름을 직접 입력해야 합니다." }, { status: 400 });
   }
 
+  const target = {
+    userAccountId: user?.id || targetPlayer?.userAccountId || null,
+    playerId: targetPlayer?.id || null,
+    targetName: directName || targetPlayer?.name || user?.userId || "대상 미상",
+    targetNickname: directNickname || targetPlayer?.nickname || null,
+    targetTag: directTag || targetPlayer?.tag || null,
+  };
+
+  if (type === "WARNING") {
+    const result = await createWarning({ target, reason, category: body.warningCategory === "INHOUSE" ? "INHOUSE" : "GENERAL", issuedAt: new Date(), source, note, createdBy: admin.user.userId });
+    return NextResponse.json({ ok: true, record: result.record, resolutionTask: result.task, banReviewCreated: Boolean(result.banReview) });
+  }
+
   const created = await prisma.userDisciplineRecord.create({
     data: {
-      userAccountId: user?.id || targetPlayer?.userAccountId || null,
-      playerId: targetPlayer?.id || null,
-      targetName: directName || targetPlayer?.name || user?.userId || "대상 미상",
-      targetNickname: directNickname || targetPlayer?.nickname || null,
-      targetTag: directTag || targetPlayer?.tag || null,
+      ...target,
       type,
       source,
       reason,
@@ -118,5 +128,7 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  return NextResponse.json({ ok: true, record: created });
+  const convertedWarning = type === "CAUTION" ? await convertActiveCautions(target, admin.user.userId) : null;
+
+  return NextResponse.json({ ok: true, record: created, convertedWarning });
 }

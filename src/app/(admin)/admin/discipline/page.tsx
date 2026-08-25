@@ -2,9 +2,11 @@ export const dynamic = "force-dynamic";
 
 import { prisma } from "@/lib/prisma/client";
 import DisciplineRecordListClient from "@/components/admin/DisciplineRecordListClient";
+import DisciplineWorkflowClient from "@/components/admin/DisciplineWorkflowClient";
+import { getKstDateKey } from "@/lib/date/kst";
 
 export default async function AdminDisciplinePage() {
-  const [records, activeWarnings, activeCautions, activeBans] = await Promise.all([
+  const [records, activeWarnings, activeCautions, activeBans, submissions, tasks, issueSessions, banReviews] = await Promise.all([
     prisma.userDisciplineRecord.findMany({
       orderBy: [{ isActive: "desc" }, { createdAt: "desc" }],
       take: 300,
@@ -16,6 +18,10 @@ export default async function AdminDisciplinePage() {
     prisma.userDisciplineRecord.count({ where: { isActive: true, type: "WARNING" } }),
     prisma.userDisciplineRecord.count({ where: { isActive: true, type: "CAUTION" } }),
     prisma.userDisciplineRecord.count({ where: { isActive: true, type: "BAN" } }),
+    prisma.disciplineSubmission.findMany({ where: { status: { in: ["PENDING_REVIEW", "AWAITING_UPLOAD"] } }, orderBy: { createdAt: "desc" }, take: 100 }),
+    prisma.disciplineResolutionTask.findMany({ where: { status: "PENDING_REVIEW" }, include: { disciplineRecord: true, evidence: true }, orderBy: { submittedAt: "asc" }, take: 100 }),
+    prisma.kakaoImageReceiveSession.findMany({ where: { targetType: "DisciplineSubmission" }, include: { images: true }, orderBy: { createdAt: "desc" }, take: 300 }),
+    prisma.disciplineBanReview.findMany({ where: { status: "PENDING" }, orderBy: { createdAt: "asc" }, take: 100 }),
   ]);
 
   const initialRecords = records.map((record) => ({
@@ -40,6 +46,15 @@ export default async function AdminDisciplinePage() {
           <div className="discipline-stat discipline-stat--ban"><span>활성 벤/강퇴</span><strong>{activeBans}건</strong></div>
           <div className="discipline-stat"><span>전체 기록</span><strong>{records.length}건</strong></div>
         </section>
+        <DisciplineWorkflowClient
+          submissions={submissions.map((item) => {
+            const data = item.parsedData as Record<string, unknown>;
+            const session = issueSessions.find((candidate) => candidate.targetId === item.id);
+            return { id: item.id, publicCode: item.publicCode, status: item.status, targetName: String(data.targetName || "대상 미상"), nicknameTag: String(data.targetNicknameTag || "-"), category: data.category === "INHOUSE" ? "내전" : "일반", issuedDate: String(data.issuedDate || "-"), createdAt: item.createdAt.toISOString().slice(0, 10), assetIds: session?.images.map((image) => image.privateAssetId) ?? [] };
+          })}
+          tasks={tasks.map((task) => ({ id: task.id, publicCode: task.publicCode, status: task.status, targetName: task.disciplineRecord.targetName, requiredGameCount: task.requiredGameCount, dueAt: getKstDateKey(task.dueAt), assetIds: task.evidence.map((item) => item.privateAssetId) }))}
+          banReviews={banReviews.map((item) => ({ id: item.id, targetName: item.targetName, nicknameTag: item.targetNickname ? `${item.targetNickname}${item.targetTag ? `#${item.targetTag}` : ""}` : "-", warningCount: Array.isArray(item.warningRecordIds) ? item.warningRecordIds.length : 3, createdAt: item.createdAt.toISOString().slice(0, 10) }))}
+        />
         <DisciplineRecordListClient initialRecords={initialRecords} />
       </div>
     </main>

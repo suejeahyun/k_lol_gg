@@ -82,6 +82,8 @@ type GameForm = {
 
 type MatchFormData = {
   id?: number;
+  submissionId?: number | null;
+  initialGameCount?: number;
   seasonId: number;
   title: string;
   matchDate: string;
@@ -334,7 +336,11 @@ export default function MatchForm({
                   "",
               })),
             }))
-          : [],
+          : Array.from({ length: initialData.initialGameCount ?? 0 }, (_, index) => ({
+              gameNumber: index + 1,
+              winnerTeam: "BLUE" as Team,
+              participants: createEmptyParticipants(),
+            })),
     };
   }, [initialData, playerIdToLabel, championIdToLabel]);
 
@@ -488,6 +494,7 @@ export default function MatchForm({
   const buildPayload = () => {
     return {
       id: form.id,
+      submissionId: form.submissionId ?? null,
       seasonId: form.seasonId,
       title: form.title.trim(),
       matchDate: getMatchDateTimeLocalFromTitle(form.title, form.matchDate ? new Date(form.matchDate) : new Date()),

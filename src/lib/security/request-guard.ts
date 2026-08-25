@@ -7,6 +7,7 @@ const DEFAULT_MAX_BODY_BYTES = 1024 * 1024;
 const JSON_IMPORT_MAX_BODY_BYTES = 10 * 1024 * 1024;
 const SCOREBOARD_MULTIPART_MAX_BODY_BYTES = 13 * 1024 * 1024;
 const BOT_MAX_BODY_BYTES = 256 * 1024;
+const KAKAO_IMAGE_MAX_BODY_BYTES = 4 * 1024 * 1024 + 64 * 1024;
 
 function normalizeOrigin(value: string | null) {
   if (!value) return null;
@@ -138,6 +139,7 @@ function getMaxBodyBytes(pathname: string) {
   if (pathname.startsWith("/api/images") || pathname.startsWith("/api/gallery-images")) {
     return JSON_IMPORT_MAX_BODY_BYTES;
   }
+  if (pathname === "/api/kakao/image-receive") return KAKAO_IMAGE_MAX_BODY_BYTES;
   if (pathname.startsWith("/api/kakao/")) return BOT_MAX_BODY_BYTES;
   return DEFAULT_MAX_BODY_BYTES;
 }

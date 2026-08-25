@@ -232,6 +232,7 @@ model Season {
   participationApplies        SeasonParticipationApply[]
   pendingParticipationApplies SeasonParticipationPendingApply[]
   teamBalanceDrafts           TeamBalanceDraft[]
+  inhouseResultSubmissions    InhouseResultSubmission[]
 }
 
 model MatchSeries {
@@ -248,6 +249,7 @@ model MatchSeries {
 
   balanceReviews      BalanceMatchReview[]
   balanceMatchResults PlayerBalanceMatchResult[]
+  resultSubmission    InhouseResultSubmission?
 
   @@index([seasonId, matchDate])
   @@index([teamBalanceDraftId])
@@ -811,10 +813,11 @@ model TeamBalanceDraft {
   diff           Float?
   balanceCost    Float?
 
-  season         Season?                  @relation(fields: [seasonId], references: [id], onDelete: SetNull)
-  players        TeamBalanceDraftPlayer[]
-  matchSeries    MatchSeries[]
-  balanceReviews BalanceMatchReview[]
+  season                   Season?                   @relation(fields: [seasonId], references: [id], onDelete: SetNull)
+  players                  TeamBalanceDraftPlayer[]
+  matchSeries              MatchSeries[]
+  balanceReviews           BalanceMatchReview[]
+  inhouseResultSubmissions InhouseResultSubmission[]
 
   @@index([createdAt])
   @@index([applyDate])
@@ -1258,7 +1261,7 @@ model RecruitParty {
   recruitDate String
   resetSeq    Int                @default(0)
   recruitCode String?
-  requestKey  String? @unique(map: "RecruitParty_requestKey_unique")
+  requestKey  String?            @unique(map: "RecruitParty_requestKey_unique")
   type        RecruitPartyType
   status      RecruitPartyStatus @default(IN_PROGRESS)
 
@@ -1502,8 +1505,13 @@ model UserDisciplineRecord {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  userAccount UserAccount? @relation(fields: [userAccountId], references: [id], onDelete: SetNull)
-  player      Player?      @relation(fields: [playerId], references: [id], onDelete: SetNull)
+  userAccount              UserAccount?                  @relation(fields: [userAccountId], references: [id], onDelete: SetNull)
+  player                   Player?                       @relation(fields: [playerId], references: [id], onDelete: SetNull)
+  submission               DisciplineSubmission?
+  resolutionTask           DisciplineResolutionTask?
+  convertedWarningCautions DisciplineCautionConversion[] @relation("ConvertedWarning")
+  cautionConversions       DisciplineCautionConversion[] @relation("ConvertedCaution")
+  banReviewRecord          DisciplineBanReview?          @relation("BanReviewRecord")
 
   @@index([userAccountId, isActive])
   @@index([playerId, isActive])
@@ -1512,6 +1520,243 @@ model UserDisciplineRecord {
   @@index([discordUserId])
   @@index([discordDmStatus])
   @@index([createdAt])
+}
+
+model KakaoFormTemplate {
+  id             Int       @id @default(autoincrement())
+  formType       String
+  version        Int
+  status         String    @default("DRAFT")
+  title          String
+  commandAliases Json
+  instructions   String    @db.Text
+  fieldsJson     Json
+  publishedAt    DateTime?
+  publishedById  Int?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  disciplineSubmissions DisciplineSubmission[]
+  inhouseSubmissions    InhouseResultSubmission[]
+
+  @@unique([formType, version])
+  @@index([formType, status, version])
+}
+
+model PrivateAsset {
+  id               Int       @id @default(autoincrement())
+  provider         String    @default("VERCEL_BLOB")
+  storageKey       String    @unique
+  blobUrl          String?   @unique
+  originalFileName String?
+  mimeType         String
+  byteSize         Int
+  width            Int?
+  height           Int?
+  sha256           String
+  purpose          String
+  expiresAt        DateTime?
+  deletedAt        DateTime?
+  createdAt        DateTime  @default(now())
+
+  disciplineEvidence DisciplineEvidence[]
+  inhouseImages      InhouseResultImage[]
+  inboundImages      KakaoInboundImage[]
+
+  @@index([purpose, createdAt])
+  @@index([sha256])
+  @@index([expiresAt, deletedAt])
+}
+
+model DisciplineSubmission {
+  id                  Int       @id @default(autoincrement())
+  publicCode          String    @unique
+  templateId          Int?
+  templateVersion     Int
+  templateSnapshot    Json
+  rawText             String    @db.Text
+  parsedData          Json
+  roomName            String?
+  sender              String?
+  sourceMessageHash   String?   @unique
+  status              String    @default("PENDING_REVIEW")
+  targetUserAccountId Int?
+  targetPlayerId      Int?
+  reviewedAt          DateTime?
+  reviewedById        Int?
+  rejectionReason     String?   @db.Text
+  disciplineRecordId  Int?      @unique
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  template         KakaoFormTemplate?    @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  disciplineRecord UserDisciplineRecord? @relation(fields: [disciplineRecordId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([targetUserAccountId, status])
+  @@index([targetPlayerId, status])
+}
+
+model DisciplineResolutionTask {
+  id                 Int       @id @default(autoincrement())
+  disciplineRecordId Int       @unique
+  category           String
+  requiredGameCount  Int
+  claimedGameCount   Int       @default(0)
+  issuedAt           DateTime
+  dueAt              DateTime
+  status             String    @default("REQUIRED")
+  publicCode         String    @unique
+  submittedAt        DateTime?
+  reviewedAt         DateTime?
+  reviewedById       Int?
+  reviewNote         String?   @db.Text
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  disciplineRecord UserDisciplineRecord @relation(fields: [disciplineRecordId], references: [id], onDelete: Cascade)
+  evidence         DisciplineEvidence[]
+
+  @@index([status, dueAt])
+}
+
+model DisciplineEvidence {
+  id               Int      @id @default(autoincrement())
+  taskId           Int
+  privateAssetId   Int
+  claimedGameCount Int      @default(0)
+  note             String?  @db.Text
+  submittedAt      DateTime @default(now())
+
+  task         DisciplineResolutionTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  privateAsset PrivateAsset             @relation(fields: [privateAssetId], references: [id], onDelete: Restrict)
+
+  @@unique([taskId, privateAssetId])
+  @@index([taskId, submittedAt])
+}
+
+model DisciplineCautionConversion {
+  id              Int      @id @default(autoincrement())
+  cautionRecordId Int      @unique
+  warningRecordId Int
+  convertedAt     DateTime @default(now())
+
+  cautionRecord UserDisciplineRecord @relation("ConvertedCaution", fields: [cautionRecordId], references: [id], onDelete: Restrict)
+  warningRecord UserDisciplineRecord @relation("ConvertedWarning", fields: [warningRecordId], references: [id], onDelete: Restrict)
+
+  @@index([warningRecordId])
+}
+
+model DisciplineBanReview {
+  id                Int       @id @default(autoincrement())
+  targetIdentityKey String
+  targetName        String
+  targetNickname    String?
+  targetTag         String?
+  warningRecordIds  Json
+  status            String    @default("PENDING")
+  reviewedAt        DateTime?
+  reviewedById      Int?
+  decisionNote      String?   @db.Text
+  banRecordId       Int?      @unique
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  banRecord UserDisciplineRecord? @relation("BanReviewRecord", fields: [banRecordId], references: [id], onDelete: SetNull)
+
+  @@index([targetIdentityKey, status])
+  @@index([status, createdAt])
+}
+
+model InhouseResultSubmission {
+  id                 Int       @id @default(autoincrement())
+  publicCode         String    @unique
+  templateId         Int?
+  templateVersion    Int
+  templateSnapshot   Json
+  rawText            String    @db.Text
+  parsedData         Json
+  seasonId           Int?
+  matchDate          DateTime
+  organizer          String
+  seriesNumber       Int
+  expectedGameCount  Int
+  teamBalanceDraftId Int?
+  roomName           String?
+  sender             String?
+  sourceMessageHash  String?   @unique
+  status             String    @default("AWAITING_UPLOAD")
+  reviewedAt         DateTime?
+  reviewedById       Int?
+  rejectionReason    String?   @db.Text
+  matchSeriesId      Int?      @unique
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  template         KakaoFormTemplate?   @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  season           Season?              @relation(fields: [seasonId], references: [id], onDelete: SetNull)
+  teamBalanceDraft TeamBalanceDraft?    @relation(fields: [teamBalanceDraftId], references: [id], onDelete: SetNull)
+  matchSeries      MatchSeries?         @relation(fields: [matchSeriesId], references: [id], onDelete: SetNull)
+  images           InhouseResultImage[]
+
+  @@index([status, createdAt])
+  @@index([matchDate, status])
+}
+
+model InhouseResultImage {
+  id             Int      @id @default(autoincrement())
+  submissionId   Int
+  privateAssetId Int
+  gameNumber     Int
+  ocrStatus      String   @default("PENDING")
+  ocrResultJson  Json?
+  ocrError       String?  @db.Text
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  submission   InhouseResultSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  privateAsset PrivateAsset            @relation(fields: [privateAssetId], references: [id], onDelete: Restrict)
+
+  @@unique([submissionId, gameNumber])
+  @@unique([submissionId, privateAssetId])
+}
+
+model KakaoImageReceiveSession {
+  id                 Int      @id @default(autoincrement())
+  publicCode         String   @unique
+  purpose            String
+  targetType         String
+  targetId           Int
+  roomKey            String
+  senderKey          String
+  expectedImageCount Int?
+  receivedImageCount Int      @default(0)
+  status             String   @default("ACTIVE")
+  expiresAt          DateTime
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  images KakaoInboundImage[]
+
+  @@index([roomKey, senderKey, status])
+  @@index([targetType, targetId])
+  @@index([status, expiresAt])
+}
+
+model KakaoInboundImage {
+  id             Int      @id @default(autoincrement())
+  sessionId      Int
+  privateAssetId Int
+  imageNumber    Int
+  sourceEventKey String?  @unique
+  sha256         String
+  receivedAt     DateTime @default(now())
+
+  session      KakaoImageReceiveSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  privateAsset PrivateAsset             @relation(fields: [privateAssetId], references: [id], onDelete: Restrict)
+
+  @@unique([sessionId, imageNumber])
+  @@unique([sessionId, sha256])
 }
 
 model DiscordOperationSetting {

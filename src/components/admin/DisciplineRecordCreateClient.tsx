@@ -38,6 +38,7 @@ export default function DisciplineRecordCreateClient({ targets }: { targets: Tar
   const [directNickname, setDirectNickname] = useState("");
   const [directTag, setDirectTag] = useState("");
   const [type, setType] = useState("CAUTION");
+  const [warningCategory, setWarningCategory] = useState("GENERAL");
   const [source, setSource] = useState("MANUAL");
   const [reason, setReason] = useState("");
   const [note, setNote] = useState("");
@@ -94,7 +95,7 @@ export default function DisciplineRecordCreateClient({ targets }: { targets: Tar
       const res = await fetch("/api/admin/discipline-records", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...payload, type, source, reason, note }),
+        body: JSON.stringify({ ...payload, type, warningCategory, source, reason, note }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.message || "저장 실패");
@@ -130,6 +131,7 @@ export default function DisciplineRecordCreateClient({ targets }: { targets: Tar
           </>
         )}
         <label>종류<select value={type} onChange={(e) => setType(e.target.value)}><option value="CAUTION">주의</option><option value="WARNING">경고</option><option value="BAN">벤/강퇴</option></select></label>
+        {type === "WARNING" ? <label>경고 구분<select value={warningCategory} onChange={(e) => setWarningCategory(e.target.value)}><option value="GENERAL">일반 · 30일 내 10판</option><option value="INHOUSE">내전 · 30일 내 15판</option></select></label> : null}
         <label>사유 유형<select value={source} onChange={(e) => setSource(e.target.value)}>{sourceOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
         <label className="discipline-wide">사유<textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="예: 내전 시작 10분 전 미입장 / 노쇼 / 전챗 조롱" /></label>
         <label className="discipline-wide">메모<textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="운영진 내부 참고 메모" /></label>

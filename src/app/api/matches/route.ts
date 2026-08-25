@@ -32,6 +32,7 @@ type CreateGameInput = {
 };
 
 type CreateMatchInput = {
+  submissionId?: number | null;
   seasonId: number;
   title: string;
   matchDate?: string;
@@ -135,6 +136,18 @@ export async function POST(req: Request) {
       where: { id: body.seasonId },
       select: { id: true, name: true },
     });
+
+    const submissionId = Number.isInteger(body.submissionId) && Number(body.submissionId) > 0 ? Number(body.submissionId) : null;
+    const resultSubmission = submissionId ? await prisma.inhouseResultSubmission.findUnique({ where: { id: submissionId }, select: { id: true, status: true, matchSeriesId: true, expectedGameCount: true, seasonId: true } }) : null;
+    if (submissionId && (!resultSubmission || resultSubmission.matchSeriesId || !["PENDING_REVIEW", "IN_REVIEW"].includes(resultSubmission.status))) {
+      return NextResponse.json({ message: "내전 결과 접수 건이 없거나 이미 등록 처리되었습니다." }, { status: 409 });
+    }
+    if (resultSubmission && resultSubmission.expectedGameCount !== body.games.length) {
+      return NextResponse.json({ message: `접수된 결과 사진 수와 동일하게 ${resultSubmission.expectedGameCount}세트를 등록해주세요.` }, { status: 400 });
+    }
+    if (resultSubmission?.seasonId && resultSubmission.seasonId !== body.seasonId) {
+      return NextResponse.json({ message: "접수 당시 활성 시즌과 같은 시즌으로 등록해주세요." }, { status: 400 });
+    }
 
     const teamBalanceDraftId =
       Number.isInteger(body.teamBalanceDraftId) && Number(body.teamBalanceDraftId) > 0
@@ -248,6 +261,11 @@ export async function POST(req: Request) {
     const created = await prisma.$transaction(async (tx) => {
       // 같은 시즌의 내전 생성 요청을 직렬화해 동시 중복 등록을 막는다.
       await tx.$queryRaw`SELECT "id" FROM "Season" WHERE "id" = ${body.seasonId} FOR UPDATE`;
+      if (submissionId) {
+        await tx.$queryRaw`SELECT "id" FROM "InhouseResultSubmission" WHERE "id" = ${submissionId} FOR UPDATE`;
+        const lockedSubmission = await tx.inhouseResultSubmission.findUnique({ where: { id: submissionId }, select: { matchSeriesId: true, status: true } });
+        if (!lockedSubmission || lockedSubmission.matchSeriesId || !["PENDING_REVIEW", "IN_REVIEW"].includes(lockedSubmission.status)) throw new Error("RESULT_SUBMISSION_ALREADY_REGISTERED");
+      }
 
       const concurrentDuplicate = await tx.matchSeries.findFirst({
         where: {
@@ -300,10 +318,12 @@ export async function POST(req: Request) {
         },
       });
 
+      if (submissionId) await tx.inhouseResultSubmission.update({ where: { id: submissionId }, data: { matchSeriesId: match.id, status: "REGISTERED", reviewedAt: new Date() } });
+
       await tx.adminLog.create({
         data: {
           action: "MATCH_CREATE",
-          message: `내전 등록: ${match.title} / 시즌: ${match.season.name} / 세트: ${match.games.length}개${teamBalanceDraftId ? ` / 팀밸런스 #${teamBalanceDraftId}` : ""}`,
+          message: `내전 등록: ${match.title} / 시즌: ${match.season.name} / 세트: ${match.games.length}개${teamBalanceDraftId ? ` / 팀밸런스 #${teamBalanceDraftId}` : ""}${submissionId ? ` / 결과접수 #${submissionId}` : ""}`,
         },
       });
 
@@ -315,6 +335,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json(created);
   } catch (error) {
+    if (error instanceof Error && error.message === "RESULT_SUBMISSION_ALREADY_REGISTERED") {
+      return NextResponse.json({ message: "다른 관리자가 이미 이 결과 접수 건을 등록했습니다." }, { status: 409 });
+    }
     if (error instanceof DuplicateMatchError) {
       return NextResponse.json(
         {

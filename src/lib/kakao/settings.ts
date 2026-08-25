@@ -47,6 +47,14 @@ export type KakaoOperationSettings = {
   meetupRecordEnabled: boolean;
   suggestionRequestEnabled: boolean;
 
+  disciplineFormEnabled: boolean;
+  disciplineStatusEnabled: boolean;
+  disciplineEvidenceEnabled: boolean;
+  inhouseResultFormEnabled: boolean;
+  inhouseResultImageEnabled: boolean;
+  allowedDisciplineRooms: string[];
+  allowedInhouseResultRooms: string[];
+
   helpCommandEnabled: boolean;
   unknownCommandResponseEnabled: boolean;
   aiNoticeRedirectEnabled: boolean;
@@ -107,6 +115,14 @@ export const DEFAULT_KAKAO_OPERATION_SETTINGS: KakaoOperationSettings = {
   leaveRequestEnabled: true,
   meetupRecordEnabled: true,
   suggestionRequestEnabled: true,
+
+  disciplineFormEnabled: false,
+  disciplineStatusEnabled: true,
+  disciplineEvidenceEnabled: false,
+  inhouseResultFormEnabled: false,
+  inhouseResultImageEnabled: false,
+  allowedDisciplineRooms: [],
+  allowedInhouseResultRooms: [],
 
   helpCommandEnabled: true,
   unknownCommandResponseEnabled: true,
@@ -214,6 +230,14 @@ export function normalizeKakaoOperationSettings(value: Partial<KakaoOperationSet
     leaveRequestEnabled: normalizeBoolean(merged.leaveRequestEnabled, DEFAULT_KAKAO_OPERATION_SETTINGS.leaveRequestEnabled),
     meetupRecordEnabled: normalizeBoolean(merged.meetupRecordEnabled, DEFAULT_KAKAO_OPERATION_SETTINGS.meetupRecordEnabled),
     suggestionRequestEnabled: normalizeBoolean(merged.suggestionRequestEnabled, DEFAULT_KAKAO_OPERATION_SETTINGS.suggestionRequestEnabled),
+
+    disciplineFormEnabled: normalizeBoolean(merged.disciplineFormEnabled, DEFAULT_KAKAO_OPERATION_SETTINGS.disciplineFormEnabled),
+    disciplineStatusEnabled: normalizeBoolean(merged.disciplineStatusEnabled, DEFAULT_KAKAO_OPERATION_SETTINGS.disciplineStatusEnabled),
+    disciplineEvidenceEnabled: normalizeBoolean(merged.disciplineEvidenceEnabled, DEFAULT_KAKAO_OPERATION_SETTINGS.disciplineEvidenceEnabled),
+    inhouseResultFormEnabled: normalizeBoolean(merged.inhouseResultFormEnabled, DEFAULT_KAKAO_OPERATION_SETTINGS.inhouseResultFormEnabled),
+    inhouseResultImageEnabled: normalizeBoolean(merged.inhouseResultImageEnabled, DEFAULT_KAKAO_OPERATION_SETTINGS.inhouseResultImageEnabled),
+    allowedDisciplineRooms: normalizeStringArray(merged.allowedDisciplineRooms, DEFAULT_KAKAO_OPERATION_SETTINGS.allowedDisciplineRooms),
+    allowedInhouseResultRooms: normalizeStringArray(merged.allowedInhouseResultRooms, DEFAULT_KAKAO_OPERATION_SETTINGS.allowedInhouseResultRooms),
 
     helpCommandEnabled: normalizeBoolean(merged.helpCommandEnabled, DEFAULT_KAKAO_OPERATION_SETTINGS.helpCommandEnabled),
     unknownCommandResponseEnabled: normalizeBoolean(merged.unknownCommandResponseEnabled, DEFAULT_KAKAO_OPERATION_SETTINGS.unknownCommandResponseEnabled),

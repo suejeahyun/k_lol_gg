@@ -62,15 +62,12 @@ export function buildDisciplineStatistics(records: DisciplineStatisticsRecord[])
   }
 
   return Array.from(grouped.values())
-    .map((person) => {
-      const convertedWarnings = Math.floor(person.rawCautions / 3);
-      return {
-        ...person,
-        cautionCount: person.rawCautions % 3,
-        convertedWarnings,
-        warningCount: person.directWarnings + convertedWarnings,
-      };
-    })
+    .map((person) => ({
+      ...person,
+      cautionCount: person.rawCautions,
+      convertedWarnings: 0,
+      warningCount: person.directWarnings,
+    }))
     .sort((a, b) => {
       if (a.isBanned !== b.isBanned) return a.isBanned ? -1 : 1;
       if (a.warningCount !== b.warningCount) return b.warningCount - a.warningCount;

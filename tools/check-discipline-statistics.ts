@@ -18,8 +18,8 @@ const result = buildDisciplineStatistics(records);
 const linked = result.find((person) => person.key === "player:20");
 const direct = result.find((person) => person.name === "직접입력");
 
-if (!linked || linked.rawCautions !== 7 || linked.cautionCount !== 1) throw new Error("주의 3회 환산 후 잔여 횟수가 올바르지 않습니다.");
-if (linked.warningCount !== 3 || linked.convertedWarnings !== 2 || linked.directWarnings !== 1) throw new Error("환산 경고 합계가 올바르지 않습니다.");
+if (!linked || linked.rawCautions !== 7 || linked.cautionCount !== 7) throw new Error("활성 주의 횟수가 올바르지 않습니다.");
+if (linked.warningCount !== 1 || linked.convertedWarnings !== 0 || linked.directWarnings !== 1) throw new Error("실제 경고 레코드 합계가 올바르지 않습니다.");
 if (!linked.isBanned || result[0]?.key !== linked.key) throw new Error("밴 상태 또는 정렬 우선순위가 올바르지 않습니다.");
 if (!direct || direct.nickname !== "닉" || direct.cautionCount !== 1) throw new Error("미등록 대상 집계가 올바르지 않습니다.");
 

@@ -189,6 +189,16 @@ assert.equal(
   "카카오 API의 256KB 초과 본문을 거부해야 합니다.",
 );
 assert.equal(
+  rejectIfBodyTooLarge(contentLengthRequest("/api/kakao/image-receive", 4 * 1024 * 1024 + 64 * 1024)),
+  null,
+  "카카오 Base64 사진 요청은 별도 상한까지 허용해야 합니다.",
+);
+assert.equal(
+  rejectIfBodyTooLarge(contentLengthRequest("/api/kakao/image-receive", 4 * 1024 * 1024 + 64 * 1024 + 1))?.status,
+  413,
+  "카카오 사진 요청은 Vercel 안전 상한을 넘으면 거부해야 합니다.",
+);
+assert.equal(
   rejectIfBodyTooLarge(
     contentLengthRequest("/api/matches/import-lol-result", 13 * 1024 * 1024),
   ),
