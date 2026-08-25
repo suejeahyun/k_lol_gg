@@ -74,6 +74,15 @@
 - 실패 후 경고 사진 수는 0/1장, 내전 사진 수는 0/2장으로 유지됐다.
 - 세션은 `ACTIVE`, 접수는 `AWAITING_UPLOAD`로 유지되어 재시도할 수 있다.
 
+## 수정 배포 및 재검증
+
+- 수정 커밋: `a0319cf` (`fix: diagnose private blob uploads and use KST dates`)
+- GitHub `main` 푸시: 완료
+- Vercel 배포 상태: `success` (`Deployment has completed`)
+- 배포 후 경고 접수 `DS767382FD4B`에 유효 PNG 재전송: 논리 상태 `500`, 사진 저장 실패
+- 판정: 애플리케이션 패치는 운영에 배포됐으나 Vercel 프로젝트의 private Blob 저장소 권한/연결은 외부 설정에서 아직 해결되지 않았다.
+- Vercel 대시보드는 현재 자동화 브라우저에서 로그인되지 않아 저장소 연결 변경과 운영 관리자 화면의 새 진단 문구 캡처는 수행하지 않았다.
+
 ## 판정
 
 | 범위 | 판정 |
