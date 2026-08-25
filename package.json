@@ -23,6 +23,7 @@
     "check:kakao-auth": "tsx tools/check-kakao-request-guard.ts",
     "check:kakao-operation-forms": "tsx tools/check-kakao-operation-forms.ts",
     "check:kakao-managed-forms": "tsx tools/check-kakao-managed-forms.ts",
+    "check:private-images": "tsx tools/check-private-image-validation.ts",
     "check:kakao-bot-managed-routing": "node tools/check-kakao-bot-managed-routing.mjs",
     "check:discipline-statistics": "tsx tools/check-discipline-statistics.ts",
     "check:riot-sync": "node tools/check-riot-tier-sync-resilience.mjs",
