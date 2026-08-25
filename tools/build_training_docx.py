@@ -390,7 +390,7 @@ def build_document():
     doc = Document()
     configure_styles(doc)
     is_admin = MODE == "admin"
-    running_title = "K-LOL.GG | 관리자 기능 교육자료" if is_admin else "K-LOL.GG | 전체 사용·운영 교육자료"
+    running_title = "K-LOL.GG | 운영진 기능 가이드" if is_admin else "K-LOL.GG | 전체 사용·운영 교육자료"
     configure_sections(doc, running_title)
 
     # editorial_cover opening
@@ -400,20 +400,20 @@ def build_document():
     kicker = doc.add_paragraph()
     kicker.alignment = WD_ALIGN_PARAGRAPH.CENTER
     kicker.paragraph_format.space_after = Pt(16)
-    run = kicker.add_run("K-LOL.GG ADMIN TRAINING" if is_admin else "K-LOL.GG OPERATIONS HANDBOOK")
+    run = kicker.add_run("K-LOL.GG 운영진 안내" if is_admin else "K-LOL.GG OPERATIONS HANDBOOK")
     set_run_font(run, size=10, color=GOLD, bold=True)
 
     title = doc.add_paragraph()
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
     title.paragraph_format.space_after = Pt(8)
-    run = title.add_run("K-LOL.GG 관리자 기능 교육자료" if is_admin else "K-LOL.GG 전체 사용·운영 교육자료")
+    run = title.add_run("K-LOL.GG 운영진 기능 가이드" if is_admin else "K-LOL.GG 전체 사용·운영 교육자료")
     set_run_font(run, size=27, color=NAVY, bold=True)
 
     subtitle = doc.add_paragraph()
     subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
     subtitle.paragraph_format.space_after = Pt(24)
     run = subtitle.add_run(
-        "신규·기존 관리자 공통 실무 교육 · 시나리오 실습 · 운영 체크리스트"
+        "자원 운영진을 위한 사이트 · 카카오봇 · 경고 · 내전 안내"
         if is_admin else
         "사이트 전체 기능 · 카카오톡 봇 명령어 · 경고 및 내전 결과 운영"
     )
@@ -422,7 +422,7 @@ def build_document():
     meta = doc.add_paragraph()
     meta.alignment = WD_ALIGN_PARAGRAPH.CENTER
     meta.paragraph_format.space_after = Pt(44)
-    run = meta.add_run("2026-08-26  |  운영·교육용 완성본")
+    run = meta.add_run("2026-08-26  |  운영진 공유용")
     set_run_font(run, size=10.5, color=MUTED, bold=True)
 
     lead = doc.add_paragraph()
@@ -431,7 +431,7 @@ def build_document():
     lead.paragraph_format.right_indent = Inches(0.55)
     lead.paragraph_format.space_after = Pt(12)
     run = lead.add_run(
-        "관리자가 접수 확인부터 승인·반려, 수기 확정, 로그 점검과 장애 보고까지 같은 기준으로 처리하도록 만든 교육용 실무 교재입니다."
+        "처음 보는 운영진도 화면을 함께 보며 경고·내전·운영 기능을 편하게 설명하고 사용할 수 있도록 만든 안내서입니다."
         if is_admin else
         "일반 사용자, 운영진, 최고관리자가 같은 절차와 용어로 사이트와 카카오 자동화를 사용할 수 있도록 정리한 기준 문서입니다."
     )
@@ -439,7 +439,7 @@ def build_document():
 
     status = doc.add_paragraph()
     status.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run = status.add_run("교육 중 실제 제재·삭제 금지 · 사진 저장은 Vercel Blob 연결 후 최종 실습")
+    run = status.add_run("연습 중 실제 제재·삭제 금지 · 애매한 판단은 운영진과 먼저 상의")
     set_run_font(run, size=9.5, color=RED, bold=True)
     doc.add_page_break()
 
@@ -499,8 +499,8 @@ def build_document():
             add_inline_markdown(p, stripped)
         idx += 1
 
-    doc.core_properties.title = "K-LOL.GG 관리자 기능 교육자료" if is_admin else "K-LOL.GG 전체 사용·운영 교육자료"
-    doc.core_properties.subject = "관리자 사이트와 카카오톡 운영 실무 교육" if is_admin else "사이트와 카카오톡 봇 전체 기능 교육"
+    doc.core_properties.title = "K-LOL.GG 운영진 기능 가이드" if is_admin else "K-LOL.GG 전체 사용·운영 교육자료"
+    doc.core_properties.subject = "자원 운영진을 위한 사이트와 카카오톡 기능 안내" if is_admin else "사이트와 카카오톡 봇 전체 기능 교육"
     doc.core_properties.author = "K-LOL.GG 운영팀"
     doc.core_properties.keywords = "K-LOL.GG, 카카오봇, 경고, 내전, 운영 매뉴얼"
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
