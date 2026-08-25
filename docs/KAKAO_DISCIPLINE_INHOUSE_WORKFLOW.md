@@ -35,7 +35,7 @@
 ## 배포 전 필수 설정
 
 - DB 마이그레이션: `npm run migrate:deploy`
-- Vercel Blob 비공개 저장소 연결 및 `BLOB_READ_WRITE_TOKEN` 설정
+- Vercel Blob 비공개 저장소를 현재 Vercel 프로젝트에 연결한다. 권장 방식은 프로젝트 연결을 OIDC로 업그레이드하는 것이며, 정적 인증을 유지한다면 해당 저장소와 일치하는 `BLOB_READ_WRITE_TOKEN`을 Vercel 환경변수에만 설정한다.
 - 기존 `KAKAO_RECRUIT_SECRET` 유지
 - 기능은 기본값이 꺼져 있으므로 저장소와 봇 적용을 확인한 뒤 관리자 설정에서 단계적으로 켠다.
 
@@ -50,6 +50,8 @@ KLOL_KAKAO_SEARCH_PLAYER_SECRET
 ```
 
 실제 값은 서버 환경변수와 같아야 한다. `.mrpack`처럼 실행 파일이 아닌 파일은 Windows에서 직접 실행하지 말고 해당 앱의 가져오기 기능을 사용한다.
+
+`BLOB_READ_WRITE_TOKEN`은 카카오봇 DataBase에 넣지 않는다. Blob 인증은 Vercel 서버에서만 처리하며 카카오봇에는 위의 K-LOL API 인증 키만 저장한다.
 
 ## 보안·운영 제한
 
