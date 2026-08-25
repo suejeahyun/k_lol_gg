@@ -14,6 +14,20 @@ function cleanBase64(value: unknown) {
   return raw.replace(/^data:image\/[a-z0-9.+-]+;base64,/i, "").replace(/\s+/g, "");
 }
 
+function publicImageErrorMessage(error: unknown) {
+  const message = error instanceof Error ? error.message : "";
+  const safePrefixes = [
+    "비어 있는 이미지는",
+    "카카오 사진 한 장은",
+    "PNG, JPG 또는 WebP",
+    "파일 확장자와 실제 이미지",
+    "이미지 크기가 올바르지",
+  ];
+  return safePrefixes.some((prefix) => message.startsWith(prefix))
+    ? message
+    : "사진 저장 중 오류가 발생했습니다. 관리자에게 문의해주세요.";
+}
+
 export async function POST(req: NextRequest) {
   try {
     const premiumLock = await requireSiteFeature("kakao");
@@ -70,7 +84,6 @@ export async function POST(req: NextRequest) {
     return kakaoJsonReply({ reply: `[K-LOL.GG 사진 접수 완료]\n접수번호: ${responseCode}\n사진: ${progressText}장${resolutionComplete || (complete && session.purpose !== "DISCIPLINE_RESOLUTION") ? "\n필요한 사진이 모두 접수되어 관리자 검토 대기로 전환되었습니다." : ""}` });
   } catch (error) {
     logServerError("[KAKAO_IMAGE_RECEIVE_ERROR]", error);
-    const message = error instanceof Error ? error.message : "사진 처리 중 오류가 발생했습니다.";
-    return kakaoJsonReply({ reply: `[K-LOL.GG 사진 접수 실패]\n${message}` }, 500);
+    return kakaoJsonReply({ reply: `[K-LOL.GG 사진 접수 실패]\n${publicImageErrorMessage(error)}` }, 500);
   }
 }

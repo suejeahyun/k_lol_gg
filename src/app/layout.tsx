@@ -36,6 +36,7 @@ const mobileAppBootScript = `
       path === "/install" ||
       path.startsWith("/install/") ||
       path === "/discipline" ||
+      path === "/recruit-helper" ||
       path === "/signup" ||
       path === "/forgot-password" ||
       path === "/privacy" ||
@@ -73,9 +74,9 @@ const mobileAppBootScript = `
         target = match ? "/app/progress/destruction/" + match[1] + "/mvp-vote" : "/app";
       }
       else if (
-        pathname.startsWith("/recruit") ||
-        pathname.startsWith("/kakao") ||
-        pathname.startsWith("/recruit-helper")
+        pathname === "/recruit" ||
+        pathname.startsWith("/recruit/") ||
+        pathname.startsWith("/kakao")
       ) target = "/app/recruits";
       else if (pathname.startsWith("/progress") || pathname.startsWith("/participation")) target = "/app/matches?tab=events";
       else if (pathname.startsWith("/riot-api")) target = "/app/me";

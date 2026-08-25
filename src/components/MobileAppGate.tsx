@@ -37,9 +37,9 @@ function toAppPath(pathname: string, search?: string) {
   else if (pathname === "/matches") target = "/app/matches";
   else if (pathname === "/rankings" || pathname.startsWith("/ai-balance")) target = "/app/rankings";
   else if (
-    pathname.startsWith("/recruit") ||
-    pathname.startsWith("/kakao") ||
-    pathname.startsWith("/recruit-helper")
+    pathname === "/recruit" ||
+    pathname.startsWith("/recruit/") ||
+    pathname.startsWith("/kakao")
   ) {
     target = "/app/recruits";
   } else if (pathname.startsWith("/progress") || pathname.startsWith("/participation")) {
@@ -95,6 +95,7 @@ export default function MobileAppGate() {
     pathname === "/install" ||
     pathname.startsWith("/install/") ||
     pathname === "/discipline" ||
+    pathname === "/recruit-helper" ||
     pathname === "/signup" ||
     pathname === "/forgot-password" ||
     pathname === "/privacy" ||

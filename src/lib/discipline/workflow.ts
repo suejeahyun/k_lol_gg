@@ -1,6 +1,12 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { makePublicCode } from "@/lib/kakao/managed-forms";
+import {
+  CAUTIONS_PER_WARNING,
+  WARNINGS_PER_BAN_REVIEW,
+  disciplineResolutionDueAt,
+  requiredResolutionGameCount,
+} from "@/lib/discipline/policy";
 
 type Db = Prisma.TransactionClient | PrismaClient;
 
@@ -11,10 +17,6 @@ export type DisciplineTarget = {
   targetNickname?: string | null;
   targetTag?: string | null;
 };
-
-function dueIn30Days(issuedAt: Date) {
-  return new Date(issuedAt.getTime() + 30 * 24 * 60 * 60 * 1000);
-}
 
 export function disciplineIdentityKey(target: DisciplineTarget) {
   if (target.userAccountId) return `user:${target.userAccountId}`;
@@ -37,9 +39,9 @@ async function createResolutionTask(db: Db, recordId: number, category: "GENERAL
     data: {
       disciplineRecordId: recordId,
       category,
-      requiredGameCount: category === "INHOUSE" ? 15 : 10,
+      requiredGameCount: requiredResolutionGameCount(category),
       issuedAt,
-      dueAt: dueIn30Days(issuedAt),
+      dueAt: disciplineResolutionDueAt(issuedAt),
       publicCode: makePublicCode("WR"),
     },
   });
@@ -52,7 +54,7 @@ async function ensureBanReview(db: Db, target: DisciplineTarget) {
     select: { id: true },
     take: 50,
   });
-  if (warnings.length < 3) return null;
+  if (warnings.length < WARNINGS_PER_BAN_REVIEW) return null;
   const identity = disciplineIdentityKey(target);
   const existing = await db.disciplineBanReview.findFirst({ where: { targetIdentityKey: identity, status: "PENDING" } });
   if (existing) return existing;
@@ -116,9 +118,9 @@ export async function convertActiveCautions(target: DisciplineTarget, createdBy:
         cautionConversions: { none: {} },
       },
       orderBy: { createdAt: "asc" },
-      take: 3,
+      take: CAUTIONS_PER_WARNING,
     });
-    if (cautions.length < 3) return null;
+    if (cautions.length < CAUTIONS_PER_WARNING) return null;
     const issuedAt = new Date();
     const warning = await tx.userDisciplineRecord.create({
       data: {

@@ -1,5 +1,5 @@
 /* eslint-disable */
-var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V33_DISCIPLINE_INHOUSE_PRIVATE_BLOB_2026_08_25";
+var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V34_DISCIPLINE_INHOUSE_HELP_2026_08_26";
 
 var BASE_URL = "https://k-lol-gg.vercel.app";
 
@@ -2355,7 +2355,21 @@ function getUnifiedHelpNotice() {
 
     "- 최근 닉네임#태그 : 최근 경기 조회" + n +
 
-    "- 랭킹 : 랭킹 조회" + n +
+    "- 랭킹 : 랭킹 조회" + n +
+
+    "" + n +
+
+    "운영 기능" + n +
+
+    "- /경고 : 경고 등록 양식" + n +
+
+    "- /경고현황 접수번호 : 접수·차감 상태 확인" + n +
+
+    "- /경고인증 인증번호 : 일반 10장·내전 15장 인증 시작/재개" + n +
+
+    "- /내전등록 : 종료된 내전 결과 2·3세트 접수" + n +
+
+    "- /내전등록현황 접수번호 : 내전 결과 접수 상태 확인" + n +
 
     "" + n +
 

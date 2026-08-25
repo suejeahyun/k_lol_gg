@@ -54,9 +54,9 @@ async function statusReply(message: string) {
 }
 
 export async function POST(req: NextRequest) {
-  const premiumLock = await requireSiteFeature("kakao");
-  if (premiumLock) return premiumLock;
   try {
+    const premiumLock = await requireSiteFeature("kakao");
+    if (premiumLock) return premiumLock;
     const body = await req.json().catch(() => ({})) as Record<string, unknown>;
     if (!isAuthorizedKakaoRequest(req, body.secret)) return kakaoJsonReply({ reply: "[K-LOL.GG]\n인증값이 올바르지 않습니다." }, 401);
     const message = text(body.message || body.text);

@@ -24,6 +24,7 @@ type ChatMessage = {
 type ScenarioGroup =
   | "구인관련 명령어"
   | "내전 관련"
+  | "운영 관리"
   | "K-LOL 관련"
   | "입력 확인";
 
@@ -59,8 +60,18 @@ const commandGroups: CommandGroup[] = [
   },
   {
     title: "내전 관련",
-    description: "종목별 내전 모집 양식을 만들고 오늘 참가 상태를 확인합니다.",
-    commands: ["내전구인 협곡", "내전구인 칼바람", "내전구인 증바람", "내전현황"],
+    description: "종목별 내전 모집, 참가 안내와 종료된 내전 결과를 관리합니다.",
+    commands: ["내전구인 협곡", "내전현황", "내전참가", "/내전등록"],
+  },
+  {
+    title: "스크림 관련",
+    description: "스크림 모집 양식을 만들고 진행 중인 모집을 확인합니다.",
+    commands: ["/스크림구인", "/스크림현황"],
+  },
+  {
+    title: "경고·차감 인증",
+    description: "경고 접수와 30일 내 게임 사진 인증 상태를 관리합니다.",
+    commands: ["/경고", "/경고현황 접수번호", "/경고인증 인증번호"],
   },
   {
     title: "K-LOL 관련",
@@ -188,17 +199,75 @@ const scenarios: Scenario[] = [
     room: "K롤방 구인구직방",
     description: "오늘 내전에 참가 의사를 남길 때 사용합니다.",
     commands: ["내전참가", "참가신청"],
-    status: "참가 접수",
+    status: "신청 안내",
     tone: "sync",
     messages: [
       { side: "me", name: "사용자", text: "내전참가", time: "오후 8:32" },
       {
         side: "bot",
         name: "K-LOL 내전 도우미",
-        text: "[K-LOL.GG 내전 참가 신청 완료]\n오늘 내전 참가 신청이 접수되었습니다.",
+        text: "[K-LOL.GG 내전 참가 신청 안내]\n1. K-LOL.GG 접속\n2. 로그인\n3. 시즌내전 참가하기 클릭\n4. 주·부 포지션 선택\n5. 참가 신청 완료",
         time: "오후 8:32",
-        status: "참가 접수",
+        status: "신청 안내",
       },
+    ],
+  },
+  {
+    id: "scrim-create",
+    group: "내전 관련",
+    title: "스크림 모집",
+    room: "스크림 운영방",
+    description: "스크림 모집 양식을 호출하고 현황을 확인합니다.",
+    commands: ["/스크림구인", "/스크림현황"],
+    status: "스크림 관리",
+    tone: "create",
+    messages: [
+      { side: "me", name: "사용자", text: "/스크림구인", time: "오후 8:35" },
+      { side: "bot", name: "K-LOL 구인구직 도우미", text: "[K-LOL.GG 스크림구인]\n스크림 모집 양식을 작성해 전체 내용을 다시 보내주세요.", time: "오후 8:35", status: "양식 호출" },
+    ],
+  },
+  {
+    id: "discipline-submit",
+    group: "운영 관리",
+    title: "경고 접수",
+    room: "운영진 방",
+    description: "경고 사유를 제외한 대상·구분·부여일과 근거 사진 수를 접수합니다.",
+    commands: ["/경고", "/경고현황 DS접수번호"],
+    status: "관리자 검토",
+    tone: "guide",
+    note: "경고 사유는 카카오방에 적지 않고 관리자 사이트 승인 창에서만 입력합니다.",
+    messages: [
+      { side: "me", name: "관리자", text: "/경고", time: "오후 9:00" },
+      { side: "bot", name: "K-LOL.GG", text: "[K-LOL.GG 경고 등록 양식 v1]\n\n대상 이름:\n대상 닉네임#태그:\n경고 구분:\n부여일: YYYY-MM-DD\n경고 부여 근거 사진 수: 0", time: "오후 9:00", status: "양식 호출" },
+    ],
+  },
+  {
+    id: "discipline-resolution",
+    group: "운영 관리",
+    title: "경고 차감 사진 인증",
+    room: "운영진이 허용한 방",
+    description: "승인 후 발급된 인증번호로 사진 접수를 시작하거나 이어서 제출합니다.",
+    commands: ["/경고인증 WR인증번호", "/경고현황 WR인증번호"],
+    status: "사진 인증",
+    tone: "sync",
+    note: "일반 경고는 30일 내 10장, 내전 경고는 15장입니다. 한 판당 사진 한 장이며 세션이 끝나면 같은 명령으로 재개합니다.",
+    messages: [
+      { side: "me", name: "대상자", text: "/경고인증 WR2DDB9EAE95", time: "오후 9:05" },
+      { side: "bot", name: "K-LOL.GG", text: "[K-LOL.GG 경고 인증 시작]\n인증번호: WR2DDB9EAE95\n현재: 0/10장\n남은 사진: 10장\n한 판당 사진 1장씩 30분 안에 보내주세요.", time: "오후 9:05", status: "접수 시작" },
+    ],
+  },
+  {
+    id: "inhouse-result",
+    group: "운영 관리",
+    title: "종료된 내전 결과 접수",
+    room: "운영진이 허용한 방",
+    description: "2세트 또는 3세트 결과 사진을 받은 뒤 사이트에서 수기 등록으로 확정합니다.",
+    commands: ["/내전등록", "/내전등록현황 MR접수번호"],
+    status: "수기 등록 대기",
+    tone: "create",
+    messages: [
+      { side: "me", name: "진행자", text: "/내전등록", time: "오후 10:00" },
+      { side: "bot", name: "K-LOL.GG", text: "[K-LOL.GG 내전 결과 등록 양식 v1]\n\n진행일: YYYY-MM-DD\n진행자:\n세트 수: 2/3\n내전 회차:\n팀 밸런스 번호: 없음\n특이사항: 없음", time: "오후 10:00", status: "양식 호출" },
     ],
   },
   {
@@ -272,6 +341,7 @@ const scenarios: Scenario[] = [
 const groups: ScenarioGroup[] = [
   "구인관련 명령어",
   "내전 관련",
+  "운영 관리",
   "K-LOL 관련",
   "입력 확인",
 ];
