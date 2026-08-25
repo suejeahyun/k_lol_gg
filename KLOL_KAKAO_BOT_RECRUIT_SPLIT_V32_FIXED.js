@@ -141,6 +141,11 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
 
     }
 
+    if (isManagedWorkflowMessage(text)) {
+      handleManagedWorkflowMessage(roomText || RECRUIT_ROOM_LABEL, text, senderText, replier);
+      return;
+    }
+
 
     /*
 
@@ -476,12 +481,6 @@ function handleRecruitCommand(text, room, sender, replier) {
     ) {
       seasonTemplateReply = getSeasonRecruitTemplateNotice(text);
     }
-
-    if (isManagedWorkflowMessage(text)) {
-      handleManagedWorkflowMessage(roomText || RECRUIT_ROOM_LABEL, text, senderText, replier);
-      return;
-    }
-
     replier.reply(seasonTemplateReply);
 
     return;

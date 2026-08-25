@@ -8,6 +8,7 @@
 - `npm run typecheck`
 - `npm run lint`
 - `npm run check:kakao-managed-forms`
+- `npm run check:kakao-bot-managed-routing`
 - `npm run check:discipline-statistics`
 - `npm run check:secrets`
 - `npm run check:admin-guards`

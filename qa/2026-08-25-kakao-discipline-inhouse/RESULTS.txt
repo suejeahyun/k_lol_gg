@@ -5,6 +5,7 @@ PASS  npx prisma validate
 PASS  npm run typecheck
 PASS  npm run lint
 PASS  npm run check:kakao-managed-forms
+PASS  npm run check:kakao-bot-managed-routing
 PASS  npm run check:discipline-statistics
 PASS  npm run check:admin-guards (관리자 API 72개)
 PASS  npm run check:feature-gates
