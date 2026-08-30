@@ -70,6 +70,8 @@ out/
 # cache
 tsconfig.tsbuildinfo
 *.tsbuildinfo
+__pycache__/
+*.py[cod]
 
 # patch / backup / zip
 _backup*/
@@ -78,6 +80,7 @@ _patch*/
 
 # logs
 *.log
+KLOL_DEPLOY_SMOKE_*.json
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

@@ -1,0 +1,48 @@
+K-LOL.GG V39 FAST REGISTRATION QA RESULTS
+DATE 2026-08-31 KST
+
+PASS npm run check
+PASS npm run check:release
+PASS npm run check:discipline-statistics
+PASS npm run check:secrets
+PASS git diff --check
+PASS node --check KLOL_KAKAO_BOT_V39_FAST_REGISTRATION.js
+PASS npm run check:kakao-managed-quick
+PASS npm run check:kakao-managed-forms
+PASS npm run check:kakao-bot-managed-routing
+PASS npm run check:kakao-bot-inhouse-routing
+PASS npm run check:kakao-policy-session
+PASS npm run check:web-submissions
+PASS npm run check:admin-match-autofill
+PASS npm run check:discipline-evidence-batches
+PASS npm run typecheck
+PASS npm run build (included in npm run check)
+
+MIGRATION STATUS
+101 migrations found
+PASS 20260830103000_enforce_admin_totp_assurance applied to production
+PASS 20260830153000_kakao_operation_form_idempotency applied to production
+PASS npm run migrate:status - Database schema is up to date
+
+PRODUCTION DB BACKUP
+PASS pg_dump custom format + pg_restore --list
+PATH E:\k-LOL.GG\backups\production\v39-r1\klol-production-before-v39-r1-20260830T154356Z.dump
+BYTES 3762942
+SHA256 1366CACBF7D4B96368A6344AA0F6ECB805EB7260A57425B7C0A91AC6A4B8CBCA
+
+BOT_FILE KLOL_KAKAO_BOT_V39_FAST_REGISTRATION.js
+BOT_VERSION KLOL_KAKAO_BOT_V39_FAST_REGISTRATION_R1_2026_08_31
+BOT_SHA256 DB7B366298A35F9804A62E23173426ED4806249C6B8BD8B78EFF0637619DADB3
+
+PASS runtime_commit f4e8d1f6a95ff9dca4732e390836c6062ae44ae7
+PASS ci_fix_commit 388ba1c1d3b31de095a1cb04589d66be3f8ff7aa
+PASS push origin/main
+NOT_RUN preview_deploy
+PASS production_deploy Vercel Production status success for 388ba1c
+PASS production_migration_deploy
+NOT_RUN messengerbotr_code_replace
+PASS production_site_smoke health ready, database ok, public routes and auth boundaries
+PASS production_kakao_api_smoke party status and openchat help authenticated HTTP 200
+PASS github_actions https://github.com/suejeahyun/k_lol_gg/actions/runs/33321031186
+NOT_RUN real_kakao_smoke
+NOT_RUN android_smoke

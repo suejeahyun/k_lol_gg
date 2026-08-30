@@ -6,7 +6,7 @@
 
 - Vercel 프로젝트와 데이터베이스에는 운영에 필요한 최소 인원만 접근시킨다.
 - 슈퍼 어드민은 일반 관리자와 분리된 전용 계정을 사용하고 TOTP 2단계 인증을 등록한다.
-- `SUPER_ADMIN_ID`, `SUPER_ADMIN_PASSWORD`, `JWT_SECRET`, `ADMIN_TOKEN_VALUE`, `CRON_SECRET`, `TOTP_ENCRYPTION_KEY`와 Kakao/Riot 비밀값은 Vercel Environment Variables에서만 관리한다.
+- `SUPER_ADMIN_ID`, `SUPER_ADMIN_PASSWORD`, `JWT_SECRET`, `CRON_SECRET`, `TOTP_ENCRYPTION_KEY`와 Kakao/Riot 비밀값은 Vercel Environment Variables에서만 관리한다.
 - `TOTP_ENCRYPTION_KEY`는 최소 32자의 강한 랜덤 값으로 설정하고 별도의 암호화된 비밀 관리소에도 복구 사본을 보관한다. 이 키를 잃으면 저장된 관리자 TOTP 비밀키를 복호화할 수 없다.
 - 비밀값을 채팅, 이슈, 로그 또는 스크린샷에 남기지 않는다. 노출이 의심되면 즉시 폐기하고 새 값으로 교체한다.
 - 환경변수를 바꾼 뒤에는 새 프로덕션 배포를 만들고 기존 로그인 세션과 API 호출을 다시 확인한다.

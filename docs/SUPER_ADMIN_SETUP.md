@@ -10,8 +10,7 @@ K-LOL.GG의 슈퍼 어드민은 환경변수를 신뢰 기준으로 사용하고
    - `SUPER_ADMIN_PASSWORD`: 최소 16자, 다른 서비스에서 사용하지 않은 랜덤 비밀번호
    - `TOTP_ENCRYPTION_KEY`: 최소 32자의 별도 랜덤 값. 등록된 TOTP 비밀키를 DB에서 암호화한다.
    - `JWT_SECRET`: 최소 32자의 랜덤 값
-   - `ADMIN_TOKEN_VALUE`: 최소 32자의 랜덤 값
-3. `ALLOW_LEGACY_ADMIN_TOKEN=false`를 유지한다.
+3. `ALLOW_LEGACY_ADMIN_TOKEN=false`를 유지한다. 레거시 관리자 토큰 인증은 더 이상 지원하지 않는다.
 4. 저장 후 프로덕션을 다시 배포한다. 환경변수 변경은 기존 배포에 자동 반영되지 않는다.
 5. `/admin/login`에서 새 `SUPER_ADMIN_ID`와 `SUPER_ADMIN_PASSWORD`로 한 번 로그인한다.
 6. 로그인 직후 `/admin/security`에서 TOTP 2단계 인증을 등록하고 복구 가능 여부를 확인한다.
