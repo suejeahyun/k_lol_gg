@@ -46,7 +46,7 @@ ES5 incompatible let/const/arrow: 0
 
 ## 브라우저 검증
 
-환경: 로컬 Next.js dev server, 390×844 viewport
+환경: 로컬 Next.js dev server 및 Production, 390×844 viewport
 
 - `/start`: 3개 목적 카드, 로그인 상태 안내, 이어하기 링크 표시 확인
 - `/start`: 문서 너비가 viewport 안에 표시되고 가로 넘침 없음
@@ -55,11 +55,38 @@ ES5 incompatible let/const/arrow: 0
 - `/admin/discipline/new`: `/admin/login?next=%2Fadmin%2Fdiscipline%2Fnew` 확인
 - 관리자 로그인 화면: `innerWidth=390`, `scrollWidth=390` 확인
 
+## 운영 반영 검사
+
+```text
+운영 DB 백업: PASS
+pg_restore 목록·전체 읽기: PASS
+prisma migrate deploy: PASS
+prisma migrate status: 102개 최신
+GitHub Actions verify: PASS
+Vercel Production: PASS
+npm run check:deploy-api: PASS
+```
+
+- 운영 `/start`: 200, 새 등록 시작 문구 확인
+- 운영 `/account`: 경고 차감 사진 제출 버튼과 경고 현황 확인
+- 운영 `/discipline/evidence`: 로그인 계정 전용 화면과 과제 0건 안내 확인
+- 운영 `/matches/submit`: 진행일·진행자 자동 입력 안내와 단계형 UI 확인
+- 운영 관리자 로그인: `next=/admin/discipline/new` 보존 확인
+- 모든 Production 모바일 확인 화면: 가로 넘침 없음
+
+## 제한이 있는 검사
+
+```text
+npm run check:release
+결과: FAIL (로컬에 Vercel Production 전용 환경변수가 없어 deploy-readiness 단계 중단)
+```
+
+소스 전체 검사, 비밀값 검사, 실제 Vercel 배포와 운영 health는 통과했다. Vercel 환경변수는 변경하지 않았다.
+
 ## 미실행
 
-- 운영 DB 마이그레이션 적용
-- Preview/Production 배포
 - 운영 계정 로그인 후 실제 이미지 업로드
 - Vercel 비공개 Blob 실저장
 - 카카오 단말 코드 교체·실방 테스트
 - Android 실기기 테스트
+- Preview 배포(Production 직접 배포로 대체)
