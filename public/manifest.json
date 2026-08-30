@@ -30,6 +30,27 @@
   ],
   "shortcuts": [
     {
+      "name": "등록 시작",
+      "short_name": "등록",
+      "description": "경고 사진 또는 내전 결과 등록을 시작합니다.",
+      "url": "/start",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "경고 차감 사진 제출",
+      "short_name": "경고 사진",
+      "description": "본인의 경고 차감 사진을 제출합니다.",
+      "url": "/discipline/evidence",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "내전 결과 제출",
+      "short_name": "내전 결과",
+      "description": "종료된 내전 결과 사진을 제출합니다.",
+      "url": "/matches/submit",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
       "name": "구인현황",
       "short_name": "구인",
       "description": "현재 구인 현황을 확인합니다.",

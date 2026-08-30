@@ -59,7 +59,16 @@ async function readJson<T>(response: Response): Promise<T> {
   return data;
 }
 
-export default function AdminSecurityTwoFactorClient() {
+type AdminSecurityTwoFactorClientProps = {
+  nextPath: string;
+};
+
+function adminLoginUrl(security: "2fa-enabled" | "2fa-disabled", nextPath: string) {
+  const params = new URLSearchParams({ security, next: nextPath });
+  return `/admin/login?${params.toString()}`;
+}
+
+export default function AdminSecurityTwoFactorClient({ nextPath }: AdminSecurityTwoFactorClientProps) {
   const [status, setStatus] = useState<TwoFactorStatus | null>(null);
   const [setup, setSetup] = useState<TwoFactorSetup | null>(null);
   const [code, setCode] = useState("");
@@ -147,7 +156,7 @@ export default function AdminSecurityTwoFactorClient() {
       await readJson(response);
       setCode("");
       setSetup(null);
-      window.location.assign("/admin/login?security=2fa-enabled");
+      window.location.assign(adminLoginUrl("2fa-enabled", nextPath));
     } catch (err) {
       setError(err instanceof Error ? err.message : "2단계 인증 활성화에 실패했습니다.");
     } finally {
@@ -177,7 +186,7 @@ export default function AdminSecurityTwoFactorClient() {
       await readJson(response);
       setDisableCode("");
       setSetup(null);
-      window.location.assign("/admin/login?security=2fa-disabled");
+      window.location.assign(adminLoginUrl("2fa-disabled", nextPath));
     } catch (err) {
       setError(err instanceof Error ? err.message : "2단계 인증 해제에 실패했습니다.");
     } finally {

@@ -187,11 +187,17 @@ export async function proxy(req: NextRequest) {
 
   const userToken = req.cookies.get("user_token")?.value;
   const state = await getApprovedAdminState(userToken);
+  const requestedPath = `${req.nextUrl.pathname}${req.nextUrl.search}`;
   if (state?.twoFactorEnrollmentRequired) {
-    return secure(NextResponse.redirect(new URL("/admin/security?setup=required", req.url)));
+    const securityUrl = new URL("/admin/security", req.url);
+    securityUrl.searchParams.set("setup", "required");
+    securityUrl.searchParams.set("next", requestedPath);
+    return secure(NextResponse.redirect(securityUrl));
   }
 
-  return secure(NextResponse.redirect(new URL("/admin/login", req.url)));
+  const loginUrl = new URL("/admin/login", req.url);
+  loginUrl.searchParams.set("next", requestedPath);
+  return secure(NextResponse.redirect(loginUrl));
 }
 
 export const config = {

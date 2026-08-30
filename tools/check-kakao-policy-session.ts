@@ -131,10 +131,11 @@ assert.deepEqual(
 );
 
 const botSource = readFileSync(
-  resolve(process.cwd(), "KLOL_KAKAO_BOT_V39_FAST_REGISTRATION.js"),
+  resolve(process.cwd(), "KLOL_KAKAO_BOT_V40_GUIDED_HUB.js"),
   "utf8",
 );
-assert.match(botSource, /KLOL_KAKAO_BOT_V39_FAST_REGISTRATION_R1_2026_08_31/);
+assert.match(botSource, /KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R2_2026_08_31/);
+assert.doesNotMatch(botSource, /\?code=/);
 assert.match(botSource, /if \(publicCode == ""\) return false;/);
 assert.match(botSource, /clearSession === true/);
 assert.match(botSource, /new Date\(\)\.getTime\(\) - savedAt > 30 \* 60 \* 1000/);

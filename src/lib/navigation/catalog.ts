@@ -12,6 +12,14 @@ export type NavigationItem = {
 
 const userNavigation: NavigationItem[] = [
   {
+    href: "/start",
+    appHref: "/start",
+    label: "등록·제출 시작",
+    description: "내전 결과·경고 사진·관리자 등록을 안내에 따라 시작",
+    section: "바로가기",
+    keywords: ["등록", "제출", "처음", "시작", "내전 결과", "경고", "인증", "사진"],
+  },
+  {
     href: "/",
     appHref: "/app",
     label: "홈",
@@ -182,6 +190,14 @@ const userNavigation: NavigationItem[] = [
 ];
 
 const adminNavigation: NavigationItem[] = [
+  {
+    href: "/start",
+    appHref: "/start",
+    label: "등록·제출 허브",
+    description: "내전 결과·경고 등록 흐름을 한 화면에서 시작",
+    section: "오늘 운영",
+    keywords: ["등록", "제출", "내전", "경고", "허브", "시작"],
+  },
   {
     href: "/admin",
     appHref: "/app/admin",

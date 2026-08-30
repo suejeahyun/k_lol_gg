@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import type { Prisma } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getKstDateKey } from "@/lib/date/kst";
 import { prisma } from "@/lib/prisma/client";
@@ -30,33 +31,57 @@ export default async function DisciplineEvidencePage({ searchParams }: PageProps
     return <main className={styles.page}><h1>경고 차감 사진 제출</h1><p>승인된 계정만 사용할 수 있습니다.</p><Link className="app-button" href="/account">내 계정 확인</Link></main>;
   }
 
-  const tasks = await prisma.disciplineResolutionTask.findMany({
-    where: {
-      status: { in: ["REQUIRED", "REJECTED", "AWAITING_UPLOAD", "PENDING_REVIEW"] },
-      ...(safeCode ? { publicCode: safeCode } : {}),
-      ...(user.role === "ADMIN" || user.role === "SUPER_ADMIN"
-        ? {}
-        : { disciplineRecord: disciplineRecordOwnerWhere(user) }),
-    },
-    include: {
-      disciplineRecord: { select: { targetName: true } },
-      evidence: { select: { submittedAt: true } },
-    },
-    orderBy: { dueAt: "asc" },
-    take: 20,
-  });
+  const now = new Date();
+  const activeStatusWhere: Prisma.DisciplineResolutionTaskWhereInput = {
+    OR: [
+      { status: "PENDING_REVIEW" },
+      {
+        status: { in: ["REQUIRED", "REJECTED", "AWAITING_UPLOAD"] },
+        dueAt: { gt: now },
+      },
+    ],
+  };
+  const include = {
+    disciplineRecord: { select: { reason: true } },
+    evidence: { select: { submittedAt: true } },
+  } satisfies Prisma.DisciplineResolutionTaskInclude;
+  const [listedTasks, requestedTask] = await Promise.all([
+    prisma.disciplineResolutionTask.findMany({
+      where: {
+        ...activeStatusWhere,
+        disciplineRecord: disciplineRecordOwnerWhere(user),
+      },
+      include,
+      orderBy: { dueAt: "asc" },
+      take: 20,
+    }),
+    safeCode
+      ? prisma.disciplineResolutionTask.findFirst({
+        where: {
+          publicCode: safeCode,
+          ...activeStatusWhere,
+          disciplineRecord: disciplineRecordOwnerWhere(user),
+        },
+        include,
+      })
+      : null,
+  ]);
+  const tasks = requestedTask && !listedTasks.some((task) => task.id === requestedTask.id)
+    ? [requestedTask, ...listedTasks.slice(0, 19)]
+    : listedTasks;
 
   return (
     <main className={styles.page}>
       <header className={styles.hero}>
         <p>DISCIPLINE EVIDENCE</p>
         <h1>경고 차감 사진 한 번에 제출</h1>
-        <span>카카오에서 한 장씩 보내지 않고 남은 게임 사진을 한 번에 선택해 제출합니다.</span>
+        <span>내 계정에 연결된 과제만 확인하고, 남은 게임 사진을 한 번에 선택해 제출할 수 있습니다.</span>
       </header>
       <DisciplineEvidenceSubmitClient initialCode={safeCode} tasks={tasks.map((task) => ({
         publicCode: task.publicCode,
         category: task.category,
-        targetName: task.disciplineRecord.targetName,
+        reason: task.disciplineRecord.reason,
+        issuedDate: getKstDateKey(task.issuedAt),
         status: task.status,
         requiredGameCount: task.requiredGameCount,
         receivedImageCount: currentDisciplineEvidenceCount(task.evidence, task.reviewedAt),

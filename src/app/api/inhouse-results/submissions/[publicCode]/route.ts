@@ -7,6 +7,7 @@ import {
   requireApprovedUserOrAdmin,
 } from "@/lib/auth/access";
 import { getKstDateKey } from "@/lib/date/kst";
+import { isInhouseSubmissionOwner } from "@/lib/inhouse-result/ownership";
 import { logServerError } from "@/lib/server/safe-log";
 
 type RouteContext = {
@@ -39,9 +40,7 @@ export async function GET(_req: Request, { params }: RouteContext) {
     if (access.type === "user" && submission.roomName !== "WEB") {
       return NextResponse.json({ message: "카카오에서 만든 접수는 관리자만 사이트에서 복구할 수 있습니다." }, { status: 403 });
     }
-    const parsedData = submission.parsedData as Record<string, unknown>;
-    const submittedByUserAccountId = Number(parsedData.submittedByUserAccountId);
-    if (access.type === "user" && submittedByUserAccountId !== access.user.userAccountId) {
+    if (access.type === "user" && !isInhouseSubmissionOwner(submission, access.user.userAccountId)) {
       return NextResponse.json({ message: "본인이 만든 내전 결과 접수만 조회할 수 있습니다." }, { status: 403 });
     }
 

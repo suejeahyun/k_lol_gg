@@ -36,6 +36,7 @@ const menuGroups: UserSidebarGroup[] = [
   {
     title: "바로가기",
     items: [
+      { href: "/start", label: "등록·제출 시작", code: "GO", activePrefixes: ["/start"] },
       { href: "/", label: "홈", code: "HOM" },
       { href: "/recruit", label: "구인현황", code: "REC", activePrefixes: ["/recruit", "/recruit-helper"] },
       { href: "/discipline", label: "운영 징계 현황", code: "DIS" },

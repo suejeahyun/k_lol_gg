@@ -13,6 +13,7 @@ import {
   managedTemplateSnapshot,
   parseKstDateOnly,
 } from "@/lib/kakao/managed-forms";
+import { getKstDateKey } from "@/lib/date/kst";
 import { logServerError } from "@/lib/server/safe-log";
 
 type CreateSubmissionBody = {
@@ -48,6 +49,56 @@ function actorDetails(access: Awaited<ReturnType<typeof requireApprovedUserOrAdm
     userAccountId: access.user.userAccountId,
     userId: access.user.userId,
   };
+}
+
+export async function GET() {
+  try {
+    const access = await requireApprovedUserOrAdmin();
+    const actor = actorDetails(access);
+    const submissions = await prisma.inhouseResultSubmission.findMany({
+      where: {
+        roomName: "WEB",
+        status: "AWAITING_UPLOAD",
+        matchSeriesId: null,
+        OR: [
+          { submittedByUserAccountId: actor.userAccountId },
+          {
+            submittedByUserAccountId: null,
+            parsedData: {
+              path: ["submittedByUserAccountId"],
+              equals: actor.userAccountId,
+            },
+          },
+        ],
+      },
+      include: { _count: { select: { images: true } } },
+      orderBy: { updatedAt: "desc" },
+      take: 20,
+    });
+
+    return NextResponse.json({
+      ok: true,
+      submissions: submissions
+        .filter((submission) => submission._count.images < submission.expectedGameCount)
+        .map((submission) => ({
+          publicCode: submission.publicCode,
+          status: submission.status,
+          matchDate: getKstDateKey(submission.matchDate),
+          organizer: submission.organizer,
+          seriesNumber: submission.seriesNumber,
+          expectedImageCount: submission.expectedGameCount,
+          receivedImageCount: submission._count.images,
+          canUpload: true,
+        })),
+    });
+  } catch (error) {
+    const accessError = getAccessErrorResponseMessage(error, "미완료 내전 결과를 불러오지 못했습니다.");
+    if (accessError.status !== 500) {
+      return NextResponse.json({ message: accessError.message }, { status: accessError.status });
+    }
+    logServerError("[WEB_INHOUSE_RESULT_LIST_ERROR]", error);
+    return NextResponse.json({ message: accessError.message }, { status: 500 });
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -113,6 +164,9 @@ export async function POST(req: NextRequest) {
         submission: {
           publicCode: duplicate.publicCode,
           status: duplicate.status,
+          matchDate: getKstDateKey(duplicate.matchDate),
+          organizer: duplicate.organizer,
+          seriesNumber: duplicate.seriesNumber,
           expectedImageCount: duplicate.expectedGameCount,
           receivedImageCount: duplicate._count.images,
         },
@@ -154,6 +208,7 @@ export async function POST(req: NextRequest) {
         teamBalanceDraftId,
         roomName: "WEB",
         sender,
+        submittedByUserAccountId: actor.userAccountId,
         sourceMessageHash,
         status: "AWAITING_UPLOAD",
       },
@@ -164,6 +219,9 @@ export async function POST(req: NextRequest) {
       submission: {
         publicCode: submission.publicCode,
         status: submission.status,
+        matchDate: getKstDateKey(submission.matchDate),
+        organizer: submission.organizer,
+        seriesNumber: submission.seriesNumber,
         expectedImageCount: submission.expectedGameCount,
         receivedImageCount: 0,
       },

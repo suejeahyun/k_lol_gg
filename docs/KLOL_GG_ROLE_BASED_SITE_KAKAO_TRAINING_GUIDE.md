@@ -146,7 +146,7 @@
 | 참가 신청 | `/admin/kakao/season-apply` | 내전 참가 신청과 대기자 확인 |
 | 플레이어·계정 | `/admin/players`, `/admin/users` | 플레이어 정보, 가입 승인과 계정 상태 관리 |
 | 주의·경고·벤 | `/admin/discipline` | 접수 검토, 사유 입력, 승인·반려, 통계 확인 |
-| 경고·내전 양식 | `/admin/kakao/forms` | 카카오 관리 양식 초안·게시 버전 관리 |
+| 등록·제출 시작 | `/start` | 내전 결과, 경고 차감 사진, 관리자 경고 등록 화면 안내 |
 | 운영 신청 | `/admin/kakao/operation-forms` | 지인·건의·모임·외출 접수 처리 |
 
 ![관리자 홈: 사이트 기능 메뉴와 현재 현황을 확인하는 화면](docs/assets/admin-training/01-admin-dashboard.jpg)
@@ -165,7 +165,7 @@
 
 ![카카오 자동화 설정: 경고·사진·내전 결과 기능 스위치](docs/assets/admin-training/04-admin-kakao-settings.jpg)
 
-![카카오 양식 관리: 경고와 내전 결과 양식 버전 관리 화면](docs/assets/admin-training/05-admin-kakao-forms.jpg)
+경고·내전 양식은 코드의 고정 템플릿을 사용하므로 별도 양식 관리 화면은 제공하지 않는다.
 
 ## 6. 관리자 카카오봇 업무 절차
 

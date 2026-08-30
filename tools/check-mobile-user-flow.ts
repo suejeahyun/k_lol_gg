@@ -13,8 +13,21 @@ import { getDisplayActiveMemberCount } from "../src/lib/kakao/party-recruit";
 const root = process.cwd();
 const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
-assert.equal(isMobileStandalonePath("/matches/submit"), true);
-assert.equal(isMobileStandalonePath("/discipline/evidence"), true);
+const standaloneEntryPaths = [
+  "/start",
+  "/account",
+  "/discipline/evidence",
+  "/matches/submit",
+  "/admin/login",
+  "/admin/security",
+  "/admin/discipline/new",
+  "/admin/matches/submissions",
+] as const;
+
+for (const path of standaloneEntryPaths) {
+  assert.equal(isMobileStandalonePath(path), true, `${path} must remain standalone on mobile`);
+  assert.equal(toMobileAppPath(path), path, `${path} must not collapse into the mobile home`);
+}
 assert.equal(
   toMobileAppPath("/matches/submit", "code=MRA7225B15AE"),
   "/matches/submit?code=MRA7225B15AE",
@@ -46,10 +59,15 @@ assert.equal(safeLocalNextPath("https://evil.example/steal", { fallback: "/app" 
 assert.equal(safeLocalNextPath("//evil.example/steal", { fallback: "/app" }), "/app");
 assert.equal(safeLocalNextPath("/api/admin/users", { fallback: "/app" }), "/app");
 assert.equal(safeLocalNextPath("/app/login?next=/admin", { fallback: "/app" }), "/app");
+assert.equal(safeLocalNextPath("/admin/login?next=/admin", { fallback: "/app" }), "/app");
 assert.equal(safeLocalNextPath(["/matches/42", "//evil.example"], { fallback: "/app" }), "/matches/42");
 assert.equal(
   safeLocalNextPath("/matches/submit?code=MRA7225B15AE", { fallback: "/app" }),
   "/matches/submit?code=MRA7225B15AE",
+);
+assert.equal(
+  safeLocalNextPath("/admin/discipline/new?source=kakao", { fallback: "/admin/matches" }),
+  "/admin/discipline/new?source=kakao",
 );
 
 const bootScript = createMobileAppBootScript();
@@ -76,12 +94,39 @@ function runMobileBoot(pathname: string, search = "") {
 
 assert.equal(runMobileBoot("/matches/submit", "?code=MRA7225B15AE"), "");
 assert.equal(runMobileBoot("/discipline/evidence", "?code=WR0123456789"), "");
+for (const path of standaloneEntryPaths) {
+  assert.equal(runMobileBoot(path, "?source=mobile-test"), "", `${path} must bypass mobile redirect`);
+}
 assert.equal(runMobileBoot("/progress/event/17", "?from=notice"), "/app/progress/event/17?from=notice");
 assert.equal(runMobileBoot("/progress/destruction/5/mvp-vote"), "/app/progress/destruction/5/mvp-vote");
 
 const appLoginPage = read("src/app/app/login/page.tsx");
 assert.match(appLoginPage, /getCurrentUser/);
 assert.doesNotMatch(appLoginPage, /cookieStore\.get\("user_token"\)/);
+
+const adminLoginPage = read("src/app/(admin)/admin/login/page.tsx");
+assert.match(adminLoginPage, /safeLocalNextPath/);
+assert.match(adminLoginPage, /next:\s*nextPath/);
+assert.match(adminLoginPage, /router\.push\(nextPath\)/);
+
+const adminSecurityPage = read("src/app/(admin)/admin/security/page.tsx");
+assert.match(adminSecurityPage, /safeLocalNextPath/);
+assert.match(adminSecurityPage, /nextPath=\{nextPath\}/);
+
+const adminSecurityClient = read("src/app/(admin)/admin/security/_components/AdminSecurityTwoFactorClient.tsx");
+assert.match(adminSecurityClient, /new URLSearchParams\(\{ security, next: nextPath \}\)/);
+
+const proxy = read("src/proxy.ts");
+assert.match(proxy, /loginUrl\.searchParams\.set\("next", requestedPath\)/);
+assert.match(proxy, /securityUrl\.searchParams\.set\("next", requestedPath\)/);
+
+const manifest = JSON.parse(read("public/manifest.json")) as {
+  shortcuts?: Array<{ url?: string }>;
+};
+const shortcutUrls = new Set(manifest.shortcuts?.map((shortcut) => shortcut.url));
+assert.equal(shortcutUrls.has("/start"), true);
+assert.equal(shortcutUrls.has("/discipline/evidence"), true);
+assert.equal(shortcutUrls.has("/matches/submit"), true);
 
 const appEventPage = read("src/app/app/progress/event/[eventId]/page.tsx");
 assert.match(appEventPage, /EventParticipationClient/);
@@ -98,7 +143,13 @@ assert.match(inhouseSubmit, /selectedFiles\.slice\(index\)/);
 
 const disciplineSubmit = read("src/app/(user)/discipline/evidence/DisciplineEvidenceSubmitClient.tsx");
 assert.match(disciplineSubmit, /SelectedImageGrid/);
-assert.match(disciplineSubmit, /discipline\/evidence\?code=/);
+assert.match(disciplineSubmit, /taskPicker/);
+assert.match(disciplineSubmit, /searchParams\.delete\("code"\)/);
+assert.match(disciplineSubmit, /history\.replaceState/);
 assert.match(disciplineSubmit, /files\.slice\(index\)/);
+
+const mobileMePage = read("src/app/app/me/page.tsx");
+assert.match(mobileMePage, /caption="경고 차감 사진 제출" captionHref="\/discipline\/evidence"/);
+assert.doesNotMatch(mobileMePage, /discipline\/evidence\?code=/);
 
 console.log("mobile user flow checks passed");

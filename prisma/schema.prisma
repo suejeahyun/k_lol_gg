@@ -205,6 +205,7 @@ model UserAccount {
   discordAccountLinkLogs   DiscordAccountLinkLog[]
   disciplineRecords        UserDisciplineRecord[]
   destructionMatchMvpVotes DestructionMatchMvpVote[]
+  inhouseResultSubmissions InhouseResultSubmission[]
 
   @@index([deletedAt])
 }
@@ -1674,38 +1675,41 @@ model DisciplineBanReview {
 }
 
 model InhouseResultSubmission {
-  id                 Int       @id @default(autoincrement())
-  publicCode         String    @unique
-  templateId         Int?
-  templateVersion    Int
-  templateSnapshot   Json
-  rawText            String    @db.Text
-  parsedData         Json
-  seasonId           Int?
-  matchDate          DateTime
-  organizer          String
-  seriesNumber       Int
-  expectedGameCount  Int
-  teamBalanceDraftId Int?
-  roomName           String?
-  sender             String?
-  sourceMessageHash  String?   @unique
-  status             String    @default("AWAITING_UPLOAD")
-  reviewedAt         DateTime?
-  reviewedById       Int?
-  rejectionReason    String?   @db.Text
-  matchSeriesId      Int?      @unique
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  id                       Int       @id @default(autoincrement())
+  publicCode               String    @unique
+  templateId               Int?
+  templateVersion          Int
+  templateSnapshot         Json
+  rawText                  String    @db.Text
+  parsedData               Json
+  seasonId                 Int?
+  matchDate                DateTime
+  organizer                String
+  seriesNumber             Int
+  expectedGameCount        Int
+  teamBalanceDraftId       Int?
+  roomName                 String?
+  sender                   String?
+  sourceMessageHash        String?   @unique
+  status                   String    @default("AWAITING_UPLOAD")
+  reviewedAt               DateTime?
+  reviewedById             Int?
+  rejectionReason          String?   @db.Text
+  matchSeriesId            Int?      @unique
+  submittedByUserAccountId Int?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
 
-  template         KakaoFormTemplate?   @relation(fields: [templateId], references: [id], onDelete: SetNull)
-  season           Season?              @relation(fields: [seasonId], references: [id], onDelete: SetNull)
-  teamBalanceDraft TeamBalanceDraft?    @relation(fields: [teamBalanceDraftId], references: [id], onDelete: SetNull)
-  matchSeries      MatchSeries?         @relation(fields: [matchSeriesId], references: [id], onDelete: SetNull)
-  images           InhouseResultImage[]
+  template               KakaoFormTemplate?   @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  season                 Season?              @relation(fields: [seasonId], references: [id], onDelete: SetNull)
+  teamBalanceDraft       TeamBalanceDraft?    @relation(fields: [teamBalanceDraftId], references: [id], onDelete: SetNull)
+  matchSeries            MatchSeries?         @relation(fields: [matchSeriesId], references: [id], onDelete: SetNull)
+  submittedByUserAccount UserAccount?         @relation(fields: [submittedByUserAccountId], references: [id], onDelete: SetNull)
+  images                 InhouseResultImage[]
 
   @@index([status, createdAt])
   @@index([matchDate, status])
+  @@index([submittedByUserAccountId, status, updatedAt], map: "InhouseResultSubmission_owner_status_updated_idx")
 }
 
 model InhouseResultImage {

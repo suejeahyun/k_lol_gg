@@ -43,8 +43,8 @@ export default async function InhouseResultSubmitPage({ searchParams }: PageProp
     <main className={styles.page}>
       <section className={styles.hero}>
         <p className={styles.eyebrow}>INHOUSE RESULT</p>
-        <h1>내전 결과 한 번에 제출</h1>
-        <p>양식 복사 없이 진행 정보와 2~3장의 결과 사진을 한 화면에서 제출합니다.</p>
+        <h1>내전 결과 등록</h1>
+        <p>안내되는 순서대로 정보 확인과 사진 선택만 하면 됩니다. 처음 이용해도 약 1분이면 제출할 수 있습니다.</p>
       </section>
       <InhouseResultSubmitClient
         defaultDate={getKstDateKey(new Date())}

@@ -58,7 +58,6 @@ export default async function AccountPage() {
       createdAt: true,
       resolutionTask: {
         select: {
-          publicCode: true,
           category: true,
           requiredGameCount: true,
           dueAt: true,
@@ -115,13 +114,13 @@ export default async function AccountPage() {
         </div>
       </section>
 
-      <section className="admin-card account-card account-discipline-card" aria-labelledby="account-discipline-title">
+      <section id="discipline" className="admin-card account-card account-discipline-card" aria-labelledby="account-discipline-title">
         <div className="admin-section-head account-discipline-head">
           <div>
             <h2 id="account-discipline-title">내 경고 현황</h2>
             <p className="admin-muted">내 계정과 연결된 플레이어의 활성 주의·경고·벤 기록입니다.</p>
           </div>
-          <Link className="admin-button" href="/discipline">전체 징계 통계</Link>
+          <Link className="admin-button" href="/discipline/evidence">경고 차감 사진 제출</Link>
         </div>
 
         <div className="account-discipline-summary" role="group" aria-label="내 활성 징계 요약">
@@ -177,7 +176,7 @@ export default async function AccountPage() {
                       <div>
                         <strong>{TASK_STATUS_LABELS[task.status] ?? task.status}</strong>
                         <span>
-                          {task.publicCode} · {task.category === "INHOUSE" ? "내전" : "일반"} · 사진 {receivedImageCount}/{task.requiredGameCount}장 · 기한 {getKstDateKey(task.dueAt)}
+                          {task.category === "INHOUSE" ? "내전 경고" : "일반 경고"} · 사진 {receivedImageCount}/{task.requiredGameCount}장 · 기한 {getKstDateKey(task.dueAt)}
                         </span>
                         {task.status === "REJECTED" && task.reviewNote ? (
                           <span className="account-discipline-task__review" role="alert">반려 사유: {task.reviewNote}</span>
@@ -189,7 +188,7 @@ export default async function AccountPage() {
                       {canUpload ? (
                         <Link
                           className="admin-button account-discipline-upload"
-                          href={`/discipline/evidence?code=${encodeURIComponent(task.publicCode)}`}
+                          href="/discipline/evidence"
                         >
                           사진 등록
                         </Link>

@@ -41,7 +41,7 @@ export default function DisciplineWorkflowClient({ submissions, tasks, banReview
       return;
     }
     const successMessage = review.kind === "submission" && review.action === "APPROVE"
-      ? `승인했습니다.${result.taskCode ? ` 차감 인증번호: ${result.taskCode}` : ""}`
+      ? `승인했습니다.${result.taskCode ? " 대상자는 내정보에서 사진 제출 과제를 확인할 수 있습니다." : ""}`
       : review.action === "APPROVE" ? "승인했습니다." : "반려했습니다.";
     if (review.kind === "submission" && review.action === "APPROVE" && result.taskCode) {
       setTaskHandoff({

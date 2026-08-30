@@ -1,6 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
 import type { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma/client";
 
 export const KAKAO_FORM_TYPES = {
   DISCIPLINE: "DISCIPLINE",
@@ -80,34 +79,8 @@ export const DEFAULT_MANAGED_TEMPLATES: Record<KakaoManagedFormType, ManagedTemp
   },
 };
 
-function toTemplate(record: {
-  id: number;
-  formType: string;
-  version: number;
-  status: string;
-  title: string;
-  commandAliases: unknown;
-  instructions: string;
-  fieldsJson: unknown;
-}): ManagedTemplate {
-  return {
-    id: record.id,
-    formType: record.formType as KakaoManagedFormType,
-    version: record.version,
-    status: record.status,
-    title: record.title,
-    commandAliases: Array.isArray(record.commandAliases) ? record.commandAliases.map(String) : [],
-    instructions: record.instructions,
-    fields: Array.isArray(record.fieldsJson) ? record.fieldsJson as ManagedField[] : [],
-  };
-}
-
 export async function getPublishedManagedTemplate(formType: KakaoManagedFormType) {
-  const record = await prisma.kakaoFormTemplate.findFirst({
-    where: { formType, status: "PUBLISHED" },
-    orderBy: { version: "desc" },
-  });
-  return record ? toTemplate(record) : DEFAULT_MANAGED_TEMPLATES[formType];
+  return DEFAULT_MANAGED_TEMPLATES[formType];
 }
 
 export function renderManagedTemplate(template: ManagedTemplate, defaults: Record<string, string> = {}) {

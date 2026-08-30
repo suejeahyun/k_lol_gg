@@ -1,0 +1,339 @@
+.page {
+  width: min(1180px, calc(100vw - 32px));
+  margin: 0 auto;
+  padding: 34px 0 64px;
+  color: #e8f3ff;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(260px, .7fr);
+  gap: 24px;
+  align-items: stretch;
+  margin-bottom: 34px;
+  padding: 34px;
+  overflow: hidden;
+  border: 1px solid rgba(125, 211, 252, .22);
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at 14% 0%, rgba(14, 165, 233, .24), transparent 38%),
+    linear-gradient(135deg, rgba(9, 31, 54, .96), rgba(10, 20, 38, .94));
+  box-shadow: 0 22px 70px rgba(1, 8, 20, .35);
+}
+
+.eyebrow,
+.sectionHeading span {
+  color: #7dd3fc;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .16em;
+}
+
+.hero h1 {
+  max-width: 720px;
+  margin: 10px 0 12px;
+  color: #fff;
+  font-size: clamp(32px, 5vw, 55px);
+  line-height: 1.08;
+  letter-spacing: -.045em;
+}
+
+.hero > div:first-child > p {
+  max-width: 650px;
+  margin: 0;
+  color: #b9cbe0;
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+.sessionCard {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 23px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, .06);
+}
+
+.sessionCard span {
+  color: #91a9c1;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.sessionCard strong {
+  margin-top: 5px;
+  color: #fff;
+  font-size: 22px;
+}
+
+.sessionCard p {
+  margin: 9px 0 16px;
+  color: #bdcee0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.sessionCard a,
+.cardAction,
+.helpActions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  border-radius: 12px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.sessionCard a {
+  color: #062038;
+  background: #7dd3fc;
+}
+
+.choiceSection {
+  margin-top: 28px;
+}
+
+.sectionHeading {
+  margin-bottom: 16px;
+}
+
+.sectionHeading h2 {
+  margin: 5px 0 0;
+  color: #fff;
+  font-size: 27px;
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.guideCard {
+  position: relative;
+  display: flex;
+  min-height: 430px;
+  flex-direction: column;
+  padding: 23px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, .2);
+  border-radius: 22px;
+  background: linear-gradient(160deg, rgba(17, 37, 61, .96), rgba(9, 21, 38, .98));
+}
+
+.guideCard::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  content: "";
+  background: var(--card-accent);
+}
+
+.match { --card-accent: linear-gradient(90deg, #38bdf8, #2563eb); }
+.evidence { --card-accent: linear-gradient(90deg, #34d399, #14b8a6); }
+.warning { --card-accent: linear-gradient(90deg, #fb7185, #f59e0b); }
+
+.cardTopline {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  gap: 8px;
+}
+
+.cardNumber {
+  color: rgba(255, 255, 255, .24);
+  font-size: 30px;
+  font-weight: 950;
+}
+
+.cardBadge,
+.recommended {
+  padding: 5px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.cardBadge {
+  color: #dcecff;
+  background: rgba(148, 163, 184, .14);
+}
+
+.recommended {
+  margin-left: auto;
+  color: #082f49;
+  background: #7dd3fc;
+}
+
+.guideCard h2 {
+  margin: 18px 0 9px;
+  color: #fff;
+  font-size: 25px;
+  letter-spacing: -.025em;
+}
+
+.guideCard > p {
+  min-height: 76px;
+  margin: 0;
+  color: #afc1d5;
+  line-height: 1.65;
+}
+
+.cardSteps {
+  display: grid;
+  gap: 10px;
+  margin: 18px 0 24px;
+  padding: 0;
+  list-style: none;
+  counter-reset: start-step;
+}
+
+.cardSteps li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #dbeafe;
+  font-size: 13px;
+  line-height: 1.45;
+  counter-increment: start-step;
+}
+
+.cardSteps li::before {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  place-items: center;
+  border-radius: 50%;
+  color: #c6e8ff;
+  background: rgba(56, 189, 248, .13);
+  content: counter(start-step);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.cardAction {
+  gap: 8px;
+  margin-top: auto;
+  color: #fff;
+  background: rgba(37, 99, 235, .88);
+}
+
+.evidence .cardAction { background: rgba(5, 150, 105, .9); }
+.warning .cardAction { background: rgba(225, 29, 72, .88); }
+
+.cardAction:hover,
+.helpActions a:hover,
+.sessionCard a:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.helpSection {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 20px;
+  padding: 20px 22px;
+  border: 1px solid rgba(125, 211, 252, .18);
+  border-radius: 18px;
+  background: rgba(12, 34, 57, .72);
+}
+
+.helpSection > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.helpIcon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  place-items: center;
+  border-radius: 14px;
+  color: #082f49;
+  background: #7dd3fc;
+  font-size: 22px;
+  font-weight: 950;
+}
+
+.helpSection h2 {
+  margin: 0 0 3px;
+  color: #fff;
+  font-size: 17px;
+}
+
+.helpSection p {
+  margin: 0;
+  color: #9fb5cb;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.helpActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.helpActions a {
+  min-height: 40px;
+  padding: 0 13px;
+  color: #dbeafe;
+  background: rgba(59, 130, 246, .18);
+}
+
+.beginnerNote {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  padding: 14px 17px;
+  border-radius: 14px;
+  color: #c7d7e7;
+  background: rgba(15, 23, 42, .62);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.beginnerNote strong {
+  flex: 0 0 auto;
+  color: #fef3c7;
+}
+
+.beginnerNote p { margin: 0; }
+
+@media (max-width: 960px) {
+  .hero { grid-template-columns: 1fr; }
+  .cardGrid { grid-template-columns: 1fr 1fr; }
+  .warning { grid-column: 1 / -1; }
+  .guideCard { min-height: 385px; }
+}
+
+@media (max-width: 680px) {
+  .page {
+    width: min(100%, calc(100vw - 20px));
+    padding-top: 16px;
+  }
+
+  .hero {
+    gap: 18px;
+    padding: 23px 18px;
+    border-radius: 20px;
+  }
+
+  .hero h1 { font-size: 34px; }
+  .hero > div:first-child > p { font-size: 15px; }
+  .cardGrid { grid-template-columns: 1fr; }
+  .warning { grid-column: auto; }
+  .guideCard { min-height: auto; }
+  .guideCard > p { min-height: auto; }
+  .helpSection { align-items: stretch; flex-direction: column; }
+  .helpActions { display: grid; grid-template-columns: 1fr 1fr; }
+  .beginnerNote { flex-direction: column; }
+}

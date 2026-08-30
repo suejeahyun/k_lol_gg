@@ -2,7 +2,7 @@ import fs from "node:fs";
 import vm from "node:vm";
 
 const source = fs.readFileSync(
-  "KLOL_KAKAO_BOT_V39_FAST_REGISTRATION.js",
+  "KLOL_KAKAO_BOT_V40_GUIDED_HUB.js",
   "utf8",
 );
 
@@ -49,6 +49,20 @@ function createConnection(url) {
         },
       };
     },
+    post() {
+      requests.push({ ...request });
+      const parsedBody = JSON.parse(request.body || "{}");
+      return {
+        text() {
+          return JSON.stringify(
+            apiResponseOverride || {
+              ok: true,
+              reply: `[TEST] ${parsedBody.message || ""}`,
+            },
+          );
+        },
+      };
+    },
   };
 
   return connection;
@@ -71,7 +85,7 @@ const context = {
 };
 
 vm.runInNewContext(source, context, {
-  filename: "KLOL_KAKAO_BOT_V39_FAST_REGISTRATION.js",
+  filename: "KLOL_KAKAO_BOT_V40_GUIDED_HUB.js",
 });
 
 function runMessage(message) {
@@ -144,6 +158,101 @@ assert(
   "일반 대화가 내전 구인 명령으로 잘못 처리됐습니다.",
 );
 
+for (const command of ["/등록", "등록도움말"]) {
+  const result = runMessage(command);
+  assert(result.requests.length === 0, `${command}: 등록 센터가 서버 API를 호출했습니다.`);
+  assert(
+    result.replies.length === 1 &&
+      result.replies[0].includes("쉬운 등록 센터") &&
+      result.replies[0].includes("https://k-lol-gg.vercel.app/start") &&
+      result.replies[0].includes("https://k-lol-gg.vercel.app/matches/submit") &&
+      result.replies[0].includes("https://k-lol-gg.vercel.app/admin/discipline/new") &&
+      result.replies[0].includes("https://k-lol-gg.vercel.app/discipline/evidence"),
+    `${command}: 세 가지 웹 등록 동선이 한 화면에 안내되지 않았습니다.`,
+  );
+}
+
+const guidedInhouse = runMessage("/내전등록");
+assert(
+    guidedInhouse.requests.length === 0 &&
+    guidedInhouse.replies.length === 1 &&
+    guidedInhouse.replies[0].includes("/matches/submit") &&
+    guidedInhouse.replies[0].includes("진행 중인 제출을 자동으로 찾아") &&
+    !guidedInhouse.replies[0].includes("/결과등록 3세트"),
+  "/내전등록이 번호 없는 사이트 등록만 명확히 안내하지 않습니다.",
+);
+
+const guidedDiscipline = runMessage("/경고등록");
+assert(
+  guidedDiscipline.requests.length === 0 &&
+    guidedDiscipline.replies.length === 1 &&
+    guidedDiscipline.replies[0].includes("/admin/discipline/new") &&
+    guidedDiscipline.replies[0].includes("관리자 로그인") &&
+    guidedDiscipline.replies[0].includes("2차 인증") &&
+    !guidedDiscipline.replies[0].includes("/경고 닉네임#태그"),
+  "/경고등록이 사이트 관리자 인증 흐름만 명확히 안내하지 않습니다.",
+);
+
+const guidedEvidence = runMessage("/인증");
+assert(
+  guidedEvidence.requests.length === 0 &&
+    guidedEvidence.replies.length === 1 &&
+    guidedEvidence.replies[0].includes("/discipline/evidence") &&
+    guidedEvidence.replies[0].includes("본인의 진행 과제만") &&
+    !guidedEvidence.replies[0].includes("?code="),
+  "/인증이 서버 접수 없이 본인 전용 사이트 링크를 안내하지 않습니다.",
+);
+
+const guidedWarningStatus = runMessage("/경고현황");
+assert(
+  guidedWarningStatus.requests.length === 0 &&
+    guidedWarningStatus.replies[0].includes("/account#discipline") &&
+    !guidedWarningStatus.replies[0].includes("WR"),
+  "/경고현황이 접수번호 없이 내정보로 연결되지 않습니다.",
+);
+
+const guidedResultStatus = runMessage("/결과현황");
+assert(
+  guidedResultStatus.requests.length === 0 &&
+    guidedResultStatus.replies[0].includes("/matches/submit") &&
+    !guidedResultStatus.replies[0].includes("MR"),
+  "/결과현황이 접수번호 없이 내 제출 화면으로 연결되지 않습니다.",
+);
+
+for (const command of ["/경고", "/경고인증", "/결과등록", "/내전결과", "/내전등록현황"]) {
+  const siteOnlyAlias = runMessage(command);
+  assert(
+    siteOnlyAlias.requests.length === 0 &&
+      siteOnlyAlias.replies.length === 1 &&
+      siteOnlyAlias.replies[0].includes("https://k-lol-gg.vercel.app/") &&
+      !siteOnlyAlias.replies[0].includes("접수번호:"),
+    `${command}: 인자 없는 기존 별칭도 사이트 우선으로 전환되어야 합니다.`,
+  );
+}
+
+const compatibleLegacyEvidence = runMessage("/인증 WR0123456789");
+assert(
+  compatibleLegacyEvidence.requests.length === 0 &&
+    compatibleLegacyEvidence.replies[0].includes("/discipline/evidence") &&
+    !compatibleLegacyEvidence.replies[0].includes("WR0123456789"),
+  "기존 코드 포함 인증도 서버 쓰기 없이 번호 없는 사이트로 전환되어야 합니다.",
+);
+
+const compatibleQuickResult = runMessage("/결과등록 3세트 1회차");
+assert(
+  compatibleQuickResult.requests.length === 0 &&
+    compatibleQuickResult.replies[0].includes("/matches/submit") &&
+    !compatibleQuickResult.replies[0].includes("MR"),
+  "기존 /결과등록 빠른 접수도 서버 쓰기 없이 사이트로 전환되어야 합니다.",
+);
+
+const compatibleLegacyForm = runMessage("[K-LOL.GG 내전 결과 등록 양식 v1]\n진행일: 2026-08-31");
+assert(
+  compatibleLegacyForm.requests.length === 0 &&
+    compatibleLegacyForm.replies[0].includes("/matches/submit"),
+  "붙여넣은 구형 내전 양식도 새 카카오 접수를 만들지 않고 사이트로 안내해야 합니다.",
+);
+
 apiResponseOverride = {
   ok: false,
   reply: "[K-LOL.GG 내전현황]\n인증값이 올바르지 않습니다.",
@@ -171,6 +280,15 @@ assert(
   missingSecret.replies.length === 1 &&
     missingSecret.replies[0].includes("KLOL_KAKAO_RECRUIT_SECRET"),
   "봇 인증값 누락 안내가 출력되지 않았습니다.",
+);
+
+const evidenceWithoutSecret = runMessage("/인증");
+assert(
+  evidenceWithoutSecret.requests.length === 0 &&
+    evidenceWithoutSecret.replies.length === 1 &&
+    evidenceWithoutSecret.replies[0].includes("/discipline/evidence") &&
+    !evidenceWithoutSecret.replies[0].includes("KLOL_KAKAO_RECRUIT_SECRET"),
+  "봇 인증값과 관계없이 /인증은 사이트 제출만 안내해야 합니다.",
 );
 
 console.log("Kakao bot inhouse routing checks passed.");

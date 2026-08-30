@@ -2,10 +2,8 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
-import {
-  getAccessErrorResponseMessage,
-  requireApprovedUserOrAdmin,
-} from "@/lib/auth/access";
+import { getAccessErrorResponseMessage } from "@/lib/auth/access";
+import { requireApprovedUser } from "@/lib/auth/session";
 import {
   deletePrivateAsset,
   storePrivateImage,
@@ -13,7 +11,10 @@ import {
 } from "@/lib/storage/private-assets";
 import { logServerError } from "@/lib/server/safe-log";
 import { currentDisciplineEvidenceCount } from "@/lib/discipline/evidence-batch";
-import { isDisciplineRecordOwner } from "@/lib/discipline/ownership";
+import {
+  disciplineRecordOwnerWhere,
+  isDisciplineRecordOwner,
+} from "@/lib/discipline/ownership";
 
 type RouteContext = {
   params: Promise<{ publicCode: string }>;
@@ -32,25 +33,24 @@ function isPublicImageError(error: unknown) {
 
 export async function POST(req: NextRequest, { params }: RouteContext) {
   try {
-    const access = await requireApprovedUserOrAdmin();
+    const user = await requireApprovedUser();
     const { publicCode: rawPublicCode } = await params;
     const publicCode = decodeURIComponent(rawPublicCode || "").trim().toUpperCase();
     if (!/^WR[A-F0-9]{10}$/.test(publicCode)) {
       return NextResponse.json({ message: "WR로 시작하는 인증번호를 확인해주세요." }, { status: 400 });
     }
 
-    const task = await prisma.disciplineResolutionTask.findUnique({
-      where: { publicCode },
+    const task = await prisma.disciplineResolutionTask.findFirst({
+      where: {
+        publicCode,
+        disciplineRecord: disciplineRecordOwnerWhere(user),
+      },
       include: {
         disciplineRecord: { select: { userAccountId: true, playerId: true } },
         evidence: { include: { privateAsset: { select: { sha256: true } } } },
       },
     });
-    if (!task) return NextResponse.json({ message: "경고 차감 인증 과제를 찾을 수 없습니다." }, { status: 404 });
-
-    if (access.type === "user" && !isDisciplineRecordOwner(task.disciplineRecord, access.user)) {
-      return NextResponse.json({ message: "본인의 경고 차감 사진만 제출할 수 있습니다." }, { status: 403 });
-    }
+    if (!task) return NextResponse.json({ message: "내 계정에서 제출할 경고 차감 과제를 찾을 수 없습니다." }, { status: 404 });
     if (task.dueAt <= new Date()) {
       return NextResponse.json({ message: "경고 차감 인증 기한이 지났습니다. 관리자에게 문의해주세요." }, { status: 409 });
     }
@@ -85,12 +85,16 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
         const current = await tx.disciplineResolutionTask.findUnique({
           where: { id: task.id },
           include: {
+            disciplineRecord: { select: { userAccountId: true, playerId: true } },
             evidence: {
               include: { privateAsset: { select: { sha256: true } } },
             },
           },
         });
-        if (!current || !["REQUIRED", "REJECTED", "AWAITING_UPLOAD"].includes(current.status)) {
+        if (!current || !isDisciplineRecordOwner(current.disciplineRecord, user)) {
+          throw new Error("TASK_NOT_FOUND");
+        }
+        if (!["REQUIRED", "REJECTED", "AWAITING_UPLOAD"].includes(current.status)) {
           throw new Error("TASK_NOT_UPLOADABLE");
         }
         if (current.dueAt <= new Date()) throw new Error("TASK_EXPIRED");
@@ -147,6 +151,9 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
   } catch (error) {
     const accessError = getAccessErrorResponseMessage(error, "경고 차감 사진을 등록하지 못했습니다.");
     if (accessError.status !== 500) return NextResponse.json({ message: accessError.message }, { status: accessError.status });
+    if (error instanceof Error && error.message === "TASK_NOT_FOUND") {
+      return NextResponse.json({ message: "내 계정에서 제출할 경고 차감 과제를 찾을 수 없습니다." }, { status: 404 });
+    }
     if (error instanceof Error && ["TASK_NOT_UPLOADABLE", "TASK_ALREADY_COMPLETE"].includes(error.message)) {
       return NextResponse.json({ message: "다른 요청에서 사진 제출이 완료되었습니다. 화면을 새로고침해주세요." }, { status: 409 });
     }

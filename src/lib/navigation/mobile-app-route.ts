@@ -10,9 +10,15 @@ export const MOBILE_PC_VIEW_SESSION_KEY = "klol-mobile-pc-view";
 
 export const MOBILE_STANDALONE_EXACT_PATHS = [
   "/install",
+  "/start",
+  "/account",
   "/discipline",
   "/discipline/evidence",
   "/matches/submit",
+  "/admin/login",
+  "/admin/security",
+  "/admin/discipline/new",
+  "/admin/matches/submissions",
   "/recruit-helper",
   "/signup",
   "/forgot-password",
@@ -24,6 +30,9 @@ export const MOBILE_STANDALONE_PREFIX_PATHS = [
   "/install/",
   "/discipline/evidence/",
   "/matches/submit/",
+  "/admin/security/",
+  "/admin/discipline/new/",
+  "/admin/matches/submissions/",
 ] as const;
 
 const MOBILE_ROUTE_RULES: readonly MobileRouteRule[] = [

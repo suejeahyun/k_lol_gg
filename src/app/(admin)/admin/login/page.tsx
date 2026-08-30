@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { safeLocalNextPath } from "@/lib/navigation/safe-next";
 
 type LoginStep = "PASSWORD" | "TWO_FACTOR";
 
@@ -23,9 +24,16 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [messageTone, setMessageTone] = useState<"error" | "info">("error");
+  const [nextPath, setNextPath] = useState("/admin/matches");
 
   useEffect(() => {
-    const security = new URLSearchParams(window.location.search).get("security");
+    const params = new URLSearchParams(window.location.search);
+    const security = params.get("security");
+    setNextPath(
+      safeLocalNextPath(params.get("next") ?? undefined, {
+        fallback: "/admin/matches",
+      }),
+    );
     if (security === "2fa-enabled") {
       setMessage("2단계 인증이 활성화되었습니다. 인증앱에 다음 새 6자리 코드가 표시되면 다시 로그인해주세요.");
       setMessageTone("info");
@@ -79,12 +87,16 @@ export default function AdminLoginPage() {
       }
 
       if (data.requiresTwoFactorSetup) {
-        router.push("/admin/security?setup=required");
+        const params = new URLSearchParams({
+          setup: "required",
+          next: nextPath,
+        });
+        router.push(`/admin/security?${params.toString()}`);
         router.refresh();
         return;
       }
 
-      router.push("/admin/matches");
+      router.push(nextPath);
       router.refresh();
     } catch (error) {
       console.error(error);

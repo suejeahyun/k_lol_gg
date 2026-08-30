@@ -6,6 +6,7 @@ import {
   getAccessErrorResponseMessage,
   requireApprovedUserOrAdmin,
 } from "@/lib/auth/access";
+import { isInhouseSubmissionOwner } from "@/lib/inhouse-result/ownership";
 import {
   deletePrivateAsset,
   storePrivateImage,
@@ -63,9 +64,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     if (access.type === "user" && submission.roomName !== "WEB") {
       return NextResponse.json({ message: "카카오에서 만든 접수는 관리자만 사이트에서 복구할 수 있습니다." }, { status: 403 });
     }
-    const parsedData = submission.parsedData as Record<string, unknown>;
-    const submittedByUserAccountId = Number(parsedData.submittedByUserAccountId);
-    if (access.type === "user" && submittedByUserAccountId !== access.user.userAccountId) {
+    if (access.type === "user" && !isInhouseSubmissionOwner(submission, access.user.userAccountId)) {
       return NextResponse.json({ message: "본인이 만든 내전 결과 접수에만 사진을 등록할 수 있습니다." }, { status: 403 });
     }
     if (submission.matchSeriesId) {

@@ -108,7 +108,6 @@ export default async function AppMePage() {
             createdAt: true,
             resolutionTask: {
               select: {
-                publicCode: true,
                 requiredGameCount: true,
                 dueAt: true,
                 status: true,
@@ -195,7 +194,7 @@ export default async function AppMePage() {
             </div>
           </AppSection>
 
-          <AppSection title="내 경고 현황" caption="전체 징계 통계" captionHref="/discipline">
+          <AppSection title="내 경고 현황" caption="경고 차감 사진 제출" captionHref="/discipline/evidence">
             <div className="klol-app-meta-grid">
               <div className="klol-app-meta"><span>주의</span><strong>{disciplineSummary.cautions}회</strong></div>
               <div className="klol-app-meta"><span>경고</span><strong>{disciplineSummary.warnings}회</strong></div>
@@ -227,7 +226,7 @@ export default async function AppMePage() {
                       <strong>{DISCIPLINE_LABELS[record.type] ?? record.type} · {record.reason}</strong>
                       <span>
                         등록일 {getKstDateKey(record.createdAt)}
-                        {task ? ` · ${TASK_STATUS_LABELS[task.status] ?? task.status} · ${task.publicCode} · 사진 ${receivedImageCount}/${task.requiredGameCount}장 · 기한 ${getKstDateKey(task.dueAt)}${canUpload ? " · 사진 등록" : ""}` : ""}
+                        {task ? ` · ${TASK_STATUS_LABELS[task.status] ?? task.status} · 사진 ${receivedImageCount}/${task.requiredGameCount}장 · 기한 ${getKstDateKey(task.dueAt)}${canUpload ? " · 사진 등록" : ""}` : ""}
                       </span>
                       {task?.status === "REJECTED" && task.reviewNote ? (
                         <span role="alert">반려 사유: {task.reviewNote}</span>
@@ -238,7 +237,7 @@ export default async function AppMePage() {
                     </span>
                   );
                   return canUpload && task ? (
-                    <Link className="klol-app-list-card" href={`/discipline/evidence?code=${encodeURIComponent(task.publicCode)}`} key={record.id}>
+                    <Link className="klol-app-list-card" href="/discipline/evidence" key={record.id}>
                       {content}
                     </Link>
                   ) : (

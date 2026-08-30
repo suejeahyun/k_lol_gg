@@ -17,6 +17,7 @@ export function safeLocalNextPath(value?: string | string[], options: SafeNextOp
     if (pathname === "/api" || pathname.startsWith("/api/")) return fallback;
     if (pathname === "/login" || pathname.startsWith("/login/")) return fallback;
     if (pathname === "/app/login" || pathname.startsWith("/app/login/")) return fallback;
+    if (pathname === "/admin/login" || pathname.startsWith("/admin/login/")) return fallback;
 
     return `${target.pathname}${target.search}${target.hash}`;
   } catch {
