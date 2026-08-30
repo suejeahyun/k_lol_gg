@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { requireAdminRequest } from "@/lib/auth/requireAdmin";
+import { writeSecurityAudit } from "@/lib/security/admin-audit";
 
 const VALID_TYPES = new Set(["CAUTION", "WARNING", "BAN"]);
 const VALID_SOURCES = new Set(["MANUAL", "LATE", "NO_SHOW", "CHAT_ABUSE", "TOXICITY", "LINE_FORM", "KICK", "BAN", "OTHER"]);
@@ -59,15 +60,29 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     },
   });
 
+  await writeSecurityAudit({
+    req,
+    admin,
+    action: "DISCIPLINE_RECORD_UPDATE",
+    message: `징계 기록 수정: #${recordId}`,
+    targetType: "UserDisciplineRecord",
+    targetId: recordId,
+    beforeJson: JSON.parse(JSON.stringify(current)),
+    afterJson: JSON.parse(JSON.stringify(updated)),
+  });
+
   return NextResponse.json({ ok: true, record: updated });
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const admin = await requireAdminRequest();
   if (!admin) return NextResponse.json({ message: "관리자 권한이 필요합니다." }, { status: 401 });
 
   const recordId = await parseId(params);
   if (!recordId) return NextResponse.json({ message: "잘못된 기록 ID입니다." }, { status: 400 });
+
+  const current = await prisma.userDisciplineRecord.findUnique({ where: { id: recordId } });
+  if (!current) return NextResponse.json({ message: "기록을 찾을 수 없습니다." }, { status: 404 });
 
   const updated = await prisma.userDisciplineRecord.update({
     where: { id: recordId },
@@ -77,6 +92,17 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
       resetReason: "운영자 삭제 처리",
       resetBy: admin.user.userId,
     },
+  });
+
+  await writeSecurityAudit({
+    req,
+    admin,
+    action: "DISCIPLINE_RECORD_DEACTIVATE",
+    message: `징계 기록 비활성화: #${recordId}`,
+    targetType: "UserDisciplineRecord",
+    targetId: recordId,
+    beforeJson: JSON.parse(JSON.stringify(current)),
+    afterJson: JSON.parse(JSON.stringify(updated)),
   });
 
   return NextResponse.json({ ok: true, record: updated });

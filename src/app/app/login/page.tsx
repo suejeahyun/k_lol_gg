@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AppLoginForm } from "@/components/app-mobile/AppLoginForm";
+import { getCurrentUser } from "@/lib/auth/session";
+import { safeLocalNextPath } from "@/lib/navigation/safe-next";
 
 export const dynamic = "force-dynamic";
 
@@ -13,25 +14,16 @@ export const metadata: Metadata = {
 
 type AppLoginPageProps = {
   searchParams?: Promise<{
-    next?: string;
+    next?: string | string[];
   }>;
 };
 
-function safeNextPath(value?: string) {
-  if (!value) return "/app";
-  if (!value.startsWith("/")) return "/app";
-  if (value.startsWith("//")) return "/app";
-  if (value.startsWith("/api/")) return "/app";
-  return value;
-}
-
 export default async function AppLoginPage({ searchParams }: AppLoginPageProps) {
   const params = await searchParams;
-  const nextPath = safeNextPath(params?.next);
-  const cookieStore = await cookies();
-  const token = cookieStore.get("user_token");
+  const nextPath = safeLocalNextPath(params?.next, { fallback: "/app" });
+  const user = await getCurrentUser();
 
-  if (token) {
+  if (user) {
     redirect(nextPath);
   }
 

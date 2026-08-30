@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import DisciplineTaskHandoff from "@/components/admin/DisciplineTaskHandoff";
 
 type Target = {
   userAccountId: number | null;
@@ -11,6 +12,20 @@ type Target = {
   nickname: string | null;
   tag: string | null;
   label: string;
+};
+
+type TaskHandoff = {
+  publicCode: string;
+  targetName: string;
+  requiredGameCount?: number;
+};
+
+type CreateResponse = {
+  message?: string;
+  resolutionTask?: {
+    publicCode?: string;
+    requiredGameCount?: number;
+  } | null;
 };
 
 const sourceOptions = [
@@ -43,6 +58,7 @@ export default function DisciplineRecordCreateClient({ targets }: { targets: Tar
   const [reason, setReason] = useState("");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
+  const [taskHandoff, setTaskHandoff] = useState<TaskHandoff | null>(null);
 
   const filteredTargets = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -97,8 +113,18 @@ export default function DisciplineRecordCreateClient({ targets }: { targets: Tar
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...payload, type, warningCategory, source, reason, note }),
       });
-      const data = await res.json().catch(() => ({}));
+      const data = await res.json().catch(() => ({})) as CreateResponse;
       if (!res.ok) throw new Error(data?.message || "저장 실패");
+      if (type === "WARNING" && data.resolutionTask?.publicCode) {
+        setTaskHandoff({
+          publicCode: data.resolutionTask.publicCode,
+          targetName: payload.targetName,
+          requiredGameCount: data.resolutionTask.requiredGameCount,
+        });
+        setReason("");
+        setNote("");
+        return;
+      }
       router.push("/admin/discipline");
       router.refresh();
     } catch (error) {
@@ -109,9 +135,15 @@ export default function DisciplineRecordCreateClient({ targets }: { targets: Tar
   }
 
   return (
+    <>
+    {taskHandoff ? <DisciplineTaskHandoff {...taskHandoff} /> : null}
     <section className="admin-card discipline-form-card">
       <h2>주의/경고/벤 등록</h2>
       <p className="admin-muted discipline-help">대상은 사이트 등록 유저 검색 또는 이름·닉네임 직접 입력으로 등록할 수 있습니다. 벤/강퇴 기록은 BAN 타입으로 남겨 추후 운영 이력을 추적합니다.</p>
+      <div className="discipline-mode-row" role="group" aria-label="빠른 경고 프리셋">
+        <button type="button" className="admin-button admin-button--secondary" onClick={() => { setType("WARNING"); setWarningCategory("GENERAL"); }}>일반 경고 · 10판</button>
+        <button type="button" className="admin-button admin-button--secondary" onClick={() => { setType("WARNING"); setWarningCategory("INHOUSE"); }}>내전 경고 · 15판</button>
+      </div>
       <div className="discipline-mode-row">
         <button type="button" className={`admin-button ${targetMode === "REGISTERED" ? "" : "admin-button--secondary"}`} onClick={() => setTargetMode("REGISTERED")}>사이트 등록 대상 검색</button>
         <button type="button" className={`admin-button ${targetMode === "DIRECT" ? "" : "admin-button--secondary"}`} onClick={() => setTargetMode("DIRECT")}>이름·닉네임 직접 등록</button>
@@ -141,5 +173,6 @@ export default function DisciplineRecordCreateClient({ targets }: { targets: Tar
         <button className="admin-button admin-button--secondary" type="button" onClick={() => router.push("/admin/discipline")}>목록</button>
       </div>
     </section>
+    </>
   );
 }

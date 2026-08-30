@@ -29,6 +29,7 @@ for (const file of files) {
     source.includes("rejectIfNotAdmin") ||
     source.includes("rejectIfNotSuperAdmin") ||
     source.includes("requireAdminRequest") ||
+    source.includes("requireAdminEnrollmentRequest") ||
     source.includes("requireSuperAdminRequest") ||
     source.includes("getAdminOrResponse");
 

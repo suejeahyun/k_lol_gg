@@ -9,7 +9,6 @@ const REQUIRED_DEPLOY_ENV_KEYS = [
   "NEXT_PUBLIC_BASE_URL",
   "JWT_SECRET",
   "TOTP_ENCRYPTION_KEY",
-  "ADMIN_TOKEN_VALUE",
   "SUPER_ADMIN_ID",
   "SUPER_ADMIN_PASSWORD",
   "CRON_SECRET",
@@ -32,7 +31,6 @@ const WEAK_EXACT_VALUES = new Set([
 const MINIMUM_SECRET_LENGTHS: Partial<Record<(typeof REQUIRED_DEPLOY_ENV_KEYS)[number], number>> = {
   JWT_SECRET: 32,
   TOTP_ENCRYPTION_KEY: 32,
-  ADMIN_TOKEN_VALUE: 32,
   SUPER_ADMIN_PASSWORD: 16,
   CRON_SECRET: 16,
   KAKAO_OPENCHAT_SECRET: 12,
@@ -41,7 +39,7 @@ const MINIMUM_SECRET_LENGTHS: Partial<Record<(typeof REQUIRED_DEPLOY_ENV_KEYS)[n
 };
 
 export function getDeployEnvWarnings(): DeployEnvWarning[] {
-  return REQUIRED_DEPLOY_ENV_KEYS.flatMap((key) => {
+  const warnings = REQUIRED_DEPLOY_ENV_KEYS.flatMap((key) => {
     const value = process.env[key]?.trim() ?? "";
 
     if (!value) {
@@ -77,6 +75,18 @@ export function getDeployEnvWarnings(): DeployEnvWarning[] {
 
     return warnings;
   });
+
+  if (["1", "true", "yes", "on"].includes(
+    String(process.env.ALLOW_LEGACY_ADMIN_TOKEN || "").toLowerCase(),
+  )) {
+    warnings.push({
+      key: "ALLOW_LEGACY_ADMIN_TOKEN",
+      level: "weak",
+      message: "레거시 관리자 토큰 사용 금지",
+    });
+  }
+
+  return warnings;
 }
 
 export function isDeployEnvReady() {

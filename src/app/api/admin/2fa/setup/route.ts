@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { requireAdminRequest } from "@/lib/auth/requireAdmin";
+import { requireAdminEnrollmentRequest } from "@/lib/auth/requireAdmin";
 import { prisma } from "@/lib/prisma/client";
 import { buildTotpOtpAuthUrl, generateTotpSecret } from "@/lib/security/totp";
 import { getRequestAuditFields, writeAdminLog } from "@/lib/admin-log";
@@ -9,7 +9,7 @@ import type { NextRequest } from "next/server";
 import { decryptTotpSecret, encryptTotpSecret } from "@/lib/security/totp-secret-storage";
 
 export async function POST(req: NextRequest) {
-  const currentUser = await requireAdminRequest();
+  const currentUser = await requireAdminEnrollmentRequest();
   if (!currentUser?.user.id) {
     return NextResponse.json({ ok: false, message: "관리자 권한이 필요합니다." }, { status: 401 });
   }
@@ -32,7 +32,10 @@ export async function POST(req: NextRequest) {
     : generateTotpSecret();
   await prisma.userAccount.update({
     where: { id: existing.id },
-    data: { adminTotpSecret: encryptTotpSecret(secret) },
+    data: {
+      adminTotpSecret: encryptTotpSecret(secret),
+      adminTotpLastUsedStep: null,
+    },
   });
 
   await writeAdminLog({

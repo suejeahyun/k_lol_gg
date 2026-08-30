@@ -22,6 +22,7 @@ export type KakaoOperationSettings = {
   allowedRoomNames: string[];
   blockedRoomNames: string[];
   blockedSenders: string[];
+  operatorSenderNames: string[];
   ignoreBotSender: boolean;
   botSenderPatterns: string[];
 
@@ -91,6 +92,7 @@ export const DEFAULT_KAKAO_OPERATION_SETTINGS: KakaoOperationSettings = {
   allowedRoomNames: [],
   blockedRoomNames: [],
   blockedSenders: [],
+  operatorSenderNames: [],
   ignoreBotSender: true,
   botSenderPatterns: ["K-LOL", "구인구직 도우미", "구인도우미", "오픈채팅봇", "봇"],
 
@@ -206,6 +208,7 @@ export function normalizeKakaoOperationSettings(value: Partial<KakaoOperationSet
     allowedRoomNames: normalizeStringArray(merged.allowedRoomNames, DEFAULT_KAKAO_OPERATION_SETTINGS.allowedRoomNames),
     blockedRoomNames: normalizeStringArray(merged.blockedRoomNames, DEFAULT_KAKAO_OPERATION_SETTINGS.blockedRoomNames),
     blockedSenders: normalizeStringArray(merged.blockedSenders, DEFAULT_KAKAO_OPERATION_SETTINGS.blockedSenders),
+    operatorSenderNames: normalizeStringArray(merged.operatorSenderNames, DEFAULT_KAKAO_OPERATION_SETTINGS.operatorSenderNames),
     ignoreBotSender: normalizeBoolean(merged.ignoreBotSender, DEFAULT_KAKAO_OPERATION_SETTINGS.ignoreBotSender),
     botSenderPatterns: normalizeStringArray(merged.botSenderPatterns, DEFAULT_KAKAO_OPERATION_SETTINGS.botSenderPatterns),
 

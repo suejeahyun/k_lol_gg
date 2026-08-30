@@ -28,6 +28,7 @@ import {
   partyRecruitJson,
   readJsonBody,
   rejectIfInvalidPartySecret,
+  rejectPartyPolicy,
 } from "../_shared";
 
 const CREATE_HELP = [
@@ -48,6 +49,8 @@ export async function POST(req: NextRequest) {
     if (secretRejected) {
       return secretRejected;
     }
+    const policyRejected = await rejectPartyPolicy(body, "RECRUIT_CREATE", { requireIdentity: true });
+    if (policyRejected) return policyRejected;
 
     // 날짜가 바뀌어도 진행 중 구인글은 유지합니다.
     // 모집번호만 날짜/회차 기준으로 다시 #1부터 배정합니다.

@@ -1,17 +1,17 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { authConstants } from "@/lib/auth";
 import { verifyAuthToken } from "@/lib/auth/token";
 import { prisma } from "@/lib/prisma/client";
-
-const ADMIN_ROLES = ["ADMIN", "SUPER_ADMIN"] as const;
-
-type AdminRole = (typeof ADMIN_ROLES)[number];
+import {
+  isAdminRole,
+  isAdminTwoFactorReady,
+  type AdminRole,
+} from "@/lib/auth/admin-security-policy";
 
 type AdminSession = {
-  mode: "legacy-admin" | "user-admin";
+  mode: "user-admin";
   user: {
-    id: number | null;
+    id: number;
     userId: string;
     role: AdminRole;
     status: "APPROVED";
@@ -19,15 +19,7 @@ type AdminSession = {
   };
 };
 
-function isAdminRole(role: string): role is AdminRole {
-  return ADMIN_ROLES.includes(role as AdminRole);
-}
-
-function isLegacyAdminTokenEnabled() {
-  return process.env.NODE_ENV !== "production" || process.env.ALLOW_LEGACY_ADMIN_TOKEN === "true";
-}
-
-export async function requireAdminRequest(): Promise<AdminSession | null> {
+async function resolveAdminSession(options: { allowTwoFactorEnrollment: boolean }): Promise<AdminSession | null> {
   const cookieStore = await cookies();
   const userToken = cookieStore.get("user_token")?.value;
   const payload = userToken ? verifyAuthToken(userToken) : null;
@@ -44,6 +36,7 @@ export async function requireAdminRequest(): Promise<AdminSession | null> {
         role: true,
         status: true,
         authVersion: true,
+        adminTotpEnabled: true,
         player: {
           select: {
             id: true,
@@ -52,36 +45,51 @@ export async function requireAdminRequest(): Promise<AdminSession | null> {
       },
     });
 
-    if (user && (payload.authVersion ?? 0) === user.authVersion && isAdminRole(user.role) && user.status === "APPROVED") {
+    const role = user && isAdminRole(user.role) ? user.role : null;
+    const validAccount = Boolean(
+      user &&
+      role &&
+      (payload.authVersion ?? 0) === user.authVersion &&
+      user.status === "APPROVED",
+    );
+    const twoFactorReady = Boolean(
+      user &&
+      isAdminTwoFactorReady({
+        role: user.role,
+        adminTotpEnabled: user.adminTotpEnabled,
+        tokenTotpVerified: payload.adminTotpVerified === true,
+      }),
+    );
+
+    const enrollmentAllowed = Boolean(
+      user &&
+      options.allowTwoFactorEnrollment &&
+      !user.adminTotpEnabled,
+    );
+
+    if (user && role && validAccount && (twoFactorReady || enrollmentAllowed)) {
       return {
         mode: "user-admin",
         user: {
           id: user.id,
           userId: user.userId,
-          role: user.role,
-          status: user.status,
+          role,
+          status: "APPROVED",
           playerId: user.player?.id ?? null,
         },
       };
     }
   }
 
-  const legacyAdminToken = cookieStore.get(authConstants.ADMIN_TOKEN_KEY)?.value;
-
-  if (isLegacyAdminTokenEnabled() && legacyAdminToken === authConstants.ADMIN_TOKEN_VALUE) {
-    return {
-      mode: "legacy-admin",
-      user: {
-        id: null,
-        userId: "legacy-admin",
-        role: "SUPER_ADMIN",
-        status: "APPROVED",
-        playerId: null,
-      },
-    };
-  }
-
   return null;
+}
+
+export async function requireAdminRequest(): Promise<AdminSession | null> {
+  return resolveAdminSession({ allowTwoFactorEnrollment: false });
+}
+
+export async function requireAdminEnrollmentRequest(): Promise<AdminSession | null> {
+  return resolveAdminSession({ allowTwoFactorEnrollment: true });
 }
 
 export async function rejectIfNotAdmin() {

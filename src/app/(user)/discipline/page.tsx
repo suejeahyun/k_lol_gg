@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import { buildDisciplineStatistics } from "@/lib/discipline/statistics";
 
@@ -7,6 +8,7 @@ export const metadata: Metadata = {
   title: "운영 징계 통계",
   description: "K-LOL.GG 활성 주의·경고·밴 현황과 주의 3회 환산 통계",
   alternates: { canonical: "/discipline" },
+  robots: { index: false, follow: false },
 };
 
 export default async function PublicDisciplinePage() {
@@ -42,6 +44,7 @@ export default async function PublicDisciplinePage() {
         현재 활성 상태인 주의·경고·밴 기록을 대상별로 집계합니다. 주의 3회는 경고 1회로
         환산하며, 환산 후 남은 주의만 주의 횟수에 표시합니다.
       </p>
+      <Link className="app-button" href="/discipline/evidence">내 경고 차감 사진 제출</Link>
 
       <section className="stats" aria-label="활성 징계 요약">
         <article className="stat"><span>징계 대상</span><strong>{statistics.length}명</strong><small>활성 기록 기준</small></article>
@@ -84,7 +87,7 @@ export default async function PublicDisciplinePage() {
 const styles = `
   .public-discipline{width:min(1180px,calc(100vw - 40px));margin:0 auto;padding:36px 0 64px}
   .public-discipline h1{margin:5px 0 10px}.intro{max-width:820px;color:rgba(210,230,255,.78);line-height:1.65;margin:0 0 24px}
-  .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:22px}
+  .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:22px 0}
   .stat,.card{border:1px solid rgba(82,164,255,.24);border-radius:18px;background:linear-gradient(180deg,rgba(10,28,55,.86),rgba(5,15,34,.76));box-shadow:0 16px 40px rgba(0,0,0,.2)}
   .stat{padding:20px;display:grid;gap:8px}.stat span,.stat small{color:rgba(210,230,255,.72)}.stat strong{font-size:30px}.stat.caution{border-color:rgba(255,214,102,.34)}.stat.warning{border-color:rgba(255,120,120,.4)}.stat.ban{border-color:rgba(248,113,113,.5);background:linear-gradient(180deg,rgba(66,14,28,.76),rgba(5,15,34,.76))}
   .card{padding:22px}.section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:16px}.section-head h2{margin:0 0 5px}.section-head p{margin:0;color:rgba(210,230,255,.68);font-size:14px}.discipline-conversion-rule{display:inline-flex;padding:7px 11px;border:1px solid rgba(255,214,102,.35);border-radius:999px;background:rgba(255,185,60,.12);color:#ffe58f;font-weight:800;font-size:13px;white-space:nowrap}

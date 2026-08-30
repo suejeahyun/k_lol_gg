@@ -140,8 +140,8 @@ export default async function AdminRecruitsPage({ searchParams }: PageProps) {
           <h1>카카오 구인구직 관리</h1>
         </div>
         <div className="admin-actions">
-          <a className="admin-button admin-button--ghost" href="/admin/recruits/settings">설정</a>
-          <a className="admin-button admin-button--ghost" href="/admin/recruits/logs">기록</a>
+          <a className="admin-button admin-button--ghost" href="/admin/kakao/recruits/settings">설정</a>
+          <a className="admin-button admin-button--ghost" href="/admin/kakao/recruits/logs">기록</a>
         </div>
       </div>
 
@@ -241,7 +241,7 @@ export default async function AdminRecruitsPage({ searchParams }: PageProps) {
             <h2>최근 구인구직 기록</h2>
             <p className="admin-muted">최근 {RECENT_LOG_LIMIT}건 · 전체 {logTotalCount.toLocaleString("ko-KR")}건</p>
           </div>
-          <a className="admin-button admin-button--ghost" href="/admin/recruits/logs">전체 기록</a>
+          <a className="admin-button admin-button--ghost" href="/admin/kakao/recruits/logs">전체 기록</a>
         </div>
 
         <div className="admin-table-wrap">

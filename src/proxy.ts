@@ -5,6 +5,7 @@ import { applySecurityHeaders } from "@/lib/security-headers";
 import { rejectIfBodyTooLarge, rejectIfInvalidOrigin, rejectIfInvalidServerAuth } from "@/lib/security/request-guard";
 import { rejectIfRateLimited } from "@/lib/security/rate-limit";
 import { prisma } from "@/lib/prisma/client";
+import { isAdminTwoFactorReady } from "@/lib/auth/admin-security-policy";
 
 const SUPER_ADMIN_API_PATTERNS = [
   /^\/api\/admin\/users\/[^/]+\/role$/,
@@ -17,13 +18,10 @@ const SUPER_ADMIN_API_PATTERNS = [
   /^\/api\/admin\/recruits\/reset-number$/,
   /^\/api\/admin\/stats\/recalculate$/,
   /^\/api\/admin\/maintenance\//,
+  /^\/api\/admin\/logs(?:\/.*)?$/,
 ];
 
-function isLegacyAdminTokenEnabled() {
-  return process.env.NODE_ENV !== "production" || process.env.ALLOW_LEGACY_ADMIN_TOKEN === "true";
-}
-
-async function getApprovedAdminRole(token?: string) {
+async function getApprovedAdminState(token?: string) {
   if (!token) return null;
 
   const payload = verifyAuthToken(token);
@@ -33,11 +31,27 @@ async function getApprovedAdminRole(token?: string) {
   try {
     const user = await prisma.userAccount.findUnique({
       where: { id: payload.userAccountId },
-      select: { role: true, status: true, deletedAt: true, authVersion: true },
+      select: {
+        role: true,
+        status: true,
+        deletedAt: true,
+        authVersion: true,
+        adminTotpEnabled: true,
+      },
     });
 
     if (!user || user.deletedAt || user.status !== "APPROVED" || (payload.authVersion ?? 0) !== user.authVersion) return null;
-    if (user.role === "ADMIN" || user.role === "SUPER_ADMIN") return user.role;
+    if (user.role === "ADMIN" || user.role === "SUPER_ADMIN") {
+      return {
+        role: user.role,
+        twoFactorEnrollmentRequired: !user.adminTotpEnabled,
+        twoFactorReady: isAdminTwoFactorReady({
+          role: user.role,
+          adminTotpEnabled: user.adminTotpEnabled,
+          tokenTotpVerified: payload.adminTotpVerified === true,
+        }),
+      };
+    }
     return null;
   } catch {
     return null;
@@ -54,6 +68,8 @@ const PRIVATE_API_PREFIXES = [
   "/api/riot/me/",
   "/api/riot/rso/",
   "/api/team-balance/",
+  "/api/inhouse-results/",
+  "/api/discipline/tasks/",
   "/api/logs",
 ];
 
@@ -79,25 +95,40 @@ function withSecurityHeaders(
   return applySecurityHeaders(response);
 }
 
-async function rejectAdminRequest(req: NextRequest, requireSuperAdmin = false) {
-  const legacyAdminToken = req.cookies.get(authConstants.ADMIN_TOKEN_KEY)?.value;
+async function rejectAdminRequest(
+  req: NextRequest,
+  requireSuperAdmin = false,
+  allowTwoFactorEnrollment = false,
+) {
   const userToken = req.cookies.get("user_token")?.value;
-  const role = await getApprovedAdminRole(userToken);
+  const state = await getApprovedAdminState(userToken);
 
-  if (role && (!requireSuperAdmin || role === "SUPER_ADMIN")) {
-    return null;
-  }
-
-  if (isLegacyAdminTokenEnabled() && legacyAdminToken === authConstants.ADMIN_TOKEN_VALUE) {
+  if (
+    state &&
+    (
+      state.twoFactorReady ||
+      (allowTwoFactorEnrollment && state.twoFactorEnrollmentRequired)
+    ) &&
+    (!requireSuperAdmin || state.role === "SUPER_ADMIN")
+  ) {
     return null;
   }
 
   return NextResponse.json(
     {
       ok: false,
-      message: requireSuperAdmin ? "최고 관리자 권한이 필요합니다." : "관리자 권한이 필요합니다.",
+      code: state?.twoFactorEnrollmentRequired
+        ? "ADMIN_2FA_SETUP_REQUIRED"
+        : undefined,
+      message: state?.twoFactorEnrollmentRequired
+        ? "관리자 2단계 인증 등록이 필요합니다."
+        : state && !state.twoFactorReady
+          ? "관리자 권한을 다시 인증해주세요."
+        : requireSuperAdmin
+          ? "최고 관리자 권한이 필요합니다."
+          : "관리자 권한이 필요합니다.",
     },
-    { status: requireSuperAdmin ? 403 : 401 },
+    { status: state ? 403 : requireSuperAdmin ? 403 : 401 },
   );
 }
 
@@ -123,7 +154,16 @@ export async function proxy(req: NextRequest) {
       return secure(NextResponse.next());
     }
 
-    const rejected = await rejectAdminRequest(req, isSuperAdminApi(pathname));
+    const allowTwoFactorEnrollment = [
+      "/api/admin/2fa/status",
+      "/api/admin/2fa/setup",
+      "/api/admin/2fa/enable",
+    ].includes(pathname);
+    const rejected = await rejectAdminRequest(
+      req,
+      isSuperAdminApi(pathname),
+      allowTwoFactorEnrollment,
+    );
     if (rejected) return secure(rejected);
 
     return secure(NextResponse.next());
@@ -141,8 +181,15 @@ export async function proxy(req: NextRequest) {
     return secure(NextResponse.next());
   }
 
-  const rejected = await rejectAdminRequest(req, false);
+  const allowTwoFactorEnrollment = pathname === "/admin/security";
+  const rejected = await rejectAdminRequest(req, false, allowTwoFactorEnrollment);
   if (!rejected) return secure(NextResponse.next());
+
+  const userToken = req.cookies.get("user_token")?.value;
+  const state = await getApprovedAdminState(userToken);
+  if (state?.twoFactorEnrollmentRequired) {
+    return secure(NextResponse.redirect(new URL("/admin/security?setup=required", req.url)));
+  }
 
   return secure(NextResponse.redirect(new URL("/admin/login", req.url)));
 }

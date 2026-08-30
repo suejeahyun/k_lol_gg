@@ -6,6 +6,7 @@ import { AppEmpty, AppSection } from "@/components/app-mobile/AppCards";
 import PremiumFeatureGate from "@/components/PremiumFeatureGate";
 import { getSiteSettings } from "@/lib/site/settings";
 import { parsePositivePage } from "@/lib/http/pagination";
+import { getDisplayActiveMemberCount } from "@/lib/kakao/party-recruit";
 
 export const dynamic = "force-dynamic";
 
@@ -34,10 +35,10 @@ const statusTabs: Array<{ key: RecruitStatusFilter; label: string }> = [
 ];
 
 function normalizeStatus(status?: string): RecruitStatusFilter {
-  if (status === "IN_PROGRESS" || status === "FINISHED" || status === "CANCELED" || status === "RESET") {
+  if (status === "ALL" || status === "IN_PROGRESS" || status === "FINISHED" || status === "CANCELED" || status === "RESET") {
     return status;
   }
-  return "ALL";
+  return "IN_PROGRESS";
 }
 
 function statusText(status: string) {
@@ -99,7 +100,7 @@ export default async function AppRecruitsPage({ searchParams }: AppRecruitsPageP
 
   const pageHref = (page: number) => {
     const query = new URLSearchParams();
-    if (activeStatus !== "ALL") query.set("status", activeStatus);
+    if (activeStatus !== "IN_PROGRESS") query.set("status", activeStatus);
     if (page > 1) query.set("page", String(page));
     const value = query.toString();
     return value ? `/app/recruits?${value}` : "/app/recruits";
@@ -114,7 +115,7 @@ export default async function AppRecruitsPage({ searchParams }: AppRecruitsPageP
           <nav className="klol-app-subtabs klol-app-subtabs--scroll" aria-label="구인 상태">
             {statusTabs.map((tab) => (
               <Link
-                href={tab.key === "ALL" ? "/app/recruits" : `/app/recruits?status=${tab.key}`}
+                href={tab.key === "IN_PROGRESS" ? "/app/recruits" : `/app/recruits?status=${tab.key}`}
                 key={tab.key}
                 data-active={activeStatus === tab.key}
               >
@@ -134,7 +135,7 @@ export default async function AppRecruitsPage({ searchParams }: AppRecruitsPageP
           ) : (
             <div className="klol-app-list">
               {parties.map((party) => {
-                const memberCount = party.members.length;
+                const memberCount = getDisplayActiveMemberCount(party.members, party.maxMembers);
                 const isClosed = party.status !== "IN_PROGRESS";
                 return (
                   <article className="klol-app-list-card" data-muted={isClosed ? "true" : undefined} key={party.id}>

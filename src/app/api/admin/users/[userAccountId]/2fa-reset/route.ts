@@ -73,6 +73,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
         adminTotpSecret: null,
         adminTotpEnabled: false,
         adminTotpEnabledAt: null,
+        adminTotpLastUsedStep: null,
         authVersion: { increment: 1 },
       },
       select: {

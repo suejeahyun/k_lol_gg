@@ -33,6 +33,8 @@ import type { Prisma } from "@prisma/client";
 import {
   buildInhouseRecruitTemplate,
   buildInhouseRecruitSelectionReply,
+  getDefaultInhouseRecruitDateKey,
+  getInhouseRecruitQueryDateKey,
   parseInhouseRecruitCommand,
 } from "../src/lib/kakao/inhouse-recruit";
 
@@ -145,8 +147,57 @@ const inhouseSelection = parseInhouseRecruitCommand("/내전구인", "2026-08-06
 if (!inhouseSelection.isCommand || inhouseSelection.mode !== null) {
   failures.push("inhouse recruit selection: bare command must request a mode");
 }
-if (!buildInhouseRecruitSelectionReply().includes("/내전구인 협곡")) {
+const inhouseSelectionReply = buildInhouseRecruitSelectionReply();
+const unsupportedInhouseSelectionReply = buildInhouseRecruitSelectionReply("지원하지않는종목");
+const expectedInhouseSelectionIntro = [
+  "[K-LOL.GG 내전 종목 선택]",
+  "지원하지 않는 종목입니다: 양식",
+  "✅️협곡내전은 관리자에게 신청 후 안내에 따라 구인해주세요.✅️",
+  "",
+  "아래 명령어 중 하나를 입력해주세요.",
+].join("\n");
+if (!inhouseSelectionReply.startsWith(expectedInhouseSelectionIntro)) {
+  failures.push("inhouse recruit selection: requested selection guidance is missing");
+}
+if (!unsupportedInhouseSelectionReply.startsWith(expectedInhouseSelectionIntro)) {
+  failures.push("inhouse recruit selection: unsupported form guidance differs from the requested copy");
+}
+if (inhouseSelectionReply.includes("&#x20;") || unsupportedInhouseSelectionReply.includes("&#x20;")) {
+  failures.push("inhouse recruit selection: HTML whitespace entity must be rendered as a real space");
+}
+if (!inhouseSelectionReply.includes("/내전구인 협곡")) {
   failures.push("inhouse recruit selection: rift choice is missing");
+}
+
+const afterMidnightKst = new Date("2026-08-28T15:06:00.000Z");
+const defaultInhouseDateKey = getDefaultInhouseRecruitDateKey(afterMidnightKst);
+if (defaultInhouseDateKey !== "2026-08-29") {
+  failures.push(
+    `inhouse recruit date: expected calendar date 2026-08-29, got ${defaultInhouseDateKey}`,
+  );
+}
+const afterMidnightCommand = parseInhouseRecruitCommand(
+  "/내전구인 협곡",
+  defaultInhouseDateKey,
+);
+if (afterMidnightCommand.dateKey !== "2026-08-29") {
+  failures.push(
+    `inhouse recruit date: after-midnight template used ${afterMidnightCommand.dateKey}`,
+  );
+}
+if (
+  getInhouseRecruitQueryDateKey(afterMidnightCommand, "2026-08-28") !==
+  "2026-08-29"
+) {
+  failures.push("inhouse recruit date: rift query did not use the creation date");
+}
+if (
+  getInhouseRecruitQueryDateKey(
+    parseInhouseRecruitCommand("/내전현황", "2026-08-29"),
+    "2026-08-28",
+  ) !== "2026-08-28"
+) {
+  failures.push("inhouse recruit date: status query did not preserve operation date");
 }
 
 const riftCommand = parseInhouseRecruitCommand(

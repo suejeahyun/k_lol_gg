@@ -1,3 +1,5 @@
+import { getKstDateKey } from "../date/kst";
+
 export type InhouseRecruitMode = "RIFT" | "ARAM" | "AUGMENT_ARAM";
 
 export type ParsedInhouseRecruitCommand = {
@@ -15,6 +17,19 @@ const MODE_LABEL: Record<InhouseRecruitMode, string> = {
   ARAM: "칼바람",
   AUGMENT_ARAM: "증바람",
 };
+
+export function getDefaultInhouseRecruitDateKey(date = new Date()) {
+  return getKstDateKey(date);
+}
+
+export function getInhouseRecruitQueryDateKey(
+  command: ParsedInhouseRecruitCommand,
+  operationDateKey: string,
+) {
+  return command.isCommand && command.mode === "RIFT"
+    ? command.dateKey
+    : operationDateKey;
+}
 
 function pad2(value: number) {
   return String(value).padStart(2, "0");
@@ -97,10 +112,13 @@ export function parseInhouseRecruitCommand(
   };
 }
 
-export function buildInhouseRecruitSelectionReply(invalidMode?: string | null) {
+export function buildInhouseRecruitSelectionReply(_invalidMode?: string | null) {
+  void _invalidMode;
+
   return [
     "[K-LOL.GG 내전 종목 선택]",
-    invalidMode ? `지원하지 않는 종목입니다: ${invalidMode}` : null,
+    "지원하지 않는 종목입니다: 양식",
+    "✅️협곡내전은 관리자에게 신청 후 안내에 따라 구인해주세요.✅️",
     "",
     "아래 명령어 중 하나를 입력해주세요.",
     "- /내전구인 협곡",
@@ -113,7 +131,6 @@ export function buildInhouseRecruitSelectionReply(invalidMode?: string | null) {
     "협곡은 티어·라인 양식으로 내전 명단에 등록됩니다.",
     "칼바람·증바람은 이름만 모집하며 내전 명단에는 등록되지 않습니다.",
   ]
-    .filter((line): line is string => line !== null)
     .join("\n");
 }
 

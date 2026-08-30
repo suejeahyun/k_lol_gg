@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireSuperAdminRequest } from "@/lib/auth/requireAdmin";
 import { getSiteSettings, saveSiteSettings } from "@/lib/site/settings";
+import { writeSecurityAudit } from "@/lib/security/admin-audit";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,7 @@ export async function PUT(request: Request) {
     return NextResponse.json({ ok: false, message: "최고 관리자 권한이 필요합니다." }, { status: 403 });
   }
 
+  const before = await getSiteSettings();
   const body = await request.json().catch(() => ({}));
   const settings = await saveSiteSettings({
     siteName: body.siteName,
@@ -52,6 +54,16 @@ export async function PUT(request: Request) {
     premiumNoticeTitle: body.premiumNoticeTitle,
     premiumNoticeMessage: body.premiumNoticeMessage,
     supportContact: body.supportContact,
+  });
+
+  await writeSecurityAudit({
+    req: request,
+    admin,
+    action: "SITE_SETTINGS_UPDATE",
+    message: "사이트 운영 설정 변경",
+    targetType: "SiteSettings",
+    beforeJson: JSON.parse(JSON.stringify(before)),
+    afterJson: JSON.parse(JSON.stringify(settings)),
   });
 
   return NextResponse.json({ ok: true, settings });

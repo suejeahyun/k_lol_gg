@@ -39,7 +39,9 @@ const menuGroups: UserSidebarGroup[] = [
       { href: "/", label: "홈", code: "HOM" },
       { href: "/recruit", label: "구인현황", code: "REC", activePrefixes: ["/recruit", "/recruit-helper"] },
       { href: "/discipline", label: "운영 징계 현황", code: "DIS" },
+      { href: "/discipline/evidence", label: "경고 차감 사진 제출", code: "EVS", auth: true, approvedOnly: true },
       { href: "/matches", label: "내전 목록", code: "MAT" },
+      { href: "/matches/submit", label: "내전 결과 제출", code: "RES", auth: true, approvedOnly: true },
       { href: "/rankings", label: "시즌 랭킹", code: "RNK" },
     ],
   },
@@ -83,6 +85,14 @@ function isActivePath(pathname: string, item: UserSidebarItem) {
   if (item.href === "/") return pathname === item.href;
 
   if (item.href === "/players/balance") {
+    return pathname === item.href;
+  }
+
+  if (item.href === "/matches") {
+    return pathname === item.href || /^\/matches\/\d+$/.test(pathname);
+  }
+
+  if (item.href === "/discipline") {
     return pathname === item.href;
   }
 

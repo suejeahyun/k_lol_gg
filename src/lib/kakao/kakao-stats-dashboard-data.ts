@@ -126,17 +126,47 @@ export async function getKakaoStatsDashboardData(input?: { days?: number }) {
   from.setDate(from.getDate() - days);
   from.setHours(0, 0, 0, 0);
 
-  const [logs, recruits, applies, forms] = await Promise.all([
+  const [
+    logs,
+    recruits,
+    applies,
+    friendForms,
+    suggestionForms,
+    meetupForms,
+    leaveForms,
+    scrimLogs,
+    disciplineForms,
+    inhouseForms,
+    inboundImages,
+  ] = await Promise.all([
     safeFindMany("recruitPartyLog", { where: { createdAt: { gte: from } }, orderBy: { createdAt: "desc" }, take: 3000 }),
     safeFindMany("recruitParty", { where: { createdAt: { gte: from } }, orderBy: { createdAt: "desc" }, take: 2000 }),
     safeFindMany("seasonParticipationPendingApply", { where: { createdAt: { gte: from } }, orderBy: { createdAt: "desc" }, take: 2000 }),
-    safeFindMany("operationForm", { where: { createdAt: { gte: from } }, orderBy: { createdAt: "desc" }, take: 2000 }),
+    safeFindMany("kakaoFriendApplication", { where: { createdAt: { gte: from } }, orderBy: { createdAt: "desc" }, take: 1000 }),
+    safeFindMany("kakaoSuggestionRequest", { where: { createdAt: { gte: from } }, orderBy: { createdAt: "desc" }, take: 1000 }),
+    safeFindMany("kakaoMeetupRecord", { where: { createdAt: { gte: from } }, orderBy: { createdAt: "desc" }, take: 1000 }),
+    safeFindMany("kakaoLeaveRequest", { where: { createdAt: { gte: from } }, orderBy: { createdAt: "desc" }, take: 1000 }),
+    safeFindMany("destructionScrimRecruitLog", { where: { createdAt: { gte: from } }, orderBy: { createdAt: "desc" }, take: 2000 }),
+    safeFindMany("disciplineSubmission", { where: { createdAt: { gte: from } }, orderBy: { createdAt: "desc" }, take: 1000 }),
+    safeFindMany("inhouseResultSubmission", { where: { createdAt: { gte: from } }, orderBy: { createdAt: "desc" }, take: 1000 }),
+    safeFindMany("kakaoInboundImage", { where: { receivedAt: { gte: from } }, orderBy: { receivedAt: "desc" }, take: 3000 }),
   ]);
+
+  const forms = [
+    ...friendForms.map((row) => ({ ...row, type: "지인초대" })),
+    ...suggestionForms.map((row) => ({ ...row, type: "건의" })),
+    ...meetupForms.map((row) => ({ ...row, type: "모임" })),
+    ...leaveForms.map((row) => ({ ...row, type: "외출" })),
+  ];
 
   const allActivities = [
     ...logs.map((row) => ({ ...row, __source: "구인 로그" })),
+    ...scrimLogs.map((row) => ({ ...row, __source: "스크림 로그" })),
     ...applies.map((row) => ({ ...row, __source: "참가신청" })),
     ...forms.map((row) => ({ ...row, __source: "운영신청" })),
+    ...disciplineForms.map((row) => ({ ...row, __source: "경고 접수" })),
+    ...inhouseForms.map((row) => ({ ...row, __source: "내전 결과" })),
+    ...inboundImages.map((row) => ({ ...row, __source: "사진 수신", createdAt: row.receivedAt })),
   ];
 
   const dailyMap = new Map<string, number>();
@@ -259,6 +289,10 @@ export async function getKakaoStatsDashboardData(input?: { days?: number }) {
       seasonApply: applies.length,
       reserveApply: applies.filter((row) => String(row.isReserve ?? row.reserve ?? row.type ?? "").includes("예비") || row.isReserve === true).length,
       operationForms: forms.length,
+      scrimActivities: scrimLogs.length,
+      disciplineForms: disciplineForms.length,
+      inhouseForms: inhouseForms.length,
+      inboundImages: inboundImages.length,
       activeRooms: roomMap.size,
       uniqueSenders: senderMap.size,
     },

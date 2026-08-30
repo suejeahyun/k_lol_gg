@@ -106,6 +106,12 @@ export default function EventParticipationClient({
       const data = await res.json();
 
       if (!res.ok) {
+        if (res.status === 401) {
+          const next = `${window.location.pathname}${window.location.search}`;
+          const loginPath = window.location.pathname.startsWith("/app") ? "/app/login" : "/login";
+          window.location.href = `${loginPath}?next=${encodeURIComponent(next)}`;
+          return;
+        }
         alert(data.message || "참가 신청 실패");
         return;
       }

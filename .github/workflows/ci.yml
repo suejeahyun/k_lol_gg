@@ -1,0 +1,79 @@
+name: K-LOL.GG CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: klol-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: klol
+          POSTGRES_PASSWORD: klol_ci_password
+          POSTGRES_DB: klol_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U klol -d klol_ci"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=12
+
+    env:
+      CI: "true"
+      DATABASE_URL: postgresql://klol:klol_ci_password@localhost:5432/klol_ci?schema=public
+      NEXT_PUBLIC_BASE_URL: http://localhost:3000
+      JWT_SECRET: ci-only-jwt-secret-change-before-deploy-32chars
+      TOTP_ENCRYPTION_KEY: ci-only-totp-encryption-key-32bytes
+      CRON_SECRET: ci-only-cron-secret-change-before-deploy
+      SUPER_ADMIN_ID: klol-ci-admin
+      SUPER_ADMIN_PASSWORD: ci-only-admin-password-2026
+      PRIVACY_CONTACT: privacy-ci@example.invalid
+      KAKAO_OPENCHAT_SECRET: ci-only-kakao-openchat-secret
+      KAKAO_SEARCH_PLAYER_SECRET: ci-only-kakao-search-secret
+      KAKAO_RECRUIT_SECRET: ci-only-kakao-recruit-secret
+      ALLOW_LEGACY_ADMIN_TOKEN: "false"
+      SECURITY_ALLOW_QUERY_SECRET: "false"
+      SECURITY_REQUIRE_HMAC: "false"
+      RIOT_FEATURE_ENABLED: "false"
+      SITE_FEATURE_AI_ASSISTANT_DEFAULT: "false"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply migrations to the disposable CI database
+        run: npx prisma migrate deploy
+
+      - name: Check secret leaks
+        run: npm run check:secrets
+
+      - name: Generate Next.js route types
+        run: npx next typegen
+
+      - name: Run release checks and production build
+        run: npm run check:release
+
+      - name: Check discipline statistics
+        run: npm run check:discipline-statistics

@@ -110,8 +110,10 @@ export async function getPublishedManagedTemplate(formType: KakaoManagedFormType
   return record ? toTemplate(record) : DEFAULT_MANAGED_TEMPLATES[formType];
 }
 
-export function renderManagedTemplate(template: ManagedTemplate) {
+export function renderManagedTemplate(template: ManagedTemplate, defaults: Record<string, string> = {}) {
   const fieldLines = template.fields.map((field) => {
+    const defaultValue = defaults[field.key]?.trim();
+    if (defaultValue) return `${field.label}: ${defaultValue}`;
     const placeholder = field.placeholder ? ` ${field.placeholder}` : "";
     return `${field.label}:${placeholder}`;
   });
@@ -122,6 +124,11 @@ export function renderManagedTemplate(template: ManagedTemplate) {
     "",
     template.instructions,
   ].join("\n");
+}
+
+export function unsupportedManagedRequiredFields(template: ManagedTemplate, supportedKeys: readonly string[]) {
+  const supported = new Set(supportedKeys);
+  return template.fields.filter((field) => field.required && !supported.has(field.key));
 }
 
 function parseLines(rawText: string) {

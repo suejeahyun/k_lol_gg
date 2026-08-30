@@ -28,6 +28,9 @@ import {
 } from "@/lib/kakao/party-recruit";
 import { classifyKakaoRecruitMessage, buildWrongRecruitApiReply } from "@/lib/kakao/recruit-message-kind";
 import { appendRecruitStatusSummary } from "@/lib/kakao/recruit-status-summary";
+import { evaluatePartyMutationOwnership } from "@/lib/kakao/policy";
+import { getKakaoOperationSettings } from "@/lib/kakao/settings";
+import { logServerError } from "@/lib/server/safe-log";
 import { POST as applySeasonRecruit } from "../../recruit/season-apply/route";
 import {
   getBodyRoom,
@@ -36,6 +39,7 @@ import {
   partyRecruitJson,
   readJsonBody,
   rejectIfInvalidPartySecret,
+  rejectPartyPolicy,
 } from "../_shared";
 
 async function findActiveRecruitParty(params: {
@@ -151,6 +155,7 @@ async function syncOneRecruit(params: {
   sender: string | null;
   recruitDate: string;
   todayRange: { gte: Date; lt: Date };
+  operatorOverride: boolean;
 }) {
   const {
     recruitNo,
@@ -159,6 +164,7 @@ async function syncOneRecruit(params: {
     sender,
     recruitDate,
     todayRange,
+    operatorOverride,
   } = params;
 
   const party = await findActiveRecruitParty({
@@ -207,6 +213,22 @@ async function syncOneRecruit(params: {
             `모집번호 #${recruitNo} 파티를 찾지 못했습니다.`,
             "먼저 구인 생성 명령어로 오늘 파티를 생성해주세요.",
           ].join("\n"),
+    };
+  }
+
+  const ownership = evaluatePartyMutationOwnership(await getKakaoOperationSettings(), {
+    partyRoomName: party.roomName,
+    partyHostName: party.hostName,
+    roomName,
+    sender,
+    operatorOverride,
+  });
+  if (!ownership.ok) {
+    return {
+      ok: false,
+      recruitNo,
+      statusCode: 403,
+      reply: `[K-LOL.GG 구인구직 반영 실패]\n${ownership.message}`,
     };
   }
 
@@ -357,6 +379,7 @@ async function syncOneRecruit(params: {
         resetSeq: result.resetSeq,
         roomName,
         sender,
+        operatorOverride: ownership.operatorOverride,
         scheduledStartAt: result.scheduledStartAt?.toISOString() ?? null,
         members: result.members,
       },
@@ -383,6 +406,8 @@ export async function POST(req: NextRequest) {
     const body = await readJsonBody(req);
     const secretRejected = rejectIfInvalidPartySecret(req, body.secret);
     if (secretRejected) return secretRejected;
+    const policyRejected = await rejectPartyPolicy(body, "RECRUIT_JOIN", { requireIdentity: true });
+    if (policyRejected) return policyRejected;
 
     await expirePartyRecruitDrafts();
 
@@ -470,6 +495,7 @@ export async function POST(req: NextRequest) {
       sender,
       recruitDate,
       todayRange,
+      operatorOverride: body.operatorOverride === true,
     });
 
     return partyRecruitJson(
@@ -482,11 +508,10 @@ export async function POST(req: NextRequest) {
       result.statusCode,
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    logServerError("[KAKAO_PARTY_RECRUIT_SYNC_ERROR]", error);
     return partyRecruitJson(
       {
-        reply: `[K-LOL.GG 구인구직 반영 실패]\n${message || "서버 처리 중 오류가 발생했습니다."}`,
-        error: message,
+        reply: "[K-LOL.GG 구인구직 반영 실패]\n잠시 후 다시 시도해주세요.",
       },
       500,
     );

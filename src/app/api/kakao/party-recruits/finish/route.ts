@@ -15,6 +15,9 @@ import {
 } from "@/lib/kakao/party-recruit";
 import { classifyKakaoRecruitMessage, buildWrongRecruitApiReply } from "@/lib/kakao/recruit-message-kind";
 import { appendRecruitStatusSummary } from "@/lib/kakao/recruit-status-summary";
+import { evaluatePartyMutationOwnership } from "@/lib/kakao/policy";
+import { getKakaoOperationSettings } from "@/lib/kakao/settings";
+import { logServerError } from "@/lib/server/safe-log";
 import {
   getLatestRecruitResetLog,
 } from "@/lib/kakao/recruit-reset";
@@ -25,6 +28,7 @@ import {
   partyRecruitJson,
   readJsonBody,
   rejectIfInvalidPartySecret,
+  rejectPartyPolicy,
 } from "../_shared";
 
 async function findActiveRecruitParty(params: {
@@ -61,6 +65,8 @@ export async function POST(req: NextRequest) {
     const body = await readJsonBody(req);
     const secretRejected = rejectIfInvalidPartySecret(req, body.secret);
     if (secretRejected) return secretRejected;
+    const policyRejected = await rejectPartyPolicy(body, "RECRUIT_FINISH", { requireIdentity: true });
+    if (policyRejected) return policyRejected;
 
     const message = getBodyText(body);
     const messageError = getKakaoMessageValidationError(message);
@@ -140,6 +146,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const ownership = evaluatePartyMutationOwnership(await getKakaoOperationSettings(), {
+      partyRoomName: party.roomName,
+      partyHostName: party.hostName,
+      roomName,
+      sender,
+      operatorOverride: body.operatorOverride === true,
+    });
+    if (!ownership.ok) {
+      return partyRecruitJson(
+        { reply: `[K-LOL.GG 구인구직 마무리 실패]\n${ownership.message}`, policyReason: ownership.reason },
+        403,
+      );
+    }
+
     const didFinish = await prisma.$transaction(async (tx) => {
       await acquirePartyRecruitLock(tx, party.id);
       const current = await tx.recruitParty.findUnique({
@@ -181,6 +201,7 @@ export async function POST(req: NextRequest) {
           roomName,
           sender,
           memberCount: getActiveMemberCount(party.members),
+          operatorOverride: ownership.operatorOverride,
         },
         db: tx,
       });
@@ -204,11 +225,10 @@ export async function POST(req: NextRequest) {
       ),
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    logServerError("[KAKAO_PARTY_RECRUIT_FINISH_ERROR]", error);
     return partyRecruitJson(
       {
-        reply: `[K-LOL.GG 구인구직 마무리 실패]\n${message || "서버 처리 중 오류가 발생했습니다."}`,
-        error: message,
+        reply: "[K-LOL.GG 구인구직 마무리 실패]\n잠시 후 다시 시도해주세요.",
       },
       500,
     );

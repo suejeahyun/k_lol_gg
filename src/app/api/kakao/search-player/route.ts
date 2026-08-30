@@ -9,6 +9,8 @@ import { createSimpleText } from "@/lib/kakao/response";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
 import { getOptionalSecret, matchesRequestSecret } from "@/lib/security/secrets";
 import { logServerError } from "@/lib/server/safe-log";
+import { evaluateKakaoRequestPolicy } from "@/lib/kakao/policy";
+import { getKakaoOperationSettings } from "@/lib/kakao/settings";
 
 function kakaoText(text: string, status = 200) {
   return NextResponse.json(createSimpleText(text), {
@@ -78,9 +80,18 @@ function extractQueryFromBody(body: Record<string, unknown>) {
   );
 }
 
-async function handleSearch(req: NextRequest, rawQuery: string) {
+async function handleSearch(req: NextRequest, rawQuery: string, context?: Record<string, unknown>) {
   const secretRejected = rejectIfInvalidSecret(req);
   if (secretRejected) return secretRejected;
+
+  const policy = evaluateKakaoRequestPolicy(await getKakaoOperationSettings(), {
+    feature: "PLAYER_SEARCH",
+    roomName: typeof context?.roomName === "string" ? context.roomName : typeof context?.room === "string" ? context.room : null,
+    sender: typeof context?.sender === "string" ? context.sender : null,
+    requireRoom: Boolean(context),
+    requireSender: Boolean(context),
+  });
+  if (!policy.ok) return kakaoText(policy.message, policy.status);
 
   const rateLimitRejected = await rejectIfRateLimited(req, {
     action: "KAKAO_SEARCH_PLAYER",
@@ -122,7 +133,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
-    return handleSearch(req, extractQueryFromBody(body));
+    return handleSearch(req, extractQueryFromBody(body), body);
   } catch (error) {
     logServerError("[KAKAO_SEARCH_PLAYER_ERROR]", error, { endpoint: "/api/kakao/search-player", method: "POST" });
 

@@ -20,6 +20,9 @@ import {
 } from "@/lib/kakao/recruit-message-parser";
 import { classifyKakaoRecruitMessage, buildWrongRecruitApiReply } from "@/lib/kakao/recruit-message-kind";
 import { isRiftInhouseRecruitSnapshot } from "@/lib/kakao/inhouse-recruit";
+import { evaluateKakaoRequestPolicy } from "@/lib/kakao/policy";
+import { getKakaoOperationSettings } from "@/lib/kakao/settings";
+import { logServerError } from "@/lib/server/safe-log";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -729,6 +732,14 @@ export async function POST(req: NextRequest) {
     const roomName =
       normalizeKakaoIdentity(body.roomName) ?? normalizeKakaoIdentity(body.room);
     const sender = normalizeKakaoIdentity(body.sender);
+    const policy = evaluateKakaoRequestPolicy(await getKakaoOperationSettings(), {
+      feature: "SEASON_APPLY",
+      roomName,
+      sender,
+      requireRoom: true,
+      requireSender: true,
+    });
+    if (!policy.ok) return kakaoJsonReply({ reply: policy.message, policyReason: policy.reason }, policy.status);
 
     const classification = classifyKakaoRecruitMessage(message);
     if (classification.kind !== "SEASON_RECRUIT") {
@@ -822,13 +833,12 @@ export async function POST(req: NextRequest) {
       }),
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    logServerError("[KAKAO_SEASON_APPLY_ERROR]", error);
 
     return kakaoJsonReply(
       {
         formatVersion: FORMAT_VERSION,
-        reply: "[K-LOL.GG 참가 신청 등록 실패]",
-        error: message,
+        reply: "[K-LOL.GG 참가 신청 등록 실패]\n잠시 후 다시 시도해주세요.",
       },
       500,
     );

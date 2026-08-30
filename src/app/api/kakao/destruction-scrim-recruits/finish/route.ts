@@ -3,6 +3,7 @@ import { requireSiteFeature } from "@/lib/site/feature-guard";
 import {
   readJsonBody,
   rejectIfInvalidScrimSecret,
+  rejectScrimPolicy,
   scrimRecruitJson,
 } from "../_shared";
 
@@ -16,6 +17,8 @@ export async function POST(req: NextRequest) {
   const body = await readJsonBody(req);
   const rejected = rejectIfInvalidScrimSecret(req, body.secret);
   if (rejected) return rejected;
+  const policyRejected = await rejectScrimPolicy(body, "RECRUIT_FINISH", { requireIdentity: true });
+  if (policyRejected) return policyRejected;
 
   return scrimRecruitJson(
     {

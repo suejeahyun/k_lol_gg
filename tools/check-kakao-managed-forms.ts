@@ -5,6 +5,13 @@ const { DEFAULT_MANAGED_TEMPLATES, parseKstDateOnly, parseManagedForm, parseNick
 const discipline = DEFAULT_MANAGED_TEMPLATES.DISCIPLINE;
 const rendered = renderManagedTemplate(discipline);
 if (rendered.includes("경고 사유:")) throw new Error("경고 사유가 카카오 양식에 노출되면 안 됩니다.");
+const disciplineDefaults = renderManagedTemplate(discipline, {
+  issuedDate: "2026-08-31",
+  evidenceImageCount: "0",
+});
+if (!disciplineDefaults.includes("부여일: 2026-08-31") || !disciplineDefaults.includes("경고 부여 근거 사진 수: 0")) {
+  throw new Error("경고 양식 자동 입력값을 표시하지 못했습니다.");
+}
 const filled = rendered
   .replace("대상 이름:", "대상 이름: 정민")
   .replace("대상 닉네임#태그:", "대상 닉네임#태그: 닉네임#KR1")
@@ -23,6 +30,14 @@ if (!parseNicknameTag("닉네임#KR1") || parseNicknameTag("닉네임") !== null
 if (!parseKstDateOnly("2026-08-25") || parseKstDateOnly("2026-02-31") !== null) throw new Error("날짜 검증에 실패했습니다.");
 
 const inhouse = DEFAULT_MANAGED_TEMPLATES.INHOUSE_RESULT;
+const inhouseDefaults = renderManagedTemplate(inhouse, {
+  matchDate: "2026-08-31",
+  organizer: "진행자",
+  note: "없음",
+});
+if (!inhouseDefaults.includes("진행일: 2026-08-31") || !inhouseDefaults.includes("진행자: 진행자") || !inhouseDefaults.includes("특이사항: 없음")) {
+  throw new Error("내전 결과 양식 자동 입력값을 표시하지 못했습니다.");
+}
 const inhouseText = renderManagedTemplate(inhouse)
   .replace("진행일: YYYY-MM-DD", "진행일: 2026-08-25")
   .replace("진행자:", "진행자: 관리자")

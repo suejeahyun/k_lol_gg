@@ -13,7 +13,9 @@ import {
   partyRecruitJson,
   readJsonBody,
   rejectIfInvalidPartySecret,
+  rejectPartyPolicy,
 } from "../_shared";
+import { logServerError } from "@/lib/server/safe-log";
 
 const STATUS_QUERY_TIMEOUT_MS = 5000;
 const STATUS_TAKE = 30;
@@ -110,9 +112,12 @@ async function handleStatus(
   req: NextRequest,
   bodySecret?: unknown,
   message?: unknown,
+  context: Record<string, unknown> = {},
 ) {
   const rejected = rejectIfInvalidPartySecret(req, bodySecret);
   if (rejected) return rejected;
+  const policyRejected = await rejectPartyPolicy(context, "RECRUIT_STATUS");
+  if (policyRejected) return policyRejected;
 
   const classification = classifyKakaoRecruitMessage(String(message || req.nextUrl.searchParams.get("message") || req.nextUrl.searchParams.get("q") || "구인현황"));
   if (classification.kind !== "PARTY_RECRUIT") {
@@ -160,12 +165,11 @@ async function handleStatus(
       );
     }
 
+    logServerError("[KAKAO_PARTY_RECRUIT_STATUS_ERROR]", error);
+
     return partyRecruitJson(
       {
-        reply: `[K-LOL.GG 구인구직 현황 실패]\n${
-          message || "서버 처리 중 오류가 발생했습니다."
-        }`,
-        error: message,
+        reply: "[K-LOL.GG 구인구직 현황 실패]\n잠시 후 다시 시도해주세요.",
       },
       500,
     );
@@ -184,5 +188,5 @@ export async function POST(req: NextRequest) {
   if (premiumLock) return premiumLock;
 
   const body = await readJsonBody(req);
-  return handleStatus(req, body.secret, body.message || body.text);
+  return handleStatus(req, body.secret, body.message || body.text, body);
 }

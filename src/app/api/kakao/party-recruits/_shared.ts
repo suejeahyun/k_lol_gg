@@ -2,6 +2,8 @@ import { NextRequest } from "next/server";
 import { getRequiredSecretInProduction, matchesRequestSecret } from "@/lib/security/secrets";
 import { kakaoJsonReply } from "@/lib/kakao/reply-format";
 import { normalizeKakaoIdentity } from "@/lib/kakao/input-guard";
+import { evaluateKakaoRequestPolicy, type KakaoPolicyFeature } from "@/lib/kakao/policy";
+import { getKakaoOperationSettings } from "@/lib/kakao/settings";
 
 export const PARTY_RECRUIT_FORMAT_VERSION = "party-recruit-v2";
 
@@ -47,6 +49,30 @@ export function rejectIfInvalidPartySecret(req: NextRequest, bodySecret: unknown
       reply: "[K-LOL.GG 구인구직 실패]\n인증값이 올바르지 않습니다.",
     },
     401,
+  );
+}
+
+export async function rejectPartyPolicy(
+  body: Record<string, unknown>,
+  feature: KakaoPolicyFeature,
+  options: { requireIdentity?: boolean } = {},
+) {
+  const settings = await getKakaoOperationSettings();
+  const policy = evaluateKakaoRequestPolicy(settings, {
+    feature,
+    roomName: getBodyRoom(body),
+    sender: getBodySender(body),
+    requireRoom: options.requireIdentity ?? false,
+    requireSender: options.requireIdentity ?? false,
+  });
+  if (policy.ok) return null;
+  return partyRecruitJson(
+    {
+      reply: policy.message,
+      ignored: policy.reason === "BOT_SENDER",
+      policyReason: policy.reason,
+    },
+    policy.status,
   );
 }
 

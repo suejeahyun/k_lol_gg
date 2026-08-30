@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
 import { AppEmpty, AppSection } from "@/components/app-mobile/AppCards";
 import { prisma } from "@/lib/prisma/client";
+import EventParticipationClient from "@/app/(user)/participation/event/[eventId]/EventParticipationClient";
 
 export const dynamic = "force-dynamic";
 
@@ -127,6 +128,12 @@ export default async function AppEventDetailPage({ params }: AppEventDetailPageP
           </div>
         </div>
       </AppSection>
+
+      {event.status === "RECRUITING" ? (
+        <AppSection title="참가 신청" caption="주라인과 부라인을 선택하면 이 화면에서 바로 신청할 수 있습니다.">
+          <EventParticipationClient eventId={String(id)} embedded />
+        </AppSection>
+      ) : null}
 
       <AppSection title="팀 구성">
         {event.teams.length === 0 ? (

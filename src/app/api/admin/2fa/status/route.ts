@@ -1,11 +1,11 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { requireAdminRequest } from "@/lib/auth/requireAdmin";
+import { requireAdminEnrollmentRequest } from "@/lib/auth/requireAdmin";
 import { prisma } from "@/lib/prisma/client";
 
 export async function GET() {
-  const currentUser = await requireAdminRequest();
+  const currentUser = await requireAdminEnrollmentRequest();
   if (!currentUser) {
     return NextResponse.json({ ok: false, message: "관리자 권한이 필요합니다." }, { status: 401 });
   }

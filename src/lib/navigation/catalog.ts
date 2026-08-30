@@ -36,6 +36,22 @@ const userNavigation: NavigationItem[] = [
     keywords: ["내전", "경기", "전적", "최근 전적", "결과"],
   },
   {
+    href: "/matches/submit",
+    appHref: "/matches/submit",
+    label: "내전 결과 제출",
+    description: "진행 정보와 결과 사진을 한 번에 제출",
+    section: "경기",
+    keywords: ["내전", "결과", "사진", "제출", "등록", "접수번호"],
+  },
+  {
+    href: "/discipline/evidence",
+    appHref: "/discipline/evidence",
+    label: "경고 차감 사진 제출",
+    description: "남은 인증 사진을 한 번에 제출",
+    section: "내 계정",
+    keywords: ["경고", "차감", "인증", "사진", "제출", "WR"],
+  },
+  {
     href: "/rankings",
     appHref: "/app/rankings",
     label: "시즌 랭킹",
@@ -181,6 +197,14 @@ const adminNavigation: NavigationItem[] = [
     description: "경기 참가자와 결과 입력",
     section: "오늘 운영",
     keywords: ["내전", "등록", "경기"],
+  },
+  {
+    href: "/admin/matches/submissions",
+    appHref: "/admin/matches/submissions",
+    label: "내전 결과 접수",
+    description: "제출된 결과 사진과 등록 상태 확인",
+    section: "오늘 운영",
+    keywords: ["내전", "결과", "사진", "접수", "검토"],
   },
   {
     href: "/admin/matches",

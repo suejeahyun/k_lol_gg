@@ -1,9 +1,11 @@
 export const dynamic = "force-dynamic";
 
+import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import DisciplineRecordListClient from "@/components/admin/DisciplineRecordListClient";
 import DisciplineWorkflowClient from "@/components/admin/DisciplineWorkflowClient";
 import { getKstDateKey } from "@/lib/date/kst";
+import { currentDisciplineEvidence } from "@/lib/discipline/evidence-batch";
 
 export default async function AdminDisciplinePage() {
   const [records, activeWarnings, activeCautions, activeBans, submissions, tasks, issueSessions, banReviews] = await Promise.all([
@@ -38,6 +40,7 @@ export default async function AdminDisciplinePage() {
           <p className="page-eyebrow">DISCIPLINE</p>
           <h1>운영 징계 관리</h1>
         </div>
+        <Link className="admin-button" href="/admin/discipline/new">주의·경고·벤 바로 등록</Link>
       </div>
       <div className="discipline-page-shell">
         <section className="discipline-summary-grid">
@@ -52,7 +55,7 @@ export default async function AdminDisciplinePage() {
             const session = issueSessions.find((candidate) => candidate.targetId === item.id);
             return { id: item.id, publicCode: item.publicCode, status: item.status, targetName: String(data.targetName || "대상 미상"), nicknameTag: String(data.targetNicknameTag || "-"), category: data.category === "INHOUSE" ? "내전" : "일반", issuedDate: String(data.issuedDate || "-"), createdAt: getKstDateKey(item.createdAt), assetIds: session?.images.map((image) => image.privateAssetId) ?? [] };
           })}
-          tasks={tasks.map((task) => ({ id: task.id, publicCode: task.publicCode, status: task.status, targetName: task.disciplineRecord.targetName, requiredGameCount: task.requiredGameCount, dueAt: getKstDateKey(task.dueAt), assetIds: task.evidence.map((item) => item.privateAssetId) }))}
+          tasks={tasks.map((task) => ({ id: task.id, publicCode: task.publicCode, status: task.status, targetName: task.disciplineRecord.targetName, requiredGameCount: task.requiredGameCount, dueAt: getKstDateKey(task.dueAt), assetIds: currentDisciplineEvidence(task.evidence, task.reviewedAt).map((item) => item.privateAssetId) }))}
           banReviews={banReviews.map((item) => ({ id: item.id, targetName: item.targetName, nicknameTag: item.targetNickname ? `${item.targetNickname}${item.targetTag ? `#${item.targetTag}` : ""}` : "-", warningCount: Array.isArray(item.warningRecordIds) ? item.warningRecordIds.length : 3, createdAt: getKstDateKey(item.createdAt) }))}
         />
         <DisciplineRecordListClient initialRecords={initialRecords} />

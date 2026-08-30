@@ -10,8 +10,10 @@ import {
   getScrimStatusPayload,
   readJsonBody,
   rejectIfInvalidScrimSecret,
+  rejectScrimPolicy,
   scrimRecruitJson,
 } from "../_shared";
+import { logServerError } from "@/lib/server/safe-log";
 
 function extractDetailNo(message: string) {
   const parsed = parseScrimNumberCommand(message);
@@ -20,9 +22,11 @@ function extractDetailNo(message: string) {
   return match ? Number(match[1]) : null;
 }
 
-async function handleStatus(req: NextRequest, bodySecret?: unknown, message?: string) {
+async function handleStatus(req: NextRequest, bodySecret?: unknown, message?: string, context: Record<string, unknown> = {}) {
   const rejected = rejectIfInvalidScrimSecret(req, bodySecret);
   if (rejected) return rejected;
+  const policyRejected = await rejectScrimPolicy(context, "RECRUIT_STATUS");
+  if (policyRejected) return policyRejected;
 
   try {
     const messageText = message || req.nextUrl.searchParams.get("message") || "스크림현황";
@@ -38,8 +42,8 @@ async function handleStatus(req: NextRequest, bodySecret?: unknown, message?: st
     const payload = await getScrimStatusPayload(detailNo);
     return scrimRecruitJson(payload);
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return scrimRecruitJson({ reply: `[K-LOL.GG 스크림현황 실패]\n${message}`, error: message }, 500);
+    logServerError("[KAKAO_SCRIM_STATUS_ERROR]", error);
+    return scrimRecruitJson({ reply: "[K-LOL.GG 스크림현황 실패]\n잠시 후 다시 시도해주세요." }, 500);
   }
 }
 
@@ -55,5 +59,5 @@ export async function POST(req: NextRequest) {
   if (premiumLock) return premiumLock;
 
   const body = await readJsonBody(req);
-  return handleStatus(req, body.secret, getBodyText(body));
+  return handleStatus(req, body.secret, getBodyText(body), body);
 }

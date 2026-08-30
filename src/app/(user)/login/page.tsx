@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import LoginForm from "@/components/LoginForm";
+import { getCurrentUser } from "@/lib/auth/session";
+import { safeLocalNextPath } from "@/lib/navigation/safe-next";
 
 export const metadata: Metadata = {
   title: "로그인",
@@ -9,17 +10,28 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function LoginPage() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("user_token");
+type LoginPageProps = {
+  searchParams?: Promise<{
+    next?: string | string[];
+  }>;
+};
 
-  if (token) {
-    redirect("/");
+function firstSearchParam(value?: string | string[]) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const params = await searchParams;
+  const nextPath = safeLocalNextPath(firstSearchParam(params?.next));
+  const user = await getCurrentUser();
+
+  if (user) {
+    redirect(nextPath);
   }
 
   return (
     <main>
-      <LoginForm />
+      <LoginForm nextPath={nextPath} />
     </main>
   );
 }

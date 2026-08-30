@@ -10,7 +10,6 @@ const requiredEnv = [
   "NEXT_PUBLIC_BASE_URL",
   "JWT_SECRET",
   "TOTP_ENCRYPTION_KEY",
-  "ADMIN_TOKEN_VALUE",
   "SUPER_ADMIN_ID",
   "SUPER_ADMIN_PASSWORD",
   "CRON_SECRET",
@@ -48,6 +47,10 @@ function addWarning(message) {
 
 function truthy(value) {
   return /^(1|true|yes|on)$/i.test(String(value || ""));
+}
+
+if (truthy(process.env.ALLOW_LEGACY_ADMIN_TOKEN)) {
+  addProblem("ALLOW_LEGACY_ADMIN_TOKEN: 레거시 관리자 토큰은 운영에서 사용할 수 없습니다.");
 }
 
 function parseEnvFile(filePath) {
@@ -92,7 +95,7 @@ for (const key of requiredEnv) {
     continue;
   }
 
-  if (["JWT_SECRET", "TOTP_ENCRYPTION_KEY", "ADMIN_TOKEN_VALUE"].includes(key) && value.length < 32) {
+  if (["JWT_SECRET", "TOTP_ENCRYPTION_KEY"].includes(key) && value.length < 32) {
     addProblem(`${key}: 최소 32자 이상의 랜덤 값이 필요합니다.`);
     continue;
   }

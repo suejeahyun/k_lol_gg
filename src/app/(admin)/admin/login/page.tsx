@@ -9,6 +9,7 @@ type AdminLoginResponse = {
   success?: boolean;
   ok?: boolean;
   requiresTwoFactor?: boolean;
+  requiresTwoFactorSetup?: boolean;
   message?: string;
 };
 
@@ -26,7 +27,7 @@ export default function AdminLoginPage() {
   useEffect(() => {
     const security = new URLSearchParams(window.location.search).get("security");
     if (security === "2fa-enabled") {
-      setMessage("2단계 인증이 활성화되었습니다. 인증앱의 6자리 코드로 다시 로그인해주세요.");
+      setMessage("2단계 인증이 활성화되었습니다. 인증앱에 다음 새 6자리 코드가 표시되면 다시 로그인해주세요.");
       setMessageTone("info");
     } else if (security === "2fa-disabled") {
       setMessage("2단계 인증이 해제되고 기존 세션이 종료되었습니다. 다시 로그인해주세요.");
@@ -74,6 +75,12 @@ export default function AdminLoginPage() {
 
       if (!response.ok || !data.success) {
         setMessage(data.message ?? "로그인에 실패했습니다.");
+        return;
+      }
+
+      if (data.requiresTwoFactorSetup) {
+        router.push("/admin/security?setup=required");
+        router.refresh();
         return;
       }
 

@@ -91,6 +91,11 @@ type MatchFormData = {
   games: GameForm[];
 };
 
+type StoredSubmissionImage = {
+  gameNumber: number;
+  privateAssetId: number;
+};
+
 type MatchFormProps = {
   mode: "create" | "edit";
   submitUrl: string;
@@ -98,6 +103,7 @@ type MatchFormProps = {
   seasons: SeasonOption[];
   players: PlayerOption[];
   champions: ChampionOption[];
+  submissionImages?: StoredSubmissionImage[];
 };
 
 function makePlayerLabel(player: PlayerOption) {
@@ -289,6 +295,7 @@ export default function MatchForm({
   seasons,
   players,
   champions,
+  submissionImages = [],
 }: MatchFormProps) {
   const router = useRouter();
 
@@ -357,6 +364,8 @@ export default function MatchForm({
   const [lolResultImportingGameIndex, setLolResultImportingGameIndex] = useState<number | null>(null);
   const [lolResultImportStatus, setLolResultImportStatus] = useState<Record<number, string>>({});
   const [lolChampionPreviews, setLolChampionPreviews] = useState<Record<string, string>>({});
+  const [storedImagesImporting, setStoredImagesImporting] = useState(false);
+  const [storedImagesImportProgress, setStoredImagesImportProgress] = useState(0);
 
   const loadTeamBalanceDrafts = async () => {
     try {
@@ -918,11 +927,15 @@ export default function MatchForm({
       .filter((file): file is File => Boolean(file));
   };
 
-  const handleImportLolResult = async (gameIndex: number, file: File | null) => {
-    if (!file) return;
+  const handleImportLolResult = async (
+    gameIndex: number,
+    file: File | null,
+    options: { silentSuccess?: boolean } = {}
+  ): Promise<boolean> => {
+    if (!file) return false;
 
     const targetGame = form.games[gameIndex];
-    if (!targetGame) return;
+    if (!targetGame) return false;
 
     const emptyPlayers = targetGame.participants.filter(
       (participant) => !participant.playerId || !participant.playerInput.trim()
@@ -930,7 +943,7 @@ export default function MatchForm({
 
     if (emptyPlayers.length > 0) {
       alert("먼저 팀 밸런스 결과를 불러오거나 플레이어 10명을 입력해주세요.");
-      return;
+      return false;
     }
 
     let timeoutId: number | null = null;
@@ -982,7 +995,7 @@ export default function MatchForm({
 
       if (!response.ok || !data) {
         alert(data?.message ?? "롤 결과 캡쳐 분석에 실패했습니다.");
-        return;
+        return false;
       }
 
       const usedParticipantIndexes = new Set<number>();
@@ -1252,7 +1265,10 @@ export default function MatchForm({
         ...prev,
         [gameIndex]: statusText,
       }));
-      alert(statusText);
+      if (!options.silentSuccess) {
+        alert(statusText);
+      }
+      return true;
     } catch (error) {
       console.error("[LOL_RESULT_IMPORT_CLIENT_ERROR]", error);
 
@@ -1267,10 +1283,129 @@ export default function MatchForm({
         [gameIndex]: message,
       }));
       alert(message);
+      return false;
     } finally {
       if (timeoutId !== null) window.clearTimeout(timeoutId);
       if (progressTimerId !== null) window.clearInterval(progressTimerId);
       setLolResultImportingGameIndex(null);
+    }
+  };
+
+  const handleImportStoredSubmissionImages = async () => {
+    if (submissionImages.length === 0) {
+      alert("자동 분석할 저장 사진이 없습니다.");
+      return;
+    }
+
+    if (storedImagesImporting || lolResultImportingGameIndex !== null) {
+      alert("이미 캡쳐 분석이 진행 중입니다. 완료 후 다시 시도해주세요.");
+      return;
+    }
+
+    const orderedImages = [...submissionImages].sort(
+      (left, right) => left.gameNumber - right.gameNumber
+    );
+    let successCount = 0;
+    let failureCount = 0;
+
+    try {
+      setStoredImagesImporting(true);
+      setStoredImagesImportProgress(0);
+
+      for (const [imageIndex, image] of orderedImages.entries()) {
+        setStoredImagesImportProgress(imageIndex + 1);
+
+        const gameIndex = form.games.findIndex(
+          (game) => game.gameNumber === image.gameNumber
+        );
+        if (gameIndex < 0) {
+          failureCount += 1;
+          continue;
+        }
+
+        setLolResultImportStatus((prev) => ({
+          ...prev,
+          [gameIndex]: `저장된 ${image.gameNumber}세트 사진을 불러오는 중...`,
+        }));
+
+        try {
+          const response = await fetch(
+            `/api/admin/private-assets/${image.privateAssetId}`,
+            {
+              method: "GET",
+              credentials: "same-origin",
+              cache: "no-store",
+            }
+          );
+
+          if (!response.ok) {
+            const data = await parseResponse<{ message?: string }>(response);
+            const message =
+              data?.message ??
+              `${image.gameNumber}세트 저장 사진을 불러오지 못했습니다.`;
+            setLolResultImportStatus((prev) => ({
+              ...prev,
+              [gameIndex]: message,
+            }));
+            alert(message);
+            failureCount += 1;
+            continue;
+          }
+
+          const blob = await response.blob();
+          if (!blob.type.startsWith("image/")) {
+            const message = `${image.gameNumber}세트 저장 파일이 이미지 형식이 아닙니다.`;
+            setLolResultImportStatus((prev) => ({
+              ...prev,
+              [gameIndex]: message,
+            }));
+            alert(message);
+            failureCount += 1;
+            continue;
+          }
+
+          const subtype = blob.type.split("/")[1]?.split(";")[0] || "png";
+          const extension = subtype === "jpeg" ? "jpg" : subtype;
+          const file = new File(
+            [blob],
+            `inhouse-result-${form.submissionId ?? "manual"}-${image.gameNumber}.${extension}`,
+            { type: blob.type }
+          );
+          const imported = await handleImportLolResult(gameIndex, file, {
+            silentSuccess: true,
+          });
+
+          if (imported) {
+            successCount += 1;
+          } else {
+            failureCount += 1;
+          }
+        } catch (error) {
+          console.error("[STORED_LOL_RESULT_IMPORT_ERROR]", {
+            gameNumber: image.gameNumber,
+            privateAssetId: image.privateAssetId,
+            error,
+          });
+          const message = `${image.gameNumber}세트 저장 사진 처리 중 오류가 발생했습니다.`;
+          setLolResultImportStatus((prev) => ({
+            ...prev,
+            [gameIndex]: message,
+          }));
+          alert(message);
+          failureCount += 1;
+        }
+      }
+
+      if (failureCount === 0) {
+        alert(`저장된 사진 ${successCount}장 분석을 완료했습니다.`);
+      } else {
+        alert(
+          `저장된 사진 ${successCount}장 분석 완료, ${failureCount}장 확인이 필요합니다. 실패한 세트는 기존 붙여넣기 방식으로 입력할 수 있습니다.`
+        );
+      }
+    } finally {
+      setStoredImagesImporting(false);
+      setStoredImagesImportProgress(0);
     }
   };
 
@@ -1284,7 +1419,7 @@ export default function MatchForm({
 
     event.preventDefault();
 
-    if (lolResultImportingGameIndex !== null) {
+    if (storedImagesImporting || lolResultImportingGameIndex !== null) {
       alert("이미 캡쳐 분석이 진행 중입니다. 완료 후 다시 붙여넣어주세요.");
       return;
     }
@@ -1472,7 +1607,12 @@ export default function MatchForm({
               className="match-form-select"
               value={selectedTeamBalanceDraftId}
               onChange={(event) => setSelectedTeamBalanceDraftId(event.target.value)}
-              disabled={draftListLoading || importLoading || teamBalanceDrafts.length === 0}
+              disabled={
+                draftListLoading ||
+                importLoading ||
+                storedImagesImporting ||
+                teamBalanceDrafts.length === 0
+              }
               style={{
                 minWidth: "260px",
                 height: "40px",
@@ -1499,10 +1639,33 @@ export default function MatchForm({
                   console.error("[IMPORT_TEAM_BALANCE_PROMISE_ERROR]", error);
                 });
               }}
-              disabled={draftListLoading || importLoading || teamBalanceDrafts.length === 0}
+              disabled={
+                draftListLoading ||
+                importLoading ||
+                storedImagesImporting ||
+                teamBalanceDrafts.length === 0
+              }
             >
               {importLoading ? "불러오는 중..." : "팀 밸런스 불러오기"}
             </button>
+
+            {submissionImages.length > 0 ? (
+              <button
+                type="button"
+                className="app-button--danger-outline"
+                onClick={() => {
+                  void handleImportStoredSubmissionImages();
+                }}
+                disabled={
+                  storedImagesImporting || lolResultImportingGameIndex !== null
+                }
+                title="현재 접수에 저장된 비공개 사진을 세트 순서대로 불러와 기존 OCR 분석을 실행합니다. 실패한 세트는 직접 붙여넣을 수 있습니다."
+              >
+                {storedImagesImporting
+                  ? `저장 사진 분석 중 ${storedImagesImportProgress}/${submissionImages.length}`
+                  : `저장된 사진 자동 분석 (${submissionImages.length}장)`}
+              </button>
+            ) : null}
           </div>
         ) : null}
       </div>
@@ -1524,7 +1687,9 @@ export default function MatchForm({
                   }`}
                   role="button"
                   tabIndex={0}
-                  aria-disabled={lolResultImportingGameIndex !== null}
+                  aria-disabled={
+                    storedImagesImporting || lolResultImportingGameIndex !== null
+                  }
                   title="Windows + Shift + S로 캡쳐 후 이 영역을 클릭하고 Ctrl + V를 누르세요. 여러 장을 붙여넣으면 현재 세트부터 순서대로 적용됩니다."
                   onPaste={(event) => {
                     void handlePasteLolResults(gameIndex, event);

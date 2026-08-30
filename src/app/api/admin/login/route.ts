@@ -16,6 +16,7 @@ import {
   encryptTotpSecret,
   isEncryptedTotpSecret,
 } from "@/lib/security/totp-secret-storage";
+import { consumeAdminTotpStep } from "@/lib/security/admin-totp-replay";
 
 type LoginBody = {
   id: string;
@@ -186,9 +187,16 @@ export async function POST(req: NextRequest) {
       const plainTotpSecret = decryptTotpSecret(user.adminTotpSecret);
       const validTotp = verifyTotpCode(plainTotpSecret, totpCode);
 
-      if (!validTotp) {
+      if (!validTotp.ok) {
         return NextResponse.json(
           { ok: false, requiresTwoFactor: true, message: "2단계 인증 코드가 올바르지 않습니다." },
+          { status: 401 },
+        );
+      }
+
+      if (!await consumeAdminTotpStep(user.id, validTotp.step)) {
+        return NextResponse.json(
+          { ok: false, requiresTwoFactor: true, message: "이미 사용한 인증 코드입니다. 새 코드를 입력해주세요." },
           { status: 401 },
         );
       }
@@ -202,9 +210,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const requiresTwoFactorSetup = !user.adminTotpEnabled;
     await writeAdminLog({
-      action: "ADMIN_LOGIN",
-      message: `관리자 로그인: #${user.id} ${user.userId} (${user.role})`,
+      action: requiresTwoFactorSetup ? "ADMIN_2FA_ENROLLMENT_LOGIN" : "ADMIN_LOGIN",
+      message: requiresTwoFactorSetup
+        ? `관리자 2단계 인증 등록 전용 로그인: #${user.id} ${user.userId} (${user.role})`
+        : `관리자 로그인: #${user.id} ${user.userId} (${user.role})`,
       actorId: user.id,
       actorType: user.role,
       actorUserId: user.userId,
@@ -220,10 +231,12 @@ export async function POST(req: NextRequest) {
       status: user.status,
       playerId: user.player?.id ?? null,
       authVersion: user.authVersion,
+      adminTotpVerified: user.adminTotpEnabled,
     });
 
     const response = NextResponse.json({
       success: true,
+      requiresTwoFactorSetup,
       user: {
         id: user.id,
         userId: user.userId,

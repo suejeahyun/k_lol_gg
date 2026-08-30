@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { requireAdminRequest } from "@/lib/auth/requireAdmin";
 import { writeSecurityAudit } from "@/lib/security/admin-audit";
+import { canManageAccountApproval } from "@/lib/auth/admin-security-policy";
 
 type RouteContext = {
   params: Promise<{
@@ -32,8 +33,11 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       return NextResponse.json({ message: "유저를 찾을 수 없습니다." }, { status: 404 });
     }
 
-    if (user.role === "SUPER_ADMIN") {
-      return NextResponse.json({ message: "최고 관리자는 거절 처리할 수 없습니다." }, { status: 400 });
+    if (!canManageAccountApproval(admin.user.role, user.role)) {
+      return NextResponse.json(
+        { message: "관리자 계정의 승인 상태는 최고 관리자만 변경할 수 있습니다." },
+        { status: 403 },
+      );
     }
 
     const updated = await prisma.userAccount.update({

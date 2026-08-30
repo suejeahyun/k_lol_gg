@@ -199,6 +199,21 @@ assert.equal(
   "카카오 사진 요청은 Vercel 안전 상한을 넘으면 거부해야 합니다.",
 );
 assert.equal(
+  rejectIfBodyTooLarge(contentLengthRequest("/api/inhouse-results/submissions/MR0123456789/images", 4 * 1024 * 1024)),
+  null,
+  "로그인 사용자의 내전 사진 업로드는 3MB 이미지와 멀티파트 오버헤드를 허용해야 합니다.",
+);
+assert.equal(
+  rejectIfBodyTooLarge(contentLengthRequest("/api/inhouse-results/submissions/MR0123456789/images", 4 * 1024 * 1024 + 1))?.status,
+  413,
+  "사이트 내전 사진 업로드는 안전 상한을 넘으면 거부해야 합니다.",
+);
+assert.equal(
+  rejectIfBodyTooLarge(contentLengthRequest("/api/discipline/tasks/WR0123456789/evidence", 4 * 1024 * 1024)),
+  null,
+  "로그인 사용자의 경고 차감 사진 업로드는 멀티파트 오버헤드를 허용해야 합니다.",
+);
+assert.equal(
   rejectIfBodyTooLarge(
     contentLengthRequest("/api/matches/import-lol-result", 13 * 1024 * 1024),
   ),
@@ -343,10 +358,8 @@ assert.equal(
 );
 
 async function checkProxyCachePolicy() {
-  const originalAdminToken = process.env.ADMIN_TOKEN_VALUE;
   const originalDatabaseUrl = process.env.DATABASE_URL;
   try {
-    process.env.ADMIN_TOKEN_VALUE ||= "security-check-admin-token";
     process.env.DATABASE_URL ||= "postgresql://security:check@127.0.0.1:5432/security_check";
     const { proxy } = await import("../src/proxy");
 
@@ -389,8 +402,6 @@ async function checkProxyCachePolicy() {
       "사용자별 응답이 가능한 API는 비로그인 응답도 공유 캐시에서 제외해야 합니다.",
     );
   } finally {
-    if (originalAdminToken === undefined) delete process.env.ADMIN_TOKEN_VALUE;
-    else process.env.ADMIN_TOKEN_VALUE = originalAdminToken;
     if (originalDatabaseUrl === undefined) delete process.env.DATABASE_URL;
     else process.env.DATABASE_URL = originalDatabaseUrl;
   }

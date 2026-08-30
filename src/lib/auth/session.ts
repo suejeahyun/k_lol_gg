@@ -23,6 +23,7 @@ export async function getCurrentUser() {
       role: true,
       status: true,
       authVersion: true,
+      adminTotpEnabled: true,
       player: {
         select: {
           id: true,
@@ -33,10 +34,16 @@ export async function getCurrentUser() {
 
   if (!user || (payload.authVersion ?? 0) !== user.authVersion) return null;
 
+  const isAdmin = user.role === "ADMIN" || user.role === "SUPER_ADMIN";
+  const adminTwoFactorReady = !isAdmin || (
+    user.adminTotpEnabled && payload.adminTotpVerified === true
+  );
+
   return {
     userAccountId: user.id,
     userId: user.userId,
-    role: user.role,
+    // 2FA 등록 전 관리자 세션은 일반 사용자 권한만 갖는다.
+    role: adminTwoFactorReady ? user.role : "USER",
     status: user.status,
     playerId: user.player?.id ?? null,
   };

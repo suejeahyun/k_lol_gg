@@ -76,6 +76,7 @@ export async function POST(req: NextRequest) {
       status: user.status,
       playerId: user.player?.id ?? null,
       authVersion: user.authVersion,
+      adminTotpVerified: false,
     });
 
     const res = NextResponse.json({

@@ -3,58 +3,19 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useSyncExternalStore } from "react";
+import {
+  isMobileStandalonePath,
+  MOBILE_APP_MEDIA_QUERY,
+  MOBILE_PC_VIEW_SESSION_KEY,
+  toMobileAppPath,
+} from "@/lib/navigation/mobile-app-route";
 
-const MOBILE_QUERY = "(max-width: 820px)";
-const SESSION_KEY = "klol-mobile-pc-view";
 const REDIRECT_DELAY_MS = 650;
-
-function appendSearch(target: string, search?: string) {
-  if (!search) return target;
-  return target.includes("?") ? `${target}&${search}` : `${target}?${search}`;
-}
-
-function detailTarget(pathname: string, sourcePrefix: string, appPrefix: string) {
-  const [, id] = pathname.slice(sourcePrefix.length).match(/^\/(\d+)/) ?? [];
-  return id ? `${appPrefix}/${id}` : appPrefix;
-}
-
-function toAppPath(pathname: string, search?: string) {
-  let target = "/app";
-
-  if (pathname === "/" || pathname === "") target = "/app";
-  else if (pathname.startsWith("/app")) target = pathname;
-  else if (pathname.startsWith("/admin")) target = "/app/admin";
-  else if (
-    pathname.startsWith("/players/balance") ||
-    pathname.startsWith("/balance")
-  ) {
-    target = "/app";
-  } else if (pathname.startsWith("/random-team")) {
-    target = "/app/random-team";
-  } else if (pathname.startsWith("/players/")) target = detailTarget(pathname, "/players", "/app/players");
-  else if (pathname === "/players") target = "/app/players";
-  else if (pathname.startsWith("/matches/")) target = detailTarget(pathname, "/matches", "/app/matches");
-  else if (pathname === "/matches") target = "/app/matches";
-  else if (pathname === "/rankings" || pathname.startsWith("/ai-balance")) target = "/app/rankings";
-  else if (
-    pathname === "/recruit" ||
-    pathname.startsWith("/recruit/") ||
-    pathname.startsWith("/kakao")
-  ) {
-    target = "/app/recruits";
-  } else if (pathname.startsWith("/progress") || pathname.startsWith("/participation")) {
-    target = "/app/matches?tab=events";
-  } else if (pathname.startsWith("/riot-api")) target = "/app/me";
-  else if (pathname.startsWith("/account") || pathname.startsWith("/me")) target = "/app/me";
-  else if (pathname.startsWith("/login") || pathname.startsWith("/signup")) target = "/app/login";
-
-  return appendSearch(target, search);
-}
 
 function subscribeToMobile(callback: () => void) {
   if (typeof window === "undefined") return () => {};
 
-  const query = window.matchMedia(MOBILE_QUERY);
+  const query = window.matchMedia(MOBILE_APP_MEDIA_QUERY);
   query.addEventListener("change", callback);
 
   return () => {
@@ -64,7 +25,7 @@ function subscribeToMobile(callback: () => void) {
 
 function readIsMobile() {
   if (typeof window === "undefined") return false;
-  return window.matchMedia(MOBILE_QUERY).matches;
+  return window.matchMedia(MOBILE_APP_MEDIA_QUERY).matches;
 }
 
 function subscribeToPcChoice(callback: () => void) {
@@ -82,7 +43,7 @@ function subscribeToPcChoice(callback: () => void) {
 function readPcChoice() {
   if (typeof window === "undefined") return false;
   try {
-    return window.sessionStorage.getItem(SESSION_KEY) === "1";
+    return window.sessionStorage.getItem(MOBILE_PC_VIEW_SESSION_KEY) === "1";
   } catch {
     return false;
   }
@@ -91,21 +52,13 @@ function readPcChoice() {
 export default function MobileAppGate() {
   const pathname = usePathname();
   const router = useRouter();
-  const isStandalonePage =
-    pathname === "/install" ||
-    pathname.startsWith("/install/") ||
-    pathname === "/discipline" ||
-    pathname === "/recruit-helper" ||
-    pathname === "/signup" ||
-    pathname === "/forgot-password" ||
-    pathname === "/privacy" ||
-    pathname === "/terms";
+  const isStandalonePage = isMobileStandalonePath(pathname);
   const isMobile = useSyncExternalStore(subscribeToMobile, readIsMobile, () => false);
   const pcChoice = useSyncExternalStore(subscribeToPcChoice, readPcChoice, () => false);
 
   const appPath = useMemo(() => {
     const search = typeof window === "undefined" ? "" : window.location.search.slice(1);
-    return toAppPath(pathname, search);
+    return toMobileAppPath(pathname, search);
   }, [pathname]);
   const shouldShow = isMobile && !pcChoice && !pathname.startsWith("/app") && !isStandalonePage;
 
@@ -115,7 +68,7 @@ export default function MobileAppGate() {
     if (!readIsMobile() || readPcChoice()) return;
 
     const timeoutId = window.setTimeout(() => {
-      window.location.replace(toAppPath(pathname, window.location.search.slice(1)));
+      window.location.replace(toMobileAppPath(pathname, window.location.search.slice(1)));
     }, REDIRECT_DELAY_MS);
 
     return () => {
@@ -125,7 +78,7 @@ export default function MobileAppGate() {
 
   useEffect(() => {
     if (!shouldShow) return;
-    const target = toAppPath(pathname, window.location.search.slice(1));
+    const target = toMobileAppPath(pathname, window.location.search.slice(1));
 
     const timeoutId = window.setTimeout(() => {
       try {
@@ -146,7 +99,7 @@ export default function MobileAppGate() {
 
   const continuePc = () => {
     try {
-      window.sessionStorage.setItem(SESSION_KEY, "1");
+      window.sessionStorage.setItem(MOBILE_PC_VIEW_SESSION_KEY, "1");
     } catch {
       // Storage can be unavailable in restricted mobile browser contexts.
     }

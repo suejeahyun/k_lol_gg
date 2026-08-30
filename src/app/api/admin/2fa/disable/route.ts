@@ -54,6 +54,7 @@ export async function POST(req: NextRequest) {
       adminTotpSecret: null,
       adminTotpEnabled: false,
       adminTotpEnabledAt: null,
+      adminTotpLastUsedStep: null,
       authVersion: { increment: 1 },
     },
   });

@@ -6,10 +6,14 @@ import { classifyKakaoRecruitMessage, buildWrongRecruitApiReply } from "@/lib/ka
 import {
   buildInhouseRecruitSelectionReply,
   buildInhouseRecruitTemplate,
+  getDefaultInhouseRecruitDateKey,
+  getInhouseRecruitQueryDateKey,
   parseInhouseRecruitCommand,
 } from "@/lib/kakao/inhouse-recruit";
 import { getRequiredSecretInProduction, matchesRequestSecret } from "@/lib/security/secrets";
 import { logServerError } from "@/lib/server/safe-log";
+import { evaluateKakaoRequestPolicy } from "@/lib/kakao/policy";
+import { getKakaoOperationSettings } from "@/lib/kakao/settings";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -35,6 +39,9 @@ type ApplyStatusBody = {
   secret?: string | null;
   message?: string | null;
   recruitNo?: number | string | null;
+  roomName?: string | null;
+  room?: string | null;
+  sender?: string | null;
 };
 
 type SeasonRecruitStatusEntry = {
@@ -334,14 +341,26 @@ function buildSeasonRecruitListReply(dateKey: string, grouped: Map<number, Seaso
 async function createStatusReply(req: NextRequest, body?: ApplyStatusBody) {
   const secretRejected = rejectIfInvalidSecret(req, body?.secret);
   if (secretRejected) return secretRejected;
+  const policy = evaluateKakaoRequestPolicy(await getKakaoOperationSettings(), {
+    feature: "SEASON_STATUS",
+    roomName: body?.roomName ?? body?.room ?? req.nextUrl.searchParams.get("roomName"),
+    sender: body?.sender ?? req.nextUrl.searchParams.get("sender"),
+    requireRoom: Boolean(body),
+    requireSender: Boolean(body),
+  });
+  if (!policy.ok) return jsonReply(policy.message, { policyReason: policy.reason }, policy.status);
 
   const rawMessage =
     body?.message ??
     req.nextUrl.searchParams.get("message") ??
     req.nextUrl.searchParams.get("q") ??
     "";
-  const dateKey = getKstOperationDateKey();
-  const createCommand = parseInhouseRecruitCommand(rawMessage, dateKey);
+  const operationDateKey = getKstOperationDateKey();
+  const createCommand = parseInhouseRecruitCommand(
+    rawMessage,
+    getDefaultInhouseRecruitDateKey(),
+  );
+  const dateKey = getInhouseRecruitQueryDateKey(createCommand, operationDateKey);
 
   if (createCommand.isCommand && !createCommand.mode) {
     return jsonReply(buildInhouseRecruitSelectionReply(createCommand.invalidMode), {

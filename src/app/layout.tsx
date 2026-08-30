@@ -7,6 +7,7 @@ import SiteRuntimeSettings from "@/components/SiteRuntimeSettings";
 import SiteAiAssistantLoader from "@/components/ai/SiteAiAssistantLoader";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import { getPublicBaseUrl } from "@/lib/http/base-url";
+import { createMobileAppBootScript } from "@/lib/navigation/mobile-app-route";
 
 const appName = "K-LOL.GG";
 const appDescription = "K-LOL.GG 내전 전적, 구인, 랭킹, 팀 밸런스, 운영 도구";
@@ -27,72 +28,7 @@ const themeBootScript = `
   }
 })();
 `;
-const mobileAppBootScript = `
-(() => {
-  try {
-    const path = window.location.pathname || "/";
-    if (path.startsWith("/app")) return;
-    if (
-      path === "/install" ||
-      path.startsWith("/install/") ||
-      path === "/discipline" ||
-      path === "/recruit-helper" ||
-      path === "/signup" ||
-      path === "/forgot-password" ||
-      path === "/privacy" ||
-      path === "/terms"
-    ) return;
-    if (!window.matchMedia("(max-width: 820px)").matches) return;
-    if (window.sessionStorage.getItem("klol-mobile-pc-view") === "1") return;
-
-    const appendSearch = (target, search) => {
-      if (!search) return target;
-      return target.includes("?") ? target + "&" + search : target + "?" + search;
-    };
-
-    const detailTarget = (pathname, sourcePrefix, appPrefix) => {
-      const match = pathname.slice(sourcePrefix.length).match(/^\\/(\\d+)/);
-      return match ? appPrefix + "/" + match[1] : appPrefix;
-    };
-
-    const toAppPath = (pathname, search) => {
-      let target = "/app";
-      if (pathname === "/" || pathname === "") target = "/app";
-      else if (pathname.startsWith("/admin")) target = "/app/admin";
-      else if (
-        pathname.startsWith("/players/balance") ||
-        pathname.startsWith("/balance")
-      ) target = "/app";
-      else if (pathname.startsWith("/random-team")) target = "/app/random-team";
-      else if (pathname.startsWith("/players/")) target = detailTarget(pathname, "/players", "/app/players");
-      else if (pathname === "/players") target = "/app/players";
-      else if (pathname.startsWith("/matches/")) target = detailTarget(pathname, "/matches", "/app/matches");
-      else if (pathname === "/matches") target = "/app/matches";
-      else if (pathname === "/rankings" || pathname.startsWith("/ai-balance")) target = "/app/rankings";
-      else if (/^\\/progress\\/destruction\\/\\d+\\/mvp-vote/.test(pathname)) {
-        const match = pathname.match(/^\\/progress\\/destruction\\/(\\d+)\\/mvp-vote/);
-        target = match ? "/app/progress/destruction/" + match[1] + "/mvp-vote" : "/app";
-      }
-      else if (
-        pathname === "/recruit" ||
-        pathname.startsWith("/recruit/") ||
-        pathname.startsWith("/kakao")
-      ) target = "/app/recruits";
-      else if (pathname.startsWith("/progress") || pathname.startsWith("/participation")) target = "/app/matches?tab=events";
-      else if (pathname.startsWith("/riot-api")) target = "/app/me";
-      else if (pathname.startsWith("/account") || pathname.startsWith("/me")) target = "/app/me";
-      else if (pathname.startsWith("/login") || pathname.startsWith("/signup")) target = "/app/login";
-      return appendSearch(target, search);
-    };
-
-    window.location.replace(toAppPath(path, window.location.search.slice(1)));
-  } catch {
-    if (!window.location.pathname.startsWith("/app")) {
-      window.location.replace("/app");
-    }
-  }
-})();
-`;
+const mobileAppBootScript = createMobileAppBootScript();
 
 export const metadata: Metadata = {
   metadataBase: new URL(getPublicBaseUrl()),

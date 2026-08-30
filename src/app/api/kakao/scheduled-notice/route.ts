@@ -7,6 +7,8 @@ import { getTodayKstRange } from "@/lib/date/kst";
 import { getRequiredSecretInProduction, matchesRequestSecret } from "@/lib/security/secrets";
 import { prisma } from "@/lib/prisma/client";
 import { logServerError } from "@/lib/server/safe-log";
+import { getKakaoOperationSettings } from "@/lib/kakao/settings";
+import { evaluateKakaoRequestPolicy } from "@/lib/kakao/policy";
 
 type PositionKey = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
 
@@ -127,6 +129,18 @@ async function createNotice(req: NextRequest, body?: NoticeBody) {
   const secretRejected = rejectIfInvalidSecret(req);
   if (secretRejected) return secretRejected;
 
+  const requestedRoomName =
+    body?.roomName ??
+    req.nextUrl.searchParams.get("room") ??
+    null;
+  const policy = evaluateKakaoRequestPolicy(await getKakaoOperationSettings(), {
+    feature: "GENERAL",
+    roomName: requestedRoomName,
+  });
+  if (!policy.ok) {
+    return jsonReply(policy.message, { policyReason: policy.reason }, policy.status);
+  }
+
   const rateLimitRejected = await rejectIfRateLimited(req, {
     action: "KAKAO_SCHEDULED_NOTICE",
     limit: 20,
@@ -140,10 +154,7 @@ async function createNotice(req: NextRequest, body?: NoticeBody) {
     req.nextUrl.searchParams.get("slot") ??
     req.nextUrl.searchParams.get("hour");
 
-  const roomName =
-    body?.roomName ??
-    req.nextUrl.searchParams.get("room") ??
-    null;
+  const roomName = requestedRoomName;
 
   const { start, end } = getTodayKstRange();
   const activeSeasonId = await getActiveSeasonId();

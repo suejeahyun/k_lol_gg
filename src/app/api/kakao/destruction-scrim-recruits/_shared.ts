@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma/client";
 import { getRequiredSecretInProduction, matchesRequestSecret } from "@/lib/security/secrets";
 import { kakaoJsonReply } from "@/lib/kakao/reply-format";
 import { normalizeKakaoIdentity } from "@/lib/kakao/input-guard";
+import { evaluateKakaoRequestPolicy, type KakaoPolicyFeature } from "@/lib/kakao/policy";
+import { getKakaoOperationSettings } from "@/lib/kakao/settings";
 import {
   buildScrimStatusReply,
   buildScrimFormFromData,
@@ -59,6 +61,26 @@ export function getBodyText(body: Record<string, unknown>) {
 
 export function getBodyRoom(body: Record<string, unknown>) {
   return normalizeKakaoIdentity(body.roomName) ?? normalizeKakaoIdentity(body.room);
+}
+
+export async function rejectScrimPolicy(
+  body: Record<string, unknown>,
+  feature: KakaoPolicyFeature,
+  options: { requireIdentity?: boolean } = {},
+) {
+  const settings = await getKakaoOperationSettings();
+  const policy = evaluateKakaoRequestPolicy(settings, {
+    feature,
+    roomName: getBodyRoom(body),
+    sender: getBodySender(body),
+    requireRoom: options.requireIdentity ?? false,
+    requireSender: options.requireIdentity ?? false,
+  });
+  if (policy.ok) return null;
+  return scrimRecruitJson(
+    { reply: policy.message, ignored: policy.reason === "BOT_SENDER", policyReason: policy.reason },
+    policy.status,
+  );
 }
 
 export function getBodySender(body: Record<string, unknown>) {

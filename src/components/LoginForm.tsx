@@ -1,14 +1,14 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
+import { safeLocalNextPath } from "@/lib/navigation/safe-next";
 
-
-export default function LoginForm() {
+export default function LoginForm({ nextPath }: { nextPath?: string }) {
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-
+  const safeNext = useMemo(() => safeLocalNextPath(nextPath), [nextPath]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -36,10 +36,10 @@ export default function LoginForm() {
       }
 
       if (data.user.status !== "APPROVED") {
-        setMessage("관리자 승인 대기 상태입니다. 잠시 후 홈으로 이동합니다.");
+        setMessage("관리자 승인 대기 상태입니다. 요청하신 화면으로 이동합니다.");
       }
 
-      window.location.href = "/";
+      window.location.href = safeNext;
     } catch (error: unknown) {
       console.error("[LOGIN_ERROR]", error);
       setMessage("로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");

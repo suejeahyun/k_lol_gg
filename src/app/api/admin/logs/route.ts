@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
-import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
+import { rejectIfNotSuperAdmin } from "@/lib/auth/requireAdmin";
 
 function getNumber(value: string | null, fallback: number, min: number, max: number) {
   const parsed = Number(value);
@@ -16,7 +16,7 @@ function getString(value: string | null) {
 }
 
 export async function GET(req: NextRequest) {
-  const rejected = await rejectIfNotAdmin();
+  const rejected = await rejectIfNotSuperAdmin();
   if (rejected) return rejected;
 
   const url = new URL(req.url);

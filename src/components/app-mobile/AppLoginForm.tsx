@@ -2,14 +2,7 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import Link from "next/link";
-
-function safeNextPath(value?: string) {
-  if (!value) return "/app";
-  if (!value.startsWith("/")) return "/app";
-  if (value.startsWith("//")) return "/app";
-  if (value.startsWith("/api/")) return "/app";
-  return value;
-}
+import { safeLocalNextPath } from "@/lib/navigation/safe-next";
 
 export function AppLoginForm({ next = "/app" }: { next?: string }) {
   const [userId, setUserId] = useState("");
@@ -17,7 +10,10 @@ export function AppLoginForm({ next = "/app" }: { next?: string }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  const nextPath = useMemo(() => safeNextPath(next), [next]);
+  const nextPath = useMemo(
+    () => safeLocalNextPath(next, { fallback: "/app" }),
+    [next],
+  );
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

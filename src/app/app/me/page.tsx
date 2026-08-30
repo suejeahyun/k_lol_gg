@@ -4,6 +4,9 @@ import { prisma } from "@/lib/prisma/client";
 import { getCurrentUser } from "@/lib/auth/session";
 import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
 import { AppEmpty, AppSection } from "@/components/app-mobile/AppCards";
+import { currentDisciplineEvidenceCount } from "@/lib/discipline/evidence-batch";
+import { disciplineRecordOwnerWhere } from "@/lib/discipline/ownership";
+import { getKstDateKey } from "@/lib/date/kst";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +37,22 @@ function tierLabel(tier?: string | null, rank?: string | null, lp?: number | nul
   return `${tier}${rank ? ` ${rank}` : ""} · ${lp ?? 0}LP`;
 }
 
+const DISCIPLINE_LABELS: Record<string, string> = {
+  CAUTION: "주의",
+  WARNING: "경고",
+  BAN: "벤/강퇴",
+};
+
+const TASK_STATUS_LABELS: Record<string, string> = {
+  REQUIRED: "사진 제출 필요",
+  AWAITING_UPLOAD: "사진 제출 중",
+  REJECTED: "보완 제출 필요",
+  PENDING_REVIEW: "관리자 검토 대기",
+  APPROVED: "차감 승인",
+};
+
+const UPLOADABLE_TASK_STATUSES = new Set(["REQUIRED", "AWAITING_UPLOAD", "REJECTED"]);
+
 export default async function AppMePage() {
   const session = await getCurrentUser().catch(() => null);
   const user = session
@@ -57,7 +76,7 @@ export default async function AppMePage() {
     select: { id: true, name: true },
   });
 
-  const [myStat, myKda] = await Promise.all([
+  const [myStat, myKda, disciplineRecords] = await Promise.all([
     player && season
       ? prisma.playerSeasonStat.findUnique({
           where: { playerId_seasonId: { playerId: player.id, seasonId: season.id } },
@@ -72,9 +91,50 @@ export default async function AppMePage() {
           _sum: { kills: true, deaths: true, assists: true },
         })
       : Promise.resolve(null),
+    user
+      ? prisma.userDisciplineRecord.findMany({
+          where: {
+            isActive: true,
+            type: { in: ["CAUTION", "WARNING", "BAN"] },
+            ...disciplineRecordOwnerWhere({
+              userAccountId: user.id,
+              playerId: player?.id ?? null,
+            }),
+          },
+          select: {
+            id: true,
+            type: true,
+            reason: true,
+            createdAt: true,
+            resolutionTask: {
+              select: {
+                publicCode: true,
+                requiredGameCount: true,
+                dueAt: true,
+                status: true,
+                reviewedAt: true,
+                reviewNote: true,
+                evidence: { select: { submittedAt: true } },
+              },
+            },
+          },
+          orderBy: { createdAt: "desc" },
+          take: 50,
+        })
+      : Promise.resolve([]),
   ]);
 
   const isAdmin = isAdminRole(user?.role ?? session?.role);
+  const disciplineSummary = disciplineRecords.reduce(
+    (summary, record) => {
+      if (record.type === "CAUTION") summary.cautions += 1;
+      if (record.type === "WARNING") summary.warnings += 1;
+      if (record.type === "BAN") summary.bans += 1;
+      return summary;
+    },
+    { cautions: 0, warnings: 0, bans: 0 },
+  );
+  const now = new Date();
 
   return (
     <AppMobileShell subtitle="내 정보">
@@ -133,6 +193,60 @@ export default async function AppMePage() {
                 <strong>{player?.riotAccount?.isVerified ? "검증됨" : player?.riotAccount ? "등록됨" : "미연동"}</strong>
               </div>
             </div>
+          </AppSection>
+
+          <AppSection title="내 경고 현황" caption="전체 징계 통계" captionHref="/discipline">
+            <div className="klol-app-meta-grid">
+              <div className="klol-app-meta"><span>주의</span><strong>{disciplineSummary.cautions}회</strong></div>
+              <div className="klol-app-meta"><span>경고</span><strong>{disciplineSummary.warnings}회</strong></div>
+              <div className="klol-app-meta"><span>벤/강퇴</span><strong>{disciplineSummary.bans > 0 ? `${disciplineSummary.bans}건` : "해당 없음"}</strong></div>
+            </div>
+            {disciplineRecords.length === 0 ? (
+              <AppEmpty>현재 활성 상태인 주의·경고·벤 기록이 없습니다.</AppEmpty>
+            ) : (
+              <div className="klol-app-list">
+                {disciplineRecords.map((record) => {
+                  const task = record.resolutionTask;
+                  const receivedImageCount = task
+                    ? currentDisciplineEvidenceCount(task.evidence, task.reviewedAt)
+                    : 0;
+                  const hasPendingUpload = Boolean(
+                    task
+                    && UPLOADABLE_TASK_STATUSES.has(task.status)
+                    && receivedImageCount < task.requiredGameCount,
+                  );
+                  const isExpired = Boolean(task && hasPendingUpload && task.dueAt <= now);
+                  const canUpload = Boolean(
+                    task
+                    && user.status === "APPROVED"
+                    && !isExpired
+                    && hasPendingUpload,
+                  );
+                  const content = (
+                    <span className="klol-app-list-title">
+                      <strong>{DISCIPLINE_LABELS[record.type] ?? record.type} · {record.reason}</strong>
+                      <span>
+                        등록일 {getKstDateKey(record.createdAt)}
+                        {task ? ` · ${TASK_STATUS_LABELS[task.status] ?? task.status} · ${task.publicCode} · 사진 ${receivedImageCount}/${task.requiredGameCount}장 · 기한 ${getKstDateKey(task.dueAt)}${canUpload ? " · 사진 등록" : ""}` : ""}
+                      </span>
+                      {task?.status === "REJECTED" && task.reviewNote ? (
+                        <span role="alert">반려 사유: {task.reviewNote}</span>
+                      ) : null}
+                      {isExpired ? (
+                        <span>제출 기한이 지났습니다. 관리자에게 문의해주세요.</span>
+                      ) : null}
+                    </span>
+                  );
+                  return canUpload && task ? (
+                    <Link className="klol-app-list-card" href={`/discipline/evidence?code=${encodeURIComponent(task.publicCode)}`} key={record.id}>
+                      {content}
+                    </Link>
+                  ) : (
+                    <div className="klol-app-list-card" key={record.id}>{content}</div>
+                  );
+                })}
+              </div>
+            )}
           </AppSection>
 
           <AppSection title="내 시즌 요약" caption={season?.name}>

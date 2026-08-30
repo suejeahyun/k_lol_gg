@@ -115,7 +115,7 @@ export default async function AppAdminPage() {
             <strong>{recruitFeatureEnabled ? activeRecruitCount : "잠금"}</strong>
             <small>카카오 구인</small>
           </Link>
-          <Link className="klol-app-admin-command-card" href="/admin/operation-forms" data-urgent={pendingOperationCount > 0}>
+          <Link className="klol-app-admin-command-card" href="/admin/kakao/operation-forms" data-urgent={pendingOperationCount > 0}>
             <span>운영 대기</span>
             <strong>{pendingOperationCount}</strong>
             <small>신청 처리</small>

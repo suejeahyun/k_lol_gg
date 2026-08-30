@@ -28,10 +28,11 @@ export default async function AdminDisciplineNewPage() {
       <div className="admin-page__header" style={{ marginBottom: 24 }}>
         <div>
           <p className="page-eyebrow">DISCIPLINE CREATE</p>
-          <h1>주의 등록</h1>
+          <h1>주의·경고·벤 바로 등록</h1>
         </div>
         <Link className="admin-button admin-button--ghost" href="/admin/discipline">목록</Link>
       </div>
+      <p className="admin-muted" style={{ margin: "-10px 0 18px" }}>카카오 양식과 별도 승인 단계 없이 이 화면에서 바로 등록합니다.</p>
       <DisciplineRecordCreateClient targets={targets} />
     </main>
   );

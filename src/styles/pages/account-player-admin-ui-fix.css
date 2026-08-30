@@ -457,6 +457,163 @@
   gap: 14px;
 }
 
+.account-discipline-card {
+  display: grid;
+  gap: 18px;
+  padding: clamp(18px, 3vw, 24px);
+}
+
+.account-discipline-head {
+  align-items: center;
+  margin: 0;
+}
+
+.account-discipline-head h2,
+.account-discipline-head p {
+  margin: 0;
+}
+
+.account-discipline-head p {
+  margin-top: 6px;
+}
+
+.account-discipline-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.account-discipline-summary > div {
+  display: grid;
+  gap: 6px;
+  padding: 15px 16px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 14px;
+  background: rgba(2, 8, 23, 0.32);
+}
+
+.account-discipline-summary span {
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.account-discipline-summary strong {
+  color: #f8fafc;
+  font-size: 21px;
+  font-weight: 950;
+}
+
+.account-discipline-summary .has-caution {
+  border-color: rgba(250, 204, 21, 0.34);
+  background: rgba(161, 98, 7, 0.12);
+}
+
+.account-discipline-summary .has-warning,
+.account-discipline-summary .has-ban {
+  border-color: rgba(248, 113, 113, 0.36);
+  background: rgba(153, 27, 27, 0.14);
+}
+
+.account-discipline-empty {
+  margin: 0;
+  padding: 18px;
+  border: 1px dashed rgba(148, 163, 184, 0.22);
+  border-radius: 14px;
+  color: #cbd5e1;
+  text-align: center;
+}
+
+.account-discipline-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.account-discipline-item {
+  display: grid;
+  gap: 13px;
+  padding: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 16px;
+  background: rgba(2, 8, 23, 0.28);
+}
+
+.account-discipline-item__main {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.account-discipline-item__main > div,
+.account-discipline-task > div {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+}
+
+.account-discipline-item__main strong,
+.account-discipline-task strong {
+  color: #f8fafc;
+  overflow-wrap: anywhere;
+}
+
+.account-discipline-item__main span:not(.account-discipline-type),
+.account-discipline-task span {
+  color: #aebed2;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.account-discipline-type {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  min-width: 62px;
+  padding: 6px 10px;
+  border: 1px solid rgba(148, 163, 184, 0.26);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.account-discipline-type--caution {
+  border-color: rgba(250, 204, 21, 0.38);
+  background: rgba(161, 98, 7, 0.16);
+  color: #fde68a;
+}
+
+.account-discipline-type--warning,
+.account-discipline-type--ban {
+  border-color: rgba(248, 113, 113, 0.42);
+  background: rgba(153, 27, 27, 0.2);
+  color: #fecaca;
+}
+
+.account-discipline-task {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 13px 14px;
+  border: 1px solid rgba(96, 165, 250, 0.24);
+  border-radius: 14px;
+  background: rgba(30, 64, 175, 0.1);
+}
+
+.account-discipline-task .account-discipline-task__review {
+  color: #fecaca;
+  font-weight: 800;
+}
+
+.account-discipline-upload {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
 .account-action-card {
   display: grid;
   gap: 8px;
@@ -593,6 +750,21 @@
 @media (max-width: 760px) {
   .account-action-grid {
     grid-template-columns: 1fr;
+  }
+
+  .account-discipline-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .account-discipline-head,
+  .account-discipline-task {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .account-discipline-head .admin-button,
+  .account-discipline-upload {
+    width: 100%;
   }
 
   .account-edit-page .account-page__header .admin-button {

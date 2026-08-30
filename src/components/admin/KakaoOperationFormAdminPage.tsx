@@ -186,7 +186,7 @@ export default async function KakaoOperationFormAdminPage({ type }: Props) {
               정보 확인 및 보관용 목록입니다. 답변/자동 완료/자동 초대 처리는 하지 않습니다.
             </p>
           </div>
-          <Link className="admin-button admin-button--ghost" href="/admin/operation-forms">
+          <Link className="admin-button admin-button--ghost" href="/admin/kakao/operation-forms">
             운영 신청 홈
           </Link>
         </div>

@@ -5,7 +5,6 @@ import { prisma } from "@/lib/prisma/client";
 import { logServerError } from "@/lib/server/safe-log";
 
 export const revalidate = 3600;
-export const dynamic = "force-dynamic";
 
 // Sitemap protocol limit is 50,000 URLs per file. Six dynamic groups plus
 // static routes stay below that ceiling even when every group reaches its cap.
@@ -37,11 +36,9 @@ const publicRoutes = [
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = getPublicBaseUrl();
-  const lastModified = new Date();
 
   const staticEntries: MetadataRoute.Sitemap = publicRoutes.map((route) => ({
     url: `${baseUrl}${route.path}`,
-    lastModified,
     changeFrequency: route.changeFrequency,
     priority: route.priority,
   }));

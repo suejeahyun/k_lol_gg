@@ -7,6 +7,7 @@ export type AuthTokenPayload = {
   status?: string;
   playerId?: number | null;
   authVersion?: number;
+  adminTotpVerified?: boolean;
 };
 
 const JWT_ISSUER = "k-lol-gg";
@@ -88,6 +89,7 @@ export function verifyAuthToken(token: string): AuthTokenPayload | null {
           ? playerId
           : null,
       authVersion: Number.isInteger(authVersion) && authVersion >= 0 ? authVersion : 0,
+      adminTotpVerified: payload.adminTotpVerified === true,
     };
   } catch {
     return null;
