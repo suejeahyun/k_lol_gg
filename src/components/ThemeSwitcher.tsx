@@ -3,7 +3,7 @@
 import { Palette } from "lucide-react";
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 
-export type KlolTheme = "dark-modern" | "neon-cyber" | "black-gold";
+export type KlolTheme = "bright-bloom" | "lavender-dream" | "mint-breeze";
 
 const THEME_STORAGE_KEY = "klol-theme";
 
@@ -14,22 +14,22 @@ const themes: Array<{
   description: string;
 }> = [
   {
-    id: "dark-modern",
-    label: "다크",
-    shortLabel: "다크",
-    description: "다크모던 기본 테마",
+    id: "bright-bloom",
+    label: "블룸",
+    shortLabel: "블룸",
+    description: "하늘빛 Bright Bloom 기본 테마",
   },
   {
-    id: "neon-cyber",
-    label: "네온",
-    shortLabel: "네온",
-    description: "네온 사이버 강조 테마",
+    id: "lavender-dream",
+    label: "라일락",
+    shortLabel: "라일락",
+    description: "포근한 라일락 드림 테마",
   },
   {
-    id: "black-gold",
-    label: "골드",
-    shortLabel: "골드",
-    description: "블랙 골드 프리미엄 테마",
+    id: "mint-breeze",
+    label: "민트",
+    shortLabel: "민트",
+    description: "산뜻한 민트 브리즈 테마",
   },
 ];
 
@@ -39,19 +39,19 @@ function isKlolTheme(value: string | null): value is KlolTheme {
 
 function applyTheme(theme: KlolTheme) {
   document.documentElement.dataset.theme = theme;
-  document.documentElement.style.colorScheme = "dark";
+  document.documentElement.style.colorScheme = "light";
 }
 
 function readStoredTheme(): KlolTheme {
   if (typeof window === "undefined") {
-    return "dark-modern";
+    return "bright-bloom";
   }
 
   const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
   if (isKlolTheme(savedTheme)) return savedTheme;
 
   const runtimeTheme = document.documentElement.dataset.theme ?? null;
-  return isKlolTheme(runtimeTheme) ? runtimeTheme : "dark-modern";
+  return isKlolTheme(runtimeTheme) ? runtimeTheme : "bright-bloom";
 }
 
 function subscribeToThemeChanges(callback: () => void) {
@@ -77,7 +77,7 @@ export default function ThemeSwitcher({
   const activeTheme = useSyncExternalStore(
     subscribeToThemeChanges,
     readStoredTheme,
-    (): KlolTheme => "dark-modern"
+    (): KlolTheme => "bright-bloom"
   );
 
   useEffect(() => {

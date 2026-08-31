@@ -4,10 +4,12 @@ import { useEffect } from "react";
 import type { SiteThemePreset } from "@/lib/site/settings";
 import { loadPublicSiteSettings } from "@/lib/site/public-settings-client";
 
-const allowedThemes: SiteThemePreset[] = ["dark-modern", "neon-cyber", "black-gold"];
+const allowedThemes: SiteThemePreset[] = ["bright-bloom", "lavender-dream", "mint-breeze"];
 const optimizedBuiltInImages: Record<string, string> = {
   "/images/theme/dark-modern/klol-global-stage-v1.png":
-    "/images/theme/dark-modern/klol-global-stage-v1.webp",
+    "/images/theme/bloom/klol-bloom-hero-v1.webp",
+  "/images/theme/dark-modern/klol-global-stage-v1.webp":
+    "/images/theme/bloom/klol-bloom-hero-v1.webp",
 };
 
 function isTheme(value: unknown): value is SiteThemePreset {
@@ -52,7 +54,7 @@ export default function SiteRuntimeSettings() {
 
         if (!window.localStorage.getItem("klol-theme") && isTheme(settings.themePreset)) {
           root.dataset.theme = settings.themePreset;
-          root.style.colorScheme = "dark";
+          root.style.colorScheme = "light";
           window.dispatchEvent(new Event("klol-theme-change"));
         }
       } catch {

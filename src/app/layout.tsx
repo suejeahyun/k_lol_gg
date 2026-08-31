@@ -14,17 +14,17 @@ const appDescription = "K-LOL.GG 내전 전적, 구인, 랭킹, 팀 밸런스, �
 const themeBootScript = `
 (() => {
   try {
-    const allowed = ["dark-modern", "neon-cyber", "black-gold"];
+    const allowed = ["bright-bloom", "lavender-dream", "mint-breeze"];
     const saved = window.localStorage.getItem("klol-theme");
-    const theme = allowed.includes(saved || "") ? saved : "dark-modern";
-    document.documentElement.dataset.theme = theme || "dark-modern";
-    document.documentElement.style.colorScheme = "dark";
+    const theme = allowed.includes(saved || "") ? saved : "bright-bloom";
+    document.documentElement.dataset.theme = theme || "bright-bloom";
+    document.documentElement.style.colorScheme = "light";
     if (saved && !allowed.includes(saved)) {
-      window.localStorage.setItem("klol-theme", "dark-modern");
+      window.localStorage.setItem("klol-theme", "bright-bloom");
     }
   } catch (error) {
-    document.documentElement.dataset.theme = "dark-modern";
-    document.documentElement.style.colorScheme = "dark";
+    document.documentElement.dataset.theme = "bright-bloom";
+    document.documentElement.style.colorScheme = "light";
   }
 })();
 `;
@@ -46,10 +46,10 @@ export const metadata: Metadata = {
     description: appDescription,
     images: [
       {
-        url: "/images/theme/dark-modern/home-hero-structured-v1.png",
-        width: 1915,
-        height: 821,
-        alt: "K-LOL.GG 내전 기록과 시즌 랭킹",
+        url: "/images/theme/bloom/klol-bloom-hero-v1.webp",
+        width: 1600,
+        height: 900,
+        alt: "구름 위에서 함께 경기를 준비하는 K-LOL.GG 오리지널 판타지 팀",
       },
     ],
   },
@@ -57,13 +57,13 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: appName,
     description: appDescription,
-    images: ["/images/theme/dark-modern/home-hero-structured-v1.png"],
+    images: ["/images/theme/bloom/klol-bloom-hero-v1.webp"],
   },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     title: appName,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
   },
   formatDetection: {
     telephone: false,
@@ -79,7 +79,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#05070d",
+  themeColor: "#F7FBFF",
 };
 
 export default function RootLayout({
@@ -94,7 +94,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
         <script dangerouslySetInnerHTML={{ __html: mobileAppBootScript }} />
       </head>
-      <body className="theme-lol-gold">
+      <body className="theme-bright-bloom">
         <SiteRuntimeSettings />
         <ServiceWorkerRegister />
         <RandomBackgroundLayout>

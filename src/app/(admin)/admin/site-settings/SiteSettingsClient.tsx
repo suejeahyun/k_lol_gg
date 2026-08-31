@@ -63,7 +63,7 @@ export default function SiteSettingsClient({ initialSettings }: SiteSettingsClie
         </div>
         <div>
           <span>기본 테마</span>
-          <strong>{settings.themePreset === "black-gold" ? "블랙 골드" : settings.themePreset === "neon-cyber" ? "네온" : "다크모던"}</strong>
+          <strong>{settings.themePreset === "lavender-dream" ? "라일락 드림" : settings.themePreset === "mint-breeze" ? "민트 브리즈" : "브라이트 블룸"}</strong>
         </div>
       </div>
 
@@ -212,9 +212,9 @@ export default function SiteSettingsClient({ initialSettings }: SiteSettingsClie
             value={settings.themePreset}
             onChange={(event) => update("themePreset", event.target.value as SiteThemePreset)}
           >
-            <option value="dark-modern">다크모던 블루</option>
-            <option value="neon-cyber">네온 사이버</option>
-            <option value="black-gold">블랙 골드</option>
+            <option value="bright-bloom">브라이트 블룸</option>
+            <option value="lavender-dream">라일락 드림</option>
+            <option value="mint-breeze">민트 브리즈</option>
           </select>
         </label>
 
@@ -288,7 +288,7 @@ export default function SiteSettingsClient({ initialSettings }: SiteSettingsClie
             className="admin-input"
             value={settings.homeBackgroundUrl ?? ""}
             onChange={(event) => update("homeBackgroundUrl", event.target.value || null)}
-            placeholder="/images/theme/dark-modern/klol-global-stage-v1.webp"
+            placeholder="/images/theme/bloom/klol-bloom-hero-v1.webp"
           />
         </label>
       </div>

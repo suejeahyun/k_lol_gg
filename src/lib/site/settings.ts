@@ -13,7 +13,7 @@ export type SiteFeatureKey =
   | "aiAssistant";
 
 export type SitePlanStatus = "ACTIVE" | "LOCKED";
-export type SiteThemePreset = "dark-modern" | "neon-cyber" | "black-gold";
+export type SiteThemePreset = "bright-bloom" | "lavender-dream" | "mint-breeze";
 
 export type SiteSettings = {
   siteName: string;
@@ -89,22 +89,22 @@ function isAiAssistantRuntimeConfigured() {
 
 export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   siteName: process.env.NEXT_PUBLIC_SITE_NAME || "K-LOL.GG",
-  siteTagline: process.env.NEXT_PUBLIC_SITE_TAGLINE || "내전 · 랭킹 · AI 데이터",
+  siteTagline: process.env.NEXT_PUBLIC_SITE_TAGLINE || "함께 즐기는 내전 · 랭킹 · 팀 밸런스",
   roomName: process.env.NEXT_PUBLIC_ROOM_NAME || null,
   siteLogoUrl: process.env.NEXT_PUBLIC_SITE_LOGO_URL || null,
   homeBackgroundUrl:
     process.env.NEXT_PUBLIC_SITE_BACKGROUND_URL ||
-    "/images/theme/dark-modern/klol-global-stage-v1.webp",
-  themePreset: "dark-modern",
-  homeEyebrow: process.env.NEXT_PUBLIC_HOME_EYEBROW || "KOREA LOL CUSTOM STATS",
-  homeHeroTitle: process.env.NEXT_PUBLIC_HOME_HERO_TITLE || "실력을",
-  homeHeroAccent: process.env.NEXT_PUBLIC_HOME_HERO_ACCENT || "증명하라",
+    "/images/theme/bloom/klol-bloom-hero-v1.webp",
+  themePreset: "bright-bloom",
+  homeEyebrow: process.env.NEXT_PUBLIC_HOME_EYEBROW || "K-LOL COMMUNITY",
+  homeHeroTitle: process.env.NEXT_PUBLIC_HOME_HERO_TITLE || "같이하면 더",
+  homeHeroAccent: process.env.NEXT_PUBLIC_HOME_HERO_ACCENT || "즐거운 내전",
   homeHeroDescription:
     process.env.NEXT_PUBLIC_HOME_HERO_DESCRIPTION ||
-    "내전 기록, 시즌 랭킹, 멸망전 진행과 MVP까지 한 화면에서 확인하세요. K-LOL.GG는 카카오톡 오픈채팅방 내전 운영을 위한 기록 허브입니다.",
-  homePrimaryCtaLabel: process.env.NEXT_PUBLIC_HOME_PRIMARY_CTA_LABEL || "내전 보러가기",
-  homePrimaryCtaHref: process.env.NEXT_PUBLIC_HOME_PRIMARY_CTA_HREF || "/matches",
-  homeSecondaryCtaLabel: process.env.NEXT_PUBLIC_HOME_SECONDARY_CTA_LABEL || "플레이어 검색",
+    "함께 플레이할 사람을 찾고, 내 경기와 시즌 기록을 편안하게 확인하세요. K-LOL.GG는 커뮤니티 내전을 더 쉽고 즐겁게 이어 주는 기록 허브입니다.",
+  homePrimaryCtaLabel: process.env.NEXT_PUBLIC_HOME_PRIMARY_CTA_LABEL || "지금 같이 플레이할 사람 찾기",
+  homePrimaryCtaHref: process.env.NEXT_PUBLIC_HOME_PRIMARY_CTA_HREF || "/recruit",
+  homeSecondaryCtaLabel: process.env.NEXT_PUBLIC_HOME_SECONDARY_CTA_LABEL || "플레이어 찾기",
   homeSecondaryCtaHref: process.env.NEXT_PUBLIC_HOME_SECONDARY_CTA_HREF || "/players",
   kakaoOpenChatUrl: process.env.NEXT_PUBLIC_KAKAO_OPENCHAT_URL || null,
   userAssistantName: process.env.NEXT_PUBLIC_USER_ASSISTANT_NAME || "K-LOL 코치",
@@ -165,8 +165,22 @@ function normalizePlanStatus(value: unknown, fallback: SitePlanStatus): SitePlan
 }
 
 function normalizeThemePreset(value: unknown, fallback: SiteThemePreset): SiteThemePreset {
-  if (value === "dark-modern" || value === "neon-cyber" || value === "black-gold") return value;
+  if (value === "bright-bloom" || value === "lavender-dream" || value === "mint-breeze") return value;
+  if (value === "dark-modern" || value === "neon-cyber" || value === "black-gold") {
+    return "bright-bloom";
+  }
   return fallback;
+}
+
+function normalizeHomeBackgroundUrl(value: unknown) {
+  const normalized = normalizeUrl(value);
+  if (
+    normalized === "/images/theme/dark-modern/klol-global-stage-v1.png" ||
+    normalized === "/images/theme/dark-modern/klol-global-stage-v1.webp"
+  ) {
+    return "/images/theme/bloom/klol-bloom-hero-v1.webp";
+  }
+  return normalized;
 }
 
 export function normalizeSiteSettings(value: unknown, updatedAt?: Date | string | null): SiteSettings {
@@ -179,7 +193,7 @@ export function normalizeSiteSettings(value: unknown, updatedAt?: Date | string 
     siteTagline: normalizeString(raw.siteTagline, DEFAULT_SITE_SETTINGS.siteTagline ?? ""),
     roomName: normalizeNullableString(raw.roomName),
     siteLogoUrl: normalizeUrl(raw.siteLogoUrl) ?? DEFAULT_SITE_SETTINGS.siteLogoUrl,
-    homeBackgroundUrl: normalizeUrl(raw.homeBackgroundUrl) ?? DEFAULT_SITE_SETTINGS.homeBackgroundUrl,
+    homeBackgroundUrl: normalizeHomeBackgroundUrl(raw.homeBackgroundUrl) ?? DEFAULT_SITE_SETTINGS.homeBackgroundUrl,
     themePreset: normalizeThemePreset(raw.themePreset, DEFAULT_SITE_SETTINGS.themePreset),
     homeEyebrow: normalizeString(raw.homeEyebrow, DEFAULT_SITE_SETTINGS.homeEyebrow),
     homeHeroTitle: normalizeString(raw.homeHeroTitle, DEFAULT_SITE_SETTINGS.homeHeroTitle),

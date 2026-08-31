@@ -40,7 +40,7 @@ export default async function AdminSiteSettingsPage() {
         <div className="stat-card">
           <span className="stat-card__label">기본 테마</span>
           <strong className="stat-card__value">
-            {settings.themePreset === "black-gold" ? "골드" : settings.themePreset === "neon-cyber" ? "네온" : "다크"}
+            {settings.themePreset === "lavender-dream" ? "라일락" : settings.themePreset === "mint-breeze" ? "민트" : "블룸"}
           </strong>
         </div>
         <div className="stat-card">

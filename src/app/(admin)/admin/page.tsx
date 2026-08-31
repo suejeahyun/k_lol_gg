@@ -23,7 +23,7 @@ type DashboardData = {
     siteName: string;
     roomName: string | null;
     planStatus: "ACTIVE" | "LOCKED" | null;
-    themePreset: "dark-modern" | "neon-cyber" | "black-gold";
+    themePreset: "bright-bloom" | "lavender-dream" | "mint-breeze";
     trialEndsAt: string | null;
     billingOwner: string | null;
     lockedFeatureCount: number;

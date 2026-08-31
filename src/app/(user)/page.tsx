@@ -14,10 +14,10 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/images/theme/dark-modern/home-hero-structured-v1.png",
-        width: 1915,
-        height: 821,
-        alt: "K-LOL.GG 내전 전적과 시즌 랭킹",
+        url: "/images/theme/bloom/klol-bloom-hero-v1.webp",
+        width: 1600,
+        height: 900,
+        alt: "구름 위에서 함께 경기를 준비하는 K-LOL.GG 오리지널 판타지 팀",
       },
     ],
   },
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "K-LOL.GG | 내전 전적·시즌 랭킹",
     description: "내전 전적, 시즌 랭킹, 최근 MVP를 확인하세요.",
-    images: ["/images/theme/dark-modern/home-hero-structured-v1.png"],
+    images: ["/images/theme/bloom/klol-bloom-hero-v1.webp"],
   },
 };
 

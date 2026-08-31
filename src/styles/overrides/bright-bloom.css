@@ -1,0 +1,779 @@
+/* Bright Bloom is the final visual layer. It preserves the existing product
+   structure while replacing the legacy dark presentation with a light,
+   readable and performance-safe community surface. */
+
+html[data-theme="bright-bloom"],
+html[data-theme="lavender-dream"],
+html[data-theme="mint-breeze"] {
+  color-scheme: light;
+  --bloom-canvas: #f7fbff;
+  --bloom-canvas-2: #eef7ff;
+  --bloom-surface: #ffffff;
+  --bloom-surface-soft: #f8fbff;
+  --bloom-sky: #ddf3ff;
+  --bloom-lavender: #eee8ff;
+  --bloom-mint: #ddf8ee;
+  --bloom-peach: #ffe8de;
+  --bloom-primary: #4169d8;
+  --bloom-primary-hover: #3156bd;
+  --bloom-ink: #24304a;
+  --bloom-ink-strong: #18233a;
+  --bloom-muted: #5a6982;
+  --bloom-border: #d9e7f4;
+  --bloom-border-strong: #9db9db;
+  --bloom-success: #16805f;
+  --bloom-warning: #9a6512;
+  --bloom-danger: #b83a58;
+  --bloom-focus: #1746b0;
+  --bloom-shadow: 0 16px 44px rgba(76, 104, 150, 0.13);
+  --bloom-shadow-soft: 0 8px 24px rgba(76, 104, 150, 0.09);
+  --bloom-hero: url("/images/theme/bloom/klol-bloom-hero-v1.webp");
+  --bloom-mascot: url("/images/theme/bloom/klol-sallangi-mascot-v1.webp");
+}
+
+html[data-theme="lavender-dream"] {
+  --bloom-canvas: #fbf9ff;
+  --bloom-canvas-2: #f3efff;
+  --bloom-sky: #e8efff;
+  --bloom-lavender: #e9ddff;
+  --bloom-mint: #e5f7f1;
+  --bloom-primary: #6b55c6;
+  --bloom-primary-hover: #5540ad;
+}
+
+html[data-theme="mint-breeze"] {
+  --bloom-canvas: #f6fdfb;
+  --bloom-canvas-2: #eaf9f4;
+  --bloom-sky: #dff5f4;
+  --bloom-lavender: #eeeaff;
+  --bloom-mint: #d3f3e7;
+  --bloom-primary: #287b71;
+  --bloom-primary-hover: #1d645c;
+}
+
+html[data-theme] body,
+html[data-theme] .app-background-root,
+html[data-theme] .app-shell,
+html[data-theme] .app-body {
+  color: var(--bloom-ink) !important;
+  background-color: var(--bloom-canvas) !important;
+}
+
+html[data-theme] body {
+  min-height: 100vh;
+}
+
+html[data-theme] .app-background-root {
+  background:
+    radial-gradient(circle at 8% 2%, rgba(181, 225, 255, 0.68), transparent 25%),
+    radial-gradient(circle at 92% 8%, rgba(222, 206, 255, 0.6), transparent 24%),
+    radial-gradient(circle at 52% 100%, rgba(203, 244, 229, 0.58), transparent 32%),
+    linear-gradient(180deg, var(--bloom-canvas) 0%, var(--bloom-canvas-2) 100%) !important;
+}
+
+html[data-theme] .app-background-root::before {
+  content: "";
+  position: fixed;
+  inset: 64px 0 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 12% 22%, rgba(255, 255, 255, 0.86) 0 3px, transparent 4px),
+    radial-gradient(circle at 86% 16%, rgba(255, 255, 255, 0.74) 0 4px, transparent 5px);
+  background-size: 92px 92px, 128px 128px;
+  opacity: 0.62;
+}
+
+html[data-theme] .app-background-side {
+  display: none !important;
+}
+
+html[data-theme] .app-background-overlay {
+  inset: 64px 0 0 !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 26%),
+    radial-gradient(circle at 50% 16%, rgba(255, 255, 255, 0.36), transparent 44%) !important;
+  opacity: 1 !important;
+}
+
+html[data-theme] .app-background-content {
+  color: var(--bloom-ink) !important;
+}
+
+/* Shared shell and navigation */
+html[data-theme] .app-topbar {
+  border-bottom: 1px solid rgba(157, 185, 219, 0.58) !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  box-shadow: 0 8px 26px rgba(76, 104, 150, 0.1) !important;
+  color: var(--bloom-ink) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(1.08);
+  backdrop-filter: blur(18px) saturate(1.08);
+}
+
+html[data-theme] .app-topbar__home {
+  color: var(--bloom-primary) !important;
+  text-shadow: none !important;
+}
+
+html[data-theme] :is(.app-topbar__title, .app-topbar__divider) {
+  color: var(--bloom-muted) !important;
+}
+
+html[data-theme] :is(.app-topbar__auth-link, .theme-switcher) {
+  border-color: var(--bloom-border) !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  color: var(--bloom-ink) !important;
+  box-shadow: 0 4px 14px rgba(76, 104, 150, 0.08) !important;
+}
+
+html[data-theme] :is(.app-topbar__auth-link--primary, .theme-switcher__option[aria-pressed="true"]) {
+  border-color: transparent !important;
+  background: linear-gradient(135deg, var(--bloom-primary), var(--bloom-primary-hover)) !important;
+  color: #ffffff !important;
+}
+
+html[data-theme] :is(.app-sidebar--user, .app-shell--admin .app-sidebar--admin) {
+  border-right: 1px solid var(--bloom-border) !important;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(221, 243, 255, 0.92), transparent 38%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 251, 255, 0.98)) !important;
+  box-shadow: 10px 0 34px rgba(76, 104, 150, 0.08) !important;
+  color: var(--bloom-ink) !important;
+}
+
+html[data-theme] :is(.app-sidebar__title, .app-sidebar__subtitle) {
+  color: var(--bloom-primary) !important;
+  text-shadow: none !important;
+}
+
+html[data-theme] :is(.app-sidebar__section-title, .app-sidebar__group-title) {
+  color: var(--bloom-muted) !important;
+}
+
+html[data-theme] .app-sidebar__bottom {
+  border-color: var(--bloom-border) !important;
+}
+
+html[data-theme] :is(.app-sidebar__link, .user-subnav__link) {
+  border-color: transparent !important;
+  color: var(--bloom-muted) !important;
+  text-shadow: none !important;
+}
+
+html[data-theme] :is(.app-sidebar__link:hover, .user-subnav__link:hover) {
+  border-color: rgba(65, 105, 216, 0.14) !important;
+  background: var(--bloom-sky) !important;
+  box-shadow: none !important;
+  color: var(--bloom-primary-hover) !important;
+}
+
+html[data-theme] :is(.app-sidebar__link--active, .app-shell--admin .app-sidebar__link--active) {
+  border-color: rgba(65, 105, 216, 0.2) !important;
+  background: linear-gradient(135deg, var(--bloom-sky), var(--bloom-lavender)) !important;
+  box-shadow: inset 3px 0 0 var(--bloom-primary), 0 6px 18px rgba(76, 104, 150, 0.08) !important;
+  color: var(--bloom-primary-hover) !important;
+}
+
+html[data-theme] :is(.app-sidebar__code, .app-shell--admin .app-sidebar__code) {
+  border: 1px solid var(--bloom-border) !important;
+  background: #ffffff !important;
+  color: var(--bloom-primary) !important;
+}
+
+html[data-theme] :is(.sidebar-auth__user, .sidebar-auth__button, .app-sidebar__menu-button) {
+  border-color: var(--bloom-border) !important;
+  background: #ffffff !important;
+  color: var(--bloom-ink) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme] .sidebar-auth__button.secondary {
+  border-color: transparent !important;
+  background: linear-gradient(135deg, var(--bloom-primary), var(--bloom-primary-hover)) !important;
+  color: #ffffff !important;
+}
+
+html[data-theme] .sidebar-auth__button.danger {
+  border-color: rgba(184, 58, 88, 0.24) !important;
+  background: #fff1f4 !important;
+  color: var(--bloom-danger) !important;
+}
+
+/* Shared surfaces, text and controls */
+html[data-theme] :is(
+  .page-header,
+  .admin-page__header,
+  .admin-dashboard-header,
+  .card,
+  .panel,
+  .v2-card,
+  .admin-card,
+  .admin-summary-card,
+  .stat-card,
+  .info-card,
+  .content-section,
+  .list-card,
+  .player-row-card,
+  .match-row-card,
+  .ranking-board,
+  .ranking-row-card,
+  .ranking-top-card,
+  .balance-form-card,
+  .participation-card,
+  .recruit-card,
+  .notice-card,
+  .gallery-card,
+  .detail-header-card,
+  .detail-board,
+  .player-panel,
+  .player-analysis-panel,
+  .champion-stat-card,
+  .destruction-detail-summary-card,
+  .destruction-rank-list,
+  .destruction-rank-row,
+  .destruction-match-list,
+  .destruction-match-row,
+  .destruction-step-section,
+  .destruction-step-body,
+  .admin-log-section,
+  .admin-player-row-card,
+  .admin-event-detail-card,
+  .admin-form
+) {
+  border-color: var(--bloom-border) !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  box-shadow: var(--bloom-shadow-soft) !important;
+  color: var(--bloom-ink) !important;
+  text-shadow: none !important;
+}
+
+html[data-theme] :is(
+  h1,
+  h2,
+  h3,
+  h4,
+  .page-title,
+  .admin-page__header h1,
+  .admin-page-header h1,
+  .home-section-title,
+  .top3-card__title,
+  .top3-panel__title,
+  .top3-slide-header__title,
+  .stat-card__value
+) {
+  color: var(--bloom-ink-strong) !important;
+  text-shadow: none !important;
+}
+
+html[data-theme] :is(
+  p,
+  small,
+  .page-description,
+  .admin-page__description,
+  .stat-card__label,
+  .top3-card__season,
+  .top3-player__nickname,
+  .top3-player__result
+) {
+  color: var(--bloom-muted) !important;
+  text-shadow: none !important;
+}
+
+html[data-theme] :is(.page-eyebrow, .home-eyebrow, .admin-page__kicker, .admin-section-kicker) {
+  color: var(--bloom-primary) !important;
+  text-shadow: none !important;
+}
+
+html[data-theme] :is(input, select, textarea, .admin-input) {
+  border-color: var(--bloom-border-strong) !important;
+  background: #ffffff !important;
+  color: var(--bloom-ink) !important;
+  box-shadow: inset 0 1px 2px rgba(76, 104, 150, 0.05) !important;
+}
+
+html[data-theme] :is(input, textarea)::placeholder {
+  color: #71819a !important;
+  opacity: 1;
+}
+
+html[data-theme] :is(.app-button, .btn-primary, .button.primary, button[type="submit"]):not(.danger) {
+  border-color: transparent !important;
+  background: linear-gradient(135deg, var(--bloom-primary), var(--bloom-primary-hover)) !important;
+  box-shadow: 0 9px 20px rgba(65, 105, 216, 0.18) !important;
+  color: #ffffff !important;
+  text-shadow: none !important;
+}
+
+html[data-theme] :is(.app-button, .btn-primary, .button.primary, button[type="submit"]):not(.danger):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 11px 24px rgba(65, 105, 216, 0.24) !important;
+}
+
+html[data-theme] :is(.chip-button, .pagination-button, .top3-slider__button) {
+  border-color: var(--bloom-border) !important;
+  background: #ffffff !important;
+  color: var(--bloom-ink) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme] :is(.chip-button--active, .pagination-button.active, .top3-pagination__dot--active) {
+  border-color: transparent !important;
+  background: var(--bloom-primary) !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+html[data-theme] :is(table, th, td, .table-wrap, [class*="__tableWrap"]) {
+  border-color: var(--bloom-border) !important;
+  color: var(--bloom-ink) !important;
+}
+
+html[data-theme] th {
+  background: var(--bloom-sky) !important;
+  color: var(--bloom-ink-strong) !important;
+}
+
+html[data-theme] tr:nth-child(even) td {
+  background: rgba(247, 251, 255, 0.78) !important;
+}
+
+/* Home hero and task-first entry */
+html[data-theme] .home-bloom-page {
+  gap: 24px !important;
+}
+
+html[data-theme] .home-bloom-page .home-dark-showcase {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden !important;
+  border: 1px solid rgba(157, 185, 219, 0.72) !important;
+  border-radius: 28px !important;
+  background: #ffffff !important;
+  box-shadow: var(--bloom-shadow) !important;
+}
+
+html[data-theme] .home-bloom-page .home-dark-showcase::before {
+  z-index: 1 !important;
+  opacity: 1 !important;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.99) 0%, rgba(255, 255, 255, 0.94) 36%, rgba(255, 255, 255, 0.46) 62%, rgba(255, 255, 255, 0.1) 100%),
+    linear-gradient(180deg, transparent 60%, rgba(255, 255, 255, 0.84) 100%) !important;
+}
+
+html[data-theme] .home-bloom-hero-art {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 0;
+  height: clamp(390px, 34vw, 540px);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+html[data-theme] .home-bloom-hero-art img {
+  object-fit: cover;
+  object-position: center;
+}
+
+html[data-theme] .home-dark-showcase-hero {
+  position: relative;
+  z-index: 2;
+  min-height: clamp(330px, 29vw, 455px) !important;
+  align-items: center !important;
+}
+
+html[data-theme] .home-dark-showcase .home-dark-hero-copy {
+  z-index: 2;
+  max-width: min(620px, 52%) !important;
+}
+
+html[data-theme] .home-dark-hero-title {
+  color: var(--bloom-ink-strong) !important;
+  font-size: clamp(40px, 5.2vw, 68px) !important;
+  line-height: 1.04 !important;
+  letter-spacing: -0.05em !important;
+  text-shadow: none !important;
+}
+
+html[data-theme] .home-dark-hero-title span {
+  color: var(--bloom-primary) !important;
+  text-shadow: none !important;
+}
+
+html[data-theme] .home-main-description {
+  max-width: 560px !important;
+  color: var(--bloom-muted) !important;
+  font-size: 16px !important;
+  line-height: 1.75 !important;
+}
+
+html[data-theme] .home-dark-actions {
+  gap: 10px !important;
+  margin-top: 24px !important;
+}
+
+html[data-theme] :is(.home-dark-primary-action, .home-dark-secondary-action, .home-dark-mini-link) {
+  min-height: 46px !important;
+  border-radius: 14px !important;
+  padding-inline: 18px !important;
+  font-size: 14px !important;
+  text-shadow: none !important;
+}
+
+html[data-theme] .home-dark-primary-action {
+  border-color: transparent !important;
+  background: linear-gradient(135deg, var(--bloom-primary), var(--bloom-primary-hover)) !important;
+  box-shadow: 0 12px 24px rgba(65, 105, 216, 0.2) !important;
+  color: #ffffff !important;
+}
+
+html[data-theme] :is(.home-dark-secondary-action, .home-dark-mini-link) {
+  border-color: var(--bloom-border-strong) !important;
+  background: rgba(255, 255, 255, 0.88) !important;
+  color: var(--bloom-ink) !important;
+}
+
+html[data-theme] .home-community-links {
+  z-index: 3;
+}
+
+html[data-theme] .home-quick-access {
+  position: relative;
+  z-index: 3;
+  gap: 10px !important;
+}
+
+html[data-theme] .home-quick-access > a {
+  border-color: var(--bloom-border) !important;
+  border-radius: 18px !important;
+  background: rgba(255, 255, 255, 0.94) !important;
+  box-shadow: 0 7px 18px rgba(76, 104, 150, 0.08) !important;
+  color: var(--bloom-ink) !important;
+}
+
+html[data-theme] .home-quick-access > a:nth-child(3n + 1) {
+  background: linear-gradient(145deg, #ffffff, var(--bloom-sky)) !important;
+}
+
+html[data-theme] .home-quick-access > a:nth-child(3n + 2) {
+  background: linear-gradient(145deg, #ffffff, var(--bloom-lavender)) !important;
+}
+
+html[data-theme] .home-quick-access > a:nth-child(3n) {
+  background: linear-gradient(145deg, #ffffff, var(--bloom-mint)) !important;
+}
+
+html[data-theme] .home-quick-access :is(span, strong, small) {
+  color: inherit !important;
+  text-shadow: none !important;
+}
+
+html[data-theme] .home-dark-showcase-grid {
+  z-index: 3;
+  border-color: var(--bloom-border) !important;
+  background:
+    radial-gradient(circle at 8% 0%, rgba(221, 243, 255, 0.84), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 251, 255, 0.98)) !important;
+  box-shadow: inset 0 1px 0 #ffffff !important;
+}
+
+html[data-theme] :is(
+  .home-dark-top3-panel,
+  .home-dark-recent-panel,
+  .home-dark-season-summary,
+  .home-top3-arena,
+  .home-top3-ace,
+  .home-top3-chaser,
+  .home-dark-rank-card,
+  .home-stat-box
+) {
+  border-color: var(--bloom-border) !important;
+  background: rgba(255, 255, 255, 0.94) !important;
+  box-shadow: var(--bloom-shadow-soft) !important;
+  color: var(--bloom-ink) !important;
+  text-shadow: none !important;
+}
+
+html[data-theme] :is(.home-top3-ace *, .home-top3-chaser *, .home-dark-rank-card *, .home-stat-box *) {
+  text-shadow: none !important;
+}
+
+html[data-theme] :is(.home-top3-ace__metric b, .home-top3-chaser__stats b, .home-top3-scoreline b) {
+  color: var(--bloom-primary) !important;
+}
+
+/* Images and status surfaces */
+html[data-theme] .winner-slider {
+  border-color: var(--bloom-border) !important;
+  background: #ffffff !important;
+  box-shadow: var(--bloom-shadow) !important;
+}
+
+html[data-theme] .winner-slider__overlay {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.72) 48%, rgba(255, 255, 255, 0.08)),
+    linear-gradient(180deg, transparent 54%, rgba(255, 255, 255, 0.86)) !important;
+}
+
+html[data-theme] .winner-slider :is(.winner-slider__title, .winner-slider__description, .winner-slider__eyebrow) {
+  color: var(--bloom-ink-strong) !important;
+  text-shadow: none !important;
+}
+
+html[data-theme] :is(.klol-app-empty, .top3-empty, .participation-card--disabled) {
+  position: relative;
+  min-height: 150px;
+  overflow: hidden;
+  border: 1px dashed var(--bloom-border-strong) !important;
+  background: linear-gradient(145deg, #ffffff, var(--bloom-sky)) !important;
+  color: var(--bloom-muted) !important;
+}
+
+html[data-theme] :is(.klol-app-empty, .top3-empty, .participation-card--disabled)::before {
+  content: "";
+  position: absolute;
+  right: 12px;
+  bottom: -18px;
+  width: 118px;
+  height: 118px;
+  background: var(--bloom-mascot) center / contain no-repeat;
+  opacity: 0.78;
+  pointer-events: none;
+}
+
+html[data-theme] :is(.auth-alert, .app-error-card, .error-panel) {
+  border-color: var(--bloom-border) !important;
+  background: var(--bloom-sky) !important;
+  color: var(--bloom-ink) !important;
+}
+
+html[data-theme] :is(.auth-alert--error, .danger, [data-state="error"]) {
+  border-color: rgba(184, 58, 88, 0.26) !important;
+  background: #fff1f4 !important;
+  color: var(--bloom-danger) !important;
+}
+
+html[data-theme] :is(.sidebar-auth__pending, [data-state="pending"], [data-status="PLANNED"]) {
+  border-color: rgba(154, 101, 18, 0.22) !important;
+  background: #fff8e7 !important;
+  color: var(--bloom-warning) !important;
+}
+
+html[data-theme] :is([data-state="success"], [data-status="RECRUITING"], [data-plan-state="active"]) {
+  border-color: rgba(22, 128, 95, 0.22) !important;
+  background: var(--bloom-mint) !important;
+  color: var(--bloom-success) !important;
+}
+
+/* Players, recruitment and participation */
+html[data-theme] :is(
+  .players-page-v2__panel,
+  .players-page-v2__summary-card,
+  .players-page-v2__board,
+  .players-page-v2__row,
+  .recruit-card,
+  .participation-card
+) {
+  border-color: var(--bloom-border) !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  box-shadow: var(--bloom-shadow-soft) !important;
+  color: var(--bloom-ink) !important;
+}
+
+html[data-theme] :is(.players-page-v2__row, .recruit-card, .participation-card):hover {
+  border-color: var(--bloom-border-strong) !important;
+  background: #ffffff !important;
+  box-shadow: var(--bloom-shadow) !important;
+  transform: translateY(-2px);
+}
+
+html[data-theme] :is(.champion-icon, .champion-image, [class*="champion"] img) {
+  border: 3px solid #ffffff !important;
+  box-shadow: 0 0 0 1px var(--bloom-border), 0 7px 18px rgba(76, 104, 150, 0.14) !important;
+}
+
+/* Team balance keeps semantic BLUE/RED but removes the dark stage. */
+html[data-theme] .balance-result-teams--compact {
+  border-color: var(--bloom-border) !important;
+  background:
+    linear-gradient(90deg, rgba(221, 243, 255, 0.9), rgba(255, 255, 255, 0.96) 46%, rgba(255, 255, 255, 0.96) 54%, rgba(255, 232, 222, 0.9)) !important;
+  box-shadow: var(--bloom-shadow) !important;
+}
+
+html[data-theme] .balance-result-teams--compact::before {
+  background: linear-gradient(180deg, transparent, var(--bloom-border-strong), transparent) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme] :is(.balance-team-panel, .balance-player-card--compact) {
+  background: rgba(255, 255, 255, 0.94) !important;
+  color: var(--bloom-ink) !important;
+  box-shadow: var(--bloom-shadow-soft) !important;
+}
+
+html[data-theme] .balance-team-panel--blue {
+  border-color: rgba(65, 105, 216, 0.34) !important;
+}
+
+html[data-theme] .balance-team-panel--red {
+  border-color: rgba(184, 58, 88, 0.3) !important;
+}
+
+html[data-theme] .balance-team-title--blue {
+  color: var(--bloom-primary) !important;
+}
+
+html[data-theme] .balance-team-title--red {
+  color: var(--bloom-danger) !important;
+}
+
+/* Mobile application shell */
+html[data-theme] .klol-app-root {
+  background:
+    radial-gradient(circle at 12% 0%, var(--bloom-sky), transparent 30%),
+    linear-gradient(180deg, var(--bloom-canvas), var(--bloom-canvas-2)) !important;
+  color: var(--bloom-ink) !important;
+}
+
+html[data-theme] :is(.klol-app-header, .klol-app-bottom-nav) {
+  border-color: var(--bloom-border) !important;
+  background: rgba(255, 255, 255, 0.94) !important;
+  box-shadow: 0 -8px 24px rgba(76, 104, 150, 0.08) !important;
+  color: var(--bloom-ink) !important;
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+html[data-theme] :is(.klol-app-card, .klol-app-list-card, .klol-app-section, .klol-app-login-card) {
+  border-color: var(--bloom-border) !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  box-shadow: var(--bloom-shadow-soft) !important;
+  color: var(--bloom-ink) !important;
+}
+
+html[data-theme] .klol-app-bottom-nav a {
+  color: var(--bloom-muted) !important;
+}
+
+html[data-theme] .klol-app-bottom-nav a[data-active="true"] {
+  background: var(--bloom-sky) !important;
+  color: var(--bloom-primary) !important;
+}
+
+html[data-theme] :is(.klol-app-badge, .klol-app-chip) {
+  border-color: var(--bloom-border) !important;
+  background: var(--bloom-sky) !important;
+  color: var(--bloom-primary-hover) !important;
+}
+
+/* Accessible focus remains visible on every pastel surface. */
+html[data-theme] :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline-color: var(--bloom-focus) !important;
+}
+
+@media (max-width: 980px) {
+  html[data-theme] .home-bloom-page .home-dark-showcase::before {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.34) 0%, rgba(255, 255, 255, 0.96) 55%, #ffffff 100%) !important;
+  }
+
+  html[data-theme] .home-bloom-hero-art {
+    height: 360px;
+  }
+
+  html[data-theme] .home-bloom-hero-art img {
+    object-position: 64% top;
+  }
+
+  html[data-theme] .home-dark-showcase-hero {
+    min-height: 500px !important;
+    align-items: flex-end !important;
+  }
+
+  html[data-theme] .home-dark-showcase .home-dark-hero-copy {
+    max-width: 100% !important;
+  }
+}
+
+@media (max-width: 720px) {
+  html[data-theme] .app-background-root::before {
+    opacity: 0.34;
+  }
+
+  html[data-theme] .app-background-overlay {
+    inset: 0 !important;
+  }
+
+  html[data-theme] .home-bloom-page .home-dark-showcase {
+    border-radius: 22px !important;
+    padding: 16px !important;
+  }
+
+  html[data-theme] .home-bloom-hero-art {
+    height: 300px;
+  }
+
+  html[data-theme] .home-bloom-hero-art img {
+    object-position: 67% top;
+  }
+
+  html[data-theme] .home-dark-showcase-hero {
+    min-height: 470px !important;
+    padding-top: 246px !important;
+  }
+
+  html[data-theme] .home-dark-hero-title {
+    font-size: clamp(34px, 11vw, 48px) !important;
+  }
+
+  html[data-theme] .home-dark-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  html[data-theme] .home-dark-primary-action {
+    grid-column: 1 / -1;
+  }
+
+  html[data-theme] .home-dark-primary-action,
+  html[data-theme] .home-dark-secondary-action {
+    width: 100% !important;
+    min-height: 48px !important;
+  }
+
+  html[data-theme] .home-quick-access {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  html[data-theme] :is(.app-sidebar--user, .app-shell--admin .app-sidebar--admin) {
+    box-shadow: none !important;
+  }
+}
+
+@media (max-width: 390px) {
+  html[data-theme] .home-bloom-hero-art {
+    height: 260px;
+  }
+
+  html[data-theme] .home-dark-showcase-hero {
+    min-height: 450px !important;
+    padding-top: 214px !important;
+  }
+
+  html[data-theme] .home-dark-actions {
+    grid-template-columns: 1fr;
+  }
+
+  html[data-theme] .home-dark-primary-action {
+    grid-column: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .app-background-root::before {
+    background-position: 0 0 !important;
+  }
+
+  html[data-theme] :is(.home-quick-access > a, .players-page-v2__row, .recruit-card, .participation-card) {
+    transform: none !important;
+  }
+}

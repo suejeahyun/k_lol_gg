@@ -362,9 +362,32 @@ export default async function HomePage() {
         { label: "참여 인원", value: seasonSummary.participantCount },
       ];
 
+  const primaryCtaLabel =
+    siteSettings.homePrimaryCtaLabel === "내전 보러가기"
+      ? "지금 같이 플레이할 사람 찾기"
+      : siteSettings.homePrimaryCtaLabel;
+  const primaryCtaHref =
+    siteSettings.homePrimaryCtaLabel === "내전 보러가기" &&
+    siteSettings.homePrimaryCtaHref === "/matches"
+      ? "/recruit"
+      : siteSettings.homePrimaryCtaHref;
+  const secondaryCtaLabel =
+    siteSettings.homeSecondaryCtaLabel === "플레이어 검색"
+      ? "플레이어 찾기"
+      : siteSettings.homeSecondaryCtaLabel;
+
   return (
-    <main className="page-container home-page home-dark-modern-page">
+    <main className="page-container home-page home-dark-modern-page home-bloom-page">
       <section className="home-dark-showcase" aria-label="K-LOL.GG 메인">
+        <div className="home-bloom-hero-art" aria-hidden="true">
+          <Image
+            src="/images/theme/bloom/klol-bloom-hero-v1.webp"
+            alt=""
+            fill
+            priority
+            sizes="(max-width: 820px) 100vw, 1200px"
+          />
+        </div>
         <div className="home-dark-showcase-hero">
           <div className="home-dark-hero-copy">
             <p className="home-eyebrow">{siteSettings.homeEyebrow}</p>
@@ -376,11 +399,14 @@ export default async function HomePage() {
             </p>
 
             <div className="home-dark-actions">
-              <Link href={siteSettings.homePrimaryCtaHref} className="home-dark-primary-action">
-                {siteSettings.homePrimaryCtaLabel}
+              <Link href={primaryCtaHref} className="home-dark-primary-action">
+                {primaryCtaLabel}
               </Link>
               <Link href={siteSettings.homeSecondaryCtaHref} className="home-dark-secondary-action">
-                {siteSettings.homeSecondaryCtaLabel}
+                {secondaryCtaLabel}
+              </Link>
+              <Link href="/me" className="home-dark-secondary-action">
+                내 경기 확인
               </Link>
             </div>
           </div>
