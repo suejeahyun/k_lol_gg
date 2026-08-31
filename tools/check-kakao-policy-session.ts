@@ -60,6 +60,24 @@ assert.equal(
   false,
 );
 
+for (const feature of ["RECRUIT_JOIN", "RECRUIT_FINISH"] as const) {
+  assert.deepEqual(
+    evaluateKakaoRequestPolicy(base, {
+      feature,
+      roomName: "다른 방",
+      sender: "다른 사람",
+      requireRoom: true,
+      requireSender: true,
+    }),
+    {
+      ok: false,
+      reason: "ROOM_BLOCKED",
+      status: 403,
+      message: "사용할 수 없는 방",
+    },
+  );
+}
+
 assert.equal(
   evaluateKakaoRequestPolicy(
     { ...base, recruitFinishCommandEnabled: false },
@@ -109,14 +127,24 @@ assert.deepEqual(
   { ok: true, operatorOverride: false },
 );
 
-assert.equal(
+assert.deepEqual(
   evaluatePartyMutationOwnership(base, {
     partyRoomName: "K-LOL 구인방",
     partyHostName: "재현",
     roomName: "K-LOL 구인방",
-    sender: "관리자 재현",
-  }).ok,
-  false,
+    sender: "다른 사람",
+  }),
+  { ok: true, operatorOverride: false },
+);
+
+assert.deepEqual(
+  evaluatePartyMutationOwnership(base, {
+    partyRoomName: "생성 당시 잘못 저장된 방 이름",
+    partyHostName: "재현",
+    roomName: "K-LOL 구인방",
+    sender: "다른 사람",
+  }),
+  { ok: true, operatorOverride: false },
 );
 
 assert.deepEqual(
@@ -128,6 +156,32 @@ assert.deepEqual(
     operatorOverride: true,
   }),
   { ok: true, operatorOverride: true },
+);
+
+const syncRoutePath = "src/app/api/kakao/party-recruits/sync/route.ts";
+const syncRouteSource = readFileSync(resolve(process.cwd(), syncRoutePath), "utf8");
+const syncPolicyIndex = syncRouteSource.indexOf(
+  "const policyRejected = await rejectPartyPolicy",
+);
+const syncMutationCallIndex = syncRouteSource.indexOf("const result = await syncOneRecruit");
+assert.ok(syncPolicyIndex >= 0, `${syncRoutePath}: 카카오 요청 정책 검사가 필요합니다.`);
+assert.ok(
+  syncMutationCallIndex > syncPolicyIndex,
+  `${syncRoutePath}: 공동 수정 함수 호출 전에 정책을 검사해야 합니다.`,
+);
+
+const finishRoutePath = "src/app/api/kakao/party-recruits/finish/route.ts";
+const finishRouteSource = readFileSync(resolve(process.cwd(), finishRoutePath), "utf8");
+const finishPolicyIndex = finishRouteSource.indexOf(
+  "const policyRejected = await rejectPartyPolicy",
+);
+const finishMutationIndex = finishRouteSource.indexOf(
+  "const ownership = evaluatePartyMutationOwnership",
+);
+assert.ok(finishPolicyIndex >= 0, `${finishRoutePath}: 카카오 요청 정책 검사가 필요합니다.`);
+assert.ok(
+  finishMutationIndex > finishPolicyIndex,
+  `${finishRoutePath}: 공동 수정 판정 전에 정책을 검사해야 합니다.`,
 );
 
 const botSource = readFileSync(
@@ -157,4 +211,4 @@ assert.match(imageRouteSource, /\{ publicCode, roomKey, senderKey, status: "ACTI
 assert.match(imageRouteSource, /data: \{ status: "EXPIRED" \}/);
 assert.match(imageRouteSource, /clearSession: result\.completed/);
 
-console.log("카카오 공통 정책·소유권·사진 세션 회귀 검사를 통과했습니다.");
+console.log("카카오 공통 정책·공동 구인 수정·사진 세션 회귀 검사를 통과했습니다.");

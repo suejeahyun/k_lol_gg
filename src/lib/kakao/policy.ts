@@ -172,20 +172,18 @@ export function evaluatePartyMutationOwnership(
     sender?: string | null;
     operatorOverride?: boolean;
   },
-) {
-  const ownsRoom = isSameKakaoIdentity(input.partyRoomName, input.roomName);
-  const ownsSender = isSameKakaoIdentity(input.partyHostName, input.sender);
-  if (ownsRoom && ownsSender) return { ok: true as const, operatorOverride: false };
+):
+  | { ok: true; operatorOverride: boolean }
+  | {
+      ok: false;
+      reason: "ROOM_MISMATCH" | "HOST_MISMATCH";
+      message: string;
+    } {
+  // 구인은 허용된 카카오톡 방 구성원이 함께 갱신하는 공동 상태다.
+  // 웹훅 인증과 설정된 방/발신자 정책은 이 판정 전에 검증되므로 최초 작성자나
+  // 생성 당시 저장된 방 이름을 기준으로 수정·마감을 다시 제한하지 않는다.
+  const operatorOverride =
+    Boolean(input.operatorOverride) && isKakaoOperatorSender(settings, input.sender);
 
-  if (input.operatorOverride && isKakaoOperatorSender(settings, input.sender)) {
-    return { ok: true as const, operatorOverride: true };
-  }
-
-  return {
-    ok: false as const,
-    reason: !ownsRoom ? "ROOM_MISMATCH" as const : "HOST_MISMATCH" as const,
-    message: !ownsRoom
-      ? "이 구인은 생성한 카카오톡 방에서만 수정하거나 마감할 수 있습니다."
-      : "구인을 만든 사람만 수정하거나 마감할 수 있습니다. 운영자는 관리자 대리처리를 명시해야 합니다.",
-  };
+  return { ok: true as const, operatorOverride };
 }
