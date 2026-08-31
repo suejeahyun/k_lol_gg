@@ -82,9 +82,11 @@ mustContain(variables, /--k-muted:\s*#5a6982/i, "보조 텍스트 토큰은 대�
 const globals = read("src/app/globals.css");
 const darkImportIndex = globals.indexOf("dark-modern-final.css");
 const bloomImportIndex = globals.indexOf("bright-bloom.css");
+const adminBloomImportIndex = globals.indexOf("admin-bright-bloom.css");
 const accessibilityImportIndex = globals.indexOf("accessibility.css");
 contract(bloomImportIndex > darkImportIndex, "Bright Bloom 스타일은 기존 다크 스타일 뒤에 적용되어야 합니다.");
-contract(accessibilityImportIndex > bloomImportIndex, "접근성 안전망은 Bright Bloom 뒤에 마지막으로 적용되어야 합니다.");
+contract(adminBloomImportIndex > bloomImportIndex, "관리자 Bright Bloom 스타일은 공통 밝은 테마 뒤에 적용되어야 합니다.");
+contract(accessibilityImportIndex > adminBloomImportIndex, "접근성 안전망은 모든 Bright Bloom 스타일 뒤에 마지막으로 적용되어야 합니다.");
 
 const bloom = read("src/styles/overrides/bright-bloom.css");
 mustContain(bloom, /html\[data-theme="bright-bloom"\]/, "Bright Bloom 루트 테마 선택자가 필요합니다.");
@@ -94,6 +96,28 @@ mustContain(bloom, /prefers-reduced-motion:\s*reduce/, "모션 감소 환경에�
 mustContain(bloom, /color-scheme:\s*light/, "밝은 브라우저 컨트롤 렌더링을 선언해야 합니다.");
 mustNotContain(bloom, /#050b16|#020617|rgba\(2,\s*6,\s*23/, "Bright Bloom 스타일에 기존 핵심 다크 배경색을 재사용하면 안 됩니다.");
 fileBudget("src/styles/overrides/bright-bloom.css", 50 * 1024);
+
+const adminBloom = read("src/styles/overrides/admin-bright-bloom.css");
+mustContain(adminBloom, /\.admin-login-page/, "관리자 로그인 화면의 밝은 테마가 필요합니다.");
+mustContain(adminBloom, /klol-bloom-hero-v1\.webp/, "관리자 로그인도 Bright Bloom 대표 자산을 사용해야 합니다.");
+mustContain(adminBloom, /\.app-shell--admin/, "관리자 공통 셸의 밝은 운영 스타일이 필요합니다.");
+mustContain(adminBloom, /SiteAiAssistant-module/, "공통 코치 위젯의 밝은 버튼 보정이 필요합니다.");
+mustContain(adminBloom, /body:has\(\.admin-login-page\).*SiteAiAssistant-module/s, "관리자 로그인에서 코치 위젯 겹침을 막아야 합니다.");
+mustContain(adminBloom, /\.admin-dashboard-command-card/, "관리자 대시보드 바로가기 카드의 밝은 테마가 필요합니다.");
+mustContain(adminBloom, /\.admin-summary-card/, "관리자 대시보드 통계 카드의 밝은 테마가 필요합니다.");
+mustContain(adminBloom, /\.global-navigation-dialog/, "전체 메뉴 팔레트의 밝은 테마가 필요합니다.");
+mustContain(adminBloom, /\.admin-table-wrap/, "관리자 데이터 테이블의 밝은 테마가 필요합니다.");
+mustContain(adminBloom, /\.site-settings-switches/, "사이트 설정 토글의 밝은 테마가 필요합니다.");
+mustContain(adminBloom, /\.securityPage/, "관리자 보안 화면의 밝은 테마가 필요합니다.");
+mustContain(adminBloom, /\.klol-app-admin-command-card/, "모바일 관리자 명령 카드의 밝은 테마가 필요합니다.");
+mustContain(adminBloom, /\.klol-app-admin-health-item/, "모바일 관리자 상태 카드의 밝은 테마가 필요합니다.");
+mustNotContain(adminBloom, /#050b16|#020617|rgba\(2,\s*6,\s*23/, "관리자 Bright Bloom 스타일에 기존 핵심 다크 배경색을 재사용하면 안 됩니다.");
+fileBudget("src/styles/overrides/admin-bright-bloom.css", 26 * 1024);
+
+const assistant = read("src/components/ai/SiteAiAssistant.module.css");
+mustContain(assistant, /--bloom-primary/, "K-LOL 코치가 Bright Bloom 색상 토큰을 사용해야 합니다.");
+mustContain(assistant, /rgba\(255,\s*255,\s*255/, "K-LOL 코치 패널에 밝은 표면이 필요합니다.");
+mustNotContain(assistant, /rgba\(10,\s*18,\s*34|rgba\(5,\s*10,\s*20|rgba\(2,\s*8,\s*18/, "K-LOL 코치에 기존 다크 표면을 재사용하면 안 됩니다.");
 
 const home = read("src/app/(user)/page.impl.tsx");
 mustContain(home, /home-bloom-page/, "홈이 Bright Bloom 전용 루트 클래스를 가져야 합니다.");

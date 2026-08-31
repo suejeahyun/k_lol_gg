@@ -1,0 +1,626 @@
+/* Bright operations surfaces: calm enough for long sessions, while remaining
+   visually consistent with the public Bright Bloom experience. */
+
+.admin-login-page {
+  position: relative;
+  isolation: isolate;
+  min-height: 100svh;
+  background:
+    radial-gradient(circle at 14% 12%, rgba(221, 243, 255, 0.94), transparent 32%),
+    linear-gradient(145deg, #f7fbff, #eee8ff 52%, #ddf8ee) !important;
+  color: var(--bloom-ink, #24304a) !important;
+}
+
+.admin-login-page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.92) 0 4px, transparent 5px),
+    radial-gradient(circle at 82% 76%, rgba(255, 255, 255, 0.78) 0 5px, transparent 6px);
+  background-size: 112px 112px, 148px 148px;
+  opacity: 0.58;
+}
+
+.admin-login-card {
+  width: min(880px, 100%) !important;
+  padding-right: 400px !important;
+  border-color: var(--bloom-border-strong, #9db9db) !important;
+  background: rgba(255, 255, 255, 0.94) !important;
+  box-shadow: 0 28px 80px rgba(76, 104, 150, 0.2), inset 0 1px 0 #ffffff !important;
+  -webkit-backdrop-filter: blur(18px) saturate(1.05);
+  backdrop-filter: blur(18px) saturate(1.05);
+}
+
+.admin-login-card::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: 360px;
+  z-index: 0;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.42), transparent 32%),
+    url("/images/theme/bloom/klol-bloom-hero-v1.webp") 62% center / cover no-repeat;
+}
+
+.admin-login-card::before {
+  background:
+    linear-gradient(rgba(105, 164, 212, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(105, 164, 212, 0.07) 1px, transparent 1px) !important;
+  background-size: 34px 34px !important;
+}
+
+.admin-login-brand > span {
+  border-color: rgba(65, 105, 216, 0.22) !important;
+  background: linear-gradient(135deg, var(--bloom-sky, #ddf3ff), var(--bloom-lavender, #eee8ff)) !important;
+  color: var(--bloom-primary, #4169d8) !important;
+  box-shadow: 0 8px 20px rgba(76, 104, 150, 0.12);
+}
+
+.admin-login-brand p {
+  color: var(--bloom-primary, #4169d8) !important;
+}
+
+.admin-login-brand h1,
+.admin-login-two-factor strong {
+  color: var(--bloom-ink-strong, #18233a) !important;
+  text-shadow: none !important;
+}
+
+.admin-login-field {
+  color: var(--bloom-ink, #24304a) !important;
+}
+
+.admin-login-field input,
+.admin-login-code {
+  border-color: var(--bloom-border-strong, #9db9db) !important;
+  background: #ffffff !important;
+  color: var(--bloom-ink, #24304a) !important;
+  box-shadow: inset 0 1px 2px rgba(76, 104, 150, 0.06) !important;
+}
+
+.admin-login-field input:focus,
+.admin-login-code:focus {
+  border-color: var(--bloom-primary, #4169d8) !important;
+  box-shadow: 0 0 0 3px rgba(65, 105, 216, 0.14) !important;
+}
+
+.admin-login-two-factor {
+  border-color: var(--bloom-border, #d9e7f4) !important;
+  background: linear-gradient(135deg, var(--bloom-sky, #ddf3ff), rgba(255, 255, 255, 0.9)) !important;
+}
+
+.admin-login-link-button {
+  color: var(--bloom-primary-hover, #3156bd) !important;
+}
+
+.admin-login-message--info {
+  border-color: rgba(65, 105, 216, 0.2) !important;
+  background: var(--bloom-sky, #ddf3ff) !important;
+  color: var(--bloom-primary-hover, #3156bd) !important;
+}
+
+.admin-login-message--error {
+  border-color: rgba(184, 58, 88, 0.22) !important;
+  background: #fff1f4 !important;
+  color: var(--bloom-danger, #b83a58) !important;
+}
+
+.admin-login-submit {
+  background: linear-gradient(135deg, var(--bloom-primary, #4169d8), var(--bloom-primary-hover, #3156bd)) !important;
+  box-shadow: 0 10px 24px rgba(65, 105, 216, 0.22) !important;
+}
+
+html[data-theme] .app-shell--admin :is(.admin-inline-setting, .admin-button--ghost) {
+  border-color: var(--bloom-border) !important;
+  background: rgba(255, 255, 255, 0.94) !important;
+  color: var(--bloom-ink) !important;
+}
+
+html[data-theme] .app-shell--admin .admin-inline-setting__check {
+  color: var(--bloom-ink) !important;
+}
+
+/* Authenticated operations console */
+html[data-theme][data-theme] .app-shell--admin :is(
+  .admin-dashboard-header,
+  .admin-page__header,
+  .admin-matches-header
+) {
+  border: 1px solid var(--bloom-border) !important;
+  border-radius: 24px !important;
+  padding: 20px !important;
+  background:
+    radial-gradient(circle at 88% 12%, var(--bloom-lavender), transparent 34%),
+    linear-gradient(135deg, #ffffff, var(--bloom-sky)) !important;
+  box-shadow: var(--bloom-shadow-soft) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin .admin-dashboard-command-card {
+  border-color: var(--bloom-border) !important;
+  background:
+    radial-gradient(circle at 86% 14%, var(--bloom-lavender), transparent 42%),
+    #ffffff !important;
+  color: var(--bloom-ink) !important;
+  box-shadow: var(--bloom-shadow-soft) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin .admin-dashboard-command-card:nth-child(3n + 2) {
+  background: linear-gradient(145deg, #ffffff, var(--bloom-mint)) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin .admin-dashboard-command-card:nth-child(3n) {
+  background: linear-gradient(145deg, #ffffff, var(--bloom-sky)) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin .admin-dashboard-command-card:hover {
+  border-color: var(--bloom-border-strong) !important;
+  background: linear-gradient(145deg, #ffffff, var(--bloom-lavender)) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin .admin-dashboard-command-card::after {
+  background: linear-gradient(90deg, var(--bloom-primary), transparent) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin .admin-dashboard-command-card span {
+  color: var(--bloom-primary) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin .admin-dashboard-command-card strong {
+  color: var(--bloom-ink-strong) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin :is(
+  .admin-dashboard-loading,
+  .admin-dashboard-error,
+  .admin-summary-card,
+  .admin-log-section,
+  .admin-card,
+  .admin-form,
+  .admin-player-row-card,
+  .admin-event-detail-card,
+  [class*="__panel"],
+  [class*="__tableWrap"],
+  [class*="__list"]
+) {
+  border-color: var(--bloom-border) !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  color: var(--bloom-ink) !important;
+  box-shadow: var(--bloom-shadow-soft) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin .admin-summary-card--premium {
+  border-color: rgba(154, 101, 18, 0.2) !important;
+  background: linear-gradient(145deg, #ffffff, #fff7db) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin :is(
+  .admin-summary-card__value,
+  .admin-summary-card__value--small,
+  .admin-section-title,
+  .admin-log-item__message,
+  .admin-control-card strong
+) {
+  color: var(--bloom-ink-strong) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin :is(
+  .admin-summary-card__label,
+  .admin-summary-card__meta,
+  .admin-log-item__date,
+  .admin-control-card span
+) {
+  color: var(--bloom-muted) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin .admin-log-item {
+  border-color: var(--bloom-border) !important;
+  background: var(--bloom-surface-soft) !important;
+  color: var(--bloom-ink) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin .admin-log-item__type {
+  border-color: transparent !important;
+  background: var(--bloom-sky) !important;
+  color: var(--bloom-primary-hover) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin .admin-log-section--alert {
+  border-color: rgba(154, 101, 18, 0.24) !important;
+  background: linear-gradient(145deg, #ffffff, #fff8df) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin :is(.admin-control-card, .admin-env-grid > div) {
+  border-color: var(--bloom-border) !important;
+  background: var(--bloom-surface-soft) !important;
+  color: var(--bloom-ink) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin :is(
+  .admin-control-card[data-enabled="true"],
+  .admin-env-grid > div[data-ready="true"]
+) {
+  border-color: rgba(22, 128, 95, 0.24) !important;
+  background: var(--bloom-mint) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin :is(
+  .admin-control-card[data-enabled="false"],
+  .admin-env-grid > div[data-ready="false"]
+) {
+  border-color: rgba(154, 101, 18, 0.24) !important;
+  background: #fff7db !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin .admin-env-warning-item {
+  border-color: rgba(154, 101, 18, 0.22) !important;
+  background: #fffaf0 !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin .admin-env-warning-item strong {
+  color: var(--bloom-ink-strong) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin .admin-env-warning-item em {
+  color: var(--bloom-muted) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin :is(.admin-button--ghost, .admin-floating-logout button) {
+  border-color: var(--bloom-border-strong) !important;
+  background: #ffffff !important;
+  color: var(--bloom-primary-hover) !important;
+  box-shadow: var(--bloom-shadow-soft) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin .admin-button {
+  border-color: var(--bloom-border-strong) !important;
+  background: #ffffff !important;
+  color: var(--bloom-primary-hover) !important;
+  box-shadow: var(--bloom-shadow-soft) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin .admin-button--primary {
+  border-color: transparent !important;
+  background: linear-gradient(135deg, var(--bloom-primary), var(--bloom-primary-hover)) !important;
+  color: #ffffff !important;
+}
+
+/* Global menu palette is shared by public and admin shells. */
+html[data-theme][data-theme] .global-navigation-trigger {
+  border-color: var(--bloom-border-strong) !important;
+  background: #ffffff !important;
+  color: var(--bloom-ink) !important;
+  box-shadow: 0 5px 16px rgba(76, 104, 150, 0.1) !important;
+}
+
+html[data-theme][data-theme] .global-navigation-trigger :is(span, kbd) {
+  color: var(--bloom-primary) !important;
+}
+
+html[data-theme][data-theme] .global-navigation-backdrop {
+  background: rgba(36, 48, 74, 0.28) !important;
+}
+
+html[data-theme][data-theme] .global-navigation-dialog {
+  border-color: var(--bloom-border-strong) !important;
+  background:
+    radial-gradient(circle at 92% 8%, var(--bloom-lavender), transparent 30%),
+    #ffffff !important;
+  box-shadow: 0 28px 80px rgba(36, 48, 74, 0.24) !important;
+}
+
+html[data-theme][data-theme] .global-navigation-dialog :is(h2, strong) {
+  color: var(--bloom-ink-strong) !important;
+}
+
+html[data-theme][data-theme] .global-navigation-dialog__header span {
+  color: var(--bloom-primary) !important;
+}
+
+html[data-theme][data-theme] :is(
+  .global-navigation-search,
+  .global-navigation-result__main,
+  .global-navigation-result__favorite,
+  .global-navigation-dialog__header > button
+) {
+  border-color: var(--bloom-border) !important;
+  background: var(--bloom-surface-soft) !important;
+  color: var(--bloom-ink) !important;
+}
+
+html[data-theme][data-theme] .global-navigation-result__main:hover {
+  border-color: var(--bloom-border-strong) !important;
+  background: var(--bloom-sky) !important;
+}
+
+html[data-theme][data-theme] :is(
+  .global-navigation-hint,
+  .global-navigation-result__main small,
+  .global-navigation-empty
+) {
+  color: var(--bloom-muted) !important;
+}
+
+/* Admin lists and data tables */
+html[data-theme][data-theme] .app-shell--admin :is(.admin-player-row-header, .admin-match-row-header) {
+  border-color: var(--bloom-border) !important;
+  background: var(--bloom-sky) !important;
+  color: var(--bloom-muted) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin :is(.admin-table-wrap, .admin-table-wrapper) {
+  border-color: var(--bloom-border) !important;
+  background: #ffffff !important;
+  box-shadow: var(--bloom-shadow-soft) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin .admin-table {
+  color: var(--bloom-ink) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin .admin-table :is(thead, th) {
+  border-color: var(--bloom-border) !important;
+  background: var(--bloom-sky) !important;
+  color: var(--bloom-ink-strong) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin .admin-table :is(tbody tr, td) {
+  border-color: var(--bloom-border) !important;
+  background: #ffffff !important;
+  color: var(--bloom-ink) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin .admin-table tbody tr:hover {
+  background: var(--bloom-surface-soft) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin .admin-match-action {
+  border-color: var(--bloom-border-strong) !important;
+  background: #ffffff !important;
+  color: var(--bloom-primary-hover) !important;
+  box-shadow: var(--bloom-shadow-soft) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin .admin-match-action--primary {
+  border-color: transparent !important;
+  background: linear-gradient(135deg, var(--bloom-primary), var(--bloom-primary-hover)) !important;
+  color: #ffffff !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin .admin-match-action--ai {
+  border-color: rgba(107, 85, 198, 0.24) !important;
+  background: var(--bloom-lavender) !important;
+  color: #5540ad !important;
+}
+
+/* Site settings */
+html[data-theme][data-theme] .app-shell--admin .site-settings-status-strip > div {
+  border-color: var(--bloom-border) !important;
+  background: var(--bloom-surface-soft) !important;
+  color: var(--bloom-ink) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin .site-settings-switches > label {
+  border-color: var(--bloom-border) !important;
+  background: #ffffff !important;
+  color: var(--bloom-ink) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin :is(
+  .site-settings-status-strip span,
+  .site-settings-message
+) {
+  color: var(--bloom-muted) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin :is(
+  .site-settings-status-strip strong,
+  .site-settings-section-title,
+  .site-settings-switches span
+) {
+  color: var(--bloom-ink-strong) !important;
+}
+
+/* The security screen uses scoped styled-jsx classes. */
+html[data-theme][data-theme] .app-shell--admin .securityPage {
+  color: var(--bloom-ink) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin .securityPage :is(
+  .securityHero,
+  .securityCard,
+  .dangerCard,
+  .notice,
+  .infoBox,
+  .stepBlock,
+  .stateItem
+) {
+  border-color: var(--bloom-border) !important;
+  background: #ffffff !important;
+  color: var(--bloom-ink) !important;
+  box-shadow: var(--bloom-shadow-soft) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin .securityPage .securityHero {
+  background: linear-gradient(145deg, #ffffff, var(--bloom-sky)) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin .securityPage :is(
+  h1,
+  h2,
+  h3,
+  .stateItem strong,
+  .infoBox strong
+) {
+  color: var(--bloom-ink-strong) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin .securityPage :is(
+  p,
+  .heroText,
+  .stateItem span,
+  .stepBody p
+) {
+  color: var(--bloom-muted) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin .securityPage :is(.primaryButton, .confirmButton) {
+  border-color: transparent !important;
+  background: linear-gradient(135deg, var(--bloom-primary), var(--bloom-primary-hover)) !important;
+  color: #ffffff !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin .securityPage .dangerButton {
+  border-color: rgba(184, 58, 88, 0.24) !important;
+  background: #fff1f4 !important;
+  color: var(--bloom-danger) !important;
+}
+
+html[data-theme][data-theme] .app-shell--admin .securityPage :is(.codeInput, code) {
+  border-color: var(--bloom-border-strong) !important;
+  background: var(--bloom-surface-soft) !important;
+  color: var(--bloom-ink) !important;
+}
+
+/* Mobile administrator app */
+html[data-theme][data-theme] .klol-app-root .klol-app-admin-hero-actions a {
+  border-color: var(--bloom-border-strong) !important;
+  background: #ffffff !important;
+  color: var(--bloom-primary-hover) !important;
+}
+
+html[data-theme][data-theme] .klol-app-root .klol-app-admin-hero-actions a:first-child {
+  border-color: transparent !important;
+  background: linear-gradient(135deg, var(--bloom-primary), var(--bloom-primary-hover)) !important;
+  color: #ffffff !important;
+}
+
+html[data-theme][data-theme] .klol-app-root .klol-app-admin-health-item {
+  border-color: var(--bloom-border) !important;
+  background: linear-gradient(145deg, #ffffff, var(--bloom-sky)) !important;
+  color: var(--bloom-ink) !important;
+  box-shadow: var(--bloom-shadow-soft) !important;
+}
+
+html[data-theme][data-theme] .klol-app-root .klol-app-admin-health-item[data-state="warn"] {
+  border-color: rgba(154, 101, 18, 0.24) !important;
+  background: linear-gradient(145deg, #ffffff, #fff7db) !important;
+}
+
+html[data-theme][data-theme] .klol-app-root .klol-app-admin-health-item[data-state="locked"] {
+  background: var(--bloom-surface-soft) !important;
+}
+
+html[data-theme][data-theme] .klol-app-root .klol-app-admin-health-item span {
+  color: var(--bloom-muted) !important;
+}
+
+html[data-theme][data-theme] .klol-app-root .klol-app-admin-health-item strong {
+  color: var(--bloom-ink-strong) !important;
+}
+
+html[data-theme][data-theme] .klol-app-root .klol-app-admin-command-card {
+  border-color: var(--bloom-border) !important;
+  background:
+    radial-gradient(circle at 86% 14%, var(--bloom-lavender), transparent 42%),
+    #ffffff !important;
+  color: var(--bloom-ink) !important;
+  box-shadow: var(--bloom-shadow-soft) !important;
+}
+
+html[data-theme][data-theme] .klol-app-root .klol-app-admin-command-card:nth-child(3n + 2) {
+  background: linear-gradient(145deg, #ffffff, var(--bloom-mint)) !important;
+}
+
+html[data-theme][data-theme] .klol-app-root .klol-app-admin-command-card[data-urgent="true"] {
+  border-color: rgba(154, 101, 18, 0.24) !important;
+  background: linear-gradient(145deg, #ffffff, #fff7db) !important;
+}
+
+html[data-theme][data-theme] .klol-app-root .klol-app-admin-command-card[data-locked="true"] {
+  background: var(--bloom-surface-soft) !important;
+}
+
+html[data-theme][data-theme] .klol-app-root .klol-app-admin-command-card :is(span, small) {
+  color: var(--bloom-muted) !important;
+}
+
+html[data-theme][data-theme] .klol-app-root .klol-app-admin-command-card strong {
+  color: var(--bloom-ink-strong) !important;
+}
+
+html[data-theme][data-theme] .klol-app-root .klol-app-admin-shortcuts a {
+  border-color: var(--bloom-border) !important;
+  background: #ffffff !important;
+  color: var(--bloom-ink) !important;
+  box-shadow: var(--bloom-shadow-soft) !important;
+}
+
+html[data-theme][data-theme] .klol-app-root .klol-app-admin-shortcuts span {
+  color: var(--bloom-muted) !important;
+}
+
+html[data-theme][data-theme] .klol-app-root .klol-app-mini-link {
+  border-color: var(--bloom-border) !important;
+  background: #ffffff !important;
+  color: var(--bloom-primary-hover) !important;
+}
+
+html[data-theme][data-theme] .klol-app-root .klol-app-admin-status-grid .klol-app-meta:nth-child(n) {
+  border-color: var(--bloom-border) !important;
+  background: #ffffff !important;
+}
+
+/* The assistant uses CSS Modules, so the legacy global button rule needs a
+   final theme-aware override for its generated class names. */
+html[data-theme] button[class*="SiteAiAssistant-module"][class*="launcher"] {
+  border-color: var(--bloom-border-strong) !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  color: var(--bloom-ink) !important;
+  box-shadow: 0 14px 34px rgba(76, 104, 150, 0.18) !important;
+}
+
+html[data-theme] [class*="SiteAiAssistant-module"][class*="launcherIcon"] {
+  background: linear-gradient(135deg, var(--bloom-sky), var(--bloom-lavender)) !important;
+  color: var(--bloom-primary) !important;
+}
+
+html[data-theme] :is(
+  button[class*="SiteAiAssistant-module"][class*="close"],
+  [class*="SiteAiAssistant-module"][class*="quickActions"] button
+) {
+  border-color: var(--bloom-border) !important;
+  background: #ffffff !important;
+  color: var(--bloom-primary-hover) !important;
+}
+
+html[data-theme] button[class*="SiteAiAssistant-module"][class*="send"] {
+  border-color: transparent !important;
+  background: linear-gradient(135deg, var(--bloom-primary), var(--bloom-primary-hover)) !important;
+  color: #ffffff !important;
+}
+
+body:has(.admin-login-page) [class*="SiteAiAssistant-module"][class*="root"] {
+  display: none !important;
+}
+
+@media (max-width: 760px) {
+  .admin-login-page {
+    background:
+      linear-gradient(180deg, rgba(247, 251, 255, 0.82), rgba(247, 251, 255, 0.98) 42%),
+      url("/images/theme/bloom/klol-bloom-hero-v1.webp") 66% top / auto 360px no-repeat,
+      linear-gradient(145deg, #f7fbff, #eee8ff) !important;
+    padding-top: 230px !important;
+  }
+
+  .admin-login-card {
+    width: min(520px, 100%) !important;
+    padding: 24px 20px !important;
+  }
+
+  .admin-login-card::after {
+    display: none;
+  }
+}
