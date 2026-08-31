@@ -6,6 +6,7 @@ import MatchDetailSlider, {
   MatchDetailSlide,
 } from "@/components/matches/MatchDetailSlider";
 import { prisma } from "@/lib/prisma/client";
+import { resolvePublicPlayerDisplayName } from "@/lib/public/player";
 
 type MatchDetailPageProps = {
   params: Promise<{
@@ -87,8 +88,8 @@ export default async function MatchDetailPage({
         include: {
           participants: {
             include: {
-              player: true,
-              champion: true,
+              player: { select: { nickname: true, tag: true } },
+              champion: { select: { name: true, imageUrl: true } },
             },
           },
         },
@@ -112,7 +113,9 @@ export default async function MatchDetailPage({
     });
 
     const mappedParticipants = sortedParticipants.map((participant) => {
-      const playerName = participant.player?.name ?? "-";
+      const playerName = participant.player
+        ? resolvePublicPlayerDisplayName(participant.player)
+        : "-";
 
       const nicknameTag = participant.player
         ? `${participant.player.nickname}#${participant.player.tag}`
@@ -154,7 +157,9 @@ export default async function MatchDetailPage({
 
     const mvp = mvpParticipant
       ? {
-          name: mvpParticipant.participant.player?.name ?? "-",
+          name: mvpParticipant.participant.player
+            ? resolvePublicPlayerDisplayName(mvpParticipant.participant.player)
+            : "-",
           nicknameTag: mvpParticipant.participant.player
             ? `${mvpParticipant.participant.player.nickname}#${mvpParticipant.participant.player.tag}`
             : "-",

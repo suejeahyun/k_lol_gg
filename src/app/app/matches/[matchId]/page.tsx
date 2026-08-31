@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
 import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
 import { AppEmpty, AppSection } from "@/components/app-mobile/AppCards";
+import { resolvePublicPlayerDisplayName } from "@/lib/public/player";
 
 export const dynamic = "force-dynamic";
 
@@ -53,7 +54,7 @@ export default async function AppMatchDetailPage({ params }: PageProps) {
         include: {
           participants: {
             include: {
-              player: { select: { name: true, nickname: true, tag: true } },
+              player: { select: { nickname: true, tag: true } },
               champion: { select: { name: true, imageUrl: true } },
             },
           },
@@ -105,7 +106,11 @@ export default async function AppMatchDetailPage({ params }: PageProps) {
                           style={participant.champion?.imageUrl ? { backgroundImage: `url(${participant.champion.imageUrl})` } : undefined}
                           aria-hidden="true"
                         />
-                        <strong>{participant.player?.name || participant.player?.nickname || "-"}</strong>
+                        <strong>
+                          {participant.player
+                            ? resolvePublicPlayerDisplayName(participant.player)
+                            : "-"}
+                        </strong>
                         <em>{participant.champion?.name || "-"}</em>
                         <b>{participant.kills}/{participant.deaths}/{participant.assists}</b>
                       </div>

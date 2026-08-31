@@ -10,10 +10,8 @@ type SoloRankSectionProps = {
 type SoloSummaryResponse = {
   player: {
     id: number;
-    name: string;
-    nickname: string;
-    tag: string;
-    riotId: string;
+    displayName: string;
+    riotId: { gameName: string; tagLine: string | null } | null;
     currentTier: string | null;
     peakTier: string | null;
   };
@@ -540,7 +538,9 @@ export default function SoloRankSection({ playerId }: SoloRankSectionProps) {
                   <span className="solo-rank-id">
                     {data.riotAccount
                       ? `${data.riotAccount.gameName}#${data.riotAccount.tagLine}`
-                      : data.player.riotId}
+                      : data.player.riotId
+                        ? `${data.player.riotId.gameName}#${data.player.riotId.tagLine}`
+                        : data.player.displayName}
                   </span>
                 </div>
 

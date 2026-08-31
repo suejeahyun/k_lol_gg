@@ -7,6 +7,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma/client";
 import { coerceGalleryImageUrls } from "@/lib/gallery/winner-image-paths";
 import EventParticipationClient from "@/app/(user)/participation/event/[eventId]/EventParticipationClient";
+import { resolvePublicPlayerDisplayName } from "@/lib/public/player";
 
 const POSITIONS = ["TOP", "JGL", "MID", "ADC", "SUP"] as const;
 
@@ -125,7 +126,6 @@ export default async function EventProgressDetailPage({ params }: PageProps) {
               position: true,
               player: {
                 select: {
-                  name: true,
                   nickname: true,
                   tag: true,
                 },
@@ -279,10 +279,8 @@ export default async function EventProgressDetailPage({ params }: PageProps) {
                       <div key={team.id} className="event-user-team-matrix__cell">
                         {member ? (
                           <>
-                            <b>{member.player.name}</b>
-                            <span>
-                              {member.player.nickname}#{member.player.tag}
-                            </span>
+                            <b>{resolvePublicPlayerDisplayName(member.player)}</b>
+                            <span>공개 Riot ID</span>
                           </>
                         ) : (
                           <em>대기</em>

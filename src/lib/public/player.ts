@@ -67,6 +67,10 @@ export function toPublicPlayerSummaryDto(
   };
 }
 
+export function toPublicPlayerDto(source: PublicPlayerSummarySource) {
+  return toPublicPlayerSummaryDto(source);
+}
+
 export function toPublicPlayerDetailDto(
   source: PublicPlayerDetailSource,
 ): PublicPlayerDetailDto {

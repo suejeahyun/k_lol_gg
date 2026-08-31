@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import { buildDisciplineStatistics } from "@/lib/discipline/statistics";
+import { resolvePublicPlayerDisplayName } from "@/lib/public/player";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -17,14 +18,28 @@ export default async function PublicDisciplinePage() {
     select: {
       userAccountId: true,
       playerId: true,
-      targetName: true,
       targetNickname: true,
       targetTag: true,
       type: true,
-      player: { select: { name: true, nickname: true, tag: true } },
+      player: { select: { nickname: true, tag: true } },
     },
   });
-  const statistics = buildDisciplineStatistics(records);
+  const statistics = buildDisciplineStatistics(
+    records.map((record) => {
+      const publicIdentity = {
+        nickname: record.player?.nickname ?? record.targetNickname,
+        tag: record.player?.tag ?? record.targetTag,
+      };
+      const displayName = resolvePublicPlayerDisplayName(publicIdentity);
+      return {
+        ...record,
+        targetName: displayName,
+        player: record.player
+          ? { ...record.player, name: displayName }
+          : null,
+      };
+    }),
+  );
   const summary = statistics.reduce(
     (acc, person) => {
       acc.cautions += person.cautionCount;
@@ -60,14 +75,14 @@ export default async function PublicDisciplinePage() {
         </div>
         <div className="table-wrap">
           <table>
-            <thead><tr><th>이름</th><th>닉네임</th><th>주의</th><th>경고</th><th>밴 상태</th></tr></thead>
+            <thead><tr><th>공개 이름</th><th>Riot ID</th><th>주의</th><th>경고</th><th>밴 상태</th></tr></thead>
             <tbody>
               {statistics.length === 0 ? (
                 <tr><td className="empty" colSpan={5}>현재 활성 징계 기록이 없습니다.</td></tr>
               ) : statistics.map((person) => (
                 <tr key={person.key}>
-                  <td data-label="이름"><strong>{person.name}</strong></td>
-                  <td data-label="닉네임">{person.nickname}</td>
+                  <td data-label="공개 이름"><strong>{person.name}</strong></td>
+                  <td data-label="Riot ID">{person.nickname}</td>
                   <td data-label="주의"><span className={`count-pill ${person.cautionCount > 0 ? "has-caution" : ""}`}>{person.cautionCount}회</span></td>
                   <td data-label="경고">
                     <span className={`count-pill ${person.warningCount > 0 ? "has-warning" : ""}`}>{person.warningCount}회</span>

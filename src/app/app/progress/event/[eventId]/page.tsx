@@ -5,6 +5,7 @@ import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
 import { AppEmpty, AppSection } from "@/components/app-mobile/AppCards";
 import { prisma } from "@/lib/prisma/client";
 import EventParticipationClient from "@/app/(user)/participation/event/[eventId]/EventParticipationClient";
+import { resolvePublicPlayerDisplayName } from "@/lib/public/player";
 
 export const dynamic = "force-dynamic";
 
@@ -63,7 +64,7 @@ export default async function AppEventDetailPage({ params }: AppEventDetailPageP
           members: {
             select: {
               position: true,
-              player: { select: { name: true } },
+              player: { select: { nickname: true, tag: true } },
             },
             orderBy: [{ position: "asc" }, { id: "asc" }],
           },
@@ -74,7 +75,7 @@ export default async function AppEventDetailPage({ params }: AppEventDetailPageP
         select: {
           id: true,
           position: true,
-          player: { select: { name: true, nickname: true, tag: true } },
+          player: { select: { nickname: true, tag: true } },
         },
         orderBy: [{ position: "asc" }, { id: "asc" }],
         take: 20,
@@ -150,7 +151,12 @@ export default async function AppEventDetailPage({ params }: AppEventDetailPageP
                   <span className="klol-app-badge">{team.score.toFixed(1)}</span>
                 </div>
                 <p className="klol-app-muted">
-                  {team.members.map((member) => `${positionText(member.position)} ${member.player.name}`).join(" · ") || "팀원 없음"}
+                  {team.members
+                    .map(
+                      (member) =>
+                        `${positionText(member.position)} ${resolvePublicPlayerDisplayName(member.player)}`,
+                    )
+                    .join(" · ") || "팀원 없음"}
                 </p>
               </article>
             ))}
@@ -167,8 +173,8 @@ export default async function AppEventDetailPage({ params }: AppEventDetailPageP
               <article className="klol-app-list-card" key={participant.id}>
                 <div className="klol-app-list-top">
                   <span className="klol-app-list-title">
-                    <strong>{participant.player.name}</strong>
-                    <span>{participant.player.nickname}#{participant.player.tag}</span>
+                    <strong>{resolvePublicPlayerDisplayName(participant.player)}</strong>
+                    <span>공개 Riot ID</span>
                   </span>
                   <span className="klol-app-badge">{positionText(participant.position)}</span>
                 </div>

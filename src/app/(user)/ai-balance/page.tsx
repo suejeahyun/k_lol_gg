@@ -5,6 +5,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import PremiumFeatureGate from "@/components/PremiumFeatureGate";
 import { getSiteSettings } from "@/lib/site/settings";
+import { resolvePublicPlayerDisplayName } from "@/lib/public/player";
 
 export const metadata: Metadata = {
   title: "K-LOL MMR",
@@ -60,7 +61,7 @@ export default async function UserAiBalancePage() {
         supportMmr: true,
         confidence: true,
         matchesAnalyzed: true,
-        player: { select: { id: true, name: true, nickname: true, tag: true } },
+        player: { select: { id: true, nickname: true, tag: true } },
       },
     }),
     prisma.balanceMatchReview.findMany({
@@ -128,8 +129,8 @@ export default async function UserAiBalancePage() {
                   <td><span className="ai-rank">#{index + 1}</span></td>
                   <td>
                     <Link className="ai-player-name" href={`/players/${profile.player.id}`}>
-                      <strong>{profile.player.name}</strong>
-                      <small>{profile.player.nickname}#{profile.player.tag}</small>
+                      <strong>{resolvePublicPlayerDisplayName(profile.player)}</strong>
+                      <small>공개 Riot ID</small>
                     </Link>
                   </td>
                   <td><strong>{fmt(profile.overallMmr)}</strong></td>

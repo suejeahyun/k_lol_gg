@@ -9,6 +9,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { calculateDestructionPublicApplicationIds, getDestructionLaneLimits } from "@/lib/destruction/recruitment-auto-reserve";
 import { ensureSeasonStats, getWinRate } from "@/lib/stats/season-performance";
+import { resolvePublicPlayerDisplayName } from "@/lib/public/player";
 
 type PageProps = {
   params: Promise<{
@@ -89,7 +90,6 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
     player: {
       select: {
         id: true,
-        name: true,
         nickname: true,
         tag: true,
         currentTier: true,
@@ -206,7 +206,6 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
         : (STATUS_LABELS[apply.status] ?? apply.status);
 
   const player = apply.player;
-  const playerTagText = [player.nickname, player.tag].filter(Boolean).join("#");
   const applyMessage = typeof apply.message === "string" ? apply.message.trim() : "";
   let seasonStat: (typeof player.seasonStats)[number] | null =
     player.seasonStats[0] ?? null;
@@ -302,7 +301,7 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
         <div>
           <p className="page-eyebrow">멸망전 참가자 상세</p>
           <h1 className="page-title">
-            {player.name}{playerTagText ? ` (${playerTagText})` : ""}
+            {resolvePublicPlayerDisplayName(player)}
           </h1>
           <p className="page-description">
             {apply.tournament.title} 참가 정보입니다.
@@ -402,8 +401,10 @@ export default async function DestructionParticipantDetailPage({ params }: PageP
 
         <div className="info-grid">
           <div className="info-card">
-            <span className="info-card__label">이름</span>
-            <strong className="info-card__value">{player.name}</strong>
+            <span className="info-card__label">공개 이름</span>
+            <strong className="info-card__value">
+              {resolvePublicPlayerDisplayName(player)}
+            </strong>
           </div>
           <div className="info-card">
             <span className="info-card__label">닉네임#태그</span>

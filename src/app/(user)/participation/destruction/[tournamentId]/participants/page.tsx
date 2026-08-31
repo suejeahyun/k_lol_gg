@@ -9,6 +9,7 @@ import {
   getRiotDestructionVerification,
   summarizeRiotDestructionVerifications,
 } from "@/lib/riot/destruction-verification";
+import { resolvePublicPlayerDisplayName } from "@/lib/public/player";
 
 type PageProps = {
   params: Promise<{
@@ -86,7 +87,6 @@ export default async function DestructionParticipantsPage({ params, searchParams
           player: {
             select: {
               id: true,
-              name: true,
               nickname: true,
               tag: true,
               currentTier: true,
@@ -737,10 +737,8 @@ export default async function DestructionParticipantsPage({ params, searchParams
                       </td>
                       <td data-label="참가자">
                         <Link href={detailHref} className="destruction-participant-name-link">
-                          <strong>{apply.player.name}</strong>
-                          <span>
-                            {apply.player.nickname}#{apply.player.tag}
-                          </span>
+                          <strong>{resolvePublicPlayerDisplayName(apply.player)}</strong>
+                          <span>공개 Riot ID</span>
                         </Link>
                       </td>
                       <td data-label="포지션">
@@ -826,8 +824,8 @@ export default async function DestructionParticipantsPage({ params, searchParams
                       </td>
                       <td data-label="참가자">
                         <Link href={detailHref} className="destruction-participant-name-link">
-                          <strong>{apply.player.name}</strong>
-                          <span>{apply.player.nickname}#{apply.player.tag}</span>
+                          <strong>{resolvePublicPlayerDisplayName(apply.player)}</strong>
+                          <span>공개 Riot ID</span>
                         </Link>
                       </td>
                       <td data-label="포지션">

@@ -5,6 +5,7 @@ import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
 import { AppEmpty, AppSection } from "@/components/app-mobile/AppCards";
 import PremiumFeatureGate from "@/components/PremiumFeatureGate";
 import { getSiteSettings } from "@/lib/site/settings";
+import { resolvePublicPlayerDisplayName } from "@/lib/public/player";
 
 export const dynamic = "force-dynamic";
 
@@ -86,8 +87,20 @@ export default async function AppMatchesPage({ searchParams }: AppMatchesPagePro
       take: 20,
     }),
     prisma.recruitParty.findMany({
-      include: {
-        members: { orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }], take: 8 },
+      select: {
+        id: true,
+        recruitNo: true,
+        title: true,
+        startTimeText: true,
+        tierText: true,
+        status: true,
+        maxMembers: true,
+        type: true,
+        members: {
+          select: { id: true },
+          orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }],
+          take: 8,
+        },
       },
       orderBy: [{ status: "asc" }, { recruitDate: "desc" }, { resetSeq: "desc" }, { recruitNo: "asc" }],
       take: 20,
@@ -124,7 +137,14 @@ export default async function AppMatchesPage({ searchParams }: AppMatchesPagePro
   const rankingStats = season
     ? await prisma.playerSeasonStat.findMany({
         where: { seasonId: season.id, participationCount: { gte: 1 } },
-        include: { player: true },
+        select: {
+          id: true,
+          wins: true,
+          totalGames: true,
+          player: {
+            select: { id: true, nickname: true, tag: true },
+          },
+        },
         orderBy: [{ wins: "desc" }, { participationCount: "desc" }, { mvpCount: "desc" }],
         take: 10,
       })
@@ -184,7 +204,7 @@ export default async function AppMatchesPage({ searchParams }: AppMatchesPagePro
                     <div className="klol-app-list-top">
                       <div className="klol-app-list-title">
                         <strong>#{party.recruitNo} · {party.title}</strong>
-                        <span>{party.startTimeText || "시간 미정"} · {party.roomName || party.tierText || "게임 정보 미입력"}</span>
+                        <span>{party.startTimeText || "시간 미정"} · {party.tierText || "게임 정보 미입력"}</span>
                       </div>
                       <span className="klol-app-badge">{recruitStatusText(party.status)}</span>
                     </div>
@@ -216,8 +236,8 @@ export default async function AppMatchesPage({ searchParams }: AppMatchesPagePro
                 <Link className="klol-app-list-card klol-app-rank-row" href={`/app/players/${stat.player.id}`} key={stat.id}>
                   <span className="klol-app-rank-no" data-rank={index + 1}>{index + 1}</span>
                   <span className="klol-app-list-title">
-                    <strong>{stat.player.name || stat.player.nickname}</strong>
-                    <span>{stat.player.nickname}#{stat.player.tag}</span>
+                    <strong>{resolvePublicPlayerDisplayName(stat.player)}</strong>
+                    <span>공개 Riot ID</span>
                   </span>
                   <span className="klol-app-stat-value">{formatWinRate(stat.wins, stat.totalGames)}</span>
                 </Link>

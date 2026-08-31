@@ -5,6 +5,7 @@ import Link from "next/link";
 import PremiumFeatureGate from "@/components/PremiumFeatureGate";
 import { prisma } from "@/lib/prisma/client";
 import { getSiteSettings } from "@/lib/site/settings";
+import { resolvePublicPlayerDisplayName } from "@/lib/public/player";
 
 export const metadata: Metadata = {
   title: "K-LOL MMR 플레이어",
@@ -31,7 +32,7 @@ export default async function UserAiMmrPlayersPage() {
       confidence: true,
       matchesAnalyzed: true,
       lastUpdatedAt: true,
-      player: { select: { id: true, name: true, nickname: true, tag: true, currentTier: true, peakTier: true } },
+      player: { select: { id: true, nickname: true, tag: true, currentTier: true, peakTier: true } },
     },
   });
 
@@ -72,9 +73,11 @@ export default async function UserAiMmrPlayersPage() {
                 <tr key={profile.id}>
                   <td><span className="ai-rank">#{index + 1}</span></td>
                   <td>
-                    <Link href={`/players/${profile.player.id}`}>{profile.player.name}</Link>
+                    <Link href={`/players/${profile.player.id}`}>
+                      {resolvePublicPlayerDisplayName(profile.player)}
+                    </Link>
                     <br />
-                    <small>{profile.player.nickname}#{profile.player.tag} · 현재 {profile.player.currentTier ?? "-"} · 최고 {profile.player.peakTier ?? "-"}</small>
+                    <small>현재 {profile.player.currentTier ?? "-"} · 최고 {profile.player.peakTier ?? "-"}</small>
                   </td>
                   <td><strong>{fmt(profile.overallMmr)}</strong></td>
                   <td>{fmt(profile.topMmr)}</td>
