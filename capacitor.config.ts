@@ -25,7 +25,7 @@ const config: CapacitorConfig = {
     cleartext: serverUrl.startsWith("http://"),
   },
   android: {
-    backgroundColor: "#05070d",
+    backgroundColor: "#F7FBFF",
     allowMixedContent: false,
   },
 };

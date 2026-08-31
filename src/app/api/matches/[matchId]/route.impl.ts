@@ -7,6 +7,7 @@ import { recalculateSeasonStats } from "@/lib/stats/recalculate";
 import { rebuildInternalMmr } from "@/lib/balance/internal-mmr";
 import { parseKstDateTime } from "@/lib/date/kst";
 import { getStoredGameMvpFields } from "@/lib/match/mvp";
+import { toPublicPlayerSummaryDto } from "@/lib/public/player";
 import { logServerError } from "@/lib/server/safe-log";
 
 type Team = "BLUE" | "RED";
@@ -44,6 +45,13 @@ type RouteContext = {
 
 const VALID_TEAMS: Team[] = ["BLUE", "RED"];
 const VALID_POSITIONS: Position[] = ["TOP", "JGL", "MID", "ADC", "SUP"];
+const publicPlayerSelect = {
+  id: true,
+  nickname: true,
+  tag: true,
+  currentTier: true,
+  peakTier: true,
+} as const;
 
 function isValidTeam(value: unknown): value is Team {
   return typeof value === "string" && VALID_TEAMS.includes(value as Team);
@@ -281,7 +289,7 @@ export async function GET(_req: NextRequest, context: RouteContext) {
             participants: {
               orderBy: { id: "asc" },
               include: {
-                player: true,
+                player: { select: publicPlayerSelect },
                 champion: true,
               },
             },
@@ -297,7 +305,16 @@ export async function GET(_req: NextRequest, context: RouteContext) {
       );
     }
 
-    return NextResponse.json(match);
+    return NextResponse.json({
+      ...match,
+      games: match.games.map((game) => ({
+        ...game,
+        participants: game.participants.map((participant) => ({
+          ...participant,
+          player: toPublicPlayerSummaryDto(participant.player),
+        })),
+      })),
+    });
   } catch (error) {
     logServerError("[MATCH_GET_BY_ID_ERROR]", error);
     return NextResponse.json(

@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { resolve } from "node:path";
+import sharp from "sharp";
 
 const root = process.cwd();
 const failures = [];
@@ -33,6 +34,37 @@ function fileBudget(path, maxBytes) {
   }
   const size = statSync(absolute).size;
   contract(size <= maxBytes, `${path} 크기 ${size}B가 예산 ${maxBytes}B를 초과했습니다.`);
+}
+
+async function rasterContract(path, width, height, minMeanRgb = 170) {
+  const absolute = resolve(root, path);
+  if (!existsSync(absolute)) {
+    failures.push(`래스터 자산 누락: ${path}`);
+    return;
+  }
+
+  try {
+    const image = sharp(absolute);
+    const [metadata, stats] = await Promise.all([
+      image.metadata(),
+      image.stats(),
+    ]);
+    contract(metadata.format === "png", `${path}는 실제 PNG 형식이어야 합니다.`);
+    contract(
+      metadata.width === width && metadata.height === height,
+      `${path} 치수는 ${width}x${height}여야 합니다.`,
+    );
+
+    const rgbChannels = stats.channels.slice(0, 3);
+    const meanRgb = rgbChannels.reduce((sum, channel) => sum + channel.mean, 0) /
+      Math.max(rgbChannels.length, 1);
+    contract(
+      meanRgb >= minMeanRgb,
+      `${path} 평균 RGB ${meanRgb.toFixed(1)}가 밝은 자산 기준 ${minMeanRgb} 미만입니다.`,
+    );
+  } catch (error) {
+    failures.push(`${path} 이미지 검사 실패: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
 function luminance(hex) {
@@ -131,8 +163,68 @@ mustContain(settings, /"bright-bloom"\s*\|\s*"lavender-dream"\s*\|\s*"mint-breez
 mustContain(settings, /themePreset:\s*"bright-bloom"/, "사이트 설정 기본 테마는 bright-bloom이어야 합니다.");
 mustContain(settings, /klol-bloom-hero-v1\.webp/, "사이트 설정 기본 배경은 새 대표 자산이어야 합니다.");
 
+const manifest = read("public/manifest.json");
+mustContain(manifest, /"background_color":\s*"#F7FBFF"/i, "PWA 시작 배경은 밝은 캔버스여야 합니다.");
+mustContain(manifest, /"theme_color":\s*"#F7FBFF"/i, "PWA 테마 색상은 밝은 캔버스여야 합니다.");
+mustNotContain(manifest, /#05070d|#020617/i, "PWA 매니페스트에 구형 다크 캔버스가 남으면 안 됩니다.");
+
+const capacitorConfig = read("capacitor.config.ts");
+mustContain(capacitorConfig, /backgroundColor:\s*"#F7FBFF"/i, "Android 네이티브 시작 배경은 밝은 캔버스여야 합니다.");
+mustNotContain(capacitorConfig, /#05070d|#020617/i, "Capacitor 설정에 구형 다크 캔버스가 남으면 안 됩니다.");
+
+const capacitorFallback = read("capacitor-web/index.html");
+mustContain(capacitorFallback, /color-scheme:\s*light/i, "Capacitor 대기 화면은 밝은 브라우저 컨트롤을 사용해야 합니다.");
+mustContain(capacitorFallback, /theme-color"\s+content="#F7FBFF"/i, "Capacitor 대기 화면 테마 색상은 밝아야 합니다.");
+mustNotContain(capacitorFallback, /#05070d|#020617/i, "Capacitor 대기 화면에 구형 다크 캔버스가 남으면 안 됩니다.");
+
+const appAssetGenerator = read("tools/generate-app-assets.mjs");
+mustContain(appAssetGenerator, /#F7FBFF/i, "앱 아이콘·스플래시 생성 원본에 Bright Bloom 캔버스가 필요합니다.");
+mustContain(appAssetGenerator, /#DDF3FF/i, "앱 아이콘·스플래시 생성 원본에 하늘색 포인트가 필요합니다.");
+mustContain(appAssetGenerator, /#EEE8FF/i, "앱 아이콘·스플래시 생성 원본에 라일락 포인트가 필요합니다.");
+mustContain(appAssetGenerator, /#DDF8EE/i, "앱 아이콘·스플래시 생성 원본에 민트 포인트가 필요합니다.");
+mustContain(appAssetGenerator, /const isLandscape = width > height/, "앱 스플래시는 가로·세로 구성을 분리해야 합니다.");
+mustContain(appAssetGenerator, /Math\.min\(height \* 0\.58, width \* 0\.3, 460\)/, "가로 스플래시 로고는 캔버스 안에서 반응형으로 축소되어야 합니다.");
+mustContain(appAssetGenerator, /Math\.min\(width \* 0\.62, height \* 0\.4, 460\)/, "세로 스플래시 로고는 캔버스 안에서 반응형으로 축소되어야 합니다.");
+mustNotContain(appAssetGenerator, /#05070d|#020617|#030712/i, "앱 아이콘·스플래시 생성 원본에 구형 다크 캔버스가 남으면 안 됩니다.");
+
 fileBudget("public/images/theme/bloom/klol-bloom-hero-v1.webp", 200 * 1024);
 fileBudget("public/images/theme/bloom/klol-sallangi-mascot-v1.webp", 80 * 1024);
+
+await rasterContract("public/icons/icon-192.png", 192, 192);
+await rasterContract("public/icons/icon-512.png", 512, 512);
+await rasterContract("public/apple-touch-icon.png", 180, 180);
+
+for (const [directory, size] of [
+  ["mipmap-mdpi", 48],
+  ["mipmap-hdpi", 72],
+  ["mipmap-xhdpi", 96],
+  ["mipmap-xxhdpi", 144],
+  ["mipmap-xxxhdpi", 192],
+]) {
+  for (const file of [
+    "ic_launcher.png",
+    "ic_launcher_round.png",
+    "ic_launcher_foreground.png",
+  ]) {
+    await rasterContract(`android/app/src/main/res/${directory}/${file}`, size, size);
+  }
+}
+
+for (const [path, width, height] of [
+  ["drawable/splash.png", 2732, 2732],
+  ["drawable-land-mdpi/splash.png", 320, 200],
+  ["drawable-land-hdpi/splash.png", 480, 320],
+  ["drawable-land-xhdpi/splash.png", 720, 480],
+  ["drawable-land-xxhdpi/splash.png", 960, 640],
+  ["drawable-land-xxxhdpi/splash.png", 1280, 960],
+  ["drawable-port-mdpi/splash.png", 200, 320],
+  ["drawable-port-hdpi/splash.png", 320, 480],
+  ["drawable-port-xhdpi/splash.png", 480, 720],
+  ["drawable-port-xxhdpi/splash.png", 640, 960],
+  ["drawable-port-xxxhdpi/splash.png", 960, 1280],
+]) {
+  await rasterContract(`android/app/src/main/res/${path}`, width, height);
+}
 
 const palette = {
   primary: "#4169D8",

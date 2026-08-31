@@ -7,12 +7,21 @@ import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { logServerError } from "@/lib/server/safe-log";
 import { applyDestructionRecruitmentAutoReserve, isBeforeDestructionAuction, parseDestructionLaneLimits } from "@/lib/destruction/recruitment-auto-reserve";
 import { readJsonObject } from "@/lib/http/json-body";
+import { toPublicPlayerSummaryDto } from "@/lib/public/player";
 
 type RouteProps = {
   params: Promise<{
     tournamentId: string;
   }>;
 };
+
+const publicPlayerSelect = {
+  id: true,
+  nickname: true,
+  tag: true,
+  currentTier: true,
+  peakTier: true,
+} as const;
 
 
 
@@ -71,10 +80,10 @@ export async function GET(_req: NextRequest, { params }: RouteProps) {
         galleryImage: true,
         teams: {
           include: {
-            captain: true,
+            captain: { select: publicPlayerSelect },
             members: {
               include: {
-                player: true,
+                player: { select: publicPlayerSelect },
               },
             },
           },
@@ -84,7 +93,7 @@ export async function GET(_req: NextRequest, { params }: RouteProps) {
         },
         participants: {
           include: {
-            player: true,
+            player: { select: publicPlayerSelect },
             team: true,
           },
           orderBy: {
@@ -108,7 +117,21 @@ export async function GET(_req: NextRequest, { params }: RouteProps) {
       );
     }
 
-    return NextResponse.json(tournament);
+    return NextResponse.json({
+      ...tournament,
+      teams: tournament.teams.map((team) => ({
+        ...team,
+        captain: toPublicPlayerSummaryDto(team.captain),
+        members: team.members.map((member) => ({
+          ...member,
+          player: toPublicPlayerSummaryDto(member.player),
+        })),
+      })),
+      participants: tournament.participants.map((participant) => ({
+        ...participant,
+        player: toPublicPlayerSummaryDto(participant.player),
+      })),
+    });
   } catch (error) {
     logServerError("[DESTRUCTION_TOURNAMENT_GET_ERROR]", error);
 
