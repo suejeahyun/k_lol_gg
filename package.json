@@ -117,6 +117,9 @@
   },
   "overrides": {
     "@hono/node-server": "1.19.13",
+    "deepmerge-ts": "8.0.0",
+    "js-yaml": "4.3.1",
+    "nanoid": "3.3.18",
     "postcss": "8.5.25",
     "sharp": "0.35.3"
   },
