@@ -2,8 +2,11 @@ import fs from "node:fs";
 import dotenv from "dotenv";
 
 const primaryEnvPath = process.env.DOTENV_CONFIG_PATH || ".env.local";
-dotenv.config({ path: primaryEnvPath, override: false, quiet: true });
-dotenv.config({ path: ".env", override: false, quiet: true });
+const processEnvOnly = process.argv.includes("--process-env-only");
+if (!processEnvOnly) {
+  dotenv.config({ path: primaryEnvPath, override: false, quiet: true });
+  dotenv.config({ path: ".env", override: false, quiet: true });
+}
 
 const requiredEnv = [
   "DATABASE_URL",
@@ -31,9 +34,11 @@ const optionalEnv = [
   "SITE_FEATURE_BALANCE_AI_DEFAULT",
   "SITE_FEATURE_RANDOM_TEAM_DEFAULT",
   "SITE_FEATURE_RIOT_DEFAULT",
+  "KAKAO_RECRUIT_SECRET_NEXT",
+  "KAKAO_SEARCH_PLAYER_SECRET_NEXT",
 ];
 
-const envFiles = [primaryEnvPath, ".env", ".env.example"];
+const envFiles = processEnvOnly ? [".env.example"] : [primaryEnvPath, ".env", ".env.example"];
 const problems = [];
 const warnings = [];
 
@@ -118,6 +123,39 @@ for (const key of requiredEnv) {
   }
 }
 
+const deployEnvironment = (
+  process.env.DEPLOY_ENV ||
+  process.env.VERCEL_ENV ||
+  (process.env.NODE_ENV === "production" ? "production" : "development")
+).trim().toLowerCase();
+const rotatingSecretPairs = [
+  ["KAKAO_RECRUIT_SECRET", "KAKAO_RECRUIT_SECRET_NEXT"],
+  ["KAKAO_SEARCH_PLAYER_SECRET", "KAKAO_SEARCH_PLAYER_SECRET_NEXT"],
+];
+for (const [activeKey, nextKey] of rotatingSecretPairs) {
+  if (!Object.prototype.hasOwnProperty.call(process.env, nextKey)) continue;
+
+  const activeValue = process.env[activeKey]?.trim() || "";
+  const nextValue = process.env[nextKey]?.trim() || "";
+  if (!nextValue) {
+    addProblem(`${nextKey}: 설정된 NEXT 값은 비어 있을 수 없습니다.`);
+    continue;
+  }
+  if (!activeValue) {
+    addProblem(`${nextKey}: NEXT 중첩 기간에는 대응하는 active 키가 필요합니다.`);
+    continue;
+  }
+  if (activeValue === nextValue) {
+    addProblem(`${nextKey}: active 키와 다른 값이어야 합니다.`);
+  }
+  if (nextValue.length < 12) {
+    addProblem(`${nextKey}: 운영 비밀키 최소 정책을 충족하지 않습니다.`);
+  }
+  if (deployEnvironment === "production" && process.env.SECURITY_REQUIRE_KAKAO_SECRET !== "true") {
+    addProblem(`${nextKey}: Production 중첩 기간에는 카카오 서버 인증 강제가 필요합니다.`);
+  }
+}
+
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL?.trim();
 if (baseUrl) {
   try {
@@ -170,5 +208,5 @@ if (problems.length > 0) {
   process.exit(1);
 }
 
-console.log("배포 필수 환경변수 점검 완료");
-console.log(`선택 환경변수: ${optionalEnv.map((key) => `${key}=${process.env[key] ? "설정됨" : "미설정"}`).join(", ")}`);
+console.log("배포 필수 환경변수 점검 완료 (값·길이·해시·접두사 출력 없음)");
+console.log(`선택 환경변수 정책 점검 대상: ${optionalEnv.join(", ")}`);

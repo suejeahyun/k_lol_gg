@@ -1,12 +1,12 @@
 ﻿import fs from "node:fs";
 import path from "node:path";
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 
 const ROOT = process.cwd();
 
 function runGit(args) {
   try {
-    return execSync(`git ${args}`, {
+    return execFileSync("git", args, {
       cwd: ROOT,
       encoding: "utf8",
       stdio: ["ignore", "pipe", "ignore"],
@@ -17,13 +17,13 @@ function runGit(args) {
 }
 
 function getTrackedFiles() {
-  const out = runGit("ls-files");
+  const out = runGit(["ls-files"]);
   if (!out) return [];
   return out.split(/\r?\n/).filter(Boolean);
 }
 
 function getDeletedTrackedFiles() {
-  const out = runGit("ls-files --deleted");
+  const out = runGit(["ls-files", "--deleted"]);
   if (!out) return new Set();
   return new Set(out.split(/\r?\n/).filter(Boolean));
 }
@@ -86,19 +86,7 @@ function walk(dir, acc = []) {
     const full = path.join(dir, entry.name);
     const rel = path.relative(ROOT, full).replace(/\\/g, "/");
 
-    if (
-      entry.isDirectory() &&
-      ![
-        ".git",
-        ".next",
-        "artifacts",
-        "node_modules",
-        ".vercel",
-        "dist",
-        "build",
-        "coverage",
-      ].includes(entry.name)
-    ) {
+    if (entry.isDirectory() && ![".git", "node_modules"].includes(entry.name)) {
       walk(full, acc);
       continue;
     }
@@ -115,8 +103,8 @@ const files = walk(ROOT);
 const secretPatterns = [
   /KLOL-SP-[A-Za-z0-9_-]+/g,
   /klol-recruit-[A-Za-z0-9_-]+/g,
-  /sk-[A-Za-z0-9_-]{20,}/g,
-  /VERCEL_OIDC_TOKEN\s*=/g,
+  /\bsk-[A-Za-z0-9_-]{20,}/g,
+  /VERCEL_OIDC_TOKEN\s*=\s*eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}/g,
   /eyJ[a-zA-Z0-9_-]{20,}\.[a-zA-Z0-9_-]{20,}\.[a-zA-Z0-9_-]{20,}/g,
 ];
 
@@ -130,6 +118,13 @@ const scanExtensions = new Set([
   ".json",
   ".md",
   ".txt",
+  ".html",
+  ".map",
+  ".log",
+  ".xml",
+  ".yaml",
+  ".yml",
+  ".toml",
   ".env.example",
 ]);
 
@@ -154,17 +149,40 @@ for (const file of files) {
   let content = "";
 
   try {
+    if (fs.statSync(abs).size > 25 * 1024 * 1024) continue;
     content = fs.readFileSync(abs, "utf8");
   } catch {
     continue;
   }
 
   for (const pattern of secretPatterns) {
-    if (pattern.test(content)) {
+    pattern.lastIndex = 0;
+    const match = pattern.exec(content);
+    if (match && !/(?:synthetic|fixture|example|dummy|placeholder|qa[-_])/i.test(match[0])) {
       problems.push(`SECRET 패턴 노출 의심: ${file}`);
       break;
     }
   }
+}
+
+const historyPattern = [
+  "KLOL-SP-[A-Za-z0-9_-]+",
+  "klol-recruit-[A-Za-z0-9_-]+",
+  "(^|[^[:alnum:]_])sk-[A-Za-z0-9_-]{20,}",
+  "VERCEL_OIDC_TOKEN[[:space:]]*=[[:space:]]*eyJ[A-Za-z0-9_-]{20,}\\.[A-Za-z0-9_-]{20,}\\.[A-Za-z0-9_-]{20,}",
+  "eyJ[A-Za-z0-9_-]{20,}\\.[A-Za-z0-9_-]{20,}\\.[A-Za-z0-9_-]{20,}",
+].join("|");
+const historyHits = runGit([
+  "log",
+  "--all",
+  "--format=%H",
+  "--name-only",
+  `-G${historyPattern}`,
+  "--",
+  ".",
+]);
+if (historyHits) {
+  problems.push("Git history에서 비밀 패턴 변경 이력이 감지되었습니다. 값과 commit 식별자는 출력하지 않았습니다.");
 }
 
 if (problems.length > 0) {

@@ -86,6 +86,32 @@ export function getDeployEnvWarnings(): DeployEnvWarning[] {
     });
   }
 
+  for (const [activeKey, nextKey] of [
+    ["KAKAO_RECRUIT_SECRET", "KAKAO_RECRUIT_SECRET_NEXT"],
+    ["KAKAO_SEARCH_PLAYER_SECRET", "KAKAO_SEARCH_PLAYER_SECRET_NEXT"],
+  ] as const) {
+    if (!Object.prototype.hasOwnProperty.call(process.env, nextKey)) continue;
+
+    const activeValue = process.env[activeKey]?.trim() ?? "";
+    const nextValue = process.env[nextKey]?.trim() ?? "";
+    if (!nextValue || !activeValue || nextValue === activeValue || nextValue.length < 12) {
+      warnings.push({
+        key: nextKey,
+        level: "weak",
+        message: "이중 키 구성 정책 미충족",
+      });
+    }
+
+    const deployEnvironment = String(process.env.DEPLOY_ENV || process.env.VERCEL_ENV || "").toLowerCase();
+    if (deployEnvironment === "production" && process.env.SECURITY_REQUIRE_KAKAO_SECRET !== "true") {
+      warnings.push({
+        key: nextKey,
+        level: "weak",
+        message: "Production 서버 인증 강제 필요",
+      });
+    }
+  }
+
   return warnings;
 }
 

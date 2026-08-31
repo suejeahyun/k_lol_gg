@@ -10,7 +10,7 @@ import {
   getInhouseRecruitQueryDateKey,
   parseInhouseRecruitCommand,
 } from "@/lib/kakao/inhouse-recruit";
-import { getRequiredSecretInProduction, matchesRequestSecret } from "@/lib/security/secrets";
+import { getRequiredSecretCandidatesInProduction, matchesRequestSecret } from "@/lib/security/secrets";
 import { logServerError } from "@/lib/server/safe-log";
 import { evaluateKakaoRequestPolicy } from "@/lib/kakao/policy";
 import { getKakaoOperationSettings } from "@/lib/kakao/settings";
@@ -101,9 +101,9 @@ function jsonReply(reply: string, extra: Record<string, unknown> = {}, status = 
 }
 
 function rejectIfInvalidSecret(req: NextRequest, bodySecret: unknown) {
-  const secret = getRequiredSecretInProduction("KAKAO_RECRUIT_SECRET");
+  const secrets = getRequiredSecretCandidatesInProduction("KAKAO_RECRUIT_SECRET");
 
-  if (!secret) return null;
+  if (secrets.length === 0) return null;
 
   const headerSecret = req.headers.get("x-kakao-recruit-secret");
   const bearer = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
@@ -111,7 +111,7 @@ function rejectIfInvalidSecret(req: NextRequest, bodySecret: unknown) {
   const secretText = typeof bodySecret === "string" ? bodySecret : null;
 
   if (
-    matchesRequestSecret(secret, {
+    matchesRequestSecret(secrets, {
       headers: [headerSecret],
       bearer,
       body: secretText,

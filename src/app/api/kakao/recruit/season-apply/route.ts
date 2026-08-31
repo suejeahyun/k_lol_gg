@@ -2,7 +2,7 @@ import { requireSiteFeature } from "@/lib/site/feature-guard";
 import { createHash } from "crypto";
 import { NextRequest } from "next/server";
 import { kakaoJsonReply } from "@/lib/kakao/reply-format";
-import { getRequiredSecretInProduction, matchesRequestSecret } from "@/lib/security/secrets";
+import { getRequiredSecretCandidatesInProduction, matchesRequestSecret } from "@/lib/security/secrets";
 import { getKstOperationDateKey, getKstStartOfDate } from "@/lib/date/kst";
 import {
   getKakaoMessageValidationError,
@@ -650,16 +650,16 @@ async function applyParticipants(params: {
 }
 
 function rejectIfInvalidSecret(req: NextRequest, bodySecret: unknown) {
-  const secret = getRequiredSecretInProduction("KAKAO_RECRUIT_SECRET");
+  const secrets = getRequiredSecretCandidatesInProduction("KAKAO_RECRUIT_SECRET");
 
-  if (!secret) return null;
+  if (secrets.length === 0) return null;
 
   const headerSecret = req.headers.get("x-kakao-recruit-secret");
   const bearer = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
   const secretText = typeof bodySecret === "string" ? bodySecret : null;
 
   if (
-    matchesRequestSecret(secret, {
+    matchesRequestSecret(secrets, {
       headers: [headerSecret],
       bearer,
       body: secretText,

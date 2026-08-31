@@ -1,10 +1,10 @@
 import { NextRequest } from "next/server";
-import { getRequiredSecretInProduction, matchesRequestSecret } from "@/lib/security/secrets";
+import { getRequiredSecretCandidatesInProduction, matchesRequestSecret } from "@/lib/security/secrets";
 
 export function isAuthorizedKakaoRequest(req: NextRequest, bodySecret: unknown) {
-  const secret = getRequiredSecretInProduction("KAKAO_RECRUIT_SECRET");
-  if (!secret) return true;
-  return matchesRequestSecret(secret, {
+  const secrets = getRequiredSecretCandidatesInProduction("KAKAO_RECRUIT_SECRET");
+  if (secrets.length === 0) return true;
+  return matchesRequestSecret(secrets, {
     headers: [req.headers.get("x-kakao-recruit-secret"), req.headers.get("x-kakao-secret")],
     bearer: req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? null,
     body: typeof bodySecret === "string" ? bodySecret : null,

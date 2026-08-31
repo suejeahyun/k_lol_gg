@@ -9,7 +9,7 @@ import { kakaoJsonReply } from "@/lib/kakao/reply-format";
 import { createOperationFormSourceHash } from "@/lib/kakao/operation-form-idempotency";
 import { evaluateKakaoRequestPolicy } from "@/lib/kakao/policy";
 import { getKakaoOperationSettings } from "@/lib/kakao/settings";
-import { getRequiredSecretInProduction, matchesRequestSecret } from "@/lib/security/secrets";
+import { getRequiredSecretCandidatesInProduction, matchesRequestSecret } from "@/lib/security/secrets";
 import {
   getKakaoOperationFormReply,
   parseKakaoOperationForm,
@@ -22,8 +22,8 @@ async function readJsonBody(req: NextRequest) {
 }
 
 function rejectIfInvalidSecret(req: NextRequest, bodySecret: unknown) {
-  const secret = getRequiredSecretInProduction("KAKAO_RECRUIT_SECRET");
-  if (!secret) return null;
+  const secrets = getRequiredSecretCandidatesInProduction("KAKAO_RECRUIT_SECRET");
+  if (secrets.length === 0) return null;
 
   const headerSecret = req.headers.get("x-kakao-recruit-secret");
   const fallbackHeaderSecret = req.headers.get("x-kakao-secret");
@@ -32,7 +32,7 @@ function rejectIfInvalidSecret(req: NextRequest, bodySecret: unknown) {
   const secretText = typeof bodySecret === "string" ? bodySecret : null;
 
   if (
-    matchesRequestSecret(secret, {
+    matchesRequestSecret(secrets, {
       headers: [headerSecret, fallbackHeaderSecret],
       bearer,
       body: secretText,

@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { getRequiredSecretInProduction, matchesRequestSecret } from "@/lib/security/secrets";
+import { getRequiredSecretCandidatesInProduction, matchesRequestSecret } from "@/lib/security/secrets";
 import { kakaoJsonReply } from "@/lib/kakao/reply-format";
 import { normalizeKakaoIdentity } from "@/lib/kakao/input-guard";
 import { evaluateKakaoRequestPolicy, type KakaoPolicyFeature } from "@/lib/kakao/policy";
@@ -25,8 +25,8 @@ export function partyRecruitJson(
 }
 
 export function rejectIfInvalidPartySecret(req: NextRequest, bodySecret: unknown) {
-  const secret = getRequiredSecretInProduction("KAKAO_RECRUIT_SECRET");
-  if (!secret) return null;
+  const secrets = getRequiredSecretCandidatesInProduction("KAKAO_RECRUIT_SECRET");
+  if (secrets.length === 0) return null;
 
   const headerSecret = req.headers.get("x-kakao-recruit-secret");
   const bearer = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
@@ -34,7 +34,7 @@ export function rejectIfInvalidPartySecret(req: NextRequest, bodySecret: unknown
   const secretText = typeof bodySecret === "string" ? bodySecret : null;
 
   if (
-    matchesRequestSecret(secret, {
+    matchesRequestSecret(secrets, {
       headers: [headerSecret],
       bearer,
       body: secretText,

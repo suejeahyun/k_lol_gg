@@ -11,9 +11,10 @@ export function safeEqualHex(a: string, b: string) {
 }
 
 export function safeEqualText(a: string, b: string) {
-  const left = Buffer.from(a, "utf8");
-  const right = Buffer.from(b, "utf8");
-  if (left.length !== right.length) return false;
+  // Hash both values to a fixed width before comparing so differing source
+  // lengths do not create an early-return timing signal.
+  const left = crypto.createHash("sha256").update(a, "utf8").digest();
+  const right = crypto.createHash("sha256").update(b, "utf8").digest();
   return crypto.timingSafeEqual(left, right);
 }
 

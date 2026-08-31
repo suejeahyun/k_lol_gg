@@ -7,7 +7,11 @@ import { getPlayerRecordForKakao } from "@/features/player/services/getPlayerRec
 import { formatPlayerRecordMessage } from "@/lib/kakao/formatPlayerRecordMessage";
 import { createSimpleText } from "@/lib/kakao/response";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
-import { getOptionalSecret, matchesRequestSecret } from "@/lib/security/secrets";
+import {
+  getRequiredSecretCandidatesInProduction,
+  getSecretCandidates,
+  matchesRequestSecret,
+} from "@/lib/security/secrets";
 import { logServerError } from "@/lib/server/safe-log";
 import { evaluateKakaoRequestPolicy } from "@/lib/kakao/policy";
 import { getKakaoOperationSettings } from "@/lib/kakao/settings";
@@ -22,17 +26,12 @@ function kakaoText(text: string, status = 200) {
 }
 
 function rejectIfInvalidSecret(req: NextRequest) {
-  const secret =
-    getOptionalSecret("KAKAO_SEARCH_PLAYER_SECRET") ||
-    getOptionalSecret("KAKAO_OPENCHAT_SECRET");
+  const searchSecrets = getRequiredSecretCandidatesInProduction("KAKAO_SEARCH_PLAYER_SECRET");
+  const secrets = searchSecrets.length > 0
+    ? searchSecrets
+    : getSecretCandidates("KAKAO_OPENCHAT_SECRET");
 
-  if (!secret) {
-    if (process.env.NODE_ENV === "production") {
-      return kakaoText("KAKAO_SEARCH_PLAYER_SECRET 또는 KAKAO_OPENCHAT_SECRET 환경변수가 설정되지 않았습니다.", 200);
-    }
-
-    return null;
-  }
+  if (secrets.length === 0) return null;
 
   const headerSecret = req.headers.get("x-kakao-search-player-secret");
   const openchatSecret = req.headers.get("x-kakao-openchat-secret");
@@ -40,7 +39,7 @@ function rejectIfInvalidSecret(req: NextRequest) {
   const querySecret = req.nextUrl.searchParams.get("secret");
 
   if (
-    matchesRequestSecret(secret, {
+    matchesRequestSecret(secrets, {
       headers: [headerSecret, openchatSecret],
       bearer,
       query: querySecret,

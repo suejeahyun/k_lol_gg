@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readRequestBodyForSignature, safeEqualText, verifySignedRequest } from "@/lib/security/hmac";
-import { allowQueryStringSecret } from "@/lib/security/secrets";
+import { readRequestBodyForSignature, verifySignedRequest } from "@/lib/security/hmac";
+import { allowQueryStringSecret, getSecretCandidates, matchesSecret } from "@/lib/security/secrets";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const DEFAULT_MAX_BODY_BYTES = 1024 * 1024;
@@ -83,22 +83,20 @@ function getKakaoSecretKind(pathname: string): KakaoSecretKind | null {
   return "recruit";
 }
 
-function getKakaoSecret(kind: KakaoSecretKind) {
-  if (kind === "recruit") return process.env.KAKAO_RECRUIT_SECRET?.trim() || null;
-  if (kind === "openchat") return process.env.KAKAO_OPENCHAT_SECRET?.trim() || null;
+function getKakaoSecrets(kind: KakaoSecretKind) {
+  if (kind === "recruit") return getSecretCandidates("KAKAO_RECRUIT_SECRET");
+  if (kind === "openchat") return getSecretCandidates("KAKAO_OPENCHAT_SECRET");
 
-  return (
-    process.env.KAKAO_SEARCH_PLAYER_SECRET?.trim() ||
-    process.env.KAKAO_OPENCHAT_SECRET?.trim() ||
-    null
-  );
+  const searchSecrets = getSecretCandidates("KAKAO_SEARCH_PLAYER_SECRET");
+  if (searchSecrets.length > 0 || process.env.NODE_ENV === "production") return searchSecrets;
+  return getSecretCandidates("KAKAO_OPENCHAT_SECRET");
 }
 
 export function getRequiredHeaderSecret(pathname: string) {
   if (process.env.SECURITY_REQUIRE_KAKAO_SECRET !== "true") return null;
 
   const kind = getKakaoSecretKind(pathname);
-  return kind ? getKakaoSecret(kind) : null;
+  return kind ? getKakaoSecrets(kind) : null;
 }
 
 export function getReceivedServerSecret(request: NextRequest) {
@@ -127,10 +125,10 @@ export function getReceivedServerSecret(request: NextRequest) {
 
 export function hasValidServerSecret(request: NextRequest, pathname: string) {
   const expected = getRequiredHeaderSecret(pathname);
-  if (!expected) return true;
+  if (expected === null) return true;
 
   const received = getReceivedServerSecret(request);
-  return received.length > 0 && safeEqualText(received, expected);
+  return matchesSecret(expected, [received]);
 }
 
 function getMaxBodyBytes(pathname: string) {
@@ -178,24 +176,32 @@ export function rejectIfBodyTooLarge(request: NextRequest) {
 
 export async function hasValidServerHmacSignature(request: NextRequest, pathname: string) {
   const expected = getRequiredHeaderSecret(pathname);
-  if (!expected) return true;
+  if (expected === null) return true;
+  if (expected.length === 0) return false;
 
   const timestamp = request.headers.get("x-klol-timestamp");
   const signature = request.headers.get("x-klol-signature");
   const body = await readRequestBodyForSignature(request);
 
-  return verifySignedRequest({
-    secret: expected,
+  const results = expected.map((secret) => verifySignedRequest({
+    secret,
     timestamp,
     signature,
     body,
-  });
+  }));
+  return results.reduce((matched, result) => matched | Number(result), 0) === 1;
 }
 
 export async function rejectIfInvalidServerAuth(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const expected = getRequiredHeaderSecret(pathname);
-  if (!expected) return null;
+  if (expected === null) return null;
+  if (expected.length === 0) {
+    return NextResponse.json(
+      { ok: false, message: "서버 인증 구성이 올바르지 않습니다." },
+      { status: 401 },
+    );
+  }
 
   const hmacRequired = process.env.SECURITY_REQUIRE_HMAC === "true";
   const hmacValid = await hasValidServerHmacSignature(request, pathname);
@@ -218,7 +224,7 @@ export async function rejectIfInvalidServerAuth(request: NextRequest) {
 export function rejectIfInvalidServerSecret(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const expected = getRequiredHeaderSecret(pathname);
-  if (!expected) return null;
+  if (expected === null) return null;
 
   if (hasValidServerSecret(request, pathname)) return null;
 
