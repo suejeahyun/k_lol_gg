@@ -3,7 +3,13 @@
 import { FormEvent, useMemo, useState } from "react";
 import { safeLocalNextPath } from "@/lib/navigation/safe-next";
 
-export default function LoginForm({ nextPath }: { nextPath?: string }) {
+export default function LoginForm({
+  nextPath,
+  notice,
+}: {
+  nextPath?: string;
+  notice?: string;
+}) {
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -53,6 +59,7 @@ export default function LoginForm({ nextPath }: { nextPath?: string }) {
       <form className="auth-card" onSubmit={handleSubmit}>
         <h1 className="auth-title">로그인</h1>
 
+        {notice ? <p className="auth-alert" role="status">{notice}</p> : null}
         {message ? <p className="auth-alert auth-alert--error" role="alert">{message}</p> : null}
 
 

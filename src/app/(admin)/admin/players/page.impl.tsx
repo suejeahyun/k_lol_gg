@@ -149,7 +149,7 @@ export default function AdminPlayersPage() {
         <div>
           <h1 className="page-title" style={{ marginBottom: 6 }}>플레이어 관리</h1>
           <p className="page-description" style={{ margin: 0 }}>
-            회원가입은 자동 승인입니다. 플레이어 수정, 계정 정보, 권한/보안 관리는 각 플레이어 상세에서 처리합니다.
+            회원가입은 승인 대기로 접수됩니다. 계정 승인·거절과 권한·보안 관리는 각 플레이어 상세에서 처리합니다.
           </p>
         </div>
         <Link href="/admin/players/new" className="app-button">플레이어 등록</Link>
@@ -226,8 +226,8 @@ function maskUserId(userId: string) {
 }
 
 function getStatusLabel(status: string) {
-  if (status === "APPROVED") return "자동 승인";
-  if (status === "PENDING") return "대기";
-  if (status === "REJECTED") return "거절";
+  if (status === "APPROVED") return "승인됨";
+  if (status === "PENDING") return "승인 대기";
+  if (status === "REJECTED") return "거절됨";
   return status || "-";
 }

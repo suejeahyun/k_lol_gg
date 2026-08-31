@@ -30,7 +30,7 @@ const userNavigation: NavigationItem[] = [
   {
     href: "/recruit",
     appHref: "/app/recruits",
-    label: "구인현황",
+    label: "구인 현황",
     description: "현재 모집 중인 파티 확인",
     section: "바로가기",
     keywords: ["구인", "파티", "모집", "스크림"],
@@ -70,7 +70,7 @@ const userNavigation: NavigationItem[] = [
   {
     href: "/players",
     appHref: "/app/players",
-    label: "플레이어 찾기",
+    label: "플레이어 검색",
     description: "플레이어 프로필과 전적 검색",
     section: "플레이어",
     keywords: ["회원", "검색", "프로필", "개인 전적", "챔피언별 전적", "kda"],
@@ -118,8 +118,8 @@ const userNavigation: NavigationItem[] = [
   {
     href: "/participation",
     appHref: "/participation",
-    label: "참가 신청",
-    description: "진행 중인 대회 참가 신청",
+    label: "참여할 이벤트 찾기",
+    description: "모집 중·예정·진행 중인 이벤트와 내 신청 확인",
     section: "대회",
     keywords: ["참가", "신청", "접수", "내 일정", "대기", "승인", "알림"],
   },

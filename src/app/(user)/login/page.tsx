@@ -13,6 +13,7 @@ export const metadata: Metadata = {
 type LoginPageProps = {
   searchParams?: Promise<{
     next?: string | string[];
+    signup?: string | string[];
   }>;
 };
 
@@ -23,6 +24,7 @@ function firstSearchParam(value?: string | string[]) {
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams;
   const nextPath = safeLocalNextPath(firstSearchParam(params?.next));
+  const signupStatus = firstSearchParam(params?.signup);
   const user = await getCurrentUser();
 
   if (user) {
@@ -31,7 +33,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
   return (
     <main>
-      <LoginForm nextPath={nextPath} />
+      <LoginForm
+        nextPath={nextPath}
+        notice={
+          signupStatus === "pending"
+            ? "가입 신청이 접수되었습니다. 운영자 승인 전에도 로그인해 승인 상태를 확인할 수 있습니다."
+            : undefined
+        }
+      />
     </main>
   );
 }

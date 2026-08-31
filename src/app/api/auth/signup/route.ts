@@ -150,7 +150,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(
       {
-        message: "회원가입이 완료되었습니다. 관리자 승인 후 이용할 수 있습니다.",
+        message: "가입 신청이 접수되었습니다. 운영자 승인 전에도 로그인해 승인 상태를 확인할 수 있습니다.",
       },
       { status: 201 },
     );

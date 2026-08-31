@@ -3,7 +3,9 @@ import Link from "next/link";
 import { unstable_cache } from "next/cache";
 import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
 import { AppEmpty, AppSection } from "@/components/app-mobile/AppCards";
+import { parsePositivePage } from "@/lib/http/pagination";
 import { prisma } from "@/lib/prisma/client";
+import { resolvePublicPlayerDisplayName } from "@/lib/public/player";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +17,7 @@ export const metadata: Metadata = {
 type AppPlayersPageProps = {
   searchParams?: Promise<{
     q?: string;
+    page?: string;
   }>;
 };
 
@@ -27,64 +30,79 @@ function getWinRate(wins: number, totalGames: number) {
   return Math.round((wins / totalGames) * 1000) / 10;
 }
 
-const DEFAULT_VISIBLE_PLAYERS = 12;
-const SEARCH_VISIBLE_PLAYERS = 80;
+const PAGE_SIZE = 24;
 
-async function getAppPlayers(q: string) {
+async function getAppPlayers(q: string, requestedPage: number) {
   const where = q
     ? {
         isActive: true,
         OR: [
-          { name: { contains: q, mode: "insensitive" as const } },
           { nickname: { contains: q, mode: "insensitive" as const } },
           { tag: { contains: q, mode: "insensitive" as const } },
         ],
       }
     : { isActive: true };
-  const take = q ? SEARCH_VISIBLE_PLAYERS : DEFAULT_VISIBLE_PLAYERS;
-
-  const [players, totalCount] = await Promise.all([
-      prisma.player.findMany({
-        where,
-        orderBy: [{ name: "asc" }, { nickname: "asc" }],
-        take,
+  const totalCount = await prisma.player.count({ where });
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const currentPage = Math.min(requestedPage, totalPages);
+  const players = await prisma.player.findMany({
+    where,
+    orderBy: [{ nickname: "asc" }, { tag: "asc" }, { id: "asc" }],
+    skip: (currentPage - 1) * PAGE_SIZE,
+    take: PAGE_SIZE,
+    select: {
+      id: true,
+      nickname: true,
+      tag: true,
+      currentTier: true,
+      peakTier: true,
+      seasonStats: {
+        orderBy: { seasonId: "desc" },
+        take: 1,
         select: {
-          id: true,
-          name: true,
-          nickname: true,
-          tag: true,
-          currentTier: true,
-          peakTier: true,
-          seasonStats: {
-            orderBy: { seasonId: "desc" },
-            take: 1,
-            select: {
-              totalGames: true,
-              participationCount: true,
-              wins: true,
-              mvpCount: true,
-            },
-          },
+          totalGames: true,
+          participationCount: true,
+          wins: true,
+          mvpCount: true,
         },
-      }),
-      prisma.player.count({ where }),
-    ]);
+      },
+    },
+  });
 
-  return { players, totalCount };
+  return {
+    players: players.map((player) => ({
+      ...player,
+      displayName: resolvePublicPlayerDisplayName(player),
+    })),
+    totalCount,
+    totalPages,
+    currentPage,
+  };
 }
 
 const getCachedAppPlayers = unstable_cache(
-  async () => getAppPlayers(""),
-  ["app-players-catalog-v1"],
+  async (page: number) => getAppPlayers("", page),
+  ["app-players-catalog-v2"],
   { revalidate: 60, tags: ["players", "rankings", "stats-top"] },
 );
 
 export default async function AppPlayersPage({ searchParams }: AppPlayersPageProps) {
   const params = await searchParams;
   const q = normalizeSearch(params?.q);
-  const { players, totalCount } = q
-    ? await getAppPlayers(q)
-    : await getCachedAppPlayers();
+  const requestedPage = parsePositivePage(params?.page);
+  const { players, totalCount, totalPages, currentPage } = q
+    ? await getAppPlayers(q, requestedPage)
+    : await getCachedAppPlayers(requestedPage);
+  const rangeStart = totalCount === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const rangeEnd = Math.min(currentPage * PAGE_SIZE, totalCount);
+
+  const pageHref = (page: number) => {
+    const query = new URLSearchParams();
+    if (q) query.set("q", q);
+    if (page > 1) query.set("page", String(page));
+    const value = query.toString();
+    return value ? `/app/players?${value}` : "/app/players";
+  };
 
   return (
     <AppMobileShell subtitle="플레이어">
@@ -98,7 +116,7 @@ export default async function AppPlayersPage({ searchParams }: AppPlayersPagePro
           <input
             name="q"
             defaultValue={q}
-            placeholder="이름, 닉네임, 태그 검색"
+            placeholder="닉네임 또는 태그 검색"
             aria-label="플레이어 검색"
           />
           <button type="submit">검색</button>
@@ -108,8 +126,8 @@ export default async function AppPlayersPage({ searchParams }: AppPlayersPagePro
       <AppSection
         title={
           q
-            ? `검색 결과 ${totalCount}명`
-            : `전체 ${totalCount}명 · ${players.length}명 표시`
+            ? `검색 결과 ${totalCount}명 · ${rangeStart}-${rangeEnd}`
+            : `전체 ${totalCount}명 · ${rangeStart}-${rangeEnd}`
         }
       >
         <div className="klol-app-list klol-app-player-list">
@@ -125,8 +143,8 @@ export default async function AppPlayersPage({ searchParams }: AppPlayersPagePro
                 <Link key={player.id} href={`/app/players/${player.id}`} className="klol-app-list-card klol-app-player-card">
                   <div className="klol-app-list-top">
                     <div className="klol-app-list-title">
-                      <strong>{player.name}</strong>
-                      <span>{player.nickname}#{player.tag}</span>
+                      <strong>{player.displayName}</strong>
+                      <span>{player.currentTier ?? "티어 미입력"}</span>
                     </div>
                     <span className="klol-app-badge">상세</span>
                   </div>
@@ -153,6 +171,22 @@ export default async function AppPlayersPage({ searchParams }: AppPlayersPagePro
             })
           )}
         </div>
+
+        {totalPages > 1 ? (
+          <nav className="klol-app-pagination" aria-label="플레이어 목록 페이지">
+            {currentPage > 1 ? (
+              <Link href={pageHref(currentPage - 1)}>이전</Link>
+            ) : (
+              <span aria-disabled="true">이전</span>
+            )}
+            <strong>{currentPage} / {totalPages}</strong>
+            {currentPage < totalPages ? (
+              <Link href={pageHref(currentPage + 1)}>다음</Link>
+            ) : (
+              <span aria-disabled="true">다음</span>
+            )}
+          </nav>
+        ) : null}
       </AppSection>
     </AppMobileShell>
   );

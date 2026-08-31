@@ -19,7 +19,7 @@ type MobileNavUser = {
 
 const baseItems: MobileNavItem[] = [
   { href: "/", label: "홈", code: "HOM", match: ["/"] },
-  { href: "/recruit", label: "구인", code: "REC", match: ["/recruit", "/recruit-helper"] },
+  { href: "/recruit", label: "구인 현황", code: "REC", match: ["/recruit", "/recruit-helper"] },
   { href: "/matches", label: "내전", code: "MAT", match: ["/matches"] },
   { href: "/rankings", label: "랭킹", code: "RNK", match: ["/rankings"] },
 ];

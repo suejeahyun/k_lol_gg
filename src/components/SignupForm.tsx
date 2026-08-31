@@ -46,8 +46,8 @@ export default function SignupForm() {
         return;
       }
 
-      setMessage("회원가입이 완료되었습니다. 관리자 승인 후 이용 가능합니다.");
-      window.location.href = "/login";
+      setMessage("가입 신청이 접수되었습니다. 운영자 승인 전에도 로그인해 승인 상태를 확인할 수 있습니다.");
+      window.location.href = "/login?signup=pending";
     } catch (error: unknown) {
       console.error("[SIGNUP_ERROR]", error);
       setMessage("회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");

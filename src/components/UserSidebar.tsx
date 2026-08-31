@@ -33,7 +33,7 @@ const menuGroups: UserSidebarGroup[] = [
     items: [
       { href: "/start", label: "등록·제출 시작", code: "GO", activePrefixes: ["/start"] },
       { href: "/", label: "홈", code: "HOM" },
-      { href: "/recruit", label: "구인현황", code: "REC", activePrefixes: ["/recruit", "/recruit-helper"] },
+      { href: "/recruit", label: "구인 현황", code: "REC", activePrefixes: ["/recruit", "/recruit-helper"] },
       { href: "/discipline", label: "운영 징계 현황", code: "DIS" },
       { href: "/discipline/evidence", label: "경고 차감 사진 제출", code: "EVS", auth: true, approvedOnly: true },
       { href: "/matches", label: "내전 목록", code: "MAT" },
@@ -44,7 +44,7 @@ const menuGroups: UserSidebarGroup[] = [
   {
     title: "플레이어·팀",
     items: [
-      { href: "/players", label: "플레이어 찾기", code: "PLY" },
+      { href: "/players", label: "플레이어 검색", code: "PLY" },
       { href: "/ai-balance", label: "K-LOL MMR", code: "MMR", activePrefixes: ["/ai-balance"] },
       { href: "/players/balance", label: "팀 밸런스", code: "BAL", auth: true, approvedOnly: true, activePrefixes: ["/players/balance"] },
 
@@ -68,7 +68,7 @@ const menuGroups: UserSidebarGroup[] = [
     title: "대회·콘텐츠",
     items: [
       { href: "/progress", label: "이벤트·멸망전", code: "EVT" },
-      { href: "/participation", label: "참가 신청", code: "APP", activePrefixes: ["/participation"] },
+      { href: "/participation", label: "참여할 이벤트 찾기", code: "APP", activePrefixes: ["/participation"] },
       { href: "/coin-toss", label: "코인토스", code: "TOS" },
       { href: "/install", label: "앱 설치", code: "APP", activePrefixes: ["/install"] },
       { href: "/highlights", label: "하이라이트", code: "VID", activePrefixes: ["/highlights", "/images"] },

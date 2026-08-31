@@ -270,7 +270,7 @@ export function isSiteFeatureEnabled(settings: SiteSettings, feature: SiteFeatur
 
 export function getSiteFeatureLabel(feature: SiteFeatureKey) {
   if (feature === "kakao") return "카카오톡 운영";
-  if (feature === "recruit") return "구인현황";
+  if (feature === "recruit") return "구인 현황";
   if (feature === "balanceAi") return "K-LOL 랭킹";
   if (feature === "randomTeam") return "랜덤 팀 나누기";
   if (feature === "riot") return "Riot 연동";

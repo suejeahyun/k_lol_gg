@@ -6,7 +6,7 @@ import { Home, ListChecks, Menu, Swords, Trophy, UserRound } from "lucide-react"
 
 const navItems = [
   { href: "/app", label: "홈", icon: Home, exact: true },
-  { href: "/app/recruits", label: "구인", icon: ListChecks },
+  { href: "/app/recruits", label: "구인 현황", icon: ListChecks },
   { href: "/app/matches", label: "내전", icon: Swords },
   { href: "/app/rankings", label: "랭킹", icon: Trophy },
   { href: "/app/me", label: "내정보", icon: UserRound },

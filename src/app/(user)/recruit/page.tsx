@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma/client";
 import PremiumFeatureGate from "@/components/PremiumFeatureGate";
+import RecruitParticipationActions from "@/components/recruit/RecruitParticipationActions";
 import { getSiteSettings } from "@/lib/site/settings";
 import {
   buildGameInfoText,
@@ -44,6 +45,16 @@ function getPublicRecruitStatusLabel(party: RecruitPageParty) {
   return getPublicActiveMemberCount(party) >= party.maxMembers
     ? "진행중 · 대기중"
     : "진행중 · 구인중";
+}
+
+function getRecruitConditions(party: RecruitPageParty) {
+  return [
+    party.startTimeText ? `시작 ${party.startTimeText}` : null,
+    party.tierText ? `티어 ${party.tierText}` : null,
+    party.preferredLineText ? `선호 라인 ${party.preferredLineText}` : null,
+    party.playStyle ? `플레이 스타일 ${party.playStyle}` : null,
+    party.note ? `안내 ${party.note}` : null,
+  ].filter((condition): condition is string => Boolean(condition));
 }
 
 function renderSlots(party: RecruitPageParty) {
@@ -150,7 +161,7 @@ export default async function RecruitPage() {
       <main className="page-shell recruit-page">
         <section className="page-hero recruit-hero">
           <p className="page-kicker">KAKAO RECRUIT</p>
-          <h1>구인현황</h1>
+          <h1>구인 현황</h1>
           <p>카카오톡 구인 명령으로 등록된 실시간 모집과 참가 현황을 확인합니다.</p>
           <div className="recruit-command-box">
             <span>/6인파티</span>
@@ -180,6 +191,8 @@ export default async function RecruitPage() {
               const statusLabel = getPublicRecruitStatusLabel(party);
               const typeLabel = getRecruitTypeLabel(party.type);
               const gameInfo = buildGameInfoText(party);
+              const remainingSeats = Math.max(0, party.maxMembers - displayActiveCount);
+              const conditions = getRecruitConditions(party);
 
               return (
                 <article key={party.publicRef} className="recruit-card">
@@ -200,14 +213,23 @@ export default async function RecruitPage() {
                     <span>
                       {displayActiveCount}/{party.maxMembers}
                     </span>
+                    <span>남은 자리 {remainingSeats}자리</span>
                     {gameInfo ? <span>게임정보: {gameInfo}</span> : null}
                   </div>
+
+                  <p className="recruit-card__conditions">
+                    {conditions.length > 0 ? conditions.join(" · ") : "별도 참여 조건이 없습니다."}
+                  </p>
 
                   <div className="recruit-slots">{renderSlots(party)}</div>
 
                   <div className="recruit-card__foot">
                     <span>최근 반영 {formatDate(party.updatedAt)}</span>
                   </div>
+                  <RecruitParticipationActions
+                    recruitNo={party.recruitNo}
+                    openChatUrl={siteSettings.kakaoOpenChatUrl}
+                  />
                 </article>
               );
             })}

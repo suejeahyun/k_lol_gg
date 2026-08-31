@@ -7,6 +7,7 @@ import PremiumFeatureGate from "@/components/PremiumFeatureGate";
 import { getSiteSettings } from "@/lib/site/settings";
 import { parsePositivePage } from "@/lib/http/pagination";
 import { toPublicRecruitDto } from "@/lib/public/recruit";
+import RecruitParticipationActions from "@/components/recruit/RecruitParticipationActions";
 
 export const dynamic = "force-dynamic";
 
@@ -161,6 +162,7 @@ export default async function AppRecruitsPage({ searchParams }: AppRecruitsPageP
               {parties.map((party) => {
                 const memberCount = getDisplayActiveMemberCount(party.members, party.maxMembers);
                 const isClosed = party.status !== "IN_PROGRESS";
+                const remainingSeats = Math.max(0, party.maxMembers - memberCount);
                 return (
                   <article className="klol-app-list-card" data-muted={isClosed ? "true" : undefined} key={party.publicRef}>
                     <div className="klol-app-list-top">
@@ -177,7 +179,7 @@ export default async function AppRecruitsPage({ searchParams }: AppRecruitsPageP
                     <div className="klol-app-meta-grid">
                       <div className="klol-app-meta">
                         <span>인원</span>
-                        <strong>{memberCount}/{party.maxMembers}</strong>
+                        <strong>{memberCount}/{party.maxMembers} · 남은 자리 {remainingSeats}</strong>
                       </div>
                       <div className="klol-app-meta">
                         <span>게임</span>
@@ -193,6 +195,20 @@ export default async function AppRecruitsPage({ searchParams }: AppRecruitsPageP
                         .map((member) => `${member.position || "FILL"} ${member.displayName}`)
                         .join(" · ") || "참가자 없음"}
                     </p>
+                    <p className="klol-app-muted">
+                      {[
+                        party.startTimeText ? `시작 ${party.startTimeText}` : null,
+                        party.tierText ? `티어 ${party.tierText}` : null,
+                        party.preferredLineText ? `선호 라인 ${party.preferredLineText}` : null,
+                        party.playStyle ? `플레이 스타일 ${party.playStyle}` : null,
+                        party.note ? `안내 ${party.note}` : null,
+                      ].filter(Boolean).join(" · ") || "별도 참여 조건이 없습니다."}
+                    </p>
+                    <RecruitParticipationActions
+                      recruitNo={party.recruitNo}
+                      openChatUrl={siteSettings.kakaoOpenChatUrl}
+                      closed={isClosed}
+                    />
                   </article>
                 );
               })}

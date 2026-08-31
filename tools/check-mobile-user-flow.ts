@@ -18,6 +18,9 @@ const standaloneEntryPaths = [
   "/account",
   "/discipline/evidence",
   "/matches/submit",
+  "/players/balance",
+  "/balance",
+  "/participation",
   "/admin/login",
   "/admin/security",
   "/admin/discipline/new",
@@ -38,6 +41,9 @@ assert.equal(
 );
 assert.equal(toMobileAppPath("/progress/event/17"), "/app/progress/event/17");
 assert.equal(toMobileAppPath("/participation/event/17"), "/app/progress/event/17");
+assert.equal(toMobileAppPath("/players/balance"), "/players/balance");
+assert.equal(toMobileAppPath("/balance"), "/balance");
+assert.equal(toMobileAppPath("/participation"), "/participation");
 assert.equal(
   toMobileAppPath("/progress/destruction/5/mvp-vote"),
   "/app/progress/destruction/5/mvp-vote",
