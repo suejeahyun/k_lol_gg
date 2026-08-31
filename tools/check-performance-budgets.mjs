@@ -41,9 +41,30 @@ try {
 }
 
 const failures = [];
+if (!Array.isArray(routeStats)) {
+  console.error("route-bundle-stats.json 형식이 배열이 아닙니다.");
+  process.exit(1);
+}
+
+const routeEntries = new Map();
 for (const entry of routeStats) {
-  if (!entry || typeof entry.route !== "string") continue;
-  if (typeof entry.firstLoadUncompressedJsBytes !== "number") continue;
+  if (!entry || typeof entry.route !== "string" || entry.route.length === 0) {
+    failures.push("경로 이름이 없는 route-bundle-stats 항목이 있습니다.");
+    continue;
+  }
+  if (
+    typeof entry.firstLoadUncompressedJsBytes !== "number" ||
+    !Number.isFinite(entry.firstLoadUncompressedJsBytes) ||
+    entry.firstLoadUncompressedJsBytes < 0
+  ) {
+    failures.push(`${entry.route}: firstLoadUncompressedJsBytes 값이 없거나 올바르지 않습니다.`);
+    continue;
+  }
+  if (routeEntries.has(entry.route)) {
+    failures.push(`${entry.route}: route-bundle-stats 항목이 중복되었습니다.`);
+    continue;
+  }
+  routeEntries.set(entry.route, entry);
 
   if (
     coreRoutes.has(entry.route) &&
@@ -61,6 +82,12 @@ for (const entry of routeStats) {
       `${entry.route}: 공개 화면 JS ${entry.firstLoadUncompressedJsBytes}바이트 ` +
         `(예산 ${PUBLIC_ROUTE_BUDGET_BYTES}바이트)`,
     );
+  }
+}
+
+for (const route of coreRoutes) {
+  if (!routeEntries.has(route)) {
+    failures.push(`${route}: 핵심 화면의 번들 통계가 누락되었습니다.`);
   }
 }
 
