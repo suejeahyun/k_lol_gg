@@ -128,10 +128,10 @@ export default async function AppHomePage() {
   return (
     <AppMobileShell subtitle="모바일 홈">
       <section className="klol-app-hero klol-app-home-hero">
-        <div className="klol-app-kicker">K-LOL.GG APP</div>
-        <h1 className="klol-app-title">내전 운영 홈</h1>
+        <div className="klol-app-kicker">K-LOL PLAYGROUND</div>
+        <h1 className="klol-app-title">오늘도 같이 플레이해요</h1>
         <p className="klol-app-subtitle">
-          구인, 최근 내전, 랭킹을 빠르게 확인합니다.
+          구인부터 내전 기록과 랭킹까지 한 번에 편하게 확인하세요.
         </p>
         <div className="klol-app-actions">
           <Link className="klol-app-primary" href="/app/recruits">구인 보기</Link>

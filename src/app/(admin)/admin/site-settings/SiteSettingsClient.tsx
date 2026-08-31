@@ -84,7 +84,7 @@ export default function SiteSettingsClient({ initialSettings }: SiteSettingsClie
             className="admin-input"
             value={settings.siteTagline ?? ""}
             onChange={(event) => update("siteTagline", event.target.value || null)}
-            placeholder="내전 · 랭킹 · AI 데이터"
+            placeholder="함께 즐기는 내전 · 랭킹 · 팀 밸런스"
           />
         </label>
 

@@ -103,7 +103,7 @@ export default function UserSidebar() {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [siteName, setSiteName] = useState("K-LOL.GG");
-  const [siteTagline, setSiteTagline] = useState("내전 · 랭킹 · AI 데이터");
+  const [siteTagline, setSiteTagline] = useState("함께 즐기는 내전 · 랭킹 · 팀 밸런스");
   const [siteLogoUrl, setSiteLogoUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -137,11 +137,11 @@ export default function UserSidebar() {
       try {
         const settings = await loadPublicSiteSettings();
         if (settings.siteName) setSiteName(settings.siteName);
-        setSiteTagline(settings.siteTagline || "내전 · 랭킹 · AI 데이터");
+        setSiteTagline(settings.siteTagline || "함께 즐기는 내전 · 랭킹 · 팀 밸런스");
         setSiteLogoUrl(settings.siteLogoUrl ?? null);
       } catch {
         setSiteName("K-LOL.GG");
-        setSiteTagline("내전 · 랭킹 · AI 데이터");
+        setSiteTagline("함께 즐기는 내전 · 랭킹 · 팀 밸런스");
         setSiteLogoUrl(null);
       }
     }

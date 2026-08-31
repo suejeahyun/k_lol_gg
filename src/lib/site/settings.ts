@@ -101,7 +101,7 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   homeHeroAccent: process.env.NEXT_PUBLIC_HOME_HERO_ACCENT || "즐거운 내전",
   homeHeroDescription:
     process.env.NEXT_PUBLIC_HOME_HERO_DESCRIPTION ||
-    "함께 플레이할 사람을 찾고, 내 경기와 시즌 기록을 편안하게 확인하세요. K-LOL.GG는 커뮤니티 내전을 더 쉽고 즐겁게 이어 주는 기록 허브입니다.",
+    "함께 플레이할 사람을 찾고, 내 경기와 시즌 기록을 편하게 확인하세요. K-LOL.GG는 커뮤니티 내전을 쉽고 즐겁게 이어 주는 기록 허브입니다.",
   homePrimaryCtaLabel: process.env.NEXT_PUBLIC_HOME_PRIMARY_CTA_LABEL || "지금 같이 플레이할 사람 찾기",
   homePrimaryCtaHref: process.env.NEXT_PUBLIC_HOME_PRIMARY_CTA_HREF || "/recruit",
   homeSecondaryCtaLabel: process.env.NEXT_PUBLIC_HOME_SECONDARY_CTA_LABEL || "플레이어 찾기",
@@ -172,6 +172,16 @@ function normalizeThemePreset(value: unknown, fallback: SiteThemePreset): SiteTh
   return fallback;
 }
 
+function normalizeLegacyCopy(
+  value: unknown,
+  fallback: string,
+  legacyValue: string,
+  replacement: string,
+) {
+  const normalized = normalizeString(value, fallback);
+  return normalized === legacyValue ? replacement : normalized;
+}
+
 function normalizeHomeBackgroundUrl(value: unknown) {
   const normalized = normalizeUrl(value);
   if (
@@ -190,18 +200,57 @@ export function normalizeSiteSettings(value: unknown, updatedAt?: Date | string 
 
   return {
     siteName: normalizeString(raw.siteName, DEFAULT_SITE_SETTINGS.siteName),
-    siteTagline: normalizeString(raw.siteTagline, DEFAULT_SITE_SETTINGS.siteTagline ?? ""),
+    siteTagline: normalizeLegacyCopy(
+      raw.siteTagline,
+      DEFAULT_SITE_SETTINGS.siteTagline ?? "",
+      "내전 · 랭킹 · AI 데이터",
+      "함께 즐기는 내전 · 랭킹 · 팀 밸런스",
+    ),
     roomName: normalizeNullableString(raw.roomName),
     siteLogoUrl: normalizeUrl(raw.siteLogoUrl) ?? DEFAULT_SITE_SETTINGS.siteLogoUrl,
     homeBackgroundUrl: normalizeHomeBackgroundUrl(raw.homeBackgroundUrl) ?? DEFAULT_SITE_SETTINGS.homeBackgroundUrl,
     themePreset: normalizeThemePreset(raw.themePreset, DEFAULT_SITE_SETTINGS.themePreset),
-    homeEyebrow: normalizeString(raw.homeEyebrow, DEFAULT_SITE_SETTINGS.homeEyebrow),
-    homeHeroTitle: normalizeString(raw.homeHeroTitle, DEFAULT_SITE_SETTINGS.homeHeroTitle),
-    homeHeroAccent: normalizeString(raw.homeHeroAccent, DEFAULT_SITE_SETTINGS.homeHeroAccent),
-    homeHeroDescription: normalizeString(raw.homeHeroDescription, DEFAULT_SITE_SETTINGS.homeHeroDescription),
-    homePrimaryCtaLabel: normalizeString(raw.homePrimaryCtaLabel, DEFAULT_SITE_SETTINGS.homePrimaryCtaLabel),
-    homePrimaryCtaHref: normalizeHref(raw.homePrimaryCtaHref, DEFAULT_SITE_SETTINGS.homePrimaryCtaHref),
-    homeSecondaryCtaLabel: normalizeString(raw.homeSecondaryCtaLabel, DEFAULT_SITE_SETTINGS.homeSecondaryCtaLabel),
+    homeEyebrow: normalizeLegacyCopy(
+      raw.homeEyebrow,
+      DEFAULT_SITE_SETTINGS.homeEyebrow,
+      "KOREA LOL CUSTOM STATS",
+      "K-LOL COMMUNITY",
+    ),
+    homeHeroTitle: normalizeLegacyCopy(
+      raw.homeHeroTitle,
+      DEFAULT_SITE_SETTINGS.homeHeroTitle,
+      "실력을",
+      "같이하면 더",
+    ),
+    homeHeroAccent: normalizeLegacyCopy(
+      raw.homeHeroAccent,
+      DEFAULT_SITE_SETTINGS.homeHeroAccent,
+      "증명하라",
+      "즐거운 내전",
+    ),
+    homeHeroDescription: normalizeLegacyCopy(
+      raw.homeHeroDescription,
+      DEFAULT_SITE_SETTINGS.homeHeroDescription,
+      "내전 기록, 시즌 랭킹, 멸망전 진행과 MVP까지 한 화면에서 확인하세요. K-LOL.GG는 카카오톡 오픈채팅방 내전 운영을 위한 기록 허브입니다.",
+      DEFAULT_SITE_SETTINGS.homeHeroDescription,
+    ),
+    homePrimaryCtaLabel: normalizeLegacyCopy(
+      raw.homePrimaryCtaLabel,
+      DEFAULT_SITE_SETTINGS.homePrimaryCtaLabel,
+      "내전 보러가기",
+      "지금 같이 플레이할 사람 찾기",
+    ),
+    homePrimaryCtaHref:
+      normalizeString(raw.homePrimaryCtaLabel, "") === "내전 보러가기" &&
+      normalizeHref(raw.homePrimaryCtaHref, DEFAULT_SITE_SETTINGS.homePrimaryCtaHref) === "/matches"
+        ? "/recruit"
+        : normalizeHref(raw.homePrimaryCtaHref, DEFAULT_SITE_SETTINGS.homePrimaryCtaHref),
+    homeSecondaryCtaLabel: normalizeLegacyCopy(
+      raw.homeSecondaryCtaLabel,
+      DEFAULT_SITE_SETTINGS.homeSecondaryCtaLabel,
+      "플레이어 검색",
+      "플레이어 찾기",
+    ),
     homeSecondaryCtaHref: normalizeHref(raw.homeSecondaryCtaHref, DEFAULT_SITE_SETTINGS.homeSecondaryCtaHref),
     kakaoOpenChatUrl: normalizeUrl(raw.kakaoOpenChatUrl),
     userAssistantName: normalizeString(raw.userAssistantName, DEFAULT_SITE_SETTINGS.userAssistantName),
