@@ -22,4 +22,4 @@ npm run dev
 npm run check
 ```
 
-진행 상태와 V1 기준점은 `docs/STATUS.md`와 `docs/cutover/V1_BLUEBLACK_BASELINE.md`를 확인합니다.
+진행 상태와 V1 기준점은 `docs/STATUS.md`와 `docs/cutover/V1_BLUEBLACK_BASELINE.md`를 확인합니다. 역할 분배와 통합 기준은 `docs/TEAM_WORKFLOW.md`에 고정합니다.
