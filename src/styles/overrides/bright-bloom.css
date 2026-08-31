@@ -63,7 +63,7 @@ html[data-theme] body {
   min-height: 100vh;
 }
 
-html[data-theme] .app-background-root {
+html[data-theme][data-theme] .app-background-root {
   background:
     radial-gradient(circle at 8% 2%, rgba(181, 225, 255, 0.68), transparent 25%),
     radial-gradient(circle at 92% 8%, rgba(222, 206, 255, 0.6), transparent 24%),
@@ -71,7 +71,7 @@ html[data-theme] .app-background-root {
     linear-gradient(180deg, var(--bloom-canvas) 0%, var(--bloom-canvas-2) 100%) !important;
 }
 
-html[data-theme] .app-background-root::before {
+html[data-theme][data-theme] .app-background-root::before {
   content: "";
   position: fixed;
   inset: 64px 0 0;
@@ -79,9 +79,20 @@ html[data-theme] .app-background-root::before {
   pointer-events: none;
   background:
     radial-gradient(circle at 12% 22%, rgba(255, 255, 255, 0.86) 0 3px, transparent 4px),
-    radial-gradient(circle at 86% 16%, rgba(255, 255, 255, 0.74) 0 4px, transparent 5px);
-  background-size: 92px 92px, 128px 128px;
-  opacity: 0.62;
+    radial-gradient(circle at 86% 16%, rgba(255, 255, 255, 0.74) 0 4px, transparent 5px) !important;
+  background-size: 92px 92px, 128px 128px !important;
+  opacity: 0.62 !important;
+  filter: none !important;
+}
+
+html[data-theme][data-theme] .app-background-root::after {
+  background:
+    radial-gradient(ellipse at 8% 52%, rgba(126, 206, 255, 0.16), transparent 28%),
+    radial-gradient(ellipse at 94% 50%, rgba(255, 178, 209, 0.14), transparent 27%),
+    linear-gradient(rgba(105, 164, 212, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(105, 164, 212, 0.03) 1px, transparent 1px) !important;
+  background-size: cover, cover, 48px 48px, 48px 48px !important;
+  opacity: 0.54 !important;
 }
 
 html[data-theme] .app-background-side {
@@ -1228,6 +1239,21 @@ html[data-theme] .klol-app-root {
   color: var(--bloom-ink) !important;
 }
 
+html[data-theme] .klol-app-shell::before {
+  background:
+    radial-gradient(circle at 18% 4%, rgba(255, 188, 216, 0.24), transparent 30%),
+    radial-gradient(circle at 84% 12%, rgba(148, 218, 255, 0.3), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 58%) !important;
+  opacity: 1 !important;
+}
+
+html[data-theme][data-theme] .destruction-coin-toss__primary {
+  border-color: rgba(240, 126, 173, 0.38) !important;
+  background: linear-gradient(135deg, #ff8fbd, #84cfff) !important;
+  color: #17314b !important;
+  box-shadow: 0 10px 24px rgba(103, 174, 223, 0.22) !important;
+}
+
 html[data-theme] :is(.klol-app-header, .klol-app-bottom-nav) {
   border-color: var(--bloom-border) !important;
   background: rgba(255, 255, 255, 0.94) !important;
@@ -1454,6 +1480,14 @@ html[data-theme] :is(a, button, input, select, textarea, summary, [tabindex]):fo
 }
 
 @media (max-width: 720px) {
+  html[data-theme][data-theme] body:has(.klol-app-root),
+  html[data-theme][data-theme] .app-background-root,
+  html[data-theme][data-theme] .klol-app-root {
+    background:
+      radial-gradient(circle at 12% 0%, var(--bloom-sky), transparent 30%),
+      linear-gradient(180deg, var(--bloom-canvas), var(--bloom-canvas-2)) !important;
+  }
+
   html[data-theme] .app-background-root::before {
     opacity: 0.34;
   }

@@ -82,19 +82,8 @@ export default async function AppRecruitsPage({ searchParams }: AppRecruitsPageP
   const params = await searchParams;
   const activeStatus = normalizeStatus(params?.status);
   const requestedPage = parsePositivePage(params?.page);
-  const siteSettings = await getSiteSettings();
-  const counts = await prisma.recruitParty.groupBy({
-    by: ["status"],
-    _count: { _all: true },
-  }).catch(() => []);
-  const totalCount = counts.reduce((sum, item) => sum + item._count._all, 0);
-  const countByStatus = new Map(counts.map((item) => [item.status, item._count._all]));
-  const selectedCount = activeStatus === "ALL"
-    ? totalCount
-    : countByStatus.get(activeStatus) ?? 0;
-  const totalPages = Math.max(1, Math.ceil(selectedCount / PAGE_SIZE));
-  const currentPage = Math.min(requestedPage, totalPages);
-  const parties = await prisma.recruitParty.findMany({
+  const speculativePage = requestedPage <= 1_000 ? requestedPage : 1;
+  const loadPartyPage = (page: number) => prisma.recruitParty.findMany({
     where: activeStatus === "ALL" ? undefined : { status: activeStatus },
     select: {
       recruitNo: true,
@@ -117,9 +106,28 @@ export default async function AppRecruitsPage({ searchParams }: AppRecruitsPageP
       },
     },
     orderBy: [{ status: "asc" }, { recruitDate: "desc" }, { resetSeq: "desc" }, { recruitNo: "asc" }],
-    skip: (currentPage - 1) * PAGE_SIZE,
+    skip: (page - 1) * PAGE_SIZE,
     take: PAGE_SIZE,
-  }).then((rows) => rows.map(toPublicRecruitDto));
+  });
+  const [siteSettings, counts, initialPartyRows] = await Promise.all([
+    getSiteSettings(),
+    prisma.recruitParty.groupBy({
+      by: ["status"],
+      _count: { _all: true },
+    }).catch(() => []),
+    loadPartyPage(speculativePage),
+  ]);
+  const totalCount = counts.reduce((sum, item) => sum + item._count._all, 0);
+  const countByStatus = new Map(counts.map((item) => [item.status, item._count._all]));
+  const selectedCount = activeStatus === "ALL"
+    ? totalCount
+    : countByStatus.get(activeStatus) ?? 0;
+  const totalPages = Math.max(1, Math.ceil(selectedCount / PAGE_SIZE));
+  const currentPage = Math.min(requestedPage, totalPages);
+  const partyRows = currentPage === speculativePage
+    ? initialPartyRows
+    : await loadPartyPage(currentPage);
+  const parties = partyRows.map(toPublicRecruitDto);
   const rangeStart = selectedCount === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
   const rangeEnd = Math.min(currentPage * PAGE_SIZE, selectedCount);
 

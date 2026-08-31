@@ -6,17 +6,16 @@
   gap: 14px;
   overflow: hidden;
   padding: 16px;
-  border: 1px solid rgba(96, 165, 250, 0.24);
+  border: 1px solid rgba(126, 174, 223, 0.34);
   border-radius: 18px;
   background:
-    radial-gradient(circle at 50% -10%, rgba(96, 165, 250, 0.24), transparent 34%),
-    radial-gradient(circle at 8% 55%, rgba(37, 99, 235, 0.14), transparent 38%),
-    radial-gradient(circle at 92% 55%, rgba(239, 68, 68, 0.12), transparent 38%),
-    linear-gradient(135deg, rgba(6, 17, 36, 0.92), rgba(2, 8, 23, 0.92));
+    radial-gradient(circle at 12% 8%, rgba(255, 171, 205, 0.24), transparent 32%),
+    radial-gradient(circle at 88% 12%, rgba(116, 203, 255, 0.24), transparent 34%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(241, 249, 255, 0.96));
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 18px 46px rgba(0, 0, 0, 0.24),
-    0 0 30px rgba(37, 99, 235, 0.14);
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 18px 46px rgba(71, 105, 141, 0.13),
+    0 0 30px rgba(112, 196, 255, 0.1);
   isolation: isolate;
 }
 
@@ -31,8 +30,8 @@
 
 .destruction-coin-toss::before {
   background-image:
-    linear-gradient(rgba(125, 211, 252, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(125, 211, 252, 0.05) 1px, transparent 1px);
+    linear-gradient(rgba(92, 157, 214, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(92, 157, 214, 0.05) 1px, transparent 1px);
   background-size: 42px 42px;
   mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
   opacity: 0.52;
@@ -40,27 +39,24 @@
 
 .destruction-coin-toss::after {
   background:
-    linear-gradient(100deg, transparent 0%, rgba(125, 211, 252, 0.12) 46%, rgba(250, 204, 21, 0.14) 50%, transparent 56%),
-    url("/images/theme/dark/auction/auction-bracket-bg.svg") center/cover no-repeat;
-  opacity: 0.18;
+    linear-gradient(100deg, transparent 0%, rgba(125, 211, 252, 0.12) 46%, rgba(255, 158, 196, 0.14) 50%, transparent 56%),
+    url("/images/theme/bloom/klol-bloom-hero-v1.webp") center 42% / cover no-repeat;
+  opacity: 0.08;
   transform: scale(1.08);
 }
 
 .destruction-coin-toss--video {
   background:
-    linear-gradient(180deg, rgba(2, 8, 23, 0.64), rgba(2, 8, 23, 0.9)),
-    radial-gradient(circle at 50% 12%, rgba(56, 189, 248, 0.2), transparent 42%),
-    radial-gradient(circle at 50% 100%, rgba(250, 204, 21, 0.14), transparent 36%),
-    url("/images/generated/klol-auction-stage-draw-cards.webp") center 58% / cover no-repeat,
-    linear-gradient(135deg, rgba(6, 17, 36, 0.94), rgba(2, 8, 23, 0.96));
+    radial-gradient(circle at 12% 0%, rgba(255, 172, 205, 0.25), transparent 36%),
+    radial-gradient(circle at 88% 2%, rgba(116, 203, 255, 0.28), transparent 38%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(239, 248, 255, 0.96));
 }
 
 .destruction-coin-toss--video::after {
   background:
-    linear-gradient(100deg, transparent 0%, rgba(125, 211, 252, 0.10) 45%, rgba(250, 204, 21, 0.12) 50%, transparent 58%),
-    radial-gradient(circle at 50% 42%, rgba(56, 189, 248, 0.16), transparent 28%),
-    url("/images/generated/klol-auction-stage-draw-cards.webp") center 58% / cover no-repeat;
-  opacity: 0.2;
+    linear-gradient(100deg, transparent 0%, rgba(125, 211, 252, 0.1) 45%, rgba(255, 158, 196, 0.12) 50%, transparent 58%),
+    url("/images/theme/bloom/klol-bloom-hero-v1.webp") center 42% / cover no-repeat;
+  opacity: 0.07;
   transform: scale(1.02);
 }
 
@@ -74,7 +70,7 @@
 
 .destruction-coin-toss__eyebrow {
   display: block;
-  color: var(--k-cyan);
+  color: #377db6;
   font-size: 11px;
   font-weight: 950;
   letter-spacing: 0.16em;
@@ -82,7 +78,7 @@
 
 .destruction-coin-toss__header :is(h1, h2) {
   margin: 5px 0 0;
-  color: var(--k-text-strong);
+  color: #213752;
   font-size: 17px;
   font-weight: 950;
 }
@@ -94,10 +90,10 @@
   min-height: 34px;
   max-width: 100%;
   padding: 8px 12px;
-  border: 1px solid rgba(125, 211, 252, 0.22);
+  border: 1px solid rgba(115, 171, 219, 0.32);
   border-radius: 999px;
-  background: rgba(2, 8, 23, 0.56);
-  color: #dbeafe;
+  background: rgba(255, 255, 255, 0.82);
+  color: #294866;
   font-size: 12px;
   font-weight: 900;
   text-align: right;
@@ -259,9 +255,9 @@
   overflow: hidden;
   min-height: 104px;
   padding: 16px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  border: 1px solid rgba(125, 164, 202, 0.28);
   border-radius: 18px;
-  background: rgba(2, 8, 23, 0.58);
+  background: rgba(255, 255, 255, 0.76);
   transition:
     border-color 240ms ease,
     box-shadow 240ms ease,
@@ -296,7 +292,7 @@
 }
 
 .destruction-coin-toss__team span {
-  color: var(--k-muted);
+  color: #5f748c;
   font-size: 11px;
   font-weight: 900;
   letter-spacing: 0.12em;
@@ -304,7 +300,7 @@
 
 .destruction-coin-toss__team strong {
   margin-top: 12px;
-  color: var(--k-text-strong);
+  color: #213752;
   font-size: clamp(18px, 2vw, 24px);
   font-weight: 950;
   line-height: 1.15;
@@ -444,16 +440,16 @@
   justify-content: center;
   gap: 8px;
   padding: 6px;
-  border: 1px solid rgba(125, 211, 252, 0.16);
+  border: 1px solid rgba(113, 166, 211, 0.25);
   border-radius: 999px;
-  background: rgba(2, 8, 23, 0.54);
+  background: rgba(255, 255, 255, 0.82);
 }
 
 .destruction-coin-toss__side-row span {
   min-width: 64px;
   padding: 8px 12px;
   border-radius: 999px;
-  color: var(--k-muted);
+  color: #5e748c;
   font-size: 12px;
   font-weight: 950;
   text-align: center;
@@ -466,9 +462,9 @@
 
 .destruction-coin-toss__side-row span.is-active {
   background:
-    linear-gradient(135deg, rgba(250, 204, 21, 0.26), rgba(14, 165, 233, 0.16)),
-    rgba(15, 23, 42, 0.84);
-  color: #fff7d6;
+    linear-gradient(135deg, rgba(255, 199, 220, 0.62), rgba(174, 225, 255, 0.66)),
+    #ffffff;
+  color: #294866;
   box-shadow:
     inset 0 0 0 1px rgba(250, 204, 21, 0.24),
     0 0 20px rgba(250, 204, 21, 0.14);
@@ -486,7 +482,7 @@
 }
 
 .destruction-coin-toss__inputs span {
-  color: var(--k-muted);
+  color: #5e748c;
   font-size: 11px;
   font-weight: 900;
   letter-spacing: 0.1em;
@@ -495,10 +491,10 @@
 .destruction-coin-toss__inputs input {
   width: 100%;
   min-height: 40px;
-  border: 1px solid rgba(125, 211, 252, 0.2);
+  border: 1px solid rgba(113, 166, 211, 0.3);
   border-radius: 13px;
-  background: rgba(2, 8, 23, 0.62);
-  color: var(--k-text-strong);
+  background: rgba(255, 255, 255, 0.9);
+  color: #213752;
   padding: 0 12px;
   font-weight: 850;
   outline: none;
@@ -524,9 +520,9 @@
 .destruction-coin-toss__copy {
   min-height: 40px;
   border-radius: 13px;
-  border: 1px solid rgba(125, 211, 252, 0.22);
-  background: rgba(2, 8, 23, 0.58);
-  color: #dbeafe;
+  border: 1px solid rgba(113, 166, 211, 0.3);
+  background: rgba(255, 255, 255, 0.9);
+  color: #294866;
   font-size: 13px;
   font-weight: 900;
   transition:
@@ -537,18 +533,17 @@
 }
 
 .destruction-coin-toss__primary {
-  border-color: rgba(250, 204, 21, 0.42);
+  border-color: rgba(240, 126, 173, 0.38);
   background:
-    linear-gradient(135deg, rgba(161, 98, 7, 0.56), rgba(15, 23, 42, 0.76)),
-    rgba(2, 8, 23, 0.64);
-  color: #fff7d6;
-  box-shadow: 0 0 22px rgba(250, 204, 21, 0.12);
+    linear-gradient(135deg, #ff8fbd, #84cfff);
+  color: #17314b;
+  box-shadow: 0 10px 24px rgba(103, 174, 223, 0.22);
 }
 
 .destruction-coin-toss__choice.is-active {
   border-color: rgba(34, 211, 238, 0.55);
-  background: rgba(14, 165, 233, 0.18);
-  color: #e0f7ff;
+  background: rgba(184, 229, 255, 0.66);
+  color: #294866;
   box-shadow: 0 0 22px rgba(14, 165, 233, 0.14);
 }
 
@@ -570,10 +565,9 @@
 
 .coin-toss-page::before {
   background:
-    linear-gradient(90deg, rgba(2, 8, 23, 0.96), rgba(2, 8, 23, 0.7) 45%, rgba(2, 8, 23, 0.96)),
-    radial-gradient(circle at 50% 18%, rgba(56, 189, 248, 0.18), transparent 34%),
-    url("/images/generated/klol-auction-stage-draw-cards.webp") center top / cover no-repeat;
-  opacity: 0.34;
+    linear-gradient(90deg, rgba(248, 252, 255, 0.96), rgba(255, 247, 252, 0.72) 48%, rgba(248, 252, 255, 0.96)),
+    url("/images/theme/bloom/klol-bloom-hero-v1.webp") center 34% / cover no-repeat;
+  opacity: 0.18;
 }
 
 .coin-toss-page::after {
@@ -594,8 +588,8 @@
   min-height: 150px;
   align-items: center;
   background:
-    linear-gradient(90deg, rgba(2, 8, 23, 0.86), rgba(8, 20, 39, 0.42)),
-    url("/images/generated/klol-auction-stage-draw-cards.webp") center 46% / cover no-repeat;
+    linear-gradient(90deg, rgba(255, 255, 255, 0.9), rgba(244, 251, 255, 0.58)),
+    url("/images/theme/bloom/klol-bloom-hero-v1.webp") center 42% / cover no-repeat;
 }
 
 .destruction-coin-toss--standalone {
@@ -623,8 +617,8 @@
   gap: 12px;
   border-radius: 24px;
   background:
-    linear-gradient(180deg, rgba(2, 8, 23, 0.18), rgba(2, 8, 23, 0.72)),
-    url("/images/generated/klol-auction-stage-draw-cards.webp") center / cover no-repeat;
+    radial-gradient(circle at 12% 8%, rgba(255, 171, 205, 0.22), transparent 34%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(240, 249, 255, 0.94));
 }
 
 .destruction-coin-toss--app {
@@ -666,7 +660,7 @@
 .destruction-coin-toss__copy:not(:disabled):hover {
   transform: translateY(-1px);
   border-color: rgba(125, 211, 252, 0.46);
-  background-color: rgba(15, 30, 52, 0.82);
+  background-color: rgba(229, 245, 255, 0.96);
 }
 
 .destruction-coin-toss__primary:disabled,

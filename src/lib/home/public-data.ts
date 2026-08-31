@@ -3,6 +3,18 @@ import { prisma } from "@/lib/prisma/client";
 import { getSiteSettings } from "@/lib/site/settings";
 import { resolvePublicPlayerDisplayName } from "@/lib/public/player";
 
+type HomeSeasonParticipantCountRow = {
+  participantCount: number;
+};
+
+export type HomePlayerSeasonSummary = {
+  seriesCount: number;
+  participantCount: number;
+  kills: number;
+  deaths: number;
+  assists: number;
+};
+
 function getKoreaDayRange(date: Date) {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Seoul",
@@ -154,21 +166,54 @@ export const getCachedHomePublicData = unstable_cache(
 
 export const getCachedHomeSeasonSummary = unstable_cache(
   async (seasonId: number) => {
-    const [matchCount, gameCount, participants] = await Promise.all([
+    const [matchCount, gameCount, participantCounts] = await Promise.all([
       prisma.matchSeries.count({ where: { seasonId } }),
       prisma.matchGame.count({ where: { series: { seasonId } } }),
-      prisma.matchParticipant.findMany({
-        where: { game: { series: { seasonId } } },
-        distinct: ["playerId"],
-        select: { playerId: true },
-      }),
+      prisma.$queryRaw<HomeSeasonParticipantCountRow[]>`
+        SELECT COUNT(DISTINCT participant."playerId")::int AS "participantCount"
+        FROM "MatchParticipant" AS participant
+        INNER JOIN "MatchGame" AS game ON game."id" = participant."gameId"
+        INNER JOIN "MatchSeries" AS series ON series."id" = game."seriesId"
+        WHERE series."seasonId" = ${seasonId}
+      `,
     ]);
 
-    return { matchCount, gameCount, participantCount: participants.length };
+    return {
+      matchCount,
+      gameCount,
+      participantCount: participantCounts[0]?.participantCount ?? 0,
+    };
   },
-  ["home-season-summary-v1"],
+  ["home-season-summary-v2-db-aggregate"],
   { revalidate: 60, tags: ["home-public", "stats-top"] },
 );
+
+export async function getHomePlayerSeasonSummary(
+  seasonId: number,
+  playerId: number,
+): Promise<HomePlayerSeasonSummary> {
+  const rows = await prisma.$queryRaw<HomePlayerSeasonSummary[]>`
+    SELECT
+      COUNT(DISTINCT game."seriesId")::int AS "seriesCount",
+      COUNT(participant."id")::int AS "participantCount",
+      COALESCE(SUM(participant."kills"), 0)::int AS "kills",
+      COALESCE(SUM(participant."deaths"), 0)::int AS "deaths",
+      COALESCE(SUM(participant."assists"), 0)::int AS "assists"
+    FROM "MatchParticipant" AS participant
+    INNER JOIN "MatchGame" AS game ON game."id" = participant."gameId"
+    INNER JOIN "MatchSeries" AS series ON series."id" = game."seriesId"
+    WHERE series."seasonId" = ${seasonId}
+      AND participant."playerId" = ${playerId}
+  `;
+
+  return rows[0] ?? {
+    seriesCount: 0,
+    participantCount: 0,
+    kills: 0,
+    deaths: 0,
+    assists: 0,
+  };
+}
 
 export const getCachedHomePlayerTiers = unstable_cache(
   async (playerIds: number[]) => {

@@ -13,6 +13,7 @@ import {
   getCachedHomePlayerTiers,
   getCachedHomePublicData,
   getCachedHomeSeasonSummary,
+  getHomePlayerSeasonSummary,
 } from "@/lib/home/public-data";
 import { calculateMvpScore, getGameMvpParticipant } from "@/lib/mvp";
 import { getCachedStatsTopData } from "@/lib/stats/top";
@@ -208,26 +209,21 @@ export default async function HomePage() {
     ),
   );
 
-  const [topPlayerTiers, seasonSummary, mySeasonParticipants, mySeasonMvpCount] =
+  const [topPlayerTiers, seasonSummary, mySeasonSummary, mySeasonMvpCount] =
     await Promise.all([
       getCachedHomePlayerTiers(top3PlayerIds),
       currentSeasonId
         ? getCachedHomeSeasonSummary(currentSeasonId)
         : Promise.resolve({ matchCount: 0, gameCount: 0, participantCount: 0 }),
       currentSeasonId && currentUser?.playerId
-        ? prisma.matchParticipant.findMany({
-            where: {
-              playerId: currentUser.playerId,
-              game: { series: { seasonId: currentSeasonId } },
-            },
-            select: {
-              kills: true,
-              deaths: true,
-              assists: true,
-              game: { select: { seriesId: true } },
-            },
-          })
-        : Promise.resolve([]),
+        ? getHomePlayerSeasonSummary(currentSeasonId, currentUser.playerId)
+        : Promise.resolve({
+            seriesCount: 0,
+            participantCount: 0,
+            kills: 0,
+            deaths: 0,
+            assists: 0,
+          }),
       currentSeasonId && currentUser?.playerId
         ? prisma.matchGame.count({
             where: {
@@ -328,30 +324,18 @@ export default async function HomePage() {
     ? formatDate(latestMvpSeries.matchDate)
     : null;
 
-  const mySeasonSeriesCount = new Set(
-    mySeasonParticipants.map((participant) => participant.game.seriesId),
-  ).size;
-  const mySeasonKills = mySeasonParticipants.reduce(
-    (sum, participant) => sum + participant.kills,
-    0,
-  );
-  const mySeasonDeaths = mySeasonParticipants.reduce(
-    (sum, participant) => sum + participant.deaths,
-    0,
-  );
-  const mySeasonAssists = mySeasonParticipants.reduce(
-    (sum, participant) => sum + participant.assists,
-    0,
-  );
   const mySeasonKda =
-    mySeasonParticipants.length > 0
-      ? ((mySeasonKills + mySeasonAssists) / Math.max(1, mySeasonDeaths)).toFixed(2)
+    mySeasonSummary.participantCount > 0
+      ? (
+          (mySeasonSummary.kills + mySeasonSummary.assists) /
+          Math.max(1, mySeasonSummary.deaths)
+        ).toFixed(2)
       : "-";
 
   const visibleSeasonSummaryStats = currentUser?.playerId
     ? [
         { label: "현재 시즌", value: topData.currentSeason?.name ?? "시즌 없음" },
-        { label: "내전 참가", value: mySeasonSeriesCount },
+        { label: "내전 참가", value: mySeasonSummary.seriesCount },
         { label: "평균 KDA", value: mySeasonKda },
         { label: "MVP", value: mySeasonMvpCount },
       ]
