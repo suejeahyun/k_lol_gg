@@ -13,9 +13,8 @@ type ApplyStatus = "APPLIED" | "CONFIRMED" | "REJECTED" | "RESERVE" | "CANCELLED
 
 type Player = {
   id: number;
-  name: string;
-  nickname: string;
-  tag: string;
+  displayName: string;
+  riotId: { gameName: string; tagLine: string | null } | null;
   peakTier: string | null;
   currentTier: string | null;
   mainPosition: ApplyPosition | null;
@@ -506,8 +505,8 @@ function ParticipationList({ tournamentId, players, laneLimits }: { tournamentId
 
       <div className="participation-header participation-header--captain">
         <span></span>
-        <span>이름</span>
-        <span>닉네임#태그</span>
+        <span>공개 이름</span>
+        <span>Riot ID</span>
         <span>현재티어</span>
         <span>최고티어</span>
         <span>주/부 포지션</span>
@@ -525,9 +524,11 @@ function ParticipationList({ tournamentId, players, laneLimits }: { tournamentId
             style={{ textDecoration: "none" }}
           >
             <span>{index + 1}</span>
-            <strong>{player.name}</strong>
+            <strong>{player.displayName}</strong>
             <em>
-              {player.nickname}#{player.tag}
+              {player.riotId
+                ? `${player.riotId.gameName}#${player.riotId.tagLine}`
+                : "Riot ID 비공개"}
             </em>
             <span>{player.currentTier ?? "-"}</span>
             <span>{player.peakTier ?? "-"}</span>
@@ -554,9 +555,11 @@ function ParticipationList({ tournamentId, players, laneLimits }: { tournamentId
               style={{ textDecoration: "none" }}
             >
               <span>초과 {index + 1}</span>
-              <strong>{player.name}</strong>
+              <strong>{player.displayName}</strong>
               <em>
-                {player.nickname}#{player.tag}
+                {player.riotId
+                  ? `${player.riotId.gameName}#${player.riotId.tagLine}`
+                  : "Riot ID 비공개"}
               </em>
               <span>{player.currentTier ?? "-"}</span>
               <span>{player.peakTier ?? "-"}</span>

@@ -6,6 +6,16 @@ import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { Prisma } from "@prisma/client";
 import { readJsonObject } from "@/lib/http/json-body";
+import { toPublicPlayerDetailDto } from "@/lib/public/player";
+
+const PRIVATE_NO_STORE = "private, no-store, max-age=0";
+
+function publicNotFound() {
+  return NextResponse.json(
+    { message: "플레이어를 찾을 수 없습니다." },
+    { status: 404, headers: { "Cache-Control": PRIVATE_NO_STORE } },
+  );
+}
 
 type RouteContext = {
   params: Promise<{
@@ -45,48 +55,25 @@ export async function GET(_request: NextRequest, context: RouteContext) {
     const { playerId } = await context.params;
     const id = Number(playerId);
 
-    if (!Number.isInteger(id)) {
-      return NextResponse.json(
-        { message: "유효하지 않은 playerId 입니다." },
-        { status: 400 }
-      );
-    }
+    if (!Number.isInteger(id) || id <= 0) return publicNotFound();
 
-    const player = await prisma.player.findUnique({
-      where: { id },
-      include: {
-        participants: {
-          orderBy: {
-            game: {
-              series: {
-                matchDate: "desc",
-              },
-            },
-          },
-          include: {
-            champion: true,
-            game: {
-              include: {
-                series: {
-                  include: {
-                    season: true,
-                  },
-                },
-              },
-            },
-          },
-        },
+    const player = await prisma.player.findFirst({
+      where: { id, isActive: true },
+      select: {
+        id: true,
+        nickname: true,
+        tag: true,
+        currentTier: true,
+        peakTier: true,
+        createdAt: true,
       },
     });
 
-    if (!player) {
-      return NextResponse.json(
-        { message: "플레이어를 찾을 수 없습니다." },
-        { status: 404 }
-      );
-    }
+    if (!player) return publicNotFound();
 
-    return NextResponse.json(player);
+    return NextResponse.json(toPublicPlayerDetailDto(player), {
+      headers: { "Cache-Control": PRIVATE_NO_STORE },
+    });
   } catch (error) {
     logServerError("[PLAYER_DETAIL_GET_ERROR]", error);
 

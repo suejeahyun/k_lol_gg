@@ -8,9 +8,8 @@ type ApplyPosition = (typeof POSITIONS)[number];
 
 type Player = {
   id: number;
-  name: string;
-  nickname: string;
-  tag: string;
+  displayName: string;
+  riotId: { gameName: string; tagLine: string | null } | null;
   peakTier: string | null;
   currentTier: string | null;
   mainPosition: ApplyPosition | null;
@@ -297,8 +296,8 @@ function ParticipationList({ players }: { players: Player[] }) {
             <thead>
               <tr>
                 <th>No</th>
-                <th>이름</th>
-                <th>닉네임#태그</th>
+                <th>공개 이름</th>
+                <th>Riot ID</th>
                 <th>현재티어</th>
                 <th>최고티어</th>
                 <th>주라인</th>
@@ -309,9 +308,11 @@ function ParticipationList({ players }: { players: Player[] }) {
               {players.map((player, index) => (
                 <tr key={player.id}>
                   <td>{index + 1}</td>
-                  <td>{player.name}</td>
+                  <td>{player.displayName}</td>
                   <td>
-                    {player.nickname}#{player.tag}
+                    {player.riotId
+                      ? `${player.riotId.gameName}#${player.riotId.tagLine}`
+                      : "Riot ID 비공개"}
                   </td>
                   <td>{player.currentTier ?? "-"}</td>
                   <td>{player.peakTier ?? "-"}</td>

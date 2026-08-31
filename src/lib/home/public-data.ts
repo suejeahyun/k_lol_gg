@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma/client";
 import { getSiteSettings } from "@/lib/site/settings";
+import { resolvePublicPlayerDisplayName } from "@/lib/public/player";
 
 function getKoreaDayRange(date: Date) {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -100,7 +101,6 @@ async function loadHomePublicData() {
                   player: {
                     select: {
                       id: true,
-                      name: true,
                       nickname: true,
                       tag: true,
                     },
@@ -129,6 +129,18 @@ async function loadHomePublicData() {
     latestMvpMatches: latestMvpMatches.map((match) => ({
       ...match,
       matchDate: match.matchDate.toISOString(),
+      games: match.games.map((game) => ({
+        ...game,
+        participants: game.participants.map((participant) => ({
+          ...participant,
+          player: {
+            id: participant.player.id,
+            displayName: resolvePublicPlayerDisplayName(participant.player),
+            nickname: participant.player.nickname,
+            tag: participant.player.tag,
+          },
+        })),
+      })),
     })),
     siteSettings,
   };

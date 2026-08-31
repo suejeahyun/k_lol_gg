@@ -298,7 +298,7 @@ export default async function NewMatchPage({
                 key={image.id}
                 target="_blank"
                 className="admin-button admin-button--ghost"
-                href={`/api/admin/private-assets/${image.privateAssetId}`}
+                href={`/admin/private-assets/${image.privateAssetId}`}
               >
                 {image.gameNumber}세트 사진 · {image.ocrStatus}
                 {image.ocrError ? " (확인 필요)" : ""}

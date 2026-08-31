@@ -100,7 +100,7 @@ export default async function PlayerRiotDetailPage({ params }: PlayerRiotDetailP
         <div>
           <p className="page-eyebrow">Riot 솔랭 분석</p>
           <h1 className="page-title">
-            {analysis.player.name} ({analysis.player.nickname}#{analysis.player.tag})
+            {analysis.player.displayName}
           </h1>
           <div className={styles.heroMeta}>
             <span className={`${styles.badge} ${analysis.riotAccount ? styles.badgeSuccess : styles.badgeWarn}`}>

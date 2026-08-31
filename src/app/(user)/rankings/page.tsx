@@ -37,7 +37,7 @@ type RankingApiResponse = {
 
 type RankingPlayer = {
   playerId: number;
-  name: string;
+  displayName: string;
   nickname: string;
   tag: string;
   totalGames: number;
@@ -199,7 +199,7 @@ function TopRankingCard({
 
               <div className="ranking-top-player__content">
                 <div className="ranking-top-player__main">
-                  <strong>{player.name}</strong>
+                  <strong>{player.displayName}</strong>
                   <span>
                     {player.nickname}#{player.tag}
                   </span>
@@ -256,7 +256,7 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
   const sortedRankings = [...eligibleRankings].sort((a, b) => {
     let result = 0;
 
-    if (sort === "name") result = a.name.localeCompare(b.name);
+    if (sort === "name") result = a.displayName.localeCompare(b.displayName);
     if (sort === "participationCount") result = a.participationCount - b.participationCount;
     if (sort === "totalGames") result = a.totalGames - b.totalGames;
     if (sort === "winRate") result = a.winRate - b.winRate;
@@ -270,7 +270,7 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
       b.winRate - a.winRate ||
       b.participationCount - a.participationCount ||
       b.mvpCount - a.mvpCount ||
-      a.name.localeCompare(b.name)
+      a.displayName.localeCompare(b.displayName)
     );
   });
 
@@ -295,7 +295,7 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
         b.winRate - a.winRate ||
         b.participationCount - a.participationCount ||
         b.mvpCount - a.mvpCount ||
-        a.name.localeCompare(b.name)
+        a.displayName.localeCompare(b.displayName)
       );
     })
     .slice(0, 3);
@@ -306,7 +306,7 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
         b.participationCount - a.participationCount ||
         b.winRate - a.winRate ||
         b.mvpCount - a.mvpCount ||
-        a.name.localeCompare(b.name)
+        a.displayName.localeCompare(b.displayName)
       );
     })
     .slice(0, 3);
@@ -317,7 +317,7 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
       return (
         b.mvpCount - a.mvpCount ||
         b.winRate - a.winRate ||
-        a.name.localeCompare(b.name)
+        a.displayName.localeCompare(b.displayName)
       );
     })
     .slice(0, 3);
@@ -465,7 +465,7 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
                         </div>
 
                         <div className="ranking-col ranking-name">
-                          {player.name}
+                          {player.displayName}
                         </div>
 
                         <div className="ranking-col ranking-riot">

@@ -5,6 +5,7 @@ import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
 import { AppEmpty, AppSection } from "@/components/app-mobile/AppCards";
 import { prisma } from "@/lib/prisma/client";
 import { formatRiotPosition, formatRiotTier } from "@/lib/riot/player-analysis";
+import { resolvePublicPlayerDisplayName } from "@/lib/public/player";
 
 export const dynamic = "force-dynamic";
 
@@ -51,7 +52,6 @@ export default async function AppPlayerDetailPage({ params }: AppPlayerDetailPag
     where: { id, isActive: true },
     select: {
       id: true,
-      name: true,
       nickname: true,
       tag: true,
       currentTier: true,
@@ -168,6 +168,7 @@ export default async function AppPlayerDetailPage({ params }: AppPlayerDetailPag
   if (!player) {
     notFound();
   }
+  const displayName = resolvePublicPlayerDisplayName(player);
 
   const stat = player.seasonStats[0];
   const totalGames = stat?.totalGames ?? player.participants.length;
@@ -205,7 +206,7 @@ export default async function AppPlayerDetailPage({ params }: AppPlayerDetailPag
     <AppMobileShell subtitle="플레이어 상세">
       <section className="klol-app-hero">
         <div className="klol-app-kicker">PLAYER DETAIL</div>
-        <h1 className="klol-app-title">{player.name}</h1>
+        <h1 className="klol-app-title">{displayName}</h1>
         <p className="klol-app-subtitle">{player.nickname}#{player.tag}</p>
         <Link className="klol-app-secondary klol-app-full-link" href="/app/players">
           플레이어 목록으로

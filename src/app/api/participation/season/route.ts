@@ -7,6 +7,7 @@ import { writeAdminLog } from "@/lib/admin-log";
 import { verifyAuthToken } from "@/lib/auth/token";
 import { getTodayKstRange } from "@/lib/date/kst";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
+import { resolvePublicPlayerDisplayName, toPublicRiotId } from "@/lib/public/player";
 
 const POSITIONS = ["TOP", "JGL", "MID", "ADC", "SUP", "ALL"] as const;
 
@@ -50,7 +51,6 @@ async function findLoginPlayer(req: NextRequest) {
       player: {
         select: {
           id: true,
-          name: true,
           nickname: true,
           tag: true,
         },
@@ -107,7 +107,6 @@ export async function GET(req: NextRequest) {
         player: {
           select: {
             id: true,
-            name: true,
             nickname: true,
             tag: true,
             peakTier: true,
@@ -122,9 +121,8 @@ export async function GET(req: NextRequest) {
       players: applies.map((apply) => ({
         applyId: apply.id,
         id: apply.player.id,
-        name: apply.player.name,
-        nickname: apply.player.nickname,
-        tag: apply.player.tag,
+        displayName: resolvePublicPlayerDisplayName(apply.player),
+        riotId: toPublicRiotId(apply.player),
         peakTier: apply.player.peakTier,
         currentTier: apply.player.currentTier,
         mainPosition: apply.mainPosition,

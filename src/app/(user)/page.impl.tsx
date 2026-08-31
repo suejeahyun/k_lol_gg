@@ -302,7 +302,7 @@ export default async function HomePage() {
           matchDate: match.matchDate,
           gameNumber: game.gameNumber,
           playerId: participant.player.id,
-          name: participant.player.name,
+          name: participant.player.displayName,
           nickname: participant.player.nickname,
           tag: participant.player.tag,
           championName: participant.champion.name,
@@ -478,7 +478,7 @@ export default async function HomePage() {
                               {mode.ace.rankLine}
                             </span>
                             <strong className="home-top3-ace__name">
-                              {mode.ace.player.name}
+                              {mode.ace.player.displayName}
                             </strong>
                             <small className="home-top3-ace__nickname">
                               {mode.ace.player.nickname}#{mode.ace.player.tag}
@@ -531,7 +531,7 @@ export default async function HomePage() {
                                   />
                                 </span>
                                 <span className="home-top3-chaser__body">
-                                  <strong>{slot.player.name}</strong>
+                                  <strong>{slot.player.displayName}</strong>
                                   <small>{slot.player.nickname}#{slot.player.tag}</small>
                                 </span>
                                 <span className="home-top3-chaser__stats">

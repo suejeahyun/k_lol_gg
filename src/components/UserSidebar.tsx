@@ -4,18 +4,13 @@ import Link from "next/link";
 import AuthSection from "./AuthSection";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { loadPublicSiteSettings } from "@/lib/site/public-settings-client";
 
 type UserStatus = "PENDING" | "APPROVED" | "REJECTED";
 
 type User = {
   userId: string;
   status: UserStatus;
-};
-
-type PublicSiteSettings = {
-  siteName?: string;
-  siteTagline?: string | null;
-  siteLogoUrl?: string | null;
 };
 
 type UserSidebarItem = {
@@ -140,12 +135,10 @@ export default function UserSidebar() {
   useEffect(() => {
     async function fetchSiteSettings() {
       try {
-        const res = await fetch("/api/site-settings", { cache: "no-store" });
-        if (!res.ok) return;
-        const data = (await res.json()) as { settings?: PublicSiteSettings };
-        if (data.settings?.siteName) setSiteName(data.settings.siteName);
-        setSiteTagline(data.settings?.siteTagline || "내전 · 랭킹 · AI 데이터");
-        setSiteLogoUrl(data.settings?.siteLogoUrl ?? null);
+        const settings = await loadPublicSiteSettings();
+        if (settings.siteName) setSiteName(settings.siteName);
+        setSiteTagline(settings.siteTagline || "내전 · 랭킹 · AI 데이터");
+        setSiteLogoUrl(settings.siteLogoUrl ?? null);
       } catch {
         setSiteName("K-LOL.GG");
         setSiteTagline("내전 · 랭킹 · AI 데이터");

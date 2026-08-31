@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma/client";
 import { writeAdminLog } from "@/lib/admin-log";
 import { requireApprovedUser } from "@/lib/auth/session";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
+import { resolvePublicPlayerDisplayName, toPublicRiotId } from "@/lib/public/player";
 
 const APPLY_POSITIONS = ["TOP", "JGL", "MID", "ADC", "SUP", "ALL"] as const;
 
@@ -68,7 +69,6 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
         player: {
           select: {
             id: true,
-            name: true,
             nickname: true,
             tag: true,
             peakTier: true,
@@ -85,9 +85,8 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
       event,
       players: applies.map((apply) => ({
         id: apply.player.id,
-        name: apply.player.name,
-        nickname: apply.player.nickname,
-        tag: apply.player.tag,
+        displayName: resolvePublicPlayerDisplayName(apply.player),
+        riotId: toPublicRiotId(apply.player),
         peakTier: apply.player.peakTier,
         currentTier: apply.player.currentTier,
         mainPosition: apply.mainPosition,

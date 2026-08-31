@@ -1,6 +1,7 @@
 /* K-LOL.GG 색상 / 테마 변수 */
 
 :root {
+  /* Brand and semantic colors */
   --k-bg: #050b16;
   --k-bg-2: #071426;
   --k-bg-3: #0b1b31;
@@ -16,9 +17,54 @@
   --k-blue: #3b82f6;
   --k-blue-2: #60a5fa;
   --k-cyan: #22d3ee;
+  --k-success: #34d399;
+  --k-warning: #fbbf24;
   --k-red: #ef4444;
+  --k-danger: #fb7185;
   --k-red-soft: rgba(239, 68, 68, 0.18);
   --k-gold: #facc15;
+
+  /* 4px spacing scale */
+  --k-space-1: 4px;
+  --k-space-2: 8px;
+  --k-space-3: 12px;
+  --k-space-4: 16px;
+  --k-space-5: 20px;
+  --k-space-6: 24px;
+  --k-space-8: 32px;
+  --k-space-10: 40px;
+  --k-space-12: 48px;
+
+  /* Type, controls, radii, and elevation */
+  --k-text-xs: 0.75rem;
+  --k-text-sm: 0.875rem;
+  --k-text-md: 1rem;
+  --k-text-lg: 1.125rem;
+  --k-text-xl: 1.5rem;
+  --k-text-2xl: clamp(1.75rem, 4vw, 2.5rem);
+  --k-control-height: 44px;
+  --k-icon-sm: 16px;
+  --k-icon-md: 20px;
+  --k-icon-lg: 24px;
+  --k-radius-sm: 8px;
+  --k-radius-md: 12px;
+  --k-radius-lg: 18px;
+  --k-radius-pill: 999px;
+  --k-shadow-sm: 0 8px 24px rgba(0, 0, 0, 0.24);
   --k-shadow: 0 18px 48px rgba(0, 0, 0, 0.42);
   --k-glow: 0 0 0 1px rgba(96, 165, 250, 0.18), 0 0 28px rgba(37, 99, 235, 0.18);
+
+  /* Interaction and layering */
+  --k-focus-ring: #f8fafc;
+  --k-focus-offset: 3px;
+  --k-motion-fast: 120ms;
+  --k-motion-base: 180ms;
+  --k-motion-slow: 280ms;
+  --k-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --k-z-sticky: 20;
+  --k-z-topbar: 1000;
+  --k-z-overlay: 9000;
+  --k-z-dialog: 10000;
+
+  /* Breakpoint contract: mobile <= 599, tablet 600-820, desktop >= 821. */
 }

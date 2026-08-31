@@ -4,6 +4,7 @@ import { AppAdminBottomNav } from "./AppAdminBottomNav";
 import AppTopAccountSwitch from "@/components/AppTopAccountSwitch";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
 import GlobalNavigationPalette from "@/components/GlobalNavigationPalette";
+import SkipLink from "@/components/SkipLink";
 import { getSiteSettings } from "@/lib/site/settings";
 
 export async function AppMobileShell({
@@ -25,6 +26,7 @@ export async function AppMobileShell({
 
   return (
     <div className="klol-app-root">
+      <SkipLink />
       <div className="klol-app-shell">
         <header className="klol-app-header">
           <Link className="klol-app-brand" href={mode === "admin" ? "/app/admin" : "/app"} aria-label={`${displayTitle} 앱 홈`}>
@@ -37,7 +39,9 @@ export async function AppMobileShell({
             <AppTopAccountSwitch mode={mode} />
           </div>
         </header>
-        <main className="klol-app-main">{children}</main>
+        <main id="main-content" className="klol-app-main" tabIndex={-1}>
+          {children}
+        </main>
       </div>
       {mode === "admin" ? <AppAdminBottomNav /> : <AppBottomNav />}
     </div>

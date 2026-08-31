@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
+import { toPublicPlayerSummaryDto } from "@/lib/public/player";
 
 export async function GET(req: NextRequest) {
   const rateLimitRejected = await rejectIfRateLimited(req, {
@@ -41,12 +42,6 @@ export async function GET(req: NextRequest) {
         isActive: true,
         OR: [
           {
-            name: {
-              contains: q,
-              mode: "insensitive",
-            },
-          },
-          {
             nickname: {
               contains: q,
               mode: "insensitive",
@@ -69,17 +64,16 @@ export async function GET(req: NextRequest) {
       },
       select: {
         id: true,
-        name: true,
         nickname: true,
         tag: true,
         currentTier: true,
         peakTier: true,
       },
-      orderBy: [{ name: "asc" }, { nickname: "asc" }],
+      orderBy: [{ nickname: "asc" }, { tag: "asc" }],
       take: 8,
     });
 
-    return NextResponse.json(players);
+    return NextResponse.json(players.map(toPublicPlayerSummaryDto));
   } catch (error) {
     logServerError("[PLAYERS_BALANCE_SEARCH_GET_ERROR]", error);
     return NextResponse.json(

@@ -4131,27 +4131,31 @@ table {
 
 .home-top3-ace__name {
   z-index: 1;
+  display: -webkit-box;
   overflow: hidden;
   max-width: 100%;
+  max-height: 2.2em;
   margin-top: 12px;
   color: #f8fbff;
   font-size: clamp(24px, 1.8vw, 34px);
   font-weight: 950;
   line-height: 1.1;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 .home-top3-ace__nickname {
   z-index: 1;
-  overflow: hidden;
   max-width: 100%;
   margin-top: 6px;
   color: rgba(178, 196, 222, 0.82);
   font-size: 12px;
   font-weight: 850;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .home-top3-scoreline {

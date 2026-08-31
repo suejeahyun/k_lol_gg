@@ -56,7 +56,7 @@ export default async function InhouseResultSubmissionsPage() {
                     <td>{getKstDateKey(item.matchDate)} · {item.seriesNumber}회차<br />{item.expectedGameCount}세트</td>
                     <td>
                       <strong>{imageCount}/{item.expectedGameCount}장</strong><br />
-                      {item.images.map((image) => <a key={image.id} className="admin-button admin-button--ghost" target="_blank" href={`/api/admin/private-assets/${image.privateAssetId}`}>{image.gameNumber}세트</a>)}
+                      {item.images.map((image) => <Link key={image.id} className="admin-button admin-button--ghost" href={`/admin/private-assets/${image.privateAssetId}`}>{image.gameNumber}세트</Link>)}
                     </td>
                     <td>
                       {item.matchSeries ? <Link href={`/admin/matches/${item.matchSeries.id}/edit`}>{item.matchSeries.title}</Link> : canStartRegistration ? <Link className="admin-button" href={`/admin/matches/new?submissionId=${item.id}`}>수기 등록 시작</Link> : item.status === "AWAITING_UPLOAD" ? <Link className="admin-button" href={`/matches/submit?code=${item.publicCode}`}>사진 등록</Link> : null}

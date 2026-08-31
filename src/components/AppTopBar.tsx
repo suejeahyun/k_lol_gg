@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import ThemeSwitcher from "./ThemeSwitcher";
 import GlobalNavigationPalette from "./GlobalNavigationPalette";
+import { loadPublicSiteSettings } from "@/lib/site/public-settings-client";
 
 type AppTopBarProps = {
   title: string;
@@ -15,11 +16,6 @@ type AppTopBarProps = {
 type TopBarUser = {
   userId: string;
   status: "PENDING" | "APPROVED" | "REJECTED";
-};
-
-type PublicSiteSettings = {
-  siteName?: string;
-  siteLogoUrl?: string | null;
 };
 
 export default function AppTopBar({
@@ -67,11 +63,9 @@ export default function AppTopBar({
   useEffect(() => {
     async function fetchSiteSettings() {
       try {
-        const res = await fetch("/api/site-settings", { cache: "no-store" });
-        if (!res.ok) return;
-        const data = (await res.json()) as { settings?: PublicSiteSettings };
-        if (data.settings?.siteName) setSiteName(data.settings.siteName);
-        setSiteLogoUrl(data.settings?.siteLogoUrl ?? null);
+        const settings = await loadPublicSiteSettings();
+        if (settings.siteName) setSiteName(settings.siteName);
+        setSiteLogoUrl(settings.siteLogoUrl ?? null);
       } catch {
         setSiteName("K-LOL.GG");
         setSiteLogoUrl(null);

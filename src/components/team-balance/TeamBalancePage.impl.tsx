@@ -417,13 +417,15 @@ export default function PlayersBalancePage() {
     }
   }
   function applySearchResult(index: number, player: SearchPlayer) {
+    const gameName = player.riotId?.gameName ?? "";
+    const tagLine = player.riotId?.tagLine ?? "";
     updateRow(index, (row) => ({
       ...row,
       playerId: player.id,
-      name: player.name,
-      nickname: player.nickname,
-      tag: player.tag,
-      selectedLabel: `${player.name} (${player.nickname}#${player.tag})`,
+      name: player.displayName,
+      nickname: gameName,
+      tag: tagLine,
+      selectedLabel: player.displayName,
       suggestions: [],
       searching: false,
       error: "",
@@ -2221,9 +2223,9 @@ export default function PlayersBalancePage() {
                 <div className="balance-input-row__index">{index + 1}</div>
 
                 <div className="balance-search-block">
-                  <input aria-label="이름 입력"
+                  <input aria-label="Riot ID 또는 공개 표시명 입력"
                     className="balance-text-input"
-                    placeholder="이름 입력"
+                    placeholder="Riot ID 또는 공개 표시명"
                     value={row.name}
                     onChange={(e) => handleNameChange(index, e.target.value)}
                     onBlur={() => {
@@ -2256,10 +2258,12 @@ export default function PlayersBalancePage() {
                           onClick={() => applySearchResult(index, player)}
                         >
                           <div className="balance-suggestion-item__name">
-                            {player.name}
+                            {player.displayName}
                           </div>
                           <div className="balance-suggestion-item__meta">
-                            {player.nickname}#{player.tag}
+                            {player.riotId
+                              ? `${player.riotId.gameName}#${player.riotId.tagLine}`
+                              : "공개 Riot ID 없음"}
                           </div>
                         </button>
                       ))}

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { loadPublicSiteSettings } from "@/lib/site/public-settings-client";
 
 type AdminSidebarItem = {
   href: string;
@@ -16,11 +17,6 @@ type AdminSidebarItem = {
 type AdminSidebarGroup = {
   title: string;
   items: AdminSidebarItem[];
-};
-
-type PublicSiteSettings = {
-  siteName?: string;
-  siteLogoUrl?: string | null;
 };
 
 const menuGroups: AdminSidebarGroup[] = [
@@ -124,11 +120,9 @@ export default function AdminSidebar() {
   useEffect(() => {
     async function loadSiteSettings() {
       try {
-        const response = await fetch("/api/site-settings", { cache: "no-store" });
-        if (!response.ok) return;
-        const data = (await response.json()) as { settings?: PublicSiteSettings };
-        if (data.settings?.siteName) setSiteName(data.settings.siteName);
-        setSiteLogoUrl(data.settings?.siteLogoUrl ?? null);
+        const settings = await loadPublicSiteSettings();
+        if (settings.siteName) setSiteName(settings.siteName);
+        setSiteLogoUrl(settings.siteLogoUrl ?? null);
       } catch {
         setSiteName("K-LOL.GG");
         setSiteLogoUrl(null);

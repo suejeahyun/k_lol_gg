@@ -19,7 +19,7 @@ type AppRankingStat = {
   wins: number;
   losses: number;
   mvpCount: number;
-  name: string;
+  displayName: string;
   nickname: string;
   tag: string;
 };
@@ -32,7 +32,7 @@ function formatWinRate(stat: AppRankingStat) {
 }
 
 function getPlayerName(stat: AppRankingStat) {
-  return stat.name || stat.nickname || "미입력";
+  return stat.displayName;
 }
 
 function RankingMiniList({

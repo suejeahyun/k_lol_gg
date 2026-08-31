@@ -10,6 +10,7 @@ import TierIcon from "@/components/TierIcon";
 import SoloRankSection from "@/components/SoloRankSection";
 import PlayerAnalysisTabs from "@/components/PlayerAnalysisTabs";
 import { ensureSeasonStats, getWinRate } from "@/lib/stats/season-performance";
+import { resolvePublicPlayerDisplayName } from "@/lib/public/player";
 
 type PlayerDetailPageProps = {
   params: Promise<{
@@ -93,9 +94,15 @@ export default async function PlayerDetailPage({
     select: { id: true, name: true },
   });
 
-  const player = await prisma.player.findUnique({
-    where: { id },
-    include: {
+  const player = await prisma.player.findFirst({
+    where: { id, isActive: true },
+    select: {
+      id: true,
+      nickname: true,
+      tag: true,
+      currentTier: true,
+      peakTier: true,
+      createdAt: true,
       seasonStats: {
         where: { seasonId: currentSeason?.id ?? -1 },
         select: {
@@ -159,6 +166,8 @@ export default async function PlayerDetailPage({
   if (!player) {
     notFound();
   }
+
+  const displayName = resolvePublicPlayerDisplayName(player);
 
   let seasonStat: (typeof player.seasonStats)[number] | null =
     player.seasonStats[0] ?? null;
@@ -303,7 +312,7 @@ export default async function PlayerDetailPage({
         <div>
           <p className="page-eyebrow">플레이어 상세</p>
           <h1 className="page-title">
-            {player.name} ({player.nickname}#{player.tag})
+            {displayName}
           </h1>
           <p className="page-description">
             등록일: {formatDateTime(player.createdAt)}
@@ -324,14 +333,16 @@ export default async function PlayerDetailPage({
 
         <div className="info-grid">
           <div className="info-card">
-            <span className="info-card__label">이름</span>
-            <strong className="info-card__value">{player.name}</strong>
+            <span className="info-card__label">공개 표시명</span>
+            <strong className="info-card__value">{displayName}</strong>
           </div>
 
           <div className="info-card">
-            <span className="info-card__label">닉네임#태그</span>
+            <span className="info-card__label">Riot ID</span>
             <strong className="info-card__value">
-              {player.nickname}#{player.tag}
+              {player.nickname?.trim() && player.tag?.trim()
+                ? `${player.nickname.trim()}#${player.tag.trim()}`
+                : "공개되지 않음"}
             </strong>
           </div>
 

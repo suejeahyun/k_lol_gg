@@ -1,0 +1,131 @@
+/* Service-wide interaction invariants. Imported last so theme overrides cannot erase them. */
+
+.skip-link {
+  position: fixed;
+  top: var(--k-space-2);
+  left: var(--k-space-2);
+  z-index: calc(var(--k-z-dialog) + 1);
+  display: inline-flex;
+  min-width: 44px;
+  min-height: var(--k-control-height);
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--k-space-4);
+  border: 2px solid var(--k-focus-ring);
+  border-radius: var(--k-radius-sm);
+  background: #071426;
+  color: #fff !important;
+  font-size: var(--k-text-sm);
+  font-weight: 900;
+  text-decoration: none;
+  transform: translateY(calc(-100% - var(--k-space-4)));
+  transition: transform var(--k-motion-fast) var(--k-ease-standard);
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+:where(
+  button,
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea,
+  [role="button"]
+) {
+  min-height: var(--k-control-height) !important;
+}
+
+:where(button, [role="button"]) {
+  min-width: 44px !important;
+  touch-action: manipulation;
+}
+
+:where(
+  .app-topbar__home,
+  .app-topbar__auth-link,
+  .app-sidebar__link,
+  .sidebar-auth__button,
+  .home-dark-actions a,
+  .home-quick-access > a,
+  .home-page a,
+  .app-error-card .app-button,
+  .page-actions a,
+  a.chip-button,
+  .klol-app-root a
+) {
+  min-height: var(--k-control-height) !important;
+}
+
+.app-topbar__home,
+.app-topbar__auth-link {
+  display: inline-flex;
+  align-items: center;
+}
+
+:where(
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  summary,
+  [tabindex]:not([tabindex="-1"])
+):focus-visible {
+  outline: 3px solid var(--k-focus-ring) !important;
+  outline-offset: var(--k-focus-offset) !important;
+}
+
+:where(button, input, select, textarea):disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed !important;
+  opacity: 0.58;
+}
+
+#main-content:focus {
+  outline: none;
+}
+
+.chip-button,
+.players-page-v2__filter-chip,
+.match-filter-chip,
+.players-page-v2__header a,
+.matches-list-v4__header a {
+  min-height: var(--k-control-height) !important;
+}
+
+.chip-button {
+  min-width: 44px !important;
+}
+
+.players-page-v2__header a,
+.matches-list-v4__header a {
+  display: flex !important;
+  align-items: center;
+}
+
+@media (min-width: 600px) and (max-width: 820px) {
+  .klol-app-shell,
+  .klol-app-bottom-nav__inner {
+    width: min(calc(100% - 48px), 680px);
+  }
+
+  .klol-app-shell {
+    padding-inline: var(--k-space-5);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:focus-within {
+    scroll-behavior: auto !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

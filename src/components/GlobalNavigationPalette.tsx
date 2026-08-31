@@ -39,6 +39,8 @@ export default function GlobalNavigationPalette({
   const router = useRouter();
   const pathname = usePathname();
   const inputRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [recent, setRecent] = useState<string[]>([]);
@@ -53,10 +55,18 @@ export default function GlobalNavigationPalette({
   const favoritesKey = `${storagePrefix}-favorites`;
 
   const showPalette = useCallback(() => {
+    previousFocusRef.current = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
     setRecent(readStoredList(recentKey));
     setFavorites(readStoredList(favoritesKey));
     setOpen(true);
   }, [favoritesKey, recentKey]);
+
+  const closePalette = useCallback(() => {
+    setOpen(false);
+    setQuery("");
+  }, []);
 
   useEffect(() => {
     if (mode !== "admin") return;
@@ -104,10 +114,10 @@ export default function GlobalNavigationPalette({
     const handleShortcut = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLocaleLowerCase() === "k") {
         event.preventDefault();
-        if (open) setOpen(false);
+        if (open) closePalette();
         else showPalette();
       }
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape" && open) closePalette();
     };
     const handleOpenRequest = () => showPalette();
 
@@ -117,15 +127,45 @@ export default function GlobalNavigationPalette({
       window.removeEventListener("keydown", handleShortcut);
       window.removeEventListener("klol:open-navigation", handleOpenRequest);
     };
-  }, [open, showPalette]);
+  }, [closePalette, open, showPalette]);
 
   useEffect(() => {
     if (!open) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    window.setTimeout(() => inputRef.current?.focus(), 0);
+    const focusTimer = window.setTimeout(() => inputRef.current?.focus(), 0);
+    const dialog = dialogRef.current;
+    const handleFocusTrap = (event: KeyboardEvent) => {
+      if (event.key !== "Tab" || !dialog) return;
+
+      const focusable = Array.from(
+        dialog.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((element) => element.getClientRects().length > 0);
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (!first || !last) return;
+
+      if (event.shiftKey && (document.activeElement === first || !dialog.contains(document.activeElement))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    dialog?.addEventListener("keydown", handleFocusTrap);
     return () => {
+      window.clearTimeout(focusTimer);
+      dialog?.removeEventListener("keydown", handleFocusTrap);
       document.body.style.overflow = previousOverflow;
+      const previousFocus = previousFocusRef.current;
+      previousFocusRef.current = null;
+      if (previousFocus && document.contains(previousFocus)) {
+        previousFocus.focus();
+      }
     };
   }, [open]);
 
@@ -159,8 +199,7 @@ export default function GlobalNavigationPalette({
     ].slice(0, MAX_RECENT_ITEMS);
     window.localStorage.setItem(recentKey, JSON.stringify(nextRecent));
     setRecent(nextRecent);
-    setOpen(false);
-    setQuery("");
+    closePalette();
     router.push(getNavigationHref(item, surface));
   };
 
@@ -191,21 +230,23 @@ export default function GlobalNavigationPalette({
           className="global-navigation-backdrop"
           role="presentation"
           onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setOpen(false);
+            if (event.target === event.currentTarget) closePalette();
           }}
         >
           <section
+            ref={dialogRef}
             className="global-navigation-dialog"
             role="dialog"
             aria-modal="true"
             aria-labelledby="global-navigation-title"
+            aria-describedby="global-navigation-hint"
           >
             <header className="global-navigation-dialog__header">
               <div>
                 <span>ALL MENU</span>
                 <h2 id="global-navigation-title">전체 메뉴에서 바로 이동</h2>
               </div>
-              <button type="button" onClick={() => setOpen(false)} aria-label="전체 메뉴 닫기">
+              <button type="button" onClick={closePalette} aria-label="전체 메뉴 닫기">
                 닫기
               </button>
             </header>
@@ -221,7 +262,12 @@ export default function GlobalNavigationPalette({
               />
             </label>
 
-            <p className="global-navigation-hint">
+            <p
+              id="global-navigation-hint"
+              className="global-navigation-hint"
+              role="status"
+              aria-live="polite"
+            >
               {query
                 ? `검색 결과 ${visibleItems.length}개`
                 : favorites.length > 0 || recent.length > 0

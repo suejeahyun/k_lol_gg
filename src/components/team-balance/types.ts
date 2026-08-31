@@ -4,9 +4,11 @@ export type RoleType = "MAIN" | "SUB" | "AUTO";
 
 export type SearchPlayer = {
   id: number;
-  name: string;
-  nickname: string;
-  tag: string;
+  displayName: string;
+  riotId: {
+    gameName: string;
+    tagLine: string | null;
+  } | null;
   currentTier?: string | null;
   peakTier?: string | null;
 };

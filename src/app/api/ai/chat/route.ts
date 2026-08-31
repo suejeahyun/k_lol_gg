@@ -8,6 +8,10 @@ import {
   type SiteAiChatMessage,
   type SiteAiScope,
 } from "@/lib/ai/site-assistant";
+import {
+  AI_TEMPORARILY_DISABLED_RESPONSE,
+  isProductionAiHardDisabled,
+} from "@/lib/ai/production-gate";
 
 export const dynamic = "force-dynamic";
 
@@ -70,6 +74,13 @@ function normalizeScopeForRole(scope: unknown, role: string): SiteAiScope {
 }
 
 export async function POST(request: NextRequest) {
+  if (isProductionAiHardDisabled()) {
+    return NextResponse.json(AI_TEMPORARILY_DISABLED_RESPONSE, {
+      status: 503,
+      headers: { "Cache-Control": "private, no-store, max-age=0" },
+    });
+  }
+
   const settings = await getSiteSettings();
 
   if (!isSiteFeatureEnabled(settings, "aiAssistant")) {

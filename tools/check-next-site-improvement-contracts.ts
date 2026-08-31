@@ -106,7 +106,7 @@ mustContain(aiRoute, /private, no-store, max-age=0/, "AI 비활성 응답은 pri
 // KL-005 must reject expired evidence before Blob download and keep reconciliation read-only.
 const assetRoute = read("src/app/api/admin/private-assets/[id]/route.ts");
 const expiryIndex = assetRoute.indexOf("isPrivateAssetExpired");
-const downloadIndex = assetRoute.indexOf("downloadPrivateAsset");
+const downloadIndex = assetRoute.indexOf("await downloadPrivateAsset");
 contract(expiryIndex >= 0, "비공개 증빙 만료 판정이 필요합니다.");
 contract(
   expiryIndex >= 0 && downloadIndex >= 0 && expiryIndex < downloadIndex,

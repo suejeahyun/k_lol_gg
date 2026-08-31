@@ -1,8 +1,43 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { getCurrentUser } from "@/lib/auth/session";
 import DestructionMvpBallot from "@/components/destruction/DestructionMvpBallot";
+import { resolvePublicPlayerDisplayName } from "@/lib/public/player";
+
+const publicMvpMatchSelect = {
+  id: true,
+  stage: true,
+  round: true,
+  matchDate: true,
+  teamAId: true,
+  teamBId: true,
+  teamAScore: true,
+  teamBScore: true,
+  mvpRevoteCandidateIds: true,
+  mvpVoteRound: true,
+  mvpSelectionMethod: true,
+  teamA: { select: { name: true } },
+  teamB: { select: { name: true } },
+  mvpPlayer: { select: { id: true, nickname: true, tag: true } },
+  tournament: {
+    select: {
+      id: true,
+      title: true,
+      status: true,
+      participants: {
+        select: {
+          playerId: true,
+          teamId: true,
+          position: true,
+          player: { select: { nickname: true, tag: true } },
+        },
+        orderBy: [{ position: "asc" }, { id: "asc" }],
+      },
+    },
+  },
+} satisfies Prisma.DestructionMatchSelect;
 
 function getStageLabel(stage: string) {
   const labels: Record<string, string> = {
@@ -54,22 +89,7 @@ export default async function DestructionMvpVoteHub({
         ...publicMatchWhere,
         mvpFinalizedAt: null,
       },
-      include: {
-        teamA: true,
-        teamB: true,
-        mvpPlayer: true,
-        tournament: {
-          select: {
-            id: true,
-            title: true,
-            status: true,
-            participants: {
-              include: { player: true },
-              orderBy: [{ position: "asc" }, { id: "asc" }],
-            },
-          },
-        },
-      },
+      select: publicMvpMatchSelect,
       orderBy: [{ matchDate: "desc" }, { updatedAt: "desc" }],
       take: 20,
     }),
@@ -78,22 +98,7 @@ export default async function DestructionMvpVoteHub({
         ...publicMatchWhere,
         mvpFinalizedAt: { not: null },
       },
-      include: {
-        teamA: true,
-        teamB: true,
-        mvpPlayer: true,
-        tournament: {
-          select: {
-            id: true,
-            title: true,
-            status: true,
-            participants: {
-              include: { player: true },
-              orderBy: [{ position: "asc" }, { id: "asc" }],
-            },
-          },
-        },
-      },
+      select: publicMvpMatchSelect,
       orderBy: [{ mvpFinalizedAt: "desc" }],
       take: 8,
     }),
@@ -152,9 +157,7 @@ export default async function DestructionMvpVoteHub({
       matchParticipants.length === 10;
     const candidates = matchParticipants.map((participant) => ({
       id: participant.playerId,
-      name: participant.player.name,
-      nickname: participant.player.nickname,
-      tag: participant.player.tag,
+      displayName: resolvePublicPlayerDisplayName(participant.player),
       position: participant.position,
       teamSide:
         participant.teamId === match.teamAId ? ("A" as const) : ("B" as const),
@@ -177,9 +180,7 @@ export default async function DestructionMvpVoteHub({
           match.mvpPlayer
             ? {
                 id: match.mvpPlayer.id,
-                name: match.mvpPlayer.name,
-                nickname: match.mvpPlayer.nickname,
-                tag: match.mvpPlayer.tag,
+                displayName: resolvePublicPlayerDisplayName(match.mvpPlayer),
                 method: match.mvpSelectionMethod,
               }
             : null
@@ -299,7 +300,7 @@ export default async function DestructionMvpVoteHub({
                 </span>
                 <strong>
                   {match.mvpPlayer
-                    ? `${match.mvpPlayer.name} (${match.mvpPlayer.nickname}#${match.mvpPlayer.tag})`
+                    ? resolvePublicPlayerDisplayName(match.mvpPlayer)
                     : "확정 정보 없음"}
                 </strong>
                 <small>

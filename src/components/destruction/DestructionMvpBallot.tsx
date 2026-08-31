@@ -5,9 +5,7 @@ import { useRouter } from "next/navigation";
 
 type Candidate = {
   id: number;
-  name: string;
-  nickname: string;
-  tag: string;
+  displayName: string;
   position?: string | null;
   teamSide?: "A" | "B";
   selectable?: boolean;
@@ -63,8 +61,7 @@ export default function DestructionMvpBallot({ matchId, candidates, initialVoteP
     if (candidate.selectable === false) {
       return (
         <span className="destruction-mvp-lineup__empty">
-          <strong>{candidate.name}</strong>
-          <span>({candidate.nickname}#{candidate.tag})</span>
+          <strong>{candidate.displayName}</strong>
           <small>{candidate.unavailableLabel ?? "선택 불가"}</small>
         </span>
       );
@@ -73,7 +70,7 @@ export default function DestructionMvpBallot({ matchId, candidates, initialVoteP
     return (
       <button type="button" className={selectedId === candidate.id ? "chip-button" : "ghost-button"}
         disabled={!canVote || savingId !== null} onClick={() => vote(candidate.id)}>
-        {candidate.name} <span>({candidate.nickname}#{candidate.tag})</span>
+        {candidate.displayName}
         {selectedId === candidate.id ? <em>내 선택</em> : null}
       </button>
     );
@@ -84,7 +81,7 @@ export default function DestructionMvpBallot({ matchId, candidates, initialVoteP
       <div className="destruction-mvp-ballot__header">
         <div>
           <span>경기 MVP · 전체 세트 합산</span>
-          <strong>{finalizedMvp ? `${finalizedMvp.name} (${finalizedMvp.nickname}#${finalizedMvp.tag})` : "투표 진행 중"}</strong>
+          <strong>{finalizedMvp ? finalizedMvp.displayName : "투표 진행 중"}</strong>
         </div>
         {finalizedMvp ? <em>{finalizedMvp.method === "VOTE" ? "유저 투표 선정" : "관리자 선정"}</em> : null}
       </div>
@@ -115,7 +112,7 @@ export default function DestructionMvpBallot({ matchId, candidates, initialVoteP
               {candidates.map((candidate) => (
                 <button key={candidate.id} type="button" className={selectedId === candidate.id ? "chip-button" : "ghost-button"}
                   disabled={!canVote || savingId !== null || candidate.selectable === false} onClick={() => vote(candidate.id)}>
-                  {candidate.name} ({candidate.nickname}#{candidate.tag}){selectedId === candidate.id ? " · 내 선택" : ""}
+                  {candidate.displayName}{selectedId === candidate.id ? " · 내 선택" : ""}
                 </button>
               ))}
             </div>

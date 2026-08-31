@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma/client";
 import { ensureSeasonStats, getWinRate } from "@/lib/stats/season-performance";
 import { logServerError } from "@/lib/server/safe-log";
 import { PUBLIC_SHORT_CACHE_HEADER } from "@/lib/http/cache";
+import { toPublicPlayerSummaryDto } from "@/lib/public/player";
 
 type RouteContext = {
   params: Promise<{
@@ -12,34 +13,34 @@ type RouteContext = {
   }>;
 };
 
+const PRIVATE_NO_STORE = "private, no-store, max-age=0";
+
+function publicNotFound() {
+  return NextResponse.json(
+    { message: "플레이어를 찾을 수 없습니다." },
+    { status: 404, headers: { "Cache-Control": PRIVATE_NO_STORE } },
+  );
+}
+
 export async function GET(_req: NextRequest, { params }: RouteContext) {
   try {
     const { playerId } = await params;
     const id = Number(playerId);
 
-    if (!Number.isInteger(id) || id <= 0) {
-      return NextResponse.json(
-        { message: "Invalid playerId" },
-        { status: 400 }
-      );
-    }
+    if (!Number.isInteger(id) || id <= 0) return publicNotFound();
 
-    const player = await prisma.player.findUnique({
-      where: { id },
+    const player = await prisma.player.findFirst({
+      where: { id, isActive: true },
       select: {
         id: true,
-        name: true,
         nickname: true,
         tag: true,
+        currentTier: true,
+        peakTier: true,
       },
     });
 
-    if (!player) {
-      return NextResponse.json(
-        { message: "Player not found" },
-        { status: 404 }
-      );
-    }
+    if (!player) return publicNotFound();
 
     const currentSeason = await prisma.season.findFirst({
       where: { isActive: true },
@@ -98,7 +99,7 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
 
     return NextResponse.json(
       {
-        player,
+        player: toPublicPlayerSummaryDto(player),
         summary: { totalGames, wins, losses, winRate, mvpCount },
         mostChampions,
       },

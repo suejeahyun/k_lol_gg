@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache";
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
+import { resolvePublicPlayerDisplayName } from "@/lib/public/player";
 
 type DbClient = PrismaClient | Prisma.TransactionClient;
 
@@ -21,7 +22,7 @@ export type StatsTopSeasonDto = {
 
 export type StatsTopPlayerDto = {
   playerId: number;
-  name: string;
+  displayName: string;
   nickname: string;
   tag: string;
   totalGames: number;
@@ -141,7 +142,6 @@ export async function getSeasonTopPlayers(seasonId: number, db: DbClient = prism
       mvpCount: true,
       player: {
         select: {
-          name: true,
           nickname: true,
           tag: true,
         },
@@ -154,7 +154,7 @@ export async function getSeasonTopPlayers(seasonId: number, db: DbClient = prism
 
     return {
       playerId: stat.playerId,
-      name: stat.player.name,
+      displayName: resolvePublicPlayerDisplayName(stat.player),
       nickname: stat.player.nickname,
       tag: stat.player.tag,
       totalGames: stat.totalGames,

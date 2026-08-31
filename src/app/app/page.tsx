@@ -193,7 +193,7 @@ export default async function AppHomePage() {
                     <span className="klol-app-badge">{party.members.length}/{party.maxMembers}</span>
                   </div>
                   <p className="klol-app-muted">
-                    {party.members.map((member) => member.name).join(" · ") || "참가자 없음"}
+                    {party.members.map((member) => member.displayName).join(" · ") || "참가자 없음"}
                   </p>
                 </Link>
               ))}
@@ -274,7 +274,7 @@ export default async function AppHomePage() {
               <Link className="klol-app-list-card klol-app-rank-row" href={`/app/players/${stat.player.id}`} key={stat.id}>
                 <span className="klol-app-rank-no" data-rank={index + 1}>{index + 1}</span>
                 <span className="klol-app-list-title">
-                  <strong>{stat.player.name}</strong>
+                  <strong>{stat.player.displayName}</strong>
                   <span>{stat.player.nickname}#{stat.player.tag}</span>
                 </span>
                 <span className="klol-app-stat-value">{stat.wins}승</span>
@@ -288,7 +288,7 @@ export default async function AppHomePage() {
         {mvpParticipant ? (
           <Link className="klol-app-list-card klol-app-home-mvp" href={`/app/matches/${recentMvp?.seriesId}`}>
             <div className="klol-app-list-title">
-              <strong>{mvpParticipant.player.name}</strong>
+              <strong>{mvpParticipant.player.displayName}</strong>
               <span>{mvpParticipant.champion.name} · {recentMvp?.series.title}</span>
             </div>
             <strong className="klol-app-stat-value">

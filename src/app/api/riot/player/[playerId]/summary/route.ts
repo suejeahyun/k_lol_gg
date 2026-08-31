@@ -9,6 +9,7 @@ import {
   getKoreanChampionNameMap,
 } from "@/lib/riot/champion";
 import { PUBLIC_SHORT_CACHE_HEADER } from "@/lib/http/cache";
+import { toPublicPlayerSummaryDto } from "@/lib/public/player";
 
 type RouteContext = {
   params: Promise<{
@@ -44,6 +45,15 @@ type SoloMatchForSummary = {
   totalDamageTaken: number;
   visionScore: number;
 };
+
+const PRIVATE_NO_STORE = "private, no-store, max-age=0";
+
+function publicNotFound() {
+  return NextResponse.json(
+    { message: "플레이어를 찾을 수 없습니다." },
+    { status: 404, headers: { "Cache-Control": PRIVATE_NO_STORE } },
+  );
+}
 
 type ChampionAggregate = {
   championId: number;
@@ -202,34 +212,45 @@ export async function GET(_request: Request, context: RouteContext) {
     const parsedPlayerId = Number(playerId);
 
     if (!Number.isInteger(parsedPlayerId) || parsedPlayerId <= 0) {
-      return NextResponse.json(
-        { message: "유효하지 않은 플레이어 ID입니다." },
-        { status: 400 }
-      );
+      return publicNotFound();
     }
 
-    const player = await prisma.player.findUnique({
+    const player = await prisma.player.findFirst({
       where: {
         id: parsedPlayerId,
+        isActive: true,
       },
       select: {
         id: true,
-        name: true,
         nickname: true,
         tag: true,
         currentTier: true,
         peakTier: true,
-        riotAccount: true,
-        soloRankSnapshot: true,
+        riotAccount: {
+          select: {
+            gameName: true,
+            tagLine: true,
+            profileIconId: true,
+            summonerLevel: true,
+            lastSyncedAt: true,
+          },
+        },
+        soloRankSnapshot: {
+          select: {
+            queueType: true,
+            tier: true,
+            rank: true,
+            leaguePoints: true,
+            wins: true,
+            losses: true,
+            winRate: true,
+            updatedAt: true,
+          },
+        },
       },
     });
 
-    if (!player) {
-      return NextResponse.json(
-        { message: "플레이어를 찾을 수 없습니다." },
-        { status: 404 }
-      );
-    }
+    if (!player) return publicNotFound();
 
     const [recentMatches, championTotals, championWinTotals] = await Promise.all([
       prisma.playerSoloMatch.findMany({
@@ -279,19 +300,12 @@ export async function GET(_request: Request, context: RouteContext) {
 
     const response = {
       player: {
-        id: player.id,
-        name: player.name,
-        nickname: player.nickname,
-        tag: player.tag,
-        riotId: `${player.nickname}#${player.tag}`,
-        currentTier: player.currentTier,
-        peakTier: player.peakTier,
+        ...toPublicPlayerSummaryDto(player),
       },
       riotAccount: player.riotAccount
         ? {
             gameName: player.riotAccount.gameName,
             tagLine: player.riotAccount.tagLine,
-            puuid: player.riotAccount.puuid,
             profileIconId: player.riotAccount.profileIconId,
             summonerLevel: player.riotAccount.summonerLevel,
             lastSyncedAt: player.riotAccount.lastSyncedAt?.toISOString() ?? null,

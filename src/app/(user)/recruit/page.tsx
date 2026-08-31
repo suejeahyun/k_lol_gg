@@ -8,12 +8,10 @@ import PremiumFeatureGate from "@/components/PremiumFeatureGate";
 import { getSiteSettings } from "@/lib/site/settings";
 import {
   buildGameInfoText,
-  formatRecruitPartyBlock,
-  getDisplayActiveMemberCount,
-  getRecruitStatusLabel,
   getRecruitTypeLabel,
   isLinePartyType,
 } from "@/lib/kakao/party-recruit";
+import { toPublicRecruitDto, type PublicRecruitDto } from "@/lib/public/recruit";
 
 export const metadata: Metadata = {
   title: "구인 현황",
@@ -21,46 +19,31 @@ export const metadata: Metadata = {
   alternates: { canonical: "/recruit" },
 };
 
-type RecruitPageMember = {
-  id: number;
-  name: string;
-  position: string | null;
-  slotNo: number | null;
-  isSubstitute: boolean;
-};
-
-type RecruitPageParty = {
-  id: number;
-  recruitNo: number;
-  recruitDate: string;
-  resetSeq: number;
-  recruitCode: string | null;
-  type: string;
-  status: string;
-  title: string;
-  roomName: string | null;
-  hostName: string | null;
-  startTimeText: string | null;
-  tierText: string | null;
-  preferredLineText: string | null;
-  playStyle: string | null;
-  note: string | null;
-  maxMembers: number;
-  createdAt: Date;
-  updatedAt: Date;
-  members: RecruitPageMember[];
-};
+type RecruitPageParty = PublicRecruitDto;
 
 const LINE_POSITIONS = ["TOP", "JUG", "MID", "ADC", "SUP"];
 
-function formatDate(date: Date) {
+function formatDate(date: string) {
   return new Intl.DateTimeFormat("ko-KR", {
     timeZone: "Asia/Seoul",
     month: "2-digit",
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-  }).format(date);
+  }).format(new Date(date));
+}
+
+function getPublicActiveMemberCount(party: RecruitPageParty) {
+  return Math.min(
+    party.members.filter((member) => !member.isSubstitute).length,
+    party.maxMembers,
+  );
+}
+
+function getPublicRecruitStatusLabel(party: RecruitPageParty) {
+  return getPublicActiveMemberCount(party) >= party.maxMembers
+    ? "진행중 · 대기중"
+    : "진행중 · 구인중";
 }
 
 function renderSlots(party: RecruitPageParty) {
@@ -73,7 +56,7 @@ function renderSlots(party: RecruitPageParty) {
           <span
             className={member ? "recruit-slot__name" : "recruit-slot__empty"}
           >
-            {member?.name || "-"}
+            {member?.displayName || "-"}
           </span>
         </div>
       );
@@ -96,7 +79,7 @@ function renderSlots(party: RecruitPageParty) {
       <div key={slotNo} className="recruit-slot">
         <span className="recruit-slot__label">{slotNo}</span>
         <span className={member ? "recruit-slot__name" : "recruit-slot__empty"}>
-          {member?.name || "-"}
+          {member?.displayName || "-"}
         </span>
       </div>,
     );
@@ -108,7 +91,7 @@ function renderSlots(party: RecruitPageParty) {
   ) {
     const subMembers = party.members
       .filter((item) => item.isSubstitute)
-      .map((item) => item.name)
+      .map((item) => item.displayName)
       .join(", ");
     slots.push(
       <div key="sub" className="recruit-slot recruit-slot--sub">
@@ -127,31 +110,25 @@ function renderSlots(party: RecruitPageParty) {
 
 export default async function RecruitPage() {
   const siteSettings = await getSiteSettings();
-  const parties = await prisma.recruitParty.findMany({
+  const rawParties = await prisma.recruitParty.findMany({
     where: { status: "IN_PROGRESS" },
     select: {
-      id: true,
       recruitNo: true,
       recruitDate: true,
       resetSeq: true,
-      recruitCode: true,
       type: true,
       status: true,
       title: true,
-      roomName: true,
-      hostName: true,
       startTimeText: true,
+      scheduledStartAt: true,
       tierText: true,
       preferredLineText: true,
       playStyle: true,
       note: true,
       maxMembers: true,
-      createdAt: true,
       updatedAt: true,
       members: {
         select: {
-          id: true,
-          name: true,
           position: true,
           slotNo: true,
           isSubstitute: true,
@@ -166,6 +143,7 @@ export default async function RecruitPage() {
     ],
     take: 50,
   });
+  const parties = rawParties.map(toPublicRecruitDto);
 
   return (
     <PremiumFeatureGate feature="recruit" settings={siteSettings}>
@@ -198,16 +176,13 @@ export default async function RecruitPage() {
         ) : (
           <section className="recruit-grid" aria-label="현재 구인현황 목록">
             {parties.map((party) => {
-              const displayActiveCount = getDisplayActiveMemberCount(
-                party.members,
-                party.maxMembers,
-              );
-              const statusLabel = getRecruitStatusLabel(party);
+              const displayActiveCount = getPublicActiveMemberCount(party);
+              const statusLabel = getPublicRecruitStatusLabel(party);
               const typeLabel = getRecruitTypeLabel(party.type);
               const gameInfo = buildGameInfoText(party);
 
               return (
-                <article key={party.id} className="recruit-card">
+                <article key={party.publicRef} className="recruit-card">
                   <div className="recruit-card__head">
                     <div>
                       <div className="recruit-card__type">{typeLabel}</div>
@@ -221,11 +196,7 @@ export default async function RecruitPage() {
                     <span>
                       {party.recruitDate} · 회차 {party.resetSeq}
                     </span>
-                    <span>
-                      관리번호{" "}
-                      {party.recruitCode ||
-                        `${party.recruitDate}-${party.maxMembers}-${party.recruitNo}`}
-                    </span>
+                    <span>공개 참조 {party.publicRef}</span>
                     <span>
                       {displayActiveCount}/{party.maxMembers}
                     </span>
@@ -236,13 +207,7 @@ export default async function RecruitPage() {
 
                   <div className="recruit-card__foot">
                     <span>최근 반영 {formatDate(party.updatedAt)}</span>
-                    {party.hostName ? <span>생성자 {party.hostName}</span> : null}
                   </div>
-
-                  <details className="recruit-raw">
-                    <summary>카톡 현황 문구 보기</summary>
-                    <pre>{formatRecruitPartyBlock(party)}</pre>
-                  </details>
                 </article>
               );
             })}

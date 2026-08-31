@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
+import { isProductionAiHardDisabled } from "@/lib/ai/production-gate";
 
 export const SITE_SETTINGS_CACHE_KEY = "site.settings";
 
@@ -243,7 +244,9 @@ export function getPublicSiteSettings(settings: SiteSettings): PublicSiteSetting
     randomTeamEnabled: settings.randomTeamEnabled,
     riotEnabled: settings.riotEnabled,
     aiAssistantEnabled:
-      settings.aiAssistantEnabled && isAiAssistantRuntimeConfigured(),
+      !isProductionAiHardDisabled() &&
+      settings.aiAssistantEnabled &&
+      isAiAssistantRuntimeConfigured(),
   };
 }
 
@@ -258,7 +261,11 @@ export function isSiteFeatureEnabled(settings: SiteSettings, feature: SiteFeatur
   if (feature === "balanceAi") return settings.balanceAiEnabled;
   if (feature === "randomTeam") return settings.randomTeamEnabled;
   if (feature === "riot") return settings.riotEnabled;
-  return settings.aiAssistantEnabled && isAiAssistantRuntimeConfigured();
+  return (
+    !isProductionAiHardDisabled() &&
+    settings.aiAssistantEnabled &&
+    isAiAssistantRuntimeConfigured()
+  );
 }
 
 export function getSiteFeatureLabel(feature: SiteFeatureKey) {

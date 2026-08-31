@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma/client";
 import { rejectIfNotAdmin } from "@/lib/auth/requireAdmin";
 import { Prisma } from "@prisma/client";
 import { readJsonObject } from "@/lib/http/json-body";
+import { toPublicPlayerSummaryDto } from "@/lib/public/player";
 
 const MAX_PAGE_SIZE = 100;
 const MAX_SEARCH_LENGTH = 100;
@@ -41,9 +42,13 @@ export async function GET(request: NextRequest) {
     const pageSizeParam = Number(
       request.nextUrl.searchParams.get("pageSize") ?? "10"
     );
-    const name = request.nextUrl.searchParams.get("name")?.trim() ?? "";
+    const query = (
+      request.nextUrl.searchParams.get("q") ??
+      request.nextUrl.searchParams.get("name") ??
+      ""
+    ).trim();
 
-    if (name.length > MAX_SEARCH_LENGTH) {
+    if (query.length > MAX_SEARCH_LENGTH) {
       return NextResponse.json(
         { message: `검색어는 ${MAX_SEARCH_LENGTH}자 이하로 입력해주세요.` },
         { status: 400 },
@@ -56,13 +61,13 @@ export async function GET(request: NextRequest) {
         ? Math.min(pageSizeParam, MAX_PAGE_SIZE)
         : 10;
 
-    const where = name
+    const where = query
       ? {
           isActive: true,
-          name: {
-            contains: name,
-            mode: "insensitive" as const,
-          },
+          OR: [
+            { nickname: { contains: query, mode: "insensitive" as const } },
+            { tag: { contains: query, mode: "insensitive" as const } },
+          ],
         }
       : { isActive: true };
 
@@ -81,25 +86,15 @@ export async function GET(request: NextRequest) {
       take: pageSize,
       select: {
         id: true,
-        name: true,
         nickname: true,
         tag: true,
         peakTier: true,
         currentTier: true,
-        createdAt: true,
-        userAccount: {
-          select: {
-            id: true,
-            userId: true,
-            role: true,
-            status: true,
-          },
-        },
       },
     });
 
     return NextResponse.json({
-      items: players,
+      items: players.map(toPublicPlayerSummaryDto),
       totalCount,
       currentPage: safePage,
       totalPages,

@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma/client";
 import { rejectIfRateLimited } from "@/lib/rate-limit";
+import { toPublicPlayerSummaryDto } from "@/lib/public/player";
 
 export async function GET(req: NextRequest) {
   const premiumLock = await requireSiteFeature("balanceAi");
@@ -43,10 +44,10 @@ export async function GET(req: NextRequest) {
     const players = await prisma.player.findMany({
       where: {
         isActive: true,
-        name: {
-          contains: q,
-          mode: "insensitive",
-        },
+        OR: [
+          { nickname: { contains: q, mode: "insensitive" } },
+          { tag: { contains: q, mode: "insensitive" } },
+        ],
         ...(excludeIds.length > 0
           ? {
               id: {
@@ -57,17 +58,16 @@ export async function GET(req: NextRequest) {
       },
       select: {
         id: true,
-        name: true,
         nickname: true,
         tag: true,
         currentTier: true,
         peakTier: true,
       },
-      orderBy: [{ name: "asc" }, { nickname: "asc" }],
+      orderBy: [{ nickname: "asc" }, { tag: "asc" }],
       take: 8,
     });
 
-    return NextResponse.json(players);
+    return NextResponse.json(players.map(toPublicPlayerSummaryDto));
   } catch (error) {
     logServerError("[PLAYERS_BALANCE_SEARCH_GET_ERROR]", error);
     return NextResponse.json([], { status: 200 });

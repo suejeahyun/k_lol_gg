@@ -2,10 +2,11 @@ import { unstable_cache } from "next/cache";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma/client";
 import { recalculateSeasonStats } from "@/lib/stats/recalculate";
+import { resolvePublicPlayerDisplayName } from "@/lib/public/player";
 
 export type SeasonRankingPlayer = {
   playerId: number;
-  name: string;
+  displayName: string;
   nickname: string;
   tag: string;
   totalGames: number;
@@ -123,7 +124,7 @@ export async function getSeasonRankingPlayers(seasonId: number): Promise<SeasonR
     },
     include: {
       player: {
-        select: { id: true, name: true, nickname: true, tag: true },
+        select: { id: true, nickname: true, tag: true },
       },
     },
     orderBy: [{ wins: "desc" }, { totalGames: "desc" }, { mvpCount: "desc" }],
@@ -133,7 +134,7 @@ export async function getSeasonRankingPlayers(seasonId: number): Promise<SeasonR
     const participationCount = stat.participationCount ?? 0;
     return {
       playerId: stat.playerId,
-      name: stat.player.name,
+      displayName: resolvePublicPlayerDisplayName(stat.player),
       nickname: stat.player.nickname,
       tag: stat.player.tag,
       totalGames: stat.totalGames,

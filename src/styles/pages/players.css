@@ -2034,13 +2034,18 @@
 }
 
 .players-page-v2__name > strong {
-  display: block;
+  display: -webkit-box;
+  max-height: 2.7em;
   overflow: hidden;
   color: #ffffff;
   font-size: 14px;
   font-weight: 950;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 .players-page-v2__champions {

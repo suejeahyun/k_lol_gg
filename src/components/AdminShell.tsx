@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import AppTopBar from "./AppTopBar";
 import AdminSidebar from "./AdminSidebar";
 import AdminLogoutButton from "./AdminLogoutButton";
+import SkipLink from "./SkipLink";
 
 type AdminShellProps = {
   children: ReactNode;
@@ -20,6 +21,7 @@ export default function AdminShell({ children }: AdminShellProps) {
 
   return (
     <div className="app-shell app-shell--admin">
+      <SkipLink />
       <AppTopBar
         title="관리자 페이지"
         homeHref="/admin/"
@@ -28,7 +30,9 @@ export default function AdminShell({ children }: AdminShellProps) {
 
       <div className="app-body">
         <AdminSidebar />
-        <div className="app-content">{children}</div>
+        <div id="main-content" className="app-content" tabIndex={-1}>
+          {children}
+        </div>
       </div>
 
       <div className="admin-floating-logout">

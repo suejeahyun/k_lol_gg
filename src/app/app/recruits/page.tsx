@@ -6,7 +6,7 @@ import { AppEmpty, AppSection } from "@/components/app-mobile/AppCards";
 import PremiumFeatureGate from "@/components/PremiumFeatureGate";
 import { getSiteSettings } from "@/lib/site/settings";
 import { parsePositivePage } from "@/lib/http/pagination";
-import { getDisplayActiveMemberCount } from "@/lib/kakao/party-recruit";
+import { toPublicRecruitDto } from "@/lib/public/recruit";
 
 export const dynamic = "force-dynamic";
 
@@ -70,6 +70,13 @@ function formatRecruitDate(value: string) {
   return match ? `${match[1]}. ${match[2]}. ${match[3]}.` : value || "날짜 미정";
 }
 
+function getDisplayActiveMemberCount(
+  members: ReadonlyArray<{ isSubstitute: boolean }>,
+  maxMembers: number,
+) {
+  return Math.min(members.filter((member) => !member.isSubstitute).length, maxMembers);
+}
+
 export default async function AppRecruitsPage({ searchParams }: AppRecruitsPageProps) {
   const params = await searchParams;
   const activeStatus = normalizeStatus(params?.status);
@@ -88,13 +95,30 @@ export default async function AppRecruitsPage({ searchParams }: AppRecruitsPageP
   const currentPage = Math.min(requestedPage, totalPages);
   const parties = await prisma.recruitParty.findMany({
     where: activeStatus === "ALL" ? undefined : { status: activeStatus },
-    include: {
-      members: { orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }] },
+    select: {
+      recruitNo: true,
+      recruitDate: true,
+      resetSeq: true,
+      type: true,
+      status: true,
+      title: true,
+      startTimeText: true,
+      scheduledStartAt: true,
+      tierText: true,
+      preferredLineText: true,
+      playStyle: true,
+      note: true,
+      maxMembers: true,
+      updatedAt: true,
+      members: {
+        select: { position: true, slotNo: true, isSubstitute: true },
+        orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }],
+      },
     },
     orderBy: [{ status: "asc" }, { recruitDate: "desc" }, { resetSeq: "desc" }, { recruitNo: "asc" }],
     skip: (currentPage - 1) * PAGE_SIZE,
     take: PAGE_SIZE,
-  });
+  }).then((rows) => rows.map(toPublicRecruitDto));
   const rangeStart = selectedCount === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
   const rangeEnd = Math.min(currentPage * PAGE_SIZE, selectedCount);
 
@@ -138,12 +162,12 @@ export default async function AppRecruitsPage({ searchParams }: AppRecruitsPageP
                 const memberCount = getDisplayActiveMemberCount(party.members, party.maxMembers);
                 const isClosed = party.status !== "IN_PROGRESS";
                 return (
-                  <article className="klol-app-list-card" data-muted={isClosed ? "true" : undefined} key={party.id}>
+                  <article className="klol-app-list-card" data-muted={isClosed ? "true" : undefined} key={party.publicRef}>
                     <div className="klol-app-list-top">
                       <div className="klol-app-list-title">
                         <strong>#{party.recruitNo} · {party.title || typeLabel(party.type)}</strong>
                         <span>
-                          {formatRecruitDate(party.recruitDate)} · {party.hostName || "호스트 미입력"} · {party.startTimeText || "시간 미정"}
+                          {formatRecruitDate(party.recruitDate)} · {party.startTimeText || "시간 미정"}
                         </span>
                       </div>
                       <span className={isClosed ? "klol-app-badge klol-app-badge--muted" : "klol-app-badge"}>
@@ -160,12 +184,14 @@ export default async function AppRecruitsPage({ searchParams }: AppRecruitsPageP
                         <strong>{typeLabel(party.type)}</strong>
                       </div>
                       <div className="klol-app-meta">
-                        <span>음성방</span>
-                        <strong>{party.roomName || "-"}</strong>
+                        <span>진행 정보</span>
+                        <strong>{party.tierText || "미입력"}</strong>
                       </div>
                     </div>
                     <p className="klol-app-muted">
-                      {party.members.map((member) => `${member.position || "FILL"} ${member.name}`).join(" · ") || party.note || "참가자 없음"}
+                      {party.members
+                        .map((member) => `${member.position || "FILL"} ${member.displayName}`)
+                        .join(" · ") || "참가자 없음"}
                     </p>
                   </article>
                 );

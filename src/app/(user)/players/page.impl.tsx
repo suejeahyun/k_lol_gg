@@ -9,6 +9,7 @@ import SafeChampionImage from "@/components/SafeChampionImage";
 import TierIcon from "@/components/TierIcon";
 import { ensureSeasonStats, getWinRate } from "@/lib/stats/season-performance";
 import { parsePositivePage } from "@/lib/http/pagination";
+import { resolvePublicPlayerDisplayName } from "@/lib/public/player";
 
 type PlayersPageProps = {
   searchParams: Promise<{
@@ -113,12 +114,6 @@ function buildPlayerSearchWhere(query: string) {
       isActive: true,
       OR: [
         {
-          name: {
-            contains: trimmed,
-            mode: "insensitive" as const,
-          },
-        },
-        {
           AND: [
             {
               nickname: {
@@ -141,12 +136,6 @@ function buildPlayerSearchWhere(query: string) {
   return {
     isActive: true,
     OR: [
-      {
-        name: {
-          contains: trimmed,
-          mode: "insensitive" as const,
-        },
-      },
       {
         nickname: {
           contains: trimmed,
@@ -308,7 +297,6 @@ async function getPlayersCatalog(seasonId: number | null, query: string) {
       where: buildPlayerSearchWhere(query),
       select: {
         id: true,
-        name: true,
         nickname: true,
         tag: true,
         peakTier: true,
@@ -402,7 +390,7 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
 
     return {
       id: player.id,
-      name: player.name,
+      displayName: resolvePublicPlayerDisplayName(player),
       nickname: player.nickname ?? "",
       tag: player.tag ?? "",
       peakTier: player.peakTier ?? null,
@@ -440,7 +428,7 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
   const sorted = [...filtered].sort((a, b) => {
     let result = 0;
 
-    if (sort === "name") result = a.name.localeCompare(b.name);
+    if (sort === "name") result = a.displayName.localeCompare(b.displayName);
     if (sort === "totalGames") result = a.totalGames - b.totalGames;
     if (sort === "winRate") result = a.winRate - b.winRate;
     if (sort === "mvpCount") result = a.mvpCount - b.mvpCount;
@@ -608,7 +596,7 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
           <span>최다 참여</span>
           <strong>
             {mostActivePlayer
-              ? `${mostActivePlayer.name} · ${mostActivePlayer.participationCount}회`
+              ? `${mostActivePlayer.displayName} · ${mostActivePlayer.participationCount}회`
               : "없음"}
           </strong>
         </div>
@@ -617,7 +605,7 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
           <span>최고 승률</span>
           <strong>
             {highestWinRatePlayer
-              ? `${highestWinRatePlayer.name} · ${formatPercent(highestWinRatePlayer.winRate)}`
+              ? `${highestWinRatePlayer.displayName} · ${formatPercent(highestWinRatePlayer.winRate)}`
               : "없음"}
           </strong>
         </div>
@@ -626,7 +614,7 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
           <span>최다 MVP</span>
           <strong>
             {highestMvpPlayer
-              ? `${highestMvpPlayer.name} · ${formatMvp(highestMvpPlayer.mvpCount)}`
+              ? `${highestMvpPlayer.displayName} · ${formatMvp(highestMvpPlayer.mvpCount)}`
               : "없음"}
           </strong>
         </div>
@@ -635,7 +623,7 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
           <span>최고 티어</span>
           <strong>
             {highestTierPlayer
-              ? `${highestTierPlayer.name} · ${highestTierPlayer.peakTier ?? "-"}`
+              ? `${highestTierPlayer.displayName} · ${highestTierPlayer.peakTier ?? "-"}`
               : "없음"}
           </strong>
         </div>
@@ -676,7 +664,7 @@ export default async function PlayersPage({ searchParams }: PlayersPageProps) {
                   className="players-page-v2__row"
                 >
                   <div className="players-page-v2__cell players-page-v2__name">
-                    <strong>{player.name}</strong>
+                    <strong>{player.displayName}</strong>
                     {player.topChampions.length > 0 ? (
                       <div className="players-page-v2__champions">
                         {player.topChampions.map((champion) => (

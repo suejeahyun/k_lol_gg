@@ -12,6 +12,15 @@ type RouteContext = {
   }>;
 };
 
+const PRIVATE_NO_STORE = "private, no-store, max-age=0";
+
+function publicNotFound() {
+  return NextResponse.json(
+    { message: "플레이어를 찾을 수 없습니다." },
+    { status: 404, headers: { "Cache-Control": PRIVATE_NO_STORE } },
+  );
+}
+
 export async function GET(
   req: NextRequest,
   { params }: RouteContext
@@ -20,12 +29,12 @@ export async function GET(
     const { playerId } = await params;
     const id = Number(playerId);
 
-    if (!Number.isInteger(id) || id <= 0) {
-      return NextResponse.json(
-        { message: "유효하지 않은 playerId 입니다." },
-        { status: 400 }
-      );
-    }
+    if (!Number.isInteger(id) || id <= 0) return publicNotFound();
+
+    const playerExists = await prisma.player.count({
+      where: { id, isActive: true },
+    });
+    if (playerExists !== 1) return publicNotFound();
 
     const page = parsePositivePage(req.nextUrl.searchParams.get("page"));
     const pageSize = 5;

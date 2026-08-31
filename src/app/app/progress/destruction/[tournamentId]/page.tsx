@@ -5,6 +5,7 @@ import { AppMobileShell } from "@/components/app-mobile/AppMobileShell";
 import { AppEmpty, AppSection } from "@/components/app-mobile/AppCards";
 import { prisma } from "@/lib/prisma/client";
 import DestructionStandingsBoard from "@/components/destruction/DestructionStandingsBoard";
+import { resolvePublicPlayerDisplayName } from "@/lib/public/player";
 
 export const dynamic = "force-dynamic";
 
@@ -30,22 +31,46 @@ export default async function AppDestructionDetailPage({ params }: AppDestructio
 
   const tournament = await prisma.destructionTournament.findUnique({
     where: { id },
-    include: {
+    select: {
+      title: true,
       teams: {
-        include: {
-          captain: true,
+        select: {
+          id: true,
+          name: true,
+          preliminaryGroup: true,
+          points: true,
+          wins: true,
+          losses: true,
+          captain: { select: { nickname: true, tag: true } },
           members: {
-            include: { player: true },
+            select: {
+              id: true,
+              position: true,
+              player: { select: { nickname: true, tag: true } },
+            },
             orderBy: [{ position: "asc" }, { id: "asc" }],
           },
         },
         orderBy: [{ preliminaryGroup: "asc" }, { id: "asc" }],
       },
       matches: {
-        include: {
-          teamA: true,
-          teamB: true,
-          mvpPlayer: true,
+        select: {
+          id: true,
+          stage: true,
+          round: true,
+          preliminaryGroup: true,
+          teamAId: true,
+          teamBId: true,
+          winnerTeamId: true,
+          mvpFinalizedAt: true,
+          isConfirmed: true,
+          matchDate: true,
+          bestOf: true,
+          teamAScore: true,
+          teamBScore: true,
+          teamA: { select: { name: true } },
+          teamB: { select: { name: true } },
+          mvpPlayer: { select: { nickname: true, tag: true } },
         },
         orderBy: [{ stage: "asc" }, { round: "asc" }],
         take: 16,
@@ -83,12 +108,17 @@ export default async function AppDestructionDetailPage({ params }: AppDestructio
                 <div className="klol-app-list-top">
                   <span className="klol-app-list-title">
                     <strong>{team.name}</strong>
-                    <span>주장 {team.captain.name} · {team.members.length}명</span>
+                    <span>주장 {resolvePublicPlayerDisplayName(team.captain)} · {team.members.length}명</span>
                   </span>
                   <span className="klol-app-badge">{team.points}점</span>
                 </div>
                 <p className="klol-app-muted">
-                  {team.members.map((member) => `${positionText(member.position)} ${member.player.name}`).join(" · ") || "팀원 없음"}
+                  {team.members
+                    .map(
+                      (member) =>
+                        `${positionText(member.position)} ${resolvePublicPlayerDisplayName(member.player)}`,
+                    )
+                    .join(" · ") || "팀원 없음"}
                 </p>
               </article>
             ))}
@@ -118,7 +148,9 @@ export default async function AppDestructionDetailPage({ params }: AppDestructio
                     <strong>{match.teamA.name} vs {match.teamB.name}</strong>
                     <span>
                       {match.stage} · ROUND {match.round} · BO{match.bestOf}
-                      {match.mvpPlayer ? ` · MVP ${match.mvpPlayer.name} (${match.mvpPlayer.nickname}#${match.mvpPlayer.tag})` : ""}
+                      {match.mvpPlayer
+                        ? ` · MVP ${resolvePublicPlayerDisplayName(match.mvpPlayer)}`
+                        : ""}
                     </span>
                   </span>
                   <span className="klol-app-badge">

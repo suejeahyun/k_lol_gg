@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma/client";
+import { resolvePublicPlayerDisplayName } from "@/lib/public/player";
 import {
   getChampionNameKo,
   getKoreanChampionNameMap,
@@ -216,9 +217,9 @@ export async function getRiotPlayerAnalysis(playerId: number) {
     where: { id: playerId },
     select: {
       id: true,
-      name: true,
       nickname: true,
       tag: true,
+      isActive: true,
       currentTier: true,
       peakTier: true,
       riotAccount: {
@@ -269,7 +270,7 @@ export async function getRiotPlayerAnalysis(playerId: number) {
     },
   });
 
-  if (!player) return null;
+  if (!player || !player.isActive) return null;
 
   const championNameMap = await getSafeChampionNameMap();
   const allSoloMatches = player.soloMatches;
@@ -288,12 +289,12 @@ export async function getRiotPlayerAnalysis(playerId: number) {
   return {
     player: {
       id: player.id,
-      name: player.name,
+      displayName: resolvePublicPlayerDisplayName(player),
       nickname: player.nickname,
       tag: player.tag,
       currentTier: player.currentTier,
       peakTier: player.peakTier,
-      riotId: `${player.nickname}#${player.tag}`,
+      riotId: resolvePublicPlayerDisplayName(player),
     },
     riotAccount: player.riotAccount,
     soloRank: player.soloRankSnapshot,

@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma/client";
 import { coerceGalleryImageUrls } from "@/lib/gallery/winner-image-paths";
 import DestructionParticipationClient from "@/app/(user)/participation/destruction/[tournamentId]/DestructionParticipationClient";
 import DestructionStandingsBoard from "@/components/destruction/DestructionStandingsBoard";
+import { resolvePublicPlayerDisplayName } from "@/lib/public/player";
 
 type PageProps = {
   params: Promise<{
@@ -69,14 +70,29 @@ export default async function DestructionProgressDetailPage({
     where: {
       id,
     },
-    include: {
-      galleryImage: true,
+    select: {
+      title: true,
+      description: true,
+      status: true,
+      winnerTeamId: true,
+      mvpPlayerId: true,
+      galleryImage: { select: { title: true, imageUrl: true } },
       teams: {
-        include: {
-          captain: true,
+        select: {
+          id: true,
+          name: true,
+          preliminaryGroup: true,
+          points: true,
+          wins: true,
+          losses: true,
+          captain: { select: { nickname: true, tag: true } },
           members: {
-            include: {
-              player: true,
+            select: {
+              id: true,
+              playerId: true,
+              position: true,
+              balanceScore: true,
+              player: { select: { nickname: true, tag: true } },
             },
             orderBy: {
               id: "asc",
@@ -91,27 +107,37 @@ export default async function DestructionProgressDetailPage({
         ],
       },
       participants: {
-        include: {
-          player: true,
-          team: true,
+        select: {
+          playerId: true,
+          player: { select: { nickname: true, tag: true } },
         },
         orderBy: {
           id: "asc",
         },
       },
       participationApplies: {
-        include: {
-          player: true,
-        },
+        select: { status: true },
         orderBy: {
           id: "asc",
         },
       },
       matches: {
-        include: {
-          teamA: true,
-          teamB: true,
-          mvpPlayer: true,
+        select: {
+          id: true,
+          stage: true,
+          preliminaryGroup: true,
+          round: true,
+          teamAId: true,
+          teamBId: true,
+          winnerTeamId: true,
+          teamAScore: true,
+          teamBScore: true,
+          isConfirmed: true,
+          matchDate: true,
+          mvpFinalizedAt: true,
+          teamA: { select: { name: true } },
+          teamB: { select: { name: true } },
+          mvpPlayer: { select: { nickname: true, tag: true } },
         },
         orderBy: [{ stage: "asc" }, { preliminaryGroup: "asc" }, { round: "asc" }],
       },
@@ -263,7 +289,7 @@ export default async function DestructionProgressDetailPage({
                   <h3>{team.name}</h3>
 
                   <div className="destruction-team-captain">
-                    팀장: {team.captain.nickname}#{team.captain.tag}
+                    팀장: {resolvePublicPlayerDisplayName(team.captain)}
                   </div>
 
                   <div className="destruction-member-list">
@@ -274,7 +300,7 @@ export default async function DestructionProgressDetailPage({
                         className="destruction-member-row"
                       >
                         <strong>
-                          {member.player.nickname}#{member.player.tag}
+                          {resolvePublicPlayerDisplayName(member.player)}
                         </strong>
                         <span>{member.position}</span>
                         <em>{member.balanceScore}</em>
@@ -323,7 +349,7 @@ export default async function DestructionProgressDetailPage({
                     </strong>
                     <em>{match.round}경기</em>
                     <b>승리: {getWinnerName(match)}</b>
-                    <i className="destruction-match-row__mvp">{match.mvpPlayer ? `MVP: ${match.mvpPlayer.name} (${match.mvpPlayer.nickname}#${match.mvpPlayer.tag})` : ""}</i>
+                    <i className="destruction-match-row__mvp">{match.mvpPlayer ? `MVP: ${resolvePublicPlayerDisplayName(match.mvpPlayer)}` : ""}</i>
                   </div>
                 ))}
               </div>
@@ -351,7 +377,7 @@ export default async function DestructionProgressDetailPage({
                     </strong>
                     <em>{match.round}경기</em>
                     <b>승리: {getWinnerName(match)}</b>
-                    <i className="destruction-match-row__mvp">{match.mvpPlayer ? `MVP: ${match.mvpPlayer.name} (${match.mvpPlayer.nickname}#${match.mvpPlayer.tag})` : ""}</i>
+                    <i className="destruction-match-row__mvp">{match.mvpPlayer ? `MVP: ${resolvePublicPlayerDisplayName(match.mvpPlayer)}` : ""}</i>
                   </div>
                 ))}
               </div>
@@ -375,7 +401,7 @@ export default async function DestructionProgressDetailPage({
                     </strong>
                     <em>{match.round}경기</em>
                     <b>승리: {getWinnerName(match)}</b>
-                    <i className="destruction-match-row__mvp">{match.mvpPlayer ? `MVP: ${match.mvpPlayer.name} (${match.mvpPlayer.nickname}#${match.mvpPlayer.tag})` : ""}</i>
+                    <i className="destruction-match-row__mvp">{match.mvpPlayer ? `MVP: ${resolvePublicPlayerDisplayName(match.mvpPlayer)}` : ""}</i>
                   </div>
                 ))}
               </div>
@@ -420,7 +446,7 @@ export default async function DestructionProgressDetailPage({
               <span>MVP</span>
               <strong>
                 {mvpParticipant
-                  ? `${mvpParticipant.player.nickname}#${mvpParticipant.player.tag}`
+                  ? resolvePublicPlayerDisplayName(mvpParticipant.player)
                   : "-"}
               </strong>
             </div>

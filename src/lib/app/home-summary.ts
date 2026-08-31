@@ -2,6 +2,7 @@ import type { Prisma } from "@prisma/client";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma/client";
 import { getSiteSettings } from "@/lib/site/settings";
+import { resolvePublicPlayerDisplayName } from "@/lib/public/player";
 
 const APP_HOME_SUMMARY_KEY = "app:home-summary:v13";
 const APP_HOME_SUMMARY_TTL_MS = 60 * 1000;
@@ -99,7 +100,7 @@ async function loadAppHomePublicData() {
         members: {
           orderBy: [{ slotNo: "asc" }, { createdAt: "asc" }],
           take: 6,
-          select: { name: true },
+          select: { slotNo: true, isSubstitute: true },
         },
       },
     }),
@@ -126,7 +127,7 @@ async function loadAppHomePublicData() {
             id: true,
             wins: true,
             player: {
-              select: { id: true, name: true, nickname: true, tag: true },
+              select: { id: true, nickname: true, tag: true },
             },
           },
         })
@@ -148,7 +149,7 @@ async function loadAppHomePublicData() {
             kills: true,
             deaths: true,
             assists: true,
-            player: { select: { name: true } },
+            player: { select: { nickname: true, tag: true } },
             champion: { select: { name: true } },
           },
         },
@@ -182,13 +183,36 @@ async function loadAppHomePublicData() {
     summary,
     season,
     siteSettings,
-    recentRecruits,
+    recentRecruits: recentRecruits.map((party) => ({
+      ...party,
+      members: party.members.map((member, index) => ({
+        displayName: member.isSubstitute
+          ? `예비 참가자 ${index + 1}`
+          : `참가자 ${member.slotNo ?? index + 1}`,
+      })),
+    })),
     recentMatches: recentMatches.map((match) => ({
       ...match,
       matchDate: match.matchDate.toISOString(),
     })),
-    topStats,
-    recentMvp,
+    topStats: topStats.map((stat) => ({
+      ...stat,
+      player: {
+        ...stat.player,
+        displayName: resolvePublicPlayerDisplayName(stat.player),
+      },
+    })),
+    recentMvp: recentMvp
+      ? {
+          ...recentMvp,
+          participants: recentMvp.participants.map((participant) => ({
+            ...participant,
+            player: {
+              displayName: resolvePublicPlayerDisplayName(participant.player),
+            },
+          })),
+        }
+      : null,
     recentEvents: recentEvents.map((event) => ({
       ...event,
       eventDate: event.eventDate.toISOString(),
