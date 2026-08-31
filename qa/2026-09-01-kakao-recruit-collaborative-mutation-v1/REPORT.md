@@ -2,9 +2,17 @@
 
 - 작업일: 2026-09-01 KST
 - 범위: 파티 구인 수정(sync)·마감(finish)의 최초 작성자 제한 제거
-- 운영 반영: 미실행
+- 운영 반영: 완료
 - DB 변경: 없음
 - 카카오봇 단말 변경: 없음
+
+## 운영 반영 증거
+
+- 소스 커밋: `0dbf59ed5a77f438e2b99a41009f43ee817e1b2d`
+- Vercel Production 배포: `EEkrLVVzf7LgWrupkcUiJXCF4YBK` / `Ready`
+- 운영 별칭: `https://k-lol-gg.vercel.app`
+- 배포 후 health: HTTP 200, `ready`, database `ok`
+- 운영 DB 쓰기·마이그레이션: 없음
 
 ## 결과
 
@@ -40,4 +48,4 @@
 
 ## 롤백
 
-DB·스키마 변경이 없으므로 해당 소스 커밋만 되돌리면 된다. 롤백 시 최초 작성자 제한 오류가 다시 발생한다.
+DB·스키마 변경이 없으므로 직전 정상 Production 배포 `5MdRr8SNbFBdk2RPh7TG4BvuJvHK`를 재승격하거나 해당 소스 커밋만 되돌리면 된다. 롤백 시 최초 작성자 제한 오류가 다시 발생한다.
