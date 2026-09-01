@@ -14,6 +14,8 @@
 - 기존 full-page 스티칭 캡처에서 보이던 겹침은 실제 최하단 레이아웃 결함이 아니었다.
 - 대화상자 열림 상태에서 `body overflow: hidden`, 대화상자 `overscroll-behavior: contain`을 확인했다.
 - 대화상자는 뷰포트 `42px`부터 `802px`까지 표시되고, 긴 메뉴는 대화상자 내부에서만 스크롤된다.
+- 검색 대화상자를 열면 활성 요소가 `type=search` 입력칸으로 이동해 키보드 사용자가 즉시 입력할 수 있음을 확인했다.
+- `/`, `/players`, `/players/[playerId]`를 320px에서 측정한 결과 문서와 본문 폭이 모두 320px였고 가로 넘침 요소는 0개였다.
 
 ## 수정
 
@@ -25,6 +27,7 @@
 
 - `players-mobile-bottom-390x844.png`
 - `mobile-menu-scroll-lock-390x844.png`
+- `search-initial-focus-320x800.png`
 - `npm run lint`: 통과
 - `npm run typecheck`: 통과
 - `npm run build`: Next.js 16.3.4 프로덕션 빌드 통과

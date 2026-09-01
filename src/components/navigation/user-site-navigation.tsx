@@ -21,8 +21,10 @@ import {
   userNavigationSections,
 } from "@/modules/navigation/domain/user-navigation";
 
-function openDialog(dialog: HTMLDialogElement | null) {
-  if (dialog && !dialog.open) dialog.showModal();
+function openDialog(dialog: HTMLDialogElement | null, initialFocus?: HTMLElement | null) {
+  if (!dialog || dialog.open) return;
+  dialog.showModal();
+  if (initialFocus) window.requestAnimationFrame(() => initialFocus.focus());
 }
 
 function closeDialog(dialog: HTMLDialogElement | null) {
@@ -31,6 +33,7 @@ function closeDialog(dialog: HTMLDialogElement | null) {
 
 function SearchControl({ compact = false }: { compact?: boolean }) {
   const dialog = useRef<HTMLDialogElement>(null);
+  const input = useRef<HTMLInputElement>(null);
   const titleId = useId();
   const inputId = useId();
 
@@ -41,7 +44,7 @@ function SearchControl({ compact = false }: { compact?: boolean }) {
         type="button"
         aria-haspopup="dialog"
         aria-label="플레이어 검색 열기"
-        onClick={() => openDialog(dialog.current)}
+        onClick={() => openDialog(dialog.current, input.current)}
       >
         <Search size={compact ? 20 : 18} aria-hidden="true" />
         {compact ? <span>검색</span> : null}
@@ -72,13 +75,13 @@ function SearchControl({ compact = false }: { compact?: boolean }) {
             <div>
               <Search size={19} aria-hidden="true" />
               <input
+                ref={input}
                 id={inputId}
                 name="q"
                 type="search"
                 maxLength={80}
                 placeholder="예: 닉네임 또는 GameName#TAG"
                 autoComplete="off"
-                autoFocus
               />
               <button type="submit">검색</button>
             </div>
