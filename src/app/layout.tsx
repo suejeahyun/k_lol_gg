@@ -11,7 +11,12 @@ export const metadata: Metadata = {
   openGraph: {
     title: "K-LOL.GG V2",
     description: "내전의 모든 순간을 더 쉽고 사랑스럽게.",
-    images: [{ url: "/og.png", width: 1672, height: 941, alt: "K-LOL.GG V2 아리 대표 이미지" }],
+    images: [{
+      url: "/og.png",
+      width: 1200,
+      height: 630,
+      alt: "파스텔 하늘에서 여우불을 띄운 아리 비공식 AI 팬아트",
+    }],
   },
   twitter: {
     card: "summary_large_image",
