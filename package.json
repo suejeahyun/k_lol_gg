@@ -15,6 +15,7 @@
     "test": "npm run test:contracts && npm run test:unit",
     "test:db": "tsx scripts/test-db/run-data-contracts.ts",
     "verify:auth-http": "node scripts/verify-auth-http.mjs",
+    "security:secrets": "node scripts/check-secrets.mjs",
     "check": "npm run lint && npm run typecheck && npm test && npm run build"
   },
   "dependencies": {
