@@ -49,4 +49,34 @@ export const fixturePlayerRepository: PlayerRepository = {
       `${player.displayName} ${player.riotId}`.toLocaleLowerCase("ko-KR").includes(normalized),
     );
   },
+  async getCatalog({ query, page, pageSize }) {
+    const matches = await this.search(query);
+    const totalPages = Math.max(1, Math.ceil(matches.length / pageSize));
+    const currentPage = Math.min(Math.max(1, page), totalPages);
+
+    return {
+      items: matches.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+      totalCount: matches.length,
+      currentPage,
+      totalPages,
+      pageSize,
+    };
+  },
+  async findById(id) {
+    const player = fixturePlayers.find((candidate) => candidate.id === id);
+    if (!player) return null;
+
+    return {
+      id: player.id,
+      displayName: player.displayName,
+      riotId: player.riotId,
+      currentTier: player.tier,
+      peakTier: player.tier,
+      joinedAt: new Date("2026-01-01T00:00:00.000Z"),
+      seasonStats: null,
+      positionStats: [],
+      championStats: [],
+      recentMatches: [],
+    };
+  },
 };

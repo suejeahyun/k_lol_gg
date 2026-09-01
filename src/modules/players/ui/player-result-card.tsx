@@ -1,4 +1,5 @@
 import { Gamepad2, Hash, TrendingUp } from "lucide-react";
+import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,6 +46,9 @@ export function PlayerResultCard({ player }: { player: PlayerSummary }) {
           <strong>{player.tier ?? "미등록"}</strong>
         </div>
       </CardContent>
+      <Link className="player-card__link" href={`/players/${encodeURIComponent(player.id)}`}>
+        {player.displayName} 상세 보기
+      </Link>
     </Card>
   );
 }

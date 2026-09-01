@@ -391,6 +391,7 @@ test("migrations, constraints, repository, and transaction contracts hold on Pos
       const repository = new PostgresPlayerRepository(database);
       const byNickname = await repository.search("  LILAC  ");
       const byRiotId = await repository.search("lilacstar#klol");
+      const byPrivateMemberName = await repository.search("공개되지 않을 회원명");
       const wildcardLiteral = await repository.search("%");
 
       assert.deepEqual(byNickname, [
@@ -405,6 +406,7 @@ test("migrations, constraints, repository, and transaction contracts hold on Pos
         },
       ]);
       assert.deepEqual(byRiotId, byNickname);
+      assert.deepEqual(byPrivateMemberName, []);
       assert.deepEqual(wildcardLiteral, []);
       assert.equal(byNickname.some((player) => player.id === inactiveId), false);
       assert.equal("memberName" in byNickname[0]!, false);
