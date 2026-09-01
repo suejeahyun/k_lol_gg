@@ -813,11 +813,16 @@
   margin: auto;
   padding: 0;
   overflow: auto;
+  overscroll-behavior: contain;
   border: 1px solid rgba(118, 151, 198, 0.3);
   border-radius: 26px;
   color: var(--foreground);
   background: transparent;
   box-shadow: 0 28px 90px rgba(33, 49, 90, 0.28);
+}
+
+body:has(.user-dialog[open]) {
+  overflow: hidden;
 }
 
 .user-dialog::backdrop {
@@ -1711,7 +1716,7 @@
   }
 
   body {
-    padding-bottom: 88px;
+    padding-bottom: calc(88px + env(safe-area-inset-bottom));
   }
 
   .site-header__inner,
