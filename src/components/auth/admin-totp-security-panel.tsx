@@ -102,6 +102,7 @@ export function AdminTotpSecurityPanel({ initialStatus }: AdminTotpSecurityPanel
     }
 
     form.reset();
+    setSetupMaterial(null);
     router.replace("/admin/login?next=%2Fadmin%2Fsecurity");
     router.refresh();
   }

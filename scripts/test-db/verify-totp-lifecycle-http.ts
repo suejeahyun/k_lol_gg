@@ -125,6 +125,7 @@ async function seedAccount(label: string, role: SyntheticAccount["role"]): Promi
 }
 
 const admin = await seedAccount("admin", "ADMIN");
+const limitedAdmin = await seedAccount("limited-admin", "ADMIN");
 const superAdmin = await seedAccount("super", "SUPER_ADMIN");
 const user = await seedAccount("user", "USER");
 const port = await availablePort();
@@ -331,6 +332,94 @@ try {
   assert.equal(postDisableLogin.status, 200);
   assert.equal((await postDisableLogin.json()).requiresTwoFactorSetup, true);
 
+  const limitedEnrollment = await login(limitedAdmin);
+  assert.equal(limitedEnrollment.status, 200);
+  const limitedEnrollmentCookie = cookiePair(limitedEnrollment);
+  const limitedSetup = await setup(limitedEnrollmentCookie);
+  assert.equal(limitedSetup.status, 201);
+  const limitedSetupPayload = await limitedSetup.json() as {
+    manualSecret: string;
+    provisioningUri: string;
+  };
+  syntheticSecrets.push(
+    limitedSetupPayload.manualSecret,
+    limitedSetupPayload.provisioningUri,
+  );
+
+  const limitedEnableStep = Math.floor(Date.now() / 30_000) - 1;
+  const limitedEnabled = await fetch(`${origin}/api/admin/security/totp/enable`, {
+    method: "POST",
+    headers: {
+      cookie: limitedEnrollmentCookie,
+      "content-type": "application/json",
+      origin,
+    },
+    body: JSON.stringify({
+      code: generateTotpCode(limitedSetupPayload.manualSecret, limitedEnableStep),
+    }),
+  });
+  assert.equal(limitedEnabled.status, 200);
+
+  const limitedLoginStep = Math.max(
+    Math.floor(Date.now() / 30_000),
+    limitedEnableStep + 1,
+  );
+  const limitedVerifiedLogin = await login(
+    limitedAdmin,
+    generateTotpCode(limitedSetupPayload.manualSecret, limitedLoginStep),
+  );
+  assert.equal(limitedVerifiedLogin.status, 200);
+  const limitedVerifiedCookie = cookiePair(limitedVerifiedLogin);
+
+  const currentLimitedStep = Math.floor(Date.now() / 30_000);
+  const acceptedCodes = new Set(
+    [-3, -2, -1, 0, 1, 2, 3].map((offset) =>
+      generateTotpCode(limitedSetupPayload.manualSecret, currentLimitedStep + offset),
+    ),
+  );
+  let incorrectCode = "000000";
+  while (acceptedCodes.has(incorrectCode)) {
+    incorrectCode = String(Number(incorrectCode) + 1).padStart(6, "0");
+  }
+
+  for (let attempt = 1; attempt <= 8; attempt += 1) {
+    const rejected = await fetch(`${origin}/api/admin/security/totp/disable`, {
+      method: "POST",
+      headers: {
+        cookie: limitedVerifiedCookie,
+        "content-type": "application/json",
+        origin,
+      },
+      body: JSON.stringify({ code: incorrectCode }),
+    });
+    assert.equal(rejected.status, 403, `TOTP attempt ${attempt} should be evaluated.`);
+    assert.equal(problemCode(await rejected.json()), "TOTP_CODE_INVALID");
+  }
+
+  const rateLimited = await fetch(`${origin}/api/admin/security/totp/disable`, {
+    method: "POST",
+    headers: {
+      cookie: limitedVerifiedCookie,
+      "content-type": "application/json",
+      origin,
+    },
+    body: JSON.stringify({ code: incorrectCode }),
+  });
+  assert.equal(rateLimited.status, 429);
+  assert.equal(problemCode(await rateLimited.json()), "TOTP_ATTEMPTS_LIMITED");
+  assert.match(rateLimited.headers.get("retry-after") ?? "", /^[1-9][0-9]*$/);
+  assert.equal((await status(limitedVerifiedCookie)).status, 200);
+  assert.ok(await repository.getTotpCredential(limitedAdmin.id));
+  assert.equal((await repository.findAccountById(limitedAdmin.id))?.authVersion, 1);
+  const limitedDisableAudits = await database
+    .select({ id: auditEvents.id })
+    .from(auditEvents)
+    .where(and(
+      eq(auditEvents.targetId, limitedAdmin.id),
+      eq(auditEvents.action, "ADMIN_TOTP_DISABLED"),
+    ));
+  assert.equal(limitedDisableAudits.length, 0);
+
   const superLogin = await login(superAdmin);
   assert.equal(superLogin.status, 200);
   const superCookie = cookiePair(superLogin);
@@ -369,7 +458,7 @@ try {
   assert.equal(userStatus.status, 403);
   assert.equal(problemCode(await userStatus.json()), "ADMIN_ROLE_REQUIRED");
 
-  process.stdout.write("[db-totp-http] status, one-time setup, concurrent enable, self-disable, stale-cookie, and role matrix passed\n");
+  process.stdout.write("[db-totp-http] status, one-time setup, concurrent enable, self-disable, durable TOTP rate limit, stale-cookie, and role matrix passed\n");
 } catch (error) {
   let sanitized = serverLog;
   for (const secret of syntheticSecrets) sanitized = sanitized.replaceAll(secret, "[synthetic-secret]");

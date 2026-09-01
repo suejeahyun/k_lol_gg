@@ -8,6 +8,7 @@ import {
   adminSecurityTraceId,
   readAdminSecurityJson,
   rejectCrossOriginAdminSecurityMutation,
+  rejectRateLimitedAdminTotpAttempt,
   requireAdminSecuritySession,
 } from "@/modules/auth/infrastructure/admin-security-http";
 import { problemResponse } from "@/platform/http";
@@ -31,6 +32,11 @@ export async function POST(request: NextRequest) {
       traceId: adminSecurityTraceId(request),
     });
   }
+  const rateLimitRejection = await rejectRateLimitedAdminTotpAttempt(
+    request,
+    authorization.session,
+  );
+  if (rateLimitRejection) return rateLimitRejection;
 
   const result = await disableAdminTotp(authorization.session, code, randomUUID());
   return result.ok

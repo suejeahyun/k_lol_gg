@@ -1,5 +1,13 @@
 import assert from "node:assert/strict";
 import { randomBytes, randomUUID } from "node:crypto";
+import {
+  mkdirSync,
+  mkdtempSync,
+  rmdirSync,
+  unlinkSync,
+  writeFileSync,
+} from "node:fs";
+import { join, resolve } from "node:path";
 import test from "node:test";
 
 import {
@@ -65,21 +73,65 @@ test("TOTP credential fingerprint binds every encrypted envelope field", () => {
   );
 });
 
-test("fixture authentication is limited to explicit loopback non-Vercel runtimes", () => {
+test("fixture authentication requires a live short-lived verifier proof on loopback", () => {
+  const proofRoot = resolve(process.cwd(), ".tmp", "auth-http");
+  mkdirSync(proofRoot, { recursive: true });
+  const proofDirectory = mkdtempSync(join(proofRoot, "unit-"));
+  const proofPath = join(proofDirectory, "fixture-proof.json");
+  const runnerPid = process.pid;
+  const runnerToken = randomBytes(32).toString("base64url");
+  const nowMs = Date.now();
+  const writeProof = (
+    origin: string,
+    values: Partial<{ createdAtMs: number; expiresAtMs: number }> = {},
+  ) => writeFileSync(proofPath, JSON.stringify({
+    createdAtMs: values.createdAtMs ?? nowMs,
+    expiresAtMs: values.expiresAtMs ?? nowMs + 60_000,
+    origin,
+    runnerPid,
+    runnerToken,
+  }));
+  const options = {
+    currentWorkingDirectory: process.cwd(),
+    isRunnerAlive: (candidate: number) => candidate === runnerPid,
+    nowMs,
+  };
   const loopback = {
     NODE_ENV: "development",
     V2_TEST_AUTH_ENABLED: "true",
+    V2_TEST_AUTH_PROOF_PATH: proofPath,
+    V2_TEST_AUTH_RUNNER_PID: String(runnerPid),
+    V2_TEST_AUTH_RUNNER_TOKEN: runnerToken,
     V2_PUBLIC_ORIGIN: "http://127.0.0.1:3300",
   };
-  assert.equal(isFixtureAuthEnvironmentEnabled(loopback), true);
-  assert.equal(isFixtureAuthEnvironmentEnabled({ ...loopback, V2_PUBLIC_ORIGIN: "http://localhost:3300" }), true);
-  assert.equal(isFixtureAuthEnvironmentEnabled({ ...loopback, NODE_ENV: "production" }), false);
-  assert.equal(isFixtureAuthEnvironmentEnabled({ ...loopback, VERCEL: "1" }), false);
-  assert.equal(isFixtureAuthEnvironmentEnabled({ ...loopback, VERCEL_ENV: "preview" }), false);
-  assert.equal(isFixtureAuthEnvironmentEnabled({ ...loopback, VERCEL_URL: "preview.example.test" }), false);
-  assert.equal(isFixtureAuthEnvironmentEnabled({ ...loopback, V2_PUBLIC_ORIGIN: "https://preview.example.test" }), false);
-  assert.equal(isFixtureAuthEnvironmentEnabled({ ...loopback, V2_PUBLIC_ORIGIN: "http://localhost.evil.test" }), false);
-  assert.equal(isFixtureAuthEnvironmentEnabled({ ...loopback, V2_PUBLIC_ORIGIN: undefined }), false);
+
+  try {
+    writeProof(loopback.V2_PUBLIC_ORIGIN);
+    assert.equal(isFixtureAuthEnvironmentEnabled(loopback, options), true);
+
+    const localhost = { ...loopback, V2_PUBLIC_ORIGIN: "http://localhost:3300" };
+    writeProof(localhost.V2_PUBLIC_ORIGIN);
+    assert.equal(isFixtureAuthEnvironmentEnabled(localhost, options), true);
+
+    writeProof(loopback.V2_PUBLIC_ORIGIN);
+    assert.equal(isFixtureAuthEnvironmentEnabled({ ...loopback, NODE_ENV: "production" }, options), false);
+    assert.equal(isFixtureAuthEnvironmentEnabled({ ...loopback, VERCEL: "1" }, options), false);
+    assert.equal(isFixtureAuthEnvironmentEnabled({ ...loopback, VERCEL_ENV: "preview" }, options), false);
+    assert.equal(isFixtureAuthEnvironmentEnabled({ ...loopback, VERCEL_URL: "preview.example.test" }, options), false);
+    assert.equal(isFixtureAuthEnvironmentEnabled({ ...loopback, V2_PUBLIC_ORIGIN: "https://preview.example.test" }, options), false);
+    assert.equal(isFixtureAuthEnvironmentEnabled({ ...loopback, V2_PUBLIC_ORIGIN: "http://localhost.evil.test" }, options), false);
+    assert.equal(isFixtureAuthEnvironmentEnabled({ ...loopback, V2_PUBLIC_ORIGIN: undefined }, options), false);
+    assert.equal(isFixtureAuthEnvironmentEnabled({ ...loopback, V2_TEST_AUTH_PROOF_PATH: undefined }, options), false);
+    assert.equal(isFixtureAuthEnvironmentEnabled({ ...loopback, V2_TEST_AUTH_RUNNER_PID: String(runnerPid + 1) }, options), false);
+    assert.equal(isFixtureAuthEnvironmentEnabled({ ...loopback, V2_TEST_AUTH_RUNNER_TOKEN: randomBytes(32).toString("base64url") }, options), false);
+    assert.equal(isFixtureAuthEnvironmentEnabled(loopback, { ...options, isRunnerAlive: () => false }), false);
+
+    writeProof(loopback.V2_PUBLIC_ORIGIN, { expiresAtMs: nowMs - 1 });
+    assert.equal(isFixtureAuthEnvironmentEnabled(loopback, options), false);
+  } finally {
+    unlinkSync(proofPath);
+    rmdirSync(proofDirectory);
+  }
 });
 
 test("production session cookies are Secure even when transport inference is false", () => {

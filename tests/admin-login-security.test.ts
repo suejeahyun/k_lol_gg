@@ -9,6 +9,7 @@ import {
   hasSameOrigin,
   readTextBodyWithinLimit,
 } from "../src/modules/auth/application/mutation-request-guard";
+import { resolveRateLimitClientKey } from "../src/modules/auth/infrastructure/rate-limit-client-key";
 
 test("safe next accepts only normalized same-origin paths", () => {
   assert.equal(normalizeInternalNext("/admin/players?status=pending#top"), "/admin/players?status=pending#top");
@@ -42,6 +43,43 @@ test("login work gate releases capacity exactly once", () => {
   release?.();
   release?.();
   assert.equal(typeof gate.acquire(), "function");
+});
+
+test("rate-limit IP keys trust only Vercel's anti-spoofing header on Vercel", () => {
+  const spoofedHeaders = new Headers({
+    "x-forwarded-for": "198.51.100.7",
+    "x-real-ip": "198.51.100.8",
+    "x-vercel-forwarded-for": "203.0.113.9",
+  });
+  assert.equal(
+    resolveRateLimitClientKey(spoofedHeaders, {}),
+    "shared-untrusted-proxy",
+  );
+  assert.equal(
+    resolveRateLimitClientKey(spoofedHeaders, { VERCEL: "1" }),
+    "203.0.113.9",
+  );
+  assert.equal(
+    resolveRateLimitClientKey(
+      new Headers({ "x-vercel-forwarded-for": "2001:db8::7" }),
+      { VERCEL: "1" },
+    ),
+    "2001:db8::7",
+  );
+  assert.equal(
+    resolveRateLimitClientKey(
+      new Headers({ "x-forwarded-for": "203.0.113.10" }),
+      { VERCEL: "1" },
+    ),
+    "unknown-vercel-client",
+  );
+  assert.equal(
+    resolveRateLimitClientKey(
+      new Headers({ "x-vercel-forwarded-for": "not-an-ip" }),
+      { VERCEL: "1" },
+    ),
+    "unknown-vercel-client",
+  );
 });
 
 test("mutation guard requires an exact same origin", () => {

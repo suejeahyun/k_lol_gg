@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { createHmac, randomBytes } from "node:crypto";
+import { mkdir, mkdtemp, rmdir, unlink, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import path from "node:path";
 
@@ -70,6 +71,50 @@ async function stopServer(child) {
   if (child.exitCode === null) child.kill("SIGKILL");
 }
 
+async function createFixtureRunnerProof(origin) {
+  const proofRoot = path.resolve(process.cwd(), ".tmp", "auth-http");
+  await mkdir(proofRoot, { recursive: true });
+  const proofDirectory = await mkdtemp(path.join(proofRoot, "verify-"));
+  const proofPath = path.join(proofDirectory, "fixture-proof.json");
+  const runnerToken = randomBytes(32).toString("base64url");
+  const createdAtMs = Date.now();
+  await writeFile(proofPath, JSON.stringify({
+    createdAtMs,
+    expiresAtMs: createdAtMs + 5 * 60_000,
+    origin,
+    runnerPid: process.pid,
+    runnerToken,
+  }), { encoding: "utf8", mode: 0o600 });
+
+  return {
+    environment: {
+      V2_TEST_AUTH_PROOF_PATH: proofPath,
+      V2_TEST_AUTH_RUNNER_PID: String(process.pid),
+      V2_TEST_AUTH_RUNNER_TOKEN: runnerToken,
+    },
+    async dispose() {
+      await unlink(proofPath).catch(() => undefined);
+      await rmdir(proofDirectory).catch(() => undefined);
+    },
+  };
+}
+
+async function spawnNextWithProof(args, environment, proof) {
+  try {
+    const child = spawn(process.execPath, [nextBin, ...args], {
+      cwd: process.cwd(),
+      env: environment,
+      stdio: ["ignore", "pipe", "pipe"],
+      windowsHide: true,
+    });
+    const startFailure = new Promise((_, reject) => child.once("error", reject));
+    return { child, startFailure };
+  } catch (error) {
+    await proof.dispose();
+    throw error;
+  }
+}
+
 const port = await availablePort();
 const origin = `http://127.0.0.1:${port}`;
 const password = `${randomBytes(24).toString("base64url")}!Aa1`;
@@ -101,9 +146,10 @@ const protectedWorkspacePaths = [
 ];
 
 const nextBin = path.join(process.cwd(), "node_modules", "next", "dist", "bin", "next");
-const child = spawn(process.execPath, [nextBin, "dev", "--hostname", "127.0.0.1", "--port", String(port)], {
-  cwd: process.cwd(),
-  env: {
+const developmentProof = await createFixtureRunnerProof(origin);
+const developmentServer = await spawnNextWithProof(
+  ["dev", "--hostname", "127.0.0.1", "--port", String(port)],
+  {
     ...process.env,
     DATABASE_URL: "",
     SESSION_SIGNING_KEYS: "",
@@ -111,12 +157,13 @@ const child = spawn(process.execPath, [nextBin, "dev", "--hostname", "127.0.0.1"
     V2_AUTH_RATE_LIMIT_PEPPER: "",
     V2_PUBLIC_ORIGIN: origin,
     V2_TEST_AUTH_ENABLED: "true",
+    ...developmentProof.environment,
     V2_TEST_AUTH_SECRET: sessionSecret,
     V2_TEST_AUTH_FIXTURES_JSON: fixtures,
   },
-  stdio: ["ignore", "pipe", "pipe"],
-  windowsHide: true,
-});
+  developmentProof,
+);
+const child = developmentServer.child;
 
 let serverLog = "";
 for (const stream of [child.stdout, child.stderr]) {
@@ -127,7 +174,10 @@ for (const stream of [child.stdout, child.stderr]) {
 }
 
 try {
-  await waitUntilReady(origin, child);
+  await Promise.race([
+    waitUntilReady(origin, child),
+    developmentServer.startFailure,
+  ]);
 
   const anonymousPage = await fetch(`${origin}/admin`, { redirect: "manual" });
   assert.equal(anonymousPage.status, 307);
@@ -257,16 +307,15 @@ try {
   throw error;
 } finally {
   await stopServer(child);
+  await developmentProof.dispose();
 }
 
 const productionPort = await availablePort();
 const productionOrigin = `http://127.0.0.1:${productionPort}`;
-const productionChild = spawn(
-  process.execPath,
-  [nextBin, "start", "--hostname", "127.0.0.1", "--port", String(productionPort)],
+const productionProof = await createFixtureRunnerProof(productionOrigin);
+const productionServer = await spawnNextWithProof(
+  ["start", "--hostname", "127.0.0.1", "--port", String(productionPort)],
   {
-    cwd: process.cwd(),
-    env: {
       ...process.env,
       NODE_ENV: "production",
       DATABASE_URL: "",
@@ -275,13 +324,13 @@ const productionChild = spawn(
       V2_AUTH_RATE_LIMIT_PEPPER: "",
       V2_PUBLIC_ORIGIN: productionOrigin,
       V2_TEST_AUTH_ENABLED: "true",
+      ...productionProof.environment,
       V2_TEST_AUTH_SECRET: sessionSecret,
       V2_TEST_AUTH_FIXTURES_JSON: fixtures,
-    },
-    stdio: ["ignore", "pipe", "pipe"],
-    windowsHide: true,
   },
+  productionProof,
 );
+const productionChild = productionServer.child;
 
 let productionLog = "";
 for (const stream of [productionChild.stdout, productionChild.stderr]) {
@@ -292,7 +341,10 @@ for (const stream of [productionChild.stdout, productionChild.stderr]) {
 }
 
 try {
-  await waitUntilReady(productionOrigin, productionChild);
+  await Promise.race([
+    waitUntilReady(productionOrigin, productionChild),
+    productionServer.startFailure,
+  ]);
   const response = await fetch(`${productionOrigin}/api/admin/login`, {
     method: "POST",
     headers: { "content-type": "application/json", origin: productionOrigin },
@@ -323,4 +375,5 @@ try {
   throw error;
 } finally {
   await stopServer(productionChild);
+  await productionProof.dispose();
 }

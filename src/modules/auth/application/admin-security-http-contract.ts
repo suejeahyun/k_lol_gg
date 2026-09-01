@@ -67,6 +67,12 @@ export const ADMIN_SECURITY_PROBLEMS = Object.freeze({
     title: "2단계 인증 상태가 변경되었습니다.",
     detail: "페이지를 새로고침한 뒤 현재 상태에서 다시 시도해 주세요.",
   }),
+  tooManyAttempts: definePublicProblem({
+    code: "TOTP_ATTEMPTS_LIMITED",
+    status: 429,
+    title: "인증 앱 코드 확인을 잠시 멈췄습니다.",
+    detail: "시도 횟수가 많습니다. 안내된 시간 뒤 새 코드로 다시 시도해 주세요.",
+  }),
   unavailable: definePublicProblem({
     code: "AUTH_SERVICE_UNAVAILABLE",
     status: 503,

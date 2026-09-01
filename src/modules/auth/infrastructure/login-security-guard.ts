@@ -5,12 +5,12 @@ import type { NextRequest } from "next/server";
 import { LoginAttemptLimiter, LoginWorkGate } from "../application/login-attempt-limiter";
 import type { RecordLoginAttemptInput } from "../application/ports/auth-repository";
 import type { LoginRateLimitScope } from "../domain/auth-records";
+import type { AuthSession } from "../domain/auth-session";
+import { resolveRateLimitClientKey } from "./rate-limit-client-key";
 import { resolveRuntimeAuthContext } from "./runtime-auth-context";
 
 function requestClientKey(request: NextRequest) {
-  const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  const direct = request.headers.get("x-real-ip")?.trim();
-  return (direct || forwarded || "unknown-client").slice(0, 128);
+  return resolveRateLimitClientKey(request.headers);
 }
 
 const limiter = new LoginAttemptLimiter();
@@ -55,6 +55,34 @@ function durableInput(
   };
 }
 
+async function guardDurableRules(
+  context: Extract<NonNullable<ReturnType<typeof resolveRuntimeAuthContext>>, { mode: "database" }>,
+  rules: readonly DurableRule[],
+): Promise<RuntimeLoginRateLimitDecision> {
+  const nowMs = Date.now();
+
+  try {
+    const records = await Promise.all(
+      rules.map((rule) => context.repository.recordLoginAttempt(
+        durableInput(rule, context.rateLimitPepper, nowMs),
+      )),
+    );
+    const longestWait = records.reduce((wait, record) => {
+      const blockedUntil = record.blockedUntil?.getTime() ?? 0;
+      return Math.max(wait, blockedUntil - nowMs);
+    }, 0);
+    return longestWait > 0
+      ? {
+          available: true,
+          allowed: false,
+          retryAfterSeconds: Math.max(1, Math.ceil(longestWait / 1_000)),
+        }
+      : { available: true, allowed: true };
+  } catch {
+    return { available: false };
+  }
+}
+
 export async function guardAdminLoginAttempt(
   request: NextRequest,
   loginId: string,
@@ -94,28 +122,42 @@ export async function guardAdminLoginAttempt(
       windowMs: 5 * 60_000,
     },
   ];
-  const nowMs = Date.now();
+  return guardDurableRules(context, rules);
+}
 
-  try {
-    const records = await Promise.all(
-      rules.map((rule) => context.repository.recordLoginAttempt(
-        durableInput(rule, context.rateLimitPepper, nowMs),
-      )),
-    );
-    const longestWait = records.reduce((wait, record) => {
-      const blockedUntil = record.blockedUntil?.getTime() ?? 0;
-      return Math.max(wait, blockedUntil - nowMs);
-    }, 0);
-    return longestWait > 0
-      ? {
-          available: true,
-          allowed: false,
-          retryAfterSeconds: Math.max(1, Math.ceil(longestWait / 1_000)),
-        }
-      : { available: true, allowed: true };
-  } catch {
+export async function guardAdminTotpCodeAttempt(
+  request: NextRequest,
+  session: AuthSession,
+): Promise<RuntimeLoginRateLimitDecision> {
+  const context = resolveRuntimeAuthContext();
+  if (!context || context.mode !== "database" || session.source !== "database") {
     return { available: false };
   }
+
+  const rules: DurableRule[] = [
+    {
+      scope: "GLOBAL_HASH",
+      domain: "klol-v2:rate-limit:admin-totp-global:v1",
+      value: "admin-totp-code",
+      limit: 120,
+      windowMs: 60_000,
+    },
+    {
+      scope: "IP_HASH",
+      domain: "klol-v2:rate-limit:admin-totp-ip:v1",
+      value: requestClientKey(request),
+      limit: 24,
+      windowMs: 5 * 60_000,
+    },
+    {
+      scope: "LOGIN_ID_HASH",
+      domain: "klol-v2:rate-limit:admin-totp-session:v1",
+      value: `${session.userId}:${session.sessionId}`,
+      limit: 8,
+      windowMs: 5 * 60_000,
+    },
+  ];
+  return guardDurableRules(context, rules);
 }
 
 export function acquireAdminLoginWork() {

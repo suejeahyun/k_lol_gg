@@ -16,6 +16,7 @@ import {
 } from "../application/admin-security-http-contract";
 import type { AuthSession } from "../domain/auth-session";
 import { authorizeAdminSecuritySession } from "./admin-security-authorization";
+import { guardAdminTotpCodeAttempt } from "./login-security-guard";
 import {
   clearedSessionCookieOptions,
   SESSION_COOKIE_NAME,
@@ -40,6 +41,23 @@ export function rejectCrossOriginAdminSecurityMutation(request: Request) {
     : problemResponse(ADMIN_SECURITY_PROBLEMS.originRequired, {
         traceId: adminSecurityTraceId(request),
       });
+}
+
+export async function rejectRateLimitedAdminTotpAttempt(
+  request: NextRequest,
+  session: AuthSession,
+) {
+  const decision = await guardAdminTotpCodeAttempt(request, session);
+  if (!decision.available) {
+    return problemResponse(ADMIN_SECURITY_PROBLEMS.unavailable, {
+      traceId: adminSecurityTraceId(request),
+    });
+  }
+  if (decision.allowed) return null;
+  return problemResponse(ADMIN_SECURITY_PROBLEMS.tooManyAttempts, {
+    headers: { "Retry-After": String(decision.retryAfterSeconds) },
+    traceId: adminSecurityTraceId(request),
+  });
 }
 
 export async function readAdminSecurityJson(request: Request) {
