@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useId, useRef } from "react";
 import {
+  CalendarCheck2,
   Home,
   LogIn,
   Menu,
@@ -178,7 +179,13 @@ export function PrimaryUserNavigation() {
           key={item.href}
           aria-current={isUserNavigationActive(pathname, item.href) ? "page" : undefined}
         >
-          {item.href === "/" ? <Home size={16} aria-hidden="true" /> : <UsersRound size={16} aria-hidden="true" />}
+          {item.href === "/" ? (
+            <Home size={16} aria-hidden="true" />
+          ) : item.href === "/players" ? (
+            <UsersRound size={16} aria-hidden="true" />
+          ) : (
+            <CalendarCheck2 size={16} aria-hidden="true" />
+          )}
           {item.label}
         </Link>
       ))}

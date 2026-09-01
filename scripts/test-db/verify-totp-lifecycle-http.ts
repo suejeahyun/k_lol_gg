@@ -176,6 +176,18 @@ async function status(cookie?: string) {
   });
 }
 
+async function enterStableFixedWindow(windowMs: number, minimumRemainingMs: number) {
+  const remainingMs = windowMs - (Date.now() % windowMs);
+  if (remainingMs < minimumRemainingMs) {
+    await new Promise((resolve) => setTimeout(resolve, remainingMs + 250));
+  }
+  const stableRemainingMs = windowMs - (Date.now() % windowMs);
+  assert.ok(
+    stableRemainingMs >= minimumRemainingMs,
+    `Expected at least ${minimumRemainingMs}ms in the fixed rate-limit window, got ${stableRemainingMs}ms.`,
+  );
+}
+
 async function setup(cookie: string, method: "POST" | "DELETE" = "POST", body: object = {}) {
   return fetch(`${origin}/api/admin/security/totp/setup`, {
     method,
@@ -370,6 +382,11 @@ try {
   );
   assert.equal(limitedVerifiedLogin.status, 200);
   const limitedVerifiedCookie = cookiePair(limitedVerifiedLogin);
+
+  // The durable limiter uses clock-aligned five-minute buckets. Enter a window
+  // with enough time left so this exact-boundary assertion cannot straddle two
+  // buckets when the test happens to start near :00/:05.
+  await enterStableFixedWindow(5 * 60_000, 30_000);
 
   const currentLimitedStep = Math.floor(Date.now() / 30_000);
   const acceptedCodes = new Set(

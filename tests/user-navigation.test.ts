@@ -30,16 +30,22 @@ test("USER_ROUTE_MAP canonical 사용자 경로 37개가 중복 없이 분류된
   });
 });
 
-test("첫 사용자 파동에서 page-contract로 표시한 세 경로는 실제 App Router 페이지가 있다", () => {
+test("구현 완료로 표시한 사용자 경로는 실제 App Router 페이지가 있다", () => {
   const pageContracts = canonicalUserRoutes.filter(
     (route) => route.implementationState === "page-contract",
   );
-  assert.deepEqual(pageContracts.map((route) => route.template), ["/", "/players", "/players/[playerId]"]);
+  assert.deepEqual(pageContracts.map((route) => route.template), [
+    "/",
+    "/players",
+    "/players/[playerId]",
+    "/applications",
+  ]);
 
   const pages = [
     "../src/app/(public)/(home)/page.tsx",
     "../src/app/(public)/(registry)/players/page.tsx",
     "../src/app/(public)/(registry)/players/[playerId]/page.tsx",
+    "../src/app/(public)/(applications)/applications/page.tsx",
   ];
   for (const page of pages) assert.equal(existsSync(new URL(page, import.meta.url)), true, page);
 });

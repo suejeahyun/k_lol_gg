@@ -125,7 +125,7 @@ test("migrations, constraints, repository, and transaction contracts hold on Pos
       const migrationRows = await pool.query<{ count: number }>(
         "select count(*)::int as count from drizzle.__drizzle_migrations",
       );
-      assert.equal(migrationRows.rows[0]?.count, 3);
+      assert.equal(migrationRows.rows[0]?.count, 4);
 
       const preservedRows = await pool.query<{ id: string; legacy_id: number | null }>(
         "select id, legacy_id from registry.players where id = $1",
@@ -143,10 +143,13 @@ test("migrations, constraints, repository, and transaction contracts hold on Pos
             ('auth', 'login_rate_limit_buckets'),
             ('registry', 'players'),
             ('registry', 'player_mutation_receipts'),
-            ('audit', 'events')
+            ('audit', 'events'),
+            ('competition', 'seasons'),
+            ('competition', 'season_applications'),
+            ('competition', 'season_command_receipts')
           )`,
       );
-      assert.equal(tableRows.rowCount, 7);
+      assert.equal(tableRows.rowCount, 10);
 
       const rateLimitColumns = await pool.query<{ column_name: string }>(
         `select column_name

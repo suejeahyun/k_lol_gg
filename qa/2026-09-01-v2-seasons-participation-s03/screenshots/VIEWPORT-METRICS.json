@@ -1,0 +1,338 @@
+{
+  "capturedAt": "2026-09-01T03:25:30.238Z",
+  "environment": "Codex IAB on Windows, DPR 1",
+  "interpretation": "documentClientWidth, visualViewportWidth, documentScrollWidth and screenshot width are recorded immediately before each screenshot. Scrollable pages include a 15px Windows classic scrollbar in the JPEG; filenames say layout-client and scrollbar-15. paintedBodyWidthApprox therefore excludes that OS scrollbar. No production CSS was changed to hide it.",
+  "kstDisplayObserved": "2026. 09. 02. 10:00 (Asia/Seoul)",
+  "captures": [
+    {
+      "file": "applications-ready-layout-client-1440-scrollbar-15.jpg",
+      "targetCssClientWidth": 1440,
+      "controllerRequestedWidth": 1455,
+      "osScrollbarPixels": 15,
+      "devicePixelRatio": 1,
+      "documentClientWidth": 1440,
+      "documentScrollHeight": 1714,
+      "documentScrollWidth": 1440,
+      "hasErrorAlert": false,
+      "innerWidth": 1455,
+      "outerWidth": 2560,
+      "regionClientWidth": null,
+      "regionScrollWidth": null,
+      "visualViewportWidth": 1440,
+      "screenshot": {
+        "height": 891,
+        "width": 1440,
+        "marker": 192
+      },
+      "paintedBodyWidthApprox": 1425
+    },
+    {
+      "file": "applications-ready-layout-client-320-scrollbar-15.jpg",
+      "targetCssClientWidth": 320,
+      "controllerRequestedWidth": 335,
+      "osScrollbarPixels": 15,
+      "devicePixelRatio": 1,
+      "documentClientWidth": 320,
+      "documentScrollHeight": 2429,
+      "documentScrollWidth": 320,
+      "hasErrorAlert": false,
+      "innerWidth": 335,
+      "outerWidth": 2560,
+      "regionClientWidth": null,
+      "regionScrollWidth": null,
+      "visualViewportWidth": 320,
+      "screenshot": {
+        "height": 806,
+        "width": 320,
+        "marker": 192
+      },
+      "paintedBodyWidthApprox": 305
+    },
+    {
+      "file": "applications-ready-layout-client-375-scrollbar-15.jpg",
+      "targetCssClientWidth": 375,
+      "controllerRequestedWidth": 390,
+      "osScrollbarPixels": 15,
+      "devicePixelRatio": 1,
+      "documentClientWidth": 375,
+      "documentScrollHeight": 2312,
+      "documentScrollWidth": 375,
+      "hasErrorAlert": false,
+      "innerWidth": 390,
+      "outerWidth": 2560,
+      "regionClientWidth": null,
+      "regionScrollWidth": null,
+      "visualViewportWidth": 375,
+      "screenshot": {
+        "height": 812,
+        "width": 375,
+        "marker": 192
+      },
+      "paintedBodyWidthApprox": 360
+    },
+    {
+      "file": "applications-ready-layout-client-390-scrollbar-15.jpg",
+      "targetCssClientWidth": 390,
+      "controllerRequestedWidth": 405,
+      "osScrollbarPixels": 15,
+      "devicePixelRatio": 1,
+      "documentClientWidth": 390,
+      "documentScrollHeight": 2312,
+      "documentScrollWidth": 390,
+      "hasErrorAlert": false,
+      "innerWidth": 405,
+      "outerWidth": 2560,
+      "regionClientWidth": null,
+      "regionScrollWidth": null,
+      "visualViewportWidth": 390,
+      "screenshot": {
+        "height": 813,
+        "width": 390,
+        "marker": 192
+      },
+      "paintedBodyWidthApprox": 375
+    },
+    {
+      "file": "applications-error-layout-client-1440-scrollbar-15.jpg",
+      "targetCssClientWidth": 1440,
+      "controllerRequestedWidth": 1455,
+      "osScrollbarPixels": 15,
+      "devicePixelRatio": 1,
+      "documentClientWidth": 1440,
+      "documentScrollHeight": 920,
+      "documentScrollWidth": 1440,
+      "hasErrorAlert": true,
+      "innerWidth": 1455,
+      "outerWidth": 2560,
+      "regionClientWidth": null,
+      "regionScrollWidth": null,
+      "visualViewportWidth": 1440,
+      "screenshot": {
+        "height": 891,
+        "width": 1440,
+        "marker": 192
+      },
+      "paintedBodyWidthApprox": 1425
+    },
+    {
+      "file": "applications-error-layout-client-390-scrollbar-15.jpg",
+      "targetCssClientWidth": 390,
+      "controllerRequestedWidth": 405,
+      "osScrollbarPixels": 15,
+      "devicePixelRatio": 1,
+      "documentClientWidth": 390,
+      "documentScrollHeight": 989,
+      "documentScrollWidth": 390,
+      "hasErrorAlert": true,
+      "innerWidth": 405,
+      "outerWidth": 2560,
+      "regionClientWidth": null,
+      "regionScrollWidth": null,
+      "visualViewportWidth": 390,
+      "screenshot": {
+        "height": 813,
+        "width": 390,
+        "marker": 192
+      },
+      "paintedBodyWidthApprox": 375
+    },
+    {
+      "file": "applications-empty-layout-client-1440-scrollbar-15.jpg",
+      "targetCssClientWidth": 1440,
+      "controllerRequestedWidth": 1455,
+      "osScrollbarPixels": 15,
+      "devicePixelRatio": 1,
+      "documentClientWidth": 1440,
+      "documentScrollHeight": 920,
+      "documentScrollWidth": 1440,
+      "hasErrorAlert": false,
+      "innerWidth": 1455,
+      "outerWidth": 2560,
+      "regionClientWidth": null,
+      "regionScrollWidth": null,
+      "visualViewportWidth": 1440,
+      "screenshot": {
+        "height": 891,
+        "width": 1440,
+        "marker": 192
+      },
+      "paintedBodyWidthApprox": 1425
+    },
+    {
+      "file": "applications-empty-layout-client-390-scrollbar-15.jpg",
+      "targetCssClientWidth": 390,
+      "controllerRequestedWidth": 405,
+      "osScrollbarPixels": 15,
+      "devicePixelRatio": 1,
+      "documentClientWidth": 390,
+      "documentScrollHeight": 989,
+      "documentScrollWidth": 390,
+      "hasErrorAlert": false,
+      "innerWidth": 405,
+      "outerWidth": 2560,
+      "regionClientWidth": null,
+      "regionScrollWidth": null,
+      "visualViewportWidth": 390,
+      "screenshot": {
+        "height": 813,
+        "width": 390,
+        "marker": 192
+      },
+      "paintedBodyWidthApprox": 375
+    },
+    {
+      "file": "admin-seasons-ready-layout-client-1440-scrollbar-15.jpg",
+      "targetCssClientWidth": 1440,
+      "controllerRequestedWidth": 1455,
+      "osScrollbarPixels": 15,
+      "devicePixelRatio": 1,
+      "documentClientWidth": 1440,
+      "documentScrollWidth": 1440,
+      "innerWidth": 1455,
+      "outerWidth": 2560,
+      "regionClientWidth": 1036,
+      "regionScrollWidth": 1036,
+      "reviewAction": {
+        "bottom": 1778.9375,
+        "left": 1288.609375,
+        "right": 1361.203125,
+        "top": 1734.9375
+      },
+      "reviewActionName": "OtherSky 신청 검토 저장",
+      "visualViewportWidth": 1440,
+      "screenshot": {
+        "height": 891,
+        "width": 1440,
+        "marker": 192
+      },
+      "paintedBodyWidthApprox": 1425
+    },
+    {
+      "file": "admin-seasons-review-layout-client-1440-scrollbar-15.jpg",
+      "targetCssClientWidth": 1440,
+      "controllerRequestedWidth": 1455,
+      "osScrollbarPixels": 15,
+      "devicePixelRatio": 1,
+      "documentClientWidth": 1440,
+      "documentScrollWidth": 1440,
+      "innerWidth": 1455,
+      "outerWidth": 2560,
+      "regionClientWidth": 1036,
+      "regionScrollWidth": 1036,
+      "reviewAction": {
+        "bottom": 543.9375,
+        "left": 1288.609375,
+        "right": 1361.203125,
+        "top": 499.9375
+      },
+      "reviewActionName": "OtherSky 신청 검토 저장",
+      "visualViewportWidth": 1440,
+      "screenshot": {
+        "height": 891,
+        "width": 1440,
+        "marker": 192
+      },
+      "paintedBodyWidthApprox": 1425
+    },
+    {
+      "file": "admin-seasons-review-layout-client-320-scrollbar-15.jpg",
+      "targetCssClientWidth": 320,
+      "controllerRequestedWidth": 335,
+      "osScrollbarPixels": 15,
+      "devicePixelRatio": 1,
+      "documentClientWidth": 320,
+      "documentScrollWidth": 320,
+      "innerWidth": 335,
+      "outerWidth": 2560,
+      "regionClientWidth": 254,
+      "regionScrollWidth": 254,
+      "reviewAction": {
+        "bottom": 543.796875,
+        "left": 51.59375,
+        "right": 268.40625,
+        "top": 499.796875
+      },
+      "reviewActionName": "OtherSky 신청 검토 저장",
+      "visualViewportWidth": 320,
+      "screenshot": {
+        "height": 806,
+        "width": 320,
+        "marker": 192
+      },
+      "paintedBodyWidthApprox": 305
+    },
+    {
+      "file": "admin-seasons-review-layout-client-375-scrollbar-15.jpg",
+      "targetCssClientWidth": 375,
+      "controllerRequestedWidth": 390,
+      "osScrollbarPixels": 15,
+      "devicePixelRatio": 1,
+      "documentClientWidth": 375,
+      "documentScrollWidth": 375,
+      "innerWidth": 390,
+      "outerWidth": 2560,
+      "regionClientWidth": 309,
+      "regionScrollWidth": 309,
+      "reviewAction": {
+        "bottom": 544.484375,
+        "left": 51.59375,
+        "right": 323.40625,
+        "top": 500.484375
+      },
+      "reviewActionName": "OtherSky 신청 검토 저장",
+      "visualViewportWidth": 375,
+      "screenshot": {
+        "height": 812,
+        "width": 375,
+        "marker": 192
+      },
+      "paintedBodyWidthApprox": 360
+    },
+    {
+      "file": "admin-seasons-review-layout-client-390-scrollbar-15.jpg",
+      "targetCssClientWidth": 390,
+      "controllerRequestedWidth": 405,
+      "osScrollbarPixels": 15,
+      "devicePixelRatio": 1,
+      "documentClientWidth": 390,
+      "documentScrollWidth": 390,
+      "innerWidth": 405,
+      "outerWidth": 2560,
+      "regionClientWidth": 324,
+      "regionScrollWidth": 324,
+      "reviewAction": {
+        "bottom": 544.484375,
+        "left": 51.59375,
+        "right": 338.40625,
+        "top": 500.484375
+      },
+      "reviewActionName": "OtherSky 신청 검토 저장",
+      "visualViewportWidth": 390,
+      "screenshot": {
+        "height": 813,
+        "width": 390,
+        "marker": 192
+      },
+      "paintedBodyWidthApprox": 375
+    },
+    {
+      "file": "admin-seasons-login-required-client-1440.jpg",
+      "targetCssClientWidth": 1440,
+      "controllerRequestedWidth": 1440,
+      "osScrollbarPixels": 0,
+      "devicePixelRatio": 1,
+      "documentClientWidth": 1440,
+      "documentScrollWidth": 1440,
+      "innerWidth": 1440,
+      "outerWidth": 2560,
+      "visualViewportWidth": 1440,
+      "screenshot": {
+        "height": 900,
+        "width": 1440,
+        "marker": 192
+      },
+      "paintedBodyWidthApprox": 1440
+    }
+  ],
+  "desktopReviewContract": "At CSS client 1440, review region clientWidth=scrollWidth=1036 and the first review action rect x=1288.6..1361.2 is fully inside visualViewportWidth 1440."
+}

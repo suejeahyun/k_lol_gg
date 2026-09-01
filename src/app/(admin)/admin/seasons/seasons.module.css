@@ -1,0 +1,113 @@
+.page { width: min(100%, 92rem); min-width: 0; margin: 0 auto; padding: clamp(1rem, 3vw, 2.5rem); }
+.header { display: flex; align-items: flex-end; justify-content: space-between; gap: 2rem; margin-bottom: 1.5rem; }
+.header span { display: inline-flex; align-items: center; gap: .4rem; color: #315eaa; font-size: .76rem; font-weight: 850; }
+.header span svg { width: 1rem; height: 1rem; }
+.header h1 { margin: .5rem 0; color: #1d2a3d; font-size: clamp(2rem, 4vw, 3.2rem); letter-spacing: -.055em; }
+.header p { max-width: 44rem; margin: 0; color: #66758b; line-height: 1.7; }
+.header > b { border-radius: 999px; color: #315eaa; background: #eaf3ff; padding: .55rem .8rem; font-size: .68rem; }
+
+.panel, .state { min-width: 0; margin-top: 1rem; border: 1px solid #dce6f3; border-radius: 1.25rem; background: white; box-shadow: 0 1rem 2.8rem rgb(66 91 129 / 7%); padding: clamp(1rem, 2.5vw, 1.5rem); }
+.panelHeading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+.panelHeading span { color: #315eaa; font-size: .67rem; font-weight: 900; letter-spacing: .09em; }
+.panelHeading h2 { margin: .2rem 0 0; color: #1d2a3d; font-size: 1.25rem; }
+.panelHeading > svg { color: #789ed2; }
+.panelHeading > strong { border-radius: .75rem; color: #4e4e89; background: #f0edff; padding: .45rem .65rem; font-size: .75rem; }
+
+.createForm { display: grid; grid-template-columns: 1.3fr repeat(4, minmax(0, 1fr)) auto; align-items: end; gap: .65rem; }
+.createForm label, .rowActions form label { display: grid; gap: .35rem; color: #5f6e84; font-size: .7rem; font-weight: 800; }
+.createForm input, .rowActions input, .filters input, .filters select, .reviewForm input, .reviewForm select { min-width: 0; min-height: 2.75rem; border: 1px solid #d5e0ee; border-radius: .75rem; color: #26354a; background: white; padding: 0 .7rem; font: inherit; }
+.createForm button, .filters button, .filters a, .rowActions button, .rowActions summary, .reviewForm button { display: inline-flex; min-height: 2.75rem; align-items: center; justify-content: center; border: 0; border-radius: .75rem; color: white; background: #315eaa; padding: 0 .8rem; font: inherit; font-size: .72rem; font-weight: 850; text-decoration: none; cursor: pointer; }
+.createForm > p { grid-column: 1 / -1; margin: 0; color: #315e78; font-size: .72rem; font-weight: 750; }
+
+.seasonList { display: grid; min-width: 0; gap: .75rem; }
+.seasonList article { display: grid; min-width: 0; grid-template-columns: minmax(13rem, 1fr) minmax(20rem, 1.2fr) minmax(18rem, 1.4fr); align-items: start; gap: 1rem; border: 1px solid #e0e8f2; border-radius: 1rem; padding: 1rem; background: #fbfdff; }
+.seasonIdentity { display: flex; align-items: center; gap: .75rem; min-width: 0; }
+.seasonIdentity > div { min-width: 0; }
+.seasonIdentity > b, .applicationTable td > b { border-radius: 999px; color: #6d5c94; background: #f0edff; padding: .35rem .55rem; font-size: .62rem; }
+.seasonIdentity > b[data-status="ACTIVE"], .applicationTable b[data-status="CONFIRMED"] { color: #28695b; background: #e7f7f1; }
+.seasonIdentity > b[data-status="ENDED"], .seasonIdentity > b[data-status="RETIRED"], .applicationTable b[data-status="CANCELLED"] { color: #6c7585; background: #edf1f5; }
+.applicationTable b[data-status="REJECTED"] { color: #9d4358; background: #fff0f4; }
+.applicationTable b[data-status="RESERVE"] { color: #886028; background: #fff5dd; }
+.seasonIdentity h3 { overflow: hidden; margin: 0; color: #1d2a3d; font-size: .95rem; text-overflow: ellipsis; white-space: nowrap; }
+.seasonIdentity p { margin: .25rem 0 0; color: #78869a; font-size: .68rem; }
+.seasonList dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; margin: 0; }
+.seasonList dl div { display: grid; gap: .15rem; min-width: 0; border-radius: .7rem; background: #f1f6fc; padding: .55rem; }
+.seasonList dt { color: #7c899c; font-size: .62rem; }
+.seasonList dd { overflow: hidden; margin: 0; color: #334258; font-size: .7rem; text-overflow: ellipsis; white-space: nowrap; }
+
+.rowActions { display: grid; gap: .55rem; }
+.rowActions > div { display: flex; flex-wrap: wrap; gap: .4rem; }
+.rowActions button[data-variant="danger"] { color: #a13f58; background: #fff0f4; }
+.rowActions button:disabled { cursor: wait; opacity: .6; }
+.rowActions details { border: 1px solid #dde6f1; border-radius: .75rem; background: white; }
+.rowActions summary { color: #315eaa; background: #edf5ff; list-style: none; }
+.rowActions form { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; padding: .75rem; }
+.rowActions form label:first-child, .rowActions form button { grid-column: 1 / -1; }
+.rowActions > p { margin: 0; color: #315e78; font-size: .68rem; }
+
+.filters { display: grid; grid-template-columns: auto minmax(12rem, 1fr) repeat(3, minmax(8rem, auto)) auto auto; align-items: center; gap: .5rem; margin-bottom: 1rem; }
+.filters label { position: relative; min-width: 0; }
+.filters label > input, .filters label > select { width: 100%; }
+.filters > svg { color: #7386a2; }
+.filters a { color: #52657e; background: #edf2f8; }
+.filterError { margin: -.35rem 0 1rem; border-radius: .75rem; color: #8f4055; background: #fff0f4; padding: .65rem .8rem; font-size: .72rem; font-weight: 750; }
+.applicationTable { width: 100%; max-width: 100%; min-width: 0; overflow-x: auto; contain: inline-size; border: 1px solid #e0e7f1; border-radius: 1rem; }
+.applicationTable table { width: 100%; min-width: 0; border-collapse: collapse; table-layout: fixed; }
+.applicationTable th:nth-child(1), .applicationTable td:nth-child(1) { width: 18%; }
+.applicationTable th:nth-child(2), .applicationTable td:nth-child(2) { width: 16%; }
+.applicationTable th:nth-child(3), .applicationTable td:nth-child(3) { width: 10%; }
+.applicationTable th:nth-child(4), .applicationTable td:nth-child(4) { width: 14%; }
+.applicationTable th:nth-child(5), .applicationTable td:nth-child(5) { width: 42%; }
+.applicationTable th, .applicationTable td { padding: .8rem; border-bottom: 1px solid #e7edf5; text-align: left; vertical-align: top; }
+.applicationTable th { color: #65758c; background: #f4f7fb; font-size: .68rem; }
+.applicationTable td { color: #334258; font-size: .72rem; }
+.applicationTable td > * { min-width: 0; overflow-wrap: anywhere; }
+.applicationTable td > strong, .applicationTable td > small, .applicationTable td > em { display: block; }
+.applicationTable td > small, .applicationTable td > em { margin-top: .2rem; color: #7b899b; font-size: .64rem; font-style: normal; }
+
+.reviewForm { display: grid; grid-template-columns: 6.25rem minmax(0, 1fr) auto; gap: .4rem; width: 100%; min-width: 0; }
+.reviewForm label { position: relative; min-width: 0; }
+.reviewForm input, .reviewForm select { width: 100%; }
+.reviewForm small { grid-column: 1 / -1; color: #315e78; font-size: .64rem; }
+.reviewForm button:disabled { cursor: wait; opacity: .6; }
+.empty, .state { display: grid; min-height: 10rem; place-items: center; align-content: center; gap: .5rem; color: #6f7d91; text-align: center; }
+.state { min-height: 22rem; }
+.state h2 { margin: 0; color: #26354a; }
+.state p { margin: 0; }
+.pagination { display: flex; align-items: center; justify-content: center; gap: .5rem; margin-top: 1rem; }
+.pagination a, .pagination span, .pagination strong { display: inline-flex; min-height: 2.75rem; align-items: center; border: 1px solid #dbe4ef; border-radius: .75rem; color: #56667d; background: white; padding: 0 .8rem; font-size: .7rem; text-decoration: none; }
+.pagination span { opacity: .5; }
+
+@media (max-width: 1200px) {
+  .createForm { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .createForm button { grid-column: 1 / -1; }
+  .seasonList article { grid-template-columns: 1fr 1fr; }
+  .rowActions { grid-column: 1 / -1; }
+  .filters { grid-template-columns: auto minmax(0, 1fr) 1fr 1fr; }
+  .filters button, .filters a { grid-column: auto; }
+}
+
+@media (max-width: 720px) {
+  .page { width: 100%; max-width: 100vw; overflow-x: clip; padding: 1rem; }
+  .header { align-items: flex-start; flex-direction: column; gap: 1rem; }
+  .header > b { align-self: flex-start; }
+  .createForm, .seasonList article, .seasonList dl, .filters { grid-template-columns: 1fr; }
+  .filters > svg { display: none; }
+  .rowActions { grid-column: auto; }
+  .rowActions form { grid-template-columns: 1fr; }
+  .rowActions form label, .rowActions form label:first-child, .rowActions form button { grid-column: auto; }
+  .seasonIdentity h3 { overflow-wrap: anywhere; text-overflow: clip; white-space: normal; }
+  .applicationTable { contain: none; overflow: visible; border: 0; border-radius: 0; }
+  .applicationTable table, .applicationTable tbody { display: grid; width: 100%; min-width: 0; gap: .8rem; }
+  .applicationTable thead { position: absolute; overflow: hidden; width: 1px; height: 1px; margin: -1px; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+  .applicationTable tr { display: grid; min-width: 0; gap: 0; border: 1px solid #dce6f3; border-radius: 1rem; background: #fbfdff; box-shadow: 0 .7rem 1.8rem rgb(66 91 129 / 6%); padding: .75rem; }
+  .applicationTable td { display: grid; width: auto; grid-template-columns: 5.5rem minmax(0, 1fr); align-items: start; gap: .18rem .65rem; min-width: 0; padding: .65rem .35rem; border-bottom: 1px solid #e7edf5; }
+  .applicationTable td:nth-child(n) { width: auto; }
+  .applicationTable td::before { grid-row: 1 / span 4; color: #708097; content: attr(data-label); font-size: .64rem; font-weight: 850; }
+  .applicationTable td > * { grid-column: 2; min-width: 0; }
+  .applicationTable td:last-child { grid-template-columns: minmax(0, 1fr); border-bottom: 0; padding-bottom: .25rem; }
+  .applicationTable td:last-child::before, .applicationTable td:last-child > * { grid-column: 1; grid-row: auto; }
+  .applicationTable td:last-child::before { margin-bottom: .45rem; color: #315eaa; font-size: .7rem; letter-spacing: .04em; }
+  .reviewForm { grid-template-columns: minmax(0, 1fr); min-width: 0; width: 100%; }
+  .reviewForm small { grid-column: auto; }
+}
