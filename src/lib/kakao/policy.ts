@@ -172,18 +172,9 @@ export function evaluatePartyMutationOwnership(
     sender?: string | null;
     operatorOverride?: boolean;
   },
-):
-  | { ok: true; operatorOverride: boolean }
-  | {
-      ok: false;
-      reason: "ROOM_MISMATCH" | "HOST_MISMATCH";
-      message: string;
-    } {
-  // 구인은 허용된 카카오톡 방 구성원이 함께 갱신하는 공동 상태다.
-  // 웹훅 인증과 설정된 방/발신자 정책은 이 판정 전에 검증되므로 최초 작성자나
-  // 생성 당시 저장된 방 이름을 기준으로 수정·마감을 다시 제한하지 않는다.
-  const operatorOverride =
-    Boolean(input.operatorOverride) && isKakaoOperatorSender(settings, input.sender);
-
-  return { ok: true as const, operatorOverride };
+) {
+  return {
+    ok: true as const,
+    operatorOverride: Boolean(input.operatorOverride) && isKakaoOperatorSender(settings, input.sender),
+  };
 }
