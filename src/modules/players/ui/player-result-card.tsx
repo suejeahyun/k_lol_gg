@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { PlayerSummary } from "../domain/player";
 
-const positionLabels: Record<PlayerSummary["mainPosition"], string> = {
+const positionLabels: Record<NonNullable<PlayerSummary["mainPosition"]>, string> = {
   TOP: "탑",
   JUNGLE: "정글",
   MID: "미드",
@@ -13,6 +13,8 @@ const positionLabels: Record<PlayerSummary["mainPosition"], string> = {
 };
 
 export function PlayerResultCard({ player }: { player: PlayerSummary }) {
+  const positionLabel = player.mainPosition ? positionLabels[player.mainPosition] : "포지션 미등록";
+
   return (
     <Card className="player-card">
       <CardHeader>
@@ -25,22 +27,22 @@ export function PlayerResultCard({ player }: { player: PlayerSummary }) {
             </small>
           </div>
         </div>
-        <Badge variant="secondary">{positionLabels[player.mainPosition]}</Badge>
+        <Badge variant="secondary">{positionLabel}</Badge>
       </CardHeader>
       <CardContent className="player-card__stats">
         <div>
           <Gamepad2 size={16} />
           <span>최근 내전</span>
-          <strong>{player.recentMatches}회</strong>
+          <strong>{player.recentMatches === null ? "기록 준비 중" : `${player.recentMatches}회`}</strong>
         </div>
         <div>
           <TrendingUp size={16} />
           <span>승률</span>
-          <strong>{player.winRate}%</strong>
+          <strong>{player.winRate === null ? "기록 준비 중" : `${player.winRate}%`}</strong>
         </div>
         <div>
           <span>솔로 랭크</span>
-          <strong>{player.tier}</strong>
+          <strong>{player.tier ?? "미등록"}</strong>
         </div>
       </CardContent>
     </Card>
