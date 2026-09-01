@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
 import { createHash, randomUUID } from "node:crypto";
+import { copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import test from "node:test";
 
 import { eq, sql } from "drizzle-orm";
@@ -90,14 +93,45 @@ test("migrations, constraints, repository, and transaction contracts hold on Pos
   const { database, pool } = createDatabaseHandle(connectionString, { max: 4 });
 
   try {
-    await t.test("forward migration applies from zero and is idempotent", async () => {
-      await applyMigrations(database);
-      await applyMigrations(database);
+    await t.test("forward migration preserves existing player rows and is idempotent", async () => {
+      const partialMigrationFolder = await mkdtemp(join(tmpdir(), "klol-v2-migrations-"));
+      const partialMetaFolder = join(partialMigrationFolder, "meta");
+      const preexistingPlayerId = randomUUID();
+      try {
+        await mkdir(partialMetaFolder);
+        await copyFile(new URL("../../drizzle/0000_jazzy_genesis.sql", import.meta.url), join(partialMigrationFolder, "0000_jazzy_genesis.sql"));
+        await copyFile(new URL("../../drizzle/0001_nappy_iron_fist.sql", import.meta.url), join(partialMigrationFolder, "0001_nappy_iron_fist.sql"));
+        const journal = JSON.parse(await readFile(new URL("../../drizzle/meta/_journal.json", import.meta.url), "utf8")) as { entries: unknown[]; version: string; dialect: string };
+        await writeFile(
+          join(partialMetaFolder, "_journal.json"),
+          JSON.stringify({ ...journal, entries: journal.entries.slice(0, 2) }),
+          "utf8",
+        );
+
+        await applyMigrations(database, partialMigrationFolder);
+        await pool.query(
+          `insert into registry.players
+             (id, member_name, member_name_normalized, nickname, nickname_normalized, tag_line, tag_line_normalized)
+           values ($1, $2, $3, $4, $5, $6, $7)`,
+          [preexistingPlayerId, "이관 전 합성 회원", "이관 전 합성 회원", "BeforeMigration", "beforemigration", "V1", "v1"],
+        );
+
+        await applyMigrations(database);
+        await applyMigrations(database);
+      } finally {
+        await rm(partialMigrationFolder, { force: true, recursive: true });
+      }
 
       const migrationRows = await pool.query<{ count: number }>(
         "select count(*)::int as count from drizzle.__drizzle_migrations",
       );
-      assert.equal(migrationRows.rows[0]?.count, 2);
+      assert.equal(migrationRows.rows[0]?.count, 3);
+
+      const preservedRows = await pool.query<{ id: string; legacy_id: number | null }>(
+        "select id, legacy_id from registry.players where id = $1",
+        [preexistingPlayerId],
+      );
+      assert.deepEqual(preservedRows.rows, [{ id: preexistingPlayerId, legacy_id: null }]);
 
       const tableRows = await pool.query<{ schema_name: string; table_name: string }>(
         `select table_schema as schema_name, table_name
@@ -108,10 +142,11 @@ test("migrations, constraints, repository, and transaction contracts hold on Pos
             ('auth', 'sessions'),
             ('auth', 'login_rate_limit_buckets'),
             ('registry', 'players'),
+            ('registry', 'player_mutation_receipts'),
             ('audit', 'events')
           )`,
       );
-      assert.equal(tableRows.rowCount, 6);
+      assert.equal(tableRows.rowCount, 7);
 
       const rateLimitColumns = await pool.query<{ column_name: string }>(
         `select column_name

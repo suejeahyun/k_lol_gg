@@ -341,31 +341,27 @@ async function runContractTests(connectionString: string): Promise<void> {
 
   const tsxCli = resolve(workspaceRoot, "node_modules/tsx/dist/cli.mjs");
   const testFiles = [
-    resolve(workspaceRoot, "tests/database/data-platform.contract.test.ts"),
-    resolve(workspaceRoot, "tests/database/auth-totp-lifecycle.contract.test.ts"),
+    "tests/database/data-platform.contract.test.ts",
+    "tests/database/auth-totp-lifecycle.contract.test.ts",
+    "tests/database/player-admin.contract.test.ts",
   ];
-  const child = spawn(process.execPath, [
-    tsxCli,
-    "--test",
-    "--test-concurrency=1",
-    ...testFiles,
-  ], {
-    cwd: workspaceRoot,
-    env: childTestEnvironment(connectionString),
-    stdio: "inherit",
-    windowsHide: true,
-  });
-
-  const exitCode = await new Promise<number>((resolveExit, reject) => {
-    child.once("error", reject);
-    child.once("exit", (code, signal) => {
-      if (signal) reject(new Error(`Database contract tests ended by ${signal}.`));
-      else resolveExit(code ?? 1);
+  for (const relativeTestFile of testFiles) {
+    const child = spawn(process.execPath, [tsxCli, "--test", resolve(workspaceRoot, relativeTestFile)], {
+      cwd: workspaceRoot,
+      env: childTestEnvironment(connectionString),
+      stdio: "inherit",
+      windowsHide: true,
     });
-  });
-
-  if (exitCode !== 0) {
-    throw new Error(`Database contract tests failed with exit code ${exitCode}.`);
+    const exitCode = await new Promise<number>((resolveExit, reject) => {
+      child.once("error", reject);
+      child.once("exit", (code, signal) => {
+        if (signal) reject(new Error(`${relativeTestFile} ended by ${signal}.`));
+        else resolveExit(code ?? 1);
+      });
+    });
+    if (exitCode !== 0) {
+      throw new Error(`${relativeTestFile} failed with exit code ${exitCode}.`);
+    }
   }
 }
 
@@ -423,6 +419,33 @@ async function runTotpLifecycleHttpVerification(connectionString: string): Promi
   }
 }
 
+async function runPlayerAdminHttpVerification(connectionString: string): Promise<void> {
+  assertSafeTestDatabase({
+    connectionString,
+    nodeEnv: "test",
+    testMode: "true",
+  });
+
+  const tsxCli = resolve(workspaceRoot, "node_modules/tsx/dist/cli.mjs");
+  const verificationFile = resolve(workspaceRoot, "scripts/test-db/verify-player-admin-http.ts");
+  const child = spawn(process.execPath, [tsxCli, verificationFile], {
+    cwd: workspaceRoot,
+    env: childTestEnvironment(connectionString),
+    stdio: "inherit",
+    windowsHide: true,
+  });
+  const exitCode = await new Promise<number>((resolveExit, reject) => {
+    child.once("error", reject);
+    child.once("exit", (code, signal) => {
+      if (signal) reject(new Error(`Player administrator HTTP verification ended by ${signal}.`));
+      else resolveExit(code ?? 1);
+    });
+  });
+  if (exitCode !== 0) {
+    throw new Error(`Player administrator HTTP verification failed with exit code ${exitCode}.`);
+  }
+}
+
 async function main(): Promise<void> {
   const useCiService =
     process.env.CI === "true" && process.env.V2_USE_CI_POSTGRES_SERVICE === "true";
@@ -438,6 +461,7 @@ async function main(): Promise<void> {
     await runContractTests(connectionString);
     await runDurableAuthHttpVerification(connectionString);
     await runTotpLifecycleHttpVerification(connectionString);
+    await runPlayerAdminHttpVerification(connectionString);
     return;
   }
 
@@ -448,6 +472,7 @@ async function main(): Promise<void> {
     await runContractTests(cluster.connectionString);
     await runDurableAuthHttpVerification(cluster.connectionString);
     await runTotpLifecycleHttpVerification(cluster.connectionString);
+    await runPlayerAdminHttpVerification(cluster.connectionString);
   } finally {
     if (cluster) {
       await stopAndRemoveCluster(cluster);
