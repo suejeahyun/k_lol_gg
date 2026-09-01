@@ -28,6 +28,10 @@ class MemoryAccountRepository implements AuthAccountRepository {
     return loginId === this.account.loginId ? this.account : null;
   }
 
+  async findById(accountId: string) {
+    return accountId === this.account.id ? this.account : null;
+  }
+
   async consumeTotpStep(_accountId: string, step: number) {
     if (this.consumedStep !== undefined && step <= this.consumedStep) return false;
     this.consumedStep = step;

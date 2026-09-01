@@ -53,10 +53,12 @@ function parseFixture(raw: RawFixture, index: number) {
 
 export class FixtureAuthAccountRepository implements AuthAccountRepository {
   private readonly accountsByLoginId: Map<string, AuthAccount>;
+  private readonly accountsById: Map<string, AuthAccount>;
   private readonly consumedTotpSteps = new Map<string, number>();
 
   private constructor(accounts: AuthAccount[]) {
     this.accountsByLoginId = new Map(accounts.map((account) => [account.loginId, account]));
+    this.accountsById = new Map(accounts.map((account) => [account.id, account]));
   }
 
   static async fromEnvironment(): Promise<FixtureAuthAccountRepository | null> {
@@ -103,6 +105,10 @@ export class FixtureAuthAccountRepository implements AuthAccountRepository {
 
   async findByLoginId(loginId: string) {
     return this.accountsByLoginId.get(loginId) ?? null;
+  }
+
+  async findById(accountId: string) {
+    return this.accountsById.get(accountId) ?? null;
   }
 
   async consumeTotpStep(accountId: string, step: number) {

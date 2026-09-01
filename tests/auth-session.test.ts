@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { authorizeSession } from "../src/modules/auth/application/authorize-session";
+import { sessionMatchesAccount } from "../src/modules/auth/application/validate-session-account";
 import { JoseSessionCodec } from "../src/modules/auth/infrastructure/jose-session-codec";
 
 const SECRET = "unit-test-session-secret-with-at-least-32-bytes";
@@ -44,4 +45,24 @@ test("authorization distinguishes missing role and missing admin TOTP", () => {
     reason: "TOTP_REQUIRED",
   });
   assert.equal(authorizeSession({ ...session, role: "SUPER_ADMIN" }, "ADMIN").allowed, true);
+});
+
+test("session is revoked when account state, role, or authVersion changes", () => {
+  const session = { ...seed, expiresAt: NOW + 60_000 };
+  const account = {
+    id: seed.userId,
+    loginId: "e2e_admin",
+    passwordHash: "not-used-by-this-test",
+    role: seed.role,
+    status: "APPROVED" as const,
+    authVersion: seed.authVersion,
+    adminTotpEnabled: true,
+    adminTotpSecret: null,
+  };
+
+  assert.equal(sessionMatchesAccount(session, account), true);
+  assert.equal(sessionMatchesAccount(session, { ...account, authVersion: 2 }), false);
+  assert.equal(sessionMatchesAccount(session, { ...account, status: "SUSPENDED" }), false);
+  assert.equal(sessionMatchesAccount(session, { ...account, role: "SUPER_ADMIN" }), false);
+  assert.equal(sessionMatchesAccount(session, { ...account, adminTotpEnabled: false }), false);
 });
