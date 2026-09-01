@@ -5,6 +5,9 @@ import test from "node:test";
 import {
   ADMIN_ROUTE_CONTRACTS,
   getAdminRouteContract,
+  interpolateAdminRouteTarget,
+  resolveAdminLegacyDestination,
+  resolveAdminRouteContract,
 } from "../src/modules/admin/domain/admin-route-contracts";
 
 test("administrator parity ledger accounts for all 81 V1 pages exactly once", () => {
@@ -52,4 +55,34 @@ test("every destination stays inside the reviewed administrator or operations-do
   assert.equal(getAdminRouteContract("/admin/players")?.decision, "keep");
   assert.equal(getAdminRouteContract("/admin/recruits")?.decision, "retire");
   assert.equal(getAdminRouteContract("/outside"), undefined);
+});
+
+test("legacy administrator routes resolve only to reviewed same-origin destinations", () => {
+  assert.equal(
+    resolveAdminLegacyDestination("/admin/players/player-123/edit"),
+    "/admin/players/player-123?mode=edit",
+  );
+  assert.equal(
+    resolveAdminLegacyDestination("/admin/balance-ai/reviews/review 7"),
+    "/admin/balance-ai?tab=reviews&review=review%207",
+  );
+  assert.equal(resolveAdminLegacyDestination("/admin/players"), null);
+  assert.equal(resolveAdminLegacyDestination("/admin/unknown"), null);
+  assert.equal(resolveAdminLegacyDestination("//attacker.invalid/admin/recruits"), null);
+  assert.equal(resolveAdminLegacyDestination("/admin\\recruits"), null);
+  assert.equal(resolveAdminLegacyDestination("/admin/recruits?next=https://attacker.invalid"), null);
+
+  const trailingSlash = resolveAdminRouteContract("/admin/recruits/");
+  assert.equal(trailingSlash?.contract.id, "063");
+});
+
+test("target interpolation rejects missing parameters and non-local destinations", () => {
+  assert.throws(
+    () => interpolateAdminRouteTarget("/admin/players/[playerId]", {}),
+    /Missing administrator route parameter/,
+  );
+  assert.throws(
+    () => interpolateAdminRouteTarget("//attacker.invalid/[id]", { id: "value" }),
+    /same origin/,
+  );
 });

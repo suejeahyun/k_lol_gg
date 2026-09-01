@@ -105,3 +105,72 @@ export const ADMIN_ROUTE_CONTRACTS = [
 export function getAdminRouteContract(source: string): AdminRouteContract | undefined {
   return ADMIN_ROUTE_CONTRACTS.find((contract) => contract.source === source);
 }
+
+export type ResolvedAdminRouteContract = {
+  contract: AdminRouteContract;
+  parameters: Readonly<Record<string, string>>;
+};
+
+function matchRoutePattern(pattern: string, pathname: string): Readonly<Record<string, string>> | null {
+  const patternSegments = pattern.split("/").filter(Boolean);
+  const pathSegments = pathname.split("/").filter(Boolean);
+  if (patternSegments.length !== pathSegments.length) return null;
+
+  const parameters: Record<string, string> = {};
+  for (let index = 0; index < patternSegments.length; index += 1) {
+    const patternSegment = patternSegments[index];
+    const pathSegment = pathSegments[index];
+    const dynamic = /^\[([A-Za-z][A-Za-z0-9]*)\]$/.exec(patternSegment);
+
+    if (dynamic) {
+      if (!pathSegment || pathSegment === "." || pathSegment === "..") return null;
+      parameters[dynamic[1]] = pathSegment;
+      continue;
+    }
+
+    if (patternSegment !== pathSegment) return null;
+  }
+
+  return parameters;
+}
+
+export function resolveAdminRouteContract(pathname: string): ResolvedAdminRouteContract | null {
+  if (
+    !pathname.startsWith("/admin") ||
+    pathname.includes("\\") ||
+    pathname.includes("?") ||
+    pathname.includes("#") ||
+    pathname.includes("//")
+  ) {
+    return null;
+  }
+
+  const normalizedPathname = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+  for (const contract of ADMIN_ROUTE_CONTRACTS) {
+    const parameters = matchRoutePattern(contract.source, normalizedPathname);
+    if (parameters) return { contract, parameters };
+  }
+  return null;
+}
+
+export function interpolateAdminRouteTarget(
+  target: string,
+  parameters: Readonly<Record<string, string>>,
+): string {
+  const resolved = target.replace(/\[([A-Za-z][A-Za-z0-9]*)\]/g, (_, key: string) => {
+    const value = parameters[key];
+    if (!value) throw new Error(`Missing administrator route parameter: ${key}`);
+    return encodeURIComponent(value);
+  });
+
+  if (!resolved.startsWith("/") || resolved.startsWith("//") || resolved.includes("\\")) {
+    throw new Error("Administrator route targets must stay on the same origin.");
+  }
+  return resolved;
+}
+
+export function resolveAdminLegacyDestination(pathname: string): string | null {
+  const resolved = resolveAdminRouteContract(pathname);
+  if (!resolved || resolved.contract.decision === "keep") return null;
+  return interpolateAdminRouteTarget(resolved.contract.target, resolved.parameters);
+}
