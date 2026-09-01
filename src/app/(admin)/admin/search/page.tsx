@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { ADMIN_WORKSPACES } from "@/modules/admin/domain/admin-workspaces";
+import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
 import styles from "./search.module.css";
 
 type AdminSearchPageProps = {
@@ -13,6 +14,10 @@ function normalizeQuery(value: string | string[] | undefined) {
 
 export default async function AdminSearchPage({ searchParams }: AdminSearchPageProps) {
   const query = normalizeQuery((await searchParams).q);
+  await requirePageRole(
+    "ADMIN",
+    query ? `/admin/search?q=${encodeURIComponent(query)}` : "/admin/search",
+  );
   const normalized = query.toLocaleLowerCase("ko-KR");
   const results = query
     ? ADMIN_WORKSPACES.filter((workspace) =>

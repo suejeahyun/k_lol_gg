@@ -42,7 +42,7 @@ export interface AuthRepository {
   readonly source: "database";
   findAccountById(id: string): Promise<AuthAccountRecord | null>;
   findAccountByLoginId(loginId: string): Promise<AuthAccountRecord | null>;
-  createSession(input: CreateSessionInput): Promise<void>;
+  createSession(input: CreateSessionInput): Promise<boolean>;
   findActiveSession(
     sessionId: string,
     tokenHash: Uint8Array,

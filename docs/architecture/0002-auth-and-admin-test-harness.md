@@ -28,7 +28,7 @@
 
 ## 세션 계약
 
-- 최소 claim: `sub`, `role`, `source`, `authVersion`, `adminTotpVerified`, `iat`, `exp`
+- 최소 claim: `sub`, 고유 UUID `jti`, `role`, `source`, `authVersion`, `adminTotpVerified`, `iat`, `exp`
 - 역할: `USER`, `ADMIN`, `SUPER_ADMIN`
 - 개인 식별 정보, 이메일, 전화번호, 비밀번호, TOTP 비밀은 토큰에 포함하지 않는다.
 - 쿠키: `HttpOnly`, `SameSite=Strict`, `Path=/`, HTTPS에서 `Secure`, 최대 30분
@@ -43,6 +43,17 @@
 - 로컬 단일 프로세스 검수에는 로그인 ID·클라이언트·전역 제한과 scrypt 동시 작업 제한을 적용한다.
 - 운영 DB 인증을 활성화하기 전에는 다중 인스턴스가 공유하는 영속 rate-limit 저장소, 원자적 TOTP step 소비, 서버 세션 ID 폐기를 반드시 연결한다. 이 세 조건이 없으면 운영 인증 저장소는 출시 불가 상태다.
 - TOTP secret은 최소 160 bit를 요구하며 운영 저장소에서는 평문으로 보관하지 않는다.
+
+## 2026-09-01 내구성 통합 근거
+
+- 운영형 세션 발급은 JWT 원문에 도메인 prefix를 붙여 SHA-256한 32-byte digest와 `jti`를 PostgreSQL에 함께 저장한다. 원문 token은 DB·로그에 저장하지 않는다.
+- 보호 요청은 JWS claim만 신뢰하지 않고 매번 `jti + token hash`로 session을 조회한 뒤 현재 account의 status, role, `authVersion`, 삭제 상태와 다시 대조한다.
+- 로그아웃은 cookie 삭제 전에 해당 `jti`를 PostgreSQL에서 revoke하며, DB 폐기에 실패한 경우 성공으로 응답하지 않는다.
+- DB 폐기가 불가능한 503 응답에서는 재시도할 raw cookie를 지우지 않는다. 비운영 fixture도 프로세스 수명 동안 폐기된 `jti`를 기억해 이전 cookie replay를 거부한다.
+- 운영형 로그인 제한은 raw login ID·IP 대신 서로 다른 domain과 32-byte server-side HMAC pepper로 만든 digest만 영속 bucket에 기록한다.
+- 운영형 TOTP는 `TOTP_ENCRYPTION_KEYS` keyring과 account ID/key version AAD를 사용하는 AES-256-GCM envelope만 복호화한다.
+- `DATABASE_URL`, `SESSION_SIGNING_KEYS`, `TOTP_ENCRYPTION_KEYS`, `V2_AUTH_RATE_LIMIT_PEPPER` 중 하나라도 없거나 형식이 틀리면 운영형 인증 context가 생성되지 않는다.
+- 비운영 fixture는 기존 수동·브라우저 QA 호환을 위해 메모리에 남아 있지만 `NODE_ENV !== production`과 명시적 test 환경 변수 조건을 계속 모두 요구한다.
 
 ## 관리자 E2E 흐름
 

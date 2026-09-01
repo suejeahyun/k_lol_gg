@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   clearedSessionCookieOptions,
+  revokeRuntimeSessionToken,
   SESSION_COOKIE_NAME,
 } from "@/modules/auth/infrastructure/runtime-session";
 import { hasSameOrigin } from "@/modules/auth/application/mutation-request-guard";
@@ -16,14 +17,24 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const response = request.headers.get("accept")?.includes("text/html")
-    ? NextResponse.redirect(new URL("/admin/login", request.url), { status: 303 })
-    : NextResponse.json({ success: true }, { headers: { "Cache-Control": "no-store" } });
-  response.headers.set("Cache-Control", "no-store");
-  response.cookies.set(
-    SESSION_COOKIE_NAME,
-    "",
-    clearedSessionCookieOptions(request.nextUrl.protocol === "https:"),
+  const revocation = await revokeRuntimeSessionToken(
+    request.cookies.get(SESSION_COOKIE_NAME)?.value,
   );
+  const response = revocation === "unavailable"
+    ? NextResponse.json(
+        { success: false, message: "세션을 완전히 폐기할 수 없습니다. 잠시 후 다시 시도해 주세요." },
+        { status: 503, headers: { "Cache-Control": "no-store" } },
+      )
+    : request.headers.get("accept")?.includes("text/html")
+      ? NextResponse.redirect(new URL("/admin/login", request.url), { status: 303 })
+      : NextResponse.json({ success: true }, { headers: { "Cache-Control": "no-store" } });
+  response.headers.set("Cache-Control", "no-store");
+  if (revocation !== "unavailable") {
+    response.cookies.set(
+      SESSION_COOKIE_NAME,
+      "",
+      clearedSessionCookieOptions(request.nextUrl.protocol === "https:"),
+    );
+  }
   return response;
 }

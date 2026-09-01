@@ -44,4 +44,17 @@ DB 계약 테스트는 `NODE_ENV=test`, `V2_DB_TEST_MODE=true`, loopback host, `
 - cleanup job이 production guard와 audit/관측 계약 없이 실행됨
 - 암호화 key ring과 HMAC pepper가 Vercel 환경별로 분리되지 않음
 
-현재 브랜치는 DB schema와 repository 계약까지 구현한다. 실제 password 검증, cookie/JWS 발급, TOTP 암복호화 service, login route 연결, 환경별 key 관리와 scheduled cleanup 실행은 S01 애플리케이션 구현의 후속 출시 게이트다.
+## 2026-09-01 구현 상태
+
+현재 구현은 password 검증, cookie/JWS 발급, 고유 `jti`, domain-separated token hash, 매 요청 DB 재검증, logout revoke, AES-256-GCM TOTP 복호화, HMAC-peppered 영속 rate-limit을 실제 login/logout/session Route Handler에 연결했다. 격리 PostgreSQL 18에서 token 변조, revoke, expiry, `authVersion`·role·status 변경 무효화와 HTTP cookie 흐름을 검증한다.
+
+다음 항목은 여전히 S01 출시 게이트다.
+
+- 비운영 메모리 fixture를 격리 PostgreSQL fixture로 이전
+- TOTP 등록 → 확인 → enable, disable/reset, 이전 key 정상 재암호화와 rotation 완료 증거
+- 비밀번호·역할·상태·TOTP 보안 mutation의 `authVersion` 증가, 전체 session revoke, audit event를 한 transaction으로 연결
+- 운영 migration job, 만료 session/rate bucket cleanup scheduler, 관측·경보
+- 최초 SUPER_ADMIN bootstrap과 복구 코드 정책
+- 환경별 keyring/pepper 분리, backup/restore와 이전 key escrow 복구 훈련
+
+따라서 현재 상태는 운영형 인증 내구성 경로가 코드와 격리 DB에서 검증된 것이며, S01 전체 또는 운영 배포 완료를 뜻하지 않는다.

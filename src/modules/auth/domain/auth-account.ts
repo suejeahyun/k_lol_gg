@@ -11,4 +11,5 @@ export type AuthAccount = {
   authVersion: number;
   adminTotpEnabled: boolean;
   adminTotpSecret: string | null;
+  adminTotpSecretUnavailable?: boolean;
 };

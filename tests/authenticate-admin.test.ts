@@ -113,3 +113,33 @@ test("non-admin and pending accounts cannot obtain an admin session", async () =
     reason: "STATUS",
   });
 });
+
+test("missing TOTP decryption key is exposed only after the password is verified", async () => {
+  const account: AuthAccount = {
+    id: "fixture-unavailable-key",
+    loginId: "unavailable_key_admin",
+    passwordHash: await hashPassword("synthetic-password-123!"),
+    role: "ADMIN",
+    status: "APPROVED",
+    authVersion: 1,
+    adminTotpEnabled: true,
+    adminTotpSecret: null,
+    adminTotpSecretUnavailable: true,
+  };
+  const dependencies = {
+    accounts: new MemoryAccountRepository(account),
+    passwords: new NodePasswordVerifier(),
+    totp: new Rfc6238TotpVerifier(() => NOW, 0),
+  };
+
+  assert.deepEqual(await authenticateAdmin({
+    loginId: account.loginId,
+    password: "wrong-password",
+    totpCode: "123456",
+  }, dependencies), { type: "invalid-credentials" });
+  assert.deepEqual(await authenticateAdmin({
+    loginId: account.loginId,
+    password: "synthetic-password-123!",
+    totpCode: "123456",
+  }, dependencies), { type: "unavailable" });
+});

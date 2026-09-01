@@ -105,6 +105,10 @@ const child = spawn(process.execPath, [nextBin, "dev", "--hostname", "127.0.0.1"
   cwd: process.cwd(),
   env: {
     ...process.env,
+    DATABASE_URL: "",
+    SESSION_SIGNING_KEYS: "",
+    TOTP_ENCRYPTION_KEYS: "",
+    V2_AUTH_RATE_LIMIT_PEPPER: "",
     V2_PUBLIC_ORIGIN: origin,
     V2_TEST_AUTH_ENABLED: "true",
     V2_TEST_AUTH_SECRET: sessionSecret,
@@ -133,6 +137,15 @@ try {
     const response = await fetch(`${origin}${workspacePath}`, { redirect: "manual" });
     assert.equal(response.status, 307, `${workspacePath} must require authentication`);
   }
+
+  const deepAnonymousPage = await fetch(`${origin}/admin/players?status=pending`, {
+    headers: { "x-klol-admin-request-path": "//attacker.invalid" },
+    redirect: "manual",
+  });
+  assert.equal(deepAnonymousPage.status, 307);
+  const deepLoginLocation = new URL(deepAnonymousPage.headers.get("location") ?? "", origin);
+  assert.equal(deepLoginLocation.pathname, "/admin/login");
+  assert.equal(deepLoginLocation.searchParams.get("next"), "/admin/players?status=pending");
 
   const anonymousApi = await fetch(`${origin}/api/admin/session`);
   assert.equal(anonymousApi.status, 401);
@@ -230,6 +243,11 @@ try {
   assert.equal(logout.status, 200);
   assert.match(logout.headers.get("set-cookie") ?? "", /Max-Age=0/i);
 
+  const fixtureReplay = await fetch(`${origin}/api/admin/session`, {
+    headers: { cookie: cookiePair },
+  });
+  assert.equal(fixtureReplay.status, 401);
+
 } catch (error) {
   const sanitizedLog = serverLog
     .replaceAll(password, "[synthetic-password]")
@@ -251,8 +269,11 @@ const productionChild = spawn(
     env: {
       ...process.env,
       NODE_ENV: "production",
+      DATABASE_URL: "",
+      SESSION_SIGNING_KEYS: "",
+      TOTP_ENCRYPTION_KEYS: "",
+      V2_AUTH_RATE_LIMIT_PEPPER: "",
       V2_PUBLIC_ORIGIN: productionOrigin,
-      V2_SESSION_SECRET: sessionSecret,
       V2_TEST_AUTH_ENABLED: "true",
       V2_TEST_AUTH_SECRET: sessionSecret,
       V2_TEST_AUTH_FIXTURES_JSON: fixtures,
@@ -279,6 +300,13 @@ try {
   });
   assert.equal(response.status, 503);
   assert.equal(response.headers.get("set-cookie"), null);
+
+  const unavailableLogout = await fetch(`${productionOrigin}/api/admin/logout`, {
+    method: "POST",
+    headers: { cookie: "klol_v2_session=retryable-opaque-token", origin: productionOrigin },
+  });
+  assert.equal(unavailableLogout.status, 503);
+  assert.equal(unavailableLogout.headers.get("set-cookie"), null);
 
   const home = await fetch(productionOrigin);
   const csp = home.headers.get("content-security-policy") ?? "";

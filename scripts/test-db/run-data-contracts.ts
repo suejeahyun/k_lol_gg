@@ -361,6 +361,33 @@ async function runContractTests(connectionString: string): Promise<void> {
   }
 }
 
+async function runDurableAuthHttpVerification(connectionString: string): Promise<void> {
+  assertSafeTestDatabase({
+    connectionString,
+    nodeEnv: "test",
+    testMode: "true",
+  });
+
+  const tsxCli = resolve(workspaceRoot, "node_modules/tsx/dist/cli.mjs");
+  const verificationFile = resolve(workspaceRoot, "scripts/test-db/verify-durable-auth-http.ts");
+  const child = spawn(process.execPath, [tsxCli, verificationFile], {
+    cwd: workspaceRoot,
+    env: childTestEnvironment(connectionString),
+    stdio: "inherit",
+    windowsHide: true,
+  });
+  const exitCode = await new Promise<number>((resolveExit, reject) => {
+    child.once("error", reject);
+    child.once("exit", (code, signal) => {
+      if (signal) reject(new Error(`Database auth HTTP verification ended by ${signal}.`));
+      else resolveExit(code ?? 1);
+    });
+  });
+  if (exitCode !== 0) {
+    throw new Error(`Database auth HTTP verification failed with exit code ${exitCode}.`);
+  }
+}
+
 async function main(): Promise<void> {
   const useCiService =
     process.env.CI === "true" && process.env.V2_USE_CI_POSTGRES_SERVICE === "true";
@@ -374,6 +401,7 @@ async function main(): Promise<void> {
       testMode: process.env.V2_DB_TEST_MODE,
     });
     await runContractTests(connectionString);
+    await runDurableAuthHttpVerification(connectionString);
     return;
   }
 
@@ -382,6 +410,7 @@ async function main(): Promise<void> {
     cluster = await startEphemeralCluster();
     process.stdout.write("[db-contract] isolated PostgreSQL 18 cluster started\n");
     await runContractTests(cluster.connectionString);
+    await runDurableAuthHttpVerification(cluster.connectionString);
   } finally {
     if (cluster) {
       await stopAndRemoveCluster(cluster);

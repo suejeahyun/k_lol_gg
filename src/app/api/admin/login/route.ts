@@ -53,7 +53,10 @@ export async function POST(request: NextRequest) {
   }
 
   const loginId = String(body.loginId ?? "");
-  const rateLimit = guardAdminLoginAttempt(request, loginId);
+  const rateLimit = await guardAdminLoginAttempt(request, loginId);
+  if (!rateLimit.available) {
+    return json({ message: "V2 인증 저장소가 아직 연결되지 않았습니다." }, 503);
+  }
   if (!rateLimit.allowed) {
     return json(
       { message: "로그인 시도가 너무 많습니다. 잠시 후 다시 시도해 주세요." },
@@ -86,6 +89,9 @@ export async function POST(request: NextRequest) {
   if (result.type === "invalid-credentials") {
     return json({ message: "아이디 또는 비밀번호가 올바르지 않습니다." }, 401);
   }
+  if (result.type === "unavailable") {
+    return json({ message: "2단계 인증 저장소를 확인할 수 없습니다." }, 503);
+  }
   if (result.type === "two-factor-required") {
     return json({ requiresTwoFactor: true, message: "인증 앱의 6자리 코드를 입력해 주세요." }, 401);
   }
@@ -99,7 +105,10 @@ export async function POST(request: NextRequest) {
     return json({ message: messages[result.reason], requiresTwoFactor: result.reason.startsWith("TOTP") }, 403);
   }
 
-  const token = await issueRuntimeSession(result.session);
+  const token = await issueRuntimeSession(result.session).catch(() => null);
+  if (!token) {
+    return json({ message: "V2 인증 세션을 만들 수 없습니다." }, 503);
+  }
   const response = json({ success: true, requiresTwoFactorSetup: result.requiresTwoFactorSetup }, 200);
   response.cookies.set(
     SESSION_COOKIE_NAME,
