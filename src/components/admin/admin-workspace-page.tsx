@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { ArrowLeft, CircleAlert, Database, ShieldCheck } from "lucide-react";
 import type { AdminWorkspace } from "@/modules/admin/domain/admin-workspaces";
+import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
 import styles from "./admin-workspace-page.module.css";
 
-export function AdminWorkspacePage({ workspace }: { workspace: AdminWorkspace }) {
+export async function AdminWorkspacePage({ workspace }: { workspace: AdminWorkspace }) {
+  await requirePageRole("ADMIN", workspace.href);
+
   return (
     <main className={styles.page}>
       <header className={styles.header}>

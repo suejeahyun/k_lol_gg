@@ -70,16 +70,44 @@ export class PostgresAuthRepository implements AuthRepository {
     return rows[0] ? accountRecord(rows[0]) : null;
   }
 
-  async createSession(input: CreateSessionInput): Promise<void> {
-    await this.database.insert(authSessions).values({
-      id: input.id,
-      tokenHash: sha256Digest(input.tokenHash, "Session token hash"),
-      userAccountId: input.userAccountId,
-      authVersion: input.authVersion,
-      role: input.role,
-      totpVerifiedAt: input.totpVerifiedAt,
-      issuedAt: input.issuedAt,
-      expiresAt: input.expiresAt,
+  async createSession(input: CreateSessionInput): Promise<boolean> {
+    return withTransaction(this.database, async (transaction) => {
+      const accountRows = await transaction
+        .select({
+          id: userAccounts.id,
+          role: userAccounts.role,
+          authVersion: userAccounts.authVersion,
+        })
+        .from(userAccounts)
+        .where(
+          and(
+            eq(userAccounts.id, input.userAccountId),
+            isNull(userAccounts.deletedAt),
+            eq(userAccounts.status, "APPROVED"),
+          ),
+        )
+        .for("update")
+        .limit(1);
+      const account = accountRows[0];
+      if (
+        !account ||
+        account.role !== input.role ||
+        account.authVersion !== input.authVersion
+      ) {
+        return false;
+      }
+
+      await transaction.insert(authSessions).values({
+        id: input.id,
+        tokenHash: sha256Digest(input.tokenHash, "Session token hash"),
+        userAccountId: input.userAccountId,
+        authVersion: input.authVersion,
+        role: input.role,
+        totpVerifiedAt: input.totpVerifiedAt,
+        issuedAt: input.issuedAt,
+        expiresAt: input.expiresAt,
+      });
+      return true;
     });
   }
 
@@ -104,6 +132,7 @@ export class PostgresAuthRepository implements AuthRepository {
         and(
           eq(authSessions.id, sessionId),
           eq(authSessions.tokenHash, sha256Digest(tokenHash, "Session token hash")),
+          eq(authSessions.kind, "USER"),
           isNull(authSessions.revokedAt),
           gt(authSessions.expiresAt, now),
           isNull(userAccounts.deletedAt),
@@ -185,7 +214,7 @@ export class PostgresAuthRepository implements AuthRepository {
         keyHash,
         windowStartedAt: input.windowStartedAt,
         attemptCount: 1,
-        blockedUntil: input.limit === 1 ? input.blockUntil : null,
+        blockedUntil: null,
         expiresAt: input.expiresAt,
         updatedAt: input.now,
       })
@@ -198,7 +227,7 @@ export class PostgresAuthRepository implements AuthRepository {
         set: {
           attemptCount: sql`${loginRateLimitBuckets.attemptCount} + 1`,
           blockedUntil: sql`case
-            when ${loginRateLimitBuckets.attemptCount} + 1 >= ${input.limit}
+            when ${loginRateLimitBuckets.attemptCount} + 1 > ${input.limit}
             then greatest(
               coalesce(${loginRateLimitBuckets.blockedUntil}, ${input.blockUntil}),
               ${input.blockUntil}

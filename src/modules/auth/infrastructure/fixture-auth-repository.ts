@@ -18,7 +18,7 @@ type RawFixture = {
 
 const VALID_STATUSES = new Set<AuthAccountStatus>(["PENDING", "APPROVED", "REJECTED", "SUSPENDED"]);
 
-function fixtureRuntimeEnabled() {
+export function isFixtureAuthRuntimeEnabled() {
   return process.env.NODE_ENV !== "production" && process.env.V2_TEST_AUTH_ENABLED === "true";
 }
 
@@ -63,7 +63,7 @@ export class FixtureAuthAccountRepository implements AuthAccountRepository {
   }
 
   static async fromEnvironment(): Promise<FixtureAuthAccountRepository | null> {
-    if (!fixtureRuntimeEnabled()) return null;
+    if (!isFixtureAuthRuntimeEnabled()) return null;
 
     const source = process.env.V2_TEST_AUTH_FIXTURES_JSON;
     if (!source || source.length > 16_384) {

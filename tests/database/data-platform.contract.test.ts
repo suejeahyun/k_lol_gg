@@ -196,7 +196,7 @@ test("migrations, constraints, repository, and transaction contracts hold on Pos
       const sessionId = randomUUID();
       const sessionDigest = digest("synthetic-raw-session-never-stored");
       const issuedAt = new Date();
-      await repository.createSession({
+      assert.equal(await repository.createSession({
         id: sessionId,
         tokenHash: sessionDigest,
         userAccountId: account.id,
@@ -205,13 +205,17 @@ test("migrations, constraints, repository, and transaction contracts hold on Pos
         totpVerifiedAt: issuedAt,
         issuedAt,
         expiresAt: new Date(issuedAt.getTime() + 60_000),
-      });
+      }), true);
       assert.equal(
         (await repository.findActiveSession(sessionId, sessionDigest, issuedAt))?.sessionId,
         sessionId,
       );
       assert.equal(
         await repository.findActiveSession(randomUUID(), sessionDigest, issuedAt),
+        null,
+      );
+      assert.equal(
+        await repository.findActiveSession(sessionId, digest("tampered-session-token"), issuedAt),
         null,
       );
 
@@ -221,7 +225,7 @@ test("migrations, constraints, repository, and transaction contracts hold on Pos
 
       const replacementSessionId = randomUUID();
       const replacementDigest = digest("replacement-session");
-      await repository.createSession({
+      assert.equal(await repository.createSession({
         id: replacementSessionId,
         tokenHash: replacementDigest,
         userAccountId: account.id,
@@ -230,7 +234,7 @@ test("migrations, constraints, repository, and transaction contracts hold on Pos
         totpVerifiedAt: issuedAt,
         issuedAt,
         expiresAt: new Date(issuedAt.getTime() + 60_000),
-      });
+      }), true);
 
       await database
         .update(userAccounts)
@@ -238,6 +242,62 @@ test("migrations, constraints, repository, and transaction contracts hold on Pos
         .where(eq(userAccounts.id, account.id));
       assert.equal(
         await repository.findActiveSession(replacementSessionId, replacementDigest, issuedAt),
+        null,
+      );
+
+      const statusAccount = approvedAccount("status_changed_admin", "ADMIN");
+      await database.insert(userAccounts).values(statusAccount);
+      const statusSessionId = randomUUID();
+      const statusDigest = digest("status-change-session");
+      assert.equal(await repository.createSession({
+        id: statusSessionId,
+        tokenHash: statusDigest,
+        userAccountId: statusAccount.id,
+        authVersion: 0,
+        role: "ADMIN",
+        totpVerifiedAt: issuedAt,
+        issuedAt,
+        expiresAt: new Date(issuedAt.getTime() + 60_000),
+      }), true);
+      await database
+        .update(userAccounts)
+        .set({ status: "SUSPENDED" })
+        .where(eq(userAccounts.id, statusAccount.id));
+      assert.equal(
+        await repository.findActiveSession(statusSessionId, statusDigest, issuedAt),
+        null,
+      );
+      assert.equal(await repository.createSession({
+        id: randomUUID(),
+        tokenHash: digest("suspended-account-session"),
+        userAccountId: statusAccount.id,
+        authVersion: 0,
+        role: "ADMIN",
+        totpVerifiedAt: issuedAt,
+        issuedAt,
+        expiresAt: new Date(issuedAt.getTime() + 60_000),
+      }), false);
+
+      const roleAccount = approvedAccount("role_changed_admin", "ADMIN");
+      await database.insert(userAccounts).values(roleAccount);
+      const roleSessionId = randomUUID();
+      const roleDigest = digest("role-change-session");
+      assert.equal(await repository.createSession({
+        id: roleSessionId,
+        tokenHash: roleDigest,
+        userAccountId: roleAccount.id,
+        authVersion: 0,
+        role: "ADMIN",
+        totpVerifiedAt: issuedAt,
+        issuedAt,
+        expiresAt: new Date(issuedAt.getTime() + 60_000),
+      }), true);
+      await database
+        .update(userAccounts)
+        .set({ role: "SUPER_ADMIN" })
+        .where(eq(userAccounts.id, roleAccount.id));
+      assert.equal(
+        await repository.findActiveSession(roleSessionId, roleDigest, issuedAt),
         null,
       );
 
@@ -273,12 +333,22 @@ test("migrations, constraints, repository, and transaction contracts hold on Pos
         blockUntil,
         limit: 3,
       });
+      const fourth = await repository.recordLoginAttempt({
+        scope: "LOGIN_ID_HASH",
+        keyHash: rateKey,
+        windowStartedAt,
+        now,
+        expiresAt,
+        blockUntil,
+        limit: 3,
+      });
       assert.deepEqual(
-        [first.attemptCount, second.attemptCount, third.attemptCount],
-        [1, 2, 3],
+        [first.attemptCount, second.attemptCount, third.attemptCount, fourth.attemptCount],
+        [1, 2, 3, 4],
       );
       assert.equal(first.blockedUntil, null);
-      assert.equal(third.blockedUntil?.getTime(), blockUntil.getTime());
+      assert.equal(third.blockedUntil, null);
+      assert.equal(fourth.blockedUntil?.getTime(), blockUntil.getTime());
 
       const parallelWindow = new Date(now.getTime());
       const parallelResults = await Promise.all(
@@ -298,6 +368,12 @@ test("migrations, constraints, repository, and transaction contracts hold on Pos
         parallelResults.map((record) => record.attemptCount).toSorted((left, right) => left - right),
         [1, 2, 3, 4, 5],
       );
+      assert.deepEqual(
+        parallelResults
+          .filter((record) => record.blockedUntil !== null)
+          .map((record) => record.attemptCount),
+        [5],
+      );
 
       const historicalNow = new Date(now.getTime() - 180_000);
       await repository.recordLoginAttempt({
@@ -309,7 +385,7 @@ test("migrations, constraints, repository, and transaction contracts hold on Pos
         blockUntil: new Date(now.getTime() - 120_000),
         limit: 1,
       });
-      await repository.createSession({
+      assert.equal(await repository.createSession({
         id: randomUUID(),
         tokenHash: digest("expired-session"),
         userAccountId: account.id,
@@ -318,7 +394,7 @@ test("migrations, constraints, repository, and transaction contracts hold on Pos
         totpVerifiedAt: historicalNow,
         issuedAt: new Date(now.getTime() - 120_000),
         expiresAt: new Date(now.getTime() - 60_000),
-      });
+      }), true);
 
       const cleanup = await repository.cleanupExpiredAuthState({
         now,

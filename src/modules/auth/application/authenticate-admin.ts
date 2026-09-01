@@ -14,6 +14,7 @@ export type AdminLoginResult =
   | { type: "two-factor-required" }
   | { type: "invalid-credentials" }
   | { type: "forbidden"; reason: "ROLE" | "STATUS" | "TOTP" | "TOTP_REPLAY" }
+  | { type: "unavailable" }
   | { type: "invalid-input" };
 
 type AuthenticateAdminDependencies = {
@@ -47,6 +48,10 @@ export async function authenticateAdmin(
 
   if (account.status !== "APPROVED") {
     return { type: "forbidden", reason: "STATUS" };
+  }
+
+  if (account.adminTotpEnabled && account.adminTotpSecretUnavailable) {
+    return { type: "unavailable" };
   }
 
   if (account.adminTotpEnabled) {
