@@ -7,3 +7,35 @@ export type PlayerSummary = Readonly<{
   recentMatches: number | null;
   winRate: number | null;
 }>;
+
+export type PlayerCatalogPage = Readonly<{
+  items: readonly PlayerSummary[];
+  totalCount: number;
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
+}>;
+
+export type PlayerProfile = Readonly<{
+  id: string;
+  displayName: string;
+  riotId: string;
+  currentTier: string | null;
+  peakTier: string | null;
+  joinedAt: Date;
+  seasonStats: null;
+  positionStats: readonly [];
+  championStats: readonly [];
+  recentMatches: readonly [];
+}>;
+
+export type PlayerCatalogQuery = Readonly<{
+  query: string;
+  page: number;
+  pageSize: number;
+}>;
+
+export type PlayerDataResult<T> =
+  | Readonly<{ state: "ready"; data: T }>
+  | Readonly<{ state: "unavailable" }>
+  | Readonly<{ state: "error" }>;
