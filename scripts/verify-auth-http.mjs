@@ -87,6 +87,18 @@ const fixtures = JSON.stringify([
     adminTotpSecret: totpSecret,
   },
 ]);
+const protectedWorkspacePaths = [
+  "/admin",
+  "/admin/players",
+  "/admin/seasons",
+  "/admin/matches",
+  "/admin/balance",
+  "/admin/progress/event",
+  "/admin/kakao",
+  "/admin/champions",
+  "/admin/riot",
+  "/admin/discipline",
+];
 
 const nextBin = path.join(process.cwd(), "node_modules", "next", "dist", "bin", "next");
 const child = spawn(process.execPath, [nextBin, "dev", "--hostname", "127.0.0.1", "--port", String(port)], {
@@ -116,6 +128,11 @@ try {
   const anonymousPage = await fetch(`${origin}/admin`, { redirect: "manual" });
   assert.equal(anonymousPage.status, 307);
   assert.match(anonymousPage.headers.get("location") ?? "", /^\/admin\/login\?next=/);
+
+  for (const workspacePath of protectedWorkspacePaths.slice(1)) {
+    const response = await fetch(`${origin}${workspacePath}`, { redirect: "manual" });
+    assert.equal(response.status, 307, `${workspacePath} must require authentication`);
+  }
 
   const anonymousApi = await fetch(`${origin}/api/admin/session`);
   assert.equal(anonymousApi.status, 401);
@@ -177,13 +194,15 @@ try {
   assert.doesNotMatch(cookie, /; Secure/i);
   const cookiePair = cookie.split(";", 1)[0];
 
-  const protectedPage = await fetch(`${origin}/admin`, {
-    headers: { cookie: cookiePair },
-    redirect: "manual",
-  });
-  assert.equal(protectedPage.status, 200);
-  assert.match(protectedPage.headers.get("content-security-policy") ?? "", /frame-ancestors 'none'/);
-  assert.equal(protectedPage.headers.get("x-frame-options"), "DENY");
+  for (const workspacePath of protectedWorkspacePaths) {
+    const protectedPage = await fetch(`${origin}${workspacePath}`, {
+      headers: { cookie: cookiePair },
+      redirect: "manual",
+    });
+    assert.equal(protectedPage.status, 200, `${workspacePath} must open for ADMIN`);
+    assert.match(protectedPage.headers.get("content-security-policy") ?? "", /frame-ancestors 'none'/);
+    assert.equal(protectedPage.headers.get("x-frame-options"), "DENY");
+  }
 
   const session = await fetch(`${origin}/api/admin/session`, { headers: { cookie: cookiePair } });
   assert.equal(session.status, 200);

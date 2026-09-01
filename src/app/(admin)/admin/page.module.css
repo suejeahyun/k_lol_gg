@@ -85,14 +85,19 @@
 .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
 
 .areaCard {
+  display: block;
   position: relative;
   min-height: 13rem;
   border: 1px solid #dfe7f2;
   border-radius: 1.15rem;
   background: white;
   box-shadow: 0 0.75rem 2rem rgb(68 90 126 / 6%);
+  color: #1d2a3d;
   padding: 1.15rem;
+  text-decoration: none;
 }
+
+.areaCard:hover, .areaCard:focus-visible { border-color: #abc8ef; box-shadow: 0 1rem 2.5rem rgb(49 94 170 / 10%); }
 
 .icon {
   width: 2.5rem;
@@ -108,7 +113,7 @@
 .stage { position: absolute; top: 1.2rem; right: 1.2rem; color: #738198; font-size: 0.7rem; font-weight: 800; }
 .areaCard h3 { margin: 1rem 0 0.4rem; font-size: 1rem; }
 .areaCard p { margin: 0; color: #65758c; font-size: 0.8rem; line-height: 1.6; }
-.pending { display: inline-flex; margin-top: 0.8rem; border-radius: 999px; background: #f2f4f8; color: #69768a; padding: 0.28rem 0.55rem; font-size: 0.68rem; font-weight: 750; }
+.pending { display: inline-flex; margin-top: 0.8rem; border-radius: 999px; background: #eef5ff; color: #315eaa; padding: 0.28rem 0.55rem; font-size: 0.68rem; font-weight: 800; }
 
 @media (max-width: 1100px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 

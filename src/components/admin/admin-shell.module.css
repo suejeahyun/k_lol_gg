@@ -71,10 +71,13 @@
 }
 
 .nav a:hover,
-.nav a:focus-visible {
+.nav a:focus-visible,
+.nav a[aria-current="page"] {
   background: #eef5ff;
   color: #254f91;
 }
+
+.nav a[aria-current="page"] { box-shadow: inset 3px 0 #76a8e9; }
 
 .nav svg { width: 1.05rem; height: 1.05rem; }
 
@@ -105,25 +108,76 @@
 .account button { border: 0; background: transparent; color: #66758b; cursor: pointer; padding: 0.4rem; }
 .account button svg { width: 1.1rem; height: 1.1rem; }
 
-.content { min-width: 0; }
-.mobileHeader { display: none; }
+.content { min-width: 0; padding-bottom: 0; }
+
+.topbar {
+  min-height: 3.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  border-bottom: 1px solid #dce5f3;
+  background: rgb(255 255 255 / 90%);
+  padding: 0 1.25rem;
+  backdrop-filter: blur(1rem);
+}
+
+.breadcrumb, .topActions, .topActions a { display: flex; align-items: center; }
+.breadcrumb { gap: .5rem; color: #718097; font-size: .76rem; }
+.breadcrumb a { min-width: 2.75rem; min-height: 2.75rem; display: flex; align-items: center; justify-content: center; color: #25344a; font-weight: 850; text-decoration: none; }
+.topActions { gap: .5rem; }
+.topActions a { gap: .35rem; min-height: 2.75rem; border-radius: .75rem; color: #46566e; padding: 0 .65rem; font-size: .74rem; font-weight: 780; text-decoration: none; }
+.topActions a:hover, .topActions a:focus-visible { background: #eef5ff; color: #254f91; }
+.topActions svg { width: 1rem; height: 1rem; }
+.environment { border: 1px solid #cfe0f5; border-radius: 999px; background: #f1f7ff; color: #315eaa; padding: .3rem .55rem; font-size: .65rem; font-weight: 900; letter-spacing: .04em; }
+.mobileBottom, .mobileMenu { display: none; }
 
 @media (max-width: 900px) {
   .shell { grid-template-columns: 1fr; }
   .sidebar { display: none; }
-  .mobileHeader {
-    min-height: 3.6rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    border-bottom: 1px solid #dce5f3;
-    background: rgb(255 255 255 / 92%);
-    padding: 0 1rem;
+  .content { padding-bottom: calc(4.5rem + env(safe-area-inset-bottom)); }
+  .topbar { min-height: 3.5rem; padding: 0 .85rem; }
+  .breadcrumb > span:last-child, .topActions a span { display: none; }
+  .topActions a { width: 2.75rem; justify-content: center; padding: 0; }
+  .mobileBottom {
+    min-height: calc(4.15rem + env(safe-area-inset-bottom));
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    align-items: start;
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 50;
+    border-top: 1px solid #d8e3f1;
+    background: rgb(255 255 255 / 95%);
+    padding: .35rem .5rem env(safe-area-inset-bottom);
     backdrop-filter: blur(1rem);
   }
-  .mobileHeader a { color: #1d2a3d; font-weight: 850; text-decoration: none; }
-  .mobileHeader span { color: #315eaa; font-size: 0.72rem; font-weight: 800; }
+  .mobileBottom a, .mobileBottom button { min-height: 3.35rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .2rem; border: 0; border-radius: .75rem; background: transparent; color: #68778d; font: inherit; font-size: .65rem; font-weight: 800; text-decoration: none; }
+  .mobileBottom a[aria-current="page"], .mobileBottom button[aria-expanded="true"] { background: #eef5ff; color: #315eaa; }
+  .mobileBottom svg { width: 1.15rem; height: 1.15rem; }
+  .mobileMenu {
+    display: block;
+    position: fixed;
+    inset: auto .75rem calc(4.65rem + env(safe-area-inset-bottom)) .75rem;
+    z-index: 49;
+    max-height: min(70svh, 38rem);
+    overflow: auto;
+    border: 1px solid #d7e2f1;
+    border-radius: 1.2rem;
+    background: white;
+    box-shadow: 0 1.5rem 4rem rgb(30 48 77 / 20%);
+    padding: .8rem;
+  }
+  .mobileMenu header { min-height: 2.75rem; display: flex; align-items: center; justify-content: space-between; padding: 0 .35rem .55rem; }
+  .mobileMenu header button { width: 2.75rem; height: 2.75rem; display: grid; place-items: center; border: 0; border-radius: .75rem; background: #f2f6fc; color: #43536b; }
+  .mobileMenu header svg { width: 1rem; height: 1rem; }
+  .mobileMenu nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .4rem; }
+  .mobileMenu nav a { min-height: 3rem; display: flex; align-items: center; gap: .55rem; border-radius: .75rem; color: #46566e; padding: .55rem .65rem; font-size: .75rem; font-weight: 780; text-decoration: none; }
+  .mobileMenu nav a[aria-current="page"] { background: #eef5ff; color: #315eaa; }
+  .mobileMenu nav svg { width: 1rem; height: 1rem; }
 }
+
+@media (max-width: 420px) { .mobileMenu nav { grid-template-columns: 1fr; } }

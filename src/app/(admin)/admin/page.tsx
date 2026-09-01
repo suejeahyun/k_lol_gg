@@ -1,29 +1,33 @@
+import Link from "next/link";
 import {
-  BarChart3,
   BookOpenCheck,
   Bot,
+  CalendarDays,
   Gamepad2,
-  ImageIcon,
   MessageCircleMore,
-  Settings2,
+  Scale,
   ShieldCheck,
+  Sparkles,
   Trophy,
   Users,
 } from "lucide-react";
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
+import { ADMIN_WORKSPACES, type AdminWorkspaceIconKey } from "@/modules/admin/domain/admin-workspaces";
 import styles from "./page.module.css";
 
-const areas = [
-  { id: "accounts", title: "계정·선수", description: "승인, 역할, 선수 등록부와 Riot 연결", icon: Users, stage: "S01–S02" },
-  { id: "matches", title: "경기·결과", description: "경기 생성, 결과 접수와 증거 검토", icon: Gamepad2, stage: "S04" },
-  { id: "tournaments", title: "대회 운영", description: "이벤트전·멸망전의 전체 상태 전이", icon: Trophy, stage: "S07–S08" },
-  { id: "balance", title: "밸런스·통계", description: "MMR, 팀 편성, 재계산과 AI 리뷰", icon: BarChart3, stage: "S05–S06" },
-  { id: "community", title: "커뮤니티", description: "구인, Kakao, 운영 신청과 자동화", icon: MessageCircleMore, stage: "S09" },
-  { id: "content", title: "콘텐츠", description: "챔피언, 하이라이트, 갤러리와 홈 노출", icon: ImageIcon, stage: "S10" },
-  { id: "safety", title: "징계·비공개 자료", description: "증거 기반 검토와 목적별 접근 제어", icon: BookOpenCheck, stage: "S10–S11" },
-  { id: "integrations", title: "외부 연동", description: "Riot·Kakao·Blob fake부터 안전하게 검증", icon: Bot, stage: "S12" },
-  { id: "operations", title: "서비스 운영", description: "사이트 설정, 감사 로그, 백업과 유지보수", icon: Settings2, stage: "S13" },
-];
+const icons = {
+  people: Users,
+  seasons: CalendarDays,
+  matches: Gamepad2,
+  balance: Scale,
+  tournaments: Trophy,
+  community: MessageCircleMore,
+  content: Sparkles,
+  integrations: Bot,
+  operations: BookOpenCheck,
+} satisfies Partial<Record<AdminWorkspaceIconKey, typeof Users>>;
+
+const areas = ADMIN_WORKSPACES.filter((workspace) => workspace.id !== "home");
 
 export default async function AdminDashboardPage() {
   const session = await requirePageRole("ADMIN", "/admin");
@@ -57,15 +61,17 @@ export default async function AdminDashboardPage() {
           <p>완성된 영역만 실제 작업 버튼을 활성화합니다.</p>
         </div>
         <div className={styles.grid}>
-          {areas.map(({ id, title, description, icon: Icon, stage }) => (
-            <article id={id} className={styles.areaCard} key={id}>
+          {areas.map((workspace) => {
+            const Icon = icons[workspace.icon] ?? ShieldCheck;
+            return (
+            <Link href={workspace.href} id={workspace.id} className={styles.areaCard} key={workspace.id}>
               <div className={styles.icon}><Icon aria-hidden="true" /></div>
-              <span className={styles.stage}>{stage}</span>
-              <h3>{title}</h3>
-              <p>{description}</p>
-              <span className={styles.pending}>구현 대기</span>
-            </article>
-          ))}
+              <span className={styles.stage}>{workspace.stage}</span>
+              <h3>{workspace.label}</h3>
+              <p>{workspace.description}</p>
+              <span className={styles.pending}>기반 화면 열기</span>
+            </Link>
+          );})}
         </div>
       </section>
     </main>

@@ -1,0 +1,17 @@
+.page { width: min(100%, 72rem); margin: 0 auto; padding: clamp(1.25rem, 3vw, 3rem); }
+.page header > span { color: #315eaa; font-size: .75rem; font-weight: 850; }
+.page h1 { margin: .45rem 0; font-size: clamp(2rem, 4vw, 3rem); letter-spacing: -.05em; }
+.page header p { max-width: 48rem; margin: 0; color: #64738a; line-height: 1.7; }
+.search { margin: 2rem 0; }
+.search label { display: block; margin-bottom: .45rem; font-size: .76rem; font-weight: 800; }
+.search > div { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .6rem; border: 1px solid #d7e2f1; border-radius: 1rem; background: white; padding: .45rem; box-shadow: 0 1rem 2.5rem rgb(49 94 170 / 7%); }
+.search svg { width: 1.1rem; height: 1.1rem; margin-left: .45rem; color: #66758b; }
+.search input { min-width: 0; height: 2.75rem; border: 0; outline: 0; background: transparent; font: inherit; }
+.search button { min-height: 2.65rem; border: 0; border-radius: .75rem; background: #315eaa; color: white; padding: 0 1rem; font-weight: 800; cursor: pointer; }
+.page section h2 { margin: 0 0 1rem; font-size: 1rem; }
+.page ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; margin: 0; padding: 0; list-style: none; }
+.page li a { display: grid; gap: .35rem; min-height: 7rem; border: 1px solid #e0e8f3; border-radius: 1rem; background: white; color: #1d2a3d; padding: 1rem; text-decoration: none; }
+.page li a:hover, .page li a:focus-visible { border-color: #a9c7f0; box-shadow: 0 .75rem 2rem rgb(49 94 170 / 8%); }
+.page li span { color: #64738a; font-size: .8rem; line-height: 1.55; }
+.empty { border: 1px dashed #cfdcec; border-radius: 1rem; color: #64738a; padding: 2rem; text-align: center; }
+@media (max-width: 680px) { .page { padding: 1rem 1rem 6.25rem; } .page ul { grid-template-columns: 1fr; } }
