@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 const MAXIMUM_TEXT_BYTES = 2 * 1024 * 1024;
 const SKIPPED_PATHS = new Set(["package-lock.json"]);
 const PLACEHOLDER_WORDS =
-  /(?:example|placeholder|synthetic|dummy|sample|unit[-_]?test|not[-_]?the|change[-_]?me|not[-_]?a[-_]?secret)/i;
+  /(?:example|placeholder|synthetic|dummy|sample|unit[-_]?test|not[-_]?the|change[-_]?me|not[-_]?a[-_]?secret|JBSWY3DPEHPK3PXP)/i;
 
 const RULES = [
   { id: "private-key", pattern: /-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----/g },
