@@ -1,5 +1,7 @@
-import { findFixturePlayers } from "../infrastructure/fixture-player-repository";
+import type { PlayerRepository } from "./ports/player-repository";
 
-export async function searchPlayers(query: string) {
-  return findFixturePlayers(query);
+export function createSearchPlayers(repository: PlayerRepository) {
+  return function searchPlayers(query: string) {
+    return repository.search(query);
+  };
 }

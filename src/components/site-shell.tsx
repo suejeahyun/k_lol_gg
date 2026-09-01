@@ -49,7 +49,11 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
             <Link className="header-search" href="/players" aria-label="플레이어 검색">
               <Search size={17} />
             </Link>
-            <Link className="header-account" href="/#roadmap">
+            <Link
+              className="header-account"
+              href="/#roadmap"
+              aria-label="로그인 기능 준비 상태 보기"
+            >
               <UserRound size={17} />
               <span>로그인</span>
             </Link>
@@ -64,9 +68,11 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
           <strong>K-LOL.GG V2</strong>
           <p>V1의 기능 계약을 새 구조로 하나씩 다시 구현하고 있습니다.</p>
         </div>
-        <p>
-          K-LOL.GG는 Riot Games의 공식 서비스가 아닌 커뮤니티 프로젝트입니다. Riot Games 및
-          League of Legends 관련 표시는 각 권리자에게 있습니다.
+        <p className="riot-disclaimer">
+          K-LOL.GG는 Riot Games 소유 자산을 사용하여{" "}
+          <a href="https://www.riotgames.com/en/legal">Riot Games의 Legal Jibber Jabber 정책</a>에
+          따라 제작된 팬 프로젝트입니다. Riot Games는 이 프로젝트를 승인하거나 후원하지
+          않습니다.
         </p>
       </footer>
 

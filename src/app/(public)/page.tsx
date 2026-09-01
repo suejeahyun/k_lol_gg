@@ -24,7 +24,7 @@ const taskCards = [
     href: "/players",
     icon: UsersRound,
     tone: "sky",
-    status: "첫 기능",
+    status: "S02 시제품",
   },
   {
     title: "내전 살펴보기",
@@ -67,8 +67,8 @@ export default function HomePage() {
             <span>더 쉽고 사랑스럽게.</span>
           </h1>
           <p className="hero-description">
-            기존 코드를 복사하지 않고 기능 계약부터 새로 설계합니다. 지금은 플레이어 찾기부터
-            하나씩 검증하며 쌓아가는 V2 초석 단계입니다.
+            기존 코드를 복사하지 않고 기능 계약부터 새로 설계합니다. 플레이어 찾기 계약
+            시제품으로 기반을 검증한 뒤 인증·권한부터 순서대로 완성합니다.
           </p>
 
           <form className="hero-search" action="/players" method="get">
@@ -154,21 +154,21 @@ export default function HomePage() {
                 <span>00</span>
                 <div>
                   <strong>기반·디자인 시스템</strong>
-                  <small>현재 진행 중</small>
+                  <small>공통 상태·CI 구축 완료</small>
                 </div>
               </li>
-              <li data-state="active">
+              <li data-state="next">
                 <span>01</span>
-                <div>
-                  <strong>플레이어 찾기</strong>
-                  <small>합성 데이터 기능 검증</small>
-                </div>
-              </li>
-              <li>
-                <span>02</span>
                 <div>
                   <strong>인증·권한</strong>
                   <small>다음 구현</small>
+                </div>
+              </li>
+              <li data-state="prototype">
+                <span>02</span>
+                <div>
+                  <strong>플레이어 등록부</strong>
+                  <small>합성 데이터 계약 시제품</small>
                 </div>
               </li>
               <li>

@@ -11,13 +11,18 @@
 - Peach: `#FFE8E1`
 - Mint: `#DFF7ED`
 - Cream: `#FFF9EC`
-- Primary: `#5B8DEF`
+- Primary: `#426FC0`
+- Primary hover: `#365FA8`
+- Muted text: `#56667F`
+- Accent text: `#356E9F`
+- Purple accent text: `#67539B`
 - Ink: `#273450`
 - Strong Ink: `#17223B`
 
 ## 규칙
 
-- 본문·버튼·상태 정보는 WCAG AA 명암을 목표로 한다.
+- 일반 본문·버튼·상태 정보는 가장 밝은 배경에서도 WCAG AA 4.5:1 이상을 유지한다.
+- 흰색과 Primary의 대비는 4.92:1이며, 흰색과 Muted text의 대비는 5.83:1이다.
 - 여성 챔피언 이미지는 장식과 분위기 전달에만 사용한다.
 - 이미지가 없어도 정보·기능·포커스 순서는 완전해야 한다.
 - 모서리는 12~32px 범위로 계층화한다.

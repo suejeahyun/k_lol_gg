@@ -30,9 +30,11 @@ src/
 ├─ modules/<feature>/
 │  ├─ domain/              # 순수 도메인 타입·규칙
 │  ├─ application/         # 유스케이스
+│  │  └─ ports/            # 저장소·외부 의존성 인터페이스
 │  ├─ infrastructure/      # DB·외부 연동 어댑터
 │  ├─ contracts/           # 공개 입출력 계약
-│  └─ ui/                  # 기능 UI
+│  ├─ ui/                  # 기능 UI
+│  └─ index.ts             # 포트와 어댑터를 조합하는 공개 진입점
 ├─ platform/               # 인증·DB·보안·관측·작업
 └─ components/ui/          # 공통 접근성 프리미티브
 ```

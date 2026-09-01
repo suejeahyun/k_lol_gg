@@ -1,4 +1,5 @@
 import type { PlayerSummary } from "../domain/player";
+import type { PlayerRepository } from "../application/ports/player-repository";
 
 const fixturePlayers: readonly PlayerSummary[] = [
   {
@@ -39,11 +40,13 @@ const fixturePlayers: readonly PlayerSummary[] = [
   },
 ];
 
-export async function findFixturePlayers(query: string): Promise<readonly PlayerSummary[]> {
-  const normalized = query.trim().toLocaleLowerCase("ko-KR");
-  if (!normalized) return fixturePlayers;
+export const fixturePlayerRepository: PlayerRepository = {
+  async search(query) {
+    const normalized = query.trim().toLocaleLowerCase("ko-KR");
+    if (!normalized) return fixturePlayers;
 
-  return fixturePlayers.filter((player) =>
-    `${player.displayName} ${player.riotId}`.toLocaleLowerCase("ko-KR").includes(normalized),
-  );
-}
+    return fixturePlayers.filter((player) =>
+      `${player.displayName} ${player.riotId}`.toLocaleLowerCase("ko-KR").includes(normalized),
+    );
+  },
+};

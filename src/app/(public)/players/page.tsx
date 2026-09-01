@@ -5,21 +5,20 @@ import { ArrowLeft, Search, Sparkles, UsersRound } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { searchPlayers } from "@/modules/players/application/search-players";
-import { PlayerResultCard } from "@/modules/players/ui/player-result-card";
+import { normalizePlayerQuery, PlayerResultCard, searchPlayers } from "@/modules/players";
 
 export const metadata: Metadata = {
   title: "플레이어 찾기",
-  description: "K-LOL.GG V2의 첫 기능 슬라이스인 플레이어 검색 화면입니다.",
+  description: "K-LOL.GG V2 S02 플레이어 등록부의 합성 데이터 계약 시제품입니다.",
 };
 
 export default async function PlayersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string | string[] }>;
 }) {
-  const { q = "" } = await searchParams;
-  const players = await searchPlayers(q);
+  const query = normalizePlayerQuery((await searchParams).q);
+  const players = await searchPlayers(query);
 
   return (
     <div className="page-wrap players-page">
@@ -30,7 +29,7 @@ export default async function PlayersPage({
       <section className="players-hero">
         <div>
           <Badge variant="secondary">
-            <Sparkles size={13} /> FIRST VERTICAL SLICE
+            <Sparkles size={13} /> S02 · PLAYER CONTRACT PROTOTYPE
           </Badge>
           <p>PLAYER REGISTRY</p>
           <h1>플레이어 찾기</h1>
@@ -48,7 +47,7 @@ export default async function PlayersPage({
           <Input
             id="player-search"
             name="q"
-            defaultValue={q}
+            defaultValue={query}
             placeholder="예: 하늘여우 또는 SkyFox#V2"
             autoComplete="off"
           />
@@ -63,7 +62,7 @@ export default async function PlayersPage({
         <div className="player-results__heading">
           <div>
             <p>SEARCH RESULT</p>
-            <h2 id="results-title">{q ? `“${q}” 검색 결과` : "샘플 플레이어"}</h2>
+            <h2 id="results-title">{query ? `“${query}” 검색 결과` : "샘플 플레이어"}</h2>
           </div>
           <span>{players.length}명</span>
         </div>
