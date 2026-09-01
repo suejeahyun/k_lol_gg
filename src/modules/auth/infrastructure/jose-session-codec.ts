@@ -13,6 +13,7 @@ const ALGORITHM = "HS256";
 const DEFAULT_TTL_SECONDS = 30 * 60;
 const MAXIMUM_TTL_SECONDS = 30 * 60;
 const CLOCK_TOLERANCE_SECONDS = 5;
+export const MAXIMUM_SESSION_TOKEN_BYTES = 8 * 1024;
 
 type EncodeOptions = {
   nowMs?: number;
@@ -78,7 +79,9 @@ export class JoseSessionCodec {
   }
 
   async decode(token: string | undefined, options: DecodeOptions = {}): Promise<AuthSession | null> {
-    if (!token) return null;
+    if (!token || new TextEncoder().encode(token).byteLength > MAXIMUM_SESSION_TOKEN_BYTES) {
+      return null;
+    }
 
     try {
       const unverifiedHeader = decodeProtectedHeader(token);

@@ -4,6 +4,7 @@ import type { AuthAccount, AuthAccountStatus } from "../domain/auth-account";
 import { isAuthRole } from "../domain/auth-session";
 import type { AuthAccountRepository } from "../application/ports/auth-account-repository";
 import { hashPassword } from "./node-password";
+import { isFixtureAuthEnvironmentEnabled } from "./fixture-runtime-policy";
 
 type RawFixture = {
   id?: unknown;
@@ -19,7 +20,7 @@ type RawFixture = {
 const VALID_STATUSES = new Set<AuthAccountStatus>(["PENDING", "APPROVED", "REJECTED", "SUSPENDED"]);
 
 export function isFixtureAuthRuntimeEnabled() {
-  return process.env.NODE_ENV !== "production" && process.env.V2_TEST_AUTH_ENABLED === "true";
+  return isFixtureAuthEnvironmentEnabled(process.env);
 }
 
 function parseFixture(raw: RawFixture, index: number) {

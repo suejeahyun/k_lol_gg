@@ -1,9 +1,24 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import type { TotpVerifier } from "../application/ports/totp-verifier";
 
 const BASE32_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 const STEP_SECONDS = 30;
 const DIGITS = 6;
+
+function encodeBase32(bytes: Uint8Array): string {
+  let bits = "";
+  for (const byte of bytes) bits += byte.toString(2).padStart(8, "0");
+
+  let result = "";
+  for (let index = 0; index < bits.length; index += 5) {
+    result += BASE32_ALPHABET[Number.parseInt(bits.slice(index, index + 5).padEnd(5, "0"), 2)];
+  }
+  return result;
+}
+
+export function generateTotpSecret(): string {
+  return encodeBase32(randomBytes(20));
+}
 
 function decodeBase32(rawSecret: string): Buffer {
   const secret = rawSecret.toUpperCase().replace(/=+$/g, "").replace(/\s+/g, "");

@@ -2,20 +2,6 @@ type BodyReadResult =
   | { ok: true; text: string }
   | { ok: false; reason: "TOO_LARGE" | "INVALID_ENCODING" };
 
-export function hasSameOrigin(request: Request, configuredPublicOrigin?: string) {
-  const suppliedOrigin = request.headers.get("origin");
-  if (!suppliedOrigin) return false;
-
-  try {
-    const expectedOrigin = configuredPublicOrigin
-      ? new URL(configuredPublicOrigin).origin
-      : new URL(request.url).origin;
-    return new URL(suppliedOrigin).origin === expectedOrigin;
-  } catch {
-    return false;
-  }
-}
-
 export async function readTextBodyWithinLimit(
   request: Request,
   maximumBytes: number,
@@ -51,3 +37,4 @@ export async function readTextBodyWithinLimit(
     reader.releaseLock();
   }
 }
+export { hasSameOrigin } from "@/platform/http/same-origin";

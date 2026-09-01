@@ -46,15 +46,16 @@ DB 계약 테스트는 `NODE_ENV=test`, `V2_DB_TEST_MODE=true`, loopback host, `
 
 ## 2026-09-01 구현 상태
 
-현재 구현은 password 검증, cookie/JWS 발급, 고유 `jti`, domain-separated token hash, 매 요청 DB 재검증, logout revoke, AES-256-GCM TOTP 복호화, HMAC-peppered 영속 rate-limit을 실제 login/logout/session Route Handler에 연결했다. 격리 PostgreSQL 18에서 token 변조, revoke, expiry, `authVersion`·role·status 변경 무효화와 HTTP cookie 흐름을 검증한다.
+현재 구현은 password 검증, cookie/JWS 발급, 고유 `jti`, domain-separated token hash, 매 요청 DB 재검증, logout revoke, AES-256-GCM TOTP 복호화, HMAC-peppered 영속 rate-limit을 실제 login/logout/session Route Handler에 연결했다. DB 기반 TOTP status/setup/enable/self-disable도 실제 관리자 보안 UI와 API에 연결했고, enable/disable은 `authVersion` 증가·전체 session revoke·audit append를 같은 transaction으로 처리한다. 격리 PostgreSQL 18에서 token 변조, revoke, expiry, 상태 변경 무효화, 동시 enable/disable 단일 승자, 중간 audit 실패 rollback과 이전 cookie 401을 검증한다.
 
 다음 항목은 여전히 S01 출시 게이트다.
 
 - 비운영 메모리 fixture를 격리 PostgreSQL fixture로 이전
-- TOTP 등록 → 확인 → enable, disable/reset, 이전 key 정상 재암호화와 rotation 완료 증거
-- 비밀번호·역할·상태·TOTP 보안 mutation의 `authVersion` 증가, 전체 session revoke, audit event를 한 transaction으로 연결
+- 비밀번호·역할·계정 상태 mutation의 `authVersion` 증가, 전체 session revoke, audit event를 한 transaction으로 연결
+- 이전 TOTP key의 정상 재암호화와 rotation 완료 증거, pending setup 만료·영속 idempotency 정책
 - 운영 migration job, 만료 session/rate bucket cleanup scheduler, 관측·경보
-- 최초 SUPER_ADMIN bootstrap과 복구 코드 정책
+- 최초 SUPER_ADMIN bootstrap, 복구 코드, SUPER_ADMIN 타인 TOTP reset 정책
 - 환경별 keyring/pepper 분리, backup/restore와 이전 key escrow 복구 훈련
+- WAF·신뢰 IP 정책의 운영 환경 검증
 
 따라서 현재 상태는 운영형 인증 내구성 경로가 코드와 격리 DB에서 검증된 것이며, S01 전체 또는 운영 배포 완료를 뜻하지 않는다.

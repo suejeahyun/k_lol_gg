@@ -5,4 +5,5 @@ export * from "./pagination";
 export * from "./problem";
 export * from "./problem-mapping";
 export * from "./response-headers";
+export * from "./same-origin";
 export * from "./trace";
