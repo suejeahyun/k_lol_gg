@@ -21,8 +21,10 @@
 
 1. `NODE_ENV !== "production"`
 2. `V2_TEST_AUTH_ENABLED === "true"`
-3. 32바이트 이상의 `V2_TEST_AUTH_SECRET`이 런타임 환경에 존재
-4. `V2_TEST_AUTH_FIXTURES_JSON`에 실행 때 생성한 합성 계정만 존재
+3. `VERCEL`, `VERCEL_ENV`, `VERCEL_URL`이 모두 비어 있어 Vercel Production/Preview가 아님
+4. `V2_PUBLIC_ORIGIN` 또는 `NEXT_PUBLIC_SITE_URL`의 hostname이 `localhost`, `127.0.0.1`, `::1` 중 하나
+5. 32바이트 이상의 `V2_TEST_AUTH_SECRET`이 런타임 환경에 존재
+6. `V2_TEST_AUTH_FIXTURES_JSON`에 실행 때 생성한 합성 계정만 존재
 
 하나라도 만족하지 않으면 로그인 API는 인증 저장소 미연결 상태를 반환한다. 비밀값과 실제 운영 계정은 저장소·fixture·로그에 넣지 않는다. 테스트 전용 세션 발급 API, 고정 쿠키, 특별 헤더 우회는 만들지 않는다.
 
@@ -54,6 +56,17 @@
 - 운영형 TOTP는 `TOTP_ENCRYPTION_KEYS` keyring과 account ID/key version AAD를 사용하는 AES-256-GCM envelope만 복호화한다.
 - `DATABASE_URL`, `SESSION_SIGNING_KEYS`, `TOTP_ENCRYPTION_KEYS`, `V2_AUTH_RATE_LIMIT_PEPPER` 중 하나라도 없거나 형식이 틀리면 운영형 인증 context가 생성되지 않는다.
 - 비운영 fixture는 기존 수동·브라우저 QA 호환을 위해 메모리에 남아 있지만 `NODE_ENV !== production`과 명시적 test 환경 변수 조건을 계속 모두 요구한다.
+- fixture는 Vercel 관련 환경 신호가 하나라도 있거나 public origin이 loopback이 아니면 비운영 build에서도 활성화되지 않는다.
+- session JWT decode는 JOSE parser 진입 전에 UTF-8 8 KiB 상한을 적용하고, production cookie는 request protocol 추론과 무관하게 `Secure`를 강제한다.
+
+## 2026-09-01 TOTP 수명주기 2차 근거
+
+- DB 기반 status는 `NOT_CONFIGURED`, `SETUP_PENDING`, `ENABLED` 세 상태만 반환하고 secret·암호화 봉투는 반환하지 않는다.
+- setup은 20-byte 난수 secret을 AES-256-GCM disabled credential로 저장한 뒤 생성 성공 응답에서만 수동 키와 `otpauth` URI를 한 번 반환한다. 이미 pending이면 기존 값을 교체하거나 다시 표시하지 않는다.
+- 사용자가 secret 응답을 잃은 경우 별도 `DELETE setup`으로 pending 등록을 명시적으로 취소한 뒤 새 등록을 시작한다. 취소도 audit event와 같은 transaction에 기록한다.
+- enable과 self-disable은 현재 계정·현재 DB session·role·`authVersion`·암호화 봉투 fingerprint·TOTP step을 transaction 안에서 재검증한다.
+- enable/disable은 `authVersion + 1`, 해당 계정의 모든 미폐기 session revoke, 허용 목록 audit event를 같은 PostgreSQL transaction으로 처리한다. 성공 응답은 현재 cookie도 만료시키고 재로그인을 요구한다.
+- lifecycle API의 대상은 request body가 아니라 검증된 `session.userId`로 고정된다. ADMIN과 SUPER_ADMIN의 자기 계정만 허용하며 SUPER_ADMIN의 타인 reset은 이 단계에 구현하지 않았다.
 
 ## 관리자 E2E 흐름
 

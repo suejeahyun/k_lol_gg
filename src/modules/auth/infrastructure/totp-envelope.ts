@@ -1,6 +1,7 @@
 import {
   createCipheriv,
   createDecipheriv,
+  createHash,
   randomBytes,
 } from "node:crypto";
 
@@ -10,6 +11,17 @@ import type { TotpEncryptionKeyring } from "./versioned-secret-keyring";
 const ALGORITHM = "aes-256-gcm";
 const IV_BYTES = 12;
 const AUTH_TAG_BYTES = 16;
+
+type TotpEnvelopeFingerprintInput = Pick<
+  TotpCredentialRecord,
+  "userAccountId" | "secretCiphertext" | "secretIv" | "secretAuthTag" | "keyVersion"
+>;
+
+function lengthPrefix(value: Uint8Array): Buffer {
+  const prefix = Buffer.alloc(4);
+  prefix.writeUInt32BE(value.byteLength);
+  return prefix;
+}
 
 function aad(userAccountId: string, keyVersion: number): Buffer {
   return Buffer.from(`klol-v2:totp:${userAccountId}:${keyVersion}`, "utf8");
@@ -76,4 +88,22 @@ export function encryptTotpSecret(
   const secretAuthTag = cipher.getAuthTag();
 
   return { secretCiphertext, secretIv, secretAuthTag, keyVersion };
+}
+
+export function fingerprintTotpCredential(
+  credential: TotpEnvelopeFingerprintInput,
+): Buffer {
+  const accountId = Buffer.from(credential.userAccountId, "utf8");
+  const keyVersion = Buffer.alloc(8);
+  keyVersion.writeBigUInt64BE(BigInt(credential.keyVersion));
+  const values = [
+    accountId,
+    Buffer.from(credential.secretCiphertext),
+    Buffer.from(credential.secretIv),
+    Buffer.from(credential.secretAuthTag),
+    keyVersion,
+  ];
+  const hash = createHash("sha256").update("klol-v2:totp-envelope-fingerprint:v1\0", "utf8");
+  for (const value of values) hash.update(lengthPrefix(value)).update(value);
+  return hash.digest();
 }

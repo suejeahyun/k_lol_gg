@@ -340,8 +340,16 @@ async function runContractTests(connectionString: string): Promise<void> {
   });
 
   const tsxCli = resolve(workspaceRoot, "node_modules/tsx/dist/cli.mjs");
-  const testFile = resolve(workspaceRoot, "tests/database/data-platform.contract.test.ts");
-  const child = spawn(process.execPath, [tsxCli, "--test", testFile], {
+  const testFiles = [
+    resolve(workspaceRoot, "tests/database/data-platform.contract.test.ts"),
+    resolve(workspaceRoot, "tests/database/auth-totp-lifecycle.contract.test.ts"),
+  ];
+  const child = spawn(process.execPath, [
+    tsxCli,
+    "--test",
+    "--test-concurrency=1",
+    ...testFiles,
+  ], {
     cwd: workspaceRoot,
     env: childTestEnvironment(connectionString),
     stdio: "inherit",
@@ -388,6 +396,33 @@ async function runDurableAuthHttpVerification(connectionString: string): Promise
   }
 }
 
+async function runTotpLifecycleHttpVerification(connectionString: string): Promise<void> {
+  assertSafeTestDatabase({
+    connectionString,
+    nodeEnv: "test",
+    testMode: "true",
+  });
+
+  const tsxCli = resolve(workspaceRoot, "node_modules/tsx/dist/cli.mjs");
+  const verificationFile = resolve(workspaceRoot, "scripts/test-db/verify-totp-lifecycle-http.ts");
+  const child = spawn(process.execPath, [tsxCli, verificationFile], {
+    cwd: workspaceRoot,
+    env: childTestEnvironment(connectionString),
+    stdio: "inherit",
+    windowsHide: true,
+  });
+  const exitCode = await new Promise<number>((resolveExit, reject) => {
+    child.once("error", reject);
+    child.once("exit", (code, signal) => {
+      if (signal) reject(new Error(`TOTP lifecycle HTTP verification ended by ${signal}.`));
+      else resolveExit(code ?? 1);
+    });
+  });
+  if (exitCode !== 0) {
+    throw new Error(`TOTP lifecycle HTTP verification failed with exit code ${exitCode}.`);
+  }
+}
+
 async function main(): Promise<void> {
   const useCiService =
     process.env.CI === "true" && process.env.V2_USE_CI_POSTGRES_SERVICE === "true";
@@ -402,6 +437,7 @@ async function main(): Promise<void> {
     });
     await runContractTests(connectionString);
     await runDurableAuthHttpVerification(connectionString);
+    await runTotpLifecycleHttpVerification(connectionString);
     return;
   }
 
@@ -411,6 +447,7 @@ async function main(): Promise<void> {
     process.stdout.write("[db-contract] isolated PostgreSQL 18 cluster started\n");
     await runContractTests(cluster.connectionString);
     await runDurableAuthHttpVerification(cluster.connectionString);
+    await runTotpLifecycleHttpVerification(cluster.connectionString);
   } finally {
     if (cluster) {
       await stopAndRemoveCluster(cluster);

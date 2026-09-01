@@ -8,9 +8,14 @@ import { sessionMatchesAccount } from "../application/validate-session-account";
 import { getFixtureAuthAccountRepository } from "./fixture-auth-repository";
 import { resolveRuntimeAuthContext } from "./runtime-auth-context";
 import { hashSessionToken } from "./session-token-hash";
+import { SESSION_COOKIE_NAME, SESSION_MAX_AGE_SECONDS } from "./session-constants";
 
-export const SESSION_COOKIE_NAME = "klol_v2_session";
-export const SESSION_MAX_AGE_SECONDS = 30 * 60;
+export {
+  clearedSessionCookieOptions,
+  sessionCookieOptions,
+} from "./session-cookie-policy";
+export { SESSION_COOKIE_NAME, SESSION_MAX_AGE_SECONDS } from "./session-constants";
+
 const revokedFixtureSessions = new Map<string, number>();
 
 function fixtureSessionIsRevoked(session: AuthSession): boolean {
@@ -22,7 +27,6 @@ function fixtureSessionIsRevoked(session: AuthSession): boolean {
   }
   return true;
 }
-
 function revokeFixtureSession(session: AuthSession): void {
   const now = Date.now();
   revokedFixtureSessions.set(session.sessionId, session.expiresAt);
@@ -32,7 +36,6 @@ function revokeFixtureSession(session: AuthSession): void {
     if (expiresAt <= now) revokedFixtureSessions.delete(sessionId);
   }
 }
-
 export async function issueRuntimeSession(seed: AuthSessionSeed) {
   const context = resolveRuntimeAuthContext();
   if (!context || context.mode !== seed.source) {
@@ -107,7 +110,6 @@ async function validateRuntimeSessionToken(token: string): Promise<AuthSession |
     return null;
   }
 }
-
 export const getCurrentSession = cache(async () => {
   const token = (await cookies()).get(SESSION_COOKIE_NAME)?.value;
   return token ? validateRuntimeSessionToken(token) : null;
@@ -136,19 +138,4 @@ export async function revokeRuntimeSessionToken(
   } catch {
     return "unavailable";
   }
-}
-
-export function sessionCookieOptions(secure: boolean) {
-  return {
-    httpOnly: true,
-    secure,
-    sameSite: "strict" as const,
-    path: "/",
-    maxAge: SESSION_MAX_AGE_SECONDS,
-    priority: "high" as const,
-  };
-}
-
-export function clearedSessionCookieOptions(secure: boolean) {
-  return { ...sessionCookieOptions(secure), maxAge: 0 };
 }
