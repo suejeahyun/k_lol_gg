@@ -140,7 +140,6 @@
 
   body {
     @apply bg-background text-foreground;
-    min-width: 320px;
     margin: 0;
     background-image:
       radial-gradient(circle at 8% 0%, rgba(183, 224, 255, 0.58), transparent 25rem),

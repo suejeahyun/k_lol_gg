@@ -134,7 +134,7 @@ export default async function HomePage() {
 
         <div className="hero-art">
           <Image
-            src="/images/brand/v2-hero-ahri.png"
+            src="/images/brand/v2-hero-ahri-1600.webp"
             alt="하늘빛 꽃잎 사이에서 여우불을 띄운 여성 챔피언 아리"
             fill
             priority

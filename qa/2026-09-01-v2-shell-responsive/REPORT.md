@@ -15,7 +15,8 @@
 - 대화상자 열림 상태에서 `body overflow: hidden`, 대화상자 `overscroll-behavior: contain`을 확인했다.
 - 대화상자는 뷰포트 `42px`부터 `802px`까지 표시되고, 긴 메뉴는 대화상자 내부에서만 스크롤된다.
 - 검색 대화상자를 열면 활성 요소가 `type=search` 입력칸으로 이동해 키보드 사용자가 즉시 입력할 수 있음을 확인했다.
-- `/`, `/players`, `/players/[playerId]`를 320px에서 측정한 결과 문서와 본문 폭이 모두 320px였고 가로 넘침 요소는 0개였다.
+- 초기 검사는 `innerWidth`만 비교해 고전형 세로 스크롤바가 차지하는 15px을 놓쳤다. 후속 캡처에서 `root clientWidth=305`, `scrollWidth=320`과 가로 스크롤바를 재현했다.
+- 원인은 `body min-width: 320px`였으며 이를 제거한 뒤 같은 320px 뷰포트에서 root/body `clientWidth=scrollWidth=305`, `min-width=0`, `scrollX=0`을 확인했다.
 
 ## 수정
 
@@ -28,6 +29,7 @@
 - `players-mobile-bottom-390x844.png`
 - `mobile-menu-scroll-lock-390x844.png`
 - `search-initial-focus-320x800.png`
+- `home-320-classic-scrollbar-fixed.png`
 - `npm run lint`: 통과
 - `npm run typecheck`: 통과
 - `npm run build`: Next.js 16.3.4 프로덕션 빌드 통과
