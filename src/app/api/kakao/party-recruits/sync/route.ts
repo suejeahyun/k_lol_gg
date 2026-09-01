@@ -223,14 +223,6 @@ async function syncOneRecruit(params: {
     sender,
     operatorOverride,
   });
-  if (!ownership.ok) {
-    return {
-      ok: false,
-      recruitNo,
-      statusCode: 403,
-      reply: `[K-LOL.GG 구인구직 반영 실패]\n${ownership.message}`,
-    };
-  }
 
   const parsed = parsePartyForm(message, String(party.type), party.maxMembers);
   if (!parsed) {

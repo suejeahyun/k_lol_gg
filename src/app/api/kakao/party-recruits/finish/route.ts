@@ -153,12 +153,6 @@ export async function POST(req: NextRequest) {
       sender,
       operatorOverride: body.operatorOverride === true,
     });
-    if (!ownership.ok) {
-      return partyRecruitJson(
-        { reply: `[K-LOL.GG 구인구직 마무리 실패]\n${ownership.message}`, policyReason: ownership.reason },
-        403,
-      );
-    }
 
     const didFinish = await prisma.$transaction(async (tx) => {
       await acquirePartyRecruitLock(tx, party.id);
