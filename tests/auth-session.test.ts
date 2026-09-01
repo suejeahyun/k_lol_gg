@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { SignJWT } from "jose";
 import { authorizeSession } from "../src/modules/auth/application/authorize-session";
 import { sessionMatchesAccount } from "../src/modules/auth/application/validate-session-account";
 import { JoseSessionCodec } from "../src/modules/auth/infrastructure/jose-session-codec";
@@ -31,6 +32,61 @@ test("session codec rejects tampering, expiry, and a different secret", async ()
   assert.equal(await codec.decode(tampered, { nowMs: NOW }), null);
   assert.equal(await codec.decode(token, { nowMs: NOW + 31_000 }), null);
   assert.equal(await new JoseSessionCodec(`${SECRET}-other`).decode(token, { nowMs: NOW }), null);
+});
+
+test("session codec requires iat and enforces the 30 minute lifetime contract", async () => {
+  const codec = new JoseSessionCodec(SECRET);
+  const key = new TextEncoder().encode(SECRET);
+  const claims = {
+    role: seed.role,
+    authVersion: seed.authVersion,
+    adminTotpVerified: seed.adminTotpVerified,
+    source: seed.source,
+  };
+  const missingIssuedAt = await new SignJWT(claims)
+    .setProtectedHeader({ alg: "HS256" })
+    .setSubject(seed.userId)
+    .setIssuer("k-lol-gg-v2")
+    .setAudience("k-lol-gg-v2-web")
+    .setExpirationTime(Math.floor(NOW / 1000) + 60)
+    .sign(key);
+  const excessiveLifetime = await new SignJWT(claims)
+    .setProtectedHeader({ alg: "HS256" })
+    .setSubject(seed.userId)
+    .setIssuer("k-lol-gg-v2")
+    .setAudience("k-lol-gg-v2-web")
+    .setIssuedAt(Math.floor(NOW / 1000))
+    .setExpirationTime(Math.floor(NOW / 1000) + 24 * 60 * 60)
+    .sign(key);
+
+  assert.equal(await codec.decode(missingIssuedAt, { nowMs: NOW }), null);
+  assert.equal(await codec.decode(excessiveLifetime, { nowMs: NOW }), null);
+});
+
+test("session codec pins issuer, audience, algorithm, and rejects future issuance", async () => {
+  const codec = new JoseSessionCodec(SECRET);
+  const key = new TextEncoder().encode(SECRET);
+  const nowSeconds = Math.floor(NOW / 1000);
+  const claims = {
+    role: seed.role,
+    authVersion: seed.authVersion,
+    adminTotpVerified: seed.adminTotpVerified,
+    source: seed.source,
+  };
+  const sign = (issuer: string, audience: string, algorithm: "HS256" | "HS384", issuedAt = nowSeconds) =>
+    new SignJWT(claims)
+      .setProtectedHeader({ alg: algorithm })
+      .setSubject(seed.userId)
+      .setIssuer(issuer)
+      .setAudience(audience)
+      .setIssuedAt(issuedAt)
+      .setExpirationTime(issuedAt + 60)
+      .sign(key);
+
+  assert.equal(await codec.decode(await sign("other-issuer", "k-lol-gg-v2-web", "HS256"), { nowMs: NOW }), null);
+  assert.equal(await codec.decode(await sign("k-lol-gg-v2", "other-audience", "HS256"), { nowMs: NOW }), null);
+  assert.equal(await codec.decode(await sign("k-lol-gg-v2", "k-lol-gg-v2-web", "HS384"), { nowMs: NOW }), null);
+  assert.equal(await codec.decode(await sign("k-lol-gg-v2", "k-lol-gg-v2-web", "HS256", nowSeconds + 60), { nowMs: NOW }), null);
 });
 
 test("authorization distinguishes missing role and missing admin TOTP", () => {

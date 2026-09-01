@@ -20,7 +20,7 @@ function decodeBase32(rawSecret: string): Buffer {
     bytes.push(Number.parseInt(bits.slice(index, index + 8), 2));
   }
 
-  if (bytes.length < 10) throw new Error("TOTP secret is too short.");
+  if (bytes.length < 20) throw new Error("TOTP secret is too short.");
   return Buffer.from(bytes);
 }
 

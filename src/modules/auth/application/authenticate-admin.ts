@@ -72,7 +72,7 @@ export async function authenticateAdmin(
       role: account.role,
       authVersion: account.authVersion,
       adminTotpVerified: account.adminTotpEnabled,
-      source: "fixture",
+      source: dependencies.accounts.source,
     },
   };
 }

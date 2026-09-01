@@ -20,6 +20,7 @@ const SECRET = base32Encode(Buffer.from("12345678901234567890"));
 const NOW = 59_000;
 
 class MemoryAccountRepository implements AuthAccountRepository {
+  readonly source = "fixture" as const;
   private consumedStep: number | undefined;
 
   constructor(private readonly account: AuthAccount) {}

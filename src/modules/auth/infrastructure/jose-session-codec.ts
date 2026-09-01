@@ -9,6 +9,8 @@ const ISSUER = "k-lol-gg-v2";
 const AUDIENCE = "k-lol-gg-v2-web";
 const ALGORITHM = "HS256";
 const DEFAULT_TTL_SECONDS = 30 * 60;
+const MAXIMUM_TTL_SECONDS = 30 * 60;
+const CLOCK_TOLERANCE_SECONDS = 5;
 
 type EncodeOptions = {
   nowMs?: number;
@@ -60,13 +62,21 @@ export class JoseSessionCodec {
         currentDate: new Date(options.nowMs ?? Date.now()),
       });
 
+      const nowSeconds = Math.floor((options.nowMs ?? Date.now()) / 1000);
+
       if (
         !payload.sub ||
         !isAuthRole(payload.role) ||
         !Number.isInteger(payload.authVersion) ||
         typeof payload.adminTotpVerified !== "boolean" ||
         (payload.source !== "fixture" && payload.source !== "database") ||
-        typeof payload.exp !== "number"
+        typeof payload.iat !== "number" ||
+        typeof payload.exp !== "number" ||
+        !Number.isInteger(payload.iat) ||
+        !Number.isInteger(payload.exp) ||
+        payload.iat > nowSeconds + CLOCK_TOLERANCE_SECONDS ||
+        payload.exp <= payload.iat ||
+        payload.exp - payload.iat > MAXIMUM_TTL_SECONDS
       ) {
         return null;
       }

@@ -1,6 +1,6 @@
 import type { AuthRole } from "./auth-session";
 
-export type AuthAccountStatus = "PENDING" | "APPROVED" | "SUSPENDED";
+export type AuthAccountStatus = "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED";
 
 export type AuthAccount = {
   id: string;

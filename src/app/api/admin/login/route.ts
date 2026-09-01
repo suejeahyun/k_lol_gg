@@ -5,37 +5,37 @@ import {
   SESSION_COOKIE_NAME,
   sessionCookieOptions,
 } from "@/modules/auth/infrastructure/runtime-session";
+import {
+  acquireAdminLoginWork,
+  guardAdminLoginAttempt,
+} from "@/modules/auth/infrastructure/login-security-guard";
+import {
+  hasSameOrigin,
+  readTextBodyWithinLimit,
+} from "@/modules/auth/application/mutation-request-guard";
 
 export const dynamic = "force-dynamic";
 
 const NO_STORE_HEADERS = { "Cache-Control": "no-store" };
 
-function json(body: object, status: number) {
-  return NextResponse.json(body, { status, headers: NO_STORE_HEADERS });
-}
-
-function hasSameOrigin(request: NextRequest) {
-  const origin = request.headers.get("origin");
-  if (!origin) return false;
-  try {
-    return new URL(origin).origin === request.nextUrl.origin;
-  } catch {
-    return false;
-  }
+function json(body: object, status: number, headers?: Record<string, string>) {
+  return NextResponse.json(body, { status, headers: { ...NO_STORE_HEADERS, ...headers } });
 }
 
 export async function POST(request: NextRequest) {
-  if (!hasSameOrigin(request)) return json({ message: "허용되지 않은 요청 출처입니다." }, 403);
+  const publicOrigin = process.env.V2_PUBLIC_ORIGIN ?? process.env.NEXT_PUBLIC_SITE_URL;
+  if (!hasSameOrigin(request, publicOrigin)) {
+    return json({ message: "허용되지 않은 요청 출처입니다." }, 403);
+  }
   if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
     return json({ message: "JSON 요청만 허용됩니다." }, 415);
   }
-  const contentLength = Number(request.headers.get("content-length") ?? 0);
-  if (contentLength > 2_048) return json({ message: "요청이 너무 큽니다." }, 413);
-
-  const rawBody = await request.text();
-  if (new TextEncoder().encode(rawBody).byteLength > 2_048) {
+  const bodyRead = await readTextBodyWithinLimit(request, 2_048);
+  if (!bodyRead.ok && bodyRead.reason === "TOO_LARGE") {
     return json({ message: "요청이 너무 큽니다." }, 413);
   }
+  if (!bodyRead.ok) return json({ message: "요청 형식이 올바르지 않습니다." }, 400);
+  const rawBody = bodyRead.text;
   const body = (() => {
     try {
       return JSON.parse(rawBody) as unknown;
@@ -52,11 +52,30 @@ export async function POST(request: NextRequest) {
     return json({ message: "요청 형식이 올바르지 않습니다." }, 400);
   }
 
+  const loginId = String(body.loginId ?? "");
+  const rateLimit = guardAdminLoginAttempt(request, loginId);
+  if (!rateLimit.allowed) {
+    return json(
+      { message: "로그인 시도가 너무 많습니다. 잠시 후 다시 시도해 주세요." },
+      429,
+      { "Retry-After": String(rateLimit.retryAfterSeconds) },
+    );
+  }
+
+  const releaseWork = acquireAdminLoginWork();
+  if (!releaseWork) {
+    return json(
+      { message: "로그인 요청이 많습니다. 잠시 후 다시 시도해 주세요." },
+      429,
+      { "Retry-After": "1" },
+    );
+  }
+
   const result = await authenticateAdminFromRuntime({
-    loginId: String(body.loginId ?? ""),
+    loginId,
     password: String(body.password ?? ""),
     totpCode: body.totpCode == null ? undefined : String(body.totpCode),
-  });
+  }).finally(releaseWork);
 
   if (!result) {
     return json({ message: "V2 인증 저장소가 아직 연결되지 않았습니다." }, 503);

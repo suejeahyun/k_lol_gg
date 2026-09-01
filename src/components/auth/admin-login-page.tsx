@@ -3,15 +3,9 @@ import { CloudSun, ShieldCheck } from "lucide-react";
 import { AdminLoginForm } from "./admin-login-form";
 import styles from "./admin-login-page.module.css";
 
-export function normalizeInternalNext(value: string | string[] | undefined) {
-  const candidate = Array.isArray(value) ? value[0] : value;
-  if (!candidate || !candidate.startsWith("/") || candidate.startsWith("//")) return "/admin";
-  return candidate;
-}
-
 export function AdminLoginPage({ nextPath }: { nextPath: string }) {
   return (
-    <main className={styles.page}>
+    <main className={styles.page} data-safe-next-path={nextPath}>
       <section className={styles.card} aria-labelledby="admin-login-title">
         <Link className={styles.brand} href="/">
           <span className={styles.brandMark}><CloudSun aria-hidden="true" /></span>

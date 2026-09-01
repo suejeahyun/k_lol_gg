@@ -16,7 +16,7 @@ type RawFixture = {
   adminTotpSecret?: unknown;
 };
 
-const VALID_STATUSES = new Set<AuthAccountStatus>(["PENDING", "APPROVED", "SUSPENDED"]);
+const VALID_STATUSES = new Set<AuthAccountStatus>(["PENDING", "APPROVED", "REJECTED", "SUSPENDED"]);
 
 function fixtureRuntimeEnabled() {
   return process.env.NODE_ENV !== "production" && process.env.V2_TEST_AUTH_ENABLED === "true";
@@ -44,7 +44,7 @@ function parseFixture(raw: RawFixture, index: number) {
   if (!Number.isInteger(authVersion) || authVersion < 0) {
     throw new Error(`Invalid fixture authVersion at index ${index}.`);
   }
-  if (adminTotpEnabled && (!adminTotpSecret || adminTotpSecret.length < 16)) {
+  if (adminTotpEnabled && (!adminTotpSecret || adminTotpSecret.length < 32)) {
     throw new Error(`Enabled fixture TOTP requires a secret at index ${index}.`);
   }
 
@@ -52,6 +52,7 @@ function parseFixture(raw: RawFixture, index: number) {
 }
 
 export class FixtureAuthAccountRepository implements AuthAccountRepository {
+  readonly source = "fixture" as const;
   private readonly accountsByLoginId: Map<string, AuthAccount>;
   private readonly accountsById: Map<string, AuthAccount>;
   private readonly consumedTotpSteps = new Map<string, number>();

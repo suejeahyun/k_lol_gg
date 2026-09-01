@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { AdminLoginPage, normalizeInternalNext } from "@/components/auth/admin-login-page";
+import { AdminLoginPage } from "@/components/auth/admin-login-page";
+import { normalizeInternalNext } from "@/modules/auth/application/normalize-internal-next";
 
 export const metadata: Metadata = {
   title: "관리자 로그인",

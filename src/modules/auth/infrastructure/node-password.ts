@@ -39,6 +39,7 @@ let dummyHashPromise: Promise<string> | undefined;
 export class NodePasswordVerifier implements PasswordVerifier {
   async verify(password: string, passwordHash: string | null): Promise<boolean> {
     dummyHashPromise ??= hashPassword("synthetic-dummy-password-not-an-account");
-    return verifyPassword(password, passwordHash ?? await dummyHashPromise);
+    const dummyHash = await dummyHashPromise;
+    return verifyPassword(password, passwordHash ?? dummyHash);
   }
 }
