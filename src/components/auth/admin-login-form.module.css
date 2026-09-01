@@ -1,0 +1,48 @@
+.form {
+  display: grid;
+  gap: 1rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.field label {
+  color: var(--foreground);
+  font-size: 0.9rem;
+  font-weight: 750;
+}
+
+.field small {
+  color: var(--muted-foreground);
+  font-size: 0.78rem;
+}
+
+.message {
+  margin: 0;
+  border: 1px solid color-mix(in srgb, var(--destructive) 30%, transparent);
+  border-radius: 0.8rem;
+  background: color-mix(in srgb, var(--destructive) 8%, white);
+  color: var(--destructive);
+  padding: 0.75rem 0.9rem;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.submit {
+  min-height: 2.85rem;
+  width: 100%;
+}
+
+.spinner {
+  animation: spin 800ms linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation: none; }
+}
