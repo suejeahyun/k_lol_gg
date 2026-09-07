@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { permanentRedirect } from "next/navigation";
 
-export default function LegacyAdminRecruitsPage() {
-  redirect("/admin/kakao/recruits");
+export default function AdminRecruitsAliasPage() {
+  permanentRedirect("/admin/kakao/recruits");
 }

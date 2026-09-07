@@ -1,5 +1,5 @@
 import { permanentRedirect } from "next/navigation";
 
-export default async function AdminAiRequestsPage() {
+export default function AdminAiRequestsAliasPage() {
   permanentRedirect("/admin/logs?view=ai-requests");
 }
