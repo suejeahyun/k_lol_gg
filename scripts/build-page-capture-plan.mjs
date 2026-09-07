@@ -42,6 +42,16 @@ const QUERY_VARIANTS = Object.freeze({
   "/admin/matches": [
     { label: "submissions", query: { view: "submissions" } },
   ],
+  "/admin/operation-forms": [
+    { label: "friends", query: { type: "friends" } },
+    { label: "leaves", query: { type: "leaves" } },
+    { label: "meetups", query: { type: "meetups" } },
+    { label: "suggestions", query: { type: "suggestions" } },
+  ],
+  "/admin/private-assets": [
+    { label: "ready", query: { status: "READY" } },
+    { label: "cleanup", query: { status: "DELETE_PENDING" } },
+  ],
   "/admin/players/[playerId]": [
     { label: "edit", query: { mode: "edit" } },
     { label: "balance", query: { tab: "balance" } },
