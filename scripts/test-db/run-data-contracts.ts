@@ -923,6 +923,7 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
     galleryId,
     eventId: await requiredFixture("event competition", `select id::text as value from competition.event_competitions order by updated_at desc, id limit 1`),
     destructionId: await requiredFixture("destruction competition", `select id::text as value from competition.destruction_competitions order by updated_at desc, id limit 1`),
+    destructionPlayerId: await requiredFixture("destruction roster player", `select participant->>'playerId' as value from competition.destruction_competitions d cross join lateral jsonb_array_elements(d.aggregate_json->'participants') participant where participant->>'teamId' is not null order by d.updated_at desc, d.id limit 1`),
     disciplineRecordId: await requiredFixture("discipline record", `select id::text as value from discipline.records order by updated_at desc, id limit 1`),
     operationFormId,
     draftId,
@@ -953,6 +954,7 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
       eventId: sourceIds.eventId,
       userAccountId: actorId,
       mmrReviewId: sourceIds.mmrReviewId,
+      destructionPlayerId: sourceIds.destructionPlayerId,
     },
     sourceIds,
   };

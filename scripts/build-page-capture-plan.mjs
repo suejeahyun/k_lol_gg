@@ -22,6 +22,7 @@ const QUERY_VARIANTS = Object.freeze({
   ],
   "/applications": [
     { label: "season", query: { type: "season" } },
+    { label: "season-pwa-entry", query: { type: "season", source: "pwa" } },
     { label: "event", query: { type: "event" } },
     { label: "destruction", query: { type: "destruction" } },
   ],
@@ -74,6 +75,25 @@ const QUERY_VARIANTS = Object.freeze({
   ],
   "/admin/seasons": [
     { label: "applications", query: { view: "applications" } },
+  ],
+  "/admin/progress/destruction/[tournamentId]": [
+    { label: "live-auction", query: { tab: "auction", mode: "live" } },
+  ],
+  "/competitions": [
+    { label: "events", query: { type: "event" } },
+    { label: "destruction", query: { type: "destruction" } },
+  ],
+  "/competitions/events/[eventId]": [
+    { label: "apply", query: { action: "apply" } },
+  ],
+  "/competitions/destruction/[tournamentId]": [
+    { label: "apply", query: { action: "apply" } },
+    { label: "captain-points", query: { tab: "captain-points" } },
+    { label: "participants", query: { tab: "participants" } },
+    { label: "participant-detail", query: { tab: "participants", player: { fixture: "destructionPlayerId" } } },
+    { label: "gallery", query: { tab: "gallery" } },
+    { label: "gallery-lightbox", query: { tab: "gallery", imageIndex: "0" } },
+    { label: "mvp", query: { tab: "mvp" } },
   ],
   "/players/[playerId]": [
     { label: "riot", query: { tab: "riot" } },

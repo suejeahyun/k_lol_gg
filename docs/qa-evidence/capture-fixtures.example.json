@@ -14,7 +14,8 @@
     "tournamentId": "99999999-9999-4999-8999-999999999999",
     "eventId": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
     "userAccountId": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
-    "mmrReviewId": "dddddddd-dddd-4ddd-8ddd-dddddddddddd"
+    "mmrReviewId": "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+    "destructionPlayerId": "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee"
   },
   "sourceIds": {
     "championKey": "ahri",
@@ -28,6 +29,7 @@
     "operationFormId": "77777777-7777-4777-8777-777777777777",
     "draftId": "11111111-1111-4111-8111-111111111111",
     "privateAssetId": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
-    "mmrReviewId": "dddddddd-dddd-4ddd-8ddd-dddddddddddd"
+    "mmrReviewId": "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+    "destructionPlayerId": "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee"
   }
 }

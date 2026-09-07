@@ -91,6 +91,7 @@ test("the repository plan covers every page once, resolves IDs and adds reviewed
     parameters: {
       ...Object.fromEntries([...parameterNames].map((parameter) => [parameter, parameter === "championId" ? "ahri" : uuidFixture])),
       mmrReviewId: uuidFixture,
+      destructionPlayerId: uuidFixture,
     },
   };
   const plan = buildCapturePlan(pages, fixtures);
@@ -129,9 +130,21 @@ test("the repository plan covers every page once, resolves IDs and adds reviewed
     "/admin/riot?tab=accounts&action=bulk-link&q=QA&batchSize=10",
     "/admin/seasons?view=applications",
     "/applications?type=season",
+    "/applications?type=season&source=pwa",
     "/applications?type=event",
     "/applications?type=destruction",
     "/rankings/mmr?view=players",
+    "/competitions?type=event",
+    "/competitions?type=destruction",
+    `/competitions/events/${uuidFixture}?action=apply`,
+    `/competitions/destruction/${uuidFixture}?action=apply`,
+    `/competitions/destruction/${uuidFixture}?tab=captain-points`,
+    `/competitions/destruction/${uuidFixture}?tab=participants`,
+    `/competitions/destruction/${uuidFixture}?tab=participants&player=${uuidFixture}`,
+    `/competitions/destruction/${uuidFixture}?tab=gallery`,
+    `/competitions/destruction/${uuidFixture}?tab=gallery&imageIndex=0`,
+    `/competitions/destruction/${uuidFixture}?tab=mvp`,
+    `/admin/progress/destruction/${uuidFixture}?tab=auction&mode=live`,
     `/players/${uuidFixture}?tab=riot`,
   ];
   for (const path of requiredVariants) assert.ok(plan.some((entry) => entry.path === path), path);
