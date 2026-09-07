@@ -4,6 +4,8 @@ import { resolveRuntimeAuthContext } from "@/modules/auth/infrastructure/runtime
 import { getDatabase } from "@/platform/db/client";
 
 import { ChampionQueryService } from "../application/query-service";
+import { ChampionCommandHandler } from "../application/command-handler";
+import { PostgresChampionAdapter } from "./postgres-champion-adapter";
 import { PostgresChampionQueryRepository } from "./postgres-champion-query-repository";
 
 function queryService() {
@@ -19,6 +21,15 @@ export function getRuntimeAdminChampionQueryService() {
   const auth = resolveRuntimeAuthContext();
   if (!auth || auth.mode !== "database") return null;
   try { return queryService(); } catch { return null; }
+}
+
+export function getRuntimeChampionCommandHandler() {
+  const auth = resolveRuntimeAuthContext();
+  if (!auth || auth.mode !== "database") return null;
+  try {
+    const adapter = new PostgresChampionAdapter(getDatabase());
+    return new ChampionCommandHandler(adapter.dependencies());
+  } catch { return null; }
 }
 
 export async function loadRuntimeChampions<T>(admin: boolean, loader: (service: ChampionQueryService) => Promise<T>) {

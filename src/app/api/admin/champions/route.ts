@@ -1,6 +1,8 @@
 import { authorizeApiRole } from "@/modules/auth/infrastructure/server-authorization";
 import { parseChampionListQuery } from "@/modules/champions";
 import { getRuntimeAdminChampionQueryService } from "@/modules/champions/infrastructure/runtime-champions";
+import { getRuntimeChampionCommandHandler } from "@/modules/champions/infrastructure/runtime-champions";
+import { championMutationError, championMutationResponse, championUnavailable, prepareChampionMutation } from "@/modules/champions/infrastructure/champion-http";
 import { definePublicProblem, noStoreJsonResponse, problemResponse, readValidatedTraceId } from "@/platform/http";
 
 export const dynamic = "force-dynamic";
@@ -20,4 +22,15 @@ export async function GET(request: Request) {
   if (!service) return problemResponse(unavailable, { traceId });
   try { return noStoreJsonResponse(await service.listAdmin(query), { traceId }); }
   catch { return problemResponse(unavailable, { traceId }); }
+}
+
+export async function POST(request: Request) {
+  const auth = await authorizeApiRole("ADMIN");
+  if (!auth.allowed) return problemResponse(auth.reason === "UNAUTHENTICATED" ? unauthenticated : forbidden, { traceId: readValidatedTraceId(request.headers) });
+  const prepared = await prepareChampionMutation(request, auth.session, { type: "CREATE_CHAMPION" });
+  if (!prepared.ok) return prepared.response;
+  const handler = getRuntimeChampionCommandHandler();
+  if (!handler) return championUnavailable(prepared.value.traceId);
+  try { return championMutationResponse(await handler.handle(prepared.value.command), prepared.value.traceId); }
+  catch (error) { return championMutationError(error, prepared.value.traceId); }
 }

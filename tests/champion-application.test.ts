@@ -42,8 +42,7 @@ function command<Type extends ChampionCommand["type"]>(
     type,
     championKey: "Ahri",
     metadata: {
-      actorPrincipalId: "admin-session-1",
-      sessionId: "admin-session-1",
+      actorSession: { userAccountId: "admin-1", sessionId: "admin-session-1", role: "ADMIN", authVersion: 1 },
       requestId: `request-${type.toLowerCase()}`,
       expectedRevision,
       issuedAt: now.toISOString(),
@@ -81,7 +80,7 @@ class Harness {
         recheck: async (_transaction, input) => {
           this.operations.push("authorization");
           return this.authorized
-            ? { principalId: input.metadata.actorPrincipalId, userAccountId: "admin-1", role: "ADMIN" }
+            ? { principalId: input.metadata.actorSession.sessionId, userAccountId: "admin-1", role: "ADMIN" }
             : null;
         },
       },

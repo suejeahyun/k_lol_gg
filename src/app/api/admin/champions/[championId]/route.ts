@@ -1,5 +1,7 @@
 import { authorizeApiRole } from "@/modules/auth/infrastructure/server-authorization";
 import { getRuntimeAdminChampionQueryService } from "@/modules/champions/infrastructure/runtime-champions";
+import { getRuntimeChampionCommandHandler } from "@/modules/champions/infrastructure/runtime-champions";
+import { championMutationError, championMutationResponse, championUnavailable, prepareChampionMutation } from "@/modules/champions/infrastructure/champion-http";
 import { definePublicProblem, formatRevisionEtag, noStoreJsonResponse, problemResponse, readValidatedTraceId } from "@/platform/http";
 
 export const dynamic = "force-dynamic";
@@ -21,3 +23,17 @@ export async function GET(request: Request, context: { params: Promise<{ champio
     return item ? noStoreJsonResponse(item, { traceId, headers: { ETag: formatRevisionEtag(item.revision) } }) : problemResponse(notFound, { traceId });
   } catch { return problemResponse(notFound, { traceId }); }
 }
+
+async function mutate(request: Request, context: { params: Promise<{ championId: string }> }, type: "UPDATE_CHAMPION" | "DEACTIVATE_CHAMPION") {
+  const auth = await authorizeApiRole("ADMIN");
+  if (!auth.allowed) return problemResponse(auth.reason === "UNAUTHENTICATED" ? unauthenticated : forbidden, { traceId: readValidatedTraceId(request.headers) });
+  const prepared = await prepareChampionMutation(request, auth.session, { type, championKey: (await context.params).championId });
+  if (!prepared.ok) return prepared.response;
+  const handler = getRuntimeChampionCommandHandler();
+  if (!handler) return championUnavailable(prepared.value.traceId);
+  try { return championMutationResponse(await handler.handle(prepared.value.command), prepared.value.traceId); }
+  catch (error) { return championMutationError(error, prepared.value.traceId); }
+}
+
+export function PATCH(request: Request, context: { params: Promise<{ championId: string }> }) { return mutate(request, context, "UPDATE_CHAMPION"); }
+export function DELETE(request: Request, context: { params: Promise<{ championId: string }> }) { return mutate(request, context, "DEACTIVATE_CHAMPION"); }

@@ -58,8 +58,8 @@ function digest(value: Uint8Array, label: string) {
 
 function validate(command: ChampionCommand) {
   canonicalChampionKey(command.championKey);
-  canonicalIdentifier(command.metadata.actorPrincipalId, "actorPrincipalId");
-  canonicalIdentifier(command.metadata.sessionId, "sessionId");
+  canonicalIdentifier(command.metadata.actorSession.userAccountId, "actorUserAccountId");
+  canonicalIdentifier(command.metadata.actorSession.sessionId, "sessionId");
   canonicalIdentifier(command.metadata.requestId, "requestId");
   if (command.metadata.idempotency.scope !== scopes[command.type]) {
     throw new ChampionApplicationError("INVALID_INPUT", "Command scope does not match its action.");
@@ -77,7 +77,7 @@ function validate(command: ChampionCommand) {
   if (intent.kind !== "ADMIN_TOTP" || intent.minimumRole !== "ADMIN" || intent.requireTotp !== true || intent.transactionRecheck !== true) {
     throw new ChampionApplicationError("FORBIDDEN", "Champion mutation requires an ADMIN-purpose TOTP session.");
   }
-  if (command.metadata.sessionId !== command.metadata.authorizationIntent.sessionId) {
+  if (command.metadata.actorSession.sessionId !== command.metadata.authorizationIntent.sessionId) {
     throw new ChampionApplicationError("FORBIDDEN", "Champion mutation session binding is invalid.");
   }
   if (!sameDigest(command.metadata.idempotency.requestHash, championCommandRequestHash(command))) {
@@ -99,7 +99,7 @@ function validateReplay(command: ChampionCommand, receipt: ChampionReceipt) {
   digest(receipt.keyHash, "receipt.keyHash");
   digest(receipt.requestHash, "receipt.requestHash");
   if (
-    receipt.actorPrincipalId !== command.metadata.actorPrincipalId ||
+    receipt.actorPrincipalId !== command.metadata.actorSession.sessionId ||
     receipt.scope !== command.metadata.idempotency.scope ||
     receipt.bodyDigestHex !== command.metadata.idempotency.bodyDigestHex ||
     !sameDigest(receipt.keyHash, command.metadata.idempotency.keyHash) ||
@@ -119,7 +119,11 @@ export class ChampionCommandHandler {
 
   private async handleTransaction(transaction: ChampionTransaction, command: ChampionCommand): Promise<ChampionCommandResult> {
     const actor = await this.dependencies.authorization.recheck(transaction, command);
-    if (!actor || actor.principalId !== command.metadata.actorPrincipalId) {
+    if (
+      !actor ||
+      actor.principalId !== command.metadata.actorSession.sessionId ||
+      actor.userAccountId !== command.metadata.actorSession.userAccountId
+    ) {
       throw new ChampionApplicationError("FORBIDDEN", "Champion mutation is unavailable.");
     }
     const claim = await this.dependencies.receipts.claim(transaction, command);
@@ -184,7 +188,7 @@ export class ChampionCommandHandler {
       throw new ChampionApplicationError("INVALID_INPUT", "Receipt expiry is invalid.");
     }
     await this.dependencies.receipts.complete(transaction, {
-      actorPrincipalId: command.metadata.actorPrincipalId,
+      actorPrincipalId: command.metadata.actorSession.sessionId,
       scope: command.metadata.idempotency.scope,
       keyHash: command.metadata.idempotency.keyHash,
       requestHash: command.metadata.idempotency.requestHash,

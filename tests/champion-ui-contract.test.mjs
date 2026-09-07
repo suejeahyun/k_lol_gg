@@ -34,4 +34,7 @@ test("champion read APIs keep public and administrator namespaces separated", as
   assert.match(adminList, /authorizeApiRole\("ADMIN"\)/);
   assert.match(adminDetail, /authorizeApiRole\("ADMIN"\)/);
   assert.match(adminDetail, /ETag/);
+  assert.match(adminList, /export async function POST/);
+  assert.match(adminDetail, /export function PATCH/);
+  assert.match(adminDetail, /export function DELETE/);
 });

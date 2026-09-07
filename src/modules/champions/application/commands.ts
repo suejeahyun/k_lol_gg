@@ -1,10 +1,11 @@
 import { createHash } from "node:crypto";
 
+import type { TransactionSessionActor } from "@/modules/auth/domain/transaction-session";
+
 import type { ChampionStatus } from "../domain/champion";
 
 export type ChampionCommandMetadata = Readonly<{
-  actorPrincipalId: string;
-  sessionId: string;
+  actorSession: TransactionSessionActor;
   requestId: string;
   expectedRevision: number;
   issuedAt: string;
