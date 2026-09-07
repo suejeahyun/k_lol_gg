@@ -1,0 +1,31 @@
+{
+  "parameters": {
+    "assetId": "71d259bb-2314-469a-b863-a4f0a7b57bc5",
+    "draftId": "9ad03c94-6045-43de-9cc3-3f6ffb33b7f3",
+    "championId": "mmr-17792e59-0dfa-4db7-8702-f8342b117cac",
+    "recordId": "0a5cc070-f7d5-49dd-9ee8-40c2714c14aa",
+    "highlightId": "e5562b0b-7ef9-4067-b62f-eb3a66ad416d",
+    "imageId": "a45d0586-ff6b-4350-878e-83b3fbd849c2",
+    "formType": "suggestions",
+    "matchId": "47a22ecc-bcef-4661-9713-02e58cf13602",
+    "submissionId": "4b9ce5bd-99b2-4728-b652-d3f122df8793",
+    "id": "5076564f-08b6-44bd-9f03-c6e320f05e58",
+    "playerId": "7d0b7155-0e2b-4273-ad7d-5fe5a3876f43",
+    "tournamentId": "a25b9de7-b15e-4439-8f29-432901b32367",
+    "eventId": "fcb98db4-3b9a-49f7-b6f5-b60c9c9f5fe6",
+    "userAccountId": "7c261db1-2d67-4112-8074-28b08769aac8"
+  },
+  "sourceIds": {
+    "championKey": "mmr-17792e59-0dfa-4db7-8702-f8342b117cac",
+    "publishedMatchId": "47a22ecc-bcef-4661-9713-02e58cf13602",
+    "submissionId": "4b9ce5bd-99b2-4728-b652-d3f122df8793",
+    "highlightId": "e5562b0b-7ef9-4067-b62f-eb3a66ad416d",
+    "galleryId": "a45d0586-ff6b-4350-878e-83b3fbd849c2",
+    "eventId": "fcb98db4-3b9a-49f7-b6f5-b60c9c9f5fe6",
+    "destructionId": "a25b9de7-b15e-4439-8f29-432901b32367",
+    "disciplineRecordId": "0a5cc070-f7d5-49dd-9ee8-40c2714c14aa",
+    "operationFormId": "5076564f-08b6-44bd-9f03-c6e320f05e58",
+    "draftId": "9ad03c94-6045-43de-9cc3-3f6ffb33b7f3",
+    "privateAssetId": "71d259bb-2314-469a-b863-a4f0a7b57bc5"
+  }
+}

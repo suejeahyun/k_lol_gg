@@ -15,6 +15,10 @@
 .visual { position: relative; overflow: hidden; aspect-ratio: 16 / 9; background: linear-gradient(145deg, var(--sky), var(--lilac)); }
 .visual img { object-fit: cover; transition: transform .25s ease; }
 .card:hover .visual img { transform: scale(1.025); }
+.mediaFallback { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 7px; padding: 18px; color: #60739c; background: linear-gradient(145deg, rgba(226,244,255,.96), rgba(241,232,255,.96), rgba(255,239,247,.94)); text-align: center; }
+.mediaFallback svg { width: 34px; height: 34px; color: #849ee0; }
+.mediaFallback strong { font-size: 14px; }
+.mediaFallback small { color: var(--text-muted); font-size: 11px; }
 .cardBody { display: grid; gap: 8px; padding: 19px; }
 .cardBody h2,.cardBody h3 { margin: 0; color: var(--ink-strong); font-size: 20px; }
 .cardBody p { display: -webkit-box; overflow: hidden; margin: 0; color: var(--text-muted); line-height: 1.6; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
@@ -31,6 +35,13 @@
 .detailHeader p { max-width: 760px; margin: 0; color: var(--text-muted); line-height: 1.75; white-space: pre-wrap; }
 .player { overflow: hidden; position: relative; aspect-ratio: 16 / 9; border: 1px solid var(--border); border-radius: 28px; background: #17223b; box-shadow: var(--shadow-soft); }
 .player iframe { width: 100%; height: 100%; border: 0; }
+.playerPreview { width: 100%; height: 100%; display: grid; place-items: center; border: 0; color: #eef5ff; background: radial-gradient(circle at 78% 16%, rgba(255,255,255,.18), transparent 24%), linear-gradient(135deg,#253760,#5c62ad 54%,#9b6dac); cursor: pointer; }
+.playerPreview > svg { position: absolute; right: clamp(24px,8vw,110px); width: clamp(88px,16vw,180px); height: auto; color: rgba(255,255,255,.16); }
+.playerPreview span { position: relative; z-index: 1; display: grid; justify-items: center; gap: 12px; }
+.playerPreview small { font-size: 12px; font-style: normal; font-weight: 900; letter-spacing: .16em; }
+.playerPreview strong { font-family: var(--font-heading); font-size: clamp(30px,5vw,54px); }
+.playerPreview em { display: inline-flex; align-items: center; gap: 8px; padding: 11px 17px; border-radius: 999px; color: #344d88; background: #fff; font-style: normal; font-weight: 900; box-shadow: 0 12px 28px rgba(15,25,55,.18); }
+.playerPreview em svg { width: 18px; height: 18px; fill: currentColor; }
 .galleryDetail { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px; }
 .galleryImage { position: relative; overflow: hidden; min-height: 320px; border: 1px solid var(--border); border-radius: 26px; background: var(--muted); }
 .galleryImage:first-child:nth-last-child(odd) { grid-column: 1 / -1; min-height: min(68vw,680px); }

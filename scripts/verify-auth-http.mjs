@@ -169,6 +169,16 @@ const fixtures = JSON.stringify([
     adminTotpEnabled: false,
   },
   {
+    id: "http-super-admin",
+    loginId: "http_super_admin",
+    password,
+    role: "SUPER_ADMIN",
+    status: "APPROVED",
+    authVersion: 1,
+    adminTotpEnabled: true,
+    adminTotpSecret: totpSecret,
+  },
+  {
     id: "http-account",
     loginId: "http_account",
     password,
@@ -179,6 +189,7 @@ const fixtures = JSON.stringify([
   },
 ]);
 const protectedWorkspacePaths = PROTECTED_ADMIN_PAGE_CASES.map(({ requestPath }) => requestPath);
+const superAdminWorkspaceRoutes = new Set(["/admin/logs", "/admin/site-settings"]);
 const enrollmentPath = ADMIN_SECURITY_PAGE_CASE.requestPath;
 
 const nextBin = path.join(process.cwd(), "node_modules", "next", "dist", "bin", "next");
@@ -344,14 +355,36 @@ try {
   assert.doesNotMatch(cookie, /; Secure/i);
   const cookiePair = cookie.split(";", 1)[0];
 
-  for (const workspacePath of protectedWorkspacePaths) {
-    const protectedPage = await fetch(`${origin}${workspacePath}`, {
+  for (const { canonicalRoute, requestPath } of PROTECTED_ADMIN_PAGE_CASES) {
+    const protectedPage = await fetch(`${origin}${requestPath}`, {
       headers: { cookie: cookiePair },
       redirect: "manual",
     });
-    assert.equal(protectedPage.status, 200, `${workspacePath} must open for ADMIN`);
+    if (superAdminWorkspaceRoutes.has(canonicalRoute)) {
+      assert.equal(protectedPage.status, 307, `${requestPath} must reject ADMIN`);
+      assert.equal(protectedPage.headers.get("location"), "/forbidden");
+      continue;
+    }
+    assert.equal(protectedPage.status, 200, `${requestPath} must open for ADMIN`);
     assert.match(protectedPage.headers.get("content-security-policy") ?? "", /frame-ancestors 'none'/);
     assert.equal(protectedPage.headers.get("x-frame-options"), "DENY");
+  }
+  const superAdminToken = await fixtureSessionToken(sessionSecret, {
+    userId: "http-super-admin",
+    role: "SUPER_ADMIN",
+    purpose: "ADMIN",
+    accountStatus: "APPROVED",
+    mustChangePassword: false,
+    authVersion: 1,
+    adminTotpVerified: true,
+  }, 30 * 60);
+  for (const { canonicalRoute, requestPath } of PROTECTED_ADMIN_PAGE_CASES) {
+    if (!superAdminWorkspaceRoutes.has(canonicalRoute)) continue;
+    const protectedPage = await fetch(`${origin}${requestPath}`, {
+      headers: { cookie: `klol_v2_session=${superAdminToken}` },
+      redirect: "manual",
+    });
+    assert.equal(protectedPage.status, 200, `${requestPath} must open for SUPER_ADMIN`);
   }
   const verifiedEnrollment = await fetch(`${origin}${enrollmentPath}`, {
     headers: { cookie: cookiePair },

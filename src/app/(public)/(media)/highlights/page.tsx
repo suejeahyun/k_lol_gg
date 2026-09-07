@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { Clapperboard, CloudSun, Play, Sparkles } from "lucide-react";
 
@@ -7,6 +6,7 @@ import { parseMediaPublicListQuery, toPublicHighlightDto } from "@/modules/media
 import { loadRuntimeMedia } from "@/modules/media/infrastructure/runtime-media";
 
 import styles from "../media.module.css";
+import { ResilientMediaImage } from "../resilient-media-image";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "하이라이트", description: "K-LOL.GG의 공개 경기 하이라이트를 봅니다.", alternates: { canonical: "/highlights" } };
@@ -23,7 +23,7 @@ export default async function HighlightsPage({ searchParams }: { searchParams: P
     {result.state === "unavailable" ? <State icon={<CloudSun />} title="영상 보관함을 연결하고 있어요." body="샘플 영상은 대신 표시하지 않습니다." />
       : result.state === "error" ? <State icon={<Sparkles />} title="하이라이트를 불러오지 못했어요." body="주소를 확인하거나 잠시 후 다시 시도해 주세요." alert />
       : items.length === 0 ? <State icon={<Play />} title="공개된 하이라이트가 아직 없어요." body="첫 영상이 게시되면 이곳에서 만날 수 있습니다." />
-      : <><div className={styles.grid}>{items.map((item) => <Link className={styles.card} href={`/highlights/${item.id}`} key={item.id}><div className={styles.visual}><Image unoptimized fill sizes="(max-width: 640px) 100vw, (max-width: 900px) 50vw, 33vw" src={item.thumbnailUrl} alt="" /></div><div className={styles.cardBody}><span className={styles.tag}>PLAY</span><h2>{item.title}</h2><p>{item.description}</p></div></Link>)}</div>{result.data.nextCursor ? <nav className={styles.pager}><Link href={`/highlights?cursor=${result.data.nextCursor}&pageSize=${query?.pageSize ?? 12}`}>다음 영상 보기</Link></nav> : null}</>}
+      : <><div className={styles.grid}>{items.map((item) => <Link className={styles.card} href={`/highlights/${item.id}`} key={item.id}><div className={styles.visual}><ResilientMediaImage sizes="(max-width: 640px) 100vw, (max-width: 900px) 50vw, 33vw" src={item.thumbnailUrl} alt="" /></div><div className={styles.cardBody}><span className={styles.tag}>PLAY</span><h2>{item.title}</h2><p>{item.description}</p></div></Link>)}</div>{result.data.nextCursor ? <nav className={styles.pager}><Link href={`/highlights?cursor=${result.data.nextCursor}&pageSize=${query?.pageSize ?? 12}`}>다음 영상 보기</Link></nav> : null}</>}
   </div>;
 }
 

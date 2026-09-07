@@ -27,7 +27,8 @@ test("browser QA server emits setup credentials, actor identity and fail-fast dy
     "assertSafeTestDatabase", "setupLoginId", "accountLoginId", "actorPlayerId", "seasonId", "applicationId",
     "championKey", "publishedMatchId", "submissionId", "highlightId", "galleryId", "eventId", "destructionId",
     "disciplineRecordId", "operationFormId", "privateAssetId", "draftId", "requiredFixture",
-    'V2_FAKE_PRIVATE_ASSETS: "1"',
+    'V2_PUBLIC_DATA_SOURCE: "postgres"',
+    'V2_FAKE_PRIVATE_ASSETS: ""',
   ]) assert.match(source, new RegExp(evidence));
   assert.match(source, /to_regclass\('assets\.private_assets'\)/u);
   assert.match(source, /owner_user_account_id = \$1/u);

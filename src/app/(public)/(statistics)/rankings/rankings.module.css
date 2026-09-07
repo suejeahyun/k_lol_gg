@@ -1,11 +1,11 @@
-.page { display: grid; gap: 24px; }
+.page { display: grid; min-width: 0; gap: 24px; }
 .hero { display: flex; justify-content: space-between; align-items: center; gap: 24px; min-height: 210px; padding: clamp(26px,5vw,50px); border: 1px solid rgba(150,174,225,.28); border-radius: 34px; background: linear-gradient(130deg,rgba(235,247,255,.96),rgba(247,237,255,.94) 58%,rgba(255,239,246,.92)); box-shadow: var(--shadow-soft); }
 .hero p,.board header span { color: var(--text-accent); font-size: 12px; font-weight: 900; letter-spacing: .12em; }
 .hero h1 { margin: 8px 0; color: var(--ink-strong); font-family: var(--font-heading); font-size: clamp(34px,6vw,58px); letter-spacing: -.05em; }
 .hero > svg { width: clamp(78px,13vw,126px); height: auto; color: #efb64e; filter: drop-shadow(0 16px 24px rgba(150,109,31,.16)); }
-.filters { display: grid; grid-template-columns: minmax(200px,2fr) minmax(120px,1fr) auto auto; gap: 12px; align-items: end; padding: 18px; border: 1px solid var(--border); border-radius: 22px; background: var(--card); }
-.filters label { display: grid; gap: 7px; color: var(--text-muted); font-size: 13px; font-weight: 800; }
-.filters select,.filters input { min-height: 44px; padding: 9px 12px; border: 1px solid var(--input); border-radius: 13px; background: #fff; }
+.filters { display: grid; min-width: 0; grid-template-columns: minmax(0,2fr) minmax(0,1fr) auto auto; gap: 12px; align-items: end; padding: 18px; border: 1px solid var(--border); border-radius: 22px; background: var(--card); }
+.filters label { display: grid; min-width: 0; gap: 7px; color: var(--text-muted); font-size: 13px; font-weight: 800; }
+.filters select,.filters input { width: 100%; max-width: 100%; min-height: 44px; padding: 9px 12px; border: 1px solid var(--input); border-radius: 13px; background: #fff; }
 .filters button,.filters a { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 10px 16px; border: 0; border-radius: 13px; color: #fff; background: var(--primary); font-weight: 900; text-decoration: none; }
 .filters a { color: var(--text-muted); background: var(--muted); pointer-events: none; }
 .summary { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; }

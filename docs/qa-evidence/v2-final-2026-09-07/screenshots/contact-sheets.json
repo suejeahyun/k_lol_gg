@@ -1,0 +1,51 @@
+[
+  {
+    "group": "public",
+    "part": 1,
+    "firstIndex": 1,
+    "lastIndex": 36,
+    "fileName": "contact-public-01.png"
+  },
+  {
+    "group": "public",
+    "part": 2,
+    "firstIndex": 37,
+    "lastIndex": 46,
+    "fileName": "contact-public-02.png"
+  },
+  {
+    "group": "account",
+    "part": 1,
+    "firstIndex": 1,
+    "lastIndex": 14,
+    "fileName": "contact-account-01.png"
+  },
+  {
+    "group": "admin",
+    "part": 1,
+    "firstIndex": 1,
+    "lastIndex": 36,
+    "fileName": "contact-admin-01.png"
+  },
+  {
+    "group": "admin",
+    "part": 2,
+    "firstIndex": 37,
+    "lastIndex": 72,
+    "fileName": "contact-admin-02.png"
+  },
+  {
+    "group": "admin",
+    "part": 3,
+    "firstIndex": 73,
+    "lastIndex": 84,
+    "fileName": "contact-admin-03.png"
+  },
+  {
+    "group": "admin-auth",
+    "part": 1,
+    "firstIndex": 1,
+    "lastIndex": 2,
+    "fileName": "contact-admin-auth-01.png"
+  }
+]

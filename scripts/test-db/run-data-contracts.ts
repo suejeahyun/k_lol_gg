@@ -961,6 +961,7 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
       ...safeProcessEnvironment(),
       NODE_ENV: "production",
       DATABASE_URL: connectionString,
+      V2_PUBLIC_DATA_SOURCE: "postgres",
       NEXT_PUBLIC_SITE_URL: origin,
       V2_PUBLIC_ORIGIN: origin,
       SESSION_SIGNING_KEYS: sessionKeysJson,

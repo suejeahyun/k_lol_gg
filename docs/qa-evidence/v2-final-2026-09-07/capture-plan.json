@@ -1,0 +1,2651 @@
+[
+  {
+    "id": "desktop:/",
+    "name": "desktop /",
+    "path": "/",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/",
+    "canonicalRoute": "/",
+    "sourcePage": "(public)/(home)/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/account",
+    "name": "desktop /account",
+    "path": "/account",
+    "group": "account",
+    "session": "account",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/account",
+    "canonicalRoute": "/account",
+    "sourcePage": "(public)/account/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/account/discipline",
+    "name": "desktop /account/discipline",
+    "path": "/account/discipline",
+    "group": "account",
+    "session": "account",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/account/discipline",
+    "canonicalRoute": "/account/discipline",
+    "sourcePage": "(public)/account/discipline/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/account/password",
+    "name": "desktop /account/password",
+    "path": "/account/password",
+    "group": "account",
+    "session": "account",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/account/password",
+    "canonicalRoute": "/account/password",
+    "sourcePage": "(public)/account/password/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/account/riot",
+    "name": "desktop /account/riot",
+    "path": "/account/riot",
+    "group": "account",
+    "session": "account",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/account/riot",
+    "canonicalRoute": "/account/riot",
+    "sourcePage": "(public)/account/riot/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin",
+    "name": "desktop /admin",
+    "path": "/admin",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin",
+    "canonicalRoute": "/admin",
+    "sourcePage": "(admin)/admin/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/balance",
+    "name": "desktop /admin/balance",
+    "path": "/admin/balance",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/balance",
+    "canonicalRoute": "/admin/balance",
+    "sourcePage": "(admin)/admin/balance/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/balance-ai",
+    "name": "desktop /admin/balance-ai",
+    "path": "/admin/balance-ai",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/balance-ai",
+    "canonicalRoute": "/admin/balance-ai",
+    "sourcePage": "(admin)/admin/balance-ai/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/balance/drafts",
+    "name": "desktop /admin/balance/drafts",
+    "path": "/admin/balance/drafts",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/balance/drafts",
+    "canonicalRoute": "/admin/balance/drafts",
+    "sourcePage": "(admin)/admin/balance/drafts/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/balance/drafts/9ad03c94-6045-43de-9cc3-3f6ffb33b7f3",
+    "name": "desktop /admin/balance/drafts/[draftId]",
+    "path": "/admin/balance/drafts/9ad03c94-6045-43de-9cc3-3f6ffb33b7f3",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/balance/drafts/[draftId]",
+    "canonicalRoute": "/admin/balance/drafts/[draftId]",
+    "sourcePage": "(admin)/admin/balance/drafts/[draftId]/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/champions",
+    "name": "desktop /admin/champions",
+    "path": "/admin/champions",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/champions",
+    "canonicalRoute": "/admin/champions",
+    "sourcePage": "(admin)/admin/champions/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/champions/mmr-17792e59-0dfa-4db7-8702-f8342b117cac/edit",
+    "name": "desktop /admin/champions/[championId]/edit",
+    "path": "/admin/champions/mmr-17792e59-0dfa-4db7-8702-f8342b117cac/edit",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/champions/[championId]/edit",
+    "canonicalRoute": "/admin/champions/[championId]/edit",
+    "sourcePage": "(admin)/admin/champions/[championId]/edit/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/champions/new",
+    "name": "desktop /admin/champions/new",
+    "path": "/admin/champions/new",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/champions/new",
+    "canonicalRoute": "/admin/champions/new",
+    "sourcePage": "(admin)/admin/champions/new/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/discipline",
+    "name": "desktop /admin/discipline",
+    "path": "/admin/discipline",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/discipline",
+    "canonicalRoute": "/admin/discipline",
+    "sourcePage": "(admin)/admin/discipline/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/discipline/0a5cc070-f7d5-49dd-9ee8-40c2714c14aa",
+    "name": "desktop /admin/discipline/[recordId]",
+    "path": "/admin/discipline/0a5cc070-f7d5-49dd-9ee8-40c2714c14aa",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/discipline/[recordId]",
+    "canonicalRoute": "/admin/discipline/[recordId]",
+    "sourcePage": "(admin)/admin/discipline/[recordId]/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/discipline/new",
+    "name": "desktop /admin/discipline/new",
+    "path": "/admin/discipline/new",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/discipline/new",
+    "canonicalRoute": "/admin/discipline/new",
+    "sourcePage": "(admin)/admin/discipline/new/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/highlights",
+    "name": "desktop /admin/highlights",
+    "path": "/admin/highlights",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/highlights",
+    "canonicalRoute": "/admin/highlights",
+    "sourcePage": "(admin)/admin/highlights/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/highlights/e5562b0b-7ef9-4067-b62f-eb3a66ad416d/edit",
+    "name": "desktop /admin/highlights/[highlightId]/edit",
+    "path": "/admin/highlights/e5562b0b-7ef9-4067-b62f-eb3a66ad416d/edit",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/highlights/[highlightId]/edit",
+    "canonicalRoute": "/admin/highlights/[highlightId]/edit",
+    "sourcePage": "(admin)/admin/highlights/[highlightId]/edit/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/highlights/new",
+    "name": "desktop /admin/highlights/new",
+    "path": "/admin/highlights/new",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/highlights/new",
+    "canonicalRoute": "/admin/highlights/new",
+    "sourcePage": "(admin)/admin/highlights/new/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/images",
+    "name": "desktop /admin/images",
+    "path": "/admin/images",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/images",
+    "canonicalRoute": "/admin/images",
+    "sourcePage": "(admin)/admin/images/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/images/a45d0586-ff6b-4350-878e-83b3fbd849c2/edit",
+    "name": "desktop /admin/images/[imageId]/edit",
+    "path": "/admin/images/a45d0586-ff6b-4350-878e-83b3fbd849c2/edit",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/images/[imageId]/edit",
+    "canonicalRoute": "/admin/images/[imageId]/edit",
+    "sourcePage": "(admin)/admin/images/[imageId]/edit/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/images/new",
+    "name": "desktop /admin/images/new",
+    "path": "/admin/images/new",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/images/new",
+    "canonicalRoute": "/admin/images/new",
+    "sourcePage": "(admin)/admin/images/new/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/kakao",
+    "name": "desktop /admin/kakao",
+    "path": "/admin/kakao",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/kakao",
+    "canonicalRoute": "/admin/kakao",
+    "sourcePage": "(admin)/admin/kakao/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/kakao/recruits",
+    "name": "desktop /admin/kakao/recruits",
+    "path": "/admin/kakao/recruits",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/kakao/recruits",
+    "canonicalRoute": "/admin/kakao/recruits",
+    "sourcePage": "(admin)/admin/kakao/recruits/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/login",
+    "name": "desktop /admin/login",
+    "path": "/admin/login",
+    "group": "admin-auth",
+    "session": "anonymous",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/login",
+    "canonicalRoute": "/admin/login",
+    "sourcePage": "(auth)/admin/login/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/logs",
+    "name": "desktop /admin/logs",
+    "path": "/admin/logs",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/logs",
+    "canonicalRoute": "/admin/logs",
+    "sourcePage": "(admin)/admin/logs/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/matches",
+    "name": "desktop /admin/matches",
+    "path": "/admin/matches",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/matches",
+    "canonicalRoute": "/admin/matches",
+    "sourcePage": "(admin)/admin/matches/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/matches/47a22ecc-bcef-4661-9713-02e58cf13602",
+    "name": "desktop /admin/matches/[matchId]",
+    "path": "/admin/matches/47a22ecc-bcef-4661-9713-02e58cf13602",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/matches/[matchId]",
+    "canonicalRoute": "/admin/matches/[matchId]",
+    "sourcePage": "(admin)/admin/matches/[matchId]/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/matches/47a22ecc-bcef-4661-9713-02e58cf13602/edit",
+    "name": "desktop /admin/matches/[matchId]/edit",
+    "path": "/admin/matches/47a22ecc-bcef-4661-9713-02e58cf13602/edit",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/matches/[matchId]/edit",
+    "canonicalRoute": "/admin/matches/[matchId]/edit",
+    "sourcePage": "(admin)/admin/matches/[matchId]/edit/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/matches/new",
+    "name": "desktop /admin/matches/new",
+    "path": "/admin/matches/new",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/matches/new",
+    "canonicalRoute": "/admin/matches/new",
+    "sourcePage": "(admin)/admin/matches/new/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/matches/submissions/4b9ce5bd-99b2-4728-b652-d3f122df8793",
+    "name": "desktop /admin/matches/submissions/[submissionId]",
+    "path": "/admin/matches/submissions/4b9ce5bd-99b2-4728-b652-d3f122df8793",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/matches/submissions/[submissionId]",
+    "canonicalRoute": "/admin/matches/submissions/[submissionId]",
+    "sourcePage": "(admin)/admin/matches/submissions/[submissionId]/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/operation-forms",
+    "name": "desktop /admin/operation-forms",
+    "path": "/admin/operation-forms",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/operation-forms",
+    "canonicalRoute": "/admin/operation-forms",
+    "sourcePage": "(admin)/admin/operation-forms/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/operation-forms/suggestions",
+    "name": "desktop /admin/operation-forms/[formType]",
+    "path": "/admin/operation-forms/suggestions",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/operation-forms/[formType]",
+    "canonicalRoute": "/admin/operation-forms/[formType]",
+    "sourcePage": "(admin)/admin/operation-forms/[formType]/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/operation-forms/suggestions/5076564f-08b6-44bd-9f03-c6e320f05e58",
+    "name": "desktop /admin/operation-forms/[formType]/[id]",
+    "path": "/admin/operation-forms/suggestions/5076564f-08b6-44bd-9f03-c6e320f05e58",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/operation-forms/[formType]/[id]",
+    "canonicalRoute": "/admin/operation-forms/[formType]/[id]",
+    "sourcePage": "(admin)/admin/operation-forms/[formType]/[id]/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/players",
+    "name": "desktop /admin/players",
+    "path": "/admin/players",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/players",
+    "canonicalRoute": "/admin/players",
+    "sourcePage": "(admin)/admin/players/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/players/7d0b7155-0e2b-4273-ad7d-5fe5a3876f43",
+    "name": "desktop /admin/players/[playerId]",
+    "path": "/admin/players/7d0b7155-0e2b-4273-ad7d-5fe5a3876f43",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/players/[playerId]",
+    "canonicalRoute": "/admin/players/[playerId]",
+    "sourcePage": "(admin)/admin/players/[playerId]/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/players/new",
+    "name": "desktop /admin/players/new",
+    "path": "/admin/players/new",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/players/new",
+    "canonicalRoute": "/admin/players/new",
+    "sourcePage": "(admin)/admin/players/new/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/private-assets",
+    "name": "desktop /admin/private-assets",
+    "path": "/admin/private-assets",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/private-assets",
+    "canonicalRoute": "/admin/private-assets",
+    "sourcePage": "(admin)/admin/private-assets/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/private-assets/71d259bb-2314-469a-b863-a4f0a7b57bc5",
+    "name": "desktop /admin/private-assets/[assetId]",
+    "path": "/admin/private-assets/71d259bb-2314-469a-b863-a4f0a7b57bc5",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/private-assets/[assetId]",
+    "canonicalRoute": "/admin/private-assets/[assetId]",
+    "sourcePage": "(admin)/admin/private-assets/[assetId]/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/progress/destruction",
+    "name": "desktop /admin/progress/destruction",
+    "path": "/admin/progress/destruction",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/progress/destruction",
+    "canonicalRoute": "/admin/progress/destruction",
+    "sourcePage": "(admin)/admin/progress/destruction/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/progress/destruction/a25b9de7-b15e-4439-8f29-432901b32367",
+    "name": "desktop /admin/progress/destruction/[tournamentId]",
+    "path": "/admin/progress/destruction/a25b9de7-b15e-4439-8f29-432901b32367",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/progress/destruction/[tournamentId]",
+    "canonicalRoute": "/admin/progress/destruction/[tournamentId]",
+    "sourcePage": "(admin)/admin/progress/destruction/[tournamentId]/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/progress/destruction/new",
+    "name": "desktop /admin/progress/destruction/new",
+    "path": "/admin/progress/destruction/new",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/progress/destruction/new",
+    "canonicalRoute": "/admin/progress/destruction/new",
+    "sourcePage": "(admin)/admin/progress/destruction/new/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/progress/event",
+    "name": "desktop /admin/progress/event",
+    "path": "/admin/progress/event",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/progress/event",
+    "canonicalRoute": "/admin/progress/event",
+    "sourcePage": "(admin)/admin/progress/event/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/progress/event/fcb98db4-3b9a-49f7-b6f5-b60c9c9f5fe6",
+    "name": "desktop /admin/progress/event/[eventId]",
+    "path": "/admin/progress/event/fcb98db4-3b9a-49f7-b6f5-b60c9c9f5fe6",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/progress/event/[eventId]",
+    "canonicalRoute": "/admin/progress/event/[eventId]",
+    "sourcePage": "(admin)/admin/progress/event/[eventId]/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/progress/event/new",
+    "name": "desktop /admin/progress/event/new",
+    "path": "/admin/progress/event/new",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/progress/event/new",
+    "canonicalRoute": "/admin/progress/event/new",
+    "sourcePage": "(admin)/admin/progress/event/new/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/riot",
+    "name": "desktop /admin/riot",
+    "path": "/admin/riot",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/riot",
+    "canonicalRoute": "/admin/riot",
+    "sourcePage": "(admin)/admin/riot/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/search",
+    "name": "desktop /admin/search",
+    "path": "/admin/search",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/search",
+    "canonicalRoute": "/admin/search",
+    "sourcePage": "(admin)/admin/search/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/seasons",
+    "name": "desktop /admin/seasons",
+    "path": "/admin/seasons",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/seasons",
+    "canonicalRoute": "/admin/seasons",
+    "sourcePage": "(admin)/admin/seasons/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/security",
+    "name": "desktop /admin/security",
+    "path": "/admin/security",
+    "group": "admin-auth",
+    "session": "setup",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/security",
+    "canonicalRoute": "/admin/security",
+    "sourcePage": "(auth)/admin/security/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/site-settings",
+    "name": "desktop /admin/site-settings",
+    "path": "/admin/site-settings",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/site-settings",
+    "canonicalRoute": "/admin/site-settings",
+    "sourcePage": "(admin)/admin/site-settings/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/users",
+    "name": "desktop /admin/users",
+    "path": "/admin/users",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/users",
+    "canonicalRoute": "/admin/users",
+    "sourcePage": "(admin)/admin/users/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/users/7c261db1-2d67-4112-8074-28b08769aac8",
+    "name": "desktop /admin/users/[userAccountId]",
+    "path": "/admin/users/7c261db1-2d67-4112-8074-28b08769aac8",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/admin/users/[userAccountId]",
+    "canonicalRoute": "/admin/users/[userAccountId]",
+    "sourcePage": "(admin)/admin/users/[userAccountId]/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/applications",
+    "name": "desktop /applications",
+    "path": "/applications",
+    "group": "account",
+    "session": "account",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/applications",
+    "canonicalRoute": "/applications",
+    "sourcePage": "(public)/(applications)/applications/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/competitions",
+    "name": "desktop /competitions",
+    "path": "/competitions",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/competitions",
+    "canonicalRoute": "/competitions",
+    "sourcePage": "(public)/(competitions)/competitions/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/competitions/destruction/a25b9de7-b15e-4439-8f29-432901b32367",
+    "name": "desktop /competitions/destruction/[tournamentId]",
+    "path": "/competitions/destruction/a25b9de7-b15e-4439-8f29-432901b32367",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/competitions/destruction/[tournamentId]",
+    "canonicalRoute": "/competitions/destruction/[tournamentId]",
+    "sourcePage": "(public)/(competitions)/competitions/destruction/[tournamentId]/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/competitions/events/fcb98db4-3b9a-49f7-b6f5-b60c9c9f5fe6",
+    "name": "desktop /competitions/events/[eventId]",
+    "path": "/competitions/events/fcb98db4-3b9a-49f7-b6f5-b60c9c9f5fe6",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/competitions/events/[eventId]",
+    "canonicalRoute": "/competitions/events/[eventId]",
+    "sourcePage": "(public)/(competitions)/competitions/events/[eventId]/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/discipline",
+    "name": "desktop /discipline",
+    "path": "/discipline",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/discipline",
+    "canonicalRoute": "/discipline",
+    "sourcePage": "(public)/(discipline)/discipline/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/forbidden",
+    "name": "desktop /forbidden",
+    "path": "/forbidden",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/forbidden",
+    "canonicalRoute": "/forbidden",
+    "sourcePage": "(public)/forbidden/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/forgot-password",
+    "name": "desktop /forgot-password",
+    "path": "/forgot-password",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/forgot-password",
+    "canonicalRoute": "/forgot-password",
+    "sourcePage": "(public)/forgot-password/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/help/kakao",
+    "name": "desktop /help/kakao",
+    "path": "/help/kakao",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/help/kakao",
+    "canonicalRoute": "/help/kakao",
+    "sourcePage": "(public)/(recruiting)/help/kakao/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/help/recruits",
+    "name": "desktop /help/recruits",
+    "path": "/help/recruits",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/help/recruits",
+    "canonicalRoute": "/help/recruits",
+    "sourcePage": "(public)/(recruiting)/help/recruits/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/help/riot",
+    "name": "desktop /help/riot",
+    "path": "/help/riot",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/help/riot",
+    "canonicalRoute": "/help/riot",
+    "sourcePage": "(public)/(guides)/help/riot/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/highlights",
+    "name": "desktop /highlights",
+    "path": "/highlights",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/highlights",
+    "canonicalRoute": "/highlights",
+    "sourcePage": "(public)/(media)/highlights/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/highlights/e5562b0b-7ef9-4067-b62f-eb3a66ad416d",
+    "name": "desktop /highlights/[highlightId]",
+    "path": "/highlights/e5562b0b-7ef9-4067-b62f-eb3a66ad416d",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/highlights/[highlightId]",
+    "canonicalRoute": "/highlights/[highlightId]",
+    "sourcePage": "(public)/(media)/highlights/[highlightId]/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/images",
+    "name": "desktop /images",
+    "path": "/images",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/images",
+    "canonicalRoute": "/images",
+    "sourcePage": "(public)/(media)/images/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/images/a45d0586-ff6b-4350-878e-83b3fbd849c2",
+    "name": "desktop /images/[imageId]",
+    "path": "/images/a45d0586-ff6b-4350-878e-83b3fbd849c2",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/images/[imageId]",
+    "canonicalRoute": "/images/[imageId]",
+    "sourcePage": "(public)/(media)/images/[imageId]/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/install",
+    "name": "desktop /install",
+    "path": "/install",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/install",
+    "canonicalRoute": "/install",
+    "sourcePage": "(public)/(guides)/install/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/login",
+    "name": "desktop /login",
+    "path": "/login",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/login",
+    "canonicalRoute": "/login",
+    "sourcePage": "(public)/login/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/matches",
+    "name": "desktop /matches",
+    "path": "/matches",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/matches",
+    "canonicalRoute": "/matches",
+    "sourcePage": "(public)/(matches)/matches/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/matches/47a22ecc-bcef-4661-9713-02e58cf13602",
+    "name": "desktop /matches/[matchId]",
+    "path": "/matches/47a22ecc-bcef-4661-9713-02e58cf13602",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/matches/[matchId]",
+    "canonicalRoute": "/matches/[matchId]",
+    "sourcePage": "(public)/(matches)/matches/[matchId]/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/matches/submissions",
+    "name": "desktop /matches/submissions",
+    "path": "/matches/submissions",
+    "group": "account",
+    "session": "account",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/matches/submissions",
+    "canonicalRoute": "/matches/submissions",
+    "sourcePage": "(public)/(matches)/matches/submissions/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/matches/submit",
+    "name": "desktop /matches/submit",
+    "path": "/matches/submit",
+    "group": "account",
+    "session": "account",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/matches/submit",
+    "canonicalRoute": "/matches/submit",
+    "sourcePage": "(public)/(matches)/matches/submit/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/players",
+    "name": "desktop /players",
+    "path": "/players",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/players",
+    "canonicalRoute": "/players",
+    "sourcePage": "(public)/(registry)/players/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/players/7d0b7155-0e2b-4273-ad7d-5fe5a3876f43",
+    "name": "desktop /players/[playerId]",
+    "path": "/players/7d0b7155-0e2b-4273-ad7d-5fe5a3876f43",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/players/[playerId]",
+    "canonicalRoute": "/players/[playerId]",
+    "sourcePage": "(public)/(registry)/players/[playerId]/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/privacy",
+    "name": "desktop /privacy",
+    "path": "/privacy",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/privacy",
+    "canonicalRoute": "/privacy",
+    "sourcePage": "(public)/privacy/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/rankings",
+    "name": "desktop /rankings",
+    "path": "/rankings",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/rankings",
+    "canonicalRoute": "/rankings",
+    "sourcePage": "(public)/(statistics)/rankings/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/rankings/mmr",
+    "name": "desktop /rankings/mmr",
+    "path": "/rankings/mmr",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/rankings/mmr",
+    "canonicalRoute": "/rankings/mmr",
+    "sourcePage": "(public)/(statistics)/rankings/mmr/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/recruits",
+    "name": "desktop /recruits",
+    "path": "/recruits",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/recruits",
+    "canonicalRoute": "/recruits",
+    "sourcePage": "(public)/(recruiting)/recruits/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/signup",
+    "name": "desktop /signup",
+    "path": "/signup",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/signup",
+    "canonicalRoute": "/signup",
+    "sourcePage": "(public)/signup/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/start",
+    "name": "desktop /start",
+    "path": "/start",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/start",
+    "canonicalRoute": "/start",
+    "sourcePage": "(public)/(guides)/start/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/terms",
+    "name": "desktop /terms",
+    "path": "/terms",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/terms",
+    "canonicalRoute": "/terms",
+    "sourcePage": "(public)/terms/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/tools/coin-toss",
+    "name": "desktop /tools/coin-toss",
+    "path": "/tools/coin-toss",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/tools/coin-toss",
+    "canonicalRoute": "/tools/coin-toss",
+    "sourcePage": "(public)/(tools)/tools/coin-toss/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/tools/random-team",
+    "name": "desktop /tools/random-team",
+    "path": "/tools/random-team",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/tools/random-team",
+    "canonicalRoute": "/tools/random-team",
+    "sourcePage": "(public)/(tools)/tools/random-team/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/tools/team-balance",
+    "name": "desktop /tools/team-balance",
+    "path": "/tools/team-balance",
+    "group": "account",
+    "session": "account",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/tools/team-balance",
+    "canonicalRoute": "/tools/team-balance",
+    "sourcePage": "(public)/(tools)/tools/team-balance/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/tools/team-balance/drafts",
+    "name": "desktop /tools/team-balance/drafts",
+    "path": "/tools/team-balance/drafts",
+    "group": "account",
+    "session": "account",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/tools/team-balance/drafts",
+    "canonicalRoute": "/tools/team-balance/drafts",
+    "sourcePage": "(public)/(tools)/tools/team-balance/drafts/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/tools/team-balance/drafts/9ad03c94-6045-43de-9cc3-3f6ffb33b7f3",
+    "name": "desktop /tools/team-balance/drafts/[draftId]",
+    "path": "/tools/team-balance/drafts/9ad03c94-6045-43de-9cc3-3f6ffb33b7f3",
+    "group": "account",
+    "session": "account",
+    "captureKind": "canonical",
+    "routeKind": "page",
+    "routeTemplate": "/tools/team-balance/drafts/[draftId]",
+    "canonicalRoute": "/tools/team-balance/drafts/[draftId]",
+    "sourcePage": "(public)/(tools)/tools/team-balance/drafts/[draftId]/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/account?tab=player",
+    "name": "desktop /account · player",
+    "path": "/account?tab=player",
+    "group": "account",
+    "session": "account",
+    "captureKind": "query-variant",
+    "routeKind": "page",
+    "routeTemplate": "/account",
+    "canonicalRoute": "/account",
+    "sourcePage": "(public)/account/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/balance-ai?tab=players",
+    "name": "desktop /admin/balance-ai · players",
+    "path": "/admin/balance-ai?tab=players",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "query-variant",
+    "routeKind": "page",
+    "routeTemplate": "/admin/balance-ai",
+    "canonicalRoute": "/admin/balance-ai",
+    "sourcePage": "(admin)/admin/balance-ai/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/balance-ai?tab=reviews",
+    "name": "desktop /admin/balance-ai · reviews",
+    "path": "/admin/balance-ai?tab=reviews",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "query-variant",
+    "routeKind": "page",
+    "routeTemplate": "/admin/balance-ai",
+    "canonicalRoute": "/admin/balance-ai",
+    "sourcePage": "(admin)/admin/balance-ai/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/discipline?tab=tasks",
+    "name": "desktop /admin/discipline · tasks",
+    "path": "/admin/discipline?tab=tasks",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "query-variant",
+    "routeKind": "page",
+    "routeTemplate": "/admin/discipline",
+    "canonicalRoute": "/admin/discipline",
+    "sourcePage": "(admin)/admin/discipline/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/discipline?tab=reviews",
+    "name": "desktop /admin/discipline · reviews",
+    "path": "/admin/discipline?tab=reviews",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "query-variant",
+    "routeKind": "page",
+    "routeTemplate": "/admin/discipline",
+    "canonicalRoute": "/admin/discipline",
+    "sourcePage": "(admin)/admin/discipline/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/kakao?tab=scrims",
+    "name": "desktop /admin/kakao · scrims",
+    "path": "/admin/kakao?tab=scrims",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "query-variant",
+    "routeKind": "page",
+    "routeTemplate": "/admin/kakao",
+    "canonicalRoute": "/admin/kakao",
+    "sourcePage": "(admin)/admin/kakao/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/kakao?tab=stats",
+    "name": "desktop /admin/kakao · stats",
+    "path": "/admin/kakao?tab=stats",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "query-variant",
+    "routeKind": "page",
+    "routeTemplate": "/admin/kakao",
+    "canonicalRoute": "/admin/kakao",
+    "sourcePage": "(admin)/admin/kakao/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/kakao?tab=settings",
+    "name": "desktop /admin/kakao · settings",
+    "path": "/admin/kakao?tab=settings",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "query-variant",
+    "routeKind": "page",
+    "routeTemplate": "/admin/kakao",
+    "canonicalRoute": "/admin/kakao",
+    "sourcePage": "(admin)/admin/kakao/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/kakao?tab=logs",
+    "name": "desktop /admin/kakao · logs",
+    "path": "/admin/kakao?tab=logs",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "query-variant",
+    "routeKind": "page",
+    "routeTemplate": "/admin/kakao",
+    "canonicalRoute": "/admin/kakao",
+    "sourcePage": "(admin)/admin/kakao/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/kakao?tab=health",
+    "name": "desktop /admin/kakao · health",
+    "path": "/admin/kakao?tab=health",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "query-variant",
+    "routeKind": "page",
+    "routeTemplate": "/admin/kakao",
+    "canonicalRoute": "/admin/kakao",
+    "sourcePage": "(admin)/admin/kakao/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/logs?view=stats",
+    "name": "desktop /admin/logs · stats",
+    "path": "/admin/logs?view=stats",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "query-variant",
+    "routeKind": "page",
+    "routeTemplate": "/admin/logs",
+    "canonicalRoute": "/admin/logs",
+    "sourcePage": "(admin)/admin/logs/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/logs?view=ai-requests",
+    "name": "desktop /admin/logs · ai-requests",
+    "path": "/admin/logs?view=ai-requests",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "query-variant",
+    "routeKind": "page",
+    "routeTemplate": "/admin/logs",
+    "canonicalRoute": "/admin/logs",
+    "sourcePage": "(admin)/admin/logs/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/matches?view=submissions",
+    "name": "desktop /admin/matches · submissions",
+    "path": "/admin/matches?view=submissions",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "query-variant",
+    "routeKind": "page",
+    "routeTemplate": "/admin/matches",
+    "canonicalRoute": "/admin/matches",
+    "sourcePage": "(admin)/admin/matches/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/matches/47a22ecc-bcef-4661-9713-02e58cf13602?tab=ai-review",
+    "name": "desktop /admin/matches/[matchId] · ai-review",
+    "path": "/admin/matches/47a22ecc-bcef-4661-9713-02e58cf13602?tab=ai-review",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "query-variant",
+    "routeKind": "page",
+    "routeTemplate": "/admin/matches/[matchId]",
+    "canonicalRoute": "/admin/matches/[matchId]",
+    "sourcePage": "(admin)/admin/matches/[matchId]/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/operation-forms?type=friends",
+    "name": "desktop /admin/operation-forms · friends",
+    "path": "/admin/operation-forms?type=friends",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "query-variant",
+    "routeKind": "page",
+    "routeTemplate": "/admin/operation-forms",
+    "canonicalRoute": "/admin/operation-forms",
+    "sourcePage": "(admin)/admin/operation-forms/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/operation-forms?type=leaves",
+    "name": "desktop /admin/operation-forms · leaves",
+    "path": "/admin/operation-forms?type=leaves",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "query-variant",
+    "routeKind": "page",
+    "routeTemplate": "/admin/operation-forms",
+    "canonicalRoute": "/admin/operation-forms",
+    "sourcePage": "(admin)/admin/operation-forms/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/operation-forms?type=meetups",
+    "name": "desktop /admin/operation-forms · meetups",
+    "path": "/admin/operation-forms?type=meetups",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "query-variant",
+    "routeKind": "page",
+    "routeTemplate": "/admin/operation-forms",
+    "canonicalRoute": "/admin/operation-forms",
+    "sourcePage": "(admin)/admin/operation-forms/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/operation-forms?type=suggestions",
+    "name": "desktop /admin/operation-forms · suggestions",
+    "path": "/admin/operation-forms?type=suggestions",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "query-variant",
+    "routeKind": "page",
+    "routeTemplate": "/admin/operation-forms",
+    "canonicalRoute": "/admin/operation-forms",
+    "sourcePage": "(admin)/admin/operation-forms/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/players/7d0b7155-0e2b-4273-ad7d-5fe5a3876f43?mode=edit",
+    "name": "desktop /admin/players/[playerId] · edit",
+    "path": "/admin/players/7d0b7155-0e2b-4273-ad7d-5fe5a3876f43?mode=edit",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "query-variant",
+    "routeKind": "page",
+    "routeTemplate": "/admin/players/[playerId]",
+    "canonicalRoute": "/admin/players/[playerId]",
+    "sourcePage": "(admin)/admin/players/[playerId]/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/players/7d0b7155-0e2b-4273-ad7d-5fe5a3876f43?tab=balance",
+    "name": "desktop /admin/players/[playerId] · balance",
+    "path": "/admin/players/7d0b7155-0e2b-4273-ad7d-5fe5a3876f43?tab=balance",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "query-variant",
+    "routeKind": "page",
+    "routeTemplate": "/admin/players/[playerId]",
+    "canonicalRoute": "/admin/players/[playerId]",
+    "sourcePage": "(admin)/admin/players/[playerId]/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/players/7d0b7155-0e2b-4273-ad7d-5fe5a3876f43?tab=riot",
+    "name": "desktop /admin/players/[playerId] · riot",
+    "path": "/admin/players/7d0b7155-0e2b-4273-ad7d-5fe5a3876f43?tab=riot",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "query-variant",
+    "routeKind": "page",
+    "routeTemplate": "/admin/players/[playerId]",
+    "canonicalRoute": "/admin/players/[playerId]",
+    "sourcePage": "(admin)/admin/players/[playerId]/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/private-assets?status=READY",
+    "name": "desktop /admin/private-assets · ready",
+    "path": "/admin/private-assets?status=READY",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "query-variant",
+    "routeKind": "page",
+    "routeTemplate": "/admin/private-assets",
+    "canonicalRoute": "/admin/private-assets",
+    "sourcePage": "(admin)/admin/private-assets/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/private-assets?status=DELETE_PENDING",
+    "name": "desktop /admin/private-assets · cleanup",
+    "path": "/admin/private-assets?status=DELETE_PENDING",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "query-variant",
+    "routeKind": "page",
+    "routeTemplate": "/admin/private-assets",
+    "canonicalRoute": "/admin/private-assets",
+    "sourcePage": "(admin)/admin/private-assets/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/riot?tab=sync",
+    "name": "desktop /admin/riot · sync",
+    "path": "/admin/riot?tab=sync",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "query-variant",
+    "routeKind": "page",
+    "routeTemplate": "/admin/riot",
+    "canonicalRoute": "/admin/riot",
+    "sourcePage": "(admin)/admin/riot/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/riot?tab=logs",
+    "name": "desktop /admin/riot · logs",
+    "path": "/admin/riot?tab=logs",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "query-variant",
+    "routeKind": "page",
+    "routeTemplate": "/admin/riot",
+    "canonicalRoute": "/admin/riot",
+    "sourcePage": "(admin)/admin/riot/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/players/7d0b7155-0e2b-4273-ad7d-5fe5a3876f43?tab=riot",
+    "name": "desktop /players/[playerId] · riot",
+    "path": "/players/7d0b7155-0e2b-4273-ad7d-5fe5a3876f43?tab=riot",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "query-variant",
+    "routeKind": "page",
+    "routeTemplate": "/players/[playerId]",
+    "canonicalRoute": "/players/[playerId]",
+    "sourcePage": "(public)/(registry)/players/[playerId]/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/tools/random-team?mode=tier",
+    "name": "desktop /tools/random-team · tier",
+    "path": "/tools/random-team?mode=tier",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "query-variant",
+    "routeKind": "page",
+    "routeTemplate": "/tools/random-team",
+    "canonicalRoute": "/tools/random-team",
+    "sourcePage": "(public)/(tools)/tools/random-team/page.tsx",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/ai-requests",
+    "name": "desktop /admin/ai-requests · redirect contract",
+    "path": "/admin/ai-requests",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "alias-redirect",
+    "routeKind": "redirect",
+    "routeTemplate": "/admin/ai-requests",
+    "sourcePage": "(admin)/admin/ai-requests/page.tsx",
+    "expectedRedirect": {
+      "status": 308,
+      "destination": "/admin/logs?view=ai-requests"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/kakao/operation-forms",
+    "name": "desktop /admin/kakao/operation-forms · redirect contract",
+    "path": "/admin/kakao/operation-forms",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "alias-redirect",
+    "routeKind": "redirect",
+    "routeTemplate": "/admin/kakao/operation-forms",
+    "sourcePage": "(admin)/admin/kakao/operation-forms/page.tsx",
+    "expectedRedirect": {
+      "status": 308,
+      "destination": "/admin/operation-forms"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/kakao/operation-forms/suggestions",
+    "name": "desktop /admin/kakao/operation-forms/[formType] · redirect contract",
+    "path": "/admin/kakao/operation-forms/suggestions",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "alias-redirect",
+    "routeKind": "redirect",
+    "routeTemplate": "/admin/kakao/operation-forms/[formType]",
+    "sourcePage": "(admin)/admin/kakao/operation-forms/[formType]/page.tsx",
+    "expectedRedirect": {
+      "status": 308,
+      "destination": "/admin/operation-forms?type=suggestions"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/operation-forms/warnings",
+    "name": "desktop /admin/operation-forms/warnings · redirect contract",
+    "path": "/admin/operation-forms/warnings",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "alias-redirect",
+    "routeKind": "redirect",
+    "routeTemplate": "/admin/operation-forms/warnings",
+    "sourcePage": "(admin)/admin/operation-forms/warnings/page.tsx",
+    "expectedRedirect": {
+      "status": 308,
+      "destination": "/admin/discipline"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/admin/recruits",
+    "name": "desktop /admin/recruits · redirect contract",
+    "path": "/admin/recruits",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "alias-redirect",
+    "routeKind": "redirect",
+    "routeTemplate": "/admin/recruits",
+    "sourcePage": "(admin)/admin/recruits/page.tsx",
+    "expectedRedirect": {
+      "status": 308,
+      "destination": "/admin/kakao/recruits"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/app",
+    "name": "desktop /app · redirect contract",
+    "path": "/app",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "alias-redirect",
+    "routeKind": "redirect",
+    "routeTemplate": "/app",
+    "sourcePage": "(public)/(legacy)/app/page.tsx",
+    "expectedRedirect": {
+      "status": 308,
+      "destination": "/"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "desktop:/app/players",
+    "name": "desktop /app/players · redirect contract",
+    "path": "/app/players",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "alias-redirect",
+    "routeKind": "redirect",
+    "routeTemplate": "/app/players",
+    "sourcePage": "(public)/(legacy)/app/players/page.tsx",
+    "expectedRedirect": {
+      "status": 308,
+      "destination": "/players"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "deviceScaleFactor": 1,
+      "mobile": false
+    }
+  },
+  {
+    "id": "mobile:/",
+    "name": "mobile /",
+    "path": "/",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "key-mobile",
+    "routeKind": "page",
+    "routeTemplate": "/",
+    "canonicalRoute": "/",
+    "sourcePage": "(public)/(home)/page.tsx",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "deviceScaleFactor": 1,
+      "mobile": true
+    }
+  },
+  {
+    "id": "mobile:/account",
+    "name": "mobile /account",
+    "path": "/account",
+    "group": "account",
+    "session": "account",
+    "captureKind": "key-mobile",
+    "routeKind": "page",
+    "routeTemplate": "/account",
+    "canonicalRoute": "/account",
+    "sourcePage": "(public)/account/page.tsx",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "deviceScaleFactor": 1,
+      "mobile": true
+    }
+  },
+  {
+    "id": "mobile:/admin",
+    "name": "mobile /admin",
+    "path": "/admin",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "key-mobile",
+    "routeKind": "page",
+    "routeTemplate": "/admin",
+    "canonicalRoute": "/admin",
+    "sourcePage": "(admin)/admin/page.tsx",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "deviceScaleFactor": 1,
+      "mobile": true
+    }
+  },
+  {
+    "id": "mobile:/admin/balance-ai",
+    "name": "mobile /admin/balance-ai",
+    "path": "/admin/balance-ai",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "key-mobile",
+    "routeKind": "page",
+    "routeTemplate": "/admin/balance-ai",
+    "canonicalRoute": "/admin/balance-ai",
+    "sourcePage": "(admin)/admin/balance-ai/page.tsx",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "deviceScaleFactor": 1,
+      "mobile": true
+    }
+  },
+  {
+    "id": "mobile:/admin/kakao",
+    "name": "mobile /admin/kakao",
+    "path": "/admin/kakao",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "key-mobile",
+    "routeKind": "page",
+    "routeTemplate": "/admin/kakao",
+    "canonicalRoute": "/admin/kakao",
+    "sourcePage": "(admin)/admin/kakao/page.tsx",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "deviceScaleFactor": 1,
+      "mobile": true
+    }
+  },
+  {
+    "id": "mobile:/admin/matches",
+    "name": "mobile /admin/matches",
+    "path": "/admin/matches",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "key-mobile",
+    "routeKind": "page",
+    "routeTemplate": "/admin/matches",
+    "canonicalRoute": "/admin/matches",
+    "sourcePage": "(admin)/admin/matches/page.tsx",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "deviceScaleFactor": 1,
+      "mobile": true
+    }
+  },
+  {
+    "id": "mobile:/admin/operation-forms",
+    "name": "mobile /admin/operation-forms",
+    "path": "/admin/operation-forms",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "key-mobile",
+    "routeKind": "page",
+    "routeTemplate": "/admin/operation-forms",
+    "canonicalRoute": "/admin/operation-forms",
+    "sourcePage": "(admin)/admin/operation-forms/page.tsx",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "deviceScaleFactor": 1,
+      "mobile": true
+    }
+  },
+  {
+    "id": "mobile:/admin/players",
+    "name": "mobile /admin/players",
+    "path": "/admin/players",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "key-mobile",
+    "routeKind": "page",
+    "routeTemplate": "/admin/players",
+    "canonicalRoute": "/admin/players",
+    "sourcePage": "(admin)/admin/players/page.tsx",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "deviceScaleFactor": 1,
+      "mobile": true
+    }
+  },
+  {
+    "id": "mobile:/admin/private-assets",
+    "name": "mobile /admin/private-assets",
+    "path": "/admin/private-assets",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "key-mobile",
+    "routeKind": "page",
+    "routeTemplate": "/admin/private-assets",
+    "canonicalRoute": "/admin/private-assets",
+    "sourcePage": "(admin)/admin/private-assets/page.tsx",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "deviceScaleFactor": 1,
+      "mobile": true
+    }
+  },
+  {
+    "id": "mobile:/admin/progress/destruction",
+    "name": "mobile /admin/progress/destruction",
+    "path": "/admin/progress/destruction",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "key-mobile",
+    "routeKind": "page",
+    "routeTemplate": "/admin/progress/destruction",
+    "canonicalRoute": "/admin/progress/destruction",
+    "sourcePage": "(admin)/admin/progress/destruction/page.tsx",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "deviceScaleFactor": 1,
+      "mobile": true
+    }
+  },
+  {
+    "id": "mobile:/admin/progress/event",
+    "name": "mobile /admin/progress/event",
+    "path": "/admin/progress/event",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "key-mobile",
+    "routeKind": "page",
+    "routeTemplate": "/admin/progress/event",
+    "canonicalRoute": "/admin/progress/event",
+    "sourcePage": "(admin)/admin/progress/event/page.tsx",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "deviceScaleFactor": 1,
+      "mobile": true
+    }
+  },
+  {
+    "id": "mobile:/admin/riot",
+    "name": "mobile /admin/riot",
+    "path": "/admin/riot",
+    "group": "admin",
+    "session": "admin",
+    "captureKind": "key-mobile",
+    "routeKind": "page",
+    "routeTemplate": "/admin/riot",
+    "canonicalRoute": "/admin/riot",
+    "sourcePage": "(admin)/admin/riot/page.tsx",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "deviceScaleFactor": 1,
+      "mobile": true
+    }
+  },
+  {
+    "id": "mobile:/applications",
+    "name": "mobile /applications",
+    "path": "/applications",
+    "group": "account",
+    "session": "account",
+    "captureKind": "key-mobile",
+    "routeKind": "page",
+    "routeTemplate": "/applications",
+    "canonicalRoute": "/applications",
+    "sourcePage": "(public)/(applications)/applications/page.tsx",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "deviceScaleFactor": 1,
+      "mobile": true
+    }
+  },
+  {
+    "id": "mobile:/competitions",
+    "name": "mobile /competitions",
+    "path": "/competitions",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "key-mobile",
+    "routeKind": "page",
+    "routeTemplate": "/competitions",
+    "canonicalRoute": "/competitions",
+    "sourcePage": "(public)/(competitions)/competitions/page.tsx",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "deviceScaleFactor": 1,
+      "mobile": true
+    }
+  },
+  {
+    "id": "mobile:/competitions/destruction/a25b9de7-b15e-4439-8f29-432901b32367",
+    "name": "mobile /competitions/destruction/[tournamentId]",
+    "path": "/competitions/destruction/a25b9de7-b15e-4439-8f29-432901b32367",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "key-mobile",
+    "routeKind": "page",
+    "routeTemplate": "/competitions/destruction/[tournamentId]",
+    "canonicalRoute": "/competitions/destruction/[tournamentId]",
+    "sourcePage": "(public)/(competitions)/competitions/destruction/[tournamentId]/page.tsx",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "deviceScaleFactor": 1,
+      "mobile": true
+    }
+  },
+  {
+    "id": "mobile:/competitions/events/fcb98db4-3b9a-49f7-b6f5-b60c9c9f5fe6",
+    "name": "mobile /competitions/events/[eventId]",
+    "path": "/competitions/events/fcb98db4-3b9a-49f7-b6f5-b60c9c9f5fe6",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "key-mobile",
+    "routeKind": "page",
+    "routeTemplate": "/competitions/events/[eventId]",
+    "canonicalRoute": "/competitions/events/[eventId]",
+    "sourcePage": "(public)/(competitions)/competitions/events/[eventId]/page.tsx",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "deviceScaleFactor": 1,
+      "mobile": true
+    }
+  },
+  {
+    "id": "mobile:/highlights",
+    "name": "mobile /highlights",
+    "path": "/highlights",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "key-mobile",
+    "routeKind": "page",
+    "routeTemplate": "/highlights",
+    "canonicalRoute": "/highlights",
+    "sourcePage": "(public)/(media)/highlights/page.tsx",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "deviceScaleFactor": 1,
+      "mobile": true
+    }
+  },
+  {
+    "id": "mobile:/images",
+    "name": "mobile /images",
+    "path": "/images",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "key-mobile",
+    "routeKind": "page",
+    "routeTemplate": "/images",
+    "canonicalRoute": "/images",
+    "sourcePage": "(public)/(media)/images/page.tsx",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "deviceScaleFactor": 1,
+      "mobile": true
+    }
+  },
+  {
+    "id": "mobile:/matches",
+    "name": "mobile /matches",
+    "path": "/matches",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "key-mobile",
+    "routeKind": "page",
+    "routeTemplate": "/matches",
+    "canonicalRoute": "/matches",
+    "sourcePage": "(public)/(matches)/matches/page.tsx",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "deviceScaleFactor": 1,
+      "mobile": true
+    }
+  },
+  {
+    "id": "mobile:/matches/47a22ecc-bcef-4661-9713-02e58cf13602",
+    "name": "mobile /matches/[matchId]",
+    "path": "/matches/47a22ecc-bcef-4661-9713-02e58cf13602",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "key-mobile",
+    "routeKind": "page",
+    "routeTemplate": "/matches/[matchId]",
+    "canonicalRoute": "/matches/[matchId]",
+    "sourcePage": "(public)/(matches)/matches/[matchId]/page.tsx",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "deviceScaleFactor": 1,
+      "mobile": true
+    }
+  },
+  {
+    "id": "mobile:/players",
+    "name": "mobile /players",
+    "path": "/players",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "key-mobile",
+    "routeKind": "page",
+    "routeTemplate": "/players",
+    "canonicalRoute": "/players",
+    "sourcePage": "(public)/(registry)/players/page.tsx",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "deviceScaleFactor": 1,
+      "mobile": true
+    }
+  },
+  {
+    "id": "mobile:/players/7d0b7155-0e2b-4273-ad7d-5fe5a3876f43",
+    "name": "mobile /players/[playerId]",
+    "path": "/players/7d0b7155-0e2b-4273-ad7d-5fe5a3876f43",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "key-mobile",
+    "routeKind": "page",
+    "routeTemplate": "/players/[playerId]",
+    "canonicalRoute": "/players/[playerId]",
+    "sourcePage": "(public)/(registry)/players/[playerId]/page.tsx",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "deviceScaleFactor": 1,
+      "mobile": true
+    }
+  },
+  {
+    "id": "mobile:/rankings",
+    "name": "mobile /rankings",
+    "path": "/rankings",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "key-mobile",
+    "routeKind": "page",
+    "routeTemplate": "/rankings",
+    "canonicalRoute": "/rankings",
+    "sourcePage": "(public)/(statistics)/rankings/page.tsx",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "deviceScaleFactor": 1,
+      "mobile": true
+    }
+  },
+  {
+    "id": "mobile:/tools/coin-toss",
+    "name": "mobile /tools/coin-toss",
+    "path": "/tools/coin-toss",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "key-mobile",
+    "routeKind": "page",
+    "routeTemplate": "/tools/coin-toss",
+    "canonicalRoute": "/tools/coin-toss",
+    "sourcePage": "(public)/(tools)/tools/coin-toss/page.tsx",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "deviceScaleFactor": 1,
+      "mobile": true
+    }
+  },
+  {
+    "id": "mobile:/tools/random-team",
+    "name": "mobile /tools/random-team",
+    "path": "/tools/random-team",
+    "group": "public",
+    "session": "anonymous",
+    "captureKind": "key-mobile",
+    "routeKind": "page",
+    "routeTemplate": "/tools/random-team",
+    "canonicalRoute": "/tools/random-team",
+    "sourcePage": "(public)/(tools)/tools/random-team/page.tsx",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "deviceScaleFactor": 1,
+      "mobile": true
+    }
+  },
+  {
+    "id": "mobile:/tools/team-balance",
+    "name": "mobile /tools/team-balance",
+    "path": "/tools/team-balance",
+    "group": "account",
+    "session": "account",
+    "captureKind": "key-mobile",
+    "routeKind": "page",
+    "routeTemplate": "/tools/team-balance",
+    "canonicalRoute": "/tools/team-balance",
+    "sourcePage": "(public)/(tools)/tools/team-balance/page.tsx",
+    "viewport": {
+      "width": 390,
+      "height": 844,
+      "deviceScaleFactor": 1,
+      "mobile": true
+    }
+  }
+]
