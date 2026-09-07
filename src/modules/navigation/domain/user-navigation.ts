@@ -55,7 +55,7 @@ export const canonicalUserRoutes = [
   { template: "/matches", label: "경기", section: "registry-match", implementationState: "planned" },
   { template: "/matches/[matchId]", label: "경기 상세", section: "registry-match", implementationState: "planned" },
   { template: "/matches/submit", label: "결과 제출", section: "registry-match", implementationState: "planned" },
-  { template: "/rankings", label: "시즌 랭킹", section: "registry-match", implementationState: "planned" },
+  { template: "/rankings", label: "시즌 랭킹", section: "registry-match", implementationState: "page-contract" },
   { template: "/rankings/mmr", label: "MMR", section: "registry-match", implementationState: "planned" },
 
   { template: "/tools/team-balance", label: "팀 밸런스", section: "tools", implementationState: "planned" },
@@ -80,6 +80,7 @@ export const canonicalUserRoutes = [
 export const primaryUserNavigation = [
   { href: "/", activeRoot: "/", label: "홈" },
   { href: "/players", activeRoot: "/players", label: "플레이어" },
+  { href: "/rankings", activeRoot: "/rankings", label: "랭킹" },
   { href: "/tools/random-team", activeRoot: "/tools", label: "팀 도구" },
   { href: "/applications", activeRoot: "/applications", label: "참가 신청" },
 ] as const;

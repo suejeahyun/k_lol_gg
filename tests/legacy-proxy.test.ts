@@ -52,3 +52,22 @@ test("legacy account adapters preserve only reviewed canonical intent", () => {
   const mutation = proxy(new NextRequest("https://v2.example/me/player", { method: "POST" }));
   assert.equal(mutation.status, 405);
 });
+
+test("legacy statistics routes use one allowlisted canonical ranking destination", () => {
+  const seasonId = "10000000-0000-4000-8000-000000000000";
+  for (const source of [
+    `/statistics?seasonId=${seasonId}&minParticipation=5&token=drop`,
+    `/app/rankings?seasonId=${seasonId}&minParticipation=5&next=https://evil.example`,
+    `/app/matches?tab=rankings&seasonId=${seasonId}&minParticipation=5&token=drop`,
+  ]) {
+    const response = proxy(new NextRequest(`https://v2.example${source}`));
+    assert.equal(response.status, 308);
+    assert.equal(
+      response.headers.get("location"),
+      `https://v2.example/rankings?seasonId=${seasonId}&minParticipation=5`,
+    );
+  }
+  const mutation = proxy(new NextRequest("https://v2.example/statistics", { method: "POST" }));
+  assert.equal(mutation.status, 405);
+  assert.equal(mutation.headers.get("allow"), "GET, HEAD");
+});

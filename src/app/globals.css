@@ -1637,6 +1637,43 @@ body:has(.user-dialog[open]) {
   font-size: 11px;
 }
 
+.profile-records__state {
+  padding: 22px;
+  border: 1px dashed var(--border);
+  border-radius: 18px;
+  color: var(--text-muted);
+  background: var(--muted);
+  text-align: center;
+}
+
+.profile-records__state--error {
+  color: #8f4059;
+  background: #fff2f5;
+}
+
+.profile-recent {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.profile-recent a {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  color: inherit;
+  background: rgba(248, 251, 255, 0.82);
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.profile-recent span {
+  color: var(--text-muted);
+}
+
 .detail-state {
   display: grid;
   min-height: 390px;

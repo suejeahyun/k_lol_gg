@@ -2,6 +2,8 @@ import { createHash, randomUUID } from "node:crypto";
 
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 
+import { lockTransactionSessionActor } from "@/modules/auth/infrastructure/transaction-session-guard";
+import { auditEvents } from "@/platform/db/schema/audit";
 import type { V2Database } from "@/platform/db/database";
 import {
   matchGames,
@@ -12,6 +14,7 @@ import {
   playerChampionStats,
   playerPositionStats,
   playerSeasonStats,
+  seasonCommandReceipts,
   seasonProjectionStates,
   seasons,
   statisticsProjectionRuns,
@@ -28,6 +31,12 @@ import type {
   SeasonProjectionApplyResult,
   StatisticsProjectionRepository,
 } from "../application/ports/statistics-projection-repository";
+import type {
+  StatisticsCommandEnvelope,
+  StatisticsCommandRepository,
+  StatisticsRecalculationResult,
+} from "../application/ports/statistics-query-repository";
+import { StatisticsServiceError } from "../application/statistics-service";
 
 type ClaimRow = {
   eventId: string;
@@ -42,6 +51,14 @@ type ClaimRow = {
 };
 
 const LEASE_SECONDS = 60;
+const COMMAND_RECEIPT_TTL_MS = 24 * 60 * 60 * 1_000;
+const SUPER_STATISTICS_POLICY = {
+  purpose: "ADMIN",
+  minimumRole: "SUPER_ADMIN",
+  allowedStatuses: ["APPROVED"],
+  allowMustChangePassword: false,
+  adminTotp: "REQUIRED",
+} as const;
 
 function asDate(value: Date | string): Date {
   const date = value instanceof Date ? value : new Date(value);
@@ -167,7 +184,83 @@ async function loadPublishedSeasonSource(
   }));
 }
 
-export class PostgresStatisticsProjectionRepository implements StatisticsProjectionRepository {
+async function rebuildSeasonProjection(
+  transaction: V2Transaction,
+  input: Readonly<{
+    seasonId: string;
+    currentState: typeof seasonProjectionStates.$inferSelect;
+    trigger: "OUTBOX" | "ADMIN";
+    requestedOutboxEventId: string | null;
+    now: Date;
+  }>,
+): Promise<SeasonProjectionApplyResult> {
+  const generation = input.currentState.generation + 1;
+  const source = await loadPublishedSeasonSource(transaction, input.seasonId);
+  const projection = buildSeasonStatisticsProjection({
+    seasonId: input.seasonId,
+    generation,
+    matches: source,
+  });
+  const checksum = seasonProjectionSourceDigest(projection);
+
+  await transaction.delete(playerChampionStats).where(eq(playerChampionStats.seasonId, input.seasonId));
+  await transaction.delete(playerPositionStats).where(eq(playerPositionStats.seasonId, input.seasonId));
+  await transaction.delete(playerSeasonStats).where(eq(playerSeasonStats.seasonId, input.seasonId));
+  if (projection.playerStats.length > 0) {
+    await transaction.insert(playerSeasonStats).values(
+      projection.playerStats.map((row) => ({ ...row, calculatedAt: input.now })),
+    );
+  }
+  if (projection.championStats.length > 0) {
+    await transaction.insert(playerChampionStats).values(
+      projection.championStats.map((row) => ({ ...row, calculatedAt: input.now })),
+    );
+  }
+  if (projection.positionStats.length > 0) {
+    await transaction.insert(playerPositionStats).values(
+      projection.positionStats.map((row) => ({ ...row, calculatedAt: input.now })),
+    );
+  }
+
+  await transaction.insert(statisticsProjectionRuns).values({
+    id: randomUUID(),
+    seasonId: input.seasonId,
+    trigger: input.trigger,
+    status: "SUCCEEDED",
+    requestedOutboxEventId: input.requestedOutboxEventId,
+    baseGeneration: input.currentState.generation,
+    resultGeneration: generation,
+    sourceMatchCount: projection.sourceMatchCount,
+    sourceGameCount: projection.sourceGameCount,
+    sourceParticipantCount: projection.sourceParticipantCount,
+    sourceChecksum: checksum,
+    startedAt: input.now,
+    completedAt: input.now,
+  });
+  await transaction
+    .update(seasonProjectionStates)
+    .set({
+      generation,
+      status: "READY",
+      sourceMatchCount: projection.sourceMatchCount,
+      sourceGameCount: projection.sourceGameCount,
+      sourceParticipantCount: projection.sourceParticipantCount,
+      sourceChecksum: checksum,
+      calculatedAt: input.now,
+      updatedAt: input.now,
+    })
+    .where(eq(seasonProjectionStates.seasonId, input.seasonId));
+  return projectionResult(
+    input.seasonId,
+    generation,
+    projection.sourceMatchCount,
+    projection.sourceGameCount,
+    projection.sourceParticipantCount,
+    checksum,
+  );
+}
+
+export class PostgresStatisticsProjectionRepository implements StatisticsProjectionRepository, StatisticsCommandRepository {
   constructor(private readonly database: V2Database) {}
 
   async claimNextMatchChanged(now: Date): Promise<ClaimedMatchChangedEvent | null> {
@@ -318,67 +411,13 @@ export class PostgresStatisticsProjectionRepository implements StatisticsProject
           .for("update");
         if (!currentState) throw new Error("STATISTICS_STATE_NOT_FOUND");
 
-        const generation = currentState.generation + 1;
-        const source = await loadPublishedSeasonSource(transaction, seasonId);
-        const projection = buildSeasonStatisticsProjection({ seasonId, generation, matches: source });
-        const checksum = seasonProjectionSourceDigest(projection);
-        const runId = randomUUID();
-
-        await transaction.delete(playerChampionStats).where(eq(playerChampionStats.seasonId, seasonId));
-        await transaction.delete(playerPositionStats).where(eq(playerPositionStats.seasonId, seasonId));
-        await transaction.delete(playerSeasonStats).where(eq(playerSeasonStats.seasonId, seasonId));
-        if (projection.playerStats.length > 0) {
-          await transaction.insert(playerSeasonStats).values(
-            projection.playerStats.map((row) => ({ ...row, calculatedAt: input.now })),
-          );
-        }
-        if (projection.championStats.length > 0) {
-          await transaction.insert(playerChampionStats).values(
-            projection.championStats.map((row) => ({ ...row, calculatedAt: input.now })),
-          );
-        }
-        if (projection.positionStats.length > 0) {
-          await transaction.insert(playerPositionStats).values(
-            projection.positionStats.map((row) => ({ ...row, calculatedAt: input.now })),
-          );
-        }
-
-        await transaction.insert(statisticsProjectionRuns).values({
-          id: runId,
+        projections.push(await rebuildSeasonProjection(transaction, {
           seasonId,
+          currentState,
           trigger: "OUTBOX",
-          status: "SUCCEEDED",
           requestedOutboxEventId: input.event.eventId,
-          baseGeneration: currentState.generation,
-          resultGeneration: generation,
-          sourceMatchCount: projection.sourceMatchCount,
-          sourceGameCount: projection.sourceGameCount,
-          sourceParticipantCount: projection.sourceParticipantCount,
-          sourceChecksum: checksum,
-          startedAt: input.now,
-          completedAt: input.now,
-        });
-        await transaction
-          .update(seasonProjectionStates)
-          .set({
-            generation,
-            status: "READY",
-            sourceMatchCount: projection.sourceMatchCount,
-            sourceGameCount: projection.sourceGameCount,
-            sourceParticipantCount: projection.sourceParticipantCount,
-            sourceChecksum: checksum,
-            calculatedAt: input.now,
-            updatedAt: input.now,
-          })
-          .where(eq(seasonProjectionStates.seasonId, seasonId));
-        projections.push(projectionResult(
-          seasonId,
-          generation,
-          projection.sourceMatchCount,
-          projection.sourceGameCount,
-          projection.sourceParticipantCount,
-          checksum,
-        ));
+          now: input.now,
+        }));
       }
 
       await transaction.insert(matchProjectionReceipts).values({
@@ -436,5 +475,138 @@ export class PostgresStatisticsProjectionRepository implements StatisticsProject
         eq(matchRecalculationOutbox.status, "PROCESSING"),
         eq(matchRecalculationOutbox.lockedAt, input.event.lockedAt),
       ));
+  }
+
+  async recalculateSeason(
+    envelope: StatisticsCommandEnvelope,
+    seasonId: string,
+    expectedGeneration: number,
+    now: Date,
+  ): Promise<StatisticsRecalculationResult> {
+    return this.database.transaction(async (transaction) => {
+      const actor = await lockTransactionSessionActor(
+        transaction,
+        envelope.actorSession,
+        now,
+        SUPER_STATISTICS_POLICY,
+      );
+      if (!actor) {
+        throw new StatisticsServiceError("SESSION_STALE", "관리자 세션이 더 이상 유효하지 않습니다.");
+      }
+
+      const receiptLockKey = `${envelope.actorSession.userAccountId}:${envelope.scope}:${envelope.keyHash.toString("hex")}`;
+      await transaction.execute(sql`select pg_advisory_xact_lock(hashtextextended(${receiptLockKey}, 0))`);
+      await transaction
+        .delete(seasonCommandReceipts)
+        .where(and(
+          eq(seasonCommandReceipts.actorUserAccountId, envelope.actorSession.userAccountId),
+          eq(seasonCommandReceipts.scope, envelope.scope),
+          eq(seasonCommandReceipts.keyHash, envelope.keyHash),
+          sql<boolean>`${seasonCommandReceipts.expiresAt} <= clock_timestamp()`,
+        ));
+      const priorReceipt = (await transaction
+        .select()
+        .from(seasonCommandReceipts)
+        .where(and(
+          eq(seasonCommandReceipts.actorUserAccountId, envelope.actorSession.userAccountId),
+          eq(seasonCommandReceipts.scope, envelope.scope),
+          eq(seasonCommandReceipts.keyHash, envelope.keyHash),
+          sql<boolean>`${seasonCommandReceipts.expiresAt} > clock_timestamp()`,
+        ))
+        .limit(1))[0];
+      if (priorReceipt) {
+        if (!Buffer.from(priorReceipt.requestHash).equals(envelope.requestHash)) {
+          throw new StatisticsServiceError(
+            "IDEMPOTENCY_MISMATCH",
+            "같은 멱등성 키가 다른 요청에 사용되었습니다.",
+          );
+        }
+        const body = priorReceipt.responseJson as StatisticsRecalculationResult["body"];
+        return {
+          body,
+          status: 200,
+          revision: body.generation,
+          replayed: true,
+        };
+      }
+
+      const season = (await transaction
+        .select({ id: seasons.id, name: seasons.name })
+        .from(seasons)
+        .where(eq(seasons.id, seasonId))
+        .for("update")
+        .limit(1))[0];
+      if (!season) throw new StatisticsServiceError("NOT_FOUND", "시즌을 찾을 수 없습니다.");
+      await transaction
+        .insert(seasonProjectionStates)
+        .values({ seasonId })
+        .onConflictDoNothing({ target: seasonProjectionStates.seasonId });
+      const currentState = (await transaction
+        .select()
+        .from(seasonProjectionStates)
+        .where(eq(seasonProjectionStates.seasonId, seasonId))
+        .for("update")
+        .limit(1))[0];
+      if (!currentState) throw new StatisticsServiceError("NOT_FOUND", "통계 상태를 찾을 수 없습니다.");
+      if (currentState.generation !== expectedGeneration) {
+        throw new StatisticsServiceError(
+          "PRECONDITION_FAILED",
+          "통계 projection revision이 변경되었습니다.",
+        );
+      }
+
+      await transaction.insert(seasonCommandReceipts).values({
+        id: randomUUID(),
+        actorUserAccountId: actor.id,
+        scope: envelope.scope,
+        keyHash: envelope.keyHash,
+        requestHash: envelope.requestHash,
+        responseStatus: 202,
+        responseJson: { pending: true },
+        targetId: seasonId,
+        createdAt: sql`clock_timestamp()`,
+        expiresAt: sql`clock_timestamp() + (${COMMAND_RECEIPT_TTL_MS} * interval '1 millisecond')`,
+      });
+      const rebuilt = await rebuildSeasonProjection(transaction, {
+        seasonId,
+        currentState,
+        trigger: "ADMIN",
+        requestedOutboxEventId: null,
+        now,
+      });
+      const body: StatisticsRecalculationResult["body"] = {
+        seasonId,
+        generation: rebuilt.generation,
+        sourceMatchCount: rebuilt.sourceMatchCount,
+        sourceGameCount: rebuilt.sourceGameCount,
+        sourceParticipantCount: rebuilt.sourceParticipantCount,
+        sourceChecksum: rebuilt.sourceChecksumHex,
+      };
+      await transaction.insert(auditEvents).values({
+        requestId: envelope.requestId,
+        actorUserAccountId: actor.id,
+        action: "STATISTICS_RECALCULATED",
+        targetType: "SEASON_STATISTICS",
+        targetId: seasonId,
+        beforeJson: {
+          seasonName: season.name,
+          generation: currentState.generation,
+          status: currentState.status,
+          sourceMatchCount: currentState.sourceMatchCount,
+          sourceGameCount: currentState.sourceGameCount,
+          sourceParticipantCount: currentState.sourceParticipantCount,
+        },
+        afterJson: body,
+      });
+      await transaction
+        .update(seasonCommandReceipts)
+        .set({ responseStatus: 200, responseJson: body })
+        .where(and(
+          eq(seasonCommandReceipts.actorUserAccountId, actor.id),
+          eq(seasonCommandReceipts.scope, envelope.scope),
+          eq(seasonCommandReceipts.keyHash, envelope.keyHash),
+        ));
+      return { body, status: 200, revision: rebuilt.generation, replayed: false };
+    }, { isolationLevel: "serializable" });
   }
 }

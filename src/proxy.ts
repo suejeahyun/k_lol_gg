@@ -9,6 +9,7 @@ import {
   buildLegacyHomeDestination,
   buildLegacyPlayersDestination,
 } from "@/modules/navigation/application/legacy-player-redirects";
+import { buildLegacyStatisticsDestination } from "@/modules/navigation/application/legacy-statistics-redirects";
 
 function permanentSameOriginRedirect(destination: string, request: NextRequest) {
   return NextResponse.redirect(new URL(destination, request.url), 308);
@@ -44,6 +45,20 @@ export function proxy(request: NextRequest) {
     }
     if (searchParams.size > 0) return new Response(null, { status: 400 });
     return permanentSameOriginRedirect(accountLegacyDestination, request);
+  }
+
+  const legacyStatisticsPath =
+    pathname === "/statistics" ||
+    pathname === "/app/rankings" ||
+    (pathname === "/app/matches" && searchParams.get("tab") === "rankings");
+  if (legacyStatisticsPath) {
+    if (request.method !== "GET" && request.method !== "HEAD") {
+      return new Response(null, { status: 405, headers: { Allow: "GET, HEAD" } });
+    }
+    return permanentSameOriginRedirect(buildLegacyStatisticsDestination({
+      seasonId: searchParams.getAll("seasonId"),
+      minParticipation: searchParams.getAll("minParticipation"),
+    }), request);
   }
 
   if (pathname === "/app/login") {
@@ -100,5 +115,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/app/:path*", "/account/tier", "/me/player"],
+  matcher: ["/admin/:path*", "/app/:path*", "/account/tier", "/me/player", "/statistics"],
 };

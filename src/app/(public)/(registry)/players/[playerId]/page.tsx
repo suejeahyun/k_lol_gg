@@ -5,6 +5,7 @@ import { ArrowLeft, CalendarDays, Gamepad2, Hash, ShieldCheck, Sparkles, Trophy 
 
 import { Badge } from "@/components/ui/badge";
 import { loadRuntimePlayerProfile } from "@/modules/players/infrastructure/runtime-player-data";
+import { loadRuntimeStatisticsData } from "@/modules/statistics/infrastructure/runtime-statistics-data";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +26,10 @@ export default async function PlayerDetailPage({
   params: Promise<{ playerId: string }>;
 }) {
   const { playerId } = await params;
-  const result = await loadRuntimePlayerProfile(playerId);
+  const [result, statisticsResult] = await Promise.all([
+    loadRuntimePlayerProfile(playerId),
+    loadRuntimeStatisticsData((service) => service.getPublicPlayerStatistics(playerId, null)),
+  ]);
 
   if (result.state === "ready" && !result.data) notFound();
 
@@ -71,13 +75,33 @@ export default async function PlayerDetailPage({
           <section className="profile-records" aria-labelledby="profile-records-title">
             <div className="section-heading">
               <div><p>RECORDS</p><h2 id="profile-records-title">시즌·포지션·챔피언 기록</h2></div>
-              <span>통계 스키마와 이관 검증 후 연결합니다.</span>
+              <span>{statisticsResult.state === "ready" && statisticsResult.data?.season ? statisticsResult.data.season.name : "공개 통계"}</span>
             </div>
-            <div className="profile-records__grid">
-              <article><Gamepad2 size={22} aria-hidden="true" /><strong>시즌 전적</strong><p>아직 연결되지 않았습니다.</p></article>
-              <article><ShieldCheck size={22} aria-hidden="true" /><strong>포지션·챔피언</strong><p>아직 연결되지 않았습니다.</p></article>
-              <article><Trophy size={22} aria-hidden="true" /><strong>최근 경기</strong><p>아직 연결되지 않았습니다.</p></article>
-            </div>
+            {statisticsResult.state === "unavailable" ? (
+              <div className="profile-records__state" role="status">통계 데이터 연결을 준비하고 있어요. 샘플 수치는 표시하지 않습니다.</div>
+            ) : statisticsResult.state === "error" ? (
+              <div className="profile-records__state profile-records__state--error" role="alert">통계를 불러오지 못했습니다. 잠시 후 다시 확인해 주세요.</div>
+            ) : !statisticsResult.data || statisticsResult.data.projection?.status !== "READY" ? (
+              <div className="profile-records__state">이 플레이어의 시즌 통계를 집계하고 있어요.</div>
+            ) : (
+              <>
+                <div className="profile-records__grid">
+                  <article><Gamepad2 size={22} aria-hidden="true" /><strong>{statisticsResult.data.summary.wins}승 {statisticsResult.data.summary.losses}패</strong><p>{statisticsResult.data.summary.totalGames}게임 · 승률 {statisticsResult.data.summary.winRate}%</p></article>
+                  <article><ShieldCheck size={22} aria-hidden="true" /><strong>참여 {statisticsResult.data.summary.participationCount}회</strong><p>{statisticsResult.data.positions[0] ? `주 포지션 ${statisticsResult.data.positions[0].position} · ${statisticsResult.data.positions[0].games}게임` : "포지션 기록 없음"}</p></article>
+                  <article><Trophy size={22} aria-hidden="true" /><strong>MVP {statisticsResult.data.summary.mvpCount}회</strong><p>{statisticsResult.data.champions[0] ? `최다 챔피언 ${statisticsResult.data.champions[0].championName}` : "챔피언 기록 없음"}</p></article>
+                </div>
+                {statisticsResult.data.recentMatches.length > 0 ? (
+                  <div className="profile-recent" aria-label="최근 공개 경기">
+                    {statisticsResult.data.recentMatches.slice(0, 5).map((match) => (
+                      <Link href={`/matches/${match.matchId}`} key={`${match.matchId}-${match.gameNumber}`}>
+                        <span>{match.playedOn} · {match.title} {match.gameNumber}게임</span>
+                        <strong>{match.championName} · {match.won ? "승리" : "패배"}{match.mvp ? " · MVP" : ""}</strong>
+                      </Link>
+                    ))}
+                  </div>
+                ) : null}
+              </>
+            )}
           </section>
         </>
       ) : null}
