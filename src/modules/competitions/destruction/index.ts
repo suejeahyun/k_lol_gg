@@ -2,6 +2,8 @@ export * from "./application";
 export * from "./auction";
 export * from "./captain-points";
 export * from "./configuration";
+export * from "./destruction-service";
+export * from "./http-contract";
 export * from "./mvp-voting";
 export * from "./recruitment";
 export * from "./roster-history";

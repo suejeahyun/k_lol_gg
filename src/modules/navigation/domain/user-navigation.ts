@@ -67,7 +67,7 @@ export const canonicalUserRoutes = [
   { template: "/applications", label: "참가 신청", section: "competitions", implementationState: "page-contract" },
   { template: "/competitions", label: "대회", section: "competitions", implementationState: "page-contract" },
   { template: "/competitions/events/[eventId]", label: "이벤트전 상세", section: "competitions", implementationState: "page-contract" },
-  { template: "/competitions/destruction/[tournamentId]", label: "멸망전 상세", section: "competitions", implementationState: "planned" },
+  { template: "/competitions/destruction/[tournamentId]", label: "멸망전 상세", section: "competitions", implementationState: "page-contract" },
 
   { template: "/recruits", label: "구인 현황", section: "community", implementationState: "page-contract" },
   { template: "/discipline", label: "징계 현황", section: "community", implementationState: "planned" },

@@ -174,6 +174,7 @@ test("public DTO is an explicit allowlist without balances, cancellation reason,
     "advanceTeamCount",
     "championTeamId",
     "id",
+    "mvpResults",
     "preliminaryBestOf",
     "preliminaryFixtures",
     "preliminaryFormat",
@@ -183,6 +184,7 @@ test("public DTO is an explicit allowlist without balances, cancellation reason,
     "status",
     "teams",
     "title",
+    "tournamentFixtures",
   ]);
   assert.equal("cancellationReason" in dto, false);
   assert.equal("mvpBallots" in dto, false);

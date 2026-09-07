@@ -76,8 +76,19 @@ export type DestructionPublicDto = Readonly<{
   advanceTeamCount: number;
   teams: readonly DestructionPublicTeamDto[];
   preliminaryFixtures: readonly DestructionPublicFixtureDto[];
+  tournamentFixtures: readonly Readonly<{
+    id: string;
+    stage: "ROUND_OF_32" | "ROUND_OF_16" | "QUARTER_FINAL" | "SEMI_FINAL" | "FINAL";
+    bestOf: number;
+    teamAId: string | null;
+    teamBId: string | null;
+    teamAScore: number | null;
+    teamBScore: number | null;
+    winnerTeamId: string | null;
+  }>[];
   qualifiedTeamIds: readonly string[];
   championTeamId: string | null;
+  mvpResults: readonly Readonly<{ fixtureId: string; finalizedPlayerId: string; selectionMethod: "VOTE" | "ADMIN" }>[];
 }>;
 
 export function toDestructionPublicDto(aggregate: DestructionAggregate): DestructionPublicDto {
@@ -108,7 +119,21 @@ export function toDestructionPublicDto(aggregate: DestructionAggregate): Destruc
       teamBScore: fixture.teamBScore,
       winnerTeamId: fixture.winnerTeamId,
     }))),
+    tournamentFixtures: Object.freeze((aggregate.tournamentBracket?.fixtures ?? []).map((fixture) => Object.freeze({
+      id: fixture.id,
+      stage: fixture.stage,
+      bestOf: fixture.bestOf,
+      teamAId: fixture.teamAId,
+      teamBId: fixture.teamBId,
+      teamAScore: fixture.result?.teamAScore ?? null,
+      teamBScore: fixture.result?.teamBScore ?? null,
+      winnerTeamId: fixture.winnerTeamId,
+    }))),
     qualifiedTeamIds: Object.freeze([...aggregate.qualifiedTeamIds]),
     championTeamId: aggregate.tournamentBracket?.championTeamId ?? null,
+    mvpResults: Object.freeze(aggregate.mvpBallots
+      .filter((ballot): ballot is typeof ballot & { finalizedPlayerId: string; selectionMethod: "VOTE" | "ADMIN" } => ballot.finalizedPlayerId !== null && ballot.selectionMethod !== null)
+      .map((ballot) => Object.freeze({ fixtureId: ballot.fixtureId, finalizedPlayerId: ballot.finalizedPlayerId, selectionMethod: ballot.selectionMethod }))
+      .sort((left, right) => left.fixtureId < right.fixtureId ? -1 : left.fixtureId > right.fixtureId ? 1 : 0)),
   });
 }
