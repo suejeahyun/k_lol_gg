@@ -150,7 +150,8 @@ test("RSO state is HMAC-bound and authorization URL never includes the client se
   });
   const issued = adapter.issueState(randomUUID());
   assert.equal(adapter.digestState(issued.publicState), issued.digestHex);
-  assert.throws(() => adapter.digestState(`${issued.publicState.slice(0, -1)}x`), /INVALID_RIOT_RSO_STATE/u);
+  const replacement = issued.publicState.endsWith("x") ? "y" : "x";
+  assert.throws(() => adapter.digestState(`${issued.publicState.slice(0, -1)}${replacement}`), /INVALID_RIOT_RSO_STATE/u);
   const authorization = adapter.authorizationUrl({ publicState: issued.publicState });
   assert.equal(authorization.includes(clientSecret), false);
   assert.equal(new URL(authorization).origin, "https://auth.riotgames.com");
