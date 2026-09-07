@@ -34,7 +34,7 @@ export async function AdminMediaEditorPage({ kind, id }: { kind: "highlight" | "
   const result = await loadRuntimeMedia<HighlightContent | GalleryContent | null>(async (service) =>
     kind === "highlight" ? service.getAdminHighlight(id) : service.getAdminGallery(id));
   if (result.state === "ready" && !result.data) notFound();
-  if (result.state !== "ready") return <main className={styles.page}><section className={styles.state} role="alert"><Sparkles /><h2>콘텐츠를 불러오지 못했습니다.</h2><p>잠시 후 다시 시도해 주세요.</p></section></main>;
+  if (result.state !== "ready") return <main className={styles.page}><section className={styles.state} role={result.state === "error" ? "alert" : "status"}><Sparkles /><h1>콘텐츠를 불러오지 못했습니다.</h1><p>잠시 후 다시 시도해 주세요.</p></section></main>;
   return <main className={styles.page}><header className={styles.header}><div><strong>{result.data!.status} · rev. {result.data!.revision}</strong><h1>{result.data!.title}</h1><p>모든 변경은 If-Match와 멱등성 키로 보호되며 보관은 원장을 삭제하지 않습니다.</p></div></header><MediaTabs active={kind} />{kind === "highlight" ? <AdminMediaForm kind="highlight" initial={result.data as import("@/modules/media").HighlightContent} uploadAvailable={isRuntimeMediaAssetUploadAvailable()} /> : <AdminMediaForm kind="gallery" initial={result.data as import("@/modules/media").GalleryContent} uploadAvailable={isRuntimeMediaAssetUploadAvailable()} />}</main>;
 }
 

@@ -21,3 +21,9 @@ test("사용자·관리자 상세 화면은 저장소 오류 상태에서도 페
     assert.match(page, /role=(?:"(?:alert|status)"|\{[^}]+\})/, path);
   }
 });
+
+test("공용 미디어 편집 화면도 저장소 오류 상태에서 페이지 제목을 유지한다", () => {
+  const page = source("../src/components/admin/media/admin-media-pages.tsx");
+  assert.match(page, /<h1>콘텐츠를 불러오지 못했습니다\.<\/h1>/);
+  assert.match(page, /role=\{result\.state === "error" \? "alert" : "status"\}/);
+});
