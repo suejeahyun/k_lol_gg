@@ -1,4 +1,4 @@
-.page { display: grid; min-width: 0; gap: 22px; padding: 28px clamp(18px,3vw,38px) 90px; }
+.page { display: grid; grid-template-columns: minmax(0,1fr); width: 100%; max-width: 100vw; min-width: 0; gap: 22px; overflow-x: hidden; padding: 28px clamp(18px,3vw,38px) 90px; }
 .hero { display: flex; justify-content: space-between; gap: 18px; padding: 26px; border: 1px solid var(--border); border-radius: 25px; background: linear-gradient(135deg,var(--sky),var(--lilac)); }
 .hero h1 { margin: 5px 0; font-family: var(--font-heading); font-size: 32px; }
 .hero p { margin: 0; color: var(--text-muted); }
