@@ -189,7 +189,16 @@ export class InMemoryRiotAdapter implements RiotQueryRepository {
   }
 
   async listAdmin(query: AdminRiotQuery): Promise<AdminRiotPageDto> {
-    const rows = [...this.ownerPlayers.entries()].map(([ownerUserAccountId, playerId]) => {
+    const empty = { items: [], syncItems: [], logItems: [] } as const;
+    const finish = (payload: Pick<AdminRiotPageDto, "items" | "syncItems" | "logItems">, total: number): AdminRiotPageDto => ({
+      tab: query.tab,
+      ...payload,
+      page: query.page,
+      pageSize: query.pageSize,
+      total,
+      totalPages: total ? Math.ceil(total / query.pageSize) : 0,
+    });
+    const accountRows = [...this.ownerPlayers.entries()].map(([ownerUserAccountId, playerId]) => {
       const link = [...this.state.links.values()].find((candidate) => candidate.playerId === playerId) ?? null;
       const lastJob = link ? [...this.state.jobs.values()].filter((job) => job.linkId === link.id).sort((left, right) => right.requestedAt.getTime() - left.requestedAt.getTime())[0] ?? null : null;
       const projection = this.state.projections.get(playerId);
@@ -206,8 +215,60 @@ export class InMemoryRiotAdapter implements RiotQueryRepository {
         lastSyncedAt: projection?.syncedAt.toISOString() ?? null,
         failureCode: lastJob?.failureCode ?? null,
       };
-    }).filter((row) => query.status === "ALL" || (query.status === "FAILED" ? row.lastSyncStatus === "FAILED" : row.status === query.status));
+    });
     const start = (query.page - 1) * query.pageSize;
-    return { items: rows.slice(start, start + query.pageSize), page: query.page, pageSize: query.pageSize, total: rows.length, totalPages: rows.length ? Math.ceil(rows.length / query.pageSize) : 0 };
+    if (query.tab === "accounts") {
+      const rows = accountRows.filter((row) => query.status === "ALL" || (query.status === "FAILED" ? row.lastSyncStatus === "FAILED" : row.status === query.status));
+      return finish({ ...empty, items: rows.slice(start, start + query.pageSize) }, rows.length);
+    }
+    const syncRows = [...this.state.jobs.values()].map((job) => {
+      const link = this.state.links.get(job.linkId)!;
+      const displayName = [...this.ownerPlayers.entries()].find((entry) => entry[1] === link?.playerId)?.[1] ?? "연결 플레이어";
+      return {
+        jobId: job.id,
+        linkId: job.linkId,
+        displayName,
+        riotId: link ? `${link.gameName}#${link.tagLine}` : "연결 정보 없음",
+        status: job.status,
+        requestedBy: job.requestedBy,
+        attemptCount: job.attemptCount,
+        maximumAttempts: job.maximumAttempts,
+        requestedAt: job.requestedAt.toISOString(),
+        availableAt: job.availableAt.toISOString(),
+        completedAt: job.completedAt?.toISOString() ?? null,
+        failureCode: job.failureCode,
+      };
+    }).sort((left, right) => right.requestedAt.localeCompare(left.requestedAt) || left.jobId.localeCompare(right.jobId));
+    if (query.tab === "sync") {
+      const rows = syncRows.filter((row) => query.status === "ALL" || row.status === query.status);
+      return finish({ ...empty, syncItems: rows.slice(start, start + query.pageSize) }, rows.length);
+    }
+    const logRows = [
+      ...(query.source === "ALL" || query.source === "API" ? syncRows.map((row) => ({
+        id: `api:${row.jobId}`,
+        source: "API" as const,
+        occurredAt: row.completedAt ?? row.requestedAt,
+        title: "Riot 전적 API 동기화",
+        detail: `${row.displayName} · ${row.failureCode ?? "응답 처리 완료"}`,
+        status: row.status,
+      })) : []),
+      ...(query.source === "ALL" || query.source === "SYNC" ? this.state.outbox.map((row) => ({
+        id: `sync:${row.id}`,
+        source: "SYNC" as const,
+        occurredAt: row.occurredAt,
+        title: "동기화 이벤트",
+        detail: row.eventType,
+        status: "PENDING",
+      })) : []),
+      ...(query.source === "ALL" || query.source === "AUDIT" ? this.state.audit.map((row, index) => ({
+        id: `audit:${index}`,
+        source: "AUDIT" as const,
+        occurredAt: row.occurredAt,
+        title: "관리 감사 기록",
+        detail: row.action,
+        status: "RECORDED",
+      })) : []),
+    ].sort((left, right) => right.occurredAt.localeCompare(left.occurredAt) || left.id.localeCompare(right.id));
+    return finish({ ...empty, logItems: logRows.slice(start, start + query.pageSize) }, logRows.length);
   }
 }

@@ -36,8 +36,35 @@ export type AdminRiotRowDto = Readonly<{
   failureCode: string | null;
 }>;
 
+export type AdminRiotSyncRowDto = Readonly<{
+  jobId: string;
+  linkId: string;
+  displayName: string;
+  riotId: string;
+  status: RiotSyncJobStatus;
+  requestedBy: "OWNER" | "ADMIN" | "SUPER_ADMIN" | "JOB";
+  attemptCount: number;
+  maximumAttempts: number;
+  requestedAt: string;
+  availableAt: string;
+  completedAt: string | null;
+  failureCode: string | null;
+}>;
+
+export type AdminRiotLogRowDto = Readonly<{
+  id: string;
+  source: "API" | "SYNC" | "AUDIT";
+  occurredAt: string;
+  title: string;
+  detail: string;
+  status: string;
+}>;
+
 export type AdminRiotPageDto = Readonly<{
+  tab: "accounts" | "sync" | "logs";
   items: readonly AdminRiotRowDto[];
+  syncItems: readonly AdminRiotSyncRowDto[];
+  logItems: readonly AdminRiotLogRowDto[];
   page: number;
   pageSize: number;
   total: number;
@@ -46,7 +73,8 @@ export type AdminRiotPageDto = Readonly<{
 
 export type AdminRiotQuery = Readonly<{
   tab: "accounts" | "sync" | "logs";
-  status: "ALL" | RiotLinkStatus | "UNLINKED" | "FAILED";
+  status: "ALL" | RiotLinkStatus | RiotSyncJobStatus | "UNLINKED";
+  source: "ALL" | "API" | "SYNC" | "AUDIT";
   page: number;
   pageSize: number;
 }>;
@@ -59,15 +87,21 @@ export interface RiotQueryRepository {
 
 export function parseAdminRiotQuery(url: string): AdminRiotQuery | null {
   const params = new URL(url).searchParams;
-  const allowed = new Set(["tab", "status", "page", "pageSize"]);
+  const allowed = new Set(["tab", "status", "source", "page", "pageSize"]);
   if ([...params.keys()].some((key) => !allowed.has(key))) return null;
   for (const key of allowed) if (params.getAll(key).length > 1) return null;
   const tab = params.get("tab") ?? "accounts";
   const status = params.get("status") ?? "ALL";
+  const source = params.get("source") ?? "ALL";
   const page = Number(params.get("page") ?? "1");
   const pageSize = Number(params.get("pageSize") ?? "25");
   if (!(["accounts", "sync", "logs"] as const).includes(tab as AdminRiotQuery["tab"])) return null;
-  if (!(["ALL", "CONNECTED", "DISCONNECTED", "REVOKED", "UNLINKED", "FAILED"] as const).includes(status as AdminRiotQuery["status"])) return null;
-  if (!Number.isSafeInteger(page) || page < 1 || page > 10_000 || !Number.isSafeInteger(pageSize) || pageSize < 1 || pageSize > 100) return null;
-  return { tab: tab as AdminRiotQuery["tab"], status: status as AdminRiotQuery["status"], page, pageSize };
+  if (!(["ALL", "CONNECTED", "DISCONNECTED", "REVOKED", "UNLINKED", "QUEUED", "RUNNING", "RETRY_WAIT", "SUCCEEDED", "PARTIAL", "FAILED", "CANCELLED"] as const).includes(status as AdminRiotQuery["status"])) return null;
+  if (!(["ALL", "API", "SYNC", "AUDIT"] as const).includes(source as AdminRiotQuery["source"])) return null;
+  const accountStatus = ["ALL", "CONNECTED", "DISCONNECTED", "REVOKED", "UNLINKED", "FAILED"].includes(status);
+  const syncStatus = ["ALL", "QUEUED", "RUNNING", "RETRY_WAIT", "SUCCEEDED", "PARTIAL", "FAILED", "CANCELLED"].includes(status);
+  if ((tab === "accounts" && (!accountStatus || source !== "ALL")) || (tab === "sync" && (!syncStatus || source !== "ALL"))) return null;
+  if (tab === "logs" && status !== "ALL") return null;
+  if (!Number.isSafeInteger(page) || page < 1 || !Number.isSafeInteger(pageSize) || pageSize < 1 || pageSize > 100 || page * pageSize > 5_000) return null;
+  return { tab: tab as AdminRiotQuery["tab"], status: status as AdminRiotQuery["status"], source: source as AdminRiotQuery["source"], page, pageSize };
 }

@@ -16,6 +16,10 @@
 .form { display: grid; gap: 12px; margin-top: 16px; }
 .form label { display: grid; gap: 6px; font-weight: 700; }
 .form input { width: 100%; min-height: 42px; padding: 9px 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--background); color: inherit; }
+.filterForm { display: flex; flex-wrap: wrap; align-items: end; gap: 8px; margin: 16px 0; }
+.filterForm label { width: 100%; color: var(--muted-foreground); font-size: .78rem; font-weight: 800; }
+.filterForm select, .filterForm button { min-height: 40px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 11px; background: var(--background); color: inherit; }
+.filterForm button { border-color: var(--primary); background: var(--primary); color: white; font-weight: 800; cursor: pointer; }
 .selectionSummary { margin: 0; padding: 10px 12px; border-radius: 12px; color: var(--muted-foreground); background: color-mix(in srgb, var(--primary) 7%, var(--card)); font-size: .78rem; }
 .selectionList { display: grid; gap: 7px; margin: 0; padding: 14px; border: 1px solid var(--border); border-radius: 14px; }
 .selectionList legend { padding: 0 6px; color: var(--foreground); font-weight: 800; }
@@ -29,6 +33,13 @@
 .actions button[data-tone="quiet"] { color: var(--foreground); background: color-mix(in srgb, var(--primary) 12%, var(--card)); }
 .actions button:disabled { opacity: .55; cursor: wait; }
 .notice { padding: 12px 14px; border-radius: 13px; background: color-mix(in srgb, var(--primary) 9%, var(--card)); overflow-wrap: anywhere; }
+.dialogBackdrop { position: fixed; z-index: 80; inset: 0; display: grid; place-items: center; padding: 18px; background: rgba(26, 43, 63, .42); }
+.dialog { width: min(520px, 100%); max-height: min(720px, calc(100vh - 36px)); overflow: auto; padding: 24px; border: 1px solid var(--border); border-radius: 22px; background: var(--card); box-shadow: 0 24px 70px rgba(20, 42, 74, .24); }
+.dialog h3 { margin: 0 0 8px; }
+.dialog p { color: var(--muted-foreground); }
+.dialog ul { display: grid; gap: 8px; max-height: 280px; overflow: auto; margin: 16px 0; padding: 0; list-style: none; }
+.dialog li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--primary) 7%, var(--card)); }
+.dialog li span { color: var(--muted-foreground); overflow-wrap: anywhere; }
 .state { margin-top: 20px; text-align: center; }
 .state[data-tone="error"] { border-color: color-mix(in srgb, #d34f68 40%, var(--border)); }
 .tableWrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 20px; background: var(--card); }
@@ -36,5 +47,10 @@
 .table th, .table td { padding: 14px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
 .table th { color: var(--muted-foreground); font-size: .8rem; }
 .table small { display: block; margin-top: 4px; color: var(--muted-foreground); }
+.logList { display: grid; gap: 10px; margin-top: 14px; }
+.logList article { padding: 16px 18px; border: 1px solid var(--border); border-radius: 16px; background: var(--card); }
+.logList article > div { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
+.logList p { margin: 8px 0; color: var(--muted-foreground); overflow-wrap: anywhere; }
+.logList small { color: var(--muted-foreground); }
 .status { display: inline-flex; padding: 5px 9px; border-radius: 999px; background: color-mix(in srgb, var(--primary) 12%, var(--card)); font-size: .78rem; font-weight: 800; }
 @media (max-width: 720px) { .page { width: min(100% - 20px, 1120px); padding-top: 20px; } .hero { align-items: start; flex-direction: column; padding: 22px; } .grid { grid-template-columns: 1fr; } .card, .state { padding: 19px; } }

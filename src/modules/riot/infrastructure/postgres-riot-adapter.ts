@@ -443,45 +443,154 @@ export class PostgresRiotAdapter implements RiotQueryRepository {
   }
 
   async listAdmin(query: AdminRiotQuery): Promise<AdminRiotPageDto> {
-    const condition = query.status === "ALL" ? undefined
-      : query.status === "UNLINKED" ? isNull(riotAccountLinks.id)
-      : query.status === "FAILED" ? sql<boolean>`exists (select 1 from riot.sync_jobs failure_job where failure_job.link_id = ${riotAccountLinks.id} and failure_job.status = 'FAILED')`
-      : eq(riotAccountLinks.status, query.status);
-    const base = this.database.select({
-      playerId: players.id,
-      displayName: players.nickname,
-      registryGameName: players.nickname,
-      registryTagLine: players.tagLine,
-      ownerUserAccountId: players.userAccountId,
-      linkId: riotAccountLinks.id,
-      revision: riotAccountLinks.revision,
-      gameName: riotAccountLinks.gameName,
-      tagLine: riotAccountLinks.tagLine,
-      method: riotAccountLinks.method,
-      status: riotAccountLinks.status,
-      lastSyncedAt: riotSummaries.lastSyncedAt,
-    }).from(players).leftJoin(riotAccountLinks, eq(riotAccountLinks.playerId, players.id)).leftJoin(riotSummaries, eq(riotSummaries.playerId, players.id)).where(condition);
-    const [rows, totals] = await Promise.all([
-      base.orderBy(desc(players.updatedAt), players.id).limit(query.pageSize).offset((query.page - 1) * query.pageSize),
-      this.database.select({ value: count() }).from(players).leftJoin(riotAccountLinks, eq(riotAccountLinks.playerId, players.id)).where(condition),
+    const empty = { items: [], syncItems: [], logItems: [] } as const;
+    const finish = (payload: Pick<AdminRiotPageDto, "items" | "syncItems" | "logItems">, total: number): AdminRiotPageDto => ({
+      tab: query.tab,
+      ...payload,
+      page: query.page,
+      pageSize: query.pageSize,
+      total,
+      totalPages: total ? Math.ceil(total / query.pageSize) : 0,
+    });
+
+    if (query.tab === "accounts") {
+      const status = query.status as "ALL" | "CONNECTED" | "DISCONNECTED" | "REVOKED" | "UNLINKED" | "FAILED";
+      const condition = status === "ALL" ? undefined
+        : status === "UNLINKED" ? isNull(riotAccountLinks.id)
+        : status === "FAILED" ? sql<boolean>`exists (select 1 from riot.sync_jobs failure_job where failure_job.link_id = ${riotAccountLinks.id} and failure_job.status = 'FAILED')`
+        : eq(riotAccountLinks.status, status);
+      const base = this.database.select({
+        playerId: players.id,
+        displayName: players.nickname,
+        registryGameName: players.nickname,
+        registryTagLine: players.tagLine,
+        ownerUserAccountId: players.userAccountId,
+        linkId: riotAccountLinks.id,
+        revision: riotAccountLinks.revision,
+        gameName: riotAccountLinks.gameName,
+        tagLine: riotAccountLinks.tagLine,
+        method: riotAccountLinks.method,
+        status: riotAccountLinks.status,
+        lastSyncedAt: riotSummaries.lastSyncedAt,
+      }).from(players).leftJoin(riotAccountLinks, eq(riotAccountLinks.playerId, players.id)).leftJoin(riotSummaries, eq(riotSummaries.playerId, players.id)).where(condition);
+      const [rows, totals] = await Promise.all([
+        base.orderBy(desc(players.updatedAt), players.id).limit(query.pageSize).offset((query.page - 1) * query.pageSize),
+        this.database.select({ value: count() }).from(players).leftJoin(riotAccountLinks, eq(riotAccountLinks.playerId, players.id)).where(condition),
+      ]);
+      const items = await Promise.all(rows.map(async (row) => {
+        const lastJob = row.linkId ? (await this.database.select().from(riotSyncJobs).where(eq(riotSyncJobs.linkId, row.linkId)).orderBy(desc(riotSyncJobs.requestedAt)).limit(1))[0] : null;
+        return {
+          playerId: row.playerId,
+          displayName: row.displayName,
+          ownerUserAccountId: row.ownerUserAccountId,
+          linkId: row.linkId,
+          revision: row.revision,
+          riotId: `${row.gameName ?? row.registryGameName}#${row.tagLine ?? row.registryTagLine}`,
+          method: row.method,
+          status: row.status ?? "UNLINKED" as const,
+          lastSyncStatus: lastJob?.status ?? null,
+          lastSyncedAt: row.lastSyncedAt?.toISOString() ?? null,
+          failureCode: lastJob?.failureCode ?? null,
+        };
+      }));
+      return finish({ ...empty, items }, totals[0]?.value ?? 0);
+    }
+
+    if (query.tab === "sync") {
+      const status = query.status as "ALL" | JobRow["status"];
+      const condition = status === "ALL" ? undefined : eq(riotSyncJobs.status, status);
+      const [rows, totals] = await Promise.all([
+        this.database.select({
+          job: riotSyncJobs,
+          displayName: players.nickname,
+          gameName: riotAccountLinks.gameName,
+          tagLine: riotAccountLinks.tagLine,
+        }).from(riotSyncJobs)
+          .innerJoin(riotAccountLinks, eq(riotAccountLinks.id, riotSyncJobs.linkId))
+          .innerJoin(players, eq(players.id, riotAccountLinks.playerId))
+          .where(condition)
+          .orderBy(desc(riotSyncJobs.requestedAt), riotSyncJobs.id)
+          .limit(query.pageSize).offset((query.page - 1) * query.pageSize),
+        this.database.select({ value: count() }).from(riotSyncJobs).where(condition),
+      ]);
+      const syncItems = rows.map(({ job, displayName, gameName, tagLine }) => ({
+        jobId: job.id,
+        linkId: job.linkId,
+        displayName,
+        riotId: `${gameName}#${tagLine}`,
+        status: job.status,
+        requestedBy: job.requestedBy,
+        attemptCount: job.attemptCount,
+        maximumAttempts: job.maximumAttempts,
+        requestedAt: job.requestedAt.toISOString(),
+        availableAt: job.availableAt.toISOString(),
+        completedAt: job.completedAt?.toISOString() ?? null,
+        failureCode: job.failureCode,
+      }));
+      return finish({ ...empty, syncItems }, totals[0]?.value ?? 0);
+    }
+
+    const end = query.page * query.pageSize;
+    const includeApi = query.source === "ALL" || query.source === "API";
+    const includeSync = query.source === "ALL" || query.source === "SYNC";
+    const includeAudit = query.source === "ALL" || query.source === "AUDIT";
+    const [apiRows, syncRows, auditRows, apiTotal, syncTotal, auditTotal] = await Promise.all([
+      includeApi ? this.database.select({
+        id: riotSyncJobs.id,
+        occurredAt: riotSyncJobs.completedAt,
+        requestedAt: riotSyncJobs.requestedAt,
+        status: riotSyncJobs.status,
+        failureCode: riotSyncJobs.failureCode,
+        displayName: players.nickname,
+      }).from(riotSyncJobs)
+        .innerJoin(riotAccountLinks, eq(riotAccountLinks.id, riotSyncJobs.linkId))
+        .innerJoin(players, eq(players.id, riotAccountLinks.playerId))
+        .orderBy(desc(riotSyncJobs.requestedAt), riotSyncJobs.id).limit(end) : Promise.resolve([]),
+      includeSync ? this.database.select({
+        id: riotOutbox.id,
+        occurredAt: riotOutbox.createdAt,
+        eventType: riotOutbox.eventType,
+        status: riotOutbox.status,
+      }).from(riotOutbox).orderBy(desc(riotOutbox.createdAt), riotOutbox.id).limit(end) : Promise.resolve([]),
+      includeAudit ? this.database.select({
+        id: auditEvents.id,
+        occurredAt: auditEvents.createdAt,
+        action: auditEvents.action,
+        metadata: auditEvents.metadataJson,
+      }).from(auditEvents).where(eq(auditEvents.targetType, "RIOT_INTEGRATION"))
+        .orderBy(desc(auditEvents.createdAt), auditEvents.id).limit(end) : Promise.resolve([]),
+      includeApi ? this.database.select({ value: count() }).from(riotSyncJobs) : Promise.resolve([{ value: 0 }]),
+      includeSync ? this.database.select({ value: count() }).from(riotOutbox) : Promise.resolve([{ value: 0 }]),
+      includeAudit ? this.database.select({ value: count() }).from(auditEvents).where(eq(auditEvents.targetType, "RIOT_INTEGRATION")) : Promise.resolve([{ value: 0 }]),
     ]);
-    const items = await Promise.all(rows.map(async (row) => {
-      const lastJob = row.linkId ? (await this.database.select().from(riotSyncJobs).where(eq(riotSyncJobs.linkId, row.linkId)).orderBy(desc(riotSyncJobs.requestedAt)).limit(1))[0] : null;
-      return {
-        playerId: row.playerId,
-        displayName: row.displayName,
-        ownerUserAccountId: row.ownerUserAccountId,
-        linkId: row.linkId,
-        revision: row.revision,
-        riotId: `${row.gameName ?? row.registryGameName}#${row.tagLine ?? row.registryTagLine}`,
-        method: row.method,
-        status: row.status ?? "UNLINKED" as const,
-        lastSyncStatus: lastJob?.status ?? null,
-        lastSyncedAt: row.lastSyncedAt?.toISOString() ?? null,
-        failureCode: lastJob?.failureCode ?? null,
-      };
-    }));
-    const total = totals[0]?.value ?? 0;
-    return { items, page: query.page, pageSize: query.pageSize, total, totalPages: total ? Math.ceil(total / query.pageSize) : 0 };
+    const logItems = [
+      ...apiRows.map((row) => ({
+        id: `api:${row.id}`,
+        source: "API" as const,
+        occurredAt: (row.occurredAt ?? row.requestedAt).toISOString(),
+        title: "Riot 전적 API 동기화",
+        detail: `${row.displayName} · ${row.failureCode ?? "응답 처리 완료"}`,
+        status: row.status,
+      })),
+      ...syncRows.map((row) => ({
+        id: `sync:${row.id}`,
+        source: "SYNC" as const,
+        occurredAt: row.occurredAt.toISOString(),
+        title: "동기화 이벤트",
+        detail: row.eventType,
+        status: row.status,
+      })),
+      ...auditRows.map((row) => ({
+        id: `audit:${row.id}`,
+        source: "AUDIT" as const,
+        occurredAt: row.occurredAt.toISOString(),
+        title: "관리 감사 기록",
+        detail: `${row.action} · ${String(row.metadata?.source ?? "UNKNOWN")}`,
+        status: "RECORDED",
+      })),
+    ].sort((left, right) => right.occurredAt.localeCompare(left.occurredAt) || left.id.localeCompare(right.id))
+      .slice((query.page - 1) * query.pageSize, end);
+    const total = (apiTotal[0]?.value ?? 0) + (syncTotal[0]?.value ?? 0) + (auditTotal[0]?.value ?? 0);
+    return finish({ ...empty, logItems }, total);
   }
 }

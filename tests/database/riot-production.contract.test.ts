@@ -214,6 +214,21 @@ test("production RSO cache and signed sync job survive application retry without
     assert.equal(processed.status, "PROCESSED");
     assert.equal((await database.select().from(riotSummaries).where(eq(riotSummaries.playerId, playerId))).length, 1);
     assert.equal((await database.select().from(jobNonceBindings).where(eq(jobNonceBindings.jobName, "riot-sync"))).length, 1);
+    const accounts = await adapter.listAdmin({ tab: "accounts", status: "ALL", source: "ALL", page: 1, pageSize: 25 });
+    assert.equal(accounts.tab, "accounts");
+    assert.ok(accounts.items.some((row) => row.playerId === playerId));
+    assert.equal(accounts.syncItems.length, 0);
+    assert.equal(accounts.logItems.length, 0);
+    const sync = await adapter.listAdmin({ tab: "sync", status: "ALL", source: "ALL", page: 1, pageSize: 25 });
+    assert.equal(sync.tab, "sync");
+    assert.equal(sync.items.length, 0);
+    assert.ok(sync.syncItems.some((row) => row.riotId === "VerifiedPlayer#KR1"));
+    assert.equal(sync.logItems.length, 0);
+    const logs = await adapter.listAdmin({ tab: "logs", status: "ALL", source: "ALL", page: 1, pageSize: 25 });
+    assert.equal(logs.tab, "logs");
+    assert.equal(logs.items.length, 0);
+    assert.equal(logs.syncItems.length, 0);
+    assert.deepEqual(new Set(logs.logItems.map((row) => row.source)), new Set(["API", "SYNC", "AUDIT"]));
     await assert.rejects(
       service.runNextSync({ principalId: "job:riot-sync", authorizationIntent: jobIntent }),
       (error: unknown) => error instanceof RiotApplicationError && error.code === "NOT_FOUND",

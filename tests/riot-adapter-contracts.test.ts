@@ -114,7 +114,10 @@ test("explicit fake runtime adapter connects application mutations to safe query
 });
 
 test("admin Riot query is bounded and rejects duplicate or unknown HTTP parameters", () => {
-  assert.deepEqual(parseAdminRiotQuery("https://example.test/admin/riot?tab=sync&status=FAILED&page=2&pageSize=50"), { tab: "sync", status: "FAILED", page: 2, pageSize: 50 });
+  assert.deepEqual(parseAdminRiotQuery("https://example.test/admin/riot?tab=sync&status=FAILED&page=2&pageSize=50"), { tab: "sync", status: "FAILED", source: "ALL", page: 2, pageSize: 50 });
+  assert.deepEqual(parseAdminRiotQuery("https://example.test/admin/riot?tab=logs&source=AUDIT"), { tab: "logs", status: "ALL", source: "AUDIT", page: 1, pageSize: 25 });
+  assert.equal(parseAdminRiotQuery("https://example.test/admin/riot?tab=accounts&source=API"), null);
+  assert.equal(parseAdminRiotQuery("https://example.test/admin/riot?tab=sync&status=CONNECTED"), null);
   assert.equal(parseAdminRiotQuery("https://example.test/admin/riot?pageSize=101"), null);
   assert.equal(parseAdminRiotQuery("https://example.test/admin/riot?tab=sync&tab=logs"), null);
   assert.equal(parseAdminRiotQuery("https://example.test/admin/riot?includeSecrets=true"), null);
@@ -144,5 +147,15 @@ test("public, owner, admin HTTP routes and responsive UI states are present", ()
   }
   assert.match(account, /Riot 계정 연결/);
   assert.match(admin, /표시할 연동 계정이 없습니다/);
+  assert.match(admin, /data-riot-state="accounts"/);
+  assert.match(admin, /data-riot-state="sync"/);
+  assert.match(admin, /data-riot-state="logs"/);
+  assert.match(admin, /Riot 계정 연결 현황/);
+  assert.match(admin, /Riot 동기화 작업 이력/);
+  assert.match(admin, /Riot API·동기화·감사 로그/);
+  const actions = readFileSync(new URL("../src/components/riot/riot-admin-actions.tsx", import.meta.url), "utf8");
+  assert.match(actions, /일괄 동기화 미리보기/);
+  assert.match(actions, /role="dialog"/);
+  assert.match(actions, /등록 확인/);
   assert.match(player, /공개할 Riot 동기화 전적이 없습니다/);
 });
