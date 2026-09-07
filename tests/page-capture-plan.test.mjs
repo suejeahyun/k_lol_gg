@@ -106,9 +106,9 @@ test("the repository plan covers every page once, resolves IDs and adds reviewed
   );
   assert.equal(plan.some((entry) => /\[[^\]]+\]|\{\{[^}]+\}\}/u.test(entry.path)), false);
 
-  for (const mobile of [false, true]) {
-    const paths = plan.filter((entry) => entry.viewport.mobile === mobile).map((entry) => entry.path);
-    assert.equal(new Set(paths).size, paths.length, `${mobile ? "mobile" : "desktop"} capture paths must be unique`);
+  for (const [name, width] of [["desktop", 1440], ["tablet", 820], ["mobile", 390]]) {
+    const paths = plan.filter((entry) => entry.viewport.width === width).map((entry) => entry.path);
+    assert.equal(new Set(paths).size, paths.length, `${name} capture paths must be unique`);
   }
   assert.equal(new Set(plan.map((entry) => entry.id)).size, plan.length, "capture IDs must be globally unique");
 
@@ -161,7 +161,11 @@ test("the repository plan covers every page once, resolves IDs and adds reviewed
   assert.equal(canonical.some((entry) => entry.routeTemplate === "/admin/ai-requests"), false);
   assert.equal(canonical.some((entry) => entry.routeTemplate === "/admin/recruits"), false);
 
-  assert.ok(plan.some((entry) => entry.captureKind === "key-mobile" && entry.path === "/"));
-  assert.ok(plan.some((entry) => entry.captureKind === "key-mobile" && entry.path === "/admin/riot"));
-  assert.ok(plan.some((entry) => entry.captureKind === "key-mobile" && entry.path === "/tools/team-balance"));
+  for (const route of ["/", "/admin/riot", "/tools/team-balance"]) {
+    assert.ok(plan.some((entry) => entry.captureKind === "tablet-canonical" && entry.path === route));
+    assert.ok(plan.some((entry) => entry.captureKind === "mobile-canonical" && entry.path === route));
+  }
+  const canonicalPageCount = pages.filter((page) => !page.expectedRedirect).length;
+  assert.equal(plan.filter((entry) => entry.captureKind === "tablet-canonical").length, canonicalPageCount);
+  assert.equal(plan.filter((entry) => entry.captureKind === "mobile-canonical").length, canonicalPageCount);
 });

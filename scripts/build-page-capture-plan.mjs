@@ -16,6 +16,13 @@ export const MOBILE_VIEWPORT = Object.freeze({
   mobile: true,
 });
 
+export const TABLET_VIEWPORT = Object.freeze({
+  width: 820,
+  height: 1180,
+  deviceScaleFactor: 1,
+  mobile: true,
+});
+
 const QUERY_VARIANTS = Object.freeze({
   "/account": [
     { label: "player", query: { tab: "player" } },
@@ -105,35 +112,6 @@ const QUERY_VARIANTS = Object.freeze({
     { label: "players", query: { view: "players" } },
   ],
 });
-
-const KEY_MOBILE_ROUTES = new Set([
-  "/",
-  "/account",
-  "/admin",
-  "/admin/balance-ai",
-  "/admin/kakao",
-  "/admin/matches",
-  "/admin/operation-forms",
-  "/admin/players",
-  "/admin/private-assets",
-  "/admin/progress/destruction",
-  "/admin/progress/event",
-  "/admin/riot",
-  "/applications",
-  "/competitions",
-  "/competitions/destruction/[tournamentId]",
-  "/competitions/events/[eventId]",
-  "/highlights",
-  "/images",
-  "/matches",
-  "/matches/[matchId]",
-  "/players",
-  "/players/[playerId]",
-  "/rankings",
-  "/tools/coin-toss",
-  "/tools/random-team",
-  "/tools/team-balance",
-]);
 
 const REDIRECT_DESTINATION_FALLBACKS = Object.freeze({
   "/app": "/",
@@ -375,21 +353,28 @@ export function buildCapturePlan(pages, fixtures) {
     captureKind: "alias-redirect",
   }));
 
-  const mobilePages = canonicalPages
-    .filter((page) => KEY_MOBILE_ROUTES.has(page.route))
-    .map((page) => planEntry({
+  const tabletPages = canonicalPages.map((page) => planEntry({
+      page,
+      path: resolvedPaths.get(page.route),
+      label: null,
+      viewportName: "tablet",
+      viewport: TABLET_VIEWPORT,
+      captureKind: "tablet-canonical",
+    }));
+
+  const mobilePages = canonicalPages.map((page) => planEntry({
       page,
       path: resolvedPaths.get(page.route),
       label: null,
       viewportName: "mobile",
       viewport: MOBILE_VIEWPORT,
-      captureKind: "key-mobile",
+      captureKind: "mobile-canonical",
     }));
 
-  const plan = [...desktopPages, ...queryVariants, ...aliasRedirects, ...mobilePages];
+  const plan = [...desktopPages, ...queryVariants, ...aliasRedirects, ...tabletPages, ...mobilePages];
   const seen = new Set();
   for (const entry of plan) {
-    const targetKey = `${entry.viewport.mobile ? "mobile" : "desktop"}:${entry.path}`;
+    const targetKey = `${entry.viewport.width}x${entry.viewport.height}:${entry.path}`;
     if (seen.has(targetKey)) throw new Error(`Duplicate capture target: ${targetKey}`);
     seen.add(targetKey);
   }
