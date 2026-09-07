@@ -1,11 +1,19 @@
 # K-LOL.GG V2 상태
 
-- 기준 커밋: `e96310c` (`main`, 2026-09-07)
-- 현재 단계: S00~S04와 S05-A·S06 로컬 구현 후보 통합, S05-B 영속화와 W3 adapter 준비 중
+- 기준 커밋: `057e8cc` (`main`, 2026-09-07 15:46 KST)
+- 현재 단계: S00~S06 영속 구현 후보 통합, S07·S09·S10 adapter 병렬 구현 중
 - V1 코드 복사: 없음. V1은 동작 명세와 동등성 대조 근거로만 사용
 - 운영 데이터·외부 연동: 연결하지 않음
 - 운영 Vercel 전환: 하지 않음
 - 전체 기능 동등성: **미완료**
+
+## 2일 목표 예측
+
+- 기준 시각: 2026-09-07 15:46 KST
+- 현재 예상 잔여: **30~40시간**
+- 목표 종료: 2026-09-09 15:03 KST 이전
+- 구현 adapter 3개를 현재 병렬 처리하고, 이후 S08·S11~S13을 다시 병렬 처리한다. 마지막 8~12시간은 한 번의 S14 전수 QA와 발견 결함 수정에 고정한다.
+- 최종 QA에서 데이터 무결성·권한 결함이 다수 발견되면 완료 판정은 늦어질 수 있으며, 시간 때문에 중요 검사를 통과 처리하지 않는다.
 
 ## 확인된 완료 범위
 
@@ -36,9 +44,17 @@
 - S06 181만여 배치 전수 탐색을 포함한 결정적 팀 밸런스 엔진과 자동·수동 동일 scoring kernel
 - S06 팀 밸런스 draft 생성·상위 3개·수동 배치·선택·저장·재평가의 DB/API/UI 수명주기
 - S05-B 전체 원장 재생형 MMR 순수 엔진과 S06 rating provider DTO 연결
+- S05-B `0008` append-only MMR generation·원장·수동 보정·독립 consumer/receipt/outbox 영속화
+- S05-B 공개 `/rankings/mmr`, SUPER 재계산·보정 화면/API, S06 MMR 우선·통계 fallback 연결
 - S07/S08 공통 대회 FSM·roster·BO·대진·standings와 이벤트전·멸망전 순수 command/application 코어
 - S08 seeded 경매, 주장 포인트, 교체 roster snapshot, 예선·본선, 경기 전체 MVP 재투표 계약
 - S09 구인·스크림, S10 미디어, S11 징계, S12 Riot, S13 운영의 선행 순수 정책 코어
+- S09 Kakao HMAC·nonce·room/sender·멱등 receipt·감사/outbox를 포함한 application/security 코어
+- 공통 비공개 자산의 목적별 OWNER/ADMIN/SUPER 권한, MIME·용량·해상도·SHA-256 검증과 staged/delete saga
+- 팀 밸런스 소유 초안 목록 DB/API/UI와 bounded pagination
+- `/start`, `/help/riot`, `/install`의 역할·운영 잠금·설치 가능/불가 상태 화면
+- 홈의 활성 플레이어·활성 시즌·게시 경기 집계와 실제 구현 상태 내비게이션 반영
+- V1 redirect 32개·통합 20개 전부에 상대 Location·query allowlist 기반 한 버전 호환 진입점
 
 ## 출시 차단 조건
 
@@ -56,12 +72,13 @@
 - S01의 기존 QA 이미지 114장 중 파일명/화면 불일치 2장과 변환 후 메타데이터 불일치 39장이 확인되어 최종 통합 QA에서 재촬영·재생성한다.
 - 합성 fixture는 명시적으로 켠 loopback 비운영 환경에서만 허용되고 Vercel/public origin에서는 차단되며, 운영 인증 대체 수단이 아니다.
 - S07~S13 선행 코어 가운데 DB repository·Route Handler·실제 사용자/관리자 화면이 아직 연결되지 않은 영역이 있다. 코어 테스트 통과를 기능 동등성 완료로 보지 않는다.
+- 52개 legacy 호환 진입점은 경로·builder·Next route type만 focused 검증했으며 canonical S07~S13 화면 완성 뒤 S14 실제 HTTP 행렬에서 다시 확인한다.
 
 ## 다음 순서
 
-1. S05-B MMR `0008` 영속 projection과 공개·관리자 화면을 연결
-2. W3 공통 DB 원장 뒤 S07 이벤트전·S08 멸망전 repository/API/UI를 병렬 연결
-3. 이미 병합한 S09~S13 순수 코어에 DB/API/UI adapter를 병렬 연결
+1. 진행 중인 S07 이벤트전·S09 구인/Kakao·S10 미디어 DB/API/UI adapter를 통합
+2. S08 멸망전과 S11 징계·증거 adapter를 병렬 연결
+3. S12 Riot fake 외부 adapter와 S13 운영/설정/job/backup adapter를 연결
 4. S14에서 전수 DB/HTTP/브라우저·접근성·반응형·성능·보안·복구 검증과 QA 증거 재생성
 5. 중요 결함과 미완료 기능이 0이고 비밀정보 검사가 통과한 뒤에만 Git 원격 브랜치 push
 6. 운영 Vercel 전환과 운영 데이터 변경은 이 계획에서 수행하지 않음
