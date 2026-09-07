@@ -4,7 +4,7 @@
 
 - 전역 도우미는 공개 설정의 `features.aiAssistant`가 `true`일 때만 브라우저에 표시된다.
 - 질문 전송은 승인 계정 세션, 역할 allowlist, `If-Match`, `Idempotency-Key`, 시간당 요청 수와 일일 비용 상한을 모두 통과해야 한다.
-- 질문 원문과 답변 원문은 DB·감사 로그에 저장하지 않는다. 원문 대신 프롬프트 SHA-256, 문자 수, 토큰 수, 추정 비용, 성공/실패 코드만 원장에 남긴다.
+- 질문 원문은 DB·감사 로그에 저장하지 않는다. 원장에는 프롬프트 SHA-256, 문자 수, 토큰 수, 추정 비용, 성공/실패 코드만 남긴다. 동일 멱등 요청에 같은 응답을 돌려주기 위한 답변은 일반 감사 원장이 아니라 제한된 command receipt에만 보관하고 운영 retention 정리 대상에 포함한다.
 - OpenAI 어댑터는 `V2_OPENAI_COMPLETION_ENABLED=true`와 모든 환경값이 유효할 때만 활성화된다. 일부 값만 설정된 상태에서는 disabled 어댑터로 fail-closed한다.
 - 외부 요청은 고정된 HTTPS Responses API endpoint, 제한된 응답 크기, timeout, redirect 거부, `store:false`, 명시적 출력 토큰 상한을 사용한다.
 - 모델과 토큰 단가는 코드가 추측하지 않는다. 운영자가 현재 계약값을 환경 변수로 명시해야 한다.

@@ -4,7 +4,7 @@
 2. `.env.example`의 AI 환경값을 모두 설정한다. `OPENAI_MODEL`과 입력/출력 micro-unit 단가는 현재 계약값을 직접 입력한다.
 3. 사이트 설정의 `aiAssistant`는 아직 켜지 않는다.
 4. fake 검증, 전체 빌드, 비밀정보 검사 후 비운영 환경에서 실제 질문 1건만 실행하고 OpenAI 대시보드 사용량과 `ai_request_ledger` 토큰·비용을 대조한다.
-5. 응답 본문이나 질문 원문이 로그, DB, 오류 추적 도구에 기록되지 않았는지 확인한다.
+5. 질문 원문이 로그, DB, 오류 추적 도구에 기록되지 않았는지 확인한다. 답변은 멱등 재생용 command receipt에만 존재하고 일반 감사/AI 원장에는 없는지 확인한다.
 6. `V2_OPENAI_COMPLETION_ENABLED=true`를 적용한 뒤 마지막으로 사이트 설정의 `aiAssistant`와 허용 역할을 켠다.
 7. 오류율, 429, 시간당 요청 수, 일일 비용을 관찰한다. 문제가 있으면 사이트 설정의 `aiAssistant=false`를 먼저 적용하고 필요하면 런타임 flag도 끈다.
 
