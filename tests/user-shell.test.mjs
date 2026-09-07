@@ -32,7 +32,8 @@ test("V2 UI는 실제 운영 데이터가 없을 때 합성 샘플을 사용자 
   );
 
   assert.doesNotMatch(playerIndex, /fixturePlayerRepository/);
-  assert.match(playerPage, /확인되지 않은 플레이어는 임의로 표시하지 않습니다/);
+  assert.match(playerPage, /result\.state === "unavailable"/);
+  assert.match(playerPage, /등록된 활성 플레이어가 없어요/);
 });
 
 test("사용자와 관리자 로그아웃 UI는 세션 폐기 성공 뒤에만 로그인 화면으로 이동한다", async () => {
@@ -66,7 +67,7 @@ test("관리자 계정 상세는 저장소 장애를 존재하지 않음 404로 
   );
   assert.match(detailPage, /await repository\.findAdmin\(id, viewerRole\)/);
   assert.doesNotMatch(detailPage, /findAdmin\([^\n]+\.catch\(\(\) => null\)/);
-  assert.match(detailError, /계정이 없다는 뜻이 아닙니다/);
+  assert.match(detailError, /계정 상세를 불러오지 못했습니다/);
   assert.match(detailError, /window\.location\.reload\(\)/);
 });
 

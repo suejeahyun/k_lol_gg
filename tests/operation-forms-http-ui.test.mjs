@@ -32,7 +32,7 @@ test("admin mutation requires ADMIN session, same-origin, If-Match and idempoten
 
 test("admin pages expose filtered empty/error/unavailable states and compatibility routes", async () => {
   const [list, detail, legacy] = await Promise.all([source("list"), source("detail"), source("legacy")]);
-  for (const text of ["조건에 맞는 신청이 없습니다", "저장소 연결을 준비 중입니다", "신청서를 불러오지 못했습니다"]) assert.match(list, new RegExp(text));
+  for (const text of ["조건에 맞는 신청이 없습니다", "신청서를 확인할 수 없습니다", "신청서를 불러오지 못했습니다"]) assert.match(list, new RegExp(text));
   assert.match(list, /aria-current/u); assert.match(list, /<table/u); assert.match(detail, /AdminOperationFormActions/u);
   assert.match(legacy, /permanentRedirect/u); assert.match(legacy, /\/admin\/operation-forms\?type=/u);
 });

@@ -40,6 +40,6 @@ test("discipline pages declare real empty, error, and unavailable states", async
     assert.match(page, /state === "unavailable"/);
     assert.match(page, /role="alert"/);
   }
-  assert.match(pages[0], /샘플 기록은 표시하지 않습니다/);
+  assert.match(pages[0], /징계 현황을 확인할 수 없어요/);
   assert.match(pages[2], /필터를 바꾸거나 새 기록을 등록해 주세요/);
 });
