@@ -1,10 +1,12 @@
 import { canonicalIdentifier, requireCompetition } from "../core/error";
+import type { CompetitionPosition } from "../core";
 
 export type DestructionApplicationStatus = "APPLIED" | "CONFIRMED" | "RESERVE" | "REJECTED" | "CANCELLED";
 export type DestructionApplication = Readonly<{
   id: string;
   userAccountId: string;
   playerId: string;
+  position: CompetitionPosition;
   status: DestructionApplicationStatus;
 }>;
 

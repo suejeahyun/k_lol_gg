@@ -60,14 +60,18 @@ function aggregate(): DestructionAggregate {
       teamCount: 4,
       laneLimits: { TOP: 4, JGL: 4, MID: 4, ADC: 4, SUP: 4 },
     }),
+    applications: [],
     teams: [],
     participants: [],
+    auctionSeed: null,
     preliminaryFixtures: [],
     qualifiedTeamIds: ["team-a", "team-b", "team-c", "team-d"],
     tournamentBracket: completedBracket(),
     rosterSnapshots: [],
     replacements: [],
     mvpBallots: [],
+    createdAt: instant,
+    updatedAt: instant,
   };
 }
 

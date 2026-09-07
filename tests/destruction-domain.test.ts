@@ -85,7 +85,7 @@ function participant(index: number): DestructionParticipant {
 }
 
 test("owner/admin cancellation intent is explicit and cannot cancel another user's application", () => {
-  const application = { id: "application-1", userAccountId: "user-1", playerId: "player-1", status: "APPLIED" as const };
+  const application = { id: "application-1", userAccountId: "user-1", playerId: "player-1", position: "TOP" as const, status: "APPLIED" as const };
   assert.equal(cancelDestructionApplication(application, {
     type: "CANCEL_APPLICATION",
     applicationId: application.id,

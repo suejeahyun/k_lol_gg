@@ -7,7 +7,7 @@ import {
   destructionCommandRequestFingerprint,
   type DestructionAdminCommand,
   type DestructionCommandContext,
-  type DestructionCommandHandler,
+  type DestructionCommandExecutor,
   type DestructionHttpCommand,
   type DestructionOwnerCommand,
 } from "./http-contract";
@@ -142,7 +142,7 @@ function fingerprint<T extends DestructionHttpCommand>(command: T): T {
 }
 
 export class DestructionService {
-  constructor(private readonly handler: DestructionCommandHandler) {}
+  constructor(private readonly handler: DestructionCommandExecutor) {}
 
   create(context: DestructionCommandContext, body: unknown) {
     if (context.purpose !== "ADMIN") throw new TypeError("FORBIDDEN");

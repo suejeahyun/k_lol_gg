@@ -8,6 +8,7 @@ import {
 import { canonicalIdentifier, requireCompetition } from "../core/error";
 import type { DestructionConfiguration } from "./configuration";
 import type { DestructionMvpBallot } from "./mvp-voting";
+import type { DestructionApplication } from "./recruitment";
 import type { DestructionFixtureRosterSnapshot, DestructionReplacement } from "./roster-history";
 import type { DestructionParticipant, DestructionTeam } from "./teams";
 
@@ -17,14 +18,18 @@ export type DestructionAggregate = Readonly<{
   title: string;
   lifecycle: DestructionLifecycle;
   configuration: DestructionConfiguration;
+  applications: readonly DestructionApplication[];
   teams: readonly DestructionTeam[];
   participants: readonly DestructionParticipant[];
+  auctionSeed: string | null;
   preliminaryFixtures: readonly StandingsFixture[];
   qualifiedTeamIds: readonly string[];
   tournamentBracket: SingleEliminationBracket | null;
   rosterSnapshots: readonly DestructionFixtureRosterSnapshot[];
   replacements: readonly DestructionReplacement[];
   mvpBallots: readonly DestructionMvpBallot[];
+  createdAt: string;
+  updatedAt: string;
 }>;
 
 export type DestructionTerminalCommand =

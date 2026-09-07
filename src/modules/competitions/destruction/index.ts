@@ -3,6 +3,7 @@ export * from "./auction";
 export * from "./captain-points";
 export * from "./configuration";
 export * from "./destruction-service";
+export * from "./destruction-command-handler";
 export * from "./http-contract";
 export * from "./mvp-voting";
 export * from "./recruitment";

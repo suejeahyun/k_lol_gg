@@ -1,16 +1,16 @@
 import "server-only";
 
-import type { DestructionQueryPort } from "./http-contract";
-import type { DestructionService } from "./destruction-service";
+import { getDatabase } from "@/platform/db/client";
+import { DestructionService } from "./destruction-service";
+import { PostgresDestructionAdapter } from "./postgres-destruction-adapter";
 
-export type RuntimeDestruction = Readonly<{
-  repository: DestructionQueryPort;
-  service: DestructionService;
-}>;
+export type RuntimeDestruction = Readonly<{ repository: PostgresDestructionAdapter; service: DestructionService }>;
 
-/** PostgreSQL binding is intentionally deferred to migration 0013. */
 export function getRuntimeDestruction(): RuntimeDestruction | null {
-  return null;
+  try {
+    const repository = new PostgresDestructionAdapter(getDatabase());
+    return { repository, service: new DestructionService(repository.commandHandler()) };
+  } catch { return null; }
 }
 
 export async function loadRuntimeDestruction<T>(loader: (runtime: RuntimeDestruction) => Promise<T>) {

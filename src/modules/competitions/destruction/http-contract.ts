@@ -166,7 +166,7 @@ export type DestructionMutationResult = Readonly<{
   replayed: boolean;
 }>;
 
-export interface DestructionCommandHandler {
+export interface DestructionCommandExecutor {
   /** Adapter must authorize, claim the receipt, mutate, audit, enqueue and complete the receipt in one transaction. */
   handle(command: DestructionHttpCommand): Promise<DestructionMutationResult>;
 }
