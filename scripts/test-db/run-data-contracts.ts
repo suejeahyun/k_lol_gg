@@ -36,9 +36,10 @@ if (
   contractScope !== "team-tools" &&
   contractScope !== "mmr" &&
   contractScope !== "recruiting" &&
-  contractScope !== "media"
+  contractScope !== "media" &&
+  contractScope !== "events"
 ) {
-  throw new Error("V2_DB_CONTRACT_SCOPE must be 'all', 'matches', 'statistics', 'team-tools', 'mmr', 'recruiting', or 'media'.");
+  throw new Error("V2_DB_CONTRACT_SCOPE must be 'all', 'matches', 'statistics', 'team-tools', 'mmr', 'recruiting', 'media', or 'events'.");
 }
 
 type EphemeralCluster = Readonly<{
@@ -433,6 +434,7 @@ async function runContractTests(connectionString: string): Promise<void> {
     "tests/database/team-balance-draft.contract.test.ts",
     "tests/database/mmr-projection.contract.test.ts",
     "tests/database/recruiting.contract.test.ts",
+    "tests/database/event-competition.contract.test.ts",
   ];
   const scopedTestFiles: Readonly<Record<string, readonly string[]>> = {
     matches: ["tests/database/match-snapshot.contract.test.ts"],
@@ -441,6 +443,7 @@ async function runContractTests(connectionString: string): Promise<void> {
     mmr: ["tests/database/mmr-projection.contract.test.ts"],
     recruiting: ["tests/database/recruiting.contract.test.ts"],
     media: ["tests/database/media.contract.test.ts"],
+    events: ["tests/database/event-competition.contract.test.ts"],
   };
   const testFiles = contractScope === "all" ? allTestFiles : scopedTestFiles[contractScope]!;
   for (const relativeTestFile of testFiles) {

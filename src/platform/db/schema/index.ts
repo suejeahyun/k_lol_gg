@@ -10,3 +10,4 @@ export * from "./team-tools";
 export * from "./mmr";
 export * from "./recruiting";
 export * from "./media";
+export * from "./event-competitions";
