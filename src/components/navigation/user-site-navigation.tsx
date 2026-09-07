@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useId, useRef } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
+  ArrowRight,
   CalendarCheck2,
   Dices,
   Home,
@@ -24,6 +25,7 @@ import {
   primaryUserNavigation,
   userNavigationSections,
 } from "@/modules/navigation/domain/user-navigation";
+import { findGlobalCommands, playerSearchHref } from "@/modules/navigation/domain/global-command-palette";
 
 function openDialog(dialog: HTMLDialogElement | null, initialFocus?: HTMLElement | null) {
   if (!dialog || dialog.open) return;
@@ -35,11 +37,40 @@ function closeDialog(dialog: HTMLDialogElement | null) {
   if (dialog?.open) dialog.close();
 }
 
-function SearchControl({ compact = false }: { compact?: boolean }) {
+function SearchControl({ compact = false, accountSignedIn = false }: { compact?: boolean; accountSignedIn?: boolean }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const input = useRef<HTMLInputElement>(null);
+  const resultLinks = useRef<(HTMLAnchorElement | null)[]>([]);
   const titleId = useId();
   const inputId = useId();
+  const resultsId = useId();
+  const [query, setQuery] = useState("");
+  const commands = useMemo(() => findGlobalCommands(query, { accountSignedIn }), [accountSignedIn, query]);
+  const playerHref = playerSearchHref(query);
+
+  function openSearch() {
+    setQuery("");
+    openDialog(dialog.current, input.current);
+  }
+
+  useEffect(() => {
+    if (compact) return;
+    function shortcut(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null;
+      const editing = target?.matches("input, textarea, select, [contenteditable='true']");
+      if ((event.key.toLocaleLowerCase("en-US") === "k" && (event.ctrlKey || event.metaKey)) || (event.key === "/" && !editing)) {
+        event.preventDefault();
+        setQuery("");
+        openDialog(dialog.current, input.current);
+      }
+    }
+    window.addEventListener("keydown", shortcut);
+    return () => window.removeEventListener("keydown", shortcut);
+  }, [compact]);
+
+  function focusResult(index: number) {
+    resultLinks.current[index]?.focus();
+  }
 
   return (
     <>
@@ -47,8 +78,10 @@ function SearchControl({ compact = false }: { compact?: boolean }) {
         className={compact ? "mobile-nav__action" : "header-icon-action"}
         type="button"
         aria-haspopup="dialog"
-        aria-label="플레이어 검색 열기"
-        onClick={() => openDialog(dialog.current, input.current)}
+        aria-label="전체 검색 열기"
+        aria-keyshortcuts="Control+K Meta+K /"
+        title="전체 검색 (Ctrl+K)"
+        onClick={openSearch}
       >
         <Search size={compact ? 20 : 18} aria-hidden="true" />
         {compact ? <span>검색</span> : null}
@@ -66,16 +99,16 @@ function SearchControl({ compact = false }: { compact?: boolean }) {
         <div className="user-dialog__panel">
           <div className="user-dialog__heading">
             <div>
-              <span>PLAYER SEARCH</span>
-              <h2 id={titleId}>플레이어를 찾아볼까요?</h2>
+              <span>COMMAND PALETTE</span>
+              <h2 id={titleId}>무엇을 찾고 있나요?</h2>
             </div>
             <button type="button" aria-label="검색 닫기" onClick={() => closeDialog(dialog.current)}>
               <X size={20} aria-hidden="true" />
             </button>
           </div>
 
-          <form className="global-search-form" action="/players" method="get">
-            <label htmlFor={inputId}>닉네임 또는 Riot ID</label>
+          <form className="global-search-form" action="/players" method="get" role="search" onSubmit={() => closeDialog(dialog.current)}>
+            <label htmlFor={inputId}>페이지, 도구, 콘텐츠 또는 플레이어</label>
             <div>
               <Search size={19} aria-hidden="true" />
               <input
@@ -84,14 +117,39 @@ function SearchControl({ compact = false }: { compact?: boolean }) {
                 name="q"
                 type="search"
                 maxLength={80}
-                placeholder="예: 닉네임 또는 GameName#TAG"
+                placeholder="예: 팀 밸런스, 대회, GameName#TAG"
                 autoComplete="off"
+                value={query}
+                aria-controls={resultsId}
+                onChange={(event) => setQuery(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "ArrowDown" && commands.length) {
+                    event.preventDefault();
+                    focusResult(0);
+                  }
+                }}
               />
-              <button type="submit">검색</button>
+              {playerHref ? <button className="global-search-form__player" type="submit">플레이어 검색</button> : <span className="global-search-form__shortcut" aria-hidden="true">Ctrl K</span>}
             </div>
           </form>
+          <div className="command-palette-results" id={resultsId} aria-live="polite">
+            <div className="command-palette-results__heading"><span>{query ? "검색 결과" : "바로 가기"}</span><small>{commands.length}개</small></div>
+            {commands.length ? <ul aria-label="접근 가능한 페이지와 기능">{commands.map((command, index) => <li key={command.id}><Link
+              ref={(node) => { resultLinks.current[index] = node; }}
+              href={command.href}
+              onClick={() => closeDialog(dialog.current)}
+              onKeyDown={(event) => {
+                if (event.key === "ArrowDown") { event.preventDefault(); focusResult(Math.min(index + 1, commands.length - 1)); }
+                if (event.key === "ArrowUp") {
+                  event.preventDefault();
+                  if (index === 0) input.current?.focus();
+                  else focusResult(index - 1);
+                }
+              }}
+            ><span><small>{command.group}</small><strong>{command.label}</strong><em>{command.description}</em></span><ArrowRight aria-hidden="true" /></Link></li>)}</ul> : <p className="command-palette-empty">일치하는 바로 가기가 없어요. 입력한 이름은 위의 플레이어 검색으로 찾아볼 수 있습니다.</p>}
+          </div>
           <p className="user-dialog__hint">
-            계정 아이디·회원명·Discord 식별자는 검색 대상이 아니며 결과에도 표시하지 않습니다.
+            로그인 전에는 공개 기능만 표시합니다. 계정 아이디·회원명·Discord 식별자는 플레이어 검색 대상이 아닙니다.
           </p>
         </div>
       </dialog>
@@ -205,7 +263,7 @@ export function PrimaryUserNavigation() {
 export function HeaderUserControls({ accountSignedIn = false }: { accountSignedIn?: boolean }) {
   return (
     <div className="header-actions">
-      <SearchControl />
+      <SearchControl accountSignedIn={accountSignedIn} />
       <AllMenuControl />
       <Link className="header-account" href={accountSignedIn ? "/account" : "/login"} aria-label={accountSignedIn ? "내 계정" : "사용자 로그인"}>
         <UserRound size={17} aria-hidden="true" />
@@ -231,7 +289,7 @@ export function MobileUserNavigation({ accountSignedIn = false }: { accountSigne
         <UsersRound size={20} aria-hidden="true" />
         <span>플레이어</span>
       </Link>
-      <SearchControl compact />
+      <SearchControl compact accountSignedIn={accountSignedIn} />
       <Link href={accountSignedIn ? "/account" : "/login"} aria-current={accountSignedIn ? (pathname.startsWith("/account") ? "page" : undefined) : (pathname === "/login" ? "page" : undefined)}>
         <LogIn size={20} aria-hidden="true" />
         <span>{accountSignedIn ? "계정" : "로그인"}</span>

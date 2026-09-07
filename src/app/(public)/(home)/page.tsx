@@ -3,7 +3,10 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
+  CalendarDays,
   Database,
+  Images,
+  LogIn,
   Search,
   ShieldCheck,
   Sparkles,
@@ -15,6 +18,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { getRuntimeAccountRepository } from "@/modules/accounts/infrastructure/runtime-account-data";
+import { getCurrentSession } from "@/modules/auth/infrastructure/runtime-session";
 import { loadRuntimeHomeSnapshot } from "@/modules/home/infrastructure/runtime-home-data";
 
 export const dynamic = "force-dynamic";
@@ -60,6 +65,21 @@ const taskCards = [
   },
 ] as const;
 
+const accountStatusLabel = {
+  PENDING: "승인 대기",
+  APPROVED: "승인됨",
+  REJECTED: "승인 거절",
+  SUSPENDED: "이용 제한",
+} as const;
+
+function dateLabel(value: string) {
+  return new Intl.DateTimeFormat("ko-KR", { month: "short", day: "numeric", timeZone: "Asia/Seoul" }).format(new Date(value));
+}
+
+function FeedEmpty({ children }: { children: React.ReactNode }) {
+  return <p className="home-feed-empty">{children}</p>;
+}
+
 function HomeDataState({ result }: { result: Awaited<ReturnType<typeof loadRuntimeHomeSnapshot>> }) {
   if (result.state === "ready") {
     return (
@@ -91,7 +111,14 @@ function HomeDataState({ result }: { result: Awaited<ReturnType<typeof loadRunti
 }
 
 export default async function HomePage() {
-  const homeResult = await loadRuntimeHomeSnapshot();
+  const [homeResult, session] = await Promise.all([
+    loadRuntimeHomeSnapshot(),
+    getCurrentSession("ACCOUNT"),
+  ]);
+  const accountRepository = session ? getRuntimeAccountRepository() : null;
+  const account = session && accountRepository
+    ? await accountRepository.findSelf(session.userId).catch(() => null)
+    : null;
 
   return (
     <div className="page-wrap home-page">
@@ -180,6 +207,53 @@ export default async function HomePage() {
         </div>
       </section>
 
+      <section className="home-overview-section" aria-labelledby="home-overview-title">
+        <div className="section-heading">
+          <div>
+            <p>COMMUNITY NOW</p>
+            <h2 id="home-overview-title">지금 올라온 소식</h2>
+          </div>
+          <span>게시 상태가 확인된 공개 데이터만 최신순으로 보여 드려요.</span>
+        </div>
+        {homeResult.state === "ready" ? (
+          <div className="home-overview-grid">
+            <article className="home-feed-panel">
+              <header><Swords aria-hidden="true" /><div><span>최근 경기</span><strong>{homeResult.snapshot.feeds.recentMatches.length}건</strong></div><Link href="/matches">전체 보기</Link></header>
+              {homeResult.snapshot.feeds.recentMatches.length ? <ul>{homeResult.snapshot.feeds.recentMatches.map((match) => <li key={match.id}><Link href={`/matches/${match.id}`}><span><strong>{match.title}</strong><small>{dateLabel(match.occurredAt)} · BLUE {match.blueWins}:{match.redWins} RED</small></span><ArrowRight aria-hidden="true" /></Link></li>)}</ul> : <FeedEmpty>아직 공개 확정 경기가 없어요.</FeedEmpty>}
+            </article>
+            <article className="home-feed-panel">
+              <header><UsersRound aria-hidden="true" /><div><span>진행 중 구인</span><strong>{homeResult.snapshot.feeds.recruits.length}건</strong></div><Link href="/recruits">전체 보기</Link></header>
+              {homeResult.snapshot.feeds.recruits.length ? <ul>{homeResult.snapshot.feeds.recruits.map((recruit) => <li key={`${recruit.kind}-${recruit.id}`}><Link href="/recruits"><span><strong>{recruit.title}</strong><small>{recruit.kind === "PARTY" ? "파티" : "스크림"} · {recruit.summary}</small></span><ArrowRight aria-hidden="true" /></Link></li>)}</ul> : <FeedEmpty>현재 진행 중인 파티·스크림 구인이 없어요.</FeedEmpty>}
+            </article>
+            <article className="home-feed-panel">
+              <header><Trophy aria-hidden="true" /><div><span>대회 현황</span><strong>{homeResult.snapshot.feeds.competitions.length}건</strong></div><Link href="/competitions">전체 보기</Link></header>
+              {homeResult.snapshot.feeds.competitions.length ? <ul>{homeResult.snapshot.feeds.competitions.map((competition) => <li key={`${competition.kind}-${competition.id}`}><Link href={competition.kind === "EVENT" ? `/competitions/events/${competition.id}` : `/competitions/destruction/${competition.id}`}><span><strong>{competition.title}</strong><small>{competition.kind === "EVENT" ? "이벤트전" : "멸망전"} · {competition.status} · {competition.participantCount}명</small></span><ArrowRight aria-hidden="true" /></Link></li>)}</ul> : <FeedEmpty>공개된 이벤트전·멸망전이 아직 없어요.</FeedEmpty>}
+            </article>
+            <article className="home-feed-panel">
+              <header><Images aria-hidden="true" /><div><span>홈 갤러리</span><strong>{homeResult.snapshot.feeds.gallery.length}건</strong></div><Link href="/images">전체 보기</Link></header>
+              {homeResult.snapshot.feeds.gallery.length ? <ul>{homeResult.snapshot.feeds.gallery.map((gallery) => <li key={gallery.id}><Link href={`/images/${gallery.id}`}><span><strong>{gallery.title}</strong><small>{gallery.description}</small></span><ArrowRight aria-hidden="true" /></Link></li>)}</ul> : <FeedEmpty>홈에 공개된 갤러리가 아직 없어요.</FeedEmpty>}
+            </article>
+          </div>
+        ) : (
+          <div className={`home-data-state${homeResult.state === "error" ? " home-data-state--error" : ""}`} role={homeResult.state === "error" ? "alert" : "status"}>
+            <span><Database aria-hidden="true" /> 공개 피드 확인 필요</span><strong>지금은 최근 소식을 불러올 수 없어요.</strong><p>샘플 소식으로 대신 채우지 않습니다. 연결이 회복되면 최신 공개 데이터가 표시됩니다.</p>
+          </div>
+        )}
+      </section>
+
+      <section className="home-personal-section" aria-labelledby="home-personal-title">
+        <div className="home-personal-copy">
+          <span><Sparkles aria-hidden="true" /> FOR YOU</span>
+          <h2 id="home-personal-title">내 활동 이어보기</h2>
+          {account ? <><p><strong>{account.loginId}</strong> 계정은 현재 {accountStatusLabel[account.status]} 상태예요.</p><div className="home-personal-actions"><Link href="/account">내 계정</Link>{account.player ? <Link href={`/players/${account.player.id}`}>{account.player.riotId} 프로필</Link> : <Link href="/account?tab=player">플레이어 연결 확인</Link>}<Link href="/applications">내 참가 신청</Link></div></> : session ? <><p>로그인은 확인됐지만 계정 요약을 지금 불러오지 못했어요. 샘플 계정 정보는 표시하지 않습니다.</p><div className="home-personal-actions"><Link href="/account">계정에서 다시 확인</Link></div></> : <><p>로그인하면 계정 상태, 연결 플레이어와 참가 신청을 이 자리에서 바로 이어갈 수 있어요.</p><div className="home-personal-actions"><Link href="/login"><LogIn aria-hidden="true" /> 로그인</Link><Link href="/signup">가입하기</Link></div></>}
+        </div>
+        <div className="home-season-card">
+          <CalendarDays aria-hidden="true" />
+          <span>현재 시즌</span>
+          {homeResult.state === "ready" && homeResult.snapshot.activeSeason ? <><strong>{homeResult.snapshot.activeSeason.name}</strong><small>{homeResult.snapshot.activeSeason.endsAt ? `${dateLabel(homeResult.snapshot.activeSeason.endsAt)} 종료 예정` : "종료 일정 미정"}</small><Link href="/applications">참가 현황 보기 <ArrowRight aria-hidden="true" /></Link></> : <><strong>{homeResult.state === "ready" ? "활성 시즌 없음" : "확인할 수 없음"}</strong><small>{homeResult.state === "ready" ? "새 시즌이 시작되면 알려 드릴게요." : "데이터 연결 상태를 확인해 주세요."}</small></>}
+        </div>
+      </section>
+
       <section className="home-status-section" aria-labelledby="home-status-title">
         <div className="section-heading">
           <div>
@@ -189,14 +263,7 @@ export default async function HomePage() {
           <span>준비되지 않은 시즌·경기·구인 수치는 표시하지 않습니다.</span>
         </div>
         <HomeDataState result={homeResult} />
-        <div className="home-feed-contract" aria-label="이용 가능한 커뮤니티 기능">
-          <span data-state="ready">플레이어 <strong>검색·프로필</strong></span>
-          <span data-state="ready">시즌 <strong>참가 신청·현황</strong></span>
-          <span data-state="ready">경기 <strong>결과·랭킹</strong></span>
-          <span data-state="ready">커뮤니티 <strong>구인·갤러리</strong></span>
-          <span data-state="ready">이벤트전 <strong>신청·대진</strong></span>
-          <span data-state="ready">멸망전 <strong>경매·본선</strong></span>
-        </div>
+        {homeResult.state === "ready" ? <div className="home-feed-contract" aria-label="실제 공개 피드 건수"><span data-state="ready">최근 경기 <strong>{homeResult.snapshot.feeds.recentMatches.length}건</strong></span><span data-state="ready">구인 <strong>{homeResult.snapshot.feeds.recruits.length}건</strong></span><span data-state="ready">대회 <strong>{homeResult.snapshot.feeds.competitions.length}건</strong></span><span data-state="ready">홈 갤러리 <strong>{homeResult.snapshot.feeds.gallery.length}건</strong></span></div> : null}
       </section>
     </div>
   );

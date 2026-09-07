@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 
 import {
@@ -126,4 +126,18 @@ test("현재 경로 표시는 홈을 하위 경로 전체에 오인 적용하지
   assert.equal(isUserNavigationActive("/players", "/"), false);
   assert.equal(isUserNavigationActive("/players/example", "/players"), true);
   assert.equal(isUserNavigationActive("/matches", "/players"), false);
+});
+
+test("전역 명령 팔레트는 검색 dialog·단축키·방향키 탐색 계약을 제공한다", () => {
+  const source = readFileSync(new URL("../src/components/navigation/user-site-navigation.tsx", import.meta.url), "utf8");
+  for (const contract of [
+    'aria-label="전체 검색 열기"',
+    'aria-keyshortcuts="Control+K Meta+K /"',
+    'aria-controls={resultsId}',
+    'event.key === "ArrowDown"',
+    'event.key === "ArrowUp"',
+    'event.ctrlKey || event.metaKey',
+    "findGlobalCommands(query, { accountSignedIn })",
+    "playerSearchHref(query)",
+  ]) assert.equal(source.includes(contract), true, contract);
 });
