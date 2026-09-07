@@ -113,6 +113,13 @@
       "when": 1788766788844,
       "tag": "0015_s11_discipline_assets",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1788767221262,
+      "tag": "0016_s10_champion_catalog",
+      "breakpoints": true
     }
   ]
 }
