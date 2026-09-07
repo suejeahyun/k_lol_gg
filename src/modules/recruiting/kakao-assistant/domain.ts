@@ -1,6 +1,10 @@
 import { createHash } from "node:crypto";
 
 import type { PlayerSummary } from "@/modules/players/domain/player";
+import {
+  isSeasonApplicationPosition,
+  type SeasonApplicationPosition,
+} from "@/modules/seasons/domain/season";
 
 export type KakaoPlayerSearchItemDto = Readonly<{
   playerId: string;
@@ -52,10 +56,83 @@ export type KakaoScheduledNoticeDto = Readonly<{
   shortagePositions: readonly ("TOP" | "JGL" | "MID" | "ADC" | "SUP")[];
 }>;
 
-export type KakaoAssistantResponse = KakaoPlayerSearchDto | KakaoOpenChatStatusDto | KakaoScheduledNoticeDto;
+export type KakaoSeasonSnapshotParticipant = Readonly<{
+  slotNo: number;
+  name: string;
+  riotId: string | null;
+  mainPosition: SeasonApplicationPosition;
+  subPositions: readonly SeasonApplicationPosition[];
+  reserve: boolean;
+}>;
+
+export type KakaoSeasonSnapshotCommand = Readonly<{
+  action: "SYNC" | "CANCEL" | "STATUS";
+  seasonId: string;
+  applyDate: string;
+  recruitNo: number;
+  participants: readonly KakaoSeasonSnapshotParticipant[];
+}>;
+
+export type KakaoSeasonSnapshotEntryDto = Readonly<{
+  slotNo: number;
+  status: "APPLIED" | "MATCHED_RESERVE" | "UNMATCHED" | "AMBIGUOUS";
+  suppliedName: string;
+  player: Readonly<{ playerId: string; displayName: string; riotId: string }> | null;
+}>;
+
+export type KakaoSeasonSnapshotDto = Readonly<{
+  kind: "SEASON_APPLICATION_SNAPSHOT";
+  seasonId: string;
+  applyDate: string;
+  recruitNo: number;
+  entries: readonly KakaoSeasonSnapshotEntryDto[];
+  appliedCount: number;
+  reserveCount: number;
+  pendingCount: number;
+  cancelledCount: number;
+}>;
+
+export type KakaoImageReceiveCommand = Readonly<{
+  sessionId: string;
+  base64Image: string;
+  declaredContentType: "image/png" | "image/jpeg" | "image/webp";
+  declaredSha256Hex: string;
+  originalFileName: string | null;
+}>;
+
+export type KakaoImageSessionCommand = Readonly<{
+  roomId: string;
+  senderId: string;
+}>;
+
+export type KakaoImageSessionDto = Readonly<{
+  kind: "KAKAO_IMAGE_SESSION";
+  sessionId: string;
+  targetType: "MATCH_SUBMISSION" | "DISCIPLINE_TASK";
+  receivedImageCount: number;
+  expectedImageCount: number;
+  status: "ACTIVE" | "CANCELLED";
+  expiresAt: string;
+}>;
+
+export type KakaoImageReceiveDto = Readonly<{
+  kind: "KAKAO_IMAGE_RECEIVED";
+  assetId: string;
+  imageNumber: number;
+  receivedImageCount: number;
+  expectedImageCount: number;
+  completed: boolean;
+}>;
+
+export type KakaoAssistantResponse =
+  | KakaoPlayerSearchDto
+  | KakaoOpenChatStatusDto
+  | KakaoScheduledNoticeDto
+  | KakaoSeasonSnapshotDto
+  | KakaoImageReceiveDto;
 
 export class KakaoAssistantError extends Error {
-  constructor(readonly code: "INVALID_INPUT" | "IDEMPOTENCY_MISMATCH" | "NONCE_CONFLICT" | "INCOMPLETE_RECEIPT") {
+  constructor(readonly code: "INVALID_INPUT" | "IDEMPOTENCY_MISMATCH" | "NONCE_CONFLICT" | "INCOMPLETE_RECEIPT" | "NOT_FOUND" | "CONFLICT" | "FORBIDDEN" | "PRECONDITION_FAILED") {
     super(code);
   }
 }
@@ -113,6 +190,117 @@ export function parseManagedOperationFormBody(value: unknown) {
     throw new KakaoAssistantError("INVALID_INPUT");
   }
   return Object.freeze({ formType: value.formType, payload: value.payload });
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
+const DATE = /^\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])$/u;
+const UNSAFE_TEXT = /[\u0000-\u001f\u007f-\u009f\u061c\u200e\u200f\u202a-\u202e\u2066-\u2069]/u;
+
+function boundedText(value: unknown, maximum: number) {
+  if (typeof value !== "string") throw new KakaoAssistantError("INVALID_INPUT");
+  const normalized = value.normalize("NFKC").trim().replace(/\s+/gu, " ");
+  if (!normalized || normalized.length > maximum || UNSAFE_TEXT.test(normalized)) {
+    throw new KakaoAssistantError("INVALID_INPUT");
+  }
+  return normalized;
+}
+
+function seasonParticipant(value: unknown): KakaoSeasonSnapshotParticipant {
+  if (!isRecord(value) || !hasExactKeys(value, ["slotNo", "name", "riotId", "mainPosition", "subPositions", "reserve"])) {
+    throw new KakaoAssistantError("INVALID_INPUT");
+  }
+  if (!Number.isSafeInteger(value.slotNo) || Number(value.slotNo) < 1 || Number(value.slotNo) > 99 ||
+      typeof value.reserve !== "boolean" || !isSeasonApplicationPosition(value.mainPosition) ||
+      !Array.isArray(value.subPositions) || value.subPositions.length > 5 ||
+      !value.subPositions.every(isSeasonApplicationPosition)) {
+    throw new KakaoAssistantError("INVALID_INPUT");
+  }
+  const subPositions = [...new Set(value.subPositions as SeasonApplicationPosition[])];
+  if (subPositions.length !== value.subPositions.length || subPositions.includes(value.mainPosition) ||
+      (value.mainPosition === "ALL" && subPositions.length > 0) || subPositions.includes("ALL")) {
+    throw new KakaoAssistantError("INVALID_INPUT");
+  }
+  const riotId = value.riotId === null ? null : boundedText(value.riotId, 97);
+  if (riotId !== null && !/^.{1,64}#[^#]{1,32}$/u.test(riotId)) throw new KakaoAssistantError("INVALID_INPUT");
+  return Object.freeze({
+    slotNo: Number(value.slotNo),
+    name: boundedText(value.name, 100),
+    riotId,
+    mainPosition: value.mainPosition,
+    subPositions: Object.freeze(subPositions),
+    reserve: value.reserve,
+  });
+}
+
+export function parseSeasonSnapshotBody(value: unknown): KakaoSeasonSnapshotCommand {
+  if (!isRecord(value) || typeof value.action !== "string") throw new KakaoAssistantError("INVALID_INPUT");
+  const mutation = value.action === "SYNC";
+  if (!hasExactKeys(value, mutation
+    ? ["action", "seasonId", "applyDate", "recruitNo", "participants"]
+    : ["action", "seasonId", "applyDate", "recruitNo"])) {
+    throw new KakaoAssistantError("INVALID_INPUT");
+  }
+  if (!["SYNC", "CANCEL", "STATUS"].includes(value.action) || typeof value.seasonId !== "string" ||
+      !UUID.test(value.seasonId) || typeof value.applyDate !== "string" || !DATE.test(value.applyDate) ||
+      !Number.isSafeInteger(value.recruitNo) || Number(value.recruitNo) < 1 || Number(value.recruitNo) > 999) {
+    throw new KakaoAssistantError("INVALID_INPUT");
+  }
+  const participants = mutation
+    ? (Array.isArray(value.participants) && value.participants.length <= 50
+      ? value.participants.map(seasonParticipant)
+      : (() => { throw new KakaoAssistantError("INVALID_INPUT"); })())
+    : [];
+  if (new Set(participants.map((participant) => participant.slotNo)).size !== participants.length) {
+    throw new KakaoAssistantError("INVALID_INPUT");
+  }
+  return Object.freeze({
+    action: value.action as KakaoSeasonSnapshotCommand["action"],
+    seasonId: value.seasonId,
+    applyDate: value.applyDate,
+    recruitNo: Number(value.recruitNo),
+    participants: Object.freeze(participants),
+  });
+}
+
+export function parseKakaoImageReceiveBody(value: unknown): KakaoImageReceiveCommand {
+  if (!isRecord(value) || !hasExactKeys(value, [
+    "sessionId", "base64Image", "declaredContentType", "declaredSha256Hex", "originalFileName",
+  ])) throw new KakaoAssistantError("INVALID_INPUT");
+  if (typeof value.sessionId !== "string" || !UUID.test(value.sessionId) ||
+      typeof value.base64Image !== "string" || value.base64Image.length < 16 || value.base64Image.length > 4_000_000 ||
+      value.base64Image.length % 4 !== 0 || !/^[A-Za-z0-9+/]+={0,2}$/u.test(value.base64Image) ||
+      !["image/png", "image/jpeg", "image/webp"].includes(String(value.declaredContentType)) ||
+      typeof value.declaredSha256Hex !== "string" || !/^[a-f0-9]{64}$/u.test(value.declaredSha256Hex) ||
+      (value.originalFileName !== null && (typeof value.originalFileName !== "string" || value.originalFileName.length > 255))) {
+    throw new KakaoAssistantError("INVALID_INPUT");
+  }
+  return Object.freeze({
+    sessionId: value.sessionId,
+    base64Image: value.base64Image,
+    declaredContentType: value.declaredContentType as KakaoImageReceiveCommand["declaredContentType"],
+    declaredSha256Hex: value.declaredSha256Hex,
+    originalFileName: value.originalFileName as string | null,
+  });
+}
+
+export function parseKakaoImageSessionBody(value: unknown): KakaoImageSessionCommand {
+  if (!isRecord(value) || !hasExactKeys(value, ["roomId", "senderId"])) {
+    throw new KakaoAssistantError("INVALID_INPUT");
+  }
+  const identifier = /^[A-Za-z0-9][A-Za-z0-9._:@/+\-]{0,127}$/u;
+  if (typeof value.roomId !== "string" || typeof value.senderId !== "string" ||
+      !identifier.test(value.roomId) || !identifier.test(value.senderId)) {
+    throw new KakaoAssistantError("INVALID_INPUT");
+  }
+  return Object.freeze({ roomId: value.roomId, senderId: value.senderId });
+}
+
+export function parseKakaoImageSessionRevokeBody(value: unknown) {
+  if (!isRecord(value) || !hasExactKeys(value, ["sessionId"]) ||
+      typeof value.sessionId !== "string" || !UUID.test(value.sessionId)) {
+    throw new KakaoAssistantError("INVALID_INPUT");
+  }
+  return Object.freeze({ sessionId: value.sessionId });
 }
 
 export function toKakaoPlayerSearchItem(player: PlayerSummary): KakaoPlayerSearchItemDto {

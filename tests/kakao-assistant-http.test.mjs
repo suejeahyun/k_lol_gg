@@ -26,18 +26,28 @@ test("Kakao assistant routes share raw-body HMAC and durable read receipts", asy
   assert.doesNotMatch(notice, /fetch\(|sendMessage|axios/u);
 });
 
-test("managed form routes only to the operation-form service and unsafe bridges fail closed", async () => {
-  const [managed, season, image] = await Promise.all([
+test("managed forms remain isolated while season snapshots and owner-bound images are durable", async () => {
+  const [managed, season, image, matchSession, disciplineSession] = await Promise.all([
     read("src/app/api/integrations/kakao/managed-forms/route.ts"),
     read("src/app/api/integrations/kakao/season-applications/route.ts"),
     read("src/app/api/integrations/kakao/image-receive/route.ts"),
+    read("src/app/api/me/match-submissions/[code]/kakao-session/route.ts"),
+    read("src/app/api/me/discipline/tasks/[taskId]/kakao-session/route.ts"),
   ]);
   assert.match(managed, /parseManagedOperationFormBody/u);
   assert.match(managed, /getRuntimeOperationForms/u);
   assert.doesNotMatch(managed, /Season|PrivateAsset|fetch\(/u);
-  assert.match(season, /KAKAO_SEASON_OWNER_MAPPING_UNAVAILABLE|kakaoSeasonMappingUnavailableResponse/u);
-  assert.match(image, /kakaoImageSessionUnavailableResponse/u);
-  assert.doesNotMatch(image, /stage|storage|privateAsset|fetch\(/iu);
+  assert.match(season, /parseSeasonSnapshotBody/u);
+  assert.match(season, /syncSeasonSnapshot/u);
+  assert.match(image, /parseKakaoImageReceiveBody/u);
+  assert.match(image, /service\.receive/u);
+  assert.doesNotMatch(image, /publicCode|targetType|fetch\(/u);
+  for (const ownerRoute of [matchSession, disciplineSession]) {
+    assert.match(ownerRoute, /require(?:Match|Discipline)ApiSession/u);
+    assert.match(ownerRoute, /prepare(?:Match|Discipline)JsonMutation/u);
+    assert.match(ownerRoute, /createOwnerSession/u);
+    assert.match(ownerRoute, /revokeOwnerSession/u);
+  }
 });
 
 test("legacy Kakao paths execute the signed canonical POST handlers without redirects", async () => {

@@ -1,17 +1,22 @@
 import assert from "node:assert/strict";
-import { createHash, randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import test from "node:test";
 
 import { and, eq } from "drizzle-orm";
+import sharp from "sharp";
 
 import { KakaoAssistantError } from "../../src/modules/recruiting/kakao-assistant/domain";
 import { PostgresKakaoAssistant } from "../../src/modules/recruiting/kakao-assistant/postgres-kakao-assistant";
+import { PostgresKakaoImageReceive } from "../../src/modules/recruiting/kakao-assistant/postgres-kakao-image-receive";
+import { FakePrivateImageStorage } from "../../src/modules/matches/infrastructure/private-image";
 import type { VerifiedKakaoWebhookIntent } from "../../src/modules/recruiting/infrastructure/kakao-signature";
 import { createDatabaseHandle } from "../../src/platform/db/database";
 import { applyMigrations } from "../../src/platform/db/migrate";
 import { players } from "../../src/platform/db/schema/registry";
-import { recruitParties, recruitingCommandReceipts, recruitingNonceBindings } from "../../src/platform/db/schema/recruiting";
-import { seasonApplications, seasons } from "../../src/platform/db/schema/seasons";
+import { authSessions, userAccounts } from "../../src/platform/db/schema/auth";
+import { matchSubmissionImages, matchSubmissions, privateAssets } from "../../src/platform/db/schema/matches";
+import { kakaoImageSessions, kakaoInboundImages, recruitParties, recruitingCommandReceipts, recruitingNonceBindings } from "../../src/platform/db/schema/recruiting";
+import { seasonApplications, seasonKakaoPendingApplications, seasons } from "../../src/platform/db/schema/seasons";
 import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
 
 const principalId = "bot:kakao-assistant-contract";
@@ -140,4 +145,135 @@ test("signed Kakao reads persist safe replay receipts and never expose private m
   } finally {
     await pool.end();
   }
+});
+
+test("signed Kakao season snapshots match exact players and preserve unresolved entries for review", async () => {
+  const connectionString = process.env.TEST_DATABASE_URL;
+  assert.ok(connectionString);
+  assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
+  const { database, pool } = createDatabaseHandle(connectionString, { max: 3 });
+  const now = new Date();
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
+  const suffix = randomUUID().slice(0, 8);
+  const seasonId = randomUUID();
+  const exactPlayerId = randomUUID();
+  try {
+    await applyMigrations(database);
+    await database.insert(seasons).values({
+      id: seasonId, name: `Kakao snapshot ${suffix}`, nameNormalized: `kakao snapshot ${suffix}`,
+      status: "ACTIVE", activatedAt: now,
+    });
+    await database.insert(players).values([
+      { id: exactPlayerId, memberName: `정확-${suffix}`, memberNameNormalized: `정확-${suffix}`, nickname: `Exact${suffix}`, nicknameNormalized: `exact${suffix}`, tagLine: "KR1", tagLineNormalized: "kr1" },
+      { id: randomUUID(), memberName: `동명이-${suffix}`, memberNameNormalized: `동명이-${suffix}`, nickname: `TwinA${suffix}`, nicknameNormalized: `twina${suffix}`, tagLine: "KR1", tagLineNormalized: "kr1" },
+      { id: randomUUID(), memberName: `동명이-${suffix}`, memberNameNormalized: `동명이-${suffix}`, nickname: `TwinB${suffix}`, nicknameNormalized: `twinb${suffix}`, tagLine: "KR1", tagLineNormalized: "kr1" },
+    ]);
+    const assistant = new PostgresKakaoAssistant(database);
+    const command = {
+      action: "SYNC" as const, seasonId, applyDate: today, recruitNo: 7,
+      participants: [
+        { slotNo: 1, name: `정확-${suffix}`, riotId: `Exact${suffix}#KR1`, mainPosition: "MID" as const, subPositions: ["SUP" as const], reserve: false },
+        { slotNo: 2, name: `없는-${suffix}`, riotId: null, mainPosition: "TOP" as const, subPositions: [], reserve: false },
+        { slotNo: 3, name: `동명이-${suffix}`, riotId: null, mainPosition: "JGL" as const, subPositions: [], reserve: false },
+        { slotNo: 4, name: `정확-${suffix}`, riotId: `Exact${suffix}#KR1`, mainPosition: "ADC" as const, subPositions: [], reserve: true },
+      ],
+    };
+    const firstInput = {
+      actorPrincipalId: principalId,
+      intent: intent("nonce-season-sync-0001", "season-sync-one"),
+      requestKey: `season-sync-${suffix}`,
+      scope: "kakao:season-applications:sync",
+      command,
+      requestId: randomUUID(),
+      now,
+    };
+    const first = await assistant.syncSeasonSnapshot(firstInput);
+    assert.equal(first.body.appliedCount, 1);
+    assert.equal(first.body.reserveCount, 1);
+    assert.equal(first.body.pendingCount, 2);
+    assert.deepEqual(first.body.entries.map((entry) => entry.status), ["APPLIED", "UNMATCHED", "AMBIGUOUS", "MATCHED_RESERVE"]);
+    assert.equal((await assistant.syncSeasonSnapshot(firstInput)).replayed, true);
+    const stored = (await database.select().from(seasonApplications).where(and(
+      eq(seasonApplications.seasonId, seasonId), eq(seasonApplications.playerId, exactPlayerId),
+    )))[0];
+    assert.equal(stored?.source, "KAKAO");
+    assert.equal(stored?.sourceSlotNo, 1);
+    assert.equal((await database.select().from(seasonKakaoPendingApplications).where(and(
+      eq(seasonKakaoPendingApplications.seasonId, seasonId), eq(seasonKakaoPendingApplications.status, "ACTIVE"),
+    ))).length, 3);
+
+    const second = await assistant.syncSeasonSnapshot({
+      ...firstInput,
+      requestKey: `season-sync-second-${suffix}`,
+      requestId: randomUUID(),
+      intent: intent("nonce-season-sync-0002", "season-sync-two"),
+      command: { ...command, participants: [command.participants[0]!] },
+    });
+    assert.equal(second.body.cancelledCount, 3);
+    assert.equal(second.body.entries.length, 1);
+    assert.equal((await database.select().from(seasonKakaoPendingApplications).where(and(
+      eq(seasonKakaoPendingApplications.seasonId, seasonId), eq(seasonKakaoPendingApplications.status, "CANCELLED"),
+    ))).length, 3);
+  } finally {
+    await database.update(seasons).set({ status: "ENDED", endedAt: new Date(), revision: 1 }).where(eq(seasons.id, seasonId)).catch(() => undefined);
+    await pool.end();
+  }
+});
+
+test("owner-created Kakao image sessions bind sender, finalize private assets, replay, and revoke", async () => {
+  const connectionString = process.env.TEST_DATABASE_URL;
+  assert.ok(connectionString);
+  assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
+  const { database, pool } = createDatabaseHandle(connectionString, { max: 3 });
+  const ownerId = randomUUID();
+  const authSessionId = randomUUID();
+  const submissionId = randomUUID();
+  const publicCode = `KIMG${randomUUID().replaceAll("-", "").slice(0, 16).toUpperCase()}`;
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + 60 * 60 * 1_000);
+  const storage = new FakePrivateImageStorage();
+  try {
+    await applyMigrations(database);
+    await database.insert(userAccounts).values({ id: ownerId, loginId: `kakao-image-${ownerId}`, loginIdNormalized: `kakao-image-${ownerId}`, role: "USER", status: "APPROVED" });
+    await database.insert(authSessions).values({ id: authSessionId, tokenHash: randomBytes(32), userAccountId: ownerId, authVersion: 0, role: "USER", purpose: "ACCOUNT", issuedAt: now, expiresAt });
+    await database.insert(matchSubmissions).values({
+      id: submissionId, publicCode, ownerUserAccountId: ownerId, title: "Kakao owner bridge",
+      organizer: "contract", seriesNumber: 1, playedOn: "2026-09-07", expectedGameCount: 2,
+      source: "WEB", sourceReferenceHash: randomBytes(32), status: "AWAITING_UPLOAD",
+    });
+    const service = new PostgresKakaoImageReceive(database, storage);
+    const actorSession = { userAccountId: ownerId, sessionId: authSessionId, role: "USER" as const, authVersion: 0 };
+    const createdInput = {
+      actorSession, targetType: "MATCH_SUBMISSION" as const, targetReference: publicCode, expectedRevision: 0,
+      requestKey: `create-${ownerId}`, bodyDigestHex: digest("create-image-session"), requestId: randomUUID(),
+      scope: `me:match-submissions:${publicCode}:kakao-session:create`, roomId: "room-contract", senderId: "operator-contract", now,
+    };
+    const created = await service.createOwnerSession(createdInput);
+    assert.equal(created.body.status, "ACTIVE");
+    assert.equal((await service.createOwnerSession(createdInput)).replayed, true);
+    const storedSession = (await database.select().from(kakaoImageSessions).where(eq(kakaoImageSessions.id, created.body.sessionId)))[0];
+    assert.equal(storedSession?.roomIdHash.length, 32);
+    assert.equal(storedSession?.senderIdHash.length, 32);
+    assert.equal(JSON.stringify(storedSession).includes("room-contract"), false);
+
+    const bytes = await sharp({ create: { width: 32, height: 32, channels: 3, background: "#dff5ff" } }).png().toBuffer();
+    const sha256Hex = createHash("sha256").update(bytes).digest("hex");
+    const command = { sessionId: created.body.sessionId, base64Image: bytes.toString("base64"), declaredContentType: "image/png" as const, declaredSha256Hex: sha256Hex, originalFileName: "scoreboard.png" };
+    await assert.rejects(service.receive({ actorPrincipalId: principalId, intent: { ...intent("nonce-image-wrong", "wrong-room"), roomId: "another-room" }, requestKey: `image-wrong-${ownerId}`, scope: "kakao:image-receive", requestId: randomUUID(), command, now }), (error) => error instanceof KakaoAssistantError && error.code === "NOT_FOUND");
+    const receivedInput = { actorPrincipalId: principalId, intent: intent("nonce-image-valid", "valid-image"), requestKey: `image-valid-${ownerId}`, scope: "kakao:image-receive", requestId: randomUUID(), command, now };
+    const received = await service.receive(receivedInput);
+    assert.equal(received.body.imageNumber, 1);
+    assert.equal(received.body.completed, false);
+    assert.equal((await service.receive(receivedInput)).replayed, true);
+    assert.equal((await database.select().from(kakaoInboundImages).where(eq(kakaoInboundImages.status, "READY"))).length, 1);
+    assert.equal((await database.select().from(privateAssets).where(and(eq(privateAssets.id, received.body.assetId), eq(privateAssets.status, "READY")))).length, 1);
+    assert.equal((await database.select().from(matchSubmissionImages).where(eq(matchSubmissionImages.submissionId, submissionId))).length, 1);
+
+    const revoked = await service.revokeOwnerSession({
+      actorSession, targetType: "MATCH_SUBMISSION", targetReference: publicCode, expectedRevision: 0,
+      requestKey: `revoke-${ownerId}`, bodyDigestHex: digest("revoke-image-session"), requestId: randomUUID(),
+      scope: `me:match-submissions:${publicCode}:kakao-session:revoke`, sessionId: created.body.sessionId, now: new Date(now.getTime() + 1_000),
+    });
+    assert.equal(revoked.body.status, "CANCELLED");
+  } finally { await pool.end(); }
 });

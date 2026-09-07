@@ -1,5 +1,6 @@
 import {
   definePublicProblem,
+  formatRevisionEtag,
   noStoreJsonResponse,
   problemForIdempotencyKeyError,
   problemForJsonBodyError,
@@ -12,25 +13,28 @@ import {
 import { MAXIMUM_KAKAO_BODY_BYTES, readVerifiedKakaoHttpRequest } from "../infrastructure/kakao-http-request";
 import { KakaoAssistantError } from "./domain";
 import type { KakaoAssistantResult } from "./postgres-kakao-assistant";
+import type { KakaoImageSessionResult } from "./postgres-kakao-image-receive";
 
 const problems = Object.freeze({
   forbidden: definePublicProblem({ code: "WEBHOOK_FORBIDDEN", status: 401, title: "웹훅 인증에 실패했습니다.", detail: "서명과 발신 설정을 확인해 주세요." }),
   invalid: definePublicProblem({ code: "INVALID_KAKAO_REQUEST", status: 400, title: "Kakao 요청이 올바르지 않습니다.", detail: "명령과 허용된 입력 필드를 확인해 주세요." }),
   mismatch: definePublicProblem({ code: "IDEMPOTENCY_MISMATCH", status: 409, title: "멱등성 키가 다른 요청에 사용되었습니다.", detail: "새 Idempotency-Key로 다시 요청해 주세요." }),
   unavailable: definePublicProblem({ code: "KAKAO_ASSISTANT_UNAVAILABLE", status: 503, title: "Kakao 보조 서비스를 사용할 수 없습니다.", detail: "잠시 후 다시 시도해 주세요." }),
-  seasonMapping: definePublicProblem({ code: "KAKAO_SEASON_OWNER_MAPPING_UNAVAILABLE", status: 503, title: "Kakao 시즌 신청을 처리할 수 없습니다.", detail: "발신자를 승인 계정의 플레이어로 안전하게 확인할 수 없어 변경하지 않았습니다." }),
-  imageSession: definePublicProblem({ code: "KAKAO_IMAGE_SESSION_UNAVAILABLE", status: 503, title: "Kakao 이미지 접수를 처리할 수 없습니다.", detail: "검증된 비공개 업로드 세션이 없어 이미지를 저장하지 않았습니다." }),
+  notFound: definePublicProblem({ code: "KAKAO_TARGET_NOT_FOUND", status: 404, title: "대상을 찾을 수 없습니다.", detail: "요청한 Kakao 연동 대상을 찾을 수 없습니다." }),
+  conflict: definePublicProblem({ code: "KAKAO_STATE_CONFLICT", status: 409, title: "현재 상태에서는 처리할 수 없습니다.", detail: "운영 날짜, 모집 기간 또는 기존 검토 상태를 확인해 주세요." }),
+  precondition: definePublicProblem({ code: "PRECONDITION_FAILED", status: 412, title: "다른 변경이 먼저 반영되었습니다.", detail: "최신 상태를 확인한 뒤 다시 시도해 주세요." }),
+  ownerForbidden: definePublicProblem({ code: "FORBIDDEN", status: 403, title: "요청 권한이 없습니다.", detail: "승인된 대상 소유자 계정으로 다시 시도해 주세요." }),
 });
 
-export async function prepareKakaoSignedJson(request: Request) {
+export async function prepareKakaoSignedJson(request: Request, maximumBytes = MAXIMUM_KAKAO_BODY_BYTES) {
   const traceId = readValidatedTraceId(request.headers);
-  const verified = await readVerifiedKakaoHttpRequest(request);
+  const verified = await readVerifiedKakaoHttpRequest(request, new Date(), maximumBytes);
   if (!verified) return { ok: false as const, response: problemResponse(problems.forbidden, { traceId }) };
   const parsed = await readJsonBody(new Request(request.url, {
     method: "POST",
     headers: { "content-type": request.headers.get("content-type") ?? "" },
     body: verified.rawBody,
-  }), { maximumBytes: MAXIMUM_KAKAO_BODY_BYTES });
+  }), { maximumBytes });
   if (!parsed.ok) return { ok: false as const, response: problemResponse(problemForJsonBodyError(parsed.error), { traceId }) };
   const idempotency = readIdempotencyKey(request.headers);
   if (!idempotency.ok) return { ok: false as const, response: problemResponse(problemForIdempotencyKeyError(idempotency.error), { traceId }) };
@@ -55,18 +59,36 @@ export function kakaoAssistantErrorResponse(error: unknown, traceId?: string) {
     if (error.code === "INVALID_INPUT") return problemResponse(problems.invalid, { traceId });
     if (error.code === "IDEMPOTENCY_MISMATCH") return problemResponse(problems.mismatch, { traceId });
     if (error.code === "NONCE_CONFLICT") return problemResponse(problems.forbidden, { traceId });
+    if (error.code === "NOT_FOUND") return problemResponse(problems.notFound, { traceId });
+    if (error.code === "CONFLICT") return problemResponse(problems.conflict, { traceId });
+    if (error.code === "FORBIDDEN") return problemResponse(problems.forbidden, { traceId });
+    if (error.code === "PRECONDITION_FAILED") return problemResponse(problems.precondition, { traceId });
+  }
+  return problemResponse(problems.unavailable, { traceId });
+}
+
+export function kakaoImageSessionResponse(result: KakaoImageSessionResult, traceId?: string) {
+  return noStoreJsonResponse(result.body, {
+    traceId,
+    headers: {
+      ETag: formatRevisionEtag(result.revision),
+      ...(result.replayed ? { "Idempotency-Replayed": "true" } : {}),
+    },
+  });
+}
+
+export function kakaoOwnerImageSessionErrorResponse(error: unknown, traceId?: string) {
+  if (error instanceof KakaoAssistantError) {
+    if (error.code === "INVALID_INPUT") return problemResponse(problems.invalid, { traceId });
+    if (error.code === "IDEMPOTENCY_MISMATCH") return problemResponse(problems.mismatch, { traceId });
+    if (error.code === "NOT_FOUND") return problemResponse(problems.notFound, { traceId });
+    if (error.code === "FORBIDDEN") return problemResponse(problems.ownerForbidden, { traceId });
+    if (error.code === "PRECONDITION_FAILED") return problemResponse(problems.precondition, { traceId });
+    if (error.code === "CONFLICT") return problemResponse(problems.conflict, { traceId });
   }
   return problemResponse(problems.unavailable, { traceId });
 }
 
 export function kakaoAssistantUnavailableResponse(traceId?: string) {
   return problemResponse(problems.unavailable, { traceId });
-}
-
-export function kakaoSeasonMappingUnavailableResponse(traceId?: string) {
-  return problemResponse(problems.seasonMapping, { traceId });
-}
-
-export function kakaoImageSessionUnavailableResponse(traceId?: string) {
-  return problemResponse(problems.imageSession, { traceId });
 }

@@ -62,9 +62,11 @@ export function verifyKakaoWebhook(input: Readonly<{
   botSenderId: string;
   nonceAlreadyUsed: boolean;
   maximumSkewSeconds?: number;
+  maximumBodyBytes?: number;
 }>): KakaoWebhookVerification {
   const { request } = input;
   const maximumSkewSeconds = input.maximumSkewSeconds ?? MAXIMUM_SKEW_SECONDS;
+  const maximumBodyBytes = input.maximumBodyBytes ?? 256 * 1_024;
   if (
     !Number.isSafeInteger(request.timestampSeconds) || request.timestampSeconds < 0 ||
     !Number.isFinite(input.now.getTime()) ||
@@ -72,7 +74,8 @@ export function verifyKakaoWebhook(input: Readonly<{
     !/^[A-Za-z0-9_-]{16,100}$/u.test(request.nonce) ||
     !safeIdentifier(request.roomId) || !safeIdentifier(request.senderId) ||
     !safeIdentifier(input.botSenderId) ||
-    !(request.rawBody instanceof Uint8Array) || request.rawBody.byteLength < 2 || request.rawBody.byteLength > 256 * 1_024 ||
+    !Number.isSafeInteger(maximumBodyBytes) || maximumBodyBytes < 2 || maximumBodyBytes > 4_200_000 ||
+    !(request.rawBody instanceof Uint8Array) || request.rawBody.byteLength < 2 || request.rawBody.byteLength > maximumBodyBytes ||
     input.secrets.length < 1 || input.secrets.length > 2 ||
     new Set(input.secrets.map((entry) => entry.keyId)).size !== input.secrets.length ||
     input.secrets.some((entry) => !safeIdentifier(entry.keyId) || !(entry.secret instanceof Uint8Array) || entry.secret.byteLength < 32)

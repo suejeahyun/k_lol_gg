@@ -13,6 +13,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { userAccounts } from "./auth";
+import { privateAssets } from "./matches";
 import { recruitingSchema } from "./namespaces";
 import { bytea } from "./primitives";
 
@@ -31,6 +32,9 @@ export const scrimRecruitStatus = recruitingSchema.enum("scrim_status", [
 export const recruitingOutboxStatus = recruitingSchema.enum("outbox_status", ["PENDING", "DELIVERED"]);
 export const operationFormType = recruitingSchema.enum("operation_form_type", ["friends", "leaves", "meetups", "suggestions"]);
 export const operationFormStatus = recruitingSchema.enum("operation_form_status", ["PENDING", "IN_REVIEW", "COMPLETED", "REJECTED", "CANCELLED"]);
+export const kakaoImageTargetType = recruitingSchema.enum("kakao_image_target_type", ["MATCH_SUBMISSION", "DISCIPLINE_TASK"]);
+export const kakaoImageSessionStatus = recruitingSchema.enum("kakao_image_session_status", ["ACTIVE", "COMPLETE", "CANCELLED", "EXPIRED"]);
+export const kakaoInboundImageStatus = recruitingSchema.enum("kakao_inbound_image_status", ["STAGED", "READY", "DELETE_PENDING"]);
 
 export const recruitParties = recruitingSchema.table("parties", {
   id: uuid("id").primaryKey(),
@@ -127,6 +131,60 @@ export const recruitingNonceBindings = recruitingSchema.table("nonce_bindings", 
   check("recruiting_nonce_expiry", sql`${table.expiresAt} > ${table.createdAt}`),
 ]);
 
+export const kakaoImageSessions = recruitingSchema.table("kakao_image_sessions", {
+  id: uuid("id").primaryKey(),
+  createdByUserAccountId: uuid("created_by_user_account_id").notNull().references(() => userAccounts.id, { onDelete: "restrict" }),
+  targetType: kakaoImageTargetType("target_type").notNull(),
+  targetId: uuid("target_id").notNull(),
+  roomIdHash: bytea("room_id_hash").notNull(),
+  senderIdHash: bytea("sender_id_hash").notNull(),
+  expectedImageCount: integer("expected_image_count").notNull(),
+  receivedImageCount: integer("received_image_count").default(0).notNull(),
+  status: kakaoImageSessionStatus("status").default("ACTIVE").notNull(),
+  expiresAt: timestamptz("expires_at").notNull(),
+  completedAt: timestamptz("completed_at"),
+  cancelledAt: timestamptz("cancelled_at"),
+  createdAt: timestamptz("created_at").defaultNow().notNull(),
+  updatedAt: timestamptz("updated_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("kakao_image_sessions_active_sender_uidx").on(table.roomIdHash, table.senderIdHash).where(sql`${table.status} = 'ACTIVE'`),
+  uniqueIndex("kakao_image_sessions_active_target_uidx").on(table.targetType, table.targetId).where(sql`${table.status} = 'ACTIVE'`),
+  index("kakao_image_sessions_target_idx").on(table.targetType, table.targetId, table.status),
+  index("kakao_image_sessions_expiry_idx").on(table.status, table.expiresAt),
+  check("kakao_image_sessions_room_hash", sql`octet_length(${table.roomIdHash}) = 32`),
+  check("kakao_image_sessions_sender_hash", sql`octet_length(${table.senderIdHash}) = 32`),
+  check("kakao_image_sessions_expected_count", sql`${table.expectedImageCount} BETWEEN 1 AND 100`),
+  check("kakao_image_sessions_received_count", sql`${table.receivedImageCount} BETWEEN 0 AND ${table.expectedImageCount}`),
+  check("kakao_image_sessions_lifecycle", sql`(${table.status} = 'ACTIVE' AND ${table.completedAt} IS NULL AND ${table.cancelledAt} IS NULL)
+    OR (${table.status} = 'COMPLETE' AND ${table.completedAt} IS NOT NULL AND ${table.cancelledAt} IS NULL AND ${table.receivedImageCount} = ${table.expectedImageCount})
+    OR (${table.status} IN ('CANCELLED', 'EXPIRED') AND ${table.completedAt} IS NULL AND ${table.cancelledAt} IS NOT NULL)`),
+]);
+
+export const kakaoInboundImages = recruitingSchema.table("kakao_inbound_images", {
+  id: uuid("id").primaryKey(),
+  sessionId: uuid("session_id").notNull().references(() => kakaoImageSessions.id, { onDelete: "restrict" }),
+  privateAssetId: uuid("private_asset_id").notNull().references(() => privateAssets.id, { onDelete: "restrict" }),
+  imageNumber: integer("image_number").notNull(),
+  requestDigest: bytea("request_digest").notNull(),
+  sha256: bytea("sha256").notNull(),
+  status: kakaoInboundImageStatus("status").default("STAGED").notNull(),
+  createdAt: timestamptz("created_at").defaultNow().notNull(),
+  readyAt: timestamptz("ready_at"),
+  deleteRequestedAt: timestamptz("delete_requested_at"),
+}, (table) => [
+  uniqueIndex("kakao_inbound_images_asset_uidx").on(table.privateAssetId),
+  uniqueIndex("kakao_inbound_images_session_number_uidx").on(table.sessionId, table.imageNumber),
+  uniqueIndex("kakao_inbound_images_session_sha_uidx").on(table.sessionId, table.sha256),
+  uniqueIndex("kakao_inbound_images_request_digest_uidx").on(table.requestDigest),
+  index("kakao_inbound_images_session_status_idx").on(table.sessionId, table.status),
+  check("kakao_inbound_images_number", sql`${table.imageNumber} BETWEEN 1 AND 100`),
+  check("kakao_inbound_images_request_digest", sql`octet_length(${table.requestDigest}) = 32`),
+  check("kakao_inbound_images_sha", sql`octet_length(${table.sha256}) = 32`),
+  check("kakao_inbound_images_lifecycle", sql`(${table.status} = 'STAGED' AND ${table.readyAt} IS NULL AND ${table.deleteRequestedAt} IS NULL)
+    OR (${table.status} = 'READY' AND ${table.readyAt} IS NOT NULL AND ${table.deleteRequestedAt} IS NULL)
+    OR (${table.status} = 'DELETE_PENDING' AND ${table.deleteRequestedAt} IS NOT NULL)`),
+]);
+
 export const operationForms = recruitingSchema.table("operation_forms", {
   id: uuid("id").primaryKey(),
   revision: bigint("revision", { mode: "number" }).default(0).notNull(),
@@ -171,7 +229,7 @@ export const recruitingOutbox = recruitingSchema.table("outbox", {
   uniqueIndex("recruiting_outbox_request_uidx").on(table.requestId),
   uniqueIndex("recruiting_outbox_dedupe_uidx").on(table.dedupeKey),
   index("recruiting_outbox_pending_idx").on(table.createdAt, table.id).where(sql`${table.status} = 'PENDING'`),
-  check("recruiting_outbox_aggregate_type", sql`${table.aggregateType} IN ('RECRUIT_PARTY', 'SCRIM_RECRUIT', 'OPERATION_FORM')`),
+  check("recruiting_outbox_aggregate_type", sql`${table.aggregateType} IN ('RECRUIT_PARTY', 'SCRIM_RECRUIT', 'OPERATION_FORM', 'KAKAO_IMAGE_SESSION')`),
   check("recruiting_outbox_revision_nonnegative", sql`${table.aggregateRevision} >= 0`),
   check("recruiting_outbox_payload_object", sql`jsonb_typeof(${table.payloadJson}) = 'object'`),
   check("recruiting_outbox_delivery_consistency", sql`(${table.status} = 'PENDING' AND ${table.deliveredAt} IS NULL) OR (${table.status} = 'DELIVERED' AND ${table.deliveredAt} IS NOT NULL)`),

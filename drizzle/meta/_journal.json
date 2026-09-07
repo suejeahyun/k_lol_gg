@@ -127,6 +127,20 @@
       "when": 1788767976741,
       "tag": "0017_s09_operation_forms",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1788774959818,
+      "tag": "0018_s09_kakao_parity",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1788775843678,
+      "tag": "0019_s09_kakao_image_sessions",
+      "breakpoints": true
     }
   ]
 }

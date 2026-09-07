@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
   bigint,
+  boolean,
   check,
   date,
   foreignKey,
@@ -121,6 +122,7 @@ export const seasonApplications = competitionSchema.table(
       .references(() => players.id, { onDelete: "restrict" }),
     applyDate: date("apply_date", { mode: "string" }).notNull(),
     recruitNo: integer("recruit_no").default(1).notNull(),
+    sourceSlotNo: integer("source_slot_no"),
     mainPosition: seasonApplicationPosition("main_position").notNull(),
     subPositions: seasonApplicationPosition("sub_positions")
       .array()
@@ -161,6 +163,7 @@ export const seasonApplications = competitionSchema.table(
       sql`${table.legacyId} IS NULL OR ${table.legacyId} > 0`,
     ),
     check("season_applications_recruit_no_positive", sql`${table.recruitNo} > 0`),
+    check("season_applications_source_slot_no_positive", sql`${table.sourceSlotNo} IS NULL OR ${table.sourceSlotNo} > 0`),
     check("season_applications_revision_nonnegative", sql`${table.revision} >= 0`),
     check(
       "season_applications_source_hash_32_bytes",
@@ -209,6 +212,93 @@ export const seasonApplications = competitionSchema.table(
         (${table.status} = 'CANCELLED' AND ${table.cancelledAt} IS NOT NULL)
         OR (${table.status} <> 'CANCELLED' AND ${table.cancelledAt} IS NULL)
       )`,
+    ),
+  ],
+);
+
+export const seasonKakaoPendingMatchState = competitionSchema.enum(
+  "season_kakao_pending_match_state",
+  ["MATCHED_RESERVE", "UNMATCHED", "AMBIGUOUS"],
+);
+export const seasonKakaoPendingStatus = competitionSchema.enum(
+  "season_kakao_pending_status",
+  ["ACTIVE", "CANCELLED", "RESOLVED"],
+);
+
+/**
+ * Lossless review queue for Kakao snapshot entries that cannot safely become an
+ * APPLIED player row. Raw room/sender identifiers are deliberately not stored.
+ */
+export const seasonKakaoPendingApplications = competitionSchema.table(
+  "season_kakao_pending_applications",
+  {
+    id: uuid("id").primaryKey(),
+    seasonId: uuid("season_id").notNull().references(() => seasons.id, { onDelete: "restrict" }),
+    matchedPlayerId: uuid("matched_player_id").references(() => players.id, { onDelete: "restrict" }),
+    applyDate: date("apply_date", { mode: "string" }).notNull(),
+    recruitNo: integer("recruit_no").notNull(),
+    slotNo: integer("slot_no").notNull(),
+    suppliedName: varchar("supplied_name", { length: 100 }).notNull(),
+    suppliedRiotId: varchar("supplied_riot_id", { length: 97 }),
+    mainPosition: seasonApplicationPosition("main_position").notNull(),
+    subPositions: seasonApplicationPosition("sub_positions")
+      .array()
+      .default(sql`ARRAY[]::competition.season_application_position[]`)
+      .notNull(),
+    reserve: boolean("reserve").default(false).notNull(),
+    matchState: seasonKakaoPendingMatchState("match_state").notNull(),
+    status: seasonKakaoPendingStatus("status").default("ACTIVE").notNull(),
+    sourceReferenceHash: bytea("source_reference_hash").notNull(),
+    cancelledAt: timestamptz("cancelled_at"),
+    resolvedAt: timestamptz("resolved_at"),
+    revision: bigint("revision", { mode: "number" }).default(0).notNull(),
+    createdAt: timestamptz("created_at").defaultNow().notNull(),
+    updatedAt: timestamptz("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("season_kakao_pending_slot_uidx").on(
+      table.seasonId,
+      table.applyDate,
+      table.recruitNo,
+      table.slotNo,
+    ),
+    index("season_kakao_pending_review_idx").on(
+      table.seasonId,
+      table.applyDate,
+      table.recruitNo,
+      table.status,
+      table.slotNo,
+    ),
+    index("season_kakao_pending_player_idx").on(table.matchedPlayerId, table.status),
+    check("season_kakao_pending_recruit_no_positive", sql`${table.recruitNo} > 0`),
+    check("season_kakao_pending_slot_no_positive", sql`${table.slotNo} > 0`),
+    check("season_kakao_pending_name_nonempty", sql`char_length(${table.suppliedName}) > 0`),
+    check("season_kakao_pending_source_hash_32_bytes", sql`octet_length(${table.sourceReferenceHash}) = 32`),
+    check("season_kakao_pending_revision_nonnegative", sql`${table.revision} >= 0`),
+    check(
+      "season_kakao_pending_match_consistency",
+      sql`(${table.matchState} = 'MATCHED_RESERVE' AND ${table.reserve} AND ${table.matchedPlayerId} IS NOT NULL)
+        OR (${table.matchState} IN ('UNMATCHED', 'AMBIGUOUS') AND ${table.matchedPlayerId} IS NULL)`,
+    ),
+    check(
+      "season_kakao_pending_lifecycle_consistency",
+      sql`(${table.status} = 'ACTIVE' AND ${table.cancelledAt} IS NULL AND ${table.resolvedAt} IS NULL)
+        OR (${table.status} = 'CANCELLED' AND ${table.cancelledAt} IS NOT NULL AND ${table.resolvedAt} IS NULL)
+        OR (${table.status} = 'RESOLVED' AND ${table.cancelledAt} IS NULL AND ${table.resolvedAt} IS NOT NULL)`,
+    ),
+    check(
+      "season_kakao_pending_sub_positions_valid",
+      sql`cardinality(${table.subPositions}) <= 5
+        AND NOT (${table.mainPosition} = ANY(${table.subPositions}))
+        AND ((${table.mainPosition} = 'ALL' AND cardinality(${table.subPositions}) = 0)
+          OR (${table.mainPosition} <> 'ALL' AND NOT ('ALL' = ANY(${table.subPositions}))))
+        AND cardinality(${table.subPositions}) =
+          (case when 'TOP' = ANY(${table.subPositions}) then 1 else 0 end) +
+          (case when 'JGL' = ANY(${table.subPositions}) then 1 else 0 end) +
+          (case when 'MID' = ANY(${table.subPositions}) then 1 else 0 end) +
+          (case when 'ADC' = ANY(${table.subPositions}) then 1 else 0 end) +
+          (case when 'SUP' = ANY(${table.subPositions}) then 1 else 0 end) +
+          (case when 'ALL' = ANY(${table.subPositions}) then 1 else 0 end)`,
     ),
   ],
 );

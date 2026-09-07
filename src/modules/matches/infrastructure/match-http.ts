@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 
 import { hasSameOrigin } from "@/modules/auth/application/mutation-request-guard";
 import { resolveRateLimitClientKey } from "@/modules/auth/infrastructure/rate-limit-client-key";
@@ -222,6 +222,7 @@ function mutationHeaderGuard(
     ok: true as const,
     traceId,
     expectedRevision: revision.revision,
+    requestKey: idempotency.key.normalized,
     context: commandContext(request, scope, session, purpose, idempotency),
   };
 }
@@ -242,7 +243,11 @@ export async function prepareMatchJsonMutation(
       response: problemResponse(problemForJsonBodyError(body.error), { traceId: headers.traceId }),
     };
   }
-  return { ...headers, body: body.value };
+  return {
+    ...headers,
+    body: body.value,
+    bodyDigestHex: createHash("sha256").update(JSON.stringify(body.value)).digest("hex"),
+  };
 }
 
 function decodedUploadFileName(value: string | null) {

@@ -1,12 +1,14 @@
 import { createHash, randomUUID } from "node:crypto";
 
-import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm";
 
 import { createSearchPlayers } from "@/modules/players/application/search-players";
 import { PostgresPlayerRepository } from "@/modules/players/infrastructure/postgres-player-repository";
 import type { V2Database } from "@/platform/db/database";
+import { auditEvents } from "@/platform/db/schema/audit";
 import { recruitParties, recruitingCommandReceipts, recruitingNonceBindings, scrimRecruits } from "@/platform/db/schema/recruiting";
-import { seasonApplications, seasons } from "@/platform/db/schema/seasons";
+import { players } from "@/platform/db/schema/registry";
+import { seasonApplications, seasonKakaoPendingApplications, seasons } from "@/platform/db/schema/seasons";
 import { withTransaction, type V2Transaction } from "@/platform/db/transaction";
 
 import type { VerifiedKakaoWebhookIntent } from "../infrastructure/kakao-signature";
@@ -17,6 +19,9 @@ import {
   type KakaoAssistantResponse,
   type KakaoOpenChatStatusDto,
   type KakaoPlayerSearchDto,
+  type KakaoSeasonSnapshotCommand,
+  type KakaoSeasonSnapshotDto,
+  type KakaoSeasonSnapshotEntryDto,
   type KakaoScheduledNoticeDto,
 } from "./domain";
 
@@ -45,6 +50,20 @@ function kstDateKey(now: Date) {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit",
   }).format(now);
+}
+
+function normalizedIdentity(value: string) {
+  return value.trim().normalize("NFKC").toLocaleLowerCase("ko-KR");
+}
+
+function splitRiotId(value: string | null) {
+  if (!value) return null;
+  const separator = value.lastIndexOf("#");
+  if (separator < 1 || separator === value.length - 1) return null;
+  return {
+    nickname: normalizedIdentity(value.slice(0, separator)),
+    tagLine: normalizedIdentity(value.slice(separator + 1)),
+  };
 }
 
 export class PostgresKakaoAssistant {
@@ -254,6 +273,222 @@ export class PostgresKakaoAssistant {
         remaining: 10,
         positionCounts: Object.freeze(positionCounts),
         shortagePositions: Object.freeze(["TOP", "JGL", "MID", "ADC", "SUP"] as const),
+      });
+    });
+  }
+
+  syncSeasonSnapshot(input: SignedReadInput & Readonly<{
+    command: KakaoSeasonSnapshotCommand;
+    requestId: string;
+    now?: Date;
+  }>): Promise<KakaoAssistantResult<KakaoSeasonSnapshotDto>> {
+    return this.execute(input, async (transaction) => {
+      const now = input.now ?? new Date();
+      const command = input.command;
+      const season = (await transaction.select().from(seasons).where(eq(seasons.id, command.seasonId)).for("update").limit(1))[0];
+      if (!season) throw new KakaoAssistantError("NOT_FOUND");
+      if (command.action !== "STATUS") {
+        if (season.status !== "ACTIVE" ||
+            (season.applicationsOpenAt && season.applicationsOpenAt > now) ||
+            (season.applicationsCloseAt && season.applicationsCloseAt <= now) ||
+            command.applyDate !== kstDateKey(now)) {
+          throw new KakaoAssistantError("CONFLICT");
+        }
+      }
+      const roundKey = `${command.seasonId}:${command.applyDate}:${command.recruitNo}`;
+      await transaction.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`kakao-season:${roundKey}`}, 0))`);
+
+      let cancelledCount = 0;
+      if (command.action === "SYNC") {
+        const sourceHash = Buffer.from(input.intent.bodyDigestHex, "hex");
+        const matched: Array<{
+          participant: KakaoSeasonSnapshotCommand["participants"][number];
+          candidates: (typeof players.$inferSelect)[];
+        }> = [];
+        for (const participant of command.participants) {
+          const riot = splitRiotId(participant.riotId);
+          const identity = normalizedIdentity(participant.name);
+          const candidates = await transaction.select().from(players).where(and(
+            eq(players.status, "ACTIVE"),
+            riot
+              ? and(eq(players.nicknameNormalized, riot.nickname), eq(players.tagLineNormalized, riot.tagLine))
+              : or(eq(players.memberNameNormalized, identity), eq(players.nicknameNormalized, identity)),
+          )).orderBy(asc(players.id)).limit(3);
+          matched.push({ participant, candidates });
+        }
+        const uniqueMatchedIds = matched
+          .filter((item) => item.candidates.length === 1 && !item.participant.reserve)
+          .map((item) => item.candidates[0]!.id);
+        if (new Set(uniqueMatchedIds).size !== uniqueMatchedIds.length) throw new KakaoAssistantError("CONFLICT");
+
+        const currentApplications = await transaction.select().from(seasonApplications).where(and(
+          eq(seasonApplications.seasonId, command.seasonId),
+          eq(seasonApplications.applyDate, command.applyDate),
+          eq(seasonApplications.recruitNo, command.recruitNo),
+          eq(seasonApplications.source, "KAKAO"),
+        )).for("update");
+        for (const current of currentApplications) {
+          if (uniqueMatchedIds.includes(current.playerId) || current.status === "CANCELLED") continue;
+          if (current.status !== "APPLIED") throw new KakaoAssistantError("CONFLICT");
+          await transaction.update(seasonApplications).set({
+            status: "CANCELLED", cancelledAt: now, revision: sql`${seasonApplications.revision} + 1`, updatedAt: now,
+          }).where(eq(seasonApplications.id, current.id));
+          cancelledCount += 1;
+        }
+
+        const activeSlots = new Set(command.participants.map((participant) => participant.slotNo));
+        const currentPending = await transaction.select().from(seasonKakaoPendingApplications).where(and(
+          eq(seasonKakaoPendingApplications.seasonId, command.seasonId),
+          eq(seasonKakaoPendingApplications.applyDate, command.applyDate),
+          eq(seasonKakaoPendingApplications.recruitNo, command.recruitNo),
+          eq(seasonKakaoPendingApplications.status, "ACTIVE"),
+        )).for("update");
+        for (const pending of currentPending) {
+          if (activeSlots.has(pending.slotNo)) continue;
+          await transaction.update(seasonKakaoPendingApplications).set({
+            status: "CANCELLED", cancelledAt: now, revision: sql`${seasonKakaoPendingApplications.revision} + 1`, updatedAt: now,
+          }).where(eq(seasonKakaoPendingApplications.id, pending.id));
+          cancelledCount += 1;
+        }
+
+        for (const { participant, candidates } of matched) {
+          const matchedPlayer = candidates.length === 1 ? candidates[0]! : null;
+          if (matchedPlayer && !participant.reserve) {
+            const current = (await transaction.select().from(seasonApplications).where(and(
+              eq(seasonApplications.seasonId, command.seasonId),
+              eq(seasonApplications.playerId, matchedPlayer.id),
+              eq(seasonApplications.applyDate, command.applyDate),
+              eq(seasonApplications.recruitNo, command.recruitNo),
+            )).for("update").limit(1))[0];
+            if (current && !["APPLIED", "CANCELLED"].includes(current.status)) throw new KakaoAssistantError("CONFLICT");
+            if (current) {
+              await transaction.update(seasonApplications).set({
+                sourceSlotNo: participant.slotNo,
+                mainPosition: participant.mainPosition,
+                subPositions: [...participant.subPositions],
+                status: "APPLIED",
+                sourceReferenceHash: current.source === "KAKAO" ? sourceHash : null,
+                cancelledAt: null,
+                revision: sql`${seasonApplications.revision} + 1`,
+                updatedAt: now,
+              }).where(eq(seasonApplications.id, current.id));
+            } else {
+              await transaction.insert(seasonApplications).values({
+                id: randomUUID(), seasonId: command.seasonId, playerId: matchedPlayer.id,
+                applyDate: command.applyDate, recruitNo: command.recruitNo, sourceSlotNo: participant.slotNo,
+                mainPosition: participant.mainPosition, subPositions: [...participant.subPositions], status: "APPLIED",
+                source: "KAKAO", sourceReferenceHash: sourceHash, createdAt: now, updatedAt: now,
+              });
+            }
+            const existingPending = currentPending.find((pending) => pending.slotNo === participant.slotNo);
+            if (existingPending) await transaction.update(seasonKakaoPendingApplications).set({
+              status: "RESOLVED", resolvedAt: now, cancelledAt: null,
+              revision: sql`${seasonKakaoPendingApplications.revision} + 1`, updatedAt: now,
+            }).where(eq(seasonKakaoPendingApplications.id, existingPending.id));
+            continue;
+          }
+
+          const matchState = matchedPlayer && participant.reserve
+            ? "MATCHED_RESERVE" as const
+            : candidates.length > 1 ? "AMBIGUOUS" as const : "UNMATCHED" as const;
+          const pendingValues = {
+            matchedPlayerId: matchState === "MATCHED_RESERVE" ? matchedPlayer!.id : null,
+            suppliedName: participant.name,
+            suppliedRiotId: participant.riotId,
+            mainPosition: participant.mainPosition,
+            subPositions: [...participant.subPositions],
+            reserve: participant.reserve,
+            matchState,
+            status: "ACTIVE" as const,
+            sourceReferenceHash: sourceHash,
+            cancelledAt: null,
+            resolvedAt: null,
+            updatedAt: now,
+          };
+          const existing = currentPending.find((pending) => pending.slotNo === participant.slotNo);
+          if (existing) await transaction.update(seasonKakaoPendingApplications).set({
+            ...pendingValues, revision: sql`${seasonKakaoPendingApplications.revision} + 1`,
+          }).where(eq(seasonKakaoPendingApplications.id, existing.id));
+          else await transaction.insert(seasonKakaoPendingApplications).values({
+            id: randomUUID(), seasonId: command.seasonId, applyDate: command.applyDate,
+            recruitNo: command.recruitNo, slotNo: participant.slotNo, createdAt: now,
+            ...pendingValues,
+          });
+        }
+        await transaction.insert(auditEvents).values({
+          requestId: input.requestId,
+          action: "KAKAO_SEASON_SNAPSHOT_SYNCED",
+          targetType: "SEASON_RECRUIT_ROUND",
+          targetId: roundKey,
+          metadataJson: {
+            participantCount: command.participants.length,
+            cancelledCount,
+            sourceDigest: input.intent.bodyDigestHex,
+          },
+          createdAt: now,
+        });
+      } else if (command.action === "CANCEL") {
+        const cancelled = await transaction.update(seasonApplications).set({
+          status: "CANCELLED", cancelledAt: now, revision: sql`${seasonApplications.revision} + 1`, updatedAt: now,
+        }).where(and(
+          eq(seasonApplications.seasonId, command.seasonId), eq(seasonApplications.applyDate, command.applyDate),
+          eq(seasonApplications.recruitNo, command.recruitNo), eq(seasonApplications.source, "KAKAO"),
+          eq(seasonApplications.status, "APPLIED"),
+        )).returning({ id: seasonApplications.id });
+        const pending = await transaction.update(seasonKakaoPendingApplications).set({
+          status: "CANCELLED", cancelledAt: now, revision: sql`${seasonKakaoPendingApplications.revision} + 1`, updatedAt: now,
+        }).where(and(
+          eq(seasonKakaoPendingApplications.seasonId, command.seasonId),
+          eq(seasonKakaoPendingApplications.applyDate, command.applyDate),
+          eq(seasonKakaoPendingApplications.recruitNo, command.recruitNo),
+          eq(seasonKakaoPendingApplications.status, "ACTIVE"),
+        )).returning({ id: seasonKakaoPendingApplications.id });
+        cancelledCount = cancelled.length + pending.length;
+        await transaction.insert(auditEvents).values({
+          requestId: input.requestId, action: "KAKAO_SEASON_SNAPSHOT_CANCELLED",
+          targetType: "SEASON_RECRUIT_ROUND", targetId: roundKey,
+          metadataJson: { cancelledCount }, createdAt: now,
+        });
+      }
+
+      const applications = await transaction.select({ application: seasonApplications, player: players }).from(seasonApplications)
+        .innerJoin(players, eq(players.id, seasonApplications.playerId)).where(and(
+          eq(seasonApplications.seasonId, command.seasonId), eq(seasonApplications.applyDate, command.applyDate),
+          eq(seasonApplications.recruitNo, command.recruitNo),
+          inArray(seasonApplications.status, ["APPLIED", "RESERVE", "CONFIRMED"]),
+        ));
+      const pending = await transaction.select({ pending: seasonKakaoPendingApplications, player: players }).from(seasonKakaoPendingApplications)
+        .leftJoin(players, eq(players.id, seasonKakaoPendingApplications.matchedPlayerId)).where(and(
+          eq(seasonKakaoPendingApplications.seasonId, command.seasonId),
+          eq(seasonKakaoPendingApplications.applyDate, command.applyDate),
+          eq(seasonKakaoPendingApplications.recruitNo, command.recruitNo),
+          eq(seasonKakaoPendingApplications.status, "ACTIVE"),
+        ));
+      const entries: KakaoSeasonSnapshotEntryDto[] = [
+        ...applications.map(({ application, player }) => ({
+          slotNo: application.sourceSlotNo ?? 999,
+          status: "APPLIED" as const,
+          suppliedName: player.memberName,
+          player: { playerId: player.id, displayName: player.nickname, riotId: `${player.nickname}#${player.tagLine}` },
+        })),
+        ...pending.map(({ pending: item, player }) => ({
+          slotNo: item.slotNo,
+          status: item.matchState,
+          suppliedName: item.suppliedName,
+          player: player ? { playerId: player.id, displayName: player.nickname, riotId: `${player.nickname}#${player.tagLine}` } : null,
+        })),
+      ];
+      entries.sort((left, right) => left.slotNo - right.slotNo || left.suppliedName.localeCompare(right.suppliedName, "ko"));
+      return Object.freeze({
+        kind: "SEASON_APPLICATION_SNAPSHOT" as const,
+        seasonId: command.seasonId,
+        applyDate: command.applyDate,
+        recruitNo: command.recruitNo,
+        entries: Object.freeze(entries),
+        appliedCount: applications.length,
+        reserveCount: pending.filter(({ pending: item }) => item.matchState === "MATCHED_RESERVE").length,
+        pendingCount: pending.filter(({ pending: item }) => item.matchState !== "MATCHED_RESERVE").length,
+        cancelledCount,
       });
     });
   }
