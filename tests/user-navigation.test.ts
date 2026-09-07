@@ -45,6 +45,8 @@ test("page-contract로 표시한 사용자 경로는 실제 App Router 페이지
     "/privacy",
     "/players",
     "/players/[playerId]",
+    "/tools/random-team",
+    "/tools/coin-toss",
     "/applications",
   ]);
 
@@ -59,6 +61,8 @@ test("page-contract로 표시한 사용자 경로는 실제 App Router 페이지
     "../src/app/(public)/privacy/page.tsx",
     "../src/app/(public)/(registry)/players/page.tsx",
     "../src/app/(public)/(registry)/players/[playerId]/page.tsx",
+    "../src/app/(public)/(tools)/tools/random-team/page.tsx",
+    "../src/app/(public)/(tools)/tools/coin-toss/page.tsx",
     "../src/app/(public)/(applications)/applications/page.tsx",
   ];
   for (const page of pages) assert.equal(existsSync(new URL(page, import.meta.url)), true, page);

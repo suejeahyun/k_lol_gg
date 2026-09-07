@@ -61,8 +61,8 @@ export const canonicalUserRoutes = [
   { template: "/tools/team-balance", label: "팀 밸런스", section: "tools", implementationState: "planned" },
   { template: "/tools/team-balance/drafts", label: "밸런스 초안", section: "tools", implementationState: "planned" },
   { template: "/tools/team-balance/drafts/[draftId]", label: "초안 상세", section: "tools", implementationState: "planned" },
-  { template: "/tools/random-team", label: "랜덤 팀", section: "tools", implementationState: "planned" },
-  { template: "/tools/coin-toss", label: "코인 토스", section: "tools", implementationState: "planned" },
+  { template: "/tools/random-team", label: "랜덤 팀", section: "tools", implementationState: "page-contract" },
+  { template: "/tools/coin-toss", label: "코인 토스", section: "tools", implementationState: "page-contract" },
 
   { template: "/applications", label: "참가 신청", section: "competitions", implementationState: "page-contract" },
   { template: "/competitions", label: "대회", section: "competitions", implementationState: "planned" },
@@ -78,9 +78,10 @@ export const canonicalUserRoutes = [
 ] as const satisfies readonly UserRouteDefinition[];
 
 export const primaryUserNavigation = [
-  { href: "/", label: "홈" },
-  { href: "/players", label: "플레이어" },
-  { href: "/applications", label: "참가 신청" },
+  { href: "/", activeRoot: "/", label: "홈" },
+  { href: "/players", activeRoot: "/players", label: "플레이어" },
+  { href: "/tools/random-team", activeRoot: "/tools", label: "팀 도구" },
+  { href: "/applications", activeRoot: "/applications", label: "참가 신청" },
 ] as const;
 
 export function isUserNavigationActive(pathname: string, href: string): boolean {

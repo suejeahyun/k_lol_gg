@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useId, useRef } from "react";
 import {
   CalendarCheck2,
+  Dices,
   Home,
   LogIn,
   Menu,
@@ -177,12 +178,14 @@ export function PrimaryUserNavigation() {
         <Link
           href={item.href}
           key={item.href}
-          aria-current={isUserNavigationActive(pathname, item.href) ? "page" : undefined}
+          aria-current={isUserNavigationActive(pathname, item.activeRoot) ? "page" : undefined}
         >
           {item.href === "/" ? (
             <Home size={16} aria-hidden="true" />
           ) : item.href === "/players" ? (
             <UsersRound size={16} aria-hidden="true" />
+          ) : item.href.startsWith("/tools/") ? (
+            <Dices size={16} aria-hidden="true" />
           ) : (
             <CalendarCheck2 size={16} aria-hidden="true" />
           )}
@@ -224,6 +227,10 @@ export function MobileUserNavigation({ accountSignedIn = false }: { accountSigne
       >
         <UsersRound size={20} aria-hidden="true" />
         <span>플레이어</span>
+      </Link>
+      <Link href="/tools/random-team" aria-current={pathname.startsWith("/tools/") ? "page" : undefined}>
+        <Dices size={20} aria-hidden="true" />
+        <span>팀 도구</span>
       </Link>
       <SearchControl compact />
       <Link href={accountSignedIn ? "/account" : "/login"} aria-current={accountSignedIn ? (pathname.startsWith("/account") ? "page" : undefined) : (pathname === "/login" ? "page" : undefined)}>
