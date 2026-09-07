@@ -144,7 +144,12 @@ export class RiotAesGcmIdentityProtector implements RiotIdentityProtectorPort {
       const iv = Buffer.from(ivEncoded!, "base64url");
       const ciphertext = Buffer.from(ciphertextEncoded!, "base64url");
       const tag = Buffer.from(tagEncoded!, "base64url");
-      if (iv.byteLength !== 12 || tag.byteLength !== 16 || ciphertext.byteLength < 1) {
+      if (
+        iv.toString("base64url") !== ivEncoded ||
+        ciphertext.toString("base64url") !== ciphertextEncoded ||
+        tag.toString("base64url") !== tagEncoded ||
+        iv.byteLength !== 12 || tag.byteLength !== 16 || ciphertext.byteLength < 1
+      ) {
         throw new Error("INVALID_RIOT_PUUID_CIPHERTEXT");
       }
       const decipher = createDecipheriv("aes-256-gcm", key, iv);
