@@ -16,6 +16,16 @@ import {
   riotSyncJobs,
 } from "../src/platform/db/schema/riot";
 
+type DrizzleSnapshot = Readonly<{
+  schemas: Record<string, unknown>;
+  tables: Record<string, unknown>;
+  enums: Record<string, unknown>;
+}>;
+
+function addedKeys(before: Record<string, unknown>, after: Record<string, unknown>) {
+  return Object.keys(after).filter((key) => !(key in before)).sort();
+}
+
 test("S12 schema exposes durable ledgers without OAuth token/code/request-log columns", () => {
   const tables = [riotAccountLinks, riotRsoStates, riotSyncJobs, riotSummaries, riotCommandReceipts, riotOutbox];
   const columnNames = tables.flatMap((table) => getTableConfig(table).columns.map((column) => column.name));
@@ -28,6 +38,44 @@ test("S12 schema exposes durable ledgers without OAuth token/code/request-log co
   }
   assert.ok(getTableConfig(riotCommandReceipts).indexes.some((index) => index.config.name === "riot_receipts_actor_scope_key_uidx"));
   assert.ok(getTableConfig(riotOutbox).indexes.some((index) => index.config.name === "riot_outbox_dedupe_uidx"));
+});
+
+test("0014 migration and snapshot add only the S12 Riot schema", () => {
+  const before = JSON.parse(readFileSync(new URL("../drizzle/meta/0013_snapshot.json", import.meta.url), "utf8")) as DrizzleSnapshot;
+  const after = JSON.parse(readFileSync(new URL("../drizzle/meta/0014_snapshot.json", import.meta.url), "utf8")) as DrizzleSnapshot;
+  const sql = readFileSync(new URL("../drizzle/0014_s12_riot.sql", import.meta.url), "utf8");
+  const riotTables = [
+    "riot.account_links",
+    "riot.command_receipts",
+    "riot.outbox",
+    "riot.rso_states",
+    "riot.summaries",
+    "riot.sync_jobs",
+  ];
+  const riotEnums = [
+    "riot.link_method",
+    "riot.link_status",
+    "riot.outbox_status",
+    "riot.sync_requester",
+    "riot.sync_status",
+  ];
+
+  assert.deepEqual(addedKeys(before.schemas, after.schemas), ["riot"]);
+  assert.deepEqual(addedKeys(before.tables, after.tables), riotTables);
+  assert.deepEqual(addedKeys(before.enums, after.enums), riotEnums);
+  assert.deepEqual(Object.keys(before.tables).filter((key) => !(key in after.tables)), []);
+  assert.deepEqual(Object.keys(before.enums).filter((key) => !(key in after.enums)), []);
+  for (const table of riotTables) {
+    const [schema, name] = table.split(".");
+    assert.match(sql, new RegExp(`CREATE TABLE "${schema}"\\."${name}"`));
+  }
+  for (const enumName of riotEnums) {
+    const [schema, name] = enumName.split(".");
+    assert.match(sql, new RegExp(`CREATE TYPE "${schema}"\\."${name}"`));
+  }
+  assert.doesNotMatch(sql, /"catalog"\."champion_(?:command_receipts|outbox)"/u);
+  assert.doesNotMatch(sql, /"discipline"\./u);
+  assert.doesNotMatch(sql, /\b(?:DROP|TRUNCATE)\b/iu);
 });
 
 test("Riot production feature flag is exact and fail-closed by default", () => {

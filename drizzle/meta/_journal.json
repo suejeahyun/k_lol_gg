@@ -99,6 +99,13 @@
       "when": 1788769000000,
       "tag": "0013_s08_destruction",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1788770000000,
+      "tag": "0014_s12_riot",
+      "breakpoints": true
     }
   ]
 }
