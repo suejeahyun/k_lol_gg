@@ -114,6 +114,18 @@ function parseCookie(cookiePair, expectedName) {
   return { name, value: firstPart.slice(separator + 1) };
 }
 
+async function loginForCookie(origin, endpoint, body) {
+  const response = await fetch(new URL(endpoint, origin), {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Origin: origin },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) throw new Error(`Synthetic browser QA login failed at ${endpoint} with HTTP ${response.status}.`);
+  const cookie = response.headers.get("set-cookie");
+  if (!cookie) throw new Error(`Synthetic browser QA login at ${endpoint} did not return a cookie.`);
+  return cookie;
+}
+
 function safeFileName(index, route) {
   const routeName = route.name || route.path || `page-${index + 1}`;
   const safeName = routeName.normalize("NFKD").replace(/[^a-zA-Z0-9가-힣]+/g, "-").replace(/^-|-$/g, "");
@@ -135,6 +147,21 @@ async function main() {
   const routes = JSON.parse(await readFile(routesPath, "utf8"));
   if (!Array.isArray(routes) || routes.length === 0) throw new Error("The capture plan must contain at least one route.");
   await mkdir(outputDirectory, { recursive: true });
+
+  const password = args.get("password");
+  const adminLoginId = args.get("admin-login-id");
+  const accountLoginId = args.get("account-login-id");
+  const totpCode = args.get("totp-code");
+  let adminCookie = args.get("admin-cookie");
+  let accountCookie = args.get("account-cookie");
+  if (!adminCookie && (adminLoginId || password || totpCode)) {
+    if (!adminLoginId || !password || !totpCode) throw new Error("Admin QA login requires --admin-login-id, --password, and --totp-code together.");
+    adminCookie = await loginForCookie(origin, "/api/admin/login", { loginId: adminLoginId, password, totpCode });
+  }
+  if (!accountCookie && accountLoginId) {
+    if (!accountLoginId || !password) throw new Error("Account QA login requires --account-login-id and --password together.");
+    accountCookie = await loginForCookie(origin, "/api/auth/login", { loginId: accountLoginId, password });
+  }
 
   const profileDirectory = await mkdtemp(join(tmpdir(), "klol-v2-capture-"));
   const debugPort = await reservePort();
@@ -160,8 +187,8 @@ async function main() {
     await Promise.all([client.call("Page.enable"), client.call("Network.enable"), client.call("Runtime.enable")]);
 
     for (const cookie of [
-      parseCookie(args.get("admin-cookie"), "klol_v2_session"),
-      parseCookie(args.get("account-cookie"), "klol_v2_account_session"),
+      parseCookie(adminCookie, "klol_v2_session"),
+      parseCookie(accountCookie, "klol_v2_account_session"),
     ].filter(Boolean)) {
       const result = await client.call("Network.setCookie", {
         ...cookie,
