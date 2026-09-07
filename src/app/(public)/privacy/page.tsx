@@ -7,7 +7,7 @@ import { ACCOUNT_PRIVACY_VERSION } from "@/modules/accounts/domain/account-polic
 
 export const metadata: Metadata = {
   title: "개인정보 처리 안내",
-  description: "K-LOL.GG V2 계정 데이터의 현재 수집·이용·보존 방식",
+  description: "K-LOL.GG 계정 데이터의 현재 수집·이용·보존 방식",
 };
 
 export default function PrivacyPage() {
@@ -19,7 +19,7 @@ export default function PrivacyPage() {
     <section><h2>4. 공개 범위</h2><p>일반 계정 API에는 비밀번호 해시, TOTP 정보, 내부 운영 사유, 회원명, 세션 토큰을 반환하지 않습니다. 회원명과 claim 비교 정보는 승인 업무를 수행하는 관리자 화면으로 제한합니다.</p></section>
     <section><h2>5. 보존과 삭제</h2><p>계정 삭제는 복구와 감사 일관성을 위해 소프트 삭제로 처리하며 플레이어 연결·상태 이력·감사 기록을 즉시 지우지 않습니다. 보존 기간과 완전 삭제 절차는 운영 정책과 관련 의무를 검토해 별도로 확정해야 합니다.</p></section>
     <section><h2>6. 복구 요청과 속도 제한</h2><p>비밀번호 복구 응답은 계정 존재 여부를 공개하지 않습니다. 로그인 아이디와 네트워크 식별값은 도메인 분리 HMAC으로 속도 제한 키를 만들며 원문 키를 저장하지 않습니다.</p></section>
-    <section><h2>7. 문의와 정책 변경</h2><p>열람·정정·삭제 요청은 서버 운영 문의 채널로 접수합니다. 문서가 바뀌면 정책 식별자와 시행일을 갱신합니다. 이 식별자는 사이트 V1/V2 제품 버전이 아니며, 현재 구체적인 담당자 연락처와 법정 보존 기간은 운영 전 확정이 필요합니다.</p></section>
+    <section><h2>7. 문의와 정책 변경</h2><p>열람·정정·삭제 요청은 서버 운영 문의 채널로 접수합니다. 문서가 바뀌면 정책 식별자와 시행일을 갱신합니다. 정책 식별자는 사이트 기능 버전과 다르며, 현재 구체적인 담당자 연락처와 법정 보존 기간은 운영 전 확정이 필요합니다.</p></section>
     <aside className={styles.notice}>이 안내는 현재 구현을 정확히 설명하기 위한 초안입니다. 법적 적합성과 최종 보존 정책은 별도 법률 검토가 필요합니다.</aside>
     <p><Link href="/signup">가입 신청으로 돌아가기</Link> · <Link href="/terms">이용약관</Link></p>
   </article></div>;

@@ -49,8 +49,8 @@ export default async function MmrRankingPage({ searchParams }: {
       </form>
       {result.state === "ready" ? (
         <>
-          <section className={styles.summary} aria-label="MMR projection 상태">
-            <article><span>generation</span><strong>{result.data.summary.generation}</strong></article>
+          <section className={styles.summary} aria-label="MMR 집계 상태">
+            <article><span>집계 차수</span><strong>{result.data.summary.generation}</strong></article>
             <article><span>공개 경기</span><strong>{result.data.summary.sourceMatchCount}</strong></article>
             <article><span>반영 대기</span><strong>{result.data.summary.pendingSourceCount}</strong></article>
           </section>

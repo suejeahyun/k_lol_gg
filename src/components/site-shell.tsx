@@ -20,7 +20,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
       </a>
       <header className="site-header">
         <div className="site-header__inner">
-          <Link className="brand" href="/" aria-label="K-LOL.GG V2 홈">
+          <Link className="brand" href="/" aria-label="K-LOL.GG 홈">
             <span className="brand__mark" aria-hidden="true">
               <Sparkles size={20} />
             </span>
@@ -42,7 +42,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
 
       <footer className="site-footer">
         <div>
-          <strong>K-LOL.GG V2</strong>
+          <strong>K-LOL.GG</strong>
           <p>함께 즐긴 내전의 기록과 다음 경기를 한곳에서 만나보세요.</p>
           <p><Link href="/terms">이용약관</Link> · <Link href="/privacy">개인정보 처리 안내</Link></p>
         </div>

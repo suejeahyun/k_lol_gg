@@ -15,11 +15,11 @@ export default async function AccountRiotPage() {
   return <div className={styles.page}>
     <header className={styles.hero}><div><span>MY RIOT ACCOUNT</span><h1>내 Riot 계정</h1><p>승인된 내 플레이어에 Riot ID를 연결하고 안전하게 전적 동기화를 요청합니다.</p></div><Link href="/help/riot">연동 도움말</Link></header>
     <nav className={styles.tabs} aria-label="Riot 계정 메뉴"><Link href="/account">계정 상태</Link><Link href="/account/riot" aria-current="page">Riot 연동</Link></nav>
-    {result.state === "unavailable" ? <section className={styles.state} role="status"><h2>Riot 연동이 아직 열리지 않았어요.</h2><p>운영 feature flag와 안전한 자격 증명이 준비되면 이 화면에서 연결할 수 있습니다.</p></section>
+    {result.state === "unavailable" ? <section className={styles.state} role="status"><h2>Riot 연동을 준비하고 있어요.</h2><p>이용 가능해지면 이 화면에서 계정을 연결할 수 있습니다.</p></section>
       : result.state === "error" ? <section className={styles.state} data-tone="error" role="alert"><h2>연동 상태를 불러오지 못했습니다.</h2><p>잠시 후 다시 시도해 주세요.</p></section>
       : !result.data ? <section className={styles.state}><h2>연결할 플레이어가 없습니다.</h2><p>먼저 관리자 승인을 받아 내 플레이어를 연결해 주세요.</p></section>
       : <div className={styles.grid}>
-        <section className={styles.card}><h2>{result.data.link ? "연결된 Riot 계정" : "Riot 계정 연결"}</h2>{result.data.link ? <dl className={styles.facts}><div><dt>Riot ID</dt><dd>{result.data.link.riotId}</dd></div><div><dt>방식</dt><dd>{result.data.link.method}</dd></div><div><dt>상태</dt><dd>{result.data.link.status}</dd></div></dl> : <p>직접 입력하거나 RSO 확인 흐름을 선택할 수 있습니다.</p>}<RiotOwnerActions linkRevision={result.data.link?.revision ?? 0} connected={result.data.link?.status === "CONNECTED"} /></section>
+        <section className={styles.card}><h2>{result.data.link ? "연결된 Riot 계정" : "Riot 계정 연결"}</h2>{result.data.link ? <dl className={styles.facts}><div><dt>Riot ID</dt><dd>{result.data.link.riotId}</dd></div><div><dt>연결 방식</dt><dd>{result.data.link.method}</dd></div><div><dt>상태</dt><dd>{result.data.link.status}</dd></div></dl> : <p>Riot ID를 직접 입력하거나 Riot 계정으로 확인할 수 있습니다.</p>}<RiotOwnerActions linkRevision={result.data.link?.revision ?? 0} connected={result.data.link?.status === "CONNECTED"} /></section>
         <section className={styles.card}><h2>최근 동기화</h2>{result.data.lastSync ? <dl className={styles.facts}><div><dt>상태</dt><dd>{result.data.lastSync.status}</dd></div><div><dt>시도</dt><dd>{result.data.lastSync.attemptCount}회</dd></div><div><dt>오류</dt><dd>{result.data.lastSync.failureCode ?? "없음"}</dd></div></dl> : <p>아직 동기화 요청이 없습니다.</p>}{result.data.summary ? <p className={styles.notice}>{result.data.summary.soloTier ?? "Unranked"} {result.data.summary.soloRank ?? ""} · {result.data.summary.leaguePoints ?? 0} LP</p> : null}</section>
       </div>}
   </div>;

@@ -155,7 +155,7 @@ export function ApplicationActions({ initial }: { initial: OwnSeasonApplication 
         <p className={styles.liveMessage}>관리자 검토가 끝난 신청은 라인을 직접 수정할 수 없습니다.</p>
       ) : null}
       {message ? <p className={styles.liveMessage} role="status">{message}</p> : null}
-      <small className={styles.revision}>현재 revision {revision} · 다른 탭에서 바뀌면 새로고침 후 다시 저장해 주세요.</small>
+      <small className={styles.revision}>다른 탭에서 내용이 바뀌었다면 새로고침 후 다시 저장해 주세요.</small>
     </section>
   );
 }

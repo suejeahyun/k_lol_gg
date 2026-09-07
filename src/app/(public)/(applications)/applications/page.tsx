@@ -65,13 +65,13 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
         <section className={styles.stateCard} role="status">
           <CloudSun aria-hidden="true" />
           <h2>시즌 현황을 불러올 수 없어요.</h2>
-          <p>잠시 후 다시 확인해 주세요. 저장되지 않은 신청을 임의로 표시하지 않습니다.</p>
+          <p>잠시 후 다시 확인해 주세요.</p>
         </section>
       ) : result.state === "error" ? (
         <section className={`${styles.stateCard} ${styles.error}`} role="alert">
           <ShieldCheck aria-hidden="true" />
           <h2>시즌 정보를 불러오지 못했어요.</h2>
-          <p>잠시 후 새로고침해 주세요. 내부 오류나 계정 정보는 화면에 노출하지 않습니다.</p>
+          <p>잠시 후 새로고침해 주세요.</p>
         </section>
       ) : !result.data.currentSeason ? (
         <section className={styles.stateCard}>
@@ -102,7 +102,7 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
             <section className={styles.stateCard} role="status">
               <ShieldCheck aria-hidden="true" />
               <h2>현재 계정은 참가 신청이 제한되어 있어요.</h2>
-              <p>계정 검토가 끝난 뒤 다시 확인해 주세요. 제한 사유나 내부 상태는 공개 화면에 표시하지 않습니다.</p>
+              <p>계정 검토가 끝난 뒤 다시 확인해 주세요.</p>
             </section>
           ) : result.data.viewer === "ANONYMOUS" ? (
             <section className={styles.loginCard}>

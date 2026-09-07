@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
-    name: "K-LOL.GG V2",
+    name: "K-LOL.GG",
     short_name: "K-LOL.GG",
     description: "함께 즐기는 리그 오브 레전드 내전 커뮤니티",
     start_url: "/start?source=pwa",

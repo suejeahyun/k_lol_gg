@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "플레이어 상세",
-  description: "K-LOL.GG 플레이어의 공개 프로필과 기록 연결 상태를 확인합니다.",
+  description: "K-LOL.GG 플레이어의 공개 프로필과 경기 기록을 확인합니다.",
 };
 
 function formatJoinedAt(value: Date) {
@@ -47,8 +47,8 @@ export default async function PlayerDetailPage({
       {result.state === "unavailable" ? (
         <section className="detail-state" role="status" aria-labelledby="player-unavailable-title">
           <Sparkles size={34} aria-hidden="true" />
-          <h1 id="player-unavailable-title">프로필 데이터 연결을 준비하고 있어요.</h1>
-          <p>샘플 프로필을 대신 보여주지 않습니다. V2 전용 등록부가 연결되면 같은 주소에서 확인할 수 있습니다.</p>
+          <h1 id="player-unavailable-title">프로필을 확인할 수 없어요.</h1>
+          <p>잠시 후 다시 확인해 주세요.</p>
         </section>
       ) : result.state === "error" ? (
         <section className="detail-state detail-state--error" role="alert" aria-labelledby="player-error-title">
@@ -71,7 +71,7 @@ export default async function PlayerDetailPage({
 
           {tab === "riot" ? (
             <section className="profile-summary" aria-labelledby="riot-summary-title">
-              <div className="section-heading"><div><p>RIOT</p><h2 id="riot-summary-title">공개 Riot 전적</h2></div><span>PUUID·token·요청 로그는 공개하지 않습니다.</span></div>
+              <div className="section-heading"><div><p>RIOT</p><h2 id="riot-summary-title">공개 Riot 전적</h2></div><span>Riot ID와 솔로 랭크 요약을 확인할 수 있어요.</span></div>
               {riotResult?.state === "unavailable" ? <div className="profile-records__state" role="status">Riot 공개 연동이 아직 활성화되지 않았어요.</div>
                 : riotResult?.state === "error" ? <div className="profile-records__state profile-records__state--error" role="alert">Riot 전적을 불러오지 못했습니다.</div>
                 : !riotResult?.data ? <div className="profile-records__state">공개할 Riot 동기화 전적이 없습니다.</div>
@@ -81,7 +81,7 @@ export default async function PlayerDetailPage({
           <section className="profile-summary" aria-labelledby="profile-summary-title">
             <div className="section-heading">
               <div><p>PROFILE</p><h2 id="profile-summary-title">프로필 요약</h2></div>
-              <span>공개 allowlist 필드만 표시합니다.</span>
+              <span>현재 티어와 주요 기록을 한눈에 확인하세요.</span>
             </div>
             <div className="profile-summary__grid">
               <article><span>현재 티어</span><strong>{result.data.currentTier ?? "미등록"}</strong></article>
@@ -96,7 +96,7 @@ export default async function PlayerDetailPage({
               <span>{statisticsResult.state === "ready" && statisticsResult.data?.season ? statisticsResult.data.season.name : "공개 통계"}</span>
             </div>
             {statisticsResult.state === "unavailable" ? (
-              <div className="profile-records__state" role="status">통계 데이터 연결을 준비하고 있어요. 샘플 수치는 표시하지 않습니다.</div>
+              <div className="profile-records__state" role="status">통계를 확인할 수 없어요. 잠시 후 다시 확인해 주세요.</div>
             ) : statisticsResult.state === "error" ? (
               <div className="profile-records__state profile-records__state--error" role="alert">통계를 불러오지 못했습니다. 잠시 후 다시 확인해 주세요.</div>
             ) : !statisticsResult.data || statisticsResult.data.projection?.status !== "READY" ? (

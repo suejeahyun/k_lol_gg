@@ -35,7 +35,7 @@ export default async function DestructionDetailPage({ params, searchParams }: { 
   if (!view) notFound();
   const tournamentId = rawId.toLocaleLowerCase("en-US");
   const runtime = getRuntimeDestruction();
-  if (!runtime) return <div className={styles.page}><section className={styles.state} role="status"><h1>멸망전 저장소를 준비하고 있어요.</h1><p>영속 저장소 연결 뒤 같은 주소에서 바로 이용할 수 있습니다.</p></section></div>;
+  if (!runtime) return <div className={styles.page}><section className={styles.state} role="status"><h1>멸망전 정보를 확인할 수 없어요.</h1><p>잠시 후 다시 확인해 주세요.</p></section></div>;
   let destruction;
   try { destruction = await runtime.repository.getPublic(tournamentId); }
   catch { return <div className={styles.page}><section className={styles.state} role="alert"><h1>멸망전을 불러오지 못했어요.</h1><p>잠시 후 다시 시도해 주세요.</p></section></div>; }

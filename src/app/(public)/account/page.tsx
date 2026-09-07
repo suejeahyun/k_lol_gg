@@ -40,12 +40,12 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
   const rawTab = (await searchParams).tab;
   const tab = (Array.isArray(rawTab) ? rawTab[0] : rawTab) === "player" ? "player" : "overview";
   if (!account) {
-    return <div className={styles.page}><section className={styles.panel} role="alert"><h1>계정 정보를 불러오지 못했습니다.</h1><p>저장소 연결을 확인한 뒤 다시 시도해 주세요.</p></section></div>;
+    return <div className={styles.page}><section className={styles.panel} role="alert"><h1>계정 정보를 불러오지 못했습니다.</h1><p>잠시 후 다시 시도해 주세요.</p></section></div>;
   }
   return (
     <div className={styles.page}>
       <header className={styles.accountHero}>
-        <div><span className={styles.eyebrow}><UserRound aria-hidden="true" /> MY ACCOUNT</span><h1>{account.loginId}</h1><p>일반 계정 세션 · 관리자 권한으로 자동 승격되지 않음</p></div>
+        <div><span className={styles.eyebrow}><UserRound aria-hidden="true" /> MY ACCOUNT</span><h1>{account.loginId}</h1><p>계정 상태와 연결된 플레이어 정보를 관리하세요.</p></div>
         <div><span className={styles.status} data-state={account.status}>{statusLabels[account.status]}</span><AccountLogoutButton /></div>
       </header>
       <nav className={styles.tabs} aria-label="계정 메뉴"><Link href="/account" aria-current={tab === "overview" ? "page" : undefined}><ShieldCheck aria-hidden="true" /> 상태</Link><Link href="/account?tab=player" aria-current={tab === "player" ? "page" : undefined}><UsersRound aria-hidden="true" /> 플레이어</Link><Link href="/account/riot"><Radio aria-hidden="true" /> Riot</Link><Link href="/account/password"><KeyRound aria-hidden="true" /> 비밀번호</Link></nav>

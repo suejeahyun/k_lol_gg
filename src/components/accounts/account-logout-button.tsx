@@ -16,13 +16,13 @@ export function AccountLogoutButton() {
     try {
       const response = await fetch("/api/auth/logout", { method: "POST" });
       if (!response.ok) {
-        setError("세션을 안전하게 종료하지 못했습니다. 로그인 상태를 유지했으며 잠시 후 다시 시도해 주세요.");
+        setError("로그아웃하지 못했습니다. 로그인 상태는 유지되며 잠시 후 다시 시도할 수 있습니다.");
         return;
       }
       router.replace("/login");
       router.refresh();
     } catch {
-      setError("네트워크 오류로 로그아웃하지 못했습니다. 로그인 상태를 유지했으며 다시 시도할 수 있습니다.");
+      setError("네트워크 오류로 로그아웃하지 못했습니다. 잠시 후 다시 시도해 주세요.");
     } finally {
       setBusy(false);
     }

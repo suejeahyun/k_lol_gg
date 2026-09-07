@@ -81,8 +81,8 @@ export default async function AdminPlayersPage({
       ) : result?.state === "unavailable" ? (
         <section className={styles.state} role="status">
           <Database aria-hidden="true" />
-          <h2>V2 플레이어 저장소 연결이 필요합니다.</h2>
-          <p>샘플 회원명이나 가짜 플레이어를 대신 표시하지 않습니다. 격리된 V2 데이터베이스가 연결되면 이 화면이 활성화됩니다.</p>
+          <h2>플레이어 정보를 확인할 수 없습니다.</h2>
+          <p>잠시 후 다시 시도해 주세요.</p>
         </section>
       ) : result?.state === "error" ? (
         <section className={styles.state} data-tone="error" role="alert">

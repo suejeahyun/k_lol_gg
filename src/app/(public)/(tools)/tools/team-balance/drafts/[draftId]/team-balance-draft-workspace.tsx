@@ -64,7 +64,7 @@ export function TeamBalanceDraftWorkspace({
   return (
     <>
       <section className={styles.draftHeader}>
-        <div><span>{mode === "ADMIN" ? "ADMIN REVIEW · " : ""}ROUND {draft.evaluationRound}</span><h1>{draft.title}</h1><p>{mode === "ADMIN" ? `소유 계정 ${draft.ownerUserAccountId} · ` : ""}통계 generation {draft.ratingGeneration ?? "없음 · 중립값 적용"} · revision {draft.revision}</p></div>
+        <div><span>{mode === "ADMIN" ? "ADMIN REVIEW · " : ""}ROUND {draft.evaluationRound}</span><h1>{draft.title}</h1><p>{mode === "ADMIN" ? `소유 계정 ${draft.ownerUserAccountId} · 통계 generation ${draft.ratingGeneration ?? "없음 · 중립값 적용"} · revision ${draft.revision}` : draft.ratingGeneration ? `최신 통계 ${draft.ratingGeneration}차 반영` : "기본 점수 적용"}</p></div>
         <strong data-status={draft.status}>{draft.status === "SAVED" ? "저장됨" : "평가 완료"}</strong>
       </section>
 

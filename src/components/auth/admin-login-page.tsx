@@ -9,7 +9,7 @@ export function AdminLoginPage({ nextPath }: { nextPath: string }) {
       <section className={styles.card} aria-labelledby="admin-login-title">
         <Link className={styles.brand} href="/">
           <span className={styles.brandMark}><CloudSun aria-hidden="true" /></span>
-          <span>K-LOL.GG <strong>V2</strong></span>
+          <span>K-LOL.GG</span>
         </Link>
         <div className={styles.heading}>
           <span className={styles.eyebrow}><ShieldCheck aria-hidden="true" /> 보호된 운영 공간</span>
@@ -18,7 +18,7 @@ export function AdminLoginPage({ nextPath }: { nextPath: string }) {
         </div>
         <AdminLoginForm nextPath={nextPath} />
         <p className={styles.notice}>
-          로그인 문제는 보안을 해제하지 않고 테스트 전용 합성 계정으로 검수합니다.
+          공용 기기에서는 사용 후 반드시 로그아웃해 주세요.
         </p>
       </section>
     </main>

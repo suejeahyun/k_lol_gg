@@ -23,7 +23,7 @@ export function AdminShell({ session, children }: { session: AuthSession; childr
       <aside className={styles.sidebar} id="admin-workspaces">
         <Link className={styles.brand} href="/admin">
           <span><CloudSun aria-hidden="true" /></span>
-          <strong>K-LOL.GG <b>V2</b></strong>
+          <strong>K-LOL.GG</strong>
         </Link>
         <div className={styles.mode}>
           <ShieldCheck aria-hidden="true" />

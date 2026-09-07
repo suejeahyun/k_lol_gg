@@ -11,38 +11,38 @@ export async function AdminWorkspacePage({ workspace }: { workspace: AdminWorksp
     <main className={styles.page}>
       <header className={styles.header}>
         <div>
-          <span className={styles.eyebrow}><ShieldCheck aria-hidden="true" /> 보호된 작업 공간 · {workspace.stage}</span>
+          <span className={styles.eyebrow}><ShieldCheck aria-hidden="true" /> 관리자 메뉴 · {workspace.stage}</span>
           <h1>{workspace.label}</h1>
           <p>{workspace.description}</p>
         </div>
-        <span className={styles.foundation}>A0 정보구조 연결</span>
+        <span className={styles.foundation}>서비스 준비 중</span>
       </header>
 
       <section className={styles.empty} aria-labelledby={`${workspace.id}-empty-title`}>
         <div className={styles.emptyIcon}><Database aria-hidden="true" /></div>
         <div>
-          <span>현재 상태 · EMPTY</span>
-          <h2 id={`${workspace.id}-empty-title`}>기능 데이터는 아직 연결하지 않았어요.</h2>
-          <p>{workspace.scope}의 V1 계약을 데이터 저장소와 연결한 뒤, 합성 데이터로 정상·빈 상태·오류·권한을 각각 검수합니다.</p>
+          <span>현재 상태 · 준비 중</span>
+          <h2 id={`${workspace.id}-empty-title`}>이 기능을 준비하고 있습니다.</h2>
+          <p>준비가 완료되면 {workspace.scope} 업무를 이곳에서 이용할 수 있습니다.</p>
         </div>
       </section>
 
       <section className={styles.contract} aria-labelledby={`${workspace.id}-contract-title`}>
         <div>
-          <span>상태 계약</span>
-          <h2 id={`${workspace.id}-contract-title`}>표시만 있는 화면을 완료로 세지 않습니다.</h2>
+          <span>이용 안내</span>
+          <h2 id={`${workspace.id}-contract-title`}>현재는 사용할 수 없는 기능입니다.</h2>
         </div>
         <ul>
-          <li><strong>Loading</strong><span>데이터를 기다리는 동안 구조가 흔들리지 않는 skeleton</span></li>
-          <li><strong>Ready / Empty</strong><span>실제 데이터와 다음 행동, 또는 데이터가 없는 이유</span></li>
-          <li><strong>Error / Retry</strong><span>안전한 오류 요약과 재시도, 서버 상세 비노출</span></li>
-          <li><strong>403 / 404</strong><span>페이지와 mutation API가 같은 역할 정책으로 거부</span></li>
+          <li><strong>권한</strong><span>관리자 역할에 따라 사용할 수 있는 메뉴가 달라집니다.</span></li>
+          <li><strong>데이터</strong><span>등록된 정보가 없으면 다음 작업을 안내합니다.</span></li>
+          <li><strong>오류</strong><span>문제가 발생하면 잠시 후 다시 시도해 주세요.</span></li>
+          <li><strong>보안</strong><span>중요한 작업은 권한과 2단계 인증을 다시 확인합니다.</span></li>
         </ul>
       </section>
 
       <aside className={styles.notice}>
         <CircleAlert aria-hidden="true" />
-        <p>현재는 내비게이션·인증·빈 상태만 구현된 기반 단계입니다. 이 영역의 V1 기능 동등성은 아직 <strong>미완료</strong>입니다.</p>
+        <p>준비가 완료되기 전에는 이 영역의 작업을 시작할 수 없습니다.</p>
       </aside>
 
       <Link className={styles.back} href="/admin"><ArrowLeft aria-hidden="true" /> 관리자 홈으로</Link>

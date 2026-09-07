@@ -36,7 +36,7 @@ export default async function MatchDetailPage({
     <div className={`page-wrap ${styles.page}`}>
       <Link className="back-link" href="/matches"><ArrowLeft size={16} aria-hidden="true" /> 경기 결과</Link>
       {result.state === "unavailable" ? (
-        <section className={styles.state} role="status"><Gamepad2 /><h1>경기 데이터 연결을 준비하고 있어요.</h1></section>
+        <section className={styles.state} role="status"><Gamepad2 /><h1>경기 결과를 확인할 수 없어요.</h1></section>
       ) : result.state === "error" ? (
         <section className={styles.state} role="alert"><ShieldCheck /><h1>경기 상세를 불러오지 못했어요.</h1></section>
       ) : result.data ? (
@@ -65,7 +65,7 @@ export default async function MatchDetailPage({
               </article>
             ))}
           </section>
-          <p className={styles.privacy}>공개 스코어보드는 등록부 플레이어 UUID, 닉네임, 태그, 챔피언, 포지션, KDA와 경기 결과만 표시합니다. 회원명·로그인 계정·밸런스 보정값·비공개 이미지와 OCR 원문은 포함하지 않습니다. MVP 공식: {result.data.formulaVersion}.</p>
+          <p className={styles.privacy}>닉네임, 챔피언, 포지션, KDA와 경기 결과를 확인할 수 있어요. MVP 산정 기준: {result.data.formulaVersion}.</p>
         </>
       ) : null}
     </div>

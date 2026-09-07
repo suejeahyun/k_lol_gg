@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
   const loginId = body.loginId;
   const rateLimit = await guardAdminLoginAttempt(request, loginId);
   if (!rateLimit.available) {
-    return json({ message: "V2 인증 저장소가 아직 연결되지 않았습니다." }, 503);
+    return json({ message: "인증 서비스를 사용할 수 없습니다. 잠시 후 다시 시도해 주세요." }, 503);
   }
   if (!rateLimit.allowed) {
     return json(
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
   }).finally(releaseWork);
 
   if (!result) {
-    return json({ message: "V2 인증 저장소가 아직 연결되지 않았습니다." }, 503);
+    return json({ message: "인증 서비스를 사용할 수 없습니다. 잠시 후 다시 시도해 주세요." }, 503);
   }
   if (result.type === "invalid-input") {
     return json({ message: "아이디와 비밀번호를 확인해 주세요." }, 400);
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
 
   const token = await issueRuntimeSession(result.session).catch(() => null);
   if (!token) {
-    return json({ message: "V2 인증 세션을 만들 수 없습니다." }, 503);
+    return json({ message: "로그인할 수 없습니다. 잠시 후 다시 시도해 주세요." }, 503);
   }
   const response = json({ success: true, requiresTwoFactorSetup: result.requiresTwoFactorSetup }, 200);
   response.cookies.set(

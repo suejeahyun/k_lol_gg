@@ -71,7 +71,7 @@ export default async function RecruitsPage() {
       ) : result.state === "ready" ? (
         <section className={styles.state}><Sparkles aria-hidden="true" /><h2>지금은 열린 모집이 없어요.</h2><p>새 모집이 등록되면 이 화면에 바로 나타납니다.</p><Link href="/help/recruits">모집 방법 알아보기</Link></section>
       ) : result.state === "unavailable" ? (
-        <section className={styles.state} role="status"><CalendarClock aria-hidden="true" /><h2>모집 데이터 연결을 준비하고 있어요.</h2><p>샘플 모집을 대신 표시하지 않습니다.</p></section>
+        <section className={styles.state} role="status"><CalendarClock aria-hidden="true" /><h2>모집을 확인할 수 없어요.</h2><p>잠시 후 다시 확인해 주세요.</p></section>
       ) : (
         <section className={styles.state} role="alert"><CircleAlert aria-hidden="true" /><h2>모집을 불러오지 못했어요.</h2><p>잠시 후 다시 시도해 주세요.</p></section>
       )}

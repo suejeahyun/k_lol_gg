@@ -18,8 +18,8 @@ export default async function SignupPage() {
       <section className={styles.intro}>
         <span className={styles.eyebrow}><Sparkles aria-hidden="true" /> JOIN K-LOL.GG</span>
         <h1>내전 놀이터에<br />함께할 준비.</h1>
-        <p>신규 Riot ID는 승인 대기 계정과 새 플레이어로 등록합니다. 기존 플레이어와 일치하면 소유권을 추정하지 않고 관리자 수동 검토를 기다립니다.</p>
-        <div className={styles.promise}><span><strong>검토 우선</strong>기존 플레이어 즉시 탈취 방지</span><span><strong>개인정보 경계</strong>회원명은 관리자 업무로 제한</span><span><strong>승인 전 제한</strong>계정 관리만 허용</span></div>
+        <p>기본 정보와 Riot ID를 입력하면 관리자가 확인 후 가입을 승인합니다.</p>
+        <div className={styles.promise}><span><strong>안전한 연결</strong>기존 플레이어는 관리자 확인</span><span><strong>개인정보 보호</strong>회원명은 운영 목적으로만 사용</span><span><strong>승인 안내</strong>내 계정에서 진행 상태 확인</span></div>
       </section>
       <section className={styles.formCard} aria-labelledby="signup-title">
         <span className={styles.eyebrow}><UserPlus aria-hidden="true" /> SIGNUP REQUEST</span>

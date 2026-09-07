@@ -81,7 +81,7 @@ export function AccountPasswordForm({ revision }: { revision: number }) {
           } else {
             setRequiresRelogin(true);
             setMessage({
-              text: "다른 보안 작업으로 현재 세션이 종료되었습니다. 다시 로그인한 뒤 비밀번호를 변경해 주세요.",
+              text: "로그인 정보가 변경되었습니다. 다시 로그인한 뒤 비밀번호를 변경해 주세요.",
               tone: "error",
             });
           }
@@ -111,7 +111,7 @@ export function AccountPasswordForm({ revision }: { revision: number }) {
       <label className={styles.field}>새 비밀번호 확인<input name="confirmation" type="password" autoComplete="new-password" minLength={10} maxLength={128} required /></label>
       <button className={styles.submit} type="submit" disabled={busy || requiresRelogin}>{busy ? "변경 중…" : "비밀번호 변경"}</button>
       {requiresRelogin ? <button className={styles.submit} type="button" onClick={() => router.replace("/login?next=%2Faccount%2Fpassword")}>다시 로그인</button> : null}
-      <div className={styles.message} data-tone={message?.tone} role={message?.tone === "error" ? "alert" : "status"} aria-live="polite">{message?.text ?? "변경하면 현재 기기를 포함한 모든 세션이 종료됩니다."}</div>
+      <div className={styles.message} data-tone={message?.tone} role={message?.tone === "error" ? "alert" : "status"} aria-live="polite">{message?.text ?? "변경 후에는 모든 기기에서 다시 로그인해야 합니다."}</div>
     </form>
   );
 }

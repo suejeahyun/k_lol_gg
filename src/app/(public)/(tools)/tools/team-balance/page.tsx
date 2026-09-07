@@ -57,7 +57,7 @@ export default async function TeamBalancePage() {
         <section className={styles.emptyState} role={catalog?.state === "error" ? "alert" : "status"}>
           <Scale aria-hidden="true" />
           <h2>플레이어 목록을 불러올 수 없어요</h2>
-          <p>V2 PostgreSQL과 공개 플레이어 등록부가 연결된 뒤 다시 시도해 주세요.</p>
+          <p>잠시 후 다시 시도해 주세요.</p>
         </section>
       )}
     </div>

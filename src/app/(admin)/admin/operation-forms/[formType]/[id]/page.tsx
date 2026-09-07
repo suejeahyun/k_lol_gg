@@ -16,7 +16,7 @@ export default async function OperationFormDetailPage({ params }: { params: Prom
   if (!isOperationFormType(formType)) notFound();
   const result = await loadRuntimeOperationForms((service) => service.get(formType, id));
   if (result.state === "ready" && !result.data) notFound();
-  if (result.state !== "ready") return <main className={styles.page}><section className={styles.state} role={result.state === "error" ? "alert" : "status"}><h1>신청서 상세를 불러올 수 없습니다.</h1><p>{result.state === "unavailable" ? "저장소 연결을 준비 중입니다." : "잠시 후 다시 시도해 주세요."}</p></section></main>;
+  if (result.state !== "ready") return <main className={styles.page}><section className={styles.state} role={result.state === "error" ? "alert" : "status"}><h1>신청서 상세를 불러올 수 없습니다.</h1><p>잠시 후 다시 시도해 주세요.</p></section></main>;
   const form = result.data!;
   return <main className={styles.page}><header className={styles.header}><div><span className={styles.eyebrow}>ADMIN · DETAIL</span><h1>{typeLabels[form.formType]}</h1><p>{form.status} · revision {form.revision}</p></div><Link className={styles.link} href={`/admin/operation-forms/${form.formType}`}>목록으로</Link></header>
     <div className={styles.detailGrid}><section className={styles.panel}><h2>접수 내용</h2><dl className={styles.facts}>{Object.entries(form.payload).map(([key, value]) => <div key={key}><dt>{fieldLabels[key] ?? key}</dt><dd>{Array.isArray(value) ? value.join(", ") : typeof value === "boolean" ? value ? "예" : "아니요" : String(value)}</dd></div>)}<div><dt>접수 시각</dt><dd>{new Intl.DateTimeFormat("ko-KR", { dateStyle: "long", timeStyle: "short", timeZone: "Asia/Seoul" }).format(new Date(form.submittedAt))}</dd></div></dl></section><AdminOperationFormActions form={form} /></div>

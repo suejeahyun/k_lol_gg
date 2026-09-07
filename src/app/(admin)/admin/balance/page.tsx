@@ -54,7 +54,7 @@ export default async function AdminBalancePage() {
           )}
         </>
       ) : result.state === "unavailable" ? (
-        <section className={styles.state} role="status"><h2>통계 저장소 연결을 준비하고 있습니다.</h2><p>관리자 인증과 데이터베이스 연결 상태를 확인해 주세요.</p></section>
+        <section className={styles.state} role="status"><h2>통계 정보를 확인할 수 없습니다.</h2><p>잠시 후 다시 시도해 주세요.</p></section>
       ) : (
         <section className={styles.state} role="alert"><h2>통계 상태를 불러오지 못했습니다.</h2><p>상세 오류는 공개하지 않습니다. 잠시 후 다시 시도해 주세요.</p></section>
       )}

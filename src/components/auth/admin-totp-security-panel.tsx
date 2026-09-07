@@ -125,20 +125,20 @@ export function AdminTotpSecurityPanel({ initialStatus }: AdminTotpSecurityPanel
         <span className={styles.statusLabel}>현재 상태</span>
         <strong data-status={status}>
           {status === "ENABLED" ? "활성화됨" : status === "SETUP_PENDING"
-            ? "등록 진행 중" : status === "NOT_CONFIGURED" ? "등록되지 않음" : "저장소 연결 필요"}
+            ? "등록 진행 중" : status === "NOT_CONFIGURED" ? "등록되지 않음" : "일시적으로 사용할 수 없음"}
         </strong>
       </div>
 
       {status === "UNAVAILABLE" ? (
         <p className={styles.notice} role="status">
-          DB 기반 관리자 보안 저장소가 연결된 격리 환경에서만 등록 상태를 변경할 수 있습니다.
+          보안 설정을 불러올 수 없습니다. 잠시 후 다시 시도해 주세요.
         </p>
       ) : null}
 
       {status === "NOT_CONFIGURED" ? (
         <section className={styles.section} aria-labelledby="totp-start-title">
           <h2 id="totp-start-title"><KeyRound aria-hidden="true" /> 인증 앱 등록 시작</h2>
-          <p>20바이트 무작위 키를 만들고 AES-256-GCM으로 암호화해 비활성 상태로 저장합니다.</p>
+          <p>새 등록 키를 만든 뒤 인증 앱에 추가하고, 표시되는 6자리 코드로 등록을 완료해 주세요.</p>
           <button type="button" onClick={beginSetup} disabled={busy}>
             {pendingAction?.includes("setup") ? <LoaderCircle className={styles.spin} aria-hidden="true" /> : <KeyRound aria-hidden="true" />}
             새 등록 키 만들기
@@ -151,7 +151,7 @@ export function AdminTotpSecurityPanel({ initialStatus }: AdminTotpSecurityPanel
           <h2 id="totp-enable-title"><Check aria-hidden="true" /> 인증 앱에서 확인</h2>
           {setupMaterial ? (
             <div className={styles.secretBox}>
-              <p className={styles.oneTime}>이 등록 키는 생성 응답에서 지금 한 번만 표시됩니다.</p>
+              <p className={styles.oneTime}>이 등록 키는 이 화면에서 한 번만 표시됩니다.</p>
               <label htmlFor="totp-manual-secret">수동 입력 키</label>
               <div className={styles.copyRow}>
                 <code id="totp-manual-secret">{setupMaterial.manualSecret}</code>
@@ -176,7 +176,7 @@ export function AdminTotpSecurityPanel({ initialStatus }: AdminTotpSecurityPanel
             <input id="totp-enable-code" name="code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" minLength={6} maxLength={6} required disabled={busy} />
             <button type="submit" disabled={busy}>
               {pendingAction?.includes("enable") ? <LoaderCircle className={styles.spin} aria-hidden="true" /> : <Check aria-hidden="true" />}
-              활성화하고 모든 세션 종료
+              활성화하고 모든 기기에서 로그아웃
             </button>
           </form>
 
@@ -189,13 +189,13 @@ export function AdminTotpSecurityPanel({ initialStatus }: AdminTotpSecurityPanel
       {status === "ENABLED" ? (
         <section className={styles.section} aria-labelledby="totp-disable-title">
           <h2 id="totp-disable-title"><ShieldOff aria-hidden="true" /> 2단계 인증 해제</h2>
-          <p>현재 인증 앱 코드를 다시 확인한 뒤 자격증명을 삭제하고 이 계정의 모든 세션을 종료합니다.</p>
+          <p>현재 인증 앱 코드를 다시 확인한 뒤 2단계 인증을 해제하고 모든 기기에서 로그아웃합니다.</p>
           <form className={styles.codeForm} onSubmit={(event) => submitCode(event, "disable")}>
             <label htmlFor="totp-disable-code">새로 표시된 6자리 코드</label>
             <input id="totp-disable-code" name="code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" minLength={6} maxLength={6} required disabled={busy} />
             <button type="submit" className={styles.danger} disabled={busy}>
               {pendingAction?.includes("disable") ? <LoaderCircle className={styles.spin} aria-hidden="true" /> : <ShieldOff aria-hidden="true" />}
-              해제하고 모든 세션 종료
+              해제하고 모든 기기에서 로그아웃
             </button>
           </form>
         </section>

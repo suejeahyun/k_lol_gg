@@ -7,13 +7,13 @@ import { ACCOUNT_TERMS_VERSION } from "@/modules/accounts/domain/account-policie
 
 export const metadata: Metadata = {
   title: "이용약관",
-  description: "K-LOL.GG V2 계정과 서비스 이용에 관한 현재 운영 규칙",
+  description: "K-LOL.GG 계정과 서비스 이용에 관한 현재 운영 규칙",
 };
 
 export default function TermsPage() {
   return <div className={styles.page}><article className={styles.policy}>
     <header><span className={styles.eyebrow}><FileCheck2 aria-hidden="true" /> SERVICE TERMS</span><h1>이용약관</h1><p>정책 식별자 {ACCOUNT_TERMS_VERSION} · 시행 2026년 9월 1일</p></header>
-    <section><h2>1. 적용 범위</h2><p>이 문서는 K-LOL.GG V2의 계정 가입, 승인, 로그인과 커뮤니티·운영 기능 이용에 적용됩니다.</p></section>
+    <section><h2>1. 적용 범위</h2><p>이 문서는 K-LOL.GG의 계정 가입, 승인, 로그인과 커뮤니티·운영 기능 이용에 적용됩니다.</p></section>
     <section><h2>2. 가입과 승인</h2><p>가입 시 로그인 아이디, 비밀번호, 회원명과 Riot ID를 입력합니다. 계정은 PENDING으로 시작하며 관리자 승인 전에는 계정 상태 확인, 로그아웃과 비밀번호 변경만 사용할 수 있습니다.</p></section>
     <section><h2>3. 플레이어 연결</h2><p>새 Riot ID는 신규 플레이어와 연결해 검토합니다. 이미 존재하지만 계정에 연결되지 않은 Riot ID는 즉시 가져오지 않고 수동 claim으로 보관합니다. 관리자 검토는 Riot 계정 소유권 검증을 뜻하지 않습니다.</p></section>
     <section><h2>4. 계정 상태와 운영 조치</h2><p>운영자는 신청을 승인·거절하거나 이용을 제한할 수 있고, 사용자에게 안내할 사유와 내부 운영 사유를 분리해 기록합니다. 역할·상태·비밀번호·삭제 변경은 세션 폐기와 감사 기록을 동반합니다.</p></section>

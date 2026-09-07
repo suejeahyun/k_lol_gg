@@ -11,7 +11,7 @@ export default function AdminUserDetailError() {
       <section className={styles.state} data-tone="error" role="alert">
         <Database aria-hidden="true" />
         <h2>계정 상세를 불러오지 못했습니다.</h2>
-        <p>계정이 없다는 뜻이 아닙니다. 저장소 연결을 확인한 뒤 다시 시도해 주세요.</p>
+        <p>잠시 후 다시 시도해 주세요.</p>
         <button className={styles.primaryLink} type="button" onClick={() => window.location.reload()}>
           <RotateCcw aria-hidden="true" /> 다시 시도
         </button>

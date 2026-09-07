@@ -57,7 +57,7 @@ export function SubmissionForm({
     return <section className={styles.panel}><h2>승인된 계정으로 로그인해 주세요</h2><p>공개 결과는 누구나 볼 수 있지만 비공개 스코어보드 접수는 로그인한 소유자만 이어갈 수 있어요.</p><Link className={styles.login} href="/login?next=%2Fmatches%2Fsubmit">로그인</Link></section>;
   }
   if (viewer === "UNAVAILABLE") {
-    return <section className={styles.panel} role="status"><h2>접수 연결을 준비하고 있어요.</h2><p>샘플 접수를 만들지 않습니다. 데이터베이스 인증 런타임이 연결되면 다시 시도해 주세요.</p></section>;
+    return <section className={styles.panel} role="status"><h2>결과 접수를 이용할 수 없어요.</h2><p>잠시 후 다시 시도해 주세요.</p></section>;
   }
 
   function continueByCode(event: React.FormEvent) {
@@ -296,7 +296,7 @@ export function SubmissionForm({
               return <label className={styles.upload} data-done={done} key={gameNumber}><strong>{gameNumber}게임 {done ? "등록 완료" : "이미지"}</strong><span>PNG · JPEG · WebP, 최대 4MiB</span>{done ? null : <input type="file" accept="image/png,image/jpeg,image/webp" disabled={busy} onChange={(event) => upload(gameNumber, event.target.files?.[0])} />}</label>;
             })}
           </div>
-          <p className={styles.help}>이미지는 소유자와 관리자만 볼 수 있으며 공개 경기 DTO에는 원본·저장 키·OCR 후보가 포함되지 않습니다. 모든 이미지가 모이면 PENDING_REVIEW로 바뀌고, 관리자가 시즌과 10명 로스터를 직접 확인한 후 승인합니다.</p>
+          <p className={styles.help}>업로드한 이미지는 본인과 관리자만 볼 수 있어요. 모든 이미지를 제출하면 관리자가 시즌과 10명 로스터를 확인한 뒤 결과를 승인합니다.</p>
         </section>
       )}
     </>

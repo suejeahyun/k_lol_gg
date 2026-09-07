@@ -61,7 +61,7 @@ export default async function PlayersPage({
           />
           <Button size="lg" type="submit">검색</Button>
         </div>
-        <small>검색어는 80자까지 허용하며 계정 아이디·회원명·Discord 식별자는 검색 대상이 아니며 결과에도 표시하지 않습니다.</small>
+        <small>닉네임 또는 Riot ID로 검색해 주세요.</small>
       </form>
 
       <section className="player-results" aria-live="polite" aria-labelledby="results-title">
@@ -79,7 +79,7 @@ export default async function PlayersPage({
           <div className="empty-state" role="status">
             <Search size={28} aria-hidden="true" />
             <strong>플레이어 등록부를 불러올 수 없어요.</strong>
-            <p>잠시 후 다시 검색해 주세요. 확인되지 않은 플레이어는 임의로 표시하지 않습니다.</p>
+            <p>잠시 후 다시 검색해 주세요.</p>
           </div>
         ) : result.state === "error" ? (
           <div className="empty-state empty-state--error" role="alert">

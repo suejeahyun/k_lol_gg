@@ -76,10 +76,10 @@ export default async function TeamBalanceDraftsPage({
           <button type="submit">추천 불러오기</button>
         </form>
         {recommendation?.state === "ready" && recommendation.data ? <TeamBalanceRecommendationsPanel recommendation={recommendation.data} hrefForTeam={(team) => `/tools/team-balance/drafts?view=recommendations&draftId=${selectedDraftId}&team=${team}`}/>
-          : <section className={styles.emptyState} role={recommendation?.state === "error" ? "alert" : "status"}><Scale aria-hidden="true"/><h2>밴픽 추천을 불러올 수 없어요</h2><p>초안 소유권과 통계 projection 상태를 확인해 주세요.</p></section>}
+          : <section className={styles.emptyState} role={recommendation?.state === "error" ? "alert" : "status"}><Scale aria-hidden="true"/><h2>밴픽 추천을 불러올 수 없어요</h2><p>잠시 후 다시 시도하거나 팀 구성을 확인해 주세요.</p></section>}
       </> : query?.view === "recommendations" && result.state === "ready" ? <section className={styles.emptyState}><FolderOpen aria-hidden="true"/><h2>추천할 저장 초안이 없습니다.</h2><p>팀 후보를 선택하고 저장한 뒤 다시 확인해 주세요.</p><Link className={styles.primaryLink} href="/tools/team-balance">첫 초안 만들기</Link></section>
       : result.state === "unavailable" ? (
-        <section className={styles.emptyState} role="status"><Scale aria-hidden="true" /><h2>팀 초안 연결을 준비하고 있어요</h2><p>데이터베이스 연결이 준비되면 저장한 초안이 여기에 표시됩니다.</p></section>
+        <section className={styles.emptyState} role="status"><Scale aria-hidden="true" /><h2>저장한 초안을 확인할 수 없어요</h2><p>잠시 후 다시 확인해 주세요.</p></section>
       ) : result.state === "error" ? (
         <section className={styles.emptyState} role="alert"><FolderOpen aria-hidden="true" /><h2>초안 목록을 불러오지 못했어요</h2><p>주소의 페이지 값을 확인하거나 잠시 후 다시 시도해 주세요.</p></section>
       ) : result.data.items.length === 0 ? (

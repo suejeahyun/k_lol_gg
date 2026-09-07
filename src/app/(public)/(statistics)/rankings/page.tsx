@@ -66,7 +66,7 @@ export default async function RankingsPage({
           {result.data.ranking.season === null ? (
             <section className={styles.state}><Sparkles /><h2>공개할 시즌이 아직 없어요.</h2><p>활성 또는 종료 시즌이 준비되면 랭킹을 확인할 수 있습니다.</p></section>
           ) : result.data.ranking.projection?.status !== "READY" ? (
-            <section className={styles.state}><Gamepad2 /><h2>이 시즌 통계를 준비하고 있어요.</h2><p>샘플 수치를 대신 표시하지 않습니다. 경기 집계가 완료되면 자동으로 열립니다.</p></section>
+            <section className={styles.state}><Gamepad2 /><h2>이 시즌 통계를 준비하고 있어요.</h2><p>경기 집계가 끝나면 자동으로 표시됩니다.</p></section>
           ) : result.data.ranking.rankings.length === 0 ? (
             <section className={styles.state}><UsersRound /><h2>랭킹 기준을 충족한 플레이어가 없어요.</h2><p>현재 기준은 시즌 참여 {minimumParticipation}회 이상입니다.</p></section>
           ) : (
@@ -104,7 +104,7 @@ export default async function RankingsPage({
           )}
         </>
       ) : result.state === "unavailable" ? (
-        <section className={styles.state} role="status"><Sparkles /><h2>통계 데이터 연결을 준비하고 있어요.</h2><p>샘플 랭킹은 표시하지 않습니다.</p></section>
+        <section className={styles.state} role="status"><Sparkles /><h2>랭킹을 확인할 수 없어요.</h2><p>잠시 후 다시 확인해 주세요.</p></section>
       ) : (
         <section className={styles.state} role="alert"><Sparkles /><h2>랭킹을 불러오지 못했어요.</h2><p>잠시 후 다시 시도해 주세요.</p></section>
       )}

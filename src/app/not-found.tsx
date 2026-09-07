@@ -10,7 +10,7 @@ export default function NotFound() {
         <StatusPanel
           eyebrow="404 · NOT FOUND"
           title="찾으시는 페이지가 없어요"
-          description="주소가 바뀌었거나 아직 V2에 만들어지지 않은 기능일 수 있습니다."
+          description="주소가 바뀌었거나 사용할 수 없는 페이지입니다."
         >
           <Link className="status-panel__link" href="/">
             홈으로 돌아가기

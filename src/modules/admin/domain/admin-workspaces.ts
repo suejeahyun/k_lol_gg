@@ -25,16 +25,16 @@ export type AdminWorkspace = {
 };
 
 export const ADMIN_WORKSPACES = [
-  { id: "home", label: "홈", shortLabel: "홈", href: "/admin", description: "검토 대기, 시스템 상태와 최근 활동을 모아 보는 운영 시작점", scope: "대시보드와 빠른 작업", icon: "dashboard", stage: "A0–A1" },
-  { id: "people", label: "인물·계정", shortLabel: "인물", href: "/admin/players", description: "플레이어 등록부와 사용자 승인·역할·보안 업무", scope: "플레이어·사용자·MMR·Riot 연결", icon: "people", stage: "A2" },
-  { id: "seasons", label: "시즌·참가", shortLabel: "시즌", href: "/admin/seasons", description: "시즌 수명주기와 참가 신청 검토를 한 흐름으로 관리", scope: "시즌·참가 신청", icon: "seasons", stage: "A3" },
-  { id: "matches", label: "경기·결과", shortLabel: "경기", href: "/admin/matches", description: "경기 등록, 결과 접수, 증거와 AI 검토를 연결", scope: "경기·접수·증거", icon: "matches", stage: "A4" },
-  { id: "balance", label: "팀·AI", shortLabel: "팀", href: "/admin/balance", description: "팀 편성, draft, MMR 프로필과 재계산 작업대", scope: "밸런스·draft·AI 리뷰", icon: "balance", stage: "A5" },
-  { id: "tournaments", label: "대회", shortLabel: "대회", href: "/admin/progress/event", description: "이벤트전과 멸망전의 단계별 운영 흐름", scope: "이벤트전·멸망전", icon: "tournaments", stage: "A6" },
-  { id: "community", label: "커뮤니티", shortLabel: "커뮤니티", href: "/admin/kakao", description: "구인, 스크림, Kakao와 운영 신청을 함께 처리", scope: "구인·Kakao·신청", icon: "community", stage: "A7" },
-  { id: "content", label: "콘텐츠·자료", shortLabel: "콘텐츠", href: "/admin/champions", description: "챔피언, 영상, 이미지와 권한 기반 비공개 자료", scope: "챔피언·미디어·비공개 자료", icon: "content", stage: "A8" },
-  { id: "integrations", label: "연동", shortLabel: "연동", href: "/admin/riot", description: "Riot 계정 연결과 동기화 상태·실패 재시도", scope: "Riot·외부 연동", icon: "integrations", stage: "A9" },
-  { id: "operations", label: "운영·감사", shortLabel: "운영", href: "/admin/discipline", description: "징계, 감사, 설정, 백업과 정비를 역할별로 통제", scope: "징계·감사·설정·백업", icon: "operations", stage: "A10" },
+  { id: "home", label: "홈", shortLabel: "홈", href: "/admin", description: "검토 대기, 시스템 상태와 최근 활동을 모아 보는 운영 시작점", scope: "대시보드와 빠른 작업", icon: "dashboard", stage: "대시보드" },
+  { id: "people", label: "인물·계정", shortLabel: "인물", href: "/admin/players", description: "플레이어 등록부와 사용자 승인·역할·보안 업무", scope: "플레이어·사용자·MMR·Riot 연결", icon: "people", stage: "계정" },
+  { id: "seasons", label: "시즌·참가", shortLabel: "시즌", href: "/admin/seasons", description: "시즌 일정과 참가 신청 검토를 한 흐름으로 관리", scope: "시즌·참가 신청", icon: "seasons", stage: "시즌" },
+  { id: "matches", label: "경기·결과", shortLabel: "경기", href: "/admin/matches", description: "경기 등록, 결과 접수와 검토를 한곳에서 관리", scope: "경기·접수·증거", icon: "matches", stage: "경기" },
+  { id: "balance", label: "팀·AI", shortLabel: "팀", href: "/admin/balance", description: "팀 편성, 저장한 초안, MMR 프로필과 재계산 관리", scope: "밸런스·팀 초안·검토", icon: "balance", stage: "팀" },
+  { id: "tournaments", label: "대회", shortLabel: "대회", href: "/admin/progress/event", description: "이벤트전과 멸망전의 단계별 운영 흐름", scope: "이벤트전·멸망전", icon: "tournaments", stage: "대회" },
+  { id: "community", label: "커뮤니티", shortLabel: "커뮤니티", href: "/admin/kakao", description: "구인, 스크림, Kakao와 운영 신청을 함께 처리", scope: "구인·Kakao·신청", icon: "community", stage: "커뮤니티" },
+  { id: "content", label: "콘텐츠·자료", shortLabel: "콘텐츠", href: "/admin/champions", description: "챔피언, 영상, 이미지와 권한 기반 비공개 자료", scope: "챔피언·미디어·비공개 자료", icon: "content", stage: "콘텐츠" },
+  { id: "integrations", label: "연동", shortLabel: "연동", href: "/admin/riot", description: "Riot 계정 연결과 동기화 상태·실패 재시도", scope: "Riot·외부 연동", icon: "integrations", stage: "연동" },
+  { id: "operations", label: "운영·감사", shortLabel: "운영", href: "/admin/discipline", description: "징계, 감사, 설정, 백업과 정비를 역할별로 통제", scope: "징계·감사·설정·백업", icon: "operations", stage: "운영" },
 ] as const satisfies readonly AdminWorkspace[];
 
 export type AdminWorkspaceId = (typeof ADMIN_WORKSPACES)[number]["id"];

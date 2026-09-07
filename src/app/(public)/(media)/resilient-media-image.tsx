@@ -22,7 +22,7 @@ export function ResilientMediaImage({
       <span className={styles.mediaFallback} role="img" aria-label={`${alt || "미디어"} 이미지를 불러올 수 없음`}>
         <ImageOff aria-hidden="true" />
         <strong>이미지를 불러올 수 없어요</strong>
-        <small>저장소 연결이 회복되면 자동으로 표시됩니다.</small>
+        <small>잠시 후 다시 확인해 주세요.</small>
       </span>
     );
   }

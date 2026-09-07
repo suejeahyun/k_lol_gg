@@ -87,7 +87,7 @@ export default async function MatchesPage({
       </section>
 
       {result.state === "unavailable" ? (
-        <section className={styles.state} role="status"><CloudSun /><h2>경기 데이터 연결을 준비하고 있어요.</h2><p>샘플 결과를 대신 보여주지 않습니다.</p></section>
+        <section className={styles.state} role="status"><CloudSun /><h2>경기 결과를 확인할 수 없어요.</h2><p>잠시 후 다시 확인해 주세요.</p></section>
       ) : result.state === "error" ? (
         <section className={styles.state} role="alert"><Search /><h2>경기 결과를 불러오지 못했어요.</h2><p>검색 조건을 확인하거나 잠시 후 다시 시도해 주세요.</p></section>
       ) : result.data.items.length === 0 ? (

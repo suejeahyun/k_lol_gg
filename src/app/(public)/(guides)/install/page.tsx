@@ -19,7 +19,7 @@ export default function InstallPage() {
         <div className={styles.heroCopy}>
           <p className={styles.eyebrow}>INSTALL K-LOL.GG</p>
           <h1 id="install-title">어디서든 같은 화면으로<br />가볍게 열어요</h1>
-          <p>데스크톱·모바일·설치형 웹앱 모두 같은 주소와 기능을 사용합니다. 개인 화면과 API 응답은 오프라인 캐시에 저장하지 않습니다.</p>
+          <p>데스크톱·모바일·설치형 웹앱 모두 같은 주소와 기능을 사용합니다. 로그인과 개인 정보가 필요한 화면은 오프라인에 저장되지 않습니다.</p>
         </div>
         <div className={styles.heroArt}><Image src="/images/champions/lulu-card.avif" alt="파스텔 구름 사이에서 손을 흔드는 룰루 비공식 AI 팬아트" fill priority sizes="(max-width: 860px) 100vw, 38vw" /></div>
       </section>
@@ -39,7 +39,7 @@ export default function InstallPage() {
       </section>
 
       <section className={styles.section}>
-        <div className={styles.notice}><LockKeyhole size={19} aria-hidden="true" /><span>설치형 웹앱의 캐시는 아이콘·manifest·공개 캐릭터 이미지와 빌드 정적 파일로 제한합니다. 로그인 화면, 관리자 화면, API와 비공개 이미지는 저장하지 않습니다.</span></div>
+        <div className={styles.notice}><LockKeyhole size={19} aria-hidden="true" /><span>앱 아이콘과 공개 이미지만 기기에 저장하며, 로그인 정보와 개인 이미지는 저장하지 않습니다.</span></div>
         <div className={styles.actions}><Link className={styles.primary} href="/start"><ExternalLink size={16} aria-hidden="true" /> 사이트 시작하기</Link><Link className={styles.secondary} href="/privacy"><ShieldCheck size={16} aria-hidden="true" /> 개인정보 처리방침</Link></div>
       </section>
     </div>

@@ -20,7 +20,7 @@ export default async function HighlightsPage({ searchParams }: { searchParams: P
   return <div className={`page-wrap ${styles.page}`}>
     <section className={styles.hero}><div className={styles.heroText}><p className={styles.eyebrow}>K-LOL MOMENTS</p><h1>우리의 반짝이는 장면</h1><span>웃음과 역전, 멋진 플레이를 가볍게 다시 만나 보세요.</span></div><Clapperboard aria-hidden="true" /></section>
     <div className={styles.heading}><div><p className={styles.eyebrow}>HIGHLIGHTS</p><h2>최신 하이라이트</h2></div><strong>{result.state === "ready" ? `${items.length}개` : "—"}</strong></div>
-    {result.state === "unavailable" ? <State icon={<CloudSun />} title="영상 보관함을 연결하고 있어요." body="샘플 영상은 대신 표시하지 않습니다." />
+    {result.state === "unavailable" ? <State icon={<CloudSun />} title="하이라이트를 확인할 수 없어요." body="잠시 후 다시 확인해 주세요." />
       : result.state === "error" ? <State icon={<Sparkles />} title="하이라이트를 불러오지 못했어요." body="주소를 확인하거나 잠시 후 다시 시도해 주세요." alert />
       : items.length === 0 ? <State icon={<Play />} title="공개된 하이라이트가 아직 없어요." body="첫 영상이 게시되면 이곳에서 만날 수 있습니다." />
       : <><div className={styles.grid}>{items.map((item) => <Link className={styles.card} href={`/highlights/${item.id}`} key={item.id}><div className={styles.visual}><ResilientMediaImage sizes="(max-width: 640px) 100vw, (max-width: 900px) 50vw, 33vw" src={item.thumbnailUrl} alt="" /></div><div className={styles.cardBody}><span className={styles.tag}>PLAY</span><h2>{item.title}</h2><p>{item.description}</p></div></Link>)}</div>{result.data.nextCursor ? <nav className={styles.pager}><Link href={`/highlights?cursor=${result.data.nextCursor}&pageSize=${query?.pageSize ?? 12}`}>다음 영상 보기</Link></nav> : null}</>}

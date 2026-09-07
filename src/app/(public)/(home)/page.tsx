@@ -26,7 +26,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "내전 커뮤니티 홈",
-  description: "K-LOL.GG V2의 공개 플레이어 등록부와 내전 커뮤니티 기능을 확인하세요.",
+  description: "K-LOL.GG의 플레이어 기록과 내전 커뮤니티 소식을 확인하세요.",
   alternates: { canonical: "/" },
 };
 
@@ -84,9 +84,9 @@ function HomeDataState({ result }: { result: Awaited<ReturnType<typeof loadRunti
   if (result.state === "ready") {
     return (
       <div className="home-data-state home-data-state--ready" role="status">
-        <span><Database size={18} aria-hidden="true" /> 공개 등록부 연결됨</span>
+        <span><Database size={18} aria-hidden="true" /> 최신 기록 확인 가능</span>
         <strong>{result.snapshot.activePlayerCount.toLocaleString("ko-KR")}명 · {result.snapshot.publishedMatchCount.toLocaleString("ko-KR")}경기</strong>
-        <p>활성 플레이어와 공개 확정 경기 수입니다. 활성 시즌은 {result.snapshot.activeSeasonCount.toLocaleString("ko-KR")}개이며 비공개 계정 필드는 조회하지 않습니다.</p>
+        <p>활성 플레이어와 확정된 경기 수입니다. 현재 진행 중인 시즌은 {result.snapshot.activeSeasonCount.toLocaleString("ko-KR")}개예요.</p>
       </div>
     );
   }
@@ -96,7 +96,7 @@ function HomeDataState({ result }: { result: Awaited<ReturnType<typeof loadRunti
       <div className="home-data-state home-data-state--error" role="alert">
         <span><Database size={18} aria-hidden="true" /> 일시적인 조회 오류</span>
         <strong>공개 현황을 불러오지 못했어요.</strong>
-        <p>검색 화면은 열 수 있으며 데이터 연결이 회복되면 다시 조회할 수 있습니다.</p>
+        <p>플레이어 검색은 계속 이용할 수 있어요. 잠시 후 다시 확인해 주세요.</p>
       </div>
     );
   }
@@ -153,8 +153,8 @@ export default async function HomePage() {
             <Button size="lg" type="submit">찾아보기</Button>
           </form>
 
-          <div className="hero-proof" aria-label="V2 사용자 영역 원칙">
-            <span><ShieldCheck size={15} aria-hidden="true" /> 공개 DTO만 표시</span>
+          <div className="hero-proof" aria-label="서비스 안내">
+            <span><ShieldCheck size={15} aria-hidden="true" /> 필요한 정보만 깔끔하게</span>
             <span><Sparkles size={15} aria-hidden="true" /> 모바일·키보드 함께 지원</span>
           </div>
         </div>
@@ -171,7 +171,7 @@ export default async function HomePage() {
           <div className="hero-art__label">
             <span>오늘의 안내 챔피언</span>
             <strong>아리</strong>
-            <small>V2 전용으로 제작한 밝은 홈 비주얼</small>
+            <small>오늘의 내전을 가볍게 시작해 보세요</small>
           </div>
         </div>
       </section>
@@ -236,7 +236,7 @@ export default async function HomePage() {
           </div>
         ) : (
           <div className={`home-data-state${homeResult.state === "error" ? " home-data-state--error" : ""}`} role={homeResult.state === "error" ? "alert" : "status"}>
-            <span><Database aria-hidden="true" /> 공개 피드 확인 필요</span><strong>지금은 최근 소식을 불러올 수 없어요.</strong><p>샘플 소식으로 대신 채우지 않습니다. 연결이 회복되면 최신 공개 데이터가 표시됩니다.</p>
+            <span><Database aria-hidden="true" /> 새 소식 확인 필요</span><strong>지금은 최근 소식을 불러올 수 없어요.</strong><p>잠시 후 다시 확인해 주세요.</p>
           </div>
         )}
       </section>
@@ -245,12 +245,12 @@ export default async function HomePage() {
         <div className="home-personal-copy">
           <span><Sparkles aria-hidden="true" /> FOR YOU</span>
           <h2 id="home-personal-title">내 활동 이어보기</h2>
-          {account ? <><p><strong>{account.loginId}</strong> 계정은 현재 {accountStatusLabel[account.status]} 상태예요.</p><div className="home-personal-actions"><Link href="/account">내 계정</Link>{account.player ? <Link href={`/players/${account.player.id}`}>{account.player.riotId} 프로필</Link> : <Link href="/account?tab=player">플레이어 연결 확인</Link>}<Link href="/applications">내 참가 신청</Link></div></> : session ? <><p>로그인은 확인됐지만 계정 요약을 지금 불러오지 못했어요. 샘플 계정 정보는 표시하지 않습니다.</p><div className="home-personal-actions"><Link href="/account">계정에서 다시 확인</Link></div></> : <><p>로그인하면 계정 상태, 연결 플레이어와 참가 신청을 이 자리에서 바로 이어갈 수 있어요.</p><div className="home-personal-actions"><Link href="/login"><LogIn aria-hidden="true" /> 로그인</Link><Link href="/signup">가입하기</Link></div></>}
+          {account ? <><p><strong>{account.loginId}</strong> 계정은 현재 {accountStatusLabel[account.status]} 상태예요.</p><div className="home-personal-actions"><Link href="/account">내 계정</Link>{account.player ? <Link href={`/players/${account.player.id}`}>{account.player.riotId} 프로필</Link> : <Link href="/account?tab=player">플레이어 연결 확인</Link>}<Link href="/applications">내 참가 신청</Link></div></> : session ? <><p>계정 정보를 불러오지 못했어요. 내 계정에서 다시 확인해 주세요.</p><div className="home-personal-actions"><Link href="/account">계정에서 다시 확인</Link></div></> : <><p>로그인하면 계정 상태, 연결 플레이어와 참가 신청을 이 자리에서 바로 이어갈 수 있어요.</p><div className="home-personal-actions"><Link href="/login"><LogIn aria-hidden="true" /> 로그인</Link><Link href="/signup">가입하기</Link></div></>}
         </div>
         <div className="home-season-card">
           <CalendarDays aria-hidden="true" />
           <span>현재 시즌</span>
-          {homeResult.state === "ready" && homeResult.snapshot.activeSeason ? <><strong>{homeResult.snapshot.activeSeason.name}</strong><small>{homeResult.snapshot.activeSeason.endsAt ? `${dateLabel(homeResult.snapshot.activeSeason.endsAt)} 종료 예정` : "종료 일정 미정"}</small><Link href="/applications">참가 현황 보기 <ArrowRight aria-hidden="true" /></Link></> : <><strong>{homeResult.state === "ready" ? "활성 시즌 없음" : "확인할 수 없음"}</strong><small>{homeResult.state === "ready" ? "새 시즌이 시작되면 알려 드릴게요." : "데이터 연결 상태를 확인해 주세요."}</small></>}
+          {homeResult.state === "ready" && homeResult.snapshot.activeSeason ? <><strong>{homeResult.snapshot.activeSeason.name}</strong><small>{homeResult.snapshot.activeSeason.endsAt ? `${dateLabel(homeResult.snapshot.activeSeason.endsAt)} 종료 예정` : "종료 일정 미정"}</small><Link href="/applications">참가 현황 보기 <ArrowRight aria-hidden="true" /></Link></> : <><strong>{homeResult.state === "ready" ? "활성 시즌 없음" : "확인할 수 없음"}</strong><small>{homeResult.state === "ready" ? "새 시즌이 시작되면 알려 드릴게요." : "잠시 후 다시 확인해 주세요."}</small></>}
         </div>
       </section>
 
@@ -258,9 +258,9 @@ export default async function HomePage() {
         <div className="section-heading">
           <div>
             <p>LIVE STATUS</p>
-            <h2 id="home-status-title">공개 데이터 연결 상태</h2>
+            <h2 id="home-status-title">지금 볼 수 있는 기록</h2>
           </div>
-          <span>준비되지 않은 시즌·경기·구인 수치는 표시하지 않습니다.</span>
+          <span>시즌·경기·구인 현황을 최신 기록으로 확인하세요.</span>
         </div>
         <HomeDataState result={homeResult} />
         {homeResult.state === "ready" ? <div className="home-feed-contract" aria-label="실제 공개 피드 건수"><span data-state="ready">최근 경기 <strong>{homeResult.snapshot.feeds.recentMatches.length}건</strong></span><span data-state="ready">구인 <strong>{homeResult.snapshot.feeds.recruits.length}건</strong></span><span data-state="ready">대회 <strong>{homeResult.snapshot.feeds.competitions.length}건</strong></span><span data-state="ready">홈 갤러리 <strong>{homeResult.snapshot.feeds.gallery.length}건</strong></span></div> : null}

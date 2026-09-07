@@ -46,7 +46,7 @@ export default async function AdminPlayerDetailPage({
         <Link className={styles.ghostLink} href="/admin/players"><ArrowLeft aria-hidden="true" /> 목록으로</Link>
         <section className={styles.state} data-tone={result.state === "error" ? "error" : undefined} role={result.state === "error" ? "alert" : "status"}>
           <Database aria-hidden="true" />
-          <h1>{result.state === "error" ? "플레이어 상세를 불러오지 못했습니다." : "V2 플레이어 저장소 연결이 필요합니다."}</h1>
+          <h1>{result.state === "error" ? "플레이어 상세를 불러오지 못했습니다." : "플레이어 정보를 확인할 수 없습니다."}</h1>
           <p>가짜 회원 정보로 대체하지 않습니다. 잠시 후 다시 시도해 주세요.</p>
         </section>
       </main>

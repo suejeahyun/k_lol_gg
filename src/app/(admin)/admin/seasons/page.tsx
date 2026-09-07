@@ -78,7 +78,7 @@ export default async function AdminSeasonsPage({
       {result.state !== "ready" ? (
         <section className={styles.state} role={result.state === "error" ? "alert" : "status"}>
           <Database aria-hidden="true" />
-          <h2>{result.state === "unavailable" ? "V2 데이터베이스 연결이 필요합니다." : "시즌 작업 공간을 불러오지 못했습니다."}</h2>
+          <h2>{result.state === "unavailable" ? "시즌 정보를 확인할 수 없습니다." : "시즌 작업 공간을 불러오지 못했습니다."}</h2>
           <p>운영 DB나 샘플 데이터로 대체하지 않고 안전한 연결을 기다립니다.</p>
         </section>
       ) : (
