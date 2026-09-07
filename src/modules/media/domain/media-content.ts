@@ -143,6 +143,54 @@ export function createGallery(input: Readonly<{
   };
 }
 
+export function updateHighlight(input: Readonly<{
+  highlight: HighlightContent;
+  expectedRevision: number;
+  title: string;
+  description: string;
+  youtubeUrl: string;
+  thumbnailAssetId: string | null;
+  sortOrder: number;
+}>): HighlightContent {
+  revision(input.expectedRevision);
+  if (input.highlight.revision !== input.expectedRevision) throw new Error("STALE_MEDIA_REVISION");
+  if (input.highlight.status === "ARCHIVED") throw new Error("ARCHIVED_MEDIA_READ_ONLY");
+  const validated = createHighlight({
+    id: input.highlight.id,
+    title: input.title,
+    description: input.description,
+    youtubeUrl: input.youtubeUrl,
+    thumbnailAssetId: input.thumbnailAssetId,
+    sortOrder: input.sortOrder,
+  });
+  return { ...input.highlight, ...validated, revision: input.highlight.revision + 1, status: input.highlight.status };
+}
+
+export function updateGallery(input: Readonly<{
+  gallery: GalleryContent;
+  expectedRevision: number;
+  title: string;
+  description: string;
+  imageAssetIds: readonly string[];
+}>): GalleryContent {
+  revision(input.expectedRevision);
+  if (input.gallery.revision !== input.expectedRevision) throw new Error("STALE_MEDIA_REVISION");
+  if (input.gallery.status === "ARCHIVED") throw new Error("ARCHIVED_MEDIA_READ_ONLY");
+  const validated = createGallery({
+    id: input.gallery.id,
+    title: input.title,
+    description: input.description,
+    imageAssetIds: input.imageAssetIds,
+  });
+  return {
+    ...input.gallery,
+    title: validated.title,
+    description: validated.description,
+    imageAssetIds: validated.imageAssetIds,
+    revision: input.gallery.revision + 1,
+  };
+}
+
 export function transitionMediaStatus<T extends HighlightContent | GalleryContent>(input: Readonly<{
   content: T;
   expectedRevision: number;

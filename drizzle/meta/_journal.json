@@ -71,6 +71,13 @@
       "when": 1788765000000,
       "tag": "0009_s09_recruiting",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1788766000000,
+      "tag": "0010_s10_media",
+      "breakpoints": true
     }
   ]
 }

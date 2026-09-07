@@ -9,6 +9,8 @@ import {
   toPublicGalleryDto,
   toPublicHighlightDto,
   transitionMediaStatus,
+  updateGallery,
+  updateHighlight,
 } from "../src/modules/media";
 
 test("YouTube inputs canonicalize only supported HTTPS origins and paths", () => {
@@ -62,4 +64,17 @@ test("public gallery DTO resolves only reviewed asset identifiers", () => {
   assert.deepEqual(dto.images, [{ assetId: "a1", url: "https://assets.test/a1" }]);
   assert.deepEqual(Object.keys(dto).sort(), ["description", "id", "images", "showOnHome", "title"]);
   assert.throws(() => toPublicGalleryDto({ ...gallery, status: "ARCHIVED" }, () => "x"), /GALLERY_NOT_PUBLIC/);
+});
+
+test("metadata edits preserve publication status, increment revision, and reject archived content", () => {
+  const publishedHighlight = createHighlight({ id: "h", title: "제목", description: "설명", youtubeUrl: "dQw4w9WgXcQ", publish: true });
+  const editedHighlight = updateHighlight({ highlight: publishedHighlight, expectedRevision: 0, title: "새 제목", description: "새 설명", youtubeUrl: "https://youtu.be/abcdefghijk", thumbnailAssetId: null, sortOrder: 3 });
+  assert.equal(editedHighlight.status, "PUBLISHED");
+  assert.equal(editedHighlight.revision, 1);
+  assert.equal(editedHighlight.youtubeId, "abcdefghijk");
+  const gallery = createGallery({ id: "g", title: "제목", description: "설명", imageAssetIds: ["a"] });
+  const editedGallery = updateGallery({ gallery, expectedRevision: 0, title: "새 제목", description: "새 설명", imageAssetIds: ["b"] });
+  assert.deepEqual(editedGallery.imageAssetIds, ["b"]);
+  const archived = transitionMediaStatus({ content: editedGallery, expectedRevision: 1, command: "ARCHIVE" });
+  assert.throws(() => updateGallery({ gallery: archived, expectedRevision: 2, title: "x", description: "y", imageAssetIds: ["z"] }), /ARCHIVED_MEDIA_READ_ONLY/);
 });
