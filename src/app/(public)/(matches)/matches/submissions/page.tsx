@@ -32,7 +32,7 @@ export default async function OwnMatchSubmissionsPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const session = await getCurrentSession();
+  const session = await getCurrentSession("ACCOUNT");
   const query = parseOwnSubmissionQuery(queryUrl(await searchParams));
   const service = getRuntimeMatchService();
   const result = session && query && service

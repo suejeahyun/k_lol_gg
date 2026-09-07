@@ -22,7 +22,7 @@ export default async function MatchSubmitPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const session = await getCurrentSession();
+  const session = await getCurrentSession("ACCOUNT");
   const rawCode = (await searchParams).code;
   const requestedCode = typeof rawCode === "string" ? rawCode : null;
   const code = canonicalSubmissionPublicCode(requestedCode);
