@@ -4,6 +4,7 @@ import test from "node:test";
 
 import { authorizeAiRequest, buildCsvBackup, toPublicSiteSettingsDto, updateSiteSettings, type SiteSettings } from "../src/modules/operations";
 import { signJobRequest, verifyJobRequest } from "../src/modules/operations/infrastructure/job-signature";
+import { parseAiRequestBody, parseCleanupBody, parseSiteSettingsPatch } from "../src/modules/operations/infrastructure/operations-input";
 
 const settings: SiteSettings = {
   revision: 1,
@@ -12,6 +13,8 @@ const settings: SiteSettings = {
   supportUrl: null,
   features: { registrations: true, matchSubmissions: true, teamBalance: true, kakaoHelp: true, riotIntegration: false, aiAssistant: false },
   aiAllowedRoles: ["ADMIN", "SUPER_ADMIN"],
+  aiRequestsPerHour: 10,
+  aiDailyCostLimitMicros: 10_000,
   internalMaintenanceNote: "private note",
 };
 
@@ -27,16 +30,26 @@ test("site settings update is revision-bound and public DTO is allowlisted", () 
 });
 
 test("AI is hard-disabled first, then checks approval, role, rate and prompt", () => {
-  assert.deepEqual(authorizeAiRequest({ settings, accountStatus: "APPROVED", role: "ADMIN", prompt: "hello", usedInWindow: 0, maximumInWindow: 10 }), { allowed: false, code: "AI_DISABLED" });
+  assert.deepEqual(authorizeAiRequest({ settings, accountStatus: "APPROVED", role: "ADMIN", prompt: "hello", usedInWindow: 0, spentTodayMicros: 0 }), { allowed: false, code: "AI_DISABLED" });
   const enabled = { ...settings, features: { ...settings.features, aiAssistant: true } };
-  assert.deepEqual(authorizeAiRequest({ settings: enabled, accountStatus: "PENDING", role: "ADMIN", prompt: "hello", usedInWindow: 0, maximumInWindow: 10 }), { allowed: false, code: "ACCOUNT_NOT_APPROVED" });
-  assert.deepEqual(authorizeAiRequest({ settings: enabled, accountStatus: "APPROVED", role: "USER", prompt: "hello", usedInWindow: 0, maximumInWindow: 10 }), { allowed: false, code: "AI_ROLE_FORBIDDEN" });
-  assert.deepEqual(authorizeAiRequest({ settings: enabled, accountStatus: "APPROVED", role: "ADMIN", prompt: " hello ", usedInWindow: 0, maximumInWindow: 10 }), { allowed: true, normalizedPrompt: "hello" });
+  assert.deepEqual(authorizeAiRequest({ settings: enabled, accountStatus: "PENDING", role: "ADMIN", prompt: "hello", usedInWindow: 0, spentTodayMicros: 0 }), { allowed: false, code: "ACCOUNT_NOT_APPROVED" });
+  assert.deepEqual(authorizeAiRequest({ settings: enabled, accountStatus: "APPROVED", role: "USER", prompt: "hello", usedInWindow: 0, spentTodayMicros: 0 }), { allowed: false, code: "AI_ROLE_FORBIDDEN" });
+  assert.deepEqual(authorizeAiRequest({ settings: enabled, accountStatus: "APPROVED", role: "ADMIN", prompt: " hello ", usedInWindow: 0, spentTodayMicros: 0 }), { allowed: true, normalizedPrompt: "hello" });
 });
 
 test("CSV backup quotes fields and neutralizes spreadsheet formulas", () => {
   const csv = buildCsvBackup({ columns: [{ header: "name", value: (row: { name: string }) => row.name }, { header: "memo", value: (row: { memo: string }) => row.memo }], rows: [{ name: "=CMD()", memo: "hello,\nworld" }] });
   assert.equal(csv, "\uFEFFname,memo\r\n'=CMD(),\"hello,\nworld\"\r\n");
+});
+
+test("operations HTTP input allowlists reject extra or privileged-looking fields", () => {
+  assert.deepEqual(parseSiteSettingsPatch({ brandName: "K-LOL" }), { brandName: "K-LOL" });
+  assert.equal(parseSiteSettingsPatch({ brandName: "K-LOL", revision: 999 }), null);
+  assert.equal(parseSiteSettingsPatch({ features: { aiAssistant: true, secretMode: true } }), null);
+  assert.deepEqual(parseAiRequestBody({ prompt: "hello" }), { prompt: "hello" });
+  assert.equal(parseAiRequestBody({ prompt: "hello", systemPrompt: "bypass" }), null);
+  assert.deepEqual(parseCleanupBody({ retentionDays: 90 }), { retentionDays: 90 });
+  assert.equal(parseCleanupBody({ retentionDays: "90" }), null);
 });
 
 test("internal job signature is scoped, expiring and nonce replay aware", () => {

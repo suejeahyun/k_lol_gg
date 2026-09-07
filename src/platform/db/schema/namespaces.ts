@@ -11,3 +11,4 @@ export const teamToolsSchema = pgSchema("team_tools");
 export const mmrSchema = pgSchema("mmr");
 export const recruitingSchema = pgSchema("recruiting");
 export const mediaSchema = pgSchema("media");
+export const operationsSchema = pgSchema("operations");

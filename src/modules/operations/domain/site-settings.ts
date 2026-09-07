@@ -14,6 +14,8 @@ export type SiteSettings = Readonly<{
   supportUrl: string | null;
   features: PublicFeatureFlags;
   aiAllowedRoles: readonly ("USER" | "ADMIN" | "SUPER_ADMIN")[];
+  aiRequestsPerHour: number;
+  aiDailyCostLimitMicros: number;
   internalMaintenanceNote: string | null;
 }>;
 
@@ -22,6 +24,17 @@ export type PublicSiteSettingsDto = Readonly<{
   tagline: string;
   supportUrl: string | null;
   features: PublicFeatureFlags;
+}>;
+
+export type SiteSettingsPatch = Readonly<{
+  brandName?: string;
+  tagline?: string;
+  supportUrl?: string | null;
+  features?: Partial<PublicFeatureFlags>;
+  aiAllowedRoles?: readonly ("USER" | "ADMIN" | "SUPER_ADMIN")[];
+  aiRequestsPerHour?: number;
+  aiDailyCostLimitMicros?: number;
+  internalMaintenanceNote?: string | null;
 }>;
 
 function cleanText(value: string, code: string, maximum: number): string {
@@ -49,14 +62,7 @@ function safeSupportUrl(value: string | null): string | null {
 export function updateSiteSettings(input: Readonly<{
   current: SiteSettings;
   expectedRevision: number;
-  patch: Readonly<{
-    brandName?: string;
-    tagline?: string;
-    supportUrl?: string | null;
-    features?: Partial<PublicFeatureFlags>;
-    aiAllowedRoles?: readonly ("USER" | "ADMIN" | "SUPER_ADMIN")[];
-    internalMaintenanceNote?: string | null;
-  }>;
+  patch: SiteSettingsPatch;
 }>): SiteSettings {
   if (!Number.isSafeInteger(input.expectedRevision) || input.current.revision !== input.expectedRevision) {
     throw new Error("STALE_SITE_SETTINGS_REVISION");
@@ -71,6 +77,14 @@ export function updateSiteSettings(input: Readonly<{
     ? input.current.internalMaintenanceNote
     : input.patch.internalMaintenanceNote?.normalize("NFKC").trim() || null;
   if (note && note.length > 2_000) throw new Error("INVALID_MAINTENANCE_NOTE");
+  const aiRequestsPerHour = input.patch.aiRequestsPerHour ?? input.current.aiRequestsPerHour;
+  const aiDailyCostLimitMicros = input.patch.aiDailyCostLimitMicros ?? input.current.aiDailyCostLimitMicros;
+  if (!Number.isSafeInteger(aiRequestsPerHour) || aiRequestsPerHour < 1 || aiRequestsPerHour > 1_000) {
+    throw new Error("INVALID_AI_RATE_LIMIT");
+  }
+  if (!Number.isSafeInteger(aiDailyCostLimitMicros) || aiDailyCostLimitMicros < 0 || aiDailyCostLimitMicros > 1_000_000_000) {
+    throw new Error("INVALID_AI_COST_LIMIT");
+  }
   return {
     revision: input.current.revision + 1,
     brandName: input.patch.brandName === undefined
@@ -84,6 +98,8 @@ export function updateSiteSettings(input: Readonly<{
       : safeSupportUrl(input.patch.supportUrl),
     features: { ...input.current.features, ...(input.patch.features ?? {}) },
     aiAllowedRoles: roles,
+    aiRequestsPerHour,
+    aiDailyCostLimitMicros,
     internalMaintenanceNote: note,
   };
 }
@@ -104,16 +120,22 @@ export function authorizeAiRequest(input: Readonly<{
   role: "USER" | "ADMIN" | "SUPER_ADMIN";
   prompt: string;
   usedInWindow: number;
-  maximumInWindow: number;
+  spentTodayMicros: number;
 }>): Readonly<{ allowed: true; normalizedPrompt: string }> | Readonly<{ allowed: false; code: string }> {
   if (!input.settings.features.aiAssistant) return { allowed: false, code: "AI_DISABLED" };
   if (input.accountStatus !== "APPROVED") return { allowed: false, code: "ACCOUNT_NOT_APPROVED" };
   if (!input.settings.aiAllowedRoles.includes(input.role)) return { allowed: false, code: "AI_ROLE_FORBIDDEN" };
-  if (!Number.isSafeInteger(input.maximumInWindow) || input.maximumInWindow < 1 || input.maximumInWindow > 1_000) {
+  if (!Number.isSafeInteger(input.settings.aiRequestsPerHour) || input.settings.aiRequestsPerHour < 1 || input.settings.aiRequestsPerHour > 1_000) {
     return { allowed: false, code: "AI_POLICY_INVALID" };
   }
-  if (!Number.isSafeInteger(input.usedInWindow) || input.usedInWindow < 0 || input.usedInWindow >= input.maximumInWindow) {
+  if (!Number.isSafeInteger(input.usedInWindow) || input.usedInWindow < 0 || input.usedInWindow >= input.settings.aiRequestsPerHour) {
     return { allowed: false, code: "AI_RATE_LIMITED" };
+  }
+  if (!Number.isSafeInteger(input.spentTodayMicros) || input.spentTodayMicros < 0) {
+    return { allowed: false, code: "AI_POLICY_INVALID" };
+  }
+  if (input.settings.aiDailyCostLimitMicros <= input.spentTodayMicros) {
+    return { allowed: false, code: "AI_COST_LIMITED" };
   }
   const normalizedPrompt = input.prompt.normalize("NFKC").trim();
   if (!normalizedPrompt || normalizedPrompt.length > 2_000 || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(normalizedPrompt)) {

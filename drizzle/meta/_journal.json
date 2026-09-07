@@ -85,6 +85,13 @@
       "when": 1788767000000,
       "tag": "0011_s07_events",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1788766800000,
+      "tag": "0012_s13_operations",
+      "breakpoints": true
     }
   ]
 }
