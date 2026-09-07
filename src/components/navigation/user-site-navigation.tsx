@@ -137,7 +137,7 @@ function AllMenuControl({ compact = false }: { compact?: boolean }) {
           </div>
 
           <p className="user-dialog__hint user-dialog__hint--top">
-            바로 사용할 수 있는 기능은 링크로, 다음 파동에서 구현할 기능은 준비 중으로 구분했습니다.
+            찾는 기능을 빠르게 열 수 있도록 역할과 이용 흐름별로 모았습니다.
           </p>
           <div className="all-menu-grid">
             {userNavigationSections.map((section) => (
@@ -151,7 +151,7 @@ function AllMenuControl({ compact = false }: { compact?: boolean }) {
                         {route.implementationState === "page-contract" ? (
                           <Link href={route.template} onClick={() => closeDialog(dialog.current)}>
                             {route.label}
-                            <span>페이지 상태 구현</span>
+                            <span>바로 열기</span>
                           </Link>
                         ) : (
                           <span aria-disabled="true">

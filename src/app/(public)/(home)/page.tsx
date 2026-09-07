@@ -21,7 +21,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "내전 커뮤니티 홈",
-  description: "K-LOL.GG V2의 공개 플레이어 등록부와 구현 상태를 확인하세요.",
+  description: "K-LOL.GG V2의 공개 플레이어 등록부와 내전 커뮤니티 기능을 확인하세요.",
   alternates: { canonical: "/" },
 };
 
@@ -155,7 +155,7 @@ export default async function HomePage() {
             <p>QUICK START</p>
             <h2 id="tasks-title">무엇을 하러 왔나요?</h2>
           </div>
-          <span>사용할 수 있는 기능과 준비 중인 기능을 분명하게 구분합니다.</span>
+          <span>자주 쓰는 기능을 한 번에 시작할 수 있어요.</span>
         </div>
         <div className="task-grid">
           {taskCards.map(({ title, description, href, icon: Icon, tone, status }) => {
