@@ -117,6 +117,7 @@ test("the repository plan covers every page once, resolves IDs and adds reviewed
     "/admin/kakao?tab=health",
     "/admin/logs?view=stats",
     "/admin/logs?view=ai-requests",
+    `/admin/matches/${uuidFixture}?tab=ai-review`,
     `/admin/players/${uuidFixture}?tab=riot`,
     "/admin/riot?tab=sync",
     "/admin/riot?tab=logs",

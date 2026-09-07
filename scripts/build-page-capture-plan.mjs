@@ -42,6 +42,9 @@ const QUERY_VARIANTS = Object.freeze({
   "/admin/matches": [
     { label: "submissions", query: { view: "submissions" } },
   ],
+  "/admin/matches/[matchId]": [
+    { label: "ai-review", query: { tab: "ai-review" } },
+  ],
   "/admin/operation-forms": [
     { label: "friends", query: { type: "friends" } },
     { label: "leaves", query: { type: "leaves" } },
