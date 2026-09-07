@@ -15,7 +15,7 @@ test("public destruction detail keeps owner application, vote and explicit unava
   assert.match(page, /rosterPlayers/);
   assert.match(page, /teamAName/);
   assert.match(page, /championTeamName/);
-  for (const token of ["parseDestructionDetailView", "captain-points", "participants", "gallery", "imageIndex", "role=\"dialog\""]) assert.match(page, new RegExp(token));
+  for (const token of ["parseDestructionDetailView", "captain-points", "participants", "gallery", "imageIndex", "role=\"dialog\"", "ResilientMediaImage"]) assert.match(page, new RegExp(token));
   assert.match(actions, /UPSERT|application/);
   assert.match(actions, /mvp-vote/);
   assert.match(actions, /aria-live="polite"/);
