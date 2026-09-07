@@ -70,6 +70,7 @@ function aggregate(): DestructionAggregate {
     rosterSnapshots: [],
     replacements: [],
     mvpBallots: [],
+    galleryId: null,
     createdAt: instant,
     updatedAt: instant,
   };
@@ -172,12 +173,13 @@ test("cancel and restore retain only the recorded lifecycle recovery state", () 
   assert.throws(() => applyDestructionTerminalCommand(current, { type: "RESTORE_CANCELLED" }), failsWith("INVALID_TRANSITION"));
 });
 
-test("public DTO is an explicit allowlist without balances, cancellation reason, votes, audit, or session material", () => {
+test("public DTO is an explicit allowlist without cancellation reason, raw votes, audit, or session material", () => {
   const dto = toDestructionPublicDto(aggregate());
   assert.deepEqual(Object.keys(dto).sort(), [
     "advanceTeamCount",
     "championTeamId",
     "championTeamName",
+    "gallery",
     "id",
     "mvpResults",
     "preliminaryBestOf",
@@ -193,7 +195,7 @@ test("public DTO is an explicit allowlist without balances, cancellation reason,
   ]);
   assert.equal("cancellationReason" in dto, false);
   assert.equal("mvpBallots" in dto, false);
-  assert.equal("remainingAuctionPoints" in dto, false);
+  assert.equal("remainingAuctionPoints" in dto, false, "auction points only appear in the allowlisted team projection");
   assert.equal(dto.tournamentFixtures.every((fixture) => fixture.teamAName !== fixture.teamAId && fixture.teamBName !== fixture.teamBId), true);
 });
 

@@ -5,6 +5,8 @@ import {
   buildLegacyAppLoginDestination,
   buildLegacyAppMatchesDestination,
   buildLegacyCanonicalIdDestination,
+  buildLegacyDestructionImageDestination,
+  buildLegacyDestructionParticipantDestination,
   buildLegacyPlayerBalanceRecommendationDestination,
   legacyRedirectResponse,
 } from "../src/modules/navigation/application/legacy-user-redirects";
@@ -39,6 +41,13 @@ test("동적 legacy ID와 밸런스 추천 query는 path traversal과 미검토 
     buildLegacyPlayerBalanceRecommendationDestination({ draftId: [id], team: ["BLUE"], next: ["//evil"] }),
     `/tools/team-balance/drafts?view=recommendations&draftId=${id}&team=BLUE`,
   );
+});
+
+test("멸망전 참가자와 이미지 legacy deep link는 검증한 ID와 ordinal만 보존한다", () => {
+  assert.equal(buildLegacyDestructionParticipantDestination("tournament_01", "player_01"), "/competitions/destruction/tournament_01?tab=participants&player=player_01");
+  assert.equal(buildLegacyDestructionParticipantDestination("../admin", "player_01"), "/applications");
+  assert.equal(buildLegacyDestructionImageDestination("tournament_01", "4"), "/competitions/destruction/tournament_01?tab=gallery&image=4");
+  assert.equal(buildLegacyDestructionImageDestination("tournament_01", "-1"), "/competitions?type=destruction");
 });
 
 test("legacy redirect 응답은 상대 Location과 no-store를 사용한다", () => {

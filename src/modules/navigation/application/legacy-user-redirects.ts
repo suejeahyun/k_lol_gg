@@ -72,6 +72,16 @@ export function buildLegacyCanonicalIdDestination(
   return destination(`${basePath}/${id}`, query);
 }
 
+export function buildLegacyDestructionParticipantDestination(tournamentId: string, playerId: string) {
+  if (!SAFE_LEGACY_ID.test(tournamentId) || !SAFE_LEGACY_ID.test(playerId)) return "/applications";
+  return destination(`/competitions/destruction/${tournamentId}`, { tab: "participants", player: playerId });
+}
+
+export function buildLegacyDestructionImageDestination(tournamentId: string, imageIndex: string) {
+  if (!SAFE_LEGACY_ID.test(tournamentId) || !/^(?:0|[1-9][0-9]{0,3})$/u.test(imageIndex)) return "/competitions?type=destruction";
+  return destination(`/competitions/destruction/${tournamentId}`, { tab: "gallery", image: imageIndex });
+}
+
 export function buildLegacyPlayerBalanceRecommendationDestination(query: LegacyQuery) {
   const draftId = one(query.draftId)?.toLocaleLowerCase("en-US");
   const team = one(query.team);

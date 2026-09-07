@@ -42,6 +42,7 @@ export type DestructionAdminWorkspace = Readonly<{
   destruction: DestructionAggregate;
   playerOptions: readonly CompetitionPlayerOption[];
   playerLabels: Readonly<Record<string, string>>;
+  galleryOptions: readonly Readonly<{ id: string; title: string }>[];
 }>;
 
 export type OwnDestructionApplicationDto = Readonly<{
@@ -162,7 +163,8 @@ export type DestructionAdminCommand =
   | AdminCommand<"REPLACE_PARTICIPANT", Readonly<{ replacementId: string; participantId: string; incomingPlayerId: string; incomingPosition: CompetitionPosition; reason: string }>>
   | AdminCommand<"RESET_MVP", Readonly<{ fixtureId: string }>>
   | AdminCommand<"ASSIGN_MVP", Readonly<{ fixtureId: string; playerId: string }>>
-  | AdminCommand<"COMPLETE_DESTRUCTION", Readonly<Record<string, never>>>
+  | AdminCommand<"SET_MEDIA_GALLERY", Readonly<{ galleryId: string | null }>>
+  | AdminCommand<"COMPLETE_DESTRUCTION", Readonly<{ galleryId?: string | null }>>
   | AdminCommand<"CANCEL_DESTRUCTION", Readonly<{ reason: string }>>
   | AdminCommand<"RESTORE_DESTRUCTION", Readonly<Record<string, never>>>;
 

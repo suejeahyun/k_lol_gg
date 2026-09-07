@@ -49,6 +49,7 @@ export interface DestructionCommandHandlerDependencies {
   unitOfWork: { transaction<T>(operation: (transaction: DestructionTransactionContext) => Promise<T>): Promise<T> };
   repository: {
     loadForUpdate(transaction: DestructionTransactionContext, tournamentId: string): Promise<DestructionAggregate | null>;
+    assertPublishedReadyGallery(transaction: DestructionTransactionContext, galleryId: string): Promise<void>;
     save(transaction: DestructionTransactionContext, input: Readonly<{ aggregate: DestructionAggregate; expectedRevision: number; create: boolean }>): Promise<void>;
   };
   authorization: {
@@ -85,6 +86,7 @@ function createAggregate(command: Extract<DestructionHttpCommand, { type: "CREAT
     rosterSnapshots: Object.freeze([]),
     replacements: Object.freeze([]),
     mvpBallots: Object.freeze([]),
+    galleryId: null,
     createdAt: now,
     updatedAt: now,
   });
@@ -285,10 +287,14 @@ function applyCommand(current: DestructionAggregate | null, command: Destruction
       const assigned = assignDestructionMvp(ballot, command.payload.playerId, now);
       return updated(current, now, { mvpBallots: Object.freeze(current.mvpBallots.map((entry) => entry.fixtureId === assigned.fixtureId ? assigned : entry)) });
     }
+    case "SET_MEDIA_GALLERY": {
+      requireCompetition(current.lifecycle.status === "TOURNAMENT" || current.lifecycle.status === "COMPLETED", "INVALID_TRANSITION", "A result gallery may be linked during or after the tournament.");
+      return updated(current, now, { galleryId: command.payload.galleryId });
+    }
     case "COMPLETE_DESTRUCTION": {
       const playedFixtureIds = [...current.preliminaryFixtures.filter((fixture) => fixture.status === "COMPLETED").map((fixture) => fixture.id), ...(current.tournamentBracket?.fixtures.filter((fixture) => fixture.resolution === "RESULT").map((fixture) => fixture.id) ?? [])];
       requireCompetition(playedFixtureIds.length > 0 && playedFixtureIds.every((fixtureId) => current.mvpBallots.some((ballot) => ballot.fixtureId === fixtureId && ballot.finalizedPlayerId)), "PRECONDITION_FAILED", "Every played fixture requires a finalized MVP vote before completion.");
-      return updated(applyDestructionTerminalCommand(current, { type: "COMPLETE", finalResultConfirmed: true }), now, {});
+      return updated(applyDestructionTerminalCommand(current, { type: "COMPLETE", finalResultConfirmed: true }), now, command.payload.galleryId === undefined ? {} : { galleryId: command.payload.galleryId });
     }
     case "CANCEL_DESTRUCTION": return updated(applyDestructionTerminalCommand(current, { type: "CANCEL", reason: command.payload.reason }), now, {});
     case "RESTORE_DESTRUCTION": return updated(applyDestructionTerminalCommand(current, { type: "RESTORE_CANCELLED" }), now, {});
@@ -340,6 +346,10 @@ export class DestructionCommandHandler {
       const current = await this.dependencies.repository.loadForUpdate(transaction, command.tournamentId);
       const create = command.type === "CREATE_DESTRUCTION";
       requireCompetition(create ? current === null && command.metadata.expectedRevision === 0 : current?.revision === command.metadata.expectedRevision, "PRECONDITION_FAILED", "The destruction revision changed.");
+      const galleryId = command.type === "SET_MEDIA_GALLERY" || command.type === "COMPLETE_DESTRUCTION"
+        ? command.payload.galleryId
+        : undefined;
+      if (galleryId) await this.dependencies.repository.assertPublishedReadyGallery(transaction, galleryId);
       const now = this.dependencies.clock.now();
       const aggregate = Object.freeze({ ...applyCommand(current, command, now), revision: command.metadata.expectedRevision + 1 });
       const body: DestructionHttpMutationBody = { tournamentId: aggregate.id, revision: aggregate.revision, status: aggregate.lifecycle.status, commandType: command.type };

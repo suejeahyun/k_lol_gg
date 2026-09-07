@@ -1,0 +1,2 @@
+ALTER TABLE "competition"."destruction_competitions" ADD COLUMN "gallery_id" uuid;--> statement-breakpoint
+ALTER TABLE "competition"."destruction_competitions" ADD CONSTRAINT "destruction_competitions_gallery_id_galleries_id_fk" FOREIGN KEY ("gallery_id") REFERENCES "media"."galleries"("id") ON DELETE restrict ON UPDATE no action;

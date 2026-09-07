@@ -193,3 +193,6 @@
 }
 
 @media (max-width: 420px) { .mobileMenu nav { grid-template-columns: 1fr; } }
+
+.account small,.mobileAccount small{color:#5f6f86}
+.breadcrumb{color:#64748b}

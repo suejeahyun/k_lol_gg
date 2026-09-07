@@ -5,6 +5,7 @@ import { userAccounts } from "./auth";
 import { competitionSchema } from "./namespaces";
 import { bytea } from "./primitives";
 import { players } from "./registry";
+import { mediaGalleries } from "./media";
 
 const timestamptz = (name: string) => timestamp(name, { mode: "date", withTimezone: true });
 
@@ -22,6 +23,7 @@ export const destructionCompetitions = competitionSchema.table("destruction_comp
   preliminaryFormat: destructionPreliminaryFormat("preliminary_format").notNull(),
   teamCount: integer("team_count").notNull(),
   participantCount: integer("participant_count").default(0).notNull(),
+  galleryId: uuid("gallery_id").references(() => mediaGalleries.id, { onDelete: "restrict" }),
   aggregateJson: jsonb("aggregate_json").$type<Record<string, unknown>>().notNull(),
   revision: bigint("revision", { mode: "number" }).notNull(),
   createdByUserAccountId: uuid("created_by_user_account_id").notNull().references(() => userAccounts.id, { onDelete: "restrict" }),

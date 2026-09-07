@@ -15,6 +15,8 @@ import {
   destructionCompetitions,
   destructionOutbox,
 } from "@/platform/db/schema/destruction-competitions";
+import { mediaGalleries, mediaGalleryAssets } from "@/platform/db/schema/media";
+import { privateAssets } from "@/platform/db/schema/matches";
 import { players } from "@/platform/db/schema/registry";
 import type { V2Transaction } from "@/platform/db/transaction";
 import { loadCompetitionPlayerDisplayCatalog } from "../infrastructure/postgres-player-display-catalog";
@@ -22,7 +24,7 @@ import { loadCompetitionPlayerDisplayCatalog } from "../infrastructure/postgres-
 import type { CompetitionCommandReceipt } from "../core";
 import { DestructionCommandHandler, type DestructionCommandHandlerDependencies, type DestructionReceiptClaim, type DestructionTransactionContext } from "./destruction-command-handler";
 import type { DestructionHttpCommand, DestructionHttpMutationBody, DestructionListQuery, DestructionPage, DestructionQueryPort } from "./http-contract";
-import { toDestructionPublicDto, type DestructionAggregate } from "./state";
+import { toDestructionPublicDto, type DestructionAggregate, type DestructionPublicGalleryDto } from "./state";
 
 type DestructionRow = typeof destructionCompetitions.$inferSelect;
 
@@ -33,7 +35,9 @@ function same(left: Uint8Array, right: Uint8Array) { return Buffer.from(left).eq
 function aggregateFromRow(row: DestructionRow): DestructionAggregate {
   const value = row.aggregateJson as unknown as DestructionAggregate;
   if (!value || value.id !== row.id || value.revision !== row.revision || value.lifecycle?.status !== row.status || value.configuration?.preliminaryFormat !== row.preliminaryFormat || !Array.isArray(value.applications) || !Array.isArray(value.participants) || !Array.isArray(value.teams)) throw new Error("DESTRUCTION_SNAPSHOT_INCONSISTENT");
-  return value;
+  const snapshotGalleryId = value.galleryId ?? null;
+  if (snapshotGalleryId !== (row.galleryId ?? null)) throw new Error("DESTRUCTION_SNAPSHOT_INCONSISTENT");
+  return Object.freeze({ ...value, galleryId: snapshotGalleryId });
 }
 
 function rowValues(aggregate: DestructionAggregate, actorUserAccountId: string) {
@@ -45,6 +49,7 @@ function rowValues(aggregate: DestructionAggregate, actorUserAccountId: string) 
     preliminaryFormat: aggregate.configuration.preliminaryFormat,
     teamCount: aggregate.configuration.teamCount,
     participantCount: aggregate.participants.length,
+    galleryId: aggregate.galleryId,
     aggregateJson: snapshot(aggregate),
     revision: aggregate.revision,
     updatedByUserAccountId: actorUserAccountId,
@@ -68,6 +73,13 @@ export class PostgresDestructionAdapter implements DestructionQueryPort {
       loadForUpdate: async (context, tournamentId) => {
         const row = (await this.tx(context).select().from(destructionCompetitions).where(eq(destructionCompetitions.id, tournamentId)).for("update").limit(1))[0];
         return row ? aggregateFromRow(row) : null;
+      },
+      assertPublishedReadyGallery: async (context, galleryId) => {
+        const transaction = this.tx(context);
+        const gallery = (await transaction.select({ id: mediaGalleries.id }).from(mediaGalleries).where(and(eq(mediaGalleries.id, galleryId), eq(mediaGalleries.status, "PUBLISHED"))).for("share").limit(1))[0];
+        if (!gallery) throw new TypeError("INVALID_GALLERY");
+        const assets = await transaction.select({ status: privateAssets.status, purpose: privateAssets.purpose }).from(mediaGalleryAssets).innerJoin(privateAssets, eq(mediaGalleryAssets.privateAssetId, privateAssets.id)).where(eq(mediaGalleryAssets.galleryId, galleryId));
+        if (assets.length < 1 || assets.length > 5 || assets.some((asset) => asset.status !== "READY" || asset.purpose !== "GALLERY")) throw new TypeError("INVALID_GALLERY");
       },
       save: async (context, input) => {
         const transaction = this.tx(context);
@@ -137,6 +149,15 @@ export class PostgresDestructionAdapter implements DestructionQueryPort {
   private tx(context: DestructionTransactionContext) { const transaction = this.contexts.get(context); if (!transaction) throw new Error("Destruction transaction context escaped its unit of work."); return transaction; }
   private actor(context: DestructionTransactionContext) { const actor = this.actors.get(context); if (!actor) throw new Error("Destruction actor was not authorized in the transaction."); return actor; }
 
+  private async getPublishedReadyGallery(galleryId: string | null): Promise<DestructionPublicGalleryDto | null> {
+    if (!galleryId) return null;
+    const gallery = (await this.database.select({ id: mediaGalleries.id, title: mediaGalleries.title, description: mediaGalleries.description }).from(mediaGalleries).where(and(eq(mediaGalleries.id, galleryId), eq(mediaGalleries.status, "PUBLISHED"))).limit(1))[0];
+    if (!gallery) return null;
+    const assets = await this.database.select({ assetId: mediaGalleryAssets.privateAssetId, ordinal: mediaGalleryAssets.ordinal, status: privateAssets.status, purpose: privateAssets.purpose }).from(mediaGalleryAssets).innerJoin(privateAssets, eq(mediaGalleryAssets.privateAssetId, privateAssets.id)).where(eq(mediaGalleryAssets.galleryId, galleryId)).orderBy(mediaGalleryAssets.ordinal);
+    if (assets.length < 1 || assets.length > 5 || assets.some((asset) => asset.status !== "READY" || asset.purpose !== "GALLERY")) return null;
+    return Object.freeze({ id: gallery.id, title: gallery.title, description: gallery.description, images: Object.freeze(assets.map((asset) => Object.freeze({ assetId: asset.assetId, ordinal: asset.ordinal, url: `/api/media/assets/${asset.assetId}` }))) });
+  }
+
   private async list(query: DestructionListQuery): Promise<DestructionPage> {
     const conditions = [query.query ? or(ilike(destructionCompetitions.titleNormalized, `%${normalizeText(query.query)}%`), ilike(destructionCompetitions.title, `%${query.query}%`)) : undefined, query.status ? eq(destructionCompetitions.status, query.status) : undefined, query.format ? eq(destructionCompetitions.preliminaryFormat, query.format) : undefined].filter((value): value is Exclude<typeof value, undefined> => value !== undefined);
     const where = conditions.length ? and(...conditions) : undefined;
@@ -145,7 +166,10 @@ export class PostgresDestructionAdapter implements DestructionQueryPort {
     const aggregates = rows.map(aggregateFromRow);
     const catalog = await loadCompetitionPlayerDisplayCatalog(
       this.database,
-      aggregates.flatMap((aggregate) => aggregate.participants.map((entry) => entry.playerId)),
+      aggregates.flatMap((aggregate) => [
+        ...aggregate.participants.map((entry) => entry.playerId),
+        ...aggregate.mvpBallots.flatMap((ballot) => ballot.finalizedPlayerId ? [ballot.finalizedPlayerId] : []),
+      ]),
     );
     return { items: rows.map((row, index) => ({ ...toDestructionPublicDto(aggregates[index]!, catalog.labels), participantCount: row.participantCount })), page: query.page, pageSize: query.pageSize, total, totalPages: total === 0 ? 0 : Math.ceil(total / query.pageSize) };
   }
@@ -156,8 +180,14 @@ export class PostgresDestructionAdapter implements DestructionQueryPort {
     const row = (await this.database.select().from(destructionCompetitions).where(eq(destructionCompetitions.id, tournamentId)).limit(1))[0];
     if (!row) return null;
     const aggregate = aggregateFromRow(row);
-    const catalog = await loadCompetitionPlayerDisplayCatalog(this.database, aggregate.participants.map((entry) => entry.playerId));
-    return toDestructionPublicDto(aggregate, catalog.labels);
+    const [catalog, gallery] = await Promise.all([
+      loadCompetitionPlayerDisplayCatalog(this.database, [
+        ...aggregate.participants.map((entry) => entry.playerId),
+        ...aggregate.mvpBallots.flatMap((ballot) => ballot.finalizedPlayerId ? [ballot.finalizedPlayerId] : []),
+      ]),
+      this.getPublishedReadyGallery(aggregate.galleryId),
+    ]);
+    return toDestructionPublicDto(aggregate, catalog.labels, gallery);
   }
   async getAdmin(tournamentId: string) { const row = (await this.database.select().from(destructionCompetitions).where(eq(destructionCompetitions.id, tournamentId)).limit(1))[0]; return row ? aggregateFromRow(row) : null; }
   async getAdminWorkspace(tournamentId: string) {
@@ -168,10 +198,13 @@ export class PostgresDestructionAdapter implements DestructionQueryPort {
       [...destruction.applications.map((entry) => entry.playerId), ...destruction.participants.map((entry) => entry.playerId)],
       true,
     );
+    const candidateGalleries = await this.database.select({ id: mediaGalleries.id, title: mediaGalleries.title }).from(mediaGalleries).where(eq(mediaGalleries.status, "PUBLISHED")).orderBy(desc(mediaGalleries.publishedAt), mediaGalleries.id).limit(50);
+    const galleryOptions = (await Promise.all(candidateGalleries.map(async (gallery) => await this.getPublishedReadyGallery(gallery.id) ? gallery : null))).filter((gallery): gallery is NonNullable<typeof gallery> => gallery !== null);
     return {
       destruction,
       playerOptions: catalog.options,
       playerLabels: Object.fromEntries(catalog.labels),
+      galleryOptions,
     };
   }
   async getOwnApplication(tournamentId: string, ownerUserAccountId: string) {

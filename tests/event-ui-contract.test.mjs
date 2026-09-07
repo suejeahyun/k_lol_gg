@@ -8,10 +8,11 @@ test("public competition pages expose list/detail/application states without adm
   const list = source("../src/app/(public)/(competitions)/competitions/page.tsx");
   const detail = source("../src/app/(public)/(competitions)/competitions/events/[eventId]/page.tsx");
   const application = source("../src/app/(public)/(competitions)/competitions/events/[eventId]/event-application-actions.tsx");
-  for (const token of ["parseEventListQuery", 'alternates: { canonical: "/competitions" }', 'role="status"', 'result.state === "error" ? "alert"']) assert.equal(list.includes(token), true, token);
-  for (const token of ["notFound()", "applicationsOpen", "EventApplicationActions", "팀 편성", "대진과 결과"]) assert.equal(detail.includes(token), true, token);
+  for (const token of ["parseEventListQuery", "parseDestructionListQuery", "parseCompetitionSavedView", 'alternates: { canonical: "/competitions" }', 'role={error ? "alert" : "status"}']) assert.equal(list.includes(token), true, token);
+  for (const token of ["notFound()", "applicationsOpen", "EventApplicationActions", "팀 편성", "대진과 결과", "parseEventDetailAction"]) assert.equal(detail.includes(token), true, token);
   for (const token of ["playerName", "teamAName", "teamBName", "winnerTeamName"]) assert.equal(detail.includes(token), true, token);
   for (const token of ["If-Match", "Idempotency-Key", 'aria-live="polite"', 'method: "PUT"', '"DELETE"']) assert.equal(application.includes(token), true, token);
+  for (const token of ["focusOnMount", "scrollIntoView", 'id="event-application"']) assert.equal(application.includes(token), true, token);
   assert.equal(`${list}${detail}${application}`.includes("ownerUserAccountId"), false);
   assert.equal(`${list}${detail}${application}`.includes("START_RECRUITMENT"), false);
 });

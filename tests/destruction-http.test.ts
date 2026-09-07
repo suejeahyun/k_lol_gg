@@ -32,12 +32,16 @@ test("admin parser covers lifecycle commands and rejects unknown or extra materi
     type: "SELL_AUCTION", payload: { participantId: applicationId, teamId: tournamentId, purchasePoints: 330 },
   });
   assert.deepEqual(parseDestructionAdminAction({ type: "CORRECT_TOURNAMENT_RESULT", payload: { fixtureId: "final-1", teamAScore: 2, teamBScore: 1, winnerTeamId: "team-a" } }).type, "CORRECT_TOURNAMENT_RESULT");
+  assert.deepEqual(parseDestructionAdminAction({ type: "COMPLETE_DESTRUCTION", payload: { galleryId: tournamentId } }), { type: "COMPLETE_DESTRUCTION", payload: { galleryId: tournamentId } });
+  assert.deepEqual(parseDestructionAdminAction({ type: "SET_MEDIA_GALLERY", payload: { galleryId: null } }), { type: "SET_MEDIA_GALLERY", payload: { galleryId: null } });
+  assert.throws(() => parseDestructionAdminAction({ type: "SET_MEDIA_GALLERY", payload: { galleryId: "not-a-uuid" } }), /INVALID_INPUT/);
   assert.throws(() => parseDestructionAdminAction({ type: "DRAW_AUCTION", payload: { seed: "client-overrides-seed" } }), /INVALID_INPUT/);
   assert.throws(() => parseDestructionAdminAction({ type: "UNKNOWN", payload: {} }), /INVALID_INPUT/);
   assert.equal(destructionAdminMinimumRole("RECORD_TOURNAMENT_RESULT"), "ADMIN");
   assert.equal(destructionAdminMinimumRole("CORRECT_TOURNAMENT_RESULT"), "SUPER_ADMIN");
   assert.equal(destructionAdminMinimumRole("REPLACE_PARTICIPANT"), "SUPER_ADMIN");
   assert.equal(destructionAdminMinimumRole("RESET_MVP"), "SUPER_ADMIN");
+  assert.equal(destructionAdminMinimumRole("SET_MEDIA_GALLERY"), "ADMIN");
 });
 
 function context(purpose: "ACCOUNT" | "ADMIN", role: "USER" | "ADMIN" | "SUPER_ADMIN" = purpose === "ACCOUNT" ? "USER" : "ADMIN"): DestructionCommandContext {

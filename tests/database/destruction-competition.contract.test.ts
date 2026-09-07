@@ -16,7 +16,10 @@ import {
   destructionCommandReceipts,
   destructionCompetitions,
   destructionOutbox,
+  mediaGalleries,
+  mediaGalleryAssets,
   players,
+  privateAssets,
   userAccounts,
 } from "../../src/platform/db/schema";
 import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
@@ -43,6 +46,9 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
   const playerIds: string[] = Array.from({ length: 20 }, () => randomUUID());
   const extraPlayerId = randomUUID();
   const tournamentId = randomUUID();
+  const galleryId = randomUUID();
+  const emptyGalleryId = randomUUID();
+  const galleryAssetId = randomUUID();
   const now = new Date();
   const expiresAt = new Date(now.getTime() + 60 * 60 * 1_000);
   const adminActor = { userAccountId: adminId, sessionId: adminSessionId, role: "SUPER_ADMIN", authVersion: 0 } as const;
@@ -70,6 +76,13 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
       ...playerIds.map((id, index) => ({ id, userAccountId: ownerIds[index]!, memberName: `S08 회원 ${index + 1}`, memberNameNormalized: `s08 회원 ${index + 1}`, nickname: `S08선수${index + 1}`, nicknameNormalized: `s08선수${index + 1}`, tagLine: `D${index + 1}`, tagLineNormalized: `d${index + 1}` })),
       { id: extraPlayerId, memberName: "S08 교체", memberNameNormalized: "s08 교체", nickname: "S08교체", nicknameNormalized: "s08교체", tagLine: "DX", tagLineNormalized: "dx" },
     ]);
+    await database.insert(privateAssets).values({ id: galleryAssetId, createdByUserAccountId: adminId, ingestSource: "ADMIN", storageProvider: "TEST", storageKey: `s08/${galleryAssetId}`, originalFileName: "result.webp", contentType: "image/webp", byteSize: 1024, width: 640, height: 360, sha256: randomBytes(32), purpose: "GALLERY", status: "READY", readyAt: now });
+    await database.insert(mediaGalleries).values([
+      { id: galleryId, revision: 0, title: "S08 결과 갤러리", description: "게시 완료된 전용 결과 이미지", status: "DRAFT", createdByUserAccountId: adminId, updatedByUserAccountId: adminId },
+      { id: emptyGalleryId, revision: 0, title: "비어 있는 갤러리", description: "READY 이미지가 없어 연결할 수 없음", status: "DRAFT", createdByUserAccountId: adminId, updatedByUserAccountId: adminId },
+    ]);
+    await database.insert(mediaGalleryAssets).values({ galleryId, privateAssetId: galleryAssetId, ordinal: 0 });
+    await database.update(mediaGalleries).set({ revision: 1, status: "PUBLISHED", publishedAt: now }).where(eq(mediaGalleries.id, galleryId));
 
     const settings = { title: "S08 하늘빛 멸망전", configuration: { preliminaryFormat: "FULL_ROUND_ROBIN_BO1", preliminaryRoundCount: 1, teamCount: 4, laneLimits: { TOP: 4, JGL: 4, MID: 4, ADC: 4, SUP: 4 } } };
     const createContext = context(adminActor, "ADMIN", "create");
@@ -163,13 +176,22 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
     result = await service.executeAdmin(context(adminActor, "ADMIN", "final-again"), tournamentId, revision, { type: "RECORD_TOURNAMENT_RESULT", payload: { fixtureId: final.id, teamAScore: 2, teamBScore: 0, winnerTeamId: final.teamAId } }); revision = result.revision;
     ballot = (await adapter.getAdmin(tournamentId))!.mvpBallots.find((entry) => entry.fixtureId === final.id)!;
     result = await service.executeAdmin(context(adminActor, "ADMIN", "final-mvp-again"), tournamentId, revision, { type: "ASSIGN_MVP", payload: { fixtureId: final.id, playerId: ballot.participantPlayerIds[0] } }); revision = result.revision;
-    result = await service.executeAdmin(context(adminActor, "ADMIN", "complete"), tournamentId, revision, { type: "COMPLETE_DESTRUCTION", payload: {} }); revision = result.revision;
+    await assert.rejects(service.executeAdmin(context(adminActor, "ADMIN", "complete-invalid-gallery"), tournamentId, revision, { type: "COMPLETE_DESTRUCTION", payload: { galleryId: emptyGalleryId } }), /INVALID_GALLERY/);
+    result = await service.executeAdmin(context(adminActor, "ADMIN", "complete"), tournamentId, revision, { type: "COMPLETE_DESTRUCTION", payload: { galleryId } }); revision = result.revision;
     assert.equal(result.body.status, "COMPLETED");
 
-    const publicDto = await adapter.getPublic(tournamentId);
+    let publicDto = await adapter.getPublic(tournamentId);
     assert.equal(JSON.stringify(publicDto).includes("userAccountId"), false);
     assert.equal(JSON.stringify(publicDto).includes("auctionSeed"), false);
-    assert.equal(JSON.stringify(publicDto).includes("remainingAuctionPoints"), false);
+    assert.equal(publicDto?.gallery?.id, galleryId);
+    assert.equal(publicDto?.gallery?.images[0]?.url, `/api/media/assets/${galleryAssetId}`);
+    assert.equal(JSON.stringify(publicDto).includes("storageKey"), false);
+    assert.equal(JSON.stringify(publicDto).includes("sha256"), false);
+    result = await service.executeAdmin(context(adminActor, "ADMIN", "gallery-clear"), tournamentId, revision, { type: "SET_MEDIA_GALLERY", payload: { galleryId: null } }); revision = result.revision;
+    assert.equal((await adapter.getPublic(tournamentId))?.gallery, null);
+    result = await service.executeAdmin(context(adminActor, "ADMIN", "gallery-restore"), tournamentId, revision, { type: "SET_MEDIA_GALLERY", payload: { galleryId } }); revision = result.revision;
+    publicDto = await adapter.getPublic(tournamentId);
+    assert.equal(publicDto?.gallery?.id, galleryId);
     assert.equal((await adapter.getOwnApplication(tournamentId, ownerIds[0]!))?.playerId, playerIds[0]);
     assert.equal((await database.select().from(destructionApplicationIndex)).length, 20);
     const receipts = await database.select().from(destructionCommandReceipts);

@@ -80,10 +80,17 @@ export function parseDestructionAdminAction(value: unknown): Pick<DestructionAdm
     case "DRAW_AUCTION":
     case "PUBLISH_PRELIMINARY":
     case "PUBLISH_TOURNAMENT":
-    case "COMPLETE_DESTRUCTION":
     case "RESTORE_DESTRUCTION":
       record(payload, []);
       return { type: input.type, payload: {} } as Pick<DestructionAdminCommand, "type" | "payload">;
+    case "COMPLETE_DESTRUCTION": {
+      const body = record(payload, ["galleryId"]);
+      return { type: input.type, payload: body.galleryId === undefined ? {} : { galleryId: body.galleryId === null ? null : uuid(body.galleryId) } };
+    }
+    case "SET_MEDIA_GALLERY": {
+      const body = record(payload, ["galleryId"]);
+      return { type: input.type, payload: { galleryId: body.galleryId === null ? null : uuid(body.galleryId) } };
+    }
     case "SET_APPLICATION_STATUS": {
       const body = record(payload, ["applicationId", "status"]);
       if (!["CONFIRMED", "RESERVE", "REJECTED"].includes(body.status as string)) throw new TypeError("INVALID_INPUT");

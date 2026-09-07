@@ -30,6 +30,7 @@ export type DestructionAggregate = Readonly<{
   rosterSnapshots: readonly DestructionFixtureRosterSnapshot[];
   replacements: readonly DestructionReplacement[];
   mvpBallots: readonly DestructionMvpBallot[];
+  galleryId: string | null;
   createdAt: string;
   updatedAt: string;
 }>;
@@ -57,7 +58,26 @@ export type DestructionPublicTeamDto = Readonly<{
   name: string;
   confirmed: boolean;
   rosterPlayerIds: readonly string[];
-  rosterPlayers: readonly Readonly<{ playerId: string; playerName: string; position: string }>[];
+  captainPlayerId: string | null;
+  captainPlayerName: string | null;
+  initialAuctionPoints: number;
+  remainingAuctionPoints: number;
+  rosterPlayers: readonly Readonly<{
+    participantId: string;
+    playerId: string;
+    playerName: string;
+    position: string;
+    isCaptain: boolean;
+    auctionStatus: string;
+    purchasePoints: number | null;
+  }>[];
+}>;
+
+export type DestructionPublicGalleryDto = Readonly<{
+  id: string;
+  title: string;
+  description: string;
+  images: readonly Readonly<{ assetId: string; ordinal: number; url: string }>[];
 }>;
 
 export type DestructionPublicFixtureDto = Readonly<{
@@ -101,12 +121,14 @@ export type DestructionPublicDto = Readonly<{
   qualifiedTeamIds: readonly string[];
   championTeamId: string | null;
   championTeamName: string | null;
+  gallery: DestructionPublicGalleryDto | null;
   mvpResults: readonly Readonly<{ fixtureId: string; fixtureName: string; finalizedPlayerId: string; finalizedPlayerName: string; selectionMethod: "VOTE" | "ADMIN" }>[];
 }>;
 
 export function toDestructionPublicDto(
   aggregate: DestructionAggregate,
   playerCatalog: ReadonlyMap<string, string> = new Map(),
+  gallery: DestructionPublicGalleryDto | null = null,
 ): DestructionPublicDto {
   const fixtureName = (fixtureId: string) => {
     const preliminary = aggregate.preliminaryFixtures.find((fixture) => fixture.id === fixtureId);
@@ -124,17 +146,28 @@ export function toDestructionPublicDto(
     preliminaryBestOf: aggregate.configuration.preliminaryBestOf,
     preliminaryRoundCount: aggregate.configuration.preliminaryRoundCount,
     advanceTeamCount: aggregate.configuration.advanceTeamCount,
-    teams: Object.freeze([...aggregate.teams].sort((left, right) => left.id < right.id ? -1 : left.id > right.id ? 1 : 0).map((team) => Object.freeze({
-      id: team.id,
-      name: team.name,
-      confirmed: team.confirmed,
-      rosterPlayerIds: Object.freeze(aggregate.participants.filter((participant) => participant.teamId === team.id).map((participant) => participant.playerId).sort()),
-      rosterPlayers: Object.freeze(aggregate.participants.filter((participant) => participant.teamId === team.id).map((participant) => Object.freeze({
-        playerId: participant.playerId,
-        playerName: competitionPlayerLabel(playerCatalog, participant.playerId),
-        position: participant.position,
-      })).sort((left, right) => left.position.localeCompare(right.position, "en-US") || left.playerName.localeCompare(right.playerName, "ko-KR"))),
-    }))),
+    teams: Object.freeze([...aggregate.teams].sort((left, right) => left.id < right.id ? -1 : left.id > right.id ? 1 : 0).map((team) => {
+      const captain = aggregate.participants.find((participant) => participant.id === team.captainParticipantId) ?? null;
+      return Object.freeze({
+        id: team.id,
+        name: team.name,
+        confirmed: team.confirmed,
+        captainPlayerId: captain?.playerId ?? null,
+        captainPlayerName: captain ? competitionPlayerLabel(playerCatalog, captain.playerId) : null,
+        initialAuctionPoints: team.initialAuctionPoints,
+        remainingAuctionPoints: team.remainingAuctionPoints,
+        rosterPlayerIds: Object.freeze(aggregate.participants.filter((participant) => participant.teamId === team.id).map((participant) => participant.playerId).sort()),
+        rosterPlayers: Object.freeze(aggregate.participants.filter((participant) => participant.teamId === team.id).map((participant) => Object.freeze({
+          participantId: participant.id,
+          playerId: participant.playerId,
+          playerName: competitionPlayerLabel(playerCatalog, participant.playerId),
+          position: participant.position,
+          isCaptain: participant.isCaptain,
+          auctionStatus: participant.auctionStatus,
+          purchasePoints: participant.purchasePoints,
+        })).sort((left, right) => left.position.localeCompare(right.position, "en-US") || left.playerName.localeCompare(right.playerName, "ko-KR"))),
+      });
+    })),
     preliminaryFixtures: Object.freeze([...aggregate.preliminaryFixtures].sort((left, right) => left.id < right.id ? -1 : left.id > right.id ? 1 : 0).map((fixture) => Object.freeze({
       id: fixture.id,
       groupKey: fixture.groupKey,
@@ -166,6 +199,7 @@ export function toDestructionPublicDto(
     championTeamName: aggregate.tournamentBracket?.championTeamId
       ? competitionTeamLabel(aggregate.teams, aggregate.tournamentBracket.championTeamId)
       : null,
+    gallery,
     mvpResults: Object.freeze(aggregate.mvpBallots
       .filter((ballot): ballot is typeof ballot & { finalizedPlayerId: string; selectionMethod: "VOTE" | "ADMIN" } => ballot.finalizedPlayerId !== null && ballot.selectionMethod !== null)
       .map((ballot) => Object.freeze({
