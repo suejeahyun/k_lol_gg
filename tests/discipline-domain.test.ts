@@ -65,7 +65,8 @@ test("owner evidence submission reaches review only at the exact required count"
   const first = submitDisciplineEvidence({ task: task(), expectedRevision: 0, accountId: "account-1", playerId: null, evidence: evidence("e1", "a", issuedAt), now: issuedAt });
   assert.equal(first.status, "AWAITING_UPLOAD");
   assert.equal(first.revision, 1);
-  const second = submitDisciplineEvidence({ task: first, expectedRevision: 1, accountId: "account-1", playerId: null, evidence: evidence("e2", "b", new Date(issuedAt.getTime() + 1)), now: issuedAt });
+  const secondAt = new Date(issuedAt.getTime() + 1);
+  const second = submitDisciplineEvidence({ task: first, expectedRevision: 1, accountId: "account-1", playerId: null, evidence: evidence("e2", "b", secondAt), now: secondAt });
   assert.equal(second.status, "PENDING_REVIEW");
   assert.equal(currentEvidence(second).length, 2);
   const approved = reviewDisciplineEvidence({ task: second, expectedRevision: 2, decision: "APPROVE", reviewNote: "", now: issuedAt });
