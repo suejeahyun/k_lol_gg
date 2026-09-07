@@ -22,7 +22,7 @@ export function RiotAdminActions({ linkId, failed }: Readonly<{ linkId: string; 
     catch (error) { setMessage(error instanceof Error ? error.message : "요청에 실패했습니다."); }
     finally { setPending(false); }
   }
-  return <div><div className={styles.actions}><button disabled={pending} onClick={() => void run(failed ? "/api/admin/riot/retry" : "/api/admin/riot/sync")}>{failed ? "재시도" : "동기화"}</button></div>{message ? <small role="status">{message}</small> : null}</div>;
+  return <div><div className={styles.actions}><button type="button" disabled={pending} onClick={() => void run(failed ? "/api/admin/riot/retry" : "/api/admin/riot/sync")}>{failed ? "재시도" : "동기화"}</button></div>{message ? <small role="status">{message}</small> : null}</div>;
 }
 
 export function RiotAdminGlobalActions({ superAdmin, items }: Readonly<{ superAdmin: boolean; items: readonly AdminRiotRowDto[] }>) {
@@ -66,11 +66,11 @@ export function RiotAdminGlobalActions({ superAdmin, items }: Readonly<{ superAd
   return <div>
     <form className={styles.form} onSubmit={(event) => { event.preventDefault(); run(() => command("/api/admin/riot/link", { playerId, gameName, tagLine }, revision), "단일 연결을 반영했습니다."); }}>
       <label><span>연결할 플레이어</span><BoundedPicker ariaLabel="Riot 단일 연결 플레이어" value={playerId} options={playerOptions} placeholder="현재 목록에서 이름 또는 Riot ID 검색" onChange={selectPlayer} /></label>
-      <label>Riot ID<input value={gameName} onChange={(event) => setGameName(event.target.value)} placeholder="게임 이름" required /><input value={tagLine} onChange={(event) => setTagLine(event.target.value)} placeholder="태그" required /></label>
+      <label>게임 이름<input value={gameName} onChange={(event) => setGameName(event.target.value)} placeholder="게임 이름" required /></label><label>태그<input value={tagLine} onChange={(event) => setTagLine(event.target.value)} placeholder="태그" required /></label>
       <p className={styles.selectionSummary} role="status">{selectedPlayer ? `${selectedPlayer.displayName} · 현재 revision ${revision} 자동 적용` : "현재 목록에서 미연결·연결 해제 플레이어를 선택해 주세요."}</p>
-      <div className={styles.actions}><button disabled={pending || !selectedPlayer || !gameName || !tagLine}>단일 연결</button></div>
+      <div className={styles.actions}><button type="submit" disabled={pending || !selectedPlayer || !gameName || !tagLine}>단일 연결</button></div>
     </form>
-    {superAdmin ? <form className={styles.form} onSubmit={(event) => { event.preventDefault(); run(() => command("/api/admin/riot/bulk", { linkIds: [...selectedLinkIds].sort() }), "일괄 동기화를 큐에 등록했습니다."); }}><fieldset className={styles.selectionList}><legend>현재 목록의 연결 계정 선택</legend>{connectedItems.length ? connectedItems.map((item) => <label key={item.linkId}><input type="checkbox" checked={selectedLinkIds.has(item.linkId)} onChange={() => toggleLink(item.linkId)} /><span><strong>{item.displayName}</strong><small>{item.riotId}</small></span></label>) : <p>현재 목록에 동기화할 연결 계정이 없습니다.</p>}</fieldset><p className={styles.selectionSummary} role="status">{selectedLinkIds.size}개 계정을 선택했습니다.</p><div className={styles.actions}><button disabled={pending || selectedLinkIds.size === 0}>선택 일괄 동기화</button><button type="button" data-tone="quiet" disabled={pending} onClick={() => run(() => command("/api/admin/riot/sync", { all: true }), "전체 동기화를 큐에 등록했습니다.")}>전체 동기화</button></div></form> : null}
+    {superAdmin ? <form className={styles.form} onSubmit={(event) => { event.preventDefault(); run(() => command("/api/admin/riot/bulk", { linkIds: [...selectedLinkIds].sort() }), "일괄 동기화를 큐에 등록했습니다."); }}><fieldset className={styles.selectionList}><legend>현재 목록의 연결 계정 선택</legend>{connectedItems.length ? connectedItems.map((item) => <label key={item.linkId}><input type="checkbox" checked={selectedLinkIds.has(item.linkId)} onChange={() => toggleLink(item.linkId)} /><span><strong>{item.displayName}</strong><small>{item.riotId}</small></span></label>) : <p>현재 목록에 동기화할 연결 계정이 없습니다.</p>}</fieldset><p className={styles.selectionSummary} role="status">{selectedLinkIds.size}개 계정을 선택했습니다.</p><div className={styles.actions}><button type="submit" disabled={pending || selectedLinkIds.size === 0}>선택 일괄 동기화</button><button type="button" data-tone="quiet" disabled={pending} onClick={() => run(() => command("/api/admin/riot/sync", { all: true }), "전체 동기화를 큐에 등록했습니다.")}>전체 동기화</button></div></form> : null}
     {message ? <p className={styles.notice} role="status">{message}</p> : null}
   </div>;
 }

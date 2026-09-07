@@ -203,20 +203,13 @@ function AllMenuControl({ compact = false }: { compact?: boolean }) {
                 <h3 id={`${titleId}-${section.id}`}>{section.label}</h3>
                 <ul>
                   {canonicalUserRoutes
-                    .filter((route) => route.section === section.id && !route.template.includes("["))
+                    .filter((route) => route.section === section.id && !route.template.includes("[") && route.implementationState === "page-contract")
                     .map((route) => (
                       <li key={route.template}>
-                        {route.implementationState === "page-contract" ? (
-                          <Link href={route.template} onClick={() => closeDialog(dialog.current)}>
-                            {route.label}
-                            <span>바로 열기</span>
-                          </Link>
-                        ) : (
-                          <span aria-disabled="true">
-                            {route.label}
-                            <small>준비 중</small>
-                          </span>
-                        )}
+                        <Link href={route.template} onClick={() => closeDialog(dialog.current)}>
+                          {route.label}
+                          <span>바로 열기</span>
+                        </Link>
                       </li>
                     ))}
                 </ul>

@@ -29,7 +29,7 @@ export default async function AdminSearchPage({ searchParams }: AdminSearchPageP
 
   return (
     <main className={styles.page}>
-      <header><span>권한 범위 내 검색</span><h1>관리자 작업 공간 찾기</h1><p>현재 A0 단계에서는 작업 공간만 검색합니다. 플레이어·계정·경기 데이터 검색은 DB 권한 필터와 함께 연결합니다.</p></header>
+      <header><span>권한 범위 내 검색</span><h1>관리자 작업 공간 찾기</h1><p>관리자 메뉴의 이름과 설명을 검색해 필요한 작업 공간으로 바로 이동합니다.</p></header>
       <form className={styles.search} role="search">
         <label htmlFor="admin-search">검색어</label>
         <div><Search aria-hidden="true" /><input id="admin-search" name="q" defaultValue={query} maxLength={80} placeholder="예: 경기, Riot, 징계" /><button type="submit">찾기</button></div>

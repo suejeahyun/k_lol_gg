@@ -40,12 +40,12 @@ export function RiotOwnerActions({ linkRevision, connected }: Readonly<{ linkRev
         <form className={styles.form} onSubmit={(event) => { event.preventDefault(); void run(() => mutate("/api/me/riot", "POST", { gameName, tagLine }, linkRevision), "직접 연결 요청을 반영했습니다. 새로고침해 상태를 확인해 주세요."); }}>
           <label>게임 이름<input value={gameName} onChange={(event) => setGameName(event.target.value)} maxLength={16} required /></label>
           <label>태그<input value={tagLine} onChange={(event) => setTagLine(event.target.value)} maxLength={5} required /></label>
-          <div className={styles.actions}><button disabled={pending}>직접 연결</button><button data-tone="quiet" type="button" disabled={pending} onClick={() => void run(() => mutate("/api/me/riot/rso/start", "POST", { returnTo: "/account/riot" }), "RSO 연결을 준비했습니다.")}>RSO로 확인</button></div>
+          <div className={styles.actions}><button type="submit" disabled={pending}>직접 연결</button><button data-tone="quiet" type="button" disabled={pending} onClick={() => void run(() => mutate("/api/me/riot/rso/start", "POST", { returnTo: "/account/riot" }), "RSO 연결을 준비했습니다.")}>RSO로 확인</button></div>
         </form>
       ) : (
         <div className={styles.actions}>
-          <button disabled={pending} onClick={() => void run(() => mutate("/api/me/riot/sync", "POST", {}), "동기화를 요청했습니다.")}>지금 동기화</button>
-          <button data-tone="quiet" disabled={pending} onClick={() => void run(() => mutate("/api/me/riot", "DELETE", {}, linkRevision), "연결을 해제했습니다. 새로고침해 상태를 확인해 주세요.")}>연결 해제</button>
+          <button type="button" disabled={pending} onClick={() => void run(() => mutate("/api/me/riot/sync", "POST", {}), "동기화를 요청했습니다.")}>지금 동기화</button>
+          <button type="button" data-tone="quiet" disabled={pending} onClick={() => void run(() => mutate("/api/me/riot", "DELETE", {}, linkRevision), "연결을 해제했습니다. 새로고침해 상태를 확인해 주세요.")}>연결 해제</button>
         </div>
       )}
       {message ? <p className={styles.notice} role="status">{message}</p> : null}
