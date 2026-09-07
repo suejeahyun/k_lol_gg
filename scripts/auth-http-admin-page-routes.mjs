@@ -11,7 +11,14 @@ export const ADMIN_SECURITY_PAGE_CASE = Object.freeze({
 });
 
 const defaultAppRoot = fileURLToPath(new URL("../src/app", import.meta.url));
-const NON_CANONICAL_ADMIN_PAGE_ROUTES = new Set(["/admin/ai-requests", "/admin/recruits"]);
+const NON_CANONICAL_ADMIN_PAGE_ROUTES = new Set([
+  "/admin/ai-requests",
+  "/admin/kakao/operation-forms",
+  "/admin/kakao/operation-forms/[formType]",
+  "/admin/operation-forms/[formType]",
+  "/admin/operation-forms/warnings",
+  "/admin/recruits",
+]);
 
 const REQUEST_SEGMENT_FIXTURES = Object.freeze({
   championId: "Ahri",
