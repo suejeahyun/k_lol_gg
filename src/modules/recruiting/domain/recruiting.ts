@@ -45,11 +45,14 @@ export type ScrimRecruit = Readonly<{
   recruitDate: string;
   scrimNumber: number;
   tournamentId: string;
-  requesterTeamId: string;
+  requesterTeamId: string | null;
   opponentTeamId: string | null;
+  legacyTitle?: string | null;
+  requesterTeamName?: string | null;
+  opponentTeamName?: string | null;
   status: ScrimRecruitStatus;
   scheduledAt: Date | null;
-  bestOf: number;
+  bestOf: number | null;
 }>;
 
 export type PublicRecruitPartyDto = Readonly<{

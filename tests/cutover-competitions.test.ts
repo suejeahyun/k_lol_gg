@@ -170,14 +170,14 @@ test("V1 destruction preserves four validated rosters, applications and auction 
   assert.match(aggregate.auctionSeed ?? "", /^v1-import-/u);
 });
 
-test("lossy cancellation, gallery and in-flight auction states fail closed", () => {
+test("lossy cancellation and in-flight auction states fail closed while gallery linking is deferred", () => {
   assert.throws(
     () => buildImportedEventAggregate({ ...teamBuildingEvent(), status: "CANCELLED" }),
     /lack a recoverable prior state/u,
   );
-  assert.throws(
-    () => buildImportedEventAggregate({ ...teamBuildingEvent(), galleryImageId: 7 }),
-    /no lossless V2 event field/u,
+  assert.equal(
+    buildImportedEventAggregate({ ...teamBuildingEvent(), galleryImageId: 7 }).id,
+    teamBuildingEvent().id,
   );
   const destruction = teamBuildingDestruction();
   assert.throws(

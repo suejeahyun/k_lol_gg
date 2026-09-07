@@ -93,6 +93,9 @@ function scrimFromRow(row: typeof scrimRecruits.$inferSelect): ScrimRecruit {
     tournamentId: row.tournamentId,
     requesterTeamId: row.requesterTeamId,
     opponentTeamId: row.opponentTeamId,
+    legacyTitle: row.legacyTitle,
+    requesterTeamName: row.requesterTeamName,
+    opponentTeamName: row.opponentTeamName,
     status: row.status,
     scheduledAt: row.scheduledAt,
     bestOf: row.bestOf,
@@ -430,6 +433,7 @@ export class PostgresRecruitingAdapter implements
       recentScrims: scrimRows.map((row) => ({
         id: row.id, revision: row.revision, recruitDate: row.recruitDate, scrimNumber: row.scrimNumber,
         status: row.status, requesterTeamId: row.requesterTeamId, opponentTeamId: row.opponentTeamId,
+        requesterTeamName: row.requesterTeamName, opponentTeamName: row.opponentTeamName,
         updatedAt: row.updatedAt.toISOString(),
       })),
     };

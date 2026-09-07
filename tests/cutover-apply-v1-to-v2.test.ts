@@ -30,21 +30,52 @@ function harness(options: Readonly<{ failPhase?: string }> = {}) {
       transactionStatements.push(`${clientIndex}:${statement.trim().split(/\s+/).slice(0, 4).join(" ")}`);
       if (statement.includes("information_schema.tables")) {
         return { rows: [
+          { table_name: "AdminLog" },
+          { table_name: "AppDataCache" },
           { table_name: "DestructionMatch" },
           { table_name: "DestructionMatchMvpVote" },
           { table_name: "DestructionParticipant" },
           { table_name: "DestructionParticipantReplacement" },
           { table_name: "DestructionParticipationApply" },
+          { table_name: "DestructionScrimRecruit" },
+          { table_name: "DestructionScrimRecruitLog" },
           { table_name: "DestructionTeam" },
           { table_name: "DestructionTournament" },
           { table_name: "DisciplineResolutionTask" },
+          { table_name: "DiscordAccountLinkLog" },
+          { table_name: "DiscordBotHeartbeat" },
+          { table_name: "DiscordOperationLog" },
+          { table_name: "DiscordOperationSetting" },
+          { table_name: "DiscordVoiceEvent" },
           { table_name: "EventMatch" },
           { table_name: "EventParticipant" },
           { table_name: "EventParticipationApply" },
           { table_name: "EventTeam" },
           { table_name: "EventTournamentMatch" },
+          { table_name: "GalleryImage" },
+          { table_name: "Highlight" },
+          { table_name: "InhouseResultImage" },
+          { table_name: "InhouseResultSubmission" },
+          { table_name: "KakaoFriendApplication" },
+          { table_name: "KakaoImageReceiveSession" },
+          { table_name: "KakaoInboundImage" },
+          { table_name: "KakaoLeaveRequest" },
+          { table_name: "KakaoMeetupRecord" },
+          { table_name: "KakaoOperationSetting" },
+          { table_name: "KakaoSuggestionRequest" },
+          { table_name: "OperationAiRequest" },
           { table_name: "PlayerRiotAccount" },
           { table_name: "PlayerSoloRankSnapshot" },
+          { table_name: "PrivateAsset" },
+          { table_name: "RecruitParty" },
+          { table_name: "RecruitPartyDiscordMonitor" },
+          { table_name: "RecruitPartyLog" },
+          { table_name: "RecruitPartyMember" },
+          { table_name: "RateLimitLog" },
+          { table_name: "RiotAccountLinkLog" },
+          { table_name: "RiotApiRequestLog" },
+          { table_name: "RiotApiStatus" },
+          { table_name: "RiotSyncJob" },
           { table_name: "UserDisciplineRecord" },
         ] };
       }
@@ -112,6 +143,24 @@ function harness(options: Readonly<{ failPhase?: string }> = {}) {
       fail("competitions");
       return [step("competitions")];
     },
+    importRecruiting: async (_client: unknown, input: { actorUserAccountId: string }) => {
+      assert.equal(input.actorUserAccountId, "00000000-0000-4000-8000-000000000001");
+      events.push("recruiting");
+      fail("recruiting");
+      return [step("recruiting")];
+    },
+    importMediaSubmissions: async (_client: unknown, input: { actorUserAccountId: string }) => {
+      assert.equal(input.actorUserAccountId, "00000000-0000-4000-8000-000000000001");
+      events.push("media");
+      fail("media");
+      return [step("media")];
+    },
+    importOperationalState: async (_client: unknown, input: { actorUserAccountId: string }) => {
+      assert.equal(input.actorUserAccountId, "00000000-0000-4000-8000-000000000001");
+      events.push("operational");
+      fail("operational");
+      return [step("operational")];
+    },
   };
   return { events, transactionStatements, dependencies };
 }
@@ -138,10 +187,10 @@ test("orders read-only preflight, migration, and one repeatable-read import tran
 
   assert.deepEqual(run.events, [
     "connect-0", "preflight", "release-0", "migrate",
-    "connect-1", "uuid", "auth", "core", "team-tools", "extensions", "competitions", "release-1", "pool-end",
+    "connect-1", "uuid", "auth", "core", "team-tools", "extensions", "competitions", "recruiting", "media", "operational", "release-1", "pool-end",
   ]);
   assert.deepEqual(results.map((result) => result.name), [
-    "database-preflight", "auth", "core", "team-tools", "extensions", "competitions",
+    "database-preflight", "auth", "core", "team-tools", "extensions", "competitions", "recruiting", "media", "operational",
   ]);
   assert.ok(run.transactionStatements.some((statement) =>
     statement === "0:begin transaction isolation level",

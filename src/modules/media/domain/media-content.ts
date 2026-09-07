@@ -7,6 +7,7 @@ export type HighlightContent = Readonly<{
   description: string;
   youtubeId: string;
   thumbnailAssetId: string | null;
+  legacyThumbnailUrl?: string | null;
   status: MediaPublicationStatus;
   sortOrder: number;
 }>;
@@ -17,6 +18,7 @@ export type GalleryContent = Readonly<{
   title: string;
   description: string;
   imageAssetIds: readonly string[];
+  externalImageUrls?: readonly string[];
   showOnHome: boolean;
   status: MediaPublicationStatus;
 }>;
@@ -180,11 +182,15 @@ export function updateGallery(input: Readonly<{
   revision(input.expectedRevision);
   if (input.gallery.revision !== input.expectedRevision) throw new Error("STALE_MEDIA_REVISION");
   if (input.gallery.status === "ARCHIVED") throw new Error("ARCHIVED_MEDIA_READ_ONLY");
+  if (input.imageAssetIds.length + (input.gallery.externalImageUrls?.length ?? 0) > 5) {
+    throw new Error("INVALID_GALLERY_IMAGE_COUNT");
+  }
   const validated = createGallery({
     id: input.gallery.id,
     title: input.title,
     description: input.description,
     imageAssetIds: input.imageAssetIds,
+    allowEmptyDraft: (input.gallery.externalImageUrls?.length ?? 0) > 0,
   });
   return {
     ...input.gallery,
@@ -205,7 +211,10 @@ export function transitionMediaStatus<T extends HighlightContent | GalleryConten
   if (
     input.command === "PUBLISH" &&
     "imageAssetIds" in input.content &&
-    (input.content.imageAssetIds.length < 1 || input.content.imageAssetIds.length > 5)
+    (
+      input.content.imageAssetIds.length + (input.content.externalImageUrls?.length ?? 0) < 1 ||
+      input.content.imageAssetIds.length + (input.content.externalImageUrls?.length ?? 0) > 5
+    )
   ) {
     throw new Error("INVALID_GALLERY_IMAGE_COUNT");
   }
@@ -250,7 +259,7 @@ export function toPublicHighlightDto(
     youtubeWatchUrl: `https://www.youtube.com/watch?v=${content.youtubeId}`,
     thumbnailUrl: content.thumbnailAssetId
       ? resolveAssetUrl(content.thumbnailAssetId)
-      : `https://i.ytimg.com/vi/${content.youtubeId}/hqdefault.jpg`,
+      : content.legacyThumbnailUrl ?? `https://i.ytimg.com/vi/${content.youtubeId}/hqdefault.jpg`,
   };
 }
 
@@ -263,7 +272,13 @@ export function toPublicGalleryDto(
     id: content.id,
     title: content.title,
     description: content.description,
-    images: content.imageAssetIds.map((assetId) => ({ assetId, url: resolveAssetUrl(assetId) })),
+    images: [
+      ...content.imageAssetIds.map((assetId) => ({ assetId, url: resolveAssetUrl(assetId) })),
+      ...(content.externalImageUrls ?? []).map((url, ordinal) => ({
+        assetId: `external:${content.id}:${ordinal}`,
+        url,
+      })),
+    ],
     showOnHome: content.showOnHome,
   };
 }

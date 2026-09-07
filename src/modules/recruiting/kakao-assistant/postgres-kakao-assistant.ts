@@ -225,7 +225,7 @@ export class PostgresKakaoAssistant {
           recruitDate: scrim.recruitDate,
           scrimNumber: scrim.scrimNumber,
           status: scrim.status as "RECRUITING" | "MATCHED" | "CONFIRMED",
-          bestOf: scrim.bestOf,
+          bestOf: scrim.bestOf ?? 3,
           scheduledAt: scrim.scheduledAt?.toISOString() ?? null,
         }))),
       });

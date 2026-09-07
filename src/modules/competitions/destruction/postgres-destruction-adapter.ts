@@ -15,7 +15,11 @@ import {
   destructionCompetitions,
   destructionOutbox,
 } from "@/platform/db/schema/destruction-competitions";
-import { mediaGalleries, mediaGalleryAssets } from "@/platform/db/schema/media";
+import {
+  mediaGalleries,
+  mediaGalleryAssets,
+  mediaGalleryExternalImages,
+} from "@/platform/db/schema/media";
 import { privateAssets } from "@/platform/db/schema/matches";
 import { players } from "@/platform/db/schema/registry";
 import type { V2Transaction } from "@/platform/db/transaction";
@@ -79,7 +83,12 @@ export class PostgresDestructionAdapter implements DestructionQueryPort {
         const gallery = (await transaction.select({ id: mediaGalleries.id }).from(mediaGalleries).where(and(eq(mediaGalleries.id, galleryId), eq(mediaGalleries.status, "PUBLISHED"))).for("share").limit(1))[0];
         if (!gallery) throw new TypeError("INVALID_GALLERY");
         const assets = await transaction.select({ status: privateAssets.status, purpose: privateAssets.purpose }).from(mediaGalleryAssets).innerJoin(privateAssets, eq(mediaGalleryAssets.privateAssetId, privateAssets.id)).where(eq(mediaGalleryAssets.galleryId, galleryId));
-        if (assets.length < 1 || assets.length > 5 || assets.some((asset) => asset.status !== "READY" || asset.purpose !== "GALLERY")) throw new TypeError("INVALID_GALLERY");
+        const externalImages = await transaction.select({ url: mediaGalleryExternalImages.sourceUrl })
+          .from(mediaGalleryExternalImages).where(eq(mediaGalleryExternalImages.galleryId, galleryId));
+        if (
+          assets.length + externalImages.length < 1 || assets.length + externalImages.length > 5 ||
+          assets.some((asset) => asset.status !== "READY" || asset.purpose !== "GALLERY")
+        ) throw new TypeError("INVALID_GALLERY");
       },
       save: async (context, input) => {
         const transaction = this.tx(context);
@@ -154,8 +163,23 @@ export class PostgresDestructionAdapter implements DestructionQueryPort {
     const gallery = (await this.database.select({ id: mediaGalleries.id, title: mediaGalleries.title, description: mediaGalleries.description }).from(mediaGalleries).where(and(eq(mediaGalleries.id, galleryId), eq(mediaGalleries.status, "PUBLISHED"))).limit(1))[0];
     if (!gallery) return null;
     const assets = await this.database.select({ assetId: mediaGalleryAssets.privateAssetId, ordinal: mediaGalleryAssets.ordinal, status: privateAssets.status, purpose: privateAssets.purpose }).from(mediaGalleryAssets).innerJoin(privateAssets, eq(mediaGalleryAssets.privateAssetId, privateAssets.id)).where(eq(mediaGalleryAssets.galleryId, galleryId)).orderBy(mediaGalleryAssets.ordinal);
-    if (assets.length < 1 || assets.length > 5 || assets.some((asset) => asset.status !== "READY" || asset.purpose !== "GALLERY")) return null;
-    return Object.freeze({ id: gallery.id, title: gallery.title, description: gallery.description, images: Object.freeze(assets.map((asset) => Object.freeze({ assetId: asset.assetId, ordinal: asset.ordinal, url: `/api/media/assets/${asset.assetId}` }))) });
+    const externalImages = await this.database.select({ ordinal: mediaGalleryExternalImages.ordinal, url: mediaGalleryExternalImages.sourceUrl })
+      .from(mediaGalleryExternalImages).where(eq(mediaGalleryExternalImages.galleryId, galleryId))
+      .orderBy(mediaGalleryExternalImages.ordinal);
+    if (
+      assets.length + externalImages.length < 1 || assets.length + externalImages.length > 5 ||
+      assets.some((asset) => asset.status !== "READY" || asset.purpose !== "GALLERY")
+    ) return null;
+    const images = [
+      ...assets.map((asset) => ({ assetId: asset.assetId, ordinal: asset.ordinal, url: `/api/media/assets/${asset.assetId}` })),
+      ...externalImages.map((image) => ({ assetId: `external:${gallery.id}:${image.ordinal}`, ...image })),
+    ].sort((left, right) => left.ordinal - right.ordinal);
+    return Object.freeze({
+      id: gallery.id,
+      title: gallery.title,
+      description: gallery.description,
+      images: Object.freeze(images.map((image) => Object.freeze(image))),
+    });
   }
 
   private async list(query: DestructionListQuery): Promise<DestructionPage> {

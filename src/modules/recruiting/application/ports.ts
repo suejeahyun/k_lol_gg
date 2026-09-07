@@ -57,8 +57,10 @@ export type AdminRecruitingStatusDto = Readonly<{
     recruitDate: string;
     scrimNumber: number;
     status: ScrimRecruit["status"];
-    requesterTeamId: string;
+    requesterTeamId: string | null;
     opponentTeamId: string | null;
+    requesterTeamName: string | null;
+    opponentTeamName: string | null;
     updatedAt: string;
   }>[];
 }>;

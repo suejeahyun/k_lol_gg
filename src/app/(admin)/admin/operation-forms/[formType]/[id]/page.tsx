@@ -9,7 +9,7 @@ import { isOperationFormType } from "@/modules/recruiting/operation-forms/domain
 import { loadRuntimeOperationForms } from "@/modules/recruiting/operation-forms/runtime";
 
 export const dynamic = "force-dynamic";
-const fieldLabels: Readonly<Record<string, string>> = Object.freeze({ applicantName: "신청자 이름", applicantNickname: "신청자 닉네임", friendName: "친구 이름", friendNickname: "친구 닉네임", usagePeriod: "이용 기간", discordNicknameChange: "Discord 닉네임 변경", periodStart: "시작일", periodEnd: "종료일", reason: "사유", scope: "범위", hostName: "주최자 이름", hostNickname: "주최자 닉네임", meetupAt: "모임 일시", location: "장소", participants: "참가자", content: "내용" });
+const fieldLabels: Readonly<Record<string, string>> = Object.freeze({ applicantName: "신청자 이름", applicantNickname: "신청자 닉네임", friendName: "친구 이름", friendNickname: "친구 닉네임", usagePeriod: "이용 기간", discordNicknameChange: "Discord 닉네임 변경", periodStart: "시작일", periodEnd: "종료일", legacyPeriodText: "기존 휴식 기간", reason: "사유", scope: "범위", hostName: "주최자 이름", hostNickname: "주최자 닉네임", meetupAt: "모임 일시", legacyDateText: "기존 모임 일시", location: "장소", participants: "참가자", content: "내용" });
 
 export default async function OperationFormDetailPage({ params }: { params: Promise<{ formType: string; id: string }> }) {
   const { formType, id } = await params; await requirePageRole("ADMIN", `/admin/operation-forms/${formType}/${id}`);

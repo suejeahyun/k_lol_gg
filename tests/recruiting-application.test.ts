@@ -367,6 +367,6 @@ test("public party and scrim DTOs expose only reviewed fields", () => {
   assert.deepEqual(Object.keys(toPublicPartyDto(party)).sort(), ["id", "maximumMembers", "memberCount", "recruitNumber", "scheduledStartAt", "status", "title", "type"]);
   assert.equal("members" in toPublicPartyDto(party), false);
   const scrim: ScrimRecruit = { id: "scrim-1", revision: 2, recruitDate: "2026-09-07", scrimNumber: 1, tournamentId: "destruction-1", requesterTeamId: "team-a", opponentTeamId: "team-b", status: "MATCHED", scheduledAt: null, bestOf: 3 };
-  assert.deepEqual(Object.keys(toPublicScrimDto(scrim)).sort(), ["bestOf", "id", "opponentTeamId", "recruitDate", "requesterTeamId", "scheduledAt", "scrimNumber", "status", "tournamentId"]);
+  assert.deepEqual(Object.keys(toPublicScrimDto(scrim)).sort(), ["bestOf", "id", "opponentTeamId", "opponentTeamName", "recruitDate", "requesterTeamId", "requesterTeamName", "scheduledAt", "scrimNumber", "status", "title", "tournamentId"]);
   assert.equal("revision" in toPublicScrimDto(scrim), false);
 });

@@ -13,6 +13,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { userAccounts } from "./auth";
+import { mediaGalleries } from "./media";
 import { competitionSchema } from "./namespaces";
 import { bytea } from "./primitives";
 import { players } from "./registry";
@@ -54,6 +55,7 @@ export const eventCompetitions = competitionSchema.table(
     recruitmentClosesAt: timestamptz("recruitment_closes_at").notNull(),
     bracketBestOf: integer("bracket_best_of").notNull(),
     activeParticipantCount: integer("active_participant_count").default(0).notNull(),
+    galleryId: uuid("gallery_id").references(() => mediaGalleries.id, { onDelete: "restrict" }),
     aggregateJson: jsonb("aggregate_json").$type<Record<string, unknown>>().notNull(),
     revision: bigint("revision", { mode: "number" }).notNull(),
     createdByUserAccountId: uuid("created_by_user_account_id")

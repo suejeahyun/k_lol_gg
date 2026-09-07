@@ -27,11 +27,13 @@ export const mediaHighlights = mediaSchema.table(
   "highlights",
   {
     id: uuid("id").primaryKey(),
+    legacyId: bigint("legacy_id", { mode: "number" }),
     revision: bigint("revision", { mode: "number" }).default(0).notNull(),
     title: varchar("title", { length: 120 }).notNull(),
     description: varchar("description", { length: 4000 }).notNull(),
     youtubeId: varchar("youtube_id", { length: 11 }).notNull(),
     thumbnailAssetId: uuid("thumbnail_asset_id").references(() => privateAssets.id, { onDelete: "restrict" }),
+    legacyThumbnailUrl: varchar("legacy_thumbnail_url", { length: 2_048 }),
     status: mediaPublicationStatus("status").default("DRAFT").notNull(),
     sortOrder: integer("sort_order").default(0).notNull(),
     createdByUserAccountId: uuid("created_by_user_account_id").notNull().references(() => userAccounts.id, { onDelete: "restrict" }),
@@ -44,10 +46,17 @@ export const mediaHighlights = mediaSchema.table(
   (table) => [
     index("media_highlights_public_idx").on(table.status, table.sortOrder, table.id),
     index("media_highlights_updated_idx").on(table.updatedAt.desc(), table.id),
+    uniqueIndex("media_highlights_legacy_id_uidx").on(table.legacyId),
     uniqueIndex("media_highlights_thumbnail_asset_uidx")
       .on(table.thumbnailAssetId)
       .where(sql`${table.thumbnailAssetId} IS NOT NULL`),
     check("media_highlights_revision_nonnegative", sql`${table.revision} >= 0`),
+    check("media_highlights_legacy_id_positive", sql`${table.legacyId} IS NULL OR ${table.legacyId} > 0`),
+    check("media_highlights_legacy_thumbnail_url", sql`${table.legacyThumbnailUrl} IS NULL OR (
+      char_length(${table.legacyThumbnailUrl}) BETWEEN 1 AND 2048
+      AND ${table.legacyThumbnailUrl} !~ '[[:cntrl:]]'
+      AND (${table.legacyThumbnailUrl} ~ '^https://' OR ${table.legacyThumbnailUrl} ~ '^/images/')
+    )`),
     check("media_highlights_title_nonempty", sql`char_length(btrim(${table.title})) BETWEEN 1 AND 120`),
     check("media_highlights_description_nonempty", sql`char_length(btrim(${table.description})) BETWEEN 1 AND 4000`),
     check("media_highlights_youtube_id", sql`${table.youtubeId} ~ '^[A-Za-z0-9_-]{11}$'`),
@@ -64,6 +73,7 @@ export const mediaGalleries = mediaSchema.table(
   "galleries",
   {
     id: uuid("id").primaryKey(),
+    legacyId: bigint("legacy_id", { mode: "number" }),
     revision: bigint("revision", { mode: "number" }).default(0).notNull(),
     title: varchar("title", { length: 120 }).notNull(),
     description: varchar("description", { length: 4000 }).notNull(),
@@ -79,7 +89,9 @@ export const mediaGalleries = mediaSchema.table(
   (table) => [
     index("media_galleries_public_idx").on(table.status, table.publishedAt.desc(), table.id),
     index("media_galleries_updated_idx").on(table.updatedAt.desc(), table.id),
+    uniqueIndex("media_galleries_legacy_id_uidx").on(table.legacyId),
     check("media_galleries_revision_nonnegative", sql`${table.revision} >= 0`),
+    check("media_galleries_legacy_id_positive", sql`${table.legacyId} IS NULL OR ${table.legacyId} > 0`),
     check("media_galleries_title_nonempty", sql`char_length(btrim(${table.title})) BETWEEN 1 AND 120`),
     check("media_galleries_description_nonempty", sql`char_length(btrim(${table.description})) BETWEEN 1 AND 4000`),
     check("media_galleries_home_published", sql`${table.showOnHome} = false OR ${table.status} = 'PUBLISHED'`),
@@ -88,6 +100,25 @@ export const mediaGalleries = mediaSchema.table(
       OR (${table.status} = 'PUBLISHED' AND ${table.publishedAt} IS NOT NULL AND ${table.archivedAt} IS NULL)
       OR (${table.status} = 'ARCHIVED' AND ${table.archivedAt} IS NOT NULL)
     )`),
+  ],
+);
+
+export const mediaGalleryExternalImages = mediaSchema.table(
+  "gallery_external_images",
+  {
+    galleryId: uuid("gallery_id").notNull().references(() => mediaGalleries.id, { onDelete: "restrict" }),
+    ordinal: integer("ordinal").notNull(),
+    sourceUrl: varchar("source_url", { length: 2_048 }).notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.galleryId, table.ordinal] }),
+    uniqueIndex("media_gallery_external_images_gallery_url_uidx").on(table.galleryId, table.sourceUrl),
+    check("media_gallery_external_images_ordinal", sql`${table.ordinal} BETWEEN 0 AND 4`),
+    check("media_gallery_external_images_source_url", sql`
+      char_length(${table.sourceUrl}) BETWEEN 1 AND 2048
+      AND ${table.sourceUrl} !~ '[[:cntrl:]]'
+      AND (${table.sourceUrl} ~ '^https://' OR ${table.sourceUrl} ~ '^/images/')
+    `),
   ],
 );
 

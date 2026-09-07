@@ -162,6 +162,20 @@
       "when": 1788778025270,
       "tag": "0022_s09_kakao_operation_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1788818889732,
+      "tag": "0023_v1_media_cutover",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1788820100814,
+      "tag": "0024_lowly_enchantress",
+      "breakpoints": true
     }
   ]
 }

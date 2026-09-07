@@ -60,9 +60,9 @@ export default async function RecruitsPage() {
               <div className={styles.cards}>
                 {result.data.scrims.map((scrim) => <article className={styles.card} key={scrim.id}>
                   <div className={styles.cardTop}><span>{scrim.status === "RECRUITING" ? "상대 모집 중" : scrim.status === "MATCHED" ? "매칭됨" : "확정"}</span><b>#{scrim.scrimNumber}</b></div>
-                  <h3>BO{scrim.bestOf} 스크림</h3>
-                  <dl><div><dt>요청 팀</dt><dd>{scrim.requesterTeamId.slice(0, 8)}</dd></div><div><dt>예정</dt><dd>{timeLabel(scrim.scheduledAt)}</dd></div></dl>
-                  <p className={styles.scrimLine}><Swords aria-hidden="true" /> {scrim.opponentTeamId ? `상대 팀 ${scrim.opponentTeamId.slice(0, 8)}` : "상대 팀을 기다리고 있어요"}</p>
+                  <h3>{scrim.title ?? (scrim.bestOf ? `BO${scrim.bestOf} 스크림` : "스크림 기록")}</h3>
+                  <dl><div><dt>요청 팀</dt><dd>{scrim.requesterTeamName ?? scrim.requesterTeamId?.slice(0, 8) ?? "기록 없음"}</dd></div><div><dt>예정</dt><dd>{timeLabel(scrim.scheduledAt)}</dd></div></dl>
+                  <p className={styles.scrimLine}><Swords aria-hidden="true" /> {scrim.opponentTeamName ?? (scrim.opponentTeamId ? `상대 팀 ${scrim.opponentTeamId.slice(0, 8)}` : "상대 팀을 기다리고 있어요")}</p>
                 </article>)}
               </div>
             )}

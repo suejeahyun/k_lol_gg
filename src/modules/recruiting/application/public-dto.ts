@@ -5,11 +5,14 @@ export type PublicScrimRecruitDto = Readonly<{
   recruitDate: string;
   scrimNumber: number;
   tournamentId: string;
-  requesterTeamId: string;
+  requesterTeamId: string | null;
   opponentTeamId: string | null;
+  title: string | null;
+  requesterTeamName: string | null;
+  opponentTeamName: string | null;
   status: ScrimRecruit["status"];
   scheduledAt: string | null;
-  bestOf: number;
+  bestOf: number | null;
 }>;
 
 export function toPublicPartyDto(party: RecruitParty) {
@@ -24,6 +27,9 @@ export function toPublicScrimDto(scrim: ScrimRecruit): PublicScrimRecruitDto {
     tournamentId: scrim.tournamentId,
     requesterTeamId: scrim.requesterTeamId,
     opponentTeamId: scrim.opponentTeamId,
+    title: scrim.legacyTitle ?? null,
+    requesterTeamName: scrim.requesterTeamName ?? null,
+    opponentTeamName: scrim.opponentTeamName ?? null,
     status: scrim.status,
     scheduledAt: scrim.scheduledAt?.toISOString() ?? null,
     bestOf: scrim.bestOf,

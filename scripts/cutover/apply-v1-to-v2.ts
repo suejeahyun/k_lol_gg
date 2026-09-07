@@ -9,6 +9,9 @@ import { importV1AccountExtensions } from "./import-v1-account-extensions";
 import { importV1AuthRegistry } from "./import-v1-auth-registry";
 import { importV1Competitions } from "./import-v1-competitions";
 import { importV1CoreRecords } from "./import-v1-core-records";
+import { importV1MediaSubmissions } from "./import-v1-media-submissions";
+import { importV1OperationalState } from "./import-v1-operational-state";
+import { importV1Recruiting } from "./import-v1-recruiting";
 import { importV1TeamTools } from "./import-v1-team-tools";
 import {
   assertV1SourceDatabase,
@@ -34,24 +37,58 @@ type CutoverDependencies = Readonly<{
   importTeamTools: typeof importV1TeamTools;
   importAccountExtensions: typeof importV1AccountExtensions;
   importCompetitions: typeof importV1Competitions;
+  importRecruiting: typeof importV1Recruiting;
+  importMediaSubmissions: typeof importV1MediaSubmissions;
+  importOperationalState: typeof importV1OperationalState;
 }>;
 
 const REQUIRED_EXTENSION_TABLES = Object.freeze([
+  "AdminLog",
+  "AppDataCache",
   "DestructionMatch",
   "DestructionMatchMvpVote",
   "DestructionParticipant",
   "DestructionParticipantReplacement",
   "DestructionParticipationApply",
+  "DestructionScrimRecruit",
+  "DestructionScrimRecruitLog",
   "DestructionTeam",
   "DestructionTournament",
   "DisciplineResolutionTask",
+  "DiscordAccountLinkLog",
+  "DiscordBotHeartbeat",
+  "DiscordOperationLog",
+  "DiscordOperationSetting",
+  "DiscordVoiceEvent",
   "EventMatch",
   "EventParticipant",
   "EventParticipationApply",
   "EventTeam",
   "EventTournamentMatch",
+  "GalleryImage",
+  "Highlight",
+  "InhouseResultImage",
+  "InhouseResultSubmission",
+  "KakaoFriendApplication",
+  "KakaoImageReceiveSession",
+  "KakaoInboundImage",
+  "KakaoLeaveRequest",
+  "KakaoMeetupRecord",
+  "KakaoOperationSetting",
+  "KakaoSuggestionRequest",
+  "OperationAiRequest",
   "PlayerRiotAccount",
   "PlayerSoloRankSnapshot",
+  "PrivateAsset",
+  "RecruitParty",
+  "RecruitPartyDiscordMonitor",
+  "RecruitPartyLog",
+  "RecruitPartyMember",
+  "RateLimitLog",
+  "RiotAccountLinkLog",
+  "RiotApiRequestLog",
+  "RiotApiStatus",
+  "RiotSyncJob",
   "UserDisciplineRecord",
 ]);
 
@@ -72,6 +109,9 @@ const defaultDependencies: CutoverDependencies = {
   importTeamTools: importV1TeamTools,
   importAccountExtensions: importV1AccountExtensions,
   importCompetitions: importV1Competitions,
+  importRecruiting: importV1Recruiting,
+  importMediaSubmissions: importV1MediaSubmissions,
+  importOperationalState: importV1OperationalState,
 };
 
 export function validateCutoverEnvironment(environment: CutoverEnvironment): string {
@@ -174,6 +214,15 @@ export async function runV1ToV2Cutover(
       const competitions = await dependencies.importCompetitions(importClient, {
         actorUserAccountId,
       });
+      const recruiting = await dependencies.importRecruiting(importClient, {
+        actorUserAccountId,
+      });
+      const mediaSubmissions = await dependencies.importMediaSubmissions(importClient, {
+        actorUserAccountId,
+      });
+      const operationalState = await dependencies.importOperationalState(importClient, {
+        actorUserAccountId,
+      });
       await importClient.query("commit");
       importComplete = true;
       return Object.freeze([
@@ -183,6 +232,9 @@ export async function runV1ToV2Cutover(
         ...teamTools,
         ...accountExtensions,
         ...competitions,
+        ...recruiting,
+        ...mediaSubmissions,
+        ...operationalState,
       ]);
     } catch (error) {
       if (!importComplete) await rollback(importClient);

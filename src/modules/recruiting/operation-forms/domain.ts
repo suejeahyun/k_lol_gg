@@ -16,8 +16,9 @@ export type FriendsFormPayload = Readonly<{
 export type LeavesFormPayload = Readonly<{
   applicantName: string;
   applicantNickname: string;
-  periodStart: string;
-  periodEnd: string;
+  periodStart: string | null;
+  periodEnd: string | null;
+  legacyPeriodText?: string | null;
   reason: string;
   scope: string;
 }>;
@@ -25,7 +26,8 @@ export type LeavesFormPayload = Readonly<{
 export type MeetupsFormPayload = Readonly<{
   hostName: string;
   hostNickname: string;
-  meetupAt: string;
+  meetupAt: string | null;
+  legacyDateText?: string | null;
   location: string;
   participants: readonly string[];
 }>;
@@ -133,23 +135,29 @@ export function parseOperationFormPayload<T extends OperationFormType>(formType:
     });
   } else if (formType === "leaves") {
     const keys = ["applicantName", "applicantNickname", "periodStart", "periodEnd", "reason", "scope"];
-    if (!hasExactKeys(value, keys)) throw new OperationFormError("INVALID_FORM_PAYLOAD");
-    const periodStart = calendarDate(value.periodStart); const periodEnd = calendarDate(value.periodEnd);
-    if (periodEnd < periodStart) throw new OperationFormError("INVALID_FORM_PAYLOAD");
+    const legacyKeys = [...keys, "legacyPeriodText"];
+    if (!hasExactKeys(value, keys) && !hasExactKeys(value, legacyKeys)) throw new OperationFormError("INVALID_FORM_PAYLOAD");
+    const legacyPeriodText = "legacyPeriodText" in value ? boundedText(value.legacyPeriodText, 160) : null;
+    const periodStart = value.periodStart === null && legacyPeriodText ? null : calendarDate(value.periodStart);
+    const periodEnd = value.periodEnd === null && legacyPeriodText ? null : calendarDate(value.periodEnd);
+    if (periodStart && periodEnd && periodEnd < periodStart) throw new OperationFormError("INVALID_FORM_PAYLOAD");
     parsed = Object.freeze({
       applicantName: boundedText(value.applicantName, 100), applicantNickname: boundedText(value.applicantNickname, 64),
-      periodStart, periodEnd, reason: boundedText(value.reason, 1_000), scope: boundedText(value.scope, 160),
+      periodStart, periodEnd, legacyPeriodText, reason: boundedText(value.reason, 1_000), scope: boundedText(value.scope, 160),
     });
   } else if (formType === "meetups") {
     const keys = ["hostName", "hostNickname", "meetupAt", "location", "participants"];
-    if (!hasExactKeys(value, keys) || !Array.isArray(value.participants) || value.participants.length < 1 || value.participants.length > 30) {
+    const legacyKeys = [...keys, "legacyDateText"];
+    if ((!hasExactKeys(value, keys) && !hasExactKeys(value, legacyKeys)) || !Array.isArray(value.participants) || value.participants.length < 1 || value.participants.length > 30) {
       throw new OperationFormError("INVALID_FORM_PAYLOAD");
     }
     const participants = value.participants.map((entry) => boundedText(entry, 100));
     if (new Set(participants).size !== participants.length) throw new OperationFormError("INVALID_FORM_PAYLOAD");
+    const legacyDateText = "legacyDateText" in value ? boundedText(value.legacyDateText, 160) : null;
+    const meetupAt = value.meetupAt === null && legacyDateText ? null : instant(value.meetupAt);
     parsed = Object.freeze({
       hostName: boundedText(value.hostName, 100), hostNickname: boundedText(value.hostNickname, 64),
-      meetupAt: instant(value.meetupAt), location: boundedText(value.location, 240), participants: Object.freeze(participants),
+      meetupAt, legacyDateText, location: boundedText(value.location, 240), participants: Object.freeze(participants),
     });
   } else {
     const keys = ["applicantName", "applicantNickname", "reason", "content"];

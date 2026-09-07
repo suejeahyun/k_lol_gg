@@ -327,7 +327,6 @@ export function buildImportedEventAggregate(source: LegacyEventCompetition): Eve
   const recruitmentOpensAt = instant(requireValue(source.recruitFrom, `event ${source.legacyId} has no recruitment opening.`), `event ${source.legacyId}.recruitFrom`);
   const recruitmentClosesAt = instant(requireValue(source.recruitTo, `event ${source.legacyId} has no recruitment closing.`), `event ${source.legacyId}.recruitTo`);
   if (Date.parse(recruitmentClosesAt) <= Date.parse(recruitmentOpensAt)) fail(`event ${source.legacyId} recruitment window is invalid.`);
-  if (source.galleryImageId !== null) fail(`event ${source.legacyId} has a V1 gallery image with no lossless V2 event field.`);
   uniqueBy(source.teams, (team) => team.id, `event ${source.legacyId} teams`);
   uniqueBy(source.participants, (participant) => participant.id, `event ${source.legacyId} participants`);
   uniqueBy(source.participants, (participant) => participant.playerId, `event ${source.legacyId} participant players`);
@@ -530,7 +529,6 @@ export function buildImportedDestructionAggregate(source: LegacyDestructionCompe
   const updatedAt = instant(source.updatedAt, `destruction ${source.legacyId}.updatedAt`);
   if (source.startDate !== null) instant(source.startDate, `destruction ${source.legacyId}.startDate`);
   if (source.endDate !== null) instant(source.endDate, `destruction ${source.legacyId}.endDate`);
-  if (source.galleryImageId !== null) fail(`destruction ${source.legacyId} has a V1 gallery image without a guaranteed V2 media-gallery mapping.`);
   if (source.advanceTeamCount !== 4) fail(`destruction ${source.legacyId} advanceTeamCount is not supported by the V2 four-team bracket.`);
   const teamCount = source.teams.length;
   if (teamCount < 4) fail(`destruction ${source.legacyId} has no explicit V1 team count and fewer than four materialized teams.`);
