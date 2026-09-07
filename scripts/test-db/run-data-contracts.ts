@@ -926,6 +926,7 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
     disciplineRecordId: await requiredFixture("discipline record", `select id::text as value from discipline.records order by updated_at desc, id limit 1`),
     operationFormId,
     draftId,
+    mmrReviewId: await requiredFixture("MMR manual adjustment", `select id::text as value from mmr.manual_adjustments order by created_at desc, id limit 1`),
     privateAssetId: null as string | null,
   };
   const privateAssetRelation = await pool.query<{ relation: string | null }>(`select to_regclass('assets.private_assets')::text as relation`);
@@ -951,6 +952,7 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
       tournamentId: sourceIds.destructionId,
       eventId: sourceIds.eventId,
       userAccountId: actorId,
+      mmrReviewId: sourceIds.mmrReviewId,
     },
     sourceIds,
   };

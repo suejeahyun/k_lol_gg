@@ -10,7 +10,10 @@ const projectRoot = resolve(import.meta.dirname, "..");
 test("capture fixture example resolves every repository page without placeholders", async () => {
   const fixtures = JSON.parse(await readFile(resolve(projectRoot, "docs/qa-evidence/capture-fixtures.example.json"), "utf8"));
   const pages = await discoverAppPages(resolve(projectRoot, "src/app"));
-  const requiredParameters = [...new Set(pages.flatMap((page) => dynamicParameters(page.route).map((item) => item.name)))].sort();
+  const requiredParameters = [...new Set([
+    ...pages.flatMap((page) => dynamicParameters(page.route).map((item) => item.name)),
+    "mmrReviewId",
+  ])].sort();
   assert.deepEqual(Object.keys(fixtures.parameters).sort(), requiredParameters);
   const plan = buildCapturePlan(pages, fixtures);
   assert.ok(plan.length >= pages.length);
@@ -26,7 +29,7 @@ test("browser QA server emits setup credentials, actor identity and fail-fast dy
   for (const evidence of [
     "assertSafeTestDatabase", "setupLoginId", "accountLoginId", "actorPlayerId", "seasonId", "applicationId",
     "championKey", "publishedMatchId", "submissionId", "highlightId", "galleryId", "eventId", "destructionId",
-    "disciplineRecordId", "operationFormId", "privateAssetId", "draftId", "requiredFixture",
+    "disciplineRecordId", "operationFormId", "privateAssetId", "draftId", "mmrReviewId", "requiredFixture",
     'V2_PUBLIC_DATA_SOURCE: "postgres"',
     'V2_FAKE_PRIVATE_ASSETS: ""',
   ]) assert.match(source, new RegExp(evidence));

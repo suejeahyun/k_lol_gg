@@ -20,9 +20,16 @@ const QUERY_VARIANTS = Object.freeze({
   "/account": [
     { label: "player", query: { tab: "player" } },
   ],
+  "/applications": [
+    { label: "season", query: { type: "season" } },
+    { label: "event", query: { type: "event" } },
+    { label: "destruction", query: { type: "destruction" } },
+  ],
   "/admin/balance-ai": [
     { label: "players", query: { tab: "players" } },
     { label: "reviews", query: { tab: "reviews" } },
+    { label: "review-detail", query: { tab: "reviews", review: { fixture: "mmrReviewId" } } },
+    { label: "recalculate-confirmation", query: { action: "recalculate" } },
   ],
   "/admin/discipline": [
     { label: "tasks", query: { tab: "tasks" } },
@@ -63,12 +70,19 @@ const QUERY_VARIANTS = Object.freeze({
   "/admin/riot": [
     { label: "sync", query: { tab: "sync" } },
     { label: "logs", query: { tab: "logs" } },
+    { label: "bulk-link", query: { tab: "accounts", action: "bulk-link", q: "QA", batchSize: "10" } },
+  ],
+  "/admin/seasons": [
+    { label: "applications", query: { view: "applications" } },
   ],
   "/players/[playerId]": [
     { label: "riot", query: { tab: "riot" } },
   ],
   "/tools/random-team": [
     { label: "tier", query: { mode: "tier" } },
+  ],
+  "/rankings/mmr": [
+    { label: "players", query: { view: "players" } },
   ],
 });
 
@@ -255,9 +269,25 @@ export function classifyRoute(route) {
   return { group: "public", session: "anonymous" };
 }
 
-function withQuery(path, query) {
+function resolveQueryValue(value, fixtures, route, key) {
+  if (typeof value === "string") return value;
+  if (!value || typeof value !== "object" || Array.isArray(value) || typeof value.fixture !== "string") {
+    throw new Error(`Query variant ${route} parameter ${key} must be a string or fixture reference.`);
+  }
+  const fixture = fixtureValue(fixtures, route, value.fixture);
+  if (fixture === undefined || fixture === null || (typeof fixture !== "string" && typeof fixture !== "number")) {
+    throw new Error(`Missing fixture for query variant ${route}: provide ${value.fixture}.`);
+  }
+  const normalized = String(fixture);
+  if (!normalized || /[\u0000-\u001f\u007f]/u.test(normalized)) {
+    throw new Error(`Fixture for query variant ${route} parameter ${key} is invalid.`);
+  }
+  return normalized;
+}
+
+function withQuery(path, query, fixtures, route) {
   const url = new URL(path, "https://capture-plan.invalid");
-  for (const [key, value] of Object.entries(query)) url.searchParams.set(key, value);
+  for (const [key, value] of Object.entries(query)) url.searchParams.set(key, resolveQueryValue(value, fixtures, route, key));
   return `${url.pathname}${url.search}`;
 }
 
@@ -307,7 +337,7 @@ export function buildCapturePlan(pages, fixtures) {
     for (const variant of QUERY_VARIANTS[page.route] ?? []) {
       queryVariants.push(planEntry({
         page,
-        path: withQuery(resolvedPaths.get(page.route), variant.query),
+        path: withQuery(resolvedPaths.get(page.route), variant.query, fixtures, page.route),
         label: variant.label,
         viewportName: "desktop",
         viewport: DESKTOP_VIEWPORT,

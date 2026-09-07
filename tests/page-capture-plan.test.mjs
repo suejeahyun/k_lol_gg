@@ -88,7 +88,10 @@ test("the repository plan covers every page once, resolves IDs and adds reviewed
   const pages = await discoverAppPages(appDirectory);
   const parameterNames = new Set(pages.flatMap((page) => dynamicParameters(page.route).map((parameter) => parameter.name)));
   const fixtures = {
-    parameters: Object.fromEntries([...parameterNames].map((parameter) => [parameter, parameter === "championId" ? "ahri" : uuidFixture])),
+    parameters: {
+      ...Object.fromEntries([...parameterNames].map((parameter) => [parameter, parameter === "championId" ? "ahri" : uuidFixture])),
+      mmrReviewId: uuidFixture,
+    },
   };
   const plan = buildCapturePlan(pages, fixtures);
   const canonical = plan.filter((entry) => entry.captureKind === "canonical");
@@ -112,6 +115,8 @@ test("the repository plan covers every page once, resolves IDs and adds reviewed
     "/account?tab=player",
     "/admin/balance-ai?tab=players",
     "/admin/balance-ai?tab=reviews",
+    `/admin/balance-ai?tab=reviews&review=${uuidFixture}`,
+    "/admin/balance-ai?action=recalculate",
     "/admin/discipline?tab=tasks",
     "/admin/kakao?tab=logs",
     "/admin/kakao?tab=health",
@@ -121,6 +126,12 @@ test("the repository plan covers every page once, resolves IDs and adds reviewed
     `/admin/players/${uuidFixture}?tab=riot`,
     "/admin/riot?tab=sync",
     "/admin/riot?tab=logs",
+    "/admin/riot?tab=accounts&action=bulk-link&q=QA&batchSize=10",
+    "/admin/seasons?view=applications",
+    "/applications?type=season",
+    "/applications?type=event",
+    "/applications?type=destruction",
+    "/rankings/mmr?view=players",
     `/players/${uuidFixture}?tab=riot`,
   ];
   for (const path of requiredVariants) assert.ok(plan.some((entry) => entry.path === path), path);
