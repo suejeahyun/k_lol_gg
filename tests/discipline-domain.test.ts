@@ -31,6 +31,7 @@ function task(requiredGameCount = 2): DisciplineTask {
     requiredGameCount,
     dueAt: new Date(issuedAt.getTime() + 30 * DAY),
     status: "REQUIRED",
+    reviewNote: null,
     reviewBoundaryAt: null,
     evidence: [],
   };

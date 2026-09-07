@@ -42,6 +42,7 @@ const ASSET_ID = "40000000-0000-4000-8000-000000000000";
 const owner: PrivateAssetHumanActor = {
   userAccountId: OWNER_ID,
   sessionId: "50000000-0000-4000-8000-000000000000",
+  authVersion: 0,
   purpose: "ACCOUNT",
   role: "USER",
   approvalStatus: "APPROVED",
@@ -50,6 +51,7 @@ const other: PrivateAssetHumanActor = { ...owner, userAccountId: OTHER_ID };
 const admin: PrivateAssetHumanActor = {
   userAccountId: OTHER_ID,
   sessionId: "60000000-0000-4000-8000-000000000000",
+  authVersion: 0,
   purpose: "ADMIN",
   role: "ADMIN",
   approvalStatus: "APPROVED",

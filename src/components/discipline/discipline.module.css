@@ -1,0 +1,42 @@
+.page { width: min(100%, 76rem); margin: 0 auto; padding: clamp(1rem, 3vw, 2.5rem); display: grid; gap: 1.4rem; }
+.hero { display: flex; align-items: center; justify-content: space-between; gap: 2rem; min-height: 13rem; padding: clamp(1.6rem, 5vw, 3.2rem); border: 1px solid rgba(151, 187, 225, .38); border-radius: 2rem; background: linear-gradient(135deg, #eefaff, #faf2ff 55%, #fff5f8); box-shadow: var(--shadow-soft); }
+.hero h1, .header h1 { margin: .35rem 0; color: var(--ink-strong); font-family: var(--font-heading); font-size: clamp(2rem, 5vw, 3.6rem); letter-spacing: -.05em; }
+.hero p, .header p, .muted { color: var(--text-muted); line-height: 1.65; }
+.eyebrow { color: var(--text-accent-purple); font-size: .75rem; font-weight: 900; letter-spacing: .12em; }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .8rem; }
+.card, .panel, .state { border: 1px solid var(--border); border-radius: 1.25rem; background: rgba(255,255,255,.9); padding: 1.1rem; box-shadow: 0 12px 34px rgba(76,94,130,.07); }
+.card span { color: var(--text-muted); font-size: .8rem; }
+.card strong { display: block; margin-top: .35rem; color: var(--ink-strong); font-size: 1.8rem; }
+.rules, .tasks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .9rem; }
+.panel h2, .panel h3 { margin-top: 0; }
+.state { min-height: 12rem; display: grid; place-content: center; text-align: center; color: var(--text-muted); }
+.header { display: flex; align-items: end; justify-content: space-between; gap: 1rem; }
+.header h1 { font-size: clamp(2rem, 4vw, 2.8rem); }
+.taskHeader, .actions, .tabs, .progressLine { display: flex; align-items: center; justify-content: space-between; gap: .7rem; flex-wrap: wrap; }
+.badge { display: inline-flex; padding: .3rem .65rem; border-radius: 999px; background: #eef5ff; color: #315eaa; font-size: .75rem; font-weight: 850; }
+.progress { height: .55rem; overflow: hidden; border-radius: 999px; background: #edf2f9; }
+.progress i { display: block; height: 100%; background: linear-gradient(90deg,#7ab9e8,#d895ce); }
+.upload { display: grid; gap: .65rem; margin-top: 1rem; }
+.upload input, .field input, .field textarea, .field select { width: 100%; border: 1px solid #cad7e8; border-radius: .75rem; padding: .75rem; background: #fff; color: inherit; font: inherit; }
+.button, .link, .tabs a { display: inline-flex; justify-content: center; align-items: center; min-height: 2.7rem; padding: .65rem 1rem; border: 0; border-radius: 999px; background: #315eaa; color: #fff; font-weight: 850; text-decoration: none; cursor: pointer; }
+.button:disabled { opacity: .6; cursor: wait; }
+.link, .tabs a { background: #eef5ff; color: #315eaa; }
+.tabs a[aria-current="page"] { background: #315eaa; color: #fff; }
+.notice, .error { border-radius: .75rem; padding: .75rem; background: #eef8f2; color: #25613b; }
+.error { background: #fff1f1; color: #9d3434; }
+.evidence { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .55rem; margin-top: .8rem; }
+.evidence a, .evidence button { min-width: 0; border: 1px solid var(--border); border-radius: .75rem; padding: .55rem; background: #fff; color: var(--ink-strong); text-align: center; overflow-wrap: anywhere; cursor: pointer; }
+.tableWrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 1rem; background: #fff; }
+.table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+.table th, .table td { padding: .75rem; border-bottom: 1px solid #edf1f6; text-align: left; white-space: nowrap; }
+.table th { background: #f8fbff; color: var(--text-muted); }
+.form { display: grid; gap: 1rem; }
+.field { display: grid; gap: .35rem; }
+.field span { font-weight: 800; }
+.detailGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .7rem; margin: 0; }
+.facts div { border-radius: .75rem; background: #f8fbff; padding: .7rem; }
+.facts dt { color: var(--text-muted); font-size: .75rem; }
+.facts dd { margin: .2rem 0 0; overflow-wrap: anywhere; }
+@media (max-width: 800px) { .stats { grid-template-columns: repeat(2, 1fr); } .rules, .tasks, .detailGrid { grid-template-columns: 1fr; } .header { align-items: start; flex-direction: column; } .evidence { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 520px) { .page { padding: .8rem; } .hero { min-height: 0; border-radius: 1.4rem; } .stats, .facts { grid-template-columns: 1fr; } .evidence { grid-template-columns: repeat(2, 1fr); } .button, .link { width: 100%; } }

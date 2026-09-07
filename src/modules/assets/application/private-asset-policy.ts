@@ -7,14 +7,16 @@ import type {
 export type PrivateAssetAccountActor = Readonly<{
   userAccountId: string;
   sessionId: string;
+  authVersion: number;
   purpose: "ACCOUNT";
-  role: "USER";
+  role: "USER" | "ADMIN" | "SUPER_ADMIN";
   approvalStatus: "APPROVED" | "RESTRICTED";
 }>;
 
 export type PrivateAssetAdminActor = Readonly<{
   userAccountId: string;
   sessionId: string;
+  authVersion: number;
   purpose: "ADMIN";
   role: "ADMIN" | "SUPER_ADMIN";
   approvalStatus: "APPROVED";

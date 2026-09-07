@@ -6,12 +6,15 @@ export type DisciplineAuthorizationIntent =
   | Readonly<{
       kind: "ACCOUNT_SESSION";
       sessionId: string;
+      role: "USER" | "ADMIN" | "SUPER_ADMIN";
+      authVersion: number;
       transactionRecheck: true;
     }>
   | Readonly<{
       kind: "ADMIN_TOTP";
       sessionId: string;
       minimumRole: "ADMIN" | "SUPER_ADMIN";
+      authVersion: number;
       requireTotp: true;
       transactionRecheck: true;
     }>;

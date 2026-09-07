@@ -27,6 +27,7 @@ function baseTask(): DisciplineTask {
     requiredGameCount: 1,
     dueAt: new Date("2026-09-30T00:00:00.000Z"),
     status: "REQUIRED",
+    reviewNote: null,
     reviewBoundaryAt: null,
     evidence: [],
   };
@@ -57,6 +58,8 @@ function submitCommand(): Extract<DisciplineCommand, { type: "SUBMIT_EVIDENCE" }
       authorizationIntent: {
         kind: "ACCOUNT_SESSION",
         sessionId: "session-1",
+        role: "USER",
+        authVersion: 0,
         transactionRecheck: true,
       },
       idempotency: {
@@ -83,6 +86,7 @@ function reviewCommand(): Extract<DisciplineCommand, { type: "REVIEW_EVIDENCE" }
         kind: "ADMIN_TOTP",
         sessionId: "admin-session-1",
         minimumRole: "ADMIN",
+        authVersion: 0,
         requireTotp: true,
         transactionRecheck: true,
       },

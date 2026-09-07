@@ -81,6 +81,9 @@ function validateCommand(command: DisciplineCommand) {
   }
   const intent = command.metadata.authorizationIntent;
   canonicalIdentifier(intent.sessionId, "sessionId");
+  if (!Number.isSafeInteger(intent.authVersion) || intent.authVersion < 0) {
+    throw new DisciplineApplicationError("INVALID_AUTHORIZATION", "Session auth version is invalid.");
+  }
   if (command.type === "SUBMIT_EVIDENCE") {
     canonicalIdentifier(command.payload.privateAssetId, "privateAssetId");
     if (intent.kind !== "ACCOUNT_SESSION" || intent.transactionRecheck !== true) {
@@ -198,6 +201,7 @@ export class DisciplineCommandHandler {
     await this.dependencies.repository.saveTask(transaction, {
       task: next,
       expectedRevision: command.metadata.expectedRevision,
+      actor: actor!,
     });
     const occurredAt = now.toISOString();
     const eventType = `DISCIPLINE_${command.type}` as const;

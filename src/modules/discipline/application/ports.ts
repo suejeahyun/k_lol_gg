@@ -2,6 +2,9 @@ import type { JsonObject } from "@/modules/competitions/core";
 
 import type { DisciplineTask } from "../domain/evidence-task";
 import type { DisciplineCommand, DisciplineCommandAction } from "./commands";
+import type { TransactionSessionActor } from "@/modules/auth/domain/transaction-session";
+import type { DisciplineCategory, DisciplineType } from "../domain/policy";
+import type { PublicDisciplineStatisticsDto } from "../domain/public-statistics";
 
 export interface DisciplineTransaction {
   readonly disciplineTransaction: unique symbol;
@@ -53,7 +56,7 @@ export interface DisciplineRepository {
   ): Promise<ReadyDisciplineEvidenceAsset | null>;
   saveTask(
     transaction: DisciplineTransaction,
-    input: Readonly<{ task: DisciplineTask; expectedRevision: number }>,
+    input: Readonly<{ task: DisciplineTask; expectedRevision: number; actor: CurrentDisciplineActor }>,
   ): Promise<void>;
 }
 
@@ -125,3 +128,100 @@ export type DisciplineCommandResult = Readonly<{
   revision: number;
   replayed: boolean;
 }>;
+
+export type DisciplineEvidenceDto = Readonly<{
+  assetId: string;
+  contentType: string;
+  byteSize: number;
+  width: number;
+  height: number;
+  status: "STAGED" | "READY" | "DELETE_PENDING";
+  submittedAt: string | null;
+}>;
+
+export type OwnerDisciplineTaskDto = Readonly<{
+  id: string;
+  publicCode: string;
+  revision: number;
+  category: DisciplineCategory;
+  requiredGameCount: number;
+  submittedEvidenceCount: number;
+  remainingEvidenceCount: number;
+  dueAt: string;
+  status: DisciplineTask["status"];
+  reviewNote: string | null;
+  evidence: readonly DisciplineEvidenceDto[];
+}>;
+
+export type AdminDisciplineRecordDto = Readonly<{
+  id: string;
+  revision: number;
+  userAccountId: string | null;
+  playerId: string | null;
+  targetName: string;
+  targetNickname: string | null;
+  targetTagLine: string | null;
+  type: DisciplineType;
+  category: DisciplineCategory;
+  source: string;
+  reason: string;
+  internalNote: string | null;
+  active: boolean;
+  createdAt: string;
+  task: OwnerDisciplineTaskDto | null;
+}>;
+
+export type DisciplineAdminListQuery = Readonly<{
+  page: number;
+  pageSize: number;
+  tab: "records" | "tasks" | "reviews";
+  status?: DisciplineTask["status"];
+  active?: boolean;
+}>;
+
+export type DisciplineMutationEnvelope = Readonly<{
+  actorSession: TransactionSessionActor;
+  requestId: string;
+  scope: string;
+  keyHash: Buffer;
+  requestHash: Buffer;
+}>;
+
+export type CreateDisciplineRecordInput = Readonly<{
+  userAccountId: string | null;
+  playerId: string | null;
+  targetName: string;
+  targetNickname: string | null;
+  targetTagLine: string | null;
+  type: DisciplineType;
+  category: DisciplineCategory;
+  source: string;
+  reason: string;
+  internalNote: string | null;
+}>;
+
+export type UpdateDisciplineRecordInput = Readonly<{
+  reason: string;
+  internalNote: string | null;
+}>;
+
+export type DisciplineAdminMutationResult = Readonly<{
+  body: Record<string, unknown>;
+  status: number;
+  revision: number;
+  replayed: boolean;
+}>;
+
+export interface DisciplineQueryPort {
+  getPublicStatistics(): Promise<PublicDisciplineStatisticsDto>;
+  listOwnerTasks(userAccountId: string): Promise<readonly OwnerDisciplineTaskDto[]>;
+  getOwnerTask(userAccountId: string, taskId: string): Promise<OwnerDisciplineTaskDto | null>;
+  listAdmin(query: DisciplineAdminListQuery): Promise<Readonly<{ items: readonly AdminDisciplineRecordDto[]; totalCount: number }>>;
+  getAdminRecord(id: string): Promise<AdminDisciplineRecordDto | null>;
+}
+
+export interface DisciplineAdminCommandPort {
+  createRecord(envelope: DisciplineMutationEnvelope, input: CreateDisciplineRecordInput, now: Date): Promise<DisciplineAdminMutationResult>;
+  updateRecord(envelope: DisciplineMutationEnvelope, id: string, expectedRevision: number, input: UpdateDisciplineRecordInput, now: Date): Promise<DisciplineAdminMutationResult>;
+  cancelRecord(envelope: DisciplineMutationEnvelope, id: string, expectedRevision: number, reason: string, now: Date): Promise<DisciplineAdminMutationResult>;
+}

@@ -21,6 +21,7 @@ export type DisciplineTask = Readonly<{
   requiredGameCount: number;
   dueAt: Date;
   status: DisciplineTaskStatus;
+  reviewNote: string | null;
   reviewBoundaryAt: Date | null;
   evidence: readonly DisciplineEvidence[];
 }>;
@@ -112,6 +113,7 @@ export function reviewDisciplineEvidence(input: Readonly<{
       : input.decision === "REJECT"
         ? "REJECTED"
         : "CANCELLED",
+    reviewNote: note || null,
     reviewBoundaryAt: input.decision === "REJECT" ? input.now : input.task.reviewBoundaryAt,
   };
 }

@@ -13,3 +13,4 @@ export const recruitingSchema = pgSchema("recruiting");
 export const mediaSchema = pgSchema("media");
 export const operationsSchema = pgSchema("operations");
 export const riotSchema = pgSchema("riot");
+export const disciplineSchema = pgSchema("discipline");
