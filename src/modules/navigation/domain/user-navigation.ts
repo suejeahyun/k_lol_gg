@@ -71,10 +71,10 @@ export const canonicalUserRoutes = [
 
   { template: "/recruits", label: "구인 현황", section: "community", implementationState: "page-contract" },
   { template: "/discipline", label: "징계 현황", section: "community", implementationState: "planned" },
-  { template: "/highlights", label: "하이라이트", section: "community", implementationState: "planned" },
-  { template: "/highlights/[highlightId]", label: "하이라이트 상세", section: "community", implementationState: "planned" },
-  { template: "/images", label: "갤러리", section: "community", implementationState: "planned" },
-  { template: "/images/[imageId]", label: "갤러리 상세", section: "community", implementationState: "planned" },
+  { template: "/highlights", label: "하이라이트", section: "community", implementationState: "page-contract" },
+  { template: "/highlights/[highlightId]", label: "하이라이트 상세", section: "community", implementationState: "page-contract" },
+  { template: "/images", label: "갤러리", section: "community", implementationState: "page-contract" },
+  { template: "/images/[imageId]", label: "갤러리 상세", section: "community", implementationState: "page-contract" },
 ] as const satisfies readonly UserRouteDefinition[];
 
 export const primaryUserNavigation = [

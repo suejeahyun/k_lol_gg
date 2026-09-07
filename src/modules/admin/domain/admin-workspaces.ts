@@ -51,5 +51,9 @@ export function isAdminWorkspaceActive(pathname: string, href: string) {
     return pathname.startsWith("/admin/players") || pathname.startsWith("/admin/users");
   }
   if (href === "/admin/progress/event") return pathname.startsWith("/admin/progress/");
+  if (href === "/admin/champions") {
+    return ["/admin/champions", "/admin/highlights", "/admin/images", "/admin/private-assets"]
+      .some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+  }
   return pathname === href || pathname.startsWith(`${href}/`);
 }

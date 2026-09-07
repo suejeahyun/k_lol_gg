@@ -32,6 +32,8 @@ test("active workspace matching does not make the dashboard match every route", 
   assert.equal(isAdminWorkspaceActive("/admin/players", "/admin"), false);
   assert.equal(isAdminWorkspaceActive("/admin/players/example", "/admin/players"), true);
   assert.equal(isAdminWorkspaceActive("/admin/progress/destruction", "/admin/progress/event"), true);
+  assert.equal(isAdminWorkspaceActive("/admin/highlights/example/edit", "/admin/champions"), true);
+  assert.equal(isAdminWorkspaceActive("/admin/images", "/admin/champions"), true);
 });
 
 test("dashboard leaves a real work destination available", () => {
