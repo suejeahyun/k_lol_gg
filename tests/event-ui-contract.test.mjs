@@ -10,6 +10,7 @@ test("public competition pages expose list/detail/application states without adm
   const application = source("../src/app/(public)/(competitions)/competitions/events/[eventId]/event-application-actions.tsx");
   for (const token of ["parseEventListQuery", 'alternates: { canonical: "/competitions" }', 'role="status"', 'result.state === "error" ? "alert"']) assert.equal(list.includes(token), true, token);
   for (const token of ["notFound()", "applicationsOpen", "EventApplicationActions", "팀 편성", "대진과 결과"]) assert.equal(detail.includes(token), true, token);
+  for (const token of ["playerName", "teamAName", "teamBName", "winnerTeamName"]) assert.equal(detail.includes(token), true, token);
   for (const token of ["If-Match", "Idempotency-Key", 'aria-live="polite"', 'method: "PUT"', '"DELETE"']) assert.equal(application.includes(token), true, token);
   assert.equal(`${list}${detail}${application}`.includes("ownerUserAccountId"), false);
   assert.equal(`${list}${detail}${application}`.includes("START_RECRUITMENT"), false);
@@ -23,6 +24,8 @@ test("administrator event pages connect every lifecycle operation to protected c
   assert.equal(list.includes("requirePageRole"), true);
   for (const token of ["PLANNED", "RECRUITING", "TEAM_BUILDING", "IN_PROGRESS", "COMPLETED", "CANCELLED", "EventAdminActions"]) assert.equal(detail.includes(token), true, token);
   for (const token of ["START_RECRUITMENT", "CLOSE_RECRUITMENT", "ADD_PARTICIPANT", "BUILD_TEAMS", "GENERATE_BRACKET", "RECORD_RESULT", "CORRECT_RESULT", "COMPLETE_EVENT", "CANCEL_EVENT", "RESTORE_EVENT", "If-Match", "Idempotency-Key"]) assert.equal(actions.includes(token), true, token);
+  for (const token of ["BoundedPicker", "playerOptions", "playerLabels", "winnerTeamId", "mvpParticipantId"]) assert.equal(actions.includes(token), true, token);
+  assert.doesNotMatch(`${detail}${actions}`, /플레이어 UUID|MVP 참가자 ID/u);
   for (const token of ["crypto.randomUUID", "bracketBestOf", "recruitmentOpensAt", 'If-Match":']) assert.equal(create.includes(token), true, token);
 });
 

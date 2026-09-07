@@ -177,6 +177,7 @@ test("public DTO is an explicit allowlist without balances, cancellation reason,
   assert.deepEqual(Object.keys(dto).sort(), [
     "advanceTeamCount",
     "championTeamId",
+    "championTeamName",
     "id",
     "mvpResults",
     "preliminaryBestOf",
@@ -193,6 +194,7 @@ test("public DTO is an explicit allowlist without balances, cancellation reason,
   assert.equal("cancellationReason" in dto, false);
   assert.equal("mvpBallots" in dto, false);
   assert.equal("remainingAuctionPoints" in dto, false);
+  assert.equal(dto.tournamentFixtures.every((fixture) => fixture.teamAName !== fixture.teamAId && fixture.teamBName !== fixture.teamBId), true);
 });
 
 test("application port types retain JSON-safe public response material", () => {

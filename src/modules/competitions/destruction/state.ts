@@ -1,4 +1,6 @@
 import {
+  competitionPlayerLabel,
+  competitionTeamLabel,
   transitionDestructionLifecycle,
   type DestructionLifecycle,
   type DestructionStatus,
@@ -55,6 +57,7 @@ export type DestructionPublicTeamDto = Readonly<{
   name: string;
   confirmed: boolean;
   rosterPlayerIds: readonly string[];
+  rosterPlayers: readonly Readonly<{ playerId: string; playerName: string; position: string }>[];
 }>;
 
 export type DestructionPublicFixtureDto = Readonly<{
@@ -65,6 +68,8 @@ export type DestructionPublicFixtureDto = Readonly<{
   bestOf: number;
   teamAId: string;
   teamBId: string;
+  teamAName: string;
+  teamBName: string;
   teamAScore: number | null;
   teamBScore: number | null;
   winnerTeamId: string | null;
@@ -87,16 +92,29 @@ export type DestructionPublicDto = Readonly<{
     bestOf: number;
     teamAId: string | null;
     teamBId: string | null;
+    teamAName: string;
+    teamBName: string;
     teamAScore: number | null;
     teamBScore: number | null;
     winnerTeamId: string | null;
   }>[];
   qualifiedTeamIds: readonly string[];
   championTeamId: string | null;
-  mvpResults: readonly Readonly<{ fixtureId: string; finalizedPlayerId: string; selectionMethod: "VOTE" | "ADMIN" }>[];
+  championTeamName: string | null;
+  mvpResults: readonly Readonly<{ fixtureId: string; fixtureName: string; finalizedPlayerId: string; finalizedPlayerName: string; selectionMethod: "VOTE" | "ADMIN" }>[];
 }>;
 
-export function toDestructionPublicDto(aggregate: DestructionAggregate): DestructionPublicDto {
+export function toDestructionPublicDto(
+  aggregate: DestructionAggregate,
+  playerCatalog: ReadonlyMap<string, string> = new Map(),
+): DestructionPublicDto {
+  const fixtureName = (fixtureId: string) => {
+    const preliminary = aggregate.preliminaryFixtures.find((fixture) => fixture.id === fixtureId);
+    const tournament = aggregate.tournamentBracket?.fixtures.find((fixture) => fixture.id === fixtureId);
+    const teamAId = preliminary?.teamAId ?? tournament?.teamAId ?? null;
+    const teamBId = preliminary?.teamBId ?? tournament?.teamBId ?? null;
+    return `${competitionTeamLabel(aggregate.teams, teamAId)} vs ${competitionTeamLabel(aggregate.teams, teamBId)}`;
+  };
   return Object.freeze({
     id: aggregate.id,
     revision: aggregate.revision,
@@ -111,6 +129,11 @@ export function toDestructionPublicDto(aggregate: DestructionAggregate): Destruc
       name: team.name,
       confirmed: team.confirmed,
       rosterPlayerIds: Object.freeze(aggregate.participants.filter((participant) => participant.teamId === team.id).map((participant) => participant.playerId).sort()),
+      rosterPlayers: Object.freeze(aggregate.participants.filter((participant) => participant.teamId === team.id).map((participant) => Object.freeze({
+        playerId: participant.playerId,
+        playerName: competitionPlayerLabel(playerCatalog, participant.playerId),
+        position: participant.position,
+      })).sort((left, right) => left.position.localeCompare(right.position, "en-US") || left.playerName.localeCompare(right.playerName, "ko-KR"))),
     }))),
     preliminaryFixtures: Object.freeze([...aggregate.preliminaryFixtures].sort((left, right) => left.id < right.id ? -1 : left.id > right.id ? 1 : 0).map((fixture) => Object.freeze({
       id: fixture.id,
@@ -120,6 +143,8 @@ export function toDestructionPublicDto(aggregate: DestructionAggregate): Destruc
       bestOf: fixture.bestOf,
       teamAId: fixture.teamAId,
       teamBId: fixture.teamBId,
+      teamAName: competitionTeamLabel(aggregate.teams, fixture.teamAId),
+      teamBName: competitionTeamLabel(aggregate.teams, fixture.teamBId),
       teamAScore: fixture.teamAScore,
       teamBScore: fixture.teamBScore,
       winnerTeamId: fixture.winnerTeamId,
@@ -130,15 +155,26 @@ export function toDestructionPublicDto(aggregate: DestructionAggregate): Destruc
       bestOf: fixture.bestOf,
       teamAId: fixture.teamAId,
       teamBId: fixture.teamBId,
+      teamAName: competitionTeamLabel(aggregate.teams, fixture.teamAId),
+      teamBName: competitionTeamLabel(aggregate.teams, fixture.teamBId),
       teamAScore: fixture.result?.teamAScore ?? null,
       teamBScore: fixture.result?.teamBScore ?? null,
       winnerTeamId: fixture.winnerTeamId,
     }))),
     qualifiedTeamIds: Object.freeze([...aggregate.qualifiedTeamIds]),
     championTeamId: aggregate.tournamentBracket?.championTeamId ?? null,
+    championTeamName: aggregate.tournamentBracket?.championTeamId
+      ? competitionTeamLabel(aggregate.teams, aggregate.tournamentBracket.championTeamId)
+      : null,
     mvpResults: Object.freeze(aggregate.mvpBallots
       .filter((ballot): ballot is typeof ballot & { finalizedPlayerId: string; selectionMethod: "VOTE" | "ADMIN" } => ballot.finalizedPlayerId !== null && ballot.selectionMethod !== null)
-      .map((ballot) => Object.freeze({ fixtureId: ballot.fixtureId, finalizedPlayerId: ballot.finalizedPlayerId, selectionMethod: ballot.selectionMethod }))
+      .map((ballot) => Object.freeze({
+        fixtureId: ballot.fixtureId,
+        fixtureName: fixtureName(ballot.fixtureId),
+        finalizedPlayerId: ballot.finalizedPlayerId,
+        finalizedPlayerName: competitionPlayerLabel(playerCatalog, ballot.finalizedPlayerId),
+        selectionMethod: ballot.selectionMethod,
+      }))
       .sort((left, right) => left.fixtureId < right.fixtureId ? -1 : left.fixtureId > right.fixtureId ? 1 : 0)),
   });
 }

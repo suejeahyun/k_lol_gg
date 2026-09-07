@@ -17,6 +17,7 @@ import {
 } from "@/platform/db/schema/destruction-competitions";
 import { players } from "@/platform/db/schema/registry";
 import type { V2Transaction } from "@/platform/db/transaction";
+import { loadCompetitionPlayerDisplayCatalog } from "../infrastructure/postgres-player-display-catalog";
 
 import type { CompetitionCommandReceipt } from "../core";
 import { DestructionCommandHandler, type DestructionCommandHandlerDependencies, type DestructionReceiptClaim, type DestructionTransactionContext } from "./destruction-command-handler";
@@ -141,16 +142,64 @@ export class PostgresDestructionAdapter implements DestructionQueryPort {
     const where = conditions.length ? and(...conditions) : undefined;
     const [rows, totals] = await Promise.all([this.database.select().from(destructionCompetitions).where(where).orderBy(desc(destructionCompetitions.updatedAt), desc(destructionCompetitions.id)).limit(query.pageSize).offset((query.page - 1) * query.pageSize), this.database.select({ value: count() }).from(destructionCompetitions).where(where)]);
     const total = totals[0]?.value ?? 0;
-    return { items: rows.map((row) => ({ ...toDestructionPublicDto(aggregateFromRow(row)), participantCount: row.participantCount })), page: query.page, pageSize: query.pageSize, total, totalPages: total === 0 ? 0 : Math.ceil(total / query.pageSize) };
+    const aggregates = rows.map(aggregateFromRow);
+    const catalog = await loadCompetitionPlayerDisplayCatalog(
+      this.database,
+      aggregates.flatMap((aggregate) => aggregate.participants.map((entry) => entry.playerId)),
+    );
+    return { items: rows.map((row, index) => ({ ...toDestructionPublicDto(aggregates[index]!, catalog.labels), participantCount: row.participantCount })), page: query.page, pageSize: query.pageSize, total, totalPages: total === 0 ? 0 : Math.ceil(total / query.pageSize) };
   }
 
   listPublic(query: DestructionListQuery) { return this.list(query); }
   listAdmin(query: DestructionListQuery) { return this.list(query); }
-  async getPublic(tournamentId: string) { const row = (await this.database.select().from(destructionCompetitions).where(eq(destructionCompetitions.id, tournamentId)).limit(1))[0]; return row ? toDestructionPublicDto(aggregateFromRow(row)) : null; }
+  async getPublic(tournamentId: string) {
+    const row = (await this.database.select().from(destructionCompetitions).where(eq(destructionCompetitions.id, tournamentId)).limit(1))[0];
+    if (!row) return null;
+    const aggregate = aggregateFromRow(row);
+    const catalog = await loadCompetitionPlayerDisplayCatalog(this.database, aggregate.participants.map((entry) => entry.playerId));
+    return toDestructionPublicDto(aggregate, catalog.labels);
+  }
   async getAdmin(tournamentId: string) { const row = (await this.database.select().from(destructionCompetitions).where(eq(destructionCompetitions.id, tournamentId)).limit(1))[0]; return row ? aggregateFromRow(row) : null; }
+  async getAdminWorkspace(tournamentId: string) {
+    const destruction = await this.getAdmin(tournamentId);
+    if (!destruction) return null;
+    const catalog = await loadCompetitionPlayerDisplayCatalog(
+      this.database,
+      [...destruction.applications.map((entry) => entry.playerId), ...destruction.participants.map((entry) => entry.playerId)],
+      true,
+    );
+    return {
+      destruction,
+      playerOptions: catalog.options,
+      playerLabels: Object.fromEntries(catalog.labels),
+    };
+  }
   async getOwnApplication(tournamentId: string, ownerUserAccountId: string) {
     const row = (await this.database.select({ applicationId: destructionApplicationIndex.applicationId, playerId: destructionApplicationIndex.playerId, position: destructionApplicationIndex.position, status: destructionApplicationIndex.status, revision: destructionCompetitions.revision }).from(destructionApplicationIndex).innerJoin(destructionCompetitions, eq(destructionCompetitions.id, destructionApplicationIndex.tournamentId)).where(and(eq(destructionApplicationIndex.tournamentId, tournamentId), eq(destructionApplicationIndex.ownerUserAccountId, ownerUserAccountId))).limit(1))[0];
     return row ? { applicationId: row.applicationId, tournamentId, tournamentRevision: row.revision, playerId: row.playerId, position: row.position, status: row.status } : null;
+  }
+  async getOwnMvpBallots(tournamentId: string, ownerUserAccountId: string) {
+    const row = (await this.database.select().from(destructionCompetitions).where(eq(destructionCompetitions.id, tournamentId)).limit(1))[0];
+    if (!row) return [];
+    const application = await this.getOwnApplication(tournamentId, ownerUserAccountId);
+    if (!application) return [];
+    const aggregate = aggregateFromRow(row);
+    const ballots = aggregate.mvpBallots.filter((ballot) =>
+      ballot.finalizedPlayerId === null && ballot.participantPlayerIds.includes(application.playerId));
+    const catalog = await loadCompetitionPlayerDisplayCatalog(this.database, ballots.flatMap((ballot) => ballot.candidatePlayerIds));
+    const publicProjection = toDestructionPublicDto(aggregate, catalog.labels);
+    const fixtureNames = new Map([
+      ...publicProjection.preliminaryFixtures.map((fixture) => [fixture.id, `${fixture.teamAName} vs ${fixture.teamBName}`] as const),
+      ...publicProjection.tournamentFixtures.map((fixture) => [fixture.id, `${fixture.teamAName} vs ${fixture.teamBName}`] as const),
+    ]);
+    return ballots.map((ballot) => ({
+      fixtureId: ballot.fixtureId,
+      fixtureName: fixtureNames.get(ballot.fixtureId) ?? "알 수 없는 경기",
+      candidates: ballot.candidatePlayerIds.filter((playerId) => playerId !== application.playerId).map((playerId) => ({
+        playerId,
+        playerName: catalog.labels.get(playerId) ?? "알 수 없는 선수",
+      })),
+    }));
   }
   async getOwnedPlayerId(ownerUserAccountId: string) { return (await this.database.select({ id: players.id }).from(players).where(and(eq(players.userAccountId, ownerUserAccountId), eq(players.status, "ACTIVE"))).limit(1))[0]?.id ?? null; }
 }

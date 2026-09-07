@@ -266,11 +266,14 @@ test("cancellation recovery restores only the recorded phase and public DTOs omi
   const restored = restoreCancelledEvent(cancelEvent(bracket, "운영 일정 변경", duringRecruitment), duringRecruitment);
   assert.equal(restored.lifecycle.status, "IN_PROGRESS");
   assert.deepEqual(restored.bracket, bracket.bracket);
-  const publicDto = toPublicEventDto(restored, duringRecruitment);
+  const playerNames = new Map(restored.participants.map((participant, index) => [participant.playerId, `선수 ${index + 1}`]));
+  const publicDto = toPublicEventDto(restored, duringRecruitment, playerNames);
   const serialized = JSON.stringify(publicDto);
   for (const forbidden of ["ownerUserAccountId", "cancellationReason", "balanceScore", "requestFingerprint", "keyHash"]) {
     assert.equal(serialized.includes(forbidden), false);
   }
+  assert.equal(publicDto.teams.flatMap((team) => team.members).every((member) => member.playerName.startsWith("선수 ")), true);
+  assert.equal(publicDto.fixtures.every((fixture) => fixture.teamAName !== fixture.teamAId && fixture.teamBName !== fixture.teamBId), true);
 });
 
 function adminMetadata(expectedRevision: number) {

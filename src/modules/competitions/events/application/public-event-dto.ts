@@ -1,3 +1,4 @@
+import { competitionPlayerLabel, competitionTeamLabel } from "../../core";
 import { eventAcceptsApplications, type EventAggregate } from "../domain/event";
 
 export type PublicEventDto = Readonly<{
@@ -18,6 +19,7 @@ export type PublicEventDto = Readonly<{
     members: readonly Readonly<{
       participantId: string;
       playerId: string;
+      playerName: string;
       position: string | null;
     }>[];
   }>[];
@@ -31,12 +33,16 @@ export type PublicEventDto = Readonly<{
     sourceFixtureIdB: string | null;
     teamAId: string | null;
     teamBId: string | null;
+    teamAName: string;
+    teamBName: string;
     teamAScore: number | null;
     teamBScore: number | null;
     winnerTeamId: string | null;
   }>[];
   winnerTeamId: string | null;
+  winnerTeamName: string | null;
   mvpPlayerId: string | null;
+  mvpPlayerName: string | null;
 }>;
 
 export type OwnEventApplicationDto = Readonly<{
@@ -49,7 +55,11 @@ export type OwnEventApplicationDto = Readonly<{
   eventRevision: number;
 }>;
 
-export function toPublicEventDto(aggregate: EventAggregate, now: string): PublicEventDto {
+export function toPublicEventDto(
+  aggregate: EventAggregate,
+  now: string,
+  playerCatalog: ReadonlyMap<string, string> = new Map(),
+): PublicEventDto {
   const participantById = new Map(aggregate.participants.map((participant) => [participant.id, participant]));
   return {
     id: aggregate.id,
@@ -71,6 +81,7 @@ export function toPublicEventDto(aggregate: EventAggregate, now: string): Public
         return {
           participantId: participant.id,
           playerId: participant.playerId,
+          playerName: competitionPlayerLabel(playerCatalog, participant.playerId),
           position: member.position,
         };
       }),
@@ -85,14 +96,20 @@ export function toPublicEventDto(aggregate: EventAggregate, now: string): Public
       sourceFixtureIdB: fixture.sourceB.kind === "WINNER" ? fixture.sourceB.sourceFixtureId : null,
       teamAId: fixture.teamAId,
       teamBId: fixture.teamBId,
+      teamAName: competitionTeamLabel(aggregate.teams, fixture.teamAId),
+      teamBName: competitionTeamLabel(aggregate.teams, fixture.teamBId),
       teamAScore: fixture.result?.teamAScore ?? null,
       teamBScore: fixture.result?.teamBScore ?? null,
       winnerTeamId: fixture.winnerTeamId,
     })) ?? [],
     winnerTeamId: aggregate.winnerTeamId,
+    winnerTeamName: aggregate.winnerTeamId === null ? null : competitionTeamLabel(aggregate.teams, aggregate.winnerTeamId),
     mvpPlayerId: aggregate.mvpParticipantId === null
       ? null
       : participantById.get(aggregate.mvpParticipantId)?.playerId ?? null,
+    mvpPlayerName: aggregate.mvpParticipantId === null
+      ? null
+      : competitionPlayerLabel(playerCatalog, participantById.get(aggregate.mvpParticipantId)?.playerId ?? ""),
   };
 }
 

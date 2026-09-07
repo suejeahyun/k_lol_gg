@@ -1,4 +1,5 @@
 import { EVENT_FORMATS, type EventAggregate } from "../domain/event";
+import type { CompetitionPlayerOption } from "../../core";
 import type { OwnEventApplicationDto, PublicEventDto } from "./public-event-dto";
 
 export const EVENT_PUBLIC_STATUSES = [
@@ -26,12 +27,19 @@ export type EventPage = Readonly<{
   totalPages: number;
 }>;
 
+export type EventAdminWorkspace = Readonly<{
+  event: EventAggregate;
+  playerOptions: readonly CompetitionPlayerOption[];
+  playerLabels: Readonly<Record<string, string>>;
+}>;
+
 export interface EventQueryRepository {
   listPublic(query: EventListQuery, now: Date): Promise<EventPage>;
   getPublic(eventId: string, now: Date): Promise<PublicEventDto | null>;
   getOwnApplication(eventId: string, ownerUserAccountId: string): Promise<OwnEventApplicationDto | null>;
   listAdmin(query: EventListQuery, now: Date): Promise<EventPage>;
   getAdmin(eventId: string): Promise<EventAggregate | null>;
+  getAdminWorkspace(eventId: string): Promise<EventAdminWorkspace | null>;
 }
 
 const ALLOWED = new Set(["q", "status", "format", "page", "pageSize"]);

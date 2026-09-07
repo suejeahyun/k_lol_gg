@@ -1,6 +1,7 @@
 export * from "./best-of";
 export * from "./bracket";
 export * from "./command-contracts";
+export * from "./display-projection";
 export * from "./error";
 export * from "./lifecycle";
 export * from "./roster";

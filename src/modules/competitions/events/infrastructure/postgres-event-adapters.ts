@@ -19,6 +19,7 @@ import {
   eventParticipantIndex,
 } from "@/platform/db/schema/event-competitions";
 import type { V2Transaction } from "@/platform/db/transaction";
+import { loadCompetitionPlayerDisplayCatalog } from "../../infrastructure/postgres-player-display-catalog";
 
 import type { CompetitionCommandReceipt } from "../../core";
 import { EventCommandHandler, type EventCommandHandlerDependencies } from "../application/event-command-handler";
@@ -302,8 +303,13 @@ export class PostgresEventAdapter implements EventQueryRepository {
       this.database.select({ value: count() }).from(eventCompetitions).where(where),
     ]);
     const total = totals[0]?.value ?? 0;
+    const aggregates = rows.map(aggregateFromRow);
+    const catalog = await loadCompetitionPlayerDisplayCatalog(
+      this.database,
+      aggregates.flatMap((aggregate) => aggregate.participants.map((entry) => entry.playerId)),
+    );
     return {
-      items: rows.map((row) => toPublicEventDto(aggregateFromRow(row), now.toISOString())),
+      items: aggregates.map((aggregate) => toPublicEventDto(aggregate, now.toISOString(), catalog.labels)),
       page: query.page,
       pageSize: query.pageSize,
       total,
@@ -316,12 +322,30 @@ export class PostgresEventAdapter implements EventQueryRepository {
 
   async getPublic(eventId: string, now: Date) {
     const row = (await this.database.select().from(eventCompetitions).where(eq(eventCompetitions.id, eventId)).limit(1))[0];
-    return row ? toPublicEventDto(aggregateFromRow(row), now.toISOString()) : null;
+    if (!row) return null;
+    const aggregate = aggregateFromRow(row);
+    const catalog = await loadCompetitionPlayerDisplayCatalog(this.database, aggregate.participants.map((entry) => entry.playerId));
+    return toPublicEventDto(aggregate, now.toISOString(), catalog.labels);
   }
 
   async getAdmin(eventId: string) {
     const row = (await this.database.select().from(eventCompetitions).where(eq(eventCompetitions.id, eventId)).limit(1))[0];
     return row ? aggregateFromRow(row) : null;
+  }
+
+  async getAdminWorkspace(eventId: string) {
+    const event = await this.getAdmin(eventId);
+    if (!event) return null;
+    const catalog = await loadCompetitionPlayerDisplayCatalog(
+      this.database,
+      event.participants.map((entry) => entry.playerId),
+      true,
+    );
+    return {
+      event,
+      playerOptions: catalog.options,
+      playerLabels: Object.fromEntries(catalog.labels),
+    };
   }
 
   async getOwnApplication(eventId: string, ownerUserAccountId: string) {

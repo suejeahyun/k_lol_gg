@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 
 import type { TransactionSessionActor } from "@/modules/auth/domain/transaction-session";
 import type { CompetitionPosition, JsonObject } from "../core";
+import type { CompetitionPlayerOption } from "../core";
 import { DESTRUCTION_PRELIMINARY_FORMATS, type DestructionConfiguration, type DestructionPreliminaryFormat } from "./configuration";
 import type { DestructionApplicationStatus } from "./recruitment";
 import type { DestructionAggregate, DestructionPublicDto } from "./state";
@@ -37,6 +38,12 @@ export type DestructionPage = Readonly<{
   totalPages: number;
 }>;
 
+export type DestructionAdminWorkspace = Readonly<{
+  destruction: DestructionAggregate;
+  playerOptions: readonly CompetitionPlayerOption[];
+  playerLabels: Readonly<Record<string, string>>;
+}>;
+
 export type OwnDestructionApplicationDto = Readonly<{
   applicationId: string;
   tournamentId: string;
@@ -46,13 +53,21 @@ export type OwnDestructionApplicationDto = Readonly<{
   status: DestructionApplicationStatus;
 }>;
 
+export type OwnDestructionMvpBallotDto = Readonly<{
+  fixtureId: string;
+  fixtureName: string;
+  candidates: readonly Readonly<{ playerId: string; playerName: string }>[];
+}>;
+
 export interface DestructionQueryPort {
   listPublic(query: DestructionListQuery): Promise<DestructionPage>;
   getPublic(tournamentId: string): Promise<DestructionPublicDto | null>;
   getOwnApplication(tournamentId: string, ownerUserAccountId: string): Promise<OwnDestructionApplicationDto | null>;
+  getOwnMvpBallots(tournamentId: string, ownerUserAccountId: string): Promise<readonly OwnDestructionMvpBallotDto[]>;
   getOwnedPlayerId(ownerUserAccountId: string): Promise<string | null>;
   listAdmin(query: DestructionListQuery): Promise<DestructionPage>;
   getAdmin(tournamentId: string): Promise<DestructionAggregate | null>;
+  getAdminWorkspace(tournamentId: string): Promise<DestructionAdminWorkspace | null>;
 }
 
 const LIST_QUERY_KEYS = new Set(["q", "status", "format", "page", "pageSize"]);
