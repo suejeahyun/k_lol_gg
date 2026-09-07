@@ -42,9 +42,10 @@ if (
   contractScope !== "operations" &&
   contractScope !== "riot" &&
   contractScope !== "discipline" &&
-  contractScope !== "champions"
+  contractScope !== "champions" &&
+  contractScope !== "recovery"
 ) {
-  throw new Error("V2_DB_CONTRACT_SCOPE must be 'all', 'matches', 'statistics', 'team-tools', 'mmr', 'recruiting', 'media', 'events', 'destruction', 'operations', 'riot', 'discipline', or 'champions'.");
+  throw new Error("V2_DB_CONTRACT_SCOPE must be 'all', 'matches', 'statistics', 'team-tools', 'mmr', 'recruiting', 'media', 'events', 'destruction', 'operations', 'riot', 'discipline', 'champions', or 'recovery'.");
 }
 
 type EphemeralCluster = Readonly<{
@@ -64,6 +65,7 @@ const safeEnvironmentNames = new Set([
   "localappdata",
   "path",
   "pathext",
+  "pg_bin_dir",
   "systemdrive",
   "systemroot",
   "temp",
@@ -447,6 +449,8 @@ async function runContractTests(connectionString: string): Promise<void> {
     "tests/database/riot.contract.test.ts",
     "tests/database/discipline.contract.test.ts",
     "tests/database/champion-catalog.contract.test.ts",
+    "tests/database/database-recovery.contract.test.ts",
+    "tests/database/cleanup-readiness.contract.test.ts",
   ];
   const scopedTestFiles: Readonly<Record<string, readonly string[]>> = {
     matches: ["tests/database/match-snapshot.contract.test.ts"],
@@ -461,6 +465,7 @@ async function runContractTests(connectionString: string): Promise<void> {
     riot: ["tests/database/riot.contract.test.ts"],
     discipline: ["tests/database/discipline.contract.test.ts"],
     champions: ["tests/database/champion-catalog.contract.test.ts"],
+    recovery: ["tests/database/database-recovery.contract.test.ts", "tests/database/cleanup-readiness.contract.test.ts"],
   };
   const testFiles = contractScope === "all" ? allTestFiles : scopedTestFiles[contractScope]!;
   for (const relativeTestFile of testFiles) {

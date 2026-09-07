@@ -14,6 +14,7 @@
     "test:unit": "tsx --test tests/*.test.ts",
     "test": "npm run test:contracts && npm run test:unit",
     "test:db": "tsx scripts/test-db/run-data-contracts.ts",
+    "verify:recovery": "tsx scripts/test-db/run-recovery-drill.ts",
     "verify:auth-http": "node scripts/verify-auth-http.mjs",
     "security:secrets": "node scripts/check-secrets.mjs",
     "check:wave": "npm run lint && npm run typecheck && npm test",
