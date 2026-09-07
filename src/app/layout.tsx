@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PwaRegistration } from "@/components/pwa-registration";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -8,6 +9,13 @@ export const metadata: Metadata = {
     template: "%s | K-LOL.GG V2",
   },
   description: "함께 즐기는 리그 오브 레전드 내전 커뮤니티의 새로운 버전입니다.",
+  manifest: "/manifest.webmanifest",
+  applicationName: "K-LOL.GG V2",
+  appleWebApp: { capable: true, title: "K-LOL.GG", statusBarStyle: "default" },
+  icons: {
+    icon: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
+    apple: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
+  },
   openGraph: {
     title: "K-LOL.GG V2",
     description: "내전의 모든 순간을 더 쉽고 사랑스럽게.",
@@ -29,7 +37,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ko" className="h-full antialiased">
-      <body className="min-h-full">{children}</body>
+      <body className="min-h-full">{children}<PwaRegistration /></body>
     </html>
   );
 }

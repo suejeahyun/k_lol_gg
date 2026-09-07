@@ -39,7 +39,7 @@ export default function InstallPage() {
       </section>
 
       <section className={styles.section}>
-        <div className={styles.notice}><LockKeyhole size={19} aria-hidden="true" /><span>설치형 웹앱의 캐시는 아이콘·manifest 같은 공개 정적 파일로 제한합니다. 로그인 화면, 관리자 화면, API, 비공개 이미지는 저장하지 않는 정책을 최종 S14 검증에서 확인합니다.</span></div>
+        <div className={styles.notice}><LockKeyhole size={19} aria-hidden="true" /><span>설치형 웹앱의 캐시는 아이콘·manifest·공개 캐릭터 이미지와 빌드 정적 파일로 제한합니다. 로그인 화면, 관리자 화면, API와 비공개 이미지는 저장하지 않습니다.</span></div>
         <div className={styles.actions}><Link className={styles.primary} href="/start"><ExternalLink size={16} aria-hidden="true" /> 사이트 시작하기</Link><Link className={styles.secondary} href="/privacy"><ShieldCheck size={16} aria-hidden="true" /> 개인정보 처리방침</Link></div>
       </section>
     </div>
