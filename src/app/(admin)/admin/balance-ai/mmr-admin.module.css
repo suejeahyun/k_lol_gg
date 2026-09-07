@@ -25,5 +25,11 @@
 .actions .note { grid-column: span 3; }
 .actions button { min-height: 2.5rem; border: 0; border-radius: .7rem; padding: .6rem .9rem; color: #fff; background: #315eaa; font-weight: 800; }
 .actions > p { min-height: 2rem; padding: 0 1rem; }
+.dialogBackdrop { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 1rem; background: rgba(28,36,56,.48); backdrop-filter: blur(4px); }
+.confirmDialog { width: min(100%,31rem); padding: 1.35rem; border: 1px solid #ccd9eb; border-radius: 1.15rem; background: #fff; box-shadow: 0 24px 70px rgba(31,47,78,.24); }
+.confirmDialog h3 { margin: 0; font-size: 1.08rem; }
+.confirmDialog p { margin: .75rem 0 1.15rem; color: #526177; line-height: 1.65; }
+.confirmDialog > div { display: flex; justify-content: flex-end; gap: .6rem; }
+.confirmDialog .cancelButton { color: #34445d; background: #edf2f8; }
 @media(max-width:800px) { .summary { grid-template-columns: 1fr 1fr; } .list article,.actions form { grid-template-columns: 1fr; } .actions .note { grid-column: auto; } }
 @media(max-width:560px) { .page { padding: 1rem 1rem 6.5rem; } .hero > svg { display: none; } .summary { grid-template-columns: 1fr; } }

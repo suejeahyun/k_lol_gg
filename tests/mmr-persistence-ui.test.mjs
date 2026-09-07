@@ -26,7 +26,7 @@ test("public MMR page exposes canonical allowlisted filters and bounded projecti
 test("admin MMR workspace connects protected recalculate, adjustment, players and review states", () => {
   const page = source("../src/app/(admin)/admin/balance-ai/page.tsx");
   const actions = source("../src/app/(admin)/admin/balance-ai/mmr-admin-actions.tsx");
-  for (const contract of ["requirePageRole", 'tab === "players"', 'tab === "reviews"', "selectedReviewId", "pendingSourceCount", "MmrAdminActions", "?tab=balance"]) {
+  for (const contract of ["requirePageRole", 'tab === "players"', 'tab === "reviews"', 'raw.action === "recalculate"', "selectedReviewId", "pendingSourceCount", "MmrAdminActions", "?tab=balance"]) {
     assert.equal(page.includes(contract), true, contract);
   }
   for (const contract of [
@@ -35,6 +35,9 @@ test("admin MMR workspace connects protected recalculate, adjustment, players an
     '"Idempotency-Key"',
     "SUPER_ADMIN",
     "전체 원장 재계산",
+    'role="alertdialog"',
+    'aria-modal="true"',
+    "확인 후 재계산",
     "조정 원장 추가",
     'aria-live="polite"',
   ]) assert.equal(actions.includes(contract), true, contract);
