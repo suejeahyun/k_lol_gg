@@ -14,6 +14,7 @@ export type BoundedPickerOption = Readonly<{
   label: string;
   status: "ACTIVE" | "INACTIVE";
   searchText?: string;
+  metadata?: Readonly<Record<string, string | null>>;
 }>;
 
 const MAX_VISIBLE_OPTIONS = 20;
@@ -36,7 +37,13 @@ function parseRemoteOptions(value: unknown): BoundedPickerOption[] {
       !("status" in candidate) ||
       (candidate.status !== "ACTIVE" && candidate.status !== "INACTIVE")
     ) return [];
-    return [{ value: candidate.value, label: candidate.label, status: candidate.status }];
+    const rawMetadata = "metadata" in candidate ? candidate.metadata : undefined;
+    const metadata = rawMetadata && typeof rawMetadata === "object" && !Array.isArray(rawMetadata) &&
+      Object.keys(rawMetadata).length <= 10 &&
+      Object.values(rawMetadata).every((entry) => entry === null || (typeof entry === "string" && entry.length <= 200))
+      ? rawMetadata as Readonly<Record<string, string | null>>
+      : undefined;
+    return [{ value: candidate.value, label: candidate.label, status: candidate.status, ...(metadata ? { metadata } : {}) }];
   }).slice(0, MAX_VISIBLE_OPTIONS);
 }
 
