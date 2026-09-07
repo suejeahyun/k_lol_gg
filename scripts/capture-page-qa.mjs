@@ -150,10 +150,12 @@ async function main() {
 
   const password = args.get("password");
   const adminLoginId = args.get("admin-login-id");
+  const setupLoginId = args.get("setup-login-id");
   const accountLoginId = args.get("account-login-id");
   const totpCode = args.get("totp-code");
   let adminCookie = args.get("admin-cookie");
   let accountCookie = args.get("account-cookie");
+  let setupCookie = args.get("setup-cookie");
   if (!adminCookie && (adminLoginId || password || totpCode)) {
     if (!adminLoginId || !password || !totpCode) throw new Error("Admin QA login requires --admin-login-id, --password, and --totp-code together.");
     adminCookie = await loginForCookie(origin, "/api/admin/login", { loginId: adminLoginId, password, totpCode });
@@ -161,6 +163,10 @@ async function main() {
   if (!accountCookie && accountLoginId) {
     if (!accountLoginId || !password) throw new Error("Account QA login requires --account-login-id and --password together.");
     accountCookie = await loginForCookie(origin, "/api/auth/login", { loginId: accountLoginId, password });
+  }
+  if (!setupCookie && setupLoginId) {
+    if (!password) throw new Error("Setup QA login requires --setup-login-id and --password together.");
+    setupCookie = await loginForCookie(origin, "/api/admin/login", { loginId: setupLoginId, password });
   }
 
   const profileDirectory = await mkdtemp(join(tmpdir(), "klol-v2-capture-"));
@@ -186,10 +192,13 @@ async function main() {
     await client.open();
     await Promise.all([client.call("Page.enable"), client.call("Network.enable"), client.call("Runtime.enable")]);
 
-    for (const cookie of [
-      parseCookie(adminCookie, "klol_v2_session"),
-      parseCookie(accountCookie, "klol_v2_account_session"),
-    ].filter(Boolean)) {
+    const sessionCookies = {
+      admin: parseCookie(adminCookie, "klol_v2_session"),
+      account: parseCookie(accountCookie, "klol_v2_account_session"),
+      setup: parseCookie(setupCookie, "klol_v2_session"),
+    };
+    async function setSessionCookie(cookie) {
+      if (!cookie) throw new Error("The capture plan requested a session cookie that was not provided.");
       const result = await client.call("Network.setCookie", {
         ...cookie,
         url: origin,
@@ -205,6 +214,17 @@ async function main() {
         throw new Error(`Invalid capture route at index ${index}.`);
       }
       const viewport = route.viewport ?? { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false };
+      const session = route.session ?? "anonymous";
+      if (!["anonymous", "account", "admin", "setup", "both"].includes(session)) {
+        throw new Error(`Invalid session profile for ${route.path}: ${session}`);
+      }
+      await Promise.all([
+        client.call("Network.deleteCookies", { name: "klol_v2_session", url: origin }),
+        client.call("Network.deleteCookies", { name: "klol_v2_account_session", url: origin }),
+      ]);
+      if (session === "account" || session === "both") await setSessionCookie(sessionCookies.account);
+      if (session === "admin" || session === "both") await setSessionCookie(sessionCookies.admin);
+      if (session === "setup") await setSessionCookie(sessionCookies.setup);
       await client.call("Emulation.setDeviceMetricsOverride", {
         width: viewport.width,
         height: viewport.height,
@@ -253,6 +273,7 @@ async function main() {
         index: index + 1,
         name: route.name ?? (basename(route.path) || "home"),
         group: route.group ?? "public",
+        session,
         requestedPath: route.path,
         requestedUrl,
         finalUrl: pageDetails.finalUrl ?? finalResponseUrl,
