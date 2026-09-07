@@ -27,6 +27,11 @@ const execFile = promisify(execFileCallback);
 const workspaceRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const disposableRoot = resolve(workspaceRoot, ".tmp/postgres-tests");
 const postgresMajor = 18;
+const contractScope = process.env.V2_DB_CONTRACT_SCOPE?.trim().toLocaleLowerCase("en-US") || "all";
+
+if (contractScope !== "all" && contractScope !== "matches") {
+  throw new Error("V2_DB_CONTRACT_SCOPE must be either 'all' or 'matches'.");
+}
 
 type EphemeralCluster = Readonly<{
   connectionString: string;
@@ -408,13 +413,17 @@ async function runContractTests(connectionString: string): Promise<void> {
   });
 
   const tsxCli = resolve(workspaceRoot, "node_modules/tsx/dist/cli.mjs");
-  const testFiles = [
+  const allTestFiles = [
     "tests/database/data-platform.contract.test.ts",
     "tests/database/auth-totp-lifecycle.contract.test.ts",
     "tests/database/player-admin.contract.test.ts",
     "tests/database/season-platform.contract.test.ts",
     "tests/database/account-lifecycle.contract.test.ts",
+    "tests/database/match-snapshot.contract.test.ts",
   ];
+  const testFiles = contractScope === "matches"
+    ? ["tests/database/match-snapshot.contract.test.ts"]
+    : allTestFiles;
   for (const relativeTestFile of testFiles) {
     const child = spawn(process.execPath, [tsxCli, "--test", resolve(workspaceRoot, relativeTestFile)], {
       cwd: workspaceRoot,
@@ -964,6 +973,10 @@ async function main(): Promise<void> {
       nodeEnv: process.env.NODE_ENV,
       testMode: process.env.V2_DB_TEST_MODE,
     });
+    if (contractScope === "matches") {
+      await runContractTests(connectionString);
+      return;
+    }
     await runFreshThenUpgradeContractTests(connectionString);
     if (
       process.env.V2_SEASON_BROWSER_QA_HOLD === "true" ||
@@ -984,6 +997,10 @@ async function main(): Promise<void> {
   try {
     cluster = await startEphemeralCluster();
     process.stdout.write("[db-contract] isolated PostgreSQL 18 cluster started\n");
+    if (contractScope === "matches") {
+      await runContractTests(cluster.connectionString);
+      return;
+    }
     await runFreshThenUpgradeContractTests(cluster.connectionString);
     if (
       process.env.V2_SEASON_BROWSER_QA_HOLD === "true" ||

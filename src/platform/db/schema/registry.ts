@@ -56,6 +56,7 @@ export const players = registrySchema.table(
     ),
     index("players_status_updated_at_idx").on(table.status, table.updatedAt),
     index("players_nickname_normalized_idx").on(table.nicknameNormalized),
+    index("players_tag_line_normalized_idx").on(table.tagLineNormalized),
     index("players_member_name_normalized_idx").on(table.memberNameNormalized),
     check("players_member_name_normalized_nonempty", sql`char_length(${table.memberNameNormalized}) > 0`),
     check("players_nickname_normalized_nonempty", sql`char_length(${table.nicknameNormalized}) > 0`),

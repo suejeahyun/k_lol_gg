@@ -187,7 +187,7 @@ test("migrations, constraints, repository, and transaction contracts hold on Pos
       const migrationRows = await pool.query<{ count: number }>(
         "select count(*)::int as count from drizzle.__drizzle_migrations",
       );
-      assert.equal(migrationRows.rows[0]?.count, 5);
+      assert.equal(migrationRows.rows[0]?.count, 6);
 
       const upgradedSession = await pool.query<{
         purpose: string;

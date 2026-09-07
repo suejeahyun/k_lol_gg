@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 
+import { clearAdminImportRecovery } from "@/modules/matches/infrastructure/admin-import-recovery";
 import styles from "./admin-shell.module.css";
 
 export function AdminLogoutButton() {
@@ -14,6 +15,7 @@ export function AdminLogoutButton() {
   async function logout() {
     setBusy(true);
     setError(null);
+    clearAdminImportRecovery();
     try {
       const response = await fetch("/api/admin/logout", { method: "POST" });
       if (!response.ok) {

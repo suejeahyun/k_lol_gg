@@ -7,7 +7,7 @@ import {
   SEASON_APPLICATION_POSITIONS,
   type OwnSeasonApplication,
   type SeasonApplicationPosition,
-} from "@/modules/seasons";
+} from "@/modules/seasons/domain/season";
 import { ClientMutationKeyStore } from "@/modules/seasons/application/client-mutation-key-store";
 import {
   availableApplicationSubPositions,
