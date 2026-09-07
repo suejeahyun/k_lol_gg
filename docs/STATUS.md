@@ -1,7 +1,7 @@
 # K-LOL.GG V2 상태
 
-- 기준 커밋: `1057847` (`main`, 2026-09-07 KST)
-- 현재 단계: S00~S06·S09 영속 구현 후보 통합, S07·S10·S13 adapter 병렬 구현 중
+- 기준 커밋: `6bba9c0` (`main`, 2026-09-07 KST)
+- 현재 단계: S00~S06·S09·S10 영속 구현 후보 통합, S07·S12·S13 병렬 구현 중
 - V1 코드 복사: 없음. V1은 동작 명세와 동등성 대조 근거로만 사용
 - 운영 데이터·외부 연동: 연결하지 않음
 - 운영 Vercel 전환: 하지 않음
@@ -52,6 +52,7 @@
 - S09 Kakao HMAC·nonce·room/sender·멱등 receipt·감사/outbox를 포함한 application/security 코어
 - S09 `0009` PostgreSQL aggregate·receipt·nonce·audit/outbox와 공개·관리자·서명 Kakao API/UI adapter
 - 공통 비공개 자산의 목적별 OWNER/ADMIN/SUPER 권한, MIME·용량·해상도·SHA-256 검증과 staged/delete saga
+- S10 `0010` PostgreSQL 하이라이트·갤러리 게시/보관/복구, 공개·관리자 API/UI와 공개 자산 재검증
 - S11 본인 세션·관리자 TOTP transaction 재확인, READY 비공개 증거 결합, 멱등 receipt·감사/outbox application/security 코어
 - 팀 밸런스 소유 초안 목록 DB/API/UI와 bounded pagination
 - `/start`, `/help/riot`, `/install`의 역할·운영 잠금·설치 가능/불가 상태 화면
@@ -78,7 +79,7 @@
 
 ## 다음 순서
 
-1. 진행 중인 S07 이벤트전·S10 미디어·S13 운영 DB/API/UI adapter를 통합
+1. 진행 중인 S07 이벤트전·S12 Riot security core·S13 운영 DB/API/UI adapter를 통합
 2. S08 멸망전과 S11 징계·증거 adapter를 병렬 연결
 3. S12 Riot fake 외부 adapter를 연결
 4. S14에서 전수 DB/HTTP/브라우저·접근성·반응형·성능·보안·복구 검증과 QA 증거 재생성
