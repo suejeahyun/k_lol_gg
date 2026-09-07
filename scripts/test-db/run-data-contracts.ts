@@ -989,7 +989,7 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
     }
     if (Date.now() >= deadline) throw new Error("Browser QA Next.js did not become ready.");
 
-    process.stdout.write(`[browser-qa-ready] ${JSON.stringify({
+    const browserQaReadyPayload = {
       origin,
       loginId,
       accountLoginId: loginId,
@@ -1010,8 +1010,9 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
         setup: setupTarget,
         claim: claimTarget,
       },
-    })}\n`);
-    process.stdout.write("[browser-qa-command] code | empty | season-error | season-restore | account-error | account-restore | sessions-error | sessions-restore | bump-approved | stop\n");
+    };
+    process.stdout.write(`[browser-qa-ready] ${JSON.stringify(browserQaReadyPayload)}\n`);
+    process.stdout.write("[browser-qa-command] ready | code | empty | season-error | season-restore | account-error | account-restore | sessions-error | sessions-restore | bump-approved | stop\n");
     process.stdin.setEncoding("utf8");
     let buffer = "";
     let seasonTableRenamed = false;
@@ -1024,7 +1025,9 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
         buffer = lines.pop() ?? "";
         for (const line of lines) {
           const command = line.trim();
-          if (command === "code") {
+          if (command === "ready") {
+            process.stdout.write(`[browser-qa-ready] ${JSON.stringify(browserQaReadyPayload)}\n`);
+          } else if (command === "code") {
             process.stdout.write(`[browser-qa-totp] ${generateTotpCode(totpSecret, Math.floor(Date.now() / 30_000))}\n`);
           } else if (command === "empty") {
             void pool
