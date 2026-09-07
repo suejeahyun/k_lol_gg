@@ -231,6 +231,13 @@ async function main() {
         deviceScaleFactor: viewport.deviceScaleFactor ?? 1,
         mobile: viewport.mobile ?? false,
       });
+      await client.call("Emulation.setEmulatedMedia", {
+        media: "screen",
+        features: [
+          { name: "prefers-color-scheme", value: "light" },
+          { name: "prefers-reduced-motion", value: "reduce" },
+        ],
+      });
       const requestedUrl = new URL(route.path, origin).toString();
       let documentStatus = null;
       let finalResponseUrl = null;
@@ -243,7 +250,17 @@ async function main() {
       const loadWait = client.waitFor("Page.loadEventFired");
       await client.call("Page.navigate", { url: requestedUrl });
       await Promise.all([loadWait, responseWait]);
-      await evaluate(client, "document.fonts?.ready.then(() => new Promise((resolve) => setTimeout(resolve, 350)))");
+      await evaluate(client, `(async () => {
+        await document.fonts?.ready;
+        const step = Math.max(320, Math.floor(innerHeight * 0.8));
+        const maximum = Math.max(0, document.documentElement.scrollHeight - innerHeight);
+        for (let y = 0; y <= maximum; y += step) {
+          scrollTo(0, y);
+          await new Promise((resolve) => setTimeout(resolve, 45));
+        }
+        scrollTo(0, 0);
+        await new Promise((resolve) => setTimeout(resolve, 300));
+      })()`);
       const pageDetails = await evaluate(client, `({
         title: document.title,
         finalUrl: location.href,
