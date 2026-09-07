@@ -20,7 +20,7 @@ export default async function TeamBalanceDraftPage({ params }: { params: Promise
 
   return (
     <div className={`page-wrap ${styles.page}`}>
-      <Link className={styles.backLink} href="/tools/team-balance"><ArrowLeft size={16} aria-hidden="true" /> 새 팀 계산</Link>
+      <Link className={styles.backLink} href="/tools/team-balance/drafts"><ArrowLeft size={16} aria-hidden="true" /> 내 초안 목록</Link>
       {result.state === "ready" && result.data ? (
         <TeamBalanceDraftWorkspace draft={result.data} />
       ) : (

@@ -4,6 +4,7 @@ import type { TeamBalanceEligibility, TeamBalanceLayoutEntry } from "../../domai
 import type {
   TeamBalanceDraft,
   TeamBalanceDraftAuthorization,
+  TeamBalanceDraftCatalog,
 } from "../../domain/team-balance-draft";
 
 export type TeamBalanceCommandEnvelope = Readonly<{
@@ -40,12 +41,21 @@ export type TeamBalanceViewer = Readonly<{
   authorization: "OWNER" | "ADMIN";
 }>;
 
+export type TeamBalanceDraftListQuery = Readonly<{
+  page: number;
+  pageSize: number;
+}>;
+
 export interface TeamBalanceRepository {
   createDraft(
     envelope: TeamBalanceCommandEnvelope,
     input: CreateTeamBalanceDraftInput,
     now: Date,
   ): Promise<TeamBalanceMutationResult>;
+  listDrafts(
+    viewer: TeamBalanceViewer,
+    query: TeamBalanceDraftListQuery,
+  ): Promise<TeamBalanceDraftCatalog>;
   getDraft(viewer: TeamBalanceViewer, draftId: string): Promise<TeamBalanceDraft | null>;
   selectCandidate(
     envelope: TeamBalanceCommandEnvelope,

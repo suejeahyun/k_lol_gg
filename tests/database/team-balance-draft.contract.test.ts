@@ -178,6 +178,27 @@ test("S06 draft lifecycle is owner/admin authorized, append-only, transactional,
       (await database.select().from(auditEvents).where(eq(auditEvents.targetType, "TEAM_BALANCE_DRAFT"))).length,
       1,
     );
+    const ownerDrafts = await service.listDrafts(
+      { actorUserAccountId: ownerId, authorization: "OWNER" },
+      { page: 1, pageSize: 12 },
+    );
+    assert.equal(ownerDrafts.totalCount, 1);
+    assert.equal(ownerDrafts.items[0]?.id, draftId);
+    assert.equal(ownerDrafts.items[0]?.participantCount, 10);
+    assert.equal(
+      (await service.listDrafts(
+        { actorUserAccountId: otherOwnerId, authorization: "OWNER" },
+        { page: 1, pageSize: 12 },
+      )).totalCount,
+      0,
+    );
+    assert.equal(
+      (await service.listDrafts(
+        { actorUserAccountId: adminId, authorization: "ADMIN" },
+        { page: 1, pageSize: 12 },
+      )).totalCount,
+      1,
+    );
     await assert.rejects(
       database.delete(teamBalanceDrafts).where(eq(teamBalanceDrafts.id, draftId)),
     );

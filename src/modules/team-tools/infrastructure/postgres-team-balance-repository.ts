@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { and, asc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm";
 
 import {
   ADMIN_MUTATION_SESSION_POLICY,
@@ -24,6 +24,7 @@ import type {
   CreateTeamBalanceDraftInput,
   SelectTeamBalanceCandidateInput,
   TeamBalanceCommandEnvelope,
+  TeamBalanceDraftListQuery,
   TeamBalanceMutationResult,
   TeamBalanceRepository,
   TeamBalanceViewer,
@@ -269,6 +270,52 @@ export class PostgresTeamBalanceRepository implements TeamBalanceRepository {
     } catch (error) {
       rethrowConflict(error);
     }
+  }
+
+  async listDrafts(viewer: TeamBalanceViewer, query: TeamBalanceDraftListQuery) {
+    const predicate = viewer.authorization === "OWNER"
+      ? eq(teamBalanceDrafts.ownerUserAccountId, viewer.actorUserAccountId)
+      : undefined;
+    const totalRows = await this.database
+      .select({ value: count() })
+      .from(teamBalanceDrafts)
+      .where(predicate);
+    const totalCount = totalRows[0]?.value ?? 0;
+    const totalPages = Math.max(1, Math.ceil(totalCount / query.pageSize));
+    const currentPage = Math.min(query.page, totalPages);
+    const rows = await this.database
+      .select({
+        id: teamBalanceDrafts.id,
+        title: teamBalanceDrafts.title,
+        status: teamBalanceDrafts.status,
+        evaluationRound: teamBalanceDrafts.evaluationRound,
+        ratingGeneration: teamBalanceDrafts.ratingGeneration,
+        revision: teamBalanceDrafts.revision,
+        createdAt: teamBalanceDrafts.createdAt,
+        updatedAt: teamBalanceDrafts.updatedAt,
+        participantCount: count(teamBalanceDraftParticipants.playerId),
+      })
+      .from(teamBalanceDrafts)
+      .leftJoin(
+        teamBalanceDraftParticipants,
+        eq(teamBalanceDraftParticipants.draftId, teamBalanceDrafts.id),
+      )
+      .where(predicate)
+      .groupBy(teamBalanceDrafts.id)
+      .orderBy(desc(teamBalanceDrafts.updatedAt), desc(teamBalanceDrafts.id))
+      .limit(query.pageSize)
+      .offset((currentPage - 1) * query.pageSize);
+    return {
+      items: rows.map((row) => ({
+        ...row,
+        createdAt: row.createdAt.toISOString(),
+        updatedAt: row.updatedAt.toISOString(),
+      })),
+      totalCount,
+      currentPage,
+      totalPages,
+      pageSize: query.pageSize,
+    };
   }
 
   async getDraft(viewer: TeamBalanceViewer, draftId: string): Promise<TeamBalanceDraft | null> {

@@ -42,6 +42,26 @@ export type TeamBalanceDraft = Readonly<{
   updatedAt: string;
 }>;
 
+export type TeamBalanceDraftSummary = Readonly<{
+  id: string;
+  title: string;
+  status: TeamBalanceDraftStatus;
+  evaluationRound: number;
+  ratingGeneration: number | null;
+  revision: number;
+  participantCount: number;
+  createdAt: string;
+  updatedAt: string;
+}>;
+
+export type TeamBalanceDraftCatalog = Readonly<{
+  items: readonly TeamBalanceDraftSummary[];
+  totalCount: number;
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
+}>;
+
 export type TeamBalanceServiceErrorCode =
   | "FORBIDDEN"
   | "IDEMPOTENCY_MISMATCH"

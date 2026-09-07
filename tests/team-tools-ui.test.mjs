@@ -62,6 +62,7 @@ test("공개 도구 페이지에는 상호 이동과 canonical metadata가 있�
 
 test("팀 밸런스 화면은 승인 계정, 10명 입력, top3·수동·저장·재평가 수명주기를 연결한다", () => {
   const page = source("../src/app/(public)/(tools)/tools/team-balance/page.tsx");
+  const drafts = source("../src/app/(public)/(tools)/tools/team-balance/drafts/page.tsx");
   const builder = source("../src/app/(public)/(tools)/tools/team-balance/team-balance-builder.tsx");
   const detail = source("../src/app/(public)/(tools)/tools/team-balance/drafts/[draftId]/team-balance-draft-workspace.tsx");
 
@@ -94,5 +95,15 @@ test("팀 밸런스 화면은 승인 계정, 10명 입력, top3·수동·저장�
     "수동 배치 평가·선택",
   ]) {
     assert.equal(detail.includes(contract), true, contract);
+  }
+  for (const contract of [
+    "requireApprovedAccountPage",
+    "service.listDrafts",
+    "participantCount",
+    'aria-label="팀 밸런스 초안 페이지"',
+    'role="alert"',
+    'role="status"',
+  ]) {
+    assert.equal(drafts.includes(contract), true, contract);
   }
 });

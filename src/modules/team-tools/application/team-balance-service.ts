@@ -6,6 +6,7 @@ import type {
   CreateTeamBalanceDraftInput,
   SelectTeamBalanceCandidateInput,
   TeamBalanceCommandEnvelope,
+  TeamBalanceDraftListQuery,
   TeamBalanceRepository,
   TeamBalanceViewer,
 } from "./ports/team-balance-repository";
@@ -159,6 +160,20 @@ export class TeamBalanceService {
 
   getDraft(viewer: TeamBalanceViewer, draftId: string) {
     return this.repository.getDraft(viewer, uuid(draftId));
+  }
+
+  listDrafts(viewer: TeamBalanceViewer, query: TeamBalanceDraftListQuery) {
+    if (
+      !Number.isSafeInteger(query.page) ||
+      !Number.isSafeInteger(query.pageSize) ||
+      query.page < 1 ||
+      query.page > 100 ||
+      query.pageSize < 1 ||
+      query.pageSize > 50
+    ) {
+      throw new TeamBalanceServiceError("INVALID_INPUT", "목록 페이지 값이 올바르지 않습니다.");
+    }
+    return this.repository.listDrafts(viewer, query);
   }
 
   createDraft(context: TeamBalanceCommandContext, body: unknown, now = new Date()) {

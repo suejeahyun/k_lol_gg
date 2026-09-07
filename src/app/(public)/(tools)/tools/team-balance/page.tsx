@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Coins, Dices, LogIn, Scale, Sparkles } from "lucide-react";
+import { Coins, Dices, FolderOpen, LogIn, Scale, Sparkles } from "lucide-react";
 
 import { getCurrentSession } from "@/modules/auth/infrastructure/runtime-session";
 import { loadRuntimePlayerCatalog } from "@/modules/players/infrastructure/runtime-player-data";
@@ -35,6 +35,7 @@ export default async function TeamBalancePage() {
 
       <nav className={styles.toolNav} aria-label="팀 도구">
         <Link href="/tools/team-balance" data-active="true"><Scale size={17} aria-hidden="true" /> 팀 밸런스</Link>
+        {approved ? <Link href="/tools/team-balance/drafts"><FolderOpen size={17} aria-hidden="true" /> 내 초안</Link> : null}
         <Link href="/tools/random-team"><Dices size={17} aria-hidden="true" /> 랜덤 팀</Link>
         <Link href="/tools/coin-toss"><Coins size={17} aria-hidden="true" /> 코인 토스</Link>
       </nav>

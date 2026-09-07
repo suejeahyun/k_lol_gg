@@ -52,14 +52,14 @@ export const canonicalUserRoutes = [
 
   { template: "/players", label: "플레이어 찾기", section: "registry-match", implementationState: "page-contract" },
   { template: "/players/[playerId]", label: "플레이어 상세", section: "registry-match", implementationState: "page-contract" },
-  { template: "/matches", label: "경기", section: "registry-match", implementationState: "planned" },
-  { template: "/matches/[matchId]", label: "경기 상세", section: "registry-match", implementationState: "planned" },
-  { template: "/matches/submit", label: "결과 제출", section: "registry-match", implementationState: "planned" },
+  { template: "/matches", label: "경기", section: "registry-match", implementationState: "page-contract" },
+  { template: "/matches/[matchId]", label: "경기 상세", section: "registry-match", implementationState: "page-contract" },
+  { template: "/matches/submit", label: "결과 제출", section: "registry-match", implementationState: "page-contract" },
   { template: "/rankings", label: "시즌 랭킹", section: "registry-match", implementationState: "page-contract" },
   { template: "/rankings/mmr", label: "MMR", section: "registry-match", implementationState: "planned" },
 
   { template: "/tools/team-balance", label: "팀 밸런스", section: "tools", implementationState: "page-contract" },
-  { template: "/tools/team-balance/drafts", label: "밸런스 초안", section: "tools", implementationState: "planned" },
+  { template: "/tools/team-balance/drafts", label: "밸런스 초안", section: "tools", implementationState: "page-contract" },
   { template: "/tools/team-balance/drafts/[draftId]", label: "초안 상세", section: "tools", implementationState: "page-contract" },
   { template: "/tools/random-team", label: "랜덤 팀", section: "tools", implementationState: "page-contract" },
   { template: "/tools/coin-toss", label: "코인 토스", section: "tools", implementationState: "page-contract" },
