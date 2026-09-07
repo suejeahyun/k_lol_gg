@@ -82,6 +82,7 @@ export interface MmrRepository {
   listPlayers(query: MmrPlayerQuery): Promise<MmrPage<MmrPlayerListItem>>;
   getPlayer(playerId: string): Promise<MmrPlayerListItem | null>;
   listAdjustments(page: number, pageSize: number): Promise<MmrPage<MmrAdjustmentReview>>;
+  getAdjustment(adjustmentId: string): Promise<MmrAdjustmentReview | null>;
   recalculate(envelope: MmrCommandEnvelope, expectedGeneration: number, now: Date): Promise<MmrMutationResult>;
   addAdjustment(
     envelope: MmrCommandEnvelope,

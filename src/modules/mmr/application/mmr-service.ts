@@ -81,6 +81,10 @@ export class MmrService {
     return this.repository.getPlayer(playerId.toLocaleLowerCase("en-US"));
   }
   listAdjustments(page: number, pageSize: number) { return this.repository.listAdjustments(page, pageSize); }
+  getAdjustment(adjustmentId: string) {
+    if (!isMmrUuid(adjustmentId)) throw new MmrServiceError("INVALID_INPUT", "조정 원장 식별자가 올바르지 않습니다.");
+    return this.repository.getAdjustment(adjustmentId.toLocaleLowerCase("en-US"));
+  }
 
   recalculate(context: MmrCommandContext, expectedGeneration: number, body: unknown, now = new Date()) {
     const value = plainObject(body);

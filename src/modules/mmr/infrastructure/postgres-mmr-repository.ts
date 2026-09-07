@@ -499,6 +499,26 @@ export class PostgresMmrRepository implements MmrRepository {
     };
   }
 
+  async getAdjustment(adjustmentId: string): Promise<MmrAdjustmentReview | null> {
+    const row = (await this.database
+      .select({
+        id: mmrManualAdjustments.id,
+        playerId: mmrManualAdjustments.playerId,
+        playerDisplayName: players.nickname,
+        position: mmrManualAdjustments.position,
+        deltaBp: mmrManualAdjustments.deltaBp,
+        reasonCode: mmrManualAdjustments.reasonCode,
+        publicNote: mmrManualAdjustments.publicNote,
+        actorUserAccountId: mmrManualAdjustments.actorUserAccountId,
+        createdAt: mmrManualAdjustments.createdAt,
+      })
+      .from(mmrManualAdjustments)
+      .innerJoin(players, eq(players.id, mmrManualAdjustments.playerId))
+      .where(eq(mmrManualAdjustments.id, adjustmentId))
+      .limit(1))[0];
+    return row ? { ...row, createdAt: row.createdAt.toISOString() } : null;
+  }
+
   private async idempotent(
     envelope: MmrCommandEnvelope,
     work: (transaction: V2Transaction) => Promise<SuccessfulMutation>,

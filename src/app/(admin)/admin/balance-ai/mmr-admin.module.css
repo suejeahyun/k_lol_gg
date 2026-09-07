@@ -23,6 +23,15 @@
 .overview h2 { width: 100%; margin: 0; font-size: 1rem; }
 .overview p { width: 100%; margin: 0; color: #586980; line-height: 1.65; }
 .overview a { padding: .55rem .75rem; border-radius: .7rem; color: #315eaa; background: #edf4ff; font-weight: 800; text-decoration: none; }
+.reviewDrawer { position: sticky; bottom: 1rem; display: grid; gap: .9rem; width: min(100%,42rem); margin: 1rem 0 1rem auto; padding: 1.1rem; border: 1px solid #cbd9ed; border-radius: 1.15rem; background: #fff; box-shadow: 0 18px 45px rgba(40,58,91,.16); }
+.reviewDrawer header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.reviewDrawer header span { color: #66758b; font-size: .7rem; font-weight: 850; }
+.reviewDrawer h2,.reviewDrawer p { margin: .2rem 0 0; }
+.reviewDrawer dl { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .6rem; margin: 0; }
+.reviewDrawer dl > div { padding: .65rem; border-radius: .75rem; background: #f3f7fc; }
+.reviewDrawer dt { color: #66758b; font-size: .68rem; }
+.reviewDrawer dd { margin: .2rem 0 0; font-weight: 800; overflow-wrap: anywhere; }
+.reviewDrawer a { color: #315eaa; font-weight: 800; }
 .actions form { display: grid; grid-template-columns: repeat(4,minmax(120px,1fr)); gap: .7rem; padding: 1rem; }
 .actions label { display: grid; gap: .35rem; color: #61718a; font-size: .72rem; font-weight: 800; }
 .actions input,.actions select { min-height: 2.6rem; border: 1px solid #dce6f4; border-radius: .7rem; padding: .55rem; }
@@ -35,5 +44,5 @@
 .confirmDialog p { margin: .75rem 0 1.15rem; color: #526177; line-height: 1.65; }
 .confirmDialog > div { display: flex; justify-content: flex-end; gap: .6rem; }
 .confirmDialog .cancelButton { color: #34445d; background: #edf2f8; }
-@media(max-width:800px) { .summary { grid-template-columns: 1fr 1fr; } .list article,.actions form { grid-template-columns: 1fr; } .actions .note { grid-column: auto; } }
+@media(max-width:800px) { .summary { grid-template-columns: 1fr 1fr; } .list article,.actions form { grid-template-columns: 1fr; } .actions .note { grid-column: auto; } .reviewDrawer dl { grid-template-columns: 1fr 1fr; } }
 @media(max-width:560px) { .page { padding: 1rem 1rem 6.5rem; } .hero > svg { display: none; } .summary { grid-template-columns: 1fr; } }
