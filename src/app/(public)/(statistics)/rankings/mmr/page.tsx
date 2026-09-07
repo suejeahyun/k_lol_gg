@@ -20,12 +20,14 @@ export default async function MmrRankingPage({ searchParams }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const raw = await searchParams;
+  const viewValid = raw.view === undefined || raw.view === "players";
   const url = new URL("https://v2.invalid/rankings/mmr");
   for (const [key, value] of Object.entries(raw)) {
+    if (key === "view") continue;
     if (Array.isArray(value)) value.forEach((entry) => url.searchParams.append(key, entry));
     else if (value !== undefined) url.searchParams.set(key, value);
   }
-  const query = parseMmrPlayerQuery(url.href);
+  const query = viewValid ? parseMmrPlayerQuery(url.href) : null;
   const result = query
     ? await loadRuntimeMmr(async (service) => ({
         summary: await service.getSummary(),
@@ -34,7 +36,7 @@ export default async function MmrRankingPage({ searchParams }: {
     : { state: "invalid" as const };
 
   return (
-    <div className={`page-wrap ${styles.page}`}>
+    <div className={`page-wrap ${styles.page}`} data-mmr-view="players">
       <section className={styles.hero}>
         <div><span><Sparkles aria-hidden="true" /> DETERMINISTIC MMR</span><h1>실력의 흐름을 한눈에</h1><p>공개된 모든 경기를 같은 순서와 공식으로 다시 계산해요. 표본이 적을수록 신뢰도를 함께 확인해 주세요.</p></div>
         <Gauge aria-hidden="true" />

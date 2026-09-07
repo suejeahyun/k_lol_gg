@@ -14,6 +14,8 @@ test("public MMR page exposes canonical allowlisted filters and bounded projecti
     'alternates: { canonical: "/rankings/mmr" }',
     'name="q"',
     'name="position"',
+    "viewValid",
+    'data-mmr-view="players"',
     "pendingSourceCount",
     "confidence",
     "sampleSize",
