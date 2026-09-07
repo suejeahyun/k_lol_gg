@@ -37,7 +37,7 @@ export default async function ApplicationsPage() {
     <main className={`page-wrap ${styles.page}`}>
       <section className={styles.hero} aria-labelledby="applications-title">
         <div>
-          <Badge variant="secondary"><CloudSun size={13} aria-hidden="true" /> S03 · SEASON DAY</Badge>
+          <Badge variant="secondary"><CloudSun size={13} aria-hidden="true" /> TODAY · SEASON DAY</Badge>
           <p>APPLICATIONS</p>
           <h1 id="applications-title">오늘 같이 뛰어요</h1>
           <span>활성 시즌과 신청 상태를 한눈에 확인하고, 내 라인을 가볍게 골라 참가할 수 있어요.</span>
@@ -48,8 +48,8 @@ export default async function ApplicationsPage() {
       {result.state === "unavailable" ? (
         <section className={styles.stateCard} role="status">
           <CloudSun aria-hidden="true" />
-          <h2>시즌 데이터 연결을 준비하고 있어요.</h2>
-          <p>V2 전용 PostgreSQL이 연결되기 전에는 샘플 신청을 만들어 보여주지 않습니다.</p>
+          <h2>시즌 현황을 불러올 수 없어요.</h2>
+          <p>잠시 후 다시 확인해 주세요. 저장되지 않은 신청을 임의로 표시하지 않습니다.</p>
         </section>
       ) : result.state === "error" ? (
         <section className={`${styles.stateCard} ${styles.error}`} role="alert">

@@ -25,10 +25,10 @@ export default function RiotHelpPage() {
 
       <section className={styles.section}>
         <div className={styles.sectionHeading}>
-          <div><h2>현재 연동 상태</h2><p>실제 Riot 운영 API나 운영 계정에는 연결하지 않습니다.</p></div>
-          <span className={styles.statusBadge}><CircleOff size={13} aria-hidden="true" /> 운영 연동 잠금</span>
+          <div><h2>현재 연동 상태</h2><p>공식 연동 준비 상태에 따라 계정 화면에서 이용 가능 여부를 안내합니다.</p></div>
+          <span className={styles.statusBadge}><CircleOff size={13} aria-hidden="true" /> 현재 이용 제한</span>
         </div>
-        <div className={styles.notice}><LockKeyhole size={19} aria-hidden="true" /><span>V2는 현재 안전한 로컬·가짜 adapter 계약을 검증하는 단계입니다. 운영 API 승인과 별도 환경 설정이 확인되기 전에는 연결·동기화 버튼을 활성화하지 않습니다.</span></div>
+        <div className={styles.notice}><LockKeyhole size={19} aria-hidden="true" /><span>공식 API 승인과 안전한 서버 설정이 확인되기 전에는 연결·동기화 버튼을 활성화하지 않습니다. 비밀키나 내부 계정 정보는 브라우저에 표시하지 않습니다.</span></div>
       </section>
 
       <section className={styles.section} aria-labelledby="riot-flow-title">

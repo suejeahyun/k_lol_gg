@@ -83,9 +83,9 @@ function HomeDataState({ result }: { result: Awaited<ReturnType<typeof loadRunti
 
   return (
     <div className="home-data-state" role="status">
-      <span><Database size={18} aria-hidden="true" /> 데이터 연결 전</span>
-      <strong>운영 데이터 대신 빈 상태를 표시합니다.</strong>
-      <p>V2 전용 PostgreSQL이 명시적으로 연결되기 전에는 샘플 수치를 만들어 보여주지 않습니다.</p>
+      <span><Database size={18} aria-hidden="true" /> 현황 확인 필요</span>
+      <strong>지금은 공개 현황을 표시할 수 없어요.</strong>
+      <p>잠시 후 다시 확인해 주세요. 검색과 이용 안내는 계속 열어볼 수 있습니다.</p>
     </div>
   );
 }
@@ -99,7 +99,7 @@ export default async function HomePage() {
         <div className="hero-copy">
           <Badge className="foundation-badge" variant="secondary">
             <Sparkles size={13} aria-hidden="true" />
-            V2 · USER WAVE 01
+            K-LOL.GG · NEW SEASON
           </Badge>
           <p className="hero-kicker">함께 찾고, 함께 기록하는 내전 놀이터</p>
           <h1 id="home-title">
@@ -107,8 +107,8 @@ export default async function HomePage() {
             <span>한눈에, 가볍게.</span>
           </h1>
           <p className="hero-description">
-            데스크톱과 모바일에서 같은 주소와 같은 흐름을 사용합니다. 플레이어·경기·랭킹·
-            팀 도구를 연결했고, 준비되지 않은 데이터는 있는 것처럼 꾸미지 않습니다.
+            플레이어·경기·랭킹·팀 도구부터 이벤트와 커뮤니티 기록까지,
+            데스크톱과 모바일에서 편안하게 이어서 이용하세요.
           </p>
 
           <form className="hero-search" action="/players" method="get">
@@ -189,13 +189,13 @@ export default async function HomePage() {
           <span>준비되지 않은 시즌·경기·구인 수치는 표시하지 않습니다.</span>
         </div>
         <HomeDataState result={homeResult} />
-        <div className="home-feed-contract" aria-label="홈 피드 구현 상태">
-          <span data-state="ready">플레이어 등록부 <strong>페이지·포트 준비</strong></span>
-          <span data-state="ready">시즌 요약 <strong>DB 연결</strong></span>
-          <span data-state="ready">최근 경기 <strong>DB 연결</strong></span>
-          <span data-state="ready">구인·갤러리 <strong>DB 연결</strong></span>
-          <span data-state="ready">이벤트전 <strong>DB 연결</strong></span>
-          <span>멸망전 <strong>구현 진행 중</strong></span>
+        <div className="home-feed-contract" aria-label="이용 가능한 커뮤니티 기능">
+          <span data-state="ready">플레이어 <strong>검색·프로필</strong></span>
+          <span data-state="ready">시즌 <strong>참가 신청·현황</strong></span>
+          <span data-state="ready">경기 <strong>결과·랭킹</strong></span>
+          <span data-state="ready">커뮤니티 <strong>구인·갤러리</strong></span>
+          <span data-state="ready">이벤트전 <strong>신청·대진</strong></span>
+          <span data-state="ready">멸망전 <strong>경매·본선</strong></span>
         </div>
       </section>
     </div>

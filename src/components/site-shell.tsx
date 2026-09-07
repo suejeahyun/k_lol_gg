@@ -43,7 +43,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
       <footer className="site-footer">
         <div>
           <strong>K-LOL.GG V2</strong>
-          <p>V1의 기능 계약을 새 구조로 하나씩 다시 구현하고 있습니다.</p>
+          <p>함께 즐긴 내전의 기록과 다음 경기를 한곳에서 만나보세요.</p>
           <p><Link href="/terms">이용약관</Link> · <Link href="/privacy">개인정보 처리 안내</Link></p>
         </div>
         <p className="riot-disclaimer">

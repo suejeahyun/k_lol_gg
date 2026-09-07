@@ -38,7 +38,7 @@ export default async function PlayersPage({
 
       <section className="players-hero" aria-labelledby="players-title">
         <div>
-          <Badge variant="secondary"><Sparkles size={13} aria-hidden="true" /> S02 · PUBLIC REGISTRY</Badge>
+          <Badge variant="secondary"><Sparkles size={13} aria-hidden="true" /> K-LOL · PLAYER REGISTRY</Badge>
           <p>PLAYER REGISTRY</p>
           <h1 id="players-title">플레이어 찾기</h1>
           <span>활성 플레이어의 공개 표시명, Riot ID, 허용된 티어 정보만 보여줍니다.</span>
@@ -78,8 +78,8 @@ export default async function PlayersPage({
         {result.state === "unavailable" ? (
           <div className="empty-state" role="status">
             <Search size={28} aria-hidden="true" />
-            <strong>플레이어 등록부 연결을 준비하고 있어요.</strong>
-            <p>V2 전용 데이터 소스가 명시적으로 연결되기 전에는 샘플 플레이어를 만들어 보여주지 않습니다.</p>
+            <strong>플레이어 등록부를 불러올 수 없어요.</strong>
+            <p>잠시 후 다시 검색해 주세요. 확인되지 않은 플레이어는 임의로 표시하지 않습니다.</p>
           </div>
         ) : result.state === "error" ? (
           <div className="empty-state empty-state--error" role="alert">
