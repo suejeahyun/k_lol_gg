@@ -29,6 +29,8 @@ export const scrimRecruitStatus = recruitingSchema.enum("scrim_status", [
   "RECRUITING", "MATCHED", "CONFIRMED", "COMPLETED", "CANCELED",
 ]);
 export const recruitingOutboxStatus = recruitingSchema.enum("outbox_status", ["PENDING", "DELIVERED"]);
+export const operationFormType = recruitingSchema.enum("operation_form_type", ["friends", "leaves", "meetups", "suggestions"]);
+export const operationFormStatus = recruitingSchema.enum("operation_form_status", ["PENDING", "IN_REVIEW", "COMPLETED", "REJECTED", "CANCELLED"]);
 
 export const recruitParties = recruitingSchema.table("parties", {
   id: uuid("id").primaryKey(),
@@ -125,6 +127,34 @@ export const recruitingNonceBindings = recruitingSchema.table("nonce_bindings", 
   check("recruiting_nonce_expiry", sql`${table.expiresAt} > ${table.createdAt}`),
 ]);
 
+export const operationForms = recruitingSchema.table("operation_forms", {
+  id: uuid("id").primaryKey(),
+  revision: bigint("revision", { mode: "number" }).default(0).notNull(),
+  formType: operationFormType("form_type").notNull(),
+  status: operationFormStatus("status").default("PENDING").notNull(),
+  payloadJson: jsonb("payload_json").$type<Record<string, unknown>>().notNull(),
+  sourceRoomId: varchar("source_room_id", { length: 128 }).notNull(),
+  sourceSenderId: varchar("source_sender_id", { length: 128 }).notNull(),
+  adminNote: varchar("admin_note", { length: 2_000 }),
+  reviewedByUserAccountId: uuid("reviewed_by_user_account_id").references(() => userAccounts.id, { onDelete: "restrict" }),
+  reviewedAt: timestamptz("reviewed_at"),
+  deletedAt: timestamptz("deleted_at"),
+  deletedByUserAccountId: uuid("deleted_by_user_account_id").references(() => userAccounts.id, { onDelete: "restrict" }),
+  deletionReason: varchar("deletion_reason", { length: 500 }),
+  submittedAt: timestamptz("submitted_at").notNull(),
+  createdAt: timestamptz("created_at").defaultNow().notNull(),
+  updatedAt: timestamptz("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("operation_forms_active_type_status_idx").on(table.formType, table.status, table.submittedAt.desc()).where(sql`${table.deletedAt} IS NULL`),
+  index("operation_forms_active_submitted_idx").on(table.submittedAt.desc(), table.id).where(sql`${table.deletedAt} IS NULL`),
+  check("operation_forms_revision_nonnegative", sql`${table.revision} >= 0`),
+  check("operation_forms_payload_object", sql`jsonb_typeof(${table.payloadJson}) = 'object' AND pg_column_size(${table.payloadJson}) <= 16384`),
+  check("operation_forms_source_room_nonempty", sql`char_length(btrim(${table.sourceRoomId})) BETWEEN 1 AND 128`),
+  check("operation_forms_source_sender_nonempty", sql`char_length(btrim(${table.sourceSenderId})) BETWEEN 1 AND 128`),
+  check("operation_forms_review_consistency", sql`(${table.reviewedAt} IS NULL AND ${table.reviewedByUserAccountId} IS NULL) OR (${table.reviewedAt} IS NOT NULL AND ${table.reviewedByUserAccountId} IS NOT NULL)`),
+  check("operation_forms_delete_consistency", sql`(${table.deletedAt} IS NULL AND ${table.deletedByUserAccountId} IS NULL AND ${table.deletionReason} IS NULL) OR (${table.deletedAt} IS NOT NULL AND ${table.deletedByUserAccountId} IS NOT NULL AND char_length(btrim(${table.deletionReason})) BETWEEN 1 AND 500)`),
+]);
+
 export const recruitingOutbox = recruitingSchema.table("outbox", {
   id: varchar("id", { length: 200 }).primaryKey(),
   requestId: uuid("request_id").notNull(),
@@ -141,7 +171,7 @@ export const recruitingOutbox = recruitingSchema.table("outbox", {
   uniqueIndex("recruiting_outbox_request_uidx").on(table.requestId),
   uniqueIndex("recruiting_outbox_dedupe_uidx").on(table.dedupeKey),
   index("recruiting_outbox_pending_idx").on(table.createdAt, table.id).where(sql`${table.status} = 'PENDING'`),
-  check("recruiting_outbox_aggregate_type", sql`${table.aggregateType} IN ('RECRUIT_PARTY', 'SCRIM_RECRUIT')`),
+  check("recruiting_outbox_aggregate_type", sql`${table.aggregateType} IN ('RECRUIT_PARTY', 'SCRIM_RECRUIT', 'OPERATION_FORM')`),
   check("recruiting_outbox_revision_nonnegative", sql`${table.aggregateRevision} >= 0`),
   check("recruiting_outbox_payload_object", sql`jsonb_typeof(${table.payloadJson}) = 'object'`),
   check("recruiting_outbox_delivery_consistency", sql`(${table.status} = 'PENDING' AND ${table.deliveredAt} IS NULL) OR (${table.status} = 'DELIVERED' AND ${table.deliveredAt} IS NOT NULL)`),
