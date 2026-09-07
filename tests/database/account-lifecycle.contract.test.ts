@@ -291,6 +291,36 @@ test("S01 account lifecycle, recovery security, races, replay, and rollback hold
     const repository = new PostgresAccountRepository(database);
     const publicPlayers = new PostgresPlayerRepository(database);
     const adminPlayers = new PostgresAdminPlayerRepository(database);
+    const owner = await seedLinkedAccount(database, "self_edit", "USER", await hashPassword("owner-password-2026"));
+    const ownerSessionId = randomUUID();
+    await database.insert(authSessions).values({
+      id: ownerSessionId,
+      tokenHash: randomBytes(32),
+      userAccountId: owner.id,
+      authVersion: 0,
+      role: "USER",
+      purpose: "ACCOUNT",
+      issuedAt: new Date(),
+      expiresAt: new Date(Date.now() + 30 * 60_000),
+    });
+    const ownPlayerInput = { nickname: `Owner${randomBytes(3).toString("hex")}`, tagLine: "KR1", peakTier: "플래티넘 4", currentTier: "골드 2" } as const;
+    const ownPlayerScope = accountMutationScope("self-player", owner.id);
+    const ownPlayerOutcome = await repository.updateOwnPlayer(
+      ownPlayerInput,
+      0,
+      command(
+        { id: owner.id, role: "USER", sessionId: ownerSessionId, authVersion: 0 },
+        ownPlayerScope,
+        fingerprintAccountMutation({ action: "self-player", expectedPlayerRevision: 0, player: ownPlayerInput }),
+      ),
+    );
+    assert.equal(ownPlayerOutcome.type, "success");
+    if (ownPlayerOutcome.type === "success") {
+      assert.equal(ownPlayerOutcome.response.account?.player?.riotId, `${ownPlayerInput.nickname}#KR1`);
+      assert.equal(ownPlayerOutcome.response.playerRevision, 1);
+    }
+    const ownPlayerAudit = await database.select({ action: auditEvents.action }).from(auditEvents).where(and(eq(auditEvents.targetId, owner.playerId), eq(auditEvents.action, "PLAYER_SELF_UPDATED")));
+    assert.equal(ownPlayerAudit.length, 1);
     const unrelatedExpiredAccountReceiptKey = randomBytes(32);
     await database.insert(accountMutationReceipts).values({
       actorUserAccountId: null,
