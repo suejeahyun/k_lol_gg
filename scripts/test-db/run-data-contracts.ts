@@ -29,8 +29,8 @@ const disposableRoot = resolve(workspaceRoot, ".tmp/postgres-tests");
 const postgresMajor = 18;
 const contractScope = process.env.V2_DB_CONTRACT_SCOPE?.trim().toLocaleLowerCase("en-US") || "all";
 
-if (contractScope !== "all" && contractScope !== "matches") {
-  throw new Error("V2_DB_CONTRACT_SCOPE must be either 'all' or 'matches'.");
+if (contractScope !== "all" && contractScope !== "matches" && contractScope !== "statistics") {
+  throw new Error("V2_DB_CONTRACT_SCOPE must be 'all', 'matches', or 'statistics'.");
 }
 
 type EphemeralCluster = Readonly<{
@@ -420,10 +420,13 @@ async function runContractTests(connectionString: string): Promise<void> {
     "tests/database/season-platform.contract.test.ts",
     "tests/database/account-lifecycle.contract.test.ts",
     "tests/database/match-snapshot.contract.test.ts",
+    "tests/database/statistics-projection.contract.test.ts",
   ];
-  const testFiles = contractScope === "matches"
-    ? ["tests/database/match-snapshot.contract.test.ts"]
-    : allTestFiles;
+  const scopedTestFiles: Readonly<Record<string, readonly string[]>> = {
+    matches: ["tests/database/match-snapshot.contract.test.ts"],
+    statistics: ["tests/database/statistics-projection.contract.test.ts"],
+  };
+  const testFiles = contractScope === "all" ? allTestFiles : scopedTestFiles[contractScope]!;
   for (const relativeTestFile of testFiles) {
     const child = spawn(process.execPath, [tsxCli, "--test", resolve(workspaceRoot, relativeTestFile)], {
       cwd: workspaceRoot,
@@ -973,7 +976,7 @@ async function main(): Promise<void> {
       nodeEnv: process.env.NODE_ENV,
       testMode: process.env.V2_DB_TEST_MODE,
     });
-    if (contractScope === "matches") {
+    if (contractScope !== "all") {
       await runContractTests(connectionString);
       return;
     }
@@ -997,7 +1000,7 @@ async function main(): Promise<void> {
   try {
     cluster = await startEphemeralCluster();
     process.stdout.write("[db-contract] isolated PostgreSQL 18 cluster started\n");
-    if (contractScope === "matches") {
+    if (contractScope !== "all") {
       await runContractTests(cluster.connectionString);
       return;
     }
