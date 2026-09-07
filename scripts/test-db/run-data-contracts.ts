@@ -952,18 +952,21 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
   const port = await availableLoopbackPort();
   const origin = `http://127.0.0.1:${port}`;
   const nextBin = resolve(workspaceRoot, "node_modules/next/dist/bin/next");
-  const child = spawn(process.execPath, [nextBin, "dev", "--webpack", "--hostname", "127.0.0.1", "--port", String(port)], {
+  // Capture the same optimized server bundle that is eligible for release.
+  // The webpack development compiler currently treats Node built-ins imported
+  // by protected route handlers as browser schemes, yielding false HTTP 500s.
+  const child = spawn(process.execPath, [nextBin, "start", "--hostname", "127.0.0.1", "--port", String(port)], {
     cwd: workspaceRoot,
     env: {
       ...safeProcessEnvironment(),
-      NODE_ENV: "development",
+      NODE_ENV: "production",
       DATABASE_URL: connectionString,
       NEXT_PUBLIC_SITE_URL: origin,
       V2_PUBLIC_ORIGIN: origin,
       SESSION_SIGNING_KEYS: sessionKeysJson,
       TOTP_ENCRYPTION_KEYS: totpKeysJson,
       V2_AUTH_RATE_LIMIT_PEPPER: rateLimitPepper,
-      V2_FAKE_PRIVATE_ASSETS: "1",
+      V2_FAKE_PRIVATE_ASSETS: "",
     },
     stdio: ["ignore", "pipe", "pipe"],
     windowsHide: true,
