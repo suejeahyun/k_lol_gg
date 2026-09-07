@@ -26,6 +26,6 @@ export function KakaoSettingsForm({ initial }: { initial: KakaoOperationSettings
     <div className={styles.checks}>{(Object.keys(labels) as (keyof typeof labels)[]).map((key) => <label key={key}><input type="checkbox" checked={settings[key]} onChange={(event) => setSettings({ ...settings, [key]: event.target.checked })}/><span>{labels[key]}</span></label>)}</div>
     <label className={styles.numberField}><span>메시지 최대 길이</span><input type="number" min={100} max={10000} value={settings.maxMessageLength} onChange={(event) => setSettings({ ...settings, maxMessageLength: Number(event.target.value) })}/></label>
     {state === "saved" ? <p role="status">설정을 저장했습니다.</p> : null}{state === "error" ? <p role="alert">저장하지 못했습니다. 최신 revision과 SUPER 2단계 인증을 확인해 주세요.</p> : null}
-    <div className={styles.actions}><button disabled={state === "saving"}>{state === "saving" ? "저장 중…" : "운영 설정 저장"}</button><small>revision {settings.revision}</small></div>
+    <div className={styles.actions}><button type="submit" disabled={state === "saving"}>{state === "saving" ? "저장 중…" : "운영 설정 저장"}</button><small>revision {settings.revision}</small></div>
   </form>;
 }
