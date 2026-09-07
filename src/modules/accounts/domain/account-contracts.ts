@@ -51,7 +51,17 @@ export type AccountPlayerDto = Readonly<{
   nickname: string;
   tagLine: string;
   riotId: string;
+  peakTier: string | null;
+  currentTier: string | null;
   status: "ACTIVE" | "INACTIVE";
+  revision: number;
+}>;
+
+export type OwnPlayerInput = Readonly<{
+  nickname: string;
+  tagLine: string;
+  peakTier: string | null;
+  currentTier: string | null;
 }>;
 
 export type AccountSelfDto = Readonly<{
@@ -123,6 +133,7 @@ export type AccountMutationCommand = Readonly<{
 export type SafeAccountMutationResponse = Readonly<{
   message: string;
   account?: AccountSelfDto | AdminAccountDto;
+  playerRevision?: number;
 }>;
 
 export const ACCOUNT_CONFLICT_REASONS = [
@@ -300,6 +311,36 @@ export function parsePasswordChangeInput(value: unknown): ParseResult<PasswordCh
     ok: true,
     value: { currentPassword: record.currentPassword, newPassword: record.newPassword },
   };
+}
+
+const divisionTierPattern = /^(?:(?:아이언|브론즈|실버|골드|플래티넘|에메랄드|다이아) [1-4]|(?:IRON|BRONZE|SILVER|GOLD|PLATINUM|EMERALD|DIAMOND) (?:I|II|III|IV))$/i;
+const masterTierPattern = /^(?:마스터 (?:10|[1-9])층|MASTER(?: [0-9]{1,4})?)$/i;
+const highTierPattern = /^(?:(?:그랜드마스터|챌린저) [0-9]{1,4}|(?:GRANDMASTER|CHALLENGER)(?: [0-9]{1,4})?)$/i;
+
+function optionalTier(value: unknown): string | null | undefined {
+  if (value === null || value === "" || value === undefined) return null;
+  const normalized = safeText(value, 2, 32);
+  if (!normalized) return undefined;
+  return divisionTierPattern.test(normalized) || masterTierPattern.test(normalized) || highTierPattern.test(normalized)
+    ? normalized
+    : undefined;
+}
+
+export function parseOwnPlayerInput(value: unknown): ParseResult<OwnPlayerInput> {
+  const record = exactRecord(value, ["riotId", "peakTier", "currentTier"]);
+  if (!record) return { ok: false };
+  const riotId = safeText(record.riotId, 3, 97);
+  if (!riotId) return { ok: false };
+  const separator = riotId.lastIndexOf("#");
+  if (separator < 1 || separator === riotId.length - 1) return { ok: false };
+  const nickname = safeText(riotId.slice(0, separator), 1, 64);
+  const tagLine = safeText(riotId.slice(separator + 1), 1, 32);
+  const peakTier = optionalTier(record.peakTier);
+  const currentTier = optionalTier(record.currentTier);
+  if (!nickname || !tagLine || nickname.includes("#") || tagLine.includes("#") || peakTier === undefined || currentTier === undefined) {
+    return { ok: false };
+  }
+  return { ok: true, value: { nickname, tagLine, peakTier, currentTier } };
 }
 
 export function parseAccountReasonInput(value: unknown): ParseResult<AccountReasonInput> {

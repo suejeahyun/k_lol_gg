@@ -23,6 +23,7 @@ import {
 } from "@/modules/auth/infrastructure/node-password";
 import {
   ADMIN_MUTATION_SESSION_POLICY,
+  APPROVED_ACCOUNT_MUTATION_SESSION_POLICY,
   lockTransactionSessionActor,
   SELF_PASSWORD_SESSION_POLICY,
 } from "@/modules/auth/infrastructure/transaction-session-guard";
@@ -50,6 +51,7 @@ import {
   normalizeLoginId,
   isCanonicalAccountUuid,
   parseLegacyAccountIntegerId,
+  accountMutationScope,
   type AccountMutationCommand,
   type AccountMutationOutcome,
   type AccountStatusInput,
@@ -57,6 +59,7 @@ import {
   type AdminAccountDto,
   type AdminAccountListQuery,
   type PasswordChangeInput,
+  type OwnPlayerInput,
   type SafeAccountMutationResponse,
   type SignupInput,
   type UserLoginInput,
@@ -201,7 +204,10 @@ async function accountDtos(
             nickname: linkedPlayer.nickname,
             tagLine: linkedPlayer.tagLine,
             riotId: `${linkedPlayer.nickname}#${linkedPlayer.tagLine}`,
+            peakTier: linkedPlayer.peakTier,
+            currentTier: linkedPlayer.currentTier,
             status: linkedPlayer.status,
+            revision: linkedPlayer.revision,
           }
         : null,
     playerClaim: claim
@@ -263,7 +269,10 @@ function selfDto(dto: AdminAccountDto): AccountSelfDto {
           nickname: player.nickname,
           tagLine: player.tagLine,
           riotId: player.riotId,
+          peakTier: player.peakTier,
+          currentTier: player.currentTier,
           status: player.status,
+          revision: player.revision,
         }
       : null,
   };
@@ -352,7 +361,7 @@ async function startMutation(
       type: "success",
       status: receipt.responseStatus as 200 | 201 | 202,
       response,
-      revision: response.account?.revision,
+      revision: response.playerRevision ?? response.account?.revision,
       replayed: true,
     },
   };
@@ -807,6 +816,108 @@ export class PostgresAccountRepository implements AccountRepository {
   async findSelf(userAccountId: string): Promise<AccountSelfDto | null> {
     const dto = await accountDto(this.database, userAccountId);
     return dto ? selfDto(dto) : null;
+  }
+
+  async updateOwnPlayer(
+    input: OwnPlayerInput,
+    expectedPlayerRevision: number,
+    command: AccountMutationCommand,
+  ): Promise<AccountMutationOutcome> {
+    try {
+      return await withTransaction(this.database, async (transaction) => {
+        if (!command.actorSession || command.actorUserAccountId !== command.actorSession.userAccountId) {
+          return { type: "session-stale" };
+        }
+        const actor = await lockTransactionSessionActor(
+          transaction,
+          command.actorSession,
+          command.now,
+          APPROVED_ACCOUNT_MUTATION_SESSION_POLICY,
+        );
+        if (!actor) return { type: "session-stale" };
+
+        const scope = accountMutationScope("self-player", actor.id);
+        const started = await startMutation(transaction, command, scope);
+        if (started.replay) return started.replay;
+
+        const before = (
+          await transaction
+            .select()
+            .from(players)
+            .where(and(eq(players.userAccountId, actor.id), eq(players.status, "ACTIVE")))
+            .for("update")
+            .limit(1)
+        )[0];
+        if (!before) return { type: "not-found" };
+        if (before.revision !== expectedPlayerRevision) {
+          return { type: "precondition-failed", currentRevision: before.revision };
+        }
+
+        const updated = (
+          await transaction
+            .update(players)
+            .set({
+              nickname: input.nickname,
+              nicknameNormalized: normalizeAccountIdentity(input.nickname),
+              tagLine: input.tagLine,
+              tagLineNormalized: normalizeAccountIdentity(input.tagLine),
+              peakTier: input.peakTier,
+              currentTier: input.currentTier,
+              revision: sql`${players.revision} + 1`,
+              updatedAt: command.now,
+            })
+            .where(and(
+              eq(players.id, before.id),
+              eq(players.userAccountId, actor.id),
+              eq(players.revision, expectedPlayerRevision),
+            ))
+            .returning({ revision: players.revision })
+        )[0];
+        if (!updated) return { type: "precondition-failed", currentRevision: before.revision };
+
+        await transaction.insert(auditEvents).values({
+          requestId: command.requestId,
+          actorUserAccountId: actor.id,
+          action: "PLAYER_SELF_UPDATED",
+          targetType: "PLAYER",
+          targetId: before.id,
+          beforeJson: {
+            riotId: `${before.nickname}#${before.tagLine}`,
+            peakTier: before.peakTier,
+            currentTier: before.currentTier,
+            revision: before.revision,
+          },
+          afterJson: {
+            riotId: `${input.nickname}#${input.tagLine}`,
+            peakTier: input.peakTier,
+            currentTier: input.currentTier,
+            revision: updated.revision,
+          },
+          metadataJson: { ownerMutation: true },
+          createdAt: command.now,
+        });
+        const dto = await accountDto(transaction, actor.id);
+        if (!dto) throw new Error("Updated owner player could not be reloaded.");
+        const outcome: Extract<AccountMutationOutcome, { type: "success" }> = {
+          type: "success",
+          status: 200,
+          response: {
+            message: "내 Riot ID와 티어 정보가 수정되었습니다.",
+            account: selfDto(dto),
+            playerRevision: updated.revision,
+          },
+          revision: updated.revision,
+          replayed: false,
+        };
+        await saveReceipt(transaction, command, started.identity, outcome);
+        return outcome;
+      });
+    } catch (error) {
+      if (errorConstraint(error) === "players_nickname_tag_line_normalized_uidx") {
+        return { type: "conflict", reason: "RIOT_ID_ALREADY_LINKED" };
+      }
+      throw error;
+    }
   }
 
   async listAdmin(

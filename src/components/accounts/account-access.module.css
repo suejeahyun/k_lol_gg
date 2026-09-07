@@ -12,6 +12,7 @@
 .formCard { align-self: center; padding: clamp(1.25rem, 4vw, 2rem); }
 .formCard h1 { font-size: clamp(1.9rem, 4vw, 2.6rem); }
 .form { display: grid; gap: 1rem; margin-top: 1.25rem; }
+.playerTierGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
 .field { display: grid; gap: .38rem; color: #354760; font-size: .75rem; font-weight: 850; }
 .field input { width: 100%; min-height: 2.75rem; border: 1px solid #cbd9ea; border-radius: .8rem; color: #203149; background: #fbfdff; padding: 0 .85rem; font: inherit; font-size: .9rem; outline: none; }
 .field input:focus-visible { border-color: #4777c7; box-shadow: 0 0 0 3px rgb(86 129 201 / 20%); }
@@ -50,7 +51,7 @@
 .skeleton { min-height: 30rem; border-radius: 1.5rem; background: linear-gradient(100deg, #edf2f8 20%, #fafcff 45%, #edf2f8 70%); background-size: 300% 100%; animation: shimmer 1.2s ease infinite; }
 @keyframes shimmer { from { background-position: 100% 0; } to { background-position: 0 0; } }
 @media (max-width: 800px) { .accessGrid { grid-template-columns: 1fr; } .intro { min-height: 22rem; } }
-@media (max-width: 520px) { .page { width: min(100% - 20px, 72rem); padding-top: .75rem; } .intro, .formCard, .accountHero, .panel { border-radius: 1.2rem; } .promise, .facts { grid-template-columns: 1fr; } .intro { min-height: 19rem; padding: 1.25rem; } .accountHero { align-items: flex-start; flex-direction: column; } .accountHero > div, .logoutControl, .logoutControl button, .logoutError { width: 100%; } }
+@media (max-width: 520px) { .page { width: min(100% - 20px, 72rem); padding-top: .75rem; } .intro, .formCard, .accountHero, .panel { border-radius: 1.2rem; } .promise, .facts, .playerTierGrid { grid-template-columns: 1fr; } .intro { min-height: 19rem; padding: 1.25rem; } .accountHero { align-items: flex-start; flex-direction: column; } .accountHero > div, .logoutControl, .logoutControl button, .logoutError { width: 100%; } }
 @media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
 .policy { width: min(100%, 58rem); margin: 0 auto; padding: clamp(1.25rem, 4vw, 2.5rem); border: 1px solid rgb(118 151 198 / 22%); border-radius: 1.6rem; background: rgb(255 255 255 / 94%); box-shadow: 0 1.2rem 3.5rem rgb(76 105 155 / 10%); }
 .policy header { padding-bottom: 1rem; border-bottom: 1px solid #e5edf8; }

@@ -16,6 +16,7 @@ import {
   parseConfirmedAccountReasonInput,
   parseInternalReasonInput,
   parsePasswordChangeInput,
+  parseOwnPlayerInput,
   parseSignupInput,
   parseRoleChangeInput,
   parseUserLoginInput,
@@ -198,6 +199,26 @@ test("login and password change reject extra keys, controls, reuse, and weak pas
     currentPassword: "old\u200f-password-2026",
     newPassword: "새비밀번호2026safe",
   }).ok, false);
+});
+
+test("own player edit accepts only Riot ID and supported tier fields", () => {
+  const parsed = parseOwnPlayerInput({
+    riotId: "Breeze#KR1",
+    currentTier: "골드 2",
+    peakTier: "플래티넘 4",
+  });
+  assert.equal(parsed.ok, true);
+  if (parsed.ok) {
+    assert.deepEqual(parsed.value, {
+      nickname: "Breeze",
+      tagLine: "KR1",
+      currentTier: "골드 2",
+      peakTier: "플래티넘 4",
+    });
+  }
+  assert.equal(parseOwnPlayerInput({ riotId: "태그없음", currentTier: null, peakTier: null }).ok, false);
+  assert.equal(parseOwnPlayerInput({ riotId: "Breeze#KR1", currentTier: "신화 1", peakTier: null }).ok, false);
+  assert.equal(parseOwnPlayerInput({ riotId: "Breeze#KR1", currentTier: null, peakTier: null, status: "ACTIVE" }).ok, false);
 });
 
 test("claim approval requires an exact explicit manual-review acknowledgement shape", () => {

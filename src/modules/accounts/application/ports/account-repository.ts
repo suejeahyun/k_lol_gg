@@ -9,6 +9,7 @@ import type {
   AdminAccountListDto,
   AdminAccountListQuery,
   PasswordChangeInput,
+  OwnPlayerInput,
   SignupInput,
   UserLoginInput,
 } from "../../domain/account-contracts";
@@ -44,6 +45,11 @@ export interface AccountRepository {
     input: PasswordChangeInput,
     nextPasswordHash: string,
     expectedRevision: number,
+    command: AccountMutationCommand,
+  ): Promise<AccountMutationOutcome>;
+  updateOwnPlayer(
+    input: OwnPlayerInput,
+    expectedPlayerRevision: number,
     command: AccountMutationCommand,
   ): Promise<AccountMutationOutcome>;
   changeStatus(
