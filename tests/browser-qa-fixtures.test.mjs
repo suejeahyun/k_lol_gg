@@ -31,9 +31,12 @@ test("browser QA server emits setup credentials, actor identity and fail-fast dy
     "championKey", "publishedMatchId", "submissionId", "highlightId", "galleryId", "eventId", "destructionId",
     "disciplineRecordId", "operationFormId", "privateAssetId", "draftId", "mmrReviewId", "destructionPlayerId", "requiredFixture",
     'V2_PUBLIC_DATA_SOURCE: "postgres"',
-    'V2_FAKE_PRIVATE_ASSETS: ""',
+    'V2_BROWSER_QA_MODE: "true"',
+    'V2_FAKE_PRIVATE_ASSETS: "1"',
+    "V2_BROWSER_QA_PRIVATE_IMAGE_FIXTURE",
   ]) assert.match(source, new RegExp(evidence));
-  assert.match(source, /to_regclass\('assets\.private_assets'\)/u);
-  assert.match(source, /owner_user_account_id = \$1/u);
+  assert.match(source, /join assets\.private_assets pa on pa\.id = msi\.private_asset_id/u);
+  assert.match(source, /update assets\.private_assets/u);
+  assert.match(source, /prepareTeamBalanceCaptureFixture\(pool, actorId\)/u);
   assert.match(source, /Browser QA fixture is missing/u);
 });
