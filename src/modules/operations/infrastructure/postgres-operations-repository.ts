@@ -331,7 +331,7 @@ export class PostgresOperationsRepository implements OperationsQueryPort, Operat
       totalEvents: sql<number>`count(*)::int`,
       eventsLast24Hours: sql<number>`count(*) filter (where ${auditEvents.createdAt} >= ${cutoff})::int`,
       uniqueActorsLast24Hours: sql<number>`count(distinct ${auditEvents.actorUserAccountId}) filter (where ${auditEvents.createdAt} >= ${cutoff})::int`,
-      latestEventAt: sql<Date | null>`max(${auditEvents.createdAt})`,
+      latestEventAt: sql<Date | null>`max(${auditEvents.createdAt})`.mapWith(auditEvents.createdAt),
     }).from(auditEvents);
     return {
       totalEvents: totals?.totalEvents ?? 0,

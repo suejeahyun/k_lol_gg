@@ -99,6 +99,17 @@ test("S13 settings, AI ledger and signed maintenance preserve authorization and 
     assert.ok((await database.select().from(operationsCommandReceipts)).length >= 2);
     assert.ok((await database.select().from(auditEvents)).length >= 3);
     assert.ok((await database.select().from(operationsOutbox)).length >= 3);
+
+    const [logs, stats, aiRequests] = await Promise.all([
+      repository.listAuditLogs({ page: 1, pageSize: 50 }),
+      repository.getAuditStats(),
+      repository.listAiRequests({ page: 1, pageSize: 50 }),
+    ]);
+    assert.ok(logs.items.length >= 3);
+    assert.ok(stats.totalEvents >= 3);
+    assert.ok(stats.latestEventAt);
+    assert.equal(new Date(stats.latestEventAt).toISOString(), stats.latestEventAt);
+    assert.equal(aiRequests.items.length, 1);
   } finally {
     await pool.end();
   }
