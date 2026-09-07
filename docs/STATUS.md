@@ -1,6 +1,6 @@
 # K-LOL.GG V2 상태
 
-- 기준 커밋: `057e8cc` (`main`, 2026-09-07 15:46 KST)
+- 기준 커밋: `0b53eda` (`main`, 2026-09-07 KST)
 - 현재 단계: S00~S06 영속 구현 후보 통합, S07·S09·S10 adapter 병렬 구현 중
 - V1 코드 복사: 없음. V1은 동작 명세와 동등성 대조 근거로만 사용
 - 운영 데이터·외부 연동: 연결하지 않음
@@ -51,6 +51,7 @@
 - S09 구인·스크림, S10 미디어, S11 징계, S12 Riot, S13 운영의 선행 순수 정책 코어
 - S09 Kakao HMAC·nonce·room/sender·멱등 receipt·감사/outbox를 포함한 application/security 코어
 - 공통 비공개 자산의 목적별 OWNER/ADMIN/SUPER 권한, MIME·용량·해상도·SHA-256 검증과 staged/delete saga
+- S11 본인 세션·관리자 TOTP transaction 재확인, READY 비공개 증거 결합, 멱등 receipt·감사/outbox application/security 코어
 - 팀 밸런스 소유 초안 목록 DB/API/UI와 bounded pagination
 - `/start`, `/help/riot`, `/install`의 역할·운영 잠금·설치 가능/불가 상태 화면
 - 홈의 활성 플레이어·활성 시즌·게시 경기 집계와 실제 구현 상태 내비게이션 반영
