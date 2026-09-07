@@ -66,7 +66,32 @@ test("private storage mode is one fail-closed production policy", () => {
   assert.equal(resolveRuntimePrivateStorageMode({ NODE_ENV: "production", V2_FAKE_PRIVATE_ASSETS: "1", BLOB_READ_WRITE_TOKEN: SDK_AUTH_FIXTURE }), PRIVATE_BLOB_STORAGE_PROVIDER);
   assert.equal(resolveRuntimePrivateStorageMode({ NODE_ENV: "development", V2_FAKE_PRIVATE_ASSETS: "1", VERCEL: "1", BLOB_READ_WRITE_TOKEN: SDK_AUTH_FIXTURE }), PRIVATE_BLOB_STORAGE_PROVIDER);
   assert.equal(resolveRuntimePrivateStorageMode({ NODE_ENV: "development", V2_FAKE_PRIVATE_ASSETS: "1" }), "FAKE_LOCAL");
+  const isolatedQa = {
+    NODE_ENV: "production",
+    V2_FAKE_PRIVATE_ASSETS: "1",
+    V2_BROWSER_QA_MODE: "true",
+    V2_DB_TEST_MODE: "true",
+    DATABASE_URL: "postgres://qa@127.0.0.1:5432/klol_v2_test_capture",
+    V2_PUBLIC_ORIGIN: "http://127.0.0.1:3210",
+  } as const;
+  assert.equal(resolveRuntimePrivateStorageMode(isolatedQa), "FAKE_LOCAL");
+  assert.equal(resolveRuntimePrivateStorageMode({ ...isolatedQa, DATABASE_URL: "postgres://qa@example.com/klol_v2_test_capture" }), "UNAVAILABLE");
+  assert.equal(resolveRuntimePrivateStorageMode({ ...isolatedQa, DATABASE_URL: "postgres://qa@127.0.0.1/production" }), "UNAVAILABLE");
+  assert.equal(resolveRuntimePrivateStorageMode({ ...isolatedQa, V2_PUBLIC_ORIGIN: "https://example.com" }), "UNAVAILABLE");
+  assert.equal(resolveRuntimePrivateStorageMode({ ...isolatedQa, VERCEL: "1" }), "UNAVAILABLE");
   assert.throws(() => new VercelBlobPrivateImageStorage("short", sdkFixture().client), /TOKEN_INVALID/u);
+});
+
+test("fake private storage can preload immutable local QA bytes without sharing caller buffers", async () => {
+  const bytes = pngBytes();
+  const storage = new (await import("../src/modules/matches/infrastructure/private-image")).FakePrivateImageStorage([
+    ["qa/match/image", bytes],
+  ]);
+  bytes[0] = 0;
+  const read = await storage.read("qa/match/image", new AbortController().signal);
+  assert.equal(read?.[0], 0x89);
+  read![0] = 0;
+  assert.equal((await storage.read("qa/match/image", new AbortController().signal))?.[0], 0x89);
 });
 
 test("official SDK seam uses private deterministic collision-safe put/get/delete options", async () => {

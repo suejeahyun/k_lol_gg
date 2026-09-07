@@ -151,6 +151,10 @@ export class FakePrivateImageStorage implements PrivateImageStorage {
   readonly storageProvider = "FAKE_LOCAL";
   readonly stored = new Map<string, Uint8Array>();
 
+  constructor(initial: readonly (readonly [string, Uint8Array])[] = []) {
+    for (const [key, bytes] of initial) this.stored.set(key, Uint8Array.from(bytes));
+  }
+
   async stageAt(input: Readonly<{ storageKey: string; bytes: Uint8Array; sha256Hex: string; signal: AbortSignal }>) {
     input.signal.throwIfAborted();
     const existing = this.stored.get(input.storageKey);

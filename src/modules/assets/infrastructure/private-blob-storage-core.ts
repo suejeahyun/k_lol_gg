@@ -41,8 +41,13 @@ const SAFE_TOKEN = /^[^\u0000-\u0020\u007f-\u009f]{32,4096}$/u;
 
 type PrivateBlobEnvironment = Readonly<{
   BLOB_READ_WRITE_TOKEN?: string;
+  DATABASE_URL?: string;
+  NEXT_PUBLIC_SITE_URL?: string;
   NODE_ENV?: string;
+  V2_BROWSER_QA_MODE?: string;
+  V2_DB_TEST_MODE?: string;
   V2_FAKE_PRIVATE_ASSETS?: string;
+  V2_PUBLIC_ORIGIN?: string;
   VERCEL?: string;
 }>;
 
@@ -51,19 +56,45 @@ export function privateBlobToken(env: PrivateBlobEnvironment) {
   return token && token === token.trim() && SAFE_TOKEN.test(token) ? token : null;
 }
 
+function isIsolatedBrowserQa(env: PrivateBlobEnvironment) {
+  if (env.NODE_ENV !== "production" || env.V2_BROWSER_QA_MODE !== "true" || env.V2_DB_TEST_MODE !== "true") {
+    return false;
+  }
+  try {
+    const database = new URL(env.DATABASE_URL ?? "");
+    const origin = new URL(env.V2_PUBLIC_ORIGIN ?? env.NEXT_PUBLIC_SITE_URL ?? "");
+    const databaseName = decodeURIComponent(database.pathname.replace(/^\//u, ""));
+    return (
+      (database.protocol === "postgres:" || database.protocol === "postgresql:") &&
+      loopbackHosts.has(database.hostname) &&
+      databaseName.startsWith("klol_v2_test_") &&
+      origin.protocol === "http:" &&
+      loopbackHosts.has(origin.hostname) &&
+      origin.username === "" &&
+      origin.password === "" &&
+      origin.pathname === "/" &&
+      origin.search === "" &&
+      origin.hash === ""
+    );
+  } catch {
+    return false;
+  }
+}
+
+const loopbackHosts = new Set(["127.0.0.1", "localhost", "::1", "[::1]"]);
+
 /**
  * This is the single fail-closed policy used by every private image runtime.
- * A fixture adapter is never selectable on Vercel or outside development.
+ * A fixture adapter is never selectable on Vercel. Outside development it is
+ * limited to the optimized browser-QA server backed by a disposable loopback
+ * database whose name carries the test prefix.
  */
 export function resolveRuntimePrivateStorageMode(
   env: PrivateBlobEnvironment = process.env,
 ): RuntimePrivateStorageMode {
-  if (
-    env.NODE_ENV === "development" &&
-    env.V2_FAKE_PRIVATE_ASSETS === "1" &&
-    env.VERCEL !== "1" &&
-    env.VERCEL !== "true"
-  ) return "FAKE_LOCAL";
+  if (env.V2_FAKE_PRIVATE_ASSETS === "1" && env.VERCEL !== "1" && env.VERCEL !== "true") {
+    if (env.NODE_ENV === "development" || isIsolatedBrowserQa(env)) return "FAKE_LOCAL";
+  }
   return privateBlobToken(env) ? PRIVATE_BLOB_STORAGE_PROVIDER : "UNAVAILABLE";
 }
 

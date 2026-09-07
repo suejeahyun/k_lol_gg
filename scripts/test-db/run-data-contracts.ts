@@ -1,5 +1,5 @@
 import { execFile as execFileCallback, spawn } from "node:child_process";
-import { randomBytes, randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import {
   access,
   mkdir,
@@ -16,6 +16,7 @@ import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 
 import { Pool } from "pg";
+import sharp from "sharp";
 
 import { generateTotpCode } from "../../src/modules/auth/infrastructure/totp";
 import { encryptTotpSecret } from "../../src/modules/auth/infrastructure/totp-envelope";
@@ -915,10 +916,39 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
      where d.id = candidate.id
     returning d.id::text as value`, [actorId]);
 
+  // Contract tests persist private-asset metadata, while their in-memory bytes
+  // intentionally disappear with the test process. Bind one real image row to
+  // deterministic, harmless bytes for the isolated optimized capture server.
+  const qaPrivateImageBytes = await sharp({
+    create: { width: 960, height: 540, channels: 4, background: { r: 226, g: 241, b: 255, alpha: 1 } },
+  }).png().toBuffer();
+  const qaPrivateImage = (await pool.query<{
+    submission_id: string;
+    image_id: string;
+    asset_id: string;
+    storage_key: string;
+  }>(`
+    select ms.id::text as submission_id, msi.id::text as image_id,
+           pa.id::text as asset_id, pa.storage_key
+      from competition.match_submission_images msi
+      join competition.match_submissions ms on ms.id = msi.submission_id
+      join assets.private_assets pa on pa.id = msi.private_asset_id
+     order by ms.updated_at desc, msi.game_number, msi.id
+     limit 1`)).rows[0];
+  if (!qaPrivateImage) throw new Error("Browser QA fixture is missing: match submission private image.");
+  await pool.query(
+    `update assets.private_assets
+        set storage_provider = 'FAKE_LOCAL', content_type = 'image/png',
+            byte_size = $2, width = 960, height = 540, sha256 = $3,
+            status = 'READY', ready_at = coalesce(ready_at, clock_timestamp())
+      where id = $1`,
+    [qaPrivateImage.asset_id, qaPrivateImageBytes.byteLength, createHash("sha256").update(qaPrivateImageBytes).digest()],
+  );
+
   const sourceIds = {
     championKey: await requiredFixture("active champion", `select key as value from catalog.champions where status = 'ACTIVE' order by updated_at desc, key limit 1`),
     publishedMatchId: await requiredFixture("published match", `select id::text as value from competition.match_series where status = 'PUBLISHED' order by updated_at desc, id limit 1`),
-    submissionId: await requiredFixture("match submission", `select id::text as value from competition.match_submissions order by updated_at desc, id limit 1`),
+    submissionId: qaPrivateImage.submission_id,
     highlightId,
     galleryId,
     eventId: await requiredFixture("event competition", `select id::text as value from competition.event_competitions order by updated_at desc, id limit 1`),
@@ -928,15 +958,8 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
     operationFormId,
     draftId,
     mmrReviewId: await requiredFixture("MMR manual adjustment", `select id::text as value from mmr.manual_adjustments order by created_at desc, id limit 1`),
-    privateAssetId: null as string | null,
+    privateAssetId: qaPrivateImage.asset_id,
   };
-  const privateAssetRelation = await pool.query<{ relation: string | null }>(`select to_regclass('assets.private_assets')::text as relation`);
-  if (privateAssetRelation.rows[0]?.relation) {
-    sourceIds.privateAssetId = await requiredFixture("private asset", `select id::text as value from assets.private_assets order by (status = 'READY') desc, created_at desc, id limit 1`);
-  }
-  if (!sourceIds.privateAssetId) {
-    throw new Error("Browser QA fixture is missing: private asset route requires assets.private_assets.");
-  }
   const captureFixtures = {
     parameters: {
       assetId: sourceIds.privateAssetId,
@@ -978,7 +1001,13 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
       SESSION_SIGNING_KEYS: sessionKeysJson,
       TOTP_ENCRYPTION_KEYS: totpKeysJson,
       V2_AUTH_RATE_LIMIT_PEPPER: rateLimitPepper,
-      V2_FAKE_PRIVATE_ASSETS: "",
+      V2_DB_TEST_MODE: "true",
+      V2_BROWSER_QA_MODE: "true",
+      V2_FAKE_PRIVATE_ASSETS: "1",
+      V2_BROWSER_QA_PRIVATE_IMAGE_FIXTURE: JSON.stringify({
+        storageKey: qaPrivateImage.storage_key,
+        bytesBase64url: qaPrivateImageBytes.toString("base64url"),
+      }),
     },
     stdio: ["ignore", "pipe", "pipe"],
     windowsHide: true,
