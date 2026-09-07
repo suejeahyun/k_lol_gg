@@ -5,6 +5,8 @@ import { prepareMatchJsonMutation, requireMatchApiSession } from "@/modules/matc
 import { parseKakaoImageSessionBody, parseKakaoImageSessionRevokeBody } from "@/modules/recruiting/kakao-assistant/domain";
 import { kakaoImageSessionResponse, kakaoOwnerImageSessionErrorResponse } from "@/modules/recruiting/kakao-assistant/http";
 import { getRuntimeKakaoImageReceive } from "@/modules/recruiting/kakao-assistant/runtime";
+import { isRuntimeKakaoFeatureEnabled } from "@/modules/recruiting/kakao-admin/runtime";
+import { requireSiteFeature } from "@/modules/operations/infrastructure/site-feature-access";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -13,6 +15,11 @@ type Context = { params: Promise<{ code: string }> };
 async function mutate(request: Request, context: Context, action: "CREATE" | "REVOKE") {
   const auth = await requireMatchApiSession("ACCOUNT");
   if (!auth.ok) return auth.response;
+  const featureFailure = await requireSiteFeature(request, "matchSubmissions");
+  if (featureFailure) return featureFailure;
+  if (action === "CREATE" && !await isRuntimeKakaoFeatureEnabled("imageReceiveEnabled")) {
+    return kakaoOwnerImageSessionErrorResponse(new Error("KAKAO_IMAGE_RECEIVE_DISABLED"));
+  }
   const { code } = await context.params;
   const scope = `me:match-submissions:${code}:kakao-session:${action.toLowerCase()}`;
   const prepared = await prepareMatchJsonMutation(request, scope, auth.session, "ACCOUNT", 2_048);

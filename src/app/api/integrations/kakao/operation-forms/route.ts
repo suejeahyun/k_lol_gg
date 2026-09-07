@@ -19,6 +19,7 @@ import {
   problemForIdempotencyKeyError, problemForJsonBodyError, problemResponse,
   readIdempotencyKey, readJsonBody, readValidatedTraceId,
 } from "@/platform/http";
+import { isRuntimeKakaoFeatureEnabled } from "@/modules/recruiting/kakao-admin/runtime";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -49,6 +50,7 @@ export async function POST(request: Request) {
     botSenderId: process.env.KAKAO_WEBHOOK_BOT_SENDER_ID ?? "", nonceAlreadyUsed: false,
   });
   if (!verification.ok) return operationFormWebhookForbiddenResponse(traceId);
+  if (!await isRuntimeKakaoFeatureEnabled("recruitingEnabled")) return operationFormUnavailableResponse(traceId);
   const parsedJson = await readJsonBody(new Request(request.url, {
     method: "POST", headers: { "content-type": request.headers.get("content-type") ?? "" }, body: rawBody,
   }), { maximumBytes: MAXIMUM_KAKAO_BODY_BYTES });

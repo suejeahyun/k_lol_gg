@@ -1,6 +1,6 @@
 # 0007 — S03 시즌 수명주기와 참가 신청 aggregate
 
-상태: 로컬 구현·격리 검증 완료, 운영 이관과 Kakao ingest는 미완료
+상태: SITE와 Kakao ingest 로컬 구현·격리 검증 완료, 운영 이관은 미완료
 
 ## 배경
 
@@ -73,10 +73,11 @@ transaction guard를 S02/S03에 retrofit한 뒤 최종 GO를 판정해야 한다
 
 ## 명시적 미완료
 
-- S09: 실제 Kakao webhook/snapshot ingest, 미매칭 pending, 참가자 매칭, 예비·다회차 명단 adapter
 - S01: 제한 세션의 실제 계정 수명주기 연결과 위 공통 transaction guard 통합
 - S13: mutation이 전혀 없는 환경의 receipt 주기 cleanup과 보존량 모니터링
 - 운영 V1 legacy ID/source backfill, count/hash/invariant 대조와 복구 리허설
 
-따라서 S03은 DB source/dedupe 기반과 SITE 흐름의 로컬 후보이지 Kakao 전체 동등성이나 운영 준비
-완료를 뜻하지 않는다.
+S09는 signed raw-body HMAC, timestamp·nonce·room·sender 검증 뒤 구조화된 snapshot을 수신한다.
+Riot ID 또는 정규화된 이름으로 정확히 한 명만 일치할 때 참가 신청에 반영하고, 예비·미일치·동명이인은
+검토 가능한 pending 행으로 보존한다. 같은 날짜·회차의 이전 Kakao snapshot에서 빠진 항목은 물리 삭제하지
+않고 `CANCELLED`로 수렴한다. 이 로컬 계약은 운영 자격 증명 설정이나 V1 데이터 이관 완료를 뜻하지 않는다.

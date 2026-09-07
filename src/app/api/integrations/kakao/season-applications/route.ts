@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { parseSeasonSnapshotBody } from "@/modules/recruiting/kakao-assistant/domain";
 import { kakaoAssistantErrorResponse, kakaoAssistantResponse, prepareKakaoSignedJson } from "@/modules/recruiting/kakao-assistant/http";
 import { getRuntimeKakaoAssistant } from "@/modules/recruiting/kakao-assistant/runtime";
+import { isRuntimeKakaoFeatureEnabled } from "@/modules/recruiting/kakao-admin/runtime";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -12,6 +13,7 @@ export async function POST(request: Request) {
   if (!prepared.ok) return prepared.response;
   try {
     const command = parseSeasonSnapshotBody(prepared.body);
+    if (!await isRuntimeKakaoFeatureEnabled("seasonApplicationsEnabled")) return kakaoAssistantErrorResponse(new Error("disabled"), prepared.traceId);
     const service = getRuntimeKakaoAssistant();
     if (!service) return kakaoAssistantErrorResponse(new Error("unavailable"), prepared.traceId);
     return kakaoAssistantResponse(await service.syncSeasonSnapshot({

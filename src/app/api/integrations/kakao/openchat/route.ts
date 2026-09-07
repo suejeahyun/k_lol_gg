@@ -6,6 +6,7 @@ import {
   prepareKakaoSignedJson,
 } from "@/modules/recruiting/kakao-assistant/http";
 import { getRuntimeKakaoAssistant } from "@/modules/recruiting/kakao-assistant/runtime";
+import { isRuntimeKakaoFeatureEnabled } from "@/modules/recruiting/kakao-admin/runtime";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -15,6 +16,9 @@ export async function POST(request: Request) {
   if (!prepared.ok) return prepared.response;
   try {
     const command = parseOpenChatBody(prepared.body);
+    const feature = command.command === "STATUS" ? "recruitingEnabled" : "playerSearchEnabled";
+    const operationMessage = command.command === "STATUS" ? command.command : `${command.command} ${command.query}`;
+    if (!await isRuntimeKakaoFeatureEnabled(feature, operationMessage)) return kakaoAssistantUnavailableResponse(prepared.traceId);
     const service = getRuntimeKakaoAssistant();
     if (!service) return kakaoAssistantUnavailableResponse(prepared.traceId);
     const common = {

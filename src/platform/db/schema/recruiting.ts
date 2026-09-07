@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
   bigint,
+  boolean,
   check,
   date,
   index,
@@ -185,6 +186,25 @@ export const kakaoInboundImages = recruitingSchema.table("kakao_inbound_images",
     OR (${table.status} = 'DELETE_PENDING' AND ${table.deleteRequestedAt} IS NOT NULL)`),
 ]);
 
+export const kakaoOperationSettings = recruitingSchema.table("kakao_operation_settings", {
+  id: integer("id").primaryKey().default(1),
+  revision: bigint("revision", { mode: "number" }).default(0).notNull(),
+  globalEnabled: boolean("global_enabled").default(true).notNull(),
+  maintenanceMode: boolean("maintenance_mode").default(false).notNull(),
+  playerSearchEnabled: boolean("player_search_enabled").default(true).notNull(),
+  seasonApplicationsEnabled: boolean("season_applications_enabled").default(true).notNull(),
+  imageReceiveEnabled: boolean("image_receive_enabled").default(true).notNull(),
+  recruitingEnabled: boolean("recruiting_enabled").default(true).notNull(),
+  scheduledNoticeEnabled: boolean("scheduled_notice_enabled").default(true).notNull(),
+  maxMessageLength: integer("max_message_length").default(4000).notNull(),
+  updatedByUserAccountId: uuid("updated_by_user_account_id").references(() => userAccounts.id, { onDelete: "restrict" }),
+  updatedAt: timestamptz("updated_at").defaultNow().notNull(),
+}, (table) => [
+  check("kakao_operation_settings_singleton", sql`${table.id} = 1`),
+  check("kakao_operation_settings_revision_nonnegative", sql`${table.revision} >= 0`),
+  check("kakao_operation_settings_max_message", sql`${table.maxMessageLength} BETWEEN 100 AND 10000`),
+]);
+
 export const operationForms = recruitingSchema.table("operation_forms", {
   id: uuid("id").primaryKey(),
   revision: bigint("revision", { mode: "number" }).default(0).notNull(),
@@ -229,7 +249,7 @@ export const recruitingOutbox = recruitingSchema.table("outbox", {
   uniqueIndex("recruiting_outbox_request_uidx").on(table.requestId),
   uniqueIndex("recruiting_outbox_dedupe_uidx").on(table.dedupeKey),
   index("recruiting_outbox_pending_idx").on(table.createdAt, table.id).where(sql`${table.status} = 'PENDING'`),
-  check("recruiting_outbox_aggregate_type", sql`${table.aggregateType} IN ('RECRUIT_PARTY', 'SCRIM_RECRUIT', 'OPERATION_FORM', 'KAKAO_IMAGE_SESSION')`),
+  check("recruiting_outbox_aggregate_type", sql`${table.aggregateType} IN ('RECRUIT_PARTY', 'SCRIM_RECRUIT', 'OPERATION_FORM', 'KAKAO_IMAGE_SESSION', 'KAKAO_SETTINGS')`),
   check("recruiting_outbox_revision_nonnegative", sql`${table.aggregateRevision} >= 0`),
   check("recruiting_outbox_payload_object", sql`jsonb_typeof(${table.payloadJson}) = 'object'`),
   check("recruiting_outbox_delivery_consistency", sql`(${table.status} = 'PENDING' AND ${table.deliveredAt} IS NULL) OR (${table.status} = 'DELIVERED' AND ${table.deliveredAt} IS NOT NULL)`),

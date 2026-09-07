@@ -5,6 +5,7 @@ import { prepareDisciplineJsonMutation, requireDisciplineApiSession } from "@/mo
 import { parseKakaoImageSessionBody, parseKakaoImageSessionRevokeBody } from "@/modules/recruiting/kakao-assistant/domain";
 import { kakaoImageSessionResponse, kakaoOwnerImageSessionErrorResponse } from "@/modules/recruiting/kakao-assistant/http";
 import { getRuntimeKakaoImageReceive } from "@/modules/recruiting/kakao-assistant/runtime";
+import { isRuntimeKakaoFeatureEnabled } from "@/modules/recruiting/kakao-admin/runtime";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -13,6 +14,9 @@ type Context = { params: Promise<{ taskId: string }> };
 async function mutate(request: Request, context: Context, action: "CREATE" | "REVOKE") {
   const auth = await requireDisciplineApiSession("USER");
   if (!auth.ok) return auth.response;
+  if (action === "CREATE" && !await isRuntimeKakaoFeatureEnabled("imageReceiveEnabled")) {
+    return kakaoOwnerImageSessionErrorResponse(new Error("KAKAO_IMAGE_RECEIVE_DISABLED"));
+  }
   const { taskId } = await context.params;
   const scope = `me:discipline:tasks:${taskId}:kakao-session:${action.toLowerCase()}`;
   const prepared = await prepareDisciplineJsonMutation(request, 2_048);

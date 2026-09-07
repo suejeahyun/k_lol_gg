@@ -9,6 +9,7 @@ import {
   operationFormUnavailableResponse,
 } from "@/modules/recruiting/operation-forms/http";
 import { getRuntimeOperationForms } from "@/modules/recruiting/operation-forms/runtime";
+import { isRuntimeKakaoFeatureEnabled } from "@/modules/recruiting/kakao-admin/runtime";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -18,6 +19,7 @@ export async function POST(request: Request) {
   if (!prepared.ok) return prepared.response;
   try {
     const routed = parseManagedOperationFormBody(prepared.body);
+    if (!await isRuntimeKakaoFeatureEnabled("recruitingEnabled")) return operationFormUnavailableResponse(prepared.traceId);
     if (!isOperationFormType(routed.formType)) {
       return operationFormErrorResponse(new OperationFormError("INVALID_FORM_TYPE"), prepared.traceId);
     }

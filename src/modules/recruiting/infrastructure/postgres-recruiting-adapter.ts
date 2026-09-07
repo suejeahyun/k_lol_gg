@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 
-import { and, count, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, count, desc, eq, gt, inArray, isNull, sql } from "drizzle-orm";
 
 import {
   ADMIN_MUTATION_SESSION_POLICY,
@@ -10,11 +10,13 @@ import {
 import { auditEvents } from "@/platform/db/schema/audit";
 import {
   recruitParties,
+  kakaoImageSessions,
   recruitingCommandReceipts,
   recruitingNonceBindings,
   recruitingOutbox,
   scrimRecruits,
 } from "@/platform/db/schema/recruiting";
+import { seasonKakaoPendingApplications } from "@/platform/db/schema/seasons";
 import type { V2Database } from "@/platform/db/database";
 import type { V2Transaction } from "@/platform/db/transaction";
 import { withTransaction } from "@/platform/db/transaction";
@@ -398,10 +400,16 @@ export class PostgresRecruitingAdapter implements
   }
 
   async getAdminStatus(): Promise<AdminRecruitingStatusDto> {
-    const [partyCountRows, scrimCountRows, outboxCountRows, partyRows, scrimRows] = await Promise.all([
+    const now = new Date();
+    const [partyCountRows, scrimCountRows, outboxCountRows, incompleteReceiptRows, activeNonceRows, activeImageRows, unresolvedSeasonRows, recentReceiptRows, partyRows, scrimRows] = await Promise.all([
       this.database.select({ value: count() }).from(recruitParties).where(eq(recruitParties.status, "IN_PROGRESS")),
       this.database.select({ value: count() }).from(scrimRecruits).where(inArray(scrimRecruits.status, ["RECRUITING", "MATCHED", "CONFIRMED"])),
       this.database.select({ value: count() }).from(recruitingOutbox).where(eq(recruitingOutbox.status, "PENDING")),
+      this.database.select({ value: count() }).from(recruitingCommandReceipts).where(isNull(recruitingCommandReceipts.responseStatus)),
+      this.database.select({ value: count() }).from(recruitingNonceBindings).where(gt(recruitingNonceBindings.expiresAt, now)),
+      this.database.select({ value: count() }).from(kakaoImageSessions).where(and(eq(kakaoImageSessions.status, "ACTIVE"), gt(kakaoImageSessions.expiresAt, now))),
+      this.database.select({ value: count() }).from(seasonKakaoPendingApplications).where(eq(seasonKakaoPendingApplications.status, "ACTIVE")),
+      this.database.select({ scope: recruitingCommandReceipts.scope, responseStatus: recruitingCommandReceipts.responseStatus, createdAt: recruitingCommandReceipts.createdAt, expiresAt: recruitingCommandReceipts.expiresAt }).from(recruitingCommandReceipts).orderBy(desc(recruitingCommandReceipts.createdAt)).limit(30),
       this.database.select().from(recruitParties).orderBy(desc(recruitParties.updatedAt), desc(recruitParties.id)).limit(30),
       this.database.select().from(scrimRecruits).orderBy(desc(scrimRecruits.updatedAt), desc(scrimRecruits.id)).limit(30),
     ]);
@@ -409,6 +417,11 @@ export class PostgresRecruitingAdapter implements
       openPartyCount: partyCountRows[0]?.value ?? 0,
       openScrimCount: scrimCountRows[0]?.value ?? 0,
       pendingOutboxCount: outboxCountRows[0]?.value ?? 0,
+      incompleteReceiptCount: incompleteReceiptRows[0]?.value ?? 0,
+      activeNonceCount: activeNonceRows[0]?.value ?? 0,
+      activeImageSessionCount: activeImageRows[0]?.value ?? 0,
+      unresolvedSeasonApplicationCount: unresolvedSeasonRows[0]?.value ?? 0,
+      recentRequests: recentReceiptRows.map((row) => ({ scope: row.scope, completed: row.responseStatus !== null, responseStatus: row.responseStatus, createdAt: row.createdAt.toISOString(), expiresAt: row.expiresAt.toISOString() })),
       recentParties: partyRows.map((row) => ({
         id: row.id, revision: row.revision, recruitDate: row.recruitDate, recruitNumber: row.recruitNumber,
         status: row.status, title: row.title, memberCount: partyFromRow(row).members.filter((member) => !member.substitute).length,

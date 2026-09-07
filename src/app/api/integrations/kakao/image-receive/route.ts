@@ -4,6 +4,7 @@ import { parseKakaoImageReceiveBody } from "@/modules/recruiting/kakao-assistant
 import { kakaoAssistantErrorResponse, kakaoAssistantResponse, prepareKakaoSignedJson } from "@/modules/recruiting/kakao-assistant/http";
 import { getRuntimeKakaoImageReceive } from "@/modules/recruiting/kakao-assistant/runtime";
 import { MAXIMUM_KAKAO_IMAGE_BODY_BYTES } from "@/modules/recruiting/infrastructure/kakao-http-request";
+import { isRuntimeKakaoFeatureEnabled } from "@/modules/recruiting/kakao-admin/runtime";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -13,6 +14,7 @@ export async function POST(request: Request) {
   if (!prepared.ok) return prepared.response;
   try {
     const command = parseKakaoImageReceiveBody(prepared.body);
+    if (!await isRuntimeKakaoFeatureEnabled("imageReceiveEnabled")) return kakaoAssistantErrorResponse(new Error("disabled"), prepared.traceId);
     const service = getRuntimeKakaoImageReceive();
     if (!service) return kakaoAssistantErrorResponse(new Error("unavailable"), prepared.traceId);
     return kakaoAssistantResponse(await service.receive({

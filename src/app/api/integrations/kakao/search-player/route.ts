@@ -9,6 +9,7 @@ import {
   prepareKakaoSignedJson,
 } from "@/modules/recruiting/kakao-assistant/http";
 import { getRuntimeKakaoAssistant } from "@/modules/recruiting/kakao-assistant/runtime";
+import { isRuntimeKakaoFeatureEnabled } from "@/modules/recruiting/kakao-admin/runtime";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -18,6 +19,7 @@ export async function POST(request: Request) {
   if (!prepared.ok) return prepared.response;
   try {
     const body = parsePlayerSearchBody(prepared.body);
+    if (!await isRuntimeKakaoFeatureEnabled("playerSearchEnabled", body.query)) return kakaoAssistantUnavailableResponse(prepared.traceId);
     const service = getRuntimeKakaoAssistant();
     if (!service) return kakaoAssistantUnavailableResponse(prepared.traceId);
     return kakaoAssistantResponse(await service.searchPlayers({

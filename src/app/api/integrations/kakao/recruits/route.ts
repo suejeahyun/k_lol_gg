@@ -21,6 +21,7 @@ import {
   readJsonBody,
   readValidatedTraceId,
 } from "@/platform/http";
+import { isRuntimeKakaoFeatureEnabled } from "@/modules/recruiting/kakao-admin/runtime";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -106,6 +107,7 @@ export async function POST(request: Request) {
     nonceAlreadyUsed: false,
   });
   if (!verification.ok) return recruitingWebhookForbiddenResponse(traceId);
+  if (!await isRuntimeKakaoFeatureEnabled("recruitingEnabled")) return recruitingUnavailableResponse(traceId);
 
   const parsedJson = await readJsonBody(new Request(request.url, {
     method: "POST",

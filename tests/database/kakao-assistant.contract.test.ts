@@ -8,6 +8,8 @@ import sharp from "sharp";
 import { KakaoAssistantError } from "../../src/modules/recruiting/kakao-assistant/domain";
 import { PostgresKakaoAssistant } from "../../src/modules/recruiting/kakao-assistant/postgres-kakao-assistant";
 import { PostgresKakaoImageReceive } from "../../src/modules/recruiting/kakao-assistant/postgres-kakao-image-receive";
+import { KakaoAdminError, PostgresKakaoAdmin } from "../../src/modules/recruiting/kakao-admin/postgres-kakao-admin";
+import { PostgresRecruitingAdapter } from "../../src/modules/recruiting/infrastructure/postgres-recruiting-adapter";
 import { FakePrivateImageStorage } from "../../src/modules/matches/infrastructure/private-image";
 import type { VerifiedKakaoWebhookIntent } from "../../src/modules/recruiting/infrastructure/kakao-signature";
 import { createDatabaseHandle } from "../../src/platform/db/database";
@@ -15,7 +17,7 @@ import { applyMigrations } from "../../src/platform/db/migrate";
 import { players } from "../../src/platform/db/schema/registry";
 import { authSessions, userAccounts } from "../../src/platform/db/schema/auth";
 import { matchSubmissionImages, matchSubmissions, privateAssets } from "../../src/platform/db/schema/matches";
-import { kakaoImageSessions, kakaoInboundImages, recruitParties, recruitingCommandReceipts, recruitingNonceBindings } from "../../src/platform/db/schema/recruiting";
+import { kakaoImageSessions, kakaoInboundImages, kakaoOperationSettings, recruitParties, recruitingCommandReceipts, recruitingNonceBindings, recruitingOutbox } from "../../src/platform/db/schema/recruiting";
 import { seasonApplications, seasonKakaoPendingApplications, seasons } from "../../src/platform/db/schema/seasons";
 import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
 
@@ -275,5 +277,40 @@ test("owner-created Kakao image sessions bind sender, finalize private assets, r
       scope: `me:match-submissions:${publicCode}:kakao-session:revoke`, sessionId: created.body.sessionId, now: new Date(now.getTime() + 1_000),
     });
     assert.equal(revoked.body.status, "CANCELLED");
+  } finally { await pool.end(); }
+});
+
+test("Kakao admin settings and health repair require SUPER TOTP and persist receipts, audit, and outbox", async () => {
+  const connectionString = process.env.TEST_DATABASE_URL;
+  assert.ok(connectionString);
+  assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
+  const { database, pool } = createDatabaseHandle(connectionString, { max: 3 });
+  const superId = randomUUID(); const sessionId = randomUUID(); const now = new Date();
+  const actor = { session: { userAccountId: superId, sessionId, role: "SUPER_ADMIN" as const, authVersion: 0 }, role: "SUPER_ADMIN" as const, accountStatus: "APPROVED" as const };
+  try {
+    await applyMigrations(database);
+    await database.insert(userAccounts).values({ id: superId, loginId: `kakao-super-${superId}`, loginIdNormalized: `kakao-super-${superId}`, role: "SUPER_ADMIN", status: "APPROVED" });
+    await database.insert(authSessions).values({ id: sessionId, tokenHash: randomBytes(32), userAccountId: superId, authVersion: 0, role: "SUPER_ADMIN", purpose: "ADMIN", totpVerifiedAt: now, issuedAt: now, expiresAt: new Date(now.getTime() + 3_600_000) });
+    const admin = new PostgresKakaoAdmin(database);
+    const initial = await admin.getSettings();
+    assert.equal(initial.revision, 0);
+    const metadata = { requestId: randomUUID(), requestKey: `kakao-settings-${superId}`, requestHashHex: digest("settings-off"), expectedRevision: 0 };
+    const updated = await admin.updateSettings({ actor, metadata, patch: { playerSearchEnabled: false, maxMessageLength: 2500 } });
+    assert.equal(updated.body.settings.playerSearchEnabled, false);
+    assert.equal(updated.revision, 1);
+    assert.equal((await admin.updateSettings({ actor, metadata, patch: { playerSearchEnabled: false, maxMessageLength: 2500 } })).replayed, true);
+    assert.equal(await admin.isFeatureEnabled("playerSearchEnabled"), false);
+    await assert.rejects(admin.updateSettings({ actor, metadata: { ...metadata, requestId: randomUUID(), requestKey: `stale-${superId}`, expectedRevision: 0 }, patch: { playerSearchEnabled: true } }), (error) => error instanceof KakaoAdminError && error.code === "PRECONDITION_FAILED");
+
+    const expiredSessionId = randomUUID();
+    await database.insert(kakaoImageSessions).values({ id: expiredSessionId, createdByUserAccountId: superId, targetType: "MATCH_SUBMISSION", targetId: randomUUID(), roomIdHash: randomBytes(32), senderIdHash: randomBytes(32), expectedImageCount: 2, status: "ACTIVE", expiresAt: new Date(now.getTime() - 1000), createdAt: now, updatedAt: now });
+    const repaired = await admin.repairExpiredSessions({ actor, metadata: { requestId: randomUUID(), requestKey: `kakao-repair-${superId}`, requestHashHex: digest("repair-expired"), expectedRevision: 1 } });
+    assert.equal(repaired.body.expiredSessionCount, 1);
+    assert.equal((await database.select().from(kakaoImageSessions).where(eq(kakaoImageSessions.id, expiredSessionId)))[0]?.status, "EXPIRED");
+    assert.ok((await database.select().from(recruitingOutbox).where(eq(recruitingOutbox.aggregateType, "KAKAO_SETTINGS"))).length >= 2);
+    assert.equal((await database.select().from(kakaoOperationSettings).where(eq(kakaoOperationSettings.id, 1)))[0]?.revision, 1);
+    const status = await new PostgresRecruitingAdapter(database).getAdminStatus();
+    assert.equal(status.incompleteReceiptCount, 0);
+    assert.ok(status.recentRequests.some((item) => item.scope === "admin:kakao:settings:update"));
   } finally { await pool.end(); }
 });

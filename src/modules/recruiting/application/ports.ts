@@ -29,6 +29,17 @@ export type AdminRecruitingStatusDto = Readonly<{
   openPartyCount: number;
   openScrimCount: number;
   pendingOutboxCount: number;
+  incompleteReceiptCount: number;
+  activeNonceCount: number;
+  activeImageSessionCount: number;
+  unresolvedSeasonApplicationCount: number;
+  recentRequests: readonly Readonly<{
+    scope: string;
+    completed: boolean;
+    responseStatus: number | null;
+    createdAt: string;
+    expiresAt: string;
+  }>[];
   recentParties: readonly Readonly<{
     id: string;
     revision: number;
