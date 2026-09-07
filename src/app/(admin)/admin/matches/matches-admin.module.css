@@ -78,6 +78,30 @@
 .actions button[data-danger="true"] { color: #fff; border-color: var(--destructive); background: var(--destructive); }
 .message { padding: 12px 14px; border-radius: 13px; color: #315e78; background: var(--sky); }
 .message[data-error="true"] { color: #8d3c53; background: #ffe8ee; }
+.reviewPanel { display: grid; gap: 16px; padding: 22px; border: 1px solid var(--border); border-radius: 22px; background: #fff; }
+.reviewHeader { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+.reviewHeader span { color: var(--text-accent); font-size: 10px; font-weight: 900; letter-spacing: .1em; }
+.reviewHeader h2 { margin: 4px 0; font-family: var(--font-heading); font-size: 25px; }
+.reviewHeader p { margin: 0; color: var(--text-muted); font-size: 13px; line-height: 1.6; }
+.reviewHeader > strong { flex: 0 0 auto; padding: 8px 12px; border-radius: 999px; color: #376b5c; background: #eaf9f2; font-size: 12px; }
+.reviewHeader > strong[data-grade="REVIEW"] { color: #8a6424; background: #fff6dc; }
+.reviewHeader > strong[data-grade="BLOCK"] { color: #8d3c53; background: #ffe8ee; }
+.reviewSummary { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.reviewSummary > span { padding: 7px 10px; border-radius: 999px; color: #53627c; background: var(--muted); font-size: 12px; font-weight: 850; }
+.reviewSummary form { margin-left: auto; }
+.reviewSummary button { min-height: 40px; padding: 0 13px; border: 1px solid var(--border); border-radius: 11px; color: var(--text-accent); background: #fff; font-weight: 850; cursor: pointer; }
+.reviewFindings { display: grid; gap: 9px; }
+.reviewFindings article { display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 12px; padding: 14px; border: 1px solid var(--border); border-radius: 15px; background: #fbfdff; }
+.reviewFindings article[data-severity="WARNING"] { border-color: #ecd492; background: #fffaf0; }
+.reviewFindings article[data-severity="ERROR"] { border-color: #efbdca; background: #fff6f8; }
+.reviewFindings svg { width: 20px; color: #4f8a75; }
+.reviewFindings article[data-severity="INFO"] svg { color: #5b78a9; }
+.reviewFindings article[data-severity="WARNING"] svg { color: #aa7c28; }
+.reviewFindings article[data-severity="ERROR"] svg { color: #af4866; }
+.reviewFindings h3,.reviewFindings p { margin: 0; }
+.reviewFindings h3 { font-size: 14px; }
+.reviewFindings p { margin-top: 3px; color: var(--text-muted); font-size: 12px; line-height: 1.55; }
+.reviewFindings article > span { color: var(--text-muted); font-size: 11px; font-weight: 850; }
 .images { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; }
 .image { overflow: hidden; border: 1px solid var(--border); border-radius: 17px; background: var(--muted); }
 .image img { display: block; width: 100%; aspect-ratio: 16/10; object-fit: contain; background: #162037; }
@@ -93,4 +117,4 @@
 .dialog textarea { min-height: 110px; padding: 10px 12px; border: 1px solid var(--input); border-radius: 12px; resize: vertical; }
 @media (max-width: 900px) { .gameEditor { overflow-x: auto; } }
 @media (max-width: 900px) { .filters { grid-template-columns: 1fr 1fr; } .filters label:first-of-type { grid-column: 1/-1; } }
-@media (max-width: 700px) { .page { padding-inline: 14px; } .hero { flex-direction: column; } .hero a { align-self: start; } .filters,.form,.images { grid-template-columns: 1fr; } .filters label:first-of-type { grid-column: auto; } .wide { grid-column: auto; } .inlineFields { grid-template-columns: 1fr; } .gameEditorHeader { align-items: start; flex-direction: column; } .compactControls { width: 100%; flex-wrap: wrap; } }
+@media (max-width: 700px) { .page { padding-inline: 14px; } .hero,.reviewHeader { flex-direction: column; } .hero a { align-self: start; } .filters,.form,.images { grid-template-columns: 1fr; } .filters label:first-of-type { grid-column: auto; } .wide { grid-column: auto; } .inlineFields { grid-template-columns: 1fr; } .gameEditorHeader { align-items: start; flex-direction: column; } .compactControls { width: 100%; flex-wrap: wrap; } .reviewSummary form,.reviewSummary button { width: 100%; margin-left: 0; } .reviewFindings article { grid-template-columns: auto minmax(0,1fr); } .reviewFindings article > span { grid-column: 2; } }
