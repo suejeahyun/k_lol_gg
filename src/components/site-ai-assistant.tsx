@@ -57,7 +57,7 @@ export function SiteAiAssistant() {
     if (busy || !revision) return;
     const data = new FormData(event.currentTarget);
     const prompt = String(data.get("prompt") ?? "").normalize("NFKC").trim();
-    if (!prompt || prompt.length > 2_000) return;
+    if (!prompt || prompt.length > 1_800) return;
     setMessages((current) => [...current, { role: "USER", text: prompt }]);
     setBusy(true);
     event.currentTarget.reset();
@@ -101,7 +101,7 @@ export function SiteAiAssistant() {
           </div>
           <form onSubmit={submit}>
             <label htmlFor="site-ai-prompt">질문</label>
-            <textarea ref={inputRef} id="site-ai-prompt" name="prompt" maxLength={2_000} rows={2} required placeholder="예: 내 경기 접수는 어디에서 확인해?" />
+            <textarea ref={inputRef} id="site-ai-prompt" name="prompt" maxLength={1_800} rows={2} required placeholder="예: 내 경기 접수는 어디에서 확인해?" />
             <button type="submit" disabled={busy || !revision} aria-label="질문 보내기"><Send aria-hidden="true" /></button>
           </form>
           <small className={styles.privacy}>입력 내용은 답변 생성 외 용도로 저장하지 않으며, 정확한 운영 상태는 해당 화면에서 확인해 주세요.</small>
