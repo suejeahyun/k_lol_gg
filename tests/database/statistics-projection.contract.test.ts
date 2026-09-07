@@ -8,6 +8,7 @@ import {
   affectedSeasonIdsForMatchChanged,
   PostgresStatisticsProjectionRepository,
 } from "../../src/modules/statistics";
+import { PostgresStatisticsQueryRepository } from "../../src/modules/statistics/infrastructure/postgres-statistics-query-repository";
 import { createDatabaseHandle } from "../../src/platform/db/database";
 import { applyMigrations } from "../../src/platform/db/migrate";
 import {
@@ -38,6 +39,7 @@ test("S05 rebuilds PUBLISHED match statistics atomically and receipts make repla
 
   const { database, pool } = createDatabaseHandle(connectionString, { max: 4 });
   const repository = new PostgresStatisticsProjectionRepository(database);
+  const queryRepository = new PostgresStatisticsQueryRepository(database);
   const seasonId = randomUUID();
   const movedSeasonId = randomUUID();
   const constraintSeasonId = randomUUID();
@@ -167,6 +169,13 @@ test("S05 rebuilds PUBLISHED match statistics atomically and receipts make repla
       status: "DELIVERED", lockedAt: null, deliveredAt: now, lastErrorCode: null, updatedAt: now,
     });
     const eventId = await enqueue("PUBLISHED", 1, null, seasonId, now);
+    const pendingAdminStatus = await queryRepository.getAdminStatus(null);
+    assert.equal(pendingAdminStatus.pendingEventCount, 1);
+    assert.equal(pendingAdminStatus.failedEventCount, 0);
+    assert.equal(
+      pendingAdminStatus.seasons.find((item) => item.season.id === seasonId)?.pendingEventCount,
+      1,
+    );
     const claimed = await repository.claimNextMatchChanged(now);
     assert.ok(claimed);
     assert.equal(claimed.eventId, eventId);

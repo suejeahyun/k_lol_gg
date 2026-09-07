@@ -322,12 +322,12 @@ export class PostgresStatisticsQueryRepository implements StatisticsQueryReposit
           WITH affected AS (
             SELECT id, old_season_id AS season_id, status, last_error_code, updated_at
               FROM competition.match_recalculation_outbox
-             WHERE old_season_id = ANY(${seasonIds}::uuid[])
+             WHERE old_season_id IN (${sql.join(seasonIds.map((id) => sql`${id}`), sql`, `)})
                AND status IN ('PENDING', 'PROCESSING', 'FAILED')
             UNION
             SELECT id, new_season_id AS season_id, status, last_error_code, updated_at
               FROM competition.match_recalculation_outbox
-             WHERE new_season_id = ANY(${seasonIds}::uuid[])
+             WHERE new_season_id IN (${sql.join(seasonIds.map((id) => sql`${id}`), sql`, `)})
                AND status IN ('PENDING', 'PROCESSING', 'FAILED')
           )
           SELECT season_id AS "seasonId",
