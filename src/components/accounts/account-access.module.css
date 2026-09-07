@@ -46,7 +46,7 @@
 .facts div { min-width: 0; border: 1px solid #e1e8f2; border-radius: .9rem; background: #f9fbfe; padding: .85rem; }
 .facts dt { color: #718097; font-size: .65rem; font-weight: 800; }
 .facts dd { margin: .3rem 0 0; color: #263a59; font-size: .78rem; font-weight: 850; overflow-wrap: anywhere; }
-.notice { margin-top: 1rem; border-left: 4px solid #7c6ac2; border-radius: .8rem; color: #55667d; background: #f5f1ff; padding: .9rem 1rem; font-size: .75rem; line-height: 1.65; }
+.formCard > .notice { margin-top: 1rem; border-left: 4px solid #7c6ac2; border-radius: .8rem; color: #405168; background: #f5f1ff; padding: .9rem 1rem; font-size: .75rem; line-height: 1.65; }
 .primaryLink { min-height: 2.75rem; display: inline-flex; align-items: center; justify-content: center; border-radius: .8rem; color: white; background: #4b72b8; padding: 0 .9rem; font-size: .75rem; font-weight: 850; text-decoration: none; }
 .skeleton { min-height: 30rem; border-radius: 1.5rem; background: linear-gradient(100deg, #edf2f8 20%, #fafcff 45%, #edf2f8 70%); background-size: 300% 100%; animation: shimmer 1.2s ease infinite; }
 @keyframes shimmer { from { background-position: 100% 0; } to { background-position: 0 0; } }

@@ -34,7 +34,7 @@ export default async function ApplicationsPage() {
   );
 
   return (
-    <main className={`page-wrap ${styles.page}`}>
+    <div className={`page-wrap ${styles.page}`}>
       <section className={styles.hero} aria-labelledby="applications-title">
         <div>
           <Badge variant="secondary"><CloudSun size={13} aria-hidden="true" /> TODAY · SEASON DAY</Badge>
@@ -153,6 +153,6 @@ export default async function ApplicationsPage() {
           </section>
         </>
       )}
-    </main>
+    </div>
   );
 }

@@ -22,10 +22,10 @@ export default async function DestructionDetailPage({ params }: { params: Promis
   if (!isDestructionUuid(rawId)) notFound();
   const tournamentId = rawId.toLocaleLowerCase("en-US");
   const runtime = getRuntimeDestruction();
-  if (!runtime) return <main className={styles.page}><section className={styles.state} role="status"><h1>멸망전 저장소를 준비하고 있어요.</h1><p>영속 저장소 연결 뒤 같은 주소에서 바로 이용할 수 있습니다.</p></section></main>;
+  if (!runtime) return <div className={styles.page}><section className={styles.state} role="status"><h1>멸망전 저장소를 준비하고 있어요.</h1><p>영속 저장소 연결 뒤 같은 주소에서 바로 이용할 수 있습니다.</p></section></div>;
   let destruction;
   try { destruction = await runtime.repository.getPublic(tournamentId); }
-  catch { return <main className={styles.page}><section className={styles.state} role="alert"><h1>멸망전을 불러오지 못했어요.</h1><p>잠시 후 다시 시도해 주세요.</p></section></main>; }
+  catch { return <div className={styles.page}><section className={styles.state} role="alert"><h1>멸망전을 불러오지 못했어요.</h1><p>잠시 후 다시 시도해 주세요.</p></section></div>; }
   if (!destruction) notFound();
   const session = await getCurrentSession("ACCOUNT");
   const [own, ownMvpBallots] = session?.accountStatus === "APPROVED" ? await Promise.all([
@@ -34,7 +34,7 @@ export default async function DestructionDetailPage({ params }: { params: Promis
   ]) : [null, []];
   const participantCount = destruction.teams.reduce((count, team) => count + team.rosterPlayerIds.length, 0);
 
-  return <main className={styles.page}>
+  return <div className={styles.page}>
     <Link className={styles.back} href="/competitions"><ArrowLeft aria-hidden="true" /> 대회 목록</Link>
     <header className={styles.detailHero}><div><span>DESTRUCTION · {destruction.status}</span><h1>{destruction.title}</h1><p>모집, 주장 선정, 경매, 예선과 4강 본선이 하나의 기록으로 이어집니다.</p></div><Gavel aria-hidden="true" /></header>
     <section className={styles.facts} aria-label="멸망전 요약">
@@ -49,5 +49,5 @@ export default async function DestructionDetailPage({ params }: { params: Promis
       <article><h2>본선 대진</h2>{destruction.tournamentFixtures.length ? destruction.tournamentFixtures.map((fixture) => <div className={styles.fixture} key={fixture.id}><span>{fixture.stage} · BO{fixture.bestOf}</span><strong>{fixture.teamAName} {fixture.teamAScore ?? "-"} : {fixture.teamBScore ?? "-"} {fixture.teamBName}</strong></div>) : <p>예선 완료 뒤 상위 4팀 대진이 공개돼요.</p>}</article>
       <article><h2>경기 MVP</h2>{destruction.mvpResults.length ? destruction.mvpResults.map((mvp) => <div className={styles.fixture} key={mvp.fixtureId}><span>{mvp.fixtureName}</span><strong>{mvp.finalizedPlayerName} · {mvp.selectionMethod}</strong></div>) : <p>완료된 경기의 10인 투표 결과가 여기에 표시돼요.</p>}</article>
     </section>
-  </main>;
+  </div>;
 }

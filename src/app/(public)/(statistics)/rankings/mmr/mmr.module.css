@@ -6,7 +6,7 @@
 .hero > svg { width: clamp(78px,13vw,126px); height: auto; color: #9876db; filter: drop-shadow(0 14px 22px rgba(111,74,172,.18)); }
 .tabs { display: flex; gap: 8px; }
 .tabs a { padding: 10px 15px; border: 1px solid var(--border); border-radius: 999px; color: var(--text-muted); background: #fff; font-weight: 800; text-decoration: none; }
-.tabs a[aria-current="page"] { color: #fff; border-color: #668fd3; background: #668fd3; }
+.tabs a[aria-current="page"] { color: #fff; border-color: var(--primary); background: var(--primary); }
 .filters { display: grid; grid-template-columns: minmax(220px,2fr) minmax(150px,1fr) auto; gap: 12px; align-items: end; padding: 18px; border: 1px solid var(--border); border-radius: 22px; background: rgba(255,255,255,.9); }
 .filters label { display: grid; gap: 7px; color: var(--text-muted); font-size: 13px; font-weight: 800; }
 .filters input,.filters select { min-height: 44px; padding: 10px 12px; border: 1px solid var(--input); border-radius: 13px; background: #fff; }

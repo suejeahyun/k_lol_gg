@@ -19,7 +19,7 @@ export default async function CompetitionsPage({ searchParams }: { searchParams:
   const query = parseEventListQuery(url.href) ?? { query: "", status: null, format: null, page: 1, pageSize: 12 as const };
   const result = await loadRuntimeEvent(({ repository }) => repository.listPublic(query, new Date()));
 
-  return <main className={styles.page}>
+  return <div className={styles.page}>
     <header className={styles.hero}><div><span><PartyPopper aria-hidden="true" /> EVENT COMPETITIONS</span><h1>함께 즐기는 이벤트전</h1><p>모집 일정부터 팀 편성, 대진과 최종 결과까지 한눈에 확인해요.</p></div><UsersRound aria-hidden="true" /></header>
     <form className={styles.filters} action="/competitions" method="get" role="search">
       <label><span>이벤트 검색</span><div><Search aria-hidden="true" /><input name="q" defaultValue={query.query} maxLength={64} placeholder="이벤트 이름" /></div></label>
@@ -28,5 +28,5 @@ export default async function CompetitionsPage({ searchParams }: { searchParams:
       <button type="submit">찾기</button>
     </form>
     {result.state === "ready" ? result.data.items.length ? <section className={styles.grid} aria-label="이벤트전 목록">{result.data.items.map((event) => <Link className={styles.card} href={`/competitions/events/${event.id}`} key={event.id}><header><span data-status={event.status}>{statusLabel[event.status]}</span><b>{event.format}</b></header><h2>{event.title}</h2><p>{event.description ?? "즐거운 이벤트전이 준비되고 있어요."}</p><dl><div><dt><CalendarDays aria-hidden="true" /> 모집 마감</dt><dd>{new Date(event.recruitmentClosesAt).toLocaleString("ko-KR")}</dd></div><div><dt><UsersRound aria-hidden="true" /> 참가자</dt><dd>{event.participantCount}/10</dd></div></dl><span className={styles.more}>자세히 보기 <ChevronRight aria-hidden="true" /></span></Link>)}</section> : <section className={styles.state} role="status"><PartyPopper aria-hidden="true" /><h2>조건에 맞는 이벤트전이 아직 없어요.</h2><p>필터를 바꾸거나 새 이벤트 모집을 기다려 주세요.</p></section> : <section className={styles.state} role={result.state === "error" ? "alert" : "status"}><h2>이벤트전 목록을 불러올 수 없어요.</h2><p>잠시 후 다시 시도해 주세요.</p></section>}
-  </main>;
+  </div>;
 }
