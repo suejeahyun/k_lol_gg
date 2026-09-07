@@ -22,8 +22,7 @@ PostgreSQL 동시성·모바일 화면·전체 HTTP 통합 검증이 끝난 뒤 
 
 ## 다음 패치 권장
 
-1. S01 공통 session transaction guard rebase와 역할/상태 race 검증
-2. PostgreSQL 18 cancel/upload/OCR lease와 old/new contribution race 검증
-3. 대량 match/player fixture EXPLAIN ANALYZE와 picker DOM 예산 측정
-4. 1440/390/375/320 공개·owner·admin 상태별 시각 QA
-5. S05 dirty-from 통계 projection consumer와 void/restore/시즌 이동 회귀
+1. PostgreSQL 18 cancel/upload/OCR lease와 old/new contribution race 검증
+2. 대량 match/player fixture EXPLAIN ANALYZE와 picker DOM 예산 측정
+3. 1440/390/375/320 공개·owner·admin 상태별 시각 QA
+4. S05 dirty-from 통계 projection consumer와 void/restore/시즌 이동 회귀

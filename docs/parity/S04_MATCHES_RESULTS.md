@@ -35,3 +35,4 @@ private asset ID/key/provider/SHA, OCR candidate/reference가 0건이어야 한�
 - `next build --webpack` compile/typecheck/static generation/route trace 통과
 - `security:secrets` 전체 tracked tree/Git history 통과, `git diff --check`와 source/docs/tests trailing whitespace 검사 통과
 - 기본 Turbopack build는 독립 worktree의 외부 `node_modules` junction 제한으로 실패했으며 main worktree 재검증이 필요
+- S01 rebase 뒤 `ACCOUNT` purpose 접수 화면, 관리자 로그아웃 복구 namespace, TypeScript와 focused PostgreSQL 4/4 재검증 통과

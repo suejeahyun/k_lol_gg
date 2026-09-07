@@ -175,11 +175,14 @@ namespace를 지운다.
 
 현재 source/static/unit/webpack compile과 S04 집중 PostgreSQL 18 증거가 있다. 완료 판정 전에 남은 항목은 다음과 같다.
 
-- S01 최종 SHA rebase와 공통 transaction auth 적용
 - PostgreSQL 18 cancel/upload/OCR lease, receipt expiry, old/new contribution 동시성 race
 - canonical/legacy HTTP origin·headers·DTO tests
 - 1440/390/375/320 ready/empty/error/permission/mutation browser captures와 metrics
 - main worktree normal Turbopack build (현재 독립 worktree node_modules junction 제한은 별도 환경 증거)
+
+S01 계정·purpose-bound session과의 rebase는 `2a5dbff`에서 완료했고, 사용자 접수 화면은 명시적
+`ACCOUNT` session만 읽도록 보강했다. 통합 후 TypeScript, focused unit/UI 계약과 S04 PostgreSQL 4/4를
+다시 통과했다. 전체 HTTP·브라우저·Turbopack 검증은 S14 final gate에서 수행한다.
 
 완료된 PostgreSQL 범위는 `0004` upgrade/idempotency와 기존 player 보존, `pg_trgm` preflight·GIN
 `EXPLAIN`, snapshot rename/교정, reject/reopen audit, `teamBalanceDraftId` 전달, V1 MVP tie-break 저장 결과,
