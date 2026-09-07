@@ -21,8 +21,8 @@ test("시작 페이지는 익명·계정 상태·승인 계정·관리자 진입
 test("Riot 도움말은 운영 연동 잠금과 공개·비공개 범위를 사실대로 안내한다", () => {
   const page = source("../src/app/(public)/(guides)/help/riot/page.tsx");
   for (const contract of [
-    "운영 연동 잠금",
-    "실제 Riot 운영 API",
+    "현재 이용 제한",
+    "공식 API 승인",
     "RSO",
     "PUUID",
     "429",
@@ -36,7 +36,7 @@ test("설치 화면은 install prompt와 iOS·APK unavailable·개인 캐시 금
   for (const contract of ["beforeinstallprompt", "appinstalled", "display-mode: standalone", "userChoice", 'aria-live="polite"']) {
     assert.equal(actions.includes(contract), true, contract);
   }
-  for (const contract of ["iPhone·iPad", "Android APK", "SHA-256", "비공개 이미지", "S14"]) {
+  for (const contract of ["iPhone·iPad", "Android APK", "SHA-256", "비공개 이미지", "빌드 정적 파일"]) {
     assert.equal(page.includes(contract), true, contract);
   }
   assert.equal(page.includes('href="/apk"'), false);

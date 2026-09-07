@@ -1,2 +1,6 @@
 // Compatibility handler: signed POSTs are executed directly instead of redirected.
-export { dynamic, runtime, POST } from "../../integrations/kakao/operation-forms/route";
+import { POST as submitOperationForm } from "../../integrations/kakao/operation-forms/route";
+
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+export const POST = submitOperationForm;

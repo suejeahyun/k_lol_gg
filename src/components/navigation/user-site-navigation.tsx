@@ -231,10 +231,6 @@ export function MobileUserNavigation({ accountSignedIn = false }: { accountSigne
         <UsersRound size={20} aria-hidden="true" />
         <span>플레이어</span>
       </Link>
-      <Link href="/tools/random-team" aria-current={pathname.startsWith("/tools/") ? "page" : undefined}>
-        <Dices size={20} aria-hidden="true" />
-        <span>팀 도구</span>
-      </Link>
       <SearchControl compact />
       <Link href={accountSignedIn ? "/account" : "/login"} aria-current={accountSignedIn ? (pathname.startsWith("/account") ? "page" : undefined) : (pathname === "/login" ? "page" : undefined)}>
         <LogIn size={20} aria-hidden="true" />

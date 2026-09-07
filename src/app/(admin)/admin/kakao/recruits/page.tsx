@@ -1,1 +1,4 @@
-export { default, dynamic } from "../page";
+import AdminKakaoPage from "../page";
+
+export const dynamic = "force-dynamic";
+export default AdminKakaoPage;

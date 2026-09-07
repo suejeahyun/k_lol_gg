@@ -1,1 +1,4 @@
-export { default, dynamic } from "../page";
+import AdminMatchDetailPage from "../page";
+
+export const dynamic = "force-dynamic";
+export default AdminMatchDetailPage;
