@@ -2014,7 +2014,7 @@ try {
       body: JSON.stringify(body),
     });
     assert.equal(response.status, 503, `${route} must fail closed when storage is unavailable`);
-    assert.equal(problemCode(await response.json()), "ACCOUNT_STORAGE_UNAVAILABLE");
+    assert.equal(problemCode(await response.json()), "SITE_SETTINGS_UNAVAILABLE");
   }
 
   const unavailableAccountLogout = await fetch(`${unavailableServer.origin}/api/auth/logout`, {

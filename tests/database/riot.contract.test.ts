@@ -98,7 +98,7 @@ test("S12 Riot persistence keeps owner auth, one-time RSO, jobs, receipts, audit
     );
     assert.deepEqual(
       riotTables.rows.map((row) => row.table_name),
-      ["account_links", "command_receipts", "outbox", "rso_states", "summaries", "sync_jobs"],
+      ["account_links", "command_receipts", "outbox", "rso_exchange_results", "rso_states", "summaries", "sync_jobs"],
     );
     assert.equal((await pool.query("select 1 from information_schema.tables where table_schema='operations' and table_name='site_settings'")).rowCount, 1);
     assert.equal((await pool.query("select 1 from information_schema.tables where table_schema='competition' and table_name='destruction_competitions'")).rowCount, 1);

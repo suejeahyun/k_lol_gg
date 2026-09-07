@@ -14,15 +14,16 @@ import {
   loginRateLimitBuckets,
   operationsCommandReceipts,
   operationsOutbox,
+  siteSettings,
   userAccounts,
 } from "../../src/platform/db/schema";
 import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
 
-function metadata(key: string, body: unknown): OperationsCommandMetadata {
+function metadata(key: string, body: unknown, expectedRevision: number): OperationsCommandMetadata {
   return {
     requestId: randomUUID(),
     requestKey: key,
-    expectedRevision: 0,
+    expectedRevision,
     requestHashHex: createHash("sha256").update(JSON.stringify(body)).digest("hex"),
   };
 }
@@ -69,6 +70,12 @@ test("bounded maintenance deletes only expired rows and records an atomic replay
       accountStatus: "APPROVED",
     };
     const repository = new PostgresOperationsRepository(database, fakeAi);
+    const currentSettings = await repository.getSiteSettings();
+    const expectedSettingsRevision = currentSettings.revision + 1;
+    await database
+      .update(siteSettings)
+      .set({ revision: expectedSettingsRevision })
+      .where(eq(siteSettings.id, 1));
 
     const expiredAuditRequest = randomUUID();
     const retainedAuditRequest = randomUUID();
@@ -91,7 +98,7 @@ test("bounded maintenance deletes only expired rows and records an atomic replay
       },
     ]);
     const auditBody = { retentionDays: 90 };
-    const auditMetadata = metadata(`recovery-audit-${randomUUID()}`, auditBody);
+    const auditMetadata = metadata(`recovery-audit-${randomUUID()}`, auditBody, expectedSettingsRevision);
     const auditCleanup = await repository.runAdminCleanup({
       actor,
       metadata: auditMetadata,
@@ -119,7 +126,7 @@ test("bounded maintenance deletes only expired rows and records an atomic replay
         expiresAt: new Date(now.getTime() + 60_000),
       },
     ]);
-    const rateMetadata = metadata(`recovery-rate-${randomUUID()}`, { retentionDays: 30 });
+    const rateMetadata = metadata(`recovery-rate-${randomUUID()}`, { retentionDays: 30 }, expectedSettingsRevision);
     const rateCleanup = await repository.runAdminCleanup({
       actor,
       metadata: rateMetadata,
@@ -135,7 +142,7 @@ test("bounded maintenance deletes only expired rows and records an atomic replay
 
     const nonSuper: OperationsActor = { ...actor, role: "ADMIN", session: { ...actor.session, role: "ADMIN" } };
     await assert.rejects(
-      repository.runAdminCleanup({ actor: nonSuper, metadata: metadata(`denied-${randomUUID()}`, auditBody), kind: "audit", retentionDays: 90 }),
+      repository.runAdminCleanup({ actor: nonSuper, metadata: metadata(`denied-${randomUUID()}`, auditBody, expectedSettingsRevision), kind: "audit", retentionDays: 90 }),
       (error: unknown) => error instanceof OperationsError && error.code === "SESSION_STALE",
     );
   } finally {
