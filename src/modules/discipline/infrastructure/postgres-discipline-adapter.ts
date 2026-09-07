@@ -499,6 +499,7 @@ export class PostgresDisciplineAdapter implements
       if (!current.active) throw new DisciplineApplicationError("INVALID_COMMAND", "Record is already inactive.");
       const resetReason = cleanText(reason, 1000, "INVALID_RESET_REASON");
       const rows = await transaction.update(disciplineRecords).set({ active: false, resetReason, resetAt: now, resetByUserAccountId: actorId, revision: current.revision + 1, updatedAt: now }).where(and(eq(disciplineRecords.id, id), eq(disciplineRecords.revision, expectedRevision))).returning();
+      await transaction.update(disciplineResolutionTasks).set({ status: "CANCELLED", reviewNote: resetReason, reviewedByUserAccountId: actorId, reviewedAt: now, revision: sql`${disciplineResolutionTasks.revision} + 1`, updatedAt: now }).where(and(eq(disciplineResolutionTasks.disciplineRecordId, id), inArray(disciplineResolutionTasks.status, ["REQUIRED", "AWAITING_UPLOAD", "PENDING_REVIEW", "REJECTED"])));
       return rows[0]!;
     });
   }
@@ -547,8 +548,18 @@ export class PostgresDisciplineAdapter implements
 
   async resolveResourceForUpdate(context: PrivateAssetTransaction, resource: { resourceType: string; resourceId: string }): Promise<PrivateAssetResourceBinding | null> {
     if (resource.resourceType !== "DISCIPLINE_TASK") return null;
-    const row = (await this.assetTransaction(context).select({ id: disciplineResolutionTasks.id, ownerUserAccountId: disciplineResolutionTasks.ownerUserAccountId }).from(disciplineResolutionTasks).where(eq(disciplineResolutionTasks.id, resource.resourceId)).for("update").limit(1))[0];
-    return row ? { resourceType: "DISCIPLINE_TASK", resourceId: row.id, ownerUserAccountId: row.ownerUserAccountId, public: false } : null;
+    const row = (await this.assetTransaction(context).select({
+      id: disciplineResolutionTasks.id,
+      ownerUserAccountId: disciplineResolutionTasks.ownerUserAccountId,
+      linkedUserAccountId: players.userAccountId,
+    }).from(disciplineResolutionTasks)
+      .leftJoin(players, eq(players.id, disciplineResolutionTasks.ownerPlayerId))
+      .where(and(
+        eq(disciplineResolutionTasks.id, resource.resourceId),
+        inArray(disciplineResolutionTasks.status, ["REQUIRED", "AWAITING_UPLOAD", "REJECTED"]),
+        sql<boolean>`${disciplineResolutionTasks.dueAt} > clock_timestamp()`,
+      )).for("update").limit(1))[0];
+    return row ? { resourceType: "DISCIPLINE_TASK", resourceId: row.id, ownerUserAccountId: row.ownerUserAccountId ?? row.linkedUserAccountId, public: false } : null;
   }
 
   async findDuplicateForUpdate(context: PrivateAssetTransaction, input: { resourceType: string; resourceId: string; purpose: PrivateAssetPurpose; sha256: Uint8Array }) {
