@@ -114,9 +114,13 @@ test("explicit fake runtime adapter connects application mutations to safe query
 });
 
 test("admin Riot query is bounded and rejects duplicate or unknown HTTP parameters", () => {
-  assert.deepEqual(parseAdminRiotQuery("https://example.test/admin/riot?tab=sync&status=FAILED&page=2&pageSize=50"), { tab: "sync", status: "FAILED", source: "ALL", page: 2, pageSize: 50 });
-  assert.deepEqual(parseAdminRiotQuery("https://example.test/admin/riot?tab=logs&source=AUDIT"), { tab: "logs", status: "ALL", source: "AUDIT", page: 1, pageSize: 25 });
+  assert.deepEqual(parseAdminRiotQuery("https://example.test/admin/riot?tab=sync&status=FAILED&page=2&pageSize=50"), { tab: "sync", action: "NONE", status: "FAILED", source: "ALL", q: "", batchSize: 10, page: 2, pageSize: 50 });
+  assert.deepEqual(parseAdminRiotQuery("https://example.test/admin/riot?tab=logs&source=AUDIT"), { tab: "logs", action: "NONE", status: "ALL", source: "AUDIT", q: "", batchSize: 10, page: 1, pageSize: 25 });
+  assert.deepEqual(parseAdminRiotQuery("https://example.test/admin/riot?tab=accounts&action=bulk-link&q=Ahri&batchSize=30"), { tab: "accounts", action: "bulk-link", status: "UNLINKED", source: "ALL", q: "Ahri", batchSize: 30, page: 1, pageSize: 30 });
   assert.equal(parseAdminRiotQuery("https://example.test/admin/riot?tab=accounts&source=API"), null);
+  assert.equal(parseAdminRiotQuery("https://example.test/admin/riot?tab=accounts&q=Ahri"), null);
+  assert.equal(parseAdminRiotQuery("https://example.test/admin/riot?tab=accounts&action=bulk-link&batchSize=31"), null);
+  assert.equal(parseAdminRiotQuery("https://example.test/admin/riot?tab=accounts&action=bulk-link&q=a&q=b"), null);
   assert.equal(parseAdminRiotQuery("https://example.test/admin/riot?tab=sync&status=CONNECTED"), null);
   assert.equal(parseAdminRiotQuery("https://example.test/admin/riot?pageSize=101"), null);
   assert.equal(parseAdminRiotQuery("https://example.test/admin/riot?tab=sync&tab=logs"), null);
@@ -133,6 +137,7 @@ test("public, owner, admin HTTP routes and responsive UI states are present", ()
     "../src/app/api/admin/riot/route.ts",
     "../src/app/api/admin/riot/link/route.ts",
     "../src/app/api/admin/riot/bulk/route.ts",
+    "../src/app/api/admin/riot/bulk-link/route.ts",
     "../src/app/api/admin/riot/sync/route.ts",
     "../src/app/api/admin/riot/retry/route.ts",
   ];
@@ -150,12 +155,21 @@ test("public, owner, admin HTTP routes and responsive UI states are present", ()
   assert.match(admin, /data-riot-state="accounts"/);
   assert.match(admin, /data-riot-state="sync"/);
   assert.match(admin, /data-riot-state="logs"/);
+  assert.match(admin, /data-riot-action/);
+  assert.match(admin, /action=bulk-link/);
   assert.match(admin, /Riot 계정 연결 현황/);
   assert.match(admin, /Riot 동기화 작업 이력/);
   assert.match(admin, /Riot API·동기화·감사 로그/);
   const actions = readFileSync(new URL("../src/components/riot/riot-admin-actions.tsx", import.meta.url), "utf8");
   assert.match(actions, /일괄 동기화 미리보기/);
+  assert.match(actions, /활성 미연동 플레이어 미리보기/);
+  assert.match(actions, /\/api\/admin\/riot\/bulk-link/);
   assert.match(actions, /role="dialog"/);
   assert.match(actions, /등록 확인/);
   assert.match(player, /공개할 Riot 동기화 전적이 없습니다/);
+  const bulkLinkRoute = readFileSync(new URL("../src/app/api/admin/riot/bulk-link/route.ts", import.meta.url), "utf8");
+  assert.match(bulkLinkRoute, /requireRiotApiSession\("SUPER_ADMIN"\)/);
+  assert.match(bulkLinkRoute, /revision: "required"/);
+  assert.match(bulkLinkRoute, /expectedRevision !== 0/);
+  assert.match(bulkLinkRoute, /connectDirectBulk/);
 });

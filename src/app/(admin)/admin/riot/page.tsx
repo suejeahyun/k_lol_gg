@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { RiotAdminActions, RiotAdminGlobalActions } from "@/components/riot/riot-admin-actions";
+import { RiotAdminActions, RiotAdminBulkLink, RiotAdminGlobalActions } from "@/components/riot/riot-admin-actions";
 import styles from "@/components/riot/riot-workspace.module.css";
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
 import { parseAdminRiotQuery } from "@/modules/riot";
@@ -17,34 +17,42 @@ function dateTime(value: string | null) {
 }
 
 export default async function AdminRiotPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  const session = await requirePageRole("ADMIN", "/admin/riot");
   const raw = await searchParams;
   const url = new URL("https://v2.invalid/admin/riot");
   for (const [key, value] of Object.entries(raw)) {
     if (typeof value === "string") url.searchParams.set(key, value);
     else if (value) for (const item of value) url.searchParams.append(key, item);
   }
-  const query = parseAdminRiotQuery(url.href) ?? {
+  const parsedQuery = parseAdminRiotQuery(url.href);
+  const query = parsedQuery ?? {
     tab: "accounts" as const,
+    action: "NONE" as const,
     status: "ALL" as const,
     source: "ALL" as const,
+    q: "",
+    batchSize: 10,
     page: 1,
     pageSize: 25,
   };
+  const session = await requirePageRole(query.action === "bulk-link" ? "SUPER_ADMIN" : "ADMIN", "/admin/riot");
+  if (!parsedQuery) return <main className={styles.page} data-riot-state="invalid-query"><section className={styles.state} data-tone="error" role="alert"><h1>Riot 운영 주소가 올바르지 않습니다.</h1><p>중복되거나 허용되지 않은 필터를 제거한 뒤 다시 시도해 주세요.</p><Link href="/admin/riot?tab=accounts">계정 화면으로 돌아가기</Link></section></main>;
   const result = await loadRuntimeRiot((runtime) => runtime.query.listAdmin(query));
   const ready = result.state === "ready" ? result.data : null;
   const count = ready ? (query.tab === "accounts" ? ready.items.length : query.tab === "sync" ? ready.syncItems.length : ready.logItems.length) : 0;
 
-  return <main className={styles.page} data-riot-tab={query.tab}>
+  return <main className={styles.page} data-riot-tab={query.tab} data-riot-action={query.action}>
     <header className={styles.hero}><div><span>RIOT OPERATIONS</span><h1>Riot 연동 운영</h1><p>계정, 동기화 작업, 안전 로그를 분리해 현재 상태와 다음 조치를 확인합니다.</p></div></header>
     <nav className={styles.tabs} aria-label="Riot 관리자 탭"><Link href="/admin/riot?tab=accounts" aria-current={query.tab === "accounts" ? "page" : undefined}>계정</Link><Link href="/admin/riot?tab=sync" aria-current={query.tab === "sync" ? "page" : undefined}>동기화</Link><Link href="/admin/riot?tab=logs" aria-current={query.tab === "logs" ? "page" : undefined}>안전 로그</Link></nav>
 
     {query.tab === "accounts" ? <>
       <section className={styles.card} data-riot-state="accounts"><h2>Riot 계정 연결 현황</h2><p>승인된 플레이어의 연결 상태를 찾고, 단일 연결 또는 선택 일괄 동기화를 진행합니다.</p>
-        <form className={styles.filterForm} method="get"><input type="hidden" name="tab" value="accounts" /><label htmlFor="riot-account-status">계정 상태</label><select id="riot-account-status" name="status" defaultValue={query.status}>{accountStatuses.map((status) => <option key={status} value={status}>{status}</option>)}</select><button type="submit">조회</button></form>
-        <RiotAdminGlobalActions superAdmin={session.role === "SUPER_ADMIN"} items={ready?.items ?? []} />
+        {query.action === "bulk-link" ? <form className={styles.filterForm} method="get"><input type="hidden" name="tab" value="accounts" /><input type="hidden" name="action" value="bulk-link" /><label htmlFor="riot-bulk-query">활성 미연동 플레이어 검색</label><input id="riot-bulk-query" name="q" defaultValue={query.q} maxLength={100} placeholder="이름 또는 닉네임#태그" /><label htmlFor="riot-bulk-size">배치 크기</label><input id="riot-bulk-size" name="batchSize" type="number" min={1} max={30} defaultValue={query.batchSize} /><button type="submit">미리보기 갱신</button></form>
+          : <form className={styles.filterForm} method="get"><input type="hidden" name="tab" value="accounts" /><label htmlFor="riot-account-status">계정 상태</label><select id="riot-account-status" name="status" defaultValue={query.status}>{accountStatuses.map((status) => <option key={status} value={status}>{status}</option>)}</select><button type="submit">조회</button></form>}
+        {query.action === "bulk-link"
+          ? <RiotAdminBulkLink items={ready?.items ?? []} q={query.q} batchSize={query.batchSize} remainingBefore={ready?.total ?? 0} />
+          : <><RiotAdminGlobalActions superAdmin={session.role === "SUPER_ADMIN"} items={ready?.items ?? []} />{session.role === "SUPER_ADMIN" ? <p><Link href="/admin/riot?tab=accounts&action=bulk-link">활성 미연동 플레이어 일괄 연결</Link></p> : null}</>}
       </section>
-      {ready && ready.items.length ? <div className={styles.tableWrap}><table className={styles.table}><thead><tr><th>플레이어</th><th>Riot ID</th><th>연결</th><th>최근 동기화</th><th>작업</th></tr></thead><tbody>{ready.items.map((row) => <tr key={row.playerId}><td><Link href={`/admin/players/${row.playerId}?tab=riot`}><strong>{row.displayName}</strong></Link></td><td>{row.riotId}</td><td><span className={styles.status}>{row.status}</span><small>{row.method ?? "연결 방식 없음"}</small></td><td>{row.lastSyncStatus ?? "요청 없음"}<small>{row.failureCode ?? dateTime(row.lastSyncedAt)}</small></td><td>{row.linkId ? <RiotAdminActions linkId={row.linkId} failed={row.lastSyncStatus === "FAILED"} /> : <Link href={`/admin/players/${row.playerId}?tab=riot`}>플레이어에서 연결</Link>}</td></tr>)}</tbody></table></div> : null}
+      {query.action === "NONE" && ready && ready.items.length ? <div className={styles.tableWrap}><table className={styles.table}><thead><tr><th>플레이어</th><th>Riot ID</th><th>연결</th><th>최근 동기화</th><th>작업</th></tr></thead><tbody>{ready.items.map((row) => <tr key={row.playerId}><td><Link href={`/admin/players/${row.playerId}?tab=riot`}><strong>{row.displayName}</strong></Link></td><td>{row.riotId}</td><td><span className={styles.status}>{row.status}</span><small>{row.method ?? "연결 방식 없음"}</small></td><td>{row.lastSyncStatus ?? "요청 없음"}<small>{row.failureCode ?? dateTime(row.lastSyncedAt)}</small></td><td>{row.linkId ? <RiotAdminActions linkId={row.linkId} failed={row.lastSyncStatus === "FAILED"} /> : <Link href={`/admin/players/${row.playerId}?tab=riot`}>플레이어에서 연결</Link>}</td></tr>)}</tbody></table></div> : null}
     </> : null}
 
     {query.tab === "sync" ? <section data-riot-state="sync"><div className={styles.card}><h2>Riot 동기화 작업 이력</h2><p>대기·실행·재시도·완료 상태와 시도 횟수를 실제 작업 단위로 확인합니다.</p><form className={styles.filterForm} method="get"><input type="hidden" name="tab" value="sync" /><label htmlFor="riot-sync-status">작업 상태</label><select id="riot-sync-status" name="status" defaultValue={query.status}>{syncStatuses.map((status) => <option key={status} value={status}>{status}</option>)}</select><button type="submit">조회</button></form></div>

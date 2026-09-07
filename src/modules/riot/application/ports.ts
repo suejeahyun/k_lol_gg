@@ -38,6 +38,7 @@ export type RiotAuthorizationIntent =
 
 export type RiotAction =
   | "CONNECT_DIRECT"
+  | "CONNECT_DIRECT_BULK"
   | "DISCONNECT"
   | "RSO_START"
   | "RSO_CALLBACK"
@@ -135,6 +136,12 @@ export type RiotProjectionUpdate = Readonly<{
 
 export interface RiotRepository {
   loadPlayerOwnerAccountIdForUpdate(transaction: RiotTransaction, playerId: string): Promise<string | null>;
+  loadPlayerRiotIdentityForUpdate(transaction: RiotTransaction, playerId: string): Promise<Readonly<{
+    playerId: string;
+    ownerAccountId: string;
+    gameName: string;
+    tagLine: string;
+  }> | null>;
   loadLinkForPlayerForUpdate(transaction: RiotTransaction, playerId: string): Promise<RiotAccountLink | null>;
   loadLinkForUpdate(transaction: RiotTransaction, linkId: string): Promise<RiotAccountLink | null>;
   saveLink(transaction: RiotTransaction, link: RiotAccountLink, expectedRevision: number): Promise<void>;

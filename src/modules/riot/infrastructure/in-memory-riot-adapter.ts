@@ -39,6 +39,7 @@ export class InMemoryRiotAdapter implements RiotQueryRepository {
   };
   private readonly activeTransactions = new WeakSet<RiotTransaction>();
   private readonly ownerPlayers = new Map<string, string>();
+  private readonly playerIdentities = new Map<string, Readonly<{ gameName: string; tagLine: string }>>();
   readonly dependencies: Pick<
     RiotApplicationDependencies,
     "unitOfWork" | "features" | "authorization" | "receipts" | "repository" | "audit" | "outbox" | "clock" | "ids"
@@ -105,6 +106,12 @@ export class InMemoryRiotAdapter implements RiotQueryRepository {
           assertTransaction(transaction);
           return [...this.ownerPlayers.entries()].find((entry) => entry[1] === playerId)?.[0] ?? null;
         },
+        loadPlayerRiotIdentityForUpdate: async (transaction, playerId) => {
+          assertTransaction(transaction);
+          const ownerAccountId = [...this.ownerPlayers.entries()].find((entry) => entry[1] === playerId)?.[0];
+          const identity = this.playerIdentities.get(playerId);
+          return ownerAccountId && identity ? { playerId, ownerAccountId, ...identity } : null;
+        },
         loadLinkForPlayerForUpdate: async (transaction, playerId) => {
           assertTransaction(transaction);
           return [...this.state.links.values()].find((link) => link.playerId === playerId) ?? null;
@@ -157,6 +164,11 @@ export class InMemoryRiotAdapter implements RiotQueryRepository {
 
   bindOwner(ownerUserAccountId: string, playerId: string) {
     this.ownerPlayers.set(ownerUserAccountId, playerId);
+  }
+
+  bindBulkCandidate(ownerUserAccountId: string, playerId: string, gameName: string, tagLine: string) {
+    this.ownerPlayers.set(ownerUserAccountId, playerId);
+    this.playerIdentities.set(playerId, { gameName, tagLine });
   }
 
   async getPublicSummary(playerId: string) {
@@ -218,7 +230,12 @@ export class InMemoryRiotAdapter implements RiotQueryRepository {
     });
     const start = (query.page - 1) * query.pageSize;
     if (query.tab === "accounts") {
-      const rows = accountRows.filter((row) => query.status === "ALL" || (query.status === "FAILED" ? row.lastSyncStatus === "FAILED" : row.status === query.status));
+      const needle = query.q.toLocaleLowerCase("ko-KR");
+      const rows = accountRows.filter((row) =>
+        (query.status === "ALL" || (query.status === "FAILED" ? row.lastSyncStatus === "FAILED" : row.status === query.status)) &&
+        (query.action !== "bulk-link" || row.status === "UNLINKED") &&
+        (!needle || `${row.displayName} ${row.riotId}`.toLocaleLowerCase("ko-KR").includes(needle))
+      );
       return finish({ ...empty, items: rows.slice(start, start + query.pageSize) }, rows.length);
     }
     const syncRows = [...this.state.jobs.values()].map((job) => {

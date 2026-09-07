@@ -4,6 +4,7 @@ import { CalendarDays, CheckCircle2, CloudSun, LogIn, ShieldCheck, UsersRound } 
 
 import { Badge } from "@/components/ui/badge";
 import { getCurrentSession } from "@/modules/auth/infrastructure/runtime-session";
+import { parseCanonicalViewQuery } from "@/modules/navigation/application/canonical-view-query";
 import { loadRuntimeSeasonData } from "@/modules/seasons/infrastructure/runtime-season-data";
 
 import { ApplicationActions } from "./application-actions";
@@ -27,23 +28,38 @@ function statusLabel(status: string) {
   }[status] ?? status;
 }
 
-export default async function ApplicationsPage() {
+function ApplicationsHero({ type, source }: { type: string; source?: string }) {
+  return <><section className={styles.hero} aria-labelledby="applications-title">
+    <div>
+      <Badge variant="secondary"><CloudSun size={13} aria-hidden="true" /> TODAY · APPLICATIONS</Badge>
+      <p>{source ? `ENTRY · ${source.toUpperCase()}` : "APPLICATIONS"}</p>
+      <h1 id="applications-title">오늘 같이 뛰어요</h1>
+      <span>신청 종류를 고르고 현재 모집과 내 신청 상태를 한눈에 확인하세요.</span>
+    </div>
+    <CalendarDays aria-hidden="true" />
+  </section><nav className={styles.typeTabs} aria-label="참가 신청 종류"><Link href="/applications?type=season" aria-current={type === "season" ? "page" : undefined}>시즌</Link><Link href="/applications?type=event" aria-current={type === "event" ? "page" : undefined}>이벤트전</Link><Link href="/applications?type=destruction" aria-current={type === "destruction" ? "page" : undefined}>멸망전</Link></nav></>;
+}
+
+export default async function ApplicationsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const selection = parseCanonicalViewQuery(await searchParams, {
+    type: ["season", "event", "destruction"],
+    source: ["pwa", "bookmark", "kakao"],
+  });
+  if (!selection.ok) return <div className={`page-wrap ${styles.page}`} data-application-type="invalid"><ApplicationsHero type="invalid" /><section className={`${styles.stateCard} ${styles.error}`} role="alert"><ShieldCheck aria-hidden="true" /><h2>신청 화면 주소를 확인해 주세요.</h2><p>종류와 진입 출처는 허용된 값을 한 번씩만 사용할 수 있습니다.</p></section></div>;
+  const type = selection.values.type ?? "season";
+  const source = selection.values.source;
+  if (type !== "season") {
+    const label = type === "event" ? "이벤트전" : "멸망전";
+    return <div className={`page-wrap ${styles.page}`} data-application-type={type} data-entry-source={source}><ApplicationsHero type={type} source={source} /><section className={styles.stateCard} role="status"><UsersRound aria-hidden="true" /><h2>{label} 신청</h2><p>{label}별 모집 상태와 참가 신청은 해당 대회 상세에서 확인합니다.</p><Link className={styles.focusLink} href="/competitions">대회 목록에서 선택</Link></section></div>;
+  }
   const session = await getCurrentSession("ACCOUNT");
   const result = await loadRuntimeSeasonData((service) =>
     service.getApplicationHub(session?.userId ?? null),
   );
 
   return (
-    <div className={`page-wrap ${styles.page}`}>
-      <section className={styles.hero} aria-labelledby="applications-title">
-        <div>
-          <Badge variant="secondary"><CloudSun size={13} aria-hidden="true" /> TODAY · SEASON DAY</Badge>
-          <p>APPLICATIONS</p>
-          <h1 id="applications-title">오늘 같이 뛰어요</h1>
-          <span>활성 시즌과 신청 상태를 한눈에 확인하고, 내 라인을 가볍게 골라 참가할 수 있어요.</span>
-        </div>
-        <CalendarDays aria-hidden="true" />
-      </section>
+    <div className={`page-wrap ${styles.page}`} data-application-type="season" data-entry-source={source}>
+      <ApplicationsHero type="season" source={source} />
 
       {result.state === "unavailable" ? (
         <section className={styles.stateCard} role="status">

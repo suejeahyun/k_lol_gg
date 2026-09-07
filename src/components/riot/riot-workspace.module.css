@@ -18,7 +18,7 @@
 .form input { width: 100%; min-height: 42px; padding: 9px 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--background); color: inherit; }
 .filterForm { display: flex; flex-wrap: wrap; align-items: end; gap: 8px; margin: 16px 0; }
 .filterForm label { width: 100%; color: var(--muted-foreground); font-size: .78rem; font-weight: 800; }
-.filterForm select, .filterForm button { min-height: 40px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 11px; background: var(--background); color: inherit; }
+.filterForm input, .filterForm select, .filterForm button { min-height: 40px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 11px; background: var(--background); color: inherit; }
 .filterForm button { border-color: var(--primary); background: var(--primary); color: white; font-weight: 800; cursor: pointer; }
 .selectionSummary { margin: 0; padding: 10px 12px; border-radius: 12px; color: var(--muted-foreground); background: color-mix(in srgb, var(--primary) 7%, var(--card)); font-size: .78rem; }
 .selectionList { display: grid; gap: 7px; margin: 0; padding: 14px; border: 1px solid var(--border); border-radius: 14px; }
@@ -26,6 +26,8 @@
 .selectionList label { display: grid; grid-template-columns: auto minmax(0,1fr); align-items: center; gap: 9px; min-height: 42px; padding: 7px 9px; border-radius: 10px; background: color-mix(in srgb, var(--primary) 5%, var(--card)); cursor: pointer; }
 .selectionList input { width: 18px; min-height: 18px; }
 .selectionList label > span { display: grid; min-width: 0; }
+.selectionList > div { display: grid; min-height: 42px; padding: 7px 9px; border-radius: 10px; background: color-mix(in srgb, var(--primary) 5%, var(--card)); }
+.selectionList > div > span { display: grid; min-width: 0; }
 .selectionList small { overflow: hidden; color: var(--muted-foreground); font-size: .72rem; text-overflow: ellipsis; white-space: nowrap; }
 .selectionList p { margin: 0; color: var(--muted-foreground); }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }

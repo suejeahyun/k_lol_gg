@@ -73,8 +73,11 @@ export type AdminRiotPageDto = Readonly<{
 
 export type AdminRiotQuery = Readonly<{
   tab: "accounts" | "sync" | "logs";
+  action: "NONE" | "bulk-link";
   status: "ALL" | RiotLinkStatus | RiotSyncJobStatus | "UNLINKED";
   source: "ALL" | "API" | "SYNC" | "AUDIT";
+  q: string;
+  batchSize: number;
   page: number;
   pageSize: number;
 }>;
@@ -87,21 +90,31 @@ export interface RiotQueryRepository {
 
 export function parseAdminRiotQuery(url: string): AdminRiotQuery | null {
   const params = new URL(url).searchParams;
-  const allowed = new Set(["tab", "status", "source", "page", "pageSize"]);
+  const allowed = new Set(["tab", "action", "status", "source", "q", "batchSize", "page", "pageSize"]);
   if ([...params.keys()].some((key) => !allowed.has(key))) return null;
   for (const key of allowed) if (params.getAll(key).length > 1) return null;
   const tab = params.get("tab") ?? "accounts";
+  const action = params.get("action") ?? "NONE";
   const status = params.get("status") ?? "ALL";
   const source = params.get("source") ?? "ALL";
+  const q = (params.get("q") ?? "").normalize("NFKC").trim();
+  const batchSize = Number(params.get("batchSize") ?? "10");
   const page = Number(params.get("page") ?? "1");
   const pageSize = Number(params.get("pageSize") ?? "25");
   if (!(["accounts", "sync", "logs"] as const).includes(tab as AdminRiotQuery["tab"])) return null;
+  if (!(action === "NONE" || action === "bulk-link")) return null;
   if (!(["ALL", "CONNECTED", "DISCONNECTED", "REVOKED", "UNLINKED", "QUEUED", "RUNNING", "RETRY_WAIT", "SUCCEEDED", "PARTIAL", "FAILED", "CANCELLED"] as const).includes(status as AdminRiotQuery["status"])) return null;
   if (!(["ALL", "API", "SYNC", "AUDIT"] as const).includes(source as AdminRiotQuery["source"])) return null;
   const accountStatus = ["ALL", "CONNECTED", "DISCONNECTED", "REVOKED", "UNLINKED", "FAILED"].includes(status);
   const syncStatus = ["ALL", "QUEUED", "RUNNING", "RETRY_WAIT", "SUCCEEDED", "PARTIAL", "FAILED", "CANCELLED"].includes(status);
   if ((tab === "accounts" && (!accountStatus || source !== "ALL")) || (tab === "sync" && (!syncStatus || source !== "ALL"))) return null;
   if (tab === "logs" && status !== "ALL") return null;
+  if (action === "bulk-link") {
+    if (tab !== "accounts" || !["ALL", "UNLINKED"].includes(status) || source !== "ALL" || page !== 1 || params.has("pageSize")) return null;
+    if (!Number.isSafeInteger(batchSize) || batchSize < 1 || batchSize > 30 || q.length > 100 || /[\u0000-\u001f\u007f]/u.test(q)) return null;
+    return { tab: "accounts", action, status: "UNLINKED", source: "ALL", q, batchSize, page: 1, pageSize: batchSize };
+  }
+  if (params.has("q") || params.has("batchSize")) return null;
   if (!Number.isSafeInteger(page) || page < 1 || !Number.isSafeInteger(pageSize) || pageSize < 1 || pageSize > 100 || page * pageSize > 5_000) return null;
-  return { tab: tab as AdminRiotQuery["tab"], status: status as AdminRiotQuery["status"], source: source as AdminRiotQuery["source"], page, pageSize };
+  return { tab: tab as AdminRiotQuery["tab"], action: "NONE", status: status as AdminRiotQuery["status"], source: source as AdminRiotQuery["source"], q: "", batchSize: 10, page, pageSize };
 }

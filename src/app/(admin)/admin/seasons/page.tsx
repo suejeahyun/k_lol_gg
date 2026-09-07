@@ -36,20 +36,26 @@ export default async function AdminSeasonsPage({
 }) {
   await requirePageRole("ADMIN", "/admin/seasons");
   const raw = await searchParams;
+  const rawView = raw.view;
+  const applicationView = rawView === "applications";
+  const invalidView = rawView !== undefined && !applicationView;
   const url = new URL("http://local.test/admin/seasons");
   for (const [key, value] of Object.entries(raw)) {
+    if (key === "view") continue;
     if (typeof value === "string") url.searchParams.set(key, value);
     else if (Array.isArray(value)) for (const item of value) url.searchParams.append(key, item);
   }
-  let queryError = false;
+  let queryError = invalidView;
   let query;
   try {
+    if (invalidView) throw new Error("INVALID_VIEW");
     query = parseAdminSeasonQuery(url.toString());
   } catch {
     queryError = true;
     query = { page: 1, pageSize: 20 } as const;
   }
   const paginationSearch = new URLSearchParams();
+  if (applicationView) paginationSearch.set("view", "applications");
   if (query.seasonId) paginationSearch.set("seasonId", query.seasonId);
   if (query.status) paginationSearch.set("status", query.status);
   if (query.source) paginationSearch.set("source", query.source);
@@ -58,7 +64,7 @@ export default async function AdminSeasonsPage({
   const result = await loadRuntimeSeasonData((service) => service.getAdminWorkspace(query));
 
   return (
-    <main className={styles.page}>
+    <main className={styles.page} data-admin-season-view={queryError ? "invalid" : applicationView ? "applications" : "seasons"}>
       <header className={styles.header}>
         <div>
           <span><ShieldCheck aria-hidden="true" /> 보호된 작업 공간 · A3</span>
@@ -67,6 +73,7 @@ export default async function AdminSeasonsPage({
         </div>
         <b>ADMIN / SUPER</b>
       </header>
+      <nav className={styles.viewTabs} aria-label="시즌 관리자 보기"><a href="/admin/seasons" aria-current={!applicationView ? "page" : undefined}>시즌 수명주기</a><a href="/admin/seasons?view=applications" aria-current={applicationView ? "page" : undefined}>참가 신청 검토</a></nav>
 
       {result.state !== "ready" ? (
         <section className={styles.state} role={result.state === "error" ? "alert" : "status"}>
@@ -102,16 +109,17 @@ export default async function AdminSeasonsPage({
             )}
           </section>
 
-          <section className={styles.panel} aria-labelledby="application-review-title">
+          <section className={styles.panel} aria-labelledby="application-review-title" data-focus={applicationView || undefined}>
             <div className={styles.panelHeading}><div><span>REVIEW QUEUE</span><h2 id="application-review-title">참가 신청 검토</h2></div><strong>{result.data.applicationTotalCount}건</strong></div>
             <form className={styles.filters} action="/admin/seasons" method="get">
+              {applicationView ? <input type="hidden" name="view" value="applications" /> : null}
               <Filter aria-hidden="true" />
               <label><span className="sr-only">회원명·닉네임·Riot ID 검색</span><input name="q" defaultValue={query.query} maxLength={80} placeholder="회원명·닉네임·Riot ID" /></label>
               <label><span className="sr-only">시즌 필터</span><select name="seasonId" defaultValue={query.seasonId ?? ""}><option value="">모든 시즌</option>{result.data.seasons.map((season) => <option key={season.id} value={season.id}>{season.name}</option>)}</select></label>
               <label><span className="sr-only">신청 상태 필터</span><select name="status" defaultValue={query.status ?? ""}><option value="">모든 상태</option>{["APPLIED", "CONFIRMED", "RESERVE", "REJECTED", "CANCELLED"].map((status) => <option key={status}>{status}</option>)}</select></label>
               <label><span className="sr-only">신청 출처 필터</span><select name="source" defaultValue={query.source ?? ""}><option value="">모든 출처</option><option>SITE</option><option>KAKAO</option></select></label>
               <button type="submit">조회</button>
-              <a href="/admin/seasons">초기화</a>
+              <a href={applicationView ? "/admin/seasons?view=applications" : "/admin/seasons"}>초기화</a>
             </form>
             {queryError ? <p className={styles.filterError} role="alert">허용되지 않거나 올바르지 않은 조회 조건을 초기화했습니다.</p> : null}
 

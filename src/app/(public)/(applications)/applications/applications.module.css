@@ -65,6 +65,11 @@
   color: rgba(101, 143, 210, 0.34);
 }
 
+.typeTabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.typeTabs a, .focusLink { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 999px; color: var(--ink-strong); background: rgba(255, 255, 255, .9); padding: 0 16px; font-size: 12px; font-weight: 900; text-decoration: none; }
+.typeTabs a[aria-current="page"] { border-color: var(--primary); color: white; background: var(--primary); }
+.focusLink { margin-top: 8px; border-color: var(--primary); color: white; background: var(--primary); }
+
 .overview,
 .actionCard,
 .participants {

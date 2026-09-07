@@ -45,6 +45,7 @@ class Harness {
   failOutbox = false;
   externalInsideTransaction = false;
   actors = new Map<string, CurrentRiotActor>();
+  playerIdentities = new Map<string, Readonly<{ ownerAccountId: string; gameName: string; tagLine: string }>>();
   private serial = 0;
 
   readonly gateway = new FakeRiotGateway();
@@ -156,6 +157,13 @@ class Harness {
               actor.purpose === "ACCOUNT" && actor.playerId === playerId && actor.accountStatus === "APPROVED",
           );
           return owner?.userAccountId ?? null;
+        },
+        loadPlayerRiotIdentityForUpdate: async (_transaction, playerId) => {
+          assertTransaction();
+          const identity = this.playerIdentities.get(playerId);
+          if (identity) return { playerId, ...identity };
+          const owner = [...this.actors.values()].find((actor): actor is Extract<CurrentRiotActor, { purpose: "ACCOUNT" }> => actor.purpose === "ACCOUNT" && actor.playerId === playerId && actor.accountStatus === "APPROVED");
+          return owner ? { playerId, ownerAccountId: owner.userAccountId, gameName: "Ahri", tagLine: "KR1" } : null;
         },
         loadLinkForPlayerForUpdate: async (_transaction, playerId) => {
           assertTransaction();
@@ -328,6 +336,53 @@ test("only SUPER_ADMIN can bulk/sync-all while owner is restricted to the owned 
     service.requestSync({ context: harness.ownerContext("wrong-owner", "other-owner"), mode: "SINGLE", linkIds: [linkId] }),
     (error: unknown) => error instanceof RiotApplicationError && error.code === "NOT_FOUND",
   );
+});
+
+test("SUPER bulk-link derives registry Riot IDs and atomically records exact replay", async () => {
+  const { harness, service } = setup();
+  const playerOne = "11111111-1111-4111-8111-111111111111";
+  const playerTwo = "22222222-2222-4222-8222-222222222222";
+  harness.playerIdentities.set(playerOne, { ownerAccountId: "owner-account-1", gameName: "Ahri", tagLine: "KR1" });
+  harness.playerIdentities.set(playerTwo, { ownerAccountId: "owner-account-2", gameName: "Lux", tagLine: "KR2" });
+  harness.gateway.registerIdentity({ gameName: "Lux", tagLine: "KR2", puuid: "private-puuid-2" });
+
+  await assert.rejects(
+    service.connectDirectBulk({ context: harness.adminContext("bulk-admin"), candidateIds: [playerOne, playerTwo], remainingBefore: 2 }),
+    (error: unknown) => error instanceof RiotApplicationError && error.code === "FORBIDDEN",
+  );
+
+  const context = harness.adminContext("bulk-super", true);
+  const first = await service.connectDirectBulk({ context, candidateIds: [playerTwo, playerOne], remainingBefore: 2 });
+  const replay = await service.connectDirectBulk({ context, candidateIds: [playerTwo, playerOne], remainingBefore: 2 });
+  assert.equal(first.replayed, false);
+  assert.equal(replay.replayed, true);
+  assert.equal(first.body.successCount, 2);
+  assert.equal(first.body.remainingCount, 0);
+  assert.equal(harness.snapshot.links.size, 2);
+  assert.equal(harness.snapshot.receipts.size, 1);
+  assert.equal(harness.snapshot.audits.length, 1);
+  assert.equal(harness.snapshot.outbox.length, 1);
+  assert.equal(harness.externalInsideTransaction, false);
+
+  await assert.rejects(
+    service.connectDirectBulk({ context, candidateIds: [playerOne], remainingBefore: 1 }),
+    (error: unknown) => error instanceof RiotApplicationError && error.code === "IDEMPOTENCY_MISMATCH",
+  );
+});
+
+test("bulk-link rolls every successful link back when durable event recording fails", async () => {
+  const { harness, service } = setup();
+  const playerId = "33333333-3333-4333-8333-333333333333";
+  harness.playerIdentities.set(playerId, { ownerAccountId: "owner-account-3", gameName: "Ahri", tagLine: "KR1" });
+  harness.failOutbox = true;
+  await assert.rejects(
+    service.connectDirectBulk({ context: harness.adminContext("bulk-rollback", true), candidateIds: [playerId], remainingBefore: 1 }),
+    /OUTBOX_UNAVAILABLE/,
+  );
+  assert.equal(harness.snapshot.links.size, 0);
+  assert.equal(harness.snapshot.receipts.size, 0);
+  assert.equal(harness.snapshot.audits.length, 0);
+  assert.equal(harness.snapshot.outbox.length, 0);
 });
 
 test("sync enforces cooldown, Retry-After, stale lease recovery and partial completion", async () => {

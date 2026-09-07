@@ -227,6 +227,122 @@ export class RiotApplicationService {
     });
   }
 
+  async connectDirectBulk(input: Readonly<{
+    context: RiotCommandContext;
+    candidateIds: readonly string[];
+    remainingBefore: number;
+  }>): Promise<RiotMutationResult> {
+    validateContext(input.context);
+    const candidateIds = [...new Set(input.candidateIds)].sort();
+    if (
+      candidateIds.length !== input.candidateIds.length ||
+      candidateIds.length < 1 ||
+      candidateIds.length > 30 ||
+      candidateIds.some((playerId) => !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu.test(playerId)) ||
+      !Number.isSafeInteger(input.remainingBefore) ||
+      input.remainingBefore < candidateIds.length ||
+      input.remainingBefore > 1_000_000
+    ) throw new RiotApplicationError("INVALID_COMMAND", "Bulk link candidates are invalid.");
+
+    const identity = riotReceiptIdentity(input.context, "riot:link:direct-bulk", {
+      action: "CONNECT_DIRECT_BULK",
+      candidateIds,
+      remainingBefore: input.remainingBefore,
+    });
+    const replay = await this.preflight(input.context, identity, "CONNECT_DIRECT_BULK", undefined, true);
+    if (replay) return { body: replay.body, replayed: true };
+
+    const initial = await this.dependencies.unitOfWork.transaction(async (transaction) => {
+      await this.authorize(transaction, input.context, "CONNECT_DIRECT_BULK", undefined, true);
+      const eligible: Array<Readonly<{ playerId: string; ownerAccountId: string; gameName: string; tagLine: string }>> = [];
+      const skippedPlayerIds: string[] = [];
+      for (const playerId of candidateIds) {
+        const candidate = await this.dependencies.repository.loadPlayerRiotIdentityForUpdate(transaction, playerId);
+        const current = await this.dependencies.repository.loadLinkForPlayerForUpdate(transaction, playerId);
+        if (!candidate || current) skippedPlayerIds.push(playerId);
+        else eligible.push(candidate);
+      }
+      return { eligible, skippedPlayerIds };
+    });
+
+    const prepared: Array<Readonly<{ candidate: (typeof initial.eligible)[number]; protectedPuuid: string }>> = [];
+    const failedPlayerIds: string[] = [];
+    const skippedPlayerIds = [...initial.skippedPlayerIds];
+    for (const candidate of initial.eligible) {
+      try {
+        const requested = canonicalRiotId(candidate);
+        const resolved = await this.dependencies.gateway.resolveRiotId(requested);
+        const canonicalResolved = canonicalRiotId(resolved);
+        if (canonicalResolved.normalizedKey !== requested.normalizedKey) {
+          skippedPlayerIds.push(candidate.playerId);
+          continue;
+        }
+        prepared.push({ candidate, protectedPuuid: await this.dependencies.identityProtector.protect(resolved.puuid) });
+      } catch (error) {
+        if (error instanceof RiotGatewayError && error.code === "NOT_FOUND") skippedPlayerIds.push(candidate.playerId);
+        else failedPlayerIds.push(candidate.playerId);
+      }
+    }
+
+    return this.dependencies.unitOfWork.transaction(async (transaction) => {
+      const actor = await this.authorize(transaction, input.context, "CONNECT_DIRECT_BULK", undefined, true);
+      const claim = await this.claim(transaction, identity);
+      if (claim) return { body: claim.body, replayed: true };
+      const successPlayerIds: string[] = [];
+      for (const item of prepared) {
+        const currentIdentity = await this.dependencies.repository.loadPlayerRiotIdentityForUpdate(transaction, item.candidate.playerId);
+        const currentLink = await this.dependencies.repository.loadLinkForPlayerForUpdate(transaction, item.candidate.playerId);
+        if (
+          !currentIdentity ||
+          currentLink ||
+          canonicalRiotId(currentIdentity).normalizedKey !== canonicalRiotId(item.candidate).normalizedKey
+        ) {
+          skippedPlayerIds.push(item.candidate.playerId);
+          continue;
+        }
+        const next = connectRiotAccount({
+          current: null,
+          id: this.dependencies.ids.next("LINK"),
+          expectedRevision: 0,
+          playerId: item.candidate.playerId,
+          ownerAccountId: currentIdentity.ownerAccountId,
+          gameName: currentIdentity.gameName,
+          tagLine: currentIdentity.tagLine,
+          puuidCiphertext: item.protectedPuuid,
+          method: "ADMIN",
+          now: this.now(),
+        });
+        await this.dependencies.repository.saveLink(transaction, next, 0);
+        successPlayerIds.push(item.candidate.playerId);
+      }
+      const uniqueSkipped = [...new Set(skippedPlayerIds)].sort();
+      const uniqueFailed = [...new Set(failedPlayerIds)].sort();
+      const body: RiotSafeBody = {
+        totalCandidates: input.remainingBefore,
+        processedCount: successPlayerIds.length + uniqueSkipped.length + uniqueFailed.length,
+        successCount: successPlayerIds.length,
+        skippedCount: uniqueSkipped.length,
+        failedCount: uniqueFailed.length,
+        remainingCount: Math.max(0, input.remainingBefore - successPlayerIds.length),
+        successPlayerIds: successPlayerIds.sort(),
+        skippedPlayerIds: uniqueSkipped,
+        failedPlayerIds: uniqueFailed,
+      };
+      await this.record(
+        transaction,
+        input.context,
+        identity,
+        actor,
+        "CONNECT_DIRECT_BULK",
+        candidateIds[0]!,
+        0,
+        { status: "MISSING", candidateIds },
+        body,
+      );
+      return { body, replayed: false };
+    });
+  }
+
   async disconnect(input: Readonly<{
     context: RiotCommandContext;
     playerId: string;
@@ -497,9 +613,10 @@ export class RiotApplicationService {
     identity: RiotReceiptIdentity,
     action: RiotAction,
     playerId?: string,
+    requireSuper = false,
   ): Promise<RiotCommandReceipt | null> {
     return this.dependencies.unitOfWork.transaction(async (transaction) => {
-      await this.authorize(transaction, context, action, playerId);
+      await this.authorize(transaction, context, action, playerId, requireSuper);
       const inspection = await this.dependencies.receipts.inspect(transaction, identity);
       if (inspection.kind === "MISMATCH") throw new RiotApplicationError("IDEMPOTENCY_MISMATCH", "Idempotency key was reused.");
       return inspection.kind === "REPLAY" ? inspection.receipt : null;
@@ -580,7 +697,9 @@ export class RiotApplicationService {
       aggregateId: targetId,
       aggregateRevision: revision,
       eventType: `RIOT_${action}`,
-      dedupeKey: `${targetId}:${revision}:${action}`,
+      dedupeKey: action === "CONNECT_DIRECT_BULK"
+        ? `${targetId}:${context.requestId}:${action}`
+        : `${targetId}:${revision}:${action}`,
       payload: after,
       occurredAt,
     });

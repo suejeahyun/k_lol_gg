@@ -220,6 +220,15 @@ export class PostgresRiotAdapter implements RiotQueryRepository {
       },
       repository: {
         loadPlayerOwnerAccountIdForUpdate: async (context, playerId) => (await this.tx(context).select({ owner: players.userAccountId }).from(players).where(and(eq(players.id, playerId), eq(players.status, "ACTIVE"))).for("update").limit(1))[0]?.owner ?? null,
+        loadPlayerRiotIdentityForUpdate: async (context, playerId) => {
+          const row = (await this.tx(context).select({
+            playerId: players.id,
+            ownerAccountId: players.userAccountId,
+            gameName: players.nickname,
+            tagLine: players.tagLine,
+          }).from(players).where(and(eq(players.id, playerId), eq(players.status, "ACTIVE"))).for("update").limit(1))[0];
+          return row?.ownerAccountId ? { ...row, ownerAccountId: row.ownerAccountId } : null;
+        },
         loadLinkForPlayerForUpdate: async (context, playerId) => {
           const row = (await this.tx(context).select().from(riotAccountLinks).where(eq(riotAccountLinks.playerId, playerId)).for("update").limit(1))[0];
           return row ? linkFromRow(row) : null;
@@ -455,10 +464,20 @@ export class PostgresRiotAdapter implements RiotQueryRepository {
 
     if (query.tab === "accounts") {
       const status = query.status as "ALL" | "CONNECTED" | "DISCONNECTED" | "REVOKED" | "UNLINKED" | "FAILED";
-      const condition = status === "ALL" ? undefined
+      const statusCondition = status === "ALL" ? undefined
         : status === "UNLINKED" ? isNull(riotAccountLinks.id)
         : status === "FAILED" ? sql<boolean>`exists (select 1 from riot.sync_jobs failure_job where failure_job.link_id = ${riotAccountLinks.id} and failure_job.status = 'FAILED')`
         : eq(riotAccountLinks.status, status);
+      const bulkSearchCondition = query.action === "bulk-link"
+        ? and(
+            eq(players.status, "ACTIVE"),
+            isNull(riotAccountLinks.id),
+            query.q
+              ? sql<boolean>`position(lower(${query.q}) in lower(concat_ws(' ', ${players.memberName}, ${players.nickname}, ${players.tagLine}, ${players.nickname} || '#' || ${players.tagLine}))) > 0`
+              : undefined,
+          )
+        : undefined;
+      const condition = and(statusCondition, bulkSearchCondition);
       const base = this.database.select({
         playerId: players.id,
         displayName: players.nickname,
