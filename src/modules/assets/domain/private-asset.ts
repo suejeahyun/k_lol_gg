@@ -110,7 +110,8 @@ export class PrivateAssetError extends Error {
 const IDENTIFIER = /^[A-Za-z0-9][A-Za-z0-9:._-]{0,254}$/u;
 const SAFE_PROVIDER = /^[A-Z0-9][A-Z0-9_-]{0,31}$/u;
 const UNSAFE_TEXT = /[\\/\u0000-\u001f\u007f-\u009f\u061c\u200e\u200f\u202a-\u202e\u2066-\u2069]/u;
-export const PRIVATE_ASSET_MAX_BYTES = 8 * 1024 * 1024;
+/** Keep server uploads below the Vercel Functions request-body ceiling. */
+export const PRIVATE_ASSET_MAX_BYTES = 4 * 1024 * 1024;
 export const PRIVATE_ASSET_MAX_PIXELS = 16_777_216;
 
 function assertAsset(condition: unknown, code: PrivateAssetErrorCode, message: string): asserts condition {
@@ -176,7 +177,7 @@ export function validatePrivateAssetUpload(input: Readonly<{
   assertAsset(
     input.bytes instanceof Uint8Array && input.bytes.byteLength >= 12 && input.bytes.byteLength <= PRIVATE_ASSET_MAX_BYTES,
     "INVALID_INPUT",
-    "Asset size must be between 12 bytes and 8 MiB.",
+    "Asset size must be between 12 bytes and 4 MiB.",
   );
   const detected = detectContentType(input.bytes);
   assertAsset(

@@ -2,7 +2,7 @@ import "server-only";
 
 import { PublicPrivateAssetService } from "@/modules/assets/application/public-private-asset-service";
 import { PostgresPublicPrivateAssetRepository } from "@/modules/assets/infrastructure/postgres-public-private-asset-repository";
-import { getRuntimePrivateAdapters } from "@/modules/matches/infrastructure/runtime-private-assets";
+import { getRuntimePrivateImageStorage } from "@/modules/matches/infrastructure/runtime-private-assets";
 import { getDatabase } from "@/platform/db/client";
 
 import { MediaService } from "../application/media-service";
@@ -17,12 +17,12 @@ export function getRuntimeMediaService() {
 }
 
 export function getRuntimePublishedAssetService() {
-  const adapters = getRuntimePrivateAdapters();
-  if (!adapters) return null;
+  const storage = getRuntimePrivateImageStorage();
+  if (!storage) return null;
   try {
     return new PublicPrivateAssetService(
       new PostgresPublicPrivateAssetRepository(getDatabase()),
-      adapters.storage,
+      storage,
     );
   } catch {
     return null;

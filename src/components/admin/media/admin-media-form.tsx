@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 
 import type { GalleryContent, HighlightContent } from "@/modules/media";
+import { PRIVATE_ASSET_MAX_BYTES } from "@/modules/assets/domain/private-asset";
 
 import styles from "./admin-media.module.css";
 
@@ -87,8 +88,8 @@ export function AdminMediaForm(props: Props) {
 
   async function upload(file: File | null) {
     if (!file || !assetEndpoint || !editable || busy) return;
-    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type) || file.size < 12 || file.size > 8 * 1024 * 1024) {
-      setMessage("PNG, JPEG, WebP 이미지만 8MB 이하로 선택해 주세요."); return;
+    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type) || file.size < 12 || file.size > PRIVATE_ASSET_MAX_BYTES) {
+      setMessage("PNG, JPEG, WebP 이미지만 4MiB 이하로 선택해 주세요."); return;
     }
     if (props.kind === "gallery" && assetIds.length >= 5) { setMessage("갤러리는 이미지를 최대 5개까지 연결할 수 있습니다."); return; }
     setBusy(true); setMessage(null);
@@ -135,7 +136,7 @@ export function AdminMediaForm(props: Props) {
 
     {!initial ? <p className={styles.notice}>먼저 초안을 만드세요. 다음 화면에서 파일을 안전하게 검사하고 바로 연결할 수 있습니다.</p> : <section className={styles.assetPanel} aria-labelledby="asset-heading">
       <div><h2 id="asset-heading">{props.kind === "highlight" ? "썸네일" : `갤러리 이미지 ${assetIds.length}/5`}</h2><p>검사를 통과해 READY가 된 이미지만 초안에 연결됩니다.</p></div>
-      {!editable ? <p className={styles.notice}>이미지를 바꾸려면 먼저 게시를 내리거나 보관된 초안을 복구해 주세요.</p> : !props.uploadAvailable ? <p className={styles.error} role="status">운영 비공개 저장소가 아직 연결되지 않아 업로드가 안전하게 닫혀 있습니다.</p> : <label className={styles.filePicker}>파일 선택<input disabled={busy || (props.kind === "gallery" && assetIds.length >= 5)} type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { void upload(event.target.files?.[0] ?? null); event.currentTarget.value = ""; }} /><span>PNG · JPEG · WebP / 최대 8MB</span></label>}
+      {!editable ? <p className={styles.notice}>이미지를 바꾸려면 먼저 게시를 내리거나 보관된 초안을 복구해 주세요.</p> : !props.uploadAvailable ? <p className={styles.error} role="status">운영 비공개 저장소가 아직 연결되지 않아 업로드가 안전하게 닫혀 있습니다.</p> : <label className={styles.filePicker}>파일 선택<input disabled={busy || (props.kind === "gallery" && assetIds.length >= 5)} type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { void upload(event.target.files?.[0] ?? null); event.currentTarget.value = ""; }} /><span>PNG · JPEG · WebP / 최대 4MiB</span></label>}
       {assetIds.length === 0 ? <p className={styles.hint}>아직 연결된 이미지가 없습니다.</p> : <div className={styles.assetList}>{assetIds.map((assetId, index) => {
         const asset = assets.find((candidate) => candidate.assetId === assetId);
         return <article className={styles.assetItem} key={assetId}><div><strong>{props.kind === "highlight" ? "현재 썸네일" : `이미지 ${index + 1}`}</strong><span>{asset ? assetLabel(asset) : "READY 자산"}</span></div>{editable && (props.kind === "highlight" || assetIds.length > 1) ? <button disabled={busy} type="button" onClick={() => void saveAssets(assetIds.filter((id) => id !== assetId))}>연결 해제</button> : null}</article>;

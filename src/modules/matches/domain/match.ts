@@ -1,3 +1,5 @@
+import { PRIVATE_ASSET_MAX_BYTES } from "@/modules/assets/domain/private-asset";
+
 export const MATCH_TEAMS = ["BLUE", "RED"] as const;
 export const MATCH_POSITIONS = ["TOP", "JGL", "MID", "ADC", "SUP"] as const;
 export const MATCH_SERIES_STATUSES = ["DRAFT", "PUBLISHED", "VOIDED"] as const;
@@ -25,7 +27,7 @@ export const MVP_FORMULA = Object.freeze({
 export const MVP_SELECTION = "WINNER_SCORE_KDA_PLAYER_ID_V1" as const;
 
 export const MATCH_COMMAND_RECEIPT_TTL_MS = 24 * 60 * 60 * 1_000;
-export const MATCH_IMAGE_MAX_BYTES = 8 * 1024 * 1024;
+export const MATCH_IMAGE_MAX_BYTES = PRIVATE_ASSET_MAX_BYTES;
 export const MATCH_IMAGE_MAX_COUNT = 5;
 export const MATCH_UPLOAD_RESERVATION_TTL_MS = 5 * 60 * 1_000;
 export const MATCH_OCR_RESERVATION_TTL_MS = 60 * 1_000;

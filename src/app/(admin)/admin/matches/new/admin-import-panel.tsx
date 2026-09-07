@@ -15,6 +15,7 @@ import {
   parseAdminImportLatestProjection,
   planAdminImportUploadFailure,
 } from "@/modules/matches/infrastructure/admin-import-retry";
+import { MATCH_IMAGE_MAX_BYTES } from "@/modules/matches/domain/match";
 
 import styles from "../matches-admin.module.css";
 
@@ -76,8 +77,8 @@ export function AdminImportPanel({ seasons, playedOn }: { seasons: readonly Seas
 
   function choose(next: File | null) {
     if (!next) return;
-    if (!(["image/png", "image/jpeg", "image/webp"].includes(next.type)) || next.size < 12 || next.size > 8 * 1_024 * 1_024) {
-      setError(true); setMessage("PNG, JPEG, WebP 8MiB 이하 이미지를 선택해 주세요."); return;
+    if (!(["image/png", "image/jpeg", "image/webp"].includes(next.type)) || next.size < 12 || next.size > MATCH_IMAGE_MAX_BYTES) {
+      setError(true); setMessage("PNG, JPEG, WebP 4MiB 이하 이미지를 선택해 주세요."); return;
     }
     if (preview) URL.revokeObjectURL(preview);
     if (!sameKeyReplayRequired) setUploadIdempotencyKey(commandKey("admin-import-upload"));

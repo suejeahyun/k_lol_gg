@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import type { MatchSubmissionView } from "@/modules/matches";
+import { MATCH_IMAGE_MAX_BYTES } from "@/modules/matches/domain/match";
 import {
   ClientMatchMutationKeyStore,
   type MatchMutationKeyTicket,
@@ -114,6 +115,9 @@ export function SubmissionForm({
 
   async function upload(gameNumber: number, file: File | undefined) {
     if (!submission || !file) return;
+    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type) || file.size < 12 || file.size > MATCH_IMAGE_MAX_BYTES) {
+      setError(true); setMessage("PNG, JPEG, WebP 이미지만 4MiB 이하로 선택해 주세요."); return;
+    }
     setBusy(true); setError(false); setMessage(`${gameNumber}게임 이미지를 안전하게 확인하고 있어요…`);
     let uploadTicket: MatchMutationKeyTicket | null = null;
     try {
@@ -289,7 +293,7 @@ export function SubmissionForm({
           <div className={styles.uploadGrid}>
             {Array.from({ length: submission.expectedGameCount }, (_, index) => index + 1).map((gameNumber) => {
               const done = submission.receivedGameNumbers.includes(gameNumber);
-              return <label className={styles.upload} data-done={done} key={gameNumber}><strong>{gameNumber}게임 {done ? "등록 완료" : "이미지"}</strong><span>PNG · JPEG · WebP, 최대 8MiB</span>{done ? null : <input type="file" accept="image/png,image/jpeg,image/webp" disabled={busy} onChange={(event) => upload(gameNumber, event.target.files?.[0])} />}</label>;
+              return <label className={styles.upload} data-done={done} key={gameNumber}><strong>{gameNumber}게임 {done ? "등록 완료" : "이미지"}</strong><span>PNG · JPEG · WebP, 최대 4MiB</span>{done ? null : <input type="file" accept="image/png,image/jpeg,image/webp" disabled={busy} onChange={(event) => upload(gameNumber, event.target.files?.[0])} />}</label>;
             })}
           </div>
           <p className={styles.help}>이미지는 소유자와 관리자만 볼 수 있으며 공개 경기 DTO에는 원본·저장 키·OCR 후보가 포함되지 않습니다. 모든 이미지가 모이면 PENDING_REVIEW로 바뀌고, 관리자가 시즌과 10명 로스터를 직접 확인한 후 승인합니다.</p>

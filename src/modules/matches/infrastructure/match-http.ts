@@ -135,7 +135,7 @@ const MATCH_HTTP_PROBLEMS = Object.freeze({
     code: "BODY_TOO_LARGE",
     status: 413,
     title: "이미지 파일이 너무 큽니다.",
-    detail: "8MiB 이하 이미지를 사용해 주세요.",
+    detail: "4MiB 이하 이미지를 사용해 주세요.",
   }),
 });
 

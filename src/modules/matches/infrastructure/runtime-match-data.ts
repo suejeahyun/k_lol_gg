@@ -4,11 +4,8 @@ import { resolveRuntimeAuthContext } from "@/modules/auth/infrastructure/runtime
 import { getDatabase } from "@/platform/db/client";
 
 import { MatchService } from "../application/match-service";
-import { FakePrivateImageStorage, FakeScoreboardOcr, fakePrivateAdaptersAllowed } from "./private-image";
 import { PostgresMatchRepository } from "./postgres-match-repository";
-
-const fakePrivateStorage = new FakePrivateImageStorage();
-const fakeScoreboardOcr = new FakeScoreboardOcr();
+import { getRuntimePrivateAdapters } from "./runtime-private-assets";
 
 /**
  * Match writes intentionally require the database authentication runtime. A
@@ -20,14 +17,12 @@ export function getRuntimeMatchService(): MatchService | null {
   const auth = resolveRuntimeAuthContext();
   if (!auth || auth.mode !== "database") return null;
   try {
-    const privateAdapters = fakePrivateAdaptersAllowed()
-      ? { storage: fakePrivateStorage, ocr: fakeScoreboardOcr }
-      : { storage: null, ocr: null };
+    const privateAdapters = getRuntimePrivateAdapters();
     return new MatchService(
       new PostgresMatchRepository(getDatabase()),
       auth.rateLimitPepper,
-      privateAdapters.storage,
-      privateAdapters.ocr,
+      privateAdapters?.storage ?? null,
+      privateAdapters?.ocr ?? null,
     );
   } catch {
     return null;

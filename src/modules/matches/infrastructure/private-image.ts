@@ -10,6 +10,7 @@ import type {
   PrivateImageStorage,
   ScoreboardOcr,
 } from "../application/ports/private-image-storage";
+import { resolveRuntimePrivateStorageMode } from "@/modules/assets/infrastructure/private-blob-storage-core";
 
 export type ValidatedPrivateImage = Readonly<{
   bytes: Uint8Array;
@@ -95,7 +96,7 @@ export async function validatePrivateScoreboardImage(input: Readonly<{
   originalFileName?: string | null;
 }>): Promise<ValidatedPrivateImage> {
   if (input.bytes.byteLength < 12 || input.bytes.byteLength > MATCH_IMAGE_MAX_BYTES) {
-    throw new MatchServiceError("INVALID_IMAGE", "이미지는 12바이트 이상 8MiB 이하여야 합니다.");
+    throw new MatchServiceError("INVALID_IMAGE", "이미지는 12바이트 이상 4MiB 이하여야 합니다.");
   }
   const detected = detectedContentType(input.bytes);
   if (!detected || input.declaredContentType !== detected || !hasExactContainerEnd(input.bytes, detected)) {
@@ -206,10 +207,5 @@ export class FakeScoreboardOcr implements ScoreboardOcr {
 }
 
 export function fakePrivateAdaptersAllowed(env: NodeJS.ProcessEnv = process.env) {
-  return (
-    env.NODE_ENV === "development" &&
-    env.V2_FAKE_PRIVATE_ASSETS === "1" &&
-    env.VERCEL !== "1" &&
-    env.VERCEL !== "true"
-  );
+  return resolveRuntimePrivateStorageMode(env) === "FAKE_LOCAL";
 }

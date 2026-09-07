@@ -6,6 +6,7 @@ import {
   parsePrivateAssetAdminListQuery,
   prepareMediaAssetUpload,
 } from "../src/modules/media/infrastructure/media-asset-http";
+import { PRIVATE_ASSET_MAX_BYTES } from "../src/modules/assets/domain/private-asset";
 
 const resourceId = "11111111-1111-4111-8111-111111111111";
 
@@ -40,7 +41,7 @@ test("raw media upload preflight requires same origin, If-Match, bounded image M
     assert.equal(prepared.value.originalFileName, "gallery.png");
   }
   assert.equal(prepareMediaAssetUpload(new Request(request.url, { method: "POST", headers: { ...Object.fromEntries(request.headers), Origin: "https://evil.test" } })).ok, false);
-  assert.equal(prepareMediaAssetUpload(new Request(request.url, { method: "POST", headers: { ...Object.fromEntries(request.headers), "X-Upload-Byte-Size": String(8 * 1024 * 1024 + 1) } })).ok, false);
+  assert.equal(prepareMediaAssetUpload(new Request(request.url, { method: "POST", headers: { ...Object.fromEntries(request.headers), "X-Upload-Byte-Size": String(PRIVATE_ASSET_MAX_BYTES + 1) } })).ok, false);
   assert.equal(prepareMediaAssetUpload(new Request(request.url, { method: "POST", headers: { ...Object.fromEntries(request.headers), "Content-Type": "image/svg+xml" } })).ok, false);
 });
 

@@ -11,7 +11,7 @@ import type {
 } from "@/modules/assets/application/ports/private-asset-ports";
 import { PrivateAssetError, type PrivateAssetInspection } from "@/modules/assets/domain/private-asset";
 import { PostgresPrivateAssetAdminAdapter } from "@/modules/assets/infrastructure/postgres-private-asset-admin-adapter";
-import { getRuntimePrivateAdapters } from "@/modules/matches/infrastructure/runtime-private-assets";
+import { getRuntimePrivateImageStorage } from "@/modules/matches/infrastructure/runtime-private-assets";
 import { UnavailablePrivateImageStorage, validatePrivateScoreboardImage } from "@/modules/matches/infrastructure/private-image";
 import { getDatabase } from "@/platform/db/client";
 
@@ -64,17 +64,17 @@ function service(storage: PrivateAssetStoragePort) {
 }
 
 export function getRuntimeMediaAssetUploadService() {
-  const adapters = getRuntimePrivateAdapters();
-  if (!adapters) return null;
-  try { return service(adapters.storage); }
+  const storage = getRuntimePrivateImageStorage();
+  if (!storage) return null;
+  try { return service(storage); }
   catch { return null; }
 }
 
 export function getRuntimeAdminPrivateAssetService() {
-  try { return service(getRuntimePrivateAdapters()?.storage ?? new UnavailablePrivateImageStorage()); }
+  try { return service(getRuntimePrivateImageStorage() ?? new UnavailablePrivateImageStorage()); }
   catch { return null; }
 }
 
 export function isRuntimeMediaAssetUploadAvailable() {
-  return getRuntimePrivateAdapters() !== null;
+  return getRuntimePrivateImageStorage() !== null;
 }
