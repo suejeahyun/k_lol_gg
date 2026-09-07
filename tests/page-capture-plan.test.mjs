@@ -93,6 +93,7 @@ test("the repository plan covers every page once, resolves IDs and adds reviewed
       mmrReviewId: uuidFixture,
       destructionPlayerId: uuidFixture,
     },
+    routes: { "/admin/kakao/recruits": { tab: "recruits" } },
   };
   const plan = buildCapturePlan(pages, fixtures);
   const canonical = plan.filter((entry) => entry.captureKind === "canonical");
@@ -120,6 +121,7 @@ test("the repository plan covers every page once, resolves IDs and adds reviewed
     "/admin/balance-ai?action=recalculate",
     "/admin/discipline?tab=tasks",
     "/admin/kakao?tab=logs",
+    "/admin/kakao?tab=recruits",
     "/admin/kakao?tab=health",
     "/admin/logs?view=stats",
     "/admin/logs?view=ai-requests",
@@ -145,6 +147,14 @@ test("the repository plan covers every page once, resolves IDs and adds reviewed
     `/competitions/destruction/${uuidFixture}?tab=gallery&imageIndex=0`,
     `/competitions/destruction/${uuidFixture}?tab=mvp`,
     `/admin/progress/destruction/${uuidFixture}?tab=auction&mode=live`,
+    `/tools/team-balance/drafts?view=recommendations&draftId=${uuidFixture}&team=RED`,
+    `/tools/team-balance/drafts?view=recommendations&draftId=${uuidFixture}&team=BLUE`,
+    `/tools/team-balance/drafts/${uuidFixture}?tab=recommendations&team=RED`,
+    `/tools/team-balance/drafts/${uuidFixture}?tab=recommendations&team=BLUE`,
+    `/admin/balance/drafts?view=recommendations&draftId=${uuidFixture}&team=RED`,
+    `/admin/balance/drafts?view=recommendations&draftId=${uuidFixture}&team=BLUE`,
+    `/admin/balance/drafts/${uuidFixture}?tab=recommendations&team=RED`,
+    `/admin/balance/drafts/${uuidFixture}?tab=recommendations&team=BLUE`,
     `/players/${uuidFixture}?tab=riot`,
   ];
   for (const path of requiredVariants) assert.ok(plan.some((entry) => entry.path === path), path);

@@ -17,6 +17,11 @@
     "mmrReviewId": "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
     "destructionPlayerId": "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee"
   },
+  "routes": {
+    "/admin/kakao/recruits": {
+      "tab": "recruits"
+    }
+  },
   "sourceIds": {
     "championKey": "ahri",
     "publishedMatchId": "55555555-5555-4555-8555-555555555555",

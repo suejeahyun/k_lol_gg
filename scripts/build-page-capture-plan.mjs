@@ -44,6 +44,7 @@ const QUERY_VARIANTS = Object.freeze({
     { label: "reviews", query: { tab: "reviews" } },
   ],
   "/admin/kakao": [
+    { label: "recruits", query: { tab: "recruits" } },
     { label: "scrims", query: { tab: "scrims" } },
     { label: "stats", query: { tab: "stats" } },
     { label: "settings", query: { tab: "settings" } },
@@ -83,6 +84,14 @@ const QUERY_VARIANTS = Object.freeze({
   "/admin/seasons": [
     { label: "applications", query: { view: "applications" } },
   ],
+  "/admin/balance/drafts": [
+    { label: "recommendations-red", query: { view: "recommendations", draftId: { fixture: "draftId" }, team: "RED" } },
+    { label: "recommendations-blue", query: { view: "recommendations", draftId: { fixture: "draftId" }, team: "BLUE" } },
+  ],
+  "/admin/balance/drafts/[draftId]": [
+    { label: "recommendations-red", query: { tab: "recommendations", team: "RED" } },
+    { label: "recommendations-blue", query: { tab: "recommendations", team: "BLUE" } },
+  ],
   "/admin/progress/destruction/[tournamentId]": [
     { label: "live-auction", query: { tab: "auction", mode: "live" } },
   ],
@@ -107,6 +116,14 @@ const QUERY_VARIANTS = Object.freeze({
   ],
   "/tools/random-team": [
     { label: "tier", query: { mode: "tier" } },
+  ],
+  "/tools/team-balance/drafts": [
+    { label: "recommendations-red", query: { view: "recommendations", draftId: { fixture: "draftId" }, team: "RED" } },
+    { label: "recommendations-blue", query: { view: "recommendations", draftId: { fixture: "draftId" }, team: "BLUE" } },
+  ],
+  "/tools/team-balance/drafts/[draftId]": [
+    { label: "recommendations-red", query: { tab: "recommendations", team: "RED" } },
+    { label: "recommendations-blue", query: { tab: "recommendations", team: "BLUE" } },
   ],
   "/rankings/mmr": [
     { label: "players", query: { view: "players" } },

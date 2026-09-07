@@ -956,6 +956,7 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
       mmrReviewId: sourceIds.mmrReviewId,
       destructionPlayerId: sourceIds.destructionPlayerId,
     },
+    routes: { "/admin/kakao/recruits": { tab: "recruits" } },
     sourceIds,
   };
 
