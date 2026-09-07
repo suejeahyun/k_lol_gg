@@ -18,6 +18,8 @@ test("feature-gated site assistant is mounted globally and uses protected AI con
     '"If-Match"',
     'role="dialog"',
     'aria-live="polite"',
+    'aria-hidden="true"',
+    'tabIndex={-1}',
     "maxLength={1_800}",
   ]) assert.equal(assistant.includes(contract), true, contract);
   assert.equal(assistant.includes("dangerouslySetInnerHTML"), false);

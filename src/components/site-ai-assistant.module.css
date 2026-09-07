@@ -1,4 +1,5 @@
 .root { position: fixed; right: 1.15rem; bottom: 1.15rem; z-index: 70; font-family: inherit; }
+.root[aria-hidden="true"] { visibility: hidden; pointer-events: none; }
 .trigger { display: flex; align-items: center; gap: .45rem; min-height: 3rem; padding: .7rem 1rem; border: 1px solid rgba(91,111,187,.2); border-radius: 999px; color: #fff; background: linear-gradient(135deg,#5f98d4,#8266ca); box-shadow: 0 14px 34px rgba(59,76,131,.26); font-weight: 850; cursor: pointer; }
 .trigger svg { width: 1.15rem; height: 1.15rem; }
 .panel { position: absolute; right: 0; bottom: 3.8rem; display: grid; grid-template-rows: auto minmax(10rem,1fr) auto auto; width: min(24rem,calc(100vw - 2rem)); max-height: min(37rem,calc(100vh - 7rem)); overflow: hidden; border: 1px solid #d9e4f2; border-radius: 1.35rem; background: rgba(255,255,255,.98); box-shadow: 0 24px 70px rgba(40,57,91,.24); }

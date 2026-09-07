@@ -241,6 +241,7 @@ async function auditPage(client, axeSource, origin, path, viewport) {
         ttfbMs: Math.round(navigation.responseStart),
         lcpMs: Math.round(window.__qualityVitals?.lcp ?? 0),
         cls: Number((window.__qualityVitals?.cls ?? 0).toFixed(4)),
+        layoutShifts: window.__qualityVitals?.shifts ?? [],
         longTaskMs: Math.round(window.__qualityVitals?.longTaskMs ?? 0),
         requestCount: resources.length + 1,
         transferBytes: Math.round(resources.reduce((sum, item) => sum + item.transferSize, navigation.transferSize ?? 0)),
@@ -300,9 +301,20 @@ async function main() {
       client.call("Accessibility.enable"),
     ]);
     await client.call("Page.addScriptToEvaluateOnNewDocument", { source: `
-      window.__qualityVitals = { lcp: 0, cls: 0, longTaskMs: 0 };
+      window.__qualityVitals = { lcp: 0, cls: 0, shifts: [], longTaskMs: 0 };
       try { new PerformanceObserver((list) => { for (const entry of list.getEntries()) window.__qualityVitals.lcp = entry.startTime; }).observe({ type: "largest-contentful-paint", buffered: true }); } catch {}
-      try { new PerformanceObserver((list) => { for (const entry of list.getEntries()) if (!entry.hadRecentInput) window.__qualityVitals.cls += entry.value; }).observe({ type: "layout-shift", buffered: true }); } catch {}
+      try { new PerformanceObserver((list) => { for (const entry of list.getEntries()) if (!entry.hadRecentInput) {
+        window.__qualityVitals.cls += entry.value;
+        window.__qualityVitals.shifts.push({
+          value: Number(entry.value.toFixed(4)),
+          timeMs: Math.round(entry.startTime),
+          sources: (entry.sources ?? []).map((source) => ({
+            node: source.node ? [source.node.tagName?.toLowerCase(), source.node.id ? "#" + source.node.id : "", source.node.classList?.length ? "." + [...source.node.classList].slice(0, 2).join(".") : ""].join("") : null,
+            previousRect: source.previousRect,
+            currentRect: source.currentRect,
+          })),
+        });
+      } }).observe({ type: "layout-shift", buffered: true }); } catch {}
       try { new PerformanceObserver((list) => { for (const entry of list.getEntries()) window.__qualityVitals.longTaskMs += entry.duration; }).observe({ type: "longtask", buffered: true }); } catch {}
     ` });
     const results = [];

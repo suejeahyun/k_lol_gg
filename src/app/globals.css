@@ -1661,7 +1661,7 @@ body:has(.user-dialog[open]) {
 
 .status-page {
   display: grid;
-  min-height: calc(100svh - 220px);
+  min-height: calc(100svh + 160px);
   place-items: center;
   padding: 48px 0 72px;
 }
@@ -2038,6 +2038,7 @@ body:has(.user-dialog[open]) {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+  min-height: calc(100svh + 160px);
   padding-top: 24px;
 }
 

@@ -45,7 +45,15 @@ export function SiteAiAssistant() {
     if (open) inputRef.current?.focus();
   }, [open]);
 
-  if (!enabled) return null;
+  if (!enabled) {
+    return (
+      <aside className={styles.root} aria-hidden="true">
+        <button className={styles.trigger} type="button" disabled tabIndex={-1}>
+          <Bot aria-hidden="true" /><span>도우미</span>
+        </button>
+      </aside>
+    );
+  }
 
   function close() {
     setOpen(false);
