@@ -48,22 +48,79 @@ test("disconnect clears encrypted PUUID and hides existence from another owner",
 
 test("sync jobs retry rate limits and transient failures with bounded backoff", () => {
   const queued = createRiotSyncJob({ id: "job", linkId: "link", requestedBy: "OWNER", now, maximumAttempts: 3 });
-  const first = claimRiotSyncJob({ job: queued, expectedRevision: 0, now });
-  const waiting = finishRiotSyncJob({ job: first, expectedRevision: 1, outcome: { kind: "RATE_LIMITED", retryAfterSeconds: 90 }, now });
+  const first = claimRiotSyncJob({ job: queued, expectedRevision: 0, leaseId: "lease-1", now });
+  const waiting = finishRiotSyncJob({ job: first, expectedRevision: 1, expectedLeaseId: "lease-1", outcome: { kind: "RATE_LIMITED", retryAfterSeconds: 90 }, now });
   assert.equal(waiting.status, "RETRY_WAIT");
   assert.equal(waiting.availableAt.getTime(), now.getTime() + 90_000);
-  assert.throws(() => claimRiotSyncJob({ job: waiting, expectedRevision: 2, now }), /NOT_CLAIMABLE/);
+  assert.throws(() => claimRiotSyncJob({ job: waiting, expectedRevision: 2, leaseId: "lease-2", now }), /NOT_CLAIMABLE/);
   const secondAt = waiting.availableAt;
-  const second = claimRiotSyncJob({ job: waiting, expectedRevision: 2, now: secondAt });
-  const succeeded = finishRiotSyncJob({ job: second, expectedRevision: 3, outcome: { kind: "SUCCESS", partial: false }, now: secondAt });
+  const second = claimRiotSyncJob({ job: waiting, expectedRevision: 2, leaseId: "lease-2", now: secondAt });
+  const succeeded = finishRiotSyncJob({ job: second, expectedRevision: 3, expectedLeaseId: "lease-2", outcome: { kind: "SUCCESS", partial: false }, now: secondAt });
   assert.equal(succeeded.status, "SUCCEEDED");
 });
 
 test("last allowed transient attempt becomes terminal failure", () => {
-  const running = claimRiotSyncJob({ job: createRiotSyncJob({ id: "job", linkId: "link", requestedBy: "ADMIN", now, maximumAttempts: 1 }), expectedRevision: 0, now });
-  const failed = finishRiotSyncJob({ job: running, expectedRevision: 1, outcome: { kind: "TRANSIENT_FAILURE", code: "TIMEOUT" }, now });
+  const running = claimRiotSyncJob({ job: createRiotSyncJob({ id: "job", linkId: "link", requestedBy: "ADMIN", now, maximumAttempts: 1 }), expectedRevision: 0, leaseId: "lease", now });
+  const failed = finishRiotSyncJob({ job: running, expectedRevision: 1, expectedLeaseId: "lease", outcome: { kind: "TRANSIENT_FAILURE", code: "TIMEOUT" }, now });
   assert.equal(failed.status, "FAILED");
   assert.equal(failed.failureCode, "TIMEOUT");
+});
+
+test("stale RUNNING lease is recoverable and the old worker cannot finish it", () => {
+  const first = claimRiotSyncJob({
+    job: createRiotSyncJob({ id: "job", linkId: "link", requestedBy: "JOB", now }),
+    expectedRevision: 0,
+    leaseId: "lease-old",
+    now,
+  });
+  const recoveredAt = new Date(now.getTime() + 60_001);
+  const recovered = claimRiotSyncJob({ job: first, expectedRevision: 1, leaseId: "lease-new", now: recoveredAt });
+  assert.equal(recovered.attemptCount, 2);
+  assert.throws(
+    () => finishRiotSyncJob({ job: recovered, expectedRevision: 2, expectedLeaseId: "lease-old", outcome: { kind: "SUCCESS", partial: false }, now: recoveredAt }),
+    /RIOT_SYNC_LEASE_LOST/,
+  );
+  const waiting = finishRiotSyncJob({
+    job: recovered,
+    expectedRevision: 2,
+    expectedLeaseId: "lease-new",
+    outcome: { kind: "TRANSIENT_FAILURE", code: "UPSTREAM_5XX" },
+    now: recoveredAt,
+  });
+  assert.equal(waiting.status, "RETRY_WAIT");
+  assert.equal(waiting.availableAt.getTime(), recoveredAt.getTime() + 20_000);
+});
+
+test("invalid upstream Retry-After is rejected rather than creating an invalid schedule", () => {
+  const running = claimRiotSyncJob({
+    job: createRiotSyncJob({ id: "job", linkId: "link", requestedBy: "JOB", now }),
+    expectedRevision: 0,
+    leaseId: "lease",
+    now,
+  });
+  assert.throws(
+    () => finishRiotSyncJob({ job: running, expectedRevision: 1, expectedLeaseId: "lease", outcome: { kind: "RATE_LIMITED", retryAfterSeconds: Number.NaN }, now }),
+    /INVALID_RIOT_RETRY_AFTER/,
+  );
+});
+
+test("permanent upstream failure never retries", () => {
+  const running = claimRiotSyncJob({
+    job: createRiotSyncJob({ id: "job", linkId: "link", requestedBy: "JOB", now }),
+    expectedRevision: 0,
+    leaseId: "lease",
+    now,
+  });
+  const failed = finishRiotSyncJob({
+    job: running,
+    expectedRevision: 1,
+    expectedLeaseId: "lease",
+    outcome: { kind: "PERMANENT_FAILURE", code: "UNAUTHORIZED" },
+    now,
+  });
+  assert.equal(failed.status, "FAILED");
+  assert.equal(failed.failureCode, "UNAUTHORIZED");
+  assert.equal(failed.completedAt?.toISOString(), now.toISOString());
 });
 
 test("public Riot DTO excludes PUUID, owner and request-log provenance", () => {

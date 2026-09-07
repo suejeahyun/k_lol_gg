@@ -22,6 +22,8 @@ export type RiotRsoState = Readonly<{
   stateDigestHex: string;
   returnTo: string;
   expiresAt: Date;
+  exchangeId: string | null;
+  exchangeStartedAt: Date | null;
   consumedAt: Date | null;
 }>;
 
@@ -34,7 +36,9 @@ export type RiotSyncJob = Readonly<{
   attemptCount: number;
   maximumAttempts: number;
   availableAt: Date;
+  requestedAt: Date;
   lockedAt: Date | null;
+  leaseId: string | null;
   completedAt: Date | null;
   failureCode: string | null;
 }>;
@@ -148,8 +152,52 @@ export function createRsoState(input: Readonly<{
     stateDigestHex: input.stateDigestHex,
     returnTo: safeRsoReturnTo(input.returnTo),
     expiresAt: new Date(input.now.getTime() + ttl),
+    exchangeId: null,
+    exchangeStartedAt: null,
     consumedAt: null,
   };
+}
+
+export function claimRsoStateExchange(input: Readonly<{
+  state: RiotRsoState;
+  ownerAccountId: string;
+  presentedDigestHex: string;
+  exchangeId: string;
+  now: Date;
+  leaseMilliseconds?: number;
+}>): RiotRsoState {
+  finiteDate(input.now, "INVALID_RSO_TIME");
+  const leaseMilliseconds = input.leaseMilliseconds ?? 60_000;
+  if (!Number.isSafeInteger(leaseMilliseconds) || leaseMilliseconds < 5_000 || leaseMilliseconds > 5 * 60_000) {
+    throw new Error("INVALID_RSO_EXCHANGE_LEASE");
+  }
+  if (
+    input.state.ownerAccountId !== input.ownerAccountId ||
+    input.state.stateDigestHex !== input.presentedDigestHex
+  ) throw new Error("RSO_STATE_NOT_FOUND");
+  if (input.state.consumedAt) throw new Error("RSO_STATE_ALREADY_CONSUMED");
+  if (input.state.expiresAt.getTime() <= input.now.getTime()) throw new Error("RSO_STATE_EXPIRED");
+  identifier(input.exchangeId, "INVALID_RSO_EXCHANGE_ID");
+  const sameExchange = input.state.exchangeId === input.exchangeId;
+  const stale =
+    input.state.exchangeStartedAt !== null &&
+    input.state.exchangeStartedAt.getTime() <= input.now.getTime() - leaseMilliseconds;
+  if (input.state.exchangeId && !sameExchange && !stale) throw new Error("RSO_EXCHANGE_IN_PROGRESS");
+  return { ...input.state, exchangeId: input.exchangeId, exchangeStartedAt: input.now };
+}
+
+export function completeRsoStateExchange(input: Readonly<{
+  state: RiotRsoState;
+  exchangeId: string;
+  now: Date;
+}>): RiotRsoState {
+  finiteDate(input.now, "INVALID_RSO_TIME");
+  if (input.state.consumedAt) throw new Error("RSO_STATE_ALREADY_CONSUMED");
+  if (!input.state.exchangeId || input.state.exchangeId !== input.exchangeId || !input.state.exchangeStartedAt) {
+    throw new Error("RSO_EXCHANGE_LEASE_LOST");
+  }
+  if (input.state.expiresAt.getTime() <= input.now.getTime()) throw new Error("RSO_STATE_EXPIRED");
+  return { ...input.state, consumedAt: input.now };
 }
 
 export function consumeRsoState(input: Readonly<{
@@ -166,6 +214,54 @@ export function consumeRsoState(input: Readonly<{
   if (input.state.consumedAt) throw new Error("RSO_STATE_ALREADY_CONSUMED");
   if (input.state.expiresAt.getTime() <= input.now.getTime()) throw new Error("RSO_STATE_EXPIRED");
   return { ...input.state, consumedAt: input.now };
+}
+
+export function connectRiotAccount(input: Readonly<{
+  current: RiotAccountLink | null;
+  id: string;
+  expectedRevision: number;
+  playerId: string;
+  ownerAccountId: string;
+  gameName: string;
+  tagLine: string;
+  puuidCiphertext: string;
+  method: RiotLinkMethod;
+  now: Date;
+}>): RiotAccountLink {
+  finiteDate(input.now, "INVALID_RIOT_TIME");
+  const riotId = canonicalRiotId(input);
+  const id = identifier(input.id, "INVALID_RIOT_LINK_ID");
+  const playerId = identifier(input.playerId, "INVALID_RIOT_PLAYER_ID");
+  const ownerAccountId = identifier(input.ownerAccountId, "INVALID_RIOT_OWNER");
+  const puuidCiphertext = identifier(input.puuidCiphertext, "INVALID_RIOT_PUUID_CIPHERTEXT");
+  if (puuidCiphertext.length > 2_000) throw new Error("INVALID_RIOT_PUUID_CIPHERTEXT");
+  if (!Number.isSafeInteger(input.expectedRevision) || input.expectedRevision < 0) {
+    throw new Error("STALE_RIOT_REVISION");
+  }
+  if (input.current) {
+    expectedRevision(input.current.revision, input.expectedRevision);
+    if (
+      input.current.id !== id ||
+      input.current.playerId !== playerId ||
+      input.current.ownerAccountId !== ownerAccountId
+    ) throw new Error("RIOT_LINK_NOT_FOUND");
+    if (input.current.status === "CONNECTED") throw new Error("RIOT_LINK_ALREADY_CONNECTED");
+  } else if (input.expectedRevision !== 0) {
+    throw new Error("STALE_RIOT_REVISION");
+  }
+  return {
+    id,
+    revision: input.current ? input.current.revision + 1 : 0,
+    playerId,
+    ownerAccountId,
+    gameName: riotId.gameName,
+    tagLine: riotId.tagLine,
+    puuidCiphertext,
+    method: input.method,
+    status: "CONNECTED",
+    linkedAt: input.now,
+    disconnectedAt: null,
+  };
 }
 
 export function disconnectRiotAccount(input: Readonly<{
@@ -201,32 +297,58 @@ export function createRiotSyncJob(input: Readonly<{
     attemptCount: 0,
     maximumAttempts,
     availableAt: input.now,
+    requestedAt: input.now,
     lockedAt: null,
+    leaseId: null,
     completedAt: null,
     failureCode: null,
   };
 }
 
+export function assertRiotSyncCooldown(input: Readonly<{
+  lastRequestedAt: Date | null;
+  now: Date;
+  cooldownMilliseconds?: number;
+}>): void {
+  finiteDate(input.now, "INVALID_RIOT_SYNC_TIME");
+  const cooldownMilliseconds = input.cooldownMilliseconds ?? 5 * 60_000;
+  if (!Number.isSafeInteger(cooldownMilliseconds) || cooldownMilliseconds < 1_000 || cooldownMilliseconds > 24 * 60 * 60_000) {
+    throw new Error("INVALID_RIOT_SYNC_COOLDOWN");
+  }
+  if (input.lastRequestedAt) {
+    finiteDate(input.lastRequestedAt, "INVALID_RIOT_SYNC_TIME");
+    const retryAt = input.lastRequestedAt.getTime() + cooldownMilliseconds;
+    if (retryAt > input.now.getTime()) throw new Error(`RIOT_SYNC_COOLDOWN:${Math.ceil((retryAt - input.now.getTime()) / 1_000)}`);
+  }
+}
+
 export function claimRiotSyncJob(input: Readonly<{
   job: RiotSyncJob;
   expectedRevision: number;
+  leaseId: string;
   now: Date;
   leaseMilliseconds?: number;
 }>): RiotSyncJob {
   expectedRevision(input.job.revision, input.expectedRevision);
   finiteDate(input.now, "INVALID_RIOT_SYNC_TIME");
-  const staleLeaseAt = input.now.getTime() - (input.leaseMilliseconds ?? 60_000);
+  const leaseMilliseconds = input.leaseMilliseconds ?? 60_000;
+  if (!Number.isSafeInteger(leaseMilliseconds) || leaseMilliseconds < 5_000 || leaseMilliseconds > 15 * 60_000) {
+    throw new Error("INVALID_RIOT_SYNC_LEASE_DURATION");
+  }
+  const staleLeaseAt = input.now.getTime() - leaseMilliseconds;
   const claimable =
     (["QUEUED", "RETRY_WAIT"].includes(input.job.status) && input.job.availableAt <= input.now) ||
     (input.job.status === "RUNNING" && input.job.lockedAt !== null && input.job.lockedAt.getTime() <= staleLeaseAt);
   if (!claimable) throw new Error("RIOT_SYNC_NOT_CLAIMABLE");
   if (input.job.attemptCount >= input.job.maximumAttempts) throw new Error("RIOT_SYNC_ATTEMPTS_EXHAUSTED");
+  identifier(input.leaseId, "INVALID_RIOT_SYNC_LEASE");
   return {
     ...input.job,
     revision: input.job.revision + 1,
     status: "RUNNING",
     attemptCount: input.job.attemptCount + 1,
     lockedAt: input.now,
+    leaseId: input.leaseId,
     failureCode: null,
   };
 }
@@ -234,19 +356,24 @@ export function claimRiotSyncJob(input: Readonly<{
 export function finishRiotSyncJob(input: Readonly<{
   job: RiotSyncJob;
   expectedRevision: number;
+  expectedLeaseId: string;
   outcome: RiotSyncOutcome;
   now: Date;
 }>): RiotSyncJob {
   expectedRevision(input.job.revision, input.expectedRevision);
   finiteDate(input.now, "INVALID_RIOT_SYNC_TIME");
   if (input.job.status !== "RUNNING" || !input.job.lockedAt) throw new Error("RIOT_SYNC_NOT_RUNNING");
+  if (!input.job.leaseId || input.job.leaseId !== input.expectedLeaseId) throw new Error("RIOT_SYNC_LEASE_LOST");
+  if (input.outcome.kind === "RATE_LIMITED" && (!Number.isFinite(input.outcome.retryAfterSeconds) || input.outcome.retryAfterSeconds <= 0)) {
+    throw new Error("INVALID_RIOT_RETRY_AFTER");
+  }
   if (input.outcome.kind === "SUCCESS") {
-    return { ...input.job, revision: input.job.revision + 1, status: input.outcome.partial ? "PARTIAL" : "SUCCEEDED", lockedAt: null, completedAt: input.now, failureCode: null };
+    return { ...input.job, revision: input.job.revision + 1, status: input.outcome.partial ? "PARTIAL" : "SUCCEEDED", lockedAt: null, leaseId: null, completedAt: input.now, failureCode: null };
   }
   const failureCode = input.outcome.kind === "RATE_LIMITED" ? "RATE_LIMITED" : input.outcome.code;
   const exhausted = input.job.attemptCount >= input.job.maximumAttempts;
   if (input.outcome.kind === "PERMANENT_FAILURE" || exhausted) {
-    return { ...input.job, revision: input.job.revision + 1, status: "FAILED", lockedAt: null, completedAt: input.now, failureCode };
+    return { ...input.job, revision: input.job.revision + 1, status: "FAILED", lockedAt: null, leaseId: null, completedAt: input.now, failureCode };
   }
   const retrySeconds = input.outcome.kind === "RATE_LIMITED"
     ? Math.min(3_600, Math.max(1, Math.ceil(input.outcome.retryAfterSeconds)))
@@ -257,6 +384,7 @@ export function finishRiotSyncJob(input: Readonly<{
     status: "RETRY_WAIT",
     availableAt: new Date(input.now.getTime() + retrySeconds * 1_000),
     lockedAt: null,
+    leaseId: null,
     completedAt: null,
     failureCode,
   };
