@@ -275,8 +275,13 @@ async function main() {
       const fileName = safeFileName(index, route);
       await writeFile(join(outputDirectory, fileName), Buffer.from(screenshot.data, "base64"));
       const finalStatus = pageDetails.responseStatus || documentStatus;
+      const finalLocation = new URL(pageDetails.finalUrl ?? finalResponseUrl ?? requestedUrl);
+      const finalPath = `${finalLocation.pathname}${finalLocation.search}`;
       const issues = [
         finalStatus !== 200 ? `HTTP_${finalStatus ?? "UNKNOWN"}` : null,
+        route.expectedRedirect?.destination && finalPath !== route.expectedRedirect.destination
+          ? "REDIRECT_DESTINATION_MISMATCH"
+          : null,
         pageDetails.hasHorizontalOverflow ? "HORIZONTAL_OVERFLOW" : null,
         pageDetails.hasFrameworkError ? "FRAMEWORK_ERROR" : null,
         !pageDetails.heading ? "MISSING_H1" : null,
@@ -289,6 +294,7 @@ async function main() {
         requestedPath: route.path,
         requestedUrl,
         finalUrl: pageDetails.finalUrl ?? finalResponseUrl,
+        finalPath,
         status: finalStatus,
         title: pageDetails.title,
         heading: pageDetails.heading,
