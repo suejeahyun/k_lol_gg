@@ -93,6 +93,30 @@ async function main() {
     }
   }
   await writeFile(join(outputDirectory, "contact-sheets.json"), `${JSON.stringify(sheetRecords, null, 2)}\n`);
+  const markdown = [
+    "# K-LOL.GG V2 전체 페이지 화면 검수",
+    "",
+    `- 캡처 시각: ${index.capturedAt}`,
+    `- 기준 주소: ${index.origin}`,
+    `- 전체 화면: ${index.routes.length}개`,
+    `- 자동 감지 문제: ${index.routes.reduce((count, record) => count + (record.issues?.length ?? 0), 0)}개`,
+    "",
+    "## 한눈에 보기",
+    "",
+    ...sheetRecords.flatMap((sheet) => [
+      `### ${sheet.group} ${sheet.part}`,
+      "",
+      `![${sheet.group} ${sheet.part}](./${sheet.fileName})`,
+      "",
+    ]),
+    "## 원본 전체 높이 PNG",
+    "",
+    "| 번호 | 그룹 | 요청 경로 | 최종 상태 | 크기 | 자동 점검 | 원본 |",
+    "| ---: | --- | --- | ---: | --- | --- | --- |",
+    ...index.routes.map((record) => `| ${record.index} | ${record.group} | \`${String(record.requestedPath).replaceAll("|", "\\|")}\` | ${record.status ?? "?"} | ${record.capturedWidth ?? "?"}×${record.capturedHeight ?? "?"} | ${record.issues?.length ? record.issues.join(", ") : "통과"} | [PNG](./${record.screenshot}) |`),
+    "",
+  ].join("\n");
+  await writeFile(join(outputDirectory, "README.md"), markdown);
 }
 
 main().catch((error) => {
