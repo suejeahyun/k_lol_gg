@@ -16,7 +16,9 @@
     "test:db": "tsx scripts/test-db/run-data-contracts.ts",
     "verify:auth-http": "node scripts/verify-auth-http.mjs",
     "security:secrets": "node scripts/check-secrets.mjs",
-    "check": "npm run lint && npm run typecheck && npm test && npm run build"
+    "check:wave": "npm run lint && npm run typecheck && npm test",
+    "check": "npm run lint && npm run typecheck && npm test && npm run build",
+    "check:final": "npm run check && npm run test:db && npm run verify:auth-http && npm run security:secrets"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
