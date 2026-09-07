@@ -1,6 +1,6 @@
 {
-  "id": "c7dae288-08b3-46db-a5df-0679620aa4e9",
-  "prevId": "f27b08bc-1cfa-41ff-a9e0-dd90e524314b",
+  "id": "f27b08bc-1cfa-41ff-a9e0-dd90e524314b",
+  "prevId": "47c9cc59-a2d2-46dd-86b4-5749e74d6072",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -14944,12 +14944,6 @@
           "notNull": true,
           "default": 0
         },
-        "gallery_id": {
-          "name": "gallery_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
         "aggregate_json": {
           "name": "aggregate_json",
           "type": "jsonb",
@@ -15038,20 +15032,6 @@
         }
       },
       "foreignKeys": {
-        "destruction_competitions_gallery_id_galleries_id_fk": {
-          "name": "destruction_competitions_gallery_id_galleries_id_fk",
-          "tableFrom": "destruction_competitions",
-          "tableTo": "galleries",
-          "schemaTo": "media",
-          "columnsFrom": [
-            "gallery_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "no action"
-        },
         "destruction_competitions_created_by_user_account_id_user_accounts_id_fk": {
           "name": "destruction_competitions_created_by_user_account_id_user_accounts_id_fk",
           "tableFrom": "destruction_competitions",
