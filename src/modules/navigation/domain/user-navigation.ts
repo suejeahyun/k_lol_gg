@@ -38,7 +38,7 @@ export const canonicalUserRoutes = [
   { template: "/account", label: "내 계정", section: "home-account", implementationState: "page-contract" },
   { template: "/account/password", label: "비밀번호 변경", section: "home-account", implementationState: "page-contract" },
   { template: "/account/riot", label: "Riot 계정", section: "home-account", implementationState: "page-contract" },
-  { template: "/account/discipline", label: "내 징계 과제", section: "home-account", implementationState: "planned" },
+  { template: "/account/discipline", label: "내 징계 과제", section: "home-account", implementationState: "page-contract" },
 
   { template: "/login", label: "로그인", section: "auth-help", implementationState: "page-contract" },
   { template: "/signup", label: "회원가입", section: "auth-help", implementationState: "page-contract" },
@@ -70,7 +70,7 @@ export const canonicalUserRoutes = [
   { template: "/competitions/destruction/[tournamentId]", label: "멸망전 상세", section: "competitions", implementationState: "page-contract" },
 
   { template: "/recruits", label: "구인 현황", section: "community", implementationState: "page-contract" },
-  { template: "/discipline", label: "징계 현황", section: "community", implementationState: "planned" },
+  { template: "/discipline", label: "징계 현황", section: "community", implementationState: "page-contract" },
   { template: "/highlights", label: "하이라이트", section: "community", implementationState: "page-contract" },
   { template: "/highlights/[highlightId]", label: "하이라이트 상세", section: "community", implementationState: "page-contract" },
   { template: "/images", label: "갤러리", section: "community", implementationState: "page-contract" },
