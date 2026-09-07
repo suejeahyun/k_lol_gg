@@ -28,7 +28,7 @@ test("administrator transition decisions preserve the approved totals", () => {
     ]),
   );
 
-  assert.deepEqual(totals, { keep: 43, integrate: 24, redirect: 12, retire: 2 });
+  assert.deepEqual(totals, { keep: 42, integrate: 25, redirect: 12, retire: 2 });
 });
 
 test("runtime parity ledger cannot drift from the reviewed route map", () => {

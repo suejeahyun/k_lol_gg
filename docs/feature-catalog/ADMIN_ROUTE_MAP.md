@@ -177,9 +177,9 @@
 | ID | V1 경로 | 판정 | V2 위치/처리 | 권한 |
 |---:|---|---|---|---|
 | 044 | `/admin/kakao` | 유지 | 커뮤니티 운영 요약·설정 상태·최근 구인 | ADMIN |
-| 045 | `/admin/kakao/recruits` | 유지 | 진행 구인·이력 | ADMIN (reset·자동화 SUPER) |
-| 046 | `/admin/kakao/recruits/logs` | 통합 | `/admin/kakao/recruits?tab=logs`, 필터·페이지 유지 | ADMIN |
-| 047 | `/admin/kakao/recruits/settings` | 통합 | `/admin/kakao/recruits?tab=health`, 진단·복구·자동화 설정 | ADMIN (복구·reset 설정 SUPER) |
+| 045 | `/admin/kakao/recruits` | 통합 | `/admin/kakao?tab=recruits`, 진행 구인·이력 | ADMIN (reset·자동화 SUPER) |
+| 046 | `/admin/kakao/recruits/logs` | 통합 | `/admin/kakao?tab=logs`, 필터·페이지 유지 | ADMIN |
+| 047 | `/admin/kakao/recruits/settings` | 통합 | `/admin/kakao?tab=health`, 진단·복구·자동화 설정 | ADMIN (복구·reset 설정 SUPER) |
 | 048 | `/admin/kakao/scrims` | 통합 | `/admin/kakao?tab=scrims`, 스크림 구인 목록 | ADMIN |
 | 049 | `/admin/kakao/season-apply` | 통합 | `/admin/seasons?view=applications`, 시즌과 검토 업무 결합 | ADMIN |
 | 050 | `/admin/kakao/settings` | 통합 | `/admin/kakao?tab=settings` | ADMIN |
