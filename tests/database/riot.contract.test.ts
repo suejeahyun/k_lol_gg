@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { randomBytes, randomUUID } from "node:crypto";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import { eq } from "drizzle-orm";
@@ -102,7 +103,9 @@ test("S12 Riot persistence keeps owner auth, one-time RSO, jobs, receipts, audit
     assert.equal((await pool.query("select 1 from information_schema.tables where table_schema='operations' and table_name='site_settings'")).rowCount, 1);
     assert.equal((await pool.query("select 1 from information_schema.tables where table_schema='competition' and table_name='destruction_competitions'")).rowCount, 1);
     assert.equal((await pool.query("select 1 from information_schema.tables where table_schema='catalog' and table_name='champions'")).rowCount, 1);
-    assert.equal((await pool.query("select 1 from information_schema.tables where table_schema='catalog' and table_name in ('champion_command_receipts', 'champion_outbox')")).rowCount, 0, "0014 must not pre-apply the later champion mutation ledger");
+    const riotMigration = await readFile(new URL("../../drizzle/0014_s12_riot.sql", import.meta.url), "utf8");
+    assert.doesNotMatch(riotMigration, /champion_(?:command_receipts|outbox)/u, "0014 must not pre-apply the later champion mutation ledger");
+    assert.equal((await pool.query("select 1 from information_schema.tables where table_schema='catalog' and table_name in ('champion_command_receipts', 'champion_outbox')")).rowCount, 2, "0016 must install the champion mutation ledger");
 
     await database.insert(userAccounts).values({
       id: ownerId,

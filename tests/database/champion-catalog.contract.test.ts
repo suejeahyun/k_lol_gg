@@ -249,9 +249,13 @@ test("S10 champion catalog keeps ADMIN TOTP mutations, replay and durable ledger
       displayName: "기존 챔피언",
     });
     const publicPage = await queries.listPublic({ query: null, status: null, page: 1, pageSize: 100 });
-    assert.deepEqual(publicPage.items.map((champion) => champion.key), ["legacy-kept"]);
+    const publicKeys = publicPage.items.map((champion) => champion.key);
+    assert.equal(publicKeys.includes("legacy-kept"), true);
+    assert.equal(publicKeys.includes("contract-ahri"), false);
     const adminPage = await queries.listAdmin({ query: null, status: null, page: 1, pageSize: 100 });
-    assert.deepEqual(adminPage.items.map((champion) => champion.key).sort(), ["contract-ahri", "legacy-kept"]);
+    const adminKeys = adminPage.items.map((champion) => champion.key);
+    assert.equal(adminKeys.includes("legacy-kept"), true);
+    assert.equal(adminKeys.includes("contract-ahri"), true);
 
     const retained = (await database.select().from(championCatalog).where(eq(championCatalog.key, "legacy-kept")))[0];
     assert.equal(retained?.revision, 7, "pre-existing catalog data must remain unchanged");

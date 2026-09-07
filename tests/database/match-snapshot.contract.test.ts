@@ -25,6 +25,7 @@ import {
   players,
   privateAssets,
   seasons,
+  teamBalanceDrafts,
   userAccounts,
 } from "../../src/platform/db/schema/index";
 import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
@@ -140,7 +141,9 @@ test("S04 stores participant display identity and rejection reasons as durable h
     const migrationRows = await pool.query<{ count: number }>(
       "select count(*)::int as count from drizzle.__drizzle_migrations",
     );
-    assert.equal(migrationRows.rows[0]?.count, 6);
+    const journal = JSON.parse(await readFile(new URL("../../drizzle/meta/_journal.json", import.meta.url), "utf8")) as { entries?: unknown[] };
+    assert.ok(Array.isArray(journal.entries));
+    assert.equal(migrationRows.rows[0]?.count, journal.entries.length);
     const extensionRows = await pool.query<{ version: string }>(
       "select extversion as version from pg_extension where extname = 'pg_trgm'",
     );
@@ -342,6 +345,18 @@ test("S04 stores participant display identity and rejection reasons as durable h
         game,
         { ...game, gameNumber: 2, winnerTeam: "RED" as const },
       ];
+      await database.insert(teamBalanceDrafts).values({
+        id: teamBalanceDraftId,
+        ownerUserAccountId: actorId,
+        title: "경기 출처 계약 초안",
+        status: "EVALUATED",
+        evaluationRound: 1,
+        revision: 0,
+        createdByUserAccountId: actorId,
+        updatedByUserAccountId: actorId,
+        createdAt: now,
+        updatedAt: now,
+      });
       await database.insert(matchSubmissions).values({
         id: submissionId,
         publicCode: `MR2${createHash("sha256").update(submissionId).digest("hex").slice(0, 16).toUpperCase()}`,

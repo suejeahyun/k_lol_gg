@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import { createDatabaseHandle } from "../../src/platform/db/database";
 import { applyMigrations } from "../../src/platform/db/migrate";
 import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
 
-test("0000 through 0004 install idempotently on a distinct empty PostgreSQL 18 database", async () => {
+test("all journaled migrations install idempotently on a distinct empty PostgreSQL 18 database", async () => {
   const connectionString = process.env.TEST_DATABASE_URL;
   assert.ok(connectionString, "TEST_DATABASE_URL must be injected by the isolated harness.");
   assertSafeTestDatabase({
@@ -37,7 +38,9 @@ test("0000 through 0004 install idempotently on a distinct empty PostgreSQL 18 d
     const migrations = await pool.query<{ count: number }>(
       "select count(*)::int as count from drizzle.__drizzle_migrations",
     );
-    assert.equal(migrations.rows[0]?.count, 5);
+    const journal = JSON.parse(await readFile(new URL("../../drizzle/meta/_journal.json", import.meta.url), "utf8")) as { entries?: unknown[] };
+    assert.ok(Array.isArray(journal.entries) && journal.entries.length > 0, "migration journal must contain entries");
+    assert.equal(migrations.rows[0]?.count, journal.entries.length);
 
     const requiredTables = await pool.query<{ schema_name: string; table_name: string }>(
       `select table_schema as schema_name, table_name

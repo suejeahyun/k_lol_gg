@@ -662,10 +662,11 @@ function base32(value: Buffer): string {
 }
 
 async function runSeasonBrowserQaServer(connectionString: string): Promise<void> {
+  assertSafeTestDatabase({ connectionString, nodeEnv: "test", testMode: "true" });
   const pool = new Pool({ connectionString, max: 2 });
   const actorId = randomUUID();
   const playerId = randomUUID();
-  const seasonId = randomUUID();
+  let seasonId: string = randomUUID();
   const applicationId = randomUUID();
   const suffix = randomBytes(4).toString("hex");
   const loginId = `browser_super_${suffix}`;
@@ -782,6 +783,9 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
     lifecycleManaged: true,
   });
   const adminTarget = await seedQaAccount("admin", "APPROVED", { role: "ADMIN" });
+  // This approved administrator deliberately has no TOTP credential so the
+  // dedicated setup browser session can capture /admin/security truthfully.
+  const setupTarget = await seedQaAccount("admin_setup", "APPROVED", { role: "ADMIN" });
   const adminTargetSecret = base32(randomBytes(20));
   const adminTargetEnvelope = encryptTotpSecret(adminTarget.id, adminTargetSecret, totpKeyring);
   await pool.query(
@@ -818,12 +822,23 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
      values ($1, $2, $3, 'PENDING', clock_timestamp(), clock_timestamp() + interval '7 days')`,
     [randomUUID(), approvedTarget.id, randomBytes(32)],
   );
-  await pool.query(
-    `insert into competition.seasons
-       (id, name, name_normalized, status, revision, activated_at, created_by_user_account_id, updated_by_user_account_id)
-     values ($1, $2::text, lower($2::text), 'ACTIVE', 1, now(), $3, $3)`,
-    [seasonId, `하늘바람 S03 ${suffix}`, actorId],
+  const activeSeason = await pool.query<{ id: string }>(
+    `select id::text as id
+       from competition.seasons
+      where status = 'ACTIVE'
+      order by activated_at desc nulls last, created_at desc, id
+      limit 1`,
   );
+  if (activeSeason.rows[0]) {
+    seasonId = activeSeason.rows[0].id;
+  } else {
+    await pool.query(
+      `insert into competition.seasons
+         (id, name, name_normalized, status, revision, activated_at, created_by_user_account_id, updated_by_user_account_id)
+       values ($1, $2::text, lower($2::text), 'ACTIVE', 1, now(), $3, $3)`,
+      [seasonId, `하늘바람 S03 ${suffix}`, actorId],
+    );
+  }
   await pool.query(
     `insert into competition.season_applications
        (id, season_id, player_id, apply_date, recruit_no, main_position, sub_positions, status, source)
@@ -831,10 +846,112 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
     [applicationId, seasonId, playerId, today],
   );
 
+  async function requiredFixture(label: string, query: string, values: readonly unknown[] = []) {
+    const result = await pool.query<{ value: string | null }>(query, [...values]);
+    const value = result.rows[0]?.value;
+    if (!value) throw new Error(`Browser QA fixture is missing: ${label}. Run the full isolated DB contracts before capture QA.`);
+    return value;
+  }
+
+  // Media contract coverage intentionally ends in ARCHIVED. Restore one real
+  // tested row for public detail capture instead of inventing a detached row.
+  const highlightId = await requiredFixture("published highlight", `
+    with candidate as (
+      select id from media.highlights order by updated_at desc, id limit 1
+    )
+    update media.highlights h
+       set status = 'PUBLISHED', published_at = coalesce(h.published_at, clock_timestamp()),
+           archived_at = null, updated_at = clock_timestamp(), updated_by_user_account_id = $1
+      from candidate
+     where h.id = candidate.id
+    returning h.id::text as value`, [actorId]);
+  const galleryId = await requiredFixture("published gallery", `
+    with candidate as (
+      select g.id
+        from media.galleries g
+        join media.gallery_assets ga on ga.gallery_id = g.id
+        join assets.private_assets pa on pa.id = ga.private_asset_id
+       where pa.status = 'READY' and pa.purpose = 'GALLERY'
+       group by g.id
+      having count(*) between 1 and 5
+       order by max(g.updated_at) desc, g.id
+       limit 1
+    )
+    update media.galleries g
+       set status = 'PUBLISHED', published_at = coalesce(g.published_at, clock_timestamp()),
+           archived_at = null, updated_at = clock_timestamp(), updated_by_user_account_id = $1
+      from candidate
+     where g.id = candidate.id
+    returning g.id::text as value`, [actorId]);
+
+  // The operation-form contract proves soft deletion and therefore leaves no
+  // visible detail. Add one minimal, allowlisted capture-only row.
+  const operationFormId = randomUUID();
+  await pool.query(
+    `insert into recruiting.operation_forms
+       (id, form_type, status, payload_json, source_room_id, source_sender_id, submitted_at, created_at, updated_at)
+     values ($1, 'suggestions', 'PENDING', $2::jsonb, 'browser-qa-room', 'browser-qa-sender',
+             clock_timestamp(), clock_timestamp(), clock_timestamp())`,
+    [operationFormId, JSON.stringify({ applicantName: "화면 검수 신청자", applicantNickname: `Breeze${suffix}`, reason: "화면 검수", content: "격리 테스트 DB 전용 운영 신청서입니다." })],
+  );
+
+  // The account-facing draft detail is owner-scoped. Reassign the tested draft
+  // to the synthetic SUPER actor while keeping every persisted candidate and
+  // participant snapshot intact.
+  const draftId = await requiredFixture("team balance draft", `
+    with candidate as (
+      select id from team_tools.team_balance_drafts order by updated_at desc, id limit 1
+    )
+    update team_tools.team_balance_drafts d
+       set owner_user_account_id = $1, updated_by_user_account_id = $1, updated_at = clock_timestamp()
+      from candidate
+     where d.id = candidate.id
+    returning d.id::text as value`, [actorId]);
+
+  const sourceIds = {
+    championKey: await requiredFixture("active champion", `select key as value from catalog.champions where status = 'ACTIVE' order by updated_at desc, key limit 1`),
+    publishedMatchId: await requiredFixture("published match", `select id::text as value from competition.match_series where status = 'PUBLISHED' order by updated_at desc, id limit 1`),
+    submissionId: await requiredFixture("match submission", `select id::text as value from competition.match_submissions order by updated_at desc, id limit 1`),
+    highlightId,
+    galleryId,
+    eventId: await requiredFixture("event competition", `select id::text as value from competition.event_competitions order by updated_at desc, id limit 1`),
+    destructionId: await requiredFixture("destruction competition", `select id::text as value from competition.destruction_competitions order by updated_at desc, id limit 1`),
+    disciplineRecordId: await requiredFixture("discipline record", `select id::text as value from discipline.records order by updated_at desc, id limit 1`),
+    operationFormId,
+    draftId,
+    privateAssetId: null as string | null,
+  };
+  const privateAssetRelation = await pool.query<{ relation: string | null }>(`select to_regclass('assets.private_assets')::text as relation`);
+  if (privateAssetRelation.rows[0]?.relation) {
+    sourceIds.privateAssetId = await requiredFixture("private asset", `select id::text as value from assets.private_assets order by (status = 'READY') desc, created_at desc, id limit 1`);
+  }
+  if (!sourceIds.privateAssetId) {
+    throw new Error("Browser QA fixture is missing: private asset route requires assets.private_assets.");
+  }
+  const captureFixtures = {
+    parameters: {
+      assetId: sourceIds.privateAssetId,
+      draftId: sourceIds.draftId,
+      championId: sourceIds.championKey,
+      recordId: sourceIds.disciplineRecordId,
+      highlightId: sourceIds.highlightId,
+      imageId: sourceIds.galleryId,
+      formType: "suggestions",
+      matchId: sourceIds.publishedMatchId,
+      submissionId: sourceIds.submissionId,
+      id: sourceIds.operationFormId,
+      playerId,
+      tournamentId: sourceIds.destructionId,
+      eventId: sourceIds.eventId,
+      userAccountId: actorId,
+    },
+    sourceIds,
+  };
+
   const port = await availableLoopbackPort();
   const origin = `http://127.0.0.1:${port}`;
   const nextBin = resolve(workspaceRoot, "node_modules/next/dist/bin/next");
-  const child = spawn(process.execPath, [nextBin, "dev", "--hostname", "127.0.0.1", "--port", String(port)], {
+  const child = spawn(process.execPath, [nextBin, "dev", "--webpack", "--hostname", "127.0.0.1", "--port", String(port)], {
     cwd: workspaceRoot,
     env: {
       ...safeProcessEnvironment(),
@@ -845,6 +962,7 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
       SESSION_SIGNING_KEYS: sessionKeysJson,
       TOTP_ENCRYPTION_KEYS: totpKeysJson,
       V2_AUTH_RATE_LIMIT_PEPPER: rateLimitPepper,
+      V2_FAKE_PRIVATE_ASSETS: "1",
     },
     stdio: ["ignore", "pipe", "pipe"],
     windowsHide: true,
@@ -873,7 +991,14 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
     process.stdout.write(`[browser-qa-ready] ${JSON.stringify({
       origin,
       loginId,
+      accountLoginId: loginId,
+      setupLoginId: setupTarget.loginId,
       password,
+      actorUserAccountId: actorId,
+      actorPlayerId: playerId,
+      seasonId,
+      applicationId,
+      fixtures: captureFixtures,
       targets: {
         pending: pendingTarget,
         approved: approvedTarget,
@@ -881,6 +1006,7 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
         suspended: suspendedTarget,
         deleted: deletedTarget,
         admin: adminTarget,
+        setup: setupTarget,
         claim: claimTarget,
       },
     })}\n`);

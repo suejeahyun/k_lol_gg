@@ -161,6 +161,11 @@ test("S05 rebuilds PUBLISHED match statistics atomically and receipts make repla
       })),
     ));
 
+    // Other contract files intentionally leave match-change events behind in
+    // the shared upgrade database. This test owns only the event it enqueues.
+    await database.update(matchRecalculationOutbox).set({
+      status: "DELIVERED", lockedAt: null, deliveredAt: now, lastErrorCode: null, updatedAt: now,
+    });
     const eventId = await enqueue("PUBLISHED", 1, null, seasonId, now);
     const claimed = await repository.claimNextMatchChanged(now);
     assert.ok(claimed);

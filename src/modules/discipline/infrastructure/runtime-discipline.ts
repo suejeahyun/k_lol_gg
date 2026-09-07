@@ -1,6 +1,8 @@
 import "server-only";
 
 import { PrivateAssetService } from "@/modules/assets/application/private-asset-service";
+import { UnavailablePrivateImageStorage } from "@/modules/matches/infrastructure/private-image";
+import { getRuntimePrivateImageStorage } from "@/modules/matches/infrastructure/runtime-private-assets";
 import { getDatabase } from "@/platform/db/client";
 
 import { DisciplineCommandHandler } from "../application/command-handler";
@@ -8,7 +10,6 @@ import type { DisciplineCommand } from "../application/commands";
 import {
   DisciplineAssetInspector,
   DisabledPrivateAssetReadGrant,
-  createRuntimeDisciplineAssetStorage,
   disciplineAssetStorageKeys,
   randomAssetIdentity,
 } from "./discipline-private-assets";
@@ -39,7 +40,7 @@ export class RuntimeDisciplineService {
       authorization: adapter,
       audit: adapter.assetAuditPort(),
       inspection: new DisciplineAssetInspector(),
-      storage: createRuntimeDisciplineAssetStorage(),
+      storage: getRuntimePrivateImageStorage() ?? new UnavailablePrivateImageStorage(),
       readGrants: new DisabledPrivateAssetReadGrant(),
       assetIds: randomAssetIdentity,
       eventIds: randomAssetIdentity,

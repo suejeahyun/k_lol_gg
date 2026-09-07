@@ -6,13 +6,8 @@ import type {
   PrivateAssetInspectionPort,
   PrivateAssetReadGrantPort,
   PrivateAssetStorageKeyPort,
-  PrivateAssetStoragePort,
 } from "@/modules/assets/application/ports/private-asset-ports";
-import {
-  UnavailablePrivateImageStorage,
-  validatePrivateScoreboardImage,
-} from "@/modules/matches/infrastructure/private-image";
-import { getRuntimePrivateImageStorage } from "@/modules/matches/infrastructure/runtime-private-assets";
+import { validatePrivateScoreboardImage } from "@/modules/matches/infrastructure/private-image";
 
 export class DisciplineAssetInspector implements PrivateAssetInspectionPort {
   async inspect(bytes: Uint8Array, declaredContentType: string, signal: AbortSignal): Promise<PrivateAssetInspection> {
@@ -45,7 +40,3 @@ export const disciplineAssetStorageKeys: PrivateAssetStorageKeyPort = {
     return `discipline/${input.resourceId}/${input.assetId}/${input.sha256Hex.slice(0, 16)}`;
   },
 };
-
-export function createRuntimeDisciplineAssetStorage(): PrivateAssetStoragePort {
-  return getRuntimePrivateImageStorage() ?? new UnavailablePrivateImageStorage();
-}

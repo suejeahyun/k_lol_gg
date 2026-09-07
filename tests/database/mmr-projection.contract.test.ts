@@ -115,6 +115,13 @@ test("S05-B persists canonical full-ledger MMR replay without competing for the 
       tagLineNormalized: `m${index + 1}`,
     })));
     await database.insert(championCatalog).values(championKeys.map((key, index) => ({ key, displayName: `MMR 챔피언 ${index + 1}` })));
+    // Full-ledger MMR requires exactly ten participants per published game.
+    // Earlier projection contracts intentionally use compact two-player
+    // fixtures, so retire only those already-tested rows in the shared DB.
+    await database.update(matchSeries).set({
+      status: "VOIDED", voidReason: "Shared contract fixture retired before full-ledger MMR", voidedAt: now, updatedAt: now,
+    }).where(eq(matchSeries.status, "PUBLISHED"));
+    const priorUnconsumedEventCount = (await database.select().from(matchRecalculationOutbox)).length;
     await database.insert(matchSeries).values([
       { id: matchIds[1], seasonId, title: "두 번째 경기", titleNormalized: "두 번째 경기", playedOn: "2026-09-02", blueWins: 1, redWins: 0, gameCount: 1, status: "PUBLISHED", publishedAt: now },
       { id: matchIds[0], seasonId, title: "첫 번째 경기", titleNormalized: "첫 번째 경기", playedOn: "2026-09-01", blueWins: 1, redWins: 0, gameCount: 1, status: "PUBLISHED", publishedAt: now },
@@ -133,13 +140,15 @@ test("S05-B persists canonical full-ledger MMR replay without competing for the 
     await enqueue(matchIds[1], 0, "PUBLISHED", new Date(now.getTime() + 1));
 
     const first = await repository.catchUp(now);
-    assert.deepEqual(first, { kind: "REBUILT", generation: 1, consumedEventCount: 2 });
+    assert.deepEqual(first, { kind: "REBUILT", generation: 1, consumedEventCount: priorUnconsumedEventCount + 2 });
     assert.deepEqual(await repository.catchUp(now), { kind: "IDLE", generation: 1 });
     assert.equal((await database.select().from(mmrPlayerProfiles)).length, 10);
     assert.equal((await database.select().from(mmrPlayerPositionProfiles)).length, 50);
     assert.equal((await database.select().from(mmrMatchResultEvents)).length, 20);
-    assert.equal((await database.select().from(mmrConsumerReceipts)).length, 2);
-    assert.ok((await database.select().from(matchRecalculationOutbox)).every((row) => row.status === "PENDING"));
+    assert.equal((await database.select().from(mmrConsumerReceipts)).length, priorUnconsumedEventCount + 2);
+    assert.ok((await database.select().from(matchRecalculationOutbox))
+      .filter((row) => (matchIds as readonly string[]).includes(row.aggregateId))
+      .every((row) => row.status === "PENDING"));
 
     const beforeSecond = (
       await database.select().from(mmrMatchResultEvents).where(and(

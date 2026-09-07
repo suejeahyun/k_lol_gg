@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import test from "node:test";
 
-import { count, eq } from "drizzle-orm";
+import { and, count, eq } from "drizzle-orm";
 import sharp from "sharp";
 
 import { PrivateAssetService } from "../../src/modules/assets/application/private-asset-service";
@@ -89,7 +89,9 @@ test("S11 discipline records and private evidence persist with masked ownership,
     assert.equal(approved.body.status, "APPROVED");
     const stats = await adapter.getPublicStatistics(); assert.equal(stats.activeWarningCount, 0); assert.equal(stats.resolvedCount, 1); assert.deepEqual(Object.keys(stats).sort(), ["activeBanCount", "activeCautionCount", "activeWarningCount", "resolvedCount", "updatedAt"]);
     assert.equal((await database.select().from(disciplineRecords).where(eq(disciplineRecords.active, false))).length, 1);
-    assert.equal((await database.select({ value: count() }).from(privateAssets).where(eq(privateAssets.status, "READY")))[0]?.value, 10);
+    assert.equal((await database.select({ value: count() }).from(privateAssets).where(and(
+      eq(privateAssets.status, "READY"), eq(privateAssets.createdByUserAccountId, ownerId), eq(privateAssets.purpose, "DISCIPLINE_RESOLUTION"),
+    )))[0]?.value, 10);
     assert.equal((await database.select({ value: count() }).from(disciplineEvidence))[0]?.value, 10);
     assert.ok((await database.select({ value: count() }).from(disciplineCommandReceipts))[0]!.value >= 12);
     assert.ok((await database.select({ value: count() }).from(disciplineOutbox))[0]!.value >= 12);
