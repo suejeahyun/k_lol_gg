@@ -15,7 +15,15 @@ import styles from "../../../team-tools.module.css";
 const positionLabel = { TOP: "탑", JGL: "정글", MID: "미드", ADC: "원딜", SUP: "서포터" } as const;
 const teamLabel = { BLUE: "블루", RED: "레드" } as const;
 
-export function TeamBalanceDraftWorkspace({ draft }: { draft: TeamBalanceDraft }) {
+export function TeamBalanceDraftWorkspace({
+  draft,
+  endpointBase = `/api/team-tools/drafts/${draft.id}`,
+  mode = "OWNER",
+}: {
+  draft: TeamBalanceDraft;
+  endpointBase?: string;
+  mode?: "OWNER" | "ADMIN";
+}) {
   const router = useRouter();
   const autoCandidates = draft.candidates.filter((candidate) => candidate.source === "AUTO");
   const initialLayout = autoCandidates[0]?.assignments.map(({ playerId, team, position }) => ({ playerId, team, position })) ?? [];
@@ -28,7 +36,7 @@ export function TeamBalanceDraftWorkspace({ draft }: { draft: TeamBalanceDraft }
     setPending(action);
     setMessage("");
     try {
-      const response = await fetch(`/api/team-tools/drafts/${draft.id}/${action}`, {
+      const response = await fetch(`${endpointBase}/${action}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -56,7 +64,7 @@ export function TeamBalanceDraftWorkspace({ draft }: { draft: TeamBalanceDraft }
   return (
     <>
       <section className={styles.draftHeader}>
-        <div><span>ROUND {draft.evaluationRound}</span><h1>{draft.title}</h1><p>통계 generation {draft.ratingGeneration ?? "없음 · 중립값 적용"} · revision {draft.revision}</p></div>
+        <div><span>{mode === "ADMIN" ? "ADMIN REVIEW · " : ""}ROUND {draft.evaluationRound}</span><h1>{draft.title}</h1><p>{mode === "ADMIN" ? `소유 계정 ${draft.ownerUserAccountId} · ` : ""}통계 generation {draft.ratingGeneration ?? "없음 · 중립값 적용"} · revision {draft.revision}</p></div>
         <strong data-status={draft.status}>{draft.status === "SAVED" ? "저장됨" : "평가 완료"}</strong>
       </section>
 
@@ -88,7 +96,7 @@ export function TeamBalanceDraftWorkspace({ draft }: { draft: TeamBalanceDraft }
 
       <section className={styles.draftActions} aria-label="초안 작업">
         <button className={styles.primaryButton} type="button" disabled={Boolean(pending) || !draft.selectedCandidateSignature || draft.status === "SAVED"} onClick={() => mutate("save", {})}><Save size={17} aria-hidden="true" /> 선택 팀 저장</button>
-        <button className={styles.secondaryButton} type="button" disabled={Boolean(pending)} onClick={() => mutate("reevaluate", {})}><RefreshCw size={17} aria-hidden="true" /> 최신 통계로 재평가</button>
+        <button className={styles.secondaryButton} type="button" disabled={Boolean(pending) || draft.status === "ARCHIVED"} onClick={() => mutate("reevaluate", {})}><RefreshCw size={17} aria-hidden="true" /> 최신 통계로 재평가</button>
         <p role="status" aria-live="polite">{pending ? "처리 중…" : message}</p>
       </section>
     </>

@@ -4,7 +4,7 @@ import test from "node:test";
 
 const source = (path) => readFile(new URL(path, import.meta.url), "utf8");
 
-test("administrator team draft pages use the ADMIN viewer without exposing owner mutations", async () => {
+test("administrator team draft pages use the ADMIN viewer and administrator mutation boundary", async () => {
   const [list, detail] = await Promise.all([
     source("../src/app/(admin)/admin/balance/drafts/page.tsx"),
     source("../src/app/(admin)/admin/balance/drafts/[draftId]/page.tsx"),
@@ -13,8 +13,9 @@ test("administrator team draft pages use the ADMIN viewer without exposing owner
   assert.match(list, /authorization:\s*"ADMIN"/);
   assert.match(detail, /requirePageRole\("ADMIN"/);
   assert.match(detail, /authorization:\s*"ADMIN"/);
-  assert.match(detail, /READ ONLY/);
-  assert.doesNotMatch(detail, /\/api\/team-tools\/drafts/);
+  assert.match(detail, /TeamBalanceDraftWorkspace/);
+  assert.match(detail, /\/api\/admin\/team-tools\/drafts/);
+  assert.doesNotMatch(detail, /READ ONLY/);
 });
 
 test("administrator recommendation aliases remain same-origin permanent redirects", async () => {
