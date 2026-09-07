@@ -30,7 +30,7 @@ test("legacy Kakao admin pages permanently redirect to canonical real-state tabs
     ["src/app/(admin)/admin/kakao/stats/page.tsx", "/admin/kakao?tab=stats"],
     ["src/app/(admin)/admin/kakao/settings/page.tsx", "/admin/kakao?tab=settings"],
     ["src/app/(admin)/admin/kakao/scrims/page.tsx", "/admin/kakao?tab=scrims"],
-    ["src/app/(admin)/admin/kakao/season-apply/page.tsx", "/admin/seasons"],
+    ["src/app/(admin)/admin/kakao/season-apply/page.tsx", "/admin/seasons?view=applications"],
     ["src/app/(admin)/admin/kakao/recruits/logs/page.tsx", "/admin/kakao?tab=logs"],
     ["src/app/(admin)/admin/kakao/recruits/settings/page.tsx", "/admin/kakao?tab=health"],
     ["src/app/(admin)/admin/recruits/page.tsx", "/admin/kakao?tab=recruits"],

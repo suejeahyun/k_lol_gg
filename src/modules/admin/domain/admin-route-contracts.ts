@@ -26,7 +26,7 @@ export const ADMIN_ROUTE_CONTRACTS = [
   { id: "005", source: "/admin/ai-requests", decision: "integrate", target: "/admin/logs?view=ai-requests", access: "SUPER" },
   { id: "006", source: "/admin/logs", decision: "keep", target: "/admin/logs", access: "SUPER" },
   { id: "007", source: "/admin/logs/stats", decision: "integrate", target: "/admin/logs?view=stats", access: "SUPER" },
-  { id: "008", source: "/admin/logs/kakao", decision: "redirect", target: "/admin/kakao/recruits?tab=logs", access: "ADMIN" },
+  { id: "008", source: "/admin/logs/kakao", decision: "redirect", target: "/admin/kakao?tab=logs", access: "ADMIN" },
   { id: "009", source: "/admin/players", decision: "keep", target: "/admin/players", access: "ADMIN" },
   { id: "010", source: "/admin/players/new", decision: "keep", target: "/admin/players/new", access: "ADMIN" },
   { id: "011", source: "/admin/players/[playerId]", decision: "keep", target: "/admin/players/[playerId]", access: "MIXED" },

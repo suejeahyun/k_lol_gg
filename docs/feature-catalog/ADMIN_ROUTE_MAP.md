@@ -120,7 +120,7 @@
 | 005 | `/admin/ai-requests` | 통합 | `/admin/logs?view=ai-requests` 탭, 검색·필터·페이지 유지 | SUPER |
 | 006 | `/admin/logs` | 유지 | 운영·감사의 감사 이벤트 기본 탭 | SUPER |
 | 007 | `/admin/logs/stats` | 통합 | `/admin/logs?view=stats` 통계 탭 | SUPER |
-| 008 | `/admin/logs/kakao` | redirect | `/admin/kakao/recruits/logs`; 허용된 기간·상태 query 보존 | ADMIN |
+| 008 | `/admin/logs/kakao` | redirect | `/admin/kakao?tab=logs`; 허용된 기간·상태 query 보존 | ADMIN |
 
 ### 5.2 인물·계정·징계 (13/81, 누계 21)
 

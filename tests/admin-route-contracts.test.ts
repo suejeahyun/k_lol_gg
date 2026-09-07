@@ -67,6 +67,7 @@ test("legacy administrator routes resolve only to reviewed same-origin destinati
     "/admin/balance-ai?tab=reviews&review=review%207",
   );
   assert.equal(resolveAdminLegacyDestination("/admin/players"), null);
+  assert.equal(resolveAdminLegacyDestination("/admin/logs/kakao"), "/admin/kakao?tab=logs");
   assert.equal(resolveAdminLegacyDestination("/admin/unknown"), null);
   assert.equal(resolveAdminLegacyDestination("//attacker.invalid/admin/recruits"), null);
   assert.equal(resolveAdminLegacyDestination("/admin\\recruits"), null);
