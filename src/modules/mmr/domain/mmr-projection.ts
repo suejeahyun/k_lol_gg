@@ -1,3 +1,5 @@
+import type { TeamBalanceRatingProviderDto } from "@/modules/team-tools";
+
 export const MMR_POSITIONS = ["TOP", "JGL", "MID", "ADC", "SUP"] as const;
 export const MMR_TEAMS = ["BLUE", "RED"] as const;
 
@@ -96,17 +98,6 @@ export type PublicMmrProfileDto = Readonly<{
   confidence: number;
   sampleSize: number;
   positions: Readonly<Record<MmrPosition, Readonly<{ score: number; sampleSize: number }>>>;
-}>;
-
-export type TeamBalanceMmrProviderDto = Readonly<{
-  overall: number;
-  confidence: number;
-  sampleSize: number;
-  positions: Readonly<Record<MmrPosition, Readonly<{
-    score: number;
-    confidence: number;
-    sampleSize: number;
-  }>>>;
 }>;
 
 type MutablePositionProfile = { scoreBp: number; sampleSize: number };
@@ -368,11 +359,18 @@ export function rebuildMmrProjection(input: Readonly<{
   const sources: OrderedSource[] = [];
   const sourceIds = new Set<string>();
   const publishedMatches = input.matches.filter((match) => match.status === "PUBLISHED");
+  const globalGameIds = new Set<string>();
   for (const match of publishedMatches) {
     requireIdentifier(match.id, "INVALID_MATCH_ID");
     requireIdentifier(match.orderKey, "INVALID_MATCH_ORDER_KEY");
+    if (match.games.length === 0) throw new Error("PUBLISHED_MATCH_WITHOUT_GAMES");
     if (sourceIds.has(match.id)) throw new Error("DUPLICATE_MMR_SOURCE_ID");
     sourceIds.add(match.id);
+    for (const game of match.games) {
+      requireIdentifier(game.id, "INVALID_GAME_ID");
+      if (globalGameIds.has(game.id)) throw new Error("DUPLICATE_GAME_ID");
+      globalGameIds.add(game.id);
+    }
     sources.push({ kind: "MATCH", id: match.id, orderKey: match.orderKey, match });
   }
   for (const adjustment of input.manualAdjustments ?? []) {
@@ -446,7 +444,7 @@ export function toPublicMmrProfileDto(profile: MmrPlayerProfile): PublicMmrProfi
   };
 }
 
-export function toTeamBalanceMmrProviderDto(profile: MmrPlayerProfile): TeamBalanceMmrProviderDto {
+export function toTeamBalanceMmrProviderDto(profile: MmrPlayerProfile): TeamBalanceRatingProviderDto {
   return {
     overall: scoreFromBp(profile.overallScoreBp),
     confidence: profile.confidenceBp / 10_000,
@@ -458,6 +456,6 @@ export function toTeamBalanceMmrProviderDto(profile: MmrPlayerProfile): TeamBala
         confidence: confidenceBp(positionProfile.sampleSize) / 10_000,
         sampleSize: positionProfile.sampleSize,
       }];
-    })) as TeamBalanceMmrProviderDto["positions"],
+    })) as TeamBalanceRatingProviderDto["positions"],
   };
 }

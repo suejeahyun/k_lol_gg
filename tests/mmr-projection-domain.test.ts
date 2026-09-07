@@ -111,6 +111,10 @@ test("malformed rosters, duplicate sources and unsafe adjustments fail closed", 
     /DUPLICATE_MMR_SOURCE_ID/,
   );
   assert.throws(
+    () => rebuildMmrProjection({ generation: 1, matches: [match({ games: [] })] }),
+    /PUBLISHED_MATCH_WITHOUT_GAMES/,
+  );
+  assert.throws(
     () => rebuildMmrProjection({ generation: 1, matches: [], manualAdjustments: [{ id: "a", orderKey: "1", playerId: "p", position: null, deltaBp: 1_001, reasonCode: "BAD" }] }),
     /INVALID_ADJUSTMENT_DELTA/,
   );
