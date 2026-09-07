@@ -85,4 +85,5 @@ export function operationsErrorResponse(error: unknown, traceId?: string) {
 }
 
 export function operationsUnavailableResponse(traceId?: string) { return problemResponse(problems.unavailable, { traceId }); }
+export function operationsInvalidResponse(traceId?: string) { return problemResponse(problems.invalid, { traceId }); }
 export function jobAuthenticationErrorResponse(traceId?: string) { return problemResponse(problems.job, { traceId }); }

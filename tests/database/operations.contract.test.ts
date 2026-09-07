@@ -9,7 +9,7 @@ import { toPublicSiteSettingsDto } from "../../src/modules/operations";
 import { OperationsError, PostgresOperationsRepository } from "../../src/modules/operations/infrastructure/postgres-operations-repository";
 import { createDatabaseHandle } from "../../src/platform/db/database";
 import { applyMigrations } from "../../src/platform/db/migrate";
-import { aiRequestLedger, auditEvents, authSessions, operationsCommandReceipts, operationsOutbox, siteSettings, userAccounts } from "../../src/platform/db/schema";
+import { aiRequestLedger, auditEvents, authSessions, operationsCommandReceipts, operationsOutbox, recruitParties, recruitingOutbox, siteSettings, userAccounts } from "../../src/platform/db/schema";
 import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
 
 function metadata(requestKey: string, expectedRevision: number, body: unknown): OperationsCommandMetadata {
@@ -71,6 +71,29 @@ test("S13 settings, AI ledger and signed maintenance preserve authorization and 
     const jobInput = { jobName: "maintenance" as const, nonce: "nonce_1234567890abcdef", requestHashHex: "ab".repeat(32), requestId: randomUUID() };
     await repository.runSignedMaintenance(jobInput);
     await assert.rejects(repository.runSignedMaintenance({ ...jobInput, requestId: randomUUID() }), (error: unknown) => error instanceof OperationsError && error.code === "JOB_NONCE_REPLAYED");
+
+    const idlePartyId = randomUUID();
+    await database.insert(recruitParties).values({
+      id: idlePartyId,
+      ownerUserAccountId: accountId,
+      recruitDate: "2026-09-06",
+      resetSequence: 0,
+      recruitNumber: 1,
+      type: "NORMAL_GAME",
+      status: "IN_PROGRESS",
+      title: "일일 마감 계약 테스트",
+      maximumMembers: 5,
+      membersJson: [],
+      lastActivityAt: new Date(Date.now() - 24 * 60 * 60_000),
+    });
+    const closeInput = { jobName: "kakao-daily-close" as const, nonce: "daily_close_1234567890", requestHashHex: "cd".repeat(32), requestId: randomUUID(), idleHours: 12, maximumClosures: 100 };
+    const close = await repository.runSignedKakaoDailyClose(closeInput);
+    assert.equal(close.counts.partiesClosed, 1);
+    const closedParty = (await database.select().from(recruitParties).where(eq(recruitParties.id, idlePartyId)))[0];
+    assert.equal(closedParty?.status, "FINISHED");
+    assert.equal(closedParty?.revision, 1);
+    assert.equal((await database.select().from(recruitingOutbox).where(eq(recruitingOutbox.aggregateId, idlePartyId))).length, 1);
+    await assert.rejects(repository.runSignedKakaoDailyClose({ ...closeInput, requestId: randomUUID() }), (error: unknown) => error instanceof OperationsError && error.code === "JOB_NONCE_REPLAYED");
 
     assert.equal((await database.select().from(siteSettings).where(eq(siteSettings.id, 1)))[0]?.revision, 1);
     assert.ok((await database.select().from(operationsCommandReceipts)).length >= 2);

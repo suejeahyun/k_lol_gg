@@ -113,6 +113,14 @@ export interface OperationsCommandPort {
     requestHashHex: string;
     requestId: string;
   }>): Promise<Readonly<{ runId: string; counts: Record<string, number> }>>;
+  runSignedKakaoDailyClose(input: Readonly<{
+    jobName: "kakao-daily-close";
+    nonce: string;
+    requestHashHex: string;
+    requestId: string;
+    idleHours: number;
+    maximumClosures: number;
+  }>): Promise<Readonly<{ runId: string; counts: Record<string, number> }>>;
   requestAi(input: Readonly<{
     actor: OperationsActor;
     metadata: OperationsCommandMetadata;
