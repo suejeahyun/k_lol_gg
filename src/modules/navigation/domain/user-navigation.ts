@@ -65,8 +65,8 @@ export const canonicalUserRoutes = [
   { template: "/tools/coin-toss", label: "코인 토스", section: "tools", implementationState: "page-contract" },
 
   { template: "/applications", label: "참가 신청", section: "competitions", implementationState: "page-contract" },
-  { template: "/competitions", label: "대회", section: "competitions", implementationState: "planned" },
-  { template: "/competitions/events/[eventId]", label: "이벤트전 상세", section: "competitions", implementationState: "planned" },
+  { template: "/competitions", label: "대회", section: "competitions", implementationState: "page-contract" },
+  { template: "/competitions/events/[eventId]", label: "이벤트전 상세", section: "competitions", implementationState: "page-contract" },
   { template: "/competitions/destruction/[tournamentId]", label: "멸망전 상세", section: "competitions", implementationState: "planned" },
 
   { template: "/recruits", label: "구인 현황", section: "community", implementationState: "page-contract" },
@@ -84,6 +84,7 @@ export const primaryUserNavigation = [
   { href: "/rankings", activeRoot: "/rankings", label: "랭킹" },
   { href: "/tools/random-team", activeRoot: "/tools", label: "팀 도구" },
   { href: "/applications", activeRoot: "/applications", label: "참가 신청" },
+  { href: "/competitions", activeRoot: "/competitions", label: "대회" },
 ] as const;
 
 export function isUserNavigationActive(pathname: string, href: string): boolean {

@@ -9,6 +9,6 @@ export async function GET(_request: Request, { params }: { params: Promise<{ eve
   if (!runtime) return eventUnavailableResponse();
   try {
     const event = await runtime.repository.getPublic(eventId.toLocaleLowerCase("en-US"), new Date());
-    return event ? eventReadResponse({ event }) : eventNotFoundResponse();
+    return event ? eventReadResponse({ event }, event.revision) : eventNotFoundResponse();
   } catch { return eventUnavailableResponse(); }
 }

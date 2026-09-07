@@ -198,7 +198,6 @@ export function PrimaryUserNavigation() {
           {item.label}
         </Link>
       ))}
-      <span className="desktop-nav__planned" aria-label="대회 기능 준비 중">대회</span>
     </nav>
   );
 }

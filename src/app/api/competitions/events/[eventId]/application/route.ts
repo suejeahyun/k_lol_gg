@@ -1,4 +1,5 @@
 import { getRuntimeEvent } from "@/modules/competitions/events/infrastructure/runtime-event";
+import { isEventUuid } from "@/modules/competitions/events";
 import { eventErrorResponse, eventMutationResponse, eventNotFoundResponse, eventReadResponse, eventUnavailableResponse, prepareEventMutation, requireEventApiSession } from "@/modules/competitions/events/infrastructure/event-http";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ eventId: string }> }) {
@@ -7,6 +8,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ eve
   const runtime = getRuntimeEvent();
   if (!runtime) return eventUnavailableResponse();
   const { eventId } = await params;
+  if (!isEventUuid(eventId)) return eventNotFoundResponse();
   try {
     const application = await runtime.repository.getOwnApplication(eventId, auth.session.userId);
     return application ? eventReadResponse({ application }, application.eventRevision) : eventNotFoundResponse();
@@ -21,6 +23,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ even
   const runtime = getRuntimeEvent();
   if (!runtime) return eventUnavailableResponse(prepared.value.traceId);
   const { eventId } = await params;
+  if (!isEventUuid(eventId)) return eventNotFoundResponse(prepared.value.traceId);
   try {
     const playerId = await runtime.repository.getOwnedPlayerId(auth.session.userId);
     if (!playerId) return eventNotFoundResponse(prepared.value.traceId);
@@ -34,6 +37,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ e
   const prepared = await prepareEventMutation(request, auth.session, "event:application:cancel");
   if (!prepared.ok) return prepared.response;
   const { eventId } = await params;
+  if (!isEventUuid(eventId)) return eventNotFoundResponse(prepared.value.traceId);
   const runtime = getRuntimeEvent();
   if (!runtime) return eventUnavailableResponse(prepared.value.traceId);
   try { return eventMutationResponse(await runtime.service.cancelOwnApplication(prepared.value.context, eventId, prepared.value.expectedRevision), prepared.value.traceId); }

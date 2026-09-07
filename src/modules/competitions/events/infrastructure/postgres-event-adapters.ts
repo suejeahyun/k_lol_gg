@@ -56,6 +56,10 @@ function aggregateFromRow(row: EventRow): EventAggregate {
 }
 
 function rowValues(aggregate: EventAggregate, actorUserAccountId: string) {
+  const activeParticipantCount = aggregate.participants.filter((entry) => entry.status === "ACTIVE").length;
+  if (activeParticipantCount > 10) {
+    throw new EventDomainError("PRECONDITION_FAILED", "An event cannot retain more than ten active participants.");
+  }
   return {
     title: aggregate.settings.title,
     titleNormalized: normalizeText(aggregate.settings.title),
@@ -65,7 +69,7 @@ function rowValues(aggregate: EventAggregate, actorUserAccountId: string) {
     recruitmentOpensAt: new Date(aggregate.settings.recruitmentOpensAt),
     recruitmentClosesAt: new Date(aggregate.settings.recruitmentClosesAt),
     bracketBestOf: aggregate.settings.bracketBestOf,
-    activeParticipantCount: aggregate.participants.filter((entry) => entry.status === "ACTIVE").length,
+    activeParticipantCount,
     aggregateJson: snapshot(aggregate),
     revision: aggregate.revision,
     updatedByUserAccountId: actorUserAccountId,

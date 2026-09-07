@@ -2,6 +2,7 @@ import { eventAcceptsApplications, type EventAggregate } from "../domain/event";
 
 export type PublicEventDto = Readonly<{
   id: string;
+  revision: number;
   title: string;
   description: string | null;
   status: EventAggregate["lifecycle"]["status"];
@@ -52,6 +53,7 @@ export function toPublicEventDto(aggregate: EventAggregate, now: string): Public
   const participantById = new Map(aggregate.participants.map((participant) => [participant.id, participant]));
   return {
     id: aggregate.id,
+    revision: aggregate.revision,
     title: aggregate.settings.title,
     description: aggregate.settings.description,
     status: aggregate.lifecycle.status,
