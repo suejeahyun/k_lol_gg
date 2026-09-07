@@ -548,18 +548,22 @@ export class PostgresDisciplineAdapter implements
 
   async resolveResourceForUpdate(context: PrivateAssetTransaction, resource: { resourceType: string; resourceId: string }): Promise<PrivateAssetResourceBinding | null> {
     if (resource.resourceType !== "DISCIPLINE_TASK") return null;
-    const row = (await this.assetTransaction(context).select({
+    const transaction = this.assetTransaction(context);
+    const row = (await transaction.select({
       id: disciplineResolutionTasks.id,
       ownerUserAccountId: disciplineResolutionTasks.ownerUserAccountId,
-      linkedUserAccountId: players.userAccountId,
+      ownerPlayerId: disciplineResolutionTasks.ownerPlayerId,
     }).from(disciplineResolutionTasks)
-      .leftJoin(players, eq(players.id, disciplineResolutionTasks.ownerPlayerId))
       .where(and(
         eq(disciplineResolutionTasks.id, resource.resourceId),
         inArray(disciplineResolutionTasks.status, ["REQUIRED", "AWAITING_UPLOAD", "REJECTED"]),
         sql<boolean>`${disciplineResolutionTasks.dueAt} > clock_timestamp()`,
       )).for("update").limit(1))[0];
-    return row ? { resourceType: "DISCIPLINE_TASK", resourceId: row.id, ownerUserAccountId: row.ownerUserAccountId ?? row.linkedUserAccountId, public: false } : null;
+    if (!row) return null;
+    const linkedUserAccountId = row.ownerUserAccountId ?? (row.ownerPlayerId
+      ? (await transaction.select({ userAccountId: players.userAccountId }).from(players).where(eq(players.id, row.ownerPlayerId)).limit(1))[0]?.userAccountId ?? null
+      : null);
+    return { resourceType: "DISCIPLINE_TASK", resourceId: row.id, ownerUserAccountId: linkedUserAccountId, public: false };
   }
 
   async findDuplicateForUpdate(context: PrivateAssetTransaction, input: { resourceType: string; resourceId: string; purpose: PrivateAssetPurpose; sha256: Uint8Array }) {
