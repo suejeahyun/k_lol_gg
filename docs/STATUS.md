@@ -1,7 +1,7 @@
 # K-LOL.GG V2 상태
 
-- 기준 커밋: `6bba9c0` (`main`, 2026-09-07 KST)
-- 현재 단계: S00~S06·S09·S10 영속 구현 후보 통합, S07·S12·S13 병렬 구현 중
+- 기준 커밋: `f8c0100` (`main`, 2026-09-07 KST)
+- 현재 단계: S00~S07·S09·S10 영속 구현 후보 통합, S08·S12·S13 병렬 구현 중
 - V1 코드 복사: 없음. V1은 동작 명세와 동등성 대조 근거로만 사용
 - 운영 데이터·외부 연동: 연결하지 않음
 - 운영 Vercel 전환: 하지 않음
@@ -47,6 +47,7 @@
 - S05-B `0008` append-only MMR generation·원장·수동 보정·독립 consumer/receipt/outbox 영속화
 - S05-B 공개 `/rankings/mmr`, SUPER 재계산·보정 화면/API, S06 MMR 우선·통계 fallback 연결
 - S07/S08 공통 대회 FSM·roster·BO·대진·standings와 이벤트전·멸망전 순수 command/application 코어
+- S07 `0011` PostgreSQL 이벤트전 aggregate·receipt·audit/outbox, 정확히 10명·BO1~9·결과 정정 무효화와 공개/관리 API/UI
 - S08 seeded 경매, 주장 포인트, 교체 roster snapshot, 예선·본선, 경기 전체 MVP 재투표 계약
 - S09 구인·스크림, S10 미디어, S11 징계, S12 Riot, S13 운영의 선행 순수 정책 코어
 - S09 Kakao HMAC·nonce·room/sender·멱등 receipt·감사/outbox를 포함한 application/security 코어
@@ -79,8 +80,8 @@
 
 ## 다음 순서
 
-1. 진행 중인 S07 이벤트전·S12 Riot security core·S13 운영 DB/API/UI adapter를 통합
-2. S08 멸망전과 S11 징계·증거 adapter를 병렬 연결
+1. 진행 중인 S08 멸망전 UI/API·S12 Riot security core·S13 운영 DB/API/UI adapter를 통합
+2. S08 PostgreSQL과 S11 징계·증거 adapter를 병렬 연결
 3. S12 Riot fake 외부 adapter를 연결
 4. S14에서 전수 DB/HTTP/브라우저·접근성·반응형·성능·보안·복구 검증과 QA 증거 재생성
 5. 중요 결함과 미완료 기능이 0이고 비밀정보 검사가 통과한 뒤에만 Git 원격 브랜치 push

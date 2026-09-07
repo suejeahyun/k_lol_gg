@@ -52,11 +52,11 @@ const taskCards = [
   },
   {
     title: "대회 진행",
-    description: "시즌·이벤트·멸망전 진행 단계를 보기 쉽게 모읍니다.",
-    href: null,
+    description: "시즌과 이벤트전 진행 단계를 보고 참가 신청을 이어가세요.",
+    href: "/competitions",
     icon: Trophy,
     tone: "lilac",
-    status: "준비 중",
+    status: "이벤트전 이용 가능",
   },
 ] as const;
 
@@ -194,7 +194,8 @@ export default async function HomePage() {
           <span data-state="ready">시즌 요약 <strong>DB 연결</strong></span>
           <span data-state="ready">최근 경기 <strong>DB 연결</strong></span>
           <span data-state="ready">구인·갤러리 <strong>DB 연결</strong></span>
-          <span>이벤트·멸망전 <strong>구현 진행 중</strong></span>
+          <span data-state="ready">이벤트전 <strong>DB 연결</strong></span>
+          <span>멸망전 <strong>구현 진행 중</strong></span>
         </div>
       </section>
     </div>
