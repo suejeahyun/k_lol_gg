@@ -2,11 +2,17 @@ import type { Metadata } from "next";
 import { Sparkles, UserPlus } from "lucide-react";
 
 import { SignupForm } from "@/components/accounts/account-auth-forms";
+import { SiteFeatureStatePanel } from "@/components/site-feature-state";
+import { readSiteFeatureState, siteFeatureLabel } from "@/modules/operations/infrastructure/site-feature-access";
 import styles from "@/components/accounts/account-access.module.css";
 
 export const metadata: Metadata = { title: "가입 신청" };
 
-export default function SignupPage() {
+export default async function SignupPage() {
+  const featureState = await readSiteFeatureState("registrations");
+  if (featureState !== "enabled") {
+    return <div className={styles.page}><SiteFeatureStatePanel label={siteFeatureLabel("registrations")} state={featureState} /></div>;
+  }
   return (
     <div className={styles.page}><div className={styles.accessGrid}>
       <section className={styles.intro}>

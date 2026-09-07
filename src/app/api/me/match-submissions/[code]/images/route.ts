@@ -11,6 +11,7 @@ import {
   requireMatchApiSession,
   uploadBodyProblem,
 } from "@/modules/matches/infrastructure/match-http";
+import { requireSiteFeature } from "@/modules/operations/infrastructure/site-feature-access";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -20,6 +21,8 @@ type Context = { params: Promise<{ code: string }> };
 export async function POST(request: Request, context: Context) {
   const authorization = await requireMatchApiSession("ACCOUNT");
   if (!authorization.ok) return authorization.response;
+  const featureFailure = await requireSiteFeature(request, "matchSubmissions");
+  if (featureFailure) return featureFailure;
   const { code: rawCode } = await context.params;
   const code = canonicalSubmissionPublicCode(rawCode);
   if (!code) return matchNotFoundResponse();

@@ -24,6 +24,7 @@ import {
   readJsonBody,
   readValidatedTraceId,
 } from "@/platform/http";
+import { requireSiteFeature } from "@/modules/operations/infrastructure/site-feature-access";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -34,6 +35,8 @@ export async function POST(request: NextRequest) {
   if (queryFailure) return queryFailure;
   const originFailure = guardAccountMutationOrigin(request, traceId);
   if (originFailure) return originFailure;
+  const featureFailure = await requireSiteFeature(request, "registrations");
+  if (featureFailure) return featureFailure;
   const body = await readJsonBody(request, { maximumBytes: 8 * 1024 });
   if (!body.ok) return problemResponse(problemForJsonBodyError(body.error), { traceId });
   const input = parseSignupInput(body.value);

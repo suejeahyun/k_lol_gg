@@ -10,6 +10,7 @@ import {
   prepareMatchJsonMutation,
   requireMatchApiSession,
 } from "@/modules/matches/infrastructure/match-http";
+import { requireSiteFeature } from "@/modules/operations/infrastructure/site-feature-access";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -37,6 +38,8 @@ export async function GET(request: Request, context: Context) {
 export async function PATCH(request: Request, context: Context) {
   const authorization = await requireMatchApiSession("ACCOUNT");
   if (!authorization.ok) return authorization.response;
+  const featureFailure = await requireSiteFeature(request, "matchSubmissions");
+  if (featureFailure) return featureFailure;
   const { code } = await context.params;
   const prepared = await prepareMatchJsonMutation(
     request,

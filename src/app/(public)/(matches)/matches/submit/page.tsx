@@ -8,6 +8,8 @@ import { getRuntimeMatchService } from "@/modules/matches/infrastructure/runtime
 import { loadRuntimeSeasonData } from "@/modules/seasons/infrastructure/runtime-season-data";
 
 import { SubmissionForm } from "./submission-form";
+import { SiteFeatureStatePanel } from "@/components/site-feature-state";
+import { readSiteFeatureState, siteFeatureLabel } from "@/modules/operations/infrastructure/site-feature-access";
 import styles from "./submit.module.css";
 
 export const dynamic = "force-dynamic";
@@ -22,6 +24,10 @@ export default async function MatchSubmitPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const featureState = await readSiteFeatureState("matchSubmissions");
+  if (featureState !== "enabled") {
+    return <div className={`page-wrap ${styles.page}`}><SiteFeatureStatePanel label={siteFeatureLabel("matchSubmissions")} state={featureState} /></div>;
+  }
   const session = await getCurrentSession("ACCOUNT");
   const rawCode = (await searchParams).code;
   const requestedCode = typeof rawCode === "string" ? rawCode : null;
