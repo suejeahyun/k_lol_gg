@@ -7,12 +7,14 @@ import { and, eq } from "drizzle-orm";
 import type { TransactionSessionActor } from "../../src/modules/auth/domain/transaction-session";
 import {
   TeamBalanceService,
+  TeamBalanceRecommendationService,
   TeamBalanceServiceError,
   type TeamBalanceCommandContext,
   type TeamBalanceRatingProvider,
   type TeamBalanceRatingSnapshot,
 } from "../../src/modules/team-tools";
 import { PostgresTeamBalanceRepository } from "../../src/modules/team-tools/infrastructure/postgres-team-balance-repository";
+import { PostgresTeamBalanceRecommendationRepository } from "../../src/modules/team-tools/infrastructure/postgres-team-balance-recommendation-repository";
 import { createDatabaseHandle } from "../../src/platform/db/database";
 import { applyMigrations } from "../../src/platform/db/migrate";
 import {
@@ -27,6 +29,7 @@ import {
   userAccounts,
 } from "../../src/platform/db/schema";
 import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
+import { prepareTeamBalanceCaptureFixture } from "../../scripts/test-db/prepare-team-balance-capture-fixture";
 
 const positions = ["TOP", "JGL", "MID", "ADC", "SUP"] as const;
 
@@ -278,6 +281,26 @@ test("S06 draft lifecycle is owner/admin authorized, append-only, transactional,
       serviceError("SESSION_STALE"),
     );
     assert.equal((await database.select().from(teamBalanceOutbox)).length, 4);
+
+    const captureDraftId = await prepareTeamBalanceCaptureFixture(pool, adminId);
+    assert.equal(captureDraftId, draftId);
+    const captureDraft = await service.getDraft(
+      { actorUserAccountId: adminId, authorization: "ADMIN" },
+      captureDraftId,
+    );
+    assert.equal(captureDraft?.status, "SAVED");
+    assert.equal(captureDraft?.selectedCandidateSource, "AUTO");
+    assert.ok(captureDraft?.candidates.some((candidate) => candidate.signature === captureDraft.selectedCandidateSignature));
+    const recommendation = await new TeamBalanceRecommendationService(
+      new PostgresTeamBalanceRecommendationRepository(database),
+    ).getRecommendation(
+      { actorUserAccountId: adminId, authorization: "ADMIN" },
+      captureDraftId,
+      "RED",
+    );
+    assert.ok(recommendation);
+    assert.equal(recommendation.state, "NO_PROJECTION");
+    assert.equal(recommendation.picks.length, 5);
   } finally {
     await pool.end();
   }

@@ -23,6 +23,7 @@ import { encryptTotpSecret } from "../../src/modules/auth/infrastructure/totp-en
 import { hashPassword } from "../../src/modules/auth/infrastructure/node-password";
 import { parseTotpEncryptionKeyring } from "../../src/modules/auth/infrastructure/versioned-secret-keyring";
 import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
+import { prepareTeamBalanceCaptureFixture } from "./prepare-team-balance-capture-fixture";
 
 const execFile = promisify(execFileCallback);
 const workspaceRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -904,17 +905,10 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
   );
 
   // The account-facing draft detail is owner-scoped. Reassign the tested draft
-  // to the synthetic SUPER actor while keeping every persisted candidate and
-  // participant snapshot intact.
-  const draftId = await requiredFixture("team balance draft", `
-    with candidate as (
-      select id from team_tools.team_balance_drafts order by updated_at desc, id limit 1
-    )
-    update team_tools.team_balance_drafts d
-       set owner_user_account_id = $1, updated_by_user_account_id = $1, updated_at = clock_timestamp()
-      from candidate
-     where d.id = candidate.id
-    returning d.id::text as value`, [actorId]);
+  // to the synthetic SUPER actor and select its current top automatic
+  // candidate. Never let an unrelated malformed/partial contract row become a
+  // silent 404 or generic error in the recommendation captures.
+  const draftId = await prepareTeamBalanceCaptureFixture(pool, actorId);
 
   // Contract tests persist private-asset metadata, while their in-memory bytes
   // intentionally disappear with the test process. Bind one real image row to

@@ -135,6 +135,30 @@ const REDIRECT_DESTINATION_FALLBACKS = Object.freeze({
   "/app/players": "/players",
 });
 
+const UUID_FIXTURE_NAMES = new Set([
+  "assetId",
+  "destructionPlayerId",
+  "draftId",
+  "eventId",
+  "highlightId",
+  "id",
+  "imageId",
+  "matchId",
+  "mmrReviewId",
+  "playerId",
+  "recordId",
+  "submissionId",
+  "tournamentId",
+  "userAccountId",
+]);
+const UUID_FIXTURE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
+
+function assertFixtureFormat(name, value, context) {
+  if (UUID_FIXTURE_NAMES.has(name) && !UUID_FIXTURE.test(value)) {
+    throw new Error(`${context} ${name} must be a canonical UUID fixture.`);
+  }
+}
+
 function isRouteGroup(segment) {
   return segment.startsWith("(") && segment.endsWith(")");
 }
@@ -234,6 +258,7 @@ function encodeFixture(value, route, parameter, catchAll) {
   if (!catchAll && normalized.some((item) => item.includes("/"))) {
     throw new Error(`Fixture for ${route} parameter ${parameter} cannot contain a slash.`);
   }
+  if (!catchAll) normalized.forEach((item) => assertFixtureFormat(parameter, item, `Fixture for ${route} parameter`));
   return normalized.map(encodeURIComponent).join("/");
 }
 
@@ -297,6 +322,7 @@ function resolveQueryValue(value, fixtures, route, key) {
   if (!normalized || /[\u0000-\u001f\u007f]/u.test(normalized)) {
     throw new Error(`Fixture for query variant ${route} parameter ${key} is invalid.`);
   }
+  assertFixtureFormat(value.fixture, normalized, `Fixture for query variant ${route} parameter ${key}`);
   return normalized;
 }
 

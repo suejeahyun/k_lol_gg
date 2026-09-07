@@ -40,11 +40,11 @@ test("route groups are removed while concrete and dynamic segments become canoni
 
 test("route fixtures override parameter fixtures and every missing dynamic fixture fails immediately", () => {
   const fixtures = {
-    parameters: { playerId: "global-player" },
-    routes: { "/players/[playerId]": { playerId: "route-player" } },
+    parameters: { playerId: "11111111-1111-4111-8111-111111111111" },
+    routes: { "/players/[playerId]": { playerId: "22222222-2222-4222-8222-222222222222" } },
   };
-  assert.equal(resolveDynamicRoute("/players/[playerId]", fixtures), "/players/route-player");
-  assert.equal(resolveDynamicRoute("/admin/players/[playerId]", fixtures), "/admin/players/global-player");
+  assert.equal(resolveDynamicRoute("/players/[playerId]", fixtures), "/players/22222222-2222-4222-8222-222222222222");
+  assert.equal(resolveDynamicRoute("/admin/players/[playerId]", fixtures), "/admin/players/11111111-1111-4111-8111-111111111111");
   assert.deepEqual(dynamicParameters("/docs/[...slug]"), [{ name: "slug", segment: "[...slug]", catchAll: true }]);
   assert.equal(resolveDynamicRoute("/docs/[...slug]", { parameters: { slug: ["one", "two"] } }), "/docs/one/two");
   assert.throws(
@@ -54,6 +54,21 @@ test("route fixtures override parameter fixtures and every missing dynamic fixtu
   assert.throws(
     () => resolveDynamicRoute("/matches/[matchId]", { parameters: { matchId: "{{MATCH_ID}}" } }),
     /not a concrete path value/u,
+  );
+  assert.throws(
+    () => resolveDynamicRoute("/tools/team-balance/drafts/[draftId]", {
+      parameters: { draftId: "343c2dbf-e83b-49d3-ac83-1b4c6a377cfdc" },
+    }),
+    /draftId must be a canonical UUID fixture/u,
+  );
+});
+
+test("recommendation query variants reject a malformed transcribed draft fixture", () => {
+  assert.throws(
+    () => buildCapturePlan([
+      { route: "/tools/team-balance/drafts", sourcePage: "tools/team-balance/drafts/page.tsx", expectedRedirect: null },
+    ], { parameters: { draftId: "343c2dbf-e83b-49d3-ac83-1b4c6a377cfdc" } }),
+    /draftId must be a canonical UUID fixture/u,
   );
 });
 
@@ -75,9 +90,9 @@ test("the CLI contract reads a fixtures JSON file and creates its output directo
     const fixturesFile = join(root, "fixtures.json");
     const outputFile = join(root, "nested", "capture-plan.json");
     await syntheticPage(syntheticApp, "(public)/players/[playerId]/page.tsx");
-    await writeFile(fixturesFile, JSON.stringify({ parameters: { playerId: "actual-player" } }));
+    await writeFile(fixturesFile, JSON.stringify({ parameters: { playerId: uuidFixture } }));
     const result = await main(["--app-dir", syntheticApp, "--fixtures", fixturesFile, "--output", outputFile]);
-    assert.equal(result[0].path, "/players/actual-player");
+    assert.equal(result[0].path, `/players/${uuidFixture}`);
     assert.deepEqual(JSON.parse(await readFile(outputFile, "utf8")), result);
   } finally {
     await rm(root, { recursive: true, force: true });
