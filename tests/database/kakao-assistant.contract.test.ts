@@ -100,6 +100,7 @@ test("signed Kakao reads persist safe replay receipts and never expose private m
     assert.equal("members" in ownParty, false);
     assert.equal(JSON.stringify(status.body).includes("절대 노출 금지"), false);
 
+    let createdActiveSeasonId: string | null = null;
     let activeSeason = (await database.select({ id: seasons.id }).from(seasons).where(eq(seasons.status, "ACTIVE")).limit(1))[0];
     if (!activeSeason) {
       const id = randomUUID();
@@ -111,6 +112,7 @@ test("signed Kakao reads persist safe replay receipts and never expose private m
         activatedAt: new Date(),
       });
       activeSeason = { id };
+      createdActiveSeasonId = id;
     }
     const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
     await database.insert(seasonApplications).values({
@@ -132,6 +134,9 @@ test("signed Kakao reads persist safe replay receipts and never expose private m
     assert.equal((await database.select().from(recruitingNonceBindings).where(and(
       eq(recruitingNonceBindings.actorKind, "BOT"), eq(recruitingNonceBindings.actorPrincipalId, principalId),
     ))).length, 3);
+    if (createdActiveSeasonId) {
+      await database.update(seasons).set({ status: "ENDED", endedAt: new Date(), revision: 1 }).where(eq(seasons.id, createdActiveSeasonId));
+    }
   } finally {
     await pool.end();
   }
