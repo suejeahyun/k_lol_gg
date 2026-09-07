@@ -8,7 +8,7 @@ import {
   type RecruitParty,
   type ScrimRecruit,
 } from "../domain/recruiting";
-import { recruitingCommandRequestFingerprint, type RecruitingCommand } from "./commands";
+import { recruitingCommandRequestFingerprint, recruitingCommandScope, type RecruitingCommand } from "./commands";
 import type {
   RecruitCommandReceipt,
   RecruitMutationBody,
@@ -27,7 +27,7 @@ import type {
 import { toPublicPartyDto, toPublicScrimDto } from "./public-dto";
 
 export class RecruitingApplicationError extends Error {
-  constructor(readonly code: "INVALID_COMMAND" | "INVALID_AUTHORIZATION_INTENT" | "IDEMPOTENCY_MISMATCH" | "NOT_FOUND" | "REVISION_CONFLICT" | "ALREADY_EXISTS", message: string) {
+  constructor(readonly code: "INVALID_COMMAND" | "INVALID_AUTHORIZATION_INTENT" | "IDEMPOTENCY_MISMATCH" | "NOT_FOUND" | "REVISION_CONFLICT" | "ALREADY_EXISTS" | "FORBIDDEN" | "SESSION_STALE", message: string) {
     super(message);
     this.name = "RecruitingApplicationError";
   }
@@ -46,20 +46,6 @@ export type RecruitingCommandHandlerDependencies = Readonly<{
 const PARTY_TYPES = new Set<RecruitingCommand["type"]>(["CREATE_PARTY", "SYNC_PARTY", "GET_PARTY_STATUS", "FINISH_PARTY", "CANCEL_PARTY", "RESET_PARTY"]);
 const CREATE_TYPES = new Set<RecruitingCommand["type"]>(["CREATE_PARTY", "CREATE_SCRIM"]);
 const STATUS_TYPES = new Set<RecruitingCommand["type"]>(["GET_PARTY_STATUS"]);
-const EXPECTED_SCOPE: Readonly<Record<RecruitingCommand["type"], string>> = {
-  CREATE_PARTY: "bot:recruiting:party:create",
-  SYNC_PARTY: "bot:recruiting:party:sync",
-  GET_PARTY_STATUS: "bot:recruiting:party:status",
-  FINISH_PARTY: "bot:recruiting:party:finish",
-  CANCEL_PARTY: "bot:recruiting:party:cancel",
-  RESET_PARTY: "admin:recruiting:party:reset",
-  CREATE_SCRIM: "bot:recruiting:scrim:create",
-  JOIN_SCRIM: "bot:recruiting:scrim:join",
-  REOPEN_SCRIM: "bot:recruiting:scrim:reopen",
-  CONFIRM_SCRIM: "bot:recruiting:scrim:confirm",
-  COMPLETE_SCRIM: "bot:recruiting:scrim:complete",
-  CANCEL_SCRIM: "bot:recruiting:scrim:cancel",
-};
 
 function digest(value: Uint8Array, label: string) {
   if (!(value instanceof Uint8Array) || value.byteLength !== 32) throw new RecruitingApplicationError("INVALID_COMMAND", `${label} must be a 32-byte digest.`);
@@ -94,10 +80,21 @@ function validateAuthorization(command: RecruitingCommand) {
     if (command.type === "RESET_PARTY") throw new RecruitingApplicationError("INVALID_AUTHORIZATION_INTENT", "Party reset requires SUPER_ADMIN authorization.");
     return;
   }
+  if (actor.kind === "ACCOUNT") {
+    canonicalIdentifier(actor.sessionActor.sessionId, "actor.sessionId");
+    if (
+      actor.principalId !== actor.sessionActor.userAccountId ||
+      !["USER", "ADMIN", "SUPER_ADMIN"].includes(actor.sessionActor.role) ||
+      actor.authorizationIntent.kind !== "APPROVED_ACCOUNT" ||
+      actor.authorizationIntent.transactionRecheck !== true ||
+      command.type === "RESET_PARTY"
+    ) throw new RecruitingApplicationError("INVALID_AUTHORIZATION_INTENT", "Account commands require an approved ACCOUNT-purpose session recheck.");
+    return;
+  }
   if (actor.kind === "ADMIN") {
-    canonicalIdentifier(actor.sessionId, "actor.sessionId");
+    canonicalIdentifier(actor.sessionActor.sessionId, "actor.sessionId");
     const intent = actor.authorizationIntent;
-    if (intent.kind !== "ADMIN_TOTP" || !["ADMIN", "SUPER_ADMIN"].includes(intent.minimumRole) || intent.requireTotp !== true || intent.transactionRecheck !== true) {
+    if (actor.principalId !== actor.sessionActor.userAccountId || actor.sessionActor.role !== intent.minimumRole || intent.kind !== "ADMIN_TOTP" || !["ADMIN", "SUPER_ADMIN"].includes(intent.minimumRole) || intent.requireTotp !== true || intent.transactionRecheck !== true) {
       throw new RecruitingApplicationError("INVALID_AUTHORIZATION_INTENT", "Administrator commands require an ADMIN-purpose TOTP session recheck.");
     }
     if (command.type === "RESET_PARTY" && intent.minimumRole !== "SUPER_ADMIN") {
@@ -137,7 +134,7 @@ function validateCommand(command: RecruitingCommand) {
   canonicalIdentifier(command.aggregateId, "aggregateId");
   canonicalIdentifier(command.metadata.requestId, "requestId");
   canonicalIdentifier(command.metadata.idempotency.scope, "scope");
-  if (command.metadata.idempotency.scope !== EXPECTED_SCOPE[command.type]) throw new RecruitingApplicationError("INVALID_COMMAND", "The command scope does not match its action.");
+  if (command.metadata.idempotency.scope !== recruitingCommandScope(command.metadata.actor.kind, command.type)) throw new RecruitingApplicationError("INVALID_COMMAND", "The command scope does not match its actor and action.");
   if (!Number.isSafeInteger(command.metadata.expectedRevision) || command.metadata.expectedRevision < 0) throw new RecruitingApplicationError("INVALID_COMMAND", "Expected revision must be a non-negative safe integer.");
   canonicalInstant(command.metadata.issuedAt, "issuedAt");
   digest(command.metadata.idempotency.keyHash, "keyHash");

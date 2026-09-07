@@ -9,3 +9,4 @@ export const catalogSchema = pgSchema("catalog");
 export const statisticsSchema = pgSchema("statistics");
 export const teamToolsSchema = pgSchema("team_tools");
 export const mmrSchema = pgSchema("mmr");
+export const recruitingSchema = pgSchema("recruiting");

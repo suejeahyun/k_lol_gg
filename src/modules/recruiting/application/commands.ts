@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 
 import type { RecruitMember, RecruitPartyType } from "../domain/recruiting";
 import type { VerifiedKakaoWebhookIntent } from "../infrastructure/kakao-signature";
+import type { TransactionSessionActor } from "@/modules/auth/domain/transaction-session";
 
 export type RecruitingAdminAuthorizationIntent = Readonly<{
   kind: "ADMIN_TOTP";
@@ -21,7 +22,8 @@ export type RecruitingJobAuthorizationIntent = Readonly<{
 
 export type RecruitingCommandActor =
   | Readonly<{ kind: "BOT"; principalId: string; authorizationIntent: VerifiedKakaoWebhookIntent }>
-  | Readonly<{ kind: "ADMIN"; principalId: string; sessionId: string; authorizationIntent: RecruitingAdminAuthorizationIntent }>
+  | Readonly<{ kind: "ACCOUNT"; principalId: string; sessionActor: TransactionSessionActor; authorizationIntent: Readonly<{ kind: "APPROVED_ACCOUNT"; transactionRecheck: true }> }>
+  | Readonly<{ kind: "ADMIN"; principalId: string; sessionActor: TransactionSessionActor; authorizationIntent: RecruitingAdminAuthorizationIntent }>
   | Readonly<{ kind: "JOB"; principalId: string; authorizationIntent: RecruitingJobAuthorizationIntent }>;
 
 export type RecruitingCommandMetadata = Readonly<{
@@ -62,6 +64,26 @@ export type ScrimCommand =
 
 export type RecruitingCommand = PartyCommand | ScrimCommand;
 
+const COMMAND_SCOPE_SUFFIX: Readonly<Record<RecruitingCommand["type"], string>> = {
+  CREATE_PARTY: "recruiting:party:create",
+  SYNC_PARTY: "recruiting:party:sync",
+  GET_PARTY_STATUS: "recruiting:party:status",
+  FINISH_PARTY: "recruiting:party:finish",
+  CANCEL_PARTY: "recruiting:party:cancel",
+  RESET_PARTY: "recruiting:party:reset",
+  CREATE_SCRIM: "recruiting:scrim:create",
+  JOIN_SCRIM: "recruiting:scrim:join",
+  REOPEN_SCRIM: "recruiting:scrim:reopen",
+  CONFIRM_SCRIM: "recruiting:scrim:confirm",
+  COMPLETE_SCRIM: "recruiting:scrim:complete",
+  CANCEL_SCRIM: "recruiting:scrim:cancel",
+};
+
+export function recruitingCommandScope(actorKind: RecruitingCommandActor["kind"], type: RecruitingCommand["type"]) {
+  if (type === "RESET_PARTY") return "admin:recruiting:party:reset";
+  return `${actorKind === "ACCOUNT" ? "account" : actorKind === "ADMIN" ? "admin" : "bot"}:${COMMAND_SCOPE_SUFFIX[type]}`;
+}
+
 function canonicalJson(value: unknown): string {
   if (value instanceof Date) return JSON.stringify(value.toISOString());
   if (value === null || typeof value !== "object") return JSON.stringify(value) ?? "null";
@@ -79,6 +101,19 @@ export function recruitingCommandRequestFingerprint(command: RecruitingCommand):
     .update("\0")
     .update(canonicalJson({ type: command.type, aggregateId: command.aggregateId, expectedRevision: command.metadata.expectedRevision, payload: command.payload }))
     .digest();
+}
+
+export function sealRecruitingCommand<T extends RecruitingCommand>(command: T): T {
+  return {
+    ...command,
+    metadata: {
+      ...command.metadata,
+      idempotency: {
+        ...command.metadata.idempotency,
+        requestFingerprint: recruitingCommandRequestFingerprint(command),
+      },
+    },
+  };
 }
 
 /** Raw request keys are accepted only at the adapter boundary and persisted as this domain-separated digest. */

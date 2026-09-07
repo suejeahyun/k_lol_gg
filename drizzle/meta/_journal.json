@@ -64,6 +64,13 @@
       "when": 1788762575737,
       "tag": "0008_s05b_mmr_projection",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1788765000000,
+      "tag": "0009_s09_recruiting",
+      "breakpoints": true
     }
   ]
 }

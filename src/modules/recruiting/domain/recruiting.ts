@@ -99,7 +99,7 @@ export function kakaoRecruitDateKey(now: Date): string {
 }
 
 export function canonicalRecruitRequestFingerprint(input: Readonly<{
-  actor: "BOT" | "ADMIN" | "JOB";
+  actor: "BOT" | "ACCOUNT" | "ADMIN" | "JOB";
   action: string;
   requestKey: string;
   payloadDigestHex: string;

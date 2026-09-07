@@ -4,3 +4,4 @@ export * from "./application/commands";
 export * from "./application/ports";
 export * from "./application/public-dto";
 export * from "./infrastructure/kakao-signature";
+export * from "./infrastructure/postgres-recruiting-adapter";

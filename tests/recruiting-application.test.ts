@@ -250,10 +250,10 @@ test("party cancel and SUPER-only reset are distinct terminal commands", async (
   const regularAdmin = {
     kind: "ADMIN" as const,
     principalId: "admin-1",
-    sessionId: "session-1",
+    sessionActor: { userAccountId: "admin-1", sessionId: "session-1", role: "ADMIN" as const, authVersion: 0 },
     authorizationIntent: { kind: "ADMIN_TOTP" as const, minimumRole: "ADMIN" as const, requireTotp: true as const, transactionRecheck: true as const },
   };
-  const superAdmin = { ...regularAdmin, authorizationIntent: { ...regularAdmin.authorizationIntent, minimumRole: "SUPER_ADMIN" as const } };
+  const superAdmin = { ...regularAdmin, sessionActor: { ...regularAdmin.sessionActor, role: "SUPER_ADMIN" as const }, authorizationIntent: { ...regularAdmin.authorizationIntent, minimumRole: "SUPER_ADMIN" as const } };
   const resetHarness = new Harness();
   const resetHandler = new RecruitingCommandHandler(resetHarness.dependencies());
   await resetHandler.handle(createParty("party-reset"));

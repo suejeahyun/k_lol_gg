@@ -1,0 +1,148 @@
+import { sql } from "drizzle-orm";
+import {
+  bigint,
+  check,
+  date,
+  index,
+  integer,
+  jsonb,
+  uniqueIndex,
+  timestamp,
+  uuid,
+  varchar,
+} from "drizzle-orm/pg-core";
+
+import { userAccounts } from "./auth";
+import { recruitingSchema } from "./namespaces";
+import { bytea } from "./primitives";
+
+const timestamptz = (name: string) => timestamp(name, { mode: "date", withTimezone: true });
+
+export const recruitPartyType = recruitingSchema.enum("party_type", [
+  "FLEX_RANK", "NORMAL_GAME", "SOLO_RANK", "ARAM", "TFT_NORMAL", "TFT_RANK",
+  "DOUBLE_UP", "PARTY_NUMBER", "PARTY_RIFT", "OTHER_GAME",
+]);
+export const recruitPartyStatus = recruitingSchema.enum("party_status", [
+  "DRAFT", "IN_PROGRESS", "FINISHED", "CANCELED", "RESET",
+]);
+export const scrimRecruitStatus = recruitingSchema.enum("scrim_status", [
+  "RECRUITING", "MATCHED", "CONFIRMED", "COMPLETED", "CANCELED",
+]);
+export const recruitingOutboxStatus = recruitingSchema.enum("outbox_status", ["PENDING", "DELIVERED"]);
+
+export const recruitParties = recruitingSchema.table("parties", {
+  id: uuid("id").primaryKey(),
+  revision: bigint("revision", { mode: "number" }).default(0).notNull(),
+  ownerUserAccountId: uuid("owner_user_account_id").references(() => userAccounts.id, { onDelete: "restrict" }),
+  recruitDate: date("recruit_date", { mode: "string" }).notNull(),
+  resetSequence: integer("reset_sequence").default(0).notNull(),
+  recruitNumber: integer("recruit_number").notNull(),
+  type: recruitPartyType("type").notNull(),
+  status: recruitPartyStatus("status").notNull(),
+  title: varchar("title", { length: 160 }).notNull(),
+  maximumMembers: integer("maximum_members").notNull(),
+  membersJson: jsonb("members_json").$type<readonly Record<string, unknown>[]>().notNull(),
+  scheduledStartAt: timestamptz("scheduled_start_at"),
+  protectedUntil: timestamptz("protected_until"),
+  lastActivityAt: timestamptz("last_activity_at").notNull(),
+  createdAt: timestamptz("created_at").defaultNow().notNull(),
+  updatedAt: timestamptz("updated_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("recruit_parties_date_reset_number_uidx").on(table.recruitDate, table.resetSequence, table.recruitNumber),
+  index("recruit_parties_public_idx").on(table.status, table.recruitDate, table.recruitNumber),
+  index("recruit_parties_owner_idx").on(table.ownerUserAccountId, table.updatedAt),
+  check("recruit_parties_revision_nonnegative", sql`${table.revision} >= 0`),
+  check("recruit_parties_reset_nonnegative", sql`${table.resetSequence} >= 0`),
+  check("recruit_parties_number_range", sql`${table.recruitNumber} BETWEEN 1 AND 99`),
+  check("recruit_parties_capacity_range", sql`${table.maximumMembers} BETWEEN 1 AND 99`),
+  check("recruit_parties_title_nonempty", sql`char_length(btrim(${table.title})) BETWEEN 1 AND 160`),
+  check("recruit_parties_members_array", sql`jsonb_typeof(${table.membersJson}) = 'array' AND jsonb_array_length(${table.membersJson}) <= ${table.maximumMembers}`),
+  check("recruit_parties_protection_order", sql`${table.protectedUntil} IS NULL OR ${table.scheduledStartAt} IS NULL OR ${table.protectedUntil} >= ${table.scheduledStartAt}`),
+]);
+
+export const scrimRecruits = recruitingSchema.table("scrims", {
+  id: uuid("id").primaryKey(),
+  revision: bigint("revision", { mode: "number" }).default(0).notNull(),
+  ownerUserAccountId: uuid("owner_user_account_id").references(() => userAccounts.id, { onDelete: "restrict" }),
+  recruitDate: date("recruit_date", { mode: "string" }).notNull(),
+  scrimNumber: integer("scrim_number").notNull(),
+  tournamentId: uuid("tournament_id").notNull(),
+  requesterTeamId: uuid("requester_team_id").notNull(),
+  opponentTeamId: uuid("opponent_team_id"),
+  status: scrimRecruitStatus("status").notNull(),
+  scheduledAt: timestamptz("scheduled_at"),
+  bestOf: integer("best_of").notNull(),
+  createdAt: timestamptz("created_at").defaultNow().notNull(),
+  updatedAt: timestamptz("updated_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("scrim_recruits_date_number_uidx").on(table.recruitDate, table.scrimNumber),
+  index("scrim_recruits_public_idx").on(table.status, table.recruitDate, table.scrimNumber),
+  index("scrim_recruits_owner_idx").on(table.ownerUserAccountId, table.updatedAt),
+  check("scrim_recruits_revision_nonnegative", sql`${table.revision} >= 0`),
+  check("scrim_recruits_number_range", sql`${table.scrimNumber} BETWEEN 1 AND 99`),
+  check("scrim_recruits_best_of", sql`${table.bestOf} IN (1, 3, 5)`),
+  check("scrim_recruits_distinct_teams", sql`${table.opponentTeamId} IS NULL OR ${table.opponentTeamId} <> ${table.requesterTeamId}`),
+  check("scrim_recruits_status_team_consistency", sql`(${table.status} = 'RECRUITING' AND ${table.opponentTeamId} IS NULL) OR (${table.status} <> 'RECRUITING')`),
+]);
+
+export const recruitingCommandReceipts = recruitingSchema.table("command_receipts", {
+  id: uuid("id").primaryKey(),
+  actorPrincipalId: varchar("actor_principal_id", { length: 160 }).notNull(),
+  scope: varchar("scope", { length: 160 }).notNull(),
+  keyHash: bytea("key_hash").notNull(),
+  requestHash: bytea("request_hash").notNull(),
+  bodyDigestHex: varchar("body_digest_hex", { length: 64 }).notNull(),
+  responseStatus: integer("response_status"),
+  responseJson: jsonb("response_json").$type<Record<string, unknown>>(),
+  responseRevision: bigint("response_revision", { mode: "number" }),
+  createdAt: timestamptz("created_at").defaultNow().notNull(),
+  expiresAt: timestamptz("expires_at").notNull(),
+}, (table) => [
+  uniqueIndex("recruiting_receipts_principal_scope_key_uidx").on(table.actorPrincipalId, table.scope, table.keyHash),
+  index("recruiting_receipts_expiry_idx").on(table.expiresAt),
+  check("recruiting_receipts_key_hash", sql`octet_length(${table.keyHash}) = 32`),
+  check("recruiting_receipts_request_hash", sql`octet_length(${table.requestHash}) = 32`),
+  check("recruiting_receipts_body_digest", sql`${table.bodyDigestHex} ~ '^[a-f0-9]{64}$'`),
+  check("recruiting_receipts_result_consistency", sql`(${table.responseStatus} IS NULL AND ${table.responseJson} IS NULL AND ${table.responseRevision} IS NULL) OR (${table.responseStatus} BETWEEN 200 AND 299 AND ${table.responseJson} IS NOT NULL AND ${table.responseRevision} >= 0)`),
+  check("recruiting_receipts_expiry", sql`${table.expiresAt} > ${table.createdAt}`),
+]);
+
+export const recruitingNonceBindings = recruitingSchema.table("nonce_bindings", {
+  id: uuid("id").primaryKey(),
+  actorKind: varchar("actor_kind", { length: 12 }).notNull(),
+  actorPrincipalId: varchar("actor_principal_id", { length: 160 }).notNull(),
+  nonceHash: bytea("nonce_hash").notNull(),
+  bindingHash: bytea("binding_hash").notNull(),
+  keyId: varchar("key_id", { length: 128 }).notNull(),
+  createdAt: timestamptz("created_at").defaultNow().notNull(),
+  expiresAt: timestamptz("expires_at").notNull(),
+}, (table) => [
+  uniqueIndex("recruiting_nonce_principal_hash_uidx").on(table.actorPrincipalId, table.nonceHash),
+  index("recruiting_nonce_expiry_idx").on(table.expiresAt),
+  check("recruiting_nonce_actor_kind", sql`${table.actorKind} IN ('BOT', 'JOB')`),
+  check("recruiting_nonce_hash", sql`octet_length(${table.nonceHash}) = 32`),
+  check("recruiting_nonce_binding_hash", sql`octet_length(${table.bindingHash}) = 32`),
+  check("recruiting_nonce_expiry", sql`${table.expiresAt} > ${table.createdAt}`),
+]);
+
+export const recruitingOutbox = recruitingSchema.table("outbox", {
+  id: varchar("id", { length: 200 }).primaryKey(),
+  requestId: uuid("request_id").notNull(),
+  aggregateType: varchar("aggregate_type", { length: 32 }).notNull(),
+  aggregateId: uuid("aggregate_id").notNull(),
+  aggregateRevision: bigint("aggregate_revision", { mode: "number" }).notNull(),
+  eventType: varchar("event_type", { length: 96 }).notNull(),
+  dedupeKey: varchar("dedupe_key", { length: 240 }).notNull(),
+  payloadJson: jsonb("payload_json").$type<Record<string, unknown>>().notNull(),
+  status: recruitingOutboxStatus("status").default("PENDING").notNull(),
+  createdAt: timestamptz("created_at").defaultNow().notNull(),
+  deliveredAt: timestamptz("delivered_at"),
+}, (table) => [
+  uniqueIndex("recruiting_outbox_request_uidx").on(table.requestId),
+  uniqueIndex("recruiting_outbox_dedupe_uidx").on(table.dedupeKey),
+  index("recruiting_outbox_pending_idx").on(table.createdAt, table.id).where(sql`${table.status} = 'PENDING'`),
+  check("recruiting_outbox_aggregate_type", sql`${table.aggregateType} IN ('RECRUIT_PARTY', 'SCRIM_RECRUIT')`),
+  check("recruiting_outbox_revision_nonnegative", sql`${table.aggregateRevision} >= 0`),
+  check("recruiting_outbox_payload_object", sql`jsonb_typeof(${table.payloadJson}) = 'object'`),
+  check("recruiting_outbox_delivery_consistency", sql`(${table.status} = 'PENDING' AND ${table.deliveredAt} IS NULL) OR (${table.status} = 'DELIVERED' AND ${table.deliveredAt} IS NOT NULL)`),
+]);

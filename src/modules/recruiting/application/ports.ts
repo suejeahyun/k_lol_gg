@@ -1,7 +1,8 @@
 import type { JsonObject } from "@/modules/competitions/core";
 
-import type { RecruitParty, ScrimRecruit } from "../domain/recruiting";
+import type { PublicRecruitPartyDto, RecruitParty, ScrimRecruit } from "../domain/recruiting";
 import type { RecruitingCommand, RecruitingCommandActor } from "./commands";
+import type { PublicScrimRecruitDto } from "./public-dto";
 
 export interface RecruitingTransactionContext {
   readonly recruitingTransaction: unique symbol;
@@ -17,6 +18,43 @@ export interface RecruitingRepository {
   loadScrimForUpdate(transaction: RecruitingTransactionContext, scrimId: string): Promise<ScrimRecruit | null>;
   saveParty(transaction: RecruitingTransactionContext, input: Readonly<{ party: RecruitParty; expectedRevision: number; create: boolean }>): Promise<void>;
   saveScrim(transaction: RecruitingTransactionContext, input: Readonly<{ scrim: ScrimRecruit; expectedRevision: number; create: boolean }>): Promise<void>;
+}
+
+export type PublicRecruitFeedDto = Readonly<{
+  parties: readonly PublicRecruitPartyDto[];
+  scrims: readonly PublicScrimRecruitDto[];
+}>;
+
+export type AdminRecruitingStatusDto = Readonly<{
+  openPartyCount: number;
+  openScrimCount: number;
+  pendingOutboxCount: number;
+  recentParties: readonly Readonly<{
+    id: string;
+    revision: number;
+    recruitDate: string;
+    recruitNumber: number;
+    status: RecruitParty["status"];
+    title: string;
+    memberCount: number;
+    maximumMembers: number;
+    updatedAt: string;
+  }>[];
+  recentScrims: readonly Readonly<{
+    id: string;
+    revision: number;
+    recruitDate: string;
+    scrimNumber: number;
+    status: ScrimRecruit["status"];
+    requesterTeamId: string;
+    opponentTeamId: string | null;
+    updatedAt: string;
+  }>[];
+}>;
+
+export interface RecruitingQueryPort {
+  listPublicFeed(): Promise<PublicRecruitFeedDto>;
+  getAdminStatus(): Promise<AdminRecruitingStatusDto>;
 }
 
 export interface RecruitingAuthorizationPort {
