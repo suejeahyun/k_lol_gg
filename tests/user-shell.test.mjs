@@ -22,7 +22,7 @@ test("사용자 shell은 skip target, landmark, modal search, 모바일 5개 진
     navigation.indexOf("export function NavigationFallback"),
   );
   assert.equal((mobileBlock.match(/<Link/g) ?? []).length, 3);
-  assert.equal((mobileBlock.match(/compact \/>/g) ?? []).length, 2);
+  assert.equal((mobileBlock.match(/<(?:SearchControl|AllMenuControl) compact\b/g) ?? []).length, 2);
 });
 test("V2 UI는 실제 운영 데이터가 없을 때 합성 샘플을 사용자 화면에 연결하지 않는다", async () => {
   const playerIndex = await readFile(new URL("../src/modules/players/index.ts", import.meta.url), "utf8");
