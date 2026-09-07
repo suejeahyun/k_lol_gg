@@ -200,11 +200,13 @@ async function main() {
       const pageDetails = await evaluate(client, `({
         title: document.title,
         finalUrl: location.href,
+        responseStatus: performance.getEntriesByType("navigation")[0]?.responseStatus ?? null,
         heading: document.querySelector("h1")?.textContent?.trim() ?? null,
         hasHorizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
         scrollWidth: document.documentElement.scrollWidth,
         clientWidth: document.documentElement.clientWidth,
-        textSample: document.body?.innerText?.trim().slice(0, 240) ?? ""
+        textSample: document.body?.innerText?.trim().slice(0, 240) ?? "",
+        hasFrameworkError: /Internal Server Error|Application error: a server-side exception|This page could not be found/i.test(document.body?.innerText ?? "")
       })`);
       const screenshot = await client.call("Page.captureScreenshot", {
         format: "png",
@@ -213,6 +215,13 @@ async function main() {
       });
       const fileName = safeFileName(index, route);
       await writeFile(join(outputDirectory, fileName), Buffer.from(screenshot.data, "base64"));
+      const finalStatus = pageDetails.responseStatus || documentStatus;
+      const issues = [
+        finalStatus !== 200 ? `HTTP_${finalStatus ?? "UNKNOWN"}` : null,
+        pageDetails.hasHorizontalOverflow ? "HORIZONTAL_OVERFLOW" : null,
+        pageDetails.hasFrameworkError ? "FRAMEWORK_ERROR" : null,
+        !pageDetails.heading ? "MISSING_H1" : null,
+      ].filter(Boolean);
       records.push({
         index: index + 1,
         name: route.name ?? (basename(route.path) || "home"),
@@ -220,17 +229,18 @@ async function main() {
         requestedPath: route.path,
         requestedUrl,
         finalUrl: pageDetails.finalUrl ?? finalResponseUrl,
-        status: documentStatus,
+        status: finalStatus,
         title: pageDetails.title,
         heading: pageDetails.heading,
         hasHorizontalOverflow: pageDetails.hasHorizontalOverflow,
         scrollWidth: pageDetails.scrollWidth,
         clientWidth: pageDetails.clientWidth,
         textSample: pageDetails.textSample,
+        issues,
         screenshot: fileName,
         viewport,
       });
-      process.stdout.write(`[capture] ${index + 1}/${routes.length} ${documentStatus ?? "?"} ${route.path} -> ${fileName}\n`);
+      process.stdout.write(`[capture] ${index + 1}/${routes.length} ${finalStatus ?? "?"} ${route.path} -> ${fileName}${issues.length ? ` issues=${issues.join(",")}` : ""}\n`);
     }
     await writeFile(join(outputDirectory, "index.json"), `${JSON.stringify({ origin, capturedAt: new Date().toISOString(), routes: records }, null, 2)}\n`);
   } finally {
