@@ -36,19 +36,19 @@ const taskCards = [
   },
   {
     title: "경기 살펴보기",
-    description: "시즌·기간별 경기와 세트 기록을 한 흐름으로 준비합니다.",
-    href: null,
+    description: "시즌·기간별 경기와 세트 기록을 한 흐름으로 확인하세요.",
+    href: "/matches",
     icon: Swords,
     tone: "peach",
-    status: "다음 구현",
+    status: "이용 가능",
   },
   {
     title: "팀 밸런스",
-    description: "포지션과 공개 지표를 고려한 팀 도구를 준비합니다.",
-    href: null,
+    description: "포지션과 확정 경기 지표를 고려해 균형 잡힌 팀을 만듭니다.",
+    href: "/tools/team-balance",
     icon: ShieldCheck,
     tone: "mint",
-    status: "준비 중",
+    status: "이용 가능",
   },
   {
     title: "대회 진행",
@@ -65,8 +65,8 @@ function HomeDataState({ result }: { result: Awaited<ReturnType<typeof loadRunti
     return (
       <div className="home-data-state home-data-state--ready" role="status">
         <span><Database size={18} aria-hidden="true" /> 공개 등록부 연결됨</span>
-        <strong>{result.snapshot.activePlayerCount.toLocaleString("ko-KR")}명</strong>
-        <p>활성 플레이어 수입니다. 계정 아이디·회원명 같은 비공개 필드는 조회하지 않습니다.</p>
+        <strong>{result.snapshot.activePlayerCount.toLocaleString("ko-KR")}명 · {result.snapshot.publishedMatchCount.toLocaleString("ko-KR")}경기</strong>
+        <p>활성 플레이어와 공개 확정 경기 수입니다. 활성 시즌은 {result.snapshot.activeSeasonCount.toLocaleString("ko-KR")}개이며 비공개 계정 필드는 조회하지 않습니다.</p>
       </div>
     );
   }
@@ -107,8 +107,8 @@ export default async function HomePage() {
             <span>한눈에, 가볍게.</span>
           </h1>
           <p className="hero-description">
-            데스크톱과 모바일에서 같은 주소와 같은 흐름을 사용합니다. 지금은 공개 플레이어
-            검색과 상세 프로필을 먼저 연결했고, 준비되지 않은 데이터는 있는 것처럼 꾸미지 않습니다.
+            데스크톱과 모바일에서 같은 주소와 같은 흐름을 사용합니다. 플레이어·경기·랭킹·
+            팀 도구를 연결했고, 준비되지 않은 데이터는 있는 것처럼 꾸미지 않습니다.
           </p>
 
           <form className="hero-search" action="/players" method="get">
@@ -191,9 +191,9 @@ export default async function HomePage() {
         <HomeDataState result={homeResult} />
         <div className="home-feed-contract" aria-label="홈 피드 구현 상태">
           <span data-state="ready">플레이어 등록부 <strong>페이지·포트 준비</strong></span>
-          <span>시즌 요약 <strong>스키마 대기</strong></span>
-          <span>최근 경기 <strong>스키마 대기</strong></span>
-          <span>구인·대회·갤러리 <strong>다음 파동</strong></span>
+          <span data-state="ready">시즌 요약 <strong>DB 연결</strong></span>
+          <span data-state="ready">최근 경기 <strong>DB 연결</strong></span>
+          <span>구인·대회·갤러리 <strong>구현 진행 중</strong></span>
         </div>
       </section>
     </div>

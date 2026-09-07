@@ -80,6 +80,7 @@ export const canonicalUserRoutes = [
 export const primaryUserNavigation = [
   { href: "/", activeRoot: "/", label: "홈" },
   { href: "/players", activeRoot: "/players", label: "플레이어" },
+  { href: "/matches", activeRoot: "/matches", label: "경기" },
   { href: "/rankings", activeRoot: "/rankings", label: "랭킹" },
   { href: "/tools/random-team", activeRoot: "/tools", label: "팀 도구" },
   { href: "/applications", activeRoot: "/applications", label: "참가 신청" },

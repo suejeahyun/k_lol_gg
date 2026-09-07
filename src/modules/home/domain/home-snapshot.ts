@@ -2,6 +2,8 @@ export type HomeFeedState = "ready" | "not-implemented";
 
 export type HomeSnapshot = Readonly<{
   activePlayerCount: number;
+  activeSeasonCount: number;
+  publishedMatchCount: number;
   feeds: Readonly<{
     playerRegistry: HomeFeedState;
     season: HomeFeedState;

@@ -11,6 +11,7 @@ import {
   Menu,
   Search,
   Sparkles,
+  Swords,
   Trophy,
   UserRound,
   UsersRound,
@@ -187,6 +188,8 @@ export function PrimaryUserNavigation() {
             <UsersRound size={16} aria-hidden="true" />
           ) : item.href === "/rankings" ? (
             <Trophy size={16} aria-hidden="true" />
+          ) : item.href === "/matches" ? (
+            <Swords size={16} aria-hidden="true" />
           ) : item.href.startsWith("/tools/") ? (
             <Dices size={16} aria-hidden="true" />
           ) : (
@@ -195,7 +198,6 @@ export function PrimaryUserNavigation() {
           {item.label}
         </Link>
       ))}
-      <span className="desktop-nav__planned" aria-label="경기 기능 준비 중">경기</span>
       <span className="desktop-nav__planned" aria-label="대회 기능 준비 중">대회</span>
     </nav>
   );
