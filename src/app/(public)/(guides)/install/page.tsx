@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { AppWindow, CircleOff, ExternalLink, LockKeyhole, MonitorSmartphone, ShieldCheck, Smartphone } from "lucide-react";
+import { AppWindow, ExternalLink, LockKeyhole, MonitorSmartphone, ShieldCheck, Smartphone } from "lucide-react";
 
 import { InstallActions } from "./install-actions";
 import styles from "../guide.module.css";
 
 export const metadata: Metadata = {
   title: "앱 설치",
-  description: "K-LOL.GG를 브라우저 앱으로 설치하는 방법과 Android 배포 상태를 확인합니다.",
+  description: "K-LOL.GG를 데스크톱과 모바일에 안전한 웹앱으로 설치하는 방법을 확인합니다.",
   alternates: { canonical: "/install" },
 };
 
@@ -34,7 +34,7 @@ export default function InstallPage() {
         <div className={styles.cardGrid}>
           <div className={styles.card}><MonitorSmartphone size={24} aria-hidden="true" /><strong>Chrome·Edge</strong><p>설치 조건이 충족되면 위 버튼이 활성화됩니다. 버튼이 없다면 브라우저 메뉴의 ‘앱 설치’를 확인하세요.</p></div>
           <div className={styles.card}><Smartphone size={24} aria-hidden="true" /><strong>iPhone·iPad</strong><p>Safari의 공유 버튼을 누른 뒤 ‘홈 화면에 추가’를 선택하세요. 별도 계정이나 앱스토어 결제는 없습니다.</p></div>
-          <div className={styles.card} aria-disabled="true"><CircleOff size={24} aria-hidden="true" /><strong>Android APK</strong><p>검증된 버전·빌드 번호·SHA-256·서명 메타데이터가 아직 없어 직접 다운로드를 제공하지 않습니다.</p><small>안전 검증 전 배포 안 함</small></div>
+          <div className={styles.card}><AppWindow size={24} aria-hidden="true" /><strong>Android</strong><p>Chrome 메뉴에서 ‘앱 설치’ 또는 ‘홈 화면에 추가’를 선택하세요. 별도 APK 없이 최신 사이트가 앱처럼 열립니다.</p><small>공식 설치 방식 · PWA</small></div>
         </div>
       </section>
 
