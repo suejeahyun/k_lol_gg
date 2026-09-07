@@ -1,5 +1,15 @@
 import { and, desc, eq, inArray } from "drizzle-orm";
 
+import {
+  MMR_POSITIONS,
+  toTeamBalanceMmrProviderDto,
+  type MmrPlayerProfile,
+} from "@/modules/mmr";
+import {
+  mmrPlayerPositionProfiles,
+  mmrPlayerProfiles,
+  mmrProjectionStates,
+} from "@/platform/db/schema/mmr";
 import { seasons } from "@/platform/db/schema/seasons";
 import {
   playerPositionStats,
@@ -22,9 +32,10 @@ function confidence(games: number) {
 }
 
 export class PostgresTeamBalanceRatingProvider implements TeamBalanceRatingProvider {
-  async load(executor: Parameters<TeamBalanceRatingProvider["load"]>[0], playerIds: readonly string[]): Promise<TeamBalanceRatingSnapshot> {
-    if (playerIds.length === 0) return { generation: null, ratings: new Map() };
-
+  private async loadStatisticsFallback(
+    executor: Parameters<TeamBalanceRatingProvider["load"]>[0],
+    playerIds: readonly string[],
+  ): Promise<TeamBalanceRatingSnapshot> {
     const projection = (
       await executor
         .select({ seasonId: seasonProjectionStates.seasonId, generation: seasonProjectionStates.generation })
@@ -92,5 +103,59 @@ export class PostgresTeamBalanceRatingProvider implements TeamBalanceRatingProvi
       );
     }
     return { generation: projection.generation, ratings };
+  }
+
+  async load(executor: Parameters<TeamBalanceRatingProvider["load"]>[0], playerIds: readonly string[]): Promise<TeamBalanceRatingSnapshot> {
+    if (playerIds.length === 0) return { generation: null, ratings: new Map() };
+    const state = (
+      await executor
+        .select({ generation: mmrProjectionStates.generation, status: mmrProjectionStates.status })
+        .from(mmrProjectionStates)
+        .where(eq(mmrProjectionStates.key, "GLOBAL"))
+        .limit(1)
+    )[0];
+    if (!state || state.status !== "READY") return this.loadStatisticsFallback(executor, playerIds);
+
+    const [profileRows, positionRows] = await Promise.all([
+      executor.select().from(mmrPlayerProfiles).where(and(
+        eq(mmrPlayerProfiles.generation, state.generation),
+        inArray(mmrPlayerProfiles.playerId, [...playerIds]),
+      )),
+      executor.select().from(mmrPlayerPositionProfiles).where(and(
+        eq(mmrPlayerPositionProfiles.generation, state.generation),
+        inArray(mmrPlayerPositionProfiles.playerId, [...playerIds]),
+      )),
+    ]);
+    const positionByPlayer = new Map<string, MmrPlayerProfile["positions"]>();
+    for (const row of profileRows) {
+      positionByPlayer.set(row.playerId, Object.fromEntries(MMR_POSITIONS.map((position) => [position, {
+        scoreBp: row.overallScoreBp,
+        sampleSize: 0,
+      }])) as MmrPlayerProfile["positions"]);
+    }
+    for (const row of positionRows) {
+      const positions = positionByPlayer.get(row.playerId);
+      if (positions) (positions as Record<string, { scoreBp: number; sampleSize: number }>)[row.position] = {
+        scoreBp: row.scoreBp,
+        sampleSize: row.sampleSize,
+      };
+    }
+    const ratings = new Map<string, TeamBalanceRatingProviderDto | null>();
+    for (const row of profileRows) {
+      ratings.set(row.playerId, toTeamBalanceMmrProviderDto({
+        playerId: row.playerId,
+        generation: row.generation,
+        overallScoreBp: row.overallScoreBp,
+        confidenceBp: row.confidenceBp,
+        sampleSize: row.sampleSize,
+        positions: positionByPlayer.get(row.playerId)!,
+      }));
+    }
+    const missing = playerIds.filter((playerId) => !ratings.has(playerId));
+    if (missing.length > 0) {
+      const fallback = await this.loadStatisticsFallback(executor, missing);
+      for (const playerId of missing) ratings.set(playerId, fallback.ratings.get(playerId) ?? null);
+    }
+    return { generation: state.generation, ratings };
   }
 }

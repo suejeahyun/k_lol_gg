@@ -9,6 +9,8 @@ import {
 } from "@/components/admin/players/admin-player-form";
 import styles from "@/components/admin/players/admin-players.module.css";
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
+import { MMR_POSITIONS } from "@/modules/mmr";
+import { loadRuntimeMmr } from "@/modules/mmr/infrastructure/runtime-mmr";
 import { loadRuntimeAdminPlayer } from "@/modules/players/infrastructure/runtime-admin-player-data";
 
 export const dynamic = "force-dynamic";
@@ -51,6 +53,9 @@ export default async function AdminPlayerDetailPage({
   }
 
   const player = result.data!;
+  const mmrResult = tab === "balance"
+    ? await loadRuntimeMmr((service) => service.getPlayer(player.id))
+    : null;
   return (
     <main className={styles.page}>
       <div className={styles.header}>
@@ -79,9 +84,17 @@ export default async function AdminPlayerDetailPage({
         </section>
       ) : tab === "balance" ? (
         <section className={styles.integrationCard}>
-          <span className={styles.integrationBadge}>S05 연결 대기</span>
-          <h2>밸런스 프로필 진입점</h2>
-          <p>라인별 MMR, 수동 보정과 변경 이력은 통계 원본·재계산 계약이 완성되는 S05에서 이 탭에 연결합니다. 현재는 값을 만들거나 추정해 표시하지 않습니다.</p>
+          <span className={styles.integrationBadge}>S05-B READY MMR</span>
+          <h2>밸런스 프로필</h2>
+          {mmrResult?.state === "ready" && mmrResult.data ? <>
+            <dl className={styles.facts}>
+              <div><dt>종합 MMR</dt><dd>{mmrResult.data.overallScore.toFixed(2)}</dd></div>
+              <div><dt>신뢰도</dt><dd>{Math.round(mmrResult.data.confidence * 100)}%</dd></div>
+              <div><dt>경기 표본</dt><dd>{mmrResult.data.sampleSize}</dd></div>
+              {MMR_POSITIONS.map((position) => <div key={position}><dt>{position}</dt><dd>{mmrResult.data!.positions[position].score.toFixed(2)} · {mmrResult.data!.positions[position].sampleSize}회</dd></div>)}
+            </dl>
+            <p><Link href={`/admin/balance-ai?tab=players&q=${encodeURIComponent(player.nickname)}`}>MMR 작업대에서 보기</Link></p>
+          </> : <p>{mmrResult?.state === "error" ? "MMR 프로필을 불러오지 못했습니다." : "계산된 MMR 프로필이 없습니다."}</p>}
         </section>
       ) : tab === "riot" ? (
         <section className={styles.integrationCard}>

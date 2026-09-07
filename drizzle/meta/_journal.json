@@ -57,6 +57,13 @@
       "when": 1788760904475,
       "tag": "0007_s06_team_balance_drafts",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1788762575737,
+      "tag": "0008_s05b_mmr_projection",
+      "breakpoints": true
     }
   ]
 }

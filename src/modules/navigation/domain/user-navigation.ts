@@ -56,7 +56,7 @@ export const canonicalUserRoutes = [
   { template: "/matches/[matchId]", label: "경기 상세", section: "registry-match", implementationState: "page-contract" },
   { template: "/matches/submit", label: "결과 제출", section: "registry-match", implementationState: "page-contract" },
   { template: "/rankings", label: "시즌 랭킹", section: "registry-match", implementationState: "page-contract" },
-  { template: "/rankings/mmr", label: "MMR", section: "registry-match", implementationState: "planned" },
+  { template: "/rankings/mmr", label: "MMR", section: "registry-match", implementationState: "page-contract" },
 
   { template: "/tools/team-balance", label: "팀 밸런스", section: "tools", implementationState: "page-contract" },
   { template: "/tools/team-balance/drafts", label: "밸런스 초안", section: "tools", implementationState: "page-contract" },

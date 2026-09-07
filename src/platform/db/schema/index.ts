@@ -7,3 +7,4 @@ export * from "./matches";
 export * from "./catalog";
 export * from "./statistics";
 export * from "./team-tools";
+export * from "./mmr";
