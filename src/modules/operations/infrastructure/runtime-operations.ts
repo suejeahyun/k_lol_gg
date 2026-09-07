@@ -3,10 +3,18 @@ import "server-only";
 import { getDatabase } from "@/platform/db/client";
 
 import { DisabledAiCompletionAdapter, PostgresOperationsRepository } from "./postgres-operations-repository";
+import { OpenAiResponsesCompletionAdapter, readOpenAiCompletionConfiguration } from "./openai-completion-adapter";
+
+function completionAdapter() {
+  const configuration = readOpenAiCompletionConfiguration();
+  return configuration
+    ? new OpenAiResponsesCompletionAdapter(configuration)
+    : new DisabledAiCompletionAdapter();
+}
 
 export function getRuntimeOperationsRepository() {
   try {
-    return new PostgresOperationsRepository(getDatabase(), new DisabledAiCompletionAdapter());
+    return new PostgresOperationsRepository(getDatabase(), completionAdapter());
   } catch {
     return null;
   }

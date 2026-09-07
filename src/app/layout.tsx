@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PwaRegistration } from "@/components/pwa-registration";
+import { SiteAiAssistant } from "@/components/site-ai-assistant";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -37,7 +38,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ko" className="h-full antialiased">
-      <body className="min-h-full">{children}<PwaRegistration /></body>
+      <body className="min-h-full">{children}<PwaRegistration /><SiteAiAssistant /></body>
     </html>
   );
 }
