@@ -8,13 +8,24 @@ import { sessionMatchesAccount } from "../application/validate-session-account";
 import { getFixtureAuthAccountRepository } from "./fixture-auth-repository";
 import { resolveRuntimeAuthContext } from "./runtime-auth-context";
 import { hashSessionToken } from "./session-token-hash";
-import { SESSION_COOKIE_NAME, SESSION_MAX_AGE_SECONDS } from "./session-constants";
+import {
+  sessionCookieName,
+  sessionMaximumAgeSeconds,
+} from "./session-constants";
 
 export {
   clearedSessionCookieOptions,
   sessionCookieOptions,
 } from "./session-cookie-policy";
-export { SESSION_COOKIE_NAME, SESSION_MAX_AGE_SECONDS } from "./session-constants";
+export {
+  SESSION_COOKIE_NAME,
+  SESSION_MAX_AGE_SECONDS,
+  sessionCookieName,
+} from "./session-constants";
+export {
+  ACCOUNT_SESSION_COOKIE_NAME,
+  ADMIN_SESSION_COOKIE_NAME,
+} from "./session-constants";
 
 const revokedFixtureSessions = new Map<string, number>();
 
@@ -44,12 +55,13 @@ export async function issueRuntimeSession(seed: AuthSessionSeed) {
 
   const nowMs = Date.now();
   const issuedAt = new Date(Math.floor(nowMs / 1_000) * 1_000);
-  const expiresAt = new Date(issuedAt.getTime() + SESSION_MAX_AGE_SECONDS * 1_000);
+  const maximumAgeSeconds = sessionMaximumAgeSeconds(seed.purpose);
+  const expiresAt = new Date(issuedAt.getTime() + maximumAgeSeconds * 1_000);
   const sessionId = randomUUID();
   const token = await context.codec.encode(seed, {
     nowMs,
     sessionId,
-    ttlSeconds: SESSION_MAX_AGE_SECONDS,
+    ttlSeconds: maximumAgeSeconds,
   });
 
   if (context.mode === "database") {
@@ -59,6 +71,7 @@ export async function issueRuntimeSession(seed: AuthSessionSeed) {
       userAccountId: seed.userId,
       authVersion: seed.authVersion,
       role: seed.role,
+      purpose: seed.purpose,
       totpVerifiedAt: seed.adminTotpVerified ? issuedAt : null,
       issuedAt,
       expiresAt,
@@ -97,9 +110,13 @@ async function validateRuntimeSessionToken(token: string): Promise<AuthSession |
       principal.sessionId !== session.sessionId ||
       principal.userAccountId !== session.userId ||
       principal.role !== session.role ||
+      principal.purpose !== session.purpose ||
+      principal.accountStatus !== session.accountStatus ||
+      principal.mustChangePassword !== session.mustChangePassword ||
       principal.authVersion !== session.authVersion ||
       databaseTotpVerified !== session.adminTotpVerified ||
       (!isAdminRole(session.role) && databaseTotpVerified) ||
+      (session.purpose === "ACCOUNT" && databaseTotpVerified) ||
       principal.issuedAt.getTime() !== session.issuedAt ||
       principal.expiresAt.getTime() !== session.expiresAt
     ) {
@@ -110,15 +127,17 @@ async function validateRuntimeSessionToken(token: string): Promise<AuthSession |
     return null;
   }
 }
-export const getCurrentSession = cache(async () => {
-  const token = (await cookies()).get(SESSION_COOKIE_NAME)?.value;
-  return token ? validateRuntimeSessionToken(token) : null;
+export const getCurrentSession = cache(async (purpose: "ACCOUNT" | "ADMIN") => {
+  const token = (await cookies()).get(sessionCookieName(purpose))?.value;
+  const session = token ? await validateRuntimeSessionToken(token) : null;
+  return session?.purpose === purpose ? session : null;
 });
 
 export type RuntimeSessionRevocationResult = "revoked" | "no-session" | "unavailable";
 
 export async function revokeRuntimeSessionToken(
   token: string | undefined,
+  expectedPurpose: "ACCOUNT" | "ADMIN",
 ): Promise<RuntimeSessionRevocationResult> {
   if (!token) return "no-session";
 
@@ -126,7 +145,11 @@ export async function revokeRuntimeSessionToken(
   if (!context) return "unavailable";
 
   const session = await context.codec.decode(token);
-  if (!session || session.source !== context.mode) return "no-session";
+  if (
+    !session ||
+    session.source !== context.mode ||
+    session.purpose !== expectedPurpose
+  ) return "no-session";
   if (context.mode === "fixture") {
     revokeFixtureSession(session);
     return "revoked";

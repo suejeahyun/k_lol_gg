@@ -24,6 +24,14 @@ import {
   sessionCookieOptions,
 } from "../src/modules/auth/infrastructure/session-cookie-policy";
 import {
+  ACCOUNT_SESSION_COOKIE_NAME,
+  ACCOUNT_SESSION_MAX_AGE_SECONDS,
+  ADMIN_SESSION_COOKIE_NAME,
+  ADMIN_SESSION_MAX_AGE_SECONDS,
+  sessionCookieName,
+  sessionMaximumAgeSeconds,
+} from "../src/modules/auth/infrastructure/session-constants";
+import {
   encryptTotpSecret,
   fingerprintTotpCredential,
 } from "../src/modules/auth/infrastructure/totp-envelope";
@@ -135,11 +143,29 @@ test("fixture authentication requires a live short-lived verifier proof on loopb
 });
 
 test("production session cookies are Secure even when transport inference is false", () => {
-  assert.equal(sessionCookieOptions(false, "development").secure, false);
-  assert.equal(sessionCookieOptions(true, "development").secure, true);
-  assert.equal(sessionCookieOptions(false, "production").secure, true);
-  assert.equal(clearedSessionCookieOptions(false, "production").secure, true);
-  assert.equal(clearedSessionCookieOptions(false, "production").maxAge, 0);
+  assert.equal(sessionCookieOptions(false, "development", "ADMIN").secure, false);
+  assert.equal(sessionCookieOptions(true, "development", "ADMIN").secure, true);
+  assert.equal(sessionCookieOptions(false, "production", "ADMIN").secure, true);
+  assert.equal(clearedSessionCookieOptions(false, "production", "ADMIN").secure, true);
+  assert.equal(clearedSessionCookieOptions(false, "production", "ADMIN").maxAge, 0);
+});
+
+test("account and administrator elevation cookies coexist with purpose-bound lifetimes", () => {
+  assert.notEqual(ACCOUNT_SESSION_COOKIE_NAME, ADMIN_SESSION_COOKIE_NAME);
+  assert.equal(sessionCookieName("ACCOUNT"), ACCOUNT_SESSION_COOKIE_NAME);
+  assert.equal(sessionCookieName("ADMIN"), ADMIN_SESSION_COOKIE_NAME);
+  assert.equal(sessionMaximumAgeSeconds("ACCOUNT"), ACCOUNT_SESSION_MAX_AGE_SECONDS);
+  assert.equal(sessionMaximumAgeSeconds("ADMIN"), ADMIN_SESSION_MAX_AGE_SECONDS);
+  assert.equal(
+    sessionCookieOptions(false, "development", "ACCOUNT").maxAge,
+    7 * 24 * 60 * 60,
+  );
+  assert.equal(
+    sessionCookieOptions(false, "development", "ADMIN").maxAge,
+    30 * 60,
+  );
+  assert.equal(clearedSessionCookieOptions(false, "development", "ACCOUNT").maxAge, 0);
+  assert.equal(clearedSessionCookieOptions(false, "development", "ADMIN").maxAge, 0);
 });
 
 test("JWT decode rejects oversized attacker input before JOSE parsing", async () => {

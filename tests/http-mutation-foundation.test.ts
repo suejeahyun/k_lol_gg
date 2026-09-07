@@ -249,6 +249,26 @@ test("JSON body reader separates media type, empty body, UTF-8, and JSON errors"
   });
 });
 
+test("JSON body reader rejects duplicate decoded object keys at every nesting level", async () => {
+  assert.deepEqual(await readJsonBody(jsonRequest('{"loginId":"first","loginId":"last"}')), {
+    ok: false,
+    error: "INVALID_JSON",
+  });
+  assert.deepEqual(
+    await readJsonBody(jsonRequest('{"loginId":"first","login\\u0049d":"last"}')),
+    { ok: false, error: "INVALID_JSON" },
+  );
+  assert.deepEqual(await readJsonBody(jsonRequest('{"outer":{"role":1,"role":2}}')), {
+    ok: false,
+    error: "INVALID_JSON",
+  });
+  assert.deepEqual(await readJsonBody(jsonRequest('{"left":"same","right":"same"}')), {
+    ok: true,
+    bytesRead: 30,
+    value: { left: "same", right: "same" },
+  });
+});
+
 test("JSON body reader enforces declared and streamed byte limits", async () => {
   const exact = await readJsonBody(jsonRequest("1234"), { maximumBytes: 4 });
   const declaredTooLarge = await readJsonBody(jsonRequest("{}", { "content-length": "99" }), {

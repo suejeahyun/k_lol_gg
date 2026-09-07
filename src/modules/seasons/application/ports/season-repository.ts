@@ -1,4 +1,5 @@
 import type { DatabaseExecutor } from "@/platform/db/transaction";
+import type { TransactionSessionActor } from "@/modules/auth/domain/transaction-session";
 
 import type {
   AdminSeasonWorkspace,
@@ -11,6 +12,8 @@ import type {
 
 export type CommandEnvelope = Readonly<{
   actorUserAccountId: string;
+  actorSession: TransactionSessionActor;
+  authorization: "ADMIN_MUTATION" | "APPROVED_ACCOUNT_MUTATION";
   requestId: string;
   scope: string;
   keyHash: Buffer;

@@ -196,20 +196,20 @@ export function PrimaryUserNavigation() {
   );
 }
 
-export function HeaderUserControls() {
+export function HeaderUserControls({ accountSignedIn = false }: { accountSignedIn?: boolean }) {
   return (
     <div className="header-actions">
       <SearchControl />
       <AllMenuControl />
-      <Link className="header-account" href="/login" aria-label="사용자 로그인">
+      <Link className="header-account" href={accountSignedIn ? "/account" : "/login"} aria-label={accountSignedIn ? "내 계정" : "사용자 로그인"}>
         <UserRound size={17} aria-hidden="true" />
-        <span>로그인</span>
+        <span>{accountSignedIn ? "내 계정" : "로그인"}</span>
       </Link>
     </div>
   );
 }
 
-export function MobileUserNavigation() {
+export function MobileUserNavigation({ accountSignedIn = false }: { accountSignedIn?: boolean }) {
   const pathname = usePathname();
 
   return (
@@ -226,9 +226,9 @@ export function MobileUserNavigation() {
         <span>플레이어</span>
       </Link>
       <SearchControl compact />
-      <Link href="/login" aria-current={pathname === "/login" ? "page" : undefined}>
+      <Link href={accountSignedIn ? "/account" : "/login"} aria-current={accountSignedIn ? (pathname.startsWith("/account") ? "page" : undefined) : (pathname === "/login" ? "page" : undefined)}>
         <LogIn size={20} aria-hidden="true" />
-        <span>로그인</span>
+        <span>{accountSignedIn ? "계정" : "로그인"}</span>
       </Link>
       <AllMenuControl compact />
     </nav>

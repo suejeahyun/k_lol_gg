@@ -18,6 +18,9 @@ import { fileURLToPath } from "node:url";
 import { Pool } from "pg";
 
 import { generateTotpCode } from "../../src/modules/auth/infrastructure/totp";
+import { encryptTotpSecret } from "../../src/modules/auth/infrastructure/totp-envelope";
+import { hashPassword } from "../../src/modules/auth/infrastructure/node-password";
+import { parseTotpEncryptionKeyring } from "../../src/modules/auth/infrastructure/versioned-secret-keyring";
 import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
 
 const execFile = promisify(execFileCallback);
@@ -206,6 +209,70 @@ async function createTestDatabase(connection: {
   return url.toString();
 }
 
+async function createSiblingTestDatabase(connectionString: string): Promise<Readonly<{
+  connectionString: string;
+  dispose: () => Promise<void>;
+}>> {
+  const source = new URL(connectionString);
+  const databaseName = `klol_v2_test_fresh_${randomBytes(8).toString("hex")}`;
+  if (!/^klol_v2_test_fresh_[a-f0-9]{16}$/.test(databaseName)) {
+    throw new Error("Unsafe generated fresh-install database name.");
+  }
+
+  const adminPool = new Pool({
+    host: source.hostname,
+    port: Number.parseInt(source.port || "5432", 10),
+    user: decodeURIComponent(source.username),
+    password: decodeURIComponent(source.password),
+    database: "postgres",
+    max: 1,
+    connectionTimeoutMillis: 5_000,
+  });
+
+  let databaseCreated = false;
+  async function dropCreatedDatabase() {
+    if (!databaseCreated) return;
+    await adminPool.query(
+      `select pg_terminate_backend(pid)
+         from pg_stat_activity
+        where datname = $1 and pid <> pg_backend_pid()`,
+      [databaseName],
+    );
+    await adminPool.query(`DROP DATABASE "${databaseName}"`);
+    databaseCreated = false;
+  }
+
+  const freshUrl = new URL(connectionString);
+  freshUrl.pathname = `/${databaseName}`;
+  try {
+    await adminPool.query(`CREATE DATABASE "${databaseName}"`);
+    databaseCreated = true;
+    assertSafeTestDatabase({
+      connectionString: freshUrl.toString(),
+      nodeEnv: "test",
+      testMode: "true",
+    });
+  } catch (error) {
+    try {
+      await dropCreatedDatabase();
+    } finally {
+      await adminPool.end();
+    }
+    throw error;
+  }
+
+  return {
+    connectionString: freshUrl.toString(),
+    async dispose() {
+      try {
+        await dropCreatedDatabase();
+      } finally {
+        await adminPool.end();
+      }
+    },
+  };
+}
+
 async function startEphemeralCluster(): Promise<EphemeralCluster> {
   const toolEnvironment = safeProcessEnvironment();
   const initdb = postgresExecutable("initdb");
@@ -346,6 +413,7 @@ async function runContractTests(connectionString: string): Promise<void> {
     "tests/database/auth-totp-lifecycle.contract.test.ts",
     "tests/database/player-admin.contract.test.ts",
     "tests/database/season-platform.contract.test.ts",
+    "tests/database/account-lifecycle.contract.test.ts",
   ];
   for (const relativeTestFile of testFiles) {
     const child = spawn(process.execPath, [tsxCli, "--test", resolve(workspaceRoot, relativeTestFile)], {
@@ -475,6 +543,67 @@ async function runSeasonHttpVerification(connectionString: string): Promise<void
   }
 }
 
+async function runFreshInstallContractTest(connectionString: string): Promise<void> {
+  assertSafeTestDatabase({
+    connectionString,
+    nodeEnv: "test",
+    testMode: "true",
+  });
+  const tsxCli = resolve(workspaceRoot, "node_modules/tsx/dist/cli.mjs");
+  const relativeTestFile = "tests/database/fresh-install.contract.test.ts";
+  const child = spawn(process.execPath, [tsxCli, "--test", resolve(workspaceRoot, relativeTestFile)], {
+    cwd: workspaceRoot,
+    env: childTestEnvironment(connectionString),
+    stdio: "inherit",
+    windowsHide: true,
+  });
+  const exitCode = await new Promise<number>((resolveExit, reject) => {
+    child.once("error", reject);
+    child.once("exit", (code, signal) => {
+      if (signal) reject(new Error(`${relativeTestFile} ended by ${signal}.`));
+      else resolveExit(code ?? 1);
+    });
+  });
+  if (exitCode !== 0) throw new Error(`${relativeTestFile} failed with exit code ${exitCode}.`);
+}
+
+async function runFreshThenUpgradeContractTests(connectionString: string): Promise<void> {
+  const freshDatabase = await createSiblingTestDatabase(connectionString);
+  try {
+    await runFreshInstallContractTest(freshDatabase.connectionString);
+  } finally {
+    await freshDatabase.dispose();
+  }
+  await runContractTests(connectionString);
+}
+
+async function runAccountHttpVerification(connectionString: string): Promise<void> {
+  assertSafeTestDatabase({
+    connectionString,
+    nodeEnv: "test",
+    testMode: "true",
+  });
+
+  const tsxCli = resolve(workspaceRoot, "node_modules/tsx/dist/cli.mjs");
+  const verificationFile = resolve(workspaceRoot, "scripts/test-db/verify-account-http.ts");
+  const child = spawn(process.execPath, [tsxCli, verificationFile], {
+    cwd: workspaceRoot,
+    env: childTestEnvironment(connectionString),
+    stdio: "inherit",
+    windowsHide: true,
+  });
+  const exitCode = await new Promise<number>((resolveExit, reject) => {
+    child.once("error", reject);
+    child.once("exit", (code, signal) => {
+      if (signal) reject(new Error(`Account HTTP verification ended by ${signal}.`));
+      else resolveExit(code ?? 1);
+    });
+  });
+  if (exitCode !== 0) {
+    throw new Error(`Account HTTP verification failed with exit code ${exitCode}.`);
+  }
+}
+
 function base32(value: Buffer): string {
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
   const bits = [...value].map((byte) => byte.toString(2).padStart(8, "0")).join("");
@@ -492,6 +621,23 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
   const seasonId = randomUUID();
   const applicationId = randomUUID();
   const suffix = randomBytes(4).toString("hex");
+  const loginId = `browser_super_${suffix}`;
+  const password = `${randomBytes(24).toString("base64url")}!Aa1`;
+  const passwordHash = await hashPassword(password);
+  const totpSecret = base32(randomBytes(20));
+  const sessionKey = randomBytes(32);
+  const totpKey = randomBytes(32);
+  const rateLimitPepper = randomBytes(32).toString("base64url");
+  const sessionKeysJson = JSON.stringify({
+    current: "browser-qa-v1",
+    keys: { "browser-qa-v1": sessionKey.toString("base64url") },
+  });
+  const totpKeysJson = JSON.stringify({
+    current: 1,
+    keys: { 1: totpKey.toString("base64url") },
+  });
+  const totpKeyring = parseTotpEncryptionKeyring(totpKeysJson);
+  const actorTotpEnvelope = encryptTotpSecret(actorId, totpSecret, totpKeyring);
   const today = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Seoul",
     year: "numeric",
@@ -500,15 +646,130 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
   }).format(new Date());
   await pool.query(
     `insert into auth.user_accounts
-       (id, login_id, login_id_normalized, password_hash, role, status)
-     values ($1, $2, $2, '$argon2id$v=19$synthetic-browser-qa-only', 'ADMIN', 'APPROVED')`,
-    [actorId, `browser_db_actor_${suffix}`],
+       (id, login_id, login_id_normalized, password_hash, role, status,
+        password_changed_at, status_changed_at)
+     values ($1, $2::text, lower($2::text), $3, 'SUPER_ADMIN', 'APPROVED', clock_timestamp(), clock_timestamp())`,
+    [actorId, loginId, passwordHash],
   );
   await pool.query(
     `insert into registry.players
        (id, user_account_id, member_name, member_name_normalized, nickname, nickname_normalized, tag_line, tag_line_normalized)
      values ($1, $2, $3, $3, $4::text, lower($4::text), 'S03', 's03')`,
     [playerId, actorId, "화면 검수 비공개 회원명", `Breeze${suffix}`],
+  );
+  await pool.query(
+    `insert into auth.admin_totp_credentials
+       (user_account_id, secret_ciphertext, secret_iv, secret_auth_tag, key_version, enabled_at)
+     values ($1, $2, $3, $4, $5, clock_timestamp())`,
+    [
+      actorId,
+      actorTotpEnvelope.secretCiphertext,
+      actorTotpEnvelope.secretIv,
+      actorTotpEnvelope.secretAuthTag,
+      actorTotpEnvelope.keyVersion,
+    ],
+  );
+
+  async function seedQaAccount(
+    label: string,
+    status: "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED",
+    options: Readonly<{
+      role?: "USER" | "ADMIN";
+      deleted?: boolean;
+      withPlayer?: boolean;
+      playerStatus?: "ACTIVE" | "INACTIVE";
+      lifecycleManaged?: boolean;
+    }> = {},
+  ) {
+    const id = randomUUID();
+    const targetPlayerId = randomUUID();
+    const targetLoginId = `qa_${label}_${suffix}`;
+    const targetRole = options.role ?? "USER";
+    const deleted = options.deleted ?? false;
+    const withPlayer = options.withPlayer ?? true;
+    const playerStatus = options.playerStatus ?? "ACTIVE";
+    await pool.query(
+      `insert into auth.user_accounts
+         (id, login_id, login_id_normalized, password_hash, role, status,
+          status_changed_at, deleted_at)
+       values ($1, $2::text, lower($2::text), $3, $4, $5, clock_timestamp(),
+               case when $6::boolean then clock_timestamp() else null end)`,
+      [id, targetLoginId, passwordHash, targetRole, status, deleted],
+    );
+    if (withPlayer) {
+      const lifecycleManaged = options.lifecycleManaged ?? false;
+      await pool.query(
+        `insert into registry.players
+           (id, user_account_id, member_name, member_name_normalized,
+            nickname, nickname_normalized, tag_line, tag_line_normalized,
+            status, deactivated_at, account_lifecycle_deactivated_at)
+         values ($1, $2, $3::text, lower($3::text), $4::text, lower($4::text), 'QA', 'qa', $5,
+                 case when $5::registry.player_status = 'INACTIVE' then clock_timestamp() else null end,
+                 case when $6::boolean then clock_timestamp() else null end)`,
+        [
+          targetPlayerId,
+          id,
+          `QA ${label} 회원`,
+          `Qa${label}${suffix}`,
+          playerStatus,
+          lifecycleManaged,
+        ],
+      );
+    }
+    return { id, loginId: targetLoginId, playerId: withPlayer ? targetPlayerId : null };
+  }
+
+  const pendingTarget = await seedQaAccount("pending", "PENDING", {
+    playerStatus: "INACTIVE",
+    lifecycleManaged: true,
+  });
+  const approvedTarget = await seedQaAccount("approved", "APPROVED");
+  const rejectedTarget = await seedQaAccount("rejected", "REJECTED", {
+    playerStatus: "INACTIVE",
+    lifecycleManaged: true,
+  });
+  const suspendedTarget = await seedQaAccount("suspended", "SUSPENDED");
+  const deletedTarget = await seedQaAccount("deleted", "REJECTED", {
+    deleted: true,
+    playerStatus: "INACTIVE",
+    lifecycleManaged: true,
+  });
+  const adminTarget = await seedQaAccount("admin", "APPROVED", { role: "ADMIN" });
+  const adminTargetSecret = base32(randomBytes(20));
+  const adminTargetEnvelope = encryptTotpSecret(adminTarget.id, adminTargetSecret, totpKeyring);
+  await pool.query(
+    `insert into auth.admin_totp_credentials
+       (user_account_id, secret_ciphertext, secret_iv, secret_auth_tag, key_version, enabled_at)
+     values ($1, $2, $3, $4, $5, clock_timestamp())`,
+    [
+      adminTarget.id,
+      adminTargetEnvelope.secretCiphertext,
+      adminTargetEnvelope.secretIv,
+      adminTargetEnvelope.secretAuthTag,
+      adminTargetEnvelope.keyVersion,
+    ],
+  );
+  const claimTarget = await seedQaAccount("claim", "PENDING", { withPlayer: false });
+  const claimPlayerId = randomUUID();
+  await pool.query(
+    `insert into registry.players
+       (id, member_name, member_name_normalized, nickname, nickname_normalized,
+        tag_line, tag_line_normalized, status)
+     values ($1, $2::text, lower($2::text), $3::text, lower($3::text), 'QA', 'qa', 'ACTIVE')`,
+    [claimPlayerId, "기존 플레이어 회원명", `ClaimTarget${suffix}`],
+  );
+  await pool.query(
+    `insert into registry.player_account_claims
+       (id, user_account_id, player_id, status, requested_member_name,
+        requested_riot_id, created_at, updated_at)
+     values ($1, $2, $3, 'PENDING', $4, $5, clock_timestamp(), clock_timestamp())`,
+    [randomUUID(), claimTarget.id, claimPlayerId, "가입자가 입력한 회원명", `ClaimTarget${suffix}#QA`],
+  );
+  await pool.query(
+    `insert into auth.password_reset_requests
+       (id, user_account_id, login_id_hash, status, requested_at, expires_at)
+     values ($1, $2, $3, 'PENDING', clock_timestamp(), clock_timestamp() + interval '7 days')`,
+    [randomUUID(), approvedTarget.id, randomBytes(32)],
   );
   await pool.query(
     `insert into competition.seasons
@@ -523,28 +784,8 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
     [applicationId, seasonId, playerId, today],
   );
 
-  const loginId = `browser_admin_${suffix}`;
-  const password = `${randomBytes(24).toString("base64url")}!Aa1`;
-  const totpSecret = base32(randomBytes(20));
-  const sessionSecret = randomBytes(32).toString("base64url");
   const port = await availableLoopbackPort();
   const origin = `http://127.0.0.1:${port}`;
-  const runnerToken = randomBytes(32).toString("base64url");
-  const proofDirectory = resolve(workspaceRoot, ".tmp/auth-http", `season-browser-${suffix}`);
-  const proofPath = resolve(proofDirectory, "fixture-proof.json");
-  const proofCreatedAtMs = Date.now();
-  await mkdir(proofDirectory, { recursive: true });
-  await writeFile(
-    proofPath,
-    JSON.stringify({
-      createdAtMs: proofCreatedAtMs,
-      expiresAtMs: proofCreatedAtMs + 9 * 60_000,
-      origin,
-      runnerPid: process.pid,
-      runnerToken,
-    }),
-    { encoding: "utf8", flag: "wx" },
-  );
   const nextBin = resolve(workspaceRoot, "node_modules/next/dist/bin/next");
   const child = spawn(process.execPath, [nextBin, "dev", "--hostname", "127.0.0.1", "--port", String(port)], {
     cwd: workspaceRoot,
@@ -554,23 +795,9 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
       DATABASE_URL: connectionString,
       NEXT_PUBLIC_SITE_URL: origin,
       V2_PUBLIC_ORIGIN: origin,
-      V2_TEST_AUTH_ENABLED: "true",
-      V2_TEST_AUTH_PROOF_PATH: proofPath,
-      V2_TEST_AUTH_RUNNER_PID: String(process.pid),
-      V2_TEST_AUTH_RUNNER_TOKEN: runnerToken,
-      V2_TEST_AUTH_SECRET: sessionSecret,
-      V2_TEST_AUTH_FIXTURES_JSON: JSON.stringify([
-        {
-          id: actorId,
-          loginId,
-          password,
-          role: "ADMIN",
-          status: "APPROVED",
-          authVersion: 1,
-          adminTotpEnabled: true,
-          adminTotpSecret: totpSecret,
-        },
-      ]),
+      SESSION_SIGNING_KEYS: sessionKeysJson,
+      TOTP_ENCRYPTION_KEYS: totpKeysJson,
+      V2_AUTH_RATE_LIMIT_PEPPER: rateLimitPepper,
     },
     stdio: ["ignore", "pipe", "pipe"],
     windowsHide: true,
@@ -596,11 +823,26 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
     }
     if (Date.now() >= deadline) throw new Error("Browser QA Next.js did not become ready.");
 
-    process.stdout.write(`[browser-qa-ready] ${JSON.stringify({ origin, loginId, password })}\n`);
-    process.stdout.write("[browser-qa-command] code | empty | error | restore | stop\n");
+    process.stdout.write(`[browser-qa-ready] ${JSON.stringify({
+      origin,
+      loginId,
+      password,
+      targets: {
+        pending: pendingTarget,
+        approved: approvedTarget,
+        rejected: rejectedTarget,
+        suspended: suspendedTarget,
+        deleted: deletedTarget,
+        admin: adminTarget,
+        claim: claimTarget,
+      },
+    })}\n`);
+    process.stdout.write("[browser-qa-command] code | empty | season-error | season-restore | account-error | account-restore | sessions-error | sessions-restore | bump-approved | stop\n");
     process.stdin.setEncoding("utf8");
     let buffer = "";
     let seasonTableRenamed = false;
+    let claimTableRenamed = false;
+    let sessionsTableRenamed = false;
     await new Promise<void>((resolveStop, reject) => {
       process.stdin.on("data", (chunk) => {
         buffer += chunk;
@@ -620,7 +862,7 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
               )
               .then(() => process.stdout.write("[browser-qa-state] no active season\n"))
               .catch(reject);
-          } else if (command === "error" && !seasonTableRenamed) {
+          } else if (command === "season-error" && !seasonTableRenamed) {
             void pool
               .query(`alter table competition.seasons rename to seasons_s03_browser_error`)
               .then(() => {
@@ -628,13 +870,50 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
                 process.stdout.write("[browser-qa-state] season repository unavailable\n");
               })
               .catch(reject);
-          } else if (command === "restore" && seasonTableRenamed) {
+          } else if (command === "season-restore" && seasonTableRenamed) {
             void pool
               .query(`alter table competition.seasons_s03_browser_error rename to seasons`)
               .then(() => {
                 seasonTableRenamed = false;
                 process.stdout.write("[browser-qa-state] season repository restored\n");
               })
+              .catch(reject);
+          } else if (command === "account-error" && !claimTableRenamed) {
+            void pool
+              .query(`alter table registry.player_account_claims rename to player_account_claims_s01_browser_error`)
+              .then(() => {
+                claimTableRenamed = true;
+                process.stdout.write("[browser-qa-state] account detail repository unavailable\n");
+              })
+              .catch(reject);
+          } else if (command === "account-restore" && claimTableRenamed) {
+            void pool
+              .query(`alter table registry.player_account_claims_s01_browser_error rename to player_account_claims`)
+              .then(() => {
+                claimTableRenamed = false;
+                process.stdout.write("[browser-qa-state] account detail repository restored\n");
+              })
+              .catch(reject);
+          } else if (command === "sessions-error" && !sessionsTableRenamed) {
+            void pool
+              .query(`alter table auth.sessions rename to sessions_s01_browser_error`)
+              .then(() => {
+                sessionsTableRenamed = true;
+                process.stdout.write("[browser-qa-state] session revocation repository unavailable\n");
+              })
+              .catch(reject);
+          } else if (command === "sessions-restore" && sessionsTableRenamed) {
+            void pool
+              .query(`alter table auth.sessions_s01_browser_error rename to sessions`)
+              .then(() => {
+                sessionsTableRenamed = false;
+                process.stdout.write("[browser-qa-state] session revocation repository restored\n");
+              })
+              .catch(reject);
+          } else if (command === "bump-approved") {
+            void pool
+              .query(`update auth.user_accounts set revision = revision + 1, updated_at = clock_timestamp() where id = $1`, [approvedTarget.id])
+              .then(() => process.stdout.write("[browser-qa-state] approved target revision bumped\n"))
               .catch(reject);
           } else if (command === "stop") {
             resolveStop();
@@ -645,11 +924,19 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
     if (seasonTableRenamed) {
       await pool.query(`alter table competition.seasons_s03_browser_error rename to seasons`);
     }
+    if (claimTableRenamed) {
+      await pool.query(`alter table registry.player_account_claims_s01_browser_error rename to player_account_claims`);
+    }
+    if (sessionsTableRenamed) {
+      await pool.query(`alter table auth.sessions_s01_browser_error rename to sessions`);
+    }
   } catch (error) {
     const sanitized = log
       .replaceAll(password, "[synthetic-password]")
       .replaceAll(totpSecret, "[synthetic-totp]")
-      .replaceAll(sessionSecret, "[synthetic-session-secret]");
+      .replaceAll(sessionKey.toString("base64url"), "[synthetic-session-secret]")
+      .replaceAll(totpKey.toString("base64url"), "[synthetic-totp-key]")
+      .replaceAll(rateLimitPepper, "[synthetic-rate-pepper]");
     process.stderr.write(`${sanitized}\n`);
     throw error;
   } finally {
@@ -662,7 +949,6 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
       if (child.exitCode === null) child.kill("SIGKILL");
     }
     await pool.end();
-    await rm(proofDirectory, { force: true, recursive: true });
   }
 }
 
@@ -678,14 +964,18 @@ async function main(): Promise<void> {
       nodeEnv: process.env.NODE_ENV,
       testMode: process.env.V2_DB_TEST_MODE,
     });
-    await runContractTests(connectionString);
-    if (process.env.V2_SEASON_BROWSER_QA_HOLD === "true") {
+    await runFreshThenUpgradeContractTests(connectionString);
+    if (
+      process.env.V2_SEASON_BROWSER_QA_HOLD === "true" ||
+      process.env.V2_ACCOUNT_BROWSER_QA_HOLD === "true"
+    ) {
       await runSeasonBrowserQaServer(connectionString);
     } else {
       await runDurableAuthHttpVerification(connectionString);
       await runTotpLifecycleHttpVerification(connectionString);
       await runPlayerAdminHttpVerification(connectionString);
       await runSeasonHttpVerification(connectionString);
+      await runAccountHttpVerification(connectionString);
     }
     return;
   }
@@ -694,14 +984,18 @@ async function main(): Promise<void> {
   try {
     cluster = await startEphemeralCluster();
     process.stdout.write("[db-contract] isolated PostgreSQL 18 cluster started\n");
-    await runContractTests(cluster.connectionString);
-    if (process.env.V2_SEASON_BROWSER_QA_HOLD === "true") {
+    await runFreshThenUpgradeContractTests(cluster.connectionString);
+    if (
+      process.env.V2_SEASON_BROWSER_QA_HOLD === "true" ||
+      process.env.V2_ACCOUNT_BROWSER_QA_HOLD === "true"
+    ) {
       await runSeasonBrowserQaServer(cluster.connectionString);
     } else {
       await runDurableAuthHttpVerification(cluster.connectionString);
       await runTotpLifecycleHttpVerification(cluster.connectionString);
       await runPlayerAdminHttpVerification(cluster.connectionString);
       await runSeasonHttpVerification(cluster.connectionString);
+      await runAccountHttpVerification(cluster.connectionString);
     }
   } finally {
     if (cluster) {

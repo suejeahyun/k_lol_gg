@@ -8,8 +8,11 @@ import {
   NavigationFallback,
   PrimaryUserNavigation,
 } from "@/components/navigation/user-site-navigation";
+import { getCurrentSession } from "@/modules/auth/infrastructure/runtime-session";
 
-export function SiteShell({ children }: { children: React.ReactNode }) {
+export async function SiteShell({ children }: { children: React.ReactNode }) {
+  const session = await getCurrentSession("ACCOUNT");
+  const accountSignedIn = session?.purpose === "ACCOUNT";
   return (
     <div className="site-canvas">
       <a className="skip-link" href="#main-content">
@@ -31,7 +34,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
             <PrimaryUserNavigation />
           </Suspense>
 
-          <HeaderUserControls />
+          <HeaderUserControls accountSignedIn={accountSignedIn} />
         </div>
       </header>
 
@@ -41,6 +44,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
         <div>
           <strong>K-LOL.GG V2</strong>
           <p>V1의 기능 계약을 새 구조로 하나씩 다시 구현하고 있습니다.</p>
+          <p><Link href="/terms">이용약관</Link> · <Link href="/privacy">개인정보 처리 안내</Link></p>
         </div>
         <p className="riot-disclaimer">
           K-LOL.GG는 Riot Games 소유 자산을 사용하여{" "}
@@ -51,7 +55,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
       </footer>
 
       <Suspense fallback={<NavigationFallback mobile />}>
-        <MobileUserNavigation />
+        <MobileUserNavigation accountSignedIn={accountSignedIn} />
       </Suspense>
     </div>
   );

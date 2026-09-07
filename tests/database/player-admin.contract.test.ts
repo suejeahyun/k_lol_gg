@@ -18,6 +18,7 @@ import { createDatabaseHandle } from "../../src/platform/db/database";
 import { applyMigrations } from "../../src/platform/db/migrate";
 import {
   auditEvents,
+  authSessions,
   playerMutationReceipts,
   players,
   userAccounts,
@@ -27,6 +28,8 @@ import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
 function account(loginId: string, role: "ADMIN" | "SUPER_ADMIN") {
   return {
     id: randomUUID(),
+    sessionId: randomUUID(),
+    authVersion: 0,
     loginId,
     loginIdNormalized: loginId.toLocaleLowerCase("ko-KR"),
     passwordHash: "$argon2id$v=19$synthetic-player-admin-contract",
@@ -35,8 +38,20 @@ function account(loginId: string, role: "ADMIN" | "SUPER_ADMIN") {
   };
 }
 
+function accountRow(actor: ReturnType<typeof account>) {
+  return {
+    id: actor.id,
+    authVersion: actor.authVersion,
+    loginId: actor.loginId,
+    loginIdNormalized: actor.loginIdNormalized,
+    passwordHash: actor.passwordHash,
+    role: actor.role,
+    status: actor.status,
+  };
+}
+
 function mutationCommand(
-  actorUserAccountId: string,
+  actor: ReturnType<typeof account>,
   key: string,
   scope: string,
   requestFingerprint: string,
@@ -45,7 +60,13 @@ function mutationCommand(
   assert.equal(parsed.ok, true);
   if (!parsed.ok) throw new Error("Synthetic idempotency key was rejected.");
   return {
-    actorUserAccountId,
+    actorUserAccountId: actor.id,
+    actorSession: {
+      userAccountId: actor.id,
+      sessionId: actor.sessionId,
+      role: actor.role,
+      authVersion: actor.authVersion,
+    },
     requestId: randomUUID(),
     idempotencyKeyMaterial: idempotencyHashMaterial(parsed.key, scope),
     requestFingerprint,
@@ -83,18 +104,47 @@ test("S02 player mutations, legacy mapping, privacy, replay, and rollback hold o
     const suffix = randomBytes(5).toString("hex");
     const admin = account(`player_admin_${suffix}`, "ADMIN");
     const superAdmin = account(`player_super_${suffix}`, "SUPER_ADMIN");
-    await database.insert(userAccounts).values([admin, superAdmin]);
+    await database.insert(userAccounts).values([admin, superAdmin].map(accountRow));
+    const sessionNow = new Date();
+    await database.insert(authSessions).values(
+      [admin, superAdmin].map((actor) => ({
+        id: actor.sessionId,
+        tokenHash: randomBytes(32),
+        userAccountId: actor.id,
+        authVersion: actor.authVersion,
+        role: actor.role,
+        purpose: "ADMIN" as const,
+        totpVerifiedAt: sessionNow,
+        issuedAt: sessionNow,
+        expiresAt: new Date(sessionNow.getTime() + 30 * 60_000),
+      })),
+    );
     const repository = new PostgresAdminPlayerRepository(database);
     const publicRepository = new PostgresPlayerRepository(database);
     const mappingRepository = new PostgresPublicPlayerLegacyMappingRepository(database);
+    const unrelatedExpiredPlayerReceiptKey = randomBytes(32);
+    await database.insert(playerMutationReceipts).values({
+      actorUserAccountId: superAdmin.id,
+      scope: "players:unrelated-expired-retention",
+      keyHash: unrelatedExpiredPlayerReceiptKey,
+      requestHash: randomBytes(32),
+      responseStatus: 200,
+      responseJson: { message: "expired unrelated receipt" },
+      responseEtag: '"0"',
+      createdAt: new Date(Date.now() - 48 * 60 * 60_000),
+      expiresAt: new Date(Date.now() - 24 * 60 * 60_000),
+    });
     const input = playerInput(suffix, 1_500_000_000);
     const createScope = playerMutationScope("create");
     const createFingerprint = playerMutationFingerprint({ action: "create", player: input });
     const createKey = uniqueKey("player-create");
-    const createCommand = mutationCommand(admin.id, createKey, createScope, createFingerprint);
+    const createCommand = mutationCommand(admin, createKey, createScope, createFingerprint);
 
     const created = await repository.create(input, createCommand);
     assert.equal(created.type, "success");
+    assert.equal((await database.select({ value: count() }).from(playerMutationReceipts).where(
+      eq(playerMutationReceipts.keyHash, unrelatedExpiredPlayerReceiptKey),
+    ))[0]?.value, 1, "a player command must not globally delete unrelated expired receipts");
     if (created.type !== "success") throw new Error("Player creation did not succeed.");
     assert.equal(created.status, 201);
     assert.equal(created.replayed, false);
@@ -102,13 +152,13 @@ test("S02 player mutations, legacy mapping, privacy, replay, and rollback hold o
     assert.equal(created.response.player.memberName, input.memberName);
     assert.equal(created.response.player.legacyId, input.legacyId);
 
-    const replayed = await repository.create(input, mutationCommand(admin.id, createKey, createScope, createFingerprint));
+    const replayed = await repository.create(input, mutationCommand(admin, createKey, createScope, createFingerprint));
     assert.deepEqual(replayed, { ...created, replayed: true });
 
     const reusedForDifferentBody = await repository.create(
       { ...input, currentTier: "GOLD I" },
       mutationCommand(
-        admin.id,
+        admin,
         createKey,
         createScope,
         playerMutationFingerprint({ action: "create", player: { ...input, currentTier: "GOLD I" } }),
@@ -135,7 +185,7 @@ test("S02 player mutations, legacy mapping, privacy, replay, and rollback hold o
     const duplicateRiot = await repository.create(
       { ...input, legacyId: null, memberName: "다른 회원" },
       mutationCommand(
-        admin.id,
+        admin,
         uniqueKey("duplicate-riot"),
         createScope,
         playerMutationFingerprint({ action: "create", player: { ...input, legacyId: null, memberName: "다른 회원" } }),
@@ -147,7 +197,7 @@ test("S02 player mutations, legacy mapping, privacy, replay, and rollback hold o
     const duplicateLegacy = await repository.create(
       duplicateLegacyInput,
       mutationCommand(
-        superAdmin.id,
+        superAdmin,
         uniqueKey("duplicate-legacy"),
         createScope,
         playerMutationFingerprint({ action: "create", player: duplicateLegacyInput }),
@@ -195,7 +245,7 @@ test("S02 player mutations, legacy mapping, privacy, replay, and rollback hold o
       playerId,
       updatedInput,
       0,
-      mutationCommand(admin.id, uniqueKey("player-update"), updateScope, updateFingerprint),
+      mutationCommand(admin, uniqueKey("player-update"), updateScope, updateFingerprint),
     );
     assert.equal(updated.type, "success");
     if (updated.type !== "success") throw new Error("Player update did not succeed.");
@@ -208,7 +258,11 @@ test("S02 player mutations, legacy mapping, privacy, replay, and rollback hold o
       .select({ value: count() })
       .from(playerMutationReceipts)
       .where(eq(playerMutationReceipts.keyHash, retainedReceiptHash));
-    assert.equal(expiredReceipt[0]?.value, 0);
+    assert.equal(
+      expiredReceipt[0]?.value,
+      1,
+      "a player update must leave an expired receipt with a different scope and key for bounded cleanup",
+    );
     assert.equal(retainedReceipt[0]?.value, 1);
 
     const stale = await repository.update(
@@ -216,7 +270,7 @@ test("S02 player mutations, legacy mapping, privacy, replay, and rollback hold o
       updatedInput,
       0,
       mutationCommand(
-        admin.id,
+        admin,
         uniqueKey("stale-update"),
         updateScope,
         playerMutationFingerprint({ action: "update", playerId, expectedRevision: 0, player: updatedInput }),
@@ -235,7 +289,7 @@ test("S02 player mutations, legacy mapping, privacy, replay, and rollback hold o
       updatedInput,
       0,
       mutationCommand(
-        admin.id,
+        admin,
         uniqueKey("missing-update"),
         playerMutationScope("update", missingPlayerId),
         missingFingerprint,
@@ -249,7 +303,7 @@ test("S02 player mutations, legacy mapping, privacy, replay, and rollback hold o
     const deactivated = await repository.deactivate(
       playerId,
       1,
-      mutationCommand(admin.id, deactivateKey, deactivateScope, deactivateFingerprint),
+      mutationCommand(admin, deactivateKey, deactivateScope, deactivateFingerprint),
     );
     assert.equal(deactivated.type, "success");
     if (deactivated.type !== "success") throw new Error("Player deactivation did not succeed.");
@@ -261,7 +315,7 @@ test("S02 player mutations, legacy mapping, privacy, replay, and rollback hold o
       await repository.deactivate(
         playerId,
         1,
-        mutationCommand(admin.id, deactivateKey, deactivateScope, deactivateFingerprint),
+        mutationCommand(admin, deactivateKey, deactivateScope, deactivateFingerprint),
       ),
       { ...deactivated, replayed: true },
     );
@@ -272,25 +326,19 @@ test("S02 player mutations, legacy mapping, privacy, replay, and rollback hold o
       playerId,
       expectedRevision: 2,
     });
-    await assert.rejects(
-      repository.reactivate(
+    const staleActor = { ...admin, id: randomUUID() };
+    assert.deepEqual(
+      await repository.reactivate(
         playerId,
         2,
         mutationCommand(
-          randomUUID(),
+          staleActor,
           uniqueKey("rollback-reactivate"),
           reactivateScope,
           reactivateFingerprint,
         ),
       ),
-      (error: unknown) => {
-        let current: unknown = error;
-        while (current && typeof current === "object") {
-          if ((current as { code?: string }).code === "23503") return true;
-          current = (current as { cause?: unknown }).cause;
-        }
-        return false;
-      },
+      { type: "session-stale" },
     );
     const afterFailedReactivation = await repository.findById(playerId);
     assert.equal(afterFailedReactivation?.status, "INACTIVE");
@@ -301,7 +349,7 @@ test("S02 player mutations, legacy mapping, privacy, replay, and rollback hold o
     const reactivated = await repository.reactivate(
       playerId,
       2,
-      mutationCommand(admin.id, reactivateKey, reactivateScope, reactivateFingerprint),
+      mutationCommand(admin, reactivateKey, reactivateScope, reactivateFingerprint),
     );
     assert.equal(reactivated.type, "success");
     if (reactivated.type !== "success") throw new Error("Player reactivation did not succeed.");
@@ -312,7 +360,7 @@ test("S02 player mutations, legacy mapping, privacy, replay, and rollback hold o
       await repository.reactivate(
         playerId,
         2,
-        mutationCommand(admin.id, reactivateKey, reactivateScope, reactivateFingerprint),
+        mutationCommand(admin, reactivateKey, reactivateScope, reactivateFingerprint),
       ),
       { ...reactivated, replayed: true },
     );
@@ -320,7 +368,7 @@ test("S02 player mutations, legacy mapping, privacy, replay, and rollback hold o
       playerId,
       2,
       mutationCommand(
-        admin.id,
+        admin,
         uniqueKey("stale-reactivate"),
         reactivateScope,
         reactivateFingerprint,
@@ -330,6 +378,63 @@ test("S02 player mutations, legacy mapping, privacy, replay, and rollback hold o
     assert.equal(await mappingRepository.findPublicUuidByLegacyId(input.legacyId!), playerId);
     assert.equal((await publicRepository.search(updatedInput.nickname))[0]?.id, playerId);
 
+    for (const [index, lifecycleAccountState] of [
+      { status: "PENDING" as const, deletedAt: null },
+      { status: "REJECTED" as const, deletedAt: null },
+      { status: "REJECTED" as const, deletedAt: new Date() },
+    ].entries()) {
+      const lifecycleAccountId = randomUUID();
+      const lifecycleLoginId = `player_lifecycle_${index}_${suffix}`;
+      const lifecyclePlayerId = randomUUID();
+      const lifecycleDeactivatedAt = new Date();
+      await database.insert(userAccounts).values({
+        id: lifecycleAccountId,
+        loginId: lifecycleLoginId,
+        loginIdNormalized: lifecycleLoginId,
+        passwordHash: null,
+        role: "USER",
+        status: lifecycleAccountState.status,
+        deletedAt: lifecycleAccountState.deletedAt,
+      });
+      await database.insert(players).values({
+        id: lifecyclePlayerId,
+        userAccountId: lifecycleAccountId,
+        memberName: `계정 lifecycle 회원 ${index}`,
+        memberNameNormalized: `계정 lifecycle 회원 ${index}`,
+        nickname: `Lifecycle${index}${suffix}`,
+        nicknameNormalized: `lifecycle${index}${suffix}`,
+        tagLine: "S02",
+        tagLineNormalized: "s02",
+        status: "INACTIVE",
+        deactivatedAt: lifecycleDeactivatedAt,
+        accountLifecycleDeactivatedAt: lifecycleDeactivatedAt,
+      });
+      const lifecycleScope = playerMutationScope("reactivate", lifecyclePlayerId);
+      assert.deepEqual(
+        await repository.reactivate(
+          lifecyclePlayerId,
+          0,
+          mutationCommand(
+            admin,
+            uniqueKey(`lifecycle-reactivate-${index}`),
+            lifecycleScope,
+            playerMutationFingerprint({
+              action: "reactivate",
+              playerId: lifecyclePlayerId,
+              expectedRevision: 0,
+            }),
+          ),
+        ),
+        { type: "conflict", reason: "ACCOUNT_LIFECYCLE_MANAGED" },
+      );
+      const lifecyclePlayer = (await database.select().from(players).where(
+        eq(players.id, lifecyclePlayerId),
+      ))[0];
+      assert.equal(lifecyclePlayer?.status, "INACTIVE");
+      assert.ok(lifecyclePlayer?.accountLifecycleDeactivatedAt);
+      assert.equal(lifecyclePlayer?.revision, 0);
+    }
+
     const auditCount = await database
       .select({ value: count() })
       .from(auditEvents)
@@ -337,25 +442,17 @@ test("S02 player mutations, legacy mapping, privacy, replay, and rollback hold o
     assert.equal(auditCount[0]?.value, 4);
 
     const rollbackInput = playerInput(`${suffix}rollback`, null);
-    await assert.rejects(
-      repository.create(
+    assert.deepEqual(
+      await repository.create(
         rollbackInput,
         mutationCommand(
-          randomUUID(),
+          { ...admin, id: randomUUID() },
           uniqueKey("rollback-create"),
           createScope,
           playerMutationFingerprint({ action: "create", player: rollbackInput }),
         ),
       ),
-      (error: unknown) => {
-        const cause = error instanceof Error ? error.cause : undefined;
-        return (
-          typeof cause === "object" &&
-          cause !== null &&
-          "code" in cause &&
-          cause.code === "23503"
-        );
-      },
+      { type: "session-stale" },
     );
     const rolledBack = await database
       .select({ value: count() })
@@ -388,11 +485,118 @@ test("S02 player mutations, legacy mapping, privacy, replay, and rollback hold o
       .select({ value: count() })
       .from(playerMutationReceipts)
       .where(eq(playerMutationReceipts.actorUserAccountId, admin.id));
-    assert.equal(receiptCount[0]?.value, 5);
+    assert.equal(receiptCount[0]?.value, 6);
     const rawKeySearch = await database.execute(
       sql`select 1 from registry.player_mutation_receipts where response_json::text like ${`%${createKey}%`}`,
     );
     assert.equal(rawKeySearch.rows.length, 0);
+
+    const raceActor = account(`player_race_${suffix}`, "ADMIN");
+    await database.insert(userAccounts).values(accountRow(raceActor));
+    await database.insert(authSessions).values({
+      id: raceActor.sessionId,
+      tokenHash: randomBytes(32),
+      userAccountId: raceActor.id,
+      authVersion: raceActor.authVersion,
+      role: raceActor.role,
+      purpose: "ADMIN",
+      totpVerifiedAt: new Date(),
+      issuedAt: new Date(),
+      expiresAt: new Date(Date.now() + 30 * 60_000),
+    });
+    const raceInput = playerInput(`${suffix}revoked`, null);
+    const raceKey = uniqueKey("player-revoke-race");
+    const raceBlocker = await pool.connect();
+    try {
+      await raceBlocker.query("begin");
+      await raceBlocker.query("select id from auth.user_accounts where id = $1 for update", [raceActor.id]);
+      const pendingMutation = repository.create(
+        raceInput,
+        mutationCommand(
+          raceActor,
+          raceKey,
+          createScope,
+          playerMutationFingerprint({ action: "create", player: raceInput }),
+        ),
+      );
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      await database.update(authSessions).set({ revokedAt: new Date() }).where(
+        eq(authSessions.id, raceActor.sessionId),
+      );
+      await raceBlocker.query("commit");
+      assert.deepEqual(await pendingMutation, { type: "session-stale" });
+    } finally {
+      await raceBlocker.query("rollback").catch(() => undefined);
+      raceBlocker.release();
+    }
+    assert.equal((await database.select({ value: count() }).from(players).where(
+      eq(players.nicknameNormalized, raceInput.nickname.toLocaleLowerCase("ko-KR")),
+    ))[0]?.value, 0);
+    assert.equal((await database.select({ value: count() }).from(playerMutationReceipts).where(
+      eq(playerMutationReceipts.actorUserAccountId, raceActor.id),
+    ))[0]?.value, 0);
+
+    const accountPurposeActor = account(`player_account_purpose_${suffix}`, "ADMIN");
+    await database.insert(userAccounts).values(accountRow(accountPurposeActor));
+    await database.insert(authSessions).values({
+      id: accountPurposeActor.sessionId,
+      tokenHash: randomBytes(32),
+      userAccountId: accountPurposeActor.id,
+      authVersion: 0,
+      role: "ADMIN",
+      purpose: "ACCOUNT",
+      totpVerifiedAt: null,
+      issuedAt: new Date(),
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60_000),
+    });
+    const wrongPurposeInput = playerInput(`${suffix}wrongpurpose`, null);
+    assert.deepEqual(
+      await repository.create(
+        wrongPurposeInput,
+        mutationCommand(
+          accountPurposeActor,
+          uniqueKey("player-account-purpose"),
+          createScope,
+          playerMutationFingerprint({ action: "create", player: wrongPurposeInput }),
+        ),
+      ),
+      { type: "session-stale" },
+    );
+
+    const expiryActor = account(`player_expiry_${suffix}`, "ADMIN");
+    await database.insert(userAccounts).values(accountRow(expiryActor));
+    await database.insert(authSessions).values({
+      id: expiryActor.sessionId,
+      tokenHash: randomBytes(32),
+      userAccountId: expiryActor.id,
+      authVersion: 0,
+      role: "ADMIN",
+      purpose: "ADMIN",
+      totpVerifiedAt: new Date(),
+      issuedAt: new Date(),
+      expiresAt: new Date(Date.now() + 350),
+    });
+    const expiryInput = playerInput(`${suffix}expiredwhilewaiting`, null);
+    const expiryBlocker = await pool.connect();
+    try {
+      await expiryBlocker.query("begin");
+      await expiryBlocker.query("select id from auth.user_accounts where id = $1 for update", [expiryActor.id]);
+      const pendingMutation = repository.create(
+        expiryInput,
+        mutationCommand(
+          expiryActor,
+          uniqueKey("player-expiry-race"),
+          createScope,
+          playerMutationFingerprint({ action: "create", player: expiryInput }),
+        ),
+      );
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      await expiryBlocker.query("commit");
+      assert.deepEqual(await pendingMutation, { type: "session-stale" });
+    } finally {
+      await expiryBlocker.query("rollback").catch(() => undefined);
+      expiryBlocker.release();
+    }
   } finally {
     await pool.end();
   }

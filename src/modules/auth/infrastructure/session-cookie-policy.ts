@@ -1,19 +1,24 @@
-import { SESSION_MAX_AGE_SECONDS } from "./session-constants";
+import { sessionMaximumAgeSeconds } from "./session-constants";
 
-export function sessionCookieOptions(secureTransport: boolean, nodeEnv = process.env.NODE_ENV) {
+export function sessionCookieOptions(
+  secureTransport: boolean,
+  nodeEnv: string | undefined,
+  purpose: "ACCOUNT" | "ADMIN",
+) {
   return {
     httpOnly: true,
     secure: nodeEnv === "production" || secureTransport,
     sameSite: "strict" as const,
     path: "/",
-    maxAge: SESSION_MAX_AGE_SECONDS,
+    maxAge: sessionMaximumAgeSeconds(purpose),
     priority: "high" as const,
   };
 }
 
 export function clearedSessionCookieOptions(
   secureTransport: boolean,
-  nodeEnv = process.env.NODE_ENV,
+  nodeEnv: string | undefined,
+  purpose: "ACCOUNT" | "ADMIN",
 ) {
-  return { ...sessionCookieOptions(secureTransport, nodeEnv), maxAge: 0 };
+  return { ...sessionCookieOptions(secureTransport, nodeEnv, purpose), maxAge: 0 };
 }

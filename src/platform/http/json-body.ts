@@ -72,6 +72,72 @@ async function cancelUnreadBody(request: Request) {
   await request.body.cancel("request body rejected before reading").catch(() => undefined);
 }
 
+type JsonContainer =
+  | { kind: "array" }
+  | { expectingKey: boolean; keys: Set<string>; kind: "object" };
+
+/**
+ * JSON.parse keeps only the last value for a duplicate object key. That makes an
+ * exact-body contract depend on which parser (proxy, WAF, or application) wins.
+ * Scan every object level before parsing and reject decoded key collisions,
+ * including escape-equivalent spellings such as `loginId` and `login\u0049d`.
+ * Syntax validation itself remains JSON.parse's responsibility.
+ */
+function hasDuplicateObjectKey(text: string) {
+  const containers: JsonContainer[] = [];
+
+  for (let index = 0; index < text.length; index += 1) {
+    const character = text[index];
+    if (character === '"') {
+      const tokenStart = index;
+      index += 1;
+      while (index < text.length) {
+        const stringCharacter = text[index];
+        if (stringCharacter === "\\") {
+          index += 2;
+          continue;
+        }
+        if (stringCharacter === '"') break;
+        index += 1;
+      }
+
+      const current = containers.at(-1);
+      if (current?.kind === "object" && current.expectingKey) {
+        try {
+          const key = JSON.parse(text.slice(tokenStart, index + 1)) as unknown;
+          if (typeof key === "string") {
+            if (current.keys.has(key)) return true;
+            current.keys.add(key);
+            current.expectingKey = false;
+          }
+        } catch {
+          // The full JSON parse below reports malformed strings consistently.
+        }
+      }
+      continue;
+    }
+
+    if (character === "{") {
+      containers.push({ kind: "object", keys: new Set(), expectingKey: true });
+      continue;
+    }
+    if (character === "[") {
+      containers.push({ kind: "array" });
+      continue;
+    }
+    if (character === "}" || character === "]") {
+      containers.pop();
+      continue;
+    }
+    if (character === ",") {
+      const current = containers.at(-1);
+      if (current?.kind === "object") current.expectingKey = true;
+    }
+  }
+
+  return false;
+}
+
 export async function readJsonBody(
   request: Request,
   options: { maximumBytes?: number } = {},
@@ -145,6 +211,7 @@ export async function readJsonBody(
   if (text.trim().length === 0) return { ok: false, error: "EMPTY_BODY" };
 
   try {
+    if (hasDuplicateObjectKey(text)) return { ok: false, error: "INVALID_JSON" };
     return { ok: true, bytesRead, value: JSON.parse(text) as unknown };
   } catch {
     return { ok: false, error: "INVALID_JSON" };

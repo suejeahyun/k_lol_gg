@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { normalizeInternalNext } from "../src/modules/auth/application/normalize-internal-next";
+import {
+  normalizeAccountNext,
+  normalizeInternalNext,
+} from "../src/modules/auth/application/normalize-internal-next";
 import {
   LoginAttemptLimiter,
   LoginWorkGate,
@@ -13,12 +16,30 @@ import { resolveRateLimitClientKey } from "../src/modules/auth/infrastructure/ra
 
 test("safe next accepts only normalized same-origin paths", () => {
   assert.equal(normalizeInternalNext("/admin/players?status=pending#top"), "/admin/players?status=pending#top");
-  assert.equal(normalizeInternalNext(["/admin", "/ignored"]), "/admin");
+  assert.equal(normalizeInternalNext(["/admin/players", "/ignored"]), "/admin");
   assert.equal(normalizeInternalNext("https://evil.example"), "/admin");
   assert.equal(normalizeInternalNext("//evil.example"), "/admin");
   assert.equal(normalizeInternalNext("/\\evil.example"), "/admin");
   assert.equal(normalizeInternalNext("/%5C%5Cevil.example"), "/admin");
   assert.equal(normalizeInternalNext("/admin\u0000evil"), "/admin");
+  assert.equal(normalizeInternalNext("/admin\u061cevil"), "/admin");
+  assert.equal(normalizeInternalNext("/admin?note=%E2%80%8Ehidden"), "/admin");
+  assert.equal(normalizeInternalNext("/admin?note=%C2%85hidden"), "/admin");
+});
+
+test("account next rejects ambiguity, browser normalization tricks, and administrator paths", () => {
+  assert.equal(normalizeAccountNext("/players?mine=1"), "/players?mine=1");
+  assert.equal(normalizeAccountNext(["/players", "/account"]), "/account");
+  assert.equal(normalizeAccountNext("/admin"), "/account");
+  assert.equal(normalizeAccountNext("/admin/users"), "/account");
+  assert.equal(normalizeAccountNext("/%61dmin/users"), "/account");
+  assert.equal(normalizeAccountNext("/\\evil.example"), "/account");
+  assert.equal(normalizeAccountNext("/%5c%5cevil.example"), "/account");
+  assert.equal(normalizeAccountNext("/%2f%2fevil.example"), "/account");
+  assert.equal(normalizeAccountNext("https://evil.example"), "/account");
+  assert.equal(normalizeAccountNext("//evil.example"), "/account");
+  assert.equal(normalizeAccountNext(`/account?x=${"a".repeat(2_048)}`), "/account");
+  assert.equal(normalizeAccountNext("/account%00evil"), "/account");
 });
 
 test("login limiter caps attempts by normalized login and resets after its window", () => {
@@ -93,6 +114,15 @@ test("mutation guard requires an exact same origin", () => {
   assert.equal(hasSameOrigin(sameOrigin), true);
   assert.equal(hasSameOrigin(differentHost), false);
   assert.equal(hasSameOrigin(sameOrigin, "https://v2.example.test"), false);
+  for (const malformedOrigin of [
+    "http://127.0.0.1:3300/path",
+    "http://127.0.0.1:3300?query=1",
+    "http://127.0.0.1:3300#fragment",
+  ]) {
+    assert.equal(hasSameOrigin(new Request("http://127.0.0.1:3300/api/admin/logout", {
+      headers: { origin: malformedOrigin },
+    })), false);
+  }
 });
 
 test("body guard stops reading after the byte limit", async () => {

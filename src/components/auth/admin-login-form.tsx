@@ -21,13 +21,14 @@ export function AdminLoginForm({ nextPath }: AdminLoginFormProps) {
     setMessage("");
 
     const formData = new FormData(event.currentTarget);
+    const totpCode = formData.get("totpCode");
     const response = await fetch("/api/admin/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         loginId: formData.get("loginId"),
         password: formData.get("password"),
-        totpCode: formData.get("totpCode"),
+        ...(typeof totpCode === "string" ? { totpCode } : {}),
       }),
     }).catch(() => null);
 

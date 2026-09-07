@@ -6,16 +6,19 @@ import {
   count,
   desc,
   eq,
-  gt,
   ilike,
   inArray,
   isNull,
-  lte,
   or,
   sql,
 } from "drizzle-orm";
 
 import { auditEvents } from "@/platform/db/schema/audit";
+import {
+  ADMIN_MUTATION_SESSION_POLICY,
+  APPROVED_ACCOUNT_MUTATION_SESSION_POLICY,
+  lockTransactionSessionActor,
+} from "@/modules/auth/infrastructure/transaction-session-guard";
 import { userAccounts } from "@/platform/db/schema/auth";
 import { players } from "@/platform/db/schema/registry";
 import {
@@ -156,7 +159,6 @@ function throwConstraintConflict(error: unknown): never {
 async function existingReceipt(
   database: DatabaseExecutor,
   envelope: CommandEnvelope,
-  now: Date,
 ): Promise<MutationResult<SuccessfulBody> | null> {
   const rows = await database
     .select()
@@ -166,7 +168,7 @@ async function existingReceipt(
         eq(seasonCommandReceipts.actorUserAccountId, envelope.actorUserAccountId),
         eq(seasonCommandReceipts.scope, envelope.scope),
         eq(seasonCommandReceipts.keyHash, envelope.keyHash),
-        gt(seasonCommandReceipts.expiresAt, now),
+        sql<boolean>`${seasonCommandReceipts.expiresAt} > clock_timestamp()`,
       ),
     )
     .limit(1);
@@ -213,18 +215,49 @@ export class PostgresSeasonRepository implements SeasonRepository {
 
   private async idempotent(
     envelope: CommandEnvelope,
+    requiredAuthorization: CommandEnvelope["authorization"],
     work: (transaction: V2Transaction) => Promise<Omit<MutationResult<SuccessfulBody>, "replayed">>,
   ): Promise<MutationResult<SuccessfulBody>> {
     const receiptNow = new Date();
-    const replay = await existingReceipt(this.database, envelope, receiptNow);
-    if (replay) return replay;
-
-    let claimed = false;
     try {
       return await withTransaction(this.database, async (transaction) => {
+        if (envelope.authorization !== requiredAuthorization) {
+          throw new SeasonServiceError("FORBIDDEN", "이 명령에 허용되지 않은 세션 목적입니다.");
+        }
+        if (envelope.actorUserAccountId !== envelope.actorSession.userAccountId) {
+          throw new SeasonServiceError("SESSION_STALE", "로그인 세션이 더 이상 유효하지 않습니다.");
+        }
+        const policy = requiredAuthorization === "ADMIN_MUTATION"
+          ? ADMIN_MUTATION_SESSION_POLICY
+          : APPROVED_ACCOUNT_MUTATION_SESSION_POLICY;
+        if (
+          !(await lockTransactionSessionActor(
+            transaction,
+            envelope.actorSession,
+            receiptNow,
+            policy,
+          ))
+        ) {
+          throw new SeasonServiceError("SESSION_STALE", "로그인 세션이 더 이상 유효하지 않습니다.");
+        }
+
+        const receiptLockKey = `${envelope.actorUserAccountId}:${envelope.scope}:${envelope.keyHash.toString("hex")}`;
+        await transaction.execute(
+          sql`select pg_advisory_xact_lock(hashtextextended(${receiptLockKey}, 0))`,
+        );
+        // Ordinary commands clean up only their own expired identity. Global
+        // bounded cleanup belongs to the S13 scheduler so user requests never
+        // become unbounded retention workers or amplify unrelated locks.
         await transaction
           .delete(seasonCommandReceipts)
-          .where(lte(seasonCommandReceipts.expiresAt, receiptNow));
+          .where(and(
+            eq(seasonCommandReceipts.actorUserAccountId, envelope.actorUserAccountId),
+            eq(seasonCommandReceipts.scope, envelope.scope),
+            eq(seasonCommandReceipts.keyHash, envelope.keyHash),
+            sql<boolean>`${seasonCommandReceipts.expiresAt} <= clock_timestamp()`,
+          ));
+        const replay = await existingReceipt(transaction, envelope);
+        if (replay) return replay;
         await transaction.insert(seasonCommandReceipts).values({
           id: randomUUID(),
           actorUserAccountId: envelope.actorUserAccountId,
@@ -233,11 +266,9 @@ export class PostgresSeasonRepository implements SeasonRepository {
           requestHash: envelope.requestHash,
           responseStatus: 202,
           responseJson: { pending: true },
-          createdAt: receiptNow,
-          expiresAt: new Date(receiptNow.getTime() + SEASON_COMMAND_RECEIPT_TTL_MS),
+          createdAt: sql`clock_timestamp()`,
+          expiresAt: sql`clock_timestamp() + (${SEASON_COMMAND_RECEIPT_TTL_MS} * interval '1 millisecond')`,
         });
-        claimed = true;
-
         const result = await work(transaction);
         await transaction
           .update(seasonCommandReceipts)
@@ -252,11 +283,6 @@ export class PostgresSeasonRepository implements SeasonRepository {
         return { ...result, replayed: false };
       });
     } catch (error) {
-      const details = postgresDetails(error);
-      if (!claimed && details.code === "23505") {
-        const concurrentReplay = await existingReceipt(this.database, envelope, new Date());
-        if (concurrentReplay) return concurrentReplay;
-      }
       throwConstraintConflict(error);
     }
   }
@@ -505,7 +531,7 @@ export class PostgresSeasonRepository implements SeasonRepository {
   }
 
   async createSeason(envelope: CommandEnvelope, input: CreateSeasonInput, now: Date) {
-    return this.idempotent(envelope, async (transaction) => {
+    return this.idempotent(envelope, "ADMIN_MUTATION", async (transaction) => {
       const id = randomUUID();
       const rows = await transaction
         .insert(seasons)
@@ -539,7 +565,7 @@ export class PostgresSeasonRepository implements SeasonRepository {
   }
 
   async updateSeason(envelope: CommandEnvelope, input: UpdateSeasonInput, now: Date) {
-    return this.idempotent(envelope, async (transaction) => {
+    return this.idempotent(envelope, "ADMIN_MUTATION", async (transaction) => {
       const currentRows = await transaction.select().from(seasons).where(eq(seasons.id, input.id)).for("update").limit(1);
       const current = currentRows[0];
       if (!current) throw new SeasonServiceError("NOT_FOUND", "시즌을 찾을 수 없습니다.");
@@ -586,7 +612,7 @@ export class PostgresSeasonRepository implements SeasonRepository {
     expectedRevision: number,
     now: Date,
   ) {
-    return this.idempotent(envelope, async (transaction) => {
+    return this.idempotent(envelope, "ADMIN_MUTATION", async (transaction) => {
       const currentRows = await transaction.select().from(seasons).where(eq(seasons.id, id)).for("update").limit(1);
       const current = currentRows[0];
       if (!current) throw new SeasonServiceError("NOT_FOUND", "시즌을 찾을 수 없습니다.");
@@ -632,7 +658,7 @@ export class PostgresSeasonRepository implements SeasonRepository {
   }
 
   async endSeason(envelope: CommandEnvelope, id: string, expectedRevision: number, now: Date) {
-    return this.idempotent(envelope, async (transaction) => {
+    return this.idempotent(envelope, "ADMIN_MUTATION", async (transaction) => {
       const currentRows = await transaction.select().from(seasons).where(eq(seasons.id, id)).for("update").limit(1);
       const current = currentRows[0];
       if (!current) throw new SeasonServiceError("NOT_FOUND", "시즌을 찾을 수 없습니다.");
@@ -676,7 +702,7 @@ export class PostgresSeasonRepository implements SeasonRepository {
     expectedRevision: number,
     now: Date,
   ) {
-    return this.idempotent(envelope, async (transaction) => {
+    return this.idempotent(envelope, "ADMIN_MUTATION", async (transaction) => {
       const sourceRows = await transaction
         .select()
         .from(seasons)
@@ -739,7 +765,7 @@ export class PostgresSeasonRepository implements SeasonRepository {
   }
 
   async retireSeason(envelope: CommandEnvelope, id: string, expectedRevision: number, now: Date) {
-    return this.idempotent(envelope, async (transaction) => {
+    return this.idempotent(envelope, "ADMIN_MUTATION", async (transaction) => {
       const currentRows = await transaction.select().from(seasons).where(eq(seasons.id, id)).for("update").limit(1);
       const current = currentRows[0];
       if (!current) throw new SeasonServiceError("NOT_FOUND", "시즌을 찾을 수 없습니다.");
@@ -826,7 +852,7 @@ export class PostgresSeasonRepository implements SeasonRepository {
     input: UpsertOwnApplicationInput,
     now: Date,
   ) {
-    return this.idempotent(envelope, async (transaction) => {
+    return this.idempotent(envelope, "APPROVED_ACCOUNT_MUTATION", async (transaction) => {
       const season = await this.activeSeasonForUpdate(transaction, now);
       const player = await this.actorPlayerForUpdate(transaction, input.actorUserAccountId);
       const currentRows = await transaction
@@ -926,7 +952,7 @@ export class PostgresSeasonRepository implements SeasonRepository {
     applyDate: string,
     now: Date,
   ) {
-    return this.idempotent(envelope, async (transaction) => {
+    return this.idempotent(envelope, "APPROVED_ACCOUNT_MUTATION", async (transaction) => {
       const season = await this.activeSeasonForUpdate(transaction, now);
       const player = await this.actorPlayerForUpdate(transaction, envelope.actorUserAccountId);
       const currentRows = await transaction
@@ -986,7 +1012,7 @@ export class PostgresSeasonRepository implements SeasonRepository {
     input: ReviewApplicationInput,
     now: Date,
   ) {
-    return this.idempotent(envelope, async (transaction) => {
+    return this.idempotent(envelope, "ADMIN_MUTATION", async (transaction) => {
       const currentRows = await transaction
         .select()
         .from(seasonApplications)

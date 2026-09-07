@@ -1,9 +1,16 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { createHmac, randomBytes } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { mkdir, mkdtemp, rmdir, unlink, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import path from "node:path";
+import { SignJWT } from "jose";
+
+import {
+  ADMIN_SECURITY_PAGE_CASE,
+  PROTECTED_ADMIN_PAGE_CASES,
+} from "./auth-http-admin-page-routes.mjs";
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 
@@ -30,6 +37,27 @@ function totp(secret, nowMs = Date.now()) {
     ((digest[offset + 2] & 0xff) << 8) |
     (digest[offset + 3] & 0xff);
   return String(binary % 1_000_000).padStart(6, "0");
+}
+
+async function fixtureSessionToken(secret, seed, ttlSeconds) {
+  const nowSeconds = Math.floor(Date.now() / 1_000);
+  return new SignJWT({
+    role: seed.role,
+    purpose: seed.purpose,
+    accountStatus: seed.accountStatus,
+    mustChangePassword: seed.mustChangePassword,
+    authVersion: seed.authVersion,
+    adminTotpVerified: seed.adminTotpVerified,
+    source: "fixture",
+  })
+    .setProtectedHeader({ alg: "HS256", typ: "JWT", kid: "local" })
+    .setSubject(seed.userId)
+    .setJti(randomUUID())
+    .setIssuer("k-lol-gg-v2")
+    .setAudience("k-lol-gg-v2-web")
+    .setIssuedAt(nowSeconds)
+    .setExpirationTime(nowSeconds + ttlSeconds)
+    .sign(new TextEncoder().encode(secret));
 }
 
 async function availablePort() {
@@ -131,19 +159,27 @@ const fixtures = JSON.stringify([
     adminTotpEnabled: true,
     adminTotpSecret: totpSecret,
   },
+  {
+    id: "http-admin-setup",
+    loginId: "http_admin_setup",
+    password,
+    role: "ADMIN",
+    status: "APPROVED",
+    authVersion: 1,
+    adminTotpEnabled: false,
+  },
+  {
+    id: "http-account",
+    loginId: "http_account",
+    password,
+    role: "USER",
+    status: "APPROVED",
+    authVersion: 1,
+    adminTotpEnabled: false,
+  },
 ]);
-const protectedWorkspacePaths = [
-  "/admin",
-  "/admin/players",
-  "/admin/seasons",
-  "/admin/matches",
-  "/admin/balance",
-  "/admin/progress/event",
-  "/admin/kakao",
-  "/admin/champions",
-  "/admin/riot",
-  "/admin/discipline",
-];
+const protectedWorkspacePaths = PROTECTED_ADMIN_PAGE_CASES.map(({ requestPath }) => requestPath);
+const enrollmentPath = ADMIN_SECURITY_PAGE_CASE.requestPath;
 
 const nextBin = path.join(process.cwd(), "node_modules", "next", "dist", "bin", "next");
 const developmentProof = await createFixtureRunnerProof(origin);
@@ -179,14 +215,64 @@ try {
     developmentServer.startFailure,
   ]);
 
-  const anonymousPage = await fetch(`${origin}/admin`, { redirect: "manual" });
-  assert.equal(anonymousPage.status, 307);
-  assert.match(anonymousPage.headers.get("location") ?? "", /^\/admin\/login\?next=/);
-
-  for (const workspacePath of protectedWorkspacePaths.slice(1)) {
+  for (const workspacePath of [...protectedWorkspacePaths, enrollmentPath]) {
     const response = await fetch(`${origin}${workspacePath}`, { redirect: "manual" });
     assert.equal(response.status, 307, `${workspacePath} must require authentication`);
+    assert.match(response.headers.get("location") ?? "", /^\/admin\/login\?next=/);
   }
+
+  const accountToken = await fixtureSessionToken(sessionSecret, {
+    userId: "http-account",
+    role: "USER",
+    purpose: "ACCOUNT",
+    accountStatus: "APPROVED",
+    mustChangePassword: false,
+    authVersion: 1,
+    adminTotpVerified: false,
+  }, 7 * 24 * 60 * 60);
+  const accountCookie = `klol_v2_account_session=${accountToken}`;
+  for (const workspacePath of [...protectedWorkspacePaths, enrollmentPath]) {
+    const response = await fetch(`${origin}${workspacePath}`, {
+      headers: { cookie: accountCookie },
+      redirect: "manual",
+    });
+    assert.equal(response.status, 307, `${workspacePath} must reject an ACCOUNT-purpose cookie`);
+    assert.match(response.headers.get("location") ?? "", /^\/admin\/login\?next=/);
+  }
+  const accountTokenInAdminCookie = `klol_v2_session=${accountToken}`;
+  for (const workspacePath of [...protectedWorkspacePaths, enrollmentPath]) {
+    const response = await fetch(`${origin}${workspacePath}`, {
+      headers: { cookie: accountTokenInAdminCookie },
+      redirect: "manual",
+    });
+    assert.equal(response.status, 307, `${workspacePath} must reject an ACCOUNT-purpose token in the ADMIN cookie`);
+    assert.match(response.headers.get("location") ?? "", /^\/admin\/login\?next=/);
+  }
+
+  const setupLogin = await fetch(`${origin}/api/admin/login`, {
+    method: "POST",
+    headers: { "content-type": "application/json", origin },
+    body: JSON.stringify({ loginId: "http_admin_setup", password }),
+  });
+  assert.equal(setupLogin.status, 200);
+  assert.equal((await setupLogin.clone().json()).requiresTwoFactorSetup, true);
+  const setupCookie = (setupLogin.headers.get("set-cookie") ?? "").split(";", 1)[0];
+  assert.match(setupCookie, /^klol_v2_session=/);
+  for (const workspacePath of protectedWorkspacePaths) {
+    const response = await fetch(`${origin}${workspacePath}`, {
+      headers: { cookie: setupCookie },
+      redirect: "manual",
+    });
+    assert.equal(response.status, 307, `${workspacePath} must require TOTP enrollment`);
+    const location = new URL(response.headers.get("location") ?? "", origin);
+    assert.equal(location.pathname, enrollmentPath);
+    assert.equal(location.searchParams.get("setup"), "required");
+  }
+  const enrollment = await fetch(`${origin}${enrollmentPath}`, {
+    headers: { cookie: setupCookie },
+    redirect: "manual",
+  });
+  assert.equal(enrollment.status, 200, "unverified ADMIN must be able to enroll TOTP");
 
   const deepAnonymousPage = await fetch(`${origin}/admin/players?status=pending`, {
     headers: { "x-klol-admin-request-path": "//attacker.invalid" },
@@ -242,10 +328,11 @@ try {
   assert.equal(challenge.status, 401);
   assert.equal((await challenge.json()).requiresTwoFactor, true);
 
+  const acceptedTotpCode = totp(totpSecret);
   const login = await fetch(`${origin}/api/admin/login`, {
     method: "POST",
     headers: { "content-type": "application/json", origin },
-    body: JSON.stringify({ loginId: "http_admin", password, totpCode: totp(totpSecret) }),
+    body: JSON.stringify({ loginId: "http_admin", password, totpCode: acceptedTotpCode }),
   });
   assert.equal(login.status, 200);
   const cookie = login.headers.get("set-cookie") ?? "";
@@ -266,6 +353,11 @@ try {
     assert.match(protectedPage.headers.get("content-security-policy") ?? "", /frame-ancestors 'none'/);
     assert.equal(protectedPage.headers.get("x-frame-options"), "DENY");
   }
+  const verifiedEnrollment = await fetch(`${origin}${enrollmentPath}`, {
+    headers: { cookie: cookiePair },
+    redirect: "manual",
+  });
+  assert.equal(verifiedEnrollment.status, 200, "verified ADMIN must be able to inspect TOTP status");
 
   const session = await fetch(`${origin}/api/admin/session`, { headers: { cookie: cookiePair } });
   assert.equal(session.status, 200);
@@ -275,9 +367,20 @@ try {
   const replay = await fetch(`${origin}/api/admin/login`, {
     method: "POST",
     headers: { "content-type": "application/json", origin },
-    body: JSON.stringify({ loginId: "http_admin", password, totpCode: totp(totpSecret) }),
+    body: JSON.stringify({ loginId: "http_admin", password, totpCode: acceptedTotpCode }),
   });
   assert.equal(replay.status, 403);
+
+  const fixtureAdminTokenInAccountCookie = `klol_v2_account_session=${cookiePair.split("=")[1]}`;
+  const fixturePurposeConfusion = await fetch(`${origin}/api/auth/logout`, {
+    method: "POST",
+    headers: { cookie: fixtureAdminTokenInAccountCookie, origin },
+  });
+  assert.equal(fixturePurposeConfusion.status, 204);
+  assert.match(fixturePurposeConfusion.headers.get("set-cookie") ?? "", /^klol_v2_account_session=.*Max-Age=0/is);
+  assert.equal((await fetch(`${origin}/api/admin/session`, {
+    headers: { cookie: cookiePair },
+  })).status, 200, "fixture ACCOUNT logout must not revoke a substituted ADMIN token");
 
   const crossOriginLogout = await fetch(`${origin}/api/admin/logout`, {
     method: "POST",

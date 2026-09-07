@@ -299,6 +299,7 @@ try {
   assert.equal((await status(enrollmentCookie)).status, 401);
   const enabledAccount = await repository.findAccountById(admin.id);
   assert.equal(enabledAccount?.authVersion, 1);
+  assert.equal(enabledAccount?.revision, 2);
   const enabledAudits = await database
     .select({ id: auditEvents.id })
     .from(auditEvents)
@@ -334,6 +335,7 @@ try {
   assert.equal((await status(verifiedCookie)).status, 401);
   assert.equal(await repository.getTotpCredential(admin.id), null);
   assert.equal((await repository.findAccountById(admin.id))?.authVersion, 2);
+  assert.equal((await repository.findAccountById(admin.id))?.revision, 3);
   const disabledAudits = await database
     .select({ id: auditEvents.id })
     .from(auditEvents)
@@ -457,6 +459,9 @@ try {
   const userToken = await codec.encode({
     userId: user.id,
     role: "USER",
+    purpose: "ACCOUNT",
+    accountStatus: "APPROVED",
+    mustChangePassword: false,
     authVersion: 0,
     adminTotpVerified: false,
     source: "database",
@@ -467,13 +472,14 @@ try {
     userAccountId: user.id,
     authVersion: 0,
     role: "USER",
+    purpose: "ACCOUNT",
     totpVerifiedAt: null,
     issuedAt,
     expiresAt: new Date(issuedAt.getTime() + 30 * 60_000),
   }), true);
-  const userStatus = await status(`klol_v2_session=${userToken}`);
-  assert.equal(userStatus.status, 403);
-  assert.equal(problemCode(await userStatus.json()), "ADMIN_ROLE_REQUIRED");
+  const userStatus = await status(`klol_v2_account_session=${userToken}`);
+  assert.equal(userStatus.status, 401);
+  assert.equal(problemCode(await userStatus.json()), "ADMIN_SESSION_REQUIRED");
 
   process.stdout.write("[db-totp-http] status, one-time setup, concurrent enable, self-disable, durable TOTP rate limit, stale-cookie, and role matrix passed\n");
 } catch (error) {

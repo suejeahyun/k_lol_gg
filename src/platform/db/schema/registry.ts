@@ -18,6 +18,11 @@ import { bytea } from "./primitives";
 const timestamptz = (name: string) => timestamp(name, { mode: "date", withTimezone: true });
 
 export const playerStatus = registrySchema.enum("player_status", ["ACTIVE", "INACTIVE"]);
+export const playerAccountClaimStatus = registrySchema.enum("player_account_claim_status", [
+  "PENDING",
+  "APPROVED",
+  "REJECTED",
+]);
 
 export const players = registrySchema.table(
   "players",
@@ -37,6 +42,7 @@ export const players = registrySchema.table(
     currentTier: varchar("current_tier", { length: 32 }),
     status: playerStatus("status").default("ACTIVE").notNull(),
     deactivatedAt: timestamptz("deactivated_at"),
+    accountLifecycleDeactivatedAt: timestamptz("account_lifecycle_deactivated_at"),
     revision: bigint("revision", { mode: "number" }).default(0).notNull(),
     createdAt: timestamptz("created_at").defaultNow().notNull(),
     updatedAt: timestamptz("updated_at").defaultNow().notNull(),
@@ -63,6 +69,10 @@ export const players = registrySchema.table(
         OR
         (${table.status} = 'INACTIVE' AND ${table.deactivatedAt} IS NOT NULL)
       )`,
+    ),
+    check(
+      "players_account_lifecycle_deactivation_consistency",
+      sql`${table.accountLifecycleDeactivatedAt} IS NULL OR (${table.status} = 'INACTIVE' AND ${table.deactivatedAt} IS NOT NULL)`,
     ),
   ],
 );
@@ -101,6 +111,48 @@ export const playerMutationReceipts = registrySchema.table(
     check(
       "player_mutation_receipts_expiry_after_creation",
       sql`${table.expiresAt} > ${table.createdAt}`,
+    ),
+  ],
+);
+
+export const playerAccountClaims = registrySchema.table(
+  "player_account_claims",
+  {
+    id: uuid("id").primaryKey(),
+    userAccountId: uuid("user_account_id")
+      .notNull()
+      .references(() => userAccounts.id, { onDelete: "restrict" }),
+    playerId: uuid("player_id")
+      .notNull()
+      .references(() => players.id, { onDelete: "restrict" }),
+    requestedMemberName: varchar("requested_member_name", { length: 100 }).notNull(),
+    requestedRiotId: varchar("requested_riot_id", { length: 97 }).notNull(),
+    status: playerAccountClaimStatus("status").default("PENDING").notNull(),
+    reviewedByUserAccountId: uuid("reviewed_by_user_account_id").references(
+      () => userAccounts.id,
+      { onDelete: "restrict" },
+    ),
+    reviewedAt: timestamptz("reviewed_at"),
+    createdAt: timestamptz("created_at").defaultNow().notNull(),
+    updatedAt: timestamptz("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("player_account_claims_pending_account_uidx")
+      .on(table.userAccountId)
+      .where(sql`${table.status} = 'PENDING'`),
+    uniqueIndex("player_account_claims_pending_player_uidx")
+      .on(table.playerId)
+      .where(sql`${table.status} = 'PENDING'`),
+    index("player_account_claims_account_updated_idx")
+      .on(table.userAccountId, table.updatedAt.desc(), table.id),
+    index("player_account_claims_status_created_idx").on(table.status, table.createdAt),
+    check(
+      "player_account_claims_review_consistency",
+      sql`(
+        (${table.status} = 'PENDING' AND ${table.reviewedAt} IS NULL AND ${table.reviewedByUserAccountId} IS NULL)
+        OR
+        (${table.status} <> 'PENDING' AND ${table.reviewedAt} IS NOT NULL AND ${table.reviewedByUserAccountId} IS NOT NULL)
+      )`,
     ),
   ],
 );

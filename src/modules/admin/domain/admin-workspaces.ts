@@ -47,6 +47,9 @@ export function getAdminWorkspace(id: AdminWorkspaceId) {
 
 export function isAdminWorkspaceActive(pathname: string, href: string) {
   if (href === "/admin") return pathname === href;
+  if (href === "/admin/players") {
+    return pathname.startsWith("/admin/players") || pathname.startsWith("/admin/users");
+  }
   if (href === "/admin/progress/event") return pathname.startsWith("/admin/progress/");
   return pathname === href || pathname.startsWith(`${href}/`);
 }

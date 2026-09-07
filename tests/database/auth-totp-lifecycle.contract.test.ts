@@ -69,6 +69,7 @@ test("administrator TOTP lifecycle is serialized, audited, and rolled back atomi
       userAccountId: accountId,
       authVersion,
       role,
+      purpose: role === "USER" ? "ACCOUNT" : "ADMIN",
       totpVerifiedAt: verified ? now : null,
       issuedAt: now,
       expiresAt: new Date(now.getTime() + 10 * 60_000),
@@ -89,6 +90,53 @@ test("administrator TOTP lifecycle is serialized, audited, and rolled back atomi
   try {
     await applyMigrations(database);
 
+    await t.test("a TOTP setup session that expires while queued cannot mutate security state", async () => {
+      const admin = account(`totp_expiry_${randomBytes(4).toString("hex")}`, "ADMIN");
+      await database.insert(userAccounts).values(admin);
+      const sessionId = randomUUID();
+      const issuedAt = new Date();
+      await database.insert(authSessions).values({
+        id: sessionId,
+        tokenHash: digest(`totp-expiry:${sessionId}`),
+        userAccountId: admin.id,
+        authVersion: 0,
+        role: "ADMIN",
+        purpose: "ADMIN",
+        totpVerifiedAt: null,
+        issuedAt,
+        expiresAt: new Date(issuedAt.getTime() + 350),
+      });
+      const repository = new PostgresAuthRepository(database);
+      const blocker = await pool.connect();
+      try {
+        await blocker.query("begin");
+        await blocker.query("select id from auth.user_accounts where id = $1 for update", [admin.id]);
+        const pending = repository.beginOwnTotpSetup({
+          actor: actorFor(admin.id, sessionId, "ADMIN"),
+          envelope: encryptTotpSecret(admin.id, generateTotpSecret(), keyring),
+          now: new Date(),
+          requestId: randomUUID(),
+        });
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        await blocker.query("commit");
+        assert.deepEqual(await pending, { ok: false, reason: "SESSION_STALE" });
+      } finally {
+        await blocker.query("rollback").catch(() => undefined);
+        blocker.release();
+      }
+      assert.equal((await database.select().from(adminTotpCredentials).where(
+        eq(adminTotpCredentials.userAccountId, admin.id),
+      )).length, 0);
+      assert.equal((await database.select().from(auditEvents).where(
+        eq(auditEvents.targetId, admin.id),
+      )).length, 0);
+      const unchangedSession = (await database.select().from(authSessions).where(
+        eq(authSessions.id, sessionId),
+      ))[0];
+      assert.equal(unchangedSession?.revokedAt, null);
+      assert.equal(unchangedSession?.totpVerifiedAt, null);
+    });
+
     await t.test("pending setup never rotates silently and explicit cancellation is auditable", async () => {
       const admin = account(`totp_setup_${randomBytes(4).toString("hex")}`, "ADMIN");
       await database.insert(userAccounts).values(admin);
@@ -105,6 +153,7 @@ test("administrator TOTP lifecycle is serialized, audited, and rolled back atomi
         now,
         requestId: randomUUID(),
       }), { ok: true });
+      assert.equal((await repository.findAccountById(admin.id))?.revision, 1);
       assert.deepEqual(await repository.beginOwnTotpSetup({
         actor,
         envelope: encryptTotpSecret(admin.id, secondSecret, keyring),
@@ -123,6 +172,7 @@ test("administrator TOTP lifecycle is serialized, audited, and rolled back atomi
         requestId: randomUUID(),
       }), { ok: true, cancelled: true });
       assert.equal(await repository.getTotpCredential(admin.id), null);
+      assert.equal((await repository.findAccountById(admin.id))?.revision, 2);
       assert.deepEqual(await repository.cancelOwnPendingTotpSetup({
         actor,
         now: new Date(now.getTime() + 3),
@@ -177,10 +227,11 @@ test("administrator TOTP lifecycle is serialized, audited, and rolled back atomi
       assert.equal(results.filter((result) => !result.ok).length, 1);
 
       const updatedAccount = await database
-        .select({ authVersion: userAccounts.authVersion })
+        .select({ authVersion: userAccounts.authVersion, revision: userAccounts.revision })
         .from(userAccounts)
         .where(eq(userAccounts.id, admin.id));
       assert.equal(updatedAccount[0]?.authVersion, 1);
+      assert.equal(updatedAccount[0]?.revision, 2);
       const sessions = await database
         .select({ revokedAt: authSessions.revokedAt })
         .from(authSessions)
@@ -226,6 +277,7 @@ test("administrator TOTP lifecycle is serialized, audited, and rolled back atomi
       assert.equal(afterCredential?.lastUsedStep, null);
       const afterAccount = await repository.findAccountById(admin.id);
       assert.equal(afterAccount?.authVersion, 0);
+      assert.equal(afterAccount?.revision, 1);
       assert.equal(
         (await repository.findActiveSession(session.id, session.tokenHash, new Date(now.getTime() + 21)))?.sessionId,
         session.id,
@@ -269,6 +321,7 @@ test("administrator TOTP lifecycle is serialized, audited, and rolled back atomi
       assert.equal(results.filter((result) => result.ok).length, 1);
       assert.equal(await repository.getTotpCredential(admin.id), null);
       assert.equal((await repository.findAccountById(admin.id))?.authVersion, 1);
+      assert.equal((await repository.findAccountById(admin.id))?.revision, 1);
 
       const sessions = await database
         .select({ revokedAt: authSessions.revokedAt })

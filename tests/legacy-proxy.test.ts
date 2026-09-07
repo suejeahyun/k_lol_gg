@@ -28,3 +28,27 @@ test("UUID mapping이 없는 legacy player detail은 영구 redirect하지 않�
   assert.equal(legacyDetail.headers.get("x-middleware-next"), "1");
   assert.equal(legacyDetail.headers.has("location"), false);
 });
+
+test("legacy account adapters preserve only reviewed canonical intent", () => {
+  const login = proxy(new NextRequest("https://v2.example/app/login?next=%2Fplayers%3Fmine%3D1"));
+  assert.equal(login.status, 308);
+  assert.equal(
+    login.headers.get("location"),
+    "https://v2.example/login?next=%2Fplayers%3Fmine%3D1",
+  );
+
+  const adminEscape = proxy(new NextRequest("https://v2.example/app/login?next=%2Fadmin%2Fusers"));
+  assert.equal(adminEscape.headers.get("location"), "https://v2.example/login?next=%2Faccount");
+
+  const duplicateNext = proxy(new NextRequest("https://v2.example/app/login?next=%2Fplayers&next=%2Faccount"));
+  assert.equal(duplicateNext.status, 400);
+  const unknown = proxy(new NextRequest("https://v2.example/app/account?token=drop"));
+  assert.equal(unknown.status, 400);
+
+  const tier = proxy(new NextRequest("https://v2.example/account/tier"));
+  assert.equal(tier.headers.get("location"), "https://v2.example/account?tab=player");
+  const mePlayer = proxy(new NextRequest("https://v2.example/me/player"));
+  assert.equal(mePlayer.headers.get("location"), "https://v2.example/account?tab=player");
+  const mutation = proxy(new NextRequest("https://v2.example/me/player", { method: "POST" }));
+  assert.equal(mutation.status, 405);
+});

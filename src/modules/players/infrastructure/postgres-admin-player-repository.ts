@@ -1,8 +1,12 @@
 import { createHash, randomUUID } from "node:crypto";
 
-import { and, asc, count, desc, eq, like, lte, or, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, like, or, sql } from "drizzle-orm";
 
 import { auditEvents } from "@/platform/db/schema/audit";
+import {
+  ADMIN_MUTATION_SESSION_POLICY,
+  lockTransactionSessionActor,
+} from "@/modules/auth/infrastructure/transaction-session-guard";
 import { userAccounts } from "@/platform/db/schema/auth";
 import { playerMutationReceipts, players } from "@/platform/db/schema/registry";
 import type { V2Database } from "@/platform/db/database";
@@ -35,6 +39,7 @@ const adminPlayerSelection = {
   status: players.status,
   revision: players.revision,
   deactivatedAt: players.deactivatedAt,
+  accountLifecycleDeactivatedAt: players.accountLifecycleDeactivatedAt,
   createdAt: players.createdAt,
   updatedAt: players.updatedAt,
   accountId: userAccounts.id,
@@ -54,6 +59,7 @@ type AdminPlayerRow = {
   status: "ACTIVE" | "INACTIVE";
   revision: number;
   deactivatedAt: Date | null;
+  accountLifecycleDeactivatedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
   accountId: string | null;
@@ -184,13 +190,23 @@ async function replayReceipt(
   const rows = await transaction
     .select()
     .from(playerMutationReceipts)
-    .where(conditions)
+    .where(
+      and(
+        conditions,
+        sql<boolean>`${playerMutationReceipts.expiresAt} > clock_timestamp()`,
+      ),
+    )
     .limit(1);
   const receipt = rows[0];
-  if (!receipt) return null;
-
-  if (receipt.expiresAt.getTime() <= command.now.getTime()) {
-    await transaction.delete(playerMutationReceipts).where(conditions);
+  if (!receipt) {
+    await transaction
+      .delete(playerMutationReceipts)
+      .where(
+        and(
+          conditions,
+          sql<boolean>`${playerMutationReceipts.expiresAt} <= clock_timestamp()`,
+        ),
+      );
     return null;
   }
   if (!Buffer.from(receipt.requestHash).equals(identity.requestHash)) {
@@ -221,8 +237,8 @@ async function saveReceipt(
     responseStatus: outcome.status,
     responseJson: outcome.response,
     responseEtag: `"${outcome.revision}"`,
-    createdAt: command.now,
-    expiresAt: new Date(command.now.getTime() + receiptLifetimeMs),
+    createdAt: sql`clock_timestamp()`,
+    expiresAt: sql`clock_timestamp() + (${receiptLifetimeMs} * interval '1 millisecond')`,
   });
 }
 
@@ -231,20 +247,27 @@ async function startMutation(
   command: PlayerMutationCommand,
   scope: string,
 ) {
-  // Receipts intentionally contain the replay response, which can include
-  // administrator-only account fields. Use the expiry index to bound their
-  // lifetime whenever any player mutation opens a transaction. S13 will add
-  // the periodic cleanup needed for installations with no mutation traffic.
-  await transaction
-    .delete(playerMutationReceipts)
-    .where(lte(playerMutationReceipts.expiresAt, command.now));
-
   const identity = receiptIdentity(command, scope);
   await lockReceipt(transaction, identity);
   return {
     identity,
     replay: await replayReceipt(transaction, command, identity),
   };
+}
+
+async function authorizeMutation(
+  transaction: V2Transaction,
+  command: PlayerMutationCommand,
+): Promise<boolean> {
+  if (command.actorUserAccountId !== command.actorSession.userAccountId) return false;
+  return Boolean(
+    await lockTransactionSessionActor(
+      transaction,
+      command.actorSession,
+      command.now,
+      ADMIN_MUTATION_SESSION_POLICY,
+    ),
+  );
 }
 
 export class PostgresAdminPlayerRepository implements AdminPlayerRepository {
@@ -304,6 +327,7 @@ export class PostgresAdminPlayerRepository implements AdminPlayerRepository {
   ): Promise<PlayerMutationOutcome> {
     try {
       return await withTransaction(this.database, async (transaction) => {
+        if (!(await authorizeMutation(transaction, command))) return { type: "session-stale" };
         const started = await startMutation(transaction, command, playerMutationScope("create"));
         if (started.replay) return started.replay;
 
@@ -351,6 +375,7 @@ export class PostgresAdminPlayerRepository implements AdminPlayerRepository {
     if (!uuidPattern.test(id)) return { type: "not-found" };
     try {
       return await withTransaction(this.database, async (transaction) => {
+        if (!(await authorizeMutation(transaction, command))) return { type: "session-stale" };
         const started = await startMutation(
           transaction,
           command,
@@ -422,6 +447,7 @@ export class PostgresAdminPlayerRepository implements AdminPlayerRepository {
   ): Promise<PlayerMutationOutcome> {
     if (!uuidPattern.test(id)) return { type: "not-found" };
     return withTransaction(this.database, async (transaction) => {
+      if (!(await authorizeMutation(transaction, command))) return { type: "session-stale" };
       const started = await startMutation(
         transaction,
         command,
@@ -501,6 +527,7 @@ export class PostgresAdminPlayerRepository implements AdminPlayerRepository {
   ): Promise<PlayerMutationOutcome> {
     if (!uuidPattern.test(id)) return { type: "not-found" };
     return withTransaction(this.database, async (transaction) => {
+      if (!(await authorizeMutation(transaction, command))) return { type: "session-stale" };
       const started = await startMutation(
         transaction,
         command,
@@ -526,12 +553,16 @@ export class PostgresAdminPlayerRepository implements AdminPlayerRepository {
         await saveReceipt(transaction, command, started.identity, outcome);
         return outcome;
       }
+      if (beforeRow.accountLifecycleDeactivatedAt !== null) {
+        return { type: "conflict", reason: "ACCOUNT_LIFECYCLE_MANAGED" };
+      }
 
       const updated = await transaction
         .update(players)
         .set({
           status: "ACTIVE",
           deactivatedAt: null,
+          accountLifecycleDeactivatedAt: null,
           revision: sql`${players.revision} + 1`,
           updatedAt: command.now,
         })

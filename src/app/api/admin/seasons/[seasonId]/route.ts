@@ -14,7 +14,7 @@ type Context = { params: Promise<{ seasonId: string }> };
 export async function PATCH(request: Request, context: Context) {
   const authorization = await requireSeasonApiSession("ADMIN");
   if (!authorization.ok) return authorization.response;
-  const prepared = await prepareSeasonMutation(request, "admin:seasons:update", authorization.session.userId);
+  const prepared = await prepareSeasonMutation(request, "admin:seasons:update", authorization.session);
   if (!prepared.ok) return prepared.response;
   const service = getRuntimeSeasonService();
   if (!service) return seasonUnavailableResponse(prepared.value.traceId);
@@ -35,7 +35,7 @@ export async function PATCH(request: Request, context: Context) {
 export async function DELETE(request: Request, context: Context) {
   const authorization = await requireSeasonApiSession("ADMIN");
   if (!authorization.ok) return authorization.response;
-  const prepared = await prepareSeasonMutation(request, "admin:seasons:retire", authorization.session.userId);
+  const prepared = await prepareSeasonMutation(request, "admin:seasons:retire", authorization.session);
   if (!prepared.ok) return prepared.response;
   const service = getRuntimeSeasonService();
   if (!service) return seasonUnavailableResponse(prepared.value.traceId);

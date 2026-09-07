@@ -19,7 +19,7 @@ import { authorizeAdminSecuritySession } from "./admin-security-authorization";
 import { guardAdminTotpCodeAttempt } from "./login-security-guard";
 import {
   clearedSessionCookieOptions,
-  SESSION_COOKIE_NAME,
+  sessionCookieName,
 } from "./runtime-session";
 
 const ADMIN_SECURITY_JSON_LIMIT_BYTES = 512;
@@ -81,6 +81,14 @@ export async function requireAdminSecuritySession(
   | Readonly<{ ok: true; session: AuthSession }>
   | Readonly<{ ok: false; response: Response }>
 > {
+  if (new URL(request.url).searchParams.size > 0) {
+    return {
+      ok: false,
+      response: problemResponse(ADMIN_SECURITY_PROBLEMS.invalidPayload, {
+        traceId: adminSecurityTraceId(request),
+      }),
+    };
+  }
   const authorization = await authorizeAdminSecuritySession(options);
   if (authorization.allowed) return { ok: true, session: authorization.session };
 
@@ -114,10 +122,19 @@ export function adminSecurityReauthenticationSuccess(
       traceId,
     }),
   });
-  response.cookies.set(
-    SESSION_COOKIE_NAME,
-    "",
-    clearedSessionCookieOptions(request.nextUrl.protocol === "https:"),
-  );
+  // Enabling or disabling TOTP increments authVersion and revokes every
+  // purpose-bound database session, so the current browser must drop both
+  // corresponding cookies as well.
+  for (const purpose of ["ACCOUNT", "ADMIN"] as const) {
+    response.cookies.set(
+      sessionCookieName(purpose),
+      "",
+      clearedSessionCookieOptions(
+        request.nextUrl.protocol === "https:",
+        process.env.NODE_ENV,
+        purpose,
+      ),
+    );
+  }
   return response;
 }

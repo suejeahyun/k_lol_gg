@@ -48,6 +48,11 @@ test("admin login requires password, TOTP, and rejects code replay", async () =>
     role: "ADMIN",
     status: "APPROVED",
     authVersion: 1,
+    revision: 0,
+    mustChangePassword: false,
+    passwordChangedAt: null,
+    statusChangedAt: new Date(0),
+    statusReasonPublic: null,
     adminTotpEnabled: true,
     adminTotpSecret: SECRET,
   };
@@ -80,6 +85,15 @@ test("admin login requires password, TOTP, and rejects code replay", async () =>
     password: "synthetic-password-123!",
     totpCode,
   }, dependencies), { type: "forbidden", reason: "TOTP_REPLAY" });
+
+  for (const input of [
+    { loginId: `${account.loginId}\u061c`, password: "synthetic-password-123!" },
+    { loginId: account.loginId, password: "synthetic\u200e-password-123!" },
+    { loginId: account.loginId, password: "synthetic-password-123!", totpCode: `12\u200f3456` },
+    { loginId: account.loginId, password: "synthetic-password-123!", totpCode: "123 456" },
+  ]) {
+    assert.deepEqual(await authenticateAdmin(input, dependencies), { type: "invalid-input" });
+  }
 });
 
 test("non-admin and pending accounts cannot obtain an admin session", async () => {
@@ -90,6 +104,11 @@ test("non-admin and pending accounts cannot obtain an admin session", async () =
     role: "USER",
     status: "APPROVED",
     authVersion: 1,
+    revision: 0,
+    mustChangePassword: false,
+    passwordChangedAt: null,
+    statusChangedAt: new Date(0),
+    statusReasonPublic: null,
     adminTotpEnabled: false,
     adminTotpSecret: null,
   };
@@ -122,6 +141,11 @@ test("missing TOTP decryption key is exposed only after the password is verified
     role: "ADMIN",
     status: "APPROVED",
     authVersion: 1,
+    revision: 0,
+    mustChangePassword: false,
+    passwordChangedAt: null,
+    statusChangedAt: new Date(0),
+    statusReasonPublic: null,
     adminTotpEnabled: true,
     adminTotpSecret: null,
     adminTotpSecretUnavailable: true,

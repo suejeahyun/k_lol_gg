@@ -1,0 +1,60 @@
+.page { width: min(100% - 24px, 72rem); margin: 0 auto; padding: clamp(1rem, 4vw, 3rem) 0 5rem; }
+.accessGrid { display: grid; grid-template-columns: minmax(0, .85fr) minmax(22rem, .55fr); gap: clamp(1rem, 4vw, 2rem); align-items: stretch; }
+.intro, .formCard, .accountHero, .panel { border: 1px solid rgb(118 151 198 / 22%); border-radius: 1.6rem; background: rgb(255 255 255 / 90%); box-shadow: 0 1.2rem 3.5rem rgb(76 105 155 / 10%); }
+.intro { min-height: 35rem; display: grid; align-content: end; overflow: hidden; padding: clamp(1.5rem, 5vw, 3.2rem); background: radial-gradient(circle at 82% 12%, rgb(210 236 255 / 90%), transparent 18rem), radial-gradient(circle at 8% 92%, rgb(244 218 239 / 75%), transparent 17rem), linear-gradient(145deg, #fff, #f4f1ff); }
+.eyebrow { display: inline-flex; width: fit-content; align-items: center; gap: .4rem; border-radius: 999px; color: #315eaa; background: #eaf5ff; padding: .4rem .65rem; font-size: .7rem; font-weight: 900; letter-spacing: .05em; }
+.eyebrow svg { width: 1rem; height: 1rem; }
+.intro h1, .formCard h1, .accountHero h1 { margin: .8rem 0 .55rem; color: #17223b; font-family: var(--font-heading); font-size: clamp(2rem, 5vw, 3.6rem); font-weight: 950; letter-spacing: -.055em; }
+.intro p, .formCard > p, .accountHero p, .panel p { margin: 0; color: #61718a; line-height: 1.7; word-break: keep-all; }
+.promise { display: grid; grid-template-columns: repeat(3, 1fr); gap: .55rem; margin-top: 1.5rem; }
+.promise span { min-height: 5.6rem; display: grid; align-content: center; gap: .25rem; border: 1px solid rgb(118 151 198 / 18%); border-radius: 1rem; background: rgb(255 255 255 / 72%); padding: .75rem; color: #66758b; font-size: .68rem; }
+.promise strong { color: #315eaa; font-size: .8rem; }
+.formCard { align-self: center; padding: clamp(1.25rem, 4vw, 2rem); }
+.formCard h1 { font-size: clamp(1.9rem, 4vw, 2.6rem); }
+.form { display: grid; gap: 1rem; margin-top: 1.25rem; }
+.field { display: grid; gap: .38rem; color: #354760; font-size: .75rem; font-weight: 850; }
+.field input { width: 100%; min-height: 2.75rem; border: 1px solid #cbd9ea; border-radius: .8rem; color: #203149; background: #fbfdff; padding: 0 .85rem; font: inherit; font-size: .9rem; outline: none; }
+.field input:focus-visible { border-color: #4777c7; box-shadow: 0 0 0 3px rgb(86 129 201 / 20%); }
+.field small { color: #718097; font-size: .66rem; font-weight: 650; line-height: 1.5; }
+.check { min-height: 2.75rem; display: flex; align-items: flex-start; gap: .6rem; color: #4b5d75; font-size: .74rem; line-height: 1.55; }
+.check input { width: 1.1rem; height: 1.1rem; margin-top: .12rem; accent-color: #4a74bd; }
+.submit { min-height: 2.75rem; border: 0; border-radius: .85rem; color: white; background: linear-gradient(135deg, #4276c4, #7865c0); padding: 0 1rem; font: inherit; font-size: .82rem; font-weight: 900; cursor: pointer; }
+.submit:hover { filter: brightness(.96); }
+.submit:disabled { cursor: wait; opacity: .65; }
+.logoutControl { display: grid; justify-items: end; gap: .45rem; }
+.logoutError { max-width: 25rem; margin: 0; border-radius: .75rem; color: #a63e59; background: #fff1f5; padding: .6rem .7rem; font-size: .7rem; font-weight: 700; line-height: 1.5; }
+.message { min-height: 2.9rem; display: flex; align-items: center; border-radius: .8rem; color: #516176; background: #f3f7fc; padding: .65rem .75rem; font-size: .72rem; line-height: 1.5; }
+.message[data-tone="error"] { color: #a63e59; background: #fff1f5; }
+.message[data-tone="success"] { color: #246d59; background: #ecfaf5; }
+.links { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .7rem; margin-top: 1rem; }
+.links a { min-height: 2.75rem; display: inline-flex; align-items: center; color: #315eaa; font-size: .74rem; font-weight: 850; text-decoration: none; }
+.links a:hover { text-decoration: underline; text-underline-offset: .2rem; }
+.accountHero { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: clamp(1.3rem, 4vw, 2.3rem); background: radial-gradient(circle at 88% 15%, #e2f3ff, transparent 16rem), linear-gradient(145deg, #fff, #f7f1ff); }
+.accountHero > div { min-width: 0; }
+.accountHero h1 { max-width: 100%; font-size: clamp(2rem, 5vw, 3.2rem); overflow-wrap: anywhere; }
+.accountHero form button { min-width: 5.5rem; min-height: 2.75rem; border: 1px solid #cfdced; border-radius: .8rem; color: #49607d; background: white; font: inherit; font-size: .75rem; font-weight: 850; cursor: pointer; }
+.status { display: inline-flex; min-height: 1.75rem; align-items: center; border-radius: 999px; color: #635091; background: #eee8ff; padding: 0 .65rem; font-size: .68rem; font-weight: 900; }
+.status[data-state="APPROVED"] { color: #28705b; background: #e8f8f2; }
+.status[data-state="REJECTED"], .status[data-state="SUSPENDED"] { color: #93445d; background: #fff0f4; }
+.tabs { display: flex; gap: .45rem; margin: 1rem 0; overflow-x: auto; }
+.tabs a { min-height: 2.75rem; display: inline-flex; align-items: center; border: 1px solid #d5e0ee; border-radius: .8rem; color: #5a6b83; background: white; padding: 0 .9rem; font-size: .74rem; font-weight: 850; text-decoration: none; white-space: nowrap; }
+.tabs a[aria-current="page"] { color: #315eaa; background: #edf5ff; }
+.panel { margin-top: 1rem; padding: clamp(1rem, 3vw, 1.5rem); }
+.panel h2 { margin: 0 0 .75rem; color: #293c5b; font-size: 1rem; }
+.facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; margin: 0; }
+.facts div { min-width: 0; border: 1px solid #e1e8f2; border-radius: .9rem; background: #f9fbfe; padding: .85rem; }
+.facts dt { color: #718097; font-size: .65rem; font-weight: 800; }
+.facts dd { margin: .3rem 0 0; color: #263a59; font-size: .78rem; font-weight: 850; overflow-wrap: anywhere; }
+.notice { margin-top: 1rem; border-left: 4px solid #7c6ac2; border-radius: .8rem; color: #55667d; background: #f5f1ff; padding: .9rem 1rem; font-size: .75rem; line-height: 1.65; }
+.primaryLink { min-height: 2.75rem; display: inline-flex; align-items: center; justify-content: center; border-radius: .8rem; color: white; background: #4b72b8; padding: 0 .9rem; font-size: .75rem; font-weight: 850; text-decoration: none; }
+.skeleton { min-height: 30rem; border-radius: 1.5rem; background: linear-gradient(100deg, #edf2f8 20%, #fafcff 45%, #edf2f8 70%); background-size: 300% 100%; animation: shimmer 1.2s ease infinite; }
+@keyframes shimmer { from { background-position: 100% 0; } to { background-position: 0 0; } }
+@media (max-width: 800px) { .accessGrid { grid-template-columns: 1fr; } .intro { min-height: 22rem; } }
+@media (max-width: 520px) { .page { width: min(100% - 20px, 72rem); padding-top: .75rem; } .intro, .formCard, .accountHero, .panel { border-radius: 1.2rem; } .promise, .facts { grid-template-columns: 1fr; } .intro { min-height: 19rem; padding: 1.25rem; } .accountHero { align-items: flex-start; flex-direction: column; } .accountHero > div, .logoutControl, .logoutControl button, .logoutError { width: 100%; } }
+@media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
+.policy { width: min(100%, 58rem); margin: 0 auto; padding: clamp(1.25rem, 4vw, 2.5rem); border: 1px solid rgb(118 151 198 / 22%); border-radius: 1.6rem; background: rgb(255 255 255 / 94%); box-shadow: 0 1.2rem 3.5rem rgb(76 105 155 / 10%); }
+.policy header { padding-bottom: 1rem; border-bottom: 1px solid #e5edf8; }
+.policy h1 { margin: .7rem 0 .4rem; color: #17223b; font-family: var(--font-heading); font-size: clamp(2rem, 5vw, 3rem); }
+.policy h2 { margin: 1.5rem 0 .45rem; color: #253a5c; font-size: 1.05rem; }
+.policy p { color: #61718a; line-height: 1.75; overflow-wrap: anywhere; }
+.policy a, .check a { color: #315fa8; font-weight: 800; text-underline-offset: .18em; }

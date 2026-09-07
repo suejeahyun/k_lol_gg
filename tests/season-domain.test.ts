@@ -87,7 +87,12 @@ test("application position UI never offers or preserves an ALL mixture", () => {
 test("season commands require exact JSON keys, safe text and zoned ISO dates", () => {
   const service = new SeasonService({} as never);
   const context = {
-    actorUserAccountId: "11111111-1111-4111-8111-111111111111",
+    actorSession: {
+      userAccountId: "11111111-1111-4111-8111-111111111111",
+      sessionId: "44444444-4444-4444-8444-444444444444",
+      role: "ADMIN" as const,
+      authVersion: 0,
+    },
     requestId: "22222222-2222-4222-8222-222222222222",
     idempotencyMaterial: new TextEncoder().encode("strict-season-test"),
   };

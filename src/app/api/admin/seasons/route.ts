@@ -29,7 +29,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const authorization = await requireSeasonApiSession("ADMIN");
   if (!authorization.ok) return authorization.response;
-  const prepared = await prepareSeasonMutation(request, "admin:seasons:create", authorization.session.userId);
+  const prepared = await prepareSeasonMutation(request, "admin:seasons:create", authorization.session);
   if (!prepared.ok) return prepared.response;
   const service = getRuntimeSeasonService();
   if (!service) return seasonUnavailableResponse(prepared.value.traceId);

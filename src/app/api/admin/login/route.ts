@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { guardExactAccountQuery } from "@/modules/accounts/infrastructure/account-http";
+import { readValidatedTraceId } from "@/platform/http";
 import { authenticateAdminFromRuntime } from "@/modules/auth/infrastructure/admin-login-service";
 import {
   issueRuntimeSession,
-  SESSION_COOKIE_NAME,
+  sessionCookieName,
   sessionCookieOptions,
 } from "@/modules/auth/infrastructure/runtime-session";
 import {
@@ -11,8 +13,8 @@ import {
 } from "@/modules/auth/infrastructure/login-security-guard";
 import {
   hasSameOrigin,
-  readTextBodyWithinLimit,
 } from "@/modules/auth/application/mutation-request-guard";
+import { readJsonBody } from "@/platform/http";
 
 export const dynamic = "force-dynamic";
 
@@ -23,36 +25,43 @@ function json(body: object, status: number, headers?: Record<string, string>) {
 }
 
 export async function POST(request: NextRequest) {
+  const traceId = readValidatedTraceId(request.headers);
+  const queryFailure = guardExactAccountQuery(request, [], traceId);
+  if (queryFailure) return queryFailure;
   const publicOrigin = process.env.V2_PUBLIC_ORIGIN ?? process.env.NEXT_PUBLIC_SITE_URL;
   if (!hasSameOrigin(request, publicOrigin)) {
     return json({ message: "허용되지 않은 요청 출처입니다." }, 403);
   }
-  if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
+  const bodyRead = await readJsonBody(request, { maximumBytes: 2_048 });
+  if (!bodyRead.ok && bodyRead.error === "UNSUPPORTED_MEDIA_TYPE") {
     return json({ message: "JSON 요청만 허용됩니다." }, 415);
   }
-  const bodyRead = await readTextBodyWithinLimit(request, 2_048);
-  if (!bodyRead.ok && bodyRead.reason === "TOO_LARGE") {
+  if (!bodyRead.ok && bodyRead.error === "BODY_TOO_LARGE") {
     return json({ message: "요청이 너무 큽니다." }, 413);
   }
   if (!bodyRead.ok) return json({ message: "요청 형식이 올바르지 않습니다." }, 400);
-  const rawBody = bodyRead.text;
-  const body = (() => {
-    try {
-      return JSON.parse(rawBody) as unknown;
-    } catch {
-      return null;
-    }
-  })() as {
+  const body = bodyRead.value as {
     loginId?: unknown;
     password?: unknown;
     totpCode?: unknown;
   } | null;
 
-  if (!body || typeof body !== "object") {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return json({ message: "요청 형식이 올바르지 않습니다." }, 400);
+  }
+  const bodyKeys = Object.keys(body).sort();
+  if (
+    !bodyKeys.includes("loginId") ||
+    !bodyKeys.includes("password") ||
+    bodyKeys.some((key) => !["loginId", "password", "totpCode"].includes(key)) ||
+    typeof body.loginId !== "string" ||
+    typeof body.password !== "string" ||
+    (body.totpCode !== undefined && typeof body.totpCode !== "string")
+  ) {
     return json({ message: "요청 형식이 올바르지 않습니다." }, 400);
   }
 
-  const loginId = String(body.loginId ?? "");
+  const loginId = body.loginId;
   const rateLimit = await guardAdminLoginAttempt(request, loginId);
   if (!rateLimit.available) {
     return json({ message: "V2 인증 저장소가 아직 연결되지 않았습니다." }, 503);
@@ -76,8 +85,8 @@ export async function POST(request: NextRequest) {
 
   const result = await authenticateAdminFromRuntime({
     loginId,
-    password: String(body.password ?? ""),
-    totpCode: body.totpCode == null ? undefined : String(body.totpCode),
+    password: body.password,
+    totpCode: body.totpCode,
   }).finally(releaseWork);
 
   if (!result) {
@@ -99,6 +108,7 @@ export async function POST(request: NextRequest) {
     const messages = {
       ROLE: "관리자 권한이 없습니다.",
       STATUS: "승인된 관리자 계정만 로그인할 수 있습니다.",
+      PASSWORD_CHANGE: "일반 로그인에서 임시 비밀번호를 먼저 변경해 주세요.",
       TOTP: "2단계 인증 코드가 올바르지 않습니다.",
       TOTP_REPLAY: "이미 사용한 인증 코드입니다. 새 코드를 입력해 주세요.",
     } as const;
@@ -111,9 +121,9 @@ export async function POST(request: NextRequest) {
   }
   const response = json({ success: true, requiresTwoFactorSetup: result.requiresTwoFactorSetup }, 200);
   response.cookies.set(
-    SESSION_COOKIE_NAME,
+    sessionCookieName("ADMIN"),
     token,
-    sessionCookieOptions(request.nextUrl.protocol === "https:"),
+    sessionCookieOptions(request.nextUrl.protocol === "https:", process.env.NODE_ENV, "ADMIN"),
   );
   return response;
 }

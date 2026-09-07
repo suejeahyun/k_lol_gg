@@ -23,7 +23,7 @@ export async function GET(request: Request) {
   const service = getRuntimeSeasonService();
   if (!service) return seasonUnavailableResponse(traceId);
   try {
-    const session = await getCurrentSession();
+    const session = await getCurrentSession("ACCOUNT");
     return seasonReadResponse(await service.getApplicationHub(session?.userId ?? null), 200, traceId);
   } catch (error) {
     return seasonServiceErrorResponse(error, traceId);
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
   const prepared = await prepareSeasonMutation(
     request,
     "applications:season:upsert",
-    authorization.session.userId,
+    authorization.session,
   );
   if (!prepared.ok) return prepared.response;
   const rateLimit = await guardSeasonApplicationMutation(request, authorization.session, "UPSERT");
@@ -62,7 +62,7 @@ export async function DELETE(request: Request) {
   const prepared = await prepareSeasonMutation(
     request,
     "applications:season:cancel",
-    authorization.session.userId,
+    authorization.session,
   );
   if (!prepared.ok) return prepared.response;
   const rateLimit = await guardSeasonApplicationMutation(request, authorization.session, "CANCEL");

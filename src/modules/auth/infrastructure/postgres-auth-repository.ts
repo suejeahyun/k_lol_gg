@@ -54,12 +54,18 @@ function accountRecord(row: typeof userAccounts.$inferSelect): AuthAccountRecord
     role: row.role,
     status: row.status,
     authVersion: row.authVersion,
+    revision: row.revision,
+    mustChangePassword: row.mustChangePassword,
+    passwordChangedAt: row.passwordChangedAt,
+    statusChangedAt: row.statusChangedAt,
+    statusReasonPublic: row.statusReasonPublic,
     deletedAt: row.deletedAt,
   };
 }
 
 type LockedTotpActor = Readonly<{
   authVersion: number;
+  revision: number;
   role: Extract<typeof userAccounts.$inferSelect.role, "ADMIN" | "SUPER_ADMIN">;
 }>;
 
@@ -70,13 +76,14 @@ type TotpActorLockResult =
 async function lockTotpMutationActor(
   transaction: V2Transaction,
   actor: TotpMutationActor,
-  now: Date,
   requireVerifiedTotp: boolean,
 ): Promise<TotpActorLockResult> {
   const accountRows = await transaction
     .select({
       authVersion: userAccounts.authVersion,
       deletedAt: userAccounts.deletedAt,
+      mustChangePassword: userAccounts.mustChangePassword,
+      revision: userAccounts.revision,
       role: userAccounts.role,
       status: userAccounts.status,
     })
@@ -89,6 +96,7 @@ async function lockTotpMutationActor(
   if (
     !account ||
     account.deletedAt !== null ||
+    account.mustChangePassword ||
     account.status !== "APPROVED" ||
     (account.role !== "ADMIN" && account.role !== "SUPER_ADMIN")
   ) {
@@ -107,9 +115,13 @@ async function lockTotpMutationActor(
         eq(authSessions.userAccountId, actor.userAccountId),
         eq(authSessions.authVersion, actor.authVersion),
         eq(authSessions.role, actor.role),
+        eq(authSessions.purpose, "ADMIN"),
         eq(authSessions.kind, "USER"),
         isNull(authSessions.revokedAt),
-        gt(authSessions.expiresAt, now),
+        // Evaluate after the account row-lock wait. PostgreSQL now() and the
+        // request timestamp are transaction/request-start values and would
+        // authorize a session that expired while queued.
+        sql<boolean>`${authSessions.expiresAt} > clock_timestamp()`,
         requireVerifiedTotp ? isNotNull(authSessions.totpVerifiedAt) : undefined,
       ),
     )
@@ -121,6 +133,7 @@ async function lockTotpMutationActor(
     ok: true,
     account: {
       authVersion: account.authVersion,
+      revision: account.revision,
       role: account.role as "ADMIN" | "SUPER_ADMIN",
     },
   };
@@ -164,12 +177,50 @@ export class PostgresAuthRepository implements AuthRepository {
     return rows[0] ? accountRecord(rows[0]) : null;
   }
 
+  async upgradePasswordHashIfCurrent(
+    userAccountId: string,
+    currentHash: string,
+    nextHash: string,
+    changedAt: Date,
+    requestId: string,
+    expectedAuthVersion: number,
+  ): Promise<boolean> {
+    return withTransaction(this.database, async (transaction) => {
+      const rows = await transaction
+        .update(userAccounts)
+        .set({ passwordHash: nextHash, updatedAt: changedAt })
+        .where(
+          and(
+            eq(userAccounts.id, userAccountId),
+            eq(userAccounts.passwordHash, currentHash),
+            eq(userAccounts.authVersion, expectedAuthVersion),
+            isNull(userAccounts.deletedAt),
+          ),
+        )
+        .returning({ id: userAccounts.id });
+      if (rows.length !== 1) return false;
+      await transaction.insert(auditEvents).values({
+        requestId,
+        actorUserAccountId: userAccountId,
+        action: "ACCOUNT_PASSWORD_HASH_UPGRADED",
+        targetType: "USER_ACCOUNT_SECURITY",
+        targetId: userAccountId,
+        beforeJson: { passwordHashFormat: "BCRYPT" },
+        afterJson: { passwordHashFormat: "SCRYPT" },
+        metadataJson: { passwordValueChanged: false, concurrencyGuarded: true },
+        createdAt: changedAt,
+      });
+      return true;
+    });
+  }
+
   async createSession(input: CreateSessionInput): Promise<boolean> {
     return withTransaction(this.database, async (transaction) => {
       const accountRows = await transaction
         .select({
           id: userAccounts.id,
           role: userAccounts.role,
+          status: userAccounts.status,
           authVersion: userAccounts.authVersion,
         })
         .from(userAccounts)
@@ -177,7 +228,6 @@ export class PostgresAuthRepository implements AuthRepository {
           and(
             eq(userAccounts.id, input.userAccountId),
             isNull(userAccounts.deletedAt),
-            eq(userAccounts.status, "APPROVED"),
           ),
         )
         .for("update")
@@ -186,7 +236,15 @@ export class PostgresAuthRepository implements AuthRepository {
       if (
         !account ||
         account.role !== input.role ||
-        account.authVersion !== input.authVersion
+        account.authVersion !== input.authVersion ||
+        (input.purpose === "ACCOUNT" && input.totpVerifiedAt !== null)
+      ) {
+        return false;
+      }
+      if (
+        input.purpose === "ADMIN" &&
+        (account.status !== "APPROVED" ||
+          (account.role !== "ADMIN" && account.role !== "SUPER_ADMIN"))
       ) {
         return false;
       }
@@ -197,6 +255,7 @@ export class PostgresAuthRepository implements AuthRepository {
         userAccountId: input.userAccountId,
         authVersion: input.authVersion,
         role: input.role,
+        purpose: input.purpose,
         totpVerifiedAt: input.totpVerifiedAt,
         issuedAt: input.issuedAt,
         expiresAt: input.expiresAt,
@@ -215,6 +274,9 @@ export class PostgresAuthRepository implements AuthRepository {
         sessionId: authSessions.id,
         userAccountId: authSessions.userAccountId,
         role: userAccounts.role,
+        purpose: authSessions.purpose,
+        accountStatus: userAccounts.status,
+        mustChangePassword: userAccounts.mustChangePassword,
         authVersion: userAccounts.authVersion,
         totpVerifiedAt: authSessions.totpVerifiedAt,
         issuedAt: authSessions.issuedAt,
@@ -230,9 +292,16 @@ export class PostgresAuthRepository implements AuthRepository {
           isNull(authSessions.revokedAt),
           gt(authSessions.expiresAt, now),
           isNull(userAccounts.deletedAt),
-          eq(userAccounts.status, "APPROVED"),
           eq(authSessions.authVersion, userAccounts.authVersion),
           eq(authSessions.role, userAccounts.role),
+          or(
+            eq(authSessions.purpose, "ACCOUNT"),
+            and(
+              eq(authSessions.purpose, "ADMIN"),
+              eq(userAccounts.status, "APPROVED"),
+              or(eq(userAccounts.role, "ADMIN"), eq(userAccounts.role, "SUPER_ADMIN")),
+            ),
+          ),
         ),
       )
       .limit(1);
@@ -288,7 +357,7 @@ export class PostgresAuthRepository implements AuthRepository {
 
   async beginOwnTotpSetup(input: BeginTotpSetupInput): Promise<TotpSetupResult> {
     return withTransaction(this.database, async (transaction) => {
-      const actor = await lockTotpMutationActor(transaction, input.actor, input.now, false);
+      const actor = await lockTotpMutationActor(transaction, input.actor, false);
       if (!actor.ok) return actor;
 
       const credentialRows = await transaction
@@ -320,14 +389,32 @@ export class PostgresAuthRepository implements AuthRepository {
         createdAt: input.now,
       });
 
+      const accountRows = await transaction
+        .update(userAccounts)
+        .set({
+          revision: sql`${userAccounts.revision} + 1`,
+          updatedAt: input.now,
+        })
+        .where(
+          and(
+            eq(userAccounts.id, input.actor.userAccountId),
+            eq(userAccounts.revision, actor.account.revision),
+          ),
+        )
+        .returning({ revision: userAccounts.revision });
+      const nextRevision = accountRows[0]?.revision;
+      if (nextRevision === undefined) {
+        throw new Error("TOTP setup account revision update returned no row.");
+      }
+
       await transaction.insert(auditEvents).values({
         requestId: input.requestId,
         actorUserAccountId: input.actor.userAccountId,
         action: "ADMIN_TOTP_SETUP_STARTED",
         targetType: "USER_ACCOUNT_SECURITY",
         targetId: input.actor.userAccountId,
-        beforeJson: { totpStatus: "NOT_CONFIGURED" },
-        afterJson: { totpStatus: "SETUP_PENDING" },
+        beforeJson: { totpStatus: "NOT_CONFIGURED", revision: actor.account.revision },
+        afterJson: { totpStatus: "SETUP_PENDING", revision: nextRevision },
         metadataJson: { selfService: true, actorRole: input.actor.role },
         createdAt: input.now,
       });
@@ -340,7 +427,7 @@ export class PostgresAuthRepository implements AuthRepository {
     input: CancelPendingTotpSetupInput,
   ): Promise<CancelPendingTotpSetupResult> {
     return withTransaction(this.database, async (transaction) => {
-      const actor = await lockTotpMutationActor(transaction, input.actor, input.now, false);
+      const actor = await lockTotpMutationActor(transaction, input.actor, false);
       if (!actor.ok) return actor;
 
       const credentialRows = await transaction
@@ -356,14 +443,31 @@ export class PostgresAuthRepository implements AuthRepository {
       await transaction
         .delete(adminTotpCredentials)
         .where(eq(adminTotpCredentials.userAccountId, input.actor.userAccountId));
+      const accountRows = await transaction
+        .update(userAccounts)
+        .set({
+          revision: sql`${userAccounts.revision} + 1`,
+          updatedAt: input.now,
+        })
+        .where(
+          and(
+            eq(userAccounts.id, input.actor.userAccountId),
+            eq(userAccounts.revision, actor.account.revision),
+          ),
+        )
+        .returning({ revision: userAccounts.revision });
+      const nextRevision = accountRows[0]?.revision;
+      if (nextRevision === undefined) {
+        throw new Error("TOTP setup cancellation account revision update returned no row.");
+      }
       await transaction.insert(auditEvents).values({
         requestId: input.requestId,
         actorUserAccountId: input.actor.userAccountId,
         action: "ADMIN_TOTP_SETUP_CANCELLED",
         targetType: "USER_ACCOUNT_SECURITY",
         targetId: input.actor.userAccountId,
-        beforeJson: { totpStatus: "SETUP_PENDING" },
-        afterJson: { totpStatus: "NOT_CONFIGURED" },
+        beforeJson: { totpStatus: "SETUP_PENDING", revision: actor.account.revision },
+        afterJson: { totpStatus: "NOT_CONFIGURED", revision: nextRevision },
         metadataJson: { selfService: true, actorRole: input.actor.role },
         createdAt: input.now,
       });
@@ -374,7 +478,7 @@ export class PostgresAuthRepository implements AuthRepository {
   async enableOwnTotp(input: EnableTotpInput): Promise<TotpSecurityMutationResult> {
     assertCandidateStep(input.candidateStep);
     return withTransaction(this.database, async (transaction) => {
-      const actor = await lockTotpMutationActor(transaction, input.actor, input.now, false);
+      const actor = await lockTotpMutationActor(transaction, input.actor, false);
       if (!actor.ok) return actor;
 
       const credentialRows = await transaction
@@ -422,6 +526,7 @@ export class PostgresAuthRepository implements AuthRepository {
         .update(userAccounts)
         .set({
           authVersion: sql`${userAccounts.authVersion} + 1`,
+          revision: sql`${userAccounts.revision} + 1`,
           updatedAt: input.now,
         })
         .where(
@@ -430,9 +535,13 @@ export class PostgresAuthRepository implements AuthRepository {
             eq(userAccounts.authVersion, actor.account.authVersion),
           ),
         )
-        .returning({ authVersion: userAccounts.authVersion });
+        .returning({
+          authVersion: userAccounts.authVersion,
+          revision: userAccounts.revision,
+        });
       const nextAuthVersion = accountRows[0]?.authVersion;
-      if (nextAuthVersion === undefined) {
+      const nextRevision = accountRows[0]?.revision;
+      if (nextAuthVersion === undefined || nextRevision === undefined) {
         throw new Error("TOTP enable account version update returned no row.");
       }
 
@@ -453,8 +562,16 @@ export class PostgresAuthRepository implements AuthRepository {
         action: "ADMIN_TOTP_ENABLED",
         targetType: "USER_ACCOUNT_SECURITY",
         targetId: input.actor.userAccountId,
-        beforeJson: { totpStatus: "SETUP_PENDING", authVersion: actor.account.authVersion },
-        afterJson: { totpStatus: "ENABLED", authVersion: nextAuthVersion },
+        beforeJson: {
+          totpStatus: "SETUP_PENDING",
+          authVersion: actor.account.authVersion,
+          revision: actor.account.revision,
+        },
+        afterJson: {
+          totpStatus: "ENABLED",
+          authVersion: nextAuthVersion,
+          revision: nextRevision,
+        },
         metadataJson: {
           selfService: true,
           actorRole: input.actor.role,
@@ -474,7 +591,7 @@ export class PostgresAuthRepository implements AuthRepository {
   async disableOwnTotp(input: DisableTotpInput): Promise<TotpSecurityMutationResult> {
     assertCandidateStep(input.candidateStep);
     return withTransaction(this.database, async (transaction) => {
-      const actor = await lockTotpMutationActor(transaction, input.actor, input.now, true);
+      const actor = await lockTotpMutationActor(transaction, input.actor, true);
       if (!actor.ok) return actor;
 
       const credentialRows = await transaction
@@ -521,6 +638,7 @@ export class PostgresAuthRepository implements AuthRepository {
         .update(userAccounts)
         .set({
           authVersion: sql`${userAccounts.authVersion} + 1`,
+          revision: sql`${userAccounts.revision} + 1`,
           updatedAt: input.now,
         })
         .where(
@@ -529,9 +647,13 @@ export class PostgresAuthRepository implements AuthRepository {
             eq(userAccounts.authVersion, actor.account.authVersion),
           ),
         )
-        .returning({ authVersion: userAccounts.authVersion });
+        .returning({
+          authVersion: userAccounts.authVersion,
+          revision: userAccounts.revision,
+        });
       const nextAuthVersion = accountRows[0]?.authVersion;
-      if (nextAuthVersion === undefined) {
+      const nextRevision = accountRows[0]?.revision;
+      if (nextAuthVersion === undefined || nextRevision === undefined) {
         throw new Error("TOTP disable account version update returned no row.");
       }
 
@@ -552,8 +674,16 @@ export class PostgresAuthRepository implements AuthRepository {
         action: "ADMIN_TOTP_DISABLED",
         targetType: "USER_ACCOUNT_SECURITY",
         targetId: input.actor.userAccountId,
-        beforeJson: { totpStatus: "ENABLED", authVersion: actor.account.authVersion },
-        afterJson: { totpStatus: "NOT_CONFIGURED", authVersion: nextAuthVersion },
+        beforeJson: {
+          totpStatus: "ENABLED",
+          authVersion: actor.account.authVersion,
+          revision: actor.account.revision,
+        },
+        afterJson: {
+          totpStatus: "NOT_CONFIGURED",
+          authVersion: nextAuthVersion,
+          revision: nextRevision,
+        },
         metadataJson: {
           selfService: true,
           actorRole: input.actor.role,

@@ -2,13 +2,27 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   clearedSessionCookieOptions,
   revokeRuntimeSessionToken,
-  SESSION_COOKIE_NAME,
+  sessionCookieName,
 } from "@/modules/auth/infrastructure/runtime-session";
 import { hasSameOrigin } from "@/modules/auth/application/mutation-request-guard";
+import {
+  guardEmptyAccountBody,
+  guardExactAccountQuery,
+} from "@/modules/accounts/infrastructure/account-http";
+import { readValidatedTraceId } from "@/platform/http";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
+  const queryFailure = guardExactAccountQuery(
+    request,
+    [],
+    readValidatedTraceId(request.headers),
+  );
+  if (queryFailure) return queryFailure;
+  const traceId = readValidatedTraceId(request.headers);
+  const bodyFailure = await guardEmptyAccountBody(request, traceId);
+  if (bodyFailure) return bodyFailure;
   const publicOrigin = process.env.V2_PUBLIC_ORIGIN ?? process.env.NEXT_PUBLIC_SITE_URL;
   if (!hasSameOrigin(request, publicOrigin)) {
     return NextResponse.json(
@@ -17,8 +31,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const adminCookieName = sessionCookieName("ADMIN");
   const revocation = await revokeRuntimeSessionToken(
-    request.cookies.get(SESSION_COOKIE_NAME)?.value,
+    request.cookies.get(adminCookieName)?.value,
+    "ADMIN",
   );
   const response = revocation === "unavailable"
     ? NextResponse.json(
@@ -31,9 +47,13 @@ export async function POST(request: NextRequest) {
   response.headers.set("Cache-Control", "no-store");
   if (revocation !== "unavailable") {
     response.cookies.set(
-      SESSION_COOKIE_NAME,
+      adminCookieName,
       "",
-      clearedSessionCookieOptions(request.nextUrl.protocol === "https:"),
+      clearedSessionCookieOptions(
+        request.nextUrl.protocol === "https:",
+        process.env.NODE_ENV,
+        "ADMIN",
+      ),
     );
   }
   return response;

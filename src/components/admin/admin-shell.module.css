@@ -61,7 +61,7 @@
   display: flex;
   align-items: center;
   gap: 0.7rem;
-  min-height: 2.65rem;
+  min-height: 2.75rem;
   border-radius: 0.8rem;
   color: #46566e;
   padding: 0.55rem 0.7rem;
@@ -105,8 +105,12 @@
 .account > span:nth-child(2) { display: grid; overflow: hidden; }
 .account small { color: #6a7890; font-size: 0.67rem; }
 .account strong { overflow: hidden; text-overflow: ellipsis; font-size: 0.76rem; }
-.account button { border: 0; background: transparent; color: #66758b; cursor: pointer; padding: 0.4rem; }
+.account button { width: 2.75rem; height: 2.75rem; display: grid; place-items: center; border: 0; border-radius: .75rem; background: transparent; color: #66758b; cursor: pointer; padding: 0; }
+.account button:hover, .account button:focus-visible { background: #eef5ff; color: #254f91; }
+.account button:disabled { cursor: wait; opacity: .55; }
 .account button svg { width: 1.1rem; height: 1.1rem; }
+.logoutControl { position: relative; display: grid; justify-items: end; }
+.logoutError { width: min(15rem, 70vw); position: absolute; right: 0; bottom: calc(100% + .5rem); z-index: 5; border: 1px solid #f2c8d4; border-radius: .75rem; color: #963d57; background: #fff7f9; box-shadow: 0 .75rem 2rem rgb(77 44 55 / 15%); padding: .6rem .7rem; font-size: .68rem; font-weight: 700; line-height: 1.45; }
 
 .content { min-width: 0; padding-bottom: 0; }
 
@@ -178,6 +182,14 @@
   .mobileMenu nav a { min-height: 3rem; display: flex; align-items: center; gap: .55rem; border-radius: .75rem; color: #46566e; padding: .55rem .65rem; font-size: .75rem; font-weight: 780; text-decoration: none; }
   .mobileMenu nav a[aria-current="page"] { background: #eef5ff; color: #315eaa; }
   .mobileMenu nav svg { width: 1rem; height: 1rem; }
+  .mobileAccount { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-top: .65rem; border-top: 1px solid #e2e9f3; padding: .7rem .35rem 0; }
+  .mobileAccount > span { display: grid; min-width: 0; }
+  .mobileAccount small { color: #6a7890; font-size: .67rem; }
+  .mobileAccount strong { overflow: hidden; color: #25344a; font-size: .76rem; text-overflow: ellipsis; white-space: nowrap; }
+  .mobileAccount button { width: 2.75rem; height: 2.75rem; display: grid; place-items: center; border: 0; border-radius: .75rem; background: #f2f6fc; color: #66758b; cursor: pointer; padding: 0; }
+  .mobileAccount button:focus-visible, .mobileAccount button:hover { background: #e6f0ff; color: #254f91; }
+  .mobileAccount button:disabled { cursor: wait; opacity: .55; }
+  .mobileAccount button svg { width: 1.1rem; height: 1.1rem; }
 }
 
 @media (max-width: 420px) { .mobileMenu nav { grid-template-columns: 1fr; } }

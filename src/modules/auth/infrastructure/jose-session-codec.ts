@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 import { decodeProtectedHeader, jwtVerify, SignJWT } from "jose";
 import {
   isAuthRole,
+  isAuthSessionAccountStatus,
+  isAuthSessionPurpose,
   type AuthSession,
   type AuthSessionSeed,
 } from "../domain/auth-session";
@@ -11,7 +13,8 @@ const ISSUER = "k-lol-gg-v2";
 const AUDIENCE = "k-lol-gg-v2-web";
 const ALGORITHM = "HS256";
 const DEFAULT_TTL_SECONDS = 30 * 60;
-const MAXIMUM_TTL_SECONDS = 30 * 60;
+const MAXIMUM_TTL_SECONDS = 7 * 24 * 60 * 60;
+const ADMIN_MAXIMUM_TTL_SECONDS = 30 * 60;
 const CLOCK_TOLERANCE_SECONDS = 5;
 export const MAXIMUM_SESSION_TOKEN_BYTES = 8 * 1024;
 
@@ -64,6 +67,9 @@ export class JoseSessionCodec {
 
     return new SignJWT({
       role: seed.role,
+      purpose: seed.purpose,
+      accountStatus: seed.accountStatus,
+      mustChangePassword: seed.mustChangePassword,
       authVersion: seed.authVersion,
       adminTotpVerified: seed.adminTotpVerified,
       source: seed.source,
@@ -110,9 +116,13 @@ export class JoseSessionCodec {
         typeof payload.jti !== "string" ||
         !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(payload.jti) ||
         !isAuthRole(payload.role) ||
+        !isAuthSessionPurpose(payload.purpose) ||
+        !isAuthSessionAccountStatus(payload.accountStatus) ||
+        typeof payload.mustChangePassword !== "boolean" ||
         !Number.isSafeInteger(payload.authVersion) ||
         (payload.authVersion as number) < 0 ||
         typeof payload.adminTotpVerified !== "boolean" ||
+        (payload.purpose === "ACCOUNT" && payload.adminTotpVerified) ||
         (payload.source !== "fixture" && payload.source !== "database") ||
         typeof payload.iat !== "number" ||
         typeof payload.exp !== "number" ||
@@ -120,7 +130,12 @@ export class JoseSessionCodec {
         !Number.isSafeInteger(payload.exp) ||
         payload.iat > nowSeconds + CLOCK_TOLERANCE_SECONDS ||
         payload.exp <= payload.iat ||
-        payload.exp - payload.iat > MAXIMUM_TTL_SECONDS
+        payload.exp - payload.iat > MAXIMUM_TTL_SECONDS ||
+        (payload.purpose === "ADMIN" && payload.exp - payload.iat > ADMIN_MAXIMUM_TTL_SECONDS) ||
+        (payload.purpose === "ADMIN" &&
+          payload.role !== "ADMIN" &&
+          payload.role !== "SUPER_ADMIN") ||
+        (payload.purpose === "ADMIN" && payload.accountStatus !== "APPROVED")
       ) {
         return null;
       }
@@ -129,6 +144,9 @@ export class JoseSessionCodec {
         sessionId: payload.jti,
         userId: payload.sub,
         role: payload.role,
+        purpose: payload.purpose,
+        accountStatus: payload.accountStatus,
+        mustChangePassword: payload.mustChangePassword,
         authVersion: payload.authVersion as number,
         adminTotpVerified: payload.adminTotpVerified,
         source: payload.source,

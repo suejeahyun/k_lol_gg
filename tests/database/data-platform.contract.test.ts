@@ -97,14 +97,22 @@ test("migrations, constraints, repository, and transaction contracts hold on Pos
       const partialMigrationFolder = await mkdtemp(join(tmpdir(), "klol-v2-migrations-"));
       const partialMetaFolder = join(partialMigrationFolder, "meta");
       const preexistingPlayerId = randomUUID();
+      const preexistingAdminId = randomUUID();
+      const preexistingSessionId = randomUUID();
+      const preexistingNonTotpSessionId = randomUUID();
+      const invisibleLegacyPlayerId = randomUUID();
+      const nonNfkcLegacyPlayerId = randomUUID();
+      const kaithiFormatLegacyPlayerId = randomUUID();
       try {
         await mkdir(partialMetaFolder);
         await copyFile(new URL("../../drizzle/0000_jazzy_genesis.sql", import.meta.url), join(partialMigrationFolder, "0000_jazzy_genesis.sql"));
         await copyFile(new URL("../../drizzle/0001_nappy_iron_fist.sql", import.meta.url), join(partialMigrationFolder, "0001_nappy_iron_fist.sql"));
+        await copyFile(new URL("../../drizzle/0002_player_registry_s02.sql", import.meta.url), join(partialMigrationFolder, "0002_player_registry_s02.sql"));
+        await copyFile(new URL("../../drizzle/0003_cooing_wolf_cub.sql", import.meta.url), join(partialMigrationFolder, "0003_cooing_wolf_cub.sql"));
         const journal = JSON.parse(await readFile(new URL("../../drizzle/meta/_journal.json", import.meta.url), "utf8")) as { entries: unknown[]; version: string; dialect: string };
         await writeFile(
           join(partialMetaFolder, "_journal.json"),
-          JSON.stringify({ ...journal, entries: journal.entries.slice(0, 2) }),
+          JSON.stringify({ ...journal, entries: journal.entries.slice(0, 4) }),
           "utf8",
         );
 
@@ -115,6 +123,60 @@ test("migrations, constraints, repository, and transaction contracts hold on Pos
            values ($1, $2, $3, $4, $5, $6, $7)`,
           [preexistingPlayerId, "이관 전 합성 회원", "이관 전 합성 회원", "BeforeMigration", "beforemigration", "V1", "v1"],
         );
+        await pool.query(
+          `insert into auth.user_accounts
+             (id, login_id, login_id_normalized, password_hash, role, status,
+              terms_accepted_at, privacy_accepted_at)
+           values ($1, $2, $2, $3, 'ADMIN', 'APPROVED', now(), now())`,
+          [preexistingAdminId, `upgrade_admin_${preexistingAdminId.slice(0, 8)}`, "$2b$12$syntheticLegacyHashForUpgradeOnly000000000000000000000"],
+        );
+        await pool.query(
+          `insert into auth.sessions
+             (id, token_hash, user_account_id, auth_version, role, totp_verified_at,
+              issued_at, expires_at)
+           values ($1, $2, $3, 0, 'ADMIN', now(), now(), now() + interval '1 hour')`,
+          [preexistingSessionId, Buffer.alloc(32, 0x44), preexistingAdminId],
+        );
+        await pool.query(
+          `insert into auth.sessions
+             (id, token_hash, user_account_id, auth_version, role, totp_verified_at,
+              issued_at, expires_at)
+           values ($1, $2, $3, 0, 'ADMIN', null, now(), now() + interval '1 hour')`,
+          [preexistingNonTotpSessionId, Buffer.alloc(32, 0x45), preexistingAdminId],
+        );
+
+        await pool.query(
+          `insert into registry.players
+             (id, member_name, member_name_normalized, nickname, nickname_normalized, tag_line, tag_line_normalized)
+           values
+             ($1, '이관 전 숨김 문자 회원', '이관 전 숨김 문자 회원', $2, $3, 'V2A', 'v2a'),
+             ($4, '이관 전 비정규 회원', '이관 전 비정규 회원', $5, $6, 'V2B', 'v2b'),
+             ($7, '이관 전 카이티 형식문자 회원', '이관 전 카이티 형식문자 회원', $8, $9, 'V2C', 'v2c')`,
+          [
+            invisibleLegacyPlayerId,
+            "Invisible\u200bLegacy",
+            "invisible\u200blegacy",
+            nonNfkcLegacyPlayerId,
+            "Cafe\u0301Legacy",
+            "cafélegacy",
+            kaithiFormatLegacyPlayerId,
+            "Kaithi\u{110bd}Legacy",
+            "kaithi\u{110bd}legacy",
+          ],
+        );
+        await assert.rejects(
+          applyMigrations(database),
+          /identity preflight found non-NFKC or invisible-control legacy data/,
+        );
+        await pool.query(
+          "delete from registry.players where id = any($1::uuid[])",
+          [[invisibleLegacyPlayerId, nonNfkcLegacyPlayerId]],
+        );
+        await assert.rejects(
+          applyMigrations(database),
+          /identity preflight found non-NFKC or invisible-control legacy data/,
+        );
+        await pool.query("delete from registry.players where id = $1", [kaithiFormatLegacyPlayerId]);
 
         await applyMigrations(database);
         await applyMigrations(database);
@@ -125,7 +187,36 @@ test("migrations, constraints, repository, and transaction contracts hold on Pos
       const migrationRows = await pool.query<{ count: number }>(
         "select count(*)::int as count from drizzle.__drizzle_migrations",
       );
-      assert.equal(migrationRows.rows[0]?.count, 4);
+      assert.equal(migrationRows.rows[0]?.count, 5);
+
+      const upgradedSession = await pool.query<{
+        purpose: string;
+        revoked_at: Date | null;
+        totp_verified_at: Date | null;
+      }>(
+        `select purpose, revoked_at, totp_verified_at
+           from auth.sessions
+          where id in ($1, $2)
+          order by id`,
+        [preexistingSessionId, preexistingNonTotpSessionId],
+      );
+      assert.equal(upgradedSession.rowCount, 2);
+      for (const session of upgradedSession.rows) {
+        assert.equal(session.purpose, "ACCOUNT");
+        assert.ok(session.revoked_at);
+        assert.equal(session.totp_verified_at, null);
+      }
+
+      const upgradedConsent = await pool.query<{ terms_version: string; privacy_version: string }>(
+        `select terms_version, privacy_version
+           from auth.user_accounts
+          where id = $1`,
+        [preexistingAdminId],
+      );
+      assert.deepEqual(upgradedConsent.rows[0], {
+        terms_version: "legacy-unversioned",
+        privacy_version: "legacy-unversioned",
+      });
 
       const preservedRows = await pool.query<{ id: string; legacy_id: number | null }>(
         "select id, legacy_id from registry.players where id = $1",
@@ -240,6 +331,7 @@ test("migrations, constraints, repository, and transaction contracts hold on Pos
         userAccountId: account.id,
         authVersion: 0,
         role: "ADMIN",
+        purpose: "ADMIN",
         totpVerifiedAt: issuedAt,
         issuedAt,
         expiresAt: new Date(issuedAt.getTime() + 60_000),
@@ -269,6 +361,7 @@ test("migrations, constraints, repository, and transaction contracts hold on Pos
         userAccountId: account.id,
         authVersion: 0,
         role: "ADMIN",
+        purpose: "ADMIN",
         totpVerifiedAt: issuedAt,
         issuedAt,
         expiresAt: new Date(issuedAt.getTime() + 60_000),
@@ -293,6 +386,7 @@ test("migrations, constraints, repository, and transaction contracts hold on Pos
         userAccountId: statusAccount.id,
         authVersion: 0,
         role: "ADMIN",
+        purpose: "ADMIN",
         totpVerifiedAt: issuedAt,
         issuedAt,
         expiresAt: new Date(issuedAt.getTime() + 60_000),
@@ -311,6 +405,7 @@ test("migrations, constraints, repository, and transaction contracts hold on Pos
         userAccountId: statusAccount.id,
         authVersion: 0,
         role: "ADMIN",
+        purpose: "ADMIN",
         totpVerifiedAt: issuedAt,
         issuedAt,
         expiresAt: new Date(issuedAt.getTime() + 60_000),
@@ -326,6 +421,7 @@ test("migrations, constraints, repository, and transaction contracts hold on Pos
         userAccountId: roleAccount.id,
         authVersion: 0,
         role: "ADMIN",
+        purpose: "ADMIN",
         totpVerifiedAt: issuedAt,
         issuedAt,
         expiresAt: new Date(issuedAt.getTime() + 60_000),
@@ -429,6 +525,7 @@ test("migrations, constraints, repository, and transaction contracts hold on Pos
         userAccountId: account.id,
         authVersion: 1,
         role: "ADMIN",
+        purpose: "ADMIN",
         totpVerifiedAt: historicalNow,
         issuedAt: new Date(now.getTime() - 120_000),
         expiresAt: new Date(now.getTime() - 60_000),

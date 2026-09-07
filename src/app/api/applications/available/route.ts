@@ -17,7 +17,7 @@ export async function GET(request: Request) {
   const service = getRuntimeSeasonService();
   if (!service) return seasonUnavailableResponse(traceId);
   try {
-    const session = await getCurrentSession();
+    const session = await getCurrentSession("ACCOUNT");
     const hub = await service.getApplicationHub(session?.userId ?? null);
     return seasonReadResponse(
       {

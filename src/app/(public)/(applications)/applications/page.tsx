@@ -28,7 +28,7 @@ function statusLabel(status: string) {
 }
 
 export default async function ApplicationsPage() {
-  const session = await getCurrentSession();
+  const session = await getCurrentSession("ACCOUNT");
   const result = await loadRuntimeSeasonData((service) =>
     service.getApplicationHub(session?.userId ?? null),
   );

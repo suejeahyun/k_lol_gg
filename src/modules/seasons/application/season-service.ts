@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import type { TransactionSessionActor } from "@/modules/auth/domain/transaction-session";
 
 import type {
   AdminWorkspaceQuery,
@@ -18,7 +19,7 @@ import {
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export type SeasonCommandContext = Readonly<{
-  actorUserAccountId: string;
+  actorSession: TransactionSessionActor;
   idempotencyMaterial: Uint8Array;
   requestId: string;
 }>;
@@ -133,14 +134,17 @@ function digest(value: Uint8Array | string): Buffer {
 
 function envelope(
   context: SeasonCommandContext,
+  authorization: CommandEnvelope["authorization"],
   scope: string,
   request: Record<string, unknown>,
 ): CommandEnvelope {
-  if (!uuidPattern.test(context.actorUserAccountId) || !uuidPattern.test(context.requestId)) {
+  if (!uuidPattern.test(context.actorSession.userAccountId) || !uuidPattern.test(context.requestId)) {
     throw new SeasonServiceError("INVALID_INPUT", "요청 식별자가 올바르지 않습니다.");
   }
   return {
-    actorUserAccountId: context.actorUserAccountId,
+    actorUserAccountId: context.actorSession.userAccountId,
+    actorSession: context.actorSession,
+    authorization,
     requestId: context.requestId,
     scope,
     keyHash: digest(context.idempotencyMaterial),
@@ -177,7 +181,7 @@ export class SeasonService {
   createSeason(context: SeasonCommandContext, body: unknown, now = new Date()) {
     const input = seasonFields(body);
     return this.repository.createSeason(
-      envelope(context, "admin:seasons:create", {
+      envelope(context, "ADMIN_MUTATION", "admin:seasons:create", {
         ...input,
         applicationsOpenAt: input.applicationsOpenAt?.toISOString() ?? null,
         applicationsCloseAt: input.applicationsCloseAt?.toISOString() ?? null,
@@ -200,7 +204,7 @@ export class SeasonService {
     const fields = seasonFields(body, true);
     const input = { id, expectedRevision, ...fields };
     return this.repository.updateSeason(
-      envelope(context, "admin:seasons:update", {
+      envelope(context, "ADMIN_MUTATION", "admin:seasons:update", {
         id,
         expectedRevision,
         ...fields,
@@ -224,7 +228,7 @@ export class SeasonService {
     assertUuid(id);
     objectBody(body, []);
     return this.repository.activateSeason(
-      envelope(context, "admin:seasons:activate", { id, expectedRevision }),
+      envelope(context, "ADMIN_MUTATION", "admin:seasons:activate", { id, expectedRevision }),
       id,
       expectedRevision,
       now,
@@ -241,7 +245,7 @@ export class SeasonService {
     assertUuid(id);
     objectBody(body, []);
     return this.repository.endSeason(
-      envelope(context, "admin:seasons:end", { id, expectedRevision }),
+      envelope(context, "ADMIN_MUTATION", "admin:seasons:end", { id, expectedRevision }),
       id,
       expectedRevision,
       now,
@@ -259,7 +263,7 @@ export class SeasonService {
     const parsed = objectBody(body, ["name"]);
     const name = normalizeSeasonName(text(parsed.name, 120));
     return this.repository.cloneSeason(
-      envelope(context, "admin:seasons:clone", { id, name, expectedRevision }),
+      envelope(context, "ADMIN_MUTATION", "admin:seasons:clone", { id, name, expectedRevision }),
       id,
       name,
       expectedRevision,
@@ -277,7 +281,7 @@ export class SeasonService {
     assertUuid(id);
     objectBody(body, []);
     return this.repository.retireSeason(
-      envelope(context, "admin:seasons:retire", { id, expectedRevision }),
+      envelope(context, "ADMIN_MUTATION", "admin:seasons:retire", { id, expectedRevision }),
       id,
       expectedRevision,
       now,
@@ -297,14 +301,14 @@ export class SeasonService {
     const mainPosition = parsed.mainPosition;
     const subPositions = positions(parsed.subPositions, mainPosition);
     const input = {
-      actorUserAccountId: context.actorUserAccountId,
+      actorUserAccountId: context.actorSession.userAccountId,
       applyDate: kstDateKey(now),
       expectedRevision,
       mainPosition,
       subPositions,
     };
     return this.repository.upsertOwnApplication(
-      envelope(context, "applications:season:upsert", input),
+      envelope(context, "APPROVED_ACCOUNT_MUTATION", "applications:season:upsert", input),
       input,
       now,
     );
@@ -319,7 +323,7 @@ export class SeasonService {
     objectBody(body, []);
     const applyDate = kstDateKey(now);
     return this.repository.cancelOwnApplication(
-      envelope(context, "applications:season:cancel", { applyDate, expectedRevision }),
+      envelope(context, "APPROVED_ACCOUNT_MUTATION", "applications:season:cancel", { applyDate, expectedRevision }),
       expectedRevision,
       applyDate,
       now,
@@ -345,7 +349,7 @@ export class SeasonService {
     const reviewNote = text(parsed.reviewNote, 1_000) || null;
     const input = { id, expectedRevision, status: parsed.status, reviewNote };
     return this.repository.reviewApplication(
-      envelope(context, "admin:season-applications:review", input),
+      envelope(context, "ADMIN_MUTATION", "admin:season-applications:review", input),
       input,
       now,
     );

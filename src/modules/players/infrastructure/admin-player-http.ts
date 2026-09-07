@@ -5,6 +5,7 @@ import { randomUUID } from "node:crypto";
 import { hasSameOrigin } from "@/modules/auth/application/mutation-request-guard";
 import { authorizeApiRole } from "@/modules/auth/infrastructure/server-authorization";
 import type { AuthSession } from "@/modules/auth/domain/auth-session";
+import { transactionSessionActor } from "@/modules/auth/domain/transaction-session";
 import {
   formatRevisionEtag,
   idempotencyHashMaterial,
@@ -66,6 +67,7 @@ export function buildPlayerMutationCommand(input: {
     ok: true,
     command: {
       actorUserAccountId: input.session.userId,
+      actorSession: transactionSessionActor(input.session),
       requestId: randomUUID(),
       idempotencyKeyMaterial: idempotencyHashMaterial(idempotency.key, input.scope),
       requestFingerprint: input.requestFingerprint,
@@ -91,6 +93,9 @@ export function playerMutationResponse(
   if (outcome.type === "not-found") {
     return problemResponse(PLAYER_HTTP_PROBLEMS.notFound, { traceId });
   }
+  if (outcome.type === "session-stale") {
+    return problemResponse(PLAYER_HTTP_PROBLEMS.unauthorized, { traceId });
+  }
   if (outcome.type === "precondition-failed") {
     return problemResponse(PLAYER_HTTP_PROBLEMS.revisionMismatch, {
       traceId,
@@ -99,6 +104,7 @@ export function playerMutationResponse(
   }
 
   const problem = {
+    ACCOUNT_LIFECYCLE_MANAGED: PLAYER_HTTP_PROBLEMS.accountLifecycleManaged,
     DUPLICATE_LEGACY_ID: PLAYER_HTTP_PROBLEMS.conflictLegacyId,
     DUPLICATE_RIOT_ID: PLAYER_HTTP_PROBLEMS.conflictRiotId,
     IDEMPOTENCY_KEY_REUSED: PLAYER_HTTP_PROBLEMS.idempotencyConflict,

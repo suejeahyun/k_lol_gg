@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { SignJWT } from "jose";
-import { authorizeSession } from "../src/modules/auth/application/authorize-session";
+import {
+  authorizeAccountSession,
+  authorizeSession,
+} from "../src/modules/auth/application/authorize-session";
 import { sessionMatchesAccount } from "../src/modules/auth/application/validate-session-account";
 import { JoseSessionCodec } from "../src/modules/auth/infrastructure/jose-session-codec";
 
@@ -12,6 +15,9 @@ const SESSION_ID = "38d0b8a7-a0aa-4d64-8bc4-00e464ce787f";
 const seed = {
   userId: "fixture-admin",
   role: "ADMIN" as const,
+  purpose: "ADMIN" as const,
+  accountStatus: "APPROVED" as const,
+  mustChangePassword: false,
   authVersion: 1,
   adminTotpVerified: true,
   source: "fixture" as const,
@@ -56,6 +62,9 @@ test("session codec requires iat and enforces the 30 minute lifetime contract", 
   const key = new TextEncoder().encode(SECRET);
   const claims = {
     role: seed.role,
+    purpose: seed.purpose,
+    accountStatus: seed.accountStatus,
+    mustChangePassword: seed.mustChangePassword,
     authVersion: seed.authVersion,
     adminTotpVerified: seed.adminTotpVerified,
     source: seed.source,
@@ -98,6 +107,9 @@ test("session codec pins issuer, audience, algorithm, and rejects future issuanc
   const nowSeconds = Math.floor(NOW / 1000);
   const claims = {
     role: seed.role,
+    purpose: seed.purpose,
+    accountStatus: seed.accountStatus,
+    mustChangePassword: seed.mustChangePassword,
     authVersion: seed.authVersion,
     adminTotpVerified: seed.adminTotpVerified,
     source: seed.source,
@@ -138,6 +150,78 @@ test("authorization distinguishes missing role and missing admin TOTP", () => {
   assert.equal(authorizeSession({ ...session, role: "SUPER_ADMIN" }, "ADMIN").allowed, true);
 });
 
+test("account sessions are limited by status and never become administrator elevation", () => {
+  const accountSession = {
+    ...seed,
+    role: "ADMIN" as const,
+    purpose: "ACCOUNT" as const,
+    accountStatus: "PENDING" as const,
+    adminTotpVerified: false,
+    sessionId: SESSION_ID,
+    issuedAt: NOW,
+    expiresAt: NOW + 60_000,
+  };
+
+  assert.equal(authorizeAccountSession(accountSession).allowed, true);
+  assert.deepEqual(authorizeSession(accountSession, "USER"), {
+    allowed: false,
+    reason: "FORBIDDEN",
+  });
+  assert.deepEqual(authorizeSession(accountSession, "ADMIN"), {
+    allowed: false,
+    reason: "FORBIDDEN",
+  });
+  assert.deepEqual(
+    authorizeSession({ ...accountSession, accountStatus: "APPROVED" }, "ADMIN"),
+    { allowed: false, reason: "FORBIDDEN" },
+  );
+  assert.equal(
+    authorizeSession({
+      ...accountSession,
+      role: "USER",
+      accountStatus: "APPROVED",
+    }, "USER").allowed,
+    true,
+  );
+});
+
+test("codec accepts seven-day ACCOUNT sessions but rejects seven-day ADMIN sessions", async () => {
+  const codec = new JoseSessionCodec(SECRET);
+  const accountSeed = {
+    ...seed,
+    role: "USER" as const,
+    purpose: "ACCOUNT" as const,
+    adminTotpVerified: false,
+  };
+  const sevenDays = 7 * 24 * 60 * 60;
+  const accountToken = await codec.encode(accountSeed, {
+    nowMs: NOW,
+    ttlSeconds: sevenDays,
+    sessionId: SESSION_ID,
+  });
+  assert.ok(await codec.decode(accountToken, { nowMs: NOW + 1_000 }));
+
+  const key = new TextEncoder().encode(SECRET);
+  const adminToken = await new SignJWT({
+    role: seed.role,
+    purpose: seed.purpose,
+    accountStatus: seed.accountStatus,
+    mustChangePassword: false,
+    authVersion: seed.authVersion,
+    adminTotpVerified: true,
+    source: seed.source,
+  })
+    .setProtectedHeader({ alg: "HS256", typ: "JWT", kid: "local" })
+    .setSubject(seed.userId)
+    .setJti(SESSION_ID)
+    .setIssuer("k-lol-gg-v2")
+    .setAudience("k-lol-gg-v2-web")
+    .setIssuedAt(Math.floor(NOW / 1_000))
+    .setExpirationTime(Math.floor(NOW / 1_000) + sevenDays)
+    .sign(key);
+  assert.equal(await codec.decode(adminToken, { nowMs: NOW + 1_000 }), null);
+});
+
 test("session is revoked when account state, role, or authVersion changes", () => {
   const session = {
     ...seed,
@@ -152,6 +236,11 @@ test("session is revoked when account state, role, or authVersion changes", () =
     role: seed.role,
     status: "APPROVED" as const,
     authVersion: seed.authVersion,
+    revision: 0,
+    mustChangePassword: false,
+    passwordChangedAt: null,
+    statusChangedAt: new Date(0),
+    statusReasonPublic: null,
     adminTotpEnabled: true,
     adminTotpSecret: null,
   };

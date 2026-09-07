@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
 import { ADMIN_WORKSPACES, type AdminWorkspaceIconKey } from "@/modules/admin/domain/admin-workspaces";
+import { accountRoleLabel } from "@/modules/accounts/domain/account-display-labels";
 import styles from "./page.module.css";
 
 const icons = {
@@ -42,7 +43,7 @@ export default async function AdminDashboardPage() {
         </div>
         <div className={styles.sessionCard}>
           <small>검증된 세션</small>
-          <strong>{session.role}</strong>
+          <strong>{accountRoleLabel(session.role)}</strong>
           <span>{session.adminTotpVerified ? "2단계 인증 완료" : "2단계 인증 등록 필요"}</span>
         </div>
       </header>

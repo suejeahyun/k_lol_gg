@@ -23,6 +23,7 @@ import {
   isAdminWorkspaceActive,
   type AdminWorkspaceIconKey,
 } from "@/modules/admin/domain/admin-workspaces";
+import { AdminLogoutButton } from "./admin-logout-button";
 import styles from "./admin-shell.module.css";
 
 const icons = {
@@ -61,7 +62,7 @@ export function AdminWorkspaceNavigation() {
   return <nav aria-label="관리자 작업 공간" className={styles.nav}><WorkspaceLinks /></nav>;
 }
 
-export function MobileAdminNavigation() {
+export function MobileAdminNavigation({ roleLabel }: { roleLabel: string }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const current = ADMIN_WORKSPACES.find((workspace) => isAdminWorkspaceActive(pathname, workspace.href));
@@ -73,6 +74,10 @@ export function MobileAdminNavigation() {
         <div className={styles.mobileMenu} id="admin-mobile-menu">
           <header><strong>전체 작업 공간</strong><button type="button" onClick={() => setMenuOpen(false)} aria-label="메뉴 닫기"><X aria-hidden="true" /></button></header>
           <nav aria-label="모바일 관리자 작업 공간"><WorkspaceLinks closeMenu={() => setMenuOpen(false)} /></nav>
+          <div className={styles.mobileAccount}>
+            <span><small>현재 역할</small><strong>{roleLabel}</strong></span>
+            <AdminLogoutButton />
+          </div>
         </div>
       ) : null}
       <nav className={styles.mobileBottom} aria-label="모바일 관리자 바로가기">

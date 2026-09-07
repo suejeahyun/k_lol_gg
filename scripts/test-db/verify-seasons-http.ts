@@ -131,15 +131,23 @@ async function seedPlayer(account: SyntheticAccount, label: string) {
   return { id, nickname, memberName };
 }
 
-async function issueSession(account: SyntheticAccount, adminTotpVerified = account.role !== "USER") {
+async function issueSession(
+  account: SyntheticAccount,
+  adminTotpVerified = account.role !== "USER",
+  accountStatus: AccountStatus = "APPROVED",
+) {
   const nowMs = Date.now();
   const issuedAt = new Date(Math.floor(nowMs / 1_000) * 1_000);
   const expiresAt = new Date(issuedAt.getTime() + 30 * 60 * 1_000);
   const sessionId = randomUUID();
+  const purpose = account.role === "USER" ? "ACCOUNT" : "ADMIN";
   const token = await sessionCodec.encode(
     {
       userId: account.id,
       role: account.role,
+      purpose,
+      accountStatus,
+      mustChangePassword: false,
       authVersion: 0,
       adminTotpVerified,
       source: "database",
@@ -153,13 +161,14 @@ async function issueSession(account: SyntheticAccount, adminTotpVerified = accou
       userAccountId: account.id,
       authVersion: 0,
       role: account.role,
+      purpose,
       totpVerifiedAt: adminTotpVerified ? issuedAt : null,
       issuedAt,
       expiresAt,
     }),
     true,
   );
-  return `klol_v2_session=${token}`;
+  return `${purpose === "ACCOUNT" ? "klol_v2_account_session" : "klol_v2_session"}=${token}`;
 }
 
 const admin = await seedAccount("admin", "ADMIN");
@@ -184,6 +193,13 @@ const rateCancelUsers = await Promise.all(
   }),
 );
 
+for (const [key, status] of [
+  ["pending", "PENDING"],
+  ["rejected", "REJECTED"],
+  ["suspended", "SUSPENDED"],
+] as const satisfies readonly (readonly [keyof typeof statusAccounts, AccountStatus])[]) {
+  await database.update(userAccounts).set({ status }).where(eq(userAccounts.id, statusAccounts[key].id));
+}
 const cookies = {
   admin: await issueSession(admin),
   superAdmin: await issueSession(superAdmin),
@@ -192,17 +208,10 @@ const cookies = {
   noPlayerUser: await issueSession(noPlayerUser, false),
   rateUpsertUser: await issueSession(rateUpsertUser, false),
   rateCancelUsers: await Promise.all(rateCancelUsers.map((account) => issueSession(account, false))),
-  pending: await issueSession(statusAccounts.pending, false),
-  rejected: await issueSession(statusAccounts.rejected, false),
-  suspended: await issueSession(statusAccounts.suspended, false),
+  pending: await issueSession(statusAccounts.pending, false, "PENDING"),
+  rejected: await issueSession(statusAccounts.rejected, false, "REJECTED"),
+  suspended: await issueSession(statusAccounts.suspended, false, "SUSPENDED"),
 };
-for (const [key, status] of [
-  ["pending", "PENDING"],
-  ["rejected", "REJECTED"],
-  ["suspended", "SUSPENDED"],
-] as const satisfies readonly (readonly [keyof typeof statusAccounts, AccountStatus])[]) {
-  await database.update(userAccounts).set({ status }).where(eq(userAccounts.id, statusAccounts[key].id));
-}
 
 const activeRows = await database.select({ id: seasons.id }).from(seasons).where(eq(seasons.status, "ACTIVE"));
 assert.equal(activeRows.length, 0, "HTTP verifier requires no active season after the DB contract suite.");
@@ -277,8 +286,8 @@ try {
   await expectProblem(await fetch(`${origin}/api/admin/seasons`), 401, "UNAUTHENTICATED");
   await expectProblem(
     await fetch(`${origin}/api/admin/seasons`, { headers: { cookie: cookies.applicant } }),
-    403,
-    "FORBIDDEN",
+    401,
+    "UNAUTHENTICATED",
   );
   assert.equal(
     (await fetch(`${origin}/api/admin/seasons`, { headers: { cookie: cookies.admin } })).status,
@@ -518,10 +527,19 @@ try {
         headers: mutationHeaders(cookie, `status-fail-${randomUUID()}`, 0),
         body: JSON.stringify({ mainPosition: "MID", subPositions: [] }),
       }),
-      401,
-      "UNAUTHENTICATED",
+      403,
+      "FORBIDDEN",
     );
   }
+  await expectProblem(
+    await fetch(`${origin}/api/applications/season`, {
+      method: "POST",
+      headers: mutationHeaders(cookies.admin, `application-admin-cookie-${randomUUID()}`, 0),
+      body: JSON.stringify({ mainPosition: "MID", subPositions: [] }),
+    }),
+    401,
+    "UNAUTHENTICATED",
+  );
   await expectProblem(
     await fetch(`${origin}/api/applications/season`, {
       method: "POST",

@@ -9,7 +9,7 @@ import type { AuthSession } from "../domain/auth-session";
 import { resolveRateLimitClientKey } from "./rate-limit-client-key";
 import { resolveRuntimeAuthContext } from "./runtime-auth-context";
 
-function requestClientKey(request: NextRequest) {
+function requestClientKey(request: Pick<NextRequest, "headers">) {
   return resolveRateLimitClientKey(request.headers);
 }
 
@@ -162,4 +162,62 @@ export async function guardAdminTotpCodeAttempt(
 
 export function acquireAdminLoginWork() {
   return workGate.acquire();
+}
+
+/**
+ * Bounds every request path that performs a password hash or verification.
+ * The durable limiter decides who may try; this process-local gate prevents an
+ * allowed burst from exhausting all worker memory while scrypt is running.
+ */
+export function acquireAccountCredentialWork() {
+  return workGate.acquire();
+}
+
+export async function guardAccountOperationAttempt(
+  request: Pick<NextRequest, "headers">,
+  operation: "login" | "recovery" | "signup" | "password-change" | "admin-password-reset",
+  subject: string,
+): Promise<RuntimeLoginRateLimitDecision> {
+  const context = resolveRuntimeAuthContext();
+  if (!context) return { available: false };
+  const normalizedSubject = subject.trim().normalize("NFKC").toLocaleLowerCase("ko-KR") || "<blank>";
+  if (context.mode === "fixture") {
+    const decision = limiter.consume(requestClientKey(request), `${operation}:${normalizedSubject}`);
+    return decision.allowed
+      ? { available: true, allowed: true }
+      : { available: true, allowed: false, retryAfterSeconds: decision.retryAfterSeconds };
+  }
+
+  const policies = {
+    login: { globalLimit: 100, ipLimit: 24, subjectLimit: 8, windowMs: 5 * 60_000 },
+    signup: { globalLimit: 60, ipLimit: 6, subjectLimit: 3, windowMs: 60 * 60_000 },
+    recovery: { globalLimit: 80, ipLimit: 12, subjectLimit: 4, windowMs: 30 * 60_000 },
+    "password-change": { globalLimit: 80, ipLimit: 12, subjectLimit: 5, windowMs: 15 * 60_000 },
+    "admin-password-reset": { globalLimit: 40, ipLimit: 10, subjectLimit: 5, windowMs: 15 * 60_000 },
+  } as const;
+  const policy = policies[operation];
+  const rules: DurableRule[] = [
+    {
+      scope: "GLOBAL_HASH",
+      domain: `klol-v2:rate-limit:account-${operation}-global:v1`,
+      value: `account-${operation}`,
+      limit: policy.globalLimit,
+      windowMs: 60_000,
+    },
+    {
+      scope: "IP_HASH",
+      domain: `klol-v2:rate-limit:account-${operation}-ip:v1`,
+      value: requestClientKey(request),
+      limit: policy.ipLimit,
+      windowMs: policy.windowMs,
+    },
+    {
+      scope: "LOGIN_ID_HASH",
+      domain: `klol-v2:rate-limit:account-${operation}-subject:v1`,
+      value: normalizedSubject,
+      limit: policy.subjectLimit,
+      windowMs: policy.windowMs,
+    },
+  ];
+  return guardDurableRules(context, rules);
 }

@@ -214,6 +214,9 @@ async function issueUserCookie() {
     {
       userId: plainUser.id,
       role: "USER",
+      purpose: "ACCOUNT",
+      accountStatus: "APPROVED",
+      mustChangePassword: false,
       authVersion: 0,
       adminTotpVerified: false,
       source: "database",
@@ -226,11 +229,12 @@ async function issueUserCookie() {
     userAccountId: plainUser.id,
     authVersion: 0,
     role: "USER",
+    purpose: "ACCOUNT",
     kind: "USER",
     issuedAt,
     expiresAt,
   });
-  return `klol_v2_session=${token}`;
+  return `klol_v2_account_session=${token}`;
 }
 
 function playerPayload(label: string, legacyId: number | null) {
@@ -251,7 +255,7 @@ try {
   const userCookie = await issueUserCookie();
 
   assert.equal((await fetch(`${origin}/api/admin/players`)).status, 401);
-  assert.equal((await fetch(`${origin}/api/admin/players`, { headers: { cookie: userCookie } })).status, 403);
+  assert.equal((await fetch(`${origin}/api/admin/players`, { headers: { cookie: userCookie } })).status, 401);
 
   const adminList = await fetch(`${origin}/api/admin/players?q=${encodeURIComponent(seededPlayer.memberName)}`, { headers: { cookie: adminCookie } });
   assert.equal(adminList.status, 200);
@@ -396,7 +400,7 @@ try {
       "if-match": '"2"',
     },
   });
-  assert.equal(userReactivate.status, 403);
+  assert.equal(userReactivate.status, 401);
   const crossOriginReactivate = await fetch(reactivatePath, {
     method: "POST",
     headers: {
@@ -457,6 +461,62 @@ try {
   });
   assert.equal(staleReactivation.status, 412);
   assert.equal(staleReactivation.headers.get("etag"), '"3"');
+
+  for (const [index, lifecycleAccountState] of [
+    { status: "PENDING" as const, deletedAt: null },
+    { status: "REJECTED" as const, deletedAt: null },
+    { status: "REJECTED" as const, deletedAt: new Date() },
+  ].entries()) {
+    const lifecycleAccountId = randomUUID();
+    const lifecycleLoginId = `player_http_lifecycle_${index}_${randomBytes(4).toString("hex")}`;
+    const lifecyclePlayerId = randomUUID();
+    const lifecycleDeactivatedAt = new Date();
+    await database.insert(userAccounts).values({
+      id: lifecycleAccountId,
+      loginId: lifecycleLoginId,
+      loginIdNormalized: lifecycleLoginId,
+      passwordHash: null,
+      role: "USER",
+      status: lifecycleAccountState.status,
+      deletedAt: lifecycleAccountState.deletedAt,
+    });
+    await database.insert(players).values({
+      id: lifecyclePlayerId,
+      userAccountId: lifecycleAccountId,
+      memberName: `HTTP lifecycle 회원 ${index}`,
+      memberNameNormalized: `http lifecycle 회원 ${index}`,
+      nickname: `HttpLifecycle${index}${randomBytes(3).toString("hex")}`,
+      nicknameNormalized: `httplifecycle${index}${randomBytes(3).toString("hex")}`,
+      tagLine: "S02",
+      tagLineNormalized: "s02",
+      status: "INACTIVE",
+      deactivatedAt: lifecycleDeactivatedAt,
+      accountLifecycleDeactivatedAt: lifecycleDeactivatedAt,
+    });
+    const lifecycleReactivation = await fetch(
+      `${origin}/api/admin/players/${lifecyclePlayerId}/reactivate`,
+      {
+        method: "POST",
+        headers: {
+          cookie: adminCookie,
+          origin,
+          "idempotency-key": `lifecycle-reactivate-${index}-${randomUUID()}`,
+          "if-match": '"0"',
+        },
+      },
+    );
+    assert.equal(lifecycleReactivation.status, 409);
+    assert.equal(
+      (await lifecycleReactivation.json()).code,
+      "PLAYER_ACCOUNT_LIFECYCLE_MANAGED",
+    );
+    const lifecyclePlayer = (await database.select().from(players).where(
+      eq(players.id, lifecyclePlayerId),
+    ))[0];
+    assert.equal(lifecyclePlayer?.status, "INACTIVE");
+    assert.ok(lifecyclePlayer?.accountLifecycleDeactivatedAt);
+    assert.equal(lifecyclePlayer?.revision, 0);
+  }
 
   const restoredLegacy = await fetch(`${origin}/app/players/${strictPayload.legacyId}`, {
     redirect: "manual",

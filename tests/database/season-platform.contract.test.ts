@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { createHash, randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import test from "node:test";
 
 import { and, count, desc, eq } from "drizzle-orm";
@@ -13,23 +13,59 @@ import {
 } from "../../src/modules/seasons/domain/season";
 import { PostgresSeasonRepository } from "../../src/modules/seasons/infrastructure/postgres-season-repository";
 import { createDatabaseHandle } from "../../src/platform/db/database";
-import { auditEvents, players, seasonApplications, seasonCommandReceipts, seasons, userAccounts } from "../../src/platform/db/schema";
+import { auditEvents, authSessions, players, seasonApplications, seasonCommandReceipts, seasons, userAccounts } from "../../src/platform/db/schema";
 import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
 
+const sessionActors = new Map<
+  string,
+  Readonly<{
+    userAccountId: string;
+    sessionId: string;
+    role: "USER" | "ADMIN" | "SUPER_ADMIN";
+    authVersion: number;
+  }>
+>();
+
 function approvedAccount(loginId: string, role: "USER" | "ADMIN" | "SUPER_ADMIN" = "USER") {
-  return {
+  const account = {
     id: randomUUID(),
+    sessionId: randomUUID(),
+    authVersion: 0,
     loginId,
     loginIdNormalized: loginId.toLocaleLowerCase("ko-KR"),
     passwordHash: "$argon2id$v=19$synthetic-season-contract-hash",
     role,
     status: "APPROVED" as const,
   };
+  sessionActors.set(account.id, {
+    userAccountId: account.id,
+    sessionId: account.sessionId,
+    role: account.role,
+    authVersion: account.authVersion,
+  });
+  return account;
+}
+
+function accountRow(actor: ReturnType<typeof approvedAccount>) {
+  return {
+    id: actor.id,
+    authVersion: actor.authVersion,
+    loginId: actor.loginId,
+    loginIdNormalized: actor.loginIdNormalized,
+    passwordHash: actor.passwordHash,
+    role: actor.role,
+    status: actor.status,
+  };
 }
 
 function command(actorUserAccountId: string, label: string) {
   return {
-    actorUserAccountId,
+    actorSession: sessionActors.get(actorUserAccountId) ?? {
+      userAccountId: actorUserAccountId,
+      sessionId: randomUUID(),
+      role: "USER" as const,
+      authVersion: 0,
+    },
     requestId: randomUUID(),
     idempotencyMaterial: new TextEncoder().encode(`season-contract:${label}`),
   };
@@ -85,7 +121,21 @@ test("season lifecycle, participation ownership, idempotency and audit contracts
   const otherPlayerId = randomUUID();
 
   try {
-    await database.insert(userAccounts).values([admin, applicant, otherUser]);
+    await database.insert(userAccounts).values([admin, applicant, otherUser].map(accountRow));
+    const sessionNow = new Date();
+    await database.insert(authSessions).values(
+      [admin, applicant, otherUser].map((actor) => ({
+        id: actor.sessionId,
+        tokenHash: randomBytes(32),
+        userAccountId: actor.id,
+        authVersion: actor.authVersion,
+        role: actor.role,
+        purpose: actor.role === "USER" ? "ACCOUNT" as const : "ADMIN" as const,
+        totpVerifiedAt: actor.role === "USER" ? null : sessionNow,
+        issuedAt: sessionNow,
+        expiresAt: new Date(sessionNow.getTime() + 30 * 60_000),
+      })),
+    );
     await database.insert(players).values([
       {
         id: applicantPlayerId,
@@ -108,6 +158,18 @@ test("season lifecycle, participation ownership, idempotency and audit contracts
         tagLineNormalized: "s03",
       },
     ]);
+    const unrelatedExpiredSeasonReceiptKey = randomBytes(32);
+    await database.insert(seasonCommandReceipts).values({
+      id: randomUUID(),
+      actorUserAccountId: applicant.id,
+      scope: "seasons:unrelated-expired-retention",
+      keyHash: unrelatedExpiredSeasonReceiptKey,
+      requestHash: randomBytes(32),
+      responseStatus: 200,
+      responseJson: { message: "expired unrelated receipt" },
+      createdAt: new Date(Date.now() - 48 * 60 * 60_000),
+      expiresAt: new Date(Date.now() - 24 * 60 * 60_000),
+    });
 
     let activeSeasonId = "";
 
@@ -137,6 +199,9 @@ test("season lifecycle, participation ownership, idempotency and audit contracts
       });
       const first = await service.createSeason(command(admin.id, "create-a"), createBody(`합성 시즌 A ${randomUUID()}`), now);
       const second = await service.createSeason(command(admin.id, "create-b"), createBody(`합성 시즌 B ${randomUUID()}`), now);
+      assert.equal((await database.select({ value: count() }).from(seasonCommandReceipts).where(
+        eq(seasonCommandReceipts.keyHash, unrelatedExpiredSeasonReceiptKey),
+      ))[0]?.value, 1, "a season command must not globally delete unrelated expired receipts");
       const firstId = (first.body.season as { id: string }).id;
       const secondId = (second.body.season as { id: string }).id;
 
@@ -730,8 +795,173 @@ test("season lifecycle, participation ownership, idempotency and audit contracts
           { mainPosition: "TOP", subPositions: [] },
           now,
         ),
-        errorCode("FORBIDDEN"),
+        errorCode("SESSION_STALE"),
       );
+    });
+
+    await t.test("ACCOUNT and ADMIN purposes cannot cross-authorize season commands", async () => {
+      await assert.rejects(
+        service.createSeason(
+          command(applicant.id, "account-purpose-admin-command"),
+          {
+            name: `목적 교차 금지 ${randomUUID()}`,
+            applicationsOpenAt: null,
+            applicationsCloseAt: null,
+            startsAt: null,
+            endsAt: null,
+          },
+          now,
+        ),
+        errorCode("SESSION_STALE"),
+      );
+      await assert.rejects(
+        service.upsertOwnApplication(
+          command(admin.id, "admin-purpose-account-command"),
+          0,
+          { mainPosition: "TOP", subPositions: [] },
+          now,
+        ),
+        errorCode("SESSION_STALE"),
+      );
+    });
+
+    await t.test("ADMIN and SUPER_ADMIN roles may use approved user actions only through ACCOUNT sessions", async () => {
+      for (const role of ["ADMIN", "SUPER_ADMIN"] as const) {
+        const accountActor = approvedAccount(`season_${role.toLocaleLowerCase()}_account_${randomUUID()}`, role);
+        const playerId = randomUUID();
+        const nickname = `${role}Account${randomUUID()}`;
+        await database.insert(userAccounts).values(accountRow(accountActor));
+        await database.insert(authSessions).values({
+          id: accountActor.sessionId,
+          tokenHash: randomBytes(32),
+          userAccountId: accountActor.id,
+          authVersion: 0,
+          role,
+          purpose: "ACCOUNT",
+          totpVerifiedAt: null,
+          issuedAt: new Date(),
+          expiresAt: new Date(Date.now() + 30 * 60_000),
+        });
+        await database.insert(players).values({
+          id: playerId,
+          userAccountId: accountActor.id,
+          memberName: `${role} ACCOUNT 합성 회원`,
+          memberNameNormalized: `${role.toLocaleLowerCase()} account 합성 회원`,
+          nickname,
+          nicknameNormalized: nickname.toLocaleLowerCase("ko-KR"),
+          tagLine: "S03",
+          tagLineNormalized: "s03",
+        });
+        const result = await service.upsertOwnApplication(
+          command(accountActor.id, `${role.toLocaleLowerCase()}-account-user-action`),
+          0,
+          { mainPosition: role === "ADMIN" ? "ADC" : "SUP", subPositions: [] },
+          now,
+        );
+        const application = result.body.application as { status: string };
+        assert.equal(application.status, "APPLIED");
+        assert.equal((await database.select({ value: count() }).from(seasonApplications).where(
+          eq(seasonApplications.playerId, playerId),
+        ))[0]?.value, 1);
+      }
+    });
+
+    await t.test("session revocation wins over a queued ACCOUNT mutation", async () => {
+      const raceUser = approvedAccount(`season_revoke_race_${randomUUID()}`);
+      const racePlayerId = randomUUID();
+      await database.insert(userAccounts).values(accountRow(raceUser));
+      await database.insert(authSessions).values({
+        id: raceUser.sessionId,
+        tokenHash: randomBytes(32),
+        userAccountId: raceUser.id,
+        authVersion: 0,
+        role: "USER",
+        purpose: "ACCOUNT",
+        totpVerifiedAt: null,
+        issuedAt: new Date(),
+        expiresAt: new Date(Date.now() + 30 * 60_000),
+      });
+      await database.insert(players).values({
+        id: racePlayerId,
+        userAccountId: raceUser.id,
+        memberName: "경합 합성 회원",
+        memberNameNormalized: "경합 합성 회원",
+        nickname: `Race${randomUUID()}`,
+        nicknameNormalized: `race${randomUUID()}`,
+        tagLine: "S03",
+        tagLineNormalized: "s03",
+      });
+      const blocker = await pool.connect();
+      try {
+        await blocker.query("begin");
+        await blocker.query("select id from auth.user_accounts where id = $1 for update", [raceUser.id]);
+        const pending = service.upsertOwnApplication(
+          command(raceUser.id, "revoke-vs-application"),
+          0,
+          { mainPosition: "JGL", subPositions: [] },
+          now,
+        );
+        await new Promise((resolve) => setTimeout(resolve, 150));
+        await database.update(authSessions).set({ revokedAt: new Date() }).where(
+          eq(authSessions.id, raceUser.sessionId),
+        );
+        await blocker.query("commit");
+        await assert.rejects(pending, errorCode("SESSION_STALE"));
+      } finally {
+        await blocker.query("rollback").catch(() => undefined);
+        blocker.release();
+      }
+      assert.equal((await database.select({ value: count() }).from(seasonApplications).where(
+        eq(seasonApplications.playerId, racePlayerId),
+      ))[0]?.value, 0);
+      assert.equal((await database.select({ value: count() }).from(seasonCommandReceipts).where(
+        eq(seasonCommandReceipts.actorUserAccountId, raceUser.id),
+      ))[0]?.value, 0);
+    });
+
+    await t.test("TOTP removal wins over a queued ADMIN mutation", async () => {
+      const raceAdmin = approvedAccount(`season_totp_race_${randomUUID()}`, "ADMIN");
+      await database.insert(userAccounts).values(accountRow(raceAdmin));
+      await database.insert(authSessions).values({
+        id: raceAdmin.sessionId,
+        tokenHash: randomBytes(32),
+        userAccountId: raceAdmin.id,
+        authVersion: 0,
+        role: "ADMIN",
+        purpose: "ADMIN",
+        totpVerifiedAt: new Date(),
+        issuedAt: new Date(),
+        expiresAt: new Date(Date.now() + 30 * 60_000),
+      });
+      const blockedName = `TOTP 경합 차단 ${randomUUID()}`;
+      const blocker = await pool.connect();
+      try {
+        await blocker.query("begin");
+        await blocker.query("select id from auth.user_accounts where id = $1 for update", [raceAdmin.id]);
+        const pending = service.createSeason(
+          command(raceAdmin.id, "totp-vs-create"),
+          {
+            name: blockedName,
+            applicationsOpenAt: null,
+            applicationsCloseAt: null,
+            startsAt: null,
+            endsAt: null,
+          },
+          now,
+        );
+        await new Promise((resolve) => setTimeout(resolve, 150));
+        await database.update(authSessions).set({ totpVerifiedAt: null }).where(
+          eq(authSessions.id, raceAdmin.sessionId),
+        );
+        await blocker.query("commit");
+        await assert.rejects(pending, errorCode("SESSION_STALE"));
+      } finally {
+        await blocker.query("rollback").catch(() => undefined);
+        blocker.release();
+      }
+      assert.equal((await database.select({ value: count() }).from(seasons).where(
+        eq(seasons.nameNormalized, blockedName.normalize("NFKC").toLocaleLowerCase("ko-KR")),
+      ))[0]?.value, 0);
     });
 
     await t.test("soft-deleted account is rejected again inside the mutation transaction", async () => {
@@ -746,7 +976,7 @@ test("season lifecycle, participation ownership, idempotency and audit contracts
           { mainPosition: "TOP", subPositions: [] },
           now,
         ),
-        errorCode("FORBIDDEN"),
+        errorCode("SESSION_STALE"),
       );
     });
 

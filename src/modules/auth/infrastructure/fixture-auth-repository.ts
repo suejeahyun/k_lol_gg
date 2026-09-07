@@ -13,6 +13,7 @@ type RawFixture = {
   role?: unknown;
   status?: unknown;
   authVersion?: unknown;
+  mustChangePassword?: unknown;
   adminTotpEnabled?: unknown;
   adminTotpSecret?: unknown;
 };
@@ -30,6 +31,7 @@ function parseFixture(raw: RawFixture, index: number) {
   const role = raw.role;
   const status = raw.status;
   const authVersion = Number(raw.authVersion ?? 1);
+  const mustChangePassword = raw.mustChangePassword === true;
   const adminTotpEnabled = raw.adminTotpEnabled === true;
   const adminTotpSecret = raw.adminTotpSecret == null ? null : String(raw.adminTotpSecret);
 
@@ -49,7 +51,17 @@ function parseFixture(raw: RawFixture, index: number) {
     throw new Error(`Enabled fixture TOTP requires a secret at index ${index}.`);
   }
 
-  return { id, loginId, password, role, status: status as AuthAccountStatus, authVersion, adminTotpEnabled, adminTotpSecret };
+  return {
+    id,
+    loginId,
+    password,
+    role,
+    status: status as AuthAccountStatus,
+    authVersion,
+    mustChangePassword,
+    adminTotpEnabled,
+    adminTotpSecret,
+  };
 }
 
 export class FixtureAuthAccountRepository implements AuthAccountRepository {
@@ -97,6 +109,11 @@ export class FixtureAuthAccountRepository implements AuthAccountRepository {
         role: fixture.role,
         status: fixture.status,
         authVersion: fixture.authVersion,
+        revision: 0,
+        mustChangePassword: fixture.mustChangePassword,
+        passwordChangedAt: null,
+        statusChangedAt: new Date(0),
+        statusReasonPublic: null,
         adminTotpEnabled: fixture.adminTotpEnabled,
         adminTotpSecret: fixture.adminTotpSecret,
       });

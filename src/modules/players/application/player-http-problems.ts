@@ -1,6 +1,12 @@
 import { definePublicProblem } from "@/platform/http";
 
 export const PLAYER_HTTP_PROBLEMS = Object.freeze({
+  accountLifecycleManaged: definePublicProblem({
+    code: "PLAYER_ACCOUNT_LIFECYCLE_MANAGED",
+    status: 409,
+    title: "계정 승인 상태에서 관리되는 플레이어입니다.",
+    detail: "이 플레이어는 계정 승인·복구 작업에서만 다시 활성화할 수 있습니다.",
+  }),
   conflictLegacyId: definePublicProblem({
     code: "PLAYER_LEGACY_ID_CONFLICT",
     status: 409,

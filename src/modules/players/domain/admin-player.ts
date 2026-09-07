@@ -1,3 +1,6 @@
+import type { TransactionSessionActor } from "@/modules/auth/domain/transaction-session";
+import { containsUnsafeText } from "@/platform/security/input-safety";
+
 export const PLAYER_STATUSES = ["ACTIVE", "INACTIVE"] as const;
 export const MAXIMUM_LEGACY_PLAYER_ID = 2_147_483_647;
 
@@ -68,7 +71,6 @@ const writeFields = new Set([
   "peakTier",
   "currentTier",
 ]);
-const unsafeTextPattern = /[\u0000-\u001f\u007f-\u009f]/;
 const divisionTierPattern = /^(?:(?:아이언|브론즈|실버|골드|플래티넘|에메랄드|다이아) [1-4]|(?:IRON|BRONZE|SILVER|GOLD|PLATINUM|EMERALD|DIAMOND) (?:I|II|III|IV))$/i;
 const masterTierPattern = /^(?:마스터 (?:10|[1-9])층|MASTER(?: [0-9]{1,4})?)$/i;
 const highTierPattern = /^(?:(?:그랜드마스터|챌린저) [0-9]{1,4}|(?:GRANDMASTER|CHALLENGER)(?: [0-9]{1,4})?)$/i;
@@ -76,7 +78,7 @@ const highTierPattern = /^(?:(?:그랜드마스터|챌린저) [0-9]{1,4}|(?:GRAN
 function normalizeRequiredText(value: unknown, maximumLength: number): string | null {
   if (typeof value !== "string") return null;
   const normalized = value.normalize("NFKC").trim().replace(/\s+/g, " ");
-  if (!normalized || normalized.length > maximumLength || unsafeTextPattern.test(normalized)) {
+  if (!normalized || normalized.length > maximumLength || containsUnsafeText(normalized)) {
     return null;
   }
   return normalized;
@@ -155,6 +157,7 @@ export type PlayerMutationResponse = Readonly<{
 
 export type PlayerMutationCommand = Readonly<{
   actorUserAccountId: string;
+  actorSession: TransactionSessionActor;
   requestId: string;
   idempotencyKeyMaterial: Uint8Array;
   requestFingerprint: string;
@@ -172,9 +175,14 @@ export type PlayerMutationOutcome =
   | Readonly<{ type: "not-found" }>
   | Readonly<{
       type: "conflict";
-      reason: "DUPLICATE_LEGACY_ID" | "DUPLICATE_RIOT_ID" | "IDEMPOTENCY_KEY_REUSED";
+      reason:
+        | "ACCOUNT_LIFECYCLE_MANAGED"
+        | "DUPLICATE_LEGACY_ID"
+        | "DUPLICATE_RIOT_ID"
+        | "IDEMPOTENCY_KEY_REUSED";
     }>
-  | Readonly<{ type: "precondition-failed"; currentRevision: number }>;
+  | Readonly<{ type: "precondition-failed"; currentRevision: number }>
+  | Readonly<{ type: "session-stale" }>;
 
 export function playerMutationScope(
   action: "create" | "update" | "deactivate" | "reactivate",

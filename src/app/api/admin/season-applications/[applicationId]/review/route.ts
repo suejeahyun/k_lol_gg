@@ -16,7 +16,7 @@ export async function POST(request: Request, context: Context) {
   const prepared = await prepareSeasonMutation(
     request,
     "admin:season-applications:review",
-    authorization.session.userId,
+    authorization.session,
   );
   if (!prepared.ok) return prepared.response;
   const service = getRuntimeSeasonService();

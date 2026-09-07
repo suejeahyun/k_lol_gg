@@ -3,6 +3,7 @@ import type {
   AuthAccountRecord,
   LoginRateLimitRecord,
   LoginRateLimitScope,
+  SessionPurpose,
   TotpCredentialRecord,
   UserRole,
 } from "../../domain/auth-records";
@@ -13,6 +14,7 @@ export type CreateSessionInput = Readonly<{
   userAccountId: string;
   authVersion: number;
   role: UserRole;
+  purpose: SessionPurpose;
   totpVerifiedAt: Date | null;
   issuedAt: Date;
   expiresAt: Date;
@@ -110,6 +112,14 @@ export interface AuthRepository {
   readonly source: "database";
   findAccountById(id: string): Promise<AuthAccountRecord | null>;
   findAccountByLoginId(loginId: string): Promise<AuthAccountRecord | null>;
+  upgradePasswordHashIfCurrent(
+    userAccountId: string,
+    currentHash: string,
+    nextHash: string,
+    changedAt: Date,
+    requestId: string,
+    expectedAuthVersion: number,
+  ): Promise<boolean>;
   createSession(input: CreateSessionInput): Promise<boolean>;
   findActiveSession(
     sessionId: string,

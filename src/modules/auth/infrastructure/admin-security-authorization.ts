@@ -13,7 +13,7 @@ export type AdminSecurityAuthorization =
 export async function authorizeAdminSecuritySession(
   options: { requireVerifiedTotp?: boolean } = {},
 ): Promise<AdminSecurityAuthorization> {
-  const session = await getCurrentSession();
+  const session = await getCurrentSession("ADMIN");
   if (!session) return { allowed: false, reason: "SESSION_REQUIRED" };
   if (!isAdminRole(session.role)) return { allowed: false, reason: "ADMIN_REQUIRED" };
   if (options.requireVerifiedTotp && !session.adminTotpVerified) {

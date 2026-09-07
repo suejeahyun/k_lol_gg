@@ -33,3 +33,6 @@ jobs:
 
       - name: Lint, typecheck, test, and build
         run: npm run check
+
+      - name: Verify administrator HTTP authentication matrix
+        run: npm run verify:auth-http

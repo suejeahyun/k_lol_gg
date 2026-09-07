@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import type { AuthRole, AuthSession } from "@/modules/auth/domain/auth-session";
+import { transactionSessionActor } from "@/modules/auth/domain/transaction-session";
 import { hasSameOrigin } from "@/modules/auth/application/mutation-request-guard";
 import { authorizeApiRole } from "@/modules/auth/infrastructure/server-authorization";
 import {
@@ -147,7 +148,7 @@ export async function requireSeasonApiSession(requiredRole: AuthRole): Promise<
 export async function prepareSeasonMutation(
   request: Request,
   scope: string,
-  actorUserAccountId: string,
+  session: AuthSession,
 ): Promise<{ ok: true; value: PreparedSeasonMutation } | { ok: false; response: Response }> {
   const traceId = readValidatedTraceId(request.headers);
   const queryProblem = rejectSeasonQuery(request, traceId);
@@ -187,7 +188,7 @@ export async function prepareSeasonMutation(
       expectedRevision: revision.revision,
       traceId,
       context: {
-        actorUserAccountId,
+        actorSession: transactionSessionActor(session),
         requestId: randomUUID(),
         idempotencyMaterial: idempotencyHashMaterial(idempotency.key, scope),
       },
@@ -233,6 +234,7 @@ export function seasonServiceErrorResponse(error: unknown, traceId?: string): Re
       NOT_FOUND: SEASON_HTTP_PROBLEMS.notFound,
       PLAYER_REQUIRED: SEASON_HTTP_PROBLEMS.playerRequired,
       PRECONDITION_FAILED: SEASON_HTTP_PROBLEMS.preconditionFailed,
+      SESSION_STALE: SEASON_HTTP_PROBLEMS.unauthenticated,
     }[error.code];
     return problemResponse(problem, { traceId });
   }

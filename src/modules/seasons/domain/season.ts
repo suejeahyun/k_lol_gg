@@ -182,6 +182,7 @@ export const SEASON_SERVICE_ERROR_CODES = [
   "NOT_FOUND",
   "PLAYER_REQUIRED",
   "PRECONDITION_FAILED",
+  "SESSION_STALE",
 ] as const;
 
 export type SeasonServiceErrorCode = (typeof SEASON_SERVICE_ERROR_CODES)[number];

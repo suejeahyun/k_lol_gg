@@ -102,6 +102,9 @@ test("session signing keyring writes current kid and still verifies retained pri
   const token = await oldCodec.encode({
     userId: "rotation-admin",
     role: "ADMIN",
+    purpose: "ADMIN",
+    accountStatus: "APPROVED",
+    mustChangePassword: false,
     authVersion: 2,
     adminTotpVerified: true,
     source: "database",

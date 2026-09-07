@@ -13,7 +13,7 @@ type Context = { params: Promise<{ seasonId: string }> };
 export async function POST(request: Request, context: Context) {
   const authorization = await requireSeasonApiSession("ADMIN");
   if (!authorization.ok) return authorization.response;
-  const prepared = await prepareSeasonMutation(request, "admin:seasons:clone", authorization.session.userId);
+  const prepared = await prepareSeasonMutation(request, "admin:seasons:clone", authorization.session);
   if (!prepared.ok) return prepared.response;
   const service = getRuntimeSeasonService();
   if (!service) return seasonUnavailableResponse(prepared.value.traceId);

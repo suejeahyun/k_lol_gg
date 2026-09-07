@@ -1,12 +1,13 @@
 import Link from "next/link";
 import {
   CloudSun,
-  LogOut,
   Search,
   ShieldCheck,
 } from "lucide-react";
 import type { AuthSession } from "@/modules/auth/domain/auth-session";
+import { accountRoleLabel } from "@/modules/accounts/domain/account-display-labels";
 import { AdminWorkspaceNavigation, MobileAdminNavigation } from "./admin-navigation";
+import { AdminLogoutButton } from "./admin-logout-button";
 import styles from "./admin-shell.module.css";
 
 function environmentLabel() {
@@ -31,10 +32,8 @@ export function AdminShell({ session, children }: { session: AuthSession; childr
         <AdminWorkspaceNavigation />
         <div className={styles.account}>
           <span className={styles.avatar} aria-hidden="true">{session.role === "SUPER_ADMIN" ? "S" : "A"}</span>
-          <span><small>현재 역할</small><strong>{session.role}</strong></span>
-          <form action="/api/admin/logout" method="post">
-            <button type="submit" aria-label="관리자 로그아웃"><LogOut aria-hidden="true" /></button>
-          </form>
+          <span><small>현재 역할</small><strong>{accountRoleLabel(session.role)}</strong></span>
+          <AdminLogoutButton />
         </div>
       </aside>
       <div className={styles.content}>
@@ -47,7 +46,7 @@ export function AdminShell({ session, children }: { session: AuthSession; childr
           </div>
         </header>
         {children}
-        <MobileAdminNavigation />
+        <MobileAdminNavigation roleLabel={accountRoleLabel(session.role)} />
       </div>
     </div>
   );
