@@ -36,6 +36,7 @@ test("page-contract로 표시한 사용자 경로는 실제 App Router 페이지
   );
   assert.deepEqual(pageContracts.map((route) => route.template), [
     "/",
+    "/start",
     "/account",
     "/account/password",
     "/login",
@@ -43,6 +44,8 @@ test("page-contract로 표시한 사용자 경로는 실제 App Router 페이지
     "/forgot-password",
     "/terms",
     "/privacy",
+    "/help/riot",
+    "/install",
     "/players",
     "/players/[playerId]",
     "/matches",
@@ -59,6 +62,7 @@ test("page-contract로 표시한 사용자 경로는 실제 App Router 페이지
 
   const pages = [
     "../src/app/(public)/(home)/page.tsx",
+    "../src/app/(public)/(guides)/start/page.tsx",
     "../src/app/(public)/account/page.tsx",
     "../src/app/(public)/account/password/page.tsx",
     "../src/app/(public)/login/page.tsx",
@@ -66,6 +70,8 @@ test("page-contract로 표시한 사용자 경로는 실제 App Router 페이지
     "../src/app/(public)/forgot-password/page.tsx",
     "../src/app/(public)/terms/page.tsx",
     "../src/app/(public)/privacy/page.tsx",
+    "../src/app/(public)/(guides)/help/riot/page.tsx",
+    "../src/app/(public)/(guides)/install/page.tsx",
     "../src/app/(public)/(registry)/players/page.tsx",
     "../src/app/(public)/(registry)/players/[playerId]/page.tsx",
     "../src/app/(public)/(matches)/matches/page.tsx",

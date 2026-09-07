@@ -34,7 +34,7 @@ export const userNavigationSections = [
  */
 export const canonicalUserRoutes = [
   { template: "/", label: "홈", section: "home-account", implementationState: "page-contract" },
-  { template: "/start", label: "시작하기", section: "home-account", implementationState: "planned" },
+  { template: "/start", label: "시작하기", section: "home-account", implementationState: "page-contract" },
   { template: "/account", label: "내 계정", section: "home-account", implementationState: "page-contract" },
   { template: "/account/password", label: "비밀번호 변경", section: "home-account", implementationState: "page-contract" },
   { template: "/account/riot", label: "Riot 계정", section: "home-account", implementationState: "planned" },
@@ -47,8 +47,8 @@ export const canonicalUserRoutes = [
   { template: "/privacy", label: "개인정보 처리방침", section: "auth-help", implementationState: "page-contract" },
   { template: "/help/kakao", label: "Kakao 도움말", section: "auth-help", implementationState: "planned" },
   { template: "/help/recruits", label: "구인 도움말", section: "auth-help", implementationState: "planned" },
-  { template: "/help/riot", label: "Riot 도움말", section: "auth-help", implementationState: "planned" },
-  { template: "/install", label: "앱 설치", section: "auth-help", implementationState: "planned" },
+  { template: "/help/riot", label: "Riot 도움말", section: "auth-help", implementationState: "page-contract" },
+  { template: "/install", label: "앱 설치", section: "auth-help", implementationState: "page-contract" },
 
   { template: "/players", label: "플레이어 찾기", section: "registry-match", implementationState: "page-contract" },
   { template: "/players/[playerId]", label: "플레이어 상세", section: "registry-match", implementationState: "page-contract" },
