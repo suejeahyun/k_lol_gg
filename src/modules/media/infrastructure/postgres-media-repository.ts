@@ -469,7 +469,9 @@ export class PostgresMediaRepository implements MediaRepository {
 
   private async replaceGalleryAssets(transaction: V2Transaction, galleryId: string, ids: readonly string[]) {
     await transaction.delete(mediaGalleryAssets).where(eq(mediaGalleryAssets.galleryId, galleryId));
-    await transaction.insert(mediaGalleryAssets).values(ids.map((privateAssetId, ordinal) => ({ galleryId, privateAssetId, ordinal })));
+    if (ids.length > 0) {
+      await transaction.insert(mediaGalleryAssets).values(ids.map((privateAssetId, ordinal) => ({ galleryId, privateAssetId, ordinal })));
+    }
   }
 
   private lifecycleDates(command: "PUBLISH" | "UNPUBLISH" | "ARCHIVE" | "RESTORE", previousPublishedAt: Date | null, now: Date) {

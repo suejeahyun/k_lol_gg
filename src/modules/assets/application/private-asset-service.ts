@@ -204,6 +204,10 @@ export class PrivateAssetService {
     return toPrivateAssetReadGrantDto(binding, grant);
   }
 
+  async metadata(actor: PrivateAssetHumanActor, assetId: string): Promise<PrivateAssetMetadataDto> {
+    return toPrivateAssetMetadataDto(await this.authorizedBinding(actor, assetId, "READ"));
+  }
+
   /** Grant redemption adapters must call this method; a grant alone never bypasses the READY check. */
   async readPrivateBytes(actor: PrivateAssetHumanActor, assetId: string): Promise<PrivateAssetBytes> {
     const binding = await this.authorizedReadyBinding(actor, assetId);

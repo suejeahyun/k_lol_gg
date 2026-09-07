@@ -35,6 +35,9 @@ test("gallery validates one to five distinct storage assets", () => {
   const gallery = createGallery({ id: "g-1", title: "우승", description: "기록", imageAssetIds: ["a1", "a2"], publish: true, showOnHome: true });
   assert.equal(gallery.showOnHome, true);
   assert.throws(() => createGallery({ id: "g", title: "t", description: "d", imageAssetIds: [] }), /INVALID_GALLERY_IMAGE_COUNT/);
+  const emptyDraft = createGallery({ id: "g-draft", title: "t", description: "d", imageAssetIds: [], allowEmptyDraft: true });
+  assert.equal(emptyDraft.status, "DRAFT");
+  assert.throws(() => transitionMediaStatus({ content: emptyDraft, expectedRevision: 0, command: "PUBLISH" }), /INVALID_GALLERY_IMAGE_COUNT/);
   assert.throws(() => createGallery({ id: "g", title: "t", description: "d", imageAssetIds: ["a", "a"] }), /DUPLICATE_GALLERY_ASSET/);
 });
 

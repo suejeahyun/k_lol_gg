@@ -73,6 +73,8 @@ test("gallery input permits only one to five distinct READY asset identifiers at
   const first = randomUUID(); const second = randomUUID();
   await service.createGallery(context, 0, { title: "우승", description: "기록", imageAssetIds: [first, second] });
   assert.deepEqual(captured, { title: "우승", description: "기록", imageAssetIds: [first, second] });
+  await service.createGallery(context, 0, { title: "빈 초안", description: "업로드 전", imageAssetIds: [] });
+  assert.deepEqual(captured, { title: "빈 초안", description: "업로드 전", imageAssetIds: [] });
   assert.throws(() => service.createGallery(context, 0, { title: "우승", description: "기록", imageAssetIds: [first, first] }), (error: unknown) => error instanceof MediaServiceError && error.code === "INVALID_INPUT");
 });
 

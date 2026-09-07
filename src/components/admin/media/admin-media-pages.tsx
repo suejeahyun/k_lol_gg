@@ -5,6 +5,7 @@ import { Images, Plus, Sparkles } from "lucide-react";
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
 import { parseMediaAdminListQuery } from "@/modules/media";
 import type { GalleryContent, HighlightContent, MediaAdminList } from "@/modules/media";
+import { isRuntimeMediaAssetUploadAvailable } from "@/modules/media/infrastructure/media-private-assets";
 import { loadRuntimeMedia } from "@/modules/media/infrastructure/runtime-media";
 
 import { AdminMediaForm } from "./admin-media-form";
@@ -25,7 +26,7 @@ export async function AdminMediaListPage({ kind, searchParams }: { kind: "highli
 export async function AdminMediaNewPage({ kind }: { kind: "highlight" | "gallery" }) {
   const path = kind === "highlight" ? "/admin/highlights/new" : "/admin/images/new"; await requirePageRole("ADMIN", path);
   const label = kind === "highlight" ? "하이라이트" : "갤러리";
-  return <main className={styles.page}><header className={styles.header}><div><strong>새 콘텐츠</strong><h1>{label} 초안 만들기</h1><p>게시 전 자산 상태와 공개 문구를 다시 확인할 수 있습니다.</p></div></header><MediaTabs active={kind} /><AdminMediaForm kind={kind} /></main>;
+  return <main className={styles.page}><header className={styles.header}><div><strong>새 콘텐츠</strong><h1>{label} 초안 만들기</h1><p>게시 전 자산 상태와 공개 문구를 다시 확인할 수 있습니다.</p></div></header><MediaTabs active={kind} /><AdminMediaForm kind={kind} uploadAvailable={isRuntimeMediaAssetUploadAvailable()} /></main>;
 }
 
 export async function AdminMediaEditorPage({ kind, id }: { kind: "highlight" | "gallery"; id: string }) {
@@ -34,7 +35,7 @@ export async function AdminMediaEditorPage({ kind, id }: { kind: "highlight" | "
     kind === "highlight" ? service.getAdminHighlight(id) : service.getAdminGallery(id));
   if (result.state === "ready" && !result.data) notFound();
   if (result.state !== "ready") return <main className={styles.page}><section className={styles.state} role="alert"><Sparkles /><h2>콘텐츠를 불러오지 못했습니다.</h2><p>잠시 후 다시 시도해 주세요.</p></section></main>;
-  return <main className={styles.page}><header className={styles.header}><div><strong>{result.data!.status} · rev. {result.data!.revision}</strong><h1>{result.data!.title}</h1><p>모든 변경은 If-Match와 멱등성 키로 보호되며 보관은 원장을 삭제하지 않습니다.</p></div></header><MediaTabs active={kind} />{kind === "highlight" ? <AdminMediaForm kind="highlight" initial={result.data as import("@/modules/media").HighlightContent} /> : <AdminMediaForm kind="gallery" initial={result.data as import("@/modules/media").GalleryContent} />}</main>;
+  return <main className={styles.page}><header className={styles.header}><div><strong>{result.data!.status} · rev. {result.data!.revision}</strong><h1>{result.data!.title}</h1><p>모든 변경은 If-Match와 멱등성 키로 보호되며 보관은 원장을 삭제하지 않습니다.</p></div></header><MediaTabs active={kind} />{kind === "highlight" ? <AdminMediaForm kind="highlight" initial={result.data as import("@/modules/media").HighlightContent} uploadAvailable={isRuntimeMediaAssetUploadAvailable()} /> : <AdminMediaForm kind="gallery" initial={result.data as import("@/modules/media").GalleryContent} uploadAvailable={isRuntimeMediaAssetUploadAvailable()} />}</main>;
 }
 
-function MediaTabs({ active }: { active: "highlight" | "gallery" }) { return <nav className={styles.tabs} aria-label="미디어 관리"><Link data-active={active === "highlight"} href="/admin/highlights">하이라이트</Link><Link data-active={active === "gallery"} href="/admin/images">갤러리</Link><Link href="/admin/champions">챔피언</Link></nav>; }
+function MediaTabs({ active }: { active: "highlight" | "gallery" }) { return <nav className={styles.tabs} aria-label="미디어 관리"><Link data-active={active === "highlight"} href="/admin/highlights">하이라이트</Link><Link data-active={active === "gallery"} href="/admin/images">갤러리</Link><Link href="/admin/private-assets">비공개 자산</Link><Link href="/admin/champions">챔피언</Link></nav>; }

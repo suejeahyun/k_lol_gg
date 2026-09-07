@@ -9,11 +9,11 @@ import type {
   PrivateAssetStoragePort,
 } from "@/modules/assets/application/ports/private-asset-ports";
 import {
-  FakePrivateImageStorage,
   UnavailablePrivateImageStorage,
   fakePrivateAdaptersAllowed,
   validatePrivateScoreboardImage,
 } from "@/modules/matches/infrastructure/private-image";
+import { getRuntimePrivateAdapters } from "@/modules/matches/infrastructure/runtime-private-assets";
 
 export class DisciplineAssetInspector implements PrivateAssetInspectionPort {
   async inspect(bytes: Uint8Array, declaredContentType: string, signal: AbortSignal): Promise<PrivateAssetInspection> {
@@ -49,6 +49,6 @@ export const disciplineAssetStorageKeys: PrivateAssetStorageKeyPort = {
 
 export function createRuntimeDisciplineAssetStorage(): PrivateAssetStoragePort {
   return fakePrivateAdaptersAllowed()
-    ? new FakePrivateImageStorage()
+    ? getRuntimePrivateAdapters()?.storage ?? new UnavailablePrivateImageStorage()
     : new UnavailablePrivateImageStorage();
 }

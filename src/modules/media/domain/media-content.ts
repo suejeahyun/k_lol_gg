@@ -125,8 +125,12 @@ export function createGallery(input: Readonly<{
   imageAssetIds: readonly string[];
   showOnHome?: boolean;
   publish?: boolean;
+  allowEmptyDraft?: boolean;
 }>): GalleryContent {
-  if (input.imageAssetIds.length < 1 || input.imageAssetIds.length > 5) {
+  if (
+    input.imageAssetIds.length > 5 ||
+    (input.imageAssetIds.length < 1 && (!input.allowEmptyDraft || input.publish))
+  ) {
     throw new Error("INVALID_GALLERY_IMAGE_COUNT");
   }
   const imageAssetIds = input.imageAssetIds.map((assetId) => identifier(assetId, "GALLERY_ASSET_ID"));
@@ -198,6 +202,13 @@ export function transitionMediaStatus<T extends HighlightContent | GalleryConten
 }>): T {
   revision(input.expectedRevision);
   if (input.content.revision !== input.expectedRevision) throw new Error("STALE_MEDIA_REVISION");
+  if (
+    input.command === "PUBLISH" &&
+    "imageAssetIds" in input.content &&
+    (input.content.imageAssetIds.length < 1 || input.content.imageAssetIds.length > 5)
+  ) {
+    throw new Error("INVALID_GALLERY_IMAGE_COUNT");
+  }
   const allowed: Record<MediaPublicationStatus, Partial<Record<typeof input.command, MediaPublicationStatus>>> = {
     DRAFT: { PUBLISH: "PUBLISHED", ARCHIVE: "ARCHIVED" },
     PUBLISHED: { UNPUBLISH: "DRAFT", ARCHIVE: "ARCHIVED" },

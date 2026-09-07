@@ -108,7 +108,7 @@ function highlightInput(body: unknown): CreateHighlightInput {
   }
 }
 
-function galleryInput(body: unknown): CreateGalleryInput {
+function galleryInput(body: unknown, allowEmptyDraft = false): CreateGalleryInput {
   const value = exactObject(body, ["title", "description", "imageAssetIds"]);
   if (!Array.isArray(value.imageAssetIds)) failInput("갤러리 이미지는 1~5개여야 합니다.");
   if (typeof value.title !== "string" || typeof value.description !== "string") failInput();
@@ -119,6 +119,7 @@ function galleryInput(body: unknown): CreateGalleryInput {
       title: value.title,
       description: value.description,
       imageAssetIds,
+      allowEmptyDraft,
     });
     return { title: parsed.title, description: parsed.description, imageAssetIds: parsed.imageAssetIds };
   } catch {
@@ -194,7 +195,7 @@ export class MediaService {
 
   createGallery(context: MediaCommandContext, expectedRevision: number, body: unknown, now = new Date()) {
     if (expectedRevision !== 0) throw new MediaServiceError("PRECONDITION_FAILED", "새 갤러리는 revision 0에서 시작합니다.");
-    const input = galleryInput(body);
+    const input = galleryInput(body, true);
     return this.repository.createGallery(envelope(context, "media:galleries:create", input), input, now);
   }
 
