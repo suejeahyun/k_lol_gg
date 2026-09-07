@@ -4,3 +4,6 @@ export * from "./application/ports";
 export * from "./application/riot-application";
 export * from "./application/riot-query";
 export * from "./infrastructure/fake-riot-adapters";
+export * from "./infrastructure/riot-api-gateway";
+export * from "./infrastructure/riot-identity-protector";
+export * from "./infrastructure/riot-runtime-policy";

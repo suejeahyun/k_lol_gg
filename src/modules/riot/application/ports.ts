@@ -82,7 +82,11 @@ export interface RiotAuthorizationPort {
 
 export interface RiotJobAuthorizationVerifierPort<Transaction = RiotTransaction> {
   /** Verifies signature freshness and atomically consumes the nonce without exposing the server secret. */
-  verifyAndConsume(transaction: Transaction, intent: Extract<RiotAuthorizationIntent, { kind: "SIGNED_JOB" }>): Promise<boolean>;
+  verifyAndConsume(
+    transaction: Transaction,
+    intent: Extract<RiotAuthorizationIntent, { kind: "SIGNED_JOB" }>,
+    action: Extract<RiotAction, "CLAIM_SYNC" | "FINISH_SYNC">,
+  ): Promise<boolean>;
 }
 
 export type RiotSafeBody = Readonly<Record<string, string | number | boolean | null | readonly string[]>>;
@@ -208,6 +212,16 @@ export interface RiotGatewayPort {
     | Readonly<{ outcome: Extract<RiotSyncOutcome, { kind: "SUCCESS" }>; snapshot: RiotRankSnapshot }>
     | Readonly<{ outcome: Exclude<RiotSyncOutcome, { kind: "SUCCESS" }> }>
   >;
+}
+
+export class RiotGatewayError extends Error {
+  constructor(
+    readonly code: "NOT_FOUND" | "RATE_LIMITED" | "TRANSIENT" | "INVALID_RESPONSE",
+    readonly retryAfterSeconds?: number,
+  ) {
+    super(`RIOT_GATEWAY_${code}`);
+    this.name = "RiotGatewayError";
+  }
 }
 
 /** Production implementation encrypts PUUID; the application stores only the protected representation. */

@@ -29,7 +29,15 @@ export function RiotOwnerActions({ linkRevision, connected }: Readonly<{ linkRev
     setPending(true); setMessage(null);
     try {
       const result = await operation();
-      setMessage(result?.authorizationUrl ? `RSO 준비 주소: ${result.authorizationUrl}` : success);
+      if (result?.authorizationUrl) {
+        const authorization = new URL(result.authorizationUrl);
+        if (authorization.protocol !== "https:" || authorization.hostname !== "auth.riotgames.com") {
+          throw new Error("안전한 Riot 로그인 주소를 확인하지 못했습니다.");
+        }
+        window.location.assign(authorization.toString());
+        return;
+      }
+      setMessage(success);
     } catch (error) { setMessage(error instanceof Error ? error.message : "요청을 처리하지 못했습니다."); }
     finally { setPending(false); }
   }

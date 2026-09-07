@@ -70,6 +70,26 @@ export const riotRsoStates = riotSchema.table("rso_states", {
   check("riot_rso_exchange_pair", sql`(${table.exchangeId} IS NULL) = (${table.exchangeStartedAt} IS NULL)`),
 ]);
 
+/**
+ * Short-lived encrypted cache for an already accepted OAuth authorization code.
+ * It closes the application-transaction retry window without retaining tokens or
+ * a plaintext PUUID. The state row remains the owner and expiry authority.
+ */
+export const riotRsoExchangeResults = riotSchema.table("rso_exchange_results", {
+  stateId: uuid("state_id").primaryKey().references(() => riotRsoStates.id, { onDelete: "cascade" }),
+  codeDigest: bytea("code_digest").notNull(),
+  keyId: varchar("key_id", { length: 32 }).notNull(),
+  protectedIdentity: text("protected_identity").notNull(),
+  createdAt: timestamptz("created_at").defaultNow().notNull(),
+  expiresAt: timestamptz("expires_at").notNull(),
+}, (table) => [
+  index("riot_rso_exchange_expiry_idx").on(table.expiresAt),
+  check("riot_rso_exchange_code_digest", sql`octet_length(${table.codeDigest}) = 32`),
+  check("riot_rso_exchange_key_id", sql`char_length(btrim(${table.keyId})) BETWEEN 1 AND 32`),
+  check("riot_rso_exchange_protected", sql`char_length(${table.protectedIdentity}) BETWEEN 32 AND 4000`),
+  check("riot_rso_exchange_expiry", sql`${table.expiresAt} > ${table.createdAt}`),
+]);
+
 export const riotSyncJobs = riotSchema.table("sync_jobs", {
   id: uuid("id").primaryKey(),
   revision: bigint("revision", { mode: "number" }).default(0).notNull(),

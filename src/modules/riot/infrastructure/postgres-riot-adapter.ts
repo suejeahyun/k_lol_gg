@@ -9,6 +9,7 @@ import {
 } from "@/modules/auth/infrastructure/transaction-session-guard";
 import { auditEvents } from "@/platform/db/schema/audit";
 import { players } from "@/platform/db/schema/registry";
+import { siteSettings } from "@/platform/db/schema/operations";
 import {
   riotAccountLinks,
   riotCommandReceipts,
@@ -114,6 +115,7 @@ export class PostgresRiotAdapter implements RiotQueryRepository {
     options: Readonly<{
       featureEnabled: boolean;
       jobVerifier?: RiotJobAuthorizationVerifierPort<V2Transaction>;
+      requireDatabaseFeatureFlag?: boolean;
     }>,
   ) {
     this.dependencies = {
@@ -128,14 +130,33 @@ export class PostgresRiotAdapter implements RiotQueryRepository {
           }
         }, { isolationLevel: "serializable" }),
       },
-      features: { isEnabled: async (context) => (this.tx(context), options.featureEnabled) },
+      features: {
+        isEnabled: async (context) => {
+          const transaction = this.tx(context);
+          if (!options.featureEnabled) return false;
+          if (!options.requireDatabaseFeatureFlag) return true;
+          const row = (await transaction.select({ features: siteSettings.featuresJson })
+            .from(siteSettings)
+            .where(eq(siteSettings.id, 1))
+            .limit(1))[0];
+          return row?.features.riotIntegration === true;
+        },
+      },
       authorization: {
         recheck: async (context, input) => {
           const transaction = this.tx(context);
           const intent = input.intent;
           let actor: CurrentRiotActor | null = null;
           if (intent.kind === "SIGNED_JOB") {
-            if (!options.jobVerifier || !(await options.jobVerifier.verifyAndConsume(transaction, intent))) return null;
+            if (
+              !options.jobVerifier ||
+              !["CLAIM_SYNC", "FINISH_SYNC"].includes(input.action) ||
+              !(await options.jobVerifier.verifyAndConsume(
+                transaction,
+                intent,
+                input.action as "CLAIM_SYNC" | "FINISH_SYNC",
+              ))
+            ) return null;
             actor = { purpose: "JOB", principalId: input.principalId, jobName: "riot-sync" };
           } else {
             const locked = await lockTransactionSessionActor(transaction, {

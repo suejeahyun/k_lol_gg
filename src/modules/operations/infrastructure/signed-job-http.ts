@@ -24,7 +24,15 @@ export async function verifyOperationsJobHttpRequest(request: Request, path: str
   try {
     const body: unknown = JSON.parse(raw.text || "{}");
     if (!body || typeof body !== "object" || Array.isArray(body)) return { ok: false as const, code: "INVALID_JOB_BODY" };
-    return { ok: true as const, body, nonce, bodyDigestHex, requestId: randomUUID() };
+    return {
+      ok: true as const,
+      body,
+      nonce,
+      timestampSeconds,
+      signatureHex,
+      bodyDigestHex,
+      requestId: randomUUID(),
+    };
   } catch {
     return { ok: false as const, code: "INVALID_JOB_BODY" };
   }

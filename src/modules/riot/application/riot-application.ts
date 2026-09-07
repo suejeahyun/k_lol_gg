@@ -14,6 +14,7 @@ import {
   type RiotSyncOutcome,
 } from "../domain/riot-integration";
 import { riotReceiptIdentity, type RiotCommandContext } from "./commands";
+import { RiotGatewayError } from "./ports";
 import type {
   CurrentRiotActor,
   RiotAction,
@@ -176,7 +177,22 @@ export class RiotApplicationService {
     const replay = await this.preflight(input.context, identity, "CONNECT_DIRECT", input.playerId);
     if (replay) return { body: replay.body, replayed: true };
 
-    const resolved = await this.dependencies.gateway.resolveRiotId(riotId);
+    let resolved: Awaited<ReturnType<RiotGatewayPort["resolveRiotId"]>>;
+    try {
+      resolved = await this.dependencies.gateway.resolveRiotId(riotId);
+    } catch (error) {
+      if (error instanceof RiotGatewayError && error.code === "NOT_FOUND") {
+        throw new RiotApplicationError("NOT_FOUND", "Riot account is not available.");
+      }
+      if (error instanceof RiotGatewayError && error.code === "RATE_LIMITED") {
+        throw new RiotApplicationError(
+          "SYNC_COOLDOWN",
+          "Riot API is rate limited.",
+          error.retryAfterSeconds ?? 60,
+        );
+      }
+      throw error;
+    }
     const resolvedId = canonicalRiotId(resolved);
     if (resolvedId.normalizedKey !== riotId.normalizedKey) {
       throw new RiotApplicationError("NOT_FOUND", "Riot account is not available.");

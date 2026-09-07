@@ -140,6 +140,10 @@ export function riotNotFoundResponse(traceId?: string) {
   return problemResponse(problems.notFound, { traceId });
 }
 
+export function riotJobForbiddenResponse(traceId?: string) {
+  return problemResponse(problems.forbidden, { traceId });
+}
+
 export function exactObject(value: unknown, keys: readonly string[]): value is Record<string, unknown> {
   return Boolean(value && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length === keys.length && keys.every((key) => Object.hasOwn(value, key)));
 }
