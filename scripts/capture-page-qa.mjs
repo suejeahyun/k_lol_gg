@@ -255,10 +255,22 @@ async function main() {
         textSample: document.body?.innerText?.trim().slice(0, 240) ?? "",
         hasFrameworkError: /Internal Server Error|Application error: a server-side exception|This page could not be found/i.test(document.body?.innerText ?? "")
       })`);
+      const layoutMetrics = await client.call("Page.getLayoutMetrics");
+      const contentSize = layoutMetrics.cssContentSize ?? layoutMetrics.contentSize;
+      if (!contentSize || contentSize.width < 1 || contentSize.height < 1) {
+        throw new Error(`Chromium returned invalid full-page dimensions for ${route.path}.`);
+      }
       const screenshot = await client.call("Page.captureScreenshot", {
         format: "png",
         captureBeyondViewport: true,
         fromSurface: true,
+        clip: {
+          x: 0,
+          y: 0,
+          width: Math.ceil(contentSize.width),
+          height: Math.ceil(contentSize.height),
+          scale: 1,
+        },
       });
       const fileName = safeFileName(index, route);
       await writeFile(join(outputDirectory, fileName), Buffer.from(screenshot.data, "base64"));
@@ -283,6 +295,8 @@ async function main() {
         hasHorizontalOverflow: pageDetails.hasHorizontalOverflow,
         scrollWidth: pageDetails.scrollWidth,
         clientWidth: pageDetails.clientWidth,
+        capturedWidth: Math.ceil(contentSize.width),
+        capturedHeight: Math.ceil(contentSize.height),
         textSample: pageDetails.textSample,
         issues,
         screenshot: fileName,
