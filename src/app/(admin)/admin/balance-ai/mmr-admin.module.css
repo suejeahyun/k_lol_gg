@@ -19,6 +19,10 @@
 .list article a { color: #244b88; text-decoration-thickness: .08em; text-underline-offset: .18em; }
 .list p { margin: 0; }
 .empty,.notice,.state { padding: 1.4rem; color: #66758b; text-align: center; }
+.overview { display: flex; flex-wrap: wrap; align-items: center; gap: .7rem; margin-top: 1rem; padding: 1.15rem; border: 1px solid #dce6f4; border-radius: 1.15rem; background: #fff; }
+.overview h2 { width: 100%; margin: 0; font-size: 1rem; }
+.overview p { width: 100%; margin: 0; color: #586980; line-height: 1.65; }
+.overview a { padding: .55rem .75rem; border-radius: .7rem; color: #315eaa; background: #edf4ff; font-weight: 800; text-decoration: none; }
 .actions form { display: grid; grid-template-columns: repeat(4,minmax(120px,1fr)); gap: .7rem; padding: 1rem; }
 .actions label { display: grid; gap: .35rem; color: #61718a; font-size: .72rem; font-weight: 800; }
 .actions input,.actions select { min-height: 2.6rem; border: 1px solid #dce6f4; border-radius: .7rem; padding: .55rem; }

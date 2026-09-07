@@ -29,6 +29,9 @@ test("admin MMR workspace connects protected recalculate, adjustment, players an
   for (const contract of ["requirePageRole", 'tab === "players"', 'tab === "reviews"', 'raw.action === "recalculate"', "selectedReviewId", "pendingSourceCount", "MmrAdminActions", "?tab=balance"]) {
     assert.equal(page.includes(contract), true, contract);
   }
+  for (const state of ['data-mmr-state="summary"', 'data-mmr-state="players"', 'data-mmr-state="reviews"']) {
+    assert.equal(page.includes(state), true, state);
+  }
   for (const contract of [
     'fetch(`/api/admin/balance-ai/${path}`',
     '"If-Match"',
