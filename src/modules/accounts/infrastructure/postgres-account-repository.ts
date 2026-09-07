@@ -1181,7 +1181,13 @@ export class PostgresAccountRepository implements AccountRepository {
       // Mark domain admission before receipt/advisory-lock work. A credential
       // change that commits while this HTTP intent waits must still supersede
       // the older recovery attempt.
-      const admittedAt = await transactionClock(transaction);
+      const databaseAdmissionClock = await transactionClock(transaction);
+      // The HTTP command is created before the repository competes for a pool
+      // connection. Use the earlier trusted boundary so a request already
+      // admitted by the application cannot become "new" merely because the
+      // pool or receipt lock was busy. A future-skewed app clock is capped by
+      // the database clock; an older clock only fails closed.
+      const admittedAt = new Date(Math.min(command.now.getTime(), databaseAdmissionClock.getTime()));
       const started = await startMutation(transaction, command, "account:reset-request");
       if (started.replay) return started.replay;
 
