@@ -206,6 +206,11 @@ test("S05-B persists canonical full-ledger MMR replay without competing for the 
     const publicPage = await repository.listPlayers({ query: "MMR플레이어", position: null, page: 1, pageSize: 20 });
     assert.equal(publicPage.total, 10);
     assert.deepEqual(Object.keys(publicPage.items[0]!).sort(), ["confidence", "displayName", "overallScore", "playerId", "positions", "riotId", "sampleSize"]);
+
+    // The shared HTTP verifier starts from a deliberately empty active-season
+    // state. Keep this contract's durable history, but release its temporary
+    // active-season singleton before the next isolated-harness phase.
+    await database.update(seasons).set({ status: "ENDED", endedAt: now, revision: 1 }).where(eq(seasons.id, seasonId));
   } finally {
     await pool.end();
   }
