@@ -60,7 +60,7 @@ export default async function RankingsPage({
             </select></label>
             <label>최소 참여<input name="minParticipation" type="number" min="0" max="999" defaultValue={minimumParticipation} /></label>
             <button type="submit">기준 적용</button>
-            <Link href="/rankings/mmr" aria-disabled="true">MMR 준비 중</Link>
+            <Link href="/rankings/mmr">MMR 랭킹 보기</Link>
           </form>
 
           {result.data.ranking.season === null ? (

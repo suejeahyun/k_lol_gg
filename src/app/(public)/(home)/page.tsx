@@ -32,7 +32,7 @@ const taskCards = [
     href: "/players",
     icon: UsersRound,
     tone: "sky",
-    status: "페이지 준비",
+    status: "이용 가능",
   },
   {
     title: "경기 살펴보기",
@@ -193,7 +193,8 @@ export default async function HomePage() {
           <span data-state="ready">플레이어 등록부 <strong>페이지·포트 준비</strong></span>
           <span data-state="ready">시즌 요약 <strong>DB 연결</strong></span>
           <span data-state="ready">최근 경기 <strong>DB 연결</strong></span>
-          <span>구인·대회·갤러리 <strong>구현 진행 중</strong></span>
+          <span data-state="ready">구인·갤러리 <strong>DB 연결</strong></span>
+          <span>이벤트·멸망전 <strong>구현 진행 중</strong></span>
         </div>
       </section>
     </div>

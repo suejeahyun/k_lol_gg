@@ -1,4 +1,5 @@
 import { Activity, Database, RefreshCw, ShieldCheck } from "lucide-react";
+import Link from "next/link";
 
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
 import { loadRuntimeAdminStatisticsData } from "@/modules/statistics/infrastructure/runtime-statistics-data";
@@ -16,7 +17,7 @@ export default async function AdminBalancePage() {
     <main className={styles.page}>
       <header className={styles.header}>
         <div><span><ShieldCheck aria-hidden="true" /> S05 보호된 작업 공간</span><h1>통계·랭킹 상태</h1><p>경기 원본에서 만든 시즌 projection과 처리 대기 이벤트를 확인합니다.</p></div>
-        <strong>MMR 연결 예정</strong>
+        <Link href="/admin/balance-ai">MMR 작업대</Link>
       </header>
 
       {result.state === "ready" ? (
