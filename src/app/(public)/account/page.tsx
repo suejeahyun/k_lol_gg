@@ -40,7 +40,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
   const rawTab = (await searchParams).tab;
   const tab = (Array.isArray(rawTab) ? rawTab[0] : rawTab) === "player" ? "player" : "overview";
   if (!account) {
-    return <div className={styles.page}><section className={styles.panel} role="alert"><h2>계정 정보를 불러오지 못했습니다.</h2><p>저장소 연결을 확인한 뒤 다시 시도해 주세요.</p></section></div>;
+    return <div className={styles.page}><section className={styles.panel} role="alert"><h1>계정 정보를 불러오지 못했습니다.</h1><p>저장소 연결을 확인한 뒤 다시 시도해 주세요.</p></section></div>;
   }
   return (
     <div className={styles.page}>

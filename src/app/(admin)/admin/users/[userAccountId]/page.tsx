@@ -17,7 +17,7 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
   const rawId = (await params).userAccountId;
   const session = await requirePageRole("ADMIN", `/admin/users/${rawId}`);
   const repository = getRuntimeAccountRepository();
-  if (!repository) return <main className={styles.page}><section className={styles.state}><h2>계정 저장소 연결이 필요합니다.</h2></section></main>;
+  if (!repository) return <main className={styles.page}><section className={styles.state} role="status"><h1>계정 저장소 연결이 필요합니다.</h1></section></main>;
   const id = rawId;
   if (!isCanonicalAccountUuid(id)) {
     const legacyId = parseLegacyAccountIntegerId(id);

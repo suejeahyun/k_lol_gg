@@ -22,7 +22,7 @@ export default async function AdminMatchDetailPage({ params, searchParams }: { p
   });
   if (result.state === "ready" && !result.data[0]) notFound();
   if (result.state !== "ready" || !result.data[0]) {
-    return <main className={styles.page}><Link href="/admin/matches"><ArrowLeft size={16} aria-hidden="true" /> 경기 목록</Link><section className={styles.state}>경기 데이터를 불러오지 못했습니다.</section></main>;
+    return <main className={styles.page}><Link href="/admin/matches"><ArrowLeft size={16} aria-hidden="true" /> 경기 목록</Link><section className={styles.state} role={result.state === "error" ? "alert" : "status"}><h1>경기 데이터를 불러오지 못했습니다.</h1></section></main>;
   }
   const [match, catalog] = result.data;
   const rawTab = (await searchParams).tab;
