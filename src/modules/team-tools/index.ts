@@ -2,3 +2,8 @@ export * from "./domain/coin-toss";
 export * from "./domain/random-source";
 export * from "./domain/random-team";
 export * from "./domain/team-balance";
+export * from "./domain/team-balance-draft";
+export * from "./application/team-balance-service";
+export * from "./application/ports/team-balance-repository";
+export * from "./application/ports/team-balance-rating-provider";
+export * from "./application/ports/riot-solo-rank-sync";

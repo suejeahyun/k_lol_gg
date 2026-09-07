@@ -6,3 +6,4 @@ export * from "./seasons";
 export * from "./matches";
 export * from "./catalog";
 export * from "./statistics";
+export * from "./team-tools";

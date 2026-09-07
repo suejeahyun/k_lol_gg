@@ -29,3 +29,22 @@ export function buildLegacyCoinTossDestination(
   appendReviewedSource(destination, searchParams.source);
   return `${destination.pathname}${destination.search}`;
 }
+
+export function buildLegacyTeamBalanceDestination(searchParams: LegacyTeamToolSearchParams): string {
+  const destination = new URL("https://v2.invalid/tools/team-balance");
+  appendReviewedSource(destination, searchParams.source);
+  return `${destination.pathname}${destination.search}`;
+}
+
+export function buildLegacyTeamBalanceDraftDestination(
+  draftId: string,
+  searchParams: LegacyTeamToolSearchParams,
+): string {
+  const normalizedDraftId = draftId.toLocaleLowerCase("en-US");
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(normalizedDraftId)) {
+    return buildLegacyTeamBalanceDestination(searchParams);
+  }
+  const destination = new URL(`https://v2.invalid/tools/team-balance/drafts/${normalizedDraftId}`);
+  appendReviewedSource(destination, searchParams.source);
+  return `${destination.pathname}${destination.search}`;
+}

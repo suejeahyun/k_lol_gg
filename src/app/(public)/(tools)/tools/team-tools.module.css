@@ -574,3 +574,105 @@
     animation: none;
   }
 }
+
+.primaryLink,
+.backLink {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 44px;
+  align-items: center;
+  gap: 7px;
+  border-radius: 13px;
+  padding: 0 15px;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.primaryLink { color: white; background: linear-gradient(135deg, #4c89ca, #755dc0); }
+.backLink { color: #566884; background: rgba(255, 255, 255, 0.82); }
+
+.balanceForm,
+.draftHeader,
+.candidateSection,
+.manualSection,
+.draftActions {
+  border: 1px solid rgba(118, 151, 198, 0.2);
+  border-radius: 25px;
+  padding: clamp(20px, 3vw, 30px);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 15px 40px rgba(76, 105, 155, 0.09);
+}
+
+.fieldLabel input,
+.balanceRows select,
+.manualGrid select {
+  min-height: 42px;
+  border: 1px solid rgba(102, 139, 190, 0.28);
+  border-radius: 11px;
+  padding: 0 10px;
+  color: #34435d;
+  background: #fbfdff;
+}
+
+.balanceRows {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.balanceRows fieldset {
+  display: grid;
+  grid-template-columns: minmax(170px, 1.5fr) repeat(4, minmax(105px, 0.75fr));
+  gap: 8px;
+  border: 1px solid rgba(118, 151, 198, 0.18);
+  border-radius: 16px;
+  padding: 14px;
+  background: #fbfdff;
+}
+
+.balanceRows legend { padding: 0 5px; color: #655795; font-size: 11px; font-weight: 900; }
+.balanceRows label,
+.manualGrid label { display: grid; gap: 5px; color: #596982; font-size: 10px; font-weight: 800; }
+.balanceRows select { min-width: 0; width: 100%; }
+
+.draftHeader { display: flex; align-items: center; justify-content: space-between; gap: 20px; background: linear-gradient(135deg, #effaff, #f4efff); }
+.draftHeader span { color: #6b5aa1; font-size: 10px; font-weight: 950; letter-spacing: .13em; }
+.draftHeader h1 { margin: 5px 0; color: var(--ink-strong); font: 950 clamp(28px, 4vw, 42px)/1.15 var(--font-heading); letter-spacing: -.04em; }
+.draftHeader p { margin: 0; color: var(--text-muted); font-size: 12px; }
+.draftHeader > strong { border-radius: 999px; padding: 9px 13px; color: #46705d; background: #e7f8ef; font-size: 12px; }
+
+.candidateGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.candidateGrid article { display: grid; gap: 13px; border: 1px solid rgba(118, 151, 198, .2); border-radius: 18px; padding: 15px; background: #fbfdff; }
+.candidateGrid article[data-selected="true"] { border-color: #7d75c8; box-shadow: inset 0 0 0 2px rgba(125,117,200,.14); }
+.candidateGrid header { display: flex; justify-content: space-between; gap: 8px; }
+.candidateGrid header strong { color: #4a6093; }
+.candidateGrid header span,
+.candidateGrid article > p { color: var(--text-muted); font-size: 10px; }
+.candidateGrid article > p { margin: 0; line-height: 1.5; }
+.candidateGrid article > button { min-height: 42px; border: 0; border-radius: 12px; color: white; background: linear-gradient(135deg,#4c89ca,#755dc0); font-weight: 850; cursor: pointer; }
+
+.compactTeams { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+.compactTeams > div { display: grid; gap: 5px; border-radius: 12px; padding: 9px; background: #eef7ff; }
+.compactTeams > div:last-child { background: #fff0f5; }
+.compactTeams b { color: #52678b; font-size: 11px; }
+.compactTeams span { display: grid; grid-template-columns: 28px minmax(0,1fr); gap: 4px; overflow: hidden; color: #3e4b61; font-size: 10px; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
+.compactTeams small { color: #7b82a1; font-size: 8px; }
+
+.manualGrid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; margin-bottom: 15px; }
+.manualGrid label { grid-template-columns: 90px minmax(0,1fr); align-items: center; }
+.draftActions { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
+.draftActions p { margin: 0 0 0 auto; color: var(--text-muted); font-size: 12px; font-weight: 750; }
+
+@media (max-width: 1050px) {
+  .balanceRows { grid-template-columns: 1fr; }
+  .candidateGrid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 720px) {
+  .balanceRows fieldset { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .balanceRows fieldset label:first-of-type { grid-column: 1 / -1; }
+  .manualGrid { grid-template-columns: 1fr; }
+  .draftHeader { align-items: flex-start; flex-direction: column; }
+  .draftActions p { width: 100%; margin-left: 0; }
+}

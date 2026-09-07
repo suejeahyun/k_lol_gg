@@ -29,8 +29,13 @@ const disposableRoot = resolve(workspaceRoot, ".tmp/postgres-tests");
 const postgresMajor = 18;
 const contractScope = process.env.V2_DB_CONTRACT_SCOPE?.trim().toLocaleLowerCase("en-US") || "all";
 
-if (contractScope !== "all" && contractScope !== "matches" && contractScope !== "statistics") {
-  throw new Error("V2_DB_CONTRACT_SCOPE must be 'all', 'matches', or 'statistics'.");
+if (
+  contractScope !== "all" &&
+  contractScope !== "matches" &&
+  contractScope !== "statistics" &&
+  contractScope !== "team-tools"
+) {
+  throw new Error("V2_DB_CONTRACT_SCOPE must be 'all', 'matches', 'statistics', or 'team-tools'.");
 }
 
 type EphemeralCluster = Readonly<{
@@ -421,10 +426,12 @@ async function runContractTests(connectionString: string): Promise<void> {
     "tests/database/account-lifecycle.contract.test.ts",
     "tests/database/match-snapshot.contract.test.ts",
     "tests/database/statistics-projection.contract.test.ts",
+    "tests/database/team-balance-draft.contract.test.ts",
   ];
   const scopedTestFiles: Readonly<Record<string, readonly string[]>> = {
     matches: ["tests/database/match-snapshot.contract.test.ts"],
     statistics: ["tests/database/statistics-projection.contract.test.ts"],
+    "team-tools": ["tests/database/team-balance-draft.contract.test.ts"],
   };
   const testFiles = contractScope === "all" ? allTestFiles : scopedTestFiles[contractScope]!;
   for (const relativeTestFile of testFiles) {

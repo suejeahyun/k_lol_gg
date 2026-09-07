@@ -58,9 +58,9 @@ export const canonicalUserRoutes = [
   { template: "/rankings", label: "시즌 랭킹", section: "registry-match", implementationState: "page-contract" },
   { template: "/rankings/mmr", label: "MMR", section: "registry-match", implementationState: "planned" },
 
-  { template: "/tools/team-balance", label: "팀 밸런스", section: "tools", implementationState: "planned" },
+  { template: "/tools/team-balance", label: "팀 밸런스", section: "tools", implementationState: "page-contract" },
   { template: "/tools/team-balance/drafts", label: "밸런스 초안", section: "tools", implementationState: "planned" },
-  { template: "/tools/team-balance/drafts/[draftId]", label: "초안 상세", section: "tools", implementationState: "planned" },
+  { template: "/tools/team-balance/drafts/[draftId]", label: "초안 상세", section: "tools", implementationState: "page-contract" },
   { template: "/tools/random-team", label: "랜덤 팀", section: "tools", implementationState: "page-contract" },
   { template: "/tools/coin-toss", label: "코인 토스", section: "tools", implementationState: "page-contract" },
 

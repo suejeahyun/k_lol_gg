@@ -51,10 +51,48 @@ test("코인 토스 화면은 상태머신과 animation/fallback 공개 경로�
 test("공개 도구 페이지에는 상호 이동과 canonical metadata가 있다", () => {
   const randomPage = source("../src/app/(public)/(tools)/tools/random-team/page.tsx");
   const coinPage = source("../src/app/(public)/(tools)/tools/coin-toss/page.tsx");
+  const balancePage = source("../src/app/(public)/(tools)/tools/team-balance/page.tsx");
 
-  for (const page of [randomPage, coinPage]) {
+  for (const page of [randomPage, coinPage, balancePage]) {
     assert.equal(page.includes('href="/tools/random-team"'), true);
     assert.equal(page.includes('href="/tools/coin-toss"'), true);
     assert.equal(page.includes("alternates: { canonical:"), true);
+  }
+});
+
+test("팀 밸런스 화면은 승인 계정, 10명 입력, top3·수동·저장·재평가 수명주기를 연결한다", () => {
+  const page = source("../src/app/(public)/(tools)/tools/team-balance/page.tsx");
+  const builder = source("../src/app/(public)/(tools)/tools/team-balance/team-balance-builder.tsx");
+  const detail = source("../src/app/(public)/(tools)/tools/team-balance/drafts/[draftId]/team-balance-draft-workspace.tsx");
+
+  for (const contract of [
+    "getCurrentSession",
+    "accountStatus",
+    "loadRuntimePlayerCatalog",
+    'role="status"',
+    'href="/login?next=%2Ftools%2Fteam-balance"',
+  ]) {
+    assert.equal(page.includes(contract), true, contract);
+  }
+  for (const contract of [
+    "Array.from({ length: 10 }",
+    'fetch("/api/team-tools/drafts"',
+    '"If-Match"',
+    '"Idempotency-Key"',
+    'role="alert"',
+    "상위 3개 계산",
+    "입력 초기화",
+  ]) {
+    assert.equal(builder.includes(contract), true, contract);
+  }
+  for (const contract of [
+    "candidate.score.totalPenalty",
+    'mutate("select"',
+    'mutate("save"',
+    'mutate("reevaluate"',
+    'aria-live="polite"',
+    "수동 배치 평가·선택",
+  ]) {
+    assert.equal(detail.includes(contract), true, contract);
   }
 });

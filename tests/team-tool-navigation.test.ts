@@ -4,6 +4,8 @@ import test from "node:test";
 import {
   buildLegacyCoinTossDestination,
   buildLegacyRandomTeamDestination,
+  buildLegacyTeamBalanceDestination,
+  buildLegacyTeamBalanceDraftDestination,
 } from "../src/modules/navigation/application/legacy-team-tool-redirects";
 
 test("랜덤 팀 legacy redirect는 mode와 PWA source allowlist만 보존한다", () => {
@@ -20,6 +22,22 @@ test("랜덤 팀 legacy redirect는 mode와 PWA source allowlist만 보존한다
   assert.equal(
     buildLegacyRandomTeamDestination({ mode: ["tier", "random"], source: "web" }),
     "/tools/random-team",
+  );
+});
+
+test("팀 밸런스 legacy redirect는 검토한 PWA source만 보존한다", () => {
+  const id = "018fa2d0-8d4e-7abc-8def-1234567890ab";
+  assert.equal(
+    buildLegacyTeamBalanceDestination({ source: "pwa", next: "//evil.example" }),
+    "/tools/team-balance?source=pwa",
+  );
+  assert.equal(
+    buildLegacyTeamBalanceDraftDestination(id.toUpperCase(), { source: "pwa", token: "drop" }),
+    `/tools/team-balance/drafts/${id}?source=pwa`,
+  );
+  assert.equal(
+    buildLegacyTeamBalanceDraftDestination("../admin", { source: "pwa" }),
+    "/tools/team-balance?source=pwa",
   );
 });
 

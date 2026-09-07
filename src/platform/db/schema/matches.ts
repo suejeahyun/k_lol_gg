@@ -19,6 +19,7 @@ import { assetsSchema, competitionSchema } from "./namespaces";
 import { bytea } from "./primitives";
 import { players } from "./registry";
 import { seasons } from "./seasons";
+import { teamBalanceDrafts } from "./team-tools";
 
 const timestamptz = (name: string) => timestamp(name, { mode: "date", withTimezone: true });
 
@@ -91,8 +92,9 @@ export const matchSeries = competitionSchema.table(
     seasonId: uuid("season_id")
       .notNull()
       .references(() => seasons.id, { onDelete: "restrict" }),
-    // S06 may add a foreign key once the team-balance aggregate is introduced.
-    teamBalanceDraftId: uuid("team_balance_draft_id"),
+    teamBalanceDraftId: uuid("team_balance_draft_id").references(() => teamBalanceDrafts.id, {
+      onDelete: "restrict",
+    }),
     title: varchar("title", { length: 160 }).notNull(),
     titleNormalized: varchar("title_normalized", { length: 160 }).notNull(),
     playedOn: date("played_on", { mode: "string" }).notNull(),
