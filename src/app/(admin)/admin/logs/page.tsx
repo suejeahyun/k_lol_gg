@@ -37,7 +37,7 @@ export default async function AdminLogsPage({
       <Link className={styles.link} aria-current={view === "stats" ? "page" : undefined} href="/admin/logs?view=stats">통계</Link>
       <Link className={styles.link} aria-current={view === "ai-requests" ? "page" : undefined} href="/admin/logs?view=ai-requests">AI 요청 원장</Link>
     </nav>
-    {result.state === "unavailable" ? <section className={styles.state}>감사 저장소에 연결할 수 없습니다.</section> : result.state === "error" ? <section className={styles.state}>운영 로그를 읽는 중 오류가 발생했습니다.</section> : <>
+    {result.state === "unavailable" ? <section className={styles.state} role="status">감사 저장소에 연결할 수 없습니다.</section> : result.state === "error" ? <section className={styles.state} role="alert">운영 로그를 읽는 중 오류가 발생했습니다.</section> : <>
       {view === "stats" ? <section className={styles.grid} aria-label="감사 로그 통계">
         <article className={styles.card}>전체 이벤트<strong>{result.data.stats.totalEvents}</strong></article>
         <article className={styles.card}>24시간 이벤트<strong>{result.data.stats.eventsLast24Hours}</strong></article>

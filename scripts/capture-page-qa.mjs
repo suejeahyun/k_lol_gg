@@ -266,6 +266,11 @@ async function main() {
         finalUrl: location.href,
         responseStatus: performance.getEntriesByType("navigation")[0]?.responseStatus ?? null,
         heading: document.querySelector("h1")?.textContent?.trim() ?? null,
+        hasVisibleRuntimeFailure: [...document.querySelectorAll('h1, h2, [role="alert"]')].some((element) => {
+          const style = getComputedStyle(element);
+          if (style.display === "none" || style.visibility === "hidden") return false;
+          return /불러오지 못했|불러오지 못했습니다|불러올 수 없|읽는 중 오류가 발생|Internal Server Error|Application error: a server-side exception/i.test(element.textContent ?? "");
+        }),
         hasHorizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
         scrollWidth: document.documentElement.scrollWidth,
         clientWidth: document.documentElement.clientWidth,
@@ -301,6 +306,7 @@ async function main() {
           : null,
         pageDetails.hasHorizontalOverflow ? "HORIZONTAL_OVERFLOW" : null,
         pageDetails.hasFrameworkError ? "FRAMEWORK_ERROR" : null,
+        pageDetails.hasVisibleRuntimeFailure ? "VISIBLE_RUNTIME_FAILURE" : null,
         !pageDetails.heading ? "MISSING_H1" : null,
       ].filter(Boolean);
       records.push({

@@ -11,3 +11,10 @@ test("full-page capture uses stable light reduced-motion rendering and wakes laz
   assert.match(source, /scrollTo\(0, 0\)/);
   assert.ok(source.indexOf("document.documentElement.scrollHeight") < source.indexOf("Page.captureScreenshot"));
 });
+
+test("full-page capture fails visible repository error states even when HTTP is 200", () => {
+  assert.match(source, /hasVisibleRuntimeFailure/);
+  assert.match(source, /VISIBLE_RUNTIME_FAILURE/);
+  assert.ok(source.includes('[role="alert"]'));
+  assert.match(source, /불러오지 못했습니다/);
+});
