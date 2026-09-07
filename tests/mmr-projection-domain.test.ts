@@ -97,8 +97,11 @@ test("public and team-balance DTOs expose only bounded score summaries", () => {
   const balanceDto = toTeamBalanceMmrProviderDto(profile);
   assert.deepEqual(Object.keys(publicDto).sort(), ["confidence", "overallScore", "playerId", "positions", "sampleSize"]);
   assert.equal("reasonCode" in publicDto, false);
-  assert.ok(balanceDto.overall >= 1 && balanceDto.overall <= 100);
-  assert.ok(balanceDto.positions.TOP.confidence >= 0 && balanceDto.positions.TOP.confidence <= 1);
+  assert.equal(typeof balanceDto.overall, "number");
+  assert.ok(balanceDto.overall! >= 1 && balanceDto.overall! <= 100);
+  const top = balanceDto.positions?.TOP;
+  assert.ok(top && top.confidence !== null);
+  assert.ok(top.confidence >= 0 && top.confidence <= 1);
 });
 
 test("malformed rosters, duplicate sources and unsafe adjustments fail closed", () => {
