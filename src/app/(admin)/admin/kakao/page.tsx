@@ -1,9 +1,11 @@
 import { Bot, CircleAlert, Clock3, DatabaseZap, MessagesSquare, ShieldCheck } from "lucide-react";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 
 import { loadRuntimeRecruiting } from "@/modules/recruiting/infrastructure/runtime-recruiting";
 import { loadRuntimeKakaoAdmin } from "@/modules/recruiting/kakao-admin/runtime";
 import { readKakaoRuntimeConfiguration } from "@/modules/recruiting/kakao-admin/domain";
+import { parseKakaoAdminTabQuery } from "@/modules/recruiting/kakao-admin/tab-query";
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
 
 import styles from "./kakao.module.css";
@@ -12,19 +14,13 @@ import { KakaoSettingsForm } from "./kakao-settings-form";
 
 export const dynamic = "force-dynamic";
 
-const KAKAO_TABS = ["recruits", "scrims", "stats", "settings", "logs", "health"] as const;
-type KakaoTab = (typeof KAKAO_TABS)[number];
-
-function normalizeTab(value: string | undefined): KakaoTab {
-  return KAKAO_TABS.includes(value as KakaoTab) ? value as KakaoTab : "recruits";
-}
-
 export default async function AdminKakaoPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const tab = normalizeTab((await searchParams).tab);
+  const tab = parseKakaoAdminTabQuery(await searchParams);
+  if (!tab) notFound();
   const session = await requirePageRole("ADMIN", `/admin/kakao?tab=${tab}`);
   const [result, settingsResult] = await Promise.all([
     loadRuntimeRecruiting((service) => service.getAdminStatus()),

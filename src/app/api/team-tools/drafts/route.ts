@@ -14,7 +14,7 @@ import {
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  const authorization = await requireTeamBalanceApiSession("USER");
+  const authorization = await requireTeamBalanceApiSession("USER", request);
   if (!authorization.ok) return authorization.response;
   const traceId = readValidatedTraceId(request.headers);
   const query = parseTeamBalanceDraftListQuery(request.url);
@@ -33,7 +33,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const authorization = await requireTeamBalanceApiSession("USER");
+  const authorization = await requireTeamBalanceApiSession("USER", request);
   if (!authorization.ok) return authorization.response;
   const prepared = await prepareTeamBalanceMutation(request, "team-tools:drafts:create", authorization.session);
   if (!prepared.ok) return prepared.response;

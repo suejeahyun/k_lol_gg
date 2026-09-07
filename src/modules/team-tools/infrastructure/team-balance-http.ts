@@ -22,6 +22,7 @@ import {
 import type { TeamBalanceCommandContext } from "../application/team-balance-service";
 import type { TeamBalanceMutationResult } from "../application/ports/team-balance-repository";
 import { TeamBalanceServiceError } from "../domain/team-balance-draft";
+import { requireSiteFeature } from "@/modules/operations/infrastructure/site-feature-access";
 
 const problems = Object.freeze({
   forbidden: definePublicProblem({ code: "FORBIDDEN", status: 403, title: "요청 권한이 없습니다.", detail: "이 팀 초안에 접근할 수 있는 계정으로 다시 시도해 주세요." }),
@@ -35,9 +36,13 @@ const problems = Object.freeze({
   unauthenticated: definePublicProblem({ code: "UNAUTHENTICATED", status: 401, title: "로그인이 필요합니다.", detail: "승인된 계정으로 로그인한 뒤 다시 시도해 주세요." }),
 });
 
-export async function requireTeamBalanceApiSession(requiredRole: AuthRole) {
+export async function requireTeamBalanceApiSession(requiredRole: AuthRole, request: Request) {
   const decision = await authorizeApiRole(requiredRole);
-  if (decision.allowed) return { ok: true as const, session: decision.session };
+  if (decision.allowed) {
+    const featureFailure = await requireSiteFeature(request, "teamBalance");
+    if (featureFailure) return { ok: false as const, response: featureFailure };
+    return { ok: true as const, session: decision.session };
+  }
   return {
     ok: false as const,
     response: problemResponse(decision.reason === "UNAUTHENTICATED" ? problems.unauthenticated : problems.forbidden),

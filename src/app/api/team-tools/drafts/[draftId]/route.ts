@@ -11,7 +11,7 @@ import {
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request, context: { params: Promise<{ draftId: string }> }) {
-  const authorization = await requireTeamBalanceApiSession("USER");
+  const authorization = await requireTeamBalanceApiSession("USER", request);
   if (!authorization.ok) return authorization.response;
   const traceId = readValidatedTraceId(request.headers);
   if (new URL(request.url).searchParams.size > 0) return teamBalanceErrorResponse(new TeamBalanceServiceError("INVALID_INPUT", "query"), traceId);

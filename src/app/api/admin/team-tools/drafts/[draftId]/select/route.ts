@@ -2,7 +2,7 @@ import { getRuntimeTeamBalanceService } from "@/modules/team-tools/infrastructur
 import { prepareTeamBalanceMutation, requireTeamBalanceApiSession, teamBalanceErrorResponse, teamBalanceMutationResponse, teamBalanceUnavailableResponse } from "@/modules/team-tools/infrastructure/team-balance-http";
 
 export async function POST(request: Request, context: { params: Promise<{ draftId: string }> }) {
-  const auth = await requireTeamBalanceApiSession("ADMIN"); if (!auth.ok) return auth.response;
+  const auth = await requireTeamBalanceApiSession("ADMIN", request); if (!auth.ok) return auth.response;
   const prepared = await prepareTeamBalanceMutation(request, "team-tools:drafts:select", auth.session); if (!prepared.ok) return prepared.response;
   const service = getRuntimeTeamBalanceService(); if (!service) return teamBalanceUnavailableResponse(prepared.value.traceId);
   try { return teamBalanceMutationResponse(await service.selectCandidate(prepared.value.context, (await context.params).draftId, prepared.value.expectedRevision, prepared.value.body), prepared.value.traceId); }

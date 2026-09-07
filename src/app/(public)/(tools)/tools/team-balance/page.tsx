@@ -4,8 +4,10 @@ import { Coins, Dices, FolderOpen, LogIn, Scale, Sparkles } from "lucide-react";
 
 import { getCurrentSession } from "@/modules/auth/infrastructure/runtime-session";
 import { loadRuntimePlayerCatalog } from "@/modules/players/infrastructure/runtime-player-data";
+import { readSiteFeatureState } from "@/modules/operations/infrastructure/site-feature-access";
 
 import { TeamBalanceBuilder } from "./team-balance-builder";
+import { TeamBalanceFeatureState } from "./team-balance-feature-state";
 import styles from "../team-tools.module.css";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +18,8 @@ export const metadata: Metadata = {
 };
 
 export default async function TeamBalancePage() {
+  const featureState = await readSiteFeatureState("teamBalance");
+  if (featureState !== "enabled") return <TeamBalanceFeatureState state={featureState} />;
   const session = await getCurrentSession("ACCOUNT");
   const approved = session?.accountStatus === "APPROVED" && !session.mustChangePassword;
   const catalog = approved

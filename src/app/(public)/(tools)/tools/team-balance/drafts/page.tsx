@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Clock3, FolderOpen, Plus, Scale } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock3, FolderOpen, Scale } from "lucide-react";
 
 import { requireApprovedAccountPage } from "@/modules/auth/infrastructure/server-authorization";
-import { loadRuntimeTeamBalance } from "@/modules/team-tools/infrastructure/runtime-team-balance";
-import { parseTeamBalanceDraftListQuery } from "@/modules/team-tools/infrastructure/team-balance-query";
+import { readSiteFeatureState } from "@/modules/operations/infrastructure/site-feature-access";
+import { loadRuntimeTeamBalance, loadRuntimeTeamBalanceRecommendations } from "@/modules/team-tools/infrastructure/runtime-team-balance";
+import { parseTeamBalanceDraftsPageQuery } from "@/modules/team-tools/infrastructure/team-recommendation-query";
 
 import styles from "../../team-tools.module.css";
+import { TeamBalanceFeatureState } from "../team-balance-feature-state";
+import { TeamBalanceRecommendationsPanel } from "./team-balance-recommendations-panel";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -17,15 +20,6 @@ export const metadata: Metadata = {
 };
 
 const statusLabel = Object.freeze({ EVALUATED: "평가됨", SAVED: "저장됨", ARCHIVED: "보관됨" });
-
-function urlFromSearchParams(input: Record<string, string | string[] | undefined>) {
-  const params = new URLSearchParams();
-  for (const [key, value] of Object.entries(input)) {
-    if (Array.isArray(value)) value.forEach((entry) => params.append(key, entry));
-    else if (value !== undefined) params.set(key, value);
-  }
-  return `http://local/tools/team-balance/drafts?${params}`;
-}
 
 function pageHref(page: number) {
   return page > 1 ? `/tools/team-balance/drafts?page=${page}` : "/tools/team-balance/drafts";
@@ -45,26 +39,46 @@ export default async function TeamBalanceDraftsPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const session = await requireApprovedAccountPage("/tools/team-balance/drafts");
-  const query = parseTeamBalanceDraftListQuery(urlFromSearchParams(await searchParams));
+  const featureState = await readSiteFeatureState("teamBalance");
+  if (featureState !== "enabled") return <TeamBalanceFeatureState state={featureState} />;
+  const query = parseTeamBalanceDraftsPageQuery(await searchParams);
+  const listQuery = query?.view === "drafts" ? query.list : { page: 1, pageSize: 50 };
   const result = query
     ? await loadRuntimeTeamBalance((service) => service.listDrafts(
         { actorUserAccountId: session.userId, authorization: "OWNER" },
-        query,
+        listQuery,
       ))
     : { state: "error" as const };
+  const selectedDraftId = query?.view === "recommendations"
+    ? query.draftId ?? (result.state === "ready" ? result.data.items[0]?.id ?? null : null)
+    : null;
+  const recommendation = query?.view === "recommendations" && selectedDraftId
+    ? await loadRuntimeTeamBalanceRecommendations((service) => service.getRecommendation(
+        { actorUserAccountId: session.userId, authorization: "OWNER" }, selectedDraftId, query.team,
+      ))
+    : null;
 
   return (
     <div className={`page-wrap ${styles.page}`}>
       <section className={styles.draftListHeader} aria-labelledby="draft-list-title">
         <div>
-          <span>MY TEAM DRAFTS</span>
-          <h1 id="draft-list-title">내 팀 밸런스 초안</h1>
-          <p>계정에 안전하게 저장된 배치를 다시 열고, 통계가 달라졌다면 재평가할 수 있어요.</p>
+          <span>{query?.view === "recommendations" ? "PICK · BAN" : "MY TEAM DRAFTS"}</span>
+          <h1 id="draft-list-title">{query?.view === "recommendations" ? "저장 팀 밴픽 추천" : "내 팀 밸런스 초안"}</h1>
+          <p>{query?.view === "recommendations" ? "선택한 저장 배치와 최신 시즌 챔피언 통계로 픽·상대 밴 후보를 확인합니다." : "계정에 안전하게 저장된 배치를 다시 열고, 통계가 달라졌다면 재평가할 수 있어요."}</p>
         </div>
-        <Link className={styles.primaryLink} href="/tools/team-balance"><Plus size={16} aria-hidden="true" /> 새 팀 계산</Link>
+        <Link className={styles.primaryLink} href={query?.view === "recommendations" ? "/tools/team-balance/drafts" : "/tools/team-balance/drafts?view=recommendations"}>{query?.view === "recommendations" ? "초안 목록" : "밴픽 추천"}</Link>
       </section>
 
-      {result.state === "unavailable" ? (
+      {query?.view === "recommendations" && result.state === "ready" && result.data.items.length > 0 ? <>
+        <form className={styles.recommendationSelector} action="/tools/team-balance/drafts" method="get">
+          <input type="hidden" name="view" value="recommendations"/><input type="hidden" name="team" value={query.team}/>
+          <label><span>저장 초안</span><select name="draftId" defaultValue={selectedDraftId ?? ""}>{result.data.items.map((draft) => <option key={draft.id} value={draft.id}>{draft.title} · {statusLabel[draft.status]}</option>)}</select></label>
+          <button type="submit">추천 불러오기</button>
+        </form>
+        {recommendation?.state === "ready" && recommendation.data ? <TeamBalanceRecommendationsPanel recommendation={recommendation.data} hrefForTeam={(team) => `/tools/team-balance/drafts?view=recommendations&draftId=${selectedDraftId}&team=${team}`}/>
+          : <section className={styles.emptyState} role={recommendation?.state === "error" ? "alert" : "status"}><Scale aria-hidden="true"/><h2>밴픽 추천을 불러올 수 없어요</h2><p>초안 소유권과 통계 projection 상태를 확인해 주세요.</p></section>}
+      </> : query?.view === "recommendations" && result.state === "ready" ? <section className={styles.emptyState}><FolderOpen aria-hidden="true"/><h2>추천할 저장 초안이 없습니다.</h2><p>팀 후보를 선택하고 저장한 뒤 다시 확인해 주세요.</p><Link className={styles.primaryLink} href="/tools/team-balance">첫 초안 만들기</Link></section>
+      : result.state === "unavailable" ? (
         <section className={styles.emptyState} role="status"><Scale aria-hidden="true" /><h2>팀 초안 연결을 준비하고 있어요</h2><p>데이터베이스 연결이 준비되면 저장한 초안이 여기에 표시됩니다.</p></section>
       ) : result.state === "error" ? (
         <section className={styles.emptyState} role="alert"><FolderOpen aria-hidden="true" /><h2>초안 목록을 불러오지 못했어요</h2><p>주소의 페이지 값을 확인하거나 잠시 후 다시 시도해 주세요.</p></section>

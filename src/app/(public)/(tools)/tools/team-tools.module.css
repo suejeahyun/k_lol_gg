@@ -335,6 +335,7 @@
 }
 
 .emptyState h2,
+.emptyState h1,
 .emptyState p {
   margin: 0;
 }
@@ -343,6 +344,13 @@
   color: var(--ink-strong);
   font-family: var(--font-heading);
   font-size: 21px;
+}
+
+.emptyState h1 {
+  color: var(--ink-strong);
+  font-family: var(--font-heading);
+  font-size: 24px;
+  font-weight: 950;
 }
 
 .emptyState p {
@@ -730,3 +738,39 @@
   .draftListCard dl { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .draftListCard dl div:last-child { grid-column: 1 / -1; }
 }
+
+.recommendationBoard { display: grid; gap: 18px; border: 1px solid rgba(118,151,198,.2); border-radius: 25px; padding: clamp(20px,3vw,30px); background: rgba(255,255,255,.9); box-shadow: 0 15px 40px rgba(76,105,155,.09); }
+.recommendationHeader { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+.recommendationHeader span,.banSection>header span { color: #6b5aa1; font-size: 10px; font-weight: 950; letter-spacing: .13em; }
+.recommendationHeader h2,.banSection h3 { margin: 5px 0; color: var(--ink-strong); font: 950 24px/1.2 var(--font-heading); }
+.recommendationHeader p,.banSection>header p { margin: 0; color: var(--text-muted); font-size: 12px; }
+.teamSwitch { display: flex; gap: 7px; }
+.teamSwitch a { min-height: 40px; display: inline-flex; align-items: center; border: 1px solid rgba(118,151,198,.25); border-radius: 12px; padding: 0 13px; color: #566884; background: #fff; font-size: 12px; font-weight: 900; text-decoration: none; }
+.teamSwitch a[aria-current="page"][data-team="RED"] { color: #934f6c; background: #ffedf4; }
+.teamSwitch a[aria-current="page"][data-team="BLUE"] { color: #376697; background: #eaf6ff; }
+.pickGrid { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 10px; }
+.pickCard { min-width: 0; border: 1px solid rgba(118,151,198,.18); border-radius: 17px; padding: 13px; background: #fbfdff; }
+.pickCard>header { display: grid; gap: 4px; padding-bottom: 10px; }
+.pickCard>header span { color: #6b5aa1; font-size: 10px; font-weight: 900; }
+.pickCard>header strong { overflow: hidden; color: #34435d; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+.pickCard ol,.banGrid { display: grid; gap: 7px; margin: 0; padding: 0; list-style: none; }
+.pickCard li { display: grid; grid-template-columns: 22px minmax(0,1fr) auto; gap: 7px; align-items: center; border-radius: 11px; padding: 8px; background: #f1f6fb; }
+.pickCard li>b { display: grid; width: 20px; height: 20px; place-items: center; border-radius: 7px; color: #675b9a; background: #eae6ff; font-size: 9px; }
+.pickCard li div { display: grid; min-width: 0; }
+.pickCard li strong { overflow: hidden; color: #34435d; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.pickCard li small { color: var(--text-muted); font-size: 8px; line-height: 1.4; }
+.pickCard li em,.banGrid li>em { color: #4c6d9b; font-size: 10px; font-style: normal; font-weight: 950; }
+.pickCard>p,.recommendationEmpty { margin: 0; color: var(--text-muted); font-size: 11px; line-height: 1.55; }
+.banSection { display: grid; gap: 12px; border-top: 1px solid rgba(118,151,198,.18); padding-top: 18px; }
+.banGrid { grid-template-columns: repeat(5,minmax(0,1fr)); }
+.banGrid li { display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 9px; align-items: center; border-radius: 14px; padding: 12px; background: #fff1f5; }
+.banGrid li>b { color: #a45575; font-size: 11px; }
+.banGrid li div { display: grid; min-width: 0; gap: 2px; }
+.banGrid li strong { color: #56384a; font-size: 12px; }
+.banGrid li span,.banGrid li small { overflow: hidden; color: #7b6070; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.recommendationSelector { display: flex; flex-wrap: wrap; align-items: end; gap: 9px; border: 1px solid rgba(118,151,198,.2); border-radius: 18px; padding: 14px; background: rgba(255,255,255,.88); }
+.recommendationSelector label { display: grid; flex: 1 1 260px; gap: 5px; color: #596982; font-size: 10px; font-weight: 850; }
+.recommendationSelector select { min-height: 42px; border: 1px solid rgba(102,139,190,.28); border-radius: 11px; padding: 0 10px; background: #fff; }
+.recommendationSelector button { min-height: 42px; border: 0; border-radius: 11px; padding: 0 15px; color: #fff; background: linear-gradient(135deg,#4c89ca,#755dc0); font-weight: 900; }
+@media(max-width:1100px){.pickGrid,.banGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.recommendationHeader{flex-direction:column}.pickGrid,.banGrid{grid-template-columns:1fr}.teamSwitch{width:100%}.teamSwitch a{flex:1;justify-content:center}}

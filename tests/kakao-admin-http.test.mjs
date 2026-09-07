@@ -33,6 +33,7 @@ test("legacy Kakao admin pages permanently redirect to canonical real-state tabs
     ["src/app/(admin)/admin/kakao/season-apply/page.tsx", "/admin/seasons"],
     ["src/app/(admin)/admin/kakao/recruits/logs/page.tsx", "/admin/kakao?tab=logs"],
     ["src/app/(admin)/admin/kakao/recruits/settings/page.tsx", "/admin/kakao?tab=health"],
+    ["src/app/(admin)/admin/recruits/page.tsx", "/admin/kakao?tab=recruits"],
     ["src/app/(admin)/admin/logs/kakao/page.tsx", "/admin/kakao?tab=logs"],
   ]);
   for (const [path, destination] of expectations) {
@@ -40,6 +41,11 @@ test("legacy Kakao admin pages permanently redirect to canonical real-state tabs
     assert.match(source, /permanentRedirect/u);
     assert.ok(source.includes(destination));
   }
+
+  const recruitsAlias = await read("src/app/(admin)/admin/kakao/recruits/page.tsx");
+  assert.match(recruitsAlias, /parseKakaoAdminTabQuery/);
+  assert.match(recruitsAlias, /permanentRedirect\(`\/admin\/kakao\?tab=\$\{tab\}`\)/);
+  assert.match(recruitsAlias, /notFound\(\)/);
 });
 
 test("every canonical Kakao handler checks the stored feature policy", async () => {

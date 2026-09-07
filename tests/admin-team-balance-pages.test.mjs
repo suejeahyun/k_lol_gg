@@ -11,9 +11,11 @@ test("administrator team draft pages use the ADMIN viewer and administrator muta
   ]);
   assert.match(list, /requirePageRole\("ADMIN"/);
   assert.match(list, /authorization:\s*"ADMIN"/);
+  assert.match(list, /loadRuntimeTeamBalanceRecommendations/);
   assert.match(detail, /requirePageRole\("ADMIN"/);
   assert.match(detail, /authorization:\s*"ADMIN"/);
   assert.match(detail, /TeamBalanceDraftWorkspace/);
+  assert.match(detail, /TeamBalanceRecommendationsPanel/);
   assert.match(detail, /\/api\/admin\/team-tools\/drafts/);
   assert.doesNotMatch(detail, /READ ONLY/);
 });
