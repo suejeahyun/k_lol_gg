@@ -14,6 +14,7 @@ import {
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
 import { ADMIN_WORKSPACES, type AdminWorkspaceIconKey } from "@/modules/admin/domain/admin-workspaces";
 import { accountRoleLabel } from "@/modules/accounts/domain/account-display-labels";
+import { loadRuntimeOperations } from "@/modules/operations/infrastructure/runtime-operations";
 import styles from "./page.module.css";
 
 const icons = {
@@ -32,6 +33,7 @@ const areas = ADMIN_WORKSPACES.filter((workspace) => workspace.id !== "home");
 
 export default async function AdminDashboardPage() {
   const session = await requirePageRole("ADMIN", "/admin");
+  const operations = await loadRuntimeOperations((repository) => repository.getDashboard());
 
   return (
     <main className={styles.page}>
@@ -53,6 +55,15 @@ export default async function AdminDashboardPage() {
         <div>
           <h2 id="admin-foundation-title">로그인을 우회하지 않는 검수 기반</h2>
           <p>현재 화면도 비밀번호·TOTP·서명된 HttpOnly 세션을 통과해야 열립니다. 각 운영 기능은 구현될 때 페이지와 API에서 권한을 다시 확인합니다.</p>
+        </div>
+      </section>
+
+      <section className={styles.notice} aria-labelledby="admin-operations-title">
+        <div><BookOpenCheck aria-hidden="true" /></div>
+        <div>
+          <h2 id="admin-operations-title">운영 상태</h2>
+          {operations.state === "unavailable" ? <p>운영 저장소에 연결할 수 없습니다.</p> : operations.state === "error" ? <p>운영 지표를 읽는 중 오류가 발생했습니다.</p> : <p>계정 {operations.data.accounts} · 활성 플레이어 {operations.data.activePlayers} · 공개 경기 {operations.data.publishedMatches} · 대기 이벤트 {operations.data.pendingOperationsEvents}</p>}
+          {session.role === "SUPER_ADMIN" ? <p><Link href="/admin/site-settings">사이트 설정</Link> · <Link href="/admin/logs">감사 로그</Link> · <Link href="/admin/ai-requests">AI 요청 ledger</Link></p> : null}
         </div>
       </section>
 
