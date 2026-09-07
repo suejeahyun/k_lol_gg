@@ -56,4 +56,3 @@ export async function loadRuntimeRecruiting<T>(loader: (service: RuntimeRecruiti
     return { state: "error" as const };
   }
 }
-

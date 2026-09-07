@@ -1,0 +1,44 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+
+import { parseRecruitingCommandBody } from "../src/modules/recruiting/infrastructure/recruiting-input";
+import { recruitingCommandScope } from "../src/modules/recruiting/application/commands";
+
+const partyId = "0199a288-15d9-7ae6-9d50-2fa0b1a91111";
+const teamId = "0199a288-15d9-7ae6-9d50-2fa0b1a92222";
+const tournamentId = "0199a288-15d9-7ae6-9d50-2fa0b1a93333";
+
+test("recruiting JSON boundary accepts only reviewed create fields", () => {
+  const allowed = new Set(["CREATE_PARTY"] as const);
+  const valid = {
+    type: "CREATE_PARTY",
+    payload: {
+      recruitDate: "2026-09-07", resetSequence: 0, recruitNumber: 1,
+      partyType: "FLEX_RANK", title: "저녁 파티", maximumMembers: 5,
+      members: [{ name: "참가자", position: "TOP", slotNo: 1, substitute: false }],
+      scheduledStartAt: null, protectedUntil: null,
+    },
+  };
+  assert.equal(parseRecruitingCommandBody(valid, allowed)?.type, "CREATE_PARTY");
+  assert.equal(parseRecruitingCommandBody({ ...valid, ownerUserAccountId: partyId }, allowed), null);
+  assert.equal(parseRecruitingCommandBody({ ...valid, payload: { ...valid.payload, internalNote: "secret" } }, allowed), null);
+  assert.equal(parseRecruitingCommandBody({ ...valid, aggregateId: partyId }, allowed)?.aggregateId, partyId);
+});
+
+test("scrim boundary validates UUID seams and command allowlists", () => {
+  const input = {
+    type: "CREATE_SCRIM",
+    aggregateId: partyId,
+    payload: { recruitDate: "2026-09-07", scrimNumber: 1, tournamentId, requesterTeamId: teamId, scheduledAt: null, bestOf: 3 },
+  };
+  assert.equal(parseRecruitingCommandBody(input, new Set(["CREATE_SCRIM"] as const))?.type, "CREATE_SCRIM");
+  assert.equal(parseRecruitingCommandBody({ ...input, payload: { ...input.payload, tournamentId: "not-uuid" } }, new Set(["CREATE_SCRIM"] as const)), null);
+  assert.equal(parseRecruitingCommandBody(input, new Set(["CREATE_PARTY"] as const)), null);
+});
+
+test("command scope is bound to both actor and action", () => {
+  assert.equal(recruitingCommandScope("BOT", "CREATE_PARTY"), "bot:recruiting:party:create");
+  assert.equal(recruitingCommandScope("ACCOUNT", "CREATE_PARTY"), "account:recruiting:party:create");
+  assert.equal(recruitingCommandScope("ADMIN", "CANCEL_SCRIM"), "admin:recruiting:scrim:cancel");
+  assert.equal(recruitingCommandScope("ADMIN", "RESET_PARTY"), "admin:recruiting:party:reset");
+});

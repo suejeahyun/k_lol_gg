@@ -45,8 +45,8 @@ export const canonicalUserRoutes = [
   { template: "/forgot-password", label: "비밀번호 찾기", section: "auth-help", implementationState: "page-contract" },
   { template: "/terms", label: "이용약관", section: "auth-help", implementationState: "page-contract" },
   { template: "/privacy", label: "개인정보 처리방침", section: "auth-help", implementationState: "page-contract" },
-  { template: "/help/kakao", label: "Kakao 도움말", section: "auth-help", implementationState: "planned" },
-  { template: "/help/recruits", label: "구인 도움말", section: "auth-help", implementationState: "planned" },
+  { template: "/help/kakao", label: "Kakao 도움말", section: "auth-help", implementationState: "page-contract" },
+  { template: "/help/recruits", label: "구인 도움말", section: "auth-help", implementationState: "page-contract" },
   { template: "/help/riot", label: "Riot 도움말", section: "auth-help", implementationState: "page-contract" },
   { template: "/install", label: "앱 설치", section: "auth-help", implementationState: "page-contract" },
 
@@ -69,7 +69,7 @@ export const canonicalUserRoutes = [
   { template: "/competitions/events/[eventId]", label: "이벤트전 상세", section: "competitions", implementationState: "planned" },
   { template: "/competitions/destruction/[tournamentId]", label: "멸망전 상세", section: "competitions", implementationState: "planned" },
 
-  { template: "/recruits", label: "구인 현황", section: "community", implementationState: "planned" },
+  { template: "/recruits", label: "구인 현황", section: "community", implementationState: "page-contract" },
   { template: "/discipline", label: "징계 현황", section: "community", implementationState: "planned" },
   { template: "/highlights", label: "하이라이트", section: "community", implementationState: "planned" },
   { template: "/highlights/[highlightId]", label: "하이라이트 상세", section: "community", implementationState: "planned" },

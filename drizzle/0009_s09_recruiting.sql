@@ -136,4 +136,3 @@ CREATE UNIQUE INDEX "recruiting_outbox_request_uidx" ON "recruiting"."outbox" ("
 CREATE UNIQUE INDEX "recruiting_outbox_dedupe_uidx" ON "recruiting"."outbox" ("dedupe_key");
 --> statement-breakpoint
 CREATE INDEX "recruiting_outbox_pending_idx" ON "recruiting"."outbox" ("created_at", "id") WHERE "status" = 'PENDING';
-

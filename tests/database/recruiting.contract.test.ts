@@ -136,7 +136,6 @@ test("S09 PostgreSQL adapter commits aggregate, receipt, audit and outbox atomic
     await pool.end();
   }
 });
-
 test("S09 PostgreSQL adapter binds a BOT nonce to exactly one signed request identity", async () => {
   const connectionString = process.env.TEST_DATABASE_URL;
   assert.ok(connectionString);
@@ -175,4 +174,3 @@ test("S09 PostgreSQL adapter binds a BOT nonce to exactly one signed request ide
     await pool.end();
   }
 });
-
