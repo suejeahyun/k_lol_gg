@@ -16,6 +16,7 @@
 .actions { display: flex; gap: .6rem; flex-wrap: wrap; }
 .button, .link { border: 0; border-radius: 999px; background: #315eaa; color: #fff; padding: .7rem 1rem; font-weight: 800; text-decoration: none; cursor: pointer; }
 .link { display: inline-flex; background: #eef5ff; color: #315eaa; }
+.link[aria-current="page"] { background: #315eaa; color: #fff; box-shadow: 0 .35rem 1rem rgb(49 94 170 / 18%); }
 .tableWrap { overflow-x: auto; border: 1px solid #dfe7f2; border-radius: 1rem; background: #fff; }
 .table { width: 100%; border-collapse: collapse; font-size: .82rem; }
 .table th, .table td { padding: .75rem; text-align: left; border-bottom: 1px solid #edf1f6; white-space: nowrap; }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { ADMIN_REQUEST_PATH_HEADER } from "@/modules/auth/application/admin-request-path";
+import { resolveAdminLegacyDestination } from "@/modules/admin/domain/admin-route-contracts";
 import {
   normalizeAccountNext,
   normalizeInternalNext,
@@ -85,6 +86,14 @@ export function proxy(request: NextRequest) {
     }
     if (searchParams.size > 0) return new Response(null, { status: 400 });
     return permanentSameOriginRedirect(`/admin/users/${legacyAdminUserMatch[1]}`, request);
+  }
+
+  const reviewedAdminDestination = resolveAdminLegacyDestination(pathname);
+  if (reviewedAdminDestination) {
+    if (request.method !== "GET" && request.method !== "HEAD") {
+      return new Response(null, { status: 405, headers: { Allow: "GET, HEAD" } });
+    }
+    return permanentSameOriginRedirect(reviewedAdminDestination, request);
   }
 
   if (pathname === "/admin" || pathname.startsWith("/admin/")) {

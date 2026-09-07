@@ -71,3 +71,21 @@ test("legacy statistics routes use one allowlisted canonical ranking destination
   assert.equal(mutation.status, 405);
   assert.equal(mutation.headers.get("allow"), "GET, HEAD");
 });
+
+test("reviewed administrator aliases resolve to their canonical integrated views", () => {
+  const ai = proxy(new NextRequest("https://v2.example/admin/ai-requests?token=drop"));
+  assert.equal(ai.status, 308);
+  assert.equal(ai.headers.get("location"), "https://v2.example/admin/logs?view=ai-requests");
+
+  const player = proxy(new NextRequest("https://v2.example/admin/players/player-7/edit"));
+  assert.equal(player.status, 308);
+  assert.equal(player.headers.get("location"), "https://v2.example/admin/players/player-7?mode=edit");
+
+  const mutation = proxy(new NextRequest("https://v2.example/admin/kakao/stats", { method: "POST" }));
+  assert.equal(mutation.status, 405);
+  assert.equal(mutation.headers.get("allow"), "GET, HEAD");
+
+  const canonical = proxy(new NextRequest("https://v2.example/admin/logs?view=stats"));
+  assert.equal(canonical.headers.get("x-middleware-next"), "1");
+  assert.equal(canonical.headers.has("location"), false);
+});
