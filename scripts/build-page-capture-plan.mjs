@@ -223,6 +223,23 @@ export function resolveDynamicRoute(route, fixtures) {
   return resolvedRoute;
 }
 
+function resolveRedirectExpectation(page, fixtures) {
+  if (!page.expectedRedirect?.destination) return page.expectedRedirect;
+  let destination = page.expectedRedirect.destination;
+  for (const match of destination.matchAll(/\$\{([A-Za-z][A-Za-z0-9_]*)\}/gu)) {
+    const parameter = match[1];
+    const value = fixtureValue(fixtures, page.route, parameter);
+    if (value === undefined || value === null) {
+      throw new Error(`Missing fixture for redirect ${page.route}: provide parameters.${parameter}.`);
+    }
+    destination = destination.replaceAll(match[0], encodeFixture(value, page.route, parameter, false));
+  }
+  if (/\$\{[^}]+\}|\[[^\]]+\]|\{\{[^}]+\}\}/u.test(destination)) {
+    throw new Error(`Redirect placeholder remains after resolving ${page.route}: ${destination}`);
+  }
+  return { ...page.expectedRedirect, destination };
+}
+
 export function classifyRoute(route) {
   if (route === "/admin/login") return { group: "admin-auth", session: "anonymous" };
   if (route === "/admin/security") return { group: "admin-auth", session: "setup" };
@@ -267,11 +284,15 @@ export function buildCapturePlan(pages, fixtures) {
   if (!fixtures || typeof fixtures !== "object" || Array.isArray(fixtures)) {
     throw new Error("Fixtures must be a JSON object.");
   }
+  const resolvedPages = pages.map((page) => ({
+    ...page,
+    expectedRedirect: resolveRedirectExpectation(page, fixtures),
+  }));
   const resolvedPaths = new Map();
-  for (const page of pages) resolvedPaths.set(page.route, resolveDynamicRoute(page.route, fixtures));
+  for (const page of resolvedPages) resolvedPaths.set(page.route, resolveDynamicRoute(page.route, fixtures));
 
-  const canonicalPages = pages.filter((page) => !page.expectedRedirect);
-  const aliasPages = pages.filter((page) => page.expectedRedirect);
+  const canonicalPages = resolvedPages.filter((page) => !page.expectedRedirect);
+  const aliasPages = resolvedPages.filter((page) => page.expectedRedirect);
   const desktopPages = canonicalPages.map((page) => planEntry({
     page,
     path: resolvedPaths.get(page.route),

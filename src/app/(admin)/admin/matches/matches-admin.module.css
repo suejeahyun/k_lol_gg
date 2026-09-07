@@ -1,4 +1,4 @@
-.page { display: grid; gap: 22px; padding: 28px clamp(18px,3vw,38px) 90px; }
+.page { display: grid; min-width: 0; gap: 22px; padding: 28px clamp(18px,3vw,38px) 90px; }
 .hero { display: flex; justify-content: space-between; gap: 18px; padding: 26px; border: 1px solid var(--border); border-radius: 25px; background: linear-gradient(135deg,var(--sky),var(--lilac)); }
 .hero h1 { margin: 5px 0; font-family: var(--font-heading); font-size: 32px; }
 .hero p { margin: 0; color: var(--text-muted); }
@@ -10,7 +10,7 @@
 .filters label { display: grid; gap: 6px; color: var(--text-muted); font-size: 12px; font-weight: 800; }
 .filters input,.filters select { min-height: 42px; padding: 9px 12px; border: 1px solid var(--input); border-radius: 12px; background: #fff; }
 .filters button { border: 0; border-radius: 12px; color: #fff; background: var(--primary); font-weight: 850; }
-.tableWrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 20px; background: #fff; }
+.tableWrap { overflow-x: auto; min-width: 0; max-width: 100%; border: 1px solid var(--border); border-radius: 20px; background: #fff; }
 .table { width: 100%; min-width: 760px; border-collapse: collapse; }
 .table th,.table td { padding: 14px 16px; border-bottom: 1px solid var(--border); text-align: left; }
 .table th { color: var(--text-muted); font-size: 12px; background: var(--muted); }

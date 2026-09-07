@@ -127,6 +127,10 @@ test("the repository plan covers every page once, resolves IDs and adds reviewed
 
   const aliasesByRoute = new Map(aliases.map((entry) => [entry.routeTemplate, entry]));
   assert.equal(aliasesByRoute.get("/admin/ai-requests")?.expectedRedirect.destination, "/admin/logs?view=ai-requests");
+  assert.equal(
+    aliasesByRoute.get("/admin/kakao/operation-forms/[formType]")?.expectedRedirect.destination,
+    `/admin/operation-forms?type=${uuidFixture}`,
+  );
   assert.equal(aliasesByRoute.get("/admin/recruits")?.expectedRedirect.status, 308);
   assert.deepEqual(aliasesByRoute.get("/app")?.expectedRedirect, { status: 308, destination: "/" });
   assert.deepEqual(aliasesByRoute.get("/app/players")?.expectedRedirect, { status: 308, destination: "/players" });
