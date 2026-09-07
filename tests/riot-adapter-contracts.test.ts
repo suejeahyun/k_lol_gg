@@ -1,0 +1,100 @@
+import assert from "node:assert/strict";
+import { existsSync, readFileSync } from "node:fs";
+import test from "node:test";
+
+import { getTableConfig } from "drizzle-orm/pg-core";
+
+import { FakeRiotGateway, FakeRiotIdentityProtector, FakeRsoAdapter, RiotApplicationService, parseAdminRiotQuery } from "../src/modules/riot";
+import { InMemoryRiotAdapter } from "../src/modules/riot/infrastructure/in-memory-riot-adapter";
+import { isRiotFeatureEnabled } from "../src/modules/riot/infrastructure/riot-runtime-policy";
+import {
+  riotAccountLinks,
+  riotCommandReceipts,
+  riotOutbox,
+  riotRsoStates,
+  riotSummaries,
+  riotSyncJobs,
+} from "../src/platform/db/schema/riot";
+
+test("S12 schema exposes durable ledgers without OAuth token/code/request-log columns", () => {
+  const tables = [riotAccountLinks, riotRsoStates, riotSyncJobs, riotSummaries, riotCommandReceipts, riotOutbox];
+  const columnNames = tables.flatMap((table) => getTableConfig(table).columns.map((column) => column.name));
+  assert.equal(columnNames.includes("protected_puuid"), true);
+  assert.equal(columnNames.includes("state_digest"), true);
+  assert.equal(columnNames.includes("lease_id"), true);
+  assert.equal(columnNames.includes("request_hash"), true);
+  for (const forbidden of ["puuid", "token", "authorization_code", "request_log_id", "client_secret"]) {
+    assert.equal(columnNames.includes(forbidden), false, forbidden);
+  }
+  assert.ok(getTableConfig(riotCommandReceipts).indexes.some((index) => index.config.name === "riot_receipts_actor_scope_key_uidx"));
+  assert.ok(getTableConfig(riotOutbox).indexes.some((index) => index.config.name === "riot_outbox_dedupe_uidx"));
+});
+
+test("Riot production feature flag is exact and fail-closed by default", () => {
+  assert.equal(isRiotFeatureEnabled({}), false);
+  assert.equal(isRiotFeatureEnabled({ V2_RIOT_INTEGRATION_ENABLED: "1" }), false);
+  assert.equal(isRiotFeatureEnabled({ V2_RIOT_INTEGRATION_ENABLED: "TRUE" }), false);
+  assert.equal(isRiotFeatureEnabled({ V2_RIOT_INTEGRATION_ENABLED: "true" }), true);
+});
+
+test("explicit fake runtime adapter connects application mutations to safe query DTOs", async () => {
+  const adapter = new InMemoryRiotAdapter(true);
+  adapter.bindOwner("account-1", "player-1");
+  const service = new RiotApplicationService({
+    ...adapter.dependencies,
+    gateway: new FakeRiotGateway(true),
+    rso: new FakeRsoAdapter("test-runtime", true),
+    identityProtector: new FakeRiotIdentityProtector(),
+  });
+  await service.connectDirect({
+    context: {
+      principalId: "account-1",
+      requestId: "request-1",
+      issuedAt: new Date("2026-09-07T00:00:00.000Z").toISOString(),
+      authorizationIntent: { kind: "OWNER_SESSION", sessionId: "session-1", role: "USER", authVersion: 0, transactionRecheck: true },
+      idempotencyKeyMaterial: new TextEncoder().encode("fake-runtime-contract-key"),
+      bodyDigestHex: "a".repeat(64),
+    },
+    playerId: "player-1",
+    expectedRevision: 0,
+    gameName: "Ahri",
+    tagLine: "KR1",
+  });
+  const status = await adapter.getOwnerStatus("account-1");
+  assert.equal(status?.link?.riotId, "Ahri#KR1");
+  assert.equal(JSON.stringify(status).includes("puuid"), false);
+});
+
+test("admin Riot query is bounded and rejects duplicate or unknown HTTP parameters", () => {
+  assert.deepEqual(parseAdminRiotQuery("https://example.test/admin/riot?tab=sync&status=FAILED&page=2&pageSize=50"), { tab: "sync", status: "FAILED", page: 2, pageSize: 50 });
+  assert.equal(parseAdminRiotQuery("https://example.test/admin/riot?pageSize=101"), null);
+  assert.equal(parseAdminRiotQuery("https://example.test/admin/riot?tab=sync&tab=logs"), null);
+  assert.equal(parseAdminRiotQuery("https://example.test/admin/riot?includeSecrets=true"), null);
+});
+
+test("public, owner, admin HTTP routes and responsive UI states are present", () => {
+  const routes = [
+    "../src/app/api/riot/player/[playerId]/summary/route.ts",
+    "../src/app/api/me/riot/route.ts",
+    "../src/app/api/me/riot/sync/route.ts",
+    "../src/app/api/me/riot/rso/start/route.ts",
+    "../src/app/api/me/riot/rso/callback/route.ts",
+    "../src/app/api/admin/riot/route.ts",
+    "../src/app/api/admin/riot/link/route.ts",
+    "../src/app/api/admin/riot/bulk/route.ts",
+    "../src/app/api/admin/riot/sync/route.ts",
+    "../src/app/api/admin/riot/retry/route.ts",
+  ];
+  for (const route of routes) assert.equal(existsSync(new URL(route, import.meta.url)), true, route);
+
+  const account = readFileSync(new URL("../src/app/(public)/account/riot/page.tsx", import.meta.url), "utf8");
+  const admin = readFileSync(new URL("../src/app/(admin)/admin/riot/page.tsx", import.meta.url), "utf8");
+  const player = readFileSync(new URL("../src/app/(public)/(registry)/players/[playerId]/page.tsx", import.meta.url), "utf8");
+  for (const source of [account, admin, player]) {
+    assert.match(source, /unavailable/);
+    assert.match(source, /error/);
+  }
+  assert.match(account, /Riot 계정 연결/);
+  assert.match(admin, /표시할 연동 계정이 없습니다/);
+  assert.match(player, /공개할 Riot 동기화 전적이 없습니다/);
+});

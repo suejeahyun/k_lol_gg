@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { KeyRound, ShieldCheck, UserRound, UsersRound } from "lucide-react";
+import { KeyRound, Radio, ShieldCheck, UserRound, UsersRound } from "lucide-react";
 
 import { AccountLogoutButton } from "@/components/accounts/account-logout-button";
 import styles from "@/components/accounts/account-access.module.css";
@@ -47,7 +47,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
         <div><span className={styles.eyebrow}><UserRound aria-hidden="true" /> MY ACCOUNT</span><h1>{account.loginId}</h1><p>일반 계정 세션 · 관리자 권한으로 자동 승격되지 않음</p></div>
         <div><span className={styles.status} data-state={account.status}>{statusLabels[account.status]}</span><AccountLogoutButton /></div>
       </header>
-      <nav className={styles.tabs} aria-label="계정 메뉴"><Link href="/account" aria-current={tab === "overview" ? "page" : undefined}><ShieldCheck aria-hidden="true" /> 상태</Link><Link href="/account?tab=player" aria-current={tab === "player" ? "page" : undefined}><UsersRound aria-hidden="true" /> 플레이어</Link><Link href="/account/password"><KeyRound aria-hidden="true" /> 비밀번호</Link></nav>
+      <nav className={styles.tabs} aria-label="계정 메뉴"><Link href="/account" aria-current={tab === "overview" ? "page" : undefined}><ShieldCheck aria-hidden="true" /> 상태</Link><Link href="/account?tab=player" aria-current={tab === "player" ? "page" : undefined}><UsersRound aria-hidden="true" /> 플레이어</Link><Link href="/account/riot"><Radio aria-hidden="true" /> Riot</Link><Link href="/account/password"><KeyRound aria-hidden="true" /> 비밀번호</Link></nav>
       {account.mustChangePassword ? <p className={styles.notice}>임시 비밀번호를 사용 중입니다. 다른 기능을 사용하기 전에 <Link href="/account/password?required=1">비밀번호를 변경해 주세요.</Link></p> : null}
       {tab === "overview" ? (
         <section className={styles.panel}><h2>계정 상태</h2><dl className={styles.facts}><div><dt>상태</dt><dd>{statusLabels[account.status]}</dd></div><div><dt>역할</dt><dd>{accountRoleLabel(account.role)}</dd></div><div><dt>상태 변경</dt><dd>{formatOptionalKoreanDateTime(account.statusChangedAt)}</dd></div><div><dt>비밀번호 변경</dt><dd>{formatOptionalKoreanDateTime(account.passwordChangedAt)}</dd></div></dl><p className={styles.notice}>{account.statusReason ?? defaultStatusMessages[account.status]}</p></section>

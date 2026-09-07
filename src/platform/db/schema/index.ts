@@ -12,3 +12,4 @@ export * from "./recruiting";
 export * from "./media";
 export * from "./event-competitions";
 export * from "./operations";
+export * from "./riot";

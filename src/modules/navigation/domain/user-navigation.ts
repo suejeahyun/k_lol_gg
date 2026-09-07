@@ -37,7 +37,7 @@ export const canonicalUserRoutes = [
   { template: "/start", label: "시작하기", section: "home-account", implementationState: "page-contract" },
   { template: "/account", label: "내 계정", section: "home-account", implementationState: "page-contract" },
   { template: "/account/password", label: "비밀번호 변경", section: "home-account", implementationState: "page-contract" },
-  { template: "/account/riot", label: "Riot 계정", section: "home-account", implementationState: "planned" },
+  { template: "/account/riot", label: "Riot 계정", section: "home-account", implementationState: "page-contract" },
   { template: "/account/discipline", label: "내 징계 과제", section: "home-account", implementationState: "planned" },
 
   { template: "/login", label: "로그인", section: "auth-help", implementationState: "page-contract" },

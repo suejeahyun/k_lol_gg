@@ -18,6 +18,8 @@ export class FakeRiotGateway implements RiotGatewayPort {
   private readonly identities = new Map<string, RiotIdentity>();
   private readonly ranks = new Map<string, Awaited<ReturnType<RiotGatewayPort["fetchRank"]>>>();
 
+  constructor(private readonly allowGeneratedIdentities = false) {}
+
   registerIdentity(identity: RiotIdentity): void {
     this.identities.set(canonicalRiotId(identity).normalizedKey, { ...identity });
   }
@@ -32,6 +34,10 @@ export class FakeRiotGateway implements RiotGatewayPort {
 
   async resolveRiotId(input: Readonly<{ gameName: string; tagLine: string }>): Promise<RiotIdentity> {
     const found = this.identities.get(canonicalRiotId(input).normalizedKey);
+    if (!found && this.allowGeneratedIdentities) {
+      const riotId = canonicalRiotId(input);
+      return { ...riotId, puuid: `fake-puuid-${digest(riotId.normalizedKey).slice(0, 24)}` };
+    }
     if (!found) throw new Error("FAKE_RIOT_ID_NOT_FOUND");
     return { ...found };
   }
@@ -54,7 +60,10 @@ export class FakeRsoAdapter implements RiotRsoPort {
   private readonly exchanges = new Map<string, Readonly<{ codeDigest: string; identity: RiotIdentity }>>();
   exchangeCalls = 0;
 
-  constructor(private readonly namespace = "klol-v2-fake-rso") {}
+  constructor(
+    private readonly namespace = "klol-v2-fake-rso",
+    private readonly allowGeneratedCallbacks = false,
+  ) {}
 
   registerCallback(authorizationCode: string, identity: RiotIdentity): void {
     this.callbackIdentities.set(digest(authorizationCode), { ...identity });
@@ -80,7 +89,9 @@ export class FakeRsoAdapter implements RiotRsoPort {
       if (previous.codeDigest !== codeDigest) throw new Error("RSO_EXCHANGE_ID_REUSED");
       return { ...previous.identity };
     }
-    const identity = this.callbackIdentities.get(codeDigest);
+    const identity = this.callbackIdentities.get(codeDigest) ?? (this.allowGeneratedCallbacks
+      ? { gameName: "RsoPlayer", tagLine: "V2", puuid: `fake-rso-puuid-${codeDigest.slice(0, 24)}` }
+      : undefined);
     if (!identity) throw new Error("RSO_AUTHORIZATION_CODE_INVALID");
     this.exchangeCalls += 1;
     this.exchanges.set(input.exchangeId, { codeDigest, identity: { ...identity } });

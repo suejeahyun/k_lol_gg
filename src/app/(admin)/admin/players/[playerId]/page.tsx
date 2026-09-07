@@ -12,6 +12,7 @@ import { requirePageRole } from "@/modules/auth/infrastructure/server-authorizat
 import { MMR_POSITIONS } from "@/modules/mmr";
 import { loadRuntimeMmr } from "@/modules/mmr/infrastructure/runtime-mmr";
 import { loadRuntimeAdminPlayer } from "@/modules/players/infrastructure/runtime-admin-player-data";
+import { loadRuntimeRiot } from "@/modules/riot/infrastructure/runtime-riot";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +57,9 @@ export default async function AdminPlayerDetailPage({
   const mmrResult = tab === "balance"
     ? await loadRuntimeMmr((service) => service.getPlayer(player.id))
     : null;
+  const riotResult = tab === "riot"
+    ? await loadRuntimeRiot((runtime) => runtime.query.getPublicSummary(player.id))
+    : null;
   return (
     <main className={styles.page}>
       <div className={styles.header}>
@@ -98,9 +102,12 @@ export default async function AdminPlayerDetailPage({
         </section>
       ) : tab === "riot" ? (
         <section className={styles.integrationCard}>
-          <span className={styles.integrationBadge}>S12 연결 대기</span>
-          <h2>Riot 계정 진입점</h2>
-          <p>연결·해제·동기화와 운영 승인 상태는 RSO 및 Riot 정책 검증이 끝나는 S12에서 이 탭에 연결합니다. 현재 외부 API는 호출하지 않습니다.</p>
+          <span className={styles.integrationBadge}>S12 RIOT</span>
+          <h2>Riot 계정·전적</h2>
+          {riotResult?.state === "unavailable" ? <p>Riot 운영 adapter가 비활성 상태입니다. 운영 feature flag는 기본적으로 꺼져 있습니다.</p>
+            : riotResult?.state === "error" ? <p role="alert">Riot 전적을 불러오지 못했습니다.</p>
+            : !riotResult?.data ? <p>아직 공개 가능한 동기화 전적이 없습니다. <Link href="/admin/riot?tab=accounts">Riot 운영 화면에서 연결 상태 확인</Link></p>
+            : <dl className={styles.facts}><div><dt>Riot ID</dt><dd>{riotResult.data.riotId}</dd></div><div><dt>솔로 랭크</dt><dd>{riotResult.data.soloTier ?? "Unranked"} {riotResult.data.soloRank ?? ""}</dd></div><div><dt>LP</dt><dd>{riotResult.data.leaguePoints ?? 0}</dd></div><div><dt>전적</dt><dd>{riotResult.data.wins ?? 0}승 {riotResult.data.losses ?? 0}패</dd></div></dl>}
         </section>
       ) : (
         <>

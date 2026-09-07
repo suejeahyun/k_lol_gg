@@ -63,13 +63,15 @@ class Harness {
   }
 
   ownerContext(key: string, principalId = "owner-principal") {
-    return this.context(principalId, { kind: "OWNER_SESSION", sessionId: `session-${principalId}`, transactionRecheck: true }, key);
+    return this.context(principalId, { kind: "OWNER_SESSION", sessionId: `session-${principalId}`, role: "USER", authVersion: 0, transactionRecheck: true }, key);
   }
 
   adminContext(key: string, superAdmin = false) {
     return this.context(superAdmin ? "super-principal" : "admin-principal", {
       kind: "ADMIN_TOTP",
       sessionId: superAdmin ? "super-session" : "admin-session",
+      role: superAdmin ? "SUPER_ADMIN" : "ADMIN",
+      authVersion: 0,
       minimumRole: superAdmin ? "SUPER_ADMIN" : "ADMIN",
       requireTotp: true,
       transactionRecheck: true,
@@ -85,6 +87,7 @@ class Harness {
         nonce: "job_nonce_123456789",
         timestampSeconds: Math.floor(this.now.getTime() / 1_000),
         bodyDigestHex: "b".repeat(64),
+        signatureHex: "c".repeat(64),
         transactionRecheck: true as const,
       },
     };
@@ -146,6 +149,14 @@ class Harness {
         },
       },
       repository: {
+        loadPlayerOwnerAccountIdForUpdate: async (_transaction, playerId) => {
+          assertTransaction();
+          const owner = [...this.actors.values()].find(
+            (actor): actor is Extract<CurrentRiotActor, { purpose: "ACCOUNT" }> =>
+              actor.purpose === "ACCOUNT" && actor.playerId === playerId && actor.accountStatus === "APPROVED",
+          );
+          return owner?.userAccountId ?? null;
+        },
         loadLinkForPlayerForUpdate: async (_transaction, playerId) => {
           assertTransaction();
           return [...this.snapshot.links.values()].find((link) => link.playerId === playerId) ?? null;
@@ -304,12 +315,15 @@ test("only SUPER_ADMIN can bulk/sync-all while owner is restricted to the owned 
   const { harness, service } = setup();
   await service.connectDirect({ context: harness.ownerContext("owner-link"), playerId: "player-1", expectedRevision: 0, gameName: "Ahri", tagLine: "KR1" });
   const linkId = [...harness.snapshot.links.keys()][0]!;
+  harness.gateway.registerIdentity({ gameName: "Lux", tagLine: "KR2", puuid: "private-puuid-2" });
+  const adminLinked = await service.connectDirect({ context: harness.adminContext("admin-link"), playerId: "player-2", expectedRevision: 0, gameName: "Lux", tagLine: "KR2" });
+  assert.equal(adminLinked.body.method, "ADMIN");
   await assert.rejects(
     service.requestSync({ context: harness.adminContext("admin-bulk"), mode: "BULK", linkIds: [linkId] }),
     (error: unknown) => error instanceof RiotApplicationError && error.code === "FORBIDDEN",
   );
   const queued = await service.requestSync({ context: harness.adminContext("super-all", true), mode: "ALL" });
-  assert.equal(queued.body.queuedCount, 1);
+  assert.equal(queued.body.queuedCount, 2);
   await assert.rejects(
     service.requestSync({ context: harness.ownerContext("wrong-owner", "other-owner"), mode: "SINGLE", linkIds: [linkId] }),
     (error: unknown) => error instanceof RiotApplicationError && error.code === "NOT_FOUND",

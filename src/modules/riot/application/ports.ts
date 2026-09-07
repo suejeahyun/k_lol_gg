@@ -10,10 +10,18 @@ export interface RiotTransaction {
 }
 
 export type RiotAuthorizationIntent =
-  | Readonly<{ kind: "OWNER_SESSION"; sessionId: string; transactionRecheck: true }>
+  | Readonly<{
+      kind: "OWNER_SESSION";
+      sessionId: string;
+      role: "USER" | "ADMIN" | "SUPER_ADMIN";
+      authVersion: number;
+      transactionRecheck: true;
+    }>
   | Readonly<{
       kind: "ADMIN_TOTP";
       sessionId: string;
+      role: "ADMIN" | "SUPER_ADMIN";
+      authVersion: number;
       minimumRole: "ADMIN" | "SUPER_ADMIN";
       requireTotp: true;
       transactionRecheck: true;
@@ -24,6 +32,7 @@ export type RiotAuthorizationIntent =
       nonce: string;
       timestampSeconds: number;
       bodyDigestHex: string;
+      signatureHex: string;
       transactionRecheck: true;
     }>;
 
@@ -71,6 +80,11 @@ export interface RiotAuthorizationPort {
   ): Promise<CurrentRiotActor | null>;
 }
 
+export interface RiotJobAuthorizationVerifierPort<Transaction = RiotTransaction> {
+  /** Verifies signature freshness and atomically consumes the nonce without exposing the server secret. */
+  verifyAndConsume(transaction: Transaction, intent: Extract<RiotAuthorizationIntent, { kind: "SIGNED_JOB" }>): Promise<boolean>;
+}
+
 export type RiotSafeBody = Readonly<Record<string, string | number | boolean | null | readonly string[]>>;
 
 export type RiotReceiptIdentity = Readonly<{
@@ -116,6 +130,7 @@ export type RiotProjectionUpdate = Readonly<{
 }>;
 
 export interface RiotRepository {
+  loadPlayerOwnerAccountIdForUpdate(transaction: RiotTransaction, playerId: string): Promise<string | null>;
   loadLinkForPlayerForUpdate(transaction: RiotTransaction, playerId: string): Promise<RiotAccountLink | null>;
   loadLinkForUpdate(transaction: RiotTransaction, linkId: string): Promise<RiotAccountLink | null>;
   saveLink(transaction: RiotTransaction, link: RiotAccountLink, expectedRevision: number): Promise<void>;

@@ -129,9 +129,17 @@ function validateContext(context: RiotCommandContext): void {
   const intent = context.authorizationIntent;
   if (intent.kind === "OWNER_SESSION") {
     identifier(intent.sessionId, "sessionId");
+    if (!Number.isSafeInteger(intent.authVersion) || intent.authVersion < 0) {
+      throw new RiotApplicationError("INVALID_COMMAND", "Account authorization version is invalid.");
+    }
   } else if (intent.kind === "ADMIN_TOTP") {
     identifier(intent.sessionId, "sessionId");
-    if (intent.requireTotp !== true || !["ADMIN", "SUPER_ADMIN"].includes(intent.minimumRole)) {
+    if (
+      intent.requireTotp !== true ||
+      !["ADMIN", "SUPER_ADMIN"].includes(intent.minimumRole) ||
+      !Number.isSafeInteger(intent.authVersion) ||
+      intent.authVersion < 0
+    ) {
       throw new RiotApplicationError("INVALID_COMMAND", "ADMIN-purpose TOTP authorization is invalid.");
     }
   } else if (
@@ -139,7 +147,8 @@ function validateContext(context: RiotCommandContext): void {
     !/^[A-Za-z0-9_-]{16,100}$/u.test(intent.nonce) ||
     !Number.isSafeInteger(intent.timestampSeconds) ||
     intent.timestampSeconds < 0 ||
-    !/^[a-f0-9]{64}$/u.test(intent.bodyDigestHex)
+    !/^[a-f0-9]{64}$/u.test(intent.bodyDigestHex) ||
+    !/^[a-f0-9]{64}$/u.test(intent.signatureHex)
   ) {
     throw new RiotApplicationError("INVALID_COMMAND", "Signed JOB authorization is invalid.");
   }
@@ -179,7 +188,9 @@ export class RiotApplicationService {
       const claim = await this.claim(transaction, identity);
       if (claim) return { body: claim.body, replayed: true };
       const current = await this.dependencies.repository.loadLinkForPlayerForUpdate(transaction, input.playerId);
-      const ownerAccountId = actor.purpose === "ACCOUNT" ? actor.userAccountId : current?.ownerAccountId;
+      const ownerAccountId = actor.purpose === "ACCOUNT"
+        ? actor.userAccountId
+        : current?.ownerAccountId ?? await this.dependencies.repository.loadPlayerOwnerAccountIdForUpdate(transaction, input.playerId);
       if (!ownerAccountId) throw new RiotApplicationError("NOT_FOUND", "Player ownership is not available.");
       const next = connectRiotAccount({
         current,
@@ -411,7 +422,7 @@ export class RiotApplicationService {
       const leaseId = this.dependencies.ids.next("LEASE");
       const next = claimRiotSyncJob({ job, expectedRevision: job.revision, leaseId, now });
       await this.dependencies.repository.saveSyncJob(transaction, next);
-      await this.recordJob(transaction, input.principalId, actor, "CLAIM_SYNC", jobSnapshot(job), jobSnapshot(next), next);
+      await this.recordJob(transaction, actor, "CLAIM_SYNC", jobSnapshot(job), jobSnapshot(next), next);
       return { job: next, link, leaseId };
     });
     if (!claimed) return { status: "IDLE" };
@@ -453,7 +464,7 @@ export class RiotApplicationService {
         });
       }
       await this.dependencies.repository.saveSyncJob(transaction, next);
-      await this.recordJob(transaction, input.principalId, actor, "FINISH_SYNC", jobSnapshot(current), jobSnapshot(next), next);
+      await this.recordJob(transaction, actor, "FINISH_SYNC", jobSnapshot(current), jobSnapshot(next), next);
       return jobSnapshot(next);
     });
     return { status: "PROCESSED", body };
@@ -568,7 +579,6 @@ export class RiotApplicationService {
 
   private async recordJob(
     transaction: RiotTransaction,
-    principalId: string,
     actor: CurrentRiotActor,
     action: "CLAIM_SYNC" | "FINISH_SYNC",
     before: RiotSafeBody,
@@ -576,7 +586,7 @@ export class RiotApplicationService {
     job: Readonly<{ id: string; revision: number }>,
   ): Promise<void> {
     const occurredAt = this.now().toISOString();
-    const requestId = `${principalId}:${job.id}:${job.revision}:${action}`;
+    const requestId = this.dependencies.ids.next("OUTBOX");
     await this.dependencies.audit.append(transaction, {
       requestId,
       actorPrincipalId: actor.principalId,
