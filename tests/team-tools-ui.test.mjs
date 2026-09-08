@@ -97,6 +97,8 @@ test("팀 밸런스 화면은 승인 계정, 10명 입력, top3·수동·저장�
     "selectedIds.has",
     "SingleChoice",
     'aria-pressed={row.allPositions}',
+    'className={styles.mainPositionButtons}',
+    'aria-label={`${row.playerLabel} 주 포지션`}',
     'aria-label="추가 가능 포지션"',
     'aria-expanded={stepOneOpen}',
     'aria-expanded={stepTwoOpen}',
@@ -119,12 +121,14 @@ test("팀 밸런스 화면은 승인 계정, 10명 입력, top3·수동·저장�
     "manualTeams",
     "onDragStart",
     "data-drop-target",
+    "manualPlayerInfo",
     "selectKeyboardSlot",
     "/matches/submit?teamBalanceDraftId=",
   ]) {
     assert.equal(detail.includes(contract), true, contract);
   }
   assert.equal(detail.includes("compactTeams"), false, "1·2·3안의 블루/레드 사진형 미리보기를 제거한다");
+  assert.equal(detail.includes("<select"), false, "수동 배치에는 플레이어 드롭다운을 표시하지 않는다");
   for (const contract of [
     "requireApprovedAccountPage",
     "service.listDrafts",

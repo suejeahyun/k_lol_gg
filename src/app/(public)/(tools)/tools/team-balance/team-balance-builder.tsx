@@ -45,7 +45,6 @@ type PlayerSearchResult = Readonly<{ playerId: string; displayName: string; riot
 const positionLabel = { TOP: "탑", JGL: "정글", MID: "미드", ADC: "원딜", SUP: "서포터" } as const;
 const preferenceLabel = { MAIN: "주 포지션", SUB: "부 포지션", AUTO: "자동 배치 가능" } as const;
 const originLabel = { ALL: "전체 신청", SITE: "사이트 신청", KAKAO: "카카오톡 신청" } as const;
-const positionOptions = TEAM_BALANCE_POSITIONS.map((value) => ({ value, label: positionLabel[value] }));
 const preferenceOptions = TEAM_BALANCE_PREFERENCES.map((value) => ({ value, label: preferenceLabel[value] }));
 
 function SingleChoice<T extends string>({
@@ -365,16 +364,39 @@ export function TeamBalanceBuilder() {
         {stepTwoOpen ? <div className={styles.balanceStepBody}>
           {selectedRows.length === 0 ? <p className={styles.stepEmpty}>먼저 1단계에서 참가자를 선택해 주세요.</p> : <div className={styles.balanceRows}>
             {rows.map((row, index) => !row.playerId ? null : (
-              <details key={row.playerId} className={styles.balanceRowDetails}>
-                <summary><span><b>{index + 1}</b><strong>{row.playerLabel}</strong></span><small>{row.allPositions ? "모든 포지션 가능" : `${positionLabel[row.mainPosition]}${row.additionalPositions.length ? ` 외 ${row.additionalPositions.length}` : ""}`}</small></summary>
-                <div>
-                  <button className={styles.allPositionToggle} type="button" aria-pressed={row.allPositions} data-selected={row.allPositions ? "true" : undefined} onClick={() => update(index, { allPositions: !row.allPositions, mainPreference: !row.allPositions ? "AUTO" : "MAIN" })}>모든 포지션 자동 배치</button>
-                  <SingleChoice label="주 포지션" value={row.mainPosition} options={positionOptions} disabled={row.allPositions} onChange={(mainPosition) => update(index, { mainPosition, additionalPositions: row.additionalPositions.filter((position) => position !== mainPosition) })} />
+              <article key={row.playerId} className={styles.balancePositionRow}>
+                <div className={styles.balancePositionHeader}>
+                  <span className={styles.balancePlayerIdentity}><b>{index + 1}</b><strong>{row.playerLabel}</strong></span>
+                  <div className={styles.mainPositionButtons} role="group" aria-label={`${row.playerLabel} 주 포지션`}>
+                    {TEAM_BALANCE_POSITIONS.map((position) => <button
+                      type="button"
+                      key={position}
+                      aria-pressed={!row.allPositions && row.mainPosition === position}
+                      data-selected={!row.allPositions && row.mainPosition === position ? "true" : undefined}
+                      onClick={() => update(index, {
+                        allPositions: false,
+                        mainPosition: position,
+                        mainPreference: row.allPositions ? "MAIN" : row.mainPreference,
+                        additionalPositions: row.additionalPositions.filter((candidate) => candidate !== position),
+                      })}
+                    >{positionLabel[position]}</button>)}
+                    <button
+                      type="button"
+                      aria-pressed={row.allPositions}
+                      data-selected={row.allPositions ? "true" : undefined}
+                      onClick={() => update(index, { allPositions: true, mainPreference: "AUTO" })}
+                    >전체</button>
+                  </div>
+                </div>
+                <details className={styles.balanceRowDetails}>
+                  <summary><strong>세부 설정</strong><small>{row.allPositions ? "모든 포지션 자동 배치" : `추가 가능 ${row.additionalPositions.length}개`}</small></summary>
+                  <div>
                   <SingleChoice label="주 포지션 선호" value={row.mainPreference} options={preferenceOptions} disabled={row.allPositions} onChange={(mainPreference) => update(index, { mainPreference })} />
                   <fieldset className={styles.choiceField} disabled={row.allPositions}><legend>추가 가능 포지션</legend><div className={styles.choiceButtons} role="group" aria-label="추가 가능 포지션">{TEAM_BALANCE_POSITIONS.filter((position) => position !== row.mainPosition).map((position) => { const selected = row.additionalPositions.includes(position); return <button type="button" key={position} aria-pressed={selected} data-selected={selected ? "true" : undefined} onClick={() => update(index, { additionalPositions: selected ? row.additionalPositions.filter((current) => current !== position) : [...row.additionalPositions, position] })}>{positionLabel[position]}</button>; })}</div></fieldset>
                   <SingleChoice label="추가 포지션 선호" value={row.additionalPreference} options={preferenceOptions} disabled={row.allPositions || row.additionalPositions.length === 0} onChange={(additionalPreference) => update(index, { additionalPreference })} />
-                </div>
-              </details>
+                  </div>
+                </details>
+              </article>
             ))}
           </div>}
         </div> : null}

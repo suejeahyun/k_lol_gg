@@ -15,6 +15,7 @@ import styles from "../../../team-tools.module.css";
 
 const positionLabel = { TOP: "탑", JGL: "정글", MID: "미드", ADC: "원딜", SUP: "서포터" } as const;
 const teamLabel = { BLUE: "블루", RED: "레드" } as const;
+const preferenceLabel = { MAIN: "주", SUB: "부", AUTO: "자동" } as const;
 
 export function TeamBalanceDraftWorkspace({
   draft,
@@ -35,6 +36,7 @@ export function TeamBalanceDraftWorkspace({
   const [keyboardSlot, setKeyboardSlot] = useState<number | null>(null);
   const [pending, setPending] = useState("");
   const [message, setMessage] = useState("");
+  const participantById = useMemo(() => new Map(draft.participants.map((participant) => [participant.playerId, participant])), [draft.participants]);
   const participantName = useMemo(() => new Map(draft.participants.map((participant) => [participant.playerId, participant.displayName])), [draft.participants]);
 
   async function mutate(action: "select" | "save" | "reevaluate", body: unknown) {
@@ -74,11 +76,6 @@ export function TeamBalanceDraftWorkspace({
           : entry);
     });
     setMessage("");
-  }
-
-  function updateManual(slot: number, playerId: string) {
-    const sourceSlot = manualLayout.findIndex((entry) => entry.playerId === playerId);
-    if (sourceSlot >= 0) swapManual(sourceSlot, slot);
   }
 
   function selectKeyboardSlot(slot: number) {
@@ -122,20 +119,38 @@ export function TeamBalanceDraftWorkspace({
       <section className={styles.manualSection} aria-labelledby="manual-title">
         <div className={styles.heading}><div><span>MANUAL BOARD</span><h2 id="manual-title">수동 배치와 서버 재평가</h2><p className={styles.stageHint}>플레이어 카드를 클릭한 채 원하는 자리로 끌어 놓으세요. 키보드에서는 교체 버튼을 두 번 선택하면 돼요.</p></div></div>
         <div className={styles.manualTeams}>
-          {TEAM_BALANCE_TEAMS.map((team) => <section key={team} data-team={team} aria-labelledby={`manual-${team.toLowerCase()}-title`}><header><h3 id={`manual-${team.toLowerCase()}-title`}>{teamLabel[team]} 팀</h3><span>5명</span></header><div>{manualLayout.map((entry, index) => entry.team !== team ? null : <article
-            key={`${entry.team}-${entry.position}`}
-            draggable
-            data-manual-slot={index}
-            data-dragging={draggingSlot === index ? "true" : undefined}
-            data-drop-target={dragOverSlot === index && draggingSlot !== index ? "true" : undefined}
-            data-keyboard-selected={keyboardSlot === index ? "true" : undefined}
-            aria-label={`${teamLabel[team]} 팀 ${positionLabel[entry.position]} ${participantName.get(entry.playerId) ?? entry.playerId}. 클릭한 채 다른 카드로 끌어 교체`}
-            title="클릭한 채 다른 플레이어 카드로 끌어 교체"
-            onDragStart={(event) => { event.dataTransfer.effectAllowed = "move"; event.dataTransfer.setData("text/plain", String(index)); setDraggingSlot(index); setDragOverSlot(index); setMessage("교체할 자리 위에 카드를 놓아 주세요."); }}
-            onDragEnd={() => { setDraggingSlot(null); setDragOverSlot(null); }}
-            onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "move"; setDragOverSlot(index); }}
-            onDrop={(event) => { event.preventDefault(); const sourceSlot = Number(event.dataTransfer.getData("text/plain")); if (Number.isInteger(sourceSlot) && sourceSlot !== index) { swapManual(sourceSlot, index); setMessage("두 플레이어의 자리를 바꿨어요. 서버 평가로 확인해 주세요."); } setDraggingSlot(null); setDragOverSlot(null); }}
-          ><div><GripVertical aria-hidden="true"/><b>{positionLabel[entry.position]}</b><strong>{participantName.get(entry.playerId) ?? entry.playerId}</strong><small>끌어서 이동</small></div><label><span className="sr-only">{teamLabel[team]} {positionLabel[entry.position]} 플레이어</span><select value={entry.playerId} onChange={(event) => updateManual(index, event.target.value)}>{draft.participants.map((participant) => <option value={participant.playerId} key={participant.playerId}>{participant.displayName}</option>)}</select></label><button type="button" aria-pressed={keyboardSlot === index} onClick={() => selectKeyboardSlot(index)}>{keyboardSlot === null ? "교체 시작" : keyboardSlot === index ? "선택 취소" : "여기와 교체"}</button></article>)}</div></section>)}
+          {TEAM_BALANCE_TEAMS.map((team) => <section key={team} data-team={team} aria-labelledby={`manual-${team.toLowerCase()}-title`}>
+            <header><h3 id={`manual-${team.toLowerCase()}-title`}>{teamLabel[team]} 팀</h3><span>5명</span></header>
+            <div>{manualLayout.map((entry, index) => {
+              if (entry.team !== team) return null;
+              const participant = participantById.get(entry.playerId);
+              const eligibility = participant?.eligiblePositions
+                .map((eligible) => `${positionLabel[eligible.position]} ${preferenceLabel[eligible.preference]}`)
+                .join(" · ") ?? "포지션 정보 없음";
+              const rating = participant?.rating;
+              const ratingSummary = rating?.overall === null || rating?.overall === undefined
+                ? "기본 점수 50 · 전적 표본 없음"
+                : `밸런스 ${rating.overall} · 신뢰도 ${Math.round((rating.confidence ?? 0) * 100)}% · 표본 ${rating.sampleSize ?? 0}`;
+              return <article
+                key={`${entry.team}-${entry.position}`}
+                draggable
+                data-manual-slot={index}
+                data-dragging={draggingSlot === index ? "true" : undefined}
+                data-drop-target={dragOverSlot === index && draggingSlot !== index ? "true" : undefined}
+                data-keyboard-selected={keyboardSlot === index ? "true" : undefined}
+                aria-label={`${teamLabel[team]} 팀 ${positionLabel[entry.position]} ${participantName.get(entry.playerId) ?? entry.playerId}. 클릭한 채 다른 카드로 끌어 교체`}
+                title="클릭한 채 다른 플레이어 카드로 끌어 교체"
+                onDragStart={(event) => { event.dataTransfer.effectAllowed = "move"; event.dataTransfer.setData("text/plain", String(index)); setDraggingSlot(index); setDragOverSlot(index); setMessage("교체할 자리 위에 카드를 놓아 주세요."); }}
+                onDragEnd={() => { setDraggingSlot(null); setDragOverSlot(null); }}
+                onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "move"; setDragOverSlot(index); }}
+                onDrop={(event) => { event.preventDefault(); const sourceSlot = Number(event.dataTransfer.getData("text/plain")); if (Number.isInteger(sourceSlot) && sourceSlot !== index) { swapManual(sourceSlot, index); setMessage("두 플레이어의 자리를 바꿨어요. 서버 평가로 확인해 주세요."); } setDraggingSlot(null); setDragOverSlot(null); }}
+              >
+                <div className={styles.manualPlayerName}><GripVertical aria-hidden="true"/><b>{positionLabel[entry.position]}</b><strong>{participantName.get(entry.playerId) ?? entry.playerId}</strong><small>끌어서 이동</small></div>
+                <div className={styles.manualPlayerInfo}><strong>{eligibility}</strong><small>{ratingSummary}</small></div>
+                <button type="button" aria-pressed={keyboardSlot === index} onClick={() => selectKeyboardSlot(index)}>{keyboardSlot === null ? "교체 시작" : keyboardSlot === index ? "선택 취소" : "여기와 교체"}</button>
+              </article>;
+            })}</div>
+          </section>)}
         </div>
         <div className={styles.manualEvaluation}><div><span>SERVER EVALUATION</span><strong>현재 수동 배치를 V2 계산 기준으로 다시 평가합니다.</strong><small>브라우저 임시 점수를 저장하지 않고 서버가 참가자·포지션·점수를 검증한 결과만 선택합니다.</small></div><button className={styles.secondaryButton} type="button" disabled={Boolean(pending) || manualLayout.length !== 10} onClick={() => mutate("select", { layout: manualLayout })}><SlidersHorizontal size={17} aria-hidden="true" /> 수동 배치 평가·선택</button></div>
       </section>
