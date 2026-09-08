@@ -18,6 +18,9 @@
 
 - ADMIN은 `/api/admin/kakao/stats`, `/api/admin/kakao/recruit-health`,
   `/api/admin/kakao/settings`에서 secret-free 상태를 읽는다.
+- ADMIN은 `/api/admin/season-kakao-pending` 목록·상세를 읽고, SUPER_ADMIN+TOTP만 수동 player 연결과
+  취소를 실행한다. 같은 시즌·날짜·회차·player의 SITE 신청과 이미 검토된 결정은 Kakao 입력보다
+  우선하며 source hash와 원문 식별자는 공개 DTO에 포함하지 않는다.
 - 설정 변경과 만료 이미지 세션 복구는 SUPER_ADMIN의 ADMIN-purpose TOTP session을 transaction에서
   다시 확인하고 `If-Match`, `Idempotency-Key`, audit와 outbox를 요구한다.
 - signing key와 허용 room/sender 원문은 환경 변수에만 두고 DB, API, 화면, 로그에 노출하지 않는다.

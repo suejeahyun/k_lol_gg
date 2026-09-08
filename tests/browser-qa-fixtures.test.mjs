@@ -29,7 +29,7 @@ test("browser QA server emits setup credentials, actor identity and fail-fast dy
   for (const evidence of [
     "assertSafeTestDatabase", "setupLoginId", "accountLoginId", "actorPlayerId", "seasonId", "applicationId",
     "championKey", "publishedMatchId", "submissionId", "highlightId", "galleryId", "eventId", "destructionId",
-    "disciplineRecordId", "operationFormId", "privateAssetId", "draftId", "mmrReviewId", "destructionPlayerId", "requiredFixture",
+    "disciplineRecordId", "operationFormId", "privateAssetId", "draftId", "mmrReviewId", "destructionPlayerId", "pendingKakaoApplicationId", "requiredFixture",
     'V2_PUBLIC_DATA_SOURCE: "postgres"',
     'V2_BROWSER_QA_MODE: "true"',
     'V2_FAKE_PRIVATE_ASSETS: "1"',

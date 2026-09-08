@@ -8,12 +8,16 @@ export const SEASON_APPLICATION_STATUSES = [
 ] as const;
 export const SEASON_APPLICATION_POSITIONS = ["TOP", "JGL", "MID", "ADC", "SUP", "ALL"] as const;
 export const SEASON_APPLICATION_SOURCES = ["SITE", "KAKAO"] as const;
+export const SEASON_KAKAO_PENDING_MATCH_STATES = ["MATCHED_RESERVE", "UNMATCHED", "AMBIGUOUS"] as const;
+export const SEASON_KAKAO_PENDING_STATUSES = ["ACTIVE", "CANCELLED", "RESOLVED"] as const;
 export const SEASON_COMMAND_RECEIPT_TTL_MS = 24 * 60 * 60 * 1_000;
 
 export type SeasonStatus = (typeof SEASON_STATUSES)[number];
 export type SeasonApplicationStatus = (typeof SEASON_APPLICATION_STATUSES)[number];
 export type SeasonApplicationPosition = (typeof SEASON_APPLICATION_POSITIONS)[number];
 export type SeasonApplicationSource = (typeof SEASON_APPLICATION_SOURCES)[number];
+export type SeasonKakaoPendingMatchState = (typeof SEASON_KAKAO_PENDING_MATCH_STATES)[number];
+export type SeasonKakaoPendingStatus = (typeof SEASON_KAKAO_PENDING_STATUSES)[number];
 
 export type PublicSeason = Readonly<{
   id: string;
@@ -58,6 +62,55 @@ export type ApplicationHub = Readonly<{
   hasActivePlayer: boolean;
   participantTotal: number;
   participantsTruncated: boolean;
+  selectedRecruitNo: number;
+  availableRecruitNos: readonly number[];
+}>;
+
+export type AdminSeasonKakaoPendingApplication = Readonly<{
+  id: string;
+  seasonId: string;
+  seasonName: string;
+  applyDate: string;
+  recruitNo: number;
+  slotNo: number;
+  suppliedName: string;
+  suppliedRiotId: string | null;
+  mainPosition: SeasonApplicationPosition;
+  subPositions: readonly SeasonApplicationPosition[];
+  reserve: boolean;
+  matchState: SeasonKakaoPendingMatchState;
+  status: SeasonKakaoPendingStatus;
+  matchedPlayer: Readonly<{ id: string; displayName: string; riotId: string }> | null;
+  revision: number;
+  createdAt: string;
+  updatedAt: string;
+}>;
+
+export type AdminSeasonKakaoPendingPage = Readonly<{
+  applications: readonly AdminSeasonKakaoPendingApplication[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+}>;
+
+export type AdminSeasonKakaoPendingDetail = Readonly<{
+  application: AdminSeasonKakaoPendingApplication;
+  candidates: readonly Readonly<{ id: string; displayName: string; riotId: string }>[];
+  candidateQuery: string;
+}>;
+
+/** Safe, deliberately small hand-off projection for the team-balance application layer. */
+export type ConfirmedSeasonTeamBalanceRoster = Readonly<{
+  season: Readonly<{ id: string; name: string }>;
+  applyDate: string;
+  recruitNo: number;
+  participants: readonly Readonly<{
+    playerId: string;
+    displayName: string;
+    mainPosition: SeasonApplicationPosition;
+    subPositions: readonly SeasonApplicationPosition[];
+  }>[];
 }>;
 
 export type AdminSeason = Readonly<{
@@ -122,6 +175,14 @@ export function isSeasonApplicationStatus(value: unknown): value is SeasonApplic
     typeof value === "string" &&
     SEASON_APPLICATION_STATUSES.includes(value as SeasonApplicationStatus)
   );
+}
+
+export function isSeasonKakaoPendingMatchState(value: unknown): value is SeasonKakaoPendingMatchState {
+  return typeof value === "string" && SEASON_KAKAO_PENDING_MATCH_STATES.includes(value as SeasonKakaoPendingMatchState);
+}
+
+export function isSeasonKakaoPendingStatus(value: unknown): value is SeasonKakaoPendingStatus {
+  return typeof value === "string" && SEASON_KAKAO_PENDING_STATUSES.includes(value as SeasonKakaoPendingStatus);
 }
 
 export function normalizeSeasonName(value: string): string {

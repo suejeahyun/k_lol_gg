@@ -24,6 +24,7 @@ import { players } from "@/platform/db/schema/registry";
 import {
   seasonApplications,
   seasonCommandReceipts,
+  seasonKakaoPendingApplications,
   seasons,
 } from "@/platform/db/schema/seasons";
 import type { V2Database } from "@/platform/db/database";
@@ -32,15 +33,18 @@ import { withTransaction } from "@/platform/db/transaction";
 
 import type {
   AdminWorkspaceQuery,
+  AdminKakaoPendingQuery,
   CommandEnvelope,
   CreateSeasonInput,
   MutationResult,
   ReviewApplicationInput,
+  ResolveKakaoPendingInput,
   SeasonAuditWriter,
   SeasonRepository,
   UpdateSeasonInput,
   UpsertOwnApplicationInput,
 } from "../application/ports/season-repository";
+import { planSeasonApplicationMerge } from "../domain/application-source-policy";
 import {
   kstDateKey,
   normalizedSeasonIdentity,
@@ -49,12 +53,14 @@ import {
   SeasonServiceError,
   type AdminSeason,
   type AdminSeasonApplication,
+  type AdminSeasonKakaoPendingApplication,
   type OwnSeasonApplication,
   type PublicSeason,
 } from "../domain/season";
 
 type SeasonRow = typeof seasons.$inferSelect;
 type ApplicationRow = typeof seasonApplications.$inferSelect;
+type PendingApplicationRow = typeof seasonKakaoPendingApplications.$inferSelect;
 type SuccessfulBody = Record<string, unknown>;
 
 function iso(value: Date | null): string | null {
@@ -126,6 +132,57 @@ function applicationAuditSnapshot(row: ApplicationRow): Record<string, unknown> 
     revision: row.revision,
   };
 }
+
+function pendingAuditSnapshot(row: PendingApplicationRow): Record<string, unknown> {
+  return {
+    seasonId: row.seasonId,
+    matchedPlayerId: row.matchedPlayerId,
+    applyDate: row.applyDate,
+    recruitNo: row.recruitNo,
+    slotNo: row.slotNo,
+    suppliedName: row.suppliedName,
+    suppliedRiotId: row.suppliedRiotId,
+    mainPosition: row.mainPosition,
+    subPositions: row.subPositions,
+    reserve: row.reserve,
+    matchState: row.matchState,
+    status: row.status,
+    cancelledAt: iso(row.cancelledAt),
+    resolvedAt: iso(row.resolvedAt),
+    revision: row.revision,
+  };
+}
+
+function adminPendingApplication(
+  row: PendingApplicationRow,
+  seasonName: string,
+  player: { id: string; nickname: string; tagLine: string } | null,
+): AdminSeasonKakaoPendingApplication {
+  return {
+    id: row.id,
+    seasonId: row.seasonId,
+    seasonName,
+    applyDate: row.applyDate,
+    recruitNo: row.recruitNo,
+    slotNo: row.slotNo,
+    suppliedName: row.suppliedName,
+    suppliedRiotId: row.suppliedRiotId,
+    mainPosition: row.mainPosition,
+    subPositions: row.subPositions,
+    reserve: row.reserve,
+    matchState: row.matchState,
+    status: row.status,
+    matchedPlayer: player ? { id: player.id, displayName: player.nickname, riotId: `${player.nickname}#${player.tagLine}` } : null,
+    revision: row.revision,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+  };
+}
+
+const SUPER_ADMIN_MUTATION_SESSION_POLICY = {
+  ...ADMIN_MUTATION_SESSION_POLICY,
+  minimumRole: "SUPER_ADMIN" as const,
+};
 
 function postgresDetails(error: unknown): { code?: string; constraint?: string } {
   let current: unknown = error;
@@ -227,9 +284,11 @@ export class PostgresSeasonRepository implements SeasonRepository {
         if (envelope.actorUserAccountId !== envelope.actorSession.userAccountId) {
           throw new SeasonServiceError("SESSION_STALE", "로그인 세션이 더 이상 유효하지 않습니다.");
         }
-        const policy = requiredAuthorization === "ADMIN_MUTATION"
-          ? ADMIN_MUTATION_SESSION_POLICY
-          : APPROVED_ACCOUNT_MUTATION_SESSION_POLICY;
+        const policy = requiredAuthorization === "SUPER_ADMIN_MUTATION"
+          ? SUPER_ADMIN_MUTATION_SESSION_POLICY
+          : requiredAuthorization === "ADMIN_MUTATION"
+            ? ADMIN_MUTATION_SESSION_POLICY
+            : APPROVED_ACCOUNT_MUTATION_SESSION_POLICY;
         if (
           !(await lockTransactionSessionActor(
             transaction,
@@ -306,7 +365,7 @@ export class PostgresSeasonRepository implements SeasonRepository {
     return rows[0] ? publicSeason(rows[0], now) : null;
   }
 
-  async getApplicationHub(actorUserAccountId: string | null, now: Date) {
+  async getApplicationHub(actorUserAccountId: string | null, now: Date, recruitNo: number) {
     const today = kstDateKey(now);
     let viewer: "ANONYMOUS" | "RESTRICTED" | "APPROVED" = "ANONYMOUS";
     let applicantPlayerId: string | null = null;
@@ -344,13 +403,42 @@ export class PostgresSeasonRepository implements SeasonRepository {
         hasActivePlayer: Boolean(applicantPlayerId),
         participantTotal: 0,
         participantsTruncated: false,
+        selectedRecruitNo: recruitNo,
+        availableRecruitNos: [1],
       };
+    }
+
+    const [applicationRoundRows, pendingRoundRows] = await Promise.all([
+      this.database
+        .selectDistinct({ recruitNo: seasonApplications.recruitNo })
+        .from(seasonApplications)
+        .where(and(
+          eq(seasonApplications.seasonId, season.id),
+          eq(seasonApplications.applyDate, today),
+          inArray(seasonApplications.status, ["APPLIED", "RESERVE", "CONFIRMED"]),
+        )),
+      this.database
+        .selectDistinct({ recruitNo: seasonKakaoPendingApplications.recruitNo })
+        .from(seasonKakaoPendingApplications)
+        .where(and(
+          eq(seasonKakaoPendingApplications.seasonId, season.id),
+          eq(seasonKakaoPendingApplications.applyDate, today),
+          eq(seasonKakaoPendingApplications.status, "ACTIVE"),
+        )),
+    ]);
+    const availableRecruitNos = [...new Set([
+      1,
+      ...applicationRoundRows.map((row) => row.recruitNo),
+      ...pendingRoundRows.map((row) => row.recruitNo),
+    ])].sort((left, right) => left - right);
+    if (!availableRecruitNos.includes(recruitNo)) {
+      throw new SeasonServiceError("INVALID_INPUT", "현재 공개된 모집 회차가 아닙니다.");
     }
 
     const publicPredicates = and(
       eq(seasonApplications.seasonId, season.id),
       eq(seasonApplications.applyDate, today),
-      eq(seasonApplications.recruitNo, 1),
+      eq(seasonApplications.recruitNo, recruitNo),
       inArray(seasonApplications.status, ["APPLIED", "RESERVE", "CONFIRMED"]),
       eq(players.status, "ACTIVE"),
     );
@@ -390,7 +478,7 @@ export class PostgresSeasonRepository implements SeasonRepository {
           and(
             eq(seasonApplications.seasonId, season.id),
             eq(seasonApplications.applyDate, today),
-            eq(seasonApplications.recruitNo, 1),
+            eq(seasonApplications.recruitNo, recruitNo),
             eq(players.userAccountId, actorUserAccountId),
           ),
         )
@@ -424,11 +512,13 @@ export class PostgresSeasonRepository implements SeasonRepository {
       hasActivePlayer: Boolean(applicantPlayerId),
       participantTotal,
       participantsTruncated: participantTotal > publicRows.length,
+      selectedRecruitNo: recruitNo,
+      availableRecruitNos,
     };
   }
 
-  async findOwnApplication(actorUserAccountId: string, now: Date) {
-    return (await this.getApplicationHub(actorUserAccountId, now)).myApplication;
+  async findOwnApplication(actorUserAccountId: string, now: Date, recruitNo: number) {
+    return (await this.getApplicationHub(actorUserAccountId, now, recruitNo)).myApplication;
   }
 
   async getAdminWorkspace(query: AdminWorkspaceQuery) {
@@ -527,6 +617,113 @@ export class PostgresSeasonRepository implements SeasonRepository {
       applicationPageSize: query.pageSize,
       applicationTotalCount: totalCount,
       applicationTotalPages: totalPages,
+    };
+  }
+
+  async getKakaoPendingApplications(query: AdminKakaoPendingQuery) {
+    const predicates = [];
+    if (query.seasonId) predicates.push(eq(seasonKakaoPendingApplications.seasonId, query.seasonId));
+    if (query.applyDate) predicates.push(eq(seasonKakaoPendingApplications.applyDate, query.applyDate));
+    if (query.recruitNo) predicates.push(eq(seasonKakaoPendingApplications.recruitNo, query.recruitNo));
+    if (query.matchState) predicates.push(eq(seasonKakaoPendingApplications.matchState, query.matchState));
+    if (query.status) predicates.push(eq(seasonKakaoPendingApplications.status, query.status));
+    if (query.query) {
+      const escaped = query.query.replaceAll("\\", "\\\\").replaceAll("%", "\\%").replaceAll("_", "\\_");
+      const pattern = `%${escaped}%`;
+      predicates.push(or(
+        ilike(seasonKakaoPendingApplications.suppliedName, pattern),
+        ilike(seasonKakaoPendingApplications.suppliedRiotId, pattern),
+      )!);
+    }
+    const where = predicates.length ? and(...predicates) : undefined;
+    const countRows = await this.database.select({ value: count() }).from(seasonKakaoPendingApplications).where(where);
+    const totalCount = countRows[0]?.value ?? 0;
+    const totalPages = Math.max(1, Math.ceil(totalCount / query.pageSize));
+    const page = Math.min(Math.max(1, query.page), totalPages);
+    const rows = await this.database
+      .select({ pending: seasonKakaoPendingApplications, seasonName: seasons.name, player: players })
+      .from(seasonKakaoPendingApplications)
+      .innerJoin(seasons, eq(seasons.id, seasonKakaoPendingApplications.seasonId))
+      .leftJoin(players, eq(players.id, seasonKakaoPendingApplications.matchedPlayerId))
+      .where(where)
+      .orderBy(desc(seasonKakaoPendingApplications.updatedAt), asc(seasonKakaoPendingApplications.slotNo))
+      .limit(query.pageSize)
+      .offset((page - 1) * query.pageSize);
+    return {
+      applications: rows.map((row) => adminPendingApplication(row.pending, row.seasonName, row.player)),
+      page,
+      pageSize: query.pageSize,
+      totalCount,
+      totalPages,
+    };
+  }
+
+  async getKakaoPendingApplication(id: string, candidateQuery: string) {
+    const rows = await this.database
+      .select({ pending: seasonKakaoPendingApplications, seasonName: seasons.name, player: players })
+      .from(seasonKakaoPendingApplications)
+      .innerJoin(seasons, eq(seasons.id, seasonKakaoPendingApplications.seasonId))
+      .leftJoin(players, eq(players.id, seasonKakaoPendingApplications.matchedPlayerId))
+      .where(eq(seasonKakaoPendingApplications.id, id))
+      .limit(1);
+    const row = rows[0];
+    if (!row) throw new SeasonServiceError("NOT_FOUND", "Kakao 보류 신청을 찾을 수 없습니다.");
+    const lookup = candidateQuery || row.pending.suppliedRiotId || row.pending.suppliedName;
+    const escaped = lookup.replaceAll("\\", "\\\\").replaceAll("%", "\\%").replaceAll("_", "\\_");
+    const pattern = `%${escaped}%`;
+    const candidateRows = await this.database
+      .select({ id: players.id, nickname: players.nickname, tagLine: players.tagLine })
+      .from(players)
+      .where(and(
+        eq(players.status, "ACTIVE"),
+        or(
+          ilike(players.memberName, pattern),
+          ilike(players.nickname, pattern),
+          ilike(sql<string>`${players.nickname} || '#' || ${players.tagLine}`, pattern),
+        ),
+      ))
+      .orderBy(asc(players.nicknameNormalized), asc(players.id))
+      .limit(50);
+    const candidateMap = new Map(candidateRows.map((candidate) => [candidate.id, candidate]));
+    if (row.player) candidateMap.set(row.player.id, row.player);
+    return {
+      application: adminPendingApplication(row.pending, row.seasonName, row.player),
+      candidateQuery,
+      candidates: [...candidateMap.values()].map((candidate) => ({
+        id: candidate.id,
+        displayName: candidate.nickname,
+        riotId: `${candidate.nickname}#${candidate.tagLine}`,
+      })),
+    };
+  }
+
+  async getConfirmedApplicationsForTeamBalance(seasonId: string, applyDate: string, recruitNo: number) {
+    const seasonRows = await this.database.select({ id: seasons.id, name: seasons.name }).from(seasons).where(eq(seasons.id, seasonId)).limit(1);
+    const season = seasonRows[0];
+    if (!season) throw new SeasonServiceError("NOT_FOUND", "시즌을 찾을 수 없습니다.");
+    const rows = await this.database
+      .select({ application: seasonApplications, playerId: players.id, displayName: players.nickname })
+      .from(seasonApplications)
+      .innerJoin(players, eq(players.id, seasonApplications.playerId))
+      .where(and(
+        eq(seasonApplications.seasonId, seasonId),
+        eq(seasonApplications.applyDate, applyDate),
+        eq(seasonApplications.recruitNo, recruitNo),
+        eq(seasonApplications.status, "CONFIRMED"),
+        eq(players.status, "ACTIVE"),
+      ))
+      .orderBy(asc(seasonApplications.createdAt), asc(seasonApplications.id))
+      .limit(50);
+    return {
+      season,
+      applyDate,
+      recruitNo,
+      participants: rows.map((row) => ({
+        playerId: row.playerId,
+        displayName: row.displayName,
+        mainPosition: row.application.mainPosition,
+        subPositions: row.application.subPositions,
+      })),
     };
   }
 
@@ -847,6 +1044,32 @@ export class PostgresSeasonRepository implements SeasonRepository {
     return playerRows[0];
   }
 
+  private async assertRecruitRoundExists(
+    transaction: V2Transaction,
+    seasonId: string,
+    applyDate: string,
+    recruitNo: number,
+  ) {
+    if (recruitNo === 1) return;
+    const [applicationRows, pendingRows] = await Promise.all([
+      transaction.select({ id: seasonApplications.id }).from(seasonApplications).where(and(
+        eq(seasonApplications.seasonId, seasonId),
+        eq(seasonApplications.applyDate, applyDate),
+        eq(seasonApplications.recruitNo, recruitNo),
+        inArray(seasonApplications.status, ["APPLIED", "RESERVE", "CONFIRMED"]),
+      )).limit(1),
+      transaction.select({ id: seasonKakaoPendingApplications.id }).from(seasonKakaoPendingApplications).where(and(
+        eq(seasonKakaoPendingApplications.seasonId, seasonId),
+        eq(seasonKakaoPendingApplications.applyDate, applyDate),
+        eq(seasonKakaoPendingApplications.recruitNo, recruitNo),
+        eq(seasonKakaoPendingApplications.status, "ACTIVE"),
+      )).limit(1),
+    ]);
+    if (!applicationRows[0] && !pendingRows[0]) {
+      throw new SeasonServiceError("INVALID_INPUT", "Kakao에서 시작되지 않은 추가 모집 회차입니다.");
+    }
+  }
+
   async upsertOwnApplication(
     envelope: CommandEnvelope,
     input: UpsertOwnApplicationInput,
@@ -855,6 +1078,7 @@ export class PostgresSeasonRepository implements SeasonRepository {
     return this.idempotent(envelope, "APPROVED_ACCOUNT_MUTATION", async (transaction) => {
       const season = await this.activeSeasonForUpdate(transaction, now);
       const player = await this.actorPlayerForUpdate(transaction, input.actorUserAccountId);
+      await this.assertRecruitRoundExists(transaction, season.id, input.applyDate, input.recruitNo);
       const currentRows = await transaction
         .select()
         .from(seasonApplications)
@@ -863,7 +1087,7 @@ export class PostgresSeasonRepository implements SeasonRepository {
             eq(seasonApplications.seasonId, season.id),
             eq(seasonApplications.playerId, player.id),
             eq(seasonApplications.applyDate, input.applyDate),
-            eq(seasonApplications.recruitNo, 1),
+            eq(seasonApplications.recruitNo, input.recruitNo),
           ),
         )
         .for("update")
@@ -881,7 +1105,7 @@ export class PostgresSeasonRepository implements SeasonRepository {
             seasonId: season.id,
             playerId: player.id,
             applyDate: input.applyDate,
-            recruitNo: 1,
+            recruitNo: input.recruitNo,
             mainPosition: input.mainPosition,
             subPositions: [...input.subPositions],
             status: "APPLIED",
@@ -950,11 +1174,13 @@ export class PostgresSeasonRepository implements SeasonRepository {
     envelope: CommandEnvelope,
     expectedRevision: number,
     applyDate: string,
+    recruitNo: number,
     now: Date,
   ) {
     return this.idempotent(envelope, "APPROVED_ACCOUNT_MUTATION", async (transaction) => {
       const season = await this.activeSeasonForUpdate(transaction, now);
       const player = await this.actorPlayerForUpdate(transaction, envelope.actorUserAccountId);
+      await this.assertRecruitRoundExists(transaction, season.id, applyDate, recruitNo);
       const currentRows = await transaction
         .select()
         .from(seasonApplications)
@@ -963,7 +1189,7 @@ export class PostgresSeasonRepository implements SeasonRepository {
             eq(seasonApplications.seasonId, season.id),
             eq(seasonApplications.playerId, player.id),
             eq(seasonApplications.applyDate, applyDate),
-            eq(seasonApplications.recruitNo, 1),
+            eq(seasonApplications.recruitNo, recruitNo),
           ),
         )
         .for("update")
@@ -1058,6 +1284,186 @@ export class PostgresSeasonRepository implements SeasonRepository {
         after: applicationAuditSnapshot(reviewed),
       });
       return { body, status: 200, revision: reviewed.revision };
+    });
+  }
+
+  async resolveKakaoPendingApplication(
+    envelope: CommandEnvelope,
+    input: ResolveKakaoPendingInput,
+    now: Date,
+  ) {
+    return this.idempotent(envelope, "SUPER_ADMIN_MUTATION", async (transaction) => {
+      const pendingRows = await transaction
+        .select()
+        .from(seasonKakaoPendingApplications)
+        .where(eq(seasonKakaoPendingApplications.id, input.id))
+        .for("update")
+        .limit(1);
+      const pending = pendingRows[0];
+      if (!pending) throw new SeasonServiceError("NOT_FOUND", "Kakao 보류 신청을 찾을 수 없습니다.");
+      if (pending.revision !== input.expectedRevision) {
+        throw new SeasonServiceError("PRECONDITION_FAILED", "보류 신청 revision이 변경되었습니다.");
+      }
+      if (pending.status !== "ACTIVE") {
+        throw new SeasonServiceError("INVALID_TRANSITION", "처리 대기 중인 Kakao 신청만 해결할 수 있습니다.");
+      }
+      if (pending.matchedPlayerId && pending.matchedPlayerId !== input.playerId) {
+        throw new SeasonServiceError("INVALID_INPUT", "자동 일치된 예비 신청은 해당 플레이어로만 해결할 수 있습니다.");
+      }
+      const playerRows = await transaction
+        .select()
+        .from(players)
+        .where(and(eq(players.id, input.playerId), eq(players.status, "ACTIVE")))
+        .for("update")
+        .limit(1);
+      if (!playerRows[0]) throw new SeasonServiceError("NOT_FOUND", "연결할 활성 플레이어를 찾을 수 없습니다.");
+
+      const existingRows = await transaction
+        .select()
+        .from(seasonApplications)
+        .where(and(
+          eq(seasonApplications.seasonId, pending.seasonId),
+          eq(seasonApplications.playerId, input.playerId),
+          eq(seasonApplications.applyDate, pending.applyDate),
+          eq(seasonApplications.recruitNo, pending.recruitNo),
+        ))
+        .for("update")
+        .limit(1);
+      const existing = existingRows[0] ?? null;
+      const plan = planSeasonApplicationMerge(existing);
+      let application = existing;
+      if (plan.action === "CREATE_KAKAO") {
+        const createdRows = await transaction.insert(seasonApplications).values({
+          id: randomUUID(),
+          seasonId: pending.seasonId,
+          playerId: input.playerId,
+          applyDate: pending.applyDate,
+          recruitNo: pending.recruitNo,
+          sourceSlotNo: pending.slotNo,
+          mainPosition: pending.mainPosition,
+          subPositions: pending.subPositions,
+          status: input.applicationStatus,
+          source: "KAKAO",
+          sourceReferenceHash: pending.sourceReferenceHash,
+          reviewedByUserAccountId: input.applicationStatus === "RESERVE" ? envelope.actorUserAccountId : null,
+          reviewedAt: input.applicationStatus === "RESERVE" ? now : null,
+          createdAt: now,
+          updatedAt: now,
+        }).returning();
+        application = createdRows[0]!;
+      } else if (plan.action === "REFRESH_KAKAO") {
+        const refreshedRows = await transaction.update(seasonApplications).set({
+          sourceSlotNo: pending.slotNo,
+          mainPosition: pending.mainPosition,
+          subPositions: pending.subPositions,
+          status: input.applicationStatus,
+          sourceReferenceHash: pending.sourceReferenceHash,
+          reviewNote: null,
+          reviewedByUserAccountId: input.applicationStatus === "RESERVE" ? envelope.actorUserAccountId : null,
+          reviewedAt: input.applicationStatus === "RESERVE" ? now : null,
+          cancelledAt: null,
+          revision: sql`${seasonApplications.revision} + 1`,
+          updatedAt: now,
+        }).where(and(eq(seasonApplications.id, existing!.id), eq(seasonApplications.revision, existing!.revision))).returning();
+        application = refreshedRows[0];
+        if (!application) throw new SeasonServiceError("PRECONDITION_FAILED", "연결 대상 신청이 변경되었습니다.");
+      }
+
+      const resolvedRows = await transaction.update(seasonKakaoPendingApplications).set({
+        status: "RESOLVED",
+        resolvedAt: now,
+        cancelledAt: null,
+        revision: sql`${seasonKakaoPendingApplications.revision} + 1`,
+        updatedAt: now,
+      }).where(and(
+        eq(seasonKakaoPendingApplications.id, pending.id),
+        eq(seasonKakaoPendingApplications.revision, input.expectedRevision),
+        eq(seasonKakaoPendingApplications.status, "ACTIVE"),
+      )).returning();
+      const resolved = resolvedRows[0];
+      if (!resolved || !application) throw new SeasonServiceError("PRECONDITION_FAILED", "보류 신청 상태가 변경되었습니다.");
+
+      if (plan.action !== "PRESERVE") {
+        await this.auditWriter.append(transaction, {
+          requestId: envelope.requestId,
+          actorUserAccountId: envelope.actorUserAccountId,
+          action: "SEASON_KAKAO_APPLICATION_MERGED",
+          targetType: "SEASON_APPLICATION",
+          targetId: application.id,
+          before: existing ? applicationAuditSnapshot(existing) : null,
+          after: applicationAuditSnapshot(application),
+          metadata: { pendingApplicationId: pending.id, mergePolicy: "SITE_AND_REVIEWED_DECISIONS_WIN", outcome: plan.outcome },
+        });
+      }
+      await this.auditWriter.append(transaction, {
+        requestId: envelope.requestId,
+        actorUserAccountId: envelope.actorUserAccountId,
+        action: "SEASON_KAKAO_PENDING_RESOLVED",
+        targetType: "SEASON_KAKAO_PENDING_APPLICATION",
+        targetId: resolved.id,
+        before: pendingAuditSnapshot(pending),
+        after: pendingAuditSnapshot(resolved),
+        metadata: { playerId: input.playerId, applicationId: application.id, mergePolicy: "SITE_AND_REVIEWED_DECISIONS_WIN", outcome: plan.outcome },
+      });
+      return {
+        body: {
+          pendingApplicationId: resolved.id,
+          applicationId: application.id,
+          pendingStatus: resolved.status,
+          applicationStatus: application.status,
+          mergeOutcome: plan.outcome,
+          revision: resolved.revision,
+        },
+        status: 200,
+        revision: resolved.revision,
+      };
+    });
+  }
+
+  async cancelKakaoPendingApplication(
+    envelope: CommandEnvelope,
+    id: string,
+    expectedRevision: number,
+    now: Date,
+  ) {
+    return this.idempotent(envelope, "SUPER_ADMIN_MUTATION", async (transaction) => {
+      const currentRows = await transaction.select().from(seasonKakaoPendingApplications)
+        .where(eq(seasonKakaoPendingApplications.id, id)).for("update").limit(1);
+      const current = currentRows[0];
+      if (!current) throw new SeasonServiceError("NOT_FOUND", "Kakao 보류 신청을 찾을 수 없습니다.");
+      if (current.revision !== expectedRevision) {
+        throw new SeasonServiceError("PRECONDITION_FAILED", "보류 신청 revision이 변경되었습니다.");
+      }
+      if (current.status !== "ACTIVE") {
+        throw new SeasonServiceError("INVALID_TRANSITION", "처리 대기 중인 Kakao 신청만 취소할 수 있습니다.");
+      }
+      const cancelledRows = await transaction.update(seasonKakaoPendingApplications).set({
+        status: "CANCELLED",
+        cancelledAt: now,
+        resolvedAt: null,
+        revision: sql`${seasonKakaoPendingApplications.revision} + 1`,
+        updatedAt: now,
+      }).where(and(
+        eq(seasonKakaoPendingApplications.id, id),
+        eq(seasonKakaoPendingApplications.revision, expectedRevision),
+        eq(seasonKakaoPendingApplications.status, "ACTIVE"),
+      )).returning();
+      const cancelled = cancelledRows[0];
+      if (!cancelled) throw new SeasonServiceError("PRECONDITION_FAILED", "보류 신청 상태가 변경되었습니다.");
+      await this.auditWriter.append(transaction, {
+        requestId: envelope.requestId,
+        actorUserAccountId: envelope.actorUserAccountId,
+        action: "SEASON_KAKAO_PENDING_CANCELLED",
+        targetType: "SEASON_KAKAO_PENDING_APPLICATION",
+        targetId: cancelled.id,
+        before: pendingAuditSnapshot(current),
+        after: pendingAuditSnapshot(cancelled),
+      });
+      return {
+        body: { pendingApplicationId: cancelled.id, status: cancelled.status, revision: cancelled.revision },
+        status: 200,
+        revision: cancelled.revision,
+      };
     });
   }
 }

@@ -10,3 +10,4 @@ export * from "./application/ports/team-balance-recommendation-repository";
 export * from "./application/ports/team-balance-repository";
 export * from "./application/ports/team-balance-rating-provider";
 export * from "./application/ports/riot-solo-rank-sync";
+export * from "./application/ports/team-balance-candidate-repository";

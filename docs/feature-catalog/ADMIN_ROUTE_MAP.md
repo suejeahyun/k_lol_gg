@@ -181,7 +181,7 @@
 | 046 | `/admin/kakao/recruits/logs` | 통합 | `/admin/kakao?tab=logs`, 필터·페이지 유지 | ADMIN |
 | 047 | `/admin/kakao/recruits/settings` | 통합 | `/admin/kakao?tab=health`, 진단·복구·자동화 설정 | ADMIN (복구·reset 설정 SUPER) |
 | 048 | `/admin/kakao/scrims` | 통합 | `/admin/kakao?tab=scrims`, 스크림 구인 목록 | ADMIN |
-| 049 | `/admin/kakao/season-apply` | 통합 | `/admin/seasons?view=applications`, 시즌과 검토 업무 결합 | ADMIN |
+| 049 | `/admin/kakao/season-apply` | 통합 | `/admin/seasons/kakao-pending`, Kakao 자동 일치 보류를 시즌 신청으로 안전하게 연결 | ADMIN 조회, SUPER 변경 |
 | 050 | `/admin/kakao/settings` | 통합 | `/admin/kakao?tab=settings` | ADMIN |
 | 051 | `/admin/kakao/stats` | 통합 | `/admin/kakao?tab=stats`, 기간·상태 보존 | ADMIN |
 | 052 | `/admin/kakao/operation-forms` | redirect | `/admin/operation-forms`; 중복 분류 허브 제거 | ADMIN |

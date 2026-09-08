@@ -67,7 +67,7 @@ export const ADMIN_ROUTE_CONTRACTS = [
   { id: "046", source: "/admin/kakao/recruits/logs", decision: "integrate", target: "/admin/kakao?tab=logs", access: "ADMIN" },
   { id: "047", source: "/admin/kakao/recruits/settings", decision: "integrate", target: "/admin/kakao?tab=health", access: "MIXED" },
   { id: "048", source: "/admin/kakao/scrims", decision: "integrate", target: "/admin/kakao?tab=scrims", access: "ADMIN" },
-  { id: "049", source: "/admin/kakao/season-apply", decision: "integrate", target: "/admin/seasons?view=applications", access: "ADMIN" },
+  { id: "049", source: "/admin/kakao/season-apply", decision: "integrate", target: "/admin/seasons/kakao-pending", access: "ADMIN" },
   { id: "050", source: "/admin/kakao/settings", decision: "integrate", target: "/admin/kakao?tab=settings", access: "ADMIN" },
   { id: "051", source: "/admin/kakao/stats", decision: "integrate", target: "/admin/kakao?tab=stats", access: "ADMIN" },
   { id: "052", source: "/admin/kakao/operation-forms", decision: "redirect", target: "/admin/operation-forms", access: "ADMIN" },

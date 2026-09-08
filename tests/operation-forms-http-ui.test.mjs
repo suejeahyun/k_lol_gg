@@ -15,7 +15,7 @@ async function source(name) { return readFile(new URL(`../${files[name]}`, impor
 
 test("signed operation-form submit retains raw-body HMAC and durable replay boundaries", async () => {
   const [webhook, adapter] = await Promise.all([source("webhook"), source("adapter")]);
-  for (const evidence of ["readBoundedKakaoRawBody", "verifyKakaoWebhook", "readIdempotencyKey", "exactEnvelope", "verification.intent.bodyDigestHex"]) assert.match(webhook, new RegExp(evidence));
+  for (const evidence of ["verifyKakaoHttpRequest", "recordKakaoWebhookRejection", "readIdempotencyKey", "exactEnvelope", "intent.bodyDigestHex"]) assert.match(webhook, new RegExp(evidence));
   for (const evidence of ["claimKakaoNonce", "claimReceipt", "recruitingNonceBindings", "recruitingCommandReceipts", "withTransaction", "appendEvent"]) assert.match(adapter, new RegExp(evidence));
   assert.doesNotMatch(webhook, /request\.json\(\)/u);
 });

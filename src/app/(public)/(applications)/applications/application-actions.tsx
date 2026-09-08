@@ -18,7 +18,7 @@ import styles from "./applications.module.css";
 
 type ProblemBody = { detail?: string; title?: string };
 
-export function ApplicationActions({ initial }: { initial: OwnSeasonApplication | null }) {
+export function ApplicationActions({ initial, recruitNo }: { initial: OwnSeasonApplication | null; recruitNo: number }) {
   const router = useRouter();
   const [mainPosition, setMainPosition] = useState<SeasonApplicationPosition>(
     initial?.mainPosition ?? "ALL",
@@ -57,7 +57,7 @@ export function ApplicationActions({ initial }: { initial: OwnSeasonApplication 
     setPending("save");
     setMessage(null);
     try {
-      await mutate("POST", { mainPosition, subPositions });
+      await mutate("POST", { recruitNo, mainPosition, subPositions });
       setMessage(initial ? "신청 내용을 수정했어요." : "참가 신청을 접수했어요.");
       router.refresh();
     } catch (error) {
@@ -72,7 +72,7 @@ export function ApplicationActions({ initial }: { initial: OwnSeasonApplication 
     setPending("cancel");
     setMessage(null);
     try {
-      await mutate("DELETE", {});
+      await mutate("DELETE", { recruitNo });
       setMessage("신청을 취소했어요. 이력은 안전하게 보관됩니다.");
       router.refresh();
     } catch (error) {
@@ -87,7 +87,7 @@ export function ApplicationActions({ initial }: { initial: OwnSeasonApplication 
       <div className={styles.sectionHeading}>
         <div>
           <span>MY APPLICATION</span>
-          <h2 id="application-action-title">{initial ? "내 신청 수정" : "오늘 참가 신청"}</h2>
+          <h2 id="application-action-title">{initial ? `내 ${recruitNo}회차 신청 수정` : `오늘 ${recruitNo}회차 참가 신청`}</h2>
         </div>
         {initial ? <strong data-status={initial.status}>{initial.status}</strong> : null}
       </div>

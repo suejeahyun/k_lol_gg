@@ -1,4 +1,5 @@
 import { CalendarCheck2, Database, Filter, ShieldCheck } from "lucide-react";
+import Link from "next/link";
 
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
 import { parseAdminSeasonQuery } from "@/modules/seasons/infrastructure/admin-season-query";
@@ -73,7 +74,7 @@ export default async function AdminSeasonsPage({
         </div>
         <b>ADMIN / SUPER</b>
       </header>
-      <nav className={styles.viewTabs} aria-label="시즌 관리자 보기"><a href="/admin/seasons" aria-current={!applicationView ? "page" : undefined}>시즌 수명주기</a><a href="/admin/seasons?view=applications" aria-current={applicationView ? "page" : undefined}>참가 신청 검토</a></nav>
+      <nav className={styles.viewTabs} aria-label="시즌 관리자 보기"><a href="/admin/seasons" aria-current={!applicationView ? "page" : undefined}>시즌 수명주기</a><a href="/admin/seasons?view=applications" aria-current={applicationView ? "page" : undefined}>참가 신청 검토</a><Link href="/admin/seasons/kakao-pending">Kakao 보류 신청</Link></nav>
 
       {result.state !== "ready" ? (
         <section className={styles.state} role={result.state === "error" ? "alert" : "status"}>

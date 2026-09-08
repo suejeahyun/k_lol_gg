@@ -1,4 +1,9 @@
-import { verifyKakaoWebhook, type KakaoWebhookSecret, type VerifiedKakaoWebhookIntent } from "./kakao-signature";
+import {
+  verifyKakaoWebhook,
+  type KakaoWebhookSecret,
+  type KakaoWebhookVerification,
+  type VerifiedKakaoWebhookIntent,
+} from "./kakao-signature";
 
 export const MAXIMUM_KAKAO_BODY_BYTES = 256 * 1_024;
 export const MAXIMUM_KAKAO_IMAGE_BODY_BYTES = 4_200_000;
@@ -47,23 +52,51 @@ export type VerifiedKakaoHttpRequest = Readonly<{
   intent: VerifiedKakaoWebhookIntent;
 }>;
 
+export type KakaoHttpRequestFailureCode =
+  | "QUERY_FORBIDDEN"
+  | "SIGNING_KEY_UNAVAILABLE"
+  | "BOT_SELF_HEADER_INVALID"
+  | "BODY_INVALID"
+  | Exclude<KakaoWebhookVerification, { ok: true }>["code"];
+
+export type KakaoHttpRequestVerification =
+  | Readonly<{ ok: true; value: VerifiedKakaoHttpRequest }>
+  | Readonly<{ ok: false; code: KakaoHttpRequestFailureCode }>;
+
+/**
+ * Emits only an allowlisted reason and request metadata. Never add request
+ * headers, identifiers, signatures, bodies, or environment values here.
+ */
+export function recordKakaoWebhookRejection(
+  code: KakaoHttpRequestFailureCode,
+  input: Readonly<{ route: string; traceId?: string }>,
+) {
+  console.warn("KAKAO_WEBHOOK_REJECTED", {
+    code,
+    route: input.route,
+    traceId: input.traceId ?? null,
+  });
+}
+
 /**
  * Verifies the exact raw body before JSON parsing. Durable nonce ownership is
  * deliberately claimed later, inside the application transaction that writes
  * the receipt or aggregate.
  */
-export async function readVerifiedKakaoHttpRequest(
+export async function verifyKakaoHttpRequest(
   request: Request,
   now = new Date(),
   maximumBodyBytes = MAXIMUM_KAKAO_BODY_BYTES,
-): Promise<VerifiedKakaoHttpRequest | null> {
-  if (new URL(request.url).searchParams.size > 0) return null;
+): Promise<KakaoHttpRequestVerification> {
+  if (new URL(request.url).searchParams.size > 0) return { ok: false, code: "QUERY_FORBIDDEN" };
   const timestamp = request.headers.get("x-klol-timestamp");
   const timestampSeconds = timestamp && /^(?:0|[1-9][0-9]{0,12})$/u.test(timestamp) ? Number(timestamp) : -1;
   const botSelf = request.headers.get("x-klol-bot-self");
   const secrets = kakaoWebhookSecrets();
+  if (!secrets) return { ok: false, code: "SIGNING_KEY_UNAVAILABLE" };
+  if (botSelf !== "0" && botSelf !== "1") return { ok: false, code: "BOT_SELF_HEADER_INVALID" };
   const rawBody = await readBoundedKakaoRawBody(request, maximumBodyBytes);
-  if (!secrets || !rawBody || (botSelf !== "0" && botSelf !== "1")) return null;
+  if (!rawBody) return { ok: false, code: "BODY_INVALID" };
   const verification = verifyKakaoWebhook({
     request: {
       timestampSeconds,
@@ -82,5 +115,16 @@ export async function readVerifiedKakaoHttpRequest(
     nonceAlreadyUsed: false,
     maximumBodyBytes,
   });
-  return verification.ok ? Object.freeze({ rawBody, intent: verification.intent }) : null;
+  return verification.ok
+    ? { ok: true, value: Object.freeze({ rawBody, intent: verification.intent }) }
+    : verification;
+}
+
+export async function readVerifiedKakaoHttpRequest(
+  request: Request,
+  now = new Date(),
+  maximumBodyBytes = MAXIMUM_KAKAO_BODY_BYTES,
+): Promise<VerifiedKakaoHttpRequest | null> {
+  const result = await verifyKakaoHttpRequest(request, now, maximumBodyBytes);
+  return result.ok ? result.value : null;
 }

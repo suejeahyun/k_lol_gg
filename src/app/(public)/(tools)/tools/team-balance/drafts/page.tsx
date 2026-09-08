@@ -8,6 +8,7 @@ import { loadRuntimeTeamBalance, loadRuntimeTeamBalanceRecommendations } from "@
 import { parseTeamBalanceDraftsPageQuery } from "@/modules/team-tools/infrastructure/team-recommendation-query";
 
 import styles from "../../team-tools.module.css";
+import { TeamToolNav } from "../../team-tool-nav";
 import { TeamBalanceFeatureState } from "../team-balance-feature-state";
 import { TeamBalanceRecommendationsPanel } from "./team-balance-recommendations-panel";
 
@@ -60,6 +61,7 @@ export default async function TeamBalanceDraftsPage({
 
   return (
     <div className={`page-wrap ${styles.page}`}>
+      <TeamToolNav current="drafts" approved />
       <section className={styles.draftListHeader} aria-labelledby="draft-list-title">
         <div>
           <span>{query?.view === "recommendations" ? "PICK · BAN" : "MY TEAM DRAFTS"}</span>

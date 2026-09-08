@@ -2078,6 +2078,10 @@ body:has(.user-dialog[open]) {
     display: none;
   }
 
+  .header-actions {
+    display: none;
+  }
+
   body {
     padding-bottom: calc(88px + env(safe-area-inset-bottom));
   }
@@ -2175,7 +2179,7 @@ body:has(.user-dialog[open]) {
     left: 10px;
     z-index: 50;
     display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 2px;
     min-height: 68px;
     padding: 7px;
@@ -2243,6 +2247,11 @@ body:has(.user-dialog[open]) {
   .mobile-nav a:focus-visible {
     color: var(--text-accent);
     background: #edf6ff;
+  }
+
+  body:has(main input:focus, main select:focus, main textarea:focus, main [contenteditable="true"]:focus) .mobile-nav {
+    transform: translateY(calc(100% + 20px + env(safe-area-inset-bottom)));
+    pointer-events: none;
   }
 
   .players-page {

@@ -952,6 +952,7 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
     operationFormId,
     draftId,
     mmrReviewId: await requiredFixture("MMR manual adjustment", `select id::text as value from mmr.manual_adjustments order by created_at desc, id limit 1`),
+    pendingKakaoApplicationId: await requiredFixture("Kakao pending season application", `select id::text as value from competition.season_kakao_pending_applications order by (status = 'ACTIVE') desc, updated_at desc, id limit 1`),
     privateAssetId: qaPrivateImage.asset_id,
   };
   const captureFixtures = {
@@ -972,6 +973,7 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
       userAccountId: actorId,
       mmrReviewId: sourceIds.mmrReviewId,
       destructionPlayerId: sourceIds.destructionPlayerId,
+      pendingId: sourceIds.pendingKakaoApplicationId,
     },
     routes: { "/admin/kakao/recruits": { tab: "recruits" } },
     sourceIds,

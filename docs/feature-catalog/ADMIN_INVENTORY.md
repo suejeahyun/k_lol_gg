@@ -152,7 +152,7 @@ TOTP 등록 관리자
 | `/admin/kakao/recruits/logs` | 직접 DB | ADMIN | 카카오 구인 로그 필터·페이지·빈 목록 | S09 |
 | `/admin/kakao/recruits/settings` | `GET/POST /api/admin/kakao/recruit-health`, recruit settings API | MIXED | 진단은 ADMIN, 안전 복구·reset 설정은 SUPER, 오류·빈 상태 | S09 |
 | `/admin/kakao/scrims` | 직접 DB, `GET /api/admin/destruction-scrim-recruits` | ADMIN | 스크림 구인 목록·상태·빈 목록 | S09 |
-| `/admin/kakao/season-apply` | 직접 DB, `GET /api/admin/season-participation-applies` | ADMIN | 참가 신청 목록·필터·페이지·빈 목록 | S03/S09 |
+| `/admin/kakao/season-apply` → `/admin/seasons/kakao-pending` | `GET /api/admin/season-kakao-pending`, 상세·resolve·cancel | ADMIN 조회, SUPER 변경 | 보류 신청 목록·필터·상세 player picker·revision 안전 해결/취소 | S03/S09 |
 | `/admin/kakao/settings` | `GET/POST /api/admin/kakao/settings` | ADMIN | 카카오 운영 설정 조회·저장·오류 | S09 |
 | `/admin/kakao/stats` | `GET /api/admin/kakao/stats` | ADMIN | 운영 통계·기간/상태·오류·빈 데이터 | S09 |
 | `/admin/kakao/operation-forms` | 직접 DB | ADMIN | 4종 신청 건수와 분류 허브 | S09 |

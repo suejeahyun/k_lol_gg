@@ -3,7 +3,10 @@ import type { TransactionSessionActor } from "@/modules/auth/domain/transaction-
 
 import type {
   AdminSeasonWorkspace,
+  AdminSeasonKakaoPendingDetail,
+  AdminSeasonKakaoPendingPage,
   ApplicationHub,
+  ConfirmedSeasonTeamBalanceRoster,
   OwnSeasonApplication,
   PublicSeason,
   SeasonApplicationPosition,
@@ -13,7 +16,7 @@ import type {
 export type CommandEnvelope = Readonly<{
   actorUserAccountId: string;
   actorSession: TransactionSessionActor;
-  authorization: "ADMIN_MUTATION" | "APPROVED_ACCOUNT_MUTATION";
+  authorization: "ADMIN_MUTATION" | "SUPER_ADMIN_MUTATION" | "APPROVED_ACCOUNT_MUTATION";
   requestId: string;
   scope: string;
   keyHash: Buffer;
@@ -40,6 +43,7 @@ export type UpdateSeasonInput = CreateSeasonInput & Readonly<{ id: string; expec
 export type UpsertOwnApplicationInput = Readonly<{
   actorUserAccountId: string;
   applyDate: string;
+  recruitNo: number;
   expectedRevision: number;
   mainPosition: SeasonApplicationPosition;
   subPositions: readonly SeasonApplicationPosition[];
@@ -61,6 +65,24 @@ export type AdminWorkspaceQuery = Readonly<{
   pageSize: number;
 }>;
 
+export type AdminKakaoPendingQuery = Readonly<{
+  seasonId?: string;
+  applyDate?: string;
+  recruitNo?: number;
+  matchState?: "MATCHED_RESERVE" | "UNMATCHED" | "AMBIGUOUS";
+  status?: "ACTIVE" | "CANCELLED" | "RESOLVED";
+  query?: string;
+  page: number;
+  pageSize: number;
+}>;
+
+export type ResolveKakaoPendingInput = Readonly<{
+  id: string;
+  expectedRevision: number;
+  playerId: string;
+  applicationStatus: "APPLIED" | "RESERVE";
+}>;
+
 export interface SeasonAuditWriter {
   append(
     executor: DatabaseExecutor,
@@ -68,7 +90,7 @@ export interface SeasonAuditWriter {
       requestId: string;
       actorUserAccountId: string;
       action: string;
-      targetType: "SEASON" | "SEASON_APPLICATION";
+      targetType: "SEASON" | "SEASON_APPLICATION" | "SEASON_KAKAO_PENDING_APPLICATION";
       targetId: string;
       before: Record<string, unknown> | null;
       after: Record<string, unknown> | null;
@@ -80,8 +102,15 @@ export interface SeasonAuditWriter {
 export interface SeasonRepository {
   listPublicSeasons(now: Date): Promise<readonly PublicSeason[]>;
   getCurrentSeason(now: Date): Promise<PublicSeason | null>;
-  getApplicationHub(actorUserAccountId: string | null, now: Date): Promise<ApplicationHub>;
+  getApplicationHub(actorUserAccountId: string | null, now: Date, recruitNo: number): Promise<ApplicationHub>;
   getAdminWorkspace(query: AdminWorkspaceQuery): Promise<AdminSeasonWorkspace>;
+  getKakaoPendingApplications(query: AdminKakaoPendingQuery): Promise<AdminSeasonKakaoPendingPage>;
+  getKakaoPendingApplication(id: string, candidateQuery: string): Promise<AdminSeasonKakaoPendingDetail>;
+  getConfirmedApplicationsForTeamBalance(
+    seasonId: string,
+    applyDate: string,
+    recruitNo: number,
+  ): Promise<ConfirmedSeasonTeamBalanceRoster>;
   createSeason(
     envelope: CommandEnvelope,
     input: CreateSeasonInput,
@@ -126,6 +155,7 @@ export interface SeasonRepository {
     envelope: CommandEnvelope,
     expectedRevision: number,
     applyDate: string,
+    recruitNo: number,
     now: Date,
   ): Promise<MutationResult<Record<string, unknown>>>;
   reviewApplication(
@@ -133,8 +163,20 @@ export interface SeasonRepository {
     input: ReviewApplicationInput,
     now: Date,
   ): Promise<MutationResult<Record<string, unknown>>>;
+  resolveKakaoPendingApplication(
+    envelope: CommandEnvelope,
+    input: ResolveKakaoPendingInput,
+    now: Date,
+  ): Promise<MutationResult<Record<string, unknown>>>;
+  cancelKakaoPendingApplication(
+    envelope: CommandEnvelope,
+    id: string,
+    expectedRevision: number,
+    now: Date,
+  ): Promise<MutationResult<Record<string, unknown>>>;
   findOwnApplication(
     actorUserAccountId: string,
     now: Date,
+    recruitNo: number,
   ): Promise<OwnSeasonApplication | null>;
 }

@@ -12,6 +12,7 @@ import { seasonApplications, seasonKakaoPendingApplications, seasons } from "@/p
 import { withTransaction, type V2Transaction } from "@/platform/db/transaction";
 
 import type { VerifiedKakaoWebhookIntent } from "../infrastructure/kakao-signature";
+import { planSeasonApplicationMerge } from "@/modules/seasons/domain/application-source-policy";
 import {
   KakaoAssistantError,
   kakaoReadIdentity,
@@ -329,7 +330,7 @@ export class PostgresKakaoAssistant {
         )).for("update");
         for (const current of currentApplications) {
           if (uniqueMatchedIds.includes(current.playerId) || current.status === "CANCELLED") continue;
-          if (current.status !== "APPLIED") throw new KakaoAssistantError("CONFLICT");
+          if (current.status !== "APPLIED") continue;
           await transaction.update(seasonApplications).set({
             status: "CANCELLED", cancelledAt: now, revision: sql`${seasonApplications.revision} + 1`, updatedAt: now,
           }).where(eq(seasonApplications.id, current.id));
@@ -337,14 +338,16 @@ export class PostgresKakaoAssistant {
         }
 
         const activeSlots = new Set(command.participants.map((participant) => participant.slotNo));
+        // The slot key is unique across every lifecycle state. Lock all rows so a
+        // later snapshot reactivates the same row instead of inserting beside a
+        // RESOLVED or CANCELLED row and violating season_kakao_pending_slot_uidx.
         const currentPending = await transaction.select().from(seasonKakaoPendingApplications).where(and(
           eq(seasonKakaoPendingApplications.seasonId, command.seasonId),
           eq(seasonKakaoPendingApplications.applyDate, command.applyDate),
           eq(seasonKakaoPendingApplications.recruitNo, command.recruitNo),
-          eq(seasonKakaoPendingApplications.status, "ACTIVE"),
         )).for("update");
         for (const pending of currentPending) {
-          if (activeSlots.has(pending.slotNo)) continue;
+          if (pending.status !== "ACTIVE" || activeSlots.has(pending.slotNo)) continue;
           await transaction.update(seasonKakaoPendingApplications).set({
             status: "CANCELLED", cancelledAt: now, revision: sql`${seasonKakaoPendingApplications.revision} + 1`, updatedAt: now,
           }).where(eq(seasonKakaoPendingApplications.id, pending.id));
@@ -360,8 +363,8 @@ export class PostgresKakaoAssistant {
               eq(seasonApplications.applyDate, command.applyDate),
               eq(seasonApplications.recruitNo, command.recruitNo),
             )).for("update").limit(1))[0];
-            if (current && !["APPLIED", "CANCELLED"].includes(current.status)) throw new KakaoAssistantError("CONFLICT");
-            if (current) {
+            const mergePlan = planSeasonApplicationMerge(current ?? null);
+            if (mergePlan.action === "REFRESH_KAKAO") {
               await transaction.update(seasonApplications).set({
                 sourceSlotNo: participant.slotNo,
                 mainPosition: participant.mainPosition,
@@ -372,7 +375,7 @@ export class PostgresKakaoAssistant {
                 revision: sql`${seasonApplications.revision} + 1`,
                 updatedAt: now,
               }).where(eq(seasonApplications.id, current.id));
-            } else {
+            } else if (mergePlan.action === "CREATE_KAKAO") {
               await transaction.insert(seasonApplications).values({
                 id: randomUUID(), seasonId: command.seasonId, playerId: matchedPlayer.id,
                 applyDate: command.applyDate, recruitNo: command.recruitNo, sourceSlotNo: participant.slotNo,
@@ -381,7 +384,7 @@ export class PostgresKakaoAssistant {
               });
             }
             const existingPending = currentPending.find((pending) => pending.slotNo === participant.slotNo);
-            if (existingPending) await transaction.update(seasonKakaoPendingApplications).set({
+            if (existingPending?.status === "ACTIVE") await transaction.update(seasonKakaoPendingApplications).set({
               status: "RESOLVED", resolvedAt: now, cancelledAt: null,
               revision: sql`${seasonKakaoPendingApplications.revision} + 1`, updatedAt: now,
             }).where(eq(seasonKakaoPendingApplications.id, existingPending.id));

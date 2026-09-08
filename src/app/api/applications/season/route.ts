@@ -4,7 +4,6 @@ import { getRuntimeSeasonService } from "@/modules/seasons/infrastructure/runtim
 import { guardSeasonApplicationMutation } from "@/modules/seasons/infrastructure/season-application-rate-limit";
 import {
   prepareSeasonMutation,
-  rejectSeasonQuery,
   requireSeasonApiSession,
   seasonMutationResponse,
   seasonRateLimitedResponse,
@@ -13,18 +12,29 @@ import {
   seasonServiceErrorResponse,
   seasonUnavailableResponse,
 } from "@/modules/seasons/infrastructure/season-http";
+import { SeasonServiceError } from "@/modules/seasons/domain/season";
 
 export const dynamic = "force-dynamic";
 
+function recruitNoFromUrl(url: string) {
+  const search = new URL(url).searchParams;
+  if ([...search.keys()].some((key) => key !== "recruitNo") || search.getAll("recruitNo").length > 1) {
+    throw new SeasonServiceError("INVALID_INPUT", "허용되지 않거나 중복된 모집 회차입니다.");
+  }
+  const raw = search.get("recruitNo") ?? "1";
+  if (!/^[1-9][0-9]*$/.test(raw)) throw new SeasonServiceError("INVALID_INPUT", "모집 회차를 확인해 주세요.");
+  const recruitNo = Number(raw);
+  if (!Number.isSafeInteger(recruitNo) || recruitNo > 999) throw new SeasonServiceError("INVALID_INPUT", "모집 회차를 확인해 주세요.");
+  return recruitNo;
+}
+
 export async function GET(request: Request) {
   const traceId = readValidatedTraceId(request.headers);
-  const queryProblem = rejectSeasonQuery(request, traceId);
-  if (queryProblem) return queryProblem;
   const service = getRuntimeSeasonService();
   if (!service) return seasonUnavailableResponse(traceId);
   try {
     const session = await getCurrentSession("ACCOUNT");
-    return seasonReadResponse(await service.getApplicationHub(session?.userId ?? null), 200, traceId);
+    return seasonReadResponse(await service.getApplicationHub(session?.userId ?? null, recruitNoFromUrl(request.url)), 200, traceId);
   } catch (error) {
     return seasonServiceErrorResponse(error, traceId);
   }

@@ -11,6 +11,7 @@ import { parseTeamBalanceDraftDetailQuery } from "@/modules/team-tools/infrastru
 import { TeamBalanceDraftWorkspace } from "./team-balance-draft-workspace";
 import { TeamBalanceRecommendationsPanel } from "../team-balance-recommendations-panel";
 import { TeamBalanceFeatureState } from "../../team-balance-feature-state";
+import { TeamToolNav } from "../../../team-tool-nav";
 import styles from "../../../team-tools.module.css";
 
 export const dynamic = "force-dynamic";
@@ -27,13 +28,13 @@ export default async function TeamBalanceDraftPage({ params, searchParams }: { p
   if (query.tab === "draft") {
     const result = await loadRuntimeTeamBalance((service) => service.getDraft({ actorUserAccountId: session.userId, authorization: "OWNER" }, draftId));
     if (result.state === "ready" && !result.data) notFound();
-    return <div className={`page-wrap ${styles.page}`}>{navigation}{result.state === "ready" && result.data
+    return <div className={`page-wrap ${styles.page}`}><TeamToolNav current="drafts" approved />{navigation}{result.state === "ready" && result.data
       ? <TeamBalanceDraftWorkspace draft={result.data}/>
       : <section className={styles.emptyState} role={result.state === "error" ? "alert" : "status"}><Scale aria-hidden="true"/><h1>팀 초안을 불러올 수 없어요</h1><p>잠시 후 다시 시도해 주세요.</p></section>}</div>;
   }
   const result = await loadRuntimeTeamBalanceRecommendations((service) => service.getRecommendation({ actorUserAccountId: session.userId, authorization: "OWNER" }, draftId, query.team));
   if (result.state === "ready" && !result.data) notFound();
-  return <div className={`page-wrap ${styles.page}`}>{navigation}{result.state === "ready" && result.data
+  return <div className={`page-wrap ${styles.page}`}><TeamToolNav current="drafts" approved />{navigation}{result.state === "ready" && result.data
     ? <><section className={styles.draftHeader}><div><span>PICK · BAN</span><h1>{result.data.draft.title}</h1><p>선택·저장된 팀 배치 기반 챔피언 추천</p></div><strong>{result.data.team}</strong></section><TeamBalanceRecommendationsPanel recommendation={result.data} hrefForTeam={(team) => `/tools/team-balance/drafts/${draftId}?tab=recommendations&team=${team}`}/></>
     : <section className={styles.emptyState} role={result.state === "error" ? "alert" : "status"}><Scale aria-hidden="true"/><h1>밴픽 추천을 불러올 수 없어요</h1><p>잠시 후 다시 시도해 주세요.</p></section>}</div>;
 }

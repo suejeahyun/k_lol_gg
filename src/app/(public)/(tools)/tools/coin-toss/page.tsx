@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Coins, Dices, Sparkles } from "lucide-react";
+import { Coins, Sparkles } from "lucide-react";
 
+import { getCurrentSession } from "@/modules/auth/infrastructure/runtime-session";
+import { TeamToolNav } from "../team-tool-nav";
 import { CoinTossTool } from "./coin-toss-tool";
 import styles from "../team-tools.module.css";
 
@@ -11,7 +12,9 @@ export const metadata: Metadata = {
   alternates: { canonical: "/tools/coin-toss" },
 };
 
-export default function CoinTossPage() {
+export default async function CoinTossPage() {
+  const session = await getCurrentSession("ACCOUNT");
+  const approved = session?.accountStatus === "APPROVED" && !session.mustChangePassword;
   return (
     <div className={`page-wrap ${styles.page}`}>
       <section className={styles.hero} aria-labelledby="coin-toss-title">
@@ -23,10 +26,7 @@ export default function CoinTossPage() {
         <Coins aria-hidden="true" />
       </section>
 
-      <nav className={styles.toolNav} aria-label="팀 도구">
-        <Link href="/tools/random-team"><Dices size={17} aria-hidden="true" /> 랜덤 팀</Link>
-        <Link href="/tools/coin-toss" data-active="true"><Coins size={17} aria-hidden="true" /> 코인 토스</Link>
-      </nav>
+      <TeamToolNav current="coin" approved={approved} />
 
       <CoinTossTool />
     </div>

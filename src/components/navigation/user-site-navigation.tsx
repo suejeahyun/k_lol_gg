@@ -157,7 +157,19 @@ function SearchControl({ compact = false, accountSignedIn = false }: { compact?:
   );
 }
 
-function AllMenuControl({ compact = false }: { compact?: boolean }) {
+const accountOnlyMenuRoutes = new Set([
+  "/account",
+  "/account/password",
+  "/account/riot",
+  "/account/discipline",
+  "/matches/submit",
+  "/tools/team-balance",
+  "/tools/team-balance/drafts",
+]);
+
+const signedOutOnlyMenuRoutes = new Set(["/login", "/signup", "/forgot-password"]);
+
+function AllMenuControl({ compact = false, accountSignedIn = false }: { compact?: boolean; accountSignedIn?: boolean }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
 
@@ -203,7 +215,13 @@ function AllMenuControl({ compact = false }: { compact?: boolean }) {
                 <h3 id={`${titleId}-${section.id}`}>{section.label}</h3>
                 <ul>
                   {canonicalUserRoutes
-                    .filter((route) => route.section === section.id && !route.template.includes("[") && route.implementationState === "page-contract")
+                    .filter((route) => (
+                      route.section === section.id &&
+                      !route.template.includes("[") &&
+                      route.implementationState === "page-contract" &&
+                      (!accountOnlyMenuRoutes.has(route.template) || accountSignedIn) &&
+                      (!signedOutOnlyMenuRoutes.has(route.template) || !accountSignedIn)
+                    ))
                     .map((route) => (
                       <li key={route.template}>
                         <Link href={route.template} onClick={() => closeDialog(dialog.current)}>
@@ -257,7 +275,7 @@ export function HeaderUserControls({ accountSignedIn = false }: { accountSignedI
   return (
     <div className="header-actions">
       <SearchControl accountSignedIn={accountSignedIn} />
-      <AllMenuControl />
+      <AllMenuControl accountSignedIn={accountSignedIn} />
       <Link className="header-account" href={accountSignedIn ? "/account" : "/login"} aria-label={accountSignedIn ? "내 계정" : "사용자 로그인"}>
         <UserRound size={17} aria-hidden="true" />
         <span>{accountSignedIn ? "내 계정" : "로그인"}</span>
@@ -287,7 +305,7 @@ export function MobileUserNavigation({ accountSignedIn = false }: { accountSigne
         <LogIn size={20} aria-hidden="true" />
         <span>{accountSignedIn ? "계정" : "로그인"}</span>
       </Link>
-      <AllMenuControl compact />
+      <AllMenuControl compact accountSignedIn={accountSignedIn} />
     </nav>
   );
 }

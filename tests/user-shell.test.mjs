@@ -8,6 +8,7 @@ test("사용자 shell은 skip target, landmark, modal search, 모바일 5개 진
     new URL("../src/components/navigation/user-site-navigation.tsx", import.meta.url),
     "utf8",
   );
+  const globals = await readFile(new URL("../src/app/globals.css", import.meta.url), "utf8");
 
   assert.match(shell, /href="#main-content"/);
   assert.match(shell, /<main id="main-content">/);
@@ -23,6 +24,19 @@ test("사용자 shell은 skip target, landmark, modal search, 모바일 5개 진
   );
   assert.equal((mobileBlock.match(/<Link/g) ?? []).length, 3);
   assert.equal((mobileBlock.match(/<(?:SearchControl|AllMenuControl) compact\b/g) ?? []).length, 2);
+  assert.match(globals, /grid-template-columns:\s*repeat\(5,\s*minmax\(0,\s*1fr\)\)/);
+  assert.match(globals, /body:has\(main input:focus/);
+});
+
+test("전체 메뉴는 로그인 상태에 맞지 않는 계정·인증 경로를 숨긴다", async () => {
+  const navigation = await readFile(
+    new URL("../src/components/navigation/user-site-navigation.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(navigation, /accountOnlyMenuRoutes/);
+  assert.match(navigation, /signedOutOnlyMenuRoutes/);
+  assert.match(navigation, /<AllMenuControl accountSignedIn=\{accountSignedIn\}/);
+  assert.match(navigation, /<AllMenuControl compact accountSignedIn=\{accountSignedIn\}/);
 });
 test("V2 UI는 실제 운영 데이터가 없을 때 합성 샘플을 사용자 화면에 연결하지 않는다", async () => {
   const playerIndex = await readFile(new URL("../src/modules/players/index.ts", import.meta.url), "utf8");

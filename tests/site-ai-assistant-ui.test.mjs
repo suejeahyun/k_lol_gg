@@ -24,4 +24,7 @@ test("feature-gated site assistant is mounted globally and uses protected AI con
   ]) assert.equal(assistant.includes(contract), true, contract);
   assert.equal(assistant.includes("dangerouslySetInnerHTML"), false);
   assert.equal(assistant.includes("localStorage"), false);
+  const styles = source("../src/components/site-ai-assistant.module.css");
+  assert.match(styles, /bottom:\s*calc\(6\.25rem \+ env\(safe-area-inset-bottom\)\)/u);
+  assert.match(styles, /body:has\(main input:focus/u);
 });

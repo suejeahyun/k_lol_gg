@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Coins, Dices, FolderOpen, LogIn, Scale, Sparkles } from "lucide-react";
+import { LogIn, Scale, Sparkles } from "lucide-react";
 
 import { getCurrentSession } from "@/modules/auth/infrastructure/runtime-session";
-import { loadRuntimePlayerCatalog } from "@/modules/players/infrastructure/runtime-player-data";
 import { readSiteFeatureState } from "@/modules/operations/infrastructure/site-feature-access";
 
+import { TeamToolNav } from "../team-tool-nav";
 import { TeamBalanceBuilder } from "./team-balance-builder";
 import { TeamBalanceFeatureState } from "./team-balance-feature-state";
 import styles from "../team-tools.module.css";
@@ -22,9 +22,6 @@ export default async function TeamBalancePage() {
   if (featureState !== "enabled") return <TeamBalanceFeatureState state={featureState} />;
   const session = await getCurrentSession("ACCOUNT");
   const approved = session?.accountStatus === "APPROVED" && !session.mustChangePassword;
-  const catalog = approved
-    ? await loadRuntimePlayerCatalog({ query: "", page: 1, pageSize: 50 })
-    : null;
 
   return (
     <div className={`page-wrap ${styles.page}`}>
@@ -37,12 +34,7 @@ export default async function TeamBalancePage() {
         <Scale aria-hidden="true" />
       </section>
 
-      <nav className={styles.toolNav} aria-label="팀 도구">
-        <Link href="/tools/team-balance" data-active="true"><Scale size={17} aria-hidden="true" /> 팀 밸런스</Link>
-        {approved ? <Link href="/tools/team-balance/drafts"><FolderOpen size={17} aria-hidden="true" /> 내 초안</Link> : null}
-        <Link href="/tools/random-team"><Dices size={17} aria-hidden="true" /> 랜덤 팀</Link>
-        <Link href="/tools/coin-toss"><Coins size={17} aria-hidden="true" /> 코인 토스</Link>
-      </nav>
+      <TeamToolNav current="balance" approved={approved} />
 
       {!approved ? (
         <section className={styles.emptyState} role="status">
@@ -51,15 +43,7 @@ export default async function TeamBalancePage() {
           <p>팀 초안은 계정 소유로 저장됩니다. 로그인과 승인이 끝나면 참가자를 선택할 수 있어요.</p>
           <Link className={styles.primaryLink} href="/login?next=%2Ftools%2Fteam-balance">로그인</Link>
         </section>
-      ) : catalog?.state === "ready" ? (
-        <TeamBalanceBuilder players={catalog.data.items.map((player) => ({ id: player.id, label: `${player.displayName} · ${player.riotId}` }))} />
-      ) : (
-        <section className={styles.emptyState} role={catalog?.state === "error" ? "alert" : "status"}>
-          <Scale aria-hidden="true" />
-          <h2>플레이어 목록을 불러올 수 없어요</h2>
-          <p>잠시 후 다시 시도해 주세요.</p>
-        </section>
-      )}
+      ) : <TeamBalanceBuilder />}
     </div>
   );
 }

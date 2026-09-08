@@ -11,6 +11,7 @@
     "db:cutover:preflight": "tsx scripts/cutover/preflight-existing-v1.ts",
     "db:cutover:inventory": "tsx scripts/cutover/inventory-v1.ts",
     "db:cutover:apply": "tsx scripts/cutover/apply-v1-to-v2.ts",
+    "bot:kakao:v41": "node scripts/build-messengerbot-v41.mjs",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test:contracts": "node --test tests/*.test.mjs",

@@ -10,7 +10,11 @@ import {
   readValidatedTraceId,
 } from "@/platform/http";
 
-import { MAXIMUM_KAKAO_BODY_BYTES, readVerifiedKakaoHttpRequest } from "../infrastructure/kakao-http-request";
+import {
+  MAXIMUM_KAKAO_BODY_BYTES,
+  recordKakaoWebhookRejection,
+  verifyKakaoHttpRequest,
+} from "../infrastructure/kakao-http-request";
 import { KakaoAssistantError } from "./domain";
 import type { KakaoAssistantResult } from "./postgres-kakao-assistant";
 import type { KakaoImageSessionResult } from "./postgres-kakao-image-receive";
@@ -28,8 +32,12 @@ const problems = Object.freeze({
 
 export async function prepareKakaoSignedJson(request: Request, maximumBytes = MAXIMUM_KAKAO_BODY_BYTES) {
   const traceId = readValidatedTraceId(request.headers);
-  const verified = await readVerifiedKakaoHttpRequest(request, new Date(), maximumBytes);
-  if (!verified) return { ok: false as const, response: problemResponse(problems.forbidden, { traceId }) };
+  const verification = await verifyKakaoHttpRequest(request, new Date(), maximumBytes);
+  if (!verification.ok) {
+    recordKakaoWebhookRejection(verification.code, { route: new URL(request.url).pathname, traceId });
+    return { ok: false as const, response: problemResponse(problems.forbidden, { traceId }) };
+  }
+  const verified = verification.value;
   const parsed = await readJsonBody(new Request(request.url, {
     method: "POST",
     headers: { "content-type": request.headers.get("content-type") ?? "" },

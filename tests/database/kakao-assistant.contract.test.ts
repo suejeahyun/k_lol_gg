@@ -216,6 +216,32 @@ test("signed Kakao season snapshots match exact players and preserve unresolved 
     assert.equal((await database.select().from(seasonKakaoPendingApplications).where(and(
       eq(seasonKakaoPendingApplications.seasonId, seasonId), eq(seasonKakaoPendingApplications.status, "CANCELLED"),
     ))).length, 3);
+
+    const terminalRows = await database.select().from(seasonKakaoPendingApplications).where(and(
+      eq(seasonKakaoPendingApplications.seasonId, seasonId),
+      eq(seasonKakaoPendingApplications.recruitNo, 7),
+    ));
+    const formerlyCancelled = terminalRows.find((row) => row.slotNo === 2);
+    const formerlyResolved = terminalRows.find((row) => row.slotNo === 3);
+    assert.ok(formerlyCancelled && formerlyResolved);
+    await database.update(seasonKakaoPendingApplications).set({
+      status: "RESOLVED", cancelledAt: null, resolvedAt: new Date(),
+    }).where(eq(seasonKakaoPendingApplications.id, formerlyResolved.id));
+
+    const reactivated = await assistant.syncSeasonSnapshot({
+      ...firstInput,
+      requestKey: `season-sync-reactivate-${suffix}`,
+      requestId: randomUUID(),
+      intent: intent("nonce-season-sync-0003", "season-sync-reactivate"),
+      command: { ...command, participants: [command.participants[1]!, command.participants[2]!] },
+    });
+    assert.deepEqual(reactivated.body.entries.map((entry) => entry.status), ["UNMATCHED", "AMBIGUOUS"]);
+    const activeAgain = await database.select().from(seasonKakaoPendingApplications).where(and(
+      eq(seasonKakaoPendingApplications.seasonId, seasonId),
+      eq(seasonKakaoPendingApplications.status, "ACTIVE"),
+    ));
+    assert.deepEqual(activeAgain.map((row) => row.id).sort(), [formerlyCancelled.id, formerlyResolved.id].sort());
+    assert.equal(activeAgain.every((row) => row.cancelledAt === null && row.resolvedAt === null), true);
   } finally {
     await database.update(seasons).set({ status: "ENDED", endedAt: new Date(), revision: 1 }).where(eq(seasons.id, seasonId)).catch(() => undefined);
     await pool.end();

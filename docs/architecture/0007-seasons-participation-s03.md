@@ -30,14 +30,19 @@ V2에서는 한 개의 활성 시즌, 같은 사람의 같은 날짜·회차 중
    전제로 재검토할 수 있다. 사용자 수정·취소 잠금과 관리자 재검토 권한은 별개다.
 7. 물리 삭제 대신 종료·보관을 사용한다. 참가 이력이 있거나 종료된 시즌 삭제 요청은 409로
    거부하여 과거 신청과 감사 기록을 보존한다.
+8. SITE와 Kakao가 같은 identity에 도달하면 `SITE_AND_REVIEWED_DECISIONS_WIN` 정책을 적용한다.
+   SITE에서 만든 신청과 `CONFIRMED/RESERVE/REJECTED` 관리자 결정을 Kakao 입력으로 덮어쓰지 않는다.
+   아직 검토하지 않은 Kakao 신청과 취소된 Kakao 신청만 새 snapshot 값으로 갱신할 수 있다.
 
 ## 서비스·HTTP 결정
 
 - 공개 canonical API는 `/api/seasons`, `/api/seasons/current`,
   `/api/applications/available`, `/api/applications/season`이다. query를 쓰지 않는 canonical route는
   어떤 query key도 400으로 거부한다.
-- 관리자 API는 `/api/admin/seasons/**`, `/api/admin/season-applications/**`다. ADMIN/SUPER만
-  mutation할 수 있고 익명·USER는 401/403으로 분리한다.
+- 관리자 API는 `/api/admin/seasons/**`, `/api/admin/season-applications/**`,
+  `/api/admin/season-kakao-pending/**`다. 일반 시즌 검토는 ADMIN/SUPER가 변경할 수 있지만 Kakao
+  보류 신청의 수동 player 연결·취소는 SUPER_ADMIN+TOTP만 가능하다. ADMIN은 보류 목록과 상세를
+  읽을 수 있고 익명·USER는 401/403으로 분리한다.
 - mutation은 exact same-origin, 8 KiB strict JSON allowlist, bidi/control 문자 차단,
   `Idempotency-Key`, strong `If-Match: "revision"`을 요구한다. stale은 412, 중복·잘못된 전이는
   409, 없음은 404다.
@@ -63,6 +68,14 @@ V2에서는 한 개의 활성 시즌, 같은 사람의 같은 날짜·회차 중
 - `/admin/seasons`는 생성, 편집, 복제, 활성화, 종료, 안전한 보관과 신청 filter/page/review를 한
   workspace에서 제공한다. 모바일은 신청별 카드와 직접 보이는 검토 action을 사용하고 1440 표도
   검토 열을 포함해 내부 가로 overflow가 없다.
+- `/applications?type=season&recruitNo=N`은 오늘 실제 SITE/Kakao 신청 또는 Kakao 보류 행으로 시작된
+  회차만 선택지로 노출한다. 1회차는 항상 열려 있고 2~999회차는 Kakao가 먼저 만든 회차에 한해
+  사이트 신청을 허용하므로 임의 회차 생성은 거부한다. 공개 projection은 pending 이름·Riot ID를
+  포함하지 않는다.
+- `/admin/seasons/kakao-pending`은 보류 목록·필터·상세 player picker를 제공한다. 해결 시 일반 신청
+  identity로 병합하고 `If-Match`, 멱등 영수증, transaction 내부 SUPER/TOTP 재검사와 before/after
+  감사를 함께 커밋한다. 확정 신청은 내부 `ConfirmedSeasonTeamBalanceRoster` allowlist DTO로만
+  team-balance application에 전달하며 회원명·로그인 ID·Kakao provenance를 노출하지 않는다.
 
 ## 통합 전 필수 경계
 

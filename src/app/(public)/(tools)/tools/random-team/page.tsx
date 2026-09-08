@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Coins, Dices, Sparkles } from "lucide-react";
+import { Dices, Sparkles } from "lucide-react";
 
+import { getCurrentSession } from "@/modules/auth/infrastructure/runtime-session";
+import { TeamToolNav } from "../team-tool-nav";
 import { RandomTeamTool } from "./random-team-tool";
 import styles from "../team-tools.module.css";
 
@@ -17,6 +18,8 @@ export default async function RandomTeamPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const mode = (await searchParams).mode === "tier" ? "tier" : "random";
+  const session = await getCurrentSession("ACCOUNT");
+  const approved = session?.accountStatus === "APPROVED" && !session.mustChangePassword;
 
   return (
     <div className={`page-wrap ${styles.page}`}>
@@ -29,10 +32,7 @@ export default async function RandomTeamPage({
         <Dices aria-hidden="true" />
       </section>
 
-      <nav className={styles.toolNav} aria-label="팀 도구">
-        <Link href="/tools/random-team" data-active="true"><Dices size={17} aria-hidden="true" /> 랜덤 팀</Link>
-        <Link href="/tools/coin-toss"><Coins size={17} aria-hidden="true" /> 코인 토스</Link>
-      </nav>
+      <TeamToolNav current="random" approved={approved} />
 
       <RandomTeamTool initialMode={mode} />
     </div>

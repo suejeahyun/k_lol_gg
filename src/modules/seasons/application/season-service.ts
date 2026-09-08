@@ -3,6 +3,7 @@ import type { TransactionSessionActor } from "@/modules/auth/domain/transaction-
 
 import type {
   AdminWorkspaceQuery,
+  AdminKakaoPendingQuery,
   CommandEnvelope,
   SeasonRepository,
 } from "./ports/season-repository";
@@ -17,6 +18,7 @@ import {
 } from "../domain/season";
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const dateKeyPattern = /^\d{4}-\d{2}-\d{2}$/;
 
 export type SeasonCommandContext = Readonly<{
   actorSession: TransactionSessionActor;
@@ -158,6 +160,21 @@ function assertUuid(value: string) {
   }
 }
 
+function positiveRecruitNo(value: unknown): number {
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 1 || value > 999) {
+    throw new SeasonServiceError("INVALID_INPUT", "모집 회차는 1부터 999 사이의 정수여야 합니다.");
+  }
+  return value;
+}
+
+function assertDateKey(value: string) {
+  const [year, month, day] = value.split("-").map(Number);
+  const probe = new Date(Date.UTC(year, month - 1, day));
+  if (!dateKeyPattern.test(value) || probe.getUTCFullYear() !== year || probe.getUTCMonth() !== month - 1 || probe.getUTCDate() !== day) {
+    throw new SeasonServiceError("INVALID_INPUT", "신청 날짜 형식을 확인해 주세요.");
+  }
+}
+
 export class SeasonService {
   constructor(private readonly repository: SeasonRepository) {}
 
@@ -169,13 +186,34 @@ export class SeasonService {
     return this.repository.getCurrentSeason(now);
   }
 
-  getApplicationHub(actorUserAccountId: string | null, now = new Date()) {
+  getApplicationHub(actorUserAccountId: string | null, recruitNoOrNow: number | Date = 1, now = new Date()) {
     if (actorUserAccountId) assertUuid(actorUserAccountId);
-    return this.repository.getApplicationHub(actorUserAccountId, now);
+    const recruitNo = recruitNoOrNow instanceof Date ? 1 : positiveRecruitNo(recruitNoOrNow);
+    return this.repository.getApplicationHub(actorUserAccountId, recruitNoOrNow instanceof Date ? recruitNoOrNow : now, recruitNo);
   }
 
   getAdminWorkspace(query: AdminWorkspaceQuery) {
     return this.repository.getAdminWorkspace(query);
+  }
+
+  getKakaoPendingApplications(query: AdminKakaoPendingQuery) {
+    return this.repository.getKakaoPendingApplications(query);
+  }
+
+  getKakaoPendingApplication(id: string, candidateQuery = "") {
+    assertUuid(id);
+    const query = text(candidateQuery, 80);
+    return this.repository.getKakaoPendingApplication(id, query);
+  }
+
+  getConfirmedApplicationsForTeamBalance(seasonId: string, applyDate: string, recruitNo: number) {
+    assertUuid(seasonId);
+    assertDateKey(applyDate);
+    return this.repository.getConfirmedApplicationsForTeamBalance(
+      seasonId,
+      applyDate,
+      positiveRecruitNo(recruitNo),
+    );
   }
 
   createSeason(context: SeasonCommandContext, body: unknown, now = new Date()) {
@@ -294,7 +332,7 @@ export class SeasonService {
     body: unknown,
     now = new Date(),
   ) {
-    const parsed = objectBody(body, ["mainPosition", "subPositions"]);
+    const parsed = objectBody(body, ["mainPosition", "subPositions", "recruitNo"]);
     if (!isSeasonApplicationPosition(parsed.mainPosition)) {
       throw new SeasonServiceError("INVALID_INPUT", "주라인을 선택해 주세요.");
     }
@@ -303,6 +341,7 @@ export class SeasonService {
     const input = {
       actorUserAccountId: context.actorSession.userAccountId,
       applyDate: kstDateKey(now),
+      recruitNo: positiveRecruitNo(parsed.recruitNo ?? 1),
       expectedRevision,
       mainPosition,
       subPositions,
@@ -320,12 +359,14 @@ export class SeasonService {
     body: unknown,
     now = new Date(),
   ) {
-    objectBody(body, []);
+    const parsed = objectBody(body, ["recruitNo"]);
     const applyDate = kstDateKey(now);
+    const recruitNo = positiveRecruitNo(parsed.recruitNo ?? 1);
     return this.repository.cancelOwnApplication(
-      envelope(context, "APPROVED_ACCOUNT_MUTATION", "applications:season:cancel", { applyDate, expectedRevision }),
+      envelope(context, "APPROVED_ACCOUNT_MUTATION", "applications:season:cancel", { applyDate, recruitNo, expectedRevision }),
       expectedRevision,
       applyDate,
+      recruitNo,
       now,
     );
   }
@@ -351,6 +392,47 @@ export class SeasonService {
     return this.repository.reviewApplication(
       envelope(context, "ADMIN_MUTATION", "admin:season-applications:review", input),
       input,
+      now,
+    );
+  }
+
+
+  resolveKakaoPendingApplication(
+    context: SeasonCommandContext,
+    id: string,
+    expectedRevision: number,
+    body: unknown,
+    now = new Date(),
+  ) {
+    assertUuid(id);
+    const parsed = objectBody(body, ["playerId", "applicationStatus"]);
+    const playerId = text(parsed.playerId, 36, true);
+    assertUuid(playerId);
+    if (parsed.applicationStatus !== "APPLIED" && parsed.applicationStatus !== "RESERVE") {
+      throw new SeasonServiceError("INVALID_INPUT", "반영할 신청 상태를 확인해 주세요.");
+    }
+    const applicationStatus: "APPLIED" | "RESERVE" = parsed.applicationStatus;
+    const input = { id, expectedRevision, playerId, applicationStatus };
+    return this.repository.resolveKakaoPendingApplication(
+      envelope(context, "SUPER_ADMIN_MUTATION", "admin:season-kakao-pending:resolve", input),
+      input,
+      now,
+    );
+  }
+
+  cancelKakaoPendingApplication(
+    context: SeasonCommandContext,
+    id: string,
+    expectedRevision: number,
+    body: unknown,
+    now = new Date(),
+  ) {
+    assertUuid(id);
+    objectBody(body, []);
+    return this.repository.cancelKakaoPendingApplication(
+      envelope(context, "SUPER_ADMIN_MUTATION", "admin:season-kakao-pending:cancel", { id, expectedRevision }),
+      id,
+      expectedRevision,
       now,
     );
   }

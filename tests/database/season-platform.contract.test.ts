@@ -13,7 +13,7 @@ import {
 } from "../../src/modules/seasons/domain/season";
 import { PostgresSeasonRepository } from "../../src/modules/seasons/infrastructure/postgres-season-repository";
 import { createDatabaseHandle } from "../../src/platform/db/database";
-import { auditEvents, authSessions, players, seasonApplications, seasonCommandReceipts, seasons, userAccounts } from "../../src/platform/db/schema";
+import { auditEvents, authSessions, players, seasonApplications, seasonCommandReceipts, seasonKakaoPendingApplications, seasons, userAccounts } from "../../src/platform/db/schema";
 import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
 
 const sessionActors = new Map<
@@ -115,16 +115,17 @@ test("season lifecycle, participation ownership, idempotency and audit contracts
   const failingService = new SeasonService(new PostgresSeasonRepository(database, failingAudit));
   const now = new Date("2026-09-01T10:00:00.000Z");
   const admin = approvedAccount(`season_admin_${randomUUID()}`, "ADMIN");
+  const superAdmin = approvedAccount(`season_super_${randomUUID()}`, "SUPER_ADMIN");
   const applicant = approvedAccount(`season_user_${randomUUID()}`);
   const otherUser = approvedAccount(`season_other_${randomUUID()}`);
   const applicantPlayerId = randomUUID();
   const otherPlayerId = randomUUID();
 
   try {
-    await database.insert(userAccounts).values([admin, applicant, otherUser].map(accountRow));
+    await database.insert(userAccounts).values([admin, superAdmin, applicant, otherUser].map(accountRow));
     const sessionNow = new Date();
     await database.insert(authSessions).values(
-      [admin, applicant, otherUser].map((actor) => ({
+      [admin, superAdmin, applicant, otherUser].map((actor) => ({
         id: actor.sessionId,
         tokenHash: randomBytes(32),
         userAccountId: actor.id,
@@ -332,6 +333,85 @@ test("season lifecycle, participation ownership, idempotency and audit contracts
         }),
         postgresError("23514", "season_applications_review_consistency"),
       );
+    });
+
+    await t.test("SUPER resolves or cancels pending Kakao applications with idempotency, merge policy and safe team handoff", async () => {
+      const pendingId = randomUUID();
+      await database.insert(seasonKakaoPendingApplications).values({
+        id: pendingId,
+        seasonId: activeSeasonId,
+        applyDate,
+        recruitNo: 10,
+        slotNo: 1,
+        suppliedName: "SeasonSky",
+        suppliedRiotId: "SeasonSky#S03",
+        mainPosition: "MID",
+        subPositions: ["SUP"],
+        reserve: true,
+        matchState: "MATCHED_RESERVE",
+        matchedPlayerId: applicantPlayerId,
+        sourceReferenceHash: Buffer.alloc(32, 0x10),
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      const round = await service.getApplicationHub(applicant.id, 10, now);
+      assert.deepEqual(round.availableRecruitNos.includes(10), true);
+      assert.equal(round.selectedRecruitNo, 10);
+      assert.equal(JSON.stringify(round).includes("suppliedName"), false);
+
+      const context = command(superAdmin.id, "resolve-pending");
+      const resolved = await service.resolveKakaoPendingApplication(context, pendingId, 0, {
+        playerId: applicantPlayerId,
+        applicationStatus: "RESERVE",
+      }, now);
+      assert.equal(resolved.revision, 1);
+      assert.equal(resolved.body.mergeOutcome, "KAKAO_CREATED");
+      const replay = await service.resolveKakaoPendingApplication(context, pendingId, 0, {
+        playerId: applicantPlayerId,
+        applicationStatus: "RESERVE",
+      }, now);
+      assert.equal(replay.replayed, true);
+
+      const createdRows = await database.select().from(seasonApplications).where(and(
+        eq(seasonApplications.playerId, applicantPlayerId),
+        eq(seasonApplications.recruitNo, 10),
+      ));
+      assert.equal(createdRows[0]?.source, "KAKAO");
+      assert.equal(createdRows[0]?.status, "RESERVE");
+      const confirmed = await service.reviewApplication(command(admin.id, "confirm-pending"), createdRows[0]!.id, 0, {
+        status: "CONFIRMED",
+        reviewNote: "팀 편성 대상",
+      }, now);
+      assert.equal(confirmed.revision, 1);
+      const teamRoster = await service.getConfirmedApplicationsForTeamBalance(activeSeasonId, applyDate, 10);
+      assert.deepEqual(teamRoster.participants, [{ playerId: applicantPlayerId, displayName: "SeasonSky", mainPosition: "MID", subPositions: ["SUP"] }]);
+      assert.equal(/memberName|loginId|sourceReferenceHash/i.test(JSON.stringify(teamRoster)), false);
+
+      const cancelledPendingId = randomUUID();
+      await database.insert(seasonKakaoPendingApplications).values({
+        id: cancelledPendingId,
+        seasonId: activeSeasonId,
+        applyDate,
+        recruitNo: 11,
+        slotNo: 1,
+        suppliedName: "미일치 합성 신청자",
+        mainPosition: "ALL",
+        subPositions: [],
+        reserve: false,
+        matchState: "UNMATCHED",
+        sourceReferenceHash: Buffer.alloc(32, 0x11),
+        createdAt: now,
+        updatedAt: now,
+      });
+      await assert.rejects(
+        service.cancelKakaoPendingApplication(command(admin.id, "admin-cannot-cancel-pending"), cancelledPendingId, 0, {}, now),
+        errorCode("SESSION_STALE"),
+      );
+      const cancelled = await service.cancelKakaoPendingApplication(command(superAdmin.id, "cancel-pending"), cancelledPendingId, 0, {}, now);
+      assert.equal(cancelled.body.status, "CANCELLED");
+      const auditRows = await database.select().from(auditEvents).where(eq(auditEvents.targetId, pendingId));
+      assert.ok(auditRows.some((event) => event.action === "SEASON_KAKAO_PENDING_RESOLVED"));
     });
 
     await t.test("SITE upsert reuses the same player/date/round row imported from Kakao", async () => {

@@ -28,6 +28,8 @@ function statusLabel(status: string) {
   }[status] ?? status;
 }
 
+const recruitNoValues = Array.from({ length: 999 }, (_, index) => String(index + 1));
+
 function ApplicationsHero({ type, source }: { type: string; source?: string }) {
   return <><section className={styles.hero} aria-labelledby="applications-title">
     <div>
@@ -44,17 +46,19 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
   const selection = parseCanonicalViewQuery(await searchParams, {
     type: ["season", "event", "destruction"],
     source: ["pwa", "bookmark", "kakao"],
+    recruitNo: recruitNoValues,
   });
   if (!selection.ok) return <div className={`page-wrap ${styles.page}`} data-application-type="invalid"><ApplicationsHero type="invalid" /><section className={`${styles.stateCard} ${styles.error}`} role="alert"><ShieldCheck aria-hidden="true" /><h2>신청 화면 주소를 확인해 주세요.</h2><p>종류와 진입 출처는 허용된 값을 한 번씩만 사용할 수 있습니다.</p></section></div>;
   const type = selection.values.type ?? "season";
   const source = selection.values.source;
+  const selectedRecruitNo = Number(selection.values.recruitNo ?? "1");
   if (type !== "season") {
     const label = type === "event" ? "이벤트전" : "멸망전";
     return <div className={`page-wrap ${styles.page}`} data-application-type={type} data-entry-source={source}><ApplicationsHero type={type} source={source} /><section className={styles.stateCard} role="status"><UsersRound aria-hidden="true" /><h2>{label} 신청</h2><p>{label}별 모집 상태와 참가 신청은 해당 대회 상세에서 확인합니다.</p><Link className={styles.focusLink} href="/competitions">대회 목록에서 선택</Link></section></div>;
   }
   const session = await getCurrentSession("ACCOUNT");
   const result = await loadRuntimeSeasonData((service) =>
-    service.getApplicationHub(session?.userId ?? null),
+    service.getApplicationHub(session?.userId ?? null, selectedRecruitNo),
   );
 
   return (
@@ -91,6 +95,11 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
                 {result.data.currentSeason.applicationsOpen ? "신청 가능" : "신청 마감"}
               </strong>
             </div>
+            {result.data.availableRecruitNos.length > 1 ? <nav className={styles.roundTabs} aria-label="오늘 모집 회차">{result.data.availableRecruitNos.map((recruitNo) => {
+              const query = new URLSearchParams({ type: "season", recruitNo: String(recruitNo) });
+              if (source) query.set("source", source);
+              return <Link key={recruitNo} href={`/applications?${query.toString()}`} aria-current={recruitNo === result.data.selectedRecruitNo ? "page" : undefined}>{recruitNo}회차</Link>;
+            })}</nav> : null}
             <div className={styles.stats}>
               <article><span>신청</span><strong>{result.data.counts.applied}</strong></article>
               <article><span>예비</span><strong>{result.data.counts.reserve}</strong></article>
@@ -111,7 +120,7 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
                 <h2>현황은 누구나, 신청은 승인된 계정으로</h2>
                 <p>로그인하면 연결된 플레이어의 오늘 신청만 만들고 수정하거나 취소할 수 있습니다.</p>
               </div>
-              <Link href="/login?next=%2Fapplications">로그인</Link>
+              <Link href={`/login?next=${encodeURIComponent(`/applications?type=season&recruitNo=${selectedRecruitNo}`)}`}>로그인</Link>
             </section>
           ) : !result.data.hasActivePlayer && result.data.currentSeason.applicationsOpen ? (
             <section className={styles.stateCard} role="status">
@@ -120,9 +129,9 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
               <p>내 플레이어 연결을 확인한 뒤 다시 신청해 주세요.</p>
             </section>
           ) : result.data.canApply ? (
-            <ApplicationActions initial={result.data.myApplication} />
+            <ApplicationActions initial={result.data.myApplication} recruitNo={result.data.selectedRecruitNo} />
           ) : result.data.currentSeason.applicationsOpen && result.data.myApplication ? (
-            <ApplicationActions initial={result.data.myApplication} />
+            <ApplicationActions initial={result.data.myApplication} recruitNo={result.data.selectedRecruitNo} />
           ) : (
             <section className={styles.stateCard}>
               <ShieldCheck aria-hidden="true" />

@@ -69,6 +69,9 @@
 .typeTabs a, .focusLink { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 999px; color: var(--ink-strong); background: rgba(255, 255, 255, .9); padding: 0 16px; font-size: 12px; font-weight: 900; text-decoration: none; }
 .typeTabs a[aria-current="page"] { border-color: var(--primary); color: white; background: var(--primary); }
 .focusLink { margin-top: 8px; border-color: var(--primary); color: white; background: var(--primary); }
+.roundTabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+.roundTabs a { display: inline-flex; min-height: 40px; align-items: center; border: 1px solid var(--border); border-radius: 999px; color: #5d5794; background: #f8fbff; padding: 0 14px; font-size: 12px; font-weight: 900; text-decoration: none; }
+.roundTabs a[aria-current="page"] { border-color: #8fa9e5; color: white; background: #6f78c9; }
 
 .overview,
 .actionCard,
