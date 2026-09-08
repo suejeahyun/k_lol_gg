@@ -14,6 +14,11 @@ import {
 import styles from "./submit.module.css";
 
 type SeasonOption = Readonly<{ id: string; name: string }>;
+type TeamBalanceDraftOption = Readonly<{
+  id: string;
+  title: string;
+  status: "EVALUATED" | "SAVED";
+}>;
 const STATUS_LABEL: Record<MatchSubmissionView["status"], string> = {
   AWAITING_UPLOAD: "이미지 등록 중",
   PENDING_REVIEW: "검토 대기",
@@ -35,11 +40,15 @@ export function SubmissionForm({
   seasons,
   initial,
   requestedCode,
+  requestedTeamBalanceDraftId,
+  teamBalanceDraft,
 }: {
   viewer: "ANONYMOUS" | "APPROVED" | "UNAVAILABLE";
   seasons: readonly SeasonOption[];
   initial: MatchSubmissionView | null;
   requestedCode: string | null;
+  requestedTeamBalanceDraftId: string | null;
+  teamBalanceDraft: TeamBalanceDraftOption | null;
 }) {
   const router = useRouter();
   const [submission, setSubmission] = useState(initial);
@@ -54,10 +63,16 @@ export function SubmissionForm({
   const createRequestIds = useRef(new ClientMatchMutationKeyStore("match-submission-request")).current;
 
   if (viewer === "ANONYMOUS") {
-    return <section className={styles.panel}><h2>승인된 계정으로 로그인해 주세요</h2><p>공개 결과는 누구나 볼 수 있지만 비공개 스코어보드 접수는 로그인한 소유자만 이어갈 수 있어요.</p><Link className={styles.login} href="/login?next=%2Fmatches%2Fsubmit">로그인</Link></section>;
+    const next = requestedTeamBalanceDraftId
+      ? `/matches/submit?teamBalanceDraftId=${encodeURIComponent(requestedTeamBalanceDraftId)}`
+      : "/matches/submit";
+    return <section className={styles.panel}><h2>승인된 계정으로 로그인해 주세요</h2><p>공개 결과는 누구나 볼 수 있지만 비공개 스코어보드 접수는 로그인한 소유자만 이어갈 수 있어요.</p><Link className={styles.login} href={`/login?next=${encodeURIComponent(next)}`}>로그인</Link></section>;
   }
   if (viewer === "UNAVAILABLE") {
     return <section className={styles.panel} role="status"><h2>결과 접수를 이용할 수 없어요.</h2><p>잠시 후 다시 시도해 주세요.</p></section>;
+  }
+  if (requestedTeamBalanceDraftId && !teamBalanceDraft) {
+    return <section className={styles.panel} role="alert"><h2>팀 초안을 연결할 수 없어요</h2><p>본인이 선택한 최신 팀 후보인지 확인한 뒤 다시 접수해 주세요.</p><Link href="/tools/team-balance/drafts">내 초안 목록으로 이동</Link></section>;
   }
 
   function continueByCode(event: React.FormEvent) {
@@ -82,7 +97,7 @@ export function SubmissionForm({
       playedOn: String(form.get("playedOn") ?? ""),
       startedAt: startedLocal ? `${startedLocal}:00+09:00` : null,
       expectedGameCount: Number(form.get("expectedGameCount")),
-      teamBalanceDraftId: null,
+      teamBalanceDraftId: teamBalanceDraft?.id ?? null,
     };
     const requestTicket = createRequestIds.issue("create-request-id", 0, createFields);
     const body = { requestId: requestTicket.key, ...createFields };
@@ -102,7 +117,7 @@ export function SubmissionForm({
         seasonName: seasons.find((season) => season.id === body.seasonId)?.name ?? null,
         title: body.title, organizer: body.organizer, seriesNumber: body.seriesNumber, note: body.note,
         playedOn: body.playedOn, startedAt: body.startedAt, expectedGameCount: body.expectedGameCount,
-        teamBalanceDraftId: null, source: "WEB", receivedGameNumbers: [], status: created.status,
+        teamBalanceDraftId: body.teamBalanceDraftId, source: "WEB", receivedGameNumbers: [], status: created.status,
         publicReviewReason: null, approvedMatchSeriesId: null, revision: created.revision,
         updatedAt: new Date().toISOString(),
       };
@@ -261,8 +276,9 @@ export function SubmissionForm({
       {!submission ? (
         <section className={styles.panel} aria-labelledby="new-submission-title">
           <h2 id="new-submission-title">새 결과 접수</h2>
+          {teamBalanceDraft ? <div className={styles.linkedDraft} role="status"><span>팀 밸런스 초안 연결</span><strong>{teamBalanceDraft.title}</strong><small>{teamBalanceDraft.status === "SAVED" ? "저장된 선택 팀" : "현재 선택한 팀"} · 참가자와 배치는 서버에서 다시 확인합니다.</small></div> : null}
           <form className={styles.form} onSubmit={createSubmission}>
-            <label className={styles.wide}>경기 제목<input name="title" required maxLength={160} /></label>
+            <label className={styles.wide}>경기 제목<input name="title" required maxLength={160} defaultValue={teamBalanceDraft?.title ?? ""} /></label>
             <label>주최자<input name="organizer" required maxLength={100} /></label>
             <label>회차<input name="seriesNumber" type="number" min={1} max={9999} defaultValue={1} required /></label>
             <label>플레이 날짜<input name="playedOn" type="date" required /></label>

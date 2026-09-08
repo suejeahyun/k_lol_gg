@@ -121,6 +121,7 @@ export type PublicMatchPlayer = Readonly<{
   tagLine: string;
   championKey: string;
   championName: string;
+  championImageUrl: string | null;
   team: MatchTeam;
   position: MatchPosition;
   kills: number;
@@ -137,6 +138,7 @@ export function toPublicMatchPlayerDto(value: PublicMatchPlayer): PublicMatchPla
     tagLine: value.tagLine,
     championKey: value.championKey,
     championName: value.championName,
+    championImageUrl: value.championImageUrl,
     team: value.team,
     position: value.position,
     kills: value.kills,

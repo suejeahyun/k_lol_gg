@@ -42,6 +42,20 @@
 .tabs a[aria-current="page"] { color: #315eaa; background: #edf5ff; }
 .panel { margin-top: 1rem; padding: clamp(1rem, 3vw, 1.5rem); }
 .panel h2 { margin: 0 0 .75rem; color: #293c5b; font-size: 1rem; }
+.panelHeading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: .9rem; }
+.panelHeading h2 { margin: .55rem 0 0; }
+.panelHeading > a { min-height: 2.5rem; display: inline-flex; align-items: center; color: #315eaa; font-size: .73rem; font-weight: 900; text-decoration: none; }
+.activityGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .7rem; }
+.activityGrid a { min-width: 0; display: grid; gap: .45rem; padding: .9rem; border: 1px solid #dfe8f3; border-radius: 1rem; color: inherit; background: linear-gradient(145deg, #fbfdff, #fff7fc); text-decoration: none; }
+.activityGrid a:hover, .activityGrid a:focus-visible { border-color: #85aad6; box-shadow: 0 .7rem 1.8rem rgb(65 100 150 / 10%); }
+.activityGrid span { display: flex; align-items: center; gap: .35rem; color: #4776bb; font-size: .68rem; font-weight: 900; }
+.activityGrid span svg { width: 1rem; height: 1rem; }
+.activityGrid strong, .activityGrid small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.activityGrid small, .empty { color: #718097; font-size: .7rem; }
+.disciplineCounts { display: grid; grid-template-columns: repeat(3, 1fr); gap: .65rem; margin: 0 0 .8rem; }
+.disciplineCounts div { padding: .8rem; border-radius: .9rem; background: #f8f4ff; text-align: center; }
+.disciplineCounts dt { color: #705b91; font-size: .68rem; font-weight: 850; }
+.disciplineCounts dd { margin: .25rem 0 0; color: #293c5b; font-size: 1.35rem; font-weight: 950; }
 .facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; margin: 0; }
 .facts div { min-width: 0; border: 1px solid #e1e8f2; border-radius: .9rem; background: #f9fbfe; padding: .85rem; }
 .facts dt { color: #718097; font-size: .65rem; font-weight: 800; }
@@ -50,8 +64,8 @@
 .primaryLink { min-height: 2.75rem; display: inline-flex; align-items: center; justify-content: center; border-radius: .8rem; color: white; background: #4b72b8; padding: 0 .9rem; font-size: .75rem; font-weight: 850; text-decoration: none; }
 .skeleton { min-height: 30rem; border-radius: 1.5rem; background: linear-gradient(100deg, #edf2f8 20%, #fafcff 45%, #edf2f8 70%); background-size: 300% 100%; animation: shimmer 1.2s ease infinite; }
 @keyframes shimmer { from { background-position: 100% 0; } to { background-position: 0 0; } }
-@media (max-width: 800px) { .accessGrid { grid-template-columns: 1fr; } .intro { min-height: 22rem; } }
-@media (max-width: 520px) { .page { width: min(100% - 20px, 72rem); padding-top: .75rem; } .intro, .formCard, .accountHero, .panel { border-radius: 1.2rem; } .promise, .facts, .playerTierGrid { grid-template-columns: 1fr; } .intro { min-height: 19rem; padding: 1.25rem; } .accountHero { align-items: flex-start; flex-direction: column; } .accountHero > div, .logoutControl, .logoutControl button, .logoutError { width: 100%; } }
+@media (max-width: 800px) { .accessGrid { grid-template-columns: 1fr; } .intro { min-height: 22rem; } .activityGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .page { width: min(100% - 20px, 72rem); padding-top: .75rem; } .intro, .formCard, .accountHero, .panel { border-radius: 1.2rem; } .promise, .facts, .playerTierGrid, .activityGrid { grid-template-columns: 1fr; } .intro { min-height: 19rem; padding: 1.25rem; } .accountHero, .panelHeading { align-items: flex-start; flex-direction: column; } .accountHero > div, .logoutControl, .logoutControl button, .logoutError { width: 100%; } }
 @media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
 .policy { width: min(100%, 58rem); margin: 0 auto; padding: clamp(1.25rem, 4vw, 2.5rem); border: 1px solid rgb(118 151 198 / 22%); border-radius: 1.6rem; background: rgb(255 255 255 / 94%); box-shadow: 0 1.2rem 3.5rem rgb(76 105 155 / 10%); }
 .policy header { padding-bottom: 1rem; border-bottom: 1px solid #e5edf8; }

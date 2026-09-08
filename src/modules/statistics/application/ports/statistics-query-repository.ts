@@ -39,6 +39,7 @@ export type PublicPlayerStatistics = Readonly<{
   champions: readonly Readonly<{
     championKey: string;
     championName: string;
+    championImageUrl: string | null;
     games: number;
     wins: number;
     losses: number;
@@ -59,6 +60,7 @@ export type PublicPlayerStatistics = Readonly<{
     gameNumber: number;
     championKey: string;
     championName: string;
+    championImageUrl: string | null;
     team: "BLUE" | "RED";
     position: StatisticsPosition;
     won: boolean;

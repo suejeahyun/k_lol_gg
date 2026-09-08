@@ -38,5 +38,11 @@
 .facts div { border-radius: .75rem; background: #f8fbff; padding: .7rem; }
 .facts dt { color: var(--text-muted); font-size: .75rem; }
 .facts dd { margin: .2rem 0 0; overflow-wrap: anywhere; }
-@media (max-width: 800px) { .stats { grid-template-columns: repeat(2, 1fr); } .rules, .tasks, .detailGrid { grid-template-columns: 1fr; } .header { align-items: start; flex-direction: column; } .evidence { grid-template-columns: repeat(3, 1fr); } }
+.recordSection { display: grid; gap: .8rem; }
+.recordSection h2 { margin: 0; }
+.recordGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .8rem; }
+.recordGrid .panel { display: grid; align-content: start; gap: .65rem; margin: 0; scroll-margin-top: 6rem; }
+.recordGrid p { margin: 0; }
+.recordLink { min-height: 2.6rem; display: inline-flex; align-items: center; color: #315eaa; font-size: .78rem; font-weight: 900; }
+@media (max-width: 800px) { .stats { grid-template-columns: repeat(2, 1fr); } .rules, .tasks, .detailGrid, .recordGrid { grid-template-columns: 1fr; } .header { align-items: start; flex-direction: column; } .evidence { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 520px) { .page { padding: .8rem; } .hero { min-height: 0; border-radius: 1.4rem; } .stats, .facts { grid-template-columns: 1fr; } .evidence { grid-template-columns: repeat(2, 1fr); } .button, .link { width: 100%; } }

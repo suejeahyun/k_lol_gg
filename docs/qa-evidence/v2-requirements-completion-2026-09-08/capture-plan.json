@@ -1,0 +1,17 @@
+[
+  { "name": "home-desktop", "group": "public", "session": "anonymous", "path": "/", "viewport": { "width": 1440, "height": 1000, "deviceScaleFactor": 1, "mobile": false } },
+  { "name": "home-mobile", "group": "public", "session": "anonymous", "path": "/", "viewport": { "width": 390, "height": 844, "deviceScaleFactor": 1, "mobile": true } },
+  { "name": "players-tier", "group": "public", "session": "anonymous", "path": "/players?tier=PLATINUM", "viewport": { "width": 1440, "height": 1000, "deviceScaleFactor": 1, "mobile": false } },
+  { "name": "player-detail", "group": "public", "session": "anonymous", "path": "/players/ffb6fb73-bace-422f-8436-b172118887d9", "viewport": { "width": 1440, "height": 1000, "deviceScaleFactor": 1, "mobile": false } },
+  { "name": "match-detail", "group": "public", "session": "anonymous", "path": "/matches/6fa41889-9a56-4a2f-82b3-b0deefd98fb0", "viewport": { "width": 1440, "height": 1000, "deviceScaleFactor": 1, "mobile": false } },
+  { "name": "random-team", "group": "public", "session": "anonymous", "path": "/tools/random-team", "viewport": { "width": 1440, "height": 1000, "deviceScaleFactor": 1, "mobile": false } },
+  { "name": "team-balance-builder", "group": "account", "session": "account", "path": "/tools/team-balance", "viewport": { "width": 1440, "height": 1000, "deviceScaleFactor": 1, "mobile": false } },
+  { "name": "team-balance-draft", "group": "account", "session": "account", "path": "/tools/team-balance/drafts/a75d7239-cdd1-4a5b-91be-e002beab895e", "viewport": { "width": 1440, "height": 1000, "deviceScaleFactor": 1, "mobile": false } },
+  { "name": "team-balance-draft-mobile", "group": "account", "session": "account", "path": "/tools/team-balance/drafts/a75d7239-cdd1-4a5b-91be-e002beab895e", "viewport": { "width": 390, "height": 844, "deviceScaleFactor": 1, "mobile": true } },
+  { "name": "match-submit-linked", "group": "account", "session": "account", "path": "/matches/submit?teamBalanceDraftId=a75d7239-cdd1-4a5b-91be-e002beab895e", "viewport": { "width": 1440, "height": 1000, "deviceScaleFactor": 1, "mobile": false } },
+  { "name": "account-overview", "group": "account", "session": "account", "path": "/account", "viewport": { "width": 1440, "height": 1000, "deviceScaleFactor": 1, "mobile": false } },
+  { "name": "account-discipline", "group": "account", "session": "account", "path": "/account/discipline", "viewport": { "width": 390, "height": 844, "deviceScaleFactor": 1, "mobile": true } },
+  { "name": "event-detail", "group": "public", "session": "anonymous", "path": "/competitions/events/850dbf11-9d21-4aaa-9d9e-ba985b449959", "viewport": { "width": 1440, "height": 1000, "deviceScaleFactor": 1, "mobile": false } },
+  { "name": "destruction-detail", "group": "public", "session": "anonymous", "path": "/competitions/destruction/620c6338-02f8-4245-bb99-5bc5ddec502e", "viewport": { "width": 1440, "height": 1000, "deviceScaleFactor": 1, "mobile": false } },
+  { "name": "destruction-detail-mobile", "group": "public", "session": "anonymous", "path": "/competitions/destruction/620c6338-02f8-4245-bb99-5bc5ddec502e", "viewport": { "width": 390, "height": 844, "deviceScaleFactor": 1, "mobile": true } }
+]

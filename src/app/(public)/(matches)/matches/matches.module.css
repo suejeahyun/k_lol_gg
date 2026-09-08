@@ -37,7 +37,7 @@
 .team { display: grid; gap: 8px; padding: 18px; }
 .team + .team { border-left: 1px solid var(--border); }
 .team h3 { margin: 0 0 6px; }
-.player { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 10px; align-items: center; padding: 11px 12px; border-radius: 14px; background: rgba(237,244,251,.72); }
+.player { display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 10px; align-items: center; padding: 11px 12px; border-radius: 14px; background: rgba(237,244,251,.72); }
 .player a,.player > div { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 850; text-decoration: none; }
 .player small { display: block; color: var(--text-muted); font-weight: 650; }
 .mvp { display: inline-flex; align-items: center; gap: 4px; color: #8a5d14; }

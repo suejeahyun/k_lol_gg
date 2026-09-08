@@ -1,3 +1,5 @@
+import type { PlayerTierFilter } from "./player-tier";
+
 export type PlayerSummary = Readonly<{
   id: string;
   displayName: string;
@@ -31,6 +33,7 @@ export type PlayerProfile = Readonly<{
 
 export type PlayerCatalogQuery = Readonly<{
   query: string;
+  tier: PlayerTierFilter | null;
   page: number;
   pageSize: number;
 }>;

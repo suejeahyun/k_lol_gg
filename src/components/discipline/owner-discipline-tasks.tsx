@@ -34,7 +34,7 @@ export function OwnerDisciplineTasks({ tasks }: { tasks: readonly OwnerDisciplin
     if (!response?.ok) setMessage("저장된 이미지를 제출하지 못했습니다. 최신 상태를 확인한 뒤 다시 시도해 주세요.");
     setBusy(null); router.refresh();
   }
-  return <>{message ? <p className={styles.error} role="alert">{message}</p> : null}<section className={styles.tasks}>{tasks.map((task) => <article className={styles.panel} key={task.id}>
+  return <>{message ? <p className={styles.error} role="alert">{message}</p> : null}<section className={styles.tasks} aria-label="경고 해소 과제">{tasks.map((task) => <article className={styles.panel} id={`task-${task.id}`} key={task.id}>
     <div className={styles.taskHeader}><div><span className={styles.eyebrow}>{task.publicCode}</span><h2>{task.category === "INHOUSE" ? "내전" : "일반"} 경고 해소 과제</h2></div><span className={styles.badge}>{statusLabel[task.status]}</span></div>
     <div className={styles.progressLine}><span>{task.submittedEvidenceCount} / {task.requiredGameCount}장</span><span>기한 {new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium" }).format(new Date(task.dueAt))}</span></div><div className={styles.progress}><i style={{ width: `${task.submittedEvidenceCount / task.requiredGameCount * 100}%` }} /></div>
     {task.reviewNote ? <p className={task.status === "REJECTED" ? styles.error : styles.notice}>검토 메모: {task.reviewNote}</p> : null}

@@ -136,6 +136,14 @@ export type SafeAccountMutationResponse = Readonly<{
   playerRevision?: number;
 }>;
 
+export type AccountParticipationDto = Readonly<{
+  kind: "MATCH" | "EVENT" | "DESTRUCTION";
+  id: string;
+  title: string;
+  status: string;
+  occurredOn: string;
+}>;
+
 export const ACCOUNT_CONFLICT_REASONS = [
   "ACCOUNT_DELETED",
   "ACTIVE_PLAYER_REQUIRED",

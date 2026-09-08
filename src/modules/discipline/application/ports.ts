@@ -153,6 +153,22 @@ export type OwnerDisciplineTaskDto = Readonly<{
   evidence: readonly DisciplineEvidenceDto[];
 }>;
 
+export type OwnerDisciplineRecordDto = Readonly<{
+  id: string;
+  type: DisciplineType;
+  category: DisciplineCategory;
+  reason: string;
+  createdAt: string;
+  taskId: string | null;
+  taskStatus: DisciplineTask["status"] | null;
+}>;
+
+export type OwnerDisciplineOverviewDto = Readonly<{
+  activeCounts: Readonly<Record<DisciplineType, number>>;
+  records: readonly OwnerDisciplineRecordDto[];
+  tasks: readonly OwnerDisciplineTaskDto[];
+}>;
+
 export type AdminDisciplineRecordDto = Readonly<{
   id: string;
   revision: number;
@@ -215,6 +231,7 @@ export type DisciplineAdminMutationResult = Readonly<{
 export interface DisciplineQueryPort {
   getPublicStatistics(): Promise<PublicDisciplineStatisticsDto>;
   listOwnerTasks(userAccountId: string): Promise<readonly OwnerDisciplineTaskDto[]>;
+  getOwnerOverview(userAccountId: string): Promise<OwnerDisciplineOverviewDto>;
   getOwnerTask(userAccountId: string, taskId: string): Promise<OwnerDisciplineTaskDto | null>;
   listAdmin(query: DisciplineAdminListQuery): Promise<Readonly<{ items: readonly AdminDisciplineRecordDto[]; totalCount: number }>>;
   getAdminRecord(id: string): Promise<AdminDisciplineRecordDto | null>;

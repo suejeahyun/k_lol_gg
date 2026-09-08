@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { randomBytes, randomUUID } from "node:crypto";
 import test from "node:test";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 
 import type { TransactionSessionActor } from "../../src/modules/auth/domain/transaction-session";
 import {
@@ -173,12 +173,23 @@ test("S06 draft lifecycle is owner/admin authorized, append-only, transactional,
     );
 
     assert.equal((await database.select().from(teamBalanceDrafts).where(eq(teamBalanceDrafts.id, draftId))).length, 1);
-    assert.equal((await database.select().from(teamBalanceDraftParticipants)).length, 10);
-    assert.equal((await database.select().from(teamBalanceDraftCandidates)).length, 3);
-    assert.equal((await database.select().from(teamBalanceCommandReceipts)).length, 1);
-    assert.equal((await database.select().from(teamBalanceOutbox)).length, 1);
+    assert.equal((await database.select().from(teamBalanceDraftParticipants).where(
+      eq(teamBalanceDraftParticipants.draftId, draftId),
+    )).length, 10);
+    assert.equal((await database.select().from(teamBalanceDraftCandidates).where(
+      eq(teamBalanceDraftCandidates.draftId, draftId),
+    )).length, 3);
+    assert.equal((await database.select().from(teamBalanceCommandReceipts).where(
+      eq(teamBalanceCommandReceipts.actorUserAccountId, ownerId),
+    )).length, 1);
+    assert.equal((await database.select().from(teamBalanceOutbox).where(
+      eq(teamBalanceOutbox.draftId, draftId),
+    )).length, 1);
     assert.equal(
-      (await database.select().from(auditEvents).where(eq(auditEvents.targetType, "TEAM_BALANCE_DRAFT"))).length,
+      (await database.select().from(auditEvents).where(and(
+        eq(auditEvents.targetType, "TEAM_BALANCE_DRAFT"),
+        eq(auditEvents.targetId, draftId),
+      ))).length,
       1,
     );
     const ownerDrafts = await service.listDrafts(
@@ -259,13 +270,22 @@ test("S06 draft lifecycle is owner/admin authorized, append-only, transactional,
     assert.equal(draft.ratingGeneration, 7);
     assert.equal(draft.selectedCandidateSignature, null);
     assert.equal(draft.candidates.length, 3);
-    assert.equal((await database.select().from(teamBalanceDraftCandidates)).length, 6);
-    assert.equal((await database.select().from(teamBalanceOutbox)).length, 4);
+    assert.equal((await database.select().from(teamBalanceDraftCandidates).where(
+      eq(teamBalanceDraftCandidates.draftId, draftId),
+    )).length, 6);
+    assert.equal((await database.select().from(teamBalanceOutbox).where(
+      eq(teamBalanceOutbox.draftId, draftId),
+    )).length, 4);
     assert.equal(
-      (await database.select().from(auditEvents).where(eq(auditEvents.targetType, "TEAM_BALANCE_DRAFT"))).length,
+      (await database.select().from(auditEvents).where(and(
+        eq(auditEvents.targetType, "TEAM_BALANCE_DRAFT"),
+        eq(auditEvents.targetId, draftId),
+      ))).length,
       4,
     );
-    assert.equal((await database.select().from(teamBalanceCommandReceipts)).length, 4);
+    assert.equal((await database.select().from(teamBalanceCommandReceipts).where(
+      inArray(teamBalanceCommandReceipts.actorUserAccountId, [ownerId, adminId]),
+    )).length, 4);
 
     await database.update(authSessions).set({ revokedAt: now }).where(
       and(eq(authSessions.id, ownerSessionId), eq(authSessions.userAccountId, ownerId)),
@@ -280,7 +300,9 @@ test("S06 draft lifecycle is owner/admin authorized, append-only, transactional,
       ),
       serviceError("SESSION_STALE"),
     );
-    assert.equal((await database.select().from(teamBalanceOutbox)).length, 4);
+    assert.equal((await database.select().from(teamBalanceOutbox).where(
+      eq(teamBalanceOutbox.draftId, draftId),
+    )).length, 4);
 
     const captureDraftId = await prepareTeamBalanceCaptureFixture(pool, adminId);
     assert.equal(captureDraftId, draftId);

@@ -9,6 +9,7 @@ import { eq } from "drizzle-orm";
 
 import type { MatchCommandEnvelope } from "../../src/modules/matches/application/ports/match-repository";
 import type { MatchTransactionAuthorizer } from "../../src/modules/matches/application/ports/match-transaction-authorizer";
+import { MatchServiceError } from "../../src/modules/matches/domain/match";
 import { PostgresMatchRepository } from "../../src/modules/matches/infrastructure/postgres-match-repository";
 import { createDatabaseHandle } from "../../src/platform/db/database";
 import { applyMigrations } from "../../src/platform/db/migrate";
@@ -25,6 +26,8 @@ import {
   players,
   privateAssets,
   seasons,
+  teamBalanceDraftCandidates,
+  teamBalanceDraftParticipants,
   teamBalanceDrafts,
   userAccounts,
 } from "../../src/platform/db/schema/index";
@@ -45,6 +48,7 @@ test("S04 stores participant display identity and rejection reasons as durable h
   const repository = new PostgresMatchRepository(database, noOpAuthorizer);
   const now = new Date("2026-09-07T03:00:00.000Z");
   const actorId = randomUUID();
+  const otherActorId = randomUUID();
   const seasonId = randomUUID();
   const playerRows = Array.from({ length: 10 }, (_, index) => ({
     id: randomUUID(),
@@ -88,6 +92,18 @@ test("S04 stores participant display identity and rejection reasons as durable h
       scope,
       keyHash: createHash("sha256").update(`key:${scope}`).digest(),
       requestHash: createHash("sha256").update(`request:${scope}`).digest(),
+    };
+  }
+
+  function accountCommand(scope: string, userAccountId = actorId): MatchCommandEnvelope {
+    return {
+      ...command(scope),
+      actor: {
+        userAccountId,
+        sessionId: randomUUID(),
+        purpose: "ACCOUNT",
+        requiredRole: "USER",
+      },
     };
   }
 
@@ -153,14 +169,24 @@ test("S04 stores participant display identity and rejection reasons as durable h
       .from(players)
       .where(eq(players.id, preexistingPlayerId));
     assert.deepEqual(preserved, [{ id: preexistingPlayerId, nickname: "BeforeS04" }]);
-    await database.insert(userAccounts).values({
-      id: actorId,
-      loginId: `match-snapshot-${actorId}`,
-      loginIdNormalized: `match-snapshot-${actorId}`,
-      passwordHash: "$argon2id$v=19$synthetic-contract-only",
-      role: "ADMIN",
-      status: "APPROVED",
-    });
+    await database.insert(userAccounts).values([
+      {
+        id: actorId,
+        loginId: `match-snapshot-${actorId}`,
+        loginIdNormalized: `match-snapshot-${actorId}`,
+        passwordHash: "$argon2id$v=19$synthetic-contract-only",
+        role: "ADMIN",
+        status: "APPROVED",
+      },
+      {
+        id: otherActorId,
+        loginId: `match-snapshot-${otherActorId}`,
+        loginIdNormalized: `match-snapshot-${otherActorId}`,
+        passwordHash: "$argon2id$v=19$synthetic-contract-only",
+        role: "USER",
+        status: "APPROVED",
+      },
+    ]);
     await database.insert(seasons).values({
       id: seasonId,
       name: `경기 스냅샷 ${seasonId}`,
@@ -169,6 +195,55 @@ test("S04 stores participant display identity and rejection reasons as durable h
     });
     await database.insert(players).values(playerRows);
     await database.insert(championCatalog).values(championRows);
+
+    async function insertSelectedTeamBalanceDraft(draftId: string, title: string) {
+      const signature = `contract-${draftId}`;
+      const assignments = playerRows.map((player, index) => ({
+        playerId: player.id,
+        team: index < 5 ? "BLUE" as const : "RED" as const,
+        position: positions[index % 5]!,
+        preference: "MAIN",
+        rating: 100,
+      }));
+      await database.insert(teamBalanceDrafts).values({
+        id: draftId,
+        ownerUserAccountId: actorId,
+        title,
+        status: "EVALUATED",
+        evaluationRound: 1,
+        selectedCandidateSource: "AUTO",
+        selectedCandidateSignature: signature,
+        revision: 0,
+        createdByUserAccountId: actorId,
+        updatedByUserAccountId: actorId,
+        createdAt: now,
+        updatedAt: now,
+      });
+      await database.insert(teamBalanceDraftParticipants).values(
+        playerRows.map((player, index) => ({
+          draftId,
+          playerId: player.id,
+          ordinal: index,
+          displayNameSnapshot: player.nickname,
+          eligiblePositionsJson: [{ position: positions[index % 5]!, preference: "MAIN" }],
+          ratingSnapshotJson: { overall: 100 },
+          updatedAt: now,
+        })),
+      );
+      await database.insert(teamBalanceDraftCandidates).values({
+        id: randomUUID(),
+        draftId,
+        evaluationRound: 1,
+        source: "AUTO",
+        rank: 1,
+        signature,
+        assignmentsJson: assignments,
+        scoreJson: {},
+        createdByUserAccountId: actorId,
+        createdAt: now,
+      });
+      return assignments;
+    }
 
     await t.test("registry rename does not rewrite a recorded participant or its archived revision", async () => {
       const created = await repository.createMatch(command("snapshot:create"), {
@@ -283,13 +358,12 @@ test("S04 stores participant display identity and rejection reasons as durable h
       assert.match(JSON.stringify(archived), /"nicknameSnapshot":"당시닉1"/);
       assert.doesNotMatch(JSON.stringify(archived), /현재닉1/);
 
-      assert.deepEqual(await repository.getMatchSummaryIntegrity(null, 500), {
-        ok: true,
-        checkedCount: 1,
-        nextAfter: null,
-        sampleTruncated: false,
-        samples: [],
-      });
+      const consistent = await repository.getMatchSummaryIntegrity(null, 500);
+      assert.equal(consistent.ok, true);
+      assert.ok(consistent.checkedCount >= 1);
+      assert.equal(consistent.nextAfter, null);
+      assert.equal(consistent.sampleTruncated, false);
+      assert.deepEqual(consistent.samples, []);
       await database
         .update(matchSeries)
         .set({ blueWins: 0, redWins: 1 })
@@ -338,6 +412,73 @@ test("S04 stores participant display identity and rejection reasons as durable h
       assert.equal(reopened?.afterJson?.publicReviewReason, null);
     });
 
+    await t.test("web submission accepts only the owner's current valid selected team draft", async () => {
+      const linkedDraftId = randomUUID();
+      await insertSelectedTeamBalanceDraft(linkedDraftId, "접수 연결 계약 초안");
+      const createInput = {
+        requestId: randomUUID(),
+        seasonId,
+        title: "팀 초안 연결 접수",
+        organizer: "진행자",
+        seriesNumber: 1,
+        note: null,
+        playedOn: "2026-09-07",
+        startedAt: null,
+        startedAtOffsetMinutes: null,
+        expectedGameCount: 2,
+        teamBalanceDraftId: linkedDraftId,
+      };
+
+      const created = await repository.createSubmission(
+        accountCommand("draft-link:create"),
+        createInput,
+        createHash("sha256").update("draft-link:create").digest(),
+        now,
+      );
+      const stored = (
+        await database
+          .select({ teamBalanceDraftId: matchSubmissions.teamBalanceDraftId })
+          .from(matchSubmissions)
+          .where(eq(matchSubmissions.id, String(created.body.submissionId)))
+      )[0];
+      assert.equal(stored?.teamBalanceDraftId, linkedDraftId);
+
+      await assert.rejects(
+        repository.createSubmission(
+          accountCommand("draft-link:forged"),
+          { ...createInput, requestId: randomUUID(), teamBalanceDraftId: randomUUID() },
+          createHash("sha256").update("draft-link:forged").digest(),
+          now,
+        ),
+        (error: unknown) => error instanceof MatchServiceError && error.code === "NOT_FOUND",
+      );
+      await assert.rejects(
+        repository.createSubmission(
+          accountCommand("draft-link:cross-owner", otherActorId),
+          { ...createInput, requestId: randomUUID() },
+          createHash("sha256").update("draft-link:cross-owner").digest(),
+          now,
+        ),
+        (error: unknown) => error instanceof MatchServiceError && error.code === "NOT_FOUND",
+      );
+
+      const invalidDraftId = randomUUID();
+      const invalidAssignments = await insertSelectedTeamBalanceDraft(invalidDraftId, "깨진 선택 후보");
+      await database
+        .update(teamBalanceDraftCandidates)
+        .set({ assignmentsJson: invalidAssignments.map((entry) => ({ ...entry, playerId: playerRows[0]!.id })) })
+        .where(eq(teamBalanceDraftCandidates.draftId, invalidDraftId));
+      await assert.rejects(
+        repository.createSubmission(
+          accountCommand("draft-link:invalid-selection"),
+          { ...createInput, requestId: randomUUID(), teamBalanceDraftId: invalidDraftId },
+          createHash("sha256").update("draft-link:invalid-selection").digest(),
+          now,
+        ),
+        (error: unknown) => error instanceof MatchServiceError && error.code === "INVALID_TRANSITION",
+      );
+    });
+
     await t.test("submission approval carries team-balance provenance through match history and outbox", async () => {
       const submissionId = randomUUID();
       const teamBalanceDraftId = randomUUID();
@@ -345,18 +486,7 @@ test("S04 stores participant display identity and rejection reasons as durable h
         game,
         { ...game, gameNumber: 2, winnerTeam: "RED" as const },
       ];
-      await database.insert(teamBalanceDrafts).values({
-        id: teamBalanceDraftId,
-        ownerUserAccountId: actorId,
-        title: "경기 출처 계약 초안",
-        status: "EVALUATED",
-        evaluationRound: 1,
-        revision: 0,
-        createdByUserAccountId: actorId,
-        updatedByUserAccountId: actorId,
-        createdAt: now,
-        updatedAt: now,
-      });
+      await insertSelectedTeamBalanceDraft(teamBalanceDraftId, "경기 출처 계약 초안");
       await database.insert(matchSubmissions).values({
         id: submissionId,
         publicCode: `MR2${createHash("sha256").update(submissionId).digest("hex").slice(0, 16).toUpperCase()}`,

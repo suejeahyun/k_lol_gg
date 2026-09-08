@@ -35,6 +35,11 @@ import {
 } from "@/platform/db/schema/matches";
 import { players } from "@/platform/db/schema/registry";
 import { seasons } from "@/platform/db/schema/seasons";
+import {
+  teamBalanceDraftCandidates,
+  teamBalanceDraftParticipants,
+  teamBalanceDrafts,
+} from "@/platform/db/schema/team-tools";
 import type { V2Database } from "@/platform/db/database";
 import type { DatabaseExecutor, V2Transaction } from "@/platform/db/transaction";
 import { withTransaction } from "@/platform/db/transaction";
@@ -113,6 +118,39 @@ function resultSummary(games: readonly MatchGameInput[]) {
     redWins: games.filter((game) => game.winnerTeam === "RED").length,
     gameCount: games.length,
   } as const;
+}
+
+export function validTeamBalanceSubmissionAssignments(
+  value: unknown,
+  participantIds: readonly string[],
+) {
+  if (!Array.isArray(value) || value.length !== 10 || participantIds.length !== 10) return false;
+  const expectedPlayers = new Set(participantIds);
+  if (expectedPlayers.size !== 10) return false;
+  const assignments = value.map((entry) => {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) return null;
+    const record = entry as Record<string, unknown>;
+    return typeof record.playerId === "string" &&
+      (record.team === "BLUE" || record.team === "RED") &&
+      MATCH_POSITIONS.includes(record.position as (typeof MATCH_POSITIONS)[number])
+      ? { playerId: record.playerId, team: record.team, position: record.position as (typeof MATCH_POSITIONS)[number] }
+      : null;
+  });
+  if (assignments.some((entry) => entry === null)) return false;
+  const normalized = assignments as readonly Readonly<{
+    playerId: string;
+    team: "BLUE" | "RED";
+    position: (typeof MATCH_POSITIONS)[number];
+  }>[];
+  if (
+    new Set(normalized.map((entry) => entry.playerId)).size !== 10 ||
+    normalized.some((entry) => !expectedPlayers.has(entry.playerId))
+  ) return false;
+  return MATCH_TEAMS.every((team) => {
+    const teamAssignments = normalized.filter((entry) => entry.team === team);
+    return teamAssignments.length === 5 &&
+      MATCH_POSITIONS.every((position) => teamAssignments.some((entry) => entry.position === position));
+  });
 }
 
 function stableValue(value: unknown): unknown {
@@ -607,6 +645,7 @@ export class PostgresMatchRepository implements MatchRepository {
             tagLine: matchParticipants.tagLineSnapshot,
             championKey: matchParticipants.championKey,
             championName: championCatalog.displayName,
+            championImageUrl: championCatalog.imageUrl,
             team: matchParticipants.team,
             position: matchParticipants.position,
             kills: matchParticipants.kills,
@@ -642,6 +681,7 @@ export class PostgresMatchRepository implements MatchRepository {
             tagLine: participant.tagLine,
             championKey: participant.championKey,
             championName: participant.championName || participant.championKey,
+            championImageUrl: participant.championImageUrl,
             team: participant.team,
             position: participant.position,
             kills: participant.kills,
@@ -1767,6 +1807,64 @@ export class PostgresMatchRepository implements MatchRepository {
     }
   }
 
+  private async assertSubmissionTeamBalanceDraft(
+    transaction: V2Transaction,
+    draftId: string | null,
+    ownerUserAccountId: string | null,
+  ) {
+    if (!draftId) return;
+    if (!ownerUserAccountId) {
+      throw new MatchServiceError("INVALID_TRANSITION", "소유자가 없는 접수에는 팀 초안을 연결할 수 없습니다.");
+    }
+    const draft = (
+      await transaction
+        .select({
+          id: teamBalanceDrafts.id,
+          evaluationRound: teamBalanceDrafts.evaluationRound,
+          selectedCandidateSource: teamBalanceDrafts.selectedCandidateSource,
+          selectedCandidateSignature: teamBalanceDrafts.selectedCandidateSignature,
+        })
+        .from(teamBalanceDrafts)
+        .where(and(
+          eq(teamBalanceDrafts.id, draftId),
+          eq(teamBalanceDrafts.ownerUserAccountId, ownerUserAccountId),
+          inArray(teamBalanceDrafts.status, ["EVALUATED", "SAVED"]),
+        ))
+        .for("share")
+        .limit(1)
+    )[0];
+    if (!draft) {
+      throw new MatchServiceError("NOT_FOUND", "연결할 수 있는 본인 팀 초안을 찾을 수 없습니다.");
+    }
+    if (!draft.selectedCandidateSource || !draft.selectedCandidateSignature) {
+      throw new MatchServiceError("INVALID_TRANSITION", "팀 후보를 선택한 초안만 경기 접수에 연결할 수 있습니다.");
+    }
+    const [candidate, participantRows] = await Promise.all([
+      transaction
+        .select({ assignmentsJson: teamBalanceDraftCandidates.assignmentsJson })
+        .from(teamBalanceDraftCandidates)
+        .where(and(
+          eq(teamBalanceDraftCandidates.draftId, draft.id),
+          eq(teamBalanceDraftCandidates.evaluationRound, draft.evaluationRound),
+          eq(teamBalanceDraftCandidates.source, draft.selectedCandidateSource),
+          eq(teamBalanceDraftCandidates.signature, draft.selectedCandidateSignature),
+        ))
+        .for("share")
+        .limit(1),
+      transaction
+        .select({ playerId: teamBalanceDraftParticipants.playerId })
+        .from(teamBalanceDraftParticipants)
+        .where(eq(teamBalanceDraftParticipants.draftId, draft.id))
+        .for("share"),
+    ]);
+    if (!candidate[0] || !validTeamBalanceSubmissionAssignments(
+      candidate[0].assignmentsJson,
+      participantRows.map((row) => row.playerId),
+    )) {
+      throw new MatchServiceError("INVALID_TRANSITION", "선택한 팀 후보와 참가자 구성이 일치하지 않습니다.");
+    }
+  }
+
   async createSubmission(
     envelope: MatchCommandEnvelope,
     input: MatchSubmissionCreateInput,
@@ -1775,6 +1873,11 @@ export class PostgresMatchRepository implements MatchRepository {
   ) {
     return this.idempotent(envelope, now, async (transaction) => {
       await this.assertSubmissionSeason(transaction, input.seasonId);
+      await this.assertSubmissionTeamBalanceDraft(
+        transaction,
+        input.teamBalanceDraftId,
+        envelope.actor.userAccountId,
+      );
       const id = randomUUID();
       const publicCode = `MR2${randomBytes(8).toString("hex").toUpperCase()}`;
       const row = (
@@ -1920,6 +2023,14 @@ export class PostgresMatchRepository implements MatchRepository {
         throw new MatchServiceError("INVALID_TRANSITION", "이미지 검토 대기 전 접수만 수정할 수 있습니다.");
       }
       await this.assertSubmissionSeason(transaction, input.seasonId);
+      if (input.teamBalanceDraftId !== current.teamBalanceDraftId) {
+        throw new MatchServiceError("INVALID_TRANSITION", "접수 생성 뒤에는 연결한 팀 초안을 변경할 수 없습니다.");
+      }
+      await this.assertSubmissionTeamBalanceDraft(
+        transaction,
+        current.teamBalanceDraftId,
+        current.ownerUserAccountId,
+      );
       const imageNumbers = (
         await transaction
           .select({ gameNumber: matchSubmissionImages.gameNumber })
@@ -3247,6 +3358,16 @@ export class PostgresMatchRepository implements MatchRepository {
       }
       if (!current.seasonId) {
         throw new MatchServiceError("INVALID_TRANSITION", "승인 전에 시즌을 명시적으로 연결해 주세요.");
+      }
+      if (current.teamBalanceDraftId) {
+        if (current.source !== "WEB") {
+          throw new MatchServiceError("INVALID_TRANSITION", "웹 소유자 접수만 팀 초안 출처를 사용할 수 있습니다.");
+        }
+        await this.assertSubmissionTeamBalanceDraft(
+          transaction,
+          current.teamBalanceDraftId,
+          current.ownerUserAccountId,
+        );
       }
       const storedGames = current.reviewedResultJson
         ? parseReviewedGames(current.reviewedResultJson, current.expectedGameCount)

@@ -37,6 +37,7 @@ import { withTransaction } from "@/platform/db/transaction";
 
 import type {
   AdminDisciplineRecordDto,
+  OwnerDisciplineOverviewDto,
   CreateDisciplineRecordInput,
   CurrentDisciplineActor,
   DisciplineAdminCommandPort,
@@ -398,6 +399,44 @@ export class PostgresDisciplineAdapter implements
     const linked = sql<boolean>`exists (select 1 from "registry"."players" p where p."id" = ${disciplineResolutionTasks.ownerPlayerId} and p."user_account_id" = ${userAccountId})`;
     const rows = await this.database.select().from(disciplineResolutionTasks).where(or(eq(disciplineResolutionTasks.ownerUserAccountId, userAccountId), linked)).orderBy(desc(disciplineResolutionTasks.dueAt), desc(disciplineResolutionTasks.id)).limit(100);
     return Promise.all(rows.map((row) => ownerTaskDto(this.database, row)));
+  }
+
+  async getOwnerOverview(userAccountId: string): Promise<OwnerDisciplineOverviewDto> {
+    const linkedRecord = sql<boolean>`exists (select 1 from "registry"."players" p where p."id" = ${disciplineRecords.playerId} and p."user_account_id" = ${userAccountId})`;
+    const [recordRows, taskRows] = await Promise.all([
+      this.database.select().from(disciplineRecords)
+        .where(and(
+          eq(disciplineRecords.active, true),
+          or(eq(disciplineRecords.userAccountId, userAccountId), linkedRecord),
+        ))
+        .orderBy(desc(disciplineRecords.createdAt), desc(disciplineRecords.id)).limit(100),
+      this.database.select().from(disciplineResolutionTasks)
+        .where(or(
+          eq(disciplineResolutionTasks.ownerUserAccountId, userAccountId),
+          sql<boolean>`exists (select 1 from "registry"."players" p where p."id" = ${disciplineResolutionTasks.ownerPlayerId} and p."user_account_id" = ${userAccountId})`,
+        ))
+        .orderBy(desc(disciplineResolutionTasks.dueAt), desc(disciplineResolutionTasks.id)).limit(100),
+    ]);
+    const tasks = await Promise.all(taskRows.map((row) => ownerTaskDto(this.database, row)));
+    const taskByRecord = new Map(taskRows.map((row) => [row.disciplineRecordId, row]));
+    const activeCounts = { CAUTION: 0, WARNING: 0, BAN: 0 };
+    for (const row of recordRows) activeCounts[row.type] += 1;
+    return Object.freeze({
+      activeCounts: Object.freeze(activeCounts),
+      records: Object.freeze(recordRows.map((row) => {
+        const task = taskByRecord.get(row.id) ?? null;
+        return Object.freeze({
+          id: row.id,
+          type: row.type,
+          category: row.category,
+          reason: row.reason,
+          createdAt: row.createdAt.toISOString(),
+          taskId: task?.id ?? null,
+          taskStatus: task?.status ?? null,
+        });
+      })),
+      tasks: Object.freeze(tasks),
+    });
   }
 
   async getOwnerTask(userAccountId: string, taskId: string) {

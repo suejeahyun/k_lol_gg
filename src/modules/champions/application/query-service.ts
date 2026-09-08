@@ -17,6 +17,7 @@ export type ChampionListPage<T> = Readonly<{
 export type AdminChampionDto = Readonly<{
   key: string;
   displayName: string;
+  imageUrl: string | null;
   status: ChampionStatus;
   revision: number;
   createdAt: string;
@@ -63,6 +64,7 @@ function toAdminDto(champion: Champion): AdminChampionDto {
   return Object.freeze({
     key: champion.key,
     displayName: champion.displayName,
+    imageUrl: champion.imageUrl,
     status: champion.status,
     revision: champion.revision,
     createdAt: champion.createdAt.toISOString(),

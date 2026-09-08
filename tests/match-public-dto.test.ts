@@ -11,6 +11,7 @@ test("public match player DTO is an exact safe allowlist including inactive prof
     tagLine: "KR1",
     championKey: "ahri",
     championName: "아리",
+    championImageUrl: "https://ddragon.leagueoflegends.com/cdn/26.18.1/img/champion/Ahri.png",
     team: "BLUE",
     position: "MID",
     kills: 8,
@@ -25,6 +26,7 @@ test("public match player DTO is an exact safe allowlist including inactive prof
   } as Parameters<typeof toPublicMatchPlayerDto>[0] & Record<string, unknown>);
   assert.deepEqual(Object.keys(dto).sort(), [
     "assists",
+    "championImageUrl",
     "championKey",
     "championName",
     "deaths",

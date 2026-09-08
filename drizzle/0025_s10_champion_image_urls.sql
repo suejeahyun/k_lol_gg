@@ -1,0 +1,2 @@
+ALTER TABLE "catalog"."champions" ADD COLUMN "image_url" varchar(512);--> statement-breakpoint
+ALTER TABLE "catalog"."champions" ADD CONSTRAINT "champion_catalog_image_url_allowlist" CHECK ("catalog"."champions"."image_url" IS NULL OR "catalog"."champions"."image_url" ~ '^https://ddragon\.leagueoflegends\.com/cdn/[0-9]+\.[0-9]+\.[0-9]+/img/champion/[A-Za-z0-9]+\.png$');

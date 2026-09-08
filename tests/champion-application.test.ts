@@ -7,6 +7,7 @@ import {
   canonicalChampionKey,
   championCommandRequestHash,
   hashChampionRequestKey,
+  normalizeChampionImageUrl,
   toPublicChampionDto,
   type Champion,
   type ChampionCommand,
@@ -115,8 +116,12 @@ class Harness {
 test("champion identity and public DTO are canonical and allowlisted", () => {
   assert.equal(canonicalChampionKey(" Ahri "), "ahri");
   assert.throws(() => canonicalChampionKey("아리#KR"), /INVALID_CHAMPION_KEY/);
-  const champion: Champion = { key: "ahri", displayName: "아리", status: "ACTIVE", revision: 0, createdAt: now, updatedAt: now };
-  assert.deepEqual(toPublicChampionDto(champion), { key: "ahri", displayName: "아리" });
+  const imageUrl = "https://ddragon.leagueoflegends.com/cdn/26.18.1/img/champion/Ahri.png";
+  const champion: Champion = { key: "ahri", displayName: "아리", imageUrl, status: "ACTIVE", revision: 0, createdAt: now, updatedAt: now };
+  assert.deepEqual(toPublicChampionDto(champion), { key: "ahri", displayName: "아리", imageUrl });
+  assert.equal(normalizeChampionImageUrl(imageUrl), imageUrl);
+  assert.equal(normalizeChampionImageUrl("https://ddragon.leagueoflegends.com.evil.invalid/cdn/26.18.1/img/champion/Ahri.png"), null);
+  assert.equal(normalizeChampionImageUrl("https://ddragon.leagueoflegends.com/cdn/26.18.1/img/champion/Ahri.png?token=secret"), null);
   assert.throws(() => toPublicChampionDto({ ...champion, status: "INACTIVE" }), /CHAMPION_NOT_FOUND/);
 });
 

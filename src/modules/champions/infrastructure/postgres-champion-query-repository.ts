@@ -10,6 +10,7 @@ function mapChampion(row: typeof championCatalog.$inferSelect): Champion {
   return Object.freeze({
     key: row.key,
     displayName: row.displayName,
+    imageUrl: row.imageUrl,
     status: row.status,
     revision: row.revision,
     createdAt: row.createdAt,

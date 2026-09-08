@@ -3,6 +3,7 @@ export type ChampionStatus = "ACTIVE" | "INACTIVE";
 export type Champion = Readonly<{
   key: string;
   displayName: string;
+  imageUrl: string | null;
   status: ChampionStatus;
   revision: number;
   createdAt: Date;
@@ -32,6 +33,7 @@ export function createChampion(input: Readonly<{
   return Object.freeze({
     key: canonicalChampionKey(input.key),
     displayName: canonicalChampionDisplayName(input.displayName),
+    imageUrl: null,
     status: "ACTIVE",
     revision: 0,
     createdAt: input.now,
@@ -83,9 +85,10 @@ export function deactivateChampion(input: Readonly<{
 export type PublicChampionDto = Readonly<{
   key: string;
   displayName: string;
+  imageUrl: string | null;
 }>;
 
 export function toPublicChampionDto(champion: Champion): PublicChampionDto {
   if (champion.status !== "ACTIVE") throw new Error("CHAMPION_NOT_FOUND");
-  return Object.freeze({ key: champion.key, displayName: champion.displayName });
+  return Object.freeze({ key: champion.key, displayName: champion.displayName, imageUrl: champion.imageUrl });
 }

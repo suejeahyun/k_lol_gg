@@ -7,6 +7,7 @@ import {
   encodePublicMatchCursor,
   parseAdminPlayerOptionQuery,
   parseAdminMatchQuery,
+  parseMatchSubmitPageQuery,
   parseOwnSubmissionQuery,
   parsePublicMatchQuery,
   publicMatchFilterFingerprint,
@@ -14,6 +15,23 @@ import {
 import { adminPlayerSearchStrategy, escapeLikeLiteral } from "../src/modules/matches/infrastructure/postgres-match-repository";
 
 const seasonId = "10000000-0000-4000-8000-000000000000";
+
+test("match submit page accepts one canonical continuation or owned draft reference", () => {
+  const draftId = "20000000-0000-4000-8000-000000000000";
+  assert.deepEqual(parseMatchSubmitPageQuery({}), { code: null, teamBalanceDraftId: null });
+  assert.deepEqual(parseMatchSubmitPageQuery({ teamBalanceDraftId: draftId.toUpperCase() }), {
+    code: null,
+    teamBalanceDraftId: draftId,
+  });
+  assert.deepEqual(parseMatchSubmitPageQuery({ code: "MR2A1B2C3D4E5F60708" }), {
+    code: "MR2A1B2C3D4E5F60708",
+    teamBalanceDraftId: null,
+  });
+  assert.equal(parseMatchSubmitPageQuery({ teamBalanceDraftId: "forged" }), null);
+  assert.equal(parseMatchSubmitPageQuery({ teamBalanceDraftId: [draftId, draftId] }), null);
+  assert.equal(parseMatchSubmitPageQuery({ code: "MR2A1B2C3D4E5F60708", teamBalanceDraftId: draftId }), null);
+  assert.equal(parseMatchSubmitPageQuery({ next: "//evil.invalid" }), null);
+});
 
 test("public match query is exact, duplicate-safe and date bounded", () => {
   assert.deepEqual(parsePublicMatchQuery(`https://example.test/api/matches?seasonId=${seasonId}&winner=BLUE&page=2`), {

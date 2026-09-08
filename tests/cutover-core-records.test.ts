@@ -72,6 +72,17 @@ test("core record import uses qualified V1 sources and the shared legacy UUID ma
   }
   assert.match(sql, /V1_COMPAT_1/);
   assert.match(sql, /WINNER_SCORE_KDA_PLAYER_ID_V1/);
+  assert.match(sql, /image_url/);
+  assert.match(sql, /btrim\(name\), "imageUrl", 'ACTIVE'/);
+});
+
+test("core integrity sends an escaped Data Dragon allowlist to PostgreSQL", async () => {
+  const { client, queries } = fakeClient({});
+  await importV1CoreRecords(client);
+  const scalarCheck = queries.find((sql) => sql.includes("core source scalar validity"));
+  assert.ok(scalarCheck);
+  assert.match(scalarCheck, /ddragon\\\.leagueoflegends\\\.com/);
+  assert.match(scalarCheck, /"imageUrl" is null/);
 });
 
 test("integrity failure stops before the first write", async () => {

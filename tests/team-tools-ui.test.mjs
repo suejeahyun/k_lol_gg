@@ -24,6 +24,10 @@ test("랜덤 팀 화면은 도메인 계산과 입력·빈·오류·결과·복�
     assert.equal(client.includes(contract), true, contract);
   }
   assert.equal(/Math\.random|\.sort\(\s*\(\)\s*=>/u.test(client), false);
+  assert.equal(client.includes('teamText("1팀"'), true);
+  assert.equal(client.includes('teamText("2팀"'), true);
+  assert.equal(client.includes("하늘 팀"), false);
+  assert.equal(client.includes("꽃잎 팀"), false);
 });
 
 test("코인 토스 화면은 상태머신과 animation/fallback 공개 경로를 함께 둔다", () => {
@@ -91,6 +95,9 @@ test("팀 밸런스 화면은 승인 계정, 10명 입력, top3·수동·저장�
     'value="KAKAO"',
     'value="SITE"',
     "selectedIds.has",
+    "SingleChoice",
+    'aria-pressed={row.allPositions}',
+    'aria-label="추가 가능 포지션"',
     'aria-expanded={stepOneOpen}',
     'aria-expanded={stepTwoOpen}',
     'fetch("/api/team-tools/drafts"',
@@ -109,9 +116,15 @@ test("팀 밸런스 화면은 승인 계정, 10명 입력, top3·수동·저장�
     'mutate("reevaluate"',
     'aria-live="polite"',
     "수동 배치 평가·선택",
+    "manualTeams",
+    "onDragStart",
+    "data-drop-target",
+    "selectKeyboardSlot",
+    "/matches/submit?teamBalanceDraftId=",
   ]) {
     assert.equal(detail.includes(contract), true, contract);
   }
+  assert.equal(detail.includes("compactTeams"), false, "1·2·3안의 블루/레드 사진형 미리보기를 제거한다");
   for (const contract of [
     "requireApprovedAccountPage",
     "service.listDrafts",

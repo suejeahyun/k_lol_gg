@@ -38,6 +38,9 @@ import {
   userAccounts,
 } from "@/platform/db/schema/auth";
 import { playerAccountClaims, players } from "@/platform/db/schema/registry";
+import { eventCompetitions, eventParticipantIndex } from "@/platform/db/schema/event-competitions";
+import { destructionApplicationIndex, destructionCompetitions } from "@/platform/db/schema/destruction-competitions";
+import { matchGames, matchParticipants, matchSeries } from "@/platform/db/schema/matches";
 import type { DatabaseExecutor, V2Transaction } from "@/platform/db/transaction";
 import { withTransaction } from "@/platform/db/transaction";
 
@@ -54,6 +57,7 @@ import {
   accountMutationScope,
   type AccountMutationCommand,
   type AccountMutationOutcome,
+  type AccountParticipationDto,
   type AccountStatusInput,
   type AccountSelfDto,
   type AdminAccountDto,
@@ -816,6 +820,50 @@ export class PostgresAccountRepository implements AccountRepository {
   async findSelf(userAccountId: string): Promise<AccountSelfDto | null> {
     const dto = await accountDto(this.database, userAccountId);
     return dto ? selfDto(dto) : null;
+  }
+
+  async findSelfParticipations(userAccountId: string): Promise<readonly AccountParticipationDto[]> {
+    const [eventRows, destructionRows, player] = await Promise.all([
+      this.database.select({
+        id: eventCompetitions.id,
+        title: eventCompetitions.title,
+        status: eventCompetitions.status,
+        occurredOn: eventCompetitions.updatedAt,
+      }).from(eventParticipantIndex)
+        .innerJoin(eventCompetitions, eq(eventCompetitions.id, eventParticipantIndex.eventId))
+        .where(and(eq(eventParticipantIndex.ownerUserAccountId, userAccountId), eq(eventParticipantIndex.status, "ACTIVE")))
+        .orderBy(desc(eventCompetitions.updatedAt), desc(eventCompetitions.id)).limit(8),
+      this.database.select({
+        id: destructionCompetitions.id,
+        title: destructionCompetitions.title,
+        status: destructionCompetitions.status,
+        applicationStatus: destructionApplicationIndex.status,
+        occurredOn: destructionCompetitions.updatedAt,
+      }).from(destructionApplicationIndex)
+        .innerJoin(destructionCompetitions, eq(destructionCompetitions.id, destructionApplicationIndex.tournamentId))
+        .where(and(
+          eq(destructionApplicationIndex.ownerUserAccountId, userAccountId),
+          inArray(destructionApplicationIndex.status, ["APPLIED", "CONFIRMED", "RESERVE"]),
+        )).orderBy(desc(destructionCompetitions.updatedAt), desc(destructionCompetitions.id)).limit(8),
+      this.database.select({ id: players.id }).from(players).where(eq(players.userAccountId, userAccountId)).limit(1),
+    ]);
+    const matchRows = player[0]
+      ? await this.database.selectDistinct({
+        id: matchSeries.id,
+        title: matchSeries.title,
+        status: matchSeries.status,
+        occurredOn: matchSeries.playedOn,
+      }).from(matchParticipants)
+        .innerJoin(matchGames, eq(matchGames.id, matchParticipants.gameId))
+        .innerJoin(matchSeries, eq(matchSeries.id, matchGames.seriesId))
+        .where(and(eq(matchParticipants.playerId, player[0].id), eq(matchSeries.status, "PUBLISHED")))
+        .orderBy(desc(matchSeries.playedOn), desc(matchSeries.id)).limit(12)
+      : [];
+    return Object.freeze([
+      ...eventRows.map((row) => ({ kind: "EVENT" as const, id: row.id, title: row.title, status: row.status, occurredOn: row.occurredOn.toISOString() })),
+      ...destructionRows.map((row) => ({ kind: "DESTRUCTION" as const, id: row.id, title: row.title, status: `${row.status}:${row.applicationStatus}`, occurredOn: row.occurredOn.toISOString() })),
+      ...matchRows.map((row) => ({ kind: "MATCH" as const, id: row.id, title: row.title, status: row.status, occurredOn: row.occurredOn })),
+    ].sort((left, right) => right.occurredOn.localeCompare(left.occurredOn, "en-US")).slice(0, 18));
   }
 
   async updateOwnPlayer(

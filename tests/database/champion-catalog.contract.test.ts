@@ -37,6 +37,14 @@ function isChampionError(code: ChampionApplicationError["code"]) {
   return (error: unknown) => error instanceof ChampionApplicationError && error.code === code;
 }
 
+function hasDatabaseConstraint(name: string) {
+  return (error: unknown) => {
+    if (!(error instanceof Error)) return false;
+    const cause = error.cause instanceof Error ? error.cause.message : "";
+    return `${error.message}\n${cause}`.includes(name);
+  };
+}
+
 function command(input: Readonly<{
   type: ChampionCommand["type"];
   championKey: string;
@@ -159,6 +167,7 @@ test("S10 champion catalog keeps ADMIN TOTP mutations, replay and durable ledger
     await database.insert(championCatalog).values({
       key: "legacy-kept",
       displayName: "기존 챔피언",
+      imageUrl: "https://ddragon.leagueoflegends.com/cdn/26.18.1/img/champion/Ahri.png",
       status: "ACTIVE",
       revision: 7,
       createdAt: legacyCreatedAt,
@@ -247,7 +256,16 @@ test("S10 champion catalog keeps ADMIN TOTP mutations, replay and durable ledger
     assert.deepEqual(await queries.getPublic("legacy-kept"), {
       key: "legacy-kept",
       displayName: "기존 챔피언",
+      imageUrl: "https://ddragon.leagueoflegends.com/cdn/26.18.1/img/champion/Ahri.png",
     });
+    await assert.rejects(
+      database.insert(championCatalog).values({
+        key: "unsafe-image",
+        displayName: "안전하지 않은 이미지",
+        imageUrl: "https://example.invalid/champion/Ahri.png",
+      }),
+      hasDatabaseConstraint("champion_catalog_image_url_allowlist"),
+    );
     const publicPage = await queries.listPublic({ query: null, status: null, page: 1, pageSize: 100 });
     const publicKeys = publicPage.items.map((champion) => champion.key);
     assert.equal(publicKeys.includes("legacy-kept"), true);

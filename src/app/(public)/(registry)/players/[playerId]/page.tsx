@@ -4,10 +4,13 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, CalendarDays, Gamepad2, Hash, ShieldCheck, Sparkles, Trophy } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { ChampionPortrait } from "@/components/champions/champion-portrait";
 import riotStyles from "@/components/riot/riot-workspace.module.css";
 import { loadRuntimePlayerProfile } from "@/modules/players/infrastructure/runtime-player-data";
 import { loadRuntimeRiot } from "@/modules/riot/infrastructure/runtime-riot";
 import { loadRuntimeStatisticsData } from "@/modules/statistics/infrastructure/runtime-statistics-data";
+
+import championStyles from "./player-champions.module.css";
 
 export const dynamic = "force-dynamic";
 
@@ -108,12 +111,21 @@ export default async function PlayerDetailPage({
                   <article><ShieldCheck size={22} aria-hidden="true" /><strong>참여 {statisticsResult.data.summary.participationCount}회</strong><p>{statisticsResult.data.positions[0] ? `주 포지션 ${statisticsResult.data.positions[0].position} · ${statisticsResult.data.positions[0].games}게임` : "포지션 기록 없음"}</p></article>
                   <article><Trophy size={22} aria-hidden="true" /><strong>MVP {statisticsResult.data.summary.mvpCount}회</strong><p>{statisticsResult.data.champions[0] ? `최다 챔피언 ${statisticsResult.data.champions[0].championName}` : "챔피언 기록 없음"}</p></article>
                 </div>
+                {statisticsResult.data.champions.length > 0 ? (
+                  <div className={championStyles.championGrid} aria-label="많이 플레이한 챔피언">
+                    {statisticsResult.data.champions.slice(0, 5).map((champion) => <article className={championStyles.championCard} key={champion.championKey}>
+                      <ChampionPortrait displayName={champion.championName} imageUrl={champion.championImageUrl} />
+                      <div><strong>{champion.championName}</strong><small>{champion.games}게임 · {champion.wins}승 · 승률 {champion.winRate}%</small></div>
+                    </article>)}
+                  </div>
+                ) : null}
                 {statisticsResult.data.recentMatches.length > 0 ? (
                   <div className="profile-recent" aria-label="최근 공개 경기">
                     {statisticsResult.data.recentMatches.slice(0, 5).map((match) => (
-                      <Link href={`/matches/${match.matchId}`} key={`${match.matchId}-${match.gameNumber}`}>
-                        <span>{match.playedOn} · {match.title} {match.gameNumber}게임</span>
-                        <strong>{match.championName} · {match.won ? "승리" : "패배"}{match.mvp ? " · MVP" : ""}</strong>
+                      <Link className={championStyles.recentMatch} href={`/matches/${match.matchId}`} key={`${match.matchId}-${match.gameNumber}`}>
+                        <ChampionPortrait displayName={match.championName} imageUrl={match.championImageUrl} />
+                        <div><span>{match.playedOn} · {match.title} {match.gameNumber}게임</span>
+                        <strong>{match.championName} · {match.won ? "승리" : "패배"}{match.mvp ? " · MVP" : ""}</strong></div>
                       </Link>
                     ))}
                   </div>

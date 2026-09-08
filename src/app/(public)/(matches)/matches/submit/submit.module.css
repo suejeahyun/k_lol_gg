@@ -4,6 +4,10 @@
 .hero h1 { margin: 8px 0; font-family: var(--font-heading); font-size: clamp(32px,5vw,52px); }
 .panel { display: grid; gap: 20px; padding: clamp(20px,4vw,32px); border: 1px solid var(--border); border-radius: 26px; background: rgba(255,255,255,.9); box-shadow: var(--shadow-soft); }
 .panel h2,.panel p { margin: 0; }
+.linkedDraft { display: grid; gap: 4px; padding: 14px 16px; border: 1px solid rgba(91,112,182,.24); border-radius: 16px; color: #46557d; background: linear-gradient(135deg,var(--sky),var(--lilac)); }
+.linkedDraft span { font-size: 10px; font-weight: 950; letter-spacing: .1em; }
+.linkedDraft strong { color: var(--ink-strong); font-size: 16px; }
+.linkedDraft small { color: var(--text-muted); font-size: 12px; line-height: 1.5; }
 .resume { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
 .resume input,.form input,.form select,.form textarea { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--input); border-radius: 13px; background: #fff; }
 .resume button,.form button,.upload button,.login { min-height: 44px; padding: 10px 17px; border: 0; border-radius: 13px; color: #fff; background: var(--primary); font-weight: 900; text-decoration: none; cursor: pointer; }

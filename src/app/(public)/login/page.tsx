@@ -8,7 +8,7 @@ import { normalizeAccountNext } from "@/modules/auth/application/normalize-inter
 export const metadata: Metadata = { title: "로그인" };
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string | string[] }> }) {
-  const nextPath = normalizeAccountNext((await searchParams).next);
+  const nextPath = normalizeAccountNext((await searchParams).next, "/");
   return (
     <div className={styles.page}>
       <div className={styles.accessGrid}>

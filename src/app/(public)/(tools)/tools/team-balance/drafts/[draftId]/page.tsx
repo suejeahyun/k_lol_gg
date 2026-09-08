@@ -29,7 +29,7 @@ export default async function TeamBalanceDraftPage({ params, searchParams }: { p
     const result = await loadRuntimeTeamBalance((service) => service.getDraft({ actorUserAccountId: session.userId, authorization: "OWNER" }, draftId));
     if (result.state === "ready" && !result.data) notFound();
     return <div className={`page-wrap ${styles.page}`}><TeamToolNav current="drafts" approved />{navigation}{result.state === "ready" && result.data
-      ? <TeamBalanceDraftWorkspace draft={result.data}/>
+      ? <TeamBalanceDraftWorkspace key={`${result.data.evaluationRound}:${result.data.selectedCandidateSignature ?? "none"}`} draft={result.data}/>
       : <section className={styles.emptyState} role={result.state === "error" ? "alert" : "status"}><Scale aria-hidden="true"/><h1>팀 초안을 불러올 수 없어요</h1><p>잠시 후 다시 시도해 주세요.</p></section>}</div>;
   }
   const result = await loadRuntimeTeamBalanceRecommendations((service) => service.getRecommendation({ actorUserAccountId: session.userId, authorization: "OWNER" }, draftId, query.team));

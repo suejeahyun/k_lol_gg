@@ -32,7 +32,10 @@ const integrityChecks = Object.freeze([
     name: "core source scalar validity",
     sql: `select count(*)::bigint as count
             from (
-              select id from public."Champion" where char_length(btrim(name)) not between 1 and 100
+              select id from public."Champion"
+               where char_length(btrim(name)) not between 1 and 100
+                  or "imageUrl" is null
+                  or "imageUrl" !~ '^https://ddragon\\.leagueoflegends\\.com/cdn/[0-9]+\\.[0-9]+\\.[0-9]+/img/champion/[A-Za-z0-9]+\\.png$'
               union all
               select id from public."Season" where char_length(btrim(name)) not between 1 and 120
               union all
@@ -116,10 +119,13 @@ export const V1_CORE_RECORD_IMPORT_STEPS: readonly ImportStep[] = Object.freeze(
     sourceCountSql: `/* count:champions:source */ select count(*)::bigint as count from public."Champion"`,
     targetCountSql: `/* count:champions:target */ select count(*)::bigint as count
                        from public."Champion" source
-                       join catalog.champions target on target.key = 'v1-' || source.id::text`,
+                       join catalog.champions target
+                         on target.key = 'v1-' || source.id::text
+                        and target.display_name = btrim(source.name)
+                        and target.image_url = source."imageUrl"`,
     importSql: `/* import:champions */
-      insert into catalog.champions (key, display_name, status, revision, created_at, updated_at)
-      select 'v1-' || id::text, btrim(name), 'ACTIVE', 0, "createdAt", "createdAt"
+      insert into catalog.champions (key, display_name, image_url, status, revision, created_at, updated_at)
+      select 'v1-' || id::text, btrim(name), "imageUrl", 'ACTIVE', 0, "createdAt", "createdAt"
         from public."Champion"
       on conflict (key) do nothing`,
   },

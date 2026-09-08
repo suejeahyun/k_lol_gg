@@ -1,4 +1,5 @@
 import { normalizePlayerQuery, type PlayerQueryValue } from "./normalize-player-query";
+import { parsePlayerTierFilter } from "../domain/player-tier";
 
 const PAGE_SIZE = 12;
 const MAX_PAGE = 10_000;
@@ -15,6 +16,7 @@ export function parsePlayerCatalogQuery(searchParams: Readonly<Record<string, Pl
 
   return {
     query: normalizePlayerQuery(searchParams.q),
+    tier: parsePlayerTierFilter(first(searchParams.tier)),
     page,
     pageSize: PAGE_SIZE,
   } as const;

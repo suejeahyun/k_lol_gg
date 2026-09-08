@@ -4,6 +4,7 @@ import { createGetPlayerProfile } from "./application/get-player-profile";
 import { createListPlayers } from "./application/list-players";
 import { parsePlayerCatalogQuery } from "./application/parse-player-catalog-query";
 import { PlayerResultCard } from "./ui/player-result-card";
+import { playerTierFilters, playerTierLabel } from "./domain/player-tier";
 
 export {
   createGetPlayerProfile,
@@ -11,5 +12,7 @@ export {
   createSearchPlayers,
   normalizePlayerQuery,
   parsePlayerCatalogQuery,
+  playerTierFilters,
+  playerTierLabel,
   PlayerResultCard,
 };

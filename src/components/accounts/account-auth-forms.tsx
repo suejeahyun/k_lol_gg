@@ -28,7 +28,7 @@ function stableIdempotencyKey(
   return key;
 }
 
-export function UserLoginForm({ nextPath = "/account" }: { nextPath?: string }) {
+export function UserLoginForm({ nextPath = "/" }: { nextPath?: string }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<Message>(null);
@@ -56,9 +56,16 @@ export function UserLoginForm({ nextPath = "/account" }: { nextPath?: string }) 
         setMessage({ text: safeMessage(body, "로그인하지 못했습니다."), tone: "error" });
         return;
       }
-      setMessage({ text: "로그인되었습니다. 계정 화면으로 이동합니다.", tone: "success" });
-      const safeNext = normalizeAccountNext(nextPath);
-      router.push(body?.account?.mustChangePassword ? "/account/password?required=1" : safeNext);
+      const passwordChangeRequired = body?.account?.mustChangePassword === true;
+      setMessage({
+        text: passwordChangeRequired
+          ? "로그인되었습니다. 먼저 비밀번호를 변경해 주세요."
+          : "로그인되었습니다. 홈으로 이동합니다.",
+        tone: "success",
+      });
+      const safeNext = normalizeAccountNext(nextPath, "/");
+      router.push(passwordChangeRequired ? "/account/password?required=1" : safeNext);
+      router.refresh();
     } catch {
       setMessage({ text: "네트워크 연결을 확인한 뒤 다시 시도해 주세요.", tone: "error" });
     } finally {

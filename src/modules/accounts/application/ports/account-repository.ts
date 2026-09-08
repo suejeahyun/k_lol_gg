@@ -3,6 +3,7 @@ import type { AuthSessionSeed } from "@/modules/auth/domain/auth-session";
 import type {
   AccountMutationCommand,
   AccountMutationOutcome,
+  AccountParticipationDto,
   AccountStatusInput,
   AccountSelfDto,
   AdminAccountDto,
@@ -21,6 +22,7 @@ export type UserLoginResult =
 export interface AccountRepository {
   authenticateUser(input: UserLoginInput, now: Date): Promise<UserLoginResult>;
   findSelf(userAccountId: string): Promise<AccountSelfDto | null>;
+  findSelfParticipations(userAccountId: string): Promise<readonly AccountParticipationDto[]>;
   listAdmin(
     query: AdminAccountListQuery,
     viewerRole: "ADMIN" | "SUPER_ADMIN",

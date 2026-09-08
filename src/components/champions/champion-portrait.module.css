@@ -1,0 +1,19 @@
+.portrait {
+  display: block;
+  width: 3rem;
+  height: 3rem;
+  flex: 0 0 3rem;
+  border: 2px solid rgba(255, 255, 255, .9);
+  border-radius: 1rem;
+  object-fit: cover;
+  box-shadow: 0 7px 18px rgba(67, 94, 139, .18);
+}
+
+.fallback {
+  display: grid;
+  place-items: center;
+  color: #31547c;
+  background: linear-gradient(135deg, #dff4ff, #f9e4ff);
+  font-size: 1rem;
+  font-weight: 950;
+}

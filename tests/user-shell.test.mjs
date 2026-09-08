@@ -38,6 +38,19 @@ test("전체 메뉴는 로그인 상태에 맞지 않는 계정·인증 경로�
   assert.match(navigation, /<AllMenuControl accountSignedIn=\{accountSignedIn\}/);
   assert.match(navigation, /<AllMenuControl compact accountSignedIn=\{accountSignedIn\}/);
 });
+
+test("일반 로그인은 홈으로 돌아가고 로그인된 헤더·모바일 메뉴는 내 정보를 표시한다", async () => {
+  const loginPage = await readFile(new URL("../src/app/(public)/login/page.tsx", import.meta.url), "utf8");
+  const authForms = await readFile(new URL("../src/components/accounts/account-auth-forms.tsx", import.meta.url), "utf8");
+  const navigation = await readFile(new URL("../src/components/navigation/user-site-navigation.tsx", import.meta.url), "utf8");
+  assert.match(loginPage, /normalizeAccountNext\(\(await searchParams\)\.next, "\/"\)/);
+  assert.match(authForms, /nextPath = "\/"/);
+  assert.match(authForms, /홈으로 이동합니다/);
+  assert.match(authForms, /"\/account\/password\?required=1"/);
+  assert.match(authForms, /router\.push\([\s\S]*router\.refresh\(\)/);
+  assert.equal((navigation.match(/accountSignedIn \? "내 정보" : "로그인"/g) ?? []).length, 2);
+  assert.doesNotMatch(navigation, /회원명·Discord 식별자는 플레이어 검색 대상이 아닙니다/);
+});
 test("V2 UI는 실제 운영 데이터가 없을 때 합성 샘플을 사용자 화면에 연결하지 않는다", async () => {
   const playerIndex = await readFile(new URL("../src/modules/players/index.ts", import.meta.url), "utf8");
   const playerPage = await readFile(

@@ -1,10 +1,11 @@
-import { and, asc, count, eq, like, or, sql } from "drizzle-orm";
+import { and, asc, count, eq, ilike, like, or, sql } from "drizzle-orm";
 
 import { players } from "@/platform/db/schema/registry";
 import type { DatabaseExecutor } from "@/platform/db/transaction";
 
 import type { PlayerRepository } from "../application/ports/player-repository";
 import type { PlayerCatalogQuery, PlayerProfile, PlayerSummary } from "../domain/player";
+import { playerTierAliases, type PlayerTierFilter } from "../domain/player-tier";
 
 const maximumSearchResults = 50;
 const maximumPageSize = 50;
@@ -18,7 +19,16 @@ function escapeLikePrefix(value: string): string {
   return `${value.replaceAll("\\", "\\\\").replaceAll("%", "\\%").replaceAll("_", "\\_")}%`;
 }
 
-function toSummary(row: typeof players.$inferSelect): PlayerSummary {
+const publicPlayerSelection = {
+  id: players.id,
+  nickname: players.nickname,
+  tagLine: players.tagLine,
+  currentTier: players.currentTier,
+} as const;
+
+function toSummary(
+  row: Pick<typeof players.$inferSelect, "id" | "nickname" | "tagLine" | "currentTier">,
+): PlayerSummary {
   return {
     id: row.id,
     displayName: row.nickname,
@@ -30,9 +40,12 @@ function toSummary(row: typeof players.$inferSelect): PlayerSummary {
   };
 }
 
-function buildSearchPredicate(normalized: string) {
+function buildSearchPredicate(normalized: string, tier: PlayerTierFilter | null = null) {
   const activePlayer = eq(players.status, "ACTIVE");
-  if (!normalized) return activePlayer;
+  const tierPredicate = tier
+    ? or(...playerTierAliases(tier).map((alias) => ilike(players.currentTier, escapeLikePrefix(alias))))
+    : undefined;
+  if (!normalized) return tierPredicate ? and(activePlayer, tierPredicate) : activePlayer;
 
   const prefix = escapeLikePrefix(normalized);
   const normalizedRiotId = sql<string>`${players.nicknameNormalized} || '#' || ${players.tagLineNormalized}`;
@@ -40,10 +53,12 @@ function buildSearchPredicate(normalized: string) {
   return and(
     activePlayer,
     or(
+      eq(players.memberNameNormalized, normalized),
       eq(players.nicknameNormalized, normalized),
       like(players.nicknameNormalized, prefix),
       like(normalizedRiotId, prefix),
     ),
+    tierPredicate,
   );
 }
 
@@ -55,7 +70,7 @@ export class PostgresPlayerRepository implements PlayerRepository {
     const predicate = buildSearchPredicate(normalized);
 
     const rows = await this.database
-      .select()
+      .select(publicPlayerSelection)
       .from(players)
       .where(predicate)
       .orderBy(asc(players.nicknameNormalized), asc(players.tagLineNormalized))
@@ -66,7 +81,7 @@ export class PostgresPlayerRepository implements PlayerRepository {
 
   async getCatalog(query: PlayerCatalogQuery) {
     const normalized = normalizeIdentity(query.query);
-    const predicate = buildSearchPredicate(normalized);
+    const predicate = buildSearchPredicate(normalized, query.tier);
     const pageSize = Math.max(1, Math.min(maximumPageSize, Math.trunc(query.pageSize)));
     const requestedPage = Math.max(1, Math.trunc(query.page));
 
@@ -79,7 +94,7 @@ export class PostgresPlayerRepository implements PlayerRepository {
     const currentPage = Math.min(requestedPage, totalPages);
 
     const rows = await this.database
-      .select()
+      .select(publicPlayerSelection)
       .from(players)
       .where(predicate)
       .orderBy(asc(players.nicknameNormalized), asc(players.tagLineNormalized))
@@ -99,7 +114,14 @@ export class PostgresPlayerRepository implements PlayerRepository {
     if (!uuidPattern.test(id)) return null;
 
     const rows = await this.database
-      .select()
+      .select({
+        id: players.id,
+        nickname: players.nickname,
+        tagLine: players.tagLine,
+        currentTier: players.currentTier,
+        peakTier: players.peakTier,
+        createdAt: players.createdAt,
+      })
       .from(players)
       .where(and(eq(players.id, id), eq(players.status, "ACTIVE")))
       .limit(1);

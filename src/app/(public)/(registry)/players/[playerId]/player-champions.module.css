@@ -1,0 +1,34 @@
+.championGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: .65rem;
+  margin-top: 1rem;
+}
+
+.championCard,
+.recentMatch {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: .75rem;
+  align-items: center;
+}
+
+.championCard {
+  padding: .8rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: linear-gradient(135deg, rgba(238, 248, 255, .9), rgba(255, 241, 249, .85));
+}
+
+.championCard div,
+.recentMatch div { min-width: 0; }
+.championCard strong,
+.championCard small,
+.recentMatch span,
+.recentMatch strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.championCard small { margin-top: .2rem; color: var(--text-muted); }
+.recentMatch { grid-template-columns: auto minmax(0, 1fr); }
+
+@media (max-width: 560px) {
+  .championGrid { grid-template-columns: 1fr; }
+}

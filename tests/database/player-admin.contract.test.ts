@@ -168,7 +168,11 @@ test("S02 player mutations, legacy mapping, privacy, replay, and rollback hold o
 
     const playerId = created.response.player.id;
     assert.equal(await mappingRepository.findPublicUuidByLegacyId(input.legacyId!), playerId);
-    assert.equal((await publicRepository.search(input.memberName)).length, 0);
+    const publicMemberNameMatch = await publicRepository.search(input.memberName);
+    assert.equal(publicMemberNameMatch.length, 1);
+    assert.equal(publicMemberNameMatch[0]?.id, playerId);
+    assert.equal("memberName" in publicMemberNameMatch[0]!, false);
+    assert.equal((await publicRepository.search("비공개 합성 회원")).length, 0);
     assert.equal((await repository.list({ query: input.memberName, status: "ALL", page: 1, pageSize: 20 })).items[0]?.id, playerId);
 
     const receiptRows = await pool.query<{ key_hex: string; response_text: string }>(

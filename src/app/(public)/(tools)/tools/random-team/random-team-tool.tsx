@@ -47,7 +47,7 @@ function resultText(result: DisplayResult) {
   const detail = result.kind === "tier"
     ? `\n\n점수 차이 ${result.value.difference}점 (${result.value.teamOneScore} : ${result.value.teamTwoScore})`
     : "";
-  return `${teamText("하늘 팀", result.value.teamOne)}\n\n${teamText("꽃잎 팀", result.value.teamTwo)}${detail}`;
+  return `${teamText("1팀", result.value.teamOne)}\n\n${teamText("2팀", result.value.teamTwo)}${detail}`;
 }
 
 export function RandomTeamTool({ initialMode }: { initialMode: TeamMode }) {
@@ -210,7 +210,7 @@ export function RandomTeamTool({ initialMode }: { initialMode: TeamMode }) {
             <div className={styles.teams} aria-live="polite">
               {(["teamOne", "teamTwo"] as const).map((teamKey, teamIndex) => (
                 <article className={styles.teamCard} key={teamKey}>
-                  <h3>{teamIndex === 0 ? "하늘 팀" : "꽃잎 팀"}<span>5명</span></h3>
+                  <h3>{teamIndex === 0 ? "1팀" : "2팀"}<span>5명</span></h3>
                   <ol>
                     {result.value[teamKey].map((participant) => (
                       <li key={participant.slot}>

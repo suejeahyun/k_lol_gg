@@ -117,7 +117,7 @@ function SearchControl({ compact = false, accountSignedIn = false }: { compact?:
                 name="q"
                 type="search"
                 maxLength={80}
-                placeholder="예: 팀 밸런스, 대회, GameName#TAG"
+                placeholder="예: 팀 밸런스, 회원명, GameName#TAG"
                 autoComplete="off"
                 value={query}
                 aria-controls={resultsId}
@@ -149,7 +149,7 @@ function SearchControl({ compact = false, accountSignedIn = false }: { compact?:
             ><span><small>{command.group}</small><strong>{command.label}</strong><em>{command.description}</em></span><ArrowRight aria-hidden="true" /></Link></li>)}</ul> : <p className="command-palette-empty">일치하는 바로 가기가 없어요. 입력한 이름은 위의 플레이어 검색으로 찾아볼 수 있습니다.</p>}
           </div>
           <p className="user-dialog__hint">
-            로그인 전에는 공개 기능만 표시합니다. 계정 아이디·회원명·Discord 식별자는 플레이어 검색 대상이 아닙니다.
+            로그인 전에는 공개 기능만 표시합니다. 회원명으로 찾아도 결과에는 공개 닉네임과 Riot ID만 보여요.
           </p>
         </div>
       </dialog>
@@ -276,9 +276,9 @@ export function HeaderUserControls({ accountSignedIn = false }: { accountSignedI
     <div className="header-actions">
       <SearchControl accountSignedIn={accountSignedIn} />
       <AllMenuControl accountSignedIn={accountSignedIn} />
-      <Link className="header-account" href={accountSignedIn ? "/account" : "/login"} aria-label={accountSignedIn ? "내 계정" : "사용자 로그인"}>
+      <Link className="header-account" href={accountSignedIn ? "/account" : "/login"} aria-label={accountSignedIn ? "내 정보" : "사용자 로그인"}>
         <UserRound size={17} aria-hidden="true" />
-        <span>{accountSignedIn ? "내 계정" : "로그인"}</span>
+        <span>{accountSignedIn ? "내 정보" : "로그인"}</span>
       </Link>
     </div>
   );
@@ -302,8 +302,8 @@ export function MobileUserNavigation({ accountSignedIn = false }: { accountSigne
       </Link>
       <SearchControl compact accountSignedIn={accountSignedIn} />
       <Link href={accountSignedIn ? "/account" : "/login"} aria-current={accountSignedIn ? (pathname.startsWith("/account") ? "page" : undefined) : (pathname === "/login" ? "page" : undefined)}>
-        <LogIn size={20} aria-hidden="true" />
-        <span>{accountSignedIn ? "계정" : "로그인"}</span>
+        {accountSignedIn ? <UserRound size={20} aria-hidden="true" /> : <LogIn size={20} aria-hidden="true" />}
+        <span>{accountSignedIn ? "내 정보" : "로그인"}</span>
       </Link>
       <AllMenuControl compact accountSignedIn={accountSignedIn} />
     </nav>

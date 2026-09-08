@@ -4,6 +4,7 @@ import Link from "next/link";
 import {
   ArrowRight,
   CalendarDays,
+  Crown,
   Database,
   Images,
   LogIn,
@@ -18,9 +19,15 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ChampionPortrait } from "@/components/champions/champion-portrait";
 import { getRuntimeAccountRepository } from "@/modules/accounts/infrastructure/runtime-account-data";
 import { getCurrentSession } from "@/modules/auth/infrastructure/runtime-session";
-import { loadRuntimeHomeSnapshot } from "@/modules/home/infrastructure/runtime-home-data";
+import { homeChampionPresentation } from "@/modules/home/domain/home-snapshot";
+import {
+  loadRuntimeDailyHomeChampion,
+  loadRuntimeHomeSnapshot,
+} from "@/modules/home/infrastructure/runtime-home-data";
+import { loadRuntimeStatisticsData } from "@/modules/statistics/infrastructure/runtime-statistics-data";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +40,7 @@ export const metadata: Metadata = {
 const taskCards = [
   {
     title: "플레이어 찾기",
-    description: "공개 닉네임과 Riot ID로 빠르게 찾아보세요.",
+    description: "회원명·닉네임·Riot ID로 함께할 플레이어를 찾아보세요.",
     href: "/players",
     icon: UsersRound,
     tone: "sky",
@@ -41,7 +48,7 @@ const taskCards = [
   },
   {
     title: "경기 살펴보기",
-    description: "시즌·기간별 경기와 세트 기록을 한 흐름으로 확인하세요.",
+    description: "최근 경기와 세트 기록을 가볍게 둘러보세요.",
     href: "/matches",
     icon: Swords,
     tone: "peach",
@@ -49,7 +56,7 @@ const taskCards = [
   },
   {
     title: "팀 밸런스",
-    description: "포지션과 확정 경기 지표를 고려해 균형 잡힌 팀을 만듭니다.",
+    description: "포지션과 경기 기록을 맞춰 즐거운 팀을 만들어 보세요.",
     href: "/tools/team-balance",
     icon: ShieldCheck,
     tone: "mint",
@@ -57,7 +64,7 @@ const taskCards = [
   },
   {
     title: "대회 진행",
-    description: "시즌과 이벤트전 진행 단계를 보고 참가 신청을 이어가세요.",
+    description: "열린 이벤트를 보고 바로 참가해 보세요.",
     href: "/competitions",
     icon: Trophy,
     tone: "lilac",
@@ -84,7 +91,7 @@ function HomeDataState({ result }: { result: Awaited<ReturnType<typeof loadRunti
   if (result.state === "ready") {
     return (
       <div className="home-data-state home-data-state--ready" role="status">
-        <span><Database size={18} aria-hidden="true" /> 최신 기록 확인 가능</span>
+        <span><Database size={18} aria-hidden="true" /> 지금 함께하고 있어요</span>
         <strong>{result.snapshot.activePlayerCount.toLocaleString("ko-KR")}명 · {result.snapshot.publishedMatchCount.toLocaleString("ko-KR")}경기</strong>
         <p>활성 플레이어와 확정된 경기 수입니다. 현재 진행 중인 시즌은 {result.snapshot.activeSeasonCount.toLocaleString("ko-KR")}개예요.</p>
       </div>
@@ -111,14 +118,28 @@ function HomeDataState({ result }: { result: Awaited<ReturnType<typeof loadRunti
 }
 
 export default async function HomePage() {
-  const [homeResult, session] = await Promise.all([
+  const [homeResult, session, dailyChampionResult, rankingResult] = await Promise.all([
     loadRuntimeHomeSnapshot(),
     getCurrentSession("ACCOUNT"),
+    loadRuntimeDailyHomeChampion(),
+    loadRuntimeStatisticsData((service) => service.getPublicSeasonRanking(null, 10)),
   ]);
   const accountRepository = session ? getRuntimeAccountRepository() : null;
   const account = session && accountRepository
     ? await accountRepository.findSelf(session.userId).catch(() => null)
     : null;
+  const dailyChampion = dailyChampionResult.state === "ready"
+    ? dailyChampionResult.data.champion
+    : null;
+  const displayChampion = dailyChampion ?? {
+    key: "ahri",
+    displayName: "아리",
+    imageUrl: null,
+  };
+  const championPresentation = homeChampionPresentation(displayChampion);
+  const currentRanking = rankingResult.state === "ready"
+    ? rankingResult.data.rankings.slice(0, 5)
+    : [];
 
   return (
     <div className="page-wrap home-page">
@@ -128,50 +149,67 @@ export default async function HomePage() {
             <Sparkles size={13} aria-hidden="true" />
             K-LOL.GG · NEW SEASON
           </Badge>
-          <p className="hero-kicker">함께 찾고, 함께 기록하는 내전 놀이터</p>
+          <p className="hero-kicker">친구와 함께하는 내전 놀이터</p>
           <h1 id="home-title">
-            필요한 기능을
-            <span>한눈에, 가볍게.</span>
+            우리 같이
+            <span>롤하자~</span>
           </h1>
           <p className="hero-description">
-            플레이어·경기·랭킹·팀 도구부터 이벤트와 커뮤니티 기록까지,
-            데스크톱과 모바일에서 편안하게 이어서 이용하세요.
+            같이할 플레이어를 찾고, 팀을 만들고, 오늘의 기록을 남겨요.
+            내전 준비부터 결과 확인까지 한곳에서 즐겨 보세요.
           </p>
 
           <form className="hero-search" action="/players" method="get">
             <label className="sr-only" htmlFor="home-player-search">
-              플레이어 닉네임 또는 Riot ID
+              회원명, 플레이어 닉네임 또는 Riot ID
             </label>
             <Search aria-hidden="true" size={19} />
             <Input
               id="home-player-search"
               name="q"
               maxLength={80}
-              placeholder="닉네임 또는 GameName#TAG 검색"
+              placeholder="회원명, 닉네임 또는 GameName#TAG"
               autoComplete="off"
             />
             <Button size="lg" type="submit">찾아보기</Button>
           </form>
 
           <div className="hero-proof" aria-label="서비스 안내">
-            <span><ShieldCheck size={15} aria-hidden="true" /> 필요한 정보만 깔끔하게</span>
-            <span><Sparkles size={15} aria-hidden="true" /> 모바일·키보드 함께 지원</span>
+            <span><ShieldCheck size={15} aria-hidden="true" /> 공개 정보만 안전하게</span>
+            <span><Sparkles size={15} aria-hidden="true" /> 어디서든 가볍게</span>
           </div>
         </div>
 
-        <div className="hero-art">
-          <Image
-            src="/images/brand/v2-hero-ahri-1600.webp"
-            alt="하늘빛 꽃잎 사이에서 여우불을 띄운 여성 챔피언 아리"
-            fill
-            priority
-            sizes="(max-width: 900px) 100vw, 46vw"
-          />
+        <div className="hero-art" data-tone={championPresentation.tone}>
+          {displayChampion.imageUrl ? (
+            <ChampionPortrait
+              className="hero-art__champion"
+              displayName={displayChampion.displayName}
+              imageUrl={displayChampion.imageUrl}
+              eager
+            />
+          ) : championPresentation.localImageSrc && championPresentation.localImageAlt ? (
+            <Image
+              src={championPresentation.localImageSrc}
+              alt={championPresentation.localImageAlt}
+              fill
+              priority
+              sizes="(max-width: 900px) 100vw, 46vw"
+            />
+          ) : (
+            <ChampionPortrait
+              className="hero-art__champion hero-art__champion--fallback"
+              displayName={displayChampion.displayName}
+              imageUrl={null}
+              eager
+            />
+          )}
           <div className="hero-art__wash" aria-hidden="true" />
           <div className="hero-art__label">
             <span>오늘의 안내 챔피언</span>
-            <strong>아리</strong>
-            <small>오늘의 내전을 가볍게 시작해 보세요</small>
+            <strong>{displayChampion.displayName}</strong>
+            <small>{championPresentation.message}</small>
+            <em>{dailyChampion ? "KST 기준 매일 변경" : "비공식 팬아트"}</em>
           </div>
         </div>
       </section>
@@ -207,13 +245,45 @@ export default async function HomePage() {
         </div>
       </section>
 
+      <section className="home-ranking-section" aria-labelledby="home-ranking-title">
+        <div className="section-heading">
+          <div>
+            <p>SEASON RANKING</p>
+            <h2 id="home-ranking-title">현재 랭킹</h2>
+          </div>
+          <Link href="/rankings">전체 랭킹 보기 <ArrowRight size={15} aria-hidden="true" /></Link>
+        </div>
+        {currentRanking.length ? (
+          <div className="home-ranking-table-wrap">
+            <table className="home-ranking-table">
+              <caption className="sr-only">현재 시즌 참여 10회 이상 플레이어 상위 5명</caption>
+              <thead><tr><th scope="col">순위</th><th scope="col">플레이어</th><th scope="col">승률</th><th scope="col">참여</th><th scope="col">MVP</th></tr></thead>
+              <tbody>{currentRanking.map((row) => (
+                <tr key={row.playerId}>
+                  <td><span data-rank={row.rank}>{row.rank === 1 ? <Crown size={14} aria-hidden="true" /> : null}{row.rank}위</span></td>
+                  <th scope="row"><Link href={`/players/${row.playerId}`}><strong>{row.displayName}</strong><small>{row.riotId}</small></Link></th>
+                  <td><strong>{row.winRate}%</strong></td>
+                  <td>{row.participationCount}회</td>
+                  <td>{row.mvpCount}회</td>
+                </tr>
+              ))}</tbody>
+            </table>
+          </div>
+        ) : (
+          <div className={`home-ranking-empty${rankingResult.state === "error" ? " home-ranking-empty--error" : ""}`} role={rankingResult.state === "error" ? "alert" : "status"}>
+            <Trophy size={24} aria-hidden="true" />
+            <div><strong>{rankingResult.state === "ready" ? "아직 순위가 없어요." : "랭킹을 잠시 불러올 수 없어요."}</strong><p>{rankingResult.state === "ready" ? "공개 경기가 쌓이면 상위 플레이어를 바로 보여 드릴게요." : "전체 랭킹 페이지에서 다시 확인해 주세요."}</p></div>
+          </div>
+        )}
+      </section>
+
       <section className="home-overview-section" aria-labelledby="home-overview-title">
         <div className="section-heading">
           <div>
             <p>COMMUNITY NOW</p>
             <h2 id="home-overview-title">지금 올라온 소식</h2>
           </div>
-          <span>게시 상태가 확인된 공개 데이터만 최신순으로 보여 드려요.</span>
+          <span>최근 경기와 커뮤니티 소식을 모았어요.</span>
         </div>
         {homeResult.state === "ready" ? (
           <div className="home-overview-grid">

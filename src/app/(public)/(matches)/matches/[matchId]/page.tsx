@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { ArrowLeft, CalendarDays, Crown, Gamepad2, ShieldCheck } from "lucide-react";
 
+import { ChampionPortrait } from "@/components/champions/champion-portrait";
 import { loadRuntimeMatchData } from "@/modules/matches/infrastructure/runtime-match-data";
 
 import styles from "../matches.module.css";
@@ -55,6 +56,7 @@ export default async function MatchDetailPage({
                       <h3>{teamLabel(team)}</h3>
                       {game.participants.filter((player) => player.team === team).map((player) => (
                         <div className={styles.player} key={`${player.team}-${player.position}`}>
+                          <ChampionPortrait displayName={player.championName || player.championKey} imageUrl={player.championImageUrl} />
                           {player.profileAvailable ? <Link href={`/players/${player.playerId}`}><strong>{player.nickname}</strong><small>{player.tagLine} · {player.position} · {player.championName || player.championKey}</small></Link> : <div><strong>{player.nickname}</strong><small>{player.tagLine} · {player.position} · {player.championName || player.championKey} · 비활성 프로필</small></div>}
                           <span>{player.kills}/{player.deaths}/{player.assists}{player.playerId === game.mvpPlayerId ? <b className={styles.mvp} aria-label="이 게임 MVP"><Crown size={14} aria-hidden="true" /> MVP</b> : null}</span>
                         </div>

@@ -68,6 +68,11 @@ test("S11 discipline records and private evidence persist with masked ownership,
     const created = await adapter.createRecord(createEnvelope, createBody, now);
     assert.equal(created.status, 201); assert.equal((await adapter.createRecord(createEnvelope, createBody, now)).replayed, true);
     const task = (await adapter.listOwnerTasks(ownerId))[0]; assert.ok(task); assert.equal(task.requiredGameCount, 10);
+    const ownerOverview = await adapter.getOwnerOverview(ownerId);
+    assert.deepEqual(ownerOverview.activeCounts, { CAUTION: 0, WARNING: 1, BAN: 0 });
+    assert.equal(ownerOverview.records[0]?.reason, "계약 검증");
+    assert.equal(ownerOverview.records[0]?.taskId, task.id);
+    assert.equal(JSON.stringify(ownerOverview).includes("비공개"), false, "owner overview must not expose internal notes");
     assert.equal(JSON.stringify(task).includes("sha256"), false); assert.equal(JSON.stringify(task).includes("storageKey"), false);
 
     let revision = task.revision; let firstAssetId = "";

@@ -209,6 +209,7 @@ export class PostgresStatisticsQueryRepository implements StatisticsQueryReposit
         .select({
           championKey: playerChampionStats.championKey,
           championName: championCatalog.displayName,
+          championImageUrl: championCatalog.imageUrl,
           games: playerChampionStats.games,
           wins: playerChampionStats.wins,
           losses: playerChampionStats.losses,
@@ -254,6 +255,7 @@ export class PostgresStatisticsQueryRepository implements StatisticsQueryReposit
         mvpPlayerId: matchGames.mvpPlayerId,
         championKey: matchParticipants.championKey,
         championName: championCatalog.displayName,
+        championImageUrl: championCatalog.imageUrl,
         team: matchParticipants.team,
         position: matchParticipants.position,
       })
@@ -292,6 +294,7 @@ export class PostgresStatisticsQueryRepository implements StatisticsQueryReposit
         gameNumber: row.gameNumber,
         championKey: row.championKey,
         championName: row.championName,
+        championImageUrl: row.championImageUrl,
         team: row.team,
         position: row.position,
         won: row.team === row.winnerTeam,

@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 
 import {
+  canonicalSubmissionPublicCode,
   MATCH_SERIES_STATUSES,
   MATCH_SUBMISSION_STATUSES,
   parseKstDate,
@@ -34,6 +35,32 @@ function queryText(value: string | null) {
   return normalized.length >= 1 && normalized.length <= 100 && !CONTROL_OR_BIDI_PATTERN.test(normalized)
     ? normalized
     : null;
+}
+
+export type MatchSubmitPageQuery = Readonly<{
+  code: string | null;
+  teamBalanceDraftId: string | null;
+}>;
+
+export function parseMatchSubmitPageQuery(
+  input: Readonly<Record<string, string | string[] | undefined>>,
+): MatchSubmitPageQuery | null {
+  if (Object.keys(input).some((key) => key !== "code" && key !== "teamBalanceDraftId")) return null;
+  const rawCode = input.code;
+  const rawDraftId = input.teamBalanceDraftId;
+  if (Array.isArray(rawCode) || Array.isArray(rawDraftId)) return null;
+  const code = rawCode === undefined ? null : canonicalSubmissionPublicCode(rawCode);
+  const teamBalanceDraftId = rawDraftId === undefined
+    ? null
+    : UUID_PATTERN.test(rawDraftId)
+      ? rawDraftId.toLocaleLowerCase("en-US")
+      : null;
+  if (
+    (rawCode !== undefined && code === null) ||
+    (rawDraftId !== undefined && teamBalanceDraftId === null) ||
+    (code !== null && teamBalanceDraftId !== null)
+  ) return null;
+  return { code, teamBalanceDraftId };
 }
 
 export function parseAdminPlayerOptionQuery(url: string): Readonly<{

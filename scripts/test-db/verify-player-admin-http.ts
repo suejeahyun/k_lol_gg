@@ -265,7 +265,15 @@ try {
 
   const publicMemberSearch = await fetch(`${origin}/players?q=${encodeURIComponent(seededPlayer.memberName)}`);
   assert.equal(publicMemberSearch.status, 200);
-  assert.match(await publicMemberSearch.text(), />0명</);
+  const publicMemberSearchHtml = await publicMemberSearch.text();
+  assert.match(publicMemberSearchHtml, />1명</);
+  assert.match(publicMemberSearchHtml, new RegExp(seededPlayer.nickname));
+  assert.match(publicMemberSearchHtml, new RegExp(`${seededPlayer.nickname}#${seededPlayer.tagLine}`));
+  const publicPartialMemberSearch = await fetch(
+    `${origin}/players?q=${encodeURIComponent(seededPlayer.memberName.slice(0, -2))}`,
+  );
+  assert.equal(publicPartialMemberSearch.status, 200);
+  assert.match(await publicPartialMemberSearch.text(), />0명</);
 
   const legacy = await fetch(`${origin}/app/players/${seededPlayer.legacyId}`, { redirect: "manual" });
   assert.equal(legacy.status, 308);

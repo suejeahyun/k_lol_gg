@@ -38,9 +38,18 @@ import {
   adminTotpCredentials,
   auditEvents,
   authSessions,
+  championCatalog,
+  destructionApplicationIndex,
+  destructionCompetitions,
+  eventCompetitions,
+  eventParticipantIndex,
+  matchGames,
+  matchParticipants,
+  matchSeries,
   passwordResetRequests,
   playerAccountClaims,
   players,
+  seasons,
   userAccounts,
 } from "../../src/platform/db/schema/index";
 import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
@@ -303,6 +312,115 @@ test("S01 account lifecycle, recovery security, races, replay, and rollback hold
       issuedAt: new Date(),
       expiresAt: new Date(Date.now() + 30 * 60_000),
     });
+    const activityNow = new Date();
+    const activityEventId = randomUUID();
+    const activityDestructionId = randomUUID();
+    const activitySeasonId = randomUUID();
+    const activityMatchId = randomUUID();
+    const activityGameId = randomUUID();
+    await database.insert(eventCompetitions).values({
+      id: activityEventId,
+      title: "내 이벤트 계약",
+      titleNormalized: "내 이벤트 계약",
+      format: "POSITION",
+      status: "RECRUITING",
+      recruitmentOpensAt: new Date(activityNow.getTime() - 60_000),
+      recruitmentClosesAt: new Date(activityNow.getTime() + 60_000),
+      bracketBestOf: 3,
+      aggregateJson: {},
+      revision: 1,
+      createdByUserAccountId: admin.id,
+      updatedByUserAccountId: admin.id,
+      createdAt: activityNow,
+      updatedAt: activityNow,
+    });
+    await database.insert(eventParticipantIndex).values({
+      eventId: activityEventId,
+      participantId: `participant-${owner.playerId}`,
+      playerId: owner.playerId,
+      ownerUserAccountId: owner.id,
+      source: "USER_APPLICATION",
+      status: "ACTIVE",
+      mainPosition: "MID",
+      subPositionsJson: [],
+      updatedAt: activityNow,
+    });
+    await database.insert(destructionCompetitions).values({
+      id: activityDestructionId,
+      title: "내 멸망전 계약",
+      titleNormalized: "내 멸망전 계약",
+      status: "RECRUITING",
+      preliminaryFormat: "FULL_ROUND_ROBIN_BO1",
+      teamCount: 4,
+      participantCount: 1,
+      aggregateJson: {},
+      revision: 1,
+      createdByUserAccountId: admin.id,
+      updatedByUserAccountId: admin.id,
+      createdAt: activityNow,
+      updatedAt: activityNow,
+    });
+    await database.insert(destructionApplicationIndex).values({
+      tournamentId: activityDestructionId,
+      applicationId: randomUUID(),
+      ownerUserAccountId: owner.id,
+      playerId: owner.playerId,
+      position: "MID",
+      status: "CONFIRMED",
+      updatedAt: activityNow,
+    });
+    await database.insert(seasons).values({ id: activitySeasonId, name: "활동 계약 시즌", nameNormalized: "활동 계약 시즌" });
+    await database.insert(championCatalog).values({ key: "activity-ahri", displayName: "아리" });
+    await database.insert(matchSeries).values({
+      id: activityMatchId,
+      seasonId: activitySeasonId,
+      title: "내전 참여 계약",
+      titleNormalized: "내전 참여 계약",
+      playedOn: "2026-09-08",
+      blueWins: 1,
+      redWins: 0,
+      gameCount: 1,
+      status: "PUBLISHED",
+      publishedAt: activityNow,
+    });
+    await database.insert(matchGames).values({
+      id: activityGameId,
+      seriesId: activityMatchId,
+      gameNumber: 1,
+      durationSeconds: 1_800,
+      winnerTeam: "BLUE",
+      mvpPlayerId: owner.playerId,
+      mvpScoreUnits2: 30,
+      mvpFormulaVersion: "V1_COMPAT_1",
+      mvpSelection: "WINNER_SCORE_KDA_PLAYER_ID_V1",
+    });
+    await database.insert(matchParticipants).values({
+      id: randomUUID(),
+      gameId: activityGameId,
+      playerId: owner.playerId,
+      nicknameSnapshot: "활동 선수",
+      tagLineSnapshot: "KR1",
+      championKey: "activity-ahri",
+      team: "BLUE",
+      position: "MID",
+      kills: 8,
+      deaths: 2,
+      assists: 7,
+      mvpScoreUnits2: 30,
+      mvpFormulaVersion: "V1_COMPAT_1",
+    });
+    const selfActivity = await repository.findSelfParticipations(owner.id);
+    assert.deepEqual(new Set(selfActivity.map((item) => item.kind)), new Set(["MATCH", "EVENT", "DESTRUCTION"]));
+    assert.equal(selfActivity.every((item) => !Object.hasOwn(item, "ownerUserAccountId")), true);
+    await database.delete(matchParticipants).where(eq(matchParticipants.gameId, activityGameId));
+    await database.delete(matchGames).where(eq(matchGames.id, activityGameId));
+    await database.delete(matchSeries).where(eq(matchSeries.id, activityMatchId));
+    await database.delete(championCatalog).where(eq(championCatalog.key, "activity-ahri"));
+    await database.delete(seasons).where(eq(seasons.id, activitySeasonId));
+    await database.delete(destructionApplicationIndex).where(eq(destructionApplicationIndex.tournamentId, activityDestructionId));
+    await database.delete(destructionCompetitions).where(eq(destructionCompetitions.id, activityDestructionId));
+    await database.delete(eventParticipantIndex).where(eq(eventParticipantIndex.eventId, activityEventId));
+    await database.delete(eventCompetitions).where(eq(eventCompetitions.id, activityEventId));
     const ownPlayerInput = { nickname: `Owner${randomBytes(3).toString("hex")}`, tagLine: "KR1", peakTier: "플래티넘 4", currentTier: "골드 2" } as const;
     const ownPlayerScope = accountMutationScope("self-player", owner.id);
     const ownPlayerOutcome = await repository.updateOwnPlayer(

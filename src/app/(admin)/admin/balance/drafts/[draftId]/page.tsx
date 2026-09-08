@@ -28,7 +28,7 @@ export default async function AdminTeamBalanceDraftPage({ params, searchParams }
     const result = await loadRuntimeTeamBalance((service) => service.getDraft({ actorUserAccountId: session.userId, authorization: "ADMIN" }, draftId));
     if (result.state === "ready" && !result.data) notFound();
     return <main className={`page-wrap ${styles.page}`}>{navigation}{result.state === "ready" && result.data
-      ? <TeamBalanceDraftWorkspace draft={result.data} endpointBase={`/api/admin/team-tools/drafts/${result.data.id}`} mode="ADMIN"/>
+      ? <TeamBalanceDraftWorkspace key={`${result.data.evaluationRound}:${result.data.selectedCandidateSignature ?? "none"}`} draft={result.data} endpointBase={`/api/admin/team-tools/drafts/${result.data.id}`} mode="ADMIN"/>
       : <section className={styles.emptyState} role={result.state === "error" ? "alert" : "status"}><Scale aria-hidden="true"/><h1>팀 초안을 불러올 수 없습니다.</h1><p>데이터베이스 연결을 확인한 뒤 다시 시도해 주세요.</p></section>}</main>;
   }
   const result = await loadRuntimeTeamBalanceRecommendations((service) => service.getRecommendation({ actorUserAccountId: session.userId, authorization: "ADMIN" }, draftId, query.team));

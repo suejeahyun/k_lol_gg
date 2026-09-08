@@ -45,6 +45,41 @@ type PlayerSearchResult = Readonly<{ playerId: string; displayName: string; riot
 const positionLabel = { TOP: "탑", JGL: "정글", MID: "미드", ADC: "원딜", SUP: "서포터" } as const;
 const preferenceLabel = { MAIN: "주 포지션", SUB: "부 포지션", AUTO: "자동 배치 가능" } as const;
 const originLabel = { ALL: "전체 신청", SITE: "사이트 신청", KAKAO: "카카오톡 신청" } as const;
+const positionOptions = TEAM_BALANCE_POSITIONS.map((value) => ({ value, label: positionLabel[value] }));
+const preferenceOptions = TEAM_BALANCE_PREFERENCES.map((value) => ({ value, label: preferenceLabel[value] }));
+
+function SingleChoice<T extends string>({
+  label,
+  value,
+  options,
+  disabled = false,
+  onChange,
+}: {
+  label: string;
+  value: T;
+  options: readonly Readonly<{ value: T; label: string }>[];
+  disabled?: boolean;
+  onChange: (value: T) => void;
+}) {
+  return (
+    <fieldset className={styles.choiceField} disabled={disabled}>
+      <legend>{label}</legend>
+      <div className={styles.choiceButtons} role="group" aria-label={label}>
+        {options.map((option) => (
+          <button
+            type="button"
+            key={option.value}
+            aria-pressed={value === option.value}
+            data-selected={value === option.value ? "true" : undefined}
+            onClick={() => onChange(option.value)}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
 
 function initialRows(): Row[] {
   return Array.from({ length: 10 }, (_, index) => ({
@@ -333,11 +368,11 @@ export function TeamBalanceBuilder() {
               <details key={row.playerId} className={styles.balanceRowDetails}>
                 <summary><span><b>{index + 1}</b><strong>{row.playerLabel}</strong></span><small>{row.allPositions ? "모든 포지션 가능" : `${positionLabel[row.mainPosition]}${row.additionalPositions.length ? ` 외 ${row.additionalPositions.length}` : ""}`}</small></summary>
                 <div>
-                  <label className={styles.allPositionToggle}><input type="checkbox" checked={row.allPositions} onChange={(event) => update(index, { allPositions: event.target.checked, mainPreference: event.target.checked ? "AUTO" : "MAIN" })} /> 모든 포지션 자동 배치 가능</label>
-                  <label>주 포지션<select value={row.mainPosition} disabled={row.allPositions} onChange={(event) => { const mainPosition = event.target.value as Position; update(index, { mainPosition, additionalPositions: row.additionalPositions.filter((position) => position !== mainPosition) }); }}>{TEAM_BALANCE_POSITIONS.map((position) => <option key={position} value={position}>{positionLabel[position]}</option>)}</select></label>
-                  <label>주 포지션 선호<select value={row.mainPreference} disabled={row.allPositions} onChange={(event) => update(index, { mainPreference: event.target.value as Preference })}>{TEAM_BALANCE_PREFERENCES.map((preference) => <option key={preference} value={preference}>{preferenceLabel[preference]}</option>)}</select></label>
-                  <fieldset className={styles.additionalPositions}><legend>추가 가능 포지션</legend>{TEAM_BALANCE_POSITIONS.filter((position) => position !== row.mainPosition).map((position) => <label key={position}><input type="checkbox" disabled={row.allPositions} checked={row.additionalPositions.includes(position)} onChange={(event) => update(index, { additionalPositions: event.target.checked ? [...row.additionalPositions, position] : row.additionalPositions.filter((current) => current !== position) })} /> {positionLabel[position]}</label>)}</fieldset>
-                  <label>추가 포지션 선호<select value={row.additionalPreference} disabled={row.allPositions || row.additionalPositions.length === 0} onChange={(event) => update(index, { additionalPreference: event.target.value as Preference })}>{TEAM_BALANCE_PREFERENCES.map((preference) => <option key={preference} value={preference}>{preferenceLabel[preference]}</option>)}</select></label>
+                  <button className={styles.allPositionToggle} type="button" aria-pressed={row.allPositions} data-selected={row.allPositions ? "true" : undefined} onClick={() => update(index, { allPositions: !row.allPositions, mainPreference: !row.allPositions ? "AUTO" : "MAIN" })}>모든 포지션 자동 배치</button>
+                  <SingleChoice label="주 포지션" value={row.mainPosition} options={positionOptions} disabled={row.allPositions} onChange={(mainPosition) => update(index, { mainPosition, additionalPositions: row.additionalPositions.filter((position) => position !== mainPosition) })} />
+                  <SingleChoice label="주 포지션 선호" value={row.mainPreference} options={preferenceOptions} disabled={row.allPositions} onChange={(mainPreference) => update(index, { mainPreference })} />
+                  <fieldset className={styles.choiceField} disabled={row.allPositions}><legend>추가 가능 포지션</legend><div className={styles.choiceButtons} role="group" aria-label="추가 가능 포지션">{TEAM_BALANCE_POSITIONS.filter((position) => position !== row.mainPosition).map((position) => { const selected = row.additionalPositions.includes(position); return <button type="button" key={position} aria-pressed={selected} data-selected={selected ? "true" : undefined} onClick={() => update(index, { additionalPositions: selected ? row.additionalPositions.filter((current) => current !== position) : [...row.additionalPositions, position] })}>{positionLabel[position]}</button>; })}</div></fieldset>
+                  <SingleChoice label="추가 포지션 선호" value={row.additionalPreference} options={preferenceOptions} disabled={row.allPositions || row.additionalPositions.length === 0} onChange={(additionalPreference) => update(index, { additionalPreference })} />
                 </div>
               </details>
             ))}

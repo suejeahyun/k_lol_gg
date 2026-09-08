@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { PlayerSummary } from "../domain/player";
+import { TierEmblem } from "./tier-emblem";
 
 const positionLabels: Record<NonNullable<PlayerSummary["mainPosition"]>, string> = {
   TOP: "탑",
@@ -41,7 +42,8 @@ export function PlayerResultCard({ player }: { player: PlayerSummary }) {
           <span>승률</span>
           <strong>{player.winRate === null ? "기록 준비 중" : `${player.winRate}%`}</strong>
         </div>
-        <div>
+        <div className="player-card__tier">
+          <TierEmblem tier={player.tier} />
           <span>솔로 랭크</span>
           <strong>{player.tier ?? "미등록"}</strong>
         </div>
