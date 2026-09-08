@@ -15,7 +15,7 @@ export async function GET(request: Request, context: Context) {
   catch (error) { return disciplineErrorResponse(error, traceId); }
 }
 export async function PATCH(request: Request, context: Context) {
-  const auth = await requireDisciplineApiSession("ADMIN"); if (!auth.ok) return auth.response;
+  const auth = await requireDisciplineApiSession("SUPER_ADMIN"); if (!auth.ok) return auth.response;
   const prepared = await prepareDisciplineJsonMutation(request); if (!prepared.ok) return prepared.response;
   const input = parseUpdateDisciplineRecord(prepared.body); if (!input) return disciplineErrorResponse(new Error("INVALID_UPDATE_DISCIPLINE"), prepared.traceId);
   const service = getRuntimeDisciplineService();
@@ -23,7 +23,7 @@ export async function PATCH(request: Request, context: Context) {
   catch (error) { return disciplineErrorResponse(error, prepared.traceId); }
 }
 export async function DELETE(request: Request, context: Context) {
-  const auth = await requireDisciplineApiSession("ADMIN"); if (!auth.ok) return auth.response;
+  const auth = await requireDisciplineApiSession("SUPER_ADMIN"); if (!auth.ok) return auth.response;
   const prepared = await prepareDisciplineJsonMutation(request); if (!prepared.ok) return prepared.response;
   const input = parseCancelDisciplineRecord(prepared.body); if (!input) return disciplineErrorResponse(new Error("INVALID_CANCEL_DISCIPLINE"), prepared.traceId);
   const service = getRuntimeDisciplineService();

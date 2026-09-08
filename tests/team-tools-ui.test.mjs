@@ -113,6 +113,11 @@ test("팀 밸런스 화면은 승인 계정, 10명 입력, top3·수동·저장�
   }
   for (const contract of [
     "candidate.score.totalPenalty",
+    "종합 균형",
+    "라인 균형",
+    "주 포지션 우선",
+    "현재 선택 기준",
+    "새 3가지 기준으로 재평가",
     'mutate("select"',
     'mutate("save"',
     'mutate("reevaluate"',

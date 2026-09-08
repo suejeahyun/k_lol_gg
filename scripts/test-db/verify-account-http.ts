@@ -903,11 +903,10 @@ try {
   });
   assert.equal(passwordLimited.status, 429);
   assert.match(passwordLimited.headers.get("retry-after") ?? "", /^\d+$/);
-  await database.update(loginRateLimitBuckets).set({
-    windowStartedAt: new Date(Date.now() - 2 * 60 * 60_000),
-    blockedUntil: new Date(Date.now() - 1_000),
-    expiresAt: new Date(Date.now() + 60 * 60_000),
-  });
+  // This disposable HTTP-contract database does not need historical throttling rows
+  // after the 429 assertion. Deleting them avoids collapsing distinct windows onto
+  // the same unique (scope, key, window_started_at) tuple during the reset.
+  await database.delete(loginRateLimitBuckets);
   const selfChangeResetRequestId = randomUUID();
   const selfChangeRequestedAt = new Date(Date.now() - 1_000);
   await database.insert(passwordResetRequests).values({

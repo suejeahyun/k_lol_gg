@@ -83,6 +83,7 @@ import {
   toMatchGameInput,
   toPublicMatchPlayerDto,
   type AdminMatchView,
+  type AdminMatchTeamBalanceSource,
   type AdminSubmissionView,
   type MatchGameInput,
   type MatchGameSnapshot,
@@ -1480,22 +1481,98 @@ export class PostgresMatchRepository implements MatchRepository {
     return inputs;
   }
 
+  private async assertAdminTeamBalanceSource(
+    transaction: V2Transaction,
+    input: MatchRecordInput,
+    source: AdminMatchTeamBalanceSource | null,
+  ): Promise<MatchSeriesProvenance> {
+    if (!source) return EMPTY_MATCH_SERIES_PROVENANCE;
+    const draft = (
+      await transaction
+        .select({
+          id: teamBalanceDrafts.id,
+          status: teamBalanceDrafts.status,
+          revision: teamBalanceDrafts.revision,
+          evaluationRound: teamBalanceDrafts.evaluationRound,
+          selectedCandidateSource: teamBalanceDrafts.selectedCandidateSource,
+          selectedCandidateSignature: teamBalanceDrafts.selectedCandidateSignature,
+        })
+        .from(teamBalanceDrafts)
+        .where(eq(teamBalanceDrafts.id, source.teamBalanceDraftId))
+        .for("share")
+        .limit(1)
+    )[0];
+    if (!draft) throw new MatchServiceError("NOT_FOUND", "연결할 팀 초안을 찾을 수 없습니다.");
+    if (
+      draft.status === "ARCHIVED" ||
+      draft.revision !== source.teamBalanceDraftRevision ||
+      draft.evaluationRound !== source.teamBalanceEvaluationRound ||
+      draft.selectedCandidateSignature !== source.teamBalanceCandidateSignature ||
+      !draft.selectedCandidateSource
+    ) {
+      throw new MatchServiceError("PRECONDITION_FAILED", "팀 초안 또는 선택 후보가 변경되었습니다. 최신 배치를 다시 불러와 주세요.");
+    }
+    const [candidate, participantRows] = await Promise.all([
+      transaction
+        .select({ assignmentsJson: teamBalanceDraftCandidates.assignmentsJson })
+        .from(teamBalanceDraftCandidates)
+        .where(and(
+          eq(teamBalanceDraftCandidates.draftId, draft.id),
+          eq(teamBalanceDraftCandidates.evaluationRound, draft.evaluationRound),
+          eq(teamBalanceDraftCandidates.source, draft.selectedCandidateSource),
+          eq(teamBalanceDraftCandidates.signature, draft.selectedCandidateSignature),
+        ))
+        .for("share")
+        .limit(1),
+      transaction
+        .select({ playerId: teamBalanceDraftParticipants.playerId })
+        .from(teamBalanceDraftParticipants)
+        .where(eq(teamBalanceDraftParticipants.draftId, draft.id))
+        .for("share"),
+    ]);
+    if (!candidate[0] || !validTeamBalanceSubmissionAssignments(
+      candidate[0].assignmentsJson,
+      participantRows.map((row) => row.playerId),
+    )) {
+      throw new MatchServiceError("INVALID_TRANSITION", "선택한 팀 후보의 참가자 구성이 손상되었습니다.");
+    }
+    const selectedAssignments = new Set(
+      (candidate[0].assignmentsJson as readonly Record<string, unknown>[])
+        .map((assignment) => `${assignment.playerId}:${assignment.team}:${assignment.position}`),
+    );
+    const firstGameAssignments = new Set(
+      input.games[0]?.participants.map((participant) =>
+        `${participant.playerId}:${participant.team}:${participant.position}`) ?? [],
+    );
+    if (
+      selectedAssignments.size !== 10 ||
+      firstGameAssignments.size !== 10 ||
+      [...selectedAssignments].some((assignment) => !firstGameAssignments.has(assignment))
+    ) {
+      throw new MatchServiceError("INVALID_INPUT", "경기 1세트의 팀·포지션 배치가 선택한 팀 초안과 다릅니다.");
+    }
+    return { teamBalanceDraftId: draft.id };
+  }
+
   async createMatch(
     envelope: MatchCommandEnvelope,
     input: MatchRecordInput,
     now: Date,
+    teamBalanceSource: AdminMatchTeamBalanceSource | null = null,
   ) {
     return this.idempotent(envelope, now, async (transaction) => {
+      const provenance = await this.assertAdminTeamBalanceSource(transaction, input, teamBalanceSource);
       const created = await this.insertMatchAggregate(
         transaction,
         envelope,
         input,
-        EMPTY_MATCH_SERIES_PROVENANCE,
+        provenance,
         "DRAFT",
         now,
       );
       const after = matchSnapshot(created.row, created.games);
-      await this.audit(transaction, envelope, "MATCH_CREATED", "MATCH_SERIES", created.row.id, null, after);
+      await this.audit(transaction, envelope, "MATCH_CREATED", "MATCH_SERIES", created.row.id, null, after,
+        teamBalanceSource ? { teamBalanceSource } : undefined);
       await this.outbox(transaction, created.row, "CREATED", null, null, null, null, after, now);
       return {
         body: { id: created.row.id, status: created.row.status, revision: created.row.revision },

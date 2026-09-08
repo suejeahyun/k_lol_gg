@@ -44,7 +44,11 @@ import type {
   UpdateSeasonInput,
   UpsertOwnApplicationInput,
 } from "../application/ports/season-repository";
-import { planSeasonApplicationMerge } from "../domain/application-source-policy";
+import {
+  SEASON_APPLICATION_MERGE_POLICY,
+  planSeasonApplicationMerge,
+  planSiteApplicationMerge,
+} from "../domain/application-source-policy";
 import {
   kstDateKey,
   normalizedSeasonIdentity,
@@ -369,6 +373,7 @@ export class PostgresSeasonRepository implements SeasonRepository {
     const today = kstDateKey(now);
     let viewer: "ANONYMOUS" | "RESTRICTED" | "APPROVED" = "ANONYMOUS";
     let applicantPlayerId: string | null = null;
+    let applicantPlayer: Readonly<{ id: string; displayName: string; riotId: string }> | null = null;
     if (actorUserAccountId) {
       const accountRows = await this.database
         .select({ status: userAccounts.status, deletedAt: userAccounts.deletedAt })
@@ -379,11 +384,15 @@ export class PostgresSeasonRepository implements SeasonRepository {
       viewer = account?.status === "APPROVED" && account.deletedAt === null ? "APPROVED" : "RESTRICTED";
       if (viewer === "APPROVED") {
         const actorPlayers = await this.database
-          .select({ id: players.id })
+          .select({ id: players.id, nickname: players.nickname, tagLine: players.tagLine })
           .from(players)
           .where(and(eq(players.userAccountId, actorUserAccountId), eq(players.status, "ACTIVE")))
           .limit(1);
-        applicantPlayerId = actorPlayers[0]?.id ?? null;
+        const actorPlayer = actorPlayers[0];
+        applicantPlayerId = actorPlayer?.id ?? null;
+        applicantPlayer = actorPlayer
+          ? { id: actorPlayer.id, displayName: actorPlayer.nickname, riotId: `${actorPlayer.nickname}#${actorPlayer.tagLine}` }
+          : null;
       }
     }
     const seasonRows = await this.database
@@ -401,6 +410,8 @@ export class PostgresSeasonRepository implements SeasonRepository {
         viewer,
         canApply: false,
         hasActivePlayer: Boolean(applicantPlayerId),
+        applicantPlayer,
+        applyDate: today,
         participantTotal: 0,
         participantsTruncated: false,
         selectedRecruitNo: recruitNo,
@@ -510,6 +521,8 @@ export class PostgresSeasonRepository implements SeasonRepository {
         (!mine || mine.status === "APPLIED" || mine.status === "CANCELLED"),
       ),
       hasActivePlayer: Boolean(applicantPlayerId),
+      applicantPlayer,
+      applyDate: today,
       participantTotal,
       participantsTruncated: participantTotal > publicRows.length,
       selectedRecruitNo: recruitNo,
@@ -1093,6 +1106,7 @@ export class PostgresSeasonRepository implements SeasonRepository {
         .for("update")
         .limit(1);
       const current = currentRows[0];
+      const mergePlan = planSiteApplicationMerge(current ?? null);
 
       if (!current) {
         if (input.expectedRevision !== 0) {
@@ -1124,6 +1138,7 @@ export class PostgresSeasonRepository implements SeasonRepository {
           targetId: created.id,
           before: null,
           after: applicationAuditSnapshot(created),
+          metadata: { mergePolicy: SEASON_APPLICATION_MERGE_POLICY, outcome: mergePlan.outcome },
         });
         return { body, status: 201, revision: created.revision };
       }
@@ -1131,7 +1146,7 @@ export class PostgresSeasonRepository implements SeasonRepository {
       if (current.revision !== input.expectedRevision) {
         throw new SeasonServiceError("PRECONDITION_FAILED", "신청 revision이 변경되었습니다.");
       }
-      if (current.status === "RESERVE" || current.status === "CONFIRMED" || current.status === "REJECTED") {
+      if (mergePlan.action === "PRESERVE_REVIEW") {
         throw new SeasonServiceError("APPLICATION_REVIEWED", "관리자 검토가 끝난 신청은 수정할 수 없습니다.");
       }
       const rows = await transaction
@@ -1144,6 +1159,9 @@ export class PostgresSeasonRepository implements SeasonRepository {
           reviewedAt: null,
           reviewedByUserAccountId: null,
           cancelledAt: null,
+          source: "SITE",
+          sourceSlotNo: null,
+          sourceReferenceHash: null,
           revision: sql`${seasonApplications.revision} + 1`,
           updatedAt: now,
         })
@@ -1165,6 +1183,11 @@ export class PostgresSeasonRepository implements SeasonRepository {
         targetId: updated.id,
         before: applicationAuditSnapshot(current),
         after: applicationAuditSnapshot(updated),
+        metadata: {
+          mergePolicy: SEASON_APPLICATION_MERGE_POLICY,
+          outcome: mergePlan.outcome,
+          previousSource: current.source,
+        },
       });
       return { body, status: 200, revision: updated.revision };
     });

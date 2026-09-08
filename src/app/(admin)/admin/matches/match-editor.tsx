@@ -10,6 +10,7 @@ import { ClientMatchMutationKeyStore } from "@/modules/matches/infrastructure/cl
 import {
   MATCH_POSITIONS,
   MATCH_TEAMS,
+  type AdminMatchTeamBalanceSource,
   type MatchGameInput,
   type MatchParticipantInput,
 } from "@/modules/matches/domain/match";
@@ -173,10 +174,12 @@ export function MatchEditor({
   initialState,
   initialBody,
   catalog,
+  teamBalanceSource = null,
 }: {
   initialState: EditorState;
   initialBody: Record<string, unknown>;
   catalog: AdminMatchEditorCatalog;
+  teamBalanceSource?: AdminMatchTeamBalanceSource | null;
 }) {
   const router = useRouter();
   const [state, setState] = useState(initialState);
@@ -210,7 +213,10 @@ export function MatchEditor({
     searchText: champion.key,
   })), [catalog.champions]);
   const errors = useMemo(() => validateForm(form, effectiveCatalog), [effectiveCatalog, form]);
-  const payload = useMemo(() => payloadFromForm(form), [form]);
+  const payload = useMemo(() => {
+    const record = payloadFromForm(form);
+    return !state.id && teamBalanceSource ? { ...record, ...teamBalanceSource } : record;
+  }, [form, state.id, teamBalanceSource]);
 
   useEffect(() => {
     if (!voidOpen) return;

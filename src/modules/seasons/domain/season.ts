@@ -60,6 +60,8 @@ export type ApplicationHub = Readonly<{
   viewer: "ANONYMOUS" | "RESTRICTED" | "APPROVED";
   canApply: boolean;
   hasActivePlayer: boolean;
+  applicantPlayer: Readonly<{ id: string; displayName: string; riotId: string }> | null;
+  applyDate: string;
   participantTotal: number;
   participantsTruncated: boolean;
   selectedRecruitNo: number;

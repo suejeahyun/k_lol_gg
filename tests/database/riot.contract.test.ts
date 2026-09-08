@@ -15,6 +15,7 @@ import {
   type RiotCommandContext,
 } from "../../src/modules/riot";
 import { PostgresRiotAdapter } from "../../src/modules/riot/infrastructure/postgres-riot-adapter";
+import { PostgresPublicRiotQueryRepository } from "../../src/modules/riot/infrastructure/postgres-public-riot-query";
 import { createDatabaseHandle } from "../../src/platform/db/database";
 import { applyMigrations } from "../../src/platform/db/migrate";
 import {
@@ -72,6 +73,7 @@ test("S12 Riot persistence keeps owner auth, one-time RSO, jobs, receipts, audit
     featureEnabled: true,
     jobVerifier: { verifyAndConsume: async () => true },
   });
+  const publicQuery = new PostgresPublicRiotQueryRepository(database);
   let applicationNow = new Date();
   const service = new RiotApplicationService({
     ...adapter.dependencies,
@@ -223,6 +225,10 @@ test("S12 Riot persistence keeps owner auth, one-time RSO, jobs, receipts, audit
     const publicSummary = await adapter.getPublicSummary(playerId);
     assert.deepEqual(Object.keys(publicSummary!).sort(), ["lastSyncedAt", "leaguePoints", "losses", "playerId", "riotId", "soloRank", "soloTier", "wins"]);
     assert.equal(JSON.stringify(publicSummary).includes("puuid"), false);
+    const publicProfileState = await publicQuery.getPublicProfileState(playerId);
+    assert.equal(publicProfileState.kind, "READY");
+    assert.equal(JSON.stringify(publicProfileState).includes("puuid"), false);
+    assert.equal(JSON.stringify(publicProfileState).includes("ownerUserAccountId"), false);
 
     const disconnected = await service.disconnect({
       context: ownerContext(actor, "disconnect"),
@@ -232,6 +238,7 @@ test("S12 Riot persistence keeps owner auth, one-time RSO, jobs, receipts, audit
     assert.equal(disconnected.body.status, "DISCONNECTED");
     assert.equal((await database.select().from(riotAccountLinks))[0]?.protectedPuuid, null);
     assert.equal(await adapter.getPublicSummary(playerId), null, "a disconnected link cannot expose a stale public summary");
+    assert.deepEqual(await publicQuery.getPublicProfileState(playerId), { kind: "UNLINKED" });
 
     const ledgerText = JSON.stringify({
       receipts: await database.select().from(riotCommandReceipts),

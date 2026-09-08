@@ -40,7 +40,7 @@ export default async function AdminTeamBalanceDraftsPage({ searchParams }: { sea
 
   return <main className={`page-wrap ${styles.page}`}>
     <section className={styles.draftListHeader} aria-labelledby="admin-draft-list-title">
-      <div><span>{query?.view === "recommendations" ? "ADMIN PICK · BAN" : "ADMIN TEAM DRAFTS"}</span><h1 id="admin-draft-list-title">{query?.view === "recommendations" ? "전체 초안 밴픽 추천" : "전체 팀 밸런스 초안"}</h1><p>{query?.view === "recommendations" ? "선택된 배치와 실제 시즌 챔피언 통계를 관리자 범위에서 검수합니다." : "사용자가 저장한 배치를 삭제하거나 가장하지 않고, 계산 근거와 현재 상태를 읽기 전용으로 확인합니다."}</p></div>
+      <div><span>{query?.view === "recommendations" ? "ADMIN PICK · BAN" : "ADMIN TEAM DRAFTS"}</span><h1 id="admin-draft-list-title">{query?.view === "recommendations" ? "전체 초안 밴픽 추천" : "전체 팀 밸런스 초안"}</h1><p>{query?.view === "recommendations" ? "선택된 배치와 실제 시즌 챔피언 통계를 관리자 범위에서 검수합니다." : "사용자가 저장한 배치를 검수하고, 선택 팀으로 경기를 등록하거나 안전하게 보관·복구합니다."}</p></div>
       <Link className={styles.primaryLink} href={query?.view === "recommendations" ? "/admin/balance/drafts" : "/admin/balance/drafts?view=recommendations"}>{query?.view === "recommendations" ? "초안 목록" : "밴픽 추천"}</Link>
     </section>
     {query?.view === "recommendations" && result.state === "ready" && result.data.items.length > 0 ? <>

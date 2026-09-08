@@ -39,7 +39,7 @@ export default async function AdminBalancePage() {
                     <dl>
                       <div><dt>경기</dt><dd>{item.projection.sourceMatchCount}</dd></div>
                       <div><dt>게임</dt><dd>{item.projection.sourceGameCount}</dd></div>
-                      <div><dt>참가 행</dt><dd>{item.projection.sourceParticipantCount}</dd></div>
+                      <div><dt>참가인원 집계</dt><dd>{item.projection.sourceParticipantCount}</dd></div>
                       <div><dt>대기/실패</dt><dd>{item.pendingEventCount} / {item.failedEventCount}</dd></div>
                     </dl>
                     <div className={styles.action}>

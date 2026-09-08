@@ -6,6 +6,7 @@ import {
   kstDateKey,
   normalizeSeasonName,
   planSeasonApplicationMerge,
+  planSiteApplicationMerge,
   SeasonService,
   SeasonServiceError,
   seasonAcceptsApplications,
@@ -156,6 +157,10 @@ test("SITE and completed administrator decisions deterministically win Kakao mer
   assert.deepEqual(planSeasonApplicationMerge({ source: "SITE", status: "APPLIED" }), { action: "PRESERVE", outcome: "SITE_PRESERVED" });
   assert.deepEqual(planSeasonApplicationMerge({ source: "KAKAO", status: "CONFIRMED" }), { action: "PRESERVE", outcome: "REVIEWED_PRESERVED" });
   assert.deepEqual(planSeasonApplicationMerge({ source: "KAKAO", status: "CANCELLED" }), { action: "REFRESH_KAKAO", outcome: "KAKAO_REFRESHED" });
+  assert.deepEqual(planSiteApplicationMerge(null), { action: "CREATE_SITE", outcome: "SITE_CREATED" });
+  assert.deepEqual(planSiteApplicationMerge({ source: "KAKAO", status: "APPLIED" }), { action: "PROMOTE_TO_SITE", outcome: "KAKAO_PROMOTED_TO_SITE" });
+  assert.deepEqual(planSiteApplicationMerge({ source: "SITE", status: "CANCELLED" }), { action: "PROMOTE_TO_SITE", outcome: "SITE_UPDATED" });
+  assert.deepEqual(planSiteApplicationMerge({ source: "KAKAO", status: "CONFIRMED" }), { action: "PRESERVE_REVIEW", outcome: "REVIEWED_PRESERVED" });
 });
 
 test("Kakao pending filters are bounded and canonical", () => {

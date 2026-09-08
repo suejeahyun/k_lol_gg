@@ -5,12 +5,15 @@ import test from "node:test";
 const root = new URL("../", import.meta.url);
 const source = (path) => readFile(new URL(path, root), "utf8");
 
-test("champion administrator pages expose list, create, edit and safe deactivation flows", async () => {
-  const [list, create, edit, form] = await Promise.all([
+test("champion administrator pages reuse the highlight content shell and keep safe mutations", async () => {
+  const [list, create, edit, form, mediaPages, highlightPage, galleryPage] = await Promise.all([
     source("src/app/(admin)/admin/champions/page.tsx"),
     source("src/app/(admin)/admin/champions/new/page.tsx"),
     source("src/app/(admin)/admin/champions/[championId]/edit/page.tsx"),
     source("src/app/(admin)/admin/champions/champion-form.tsx"),
+    source("src/components/admin/media/admin-media-pages.tsx"),
+    source("src/app/(admin)/admin/highlights/page.tsx"),
+    source("src/app/(admin)/admin/images/page.tsx"),
   ]);
   assert.match(list, /loadRuntimeChampions/);
   assert.match(list, /ready|state/);
@@ -19,7 +22,17 @@ test("champion administrator pages expose list, create, edit and safe deactivati
   assert.match(form, /Idempotency-Key/);
   assert.match(form, /If-Match/);
   assert.match(form, /method: "DELETE"/);
+  assert.match(list, /AdminContentTabs active="champion"/);
+  assert.match(create, /AdminContentTabs active="champion"/);
+  assert.match(edit, /AdminContentTabs active="champion"/);
+  assert.match(list, /admin-media\.module\.css/);
+  assert.match(form, /admin-media\.module\.css/);
+  assert.match(mediaPages, /export function AdminContentTabs/);
+  assert.match(mediaPages, /aria-current=/);
+  assert.match(highlightPage, /AdminMediaListPage kind="highlight"/);
+  assert.match(galleryPage, /AdminMediaListPage kind="gallery"/);
   assert.doesNotMatch(list, /AdminWorkspacePage/);
+  assert.doesNotMatch(list, /champions\.module\.css/);
 });
 
 test("champion read APIs keep public and administrator namespaces separated", async () => {

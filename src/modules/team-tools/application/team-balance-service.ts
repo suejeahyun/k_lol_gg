@@ -239,4 +239,44 @@ export class TeamBalanceService {
       now,
     );
   }
+
+  archiveDraft(
+    context: TeamBalanceCommandContext,
+    draftId: string,
+    expectedRevision: number,
+    body: unknown,
+    now = new Date(),
+  ) {
+    if (context.authorization !== "ADMIN_MUTATION") {
+      throw new TeamBalanceServiceError("FORBIDDEN", "관리자만 팀 초안을 보관할 수 있습니다.");
+    }
+    emptyBody(body);
+    const id = uuid(draftId);
+    return this.repository.archiveDraft(
+      envelope(context, "team-tools:drafts:archive", { id, expectedRevision }),
+      id,
+      expectedRevision,
+      now,
+    );
+  }
+
+  restoreDraft(
+    context: TeamBalanceCommandContext,
+    draftId: string,
+    expectedRevision: number,
+    body: unknown,
+    now = new Date(),
+  ) {
+    if (context.authorization !== "ADMIN_MUTATION") {
+      throw new TeamBalanceServiceError("FORBIDDEN", "관리자만 팀 초안을 복구할 수 있습니다.");
+    }
+    emptyBody(body);
+    const id = uuid(draftId);
+    return this.repository.restoreDraft(
+      envelope(context, "team-tools:drafts:restore", { id, expectedRevision }),
+      id,
+      expectedRevision,
+      now,
+    );
+  }
 }

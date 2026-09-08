@@ -82,6 +82,34 @@ function compareOracle(
   );
 }
 
+function comparePositionOracle(
+  left: ReturnType<typeof evaluateTeamBalanceLayout>,
+  right: ReturnType<typeof evaluateTeamBalanceLayout>,
+) {
+  return (
+    left.score.positionDifferenceTotal - right.score.positionDifferenceTotal ||
+    left.score.teamStrength.difference - right.score.teamStrength.difference ||
+    left.score.preference.rawPenalty - right.score.preference.rawPenalty ||
+    left.score.uncertainty.rawPenalty - right.score.uncertainty.rawPenalty ||
+    left.score.totalPenalty - right.score.totalPenalty ||
+    (left.signature < right.signature ? -1 : left.signature > right.signature ? 1 : 0)
+  );
+}
+
+function comparePreferenceOracle(
+  left: ReturnType<typeof evaluateTeamBalanceLayout>,
+  right: ReturnType<typeof evaluateTeamBalanceLayout>,
+) {
+  return (
+    left.score.preference.rawPenalty - right.score.preference.rawPenalty ||
+    left.score.teamStrength.difference - right.score.teamStrength.difference ||
+    left.score.positionDifferenceTotal - right.score.positionDifferenceTotal ||
+    left.score.uncertainty.rawPenalty - right.score.uncertainty.rawPenalty ||
+    left.score.totalPenalty - right.score.totalPenalty ||
+    (left.signature < right.signature ? -1 : left.signature > right.signature ? 1 : 0)
+  );
+}
+
 test("team balance vocabulary and neutral provider defaults are explicit", () => {
   assert.deepEqual(TEAM_BALANCE_POSITIONS, ["TOP", "JGL", "MID", "ADC", "SUP"]);
   assert.deepEqual(TEAM_BALANCE_TEAMS, ["BLUE", "RED"]);
@@ -147,14 +175,18 @@ test("each candidate is a lossless 5:5 layout with every position exactly once",
   }
 });
 
-test("top three matches an independent exhaustive 2^4 symmetry-reduced oracle", () => {
+test("three recommendations use distinct overall, position, and preference criteria", () => {
   const players = pairedPlayers();
-  const oracle = exhaustivePairedLayouts(players)
-    .map((layout) => evaluateTeamBalanceLayout(players, layout))
-    .sort(compareOracle)
-    .slice(0, 3);
+  const evaluated = exhaustivePairedLayouts(players).map((layout) => evaluateTeamBalanceLayout(players, layout));
+  const used = new Set<string>();
+  const oracle = [compareOracle, comparePositionOracle, comparePreferenceOracle].map((compare) => {
+    const candidate = [...evaluated].sort(compare).find((entry) => !used.has(entry.signature))!;
+    used.add(candidate.signature);
+    return candidate;
+  });
   const calculated = calculateTeamBalanceCandidates([...players].reverse());
 
+  assert.equal(new Set(calculated.candidates.map((candidate) => candidate.signature)).size, 3);
   assert.deepEqual(
     calculated.candidates.map((candidate) => candidate.signature),
     oracle.map((candidate) => candidate.signature),

@@ -76,4 +76,16 @@ export interface TeamBalanceRepository {
     expectedRevision: number,
     now: Date,
   ): Promise<TeamBalanceMutationResult>;
+  archiveDraft(
+    envelope: TeamBalanceCommandEnvelope,
+    draftId: string,
+    expectedRevision: number,
+    now: Date,
+  ): Promise<TeamBalanceMutationResult>;
+  restoreDraft(
+    envelope: TeamBalanceCommandEnvelope,
+    draftId: string,
+    expectedRevision: number,
+    now: Date,
+  ): Promise<TeamBalanceMutationResult>;
 }

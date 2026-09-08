@@ -5,7 +5,7 @@ import { getRuntimeDisciplineService } from "@/modules/discipline/infrastructure
 export const dynamic = "force-dynamic";
 type Context = { params: Promise<{ taskId: string }> };
 export async function PATCH(request: Request, context: Context) {
-  const auth = await requireDisciplineApiSession("ADMIN"); if (!auth.ok) return auth.response;
+  const auth = await requireDisciplineApiSession("SUPER_ADMIN"); if (!auth.ok) return auth.response;
   const prepared = await prepareDisciplineJsonMutation(request); if (!prepared.ok) return prepared.response;
   const input = parseDisciplineReview(prepared.body); if (!input) return disciplineErrorResponse(new Error("INVALID_REVIEW_DISCIPLINE"), prepared.traceId);
   const service = getRuntimeDisciplineService();

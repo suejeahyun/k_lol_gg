@@ -1,5 +1,6 @@
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 
+import { championImageUrlProjection } from "@/modules/champions/infrastructure/champion-image-projection";
 import {
   championCatalog,
   matchGames,
@@ -209,7 +210,7 @@ export class PostgresStatisticsQueryRepository implements StatisticsQueryReposit
         .select({
           championKey: playerChampionStats.championKey,
           championName: championCatalog.displayName,
-          championImageUrl: championCatalog.imageUrl,
+          championImageUrl: championImageUrlProjection(),
           games: playerChampionStats.games,
           wins: playerChampionStats.wins,
           losses: playerChampionStats.losses,
@@ -255,7 +256,7 @@ export class PostgresStatisticsQueryRepository implements StatisticsQueryReposit
         mvpPlayerId: matchGames.mvpPlayerId,
         championKey: matchParticipants.championKey,
         championName: championCatalog.displayName,
-        championImageUrl: championCatalog.imageUrl,
+        championImageUrl: championImageUrlProjection(),
         team: matchParticipants.team,
         position: matchParticipants.position,
       })

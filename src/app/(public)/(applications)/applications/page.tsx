@@ -129,9 +129,19 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
               <p>내 플레이어 연결을 확인한 뒤 다시 신청해 주세요.</p>
             </section>
           ) : result.data.canApply ? (
-            <ApplicationActions initial={result.data.myApplication} recruitNo={result.data.selectedRecruitNo} />
+            <ApplicationActions
+              initial={result.data.myApplication}
+              recruitNo={result.data.selectedRecruitNo}
+              applicantPlayer={result.data.applicantPlayer!}
+              applyDate={result.data.applyDate}
+            />
           ) : result.data.currentSeason.applicationsOpen && result.data.myApplication ? (
-            <ApplicationActions initial={result.data.myApplication} recruitNo={result.data.selectedRecruitNo} />
+            <ApplicationActions
+              initial={result.data.myApplication}
+              recruitNo={result.data.selectedRecruitNo}
+              applicantPlayer={result.data.applicantPlayer!}
+              applyDate={result.data.applyDate}
+            />
           ) : (
             <section className={styles.stateCard}>
               <ShieldCheck aria-hidden="true" />
@@ -146,7 +156,11 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
               <div>
                 <span>MY STATUS</span>
                 <h2 id="my-status-title">{statusLabel(result.data.myApplication.status)}</h2>
-                <p>{result.data.myApplication.applyDate} · #{result.data.myApplication.recruitNo} · {result.data.myApplication.mainPosition}</p>
+                <p>
+                  {result.data.myApplication.applyDate} · {result.data.myApplication.recruitNo}회차 · 주 {result.data.myApplication.mainPosition}
+                  {result.data.myApplication.subPositions.length > 0 ? ` · 부 ${result.data.myApplication.subPositions.join(", ")}` : " · 부 없음"}
+                  {` · ${result.data.myApplication.source === "SITE" ? "사이트" : "카카오 연동"}`}
+                </p>
               </div>
             </section>
           ) : null}
@@ -167,7 +181,7 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
                   <li key={`${participant.player.id}-${participant.applyDate}-${participant.recruitNo}`}>
                     <span aria-hidden="true">{participant.player.displayName.slice(0, 1).toUpperCase()}</span>
                     <div><strong>{participant.player.displayName}</strong><small>{participant.player.riotId}</small></div>
-                    <em>{participant.mainPosition}</em>
+                    <em>주 {participant.mainPosition} · 부 {participant.subPositions.join(", ") || "없음"}</em>
                     <b data-status={participant.status}>{statusLabel(participant.status)}</b>
                   </li>
                 ))}

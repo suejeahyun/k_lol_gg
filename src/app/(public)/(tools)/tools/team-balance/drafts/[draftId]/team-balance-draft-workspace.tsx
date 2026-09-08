@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Check, GripVertical, RefreshCw, Save, SlidersHorizontal } from "lucide-react";
+import { Archive, ArrowRight, Check, GripVertical, RefreshCw, RotateCcw, Save, SlidersHorizontal } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import {
   TEAM_BALANCE_TEAMS,
+  type TeamBalanceDraftCandidate,
   type TeamBalanceDraft,
   type TeamBalanceLayoutEntry,
 } from "@/modules/team-tools";
@@ -16,6 +17,17 @@ import styles from "../../../team-tools.module.css";
 const positionLabel = { TOP: "탑", JGL: "정글", MID: "미드", ADC: "원딜", SUP: "서포터" } as const;
 const teamLabel = { BLUE: "블루", RED: "레드" } as const;
 const preferenceLabel = { MAIN: "주", SUB: "부", AUTO: "자동" } as const;
+const candidateCriteria = {
+  OVERALL_BALANCE: { label: "종합 균형", description: "팀 전력·라인 차이·포지션 선호를 모두 반영한 추천" },
+  POSITION_BALANCE: { label: "라인 균형", description: "각 라인의 맞대결 점수 차이를 가장 먼저 줄인 추천" },
+  PREFERENCE_PRIORITY: { label: "주 포지션 우선", description: "참가자가 신청한 주 포지션 배치를 가장 먼저 지킨 추천" },
+  LEGACY: { label: "이전 계산 후보", description: "새 3가지 기준을 적용하려면 아래 재평가 버튼을 눌러 주세요." },
+  MANUAL: { label: "수동 배치", description: "사용자가 직접 교체하고 서버에서 다시 평가한 배치" },
+} as const;
+
+function candidateCriterion(candidate: Pick<TeamBalanceDraftCandidate, "criterion">) {
+  return candidateCriteria[candidate.criterion ?? "LEGACY"];
+}
 
 export function TeamBalanceDraftWorkspace({
   draft,
@@ -29,6 +41,7 @@ export function TeamBalanceDraftWorkspace({
   const router = useRouter();
   const autoCandidates = draft.candidates.filter((candidate) => candidate.source === "AUTO");
   const selectedCandidate = draft.candidates.find((candidate) => candidate.signature === draft.selectedCandidateSignature) ?? null;
+  const hasLegacyCandidates = autoCandidates.some((candidate) => !candidate.criterion || candidate.criterion === "LEGACY");
   const initialLayout = (selectedCandidate ?? autoCandidates[0])?.assignments.map(({ playerId, team, position }) => ({ playerId, team, position })) ?? [];
   const [manualLayout, setManualLayout] = useState<TeamBalanceLayoutEntry[]>(initialLayout);
   const [draggingSlot, setDraggingSlot] = useState<number | null>(null);
@@ -39,7 +52,7 @@ export function TeamBalanceDraftWorkspace({
   const participantById = useMemo(() => new Map(draft.participants.map((participant) => [participant.playerId, participant])), [draft.participants]);
   const participantName = useMemo(() => new Map(draft.participants.map((participant) => [participant.playerId, participant.displayName])), [draft.participants]);
 
-  async function mutate(action: "select" | "save" | "reevaluate", body: unknown) {
+  async function mutate(action: "select" | "save" | "reevaluate" | "archive" | "restore", body: unknown) {
     setPending(action);
     setMessage("");
     try {
@@ -54,7 +67,15 @@ export function TeamBalanceDraftWorkspace({
       });
       const result = await response.json() as { detail?: string };
       if (!response.ok) throw new Error(result.detail ?? "팀 초안을 변경하지 못했어요.");
-      setMessage(action === "save" ? "선택한 팀을 저장했어요." : action === "reevaluate" ? "최신 통계로 다시 계산했어요." : "팀 후보를 선택했어요.");
+      setMessage(action === "save"
+        ? "선택한 팀을 저장했어요."
+        : action === "reevaluate"
+          ? "최신 통계로 다시 계산했어요."
+          : action === "archive"
+            ? "초안을 보관했어요. 일반 사용자 목록에서는 더 이상 보이지 않아요."
+            : action === "restore"
+              ? "보관한 초안을 복구했어요."
+              : "팀 후보를 선택했어요.");
       router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "팀 초안을 변경하지 못했어요.");
@@ -98,21 +119,24 @@ export function TeamBalanceDraftWorkspace({
     <>
       <section className={styles.draftHeader}>
         <div><span>{mode === "ADMIN" ? "ADMIN REVIEW · " : ""}ROUND {draft.evaluationRound}</span><h1>{draft.title}</h1><p>{mode === "ADMIN" ? `소유 계정 ${draft.ownerUserAccountId} · 통계 generation ${draft.ratingGeneration ?? "없음 · 중립값 적용"} · revision ${draft.revision}` : draft.ratingGeneration ? `최신 통계 ${draft.ratingGeneration}차 반영` : "기본 점수 적용"}</p></div>
-        <strong data-status={draft.status}>{draft.status === "SAVED" ? "저장됨" : "평가 완료"}</strong>
+        <strong data-status={draft.status}>{draft.status === "ARCHIVED" ? "보관됨" : draft.status === "SAVED" ? "저장됨" : "평가 완료"}</strong>
       </section>
 
       <section className={styles.candidateSection} aria-labelledby="candidate-title">
         <div className={styles.heading}><div><span>AUTO OPTIONS · TOP 3</span><h2 id="candidate-title">자동 추천 후보 비교</h2><p className={styles.stageHint}>세 후보의 팀 차이와 라인 차이를 비교한 뒤 사용할 배치를 선택하세요.</p></div></div>
-        {selectedCandidate ? <div className={styles.evaluationOverview} role="status"><div><span>현재 선택</span><strong>{selectedCandidate.source === "AUTO" ? `${selectedCandidate.rank}안` : "수동 배치"}</strong></div><div><span>총 페널티</span><strong>{selectedCandidate.score.totalPenalty.toLocaleString()}</strong></div><div><span>팀 차이</span><strong>{selectedCandidate.score.teamStrength.difference}</strong></div><div><span>라인 차이</span><strong>{selectedCandidate.score.positionDifferenceTotal}</strong></div></div> : null}
+        {selectedCandidate ? <div className={styles.evaluationOverview} role="status"><div><span>현재 선택 기준</span><strong>{candidateCriterion(selectedCandidate).label}</strong></div><div><span>총 페널티</span><strong>{selectedCandidate.score.totalPenalty.toLocaleString()}</strong></div><div><span>팀 차이</span><strong>{selectedCandidate.score.teamStrength.difference}</strong></div><div><span>라인 차이</span><strong>{selectedCandidate.score.positionDifferenceTotal}</strong></div></div> : null}
         <div className={styles.candidateGrid}>
-          {autoCandidates.map((candidate) => (
-            <article key={candidate.id} data-selected={draft.selectedCandidateSignature === candidate.signature}>
-              <header><strong>{candidate.rank}안</strong><span>{draft.selectedCandidateSignature === candidate.signature ? "선택 중" : "비교 후보"}</span></header>
+          {autoCandidates.map((candidate) => {
+            const criterion = candidateCriterion(candidate);
+            const selected = draft.selectedCandidateSignature === candidate.signature;
+            return <article key={candidate.id} data-selected={selected}>
+              <header><strong>{candidate.rank}안 · {criterion.label}</strong><span>{selected ? "적용 중" : criterion.label}</span></header>
+              <p>{criterion.description}</p>
               <div className={styles.candidateMetrics}><span>총 페널티 <b>{candidate.score.totalPenalty.toLocaleString()}</b></span><span>팀 차이 <b>{candidate.score.teamStrength.difference}</b></span><span>라인 차이 <b>{candidate.score.positionDifferenceTotal}</b></span><span>주/부/자동 <b>{candidate.score.preference.mainCount}/{candidate.score.preference.subCount}/{candidate.score.preference.autoCount}</b></span></div>
               <div className={styles.lineComparison} aria-label={`${candidate.rank}안 라인별 비교`}>{candidate.score.positions.map((line) => { const blue = candidate.assignments.find((entry) => entry.team === "BLUE" && entry.position === line.position); const red = candidate.assignments.find((entry) => entry.team === "RED" && entry.position === line.position); return <span key={line.position}><b>{positionLabel[line.position]}</b><em>{blue ? participantName.get(blue.playerId) : "-"}</em><small>↔</small><em>{red ? participantName.get(red.playerId) : "-"}</em><strong>{line.difference}</strong></span>; })}</div>
-              <button type="button" aria-pressed={draft.selectedCandidateSignature === candidate.signature} disabled={Boolean(pending) || draft.selectedCandidateSignature === candidate.signature} onClick={() => mutate("select", { candidateRank: candidate.rank })}><Check size={16} aria-hidden="true" /> {draft.selectedCandidateSignature === candidate.signature ? "선택한 후보" : "이 후보 선택"}</button>
-            </article>
-          ))}
+              <button type="button" aria-pressed={selected} disabled={Boolean(pending) || selected || draft.status === "ARCHIVED"} onClick={() => mutate("select", { candidateRank: candidate.rank })}><Check size={16} aria-hidden="true" /> {selected ? `${criterion.label} 적용 중` : `${criterion.label} 선택`}</button>
+            </article>;
+          })}
         </div>
       </section>
 
@@ -152,13 +176,16 @@ export function TeamBalanceDraftWorkspace({
             })}</div>
           </section>)}
         </div>
-        <div className={styles.manualEvaluation}><div><span>SERVER EVALUATION</span><strong>현재 수동 배치를 V2 계산 기준으로 다시 평가합니다.</strong><small>브라우저 임시 점수를 저장하지 않고 서버가 참가자·포지션·점수를 검증한 결과만 선택합니다.</small></div><button className={styles.secondaryButton} type="button" disabled={Boolean(pending) || manualLayout.length !== 10} onClick={() => mutate("select", { layout: manualLayout })}><SlidersHorizontal size={17} aria-hidden="true" /> 수동 배치 평가·선택</button></div>
+        <div className={styles.manualEvaluation}><div><span>SERVER EVALUATION</span><strong>현재 수동 배치를 V2 계산 기준으로 다시 평가합니다.</strong><small>브라우저 임시 점수를 저장하지 않고 서버가 참가자·포지션·점수를 검증한 결과만 선택합니다.</small></div><button className={styles.secondaryButton} type="button" disabled={Boolean(pending) || manualLayout.length !== 10 || draft.status === "ARCHIVED"} onClick={() => mutate("select", { layout: manualLayout })}><SlidersHorizontal size={17} aria-hidden="true" /> 수동 배치 평가·선택</button></div>
       </section>
 
       <section className={styles.draftActions} aria-label="초안 작업">
-        <button className={styles.primaryButton} type="button" disabled={Boolean(pending) || !draft.selectedCandidateSignature || draft.status === "SAVED"} onClick={() => mutate("save", {})}><Save size={17} aria-hidden="true" /> 선택 팀 저장</button>
-        <button className={styles.secondaryButton} type="button" disabled={Boolean(pending) || draft.status === "ARCHIVED"} onClick={() => mutate("reevaluate", {})}><RefreshCw size={17} aria-hidden="true" /> 최신 통계로 재평가</button>
+        <button className={styles.primaryButton} type="button" disabled={Boolean(pending) || !draft.selectedCandidateSignature || draft.status === "SAVED" || draft.status === "ARCHIVED"} onClick={() => mutate("save", {})}><Save size={17} aria-hidden="true" /> 선택 팀 저장</button>
+        <button className={styles.secondaryButton} type="button" disabled={Boolean(pending) || draft.status === "ARCHIVED"} onClick={() => mutate("reevaluate", {})}><RefreshCw size={17} aria-hidden="true" /> {hasLegacyCandidates ? "새 3가지 기준으로 재평가" : "최신 통계로 재평가"}</button>
         {mode === "OWNER" && draft.selectedCandidateSignature && draft.status !== "ARCHIVED" ? <Link className={styles.primaryLink} href={`/matches/submit?teamBalanceDraftId=${encodeURIComponent(draft.id)}`}>이 팀으로 경기 결과 접수 <ArrowRight size={16} aria-hidden="true" /></Link> : null}
+        {mode === "ADMIN" && draft.selectedCandidateSignature && draft.status !== "ARCHIVED" ? <Link className={styles.primaryLink} href={`/admin/matches/new?teamBalanceDraftId=${encodeURIComponent(draft.id)}`}>선택 팀으로 경기 등록 <ArrowRight size={16} aria-hidden="true" /></Link> : null}
+        {mode === "ADMIN" && draft.status !== "ARCHIVED" ? <button className={styles.secondaryButton} type="button" disabled={Boolean(pending)} onClick={() => mutate("archive", {})}><Archive size={17} aria-hidden="true" /> 초안 보관</button> : null}
+        {mode === "ADMIN" && draft.status === "ARCHIVED" ? <button className={styles.secondaryButton} type="button" disabled={Boolean(pending)} onClick={() => mutate("restore", {})}><RotateCcw size={17} aria-hidden="true" /> 초안 복구</button> : null}
         <p role="status" aria-live="polite">{pending ? "처리 중…" : message}</p>
       </section>
     </>

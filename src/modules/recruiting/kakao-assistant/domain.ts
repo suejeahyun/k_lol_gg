@@ -3,6 +3,8 @@ import { createHash } from "node:crypto";
 import type { PlayerSummary } from "@/modules/players/domain/player";
 import {
   isSeasonApplicationPosition,
+  type SeasonApplicationSource,
+  type SeasonApplicationStatus,
   type SeasonApplicationPosition,
 } from "@/modules/seasons/domain/season";
 
@@ -75,8 +77,12 @@ export type KakaoSeasonSnapshotCommand = Readonly<{
 
 export type KakaoSeasonSnapshotEntryDto = Readonly<{
   slotNo: number;
-  status: "APPLIED" | "MATCHED_RESERVE" | "UNMATCHED" | "AMBIGUOUS";
+  status: SeasonApplicationStatus | "MATCHED_RESERVE" | "UNMATCHED" | "AMBIGUOUS";
+  source: SeasonApplicationSource;
   suppliedName: string;
+  suppliedRiotId: string | null;
+  mainPosition: SeasonApplicationPosition;
+  subPositions: readonly SeasonApplicationPosition[];
   player: Readonly<{ playerId: string; displayName: string; riotId: string }> | null;
 }>;
 
@@ -88,6 +94,7 @@ export type KakaoSeasonSnapshotDto = Readonly<{
   entries: readonly KakaoSeasonSnapshotEntryDto[];
   appliedCount: number;
   reserveCount: number;
+  confirmedCount: number;
   pendingCount: number;
   cancelledCount: number;
 }>;

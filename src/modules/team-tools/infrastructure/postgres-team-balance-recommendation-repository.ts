@@ -25,7 +25,9 @@ export class PostgresTeamBalanceRecommendationRepository implements TeamBalanceR
 
   async getRecommendation(viewer: TeamBalanceViewer, draftId: string, team: TeamBalanceTeam) {
     const draft = (await this.database.select().from(teamBalanceDrafts).where(eq(teamBalanceDrafts.id, draftId)).limit(1))[0];
-    if (!draft || (viewer.authorization === "OWNER" && draft.ownerUserAccountId !== viewer.actorUserAccountId)) {
+    if (!draft || (viewer.authorization === "OWNER" && (
+      draft.ownerUserAccountId !== viewer.actorUserAccountId || draft.status === "ARCHIVED"
+    ))) {
       throw new TeamBalanceServiceError("NOT_FOUND", "팀 초안을 찾을 수 없습니다.");
     }
     const draftDto = Object.freeze({

@@ -470,17 +470,37 @@ export class PostgresKakaoAssistant {
       const entries: KakaoSeasonSnapshotEntryDto[] = [
         ...applications.map(({ application, player }) => ({
           slotNo: application.sourceSlotNo ?? 999,
-          status: "APPLIED" as const,
-          suppliedName: player.memberName,
+          status: application.status,
+          source: application.source,
+          suppliedName: player.nickname,
+          suppliedRiotId: `${player.nickname}#${player.tagLine}`,
+          mainPosition: application.mainPosition,
+          subPositions: application.subPositions,
           player: { playerId: player.id, displayName: player.nickname, riotId: `${player.nickname}#${player.tagLine}` },
         })),
         ...pending.map(({ pending: item, player }) => ({
           slotNo: item.slotNo,
           status: item.matchState,
+          source: "KAKAO" as const,
           suppliedName: item.suppliedName,
+          suppliedRiotId: item.suppliedRiotId,
+          mainPosition: item.mainPosition,
+          subPositions: item.subPositions,
           player: player ? { playerId: player.id, displayName: player.nickname, riotId: `${player.nickname}#${player.tagLine}` } : null,
         })),
       ];
+      entries.sort((left, right) => left.slotNo - right.slotNo || left.suppliedName.localeCompare(right.suppliedName, "ko"));
+      const usedSlots = new Set<number>();
+      for (let index = 0; index < entries.length; index += 1) {
+        const entry = entries[index]!;
+        let slotNo = entry.slotNo;
+        if (!Number.isSafeInteger(slotNo) || slotNo < 1 || slotNo > 99 || usedSlots.has(slotNo)) {
+          slotNo = 1;
+          while (usedSlots.has(slotNo)) slotNo += 1;
+        }
+        usedSlots.add(slotNo);
+        if (slotNo !== entry.slotNo) entries[index] = { ...entry, slotNo };
+      }
       entries.sort((left, right) => left.slotNo - right.slotNo || left.suppliedName.localeCompare(right.suppliedName, "ko"));
       return Object.freeze({
         kind: "SEASON_APPLICATION_SNAPSHOT" as const,
@@ -488,8 +508,10 @@ export class PostgresKakaoAssistant {
         applyDate: command.applyDate,
         recruitNo: command.recruitNo,
         entries: Object.freeze(entries),
-        appliedCount: applications.length,
-        reserveCount: pending.filter(({ pending: item }) => item.matchState === "MATCHED_RESERVE").length,
+        appliedCount: applications.filter(({ application }) => application.status === "APPLIED").length,
+        reserveCount: applications.filter(({ application }) => application.status === "RESERVE").length +
+          pending.filter(({ pending: item }) => item.matchState === "MATCHED_RESERVE").length,
+        confirmedCount: applications.filter(({ application }) => application.status === "CONFIRMED").length,
         pendingCount: pending.filter(({ pending: item }) => item.matchState !== "MATCHED_RESERVE").length,
         cancelledCount,
       });

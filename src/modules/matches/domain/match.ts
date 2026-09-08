@@ -85,6 +85,13 @@ export type MatchSeriesProvenance = Readonly<{
   teamBalanceDraftId: string | null;
 }>;
 
+export type AdminMatchTeamBalanceSource = Readonly<{
+  teamBalanceDraftId: string;
+  teamBalanceDraftRevision: number;
+  teamBalanceEvaluationRound: number;
+  teamBalanceCandidateSignature: string;
+}>;
+
 export const EMPTY_MATCH_SERIES_PROVENANCE: MatchSeriesProvenance = Object.freeze({
   teamBalanceDraftId: null,
 });

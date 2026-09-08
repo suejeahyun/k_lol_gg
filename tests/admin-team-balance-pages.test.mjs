@@ -32,3 +32,27 @@ test("administrator recommendation aliases remain same-origin permanent redirect
   assert.match(detailAlias, /308/);
   assert.match(listAlias, /308/);
 });
+
+test("administrator drafts support recoverable archive and persisted match registration", async () => {
+  const [workspace, archiveRoute, restoreRoute, newMatch, editor, matchService, matchRepository] = await Promise.all([
+    source("../src/app/(public)/(tools)/tools/team-balance/drafts/[draftId]/team-balance-draft-workspace.tsx"),
+    source("../src/app/api/admin/team-tools/drafts/[draftId]/archive/route.ts"),
+    source("../src/app/api/admin/team-tools/drafts/[draftId]/restore/route.ts"),
+    source("../src/app/(admin)/admin/matches/new/page.tsx"),
+    source("../src/app/(admin)/admin/matches/match-editor.tsx"),
+    source("../src/modules/matches/application/match-service.ts"),
+    source("../src/modules/matches/infrastructure/postgres-match-repository.ts"),
+  ]);
+  assert.match(workspace, /mode === "ADMIN"[\s\S]*선택 팀으로 경기 등록/);
+  assert.match(workspace, /초안 보관/);
+  assert.match(workspace, /초안 복구/);
+  assert.match(archiveRoute, /service\.archiveDraft/);
+  assert.match(restoreRoute, /service\.restoreDraft/);
+  assert.match(newMatch, /teamBalanceDraftId/);
+  assert.match(newMatch, /selectedCandidate\.assignments\.map/);
+  assert.match(newMatch, /getAdminEditorCatalog\([\s\S]*draftResult\.data\?\.participants/);
+  assert.match(editor, /teamBalanceSource \? \{ \.\.\.record, \.\.\.teamBalanceSource \}/);
+  assert.match(matchService, /parseAdminCreateRecord/);
+  assert.match(matchRepository, /assertAdminTeamBalanceSource/);
+  assert.match(matchRepository, /teamBalanceDraftId: draft\.id/);
+});

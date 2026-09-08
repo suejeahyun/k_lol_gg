@@ -545,7 +545,10 @@ export class PostgresDisciplineAdapter implements
 
   private async mutateRecord(envelope: DisciplineMutationEnvelope, id: string, expectedRevision: number, now: Date, action: string, change: (transaction: V2Transaction, row: RecordRow, actorId: string) => Promise<RecordRow>) {
     return withTransaction(this.database, async (transaction) => {
-      const actor = await lockTransactionSessionActor(transaction, envelope.actorSession, now, ADMIN_MUTATION_SESSION_POLICY);
+      const actor = await lockTransactionSessionActor(transaction, envelope.actorSession, now, {
+        ...ADMIN_MUTATION_SESSION_POLICY,
+        minimumRole: "SUPER_ADMIN",
+      });
       if (!actor) throw new DisciplineApplicationError("INVALID_AUTHORIZATION", "Administrator session is stale.");
       await transaction.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`${actor.id}:${envelope.scope}:${envelope.keyHash.toString("hex")}`}, 0))`);
       const replay = await existingAdminReceipt(transaction, envelope);

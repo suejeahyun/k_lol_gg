@@ -166,7 +166,8 @@ test("public, owner, admin HTTP routes and responsive UI states are present", ()
   assert.match(actions, /\/api\/admin\/riot\/bulk-link/);
   assert.match(actions, /role="dialog"/);
   assert.match(actions, /등록 확인/);
-  assert.match(player, /공개할 Riot 동기화 전적이 없습니다/);
+  assert.match(player, /Riot 계정을 연결하지 않았어요/);
+  assert.match(player, /공개 전적을 아직 동기화하지 않았어요/);
   const bulkLinkRoute = readFileSync(new URL("../src/app/api/admin/riot/bulk-link/route.ts", import.meta.url), "utf8");
   assert.match(bulkLinkRoute, /requireRiotApiSession\("SUPER_ADMIN"\)/);
   assert.match(bulkLinkRoute, /revision: "required"/);

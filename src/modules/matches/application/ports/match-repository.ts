@@ -1,5 +1,6 @@
 import type {
   AdminMatchView,
+  AdminMatchTeamBalanceSource,
   AdminMatchImportInput,
   AdminSubmissionView,
   MatchGameInput,
@@ -235,6 +236,7 @@ export interface MatchRepository {
     envelope: MatchCommandEnvelope,
     input: MatchRecordInput,
     now: Date,
+    teamBalanceSource?: AdminMatchTeamBalanceSource | null,
   ): Promise<MatchMutationResult<Record<string, unknown>>>;
   updateMatch(
     envelope: MatchCommandEnvelope,

@@ -439,7 +439,7 @@ test("season lifecycle, participation ownership, idempotency and audit contracts
       );
       assert.equal(first.status, 200);
       assert.equal(first.replayed, false);
-      assert.equal((first.body.application as { source: string }).source, "KAKAO");
+      assert.equal((first.body.application as { source: string }).source, "SITE");
       assert.deepEqual((first.body.application as { subPositions: string[] }).subPositions, ["SUP"]);
 
       const replay = await service.upsertOwnApplication(
@@ -483,11 +483,22 @@ test("season lifecycle, participation ownership, idempotency and audit contracts
         );
       assert.equal(duplicateCount[0]?.value, 1);
 
+      const promotedRows = await database
+        .select()
+        .from(seasonApplications)
+        .where(eq(seasonApplications.id, kakaoApplicationId));
+      assert.equal(promotedRows.length, 1);
+      assert.equal(promotedRows[0]?.source, "SITE");
+      assert.equal(promotedRows[0]?.mainPosition, "ADC");
+      assert.deepEqual(promotedRows[0]?.subPositions, ["SUP"]);
+      assert.equal(promotedRows[0]?.sourceSlotNo, null);
+      assert.equal(promotedRows[0]?.sourceReferenceHash, null);
+
       const sharedSnapshotRows = await database
         .select({ id: seasonApplications.id })
         .from(seasonApplications)
         .where(eq(seasonApplications.sourceReferenceHash, kakaoSnapshotHash));
-      assert.equal(sharedSnapshotRows.length, 2, "one Kakao snapshot may provenance multiple applicants");
+      assert.equal(sharedSnapshotRows.length, 1, "SITE promotion clears only that row's Kakao provenance");
     });
 
     await t.test("command receipts expire after 24 hours and an expired key is safely reusable", async () => {
@@ -786,8 +797,9 @@ test("season lifecycle, participation ownership, idempotency and audit contracts
       assert.equal(cancelEvent?.beforeJson?.status, "APPLIED");
       assert.equal(cancelEvent?.afterJson?.status, "CANCELLED");
       assert.equal(typeof cancelEvent?.afterJson?.cancelledAt, "string");
-      assert.equal(upsertEvent?.afterJson?.source, "KAKAO");
+      assert.equal(upsertEvent?.afterJson?.source, "SITE");
       assert.deepEqual(upsertEvent?.afterJson?.subPositions, ["JGL"]);
+      assert.equal(upsertEvent?.metadataJson?.outcome, "SITE_UPDATED");
       assert.equal(reviewEvent?.afterJson?.reviewedByUserAccountId, admin.id);
       assert.equal(typeof reviewEvent?.afterJson?.reviewedAt, "string");
     });

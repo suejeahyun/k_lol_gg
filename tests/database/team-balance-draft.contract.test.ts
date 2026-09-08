@@ -20,6 +20,7 @@ import { applyMigrations } from "../../src/platform/db/migrate";
 import {
   auditEvents,
   authSessions,
+  matchSubmissions,
   players,
   teamBalanceCommandReceipts,
   teamBalanceDraftCandidates,
@@ -270,6 +271,10 @@ test("S06 draft lifecycle is owner/admin authorized, append-only, transactional,
     assert.equal(draft.ratingGeneration, 7);
     assert.equal(draft.selectedCandidateSignature, null);
     assert.equal(draft.candidates.length, 3);
+    assert.deepEqual(
+      draft.candidates.map((candidate) => candidate.criterion),
+      ["OVERALL_BALANCE", "POSITION_BALANCE", "PREFERENCE_PRIORITY"],
+    );
     assert.equal((await database.select().from(teamBalanceDraftCandidates).where(
       eq(teamBalanceDraftCandidates.draftId, draftId),
     )).length, 6);
@@ -287,6 +292,104 @@ test("S06 draft lifecycle is owner/admin authorized, append-only, transactional,
       inArray(teamBalanceCommandReceipts.actorUserAccountId, [ownerId, adminId]),
     )).length, 4);
 
+    assert.throws(
+      () => service.archiveDraft(
+        commandContext(ownerActor, "APPROVED_ACCOUNT_MUTATION", "owner-archive-forbidden"),
+        draftId,
+        3,
+        {},
+        now,
+      ),
+      serviceError("FORBIDDEN"),
+    );
+    const archived = await service.archiveDraft(
+      commandContext(adminActor, "ADMIN_MUTATION", "admin-archive-1"),
+      draftId,
+      3,
+      {},
+      now,
+    );
+    assert.equal(archived.revision, 4);
+    assert.equal(
+      (await service.listDrafts(
+        { actorUserAccountId: ownerId, authorization: "OWNER" },
+        { page: 1, pageSize: 12 },
+      )).totalCount,
+      0,
+    );
+    await assert.rejects(
+      service.getDraft({ actorUserAccountId: ownerId, authorization: "OWNER" }, draftId),
+      serviceError("NOT_FOUND"),
+    );
+    assert.equal(
+      (await service.getDraft({ actorUserAccountId: adminId, authorization: "ADMIN" }, draftId))?.status,
+      "ARCHIVED",
+    );
+    await assert.rejects(
+      new TeamBalanceRecommendationService(
+        new PostgresTeamBalanceRecommendationRepository(database),
+      ).getRecommendation(
+        { actorUserAccountId: ownerId, authorization: "OWNER" },
+        draftId,
+        "BLUE",
+      ),
+      serviceError("NOT_FOUND"),
+    );
+    const restored = await service.restoreDraft(
+      commandContext(adminActor, "ADMIN_MUTATION", "admin-restore-1"),
+      draftId,
+      4,
+      {},
+      now,
+    );
+    assert.equal(restored.revision, 5);
+    assert.equal(
+      (await service.listDrafts(
+        { actorUserAccountId: ownerId, authorization: "OWNER" },
+        { page: 1, pageSize: 12 },
+      )).totalCount,
+      1,
+    );
+    const openSubmissionId = randomUUID();
+    await database.insert(matchSubmissions).values({
+      id: openSubmissionId,
+      publicCode: `MR2${randomBytes(8).toString("hex").toUpperCase()}`,
+      ownerUserAccountId: ownerId,
+      seasonId: null,
+      title: "검토 중인 초안 연결 접수",
+      organizer: "테스트 진행자",
+      seriesNumber: 1,
+      playedOn: "2026-09-08",
+      expectedGameCount: 2,
+      teamBalanceDraftId: draftId,
+      source: "WEB",
+      sourceReferenceHash: randomBytes(32),
+      status: "AWAITING_UPLOAD",
+      createdAt: now,
+      updatedAt: now,
+    });
+    await assert.rejects(
+      service.archiveDraft(
+        commandContext(adminActor, "ADMIN_MUTATION", "admin-archive-open-submission"),
+        draftId,
+        5,
+        {},
+        now,
+      ),
+      serviceError("INVALID_TRANSITION"),
+    );
+    await database.delete(matchSubmissions).where(eq(matchSubmissions.id, openSubmissionId));
+    assert.equal((await database.select().from(teamBalanceOutbox).where(
+      eq(teamBalanceOutbox.draftId, draftId),
+    )).length, 6);
+    assert.equal(
+      (await database.select().from(auditEvents).where(and(
+        eq(auditEvents.targetType, "TEAM_BALANCE_DRAFT"),
+        eq(auditEvents.targetId, draftId),
+      ))).length,
+      6,
+    );
+
     await database.update(authSessions).set({ revokedAt: now }).where(
       and(eq(authSessions.id, ownerSessionId), eq(authSessions.userAccountId, ownerId)),
     );
@@ -294,7 +397,7 @@ test("S06 draft lifecycle is owner/admin authorized, append-only, transactional,
       service.selectCandidate(
         commandContext(ownerActor, "APPROVED_ACCOUNT_MUTATION", "revoked-owner"),
         draftId,
-        3,
+        5,
         { candidateRank: 1 },
         now,
       ),
@@ -302,7 +405,7 @@ test("S06 draft lifecycle is owner/admin authorized, append-only, transactional,
     );
     assert.equal((await database.select().from(teamBalanceOutbox).where(
       eq(teamBalanceOutbox.draftId, draftId),
-    )).length, 4);
+    )).length, 6);
 
     const captureDraftId = await prepareTeamBalanceCaptureFixture(pool, adminId);
     assert.equal(captureDraftId, draftId);

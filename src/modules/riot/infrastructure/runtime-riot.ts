@@ -8,6 +8,7 @@ import type { RiotQueryRepository } from "../application/riot-query";
 import { FakeRiotGateway, FakeRiotIdentityProtector, FakeRsoAdapter } from "./fake-riot-adapters";
 import { InMemoryRiotAdapter } from "./in-memory-riot-adapter";
 import { PostgresRiotAdapter } from "./postgres-riot-adapter";
+import { PostgresPublicRiotQueryRepository } from "./postgres-public-riot-query";
 import { RiotApiGateway } from "./riot-api-gateway";
 import { RiotAesGcmIdentityProtector, parseRiotEncryptionKeyring } from "./riot-identity-protector";
 import { PostgresRiotJobVerifier } from "./riot-job-verifier";
@@ -89,6 +90,18 @@ export async function loadRuntimeRiot<T>(loader: (runtime: RuntimeRiot) => Promi
   if (!runtime) return { state: "unavailable" as const };
   try { return { state: "ready" as const, data: await loader(runtime) }; }
   catch {
+    return { state: "error" as const };
+  }
+}
+
+export async function loadRuntimePublicRiotProfile(playerId: string) {
+  if (process.env.V2_PUBLIC_DATA_SOURCE !== "postgres" || !process.env.DATABASE_URL) {
+    return { state: "unavailable" as const };
+  }
+  try {
+    const repository = new PostgresPublicRiotQueryRepository(getDatabase());
+    return { state: "ready" as const, data: await repository.getPublicProfileState(playerId) };
+  } catch {
     return { state: "error" as const };
   }
 }

@@ -44,6 +44,12 @@ test("public season applications expose Kakao-started recruit rounds without lea
   assert.match(page, /availableRecruitNos/);
   assert.match(page, /recruitNo: recruitNoValues/);
   assert.match(actions, /\{ recruitNo, mainPosition, subPositions \}/);
+  assert.match(actions, /applicantPlayer\.displayName/);
+  assert.match(actions, /applyDate/);
+  assert.match(actions, /사이트에서 저장한 라인 선택이 우선/);
+  assert.match(page, /applicantPlayer=\{result\.data\.applicantPlayer!\}/);
   assert.match(repository, /assertRecruitRoundExists/);
+  assert.match(repository, /planSiteApplicationMerge\(current \?\? null\)/);
+  assert.match(repository, /source: "SITE",[\s\S]*sourceSlotNo: null,[\s\S]*sourceReferenceHash: null/u);
   assert.doesNotMatch(page, /suppliedName|suppliedRiotId|sourceReferenceHash/);
 });

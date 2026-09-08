@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { ChampionPortrait } from "@/components/champions/champion-portrait";
 import riotStyles from "@/components/riot/riot-workspace.module.css";
 import { loadRuntimePlayerProfile } from "@/modules/players/infrastructure/runtime-player-data";
-import { loadRuntimeRiot } from "@/modules/riot/infrastructure/runtime-riot";
+import { loadRuntimePublicRiotProfile } from "@/modules/riot/infrastructure/runtime-riot";
 import { loadRuntimeStatisticsData } from "@/modules/statistics/infrastructure/runtime-statistics-data";
 
 import championStyles from "./player-champions.module.css";
@@ -25,6 +25,37 @@ function formatJoinedAt(value: Date) {
     timeZone: "Asia/Seoul",
   }).format(value);
 }
+
+function PublicRiotProfileState({
+  result,
+}: {
+  result: Awaited<ReturnType<typeof loadRuntimePublicRiotProfile>>;
+}) {
+  if (result.state === "unavailable") {
+    return <div className="profile-records__state" role="status">Riot 전적 조회를 준비하고 있어요.</div>;
+  }
+  if (result.state === "error") {
+    return <div className="profile-records__state profile-records__state--error" role="alert">Riot 전적을 불러오지 못했습니다. 잠시 후 다시 확인해 주세요.</div>;
+  }
+  if (result.data.kind === "UNLINKED") {
+    return <div className="profile-records__state">이 플레이어는 Riot 계정을 연결하지 않았어요.</div>;
+  }
+  if (result.data.kind === "PENDING_SYNC") {
+    return <div className="profile-records__state">Riot 계정은 연결됐지만 공개 전적을 아직 동기화하지 않았어요.</div>;
+  }
+  if (result.data.kind === "PLAYER_NOT_FOUND") {
+    return <div className="profile-records__state profile-records__state--error" role="alert">플레이어 정보를 다시 확인해 주세요.</div>;
+  }
+  const summary = result.data.summary;
+  return (
+    <div className="profile-summary__grid">
+      <article><span>Riot ID</span><strong>{summary.riotId}</strong></article>
+      <article><span>솔로 랭크</span><strong>{summary.soloTier ?? "Unranked"} {summary.soloRank ?? ""}</strong></article>
+      <article><span>LP · 전적</span><strong>{summary.leaguePoints ?? 0} LP · {summary.wins ?? 0}승 {summary.losses ?? 0}패</strong></article>
+    </div>
+  );
+}
+
 export default async function PlayerDetailPage({
   params,
   searchParams,
@@ -39,7 +70,7 @@ export default async function PlayerDetailPage({
     loadRuntimePlayerProfile(playerId),
     loadRuntimeStatisticsData((service) => service.getPublicPlayerStatistics(playerId, null)),
   ]);
-  const riotResult = tab === "riot" ? await loadRuntimeRiot((runtime) => runtime.query.getPublicSummary(playerId)) : null;
+  const riotResult = tab === "riot" ? await loadRuntimePublicRiotProfile(playerId) : null;
 
   if (result.state === "ready" && !result.data) notFound();
 
@@ -75,10 +106,7 @@ export default async function PlayerDetailPage({
           {tab === "riot" ? (
             <section className="profile-summary" aria-labelledby="riot-summary-title">
               <div className="section-heading"><div><p>RIOT</p><h2 id="riot-summary-title">공개 Riot 전적</h2></div><span>Riot ID와 솔로 랭크 요약을 확인할 수 있어요.</span></div>
-              {riotResult?.state === "unavailable" ? <div className="profile-records__state" role="status">Riot 공개 연동이 아직 활성화되지 않았어요.</div>
-                : riotResult?.state === "error" ? <div className="profile-records__state profile-records__state--error" role="alert">Riot 전적을 불러오지 못했습니다.</div>
-                : !riotResult?.data ? <div className="profile-records__state">공개할 Riot 동기화 전적이 없습니다.</div>
-                : <div className="profile-summary__grid"><article><span>Riot ID</span><strong>{riotResult.data.riotId}</strong></article><article><span>솔로 랭크</span><strong>{riotResult.data.soloTier ?? "Unranked"} {riotResult.data.soloRank ?? ""}</strong></article><article><span>LP · 전적</span><strong>{riotResult.data.leaguePoints ?? 0} LP · {riotResult.data.wins ?? 0}승 {riotResult.data.losses ?? 0}패</strong></article></div>}
+              {riotResult ? <PublicRiotProfileState result={riotResult} /> : null}
             </section>
           ) : <>
           <section className="profile-summary" aria-labelledby="profile-summary-title">

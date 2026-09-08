@@ -192,8 +192,19 @@ test("signed Kakao season snapshots match exact players and preserve unresolved 
     const first = await assistant.syncSeasonSnapshot(firstInput);
     assert.equal(first.body.appliedCount, 1);
     assert.equal(first.body.reserveCount, 1);
+    assert.equal(first.body.confirmedCount, 0);
     assert.equal(first.body.pendingCount, 2);
     assert.deepEqual(first.body.entries.map((entry) => entry.status), ["APPLIED", "UNMATCHED", "AMBIGUOUS", "MATCHED_RESERVE"]);
+    assert.deepEqual(first.body.entries[0], {
+      slotNo: 1,
+      status: "APPLIED",
+      source: "KAKAO",
+      suppliedName: `Exact${suffix}`,
+      suppliedRiotId: `Exact${suffix}#KR1`,
+      mainPosition: "MID",
+      subPositions: ["SUP"],
+      player: { playerId: exactPlayerId, displayName: `Exact${suffix}`, riotId: `Exact${suffix}#KR1` },
+    });
     assert.equal((await assistant.syncSeasonSnapshot(firstInput)).replayed, true);
     const stored = (await database.select().from(seasonApplications).where(and(
       eq(seasonApplications.seasonId, seasonId), eq(seasonApplications.playerId, exactPlayerId),
@@ -204,6 +215,13 @@ test("signed Kakao season snapshots match exact players and preserve unresolved 
       eq(seasonKakaoPendingApplications.seasonId, seasonId), eq(seasonKakaoPendingApplications.status, "ACTIVE"),
     ))).length, 3);
 
+    await database.update(seasonApplications).set({
+      source: "SITE",
+      sourceSlotNo: null,
+      sourceReferenceHash: null,
+      mainPosition: "TOP",
+    }).where(eq(seasonApplications.id, stored!.id));
+
     const second = await assistant.syncSeasonSnapshot({
       ...firstInput,
       requestKey: `season-sync-second-${suffix}`,
@@ -213,6 +231,8 @@ test("signed Kakao season snapshots match exact players and preserve unresolved 
     });
     assert.equal(second.body.cancelledCount, 3);
     assert.equal(second.body.entries.length, 1);
+    assert.equal(second.body.entries[0]?.source, "SITE");
+    assert.equal(second.body.entries[0]?.mainPosition, "TOP");
     assert.equal((await database.select().from(seasonKakaoPendingApplications).where(and(
       eq(seasonKakaoPendingApplications.seasonId, seasonId), eq(seasonKakaoPendingApplications.status, "CANCELLED"),
     ))).length, 3);
@@ -235,7 +255,10 @@ test("signed Kakao season snapshots match exact players and preserve unresolved 
       intent: intent("nonce-season-sync-0003", "season-sync-reactivate"),
       command: { ...command, participants: [command.participants[1]!, command.participants[2]!] },
     });
-    assert.deepEqual(reactivated.body.entries.map((entry) => entry.status), ["UNMATCHED", "AMBIGUOUS"]);
+    assert.deepEqual(reactivated.body.entries.map((entry) => entry.status), ["APPLIED", "UNMATCHED", "AMBIGUOUS"]);
+    assert.deepEqual(reactivated.body.entries.map((entry) => entry.slotNo), [1, 2, 3]);
+    assert.equal(reactivated.body.entries[0]?.source, "SITE");
+    assert.equal(reactivated.body.entries[0]?.mainPosition, "TOP");
     const activeAgain = await database.select().from(seasonKakaoPendingApplications).where(and(
       eq(seasonKakaoPendingApplications.seasonId, seasonId),
       eq(seasonKakaoPendingApplications.status, "ACTIVE"),

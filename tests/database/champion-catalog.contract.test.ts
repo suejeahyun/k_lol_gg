@@ -270,6 +270,26 @@ test("S10 champion catalog keeps ADMIN TOTP mutations, replay and durable ledger
     const publicKeys = publicPage.items.map((champion) => champion.key);
     assert.equal(publicKeys.includes("legacy-kept"), true);
     assert.equal(publicKeys.includes("contract-ahri"), false);
+
+    let preMigrationReadVerified = false;
+    await assert.rejects(database.transaction(async (transaction) => {
+      await transaction.execute(sql`alter table catalog.champions drop column image_url`);
+      const compatibilityQueries = new ChampionQueryService(
+        new PostgresChampionQueryRepository(transaction as never),
+      );
+      const compatibilityPage = await compatibilityQueries.listPublic({
+        query: null,
+        status: null,
+        page: 1,
+        pageSize: 100,
+      });
+      assert.equal(compatibilityPage.items.some((champion) => champion.key === "legacy-kept"), true);
+      assert.equal(compatibilityPage.items.every((champion) => champion.imageUrl === null), true);
+      preMigrationReadVerified = true;
+      throw new Error("EXPECTED_PRE_MIGRATION_COMPATIBILITY_ROLLBACK");
+    }), /EXPECTED_PRE_MIGRATION_COMPATIBILITY_ROLLBACK/u);
+    assert.equal(preMigrationReadVerified, true);
+
     const adminPage = await queries.listAdmin({ query: null, status: null, page: 1, pageSize: 100 });
     const adminKeys = adminPage.items.map((champion) => champion.key);
     assert.equal(adminKeys.includes("legacy-kept"), true);

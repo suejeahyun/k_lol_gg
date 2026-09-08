@@ -42,7 +42,7 @@ const problems = Object.freeze({
   unauthenticated: definePublicProblem({ code: "UNAUTHENTICATED", status: 401, title: "로그인이 필요합니다.", detail: "해당 용도의 계정으로 로그인한 뒤 다시 시도해 주세요." }),
 });
 
-export async function requireDisciplineApiSession(role: "USER" | "ADMIN") {
+export async function requireDisciplineApiSession(role: "USER" | "ADMIN" | "SUPER_ADMIN") {
   const decision = await authorizeApiRole(role);
   return decision.allowed
     ? { ok: true as const, session: decision.session }

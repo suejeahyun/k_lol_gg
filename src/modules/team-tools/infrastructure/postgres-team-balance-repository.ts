@@ -8,6 +8,7 @@ import {
   lockTransactionSessionActor,
 } from "@/modules/auth/infrastructure/transaction-session-guard";
 import { auditEvents } from "@/platform/db/schema/audit";
+import { matchSubmissions } from "@/platform/db/schema/matches";
 import { players } from "@/platform/db/schema/registry";
 import {
   teamBalanceCommandReceipts,
@@ -41,6 +42,8 @@ import {
 import {
   TEAM_BALANCE_DRAFT_RECEIPT_TTL_MS,
   TeamBalanceServiceError,
+  automaticTeamBalanceCriterion,
+  type TeamBalanceCandidateCriterion,
   type TeamBalanceDraft,
   type TeamBalanceDraftCandidate,
   type TeamBalanceDraftParticipant,
@@ -127,7 +130,10 @@ function assertDraftAccess(row: DraftRow, authorization: TeamBalanceCommandEnvel
 }
 
 function assertViewerAccess(row: DraftRow, viewer: TeamBalanceViewer) {
-  if (viewer.authorization === "OWNER" && row.ownerUserAccountId !== viewer.actorUserAccountId) {
+  if (
+    viewer.authorization === "OWNER" &&
+    (row.ownerUserAccountId !== viewer.actorUserAccountId || row.status === "ARCHIVED")
+  ) {
     throw new TeamBalanceServiceError("NOT_FOUND", "팀 초안을 찾을 수 없습니다.");
   }
 }
@@ -143,14 +149,23 @@ function participantFromRow(row: typeof teamBalanceDraftParticipants.$inferSelec
 }
 
 function candidateFromRow(row: typeof teamBalanceDraftCandidates.$inferSelect): TeamBalanceDraftCandidate {
+  const storedCriterion = (row.scoreJson as { criterion?: unknown }).criterion;
+  const score = { ...row.scoreJson };
+  delete score.criterion;
+  const criterion: TeamBalanceCandidateCriterion = row.source === "MANUAL"
+    ? "MANUAL"
+    : storedCriterion === "OVERALL_BALANCE" || storedCriterion === "POSITION_BALANCE" || storedCriterion === "PREFERENCE_PRIORITY"
+      ? storedCriterion
+      : "LEGACY";
   return {
     id: row.id,
     evaluationRound: row.evaluationRound,
     source: row.source,
     rank: row.rank,
+    criterion,
     signature: row.signature,
     assignments: row.assignmentsJson as unknown as EvaluatedTeamBalanceLayout["assignments"],
-    score: row.scoreJson as unknown as EvaluatedTeamBalanceLayout["score"],
+    score: score as unknown as EvaluatedTeamBalanceLayout["score"],
   };
 }
 
@@ -200,7 +215,7 @@ function evaluatedCandidatesValues(
     rank: candidate.rank,
     signature: candidate.signature,
     assignmentsJson: candidate.assignments,
-    scoreJson: candidate.score,
+    scoreJson: { ...candidate.score, criterion: automaticTeamBalanceCriterion(candidate.rank) },
     createdByUserAccountId: actorUserAccountId,
     createdAt: now,
   }));
@@ -274,7 +289,10 @@ export class PostgresTeamBalanceRepository implements TeamBalanceRepository {
 
   async listDrafts(viewer: TeamBalanceViewer, query: TeamBalanceDraftListQuery) {
     const predicate = viewer.authorization === "OWNER"
-      ? eq(teamBalanceDrafts.ownerUserAccountId, viewer.actorUserAccountId)
+      ? and(
+          eq(teamBalanceDrafts.ownerUserAccountId, viewer.actorUserAccountId),
+          inArray(teamBalanceDrafts.status, ["EVALUATED", "SAVED"]),
+        )
       : undefined;
     const totalRows = await this.database
       .select({ value: count() })
@@ -505,7 +523,7 @@ export class PostgresTeamBalanceRepository implements TeamBalanceRepository {
                 rank: null,
                 signature: evaluated.signature,
                 assignmentsJson: evaluated.assignments,
-                scoreJson: evaluated.score,
+                scoreJson: { ...evaluated.score, criterion: "MANUAL" },
                 createdByUserAccountId: envelope.actorUserAccountId,
                 createdAt: now,
               })
@@ -634,6 +652,103 @@ export class PostgresTeamBalanceRepository implements TeamBalanceRepository {
         status: 200,
         revision: updated.revision,
       };
+    });
+  }
+
+  async archiveDraft(
+    envelope: TeamBalanceCommandEnvelope,
+    draftId: string,
+    expectedRevision: number,
+    now: Date,
+  ) {
+    return this.idempotent(envelope, "ADMIN_MUTATION", async (transaction) => {
+      const current = (
+        await transaction
+          .select()
+          .from(teamBalanceDrafts)
+          .where(eq(teamBalanceDrafts.id, draftId))
+          .for("update")
+          .limit(1)
+      )[0];
+      if (!current) throw new TeamBalanceServiceError("NOT_FOUND", "팀 초안을 찾을 수 없습니다.");
+      if (current.revision !== expectedRevision) {
+        throw new TeamBalanceServiceError("PRECONDITION_FAILED", "팀 초안 revision이 변경되었습니다.");
+      }
+      if (current.status === "ARCHIVED") {
+        throw new TeamBalanceServiceError("INVALID_TRANSITION", "이미 보관된 초안입니다.");
+      }
+      const openSubmission = (
+        await transaction
+          .select({ id: matchSubmissions.id })
+          .from(matchSubmissions)
+          .where(and(
+            eq(matchSubmissions.teamBalanceDraftId, draftId),
+            inArray(matchSubmissions.status, ["AWAITING_UPLOAD", "PENDING_REVIEW"]),
+          ))
+          .for("share")
+          .limit(1)
+      )[0];
+      if (openSubmission) {
+        throw new TeamBalanceServiceError("INVALID_TRANSITION", "검토 중인 경기 접수가 있어 초안을 보관할 수 없습니다.");
+      }
+      const updated = (
+        await transaction
+          .update(teamBalanceDrafts)
+          .set({
+            status: "ARCHIVED",
+            archivedAt: now,
+            revision: sql`${teamBalanceDrafts.revision} + 1`,
+            updatedByUserAccountId: envelope.actorUserAccountId,
+            updatedAt: now,
+          })
+          .where(and(eq(teamBalanceDrafts.id, draftId), eq(teamBalanceDrafts.revision, expectedRevision)))
+          .returning()
+      )[0];
+      if (!updated) throw new TeamBalanceServiceError("PRECONDITION_FAILED", "팀 초안 revision이 변경되었습니다.");
+      await appendEvidence(transaction, envelope, "TEAM_BALANCE_DRAFT_ARCHIVED", draftSnapshot(current), updated);
+      return { body: { draftId, revision: updated.revision, archived: true }, status: 200, revision: updated.revision };
+    });
+  }
+
+  async restoreDraft(
+    envelope: TeamBalanceCommandEnvelope,
+    draftId: string,
+    expectedRevision: number,
+    now: Date,
+  ) {
+    return this.idempotent(envelope, "ADMIN_MUTATION", async (transaction) => {
+      const current = (
+        await transaction
+          .select()
+          .from(teamBalanceDrafts)
+          .where(eq(teamBalanceDrafts.id, draftId))
+          .for("update")
+          .limit(1)
+      )[0];
+      if (!current) throw new TeamBalanceServiceError("NOT_FOUND", "팀 초안을 찾을 수 없습니다.");
+      if (current.revision !== expectedRevision) {
+        throw new TeamBalanceServiceError("PRECONDITION_FAILED", "팀 초안 revision이 변경되었습니다.");
+      }
+      if (current.status !== "ARCHIVED") {
+        throw new TeamBalanceServiceError("INVALID_TRANSITION", "보관된 초안만 복구할 수 있습니다.");
+      }
+      const restoredStatus = current.savedAt && current.selectedCandidateSignature ? "SAVED" : "EVALUATED";
+      const updated = (
+        await transaction
+          .update(teamBalanceDrafts)
+          .set({
+            status: restoredStatus,
+            archivedAt: null,
+            revision: sql`${teamBalanceDrafts.revision} + 1`,
+            updatedByUserAccountId: envelope.actorUserAccountId,
+            updatedAt: now,
+          })
+          .where(and(eq(teamBalanceDrafts.id, draftId), eq(teamBalanceDrafts.revision, expectedRevision)))
+          .returning()
+      )[0];
+      if (!updated) throw new TeamBalanceServiceError("PRECONDITION_FAILED", "팀 초안 revision이 변경되었습니다.");
+      await appendEvidence(transaction, envelope, "TEAM_BALANCE_DRAFT_RESTORED", draftSnapshot(current), updated);
+      return { body: { draftId, revision: updated.revision, restored: true }, status: 200, revision: updated.revision };
     });
   }
 }

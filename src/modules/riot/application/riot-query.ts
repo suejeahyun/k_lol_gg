@@ -88,6 +88,22 @@ export interface RiotQueryRepository {
   listAdmin(query: AdminRiotQuery): Promise<AdminRiotPageDto>;
 }
 
+export type PublicRiotProfileState =
+  | Readonly<{ kind: "PLAYER_NOT_FOUND" }>
+  | Readonly<{ kind: "UNLINKED" }>
+  | Readonly<{ kind: "PENDING_SYNC" }>
+  | Readonly<{ kind: "READY"; summary: PublicRiotSummaryDto }>;
+
+export interface PublicRiotProfileQueryRepository {
+  getPublicProfileState(playerId: string): Promise<PublicRiotProfileState>;
+}
+
+const publicPlayerIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
+
+export function isPublicRiotPlayerId(value: string): boolean {
+  return publicPlayerIdPattern.test(value);
+}
+
 export function parseAdminRiotQuery(url: string): AdminRiotQuery | null {
   const params = new URL(url).searchParams;
   const allowed = new Set(["tab", "action", "status", "source", "q", "batchSize", "page", "pageSize"]);

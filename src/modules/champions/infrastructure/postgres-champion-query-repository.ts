@@ -5,8 +5,19 @@ import type { V2Database } from "@/platform/db/database";
 
 import type { Champion } from "../domain/champion";
 import type { ChampionListPage, ChampionListQuery, ChampionQueryRepository } from "../application/query-service";
+import { championImageUrlProjection } from "./champion-image-projection";
 
-function mapChampion(row: typeof championCatalog.$inferSelect): Champion {
+const championSelection = {
+  key: championCatalog.key,
+  displayName: championCatalog.displayName,
+  imageUrl: championImageUrlProjection(),
+  status: championCatalog.status,
+  revision: championCatalog.revision,
+  createdAt: championCatalog.createdAt,
+  updatedAt: championCatalog.updatedAt,
+} as const;
+
+function mapChampion(row: Champion): Champion {
   return Object.freeze({
     key: row.key,
     displayName: row.displayName,
@@ -33,7 +44,7 @@ export class PostgresChampionQueryRepository implements ChampionQueryRepository 
     }
     const where = conditions.length ? and(...conditions) : undefined;
     const [rows, totalRows] = await Promise.all([
-      this.database.select().from(championCatalog).where(where)
+      this.database.select(championSelection).from(championCatalog).where(where)
         .orderBy(asc(championCatalog.displayName), asc(championCatalog.key))
         .limit(query.pageSize).offset((query.page - 1) * query.pageSize),
       this.database.select({ value: count() }).from(championCatalog).where(where),
@@ -47,7 +58,7 @@ export class PostgresChampionQueryRepository implements ChampionQueryRepository 
   }
 
   async find(key: string): Promise<Champion | null> {
-    const row = (await this.database.select().from(championCatalog).where(eq(championCatalog.key, key)).limit(1))[0];
+    const row = (await this.database.select(championSelection).from(championCatalog).where(eq(championCatalog.key, key)).limit(1))[0];
     return row ? mapChampion(row) : null;
   }
 }

@@ -497,9 +497,36 @@ function compareInternalCandidates(left: InternalCandidate, right: InternalCandi
   );
 }
 
-function insertCandidate(candidates: InternalCandidate[], candidate: InternalCandidate, limit: number) {
+function comparePositionBalanceCandidates(left: InternalCandidate, right: InternalCandidate) {
+  return (
+    left.kernel.positionDifferenceBasisPoints - right.kernel.positionDifferenceBasisPoints ||
+    left.kernel.teamDifferenceBasisPoints - right.kernel.teamDifferenceBasisPoints ||
+    left.kernel.preferenceRawPenalty - right.kernel.preferenceRawPenalty ||
+    left.kernel.uncertaintyRawPenalty - right.kernel.uncertaintyRawPenalty ||
+    left.kernel.totalPenalty - right.kernel.totalPenalty ||
+    compareText(left.signature, right.signature)
+  );
+}
+
+function comparePreferencePriorityCandidates(left: InternalCandidate, right: InternalCandidate) {
+  return (
+    left.kernel.preferenceRawPenalty - right.kernel.preferenceRawPenalty ||
+    left.kernel.teamDifferenceBasisPoints - right.kernel.teamDifferenceBasisPoints ||
+    left.kernel.positionDifferenceBasisPoints - right.kernel.positionDifferenceBasisPoints ||
+    left.kernel.uncertaintyRawPenalty - right.kernel.uncertaintyRawPenalty ||
+    left.kernel.totalPenalty - right.kernel.totalPenalty ||
+    compareText(left.signature, right.signature)
+  );
+}
+
+function insertCandidate(
+  candidates: InternalCandidate[],
+  candidate: InternalCandidate,
+  limit: number,
+  compare: (left: InternalCandidate, right: InternalCandidate) => number,
+) {
   candidates.push(candidate);
-  candidates.sort(compareInternalCandidates);
+  candidates.sort(compare);
   if (candidates.length > limit) candidates.pop();
 }
 
@@ -597,7 +624,11 @@ export function calculateTeamBalanceCandidates(
   }
 
   const players = normalizePlayers(input);
-  const candidates: InternalCandidate[] = [];
+  const criterionPools = [
+    { compare: compareInternalCandidates, candidates: [] as InternalCandidate[] },
+    { compare: comparePositionBalanceCandidates, candidates: [] as InternalCandidate[] },
+    { compare: comparePreferencePriorityCandidates, candidates: [] as InternalCandidate[] },
+  ] as const;
   const teamCombinations = combinationsWithAnchor(players.length);
   let feasibleLayoutCount = 0;
 
@@ -616,24 +647,32 @@ export function calculateTeamBalanceCandidates(
     for (const blue of blueAssignments) {
       for (const red of redAssignments) {
         feasibleLayoutCount += 1;
-        insertCandidate(
-          candidates,
-          {
-            blue,
-            red,
-            signature: `${blue.signature}|${red.signature}`,
-            kernel: scoreKernel(blue, red),
-          },
-          limit,
-        );
+        const candidate = {
+          blue,
+          red,
+          signature: `${blue.signature}|${red.signature}`,
+          kernel: scoreKernel(blue, red),
+        };
+        for (const pool of criterionPools) {
+          insertCandidate(pool.candidates, candidate, 3, pool.compare);
+        }
       }
     }
   }
 
   if (feasibleLayoutCount === 0) throw new TeamBalanceDomainError("NO_FEASIBLE_LAYOUT");
 
+  const selectedCandidates: InternalCandidate[] = [];
+  const selectedSignatures = new Set<string>();
+  for (const pool of criterionPools.slice(0, limit)) {
+    const candidate = pool.candidates.find((entry) => !selectedSignatures.has(entry.signature));
+    if (!candidate) continue;
+    selectedCandidates.push(candidate);
+    selectedSignatures.add(candidate.signature);
+  }
+
   return {
-    candidates: candidates.map((candidate, index) => ({
+    candidates: selectedCandidates.map((candidate, index) => ({
       ...materializeLayout(candidate),
       rank: index + 1,
     })),

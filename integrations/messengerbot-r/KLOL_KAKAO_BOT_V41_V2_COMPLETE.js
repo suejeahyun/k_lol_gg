@@ -308,7 +308,8 @@ function v41Today() {
 }
 
 function v41RecruitNumber(text) {
-  var match = String(text || "").match(/#\s*(\d{1,3})/);
+  var match = String(text || "").match(/회차\s*[:：]\s*#?\s*(\d{1,3})/);
+  if (!match) match = String(text || "").match(/#\s*(\d{1,3})/);
   var value = match ? Number(match[1]) : 1;
   return value >= 1 && value <= 999 ? value : 1;
 }
@@ -354,15 +355,43 @@ function v41FormatOpenchat(result) {
   return lines.join("\n");
 }
 
+function v41SafeSeasonField(value) {
+  return v41Trim(value).replace(/[\r\n|]+/g, " ").replace(/\s+/g, " ");
+}
+
+function v41SeasonStatusLabel(status) {
+  return {
+    APPLIED: "신청",
+    RESERVE: "예비",
+    CONFIRMED: "확정",
+    REJECTED: "거절",
+    CANCELLED: "취소",
+    MATCHED_RESERVE: "예비 · 확인 필요",
+    UNMATCHED: "플레이어 확인 필요",
+    AMBIGUOUS: "동명이인 확인 필요"
+  }[String(status || "")] || v41SafeSeasonField(status);
+}
+
 function v41FormatSeason(result) {
   var body = result && result.body;
   var entries = body && body.entries instanceof Array ? body.entries : [];
-  var lines = ["[K-LOL.GG 내전 현황]"];
+  var lines = ["[K-LOL.GG 내전 참가 신청]"];
   var index = 0;
   if (!result || !result.ok) return v41ResultMessage(result);
-  lines.push("신청 " + body.appliedCount + " · 예비 " + body.reserveCount + " · 확인 필요 " + body.pendingCount);
+  lines.push("신청일: " + body.applyDate);
+  lines.push("회차: #" + body.recruitNo);
+  lines.push("신청 " + Number(body.appliedCount || 0) + " · 예비 " + Number(body.reserveCount || 0) + " · 확정 " + Number(body.confirmedCount || 0) + " · 확인 필요 " + Number(body.pendingCount || 0));
   for (index = 0; index < entries.length; index += 1) {
-    lines.push(entries[index].slotNo + ". " + entries[index].suppliedName + " · " + entries[index].status);
+    var entry = entries[index];
+    var name = entry.player ? entry.player.displayName : entry.suppliedName;
+    var riotId = entry.player ? entry.player.riotId : entry.suppliedRiotId;
+    var subs = entry.subPositions instanceof Array && entry.subPositions.length ? entry.subPositions.join(", ") : "없음";
+    lines.push(entry.slotNo + ". 플레이어: " + v41SafeSeasonField(name) +
+      " | Riot ID: " + v41SafeSeasonField(riotId || "없음") +
+      " | 주라인: " + v41SafeSeasonField(entry.mainPosition || "ALL") +
+      " | 부라인: " + v41SafeSeasonField(subs) +
+      " | 상태: " + v41SeasonStatusLabel(entry.status) +
+      " | 출처: " + (entry.source === "SITE" ? "SITE" : "KAKAO"));
   }
   return lines.join("\n");
 }
@@ -385,7 +414,41 @@ function v41SeasonParticipants(text) {
   var index = 0;
   for (index = 0; index < lines.length; index += 1) {
     var match = v41Trim(lines[index]).match(/^(\d{1,2})\s*[.)]\s*(.+)$/);
-    if (!match || match[2].indexOf("/") < 0 || /^(?:EX|예시)/i.test(match[2])) continue;
+    if (!match || /^(?:EX|예시)/i.test(match[2])) continue;
+    if (match[2].indexOf("플레이어:") >= 0 || match[2].indexOf("플레이어：") >= 0) {
+      var labeled = match[2].split("|");
+      var values = {};
+      var labelIndex = 0;
+      for (labelIndex = 0; labelIndex < labeled.length; labelIndex += 1) {
+        var labelMatch = v41Trim(labeled[labelIndex]).match(/^([^:：]+)\s*[:：]\s*(.*)$/);
+        if (labelMatch) values[v41Trim(labelMatch[1]).toLowerCase()] = v41Trim(labelMatch[2]);
+      }
+      var labeledName = values["플레이어"] || values["이름"];
+      var labeledRiotId = values["riot id"] || values["라이엇 id"] || null;
+      var labeledMain = v41Position(values["주라인"] || values["주 포지션"]);
+      var labeledSubs = [];
+      var labeledSubTokens = String(values["부라인"] || values["부 포지션"] || "").split(/[,，]/);
+      var labeledSubIndex = 0;
+      if (!labeledName || !labeledMain) throw new Error(match[1] + "번 신청자의 플레이어 또는 주라인을 확인해 주세요.");
+      for (labeledSubIndex = 0; labeledSubIndex < labeledSubTokens.length; labeledSubIndex += 1) {
+        var labeledSubText = v41Trim(labeledSubTokens[labeledSubIndex]);
+        if (!labeledSubText || /^(?:없음|-)$/.test(labeledSubText)) continue;
+        var labeledSub = v41Position(labeledSubText);
+        if (!labeledSub || labeledSub === labeledMain || labeledSub === "ALL" || labeledSubs.indexOf(labeledSub) >= 0) {
+          throw new Error(match[1] + "번 신청자의 부라인을 확인해 주세요.");
+        }
+        labeledSubs.push(labeledSub);
+      }
+      if (labeledMain === "ALL" && labeledSubs.length) throw new Error(match[1] + "번 신청자의 부라인을 확인해 주세요.");
+      if (labeledRiotId && /^(?:없음|-)$/.test(labeledRiotId)) labeledRiotId = null;
+      participants.push({
+        slotNo: Number(match[1]), name: labeledName, riotId: labeledRiotId,
+        mainPosition: labeledMain, subPositions: labeledSubs,
+        reserve: /(?:예비|대기|MATCHED_RESERVE|RESERVE)/i.test(values["상태"] || "")
+      });
+      continue;
+    }
+    if (match[2].indexOf("/") < 0) continue;
     var fields = match[2].split("/");
     if (fields.length < 4) continue;
     var name = v41Trim(fields[0]);
@@ -511,6 +574,8 @@ function v41Help() {
     "[K-LOL.GG V41 도움말]",
     "전적 닉네임#태그 · 구인현황 · 내전현황",
     "내전 신청 양식 전체 전송(SYNC)",
+    "신청일: YYYY-MM-DD · 회차: #1",
+    "1. 플레이어: 닉네임 | Riot ID: 닉네임#태그 | 주라인: MID | 부라인: SUP, ADC | 상태: 신청",
     "/V2연동확인 · /V2사진세션 <사이트 발급 UUID>",
     "운영자 구조화 명령: /V2모집, /V2시즌, /V2양식 뒤에 JSON 객체",
     "구형 free-text 파티/스크림 등록은 안전을 위해 사이트에서 진행: " + KLOL_V41_SITE_URL + "/recruit"
@@ -539,7 +604,7 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
         action: "STATUS", seasonId: v41SeasonId(), applyDate: v41Today(), recruitNo: v41RecruitNumber(text)
       }, KLOL_V2_KAKAO.contextFromChat(room, sender))));
     }
-    if (/협곡\s*내전|참가\s*신청\s*양식/.test(text) && /^\s*\d{1,2}\s*[.)]/m.test(text)) {
+    if (/K-LOL\.GG\s*내전\s*참가\s*신청|내전\s*(?:참가\s*)?신청|협곡\s*내전|참가\s*신청\s*양식/.test(text) && /^\s*\d{1,2}\s*[.)]/m.test(text)) {
       return v41Reply(replier, v41FormatSeason(KLOL_V2_KAKAO.seasonApplications({
         action: "SYNC", seasonId: v41SeasonId(), applyDate: v41DateFromSnapshot(text),
         recruitNo: v41RecruitNumber(text), participants: v41SeasonParticipants(text)

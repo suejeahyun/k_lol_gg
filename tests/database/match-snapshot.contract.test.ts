@@ -479,6 +479,70 @@ test("S04 stores participant display identity and rejection reasons as durable h
       );
     });
 
+    await t.test("admin match creation rechecks and persists the exact selected team draft", async () => {
+      const teamBalanceDraftId = randomUUID();
+      const signature = `contract-${teamBalanceDraftId}`;
+      await insertSelectedTeamBalanceDraft(teamBalanceDraftId, "관리자 경기 등록 초안");
+      const source = {
+        teamBalanceDraftId,
+        teamBalanceDraftRevision: 0,
+        teamBalanceEvaluationRound: 1,
+        teamBalanceCandidateSignature: signature,
+      };
+      const created = await repository.createMatch(command("admin:draft-link:create"), {
+        seasonId,
+        title: "초안에서 만든 관리자 경기",
+        playedOn: "2026-09-07",
+        startedAt: null,
+        startedAtOffsetMinutes: null,
+        games: [game],
+      }, now, source);
+      const matchId = String(created.body.id);
+      const stored = (await database.select().from(matchSeries).where(eq(matchSeries.id, matchId)))[0];
+      assert.equal(stored?.teamBalanceDraftId, teamBalanceDraftId);
+      const createdAudit = (await database.select().from(auditEvents).where(eq(auditEvents.targetId, matchId)))
+        .find((event) => event.action === "MATCH_CREATED");
+      assert.equal(createdAudit?.afterJson?.teamBalanceDraftId, teamBalanceDraftId);
+      assert.equal(createdAudit?.metadataJson?.teamBalanceSource &&
+        (createdAudit.metadataJson.teamBalanceSource as Record<string, unknown>).teamBalanceCandidateSignature,
+      signature);
+      const createdEvent = (await database.select().from(matchRecalculationOutbox).where(
+        eq(matchRecalculationOutbox.aggregateId, matchId),
+      ))[0];
+      assert.equal(createdEvent?.teamBalanceDraftId, teamBalanceDraftId);
+
+      await assert.rejects(
+        repository.createMatch(command("admin:draft-link:stale"), {
+          seasonId,
+          title: "오래된 초안 경기",
+          playedOn: "2026-09-07",
+          startedAt: null,
+          startedAtOffsetMinutes: null,
+          games: [game],
+        }, now, { ...source, teamBalanceDraftRevision: 1 }),
+        (error: unknown) => error instanceof MatchServiceError && error.code === "PRECONDITION_FAILED",
+      );
+      const swappedGame = {
+        ...game,
+        participants: game.participants.map((participant, index, participants) => index === 0
+          ? { ...participant, playerId: participants[5]!.playerId }
+          : index === 5
+            ? { ...participant, playerId: participants[0]!.playerId }
+            : participant),
+      };
+      await assert.rejects(
+        repository.createMatch(command("admin:draft-link:mismatch"), {
+          seasonId,
+          title: "배치 불일치 경기",
+          playedOn: "2026-09-07",
+          startedAt: null,
+          startedAtOffsetMinutes: null,
+          games: [swappedGame],
+        }, now, source),
+        (error: unknown) => error instanceof MatchServiceError && error.code === "INVALID_INPUT",
+      );
+    });
+
     await t.test("submission approval carries team-balance provenance through match history and outbox", async () => {
       const submissionId = randomUUID();
       const teamBalanceDraftId = randomUUID();

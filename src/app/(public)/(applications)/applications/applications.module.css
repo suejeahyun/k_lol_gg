@@ -176,6 +176,27 @@
 }
 
 .actionCard { display: grid; gap: 18px; }
+.applicationContext {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+.applicationContext > div {
+  display: grid;
+  min-width: 0;
+  align-content: center;
+  gap: 3px;
+  min-height: 82px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: #f8fbff;
+  padding: 13px 14px;
+}
+.applicationContext dt { color: var(--text-muted); font-size: 10px; font-weight: 850; }
+.applicationContext dd { overflow: hidden; margin: 0; color: var(--ink-strong); font-size: 13px; font-weight: 900; text-overflow: ellipsis; white-space: nowrap; }
+.applicationContext small { overflow: hidden; color: var(--text-muted); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.mergeNotice { margin: -6px 0 0; border-radius: 14px; color: #4f5c81; background: #f3f0ff; padding: 12px 14px; font-size: 11px; font-weight: 750; line-height: 1.6; }
 .actionCard fieldset { min-width: 0; margin: 0; border: 0; padding: 0; }
 .actionCard legend { margin-bottom: 10px; color: var(--ink-strong); font-size: 12px; font-weight: 900; }
 .actionCard legend small { color: var(--text-muted); font-weight: 700; }
@@ -258,6 +279,7 @@
   .hero { min-height: 220px; border-radius: 24px; }
   .hero > svg { width: 72px; }
   .positionGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .applicationContext { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .loginCard { grid-template-columns: auto minmax(0, 1fr); }
   .loginCard a { grid-column: 1 / -1; width: 100%; }
 }
@@ -268,6 +290,7 @@
   .stats article { min-height: 76px; }
   .sectionHeading { flex-direction: column; }
   .positionGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .applicationContext { grid-template-columns: 1fr; }
   .actionButtons { display: grid; }
   .participantList li { grid-template-columns: auto minmax(0, 1fr) auto; }
   .participantList li > b { grid-column: 2 / -1; justify-self: start; }

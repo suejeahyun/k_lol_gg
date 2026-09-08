@@ -27,6 +27,7 @@ import {
   parseSubmissionCreateInput,
   parseSubmissionUpdateInput,
   type MatchRecordInput,
+  type AdminMatchTeamBalanceSource,
 } from "../domain/match";
 import { validatePrivateScoreboardImage } from "../infrastructure/private-image";
 
@@ -116,6 +117,58 @@ function parseAdminRecord(value: unknown): MatchRecordInput | null {
     startedAt: value.startedAt,
     games: value.games,
   });
+}
+
+function parseAdminCreateRecord(value: unknown): Readonly<{
+  input: MatchRecordInput;
+  teamBalanceSource: AdminMatchTeamBalanceSource | null;
+}> | null {
+  if (!isRecord(value)) return null;
+  const record = parseAdminRecord(value);
+  if (record) return { input: record, teamBalanceSource: null };
+  if (!hasExactKeys(value, [
+    "seasonId",
+    "title",
+    "playedOn",
+    "startedAt",
+    "games",
+    "teamBalanceDraftId",
+    "teamBalanceDraftRevision",
+    "teamBalanceEvaluationRound",
+    "teamBalanceCandidateSignature",
+  ])) return null;
+  const teamBalanceDraftId = canonicalUuid(value.teamBalanceDraftId);
+  const teamBalanceDraftRevision = value.teamBalanceDraftRevision;
+  const teamBalanceEvaluationRound = value.teamBalanceEvaluationRound;
+  const teamBalanceCandidateSignature = typeof value.teamBalanceCandidateSignature === "string"
+    ? value.teamBalanceCandidateSignature
+    : "";
+  const input = parseMatchRecordInput({
+    seasonId: value.seasonId,
+    title: value.title,
+    playedOn: value.playedOn,
+    startedAt: value.startedAt,
+    games: value.games,
+  });
+  if (
+    !input ||
+    !teamBalanceDraftId ||
+    !Number.isSafeInteger(teamBalanceDraftRevision) ||
+    Number(teamBalanceDraftRevision) < 0 ||
+    !Number.isSafeInteger(teamBalanceEvaluationRound) ||
+    Number(teamBalanceEvaluationRound) < 1 ||
+    teamBalanceCandidateSignature.length < 1 ||
+    teamBalanceCandidateSignature.length > 500
+  ) return null;
+  return {
+    input,
+    teamBalanceSource: {
+      teamBalanceDraftId,
+      teamBalanceDraftRevision: Number(teamBalanceDraftRevision),
+      teamBalanceEvaluationRound: Number(teamBalanceEvaluationRound),
+      teamBalanceCandidateSignature,
+    },
+  };
 }
 
 function safeOcrCandidate(value: unknown, gameNumber: number): Record<string, unknown> | null {
@@ -567,9 +620,14 @@ export class MatchService {
   }
 
   createMatch(context: MatchCommandContext, body: unknown) {
-    const input = parseAdminRecord(body);
-    if (!input) throw new MatchServiceError("INVALID_INPUT", "경기 입력 구조가 올바르지 않습니다.");
-    return this.repository.createMatch(this.envelope(context, "admin:matches:create", body), input, new Date());
+    const parsed = parseAdminCreateRecord(body);
+    if (!parsed) throw new MatchServiceError("INVALID_INPUT", "경기 입력 구조가 올바르지 않습니다.");
+    return this.repository.createMatch(
+      this.envelope(context, "admin:matches:create", body),
+      parsed.input,
+      new Date(),
+      parsed.teamBalanceSource,
+    );
   }
 
   updateMatch(context: MatchCommandContext, matchId: string, expectedRevision: number, body: unknown) {

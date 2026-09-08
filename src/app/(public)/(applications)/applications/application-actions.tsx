@@ -18,7 +18,26 @@ import styles from "./applications.module.css";
 
 type ProblemBody = { detail?: string; title?: string };
 
-export function ApplicationActions({ initial, recruitNo }: { initial: OwnSeasonApplication | null; recruitNo: number }) {
+type ApplicantPlayer = Readonly<{ displayName: string; riotId: string }>;
+
+type ApplicationActionsProps = Readonly<{
+  initial: OwnSeasonApplication | null;
+  recruitNo: number;
+  applicantPlayer: ApplicantPlayer;
+  applyDate: string;
+}>;
+
+function statusLabel(status: OwnSeasonApplication["status"]) {
+  return {
+    APPLIED: "신청",
+    RESERVE: "예비",
+    CONFIRMED: "확정",
+    REJECTED: "거절",
+    CANCELLED: "취소",
+  }[status];
+}
+
+export function ApplicationActions({ initial, recruitNo, applicantPlayer, applyDate }: ApplicationActionsProps) {
   const router = useRouter();
   const [mainPosition, setMainPosition] = useState<SeasonApplicationPosition>(
     initial?.mainPosition ?? "ALL",
@@ -89,8 +108,22 @@ export function ApplicationActions({ initial, recruitNo }: { initial: OwnSeasonA
           <span>MY APPLICATION</span>
           <h2 id="application-action-title">{initial ? `내 ${recruitNo}회차 신청 수정` : `오늘 ${recruitNo}회차 참가 신청`}</h2>
         </div>
-        {initial ? <strong data-status={initial.status}>{initial.status}</strong> : null}
+        {initial ? <strong data-status={initial.status}>{statusLabel(initial.status)}</strong> : null}
       </div>
+
+      <dl className={styles.applicationContext} aria-label="참가 신청 기준 정보">
+        <div>
+          <dt>플레이어</dt>
+          <dd>{applicantPlayer.displayName}</dd>
+          <small>{applicantPlayer.riotId}</small>
+        </div>
+        <div><dt>신청일</dt><dd>{applyDate}</dd></div>
+        <div><dt>회차</dt><dd>{recruitNo}회차</dd></div>
+        <div><dt>현재 출처</dt><dd>{initial?.source === "KAKAO" ? "카카오 연동" : "사이트"}</dd></div>
+      </dl>
+      <p className={styles.mergeNotice}>
+        카카오 신청과 같은 플레이어·신청일·회차는 한 건으로 관리합니다. 사이트에서 저장한 라인 선택이 우선되며 이후 카카오 동기화가 덮어쓰지 않습니다.
+      </p>
 
       <fieldset disabled={pending !== null || Boolean(initial && ["RESERVE", "CONFIRMED", "REJECTED"].includes(initial.status))}>
         <legend>주라인</legend>
