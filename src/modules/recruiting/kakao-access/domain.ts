@@ -1,5 +1,8 @@
 export const KAKAO_ROOM_STATUSES = ["ACTIVE", "PAUSED", "REVOKED"] as const;
 export type KakaoRoomStatus = (typeof KAKAO_ROOM_STATUSES)[number];
+export const KAKAO_ROOM_CAPABILITY_PROFILES = ["RECRUIT", "FEATURES"] as const;
+export type KakaoRoomCapabilityProfile = (typeof KAKAO_ROOM_CAPABILITY_PROFILES)[number];
+export type KakaoRoomCommandCapability = KakaoRoomCapabilityProfile;
 export const KAKAO_ROOM_MEMBER_ROLES = ["MEMBER", "MANAGER", "ADMIN"] as const;
 export type KakaoRoomMemberRole = (typeof KAKAO_ROOM_MEMBER_ROLES)[number];
 
@@ -33,7 +36,11 @@ export const KAKAO_COMMAND_CAPABILITY = Object.freeze({
   RAW_V2_JSON: "INSTALLATION_INTERNAL",
 } as const satisfies Readonly<Record<string, KakaoCommandCapability>>);
 
-export type KakaoRoomAccessFailure = "ROOM_BINDING_REQUIRED" | "ROOM_NOT_REGISTERED" | "ROOM_PAUSED" | "ROLE_FORBIDDEN" | "REGISTRY_UNAVAILABLE";
+export type KakaoRoomAccessFailure = "ROOM_BINDING_REQUIRED" | "ROOM_NOT_REGISTERED" | "ROOM_PAUSED" | "ROOM_CAPABILITY_FORBIDDEN" | "ROLE_FORBIDDEN" | "REGISTRY_UNAVAILABLE";
+
+export function kakaoRoomAllowsCapability(profile: KakaoRoomCapabilityProfile, capability: KakaoRoomCommandCapability) {
+  return profile === capability;
+}
 
 export function kakaoRoleAtLeast(actual: KakaoRoomMemberRole, required: KakaoRoomMemberRole) {
   const rank = { MEMBER: 0, MANAGER: 1, ADMIN: 2 } as const;

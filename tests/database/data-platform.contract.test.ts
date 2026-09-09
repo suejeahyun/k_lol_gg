@@ -109,6 +109,7 @@ test("migrations, constraints, repository, and transaction contracts hold on Pos
       const legacyKakaoRoomOneId = randomUUID();
       const legacyKakaoRoomMultipleAId = randomUUID();
       const legacyKakaoRoomMultipleBId = randomUUID();
+      const legacyKakaoPairingId = randomUUID();
       try {
         await mkdir(partialMetaFolder);
         await copyFile(new URL("../../drizzle/0000_jazzy_genesis.sql", import.meta.url), join(partialMigrationFolder, "0000_jazzy_genesis.sql"));
@@ -184,10 +185,13 @@ test("migrations, constraints, repository, and transaction contracts hold on Pos
         );
         await pool.query("delete from registry.players where id = $1", [kaithiFormatLegacyPlayerId]);
 
-        for (const entry of journal.entries.slice(0, -1) as Array<{ tag: string }>) {
+        const canonicalRoomMigrationIndex = (journal.entries as Array<{ tag: string }>).findIndex((entry) => entry.tag === "0033_tan_sprite");
+        assert.ok(canonicalRoomMigrationIndex > 0);
+        const beforeCanonicalRoomEntries = (journal.entries as Array<{ tag: string }>).slice(0, canonicalRoomMigrationIndex);
+        for (const entry of beforeCanonicalRoomEntries) {
           await copyFile(new URL(`../../drizzle/${entry.tag}.sql`, import.meta.url), join(partialMigrationFolder, `${entry.tag}.sql`));
         }
-        await writeFile(join(partialMetaFolder, "_journal.json"), JSON.stringify({ ...journal, entries: journal.entries.slice(0, -1) }), "utf8");
+        await writeFile(join(partialMetaFolder, "_journal.json"), JSON.stringify({ ...journal, entries: beforeCanonicalRoomEntries }), "utf8");
         await applyMigrations(database, partialMigrationFolder);
 
         await pool.query(
@@ -222,6 +226,12 @@ test("migrations, constraints, repository, and transaction contracts hold on Pos
             legacyBindingBId, `room-${"3".repeat(32)}`, legacyKakaoRoomMultipleBId,
           ],
         );
+        await pool.query(
+          `insert into recruiting.kakao_room_pairings
+             (id, target_room_id, display_name, code_hash, expires_at, created_by_user_account_id)
+           values ($1, $2, '기존 구인구직 연결 코드', $3, now() + interval '10 minutes', $4)`,
+          [legacyKakaoPairingId, legacyKakaoRoomOneId, Buffer.alloc(32, 0x55), preexistingAdminId],
+        );
 
         await assert.rejects(applyMigrations(database), /KAKAO_INSTALLATION_MULTIPLE_ROOMS/);
         const rolledBackColumn = await pool.query(
@@ -229,6 +239,11 @@ test("migrations, constraints, repository, and transaction contracts hold on Pos
            where table_schema = 'recruiting' and table_name = 'kakao_bot_installations' and column_name = 'canonical_room_id'`,
         );
         assert.equal(rolledBackColumn.rowCount, 0, "0033 must roll back instead of partially adding the canonical room column");
+        const rolledBackProfileColumn = await pool.query(
+          `select 1 from information_schema.columns
+           where table_schema = 'recruiting' and table_name = 'kakao_rooms' and column_name = 'capability_profile'`,
+        );
+        assert.equal(rolledBackProfileColumn.rowCount, 0, "0034 must not run after the rejected 0033 upgrade");
 
         await pool.query("delete from recruiting.kakao_room_bindings where id = $1", [legacyBindingBId]);
         await applyMigrations(database);
@@ -243,6 +258,18 @@ test("migrations, constraints, repository, and transaction contracts hold on Pos
         assert.equal(byId.get(legacyKakaoZeroInstallationId), null);
         assert.equal(byId.get(legacyKakaoOneInstallationId), legacyKakaoRoomOneId);
         assert.equal(byId.get(legacyKakaoMultipleInstallationId), legacyKakaoRoomMultipleAId);
+        const roomProfiles = await pool.query<{ capability_profile: string }>(
+          `select capability_profile from recruiting.kakao_rooms
+           where id = any($1::uuid[]) order by id`,
+          [[legacyKakaoRoomOneId, legacyKakaoRoomMultipleAId, legacyKakaoRoomMultipleBId]],
+        );
+        assert.equal(roomProfiles.rowCount, 3);
+        assert.deepEqual(new Set(roomProfiles.rows.map((row) => row.capability_profile)), new Set(["RECRUIT"]));
+        const pairingProfile = await pool.query<{ capability_profile: string }>(
+          `select capability_profile from recruiting.kakao_room_pairings where id = $1`,
+          [legacyKakaoPairingId],
+        );
+        assert.equal(pairingProfile.rows[0]?.capability_profile, "RECRUIT");
       } finally {
         await rm(partialMigrationFolder, { force: true, recursive: true });
       }

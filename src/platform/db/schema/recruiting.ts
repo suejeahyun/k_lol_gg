@@ -35,6 +35,7 @@ export const recruitingOutboxStatus = recruitingSchema.enum("outbox_status", ["P
 export const operationFormType = recruitingSchema.enum("operation_form_type", ["friends", "leaves", "meetups", "suggestions"]);
 export const operationFormStatus = recruitingSchema.enum("operation_form_status", ["PENDING", "IN_REVIEW", "COMPLETED", "REJECTED", "CANCELLED"]);
 export const kakaoRoomStatus = recruitingSchema.enum("kakao_room_status", ["ACTIVE", "PAUSED", "REVOKED"]);
+export const kakaoRoomCapabilityProfile = recruitingSchema.enum("kakao_room_capability_profile", ["RECRUIT", "FEATURES"]);
 export const kakaoRoomMemberRole = recruitingSchema.enum("kakao_room_member_role", ["MEMBER", "MANAGER", "ADMIN"]);
 export const kakaoRoomRegistrationSource = recruitingSchema.enum("kakao_room_registration_source", ["BOOTSTRAP", "PAIRING", "ADMIN"]);
 export const kakaoBotInstallationStatus = recruitingSchema.enum("kakao_bot_installation_status", ["ACTIVE", "REVOKED"]);
@@ -248,6 +249,7 @@ export const kakaoRooms = recruitingSchema.table("kakao_rooms", {
   revision: bigint("revision", { mode: "number" }).default(0).notNull(),
   displayName: varchar("display_name", { length: 120 }).notNull(),
   status: kakaoRoomStatus("status").default("ACTIVE").notNull(),
+  capabilityProfile: kakaoRoomCapabilityProfile("capability_profile").default("RECRUIT").notNull(),
   registrationSource: kakaoRoomRegistrationSource("registration_source").notNull(),
   policyVersion: integer("policy_version").default(1).notNull(),
   registeredByUserAccountId: uuid("registered_by_user_account_id").references(() => userAccounts.id, { onDelete: "restrict" }),
@@ -321,6 +323,7 @@ export const kakaoRoomPairings = recruitingSchema.table("kakao_room_pairings", {
   id: uuid("id").primaryKey(),
   targetRoomId: uuid("target_room_id").references(() => kakaoRooms.id, { onDelete: "restrict" }),
   displayName: varchar("display_name", { length: 120 }).notNull(),
+  capabilityProfile: kakaoRoomCapabilityProfile("capability_profile").default("RECRUIT").notNull(),
   codeHash: bytea("code_hash").notNull(),
   expiresAt: timestamptz("expires_at").notNull(),
   consumedAt: timestamptz("consumed_at"),

@@ -239,6 +239,13 @@
       "when": 1788956743483,
       "tag": "0033_tan_sprite",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1788963649789,
+      "tag": "0034_kakao_room_capability_profiles",
+      "breakpoints": true
     }
   ]
 }
