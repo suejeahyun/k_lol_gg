@@ -51,6 +51,8 @@ test("Kakao webhook binds HMAC to timestamp, nonce, room, sender, and raw body w
 
   const tampered = verify({ request: { ...request(), rawBody: new TextEncoder().encode('{"command":"변조"}') } });
   assert.deepEqual(tampered, { ok: false, code: "INVALID_SIGNATURE" });
+  const differentInstallationSecret = new Uint8Array(32).fill(33);
+  assert.deepEqual(verify({ request: request(differentInstallationSecret) }), { ok: false, code: "INVALID_SIGNATURE" });
 });
 
 test("Kakao webhook rejects stale/replayed, forbidden room/sender, and bot-self requests", () => {

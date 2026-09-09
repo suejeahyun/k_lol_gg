@@ -365,7 +365,7 @@ V2 원칙:
 | `/api/kakao/search-player` | GET / POST | BOT, secret 기반 검색 | integration adapter, 안전 DTO |
 | `/api/kakao/web-player-search` | GET | PUBLIC, 웹 도움말 검색·rate limit | `/api/players/search`로 통합 |
 
-V2 bot 계약은 query/body secret을 폐기하고 `timestamp + raw body HMAC`, 짧은 재전송 허용창, request key, room/sender allowlist, 이중 secret 회전 기간을 사용한다. 운영 credential 없이 합성 서명 fixture로 검수한다.
+V2 bot 계약은 query/body secret을 폐기하고 `timestamp + raw body HMAC`, 짧은 재전송 허용창, request key, canonical room binding/role, 이중 secret 회전 기간을 사용한다. 정적 room 환경변수는 정상 권한 판정이 아니라 명시적 비상 bootstrap에만 남기며, sender 환경변수는 bootstrap과 별도 raw-V2 내부 호환 gate 외에는 역할을 부여하지 않는다. 운영 credential 없이 합성 서명 fixture로 검수한다.
 
 ### 4.8 징계·운영 job·로그 (4/112, 누계 112)
 

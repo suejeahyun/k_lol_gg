@@ -22,6 +22,10 @@ const adminKeyHash = (key: string) => createHash("sha256").update(`klol-v2:kakao
 const pairingRequestKeyHash = (key: string) => createHash("sha256").update(`klol-v2:kakao-pairing-request:v1\0${key}`).digest();
 
 export type KakaoRoomAuthorization = Readonly<{ roomId: string; roomStatus: "ACTIVE"; installationId: string; memberId: string; role: KakaoRoomMemberRole }>;
+export type KakaoRoomBootstrapEnvironment = Readonly<{
+  KAKAO_WEBHOOK_ALLOWED_ROOMS?: string;
+  KAKAO_WEBHOOK_ALLOWED_SENDERS?: string;
+}>;
 
 export class PostgresKakaoRoomRegistry {
   constructor(private readonly database: V2Database) {}
@@ -56,9 +60,9 @@ export class PostgresKakaoRoomRegistry {
   }
 
   /** Emergency/bootstrap only. Existing rows are never updated, merged, paused, or revoked. */
-  private async bootstrap(transaction: V2Transaction, installationId: string, now: Date) {
-    const rooms = [...new Set((process.env.KAKAO_WEBHOOK_ALLOWED_ROOMS ?? "").split(",").map((value) => value.trim()).filter((value) => isKakaoFingerprint(value, "room")))];
-    const senders = [...new Set((process.env.KAKAO_WEBHOOK_ALLOWED_SENDERS ?? "").split(",").map((value) => value.trim()).filter((value) => isKakaoFingerprint(value, "sender")))];
+  private async bootstrap(transaction: V2Transaction, installationId: string, now: Date, environment: KakaoRoomBootstrapEnvironment) {
+    const rooms = [...new Set((environment.KAKAO_WEBHOOK_ALLOWED_ROOMS ?? "").split(",").map((value) => value.trim()).filter((value) => isKakaoFingerprint(value, "room")))];
+    const senders = [...new Set((environment.KAKAO_WEBHOOK_ALLOWED_SENDERS ?? "").split(",").map((value) => value.trim()).filter((value) => isKakaoFingerprint(value, "sender")))];
     for (const localRoomFingerprint of rooms) {
       let binding = (await transaction.select().from(kakaoRoomBindings).where(and(eq(kakaoRoomBindings.installationId, installationId), eq(kakaoRoomBindings.localRoomFingerprint, localRoomFingerprint))).limit(1))[0];
       if (!binding) {
@@ -79,11 +83,23 @@ export class PostgresKakaoRoomRegistry {
     }
   }
 
+  /**
+   * Explicit one-shot import for emergency recovery or legacy cutover. Normal
+   * request authorization never reads the static room/sender environment.
+   */
+  async bootstrapFromEnvironment(installationPublicId: string, environment: KakaoRoomBootstrapEnvironment) {
+    return withTransaction(this.database, async (transaction) => {
+      const now = new Date();
+      const installation = await this.installation(transaction, installationPublicId, now);
+      await this.bootstrap(transaction, installation.id, now, environment);
+      return Object.freeze({ installationId: installation.id });
+    });
+  }
+
   async authorize(input: Readonly<{ installationPublicId: string; localRoomFingerprint: string; senderFingerprint: string; requiredRole: KakaoRoomMemberRole }>): Promise<KakaoRoomAuthorization> {
     if (!isKakaoFingerprint(input.localRoomFingerprint, "room") || !isKakaoFingerprint(input.senderFingerprint, "sender")) throw new KakaoRoomRegistryError("INVALID_INPUT");
     return withTransaction(this.database, async (transaction) => {
       const now = new Date(); const installation = await this.installation(transaction, input.installationPublicId, now);
-      await this.bootstrap(transaction, installation.id, now);
       const binding = (await transaction.select().from(kakaoRoomBindings).where(and(eq(kakaoRoomBindings.installationId, installation.id), eq(kakaoRoomBindings.localRoomFingerprint, input.localRoomFingerprint))).limit(1))[0];
       if (!binding) throw new KakaoRoomRegistryError("ROOM_BINDING_REQUIRED");
       const room = (await transaction.select().from(kakaoRooms).where(eq(kakaoRooms.id, binding.roomId)).for("update").limit(1))[0];

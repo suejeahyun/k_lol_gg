@@ -26,3 +26,14 @@ test("season member submissions and reads are public-room commands but force can
   assert.match(source, /requiredRole: "ADMIN"/u);
   assert.match(source, /recordKakaoWebhookRejection\("ROLE_FORBIDDEN"/u);
 });
+
+test("normal room authorization uses only canonical registry state and keeps environment bootstrap explicit", async () => {
+  const source = await readFile(resolve(root, "src/modules/recruiting/kakao-access/postgres-kakao-room-registry.ts"), "utf8");
+  const authorizeStart = source.indexOf("async authorize(");
+  const authorizeEnd = source.indexOf("\n  async list()", authorizeStart);
+  assert.ok(authorizeStart > 0 && authorizeEnd > authorizeStart);
+  const authorize = source.slice(authorizeStart, authorizeEnd);
+  assert.doesNotMatch(authorize, /bootstrap|process\.env|KAKAO_WEBHOOK_ALLOWED_ROOMS|KAKAO_WEBHOOK_ALLOWED_SENDERS/u);
+  assert.match(source, /async bootstrapFromEnvironment\(/u);
+  assert.match(source, /ROOM_BINDING_REQUIRED/u);
+});

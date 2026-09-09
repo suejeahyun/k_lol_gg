@@ -7,7 +7,7 @@
 - HMAC은 허용된 MessengerBot 설치본이 정확한 요청을 만들었다는 사실만 증명하며 사람 역할을 부여하지 않는다. V2 서명 material은 공개 `botInstallationId`, 로컬 방·발신자 fingerprint, nonce, timestamp, body digest를 포함한다.
 - `(installation, local room fingerprint)`는 `recruiting.kakao_room_bindings`를 통해 canonical `recruiting.kakao_rooms.id`로 해석한다. 방 상태와 `recruiting.kakao_room_members`가 MEMBER/MANAGER/ADMIN 권한을 판정한다.
 - 여러 설치본의 서로 다른 로컬 fingerprint는 SUPER 관리자가 발급한 만료·일회용·해시 저장 pairing code를 사용한 경우에만 같은 canonical 방에 연결한다. 표시 이름만으로는 병합하지 않는다.
-- 환경변수 방·발신자 목록은 비상 bootstrap 입력으로만 남는다. 적격한 최초 요청에서 누락된 BOOTSTRAP 행만 삽입하며 기존 registry 상태를 갱신하거나 삭제하지 않는다. 신규 방은 `/admin/kakao/rooms`와 `/V2방연동 CODE`로 연결하므로 재배포가 필요 없다.
+- 환경변수 방 목록은 명시적으로 실행하는 비상·일회성 bootstrap 입력으로만 남는다. 발신자 목록은 bootstrap 초기 ADMIN과 별도 raw-V2 내부 호환 gate에만 남고 일반 방 역할을 부여하지 않는다. 정상 요청의 `authorize()`는 두 값을 읽거나 비교하지 않는다. bootstrap도 누락된 BOOTSTRAP 행과 구형 aggregate의 방 참조만 비파괴 이관하며 기존 registry 상태를 갱신·병합·중지·회수·삭제하지 않는다. 신규 방은 `/admin/kakao/rooms`와 `/V2방연동 CODE`로 연결하므로 재배포가 필요 없다.
 
 ## 수신 경계
 
@@ -30,14 +30,14 @@
   우선하며 source hash와 원문 식별자는 공개 DTO에 포함하지 않는다.
 - 설정 변경과 만료 이미지 세션 복구는 SUPER_ADMIN의 ADMIN-purpose TOTP session을 transaction에서
   다시 확인하고 `If-Match`, `Idempotency-Key`, audit와 outbox를 요구한다.
-- signing key와 허용 room/sender 원문은 환경 변수에만 두고 DB, API, 화면, 로그에 노출하지 않는다.
+- signing key 원문, 비상 bootstrap room/sender 원문과 raw-V2 호환 sender 원문은 환경 변수에만 두고 DB, API, 화면, 로그에 노출하지 않는다.
   DB 설정은 기능 enable/maintenance와 구조화 메시지 크기 상한만 관리한다.
 - `/admin/kakao?tab=recruits|scrims|stats|settings|logs|health`가 canonical이며 기존 관리자 deep link는
   GET 308로만 연결한다. mutation redirect는 만들지 않는다.
 
 ## 운영 전 확인
 
-- 운영 secret과 allowlist를 별도 채널에서 주입하고 값 자체가 아닌 configured boolean만 확인한다.
+- 운영 signing secret을 별도 채널에서 주입한다. 기존 room 목록을 이관할 때만 bootstrap room 값을 일시 주입하고, 명시적 import 후 제거한다. raw-V2 내부 호환 명령을 사용하지 않으면 sender 값도 bootstrap 뒤 제거한다. 값 자체가 아닌 configured boolean만 확인한다.
 - 0018, 0019, 0022 migration 적용과 no-drift, signed request fixture, private storage adapter를 검증한다.
 - 외부 Kakao 발송은 이 저장소의 책임 범위가 아니다. scheduled notice API는 safe DTO만 반환한다.
 

@@ -90,6 +90,6 @@ R12 설치본은 65,535자 미만이며 빌드 시 ES5 파서 검사를 통과�
 
 `ROOM_BINDING_REQUIRED`이면 sender나 환경변수를 추가하지 말고 해당 방의 `/V2연동확인` 결과 전체를 관리자에게 전달한다. R12는 MessengerBot R 0.7.34a 이상의 `channelId`를 방 fingerprint의 우선 근거로 사용하므로 같은 방에서는 발신자와 방 제목 변경에 관계없이 같은 fingerprint가 나온다. `channelId`가 없고 `room=sender`인 손상된 구형 알림 callback은 권한 요청을 안전하게 거부한다. 여러 휴대폰/봇 설치본은 서로 다른 로컬 방 fingerprint를 만들 수 있으며 관리자가 일회용 코드로 같은 canonical 방을 지정해야 한다.
 
-R12 휴대폰 설치본은 `/봇버전`과 `/V2연동확인`에 공개 `botInstallationId`를 표시하며 `/V2연동확인`은 방 식별 기준이 `channelId`인지도 표시한다. MessengerBot R 앱 자체가 0.7.34a 미만이면 먼저 최신 안정 버전으로 업데이트해야 한다. migration `0031_brainy_taskmaster.sql`, 대응 서버, R12 휴대폰 설치본을 하나의 점검 시간에 적용하고 혼용 중에는 모집 변경을 중지한다. 기존 환경변수 방은 최초 요청에서 bootstrap binding으로 비파괴 이관되지만 신규 방은 DB 페어링만 사용한다. 이 저장소 작업은 실제 설치나 배포를 수행하지 않았다.
+R12 휴대폰 설치본은 `/봇버전`과 `/V2연동확인`에 공개 `botInstallationId`를 표시하며 `/V2연동확인`은 방 식별 기준이 `channelId`인지도 표시한다. MessengerBot R 앱 자체가 0.7.34a 미만이면 먼저 최신 안정 버전으로 업데이트해야 한다. migration `0031_brainy_taskmaster.sql`, 대응 서버, R12 휴대폰 설치본을 하나의 점검 시간에 적용하고 혼용 중에는 모집 변경을 중지한다. 정상 요청은 Vercel `KAKAO_WEBHOOK_ALLOWED_ROOMS`와 방 fingerprint를 비교하지 않으며, 미등록 방은 `ROOM_BINDING_REQUIRED` 후 DB pairing만 사용한다. 구형 환경변수 값은 명시적인 비상·일회성 bootstrap에서만 비파괴 이관할 수 있고, 값 불일치는 기존 canonical 방을 삭제·중지·회수하지 않는다. 이 저장소 작업은 실제 설치나 배포를 수행하지 않았다.
 
 서버 설정이나 서명 키가 아직 없거나 현재 Vercel 배포가 새 환경변수를 읽지 못하면 컴파일은 성공하지만 서버 요청은 안전한 실패 안내를 반환한다.

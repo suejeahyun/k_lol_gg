@@ -16,6 +16,7 @@ const roomA = `room-${"1".repeat(32)}`;
 const roomB = `room-${"2".repeat(32)}`;
 const senderA = `sender-${"3".repeat(32)}`;
 const senderB = `sender-${"4".repeat(32)}`;
+const senderC = `sender-${"5".repeat(32)}`;
 let requestSequence = 0;
 function metadata(expectedRevision = 0) { requestSequence += 1; return { requestId: randomUUID(), requestKey: `kakao-room-contract-${requestSequence}-12345678`, requestHashHex: randomBytes(32).toString("hex"), expectedRevision }; }
 
@@ -45,6 +46,10 @@ test("different MessengerBot installations bind local fingerprints to one canoni
     assert.equal((await registry.authorize({ installationPublicId: installationA, localRoomFingerprint: roomA, senderFingerprint: senderA, requiredRole: "MEMBER" })).roomId, first.roomId);
     const authorizedB = await registry.authorize({ installationPublicId: installationB, localRoomFingerprint: roomB, senderFingerprint: senderB, requiredRole: "MEMBER" });
     assert.equal(authorizedB.roomId, first.roomId);
+    const authorizedC = await registry.authorize({ installationPublicId: installationA, localRoomFingerprint: roomA, senderFingerprint: senderC, requiredRole: "MEMBER" });
+    assert.equal(authorizedC.roomId, first.roomId);
+    assert.equal(authorizedC.role, "MEMBER");
+    await assert.rejects(registry.authorize({ installationPublicId: installationA, localRoomFingerprint: roomA, senderFingerprint: senderC, requiredRole: "ADMIN" }), (error: unknown) => error instanceof KakaoRoomRegistryError && error.code === "ROLE_FORBIDDEN");
     await assert.rejects(registry.authorize({ installationPublicId: installationC, localRoomFingerprint: roomA, senderFingerprint: senderA, requiredRole: "MEMBER" }), (error: unknown) => error instanceof KakaoRoomRegistryError && error.code === "ROOM_BINDING_REQUIRED");
     await assert.rejects(registry.authorize({ installationPublicId: installationB, localRoomFingerprint: roomB, senderFingerprint: senderB, requiredRole: "ADMIN" }), (error: unknown) => error instanceof KakaoRoomRegistryError && error.code === "ROLE_FORBIDDEN");
     const roleMetadata = metadata(0); const promoted = await registry.setMemberRole({ actor, memberId: authorizedB.memberId, role: "ADMIN", metadata: roleMetadata });
@@ -63,7 +68,12 @@ test("different MessengerBot installations bind local fingerprints to one canoni
     await assert.rejects(registry.consumePairing({ installationPublicId: installationC, localRoomFingerprint: roomB, senderFingerprint: senderB, code: mergeCode.code, requestKey: "pair-consume-conflict-12345678", requestId: randomUUID() }), (error: unknown) => error instanceof KakaoRoomRegistryError && error.code === "CONFLICT");
 
     const bootstrapRoom = `room-${"f".repeat(32)}`; process.env.KAKAO_WEBHOOK_ALLOWED_ROOMS = bootstrapRoom; process.env.KAKAO_WEBHOOK_ALLOWED_SENDERS = senderA;
+    const beforeMismatchedEnvironment = await registry.list();
+    await assert.rejects(registry.authorize({ installationPublicId: installationA, localRoomFingerprint: bootstrapRoom, senderFingerprint: senderA, requiredRole: "MEMBER" }), (error: unknown) => error instanceof KakaoRoomRegistryError && error.code === "ROOM_BINDING_REQUIRED");
+    const afterMismatchedEnvironment = await registry.list();
+    assert.deepEqual(afterMismatchedEnvironment.rooms.map((room) => ({ id: room.id, status: room.status, bindings: room.bindings.map((binding) => binding.id) })), beforeMismatchedEnvironment.rooms.map((room) => ({ id: room.id, status: room.status, bindings: room.bindings.map((binding) => binding.id) })));
     const legacyPartyId = randomUUID(); await database.insert(recruitParties).values({ id: legacyPartyId, recruitDate: "2026-09-09", resetSequence: 99, recruitNumber: 99, type: "ARAM", status: "IN_PROGRESS", title: "기존 방 이관", maximumMembers: 5, membersJson: [], sourceRoomId: bootstrapRoom, lastActivityAt: now });
+    await registry.bootstrapFromEnvironment(installationA, { KAKAO_WEBHOOK_ALLOWED_ROOMS: bootstrapRoom, KAKAO_WEBHOOK_ALLOWED_SENDERS: senderA });
     const bootstrapped = await registry.authorize({ installationPublicId: installationA, localRoomFingerprint: bootstrapRoom, senderFingerprint: senderA, requiredRole: "ADMIN" });
     assert.equal((await database.select({ sourceRoomId: recruitParties.sourceRoomId }).from(recruitParties).where(eq(recruitParties.id, legacyPartyId)))[0]?.sourceRoomId, bootstrapped.roomId);
   } finally {
