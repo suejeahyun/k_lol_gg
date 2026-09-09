@@ -11,6 +11,7 @@ import type { MatchCommandEnvelope } from "../../src/modules/matches/application
 import type { MatchTransactionAuthorizer } from "../../src/modules/matches/application/ports/match-transaction-authorizer";
 import { MatchServiceError } from "../../src/modules/matches/domain/match";
 import { PostgresMatchRepository } from "../../src/modules/matches/infrastructure/postgres-match-repository";
+import { resolveChampionImageUrl } from "../../src/modules/champions/domain/champion-image";
 import { createDatabaseHandle } from "../../src/platform/db/database";
 import { applyMigrations } from "../../src/platform/db/migrate";
 import {
@@ -60,7 +61,7 @@ test("S04 stores participant display identity and rejection reasons as durable h
     tagLineNormalized: `old${index + 1}`,
   }));
   const championRows = Array.from({ length: 10 }, (_, index) => ({
-    key: `snapshot-champion-${index + 1}`,
+    key: `snapshotchampion${index + 1}`,
     displayName: `스냅샷 챔피언 ${index + 1}`,
   }));
   const positions = ["TOP", "JGL", "MID", "ADC", "SUP"] as const;
@@ -195,6 +196,31 @@ test("S04 stores participant display identity and rejection reasons as durable h
     });
     await database.insert(players).values(playerRows);
     await database.insert(championCatalog).values(championRows);
+
+    await t.test("published detail keeps ten KDA rows and exposes a real API 404/fallback contract", async () => {
+      await database.update(championCatalog).set({ imageUrl: null });
+      const created = await repository.createMatch(command("public-detail:create"), {
+        seasonId,
+        title: "공개 상세 계약 경기",
+        playedOn: "2026-09-07",
+        startedAt: null,
+        startedAtOffsetMinutes: null,
+        games: [game],
+      }, now);
+      const matchId = String(created.body.id);
+      await repository.publishMatch(command("public-detail:publish"), matchId, 0, now);
+
+      const publicMatch = await repository.getPublic(matchId);
+      const participants = publicMatch?.games[0]?.participants ?? [];
+      assert.equal(participants.length, 10);
+      assert.deepEqual(
+        participants.map(({ kills, deaths, assists }) => ({ kills, deaths, assists })),
+        game.participants.map(({ kills, deaths, assists }) => ({ kills, deaths, assists })),
+      );
+      assert.equal(participants.every((participant) => participant.championImageUrl === null), true);
+      assert.match(resolveChampionImageUrl(participants[0]?.championImageUrl, participants[0]?.championKey) ?? "", /^https:\/\/ddragon\.leagueoflegends\.com\/cdn\/26\.18\.1\/img\/champion\//);
+
+    });
 
     async function insertSelectedTeamBalanceDraft(draftId: string, title: string) {
       const signature = `contract-${draftId}`;

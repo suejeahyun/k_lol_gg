@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { ChampionPortrait } from "@/components/champions/champion-portrait";
 import riotStyles from "@/components/riot/riot-workspace.module.css";
 import { loadRuntimePlayerProfile } from "@/modules/players/infrastructure/runtime-player-data";
+import type { PublicRiotSummaryDto } from "@/modules/riot/domain/riot-integration";
 import { loadRuntimePublicRiotProfile } from "@/modules/riot/infrastructure/runtime-riot";
 import { loadRuntimeStatisticsData } from "@/modules/statistics/infrastructure/runtime-statistics-data";
 
@@ -24,6 +25,14 @@ function formatJoinedAt(value: Date) {
     dateStyle: "long",
     timeZone: "Asia/Seoul",
   }).format(value);
+}
+
+function RiotSummaryCards({ summary }: { summary: PublicRiotSummaryDto }) {
+  return <div className="profile-summary__grid">
+    <article><span>Riot ID</span><strong>{summary.riotId}</strong></article>
+    <article><span>솔로 랭크</span><strong>{summary.soloTier ?? "Unranked"} {summary.soloRank ?? ""}</strong></article>
+    <article><span>LP · 전적</span><strong>{summary.leaguePoints ?? 0} LP · {summary.wins ?? 0}승 {summary.losses ?? 0}패</strong></article>
+  </div>;
 }
 
 function PublicRiotProfileState({
@@ -46,14 +55,17 @@ function PublicRiotProfileState({
   if (result.data.kind === "PLAYER_NOT_FOUND") {
     return <div className="profile-records__state profile-records__state--error" role="alert">플레이어 정보를 다시 확인해 주세요.</div>;
   }
+  if (result.data.kind === "RATE_LIMITED") {
+    return <><div className="profile-records__state" role="status">Riot API 요청 한도에 도달했어요.{result.data.retryAfterSeconds ? ` 약 ${result.data.retryAfterSeconds}초 후 다시 동기화합니다.` : " 잠시 후 다시 동기화합니다."}</div>{result.data.summary ? <RiotSummaryCards summary={result.data.summary} /> : null}</>;
+  }
+  if (result.data.kind === "TEMPORARY_ERROR") {
+    return <><div className="profile-records__state profile-records__state--error" role="alert">Riot 동기화 중 일시 오류가 발생했어요. 잠시 후 다시 시도합니다.</div>{result.data.summary ? <RiotSummaryCards summary={result.data.summary} /> : null}</>;
+  }
+  if (result.data.kind === "STALE_SNAPSHOT") {
+    return <><div className="profile-records__state" role="status">표시 중인 전적은 최근 24시간보다 오래된 스냅샷이에요. 최신 동기화를 기다리고 있습니다.</div><RiotSummaryCards summary={result.data.summary} /></>;
+  }
   const summary = result.data.summary;
-  return (
-    <div className="profile-summary__grid">
-      <article><span>Riot ID</span><strong>{summary.riotId}</strong></article>
-      <article><span>솔로 랭크</span><strong>{summary.soloTier ?? "Unranked"} {summary.soloRank ?? ""}</strong></article>
-      <article><span>LP · 전적</span><strong>{summary.leaguePoints ?? 0} LP · {summary.wins ?? 0}승 {summary.losses ?? 0}패</strong></article>
-    </div>
-  );
+  return <RiotSummaryCards summary={summary} />;
 }
 
 export default async function PlayerDetailPage({
@@ -142,7 +154,7 @@ export default async function PlayerDetailPage({
                 {statisticsResult.data.champions.length > 0 ? (
                   <div className={championStyles.championGrid} aria-label="많이 플레이한 챔피언">
                     {statisticsResult.data.champions.slice(0, 5).map((champion) => <article className={championStyles.championCard} key={champion.championKey}>
-                      <ChampionPortrait displayName={champion.championName} imageUrl={champion.championImageUrl} />
+                      <ChampionPortrait displayName={champion.championName} imageUrl={champion.championImageUrl} championKey={champion.championKey} />
                       <div><strong>{champion.championName}</strong><small>{champion.games}게임 · {champion.wins}승 · 승률 {champion.winRate}%</small></div>
                     </article>)}
                   </div>
@@ -151,7 +163,7 @@ export default async function PlayerDetailPage({
                   <div className="profile-recent" aria-label="최근 공개 경기">
                     {statisticsResult.data.recentMatches.slice(0, 5).map((match) => (
                       <Link className={championStyles.recentMatch} href={`/matches/${match.matchId}`} key={`${match.matchId}-${match.gameNumber}`}>
-                        <ChampionPortrait displayName={match.championName} imageUrl={match.championImageUrl} />
+                        <ChampionPortrait displayName={match.championName} imageUrl={match.championImageUrl} championKey={match.championKey} />
                         <div><span>{match.playedOn} · {match.title} {match.gameNumber}게임</span>
                         <strong>{match.championName} · {match.won ? "승리" : "패배"}{match.mvp ? " · MVP" : ""}</strong></div>
                       </Link>

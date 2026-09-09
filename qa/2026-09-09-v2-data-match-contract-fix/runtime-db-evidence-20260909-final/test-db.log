@@ -1,0 +1,29 @@
+
+> klol-gg-v2@0.1.0 test:db
+> tsx scripts/test-db/run-data-contracts.ts
+
+[db-contract] isolated PostgreSQL 18 cluster started
+▶ S04 stores participant display identity and rejection reasons as durable history
+  ✔ published detail keeps ten KDA rows and exposes a real API 404/fallback contract (47.5431ms)
+  ✔ registry rename does not rewrite a recorded participant or its archived revision (285.8897ms)
+  ✔ reject after and reopen before audit snapshots retain the cleared public reason (16.7945ms)
+  ✔ web submission accepts only the owner's current valid selected team draft (22.0568ms)
+  ✔ admin match creation rechecks and persists the exact selected team draft (16.0777ms)
+  ✔ submission approval carries team-balance provenance through match history and outbox (48.7138ms)
+✔ S04 stores participant display identity and rejection reasons as durable history (1307.2867ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1970.8515
+[match-public-http] PASS repository participantCount expected=10 actual=10
+[match-public-http] PASS repository kdaPreserved=true
+[match-public-http] PASS repository dataDragonFallback=https://ddragon.leagueoflegends.com/cdn/26.18.1/img/champion/Httpchampion1.png
+[match-public-http] PASS invalidIdentifier expected=400 actual=400
+[match-public-http] PASS unavailableService expected=503 actual=503
+[match-public-http] PASS publishedMatch expected=200 actual=200 participantCount=10 kdaPreserved=true dataDragonFallback=https://ddragon.leagueoflegends.com/cdn/26.18.1/img/champion/Httpchampion1.png
+[match-public-http] PASS missingUuid expected=404 actual=404
+[db-contract] cluster stopped and disposable workspace path removed

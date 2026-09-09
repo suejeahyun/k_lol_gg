@@ -1,9 +1,10 @@
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 
-import { riotAccountLinks, riotSummaries } from "@/platform/db/schema/riot";
+import { riotAccountLinks, riotSummaries, riotSyncJobs } from "@/platform/db/schema/riot";
 import { players } from "@/platform/db/schema/registry";
 import type { DatabaseExecutor } from "@/platform/db/transaction";
 
+import { resolvePublicRiotProfileState } from "../application/riot-query";
 import type {
   PublicRiotProfileQueryRepository,
   PublicRiotProfileState,
@@ -39,14 +40,15 @@ export class PostgresPublicRiotQueryRepository implements PublicRiotProfileQuery
       .where(and(eq(players.id, playerId), eq(players.status, "ACTIVE")))
       .limit(1))[0];
 
-    if (!row) return { kind: "PLAYER_NOT_FOUND" };
-    if (!row.linkId) return { kind: "UNLINKED" };
-    if (!row.summaryPlayerId || !row.gameName || !row.tagLine || !row.lastSyncedAt) {
-      return { kind: "PENDING_SYNC" };
-    }
-    return {
-      kind: "READY",
-      summary: {
+    if (!row) return resolvePublicRiotProfileState({ playerFound: false, linked: false, summary: null, latestSync: null, now: new Date() });
+    const latestSync = row.linkId ? (await this.database
+      .select({ status: riotSyncJobs.status, failureCode: riotSyncJobs.failureCode, availableAt: riotSyncJobs.availableAt })
+      .from(riotSyncJobs)
+      .where(eq(riotSyncJobs.linkId, row.linkId))
+      .orderBy(desc(riotSyncJobs.requestedAt), desc(riotSyncJobs.id))
+      .limit(1))[0] ?? null : null;
+    const summary = row.summaryPlayerId && row.gameName && row.tagLine && row.lastSyncedAt
+      ? {
         playerId: row.summaryPlayerId,
         riotId: `${row.gameName}#${row.tagLine}`,
         soloTier: row.soloTier,
@@ -55,7 +57,8 @@ export class PostgresPublicRiotQueryRepository implements PublicRiotProfileQuery
         wins: row.wins,
         losses: row.losses,
         lastSyncedAt: row.lastSyncedAt.toISOString(),
-      },
-    };
+      }
+      : null;
+    return resolvePublicRiotProfileState({ playerFound: true, linked: Boolean(row.linkId), summary, latestSync, now: new Date() });
   }
 }

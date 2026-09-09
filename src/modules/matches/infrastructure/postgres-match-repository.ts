@@ -656,7 +656,7 @@ export class PostgresMatchRepository implements MatchRepository {
           })
           .from(matchParticipants)
           .innerJoin(players, eq(players.id, matchParticipants.playerId))
-          .innerJoin(championCatalog, eq(championCatalog.key, matchParticipants.championKey))
+          .leftJoin(championCatalog, eq(championCatalog.key, matchParticipants.championKey))
           .where(inArray(matchParticipants.gameId, gameIds))
       : [];
     const positionRank = new Map(MATCH_POSITIONS.map((position, index) => [position, index]));

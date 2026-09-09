@@ -10,6 +10,7 @@ import styles from "../matches.module.css";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "경기 상세", robots: { index: true, follow: true } };
+const publicMatchIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 
 function teamLabel(team: "BLUE" | "RED") {
   return team === "BLUE" ? "블루팀" : "레드팀";
@@ -30,6 +31,7 @@ export default async function MatchDetailPage({
     if (mapping.state === "ready") permanentRedirect(`/matches/${mapping.data}`);
     return <div className={`page-wrap ${styles.page}`}><section className={styles.state} role={mapping.state === "error" ? "alert" : "status"}><Gamepad2 /><h1>경기 주소를 확인하지 못했어요.</h1></section></div>;
   }
+  if (!publicMatchIdPattern.test(matchId)) notFound();
   const result = await loadRuntimeMatchData((service) => service.getPublic(matchId));
   if (result.state === "ready" && !result.data) notFound();
 
@@ -56,7 +58,7 @@ export default async function MatchDetailPage({
                       <h3>{teamLabel(team)}</h3>
                       {game.participants.filter((player) => player.team === team).map((player) => (
                         <div className={styles.player} key={`${player.team}-${player.position}`}>
-                          <ChampionPortrait displayName={player.championName || player.championKey} imageUrl={player.championImageUrl} />
+                          <ChampionPortrait displayName={player.championName || player.championKey} imageUrl={player.championImageUrl} championKey={player.championKey} />
                           {player.profileAvailable ? <Link href={`/players/${player.playerId}`}><strong>{player.nickname}</strong><small>{player.tagLine} · {player.position} · {player.championName || player.championKey}</small></Link> : <div><strong>{player.nickname}</strong><small>{player.tagLine} · {player.position} · {player.championName || player.championKey} · 비활성 프로필</small></div>}
                           <span>{player.kills}/{player.deaths}/{player.assists}{player.playerId === game.mvpPlayerId ? <b className={styles.mvp} aria-label="이 게임 MVP"><Crown size={14} aria-hidden="true" /> MVP</b> : null}</span>
                         </div>

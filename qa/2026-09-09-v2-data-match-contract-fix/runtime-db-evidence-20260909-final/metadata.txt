@@ -1,0 +1,9 @@
+started_at_utc=2026-09-09T02:14:48.7926431Z
+commit_sha=24d71c0c7a6c0e02948013df8f1e8cc8847b0982
+node_version=v24.14.1
+postgres_initdb_version=initdb (PostgreSQL) 18.3
+database_name_prefix=klol_v2_test_
+database_host=loopback-only
+credentials=redacted-not-recorded
+ended_at_utc=2026-09-09T02:15:09.3205554Z
+exit_code=0

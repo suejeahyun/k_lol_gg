@@ -4,23 +4,25 @@
 
 import { useState } from "react";
 
-import { championPortraitInitial, normalizeChampionImageUrl } from "@/modules/champions/domain/champion-image";
+import { championPortraitInitial, normalizeChampionImageUrl, resolveChampionImageUrl } from "@/modules/champions/domain/champion-image";
 
 import styles from "./champion-portrait.module.css";
 
 export function ChampionPortrait({
   displayName,
   imageUrl,
+  championKey,
   eager = false,
   className,
 }: Readonly<{
   displayName: string;
   imageUrl: string | null;
+  championKey?: string | null;
   eager?: boolean;
   className?: string;
 }>) {
   const [failed, setFailed] = useState(false);
-  const safeUrl = normalizeChampionImageUrl(imageUrl);
+  const safeUrl = normalizeChampionImageUrl(imageUrl) ?? resolveChampionImageUrl(null, championKey);
   const classes = [styles.portrait, className].filter(Boolean).join(" ");
 
   if (!safeUrl || failed) {

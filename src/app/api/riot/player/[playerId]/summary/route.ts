@@ -12,7 +12,6 @@ export async function GET(request: Request, context: { params: Promise<{ playerI
   if (!isPublicRiotPlayerId(playerId)) return riotInvalidInputResponse(traceId);
   const result = await loadRuntimePublicRiotProfile(playerId);
   if (result.state !== "ready") return riotUnavailableResponse(traceId);
-  return result.data.kind === "READY"
-    ? riotReadResponse({ summary: result.data.summary }, undefined, traceId)
-    : riotNotFoundResponse(traceId);
+  if (result.data.kind === "PLAYER_NOT_FOUND") return riotNotFoundResponse(traceId);
+  return riotReadResponse({ state: result.data, summary: "summary" in result.data ? result.data.summary : null }, undefined, traceId);
 }

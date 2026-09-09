@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "targetCommitSha": "24d71c0c7a6c0e02948013df8f1e8cc8847b0982",
+  "command": "V2_DB_CONTRACT_SCOPE=matches npm run test:db",
+  "startedAtUtc": "2026-09-09T02:14:48.7926431Z",
+  "endedAtUtc": "2026-09-09T02:15:09.3205554Z",
+  "exitCode": 0,
+  "runtime": {
+    "node": "v24.14.1",
+    "postgres": "18.3"
+  },
+  "isolation": {
+    "databaseHost": "loopback-only",
+    "databaseNamePrefix": "klol_v2_test_",
+    "automaticCleanupConfirmed": true,
+    "credentialsRecorded": false
+  },
+  "assertions": {
+    "invalidIdentifier": { "expected": 400, "actual": 400, "passed": true },
+    "unavailableService": { "expected": 503, "actual": 503, "passed": true },
+    "publishedMatch": { "expected": 200, "actual": 200, "passed": true, "participantCount": 10, "kdaPreserved": true },
+    "dataDragonFallback": { "passed": true, "url": "https://ddragon.leagueoflegends.com/cdn/26.18.1/img/champion/Httpchampion1.png" },
+    "missingUuid": { "expected": 404, "actual": 404, "passed": true }
+  },
+  "testSummary": { "passed": 7, "failed": 0 },
+  "stagedRawLogSha256": "2d6e655fc5dbaf09f3965e64d389d7a1be54240538b3174ce5abef3771ec892f"
+}

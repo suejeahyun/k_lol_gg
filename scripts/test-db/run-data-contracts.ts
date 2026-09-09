@@ -491,6 +491,23 @@ async function runContractTests(connectionString: string): Promise<void> {
   }
 }
 
+async function runMatchPublicHttpVerification(connectionString: string): Promise<void> {
+  assertSafeTestDatabase({ connectionString, nodeEnv: "test", testMode: "true" });
+  const tsxCli = resolve(workspaceRoot, "node_modules/tsx/dist/cli.mjs");
+  const verificationFile = resolve(workspaceRoot, "scripts/test-db/verify-match-public-http.ts");
+  const child = spawn(process.execPath, [tsxCli, verificationFile], {
+    cwd: workspaceRoot,
+    env: childTestEnvironment(connectionString),
+    stdio: "inherit",
+    windowsHide: true,
+  });
+  const exitCode = await new Promise<number>((resolveExit, reject) => {
+    child.once("error", reject);
+    child.once("exit", (code, signal) => signal ? reject(new Error(`Match public HTTP verification ended by ${signal}.`)) : resolveExit(code ?? 1));
+  });
+  if (exitCode !== 0) throw new Error(`Match public HTTP verification failed with exit code ${exitCode}.`);
+}
+
 async function runDurableAuthHttpVerification(connectionString: string): Promise<void> {
   assertSafeTestDatabase({
     connectionString,
@@ -1183,6 +1200,7 @@ async function main(): Promise<void> {
     });
     if (contractScope !== "all") {
       await runContractTests(connectionString);
+      if (contractScope === "matches") await runMatchPublicHttpVerification(connectionString);
       return;
     }
     await runFreshThenUpgradeContractTests(connectionString);
@@ -1207,6 +1225,7 @@ async function main(): Promise<void> {
     process.stdout.write("[db-contract] isolated PostgreSQL 18 cluster started\n");
     if (contractScope !== "all") {
       await runContractTests(cluster.connectionString);
+      if (contractScope === "matches") await runMatchPublicHttpVerification(cluster.connectionString);
       return;
     }
     await runFreshThenUpgradeContractTests(cluster.connectionString);

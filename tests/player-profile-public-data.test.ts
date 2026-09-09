@@ -6,14 +6,21 @@ import { PostgresPublicRiotQueryRepository } from "../src/modules/riot/infrastru
 
 const playerId = "a3e37453-d88d-4521-a487-bf0085bc0701";
 
-function repositoryReturning(row: unknown) {
-  const chain = {
+function repositoryReturning(row: unknown, latestSync: unknown = null) {
+  const mainChain = {
     from() { return this; },
     leftJoin() { return this; },
     where() { return this; },
     async limit() { return row ? [row] : []; },
   };
-  const database = { select: () => chain };
+  const syncChain = {
+    from() { return this; },
+    where() { return this; },
+    orderBy() { return this; },
+    async limit() { return latestSync ? [latestSync] : []; },
+  };
+  let selectCount = 0;
+  const database = { select: () => selectCount++ === 0 ? mainChain : syncChain };
   return new PostgresPublicRiotQueryRepository(database as never);
 }
 
@@ -28,6 +35,7 @@ test("공개 Riot 조회는 없는 플레이어·미연동·동기화 대기·�
   assert.deepEqual(await repositoryReturning({ playerId, linkId: null }).getPublicProfileState(playerId), { kind: "UNLINKED" });
   assert.deepEqual(await repositoryReturning({ playerId, linkId: "link", summaryPlayerId: null }).getPublicProfileState(playerId), { kind: "PENDING_SYNC" });
 
+  const lastSyncedAt = new Date();
   const ready = await repositoryReturning({
     playerId,
     linkId: "link",
@@ -39,7 +47,7 @@ test("공개 Riot 조회는 없는 플레이어·미연동·동기화 대기·�
     leaguePoints: 43,
     wins: 12,
     losses: 9,
-    lastSyncedAt: new Date("2026-09-08T00:00:00.000Z"),
+    lastSyncedAt,
   }).getPublicProfileState(playerId);
   assert.deepEqual(ready, {
     kind: "READY",
@@ -51,7 +59,7 @@ test("공개 Riot 조회는 없는 플레이어·미연동·동기화 대기·�
       leaguePoints: 43,
       wins: 12,
       losses: 9,
-      lastSyncedAt: "2026-09-08T00:00:00.000Z",
+      lastSyncedAt: lastSyncedAt.toISOString(),
     },
   });
   assert.equal(JSON.stringify(ready).includes("protectedPuuid"), false);
