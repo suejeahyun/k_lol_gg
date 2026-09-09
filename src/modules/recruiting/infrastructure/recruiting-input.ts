@@ -62,7 +62,8 @@ function payloadFor(type: RecruitingCommand["type"], value: unknown): Recruiting
       if (!exactKeys(payload, ["recruitDate", "resetSequence", "recruitNumber", "partyType", "title", "maximumMembers", "members", "scheduledStartAt", "protectedUntil"], ["startTimeText", "gameInfo"])) return null;
       if (
         typeof payload.recruitDate !== "string" || !/^\d{4}-\d{2}-\d{2}$/u.test(payload.recruitDate) ||
-        !integer(payload.resetSequence, 0, 999) || !integer(payload.recruitNumber, 1, 99) ||
+        !(payload.resetSequence === null || integer(payload.resetSequence, 0, 999)) ||
+        !(payload.recruitNumber === null || integer(payload.recruitNumber, 1, 99)) ||
         typeof payload.partyType !== "string" || !RECRUIT_PARTY_TYPES.includes(payload.partyType as (typeof RECRUIT_PARTY_TYPES)[number]) ||
         !text(payload.title, 160) || !integer(payload.maximumMembers, 1, 99) ||
         !Array.isArray(payload.members) || !payload.members.every(member) ||
@@ -138,6 +139,16 @@ export type ParsedRecruitingCommandBody = Readonly<{
   aggregateId: string | null;
   payload: RecruitingCommand["payload"];
   source: "DIRECT" | "COMPAT_V1" | "RAW_V2";
+  compatTarget: Readonly<{
+    kind: "PARTY" | "SCRIM";
+    recruitDate: string;
+    recruitNumber: number;
+  }> | null;
+  compatCreate: Readonly<{
+    partyType: (typeof RECRUIT_PARTY_TYPES)[number];
+    title: string;
+    maximumMembers: number;
+  }> | null;
 }>;
 
 export function parseRecruitingCommandBody(
@@ -147,7 +158,7 @@ export function parseRecruitingCommandBody(
   requireKakaoSource = false,
 ): ParsedRecruitingCommandBody | null {
   const body = record(value);
-  const optionalKeys = aggregateIdOverride ? [] : ["aggregateId"];
+  const optionalKeys = aggregateIdOverride ? [] : ["aggregateId", ...(requireKakaoSource ? ["compatTarget", "compatCreate"] : [])];
   if (!body || !exactKeys(body, ["type", "payload", ...(requireKakaoSource ? ["source"] : [])], optionalKeys)) return null;
   if (typeof body.type !== "string" || !COMMAND_TYPES.has(body.type as RecruitingCommand["type"])) return null;
   const type = body.type as RecruitingCommand["type"];
@@ -155,6 +166,25 @@ export function parseRecruitingCommandBody(
   if (requireKakaoSource && body.source !== "COMPAT_V1" && body.source !== "RAW_V2") return null;
   const aggregateId = aggregateIdOverride ?? body.aggregateId ?? null;
   if (aggregateId !== null && !uuid(aggregateId)) return null;
+  const target = body.compatTarget === undefined ? null : record(body.compatTarget);
+  const compatTarget = target && exactKeys(target, ["kind", "recruitDate", "recruitNumber"]) &&
+    (target.kind === "PARTY" || target.kind === "SCRIM") &&
+    typeof target.recruitDate === "string" && /^\d{4}-\d{2}-\d{2}$/u.test(target.recruitDate) &&
+    integer(target.recruitNumber, 1, 99)
+    ? { kind: target.kind as "PARTY" | "SCRIM", recruitDate: target.recruitDate, recruitNumber: Number(target.recruitNumber) }
+    : null;
+  if (body.compatTarget !== undefined && !compatTarget) return null;
+  const create = body.compatCreate === undefined ? null : record(body.compatCreate);
+  const compatCreate = create && exactKeys(create, ["partyType", "title", "maximumMembers"]) &&
+    typeof create.partyType === "string" && RECRUIT_PARTY_TYPES.includes(create.partyType as (typeof RECRUIT_PARTY_TYPES)[number]) &&
+    text(create.title, 160) && integer(create.maximumMembers, 1, 99)
+    ? {
+        partyType: create.partyType as (typeof RECRUIT_PARTY_TYPES)[number],
+        title: create.title as string,
+        maximumMembers: Number(create.maximumMembers),
+      }
+    : null;
+  if (body.compatCreate !== undefined && !compatCreate) return null;
   const payload = payloadFor(type, body.payload);
-  return payload ? { type, aggregateId, payload, source: requireKakaoSource ? body.source as "COMPAT_V1" | "RAW_V2" : "DIRECT" } : null;
+  return payload ? { type, aggregateId, payload, source: requireKakaoSource ? body.source as "COMPAT_V1" | "RAW_V2" : "DIRECT", compatTarget, compatCreate } : null;
 }

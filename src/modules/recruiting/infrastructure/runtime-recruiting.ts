@@ -30,6 +30,15 @@ export class RuntimeRecruitingService {
     return this.handler.handle(command);
   }
 
+  resolveCompatTarget(input: Readonly<{
+    kind: "PARTY" | "SCRIM";
+    sourceRoomId: string;
+    recruitDate: string;
+    recruitNumber: number;
+  }>) {
+    return this.adapter.resolveCompatTarget(input);
+  }
+
   listPublicFeed() {
     return this.adapter.listPublicFeed();
   }

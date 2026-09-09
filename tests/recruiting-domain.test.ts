@@ -167,6 +167,15 @@ test("Kakao command access separates public create/read/join from controller lif
   assert.equal(kakaoRecruitCommandAccess("RESET_PARTY"), "DENY");
 });
 
+test("V1 room members may update and close shared forms without weakening raw V2", () => {
+  for (const type of ["SYNC_PARTY", "FINISH_PARTY", "SYNC_SCRIM"] as const) {
+    assert.equal(kakaoRecruitCommandAccess(type, "COMPAT_V1"), "ROOM_MEMBER_MUTATION", type);
+    assert.equal(kakaoRecruitCommandAccess(type, "RAW_V2"), "OWNER_OR_MANAGER", type);
+  }
+  assert.equal(kakaoRecruitCommandAccess("CANCEL_PARTY", "COMPAT_V1"), "ADMIN");
+  assert.equal(kakaoRecruitCommandAccess("RESET_PARTY", "COMPAT_V1"), "DENY");
+});
+
 test("Kakao creator, joined opponent leader, or trusted operator controls lifecycle commands", () => {
   const base = { sourceSenderId: "sender-creator", opponentSenderId: "sender-opponent", signedSenderId: "sender-other", trustedSender: false };
   assert.equal(kakaoSenderControlsRecruitAggregate({ ...base, signedSenderId: "sender-creator" }), true);

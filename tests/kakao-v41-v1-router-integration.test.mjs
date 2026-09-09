@@ -58,6 +58,31 @@ async function harness() {
       recruit(command, requestContext) {
         calls.recruits.push({ command: structuredClone(command), requestContext: structuredClone(requestContext) });
         if (receipts.has(requestContext.requestKey)) return structuredClone(receipts.get(requestContext.requestKey));
+        let effectiveCommand = structuredClone(command);
+        if (command.compatTarget?.kind === "PARTY") {
+          const target = parties.find((entry) => entry.recruitDate === command.compatTarget.recruitDate && entry.recruitNumber === command.compatTarget.recruitNumber);
+          if (target) effectiveCommand.aggregateId = target.id;
+          else if (command.compatCreate && command.type === "SYNC_PARTY") {
+            effectiveCommand = {
+              type: "CREATE_PARTY",
+              aggregateId: command.aggregateId,
+              payload: {
+                recruitDate: command.compatTarget.recruitDate,
+                resetSequence: null,
+                recruitNumber: command.compatTarget.recruitNumber,
+                partyType: command.compatCreate.partyType,
+                title: command.compatCreate.title,
+                maximumMembers: command.compatCreate.maximumMembers,
+                members: structuredClone(command.payload.members),
+                startTimeText: command.payload.startTimeText,
+                gameInfo: command.payload.gameInfo,
+                scheduledStartAt: command.payload.scheduledStartAt,
+                protectedUntil: null,
+              },
+            };
+          } else return { ok: false, status: 404, body: { code: "NOT_FOUND" } };
+        }
+        command = effectiveCommand;
         if (command.type === "CREATE_SCRIM") {
           const scrim = {
             id: command.aggregateId,
@@ -78,12 +103,13 @@ async function harness() {
         }
         let party = parties.find((entry) => entry.id === command.aggregateId);
         if (command.type === "CREATE_PARTY") {
+          const nextNumber = command.payload.recruitNumber ?? (parties.length ? Math.max(...parties.map((entry) => entry.recruitNumber)) + 1 : 1);
           party = {
             id: command.aggregateId,
             revision: 0,
             recruitDate: command.payload.recruitDate,
-            resetSequence: command.payload.resetSequence,
-            recruitNumber: command.payload.recruitNumber,
+            resetSequence: command.payload.resetSequence ?? 0,
+            recruitNumber: nextNumber,
             type: command.payload.partyType,
             title: command.payload.title,
             status: "IN_PROGRESS",
@@ -165,7 +191,7 @@ test("legacy party create suppresses a duplicate callback before a second V2 mut
     aggregateId: "123e4567-e89b-42d3-a456-426614174000",
     payload: {
       recruitDate: "2026-09-08",
-      resetSequence: 0,
+      resetSequence: null,
       recruitNumber: 7,
       partyType: "FLEX_RANK",
       title: "자랭 하실분!",
@@ -181,8 +207,8 @@ test("legacy party create suppresses a duplicate callback before a second V2 mut
   assert.equal(bot.parties.length, 1);
   assert.match(bot.replies.at(-1), /모집번호: #7/u);
   assert.match(bot.replies.at(-1), /TOP\./u);
-  assert.match(bot.replies.at(-1), /》시작시간 : 00:00/u);
-  assert.match(bot.replies.at(-1), /》게임정보 : 미입력/u);
+  assert.doesNotMatch(bot.replies.at(-1), /》시작시간/u);
+  assert.doesNotMatch(bot.replies.at(-1), /》게임정보/u);
 });
 
 test("legacy full party form maps positions to slots and synchronizes the existing V2 party", async () => {
@@ -217,8 +243,8 @@ test("slash and plain temporary/form flows share server-first metadata fallback 
     bot.respond(createText);
     assert.equal(bot.calls.recruits[0].command.payload.startTimeText, null);
     assert.equal(bot.calls.recruits[0].command.payload.gameInfo, null);
-    assert.match(bot.replies.at(-1), /》시작시간 : 00:00/u);
-    assert.match(bot.replies.at(-1), /》게임정보 : 미입력/u);
+    assert.doesNotMatch(bot.replies.at(-1), /》시작시간/u);
+    assert.doesNotMatch(bot.replies.at(-1), /》게임정보/u);
 
     for (const separator of ["\n", "\r\n"]) {
       bot.respond([
@@ -260,8 +286,8 @@ test("legacy party candidates stay separate from primary capacity", async () => 
   ].join("\n"));
 
   const call = bot.calls.recruits.at(-1);
-  assert.equal(call.command.type, "CREATE_PARTY");
-  assert.equal(call.command.payload.maximumMembers, 5);
+  assert.equal(call.command.type, "SYNC_PARTY");
+  assert.equal(call.command.compatCreate.maximumMembers, 5);
   assert.equal(call.command.payload.members.filter((member) => !member.substitute).length, 5);
   assert.deepEqual(call.command.payload.members.filter((member) => member.substitute).map((member) => member.name), ["후보A", "후보B"]);
   assert.match(bot.replies.at(-1), /5\/5 · 예비 2명/u);

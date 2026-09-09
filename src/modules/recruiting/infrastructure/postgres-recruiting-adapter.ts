@@ -165,6 +165,28 @@ export class PostgresRecruitingAdapter implements
 
   constructor(private readonly database: V2Database) {}
 
+  async resolveCompatTarget(input: Readonly<{
+    kind: "PARTY" | "SCRIM";
+    sourceRoomId: string;
+    recruitDate: string;
+    recruitNumber: number;
+  }>) {
+    if (input.kind === "PARTY") {
+      return (await this.database.select({ id: recruitParties.id, revision: recruitParties.revision })
+        .from(recruitParties).where(and(
+          eq(recruitParties.sourceRoomId, input.sourceRoomId),
+          eq(recruitParties.recruitDate, input.recruitDate),
+          eq(recruitParties.recruitNumber, input.recruitNumber),
+        )).orderBy(desc(recruitParties.resetSequence)).limit(1))[0] ?? null;
+    }
+    return (await this.database.select({ id: scrimRecruits.id, revision: scrimRecruits.revision })
+      .from(scrimRecruits).where(and(
+        eq(scrimRecruits.sourceRoomId, input.sourceRoomId),
+        eq(scrimRecruits.recruitDate, input.recruitDate),
+        eq(scrimRecruits.scrimNumber, input.recruitNumber),
+      )).limit(1))[0] ?? null;
+  }
+
   private transactionFor(context: RecruitingTransactionContext) {
     const transaction = this.transactions.get(context);
     if (!transaction) throw new Error("Recruiting transaction context is no longer active.");
@@ -220,9 +242,16 @@ export class PostgresRecruitingAdapter implements
       if (!kakaoRoomOwnsRecruitAggregate(ownership?.sourceRoomId ?? null, actor.authorizationIntent.roomId)) {
         throw new RecruitingApplicationError("NOT_FOUND", "The recruiting aggregate was not found in this Kakao room.");
       }
-      const access = kakaoRecruitCommandAccess(input.commandType);
+      const access = kakaoRecruitCommandAccess(input.commandType, actor.commandSource);
       if (access === "DENY") {
         throw new RecruitingApplicationError("FORBIDDEN", "This recruiting command is not available through Kakao.");
+      }
+      // COMPAT_V1 is the shared room workflow from the original Kakao bot: a
+      // verified member may edit or close any aggregate in this canonical room.
+      // The ownership lookup above is still mandatory for room isolation; the
+      // webhook verifier already rechecked/registered the member in the room.
+      if (access === "ROOM_MEMBER_MUTATION") {
+        return this.claimSignedNonce(transaction, actor, input.idempotency);
       }
       const member = (await transaction.select({ role: kakaoRoomMembers.role, linkedUserAccountId: kakaoRoomMembers.linkedUserAccountId }).from(kakaoRoomMembers)
         .innerJoin(kakaoRooms, eq(kakaoRooms.id, kakaoRoomMembers.roomId)).where(and(
@@ -249,16 +278,24 @@ export class PostgresRecruitingAdapter implements
       }
     }
 
+    await this.claimSignedNonce(transaction, actor, input.idempotency);
+  }
+
+  private async claimSignedNonce(
+    transaction: ReturnType<PostgresRecruitingAdapter["transactionFor"]>,
+    actor: Extract<RecruitingCommandActor, { kind: "BOT" | "JOB" }>,
+    idempotency: RecruitingCommand["metadata"]["idempotency"],
+  ) {
     const intent = actor.authorizationIntent;
     const nonce = intent.nonce;
     const keyId = actor.kind === "BOT" ? actor.authorizationIntent.keyId : actor.authorizationIntent.jobName;
     const nonceHash = sha256(`klol-v2:recruiting-nonce:v1\0${actor.principalId}\0${nonce}`);
     const bindingHash = sha256([
       "klol-v2:recruiting-nonce-binding:v1",
-      input.idempotency.scope,
-      Buffer.from(input.idempotency.keyHash).toString("hex"),
-      Buffer.from(input.idempotency.requestFingerprint).toString("hex"),
-      input.idempotency.bodyDigestHex,
+      idempotency.scope,
+      Buffer.from(idempotency.keyHash).toString("hex"),
+      Buffer.from(idempotency.requestFingerprint).toString("hex"),
+      idempotency.bodyDigestHex,
     ].join("\0"));
     const lockKey = `${actor.principalId}:${nonceHash.toString("hex")}`;
     await transaction.execute(sql`select pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`);
@@ -349,6 +386,31 @@ export class PostgresRecruitingAdapter implements
   async loadPartyForUpdate(context: RecruitingTransactionContext, partyId: string) {
     const row = (await this.transactionFor(context).select().from(recruitParties).where(eq(recruitParties.id, partyId)).for("update").limit(1))[0];
     return row ? partyFromRow(row) : null;
+  }
+
+  async allocateNextPartyIdentityForUpdate(
+    context: RecruitingTransactionContext,
+    input: Readonly<{ sourceRoomId: string; recruitDate: string; preferredRecruitNumber: number | null }>,
+  ) {
+    const transaction = this.transactionFor(context);
+    const lockKey = `kakao-v1-party-number:${input.recruitDate}`;
+    await transaction.execute(sql`select pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`);
+    const latest = (await transaction.select({
+      resetSequence: recruitParties.resetSequence,
+      recruitNumber: recruitParties.recruitNumber,
+    }).from(recruitParties).where(eq(recruitParties.recruitDate, input.recruitDate))
+      .orderBy(desc(recruitParties.resetSequence), desc(recruitParties.recruitNumber)).limit(1))[0];
+    if (!latest) return { resetSequence: 0, recruitNumber: input.preferredRecruitNumber ?? 1 };
+    if (input.preferredRecruitNumber !== null) {
+      const existing = (await transaction.select({ id: recruitParties.id }).from(recruitParties).where(and(
+        eq(recruitParties.recruitDate, input.recruitDate),
+        eq(recruitParties.resetSequence, latest.resetSequence),
+        eq(recruitParties.recruitNumber, input.preferredRecruitNumber),
+      )).limit(1))[0];
+      return existing ? null : { resetSequence: latest.resetSequence, recruitNumber: input.preferredRecruitNumber };
+    }
+    if (latest.recruitNumber >= 99) return null;
+    return { resetSequence: latest.resetSequence, recruitNumber: latest.recruitNumber + 1 };
   }
 
   async loadScrimForUpdate(context: RecruitingTransactionContext, scrimId: string) {

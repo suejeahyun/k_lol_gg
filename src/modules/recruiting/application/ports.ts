@@ -14,6 +14,12 @@ export interface RecruitingUnitOfWork {
 }
 
 export interface RecruitingRepository {
+  /** Allocates the next V1 party number under a transaction advisory lock. */
+  allocateNextPartyIdentityForUpdate(transaction: RecruitingTransactionContext, input: Readonly<{
+    sourceRoomId: string;
+    recruitDate: string;
+    preferredRecruitNumber: number | null;
+  }>): Promise<Readonly<{ resetSequence: number; recruitNumber: number }> | null>;
   loadPartyForUpdate(transaction: RecruitingTransactionContext, partyId: string): Promise<RecruitParty | null>;
   loadScrimForUpdate(transaction: RecruitingTransactionContext, scrimId: string): Promise<ScrimRecruit | null>;
   /**

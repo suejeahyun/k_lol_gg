@@ -75,7 +75,8 @@ function validateAuthorization(command: RecruitingCommand) {
       actor.authorizationIntent.kind !== "KAKAO_HMAC" ||
       actor.authorizationIntent.transactionRecheck !== true ||
       actor.authorizationIntent.requireNonceClaim !== true ||
-      actor.authorizationIntent.bodyDigestHex !== command.metadata.idempotency.bodyDigestHex
+      actor.authorizationIntent.bodyDigestHex !== command.metadata.idempotency.bodyDigestHex ||
+      (actor.commandSource !== "COMPAT_V1" && actor.commandSource !== "RAW_V2")
     ) throw new RecruitingApplicationError("INVALID_AUTHORIZATION_INTENT", "BOT commands require the verified Kakao body and an in-transaction nonce claim.");
     if (Math.floor(Date.parse(command.metadata.issuedAt) / 1_000) !== actor.authorizationIntent.timestampSeconds) {
       throw new RecruitingApplicationError("INVALID_AUTHORIZATION_INTENT", "The BOT command time must remain bound to its signed webhook timestamp.");
@@ -272,6 +273,22 @@ export class RecruitingCommandHandler {
       return { body: receipt.body, revision: receipt.revision, replayed: true };
     }
 
+    let allocatedPartyIdentity: Readonly<{ resetSequence: number; recruitNumber: number }> | null = null;
+    if (command.type === "CREATE_PARTY" && command.payload.resetSequence === null) {
+      if (
+        command.metadata.actor.kind !== "BOT" || command.metadata.actor.commandSource !== "COMPAT_V1"
+      ) throw new RecruitingApplicationError("INVALID_COMMAND", "Automatic party numbering is limited to signed Kakao V1 creates.");
+      allocatedPartyIdentity = await this.dependencies.repository.allocateNextPartyIdentityForUpdate(transaction, {
+        sourceRoomId: command.metadata.actor.authorizationIntent.roomId,
+        recruitDate: command.payload.recruitDate,
+        preferredRecruitNumber: command.payload.recruitNumber,
+      });
+      if (!allocatedPartyIdentity) throw new RecruitingApplicationError("INVALID_COMMAND", "All 99 party numbers for this date are already used.");
+    }
+    if (command.type === "CREATE_PARTY" && command.payload.resetSequence !== null && command.payload.recruitNumber === null) {
+      throw new RecruitingApplicationError("INVALID_COMMAND", "A party number is required when automatic numbering is disabled.");
+    }
+
     const partyCommand = PARTY_TYPES.has(command.type);
     const party = partyCommand ? await this.dependencies.repository.loadPartyForUpdate(transaction, command.aggregateId) : null;
     const scrim = partyCommand ? null : await this.dependencies.repository.loadScrimForUpdate(transaction, command.aggregateId);
@@ -286,7 +303,18 @@ export class RecruitingCommandHandler {
     let nextScrim: ScrimRecruit | null = scrim;
     switch (command.type) {
       case "CREATE_PARTY":
-        nextParty = createRecruitParty({ id: command.aggregateId, sourceRoomId: command.metadata.actor.kind === "BOT" ? command.metadata.actor.authorizationIntent.roomId : null, sourceSenderId: command.metadata.actor.kind === "BOT" ? command.metadata.actor.authorizationIntent.senderId : null, ...command.payload, type: command.payload.partyType, scheduledStartAt: parseDate(command.payload.scheduledStartAt, "scheduledStartAt"), protectedUntil: parseDate(command.payload.protectedUntil, "protectedUntil"), now });
+        nextParty = createRecruitParty({
+          id: command.aggregateId,
+          sourceRoomId: command.metadata.actor.kind === "BOT" ? command.metadata.actor.authorizationIntent.roomId : null,
+          sourceSenderId: command.metadata.actor.kind === "BOT" ? command.metadata.actor.authorizationIntent.senderId : null,
+          ...command.payload,
+          resetSequence: allocatedPartyIdentity?.resetSequence ?? command.payload.resetSequence!,
+          recruitNumber: allocatedPartyIdentity?.recruitNumber ?? command.payload.recruitNumber!,
+          type: command.payload.partyType,
+          scheduledStartAt: parseDate(command.payload.scheduledStartAt, "scheduledStartAt"),
+          protectedUntil: parseDate(command.payload.protectedUntil, "protectedUntil"),
+          now,
+        });
         break;
       case "SYNC_PARTY":
         nextParty = sync(command, party!, now);

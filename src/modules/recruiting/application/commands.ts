@@ -21,7 +21,13 @@ export type RecruitingJobAuthorizationIntent = Readonly<{
 }>;
 
 export type RecruitingCommandActor =
-  | Readonly<{ kind: "BOT"; principalId: string; authorizationIntent: VerifiedKakaoWebhookIntent }>
+  | Readonly<{
+      kind: "BOT";
+      principalId: string;
+      authorizationIntent: VerifiedKakaoWebhookIntent;
+      /** The compatibility surface is part of the authorization policy, not caller metadata. */
+      commandSource: "COMPAT_V1" | "RAW_V2";
+    }>
   | Readonly<{ kind: "ACCOUNT"; principalId: string; sessionActor: TransactionSessionActor; authorizationIntent: Readonly<{ kind: "APPROVED_ACCOUNT"; transactionRecheck: true }> }>
   | Readonly<{ kind: "ADMIN"; principalId: string; sessionActor: TransactionSessionActor; authorizationIntent: RecruitingAdminAuthorizationIntent }>
   | Readonly<{ kind: "JOB"; principalId: string; authorizationIntent: RecruitingJobAuthorizationIntent }>;
@@ -47,7 +53,7 @@ type Command<Type extends string, Payload> = Readonly<{
 }>;
 
 export type PartyCommand =
-  | Command<"CREATE_PARTY", Readonly<{ recruitDate: string; resetSequence: number; recruitNumber: number; partyType: RecruitPartyType; title: string; maximumMembers: number; members: readonly RecruitMember[]; startTimeText?: string | null; gameInfo?: string | null; scheduledStartAt: string | null; protectedUntil: string | null }>>
+  | Command<"CREATE_PARTY", Readonly<{ recruitDate: string; resetSequence: number | null; recruitNumber: number | null; partyType: RecruitPartyType; title: string; maximumMembers: number; members: readonly RecruitMember[]; startTimeText?: string | null; gameInfo?: string | null; scheduledStartAt: string | null; protectedUntil: string | null }>>
   | Command<"SYNC_PARTY", Readonly<{ members: readonly RecruitMember[]; startTimeText?: string | null; gameInfo?: string | null; scheduledStartAt?: string | null }>>
   | Command<"GET_PARTY_STATUS", Readonly<Record<string, never>>>
   | Command<"FINISH_PARTY", Readonly<Record<string, never>>>
@@ -100,13 +106,23 @@ export type ScrimCommand =
 
 export type RecruitingCommand = PartyCommand | ScrimCommand;
 
-export type KakaoRecruitCommandAccess = "PUBLIC_CREATE" | "PUBLIC_READ" | "PUBLIC_JOIN" | "OWNER_OR_MANAGER" | "ADMIN" | "DENY";
+export type KakaoRecruitCommandAccess = "PUBLIC_CREATE" | "PUBLIC_READ" | "PUBLIC_JOIN" | "ROOM_MEMBER_MUTATION" | "OWNER_OR_MANAGER" | "ADMIN" | "DENY";
+
+const COMPAT_V1_MEMBER_COMMANDS: ReadonlySet<RecruitingCommand["type"]> = new Set([
+  "SYNC_PARTY",
+  "FINISH_PARTY",
+  "SYNC_SCRIM",
+]);
 
 /** Server-side policy for commands received through the signed Kakao webhook. */
-export function kakaoRecruitCommandAccess(type: RecruitingCommand["type"]): KakaoRecruitCommandAccess {
+export function kakaoRecruitCommandAccess(
+  type: RecruitingCommand["type"],
+  source: "COMPAT_V1" | "RAW_V2" = "RAW_V2",
+): KakaoRecruitCommandAccess {
   if (type === "CREATE_PARTY" || type === "CREATE_SCRIM") return "PUBLIC_CREATE";
   if (type === "GET_PARTY_STATUS") return "PUBLIC_READ";
   if (type === "JOIN_SCRIM") return "PUBLIC_JOIN";
+  if (source === "COMPAT_V1" && COMPAT_V1_MEMBER_COMMANDS.has(type)) return "ROOM_MEMBER_MUTATION";
   if (type === "RESET_PARTY") return "DENY";
   if (type === "CANCEL_PARTY" || type === "CANCEL_SCRIM" || type === "REOPEN_SCRIM") return "ADMIN";
   return "OWNER_OR_MANAGER";
@@ -146,11 +162,13 @@ export function recruitingCommandRequestFingerprint(command: RecruitingCommand):
     ? command.metadata.actor.authorizationIntent.deliveryId ? {
         kind: command.metadata.actor.kind,
         principalId: command.metadata.actor.principalId,
+        commandSource: command.metadata.actor.commandSource,
         roomId: command.metadata.actor.authorizationIntent.roomId,
         deliveryId: command.metadata.actor.authorizationIntent.deliveryId,
       } : {
         kind: command.metadata.actor.kind,
         principalId: command.metadata.actor.principalId,
+        commandSource: command.metadata.actor.commandSource,
         roomId: command.metadata.actor.authorizationIntent.roomId,
         senderId: command.metadata.actor.authorizationIntent.senderId,
       }

@@ -338,9 +338,7 @@ function v41FormatOpenchat(result) {
 
 function v41PartyTemplate(parsed, recruitNo, party) {
   var title = String(parsed.title || (Number(parsed.maximumMembers) + "인 파티 구인"));
-  var startTimeText = v41Trim(party && party.startTimeText) || v41Trim(parsed.startTimeText);
-  var gameInfo = v41Trim(party && party.gameInfo) || v41Trim(parsed.gameInfo);
-  var lines = ["[K-LOL.GG 구인구직 양식]", "같이 할사람~", "", "아래 양식의 모집번호는 유지해서 작성해주세요.", "", "📢 " + title, "모집번호: #" + Number(recruitNo), "", "》시작시간 :" + (startTimeText ? " " + startTimeText : ""), "》게임정보 :" + (gameInfo ? " " + gameInfo : ""), ""];
+  var lines = ["[K-LOL.GG 구인구직 양식]", "같이 할사람~", "", "아래 양식의 모집번호는 유지해서 작성해주세요.", "", "📢 " + title, "모집번호: #" + Number(recruitNo), ""];
   var positions = ["TOP.", "JUG.", "MID.", "ADC.", "SUP."];
   var lineParty = parsed.type === "FLEX_RANK" || parsed.type === "NORMAL_GAME" || parsed.type === "PARTY_RIFT";
   var index = 0;
@@ -752,6 +750,7 @@ function v41CompatParser() {
 
 function v41LegacyIntentKey(room, sender, text) {
   var identity = KLOL_V2_KAKAO.identityForChat(room, sender);
+  text = String(text || "").replace(/^\/(?=\S)/, "");
   return "KLOL_V41_INTENT_" + identity.roomId.substring(5) + "_" + identity.senderId.substring(7) + "_" +
     v41SnapshotSummaryHash(v41NormalizeText(text));
 }
@@ -779,7 +778,7 @@ function v41LegacyIntent(room, sender, text, createValue) {
   saved.requestKey = "mbr-v41-legacy-" + v41SnapshotSummaryHash({
     room: KLOL_V2_KAKAO.identityForChat(room, sender).roomId,
     sender: KLOL_V2_KAKAO.identityForChat(room, sender).senderId,
-    text: text,
+    text: String(text || "").replace(/^\/(?=\S)/, ""),
     createdAt: now
   }).toLowerCase();
   DataBase.setDataBase(key, JSON.stringify(saved));
@@ -962,27 +961,22 @@ function v41HandleLegacyParty(parsed, text, room, sender, replier) {
       "봇이 출력한 원본 양식의 ‘모집번호: #번호’를 유지해서 다시 보내 주세요."
     ].join("\n"));
   }
-  status = v41OpenChat(room, sender);
-  if (parsed.action === "STATUS") return v41Reply(replier, v41FormatPartyStatus(status));
+  if (parsed.action === "STATUS") return v41Reply(replier, v41FormatPartyStatus(v41OpenChat(room, sender)));
   if (parsed.action === "DETAIL") {
+    status = v41OpenChat(room, sender);
     party = v41FindParty(status, parsed.recruitNo);
     if (!party) throw v41UserError("진행 중인 파티 #" + parsed.recruitNo + "을 찾지 못했습니다.");
     return v41Reply(replier, v41FormatPartyDetail(party));
   }
   if (parsed.action === "CREATE") {
-    var recruitNo = parsed.explicitRecruitNumber || Number(status.body.nextPartyRecruitNumber || 0);
-    if (!recruitNo) throw v41UserError("오늘 모집 번호 99개를 모두 사용했습니다. 관리자에게 번호 초기화를 요청해 주세요.");
-    if (v41FindParty(status, recruitNo) && !v41ReadLegacyIntent(room, sender, text)) {
-      throw v41UserError("이미 진행 중인 파티 #" + recruitNo + "이 있습니다.");
-    }
     result = v41RecruitMutation(room, sender, text, function () {
       return {
         expectedRevision: 0,
         command: {
           type: "CREATE_PARTY", aggregateId: v41AggregateId("party-create"),
           payload: {
-            recruitDate: v41Today(), resetSequence: Number(status.body.nextPartyResetSequence || 0),
-            recruitNumber: recruitNo, partyType: parsed.type, title: parsed.title,
+            recruitDate: v41Today(), resetSequence: null,
+            recruitNumber: parsed.explicitRecruitNumber || null, partyType: parsed.type, title: parsed.title,
             maximumMembers: Number(parsed.maximumMembers), members: [],
             startTimeText: null, gameInfo: null, scheduledStartAt: null, protectedUntil: null
           }
@@ -990,63 +984,50 @@ function v41HandleLegacyParty(parsed, text, room, sender, replier) {
       };
     });
     if (!result || !result.ok) return v41Reply(replier, v41ResultMessage(result));
-    var createdNo = result.body && result.body.data ? Number(result.body.data.recruitNumber || recruitNo) : recruitNo;
+    var createdNo = result.body && result.body.data ? Number(result.body.data.recruitNumber || 0) : 0;
+    if (!createdNo) throw v41UserError("모집 번호를 확인하지 못했습니다.");
     return v41Reply(replier, v41PartyTemplate(parsed, createdNo, result.body && result.body.data));
   }
   if (parsed.action === "SYNC_FORM") {
-    party = v41FindParty(status, parsed.recruitNo);
     var members = v41PartyMembers(parsed);
     var primaryCount = 0;
     var memberIndex = 0;
     for (memberIndex = 0; memberIndex < members.length; memberIndex += 1) {
       if (!members[memberIndex].substitute) primaryCount += 1;
     }
-    if (primaryCount > Number(party ? party.maximumMembers : parsed.maximumMembers)) {
+    if (primaryCount > Number(parsed.maximumMembers)) {
       throw v41UserError("참가 인원이 모집 정원을 넘었습니다. 예비 인원은 정원과 별도로 최대 99명까지 보존됩니다.");
     }
     result = v41RecruitMutation(room, sender, text, function () {
-      if (party) {
-        return {
-          expectedRevision: Number(party.revision),
-          command: {
-            type: "SYNC_PARTY", aggregateId: party.id,
-            payload: {
-              members: members, startTimeText: parsed.startTimeText, gameInfo: parsed.gameInfo,
-              scheduledStartAt: v41ScheduledInstant(v41Today(), parsed.startTimeText)
-            }
-          }
-        };
-      }
       return {
         expectedRevision: 0,
         command: {
-            type: "CREATE_PARTY", aggregateId: v41AggregateId("party-form-create"),
+          type: "SYNC_PARTY", aggregateId: v41AggregateId("party-form-create"),
+          compatTarget: { kind: "PARTY", recruitDate: v41Today(), recruitNumber: Number(parsed.recruitNo) },
+          compatCreate: { partyType: parsed.type, title: parsed.title, maximumMembers: Number(parsed.maximumMembers) },
           payload: {
-            recruitDate: v41Today(), resetSequence: Number(status.body.nextPartyResetSequence || 0),
-            recruitNumber: Number(parsed.recruitNo), partyType: parsed.type, title: parsed.title,
-            maximumMembers: Number(parsed.maximumMembers), members: members,
+            members: members,
             startTimeText: parsed.startTimeText, gameInfo: parsed.gameInfo,
-            scheduledStartAt: v41ScheduledInstant(v41Today(), parsed.startTimeText), protectedUntil: null
+            scheduledStartAt: v41ScheduledInstant(v41Today(), parsed.startTimeText)
           }
         }
       };
     });
     if (!result || !result.ok) return v41Reply(replier, v41ResultMessage(result));
-    status = v41OpenChat(room, sender);
-    party = v41FindParty(status, parsed.recruitNo);
+    party = result.body && result.body.data ? result.body.data : null;
     return v41Reply(replier, party
-      ? "[파티 #" + Number(parsed.recruitNo) + " 반영]\n" + Number(party.memberCount || 0) + "/" + Number(party.maximumMembers || 0) + " · 예비 " + Number(party.reserveCount || 0) + "명\n시작시간: " + v41PartyStartText(party) + " · 게임정보: " + (v41Trim(party.gameInfo || party.note) || "미입력") + "\n마감: " + Number(parsed.recruitNo) + "ㅉ"
+      ? "[파티 #" + Number(parsed.recruitNo) + " 반영]\n" + Number(party.memberCount || primaryCount) + "/" + Number(party.maximumMembers || parsed.maximumMembers) + " · 예비 " + Number(members.length - primaryCount) + "명\n시작시간: " + v41PartyStartText(party) + " · 게임정보: " + (v41Trim(party.gameInfo || party.note) || "미입력") + "\n마감: " + Number(parsed.recruitNo) + "ㅉ"
       : "[K-LOL.GG 파티]\n명단을 반영했습니다.");
   }
   if (parsed.action === "FINISH") {
-    party = v41FindParty(status, parsed.recruitNo);
-    if (!party && !v41ReadLegacyIntent(room, sender, text)) {
-      throw v41UserError("진행 중인 파티 #" + parsed.recruitNo + "을 찾지 못했습니다.");
-    }
     result = v41RecruitMutation(room, sender, text, function () {
       return {
-        expectedRevision: Number(party.revision),
-        command: { type: "FINISH_PARTY", aggregateId: party.id, payload: {} }
+        expectedRevision: 0,
+        command: {
+          type: "FINISH_PARTY", aggregateId: null,
+          compatTarget: { kind: "PARTY", recruitDate: v41Today(), recruitNumber: Number(parsed.recruitNo) },
+          payload: {}
+        }
       };
     });
     return v41Reply(replier, result && result.ok

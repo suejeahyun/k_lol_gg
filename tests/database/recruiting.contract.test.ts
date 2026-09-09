@@ -156,7 +156,7 @@ test("S09 PostgreSQL adapter binds a BOT nonce to exactly one signed request ide
       type: "CREATE_PARTY",
       aggregateId,
       metadata: {
-        actor: { kind: "BOT", principalId: "bot:kakao", authorizationIntent: { kind: "KAKAO_HMAC", keyId: "current", timestampSeconds: Math.floor(now.getTime()/1000), nonce, roomId: "room-1", senderId: "operator-1", bodyDigestHex, requireNonceClaim: true, transactionRecheck: true } },
+        actor: { kind: "BOT", principalId: "bot:kakao", commandSource: "COMPAT_V1", authorizationIntent: { kind: "KAKAO_HMAC", keyId: "current", timestampSeconds: Math.floor(now.getTime()/1000), nonce, roomId: "room-1", senderId: "operator-1", bodyDigestHex, requireNonceClaim: true, transactionRecheck: true } },
         requestId: randomUUID(), expectedRevision: 0, issuedAt: new Date(Math.floor(now.getTime()/1000)*1000).toISOString(),
         idempotency: { scope: recruitingCommandScope("BOT", "CREATE_PARTY"), keyHash: hashRecruitingRequestKey(requestKey), requestFingerprint: new Uint8Array(32), bodyDigestHex },
       },
@@ -199,6 +199,7 @@ test("Kakao aggregate controllers block confused-deputy lifecycle mutations", { 
     payload: Extract<RecruitingCommand, { type: Type }>["payload"];
     senderId: string;
     roomId?: string;
+    commandSource?: "COMPAT_V1" | "RAW_V2";
   }>): Extract<RecruitingCommand, { type: Type }> {
     sequence += 1;
     const issuedAt = new Date(Math.floor(Date.now() / 1_000) * 1_000);
@@ -207,7 +208,7 @@ test("Kakao aggregate controllers block confused-deputy lifecycle mutations", { 
       aggregateId: input.aggregateId,
       metadata: {
         actor: {
-          kind: "BOT", principalId: "bot:kakao",
+          kind: "BOT", principalId: "bot:kakao", commandSource: input.commandSource ?? "RAW_V2",
           authorizationIntent: {
             kind: "KAKAO_HMAC", keyId: "current", timestampSeconds: Math.floor(issuedAt.getTime() / 1_000),
             nonce: `controller_nonce_${sequence}_12345678`, roomId: input.roomId ?? canonicalRoomId,
@@ -229,6 +230,7 @@ test("Kakao aggregate controllers block confused-deputy lifecycle mutations", { 
     await applyMigrations(database);
     await database.insert(kakaoRooms).values({ id: canonicalRoomId, displayName: "Controller contract", status: "ACTIVE", registrationSource: "ADMIN" });
     await database.insert(kakaoRoomMembers).values({ id: randomUUID(), roomId: canonicalRoomId, senderFingerprint: "sender-operator", role: "MANAGER" });
+    await database.insert(kakaoRoomMembers).values({ id: randomUUID(), roomId: canonicalRoomId, senderFingerprint: "sender-other", role: "MEMBER" });
     const partyId = randomUUID();
     const createParty = botCommand({
       type: "CREATE_PARTY", aggregateId: partyId, expectedRevision: 0, senderId: "sender-creator",
@@ -247,7 +249,7 @@ test("Kakao aggregate controllers block confused-deputy lifecycle mutations", { 
     assert.equal((await handler.handle(creatorSync)).revision, 1);
     assert.equal((await handler.handle(creatorSync)).replayed, true);
     await assert.rejects(handler.handle(botCommand({ type: "FINISH_PARTY", aggregateId: partyId, expectedRevision: 1, payload: {}, senderId: "sender-other" })), (error: unknown) => error instanceof RecruitingApplicationError && error.code === "FORBIDDEN");
-    assert.equal((await handler.handle(botCommand({ type: "FINISH_PARTY", aggregateId: partyId, expectedRevision: 1, payload: {}, senderId: "sender-operator" }))).body.status, "FINISHED");
+    assert.equal((await handler.handle(botCommand({ type: "FINISH_PARTY", aggregateId: partyId, expectedRevision: 1, payload: {}, senderId: "sender-other", commandSource: "COMPAT_V1" }))).body.status, "FINISHED");
 
     const scrimId = randomUUID();
     await handler.handle(botCommand({

@@ -40,6 +40,7 @@ const scopes: Record<RecruitingCommand["type"], string> = {
 const botActor = {
   kind: "BOT" as const,
   principalId: "bot:kakao",
+  commandSource: "COMPAT_V1" as const,
   authorizationIntent: {
     kind: "KAKAO_HMAC" as const,
     keyId: "current",
@@ -153,6 +154,18 @@ class Harness {
         },
       },
       repository: {
+        allocateNextPartyIdentityForUpdate: async (_transaction, input) => {
+          this.operations.push("allocate-party-number");
+          const parties = [...this.snapshot.parties.values()].filter((party) => party.recruitDate === "2026-09-07");
+          const latest = parties.sort((left, right) => right.resetSequence - left.resetSequence || right.recruitNumber - left.recruitNumber)[0];
+          if (!latest) return { resetSequence: 0, recruitNumber: input.preferredRecruitNumber ?? 1 };
+          if (input.preferredRecruitNumber !== null) {
+            return parties.some((party) => party.resetSequence === latest.resetSequence && party.recruitNumber === input.preferredRecruitNumber)
+              ? null
+              : { resetSequence: latest.resetSequence, recruitNumber: input.preferredRecruitNumber };
+          }
+          return latest.recruitNumber < 99 ? { resetSequence: latest.resetSequence, recruitNumber: latest.recruitNumber + 1 } : null;
+        },
         loadPartyForUpdate: async (_transaction, id) => {
           this.operations.push("load");
           return this.snapshot.parties.get(id) ?? null;
@@ -220,7 +233,7 @@ function createScrim(scrimId = "scrim-1") {
   });
 }
 
-test("BOT idempotency fingerprints bind the signed room and sender", () => {
+test("BOT idempotency fingerprints bind the signed room, sender, and command source", () => {
   const original = createParty("party-room-bound");
   const otherRoom = {
     ...original,
@@ -249,6 +262,17 @@ test("BOT idempotency fingerprints bind the signed room and sender", () => {
   assert.notDeepEqual(
     Buffer.from(recruitingCommandRequestFingerprint(original)),
     Buffer.from(recruitingCommandRequestFingerprint(otherSender)),
+  );
+  const rawV2 = {
+    ...original,
+    metadata: {
+      ...original.metadata,
+      actor: { ...botActor, commandSource: "RAW_V2" as const },
+    },
+  } satisfies Extract<RecruitingCommand, { type: "CREATE_PARTY" }>;
+  assert.notDeepEqual(
+    Buffer.from(recruitingCommandRequestFingerprint(original)),
+    Buffer.from(recruitingCommandRequestFingerprint(rawV2)),
   );
 });
 
