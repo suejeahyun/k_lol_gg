@@ -100,7 +100,7 @@ export type ScrimCommand =
 
 export type RecruitingCommand = PartyCommand | ScrimCommand;
 
-export type KakaoRecruitCommandAccess = "PUBLIC_CREATE" | "PUBLIC_READ" | "PUBLIC_JOIN" | "CONTROLLER" | "DENY";
+export type KakaoRecruitCommandAccess = "PUBLIC_CREATE" | "PUBLIC_READ" | "PUBLIC_JOIN" | "OWNER_OR_MANAGER" | "ADMIN" | "DENY";
 
 /** Server-side policy for commands received through the signed Kakao webhook. */
 export function kakaoRecruitCommandAccess(type: RecruitingCommand["type"]): KakaoRecruitCommandAccess {
@@ -108,7 +108,8 @@ export function kakaoRecruitCommandAccess(type: RecruitingCommand["type"]): Kaka
   if (type === "GET_PARTY_STATUS") return "PUBLIC_READ";
   if (type === "JOIN_SCRIM") return "PUBLIC_JOIN";
   if (type === "RESET_PARTY") return "DENY";
-  return "CONTROLLER";
+  if (type === "CANCEL_PARTY" || type === "CANCEL_SCRIM" || type === "REOPEN_SCRIM") return "ADMIN";
+  return "OWNER_OR_MANAGER";
 }
 
 const COMMAND_SCOPE_SUFFIX: Readonly<Record<RecruitingCommand["type"], string>> = {

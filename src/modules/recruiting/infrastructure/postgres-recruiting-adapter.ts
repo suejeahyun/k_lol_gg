@@ -8,9 +8,12 @@ import {
   lockTransactionSessionActor,
 } from "@/modules/auth/infrastructure/transaction-session-guard";
 import { auditEvents } from "@/platform/db/schema/audit";
+import { userAccounts } from "@/platform/db/schema/auth";
 import { destructionCompetitions } from "@/platform/db/schema/destruction-competitions";
 import {
   recruitParties,
+  kakaoRoomMembers,
+  kakaoRooms,
   kakaoImageSessions,
   recruitingCommandReceipts,
   recruitingNonceBindings,
@@ -24,6 +27,7 @@ import { withTransaction } from "@/platform/db/transaction";
 
 import { RecruitingApplicationError } from "../application/command-handler";
 import { kakaoRecruitCommandAccess, type RecruitingCommand, type RecruitingCommandActor } from "../application/commands";
+import { kakaoRoleAtLeast, type KakaoRoomMemberRole } from "../kakao-access/domain";
 import type {
   AdminRecruitingStatusDto,
   RecruitCommandReceipt,
@@ -39,7 +43,6 @@ import type {
 import { toPublicPartyDto, toPublicScrimDto } from "../application/public-dto";
 import { kakaoRoomOwnsRecruitAggregate, kakaoSenderControlsRecruitAggregate } from "../domain/recruiting";
 import type { RecruitMember, RecruitParty, ScrimLineup, ScrimRecruit } from "../domain/recruiting";
-import { splitKakaoIdentifiers } from "./kakao-http-request";
 
 const RECEIPT_TTL_MILLISECONDS = 24 * 60 * 60 * 1_000;
 const NONCE_TTL_MILLISECONDS = 15 * 60 * 1_000;
@@ -221,12 +224,29 @@ export class PostgresRecruitingAdapter implements
       if (access === "DENY") {
         throw new RecruitingApplicationError("FORBIDDEN", "This recruiting command is not available through Kakao.");
       }
-      if (access === "CONTROLLER" && !kakaoSenderControlsRecruitAggregate({
+      const member = (await transaction.select({ role: kakaoRoomMembers.role, linkedUserAccountId: kakaoRoomMembers.linkedUserAccountId }).from(kakaoRoomMembers)
+        .innerJoin(kakaoRooms, eq(kakaoRooms.id, kakaoRoomMembers.roomId)).where(and(
+          eq(kakaoRooms.id, actor.authorizationIntent.roomId),
+          eq(kakaoRooms.status, "ACTIVE"),
+          eq(kakaoRoomMembers.senderFingerprint, actor.authorizationIntent.senderId),
+        )).limit(1))[0];
+      let role = (member?.role ?? "MEMBER") as KakaoRoomMemberRole;
+      if (member?.linkedUserAccountId) {
+        const account = (await transaction.select({ role: userAccounts.role, status: userAccounts.status }).from(userAccounts).where(eq(userAccounts.id, member.linkedUserAccountId)).limit(1))[0];
+        if (account?.status === "APPROVED" && (account.role === "ADMIN" || account.role === "SUPER_ADMIN")) role = "ADMIN";
+      }
+      const controller = kakaoSenderControlsRecruitAggregate({
         sourceSenderId: ownership?.sourceSenderId ?? null,
         opponentSenderId: (ownership as { opponentSenderId?: string | null } | undefined)?.opponentSenderId ?? null,
         signedSenderId: actor.authorizationIntent.senderId,
-        trustedSender: splitKakaoIdentifiers(process.env.KAKAO_WEBHOOK_ALLOWED_SENDERS).has(actor.authorizationIntent.senderId),
-      })) throw new RecruitingApplicationError("FORBIDDEN", "This Kakao lifecycle command requires an aggregate controller.");
+        trustedSender: false,
+      });
+      if (access === "OWNER_OR_MANAGER" && !controller && !kakaoRoleAtLeast(role, "MANAGER")) {
+        throw new RecruitingApplicationError("FORBIDDEN", "This Kakao lifecycle command requires the owner, room manager, or administrator role.");
+      }
+      if (access === "ADMIN" && !kakaoRoleAtLeast(role, "ADMIN")) {
+        throw new RecruitingApplicationError("FORBIDDEN", "This Kakao lifecycle command requires the room administrator role.");
+      }
     }
 
     const intent = actor.authorizationIntent;

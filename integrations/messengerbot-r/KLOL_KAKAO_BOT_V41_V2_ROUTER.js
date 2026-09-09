@@ -5,7 +5,7 @@
  * This router requires KLOL_KAKAO_BOT_V41_V2_TRANSPORT.js and
  * KLOL_KAKAO_BOT_V41_V1_COMPAT.js immediately before it.
  */
-var KLOL_V41_BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V41_V2_2026_09_09_R8_CONTROLLER_AUTH_SYNC";
+var KLOL_V41_BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V41_V2_2026_09_09_R9_DB_ROOM_BINDINGS";
 var KLOL_V41_SEASON_PREVIEW_TTL_MS = 10 * 60 * 1000;
 var KLOL_V41_IMAGE_SESSION_TTL_MS = 30 * 60 * 1000;
 
@@ -1419,7 +1419,7 @@ function v41Help() {
 function v41V2Help() {
   return [
     "[K-LOL.GG V2 관리 도움말]",
-    "/V2연동확인 · /V2사진세션 <사이트 발급 UUID>",
+    "/V2연동확인 · /V2방연동 <8자리 코드> · /V2사진세션 <사이트 발급 UUID>",
     "/사진상태 · /V2사진취소",
     "/V2모집 · /V2시즌 · /V2양식"
   ].join("\n");
@@ -1446,7 +1446,7 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
     if (/^\/?(?:V2)?연동확인$/i.test(text)) {
       try {
         var identity = KLOL_V2_KAKAO.identityForChat(room, sender);
-        return v41Reply(replier, "[K-LOL.GG V2 연동 ID]\n방: " + identity.roomId + "\n발신자: " + identity.senderId);
+        return v41Reply(replier, "[K-LOL.GG V2 연동 ID]\n설치본: " + KLOL_V2_KAKAO.installationId() + "\n방: " + identity.roomId + "\n발신자: " + identity.senderId);
       } catch (identityError) {
         return v41Reply(replier, "[K-LOL.GG V2 연동]\n연동 ID 생성에 실패했습니다. MessengerBot R 실행 로그를 확인해 주세요.");
       }
@@ -1498,6 +1498,8 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
     if (text.indexOf("V2시즌 ") === 0) {
       return v41Reply(replier, v41FormatSeason(KLOL_V2_KAKAO.seasonApplications(v41JsonAfter(text, "V2시즌"), KLOL_V2_KAKAO.contextFromChat(room, sender))));
     }
+    var pairingMatch = /^\/?V2방연동\s+([A-HJ-NP-Z2-9]{8})$/i.exec(text);
+    if (pairingMatch) return v41Reply(replier, v41ResultMessage(KLOL_V2_KAKAO.pairRoom(pairingMatch[1], KLOL_V2_KAKAO.contextFromChat(room, sender))));
     if (text.indexOf("V2양식 ") === 0) {
       var form = v41JsonAfter(text, "V2양식");
       return v41Reply(replier, v41ResultMessage(KLOL_V2_KAKAO.operationForm(form.formType, form.payload, KLOL_V2_KAKAO.contextFromChat(room, sender))));

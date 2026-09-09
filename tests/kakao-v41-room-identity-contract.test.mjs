@@ -14,6 +14,15 @@ test("room identity is derived only from the callback room string and the privat
   assert.match(identityBody, /"sender-id\\n" \+ trimText\(sender\)/u);
 });
 
+test("one shared identity module derives and signs the public bot installation fingerprint", async () => {
+  const transport = await readFile(resolve(integrationDirectory, "KLOL_KAKAO_BOT_V41_V2_TRANSPORT.js"), "utf8");
+  assert.match(transport, /function installationId\(\)/u);
+  assert.match(transport, /"installation-id\\nKLOL_V41"/u);
+  assert.match(transport, /KLOL_KAKAO_WEBHOOK_V2/u);
+  assert.match(transport, /header\("x-klol-installation", installId\)/u);
+  assert.match(transport, /signatureMaterial\(timestampSeconds, nonce, installId, roomId, senderId, bodyDigestHex\)/u);
+});
+
 test("legacy callback argument order remains room, message, sender", async () => {
   const router = await readFile(resolve(integrationDirectory, "KLOL_KAKAO_BOT_V41_V2_ROUTER.js"), "utf8");
   assert.match(router, /function response\(room, msg, sender, isGroupChat, replier, imageDB, packageName\)/u);

@@ -160,9 +160,10 @@ test("Kakao command access separates public create/read/join from controller lif
   assert.equal(kakaoRecruitCommandAccess("CREATE_SCRIM"), "PUBLIC_CREATE");
   assert.equal(kakaoRecruitCommandAccess("GET_PARTY_STATUS"), "PUBLIC_READ");
   assert.equal(kakaoRecruitCommandAccess("JOIN_SCRIM"), "PUBLIC_JOIN");
-  for (const type of ["SYNC_PARTY", "FINISH_PARTY", "CANCEL_PARTY", "SYNC_SCRIM", "REOPEN_SCRIM", "CONFIRM_SCRIM", "COMPLETE_SCRIM", "CANCEL_SCRIM"] as const) {
-    assert.equal(kakaoRecruitCommandAccess(type), "CONTROLLER", type);
+  for (const type of ["SYNC_PARTY", "FINISH_PARTY", "SYNC_SCRIM", "CONFIRM_SCRIM", "COMPLETE_SCRIM"] as const) {
+    assert.equal(kakaoRecruitCommandAccess(type), "OWNER_OR_MANAGER", type);
   }
+  for (const type of ["CANCEL_PARTY", "REOPEN_SCRIM", "CANCEL_SCRIM"] as const) assert.equal(kakaoRecruitCommandAccess(type), "ADMIN", type);
   assert.equal(kakaoRecruitCommandAccess("RESET_PARTY"), "DENY");
 });
 

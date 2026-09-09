@@ -36,6 +36,7 @@ export default async function AdminKakaoPage({
       <Link aria-current={tab === "settings" ? "page" : undefined} href="/admin/kakao?tab=settings">설정</Link>
       <Link aria-current={tab === "logs" ? "page" : undefined} href="/admin/kakao?tab=logs">처리 상태</Link>
       <Link aria-current={tab === "health" ? "page" : undefined} href="/admin/kakao?tab=health">보안 점검</Link>
+      <Link href="/admin/kakao/rooms">방 권한</Link>
     </nav>
     {result.state === "ready" ? <>
       {tab === "stats" ? <section className={styles.summary} aria-label="Kakao 운영 요약"><article><MessagesSquare/><span>열린 파티</span><strong>{result.data.openPartyCount}</strong></article><article><Clock3/><span>진행 스크림</span><strong>{result.data.openScrimCount}</strong></article><article><DatabaseZap/><span>미해결 시즌 신청</span><strong>{result.data.unresolvedSeasonApplicationCount}</strong></article><article><DatabaseZap/><span>활성 이미지 세션</span><strong>{result.data.activeImageSessionCount}</strong></article><article><DatabaseZap/><span>대기 outbox</span><strong>{result.data.pendingOutboxCount}</strong></article><article><Clock3/><span>미완료 영수증</span><strong>{result.data.incompleteReceiptCount}</strong></article></section> : null}

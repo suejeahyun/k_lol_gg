@@ -23,6 +23,8 @@ import {
   recruitingNonceBindings,
   recruitingOutbox,
   scrimRecruits,
+  kakaoRoomMembers,
+  kakaoRooms,
   userAccounts,
 } from "../../src/platform/db/schema";
 import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
@@ -189,6 +191,7 @@ test("Kakao aggregate controllers block confused-deputy lifecycle mutations", { 
     clock: { now: () => new Date(), receiptExpiresAt: (createdAt) => new Date(createdAt.getTime() + 86_400_000) },
   });
   let sequence = 0;
+  const canonicalRoomId = randomUUID();
   function botCommand<Type extends RecruitingCommand["type"]>(input: Readonly<{
     type: Type;
     aggregateId: string;
@@ -207,7 +210,7 @@ test("Kakao aggregate controllers block confused-deputy lifecycle mutations", { 
           kind: "BOT", principalId: "bot:kakao",
           authorizationIntent: {
             kind: "KAKAO_HMAC", keyId: "current", timestampSeconds: Math.floor(issuedAt.getTime() / 1_000),
-            nonce: `controller_nonce_${sequence}_12345678`, roomId: input.roomId ?? "room-controller",
+            nonce: `controller_nonce_${sequence}_12345678`, roomId: input.roomId ?? canonicalRoomId,
             senderId: input.senderId, bodyDigestHex, requireNonceClaim: true, transactionRecheck: true,
           },
         },
@@ -224,6 +227,8 @@ test("Kakao aggregate controllers block confused-deputy lifecycle mutations", { 
 
   try {
     await applyMigrations(database);
+    await database.insert(kakaoRooms).values({ id: canonicalRoomId, displayName: "Controller contract", status: "ACTIVE", registrationSource: "ADMIN" });
+    await database.insert(kakaoRoomMembers).values({ id: randomUUID(), roomId: canonicalRoomId, senderFingerprint: "sender-operator", role: "MANAGER" });
     const partyId = randomUUID();
     const createParty = botCommand({
       type: "CREATE_PARTY", aggregateId: partyId, expectedRevision: 0, senderId: "sender-creator",

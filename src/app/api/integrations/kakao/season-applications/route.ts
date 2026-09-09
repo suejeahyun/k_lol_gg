@@ -4,7 +4,9 @@ import { kakaoSeasonCommandAccess, parseSeasonSnapshotBody } from "@/modules/rec
 import { kakaoAssistantCapabilityForbiddenResponse, kakaoAssistantErrorResponse, kakaoAssistantResponse, prepareKakaoSignedJson } from "@/modules/recruiting/kakao-assistant/http";
 import { getRuntimeKakaoAssistant } from "@/modules/recruiting/kakao-assistant/runtime";
 import { isRuntimeKakaoFeatureEnabled } from "@/modules/recruiting/kakao-admin/runtime";
-import { MAXIMUM_KAKAO_BODY_BYTES, PUBLIC_KAKAO_ROOM_COMMAND, recordKakaoWebhookRejection, splitKakaoIdentifiers } from "@/modules/recruiting/infrastructure/kakao-http-request";
+import { MAXIMUM_KAKAO_BODY_BYTES, PUBLIC_KAKAO_ROOM_COMMAND, recordKakaoWebhookRejection } from "@/modules/recruiting/infrastructure/kakao-http-request";
+import { KakaoRoomRegistryError } from "@/modules/recruiting/kakao-access/postgres-kakao-room-registry";
+import { legacyKakaoInstallationId } from "@/modules/recruiting/infrastructure/kakao-signature";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -14,10 +16,16 @@ export async function POST(request: Request) {
   if (!prepared.ok) return prepared.response;
   try {
     const command = parseSeasonSnapshotBody(prepared.body);
-    if (kakaoSeasonCommandAccess(command.action) === "TRUSTED_OPERATOR" &&
-        !splitKakaoIdentifiers(process.env.KAKAO_WEBHOOK_ALLOWED_SENDERS).has(prepared.intent.senderId)) {
-      recordKakaoWebhookRejection("CAPABILITY_FORBIDDEN", { route: new URL(request.url).pathname, traceId: prepared.traceId });
-      return kakaoAssistantCapabilityForbiddenResponse(prepared.traceId);
+    if (kakaoSeasonCommandAccess(command.action) === "TRUSTED_OPERATOR") {
+      const { getRuntimeKakaoRoomRegistry } = await import("@/modules/recruiting/kakao-access/runtime");
+      const registry = getRuntimeKakaoRoomRegistry();
+      try {
+        if (!registry) throw new KakaoRoomRegistryError("UNAVAILABLE");
+        await registry.authorize({ installationPublicId: prepared.intent.installationId ?? legacyKakaoInstallationId(prepared.intent.keyId), localRoomFingerprint: prepared.intent.localRoomFingerprint ?? prepared.intent.roomId, senderFingerprint: prepared.intent.senderId, requiredRole: "ADMIN" });
+      } catch {
+        recordKakaoWebhookRejection("ROLE_FORBIDDEN", { route: new URL(request.url).pathname, traceId: prepared.traceId });
+        return kakaoAssistantCapabilityForbiddenResponse(prepared.traceId);
+      }
     }
     if (!await isRuntimeKakaoFeatureEnabled("seasonApplicationsEnabled")) return kakaoAssistantErrorResponse(new Error("disabled"), prepared.traceId);
     const service = getRuntimeKakaoAssistant();

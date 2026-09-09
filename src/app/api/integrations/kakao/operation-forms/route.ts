@@ -5,7 +5,6 @@ import {
   operationFormErrorResponse,
   operationFormMutationResponse,
   operationFormUnavailableResponse,
-  operationFormWebhookForbiddenResponse,
 } from "@/modules/recruiting/operation-forms/http";
 import { getRuntimeOperationForms } from "@/modules/recruiting/operation-forms/runtime";
 import {
@@ -19,6 +18,7 @@ import {
   readIdempotencyKey, readJsonBody, readValidatedTraceId,
 } from "@/platform/http";
 import { isRuntimeKakaoFeatureEnabled } from "@/modules/recruiting/kakao-admin/runtime";
+import { kakaoWebhookFailureResponse } from "@/modules/recruiting/kakao-access/http";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
   const verification = await verifyKakaoHttpRequest(request, new Date(), MAXIMUM_KAKAO_BODY_BYTES, PUBLIC_KAKAO_ROOM_COMMAND);
   if (!verification.ok) {
     recordKakaoWebhookRejection(verification.code, { route: new URL(request.url).pathname, traceId });
-    return operationFormWebhookForbiddenResponse(verification.code, traceId);
+    return kakaoWebhookFailureResponse(verification.code, traceId);
   }
   const { rawBody, intent } = verification.value;
   if (!await isRuntimeKakaoFeatureEnabled("recruitingEnabled")) return operationFormUnavailableResponse(traceId);

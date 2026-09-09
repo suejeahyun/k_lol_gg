@@ -15,7 +15,6 @@ import {
   recruitingErrorResponse,
   recruitingMutationResponse,
   recruitingUnavailableResponse,
-  recruitingWebhookForbiddenResponse,
 } from "@/modules/recruiting/infrastructure/recruiting-http";
 import {
   problemForIdempotencyKeyError,
@@ -28,6 +27,7 @@ import {
   readValidatedTraceId,
 } from "@/platform/http";
 import { isRuntimeKakaoFeatureEnabled } from "@/modules/recruiting/kakao-admin/runtime";
+import { kakaoWebhookFailureResponse } from "@/modules/recruiting/kakao-access/http";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
   const verification = await verifyKakaoHttpRequest(request, new Date(), MAXIMUM_BODY_BYTES, PUBLIC_KAKAO_ROOM_COMMAND);
   if (!verification.ok) {
     recordKakaoWebhookRejection(verification.code, { route: new URL(request.url).pathname, traceId });
-    return recruitingWebhookForbiddenResponse(traceId);
+    return kakaoWebhookFailureResponse(verification.code, traceId);
   }
   const { rawBody, intent } = verification.value;
   if (!await isRuntimeKakaoFeatureEnabled("recruitingEnabled")) return recruitingUnavailableResponse(traceId);

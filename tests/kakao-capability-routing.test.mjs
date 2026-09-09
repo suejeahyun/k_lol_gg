@@ -22,7 +22,7 @@ test("Kakao route capability policy is explicit for every phone endpoint", async
 test("season member submissions and reads are public-room commands but force cancel has a trusted command gate", async () => {
   const source = await readFile(resolve(root, "src/app/api/integrations/kakao/season-applications/route.ts"), "utf8");
   assert.match(source, /kakaoSeasonCommandAccess\(command\.action\) === "TRUSTED_OPERATOR"/u);
-  assert.match(source, /KAKAO_WEBHOOK_ALLOWED_SENDERS/u);
-  assert.match(source, /recordKakaoWebhookRejection\("CAPABILITY_FORBIDDEN"/u);
-  assert.match(source, /kakaoAssistantCapabilityForbiddenResponse/u);
+  assert.match(source, /registry\.authorize/u);
+  assert.match(source, /requiredRole: "ADMIN"/u);
+  assert.match(source, /recordKakaoWebhookRejection\("ROLE_FORBIDDEN"/u);
 });

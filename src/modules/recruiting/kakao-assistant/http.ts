@@ -20,16 +20,17 @@ import {
 import { KakaoAssistantError } from "./domain";
 import type { KakaoAssistantResult } from "./postgres-kakao-assistant";
 import type { KakaoImageSessionResult } from "./postgres-kakao-image-receive";
+import { kakaoWebhookFailureResponse } from "../kakao-access/http";
 
 const problems = Object.freeze({
   forbidden: definePublicProblem({ code: "KAKAO_INTEGRATION_ERROR", status: 401, title: "연동 설정 오류", detail: "연동 설정 오류: 봇의 서버 주소와 서명 설정을 확인해 주세요." }),
   roomForbidden: definePublicProblem({ code: "KAKAO_ROOM_FORBIDDEN", status: 403, title: "이 카카오톡 방은 아직 연동되지 않았습니다.", detail: "이 카카오톡 방은 아직 연동되지 않았습니다. /V2연동확인 결과를 관리자에게 전달해 주세요." }),
   capabilityForbidden: definePublicProblem({ code: "KAKAO_CAPABILITY_FORBIDDEN", status: 403, title: "이 기능 권한 없음", detail: "이 기능 권한 없음: 이 요청에 필요한 권한을 확인해 주세요." }),
-  invalid: definePublicProblem({ code: "INVALID_KAKAO_REQUEST", status: 400, title: "Kakao 요청이 올바르지 않습니다.", detail: "명령과 허용된 입력 필드를 확인해 주세요." }),
-  mismatch: definePublicProblem({ code: "IDEMPOTENCY_MISMATCH", status: 409, title: "멱등성 키가 다른 요청에 사용되었습니다.", detail: "새 Idempotency-Key로 다시 요청해 주세요." }),
+  invalid: definePublicProblem({ code: "FORM_INVALID", status: 400, title: "Kakao 요청이 올바르지 않습니다.", detail: "명령과 허용된 입력 필드를 확인해 주세요." }),
+  mismatch: definePublicProblem({ code: "CONFLICT", status: 409, title: "멱등성 키가 다른 요청에 사용되었습니다.", detail: "새 Idempotency-Key로 다시 요청해 주세요." }),
   unavailable: definePublicProblem({ code: "KAKAO_ASSISTANT_UNAVAILABLE", status: 503, title: "Kakao 보조 서비스를 사용할 수 없습니다.", detail: "잠시 후 다시 시도해 주세요." }),
   notFound: definePublicProblem({ code: "KAKAO_TARGET_NOT_FOUND", status: 404, title: "대상을 찾을 수 없습니다.", detail: "요청한 Kakao 연동 대상을 찾을 수 없습니다." }),
-  conflict: definePublicProblem({ code: "KAKAO_STATE_CONFLICT", status: 409, title: "현재 상태에서는 처리할 수 없습니다.", detail: "운영 날짜, 모집 기간 또는 기존 검토 상태를 확인해 주세요." }),
+  conflict: definePublicProblem({ code: "CONFLICT", status: 409, title: "현재 상태에서는 처리할 수 없습니다.", detail: "운영 날짜, 모집 기간 또는 기존 검토 상태를 확인해 주세요." }),
   precondition: definePublicProblem({ code: "PRECONDITION_FAILED", status: 412, title: "다른 변경이 먼저 반영되었습니다.", detail: "최신 상태를 확인한 뒤 다시 시도해 주세요." }),
   ownerForbidden: definePublicProblem({ code: "FORBIDDEN", status: 403, title: "요청 권한이 없습니다.", detail: "승인된 대상 소유자 계정으로 다시 시도해 주세요." }),
 });
@@ -43,12 +44,7 @@ export async function prepareKakaoSignedJson(
   const verification = await verifyKakaoHttpRequest(request, new Date(), maximumBytes, policy);
   if (!verification.ok) {
     recordKakaoWebhookRejection(verification.code, { route: new URL(request.url).pathname, traceId });
-    const problem = verification.code === "ROOM_FORBIDDEN"
-      ? problems.roomForbidden
-      : verification.code === "CAPABILITY_FORBIDDEN"
-        ? problems.capabilityForbidden
-        : problems.forbidden;
-    return { ok: false as const, response: problemResponse(problem, { traceId }) };
+    return { ok: false as const, response: kakaoWebhookFailureResponse(verification.code, traceId) };
   }
   const verified = verification.value;
   const parsed = await readJsonBody(new Request(request.url, {

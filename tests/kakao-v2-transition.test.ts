@@ -4,7 +4,7 @@ import test from "node:test";
 
 import {
   recordKakaoWebhookRejection,
-  verifyKakaoHttpRequest,
+  verifyKakaoInstallationHttpRequest,
 } from "../src/modules/recruiting/infrastructure/kakao-http-request";
 import { kakaoWebhookBodyDigest } from "../src/modules/recruiting/infrastructure/kakao-signature";
 import { legacyKakaoRecruitTransitionResponse } from "../src/modules/recruiting/infrastructure/legacy-kakao-recruit-transition";
@@ -48,7 +48,7 @@ test("Kakao HTTP verification reports allowlisted internal reasons without weake
   const now = new Date("2026-09-08T00:00:00.000Z");
   try {
     for (const key of ENV_KEYS) delete process.env[key];
-    const unavailable = await verifyKakaoHttpRequest(new Request("https://example.test/hook", { method: "POST", body: "{}" }), now);
+    const unavailable = await verifyKakaoInstallationHttpRequest(new Request("https://example.test/hook", { method: "POST", body: "{}" }), now);
     assert.deepEqual(unavailable, { ok: false, code: "SIGNING_KEY_UNAVAILABLE" });
 
     process.env.KAKAO_WEBHOOK_SECRET_CURRENT = "0123456789abcdef0123456789abcdef";
@@ -56,13 +56,13 @@ test("Kakao HTTP verification reports allowlisted internal reasons without weake
     process.env.KAKAO_WEBHOOK_ALLOWED_ROOMS = "room-contract";
     process.env.KAKAO_WEBHOOK_ALLOWED_SENDERS = "sender-contract";
     process.env.KAKAO_WEBHOOK_BOT_SENDER_ID = "sender-bot";
-    const accepted = await verifyKakaoHttpRequest(signedRequest(now, '{"query":"Arcane"}'), now);
+    const accepted = await verifyKakaoInstallationHttpRequest(signedRequest(now, '{"query":"Arcane"}'), now);
     assert.equal(accepted.ok, true);
     if (accepted.ok) assert.equal(accepted.value.intent.keyId, "current-contract");
 
-    const query = await verifyKakaoHttpRequest(signedRequest(now, "{}", { url: "https://example.test/hook?secret=forbidden" }), now);
+    const query = await verifyKakaoInstallationHttpRequest(signedRequest(now, "{}", { url: "https://example.test/hook?secret=forbidden" }), now);
     assert.deepEqual(query, { ok: false, code: "QUERY_FORBIDDEN" });
-    const selfHeader = await verifyKakaoHttpRequest(signedRequest(now, "{}", { "x-klol-bot-self": "yes" }), now);
+    const selfHeader = await verifyKakaoInstallationHttpRequest(signedRequest(now, "{}", { "x-klol-bot-self": "yes" }), now);
     assert.deepEqual(selfHeader, { ok: false, code: "BOT_SELF_HEADER_INVALID" });
 
     const calls: unknown[][] = [];
@@ -90,6 +90,22 @@ test("Kakao HTTP verification reports allowlisted internal reasons without weake
       else process.env[key] = value;
     }
   }
+});
+
+test("V2 installation fingerprint is inside the HMAC material", { concurrency: false }, async () => {
+  const prior = process.env.KAKAO_WEBHOOK_SECRET_CURRENT; const priorBot = process.env.KAKAO_WEBHOOK_BOT_SENDER_ID; const now = new Date("2026-09-09T07:40:00.000Z");
+  process.env.KAKAO_WEBHOOK_SECRET_CURRENT = "0123456789abcdef0123456789abcdef";
+  process.env.KAKAO_WEBHOOK_BOT_SENDER_ID = `sender-${"e".repeat(32)}`;
+  try {
+    const body = "{}"; const timestamp = String(Math.floor(now.getTime() / 1_000)); const nonce = "nonce-installation-000001";
+    const installationId = `install-${"a".repeat(32)}`; const roomId = `room-${"b".repeat(32)}`; const senderId = `sender-${"c".repeat(32)}`;
+    const digest = kakaoWebhookBodyDigest(new TextEncoder().encode(body));
+    const material = ["KLOL_KAKAO_WEBHOOK_V2", timestamp, nonce, installationId, roomId, senderId, digest].join("\n");
+    const signature = `v2=${createHmac("sha256", process.env.KAKAO_WEBHOOK_SECRET_CURRENT).update(material).digest("hex")}`;
+    const request = (install: string) => new Request("https://example.test/hook", { method: "POST", headers: { "x-klol-timestamp": timestamp, "x-klol-nonce": nonce, "x-klol-installation": install, "x-klol-room": roomId, "x-klol-sender": senderId, "x-klol-bot-self": "0", "x-klol-signature": signature }, body });
+    const accepted = await verifyKakaoInstallationHttpRequest(request(installationId), now); assert.equal(accepted.ok, true); if (accepted.ok) assert.equal(accepted.value.intent.installationId, installationId);
+    assert.deepEqual(await verifyKakaoInstallationHttpRequest(request(`install-${"d".repeat(32)}`), now), { ok: false, code: "INVALID_SIGNATURE" });
+  } finally { if (prior === undefined) delete process.env.KAKAO_WEBHOOK_SECRET_CURRENT; else process.env.KAKAO_WEBHOOK_SECRET_CURRENT = prior; if (priorBot === undefined) delete process.env.KAKAO_WEBHOOK_BOT_SENDER_ID; else process.env.KAKAO_WEBHOOK_BOT_SENDER_ID = priorBot; }
 });
 
 test("legacy party and scrim mutations fail closed with an explicit V2 successor and no redirect", async () => {

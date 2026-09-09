@@ -17,6 +17,7 @@ import { userAccounts } from "./auth";
 import { privateAssets } from "./matches";
 import { recruitingSchema } from "./namespaces";
 import { bytea } from "./primitives";
+import { players } from "./registry";
 
 const timestamptz = (name: string) => timestamp(name, { mode: "date", withTimezone: true });
 
@@ -33,6 +34,10 @@ export const scrimRecruitStatus = recruitingSchema.enum("scrim_status", [
 export const recruitingOutboxStatus = recruitingSchema.enum("outbox_status", ["PENDING", "DELIVERED"]);
 export const operationFormType = recruitingSchema.enum("operation_form_type", ["friends", "leaves", "meetups", "suggestions"]);
 export const operationFormStatus = recruitingSchema.enum("operation_form_status", ["PENDING", "IN_REVIEW", "COMPLETED", "REJECTED", "CANCELLED"]);
+export const kakaoRoomStatus = recruitingSchema.enum("kakao_room_status", ["ACTIVE", "PAUSED", "REVOKED"]);
+export const kakaoRoomMemberRole = recruitingSchema.enum("kakao_room_member_role", ["MEMBER", "MANAGER", "ADMIN"]);
+export const kakaoRoomRegistrationSource = recruitingSchema.enum("kakao_room_registration_source", ["BOOTSTRAP", "PAIRING", "ADMIN"]);
+export const kakaoBotInstallationStatus = recruitingSchema.enum("kakao_bot_installation_status", ["ACTIVE", "REVOKED"]);
 export const kakaoImageTargetType = recruitingSchema.enum("kakao_image_target_type", ["MATCH_SUBMISSION", "DISCIPLINE_TASK"]);
 export const kakaoImageSessionStatus = recruitingSchema.enum("kakao_image_session_status", ["ACTIVE", "COMPLETE", "CANCELLED", "EXPIRED"]);
 export const kakaoInboundImageStatus = recruitingSchema.enum("kakao_inbound_image_status", ["STAGED", "READY", "DELETE_PENDING"]);
@@ -236,6 +241,100 @@ export const kakaoOperationSettings = recruitingSchema.table("kakao_operation_se
   check("kakao_operation_settings_singleton", sql`${table.id} = 1`),
   check("kakao_operation_settings_revision_nonnegative", sql`${table.revision} >= 0`),
   check("kakao_operation_settings_max_message", sql`${table.maxMessageLength} BETWEEN 100 AND 10000`),
+]);
+
+export const kakaoRooms = recruitingSchema.table("kakao_rooms", {
+  id: uuid("id").primaryKey(),
+  revision: bigint("revision", { mode: "number" }).default(0).notNull(),
+  displayName: varchar("display_name", { length: 120 }).notNull(),
+  status: kakaoRoomStatus("status").default("ACTIVE").notNull(),
+  registrationSource: kakaoRoomRegistrationSource("registration_source").notNull(),
+  policyVersion: integer("policy_version").default(1).notNull(),
+  registeredByUserAccountId: uuid("registered_by_user_account_id").references(() => userAccounts.id, { onDelete: "restrict" }),
+  registeredAt: timestamptz("registered_at").defaultNow().notNull(),
+  updatedAt: timestamptz("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("kakao_rooms_status_idx").on(table.status, table.updatedAt),
+  check("kakao_rooms_revision_nonnegative", sql`${table.revision} >= 0`),
+  check("kakao_rooms_display_name", sql`char_length(btrim(${table.displayName})) BETWEEN 1 AND 120`),
+  check("kakao_rooms_policy_version", sql`${table.policyVersion} BETWEEN 1 AND 1000000`),
+]);
+
+export const kakaoBotInstallations = recruitingSchema.table("kakao_bot_installations", {
+  id: uuid("id").primaryKey(),
+  revision: bigint("revision", { mode: "number" }).default(0).notNull(),
+  publicId: varchar("public_id", { length: 128 }).notNull(),
+  displayName: varchar("display_name", { length: 120 }).notNull(),
+  status: kakaoBotInstallationStatus("status").default("ACTIVE").notNull(),
+  firstSeenAt: timestamptz("first_seen_at").defaultNow().notNull(),
+  lastSeenAt: timestamptz("last_seen_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("kakao_bot_installations_public_uidx").on(table.publicId),
+  index("kakao_bot_installations_status_idx").on(table.status, table.lastSeenAt),
+  check("kakao_bot_installations_revision_nonnegative", sql`${table.revision} >= 0`),
+  check("kakao_bot_installations_public", sql`char_length(btrim(${table.publicId})) BETWEEN 8 AND 128`),
+  check("kakao_bot_installations_name", sql`char_length(btrim(${table.displayName})) BETWEEN 1 AND 120`),
+]);
+
+export const kakaoRoomBindings = recruitingSchema.table("kakao_room_bindings", {
+  id: uuid("id").primaryKey(),
+  revision: bigint("revision", { mode: "number" }).default(0).notNull(),
+  installationId: uuid("installation_id").notNull().references(() => kakaoBotInstallations.id, { onDelete: "restrict" }),
+  localRoomFingerprint: varchar("local_room_fingerprint", { length: 128 }).notNull(),
+  roomId: uuid("room_id").notNull().references(() => kakaoRooms.id, { onDelete: "cascade" }),
+  registrationSource: kakaoRoomRegistrationSource("registration_source").notNull(),
+  createdAt: timestamptz("created_at").defaultNow().notNull(),
+  updatedAt: timestamptz("updated_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("kakao_room_bindings_installation_local_uidx").on(table.installationId, table.localRoomFingerprint),
+  index("kakao_room_bindings_room_idx").on(table.roomId, table.updatedAt),
+  check("kakao_room_bindings_revision_nonnegative", sql`${table.revision} >= 0`),
+  check("kakao_room_bindings_local", sql`char_length(btrim(${table.localRoomFingerprint})) BETWEEN 8 AND 128`),
+]);
+
+export const kakaoRoomMembers = recruitingSchema.table("kakao_room_members", {
+  id: uuid("id").primaryKey(),
+  revision: bigint("revision", { mode: "number" }).default(0).notNull(),
+  roomId: uuid("room_id").notNull().references(() => kakaoRooms.id, { onDelete: "cascade" }),
+  senderFingerprint: varchar("sender_fingerprint", { length: 128 }).notNull(),
+  linkedUserAccountId: uuid("linked_user_account_id").references(() => userAccounts.id, { onDelete: "set null" }),
+  linkedPlayerId: uuid("linked_player_id").references(() => players.id, { onDelete: "set null" }),
+  role: kakaoRoomMemberRole("role").default("MEMBER").notNull(),
+  lastActivityAt: timestamptz("last_activity_at").defaultNow().notNull(),
+  createdAt: timestamptz("created_at").defaultNow().notNull(),
+  updatedAt: timestamptz("updated_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("kakao_room_members_room_sender_uidx").on(table.roomId, table.senderFingerprint),
+  index("kakao_room_members_room_role_idx").on(table.roomId, table.role, table.updatedAt),
+  index("kakao_room_members_user_idx").on(table.linkedUserAccountId),
+  check("kakao_room_members_revision_nonnegative", sql`${table.revision} >= 0`),
+  check("kakao_room_members_sender", sql`char_length(btrim(${table.senderFingerprint})) BETWEEN 8 AND 128`),
+]);
+
+export const kakaoRoomPairings = recruitingSchema.table("kakao_room_pairings", {
+  id: uuid("id").primaryKey(),
+  targetRoomId: uuid("target_room_id").references(() => kakaoRooms.id, { onDelete: "restrict" }),
+  displayName: varchar("display_name", { length: 120 }).notNull(),
+  codeHash: bytea("code_hash").notNull(),
+  expiresAt: timestamptz("expires_at").notNull(),
+  consumedAt: timestamptz("consumed_at"),
+  consumedRoomId: uuid("consumed_room_id").references(() => kakaoRooms.id, { onDelete: "restrict" }),
+  consumedInstallationId: uuid("consumed_installation_id").references(() => kakaoBotInstallations.id, { onDelete: "restrict" }),
+  consumedLocalRoomFingerprint: varchar("consumed_local_room_fingerprint", { length: 128 }),
+  consumedSenderFingerprint: varchar("consumed_sender_fingerprint", { length: 128 }),
+  consumedRequestKeyHash: bytea("consumed_request_key_hash"),
+  createdByUserAccountId: uuid("created_by_user_account_id").notNull().references(() => userAccounts.id, { onDelete: "restrict" }),
+  createdAt: timestamptz("created_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("kakao_room_pairings_code_uidx").on(table.codeHash),
+  index("kakao_room_pairings_expiry_idx").on(table.expiresAt, table.consumedAt),
+  check("kakao_room_pairings_code_hash", sql`octet_length(${table.codeHash}) = 32`),
+  check("kakao_room_pairings_name", sql`char_length(btrim(${table.displayName})) BETWEEN 1 AND 120`),
+  check("kakao_room_pairings_expiry", sql`${table.expiresAt} > ${table.createdAt}`),
+  check("kakao_room_pairings_local", sql`${table.consumedLocalRoomFingerprint} IS NULL OR char_length(btrim(${table.consumedLocalRoomFingerprint})) BETWEEN 8 AND 128`),
+  check("kakao_room_pairings_sender", sql`${table.consumedSenderFingerprint} IS NULL OR char_length(btrim(${table.consumedSenderFingerprint})) BETWEEN 8 AND 128`),
+  check("kakao_room_pairings_request_key", sql`${table.consumedRequestKeyHash} IS NULL OR octet_length(${table.consumedRequestKeyHash}) = 32`),
+  check("kakao_room_pairings_consumption", sql`(${table.consumedAt} IS NULL AND ${table.consumedRoomId} IS NULL AND ${table.consumedInstallationId} IS NULL AND ${table.consumedLocalRoomFingerprint} IS NULL AND ${table.consumedSenderFingerprint} IS NULL AND ${table.consumedRequestKeyHash} IS NULL) OR (${table.consumedAt} IS NOT NULL AND ${table.consumedRoomId} IS NOT NULL AND ${table.consumedInstallationId} IS NOT NULL AND ${table.consumedLocalRoomFingerprint} IS NOT NULL AND ${table.consumedSenderFingerprint} IS NOT NULL AND ${table.consumedRequestKeyHash} IS NOT NULL)`),
 ]);
 
 export const operationForms = recruitingSchema.table("operation_forms", {

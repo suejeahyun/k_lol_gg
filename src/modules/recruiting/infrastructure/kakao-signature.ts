@@ -3,6 +3,7 @@ import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 export type KakaoWebhookRequest = Readonly<{
   timestampSeconds: number;
   nonce: string;
+  installationId?: string;
   roomId: string;
   senderId: string;
   botSelf: boolean;
@@ -20,6 +21,8 @@ export type VerifiedKakaoWebhookIntent = Readonly<{
   keyId: string;
   timestampSeconds: number;
   nonce: string;
+  installationId?: string;
+  localRoomFingerprint?: string;
   roomId: string;
   senderId: string;
   bodyDigestHex: string;
@@ -27,7 +30,7 @@ export type VerifiedKakaoWebhookIntent = Readonly<{
   transactionRecheck: true;
 }>;
 
-export type KakaoWebhookCapability = "PUBLIC_ROOM_COMMAND" | "TRUSTED_SENDER_COMMAND";
+export type KakaoWebhookCapability = "INSTALLATION_ONLY" | "PUBLIC_ROOM_COMMAND" | "TRUSTED_SENDER_COMMAND";
 
 export type KakaoWebhookVerification =
   | Readonly<{ ok: true; intent: VerifiedKakaoWebhookIntent }>
@@ -43,8 +46,14 @@ export function kakaoWebhookBodyDigest(rawBody: Uint8Array) {
   return createHash("sha256").update(rawBody).digest("hex");
 }
 
+export function legacyKakaoInstallationId(keyId: string) {
+  return `install-${createHash("sha256").update(`klol-v2:legacy-installation:v1\0${keyId}`).digest("hex").slice(0, 32)}`;
+}
+
 function signatureMaterial(request: Omit<KakaoWebhookRequest, "signature" | "botSelf" | "rawBody">, bodyDigestHex: string) {
-  return ["KLOL_KAKAO_WEBHOOK_V1", request.timestampSeconds, request.nonce, request.roomId, request.senderId, bodyDigestHex].join("\n");
+  return request.installationId
+    ? ["KLOL_KAKAO_WEBHOOK_V2", request.timestampSeconds, request.nonce, request.installationId, request.roomId, request.senderId, bodyDigestHex].join("\n")
+    : ["KLOL_KAKAO_WEBHOOK_V1", request.timestampSeconds, request.nonce, request.roomId, request.senderId, bodyDigestHex].join("\n");
 }
 
 export function signKakaoWebhookForFixture(
@@ -52,7 +61,7 @@ export function signKakaoWebhookForFixture(
   secret: Uint8Array,
 ) {
   const digest = kakaoWebhookBodyDigest(request.rawBody);
-  return `v1=${createHmac("sha256", secret).update(signatureMaterial(request, digest)).digest("hex")}`;
+  return `${request.installationId ? "v2" : "v1"}=${createHmac("sha256", secret).update(signatureMaterial(request, digest)).digest("hex")}`;
 }
 
 export function verifyKakaoWebhook(input: Readonly<{
@@ -76,6 +85,7 @@ export function verifyKakaoWebhook(input: Readonly<{
     !Number.isFinite(input.now.getTime()) ||
     !Number.isSafeInteger(maximumSkewSeconds) || maximumSkewSeconds < 1 || maximumSkewSeconds > 900 ||
     !/^[A-Za-z0-9_-]{16,100}$/u.test(request.nonce) ||
+    (request.installationId !== undefined && !safeIdentifier(request.installationId)) ||
     !safeIdentifier(request.roomId) || !safeIdentifier(request.senderId) ||
     !safeIdentifier(input.botSenderId) ||
     !Number.isSafeInteger(maximumBodyBytes) || maximumBodyBytes < 2 || maximumBodyBytes > 4_200_000 ||
@@ -83,17 +93,19 @@ export function verifyKakaoWebhook(input: Readonly<{
     input.secrets.length < 1 || input.secrets.length > 2 ||
     new Set(input.secrets.map((entry) => entry.keyId)).size !== input.secrets.length ||
     input.secrets.some((entry) => !safeIdentifier(entry.keyId) || !(entry.secret instanceof Uint8Array) || entry.secret.byteLength < 32) ||
-    (requiredCapability !== "PUBLIC_ROOM_COMMAND" && requiredCapability !== "TRUSTED_SENDER_COMMAND")
+    !["INSTALLATION_ONLY", "PUBLIC_ROOM_COMMAND", "TRUSTED_SENDER_COMMAND"].includes(requiredCapability)
   ) return { ok: false, code: "INVALID_REQUEST" };
   if (Math.abs(Math.floor(input.now.getTime() / 1_000) - request.timestampSeconds) > maximumSkewSeconds) {
     return { ok: false, code: "EXPIRED_TIMESTAMP" };
   }
   if (input.nonceAlreadyUsed) return { ok: false, code: "REPLAYED_NONCE" };
 
-  const signatureMatch = /^v1=([a-f0-9]{64})$/u.exec(request.signature);
+  const expectedVersion = request.installationId ? "v2" : "v1";
+  const signatureMatch = /^(v1|v2)=([a-f0-9]{64})$/u.exec(request.signature);
+  if (signatureMatch?.[1] !== expectedVersion) return { ok: false, code: "INVALID_SIGNATURE" };
   if (!signatureMatch) return { ok: false, code: "INVALID_SIGNATURE" };
   const bodyDigestHex = kakaoWebhookBodyDigest(request.rawBody);
-  const supplied = Buffer.from(signatureMatch[1]!, "hex");
+  const supplied = Buffer.from(signatureMatch[2]!, "hex");
   let matchedKeyId: string | null = null;
   for (const entry of input.secrets) {
     const expected = createHmac("sha256", entry.secret)
@@ -102,8 +114,19 @@ export function verifyKakaoWebhook(input: Readonly<{
     if (timingSafeEqual(expected, supplied)) matchedKeyId = entry.keyId;
   }
   if (!matchedKeyId) return { ok: false, code: "INVALID_SIGNATURE" };
-  if (!input.allowedRoomIds.has(request.roomId)) return { ok: false, code: "ROOM_FORBIDDEN" };
   if (request.botSelf || request.senderId === input.botSenderId) return { ok: false, code: "BOT_SELF_MESSAGE" };
+  if (requiredCapability === "INSTALLATION_ONLY") {
+    return {
+      ok: true,
+      intent: Object.freeze({
+        kind: "KAKAO_HMAC", keyId: matchedKeyId, timestampSeconds: request.timestampSeconds,
+        nonce: request.nonce, installationId: request.installationId ?? legacyKakaoInstallationId(matchedKeyId),
+        roomId: request.roomId, senderId: request.senderId, bodyDigestHex,
+        requireNonceClaim: true, transactionRecheck: true,
+      }),
+    };
+  }
+  if (!input.allowedRoomIds.has(request.roomId)) return { ok: false, code: "ROOM_FORBIDDEN" };
   if (requiredCapability === "TRUSTED_SENDER_COMMAND" && !input.allowedSenderIds.has(request.senderId)) {
     return { ok: false, code: "CAPABILITY_FORBIDDEN" };
   }
@@ -114,6 +137,7 @@ export function verifyKakaoWebhook(input: Readonly<{
       keyId: matchedKeyId,
       timestampSeconds: request.timestampSeconds,
       nonce: request.nonce,
+      installationId: request.installationId ?? legacyKakaoInstallationId(matchedKeyId),
       roomId: request.roomId,
       senderId: request.senderId,
       bodyDigestHex,
