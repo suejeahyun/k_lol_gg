@@ -1,0 +1,3 @@
+CREATE TYPE "recruiting"."kakao_room_capability_profile" AS ENUM('RECRUIT', 'FEATURES');--> statement-breakpoint
+ALTER TABLE "recruiting"."kakao_room_pairings" ADD COLUMN "capability_profile" "recruiting"."kakao_room_capability_profile" DEFAULT 'RECRUIT' NOT NULL;--> statement-breakpoint
+ALTER TABLE "recruiting"."kakao_rooms" ADD COLUMN "capability_profile" "recruiting"."kakao_room_capability_profile" DEFAULT 'RECRUIT' NOT NULL;

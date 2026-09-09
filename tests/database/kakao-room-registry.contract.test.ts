@@ -7,7 +7,7 @@ import { PostgresKakaoRoomRegistry, KakaoRoomRegistryError } from "../../src/mod
 import type { OperationsActor } from "../../src/modules/operations/application/ports";
 import { createDatabaseHandle } from "../../src/platform/db/database";
 import { applyMigrations } from "../../src/platform/db/migrate";
-import { authSessions, kakaoBotInstallations, recruitParties, userAccounts } from "../../src/platform/db/schema";
+import { authSessions, kakaoBotInstallations, kakaoRoomPairings, kakaoRooms, recruitParties, userAccounts } from "../../src/platform/db/schema";
 
 const installationA = `install-${"a".repeat(32)}`;
 const installationB = `install-${"b".repeat(32)}`;
@@ -50,22 +50,31 @@ test("one installation maps to exactly one canonical room without room parsing o
     await assert.rejects(registry.authorize({ installationPublicId: installationA, senderFingerprint: senderA, requiredRole: "MEMBER" }), (error: unknown) => error instanceof KakaoRoomRegistryError && error.code === "ROOM_BINDING_REQUIRED");
     assert.equal((await database.select().from(kakaoBotInstallations).where(eq(kakaoBotInstallations.publicId, installationA))).length, 1);
 
-    const firstCode = await registry.createPairing({ actor, displayName: "동일 실제 방", ttlMinutes: 10, metadata: metadata() });
+    const firstCode = await registry.createPairing({ actor, displayName: "동일 실제 방", capabilityProfile: "RECRUIT", ttlMinutes: 10, metadata: metadata() });
+    assert.equal(firstCode.capabilityProfile, "RECRUIT");
     const firstRequest = pairInput(installationA, senderA, firstCode.code, "pair-consume-first-12345678");
     const first = await registry.consumePairing(firstRequest);
     assert.equal((await registry.consumePairing(firstRequest)).replayed, true);
-    assert.equal((await registry.authorize({ installationPublicId: installationA, senderFingerprint: senderA, requiredRole: "MEMBER" })).roomId, first.roomId);
+    const firstAuthorization = await registry.authorize({ installationPublicId: installationA, senderFingerprint: senderA, requiredRole: "MEMBER", requiredCapabilityProfile: "RECRUIT" });
+    assert.equal(firstAuthorization.roomId, first.roomId);
+    assert.equal(firstAuthorization.capabilityProfile, "RECRUIT");
+    await assert.rejects(registry.authorize({ installationPublicId: installationA, senderFingerprint: senderA, requiredRole: "MEMBER", requiredCapabilityProfile: "FEATURES" }), (error: unknown) => error instanceof KakaoRoomRegistryError && error.code === "ROOM_CAPABILITY_FORBIDDEN");
+    assert.equal((await database.select({ capabilityProfile: kakaoRooms.capabilityProfile }).from(kakaoRooms).where(eq(kakaoRooms.id, first.roomId)))[0]?.capabilityProfile, "RECRUIT");
 
     const secondCode = await registry.createPairing({ actor, targetRoomId: first.roomId, displayName: "동일 실제 방", ttlMinutes: 10, metadata: metadata() });
+    assert.equal(secondCode.capabilityProfile, "RECRUIT");
     const second = await registry.consumePairing(pairInput(installationB, senderB, secondCode.code, "pair-consume-second-12345678"));
     assert.equal(second.roomId, first.roomId);
+    await assert.rejects(registry.createPairing({ actor, targetRoomId: first.roomId, displayName: "프로필 변경 금지", capabilityProfile: "FEATURES", ttlMinutes: 10, metadata: metadata() }), (error: unknown) => error instanceof KakaoRoomRegistryError && error.code === "CONFLICT");
     const unknown = await registry.authorize({ installationPublicId: installationA, senderFingerprint: senderC, requiredRole: "MEMBER" });
     assert.equal(unknown.role, "MEMBER");
     await assert.rejects(registry.authorize({ installationPublicId: installationA, senderFingerprint: senderC, requiredRole: "ADMIN" }), (error: unknown) => error instanceof KakaoRoomRegistryError && error.code === "ROLE_FORBIDDEN");
 
-    const displayCode = await registry.createPairing({ actor, displayName: "표시명 fallback", ttlMinutes: 10, metadata: metadata() });
+    const displayCode = await registry.createPairing({ actor, displayName: "사이트 기능 방", capabilityProfile: "FEATURES", ttlMinutes: 10, metadata: metadata() });
     const displayPairing = await registry.consumePairing(pairInput(installationC, displaySender, displayCode.code, "pair-display-12345678"));
+    assert.equal(displayPairing.capabilityProfile, "FEATURES");
     assert.equal(displayPairing.role, "MEMBER");
+    assert.equal((await registry.authorize({ installationPublicId: installationC, senderFingerprint: displaySender, requiredRole: "MEMBER", requiredCapabilityProfile: "FEATURES" })).capabilityProfile, "FEATURES");
     await assert.rejects(registry.authorize({ installationPublicId: installationC, senderFingerprint: displaySender, requiredRole: "MANAGER" }), (error: unknown) => error instanceof KakaoRoomRegistryError && error.code === "ROLE_FORBIDDEN");
     const conflictCode = await registry.createPairing({ actor, targetRoomId: first.roomId, displayName: "다른 방 금지", ttlMinutes: 10, metadata: metadata() });
     await assert.rejects(registry.consumePairing(pairInput(installationC, displaySender, conflictCode.code, "pair-conflict-12345678")), (error: unknown) => error instanceof KakaoRoomRegistryError && error.code === "CONFLICT");
@@ -84,7 +93,10 @@ test("one installation maps to exactly one canonical room without room parsing o
     await database.insert(recruitParties).values({ id: legacyPartyId, recruitDate: "2026-09-09", resetSequence: 99, recruitNumber: 99, type: "ARAM", status: "IN_PROGRESS", title: "기존 방 이관", maximumMembers: 5, membersJson: [], sourceRoomId: bootstrapRoom, lastActivityAt: now });
     await registry.bootstrapFromEnvironment(bootstrapInstallation, { KAKAO_WEBHOOK_ALLOWED_ROOMS: bootstrapRoom, KAKAO_WEBHOOK_ALLOWED_SENDERS: senderA });
     const bootstrapped = await registry.authorize({ installationPublicId: bootstrapInstallation, senderFingerprint: senderA, requiredRole: "ADMIN" });
+    assert.equal(bootstrapped.capabilityProfile, "RECRUIT");
     assert.equal((await database.select({ sourceRoomId: recruitParties.sourceRoomId }).from(recruitParties).where(eq(recruitParties.id, legacyPartyId)))[0]?.sourceRoomId, bootstrapped.roomId);
+    assert.deepEqual(new Set((await registry.list()).rooms.map((room) => room.capabilityProfile)), new Set(["RECRUIT", "FEATURES"]));
+    assert.ok((await database.select().from(kakaoRoomPairings)).every((pairing) => pairing.capabilityProfile === "RECRUIT" || pairing.capabilityProfile === "FEATURES"));
   } finally {
     if (priorRooms === undefined) delete process.env.KAKAO_WEBHOOK_ALLOWED_ROOMS; else process.env.KAKAO_WEBHOOK_ALLOWED_ROOMS = priorRooms;
     if (priorSenders === undefined) delete process.env.KAKAO_WEBHOOK_ALLOWED_SENDERS; else process.env.KAKAO_WEBHOOK_ALLOWED_SENDERS = priorSenders;

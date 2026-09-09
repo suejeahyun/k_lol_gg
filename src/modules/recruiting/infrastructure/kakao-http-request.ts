@@ -9,6 +9,7 @@ import {
   legacyKakaoInstallationId,
 } from "./kakao-signature";
 import { KakaoRoomRegistryError } from "../kakao-access/postgres-kakao-room-registry";
+import type { KakaoRoomCapabilityProfile } from "../kakao-access/domain";
 
 export const MAXIMUM_KAKAO_BODY_BYTES = 256 * 1_024;
 export const MAXIMUM_KAKAO_IMAGE_BODY_BYTES = 4_200_000;
@@ -75,6 +76,7 @@ export type KakaoHttpRequestFailureCode =
   | "ROOM_BINDING_REQUIRED"
   | "ROOM_NOT_REGISTERED"
   | "ROOM_PAUSED"
+  | "ROOM_CAPABILITY_FORBIDDEN"
   | "ROLE_FORBIDDEN"
   | "REGISTRY_UNAVAILABLE"
   | Exclude<KakaoWebhookVerification, { ok: true }>["code"];
@@ -85,11 +87,14 @@ export type KakaoHttpRequestVerification =
 
 export type KakaoWebhookAuthorizationPolicy = Readonly<{
   capability: KakaoWebhookCapability;
+  roomCapabilityProfile?: KakaoRoomCapabilityProfile;
 }>;
 
 export const PUBLIC_KAKAO_ROOM_COMMAND = Object.freeze({ capability: "PUBLIC_ROOM_COMMAND" as const });
 export const TRUSTED_KAKAO_SENDER_COMMAND = Object.freeze({ capability: "TRUSTED_SENDER_COMMAND" as const });
 export const INSTALLATION_KAKAO_REQUEST = Object.freeze({ capability: "INSTALLATION_ONLY" as const });
+export const RECRUIT_KAKAO_ROOM_COMMAND = Object.freeze({ capability: "PUBLIC_ROOM_COMMAND" as const, roomCapabilityProfile: "RECRUIT" as const });
+export const FEATURES_KAKAO_ROOM_COMMAND = Object.freeze({ capability: "PUBLIC_ROOM_COMMAND" as const, roomCapabilityProfile: "FEATURES" as const });
 
 /**
  * Emits only an allowlisted reason and request metadata. Never add request
@@ -103,7 +108,7 @@ export function recordKakaoWebhookRejection(
     ? "ROOM"
     : code === "INSTALLATION_REVOKED" || code === "ROOM_BINDING_REQUIRED" || code === "ROOM_NOT_REGISTERED" || code === "ROOM_PAUSED"
       ? "ROOM_REGISTRY"
-    : code === "CAPABILITY_FORBIDDEN"
+    : code === "CAPABILITY_FORBIDDEN" || code === "ROOM_CAPABILITY_FORBIDDEN"
       ? "CAPABILITY"
       : code === "ROLE_FORBIDDEN"
         ? "ROLE"
@@ -187,6 +192,7 @@ export async function verifyKakaoHttpRequest(
       installationPublicId: installation.value.intent.installationId ?? legacyKakaoInstallationId(installation.value.intent.keyId),
       senderFingerprint: installation.value.intent.senderId,
       requiredRole: policy.capability === "TRUSTED_SENDER_COMMAND" ? "ADMIN" : "MEMBER",
+      requiredCapabilityProfile: policy.roomCapabilityProfile,
       keyId: installation.value.intent.keyId,
       botVersion: installation.value.intent.botVersion,
     });
@@ -201,6 +207,7 @@ export async function verifyKakaoHttpRequest(
       if (error.code === "ROOM_BINDING_REQUIRED") return { ok: false, code: "ROOM_BINDING_REQUIRED" };
       if (error.code === "ROOM_NOT_REGISTERED") return { ok: false, code: "ROOM_NOT_REGISTERED" };
       if (error.code === "ROOM_PAUSED") return { ok: false, code: "ROOM_PAUSED" };
+      if (error.code === "ROOM_CAPABILITY_FORBIDDEN") return { ok: false, code: "ROOM_CAPABILITY_FORBIDDEN" };
       if (error.code === "ROLE_FORBIDDEN") return { ok: false, code: "ROLE_FORBIDDEN" };
     }
     return { ok: false, code: "REGISTRY_UNAVAILABLE" };

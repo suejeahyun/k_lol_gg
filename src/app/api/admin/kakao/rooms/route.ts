@@ -20,8 +20,8 @@ export async function POST(request: Request) {
   const registry = getRuntimeKakaoRoomRegistry(); if (!registry) return problemResponse(problems.unavailable, { traceId: prepared.traceId });
   try {
     const body = prepared.body as Record<string, unknown>; const actor = operationsActor(auth.session);
-    if (body.action === "CREATE_PAIRING" && typeof body.displayName === "string") {
-      const result = await registry.createPairing({ actor, targetRoomId: typeof body.targetRoomId === "string" ? body.targetRoomId : null, displayName: body.displayName, ttlMinutes: typeof body.ttlMinutes === "number" ? body.ttlMinutes : 10, metadata: prepared.metadata });
+    if (body.action === "CREATE_PAIRING" && typeof body.displayName === "string" && (body.capabilityProfile === "RECRUIT" || body.capabilityProfile === "FEATURES")) {
+      const result = await registry.createPairing({ actor, targetRoomId: typeof body.targetRoomId === "string" ? body.targetRoomId : null, displayName: body.displayName, capabilityProfile: body.capabilityProfile, ttlMinutes: typeof body.ttlMinutes === "number" ? body.ttlMinutes : 10, metadata: prepared.metadata });
       return noStoreJsonResponse({ ok: true, ...result }, { status: 201, traceId: prepared.traceId, headers: result.replayed ? { "Idempotency-Replayed": "true" } : undefined });
     }
     if (body.action === "SET_ROOM_STATUS" && typeof body.roomId === "string" && (body.status === "ACTIVE" || body.status === "PAUSED" || body.status === "REVOKED")) {
