@@ -14,6 +14,8 @@
     "bot:kakao:v41": "node scripts/build-messengerbot-v41.mjs",
     "bot:kakao:audit": "node scripts/audit-messengerbot-v41-commands.mjs",
     "bot:kakao:rhino-audit": "node scripts/audit-messengerbot-rhino-static.mjs",
+    "verify:champion-images": "tsx scripts/champions/verify-data-dragon-images.ts",
+    "db:champion-images": "tsx scripts/champions/backfill-data-dragon-images.ts",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test:contracts": "node --test tests/*.test.mjs",

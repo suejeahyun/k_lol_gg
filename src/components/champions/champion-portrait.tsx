@@ -1,10 +1,10 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element -- Riot Data Dragon URLs are DB-allowlisted and must keep a client-side error fallback. */
+/* eslint-disable @next/next/no-img-element -- Riot Data Dragon URLs are allowlisted and require a client-side candidate fallback. */
 
 import { useState } from "react";
 
-import { championPortraitInitial, normalizeChampionImageUrl, resolveChampionImageUrl } from "@/modules/champions/domain/champion-image";
+import { championImageCandidates, championPortraitInitial } from "@/modules/champions/domain/champion-image";
 
 import styles from "./champion-portrait.module.css";
 
@@ -21,12 +21,13 @@ export function ChampionPortrait({
   eager?: boolean;
   className?: string;
 }>) {
-  const [failed, setFailed] = useState(false);
-  const safeUrl = normalizeChampionImageUrl(imageUrl) ?? resolveChampionImageUrl(null, championKey);
+  const [failedUrls, setFailedUrls] = useState<readonly string[]>([]);
+  const safeUrl = championImageCandidates(imageUrl, championKey, displayName)
+    .find((candidate) => !failedUrls.includes(candidate)) ?? null;
   const classes = [styles.portrait, className].filter(Boolean).join(" ");
 
-  if (!safeUrl || failed) {
+  if (!safeUrl) {
     return <span className={`${classes} ${styles.fallback}`} role="img" aria-label={`${displayName} 챔피언 이미지 없음`}>{championPortraitInitial(displayName)}</span>;
   }
-  return <img className={classes} src={safeUrl} alt={`${displayName} 챔피언`} width={48} height={48} loading={eager ? "eager" : "lazy"} decoding="async" referrerPolicy="no-referrer" onError={() => setFailed(true)} />;
+  return <img className={classes} src={safeUrl} alt={`${displayName} 챔피언`} width={48} height={48} loading={eager ? "eager" : "lazy"} decoding="async" referrerPolicy="no-referrer" onError={() => setFailedUrls((current) => current.includes(safeUrl) ? current : [...current, safeUrl])} />;
 }

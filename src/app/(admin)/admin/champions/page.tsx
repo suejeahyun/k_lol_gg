@@ -5,6 +5,8 @@ import { requirePageRole } from "@/modules/auth/infrastructure/server-authorizat
 import { parseChampionListQuery } from "@/modules/champions";
 import { loadRuntimeChampions } from "@/modules/champions/infrastructure/runtime-champions";
 import { AdminContentTabs } from "@/components/admin/media/admin-media-pages";
+import { ChampionPortrait } from "@/components/champions/champion-portrait";
+import { officialChampionImageUrl } from "@/modules/champions/domain/champion-image";
 
 import styles from "@/components/admin/media/admin-media.module.css";
 
@@ -26,7 +28,7 @@ export default async function AdminChampionsPage({ searchParams }: { searchParam
     <AdminContentTabs active="champion" />
     <form className={styles.filters} action="/admin/champions"><label>검색<input name="q" defaultValue={query?.query ?? ""} maxLength={80} placeholder="이름 또는 고정 키" /></label><label>상태<select name="status" defaultValue={query?.status ?? ""}><option value="">전체</option><option value="ACTIVE">ACTIVE</option><option value="INACTIVE">INACTIVE</option></select></label><input type="hidden" name="pageSize" value={query?.pageSize ?? 30} /><button type="submit" className={styles.submit}>적용</button></form>
     {result.state !== "ready" ? <section className={styles.state} role={result.state === "error" ? "alert" : "status"}><Sparkles aria-hidden="true" /><h2>챔피언 목록을 불러오지 못했습니다.</h2><p>검색 조건과 데이터베이스 연결을 확인해 주세요.</p></section> : result.data.items.length === 0 ? <section className={styles.state} role="status"><LibraryBig aria-hidden="true" /><h2>조건에 맞는 챔피언이 없습니다.</h2><p>새 챔피언을 등록하거나 검색 조건을 바꿔 보세요.</p></section> : <>
-      <section className={styles.list} aria-label="챔피언 목록">{result.data.items.map((item) => <Link className={styles.item} href={`/admin/champions/${item.key}/edit`} key={item.key}><div><h2>{item.displayName}</h2><p className={styles.code}>고정 키 · {item.key}</p></div><span className={styles.badge} data-state={item.status}>{item.status}</span><span>rev. {item.revision}</span></Link>)}</section>
+      <section className={styles.list} aria-label="챔피언 목록">{result.data.items.map((item) => { const imageState = item.imageUrl === officialChampionImageUrl(item.key, item.displayName) ? "DATA_DRAGON" : "KEY_FALLBACK"; return <Link className={styles.item} href={`/admin/champions/${item.key}/edit`} key={item.key}><div className={styles.championMeta}><ChampionPortrait className={styles.championPortrait} displayName={item.displayName} imageUrl={item.imageUrl} championKey={item.key} /><div><h2>{item.displayName}</h2><p className={styles.code}>고정 키 · {item.key}</p></div></div><span className={styles.badge} data-state={imageState}>{imageState === "DATA_DRAGON" ? "16.17.1 공식 매핑" : "공식 이미지 대체"}</span><span className={styles.badge} data-state={item.status}>{item.status}</span><span>rev. {item.revision}</span></Link>; })}</section>
       {pageCount > 1 ? <nav className={styles.pagination} aria-label="챔피언 목록 페이지">{query!.page > 1 ? <Link href={`/admin/champions?page=${query!.page - 1}&pageSize=${query!.pageSize}`}>이전</Link> : <span /> }<strong>{query!.page} / {pageCount}</strong>{query!.page < pageCount ? <Link href={`/admin/champions?page=${query!.page + 1}&pageSize=${query!.pageSize}`}>다음</Link> : <span />}</nav> : null}
     </>}
   </main>;

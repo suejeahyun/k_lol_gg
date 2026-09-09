@@ -515,7 +515,8 @@
   box-shadow: none;
 }
 
-.hero-art > .hero-art__champion--fallback {
+.hero-art > .hero-art__champion--fallback,
+.hero-art > span.hero-art__champion {
   place-items: center;
   color: rgba(57, 84, 128, 0.8);
   background:

@@ -17,6 +17,17 @@ const contentSecurityPolicy = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  images: {
+    minimumCacheTTL: 60 * 60 * 24 * 7,
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "ddragon.leagueoflegends.com",
+        port: "",
+        pathname: "/cdn/16.17.1/img/champion/**",
+      },
+    ],
+  },
   async headers() {
     return [
       {

@@ -1,13 +1,47 @@
+import {
+  DATA_DRAGON_CHAMPIONS,
+  DATA_DRAGON_VERSION,
+  type DataDragonChampion,
+} from "./data-dragon-catalog";
+
 const DATA_DRAGON_HOST = "ddragon.leagueoflegends.com";
 const DATA_DRAGON_PATH = /^\/cdn\/[0-9]+\.[0-9]+\.[0-9]+\/img\/champion\/[A-Za-z0-9]+\.png$/u;
-const DATA_DRAGON_VERSION = "26.18.1";
-const DATA_DRAGON_SLUG_OVERRIDES: Readonly<Record<string, string>> = {
-  aurelionsol: "AurelionSol", belveth: "Belveth", chogath: "Chogath", drmundo: "DrMundo",
-  jarvaniv: "JarvanIV", kaisa: "Kaisa", khazix: "Khazix", kogmaw: "KogMaw",
-  leesin: "LeeSin", masteryi: "MasterYi", missfortune: "MissFortune", monkeyking: "MonkeyKing",
-  reksai: "RekSai", renataglasc: "RenataGlasc", tahmkench: "TahmKench", twistedfate: "TwistedFate",
-  velkoz: "Velkoz", xinzhao: "XinZhao",
+
+function championLookupKey(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const normalized = value
+    .normalize("NFKC")
+    .trim()
+    .toLocaleLowerCase("en-US")
+    .replace(/[\s._'-]+/gu, "");
+  return normalized || null;
+}
+
+const dataDragonChampionByLookup = new Map<string, DataDragonChampion>();
+
+for (const champion of DATA_DRAGON_CHAMPIONS) {
+  for (const value of [champion.riotKey, champion.id, champion.name]) {
+    const lookup = championLookupKey(value);
+    const existing = lookup ? dataDragonChampionByLookup.get(lookup) : null;
+    if (!lookup) throw new Error("INVALID_DATA_DRAGON_CHAMPION_LOOKUP");
+    if (existing && existing.id !== champion.id) {
+      throw new Error("AMBIGUOUS_DATA_DRAGON_CHAMPION_LOOKUP");
+    }
+    dataDragonChampionByLookup.set(lookup, champion);
+  }
+}
+
+const legacyChampionAliases: Readonly<Record<string, string>> = {
+  nunuandwillump: "Nunu",
+  renataglasc: "Renata",
+  wukong: "MonkeyKing",
 };
+
+for (const [alias, officialId] of Object.entries(legacyChampionAliases)) {
+  const champion = dataDragonChampionByLookup.get(championLookupKey(officialId) ?? "");
+  if (!champion) throw new Error("INVALID_DATA_DRAGON_CHAMPION_ALIAS");
+  dataDragonChampionByLookup.set(alias, champion);
+}
 
 /**
  * Keeps every public champion portrait on Riot's versioned Data Dragon image
@@ -33,17 +67,48 @@ export function normalizeChampionImageUrl(value: unknown): string | null {
   }
 }
 
-/** Builds a trusted Riot Data Dragon fallback from the stored champion key only. */
-export function officialChampionImageUrl(championKey: unknown): string | null {
-  if (typeof championKey !== "string") return null;
-  const key = championKey.normalize("NFKC").trim().toLowerCase();
-  if (!/^[a-z0-9]+$/u.test(key)) return null;
-  const slug = DATA_DRAGON_SLUG_OVERRIDES[key] ?? `${key.slice(0, 1).toUpperCase()}${key.slice(1)}`;
-  return `https://${DATA_DRAGON_HOST}/cdn/${DATA_DRAGON_VERSION}/img/champion/${slug}.png`;
+export function findDataDragonChampion(
+  championKey: unknown,
+  displayName?: unknown,
+): DataDragonChampion | null {
+  for (const value of [championKey, displayName]) {
+    const lookup = championLookupKey(value);
+    const champion = lookup ? dataDragonChampionByLookup.get(lookup) : null;
+    if (champion) return champion;
+  }
+  return null;
 }
 
-export function resolveChampionImageUrl(imageUrl: unknown, championKey: unknown): string | null {
-  return normalizeChampionImageUrl(imageUrl) ?? officialChampionImageUrl(championKey);
+/** Builds a trusted Riot URL only when the champion exists in the pinned official catalog. */
+export function officialChampionImageUrl(
+  championKey: unknown,
+  displayName?: unknown,
+): string | null {
+  const champion = findDataDragonChampion(championKey, displayName);
+  return champion
+    ? `https://${DATA_DRAGON_HOST}/cdn/${DATA_DRAGON_VERSION}/img/champion/${champion.id}.png`
+    : null;
+}
+
+/** Official identity, validated stored URL, then the component's text fallback. */
+export function championImageCandidates(
+  imageUrl: unknown,
+  championKey: unknown,
+  displayName?: unknown,
+): readonly string[] {
+  const candidates = [
+    officialChampionImageUrl(championKey, displayName),
+    normalizeChampionImageUrl(imageUrl),
+  ].filter((candidate): candidate is string => candidate !== null);
+  return Object.freeze([...new Set(candidates)]);
+}
+
+export function resolveChampionImageUrl(
+  imageUrl: unknown,
+  championKey: unknown,
+  displayName?: unknown,
+): string | null {
+  return championImageCandidates(imageUrl, championKey, displayName)[0] ?? null;
 }
 
 export function championPortraitInitial(displayName: string) {

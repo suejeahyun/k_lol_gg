@@ -83,6 +83,9 @@ export default async function PlayerDetailPage({
     loadRuntimeStatisticsData((service) => service.getPublicPlayerStatistics(playerId, null)),
   ]);
   const riotResult = tab === "riot" ? await loadRuntimePublicRiotProfile(playerId) : null;
+  const topChampion = statisticsResult.state === "ready"
+    ? statisticsResult.data?.champions[0] ?? null
+    : null;
 
   if (result.state === "ready" && !result.data) notFound();
 
@@ -149,7 +152,7 @@ export default async function PlayerDetailPage({
                 <div className="profile-records__grid">
                   <article><Gamepad2 size={22} aria-hidden="true" /><strong>{statisticsResult.data.summary.wins}승 {statisticsResult.data.summary.losses}패</strong><p>{statisticsResult.data.summary.totalGames}게임 · 승률 {statisticsResult.data.summary.winRate}%</p></article>
                   <article><ShieldCheck size={22} aria-hidden="true" /><strong>참여 {statisticsResult.data.summary.participationCount}회</strong><p>{statisticsResult.data.positions[0] ? `주 포지션 ${statisticsResult.data.positions[0].position} · ${statisticsResult.data.positions[0].games}게임` : "포지션 기록 없음"}</p></article>
-                  <article><Trophy size={22} aria-hidden="true" /><strong>MVP {statisticsResult.data.summary.mvpCount}회</strong><p>{statisticsResult.data.champions[0] ? `최다 챔피언 ${statisticsResult.data.champions[0].championName}` : "챔피언 기록 없음"}</p></article>
+                  <article>{topChampion ? <ChampionPortrait displayName={topChampion.championName} imageUrl={topChampion.championImageUrl} championKey={topChampion.championKey} /> : <Trophy size={22} aria-hidden="true" />}<strong>MVP {statisticsResult.data.summary.mvpCount}회</strong><p>{topChampion ? `최다 챔피언 ${topChampion.championName}` : "챔피언 기록 없음"}</p></article>
                 </div>
                 {statisticsResult.data.champions.length > 0 ? (
                   <div className={championStyles.championGrid} aria-label="많이 플레이한 챔피언">

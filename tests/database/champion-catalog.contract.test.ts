@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import test from "node:test";
 
-import { eq, sql } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 
 import type { TransactionSessionActor } from "../../src/modules/auth/domain/transaction-session";
 import {
@@ -13,6 +13,10 @@ import {
   hashChampionRequestKey,
   type ChampionCommand,
 } from "../../src/modules/champions";
+import {
+  createChampionImageBackfillFixture,
+  planChampionImageBackfill,
+} from "../../src/modules/champions/domain/champion-image-backfill";
 import { PostgresChampionAdapter } from "../../src/modules/champions/infrastructure/postgres-champion-adapter";
 import { PostgresChampionQueryRepository } from "../../src/modules/champions/infrastructure/postgres-champion-query-repository";
 import { createDatabaseHandle } from "../../src/platform/db/database";
@@ -167,7 +171,7 @@ test("S10 champion catalog keeps ADMIN TOTP mutations, replay and durable ledger
     await database.insert(championCatalog).values({
       key: "legacy-kept",
       displayName: "기존 챔피언",
-      imageUrl: "https://ddragon.leagueoflegends.com/cdn/26.18.1/img/champion/Ahri.png",
+      imageUrl: "https://ddragon.leagueoflegends.com/cdn/16.17.1/img/champion/Ahri.png",
       status: "ACTIVE",
       revision: 7,
       createdAt: legacyCreatedAt,
@@ -256,7 +260,7 @@ test("S10 champion catalog keeps ADMIN TOTP mutations, replay and durable ledger
     assert.deepEqual(await queries.getPublic("legacy-kept"), {
       key: "legacy-kept",
       displayName: "기존 챔피언",
-      imageUrl: "https://ddragon.leagueoflegends.com/cdn/26.18.1/img/champion/Ahri.png",
+      imageUrl: "https://ddragon.leagueoflegends.com/cdn/16.17.1/img/champion/Ahri.png",
     });
     await assert.rejects(
       database.insert(championCatalog).values({
@@ -341,6 +345,72 @@ test("S10 champion catalog keeps ADMIN TOTP mutations, replay and durable ledger
 
     await assert.rejects(database.delete(championCatalog).where(eq(championCatalog.key, "contract-ahri")));
     assert.equal((await database.select().from(championCatalog).where(eq(championCatalog.key, "contract-ahri")))[0]?.status, "INACTIVE");
+  } finally {
+    await pool.end();
+  }
+});
+
+test("S10 champion image backfill applies and rolls back all 173 NULL fixture rows", async () => {
+  const connectionString = process.env.TEST_DATABASE_URL;
+  assert.ok(connectionString, "TEST_DATABASE_URL must be injected by the isolated harness.");
+  assertSafeTestDatabase({
+    connectionString,
+    nodeEnv: process.env.NODE_ENV,
+    testMode: process.env.V2_DB_TEST_MODE,
+  });
+  const { database, pool } = createDatabaseHandle(connectionString, { max: 4 });
+
+  try {
+    await applyMigrations(database);
+    const fixture = createChampionImageBackfillFixture();
+    const fixtureKeys = fixture.map((row) => row.key);
+    await database.insert(championCatalog).values(fixture.map((row) => ({
+      key: row.key,
+      displayName: row.displayName,
+      imageUrl: null,
+    })));
+
+    const before = await database.select({
+      key: championCatalog.key,
+      displayName: championCatalog.displayName,
+      imageUrl: championCatalog.imageUrl,
+    }).from(championCatalog).where(inArray(championCatalog.key, fixtureKeys));
+    const dryRun = planChampionImageBackfill(before);
+    assert.deepEqual({
+      rows: dryRun.databaseRows,
+      matched: dryRun.matchedRows,
+      updates: dryRun.wouldUpdateRows,
+      unmatched: dryRun.unmatchedRows,
+      conflicts: dryRun.conflictRows,
+    }, { rows: 173, matched: 173, updates: 173, unmatched: 0, conflicts: 0 });
+
+    await database.transaction(async (transaction) => {
+      for (const step of dryRun.steps) {
+        assert.equal(step.action, "UPDATE");
+        assert.ok(step.expectedImageUrl);
+        await transaction.update(championCatalog)
+          .set({ imageUrl: step.expectedImageUrl })
+          .where(eq(championCatalog.key, step.key));
+      }
+    });
+
+    const applied = await database.select({ imageUrl: championCatalog.imageUrl }).from(championCatalog)
+      .where(inArray(championCatalog.key, fixtureKeys));
+    assert.equal(applied.length, 173);
+    assert.equal(applied.every((row) => row.imageUrl !== null), true);
+    assert.equal(new Set(applied.map((row) => row.imageUrl)).size, 173);
+
+    await database.transaction(async (transaction) => {
+      for (const row of fixture) {
+        await transaction.update(championCatalog)
+          .set({ imageUrl: null })
+          .where(eq(championCatalog.key, row.key));
+      }
+    });
+    const rolledBack = await database.select({ imageUrl: championCatalog.imageUrl }).from(championCatalog)
+      .where(inArray(championCatalog.key, fixtureKeys));
+    assert.equal(rolledBack.length, 173);
+    assert.equal(rolledBack.every((row) => row.imageUrl === null), true);
   } finally {
     await pool.end();
   }

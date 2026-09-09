@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -181,35 +180,19 @@ export default async function HomePage() {
         </div>
 
         <div className="hero-art" data-tone={championPresentation.tone}>
-          {displayChampion.imageUrl ? (
-            <ChampionPortrait
-              className="hero-art__champion"
-              displayName={displayChampion.displayName}
-              imageUrl={displayChampion.imageUrl}
-              eager
-            />
-          ) : championPresentation.localImageSrc && championPresentation.localImageAlt ? (
-            <Image
-              src={championPresentation.localImageSrc}
-              alt={championPresentation.localImageAlt}
-              fill
-              priority
-              sizes="(max-width: 900px) 100vw, 46vw"
-            />
-          ) : (
-            <ChampionPortrait
-              className="hero-art__champion hero-art__champion--fallback"
-              displayName={displayChampion.displayName}
-              imageUrl={null}
-              eager
-            />
-          )}
+          <ChampionPortrait
+            className="hero-art__champion"
+            displayName={displayChampion.displayName}
+            imageUrl={displayChampion.imageUrl}
+            championKey={displayChampion.key}
+            eager
+          />
           <div className="hero-art__wash" aria-hidden="true" />
           <div className="hero-art__label">
             <span>오늘의 안내 챔피언</span>
             <strong>{displayChampion.displayName}</strong>
             <small>{championPresentation.message}</small>
-            <em>{dailyChampion ? "KST 기준 매일 변경" : "비공식 팬아트"}</em>
+            <em>{dailyChampion ? "KST 기준 매일 변경" : "Riot Data Dragon"}</em>
           </div>
         </div>
       </section>

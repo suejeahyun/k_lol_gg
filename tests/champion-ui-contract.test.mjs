@@ -33,6 +33,8 @@ test("champion administrator pages reuse the highlight content shell and keep sa
   assert.match(galleryPage, /AdminMediaListPage kind="gallery"/);
   assert.doesNotMatch(list, /AdminWorkspacePage/);
   assert.doesNotMatch(list, /champions\.module\.css/);
+  assert.match(list, /ChampionPortrait/);
+  assert.match(list, /championKey=\{item\.key\}/);
 });
 
 test("champion read APIs keep public and administrator namespaces separated", async () => {

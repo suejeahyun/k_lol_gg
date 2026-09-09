@@ -63,6 +63,11 @@ test("홈은 DB 전체 활성 챔피언의 KST 일일 선택과 공개 현재 �
   assert.match(home, /getPublicSeasonRanking\(null, 10\)/);
   assert.match(home, /className="home-ranking-table"/);
   assert.match(home, /ChampionPortrait/);
+  assert.match(home, /championKey=\{displayChampion\.key\}/);
+  assert.equal((home.match(/<ChampionPortrait/g) ?? []).length, 1);
+  assert.doesNotMatch(home, /26\.18\.1/);
+  assert.match(home, /Riot Data Dragon/);
+  assert.doesNotMatch(home, /비공식 팬아트/);
 });
 
 test("홈과 플레이어 찾기는 회원명 검색을 안내하되 회원명을 결과로 출력하지 않는다", () => {
