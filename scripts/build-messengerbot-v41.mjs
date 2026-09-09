@@ -14,7 +14,7 @@ const compatibilityPath = resolve(integrationDirectory, "KLOL_KAKAO_BOT_V41_V1_C
 const routerPath = resolve(integrationDirectory, "KLOL_KAKAO_BOT_V41_V2_ROUTER.js");
 const outputPath = resolve(integrationDirectory, "KLOL_KAKAO_BOT_V41_V2_COMPLETE.js");
 const mobileOutputPath = resolve(integrationDirectory, "KLOL_KAKAO_BOT_V41_MESSENGERBOT_R.js");
-const bundleMarker = "KLOL_V41_BUNDLE_R6_V1_EXACT";
+const bundleMarker = "KLOL_V41_BUNDLE_R7_SLASH_PARITY";
 
 const [transportSource, compatibilitySource, routerSource] = await Promise.all([
   readFile(transportPath, "utf8"),

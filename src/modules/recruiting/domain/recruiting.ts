@@ -43,6 +43,8 @@ export type RecruitParty = Readonly<{
   title: string;
   maximumMembers: number;
   members: readonly RecruitMember[];
+  startTimeText: string;
+  gameInfo: string;
   scheduledStartAt: Date | null;
   protectedUntil: Date | null;
   lastActivityAt: Date;
@@ -78,6 +80,8 @@ export type PublicRecruitPartyDto = Readonly<{
   title: string;
   memberCount: number;
   maximumMembers: number;
+  startTimeText: string;
+  gameInfo: string;
   scheduledStartAt: string | null;
 }>;
 
@@ -114,6 +118,17 @@ export function kakaoRecruitDateKey(now: Date): string {
   if (!Number.isFinite(now.getTime())) throw new Error("INVALID_RECRUIT_TIME");
   const kst = new Date(now.getTime() + KST_OFFSET_MS);
   return `${kst.getUTCFullYear()}-${String(kst.getUTCMonth() + 1).padStart(2, "0")}-${String(kst.getUTCDate()).padStart(2, "0")}`;
+}
+
+export function kakaoRecruitTimeText(now: Date): string {
+  if (!Number.isFinite(now.getTime())) throw new Error("INVALID_RECRUIT_TIME");
+  const kst = new Date(now.getTime() + KST_OFFSET_MS);
+  return `${String(kst.getUTCHours()).padStart(2, "0")}:${String(kst.getUTCMinutes()).padStart(2, "0")}`;
+}
+
+function optionalPartyText(value: string | null | undefined, code: string, maximum: number): string | null {
+  if (value === null || value === undefined || !value.trim()) return null;
+  return cleanText(value, code, maximum);
 }
 
 export function canonicalRecruitRequestFingerprint(input: Readonly<{
@@ -164,6 +179,8 @@ export function createRecruitParty(input: Readonly<{
   title: string;
   maximumMembers: number;
   members?: readonly RecruitMember[];
+  startTimeText?: string | null;
+  gameInfo?: string | null;
   scheduledStartAt?: Date | null;
   protectedUntil?: Date | null;
   now: Date;
@@ -192,6 +209,8 @@ export function createRecruitParty(input: Readonly<{
     title: cleanText(input.title, "INVALID_RECRUIT_TITLE", 160),
     maximumMembers: input.maximumMembers,
     members: normalizeMembers(input.members ?? [], input.maximumMembers),
+    startTimeText: optionalPartyText(input.startTimeText, "INVALID_RECRUIT_START_TIME_TEXT", 160) ?? kakaoRecruitTimeText(input.now),
+    gameInfo: optionalPartyText(input.gameInfo, "INVALID_RECRUIT_GAME_INFO", 500) ?? "미입력",
     scheduledStartAt: input.scheduledStartAt ?? null,
     protectedUntil: input.protectedUntil ?? null,
     lastActivityAt: input.now,
@@ -202,6 +221,9 @@ export function syncRecruitParty(input: Readonly<{
   party: RecruitParty;
   expectedRevision: number;
   members: readonly RecruitMember[];
+  startTimeText?: string | null;
+  gameInfo?: string | null;
+  scheduledStartAt?: Date | null;
   now: Date;
 }>): RecruitParty {
   expectedRevision(input.party.revision, input.expectedRevision);
@@ -211,6 +233,11 @@ export function syncRecruitParty(input: Readonly<{
     ...input.party,
     revision: input.party.revision + 1,
     members: normalizeMembers(input.members, input.party.maximumMembers),
+    startTimeText: optionalPartyText(input.startTimeText, "INVALID_RECRUIT_START_TIME_TEXT", 160) ?? input.party.startTimeText,
+    gameInfo: optionalPartyText(input.gameInfo, "INVALID_RECRUIT_GAME_INFO", 500) ?? input.party.gameInfo,
+    scheduledStartAt: input.startTimeText === null || input.startTimeText === undefined
+      ? input.party.scheduledStartAt
+      : input.scheduledStartAt ?? null,
     lastActivityAt: input.now,
   };
 }
@@ -249,6 +276,8 @@ export function toPublicRecruitPartyDto(party: RecruitParty): PublicRecruitParty
     title: party.title,
     memberCount: party.members.filter((member) => !member.substitute).length,
     maximumMembers: party.maximumMembers,
+    startTimeText: party.startTimeText,
+    gameInfo: party.gameInfo,
     scheduledStartAt: party.scheduledStartAt?.toISOString() ?? null,
   };
 }

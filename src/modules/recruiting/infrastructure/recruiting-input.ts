@@ -59,18 +59,22 @@ function payloadFor(type: RecruitingCommand["type"], value: unknown): Recruiting
   if (!payload) return null;
   switch (type) {
     case "CREATE_PARTY":
-      if (!exactKeys(payload, ["recruitDate", "resetSequence", "recruitNumber", "partyType", "title", "maximumMembers", "members", "scheduledStartAt", "protectedUntil"])) return null;
+      if (!exactKeys(payload, ["recruitDate", "resetSequence", "recruitNumber", "partyType", "title", "maximumMembers", "members", "scheduledStartAt", "protectedUntil"], ["startTimeText", "gameInfo"])) return null;
       if (
         typeof payload.recruitDate !== "string" || !/^\d{4}-\d{2}-\d{2}$/u.test(payload.recruitDate) ||
         !integer(payload.resetSequence, 0, 999) || !integer(payload.recruitNumber, 1, 99) ||
         typeof payload.partyType !== "string" || !RECRUIT_PARTY_TYPES.includes(payload.partyType as (typeof RECRUIT_PARTY_TYPES)[number]) ||
         !text(payload.title, 160) || !integer(payload.maximumMembers, 1, 99) ||
         !Array.isArray(payload.members) || !payload.members.every(member) ||
+        !optionalText(payload.startTimeText, 160) || !optionalText(payload.gameInfo, 500) ||
         !nullableInstant(payload.scheduledStartAt) || !nullableInstant(payload.protectedUntil)
       ) return null;
       return payload as RecruitingCommand["payload"];
     case "SYNC_PARTY":
-      return exactKeys(payload, ["members"]) && Array.isArray(payload.members) && payload.members.every(member)
+      return exactKeys(payload, ["members"], ["startTimeText", "gameInfo", "scheduledStartAt"]) &&
+        Array.isArray(payload.members) && payload.members.every(member) &&
+        optionalText(payload.startTimeText, 160) && optionalText(payload.gameInfo, 500) &&
+        (payload.scheduledStartAt === undefined || nullableInstant(payload.scheduledStartAt))
         ? payload as RecruitingCommand["payload"] : null;
     case "GET_PARTY_STATUS":
     case "FINISH_PARTY":

@@ -49,6 +49,8 @@ export type KakaoOpenChatStatusDto = Readonly<{
       slotNo: number;
       substitute: boolean;
     }>[];
+    startTimeText: string;
+    gameInfo: string;
     scheduledStartAt: string | null;
   }>[];
   scrims: readonly Readonly<{

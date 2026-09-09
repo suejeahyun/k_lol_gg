@@ -4,6 +4,7 @@ import type { RecruitingCommand } from "@/modules/recruiting/application/command
 import { getRuntimeRecruitingService } from "@/modules/recruiting/infrastructure/runtime-recruiting";
 import { parseRecruitingCommandBody } from "@/modules/recruiting/infrastructure/recruiting-input";
 import {
+  PUBLIC_KAKAO_ROOM_COMMAND,
   recordKakaoWebhookRejection,
   verifyKakaoHttpRequest,
 } from "@/modules/recruiting/infrastructure/kakao-http-request";
@@ -39,7 +40,7 @@ export async function POST(request: Request) {
   const traceId = readValidatedTraceId(request.headers);
   // V1 party forms are collaboratively edited by human members of an approved room.
   // The raw-body HMAC, approved-room check, nonce claim and bot-self rejection remain mandatory.
-  const verification = await verifyKakaoHttpRequest(request, new Date(), MAXIMUM_BODY_BYTES, { allowAnySender: true });
+  const verification = await verifyKakaoHttpRequest(request, new Date(), MAXIMUM_BODY_BYTES, PUBLIC_KAKAO_ROOM_COMMAND);
   if (!verification.ok) {
     recordKakaoWebhookRejection(verification.code, { route: new URL(request.url).pathname, traceId });
     return recruitingWebhookForbiddenResponse(traceId);

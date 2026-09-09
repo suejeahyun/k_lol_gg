@@ -420,6 +420,24 @@ test("durable receipt replay returns before load and same request key with anoth
   assert.equal(harness.snapshot.parties.get("party-1")?.title, "저녁 내전 모집");
 });
 
+test("server-clock party metadata fallback is identical on durable replay", async () => {
+  const harness = new Harness();
+  const handler = new RecruitingCommandHandler(harness.dependencies());
+  const original = command("CREATE_PARTY", "party-meta-replay", 0, {
+    recruitDate: "2026-09-07", resetSequence: 0, recruitNumber: 8, partyType: "FLEX_RANK",
+    title: "재생 시간 고정", maximumMembers: 5, members: [], startTimeText: null, gameInfo: null,
+    scheduledStartAt: null, protectedUntil: null,
+  });
+  const first = await handler.handle(original);
+  const replay = await handler.handle(original);
+  assert.equal(first.body.data.startTimeText, "09:00");
+  assert.equal(first.body.data.gameInfo, "미입력");
+  assert.equal(replay.replayed, true);
+  assert.equal(replay.body.data.startTimeText, "09:00");
+  assert.deepEqual(replay.body, first.body);
+  assert.equal(harness.snapshot.parties.get("party-meta-replay")?.startTimeText, "09:00");
+});
+
 test("a malformed replay receipt is rejected even when its request hash matches", async () => {
   const harness = new Harness();
   const handler = new RecruitingCommandHandler(harness.dependencies());
@@ -481,9 +499,10 @@ test("public party and scrim DTOs expose only reviewed fields", () => {
     id: "party-1", revision: 4, sourceRoomId: null, recruitDate: "2026-09-07", resetSequence: 2, recruitNumber: 3,
     type: "ARAM", status: "IN_PROGRESS", title: "칼바람", maximumMembers: 5,
     members: [{ name: "private-name", position: null, slotNo: 1, substitute: false }],
+    startTimeText: "21:00", gameInfo: "미입력",
     scheduledStartAt: null, protectedUntil: new Date(now), lastActivityAt: new Date(now),
   };
-  assert.deepEqual(Object.keys(toPublicPartyDto(party)).sort(), ["id", "maximumMembers", "memberCount", "recruitNumber", "scheduledStartAt", "status", "title", "type"]);
+  assert.deepEqual(Object.keys(toPublicPartyDto(party)).sort(), ["gameInfo", "id", "maximumMembers", "memberCount", "recruitNumber", "scheduledStartAt", "startTimeText", "status", "title", "type"]);
   assert.equal("members" in toPublicPartyDto(party), false);
   const scrim: ScrimRecruit = { id: "scrim-1", revision: 2, sourceRoomId: null, recruitDate: "2026-09-07", scrimNumber: 1, tournamentId: "destruction-1", legacyTournamentNumber: null, requesterTeamId: "team-a", opponentTeamId: "team-b", requesterLineup: null, opponentLineup: null, legacyMemo: null, legacySeriesRuleText: null, status: "MATCHED", scheduledAt: null, bestOf: 3 };
   assert.deepEqual(Object.keys(toPublicScrimDto(scrim)).sort(), ["bestOf", "id", "legacyTournamentNumber", "memo", "opponentLineup", "opponentTeamId", "opponentTeamName", "recruitDate", "requesterLineup", "requesterTeamId", "requesterTeamName", "scheduledAt", "scrimNumber", "seriesRuleText", "status", "title", "tournamentId"]);

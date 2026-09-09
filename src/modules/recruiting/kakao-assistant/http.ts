@@ -12,8 +12,10 @@ import {
 
 import {
   MAXIMUM_KAKAO_BODY_BYTES,
+  TRUSTED_KAKAO_SENDER_COMMAND,
   recordKakaoWebhookRejection,
   verifyKakaoHttpRequest,
+  type KakaoWebhookAuthorizationPolicy,
 } from "../infrastructure/kakao-http-request";
 import { KakaoAssistantError } from "./domain";
 import type { KakaoAssistantResult } from "./postgres-kakao-assistant";
@@ -33,7 +35,7 @@ const problems = Object.freeze({
 export async function prepareKakaoSignedJson(
   request: Request,
   maximumBytes = MAXIMUM_KAKAO_BODY_BYTES,
-  policy: Readonly<{ allowAnySender?: boolean }> = {},
+  policy: KakaoWebhookAuthorizationPolicy = TRUSTED_KAKAO_SENDER_COMMAND,
 ) {
   const traceId = readValidatedTraceId(request.headers);
   const verification = await verifyKakaoHttpRequest(request, new Date(), maximumBytes, policy);

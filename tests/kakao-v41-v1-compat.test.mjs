@@ -70,6 +70,7 @@ test("party form parser preserves metadata, positions, numbered members, and sub
   assert.equal(parsed.recruitNo, 3);
   assert.equal(parsed.type, "FLEX_RANK");
   assert.equal(parsed.startTimeText, "21:00");
+  assert.equal(parsed.gameInfo, "즐겜");
   assert.equal(parsed.tierText, "E");
   assert.equal(parsed.preferredLineText, "MID");
   assert.equal(parsed.playStyle, "즐겜");
@@ -105,6 +106,23 @@ test("party form parser preserves metadata, positions, numbered members, and sub
   assert.equal(compat.isPartyFormWithoutNumber(missingNumber), true);
   assert.deepEqual(plain(compat.classifyMessage(missingNumber, "보낸이", "2026-09-08")), { domain: "PARTY", action: "MISSING_NUMBER" });
   assert.equal(compat.isPartyFormWithoutNumber("[K-LOL.GG 내전 참가 신청]\n신청일: 2026-09-08\n회차: #1\n1. 플레이어: 별빛 | Riot ID: 별빛#KR1 | 주라인: MID"), false);
+});
+
+test("party form metadata accepts line endings and colon variants without rewriting values", async () => {
+  const { compat } = await loadCompat();
+  for (const separator of ["\n", "\r\n"]) {
+    const populated = compat.parsePartyForm([
+      "📢 5인 파티 구인", "모집번호: #7", "》시작시간 ：   모이면   ", "》게임정보:   일겜or자랭   ", "1. 참가자",
+    ].join(separator));
+    assert.equal(populated.startTimeText, "모이면");
+    assert.equal(populated.gameInfo, "일겜or자랭");
+
+    const empty = compat.parsePartyForm([
+      "📢 5인 파티 구인", "모집번호: #8", "》시작시간:", "》게임정보：   ", "1. 참가자",
+    ].join(separator));
+    assert.equal(empty.startTimeText, null);
+    assert.equal(empty.gameInfo, null);
+  }
 });
 
 test("inhouse aliases parse mode, date, time, recruit number, and capacity", async () => {

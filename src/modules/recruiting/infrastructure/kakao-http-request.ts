@@ -3,6 +3,7 @@ import {
   type KakaoWebhookSecret,
   type KakaoWebhookVerification,
   type VerifiedKakaoWebhookIntent,
+  type KakaoWebhookCapability,
 } from "./kakao-signature";
 
 export const MAXIMUM_KAKAO_BODY_BYTES = 256 * 1_024;
@@ -63,6 +64,13 @@ export type KakaoHttpRequestVerification =
   | Readonly<{ ok: true; value: VerifiedKakaoHttpRequest }>
   | Readonly<{ ok: false; code: KakaoHttpRequestFailureCode }>;
 
+export type KakaoWebhookAuthorizationPolicy = Readonly<{
+  capability: KakaoWebhookCapability;
+}>;
+
+export const PUBLIC_KAKAO_ROOM_COMMAND = Object.freeze({ capability: "PUBLIC_ROOM_COMMAND" as const });
+export const TRUSTED_KAKAO_SENDER_COMMAND = Object.freeze({ capability: "TRUSTED_SENDER_COMMAND" as const });
+
 /**
  * Emits only an allowlisted reason and request metadata. Never add request
  * headers, identifiers, signatures, bodies, or environment values here.
@@ -71,8 +79,16 @@ export function recordKakaoWebhookRejection(
   code: KakaoHttpRequestFailureCode,
   input: Readonly<{ route: string; traceId?: string }>,
 ) {
+  const stage = code === "ROOM_FORBIDDEN"
+    ? "ROOM"
+    : code === "CAPABILITY_FORBIDDEN"
+      ? "CAPABILITY"
+      : code === "BOT_SELF_MESSAGE"
+        ? "SENDER"
+        : "SIGNATURE";
   console.warn("KAKAO_WEBHOOK_REJECTED", {
     code,
+    stage,
     route: input.route,
     traceId: input.traceId ?? null,
   });
@@ -87,7 +103,7 @@ export async function verifyKakaoHttpRequest(
   request: Request,
   now = new Date(),
   maximumBodyBytes = MAXIMUM_KAKAO_BODY_BYTES,
-  policy: Readonly<{ allowAnySender?: boolean }> = {},
+  policy: KakaoWebhookAuthorizationPolicy = TRUSTED_KAKAO_SENDER_COMMAND,
 ): Promise<KakaoHttpRequestVerification> {
   if (new URL(request.url).searchParams.size > 0) return { ok: false, code: "QUERY_FORBIDDEN" };
   const timestamp = request.headers.get("x-klol-timestamp");
@@ -112,7 +128,7 @@ export async function verifyKakaoHttpRequest(
     secrets,
     allowedRoomIds: splitKakaoIdentifiers(process.env.KAKAO_WEBHOOK_ALLOWED_ROOMS),
     allowedSenderIds: splitKakaoIdentifiers(process.env.KAKAO_WEBHOOK_ALLOWED_SENDERS),
-    allowAnySender: policy.allowAnySender === true,
+    requiredCapability: policy.capability,
     botSenderId: process.env.KAKAO_WEBHOOK_BOT_SENDER_ID ?? "",
     nonceAlreadyUsed: false,
     maximumBodyBytes,

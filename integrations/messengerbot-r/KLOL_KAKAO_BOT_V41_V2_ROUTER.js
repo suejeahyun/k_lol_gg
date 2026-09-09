@@ -5,7 +5,7 @@
  * This router requires KLOL_KAKAO_BOT_V41_V2_TRANSPORT.js and
  * KLOL_KAKAO_BOT_V41_V1_COMPAT.js immediately before it.
  */
-var KLOL_V41_BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V41_V2_2026_09_09_R6_V1_EXACT";
+var KLOL_V41_BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V41_V2_2026_09_09_R7_SLASH_PARITY";
 var KLOL_V41_SEASON_PREVIEW_TTL_MS = 10 * 60 * 1000;
 var KLOL_V41_IMAGE_SESSION_TTL_MS = 30 * 60 * 1000;
 
@@ -246,10 +246,10 @@ function v41PartyMemberNames(party) {
 }
 
 function v41PartySummaryLine(party) {
-  var note = v41Trim(party && party.note);
+  var gameInfo = v41Trim(party && (party.gameInfo || party.note)) || "미입력";
   return "#" + Number(party.recruitNumber) + " · " + v41PartyTypeLabel(party) + " · " +
     Number(party.memberCount || 0) + "/" + Number(party.maximumMembers || 0) + " · " +
-    v41PartyStartText(party) + (note ? " · " + note : "");
+    v41PartyStartText(party) + " · " + gameInfo;
 }
 
 function v41FormatPartyStatus(result) {
@@ -290,9 +290,11 @@ function v41FormatOpenchat(result) {
   return lines.join("\n");
 }
 
-function v41PartyTemplate(parsed, recruitNo) {
+function v41PartyTemplate(parsed, recruitNo, party) {
   var title = String(parsed.title || (Number(parsed.maximumMembers) + "인 파티 구인"));
-  var lines = ["[K-LOL.GG 구인구직 양식]", "같이 할사람~", "", "아래 양식의 모집번호는 유지해서 작성해주세요.", "", "📢 " + title, "모집번호: #" + Number(recruitNo), "", "》시작시간 :", "》게임정보 :", ""];
+  var startTimeText = v41Trim(party && party.startTimeText) || v41Trim(parsed.startTimeText);
+  var gameInfo = v41Trim(party && party.gameInfo) || v41Trim(parsed.gameInfo);
+  var lines = ["[K-LOL.GG 구인구직 양식]", "같이 할사람~", "", "아래 양식의 모집번호는 유지해서 작성해주세요.", "", "📢 " + title, "모집번호: #" + Number(recruitNo), "", "》시작시간 :" + (startTimeText ? " " + startTimeText : ""), "》게임정보 :" + (gameInfo ? " " + gameInfo : ""), ""];
   var positions = ["TOP.", "JUG.", "MID.", "ADC.", "SUP."];
   var lineParty = parsed.type === "FLEX_RANK" || parsed.type === "NORMAL_GAME" || parsed.type === "PARTY_RIFT";
   var index = 0;
@@ -616,7 +618,7 @@ function v41SaveRecruitState(room, kind, result) {
 }
 
 function v41HandleRecruitJson(text, room, sender, replier) {
-  var input = v41JsonAfter(text, "/V2모집");
+  var input = v41JsonAfter(text, "V2모집");
   var type = String(input.type || "");
   var kind = v41RecruitKind(type);
   var create = type.indexOf("CREATE_") === 0;
@@ -738,6 +740,7 @@ function v41FormatPartyDetail(party) {
   var index = 0;
   lines.push("인원 " + Number(party.memberCount || 0) + "/" + Number(party.maximumMembers || 0) +
     (Number(party.reserveCount || 0) ? " · 예비 " + Number(party.reserveCount) : ""));
+  lines.push("시작시간: " + v41PartyStartText(party) + " · 게임정보: " + (v41Trim(party.gameInfo || party.note) || "미입력"));
   for (index = 0; index < members.length; index += 1) {
     lines.push((members[index].substitute ? "예비 " : "") + Number(members[index].slotNo || index + 1) + ". " +
       String(members[index].name || "이름 미정") + (members[index].position ? " · " + v41PositionLabel(members[index].position) : ""));
@@ -873,14 +876,14 @@ function v41HandleLegacyParty(parsed, text, room, sender, replier) {
             recruitDate: v41Today(), resetSequence: Number(status.body.nextPartyResetSequence || 0),
             recruitNumber: recruitNo, partyType: parsed.type, title: parsed.title,
             maximumMembers: Number(parsed.maximumMembers), members: [],
-            scheduledStartAt: null, protectedUntil: null
+            startTimeText: null, gameInfo: null, scheduledStartAt: null, protectedUntil: null
           }
         }
       };
     });
     if (!result || !result.ok) return v41Reply(replier, v41ResultMessage(result));
     var createdNo = result.body && result.body.data ? Number(result.body.data.recruitNumber || recruitNo) : recruitNo;
-    return v41Reply(replier, v41PartyTemplate(parsed, createdNo));
+    return v41Reply(replier, v41PartyTemplate(parsed, createdNo, result.body && result.body.data));
   }
   if (parsed.action === "SYNC_FORM") {
     party = v41FindParty(status, parsed.recruitNo);
@@ -897,7 +900,13 @@ function v41HandleLegacyParty(parsed, text, room, sender, replier) {
       if (party) {
         return {
           expectedRevision: Number(party.revision),
-          command: { type: "SYNC_PARTY", aggregateId: party.id, payload: { members: members } }
+          command: {
+            type: "SYNC_PARTY", aggregateId: party.id,
+            payload: {
+              members: members, startTimeText: parsed.startTimeText, gameInfo: parsed.gameInfo,
+              scheduledStartAt: v41ScheduledInstant(v41Today(), parsed.startTimeText)
+            }
+          }
         };
       }
       return {
@@ -908,6 +917,7 @@ function v41HandleLegacyParty(parsed, text, room, sender, replier) {
             recruitDate: v41Today(), resetSequence: Number(status.body.nextPartyResetSequence || 0),
             recruitNumber: Number(parsed.recruitNo), partyType: parsed.type, title: parsed.title,
             maximumMembers: Number(parsed.maximumMembers), members: members,
+            startTimeText: parsed.startTimeText, gameInfo: parsed.gameInfo,
             scheduledStartAt: v41ScheduledInstant(v41Today(), parsed.startTimeText), protectedUntil: null
           }
         }
@@ -917,7 +927,7 @@ function v41HandleLegacyParty(parsed, text, room, sender, replier) {
     status = v41OpenChat(room, sender);
     party = v41FindParty(status, parsed.recruitNo);
     return v41Reply(replier, party
-      ? "[파티 #" + Number(parsed.recruitNo) + " 반영]\n" + Number(party.memberCount || 0) + "/" + Number(party.maximumMembers || 0) + " · 예비 " + Number(party.reserveCount || 0) + "명\n마감: " + Number(parsed.recruitNo) + "ㅉ"
+      ? "[파티 #" + Number(parsed.recruitNo) + " 반영]\n" + Number(party.memberCount || 0) + "/" + Number(party.maximumMembers || 0) + " · 예비 " + Number(party.reserveCount || 0) + "명\n시작시간: " + v41PartyStartText(party) + " · 게임정보: " + (v41Trim(party.gameInfo || party.note) || "미입력") + "\n마감: " + Number(parsed.recruitNo) + "ㅉ"
       : "[K-LOL.GG 파티]\n명단을 반영했습니다.");
   }
   if (parsed.action === "FINISH") {
@@ -1351,7 +1361,7 @@ function v41V2Help() {
 }
 
 function response(room, msg, sender, isGroupChat, replier, imageDB, packageName) {
-  var text = v41Trim(v41NormalizeText(msg));
+  var text = v41CompatParser().canonicalCommandText(msg);
   var rawImage = "";
   try {
     if (v41IsBotEchoSender(sender)) return null;
@@ -1363,9 +1373,9 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
     if (text.indexOf("들어왔습니다") >= 0) return v41Reply(replier, "다시 오셨네요, 반가워요! 😊");
     if (text.indexOf("나갔습니다") >= 0 || text.indexOf("초대되었습니다") >= 0) return null;
     if (!text) return null;
-    if (text === "/봇버전" || text === "봇버전") return v41Reply(replier, "[K-LOL.GG 카카오봇]\n" + KLOL_V41_BOT_CODE_VERSION);
-    if (text === "/V2도움말" || text === "V2도움말") return v41Reply(replier, v41V2Help());
-    if (text === "/도움말" || text === "도움말" || text === "/명령어" || text === "명령어") return v41Reply(replier, v41Help());
+    if (text === "봇버전") return v41Reply(replier, "[K-LOL.GG 카카오봇]\n" + KLOL_V41_BOT_CODE_VERSION);
+    if (text === "V2도움말") return v41Reply(replier, v41V2Help());
+    if (text === "도움말" || text === "명령어") return v41Reply(replier, v41Help());
     var legacyNotice = v41LegacyLinkNotice(text);
     if (legacyNotice) return v41Reply(replier, legacyNotice);
     if (/^\/?(?:V2)?연동확인$/i.test(text)) {
@@ -1419,16 +1429,16 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
         action: "STATUS", seasonId: v41SeasonId(), applyDate: v41Today(), recruitNo: v41RecruitNumber(text)
       }, KLOL_V2_KAKAO.contextFromChat(room, sender))));
     }
-    if (text.indexOf("/V2모집 ") === 0) return v41HandleRecruitJson(text, room, sender, replier);
-    if (text.indexOf("/V2시즌 ") === 0) {
-      return v41Reply(replier, v41FormatSeason(KLOL_V2_KAKAO.seasonApplications(v41JsonAfter(text, "/V2시즌"), KLOL_V2_KAKAO.contextFromChat(room, sender))));
+    if (text.indexOf("V2모집 ") === 0) return v41HandleRecruitJson(text, room, sender, replier);
+    if (text.indexOf("V2시즌 ") === 0) {
+      return v41Reply(replier, v41FormatSeason(KLOL_V2_KAKAO.seasonApplications(v41JsonAfter(text, "V2시즌"), KLOL_V2_KAKAO.contextFromChat(room, sender))));
     }
-    if (text.indexOf("/V2양식 ") === 0) {
-      var form = v41JsonAfter(text, "/V2양식");
+    if (text.indexOf("V2양식 ") === 0) {
+      var form = v41JsonAfter(text, "V2양식");
       return v41Reply(replier, v41ResultMessage(KLOL_V2_KAKAO.operationForm(form.formType, form.payload, KLOL_V2_KAKAO.contextFromChat(room, sender))));
     }
-    if (text.indexOf("/V2사진세션 ") === 0) {
-      v41SaveImageSession(room, sender, v41Trim(text.substring("/V2사진세션".length)));
+    if (text.indexOf("V2사진세션 ") === 0) {
+      v41SaveImageSession(room, sender, v41Trim(text.substring("V2사진세션".length)));
       return v41Reply(replier, "[K-LOL.GG 사진 접수]\n30분 동안 이 대화의 다음 사진을 안전하게 접수합니다.");
     }
   } catch (error) {

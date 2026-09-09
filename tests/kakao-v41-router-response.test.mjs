@@ -313,3 +313,34 @@ test("response accepts bitmap fallback, reports image progress, and clears termi
   bot.respond("/사진상태");
   assert.match(bot.replies.at(-1), /연결된 사진 세션이 없습니다/u);
 });
+
+test("response entry point keeps representative V1 and V2 replies identical with or without slash", async () => {
+  for (const command of [
+    "구인현황",
+    "봇버전",
+    "5인파티",
+    "내전구인 협곡",
+    "전적 별빛#KR1",
+    "V2사진세션 123e4567-e89b-42d3-a456-426614174000",
+    'V2양식 {"formType":"meetups","payload":{}}',
+  ]) {
+    const plain = await harness();
+    const slash = await harness();
+    plain.respond(command);
+    slash.respond(`/${command}`);
+    assert.deepEqual(slash.replies, plain.replies, command);
+    assert.deepEqual(slash.calls, plain.calls, command);
+  }
+});
+
+test("response entry point does not treat slash-only, URL, middle slash, double slash, or slash-space as commands", async () => {
+  const bot = await harness();
+  for (const message of [
+    "/",
+    "https://k-lol.gg/help",
+    "대화 중 /명령어를 적었습니다",
+    "//명령어",
+    "/ 명령어",
+  ]) bot.respond(message);
+  assert.deepEqual(bot.replies, []);
+});

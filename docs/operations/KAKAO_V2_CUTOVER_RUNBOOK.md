@@ -17,7 +17,7 @@
 - `KAKAO_WEBHOOK_ALLOWED_ROOMS`: 쉼표로 구분한 opaque room ID
 - `KAKAO_WEBHOOK_ALLOWED_SENDERS`: 쉼표로 구분한 opaque sender ID
 - `KAKAO_WEBHOOK_BOT_SENDER_ID`: 봇 자신의 opaque sender ID
-- `DATABASE_URL`, migration `0009`, `0018`, `0019`, `0022`, `0026`, `0027`, `0028`
+- `DATABASE_URL`, migration `0009`, `0018`, `0019`, `0022`, `0026`, `0027`, `0028`, `0029`
 
 선택:
 
@@ -85,11 +85,25 @@ Remove-Variable klolRandomBytes, klolRng, klolGeneratedSecret, klolSha256, klolD
 ### 설정 후 비밀 없는 확인
 
 1. 전체본의 해시와 START/END sentinel을 설치 문서대로 확인하고 MessengerBot R에서 컴파일한다.
-2. `/봇버전`이 `KLOL_KAKAO_BOT_V41_V2_2026_09_09_R6_V1_EXACT`를 반환하는지 확인한다.
+2. `/봇버전`과 `봇버전`이 모두 `KLOL_KAKAO_BOT_V41_V2_2026_09_09_R7_SLASH_PARITY`를 반환하는지 확인한다.
 3. `/V2연동확인`의 방/발신자 ID가 Vercel allowlist와 일치하는지 확인한다. 이 명령은 외부 요청 없이 로컬 identity key로 계산된다.
 4. 먼저 `랭킹`, `구인현황` 같은 읽기 요청을 확인한 뒤, Preview에서만 테스트 모집 create → status → finish 또는 내전 신청 미리보기 → 확인을 검증한다.
 5. 관리자 `/admin/kakao`에서 키 값이 아니라 current key/room/sender/bot sender의 configured 상태만 확인한다.
-6. 401이면 서버 로그의 allowlisted reject code만 확인한다. `SIGNING_KEY_UNAVAILABLE`는 서버 current 누락, `INVALID_SIGNATURE`는 signing 값 불일치, `ROOM_FORBIDDEN`/`SENDER_FORBIDDEN`은 allowlist 불일치, `BOT_SELF_MESSAGE`는 bot ID/self header 차단이다. 503이면 DB migration과 `kakao_operation_settings` 상태를 확인한다.
+6. 401이면 서버 로그의 allowlisted reject code와 stage만 확인한다. `SIGNING_KEY_UNAVAILABLE`는 서버 current 누락, `INVALID_SIGNATURE`는 signing 값 불일치, `ROOM_FORBIDDEN`은 room allowlist 불일치, `CAPABILITY_FORBIDDEN`은 trusted sender capability 부족, `BOT_SELF_MESSAGE`는 bot ID/self header 차단이다. 503이면 DB migration과 `kakao_operation_settings` 상태를 확인한다.
+
+### 같은 표시 방에서 `ROOM_FORBIDDEN`이 엇갈릴 때
+
+V41의 `roomId`는 `identity secret + "room-id\\n" + trim(String(room))`만으로 결정되며 sender, 메시지 본문, slash는 섞이지 않는다. 따라서 같은 서버 배포에서 한 발신자는 성공하고 다른 발신자는 `ROOM_FORBIDDEN`이라면 서버 sender 설정 변경으로 해결할 문제가 아니다. 확인 가능한 원인은 (a) 실제 callback `room` 문자열/객체의 문자열화 결과가 다르거나 (b) 서로 다른 MessengerBot R 실행기·봇 사본이 다른 identity secret을 쓰는 경우로 한정된다. 실패 요청의 room ID를 기록하지 않는 보안 경계 때문에, 해당 기기 증거 없이 둘 중 하나를 확정하지 않는다.
+
+1. 각 기기에서 같은 봇 소스의 로컬 콘솔로 `KLOL_V2_KAKAO.identityForChat("KLOL_IDENTITY_SELF_CHECK", "probe").roomId`만 계산해 서로 비교한다. 이 probe ID는 비밀 원문이 아니며 실제 방 ID도 아니다. 다르면 identity secret 또는 설치본이 다르다.
+2. probe가 같으면 실제 문제 방에서 `/V2연동확인`을 각 발신 경로로 한 번씩 실행해 `room-` 값만 운영자가 직접 비교한다. 다르면 callback room 값/봇 인스턴스가 다르다. 채팅이나 QA 문서에는 값을 복사하지 않는다.
+3. `/봇버전`과 설치 파일 SHA-256으로 서로 다른 생성 번들·봇 사본 여부를 확인한다. 동일 기기에서 봇이 중복 실행 중인지도 확인한다.
+4. identity secret 불일치라면 서버 allowed-room wildcard를 쓰지 않는다. 기준 기기의 기존 secret을 다른 실행기의 private `DataBase`에 안전하게 맞추고 재컴파일한 뒤 기존 `room-` 값이 유지되는지 확인한다.
+5. callback 값 차이라면 room 원문을 서버로 보내거나 로그에 남기지 말고, 기기 로컬에서 `String(room).length`, `trim` 전후 길이와 코드포인트만 비교한다. 표시 이름이 같은 별도 채팅방인지도 확인한다.
+
+Unicode NFKC, zero-width 제거, 내부 공백 축약을 room identity에 새로 적용하면 서로 다른 실제 방 문자열이 충돌하거나 기존 모든 allowlist ID가 바뀔 수 있다. R7은 이 위험을 피하려고 기존의 앞뒤 공백 trim 계약을 유지한다. 향후 정규화가 꼭 필요하면 구 ID와 신 ID를 동시에 계산하는 제한된 dual-read 기간, 충돌 검사, allowlist 이관 후 구 ID 제거 순서가 필요하다.
+
+운영 로그가 `ROOM_FORBIDDEN`이면 즉시 가능한 환경 복구는 **확인된 기존 room ID를 allowlist에 정확히 복원하는 것**뿐이다. sender env 추가는 공개 `openchat`/`recruits` 실패를 고치지 않는다. signing key나 HMAC 문제가 아닌 것도 해당 로그로 구분된다. 코드 패치 배포 전에는 실행기/identity 설정 불일치를 먼저 바로잡는다.
 
 저장소에서 실행하는 비파괴 계약 확인 명령은 다음과 같다.
 
@@ -98,13 +112,14 @@ npm run bot:kakao:v41
 node --check integrations/messengerbot-r/KLOL_KAKAO_BOT_V41_V2_COMPLETE.js
 npx tsx --test tests/recruiting-security.test.ts tests/kakao-v2-transition.test.ts
 node --test tests/kakao-v41-bot-contract.test.mjs
+npm run bot:kakao:audit
 ```
 
 저장소에서 비밀 원문을 확인하거나 출력할 필요는 없다. 키 길이·형식·configured boolean과 양쪽 fingerprint 비교만으로 설정을 점검한다.
 
 ## MessengerBot R 준비
 
-MessengerBot R에 바로 붙여 넣는 엔트리는 `integrations/messengerbot-r/KLOL_KAKAO_BOT_V41_V2_COMPLETE.js`다. `TRANSPORT.js`, `KLOL_KAKAO_BOT_V41_V1_COMPAT.js`, `ROUTER.js`를 수정했다면 `npm run bot:kakao:v41`로 완성본을 다시 생성하고 `node --check`를 통과시킨다. 기존 V40은 덮어쓰지 않는다.
+MessengerBot R 휴대폰에 바로 붙여 넣는 엔트리는 65,535자 미만의 `integrations/messengerbot-r/KLOL_KAKAO_BOT_V41_MESSENGERBOT_R.js`다. `KLOL_KAKAO_BOT_V41_V2_COMPLETE.js`는 개발·검토용이다. `TRANSPORT.js`, `KLOL_KAKAO_BOT_V41_V1_COMPAT.js`, `ROUTER.js`를 수정했다면 `npm run bot:kakao:v41`로 두 생성본을 다시 만들고 `node --check`와 생성 동일성 테스트를 통과시킨다. 기존 V40은 덮어쓰지 않는다.
 
 1. MessengerBot R private `DataBase`에 `KLOL_V2_KAKAO_WEBHOOK_SECRET_CURRENT`를 저장한다.
 2. 별도의 32 bytes 이상 난수 키를 `KLOL_V2_KAKAO_IDENTITY_SECRET`에 저장한다. 이 값은 서명 키 회전 때 바꾸지 않아야 opaque 방·발신자 ID가 유지된다.
@@ -164,7 +179,7 @@ KLOL_KAKAO_WEBHOOK_V1
 
 ## 무중단 전환 순서
 
-1. 별도 preview/스테이징 DB에 migration `0009`, `0018`, `0019`, `0022`, `0026`~`0028`과 `kakao_operation_settings` singleton을 확인한다.
+1. 별도 preview/스테이징 DB에 migration `0009`, `0018`, `0019`, `0022`, `0026`~`0029`와 `kakao_operation_settings` singleton을 확인한다.
 2. 새 키와 opaque allowlist를 스테이징 서버·V41 봇 사본에만 주입한다.
 3. player search/status처럼 읽기 영향이 작은 명령으로 정상·만료 timestamp·잘못된 room을 각각 한 번 검증한다.
 4. party create → status → sync → finish를 테스트 데이터로 검증하고 `aggregateId`/`revision` 저장을 확인한다.
@@ -179,7 +194,9 @@ KLOL_KAKAO_WEBHOOK_V1
 - `SIGNING_KEY_UNAVAILABLE`: 서버 current key 미설정
 - `QUERY_FORBIDDEN`, `BODY_INVALID`, `BOT_SELF_HEADER_INVALID`, `INVALID_REQUEST`
 - `INVALID_SIGNATURE`, `EXPIRED_TIMESTAMP`
-- `ROOM_FORBIDDEN`, `SENDER_FORBIDDEN`, `BOT_SELF_MESSAGE`
+- `ROOM_FORBIDDEN`, `CAPABILITY_FORBIDDEN`, `BOT_SELF_MESSAGE`
+
+각 로그에는 `SIGNATURE`, `ROOM`, `SENDER`, `CAPABILITY` 중 하나의 stage가 함께 남는다. ID나 비밀값은 남기지 않는다.
 
 로그에는 body, signature, nonce, room/sender ID, 환경변수 값이 포함되지 않는다. 401이면 위 코드를 먼저 확인하고, 503이면 DB 연결·0022 singleton·0026~0028 모집 호환 스키마·global/maintenance/개별 feature를 확인한다. 409/412이면 idempotency key 또는 revision을 갱신한다.
 

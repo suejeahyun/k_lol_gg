@@ -12,12 +12,12 @@ const currentSecret = new Uint8Array(32).fill(11);
 const priorSecret = new Uint8Array(32).fill(22);
 const rawBody = new TextEncoder().encode('{"command":"모집"}');
 
-function request(secret = currentSecret) {
+function request(secret = currentSecret, senderId = "operator-1") {
   const unsigned = {
     timestampSeconds: Math.floor(now.getTime() / 1_000),
     nonce: "nonce_1234567890abcdef",
     roomId: "room-1",
-    senderId: "operator-1",
+    senderId,
     rawBody,
   };
   return { ...unsigned, botSelf: false, signature: signKakaoWebhookForFixture(unsigned, secret) };
@@ -57,7 +57,7 @@ test("Kakao webhook rejects stale/replayed, forbidden room/sender, and bot-self 
   assert.deepEqual(verify({ now: new Date(now.getTime() + 301_000) }), { ok: false, code: "EXPIRED_TIMESTAMP" });
   assert.deepEqual(verify({ nonceAlreadyUsed: true }), { ok: false, code: "REPLAYED_NONCE" });
   assert.deepEqual(verify({ allowedRoomIds: new Set(["room-2"]) }), { ok: false, code: "ROOM_FORBIDDEN" });
-  assert.deepEqual(verify({ allowedSenderIds: new Set(["operator-2"]) }), { ok: false, code: "SENDER_FORBIDDEN" });
+  assert.deepEqual(verify({ allowedSenderIds: new Set(["operator-2"]) }), { ok: false, code: "CAPABILITY_FORBIDDEN" });
   assert.deepEqual(verify({ request: { ...request(), botSelf: true } }), { ok: false, code: "BOT_SELF_MESSAGE" });
 
   const botUnsigned = { ...request(), senderId: "bot-1" };
@@ -74,17 +74,30 @@ test("Kakao webhook rejects stale/replayed, forbidden room/sender, and bot-self 
   }), { ok: false, code: "BOT_SELF_MESSAGE" });
 });
 
-test("signed public reads may accept any human sender in an allowed room without weakening bot-self protection", () => {
-  assert.equal(verify({ allowedSenderIds: new Set(), allowAnySender: true }).ok, true);
+test("signed public room commands accept 99 재현, 지오, and 97 기용 without granting trusted capabilities", () => {
+  for (const senderId of ["sender-admin-99", "sender-gio", "sender-admin-97"]) {
+    assert.equal(verify({
+      request: request(currentSecret, senderId),
+      allowedSenderIds: new Set(),
+      requiredCapability: "PUBLIC_ROOM_COMMAND",
+    }).ok, true, senderId);
+  }
+  for (const senderId of ["sender-gio", "sender-admin-97"]) {
+    assert.deepEqual(verify({
+      request: request(currentSecret, senderId),
+      allowedSenderIds: new Set(["sender-admin-99"]),
+      requiredCapability: "TRUSTED_SENDER_COMMAND",
+    }), { ok: false, code: "CAPABILITY_FORBIDDEN" }, senderId);
+  }
   assert.deepEqual(verify({
     allowedSenderIds: new Set(),
-    allowAnySender: true,
+    requiredCapability: "PUBLIC_ROOM_COMMAND",
     request: { ...request(), botSelf: true },
   }), { ok: false, code: "BOT_SELF_MESSAGE" });
   assert.deepEqual(verify({
     allowedRoomIds: new Set(["room-2"]),
     allowedSenderIds: new Set(),
-    allowAnySender: true,
+    requiredCapability: "PUBLIC_ROOM_COMMAND",
   }), { ok: false, code: "ROOM_FORBIDDEN" });
 });
 

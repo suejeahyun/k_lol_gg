@@ -27,9 +27,11 @@ export type VerifiedKakaoWebhookIntent = Readonly<{
   transactionRecheck: true;
 }>;
 
+export type KakaoWebhookCapability = "PUBLIC_ROOM_COMMAND" | "TRUSTED_SENDER_COMMAND";
+
 export type KakaoWebhookVerification =
   | Readonly<{ ok: true; intent: VerifiedKakaoWebhookIntent }>
-  | Readonly<{ ok: false; code: "INVALID_SIGNATURE" | "EXPIRED_TIMESTAMP" | "REPLAYED_NONCE" | "ROOM_FORBIDDEN" | "SENDER_FORBIDDEN" | "BOT_SELF_MESSAGE" | "INVALID_REQUEST" }>;
+  | Readonly<{ ok: false; code: "INVALID_SIGNATURE" | "EXPIRED_TIMESTAMP" | "REPLAYED_NONCE" | "ROOM_FORBIDDEN" | "CAPABILITY_FORBIDDEN" | "BOT_SELF_MESSAGE" | "INVALID_REQUEST" }>;
 
 const MAXIMUM_SKEW_SECONDS = 5 * 60;
 
@@ -59,7 +61,7 @@ export function verifyKakaoWebhook(input: Readonly<{
   secrets: readonly KakaoWebhookSecret[];
   allowedRoomIds: ReadonlySet<string>;
   allowedSenderIds: ReadonlySet<string>;
-  allowAnySender?: boolean;
+  requiredCapability?: KakaoWebhookCapability;
   botSenderId: string;
   nonceAlreadyUsed: boolean;
   maximumSkewSeconds?: number;
@@ -68,6 +70,7 @@ export function verifyKakaoWebhook(input: Readonly<{
   const { request } = input;
   const maximumSkewSeconds = input.maximumSkewSeconds ?? MAXIMUM_SKEW_SECONDS;
   const maximumBodyBytes = input.maximumBodyBytes ?? 256 * 1_024;
+  const requiredCapability = input.requiredCapability ?? "TRUSTED_SENDER_COMMAND";
   if (
     !Number.isSafeInteger(request.timestampSeconds) || request.timestampSeconds < 0 ||
     !Number.isFinite(input.now.getTime()) ||
@@ -79,7 +82,8 @@ export function verifyKakaoWebhook(input: Readonly<{
     !(request.rawBody instanceof Uint8Array) || request.rawBody.byteLength < 2 || request.rawBody.byteLength > maximumBodyBytes ||
     input.secrets.length < 1 || input.secrets.length > 2 ||
     new Set(input.secrets.map((entry) => entry.keyId)).size !== input.secrets.length ||
-    input.secrets.some((entry) => !safeIdentifier(entry.keyId) || !(entry.secret instanceof Uint8Array) || entry.secret.byteLength < 32)
+    input.secrets.some((entry) => !safeIdentifier(entry.keyId) || !(entry.secret instanceof Uint8Array) || entry.secret.byteLength < 32) ||
+    (requiredCapability !== "PUBLIC_ROOM_COMMAND" && requiredCapability !== "TRUSTED_SENDER_COMMAND")
   ) return { ok: false, code: "INVALID_REQUEST" };
   if (Math.abs(Math.floor(input.now.getTime() / 1_000) - request.timestampSeconds) > maximumSkewSeconds) {
     return { ok: false, code: "EXPIRED_TIMESTAMP" };
@@ -99,8 +103,10 @@ export function verifyKakaoWebhook(input: Readonly<{
   }
   if (!matchedKeyId) return { ok: false, code: "INVALID_SIGNATURE" };
   if (!input.allowedRoomIds.has(request.roomId)) return { ok: false, code: "ROOM_FORBIDDEN" };
-  if (!input.allowAnySender && !input.allowedSenderIds.has(request.senderId)) return { ok: false, code: "SENDER_FORBIDDEN" };
   if (request.botSelf || request.senderId === input.botSenderId) return { ok: false, code: "BOT_SELF_MESSAGE" };
+  if (requiredCapability === "TRUSTED_SENDER_COMMAND" && !input.allowedSenderIds.has(request.senderId)) {
+    return { ok: false, code: "CAPABILITY_FORBIDDEN" };
+  }
   return {
     ok: true,
     intent: Object.freeze({

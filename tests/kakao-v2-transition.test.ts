@@ -70,13 +70,19 @@ test("Kakao HTTP verification reports allowlisted internal reasons without weake
     console.warn = (...values: unknown[]) => { calls.push(values); };
     try {
       recordKakaoWebhookRejection("INVALID_SIGNATURE", { route: "/hook", traceId: "trace-safe" });
+      recordKakaoWebhookRejection("ROOM_FORBIDDEN", { route: "/hook" });
+      recordKakaoWebhookRejection("BOT_SELF_MESSAGE", { route: "/hook" });
+      recordKakaoWebhookRejection("CAPABILITY_FORBIDDEN", { route: "/hook" });
     } finally {
       console.warn = originalWarn;
     }
-    assert.deepEqual(calls, [["KAKAO_WEBHOOK_REJECTED", {
-      code: "INVALID_SIGNATURE", route: "/hook", traceId: "trace-safe",
-    }]]);
+    assert.deepEqual(calls.map((call) => (call[1] as { stage: string }).stage), ["SIGNATURE", "ROOM", "SENDER", "CAPABILITY"]);
+    assert.deepEqual(calls[0], ["KAKAO_WEBHOOK_REJECTED", {
+      code: "INVALID_SIGNATURE", stage: "SIGNATURE", route: "/hook", traceId: "trace-safe",
+    }]);
     assert.equal(JSON.stringify(calls).includes(process.env.KAKAO_WEBHOOK_SECRET_CURRENT), false);
+    assert.equal(JSON.stringify(calls).includes("room-contract"), false);
+    assert.equal(JSON.stringify(calls).includes("sender-contract"), false);
   } finally {
     for (const key of ENV_KEYS) {
       const value = previous[key];

@@ -7,13 +7,14 @@ import {
 } from "@/modules/recruiting/kakao-assistant/http";
 import { getRuntimeKakaoAssistant } from "@/modules/recruiting/kakao-assistant/runtime";
 import { isRuntimeKakaoFeatureEnabled } from "@/modules/recruiting/kakao-admin/runtime";
+import { MAXIMUM_KAKAO_BODY_BYTES, TRUSTED_KAKAO_SENDER_COMMAND } from "@/modules/recruiting/infrastructure/kakao-http-request";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 /** Produces a signed read-only notice payload. Delivery remains an external bot responsibility. */
 export async function POST(request: Request) {
-  const prepared = await prepareKakaoSignedJson(request);
+  const prepared = await prepareKakaoSignedJson(request, MAXIMUM_KAKAO_BODY_BYTES, TRUSTED_KAKAO_SENDER_COMMAND);
   if (!prepared.ok) return prepared.response;
   try {
     const body = parseScheduledNoticeBody(prepared.body);

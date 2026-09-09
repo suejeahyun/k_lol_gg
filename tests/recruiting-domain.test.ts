@@ -5,6 +5,7 @@ import {
   canonicalRecruitRequestFingerprint,
   createRecruitParty,
   kakaoRecruitDateKey,
+  kakaoRecruitTimeText,
   kakaoRoomOwnsRecruitAggregate,
   shouldAutoFinishRecruit,
   syncScrimRecruit,
@@ -29,6 +30,32 @@ function scrim(): ScrimRecruit {
 test("KST recruit date is stable across the UTC day boundary", () => {
   assert.equal(kakaoRecruitDateKey(new Date("2026-09-07T14:59:59.999Z")), "2026-09-07");
   assert.equal(kakaoRecruitDateKey(new Date("2026-09-07T15:00:00.000Z")), "2026-09-08");
+});
+
+test("KST recruit display time is stable across midnight", () => {
+  assert.equal(kakaoRecruitTimeText(new Date("2026-09-07T14:59:59.999Z")), "23:59");
+  assert.equal(kakaoRecruitTimeText(new Date("2026-09-07T15:00:00.000Z")), "00:00");
+});
+
+test("party metadata defaults on the server clock and preserves free text on sync", () => {
+  const created = createRecruitParty({
+    id: "party-meta", recruitDate: "2026-09-08", resetSequence: 0, recruitNumber: 9,
+    type: "FLEX_RANK", title: "자랭 모집", maximumMembers: 5,
+    startTimeText: null, gameInfo: "   ", now,
+  });
+  assert.equal(created.startTimeText, "00:00");
+  assert.equal(created.gameInfo, "미입력");
+
+  const preserved = syncRecruitParty({ party: created, expectedRevision: 0, members: [], startTimeText: null, gameInfo: null, now });
+  assert.equal(preserved.startTimeText, "00:00");
+  assert.equal(preserved.gameInfo, "미입력");
+
+  const populated = syncRecruitParty({
+    party: preserved, expectedRevision: 1, members: [], startTimeText: "모이면", gameInfo: "일겜or자랭", now,
+  });
+  assert.equal(populated.startTimeText, "모이면");
+  assert.equal(populated.gameInfo, "일겜or자랭");
+  assert.equal(populated.scheduledStartAt, null);
 });
 
 test("request fingerprint is canonical and binds actor, action, key and body", () => {
@@ -123,5 +150,5 @@ test("full scrim sync replaces V1 form fields but binds date, number, tournament
 });
 
 test("public party DTO excludes room, sender, notes and request keys by construction", () => {
-  assert.deepEqual(Object.keys(toPublicRecruitPartyDto(party())).sort(), ["id", "maximumMembers", "memberCount", "recruitNumber", "scheduledStartAt", "status", "title", "type"]);
+  assert.deepEqual(Object.keys(toPublicRecruitPartyDto(party())).sort(), ["gameInfo", "id", "maximumMembers", "memberCount", "recruitNumber", "scheduledStartAt", "startTimeText", "status", "title", "type"]);
 });

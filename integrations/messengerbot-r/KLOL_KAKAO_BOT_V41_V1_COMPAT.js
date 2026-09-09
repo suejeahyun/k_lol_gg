@@ -41,6 +41,15 @@ var KLOL_V41_V1_COMPAT = (function () {
       .replace(/\n{4,}/g, "\n\n\n");
   }
 
+  function canonicalCommandText(value) {
+    var checked = validateInput(value);
+    var text = checked.ok ? trim(checked.text) : "";
+    if (text.length > 1 && text.charAt(0) === "/" && text.charAt(1) !== "/" && !/\s/.test(text.charAt(1))) {
+      return text.substring(1);
+    }
+    return text;
+  }
+
   function validateInput(value) {
     var source = String(value == null ? "" : value);
     var normalized = "";
@@ -160,22 +169,22 @@ var KLOL_V41_V1_COMPAT = (function () {
 
   function readSimpleMeta(text) {
     var lines = text.split("\n");
-    var result = { startTimeText: null, tierText: null, preferredLineText: null, playStyle: null, note: null };
+    var result = { startTimeText: null, gameInfo: null, tierText: null, preferredLineText: null, playStyle: null };
     var index = 0;
     var line = "";
     var value = "";
     for (index = 0; index < lines.length; index += 1) {
       line = trim(lines[index]).replace(/^[》>]\s*/, "");
-      if (/^(?:게임\s*)?(?:시작|출발)\s*시간\s*:/.test(line)) {
-        value = trim(line.replace(/^(?:게임\s*)?(?:시작|출발)\s*시간\s*:/, ""));
+      if (/^(?:게임\s*)?(?:시작|출발)\s*시간\s*[:：]/.test(line)) {
+        value = trim(line.replace(/^(?:게임\s*)?(?:시작|출발)\s*시간\s*[:：]/, ""));
         var tierMatch = value.match(/^(.*?)(?:\+\s*티어\s*[:：]?\s*)([^+]+)$/);
         if (tierMatch) {
           if (trim(tierMatch[1]).length <= 160) result.startTimeText = trim(tierMatch[1]) || null;
           if (trim(tierMatch[2]).length <= 80) result.tierText = trim(tierMatch[2]) || null;
         } else if (value && value.length <= 160) result.startTimeText = value;
-      } else if (/^게임\s*정보\s*:/.test(line)) {
-        value = trim(line.replace(/^게임\s*정보\s*:/, ""));
-        if (value && value.length <= 500) result.note = value;
+      } else if (/^게임\s*정보\s*[:：]/.test(line)) {
+        value = trim(line.replace(/^게임\s*정보\s*[:：]/, ""));
+        if (value && value.length <= 500) result.gameInfo = value;
       } else if (/^(?:티어|현티어)\s*:/.test(line)) {
         value = trim(line.replace(/^(?:티어|현티어)\s*:/, ""));
         if (value && value.length <= 80) result.tierText = value;
@@ -297,7 +306,7 @@ var KLOL_V41_V1_COMPAT = (function () {
       domain: "PARTY", action: "SYNC_FORM", recruitNo: recruitNo,
       type: definition.type, title: definition.title, maximumMembers: definition.maximumMembers,
       startTimeText: meta.startTimeText, tierText: meta.tierText,
-      preferredLineText: meta.preferredLineText, playStyle: meta.playStyle, note: meta.note,
+      gameInfo: meta.gameInfo, preferredLineText: meta.preferredLineText, playStyle: meta.playStyle,
       members: members
     };
   }
@@ -774,23 +783,26 @@ var KLOL_V41_V1_COMPAT = (function () {
 
   function classifyMessage(value, sender, fallbackDateKey) {
     var checked = validateInput(value);
+    var text = "";
     var parsed = null;
     if (!checked.ok) return { domain: "INPUT", action: "REJECT", error: checked.error };
-    parsed = classifyManagedCommand(checked.text);
+    text = canonicalCommandText(checked.text);
+    parsed = classifyManagedCommand(text);
     if (parsed) return parsed;
-    parsed = parseOperationForm(checked.text, sender);
+    parsed = parseOperationForm(text, sender);
     if (parsed) return parsed;
-    parsed = parseInhouseCommand(checked.text, fallbackDateKey);
+    parsed = parseInhouseCommand(text, fallbackDateKey);
     if (parsed) return parsed;
-    parsed = parseScrimCommand(checked.text);
+    parsed = parseScrimCommand(text);
     if (parsed) return parsed;
-    return classifyPartyCommand(checked.text);
+    return classifyPartyCommand(text);
   }
 
   return {
-    VERSION: "KLOL_V41_V1_COMPAT_2026_09_09_V40_PARITY",
+    VERSION: "KLOL_V41_V1_COMPAT_2026_09_09_SLASH_PARITY",
     limits: { maximumInputLength: MAX_INPUT_LENGTH, maximumInputLines: MAX_INPUT_LINES, maximumMembers: MAX_MEMBERS },
     normalizeText: normalizeText,
+    canonicalCommandText: canonicalCommandText,
     validateInput: validateInput,
     parsePartyCreateCommand: parsePartyCreateCommand,
     parsePartyFinishCommand: parsePartyFinishCommand,

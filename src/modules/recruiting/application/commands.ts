@@ -47,8 +47,8 @@ type Command<Type extends string, Payload> = Readonly<{
 }>;
 
 export type PartyCommand =
-  | Command<"CREATE_PARTY", Readonly<{ recruitDate: string; resetSequence: number; recruitNumber: number; partyType: RecruitPartyType; title: string; maximumMembers: number; members: readonly RecruitMember[]; scheduledStartAt: string | null; protectedUntil: string | null }>>
-  | Command<"SYNC_PARTY", Readonly<{ members: readonly RecruitMember[] }>>
+  | Command<"CREATE_PARTY", Readonly<{ recruitDate: string; resetSequence: number; recruitNumber: number; partyType: RecruitPartyType; title: string; maximumMembers: number; members: readonly RecruitMember[]; startTimeText?: string | null; gameInfo?: string | null; scheduledStartAt: string | null; protectedUntil: string | null }>>
+  | Command<"SYNC_PARTY", Readonly<{ members: readonly RecruitMember[]; startTimeText?: string | null; gameInfo?: string | null; scheduledStartAt?: string | null }>>
   | Command<"GET_PARTY_STATUS", Readonly<Record<string, never>>>
   | Command<"FINISH_PARTY", Readonly<Record<string, never>>>
   | Command<"CANCEL_PARTY", Readonly<Record<string, never>>>

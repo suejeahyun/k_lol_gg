@@ -214,7 +214,7 @@ function createScrim(command: Extract<RecruitingCommand, { type: "CREATE_SCRIM" 
 }
 
 function partySnapshot(party: RecruitParty | null): JsonObject | null {
-  return party ? { id: party.id, revision: party.revision, status: party.status, memberCount: party.members.filter((member) => !member.substitute).length, reserveCount: party.members.filter((member) => member.substitute).length, maximumMembers: party.maximumMembers } : null;
+  return party ? { id: party.id, revision: party.revision, status: party.status, memberCount: party.members.filter((member) => !member.substitute).length, reserveCount: party.members.filter((member) => member.substitute).length, maximumMembers: party.maximumMembers, startTimeText: party.startTimeText, gameInfo: party.gameInfo } : null;
 }
 
 function scrimSnapshot(scrim: ScrimRecruit | null): JsonObject | null {
@@ -232,7 +232,7 @@ function scrimSnapshot(scrim: ScrimRecruit | null): JsonObject | null {
 
 function partyJson(party: RecruitParty): JsonObject {
   const dto = toPublicPartyDto(party);
-  return { id: dto.id, recruitNumber: dto.recruitNumber, type: dto.type, status: dto.status, title: dto.title, memberCount: dto.memberCount, maximumMembers: dto.maximumMembers, scheduledStartAt: dto.scheduledStartAt };
+  return { id: dto.id, recruitNumber: dto.recruitNumber, type: dto.type, status: dto.status, title: dto.title, memberCount: dto.memberCount, maximumMembers: dto.maximumMembers, startTimeText: dto.startTimeText, gameInfo: dto.gameInfo, scheduledStartAt: dto.scheduledStartAt };
 }
 
 function scrimJson(scrim: ScrimRecruit): JsonObject {
@@ -349,7 +349,17 @@ export class RecruitingCommandHandler {
 }
 
 function sync(command: Extract<RecruitingCommand, { type: "SYNC_PARTY" }>, party: RecruitParty, now: Date) {
-  return syncRecruitParty({ party, expectedRevision: command.metadata.expectedRevision, members: command.payload.members, now });
+  return syncRecruitParty({
+    party,
+    expectedRevision: command.metadata.expectedRevision,
+    members: command.payload.members,
+    startTimeText: command.payload.startTimeText,
+    gameInfo: command.payload.gameInfo,
+    scheduledStartAt: command.payload.scheduledStartAt === undefined
+      ? undefined
+      : parseDate(command.payload.scheduledStartAt, "scheduledStartAt"),
+    now,
+  });
 }
 
 function syncScrim(command: Extract<RecruitingCommand, { type: "SYNC_SCRIM" }>, scrim: ScrimRecruit) {

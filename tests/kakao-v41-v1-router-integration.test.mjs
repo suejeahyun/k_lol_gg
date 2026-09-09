@@ -92,6 +92,8 @@ async function harness() {
             maximumMembers: command.payload.maximumMembers,
             members: structuredClone(command.payload.members),
             scheduledStartAt: command.payload.scheduledStartAt,
+            startTimeText: command.payload.startTimeText || "00:00",
+            gameInfo: command.payload.gameInfo || "미입력",
           };
           parties.push(party);
         } else if (command.type === "SYNC_PARTY") {
@@ -99,6 +101,9 @@ async function harness() {
           party.members = structuredClone(command.payload.members);
           party.memberCount = party.members.filter((member) => !member.substitute).length;
           party.reserveCount = party.members.filter((member) => member.substitute).length;
+          if (command.payload.startTimeText) party.startTimeText = command.payload.startTimeText;
+          if (command.payload.gameInfo) party.gameInfo = command.payload.gameInfo;
+          if (Object.prototype.hasOwnProperty.call(command.payload, "scheduledStartAt")) party.scheduledStartAt = command.payload.scheduledStartAt;
         } else if (command.type === "FINISH_PARTY") {
           party.revision += 1;
           party.status = "FINISHED";
@@ -120,6 +125,8 @@ async function harness() {
               memberCount: party.memberCount,
               maximumMembers: party.maximumMembers,
               scheduledStartAt: party.scheduledStartAt,
+              startTimeText: party.startTimeText,
+              gameInfo: party.gameInfo,
             },
           },
         };
@@ -141,7 +148,9 @@ async function harness() {
   });
   new vm.Script(`${compatibility}\n${router}`, { filename: "KLOL_V41_COMPLETE_TEST.js" }).runInContext(context);
   const replier = { reply(value) { replies.push(String(value)); } };
-  const respond = (message) => context.response("테스트방", message, "사용자", true, replier, null, "com.xfl.msgbot");
+  const respond = (message, options = {}) => context.response(
+    options.room ?? "테스트방", message, options.sender ?? "사용자", true, replier, null, "com.xfl.msgbot",
+  );
   return { calls, parties, scrims, replies, respond };
 }
 
@@ -162,6 +171,8 @@ test("legacy party create command calls the typed V2 mutation once and replays w
       title: "자랭 하실분!",
       maximumMembers: 5,
       members: [],
+      startTimeText: null,
+      gameInfo: null,
       scheduledStartAt: null,
       protectedUntil: null,
     },
@@ -171,6 +182,8 @@ test("legacy party create command calls the typed V2 mutation once and replays w
   assert.equal(bot.parties.length, 1);
   assert.match(bot.replies.at(-1), /모집번호: #7/u);
   assert.match(bot.replies.at(-1), /TOP\./u);
+  assert.match(bot.replies.at(-1), /》시작시간 : 00:00/u);
+  assert.match(bot.replies.at(-1), /》게임정보 : 미입력/u);
 });
 
 test("legacy full party form maps positions to slots and synchronizes the existing V2 party", async () => {
@@ -183,6 +196,8 @@ test("legacy full party form maps positions to slots and synchronizes the existi
 
   const call = bot.calls.recruits.at(-1);
   assert.equal(call.command.type, "SYNC_PARTY");
+  assert.equal(call.command.payload.startTimeText, "21:00");
+  assert.equal(call.command.payload.gameInfo, null);
   assert.equal(call.requestContext.expectedRevision, 0);
   assert.deepEqual(call.command.payload.members.map(({ name, position, slotNo, substitute }) => ({ name, position, slotNo, substitute })), [
     { name: "탑솔러", position: "TOP", slotNo: 1, substitute: false },
@@ -193,6 +208,48 @@ test("legacy full party form maps positions to slots and synchronizes the existi
   ]);
   assert.match(bot.replies.at(-1), /\[파티 #7 반영\]/u);
   assert.match(bot.replies.at(-1), /5\/5 · 예비 0명/u);
+  assert.match(bot.replies.at(-1), /시작시간: 21:00/u);
+  assert.match(bot.replies.at(-1), /게임정보: 미입력/u);
+});
+
+test("slash and plain temporary/form flows share server-first metadata fallback and preserve free text", async () => {
+  for (const createText of ["5인파티 9", "/5인파티 9"]) {
+    const bot = await harness();
+    bot.respond(createText);
+    assert.equal(bot.calls.recruits[0].command.payload.startTimeText, null);
+    assert.equal(bot.calls.recruits[0].command.payload.gameInfo, null);
+    assert.match(bot.replies.at(-1), /》시작시간 : 00:00/u);
+    assert.match(bot.replies.at(-1), /》게임정보 : 미입력/u);
+
+    for (const separator of ["\n", "\r\n"]) {
+      bot.respond([
+        "📢 5인 파티 구인", "모집번호: #9", "》시작시간 ：   모이면   ",
+        "》게임정보:   일겜or자랭   ", "1. 참가자",
+      ].join(separator));
+      const call = bot.calls.recruits.at(-1);
+      assert.equal(call.command.type, "SYNC_PARTY");
+      assert.equal(call.command.payload.startTimeText, "모이면");
+      assert.equal(call.command.payload.gameInfo, "일겜or자랭");
+      assert.match(bot.replies.at(-1), /시작시간: 모이면/u);
+      assert.match(bot.replies.at(-1), /게임정보: 일겜or자랭/u);
+    }
+  }
+});
+
+test("99 재현, 지오, 97 기용 fixtures complete public create, form, and finish flows with or without slash", async () => {
+  for (const sender of ["99 재현", "지오", "97 기용"]) {
+    for (const slash of ["", "/"]) {
+      const bot = await harness();
+      bot.respond(`${slash}2인파티 7`, { sender });
+      bot.respond([
+        "📢 2인 파티 구인", "모집번호: #7", "》시작시간: 모이면", "》게임정보: 일겜or자랭", "1. 참가자",
+      ].join("\n"), { sender });
+      bot.respond(`${slash}7ㅉ`, { sender });
+      assert.deepEqual(bot.calls.recruits.map(({ command }) => command.type), ["CREATE_PARTY", "SYNC_PARTY", "FINISH_PARTY"], `${sender}:${slash || "plain"}`);
+      assert.equal(bot.parties[0].status, "FINISHED");
+      assert.doesNotMatch(bot.replies.join("\n"), /요청 실패/u);
+    }
+  }
 });
 
 test("legacy party candidates stay separate from primary capacity", async () => {

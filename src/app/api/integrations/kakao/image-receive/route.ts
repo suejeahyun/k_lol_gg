@@ -3,14 +3,14 @@ import { randomUUID } from "node:crypto";
 import { parseKakaoImageReceiveBody } from "@/modules/recruiting/kakao-assistant/domain";
 import { kakaoAssistantErrorResponse, kakaoAssistantResponse, prepareKakaoSignedJson } from "@/modules/recruiting/kakao-assistant/http";
 import { getRuntimeKakaoImageReceive } from "@/modules/recruiting/kakao-assistant/runtime";
-import { MAXIMUM_KAKAO_IMAGE_BODY_BYTES } from "@/modules/recruiting/infrastructure/kakao-http-request";
+import { MAXIMUM_KAKAO_IMAGE_BODY_BYTES, TRUSTED_KAKAO_SENDER_COMMAND } from "@/modules/recruiting/infrastructure/kakao-http-request";
 import { isRuntimeKakaoFeatureEnabled } from "@/modules/recruiting/kakao-admin/runtime";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  const prepared = await prepareKakaoSignedJson(request, MAXIMUM_KAKAO_IMAGE_BODY_BYTES);
+  const prepared = await prepareKakaoSignedJson(request, MAXIMUM_KAKAO_IMAGE_BODY_BYTES, TRUSTED_KAKAO_SENDER_COMMAND);
   if (!prepared.ok) return prepared.response;
   try {
     const command = parseKakaoImageReceiveBody(prepared.body);
