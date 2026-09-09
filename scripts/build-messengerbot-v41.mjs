@@ -14,7 +14,7 @@ const compatibilityPath = resolve(integrationDirectory, "KLOL_KAKAO_BOT_V41_V1_C
 const routerPath = resolve(integrationDirectory, "KLOL_KAKAO_BOT_V41_V2_ROUTER.js");
 const outputPath = resolve(integrationDirectory, "KLOL_KAKAO_BOT_V41_V2_COMPLETE.js");
 const mobileOutputPath = resolve(integrationDirectory, "KLOL_KAKAO_BOT_V41_MESSENGERBOT_R.js");
-const bundleMarker = "KLOL_V41_BUNDLE_R12_CHANNEL_ID_ROOM";
+const bundleMarker = "KLOL_V41_BUNDLE_R14_INSTALLATION_DEDUPE";
 
 const [transportSource, compatibilitySource, routerSource] = await Promise.all([
   readFile(transportPath, "utf8"),
@@ -38,15 +38,15 @@ const mobileAst = await minify(complete, {
     dead_code: true,
     unused: true,
     booleans: true,
-    collapse_vars: false,
+    collapse_vars: true,
     comparisons: true,
-    conditionals: false,
+    conditionals: true,
     evaluate: true,
-    if_return: false,
-    join_vars: false,
-    loops: false,
-    reduce_vars: false,
-    sequences: false,
+    if_return: true,
+    join_vars: true,
+    loops: true,
+    reduce_vars: true,
+    sequences: true,
     side_effects: false,
     top_retain: ["response"],
     toplevel: true,

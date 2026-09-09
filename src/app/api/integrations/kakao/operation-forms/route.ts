@@ -34,7 +34,7 @@ export async function POST(request: Request) {
   // Operation forms are public submissions inside an approved Kakao room; administrative review stays site-only.
   const verification = await verifyKakaoHttpRequest(request, new Date(), MAXIMUM_KAKAO_BODY_BYTES, PUBLIC_KAKAO_ROOM_COMMAND);
   if (!verification.ok) {
-    recordKakaoWebhookRejection(verification.code, { route: new URL(request.url).pathname, traceId });
+    recordKakaoWebhookRejection(verification.code, { route: new URL(request.url).pathname, traceId, request });
     return kakaoWebhookFailureResponse(verification.code, traceId);
   }
   const { rawBody, intent } = verification.value;

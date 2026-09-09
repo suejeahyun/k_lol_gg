@@ -265,6 +265,8 @@ export const kakaoBotInstallations = recruitingSchema.table("kakao_bot_installat
   revision: bigint("revision", { mode: "number" }).default(0).notNull(),
   publicId: varchar("public_id", { length: 128 }).notNull(),
   displayName: varchar("display_name", { length: 120 }).notNull(),
+  keyId: varchar("key_id", { length: 128 }).default("legacy").notNull(),
+  lastBotVersion: varchar("last_bot_version", { length: 128 }),
   status: kakaoBotInstallationStatus("status").default("ACTIVE").notNull(),
   firstSeenAt: timestamptz("first_seen_at").defaultNow().notNull(),
   lastSeenAt: timestamptz("last_seen_at").defaultNow().notNull(),
@@ -274,6 +276,8 @@ export const kakaoBotInstallations = recruitingSchema.table("kakao_bot_installat
   check("kakao_bot_installations_revision_nonnegative", sql`${table.revision} >= 0`),
   check("kakao_bot_installations_public", sql`char_length(btrim(${table.publicId})) BETWEEN 8 AND 128`),
   check("kakao_bot_installations_name", sql`char_length(btrim(${table.displayName})) BETWEEN 1 AND 120`),
+  check("kakao_bot_installations_key", sql`char_length(btrim(${table.keyId})) BETWEEN 1 AND 128`),
+  check("kakao_bot_installations_version", sql`${table.lastBotVersion} IS NULL OR char_length(btrim(${table.lastBotVersion})) BETWEEN 8 AND 128`),
 ]);
 
 export const kakaoRoomBindings = recruitingSchema.table("kakao_room_bindings", {

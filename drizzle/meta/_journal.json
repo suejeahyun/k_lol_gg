@@ -225,6 +225,13 @@
       "when": 1788942447397,
       "tag": "0031_brainy_taskmaster",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1788948034982,
+      "tag": "0032_bent_ultimates",
+      "breakpoints": true
     }
   ]
 }

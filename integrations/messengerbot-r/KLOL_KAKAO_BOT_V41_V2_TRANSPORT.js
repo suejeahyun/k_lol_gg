@@ -11,9 +11,10 @@
  * pseudonymous-ID key under KLOL_V2_KAKAO_IDENTITY_SECRET.
  */
 var KLOL_V2_KAKAO = (function () {
-  var CONTRACT_VERSION = "KLOL_KAKAO_WEBHOOK_V2";
+  var CONTRACT_VERSION = "KLOL_KAKAO_WEBHOOK_V3";
   var SETTING_BASE_URL = "KLOL_V2_BASE_URL";
   var SETTING_SIGNING_SECRET = "KLOL_V2_KAKAO_WEBHOOK_SECRET_CURRENT";
+  var SETTING_SIGNING_KEY_ID = "KLOL_V2_KAKAO_WEBHOOK_KEY_ID_CURRENT";
   var SETTING_IDENTITY_SECRET = "KLOL_V2_KAKAO_IDENTITY_SECRET";
   var ENDPOINTS = {
     recruit: "/api/integrations/kakao/recruits",
@@ -133,16 +134,37 @@ var KLOL_V2_KAKAO = (function () {
     return String(java.util.UUID.randomUUID().toString());
   }
 
-  function idempotencyKey(nonce) {
-    return "mbr-v41-" + nonce;
-  }
-
   function installationId() {
     return "install-" + hmacSha256Hex(identitySecret(), "installation-id\nKLOL_V41").substring(0, 32);
   }
 
-  function signatureMaterial(timestampSeconds, nonce, installId, roomId, senderId, bodyDigestHex) {
-    return [CONTRACT_VERSION, timestampSeconds, nonce, installId, roomId, senderId, bodyDigestHex].join("\n");
+  function signingKeyId() {
+    return safeIdentifier(readPrivateSetting(SETTING_SIGNING_KEY_ID) || "current", "키 ID");
+  }
+
+  function botVersion() {
+    return safeIdentifier(typeof KLOL_V41_BOT_CODE_VERSION === "string" ? KLOL_V41_BOT_CODE_VERSION : "KLOL_V41_UNKNOWN", "봇 버전");
+  }
+
+  function messageDeliveryId(room, sender, message, logId, channelId, userHash) {
+    var roomKey = trimText(channelId) || canonicalRoomName(room);
+    var senderKey = trimText(userHash) || trimText(sender);
+    var material = ["KLOL_V41_MESSAGE_DELIVERY_V1", roomKey, senderKey, trimText(logId), String(message == null ? "" : message)].join("\n");
+    return "delivery-" + sha256Hex(material).substring(0, 32);
+  }
+
+  function deterministicMessageUuid(domain) {
+    var deliveryId = typeof KLOL_V41_CURRENT_DELIVERY_ID === "string" ? KLOL_V41_CURRENT_DELIVERY_ID : "";
+    if (!/^delivery-[a-f0-9]{32}$/.test(deliveryId)) return newUuid();
+    var hex = sha256Hex("KLOL_V41_MESSAGE_UUID_V1\n" + String(domain || "aggregate") + "\n" + deliveryId).substring(0, 32).split("");
+    hex[12] = "4";
+    hex[16] = ["8", "9", "a", "b"][parseInt(hex[16], 16) % 4];
+    hex = hex.join("");
+    return hex.substring(0, 8) + "-" + hex.substring(8, 12) + "-" + hex.substring(12, 16) + "-" + hex.substring(16, 20) + "-" + hex.substring(20);
+  }
+
+  function signatureMaterial(timestampSeconds, nonce, installId, keyId, deliveryId, version, roomId, senderId, bodyDigestHex) {
+    return [CONTRACT_VERSION, timestampSeconds, nonce, installId, keyId, deliveryId, version, roomId, senderId, bodyDigestHex].join("\n");
   }
 
   function safeJsonParse(value) {
@@ -162,12 +184,15 @@ var KLOL_V2_KAKAO = (function () {
     var roomId = safeIdentifier(context.roomId, "방");
     var senderId = safeIdentifier(context.senderId, "발신자");
     var installId = safeIdentifier(context.installationId || installationId(), "설치본");
+    var keyId = safeIdentifier(context.keyId || signingKeyId(), "키 ID");
+    var deliveryId = safeIdentifier(context.deliveryId, "메시지 전달");
+    var version = safeIdentifier(context.botVersion || botVersion(), "봇 버전");
     var nonce = randomNonce();
     var timestampSeconds = Math.floor(new Date().getTime() / 1000);
     var bodyDigestHex = sha256Hex(rawBody);
-    var signature = "v2=" + hmacSha256Hex(
+    var signature = "v3=" + hmacSha256Hex(
       signingSecret(),
-      signatureMaterial(timestampSeconds, nonce, installId, roomId, senderId, bodyDigestHex)
+      signatureMaterial(timestampSeconds, nonce, installId, keyId, deliveryId, version, roomId, senderId, bodyDigestHex)
     );
     var connection = org.jsoup.Jsoup.connect(publicBaseUrl() + path)
       .ignoreContentType(true)
@@ -178,11 +203,14 @@ var KLOL_V2_KAKAO = (function () {
       .header("x-klol-timestamp", String(timestampSeconds))
       .header("x-klol-nonce", nonce)
       .header("x-klol-installation", installId)
+      .header("x-klol-key-id", keyId)
+      .header("x-klol-delivery", deliveryId)
+      .header("x-klol-bot-version", version)
       .header("x-klol-room", roomId)
       .header("x-klol-sender", senderId)
       .header("x-klol-bot-self", context.botSelf === true ? "1" : "0")
       .header("x-klol-signature", signature)
-      .header("Idempotency-Key", context.requestKey || idempotencyKey(nonce))
+      .header("Idempotency-Key", "mbr-v41-" + deliveryId)
       .timeout(typeof context.timeoutMs === "number" ? Math.floor(context.timeoutMs) : 12000)
       .requestBody(rawBody);
     if (path === ENDPOINTS.imageReceive) connection.maxBodySize(0);
@@ -222,7 +250,9 @@ var KLOL_V2_KAKAO = (function () {
 
   function contextFromChat(room, sender, options) {
     var identity = identityForChat(room, sender);
-    var context = { installationId: installationId(), roomId: identity.roomId, senderId: identity.senderId, botSelf: false };
+    var currentDeliveryId = typeof KLOL_V41_CURRENT_DELIVERY_ID === "string" ? KLOL_V41_CURRENT_DELIVERY_ID : "";
+    if (!/^delivery-[a-f0-9]{32}$/.test(currentDeliveryId)) currentDeliveryId = "delivery-" + sha256Hex(randomNonce()).substring(0, 32);
+    var context = { installationId: installationId(), keyId: signingKeyId(), deliveryId: currentDeliveryId, botVersion: botVersion(), roomId: identity.roomId, senderId: identity.senderId, botSelf: false };
     var key = "";
     options = options || {};
     for (key in options) {
@@ -306,7 +336,8 @@ var KLOL_V2_KAKAO = (function () {
     else if (code === "ROLE_FORBIDDEN" || code === "KAKAO_CAPABILITY_FORBIDDEN" || code === "FORBIDDEN") detail = "이 기능 권한 없음: 이 요청에 필요한 권한을 확인해 주세요.";
     else if (code === "FORM_INVALID" || code === "INVALID_OPERATION_FORM") detail = "양식 필드 누락: 신청 유형과 필수 항목을 확인해 주세요.";
     else if (code === "CONFLICT") detail = "이미 처리되었거나 현재 상태와 충돌합니다. 최신 상태를 확인해 주세요.";
-    else if (code === "KAKAO_INTEGRATION_ERROR" || (result && result.status === 401)) detail = "연동 설정 오류: 봇의 서버 주소와 서명 설정을 확인해 주세요.";
+    else if (code === "INVALID_SIGNATURE" || code === "KAKAO_INTEGRATION_ERROR" || (result && result.status === 401)) detail = "설치본 인증 오류: /봇버전의 installation/key ID와 서버 등록 키를 확인해 주세요.";
+    else if (code === "INSTALLATION_REVOKED") detail = "회수된 봇 설치본입니다. /봇버전의 설치본 ID를 관리자에게 전달해 주세요.";
     var trace = result && result.traceId ? "\n문의 코드: " + result.traceId : "";
     return "[K-LOL.GG 요청 실패]\n" + detail + trace;
   }
@@ -319,6 +350,9 @@ var KLOL_V2_KAKAO = (function () {
     canonicalRoomName: canonicalRoomName,
     roomIdentityInput: roomIdentityInput,
     installationId: installationId,
+    signingKeyId: signingKeyId,
+    messageDeliveryId: messageDeliveryId,
+    deterministicMessageUuid: deterministicMessageUuid,
     contextFromChat: contextFromChat,
     sha256Base64BytesHex: sha256Base64BytesHex,
     newUuid: newUuid,

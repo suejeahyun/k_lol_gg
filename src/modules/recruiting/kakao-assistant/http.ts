@@ -43,7 +43,7 @@ export async function prepareKakaoSignedJson(
   const traceId = readValidatedTraceId(request.headers);
   const verification = await verifyKakaoHttpRequest(request, new Date(), maximumBytes, policy);
   if (!verification.ok) {
-    recordKakaoWebhookRejection(verification.code, { route: new URL(request.url).pathname, traceId });
+    recordKakaoWebhookRejection(verification.code, { route: new URL(request.url).pathname, traceId, request });
     return { ok: false as const, response: kakaoWebhookFailureResponse(verification.code, traceId) };
   }
   const verified = verification.value;

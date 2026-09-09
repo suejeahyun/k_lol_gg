@@ -154,12 +154,12 @@ async function harness() {
   return { calls, parties, scrims, replies, respond };
 }
 
-test("legacy party create command calls the typed V2 mutation once and replays with one durable intent", async () => {
+test("legacy party create suppresses a duplicate callback before a second V2 mutation", async () => {
   const bot = await harness();
   bot.respond("자랭구인 7");
   bot.respond("자랭구인 7");
 
-  assert.equal(bot.calls.recruits.length, 2);
+  assert.equal(bot.calls.recruits.length, 1);
   assert.deepEqual(bot.calls.recruits[0].command, {
     type: "CREATE_PARTY",
     aggregateId: "123e4567-e89b-42d3-a456-426614174000",
@@ -178,7 +178,6 @@ test("legacy party create command calls the typed V2 mutation once and replays w
     },
   });
   assert.equal(bot.calls.recruits[0].requestContext.expectedRevision, 0);
-  assert.equal(bot.calls.recruits[0].requestContext.requestKey, bot.calls.recruits[1].requestContext.requestKey);
   assert.equal(bot.parties.length, 1);
   assert.match(bot.replies.at(-1), /모집번호: #7/u);
   assert.match(bot.replies.at(-1), /TOP\./u);
@@ -268,14 +267,13 @@ test("legacy party candidates stay separate from primary capacity", async () => 
   assert.match(bot.replies.at(-1), /5\/5 · 예비 2명/u);
 });
 
-test("legacy finish command remains idempotent even after the party leaves active status", async () => {
+test("legacy finish suppresses a duplicate callback after the party leaves active status", async () => {
   const bot = await harness();
   bot.respond("자랭구인 7");
   bot.respond("7ㅉ");
   bot.respond("7ㅉ");
 
-  assert.equal(bot.calls.recruits.at(-2).command.type, "FINISH_PARTY");
-  assert.equal(bot.calls.recruits.at(-2).requestContext.requestKey, bot.calls.recruits.at(-1).requestContext.requestKey);
+  assert.deepEqual(bot.calls.recruits.map(({ command }) => command.type), ["CREATE_PARTY", "FINISH_PARTY"]);
   assert.equal(bot.parties[0].status, "FINISHED");
   assert.match(bot.replies.at(-1), /모집을 마감했습니다/u);
 });

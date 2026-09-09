@@ -436,6 +436,32 @@ test("durable receipt replay returns before load and same request key with anoth
   assert.equal(harness.snapshot.parties.get("party-1")?.title, "저녁 내전 모집");
 });
 
+test("one signed Kakao delivery received by two installations mutates canonical room state once", async () => {
+  const harness = new Harness();
+  const handler = new RecruitingCommandHandler(harness.dependencies());
+  const deliveryId = `delivery-${"7".repeat(32)}`;
+  const firstActor = { ...botActor, authorizationIntent: { ...botActor.authorizationIntent, installationId: `install-${"1".repeat(32)}`, deliveryId, nonce: "nonce_installation_a_123456" } };
+  const first = command("CREATE_PARTY", "party-two-installations", 0, {
+    recruitDate: "2026-09-09", resetSequence: 0, recruitNumber: 17, partyType: "FLEX_RANK",
+    title: "설치본 중복 방지", maximumMembers: 5, members: [], scheduledStartAt: null, protectedUntil: null,
+  }, firstActor);
+  const second = seal({
+    ...first,
+    metadata: {
+      ...first.metadata,
+      requestId: "request-installation-b",
+      actor: { ...botActor, authorizationIntent: { ...botActor.authorizationIntent, installationId: `install-${"2".repeat(32)}`, senderId: "operator-from-second-installation", deliveryId, nonce: "nonce_installation_b_123456" } },
+    },
+  });
+  const created = await handler.handle(first);
+  const replay = await handler.handle(second);
+  assert.equal(created.replayed, false);
+  assert.equal(replay.replayed, true);
+  assert.equal(harness.snapshot.parties.size, 1);
+  assert.equal(harness.snapshot.audits.filter((event) => event.action === "RECRUITING_CREATE_PARTY").length, 1);
+  assert.equal(harness.snapshot.outbox.filter((event) => event.eventType === "RECRUITING_CREATE_PARTY").length, 1);
+});
+
 test("server-clock party metadata fallback is identical on durable replay", async () => {
   const harness = new Harness();
   const handler = new RecruitingCommandHandler(harness.dependencies());

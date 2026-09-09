@@ -4,7 +4,7 @@
 
 ## R9 설치본 신뢰와 canonical 방 권한
 
-- HMAC은 허용된 MessengerBot 설치본이 정확한 요청을 만들었다는 사실만 증명하며 사람 역할을 부여하지 않는다. V2 서명 material은 공개 `botInstallationId`, 로컬 방·발신자 fingerprint, nonce, timestamp, body digest를 포함한다.
+- HMAC은 허용된 MessengerBot 설치본이 정확한 요청을 만들었다는 사실만 증명하며 사람 역할을 부여하지 않는다. V3 서명 material은 공개 `botInstallationId`, 키 ID, 메시지 전달 ID, 봇 버전, 로컬 방·발신자 fingerprint, nonce, timestamp, body digest를 포함한다. 서버는 V1/V2 검증 호환을 유지하되 R14 휴대폰은 V3만 생성한다.
 - `(installation, local room fingerprint)`는 `recruiting.kakao_room_bindings`를 통해 canonical `recruiting.kakao_rooms.id`로 해석한다. 방 상태와 `recruiting.kakao_room_members`가 MEMBER/MANAGER/ADMIN 권한을 판정한다.
 - 여러 설치본의 서로 다른 로컬 fingerprint는 SUPER 관리자가 발급한 만료·일회용·해시 저장 pairing code를 사용한 경우에만 같은 canonical 방에 연결한다. 표시 이름만으로는 병합하지 않는다.
 - 환경변수 방 목록은 명시적으로 실행하는 비상·일회성 bootstrap 입력으로만 남는다. 발신자 목록은 bootstrap 초기 ADMIN과 별도 raw-V2 내부 호환 gate에만 남고 일반 방 역할을 부여하지 않는다. 정상 요청의 `authorize()`는 두 값을 읽거나 비교하지 않는다. bootstrap도 누락된 BOOTSTRAP 행과 구형 aggregate의 방 참조만 비파괴 이관하며 기존 registry 상태를 갱신·병합·중지·회수·삭제하지 않는다. 신규 방은 `/admin/kakao/rooms`와 `/V2방연동 CODE`로 연결하므로 재배포가 필요 없다.

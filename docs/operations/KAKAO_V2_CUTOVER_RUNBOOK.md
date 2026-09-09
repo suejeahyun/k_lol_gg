@@ -47,7 +47,7 @@ V2는 endpoint별 bearer secret 대신 canonical Kakao API 전체에 하나의 H
 | `KAKAO_WEBHOOK_ALLOWED_ROOMS` | 직접 대응 없음 | 정상 권한 판정에서는 읽지 않는다. 구형 room ID를 DB registry로 명시적 일회성 bootstrap할 때만 임시 사용한다. |
 | `KAKAO_WEBHOOK_ALLOWED_SENDERS` | 직접 대응 없음 | 정상 역할 판정에서는 읽지 않는다. 구형 sender를 bootstrap 방의 초기 ADMIN으로 이관하거나 별도 raw-V2 내부 호환 gate를 유지할 때만 사용한다. |
 | `KAKAO_WEBHOOK_BOT_SENDER_ID` | 직접 대응 없음 | 봇 계정 자신의 `sender-` ID. 모든 요청에서 self-message 차단에 사용되므로 유효한 단일 ID가 필요하다. |
-| `KAKAO_WEBHOOK_KEY_ID_CURRENT` | 없음 | 비밀이 아닌 서버 감사/회전 라벨. 봇은 전송하지 않으며 기본값은 `current`. |
+| `KAKAO_WEBHOOK_KEY_ID_CURRENT` | `KLOL_V2_KAKAO_WEBHOOK_KEY_ID_CURRENT` | **동일한 공개 라벨**. R14 V3 서명에 포함되며 검증에 성공한 서버 key ID와 일치해야 한다. |
 | `KAKAO_WEBHOOK_SECRET_PREVIOUS` / `KAKAO_WEBHOOK_KEY_ID_PREVIOUS` | 없음 | 회전 관측 기간에만 서버가 이전 서명을 함께 받는 용도. current와 다른 값/라벨을 쓴다. |
 | `KAKAO_WEBHOOK_PRINCIPAL_ID` | 없음 | 비밀이 아닌 감사 주체 라벨. 기본값 `bot:kakao`. |
 | 없음 | `KLOL_V2_BASE_URL` | 봇이 요청할 V2 환경의 HTTPS origin. 경로·쿼리·fragment 없이 `https://host` 형식만 허용한다. |
@@ -99,11 +99,11 @@ Remove-Variable klolRandomBytes, klolRng, klolGeneratedSecret, klolSha256, klolD
 3. `/V2연동확인`의 설치본·방 ID를 확인하고, 미등록 방이면 사이트 SUPER 관리자가 발급한 코드를 같은 방에서 `/V2방연동 CODE`로 한 번 사용한다.
 4. 먼저 `랭킹`, `구인현황` 같은 읽기 요청을 확인한 뒤, Preview에서만 테스트 모집 create → status → finish 또는 내전 신청 미리보기 → 확인을 검증한다.
 5. 관리자 `/admin/kakao/rooms`에서 canonical 방 상태, 설치본 binding, MEMBER/MANAGER/ADMIN 역할을 확인한다. 키·fingerprint 원문은 화면이나 로그에 노출하지 않는다.
-6. 서버 로그의 제한된 reject code와 stage만 확인한다. `SIGNING_KEY_UNAVAILABLE`/`INVALID_SIGNATURE`는 401 연동 설정 오류, `ROOM_BINDING_REQUIRED`는 403 pairing 필요, `ROOM_PAUSED`/`ROOM_NOT_REGISTERED`는 canonical 방 상태 오류, `ROLE_FORBIDDEN`은 역할 부족, `BOT_SELF_MESSAGE`는 bot ID/self header 차단이다. 503이면 DB 연결과 migration `0031`을 우선 확인하며 DB 장애는 우회 허용하지 않는다.
+6. 서버 로그의 제한된 reject code와 stage만 확인한다. `SIGNING_KEY_UNAVAILABLE`/`INVALID_SIGNATURE`/`INSTALLATION_KEY_MISMATCH`는 401 설치본 인증 오류, `INSTALLATION_REVOKED`는 403 회수 상태, `ROOM_BINDING_REQUIRED`는 403 pairing 필요, `ROOM_PAUSED`/`ROOM_NOT_REGISTERED`는 canonical 방 상태 오류, `ROLE_FORBIDDEN`은 역할 부족, `BOT_SELF_MESSAGE`는 bot ID/self header 차단이다. 503이면 DB 연결과 migration `0031`, `0032`를 우선 확인하며 DB 장애는 우회 허용하지 않는다.
 
 ### 같은 표시 방에서 `ROOM_FORBIDDEN`이 엇갈릴 때
 
-V41 R12의 `roomId`는 MessengerBot R 0.7.34a 이상에서 제공하는 stable `channelId`를 우선 사용하고, 이를 받을 수 없는 호환 런타임에서만 정규화된 `room`을 사용한다. `sender`, 메시지 본문, slash는 방 식별에 섞이지 않는다. Android 11+ 알림 파서 손상 징후인 `isGroupChat=false` 및 `room=sender` 조합에서는 방 권한 요청을 안전하게 거부한다. 이 경우 DB나 환경변수에 sender를 방으로 추가하지 말고 MessengerBot R 앱을 최신 안정 버전으로 교체한다.
+V41 R14의 `roomId`는 MessengerBot R 0.7.34a 이상에서 제공하는 stable `channelId`를 우선 사용하고, 이를 받을 수 없는 호환 런타임에서만 정규화된 `room`을 사용한다. `sender`, 메시지 본문, slash는 방 식별에 섞이지 않는다. Android 11+ 알림 파서 손상 징후인 `isGroupChat=false` 및 `room=sender` 조합에서는 방 권한 요청을 안전하게 거부한다. 이 경우 DB나 환경변수에 sender를 방으로 추가하지 말고 MessengerBot R 앱을 최신 안정 버전으로 교체한다.
 
 1. 각 기기에서 같은 봇 소스의 로컬 콘솔로 `KLOL_V2_KAKAO.identityForChat("KLOL_IDENTITY_SELF_CHECK", "probe").roomId`만 계산해 서로 비교한다. 이 probe ID는 비밀 원문이 아니며 실제 방 ID도 아니다. 다르면 identity secret 또는 설치본이 다르다.
 2. probe가 같으면 실제 문제 방에서 `/V2연동확인`을 각 발신 경로로 한 번씩 실행해 `room-` 값만 운영자가 직접 비교한다. 다르면 callback room 값/봇 인스턴스가 다르다. 채팅이나 QA 문서에는 값을 복사하지 않는다.
@@ -111,7 +111,7 @@ V41 R12의 `roomId`는 MessengerBot R 0.7.34a 이상에서 제공하는 stable `
 4. identity secret 불일치라면 기준 기기의 기존 secret을 다른 실행기의 private `DataBase`에 안전하게 맞추고 재컴파일한 뒤 기존 `room-` 값이 유지되는지 확인한다. 서로 다른 설치본을 의도적으로 유지한다면 각각을 동일 canonical 방에 pairing한다.
 5. callback 값 차이라면 room 원문을 서버로 보내거나 로그에 남기지 말고, 기기 로컬에서 `String(room).length`, `trim` 전후 길이와 코드포인트만 비교한다. 표시 이름이 같은 별도 채팅방인지도 확인한다.
 
-Unicode NFKC, zero-width 제거, 내부 공백 축약을 legacy room identity에 새로 적용하면 서로 다른 실제 방 문자열이 충돌하거나 기존 fingerprint가 바뀔 수 있다. R12는 stable `channelId`를 우선한다. identity 규칙을 바꿔야 한다면 충돌 검사 후 새 fingerprint를 기존 canonical 방에 명시적으로 pairing한다.
+Unicode NFKC, zero-width 제거, 내부 공백 축약을 legacy room identity에 새로 적용하면 서로 다른 실제 방 문자열이 충돌하거나 기존 fingerprint가 바뀔 수 있다. R14는 stable `channelId`를 우선한다. identity 규칙을 바꿔야 한다면 충돌 검사 후 새 fingerprint를 기존 canonical 방에 명시적으로 pairing한다.
 
 새 구조에서 `ROOM_BINDING_REQUIRED`가 나오면 환경변수 room/sender를 추가하지 않는다. `/V2연동확인`의 설치본·방 fingerprint를 확인하고, SUPER 관리자가 해당 canonical 방의 일회용 pairing code를 발급한다. `ROOM_PAUSED`/`ROOM_NOT_REGISTERED`는 registry 상태를 복구하며, DB 장애 시에는 fail-closed 상태를 유지한다.
 
@@ -136,14 +136,15 @@ npm run bot:kakao:audit
 MessengerBot R 휴대폰에 바로 붙여 넣는 엔트리는 65,535자 미만의 `integrations/messengerbot-r/KLOL_KAKAO_BOT_V41_MESSENGERBOT_R.js`다. `KLOL_KAKAO_BOT_V41_V2_COMPLETE.js`는 개발·검토용이다. `TRANSPORT.js`, `KLOL_KAKAO_BOT_V41_V1_COMPAT.js`, `ROUTER.js`를 수정했다면 `npm run bot:kakao:v41`로 두 생성본을 다시 만들고 `node --check`와 생성 동일성 테스트를 통과시킨다. 기존 V40은 덮어쓰지 않는다.
 
 1. MessengerBot R private `DataBase`에 `KLOL_V2_KAKAO_WEBHOOK_SECRET_CURRENT`를 저장한다.
-2. 별도의 32 bytes 이상 난수 키를 `KLOL_V2_KAKAO_IDENTITY_SECRET`에 저장한다. 이 값은 서명 키 회전 때 바꾸지 않아야 opaque 방·발신자 ID가 유지된다.
-3. `KLOL_V2_BASE_URL`에 검증할 HTTPS 운영/스테이징 origin을 반드시 저장한다. 소스에는 기본 운영 origin이 없으며, 미설정 상태에서는 외부 요청을 보내지 않는다.
-4. V41 완성본을 별도 봇 사본에 붙여 넣고 `/V2연동확인`으로 설치본·opaque 방 fingerprint를 확인한다. 사이트 SUPER 관리자가 새 canonical 방 또는 기존 방 대상의 일회용 코드를 발급하고, 실제 방에서 `/V2방연동 CODE`를 실행한다.
-5. `/전적`, `구인현황`, `스크림현황`, `내전현황`과 내전 신청 양식은 V2 helper로 직접 전송된다. `내전현황`과 양식 동기화를 위해 `KLOL_V2_ACTIVE_SEASON_ID`에 현재 시즌 UUID를 저장한다. V39/V40의 문장형 파티·스크림 전체 양식과 운영 신청 4종도 호환 파서가 exact V2 body로 바꿔 전송하며, 구조화 운영자는 `/V2모집 <JSON>`을 사용할 수 있다.
-6. 모집 mutation은 서버 응답의 `aggregateId`와 `revision`을 봇의 private storage에 저장하고 후속 명령에 사용한다. 최신 revision이 없으면 mutation을 보내지 않는다.
-7. 이미지 수신은 공개 코드가 아니라 사이트 소유자가 먼저 만든 30분짜리 opaque `sessionId`만 사용한다.
+2. 서버 current key ID와 같은 공개 라벨을 `KLOL_V2_KAKAO_WEBHOOK_KEY_ID_CURRENT`에 저장한다.
+3. 별도의 32 bytes 이상 난수 키를 `KLOL_V2_KAKAO_IDENTITY_SECRET`에 저장한다. 이 값은 서명 키 회전 때 바꾸지 않아야 opaque 방·발신자 ID가 유지된다.
+4. `KLOL_V2_BASE_URL`에 검증할 HTTPS 운영/스테이징 origin을 반드시 저장한다. 소스에는 기본 운영 origin이 없으며, 미설정 상태에서는 외부 요청을 보내지 않는다.
+5. V41 완성본을 별도 봇 사본에 붙여 넣고 `/V2연동확인`으로 설치본·opaque 방 fingerprint를 확인한다. 사이트 SUPER 관리자가 새 canonical 방 또는 기존 방 대상의 일회용 코드를 발급하고, 실제 방에서 `/V2방연동 CODE`를 실행한다.
+6. `/전적`, `구인현황`, `스크림현황`, `내전현황`과 내전 신청 양식은 V2 helper로 직접 전송된다. `내전현황`과 양식 동기화를 위해 `KLOL_V2_ACTIVE_SEASON_ID`에 현재 시즌 UUID를 저장한다. V39/V40의 문장형 파티·스크림 전체 양식과 운영 신청 4종도 호환 파서가 exact V2 body로 바꿔 전송하며, 구조화 운영자는 `/V2모집 <JSON>`을 사용할 수 있다.
+7. 모집 mutation은 서버 응답의 `aggregateId`와 `revision`을 봇의 private storage에 저장하고 후속 명령에 사용한다. 최신 revision이 없으면 mutation을 보내지 않는다.
+8. 이미지 수신은 공개 코드가 아니라 사이트 소유자가 먼저 만든 30분짜리 opaque `sessionId`만 사용한다.
 
-완성본은 `response()`를 포함한 독립 실행 엔트리다. 전송부만 재사용할 때에만 `TRANSPORT.js`를 사용한다. V40 문장형 등록은 봇이 새 UUID·멱등 키를 만들고 서버가 반환한 revision을 방별 private storage에 보관한다. 서버가 구형 secret을 새 HMAC으로 승격하는 우회 경로는 제공하지 않는다. 봇이 만든 모집은 authorization 뒤 해석된 canonical `sourceRoomId`에 묶여 같은 canonical 방에서만 조회·수정된다.
+완성본은 `response()`를 포함한 독립 실행 엔트리다. 전송부만 재사용할 때에만 `TRANSPORT.js`를 사용한다. R14 문장형 등록은 delivery ID에서 결정한 UUID·멱등 키를 만들고 서버가 반환한 revision을 방별 private storage에 보관한다. 서버가 구형 secret을 새 HMAC으로 승격하는 우회 경로는 제공하지 않는다. 봇이 만든 모집은 authorization 뒤 해석된 canonical `sourceRoomId`에 묶여 같은 canonical 방에서만 조회·수정된다.
 
 ### 소유자 사진 전송
 
@@ -208,7 +209,7 @@ R8 서버는 출처 표식 없는 R7 모집 body를 거부하고, R8 봇이 보�
 3. player search/status처럼 읽기 영향이 작은 명령으로 정상·만료 timestamp·잘못된 room을 각각 한 번 검증한다.
 4. party create → status → sync → finish를 테스트 데이터로 검증하고 `aggregateId`/`revision` 저장을 확인한다.
 5. 스크림 문장형 전체 양식으로 create → status → detail을 확인하고 양 팀 5포지션 라인업·메모·진행 방식·일시가 보존되는지 검증한다. 기존 UUID 기반 구조화 명령도 같은 계약으로 확인한다.
-6. 운영 모집 변경을 잠시 중지하고 저장→정상 종료→백업 뒤 migration `0030`, `0031`, 서버, R12 휴대폰 전체본을 연속 적용한다. V1/R7 봇은 중지해 동일 메시지를 두 봇이 동시에 mutation하지 않게 한다.
+6. 운영 모집 변경을 잠시 중지하고 저장→정상 종료→백업 뒤 migration `0030`, `0031`, `0032`, 서버, R14 휴대폰 전체본을 연속 적용한다. 이전 봇과 같은 방을 구독하는 다른 스크립트·프로필은 모두 중지한다.
 7. 생성자·같은 방 타 발신자·운영자와 다른 방 fixture로 2xx/403/404를 확인하고, 완전한 2명→0명 내전 양식이 SITE/관리자 확정/다른 방·회차를 보존하는지 확인한다.
 8. 회전 시 서버에 previous/current를 함께 두고 봇을 current로 바꾼 다음, 관측 기간 후 previous를 제거한다.
 

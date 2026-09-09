@@ -44,7 +44,7 @@ export async function POST(request: Request) {
   // The raw-body HMAC, approved-room check, nonce claim and bot-self rejection remain mandatory.
   const verification = await verifyKakaoHttpRequest(request, new Date(), MAXIMUM_BODY_BYTES, PUBLIC_KAKAO_ROOM_COMMAND);
   if (!verification.ok) {
-    recordKakaoWebhookRejection(verification.code, { route: new URL(request.url).pathname, traceId });
+    recordKakaoWebhookRejection(verification.code, { route: new URL(request.url).pathname, traceId, request });
     return kakaoWebhookFailureResponse(verification.code, traceId);
   }
   const { rawBody, intent } = verification.value;

@@ -1,3 +1,5 @@
+import { createHmac } from "node:crypto";
+
 import {
   verifyKakaoWebhook,
   type KakaoWebhookSecret,
@@ -68,6 +70,8 @@ export type KakaoHttpRequestFailureCode =
   | "SIGNING_KEY_UNAVAILABLE"
   | "BOT_SELF_HEADER_INVALID"
   | "BODY_INVALID"
+  | "INSTALLATION_KEY_MISMATCH"
+  | "INSTALLATION_REVOKED"
   | "ROOM_BINDING_REQUIRED"
   | "ROOM_NOT_REGISTERED"
   | "ROOM_PAUSED"
@@ -93,11 +97,11 @@ export const INSTALLATION_KAKAO_REQUEST = Object.freeze({ capability: "INSTALLAT
  */
 export function recordKakaoWebhookRejection(
   code: KakaoHttpRequestFailureCode,
-  input: Readonly<{ route: string; traceId?: string }>,
+  input: Readonly<{ route: string; traceId?: string; request?: Request }>,
 ) {
   const stage = code === "ROOM_FORBIDDEN"
     ? "ROOM"
-    : code === "ROOM_BINDING_REQUIRED" || code === "ROOM_NOT_REGISTERED" || code === "ROOM_PAUSED"
+    : code === "INSTALLATION_REVOKED" || code === "ROOM_BINDING_REQUIRED" || code === "ROOM_NOT_REGISTERED" || code === "ROOM_PAUSED"
       ? "ROOM_REGISTRY"
     : code === "CAPABILITY_FORBIDDEN"
       ? "CAPABILITY"
@@ -106,11 +110,17 @@ export function recordKakaoWebhookRejection(
       : code === "BOT_SELF_MESSAGE"
         ? "SENDER"
         : "SIGNATURE";
+  const currentSecret = kakaoWebhookSecrets()?.[0]?.secret;
+  const keyedHint = (domain: string, value: string | null) => currentSecret && value && value.length <= 256
+    ? createHmac("sha256", currentSecret).update(`klol-v2:kakao-rejection:${domain}:v1\0${value}`).digest("hex").slice(0, 12)
+    : null;
   console.warn("KAKAO_WEBHOOK_REJECTED", {
     code,
     stage,
     route: input.route,
     traceId: input.traceId ?? null,
+    installationHint: keyedHint("installation", input.request?.headers.get("x-klol-installation") ?? null),
+    signatureHint: keyedHint("signature", input.request?.headers.get("x-klol-signature") ?? null),
   });
 }
 
@@ -138,6 +148,9 @@ export async function verifyKakaoInstallationHttpRequest(
       timestampSeconds,
       nonce: request.headers.get("x-klol-nonce") ?? "",
       installationId: request.headers.get("x-klol-installation") ?? undefined,
+      reportedKeyId: request.headers.get("x-klol-key-id") ?? undefined,
+      deliveryId: request.headers.get("x-klol-delivery") ?? undefined,
+      botVersion: request.headers.get("x-klol-bot-version") ?? undefined,
       roomId: request.headers.get("x-klol-room") ?? "",
       senderId: request.headers.get("x-klol-sender") ?? "",
       botSelf: botSelf === "1",
@@ -175,6 +188,8 @@ export async function verifyKakaoHttpRequest(
       localRoomFingerprint: installation.value.intent.roomId,
       senderFingerprint: installation.value.intent.senderId,
       requiredRole: policy.capability === "TRUSTED_SENDER_COMMAND" ? "ADMIN" : "MEMBER",
+      keyId: installation.value.intent.keyId,
+      botVersion: installation.value.intent.botVersion,
     });
     return { ok: true, value: Object.freeze({
       rawBody: installation.value.rawBody,
@@ -182,6 +197,8 @@ export async function verifyKakaoHttpRequest(
     }) };
   } catch (error) {
     if (error instanceof KakaoRoomRegistryError) {
+      if (error.code === "INSTALLATION_KEY_MISMATCH") return { ok: false, code: "INSTALLATION_KEY_MISMATCH" };
+      if (error.code === "INSTALLATION_REVOKED") return { ok: false, code: "INSTALLATION_REVOKED" };
       if (error.code === "ROOM_BINDING_REQUIRED") return { ok: false, code: "ROOM_BINDING_REQUIRED" };
       if (error.code === "ROOM_NOT_REGISTERED") return { ok: false, code: "ROOM_NOT_REGISTERED" };
       if (error.code === "ROOM_PAUSED") return { ok: false, code: "ROOM_PAUSED" };

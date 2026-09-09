@@ -4,6 +4,9 @@ export type KakaoWebhookRequest = Readonly<{
   timestampSeconds: number;
   nonce: string;
   installationId?: string;
+  reportedKeyId?: string;
+  deliveryId?: string;
+  botVersion?: string;
   roomId: string;
   senderId: string;
   botSelf: boolean;
@@ -22,6 +25,8 @@ export type VerifiedKakaoWebhookIntent = Readonly<{
   timestampSeconds: number;
   nonce: string;
   installationId?: string;
+  deliveryId?: string;
+  botVersion?: string;
   localRoomFingerprint?: string;
   roomId: string;
   senderId: string;
@@ -51,6 +56,9 @@ export function legacyKakaoInstallationId(keyId: string) {
 }
 
 function signatureMaterial(request: Omit<KakaoWebhookRequest, "signature" | "botSelf" | "rawBody">, bodyDigestHex: string) {
+  if (request.installationId && request.reportedKeyId && request.deliveryId && request.botVersion) {
+    return ["KLOL_KAKAO_WEBHOOK_V3", request.timestampSeconds, request.nonce, request.installationId, request.reportedKeyId, request.deliveryId, request.botVersion, request.roomId, request.senderId, bodyDigestHex].join("\n");
+  }
   return request.installationId
     ? ["KLOL_KAKAO_WEBHOOK_V2", request.timestampSeconds, request.nonce, request.installationId, request.roomId, request.senderId, bodyDigestHex].join("\n")
     : ["KLOL_KAKAO_WEBHOOK_V1", request.timestampSeconds, request.nonce, request.roomId, request.senderId, bodyDigestHex].join("\n");
@@ -61,7 +69,8 @@ export function signKakaoWebhookForFixture(
   secret: Uint8Array,
 ) {
   const digest = kakaoWebhookBodyDigest(request.rawBody);
-  return `${request.installationId ? "v2" : "v1"}=${createHmac("sha256", secret).update(signatureMaterial(request, digest)).digest("hex")}`;
+  const version = request.installationId && request.reportedKeyId && request.deliveryId && request.botVersion ? "v3" : request.installationId ? "v2" : "v1";
+  return `${version}=${createHmac("sha256", secret).update(signatureMaterial(request, digest)).digest("hex")}`;
 }
 
 export function verifyKakaoWebhook(input: Readonly<{
@@ -86,6 +95,9 @@ export function verifyKakaoWebhook(input: Readonly<{
     !Number.isSafeInteger(maximumSkewSeconds) || maximumSkewSeconds < 1 || maximumSkewSeconds > 900 ||
     !/^[A-Za-z0-9_-]{16,100}$/u.test(request.nonce) ||
     (request.installationId !== undefined && !safeIdentifier(request.installationId)) ||
+    (request.reportedKeyId !== undefined && !safeIdentifier(request.reportedKeyId)) ||
+    (request.deliveryId !== undefined && !/^delivery-[a-f0-9]{32}$/u.test(request.deliveryId)) ||
+    (request.botVersion !== undefined && (!safeIdentifier(request.botVersion) || request.botVersion.length < 8)) ||
     !safeIdentifier(request.roomId) || !safeIdentifier(request.senderId) ||
     !safeIdentifier(input.botSenderId) ||
     !Number.isSafeInteger(maximumBodyBytes) || maximumBodyBytes < 2 || maximumBodyBytes > 4_200_000 ||
@@ -100,8 +112,11 @@ export function verifyKakaoWebhook(input: Readonly<{
   }
   if (input.nonceAlreadyUsed) return { ok: false, code: "REPLAYED_NONCE" };
 
-  const expectedVersion = request.installationId ? "v2" : "v1";
-  const signatureMatch = /^(v1|v2)=([a-f0-9]{64})$/u.exec(request.signature);
+  const hasV3Fields = Boolean(request.installationId && request.reportedKeyId && request.deliveryId && request.botVersion);
+  const hasPartialV3Fields = Boolean(request.reportedKeyId || request.deliveryId || request.botVersion) && !hasV3Fields;
+  if (hasPartialV3Fields) return { ok: false, code: "INVALID_REQUEST" };
+  const expectedVersion = hasV3Fields ? "v3" : request.installationId ? "v2" : "v1";
+  const signatureMatch = /^(v1|v2|v3)=([a-f0-9]{64})$/u.exec(request.signature);
   if (signatureMatch?.[1] !== expectedVersion) return { ok: false, code: "INVALID_SIGNATURE" };
   if (!signatureMatch) return { ok: false, code: "INVALID_SIGNATURE" };
   const bodyDigestHex = kakaoWebhookBodyDigest(request.rawBody);
@@ -114,6 +129,7 @@ export function verifyKakaoWebhook(input: Readonly<{
     if (timingSafeEqual(expected, supplied)) matchedKeyId = entry.keyId;
   }
   if (!matchedKeyId) return { ok: false, code: "INVALID_SIGNATURE" };
+  if (request.reportedKeyId && request.reportedKeyId !== matchedKeyId) return { ok: false, code: "INVALID_SIGNATURE" };
   if (request.botSelf || request.senderId === input.botSenderId) return { ok: false, code: "BOT_SELF_MESSAGE" };
   if (requiredCapability === "INSTALLATION_ONLY") {
     return {
@@ -121,6 +137,7 @@ export function verifyKakaoWebhook(input: Readonly<{
       intent: Object.freeze({
         kind: "KAKAO_HMAC", keyId: matchedKeyId, timestampSeconds: request.timestampSeconds,
         nonce: request.nonce, installationId: request.installationId ?? legacyKakaoInstallationId(matchedKeyId),
+        deliveryId: request.deliveryId, botVersion: request.botVersion,
         roomId: request.roomId, senderId: request.senderId, bodyDigestHex,
         requireNonceClaim: true, transactionRecheck: true,
       }),
@@ -138,6 +155,8 @@ export function verifyKakaoWebhook(input: Readonly<{
       timestampSeconds: request.timestampSeconds,
       nonce: request.nonce,
       installationId: request.installationId ?? legacyKakaoInstallationId(matchedKeyId),
+      deliveryId: request.deliveryId,
+      botVersion: request.botVersion,
       roomId: request.roomId,
       senderId: request.senderId,
       bodyDigestHex,

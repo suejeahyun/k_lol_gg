@@ -70,6 +70,7 @@ function validateAuthorization(command: RecruitingCommand) {
     canonicalIdentifier(actor.authorizationIntent.nonce, "authorizationIntent.nonce");
     canonicalIdentifier(actor.authorizationIntent.roomId, "authorizationIntent.roomId");
     canonicalIdentifier(actor.authorizationIntent.senderId, "authorizationIntent.senderId");
+    if (actor.authorizationIntent.deliveryId) canonicalIdentifier(actor.authorizationIntent.deliveryId, "authorizationIntent.deliveryId");
     if (
       actor.authorizationIntent.kind !== "KAKAO_HMAC" ||
       actor.authorizationIntent.transactionRecheck !== true ||

@@ -5,7 +5,50 @@
  * This router requires KLOL_KAKAO_BOT_V41_V2_TRANSPORT.js and
  * KLOL_KAKAO_BOT_V41_V1_COMPAT.js immediately before it.
  */
-var KLOL_V41_BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V41_V2_2026_09_09_R12_CHANNEL_ID_ROOM";
+var KLOL_V41_BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V41_V3_2026_09_09_R14_INSTALLATION_DEDUPE";
+var KLOL_V41_CURRENT_DELIVERY_ID = "";
+var KLOL_V41_DELIVERY_TTL_MS = 30000;
+
+function v41ClaimMessageDelivery(deliveryId) {
+  var key = "KLOL_V41_DELIVERY_" + String(deliveryId || "").replace(/^delivery-/, "");
+  var now = new Date().getTime();
+  var previous = 0;
+  try { previous = Number(DataBase.getDataBase(key) || 0); } catch (readError) { return true; }
+  if (previous > 0 && now - previous >= 0 && now - previous <= KLOL_V41_DELIVERY_TTL_MS) return false;
+  try { DataBase.setDataBase(key, String(now)); } catch (writeError) { return true; }
+  return true;
+}
+
+function v41FallbackMessageDeliveryId(room, sender, msg, logId, channelId, userHash) {
+  var material = ["KLOL_V41_MESSAGE_DELIVERY_FALLBACK_V1", channelId || room, userHash || sender, logId || "", msg || ""].join("\n");
+  var seeds = [2166136261, 3339675911, 2246822507, 3266489909];
+  var output = "";
+  var seedIndex = 0;
+  for (seedIndex = 0; seedIndex < seeds.length; seedIndex += 1) {
+    var hash = seeds[seedIndex] >>> 0;
+    var index = 0;
+    for (index = 0; index < material.length; index += 1) {
+      hash ^= material.charCodeAt(index);
+      hash = Math.imul ? Math.imul(hash, 16777619 + seedIndex * 2) >>> 0 : (hash * (16777619 + seedIndex * 2)) >>> 0;
+    }
+    output += ("00000000" + hash.toString(16)).slice(-8);
+  }
+  return "delivery-" + output;
+}
+
+function v41MessageDeliveryId(room, sender, msg, logId, channelId, userHash) {
+  var deliveryId = "";
+  try {
+    if (typeof KLOL_V2_KAKAO.messageDeliveryId === "function") deliveryId = KLOL_V2_KAKAO.messageDeliveryId(room, sender, msg, logId, channelId, userHash);
+  } catch (deliveryError) {}
+  return /^delivery-[a-f0-9]{32}$/.test(String(deliveryId || "")) ? deliveryId : v41FallbackMessageDeliveryId(room, sender, msg, logId, channelId, userHash);
+}
+
+function v41AggregateId(domain) {
+  return typeof KLOL_V2_KAKAO.deterministicMessageUuid === "function"
+    ? KLOL_V2_KAKAO.deterministicMessageUuid(domain)
+    : KLOL_V2_KAKAO.newUuid();
+}
 var KLOL_V41_SEASON_PREVIEW_TTL_MS = 10 * 60 * 1000;
 var KLOL_V41_IMAGE_SESSION_TTL_MS = 30 * 60 * 1000;
 
@@ -687,7 +730,7 @@ function v41HandleRecruitJson(text, room, sender, replier) {
   var saved = create ? null : v41ReadRecruitState(room, kind);
   var aggregateId = typeof input.aggregateId === "string" ? input.aggregateId : (saved ? saved.aggregateId : "");
   var expectedRevision = typeof input.expectedRevision === "number" ? input.expectedRevision : (create ? 0 : (saved ? saved.revision : -1));
-  if (create && !aggregateId) aggregateId = KLOL_V2_KAKAO.newUuid();
+  if (create && !aggregateId) aggregateId = v41AggregateId("raw-recruit");
   if (!aggregateId || expectedRevision < 0) throw new Error("모집 ID 또는 최신 revision을 확인해 주세요.");
   var payload = { type: type, aggregateId: aggregateId, payload: input.payload };
   var result = KLOL_V2_KAKAO.recruit(payload, KLOL_V2_KAKAO.contextFromChat(room, sender, {
@@ -933,7 +976,7 @@ function v41HandleLegacyParty(parsed, text, room, sender, replier) {
       return {
         expectedRevision: 0,
         command: {
-          type: "CREATE_PARTY", aggregateId: KLOL_V2_KAKAO.newUuid(),
+          type: "CREATE_PARTY", aggregateId: v41AggregateId("party-create"),
           payload: {
             recruitDate: v41Today(), resetSequence: Number(status.body.nextPartyResetSequence || 0),
             recruitNumber: recruitNo, partyType: parsed.type, title: parsed.title,
@@ -974,7 +1017,7 @@ function v41HandleLegacyParty(parsed, text, room, sender, replier) {
       return {
         expectedRevision: 0,
         command: {
-          type: "CREATE_PARTY", aggregateId: KLOL_V2_KAKAO.newUuid(),
+            type: "CREATE_PARTY", aggregateId: v41AggregateId("party-form-create"),
           payload: {
             recruitDate: v41Today(), resetSequence: Number(status.body.nextPartyResetSequence || 0),
             recruitNumber: Number(parsed.recruitNo), partyType: parsed.type, title: parsed.title,
@@ -1117,7 +1160,7 @@ function v41HandleLegacyScrim(parsed, text, room, sender, replier) {
       return {
         expectedRevision: scrim ? Number(scrim.revision) : 0,
         command: {
-          type: scrim ? "SYNC_SCRIM" : "CREATE_SCRIM", aggregateId: scrim ? String(scrim.id) : KLOL_V2_KAKAO.newUuid(),
+          type: scrim ? "SYNC_SCRIM" : "CREATE_SCRIM", aggregateId: scrim ? String(scrim.id) : v41AggregateId("scrim-create"),
           payload: {
             recruitDate: operationDate, scrimNumber: scrimNo,
             tournamentId: tournamentId, legacyTournamentNumber: legacyTournamentNumber,
@@ -1428,8 +1471,11 @@ function v41V2Help() {
 function response(room, msg, sender, isGroupChat, replier, imageDB, packageName, isMention, logId, channelId, userHash) {
   var text = v41CompatParser().canonicalCommandText(msg);
   var rawImage = "";
-  if (typeof KLOL_V2_KAKAO.roomIdentityInput === "function") room = KLOL_V2_KAKAO.roomIdentityInput(room, sender, isGroupChat, channelId);
+  var deliveryId = v41MessageDeliveryId(room, sender, msg, logId, channelId, userHash);
+  if (!v41ClaimMessageDelivery(deliveryId)) return null;
+  KLOL_V41_CURRENT_DELIVERY_ID = deliveryId;
   try {
+    if (typeof KLOL_V2_KAKAO.roomIdentityInput === "function") room = KLOL_V2_KAKAO.roomIdentityInput(room, sender, isGroupChat, channelId);
     if (v41IsBotEchoSender(sender)) return null;
     rawImage = v41ReceivedImage(imageDB);
     if (rawImage && v41HandleImage(room, sender, rawImage, replier)) return null;
@@ -1440,7 +1486,7 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName,
     if (text.indexOf("나갔습니다") >= 0 || text.indexOf("초대되었습니다") >= 0) return null;
     if (!text) return null;
     if (text === "봇버전") {
-      try { return v41Reply(replier, "[K-LOL.GG 카카오봇]\n" + KLOL_V41_BOT_CODE_VERSION + "\n설치본: " + KLOL_V2_KAKAO.installationId()); }
+      try { return v41Reply(replier, "[K-LOL.GG 카카오봇]\n" + KLOL_V41_BOT_CODE_VERSION + "\n설치본: " + KLOL_V2_KAKAO.installationId() + "\n키 ID: " + KLOL_V2_KAKAO.signingKeyId()); }
       catch (versionIdentityError) { return v41Reply(replier, "[K-LOL.GG 카카오봇]\n" + KLOL_V41_BOT_CODE_VERSION + "\n설치본: 설정 확인 필요"); }
     }
     if (text === "V2도움말") return v41Reply(replier, v41V2Help());
@@ -1451,7 +1497,7 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName,
       try {
         if (!room) return v41Reply(replier, "[K-LOL.GG V2 방 식별 불가]\n메신저봇R 알림 파서가 방 이름 대신 발신자명을 전달했습니다.\n메신저봇R 0.7.34a 이상으로 업데이트한 뒤 다시 확인해 주세요.");
         var identity = KLOL_V2_KAKAO.identityForChat(room, sender);
-        return v41Reply(replier, "[K-LOL.GG V2 연동 ID]\n설치본: " + KLOL_V2_KAKAO.installationId() + "\n방: " + identity.roomId + "\n발신자: " + identity.senderId + "\n방 식별 기준: " + (String(room).indexOf("channel-id\n") === 0 ? "channelId" : "legacy room"));
+        return v41Reply(replier, "[K-LOL.GG V2 연동 ID]\n설치본: " + KLOL_V2_KAKAO.installationId() + "\n키 ID: " + KLOL_V2_KAKAO.signingKeyId() + "\n방: " + identity.roomId + "\n발신자: " + identity.senderId + "\n방 식별 기준: " + (String(room).indexOf("channel-id\n") === 0 ? "channelId" : "legacy room"));
       } catch (identityError) {
         return v41Reply(replier, "[K-LOL.GG V2 연동]\n연동 ID 생성에 실패했습니다. MessengerBot R 실행 로그를 확인해 주세요.");
       }
@@ -1516,6 +1562,8 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName,
   } catch (error) {
     var detail = error && error.v41UserSafe === true ? String(error.message || "입력 형식을 확인해 주세요.") : "설정 또는 입력 형식을 확인해 주세요.";
     v41Reply(replier, detail.indexOf("[K-LOL.GG 요청 실패]") === 0 ? detail : "[K-LOL.GG 요청 실패]\n" + detail);
+  } finally {
+    KLOL_V41_CURRENT_DELIVERY_ID = "";
   }
 }
 

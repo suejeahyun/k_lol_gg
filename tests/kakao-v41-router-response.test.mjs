@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import test from "node:test";
@@ -14,6 +15,7 @@ async function harness() {
   const values = new Map();
   const replies = [];
   const calls = { season: [], images: [], records: [], recent: [], ranking: 0, notices: [], recruits: [], contexts: [] };
+  let logSequence = 0;
   const context = vm.createContext({
     console,
     DataBase: {
@@ -29,6 +31,14 @@ async function harness() {
       roomIdentityInput(room, sender, isGroupChat, channelId) {
         if (/^[1-9][0-9]*$/u.test(String(channelId ?? ""))) return `channel-id\n${channelId}`;
         return isGroupChat === false && room === sender ? "" : room;
+      },
+      signingKeyId() { return "current"; },
+      messageDeliveryId(room, sender, message, logId, channelId, userHash) {
+        return `delivery-${createHash("sha256").update([room, sender, message, logId, channelId, userHash].join("|")).digest("hex").slice(0, 32)}`;
+      },
+      deterministicMessageUuid(domain) {
+        const suffix = Buffer.from(String(domain)).toString("hex").padEnd(32, "0").slice(0, 32);
+        return `${suffix.slice(0, 8)}-${suffix.slice(8, 12)}-4${suffix.slice(13, 16)}-8${suffix.slice(17, 20)}-${suffix.slice(20)}`;
       },
       contextFromChat(room, sender, options = {}) {
         const requestContext = { room, sender, ...options };
@@ -142,7 +152,7 @@ async function harness() {
     options.imageDB ?? null,
     "com.xfl.msgbot",
     false,
-    "123",
+    options.logId ?? String(logSequence += 1),
     options.channelId,
     options.userHash,
   );
@@ -342,6 +352,14 @@ test("response scopes different senders to one stable channel and rejects the br
 
   bot.respond("/V2연동확인", { room: "관리자. 99", sender: "관리자. 99", isGroupChat: false });
   assert.match(bot.replies.at(-1), /메신저봇R 0\.7\.34a 이상으로 업데이트/u);
+});
+
+test("response suppresses a duplicate callback with the same Kakao log identity", async () => {
+  const bot = await harness();
+  bot.respond("/랭킹", { channelId: "987654321", userHash: "same-user", logId: "777" });
+  bot.respond("/랭킹", { channelId: "987654321", userHash: "same-user", logId: "777" });
+  assert.equal(bot.calls.ranking, 1);
+  assert.equal(bot.replies.length, 1);
 });
 
 test("response entry point keeps representative V1 and V2 replies identical with or without slash", async () => {

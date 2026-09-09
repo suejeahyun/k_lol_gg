@@ -19,7 +19,7 @@ const problems = Object.freeze({
 export async function POST(request: Request) {
   const traceId = readValidatedTraceId(request.headers);
   const verified = await verifyKakaoInstallationHttpRequest(request);
-  if (!verified.ok) { recordKakaoWebhookRejection(verified.code, { route: new URL(request.url).pathname, traceId }); return problemResponse(definePublicProblem({ code: "INVALID_SIGNATURE", status: 401, title: "봇 설치 인증 실패", detail: "MessengerBot 설치본의 서명 설정을 확인해 주세요." }), { traceId }); }
+  if (!verified.ok) { recordKakaoWebhookRejection(verified.code, { route: new URL(request.url).pathname, traceId, request }); return problemResponse(definePublicProblem({ code: "INVALID_SIGNATURE", status: 401, title: "봇 설치 인증 실패", detail: "MessengerBot 설치본의 installation/key ID와 서명 설정을 확인해 주세요." }), { traceId }); }
   let body: unknown;
   try { body = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(verified.value.rawBody)); } catch { return problemResponse(problems.invalid, { traceId }); }
   if (!body || typeof body !== "object" || Array.isArray(body) || Object.keys(body).join("|") !== "code") return problemResponse(problems.invalid, { traceId });
@@ -28,11 +28,13 @@ export async function POST(request: Request) {
   const idempotency = readIdempotencyKey(request.headers); if (!idempotency.ok) return problemResponse(problemForIdempotencyKeyError(idempotency.error), { traceId });
   try {
     const intent = verified.value.intent;
-    const result = await registry.consumePairing({ installationPublicId: intent.installationId ?? legacyKakaoInstallationId(intent.keyId), localRoomFingerprint: intent.roomId, senderFingerprint: intent.senderId, code: (body as { code?: unknown }).code, requestKey: idempotency.key.normalized, requestId: randomUUID() });
+    const result = await registry.consumePairing({ installationPublicId: intent.installationId ?? legacyKakaoInstallationId(intent.keyId), localRoomFingerprint: intent.roomId, senderFingerprint: intent.senderId, keyId: intent.keyId, botVersion: intent.botVersion, code: (body as { code?: unknown }).code, requestKey: idempotency.key.normalized, requestId: randomUUID() });
     return noStoreJsonResponse({ ok: true, roomId: result.roomId, status: result.status, role: result.role }, { status: 201, traceId, headers: result.replayed ? { "Idempotency-Replayed": "true" } : undefined });
   } catch (error) {
     if (error instanceof KakaoRoomRegistryError) {
       if (error.code === "INVALID_INPUT") return problemResponse(problems.invalid, { traceId });
+      if (error.code === "INSTALLATION_KEY_MISMATCH") return problemResponse(definePublicProblem({ code: "INVALID_SIGNATURE", status: 401, title: "설치본 키가 일치하지 않습니다.", detail: "/봇버전의 installation/key ID와 서버 등록 정보를 확인해 주세요." }), { traceId });
+      if (error.code === "INSTALLATION_REVOKED") return problemResponse(definePublicProblem({ code: "INSTALLATION_REVOKED", status: 403, title: "회수된 봇 설치본입니다.", detail: "/봇버전의 설치본 ID를 관리자에게 전달해 주세요." }), { traceId });
       if (error.code === "PAIRING_EXPIRED" || error.code === "PAIRING_REPLAY") return problemResponse(problems.expired, { traceId });
       if (error.code === "CONFLICT") return problemResponse(problems.conflict, { traceId });
     }

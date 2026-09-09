@@ -20,9 +20,10 @@ test("one shared identity module derives and signs the public bot installation f
   const transport = await readFile(resolve(integrationDirectory, "KLOL_KAKAO_BOT_V41_V2_TRANSPORT.js"), "utf8");
   assert.match(transport, /function installationId\(\)/u);
   assert.match(transport, /"installation-id\\nKLOL_V41"/u);
-  assert.match(transport, /KLOL_KAKAO_WEBHOOK_V2/u);
+  assert.match(transport, /KLOL_KAKAO_WEBHOOK_V3/u);
   assert.match(transport, /header\("x-klol-installation", installId\)/u);
-  assert.match(transport, /signatureMaterial\(timestampSeconds, nonce, installId, roomId, senderId, bodyDigestHex\)/u);
+  assert.match(transport, /header\("x-klol-key-id", keyId\)/u);
+  assert.match(transport, /signatureMaterial\(timestampSeconds, nonce, installId, keyId, deliveryId, version, roomId, senderId, bodyDigestHex\)/u);
 });
 
 test("current callback accepts stable channel and user identity arguments", async () => {
@@ -36,6 +37,7 @@ test("both field diagnostics expose the installation fingerprint", async () => {
   assert.match(router, /text === "봇버전"/u);
   assert.match(router, /\[K-LOL\.GG V2 연동 ID\]/u);
   assert.equal((router.match(/KLOL_V2_KAKAO\.installationId\(\)/gu) ?? []).length, 2);
+  assert.equal((router.match(/KLOL_V2_KAKAO\.signingKeyId\(\)/gu) ?? []).length, 2);
   assert.match(router, /방 식별 기준:/u);
   assert.match(router, /KLOL_V2_KAKAO\.roomIdentityInput\(room, sender, isGroupChat, channelId\)/u);
 });

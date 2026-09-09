@@ -23,7 +23,7 @@ export async function POST(request: Request) {
         if (!registry) throw new KakaoRoomRegistryError("UNAVAILABLE");
         await registry.authorize({ installationPublicId: prepared.intent.installationId ?? legacyKakaoInstallationId(prepared.intent.keyId), localRoomFingerprint: prepared.intent.localRoomFingerprint ?? prepared.intent.roomId, senderFingerprint: prepared.intent.senderId, requiredRole: "ADMIN" });
       } catch {
-        recordKakaoWebhookRejection("ROLE_FORBIDDEN", { route: new URL(request.url).pathname, traceId: prepared.traceId });
+        recordKakaoWebhookRejection("ROLE_FORBIDDEN", { route: new URL(request.url).pathname, traceId: prepared.traceId, request });
         return kakaoAssistantCapabilityForbiddenResponse(prepared.traceId);
       }
     }

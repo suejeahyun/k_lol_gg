@@ -1,0 +1,4 @@
+ALTER TABLE "recruiting"."kakao_bot_installations" ADD COLUMN "key_id" varchar(128) DEFAULT 'legacy' NOT NULL;--> statement-breakpoint
+ALTER TABLE "recruiting"."kakao_bot_installations" ADD COLUMN "last_bot_version" varchar(128);--> statement-breakpoint
+ALTER TABLE "recruiting"."kakao_bot_installations" ADD CONSTRAINT "kakao_bot_installations_key" CHECK (char_length(btrim("recruiting"."kakao_bot_installations"."key_id")) BETWEEN 1 AND 128);--> statement-breakpoint
+ALTER TABLE "recruiting"."kakao_bot_installations" ADD CONSTRAINT "kakao_bot_installations_version" CHECK ("recruiting"."kakao_bot_installations"."last_bot_version" IS NULL OR char_length(btrim("recruiting"."kakao_bot_installations"."last_bot_version")) BETWEEN 8 AND 128);

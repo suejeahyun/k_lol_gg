@@ -143,7 +143,12 @@ function canonicalJson(value: unknown): string {
 
 export function recruitingCommandRequestFingerprint(command: RecruitingCommand): Uint8Array {
   const actorBinding = command.metadata.actor.kind === "BOT"
-    ? {
+    ? command.metadata.actor.authorizationIntent.deliveryId ? {
+        kind: command.metadata.actor.kind,
+        principalId: command.metadata.actor.principalId,
+        roomId: command.metadata.actor.authorizationIntent.roomId,
+        deliveryId: command.metadata.actor.authorizationIntent.deliveryId,
+      } : {
         kind: command.metadata.actor.kind,
         principalId: command.metadata.actor.principalId,
         roomId: command.metadata.actor.authorizationIntent.roomId,
