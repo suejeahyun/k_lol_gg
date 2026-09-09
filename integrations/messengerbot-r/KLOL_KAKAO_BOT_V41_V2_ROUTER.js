@@ -5,7 +5,7 @@
  * This router requires KLOL_KAKAO_BOT_V41_V2_TRANSPORT.js and
  * KLOL_KAKAO_BOT_V41_V1_COMPAT.js immediately before it.
  */
-var KLOL_V41_BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V41_V2_2026_09_09_R9_DB_ROOM_BINDINGS";
+var KLOL_V41_BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V41_V2_2026_09_09_R10_ROOM_IDENTITY";
 var KLOL_V41_SEASON_PREVIEW_TTL_MS = 10 * 60 * 1000;
 var KLOL_V41_IMAGE_SESSION_TTL_MS = 30 * 60 * 1000;
 
@@ -1438,7 +1438,10 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
     if (text.indexOf("들어왔습니다") >= 0) return v41Reply(replier, "다시 오셨네요, 반가워요! 😊");
     if (text.indexOf("나갔습니다") >= 0 || text.indexOf("초대되었습니다") >= 0) return null;
     if (!text) return null;
-    if (text === "봇버전") return v41Reply(replier, "[K-LOL.GG 카카오봇]\n" + KLOL_V41_BOT_CODE_VERSION);
+    if (text === "봇버전") {
+      try { return v41Reply(replier, "[K-LOL.GG 카카오봇]\n" + KLOL_V41_BOT_CODE_VERSION + "\n설치본: " + KLOL_V2_KAKAO.installationId()); }
+      catch (versionIdentityError) { return v41Reply(replier, "[K-LOL.GG 카카오봇]\n" + KLOL_V41_BOT_CODE_VERSION + "\n설치본: 설정 확인 필요"); }
+    }
     if (text === "V2도움말") return v41Reply(replier, v41V2Help());
     if (text === "도움말" || text === "명령어") return v41Reply(replier, v41Help());
     var legacyNotice = v41LegacyLinkNotice(text);

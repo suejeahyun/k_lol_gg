@@ -31,6 +31,14 @@ var KLOL_V2_KAKAO = (function () {
     return String(value == null ? "" : value).replace(/^\s+|\s+$/g, "");
   }
 
+  function canonicalRoomName(value) {
+    var normalized = trimText(value);
+    try {
+      normalized = String(java.text.Normalizer.normalize(new java.lang.String(normalized), java.text.Normalizer.Form.NFKC));
+    } catch (ignored) {}
+    return trimText(normalized.replace(/[\u200B\u200C\u200D\uFEFF]/g, ""));
+  }
+
   function readPrivateSetting(key) {
     try {
       return trimText(String(DataBase.getDataBase(key) || ""));
@@ -197,7 +205,7 @@ var KLOL_V2_KAKAO = (function () {
   function identityForChat(room, sender) {
     var secret = identitySecret();
     return {
-      roomId: "room-" + hmacSha256Hex(secret, "room-id\n" + trimText(room)).substring(0, 32),
+      roomId: "room-" + hmacSha256Hex(secret, "room-id\n" + canonicalRoomName(room)).substring(0, 32),
       senderId: "sender-" + hmacSha256Hex(secret, "sender-id\n" + trimText(sender)).substring(0, 32)
     };
   }
@@ -298,6 +306,7 @@ var KLOL_V2_KAKAO = (function () {
     contractVersion: CONTRACT_VERSION,
     publicBaseUrl: publicBaseUrl,
     identityForChat: identityForChat,
+    canonicalRoomName: canonicalRoomName,
     installationId: installationId,
     contextFromChat: contextFromChat,
     sha256Base64BytesHex: sha256Base64BytesHex,

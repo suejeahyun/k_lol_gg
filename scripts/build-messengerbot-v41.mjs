@@ -14,7 +14,7 @@ const compatibilityPath = resolve(integrationDirectory, "KLOL_KAKAO_BOT_V41_V1_C
 const routerPath = resolve(integrationDirectory, "KLOL_KAKAO_BOT_V41_V2_ROUTER.js");
 const outputPath = resolve(integrationDirectory, "KLOL_KAKAO_BOT_V41_V2_COMPLETE.js");
 const mobileOutputPath = resolve(integrationDirectory, "KLOL_KAKAO_BOT_V41_MESSENGERBOT_R.js");
-const bundleMarker = "KLOL_V41_BUNDLE_R9_DB_ROOM_BINDINGS";
+const bundleMarker = "KLOL_V41_BUNDLE_R10_ROOM_IDENTITY";
 
 const [transportSource, compatibilitySource, routerSource] = await Promise.all([
   readFile(transportPath, "utf8"),
@@ -89,11 +89,11 @@ function compactPreservingSemicolons(source) {
     output += token.raw;
     if (token.raw === ";") {
       semicolonCount += 1;
-      if (semicolonCount % 4 === 0) output += "\n";
+      if (semicolonCount % 5 === 0) output += "\n";
     }
     if (token.raw === "}") {
       closingBraceCount += 1;
-      if (closingBraceCount % 3 === 0) output += "\n";
+      if (closingBraceCount % 4 === 0) output += "\n";
     }
     previous = token;
   }
