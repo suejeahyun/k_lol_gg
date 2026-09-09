@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   KakaoAssistantError,
+  kakaoSeasonCommandAccess,
   parseManagedOperationFormBody,
   parseKakaoImageReceiveBody,
   parseKakaoImageSessionBody,
@@ -66,6 +67,12 @@ test("Kakao season snapshots require exact bounded participant slots and positio
   }));
   assert.equal(parseSeasonSnapshotBody({ ...command, participants: many }).participants.length, 99);
   assert.throws(() => parseSeasonSnapshotBody({ ...command, participants: [...many, { ...many[0], slotNo: 100 }] }), KakaoAssistantError);
+});
+
+test("Kakao season command access keeps submit and status member-safe while force cancel stays trusted", () => {
+  assert.equal(kakaoSeasonCommandAccess("SYNC"), "MEMBER_SAFE");
+  assert.equal(kakaoSeasonCommandAccess("STATUS"), "MEMBER_SAFE");
+  assert.equal(kakaoSeasonCommandAccess("CANCEL"), "TRUSTED_OPERATOR");
 });
 
 test("managed forms route only the explicit operation-form command", () => {

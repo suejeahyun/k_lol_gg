@@ -45,7 +45,7 @@ V2는 endpoint별 bearer secret 대신 canonical Kakao API 전체에 하나의 H
 | `KAKAO_WEBHOOK_SECRET_CURRENT` | `KLOL_V2_KAKAO_WEBHOOK_SECRET_CURRENT` | **동일한 값**. 각각 UTF-8 32 bytes 이상. 모든 V2 요청의 HMAC 서명/검증 키. |
 | 없음 | `KLOL_V2_KAKAO_IDENTITY_SECRET` | 서버에 저장하지 않는 **별도 값**. 방·발신자 표시 이름을 opaque ID로 만드는 로컬 HMAC 키. signing key와 같으면 안 되고 signing key 회전 때 바꾸지 않는다. |
 | `KAKAO_WEBHOOK_ALLOWED_ROOMS` | 직접 대응 없음 | `/V2연동확인`이 표시한 `room-` ID를 쉼표로 연결한다. 모든 canonical API에서 강제된다. |
-| `KAKAO_WEBHOOK_ALLOWED_SENDERS` | 직접 대응 없음 | 허용할 `sender-` ID를 쉼표로 연결한다. 내전 authoritative 신청, 예약 공지, 이미지 접수와 raw 운영 명령에서 강제된다. 외출 등 member-safe 운영 양식 제출에는 강제하지 않는다. |
+| `KAKAO_WEBHOOK_ALLOWED_SENDERS` | 직접 대응 없음 | 허용할 `sender-` ID를 쉼표로 연결한다. 내전 강제 취소, 예약 공지, 이미지 접수와 raw 운영 명령에서 강제된다. 외출 및 내전 제출·현황 등 member-safe 동작에는 강제하지 않는다. |
 | `KAKAO_WEBHOOK_BOT_SENDER_ID` | 직접 대응 없음 | 봇 계정 자신의 `sender-` ID. 모든 요청에서 self-message 차단에 사용되므로 유효한 단일 ID가 필요하다. |
 | `KAKAO_WEBHOOK_KEY_ID_CURRENT` | 없음 | 비밀이 아닌 서버 감사/회전 라벨. 봇은 전송하지 않으며 기본값은 `current`. |
 | `KAKAO_WEBHOOK_SECRET_PREVIOUS` / `KAKAO_WEBHOOK_KEY_ID_PREVIOUS` | 없음 | 회전 관측 기간에만 서버가 이전 서명을 함께 받는 용도. current와 다른 값/라벨을 쓴다. |
@@ -53,7 +53,7 @@ V2는 endpoint별 bearer secret 대신 canonical Kakao API 전체에 하나의 H
 | 없음 | `KLOL_V2_BASE_URL` | 봇이 요청할 V2 환경의 HTTPS origin. 경로·쿼리·fragment 없이 `https://host` 형식만 허용한다. |
 | 없음 | `KLOL_V2_ACTIVE_SEASON_ID` | 내전 현황·전체 신청 동기화에서 쓰는 현재 시즌 UUID. 다른 명령만 쓸 때는 불필요하다. |
 
-`search-player`, `openchat`, `operation-forms`, member-safe `managed-forms` 제출과 모집 생성·조회·스크림 참가는 서명과 방 allowlist를 통과한 요청에 한해 일반 발신자를 허용한다. 운영 양식 검토·삭제는 Kakao 명령으로 제공하지 않고 웹 ADMIN 세션을 요구한다. 모집 동기화·종료·취소·재개·확정·완료는 aggregate 생성자, 참가한 상대 팀장 또는 sender allowlist 운영자만 허용한다. 다른 방은 404로 숨기고, 같은 방의 비소유 발신자는 403을 받는다. `season-applications`, `scheduled-notice`, `image-receive`는 발신자 allowlist도 요구한다. 모든 부류에서 bot sender 차단은 동일하다.
+`search-player`, `openchat`, `operation-forms`, member-safe `managed-forms`, 내전 snapshot `SYNC`/`STATUS`, 모집 생성·조회와 스크림 참가는 서명과 방 allowlist를 통과한 요청에 한해 일반 발신자를 허용한다. 운영 양식 검토·삭제는 Kakao 명령으로 제공하지 않고 웹 ADMIN 세션을 요구한다. 모집 동기화·종료·취소·재개·확정·완료는 aggregate 생성자, 참가한 상대 팀장 또는 sender allowlist 운영자만 허용한다. 내전 snapshot `CANCEL`, 예약 공지, 이미지 접수와 raw V2 JSON은 trusted sender만 허용한다. 다른 방은 member-safe 요청도 `ROOM_FORBIDDEN`, 다른 방의 aggregate 조회·변경은 404로 숨긴다. 모든 부류에서 bot sender 차단은 동일하다.
 
 | 모집 명령 | Kakao 권한 |
 | --- | --- |

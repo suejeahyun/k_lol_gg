@@ -118,7 +118,14 @@ export type KakaoSeasonSnapshotCommand =
       action: "STATUS";
       recruitNo: number | null;
       participants: readonly KakaoSeasonSnapshotParticipant[];
-    }>);
+  }>);
+
+export type KakaoSeasonCommandAccess = "MEMBER_SAFE" | "TRUSTED_OPERATOR";
+
+/** Kakao room members may submit/read snapshots; explicit force-cancel stays operator-only. */
+export function kakaoSeasonCommandAccess(action: KakaoSeasonSnapshotCommand["action"]): KakaoSeasonCommandAccess {
+  return action === "CANCEL" ? "TRUSTED_OPERATOR" : "MEMBER_SAFE";
+}
 
 export type KakaoSeasonSnapshotEntryDto = Readonly<{
   slotNo: number;

@@ -20,6 +20,8 @@
 - 전체 양식 맨 앞의 ASCII `/`와 전각 `／`는 한 번만 제거한다. URL, 중간 slash, `//`, slash 뒤 공백 guard는 유지한다.
 - 외출 양식은 간편 공지, `2. 양식작성`, 실제 `<외출>`, literal `&lt;외출&gt;` 래퍼를 같은 payload로 해석한다. 기간·사유·범위 누락은 서버 호출 전에 항목별로 안내한다.
 - 외출 등 member-safe 운영 양식 제출은 허용 방의 일반 발신자에게 열고, 관리자 검토·삭제는 기존 ADMIN 세션/TOTP 경계를 유지한다.
+- 내전 전체 양식 `SYNC`와 `STATUS`도 허용 방 모든 일반 발신자에게 열었다. 명시적 강제 `CANCEL`은 command-level trusted sender gate를 별도로 유지한다.
+- 전역 sender allowlist나 wildcard는 바꾸지 않았다. 동일 허용 방의 sender A/B/C가 공개 capability를 통과하고 trusted capability는 실패하며, 생성자는 자기 모집 수정 성공, 비생성자 운영 변경은 403, 다른 방은 실패하는 fixture를 고정했다.
 - 제출 receipt 범위에 room+sender 해시를 넣어 같은 멱등성 키/본문도 다른 방 또는 다른 발신자와 충돌하지 않게 했다. 원문 room/sender는 공개 DTO에 포함하지 않는다.
 - 연동 실패를 양식 필드 누락(400), 연동/서명 설정(401), 미연동 방(403), 기능 권한 부족(403)으로 구분한다. 미연동 방은 `/V2연동확인` 결과를 관리자에게 전달하도록 안내한다.
 
@@ -39,7 +41,7 @@
 
 ## 검증 증거
 
-- contracts 209/209, unit 477/477, TypeScript typecheck 통과.
+- contracts 210/210, unit 478/478, TypeScript typecheck 통과.
 - 격리 PostgreSQL 18 `recruiting` scope: 9/9 통과. controller 2xx/403/404, 재전송, 방·발신자별 외출 멱등성 격리, 2→1→2→0, 확인 필요 철회, SITE/관리자 확정 보존, 다른 방·회차 격리를 실제 transaction으로 확인했다. 클러스터 종료·임시 경로 제거도 확인했다.
 - 봇 집중 fixture 27/27: 일반/ASCII slash/전각 slash 빈 전체 양식 parity, 불완전 빈 양식과 double/URL/중간 slash 거부, 외출 4개 래퍼 동일 payload, 필드 누락 시 제출 0회, 오류 분류를 확인했다.
 - 휴대폰 설치본: LF 기준 64,489자(<65,535, 여유 1,046자), 75,669 bytes, 966줄, SHA-256 `f0f5f5d950c75b93a573a8167ae48ea02e812936084dc7faf3096063ad06839d`. 모든 LF가 CRLF로 바뀌는 보수적 계산도 65,454자로 한도 안이다.

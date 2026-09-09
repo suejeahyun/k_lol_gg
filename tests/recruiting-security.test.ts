@@ -74,18 +74,18 @@ test("Kakao webhook rejects stale/replayed, forbidden room/sender, and bot-self 
   }), { ok: false, code: "BOT_SELF_MESSAGE" });
 });
 
-test("signed public room commands accept 99 재현, 지오, and 97 기용 without granting trusted capabilities", () => {
-  for (const senderId of ["sender-admin-99", "sender-gio", "sender-admin-97"]) {
+test("same allowed room accepts arbitrary members A/B/C without granting operator capabilities", () => {
+  for (const senderId of ["sender-member-a", "sender-member-b", "sender-member-c"]) {
     assert.equal(verify({
       request: request(currentSecret, senderId),
       allowedSenderIds: new Set(),
       requiredCapability: "PUBLIC_ROOM_COMMAND",
     }).ok, true, senderId);
   }
-  for (const senderId of ["sender-gio", "sender-admin-97"]) {
+  for (const senderId of ["sender-member-a", "sender-member-b", "sender-member-c"]) {
     assert.deepEqual(verify({
       request: request(currentSecret, senderId),
-      allowedSenderIds: new Set(["sender-admin-99"]),
+      allowedSenderIds: new Set(["sender-operator"]),
       requiredCapability: "TRUSTED_SENDER_COMMAND",
     }), { ok: false, code: "CAPABILITY_FORBIDDEN" }, senderId);
   }

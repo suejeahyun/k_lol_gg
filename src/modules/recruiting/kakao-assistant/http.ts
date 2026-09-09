@@ -113,3 +113,7 @@ export function kakaoOwnerImageSessionErrorResponse(error: unknown, traceId?: st
 export function kakaoAssistantUnavailableResponse(traceId?: string) {
   return problemResponse(problems.unavailable, { traceId });
 }
+
+export function kakaoAssistantCapabilityForbiddenResponse(traceId?: string) {
+  return problemResponse(problems.capabilityForbidden, { traceId });
+}

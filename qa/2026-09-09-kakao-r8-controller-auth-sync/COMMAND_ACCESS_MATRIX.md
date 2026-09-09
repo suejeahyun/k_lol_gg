@@ -11,11 +11,15 @@
 
 `/V2모집 <JSON>` 진입 자체는 sender allowlist 운영자 또는 명시적 비운영 개발 모드만 허용한다. V1 호환 명령은 `COMPAT_V1`, 원시 JSON은 `RAW_V2`로 서명 body에 귀속된다.
 
-내전 전체 양식은 trusted sender capability를 유지한다. authoritative 철회 범위는 `sourceRoomIdHash + applyDate + recruitNo + RIFT`이며 SITE와 관리자 검토 완료 행은 범위에 포함하지 않는다.
+내전 전체 양식 `SYNC`와 `STATUS`는 허용 방 일반 발신자에게 공개하고, 명시적 강제 `CANCEL`만 trusted sender로 제한한다. authoritative 철회 범위는 `sourceRoomIdHash + applyDate + recruitNo + RIFT`이며 SITE와 관리자 검토 완료 행은 범위에 포함하지 않는다.
 
 | 운영 양식 동작 | 허용 방 일반 발신자 | sender allowlist 운영자 | ADMIN 세션 |
 | --- | --- | --- | --- |
-| 외출·친구·정모·건의 제출 | 허용 | 허용 | Kakao 제출 경계와 무관 |
+| 외출·휴식·친구·정모·건의 제출 | 허용 | 허용 | Kakao 제출 경계와 무관 |
+| 내전 전체 양식 `SYNC`, 현황 `STATUS` | 허용 | 허용 | Kakao 제출 경계와 무관 |
+| 내전 강제 `CANCEL` | 거부 | 허용 | Kakao 제출 경계와 무관 |
 | 검토·상태 변경·soft delete | Kakao 경로 없음 | Kakao 경로 없음 | ADMIN 인증·same-origin·revision·idempotency 필수 |
 
 미연동 방은 제출자 권한과 관계없이 403 `KAKAO_ROOM_FORBIDDEN`이며, sender allowlist 추가로 우회하지 않는다.
+
+동일 허용 방의 임의 sender A/B/C는 member-safe 서명 검증을 모두 통과하지만 trusted operator capability는 얻지 않는다. aggregate 수정은 각 sender가 직접 생성한 모집에만 허용되고, 다른 sender의 마감·취소·재오픈은 403이다.
