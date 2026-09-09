@@ -13,7 +13,7 @@ async function harness() {
   ]);
   const values = new Map();
   const replies = [];
-  const calls = { season: [], images: [], records: [], recent: [], ranking: 0, notices: [], recruits: [] };
+  const calls = { season: [], images: [], records: [], recent: [], ranking: 0, notices: [], recruits: [], contexts: [] };
   const context = vm.createContext({
     console,
     DataBase: {
@@ -26,7 +26,15 @@ async function harness() {
         const safe = (value) => String(value).replace(/[^A-Za-z0-9]/g, "").toLowerCase() || "empty";
         return { roomId: `room-${safe(room)}`, senderId: `sender-${safe(sender)}` };
       },
-      contextFromChat(room, sender, options = {}) { return { room, sender, ...options }; },
+      roomIdentityInput(room, sender, isGroupChat, channelId) {
+        if (/^[1-9][0-9]*$/u.test(String(channelId ?? ""))) return `channel-id\n${channelId}`;
+        return isGroupChat === false && room === sender ? "" : room;
+      },
+      contextFromChat(room, sender, options = {}) {
+        const requestContext = { room, sender, ...options };
+        calls.contexts.push(structuredClone(requestContext));
+        return requestContext;
+      },
       newUuid() { return "abcdef01-2345-4789-abcd-ef0123456789"; },
       seasonApplications(command, requestContext) {
         calls.season.push({ command: structuredClone(command), requestContext: structuredClone(requestContext) });
@@ -129,10 +137,14 @@ async function harness() {
     options.room ?? "테스트방",
     message,
     options.sender ?? "사용자",
-    true,
+    options.isGroupChat ?? true,
     replier,
     options.imageDB ?? null,
     "com.xfl.msgbot",
+    false,
+    "123",
+    options.channelId,
+    options.userHash,
   );
   return { context, values, replies, calls, respond };
 }
@@ -320,6 +332,16 @@ test("response accepts bitmap fallback, reports image progress, and clears termi
   bot.respond("/V2사진취소");
   bot.respond("/사진상태");
   assert.match(bot.replies.at(-1), /연결된 사진 세션이 없습니다/u);
+});
+
+test("response scopes different senders to one stable channel and rejects the broken legacy room fallback", async () => {
+  const bot = await harness();
+  bot.respond("/랭킹", { room: "관리자. 99", sender: "관리자. 99", isGroupChat: false, channelId: "987654321" });
+  bot.respond("/랭킹", { room: "관리자. 97", sender: "관리자. 97", isGroupChat: false, channelId: "987654321" });
+  assert.deepEqual(bot.calls.contexts.slice(-2).map((item) => item.room), ["channel-id\n987654321", "channel-id\n987654321"]);
+
+  bot.respond("/V2연동확인", { room: "관리자. 99", sender: "관리자. 99", isGroupChat: false });
+  assert.match(bot.replies.at(-1), /메신저봇R 0\.7\.34a 이상으로 업데이트/u);
 });
 
 test("response entry point keeps representative V1 and V2 replies identical with or without slash", async () => {

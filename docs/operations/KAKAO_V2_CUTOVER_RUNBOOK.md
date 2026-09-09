@@ -103,7 +103,7 @@ Remove-Variable klolRandomBytes, klolRng, klolGeneratedSecret, klolSha256, klolD
 
 ### 같은 표시 방에서 `ROOM_FORBIDDEN`이 엇갈릴 때
 
-V41의 `roomId`는 `identity secret + "room-id\\n" + trim(String(room))`만으로 결정되며 sender, 메시지 본문, slash는 섞이지 않는다. 따라서 같은 서버 배포에서 한 발신자는 성공하고 다른 발신자는 `ROOM_FORBIDDEN`이라면 서버 sender 설정 변경으로 해결할 문제가 아니다. 확인 가능한 원인은 (a) 실제 callback `room` 문자열/객체의 문자열화 결과가 다르거나 (b) 서로 다른 MessengerBot R 실행기·봇 사본이 다른 identity secret을 쓰는 경우로 한정된다. 실패 요청의 room ID를 기록하지 않는 보안 경계 때문에, 해당 기기 증거 없이 둘 중 하나를 확정하지 않는다.
+V41 R12의 `roomId`는 MessengerBot R 0.7.34a 이상에서 제공하는 stable `channelId`를 우선 사용하고, 이를 받을 수 없는 호환 런타임에서만 정규화된 `room`을 사용한다. `sender`, 메시지 본문, slash는 방 식별에 섞이지 않는다. Android 11+ 알림 파서 손상 징후인 `isGroupChat=false` 및 `room=sender` 조합에서는 방 권한 요청을 안전하게 거부한다. 이 경우 DB나 환경변수에 sender를 방으로 추가하지 말고 MessengerBot R 앱을 최신 안정 버전으로 교체한다.
 
 1. 각 기기에서 같은 봇 소스의 로컬 콘솔로 `KLOL_V2_KAKAO.identityForChat("KLOL_IDENTITY_SELF_CHECK", "probe").roomId`만 계산해 서로 비교한다. 이 probe ID는 비밀 원문이 아니며 실제 방 ID도 아니다. 다르면 identity secret 또는 설치본이 다르다.
 2. probe가 같으면 실제 문제 방에서 `/V2연동확인`을 각 발신 경로로 한 번씩 실행해 `room-` 값만 운영자가 직접 비교한다. 다르면 callback room 값/봇 인스턴스가 다르다. 채팅이나 QA 문서에는 값을 복사하지 않는다.

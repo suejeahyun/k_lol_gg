@@ -5,7 +5,7 @@
  * This router requires KLOL_KAKAO_BOT_V41_V2_TRANSPORT.js and
  * KLOL_KAKAO_BOT_V41_V1_COMPAT.js immediately before it.
  */
-var KLOL_V41_BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V41_V2_2026_09_09_R11_ROOM_CALLBACK_TRACE";
+var KLOL_V41_BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V41_V2_2026_09_09_R12_CHANNEL_ID_ROOM";
 var KLOL_V41_SEASON_PREVIEW_TTL_MS = 10 * 60 * 1000;
 var KLOL_V41_IMAGE_SESSION_TTL_MS = 30 * 60 * 1000;
 
@@ -1425,9 +1425,10 @@ function v41V2Help() {
   ].join("\n");
 }
 
-function response(room, msg, sender, isGroupChat, replier, imageDB, packageName) {
+function response(room, msg, sender, isGroupChat, replier, imageDB, packageName, isMention, logId, channelId, userHash) {
   var text = v41CompatParser().canonicalCommandText(msg);
   var rawImage = "";
+  if (typeof KLOL_V2_KAKAO.roomIdentityInput === "function") room = KLOL_V2_KAKAO.roomIdentityInput(room, sender, isGroupChat, channelId);
   try {
     if (v41IsBotEchoSender(sender)) return null;
     rawImage = v41ReceivedImage(imageDB);
@@ -1448,8 +1449,9 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
     if (legacyNotice) return v41Reply(replier, legacyNotice);
     if (/^\/?(?:V2)?연동확인$/i.test(text)) {
       try {
+        if (!room) return v41Reply(replier, "[K-LOL.GG V2 방 식별 불가]\n메신저봇R 알림 파서가 방 이름 대신 발신자명을 전달했습니다.\n메신저봇R 0.7.34a 이상으로 업데이트한 뒤 다시 확인해 주세요.");
         var identity = KLOL_V2_KAKAO.identityForChat(room, sender);
-        return v41Reply(replier, "[K-LOL.GG V2 연동 ID]\n설치본: " + KLOL_V2_KAKAO.installationId() + "\n방: " + identity.roomId + "\n발신자: " + identity.senderId + "\n방입력 UTF-16: " + KLOL_V2_KAKAO.roomInputDiagnostic(room));
+        return v41Reply(replier, "[K-LOL.GG V2 연동 ID]\n설치본: " + KLOL_V2_KAKAO.installationId() + "\n방: " + identity.roomId + "\n발신자: " + identity.senderId + "\n방 식별 기준: " + (String(room).indexOf("channel-id\n") === 0 ? "channelId" : "legacy room"));
       } catch (identityError) {
         return v41Reply(replier, "[K-LOL.GG V2 연동]\n연동 ID 생성에 실패했습니다. MessengerBot R 실행 로그를 확인해 주세요.");
       }

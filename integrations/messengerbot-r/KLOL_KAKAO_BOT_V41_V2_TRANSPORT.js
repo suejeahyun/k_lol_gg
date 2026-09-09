@@ -39,16 +39,12 @@ var KLOL_V2_KAKAO = (function () {
     return trimText(normalized.replace(/[\u200B\u200C\u200D\uFEFF]/g, ""));
   }
 
-  function roomInputDiagnostic(value) {
-    var normalized = canonicalRoomName(value);
-    var units = [];
-    var limit = Math.min(normalized.length, 80);
-    for (var index = 0; index < limit; index += 1) {
-      var hex = normalized.charCodeAt(index).toString(16).toUpperCase();
-      while (hex.length < 4) hex = "0" + hex;
-      units.push(hex);
-    }
-    return normalized.length + ":" + units.join(".") + (normalized.length > limit ? ".TRUNCATED" : "");
+  function roomIdentityInput(room, sender, isGroupChat, channelId) {
+    var stableChannelId = trimText(channelId);
+    if (/^[1-9][0-9]*$/.test(stableChannelId)) return "channel-id\n" + stableChannelId;
+    var normalizedRoom = canonicalRoomName(room);
+    if (isGroupChat === false && normalizedRoom === trimText(sender)) return "";
+    return normalizedRoom;
   }
 
   function readPrivateSetting(key) {
@@ -216,8 +212,10 @@ var KLOL_V2_KAKAO = (function () {
 
   function identityForChat(room, sender) {
     var secret = identitySecret();
+    var normalizedRoom = canonicalRoomName(room);
+    if (!normalizedRoom) throw new Error("안정적인 방 식별값을 확인할 수 없습니다.");
     return {
-      roomId: "room-" + hmacSha256Hex(secret, "room-id\n" + canonicalRoomName(room)).substring(0, 32),
+      roomId: "room-" + hmacSha256Hex(secret, "room-id\n" + normalizedRoom).substring(0, 32),
       senderId: "sender-" + hmacSha256Hex(secret, "sender-id\n" + trimText(sender)).substring(0, 32)
     };
   }
@@ -319,7 +317,7 @@ var KLOL_V2_KAKAO = (function () {
     publicBaseUrl: publicBaseUrl,
     identityForChat: identityForChat,
     canonicalRoomName: canonicalRoomName,
-    roomInputDiagnostic: roomInputDiagnostic,
+    roomIdentityInput: roomIdentityInput,
     installationId: installationId,
     contextFromChat: contextFromChat,
     sha256Base64BytesHex: sha256Base64BytesHex,
