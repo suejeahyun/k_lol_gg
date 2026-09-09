@@ -5,7 +5,7 @@
  * This router requires KLOL_KAKAO_BOT_V41_V2_TRANSPORT.js and
  * KLOL_KAKAO_BOT_V41_V1_COMPAT.js immediately before it.
  */
-var KLOL_V41_BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V41_V2_2026_09_09_R10_ROOM_IDENTITY";
+var KLOL_V41_BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V41_V2_2026_09_09_R11_ROOM_CALLBACK_TRACE";
 var KLOL_V41_SEASON_PREVIEW_TTL_MS = 10 * 60 * 1000;
 var KLOL_V41_IMAGE_SESSION_TTL_MS = 30 * 60 * 1000;
 
@@ -1449,7 +1449,7 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
     if (/^\/?(?:V2)?연동확인$/i.test(text)) {
       try {
         var identity = KLOL_V2_KAKAO.identityForChat(room, sender);
-        return v41Reply(replier, "[K-LOL.GG V2 연동 ID]\n설치본: " + KLOL_V2_KAKAO.installationId() + "\n방: " + identity.roomId + "\n발신자: " + identity.senderId);
+        return v41Reply(replier, "[K-LOL.GG V2 연동 ID]\n설치본: " + KLOL_V2_KAKAO.installationId() + "\n방: " + identity.roomId + "\n발신자: " + identity.senderId + "\n방입력 UTF-16: " + KLOL_V2_KAKAO.roomInputDiagnostic(room));
       } catch (identityError) {
         return v41Reply(replier, "[K-LOL.GG V2 연동]\n연동 ID 생성에 실패했습니다. MessengerBot R 실행 로그를 확인해 주세요.");
       }

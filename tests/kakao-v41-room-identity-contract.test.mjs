@@ -36,6 +36,8 @@ test("both field diagnostics expose the installation fingerprint", async () => {
   assert.match(router, /text === "봇버전"/u);
   assert.match(router, /\[K-LOL\.GG V2 연동 ID\]/u);
   assert.equal((router.match(/KLOL_V2_KAKAO\.installationId\(\)/gu) ?? []).length, 2);
+  assert.match(router, /방입력 UTF-16:/u);
+  assert.match(router, /KLOL_V2_KAKAO\.roomInputDiagnostic\(room\)/u);
 });
 
 test("room normalization canonicalizes Unicode and removes unstable invisible characters", async () => {
@@ -67,6 +69,7 @@ test("one installation and room yields one room fingerprint for 100 unique sende
   assert.equal(new Set(identities.map((item) => item.senderId)).size, 100);
   assert.equal(runtime.identityForChat("Ｋ－ＬＯＬ 공식방", "별도 사용자").roomId, runtime.identityForChat("K-LOL 공식방", "별도 사용자").roomId);
   assert.equal(runtime.identityForChat("\u200B K-LOL 공식방 \u200B", "또 다른 사용자").roomId, runtime.identityForChat("K-LOL 공식방", "또 다른 사용자").roomId);
+  assert.equal(runtime.roomInputDiagnostic("Ａ\u200BK"), "2:0041.004B");
 });
 
 test("different identity secrets remain different installations until administrator pairing", async () => {

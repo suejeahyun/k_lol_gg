@@ -39,6 +39,18 @@ var KLOL_V2_KAKAO = (function () {
     return trimText(normalized.replace(/[\u200B\u200C\u200D\uFEFF]/g, ""));
   }
 
+  function roomInputDiagnostic(value) {
+    var normalized = canonicalRoomName(value);
+    var units = [];
+    var limit = Math.min(normalized.length, 80);
+    for (var index = 0; index < limit; index += 1) {
+      var hex = normalized.charCodeAt(index).toString(16).toUpperCase();
+      while (hex.length < 4) hex = "0" + hex;
+      units.push(hex);
+    }
+    return normalized.length + ":" + units.join(".") + (normalized.length > limit ? ".TRUNCATED" : "");
+  }
+
   function readPrivateSetting(key) {
     try {
       return trimText(String(DataBase.getDataBase(key) || ""));
@@ -307,6 +319,7 @@ var KLOL_V2_KAKAO = (function () {
     publicBaseUrl: publicBaseUrl,
     identityForChat: identityForChat,
     canonicalRoomName: canonicalRoomName,
+    roomInputDiagnostic: roomInputDiagnostic,
     installationId: installationId,
     contextFromChat: contextFromChat,
     sha256Base64BytesHex: sha256Base64BytesHex,
