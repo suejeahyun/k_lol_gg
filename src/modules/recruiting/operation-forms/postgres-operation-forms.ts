@@ -190,7 +190,8 @@ export class PostgresOperationForms {
   }>): Promise<OperationFormMutationResult> {
     const payload = parseOperationFormPayload(input.formType, input.payload);
     return withTransaction(this.database, async (transaction) => {
-      const scope = `BOT:SUBMIT_OPERATION_FORM:${input.formType}`;
+      const submitterScope = sha256(`klol-v2:operation-form-submitter:v1\0${input.intent.roomId}\0${input.intent.senderId}`).toString("hex");
+      const scope = `BOT:SUBMIT_OPERATION_FORM:${input.formType}:${submitterScope}`;
       const receipt = await this.claimReceipt(transaction, { actorPrincipalId: input.actorPrincipalId, scope, expectedRevision: 0, idempotency: input.idempotency });
       await this.claimKakaoNonce(transaction, input.actorPrincipalId, input.intent, { scope, keyHash: receipt.keyHash, requestHash: receipt.requestHash });
       if (receipt.replay) return { ...receipt.replay, replayed: true };

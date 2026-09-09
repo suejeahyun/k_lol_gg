@@ -105,11 +105,13 @@ export type KakaoSeasonSnapshotCommand =
   | (KakaoSeasonSnapshotCommandBase & Readonly<{
       action: "SYNC";
       recruitNo: number;
+      mode: "RIFT";
       participants: readonly KakaoSeasonSnapshotParticipant[];
     }>)
   | (KakaoSeasonSnapshotCommandBase & Readonly<{
       action: "CANCEL";
       recruitNo: number;
+      mode: "RIFT";
       participants: readonly KakaoSeasonSnapshotParticipant[];
     }>)
   | (KakaoSeasonSnapshotCommandBase & Readonly<{
@@ -186,6 +188,9 @@ export type KakaoSeasonSnapshotDto = Readonly<{
   confirmedCount: number;
   pendingCount: number;
   cancelledCount: number;
+  createdCount?: number;
+  updatedCount?: number;
+  mode?: "RIFT";
   availableRecruitNos?: readonly number[];
   legacyReply?: string;
 }>;
@@ -341,14 +346,18 @@ function seasonParticipant(value: unknown): KakaoSeasonSnapshotParticipant {
 export function parseSeasonSnapshotBody(value: unknown): KakaoSeasonSnapshotCommand {
   if (!isRecord(value) || typeof value.action !== "string") throw new KakaoAssistantError("INVALID_INPUT");
   const mutation = value.action === "SYNC";
+  const authoritativeMutation = value.action === "SYNC" || value.action === "CANCEL";
   if (!hasExactKeys(value, mutation
-    ? ["action", "seasonId", "applyDate", "recruitNo", "participants"]
-    : ["action", "seasonId", "applyDate", "recruitNo"])) {
+    ? ["action", "seasonId", "applyDate", "recruitNo", "mode", "participants"]
+    : authoritativeMutation
+      ? ["action", "seasonId", "applyDate", "recruitNo", "mode"]
+      : ["action", "seasonId", "applyDate", "recruitNo"])) {
     throw new KakaoAssistantError("INVALID_INPUT");
   }
   const statusAllRounds = value.action === "STATUS" && value.recruitNo === null;
   if (!["SYNC", "CANCEL", "STATUS"].includes(value.action) || typeof value.seasonId !== "string" ||
       !UUID.test(value.seasonId) || typeof value.applyDate !== "string" || !DATE.test(value.applyDate) ||
+      (authoritativeMutation && value.mode !== "RIFT") ||
       (!statusAllRounds && (!Number.isSafeInteger(value.recruitNo) || Number(value.recruitNo) < 1 || Number(value.recruitNo) > 999))) {
     throw new KakaoAssistantError("INVALID_INPUT");
   }
@@ -365,6 +374,7 @@ export function parseSeasonSnapshotBody(value: unknown): KakaoSeasonSnapshotComm
     seasonId: value.seasonId,
     applyDate: value.applyDate,
     recruitNo: Number(value.recruitNo),
+    mode: "RIFT" as const,
     participants: Object.freeze(participants),
   });
   if (value.action === "CANCEL") return Object.freeze({
@@ -372,6 +382,7 @@ export function parseSeasonSnapshotBody(value: unknown): KakaoSeasonSnapshotComm
     seasonId: value.seasonId,
     applyDate: value.applyDate,
     recruitNo: Number(value.recruitNo),
+    mode: "RIFT" as const,
     participants: Object.freeze(participants),
   });
   return Object.freeze({

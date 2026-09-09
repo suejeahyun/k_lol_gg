@@ -1,0 +1,18 @@
+DROP INDEX "competition"."season_kakao_pending_slot_uidx";--> statement-breakpoint
+ALTER TABLE "competition"."season_applications" ADD COLUMN "source_room_id_hash" "bytea";--> statement-breakpoint
+ALTER TABLE "competition"."season_applications" ADD COLUMN "source_mode" varchar(16);--> statement-breakpoint
+ALTER TABLE "competition"."season_kakao_pending_applications" ADD COLUMN "source_room_id_hash" "bytea";--> statement-breakpoint
+ALTER TABLE "competition"."season_kakao_pending_applications" ADD COLUMN "source_mode" varchar(16);--> statement-breakpoint
+ALTER TABLE "recruiting"."parties" ADD COLUMN "source_sender_id" varchar(128);--> statement-breakpoint
+ALTER TABLE "recruiting"."scrims" ADD COLUMN "source_sender_id" varchar(128);--> statement-breakpoint
+ALTER TABLE "recruiting"."scrims" ADD COLUMN "opponent_sender_id" varchar(128);--> statement-breakpoint
+CREATE INDEX "season_applications_kakao_snapshot_scope_idx" ON "competition"."season_applications" USING btree ("season_id","apply_date","recruit_no","source_room_id_hash","source_mode");--> statement-breakpoint
+CREATE INDEX "season_kakao_pending_snapshot_scope_idx" ON "competition"."season_kakao_pending_applications" USING btree ("season_id","apply_date","recruit_no","source_room_id_hash","source_mode","status");--> statement-breakpoint
+CREATE UNIQUE INDEX "season_kakao_pending_slot_uidx" ON "competition"."season_kakao_pending_applications" USING btree ("season_id","apply_date","recruit_no","slot_no","source_room_id_hash","source_mode");--> statement-breakpoint
+ALTER TABLE "competition"."season_applications" ADD CONSTRAINT "season_applications_room_hash_32_bytes" CHECK ("competition"."season_applications"."source_room_id_hash" IS NULL OR octet_length("competition"."season_applications"."source_room_id_hash") = 32);--> statement-breakpoint
+ALTER TABLE "competition"."season_applications" ADD CONSTRAINT "season_applications_source_mode" CHECK ("competition"."season_applications"."source_mode" IS NULL OR "competition"."season_applications"."source_mode" = 'RIFT');--> statement-breakpoint
+ALTER TABLE "competition"."season_kakao_pending_applications" ADD CONSTRAINT "season_kakao_pending_room_hash_32_bytes" CHECK ("competition"."season_kakao_pending_applications"."source_room_id_hash" IS NULL OR octet_length("competition"."season_kakao_pending_applications"."source_room_id_hash") = 32);--> statement-breakpoint
+ALTER TABLE "competition"."season_kakao_pending_applications" ADD CONSTRAINT "season_kakao_pending_source_mode" CHECK ("competition"."season_kakao_pending_applications"."source_mode" IS NULL OR "competition"."season_kakao_pending_applications"."source_mode" = 'RIFT');--> statement-breakpoint
+ALTER TABLE "recruiting"."parties" ADD CONSTRAINT "recruit_parties_source_sender" CHECK ("recruiting"."parties"."source_sender_id" IS NULL OR char_length(btrim("recruiting"."parties"."source_sender_id")) BETWEEN 1 AND 128);--> statement-breakpoint
+ALTER TABLE "recruiting"."scrims" ADD CONSTRAINT "scrim_recruits_source_sender" CHECK ("recruiting"."scrims"."source_sender_id" IS NULL OR char_length(btrim("recruiting"."scrims"."source_sender_id")) BETWEEN 1 AND 128);--> statement-breakpoint
+ALTER TABLE "recruiting"."scrims" ADD CONSTRAINT "scrim_recruits_opponent_sender" CHECK ("recruiting"."scrims"."opponent_sender_id" IS NULL OR char_length(btrim("recruiting"."scrims"."opponent_sender_id")) BETWEEN 1 AND 128);

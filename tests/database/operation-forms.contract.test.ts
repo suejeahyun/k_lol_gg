@@ -34,11 +34,27 @@ test("S09 operation forms persist signed submissions and ADMIN TOTP mutations at
     };
     const created = await service.submit(submit); assert.equal(created.status, 201); assert.equal(created.replayed, false);
     const replay = await service.submit(submit); assert.equal(replay.replayed, true); assert.deepEqual(replay.body, created.body);
-    assert.equal((await database.select().from(operationForms)).length, 1);
-    assert.equal((await database.select().from(recruitingNonceBindings).where(eq(recruitingNonceBindings.actorPrincipalId, submit.actorPrincipalId))).length, 1);
-    assert.equal((await database.select().from(recruitingCommandReceipts).where(eq(recruitingCommandReceipts.actorPrincipalId, submit.actorPrincipalId))).length, 1);
-    assert.equal((await database.select().from(recruitingOutbox).where(eq(recruitingOutbox.aggregateType, "OPERATION_FORM"))).length, 1);
-    assert.equal((await database.select().from(auditEvents).where(eq(auditEvents.targetType, "OPERATION_FORM"))).length, 1);
+    const otherSender = await service.submit({
+      ...submit, requestId: randomUUID(),
+      intent: { ...submit.intent, nonce: "operation_nonce_contract_0002", senderId: "sender-contract-other" },
+    });
+    const otherRoom = await service.submit({
+      ...submit, requestId: randomUUID(),
+      intent: { ...submit.intent, nonce: "operation_nonce_contract_0003", roomId: "room-contract-other" },
+    });
+    assert.equal(otherSender.replayed, false); assert.equal(otherRoom.replayed, false);
+    assert.notEqual((otherSender.body.form as { id: string }).id, (created.body.form as { id: string }).id);
+    assert.notEqual((otherRoom.body.form as { id: string }).id, (created.body.form as { id: string }).id);
+    const submittedRows = await database.select().from(operationForms);
+    assert.equal(submittedRows.length, 3);
+    assert.deepEqual(
+      submittedRows.map((row) => [row.sourceRoomId, row.sourceSenderId]).sort(),
+      [["room-contract", "sender-contract"], ["room-contract", "sender-contract-other"], ["room-contract-other", "sender-contract"]].sort(),
+    );
+    assert.equal((await database.select().from(recruitingNonceBindings).where(eq(recruitingNonceBindings.actorPrincipalId, submit.actorPrincipalId))).length, 3);
+    assert.equal((await database.select().from(recruitingCommandReceipts).where(eq(recruitingCommandReceipts.actorPrincipalId, submit.actorPrincipalId))).length, 3);
+    assert.equal((await database.select().from(recruitingOutbox).where(eq(recruitingOutbox.aggregateType, "OPERATION_FORM"))).length, 3);
+    assert.equal((await database.select().from(auditEvents).where(eq(auditEvents.targetType, "OPERATION_FORM"))).length, 3);
     await assert.rejects(service.submit({ ...submit, idempotency: { ...submit.idempotency, bodyDigestHex: "cd".repeat(32) } }), (error: unknown) => error instanceof OperationFormApplicationError && error.code === "IDEMPOTENCY_MISMATCH");
 
     const adminId = randomUUID(); const sessionId = randomUUID(); const now = new Date();
@@ -63,8 +79,8 @@ test("S09 operation forms persist signed submissions and ADMIN TOTP mutations at
     });
     assert.deepEqual(removed.body, { deleted: true, id: createdForm.id, revision: 2 });
     const retained = (await database.select().from(operationForms).where(eq(operationForms.id, createdForm.id)))[0];
-    assert.ok(retained?.deletedAt); assert.equal((await service.list()).items.length, 0);
-    assert.equal((await database.select().from(recruitingOutbox).where(eq(recruitingOutbox.aggregateType, "OPERATION_FORM"))).length, 3);
-    assert.equal((await database.select().from(auditEvents).where(eq(auditEvents.targetType, "OPERATION_FORM"))).length, 3);
+    assert.ok(retained?.deletedAt); assert.equal((await service.list()).items.length, 2);
+    assert.equal((await database.select().from(recruitingOutbox).where(eq(recruitingOutbox.aggregateType, "OPERATION_FORM"))).length, 5);
+    assert.equal((await database.select().from(auditEvents).where(eq(auditEvents.targetType, "OPERATION_FORM"))).length, 5);
   } finally { await pool.end(); }
 });

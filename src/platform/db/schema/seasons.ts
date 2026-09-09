@@ -131,6 +131,8 @@ export const seasonApplications = competitionSchema.table(
     status: seasonApplicationStatus("status").default("APPLIED").notNull(),
     source: seasonApplicationSource("source").default("SITE").notNull(),
     sourceReferenceHash: bytea("source_reference_hash"),
+    sourceRoomIdHash: bytea("source_room_id_hash"),
+    sourceMode: varchar("source_mode", { length: 16 }),
     reviewNote: text("review_note"),
     reviewedByUserAccountId: uuid("reviewed_by_user_account_id").references(() => userAccounts.id, {
       onDelete: "restrict",
@@ -150,6 +152,13 @@ export const seasonApplications = competitionSchema.table(
       table.recruitNo,
     ),
     index("season_applications_source_reference_hash_idx").on(table.sourceReferenceHash),
+    index("season_applications_kakao_snapshot_scope_idx").on(
+      table.seasonId,
+      table.applyDate,
+      table.recruitNo,
+      table.sourceRoomIdHash,
+      table.sourceMode,
+    ),
     index("season_applications_review_queue_idx").on(
       table.seasonId,
       table.applyDate,
@@ -169,6 +178,11 @@ export const seasonApplications = competitionSchema.table(
       "season_applications_source_hash_32_bytes",
       sql`${table.sourceReferenceHash} IS NULL OR octet_length(${table.sourceReferenceHash}) = 32`,
     ),
+    check(
+      "season_applications_room_hash_32_bytes",
+      sql`${table.sourceRoomIdHash} IS NULL OR octet_length(${table.sourceRoomIdHash}) = 32`,
+    ),
+    check("season_applications_source_mode", sql`${table.sourceMode} IS NULL OR ${table.sourceMode} = 'RIFT'`),
     check(
       "season_applications_source_hash_consistency",
       sql`(
@@ -249,6 +263,8 @@ export const seasonKakaoPendingApplications = competitionSchema.table(
     matchState: seasonKakaoPendingMatchState("match_state").notNull(),
     status: seasonKakaoPendingStatus("status").default("ACTIVE").notNull(),
     sourceReferenceHash: bytea("source_reference_hash").notNull(),
+    sourceRoomIdHash: bytea("source_room_id_hash"),
+    sourceMode: varchar("source_mode", { length: 16 }),
     cancelledAt: timestamptz("cancelled_at"),
     resolvedAt: timestamptz("resolved_at"),
     revision: bigint("revision", { mode: "number" }).default(0).notNull(),
@@ -261,6 +277,8 @@ export const seasonKakaoPendingApplications = competitionSchema.table(
       table.applyDate,
       table.recruitNo,
       table.slotNo,
+      table.sourceRoomIdHash,
+      table.sourceMode,
     ),
     index("season_kakao_pending_review_idx").on(
       table.seasonId,
@@ -270,10 +288,20 @@ export const seasonKakaoPendingApplications = competitionSchema.table(
       table.slotNo,
     ),
     index("season_kakao_pending_player_idx").on(table.matchedPlayerId, table.status),
+    index("season_kakao_pending_snapshot_scope_idx").on(
+      table.seasonId,
+      table.applyDate,
+      table.recruitNo,
+      table.sourceRoomIdHash,
+      table.sourceMode,
+      table.status,
+    ),
     check("season_kakao_pending_recruit_no_positive", sql`${table.recruitNo} > 0`),
     check("season_kakao_pending_slot_no_positive", sql`${table.slotNo} > 0`),
     check("season_kakao_pending_name_nonempty", sql`char_length(${table.suppliedName}) > 0`),
     check("season_kakao_pending_source_hash_32_bytes", sql`octet_length(${table.sourceReferenceHash}) = 32`),
+    check("season_kakao_pending_room_hash_32_bytes", sql`${table.sourceRoomIdHash} IS NULL OR octet_length(${table.sourceRoomIdHash}) = 32`),
+    check("season_kakao_pending_source_mode", sql`${table.sourceMode} IS NULL OR ${table.sourceMode} = 'RIFT'`),
     check("season_kakao_pending_revision_nonnegative", sql`${table.revision} >= 0`),
     check(
       "season_kakao_pending_match_consistency",

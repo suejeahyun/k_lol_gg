@@ -16,6 +16,7 @@ import { createDatabaseHandle } from "../../src/platform/db/database";
 import { applyMigrations } from "../../src/platform/db/migrate";
 import { players } from "../../src/platform/db/schema/registry";
 import { authSessions, userAccounts } from "../../src/platform/db/schema/auth";
+import { auditEvents } from "../../src/platform/db/schema/audit";
 import { matchSubmissionImages, matchSubmissions, privateAssets } from "../../src/platform/db/schema/matches";
 import { kakaoImageSessions, kakaoInboundImages, kakaoOperationSettings, recruitParties, recruitingCommandReceipts, recruitingNonceBindings, recruitingOutbox } from "../../src/platform/db/schema/recruiting";
 import { seasonApplications, seasonKakaoPendingApplications, seasons } from "../../src/platform/db/schema/seasons";
@@ -23,14 +24,14 @@ import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
 
 const principalId = "bot:kakao-assistant-contract";
 const digest = (value: string) => createHash("sha256").update(value).digest("hex");
-function intent(nonce: string, body: string): VerifiedKakaoWebhookIntent {
+function intent(nonce: string, body: string, roomId = "room-contract", senderId = "operator-contract"): VerifiedKakaoWebhookIntent {
   return {
     kind: "KAKAO_HMAC",
     keyId: "contract",
     timestampSeconds: Math.floor(Date.now() / 1_000),
     nonce,
-    roomId: "room-contract",
-    senderId: "operator-contract",
+    roomId,
+    senderId,
     bodyDigestHex: digest(body),
     requireNonceClaim: true,
     transactionRecheck: true,
@@ -167,6 +168,87 @@ test("signed Kakao reads persist safe replay receipts and isolate recruit member
   }
 });
 
+test("authoritative Kakao season sync withdraws only same-room same-round RIFT rows and replays without writes", async () => {
+  const connectionString = process.env.TEST_DATABASE_URL;
+  assert.ok(connectionString);
+  assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
+  const { database, pool } = createDatabaseHandle(connectionString, { max: 3 });
+  const now = new Date();
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
+  const suffix = randomUUID().slice(0, 8);
+  const seasonId = randomUUID();
+  const exactPlayerId = randomUUID();
+  const sitePlayerId = randomUUID();
+  const confirmedPlayerId = randomUUID();
+  const reviewerId = randomUUID();
+  const roomA = `room-authoritative-a-${suffix}`;
+  const roomB = `room-authoritative-b-${suffix}`;
+  const roomAHash = createHash("sha256").update(`klol-v2:kakao-season-room:v1\0${roomA}`).digest();
+  const sync = (input: { room: string; round: number; body: string; nonce: string; key: string; participants: readonly ({ slotNo: number; name: string; riotId: string | null; mainPosition: "MID" | "TOP"; subPositions: readonly ("SUP" | "MID")[]; reserve: boolean })[] }) =>
+    new PostgresKakaoAssistant(database).syncSeasonSnapshot({
+      actorPrincipalId: principalId,
+      intent: intent(input.nonce, input.body, input.room),
+      requestKey: input.key,
+      scope: "kakao:season-applications:sync",
+      command: { action: "SYNC", seasonId, applyDate: today, recruitNo: input.round, mode: "RIFT", participants: input.participants },
+      requestId: randomUUID(),
+      now,
+    });
+  const exact = { slotNo: 1, name: `정확-${suffix}`, riotId: `Exact${suffix}#KR1`, mainPosition: "MID" as const, subPositions: ["SUP" as const], reserve: false };
+  const pending = { slotNo: 2, name: `확인-${suffix}`, riotId: null, mainPosition: "TOP" as const, subPositions: ["MID" as const], reserve: false };
+  try {
+    await applyMigrations(database);
+    await database.insert(userAccounts).values({ id: reviewerId, loginId: `reviewer-${suffix}`, loginIdNormalized: `reviewer-${suffix}`, role: "ADMIN", status: "APPROVED" });
+    await database.insert(seasons).values({ id: seasonId, name: `Authoritative ${suffix}`, nameNormalized: `authoritative ${suffix}`, status: "ACTIVE", activatedAt: now });
+    await database.insert(players).values([
+      { id: exactPlayerId, memberName: `정확-${suffix}`, memberNameNormalized: `정확-${suffix}`, nickname: `Exact${suffix}`, nicknameNormalized: `exact${suffix}`, tagLine: "KR1", tagLineNormalized: "kr1" },
+      { id: sitePlayerId, memberName: `사이트-${suffix}`, memberNameNormalized: `사이트-${suffix}`, nickname: `Site${suffix}`, nicknameNormalized: `site${suffix}`, tagLine: "KR1", tagLineNormalized: "kr1" },
+      { id: confirmedPlayerId, memberName: `확정-${suffix}`, memberNameNormalized: `확정-${suffix}`, nickname: `Confirmed${suffix}`, nicknameNormalized: `confirmed${suffix}`, tagLine: "KR1", tagLineNormalized: "kr1" },
+    ]);
+    await database.insert(seasonApplications).values([
+      { id: randomUUID(), seasonId, playerId: sitePlayerId, applyDate: today, recruitNo: 41, sourceSlotNo: 2, mainPosition: "TOP", status: "APPLIED", source: "SITE", createdAt: now, updatedAt: now },
+      { id: randomUUID(), seasonId, playerId: confirmedPlayerId, applyDate: today, recruitNo: 41, sourceSlotNo: 8, mainPosition: "MID", status: "CONFIRMED", source: "KAKAO", sourceReferenceHash: randomBytes(32), sourceRoomIdHash: roomAHash, sourceMode: "RIFT", reviewedByUserAccountId: reviewerId, reviewedAt: now, createdAt: now, updatedAt: now },
+    ]);
+
+    await sync({ room: roomB, round: 41, body: "room-b", nonce: "nonce-room-b-sync-0001", key: `room-b-${suffix}`, participants: [{ ...pending, slotNo: 1, name: `다른방-${suffix}` }] });
+    await sync({ room: roomA, round: 42, body: "round-42", nonce: "nonce-round-42-sync-01", key: `round-42-${suffix}`, participants: [{ ...pending, slotNo: 1, name: `다른회차-${suffix}` }] });
+
+    const firstInput = { room: roomA, round: 41, body: "two-members", nonce: "nonce-two-member-0001", key: `two-${suffix}`, participants: [exact, pending] } as const;
+    const first = await sync(firstInput);
+    assert.deepEqual({ created: first.body.createdCount, updated: first.body.updatedCount, cancelled: first.body.cancelledCount, pending: first.body.pendingCount }, { created: 2, updated: 0, cancelled: 0, pending: 1 });
+    const beforeReplay = await database.select({ id: seasonApplications.id, revision: seasonApplications.revision }).from(seasonApplications).where(eq(seasonApplications.seasonId, seasonId));
+    const replay = await sync(firstInput);
+    assert.equal(replay.replayed, true);
+    assert.deepEqual(await database.select({ id: seasonApplications.id, revision: seasonApplications.revision }).from(seasonApplications).where(eq(seasonApplications.seasonId, seasonId)), beforeReplay);
+
+    const one = await sync({ room: roomA, round: 41, body: "one-member", nonce: "nonce-one-member-0001", key: `one-${suffix}`, participants: [exact] });
+    assert.equal(one.body.cancelledCount, 1);
+    assert.equal(one.body.pendingCount, 0);
+
+    const restored = await sync({ room: roomA, round: 41, body: "two-members-restored", nonce: "nonce-two-restored-01", key: `restore-${suffix}`, participants: [exact, pending] });
+    assert.equal(restored.body.updatedCount, 1);
+    assert.equal(restored.body.pendingCount, 1);
+
+    const emptied = await sync({ room: roomA, round: 41, body: "zero-members", nonce: "nonce-zero-member-001", key: `zero-${suffix}`, participants: [] });
+    assert.equal(emptied.body.cancelledCount, 2);
+    assert.equal(emptied.body.pendingCount, 0);
+    assert.equal(emptied.body.entries.some((entry) => entry.source === "SITE" && entry.player?.playerId === sitePlayerId), true);
+    assert.equal(emptied.body.entries.some((entry) => entry.status === "CONFIRMED" && entry.player?.playerId === confirmedPlayerId), true);
+
+    const allPending = await database.select().from(seasonKakaoPendingApplications).where(eq(seasonKakaoPendingApplications.seasonId, seasonId));
+    assert.equal(allPending.length, 3);
+    assert.equal(allPending.some((row) => row.recruitNo === 41 && row.suppliedName === `확인-${suffix}` && row.status === "CANCELLED"), true);
+    assert.equal(allPending.some((row) => row.recruitNo === 41 && row.suppliedName === `다른방-${suffix}` && row.status === "ACTIVE"), true);
+    assert.equal(allPending.some((row) => row.recruitNo === 42 && row.suppliedName === `다른회차-${suffix}` && row.status === "ACTIVE"), true);
+    const syncedAudits = await database.select().from(auditEvents).where(and(eq(auditEvents.targetType, "SEASON_RECRUIT_ROUND"), eq(auditEvents.action, "KAKAO_SEASON_SNAPSHOT_SYNCED")));
+    assert.equal(syncedAudits.some((event) => event.targetId.includes(roomAHash.toString("hex")) && event.metadataJson?.cancelledCount === 2), true);
+    assert.equal(JSON.stringify(syncedAudits).includes(roomA), false);
+  } finally {
+    await database.update(seasons).set({ status: "ENDED", endedAt: new Date(), revision: 1 }).where(eq(seasons.id, seasonId)).catch(() => undefined);
+    await pool.end();
+  }
+});
+
 test("signed Kakao season snapshots match exact players and preserve unresolved entries for review", async () => {
   const connectionString = process.env.TEST_DATABASE_URL;
   assert.ok(connectionString);
@@ -192,7 +274,7 @@ test("signed Kakao season snapshots match exact players and preserve unresolved 
     ]);
     const assistant = new PostgresKakaoAssistant(database);
     const command = {
-      action: "SYNC" as const, seasonId, applyDate: today, recruitNo: 7,
+      action: "SYNC" as const, seasonId, applyDate: today, recruitNo: 7, mode: "RIFT" as const,
       participants: [
         { slotNo: 1, name: `정확-${suffix}`, riotId: `Exact${suffix}#KR1`, mainPosition: "MID" as const, subPositions: ["SUP" as const], reserve: false },
         { slotNo: 2, name: `없는-${suffix}`, riotId: null, mainPosition: "TOP" as const, subPositions: [], reserve: false },

@@ -220,7 +220,7 @@ function createScrim(scrimId = "scrim-1") {
   });
 }
 
-test("BOT idempotency fingerprints bind the signed room", () => {
+test("BOT idempotency fingerprints bind the signed room and sender", () => {
   const original = createParty("party-room-bound");
   const otherRoom = {
     ...original,
@@ -236,6 +236,20 @@ test("BOT idempotency fingerprints bind the signed room", () => {
     Buffer.from(recruitingCommandRequestFingerprint(original)),
     Buffer.from(recruitingCommandRequestFingerprint(otherRoom)),
   );
+  const otherSender = {
+    ...original,
+    metadata: {
+      ...original.metadata,
+      actor: {
+        ...botActor,
+        authorizationIntent: { ...botActor.authorizationIntent, senderId: "operator-2" },
+      },
+    },
+  } satisfies Extract<RecruitingCommand, { type: "CREATE_PARTY" }>;
+  assert.notDeepEqual(
+    Buffer.from(recruitingCommandRequestFingerprint(original)),
+    Buffer.from(recruitingCommandRequestFingerprint(otherSender)),
+  );
 });
 
 test("party create, sync, status and finish use the domain while mutations commit in atomic order", async () => {
@@ -244,6 +258,7 @@ test("party create, sync, status and finish use the domain while mutations commi
   const created = await handler.handle(createParty());
   assert.equal(created.revision, 0);
   assert.equal(harness.snapshot.parties.get("party-1")?.sourceRoomId, "room-1");
+  assert.equal(harness.snapshot.parties.get("party-1")?.sourceSenderId, "operator-1");
   assert.deepEqual(harness.operations, ["authorization", "claim", "load", "save", "audit", "outbox", "receipt"]);
 
   harness.operations = [];
@@ -292,6 +307,7 @@ test("scrim create, join, reopen, confirm, complete and cancel enforce the state
   const handler = new RecruitingCommandHandler(harness.dependencies());
   await handler.handle(createScrim());
   assert.equal(harness.snapshot.scrims.get("scrim-1")?.sourceRoomId, "room-1");
+  assert.equal(harness.snapshot.scrims.get("scrim-1")?.sourceSenderId, "operator-1");
   assert.equal((await handler.handle(command("JOIN_SCRIM", "scrim-1", 0, { opponentTeamId: "team-b" }))).body.status, "MATCHED");
   assert.equal((await handler.handle(command("REOPEN_SCRIM", "scrim-1", 1, {}))).body.status, "RECRUITING");
   assert.equal((await handler.handle(command("JOIN_SCRIM", "scrim-1", 2, { opponentTeamId: "team-c" }))).body.status, "MATCHED");
@@ -496,7 +512,7 @@ test("BOT body binding, JOB restriction, stale revision, and authorization failu
 
 test("public party and scrim DTOs expose only reviewed fields", () => {
   const party: RecruitParty = {
-    id: "party-1", revision: 4, sourceRoomId: null, recruitDate: "2026-09-07", resetSequence: 2, recruitNumber: 3,
+    id: "party-1", revision: 4, sourceRoomId: null, sourceSenderId: null, recruitDate: "2026-09-07", resetSequence: 2, recruitNumber: 3,
     type: "ARAM", status: "IN_PROGRESS", title: "칼바람", maximumMembers: 5,
     members: [{ name: "private-name", position: null, slotNo: 1, substitute: false }],
     startTimeText: "21:00", gameInfo: "미입력",
@@ -504,7 +520,7 @@ test("public party and scrim DTOs expose only reviewed fields", () => {
   };
   assert.deepEqual(Object.keys(toPublicPartyDto(party)).sort(), ["gameInfo", "id", "maximumMembers", "memberCount", "recruitNumber", "scheduledStartAt", "startTimeText", "status", "title", "type"]);
   assert.equal("members" in toPublicPartyDto(party), false);
-  const scrim: ScrimRecruit = { id: "scrim-1", revision: 2, sourceRoomId: null, recruitDate: "2026-09-07", scrimNumber: 1, tournamentId: "destruction-1", legacyTournamentNumber: null, requesterTeamId: "team-a", opponentTeamId: "team-b", requesterLineup: null, opponentLineup: null, legacyMemo: null, legacySeriesRuleText: null, status: "MATCHED", scheduledAt: null, bestOf: 3 };
+  const scrim: ScrimRecruit = { id: "scrim-1", revision: 2, sourceRoomId: null, sourceSenderId: null, opponentSenderId: null, recruitDate: "2026-09-07", scrimNumber: 1, tournamentId: "destruction-1", legacyTournamentNumber: null, requesterTeamId: "team-a", opponentTeamId: "team-b", requesterLineup: null, opponentLineup: null, legacyMemo: null, legacySeriesRuleText: null, status: "MATCHED", scheduledAt: null, bestOf: 3 };
   assert.deepEqual(Object.keys(toPublicScrimDto(scrim)).sort(), ["bestOf", "id", "legacyTournamentNumber", "memo", "opponentLineup", "opponentTeamId", "opponentTeamName", "recruitDate", "requesterLineup", "requesterTeamId", "requesterTeamName", "scheduledAt", "scrimNumber", "seriesRuleText", "status", "title", "tournamentId"]);
   assert.equal("revision" in toPublicScrimDto(scrim), false);
 });

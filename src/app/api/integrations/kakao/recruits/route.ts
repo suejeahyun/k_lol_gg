@@ -1,10 +1,12 @@
 import { randomUUID } from "node:crypto";
 
 import type { RecruitingCommand } from "@/modules/recruiting/application/commands";
+import { RecruitingApplicationError } from "@/modules/recruiting/application/command-handler";
 import { getRuntimeRecruitingService } from "@/modules/recruiting/infrastructure/runtime-recruiting";
 import { parseRecruitingCommandBody } from "@/modules/recruiting/infrastructure/recruiting-input";
 import {
   PUBLIC_KAKAO_ROOM_COMMAND,
+  mayUseRawKakaoRecruitCommand,
   recordKakaoWebhookRejection,
   verifyKakaoHttpRequest,
 } from "@/modules/recruiting/infrastructure/kakao-http-request";
@@ -54,8 +56,14 @@ export async function POST(request: Request) {
     body: rawBody,
   }), { maximumBytes: MAXIMUM_BODY_BYTES });
   if (!parsedJson.ok) return problemResponse(problemForJsonBodyError(parsedJson.error), { traceId });
-  const parsed = parseRecruitingCommandBody(parsedJson.value, BOT_TYPES);
+  const parsed = parseRecruitingCommandBody(parsedJson.value, BOT_TYPES, undefined, true);
   if (!parsed || !parsed.aggregateId) return recruitingErrorResponse(new Error("INVALID_WEBHOOK_COMMAND"), traceId);
+  if (parsed.source === "RAW_V2" && !mayUseRawKakaoRecruitCommand(intent.senderId)) {
+    return recruitingErrorResponse(new RecruitingApplicationError(
+      "FORBIDDEN",
+      "Raw V2 recruiting commands require a trusted operator or explicit non-production development mode.",
+    ), traceId);
+  }
   const idempotency = readIdempotencyKey(request.headers);
   if (!idempotency.ok) return problemResponse(problemForIdempotencyKeyError(idempotency.error), { traceId });
   const revision = readIfMatchRevision(request.headers);

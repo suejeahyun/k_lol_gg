@@ -137,20 +137,24 @@ export type ParsedRecruitingCommandBody = Readonly<{
   type: RecruitingCommand["type"];
   aggregateId: string | null;
   payload: RecruitingCommand["payload"];
+  source: "DIRECT" | "COMPAT_V1" | "RAW_V2";
 }>;
 
 export function parseRecruitingCommandBody(
   value: unknown,
   allowedTypes: ReadonlySet<RecruitingCommand["type"]>,
   aggregateIdOverride?: string,
+  requireKakaoSource = false,
 ): ParsedRecruitingCommandBody | null {
   const body = record(value);
-  if (!body || !exactKeys(body, ["type", "payload"], aggregateIdOverride ? [] : ["aggregateId"])) return null;
+  const optionalKeys = aggregateIdOverride ? [] : ["aggregateId"];
+  if (!body || !exactKeys(body, ["type", "payload", ...(requireKakaoSource ? ["source"] : [])], optionalKeys)) return null;
   if (typeof body.type !== "string" || !COMMAND_TYPES.has(body.type as RecruitingCommand["type"])) return null;
   const type = body.type as RecruitingCommand["type"];
   if (!allowedTypes.has(type)) return null;
+  if (requireKakaoSource && body.source !== "COMPAT_V1" && body.source !== "RAW_V2") return null;
   const aggregateId = aggregateIdOverride ?? body.aggregateId ?? null;
   if (aggregateId !== null && !uuid(aggregateId)) return null;
   const payload = payloadFor(type, body.payload);
-  return payload ? { type, aggregateId, payload } : null;
+  return payload ? { type, aggregateId, payload, source: requireKakaoSource ? body.source as "COMPAT_V1" | "RAW_V2" : "DIRECT" } : null;
 }

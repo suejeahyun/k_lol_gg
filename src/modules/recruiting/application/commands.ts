@@ -100,6 +100,17 @@ export type ScrimCommand =
 
 export type RecruitingCommand = PartyCommand | ScrimCommand;
 
+export type KakaoRecruitCommandAccess = "PUBLIC_CREATE" | "PUBLIC_READ" | "PUBLIC_JOIN" | "CONTROLLER" | "DENY";
+
+/** Server-side policy for commands received through the signed Kakao webhook. */
+export function kakaoRecruitCommandAccess(type: RecruitingCommand["type"]): KakaoRecruitCommandAccess {
+  if (type === "CREATE_PARTY" || type === "CREATE_SCRIM") return "PUBLIC_CREATE";
+  if (type === "GET_PARTY_STATUS") return "PUBLIC_READ";
+  if (type === "JOIN_SCRIM") return "PUBLIC_JOIN";
+  if (type === "RESET_PARTY") return "DENY";
+  return "CONTROLLER";
+}
+
 const COMMAND_SCOPE_SUFFIX: Readonly<Record<RecruitingCommand["type"], string>> = {
   CREATE_PARTY: "recruiting:party:create",
   SYNC_PARTY: "recruiting:party:sync",
@@ -131,10 +142,15 @@ function canonicalJson(value: unknown): string {
 
 export function recruitingCommandRequestFingerprint(command: RecruitingCommand): Uint8Array {
   const actorBinding = command.metadata.actor.kind === "BOT"
-    ? { kind: command.metadata.actor.kind, principalId: command.metadata.actor.principalId, roomId: command.metadata.actor.authorizationIntent.roomId }
+    ? {
+        kind: command.metadata.actor.kind,
+        principalId: command.metadata.actor.principalId,
+        roomId: command.metadata.actor.authorizationIntent.roomId,
+        senderId: command.metadata.actor.authorizationIntent.senderId,
+      }
     : { kind: command.metadata.actor.kind, principalId: command.metadata.actor.principalId };
   return createHash("sha256")
-    .update("klol-v2:recruiting-command:v2\0")
+    .update("klol-v2:recruiting-command:v3\0")
     .update(command.metadata.idempotency.scope)
     .update("\0")
     .update(command.metadata.idempotency.bodyDigestHex)

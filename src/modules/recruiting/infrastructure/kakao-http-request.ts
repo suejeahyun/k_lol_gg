@@ -13,6 +13,14 @@ export function splitKakaoIdentifiers(value: string | undefined) {
   return new Set((value ?? "").split(",").map((entry) => entry.trim()).filter(Boolean));
 }
 
+export function mayUseRawKakaoRecruitCommand(
+  senderId: string,
+  environment: NodeJS.ProcessEnv = process.env,
+) {
+  if (splitKakaoIdentifiers(environment.KAKAO_WEBHOOK_ALLOWED_SENDERS).has(senderId)) return true;
+  return environment.NODE_ENV !== "production" && environment.KAKAO_RAW_RECRUIT_COMMANDS_DEVELOPMENT_ONLY === "true";
+}
+
 export function kakaoWebhookSecrets(): readonly KakaoWebhookSecret[] | null {
   const current = process.env.KAKAO_WEBHOOK_SECRET_CURRENT;
   if (!current) return null;

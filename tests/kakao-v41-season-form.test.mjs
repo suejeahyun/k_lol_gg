@@ -75,3 +75,13 @@ test("V41 season input accepts the labeled site form and rejects invalid sub pos
     "[K-LOL.GG 내전 참가 신청]\n1. 플레이어: 달빛 | Riot ID: 없음 | 주라인: MID | 부라인: MID | 상태: 신청",
   ), /부라인/u);
 });
+
+test("V41 authoritative sync response reports create, update, cancel and review counts", async () => {
+  const router = await loadRouter();
+  router.__seasonResultJson = JSON.stringify({
+    ok: true,
+    body: { applyDate: "2026-09-08", recruitNo: 3, mode: "RIFT", entries: [], createdCount: 2, updatedCount: 1, cancelledCount: 3, pendingCount: 1 },
+  });
+  const formatted = vm.runInContext("v41FormatSeason(JSON.parse(__seasonResultJson))", router);
+  assert.match(formatted, /신청 2 · 수정 1 · 취소 3 · 확인 필요 1/u);
+});

@@ -22,6 +22,7 @@ import {
   recruitingCommandReceipts,
   recruitingNonceBindings,
   recruitingOutbox,
+  scrimRecruits,
   userAccounts,
 } from "../../src/platform/db/schema";
 import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
@@ -121,7 +122,7 @@ test("S09 PostgreSQL adapter commits aggregate, receipt, audit and outbox atomic
     assert.equal((await database.select().from(auditEvents).where(eq(auditEvents.targetType, "RECRUIT_PARTY"))).length, 1);
     const feed = await adapter.listPublicFeed();
     assert.equal(feed.parties.length, 1);
-    assert.deepEqual(Object.keys(feed.parties[0]!).sort(), ["id", "maximumMembers", "memberCount", "recruitNumber", "scheduledStartAt", "status", "title", "type"]);
+    assert.deepEqual(Object.keys(feed.parties[0]!).sort(), ["gameInfo", "id", "maximumMembers", "memberCount", "recruitNumber", "scheduledStartAt", "startTimeText", "status", "title", "type"]);
     assert.equal("members" in feed.parties[0]!, false);
 
     const changed = accountCreateCommand({ accountId, sessionId, aggregateId: partyId, requestKey: "s09-contract-create-0001", title: "다른 본문" });
@@ -171,6 +172,95 @@ test("S09 PostgreSQL adapter binds a BOT nonce to exactly one signed request ide
     assert.notEqual(storedNonce[0]?.nonceHash.toString("utf8"), nonce);
     assert.equal(storedNonce[0]?.bindingHash.length, createHash("sha256").digest().length);
   } finally {
+    await pool.end();
+  }
+});
+
+test("Kakao aggregate controllers block confused-deputy lifecycle mutations", { concurrency: false }, async () => {
+  const connectionString = process.env.TEST_DATABASE_URL;
+  assert.ok(connectionString);
+  const previousAllowedSenders = process.env.KAKAO_WEBHOOK_ALLOWED_SENDERS;
+  process.env.KAKAO_WEBHOOK_ALLOWED_SENDERS = "sender-operator";
+  const { database, pool } = createDatabaseHandle(connectionString, { max: 3 });
+  const adapter = new PostgresRecruitingAdapter(database);
+  const handler = new RecruitingCommandHandler({
+    unitOfWork: adapter, repository: adapter, authorization: adapter, receipts: adapter,
+    audit: adapter.auditPort(), outbox: adapter.outboxPort(),
+    clock: { now: () => new Date(), receiptExpiresAt: (createdAt) => new Date(createdAt.getTime() + 86_400_000) },
+  });
+  let sequence = 0;
+  function botCommand<Type extends RecruitingCommand["type"]>(input: Readonly<{
+    type: Type;
+    aggregateId: string;
+    expectedRevision: number;
+    payload: Extract<RecruitingCommand, { type: Type }>["payload"];
+    senderId: string;
+    roomId?: string;
+  }>): Extract<RecruitingCommand, { type: Type }> {
+    sequence += 1;
+    const issuedAt = new Date(Math.floor(Date.now() / 1_000) * 1_000);
+    return sealRecruitingCommand({
+      type: input.type,
+      aggregateId: input.aggregateId,
+      metadata: {
+        actor: {
+          kind: "BOT", principalId: "bot:kakao",
+          authorizationIntent: {
+            kind: "KAKAO_HMAC", keyId: "current", timestampSeconds: Math.floor(issuedAt.getTime() / 1_000),
+            nonce: `controller_nonce_${sequence}_12345678`, roomId: input.roomId ?? "room-controller",
+            senderId: input.senderId, bodyDigestHex, requireNonceClaim: true, transactionRecheck: true,
+          },
+        },
+        requestId: randomUUID(), expectedRevision: input.expectedRevision, issuedAt: issuedAt.toISOString(),
+        idempotency: {
+          scope: recruitingCommandScope("BOT", input.type),
+          keyHash: hashRecruitingRequestKey(`controller-key-${sequence}-12345678`),
+          requestFingerprint: new Uint8Array(32), bodyDigestHex,
+        },
+      },
+      payload: input.payload,
+    } as Extract<RecruitingCommand, { type: Type }>);
+  }
+
+  try {
+    await applyMigrations(database);
+    const partyId = randomUUID();
+    const createParty = botCommand({
+      type: "CREATE_PARTY", aggregateId: partyId, expectedRevision: 0, senderId: "sender-creator",
+      payload: { recruitDate: "2026-09-09", resetSequence: 90, recruitNumber: 90, partyType: "ARAM", title: "소유권 테스트", maximumMembers: 5, members: [], scheduledStartAt: null, protectedUntil: null },
+    });
+    const createdParty = await handler.handle(createParty);
+    assert.equal((await handler.handle(createParty)).replayed, true);
+    assert.equal((await database.select().from(recruitParties).where(eq(recruitParties.id, partyId)))[0]?.sourceSenderId, "sender-creator");
+
+    const publicRead = botCommand({ type: "GET_PARTY_STATUS", aggregateId: partyId, expectedRevision: 0, payload: {}, senderId: "sender-other" });
+    assert.equal((await handler.handle(publicRead)).body.status, "IN_PROGRESS");
+    await assert.rejects(handler.handle(botCommand({ type: "GET_PARTY_STATUS", aggregateId: partyId, expectedRevision: 0, payload: {}, senderId: "sender-other", roomId: "room-other" })), (error: unknown) => error instanceof RecruitingApplicationError && error.code === "NOT_FOUND");
+    await assert.rejects(handler.handle(botCommand({ type: "SYNC_PARTY", aggregateId: partyId, expectedRevision: 0, payload: { members: [] }, senderId: "sender-other" })), (error: unknown) => error instanceof RecruitingApplicationError && error.code === "FORBIDDEN");
+
+    const creatorSync = botCommand({ type: "SYNC_PARTY", aggregateId: partyId, expectedRevision: 0, payload: { members: [] }, senderId: "sender-creator" });
+    assert.equal((await handler.handle(creatorSync)).revision, 1);
+    assert.equal((await handler.handle(creatorSync)).replayed, true);
+    await assert.rejects(handler.handle(botCommand({ type: "FINISH_PARTY", aggregateId: partyId, expectedRevision: 1, payload: {}, senderId: "sender-other" })), (error: unknown) => error instanceof RecruitingApplicationError && error.code === "FORBIDDEN");
+    assert.equal((await handler.handle(botCommand({ type: "FINISH_PARTY", aggregateId: partyId, expectedRevision: 1, payload: {}, senderId: "sender-operator" }))).body.status, "FINISHED");
+
+    const scrimId = randomUUID();
+    await handler.handle(botCommand({
+      type: "CREATE_SCRIM", aggregateId: scrimId, expectedRevision: 0, senderId: "sender-creator",
+      payload: { recruitDate: "2026-09-09", scrimNumber: 90, tournamentId: randomUUID(), requesterTeamId: randomUUID(), scheduledAt: null, bestOf: 3 },
+    }));
+    const join = botCommand({ type: "JOIN_SCRIM", aggregateId: scrimId, expectedRevision: 0, payload: { opponentTeamId: randomUUID() }, senderId: "sender-opponent" });
+    assert.equal((await handler.handle(join)).body.status, "MATCHED");
+    assert.equal((await database.select().from(scrimRecruits).where(eq(scrimRecruits.id, scrimId)))[0]?.opponentSenderId, "sender-opponent");
+    await assert.rejects(handler.handle(botCommand({ type: "CONFIRM_SCRIM", aggregateId: scrimId, expectedRevision: 1, payload: {}, senderId: "sender-other" })), (error: unknown) => error instanceof RecruitingApplicationError && error.code === "FORBIDDEN");
+    const opponentConfirm = botCommand({ type: "CONFIRM_SCRIM", aggregateId: scrimId, expectedRevision: 1, payload: {}, senderId: "sender-opponent" });
+    assert.equal((await handler.handle(opponentConfirm)).body.status, "CONFIRMED");
+    assert.equal((await handler.handle(opponentConfirm)).replayed, true);
+    await assert.rejects(handler.handle(botCommand({ type: "COMPLETE_SCRIM", aggregateId: scrimId, expectedRevision: 2, payload: {}, senderId: "sender-creator", roomId: "room-other" })), (error: unknown) => error instanceof RecruitingApplicationError && error.code === "NOT_FOUND");
+    assert.equal((await handler.handle(botCommand({ type: "COMPLETE_SCRIM", aggregateId: scrimId, expectedRevision: 2, payload: {}, senderId: "sender-creator" }))).body.status, "COMPLETED");
+  } finally {
+    if (previousAllowedSenders === undefined) delete process.env.KAKAO_WEBHOOK_ALLOWED_SENDERS;
+    else process.env.KAKAO_WEBHOOK_ALLOWED_SENDERS = previousAllowedSenders;
     await pool.end();
   }
 });

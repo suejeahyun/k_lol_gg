@@ -18,17 +18,18 @@ import {
 
 import { OperationFormError } from "./domain";
 import { OperationFormApplicationError, type OperationFormMutationResult } from "./postgres-operation-forms";
+import type { KakaoHttpRequestFailureCode } from "../infrastructure/kakao-http-request";
+import { operationFormWebhookFailureProblem } from "./webhook-problems";
 
 const problems = Object.freeze({
   forbidden: definePublicProblem({ code: "FORBIDDEN", status: 403, title: "요청 권한이 없습니다.", detail: "관리자 보안 인증을 확인해 주세요." }),
-  invalid: definePublicProblem({ code: "INVALID_OPERATION_FORM", status: 400, title: "신청서 입력이 올바르지 않습니다.", detail: "신청 유형과 필수 항목을 확인해 주세요." }),
+  invalid: definePublicProblem({ code: "INVALID_OPERATION_FORM", status: 400, title: "양식 필드 누락", detail: "양식 필드 누락: 신청 유형과 필수 항목을 확인해 주세요." }),
   mismatch: definePublicProblem({ code: "IDEMPOTENCY_MISMATCH", status: 409, title: "멱등성 키가 다른 요청에 사용되었습니다.", detail: "새 Idempotency-Key로 다시 요청해 주세요." }),
   notFound: definePublicProblem({ code: "NOT_FOUND", status: 404, title: "운영 신청서를 찾을 수 없습니다.", detail: "주소와 신청 유형을 확인해 주세요." }),
   origin: definePublicProblem({ code: "ORIGIN_FORBIDDEN", status: 403, title: "허용되지 않은 요청 출처입니다.", detail: "같은 사이트에서 다시 시도해 주세요." }),
   precondition: definePublicProblem({ code: "PRECONDITION_FAILED", status: 412, title: "다른 변경이 먼저 반영되었습니다.", detail: "최신 신청서를 다시 불러와 주세요." }),
   unavailable: definePublicProblem({ code: "OPERATION_FORMS_UNAVAILABLE", status: 503, title: "운영 신청 서비스를 사용할 수 없습니다.", detail: "잠시 후 다시 시도해 주세요." }),
   unauthenticated: definePublicProblem({ code: "UNAUTHENTICATED", status: 401, title: "관리자 로그인이 필요합니다.", detail: "관리자 계정으로 다시 로그인해 주세요." }),
-  webhook: definePublicProblem({ code: "WEBHOOK_FORBIDDEN", status: 401, title: "웹훅 인증에 실패했습니다.", detail: "서명과 발신 설정을 확인해 주세요." }),
 });
 
 export async function requireOperationFormAdmin() {
@@ -62,7 +63,9 @@ export function operationFormMutationResponse(result: OperationFormMutationResul
 
 export function operationFormReadResponse(body: unknown, traceId?: string) { return noStoreJsonResponse(body, { traceId }); }
 export function operationFormUnavailableResponse(traceId?: string) { return problemResponse(problems.unavailable, { traceId }); }
-export function operationFormWebhookForbiddenResponse(traceId?: string) { return problemResponse(problems.webhook, { traceId }); }
+export function operationFormWebhookForbiddenResponse(code: KakaoHttpRequestFailureCode, traceId?: string) {
+  return problemResponse(operationFormWebhookFailureProblem(code), { traceId });
+}
 
 export function operationFormErrorResponse(error: unknown, traceId?: string) {
   if (error instanceof OperationFormApplicationError) {

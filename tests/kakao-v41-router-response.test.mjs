@@ -13,7 +13,7 @@ async function harness() {
   ]);
   const values = new Map();
   const replies = [];
-  const calls = { season: [], images: [], records: [], recent: [], ranking: 0, notices: [] };
+  const calls = { season: [], images: [], records: [], recent: [], ranking: 0, notices: [], recruits: [] };
   const context = vm.createContext({
     console,
     DataBase: {
@@ -94,7 +94,10 @@ async function harness() {
         } };
       },
       openchatStatus() { return { ok: true, body: { parties: [], scrims: [] } }; },
-      recruit() { return { ok: true, body: {} }; },
+      recruit(command, requestContext) {
+        calls.recruits.push({ command: structuredClone(command), requestContext: structuredClone(requestContext) });
+        return { ok: true, body: {} };
+      },
       operationForm() { return { ok: true, body: {} }; },
     },
     java: {
@@ -138,7 +141,11 @@ const snapshot = [
   "[K-LOL.GG 내전 참가 신청]",
   "신청일：２０２６-０９-０８",
   "회차：＃３",
+  "종목：협곡",
+  "정원：１０명",
+  "*참가 신청 양식*",
   "１． 플레이어： 별빛 | Riot ID： 별빛#KR1 | 주라인： MID | 부라인： SUP， ADC | 상태： 신청",
+  "２．", "３．", "４．", "５．", "６．", "７．", "８．", "９．", "１０．",
 ].join("\n");
 
 test("response stores a season preview and only the matching one-time code performs SYNC", async () => {
@@ -164,6 +171,7 @@ test("response stores a season preview and only the matching one-time code perfo
     seasonId: "123e4567-e89b-42d3-a456-426614174000",
     applyDate: "2026-09-08",
     recruitNo: 3,
+    mode: "RIFT",
     participants: [{ slotNo: 1, name: "별빛", riotId: "별빛#KR1", mainPosition: "MID", subPositions: ["SUP", "ADC"], reserve: false }],
   });
 
@@ -172,13 +180,13 @@ test("response stores a season preview and only the matching one-time code perfo
   assert.match(bot.replies.at(-1), /확인할 미리보기가 없거나/u);
 });
 
-test("response requires explicit snapshot date and round and supports preview cancellation", async () => {
+test("response requires a complete authoritative snapshot scope and supports preview cancellation", async () => {
   const bot = await harness();
-  bot.respond("[K-LOL.GG 내전 참가 신청]\n회차: #2\n1. 플레이어: 별빛 | Riot ID: 별빛#KR1 | 주라인: MID | 부라인: SUP | 상태: 신청");
+  bot.respond("[K-LOL.GG 내전 참가 신청]\n회차: #2\n종목: 협곡\n정원: 1명\n*참가 신청 양식*\n1. 플레이어: 별빛 | Riot ID: 별빛#KR1 | 주라인: MID | 부라인: SUP | 상태: 신청");
   assert.match(bot.replies.at(-1), /신청일: YYYY-MM-DD/u);
   assert.equal(bot.calls.season.length, 0);
 
-  bot.respond("[K-LOL.GG 내전 참가 신청]\n신청일: 2026-09-08\n1. 플레이어: 별빛 | Riot ID: 별빛#KR1 | 주라인: MID | 부라인: SUP | 상태: 신청");
+  bot.respond("[K-LOL.GG 내전 참가 신청]\n신청일: 2026-09-08\n종목: 협곡\n정원: 1명\n*참가 신청 양식*\n1. 플레이어: 별빛 | Riot ID: 별빛#KR1 | 주라인: MID | 부라인: SUP | 상태: 신청");
   assert.match(bot.replies.at(-1), /회차: #번호/u);
   assert.equal(bot.calls.season.length, 0);
 
@@ -331,6 +339,13 @@ test("response entry point keeps representative V1 and V2 replies identical with
     assert.deepEqual(slash.replies, plain.replies, command);
     assert.deepEqual(slash.calls, plain.calls, command);
   }
+});
+
+test("raw V2 recruiting JSON is explicitly marked for the server-side operator gate", async () => {
+  const bot = await harness();
+  bot.respond('V2모집 {"type":"GET_PARTY_STATUS","aggregateId":"123e4567-e89b-42d3-a456-426614174000","expectedRevision":0,"payload":{}}');
+  assert.equal(bot.calls.recruits.length, 1);
+  assert.equal(bot.calls.recruits[0].requestContext.commandSource, "RAW_V2");
 });
 
 test("response entry point does not treat slash-only, URL, middle slash, double slash, or slash-space as commands", async () => {

@@ -607,21 +607,20 @@ var KLOL_V41_V1_COMPAT = (function () {
   function readOperationField(text, label, nextLabels) {
     var lines = text.split("\n");
     var output = [];
-    var collecting = false;
+    var startIndex = -1;
     var index = 0;
     var nextIndex = 0;
     var line = "";
     var labelPattern = String(label).replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s*");
     var labelRegex = new RegExp("^\\s*" + labelPattern + "\\s*[:：]?\\s*", "i");
     for (index = 0; index < lines.length; index += 1) {
+      if (startsWithLabel(lines[index], label)) startIndex = index;
+    }
+    if (startIndex < 0) return "";
+    line = stripFieldPrefix(lines[startIndex]);
+    output.push(trim(line.replace(labelRegex, "")));
+    for (index = startIndex + 1; index < lines.length; index += 1) {
       line = stripFieldPrefix(lines[index]);
-      if (!collecting) {
-        if (startsWithLabel(line, label)) {
-          output.push(trim(line.replace(labelRegex, "")));
-          collecting = true;
-        }
-        continue;
-      }
       for (nextIndex = 0; nextIndex < nextLabels.length; nextIndex += 1) {
         if (startsWithLabel(line, nextLabels[nextIndex])) break;
       }
@@ -688,8 +687,11 @@ var KLOL_V41_V1_COMPAT = (function () {
   }
 
   function scopeFromText(value) {
-    var text = cleanOperationField(value, 160);
-    var compact = normalizeText(value).replace(/\s+/g, "");
+    var normalized = normalizeText(value);
+    var withoutChoices = normalized.replace(/^\s*[（(][^）)]*[）)]\s*/, "");
+    var selectedValue = trim(withoutChoices) ? withoutChoices : normalized;
+    var text = cleanOperationField(selectedValue, 160);
+    var compact = selectedValue.replace(/\s+/g, "");
     var selected = [];
     if (/소통방/.test(compact)) selected.push("소통방");
     if (/구인방/.test(compact)) selected.push("구인방");
@@ -705,6 +707,8 @@ var KLOL_V41_V1_COMPAT = (function () {
     var period = null;
     var participants = null;
     var payload = null;
+    var missing = [];
+    var leaveMarker = false;
     if (!text) return null;
     if (hasLabels(text, ["지인 이름", "지인 닉네임", "이용기간", "디스코드 닉네임 변경"])) {
       person = splitPerson("", sender);
@@ -741,18 +745,22 @@ var KLOL_V41_V1_COMPAT = (function () {
       if (!payload.legacyDateText || !payload.location || participants.length < 1) return null;
       return { domain: "OPERATION_FORM", action: "SUBMIT", formType: "meetups", payload: payload };
     }
-    if (hasLabels(text, ["이름 및 닉네임", "외출기간", "외출사유", "외출범위"])) {
+    leaveMarker = /(?:<\s*외출\s*>|&lt;\s*외출\s*&gt;)/i.test(text) ||
+      hasLabels(text, ["이름 및 닉네임", "외출기간", "외출사유", "외출범위"]);
+    if (leaveMarker) {
       person = splitPerson(readOperationField(text, "이름 및 닉네임", ["외출기간", "외출사유", "외출범위"]), sender);
       period = parsePeriod(readOperationField(text, "외출기간", ["외출사유", "외출범위"]));
-      if (!period) return null;
       payload = {
         applicantName: person.name, applicantNickname: person.nickname,
-        periodStart: period.periodStart, periodEnd: period.periodEnd,
+        periodStart: period ? period.periodStart : null, periodEnd: period ? period.periodEnd : null,
         reason: cleanOperationField(readOperationField(text, "외출사유", ["외출범위"]), 1000),
         scope: scopeFromText(readOperationField(text, "외출범위", []))
       };
-      if (period.legacyPeriodText) payload.legacyPeriodText = period.legacyPeriodText;
-      if (!payload.reason || !payload.scope) return null;
+      if (period && period.legacyPeriodText) payload.legacyPeriodText = period.legacyPeriodText;
+      if (!period) missing.push("외출기간");
+      if (!payload.reason) missing.push("외출사유");
+      if (!payload.scope) missing.push("외출범위");
+      if (missing.length) return { domain: "OPERATION_FORM", action: "INVALID", formType: "leaves", missingFields: missing };
       return { domain: "OPERATION_FORM", action: "SUBMIT", formType: "leaves", payload: payload };
     }
     return null;

@@ -32,12 +32,19 @@ test("Kakao assistant accepts only exact bounded search and read commands", () =
 test("Kakao season snapshots require exact bounded participant slots and positions", () => {
   const command = parseSeasonSnapshotBody({
     action: "SYNC",
+    mode: "RIFT",
     seasonId: "11111111-1111-4111-8111-111111111111",
     applyDate: "2026-09-07",
     recruitNo: 2,
     participants: [{ slotNo: 1, name: " 별빛 ", riotId: "Ahri#KR1", mainPosition: "MID", subPositions: ["SUP"], reserve: false }],
   });
   assert.equal(command.participants[0]?.name, "별빛");
+  assert.deepEqual(parseSeasonSnapshotBody({ ...command, participants: [] }).participants, []);
+  assert.equal(command.action, "SYNC");
+  if (command.action !== "SYNC") assert.fail("SYNC command expected");
+  const { mode: omittedMode, ...withoutMode } = command;
+  assert.equal(omittedMode, "RIFT");
+  assert.throws(() => parseSeasonSnapshotBody(withoutMode), KakaoAssistantError);
   assert.deepEqual(parseSeasonSnapshotBody({
     action: "STATUS", seasonId: command.seasonId, applyDate: command.applyDate, recruitNo: 2,
   }).participants, []);
@@ -47,7 +54,7 @@ test("Kakao season snapshots require exact bounded participant slots and positio
     action: "STATUS", seasonId: command.seasonId, applyDate: command.applyDate, recruitNo: null, participants: [],
   });
   assert.throws(() => parseSeasonSnapshotBody({
-    action: "CANCEL", seasonId: command.seasonId, applyDate: command.applyDate, recruitNo: null,
+    action: "CANCEL", seasonId: command.seasonId, applyDate: command.applyDate, recruitNo: null, mode: "RIFT",
   }), KakaoAssistantError);
   assert.throws(() => parseSeasonSnapshotBody({ ...command, recruitNo: null }), KakaoAssistantError);
   assert.throws(() => parseSeasonSnapshotBody({ ...command, participants: [...command.participants, command.participants[0]] }), KakaoAssistantError);

@@ -210,7 +210,13 @@ var KLOL_V2_KAKAO = (function () {
     if (!context || typeof context.expectedRevision !== "number") {
       throw new Error("모집 요청에는 최신 revision이 필요합니다.");
     }
-    return request(ENDPOINTS.recruit, command, contextFor("recruit", context));
+    var body = {};
+    var key = "";
+    for (key in command) {
+      if (Object.prototype.hasOwnProperty.call(command, key)) body[key] = command[key];
+    }
+    body.source = context.commandSource === "RAW_V2" ? "RAW_V2" : "COMPAT_V1";
+    return request(ENDPOINTS.recruit, body, contextFor("recruit", context));
   }
 
   function searchPlayer(query, context) {
@@ -264,7 +270,12 @@ var KLOL_V2_KAKAO = (function () {
   function userMessage(result) {
     if (result && result.ok) return "[K-LOL.GG]\n요청을 안전하게 처리했습니다.";
     var body = result && result.body && typeof result.body === "object" ? result.body : null;
+    var code = body && typeof body.code === "string" ? body.code : "";
     var detail = body && typeof body.detail === "string" ? body.detail : "잠시 후 다시 시도해 주세요.";
+    if (code === "KAKAO_ROOM_FORBIDDEN") detail = "이 카카오톡 방은 아직 연동되지 않았습니다. /V2연동확인 결과를 관리자에게 전달해 주세요.";
+    else if (code === "KAKAO_CAPABILITY_FORBIDDEN" || code === "FORBIDDEN") detail = "이 기능 권한 없음: 이 요청에 필요한 권한을 확인해 주세요.";
+    else if (code === "INVALID_OPERATION_FORM") detail = "양식 필드 누락: 신청 유형과 필수 항목을 확인해 주세요.";
+    else if (code === "KAKAO_INTEGRATION_ERROR" || (result && result.status === 401)) detail = "연동 설정 오류: 봇의 서버 주소와 서명 설정을 확인해 주세요.";
     var trace = result && result.traceId ? "\n문의 코드: " + result.traceId : "";
     return "[K-LOL.GG 요청 실패]\n" + detail + trace;
   }

@@ -5,6 +5,7 @@ import {
   OperationFormError, parseOperationFormPayload, reviewOperationForm,
   softDeleteOperationForm, toAdminOperationFormDto, type OperationForm,
 } from "../src/modules/recruiting/operation-forms/domain";
+import { operationFormWebhookFailureProblem } from "../src/modules/recruiting/operation-forms/webhook-problems";
 
 const now = new Date("2026-09-07T01:00:00.000Z");
 const base: OperationForm<"suggestions"> = Object.freeze({
@@ -45,4 +46,19 @@ test("delete is soft and the admin DTO excludes source, reviewer identity, and d
   const dto = toAdminOperationFormDto(base) as unknown as Record<string, unknown>;
   assert.deepEqual(Object.keys(dto).sort(), ["adminNote", "formType", "id", "payload", "reviewedAt", "revision", "status", "submittedAt", "updatedAt"].sort());
   assert.equal("sourceRoomId" in dto, false); assert.equal("deletedByUserAccountId" in dto, false);
+});
+
+test("Kakao operation form failures distinguish integration, room and capability without exposing identifiers", () => {
+  const cases = [
+    ["INVALID_SIGNATURE", 401, "KAKAO_INTEGRATION_ERROR", "연동 설정 오류"],
+    ["ROOM_FORBIDDEN", 403, "KAKAO_ROOM_FORBIDDEN", "/V2연동확인 결과를 관리자에게 전달"],
+    ["CAPABILITY_FORBIDDEN", 403, "KAKAO_CAPABILITY_FORBIDDEN", "이 기능 권한 없음"],
+  ] as const;
+  for (const [code, status, publicCode, detail] of cases) {
+    const problem = operationFormWebhookFailureProblem(code);
+    assert.equal(problem.status, status);
+    assert.equal(problem.code, publicCode);
+    assert.match(problem.detail, new RegExp(detail));
+    assert.equal(JSON.stringify(problem).includes("room-contract"), false);
+  }
 });

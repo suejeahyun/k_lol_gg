@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { parseRecruitingCommandBody } from "../src/modules/recruiting/infrastructure/recruiting-input";
+import { mayUseRawKakaoRecruitCommand } from "../src/modules/recruiting/infrastructure/kakao-http-request";
 import { recruitingCommandScope } from "../src/modules/recruiting/application/commands";
 
 const partyId = "0199a288-15d9-7ae6-9d50-2fa0b1a91111";
@@ -23,6 +24,26 @@ test("recruiting JSON boundary accepts only reviewed create fields", () => {
   assert.equal(parseRecruitingCommandBody({ ...valid, ownerUserAccountId: partyId }, allowed), null);
   assert.equal(parseRecruitingCommandBody({ ...valid, payload: { ...valid.payload, internalNote: "secret" } }, allowed), null);
   assert.equal(parseRecruitingCommandBody({ ...valid, aggregateId: partyId }, allowed)?.aggregateId, partyId);
+  assert.equal(parseRecruitingCommandBody({ ...valid, source: "RAW_V2" }, allowed), null, "non-Kakao routes reject transport markers");
+  assert.equal(parseRecruitingCommandBody({ ...valid, source: "RAW_V2" }, allowed, undefined, true)?.source, "RAW_V2");
+  assert.equal(parseRecruitingCommandBody({ ...valid, source: "COMPAT_V1" }, allowed, undefined, true)?.source, "COMPAT_V1");
+  assert.equal(parseRecruitingCommandBody(valid, allowed, undefined, true), null, "Kakao requests fail closed without a signed source marker");
+  assert.equal(parseRecruitingCommandBody({ ...valid, source: "FORGED" }, allowed, undefined, true), null);
+});
+
+test("raw V2 recruit commands require an operator or explicit non-production development mode", () => {
+  assert.equal(mayUseRawKakaoRecruitCommand("sender-operator", {
+    NODE_ENV: "production", KAKAO_WEBHOOK_ALLOWED_SENDERS: "sender-operator",
+  }), true);
+  assert.equal(mayUseRawKakaoRecruitCommand("sender-member", {
+    NODE_ENV: "production", KAKAO_WEBHOOK_ALLOWED_SENDERS: "sender-operator", KAKAO_RAW_RECRUIT_COMMANDS_DEVELOPMENT_ONLY: "true",
+  }), false);
+  assert.equal(mayUseRawKakaoRecruitCommand("sender-member", {
+    NODE_ENV: "development", KAKAO_WEBHOOK_ALLOWED_SENDERS: "sender-operator", KAKAO_RAW_RECRUIT_COMMANDS_DEVELOPMENT_ONLY: "true",
+  }), true);
+  assert.equal(mayUseRawKakaoRecruitCommand("sender-member", {
+    NODE_ENV: "development", KAKAO_WEBHOOK_ALLOWED_SENDERS: "sender-operator",
+  }), false);
 });
 
 test("scrim boundary validates UUID seams and command allowlists", () => {

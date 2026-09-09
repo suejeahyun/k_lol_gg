@@ -77,6 +77,7 @@ async function createHarness({ seasonResult } = {}) {
   const values = new Map([["KLOL_V2_ACTIVE_SEASON_ID", "123e4567-e89b-42d3-a456-426614174000"]]);
   const replies = [];
   const seasonCalls = [];
+  const operationCalls = [];
   const defaultSeasonResult = {
     ok: true,
     body: {
@@ -128,7 +129,10 @@ async function createHarness({ seasonResult } = {}) {
       },
       openchatStatus() { throw new Error("unexpected openchat request"); },
       recruit() { throw new Error("unexpected recruit request"); },
-      operationForm() { throw new Error("unexpected operation form request"); },
+      operationForm(formType, payload, requestContext) {
+        operationCalls.push({ formType, payload: structuredClone(payload), requestContext: structuredClone(requestContext) });
+        return { ok: true, body: {} };
+      },
       imageReceive() { throw new Error("unexpected image request"); },
       playerRecord() { throw new Error("unexpected player-record request"); },
       recentMatches() { throw new Error("unexpected recent-match request"); },
@@ -140,7 +144,7 @@ async function createHarness({ seasonResult } = {}) {
   new vm.Script(`${compatibility}\n${router}`, { filename: "KLOL_V41_V1_INHOUSE_GOLDEN.js" }).runInContext(context);
   const replier = { reply(value) { replies.push(String(value)); } };
   const respond = (message) => context.response("K롤방 구인구직방", message, "관리자. 99 재현 M(M)", true, replier, null, "com.xfl.msgbot");
-  return { replies, respond, seasonCalls };
+  return { replies, respond, seasonCalls, operationCalls };
 }
 
 test("V1: 내전구인만 입력하면 종목 선택 안내를 정확히 보낸다", async () => {
@@ -195,6 +199,7 @@ test("V1: 작성한 전체 신청 양식은 확인 단계 없이 한 번 동기�
   assert.equal(bot.seasonCalls.length, 1);
   assert.equal(bot.seasonCalls[0].command.action, "SYNC");
   assert.equal(bot.seasonCalls[0].command.recruitNo, 2);
+  assert.equal(bot.seasonCalls[0].command.mode, "RIFT");
   assert.deepEqual(bot.seasonCalls[0].command.participants.map(({ slotNo, name, mainPosition, subPositions }) => ({ slotNo, name, mainPosition, subPositions })), [
     { slotNo: 1, name: "재현", mainPosition: "ADC", subPositions: ["MID"] },
     { slotNo: 2, name: "민서", mainPosition: "MID", subPositions: ["SUP"] },
@@ -209,6 +214,40 @@ test("V1: 같은 전체 신청 양식이 연속 수신되면 첫 반영 뒤 중�
   bot.respond(V1_FILLED_FORM);
   assert.equal(bot.seasonCalls.length, 1);
   assert.deepEqual(bot.replies, [syncReply]);
+});
+
+test("V1: 빈 전체 양식은 일반·ASCII slash·전각 slash 모두 0명 authoritative sync로 처리한다", async () => {
+  const empty = v1Template({ mode: "협곡", participants: [] });
+  for (const message of [empty, `/${empty}`, `／${empty}`]) {
+    const bot = await createHarness();
+    bot.respond(message);
+    assert.equal(bot.seasonCalls.length, 1, message.slice(0, 2));
+    assert.deepEqual(bot.seasonCalls[0].command, {
+      action: "SYNC",
+      seasonId: "123e4567-e89b-42d3-a456-426614174000",
+      applyDate: "2026-09-09",
+      recruitNo: 1,
+      mode: "RIFT",
+      participants: [],
+    });
+  }
+});
+
+test("V1: 불완전한 빈 양식과 double·URL·중간 slash는 authoritative sync를 실행하지 않는다", async () => {
+  const empty = v1Template({ mode: "협곡", participants: [] });
+  const malformed = empty.split("\n").filter((line) => line !== "10.").join("\n");
+  for (const message of [malformed, `//${empty}`, `https://example.invalid/${empty}`, `📢 /${empty.slice(2)}`]) {
+    const bot = await createHarness();
+    bot.respond(message);
+    assert.equal(bot.seasonCalls.length, 0, message.slice(0, 24));
+  }
+});
+
+test("외출 필수값 누락은 항목별 안내만 보내고 서버 제출을 실행하지 않는다", async () => {
+  const bot = await createHarness();
+  bot.respond("&lt;외출&gt;\n1. 이름 및 닉네임: 신청자/닉\n2. 외출기간:\n3. 외출사유:\n4. 외출범위:");
+  assert.deepEqual(bot.replies, ["[K-LOL.GG 양식 필드 누락]\n필수 항목을 확인해 주세요: 외출기간, 외출사유, 외출범위"]);
+  assert.equal(bot.operationCalls.length, 0);
 });
 
 test("오류 제목이 이미 포함된 서버 상세는 K-LOL.GG 요청 실패 제목을 중복하지 않는다", async () => {

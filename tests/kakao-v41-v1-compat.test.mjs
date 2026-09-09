@@ -186,6 +186,31 @@ test("four operation forms become exact V2 payload shapes with sender fallbacks"
   assert.deepEqual(plain(leaves.payload), { applicantName: "신청자", applicantNickname: "닉", periodStart: "2026-09-10", periodEnd: "2026-09-12", reason: "여행", scope: "소통방, 구인방, 디코" });
 });
 
+test("four legacy 외출 wrappers parse identically and missing fields are explicit", async () => {
+  const { compat } = await loadCompat();
+  const fields = [
+    "1. 이름 및 닉네임: 신청자/닉",
+    "2. 외출기간: 2026-09-10 ~ 2026-09-12",
+    "3. 외출사유: 여행",
+    "4. 외출범위 (소통방,구인방,디코) 소통방",
+  ].join("\n");
+  const forms = [
+    ["💟간편 공지💟", "1. 안내를 확인해 주세요.", "2. 양식작성 후 전송해 주세요.", "3. &lt;외출&gt;", "4. 필수값을 작성해 주세요.", "5. 운영진이 확인합니다.", "6. 완료 안내를 기다려 주세요.", fields].join("\n"),
+    ["2. 양식작성 후 전송", "&lt;외출&gt;", fields].join("\n"),
+    ["<외출>", fields].join("\n"),
+    ["&lt;외출&gt;", fields.replace("외출범위 (소통방,구인방,디코) 소통방", "외출범위 : 소통방")].join("\n"),
+  ];
+  for (const form of forms) {
+    assert.deepEqual(plain(compat.parseOperationForm(form, "보낸이")), {
+      domain: "OPERATION_FORM", action: "SUBMIT", formType: "leaves",
+      payload: { applicantName: "신청자", applicantNickname: "닉", periodStart: "2026-09-10", periodEnd: "2026-09-12", reason: "여행", scope: "소통방" },
+    });
+  }
+  assert.deepEqual(plain(compat.parseOperationForm("&lt;외출&gt;\n1. 이름 및 닉네임: 신청자/닉\n2. 외출기간:\n3. 외출사유:\n4. 외출범위:", "보낸이")), {
+    domain: "OPERATION_FORM", action: "INVALID", formType: "leaves", missingFields: ["외출기간", "외출사유", "외출범위"],
+  });
+});
+
 test("registration, warning, result, evidence, status, and photo-cancel aliases are classified", async () => {
   const { compat } = await loadCompat();
   const aliases = [

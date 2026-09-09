@@ -42,6 +42,7 @@ export const recruitParties = recruitingSchema.table("parties", {
   revision: bigint("revision", { mode: "number" }).default(0).notNull(),
   ownerUserAccountId: uuid("owner_user_account_id").references(() => userAccounts.id, { onDelete: "restrict" }),
   sourceRoomId: varchar("source_room_id", { length: 128 }),
+  sourceSenderId: varchar("source_sender_id", { length: 128 }),
   recruitDate: date("recruit_date", { mode: "string" }).notNull(),
   resetSequence: integer("reset_sequence").default(0).notNull(),
   recruitNumber: integer("recruit_number").notNull(),
@@ -71,6 +72,7 @@ export const recruitParties = recruitingSchema.table("parties", {
   check("recruit_parties_game_info", sql`char_length(btrim(${table.gameInfo})) BETWEEN 1 AND 500`),
   check("recruit_parties_primary_capacity", sql`jsonb_array_length(jsonb_path_query_array(${table.membersJson}, '$[*] ? (@.substitute == false)')) <= ${table.maximumMembers}`),
   check("recruit_parties_source_room", sql`${table.sourceRoomId} IS NULL OR char_length(btrim(${table.sourceRoomId})) BETWEEN 1 AND 128`),
+  check("recruit_parties_source_sender", sql`${table.sourceSenderId} IS NULL OR char_length(btrim(${table.sourceSenderId})) BETWEEN 1 AND 128`),
   check("recruit_parties_protection_order", sql`${table.protectedUntil} IS NULL OR ${table.scheduledStartAt} IS NULL OR ${table.protectedUntil} >= ${table.scheduledStartAt}`),
 ]);
 
@@ -79,6 +81,8 @@ export const scrimRecruits = recruitingSchema.table("scrims", {
   revision: bigint("revision", { mode: "number" }).default(0).notNull(),
   ownerUserAccountId: uuid("owner_user_account_id").references(() => userAccounts.id, { onDelete: "restrict" }),
   sourceRoomId: varchar("source_room_id", { length: 128 }),
+  sourceSenderId: varchar("source_sender_id", { length: 128 }),
+  opponentSenderId: varchar("opponent_sender_id", { length: 128 }),
   recruitDate: date("recruit_date", { mode: "string" }).notNull(),
   scrimNumber: integer("scrim_number").notNull(),
   tournamentId: uuid("tournament_id"),
@@ -115,6 +119,8 @@ export const scrimRecruits = recruitingSchema.table("scrims", {
   check("scrim_recruits_legacy_memo", sql`${table.legacyMemo} IS NULL OR char_length(btrim(${table.legacyMemo})) BETWEEN 1 AND 500`),
   check("scrim_recruits_legacy_series_rule", sql`${table.legacySeriesRuleText} IS NULL OR char_length(btrim(${table.legacySeriesRuleText})) BETWEEN 1 AND 160`),
   check("scrim_recruits_source_room", sql`${table.sourceRoomId} IS NULL OR char_length(btrim(${table.sourceRoomId})) BETWEEN 1 AND 128`),
+  check("scrim_recruits_source_sender", sql`${table.sourceSenderId} IS NULL OR char_length(btrim(${table.sourceSenderId})) BETWEEN 1 AND 128`),
+  check("scrim_recruits_opponent_sender", sql`${table.opponentSenderId} IS NULL OR char_length(btrim(${table.opponentSenderId})) BETWEEN 1 AND 128`),
   check("scrim_recruits_distinct_teams", sql`${table.opponentTeamId} IS NULL OR ${table.opponentTeamId} <> ${table.requesterTeamId}`),
   check("scrim_recruits_status_team_consistency", sql`(${table.status} = 'RECRUITING' AND ${table.opponentTeamId} IS NULL) OR (${table.status} <> 'RECRUITING')`),
 ]);

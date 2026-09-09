@@ -35,6 +35,7 @@ export type RecruitParty = Readonly<{
   id: string;
   revision: number;
   sourceRoomId: string | null;
+  sourceSenderId: string | null;
   recruitDate: string;
   resetSequence: number;
   recruitNumber: number;
@@ -54,6 +55,8 @@ export type ScrimRecruit = Readonly<{
   id: string;
   revision: number;
   sourceRoomId: string | null;
+  sourceSenderId: string | null;
+  opponentSenderId: string | null;
   recruitDate: string;
   scrimNumber: number;
   tournamentId: string | null;
@@ -147,6 +150,15 @@ export function kakaoRoomOwnsRecruitAggregate(sourceRoomId: string | null, signe
   return sourceRoomId !== null && sourceRoomId === signedRoomId;
 }
 
+export function kakaoSenderControlsRecruitAggregate(input: Readonly<{
+  sourceSenderId: string | null;
+  opponentSenderId?: string | null;
+  signedSenderId: string;
+  trustedSender: boolean;
+}>): boolean {
+  return input.trustedSender || input.sourceSenderId === input.signedSenderId || input.opponentSenderId === input.signedSenderId;
+}
+
 function normalizeMembers(members: readonly RecruitMember[], maximumMembers: number): readonly RecruitMember[] {
   if (members.length > 99) throw new Error("RECRUIT_MEMBER_LIMIT_EXCEEDED");
   if (members.filter((member) => !member.substitute).length > maximumMembers) throw new Error("RECRUIT_CAPACITY_EXCEEDED");
@@ -172,6 +184,7 @@ function normalizeMembers(members: readonly RecruitMember[], maximumMembers: num
 export function createRecruitParty(input: Readonly<{
   id: string;
   sourceRoomId?: string | null;
+  sourceSenderId?: string | null;
   recruitDate: string;
   resetSequence: number;
   recruitNumber: number;
@@ -201,6 +214,7 @@ export function createRecruitParty(input: Readonly<{
     id: input.id,
     revision: 0,
     sourceRoomId: input.sourceRoomId ? identifier(input.sourceRoomId, "INVALID_RECRUIT_SOURCE_ROOM") : null,
+    sourceSenderId: input.sourceSenderId ? identifier(input.sourceSenderId, "INVALID_RECRUIT_SOURCE_SENDER") : null,
     recruitDate: input.recruitDate,
     resetSequence: input.resetSequence,
     recruitNumber: input.recruitNumber,
@@ -287,14 +301,17 @@ export function transitionScrimRecruit(input: Readonly<{
   expectedRevision: number;
   command: "JOIN" | "CONFIRM" | "COMPLETE" | "CANCEL" | "REOPEN";
   opponentTeamId?: string | null;
+  opponentSenderId?: string | null;
 }>): ScrimRecruit {
   expectedRevision(input.scrim.revision, input.expectedRevision);
   let status: ScrimRecruitStatus;
   let opponentTeamId = input.scrim.opponentTeamId;
+  let opponentSenderId = input.scrim.opponentSenderId;
   if (input.command === "JOIN" && input.scrim.status === "RECRUITING") {
     const candidate = identifier(input.opponentTeamId ?? "", "INVALID_SCRIM_OPPONENT");
     if (candidate === input.scrim.requesterTeamId) throw new Error("SAME_SCRIM_TEAM");
     opponentTeamId = candidate;
+    opponentSenderId = input.opponentSenderId ? identifier(input.opponentSenderId, "INVALID_SCRIM_OPPONENT_SENDER") : null;
     status = "MATCHED";
   } else if (input.command === "CONFIRM" && input.scrim.status === "MATCHED" && opponentTeamId) {
     status = "CONFIRMED";
@@ -305,10 +322,11 @@ export function transitionScrimRecruit(input: Readonly<{
   } else if (input.command === "REOPEN" && input.scrim.status === "MATCHED") {
     status = "RECRUITING";
     opponentTeamId = null;
+    opponentSenderId = null;
   } else {
     throw new Error("INVALID_SCRIM_TRANSITION");
   }
-  return { ...input.scrim, revision: input.scrim.revision + 1, opponentTeamId, status };
+  return { ...input.scrim, revision: input.scrim.revision + 1, opponentTeamId, opponentSenderId, status };
 }
 
 function scrimLineupHasMember(lineup: ScrimLineup | null): boolean {
@@ -365,6 +383,7 @@ export function syncScrimRecruit(input: Readonly<{
     revision: input.scrim.revision + 1,
     requesterTeamId: input.requesterTeamId,
     opponentTeamId: input.opponentTeamId,
+    opponentSenderId: hasOpponent ? input.scrim.opponentSenderId : null,
     legacyTitle: input.legacyTitle,
     requesterTeamName: input.requesterTeamName,
     opponentTeamName: input.opponentTeamName,

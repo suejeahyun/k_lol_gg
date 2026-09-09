@@ -194,6 +194,8 @@ function createScrim(command: Extract<RecruitingCommand, { type: "CREATE_SCRIM" 
     id: command.aggregateId,
     revision: 0,
     sourceRoomId: command.metadata.actor.kind === "BOT" ? command.metadata.actor.authorizationIntent.roomId : null,
+    sourceSenderId: command.metadata.actor.kind === "BOT" ? command.metadata.actor.authorizationIntent.senderId : null,
+    opponentSenderId: null,
     recruitDate: payload.recruitDate,
     scrimNumber: payload.scrimNumber,
     tournamentId,
@@ -283,7 +285,7 @@ export class RecruitingCommandHandler {
     let nextScrim: ScrimRecruit | null = scrim;
     switch (command.type) {
       case "CREATE_PARTY":
-        nextParty = createRecruitParty({ id: command.aggregateId, sourceRoomId: command.metadata.actor.kind === "BOT" ? command.metadata.actor.authorizationIntent.roomId : null, ...command.payload, type: command.payload.partyType, scheduledStartAt: parseDate(command.payload.scheduledStartAt, "scheduledStartAt"), protectedUntil: parseDate(command.payload.protectedUntil, "protectedUntil"), now });
+        nextParty = createRecruitParty({ id: command.aggregateId, sourceRoomId: command.metadata.actor.kind === "BOT" ? command.metadata.actor.authorizationIntent.roomId : null, sourceSenderId: command.metadata.actor.kind === "BOT" ? command.metadata.actor.authorizationIntent.senderId : null, ...command.payload, type: command.payload.partyType, scheduledStartAt: parseDate(command.payload.scheduledStartAt, "scheduledStartAt"), protectedUntil: parseDate(command.payload.protectedUntil, "protectedUntil"), now });
         break;
       case "SYNC_PARTY":
         nextParty = sync(command, party!, now);
@@ -306,7 +308,12 @@ export class RecruitingCommandHandler {
       case "CONFIRM_SCRIM":
       case "COMPLETE_SCRIM":
       case "CANCEL_SCRIM":
-        nextScrim = transitionScrimRecruit({ scrim: scrim!, expectedRevision: command.metadata.expectedRevision, command: command.type === "JOIN_SCRIM" ? "JOIN" : command.type === "REOPEN_SCRIM" ? "REOPEN" : command.type === "CONFIRM_SCRIM" ? "CONFIRM" : command.type === "COMPLETE_SCRIM" ? "COMPLETE" : "CANCEL", opponentTeamId: command.type === "JOIN_SCRIM" ? command.payload.opponentTeamId : undefined });
+        nextScrim = transitionScrimRecruit({
+          scrim: scrim!, expectedRevision: command.metadata.expectedRevision,
+          command: command.type === "JOIN_SCRIM" ? "JOIN" : command.type === "REOPEN_SCRIM" ? "REOPEN" : command.type === "CONFIRM_SCRIM" ? "CONFIRM" : command.type === "COMPLETE_SCRIM" ? "COMPLETE" : "CANCEL",
+          opponentTeamId: command.type === "JOIN_SCRIM" ? command.payload.opponentTeamId : undefined,
+          opponentSenderId: command.type === "JOIN_SCRIM" && command.metadata.actor.kind === "BOT" ? command.metadata.actor.authorizationIntent.senderId : undefined,
+        });
         break;
     }
 

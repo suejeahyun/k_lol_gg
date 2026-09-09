@@ -17,13 +17,14 @@
 - `KAKAO_WEBHOOK_ALLOWED_ROOMS`: 쉼표로 구분한 opaque room ID
 - `KAKAO_WEBHOOK_ALLOWED_SENDERS`: 쉼표로 구분한 opaque sender ID
 - `KAKAO_WEBHOOK_BOT_SENDER_ID`: 봇 자신의 opaque sender ID
-- `DATABASE_URL`, migration `0009`, `0018`, `0019`, `0022`, `0026`, `0027`, `0028`, `0029`
+- `DATABASE_URL`, migration `0009`, `0018`, `0019`, `0022`, `0026`, `0027`, `0028`, `0029`, `0030`
 
 선택:
 
 - `KAKAO_WEBHOOK_KEY_ID_CURRENT`: 기본값 `current`
 - `KAKAO_WEBHOOK_SECRET_PREVIOUS`, `KAKAO_WEBHOOK_KEY_ID_PREVIOUS`: 제한된 키 회전 기간에만 사용
 - `KAKAO_WEBHOOK_PRINCIPAL_ID`: 기본값 `bot:kakao`; 자격증명이 아닌 감사 주체 라벨
+- `KAKAO_RAW_RECRUIT_COMMANDS_DEVELOPMENT_ONLY`: Production 이외 환경에서만 `/V2모집 <JSON>`을 명시적으로 허용하려면 정확히 `true`. 운영에서는 설정하지 않는다.
 
 DB의 `recruiting.kakao_operation_settings`도 `global_enabled=true`, `maintenance_mode=false`이고 사용할 기능이 활성화되어야 한다. 비밀값과 allowlist 원문은 DB나 관리자 화면에 저장하지 않는다.
 
@@ -44,7 +45,7 @@ V2는 endpoint별 bearer secret 대신 canonical Kakao API 전체에 하나의 H
 | `KAKAO_WEBHOOK_SECRET_CURRENT` | `KLOL_V2_KAKAO_WEBHOOK_SECRET_CURRENT` | **동일한 값**. 각각 UTF-8 32 bytes 이상. 모든 V2 요청의 HMAC 서명/검증 키. |
 | 없음 | `KLOL_V2_KAKAO_IDENTITY_SECRET` | 서버에 저장하지 않는 **별도 값**. 방·발신자 표시 이름을 opaque ID로 만드는 로컬 HMAC 키. signing key와 같으면 안 되고 signing key 회전 때 바꾸지 않는다. |
 | `KAKAO_WEBHOOK_ALLOWED_ROOMS` | 직접 대응 없음 | `/V2연동확인`이 표시한 `room-` ID를 쉼표로 연결한다. 모든 canonical API에서 강제된다. |
-| `KAKAO_WEBHOOK_ALLOWED_SENDERS` | 직접 대응 없음 | 허용할 `sender-` ID를 쉼표로 연결한다. 내전 신청, 관리 양식, 예약 공지, 이미지 접수에서 강제된다. |
+| `KAKAO_WEBHOOK_ALLOWED_SENDERS` | 직접 대응 없음 | 허용할 `sender-` ID를 쉼표로 연결한다. 내전 authoritative 신청, 예약 공지, 이미지 접수와 raw 운영 명령에서 강제된다. 외출 등 member-safe 운영 양식 제출에는 강제하지 않는다. |
 | `KAKAO_WEBHOOK_BOT_SENDER_ID` | 직접 대응 없음 | 봇 계정 자신의 `sender-` ID. 모든 요청에서 self-message 차단에 사용되므로 유효한 단일 ID가 필요하다. |
 | `KAKAO_WEBHOOK_KEY_ID_CURRENT` | 없음 | 비밀이 아닌 서버 감사/회전 라벨. 봇은 전송하지 않으며 기본값은 `current`. |
 | `KAKAO_WEBHOOK_SECRET_PREVIOUS` / `KAKAO_WEBHOOK_KEY_ID_PREVIOUS` | 없음 | 회전 관측 기간에만 서버가 이전 서명을 함께 받는 용도. current와 다른 값/라벨을 쓴다. |
@@ -52,7 +53,16 @@ V2는 endpoint별 bearer secret 대신 canonical Kakao API 전체에 하나의 H
 | 없음 | `KLOL_V2_BASE_URL` | 봇이 요청할 V2 환경의 HTTPS origin. 경로·쿼리·fragment 없이 `https://host` 형식만 허용한다. |
 | 없음 | `KLOL_V2_ACTIVE_SEASON_ID` | 내전 현황·전체 신청 동기화에서 쓰는 현재 시즌 UUID. 다른 명령만 쓸 때는 불필요하다. |
 
-`recruits`, `search-player`, `openchat`, `operation-forms`는 서명과 방 allowlist를 통과한 요청에 한해 임의 발신자를 허용한다. `season-applications`, `managed-forms`, `scheduled-notice`, `image-receive`는 발신자 allowlist도 요구한다. 두 부류 모두 bot sender 차단은 동일하다.
+`search-player`, `openchat`, `operation-forms`, member-safe `managed-forms` 제출과 모집 생성·조회·스크림 참가는 서명과 방 allowlist를 통과한 요청에 한해 일반 발신자를 허용한다. 운영 양식 검토·삭제는 Kakao 명령으로 제공하지 않고 웹 ADMIN 세션을 요구한다. 모집 동기화·종료·취소·재개·확정·완료는 aggregate 생성자, 참가한 상대 팀장 또는 sender allowlist 운영자만 허용한다. 다른 방은 404로 숨기고, 같은 방의 비소유 발신자는 403을 받는다. `season-applications`, `scheduled-notice`, `image-receive`는 발신자 allowlist도 요구한다. 모든 부류에서 bot sender 차단은 동일하다.
+
+| 모집 명령 | Kakao 권한 |
+| --- | --- |
+| `CREATE_PARTY`, `CREATE_SCRIM` | 허용 방의 일반 발신자 |
+| `GET_PARTY_STATUS` | 같은 원본 방의 일반 발신자 |
+| `JOIN_SCRIM` | 같은 원본 방의 일반 발신자; 성공한 발신자를 상대 팀장으로 귀속 |
+| `SYNC_*`, `FINISH_PARTY`, `CANCEL_*`, `REOPEN_SCRIM`, `CONFIRM_SCRIM`, `COMPLETE_SCRIM` | 생성자·상대 팀장·sender allowlist 운영자 |
+| `RESET_PARTY` | Kakao 경로 거부 |
+| `/V2모집 <JSON>` | sender allowlist 운영자 또는 명시적 비운영 개발 모드만 허용 |
 
 ### 안전한 키 생성과 환경별 범위
 
@@ -85,11 +95,11 @@ Remove-Variable klolRandomBytes, klolRng, klolGeneratedSecret, klolSha256, klolD
 ### 설정 후 비밀 없는 확인
 
 1. 전체본의 해시와 START/END sentinel을 설치 문서대로 확인하고 MessengerBot R에서 컴파일한다.
-2. `/봇버전`과 `봇버전`이 모두 `KLOL_KAKAO_BOT_V41_V2_2026_09_09_R7_SLASH_PARITY`를 반환하는지 확인한다.
+2. `/봇버전`과 `봇버전`이 모두 `KLOL_KAKAO_BOT_V41_V2_2026_09_09_R8_CONTROLLER_AUTH_SYNC`를 반환하는지 확인한다.
 3. `/V2연동확인`의 방/발신자 ID가 Vercel allowlist와 일치하는지 확인한다. 이 명령은 외부 요청 없이 로컬 identity key로 계산된다.
 4. 먼저 `랭킹`, `구인현황` 같은 읽기 요청을 확인한 뒤, Preview에서만 테스트 모집 create → status → finish 또는 내전 신청 미리보기 → 확인을 검증한다.
 5. 관리자 `/admin/kakao`에서 키 값이 아니라 current key/room/sender/bot sender의 configured 상태만 확인한다.
-6. 401이면 서버 로그의 allowlisted reject code와 stage만 확인한다. `SIGNING_KEY_UNAVAILABLE`는 서버 current 누락, `INVALID_SIGNATURE`는 signing 값 불일치, `ROOM_FORBIDDEN`은 room allowlist 불일치, `CAPABILITY_FORBIDDEN`은 trusted sender capability 부족, `BOT_SELF_MESSAGE`는 bot ID/self header 차단이다. 503이면 DB migration과 `kakao_operation_settings` 상태를 확인한다.
+6. 서버 로그의 allowlisted reject code와 stage만 확인한다. `SIGNING_KEY_UNAVAILABLE`/`INVALID_SIGNATURE`는 401 연동 설정 오류, `ROOM_FORBIDDEN`은 403 room allowlist 불일치, `CAPABILITY_FORBIDDEN`은 403 trusted sender capability 부족, `BOT_SELF_MESSAGE`는 bot ID/self header 차단이다. 양식 필드 누락은 400이며 DB에 제출하지 않는다. 503이면 DB migration과 `kakao_operation_settings` 상태를 확인한다.
 
 ### 같은 표시 방에서 `ROOM_FORBIDDEN`이 엇갈릴 때
 
@@ -101,9 +111,13 @@ V41의 `roomId`는 `identity secret + "room-id\\n" + trim(String(room))`만으�
 4. identity secret 불일치라면 서버 allowed-room wildcard를 쓰지 않는다. 기준 기기의 기존 secret을 다른 실행기의 private `DataBase`에 안전하게 맞추고 재컴파일한 뒤 기존 `room-` 값이 유지되는지 확인한다.
 5. callback 값 차이라면 room 원문을 서버로 보내거나 로그에 남기지 말고, 기기 로컬에서 `String(room).length`, `trim` 전후 길이와 코드포인트만 비교한다. 표시 이름이 같은 별도 채팅방인지도 확인한다.
 
-Unicode NFKC, zero-width 제거, 내부 공백 축약을 room identity에 새로 적용하면 서로 다른 실제 방 문자열이 충돌하거나 기존 모든 allowlist ID가 바뀔 수 있다. R7은 이 위험을 피하려고 기존의 앞뒤 공백 trim 계약을 유지한다. 향후 정규화가 꼭 필요하면 구 ID와 신 ID를 동시에 계산하는 제한된 dual-read 기간, 충돌 검사, allowlist 이관 후 구 ID 제거 순서가 필요하다.
+Unicode NFKC, zero-width 제거, 내부 공백 축약을 room identity에 새로 적용하면 서로 다른 실제 방 문자열이 충돌하거나 기존 모든 allowlist ID가 바뀔 수 있다. R8은 이 위험을 피하려고 기존의 앞뒤 공백 trim 계약을 유지한다. 향후 정규화가 꼭 필요하면 구 ID와 신 ID를 동시에 계산하는 제한된 dual-read 기간, 충돌 검사, allowlist 이관 후 구 ID 제거 순서가 필요하다.
 
 운영 로그가 `ROOM_FORBIDDEN`이면 즉시 가능한 환경 복구는 **확인된 기존 room ID를 allowlist에 정확히 복원하는 것**뿐이다. sender env 추가는 공개 `openchat`/`recruits` 실패를 고치지 않는다. signing key나 HMAC 문제가 아닌 것도 해당 로그로 구분된다. 코드 패치 배포 전에는 실행기/identity 설정 불일치를 먼저 바로잡는다.
+
+2026-09-09 외출 접수 장애의 읽기 전용 production 로그에서는 12:18:33.050, 15:36:49.894, 15:36:58.649, 15:37:05.579 KST 요청이 모두 `/api/integrations/kakao/operation-forms`의 `ROOM_FORBIDDEN`으로 DB 진입 전에 종료됐다. 이 경로는 당시에도 일반 발신자를 허용했고 HMAC 검증 뒤 room을 판정하므로 원인은 room allowlist 불일치로 확정한다. 확인된 probe ID는 저장소에 복사하지 않고 운영 환경 값과 대조한다.
+
+같은 날 별도 운영 hotfix로 기존 room 1개를 보존한 채 확인된 room 1개를 추가했다(정규화 2개, duplicate 0, wildcard 없음). sender/secret/다른 env는 바꾸지 않았고, 기존 source SHA `e408bdd50260b9f48ebea5ee509d34aced295ca6`를 `dpl_7ggWSkbjf3Qq9aoQaGT8Bn6hf2ue`로 재배포해 production health 200과 DB `select 1`을 확인했다. Vercel env history를 rollback 근거로 유지한다. 이 확인은 R8 코드 배포 증거가 아니며, 실제 양식 재전송 후 `ROOM_FORBIDDEN` 소멸과 2xx/정확한 400을 추가 확인해야 한다.
 
 저장소에서 실행하는 비파괴 계약 확인 명령은 다음과 같다.
 
@@ -142,17 +156,25 @@ MessengerBot R 휴대폰에 바로 붙여 넣는 엔트리는 65,535자 미만�
 
 ### 내전 참가 신청 공통 양식
 
-사이트와 봇은 `플레이어 + 신청일 + 회차`를 동일 신청의 기준으로 사용하며 주라인과 부라인을 같은 구조로 주고받는다. V41이 출력한 아래 형식은 그대로 다시 입력할 수 있다.
+사이트와 봇은 플레이어 identity를 공유하지만, Kakao authoritative sync 범위는 `opaque sourceRoomId hash + 신청일 + 회차 + 모드`다. 주라인과 부라인은 같은 구조로 주고받는다. V41이 출력한 전체 형식은 맨 앞의 `/` 또는 전각 `／` 한 글자를 붙여도 동일하게 처리한다.
 
 ```text
 [K-LOL.GG 내전 참가 신청]
 신청일: 2026-09-08
 회차: #1
+종목: 협곡
+정원: 10명
+*참가 신청 양식*
 1. 플레이어: 별빛 | Riot ID: 별빛#KR1 | 주라인: MID | 부라인: SUP, ADC | 상태: 신청 | 출처: SITE
+2.
+...
+10.
 ```
 
 - 사이트에서 승인 계정으로 저장하면 동일한 카카오 신청 행을 새로 만들지 않고 SITE 신청으로 승격한다. SITE의 라인 선택과 완료된 관리자 판정이 후속 카카오 스냅샷보다 우선한다.
 - 봇은 SITE 신청을 취소하거나 덮어쓰지 않는다. 카카오에서만 생성된 미검토 신청과 확인 대기 행만 스냅샷에 맞춰 갱신한다.
+- 헤더의 날짜·회차·협곡 모드·정원과 1번부터 정원까지의 전체 슬롯을 모두 확인한 경우에만 누락 신청을 철회한다. 완전한 빈 1~10 양식은 0명 동기화이며, 일부 슬롯이 빠진 빈 입력은 대량 철회를 막기 위해 거부한다.
+- 누락된 같은 범위 KAKAO 신청은 hard delete하지 않고 `CANCELLED`로 전환한다. SITE, 관리자 확정/예비/거절, 다른 방·날짜·회차·모드는 변경하지 않는다.
 - 공개 사이트와 봇 현황의 확인된 플레이어 표시는 닉네임·Riot ID·라인으로 제한한다. 회원명, 로그인 ID, Discord, 관리자 메모, 원본 해시는 응답에 포함하지 않는다. 자동 매칭하지 못한 봇 입력명은 서명·허용 목록이 검증된 운영자용 봇 응답과 관리자 검토 화면에서만 사용한다.
 
 ## 요청 계약
@@ -177,15 +199,18 @@ KLOL_KAKAO_WEBHOOK_V1
 <sha256(rawBody)>
 ```
 
-## 무중단 전환 순서
+## R8 동시 전환 순서
 
-1. 별도 preview/스테이징 DB에 migration `0009`, `0018`, `0019`, `0022`, `0026`~`0029`와 `kakao_operation_settings` singleton을 확인한다.
+R8 서버는 출처 표식 없는 R7 모집 body를 거부하고, R8 봇이 보내는 출처 표식은 R7 서버의 exact-key 파서가 거부한다. 따라서 이 버전은 서버와 휴대폰을 혼용하는 무중단 전환 대상이 아니다. 짧은 Kakao 모집 변경 점검 시간을 잡고 아래 순서를 한 묶음으로 실행한다.
+
+1. 별도 preview/스테이징 DB에 migration `0009`, `0018`, `0019`, `0022`, `0026`~`0030`과 `kakao_operation_settings` singleton을 확인한다.
 2. 새 키와 opaque allowlist를 스테이징 서버·V41 봇 사본에만 주입한다.
 3. player search/status처럼 읽기 영향이 작은 명령으로 정상·만료 timestamp·잘못된 room을 각각 한 번 검증한다.
 4. party create → status → sync → finish를 테스트 데이터로 검증하고 `aggregateId`/`revision` 저장을 확인한다.
 5. 스크림 문장형 전체 양식으로 create → status → detail을 확인하고 양 팀 5포지션 라인업·메모·진행 방식·일시가 보존되는지 검증한다. 기존 UUID 기반 구조화 명령도 같은 계약으로 확인한다.
-6. V41을 운영 봇으로 전환한 뒤 V1 봇은 중지한다. 동일 메시지를 두 봇이 동시에 mutation하지 않게 한다.
-7. 회전 시 서버에 previous/current를 함께 두고 봇을 current로 바꾼 다음, 관측 기간 후 previous를 제거한다.
+6. 운영 모집 변경을 잠시 중지하고 저장→정상 종료→백업 뒤 migration `0030`, R8 서버, R8 휴대폰 전체본을 연속 적용한다. V1/R7 봇은 중지해 동일 메시지를 두 봇이 동시에 mutation하지 않게 한다.
+7. 생성자·같은 방 타 발신자·운영자와 다른 방 fixture로 2xx/403/404를 확인하고, 완전한 2명→0명 내전 양식이 SITE/관리자 확정/다른 방·회차를 보존하는지 확인한다.
+8. 회전 시 서버에 previous/current를 함께 두고 봇을 current로 바꾼 다음, 관측 기간 후 previous를 제거한다.
 
 ## 비밀 없는 장애 판정
 
@@ -198,8 +223,8 @@ KLOL_KAKAO_WEBHOOK_V1
 
 각 로그에는 `SIGNATURE`, `ROOM`, `SENDER`, `CAPABILITY` 중 하나의 stage가 함께 남는다. ID나 비밀값은 남기지 않는다.
 
-로그에는 body, signature, nonce, room/sender ID, 환경변수 값이 포함되지 않는다. 401이면 위 코드를 먼저 확인하고, 503이면 DB 연결·0022 singleton·0026~0028 모집 호환 스키마·global/maintenance/개별 feature를 확인한다. 409/412이면 idempotency key 또는 revision을 갱신한다.
+로그에는 body, signature, nonce, room/sender ID, 환경변수 값이 포함되지 않는다. 401이면 위 코드를 먼저 확인하고, 503이면 DB 연결·0022 singleton·0026~0030 모집 호환 스키마·global/maintenance/개별 feature를 확인한다. 403은 같은 방 비소유 lifecycle 시도 또는 raw V2 제한, 404는 원본 방 불일치 은닉을 우선 확인한다. 409/412이면 idempotency key 또는 revision을 갱신한다.
 
 ## 롤백
 
-V41 배포만 중지하고 V1 서비스가 아직 살아 있는 기간에는 V40으로 되돌릴 수 있다. V2 서버가 기본 코드가 된 뒤에는 구형 secret 계약을 다시 켜지 않는다. 문제가 있으면 V2 Kakao DB feature를 끄고 봇을 중지한 다음 원인을 수정한다. 데이터 삭제나 V1 public 테이블 변경은 필요하지 않다.
+R8 서버와 R8 휴대폰은 함께 롤백한다. 한쪽만 R7로 되돌리면 모집 body exact-key 검사가 실패한다. V2 서버가 기본 코드가 된 뒤에는 구형 secret 계약을 다시 켜지 않는다. 문제가 있으면 V2 Kakao DB feature를 끄고 봇을 중지한 다음 원인을 수정한다. `0030`의 nullable provenance 열과 상태 행은 그대로 두며 데이터를 삭제하지 않는다. 기존 provenance가 없는 KAKAO 행은 새 authoritative sync가 임의 철회하지 않으므로 운영자가 별도로 검토한다.

@@ -5,7 +5,7 @@
  * This router requires KLOL_KAKAO_BOT_V41_V2_TRANSPORT.js and
  * KLOL_KAKAO_BOT_V41_V1_COMPAT.js immediately before it.
  */
-var KLOL_V41_BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V41_V2_2026_09_09_R7_SLASH_PARITY";
+var KLOL_V41_BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V41_V2_2026_09_09_R8_CONTROLLER_AUTH_SYNC";
 var KLOL_V41_SEASON_PREVIEW_TTL_MS = 10 * 60 * 1000;
 var KLOL_V41_IMAGE_SESSION_TTL_MS = 30 * 60 * 1000;
 
@@ -334,7 +334,12 @@ function v41FormatSeason(result) {
   if (body && typeof body.legacyReply === "string" && v41Trim(body.legacyReply)) return String(body.legacyReply);
   lines.push("신청일: " + body.applyDate);
   lines.push("회차: #" + body.recruitNo);
-  lines.push("신청 " + Number(body.appliedCount || 0) + " · 예비 " + Number(body.reserveCount || 0) + " · 확정 " + Number(body.confirmedCount || 0) + " · 확인 필요 " + Number(body.pendingCount || 0));
+  lines.push("종목: 협곡");
+  if (typeof body.createdCount === "number" && typeof body.updatedCount === "number") {
+    lines.push("신청 " + Number(body.createdCount || 0) + " · 수정 " + Number(body.updatedCount || 0) + " · 취소 " + Number(body.cancelledCount || 0) + " · 확인 필요 " + Number(body.pendingCount || 0));
+  } else {
+    lines.push("신청 " + Number(body.appliedCount || 0) + " · 예비 " + Number(body.reserveCount || 0) + " · 확정 " + Number(body.confirmedCount || 0) + " · 확인 필요 " + Number(body.pendingCount || 0));
+  }
   for (index = 0; index < entries.length; index += 1) {
     var entry = entries[index];
     var name = entry.player ? entry.player.displayName : entry.suppliedName;
@@ -362,7 +367,7 @@ function v41Position(value) {
   return null;
 }
 
-function v41SeasonParticipants(text) {
+function v41SeasonParticipants(text, allowEmpty) {
   var lines = String(text || "").replace(/\r\n?/g, "\n").split("\n");
   var participants = [];
   var index = 0;
@@ -420,7 +425,7 @@ function v41SeasonParticipants(text) {
       subPositions: subs, reserve: /(?:예비|대기)/.test(match[2])
     });
   }
-  if (!participants.length) throw new Error("내전 신청자 줄을 찾지 못했습니다.");
+  if (!participants.length && allowEmpty !== true) throw new Error("내전 신청자 줄을 찾지 못했습니다.");
   return participants;
 }
 
@@ -443,12 +448,66 @@ function v41SnapshotHeader(text) {
 function v41RequiredSnapshotDate(text) {
   var header = v41SnapshotHeader(text);
   var match = header.match(/(?:신청일|날짜|일자)\s*[:：]\s*(20\d{2}-\d{2}-\d{2})/);
+  if (!match) match = header.match(/》\s*(20\d{2}-\d{2}-\d{2})(?:\s|$)/);
   if (!match) throw v41UserError("내전 전체 양식에 신청일: YYYY-MM-DD를 적어 주세요.");
   var parsed = new Date(match[1] + "T00:00:00Z");
   if (isNaN(parsed.getTime()) || parsed.toISOString().substring(0, 10) !== match[1]) {
     throw v41UserError("내전 전체 양식의 신청일을 확인해 주세요.");
   }
   return match[1];
+}
+
+function v41RequiredSnapshotMode(text) {
+  var header = v41SnapshotHeader(text);
+  var match = header.match(/(?:종목|모드)\s*[:：]\s*(협곡)/);
+  if (!match) match = header.match(/》\s*(협곡)\s*(?:\n|$)/);
+  if (!match) throw v41UserError("내전 전체 양식에 종목: 협곡을 적어 주세요.");
+  return "RIFT";
+}
+
+function v41RequiredSnapshotCapacity(text) {
+  var header = v41SnapshotHeader(text);
+  var match = header.match(/👥\s*\d{1,3}\s*\/\s*(\d{1,3})\s*명/);
+  if (!match) match = header.match(/정원\s*[:：]\s*(\d{1,3})\s*명?/);
+  var capacity = match ? Number(match[1]) : 0;
+  if (!capacity || capacity < 1 || capacity > 99) {
+    throw v41UserError("내전 전체 양식의 정원과 전체 번호를 확인해 주세요.");
+  }
+  return capacity;
+}
+
+function v41RequireCompleteSnapshotSlots(text, capacity) {
+  var lines = v41NormalizeText(text).split("\n");
+  var slots = {};
+  var index = 0;
+  for (index = 0; index < lines.length; index += 1) {
+    var match = v41Trim(lines[index]).match(/^(\d{1,2})\s*[.)]\s*(.*)$/);
+    if (!match || /^(?:EX|예시)/i.test(match[2])) continue;
+    if (slots[match[1]]) throw v41UserError("내전 전체 양식에 중복된 번호가 있습니다.");
+    slots[match[1]] = true;
+  }
+  for (index = 1; index <= capacity; index += 1) {
+    if (!slots[String(index)]) throw v41UserError("내전 전체 양식은 1번부터 정원까지 모든 줄을 유지해 주세요.");
+  }
+  if (Object.keys(slots).length !== capacity) {
+    throw v41UserError("내전 전체 양식의 번호 범위를 확인해 주세요.");
+  }
+}
+
+function v41AuthoritativeSeasonSnapshot(text) {
+  var value = v41Trim(v41NormalizeText(text));
+  if (!/^(?:📢\s*내전하실분\s*#\s*\d{1,3}|\[K-LOL\.GG\s*내전\s*참가\s*신청\])/.test(value)) {
+    throw v41UserError("봇이 출력한 전체 참가 신청 양식을 사용해 주세요.");
+  }
+  if (!/참가\s*신청\s*양식/.test(value)) throw v41UserError("봇이 출력한 전체 참가 신청 양식을 사용해 주세요.");
+  var snapshot = {
+    applyDate: v41RequiredSnapshotDate(value),
+    recruitNo: v41RequiredSnapshotRecruitNo(value),
+    mode: v41RequiredSnapshotMode(value),
+    capacity: v41RequiredSnapshotCapacity(value)
+  };
+  v41RequireCompleteSnapshotSlots(value, snapshot.capacity);
+  return snapshot;
 }
 
 function v41RequiredSnapshotRecruitNo(text) {
@@ -492,7 +551,7 @@ function v41ReadSeasonPreview(room, sender) {
   try { saved = JSON.parse(String(DataBase.getDataBase(v41SeasonPreviewKey(room, sender)) || "null")); } catch (ignored) {}
   if (!saved || typeof saved !== "object" || typeof saved.code !== "string" ||
       typeof saved.createdAt !== "number" || typeof saved.applyDate !== "string" ||
-      typeof saved.recruitNo !== "number" || !v41IsArray(saved.participants)) {
+      typeof saved.recruitNo !== "number" || saved.mode !== "RIFT" || !v41IsArray(saved.participants)) {
     v41ClearSeasonPreview(room, sender);
     return null;
   }
@@ -504,9 +563,10 @@ function v41ReadSeasonPreview(room, sender) {
 }
 
 function v41CreateSeasonPreview(room, sender, text) {
-  var applyDate = v41RequiredSnapshotDate(text);
-  var recruitNo = v41RequiredSnapshotRecruitNo(text);
-  var participants = v41SeasonParticipants(text);
+  var authoritative = v41AuthoritativeSeasonSnapshot(text);
+  var applyDate = authoritative.applyDate;
+  var recruitNo = authoritative.recruitNo;
+  var participants = v41SeasonParticipants(text, true);
   var slots = {};
   var index = 0;
   if (participants.length > 99) {
@@ -516,7 +576,7 @@ function v41CreateSeasonPreview(room, sender, text) {
     if (slots[String(participants[index].slotNo)]) throw v41UserError("내전 전체 양식에 중복된 번호가 있습니다.");
     slots[String(participants[index].slotNo)] = true;
   }
-  var summary = { applyDate: applyDate, recruitNo: recruitNo, participants: participants };
+  var summary = { applyDate: applyDate, recruitNo: recruitNo, mode: authoritative.mode, participants: participants };
   var hash = v41SnapshotSummaryHash(summary);
   var code = String(KLOL_V2_KAKAO.newUuid()).replace(/-/g, "").substring(0, 6).toUpperCase();
   var preview = {
@@ -524,6 +584,7 @@ function v41CreateSeasonPreview(room, sender, text) {
     createdAt: new Date().getTime(),
     applyDate: applyDate,
     recruitNo: recruitNo,
+    mode: authoritative.mode,
     participants: participants,
     count: participants.length,
     hash: hash
@@ -551,14 +612,14 @@ function v41ConfirmSeasonPreview(room, sender, code, replier) {
   v41ClearSeasonPreview(room, sender);
   var result = KLOL_V2_KAKAO.seasonApplications({
     action: "SYNC", seasonId: v41SeasonId(), applyDate: preview.applyDate,
-    recruitNo: preview.recruitNo, participants: preview.participants
+    recruitNo: preview.recruitNo, mode: preview.mode, participants: preview.participants
   }, KLOL_V2_KAKAO.contextFromChat(room, sender));
   return v41Reply(replier, v41FormatSeason(result));
 }
 
 function v41IsV1SeasonSnapshot(text) {
-  var value = v41NormalizeText(text);
-  return /내전하실분\s*#\s*\d{1,3}/.test(value) &&
+  var value = v41Trim(v41NormalizeText(text));
+  return /^📢\s*내전하실분\s*#\s*\d{1,3}/.test(value) &&
     /참가\s*신청\s*양식/.test(value) &&
     /이름\s*\/\s*현티어\s*\/\s*최고티어/.test(value) &&
     /^\s*\d{1,2}\s*[.)]/m.test(value);
@@ -573,12 +634,13 @@ function v41V1SeasonSyncKey(room, sender, text) {
 function v41HandleV1SeasonSnapshot(text, room, sender, replier) {
   var key = v41V1SeasonSyncKey(room, sender, text);
   if (String(DataBase.getDataBase(key) || "") === "done") return true;
-  var applyDate = v41DateFromSnapshot(text);
-  var recruitNo = v41RequiredSnapshotRecruitNo(text);
-  var participants = v41SeasonParticipants(text);
+  var authoritative = v41AuthoritativeSeasonSnapshot(text);
+  var applyDate = authoritative.applyDate;
+  var recruitNo = authoritative.recruitNo;
+  var participants = v41SeasonParticipants(text, true);
   var result = KLOL_V2_KAKAO.seasonApplications({
     action: "SYNC", seasonId: v41SeasonId(), applyDate: applyDate,
-    recruitNo: recruitNo, participants: participants
+    recruitNo: recruitNo, mode: authoritative.mode, participants: participants
   }, KLOL_V2_KAKAO.contextFromChat(room, sender, {
     requestKey: "mbr-v41-v1-season-" + v41SnapshotSummaryHash(v41NormalizeText(text)).toLowerCase()
   }));
@@ -629,7 +691,7 @@ function v41HandleRecruitJson(text, room, sender, replier) {
   if (!aggregateId || expectedRevision < 0) throw new Error("모집 ID 또는 최신 revision을 확인해 주세요.");
   var payload = { type: type, aggregateId: aggregateId, payload: input.payload };
   var result = KLOL_V2_KAKAO.recruit(payload, KLOL_V2_KAKAO.contextFromChat(room, sender, {
-    expectedRevision: expectedRevision
+    expectedRevision: expectedRevision, commandSource: "RAW_V2"
   }));
   v41SaveRecruitState(room, kind, result);
   v41Reply(replier, v41ResultMessage(result));
@@ -1093,6 +1155,9 @@ function v41HandleCompat(text, room, sender, replier) {
   if (parsed.domain === "PARTY") return v41HandleLegacyParty(parsed, text, room, sender, replier);
   if (parsed.domain === "INHOUSE") return v41HandleLegacyInhouse(parsed, room, sender, replier);
   if (parsed.domain === "SCRIM") return v41HandleLegacyScrim(parsed, text, room, sender, replier);
+  if (parsed.domain === "OPERATION_FORM" && parsed.action === "INVALID") {
+    return v41Reply(replier, "[K-LOL.GG 양식 필드 누락]\n필수 항목을 확인해 주세요: " + parsed.missingFields.join(", "));
+  }
   if (parsed.domain === "OPERATION_FORM" && parsed.action === "SUBMIT") {
     var intent = v41LegacyIntent(room, sender, text, function () { return {}; });
     var result = KLOL_V2_KAKAO.operationForm(parsed.formType, parsed.payload, KLOL_V2_KAKAO.contextFromChat(room, sender, {

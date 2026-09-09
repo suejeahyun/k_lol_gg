@@ -6,8 +6,8 @@ import test from "node:test";
 const root = resolve(import.meta.dirname, "..");
 
 const routes = {
-  PUBLIC_KAKAO_ROOM_COMMAND: ["recruits", "operation-forms", "openchat", "search-player"],
-  TRUSTED_KAKAO_SENDER_COMMAND: ["season-applications", "managed-forms", "scheduled-notice", "image-receive"],
+  PUBLIC_KAKAO_ROOM_COMMAND: ["recruits", "operation-forms", "managed-forms", "openchat", "search-player"],
+  TRUSTED_KAKAO_SENDER_COMMAND: ["season-applications", "scheduled-notice", "image-receive"],
 };
 
 test("Kakao route capability policy is explicit for every phone endpoint", async () => {

@@ -22,7 +22,9 @@ import type { KakaoAssistantResult } from "./postgres-kakao-assistant";
 import type { KakaoImageSessionResult } from "./postgres-kakao-image-receive";
 
 const problems = Object.freeze({
-  forbidden: definePublicProblem({ code: "WEBHOOK_FORBIDDEN", status: 401, title: "웹훅 인증에 실패했습니다.", detail: "서명과 발신 설정을 확인해 주세요." }),
+  forbidden: definePublicProblem({ code: "KAKAO_INTEGRATION_ERROR", status: 401, title: "연동 설정 오류", detail: "연동 설정 오류: 봇의 서버 주소와 서명 설정을 확인해 주세요." }),
+  roomForbidden: definePublicProblem({ code: "KAKAO_ROOM_FORBIDDEN", status: 403, title: "이 카카오톡 방은 아직 연동되지 않았습니다.", detail: "이 카카오톡 방은 아직 연동되지 않았습니다. /V2연동확인 결과를 관리자에게 전달해 주세요." }),
+  capabilityForbidden: definePublicProblem({ code: "KAKAO_CAPABILITY_FORBIDDEN", status: 403, title: "이 기능 권한 없음", detail: "이 기능 권한 없음: 이 요청에 필요한 권한을 확인해 주세요." }),
   invalid: definePublicProblem({ code: "INVALID_KAKAO_REQUEST", status: 400, title: "Kakao 요청이 올바르지 않습니다.", detail: "명령과 허용된 입력 필드를 확인해 주세요." }),
   mismatch: definePublicProblem({ code: "IDEMPOTENCY_MISMATCH", status: 409, title: "멱등성 키가 다른 요청에 사용되었습니다.", detail: "새 Idempotency-Key로 다시 요청해 주세요." }),
   unavailable: definePublicProblem({ code: "KAKAO_ASSISTANT_UNAVAILABLE", status: 503, title: "Kakao 보조 서비스를 사용할 수 없습니다.", detail: "잠시 후 다시 시도해 주세요." }),
@@ -41,7 +43,12 @@ export async function prepareKakaoSignedJson(
   const verification = await verifyKakaoHttpRequest(request, new Date(), maximumBytes, policy);
   if (!verification.ok) {
     recordKakaoWebhookRejection(verification.code, { route: new URL(request.url).pathname, traceId });
-    return { ok: false as const, response: problemResponse(problems.forbidden, { traceId }) };
+    const problem = verification.code === "ROOM_FORBIDDEN"
+      ? problems.roomForbidden
+      : verification.code === "CAPABILITY_FORBIDDEN"
+        ? problems.capabilityForbidden
+        : problems.forbidden;
+    return { ok: false as const, response: problemResponse(problem, { traceId }) };
   }
   const verified = verification.value;
   const parsed = await readJsonBody(new Request(request.url, {

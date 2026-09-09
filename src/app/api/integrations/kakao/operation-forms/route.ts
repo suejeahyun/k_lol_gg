@@ -35,7 +35,7 @@ export async function POST(request: Request) {
   const verification = await verifyKakaoHttpRequest(request, new Date(), MAXIMUM_KAKAO_BODY_BYTES, PUBLIC_KAKAO_ROOM_COMMAND);
   if (!verification.ok) {
     recordKakaoWebhookRejection(verification.code, { route: new URL(request.url).pathname, traceId });
-    return operationFormWebhookForbiddenResponse(traceId);
+    return operationFormWebhookForbiddenResponse(verification.code, traceId);
   }
   const { rawBody, intent } = verification.value;
   if (!await isRuntimeKakaoFeatureEnabled("recruitingEnabled")) return operationFormUnavailableResponse(traceId);

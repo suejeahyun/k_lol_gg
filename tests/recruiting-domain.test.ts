@@ -7,6 +7,8 @@ import {
   kakaoRecruitDateKey,
   kakaoRecruitTimeText,
   kakaoRoomOwnsRecruitAggregate,
+  kakaoSenderControlsRecruitAggregate,
+  kakaoRecruitCommandAccess,
   shouldAutoFinishRecruit,
   syncScrimRecruit,
   syncRecruitParty,
@@ -24,7 +26,7 @@ function party(): RecruitParty {
 }
 
 function scrim(): ScrimRecruit {
-  return { id: "scrim-1", revision: 0, sourceRoomId: null, recruitDate: "2026-09-08", scrimNumber: 1, tournamentId: "t1", legacyTournamentNumber: null, requesterTeamId: "team-a", opponentTeamId: null, requesterLineup: null, opponentLineup: null, legacyMemo: null, legacySeriesRuleText: null, status: "RECRUITING", scheduledAt: null, bestOf: 3 };
+  return { id: "scrim-1", revision: 0, sourceRoomId: null, sourceSenderId: null, opponentSenderId: null, recruitDate: "2026-09-08", scrimNumber: 1, tournamentId: "t1", legacyTournamentNumber: null, requesterTeamId: "team-a", opponentTeamId: null, requesterLineup: null, opponentLineup: null, legacyMemo: null, legacySeriesRuleText: null, status: "RECRUITING", scheduledAt: null, bestOf: 3 };
 }
 
 test("KST recruit date is stable across the UTC day boundary", () => {
@@ -151,4 +153,33 @@ test("full scrim sync replaces V1 form fields but binds date, number, tournament
 
 test("public party DTO excludes room, sender, notes and request keys by construction", () => {
   assert.deepEqual(Object.keys(toPublicRecruitPartyDto(party())).sort(), ["gameInfo", "id", "maximumMembers", "memberCount", "recruitNumber", "scheduledStartAt", "startTimeText", "status", "title", "type"]);
+});
+
+test("Kakao command access separates public create/read/join from controller lifecycle changes", () => {
+  assert.equal(kakaoRecruitCommandAccess("CREATE_PARTY"), "PUBLIC_CREATE");
+  assert.equal(kakaoRecruitCommandAccess("CREATE_SCRIM"), "PUBLIC_CREATE");
+  assert.equal(kakaoRecruitCommandAccess("GET_PARTY_STATUS"), "PUBLIC_READ");
+  assert.equal(kakaoRecruitCommandAccess("JOIN_SCRIM"), "PUBLIC_JOIN");
+  for (const type of ["SYNC_PARTY", "FINISH_PARTY", "CANCEL_PARTY", "SYNC_SCRIM", "REOPEN_SCRIM", "CONFIRM_SCRIM", "COMPLETE_SCRIM", "CANCEL_SCRIM"] as const) {
+    assert.equal(kakaoRecruitCommandAccess(type), "CONTROLLER", type);
+  }
+  assert.equal(kakaoRecruitCommandAccess("RESET_PARTY"), "DENY");
+});
+
+test("Kakao creator, joined opponent leader, or trusted operator controls lifecycle commands", () => {
+  const base = { sourceSenderId: "sender-creator", opponentSenderId: "sender-opponent", signedSenderId: "sender-other", trustedSender: false };
+  assert.equal(kakaoSenderControlsRecruitAggregate({ ...base, signedSenderId: "sender-creator" }), true);
+  assert.equal(kakaoSenderControlsRecruitAggregate({ ...base, signedSenderId: "sender-opponent" }), true);
+  assert.equal(kakaoSenderControlsRecruitAggregate({ ...base, trustedSender: true }), true);
+  assert.equal(kakaoSenderControlsRecruitAggregate(base), false);
+  assert.equal(kakaoSenderControlsRecruitAggregate({ ...base, sourceSenderId: null, opponentSenderId: null }), false);
+});
+
+test("public scrim join binds the opponent leader and reopen clears that controller", () => {
+  const joined = transitionScrimRecruit({
+    scrim: scrim(), expectedRevision: 0, command: "JOIN", opponentTeamId: "team-b", opponentSenderId: "sender-opponent",
+  });
+  assert.equal(joined.opponentSenderId, "sender-opponent");
+  const reopened = transitionScrimRecruit({ scrim: joined, expectedRevision: 1, command: "REOPEN" });
+  assert.equal(reopened.opponentSenderId, null);
 });

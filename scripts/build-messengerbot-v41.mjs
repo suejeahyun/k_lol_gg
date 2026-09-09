@@ -14,7 +14,7 @@ const compatibilityPath = resolve(integrationDirectory, "KLOL_KAKAO_BOT_V41_V1_C
 const routerPath = resolve(integrationDirectory, "KLOL_KAKAO_BOT_V41_V2_ROUTER.js");
 const outputPath = resolve(integrationDirectory, "KLOL_KAKAO_BOT_V41_V2_COMPLETE.js");
 const mobileOutputPath = resolve(integrationDirectory, "KLOL_KAKAO_BOT_V41_MESSENGERBOT_R.js");
-const bundleMarker = "KLOL_V41_BUNDLE_R7_SLASH_PARITY";
+const bundleMarker = "KLOL_V41_BUNDLE_R8_CONTROLLER_AUTH_SYNC";
 
 const [transportSource, compatibilitySource, routerSource] = await Promise.all([
   readFile(transportPath, "utf8"),
@@ -76,6 +76,7 @@ function compactPreservingSemicolons(source) {
   let output = "";
   let previous = null;
   let closingBraceCount = 0;
+  let semicolonCount = 0;
   for (const token of tokens) {
     const priorLast = previous?.raw.slice(-1) ?? "";
     const currentFirst = token.raw.charAt(0);
@@ -86,10 +87,13 @@ function compactPreservingSemicolons(source) {
     const keywordBeforeRegex = token.type === "regexp" && /^(?:return|throw|case|delete|void|typeof|new|in|instanceof)$/u.test(previous?.raw ?? "");
     if (wordsTouch || operatorsTouch || keywordBeforeRegex) output += " ";
     output += token.raw;
-    if (token.raw === ";") output += "\n";
+    if (token.raw === ";") {
+      semicolonCount += 1;
+      if (semicolonCount % 2 === 0) output += "\n";
+    }
     if (token.raw === "}") {
       closingBraceCount += 1;
-      if (closingBraceCount % 2 === 1) output += "\n";
+      if (closingBraceCount % 4 !== 0) output += "\n";
     }
     previous = token;
   }
@@ -100,6 +104,10 @@ const mobile = compactPreservingSemicolons(mobileAst.code);
 if (mobile.length >= 65_535) {
   throw new Error(`MessengerBot R mobile bundle exceeds the 65,535 character limit: ${mobile.length}`);
 }
+const projectedCrLfLength = mobile.length + (mobile.match(/\n/g) ?? []).length;
+if (projectedCrLfLength >= 65_535) {
+  throw new Error(`MessengerBot R mobile bundle exceeds the 65,535 character limit after CRLF conversion: ${projectedCrLfLength}`);
+}
 
 await Promise.all([
   writeFile(outputPath, complete, "utf8"),
@@ -108,3 +116,4 @@ await Promise.all([
 console.log("Generated integrations/messengerbot-r/KLOL_KAKAO_BOT_V41_V2_COMPLETE.js");
 console.log("Generated integrations/messengerbot-r/KLOL_KAKAO_BOT_V41_MESSENGERBOT_R.js");
 console.log(`MessengerBot R mobile characters: ${mobile.length}`);
+console.log(`MessengerBot R mobile CRLF projection: ${projectedCrLfLength}`);

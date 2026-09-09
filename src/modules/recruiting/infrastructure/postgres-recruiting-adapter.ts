@@ -23,7 +23,7 @@ import type { V2Transaction } from "@/platform/db/transaction";
 import { withTransaction } from "@/platform/db/transaction";
 
 import { RecruitingApplicationError } from "../application/command-handler";
-import type { RecruitingCommand, RecruitingCommandActor } from "../application/commands";
+import { kakaoRecruitCommandAccess, type RecruitingCommand, type RecruitingCommandActor } from "../application/commands";
 import type {
   AdminRecruitingStatusDto,
   RecruitCommandReceipt,
@@ -37,8 +37,9 @@ import type {
   RecruitingUnitOfWork,
 } from "../application/ports";
 import { toPublicPartyDto, toPublicScrimDto } from "../application/public-dto";
-import { kakaoRoomOwnsRecruitAggregate } from "../domain/recruiting";
+import { kakaoRoomOwnsRecruitAggregate, kakaoSenderControlsRecruitAggregate } from "../domain/recruiting";
 import type { RecruitMember, RecruitParty, ScrimLineup, ScrimRecruit } from "../domain/recruiting";
+import { splitKakaoIdentifiers } from "./kakao-http-request";
 
 const RECEIPT_TTL_MILLISECONDS = 24 * 60 * 60 * 1_000;
 const NONCE_TTL_MILLISECONDS = 15 * 60 * 1_000;
@@ -83,6 +84,7 @@ function partyFromRow(row: typeof recruitParties.$inferSelect): RecruitParty {
     id: row.id,
     revision: row.revision,
     sourceRoomId: row.sourceRoomId,
+    sourceSenderId: row.sourceSenderId,
     recruitDate: row.recruitDate,
     resetSequence: row.resetSequence,
     recruitNumber: row.recruitNumber,
@@ -107,6 +109,8 @@ function scrimFromRow(row: typeof scrimRecruits.$inferSelect): ScrimRecruit {
     id: row.id,
     revision: row.revision,
     sourceRoomId: row.sourceRoomId,
+    sourceSenderId: row.sourceSenderId,
+    opponentSenderId: row.opponentSenderId,
     recruitDate: row.recruitDate,
     scrimNumber: row.scrimNumber,
     tournamentId: row.tournamentId,
@@ -207,12 +211,22 @@ export class PostgresRecruitingAdapter implements
 
     if (actor.kind === "BOT" && !input.commandType.startsWith("CREATE_")) {
       const aggregate = ownedAggregate(input.commandType);
-      const sourceRoomId = aggregate === "PARTY"
-        ? (await transaction.select({ sourceRoomId: recruitParties.sourceRoomId }).from(recruitParties).where(eq(recruitParties.id, input.aggregateId)).limit(1))[0]?.sourceRoomId
-        : (await transaction.select({ sourceRoomId: scrimRecruits.sourceRoomId }).from(scrimRecruits).where(eq(scrimRecruits.id, input.aggregateId)).limit(1))[0]?.sourceRoomId;
-      if (!kakaoRoomOwnsRecruitAggregate(sourceRoomId ?? null, actor.authorizationIntent.roomId)) {
+      const ownership = aggregate === "PARTY"
+        ? (await transaction.select({ sourceRoomId: recruitParties.sourceRoomId, sourceSenderId: recruitParties.sourceSenderId }).from(recruitParties).where(eq(recruitParties.id, input.aggregateId)).limit(1))[0]
+        : (await transaction.select({ sourceRoomId: scrimRecruits.sourceRoomId, sourceSenderId: scrimRecruits.sourceSenderId, opponentSenderId: scrimRecruits.opponentSenderId }).from(scrimRecruits).where(eq(scrimRecruits.id, input.aggregateId)).limit(1))[0];
+      if (!kakaoRoomOwnsRecruitAggregate(ownership?.sourceRoomId ?? null, actor.authorizationIntent.roomId)) {
         throw new RecruitingApplicationError("NOT_FOUND", "The recruiting aggregate was not found in this Kakao room.");
       }
+      const access = kakaoRecruitCommandAccess(input.commandType);
+      if (access === "DENY") {
+        throw new RecruitingApplicationError("FORBIDDEN", "This recruiting command is not available through Kakao.");
+      }
+      if (access === "CONTROLLER" && !kakaoSenderControlsRecruitAggregate({
+        sourceSenderId: ownership?.sourceSenderId ?? null,
+        opponentSenderId: (ownership as { opponentSenderId?: string | null } | undefined)?.opponentSenderId ?? null,
+        signedSenderId: actor.authorizationIntent.senderId,
+        trustedSender: splitKakaoIdentifiers(process.env.KAKAO_WEBHOOK_ALLOWED_SENDERS).has(actor.authorizationIntent.senderId),
+      })) throw new RecruitingApplicationError("FORBIDDEN", "This Kakao lifecycle command requires an aggregate controller.");
     }
 
     const intent = actor.authorizationIntent;
@@ -344,6 +358,7 @@ export class PostgresRecruitingAdapter implements
     const values = {
       revision: input.party.revision,
       sourceRoomId: input.party.sourceRoomId,
+      sourceSenderId: input.party.sourceSenderId,
       recruitDate: input.party.recruitDate,
       resetSequence: input.party.resetSequence,
       recruitNumber: input.party.recruitNumber,
@@ -382,6 +397,8 @@ export class PostgresRecruitingAdapter implements
     const values = {
       revision: input.scrim.revision,
       sourceRoomId: input.scrim.sourceRoomId,
+      sourceSenderId: input.scrim.sourceSenderId,
+      opponentSenderId: input.scrim.opponentSenderId,
       recruitDate: input.scrim.recruitDate,
       scrimNumber: input.scrim.scrimNumber,
       tournamentId: input.scrim.tournamentId,
