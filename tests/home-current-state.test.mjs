@@ -51,13 +51,18 @@ test("홈 피드 공개 projection은 소유자·회원·Discord 필드를 선�
   }
 });
 
-test("홈은 DB 전체 활성 챔피언의 KST 일일 선택과 공개 현재 랭킹을 표시한다", () => {
+test("홈은 DB 전체 활성 챔피언을 읽되 여성 허용 목록에서 KST 일일 안내 챔피언을 선택한다", () => {
   const runtime = source("../src/modules/home/infrastructure/runtime-home-data.ts");
   const domain = source("../src/modules/home/domain/home-snapshot.ts");
+  const guidePolicy = source("../src/modules/home/domain/home-guide-champions.ts");
   const home = source("../src/app/(public)/(home)/page.tsx");
   assert.match(runtime, /service\.listPublic\(\{ query: null, status: "ACTIVE"/);
   assert.match(runtime, /Math\.ceil\(firstPage\.total \/ pageSize\)/);
   assert.match(domain, /timeZone: "Asia\/Seoul"/);
+  assert.match(domain, /findHomeGuideChampion/);
+  assert.match(guidePolicy, /HOME_GUIDE_CHAMPION_COUNT = 68/);
+  assert.match(home, /data-guide-audience="female-only"/);
+  assert.match(home, /pastel-breeze-frame-v1\.avif/);
   assert.match(home, /우리 같이/);
   assert.match(home, /롤하자~/);
   assert.match(home, /getPublicSeasonRanking\(null, 10\)/);

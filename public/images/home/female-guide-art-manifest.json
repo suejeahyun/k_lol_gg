@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "assetVersion": "female-guide-art-v1",
+  "generatedOn": "2026-09-10",
+  "useCase": "stylized-concept",
+  "purpose": "홈 오늘의 안내 챔피언 공통 테마 장식 레이어",
+  "disclosure": "built-in image_gen으로 생성한 비공식 장식 이미지입니다. 챔피언 식별 이미지는 Riot Data Dragon의 공식 스플래시를 사용합니다.",
+  "prompt": "밝고 귀엽고 발랄하며 하늘하늘 살랑살랑한 분위기의 파스텔 하늘, 구름, 다섯 장 꽃, 흩날리는 꽃잎, 반짝임, 바람 리본을 투명 배경의 와이드 홈 히어로 장식 레이어로 제작. 중앙은 챔피언을 위해 비우고 텍스트, 로고, 캐릭터, 워터마크는 제외.",
+  "source": {
+    "path": "output/home-female-guide-art-20260910/pastel-breeze-frame-v1-source.png",
+    "width": 1672,
+    "height": 940,
+    "bytes": 981522,
+    "sha256": "8F4B3B8FA5A4549B7BF6E11D90EE46CA0ED7F8C1FB94DE8760BF05F7C4208EDD"
+  },
+  "files": [
+    {
+      "path": "/images/home/pastel-breeze-frame-v1.avif",
+      "format": "avif",
+      "width": 1672,
+      "height": 940,
+      "bytes": 120353,
+      "sha256": "CBBD9877B2846522F98DBEE270A7774EA0CC226EEF33D26B3A4997C583DFC03E"
+    },
+    {
+      "path": "/images/home/pastel-breeze-frame-v1.webp",
+      "format": "webp",
+      "width": 1672,
+      "height": 940,
+      "bytes": 264170,
+      "sha256": "DB40357EB3F689DE2B75D3B81059721374B9D1E1EC8408C334F346C509B0C04D"
+    }
+  ]
+}

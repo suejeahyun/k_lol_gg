@@ -179,7 +179,14 @@ export default async function HomePage() {
           </div>
         </div>
 
-        <div className="hero-art" data-tone={championPresentation.tone}>
+        <div
+          className="hero-art"
+          data-tone={championPresentation.tone}
+          data-guide-audience="female-only"
+          data-guide-art="pastel-breeze-frame-v1"
+          data-champion-key={displayChampion.key}
+          data-champion-name={displayChampion.displayName}
+        >
           <ChampionPortrait
             className="hero-art__champion"
             displayName={displayChampion.displayName}
@@ -188,6 +195,17 @@ export default async function HomePage() {
             variant="splash"
             eager
           />
+          <picture className="hero-art__theme">
+            <source srcSet="/images/home/pastel-breeze-frame-v1.avif" type="image/avif" />
+            <img
+              src={championPresentation.localImageSrc ?? "/images/home/pastel-breeze-frame-v1.webp"}
+              alt=""
+              width={1672}
+              height={940}
+              loading="eager"
+              decoding="async"
+            />
+          </picture>
           <div className="hero-art__wash" aria-hidden="true" />
           <div className="hero-art__label">
             <span>오늘의 안내 챔피언</span>

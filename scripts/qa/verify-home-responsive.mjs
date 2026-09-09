@@ -72,9 +72,11 @@ while (Date.now() < deadline) {
     expression: `(() => {
       const hero = document.querySelector('.hero-panel');
       const image = document.querySelector('.hero-art__champion');
+      const themeImage = document.querySelector('.hero-art__theme img');
       return document.readyState === 'complete' &&
         Boolean(hero && hero.getBoundingClientRect().width > 0) &&
-        Boolean(image && (image.tagName !== 'IMG' || image.naturalWidth > 0));
+        Boolean(image && (image.tagName !== 'IMG' || image.naturalWidth > 0)) &&
+        Boolean(themeImage && themeImage.complete && themeImage.naturalWidth > 0);
     })()`,
     returnByValue: true,
   });
@@ -96,7 +98,14 @@ const evaluation = await command("Runtime.evaluate", {
       const element = document.querySelector(selector);
       if (!element) return null;
       const value = element.getBoundingClientRect();
-      return { x: value.x, y: value.y, width: value.width, height: value.height, right: value.right };
+      return {
+        x: value.x,
+        y: value.y,
+        width: value.width,
+        height: value.height,
+        right: value.right,
+        bottom: value.bottom,
+      };
     };
     const rootWidth = document.documentElement.clientWidth;
     const elements = [...document.querySelectorAll('body *')];
@@ -134,6 +143,8 @@ const evaluation = await command("Runtime.evaluate", {
       };
     }).sort((left, right) => right.scrollWidth - left.scrollWidth).slice(0, 25);
     const image = document.querySelector('.hero-art__champion');
+    const themeImage = document.querySelector('.hero-art__theme img');
+    const heroArt = document.querySelector('.hero-art');
     return {
       viewport: {
         innerWidth: window.innerWidth,
@@ -147,6 +158,7 @@ const evaluation = await command("Runtime.evaluate", {
         hero: rect('.hero-panel'),
         heroCopy: rect('.hero-copy'),
         heroArt: rect('.hero-art'),
+        heroLabel: rect('.hero-art__label'),
         search: rect('.hero-search'),
         searchButton: rect('.hero-search button'),
         mobileNav: rect('.mobile-nav'),
@@ -158,6 +170,19 @@ const evaluation = await command("Runtime.evaluate", {
         naturalHeight: image.naturalHeight ?? null,
         currentSrc: image.currentSrc ?? null,
       } : null,
+      themeImage: themeImage ? {
+        complete: themeImage.complete,
+        naturalWidth: themeImage.naturalWidth,
+        naturalHeight: themeImage.naturalHeight,
+        currentSrc: themeImage.currentSrc,
+        opacity: getComputedStyle(themeImage).opacity,
+      } : null,
+      guide: heroArt ? {
+        audience: heroArt.getAttribute('data-guide-audience'),
+        art: heroArt.getAttribute('data-guide-art'),
+        championKey: heroArt.getAttribute('data-champion-key'),
+        championName: heroArt.getAttribute('data-champion-name'),
+      } : null,
       cumulativeLayoutShift: window.__homeLayoutShift || 0,
       homeGridTemplateColumns: getComputedStyle(document.querySelector('.home-page')).gridTemplateColumns,
       intrinsicCandidates,
@@ -168,6 +193,13 @@ const evaluation = await command("Runtime.evaluate", {
 });
 const result = evaluation.result?.value;
 if (!result) throw new Error("LAYOUT_EVALUATION_FAILED");
+const heroLabel = result.rects.heroLabel;
+const mobileNav = result.rects.mobileNav;
+const labelNavIntersection = heroLabel && mobileNav
+  ? Math.max(0, Math.min(heroLabel.right, mobileNav.right) - Math.max(heroLabel.x, mobileNav.x))
+    * Math.max(0, Math.min(heroLabel.bottom, mobileNav.bottom) - Math.max(heroLabel.y, mobileNav.y))
+  : 0;
+result.labelNavIntersection = labelNavIntersection;
 
 if (screenshotPath) {
   const screenshot = await command("Page.captureScreenshot", {
@@ -188,8 +220,14 @@ const requiredRects = Object.values(result.rects).filter(Boolean);
 if (
   scrollWidth > clientWidth ||
   requiredRects.some((value) => value.x < -0.5 || value.right > clientWidth + 0.5) ||
+  labelNavIntersection > 0.5 ||
   result.image?.complete !== true ||
   !(result.image?.naturalWidth > 0) ||
   !(result.image?.naturalHeight > 0) ||
+  result.themeImage?.complete !== true ||
+  !(result.themeImage?.naturalWidth > 0) ||
+  !(result.themeImage?.naturalHeight > 0) ||
+  result.guide?.audience !== "female-only" ||
+  result.guide?.art !== "pastel-breeze-frame-v1" ||
   result.cumulativeLayoutShift > 0.1
 ) process.exitCode = 1;

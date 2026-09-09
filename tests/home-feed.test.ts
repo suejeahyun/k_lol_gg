@@ -7,6 +7,12 @@ import {
   mergeRecentHomeItems,
   selectDailyHomeChampion,
 } from "../src/modules/home/domain/home-snapshot";
+import {
+  findHomeGuideChampion,
+  HOME_GUIDE_CHAMPION_COUNT,
+  HOME_GUIDE_CHAMPIONS,
+  HOME_GUIDE_OVERLAY_IMAGE_SRC,
+} from "../src/modules/home/domain/home-guide-champions";
 
 test("홈의 서로 다른 공개 피드는 시간 역순과 ID tie-break로 결정적으로 합쳐진다", () => {
   const first = Object.freeze([
@@ -50,12 +56,62 @@ test("오늘의 챔피언은 KST 날짜·활성 목록에 대해 SSR에서도 �
   assert.deepEqual([...cycle].sort(), champions.map((champion) => champion.key).sort());
 });
 
-test("오늘의 챔피언 문구는 이름을 자연스럽게 포함하고 승인된 로컬 팬아트만 연결한다", () => {
+test("오늘의 챔피언 문구는 이름을 자연스럽게 포함하고 공통 로컬 오버레이만 연결한다", () => {
   const ahri = homeChampionPresentation(champions[0]);
   assert.match(ahri.message, /아리/);
-  assert.equal(ahri.localImageSrc, "/images/brand/v2-hero-ahri-1600.webp");
+  assert.equal(ahri.localImageSrc, HOME_GUIDE_OVERLAY_IMAGE_SRC);
+  assert.equal(ahri.localImageAlt, null);
   const unknown = homeChampionPresentation({ key: "new-champion", displayName: "새 챔피언", imageUrl: null });
   assert.match(unknown.message, /새 챔피언/);
   assert.equal(unknown.localImageSrc, null);
   assert.throws(() => selectDailyHomeChampion(champions, "2026-02-30"), /DATE_KEY_INVALID/);
+});
+
+test("홈 안내 허용 목록은 공식 매핑을 통과한 여성 챔피언 68명과 고유 문구를 갖는다", () => {
+  assert.equal(HOME_GUIDE_CHAMPIONS.length, HOME_GUIDE_CHAMPION_COUNT);
+  assert.equal(new Set(HOME_GUIDE_CHAMPIONS.map((profile) => profile.id)).size, HOME_GUIDE_CHAMPION_COUNT);
+  assert.equal(new Set(HOME_GUIDE_CHAMPIONS.map((profile) => profile.message)).size, HOME_GUIDE_CHAMPION_COUNT);
+  assert.deepEqual(
+    [...new Set(HOME_GUIDE_CHAMPIONS.map((profile) => profile.tone))].sort(),
+    ["lilac", "mint", "peach", "sky"],
+  );
+  for (const profile of HOME_GUIDE_CHAMPIONS) {
+    assert.match(profile.message, /[가-힣]/u, profile.id);
+    assert.equal(profile.overlayImageSrc, HOME_GUIDE_OVERLAY_IMAGE_SRC, profile.id);
+    assert.equal(findHomeGuideChampion(profile.id)?.id, profile.id);
+  }
+});
+
+test("특례 네 챔피언은 포함하고 Kindred와 남성·미확인 후보는 기본 거부한다", () => {
+  for (const id of ["Anivia", "Belveth", "Naafiri", "RekSai"]) {
+    assert.equal(findHomeGuideChampion(id)?.id, id);
+  }
+  assert.equal(findHomeGuideChampion("Kindred"), null);
+  assert.equal(findHomeGuideChampion("Garen"), null);
+  assert.equal(findHomeGuideChampion("unreleased-champion"), null);
+
+  const mixed = [
+    { key: "Garen", displayName: "가렌", imageUrl: null },
+    { key: "Kindred", displayName: "킨드레드", imageUrl: null },
+    { key: "Ahri", displayName: "아리", imageUrl: null },
+  ] as const;
+  assert.equal(selectDailyHomeChampion(mixed, "2026-09-10").champion?.key, "Ahri");
+  assert.equal(selectDailyHomeChampion(mixed.slice(0, 2), "2026-09-10").champion, null);
+});
+
+test("레거시 키는 표시 이름으로 canonicalize하며 같은 공식 챔피언을 한 번만 선택한다", () => {
+  const aliases = [
+    { key: "v1-103", displayName: "아리", imageUrl: null },
+    { key: "Ahri", displayName: "아리", imageUrl: null },
+    { key: "v1-99", displayName: "럭스", imageUrl: null },
+  ] as const;
+  assert.equal(findHomeGuideChampion("v1-103", "아리")?.id, "Ahri");
+  const selected = ["2026-09-10", "2026-09-11"].map(
+    (dateKey) => selectDailyHomeChampion(aliases, dateKey).champion?.key,
+  );
+  assert.deepEqual([...new Set(selected)].sort(), ["Ahri", "v1-99"]);
+  assert.deepEqual(
+    selectDailyHomeChampion(aliases, "2026-09-10"),
+    selectDailyHomeChampion([...aliases].reverse(), "2026-09-10"),
+  );
 });

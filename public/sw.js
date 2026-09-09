@@ -1,4 +1,4 @@
-const CACHE_NAME = "klol-v2-static-v1";
+const CACHE_NAME = "klol-v2-static-v2";
 const PRECACHE = [
   "/manifest.webmanifest",
   "/icons/icon-192.png",
@@ -6,6 +6,7 @@ const PRECACHE = [
   "/icons/icon-maskable-512.png",
   "/images/brand/v2-hero-ahri-1600.webp",
   "/images/champions/lulu-card.avif",
+  "/images/home/pastel-breeze-frame-v1.avif",
 ];
 
 self.addEventListener("install", (event) => {
@@ -21,7 +22,12 @@ function isPublicStatic(request) {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return false;
   if (url.pathname === "/manifest.webmanifest" || url.pathname.startsWith("/_next/static/")) return true;
-  if (url.pathname.startsWith("/icons/") || url.pathname.startsWith("/images/brand/") || url.pathname.startsWith("/images/champions/")) {
+  if (
+    url.pathname.startsWith("/icons/") ||
+    url.pathname.startsWith("/images/brand/") ||
+    url.pathname.startsWith("/images/champions/") ||
+    url.pathname.startsWith("/images/home/")
+  ) {
     return /\.(?:avif|gif|ico|jpe?g|png|svg|webp)$/i.test(url.pathname);
   }
   return false;

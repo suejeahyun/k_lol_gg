@@ -1,3 +1,8 @@
+import {
+  findHomeGuideChampion,
+  type HomeGuideTone,
+} from "./home-guide-champions";
+
 export type HomeRecentMatch = Readonly<{
   id: string;
   title: string;
@@ -83,7 +88,7 @@ export type HomeChampionPresentation = Readonly<{
   message: string;
   localImageSrc: string | null;
   localImageAlt: string | null;
-  tone: "sky" | "lilac" | "peach" | "mint";
+  tone: HomeGuideTone;
 }>;
 
 const dayMilliseconds = 86_400_000;
@@ -124,11 +129,16 @@ export function selectDailyHomeChampion(
 
   const unique = new Map<string, HomeChampionCandidate>();
   for (const champion of champions) {
-    if (!unique.has(champion.key)) unique.set(champion.key, champion);
+    const profile = findHomeGuideChampion(champion.key, champion.displayName);
+    if (!profile) continue;
+    const previous = unique.get(profile.id);
+    if (!previous || champion.key.localeCompare(previous.key, "en-US") < 0) {
+      unique.set(profile.id, champion);
+    }
   }
-  const ordered = [...unique.values()].sort((left, right) => (
-    left.key === right.key ? 0 : left.key < right.key ? -1 : 1
-  ));
+  const ordered = [...unique.entries()]
+    .sort(([left], [right]) => left.localeCompare(right, "en-US"))
+    .map(([, champion]) => champion);
   if (ordered.length === 0) return { dateKey, champion: null };
 
   const epochDay = Math.floor(epoch / dayMilliseconds);
@@ -138,48 +148,16 @@ export function selectDailyHomeChampion(
   };
 }
 
-const knownChampionPresentation: Readonly<Record<string, HomeChampionPresentation>> = {
-  ahri: {
-    message: "오늘은 아리처럼 가볍게 합류해 볼까요?",
-    localImageSrc: "/images/brand/v2-hero-ahri-1600.webp",
-    localImageAlt: "하늘빛 꽃잎 사이에서 여우불을 띄운 아리 비공식 팬아트",
-    tone: "lilac",
-  },
-  lux: {
-    message: "럭스처럼 반짝이는 한 판을 만들어 봐요.",
-    localImageSrc: "/images/champions/lux-card.webp",
-    localImageAlt: "밝은 빛을 두른 럭스 비공식 팬아트",
-    tone: "sky",
-  },
-  janna: {
-    message: "잔잔한 바람처럼 기분 좋은 팀을 만나 봐요.",
-    localImageSrc: "/images/champions/janna-card.webp",
-    localImageAlt: "산뜻한 바람을 표현한 잔나 비공식 팬아트",
-    tone: "mint",
-  },
-  seraphine: {
-    message: "세라핀처럼 호흡을 맞춰 신나는 내전을 시작해요.",
-    localImageSrc: "/images/champions/seraphine-card.webp",
-    localImageAlt: "분홍빛 무대의 세라핀 비공식 팬아트",
-    tone: "peach",
-  },
-  lulu: {
-    message: "룰루처럼 통통 튀는 조합을 만들어 볼까요?",
-    localImageSrc: "/images/champions/lulu-card.webp",
-    localImageAlt: "보랏빛 마법을 표현한 룰루 비공식 팬아트",
-    tone: "lilac",
-  },
-  gwen: {
-    message: "그웬처럼 야무지게 오늘의 기록을 이어가요.",
-    localImageSrc: "/images/champions/gwen-card.webp",
-    localImageAlt: "푸른 실과 가위를 표현한 그웬 비공식 팬아트",
-    tone: "sky",
-  },
-};
-
 export function homeChampionPresentation(champion: HomeChampionCandidate): HomeChampionPresentation {
-  const known = knownChampionPresentation[champion.key.toLocaleLowerCase("en-US")];
-  if (known) return known;
+  const known = findHomeGuideChampion(champion.key, champion.displayName);
+  if (known) {
+    return {
+      message: known.message,
+      localImageSrc: known.overlayImageSrc,
+      localImageAlt: null,
+      tone: known.tone,
+    };
+  }
 
   const messages = [
     `${champion.displayName}와 함께 오늘의 첫 경기를 열어 봐요.`,
