@@ -16,6 +16,7 @@
 - 생성 aggregate UUID도 delivery ID에서 결정해 두 설치본의 body hash가 같게 유지된다.
 - 휴대폰은 30초 동안 같은 메시지 callback을 `DataBase` 키로 선차단한다. Java crypto가 없는 호환 런타임에는 ES5 결정적 fallback을 사용한다.
 - `/봇버전`, `/V2연동확인`은 설치본 ID와 key ID를 함께 표시한다.
+- R14.1은 `/V2진단`으로 주소 설정 실패, 서명·HTTPS 실행 실패, 서버 HTTP 응답을 비밀값 없이 구분한다.
 - `INVALID_SIGNATURE`, `INSTALLATION_REVOKED`, room binding 오류를 서로 다른 한국어 조치로 안내한다.
 - 거부 로그에는 원문 설치본·서명 대신 서버 키 HMAC의 12자리 비밀 비노출 hint만 기록한다.
 - `/admin/kakao/rooms`에서 설치본 상태, key ID, 마지막 봇 버전, 최근 확인 시각을 조회한다.
@@ -45,8 +46,8 @@
 
 | 파일 | 줄 | bytes | 문자 | SHA-256 |
 | --- | ---: | ---: | ---: | --- |
-| `KLOL_KAKAO_BOT_V41_MESSENGERBOT_R.js` | 91 | 75,915 | 64,358 | `242dac7363414599b6716a672107c98fcf63040d80c3164bf619ffa7c589bdca` |
-| `KLOL_KAKAO_BOT_V41_V2_COMPLETE.js` | 2,777 | 133,623 | 121,928 | `ef1a0a9ad3ba3c86b7f715a406c219e256b8e251d8e1211e31a9ee99b355e28e` |
+| `KLOL_KAKAO_BOT_V41_MESSENGERBOT_R.js` (R14.1) | 92 | 76,548 | 64,835 | `ca8bfd40453a84c1ce88cdd43e22a7695a42f6ec9f5678088d5dce322e83074d` |
+| `KLOL_KAKAO_BOT_V41_V2_COMPLETE.js` (R14.1) | 2,788 | 134,472 | 122,621 | `8dba11ab8774c742771ca31e3690878c1bb96b3ae03f95f366377fd46ac24844` |
 
 ### 운영 휴대폰 설치본(로컬 전용)
 
@@ -57,6 +58,10 @@
 - installation identity fingerprint: `c874f248ce4cc5f01395974310035ed3122e5a9d729aad3c6d32e386047893e7`
 - signing secret와 installation identity는 서로 다른 값임을 확인했다.
 - 비밀이 포함된 파일이므로 Git 추적·스테이징 대상에서 제외하고 로컬 전달 폴더에만 보관한다.
+- R14.1 진단 설치본: `E:\k-LOL.GG\_handoff\kakao-r14-20260909\KLOL_KAKAO_BOT_V41_R14_1_DIAGNOSTIC_READY_TO_INSTALL_PRIVATE.js`
+  - 93줄, 76,964 bytes, 65,251자, CRLF 환산 65,343자
+  - SHA-256: `565c904d534b88ac827e7e951b05bdc5ce850efd2125900e513bd643d5db9cf8`
+  - 버전: `KLOL_KAKAO_BOT_V41_V3_2026_09_09_R14_1_DIAGNOSTIC`
 
 ## 운영 반영 상태
 
@@ -88,10 +93,13 @@
 ### 현장 활성화 대기
 
 - 서버·DB rollout: 완료
-- MessengerBot R R14 운영 설치본: 생성·무결성 확인 완료, 실제 휴대폰 설치는 아직 미수행
-- 실제 signed 카카오 명령 smoke: 휴대폰 설치 뒤 수행 필요
+- MessengerBot R R14 운영 설치본: 2026-09-09 20:43 KST 휴대폰 설치 확인
+- `/봇버전`: `KLOL_KAKAO_BOT_V41_V3_2026_09_09_R14_INSTALLATION_DEDUPE`, installation `install-fcea8f04…`, key ID `current` 확인
+- 20:42 KST `10인파티` 1차 시도는 휴대폰에서 `설정 또는 입력 형식을 확인해 주세요`로 실패했다. 같은 시각 운영 Kakao API 로그와 installation/room/binding/pairing 레코드가 모두 0건이어서 서버 도달 전 휴대폰 예외로 판정했다.
+- R14.1 진단 패치: 생성 완료, contract 218/218·unit 481/481·핵심 회귀 20/20·101-command audit 통과, 휴대폰 교체 설치 대기
+- 실제 signed 카카오 명령 smoke: R14.1에서 `/V2연동확인`과 `/V2진단` 출력을 받아 원인을 좁힌 뒤 재시도 필요
 
-휴대폰에서 기존 봇·스크립트·프로필을 모두 중지하고 위 로컬 전용 R14 파일 하나만 활성화한 뒤 `/봇버전` → `/V2연동확인` → pairing → `5인파티` 순서로 확인한다.
+휴대폰에서 기존 봇·스크립트·프로필이 모두 중지됐는지 다시 확인하고 R14.1 한 개만 활성화한 뒤 `/봇버전` → `/V2연동확인` → `/V2진단` → pairing → `10인파티` 순서로 진행한다.
 
 ## 복구 지점
 
@@ -106,7 +114,7 @@
 - 기기의 복수 활성 스크립트·프로필 여부는 저장소에서 원격 확인할 수 없다. 설치 시 사람이 목록을 확인해야 한다.
 - callback에 stable `logId`가 없는 런타임에서는 30초 안의 동일 방·발신자·본문 재입력을 중복으로 볼 수 있다. 0.7.34a 이상과 stable callback 식별자를 사용한다.
 - 휴대폰 번들은 문자 제한까지 1,087자 여유뿐이므로 다음 기능 추가 전에 모듈 분리 또는 더 작은 명령 데이터 표현이 필요하다.
-- 실제 signed 요청·DB 등록·명령 mutation 검증은 휴대폰 설치 전이라 아직 확인되지 않았다.
+- 실제 signed 요청·DB 등록·명령 mutation 검증은 휴대폰 요청이 서버에 도달하지 않아 아직 확인되지 않았다.
 
 ## 다음 패치 추천
 

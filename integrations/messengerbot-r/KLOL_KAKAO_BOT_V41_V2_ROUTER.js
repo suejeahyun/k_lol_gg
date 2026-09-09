@@ -5,7 +5,7 @@
  * This router requires KLOL_KAKAO_BOT_V41_V2_TRANSPORT.js and
  * KLOL_KAKAO_BOT_V41_V1_COMPAT.js immediately before it.
  */
-var KLOL_V41_BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V41_V3_2026_09_09_R14_INSTALLATION_DEDUPE";
+var KLOL_V41_BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V41_V3_2026_09_09_R14_1_DIAGNOSTIC";
 var KLOL_V41_CURRENT_DELIVERY_ID = "";
 var KLOL_V41_DELIVERY_TTL_MS = 30000;
 
@@ -1462,10 +1462,19 @@ function v41Help() {
 function v41V2Help() {
   return [
     "[K-LOL.GG V2 관리 도움말]",
-    "/V2연동확인 · /V2방연동 <8자리 코드> · /V2사진세션 <사이트 발급 UUID>",
+    "/V2연동확인 · /V2진단 · /V2방연동 <8자리 코드> · /V2사진세션 <사이트 발급 UUID>",
     "/사진상태 · /V2사진취소",
     "/V2모집 · /V2시즌 · /V2양식"
   ].join("\n");
+}
+
+function v41Diagnostic(room, sender) {
+  var result = null;
+  try { KLOL_V2_KAKAO.publicBaseUrl(); }
+  catch (error) { return "[K-LOL.GG V2 진단]\n주소 설정: 확인 필요\n비밀값은 표시하지 않습니다."; }
+  try { result = KLOL_V2_KAKAO.openchatStatus(KLOL_V2_KAKAO.contextFromChat(room, sender)); }
+  catch (error) { return "[K-LOL.GG V2 진단]\n주소 설정: 정상\n서명·HTTPS 실행: 실패\nMessengerBot R 실행 로그를 확인해 주세요."; }
+  return "[K-LOL.GG V2 진단]\n서버 도달: HTTP " + Number(result.status || 0) + "\n서버 코드: " + String(result.body && result.body.code || "OK") + (result.traceId ? "\n문의 코드: " + String(result.traceId) : "") + "\n비밀값은 표시하지 않습니다.";
 }
 
 function response(room, msg, sender, isGroupChat, replier, imageDB, packageName, isMention, logId, channelId, userHash) {
@@ -1490,6 +1499,7 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName,
       catch (versionIdentityError) { return v41Reply(replier, "[K-LOL.GG 카카오봇]\n" + KLOL_V41_BOT_CODE_VERSION + "\n설치본: 설정 확인 필요"); }
     }
     if (text === "V2도움말") return v41Reply(replier, v41V2Help());
+    if (/^\/?V2진단$/i.test(text)) return v41Reply(replier, v41Diagnostic(room, sender));
     if (text === "도움말" || text === "명령어") return v41Reply(replier, v41Help());
     var legacyNotice = v41LegacyLinkNotice(text);
     if (legacyNotice) return v41Reply(replier, legacyNotice);

@@ -43,6 +43,7 @@ test("paste-ready V41 bot routes major commands only through the signed V2 trans
   assert.doesNotMatch(`${transport}\n${compatibility}\n${router}`, /BotManager|addListener|setCommandPrefix/u);
   assert.match(transport, /KLOL_V2_KAKAO_IDENTITY_SECRET/u);
   assert.match(transport, /identityForChat/u);
+  assert.match(router, /\/V2진단/u);
   assert.match(transport, /signature\s*=\s*"v3="/u);
   assert.match(transport, /signatureMaterial\(timestampSeconds, nonce, installId, keyId, deliveryId, version, roomId, senderId, bodyDigestHex\)/u);
   assert.match(transport, /body\.source = context\.commandSource === "RAW_V2" \? "RAW_V2" : "COMPAT_V1"/u);
@@ -72,7 +73,7 @@ test("paste-ready V41 bot routes major commands only through the signed V2 trans
   assert.match(build, /writeFile\(outputPath/u);
   assert.match(build, /writeFile\(mobileOutputPath/u);
   assert.match(mobile, /(?:function\s+response\s*\(|response\s*=\s*function\s*\()/u);
-  assert.match(mobile, /KLOL_KAKAO_BOT_V41_V3_2026_09_09_R14_INSTALLATION_DEDUPE/u);
+  assert.match(mobile, /KLOL_KAKAO_BOT_V41_V3_2026_09_09_R14_1_DIAGNOSTIC/u);
   assert.match(complete, /KLOL_V41_BUNDLE_R14_INSTALLATION_DEDUPE_START/u);
   assert.match(complete, /KLOL_V41_BUNDLE_R14_INSTALLATION_DEDUPE_END/u);
   assert.ok(mobile.length < complete.length, "mobile bundle should be smaller than the readable source bundle");

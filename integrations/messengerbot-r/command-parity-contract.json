@@ -4,6 +4,7 @@
   "commands": [
     { "domain": "CORE", "name": "봇버전", "sample": "봇버전" },
     { "domain": "CORE", "name": "V2도움말", "sample": "V2도움말" },
+    { "domain": "CORE", "name": "V2진단", "sample": "V2진단" },
     { "domain": "CORE", "name": "도움말", "sample": "도움말" },
     { "domain": "CORE", "name": "명령어", "sample": "명령어" },
     { "domain": "CORE", "name": "V2연동확인", "sample": "V2연동확인" },

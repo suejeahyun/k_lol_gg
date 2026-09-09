@@ -344,6 +344,17 @@ test("response accepts bitmap fallback, reports image progress, and clears termi
   assert.match(bot.replies.at(-1), /연결된 사진 세션이 없습니다/u);
 });
 
+test("response exposes a secret-free V2 transport diagnostic", async () => {
+  const bot = await harness();
+  bot.context.KLOL_V2_KAKAO.publicBaseUrl = () => "https://k-lol-gg.vercel.app";
+  bot.context.KLOL_V2_KAKAO.openchatStatus = () => ({ status: 403, body: { code: "ROOM_BINDING_REQUIRED" }, traceId: "trace-test" });
+  bot.respond("/V2진단");
+  assert.match(bot.replies.at(-1), /서버 도달: HTTP 403/u);
+  assert.match(bot.replies.at(-1), /ROOM_BINDING_REQUIRED/u);
+  assert.match(bot.replies.at(-1), /비밀값은 표시하지 않습니다/u);
+  assert.doesNotMatch(bot.replies.at(-1), /WEBHOOK_SECRET|IDENTITY_SECRET/u);
+});
+
 test("response scopes different senders to one stable channel and rejects the broken legacy room fallback", async () => {
   const bot = await harness();
   bot.respond("/랭킹", { room: "관리자. 99", sender: "관리자. 99", isGroupChat: false, channelId: "987654321" });
