@@ -377,7 +377,6 @@ var KLOL_V41_V1_COMPAT = (function () {
     var text = checked.ok ? trim(checked.text).replace(/^\//, "") : "";
     var match = null;
     var args = "";
-    var compact = text.replace(/\s+/g, "");
     var first = "";
     var mode = null;
     var recruitMatch = null;

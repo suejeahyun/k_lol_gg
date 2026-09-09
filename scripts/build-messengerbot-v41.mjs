@@ -2,6 +2,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { analyzeRhinoStatic, rhinoHasSideEffects } from "./lib/messengerbot-rhino-static.mjs";
 
 const require = createRequire(import.meta.url);
 const { minify } = require("next/dist/compiled/terser");
@@ -14,7 +15,7 @@ const compatibilityPath = resolve(integrationDirectory, "KLOL_KAKAO_BOT_V41_V1_C
 const routerPath = resolve(integrationDirectory, "KLOL_KAKAO_BOT_V41_V2_ROUTER.js");
 const outputPath = resolve(integrationDirectory, "KLOL_KAKAO_BOT_V41_V2_COMPLETE.js");
 const mobileOutputPath = resolve(integrationDirectory, "KLOL_KAKAO_BOT_V41_MESSENGERBOT_R.js");
-const bundleMarker = "KLOL_V41_BUNDLE_R14_2_INSTALLATION_SCOPE";
+const bundleMarker = "KLOL_V41_BUNDLE_R14_2_1_RHINO_CLEAN";
 
 const [transportSource, compatibilitySource, routerSource] = await Promise.all([
   readFile(transportPath, "utf8"),
@@ -47,10 +48,10 @@ const mobileAst = await minify(complete, {
     loops: true,
     reduce_vars: true,
     sequences: true,
-    side_effects: false,
+    side_effects: true,
     top_retain: ["response"],
     toplevel: true,
-    passes: 2,
+    passes: 3,
   },
   mangle: { toplevel: true, reserved: ["response"] },
   keep_fnames: /^response$/u,
@@ -64,6 +65,148 @@ const mobileAst = await minify(complete, {
 });
 
 if (!mobileAst.code) throw new Error("MessengerBot R mobile bundle generation failed");
+
+function explicitStatement(expression, source) {
+  const slice = (node) => source.slice(node.start, node.end);
+  if (expression.type === "SequenceExpression") {
+    return expression.expressions.map((item) => explicitStatement(item, source)).join("");
+  }
+  if (expression.type === "LogicalExpression") {
+    const condition = slice(expression.left);
+    const body = explicitStatement(expression.right, source);
+    return expression.operator === "&&"
+      ? `if(${condition}){${body}}`
+      : `if(!(${condition})){${body}}`;
+  }
+  if (expression.type === "ConditionalExpression") {
+    return `if(${slice(expression.test)}){${explicitStatement(expression.consequent, source)}}else{${explicitStatement(expression.alternate, source)}}`;
+  }
+  if (expression.type === "UnaryExpression" && expression.operator === "void") {
+    return explicitStatement(expression.argument, source);
+  }
+  if (
+    expression.type === "Literal" ||
+    expression.type === "Identifier" ||
+    expression.type === "ThisExpression" ||
+    expression.type === "FunctionExpression" ||
+    expression.type === "ArrayExpression" ||
+    expression.type === "ObjectExpression"
+  ) {
+    return "";
+  }
+  return `${slice(expression)};`;
+}
+
+function rewriteRhinoWarningStatements(source) {
+  const program = acorn.parse(source, { ecmaVersion: 5, allowReserved: true });
+  const replacements = [];
+  const visit = (node) => {
+    if (!node || typeof node !== "object") return;
+    if (node.type === "ExpressionStatement" && !node.directive) {
+      replacements.push({ start: node.start, end: node.end, text: explicitStatement(node.expression, source) });
+      return;
+    }
+    for (const key of Object.keys(node)) {
+      if (key === "start" || key === "end" || key === "loc" || key === "range") continue;
+      const value = node[key];
+      if (Array.isArray(value)) for (const item of value) visit(item);
+      else visit(value);
+    }
+  };
+  visit(program);
+  let rewritten = source;
+  for (const replacement of replacements.sort((left, right) => right.start - left.start)) {
+    rewritten = rewritten.slice(0, replacement.start) + replacement.text + rewritten.slice(replacement.end);
+  }
+  return rewritten;
+}
+
+function protectNestedCommaOperands(source) {
+  const helperName = "__";
+  const program = acorn.parse(source, { ecmaVersion: 5, allowReserved: true, preserveParens: true });
+  const wrap = [];
+  let helperCollision = false;
+  const visit = (node) => {
+    if (!node || typeof node !== "object") return;
+    if (node.type === "Identifier" && node.name === helperName) helperCollision = true;
+    if (node.type === "SequenceExpression") {
+      for (let index = 0; index < node.expressions.length - 1; index += 1) {
+        const operand = node.expressions[index];
+        if (!rhinoHasSideEffects(operand)) wrap.push({ start: operand.start, end: operand.end });
+      }
+    }
+    for (const key of Object.keys(node)) {
+      if (key === "start" || key === "end" || key === "loc" || key === "range") continue;
+      const value = node[key];
+      if (Array.isArray(value)) for (const item of value) visit(item);
+      else visit(value);
+    }
+  };
+  visit(program);
+  if (helperCollision) throw new Error(`MessengerBot R helper name collision: ${helperName}`);
+  if (wrap.length === 0) return source;
+  const openings = new Map();
+  const closings = new Map();
+  for (const item of wrap) {
+    openings.set(item.start, (openings.get(item.start) || "") + `${helperName}(`);
+    closings.set(item.end, ")" + (closings.get(item.end) || ""));
+  }
+  let output = "";
+  for (let index = 0; index <= source.length; index += 1) {
+    if (closings.has(index)) output += closings.get(index);
+    if (openings.has(index)) output += openings.get(index);
+    if (index < source.length) output += source.charAt(index);
+  }
+  return `var ${helperName}=function(value){return value;};` + output;
+}
+
+function parenthesizeAssignmentConditions(source) {
+  const program = acorn.parse(source, { ecmaVersion: 5, allowReserved: true });
+  const wrap = [];
+  const visit = (node) => {
+    if (!node || typeof node !== "object") return;
+    if (
+      (node.type === "IfStatement" || node.type === "WhileStatement" || node.type === "DoWhileStatement") &&
+      node.test && node.test.type === "AssignmentExpression"
+    ) wrap.push({ start: node.test.start, end: node.test.end });
+    for (const key of Object.keys(node)) {
+      if (key === "start" || key === "end" || key === "loc" || key === "range") continue;
+      const value = node[key];
+      if (Array.isArray(value)) for (const item of value) visit(item);
+      else visit(value);
+    }
+  };
+  visit(program);
+  let output = source;
+  for (const item of wrap.sort((left, right) => right.start - left.start)) {
+    output = output.slice(0, item.start) + "(" + output.slice(item.start, item.end) + ")" + output.slice(item.end);
+  }
+  return output;
+}
+
+function braceEmptyLoopBodies(source) {
+  const program = acorn.parse(source, { ecmaVersion: 5, allowReserved: true });
+  const replacements = [];
+  const visit = (node) => {
+    if (!node || typeof node !== "object") return;
+    if (
+      (node.type === "ForStatement" || node.type === "ForInStatement" || node.type === "WhileStatement" || node.type === "DoWhileStatement") &&
+      node.body && node.body.type === "EmptyStatement"
+    ) replacements.push({ start: node.body.start, end: node.body.end });
+    for (const key of Object.keys(node)) {
+      if (key === "start" || key === "end" || key === "loc" || key === "range") continue;
+      const value = node[key];
+      if (Array.isArray(value)) for (const item of value) visit(item);
+      else visit(value);
+    }
+  };
+  visit(program);
+  let output = source;
+  for (const item of replacements.sort((left, right) => right.start - left.start)) {
+    output = output.slice(0, item.start) + "{}" + output.slice(item.end);
+  }
+  return output;
+}
 
 function compactPreservingSemicolons(source) {
   const tokenizer = acorn.tokenizer(source, { ecmaVersion: 5, allowReserved: true });
@@ -100,7 +243,29 @@ function compactPreservingSemicolons(source) {
   return output;
 }
 
-const mobile = compactPreservingSemicolons(mobileAst.code);
+const rewrittenMobile = rewriteRhinoWarningStatements(mobileAst.code);
+const commaSafeMobile = protectNestedCommaOperands(rewrittenMobile);
+const assignmentSafeMobile = parenthesizeAssignmentConditions(commaSafeMobile);
+const mobile = compactPreservingSemicolons(braceEmptyLoopBodies(assignmentSafeMobile));
+
+function assertRhinoStaticSafety(source) {
+  const program = acorn.parse(source, { ecmaVersion: 5, allowReserved: true, preserveParens: true });
+  const findings = analyzeRhinoStatic(program);
+  if (findings.statementCandidates.length > 0) {
+    throw new Error(`MessengerBot R bundle contains CODE_HAS_NO_SIDE_EFFECTS candidates: ${findings.statementCandidates.map((item) => item.type).join(", ")}`);
+  }
+  if (findings.voidExpressions.length > 0) {
+    throw new Error(`MessengerBot R bundle contains forbidden void expressions: ${findings.voidExpressions.length}`);
+  }
+  if (findings.unsafeSequenceOperands.length > 0) {
+    throw new Error(`MessengerBot R bundle contains unsafe nested comma operands: ${findings.unsafeSequenceOperands.length}; offsets=${findings.unsafeSequenceOperands.join(",")}`);
+  }
+  if (findings.bareAssignmentConditions.length > 0) {
+    throw new Error(`MessengerBot R bundle contains bare assignment in conditions: ${findings.bareAssignmentConditions.length}; offsets=${findings.bareAssignmentConditions.join(",")}`);
+  }
+}
+
+assertRhinoStaticSafety(mobile);
 if (mobile.length >= 65_535) {
   throw new Error(`MessengerBot R mobile bundle exceeds the 65,535 character limit: ${mobile.length}`);
 }
@@ -117,3 +282,4 @@ console.log("Generated integrations/messengerbot-r/KLOL_KAKAO_BOT_V41_V2_COMPLET
 console.log("Generated integrations/messengerbot-r/KLOL_KAKAO_BOT_V41_MESSENGERBOT_R.js");
 console.log(`MessengerBot R mobile characters: ${mobile.length}`);
 console.log(`MessengerBot R mobile CRLF projection: ${projectedCrLfLength}`);
+console.log("MessengerBot R CODE_HAS_NO_SIDE_EFFECTS candidates: 0");
