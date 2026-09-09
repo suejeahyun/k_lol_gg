@@ -12,17 +12,19 @@ export function ChampionPortrait({
   displayName,
   imageUrl,
   championKey,
+  variant = "icon",
   eager = false,
   className,
 }: Readonly<{
   displayName: string;
   imageUrl: string | null;
   championKey?: string | null;
+  variant?: "icon" | "splash";
   eager?: boolean;
   className?: string;
 }>) {
   const [failedUrls, setFailedUrls] = useState<readonly string[]>([]);
-  const safeUrl = championImageCandidates(imageUrl, championKey, displayName)
+  const safeUrl = championImageCandidates(imageUrl, championKey, displayName, variant)
     .find((candidate) => !failedUrls.includes(candidate)) ?? null;
   const classes = [styles.portrait, className].filter(Boolean).join(" ");
 

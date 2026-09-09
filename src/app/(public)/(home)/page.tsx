@@ -185,6 +185,7 @@ export default async function HomePage() {
             displayName={displayChampion.displayName}
             imageUrl={displayChampion.imageUrl}
             championKey={displayChampion.key}
+            variant="splash"
             eager
           />
           <div className="hero-art__wash" aria-hidden="true" />

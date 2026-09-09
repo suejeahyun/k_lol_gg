@@ -11,6 +11,7 @@ import {
   championImageCandidates,
   findDataDragonChampion,
   officialChampionImageUrl,
+  officialChampionSplashUrl,
   resolveChampionImageUrl,
 } from "../src/modules/champions/domain/champion-image";
 
@@ -21,6 +22,19 @@ test("pinned Data Dragon catalog contains 173 unique official champions", () => 
   assert.equal(new Set(DATA_DRAGON_CHAMPIONS.map((champion) => champion.riotKey)).size, 173);
   assert.equal(new Set(DATA_DRAGON_CHAMPIONS.map((champion) => champion.id)).size, 173);
   assert.equal(new Set(DATA_DRAGON_CHAMPIONS.map((champion) => champion.name)).size, 173);
+});
+
+test("home splash chain keeps high-resolution artwork ahead of icon and stored fallback", () => {
+  const stored = "https://ddragon.leagueoflegends.com/cdn/15.24.1/img/champion/Kindred.png";
+  assert.equal(
+    officialChampionSplashUrl("kindred"),
+    "https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Kindred_0.jpg",
+  );
+  assert.deepEqual(championImageCandidates(stored, "kindred", "킨드레드", "splash"), [
+    "https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Kindred_0.jpg",
+    "https://ddragon.leagueoflegends.com/cdn/16.17.1/img/champion/Kindred.png",
+    stored,
+  ]);
 });
 
 test("resolver uses official ids for canonical, legacy, numeric and Korean lookups", () => {

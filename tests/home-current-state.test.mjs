@@ -64,6 +64,7 @@ test("홈은 DB 전체 활성 챔피언의 KST 일일 선택과 공개 현재 �
   assert.match(home, /className="home-ranking-table"/);
   assert.match(home, /ChampionPortrait/);
   assert.match(home, /championKey=\{displayChampion\.key\}/);
+  assert.match(home, /variant="splash"/);
   assert.equal((home.match(/<ChampionPortrait/g) ?? []).length, 1);
   assert.doesNotMatch(home, /26\.18\.1/);
   assert.match(home, /Riot Data Dragon/);
@@ -79,4 +80,13 @@ test("홈과 플레이어 찾기는 회원명 검색을 안내하되 회원명�
   assert.match(playerPage, /player-tier-filters/);
   assert.match(playerRepository, /players\.memberNameNormalized/);
   assert.doesNotMatch(playerPage, /player\.memberName/);
+});
+
+test("홈의 고정폭 랭킹 표는 모바일에서 페이지 grid를 넓히지 않는다", () => {
+  const styles = source("../src/app/globals.css");
+  assert.match(styles, /\.home-page\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/s);
+  assert.match(styles, /\.home-page\s*>\s*\*\s*\{[^}]*min-width:\s*0/s);
+  assert.match(styles, /@media\s*\(max-width:\s*820px\)[\s\S]*?\.hero-panel\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/s);
+  assert.match(styles, /\.home-ranking-table-wrap\s*\{[^}]*overflow-x:\s*auto/s);
+  assert.match(styles, /\.home-ranking-table\s*\{[^}]*min-width:\s*580px/s);
 });

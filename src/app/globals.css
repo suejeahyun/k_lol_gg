@@ -371,8 +371,13 @@
 
 .home-page {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 26px;
   padding: 28px 0 54px;
+}
+
+.home-page > * {
+  min-width: 0;
 }
 
 .hero-panel {
@@ -2327,9 +2332,13 @@ body:has(.user-dialog[open]) {
   }
 
   .hero-panel {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     min-height: 0;
     border-radius: 25px;
+  }
+
+  .hero-panel > * {
+    min-width: 0;
   }
 
   .hero-copy {

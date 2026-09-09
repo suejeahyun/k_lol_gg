@@ -15,7 +15,7 @@ test("public match and player detail use the same allowlisted champion portrait 
   assert.match(resolver, /ddragon\.leagueoflegends\.com/);
   assert.match(resolver, /url\.search !== ""/);
   assert.match(resolver, /url\.hash !== ""/);
-  assert.match(portrait, /championImageCandidates\(imageUrl, championKey, displayName\)/);
+  assert.match(portrait, /championImageCandidates\(imageUrl, championKey, displayName, variant\)/);
   assert.match(portrait, /setFailedUrls/);
   assert.match(portrait, /챔피언 이미지 없음/);
   assert.match(match, /imageUrl=\{player\.championImageUrl\}/);

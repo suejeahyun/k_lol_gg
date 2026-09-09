@@ -4,11 +4,13 @@ import {
 } from "../../src/modules/champions/domain/data-dragon-catalog";
 import {
   officialChampionImageUrl,
+  officialChampionSplashUrl,
   resolveChampionImageUrl,
 } from "../../src/modules/champions/domain/champion-image";
 import sharp from "sharp";
 
 type Verification = Readonly<{
+  kind: "icon" | "splash";
   id: string;
   name: string;
   url: string;
@@ -21,16 +23,23 @@ type Verification = Readonly<{
   error: string | null;
 }>;
 
-const results = new Array<Verification>(DATA_DRAGON_CHAMPIONS.length);
+const assets = DATA_DRAGON_CHAMPIONS.flatMap((champion) => {
+  const iconUrl = officialChampionImageUrl(champion.id);
+  const splashUrl = officialChampionSplashUrl(champion.id);
+  if (!iconUrl || !splashUrl) throw new Error("OFFICIAL_CHAMPION_ASSET_URL_MISSING:" + champion.id);
+  return [
+    { champion, kind: "icon" as const, url: iconUrl },
+    { champion, kind: "splash" as const, url: splashUrl },
+  ];
+});
+const results = new Array<Verification>(assets.length);
 let cursor = 0;
 
 async function worker(): Promise<void> {
-  while (cursor < DATA_DRAGON_CHAMPIONS.length) {
+  while (cursor < assets.length) {
     const index = cursor;
     cursor += 1;
-    const champion = DATA_DRAGON_CHAMPIONS[index]!;
-    const url = officialChampionImageUrl(champion.id);
-    if (!url) throw new Error("OFFICIAL_CHAMPION_IMAGE_URL_MISSING:" + champion.id);
+    const { champion, kind, url } = assets[index]!;
     try {
       const response = await fetch(url, {
         method: "GET",
@@ -40,30 +49,35 @@ async function worker(): Promise<void> {
       const contentType = response.headers.get("content-type");
       const image = Buffer.from(await response.arrayBuffer());
       const metadata = response.status === 200 ? await sharp(image).metadata() : null;
-      const isDecodedPng =
-        contentType?.toLowerCase().startsWith("image/png") === true &&
-        metadata?.format === "png" &&
-        typeof metadata.width === "number" &&
-        metadata.width > 0 &&
-        typeof metadata.height === "number" &&
-        metadata.height > 0;
+      const decodedWidth = metadata?.width ?? null;
+      const decodedHeight = metadata?.height ?? null;
+      const isExpectedImage =
+        (kind === "icon"
+          ? contentType?.toLowerCase().startsWith("image/png") === true && metadata?.format === "png"
+          : contentType?.toLowerCase().startsWith("image/jpeg") === true && metadata?.format === "jpeg") &&
+        typeof decodedWidth === "number" &&
+        decodedWidth >= (kind === "icon" ? 120 : 1_000) &&
+        typeof decodedHeight === "number" &&
+        decodedHeight >= (kind === "icon" ? 120 : 500);
       results[index] = {
+        kind,
         id: champion.id,
         name: champion.name,
         url,
         status: response.status,
         contentType,
         format: metadata?.format ?? null,
-        width: metadata?.width ?? null,
-        height: metadata?.height ?? null,
-        ok: response.status === 200 && isDecodedPng,
+        width: decodedWidth,
+        height: decodedHeight,
+        ok: response.status === 200 && isExpectedImage,
         error:
-          response.status === 200 && !isDecodedPng
-            ? "RESPONSE_IS_NOT_A_DECODABLE_PNG"
+          response.status === 200 && !isExpectedImage
+            ? "RESPONSE_IS_NOT_EXPECTED_DECODABLE_IMAGE"
             : null,
       };
     } catch (error) {
       results[index] = {
+        kind,
         id: champion.id,
         name: champion.name,
         url,
@@ -89,9 +103,15 @@ const intentionalFallback = resolveChampionImageUrl(
 ) === null;
 const summary = {
   dataDragonVersion: DATA_DRAGON_VERSION,
-  fixtureRows: results.length,
+  fixtureRows: DATA_DRAGON_CHAMPIONS.length,
+  assetRows: results.length,
   http200Rows: results.filter((result) => result.status === 200).length,
-  decodedPngRows: results.filter((result) => result.ok).length,
+  iconHttp200Rows: results.filter((result) => result.kind === "icon" && result.status === 200).length,
+  decodedPngRows: results.filter((result) => result.kind === "icon" && result.ok).length,
+  splashHttp200Rows: results.filter((result) => result.kind === "splash" && result.status === 200).length,
+  decodedSplashRows: results.filter((result) => result.kind === "splash" && result.ok).length,
+  minimumSplashWidth: Math.min(...results.filter((result) => result.kind === "splash").map((result) => result.width ?? 0)),
+  minimumSplashHeight: Math.min(...results.filter((result) => result.kind === "splash").map((result) => result.height ?? 0)),
   intentionalFallbackRows: intentionalFallback ? 1 : 0,
   failedRows: failures.length,
   brokenImageCount: failures.length,

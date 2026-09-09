@@ -90,13 +90,26 @@ export function officialChampionImageUrl(
     : null;
 }
 
+/** High-resolution Riot artwork used only by large hero surfaces. */
+export function officialChampionSplashUrl(
+  championKey: unknown,
+  displayName?: unknown,
+): string | null {
+  const champion = findDataDragonChampion(championKey, displayName);
+  return champion
+    ? `https://${DATA_DRAGON_HOST}/cdn/img/champion/splash/${champion.id}_0.jpg`
+    : null;
+}
+
 /** Official identity, validated stored URL, then the component's text fallback. */
 export function championImageCandidates(
   imageUrl: unknown,
   championKey: unknown,
   displayName?: unknown,
+  variant: "icon" | "splash" = "icon",
 ): readonly string[] {
   const candidates = [
+    variant === "splash" ? officialChampionSplashUrl(championKey, displayName) : null,
     officialChampionImageUrl(championKey, displayName),
     normalizeChampionImageUrl(imageUrl),
   ].filter((candidate): candidate is string => candidate !== null);

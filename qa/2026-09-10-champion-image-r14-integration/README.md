@@ -32,7 +32,8 @@
 | 계약 테스트 | 221/221 통과 |
 | 단위 테스트 | 490/490 통과 |
 | Next.js production build | 91/91 페이지 통과 |
-| Riot CDN 실제 GET·PNG decode | 173/173 HTTP 200, 173/173 PNG decode, broken 0 |
+| Riot CDN icon 실제 GET·PNG decode | 173/173 HTTP 200, 173/173 PNG decode, broken 0 |
+| Riot CDN splash 실제 GET·JPEG decode | 173/173 HTTP 200, 173/173 JPEG decode, 최소 1215×717, broken 0 |
 | PostgreSQL 18 champion scope | 2/2 통과 |
 | DB NULL backfill/replay/rollback | 173/173 적용 및 173/173 NULL 복원 통과 |
 | 로컬 production 브라우저 | 홈에서 `아리 챔피언` 이미지와 `Riot Data Dragon` 표기 확인 |
@@ -63,10 +64,35 @@ npm run build
 - `0034` SHA-256: `FA7B4A9DB12B67C3AC9C9877D1631831C6F88AFE56194D6AAEFCE05622A2DDF8`
 - backfill runner SHA-256: `03E13121C8FC8149379860ED95C8ECE3F7FD5FDF606508C5B0A6A0260EF91296`
 - catalog SHA-256: `DC26B1DB0DD2D95A92BDBEB2A91481C8996CFBB75B9DB339E98D71BFF3FDD041`
-- CDN verifier SHA-256: `10C7C4577D3B82C37655CFC6BFA3476583A09F6DA90729DE9FB4EA14F5BCB6E1`
+- CDN verifier SHA-256: `F5841190E6CAFA4D9FB6C128EB437698F361ABBC6F4FC5B287671A8518578DBB`
+- responsive browser verifier SHA-256: `B0A07CDC714A4AF2973BADC50DA08644E3623F7A9F152B172A07882ECEC37373`
 - 운영 dry-run은 운영 비밀정보를 읽지 않는 원칙 때문에 이 작업에서 실행하지 않았다. ops가 운영 환경에서 `npm run db:champion-images`로 읽기 전용 결과를 먼저 저장해야 한다.
 - apply는 `npm run db:champion-images -- --apply --backup-file=<새 JSON 경로> --confirm-version=16.17.1`에서만 허용된다. 기존 파일 덮어쓰기는 거부한다.
 - rollback은 apply가 생성한 같은 백업으로 `npm run db:champion-images -- --rollback=<백업 JSON 경로> --confirm-version=16.17.1`을 실행한다. 현재값이 backfill 값과 일치하지 않으면 중단하여 후속 변경을 덮지 않는다.
+
+## 모바일 overflow 후속 검증
+
+운영 390px 재현에서 `clientWidth=375`, `scrollWidth=632`였고 `.home-page`의 계산된 단일 grid 열이 `620px`였다. 직접 원인은 `home-ranking-table`의 `min-width: 580px`가 암시적 grid 열의 자동 최소폭으로 전파된 것이며, 섹션 좌우 padding·border가 합쳐져 모든 홈 grid item이 약 620px로 확장됐다. 챔피언 이미지의 intrinsic width는 이 overflow의 원인이 아니었다.
+
+- `.home-page` 단일 열을 `minmax(0, 1fr)`로 명시하고 모든 직계 grid item에 `min-width: 0`을 적용했다.
+- 모바일 hero 열도 `minmax(0, 1fr)`와 자식 `min-width: 0`으로 제한했다.
+- 580px 랭킹 표는 기존 `.home-ranking-table-wrap { overflow-x: auto; }` 내부에서만 스크롤된다.
+- 홈 hero만 공식 splash를 먼저 사용하고, 나머지 표면은 16.17.1 아이콘을 유지한다. 후보 순서는 `splash → 16.17.1 icon → 저장 URL → 문자 fallback`이다.
+
+| 브라우저 폭 | clientWidth | scrollWidth | hero/search/nav | 이미지 | CLS |
+|---|---:|---:|---|---|---:|
+| 360px | 345 | 345 | 전부 viewport 내부 | 1215×717 splash | 0 |
+| 390px | 375 | 375 | 전부 viewport 내부 | 1215×717 splash | 0 |
+| 1440px | 1425 | 1425 | 전부 viewport 내부 | 1215×717 splash | 0 |
+
+증거 화면:
+
+- `home-mobile-390-production-before.png`: 운영 수정 전 overflow 재현
+- `home-mobile-360-after.png`: 로컬 production build 360px
+- `home-mobile-390-after.png`: 로컬 production build 390px
+- `home-desktop-1440-after.png`: 로컬 production build 1440px
+
+관리자 챔피언 화면은 인증 세션을 제공받지 않아 브라우저로 재검증하지 못했다. 공통 portrait 계약과 빌드/테스트는 통과했지만, 운영 배포 후 관리자 인증 상태에서 별도 확인이 필요하다.
 
 ## 근거 있는 다음 패치 추천
 
