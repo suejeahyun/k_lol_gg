@@ -377,6 +377,8 @@ test("response suppresses a duplicate callback with the same Kakao log identity"
 });
 
 test("response entry point keeps representative V1 and V2 replies identical with or without slash", async () => {
+  const withoutVolatileRequestKeys = (value) => JSON.parse(JSON.stringify(value, (key, entry) =>
+    key === "requestKey" && typeof entry === "string" ? "<request-key>" : entry));
   for (const command of [
     "구인현황",
     "봇버전",
@@ -391,7 +393,7 @@ test("response entry point keeps representative V1 and V2 replies identical with
     plain.respond(command);
     slash.respond(`/${command}`);
     assert.deepEqual(slash.replies, plain.replies, command);
-    assert.deepEqual(slash.calls, plain.calls, command);
+    assert.deepEqual(withoutVolatileRequestKeys(slash.calls), withoutVolatileRequestKeys(plain.calls), command);
   }
 });
 

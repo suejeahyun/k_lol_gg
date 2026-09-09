@@ -1,10 +1,13 @@
-import { createHash } from "node:crypto";
+import { createHash, createHmac, randomBytes } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
-const [sourceInstallerArgument, outputInstallerArgument] = process.argv.slice(2);
+const arguments_ = process.argv.slice(2);
+const freshIdentity = arguments_.includes("--fresh-identity");
+const positional = arguments_.filter((argument) => argument !== "--fresh-identity");
+const [sourceInstallerArgument, outputInstallerArgument] = positional;
 if (!sourceInstallerArgument || !outputInstallerArgument) {
-  throw new Error("Usage: node scripts/build-private-messengerbot-installer.mjs <approved-private-source> <private-output>");
+  throw new Error("Usage: node scripts/build-private-messengerbot-installer.mjs <approved-private-source> <private-output> [--fresh-identity]");
 }
 
 const root = process.cwd();
@@ -23,20 +26,28 @@ const [sourceInstaller, mobile] = await Promise.all([
   readFile(mobilePath, "utf8"),
 ]);
 const settings = new Map();
-const settingPattern = /"(KLOL_[A-Z0-9_]+)":"((?:\\.|[^"\\])*)"/g;
 const settingsRegion = sourceInstaller.slice(0, 4_096);
-let match = null;
-while ((match = settingPattern.exec(settingsRegion)) !== null) {
-  if (!settingKeys.includes(match[1]) || settings.has(match[1])) continue;
-  settings.set(match[1], JSON.parse(`"${match[2]}"`));
+const settingPatterns = [
+  /"(KLOL_[A-Z0-9_]+)":"((?:\\.|[^"\\])*)"/g,
+  /DataBase\.setDataBase\(\s*"(KLOL_[A-Z0-9_]+)"\s*,\s*"((?:\\.|[^"\\])*)"\s*\)/g,
+];
+for (const settingPattern of settingPatterns) {
+  let match = null;
+  while ((match = settingPattern.exec(settingsRegion)) !== null) {
+    if (!settingKeys.includes(match[1])) continue;
+    const value = JSON.parse(`"${match[2]}"`);
+    if (settings.has(match[1]) && settings.get(match[1]) !== value) {
+      throw new Error(`Approved private setting is ambiguous: ${match[1]}`);
+    }
+    settings.set(match[1], value);
+  }
 }
 for (const key of settingKeys) {
   if (!settings.has(key) || !settings.get(key)) throw new Error(`Approved private setting is missing: ${key}`);
 }
 if (settings.size !== settingKeys.length) throw new Error("Approved private settings are not exact");
+if (freshIdentity) settings.set("KLOL_V2_KAKAO_IDENTITY_SECRET", randomBytes(32).toString("base64url"));
 
-const canonicalSettings = settingKeys.map((key) => `${key}\0${settings.get(key)}`).join("\0");
-const settingFingerprint = createHash("sha256").update(canonicalSettings, "utf8").digest("hex");
 const preamble = settingKeys
   .map((key) => `DataBase.setDataBase(${JSON.stringify(key)},${JSON.stringify(settings.get(key))});`)
   .join("");
@@ -47,7 +58,10 @@ if (privateInstaller.length >= 65_535 || crlfProjection >= 65_535) {
 }
 await writeFile(outputInstallerPath, privateInstaller, "utf8");
 const privateSha256 = createHash("sha256").update(privateInstaller, "utf8").digest("hex");
-console.log(`Private installer generated: settingsPreserved=true, settingsFingerprint=${settingFingerprint}`);
+const installationId = `install-${createHmac("sha256", settings.get("KLOL_V2_KAKAO_IDENTITY_SECRET"))
+  .update("installation-id\nKLOL_V41", "utf8").digest("hex").slice(0, 32)}`;
+console.log(`Private installer generated: sharedSettingsPreserved=true, identityPreserved=${!freshIdentity}`);
+console.log(`Private installer identity: ${freshIdentity ? "fresh" : "preserved"}, installationId=${installationId}`);
 console.log(`Private installer characters: ${privateInstaller.length}`);
 console.log(`Private installer CRLF projection: ${crlfProjection}`);
 console.log(`Private installer bytes: ${Buffer.byteLength(privateInstaller, "utf8")}`);

@@ -6,8 +6,8 @@ import test from "node:test";
 const root = resolve(import.meta.dirname, "..");
 
 const routes = {
-  PUBLIC_KAKAO_ROOM_COMMAND: ["recruits", "operation-forms", "managed-forms", "openchat", "search-player", "season-applications"],
-  TRUSTED_KAKAO_SENDER_COMMAND: ["scheduled-notice", "image-receive"],
+  RECRUIT_KAKAO_ROOM_COMMAND: ["recruits", "openchat", "search-player"],
+  FEATURES_KAKAO_ROOM_COMMAND: ["operation-forms", "managed-forms", "season-applications", "scheduled-notice", "image-receive"],
 };
 
 test("Kakao route capability policy is explicit for every phone endpoint", async () => {
@@ -19,7 +19,7 @@ test("Kakao route capability policy is explicit for every phone endpoint", async
   }
 });
 
-test("season member submissions and reads are public-room commands but force cancel has a trusted command gate", async () => {
+test("season member submissions and reads use the FEATURES room but force cancel has a trusted command gate", async () => {
   const source = await readFile(resolve(root, "src/app/api/integrations/kakao/season-applications/route.ts"), "utf8");
   assert.match(source, /kakaoSeasonCommandAccess\(command\.action\) === "TRUSTED_OPERATOR"/u);
   assert.match(source, /registry\.authorize/u);

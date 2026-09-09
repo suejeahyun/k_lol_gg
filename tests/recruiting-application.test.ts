@@ -504,6 +504,37 @@ test("server-clock party metadata fallback is identical on durable replay", asyn
   assert.equal(harness.snapshot.parties.get("party-meta-replay")?.startTimeText, "09:00");
 });
 
+test("signed V1 creates allocate the party number inside the mutation transaction", async () => {
+  const harness = new Harness();
+  const handler = new RecruitingCommandHandler(harness.dependencies());
+  const created = await handler.handle(command("CREATE_PARTY", "party-auto-number", 0, {
+    recruitDate: "2026-09-07",
+    resetSequence: null,
+    recruitNumber: null,
+    partyType: "PARTY_NUMBER",
+    title: "5인 파티 구인",
+    maximumMembers: 5,
+    members: [],
+    scheduledStartAt: null,
+    protectedUntil: null,
+  }));
+  assert.equal(created.body.data.recruitNumber, 1);
+  assert.equal(created.body.data.startTimeText, "09:00");
+  assert.equal(created.body.data.gameInfo, "미입력");
+  assert.deepEqual(harness.operations, ["authorization", "claim", "allocate-party-number", "load", "save", "audit", "outbox", "receipt"]);
+  assert.equal((await handler.handle(command("CREATE_PARTY", "party-auto-number-2", 0, {
+    recruitDate: "2026-09-07",
+    resetSequence: null,
+    recruitNumber: 7,
+    partyType: "PARTY_NUMBER",
+    title: "7번 파티",
+    maximumMembers: 5,
+    members: [],
+    scheduledStartAt: null,
+    protectedUntil: null,
+  }))).body.data.recruitNumber, 7);
+});
+
 test("a malformed replay receipt is rejected even when its request hash matches", async () => {
   const harness = new Harness();
   const handler = new RecruitingCommandHandler(harness.dependencies());

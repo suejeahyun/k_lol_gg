@@ -10,13 +10,13 @@ import {
 } from "@/modules/recruiting/kakao-assistant/http";
 import { getRuntimeKakaoAssistant } from "@/modules/recruiting/kakao-assistant/runtime";
 import { isRuntimeKakaoFeatureEnabled } from "@/modules/recruiting/kakao-admin/runtime";
-import { PUBLIC_KAKAO_ROOM_COMMAND } from "@/modules/recruiting/infrastructure/kakao-http-request";
+import { RECRUIT_KAKAO_ROOM_COMMAND } from "@/modules/recruiting/infrastructure/kakao-http-request";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  const prepared = await prepareKakaoSignedJson(request, undefined, PUBLIC_KAKAO_ROOM_COMMAND);
+  const prepared = await prepareKakaoSignedJson(request, undefined, RECRUIT_KAKAO_ROOM_COMMAND);
   if (!prepared.ok) return prepared.response;
   try {
     const body = parsePlayerSearchBody(prepared.body);

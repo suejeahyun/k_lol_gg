@@ -2,7 +2,7 @@
 
 ## 휴대폰 제한 대응본을 우선 사용
 
-MessengerBot R에는 아래 **한 파일만** 설치한다.
+MessengerBot R의 각 봇 프로필에는 아래 **한 파일만** 설치한다.
 
 `KLOL_KAKAO_BOT_V41_MESSENGERBOT_R.js`
 
@@ -16,11 +16,11 @@ MessengerBot R에는 아래 **한 파일만** 설치한다.
 2. 필요하면 기존 소스를 휴대폰 밖의 안전한 위치에 백업한다. 비밀 설정값은 소스에 넣지 않는다.
 3. 소스 편집기의 기존 내용을 전체 선택해 지운다.
 4. 설치용 파일 전체를 첫 글자부터 마지막 글자까지 붙여 넣는다.
-5. 설치본 안에 `KLOL_KAKAO_BOT_V41_V3_2026_09_09_R14_2_1_RHINO_CLEAN`이 있는지 검색한다.
+5. 설치본 안에 `KLOL_KAKAO_BOT_V41_V3_2026_09_09_R14_3_TWO_ROOM_V1_PARITY`가 있는지 검색한다.
 6. 끝부분에 `response.__kakaoBotEntryPoint=!0;`가 있는지 확인한다. `!0`은 압축된 `true`다. 휴대폰 설치본은 용량 절약을 위해 개발용 START/END 변수를 포함하지 않는다.
 7. 저장 후 컴파일하고 봇을 다시 시작한다.
 8. 이 설치본이 구독하는 실제 카카오톡 방을 하나만 남긴다. 같은 방의 중복 봇뿐 아니라 동일 설치본으로 다른 방을 함께 구독해서도 안 된다.
-9. 카카오톡 방에서 `/봇버전`과 `봇버전`을 각각 보내 `KLOL_KAKAO_BOT_V41_V3_2026_09_09_R14_2_1_RHINO_CLEAN`, 설치본 ID, 키 ID가 동일하게 출력되는지 확인한다.
+9. 카카오톡 방에서 `/봇버전`과 `봇버전`을 각각 보내 `KLOL_KAKAO_BOT_V41_V3_2026_09_09_R14_3_TWO_ROOM_V1_PARITY`, 설치본 ID, 키 ID가 동일하게 출력되는지 확인한다.
 
 편집기의 자동 줄바꿈은 화면에 보이는 줄 수를 늘릴 수 있다. 가능하면 파일 관리자나 전송 도구에서 바이트와 SHA-256을 확인한다.
 
@@ -36,13 +36,13 @@ function v41JsonAfter(text, prefix) {
 }
 ```
 
-R14.2.1 설치본은 65,535자 미만이며 빌드 시 ES5 파서와 Rhino `CODE_HAS_NO_SIDE_EFFECTS` 정적 검사를 통과한다. standalone sequence·logical·conditional·pure expression과 `void` 표현을 명시적 `if`·호출·대입 문장으로 변환하고, 중첩 comma 피연산자와 bare assignment 조건도 경고 없는 형태로 만든다. PC의 실제 Rhino 1.7.13 strict/fatal-warnings compile도 경고 0으로 통과했으며, 휴대폰 앱 컴파일은 설치 시 별도 확인한다.
+R14.3 설치본은 65,535자 미만이며 빌드 시 ES5 파서와 Rhino `CODE_HAS_NO_SIDE_EFFECTS` 정적 검사를 통과한다. standalone sequence·logical·conditional·pure expression과 `void` 표현을 명시적 `if`·호출·대입 문장으로 변환하고, 중첩 comma 피연산자와 bare assignment 조건도 경고 없는 형태로 만든다. 휴대폰 앱 컴파일은 설치 시 별도 확인한다.
 
 따라서 오류 행에 `}`만 추가하지 않는다. 파일 마지막에 END 표식이 없거나 전체 줄 수·해시가 다르면 기존 내용을 완전히 지우고 전체본 파일을 다시 전송한다.
 
 | 확인 결과 | 판정 |
 | --- | --- |
-| 아래 줄 수 + R14.2 버전 + 아래 SHA-256 일치 | 설정 분리형 휴대폰 설치본 |
+| 아래 줄 수 + R14.3 버전 + 아래 SHA-256 일치 | 설정 분리형 휴대폰 설치본 |
 | 약 1,567줄에서 끝나고 `response.__kakaoBotEntryPoint=!0;`가 없음 | 붙여 넣기/저장 중 잘린 파일일 가능성이 매우 높음 |
 | 2,777줄 + R14 START/END 표식 | 개발·검토용 전체본. 휴대폰에는 설치하지 않음 |
 | 줄 수가 다르고 버전 또는 해시도 다름 | 이전 버전, 혼합 붙여 넣기 또는 내용 변형 |
@@ -66,12 +66,12 @@ R14.2.1 설치본은 65,535자 미만이며 빌드 시 ES5 파서와 Rhino `CODE
 
 | 용도 | 파일 | 버전 | 물리 줄 수 | 크기 | SHA-256 |
 | --- | --- | --- | ---: | ---: | --- |
-| MessengerBot R 설정 분리형 | `KLOL_KAKAO_BOT_V41_MESSENGERBOT_R.js` | `KLOL_KAKAO_BOT_V41_V3_2026_09_09_R14_2_1_RHINO_CLEAN` | 99 | 76,468 bytes / 64,845자 | `5994b77ce8692dec92f180f2422b8f841839a72ee0c678690f0d3eea12243220` |
-| 개발·검토용 | `KLOL_KAKAO_BOT_V41_V2_COMPLETE.js` | `KLOL_KAKAO_BOT_V41_V3_2026_09_09_R14_2_1_RHINO_CLEAN` | 2,780 | 133,939 bytes / 122,178자 | `c0e230977c3cc3a9daf868d9001eeb092a3cb40c8354925b4b2e182b64c8656f` |
+| MessengerBot R 설정 분리형 | `KLOL_KAKAO_BOT_V41_MESSENGERBOT_R.js` | `KLOL_KAKAO_BOT_V41_V3_2026_09_09_R14_3_TWO_ROOM_V1_PARITY` | 98 | 76,121 bytes / 64,560자 | `554ba00ea2a650bbd0418d2761c0aae26d37dd3d8c11f4592531c5ac95498e23` |
+| 개발·검토용 | `KLOL_KAKAO_BOT_V41_V2_COMPLETE.js` | `KLOL_KAKAO_BOT_V41_V3_2026_09_09_R14_3_TWO_ROOM_V1_PARITY` | 2,765 | 133,135 bytes / 121,436자 | `c644065f7308d6644196d77254282c976dd4916c6f6b861580e055ddf88ecc91` |
 
 해시, 크기 또는 끝 표시가 다르면 다른 버전이거나 전송 과정에서 변형된 파일이다.
 
-설치본의 LF가 모두 CRLF로 변환되는 보수적 계산은 64,943자로 65,535자 이하다. private 설정 포함 설치본은 65,336자로 제한보다 199자 작다. 전송 도구가 다른 문자를 추가하지 않게 파일 자체를 그대로 설치한다.
+설치본의 LF가 모두 CRLF로 변환되는 보수적 계산은 64,657자로 65,535자 이하다. private 설정 포함 RECRUIT 설치본은 65,050자, FEATURES 설치본은 65,029자다. 전송 도구가 다른 문자를 추가하지 않게 파일 자체를 그대로 설치한다.
 
 ## 첫 동작 확인
 
@@ -82,21 +82,21 @@ R14.2.1 설치본은 65,535자 미만이며 빌드 시 ES5 파서와 Rhino `CODE
 3. 사이트 SUPER 관리자가 `/admin/kakao/rooms`에서 새 방 또는 기존 canonical 방 연결 코드를 발급
 4. 해당 실제 방에서 `/V2방연동 8자리코드`
 5. `/도움말`
-6. `5인파티`
-7. `구인현황`
-8. `내전구인`
-9. `스크림구인`
-10. `랭킹`
+6. RECRUIT 방: `5인파티`, `구인현황`, `스크림구인`, 다른 사용자가 만든 모집의 `번호ㅉ`
+7. FEATURES 방: `내전구인`, 외출 양식, `랭킹`
+8. 각 명령을 `/` 포함·미포함으로 한 번씩 확인
 
-서명 키는 설치본 신뢰만 증명하며 사람 권한을 부여하지 않는다. DB에 연결된 ACTIVE canonical 방의 미등록 발신자는 MEMBER로 자동 기록된다. 조회·생성·참가·양식 제출은 MEMBER, 모집 동기화·종료·확정·완료는 생성자 또는 MANAGER 이상, 강제 취소·재개는 ADMIN, 방·역할·설정 관리는 SUPER 권한이다. `/` 유무는 판정에 영향을 주지 않는다.
+서명 키는 설치본 신뢰만 증명하며 사람 권한을 부여하지 않는다. DB에 연결된 ACTIVE canonical 방의 미등록 발신자는 MEMBER로 자동 기록된다. RECRUIT 방의 V1 파티·스크림·구인 조회·생성·수정·마감은 같은 방의 모든 MEMBER가 사용할 수 있다. 웹사이트 관리자 기능과 raw V2·보안 설정·내부 maintenance는 기존 관리자 권한을 그대로 유지한다. `/` 유무는 판정에 영향을 주지 않는다.
+
+RECRUIT 최초 양식은 `》시작시간 :`, `》게임정보 :` 빈 줄을 출력하지 않는다. 사용자가 복사 양식에 두 줄을 직접 추가하면 값은 그대로 인식한다. 줄이 없거나 공백이면 서버가 요청을 받은 KST `HH:mm`과 `미입력`으로 저장한다.
 
 `ROOM_BINDING_REQUIRED`이면 sender나 환경변수를 추가하지 말고 `/V2연동확인` 결과 전체를 관리자에게 전달한다. R14.2는 MessengerBot callback의 `room`, `channelId`, `isGroupChat`을 인증·라우팅에 전혀 사용하지 않는다. `room=sender`처럼 손상된 알림 callback도 동일한 설치본 ID로 동작한다. 관리자는 일회용 코드로 그 설치본을 canonical 방 하나에 연결한다.
 
-중요한 운영 불변식은 **봇 설치본 하나 = 실제 카카오톡 방 하나**다. 같은 identity secret이 들어간 동일 installer를 여러 실제 방에서 실행하면 서버는 두 방을 구분할 수 없고 데이터와 권한이 합쳐진다. 이 상태는 room parser를 의도적으로 제거했기 때문에 코드로 탐지할 수 없다. 실제 방마다 별도 identity secret과 별도 설치본 ID를 발급하고 별도 MessengerBot 봇 프로필로 실행한다.
+중요한 운영 불변식은 **봇 설치본 하나 = 실제 카카오톡 방 하나**다. RECRUIT와 FEATURES는 서로 다른 identity secret·설치본 ID·MessengerBot 봇 프로필을 사용하고, 관리자 pairing에서 각각 `RECRUIT`, `FEATURES`를 선택한다. 같은 identity secret이 들어간 installer를 두 방에서 실행하면 서버는 두 방을 구분할 수 없고 데이터와 권한이 합쳐진다. room parser를 의도적으로 제거했기 때문에 이를 코드로 탐지할 수 없다.
 
 R14.2 휴대폰 설치본은 `/봇버전`과 `/V2연동확인`에 공개 설치본 ID와 키 ID, opaque 발신자 ID를 표시한다. V3 서명은 이 값들과 봇 버전·설치본 기반 scope·메시지 전달 ID를 함께 묶는다. scope는 installation ID에서 SHA-256으로 파생하므로 signing key 교체 뒤에도 유지된다. 같은 카카오 메시지 재전송은 설치본+발신자+logId+본문 delivery ID로 멱등 처리한다. 키 교체 시 서버의 current/previous ID를 먼저 설정한 뒤 휴대폰 키와 ID를 current로 바꾸며, 이전 키 ID로 고정된 설치본은 새 current ID로 한 번 승격된 뒤 되돌아갈 수 없다.
 
-migration `0031_brainy_taskmaster.sql`, `0032_bent_ultimates.sql`, `0033_tan_sprite.sql`, 대응 서버, R14.2 휴대폰 설치본을 하나의 점검 시간에 적용하고 혼용 중에는 모집 변경을 중지한다. 0033은 기존 설치본 하나가 서로 다른 canonical 방 둘 이상에 연결돼 있으면 `KAKAO_INSTALLATION_MULTIPLE_ROOMS`로 중단하며 자동 병합하거나 삭제하지 않는다. 운영자가 충돌을 명시적으로 정리한 뒤 다시 적용한다. 정상 요청은 Vercel `KAKAO_WEBHOOK_ALLOWED_ROOMS`/`KAKAO_WEBHOOK_ALLOWED_SENDERS`를 권한 판정에 사용하지 않으며, 미등록 설치본은 `ROOM_BINDING_REQUIRED` 후 DB pairing만 사용한다.
+migration `0031_brainy_taskmaster.sql`, `0032_bent_ultimates.sql`, `0033_tan_sprite.sql`, `0034_kakao_room_capability_profiles.sql`, 대응 서버, R14.3 휴대폰 설치본을 하나의 점검 시간에 적용하고 혼용 중에는 모집 변경을 중지한다. 0034는 기존 방을 `RECRUIT`로 보존하고 이후 방마다 `RECRUIT` 또는 `FEATURES` 프로필을 강제한다. 정상 요청은 Vercel sender/room allowlist를 권한 판정에 사용하지 않으며, 미등록 설치본은 `ROOM_BINDING_REQUIRED` 후 DB pairing만 사용한다.
 
 R14.2로 바꾸면 휴대폰 `DataBase`의 모집 revision·내전 미리보기·사진 세션 key가 기존 room fingerprint에서 installation scope로 바뀐다. 전환 전에 진행 중인 양식을 완료하거나 취소하고, 전환 뒤 미리보기·사진 세션을 새로 시작한다. 기존 서버 데이터는 삭제하지 않는다.
 

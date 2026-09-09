@@ -204,13 +204,16 @@ var KLOL_V2_KAKAO = (function () {
     if (typeof context.expectedRevision === "number" && context.expectedRevision >= 0) {
       connection.header("If-Match", "\"" + String(Math.floor(context.expectedRevision)) + "\"");
     }
+    var requestStartedAt = new Date().getTime();
     var response = connection.execute();
     var parsed = safeJsonParse(response.body());
     return {
       ok: response.statusCode() >= 200 && response.statusCode() < 300,
       status: response.statusCode(),
       body: parsed,
-      traceId: trimText(response.header("X-Trace-Id"))
+      traceId: trimText(response.header("X-Trace-Id")),
+      roundTripMs: Math.max(0, new Date().getTime() - requestStartedAt),
+      serverTiming: trimText(response.header("Server-Timing"))
     };
   }
 
@@ -321,6 +324,7 @@ var KLOL_V2_KAKAO = (function () {
     var detail = body && typeof body.detail === "string" ? body.detail : "잠시 후 다시 시도해 주세요.";
     if (code === "ROOM_BINDING_REQUIRED" || code === "ROOM_NOT_REGISTERED" || code === "KAKAO_ROOM_FORBIDDEN") detail = "이 봇 설치본의 연결이 필요합니다. /V2연동확인 결과를 관리자에게 전달해 주세요.";
     else if (code === "ROOM_PAUSED") detail = "이 방의 K-LOL.GG 기능이 일시 중지되었습니다.";
+    else if (code === "ROOM_CAPABILITY_FORBIDDEN") detail = "이 명령은 연결된 다른 K-LOL.GG 카카오방에서 사용해 주세요.";
     else if (code === "ROLE_FORBIDDEN" || code === "KAKAO_CAPABILITY_FORBIDDEN" || code === "FORBIDDEN") detail = "이 기능 권한 없음: 이 요청에 필요한 권한을 확인해 주세요.";
     else if (code === "FORM_INVALID" || code === "INVALID_OPERATION_FORM") detail = "양식 필드 누락: 신청 유형과 필수 항목을 확인해 주세요.";
     else if (code === "CONFLICT") detail = "이미 처리되었거나 현재 상태와 충돌합니다. 최신 상태를 확인해 주세요.";

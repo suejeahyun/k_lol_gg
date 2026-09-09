@@ -46,6 +46,22 @@ test("raw V2 recruit commands require an operator or explicit non-production dev
   }), false);
 });
 
+test("signed V1 compatibility targets are exact while raw V2 cannot smuggle extra fields", () => {
+  const value = {
+    type: "SYNC_PARTY",
+    aggregateId: partyId,
+    source: "COMPAT_V1",
+    compatTarget: { kind: "PARTY", recruitDate: "2026-09-09", recruitNumber: 4 },
+    compatCreate: { partyType: "PARTY_NUMBER", title: "4인 파티 구인", maximumMembers: 4 },
+    payload: { members: [], startTimeText: null, gameInfo: null, scheduledStartAt: null },
+  };
+  const parsed = parseRecruitingCommandBody(value, new Set(["SYNC_PARTY"] as const), undefined, true);
+  assert.deepEqual(parsed?.compatTarget, value.compatTarget);
+  assert.deepEqual(parsed?.compatCreate, value.compatCreate);
+  assert.equal(parseRecruitingCommandBody({ ...value, compatTarget: { ...value.compatTarget, roomId: "forged" } }, new Set(["SYNC_PARTY"] as const), undefined, true), null);
+  assert.equal(parseRecruitingCommandBody({ ...value, compatCreate: { ...value.compatCreate, owner: "forged" } }, new Set(["SYNC_PARTY"] as const), undefined, true), null);
+});
+
 test("scrim boundary validates UUID seams and command allowlists", () => {
   const input = {
     type: "CREATE_SCRIM",

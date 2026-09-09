@@ -5,7 +5,7 @@
  * This router requires KLOL_KAKAO_BOT_V41_V2_TRANSPORT.js and
  * KLOL_KAKAO_BOT_V41_V1_COMPAT.js immediately before it.
  */
-var KLOL_V41_BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V41_V3_2026_09_09_R14_2_1_RHINO_CLEAN";
+var KLOL_V41_BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V41_V3_2026_09_09_R14_3_TWO_ROOM_V1_PARITY";
 var KLOL_V41_CURRENT_DELIVERY_ID = "";
 var KLOL_V41_CURRENT_USER_HASH = "";
 var KLOL_V41_DELIVERY_TTL_MS = 30000;
@@ -1458,7 +1458,7 @@ function v41Diagnostic(room, sender) {
   catch (error) { return "[K-LOL.GG V2 진단]\n주소 설정: 확인 필요\n비밀값은 표시하지 않습니다."; }
   try { result = KLOL_V2_KAKAO.openchatStatus(KLOL_V2_KAKAO.contextFromChat(room, sender)); }
   catch (error) { return "[K-LOL.GG V2 진단]\n주소 설정: 정상\n서명·HTTPS 실행: 실패\nMessengerBot R 실행 로그를 확인해 주세요."; }
-  return "[K-LOL.GG V2 진단]\n서버 도달: HTTP " + Number(result.status || 0) + "\n서버 코드: " + String(result.body && result.body.code || "OK") + (result.traceId ? "\n문의 코드: " + String(result.traceId) : "") + "\n비밀값은 표시하지 않습니다.";
+  return "[K-LOL.GG V2 진단]\n서버 도달: HTTP " + Number(result.status || 0) + "\n왕복 시간: " + Number(result.roundTripMs || 0) + "ms\n서버 코드: " + String(result.body && result.body.code || "OK") + (result.traceId ? "\n문의 코드: " + String(result.traceId) : "") + "\n비밀값은 표시하지 않습니다.";
 }
 
 function response(room, msg, sender, isGroupChat, replier, imageDB, packageName, isMention, logId, channelId, userHash) {

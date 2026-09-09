@@ -3,6 +3,11 @@ import { readFileSync } from "node:fs";
 
 const MAXIMUM_TEXT_BYTES = 2 * 1024 * 1024;
 const SKIPPED_PATHS = new Set(["package-lock.json"]);
+const arguments_ = process.argv.slice(2);
+const treeOnly = arguments_.includes("--tree-only");
+if (arguments_.some((argument) => argument !== "--tree-only")) {
+  throw new Error("Usage: node scripts/check-secrets.mjs [--tree-only]");
+}
 const PLACEHOLDER_WORDS =
   /(?:example|placeholder|synthetic|dummy|sample|unit[-_]?test|not[-_]?the|change[-_]?me|not[-_]?a[-_]?secret|JBSWY3DPEHPK3PXP)/i;
 
@@ -129,7 +134,7 @@ function scanHistory(findings) {
 
 const findings = [];
 scanCurrentTree(findings);
-scanHistory(findings);
+if (!treeOnly) scanHistory(findings);
 
 const unique = [...new Map(findings.map((finding) => [
   `${finding.rule}:${finding.source}:${finding.line}`,
@@ -143,5 +148,7 @@ if (unique.length > 0) {
   }
   process.exitCode = 1;
 } else {
-  console.log("[secret-scan] passed: tracked tree and complete Git history contain no high-confidence secret patterns.");
+  console.log(treeOnly
+    ? "[secret-scan] passed: tracked and untracked current tree contains no high-confidence secret patterns."
+    : "[secret-scan] passed: tracked tree and complete Git history contain no high-confidence secret patterns.");
 }

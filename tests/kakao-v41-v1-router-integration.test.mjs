@@ -13,7 +13,7 @@ async function harness() {
   ]);
   const values = new Map();
   const replies = [];
-  const calls = { recruits: [], forms: [] };
+  const calls = { recruits: [], forms: [], openchat: 0 };
   const parties = [];
   const scrims = [];
   const receipts = new Map();
@@ -44,6 +44,7 @@ async function harness() {
       newUuid() { return "123e4567-e89b-42d3-a456-426614174000"; },
       userMessage(result) { return result?.ok ? "[K-LOL.GG]\n요청을 안전하게 처리했습니다." : "[K-LOL.GG 요청 실패]\n테스트 실패"; },
       openchatStatus() {
+        calls.openchat += 1;
         return {
           ok: true,
           body: {
@@ -186,6 +187,7 @@ test("legacy party create suppresses a duplicate callback before a second V2 mut
   bot.respond("자랭구인 7");
 
   assert.equal(bot.calls.recruits.length, 1);
+  assert.equal(bot.calls.openchat, 0, "party create uses one HTTP request");
   assert.deepEqual(bot.calls.recruits[0].command, {
     type: "CREATE_PARTY",
     aggregateId: "123e4567-e89b-42d3-a456-426614174000",
@@ -235,6 +237,7 @@ test("legacy full party form maps positions to slots and synchronizes the existi
   assert.match(bot.replies.at(-1), /5\/5 · 예비 0명/u);
   assert.match(bot.replies.at(-1), /시작시간: 21:00/u);
   assert.match(bot.replies.at(-1), /게임정보: 미입력/u);
+  assert.equal(bot.calls.openchat, 0, "party sync resolves its target in the mutation request");
 });
 
 test("slash and plain temporary/form flows share server-first metadata fallback and preserve free text", async () => {
@@ -272,6 +275,7 @@ test("99 재현, 지오, 97 기용 fixtures complete public create, form, and fi
       bot.respond(`${slash}7ㅉ`, { sender });
       assert.deepEqual(bot.calls.recruits.map(({ command }) => command.type), ["CREATE_PARTY", "SYNC_PARTY", "FINISH_PARTY"], `${sender}:${slash || "plain"}`);
       assert.equal(bot.parties[0].status, "FINISHED");
+      assert.equal(bot.calls.openchat, 0, "party create, sync, and finish each avoid a status preflight");
       assert.doesNotMatch(bot.replies.join("\n"), /요청 실패/u);
     }
   }

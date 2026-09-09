@@ -38,9 +38,6 @@ const V40_FIVE_PERSON_TEMPLATE = [
   "📢 5인 파티 구인",
   "모집번호: #12",
   "",
-  "》시작시간 :",
-  "》게임정보 :",
-  "",
   "1.",
   "2.",
   "3.",
@@ -129,6 +126,7 @@ async function createHarness({ parties = [] } = {}) {
         };
       },
       recruit(command) {
+        const recruitNumber = command.payload.recruitNumber ?? 12;
         return {
           ok: true,
           body: {
@@ -139,7 +137,7 @@ async function createHarness({ parties = [] } = {}) {
             commandType: command.type,
             data: {
               id: command.aggregateId,
-              recruitNumber: command.payload.recruitNumber,
+              recruitNumber,
               title: command.payload.title,
               type: command.payload.partyType,
               maximumMembers: command.payload.maximumMembers,

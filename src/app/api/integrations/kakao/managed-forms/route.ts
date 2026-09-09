@@ -10,14 +10,14 @@ import {
 } from "@/modules/recruiting/operation-forms/http";
 import { getRuntimeOperationForms } from "@/modules/recruiting/operation-forms/runtime";
 import { isRuntimeKakaoFeatureEnabled } from "@/modules/recruiting/kakao-admin/runtime";
-import { MAXIMUM_KAKAO_BODY_BYTES, PUBLIC_KAKAO_ROOM_COMMAND } from "@/modules/recruiting/infrastructure/kakao-http-request";
+import { FEATURES_KAKAO_ROOM_COMMAND, MAXIMUM_KAKAO_BODY_BYTES } from "@/modules/recruiting/infrastructure/kakao-http-request";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   // This route submits a member form only. Review, approval and deletion remain on ADMIN session routes.
-  const prepared = await prepareKakaoSignedJson(request, MAXIMUM_KAKAO_BODY_BYTES, PUBLIC_KAKAO_ROOM_COMMAND);
+  const prepared = await prepareKakaoSignedJson(request, MAXIMUM_KAKAO_BODY_BYTES, FEATURES_KAKAO_ROOM_COMMAND);
   if (!prepared.ok) return prepared.response;
   try {
     const routed = parseManagedOperationFormBody(prepared.body);

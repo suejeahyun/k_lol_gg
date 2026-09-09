@@ -9,7 +9,7 @@ import {
 import { getRuntimeOperationForms } from "@/modules/recruiting/operation-forms/runtime";
 import {
   MAXIMUM_KAKAO_BODY_BYTES,
-  PUBLIC_KAKAO_ROOM_COMMAND,
+  FEATURES_KAKAO_ROOM_COMMAND,
   recordKakaoWebhookRejection,
   verifyKakaoHttpRequest,
 } from "@/modules/recruiting/infrastructure/kakao-http-request";
@@ -32,7 +32,7 @@ function exactEnvelope(value: unknown): value is { formType: string; payload: un
 export async function POST(request: Request) {
   const traceId = readValidatedTraceId(request.headers);
   // Operation forms are public submissions inside an approved Kakao room; administrative review stays site-only.
-  const verification = await verifyKakaoHttpRequest(request, new Date(), MAXIMUM_KAKAO_BODY_BYTES, PUBLIC_KAKAO_ROOM_COMMAND);
+  const verification = await verifyKakaoHttpRequest(request, new Date(), MAXIMUM_KAKAO_BODY_BYTES, FEATURES_KAKAO_ROOM_COMMAND);
   if (!verification.ok) {
     recordKakaoWebhookRejection(verification.code, { route: new URL(request.url).pathname, traceId, request });
     return kakaoWebhookFailureResponse(verification.code, traceId);

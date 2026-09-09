@@ -4,7 +4,7 @@ import { kakaoSeasonCommandAccess, parseSeasonSnapshotBody } from "@/modules/rec
 import { kakaoAssistantCapabilityForbiddenResponse, kakaoAssistantErrorResponse, kakaoAssistantResponse, prepareKakaoSignedJson } from "@/modules/recruiting/kakao-assistant/http";
 import { getRuntimeKakaoAssistant } from "@/modules/recruiting/kakao-assistant/runtime";
 import { isRuntimeKakaoFeatureEnabled } from "@/modules/recruiting/kakao-admin/runtime";
-import { MAXIMUM_KAKAO_BODY_BYTES, PUBLIC_KAKAO_ROOM_COMMAND, recordKakaoWebhookRejection } from "@/modules/recruiting/infrastructure/kakao-http-request";
+import { FEATURES_KAKAO_ROOM_COMMAND, MAXIMUM_KAKAO_BODY_BYTES, recordKakaoWebhookRejection } from "@/modules/recruiting/infrastructure/kakao-http-request";
 import { KakaoRoomRegistryError } from "@/modules/recruiting/kakao-access/postgres-kakao-room-registry";
 import { legacyKakaoInstallationId } from "@/modules/recruiting/infrastructure/kakao-signature";
 
@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  const prepared = await prepareKakaoSignedJson(request, MAXIMUM_KAKAO_BODY_BYTES, PUBLIC_KAKAO_ROOM_COMMAND);
+  const prepared = await prepareKakaoSignedJson(request, MAXIMUM_KAKAO_BODY_BYTES, FEATURES_KAKAO_ROOM_COMMAND);
   if (!prepared.ok) return prepared.response;
   try {
     const command = parseSeasonSnapshotBody(prepared.body);
