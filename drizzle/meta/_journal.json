@@ -232,6 +232,13 @@
       "when": 1788948034982,
       "tag": "0032_bent_ultimates",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1788956743483,
+      "tag": "0033_tan_sprite",
+      "breakpoints": true
     }
   ]
 }

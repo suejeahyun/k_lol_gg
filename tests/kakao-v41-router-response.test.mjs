@@ -23,6 +23,8 @@ async function harness() {
       setDataBase(key, value) { values.set(String(key), String(value)); },
     },
     KLOL_V2_KAKAO: {
+      installationScopeId() { return `room-${"a".repeat(32)}`; },
+      installationId() { return `install-${"b".repeat(32)}`; },
       userMessage(result) { return result?.ok ? "[K-LOL.GG]\n요청을 안전하게 처리했습니다." : "[K-LOL.GG 요청 실패]\n테스트 실패"; },
       identityForChat(room, sender) {
         const safe = (value) => String(value).replace(/[^A-Za-z0-9]/g, "").toLowerCase() || "empty";
@@ -355,14 +357,15 @@ test("response exposes a secret-free V2 transport diagnostic", async () => {
   assert.doesNotMatch(bot.replies.at(-1), /WEBHOOK_SECRET|IDENTITY_SECRET/u);
 });
 
-test("response scopes different senders to one stable channel and rejects the broken legacy room fallback", async () => {
+test("response scopes different senders to one installation and ignores broken room parser fields", async () => {
   const bot = await harness();
   bot.respond("/랭킹", { room: "관리자. 99", sender: "관리자. 99", isGroupChat: false, channelId: "987654321" });
   bot.respond("/랭킹", { room: "관리자. 97", sender: "관리자. 97", isGroupChat: false, channelId: "987654321" });
-  assert.deepEqual(bot.calls.contexts.slice(-2).map((item) => item.room), ["channel-id\n987654321", "channel-id\n987654321"]);
+  assert.deepEqual(bot.calls.contexts.slice(-2).map((item) => item.room), [`room-${"a".repeat(32)}`, `room-${"a".repeat(32)}`]);
 
   bot.respond("/V2연동확인", { room: "관리자. 99", sender: "관리자. 99", isGroupChat: false });
-  assert.match(bot.replies.at(-1), /메신저봇R 0\.7\.34a 이상으로 업데이트/u);
+  assert.match(bot.replies.at(-1), /연동 기준: 설치본/u);
+  assert.doesNotMatch(bot.replies.at(-1), /방 식별 불가|0\.7\.34a/u);
 });
 
 test("response suppresses a duplicate callback with the same Kakao log identity", async () => {

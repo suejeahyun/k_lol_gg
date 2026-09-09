@@ -448,10 +448,11 @@ test("owner-created Kakao image sessions bind sender, finalize private assets, r
     });
     const service = new PostgresKakaoImageReceive(database, storage);
     const actorSession = { userAccountId: ownerId, sessionId: authSessionId, role: "USER" as const, authVersion: 0 };
+    const installationPublicId = `install-${"a".repeat(32)}`;
     const createdInput = {
       actorSession, targetType: "MATCH_SUBMISSION" as const, targetReference: publicCode, expectedRevision: 0,
       requestKey: `create-${ownerId}`, bodyDigestHex: digest("create-image-session"), requestId: randomUUID(),
-      scope: `me:match-submissions:${publicCode}:kakao-session:create`, roomId: "room-contract", senderId: "operator-contract", now,
+      scope: `me:match-submissions:${publicCode}:kakao-session:create`, roomId: installationPublicId, senderId: "operator-contract", now,
     };
     const created = await service.createOwnerSession(createdInput);
     assert.equal(created.body.status, "ACTIVE");
@@ -459,13 +460,13 @@ test("owner-created Kakao image sessions bind sender, finalize private assets, r
     const storedSession = (await database.select().from(kakaoImageSessions).where(eq(kakaoImageSessions.id, created.body.sessionId)))[0];
     assert.equal(storedSession?.roomIdHash.length, 32);
     assert.equal(storedSession?.senderIdHash.length, 32);
-    assert.equal(JSON.stringify(storedSession).includes("room-contract"), false);
+    assert.equal(JSON.stringify(storedSession).includes(installationPublicId), false);
 
     const bytes = await sharp({ create: { width: 32, height: 32, channels: 3, background: "#dff5ff" } }).png().toBuffer();
     const sha256Hex = createHash("sha256").update(bytes).digest("hex");
     const command = { sessionId: created.body.sessionId, base64Image: bytes.toString("base64"), declaredContentType: "image/png" as const, declaredSha256Hex: sha256Hex, originalFileName: "scoreboard.png" };
     await assert.rejects(service.receive({ actorPrincipalId: principalId, intent: { ...intent("nonce-image-wrong", "wrong-room"), roomId: "another-room" }, requestKey: `image-wrong-${ownerId}`, scope: "kakao:image-receive", requestId: randomUUID(), command, now }), (error) => error instanceof KakaoAssistantError && error.code === "NOT_FOUND");
-    const receivedInput = { actorPrincipalId: principalId, intent: intent("nonce-image-valid", "valid-image"), requestKey: `image-valid-${ownerId}`, scope: "kakao:image-receive", requestId: randomUUID(), command, now };
+    const receivedInput = { actorPrincipalId: principalId, intent: { ...intent("nonce-image-valid", "valid-image", randomUUID()), installationId: installationPublicId, localRoomFingerprint: `room-${"b".repeat(32)}` }, requestKey: `image-valid-${ownerId}`, scope: "kakao:image-receive", requestId: randomUUID(), command, now };
     const received = await service.receive(receivedInput);
     assert.equal(received.body.imageNumber, 1);
     assert.equal(received.body.completed, false);

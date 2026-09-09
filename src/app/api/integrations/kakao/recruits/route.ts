@@ -1,12 +1,10 @@
 import { randomUUID } from "node:crypto";
 
 import type { RecruitingCommand } from "@/modules/recruiting/application/commands";
-import { RecruitingApplicationError } from "@/modules/recruiting/application/command-handler";
 import { getRuntimeRecruitingService } from "@/modules/recruiting/infrastructure/runtime-recruiting";
 import { parseRecruitingCommandBody } from "@/modules/recruiting/infrastructure/recruiting-input";
 import {
   PUBLIC_KAKAO_ROOM_COMMAND,
-  mayUseRawKakaoRecruitCommand,
   recordKakaoWebhookRejection,
   verifyKakaoHttpRequest,
 } from "@/modules/recruiting/infrastructure/kakao-http-request";
@@ -28,6 +26,8 @@ import {
 } from "@/platform/http";
 import { isRuntimeKakaoFeatureEnabled } from "@/modules/recruiting/kakao-admin/runtime";
 import { kakaoWebhookFailureResponse } from "@/modules/recruiting/kakao-access/http";
+import { KakaoRoomRegistryError } from "@/modules/recruiting/kakao-access/postgres-kakao-room-registry";
+import { legacyKakaoInstallationId } from "@/modules/recruiting/infrastructure/kakao-signature";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -58,11 +58,16 @@ export async function POST(request: Request) {
   if (!parsedJson.ok) return problemResponse(problemForJsonBodyError(parsedJson.error), { traceId });
   const parsed = parseRecruitingCommandBody(parsedJson.value, BOT_TYPES, undefined, true);
   if (!parsed || !parsed.aggregateId) return recruitingErrorResponse(new Error("INVALID_WEBHOOK_COMMAND"), traceId);
-  if (parsed.source === "RAW_V2" && !mayUseRawKakaoRecruitCommand(intent.senderId)) {
-    return recruitingErrorResponse(new RecruitingApplicationError(
-      "FORBIDDEN",
-      "Raw V2 recruiting commands require a trusted operator or explicit non-production development mode.",
-    ), traceId);
+  if (parsed.source === "RAW_V2") {
+    const { getRuntimeKakaoRoomRegistry } = await import("@/modules/recruiting/kakao-access/runtime");
+    const registry = getRuntimeKakaoRoomRegistry();
+    try {
+      if (!registry) throw new KakaoRoomRegistryError("UNAVAILABLE");
+      await registry.authorize({ installationPublicId: intent.installationId ?? legacyKakaoInstallationId(intent.keyId), senderFingerprint: intent.senderId, requiredRole: "ADMIN", keyId: intent.keyId, botVersion: intent.botVersion });
+    } catch {
+      recordKakaoWebhookRejection("ROLE_FORBIDDEN", { route: new URL(request.url).pathname, traceId, request });
+      return kakaoWebhookFailureResponse("ROLE_FORBIDDEN", traceId);
+    }
   }
   const idempotency = readIdempotencyKey(request.headers);
   if (!idempotency.ok) return problemResponse(problemForIdempotencyKeyError(idempotency.error), { traceId });

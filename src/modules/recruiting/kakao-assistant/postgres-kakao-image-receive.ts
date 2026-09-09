@@ -43,6 +43,9 @@ type Target = Readonly<{
 
 const sameBytes = (left: Uint8Array, right: Uint8Array) => Buffer.from(left).equals(Buffer.from(right));
 const hiddenIdentity = (kind: "room" | "sender", value: string) => createHash("sha256").update(`klol-v2:kakao-image-${kind}:v1\0${value}`).digest();
+const matchesRoomScope = (expected: Uint8Array, intent: VerifiedKakaoWebhookIntent) => [intent.installationId, intent.localRoomFingerprint, intent.roomId]
+  .filter((value): value is string => Boolean(value))
+  .some((value) => sameBytes(expected, hiddenIdentity("room", value)));
 const ownerPrincipal = (actor: TransactionSessionActor) => `account:${actor.userAccountId}`;
 
 function decodeCanonicalBase64(value: string) {
@@ -129,7 +132,7 @@ export class PostgresKakaoImageReceive {
       const replay = await this.claimBotRequest(transaction, input, now);
       if (replay) return { replay } as const;
       const session = (await transaction.select().from(kakaoImageSessions).where(eq(kakaoImageSessions.id, input.command.sessionId)).for("update").limit(1))[0];
-      if (!session || !sameBytes(session.roomIdHash, hiddenIdentity("room", input.intent.roomId)) || !sameBytes(session.senderIdHash, hiddenIdentity("sender", input.intent.senderId))) {
+      if (!session || !matchesRoomScope(session.roomIdHash, input.intent) || !sameBytes(session.senderIdHash, hiddenIdentity("sender", input.intent.senderId))) {
         throw new KakaoAssistantError("NOT_FOUND");
       }
       if (session.status !== "ACTIVE") throw new KakaoAssistantError("CONFLICT");

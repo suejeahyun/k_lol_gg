@@ -55,6 +55,10 @@ export function legacyKakaoInstallationId(keyId: string) {
   return `install-${createHash("sha256").update(`klol-v2:legacy-installation:v1\0${keyId}`).digest("hex").slice(0, 32)}`;
 }
 
+export function installationScopedRoomId(installationId: string) {
+  return `room-${createHash("sha256").update(`klol-v2:kakao-installation-room-scope:v1\0${installationId}`).digest("hex").slice(0, 32)}`;
+}
+
 function signatureMaterial(request: Omit<KakaoWebhookRequest, "signature" | "botSelf" | "rawBody">, bodyDigestHex: string) {
   if (request.installationId && request.reportedKeyId && request.deliveryId && request.botVersion) {
     return ["KLOL_KAKAO_WEBHOOK_V3", request.timestampSeconds, request.nonce, request.installationId, request.reportedKeyId, request.deliveryId, request.botVersion, request.roomId, request.senderId, bodyDigestHex].join("\n");
@@ -122,14 +126,16 @@ export function verifyKakaoWebhook(input: Readonly<{
   const bodyDigestHex = kakaoWebhookBodyDigest(request.rawBody);
   const supplied = Buffer.from(signatureMatch[2]!, "hex");
   let matchedKeyId: string | null = null;
+  let matchedSecret: Uint8Array | null = null;
   for (const entry of input.secrets) {
     const expected = createHmac("sha256", entry.secret)
       .update(signatureMaterial(request, bodyDigestHex))
       .digest();
-    if (timingSafeEqual(expected, supplied)) matchedKeyId = entry.keyId;
+    if (timingSafeEqual(expected, supplied)) { matchedKeyId = entry.keyId; matchedSecret = entry.secret; }
   }
-  if (!matchedKeyId) return { ok: false, code: "INVALID_SIGNATURE" };
+  if (!matchedKeyId || !matchedSecret) return { ok: false, code: "INVALID_SIGNATURE" };
   if (request.reportedKeyId && request.reportedKeyId !== matchedKeyId) return { ok: false, code: "INVALID_SIGNATURE" };
+  if (hasV3Fields && request.installationId && request.roomId !== installationScopedRoomId(request.installationId)) return { ok: false, code: "INVALID_SIGNATURE" };
   if (request.botSelf || request.senderId === input.botSenderId) return { ok: false, code: "BOT_SELF_MESSAGE" };
   if (requiredCapability === "INSTALLATION_ONLY") {
     return {

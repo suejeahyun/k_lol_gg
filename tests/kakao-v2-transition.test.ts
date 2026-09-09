@@ -6,7 +6,7 @@ import {
   recordKakaoWebhookRejection,
   verifyKakaoInstallationHttpRequest,
 } from "../src/modules/recruiting/infrastructure/kakao-http-request";
-import { kakaoWebhookBodyDigest } from "../src/modules/recruiting/infrastructure/kakao-signature";
+import { installationScopedRoomId, kakaoWebhookBodyDigest } from "../src/modules/recruiting/infrastructure/kakao-signature";
 import { legacyKakaoRecruitTransitionResponse } from "../src/modules/recruiting/infrastructure/legacy-kakao-recruit-transition";
 
 const ENV_KEYS = [
@@ -121,7 +121,7 @@ test("V3 binds installation key id, delivery id, and bot version inside the HMAC
   process.env.KAKAO_WEBHOOK_BOT_SENDER_ID = `sender-${"e".repeat(32)}`;
   try {
     const body = "{}"; const timestamp = String(Math.floor(now.getTime() / 1_000)); const nonce = "nonce-v3-installation-0001";
-    const installationId = `install-${"a".repeat(32)}`; const keyId = "phone-key-a"; const deliveryId = `delivery-${"b".repeat(32)}`; const botVersion = "KLOL_V41_V3_R14"; const roomId = `room-${"c".repeat(32)}`; const senderId = `sender-${"d".repeat(32)}`;
+    const installationId = `install-${"a".repeat(32)}`; const keyId = "phone-key-a"; const deliveryId = `delivery-${"b".repeat(32)}`; const botVersion = "KLOL_V41_V3_R14_2"; const roomId = installationScopedRoomId(installationId); const senderId = `sender-${"d".repeat(32)}`;
     const digest = kakaoWebhookBodyDigest(new TextEncoder().encode(body));
     const material = ["KLOL_KAKAO_WEBHOOK_V3", timestamp, nonce, installationId, keyId, deliveryId, botVersion, roomId, senderId, digest].join("\n");
     const signature = `v3=${createHmac("sha256", process.env.KAKAO_WEBHOOK_SECRET_CURRENT).update(material).digest("hex")}`;
@@ -130,6 +130,10 @@ test("V3 binds installation key id, delivery id, and bot version inside the HMAC
     if (accepted.ok) { assert.equal(accepted.value.intent.keyId, keyId); assert.equal(accepted.value.intent.deliveryId, deliveryId); assert.equal(accepted.value.intent.botVersion, botVersion); }
     assert.deepEqual(await verifyKakaoInstallationHttpRequest(request({ "x-klol-key-id": "phone-key-b" }), now), { ok: false, code: "INVALID_SIGNATURE" });
     assert.deepEqual(await verifyKakaoInstallationHttpRequest(request({ "x-klol-delivery": `delivery-${"f".repeat(32)}` }), now), { ok: false, code: "INVALID_SIGNATURE" });
+    const alternateRoom = `room-${"c".repeat(32)}`;
+    const alternateMaterial = ["KLOL_KAKAO_WEBHOOK_V3", timestamp, nonce, installationId, keyId, deliveryId, botVersion, alternateRoom, senderId, digest].join("\n");
+    const alternateSignature = `v3=${createHmac("sha256", process.env.KAKAO_WEBHOOK_SECRET_CURRENT).update(alternateMaterial).digest("hex")}`;
+    assert.deepEqual(await verifyKakaoInstallationHttpRequest(request({ "x-klol-room": alternateRoom, "x-klol-signature": alternateSignature }), now), { ok: false, code: "INVALID_SIGNATURE" });
   } finally {
     if (prior === undefined) delete process.env.KAKAO_WEBHOOK_SECRET_CURRENT; else process.env.KAKAO_WEBHOOK_SECRET_CURRENT = prior;
     if (priorKey === undefined) delete process.env.KAKAO_WEBHOOK_KEY_ID_CURRENT; else process.env.KAKAO_WEBHOOK_KEY_ID_CURRENT = priorKey;

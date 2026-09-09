@@ -48,7 +48,12 @@ export function requiredRoomRole(capability: KakaoCommandCapability): KakaoRoomM
 }
 
 export function isKakaoFingerprint(value: string, prefix: "room" | "sender" | "install") {
+  if (prefix === "sender") return /^sender-(?:user-|display-)?[a-f0-9]{32}$/u.test(value);
   return new RegExp(`^${prefix}-[a-f0-9]{32}$`, "u").test(value);
+}
+
+export function isStableKakaoSenderFingerprint(value: string) {
+  return /^sender-(?:user-)?[a-f0-9]{32}$/u.test(value);
 }
 
 export function parsePairingCode(value: unknown) {

@@ -185,7 +185,6 @@ export async function verifyKakaoHttpRequest(
   try {
     const authorization = await registry.authorize({
       installationPublicId: installation.value.intent.installationId ?? legacyKakaoInstallationId(installation.value.intent.keyId),
-      localRoomFingerprint: installation.value.intent.roomId,
       senderFingerprint: installation.value.intent.senderId,
       requiredRole: policy.capability === "TRUSTED_SENDER_COMMAND" ? "ADMIN" : "MEMBER",
       keyId: installation.value.intent.keyId,

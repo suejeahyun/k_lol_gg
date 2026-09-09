@@ -5,11 +5,11 @@ import type { OperationsActor, OperationsCommandMetadata } from "@/modules/opera
 import { ADMIN_MUTATION_SESSION_POLICY, lockTransactionSessionActor } from "@/modules/auth/infrastructure/transaction-session-guard";
 import { auditEvents } from "@/platform/db/schema/audit";
 import { userAccounts } from "@/platform/db/schema/auth";
-import { kakaoBotInstallations, kakaoRoomBindings, kakaoRoomMembers, kakaoRoomPairings, kakaoRooms, operationForms, recruitParties, recruitingCommandReceipts, scrimRecruits } from "@/platform/db/schema/recruiting";
+import { kakaoBotInstallations, kakaoRoomBindings, kakaoRoomMembers, kakaoRoomPairings, kakaoRooms, operationForms, recruitParties, recruitingCommandReceipts, recruitingNonceBindings, scrimRecruits } from "@/platform/db/schema/recruiting";
 import type { V2Database } from "@/platform/db/database";
 import { withTransaction, type V2Transaction } from "@/platform/db/transaction";
 
-import { isKakaoFingerprint, kakaoRoleAtLeast, parsePairingCode, type KakaoRoomMemberRole, type KakaoRoomStatus } from "./domain";
+import { isKakaoFingerprint, isStableKakaoSenderFingerprint, kakaoRoleAtLeast, parsePairingCode, type KakaoRoomMemberRole, type KakaoRoomStatus } from "./domain";
 
 export class KakaoRoomRegistryError extends Error {
   constructor(readonly code: "INVALID_INPUT" | "INSTALLATION_KEY_MISMATCH" | "INSTALLATION_REVOKED" | "ROOM_BINDING_REQUIRED" | "ROOM_NOT_REGISTERED" | "ROOM_PAUSED" | "ROLE_FORBIDDEN" | "PAIRING_EXPIRED" | "PAIRING_REPLAY" | "CONFLICT" | "PRECONDITION_FAILED" | "SESSION_STALE" | "UNAVAILABLE") { super(code); }
@@ -24,6 +24,7 @@ const pairingRequestKeyHash = (key: string) => createHash("sha256").update(`klol
 export type KakaoRoomAuthorization = Readonly<{ roomId: string; roomStatus: "ACTIVE"; installationId: string; memberId: string; role: KakaoRoomMemberRole }>;
 export type KakaoRoomBootstrapEnvironment = Readonly<{
   KAKAO_WEBHOOK_ALLOWED_ROOMS?: string;
+  /** Legacy emergency import only. Normal request authorization never reads this value. */
   KAKAO_WEBHOOK_ALLOWED_SENDERS?: string;
 }>;
 
@@ -67,28 +68,26 @@ export class PostgresKakaoRoomRegistry {
     return row;
   }
 
-  /** Emergency/bootstrap only. Existing rows are never updated, merged, paused, or revoked. */
+  /** Emergency/bootstrap only. Legacy aggregate scopes are moved to one explicit canonical room; rooms are never merged or deleted. */
   private async bootstrap(transaction: V2Transaction, installationId: string, now: Date, environment: KakaoRoomBootstrapEnvironment) {
     const rooms = [...new Set((environment.KAKAO_WEBHOOK_ALLOWED_ROOMS ?? "").split(",").map((value) => value.trim()).filter((value) => isKakaoFingerprint(value, "room")))];
     const senders = [...new Set((environment.KAKAO_WEBHOOK_ALLOWED_SENDERS ?? "").split(",").map((value) => value.trim()).filter((value) => isKakaoFingerprint(value, "sender")))];
-    for (const localRoomFingerprint of rooms) {
-      let binding = (await transaction.select().from(kakaoRoomBindings).where(and(eq(kakaoRoomBindings.installationId, installationId), eq(kakaoRoomBindings.localRoomFingerprint, localRoomFingerprint))).limit(1))[0];
-      if (!binding) {
-        const prior = (await transaction.select().from(kakaoRoomBindings).where(and(eq(kakaoRoomBindings.localRoomFingerprint, localRoomFingerprint), eq(kakaoRoomBindings.registrationSource, "BOOTSTRAP"))).limit(1))[0];
-        let roomId = prior?.roomId;
-        if (!roomId) {
-          roomId = randomUUID();
-          await transaction.insert(kakaoRooms).values({ id: roomId, displayName: `Bootstrap ${localRoomFingerprint.slice(-6)}`, status: "ACTIVE", registrationSource: "BOOTSTRAP", registeredAt: now, updatedAt: now });
-        }
-        await transaction.insert(kakaoRoomBindings).values({ id: randomUUID(), installationId, localRoomFingerprint, roomId, registrationSource: "BOOTSTRAP", createdAt: now, updatedAt: now }).onConflictDoNothing({ target: [kakaoRoomBindings.installationId, kakaoRoomBindings.localRoomFingerprint] });
-        binding = (await transaction.select().from(kakaoRoomBindings).where(and(eq(kakaoRoomBindings.installationId, installationId), eq(kakaoRoomBindings.localRoomFingerprint, localRoomFingerprint))).limit(1))[0];
-      }
-      if (!binding) continue;
-      await transaction.update(recruitParties).set({ sourceRoomId: binding.roomId }).where(eq(recruitParties.sourceRoomId, localRoomFingerprint));
-      await transaction.update(scrimRecruits).set({ sourceRoomId: binding.roomId }).where(eq(scrimRecruits.sourceRoomId, localRoomFingerprint));
-      await transaction.update(operationForms).set({ sourceRoomId: binding.roomId }).where(eq(operationForms.sourceRoomId, localRoomFingerprint));
-      for (const senderFingerprint of senders) await transaction.insert(kakaoRoomMembers).values({ id: randomUUID(), roomId: binding.roomId, senderFingerprint, role: "ADMIN", lastActivityAt: now, createdAt: now, updatedAt: now }).onConflictDoNothing({ target: [kakaoRoomMembers.roomId, kakaoRoomMembers.senderFingerprint] });
+    if (rooms.length !== 1) throw new KakaoRoomRegistryError("INVALID_INPUT");
+    const legacyRoomFingerprint = rooms[0]!;
+    const installation = (await transaction.select().from(kakaoBotInstallations).where(eq(kakaoBotInstallations.id, installationId)).for("update").limit(1))[0];
+    if (!installation) throw new KakaoRoomRegistryError("UNAVAILABLE");
+    const prior = (await transaction.select().from(kakaoRoomBindings).where(eq(kakaoRoomBindings.localRoomFingerprint, legacyRoomFingerprint)).limit(1))[0];
+    let roomId = installation.canonicalRoomId ?? prior?.roomId;
+    if (!roomId) {
+      roomId = randomUUID();
+      await transaction.insert(kakaoRooms).values({ id: roomId, displayName: `Bootstrap ${legacyRoomFingerprint.slice(-6)}`, status: "ACTIVE", registrationSource: "BOOTSTRAP", registeredAt: now, updatedAt: now });
     }
+    if (installation.canonicalRoomId && installation.canonicalRoomId !== roomId) throw new KakaoRoomRegistryError("CONFLICT");
+    await transaction.update(kakaoBotInstallations).set({ canonicalRoomId: roomId, revision: sql`${kakaoBotInstallations.revision} + 1`, lastSeenAt: now }).where(eq(kakaoBotInstallations.id, installation.id));
+    await transaction.update(recruitParties).set({ sourceRoomId: roomId }).where(eq(recruitParties.sourceRoomId, legacyRoomFingerprint));
+    await transaction.update(scrimRecruits).set({ sourceRoomId: roomId }).where(eq(scrimRecruits.sourceRoomId, legacyRoomFingerprint));
+    await transaction.update(operationForms).set({ sourceRoomId: roomId }).where(eq(operationForms.sourceRoomId, legacyRoomFingerprint));
+    for (const senderFingerprint of senders) await transaction.insert(kakaoRoomMembers).values({ id: randomUUID(), roomId, senderFingerprint, role: "ADMIN", lastActivityAt: now, createdAt: now, updatedAt: now }).onConflictDoNothing({ target: [kakaoRoomMembers.roomId, kakaoRoomMembers.senderFingerprint] });
   }
 
   /**
@@ -104,13 +103,12 @@ export class PostgresKakaoRoomRegistry {
     });
   }
 
-  async authorize(input: Readonly<{ installationPublicId: string; localRoomFingerprint: string; senderFingerprint: string; requiredRole: KakaoRoomMemberRole; keyId?: string; botVersion?: string }>): Promise<KakaoRoomAuthorization> {
-    if (!isKakaoFingerprint(input.localRoomFingerprint, "room") || !isKakaoFingerprint(input.senderFingerprint, "sender")) throw new KakaoRoomRegistryError("INVALID_INPUT");
-    return withTransaction(this.database, async (transaction) => {
+  async authorize(input: Readonly<{ installationPublicId: string; senderFingerprint: string; requiredRole: KakaoRoomMemberRole; keyId?: string; botVersion?: string }>): Promise<KakaoRoomAuthorization> {
+    if (!isKakaoFingerprint(input.senderFingerprint, "sender")) throw new KakaoRoomRegistryError("INVALID_INPUT");
+    const result = await withTransaction(this.database, async (transaction) => {
       const now = new Date(); const installation = await this.installation(transaction, input.installationPublicId, now, input.keyId, input.botVersion);
-      const binding = (await transaction.select().from(kakaoRoomBindings).where(and(eq(kakaoRoomBindings.installationId, installation.id), eq(kakaoRoomBindings.localRoomFingerprint, input.localRoomFingerprint))).limit(1))[0];
-      if (!binding) throw new KakaoRoomRegistryError("ROOM_BINDING_REQUIRED");
-      const room = (await transaction.select().from(kakaoRooms).where(eq(kakaoRooms.id, binding.roomId)).for("update").limit(1))[0];
+      if (!installation.canonicalRoomId) return Object.freeze({ failure: "ROOM_BINDING_REQUIRED" as const });
+      const room = (await transaction.select().from(kakaoRooms).where(eq(kakaoRooms.id, installation.canonicalRoomId)).for("update").limit(1))[0];
       if (!room || room.status === "REVOKED") throw new KakaoRoomRegistryError("ROOM_NOT_REGISTERED");
       if (room.status === "PAUSED") throw new KakaoRoomRegistryError("ROOM_PAUSED");
       let member = (await transaction.select().from(kakaoRoomMembers).where(and(eq(kakaoRoomMembers.roomId, room.id), eq(kakaoRoomMembers.senderFingerprint, input.senderFingerprint))).for("update").limit(1))[0];
@@ -121,6 +119,7 @@ export class PostgresKakaoRoomRegistry {
       } else await transaction.update(kakaoRoomMembers).set({ lastActivityAt: now, updatedAt: now }).where(eq(kakaoRoomMembers.id, member.id));
       if (!member) throw new KakaoRoomRegistryError("UNAVAILABLE");
       let effectiveRole = member.role;
+      if (!isStableKakaoSenderFingerprint(input.senderFingerprint)) effectiveRole = "MEMBER";
       if (member.linkedUserAccountId) {
         const account = (await transaction.select({ role: userAccounts.role, status: userAccounts.status }).from(userAccounts).where(eq(userAccounts.id, member.linkedUserAccountId)).limit(1))[0];
         if (account?.status === "APPROVED" && (account.role === "ADMIN" || account.role === "SUPER_ADMIN") && roleRank(effectiveRole) < roleRank("ADMIN")) effectiveRole = "ADMIN";
@@ -128,11 +127,13 @@ export class PostgresKakaoRoomRegistry {
       if (!kakaoRoleAtLeast(effectiveRole, input.requiredRole)) throw new KakaoRoomRegistryError("ROLE_FORBIDDEN");
       return Object.freeze({ roomId: room.id, roomStatus: "ACTIVE" as const, installationId: installation.id, memberId: member.id, role: effectiveRole });
     });
+    if ("failure" in result) throw new KakaoRoomRegistryError(result.failure);
+    return result;
   }
 
   async list() {
     const [rooms, bindings, installations, members] = await Promise.all([this.database.select().from(kakaoRooms).orderBy(kakaoRooms.displayName, kakaoRooms.id), this.database.select().from(kakaoRoomBindings).orderBy(kakaoRoomBindings.roomId, kakaoRoomBindings.createdAt), this.database.select().from(kakaoBotInstallations), this.database.select().from(kakaoRoomMembers).orderBy(kakaoRoomMembers.roomId, kakaoRoomMembers.createdAt)]);
-    return Object.freeze({ rooms: rooms.map((room) => Object.freeze({ id: room.id, revision: room.revision, displayName: room.displayName, status: room.status, registrationSource: room.registrationSource, policyVersion: room.policyVersion, registeredAt: room.registeredAt.toISOString(), updatedAt: room.updatedAt.toISOString(), bindings: bindings.filter((binding) => binding.roomId === room.id).map((binding) => { const install = installations.find((item) => item.id === binding.installationId); return Object.freeze({ id: binding.id, installationHint: install ? hint(install.publicId) : "unknown", installationKeyId: install?.keyId ?? "unknown", installationStatus: install?.status ?? "REVOKED", lastBotVersion: install?.lastBotVersion ?? null, lastSeenAt: install?.lastSeenAt.toISOString() ?? null, roomHint: hint(binding.localRoomFingerprint), source: binding.registrationSource }); }), members: members.filter((member) => member.roomId === room.id).map((member) => Object.freeze({ id: member.id, revision: member.revision, senderHint: hint(member.senderFingerprint), role: member.role, linkedUserAccountId: member.linkedUserAccountId, linkedPlayerId: member.linkedPlayerId, lastActivityAt: member.lastActivityAt.toISOString() })) })) });
+    return Object.freeze({ rooms: rooms.map((room) => Object.freeze({ id: room.id, revision: room.revision, displayName: room.displayName, status: room.status, registrationSource: room.registrationSource, policyVersion: room.policyVersion, registeredAt: room.registeredAt.toISOString(), updatedAt: room.updatedAt.toISOString(), bindings: installations.filter((installation) => installation.canonicalRoomId === room.id).map((installation) => { const legacy = bindings.find((binding) => binding.installationId === installation.id && binding.roomId === room.id); return Object.freeze({ id: installation.id, installationHint: hint(installation.publicId), installationKeyId: installation.keyId, installationStatus: installation.status, lastBotVersion: installation.lastBotVersion, lastSeenAt: installation.lastSeenAt.toISOString(), roomHint: "설치본 기준", source: legacy?.registrationSource ?? room.registrationSource }); }), members: members.filter((member) => member.roomId === room.id).map((member) => Object.freeze({ id: member.id, revision: member.revision, senderHint: hint(member.senderFingerprint), role: member.role, linkedUserAccountId: member.linkedUserAccountId, linkedPlayerId: member.linkedPlayerId, lastActivityAt: member.lastActivityAt.toISOString() })) })) });
   }
 
   async createPairing(input: Readonly<{ actor: OperationsActor; targetRoomId?: string | null; displayName: string; ttlMinutes: number; metadata: OperationsCommandMetadata }>) {
@@ -151,28 +152,37 @@ export class PostgresKakaoRoomRegistry {
     });
   }
 
-  async consumePairing(input: Readonly<{ installationPublicId: string; localRoomFingerprint: string; senderFingerprint: string; keyId?: string; botVersion?: string; code: unknown; requestKey: string; requestId: string }>) {
+  async consumePairing(input: Readonly<{ installationPublicId: string; senderFingerprint: string; keyId?: string; botVersion?: string; nonce: string; bodyDigestHex: string; code: unknown; requestKey: string; requestId: string }>) {
     const code = parsePairingCode(input.code);
-    if (!code || !isKakaoFingerprint(input.localRoomFingerprint, "room") || !isKakaoFingerprint(input.senderFingerprint, "sender")) throw new KakaoRoomRegistryError("INVALID_INPUT");
+    if (!code || !isKakaoFingerprint(input.senderFingerprint, "sender") || !/^[A-Za-z0-9_-]{16,100}$/u.test(input.nonce) || !/^[a-f0-9]{64}$/u.test(input.bodyDigestHex)) throw new KakaoRoomRegistryError("INVALID_INPUT");
     return withTransaction(this.database, async (transaction) => {
       const now = new Date(); const installation = await this.installation(transaction, input.installationPublicId, now, input.keyId, input.botVersion);
+      const actorPrincipalId = `bot:kakao:${input.installationPublicId}`;
+      const nonceHash = createHash("sha256").update(`klol-v2:recruiting-nonce:v1\0${actorPrincipalId}\0${input.nonce}`).digest();
+      const bindingHash = createHash("sha256").update(["klol-v2:kakao-pairing-nonce-binding:v1", input.installationPublicId, input.senderFingerprint, input.requestKey, input.bodyDigestHex].join("\0")).digest();
+      await transaction.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`${actorPrincipalId}:${nonceHash.toString("hex")}`}, 0))`);
+      const priorNonce = (await transaction.select().from(recruitingNonceBindings).where(and(eq(recruitingNonceBindings.actorPrincipalId, actorPrincipalId), eq(recruitingNonceBindings.nonceHash, nonceHash))).limit(1))[0];
+      if (priorNonce && priorNonce.expiresAt > now && !Buffer.from(priorNonce.bindingHash).equals(bindingHash)) throw new KakaoRoomRegistryError("CONFLICT");
+      const nonceValues = { actorKind: "BOT" as const, actorPrincipalId, nonceHash, bindingHash, keyId: input.keyId ?? "legacy", createdAt: now, expiresAt: new Date(now.getTime() + 10 * 60_000) };
+      if (!priorNonce) await transaction.insert(recruitingNonceBindings).values({ id: randomUUID(), ...nonceValues });
+      else if (priorNonce.expiresAt <= now) await transaction.update(recruitingNonceBindings).set(nonceValues).where(eq(recruitingNonceBindings.id, priorNonce.id));
       const pairing = (await transaction.select().from(kakaoRoomPairings).where(eq(kakaoRoomPairings.codeHash, pairingHash(code))).for("update").limit(1))[0];
       if (!pairing) throw new KakaoRoomRegistryError("INVALID_INPUT");
       const requestKeyHash = pairingRequestKeyHash(input.requestKey);
       if (pairing.consumedAt) {
-        if (pairing.consumedRoomId && pairing.consumedInstallationId === installation.id && pairing.consumedLocalRoomFingerprint === input.localRoomFingerprint && pairing.consumedSenderFingerprint === input.senderFingerprint && pairing.consumedRequestKeyHash && Buffer.from(pairing.consumedRequestKeyHash).equals(requestKeyHash)) return Object.freeze({ roomId: pairing.consumedRoomId, status: "ACTIVE" as const, role: "MANAGER" as const, replayed: true as const });
+        if (pairing.consumedRoomId && pairing.consumedInstallationId === installation.id && pairing.consumedSenderFingerprint === input.senderFingerprint && pairing.consumedRequestKeyHash && Buffer.from(pairing.consumedRequestKeyHash).equals(requestKeyHash)) return Object.freeze({ roomId: pairing.consumedRoomId, status: "ACTIVE" as const, role: isStableKakaoSenderFingerprint(input.senderFingerprint) ? "MANAGER" as const : "MEMBER" as const, replayed: true as const });
         throw new KakaoRoomRegistryError("PAIRING_REPLAY");
       }
       if (pairing.expiresAt <= now) throw new KakaoRoomRegistryError("PAIRING_EXPIRED");
-      const existing = (await transaction.select().from(kakaoRoomBindings).where(and(eq(kakaoRoomBindings.installationId, installation.id), eq(kakaoRoomBindings.localRoomFingerprint, input.localRoomFingerprint))).for("update").limit(1))[0];
-      if (existing && pairing.targetRoomId && existing.roomId !== pairing.targetRoomId) throw new KakaoRoomRegistryError("CONFLICT");
-      let roomId = pairing.targetRoomId ?? existing?.roomId;
+      if (installation.canonicalRoomId && pairing.targetRoomId && installation.canonicalRoomId !== pairing.targetRoomId) throw new KakaoRoomRegistryError("CONFLICT");
+      let roomId = pairing.targetRoomId ?? installation.canonicalRoomId;
       if (!roomId) { roomId = randomUUID(); await transaction.insert(kakaoRooms).values({ id: roomId, displayName: pairing.displayName, status: "ACTIVE", registrationSource: "PAIRING", policyVersion: 1, registeredByUserAccountId: pairing.createdByUserAccountId, registeredAt: now, updatedAt: now }); }
-      if (!existing) await transaction.insert(kakaoRoomBindings).values({ id: randomUUID(), installationId: installation.id, localRoomFingerprint: input.localRoomFingerprint, roomId, registrationSource: "PAIRING", createdAt: now, updatedAt: now });
-      await transaction.insert(kakaoRoomMembers).values({ id: randomUUID(), roomId, senderFingerprint: input.senderFingerprint, role: "MANAGER", lastActivityAt: now, createdAt: now, updatedAt: now }).onConflictDoUpdate({ target: [kakaoRoomMembers.roomId, kakaoRoomMembers.senderFingerprint], set: { role: "MANAGER", lastActivityAt: now, revision: sql`${kakaoRoomMembers.revision} + 1`, updatedAt: now } });
-      await transaction.update(kakaoRoomPairings).set({ consumedAt: now, consumedRoomId: roomId, consumedInstallationId: installation.id, consumedLocalRoomFingerprint: input.localRoomFingerprint, consumedSenderFingerprint: input.senderFingerprint, consumedRequestKeyHash: requestKeyHash }).where(and(eq(kakaoRoomPairings.id, pairing.id), isNull(kakaoRoomPairings.consumedAt)));
-      await transaction.insert(auditEvents).values({ requestId: input.requestId, actorUserAccountId: pairing.createdByUserAccountId, action: "KAKAO_ROOM_PAIRED", targetType: "KAKAO_ROOM", targetId: roomId, metadataJson: { installationHint: hint(input.installationPublicId), roomHint: hint(input.localRoomFingerprint) }, createdAt: now });
-      return Object.freeze({ roomId, status: "ACTIVE" as const, role: "MANAGER" as const, replayed: false as const });
+      await transaction.update(kakaoBotInstallations).set({ canonicalRoomId: roomId, revision: sql`${kakaoBotInstallations.revision} + 1`, lastSeenAt: now }).where(eq(kakaoBotInstallations.id, installation.id));
+      const pairedRole = isStableKakaoSenderFingerprint(input.senderFingerprint) ? "MANAGER" as const : "MEMBER" as const;
+      await transaction.insert(kakaoRoomMembers).values({ id: randomUUID(), roomId, senderFingerprint: input.senderFingerprint, role: pairedRole, lastActivityAt: now, createdAt: now, updatedAt: now }).onConflictDoUpdate({ target: [kakaoRoomMembers.roomId, kakaoRoomMembers.senderFingerprint], set: { role: pairedRole, lastActivityAt: now, revision: sql`${kakaoRoomMembers.revision} + 1`, updatedAt: now } });
+      await transaction.update(kakaoRoomPairings).set({ consumedAt: now, consumedRoomId: roomId, consumedInstallationId: installation.id, consumedLocalRoomFingerprint: input.installationPublicId, consumedSenderFingerprint: input.senderFingerprint, consumedRequestKeyHash: requestKeyHash }).where(and(eq(kakaoRoomPairings.id, pairing.id), isNull(kakaoRoomPairings.consumedAt)));
+      await transaction.insert(auditEvents).values({ requestId: input.requestId, actorUserAccountId: pairing.createdByUserAccountId, action: "KAKAO_ROOM_PAIRED", targetType: "KAKAO_ROOM", targetId: roomId, metadataJson: { installationHint: hint(input.installationPublicId), scope: "INSTALLATION" }, createdAt: now });
+      return Object.freeze({ roomId, status: "ACTIVE" as const, role: pairedRole, replayed: false as const });
     });
   }
 

@@ -5,8 +5,9 @@
  * This router requires KLOL_KAKAO_BOT_V41_V2_TRANSPORT.js and
  * KLOL_KAKAO_BOT_V41_V1_COMPAT.js immediately before it.
  */
-var KLOL_V41_BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V41_V3_2026_09_09_R14_1_DIAGNOSTIC";
+var KLOL_V41_BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V41_V3_2026_09_09_R14_2_INSTALLATION_SCOPE";
 var KLOL_V41_CURRENT_DELIVERY_ID = "";
+var KLOL_V41_CURRENT_USER_HASH = "";
 var KLOL_V41_DELIVERY_TTL_MS = 30000;
 
 function v41ClaimMessageDelivery(deliveryId) {
@@ -20,7 +21,9 @@ function v41ClaimMessageDelivery(deliveryId) {
 }
 
 function v41FallbackMessageDeliveryId(room, sender, msg, logId, channelId, userHash) {
-  var material = ["KLOL_V41_MESSAGE_DELIVERY_FALLBACK_V1", channelId || room, userHash || sender, logId || "", msg || ""].join("\n");
+  var installationScope = "installation-unavailable";
+  try { installationScope = KLOL_V2_KAKAO.installationScopeId(); } catch (scopeError) {}
+  var material = ["KLOL_V41_MESSAGE_DELIVERY_FALLBACK_V2", installationScope, userHash || sender, logId || "", msg || ""].join("\n");
   var seeds = [2166136261, 3339675911, 2246822507, 3266489909];
   var output = "";
   var seedIndex = 0;
@@ -1483,8 +1486,11 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName,
   var deliveryId = v41MessageDeliveryId(room, sender, msg, logId, channelId, userHash);
   if (!v41ClaimMessageDelivery(deliveryId)) return null;
   KLOL_V41_CURRENT_DELIVERY_ID = deliveryId;
+  KLOL_V41_CURRENT_USER_HASH = String(userHash || "");
   try {
-    if (typeof KLOL_V2_KAKAO.roomIdentityInput === "function") room = KLOL_V2_KAKAO.roomIdentityInput(room, sender, isGroupChat, channelId);
+    room = typeof KLOL_V2_KAKAO.installationScopeId === "function"
+      ? KLOL_V2_KAKAO.installationScopeId()
+      : KLOL_V2_KAKAO.identityForChat(room, "room-scope").roomId;
     if (v41IsBotEchoSender(sender)) return null;
     rawImage = v41ReceivedImage(imageDB);
     if (rawImage && v41HandleImage(room, sender, rawImage, replier)) return null;
@@ -1505,9 +1511,8 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName,
     if (legacyNotice) return v41Reply(replier, legacyNotice);
     if (/^\/?(?:V2)?연동확인$/i.test(text)) {
       try {
-        if (!room) return v41Reply(replier, "[K-LOL.GG V2 방 식별 불가]\n메신저봇R 알림 파서가 방 이름 대신 발신자명을 전달했습니다.\n메신저봇R 0.7.34a 이상으로 업데이트한 뒤 다시 확인해 주세요.");
         var identity = KLOL_V2_KAKAO.identityForChat(room, sender);
-        return v41Reply(replier, "[K-LOL.GG V2 연동 ID]\n설치본: " + KLOL_V2_KAKAO.installationId() + "\n키 ID: " + KLOL_V2_KAKAO.signingKeyId() + "\n방: " + identity.roomId + "\n발신자: " + identity.senderId + "\n방 식별 기준: " + (String(room).indexOf("channel-id\n") === 0 ? "channelId" : "legacy room"));
+        return v41Reply(replier, "[K-LOL.GG V2 연동 ID]\n설치본: " + KLOL_V2_KAKAO.installationId() + "\n키 ID: " + KLOL_V2_KAKAO.signingKeyId() + "\n발신자: " + identity.senderId + "\n연동 기준: 설치본\n주의: 이 봇 설치본은 카카오톡 방 하나에서만 사용하세요.");
       } catch (identityError) {
         return v41Reply(replier, "[K-LOL.GG V2 연동]\n연동 ID 생성에 실패했습니다. MessengerBot R 실행 로그를 확인해 주세요.");
       }
@@ -1574,6 +1579,7 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName,
     v41Reply(replier, detail.indexOf("[K-LOL.GG 요청 실패]") === 0 ? detail : "[K-LOL.GG 요청 실패]\n" + detail);
   } finally {
     KLOL_V41_CURRENT_DELIVERY_ID = "";
+    KLOL_V41_CURRENT_USER_HASH = "";
   }
 }
 

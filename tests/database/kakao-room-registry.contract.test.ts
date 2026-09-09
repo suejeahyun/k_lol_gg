@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { randomBytes, randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import test from "node:test";
 import { eq } from "drizzle-orm";
 
@@ -13,15 +13,27 @@ const installationA = `install-${"a".repeat(32)}`;
 const installationB = `install-${"b".repeat(32)}`;
 const installationC = `install-${"c".repeat(32)}`;
 const installationD = `install-${"d".repeat(32)}`;
-const roomA = `room-${"1".repeat(32)}`;
-const roomB = `room-${"2".repeat(32)}`;
 const senderA = `sender-${"3".repeat(32)}`;
 const senderB = `sender-${"4".repeat(32)}`;
 const senderC = `sender-${"5".repeat(32)}`;
+const displaySender = `sender-display-${"6".repeat(32)}`;
 let requestSequence = 0;
-function metadata(expectedRevision = 0) { requestSequence += 1; return { requestId: randomUUID(), requestKey: `kakao-room-contract-${requestSequence}-12345678`, requestHashHex: randomBytes(32).toString("hex"), expectedRevision }; }
 
-test("different MessengerBot installations bind local fingerprints to one canonical room without role leakage", { concurrency: false }, async () => {
+function metadata(expectedRevision = 0) {
+  requestSequence += 1;
+  return { requestId: randomUUID(), requestKey: `kakao-room-contract-${requestSequence}-12345678`, requestHashHex: randomBytes(32).toString("hex"), expectedRevision };
+}
+
+function pairInput(installationPublicId: string, senderFingerprint: string, code: string | null, requestKey: string, keyId?: string, botVersion?: string) {
+  return {
+    installationPublicId, senderFingerprint, keyId, botVersion,
+    nonce: `nonce_${createHash("sha256").update(requestKey).digest("hex").slice(0, 32)}`,
+    bodyDigestHex: createHash("sha256").update(String(code)).digest("hex"),
+    code, requestKey, requestId: randomUUID(),
+  };
+}
+
+test("one installation maps to exactly one canonical room without room parsing or sender allowlists", { concurrency: false }, async () => {
   const connectionString = process.env.TEST_DATABASE_URL; assert.ok(connectionString);
   const priorRooms = process.env.KAKAO_WEBHOOK_ALLOWED_ROOMS; const priorSenders = process.env.KAKAO_WEBHOOK_ALLOWED_SENDERS;
   const priorCurrentKeyId = process.env.KAKAO_WEBHOOK_KEY_ID_CURRENT; const priorPreviousKeyId = process.env.KAKAO_WEBHOOK_KEY_ID_PREVIOUS;
@@ -35,61 +47,43 @@ test("different MessengerBot installations bind local fingerprints to one canoni
     await database.insert(userAccounts).values({ id: superId, loginId: `room-super-${superId}`, loginIdNormalized: `room-super-${superId}`, role: "SUPER_ADMIN", status: "APPROVED" });
     await database.insert(authSessions).values({ id: sessionId, tokenHash: randomBytes(32), userAccountId: superId, authVersion: 0, role: "SUPER_ADMIN", purpose: "ADMIN", totpVerifiedAt: now, issuedAt: now, expiresAt: new Date(now.getTime() + 3_600_000) });
 
-    const firstMetadata = metadata();
-    const firstCode = await registry.createPairing({ actor, displayName: "동일 실제 방", ttlMinutes: 10, metadata: firstMetadata });
-    const pairingReplay = await registry.createPairing({ actor, displayName: "동일 실제 방", ttlMinutes: 10, metadata: firstMetadata });
-    assert.equal(pairingReplay.id, firstCode.id); assert.equal(pairingReplay.code, null); assert.equal(pairingReplay.replayed, true);
-    const firstRequestKey = "pair-consume-first-12345678";
-    const first = await registry.consumePairing({ installationPublicId: installationA, localRoomFingerprint: roomA, senderFingerprint: senderA, code: firstCode.code, requestKey: firstRequestKey, requestId: randomUUID() });
-    assert.equal((await registry.consumePairing({ installationPublicId: installationA, localRoomFingerprint: roomA, senderFingerprint: senderA, code: firstCode.code, requestKey: firstRequestKey, requestId: randomUUID() })).replayed, true);
-    const secondCode = await registry.createPairing({ actor, targetRoomId: first.roomId, displayName: "동일 실제 방", ttlMinutes: 10, metadata: metadata() });
-    const second = await registry.consumePairing({ installationPublicId: installationB, localRoomFingerprint: roomB, senderFingerprint: senderB, code: secondCode.code, requestKey: "pair-consume-second-12345678", requestId: randomUUID() });
-    assert.equal(second.roomId, first.roomId);
-    assert.equal((await registry.authorize({ installationPublicId: installationA, localRoomFingerprint: roomA, senderFingerprint: senderA, requiredRole: "MEMBER" })).roomId, first.roomId);
-    const authorizedB = await registry.authorize({ installationPublicId: installationB, localRoomFingerprint: roomB, senderFingerprint: senderB, requiredRole: "MEMBER" });
-    assert.equal(authorizedB.roomId, first.roomId);
-    const authorizedC = await registry.authorize({ installationPublicId: installationA, localRoomFingerprint: roomA, senderFingerprint: senderC, requiredRole: "MEMBER" });
-    assert.equal(authorizedC.roomId, first.roomId);
-    assert.equal(authorizedC.role, "MEMBER");
-    await assert.rejects(registry.authorize({ installationPublicId: installationA, localRoomFingerprint: roomA, senderFingerprint: senderC, requiredRole: "ADMIN" }), (error: unknown) => error instanceof KakaoRoomRegistryError && error.code === "ROLE_FORBIDDEN");
-    await assert.rejects(registry.authorize({ installationPublicId: installationC, localRoomFingerprint: roomA, senderFingerprint: senderA, requiredRole: "MEMBER" }), (error: unknown) => error instanceof KakaoRoomRegistryError && error.code === "ROOM_BINDING_REQUIRED");
-    await assert.rejects(registry.authorize({ installationPublicId: installationB, localRoomFingerprint: roomB, senderFingerprint: senderB, requiredRole: "ADMIN" }), (error: unknown) => error instanceof KakaoRoomRegistryError && error.code === "ROLE_FORBIDDEN");
-    const roleMetadata = metadata(0); const promoted = await registry.setMemberRole({ actor, memberId: authorizedB.memberId, role: "ADMIN", metadata: roleMetadata });
-    assert.equal((await registry.setMemberRole({ actor, memberId: authorizedB.memberId, role: "ADMIN", metadata: roleMetadata })).replayed, true);
-    assert.equal((await registry.authorize({ installationPublicId: installationB, localRoomFingerprint: roomB, senderFingerprint: senderB, requiredRole: "ADMIN" })).role, "ADMIN");
-    const pauseMetadata = metadata(0); const paused = await registry.setRoomStatus({ actor, roomId: first.roomId, status: "PAUSED", metadata: pauseMetadata });
-    assert.equal((await registry.setRoomStatus({ actor, roomId: first.roomId, status: "PAUSED", metadata: pauseMetadata })).replayed, true);
-    await registry.setRoomStatus({ actor, roomId: first.roomId, status: "ACTIVE", metadata: metadata(paused.revision) });
-    assert.equal(promoted.role, "ADMIN");
-    await assert.rejects(registry.consumePairing({ installationPublicId: installationA, localRoomFingerprint: roomA, senderFingerprint: senderA, code: firstCode.code, requestKey: "pair-consume-replay-87654321", requestId: randomUUID() }), (error: unknown) => error instanceof KakaoRoomRegistryError && error.code === "PAIRING_REPLAY");
+    await assert.rejects(registry.authorize({ installationPublicId: installationA, senderFingerprint: senderA, requiredRole: "MEMBER" }), (error: unknown) => error instanceof KakaoRoomRegistryError && error.code === "ROOM_BINDING_REQUIRED");
+    assert.equal((await database.select().from(kakaoBotInstallations).where(eq(kakaoBotInstallations.publicId, installationA))).length, 1);
 
-    const otherCode = await registry.createPairing({ actor, displayName: "다른 실제 방", ttlMinutes: 10, metadata: metadata() });
-    const other = await registry.consumePairing({ installationPublicId: installationC, localRoomFingerprint: roomB, senderFingerprint: senderB, code: otherCode.code, requestKey: "pair-consume-other-12345678", requestId: randomUUID() });
-    assert.notEqual(other.roomId, first.roomId);
-    const mergeCode = await registry.createPairing({ actor, targetRoomId: first.roomId, displayName: "동일 실제 방", ttlMinutes: 10, metadata: metadata() });
-    await assert.rejects(registry.consumePairing({ installationPublicId: installationC, localRoomFingerprint: roomB, senderFingerprint: senderB, code: mergeCode.code, requestKey: "pair-consume-conflict-12345678", requestId: randomUUID() }), (error: unknown) => error instanceof KakaoRoomRegistryError && error.code === "CONFLICT");
+    const firstCode = await registry.createPairing({ actor, displayName: "동일 실제 방", ttlMinutes: 10, metadata: metadata() });
+    const firstRequest = pairInput(installationA, senderA, firstCode.code, "pair-consume-first-12345678");
+    const first = await registry.consumePairing(firstRequest);
+    assert.equal((await registry.consumePairing(firstRequest)).replayed, true);
+    assert.equal((await registry.authorize({ installationPublicId: installationA, senderFingerprint: senderA, requiredRole: "MEMBER" })).roomId, first.roomId);
+
+    const secondCode = await registry.createPairing({ actor, targetRoomId: first.roomId, displayName: "동일 실제 방", ttlMinutes: 10, metadata: metadata() });
+    const second = await registry.consumePairing(pairInput(installationB, senderB, secondCode.code, "pair-consume-second-12345678"));
+    assert.equal(second.roomId, first.roomId);
+    const unknown = await registry.authorize({ installationPublicId: installationA, senderFingerprint: senderC, requiredRole: "MEMBER" });
+    assert.equal(unknown.role, "MEMBER");
+    await assert.rejects(registry.authorize({ installationPublicId: installationA, senderFingerprint: senderC, requiredRole: "ADMIN" }), (error: unknown) => error instanceof KakaoRoomRegistryError && error.code === "ROLE_FORBIDDEN");
+
+    const displayCode = await registry.createPairing({ actor, displayName: "표시명 fallback", ttlMinutes: 10, metadata: metadata() });
+    const displayPairing = await registry.consumePairing(pairInput(installationC, displaySender, displayCode.code, "pair-display-12345678"));
+    assert.equal(displayPairing.role, "MEMBER");
+    await assert.rejects(registry.authorize({ installationPublicId: installationC, senderFingerprint: displaySender, requiredRole: "MANAGER" }), (error: unknown) => error instanceof KakaoRoomRegistryError && error.code === "ROLE_FORBIDDEN");
+    const conflictCode = await registry.createPairing({ actor, targetRoomId: first.roomId, displayName: "다른 방 금지", ttlMinutes: 10, metadata: metadata() });
+    await assert.rejects(registry.consumePairing(pairInput(installationC, displaySender, conflictCode.code, "pair-conflict-12345678")), (error: unknown) => error instanceof KakaoRoomRegistryError && error.code === "CONFLICT");
 
     const keyedCode = await registry.createPairing({ actor, displayName: "설치본 키 고정 방", ttlMinutes: 10, metadata: metadata() });
-    const keyed = await registry.consumePairing({ installationPublicId: installationD, localRoomFingerprint: roomA, senderFingerprint: senderA, keyId: "phone-key-a", botVersion: "KLOL_V41_V3_R14", code: keyedCode.code, requestKey: "pair-keyed-install-12345678", requestId: randomUUID() });
-    assert.equal((await registry.authorize({ installationPublicId: installationD, localRoomFingerprint: roomA, senderFingerprint: senderB, requiredRole: "MEMBER", keyId: "phone-key-a", botVersion: "KLOL_V41_V3_R14" })).roomId, keyed.roomId);
-    await assert.rejects(registry.authorize({ installationPublicId: installationD, localRoomFingerprint: roomA, senderFingerprint: senderB, requiredRole: "MEMBER", keyId: "phone-key-b", botVersion: "KLOL_V41_V3_R14" }), (error: unknown) => error instanceof KakaoRoomRegistryError && error.code === "INSTALLATION_KEY_MISMATCH");
+    const keyed = await registry.consumePairing(pairInput(installationD, senderA, keyedCode.code, "pair-keyed-12345678", "phone-key-a", "KLOL_V41_V3_R14_2"));
     process.env.KAKAO_WEBHOOK_KEY_ID_PREVIOUS = "phone-key-a"; process.env.KAKAO_WEBHOOK_KEY_ID_CURRENT = "phone-key-b";
-    assert.equal((await registry.authorize({ installationPublicId: installationD, localRoomFingerprint: roomA, senderFingerprint: senderB, requiredRole: "MEMBER", keyId: "phone-key-b", botVersion: "KLOL_V41_V3_R14_ROTATED" })).roomId, keyed.roomId);
-    await assert.rejects(registry.authorize({ installationPublicId: installationD, localRoomFingerprint: roomA, senderFingerprint: senderB, requiredRole: "MEMBER", keyId: "phone-key-a", botVersion: "KLOL_V41_V3_R14" }), (error: unknown) => error instanceof KakaoRoomRegistryError && error.code === "INSTALLATION_KEY_MISMATCH");
-    const keyedBinding = (await registry.list()).rooms.find((room) => room.id === keyed.roomId)?.bindings[0];
-    assert.equal(keyedBinding?.installationKeyId, "phone-key-b");
-    assert.equal(keyedBinding?.lastBotVersion, "KLOL_V41_V3_R14_ROTATED");
+    assert.equal((await registry.authorize({ installationPublicId: installationD, senderFingerprint: senderB, requiredRole: "MEMBER", keyId: "phone-key-b", botVersion: "KLOL_V41_V3_R14_2_ROTATED" })).roomId, keyed.roomId);
+    await assert.rejects(registry.authorize({ installationPublicId: installationD, senderFingerprint: senderB, requiredRole: "MEMBER", keyId: "phone-key-a", botVersion: "KLOL_V41_V3_R14_2" }), (error: unknown) => error instanceof KakaoRoomRegistryError && error.code === "INSTALLATION_KEY_MISMATCH");
     await database.update(kakaoBotInstallations).set({ status: "REVOKED" }).where(eq(kakaoBotInstallations.publicId, installationD));
-    await assert.rejects(registry.authorize({ installationPublicId: installationD, localRoomFingerprint: roomA, senderFingerprint: senderB, requiredRole: "MEMBER", keyId: "phone-key-b", botVersion: "KLOL_V41_V3_R14_ROTATED" }), (error: unknown) => error instanceof KakaoRoomRegistryError && error.code === "INSTALLATION_REVOKED");
+    await assert.rejects(registry.authorize({ installationPublicId: installationD, senderFingerprint: senderB, requiredRole: "MEMBER", keyId: "phone-key-b", botVersion: "KLOL_V41_V3_R14_2_ROTATED" }), (error: unknown) => error instanceof KakaoRoomRegistryError && error.code === "INSTALLATION_REVOKED");
 
-    const bootstrapRoom = `room-${"f".repeat(32)}`; process.env.KAKAO_WEBHOOK_ALLOWED_ROOMS = bootstrapRoom; process.env.KAKAO_WEBHOOK_ALLOWED_SENDERS = senderA;
-    const beforeMismatchedEnvironment = await registry.list();
-    await assert.rejects(registry.authorize({ installationPublicId: installationA, localRoomFingerprint: bootstrapRoom, senderFingerprint: senderA, requiredRole: "MEMBER" }), (error: unknown) => error instanceof KakaoRoomRegistryError && error.code === "ROOM_BINDING_REQUIRED");
-    const afterMismatchedEnvironment = await registry.list();
-    assert.deepEqual(afterMismatchedEnvironment.rooms.map((room) => ({ id: room.id, status: room.status, bindings: room.bindings.map((binding) => binding.id) })), beforeMismatchedEnvironment.rooms.map((room) => ({ id: room.id, status: room.status, bindings: room.bindings.map((binding) => binding.id) })));
-    const legacyPartyId = randomUUID(); await database.insert(recruitParties).values({ id: legacyPartyId, recruitDate: "2026-09-09", resetSequence: 99, recruitNumber: 99, type: "ARAM", status: "IN_PROGRESS", title: "기존 방 이관", maximumMembers: 5, membersJson: [], sourceRoomId: bootstrapRoom, lastActivityAt: now });
-    await registry.bootstrapFromEnvironment(installationA, { KAKAO_WEBHOOK_ALLOWED_ROOMS: bootstrapRoom, KAKAO_WEBHOOK_ALLOWED_SENDERS: senderA });
-    const bootstrapped = await registry.authorize({ installationPublicId: installationA, localRoomFingerprint: bootstrapRoom, senderFingerprint: senderA, requiredRole: "ADMIN" });
+    const bootstrapInstallation = `install-${"e".repeat(32)}`;
+    const bootstrapRoom = `room-${"f".repeat(32)}`;
+    const legacyPartyId = randomUUID();
+    await database.insert(recruitParties).values({ id: legacyPartyId, recruitDate: "2026-09-09", resetSequence: 99, recruitNumber: 99, type: "ARAM", status: "IN_PROGRESS", title: "기존 방 이관", maximumMembers: 5, membersJson: [], sourceRoomId: bootstrapRoom, lastActivityAt: now });
+    await registry.bootstrapFromEnvironment(bootstrapInstallation, { KAKAO_WEBHOOK_ALLOWED_ROOMS: bootstrapRoom, KAKAO_WEBHOOK_ALLOWED_SENDERS: senderA });
+    const bootstrapped = await registry.authorize({ installationPublicId: bootstrapInstallation, senderFingerprint: senderA, requiredRole: "ADMIN" });
     assert.equal((await database.select({ sourceRoomId: recruitParties.sourceRoomId }).from(recruitParties).where(eq(recruitParties.id, legacyPartyId)))[0]?.sourceRoomId, bootstrapped.roomId);
   } finally {
     if (priorRooms === undefined) delete process.env.KAKAO_WEBHOOK_ALLOWED_ROOMS; else process.env.KAKAO_WEBHOOK_ALLOWED_ROOMS = priorRooms;

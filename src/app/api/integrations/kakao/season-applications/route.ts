@@ -21,7 +21,7 @@ export async function POST(request: Request) {
       const registry = getRuntimeKakaoRoomRegistry();
       try {
         if (!registry) throw new KakaoRoomRegistryError("UNAVAILABLE");
-        await registry.authorize({ installationPublicId: prepared.intent.installationId ?? legacyKakaoInstallationId(prepared.intent.keyId), localRoomFingerprint: prepared.intent.localRoomFingerprint ?? prepared.intent.roomId, senderFingerprint: prepared.intent.senderId, requiredRole: "ADMIN" });
+        await registry.authorize({ installationPublicId: prepared.intent.installationId ?? legacyKakaoInstallationId(prepared.intent.keyId), senderFingerprint: prepared.intent.senderId, requiredRole: "ADMIN", keyId: prepared.intent.keyId, botVersion: prepared.intent.botVersion });
       } catch {
         recordKakaoWebhookRejection("ROLE_FORBIDDEN", { route: new URL(request.url).pathname, traceId: prepared.traceId, request });
         return kakaoAssistantCapabilityForbiddenResponse(prepared.traceId);
