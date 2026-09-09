@@ -30,9 +30,13 @@ const problems = Object.freeze({
   ownerForbidden: definePublicProblem({ code: "FORBIDDEN", status: 403, title: "요청 권한이 없습니다.", detail: "승인된 대상 소유자 계정으로 다시 시도해 주세요." }),
 });
 
-export async function prepareKakaoSignedJson(request: Request, maximumBytes = MAXIMUM_KAKAO_BODY_BYTES) {
+export async function prepareKakaoSignedJson(
+  request: Request,
+  maximumBytes = MAXIMUM_KAKAO_BODY_BYTES,
+  policy: Readonly<{ allowAnySender?: boolean }> = {},
+) {
   const traceId = readValidatedTraceId(request.headers);
-  const verification = await verifyKakaoHttpRequest(request, new Date(), maximumBytes);
+  const verification = await verifyKakaoHttpRequest(request, new Date(), maximumBytes, policy);
   if (!verification.ok) {
     recordKakaoWebhookRejection(verification.code, { route: new URL(request.url).pathname, traceId });
     return { ok: false as const, response: problemResponse(problems.forbidden, { traceId }) };

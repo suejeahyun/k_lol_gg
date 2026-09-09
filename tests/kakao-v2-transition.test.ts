@@ -93,6 +93,12 @@ test("legacy party and scrim mutations fail closed with an explicit V2 successor
   assert.equal(retired.headers.get("cache-control"), "no-store");
   assert.equal((await retired.json()).code, "KAKAO_BOT_UPGRADE_REQUIRED");
 
+  const dailyClose = legacyKakaoRecruitTransitionResponse({ group: "party", action: "auto-finish-idle", method: "POST" });
+  const dailyCloseBody = await dailyClose.json();
+  assert.equal(dailyClose.status, 410);
+  assert.equal(dailyCloseBody.successor, "/api/internal/jobs/kakao-daily-close");
+  assert.match(dailyClose.headers.get("link") ?? "", /\/api\/internal\/jobs\/kakao-daily-close/);
+
   const wrongMethod = legacyKakaoRecruitTransitionResponse({ group: "scrim", action: "create", method: "GET" });
   assert.equal(wrongMethod.status, 405);
   assert.equal(wrongMethod.headers.get("allow"), "POST");

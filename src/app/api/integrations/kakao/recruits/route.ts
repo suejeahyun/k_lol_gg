@@ -32,12 +32,14 @@ export const runtime = "nodejs";
 const MAXIMUM_BODY_BYTES = 256 * 1_024;
 const BOT_TYPES: ReadonlySet<RecruitingCommand["type"]> = new Set([
   "CREATE_PARTY", "SYNC_PARTY", "GET_PARTY_STATUS", "FINISH_PARTY", "CANCEL_PARTY",
-  "CREATE_SCRIM", "JOIN_SCRIM", "REOPEN_SCRIM", "CONFIRM_SCRIM", "COMPLETE_SCRIM", "CANCEL_SCRIM",
+  "CREATE_SCRIM", "SYNC_SCRIM", "JOIN_SCRIM", "REOPEN_SCRIM", "CONFIRM_SCRIM", "COMPLETE_SCRIM", "CANCEL_SCRIM",
 ]);
 
 export async function POST(request: Request) {
   const traceId = readValidatedTraceId(request.headers);
-  const verification = await verifyKakaoHttpRequest(request, new Date(), MAXIMUM_BODY_BYTES);
+  // V1 party forms are collaboratively edited by human members of an approved room.
+  // The raw-body HMAC, approved-room check, nonce claim and bot-self rejection remain mandatory.
+  const verification = await verifyKakaoHttpRequest(request, new Date(), MAXIMUM_BODY_BYTES, { allowAnySender: true });
   if (!verification.ok) {
     recordKakaoWebhookRejection(verification.code, { route: new URL(request.url).pathname, traceId });
     return recruitingWebhookForbiddenResponse(traceId);

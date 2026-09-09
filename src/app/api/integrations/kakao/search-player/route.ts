@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  const prepared = await prepareKakaoSignedJson(request);
+  const prepared = await prepareKakaoSignedJson(request, undefined, { allowAnySender: true });
   if (!prepared.ok) return prepared.response;
   try {
     const body = parsePlayerSearchBody(prepared.body);

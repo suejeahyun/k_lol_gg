@@ -8,6 +8,7 @@ import {
   lockTransactionSessionActor,
 } from "@/modules/auth/infrastructure/transaction-session-guard";
 import { auditEvents } from "@/platform/db/schema/audit";
+import { destructionCompetitions } from "@/platform/db/schema/destruction-competitions";
 import {
   recruitParties,
   kakaoImageSessions,
@@ -36,10 +37,12 @@ import type {
   RecruitingUnitOfWork,
 } from "../application/ports";
 import { toPublicPartyDto, toPublicScrimDto } from "../application/public-dto";
-import type { RecruitMember, RecruitParty, ScrimRecruit } from "../domain/recruiting";
+import { kakaoRoomOwnsRecruitAggregate } from "../domain/recruiting";
+import type { RecruitMember, RecruitParty, ScrimLineup, ScrimRecruit } from "../domain/recruiting";
 
 const RECEIPT_TTL_MILLISECONDS = 24 * 60 * 60 * 1_000;
 const NONCE_TTL_MILLISECONDS = 15 * 60 * 1_000;
+const ACTIVE_DESTRUCTION_STATUSES = ["PLANNED", "RECRUITING", "TEAM_BUILDING", "AUCTION", "PRELIMINARY", "TOURNAMENT"] as const;
 
 type TransactionActor = Readonly<{
   actor: RecruitingCommandActor;
@@ -63,6 +66,15 @@ function validMember(value: unknown): value is RecruitMember {
     (item.position === null || ["TOP", "JGL", "MID", "ADC", "SUP"].includes(String(item.position)));
 }
 
+function validLineup(value: unknown): value is ScrimLineup | null {
+  if (value === null) return true;
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const item = value as Record<string, unknown>;
+  const keys = Object.keys(item).sort();
+  if (keys.join("|") !== "adc|jungle|mid|support|top") return false;
+  return keys.every((key) => item[key] === null || typeof item[key] === "string");
+}
+
 function partyFromRow(row: typeof recruitParties.$inferSelect): RecruitParty {
   if (!Array.isArray(row.membersJson) || !row.membersJson.every(validMember)) {
     throw new Error("Stored recruit party members are invalid.");
@@ -70,6 +82,7 @@ function partyFromRow(row: typeof recruitParties.$inferSelect): RecruitParty {
   return {
     id: row.id,
     revision: row.revision,
+    sourceRoomId: row.sourceRoomId,
     recruitDate: row.recruitDate,
     resetSequence: row.resetSequence,
     recruitNumber: row.recruitNumber,
@@ -85,17 +98,26 @@ function partyFromRow(row: typeof recruitParties.$inferSelect): RecruitParty {
 }
 
 function scrimFromRow(row: typeof scrimRecruits.$inferSelect): ScrimRecruit {
+  if (!validLineup(row.requesterLineupJson) || !validLineup(row.opponentLineupJson)) {
+    throw new Error("Stored scrim lineups are invalid.");
+  }
   return {
     id: row.id,
     revision: row.revision,
+    sourceRoomId: row.sourceRoomId,
     recruitDate: row.recruitDate,
     scrimNumber: row.scrimNumber,
     tournamentId: row.tournamentId,
+    legacyTournamentNumber: row.legacyTournamentNumber,
     requesterTeamId: row.requesterTeamId,
     opponentTeamId: row.opponentTeamId,
     legacyTitle: row.legacyTitle,
     requesterTeamName: row.requesterTeamName,
     opponentTeamName: row.opponentTeamName,
+    requesterLineup: row.requesterLineupJson,
+    opponentLineup: row.opponentLineupJson,
+    legacyMemo: row.legacyMemo,
+    legacySeriesRuleText: row.legacySeriesRuleText,
     status: row.status,
     scheduledAt: row.scheduledAt,
     bestOf: row.bestOf,
@@ -179,6 +201,16 @@ export class PostgresRecruitingAdapter implements
         if (owner !== account.id) throw new RecruitingApplicationError("NOT_FOUND", "The recruiting aggregate was not found.");
       }
       return;
+    }
+
+    if (actor.kind === "BOT" && !input.commandType.startsWith("CREATE_")) {
+      const aggregate = ownedAggregate(input.commandType);
+      const sourceRoomId = aggregate === "PARTY"
+        ? (await transaction.select({ sourceRoomId: recruitParties.sourceRoomId }).from(recruitParties).where(eq(recruitParties.id, input.aggregateId)).limit(1))[0]?.sourceRoomId
+        : (await transaction.select({ sourceRoomId: scrimRecruits.sourceRoomId }).from(scrimRecruits).where(eq(scrimRecruits.id, input.aggregateId)).limit(1))[0]?.sourceRoomId;
+      if (!kakaoRoomOwnsRecruitAggregate(sourceRoomId ?? null, actor.authorizationIntent.roomId)) {
+        throw new RecruitingApplicationError("NOT_FOUND", "The recruiting aggregate was not found in this Kakao room.");
+      }
     }
 
     const intent = actor.authorizationIntent;
@@ -288,11 +320,28 @@ export class PostgresRecruitingAdapter implements
     return row ? scrimFromRow(row) : null;
   }
 
+  async listActiveDestructionTournamentIdsForUpdate(context: RecruitingTransactionContext) {
+    const transaction = this.transactionFor(context);
+    // V1 omits the tournament identity. Freeze this small catalog only for the
+    // inference transaction so a concurrent create/status change cannot turn a
+    // uniquely resolved target into an ambiguous one before the scrim FK is saved.
+    await transaction.execute(sql`lock table ${destructionCompetitions} in share mode`);
+    const rows = await transaction
+      .select({ id: destructionCompetitions.id })
+      .from(destructionCompetitions)
+      .where(inArray(destructionCompetitions.status, ACTIVE_DESTRUCTION_STATUSES))
+      .orderBy(desc(destructionCompetitions.updatedAt), desc(destructionCompetitions.id))
+      .for("share")
+      .limit(2);
+    return rows.map((row) => row.id);
+  }
+
   async saveParty(context: RecruitingTransactionContext, input: Readonly<{ party: RecruitParty; expectedRevision: number; create: boolean }>) {
     const transaction = this.transactionFor(context);
     const actor = this.actors.get(context)?.actor;
     const values = {
       revision: input.party.revision,
+      sourceRoomId: input.party.sourceRoomId,
       recruitDate: input.party.recruitDate,
       resetSequence: input.party.resetSequence,
       recruitNumber: input.party.recruitNumber,
@@ -328,11 +377,20 @@ export class PostgresRecruitingAdapter implements
     const now = new Date();
     const values = {
       revision: input.scrim.revision,
+      sourceRoomId: input.scrim.sourceRoomId,
       recruitDate: input.scrim.recruitDate,
       scrimNumber: input.scrim.scrimNumber,
       tournamentId: input.scrim.tournamentId,
+      legacyTournamentNumber: input.scrim.legacyTournamentNumber,
       requesterTeamId: input.scrim.requesterTeamId,
       opponentTeamId: input.scrim.opponentTeamId,
+      legacyTitle: input.scrim.legacyTitle,
+      requesterTeamName: input.scrim.requesterTeamName,
+      opponentTeamName: input.scrim.opponentTeamName,
+      requesterLineupJson: input.scrim.requesterLineup,
+      opponentLineupJson: input.scrim.opponentLineup,
+      legacyMemo: input.scrim.legacyMemo,
+      legacySeriesRuleText: input.scrim.legacySeriesRuleText,
       status: input.scrim.status,
       scheduledAt: input.scrim.scheduledAt,
       bestOf: input.scrim.bestOf,

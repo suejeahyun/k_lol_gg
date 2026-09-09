@@ -15,3 +15,4 @@ export * from "./operations";
 export * from "./riot";
 export * from "./destruction-competitions";
 export * from "./discipline";
+export * from "./legacy";

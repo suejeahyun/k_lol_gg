@@ -12,7 +12,6 @@
  */
 var KLOL_V2_KAKAO = (function () {
   var CONTRACT_VERSION = "KLOL_KAKAO_WEBHOOK_V1";
-  var DEFAULT_BASE_URL = "https://k-lol-gg.vercel.app";
   var SETTING_BASE_URL = "KLOL_V2_BASE_URL";
   var SETTING_SIGNING_SECRET = "KLOL_V2_KAKAO_WEBHOOK_SECRET_CURRENT";
   var SETTING_IDENTITY_SECRET = "KLOL_V2_KAKAO_IDENTITY_SECRET";
@@ -71,11 +70,18 @@ var KLOL_V2_KAKAO = (function () {
   }
 
   function normalizeBaseUrl(value) {
-    var baseUrl = trimText(value || DEFAULT_BASE_URL).replace(/\/+$/, "");
+    var baseUrl = trimText(value).replace(/\/+$/, "");
+    if (!baseUrl) {
+      throw new Error("V2 HTTPS 주소가 없습니다. 봇의 KLOL_V2_BASE_URL 비공개 설정을 확인해 주세요.");
+    }
     if (!/^https:\/\/[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?(?::443)?$/.test(baseUrl)) {
       throw new Error("V2 HTTPS 주소 설정을 확인해 주세요.");
     }
     return baseUrl;
+  }
+
+  function publicBaseUrl() {
+    return normalizeBaseUrl(readPrivateSetting(SETTING_BASE_URL));
   }
 
   function safeIdentifier(value, label) {
@@ -141,7 +147,7 @@ var KLOL_V2_KAKAO = (function () {
       signingSecret(),
       signatureMaterial(timestampSeconds, nonce, roomId, senderId, bodyDigestHex)
     );
-    var connection = org.jsoup.Jsoup.connect(normalizeBaseUrl(readPrivateSetting(SETTING_BASE_URL)) + path)
+    var connection = org.jsoup.Jsoup.connect(publicBaseUrl() + path)
       .ignoreContentType(true)
       .ignoreHttpErrors(true)
       .method(org.jsoup.Connection.Method.POST)
@@ -219,6 +225,18 @@ var KLOL_V2_KAKAO = (function () {
     return request(ENDPOINTS.openchat, { command: "SEARCH_PLAYER", query: String(query || "") }, contextFor("openchat", context));
   }
 
+  function playerRecord(query, context) {
+    return request(ENDPOINTS.openchat, { command: "RECORD", query: String(query || "") }, contextFor("openchat", context));
+  }
+
+  function recentMatches(query, context) {
+    return request(ENDPOINTS.openchat, { command: "RECENT", query: String(query || "") }, contextFor("openchat", context));
+  }
+
+  function ranking(context) {
+    return request(ENDPOINTS.openchat, { command: "RANKING" }, contextFor("openchat", context));
+  }
+
   function seasonApplications(command, context) {
     return request(ENDPOINTS.seasonApplications, command, contextFor("seasonApplications", context));
   }
@@ -252,8 +270,9 @@ var KLOL_V2_KAKAO = (function () {
   }
 
   return {
-    version: "KLOL_KAKAO_BOT_V41_V2_TRANSPORT_2026_09_08",
+    version: "KLOL_KAKAO_BOT_V41_V2_TRANSPORT_2026_09_09_REQUIRED_ORIGIN",
     contractVersion: CONTRACT_VERSION,
+    publicBaseUrl: publicBaseUrl,
     identityForChat: identityForChat,
     contextFromChat: contextFromChat,
     sha256Base64BytesHex: sha256Base64BytesHex,
@@ -262,6 +281,9 @@ var KLOL_V2_KAKAO = (function () {
     searchPlayer: searchPlayer,
     openchatStatus: openchatStatus,
     openchatSearch: openchatSearch,
+    playerRecord: playerRecord,
+    recentMatches: recentMatches,
+    ranking: ranking,
     seasonApplications: seasonApplications,
     managedForm: managedForm,
     operationForm: operationForm,

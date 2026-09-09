@@ -87,6 +87,7 @@ export async function verifyKakaoHttpRequest(
   request: Request,
   now = new Date(),
   maximumBodyBytes = MAXIMUM_KAKAO_BODY_BYTES,
+  policy: Readonly<{ allowAnySender?: boolean }> = {},
 ): Promise<KakaoHttpRequestVerification> {
   if (new URL(request.url).searchParams.size > 0) return { ok: false, code: "QUERY_FORBIDDEN" };
   const timestamp = request.headers.get("x-klol-timestamp");
@@ -111,6 +112,7 @@ export async function verifyKakaoHttpRequest(
     secrets,
     allowedRoomIds: splitKakaoIdentifiers(process.env.KAKAO_WEBHOOK_ALLOWED_ROOMS),
     allowedSenderIds: splitKakaoIdentifiers(process.env.KAKAO_WEBHOOK_ALLOWED_SENDERS),
+    allowAnySender: policy.allowAnySender === true,
     botSenderId: process.env.KAKAO_WEBHOOK_BOT_SENDER_ID ?? "",
     nonceAlreadyUsed: false,
     maximumBodyBytes,

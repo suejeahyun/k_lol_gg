@@ -1,0 +1,4 @@
+ALTER TABLE "recruiting"."scrims" DROP CONSTRAINT "scrim_recruits_tournament_identity";--> statement-breakpoint
+ALTER TABLE "recruiting"."scrims" DROP CONSTRAINT "scrim_recruits_requester_identity";--> statement-breakpoint
+ALTER TABLE "recruiting"."scrims" ADD CONSTRAINT "scrim_recruits_tournament_identity" CHECK ("recruiting"."scrims"."tournament_id" IS NOT NULL OR ("recruiting"."scrims"."legacy_tournament_number" IS NOT NULL AND "recruiting"."scrims"."legacy_tournament_number" BETWEEN 1 AND 9999));--> statement-breakpoint
+ALTER TABLE "recruiting"."scrims" ADD CONSTRAINT "scrim_recruits_requester_identity" CHECK ("recruiting"."scrims"."requester_team_id" IS NOT NULL OR ("recruiting"."scrims"."requester_team_name" IS NOT NULL AND char_length(btrim("recruiting"."scrims"."requester_team_name")) BETWEEN 1 AND 120));

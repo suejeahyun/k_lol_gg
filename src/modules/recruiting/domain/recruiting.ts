@@ -23,9 +23,18 @@ export type RecruitMember = Readonly<{
   substitute: boolean;
 }>;
 
+export type ScrimLineup = Readonly<{
+  top: string | null;
+  jungle: string | null;
+  mid: string | null;
+  adc: string | null;
+  support: string | null;
+}>;
+
 export type RecruitParty = Readonly<{
   id: string;
   revision: number;
+  sourceRoomId: string | null;
   recruitDate: string;
   resetSequence: number;
   recruitNumber: number;
@@ -42,14 +51,20 @@ export type RecruitParty = Readonly<{
 export type ScrimRecruit = Readonly<{
   id: string;
   revision: number;
+  sourceRoomId: string | null;
   recruitDate: string;
   scrimNumber: number;
-  tournamentId: string;
+  tournamentId: string | null;
+  legacyTournamentNumber: number | null;
   requesterTeamId: string | null;
   opponentTeamId: string | null;
   legacyTitle?: string | null;
   requesterTeamName?: string | null;
   opponentTeamName?: string | null;
+  requesterLineup: ScrimLineup | null;
+  opponentLineup: ScrimLineup | null;
+  legacyMemo: string | null;
+  legacySeriesRuleText: string | null;
   status: ScrimRecruitStatus;
   scheduledAt: Date | null;
   bestOf: number | null;
@@ -113,8 +128,13 @@ export function canonicalRecruitRequestFingerprint(input: Readonly<{
   return `${input.actor}:${action}:${requestKey}:${input.payloadDigestHex}`;
 }
 
+export function kakaoRoomOwnsRecruitAggregate(sourceRoomId: string | null, signedRoomId: string): boolean {
+  return sourceRoomId !== null && sourceRoomId === signedRoomId;
+}
+
 function normalizeMembers(members: readonly RecruitMember[], maximumMembers: number): readonly RecruitMember[] {
-  if (members.length > maximumMembers) throw new Error("RECRUIT_CAPACITY_EXCEEDED");
+  if (members.length > 99) throw new Error("RECRUIT_MEMBER_LIMIT_EXCEEDED");
+  if (members.filter((member) => !member.substitute).length > maximumMembers) throw new Error("RECRUIT_CAPACITY_EXCEEDED");
   const positions = new Set<string>();
   const slots = new Set<string>();
   return members.map((member) => {
@@ -136,6 +156,7 @@ function normalizeMembers(members: readonly RecruitMember[], maximumMembers: num
 
 export function createRecruitParty(input: Readonly<{
   id: string;
+  sourceRoomId?: string | null;
   recruitDate: string;
   resetSequence: number;
   recruitNumber: number;
@@ -162,6 +183,7 @@ export function createRecruitParty(input: Readonly<{
   return {
     id: input.id,
     revision: 0,
+    sourceRoomId: input.sourceRoomId ? identifier(input.sourceRoomId, "INVALID_RECRUIT_SOURCE_ROOM") : null,
     recruitDate: input.recruitDate,
     resetSequence: input.resetSequence,
     recruitNumber: input.recruitNumber,
@@ -258,4 +280,71 @@ export function transitionScrimRecruit(input: Readonly<{
     throw new Error("INVALID_SCRIM_TRANSITION");
   }
   return { ...input.scrim, revision: input.scrim.revision + 1, opponentTeamId, status };
+}
+
+function scrimLineupHasMember(lineup: ScrimLineup | null): boolean {
+  return lineup !== null && Object.values(lineup).some((member) => member !== null);
+}
+
+/** Replaces one active V1-compatible form without allowing its date/number/tournament identity to drift. */
+export function syncScrimRecruit(input: Readonly<{
+  scrim: ScrimRecruit;
+  expectedRevision: number;
+  recruitDate: string;
+  scrimNumber: number;
+  tournamentId: string | null;
+  legacyTournamentNumber: number | null;
+  requesterTeamId: string | null;
+  opponentTeamId: string | null;
+  legacyTitle: string | null;
+  requesterTeamName: string | null;
+  opponentTeamName: string | null;
+  requesterLineup: ScrimLineup | null;
+  opponentLineup: ScrimLineup | null;
+  legacyMemo: string | null;
+  legacySeriesRuleText: string | null;
+  scheduledAt: Date | null;
+  bestOf: number;
+}>): ScrimRecruit {
+  expectedRevision(input.scrim.revision, input.expectedRevision);
+  if (["COMPLETED", "CANCELED"].includes(input.scrim.status)) throw new Error("INVALID_SCRIM_TRANSITION");
+  if (!/^\d{4}-\d{2}-\d{2}$/u.test(input.recruitDate)) throw new Error("INVALID_RECRUIT_DATE");
+  if (!Number.isSafeInteger(input.scrimNumber) || input.scrimNumber < 1 || input.scrimNumber > 99) throw new Error("INVALID_SCRIM_NUMBER");
+  if (input.tournamentId !== null) identifier(input.tournamentId, "INVALID_SCRIM_TOURNAMENT");
+  if (input.tournamentId === null && (!Number.isSafeInteger(input.legacyTournamentNumber) || input.legacyTournamentNumber === null || input.legacyTournamentNumber < 1 || input.legacyTournamentNumber > 9999)) {
+    throw new Error("INVALID_SCRIM_TOURNAMENT");
+  }
+  if (
+    input.recruitDate !== input.scrim.recruitDate ||
+    input.scrimNumber !== input.scrim.scrimNumber ||
+    input.tournamentId !== input.scrim.tournamentId ||
+    input.legacyTournamentNumber !== input.scrim.legacyTournamentNumber
+  ) throw new Error("SCRIM_IDENTITY_MISMATCH");
+  if (input.requesterTeamId !== null) identifier(input.requesterTeamId, "INVALID_SCRIM_REQUESTER");
+  if (input.requesterTeamId === null && input.requesterTeamName === null) throw new Error("INVALID_SCRIM_REQUESTER");
+  if (input.opponentTeamId !== null) identifier(input.opponentTeamId, "INVALID_SCRIM_OPPONENT");
+  if (input.opponentTeamId !== null && input.opponentTeamId === input.requesterTeamId) throw new Error("SAME_SCRIM_TEAM");
+  validDate(input.scheduledAt, "INVALID_SCRIM_SCHEDULE");
+  if (![1, 3, 5].includes(input.bestOf)) throw new Error("INVALID_BEST_OF");
+
+  const hasOpponent = input.opponentTeamId !== null || input.opponentTeamName !== null || scrimLineupHasMember(input.opponentLineup);
+  const status: ScrimRecruitStatus = hasOpponent
+    ? input.scrim.status === "CONFIRMED" ? "CONFIRMED" : "MATCHED"
+    : "RECRUITING";
+  return {
+    ...input.scrim,
+    revision: input.scrim.revision + 1,
+    requesterTeamId: input.requesterTeamId,
+    opponentTeamId: input.opponentTeamId,
+    legacyTitle: input.legacyTitle,
+    requesterTeamName: input.requesterTeamName,
+    opponentTeamName: input.opponentTeamName,
+    requesterLineup: input.requesterLineup,
+    opponentLineup: input.opponentLineup,
+    legacyMemo: input.legacyMemo,
+    legacySeriesRuleText: input.legacySeriesRuleText,
+    status,
+    scheduledAt: input.scheduledAt,
+    bestOf: input.bestOf,
+  };
 }

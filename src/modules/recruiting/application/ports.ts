@@ -16,6 +16,12 @@ export interface RecruitingUnitOfWork {
 export interface RecruitingRepository {
   loadPartyForUpdate(transaction: RecruitingTransactionContext, partyId: string): Promise<RecruitParty | null>;
   loadScrimForUpdate(transaction: RecruitingTransactionContext, scrimId: string): Promise<ScrimRecruit | null>;
+  /**
+   * Returns at most two non-terminal destruction competitions while holding share
+   * locks. CREATE_SCRIM uses the bounded result to distinguish one active target
+   * from the unsafe zero/multiple-target cases inside the mutation transaction.
+   */
+  listActiveDestructionTournamentIdsForUpdate(transaction: RecruitingTransactionContext): Promise<readonly string[]>;
   saveParty(transaction: RecruitingTransactionContext, input: Readonly<{ party: RecruitParty; expectedRevision: number; create: boolean }>): Promise<void>;
   saveScrim(transaction: RecruitingTransactionContext, input: Readonly<{ scrim: ScrimRecruit; expectedRevision: number; create: boolean }>): Promise<void>;
 }

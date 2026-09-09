@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 
 const ADMIN_MUTATION_TYPES = new Set([
   "SYNC_PARTY", "FINISH_PARTY", "CANCEL_PARTY", "RESET_PARTY",
-  "JOIN_SCRIM", "REOPEN_SCRIM", "CONFIRM_SCRIM", "COMPLETE_SCRIM", "CANCEL_SCRIM",
+  "SYNC_SCRIM", "JOIN_SCRIM", "REOPEN_SCRIM", "CONFIRM_SCRIM", "COMPLETE_SCRIM", "CANCEL_SCRIM",
 ] as const);
 
 export async function PATCH(request: Request, context: { params: Promise<{ recruitId: string }> }) {

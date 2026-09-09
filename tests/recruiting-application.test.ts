@@ -29,6 +29,7 @@ const scopes: Record<RecruitingCommand["type"], string> = {
   CANCEL_PARTY: "bot:recruiting:party:cancel",
   RESET_PARTY: "admin:recruiting:party:reset",
   CREATE_SCRIM: "bot:recruiting:scrim:create",
+  SYNC_SCRIM: "bot:recruiting:scrim:sync",
   JOIN_SCRIM: "bot:recruiting:scrim:join",
   REOPEN_SCRIM: "bot:recruiting:scrim:reopen",
   CONFIRM_SCRIM: "bot:recruiting:scrim:confirm",
@@ -108,6 +109,7 @@ class Harness {
   snapshot: Snapshot = { parties: new Map(), scrims: new Map(), receipts: new Map(), audits: [], outbox: [], nonceBindings: new Map() };
   operations: string[] = [];
   failOutbox = false;
+  activeDestructionTournamentIds: string[] = ["destruction-active-1"];
   transaction = {} as RecruitingTransactionContext;
 
   dependencies(): RecruitingCommandHandlerDependencies {
@@ -158,6 +160,10 @@ class Harness {
         loadScrimForUpdate: async (_transaction, id) => {
           this.operations.push("load");
           return this.snapshot.scrims.get(id) ?? null;
+        },
+        listActiveDestructionTournamentIdsForUpdate: async () => {
+          this.operations.push("resolve-tournament");
+          return [...this.activeDestructionTournamentIds];
         },
         saveParty: async (_transaction, input) => {
           this.operations.push("save");
@@ -214,11 +220,30 @@ function createScrim(scrimId = "scrim-1") {
   });
 }
 
+test("BOT idempotency fingerprints bind the signed room", () => {
+  const original = createParty("party-room-bound");
+  const otherRoom = {
+    ...original,
+    metadata: {
+      ...original.metadata,
+      actor: {
+        ...botActor,
+        authorizationIntent: { ...botActor.authorizationIntent, roomId: "room-2" },
+      },
+    },
+  } satisfies Extract<RecruitingCommand, { type: "CREATE_PARTY" }>;
+  assert.notDeepEqual(
+    Buffer.from(recruitingCommandRequestFingerprint(original)),
+    Buffer.from(recruitingCommandRequestFingerprint(otherRoom)),
+  );
+});
+
 test("party create, sync, status and finish use the domain while mutations commit in atomic order", async () => {
   const harness = new Harness();
   const handler = new RecruitingCommandHandler(harness.dependencies());
   const created = await handler.handle(createParty());
   assert.equal(created.revision, 0);
+  assert.equal(harness.snapshot.parties.get("party-1")?.sourceRoomId, "room-1");
   assert.deepEqual(harness.operations, ["authorization", "claim", "load", "save", "audit", "outbox", "receipt"]);
 
   harness.operations = [];
@@ -266,6 +291,7 @@ test("scrim create, join, reopen, confirm, complete and cancel enforce the state
   const harness = new Harness();
   const handler = new RecruitingCommandHandler(harness.dependencies());
   await handler.handle(createScrim());
+  assert.equal(harness.snapshot.scrims.get("scrim-1")?.sourceRoomId, "room-1");
   assert.equal((await handler.handle(command("JOIN_SCRIM", "scrim-1", 0, { opponentTeamId: "team-b" }))).body.status, "MATCHED");
   assert.equal((await handler.handle(command("REOPEN_SCRIM", "scrim-1", 1, {}))).body.status, "RECRUITING");
   assert.equal((await handler.handle(command("JOIN_SCRIM", "scrim-1", 2, { opponentTeamId: "team-c" }))).body.status, "MATCHED");
@@ -276,6 +302,99 @@ test("scrim create, join, reopen, confirm, complete and cancel enforce the state
   const cancelledHandler = new RecruitingCommandHandler(cancelledHarness.dependencies());
   await cancelledHandler.handle(createScrim("scrim-cancel"));
   assert.equal((await cancelledHandler.handle(command("CANCEL_SCRIM", "scrim-cancel", 0, {}))).body.status, "CANCELED");
+});
+
+test("legacy scrim form fields remain durable in the typed aggregate", async () => {
+  const harness = new Harness();
+  const handler = new RecruitingCommandHandler(harness.dependencies());
+  await handler.handle(command("CREATE_SCRIM", "scrim-legacy", 0, {
+    recruitDate: "2026-09-07", scrimNumber: 2, tournamentId: null, legacyTournamentNumber: 14,
+    requesterTeamId: null, title: "별빛단 스크림", requesterTeamName: "별빛단", opponentTeamName: "달빛단",
+    requesterLineup: { top: "가", jungle: "나", mid: "다", adc: "라", support: "마" },
+    opponentLineup: { top: "바", jungle: "사", mid: "아", adc: "자", support: "차" },
+    memo: "즐겁게", seriesRuleText: "3판2선", scheduledAt: "2026-09-07T12:30:00.000Z", bestOf: 3,
+  }));
+  const stored = harness.snapshot.scrims.get("scrim-legacy");
+  assert.equal(stored?.legacyTournamentNumber, 14);
+  assert.equal(stored?.requesterTeamName, "별빛단");
+  assert.equal(stored?.requesterLineup?.jungle, "나");
+  assert.equal(stored?.legacyMemo, "즐겁게");
+});
+
+test("signed V1 scrim forms infer exactly one active destruction tournament inside the transaction", async () => {
+  const harness = new Harness();
+  harness.activeDestructionTournamentIds = ["destruction-active-only"];
+  const handler = new RecruitingCommandHandler(harness.dependencies());
+  const v1Command = command("CREATE_SCRIM", "scrim-v1-inferred", 0, {
+    recruitDate: "2026-09-07", scrimNumber: 4, tournamentId: null, legacyTournamentNumber: null,
+    requesterTeamId: null, requesterTeamName: "별빛단", scheduledAt: null, bestOf: 3,
+  });
+
+  const created = await handler.handle(v1Command);
+  assert.equal(created.body.data.tournamentId, "destruction-active-only");
+  assert.equal(created.body.data.legacyTournamentNumber, null);
+  assert.equal(harness.snapshot.scrims.get("scrim-v1-inferred")?.tournamentId, "destruction-active-only");
+  assert.equal(harness.snapshot.audits[0]?.after.tournamentId, "destruction-active-only");
+  assert.deepEqual(harness.operations, ["authorization", "claim", "load", "resolve-tournament", "save", "audit", "outbox", "receipt"]);
+
+  harness.operations = [];
+  harness.activeDestructionTournamentIds = ["changed-one", "changed-two"];
+  const replay = await handler.handle(v1Command);
+  assert.equal(replay.replayed, true);
+  assert.deepEqual(replay.body, created.body);
+  assert.deepEqual(harness.operations, ["authorization", "claim"]);
+});
+
+test("signed V1 scrim inference rejects zero or multiple active destruction tournaments atomically", async () => {
+  for (const [candidates, expectedCode] of [
+    [[], "ACTIVE_DESTRUCTION_TOURNAMENT_NOT_FOUND"],
+    [["destruction-active-a", "destruction-active-b"], "ACTIVE_DESTRUCTION_TOURNAMENT_AMBIGUOUS"],
+  ] as const) {
+    const harness = new Harness();
+    harness.activeDestructionTournamentIds = [...candidates];
+    const handler = new RecruitingCommandHandler(harness.dependencies());
+    await assert.rejects(
+      handler.handle(command("CREATE_SCRIM", `scrim-${expectedCode.toLowerCase()}`, 0, {
+        recruitDate: "2026-09-07", scrimNumber: 5, tournamentId: null, legacyTournamentNumber: null,
+        requesterTeamId: null, requesterTeamName: "별빛단", scheduledAt: null, bestOf: 3,
+      })),
+      (error: unknown) => error instanceof RecruitingApplicationError && error.code === expectedCode,
+    );
+    assert.equal(harness.snapshot.scrims.size, 0);
+    assert.equal(harness.snapshot.receipts.size, 0);
+    assert.equal(harness.snapshot.audits.length, 0);
+    assert.equal(harness.snapshot.outbox.length, 0);
+    assert.equal(harness.snapshot.nonceBindings.size, 0);
+  }
+});
+
+test("full scrim sync is revision-bound, audited and idempotently replayed", async () => {
+  const harness = new Harness();
+  const handler = new RecruitingCommandHandler(harness.dependencies());
+  await handler.handle(command("CREATE_SCRIM", "scrim-sync", 0, {
+    recruitDate: "2026-09-07", scrimNumber: 3, tournamentId: null, legacyTournamentNumber: 14,
+    requesterTeamId: null, title: "별빛단 스크림", requesterTeamName: "별빛단", opponentTeamName: null,
+    requesterLineup: { top: "가", jungle: "나", mid: "다", adc: "라", support: "마" },
+    opponentLineup: null, memo: null, seriesRuleText: "3판2선", scheduledAt: null, bestOf: 3,
+  }));
+  const syncCommand = command("SYNC_SCRIM", "scrim-sync", 0, {
+    recruitDate: "2026-09-07", scrimNumber: 3, tournamentId: null, legacyTournamentNumber: 14,
+    requesterTeamId: null, title: "별빛단 스크림 구인", requesterTeamName: "별빛단", opponentTeamName: "달빛단",
+    requesterLineup: { top: "새가", jungle: "새나", mid: "새다", adc: "새라", support: "새마" },
+    opponentLineup: { top: "바", jungle: "사", mid: "아", adc: "자", support: "차" },
+    memo: "수정 메모", seriesRuleText: "5판3선", scheduledAt: "2026-09-07T13:00:00.000Z", bestOf: 5,
+  });
+  const synced = await handler.handle(syncCommand);
+  assert.equal(synced.revision, 1);
+  assert.equal(synced.body.status, "MATCHED");
+  assert.equal(synced.body.data.opponentTeamName, "달빛단");
+  assert.equal(synced.body.data.bestOf, 5);
+  assert.equal((await handler.handle(syncCommand)).replayed, true);
+  assert.equal(harness.snapshot.audits.filter((event) => event.action === "RECRUITING_SYNC_SCRIM").length, 1);
+  assert.equal(harness.snapshot.outbox.filter((event) => event.eventType === "RECRUITING_SYNC_SCRIM").length, 1);
+  const audit = harness.snapshot.audits.find((event) => event.action === "RECRUITING_SYNC_SCRIM");
+  assert.equal(audit?.before?.bestOf, 3);
+  assert.equal(audit?.after.bestOf, 5);
 });
 
 test("durable receipt replay returns before load and same request key with another body conflicts", async () => {
@@ -359,14 +478,14 @@ test("BOT body binding, JOB restriction, stale revision, and authorization failu
 
 test("public party and scrim DTOs expose only reviewed fields", () => {
   const party: RecruitParty = {
-    id: "party-1", revision: 4, recruitDate: "2026-09-07", resetSequence: 2, recruitNumber: 3,
+    id: "party-1", revision: 4, sourceRoomId: null, recruitDate: "2026-09-07", resetSequence: 2, recruitNumber: 3,
     type: "ARAM", status: "IN_PROGRESS", title: "칼바람", maximumMembers: 5,
     members: [{ name: "private-name", position: null, slotNo: 1, substitute: false }],
     scheduledStartAt: null, protectedUntil: new Date(now), lastActivityAt: new Date(now),
   };
   assert.deepEqual(Object.keys(toPublicPartyDto(party)).sort(), ["id", "maximumMembers", "memberCount", "recruitNumber", "scheduledStartAt", "status", "title", "type"]);
   assert.equal("members" in toPublicPartyDto(party), false);
-  const scrim: ScrimRecruit = { id: "scrim-1", revision: 2, recruitDate: "2026-09-07", scrimNumber: 1, tournamentId: "destruction-1", requesterTeamId: "team-a", opponentTeamId: "team-b", status: "MATCHED", scheduledAt: null, bestOf: 3 };
-  assert.deepEqual(Object.keys(toPublicScrimDto(scrim)).sort(), ["bestOf", "id", "opponentTeamId", "opponentTeamName", "recruitDate", "requesterTeamId", "requesterTeamName", "scheduledAt", "scrimNumber", "status", "title", "tournamentId"]);
+  const scrim: ScrimRecruit = { id: "scrim-1", revision: 2, sourceRoomId: null, recruitDate: "2026-09-07", scrimNumber: 1, tournamentId: "destruction-1", legacyTournamentNumber: null, requesterTeamId: "team-a", opponentTeamId: "team-b", requesterLineup: null, opponentLineup: null, legacyMemo: null, legacySeriesRuleText: null, status: "MATCHED", scheduledAt: null, bestOf: 3 };
+  assert.deepEqual(Object.keys(toPublicScrimDto(scrim)).sort(), ["bestOf", "id", "legacyTournamentNumber", "memo", "opponentLineup", "opponentTeamId", "opponentTeamName", "recruitDate", "requesterLineup", "requesterTeamId", "requesterTeamName", "scheduledAt", "scrimNumber", "seriesRuleText", "status", "title", "tournamentId"]);
   assert.equal("revision" in toPublicScrimDto(scrim), false);
 });

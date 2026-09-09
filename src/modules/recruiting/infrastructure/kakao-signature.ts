@@ -59,6 +59,7 @@ export function verifyKakaoWebhook(input: Readonly<{
   secrets: readonly KakaoWebhookSecret[];
   allowedRoomIds: ReadonlySet<string>;
   allowedSenderIds: ReadonlySet<string>;
+  allowAnySender?: boolean;
   botSenderId: string;
   nonceAlreadyUsed: boolean;
   maximumSkewSeconds?: number;
@@ -98,7 +99,7 @@ export function verifyKakaoWebhook(input: Readonly<{
   }
   if (!matchedKeyId) return { ok: false, code: "INVALID_SIGNATURE" };
   if (!input.allowedRoomIds.has(request.roomId)) return { ok: false, code: "ROOM_FORBIDDEN" };
-  if (!input.allowedSenderIds.has(request.senderId)) return { ok: false, code: "SENDER_FORBIDDEN" };
+  if (!input.allowAnySender && !input.allowedSenderIds.has(request.senderId)) return { ok: false, code: "SENDER_FORBIDDEN" };
   if (request.botSelf || request.senderId === input.botSenderId) return { ok: false, code: "BOT_SELF_MESSAGE" };
   return {
     ok: true,

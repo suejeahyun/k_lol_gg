@@ -34,11 +34,37 @@ test("scrim boundary validates UUID seams and command allowlists", () => {
   assert.equal(parseRecruitingCommandBody(input, new Set(["CREATE_SCRIM"] as const))?.type, "CREATE_SCRIM");
   assert.equal(parseRecruitingCommandBody({ ...input, payload: { ...input.payload, tournamentId: "not-uuid" } }, new Set(["CREATE_SCRIM"] as const)), null);
   assert.equal(parseRecruitingCommandBody(input, new Set(["CREATE_PARTY"] as const)), null);
+
+  const legacy = {
+    type: "CREATE_SCRIM", aggregateId: partyId,
+    payload: {
+      recruitDate: "2026-09-07", scrimNumber: 2, tournamentId: null, legacyTournamentNumber: 14,
+      requesterTeamId: null, title: "별빛단 스크림", requesterTeamName: "별빛단", opponentTeamName: "달빛단",
+      requesterLineup: { top: "가", jungle: "나", mid: "다", adc: "라", support: "마" },
+      opponentLineup: { top: null, jungle: null, mid: null, adc: null, support: null },
+      memo: "즐겁게", seriesRuleText: "3판2선", scheduledAt: null, bestOf: 3,
+    },
+  };
+  assert.equal(parseRecruitingCommandBody(legacy, new Set(["CREATE_SCRIM"] as const))?.type, "CREATE_SCRIM");
+  const v1WithoutTournamentNumber = {
+    ...legacy,
+    payload: { ...legacy.payload, legacyTournamentNumber: null },
+  };
+  assert.equal(parseRecruitingCommandBody(v1WithoutTournamentNumber, new Set(["CREATE_SCRIM"] as const))?.type, "CREATE_SCRIM");
+  assert.equal(parseRecruitingCommandBody({ ...legacy, payload: { ...legacy.payload, legacyTournamentNumber: 10_000 } }, new Set(["CREATE_SCRIM"] as const)), null);
+  assert.equal(parseRecruitingCommandBody({ ...legacy, payload: { ...legacy.payload, requesterTeamName: null } }, new Set(["CREATE_SCRIM"] as const)), null);
+
+  const sync = { ...legacy, type: "SYNC_SCRIM" };
+  assert.equal(parseRecruitingCommandBody(sync, new Set(["SYNC_SCRIM"] as const))?.type, "SYNC_SCRIM");
+  assert.equal(parseRecruitingCommandBody({ ...sync, payload: { ...sync.payload, opponentTeamId: teamId } }, new Set(["SYNC_SCRIM"] as const))?.type, "SYNC_SCRIM");
+  assert.equal(parseRecruitingCommandBody({ ...sync, payload: { ...sync.payload, internalNote: "secret" } }, new Set(["SYNC_SCRIM"] as const)), null);
+  assert.equal(parseRecruitingCommandBody(sync, new Set(["JOIN_SCRIM"] as const)), null);
 });
 
 test("command scope is bound to both actor and action", () => {
   assert.equal(recruitingCommandScope("BOT", "CREATE_PARTY"), "bot:recruiting:party:create");
   assert.equal(recruitingCommandScope("ACCOUNT", "CREATE_PARTY"), "account:recruiting:party:create");
   assert.equal(recruitingCommandScope("ADMIN", "CANCEL_SCRIM"), "admin:recruiting:scrim:cancel");
+  assert.equal(recruitingCommandScope("BOT", "SYNC_SCRIM"), "bot:recruiting:scrim:sync");
   assert.equal(recruitingCommandScope("ADMIN", "RESET_PARTY"), "admin:recruiting:party:reset");
 });

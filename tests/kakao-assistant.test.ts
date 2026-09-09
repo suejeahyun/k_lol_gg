@@ -18,10 +18,14 @@ test("Kakao assistant accepts only exact bounded search and read commands", () =
   assert.deepEqual(parsePlayerSearchBody({ query: " 전적 Ahri#KR1 " }), { command: "SEARCH_PLAYER", query: "Ahri#KR1" });
   assert.deepEqual(parseOpenChatBody({ command: "STATUS" }), { command: "STATUS" });
   assert.deepEqual(parseOpenChatBody({ command: "SEARCH_PLAYER", query: "별빛" }), { command: "SEARCH_PLAYER", query: "별빛" });
+  assert.deepEqual(parseOpenChatBody({ command: "RECORD", query: " 별빛#KR1 " }), { command: "RECORD", query: "별빛#KR1" });
+  assert.deepEqual(parseOpenChatBody({ command: "RECENT", query: "별빛" }), { command: "RECENT", query: "별빛" });
+  assert.deepEqual(parseOpenChatBody({ command: "RANKING" }), { command: "RANKING" });
   assert.deepEqual(parseScheduledNoticeBody({}), { slot: null });
   assert.deepEqual(parseScheduledNoticeBody({ slot: 21 }), { slot: "21" });
   assert.throws(() => parsePlayerSearchBody({ query: "Ahri", memberName: "private" }), KakaoAssistantError);
   assert.throws(() => parseOpenChatBody({ command: "RESET" }), KakaoAssistantError);
+  assert.throws(() => parseOpenChatBody({ command: "RANKING", query: "forged" }), KakaoAssistantError);
   assert.throws(() => parseScheduledNoticeBody({ roomName: "untrusted-room" }), KakaoAssistantError);
 });
 
@@ -37,9 +41,24 @@ test("Kakao season snapshots require exact bounded participant slots and positio
   assert.deepEqual(parseSeasonSnapshotBody({
     action: "STATUS", seasonId: command.seasonId, applyDate: command.applyDate, recruitNo: 2,
   }).participants, []);
+  assert.deepEqual(parseSeasonSnapshotBody({
+    action: "STATUS", seasonId: command.seasonId, applyDate: command.applyDate, recruitNo: null,
+  }), {
+    action: "STATUS", seasonId: command.seasonId, applyDate: command.applyDate, recruitNo: null, participants: [],
+  });
+  assert.throws(() => parseSeasonSnapshotBody({
+    action: "CANCEL", seasonId: command.seasonId, applyDate: command.applyDate, recruitNo: null,
+  }), KakaoAssistantError);
+  assert.throws(() => parseSeasonSnapshotBody({ ...command, recruitNo: null }), KakaoAssistantError);
   assert.throws(() => parseSeasonSnapshotBody({ ...command, participants: [...command.participants, command.participants[0]] }), KakaoAssistantError);
   assert.throws(() => parseSeasonSnapshotBody({ ...command, participants: [{ ...command.participants[0], subPositions: ["MID"] }] }), KakaoAssistantError);
   assert.throws(() => parseSeasonSnapshotBody({ ...command, sender: "forged" }), KakaoAssistantError);
+  const many = Array.from({ length: 99 }, (_, index) => ({
+    slotNo: index + 1, name: `신청자${index + 1}`, riotId: null,
+    mainPosition: "ALL" as const, subPositions: [], reserve: index >= 10,
+  }));
+  assert.equal(parseSeasonSnapshotBody({ ...command, participants: many }).participants.length, 99);
+  assert.throws(() => parseSeasonSnapshotBody({ ...command, participants: [...many, { ...many[0], slotNo: 100 }] }), KakaoAssistantError);
 });
 
 test("managed forms route only the explicit operation-form command", () => {

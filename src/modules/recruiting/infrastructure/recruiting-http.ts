@@ -29,6 +29,8 @@ import {
 import type { RecruitingCommandResult } from "../application/ports";
 
 const problems = Object.freeze({
+  activeTournamentAmbiguous: definePublicProblem({ code: "ACTIVE_DESTRUCTION_TOURNAMENT_AMBIGUOUS", status: 409, title: "활성 멸망전이 여러 개입니다.", detail: "스크림을 연결할 멸망전을 하나만 활성 상태로 두거나 양식에 멸망전 번호를 지정해 주세요." }),
+  activeTournamentNotFound: definePublicProblem({ code: "ACTIVE_DESTRUCTION_TOURNAMENT_NOT_FOUND", status: 409, title: "활성 멸망전이 없습니다.", detail: "멸망전을 활성화한 뒤 V1 스크림 양식을 다시 보내 주세요." }),
   conflict: definePublicProblem({ code: "RECRUIT_CONFLICT", status: 409, title: "현재 모집 상태에서는 처리할 수 없습니다.", detail: "최신 모집 상태를 확인한 뒤 다시 시도해 주세요." }),
   forbidden: definePublicProblem({ code: "FORBIDDEN", status: 403, title: "요청 권한이 없습니다.", detail: "승인된 계정 또는 관리자 계정으로 다시 시도해 주세요." }),
   idempotencyMismatch: definePublicProblem({ code: "IDEMPOTENCY_MISMATCH", status: 409, title: "멱등성 키가 다른 요청에 사용되었습니다.", detail: "새 Idempotency-Key로 다시 요청해 주세요." }),
@@ -136,6 +138,8 @@ export function recruitingReadResponse(body: unknown, traceId?: string) {
 export function recruitingErrorResponse(error: unknown, traceId?: string) {
   if (error instanceof RecruitingApplicationError) {
     const problem = {
+      ACTIVE_DESTRUCTION_TOURNAMENT_AMBIGUOUS: problems.activeTournamentAmbiguous,
+      ACTIVE_DESTRUCTION_TOURNAMENT_NOT_FOUND: problems.activeTournamentNotFound,
       ALREADY_EXISTS: problems.conflict,
       FORBIDDEN: problems.forbidden,
       IDEMPOTENCY_MISMATCH: problems.idempotencyMismatch,
@@ -147,7 +151,7 @@ export function recruitingErrorResponse(error: unknown, traceId?: string) {
     }[error.code];
     return problemResponse(problem, { traceId });
   }
-  if (error instanceof Error && ["RECRUIT_NOT_MUTABLE", "INVALID_SCRIM_TRANSITION"].includes(error.message)) {
+  if (error instanceof Error && ["RECRUIT_NOT_MUTABLE", "INVALID_SCRIM_TRANSITION", "SCRIM_IDENTITY_MISMATCH"].includes(error.message)) {
     return problemResponse(problems.conflict, { traceId });
   }
   if (error instanceof Error && error.message === "STALE_RECRUIT_REVISION") {

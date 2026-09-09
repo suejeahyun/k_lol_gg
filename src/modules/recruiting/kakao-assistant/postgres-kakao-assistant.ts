@@ -4,6 +4,7 @@ import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm";
 
 import { createSearchPlayers } from "@/modules/players/application/search-players";
 import { PostgresPlayerRepository } from "@/modules/players/infrastructure/postgres-player-repository";
+import { PostgresStatisticsQueryRepository } from "@/modules/statistics/infrastructure/postgres-statistics-query-repository";
 import type { V2Database } from "@/platform/db/database";
 import { auditEvents } from "@/platform/db/schema/audit";
 import { recruitParties, recruitingCommandReceipts, recruitingNonceBindings, scrimRecruits } from "@/platform/db/schema/recruiting";
@@ -20,6 +21,8 @@ import {
   type KakaoAssistantResponse,
   type KakaoOpenChatStatusDto,
   type KakaoPlayerSearchDto,
+  type KakaoPlayerRecordDto,
+  type KakaoRankingDto,
   type KakaoSeasonSnapshotCommand,
   type KakaoSeasonSnapshotDto,
   type KakaoSeasonSnapshotEntryDto,
@@ -30,6 +33,28 @@ const RECEIPT_TTL_MILLISECONDS = 24 * 60 * 60 * 1_000;
 const NONCE_TTL_MILLISECONDS = 15 * 60 * 1_000;
 const MAXIMUM_PLAYER_RESULTS = 20;
 const MAXIMUM_STATUS_RESULTS = 20;
+const RECRUIT_POSITIONS = new Set(["TOP", "JGL", "MID", "ADC", "SUP"]);
+const LEGACY_INHOUSE_CAPACITY = 10;
+const LEGACY_INHOUSE_TIERS: Readonly<Record<string, string>> = Object.freeze({
+  IRON: "I", BRONZE: "B", SILVER: "S", GOLD: "G", PLATINUM: "P", EMERALD: "E",
+  DIAMOND: "D", MASTER: "M", GRANDMASTER: "GM", CHALLENGER: "C", UNRANKED: "U",
+});
+const LEGACY_INHOUSE_TIER_INITIALS: Readonly<Record<string, string>> = Object.freeze({
+  I: "I", B: "B", S: "S", G: "G", P: "P", E: "E", D: "D", M: "M", C: "C",
+});
+const LEGACY_INHOUSE_POSITIONS = Object.freeze({ TOP: "TOP", JGL: "JG", MID: "MD", ADC: "AD", SUP: "SUP", ALL: "ALL" });
+
+type LegacySeasonEntry = Readonly<{
+  recruitNo: number;
+  slotNo: number | null;
+  reserve: boolean;
+  name: string;
+  currentTier: string | null;
+  peakTier: string | null;
+  mainPosition: KakaoSeasonSnapshotEntryDto["mainPosition"];
+  subPositions: KakaoSeasonSnapshotEntryDto["subPositions"];
+  createdAt: Date;
+}>;
 
 type SignedReadInput = Readonly<{
   actorPrincipalId: string;
@@ -65,6 +90,129 @@ function splitRiotId(value: string | null) {
     nickname: normalizedIdentity(value.slice(0, separator)),
     tagLine: normalizedIdentity(value.slice(separator + 1)),
   };
+}
+
+function publicRecruitMembers(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((member) => {
+    if (!member || typeof member !== "object" || Array.isArray(member)) return [];
+    const item = member as Record<string, unknown>;
+    if (typeof item.name !== "string" || !Number.isSafeInteger(item.slotNo) || typeof item.substitute !== "boolean") return [];
+    if (item.position !== null && (typeof item.position !== "string" || !RECRUIT_POSITIONS.has(item.position))) return [];
+    return [{
+      name: item.name,
+      position: item.position as "TOP" | "JGL" | "MID" | "ADC" | "SUP" | null,
+      slotNo: Number(item.slotNo),
+      substitute: item.substitute,
+    }];
+  });
+}
+
+function publicScrimLineup(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const item = value as Record<string, unknown>;
+  const fields = ["top", "jungle", "mid", "adc", "support"] as const;
+  if (Object.keys(item).sort().join("|") !== [...fields].sort().join("|") ||
+      !fields.every((field) => item[field] === null || typeof item[field] === "string")) return null;
+  return Object.freeze({
+    top: item.top as string | null,
+    jungle: item.jungle as string | null,
+    mid: item.mid as string | null,
+    adc: item.adc as string | null,
+    support: item.support as string | null,
+  });
+}
+
+function legacyInhouseDate(value: string) {
+  const [year, month, day] = value.split("-").map(Number);
+  return `${year}-${month}-${day}`;
+}
+
+function legacyInhouseTier(value: string | null) {
+  const text = String(value ?? "UNRANKED").trim().toUpperCase();
+  if (LEGACY_INHOUSE_TIERS[text]) return LEGACY_INHOUSE_TIERS[text];
+  if (text.includes("아이언")) return "I";
+  if (text.includes("브론즈")) return "B";
+  if (text.includes("실버")) return "S";
+  if (text.includes("골드")) return "G";
+  if (text.includes("플래") || text.includes("플레")) return "P";
+  if (text.includes("에메")) return "E";
+  if (text.includes("다이아")) return "D";
+  if (text.includes("그랜드마스터") || text.includes("그마")) return "GM";
+  if (text.includes("마스터") || text === "마") return "M";
+  if (text.includes("챌")) return "C";
+  return LEGACY_INHOUSE_TIER_INITIALS[text.charAt(0)] ?? "U";
+}
+
+function legacyInhousePositions(entry: Pick<LegacySeasonEntry, "mainPosition" | "subPositions">) {
+  return [entry.mainPosition, ...entry.subPositions].map((position) => LEGACY_INHOUSE_POSITIONS[position]).join("/");
+}
+
+function compareLegacySeasonEntries(left: LegacySeasonEntry, right: LegacySeasonEntry) {
+  const leftSlot = left.slotNo;
+  const rightSlot = right.slotNo;
+  if (leftSlot !== null && rightSlot !== null && leftSlot !== rightSlot) return leftSlot - rightSlot;
+  if (leftSlot !== null && rightSlot === null) return -1;
+  if (leftSlot === null && rightSlot !== null) return 1;
+  return left.createdAt.getTime() - right.createdAt.getTime() || left.name.localeCompare(right.name, "ko");
+}
+
+function legacyInhouseEntryLine(prefix: string, entry: LegacySeasonEntry | null) {
+  if (!entry) return `${prefix}.`;
+  const name = entry.name.normalize("NFKC").replace(/[\r\n/]+/gu, " ").replace(/\s+/gu, " ").trim();
+  return `${prefix}. ${name}/${legacyInhouseTier(entry.currentTier)}/${legacyInhouseTier(entry.peakTier)}/${legacyInhousePositions(entry)}`;
+}
+
+function legacyInhouseDetail(applyDate: string, recruitNo: number, entries: readonly LegacySeasonEntry[]) {
+  const mainEntries = entries.filter((entry) => !entry.reserve).sort(compareLegacySeasonEntries);
+  const reserveEntries = entries.filter((entry) => entry.reserve).sort(compareLegacySeasonEntries);
+  const slots: Array<LegacySeasonEntry | null> = Array.from({ length: LEGACY_INHOUSE_CAPACITY }, () => null);
+  const overflow: LegacySeasonEntry[] = [];
+  for (const entry of mainEntries) {
+    if (entry.slotNo !== null && entry.slotNo >= 1 && entry.slotNo <= LEGACY_INHOUSE_CAPACITY && !slots[entry.slotNo - 1]) {
+      slots[entry.slotNo - 1] = entry;
+      continue;
+    }
+    const emptyIndex = slots.findIndex((candidate) => candidate === null);
+    if (emptyIndex >= 0) slots[emptyIndex] = entry;
+    else overflow.push(entry);
+  }
+  const lines = [
+    `📢 내전하실분 #${recruitNo}`,
+    " 》협곡",
+    ` 》${applyDate} 21:00 시작`,
+    `👥 ${mainEntries.length}/${LEGACY_INHOUSE_CAPACITY}명`,
+    "",
+    "*참가 신청 양식*",
+    "이름/현티어/최고티어/주라인/부라인",
+    "EX) 1.지후/P/E/AD/MD",
+    "",
+  ];
+  slots.forEach((entry, index) => lines.push(legacyInhouseEntryLine(String(index + 1), entry)));
+  overflow.forEach((entry, index) => lines.push(legacyInhouseEntryLine(String(LEGACY_INHOUSE_CAPACITY + index + 1), entry)));
+  if (reserveEntries.length > 0) {
+    lines.push("");
+    reserveEntries.forEach((entry, index) => lines.push(legacyInhouseEntryLine(`예비 ${index + 1}`, entry)));
+  }
+  return lines.join("\n");
+}
+
+function legacyInhouseOverview(applyDate: string, grouped: ReadonlyMap<number, readonly LegacySeasonEntry[]>) {
+  if (grouped.size === 0) {
+    return "[K-LOL.GG 내전현황]\n오늘 등록된 내전 신청이 없습니다.\n\n참가 신청: 내전참가";
+  }
+  const recruitNos = [...grouped.keys()].sort((left, right) => left - right);
+  const lines = ["[K-LOL.GG 내전현황]", "🔎 전체 명단: 내전상세 번호", ""];
+  for (const recruitNo of recruitNos) {
+    const entries = grouped.get(recruitNo) ?? [];
+    const mainCount = entries.filter((entry) => !entry.reserve).length;
+    const reserveCount = entries.length - mainCount;
+    const reserveText = reserveCount > 0 ? ` / 예비 ${reserveCount}` : "";
+    lines.push(`#${recruitNo} ${legacyInhouseDate(applyDate)} 21:00 시작 (${mainCount}/${LEGACY_INHOUSE_CAPACITY}${reserveText})`);
+    lines.push(`└ 내전상세 ${recruitNo}`);
+  }
+  lines.push("", `상세 명령: ${recruitNos.map((recruitNo) => `내전상세 ${recruitNo}`).join(" / ")}`);
+  return lines.join("\n");
 }
 
 export class PostgresKakaoAssistant {
@@ -178,53 +326,165 @@ export class PostgresKakaoAssistant {
     });
   }
 
+  getPlayerRecord(input: SignedReadInput & Readonly<{ query: string; mode: "RECORD" | "RECENT" }>): Promise<KakaoAssistantResult<KakaoPlayerRecordDto>> {
+    return this.execute(input, async (transaction) => {
+      const candidates = await createSearchPlayers(new PostgresPlayerRepository(transaction))(input.query);
+      const normalized = normalizedIdentity(input.query);
+      const player = candidates.find((candidate) =>
+        normalizedIdentity(candidate.riotId) === normalized || normalizedIdentity(candidate.displayName) === normalized,
+      ) ?? candidates[0] ?? null;
+      if (!player) {
+        return Object.freeze({
+          kind: "PLAYER_RECORD" as const,
+          mode: input.mode,
+          query: input.query,
+          player: null,
+          season: null,
+          summary: null,
+          recentMatches: Object.freeze([]),
+        });
+      }
+      const statistics = await new PostgresStatisticsQueryRepository(transaction)
+        .getPublicPlayerStatistics(player.id, null);
+      if (!statistics) throw new KakaoAssistantError("NOT_FOUND");
+      return Object.freeze({
+        kind: "PLAYER_RECORD" as const,
+        mode: input.mode,
+        query: input.query,
+        player: Object.freeze({
+          playerId: statistics.player.id,
+          displayName: statistics.player.displayName,
+          riotId: statistics.player.riotId,
+        }),
+        season: statistics.season
+          ? Object.freeze({ id: statistics.season.id, name: statistics.season.name })
+          : null,
+        summary: Object.freeze({ ...statistics.summary }),
+        recentMatches: Object.freeze(statistics.recentMatches.slice(0, 10).map((match) => Object.freeze({
+          matchId: match.matchId,
+          title: match.title,
+          playedOn: match.playedOn,
+          gameNumber: match.gameNumber,
+          championName: match.championName,
+          team: match.team,
+          position: match.position,
+          won: match.won,
+          mvp: match.mvp,
+        }))),
+      });
+    });
+  }
+
+  getRanking(input: SignedReadInput): Promise<KakaoAssistantResult<KakaoRankingDto>> {
+    return this.execute(input, async (transaction) => {
+      const minimumParticipation = 1;
+      const ranking = await new PostgresStatisticsQueryRepository(transaction)
+        .getPublicSeasonRanking(null, minimumParticipation);
+      const rows = ranking.rankings.slice(0, 10);
+      return Object.freeze({
+        kind: "RANKING" as const,
+        season: ranking.season ? Object.freeze({ id: ranking.season.id, name: ranking.season.name }) : null,
+        minimumParticipation,
+        rows: Object.freeze(rows.map((row) => Object.freeze({ ...row }))),
+        truncated: ranking.rankings.length > rows.length,
+      });
+    });
+  }
+
   getOpenChatStatus(input: SignedReadInput): Promise<KakaoAssistantResult<KakaoOpenChatStatusDto>> {
     return this.execute(input, async (transaction) => {
-      const [parties, scrims] = await Promise.all([
+      const today = kstDateKey(new Date());
+      const [partyRows, scrimRows, latestPartyRows, latestScrimRows] = await Promise.all([
         transaction.select({
           id: recruitParties.id,
+          revision: recruitParties.revision,
           recruitDate: recruitParties.recruitDate,
+          resetSequence: recruitParties.resetSequence,
           recruitNumber: recruitParties.recruitNumber,
+          type: recruitParties.type,
           title: recruitParties.title,
           status: recruitParties.status,
           members: recruitParties.membersJson,
           maximumMembers: recruitParties.maximumMembers,
           scheduledStartAt: recruitParties.scheduledStartAt,
-        }).from(recruitParties).where(eq(recruitParties.status, "IN_PROGRESS"))
-          .orderBy(desc(recruitParties.recruitDate), asc(recruitParties.recruitNumber)).limit(MAXIMUM_STATUS_RESULTS),
+        }).from(recruitParties).where(and(
+          eq(recruitParties.status, "IN_PROGRESS"),
+          eq(recruitParties.sourceRoomId, input.intent.roomId),
+        ))
+          .orderBy(desc(recruitParties.recruitDate), asc(recruitParties.recruitNumber)).limit(MAXIMUM_STATUS_RESULTS + 1),
         transaction.select({
           id: scrimRecruits.id,
+          revision: scrimRecruits.revision,
           recruitDate: scrimRecruits.recruitDate,
           scrimNumber: scrimRecruits.scrimNumber,
+          tournamentId: scrimRecruits.tournamentId,
+          legacyTournamentNumber: scrimRecruits.legacyTournamentNumber,
+          requesterTeamId: scrimRecruits.requesterTeamId,
+          opponentTeamId: scrimRecruits.opponentTeamId,
+          title: scrimRecruits.legacyTitle,
+          requesterTeamName: scrimRecruits.requesterTeamName,
+          opponentTeamName: scrimRecruits.opponentTeamName,
+          requesterLineup: scrimRecruits.requesterLineupJson,
+          opponentLineup: scrimRecruits.opponentLineupJson,
+          memo: scrimRecruits.legacyMemo,
+          seriesRuleText: scrimRecruits.legacySeriesRuleText,
           status: scrimRecruits.status,
           bestOf: scrimRecruits.bestOf,
           scheduledAt: scrimRecruits.scheduledAt,
-        }).from(scrimRecruits).where(inArray(scrimRecruits.status, ["RECRUITING", "MATCHED", "CONFIRMED"]))
-          .orderBy(desc(scrimRecruits.recruitDate), asc(scrimRecruits.scrimNumber)).limit(MAXIMUM_STATUS_RESULTS),
+        }).from(scrimRecruits).where(and(
+          inArray(scrimRecruits.status, ["RECRUITING", "MATCHED", "CONFIRMED"]),
+          eq(scrimRecruits.sourceRoomId, input.intent.roomId),
+        ))
+          .orderBy(desc(scrimRecruits.recruitDate), asc(scrimRecruits.scrimNumber)).limit(MAXIMUM_STATUS_RESULTS + 1),
+        transaction.select({ resetSequence: recruitParties.resetSequence, recruitNumber: recruitParties.recruitNumber })
+          .from(recruitParties).where(eq(recruitParties.recruitDate, today))
+          .orderBy(desc(recruitParties.resetSequence), desc(recruitParties.recruitNumber)).limit(1),
+        transaction.select({ scrimNumber: scrimRecruits.scrimNumber })
+          .from(scrimRecruits).where(eq(scrimRecruits.recruitDate, today))
+          .orderBy(desc(scrimRecruits.scrimNumber)).limit(1),
       ]);
+      const parties = partyRows.slice(0, MAXIMUM_STATUS_RESULTS);
+      const scrims = scrimRows.slice(0, MAXIMUM_STATUS_RESULTS);
+      const latestParty = latestPartyRows[0];
+      const latestScrim = latestScrimRows[0];
       return Object.freeze({
         kind: "OPENCHAT_STATUS" as const,
+        nextPartyRecruitNumber: !latestParty ? 1 : latestParty.recruitNumber < 99 ? latestParty.recruitNumber + 1 : null,
+        nextPartyResetSequence: latestParty?.resetSequence ?? 0,
+        nextScrimNumber: !latestScrim ? 1 : latestScrim.scrimNumber < 99 ? latestScrim.scrimNumber + 1 : null,
+        partiesTruncated: partyRows.length > parties.length,
+        scrimsTruncated: scrimRows.length > scrims.length,
         parties: Object.freeze(parties.map((party) => Object.freeze({
           id: party.id,
+          revision: party.revision,
           recruitDate: party.recruitDate,
+          resetSequence: party.resetSequence,
           recruitNumber: party.recruitNumber,
+          type: party.type,
           title: party.title,
           status: "IN_PROGRESS" as const,
-          memberCount: Array.isArray(party.members)
-            ? party.members.filter((member) =>
-                member !== null &&
-                typeof member === "object" &&
-                !Array.isArray(member) &&
-                member.substitute === false,
-              ).length
-            : 0,
+          memberCount: publicRecruitMembers(party.members).filter((member) => !member.substitute).length,
+          reserveCount: publicRecruitMembers(party.members).filter((member) => member.substitute).length,
           maximumMembers: party.maximumMembers,
+          members: Object.freeze(publicRecruitMembers(party.members).map((member) => Object.freeze(member))),
           scheduledStartAt: party.scheduledStartAt?.toISOString() ?? null,
         }))),
         scrims: Object.freeze(scrims.map((scrim) => Object.freeze({
           id: scrim.id,
+          revision: scrim.revision,
           recruitDate: scrim.recruitDate,
           scrimNumber: scrim.scrimNumber,
+          tournamentId: scrim.tournamentId,
+          legacyTournamentNumber: scrim.legacyTournamentNumber,
+          requesterTeamId: scrim.requesterTeamId,
+          opponentTeamId: scrim.opponentTeamId,
+          title: scrim.title,
+          requesterTeamName: scrim.requesterTeamName,
+          opponentTeamName: scrim.opponentTeamName,
+          requesterLineup: publicScrimLineup(scrim.requesterLineup),
+          opponentLineup: publicScrimLineup(scrim.opponentLineup),
+          memo: scrim.memo,
+          seriesRuleText: scrim.seriesRuleText,
           status: scrim.status as "RECRUITING" | "MATCHED" | "CONFIRMED",
           bestOf: scrim.bestOf ?? 3,
           scheduledAt: scrim.scheduledAt?.toISOString() ?? null,
@@ -296,7 +556,7 @@ export class PostgresKakaoAssistant {
           throw new KakaoAssistantError("CONFLICT");
         }
       }
-      const roundKey = `${command.seasonId}:${command.applyDate}:${command.recruitNo}`;
+      const roundKey = `${command.seasonId}:${command.applyDate}:${command.recruitNo ?? "all"}`;
       await transaction.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`kakao-season:${roundKey}`}, 0))`);
 
       let cancelledCount = 0;
@@ -457,16 +717,64 @@ export class PostgresKakaoAssistant {
       const applications = await transaction.select({ application: seasonApplications, player: players }).from(seasonApplications)
         .innerJoin(players, eq(players.id, seasonApplications.playerId)).where(and(
           eq(seasonApplications.seasonId, command.seasonId), eq(seasonApplications.applyDate, command.applyDate),
-          eq(seasonApplications.recruitNo, command.recruitNo),
+          command.recruitNo === null ? undefined : eq(seasonApplications.recruitNo, command.recruitNo),
           inArray(seasonApplications.status, ["APPLIED", "RESERVE", "CONFIRMED"]),
-        ));
+        )).orderBy(asc(seasonApplications.recruitNo), asc(seasonApplications.sourceSlotNo), asc(seasonApplications.createdAt), asc(seasonApplications.id));
       const pending = await transaction.select({ pending: seasonKakaoPendingApplications, player: players }).from(seasonKakaoPendingApplications)
         .leftJoin(players, eq(players.id, seasonKakaoPendingApplications.matchedPlayerId)).where(and(
           eq(seasonKakaoPendingApplications.seasonId, command.seasonId),
           eq(seasonKakaoPendingApplications.applyDate, command.applyDate),
-          eq(seasonKakaoPendingApplications.recruitNo, command.recruitNo),
+          command.recruitNo === null ? undefined : eq(seasonKakaoPendingApplications.recruitNo, command.recruitNo),
           eq(seasonKakaoPendingApplications.status, "ACTIVE"),
-        ));
+        )).orderBy(asc(seasonKakaoPendingApplications.recruitNo), asc(seasonKakaoPendingApplications.slotNo), asc(seasonKakaoPendingApplications.createdAt), asc(seasonKakaoPendingApplications.id));
+      const legacyEntries: LegacySeasonEntry[] = [
+        ...applications.map(({ application, player }) => ({
+          recruitNo: application.recruitNo,
+          slotNo: application.sourceSlotNo,
+          reserve: application.status === "RESERVE",
+          name: player.memberName,
+          currentTier: player.currentTier,
+          peakTier: player.peakTier,
+          mainPosition: application.mainPosition,
+          subPositions: application.subPositions,
+          createdAt: application.createdAt,
+        })),
+        ...pending.map(({ pending: item, player }) => ({
+          recruitNo: item.recruitNo,
+          slotNo: item.slotNo,
+          reserve: item.reserve,
+          name: item.suppliedName,
+          currentTier: player?.currentTier ?? null,
+          peakTier: player?.peakTier ?? null,
+          mainPosition: item.mainPosition,
+          subPositions: item.subPositions,
+          createdAt: item.createdAt,
+        })),
+      ];
+      const legacyGrouped = new Map<number, LegacySeasonEntry[]>();
+      for (const entry of legacyEntries) {
+        const group = legacyGrouped.get(entry.recruitNo) ?? [];
+        group.push(entry);
+        legacyGrouped.set(entry.recruitNo, group);
+      }
+      if (command.action === "STATUS" && command.recruitNo === null) {
+        const availableRecruitNos = [...legacyGrouped.keys()].sort((left, right) => left - right);
+        return Object.freeze({
+          kind: "SEASON_APPLICATION_SNAPSHOT" as const,
+          seasonId: command.seasonId,
+          applyDate: command.applyDate,
+          recruitNo: null,
+          entries: Object.freeze([]),
+          appliedCount: applications.filter(({ application }) => application.status === "APPLIED").length,
+          reserveCount: applications.filter(({ application }) => application.status === "RESERVE").length +
+            pending.filter(({ pending: item }) => item.matchState === "MATCHED_RESERVE").length,
+          confirmedCount: applications.filter(({ application }) => application.status === "CONFIRMED").length,
+          pendingCount: pending.filter(({ pending: item }) => item.matchState !== "MATCHED_RESERVE").length,
+          cancelledCount: 0,
+          availableRecruitNos: Object.freeze(availableRecruitNos),
+          legacyReply: legacyInhouseOverview(command.applyDate, legacyGrouped),
+        });
+      }
       const entries: KakaoSeasonSnapshotEntryDto[] = [
         ...applications.map(({ application, player }) => ({
           slotNo: application.sourceSlotNo ?? 999,
@@ -514,6 +822,9 @@ export class PostgresKakaoAssistant {
         confirmedCount: applications.filter(({ application }) => application.status === "CONFIRMED").length,
         pendingCount: pending.filter(({ pending: item }) => item.matchState !== "MATCHED_RESERVE").length,
         cancelledCount,
+        ...(command.action === "STATUS" && command.recruitNo !== null ? {
+          legacyReply: legacyInhouseDetail(command.applyDate, command.recruitNo, legacyEntries),
+        } : {}),
       });
     });
   }

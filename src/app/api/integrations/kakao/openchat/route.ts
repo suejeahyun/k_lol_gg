@@ -12,12 +12,12 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  const prepared = await prepareKakaoSignedJson(request);
+  const prepared = await prepareKakaoSignedJson(request, undefined, { allowAnySender: true });
   if (!prepared.ok) return prepared.response;
   try {
     const command = parseOpenChatBody(prepared.body);
     const feature = command.command === "STATUS" ? "recruitingEnabled" : "playerSearchEnabled";
-    const operationMessage = command.command === "STATUS" ? command.command : `${command.command} ${command.query}`;
+    const operationMessage = "query" in command ? `${command.command} ${command.query}` : command.command;
     if (!await isRuntimeKakaoFeatureEnabled(feature, operationMessage)) return kakaoAssistantUnavailableResponse(prepared.traceId);
     const service = getRuntimeKakaoAssistant();
     if (!service) return kakaoAssistantUnavailableResponse(prepared.traceId);
@@ -28,7 +28,11 @@ export async function POST(request: Request) {
     };
     const result = command.command === "STATUS"
       ? await service.getOpenChatStatus({ ...common, scope: "BOT:KAKAO:OPENCHAT:STATUS" })
-      : await service.searchPlayers({ ...common, scope: "BOT:KAKAO:OPENCHAT:SEARCH_PLAYER", query: command.query });
+      : command.command === "SEARCH_PLAYER"
+        ? await service.searchPlayers({ ...common, scope: "BOT:KAKAO:OPENCHAT:SEARCH_PLAYER", query: command.query })
+        : command.command === "RECORD" || command.command === "RECENT"
+          ? await service.getPlayerRecord({ ...common, scope: `BOT:KAKAO:OPENCHAT:${command.command}`, query: command.query, mode: command.command })
+          : await service.getRanking({ ...common, scope: "BOT:KAKAO:OPENCHAT:RANKING" });
     return kakaoAssistantResponse(result, prepared.traceId);
   } catch (error) {
     return kakaoAssistantErrorResponse(error, prepared.traceId);

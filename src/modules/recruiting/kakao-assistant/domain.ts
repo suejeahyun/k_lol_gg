@@ -26,20 +26,47 @@ export type KakaoPlayerSearchDto = Readonly<{
 
 export type KakaoOpenChatStatusDto = Readonly<{
   kind: "OPENCHAT_STATUS";
+  nextPartyRecruitNumber: number | null;
+  nextPartyResetSequence: number;
+  nextScrimNumber: number | null;
+  partiesTruncated: boolean;
+  scrimsTruncated: boolean;
   parties: readonly Readonly<{
     id: string;
+    revision: number;
     recruitDate: string;
+    resetSequence: number;
     recruitNumber: number;
+    type: "FLEX_RANK" | "NORMAL_GAME" | "SOLO_RANK" | "ARAM" | "TFT_NORMAL" | "TFT_RANK" | "DOUBLE_UP" | "PARTY_NUMBER" | "PARTY_RIFT" | "OTHER_GAME";
     title: string;
     status: "IN_PROGRESS";
     memberCount: number;
+    reserveCount: number;
     maximumMembers: number;
+    members: readonly Readonly<{
+      name: string;
+      position: "TOP" | "JGL" | "MID" | "ADC" | "SUP" | null;
+      slotNo: number;
+      substitute: boolean;
+    }>[];
     scheduledStartAt: string | null;
   }>[];
   scrims: readonly Readonly<{
     id: string;
+    revision: number;
     recruitDate: string;
     scrimNumber: number;
+    tournamentId: string | null;
+    legacyTournamentNumber: number | null;
+    requesterTeamId: string | null;
+    opponentTeamId: string | null;
+    requesterTeamName: string | null;
+    opponentTeamName: string | null;
+    title: string | null;
+    requesterLineup: Readonly<{ top: string | null; jungle: string | null; mid: string | null; adc: string | null; support: string | null }> | null;
+    opponentLineup: Readonly<{ top: string | null; jungle: string | null; mid: string | null; adc: string | null; support: string | null }> | null;
+    memo: string | null;
+    seriesRuleText: string | null;
     status: "RECRUITING" | "MATCHED" | "CONFIRMED";
     bestOf: number;
     scheduledAt: string | null;
@@ -67,13 +94,27 @@ export type KakaoSeasonSnapshotParticipant = Readonly<{
   reserve: boolean;
 }>;
 
-export type KakaoSeasonSnapshotCommand = Readonly<{
-  action: "SYNC" | "CANCEL" | "STATUS";
+type KakaoSeasonSnapshotCommandBase = Readonly<{
   seasonId: string;
   applyDate: string;
-  recruitNo: number;
-  participants: readonly KakaoSeasonSnapshotParticipant[];
 }>;
+
+export type KakaoSeasonSnapshotCommand =
+  | (KakaoSeasonSnapshotCommandBase & Readonly<{
+      action: "SYNC";
+      recruitNo: number;
+      participants: readonly KakaoSeasonSnapshotParticipant[];
+    }>)
+  | (KakaoSeasonSnapshotCommandBase & Readonly<{
+      action: "CANCEL";
+      recruitNo: number;
+      participants: readonly KakaoSeasonSnapshotParticipant[];
+    }>)
+  | (KakaoSeasonSnapshotCommandBase & Readonly<{
+      action: "STATUS";
+      recruitNo: number | null;
+      participants: readonly KakaoSeasonSnapshotParticipant[];
+    }>);
 
 export type KakaoSeasonSnapshotEntryDto = Readonly<{
   slotNo: number;
@@ -86,17 +127,65 @@ export type KakaoSeasonSnapshotEntryDto = Readonly<{
   player: Readonly<{ playerId: string; displayName: string; riotId: string }> | null;
 }>;
 
+export type KakaoPlayerRecordDto = Readonly<{
+  kind: "PLAYER_RECORD";
+  mode: "RECORD" | "RECENT";
+  query: string;
+  player: Readonly<{ playerId: string; displayName: string; riotId: string }> | null;
+  season: Readonly<{ id: string; name: string }> | null;
+  summary: Readonly<{
+    totalGames: number;
+    participationCount: number;
+    wins: number;
+    losses: number;
+    winRate: number;
+    mvpCount: number;
+  }> | null;
+  recentMatches: readonly Readonly<{
+    matchId: string;
+    title: string;
+    playedOn: string;
+    gameNumber: number;
+    championName: string;
+    team: "BLUE" | "RED";
+    position: "TOP" | "JGL" | "MID" | "ADC" | "SUP";
+    won: boolean;
+    mvp: boolean;
+  }>[];
+}>;
+
+export type KakaoRankingDto = Readonly<{
+  kind: "RANKING";
+  season: Readonly<{ id: string; name: string }> | null;
+  minimumParticipation: number;
+  rows: readonly Readonly<{
+    rank: number;
+    playerId: string;
+    displayName: string;
+    riotId: string;
+    totalGames: number;
+    participationCount: number;
+    wins: number;
+    losses: number;
+    winRate: number;
+    mvpCount: number;
+  }>[];
+  truncated: boolean;
+}>;
+
 export type KakaoSeasonSnapshotDto = Readonly<{
   kind: "SEASON_APPLICATION_SNAPSHOT";
   seasonId: string;
   applyDate: string;
-  recruitNo: number;
+  recruitNo: number | null;
   entries: readonly KakaoSeasonSnapshotEntryDto[];
   appliedCount: number;
   reserveCount: number;
   confirmedCount: number;
   pendingCount: number;
   cancelledCount: number;
+  availableRecruitNos?: readonly number[];
+  legacyReply?: string;
 }>;
 
 export type KakaoImageReceiveCommand = Readonly<{
@@ -133,6 +222,8 @@ export type KakaoImageReceiveDto = Readonly<{
 
 export type KakaoAssistantResponse =
   | KakaoPlayerSearchDto
+  | KakaoPlayerRecordDto
+  | KakaoRankingDto
   | KakaoOpenChatStatusDto
   | KakaoScheduledNoticeDto
   | KakaoSeasonSnapshotDto
@@ -175,6 +266,12 @@ export function parseOpenChatBody(value: unknown) {
   }
   if (value.command === "SEARCH_PLAYER" && hasExactKeys(value, ["command", "query"])) {
     return Object.freeze({ command: "SEARCH_PLAYER" as const, query: parseKakaoPlayerQuery(value.query) });
+  }
+  if ((value.command === "RECORD" || value.command === "RECENT") && hasExactKeys(value, ["command", "query"])) {
+    return Object.freeze({ command: value.command, query: parseKakaoPlayerQuery(value.query) });
+  }
+  if (value.command === "RANKING" && hasExactKeys(value, ["command"])) {
+    return Object.freeze({ command: "RANKING" as const });
   }
   throw new KakaoAssistantError("INVALID_INPUT");
 }
@@ -247,24 +344,39 @@ export function parseSeasonSnapshotBody(value: unknown): KakaoSeasonSnapshotComm
     : ["action", "seasonId", "applyDate", "recruitNo"])) {
     throw new KakaoAssistantError("INVALID_INPUT");
   }
+  const statusAllRounds = value.action === "STATUS" && value.recruitNo === null;
   if (!["SYNC", "CANCEL", "STATUS"].includes(value.action) || typeof value.seasonId !== "string" ||
       !UUID.test(value.seasonId) || typeof value.applyDate !== "string" || !DATE.test(value.applyDate) ||
-      !Number.isSafeInteger(value.recruitNo) || Number(value.recruitNo) < 1 || Number(value.recruitNo) > 999) {
+      (!statusAllRounds && (!Number.isSafeInteger(value.recruitNo) || Number(value.recruitNo) < 1 || Number(value.recruitNo) > 999))) {
     throw new KakaoAssistantError("INVALID_INPUT");
   }
   const participants = mutation
-    ? (Array.isArray(value.participants) && value.participants.length <= 50
+    ? (Array.isArray(value.participants) && value.participants.length <= 99
       ? value.participants.map(seasonParticipant)
       : (() => { throw new KakaoAssistantError("INVALID_INPUT"); })())
     : [];
   if (new Set(participants.map((participant) => participant.slotNo)).size !== participants.length) {
     throw new KakaoAssistantError("INVALID_INPUT");
   }
-  return Object.freeze({
-    action: value.action as KakaoSeasonSnapshotCommand["action"],
+  if (value.action === "SYNC") return Object.freeze({
+    action: "SYNC" as const,
     seasonId: value.seasonId,
     applyDate: value.applyDate,
     recruitNo: Number(value.recruitNo),
+    participants: Object.freeze(participants),
+  });
+  if (value.action === "CANCEL") return Object.freeze({
+    action: "CANCEL" as const,
+    seasonId: value.seasonId,
+    applyDate: value.applyDate,
+    recruitNo: Number(value.recruitNo),
+    participants: Object.freeze(participants),
+  });
+  return Object.freeze({
+    action: "STATUS" as const,
+    seasonId: value.seasonId,
+    applyDate: value.applyDate,
+    recruitNo: statusAllRounds ? null : Number(value.recruitNo),
     participants: Object.freeze(participants),
   });
 }

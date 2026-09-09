@@ -20,7 +20,7 @@ type LegacyRecruitGroup = "party" | "scrim";
 
 function transitionTarget(group: LegacyRecruitGroup, action: string) {
   if (group === "party" && action === "auto-finish-idle") {
-    return "/api/internal/jobs/recruit-auto-finish";
+    return "/api/internal/jobs/kakao-daily-close";
   }
   if (group === "party" && action === "reset") return "/admin/kakao?tab=health";
   return "/api/integrations/kakao/recruits";

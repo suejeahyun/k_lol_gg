@@ -37,13 +37,14 @@ function intent(nonce: string, body: string): VerifiedKakaoWebhookIntent {
   };
 }
 
-test("signed Kakao reads persist safe replay receipts and never expose private member data", async () => {
+test("signed Kakao reads persist safe replay receipts and isolate recruit members to the bound room", async () => {
   const connectionString = process.env.TEST_DATABASE_URL;
   assert.ok(connectionString);
   assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
   const { database, pool } = createDatabaseHandle(connectionString, { max: 3 });
   const playerId = randomUUID();
   const partyId = randomUUID();
+  const foreignPartyId = randomUUID();
   const suffix = randomUUID().slice(0, 8);
   try {
     await applyMigrations(database);
@@ -57,17 +58,32 @@ test("signed Kakao reads persist safe replay receipts and never expose private m
       tagLineNormalized: "qa",
       currentTier: "GOLD",
     });
-    await database.insert(recruitParties).values({
-      id: partyId,
-      recruitDate: "2099-01-01",
-      recruitNumber: 91,
-      type: "FLEX_RANK",
-      status: "IN_PROGRESS",
-      title: "Kakao 계약 파티",
-      maximumMembers: 5,
-      membersJson: [{ name: "절대 노출 금지", position: "MID", slotNo: 1, substitute: false }],
-      lastActivityAt: new Date(),
-    });
+    await database.insert(recruitParties).values([
+      {
+        id: partyId,
+        recruitDate: "2099-01-01",
+        recruitNumber: 91,
+        type: "FLEX_RANK",
+        status: "IN_PROGRESS",
+        title: "Kakao 계약 파티",
+        maximumMembers: 5,
+        membersJson: [{ name: "같은 방 참가자", position: "MID", slotNo: 1, substitute: false }],
+        sourceRoomId: "room-contract",
+        lastActivityAt: new Date(),
+      },
+      {
+        id: foreignPartyId,
+        recruitDate: "2099-01-01",
+        recruitNumber: 92,
+        type: "FLEX_RANK",
+        status: "IN_PROGRESS",
+        title: "다른 방 계약 파티",
+        maximumMembers: 5,
+        membersJson: [{ name: "다른 방 비공개", position: "TOP", slotNo: 1, substitute: false }],
+        sourceRoomId: "room-other",
+        lastActivityAt: new Date(),
+      },
+    ]);
     const assistant = new PostgresKakaoAssistant(database);
     const searchInput = {
       actorPrincipalId: principalId,
@@ -104,8 +120,10 @@ test("signed Kakao reads persist safe replay receipts and never expose private m
     const ownParty = status.body.parties.find((party) => party.id === partyId);
     assert.ok(ownParty);
     assert.equal(ownParty.memberCount, 1);
-    assert.equal("members" in ownParty, false);
-    assert.equal(JSON.stringify(status.body).includes("절대 노출 금지"), false);
+    assert.equal(ownParty.members.length, 1);
+    assert.equal(ownParty.members[0]?.name, "같은 방 참가자");
+    assert.equal(status.body.parties.some((party) => party.id === foreignPartyId), false);
+    assert.equal(JSON.stringify(status.body).includes("다른 방 비공개"), false);
 
     let createdActiveSeasonId: string | null = null;
     let activeSeason = (await database.select({ id: seasons.id }).from(seasons).where(eq(seasons.status, "ACTIVE")).limit(1))[0];
@@ -159,6 +177,7 @@ test("signed Kakao season snapshots match exact players and preserve unresolved 
   const suffix = randomUUID().slice(0, 8);
   const seasonId = randomUUID();
   const exactPlayerId = randomUUID();
+  const sitePlayerId = randomUUID();
   try {
     await applyMigrations(database);
     await database.insert(seasons).values({
@@ -169,6 +188,7 @@ test("signed Kakao season snapshots match exact players and preserve unresolved 
       { id: exactPlayerId, memberName: `정확-${suffix}`, memberNameNormalized: `정확-${suffix}`, nickname: `Exact${suffix}`, nicknameNormalized: `exact${suffix}`, tagLine: "KR1", tagLineNormalized: "kr1" },
       { id: randomUUID(), memberName: `동명이-${suffix}`, memberNameNormalized: `동명이-${suffix}`, nickname: `TwinA${suffix}`, nicknameNormalized: `twina${suffix}`, tagLine: "KR1", tagLineNormalized: "kr1" },
       { id: randomUUID(), memberName: `동명이-${suffix}`, memberNameNormalized: `동명이-${suffix}`, nickname: `TwinB${suffix}`, nicknameNormalized: `twinb${suffix}`, tagLine: "KR1", tagLineNormalized: "kr1" },
+      { id: sitePlayerId, memberName: `사이트-${suffix}`, memberNameNormalized: `사이트-${suffix}`, nickname: `Site${suffix}`, nicknameNormalized: `site${suffix}`, tagLine: "KR1", tagLineNormalized: "kr1", currentTier: "DIAMOND", peakTier: "MASTER" },
     ]);
     const assistant = new PostgresKakaoAssistant(database);
     const command = {
@@ -190,6 +210,7 @@ test("signed Kakao season snapshots match exact players and preserve unresolved 
       now,
     };
     const first = await assistant.syncSeasonSnapshot(firstInput);
+    assert.equal("legacyReply" in first.body, false);
     assert.equal(first.body.appliedCount, 1);
     assert.equal(first.body.reserveCount, 1);
     assert.equal(first.body.confirmedCount, 0);
@@ -214,6 +235,57 @@ test("signed Kakao season snapshots match exact players and preserve unresolved 
     assert.equal((await database.select().from(seasonKakaoPendingApplications).where(and(
       eq(seasonKakaoPendingApplications.seasonId, seasonId), eq(seasonKakaoPendingApplications.status, "ACTIVE"),
     ))).length, 3);
+
+    await database.insert(seasonApplications).values({
+      id: randomUUID(), seasonId, playerId: sitePlayerId, applyDate: today, recruitNo: 8,
+      mainPosition: "TOP", subPositions: ["ADC"], status: "APPLIED", source: "SITE", createdAt: now, updatedAt: now,
+    });
+    const allRoundsInput = {
+      actorPrincipalId: principalId,
+      intent: intent("nonce-season-status-all-0001", "season-status-all"),
+      requestKey: `season-status-all-${suffix}`,
+      scope: "kakao:season-applications:status",
+      command: { action: "STATUS", seasonId, applyDate: today, recruitNo: null, participants: [] },
+      requestId: randomUUID(),
+      now,
+    } as const;
+    const allRounds = await assistant.syncSeasonSnapshot(allRoundsInput);
+    const [year, month, day] = today.split("-").map(Number);
+    assert.equal(allRounds.body.recruitNo, null);
+    assert.deepEqual(allRounds.body.availableRecruitNos, [7, 8]);
+    assert.equal(allRounds.body.entries.length, 0);
+    assert.equal(allRounds.body.appliedCount, 2);
+    assert.equal(allRounds.body.reserveCount, 1);
+    assert.equal(allRounds.body.pendingCount, 2);
+    assert.equal(allRounds.body.legacyReply, [
+      "[K-LOL.GG 내전현황]",
+      "🔎 전체 명단: 내전상세 번호",
+      "",
+      `#7 ${year}-${month}-${day} 21:00 시작 (3/10 / 예비 1)`,
+      "└ 내전상세 7",
+      `#8 ${year}-${month}-${day} 21:00 시작 (1/10)`,
+      "└ 내전상세 8",
+      "",
+      "상세 명령: 내전상세 7 / 내전상세 8",
+    ].join("\n"));
+    assert.equal((await assistant.syncSeasonSnapshot(allRoundsInput)).replayed, true);
+
+    const siteRound = await assistant.syncSeasonSnapshot({
+      actorPrincipalId: principalId,
+      intent: intent("nonce-season-status-one-0001", "season-status-one"),
+      requestKey: `season-status-one-${suffix}`,
+      scope: "kakao:season-applications:status",
+      command: { action: "STATUS", seasonId, applyDate: today, recruitNo: 8, participants: [] },
+      requestId: randomUUID(),
+      now,
+    });
+    assert.equal(siteRound.body.entries.length, 1);
+    assert.equal(siteRound.body.entries[0]?.source, "SITE");
+    assert.equal(siteRound.body.legacyReply, [
+      "📢 내전하실분 #8", " 》협곡", ` 》${today} 21:00 시작`, "👥 1/10명", "",
+      "*참가 신청 양식*", "이름/현티어/최고티어/주라인/부라인", "EX) 1.지후/P/E/AD/MD", "",
+      `1. 사이트-${suffix}/D/M/TOP/AD`, "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9.", "10.",
+    ].join("\n"));
 
     await database.update(seasonApplications).set({
       source: "SITE",

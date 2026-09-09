@@ -5,7 +5,9 @@ import {
   canonicalRecruitRequestFingerprint,
   createRecruitParty,
   kakaoRecruitDateKey,
+  kakaoRoomOwnsRecruitAggregate,
   shouldAutoFinishRecruit,
+  syncScrimRecruit,
   syncRecruitParty,
   toPublicRecruitPartyDto,
   transitionRecruitParty,
@@ -21,7 +23,7 @@ function party(): RecruitParty {
 }
 
 function scrim(): ScrimRecruit {
-  return { id: "scrim-1", revision: 0, recruitDate: "2026-09-08", scrimNumber: 1, tournamentId: "t1", requesterTeamId: "team-a", opponentTeamId: null, status: "RECRUITING", scheduledAt: null, bestOf: 3 };
+  return { id: "scrim-1", revision: 0, sourceRoomId: null, recruitDate: "2026-09-08", scrimNumber: 1, tournamentId: "t1", legacyTournamentNumber: null, requesterTeamId: "team-a", opponentTeamId: null, requesterLineup: null, opponentLineup: null, legacyMemo: null, legacySeriesRuleText: null, status: "RECRUITING", scheduledAt: null, bestOf: 3 };
 }
 
 test("KST recruit date is stable across the UTC day boundary", () => {
@@ -47,6 +49,24 @@ test("party sync enforces capacity, positions, slots and optimistic revision", (
     { name: "가", position: "TOP", slotNo: 1, substitute: false },
     { name: "나", position: "TOP", slotNo: 2, substitute: false },
   ] }), /DUPLICATE_RECRUIT_POSITION/);
+});
+
+test("Kakao recruit aggregates are visible and mutable only from their signed source room", () => {
+  assert.equal(kakaoRoomOwnsRecruitAggregate("room-a", "room-a"), true);
+  assert.equal(kakaoRoomOwnsRecruitAggregate("room-a", "room-b"), false);
+  assert.equal(kakaoRoomOwnsRecruitAggregate(null, "room-a"), false);
+});
+
+test("party primary capacity excludes candidates while the total list remains bounded", () => {
+  const members = [
+    { name: "가", position: "TOP" as const, slotNo: 1, substitute: false },
+    { name: "나", position: null, slotNo: 1, substitute: true },
+    { name: "다", position: null, slotNo: 2, substitute: true },
+  ];
+  const created = createRecruitParty({ id: "party-candidates", recruitDate: "2026-09-08", resetSequence: 0, recruitNumber: 2, type: "FLEX_RANK", title: "후보 보존", maximumMembers: 1, members, now });
+  assert.equal(created.members.length, 3);
+  assert.equal(toPublicRecruitPartyDto(created).memberCount, 1);
+  assert.throws(() => createRecruitParty({ id: "party-over", recruitDate: "2026-09-08", resetSequence: 0, recruitNumber: 3, type: "FLEX_RANK", title: "정원 초과", maximumMembers: 1, members: [...members, { name: "라", position: "MID", slotNo: 2, substitute: false }], now }), /RECRUIT_CAPACITY_EXCEEDED/);
 });
 
 test("party terminal transitions do not permit mutation or replay with a new command", () => {
@@ -75,6 +95,31 @@ test("scrim opponent can be reopened but requester cannot join itself", () => {
   const reopened = transitionScrimRecruit({ scrim: matched, expectedRevision: 1, command: "REOPEN" });
   assert.equal(reopened.status, "RECRUITING");
   assert.equal(reopened.opponentTeamId, null);
+});
+
+test("full scrim sync replaces V1 form fields but binds date, number, tournament and revision", () => {
+  const input = {
+    scrim: scrim(), expectedRevision: 0, recruitDate: "2026-09-08", scrimNumber: 1,
+    tournamentId: "t1", legacyTournamentNumber: null, requesterTeamId: null,
+    opponentTeamId: null, legacyTitle: "별빛단 스크림 구인", requesterTeamName: "별빛단",
+    opponentTeamName: "달빛단", requesterLineup: { top: "가", jungle: "나", mid: "다", adc: "라", support: "마" },
+    opponentLineup: { top: "바", jungle: "사", mid: "아", adc: "자", support: "차" },
+    legacyMemo: "즐겁게", legacySeriesRuleText: "5판3선", scheduledAt: new Date("2026-09-08T12:00:00.000Z"), bestOf: 5,
+  } as const;
+  const synced = syncScrimRecruit(input);
+  assert.equal(synced.revision, 1);
+  assert.equal(synced.status, "MATCHED");
+  assert.equal(synced.requesterTeamName, "별빛단");
+  assert.equal(synced.opponentLineup?.support, "차");
+  assert.equal(synced.legacyMemo, "즐겁게");
+  assert.equal(synced.bestOf, 5);
+
+  const confirmed = { ...synced, revision: 2, status: "CONFIRMED" as const };
+  assert.equal(syncScrimRecruit({ ...input, scrim: confirmed, expectedRevision: 2, opponentTeamName: "새달빛단" }).status, "CONFIRMED");
+  assert.equal(syncScrimRecruit({ ...input, scrim: confirmed, expectedRevision: 2, opponentTeamName: null, opponentLineup: null }).status, "RECRUITING");
+  assert.throws(() => syncScrimRecruit({ ...input, scrim: confirmed, expectedRevision: 1 }), /STALE_RECRUIT_REVISION/);
+  assert.throws(() => syncScrimRecruit({ ...input, scrim: confirmed, expectedRevision: 2, scrimNumber: 2 }), /SCRIM_IDENTITY_MISMATCH/);
+  assert.throws(() => syncScrimRecruit({ ...input, scrim: { ...confirmed, status: "COMPLETED" }, expectedRevision: 2 }), /INVALID_SCRIM_TRANSITION/);
 });
 
 test("public party DTO excludes room, sender, notes and request keys by construction", () => {

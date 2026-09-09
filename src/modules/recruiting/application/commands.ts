@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import type { RecruitMember, RecruitPartyType } from "../domain/recruiting";
+import type { RecruitMember, RecruitPartyType, ScrimLineup } from "../domain/recruiting";
 import type { VerifiedKakaoWebhookIntent } from "../infrastructure/kakao-signature";
 import type { TransactionSessionActor } from "@/modules/auth/domain/transaction-session";
 
@@ -54,8 +54,44 @@ export type PartyCommand =
   | Command<"CANCEL_PARTY", Readonly<Record<string, never>>>
   | Command<"RESET_PARTY", Readonly<Record<string, never>>>;
 
+export type ScrimFormCommandPayload = Readonly<{
+      recruitDate: string;
+      scrimNumber: number;
+      tournamentId: string | null;
+      legacyTournamentNumber?: number | null;
+      requesterTeamId: string | null;
+      title?: string | null;
+      requesterTeamName?: string | null;
+      opponentTeamName?: string | null;
+      requesterLineup?: ScrimLineup | null;
+      opponentLineup?: ScrimLineup | null;
+      memo?: string | null;
+      seriesRuleText?: string | null;
+      scheduledAt: string | null;
+      bestOf: number;
+    }>;
+
+export type SyncScrimCommandPayload = Readonly<{
+  recruitDate: string;
+  scrimNumber: number;
+  tournamentId: string | null;
+  legacyTournamentNumber: number | null;
+  requesterTeamId: string | null;
+  opponentTeamId?: string | null;
+  title: string | null;
+  requesterTeamName: string | null;
+  opponentTeamName: string | null;
+  requesterLineup: ScrimLineup | null;
+  opponentLineup: ScrimLineup | null;
+  memo: string | null;
+  seriesRuleText: string | null;
+  scheduledAt: string | null;
+  bestOf: number;
+}>;
+
 export type ScrimCommand =
-  | Command<"CREATE_SCRIM", Readonly<{ recruitDate: string; scrimNumber: number; tournamentId: string; requesterTeamId: string; scheduledAt: string | null; bestOf: number }>>
+  | Command<"CREATE_SCRIM", ScrimFormCommandPayload>
+  | Command<"SYNC_SCRIM", SyncScrimCommandPayload>
   | Command<"JOIN_SCRIM", Readonly<{ opponentTeamId: string }>>
   | Command<"REOPEN_SCRIM", Readonly<Record<string, never>>>
   | Command<"CONFIRM_SCRIM", Readonly<Record<string, never>>>
@@ -72,6 +108,7 @@ const COMMAND_SCOPE_SUFFIX: Readonly<Record<RecruitingCommand["type"], string>> 
   CANCEL_PARTY: "recruiting:party:cancel",
   RESET_PARTY: "recruiting:party:reset",
   CREATE_SCRIM: "recruiting:scrim:create",
+  SYNC_SCRIM: "recruiting:scrim:sync",
   JOIN_SCRIM: "recruiting:scrim:join",
   REOPEN_SCRIM: "recruiting:scrim:reopen",
   CONFIRM_SCRIM: "recruiting:scrim:confirm",
@@ -93,13 +130,16 @@ function canonicalJson(value: unknown): string {
 }
 
 export function recruitingCommandRequestFingerprint(command: RecruitingCommand): Uint8Array {
+  const actorBinding = command.metadata.actor.kind === "BOT"
+    ? { kind: command.metadata.actor.kind, principalId: command.metadata.actor.principalId, roomId: command.metadata.actor.authorizationIntent.roomId }
+    : { kind: command.metadata.actor.kind, principalId: command.metadata.actor.principalId };
   return createHash("sha256")
-    .update("klol-v2:recruiting-command:v1\0")
+    .update("klol-v2:recruiting-command:v2\0")
     .update(command.metadata.idempotency.scope)
     .update("\0")
     .update(command.metadata.idempotency.bodyDigestHex)
     .update("\0")
-    .update(canonicalJson({ type: command.type, aggregateId: command.aggregateId, expectedRevision: command.metadata.expectedRevision, payload: command.payload }))
+    .update(canonicalJson({ actorBinding, type: command.type, aggregateId: command.aggregateId, expectedRevision: command.metadata.expectedRevision, payload: command.payload }))
     .digest();
 }
 

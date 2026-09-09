@@ -74,6 +74,20 @@ test("Kakao webhook rejects stale/replayed, forbidden room/sender, and bot-self 
   }), { ok: false, code: "BOT_SELF_MESSAGE" });
 });
 
+test("signed public reads may accept any human sender in an allowed room without weakening bot-self protection", () => {
+  assert.equal(verify({ allowedSenderIds: new Set(), allowAnySender: true }).ok, true);
+  assert.deepEqual(verify({
+    allowedSenderIds: new Set(),
+    allowAnySender: true,
+    request: { ...request(), botSelf: true },
+  }), { ok: false, code: "BOT_SELF_MESSAGE" });
+  assert.deepEqual(verify({
+    allowedRoomIds: new Set(["room-2"]),
+    allowedSenderIds: new Set(),
+    allowAnySender: true,
+  }), { ok: false, code: "ROOM_FORBIDDEN" });
+});
+
 test("malformed signatures and unsafe request structure fail closed", () => {
   assert.deepEqual(verify({ request: { ...request(), signature: "bad" } }), { ok: false, code: "INVALID_SIGNATURE" });
   assert.deepEqual(verify({ request: { ...request(), nonce: "short" } }), { ok: false, code: "INVALID_REQUEST" });

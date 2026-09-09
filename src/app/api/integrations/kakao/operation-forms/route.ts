@@ -30,7 +30,8 @@ function exactEnvelope(value: unknown): value is { formType: string; payload: un
 
 export async function POST(request: Request) {
   const traceId = readValidatedTraceId(request.headers);
-  const verification = await verifyKakaoHttpRequest(request, new Date(), MAXIMUM_KAKAO_BODY_BYTES);
+  // Operation forms are public submissions inside an approved Kakao room; administrative review stays site-only.
+  const verification = await verifyKakaoHttpRequest(request, new Date(), MAXIMUM_KAKAO_BODY_BYTES, { allowAnySender: true });
   if (!verification.ok) {
     recordKakaoWebhookRejection(verification.code, { route: new URL(request.url).pathname, traceId });
     return operationFormWebhookForbiddenResponse(traceId);

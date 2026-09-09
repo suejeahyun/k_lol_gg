@@ -2,10 +2,12 @@ import { canonicalIdentifier, validateBestOf, type JsonObject } from "@/modules/
 
 import {
   createRecruitParty,
+  syncScrimRecruit,
   syncRecruitParty,
   transitionRecruitParty,
   transitionScrimRecruit,
   type RecruitParty,
+  type ScrimLineup,
   type ScrimRecruit,
 } from "../domain/recruiting";
 import { recruitingCommandRequestFingerprint, recruitingCommandScope, type RecruitingCommand } from "./commands";
@@ -27,7 +29,7 @@ import type {
 import { toPublicPartyDto, toPublicScrimDto } from "./public-dto";
 
 export class RecruitingApplicationError extends Error {
-  constructor(readonly code: "INVALID_COMMAND" | "INVALID_AUTHORIZATION_INTENT" | "IDEMPOTENCY_MISMATCH" | "NOT_FOUND" | "REVISION_CONFLICT" | "ALREADY_EXISTS" | "FORBIDDEN" | "SESSION_STALE", message: string) {
+  constructor(readonly code: "INVALID_COMMAND" | "INVALID_AUTHORIZATION_INTENT" | "IDEMPOTENCY_MISMATCH" | "NOT_FOUND" | "REVISION_CONFLICT" | "ALREADY_EXISTS" | "FORBIDDEN" | "SESSION_STALE" | "ACTIVE_DESTRUCTION_TOURNAMENT_NOT_FOUND" | "ACTIVE_DESTRUCTION_TOURNAMENT_AMBIGUOUS", message: string) {
     super(message);
     this.name = "RecruitingApplicationError";
   }
@@ -152,21 +154,59 @@ function parseDate(value: string | null, label: string) {
   return new Date(value);
 }
 
-function createScrim(command: Extract<RecruitingCommand, { type: "CREATE_SCRIM" }>): ScrimRecruit {
+function optionalScrimText(value: string | null | undefined, label: string, maximum: number) {
+  if (value === null || value === undefined) return null;
+  const normalized = value.normalize("NFKC").trim().replace(/\s+/gu, " ");
+  if (!normalized || normalized.length > maximum || /[\u0000-\u001f\u007f]/u.test(normalized)) {
+    throw new RecruitingApplicationError("INVALID_COMMAND", `${label} is invalid.`);
+  }
+  return normalized;
+}
+
+function scrimLineup(value: ScrimLineup | null | undefined, label: string): ScrimLineup | null {
+  if (!value) return null;
+  const output = {
+    top: optionalScrimText(value.top, `${label}.top`, 80),
+    jungle: optionalScrimText(value.jungle, `${label}.jungle`, 80),
+    mid: optionalScrimText(value.mid, `${label}.mid`, 80),
+    adc: optionalScrimText(value.adc, `${label}.adc`, 80),
+    support: optionalScrimText(value.support, `${label}.support`, 80),
+  };
+  return Object.values(output).some((entry) => entry !== null) ? Object.freeze(output) : null;
+}
+
+function createScrim(command: Extract<RecruitingCommand, { type: "CREATE_SCRIM" }>, inferredTournamentId: string | null = null): ScrimRecruit {
   const payload = command.payload;
+  const tournamentId = payload.tournamentId ?? inferredTournamentId;
   if (!/^\d{4}-\d{2}-\d{2}$/u.test(payload.recruitDate)) throw new RecruitingApplicationError("INVALID_COMMAND", "Scrim recruitDate must be YYYY-MM-DD.");
   if (!Number.isSafeInteger(payload.scrimNumber) || payload.scrimNumber < 1 || payload.scrimNumber > 99) throw new RecruitingApplicationError("INVALID_COMMAND", "Scrim number must be between one and 99.");
-  canonicalIdentifier(payload.tournamentId, "tournamentId");
-  canonicalIdentifier(payload.requesterTeamId, "requesterTeamId");
+  if (tournamentId) canonicalIdentifier(tournamentId, "tournamentId");
+  if (payload.requesterTeamId) canonicalIdentifier(payload.requesterTeamId, "requesterTeamId");
+  if (!tournamentId && (!Number.isSafeInteger(payload.legacyTournamentNumber) || Number(payload.legacyTournamentNumber) < 1 || Number(payload.legacyTournamentNumber) > 9999)) {
+    throw new RecruitingApplicationError("INVALID_COMMAND", "A scrim requires a tournament ID or legacy tournament number.");
+  }
+  const requesterTeamName = optionalScrimText(payload.requesterTeamName, "requesterTeamName", 120);
+  if (!payload.requesterTeamId && !requesterTeamName) {
+    throw new RecruitingApplicationError("INVALID_COMMAND", "A scrim requires a requester team ID or name.");
+  }
   validateBestOf(payload.bestOf);
   return Object.freeze({
     id: command.aggregateId,
     revision: 0,
+    sourceRoomId: command.metadata.actor.kind === "BOT" ? command.metadata.actor.authorizationIntent.roomId : null,
     recruitDate: payload.recruitDate,
     scrimNumber: payload.scrimNumber,
-    tournamentId: payload.tournamentId,
+    tournamentId,
+    legacyTournamentNumber: payload.legacyTournamentNumber ?? null,
     requesterTeamId: payload.requesterTeamId,
     opponentTeamId: null,
+    legacyTitle: optionalScrimText(payload.title, "title", 160),
+    requesterTeamName,
+    opponentTeamName: optionalScrimText(payload.opponentTeamName, "opponentTeamName", 120),
+    requesterLineup: scrimLineup(payload.requesterLineup, "requesterLineup"),
+    opponentLineup: scrimLineup(payload.opponentLineup, "opponentLineup"),
+    legacyMemo: optionalScrimText(payload.memo, "memo", 500),
+    legacySeriesRuleText: optionalScrimText(payload.seriesRuleText, "seriesRuleText", 160),
     status: "RECRUITING",
     scheduledAt: parseDate(payload.scheduledAt, "scheduledAt"),
     bestOf: payload.bestOf,
@@ -174,11 +214,20 @@ function createScrim(command: Extract<RecruitingCommand, { type: "CREATE_SCRIM" 
 }
 
 function partySnapshot(party: RecruitParty | null): JsonObject | null {
-  return party ? { id: party.id, revision: party.revision, status: party.status, memberCount: party.members.length, maximumMembers: party.maximumMembers } : null;
+  return party ? { id: party.id, revision: party.revision, status: party.status, memberCount: party.members.filter((member) => !member.substitute).length, reserveCount: party.members.filter((member) => member.substitute).length, maximumMembers: party.maximumMembers } : null;
 }
 
 function scrimSnapshot(scrim: ScrimRecruit | null): JsonObject | null {
-  return scrim ? { id: scrim.id, revision: scrim.revision, status: scrim.status, requesterTeamId: scrim.requesterTeamId, opponentTeamId: scrim.opponentTeamId } : null;
+  return scrim ? {
+    id: scrim.id, revision: scrim.revision, recruitDate: scrim.recruitDate, scrimNumber: scrim.scrimNumber,
+    tournamentId: scrim.tournamentId, legacyTournamentNumber: scrim.legacyTournamentNumber,
+    status: scrim.status, requesterTeamId: scrim.requesterTeamId, opponentTeamId: scrim.opponentTeamId,
+    title: scrim.legacyTitle ?? null, requesterTeamName: scrim.requesterTeamName ?? null,
+    opponentTeamName: scrim.opponentTeamName ?? null, requesterLineup: scrim.requesterLineup,
+    opponentLineup: scrim.opponentLineup, memo: scrim.legacyMemo,
+    seriesRuleText: scrim.legacySeriesRuleText, scheduledAt: scrim.scheduledAt?.toISOString() ?? null,
+    bestOf: scrim.bestOf,
+  } : null;
 }
 
 function partyJson(party: RecruitParty): JsonObject {
@@ -188,7 +237,7 @@ function partyJson(party: RecruitParty): JsonObject {
 
 function scrimJson(scrim: ScrimRecruit): JsonObject {
   const dto = toPublicScrimDto(scrim);
-  return { id: dto.id, recruitDate: dto.recruitDate, scrimNumber: dto.scrimNumber, tournamentId: dto.tournamentId, requesterTeamId: dto.requesterTeamId, opponentTeamId: dto.opponentTeamId, status: dto.status, scheduledAt: dto.scheduledAt, bestOf: dto.bestOf };
+  return { id: dto.id, recruitDate: dto.recruitDate, scrimNumber: dto.scrimNumber, tournamentId: dto.tournamentId, legacyTournamentNumber: dto.legacyTournamentNumber, requesterTeamId: dto.requesterTeamId, opponentTeamId: dto.opponentTeamId, title: dto.title, requesterTeamName: dto.requesterTeamName, opponentTeamName: dto.opponentTeamName, requesterLineup: dto.requesterLineup, opponentLineup: dto.opponentLineup, memo: dto.memo, seriesRuleText: dto.seriesRuleText, status: dto.status, scheduledAt: dto.scheduledAt, bestOf: dto.bestOf };
 }
 
 export class RecruitingCommandHandler {
@@ -234,7 +283,7 @@ export class RecruitingCommandHandler {
     let nextScrim: ScrimRecruit | null = scrim;
     switch (command.type) {
       case "CREATE_PARTY":
-        nextParty = createRecruitParty({ id: command.aggregateId, ...command.payload, type: command.payload.partyType, scheduledStartAt: parseDate(command.payload.scheduledStartAt, "scheduledStartAt"), protectedUntil: parseDate(command.payload.protectedUntil, "protectedUntil"), now });
+        nextParty = createRecruitParty({ id: command.aggregateId, sourceRoomId: command.metadata.actor.kind === "BOT" ? command.metadata.actor.authorizationIntent.roomId : null, ...command.payload, type: command.payload.partyType, scheduledStartAt: parseDate(command.payload.scheduledStartAt, "scheduledStartAt"), protectedUntil: parseDate(command.payload.protectedUntil, "protectedUntil"), now });
         break;
       case "SYNC_PARTY":
         nextParty = sync(command, party!, now);
@@ -247,7 +296,10 @@ export class RecruitingCommandHandler {
         nextParty = transitionRecruitParty({ party: party!, expectedRevision: command.metadata.expectedRevision, command: command.type === "FINISH_PARTY" ? "FINISH" : command.type === "CANCEL_PARTY" ? "CANCEL" : "RESET", now });
         break;
       case "CREATE_SCRIM":
-        nextScrim = createScrim(command);
+        nextScrim = createScrim(command, await this.inferV1ScrimTournamentId(transaction, command));
+        break;
+      case "SYNC_SCRIM":
+        nextScrim = syncScrim(command, scrim!);
         break;
       case "JOIN_SCRIM":
       case "REOPEN_SCRIM":
@@ -276,8 +328,49 @@ export class RecruitingCommandHandler {
     await this.dependencies.receipts.complete(transaction, receipt);
     return { body, revision: next.revision, replayed: false };
   }
+
+  private async inferV1ScrimTournamentId(
+    transaction: RecruitingTransactionContext,
+    command: Extract<RecruitingCommand, { type: "CREATE_SCRIM" }>,
+  ) {
+    if (command.payload.tournamentId || command.payload.legacyTournamentNumber !== null && command.payload.legacyTournamentNumber !== undefined) return null;
+    if (command.metadata.actor.kind !== "BOT") {
+      throw new RecruitingApplicationError("INVALID_COMMAND", "Only a signed Kakao V1 form may infer its destruction tournament.");
+    }
+    const candidates = await this.dependencies.repository.listActiveDestructionTournamentIdsForUpdate(transaction);
+    if (candidates.length === 0) {
+      throw new RecruitingApplicationError("ACTIVE_DESTRUCTION_TOURNAMENT_NOT_FOUND", "No active destruction tournament is available for the V1 scrim form.");
+    }
+    if (candidates.length !== 1) {
+      throw new RecruitingApplicationError("ACTIVE_DESTRUCTION_TOURNAMENT_AMBIGUOUS", "More than one active destruction tournament matches the V1 scrim form.");
+    }
+    return candidates[0]!;
+  }
 }
 
 function sync(command: Extract<RecruitingCommand, { type: "SYNC_PARTY" }>, party: RecruitParty, now: Date) {
   return syncRecruitParty({ party, expectedRevision: command.metadata.expectedRevision, members: command.payload.members, now });
+}
+
+function syncScrim(command: Extract<RecruitingCommand, { type: "SYNC_SCRIM" }>, scrim: ScrimRecruit) {
+  const payload = command.payload;
+  return syncScrimRecruit({
+    scrim,
+    expectedRevision: command.metadata.expectedRevision,
+    recruitDate: payload.recruitDate,
+    scrimNumber: payload.scrimNumber,
+    tournamentId: payload.tournamentId,
+    legacyTournamentNumber: payload.legacyTournamentNumber,
+    requesterTeamId: payload.requesterTeamId,
+    opponentTeamId: payload.opponentTeamId ?? null,
+    legacyTitle: optionalScrimText(payload.title, "title", 160),
+    requesterTeamName: optionalScrimText(payload.requesterTeamName, "requesterTeamName", 120),
+    opponentTeamName: optionalScrimText(payload.opponentTeamName, "opponentTeamName", 120),
+    requesterLineup: scrimLineup(payload.requesterLineup, "requesterLineup"),
+    opponentLineup: scrimLineup(payload.opponentLineup, "opponentLineup"),
+    legacyMemo: optionalScrimText(payload.memo, "memo", 500),
+    legacySeriesRuleText: optionalScrimText(payload.seriesRuleText, "seriesRuleText", 160),
+    scheduledAt: parseDate(payload.scheduledAt, "scheduledAt"),
+    bestOf: payload.bestOf,
+  });
 }
