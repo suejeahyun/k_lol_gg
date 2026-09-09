@@ -13,4 +13,3 @@
 | DB registry 장애 | 휴대폰 로컬 진단 | 서버 일반 API `503 REGISTRY_UNAVAILABLE` |
 
 정적 `KAKAO_WEBHOOK_ALLOWED_ROOMS`/`SENDERS`는 이 표의 정상 권한 판정에 참여하지 않는다. 값은 명시적 비상 bootstrap 입력일 뿐이다.
-
