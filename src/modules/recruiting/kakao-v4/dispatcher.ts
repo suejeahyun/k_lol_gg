@@ -11,6 +11,8 @@ import {
 import type { RecruitingCommandResult } from "../application/ports";
 import type {
   KakaoOpenChatStatusDto,
+  KakaoPlayerRecordDto,
+  KakaoRankingDto,
   KakaoSeasonSnapshotCommand,
   KakaoSeasonSnapshotDto,
 } from "../kakao-assistant/domain";
@@ -44,6 +46,8 @@ export type KakaoV4AssistantPort = Readonly<{
     command: KakaoSeasonSnapshotCommand;
     requestId: string;
   }>): Promise<Readonly<{ body: KakaoSeasonSnapshotDto; replayed: boolean }>>;
+  getPlayerRecord?(input: SignedAssistantInput & Readonly<{ query: string; mode: "RECORD" | "RECENT" }>): Promise<Readonly<{ body: KakaoPlayerRecordDto; replayed: boolean }>>;
+  getRanking?(input: SignedAssistantInput): Promise<Readonly<{ body: KakaoRankingDto; replayed: boolean }>>;
 }>;
 
 export type KakaoV4DispatchContext = Readonly<{
@@ -55,7 +59,7 @@ export type KakaoV4DispatchContext = Readonly<{
 }>;
 
 export type KakaoV4DispatcherResult = Readonly<{
-  kind: "PARTY" | "SCRIM" | "SEASON";
+  kind: "PARTY" | "SCRIM" | "SEASON" | "PLAYER";
   action: CanonicalKakaoV4Command["action"];
   aggregate: unknown;
   legacyReply: string;
@@ -167,6 +171,20 @@ const DEPRECATED_SCRIM_REPLIES = Object.freeze({
   DEPRECATED_FINISH: "[K-LOL.GG 스크림 수동 종료 사용 안 함]\n스크림은 매일 오전 6시에 자동 종료됩니다.",
 });
 
+function playerRecordReply(body: KakaoPlayerRecordDto) {
+  const title = body.player ? `${body.player.displayName}#${body.player.riotId}` : body.query;
+  if (!body.player) return `[${title} ${body.mode === "RECENT" ? "최근 경기" : "전적"}]\n플레이어를 찾을 수 없습니다.`;
+  const recent = body.recentMatches.slice(0, body.mode === "RECENT" ? 10 : 1).map((match, index) => `${index + 1}. ${match.won ? "승" : "패"} | ${match.championName} | ${match.playedOn}`);
+  if (body.mode === "RECENT") return `[${title} 최근 경기]\n\n${recent.length > 0 ? recent.join("\n") : "최근 경기 없음"}`;
+  const summary = body.summary;
+  return [`[${title} 전적]`, `시즌: ${body.season?.name ?? "없음"}`, summary ? `참여: ${summary.participationCount}회 / ${summary.totalGames}세트` : "참여: 0회 / 0세트", summary ? `전적: ${summary.wins}승 ${summary.losses}패 (${summary.winRate.toFixed(1)}%)` : "전적: 없음", recent.length > 0 ? `최근: ${recent[0]!.replace(/^1\.\s*/u, "")}` : "최근: 없음"].join("\n");
+}
+
+function rankingReply(body: KakaoRankingDto) {
+  const rows = body.rows.slice(0, 5).map((row) => `${row.rank}. ${row.displayName}#${row.riotId} | 승률 ${row.winRate.toFixed(1)}% | 참여 ${row.participationCount}회`);
+  return ["🏆 K-LOL.GG 랭킹 TOP 5", `기준: 내전 참여 ${body.minimumParticipation}회 이상`, "", ...(rows.length > 0 ? rows : ["표시할 랭킹이 없습니다."])].join("\n");
+}
+
 function seasonReply(body: KakaoSeasonSnapshotDto) {
   if (body.legacyReply) return body.legacyReply;
   return [
@@ -191,7 +209,19 @@ export class KakaoV4CommandDispatcher {
 
     if (command.domain === "PARTY") return this.party(context, command);
     if (command.domain === "SCRIM") return this.scrim(context, command);
+    if (command.domain === "PLAYER") return this.player(context, command);
     return this.season(context, command);
+  }
+
+  private async player(context: KakaoV4DispatchContext, command: Extract<CanonicalKakaoV4Command, { domain: "PLAYER" }>): Promise<KakaoV4DispatcherResult> {
+    if (command.action === "RANKING") {
+      if (!this.dependencies.assistant.getRanking) throw new KakaoV4DispatcherError("INVALID_COMMAND");
+      const result = await this.dependencies.assistant.getRanking(signedInput(context));
+      return Object.freeze({ kind: "PLAYER", action: command.action, aggregate: result.body, legacyReply: rankingReply(result.body), replayed: result.replayed });
+    }
+    if (!this.dependencies.assistant.getPlayerRecord) throw new KakaoV4DispatcherError("INVALID_COMMAND");
+    const result = await this.dependencies.assistant.getPlayerRecord({ ...signedInput(context), query: command.query, mode: command.action });
+    return Object.freeze({ kind: "PLAYER", action: command.action, aggregate: result.body, legacyReply: playerRecordReply(result.body), replayed: result.replayed });
   }
 
   private async openChatStatus(context: KakaoV4DispatchContext) {

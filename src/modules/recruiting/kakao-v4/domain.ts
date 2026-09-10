@@ -65,6 +65,8 @@ export function parseKakaoV4CommandEnvelope(value: unknown): KakaoV4CommandEnvel
 export function canonicalKakaoV4CommandText(value: string) {
   const text = value.trim();
   if (!text || text === "/" || text.startsWith("//")) return null;
+  if (/^[a-z][a-z0-9+.-]*:\/\//iu.test(text)) return null;
+  if (!text.includes("\n") && text.indexOf("/") > 0) return null;
   if (!text.startsWith("/")) return text;
   const stripped = text.slice(1);
   return !stripped || /^\s/u.test(stripped) ? null : stripped;

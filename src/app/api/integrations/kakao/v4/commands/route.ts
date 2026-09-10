@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import {
   noStoreJsonResponse,
   problemForIdempotencyKeyError,
@@ -34,9 +36,8 @@ function runtimeService() {
   if (!registry) return null;
   const recruiting = getRuntimeRecruitingService();
   const assistant = getRuntimeKakaoAssistant();
-  service = recruiting && assistant
-    ? new KakaoV4CommandService(registry, new KakaoV4CommandDispatcher({ recruiting, assistant }))
-    : new KakaoV4CommandService(registry);
+  if (!recruiting || !assistant) return null;
+  service = new KakaoV4CommandService(registry, new KakaoV4CommandDispatcher({ recruiting, assistant }));
   return service;
 }
 
@@ -87,7 +88,7 @@ export async function POST(request: Request) {
   const commandService = runtimeService();
   if (!commandService) return kakaoV4ProblemResponse("UNAVAILABLE", traceId);
   try {
-    const result = await commandService.execute(envelope, keyId);
+    const result = await commandService.execute(envelope, keyId, { requestDigestHex: verified.requestDigestHex, requestId: traceId ?? randomUUID() });
     const replayHeaders = result.replayed ? { "Idempotency-Replayed": "true" } : undefined;
     if (result.kind === "NOT_IMPLEMENTED") return kakaoV4ProblemResponse("ROUTER_NOT_ENABLED", traceId, replayHeaders);
     return noStoreJsonResponse({

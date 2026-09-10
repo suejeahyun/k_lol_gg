@@ -65,7 +65,7 @@ test("profile authorization does not receive sender role or allowlist inputs", a
   assert.doesNotMatch(JSON.stringify(calls), /sender|role|allowlist/iu);
 });
 
-test("health and contract probes work while other commands stay explicit 501 candidates", async () => {
+test("health, contract probes, and classified commands return deterministic replies without a runtime dispatcher", async () => {
   const service = new KakaoV4CommandService({
     async authorizeProfile(input) {
       return { roomId: "00000000-0000-4000-8000-000000000001", roomStatus: "ACTIVE", capabilityProfile: input.requiredCapabilityProfile, installationId: "00000000-0000-4000-8000-000000000002" };
@@ -77,7 +77,7 @@ test("health and contract probes work while other commands stay explicit 501 can
   const probe = await service.execute({ ...envelope, eventId: "event-boot-abcdef0123456789-2", text: "V4계약확인" }, "current");
   assert.equal(probe.kind, "REPLY");
   const pending = await service.execute({ ...envelope, eventId: "event-boot-abcdef0123456789-3", text: "/5인파티" }, "current");
-  assert.equal(pending.kind, "NOT_IMPLEMENTED");
+  assert.equal(pending.kind, "REPLY");
 });
 
 test("event ID is the idempotency boundary and mismatched reuse conflicts", async () => {
@@ -95,9 +95,9 @@ test("public error responses keep stable status and code contracts", async () =>
   const cases: Array<[KakaoV4HttpErrorCode, number, string]> = [
     ["COMMAND_INVALID", 400, "KAKAO_V4_COMMAND_INVALID"],
     ["SIGNATURE_INVALID", 401, "INVALID_SIGNATURE"],
-    ["IDEMPOTENCY_MISMATCH", 409, "IDEMPOTENCY_MISMATCH"],
+    ["IDEMPOTENCY_MISMATCH", 409, "REPLAY_CONFLICT"],
     ["ROUTER_NOT_ENABLED", 501, "KAKAO_V4_COMMAND_ROUTER_NOT_ENABLED"],
-    ["UNAVAILABLE", 503, "KAKAO_V4_UNAVAILABLE"],
+    ["UNAVAILABLE", 503, "SERVER_UNAVAILABLE"],
   ];
   for (const [code, status, publicCode] of cases) {
     const response = kakaoV4ProblemResponse(code, "trace-v4-test");
@@ -109,13 +109,13 @@ test("public error responses keep stable status and code contracts", async () =>
 test("V4 application errors normalize idempotency conflicts to public 409 only", async () => {
   const conflict = kakaoV4CommandFailureResponse(new KakaoV4CommandError("IDEMPOTENCY_MISMATCH"), "trace-v4-conflict");
   assert.equal(conflict.status, 409);
-  assert.equal((await conflict.json()).code, "IDEMPOTENCY_MISMATCH");
+  assert.equal((await conflict.json()).code, "REPLAY_CONFLICT");
 
   const unavailable = kakaoV4CommandFailureResponse(new KakaoV4CommandError("DISPATCHER_UNAVAILABLE"), "trace-v4-unavailable");
   assert.equal(unavailable.status, 503);
-  assert.equal((await unavailable.json()).code, "KAKAO_V4_UNAVAILABLE");
+  assert.equal((await unavailable.json()).code, "SERVER_UNAVAILABLE");
 
   const invalid = kakaoV4CommandFailureResponse({ code: "INVALID_COMMAND" }, "trace-v4-invalid");
   assert.equal(invalid.status, 400);
-  assert.equal((await invalid.json()).code, "KAKAO_V4_COMMAND_INVALID");
+  assert.equal((await invalid.json()).code, "INVALID_FORM");
 });

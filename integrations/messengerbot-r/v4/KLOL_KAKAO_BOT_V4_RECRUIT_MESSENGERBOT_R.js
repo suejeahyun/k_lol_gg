@@ -138,18 +138,22 @@ var KLOL_V4 = (function () {
       text: String(text)
     });
     var material = CONTRACT + "\n" + keyId + "\n" + sha256(body);
-    var response = org.jsoup.Jsoup.connect(baseUrl() + ENDPOINT)
-      .ignoreContentType(true)
-      .ignoreHttpErrors(true)
-      .method(org.jsoup.Connection.Method.POST)
-      .header("Content-Type", "application/json; charset=utf-8")
-      .header("Accept", "application/json")
-      .header("x-klol-key-id", keyId)
-      .header("x-klol-signature", "v4=" + hmac(requiredSecret(SIGNING_SECRET_KEY, "서명 키"), material))
-      .header("Idempotency-Key", eventId)
-      .timeout(5000)
-      .requestBody(body)
-      .execute();
+    var response = null;
+    var attempt = 0;
+    function execute() {
+      return org.jsoup.Jsoup.connect(baseUrl() + ENDPOINT).ignoreContentType(true).ignoreHttpErrors(true)
+        .method(org.jsoup.Connection.Method.POST).header("Content-Type", "application/json; charset=utf-8")
+        .header("Accept", "application/json").header("x-klol-key-id", keyId)
+        .header("x-klol-signature", "v4=" + hmac(requiredSecret(SIGNING_SECRET_KEY, "서명 키"), material))
+        .header("Idempotency-Key", eventId).timeout(5000).requestBody(body).execute();
+    }
+    try {
+      attempt = 1;
+      response = execute();
+    } catch (firstNetworkError) {
+      attempt = 2;
+      response = execute();
+    }
     return {
       ok: response.statusCode() >= 200 && response.statusCode() < 300,
       status: response.statusCode(),
@@ -161,7 +165,13 @@ var KLOL_V4 = (function () {
   function resultReply(result) {
     if (result && result.ok && result.body && typeof result.body.reply === "string") return result.body.reply;
     if (result && result.ok) return "";
+    var code = result && result.body && typeof result.body.code === "string" ? result.body.code : "SERVER_UNAVAILABLE";
     var detail = result && result.body && typeof result.body.detail === "string" ? result.body.detail : "잠시 후 다시 시도해 주세요.";
+    if (code === "WRONG_PROFILE") detail = "이 명령은 다른 봇 프로필에서 사용할 수 있습니다.";
+    else if (code === "INVALID_SIGNATURE") detail = "봇 설치본의 서명 키와 key ID를 확인해 주세요.";
+    else if (code === "REPLAY_CONFLICT") detail = "동일 event ID가 다른 요청에 사용되었습니다.";
+    else if (code === "SERVER_UNAVAILABLE") detail = "서버를 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.";
+    else if (code === "INVALID_FORM") detail = "양식 필수 항목을 확인해 주세요.";
     return "[K-LOL.GG 요청 실패]\n" + detail + (result && result.traceId ? "\n문의 코드: " + result.traceId : "");
   }
 
@@ -177,11 +187,22 @@ var KLOL_V4 = (function () {
 var KLOL_V4_PROFILE_ID = "RECRUIT";
 var KLOL_V4_BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V4_RECRUIT_2026_09_10_R1";
 
+function klolV4EntryAcceptsText(text) {
+  var value = String(text == null ? "" : text).replace(/^\s+|\s+$/g, "");
+  var canonical = value;
+  if (!value || value === "/" || value.indexOf("//") === 0 || /^\/\s/.test(value)) return false;
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(value)) return false;
+  if (value.indexOf("\n") < 0 && value.indexOf("/") > 0) return false;
+  if (value.charAt(0) === "/") canonical = value.substring(1);
+  return !/^(?:랭킹|전적\s|최근\s|내전(?:구인|모집|현황|상세|참가|신청)|시즌내전|AI공지)/.test(canonical);
+}
+
 function response(room, msg, sender, isGroupChat, replier, imageDB, packageName, isMention, logId, channelId, userHash) {
   var text = String(msg == null ? "" : msg);
   var local = null;
   var result = null;
   var reply = "";
+  if (!klolV4EntryAcceptsText(text)) return;
   if (KLOL_V4.shouldIgnore(KLOL_V4_PROFILE_ID, text, sender)) return;
   local = KLOL_V4.localReply(KLOL_V4_PROFILE_ID, text, KLOL_V4_BOT_CODE_VERSION);
   if (local) {

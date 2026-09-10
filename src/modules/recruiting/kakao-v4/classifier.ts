@@ -51,7 +51,7 @@ export const KAKAO_V4_CANONICAL_COMMANDS = [
   "OPERATIONS_SCHEDULE_NOTICE",
   "OPERATIONS_FORM_SUBMIT",
 ] as const;
-export type KakaoV4CanonicalCommand = (typeof KAKAO_V4_CANONICAL_COMMANDS)[number];
+export type KakaoV4CommandId = (typeof KAKAO_V4_CANONICAL_COMMANDS)[number];
 
 type KakaoV4CommandAudience = "USER" | "INTERNAL";
 type KakaoV4CommandParameters = Readonly<Record<string, string | number | boolean | null>>;
@@ -59,7 +59,7 @@ type KakaoV4CommandParameters = Readonly<Record<string, string | number | boolea
 type KakaoV4RecognizedCommand = Readonly<{
   kind: "COMMAND" | "SNAPSHOT";
   family: KakaoV4CommandFamily;
-  command: KakaoV4CanonicalCommand;
+  command: KakaoV4CommandId;
   canonicalText: string;
   allowedProfiles: readonly KakaoV4ProfileId[];
   audience: KakaoV4CommandAudience;
@@ -71,7 +71,7 @@ export type KakaoV4CommandClassification =
   | Readonly<{
       kind: "WRONG_PROFILE";
       family: KakaoV4CommandFamily;
-      command: KakaoV4CanonicalCommand;
+      command: KakaoV4CommandId;
       canonicalText: string;
       allowedProfiles: readonly KakaoV4ProfileId[];
       audience: KakaoV4CommandAudience;
@@ -134,18 +134,18 @@ const COMMAND_PROFILE_MATRIX = Object.freeze({
   OPERATIONS_INHOUSE_CONFIRM: FEATURES_ONLY,
   OPERATIONS_SCHEDULE_NOTICE: FEATURES_ONLY,
   OPERATIONS_FORM_SUBMIT: FEATURES_ONLY,
-} as const satisfies Readonly<Record<KakaoV4CanonicalCommand, readonly KakaoV4ProfileId[]>>);
+} as const satisfies Readonly<Record<KakaoV4CommandId, readonly KakaoV4ProfileId[]>>);
 
-function commandAllowsProfile(command: KakaoV4CanonicalCommand, profileId: KakaoV4ProfileId) {
+function commandAllowsProfile(command: KakaoV4CommandId, profileId: KakaoV4ProfileId) {
   return (COMMAND_PROFILE_MATRIX[command] as readonly KakaoV4ProfileId[]).includes(profileId);
 }
 
 export const KAKAO_V4_PROFILE_COMMAND_MATRIX = Object.freeze({
   RECRUIT: Object.freeze(KAKAO_V4_CANONICAL_COMMANDS.filter((command) => commandAllowsProfile(command, "RECRUIT"))),
   FEATURES: Object.freeze(KAKAO_V4_CANONICAL_COMMANDS.filter((command) => commandAllowsProfile(command, "FEATURES"))),
-} as const satisfies Readonly<Record<KakaoV4ProfileId, readonly KakaoV4CanonicalCommand[]>>);
+} as const satisfies Readonly<Record<KakaoV4ProfileId, readonly KakaoV4CommandId[]>>);
 
-function commandFamily(command: KakaoV4CanonicalCommand): KakaoV4CommandFamily {
+function commandFamily(command: KakaoV4CommandId): KakaoV4CommandFamily {
   if (command.startsWith("PARTY_")) return "PARTY";
   if (command.startsWith("INHOUSE_")) return "INHOUSE";
   if (command.startsWith("SCRIM_")) return "SCRIM";
@@ -155,7 +155,7 @@ function commandFamily(command: KakaoV4CanonicalCommand): KakaoV4CommandFamily {
 }
 
 function recognized(
-  command: KakaoV4CanonicalCommand,
+  command: KakaoV4CommandId,
   canonicalText: string,
   parameters: KakaoV4CommandParameters = Object.freeze({}),
   kind: "COMMAND" | "SNAPSHOT" = "COMMAND",
