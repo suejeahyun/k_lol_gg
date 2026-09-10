@@ -12,6 +12,7 @@
     "db:cutover:inventory": "tsx scripts/cutover/inventory-v1.ts",
     "db:cutover:apply": "tsx scripts/cutover/apply-v1-to-v2.ts",
     "bot:kakao:v41": "node scripts/build-messengerbot-v41.mjs",
+    "bot:kakao:v4": "node scripts/build-messengerbot-v4.mjs",
     "bot:kakao:audit": "node scripts/audit-messengerbot-v41-commands.mjs",
     "bot:kakao:rhino-audit": "node scripts/audit-messengerbot-rhino-static.mjs",
     "verify:champion-images": "tsx scripts/champions/verify-data-dragon-images.ts",

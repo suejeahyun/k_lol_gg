@@ -22,6 +22,7 @@ const adminKeyHash = (key: string) => createHash("sha256").update(`klol-v2:kakao
 const pairingRequestKeyHash = (key: string) => createHash("sha256").update(`klol-v2:kakao-pairing-request:v1\0${key}`).digest();
 
 export type KakaoRoomAuthorization = Readonly<{ roomId: string; roomStatus: "ACTIVE"; capabilityProfile: KakaoRoomCapabilityProfile; installationId: string; memberId: string; role: KakaoRoomMemberRole }>;
+export type KakaoProfileAuthorization = Readonly<{ roomId: string; roomStatus: "ACTIVE"; capabilityProfile: KakaoRoomCapabilityProfile; installationId: string }>;
 export type KakaoRoomBootstrapEnvironment = Readonly<{
   KAKAO_WEBHOOK_ALLOWED_ROOMS?: string;
   /** Legacy emergency import only. Normal request authorization never reads this value. */
@@ -127,6 +128,28 @@ export class PostgresKakaoRoomRegistry {
       }
       if (!kakaoRoleAtLeast(effectiveRole, input.requiredRole)) throw new KakaoRoomRegistryError("ROLE_FORBIDDEN");
       return Object.freeze({ roomId: room.id, roomStatus: "ACTIVE" as const, capabilityProfile: room.capabilityProfile, installationId: installation.id, memberId: member.id, role: effectiveRole });
+    });
+    if ("failure" in result) throw new KakaoRoomRegistryError(result.failure);
+    return result;
+  }
+
+  async authorizeProfile(input: Readonly<{ installationPublicId: string; requiredCapabilityProfile: KakaoRoomCapabilityProfile; keyId?: string; botVersion?: string }>): Promise<KakaoProfileAuthorization> {
+    const result = await withTransaction(this.database, async (transaction) => {
+      const now = new Date();
+      const installation = await this.installation(transaction, input.installationPublicId, now, input.keyId, input.botVersion);
+      if (!installation.canonicalRoomId) return Object.freeze({ failure: "ROOM_BINDING_REQUIRED" as const });
+      const room = (await transaction.select().from(kakaoRooms).where(eq(kakaoRooms.id, installation.canonicalRoomId)).for("update").limit(1))[0];
+      if (!room || room.status === "REVOKED") throw new KakaoRoomRegistryError("ROOM_NOT_REGISTERED");
+      if (room.status === "PAUSED") throw new KakaoRoomRegistryError("ROOM_PAUSED");
+      if (!kakaoRoomAllowsCapability(room.capabilityProfile, input.requiredCapabilityProfile)) {
+        throw new KakaoRoomRegistryError("ROOM_CAPABILITY_FORBIDDEN");
+      }
+      return Object.freeze({
+        roomId: room.id,
+        roomStatus: "ACTIVE" as const,
+        capabilityProfile: room.capabilityProfile,
+        installationId: installation.id,
+      });
     });
     if ("failure" in result) throw new KakaoRoomRegistryError(result.failure);
     return result;
