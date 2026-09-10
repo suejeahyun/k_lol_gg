@@ -47,11 +47,12 @@ V4 루트의 paste-ready 운영 산출물은 UNIFIED 하나뿐이다. 분리형 
 ## 수행하지 않음
 
 - 운영/Preview DB 접속, query, migration apply/down, row 변경.
-- 환경변수 또는 MessengerBot private secret 값 조회·출력·변경.
+- 기존 V1/V41 환경변수 또는 비밀값 조회·출력·변경.
 - 실제 카카오방과 MessengerBot-R 기기 조작.
 
 ## 운영 배포
 
-- GitHub `main`과 기능 브랜치에 검증 코드 커밋 `aedfb83376a6dd18fea07255fdf151bd5f819714`을 동일하게 푸시했다.
-- Vercel Production 배포 `2poEtgAwJY2KYA3q66a7pBqh5j3k`가 `Ready`임을 UI에서 확인했다.
-- 운영 `/`, `/api/health`, `/recruits`는 HTTP 200이며, 빈 V4 command 요청은 HTTP 400 `KAKAO_V4_COMMAND_INVALID`로 차단됐다.
+- GitHub `main`과 기능 브랜치에 검증 코드 커밋 `886f3a58bc090278e9ff10f1160121dd84ff35f7`을 동일하게 푸시했다.
+- Vercel Production 배포 `4SyV7sqyJ6h938ugCNvMmAaLYGN7`가 `Ready`임을 UI에서 확인했다.
+- 운영 `/`, `/api/health`, `/recruits`는 HTTP 200이다.
+- private one-paste 파일과 동일한 V4 전용 keyring으로 서명한 `V4계약확인` 운영 요청은 HTTP 200, 계약 `KLOL_KAKAO_COMMAND_V4`, reply 존재로 확인했다. 비밀값·서명·식별자는 출력하지 않았다.

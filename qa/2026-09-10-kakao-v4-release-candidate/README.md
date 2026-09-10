@@ -2,7 +2,7 @@
 
 검증일: 2026-09-10 (Asia/Seoul)
 
-통합 봇 재설계 및 운영 배포 기준 HEAD: `aedfb83376a6dd18fea07255fdf151bd5f819714`
+통합 봇 재설계 및 운영 배포 기준 HEAD: `886f3a58bc090278e9ff10f1160121dd84ff35f7`
 
 ## 판정
 
@@ -12,8 +12,9 @@
 - V4 room registry/pair-room 의존성: 없음.
 - V3/V41 pairing: 변경하지 않음.
 - 서버 운영 반영: GitHub `main`과 Vercel Production 배포 확인. 자세한 근거는 `PRODUCTION_DEPLOYMENT.md`.
-- 운영 DB 실제 schema 재조회, 환경변수 실제 값, MessengerBot-R 실기기: 미확인.
+- 운영 DB 실제 schema 재조회와 MessengerBot-R 실기기: 미확인.
 - V4 전용 identity·signing keyring은 Vercel Production에 값 노출 없이 등록했으며 V1/V41 keyring과 분리했다.
+- 같은 keyring을 내장한 private one-paste 파일로 운영 서명 요청 HTTP 200을 확인했다.
 
 ## 공개 명령 폐쇄
 
@@ -39,7 +40,6 @@
 
 ## 남은 확인
 
-- Production/Preview 환경변수 configured 여부와 값 일치.
 - 운영 DB migration head와 receipt/nonce schema 실제 상태.
 - 실기기 Rhino 컴파일, callback, 줄바꿈, 링크, 5초 timeout·무재시도 동작.
 - MessengerBot R log ID가 두 방 전체에서 유일한지 여부와 같은 family 충돌 가능성.
