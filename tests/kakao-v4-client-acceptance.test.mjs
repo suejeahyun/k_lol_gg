@@ -166,9 +166,9 @@ test("[C03D] a copied V1 party form without its number returns the exact local g
 
 test("[C03B] unified bot version is one local reply and never reaches transport", async () => {
   const bot = await unifiedHarness();
-  bot.api.unifiedLocalReply = (text) => text === "/봇버전" ? "통합 봇 버전" : null;
+  bot.api.unifiedLocalReply = (text, codeVersion) => text === "/봇버전" ? `버전: ${codeVersion}` : null;
   bot.respond("/봇버전", { room: "어느 방이든 동일" });
-  assert.deepEqual(bot.replies, ["통합 봇 버전"]);
+  assert.deepEqual(bot.replies, ["버전: KLOL_KAKAO_BOT_V4_UNIFIED_2026_09_11_R5_FORM_DEFAULTS"]);
   assert.equal(bot.calls.length, 0);
 });
 
@@ -246,3 +246,15 @@ for (const code of [
     assert.match(source, new RegExp(code, "u"), `missing client error category ${code}`);
   });
 }
+
+test("[C08A] INVALID_FORM keeps the server parser detail and has a safe fallback", async () => {
+  const { api } = await sharedInternals();
+  assert.equal(
+    api.resultReply({ ok: false, body: { code: "INVALID_FORM", detail: "봇이 제공한 전체 양식의 모집번호를 유지해 주세요." } }),
+    "[K-LOL.GG 요청 실패]\n봇이 제공한 전체 양식의 모집번호를 유지해 주세요.",
+  );
+  assert.equal(
+    api.resultReply({ ok: false, body: { code: "INVALID_FORM" } }),
+    "[K-LOL.GG 요청 실패]\n양식 필수 항목을 확인해 주세요.",
+  );
+});

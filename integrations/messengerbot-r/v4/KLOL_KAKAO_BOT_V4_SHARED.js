@@ -273,12 +273,13 @@ var KLOL_V4 = (function () {
     if (result && result.ok && result.body && typeof result.body.reply === "string") return result.body.reply;
     if (result && result.ok) return "";
     var code = result && result.body && typeof result.body.code === "string" ? result.body.code : "SERVER_UNAVAILABLE";
-    var detail = result && result.body && typeof result.body.detail === "string" ? result.body.detail : "잠시 후 다시 시도해 주세요.";
+    var serverDetail = result && result.body && typeof result.body.detail === "string" ? trimText(result.body.detail) : "";
+    var detail = serverDetail || "잠시 후 다시 시도해 주세요.";
     if (code === "WRONG_PROFILE") detail = "이 명령은 다른 봇 프로필에서 사용할 수 있습니다.";
     else if (code === "INVALID_SIGNATURE") detail = "봇 설치본의 서명 키와 key ID를 확인해 주세요.";
     else if (code === "REPLAY_CONFLICT") detail = "동일 event ID가 다른 요청에 사용되었습니다.";
     else if (code === "SERVER_UNAVAILABLE") detail = "서버를 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.";
-    else if (code === "INVALID_FORM") detail = "양식 필수 항목을 확인해 주세요.";
+    else if (code === "INVALID_FORM" && !serverDetail) detail = "양식 필수 항목을 확인해 주세요.";
     return "[K-LOL.GG 요청 실패]\n" + detail + (result && result.traceId ? "\n문의 코드: " + result.traceId : "");
   }
 

@@ -66,12 +66,15 @@ test("a Kakao V4 number reservation stays draft until the completed V1 form acti
     type: "PARTY_NUMBER", title: "5인 파티 구인", maximumMembers: 5, initialStatus: "DRAFT", now,
   });
   assert.equal(reserved.status, "DRAFT");
+  const submittedAt = new Date("2026-09-07T15:34:00.000Z");
   const activated = syncRecruitParty({
-    party: reserved, expectedRevision: 0, now,
+    party: reserved, expectedRevision: 0, now: submittedAt,
     members: [{ name: "재현", position: null, slotNo: 1, substitute: false }],
   });
   assert.equal(activated.status, "IN_PROGRESS");
   assert.equal(activated.members[0]?.name, "재현");
+  assert.equal(activated.startTimeText, "00:34");
+  assert.equal(activated.gameInfo, "미입력");
 });
 
 test("request fingerprint is canonical and binds actor, action, key and body", () => {

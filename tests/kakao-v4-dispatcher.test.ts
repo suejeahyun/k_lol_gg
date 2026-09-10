@@ -8,7 +8,8 @@ import {
   type RecruitingCommandResult,
 } from "../src/modules/recruiting";
 import { kakaoReadIdentity, type KakaoOpenChatStatusDto, type KakaoSeasonSnapshotDto } from "../src/modules/recruiting/kakao-assistant/domain";
-import type { CanonicalKakaoV4Command } from "../src/modules/recruiting/kakao-v4/canonical-command";
+import { canonicalizeKakaoV4Command, type CanonicalKakaoV4Command } from "../src/modules/recruiting/kakao-v4/canonical-command";
+import { classifyKakaoV4Command } from "../src/modules/recruiting/kakao-v4/classifier";
 import {
   KakaoV4CommandDispatcher,
   KakaoV4DispatcherError,
@@ -252,6 +253,33 @@ test("party create command reserves an invisible draft number and returns the ex
   assert.notEqual(result.aggregate, null);
   assert.equal(result.legacyReply, "[K-LOL.GG 구인구직 양식]\n같이 할사람~\n\n아래 양식의 모집번호는 유지해서 작성해주세요.\n\n📢 5인 파티 구인\n모집번호: #8\n\n1.\n2.\n3.\n4.\n5.\n예비 1.\n\n참여해주실 분은 태그해주세요.\n*상호배려와 존중 부탁드립니다.");
   assert.doesNotMatch(result.legacyReply, /시작시간|게임정보/u);
+});
+
+test("the exact generated V1 party form is accepted without metadata for slash and plain submissions", async () => {
+  for (const prefix of ["", "/"]) {
+    const state = harness();
+    const generated = await state.dispatcher.dispatch(context, {
+      domain: "PARTY",
+      action: "CREATE",
+      payload: {
+        recruitDate: "2026-09-10", preferredRecruitNumber: null, partyType: "PARTY_NUMBER",
+        title: "5인 파티 구인", maximumMembers: 5, members: [], startTimeText: null, gameInfo: null,
+        scheduledStartAt: null, protectedUntil: null,
+      },
+    });
+    const submittedText = `${prefix}${generated.legacyReply.replace("1.", "1. 재현")}`;
+    const submittedEnvelope = { ...context.envelope, eventId: `event-dispatcher-form-${prefix ? "slash" : "plain"}`, text: submittedText };
+    const classification = classifyKakaoV4Command({ profileId: "RECRUIT", text: submittedText });
+    const command = canonicalizeKakaoV4Command(classification, submittedEnvelope);
+    if (!command || command.domain !== "PARTY" || command.action !== "SYNC") assert.fail("generated form must canonicalize as a party snapshot");
+
+    const saved = await state.dispatcher.dispatch({ ...context, envelope: submittedEnvelope }, command);
+    assert.deepEqual(state.handled.map((handled) => handled.type), ["CREATE_PARTY", "SYNC_PARTY"]);
+    if (state.handled[1]?.type !== "SYNC_PARTY") assert.fail("submitted form must activate the reserved party");
+    assert.equal(state.handled[1].payload.startTimeText, undefined);
+    assert.equal(state.handled[1].payload.gameInfo, undefined);
+    assert.match(saved.legacyReply, /시작시간: 09:26 · 게임정보: 미입력/u);
+  }
 });
 
 test("first completed automatic party form creates the party once", async () => {

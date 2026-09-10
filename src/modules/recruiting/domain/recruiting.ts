@@ -244,13 +244,16 @@ export function syncRecruitParty(input: Readonly<{
   expectedRevision(input.party.revision, input.expectedRevision);
   if (input.party.status !== "IN_PROGRESS" && input.party.status !== "DRAFT") throw new Error("RECRUIT_NOT_MUTABLE");
   validDate(input.now, "INVALID_RECRUIT_TIME");
+  const activatingDraft = input.party.status === "DRAFT";
   return {
     ...input.party,
     revision: input.party.revision + 1,
     status: "IN_PROGRESS",
     members: normalizeMembers(input.members, input.party.maximumMembers),
-    startTimeText: optionalPartyText(input.startTimeText, "INVALID_RECRUIT_START_TIME_TEXT", 160) ?? input.party.startTimeText,
-    gameInfo: optionalPartyText(input.gameInfo, "INVALID_RECRUIT_GAME_INFO", 500) ?? input.party.gameInfo,
+    startTimeText: optionalPartyText(input.startTimeText, "INVALID_RECRUIT_START_TIME_TEXT", 160)
+      ?? (activatingDraft ? kakaoRecruitTimeText(input.now) : input.party.startTimeText),
+    gameInfo: optionalPartyText(input.gameInfo, "INVALID_RECRUIT_GAME_INFO", 500)
+      ?? (activatingDraft ? "미입력" : input.party.gameInfo),
     scheduledStartAt: input.startTimeText === null || input.startTimeText === undefined
       ? input.party.scheduledStartAt
       : input.scheduledStartAt ?? null,
