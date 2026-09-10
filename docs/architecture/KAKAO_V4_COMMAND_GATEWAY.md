@@ -7,8 +7,8 @@
 - 소스 구현: 단일 gateway, profile 전용 authorization, 전체 공개 V1 명령 dispatcher, 두 ES5 템플릿과 생성 스크립트.
 - 실제 동작: `봇버전`·`도움말` 등은 봇 로컬 응답, 나머지 공개 V1 파티·내전·스크림·조회·운영 양식은 서명·profile 검증 후 canonical dispatcher가 처리한다.
 - 차단 동작: 알 수 없는 명령과 internal/raw 입력은 `INVALID_FORM`, 교차 profile 명령은 `WRONG_PROFILE`로 fail-closed한다. 공개 V1 명령에 `501` 또는 `ROUTER_NOT_ENABLED` 경로는 없다.
-- 검증 상태: 자동 contract·unit·typecheck 통과. 운영 DB·환경변수 실제 구성과 MessengerBot R 실기기는 아직 미확인이다.
-- 운영 반영: 미적용. 이 문서 보강으로 DB schema, 환경변수, 배포, 운영 봇을 변경하지 않는다.
+- 검증 상태: 자동 contract·unit·typecheck·production build 통과. 운영 Vercel의 필수 환경변수 이름은 확인했으며 `KLOL_V2_KAKAO_IDENTITY_SECRET`은 아직 미설정이다. MessengerBot R 실기기 전환도 아직 수행하지 않았다.
+- 운영 반영: 서버 코드는 2026-09-10 GitHub `main`과 Vercel Production에 배포됐다. V4 endpoint는 배포됐지만, 위 identity secret 설정과 같은 휴대폰의 두 봇 프로필 실기기 검증 전에는 기존 운영 봇에서 V4로 전환하지 않는다.
 
 ## 경계
 

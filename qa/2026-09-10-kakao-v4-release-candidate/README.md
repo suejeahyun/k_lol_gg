@@ -2,7 +2,7 @@
 
 검증일: 2026-09-10 (Asia/Seoul)
 
-RC 토폴로지 보강 기준 HEAD: `55a4c4564a91b46fc0fe7991b3032c807d44d018`
+RC 토폴로지 보강 기준 HEAD: `a04da75f18a5e8f59fb01b8562425f2490046638`
 
 ## 판정
 
@@ -11,8 +11,9 @@ RC 토폴로지 보강 기준 HEAD: `55a4c4564a91b46fc0fe7991b3032c807d44d018`
 - V4 인증: deterministic `installationId + profile`과 current/previous HMAC 기반.
 - V4 room registry/pair-room 의존성: 없음.
 - V3/V41 pairing: 변경하지 않음.
-- 운영 반영: 미적용.
-- 운영 DB, 환경변수 실제 값, MessengerBot-R 실기기: 미확인.
+- 서버 운영 반영: GitHub `main`과 Vercel Production 배포 확인. 자세한 근거는 `PRODUCTION_DEPLOYMENT.md`.
+- 운영 DB 실제 schema 재조회, 환경변수 실제 값, MessengerBot-R 실기기: 미확인.
+- `KLOL_V2_KAKAO_IDENTITY_SECRET` 이름은 Vercel Production에 아직 미설정이므로 V4 휴대폰 전환은 보류.
 
 ## 공개 명령 폐쇄
 

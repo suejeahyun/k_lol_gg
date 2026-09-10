@@ -1,5 +1,7 @@
 # Release Candidate 원격 게시 증거
 
+이 문서는 최초 feature branch 게시 시점의 기록이다. 이후 `main`과 Vercel Production 배포 결과는 `PRODUCTION_DEPLOYMENT.md`를 기준으로 한다.
+
 게시일: 2026-09-10 (Asia/Seoul)
 
 ## 사전 확인
