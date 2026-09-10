@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "releases": [
+    {
+      "featureId": "kakao-v4-form-defaults",
+      "version": "5.0.0",
+      "gitTag": "kakao-v4-form-defaults-v5.0.0",
+      "commit": "e2a618a4b5b9aec8a706f97cb690b82740d8d021",
+      "releasedAt": "2026-09-11T01:06:18+09:00",
+      "migrationHead": "0034_kakao_room_capability_profiles",
+      "qaEvidence": "docs/qa-evidence/kakao-v4-r5-form-defaults-2026-09-11/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-11-kakao-v4-r5-form-defaults.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_BDynzkQKWpJEvko2SFxT5erTHCEB",
+        "url": "https://k-lol-gq0s45q0k-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-10T16:07:39.077Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": [
+        {
+          "name": "MessengerBot R unified",
+          "version": "KLOL_KAKAO_BOT_V4_UNIFIED_2026_09_11_R5_FORM_DEFAULTS",
+          "status": "PENDING_USER_INSTALL"
+        }
+      ]
+    }
+  ]
+}

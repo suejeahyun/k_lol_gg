@@ -8,6 +8,8 @@
     "build": "next build",
     "start": "next start",
     "db:generate": "drizzle-kit generate",
+    "db:erd": "tsx scripts/database/generate-erd.ts",
+    "db:erd:check": "tsx scripts/database/generate-erd.ts --check",
     "db:cutover:preflight": "tsx scripts/cutover/preflight-existing-v1.ts",
     "db:cutover:inventory": "tsx scripts/cutover/inventory-v1.ts",
     "db:cutover:apply": "tsx scripts/cutover/apply-v1-to-v2.ts",
@@ -29,10 +31,11 @@
     "verify:recovery": "tsx scripts/test-db/run-recovery-drill.ts",
     "verify:auth-http": "node scripts/verify-auth-http.mjs",
     "verify:browser-quality": "node scripts/verify-browser-quality.mjs",
+    "release:evidence:check": "node scripts/releases/verify-release-evidence.mjs",
     "security:secrets": "node scripts/check-secrets.mjs",
     "check:wave": "npm run lint && npm run typecheck && npm test",
-    "check": "npm run lint && npm run typecheck && npm test && npm run verify:home-guide-art && npm run build",
-    "check:final": "npm run check && npm run test:db && npm run verify:auth-http && npm run security:secrets"
+    "check": "npm run lint && npm run typecheck && npm run db:erd:check && npm test && npm run verify:home-guide-art && npm run build",
+    "check:final": "npm run check && npm run release:evidence:check && npm run test:db && npm run verify:auth-http && npm run security:secrets"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

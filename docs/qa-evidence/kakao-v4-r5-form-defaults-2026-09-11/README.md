@@ -1,6 +1,6 @@
 # Kakao V4 R5 양식 기본값 패치 QA
 
-상태: 소스와 unified MessengerBot R 산출물에 반영하고 로컬 검증을 완료했다. 운영 서버 배포, 운영 DB 변경, 휴대폰 MessengerBot R 설치·교체, 실제 Kakao 메시지 송수신은 수행하지 않았다.
+상태: 소스와 unified MessengerBot R 산출물에 반영하고 로컬 검증을 완료했다. 커밋 `e2a618a4b5b9aec8a706f97cb690b82740d8d021`은 Vercel Production 배포 `dpl_BDynzkQKWpJEvko2SFxT5erTHCEB`에서 Ready와 health/DB `select 1`을 확인했다. 운영 DB 변경, 휴대폰 MessengerBot R 설치·교체, 실제 Kakao 메시지 송수신은 수행하지 않았다.
 
 ## 수정 내용
 
@@ -15,7 +15,8 @@
 - `npm run check`: PASS
   - lint: 오류 0건, 기존 경고 26건
   - typecheck: PASS
-  - 계약·단위 테스트: 619/619 PASS
+  - 계약 테스트: 312/312 PASS
+  - 단위 테스트: 619/619 PASS
   - 여성 챔피언 이미지: 68/68 PASS
   - Next production build: 92 pages PASS
 - Kakao unified 클라이언트·산출물·공개 계약·private installer 관련 테스트: 32/32 PASS
@@ -27,7 +28,7 @@
 
 ## 운영 반영 상태와 남은 위험
 
-- 운영과 휴대폰 설치본에는 미반영이다. 산출물을 실제 교체한 뒤 `/봇버전`이 위 R5 문자열을 반환하는지 확인해야 설치 완료로 판정할 수 있다.
+- 운영 서버에는 반영됐지만 휴대폰 설치본은 미확인이다. 산출물을 실제 교체한 뒤 `/봇버전`이 위 R5 문자열을 반환하는지 확인해야 실기기 설치 완료로 판정할 수 있다.
 - 정확한 생성 문자열의 `/` 유무 제출은 로컬 fixture로 검증했다. 실제 Kakao/MessengerBot R 환경에서 생기는 추가 줄바꿈·끝 공백 변형과 네트워크 재시도는 실기기 송수신으로 확인하지 않았다.
 - 제출 기본 시각은 서버가 받은 시각과 KST 변환에 의존하므로 운영 서버 시계 동기화가 필요하다.
 - `INVALID_FORM`은 서버가 공개 응답으로 선택한 상세만 전달하지만, 새 파서 사유를 추가할 때 내부 값이나 비밀정보를 포함하지 않는지 계속 검토해야 한다.
