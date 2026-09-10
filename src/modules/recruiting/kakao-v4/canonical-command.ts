@@ -2,8 +2,10 @@ import type { SeasonApplicationPosition } from "@/modules/seasons/domain/season"
 
 import type { ScrimFormCommandPayload, SyncScrimCommandPayload } from "../application/commands";
 import type { RecruitMember, RecruitPartyType, ScrimLineup } from "../domain/recruiting";
+import { isOperationFormType, type OperationFormPayloadByType, type OperationFormType } from "../operation-forms/domain";
 import type { KakaoV4CommandClassification } from "./classifier";
 import type { KakaoV4CommandEnvelope } from "./domain";
+import { parseKakaoV4OperationForm } from "./operation-form";
 
 export type KakaoV4RecruitTarget = Readonly<{
   recruitDate: string;
@@ -95,10 +97,14 @@ export type CanonicalKakaoV4Command =
       participants: readonly KakaoV4SeasonParticipant[];
     }>
   | Readonly<{ domain: "PLAYER"; action: "RECORD" | "RECENT"; query: string }>
-  | Readonly<{ domain: "PLAYER"; action: "RANKING" }>;
+  | Readonly<{ domain: "PLAYER"; action: "RANKING" }>
+  | Readonly<{ domain: "OPERATIONS"; action: "REGISTRATION_HUB" | "INHOUSE_RESULT" | "INHOUSE_RESULT_STATUS" | "DISCIPLINE_CREATE" | "DISCIPLINE_EVIDENCE" | "DISCIPLINE_STATUS" }>
+  | Readonly<{ domain: "OPERATIONS"; action: "SCHEDULE_NOTICE"; slot: string | null }>
+  | Readonly<{ domain: "OPERATIONS"; action: "SUBMIT_FORM"; formType: OperationFormType; payload: OperationFormPayloadByType[OperationFormType] }>
+  | Readonly<{ domain: "OPERATIONS"; action: "INVALID_FORM"; formType: OperationFormType; missingFields: readonly string[] }>;
 
 export function requiredProfileForKakaoV4Command(command: CanonicalKakaoV4Command) {
-  return command.domain === "SEASON" || command.domain === "PLAYER" ? "FEATURES" as const : "RECRUIT" as const;
+  return command.domain === "SEASON" || command.domain === "PLAYER" || command.domain === "OPERATIONS" ? "FEATURES" as const : "RECRUIT" as const;
 }
 
 function kstDate(timestamp: number) {
@@ -336,5 +342,31 @@ export function canonicalizeKakaoV4Command(classification: KakaoV4CommandClassif
     return query ? Object.freeze({ domain: "PLAYER" as const, action: classification.command === "PLAYER_RECORD" ? "RECORD" as const : "RECENT" as const, query }) : null;
   }
   if (classification.command === "PLAYER_RANKING") return Object.freeze({ domain: "PLAYER" as const, action: "RANKING" as const });
+  const staticOperation = {
+    OPERATIONS_REGISTRATION_HUB: "REGISTRATION_HUB",
+    OPERATIONS_INHOUSE_RESULT: "INHOUSE_RESULT",
+    OPERATIONS_INHOUSE_RESULT_STATUS: "INHOUSE_RESULT_STATUS",
+    OPERATIONS_DISCIPLINE_CREATE: "DISCIPLINE_CREATE",
+    OPERATIONS_DISCIPLINE_EVIDENCE: "DISCIPLINE_EVIDENCE",
+    OPERATIONS_DISCIPLINE_STATUS: "DISCIPLINE_STATUS",
+  } as const;
+  if (classification.command in staticOperation) {
+    return Object.freeze({
+      domain: "OPERATIONS" as const,
+      action: staticOperation[classification.command as keyof typeof staticOperation],
+    });
+  }
+  if (classification.command === "OPERATIONS_SCHEDULE_NOTICE") {
+    const hour = numberParameter(parameters, "hour");
+    return Object.freeze({ domain: "OPERATIONS" as const, action: "SCHEDULE_NOTICE" as const, slot: hour ? String(hour) : null });
+  }
+  if (classification.command === "OPERATIONS_FORM_SUBMIT") {
+    const formType = textParameter(parameters, "formType");
+    if (!isOperationFormType(formType)) return null;
+    const parsed = parseKakaoV4OperationForm({ formType, text: classification.canonicalText, senderFallback: envelope.senderId });
+    return parsed.valid
+      ? Object.freeze({ domain: "OPERATIONS" as const, action: "SUBMIT_FORM" as const, formType: parsed.formType, payload: parsed.payload })
+      : Object.freeze({ domain: "OPERATIONS" as const, action: "INVALID_FORM" as const, formType: parsed.formType, missingFields: parsed.missingFields });
+  }
   return null;
 }

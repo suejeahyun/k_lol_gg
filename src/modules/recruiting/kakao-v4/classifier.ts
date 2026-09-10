@@ -356,11 +356,16 @@ function classifyOperations(text: string): KakaoV4RecognizedCommand | null {
   if (text === "내전미리보기취소") return recognized("OPERATIONS_INHOUSE_PREVIEW_CANCEL", text);
   const confirm = /^내전확인\s+(.+)$/u.exec(text);
   if (confirm) return recognized("OPERATIONS_INHOUSE_CONFIRM", text, { confirmationCode: confirm[1]!.trim() });
-  const notice = /^(?:자동공지|공지생성)(?:\s+(\d+))?$/u.exec(text);
+  const notice = /^(?:자동공지|공지생성)(?:\s+(12|15|18|20))?$/u.exec(text);
   if (notice) return recognized("OPERATIONS_SCHEDULE_NOTICE", text, { hour: notice[1] ? Number(notice[1]) : null });
+  if (text.startsWith("[") && text.includes("양식") && /\sv\d+/iu.test(text)) {
+    if (/징계|경고/u.test(text)) return recognized("OPERATIONS_DISCIPLINE_CREATE", text);
+    if (/내전|경기|결과/u.test(text)) return recognized("OPERATIONS_INHOUSE_RESULT", text);
+    return recognized("OPERATIONS_REGISTRATION_HUB", text);
+  }
   if (["등록", "등록도움말", "사진취소"].includes(text)) return recognized("OPERATIONS_REGISTRATION_HUB", text);
   if (["내전등록", "결과등록", "내전결과"].includes(text) || /^내전등록\s+\S/u.test(text)) return recognized("OPERATIONS_INHOUSE_RESULT", text);
-  if (["내전등록현황", "결과현황"].includes(text) || /^내전현황\s+MR[A-Z0-9]+$/u.test(text)) return recognized("OPERATIONS_INHOUSE_RESULT_STATUS", text);
+  if (["내전등록현황", "결과현황"].includes(text) || /^내전현황\s+MR[A-F0-9]{10,16}$/iu.test(text)) return recognized("OPERATIONS_INHOUSE_RESULT_STATUS", text);
   if (["경고등록", "경고"].includes(text) || /^경고등록\s+\S/u.test(text)) return recognized("OPERATIONS_DISCIPLINE_CREATE", text);
   if (["인증", "경고인증"].includes(text) || /^경고인증완료\s+\S/u.test(text)) return recognized("OPERATIONS_DISCIPLINE_EVIDENCE", text);
   if (text === "경고현황" || /^경고현황\s+\S/u.test(text)) return recognized("OPERATIONS_DISCIPLINE_STATUS", text);

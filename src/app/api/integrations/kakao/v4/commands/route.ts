@@ -12,6 +12,7 @@ import {
 import { getRuntimeKakaoRoomRegistry } from "@/modules/recruiting/kakao-access/runtime";
 import { getRuntimeKakaoAssistant } from "@/modules/recruiting/kakao-assistant/runtime";
 import { getRuntimeRecruitingService } from "@/modules/recruiting/infrastructure/runtime-recruiting";
+import { getRuntimeOperationForms } from "@/modules/recruiting/operation-forms/runtime";
 import { kakaoWebhookFailureResponse } from "@/modules/recruiting/kakao-access/http";
 import { KakaoRoomRegistryError } from "@/modules/recruiting/kakao-access/postgres-kakao-room-registry";
 import { kakaoWebhookSecrets, readBoundedKakaoRawBody } from "@/modules/recruiting/infrastructure/kakao-http-request";
@@ -37,10 +38,12 @@ function runtimeService() {
   const recruiting = getRuntimeRecruitingService();
   const assistant = getRuntimeKakaoAssistant();
   if (!recruiting || !assistant) return null;
+  const operationForms = getRuntimeOperationForms();
   service = new KakaoV4CommandService(registry, new KakaoV4CommandDispatcher({
     recruiting,
     assistant,
     publicOrigin: process.env.V2_PUBLIC_ORIGIN ?? process.env.NEXT_PUBLIC_SITE_URL,
+    ...(operationForms ? { operationForms } : {}),
   }));
   return service;
 }

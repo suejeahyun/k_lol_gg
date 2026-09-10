@@ -9,12 +9,16 @@ import {
   type RecruitingCommand,
 } from "../application/commands";
 import type { RecruitingCommandResult } from "../application/ports";
+import type { OperationFormPayloadByType, OperationFormType } from "../operation-forms/domain";
+import type { OperationFormMutationResult } from "../operation-forms/postgres-operation-forms";
 import type {
   KakaoOpenChatStatusDto,
   KakaoPlayerRecordDto,
   KakaoRankingDto,
+  KakaoScheduledNoticeDto,
   KakaoSeasonSnapshotCommand,
   KakaoSeasonSnapshotDto,
+  KakaoV4StaticReceiptDto,
 } from "../kakao-assistant/domain";
 import type { KakaoV4CommandEnvelope } from "./domain";
 import {
@@ -56,6 +60,19 @@ export type KakaoV4AssistantPort = Readonly<{
   }>): Promise<Readonly<{ body: KakaoSeasonSnapshotDto; replayed: boolean }>>;
   getPlayerRecord?(input: SignedAssistantInput & Readonly<{ query: string; mode: "RECORD" | "RECENT" }>): Promise<Readonly<{ body: KakaoPlayerRecordDto; replayed: boolean }>>;
   getRanking?(input: SignedAssistantInput): Promise<Readonly<{ body: KakaoRankingDto; replayed: boolean }>>;
+  getScheduledNotice?(input: SignedAssistantInput & Readonly<{ slot: string | null }>): Promise<Readonly<{ body: KakaoScheduledNoticeDto; replayed: boolean }>>;
+  recordV4StaticReply?(input: SignedAssistantInput & Readonly<{ legacyReply: string }>): Promise<Readonly<{ body: KakaoV4StaticReceiptDto; replayed: boolean }>>;
+}>;
+
+export type KakaoV4OperationFormsPort = Readonly<{
+  submit(input: Readonly<{
+    actorPrincipalId: string;
+    intent: VerifiedKakaoWebhookIntent;
+    requestId: string;
+    idempotency: Readonly<{ requestKey: string; bodyDigestHex: string; eventScope: typeof KAKAO_V4_EVENT_SCOPE }>;
+    formType: OperationFormType;
+    payload: OperationFormPayloadByType[OperationFormType];
+  }>): Promise<OperationFormMutationResult>;
 }>;
 
 export type KakaoV4DispatchContext = Readonly<{
@@ -67,7 +84,7 @@ export type KakaoV4DispatchContext = Readonly<{
 }>;
 
 export type KakaoV4DispatcherResult = Readonly<{
-  kind: "PARTY" | "SCRIM" | "SEASON" | "PLAYER";
+  kind: "PARTY" | "SCRIM" | "SEASON" | "PLAYER" | "OPERATIONS";
   action: CanonicalKakaoV4Command["action"];
   aggregate: unknown;
   legacyReply: string;
@@ -75,7 +92,10 @@ export type KakaoV4DispatcherResult = Readonly<{
 }>;
 
 export class KakaoV4DispatcherError extends Error {
-  constructor(readonly code: "PROFILE_MISMATCH" | "NOT_FOUND" | "INVALID_COMMAND") {
+  constructor(
+    readonly code: "PROFILE_MISMATCH" | "NOT_FOUND" | "INVALID_COMMAND" | "INVALID_FORM" | "UNAVAILABLE",
+    readonly missingFields: readonly string[] = Object.freeze([]),
+  ) {
     super(code);
     this.name = "KakaoV4DispatcherError";
   }
@@ -296,6 +316,68 @@ function rankingReply(body: KakaoRankingDto) {
   return ["🏆 K-LOL.GG 랭킹 TOP 5", `기준: 내전 참여 ${body.minimumParticipation}회 이상`, "", ...(rows.length > 0 ? rows : ["표시할 랭킹이 없습니다."])].join("\n");
 }
 
+const OPERATION_STATIC_REPLIES = Object.freeze({
+  REGISTRATION_HUB: [
+    "[K-LOL.GG 쉬운 등록 센터]",
+    "처음 사용하셔도 괜찮아요. 필요한 항목의 링크를 누르면 됩니다.",
+    "▶ https://k-lol-gg.vercel.app/start", "",
+    "① 내전 결과 등록",
+    "경기 정보와 결과 사진 2~3장을 한 화면에서 제출합니다.",
+    "▶ https://k-lol-gg.vercel.app/matches/submit", "",
+    "② 주의·경고·벤 등록 (관리자)",
+    "대상 검색부터 사유·근거 사진 등록까지 한 화면에서 처리합니다.",
+    "▶ https://k-lol-gg.vercel.app/admin/discipline/new",
+    "※ 관리자 로그인이 필요하며, 권한이 없으면 등록할 수 없습니다.", "",
+    "③ 경고 차감 사진 제출",
+    "본인의 진행 과제를 선택하고 남은 사진을 한 번에 제출합니다.",
+    "▶ https://k-lol-gg.vercel.app/discipline/evidence",
+    "※ 본인 계정 로그인이 필요합니다.", "",
+    "등록과 사진 제출은 로그인한 본인 계정 기준으로 처리됩니다.",
+  ].join("\n"),
+  INHOUSE_RESULT: [
+    "[K-LOL.GG 내전 결과 등록]", "가장 쉬운 등록 방법을 안내합니다.", "",
+    "1. 아래 링크를 엽니다.", "2. 세트 수·회차·팀 밸런스를 확인합니다.",
+    "3. 결과 사진 2~3장을 한 번에 올리고 제출합니다.", "",
+    "▶ https://k-lol-gg.vercel.app/matches/submit", "",
+    "로그인하면 진행 중인 제출을 자동으로 찾아 이어서 할 수 있습니다.",
+  ].join("\n"),
+  INHOUSE_RESULT_STATUS: [
+    "[K-LOL.GG 내전 결과 제출 현황]",
+    "사이트에 로그인하면 진행 중인 내 제출을 자동으로 확인할 수 있습니다.", "",
+    "▶ https://k-lol-gg.vercel.app/matches/submit",
+  ].join("\n"),
+  DISCIPLINE_CREATE: [
+    "[K-LOL.GG 관리자 경고 등록]",
+    "관리자 화면에서 대상 검색 → 종류 선택 → 사유·사진 등록 순서로 진행합니다.", "",
+    "▶ https://k-lol-gg.vercel.app/admin/discipline/new", "",
+    "※ 관리자 로그인과 2차 인증이 필요하며, 완료 후 이 화면으로 돌아옵니다.",
+  ].join("\n"),
+  DISCIPLINE_EVIDENCE: [
+    "[K-LOL.GG 경고 차감 사진 제출]",
+    "사이트에 로그인하면 본인의 진행 과제만 자동으로 표시됩니다.",
+    "로그인 계정 기준으로 남은 사진을 한 번에 제출할 수 있습니다.", "",
+    "▶ https://k-lol-gg.vercel.app/discipline/evidence",
+  ].join("\n"),
+  DISCIPLINE_STATUS: [
+    "[K-LOL.GG 내 경고 현황]", "내정보에서 경고 상태와 남은 사진 수를 확인하세요.", "",
+    "▶ https://k-lol-gg.vercel.app/account#discipline",
+  ].join("\n"),
+});
+
+function scheduledNoticeReply(body: KakaoScheduledNoticeDto) {
+  const labels = { TOP: "탑", JGL: "정글", MID: "미드", ADC: "원딜", SUP: "서포터" } as const;
+  const shortageLabels = body.shortagePositions.map((position) => labels[position]);
+  return [
+    "[K-LOL.GG 내전 공지 미리보기]",
+    "읽기 전용 미리보기이며 실제 방 자동 발송은 하지 않았습니다.",
+    `날짜: ${body.date}${body.slot ? ` · 시간: ${body.slot}시` : ""}`,
+    body.seasonId ? "활성 시즌 신청 현황" : "활성 시즌이 없습니다.",
+    `신청 ${body.total}/${body.targetCount} · 남은 인원 ${body.remaining}명`,
+    `포지션: 탑 ${body.positionCounts.TOP} · 정글 ${body.positionCounts.JGL} · 미드 ${body.positionCounts.MID} · 원딜 ${body.positionCounts.ADC} · 서포터 ${body.positionCounts.SUP}`,
+    `부족 포지션: ${shortageLabels.length > 0 ? shortageLabels.join(", ") : "없음"}`,
+  ].join("\n");
+}
+
 function seasonReply(body: KakaoSeasonSnapshotDto) {
   if (body.legacyReply) return body.legacyReply;
   return [
@@ -310,6 +392,7 @@ export class KakaoV4CommandDispatcher {
     recruiting: KakaoV4RecruitingPort;
     assistant: KakaoV4AssistantPort;
     publicOrigin?: string;
+    operationForms?: KakaoV4OperationFormsPort;
   }>) {}
 
   async dispatch(context: KakaoV4DispatchContext, command: CanonicalKakaoV4Command): Promise<KakaoV4DispatcherResult> {
@@ -322,7 +405,55 @@ export class KakaoV4CommandDispatcher {
     if (command.domain === "PARTY") return this.party(context, command);
     if (command.domain === "SCRIM") return this.scrim(context, command);
     if (command.domain === "PLAYER") return this.player(context, command);
+    if (command.domain === "OPERATIONS") return this.operations(context, command);
     return this.season(context, command);
+  }
+
+  private async operations(
+    context: KakaoV4DispatchContext,
+    command: Extract<CanonicalKakaoV4Command, { domain: "OPERATIONS" }>,
+  ): Promise<KakaoV4DispatcherResult> {
+    if (command.action === "SUBMIT_FORM") {
+      if (!this.dependencies.operationForms) throw new KakaoV4DispatcherError("UNAVAILABLE");
+      const result = await this.dependencies.operationForms.submit({
+        actorPrincipalId: actorPrincipalId(context.envelope),
+        intent: authorizationIntent(context),
+        requestId: context.requestId,
+        idempotency: {
+          requestKey: context.envelope.eventId,
+          bodyDigestHex: context.requestDigestHex,
+          eventScope: KAKAO_V4_EVENT_SCOPE,
+        },
+        formType: command.formType,
+        payload: command.payload,
+      });
+      const embeddedReply = typeof result.body.reply === "string" ? result.body.reply : null;
+      return Object.freeze({
+        kind: "OPERATIONS",
+        action: command.action,
+        aggregate: result.body,
+        legacyReply: embeddedReply ?? `[K-LOL.GG 운영 양식]\n${command.formType} 양식을 접수했습니다.`,
+        replayed: result.replayed,
+      });
+    }
+    if (command.action === "SCHEDULE_NOTICE") {
+      if (!this.dependencies.assistant.getScheduledNotice) throw new KakaoV4DispatcherError("UNAVAILABLE");
+      const result = await this.dependencies.assistant.getScheduledNotice({ ...signedInput(context), slot: command.slot });
+      return Object.freeze({ kind: "OPERATIONS", action: command.action, aggregate: result.body, legacyReply: scheduledNoticeReply(result.body), replayed: result.replayed });
+    }
+    if (!this.dependencies.assistant.recordV4StaticReply) throw new KakaoV4DispatcherError("UNAVAILABLE");
+    const legacyReply = command.action === "INVALID_FORM"
+      ? `[K-LOL.GG 양식 필드 누락]\n필수 항목을 확인해 주세요: ${command.missingFields.join(", ")}`
+      : OPERATION_STATIC_REPLIES[command.action];
+    const receipt = await this.dependencies.assistant.recordV4StaticReply({ ...signedInput(context), legacyReply });
+    if (command.action === "INVALID_FORM") throw new KakaoV4DispatcherError("INVALID_FORM", command.missingFields);
+    return Object.freeze({
+      kind: "OPERATIONS",
+      action: command.action,
+      aggregate: receipt.body,
+      legacyReply: receipt.body.legacyReply,
+      replayed: receipt.replayed,
+    });
   }
 
   private async player(context: KakaoV4DispatchContext, command: Extract<CanonicalKakaoV4Command, { domain: "PLAYER" }>): Promise<KakaoV4DispatcherResult> {

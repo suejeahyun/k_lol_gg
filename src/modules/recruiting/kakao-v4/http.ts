@@ -38,7 +38,19 @@ export function kakaoV4CommandFailureResponse(error: unknown, traceId?: string) 
     : undefined;
   if (code === "IDEMPOTENCY_MISMATCH") return kakaoV4ProblemResponse("IDEMPOTENCY_MISMATCH", traceId);
   if (code === "WRONG_PROFILE" || code === "PROFILE_MISMATCH") return kakaoV4ProblemResponse("WRONG_PROFILE", traceId);
-  if (code === "INVALID_FORM" || code === "INVALID_COMMAND") return kakaoV4ProblemResponse("INVALID_FORM", traceId);
+  if (code === "INVALID_FORM") {
+    const missingFields = typeof error === "object" && error !== null && "missingFields" in error && Array.isArray(error.missingFields)
+      ? error.missingFields.filter((field): field is string => typeof field === "string" && field.length > 0 && field.length <= 40).slice(0, 8)
+      : [];
+    if (missingFields.length > 0) return problemResponse(definePublicProblem({
+      code: "INVALID_FORM",
+      status: 400,
+      title: "V1 양식 필드 누락",
+      detail: `필수 항목을 확인해 주세요: ${missingFields.join(", ")}`,
+    }), { traceId });
+    return kakaoV4ProblemResponse("INVALID_FORM", traceId);
+  }
+  if (code === "INVALID_COMMAND") return kakaoV4ProblemResponse("INVALID_FORM", traceId);
   if (code === "NOT_FOUND") return kakaoV4ProblemResponse("COMMAND_INVALID", traceId);
   return kakaoV4ProblemResponse("UNAVAILABLE", traceId);
 }

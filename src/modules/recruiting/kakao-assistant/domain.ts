@@ -92,6 +92,12 @@ export type KakaoScheduledNoticeDto = Readonly<{
   shortagePositions: readonly ("TOP" | "JGL" | "MID" | "ADC" | "SUP")[];
 }>;
 
+export type KakaoV4StaticReceiptDto = Readonly<{
+  kind: "KAKAO_V4_STATIC_RECEIPT";
+  receiptVersion: 1;
+  legacyReply: string;
+}>;
+
 export type KakaoSeasonSnapshotParticipant = Readonly<{
   slotNo: number;
   name: string;
@@ -246,6 +252,7 @@ export type KakaoAssistantResponse =
   | KakaoRankingDto
   | KakaoOpenChatStatusDto
   | KakaoScheduledNoticeDto
+  | KakaoV4StaticReceiptDto
   | KakaoSeasonSnapshotDto
   | KakaoImageReceiveDto;
 

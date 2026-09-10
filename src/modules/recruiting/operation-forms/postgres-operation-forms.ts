@@ -18,6 +18,11 @@ import { withTransaction } from "@/platform/db/transaction";
 
 import type { VerifiedKakaoWebhookIntent } from "../infrastructure/kakao-signature";
 import {
+  KAKAO_V4_EVENT_SCOPE,
+  hashKakaoV4EventId,
+  kakaoV4EventRequestFingerprint,
+} from "../application/commands";
+import {
   type AdminOperationFormDto,
   isOperationFormStatus,
   isOperationFormType,
@@ -37,6 +42,7 @@ const NONCE_TTL_MILLISECONDS = 15 * 60 * 1_000;
 export type OperationFormIdempotency = Readonly<{
   requestKey: string;
   bodyDigestHex: string;
+  eventScope?: typeof KAKAO_V4_EVENT_SCOPE;
 }>;
 
 export type OperationFormMutationResult = Readonly<{
@@ -82,6 +88,23 @@ function mutationFingerprint(scope: string, expectedRevision: number, digest: st
   return sha256(["klol-v2:operation-form-request:v1", scope, expectedRevision, digest].join("\0"));
 }
 
+export function operationFormReceiptIdentity(input: Readonly<{
+  actorPrincipalId: string;
+  scope: string;
+  expectedRevision: number;
+  idempotency: OperationFormIdempotency;
+}>) {
+  const v4Event = input.idempotency.eventScope === KAKAO_V4_EVENT_SCOPE;
+  return Object.freeze({
+    keyHash: v4Event
+      ? Buffer.from(hashKakaoV4EventId(input.idempotency.requestKey))
+      : sha256(`klol-v2:operation-form-key:v1\0${input.idempotency.requestKey}`),
+    requestHash: v4Event
+      ? Buffer.from(kakaoV4EventRequestFingerprint({ principalId: input.actorPrincipalId, bodyDigestHex: input.idempotency.bodyDigestHex }))
+      : mutationFingerprint(input.scope, input.expectedRevision, input.idempotency.bodyDigestHex),
+  });
+}
+
 export class OperationFormApplicationError extends Error {
   constructor(readonly code: "IDEMPOTENCY_MISMATCH" | "NOT_FOUND" | "SESSION_STALE" | "FORBIDDEN") { super(code); }
 }
@@ -98,8 +121,7 @@ export class PostgresOperationForms {
     idempotency: OperationFormIdempotency;
   }>): Promise<Readonly<{ replay: null; keyHash: Buffer; requestHash: Buffer }> | Readonly<{ replay: ReceiptReplay; keyHash: Buffer; requestHash: Buffer }>> {
     if (!validDigest(input.idempotency.bodyDigestHex)) throw new OperationFormError("INVALID_FORM_PAYLOAD");
-    const keyHash = sha256(`klol-v2:operation-form-key:v1\0${input.idempotency.requestKey}`);
-    const requestHash = mutationFingerprint(input.scope, input.expectedRevision, input.idempotency.bodyDigestHex);
+    const { keyHash, requestHash } = operationFormReceiptIdentity(input);
     await transaction.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`${input.actorPrincipalId}:${input.scope}:${keyHash.toString("hex")}`}, 0))`);
     const current = (await transaction.select().from(recruitingCommandReceipts).where(and(
       eq(recruitingCommandReceipts.actorPrincipalId, input.actorPrincipalId),
@@ -143,7 +165,10 @@ export class PostgresOperationForms {
   }>) {
     if (!intent.requireNonceClaim || !intent.transactionRecheck) throw new OperationFormApplicationError("FORBIDDEN");
     const nonceHash = sha256(`klol-v2:recruiting-nonce:v1\0${actorPrincipalId}\0${intent.nonce}`);
-    const bindingHash = sha256(["klol-v2:operation-form-nonce-binding:v1", identity.scope, identity.keyHash.toString("hex"), identity.requestHash.toString("hex"), intent.bodyDigestHex].join("\0"));
+    const bindingHash = sha256([
+      identity.scope === KAKAO_V4_EVENT_SCOPE ? "klol-v2:recruiting-nonce-binding:v1" : "klol-v2:operation-form-nonce-binding:v1",
+      identity.scope, identity.keyHash.toString("hex"), identity.requestHash.toString("hex"), intent.bodyDigestHex,
+    ].join("\0"));
     await transaction.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`${actorPrincipalId}:${nonceHash.toString("hex")}`}, 0))`);
     const current = (await transaction.select().from(recruitingNonceBindings).where(and(
       eq(recruitingNonceBindings.actorPrincipalId, actorPrincipalId), eq(recruitingNonceBindings.nonceHash, nonceHash),
@@ -191,7 +216,7 @@ export class PostgresOperationForms {
     const payload = parseOperationFormPayload(input.formType, input.payload);
     return withTransaction(this.database, async (transaction) => {
       const submitterScope = sha256(`klol-v2:operation-form-submitter:v1\0${input.intent.roomId}\0${input.intent.senderId}`).toString("hex");
-      const scope = `BOT:SUBMIT_OPERATION_FORM:${input.formType}:${submitterScope}`;
+      const scope = input.idempotency.eventScope ?? `BOT:SUBMIT_OPERATION_FORM:${input.formType}:${submitterScope}`;
       const receipt = await this.claimReceipt(transaction, { actorPrincipalId: input.actorPrincipalId, scope, expectedRevision: 0, idempotency: input.idempotency });
       await this.claimKakaoNonce(transaction, input.actorPrincipalId, input.intent, { scope, keyHash: receipt.keyHash, requestHash: receipt.requestHash });
       if (receipt.replay) return { ...receipt.replay, replayed: true };

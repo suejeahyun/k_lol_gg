@@ -27,6 +27,7 @@ import {
   type KakaoSeasonSnapshotDto,
   type KakaoSeasonSnapshotEntryDto,
   type KakaoScheduledNoticeDto,
+  type KakaoV4StaticReceiptDto,
 } from "./domain";
 
 const RECEIPT_TTL_MILLISECONDS = 24 * 60 * 60 * 1_000;
@@ -548,6 +549,14 @@ export class PostgresKakaoAssistant {
         shortagePositions: Object.freeze(["TOP", "JGL", "MID", "ADC", "SUP"] as const),
       });
     });
+  }
+
+  recordV4StaticReply(input: SignedReadInput & Readonly<{ legacyReply: string }>): Promise<KakaoAssistantResult<KakaoV4StaticReceiptDto>> {
+    return this.execute(input, async () => Object.freeze({
+      kind: "KAKAO_V4_STATIC_RECEIPT" as const,
+      receiptVersion: 1 as const,
+      legacyReply: input.legacyReply,
+    }));
   }
 
   syncSeasonSnapshot(input: SignedReadInput & Readonly<{
