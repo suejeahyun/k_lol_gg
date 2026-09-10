@@ -48,3 +48,27 @@ test("builder owns the two paste-ready outputs", async () => {
   assert.match(build, /ecmaVersion:\s*5/u);
   assert.match(build, /65_535/u);
 });
+
+test("release docs lock one phone, two MessengerBot profiles, and one selected room per profile", async () => {
+  const [shared, architecture, installation, environment] = await Promise.all([
+    read("integrations/messengerbot-r/v4/KLOL_KAKAO_BOT_V4_SHARED.js"),
+    read("docs/architecture/KAKAO_V4_COMMAND_GATEWAY.md"),
+    read("qa/2026-09-10-kakao-v4-release-candidate/INSTALLATION.md"),
+    read("qa/2026-09-10-kakao-v4-release-candidate/ENVIRONMENT_VARIABLES.md"),
+  ]);
+  const contract = `${architecture}\n${installation}\n${environment}`;
+  assert.match(contract, /휴대폰 1대[\s\S]*MessengerBot R (?:봇 )?프로필 2개/u);
+  assert.match(contract, /RECRUIT[^\n]*구인 관련방 하나만/u);
+  assert.match(contract, /FEATURES[^\n]*기능방 하나만/u);
+  assert.match(contract, /공용 `?DataBase`?[^\n]*(?:공동|공유)/u);
+  assert.match(contract, /callback의 `room` 문자열은 신뢰하거나 서버로 보내지 않는다/u);
+  assert.doesNotMatch(contract, /각 휴대폰에 붙여넣|별도 휴대폰|휴대폰 두 대가 필요/u);
+  for (const key of [
+    "KLOL_V2_BASE_URL",
+    "KLOL_V2_KAKAO_IDENTITY_SECRET",
+    "KLOL_V2_KAKAO_WEBHOOK_SECRET_CURRENT",
+    "KLOL_V2_KAKAO_WEBHOOK_KEY_ID_CURRENT",
+  ]) assert.match(shared, new RegExp(`"${key}"`, "u"));
+  assert.match(shared, /"installation-id\\nKLOL_V4\\n" \+ profile\(profileId\)/u);
+  assert.doesNotMatch(shared, /KLOL_V2_(?:BASE_URL|KAKAO_IDENTITY_SECRET)_(?:RECRUIT|FEATURES)/u);
+});

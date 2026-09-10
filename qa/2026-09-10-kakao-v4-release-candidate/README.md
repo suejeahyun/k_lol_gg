@@ -2,7 +2,7 @@
 
 검증일: 2026-09-10 (Asia/Seoul)
 
-기준 HEAD: `924ebd187c0064274a403414881fbf7cd4a3b362`
+RC 토폴로지 보강 기준 HEAD: `55a4c4564a91b46fc0fe7991b3032c807d44d018`
 
 ## 판정
 
@@ -25,9 +25,12 @@
 
 ## Installation-scope 보안
 
+- 기준 토폴로지는 휴대폰 1대, MessengerBot R 프로필 2개, 카카오톡 방 2개다.
+- 같은 휴대폰의 공용 DataBase 설정을 두 프로필이 공유하고, MessengerBot R의 응답 방 선택으로 각 프로필을 지정 방 하나에만 연결한다.
 - identity secret과 profile ID로 RECRUIT/FEATURES installation ID를 서로 다르게 결정한다.
 - installation ID에서 DB 식별자를 노출하지 않는 내부 room scope를 결정한다.
 - profile 교차 사용, 임의 installation ID와 잘못된 signature는 fail-closed한다.
+- 교차 명령은 휴대폰에서 전송 전에 차단하고, 우회 요청도 서버에서 `WRONG_PROFILE`로 차단한다.
 - 일반 sender 두 명이 같은 installation scope에서 생성·교차 수정·종료할 수 있다.
 - 같은 `eventId`와 body는 replay하고 다른 body는 HTTP 409 `REPLAY_CONFLICT`다.
 
@@ -44,4 +47,3 @@
 2. RECRUIT와 FEATURES 실기기 canary 증거를 자동 수집한다.
 3. local reply의 server/client 단일 source 생성을 도입해 문구 drift를 차단한다.
 4. local 안내 응답까지 durable receipt가 필요한지 운영 기준을 확정한다.
-

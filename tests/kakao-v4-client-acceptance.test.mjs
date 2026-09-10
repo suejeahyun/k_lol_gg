@@ -92,6 +92,22 @@ test("[C03] FEATURES ignores RECRUIT commands locally without a server call", as
   assert.equal(bot.replies.length, 0);
 });
 
+test("[C03A] one phone with two room-selected bot profiles emits only the matching profile command", async () => {
+  const recruitRoomBot = await entryHarness("RECRUIT");
+  const featuresRoomBot = await entryHarness("FEATURES");
+
+  recruitRoomBot.respond("5인파티", { room: "구인 관련방", logId: "same-phone-recruit-1" });
+  recruitRoomBot.respond("랭킹", { room: "구인 관련방", logId: "same-phone-recruit-cross" });
+  featuresRoomBot.respond("랭킹", { room: "기능방", logId: "same-phone-features-1" });
+  featuresRoomBot.respond("5인파티", { room: "기능방", logId: "same-phone-features-cross" });
+
+  assert.deepEqual(recruitRoomBot.calls.map((call) => call.profileId), ["RECRUIT"]);
+  assert.deepEqual(featuresRoomBot.calls.map((call) => call.profileId), ["FEATURES"]);
+  assert.equal(recruitRoomBot.replies.length, 1);
+  assert.equal(featuresRoomBot.replies.length, 1);
+  assert.doesNotMatch(JSON.stringify([...recruitRoomBot.calls, ...featuresRoomBot.calls]), /구인 관련방|기능방/u);
+});
+
 test("[C04] malformed slash, URLs and middle slash are rejected before transport", async () => {
   for (const profile of profiles) {
     const bot = await entryHarness(profile);

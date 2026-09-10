@@ -45,16 +45,38 @@ test("V4 installation identity exactly mirrors the phone HMAC contract", () => {
   }
 });
 
-test("RECRUIT and FEATURES use distinct stable installation scopes", async () => {
+test("one phone may share one identity secret while RECRUIT and FEATURES keep distinct stable installation scopes", async () => {
   const authorizer = new KakaoV4InstallationScopeAuthorizer(secret);
   const recruitId = kakaoV4InstallationId("RECRUIT", secret);
   const featuresId = kakaoV4InstallationId("FEATURES", secret);
+  assert.equal(kakaoV4InstallationId("RECRUIT", secret), recruitId);
+  assert.equal(kakaoV4InstallationId("FEATURES", secret), featuresId);
   const recruit = await authorizer.authorizeProfile({ installationPublicId: recruitId, requiredCapabilityProfile: "RECRUIT" });
   const features = await authorizer.authorizeProfile({ installationPublicId: featuresId, requiredCapabilityProfile: "FEATURES" });
   assert.notEqual(recruit.installationId, features.installationId);
   assert.notEqual(recruit.roomId, features.roomId);
   assert.equal(recruit.roomId, kakaoV4InstallationScopeId(recruitId));
   assert.equal(features.roomId, kakaoV4InstallationScopeId(featuresId));
+});
+
+test("the server rejects cross-profile commands before dispatch for both phone profiles", async () => {
+  let dispatches = 0;
+  const dispatcher = {
+    async dispatch() {
+      dispatches += 1;
+      return Object.freeze({ kind: "PARTY", action: "CREATE", aggregate: null, legacyReply: "unexpected", replayed: false });
+    },
+  } as unknown as KakaoV4CommandDispatcher;
+  const service = new KakaoV4CommandService(new KakaoV4InstallationScopeAuthorizer(secret), dispatcher);
+  await assert.rejects(
+    service.execute(envelope("RECRUIT", "a", 20, "랭킹"), "current"),
+    (error) => error instanceof Error && "code" in error && error.code === "WRONG_PROFILE",
+  );
+  await assert.rejects(
+    service.execute(envelope("FEATURES", "b", 21, "5인파티"), "current"),
+    (error) => error instanceof Error && "code" in error && error.code === "WRONG_PROFILE",
+  );
+  assert.equal(dispatches, 0);
 });
 
 test("arbitrary installation IDs and cross-profile IDs fail closed", async () => {

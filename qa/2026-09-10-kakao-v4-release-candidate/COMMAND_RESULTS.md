@@ -15,20 +15,20 @@
 - 네 커밋 통합 직후 실제 Phase 4 acceptance: 22/25 통과, 3/25 실패.
 - 확대 readiness/Phase 5 포함 최초 실행: 46/49 통과, 3/49 실패.
 - 최종 Phase 4 acceptance: 25/25 통과, 실패 0.
-- 최종 Phase 4+5+readiness 집중 묶음: 49/49 통과.
+- 최종 Phase 4+5+readiness 집중 묶음: 50/50 통과.
 
 ## 전체 검증
 
 | 검증 | 통과 | 실패 | 결과 |
 | --- | ---: | ---: | --- |
 | Phase 4 acceptance | 25 | 0 | PASS |
-| Phase 5 installation-scope | 8 | 0 | PASS |
+| Phase 5 installation-scope | 9 | 0 | PASS |
 | Phase 4 closure 보강 테스트 | 11 | 0 | PASS |
 | Release-readiness | 5 | 0 | PASS, P0 RESOLVED |
 | Phase 2·3·V1 client/golden | 95 | 0 | PASS |
 | Phase 2·3 server/dispatcher | 91 | 0 | PASS |
-| `npm run test:contracts` | 304 | 0 | PASS |
-| `npm run test:unit` | 608 | 0 | PASS |
+| `npm run test:contracts` | 306 | 0 | PASS |
+| `npm run test:unit` | 609 | 0 | PASS |
 | `npm run typecheck` | - | - | PASS |
 | 변경 TypeScript/MJS 12개 ESLint | - | - | PASS, 오류·경고 0건 |
 | `npm run build` | - | - | PASS, V4 route 포함·정적 페이지 92개 |
@@ -49,4 +49,3 @@ SHA-256은 현재 worktree 바이트 기준이다. 설치 과정에서 줄바꿈
 - 운영/Preview DB 접속, query, migration apply/down, row 변경.
 - 환경변수 또는 MessengerBot private secret 값 조회·출력·변경.
 - 실제 카카오방과 MessengerBot-R 기기 조작.
-
