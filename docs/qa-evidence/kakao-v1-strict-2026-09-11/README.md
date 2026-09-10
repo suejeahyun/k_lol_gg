@@ -56,7 +56,10 @@ npm run check
 ## 운영 반영 상태와 남은 확인
 
 - 저장소 소스·생성본·전체 계약 338개와 단위 테스트 635개 검증: 완료
-- Vercel 서버 변경: 소스에만 반영. 기존 `/api/integrations/kakao/v4/commands` 안에 strict 응답 계약을 추가했으며 배포 여부는 미확인이다.
+- GitHub `main`: `78852f363cee51fca044c468cf2299521c5ba99a`까지 push 완료
+- Vercel production: deployment `dpl_98owgh5yXFqWAJzhjg7b1zUWXBvF` Ready, `https://k-lol-gg.vercel.app` alias 연결 확인
+- 운영 `GET /api/health`: HTTP 200, `status=ready`
+- 운영 strict schema 무서명 probe: HTTP 401 `INVALID_SIGNATURE`. 형식 단계의 400이 아니라 서명 검증까지 도달해 strict envelope 배포를 확인했다. 실제 비밀값은 사용하거나 출력하지 않았다.
 - MessengerBot R 휴대폰 코드 교체: 미확인
 - 실제 두 기능방에서 다른 사용자 생성→전체 양식 제출→수정→현황→마감: 미확인
 
