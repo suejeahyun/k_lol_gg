@@ -9,7 +9,7 @@ import {
   readJsonBody,
   readValidatedTraceId,
 } from "@/platform/http";
-import { getRuntimeKakaoAssistant } from "@/modules/recruiting/kakao-assistant/runtime";
+import { getRuntimeKakaoAssistant } from "@/modules/recruiting/kakao-assistant/runtime-assistant";
 import { getRuntimeRecruitingService } from "@/modules/recruiting/infrastructure/runtime-recruiting";
 import { getRuntimeOperationForms } from "@/modules/recruiting/operation-forms/runtime";
 import { readBoundedKakaoRawBody } from "@/modules/recruiting/infrastructure/kakao-http-request";

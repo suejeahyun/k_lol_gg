@@ -1,5 +1,5 @@
 /* eslint-disable */
-var KLOL_V4_BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V4_UNIFIED_2026_09_10_R3_TEMPLATE_FIRST_SAFE";
+var KLOL_V4_BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V4_UNIFIED_2026_09_10_R4_V1_EXACT_DRAFT";
 
 function response(room, msg, sender, isGroupChat, replier, imageDB, packageName, isMention, logId, channelId, userHash) {
   var text = String(msg == null ? "" : msg);
@@ -7,6 +7,7 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName,
   var local = null;
   var result = null;
   var reply = "";
+  if (KLOL_V4.beginRequest) KLOL_V4.beginRequest();
   if (KLOL_V4.shouldIgnoreUnified(text, sender)) return;
   local = KLOL_V4.unifiedLocalReply(text, KLOL_V4_BOT_CODE_VERSION);
   if (local) {

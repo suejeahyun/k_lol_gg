@@ -90,7 +90,7 @@ export class KakaoV4CommandService {
       requiredCapabilityProfile: envelope.profileId,
     });
     const receiptKey = `${envelope.installationId}:${envelope.eventId}`;
-    const digest = envelopeDigest(envelope);
+    const digest = metadata?.requestDigestHex ?? envelopeDigest(envelope);
     const current = this.receipts.get(receiptKey);
     if (current) {
       if (current.digest !== digest) throw new KakaoV4CommandError("IDEMPOTENCY_MISMATCH");

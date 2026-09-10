@@ -175,6 +175,19 @@ function snapshotMembers(text: string): readonly RecruitMember[] {
   return Object.freeze(members);
 }
 
+function partyCreateTitle(partyType: RecruitPartyType, maximumMembers: number, canonicalText: string) {
+  if (partyType === "PARTY_NUMBER") return `${maximumMembers}인 파티 구인`;
+  if (partyType === "PARTY_RIFT") return "5인 협곡 파티 구인";
+  if (partyType === "FLEX_RANK") return "자랭 하실분!";
+  if (partyType === "NORMAL_GAME") return "일반 하실분!";
+  if (partyType === "SOLO_RANK") return "솔랭 하실분!";
+  if (partyType === "ARAM") return canonicalText.includes("증바람") ? "증바람 하실분!" : "칼바람 하실분!";
+  if (partyType === "TFT_NORMAL") return "롤체 일반 하실분!";
+  if (partyType === "TFT_RANK") return "롤체 랭크 하실분!";
+  if (partyType === "DOUBLE_UP") return "더블업 하실분!";
+  return "기타게임 하실분!";
+}
+
 function partySnapshotDefinition(text: string) {
   const header = /^\s*📢\s*(.*?)\s*$/mu.exec(text)?.[1]?.trim() ?? "";
   const definitions = [
@@ -383,7 +396,7 @@ export function canonicalizeKakaoV4Command(classification: KakaoV4CommandClassif
     const maximumMembers = numberParameter(parameters, "maximumMembers") ?? 5;
     return Object.freeze({ domain: "PARTY" as const, action: "CREATE" as const, payload: Object.freeze({
       recruitDate: date, preferredRecruitNumber: numberParameter(parameters, "explicitRecruitNumber"), partyType,
-      title: partyType === "PARTY_NUMBER" ? `${maximumMembers}인 파티 구인` : classification.canonicalText,
+      title: partyCreateTitle(partyType, maximumMembers, classification.canonicalText),
       maximumMembers, members: Object.freeze([]), startTimeText: null, gameInfo: null,
       scheduledStartAt: null, protectedUntil: null,
     }) });

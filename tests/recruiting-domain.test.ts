@@ -60,6 +60,20 @@ test("party metadata defaults on the server clock and preserves free text on syn
   assert.equal(populated.scheduledStartAt, null);
 });
 
+test("a Kakao V4 number reservation stays draft until the completed V1 form activates it", () => {
+  const reserved = createRecruitParty({
+    id: "party-draft", recruitDate: "2026-09-08", resetSequence: 0, recruitNumber: 12,
+    type: "PARTY_NUMBER", title: "5인 파티 구인", maximumMembers: 5, initialStatus: "DRAFT", now,
+  });
+  assert.equal(reserved.status, "DRAFT");
+  const activated = syncRecruitParty({
+    party: reserved, expectedRevision: 0, now,
+    members: [{ name: "재현", position: null, slotNo: 1, substitute: false }],
+  });
+  assert.equal(activated.status, "IN_PROGRESS");
+  assert.equal(activated.members[0]?.name, "재현");
+});
+
 test("request fingerprint is canonical and binds actor, action, key and body", () => {
   const digest = "a".repeat(64);
   assert.equal(canonicalRecruitRequestFingerprint({ actor: "BOT", action: " create ", requestKey: "request-1", payloadDigestHex: digest }), `BOT:CREATE:request-1:${digest}`);

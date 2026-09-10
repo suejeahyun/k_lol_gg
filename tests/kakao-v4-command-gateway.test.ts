@@ -91,6 +91,21 @@ test("event ID is the idempotency boundary and mismatched reuse conflicts", asyn
   await assert.rejects(() => service.execute({ ...envelope, text: "V4계약확인" }, "current"), (error) => error instanceof KakaoV4CommandError && error.code === "IDEMPOTENCY_MISMATCH");
 });
 
+test("hot replay cache binds the verified raw request digest", async () => {
+  const service = new KakaoV4CommandService({
+    async authorizeProfile(input) {
+      return { roomId: "00000000-0000-4000-8000-000000000001", roomStatus: "ACTIVE", capabilityProfile: input.requiredCapabilityProfile, installationId: "00000000-0000-4000-8000-000000000002" };
+    },
+  });
+  const metadata = { requestDigestHex: "a".repeat(64), requestId: "request-v4-raw-digest" };
+  assert.equal((await service.execute(envelope, "current", metadata)).replayed, false);
+  assert.equal((await service.execute(envelope, "current", metadata)).replayed, true);
+  await assert.rejects(
+    () => service.execute(envelope, "current", { ...metadata, requestDigestHex: "b".repeat(64) }),
+    (error) => error instanceof KakaoV4CommandError && error.code === "IDEMPOTENCY_MISMATCH",
+  );
+});
+
 test("public error responses keep stable status and code contracts", async () => {
   const cases: Array<[KakaoV4HttpErrorCode, number, string]> = [
     ["COMMAND_INVALID", 400, "KAKAO_V4_COMMAND_INVALID"],

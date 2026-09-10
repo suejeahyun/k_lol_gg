@@ -88,10 +88,17 @@ function mutationResult(command: RecruitingCommand): RecruitingCommandResult {
   };
 }
 
-function harness(options: Readonly<{ missingPartyTarget?: boolean }> = {}) {
+function harness(options: Readonly<{
+  missingPartyTarget?: boolean;
+  emptyPartyStatus?: boolean;
+  missingPlayer?: boolean;
+  emptyRanking?: boolean;
+  wholePercent?: boolean;
+}> = {}) {
   const handled: RecruitingCommand[] = [];
   const resolved: unknown[] = [];
   const statusCalls: unknown[] = [];
+  const staticCalls: unknown[] = [];
   const seasonCalls: Array<{ command: unknown }> = [];
   const recruiting: KakaoV4RecruitingPort = {
     async handle(command) {
@@ -116,7 +123,53 @@ function harness(options: Readonly<{ missingPartyTarget?: boolean }> = {}) {
   const assistant: KakaoV4AssistantPort = {
     async getOpenChatStatus(input) {
       statusCalls.push(input);
-      return { body: openStatus(), replayed: false };
+      const body = openStatus();
+      return { body: options.emptyPartyStatus ? { ...body, parties: [] } : body, replayed: false };
+    },
+    async recordV4StaticReply(input) {
+      staticCalls.push(input);
+      return { body: { kind: "KAKAO_V4_STATIC_RECEIPT", receiptVersion: 1, legacyReply: input.legacyReply }, replayed: false };
+    },
+    async getPlayerRecord(input) {
+      if (options.missingPlayer) return {
+        body: {
+          kind: "PLAYER_RECORD", mode: input.mode, query: input.query, player: null,
+          currentTier: null, peakTier: null, season: null, summary: null, recentMatches: [],
+        },
+        replayed: false,
+      };
+      return {
+        body: {
+          kind: "PLAYER_RECORD", mode: input.mode, query: input.query,
+          player: { playerId: "player-1", displayName: "별빛", riotId: "별빛#KR1" },
+          currentTier: "EMERALD", peakTier: "DIAMOND",
+          season: { id: "season-1", name: "가을 시즌" },
+          summary: {
+            totalGames: 12, participationCount: 7, wins: 5, losses: 2,
+            winRate: options.wholePercent ? 50 : 71.4, mvpCount: 2, kills: 25, deaths: 8, assists: 9, kda: 4.2,
+          },
+          recentMatches: [{
+            matchId: "match-1", title: "정기 내전", playedOn: "2026-09-09", gameNumber: 1,
+            championName: "아리", team: "BLUE", position: "MID", won: true, mvp: true,
+            kills: 8, deaths: 2, assists: 9,
+          }],
+        },
+        replayed: false,
+      };
+    },
+    async getRanking() {
+      return {
+        body: {
+          kind: "RANKING", season: { id: "season-1", name: "가을 시즌" }, minimumParticipation: 10,
+          rows: options.emptyRanking ? [] : [{
+            rank: 1, playerId: "player-1", displayName: "별빛", riotId: "별빛#KR1",
+            totalGames: 12, participationCount: 12, wins: 9, losses: 3,
+            winRate: options.wholePercent ? 50 : 71.4, mvpCount: 2, kda: 4.2,
+          }],
+          truncated: false,
+        },
+        replayed: false,
+      };
     },
     async syncSeasonSnapshot(input) {
       seasonCalls.push({ command: input.command });
@@ -132,8 +185,44 @@ function harness(options: Readonly<{ missingPartyTarget?: boolean }> = {}) {
       return { body, replayed: false };
     },
   };
-  return { dispatcher: new KakaoV4CommandDispatcher({ recruiting, assistant }), handled, resolved, statusCalls, seasonCalls };
+  return { dispatcher: new KakaoV4CommandDispatcher({ recruiting, assistant }), handled, resolved, statusCalls, staticCalls, seasonCalls };
 }
+
+test("player record, recent matches, and ranking preserve exact V1-visible fields", async () => {
+  const state = harness();
+  const featuresContext: KakaoV4DispatchContext = {
+    ...context,
+    envelope: { ...context.envelope, profileId: "FEATURES" },
+    authorization: { ...context.authorization, capabilityProfile: "FEATURES" },
+  };
+  const record = await state.dispatcher.dispatch(featuresContext, { domain: "PLAYER", action: "RECORD", query: "별빛#KR1" });
+  assert.equal(record.legacyReply, "[별빛#KR1 전적]\n\n시즌: 가을 시즌\n티어: EMERALD / DIAMOND\n참여: 7회 / 12세트\n전적: 5승 2패 (71.4%)\nKDA: 4.20 (25/8/9)\nMVP: 2회\n\n최근: 승 아리 8/2/9\n\nhttps://k-lol-gg.vercel.app/players/player-1");
+
+  const recent = await state.dispatcher.dispatch(featuresContext, { domain: "PLAYER", action: "RECENT", query: "별빛#KR1" });
+  assert.equal(recent.legacyReply, "[별빛#KR1 최근 경기]\n\n1. 승 | 아리 | 8/2/9\n\nhttps://k-lol-gg.vercel.app/players/player-1");
+
+  const ranking = await state.dispatcher.dispatch(featuresContext, { domain: "PLAYER", action: "RANKING" });
+  assert.equal(ranking.legacyReply, "🏆 K-LOL.GG 랭킹 TOP 5\n기준: 내전 참여 10회 이상\n\n1. 별빛#KR1 | 승률 71.4% | 참여 12회 | 12세트 | KDA 4.20");
+});
+
+test("player and ranking boundary replies preserve V1 wording and percent formatting", async () => {
+  const featuresContext: KakaoV4DispatchContext = {
+    ...context,
+    envelope: { ...context.envelope, profileId: "FEATURES" },
+    authorization: { ...context.authorization, capabilityProfile: "FEATURES" },
+  };
+  const whole = harness({ wholePercent: true });
+  const record = await whole.dispatcher.dispatch(featuresContext, { domain: "PLAYER", action: "RECORD", query: "별빛#KR1" });
+  const ranking = await whole.dispatcher.dispatch(featuresContext, { domain: "PLAYER", action: "RANKING" });
+  assert.match(record.legacyReply, /전적: 5승 2패 \(50%\)/u);
+  assert.match(ranking.legacyReply, /승률 50%/u);
+
+  const missing = harness({ missingPlayer: true, emptyRanking: true });
+  const missingPlayer = await missing.dispatcher.dispatch(featuresContext, { domain: "PLAYER", action: "RECORD", query: "없는사람#KR1" });
+  const emptyRanking = await missing.dispatcher.dispatch(featuresContext, { domain: "PLAYER", action: "RANKING" });
+  assert.equal(missingPlayer.legacyReply, "[플레이어 전적]\n\n일치하는 플레이어를 찾지 못했습니다.");
+  assert.match(emptyRanking.legacyReply, /표시할 랭킹 기록이 없습니다\./u);
+});
 
 test("V4 event key is shared by recruiting and assistant durable receipts", () => {
   const direct = hashKakaoV4EventId(context.envelope.eventId);
@@ -146,22 +235,22 @@ test("V4 event key is shared by recruiting and assistant durable receipts", () =
   assert.deepEqual(Buffer.from(assistant.keyHash), Buffer.from(direct));
 });
 
-test("party create command returns an unsaved template without an application mutation", async () => {
+test("party create command reserves an invisible draft number and returns the exact V1 template", async () => {
   const state = harness();
   const command: CanonicalKakaoV4Command = {
     domain: "PARTY",
     action: "CREATE",
     payload: {
       recruitDate: "2026-09-10", preferredRecruitNumber: null, partyType: "PARTY_NUMBER",
-      title: "5인 파티", maximumMembers: 5, members: [], startTimeText: null, gameInfo: null,
+      title: "5인 파티 구인", maximumMembers: 5, members: [], startTimeText: null, gameInfo: null,
       scheduledStartAt: null, protectedUntil: null,
     },
   };
   const result = await state.dispatcher.dispatch(context, command);
-  assert.equal(state.handled.length, 0);
-  assert.equal(result.aggregate, null);
-  assert.match(result.legacyReply, /모집번호: #자동배정/u);
-  assert.match(result.legacyReply, /전체 전송하면 파티가 저장/u);
+  assert.deepEqual(state.handled.map((handled) => handled.type), ["CREATE_PARTY"]);
+  assert.equal(state.handled[0]?.type === "CREATE_PARTY" ? state.handled[0].payload.initialStatus : null, "DRAFT");
+  assert.notEqual(result.aggregate, null);
+  assert.equal(result.legacyReply, "[K-LOL.GG 구인구직 양식]\n같이 할사람~\n\n아래 양식의 모집번호는 유지해서 작성해주세요.\n\n📢 5인 파티 구인\n모집번호: #8\n\n1.\n2.\n3.\n4.\n5.\n예비 1.\n\n참여해주실 분은 태그해주세요.\n*상호배려와 존중 부탁드립니다.");
   assert.doesNotMatch(result.legacyReply, /시작시간|게임정보/u);
 });
 
@@ -179,8 +268,7 @@ test("first completed automatic party form creates the party once", async () => 
   assert.deepEqual(state.handled.map((command) => command.type), ["CREATE_PARTY"]);
   assert.equal(state.handled[0]?.metadata.actor.kind, "BOT");
   assert.equal(state.handled[0]?.metadata.idempotency.scope, KAKAO_V4_EVENT_SCOPE);
-  assert.match(result.legacyReply, /파티 #8 등록/u);
-  assert.match(result.legacyReply, /모집번호: #8/u);
+  assert.equal(result.legacyReply, "[파티 #8 반영]\n1/5 · 예비 0명\n시작시간: 09:26 · 게임정보: 미입력\n마감: 8ㅉ");
 });
 
 test("explicit missing party number never falls back to creating a new party", async () => {
@@ -201,16 +289,24 @@ test("party status and detail use one server status receipt and return the lates
   const statusState = harness();
   const status = await statusState.dispatcher.dispatch(context, { domain: "PARTY", action: "STATUS" });
   assert.equal(statusState.statusCalls.length, 1);
+  assert.equal((statusState.statusCalls[0] as { projection?: string }).projection, "PARTY");
   assert.equal(statusState.handled.length, 0);
-  assert.match(status.legacyReply, /현재 구인 현황/u);
+  assert.match(status.legacyReply, /K-LOL\.GG 구인구직 현황/u);
 
   const detailState = harness();
   const detail = await detailState.dispatcher.dispatch(context, {
     domain: "PARTY", action: "DETAIL", target: { recruitDate: "2026-09-10", recruitNumber: 7 },
   });
   assert.equal(detailState.statusCalls.length, 1);
+  assert.equal((detailState.statusCalls[0] as { projection?: string }).projection, "PARTY");
   assert.match(detail.legacyReply, /시작시간: 21:00/u);
   assert.match(detail.legacyReply, /게임정보: 미입력/u);
+
+  const missingDetailState = harness({ emptyPartyStatus: true });
+  const missingDetail = await missingDetailState.dispatcher.dispatch(context, {
+    domain: "PARTY", action: "DETAIL", target: { recruitDate: "2026-09-10", recruitNumber: 77 },
+  });
+  assert.equal(missingDetail.legacyReply, "[K-LOL.GG 요청 실패]\n진행 중인 파티 #77을 찾지 못했습니다.");
 });
 
 test("party snapshot and finish resolve latest revision without owner or role inputs", async () => {
@@ -229,6 +325,14 @@ test("party snapshot and finish resolve latest revision without owner or role in
   assert.deepEqual(state.handled.map((command) => command.type), ["SYNC_PARTY", "FINISH_PARTY"]);
   assert.equal(JSON.stringify(state.handled).includes("role"), false);
   assert.equal(JSON.stringify(state.handled).includes("owner"), false);
+});
+
+test("scrim status requests only the scrim projection", async () => {
+  const state = harness();
+  const result = await state.dispatcher.dispatch(context, { domain: "SCRIM", action: "STATUS" });
+  assert.equal(state.statusCalls.length, 1);
+  assert.equal((state.statusCalls[0] as { projection?: string }).projection, "SCRIM");
+  assert.match(result.legacyReply, /K-LOL\.GG 스크림 현황/u);
 });
 
 test("season authoritative zero-person snapshot stays one transactional assistant call", async () => {
@@ -319,12 +423,13 @@ test("season status and detail each return one authoritative assistant result", 
   }
 });
 
-test("scrim deprecated lifecycle commands never call the recruiting mutation port", async () => {
+test("scrim deprecated lifecycle commands use a static receipt without domain status queries", async () => {
   for (const action of ["DEPRECATED_JOIN", "DEPRECATED_CONFIRM", "DEPRECATED_CANCEL", "DEPRECATED_FINISH"] as const) {
     const state = harness();
     const result = await state.dispatcher.dispatch(context, { domain: "SCRIM", action });
     assert.equal(state.handled.length, 0);
-    assert.equal(state.statusCalls.length, 1);
+    assert.equal(state.statusCalls.length, 0);
+    assert.equal(state.staticCalls.length, 1);
     assert.match(result.legacyReply, /사용 안 함/u);
   }
 });

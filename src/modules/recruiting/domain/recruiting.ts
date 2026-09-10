@@ -196,6 +196,7 @@ export function createRecruitParty(input: Readonly<{
   gameInfo?: string | null;
   scheduledStartAt?: Date | null;
   protectedUntil?: Date | null;
+  initialStatus?: "DRAFT";
   now: Date;
 }>): RecruitParty {
   identifier(input.id, "INVALID_RECRUIT_ID");
@@ -219,7 +220,7 @@ export function createRecruitParty(input: Readonly<{
     resetSequence: input.resetSequence,
     recruitNumber: input.recruitNumber,
     type: input.type,
-    status: "IN_PROGRESS",
+    status: input.initialStatus ?? "IN_PROGRESS",
     title: cleanText(input.title, "INVALID_RECRUIT_TITLE", 160),
     maximumMembers: input.maximumMembers,
     members: normalizeMembers(input.members ?? [], input.maximumMembers),
@@ -241,11 +242,12 @@ export function syncRecruitParty(input: Readonly<{
   now: Date;
 }>): RecruitParty {
   expectedRevision(input.party.revision, input.expectedRevision);
-  if (input.party.status !== "IN_PROGRESS") throw new Error("RECRUIT_NOT_MUTABLE");
+  if (input.party.status !== "IN_PROGRESS" && input.party.status !== "DRAFT") throw new Error("RECRUIT_NOT_MUTABLE");
   validDate(input.now, "INVALID_RECRUIT_TIME");
   return {
     ...input.party,
     revision: input.party.revision + 1,
+    status: "IN_PROGRESS",
     members: normalizeMembers(input.members, input.party.maximumMembers),
     startTimeText: optionalPartyText(input.startTimeText, "INVALID_RECRUIT_START_TIME_TEXT", 160) ?? input.party.startTimeText,
     gameInfo: optionalPartyText(input.gameInfo, "INVALID_RECRUIT_GAME_INFO", 500) ?? input.party.gameInfo,

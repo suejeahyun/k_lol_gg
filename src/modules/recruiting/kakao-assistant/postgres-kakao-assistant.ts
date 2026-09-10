@@ -7,6 +7,7 @@ import { PostgresPlayerRepository } from "@/modules/players/infrastructure/postg
 import { PostgresStatisticsQueryRepository } from "@/modules/statistics/infrastructure/postgres-statistics-query-repository";
 import type { V2Database } from "@/platform/db/database";
 import { auditEvents } from "@/platform/db/schema/audit";
+import { matchGames, matchParticipants, matchSeries } from "@/platform/db/schema/matches";
 import { recruitParties, recruitingCommandReceipts, recruitingNonceBindings, scrimRecruits } from "@/platform/db/schema/recruiting";
 import { players } from "@/platform/db/schema/registry";
 import { seasonApplications, seasonKakaoPendingApplications, seasons } from "@/platform/db/schema/seasons";
@@ -348,6 +349,8 @@ export class PostgresKakaoAssistant {
           mode: input.mode,
           query: input.query,
           player: null,
+          currentTier: null,
+          peakTier: null,
           season: null,
           summary: null,
           recentMatches: Object.freeze([]),
@@ -356,6 +359,34 @@ export class PostgresKakaoAssistant {
       const statistics = await new PostgresStatisticsQueryRepository(transaction)
         .getPublicPlayerStatistics(player.id, null);
       if (!statistics) throw new KakaoAssistantError("NOT_FOUND");
+      const playerTier = (await transaction.select({
+        currentTier: players.currentTier,
+        peakTier: players.peakTier,
+      }).from(players).where(eq(players.id, player.id)).limit(1))[0] ?? null;
+      const kdaRows = !statistics.season ? [] : await transaction.select({
+        matchId: matchSeries.id,
+        gameNumber: matchGames.gameNumber,
+        kills: matchParticipants.kills,
+        deaths: matchParticipants.deaths,
+        assists: matchParticipants.assists,
+        totalKills: sql<number>`sum(${matchParticipants.kills}) over ()`.mapWith(Number),
+        totalDeaths: sql<number>`sum(${matchParticipants.deaths}) over ()`.mapWith(Number),
+        totalAssists: sql<number>`sum(${matchParticipants.assists}) over ()`.mapWith(Number),
+      }).from(matchParticipants)
+        .innerJoin(matchGames, eq(matchGames.id, matchParticipants.gameId))
+        .innerJoin(matchSeries, eq(matchSeries.id, matchGames.seriesId))
+        .where(and(
+          eq(matchParticipants.playerId, player.id),
+          eq(matchSeries.seasonId, statistics.season.id),
+          eq(matchSeries.status, "PUBLISHED"),
+        ))
+        .orderBy(desc(matchSeries.playedOn), desc(matchSeries.startedAt), desc(matchSeries.id), desc(matchGames.gameNumber))
+        .limit(10);
+      const recentKda = new Map(kdaRows.map((row) => [`${row.matchId}:${row.gameNumber}`, row]));
+      const totals = kdaRows[0] ?? null;
+      const kills = totals?.totalKills ?? 0;
+      const deaths = totals?.totalDeaths ?? 0;
+      const assists = totals?.totalAssists ?? 0;
       return Object.freeze({
         kind: "PLAYER_RECORD" as const,
         mode: input.mode,
@@ -365,11 +396,21 @@ export class PostgresKakaoAssistant {
           displayName: statistics.player.displayName,
           riotId: statistics.player.riotId,
         }),
+        currentTier: playerTier?.currentTier ?? null,
+        peakTier: playerTier?.peakTier ?? null,
         season: statistics.season
           ? Object.freeze({ id: statistics.season.id, name: statistics.season.name })
           : null,
-        summary: Object.freeze({ ...statistics.summary }),
-        recentMatches: Object.freeze(statistics.recentMatches.slice(0, 10).map((match) => Object.freeze({
+        summary: Object.freeze({
+          ...statistics.summary,
+          kills,
+          deaths,
+          assists,
+          kda: (kills + assists) / Math.max(1, deaths),
+        }),
+        recentMatches: Object.freeze(statistics.recentMatches.slice(0, 10).map((match) => {
+          const participant = recentKda.get(`${match.matchId}:${match.gameNumber}`);
+          return Object.freeze({
           matchId: match.matchId,
           title: match.title,
           playedOn: match.playedOn,
@@ -379,32 +420,50 @@ export class PostgresKakaoAssistant {
           position: match.position,
           won: match.won,
           mvp: match.mvp,
-        }))),
+          kills: participant?.kills ?? 0,
+          deaths: participant?.deaths ?? 0,
+          assists: participant?.assists ?? 0,
+          });
+        })),
       });
     });
   }
 
   getRanking(input: SignedReadInput): Promise<KakaoAssistantResult<KakaoRankingDto>> {
     return this.execute(input, async (transaction) => {
-      const minimumParticipation = 1;
+      const minimumParticipation = 10;
       const ranking = await new PostgresStatisticsQueryRepository(transaction)
         .getPublicSeasonRanking(null, minimumParticipation);
       const rows = ranking.rankings.slice(0, 10);
+      const kdaRows = !ranking.season || rows.length === 0 ? [] : await transaction.select({
+        playerId: matchParticipants.playerId,
+        kills: sql<number>`sum(${matchParticipants.kills})`.mapWith(Number),
+        deaths: sql<number>`sum(${matchParticipants.deaths})`.mapWith(Number),
+        assists: sql<number>`sum(${matchParticipants.assists})`.mapWith(Number),
+      }).from(matchParticipants)
+        .innerJoin(matchGames, eq(matchGames.id, matchParticipants.gameId))
+        .innerJoin(matchSeries, eq(matchSeries.id, matchGames.seriesId))
+        .where(and(
+          inArray(matchParticipants.playerId, rows.map((row) => row.playerId)),
+          eq(matchSeries.seasonId, ranking.season.id),
+          eq(matchSeries.status, "PUBLISHED"),
+        ))
+        .groupBy(matchParticipants.playerId);
+      const kdaByPlayer = new Map(kdaRows.map((row) => [row.playerId, (row.kills + row.assists) / Math.max(1, row.deaths)]));
       return Object.freeze({
         kind: "RANKING" as const,
         season: ranking.season ? Object.freeze({ id: ranking.season.id, name: ranking.season.name }) : null,
         minimumParticipation,
-        rows: Object.freeze(rows.map((row) => Object.freeze({ ...row }))),
+        rows: Object.freeze(rows.map((row) => Object.freeze({ ...row, kda: kdaByPlayer.get(row.playerId) ?? 0 }))),
         truncated: ranking.rankings.length > rows.length,
       });
     });
   }
 
-  getOpenChatStatus(input: SignedReadInput): Promise<KakaoAssistantResult<KakaoOpenChatStatusDto>> {
+  getOpenChatStatus(input: SignedReadInput & Readonly<{ projection?: "PARTY" | "SCRIM" }>): Promise<KakaoAssistantResult<KakaoOpenChatStatusDto>> {
     return this.execute(input, async (transaction) => {
       const today = kstDateKey(new Date());
-      const [partyRows, scrimRows, latestPartyRows, latestScrimRows] = await Promise.all([
-        transaction.select({
+      const partyRows = input.projection === "SCRIM" ? [] : await transaction.select({
           id: recruitParties.id,
           revision: recruitParties.revision,
           recruitDate: recruitParties.recruitDate,
@@ -422,8 +481,8 @@ export class PostgresKakaoAssistant {
           eq(recruitParties.status, "IN_PROGRESS"),
           eq(recruitParties.sourceRoomId, input.intent.roomId),
         ))
-          .orderBy(desc(recruitParties.recruitDate), asc(recruitParties.recruitNumber)).limit(MAXIMUM_STATUS_RESULTS + 1),
-        transaction.select({
+          .orderBy(desc(recruitParties.recruitDate), asc(recruitParties.recruitNumber)).limit(MAXIMUM_STATUS_RESULTS + 1);
+      const scrimRows = input.projection === "PARTY" ? [] : await transaction.select({
           id: scrimRecruits.id,
           revision: scrimRecruits.revision,
           recruitDate: scrimRecruits.recruitDate,
@@ -446,42 +505,44 @@ export class PostgresKakaoAssistant {
           inArray(scrimRecruits.status, ["RECRUITING", "MATCHED", "CONFIRMED"]),
           eq(scrimRecruits.sourceRoomId, input.intent.roomId),
         ))
-          .orderBy(desc(scrimRecruits.recruitDate), asc(scrimRecruits.scrimNumber)).limit(MAXIMUM_STATUS_RESULTS + 1),
-        transaction.select({ resetSequence: recruitParties.resetSequence, recruitNumber: recruitParties.recruitNumber })
+          .orderBy(desc(scrimRecruits.recruitDate), asc(scrimRecruits.scrimNumber)).limit(MAXIMUM_STATUS_RESULTS + 1);
+      const latestPartyRows = input.projection ? [] : await transaction.select({ resetSequence: recruitParties.resetSequence, recruitNumber: recruitParties.recruitNumber })
           .from(recruitParties).where(eq(recruitParties.recruitDate, today))
-          .orderBy(desc(recruitParties.resetSequence), desc(recruitParties.recruitNumber)).limit(1),
-        transaction.select({ scrimNumber: scrimRecruits.scrimNumber })
+          .orderBy(desc(recruitParties.resetSequence), desc(recruitParties.recruitNumber)).limit(1);
+      const latestScrimRows = input.projection ? [] : await transaction.select({ scrimNumber: scrimRecruits.scrimNumber })
           .from(scrimRecruits).where(eq(scrimRecruits.recruitDate, today))
-          .orderBy(desc(scrimRecruits.scrimNumber)).limit(1),
-      ]);
+          .orderBy(desc(scrimRecruits.scrimNumber)).limit(1);
       const parties = partyRows.slice(0, MAXIMUM_STATUS_RESULTS);
       const scrims = scrimRows.slice(0, MAXIMUM_STATUS_RESULTS);
       const latestParty = latestPartyRows[0];
       const latestScrim = latestScrimRows[0];
       return Object.freeze({
         kind: "OPENCHAT_STATUS" as const,
-        nextPartyRecruitNumber: !latestParty ? 1 : latestParty.recruitNumber < 99 ? latestParty.recruitNumber + 1 : null,
+        nextPartyRecruitNumber: input.projection ? null : !latestParty ? 1 : latestParty.recruitNumber < 99 ? latestParty.recruitNumber + 1 : null,
         nextPartyResetSequence: latestParty?.resetSequence ?? 0,
-        nextScrimNumber: !latestScrim ? 1 : latestScrim.scrimNumber < 99 ? latestScrim.scrimNumber + 1 : null,
+        nextScrimNumber: input.projection ? null : !latestScrim ? 1 : latestScrim.scrimNumber < 99 ? latestScrim.scrimNumber + 1 : null,
         partiesTruncated: partyRows.length > parties.length,
         scrimsTruncated: scrimRows.length > scrims.length,
-        parties: Object.freeze(parties.map((party) => Object.freeze({
-          id: party.id,
-          revision: party.revision,
-          recruitDate: party.recruitDate,
-          resetSequence: party.resetSequence,
-          recruitNumber: party.recruitNumber,
-          type: party.type,
-          title: party.title,
-          status: "IN_PROGRESS" as const,
-          memberCount: publicRecruitMembers(party.members).filter((member) => !member.substitute).length,
-          reserveCount: publicRecruitMembers(party.members).filter((member) => member.substitute).length,
-          maximumMembers: party.maximumMembers,
-          members: Object.freeze(publicRecruitMembers(party.members).map((member) => Object.freeze(member))),
-          startTimeText: party.startTimeText,
-          gameInfo: party.gameInfo,
-          scheduledStartAt: party.scheduledStartAt?.toISOString() ?? null,
-        }))),
+        parties: Object.freeze(parties.map((party) => {
+          const members = publicRecruitMembers(party.members);
+          return Object.freeze({
+            id: party.id,
+            revision: party.revision,
+            recruitDate: party.recruitDate,
+            resetSequence: party.resetSequence,
+            recruitNumber: party.recruitNumber,
+            type: party.type,
+            title: party.title,
+            status: "IN_PROGRESS" as const,
+            memberCount: members.filter((member) => !member.substitute).length,
+            reserveCount: members.filter((member) => member.substitute).length,
+            maximumMembers: party.maximumMembers,
+            members: Object.freeze(members.map((member) => Object.freeze(member))),
+            startTimeText: party.startTimeText,
+            gameInfo: party.gameInfo,
+            scheduledStartAt: party.scheduledStartAt?.toISOString() ?? null,
+          });
+        })),
         scrims: Object.freeze(scrims.map((scrim) => Object.freeze({
           id: scrim.id,
           revision: scrim.revision,

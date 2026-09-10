@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import { kakaoSeasonCommandAccess, parseSeasonSnapshotBody } from "@/modules/recruiting/kakao-assistant/domain";
 import { kakaoAssistantCapabilityForbiddenResponse, kakaoAssistantErrorResponse, kakaoAssistantResponse, prepareKakaoSignedJson } from "@/modules/recruiting/kakao-assistant/http";
-import { getRuntimeKakaoAssistant } from "@/modules/recruiting/kakao-assistant/runtime";
+import { getRuntimeKakaoAssistant } from "@/modules/recruiting/kakao-assistant/runtime-assistant";
 import { isRuntimeKakaoFeatureEnabled } from "@/modules/recruiting/kakao-admin/runtime";
 import { FEATURES_KAKAO_ROOM_COMMAND, MAXIMUM_KAKAO_BODY_BYTES, recordKakaoWebhookRejection } from "@/modules/recruiting/infrastructure/kakao-http-request";
 import { KakaoRoomRegistryError } from "@/modules/recruiting/kakao-access/postgres-kakao-room-registry";

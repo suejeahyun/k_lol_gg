@@ -18,6 +18,7 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName,
   var local = null;
   var result = null;
   var reply = "";
+  if (KLOL_V4.beginRequest) KLOL_V4.beginRequest();
   if (!klolV4EntryAcceptsText(text)) return;
   if (KLOL_V4.acceptsPublicText && !KLOL_V4.acceptsPublicText(KLOL_V4_PROFILE_ID, text)) return;
   if (KLOL_V4.shouldIgnore(KLOL_V4_PROFILE_ID, text, sender)) return;

@@ -155,6 +155,8 @@ export type KakaoPlayerRecordDto = Readonly<{
   mode: "RECORD" | "RECENT";
   query: string;
   player: Readonly<{ playerId: string; displayName: string; riotId: string }> | null;
+  currentTier: string | null;
+  peakTier: string | null;
   season: Readonly<{ id: string; name: string }> | null;
   summary: Readonly<{
     totalGames: number;
@@ -163,6 +165,10 @@ export type KakaoPlayerRecordDto = Readonly<{
     losses: number;
     winRate: number;
     mvpCount: number;
+    kills: number;
+    deaths: number;
+    assists: number;
+    kda: number;
   }> | null;
   recentMatches: readonly Readonly<{
     matchId: string;
@@ -174,6 +180,9 @@ export type KakaoPlayerRecordDto = Readonly<{
     position: "TOP" | "JGL" | "MID" | "ADC" | "SUP";
     won: boolean;
     mvp: boolean;
+    kills: number;
+    deaths: number;
+    assists: number;
   }>[];
 }>;
 
@@ -192,6 +201,7 @@ export type KakaoRankingDto = Readonly<{
     losses: number;
     winRate: number;
     mvpCount: number;
+    kda: number;
   }>[];
   truncated: boolean;
 }>;

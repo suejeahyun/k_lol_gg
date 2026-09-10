@@ -298,6 +298,12 @@ export class RecruitingCommandHandler {
       });
       if (!allocatedPartyIdentity) throw new RecruitingApplicationError("INVALID_COMMAND", "All 99 party numbers for this date are already used.");
     }
+    if (
+      command.type === "CREATE_PARTY" && command.payload.initialStatus === "DRAFT" &&
+      (command.metadata.actor.kind !== "BOT" || command.metadata.actor.commandSource !== "KAKAO_V4")
+    ) {
+      throw new RecruitingApplicationError("INVALID_COMMAND", "Draft party number reservations are limited to signed Kakao V4 creates.");
+    }
     if (command.type === "CREATE_PARTY" && command.payload.resetSequence !== null && command.payload.recruitNumber === null) {
       throw new RecruitingApplicationError("INVALID_COMMAND", "A party number is required when automatic numbering is disabled.");
     }

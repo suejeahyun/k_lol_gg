@@ -51,10 +51,11 @@ async function entryHarness(profile) {
 async function sharedInternals(bootUuid = "01234567-89ab-cdef-0123-456789abcdef", settings = {}) {
   const source = (await readFile(resolve(directory, "KLOL_KAKAO_BOT_V4_SHARED.js"), "utf8")).replace(/\r\n?/gu, "\n");
   const instrumented = source.replace(
-    "return {\n    localReply: localReply,",
-    "return {\n    __testNextEventId: nextEventId,\n    __testLogEventMaterial: logEventMaterial,\n    __testCanonicalLocalCommand: canonicalLocalCommand,\n    localReply: localReply,",
+    "return {\n    beginRequest: beginRequest,",
+    "return {\n    __testNextEventId: nextEventId,\n    __testLogEventMaterial: logEventMaterial,\n    __testCanonicalLocalCommand: canonicalLocalCommand,\n    __testSetting: setting,\n    beginRequest: beginRequest,",
   );
   assert.notEqual(instrumented, source, "shared export instrumentation point disappeared");
+  const settingReads = {};
   const context = vm.createContext({
     java: {
       util: {
@@ -64,11 +65,14 @@ async function sharedInternals(bootUuid = "01234567-89ab-cdef-0123-456789abcdef"
       },
     },
     DataBase: {
-      getDataBase(key) { return settings[key] ?? ""; },
+      getDataBase(key) {
+        settingReads[key] = (settingReads[key] ?? 0) + 1;
+        return settings[key] ?? "";
+      },
     },
   });
   vm.runInContext(instrumented, context);
-  return { source, api: context.KLOL_V4, context };
+  return { source, api: context.KLOL_V4, context, settingReads };
 }
 
 async function unifiedHarness() {
@@ -145,16 +149,19 @@ test("[C03A] one unified phone bot routes both room command families exactly onc
   assert.doesNotMatch(JSON.stringify(bot.calls), /구인 관련방|기능방|untrusted-room|untrusted-channel/u);
 });
 
-test("[C03C] party template commands including spaced aliases reply locally without HTTP or an early save", async () => {
+test("[C03C] party template commands including spaced aliases use exactly one server request for a V1 number", async () => {
   const bot = await unifiedHarness();
   for (const command of ["5인파티", "/2인파티", "5인 파티", "/2인 파티", "자랭구인"]) bot.respond(command);
-  assert.equal(bot.calls.length, 0);
+  assert.equal(bot.calls.length, 5);
   assert.equal(bot.replies.length, 5);
-  for (const reply of bot.replies) {
-    assert.match(reply, /모집번호: #자동배정/u);
-    assert.match(reply, /전체 전송하면 파티가 저장/u);
-    assert.doesNotMatch(reply, /시작시간|게임정보/u);
-  }
+  assert.deepEqual(bot.calls.map((call) => call.profileId), ["RECRUIT", "RECRUIT", "RECRUIT", "RECRUIT", "RECRUIT"]);
+});
+
+test("[C03D] a copied V1 party form without its number returns the exact local guidance", async () => {
+  const bot = await unifiedHarness();
+  bot.respond("📢 5인 파티 구인\n\n1. 재현\n2.\n3.\n4.\n5.\n예비 1.");
+  assert.equal(bot.calls.length, 0);
+  assert.deepEqual(bot.replies, ["[K-LOL.GG 양식 확인 필요]\n모집번호를 찾지 못했습니다.\n\n봇이 출력한 원본 양식의 ‘모집번호: #번호’를 유지해서 다시 보내주세요."]);
 });
 
 test("[C03B] unified bot version is one local reply and never reaches transport", async () => {
@@ -202,6 +209,13 @@ test("[C05A] logId replay is stable in one boot and isolated across profiles and
   assert.equal(firstBoot.__testLogEventMaterial("RECRUIT", "room-local-log-1"), first);
   assert.notEqual(firstBoot.__testLogEventMaterial("FEATURES", "room-local-log-1"), first);
   assert.notEqual(secondBoot.__testLogEventMaterial("RECRUIT", "room-local-log-1"), first);
+});
+
+test("[C05C] phone settings are read from MessengerBot storage once within one request cache", async () => {
+  const { api, settingReads } = await sharedInternals(undefined, { TEST_SETTING: "value" });
+  assert.equal(api.__testSetting("TEST_SETTING"), "value");
+  assert.equal(api.__testSetting("TEST_SETTING"), "value");
+  assert.equal(settingReads.TEST_SETTING, 1);
 });
 
 test("[C05B] unified echo suppression checks both room-specific bot display names", async () => {

@@ -8,7 +8,7 @@ import {
   kakaoAssistantUnavailableResponse,
   prepareKakaoSignedJson,
 } from "@/modules/recruiting/kakao-assistant/http";
-import { getRuntimeKakaoAssistant } from "@/modules/recruiting/kakao-assistant/runtime";
+import { getRuntimeKakaoAssistant } from "@/modules/recruiting/kakao-assistant/runtime-assistant";
 import { isRuntimeKakaoFeatureEnabled } from "@/modules/recruiting/kakao-admin/runtime";
 import { RECRUIT_KAKAO_ROOM_COMMAND } from "@/modules/recruiting/infrastructure/kakao-http-request";
 
