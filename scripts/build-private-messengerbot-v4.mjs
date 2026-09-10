@@ -14,6 +14,7 @@ const privateDirectory = resolve(root, ".private");
 const publicPath = resolve(root, "integrations/messengerbot-r/v4/KLOL_KAKAO_BOT_V4_UNIFIED_MESSENGERBOT_R.js");
 const arguments_ = process.argv.slice(2);
 const configureVercel = arguments_.includes("--configure-vercel");
+const refreshPrivate = arguments_.includes("--refresh");
 const outputIndex = arguments_.indexOf("--output");
 const outputPath = resolve(root, outputIndex >= 0 && arguments_[outputIndex + 1]
   ? arguments_[outputIndex + 1]
@@ -22,20 +23,37 @@ const outputPath = resolve(root, outputIndex >= 0 && arguments_[outputIndex + 1]
 if (outputPath !== privateDirectory && !outputPath.startsWith(`${privateDirectory}${sep}`)) {
   throw new Error("Private MessengerBot output must stay under .private/");
 }
+if (refreshPrivate && configureVercel) throw new Error("--refresh preserves the current keyring and cannot configure Vercel");
+let existingPrivateSource = null;
 try {
   await access(outputPath);
-  throw new Error("Private V4 output already exists; remove it only as part of an explicit key rotation");
+  if (!refreshPrivate) throw new Error("Private V4 output already exists; use --refresh to update code without rotating keys");
+  existingPrivateSource = await readFile(outputPath, "utf8");
 } catch (error) {
   if (!(error && typeof error === "object" && "code" in error && error.code === "ENOENT")) throw error;
+  if (refreshPrivate) throw new Error("Private V4 output does not exist; generate it before using --refresh");
 }
 const relativeOutputPath = relative(root, outputPath).replaceAll("\\", "/");
 const ignored = spawnSync("git", ["check-ignore", "--quiet", "--", relativeOutputPath], { cwd: root, windowsHide: true });
 const tracked = spawnSync("git", ["ls-files", "--error-unmatch", "--", relativeOutputPath], { cwd: root, windowsHide: true });
 if (ignored.status !== 0 || tracked.status === 0) throw new Error("Private V4 output path must be ignored and untracked");
 
-const identitySecret = randomBytes(32).toString("base64url");
-const signingSecret = randomBytes(32).toString("base64url");
-const keyId = "v4-current";
+function privateSetting(source, name) {
+  const escapedName = JSON.stringify(name).replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+  const match = source?.match(new RegExp(`DataBase\\.setDataBase\\(${escapedName},\\s*(\"(?:\\\\.|[^\"\\\\])*\")\\);`, "u"));
+  if (!match) throw new Error(`Private V4 setting is missing: ${name}`);
+  return JSON.parse(match[1]);
+}
+
+const identitySecret = existingPrivateSource
+  ? privateSetting(existingPrivateSource, "KLOL_V4_KAKAO_IDENTITY_SECRET")
+  : randomBytes(32).toString("base64url");
+const signingSecret = existingPrivateSource
+  ? privateSetting(existingPrivateSource, "KLOL_V4_KAKAO_WEBHOOK_SECRET_CURRENT")
+  : randomBytes(32).toString("base64url");
+const keyId = existingPrivateSource
+  ? privateSetting(existingPrivateSource, "KLOL_V4_KAKAO_WEBHOOK_KEY_ID_CURRENT")
+  : "v4-current";
 const settings = Object.freeze([
   ["KLOL_V2_BASE_URL", "https://k-lol-gg.vercel.app"],
   ["KLOL_V4_KAKAO_IDENTITY_SECRET", identitySecret],
@@ -88,6 +106,6 @@ if (findings.statementCandidates.length || findings.unsafeSequenceOperands.lengt
 }
 
 await mkdir(dirname(outputPath), { recursive: true });
-await writeFile(outputPath, output, { encoding: "utf8", flag: "wx" });
-console.log(`Private V4 one-paste installer generated under .private (${output.length} characters).`);
+await writeFile(outputPath, output, { encoding: "utf8", flag: refreshPrivate ? "w" : "wx" });
+console.log(`Private V4 one-paste installer ${refreshPrivate ? "refreshed" : "generated"} under .private (${output.length} characters).`);
 console.log(`Vercel Production V4 keyring configured: ${configureVercel ? "yes" : "no"}.`);

@@ -177,6 +177,42 @@ function partyStatusReply(parties: KakaoOpenChatStatusDto["parties"]) {
   return `[K-LOL.GG 현재 구인 현황]\n\n${parties.map(partyLines).join("\n\n")}`;
 }
 
+function partyTemplate(input: Readonly<{
+  recruitNumber: number | null;
+  partyType: string;
+  title: string;
+  maximumMembers: number;
+  members?: readonly Readonly<{ slotNo: number | null; name: string; position: string | null; substitute: boolean }>[];
+}>) {
+  const members = input.members ?? [];
+  const lines = [
+    "[K-LOL.GG 구인구직 양식]",
+    "같이 할사람~",
+    "",
+    "아래 양식을 작성해 전체 전송하면 파티가 저장됩니다.",
+    "",
+    `📢 ${input.title}`,
+    `모집번호: #${input.recruitNumber === null ? "자동배정" : String(input.recruitNumber)}`,
+    "",
+  ];
+  const lineParty = input.partyType === "FLEX_RANK" || input.partyType === "NORMAL_GAME" || input.partyType === "PARTY_RIFT";
+  const positionLabels = ["TOP", "JUG", "MID", "ADC", "SUP"] as const;
+  if (lineParty) {
+    for (const [index, label] of positionLabels.entries()) {
+      const member = members.find((candidate) => !candidate.substitute && (candidate.position === (label === "JUG" ? "JGL" : label) || candidate.slotNo === index + 1));
+      lines.push(`${label}. ${member?.name ?? ""}`.trimEnd());
+    }
+  } else {
+    for (let slotNo = 1; slotNo <= input.maximumMembers; slotNo += 1) {
+      const member = members.find((candidate) => !candidate.substitute && candidate.slotNo === slotNo);
+      lines.push(`${slotNo}. ${member?.name ?? ""}`.trimEnd());
+    }
+  }
+  const reserves = members.filter((member) => member.substitute);
+  lines.push(`예비 1. ${reserves.map((member) => member.name).join(", ")}`.trimEnd(), "", lineParty ? "마지막 참가자가 전체 태그 해주세요." : "참여해주실 분은 태그해주세요.", "*상호배려와 존중 부탁드립니다.");
+  return lines.join("\n");
+}
+
 function scrimLines(scrim: KakaoOpenChatStatusDto["scrims"][number]) {
   return `#${scrim.scrimNumber} ${scrim.requesterTeamName ?? "요청팀 미정"} vs ${scrim.opponentTeamName ?? "상대구함"} / ${scrimTime(scrim)} / ${scrimRule(scrim)} / ${scrimStatusLabel(scrim.status)}`;
 }
@@ -501,59 +537,97 @@ export class KakaoV4CommandDispatcher {
       });
     }
 
-    let recruitingCommand: RecruitingCommand;
     if (command.action === "CREATE") {
-      recruitingCommand = sealRecruitingCommand({
-        type: "CREATE_PARTY",
-        aggregateId: deterministicAggregateId(context.envelope.eventId, "PARTY"),
-        metadata: commandMetadata(context, 0),
-        payload: {
-          recruitDate: command.payload.recruitDate,
-          resetSequence: null,
+      return Object.freeze({
+        kind: "PARTY" as const,
+        action: command.action,
+        aggregate: null,
+        legacyReply: partyTemplate({
           recruitNumber: command.payload.preferredRecruitNumber,
           partyType: command.payload.partyType,
           title: command.payload.title,
           maximumMembers: command.payload.maximumMembers,
-          members: command.payload.members,
-          startTimeText: command.payload.startTimeText,
-          gameInfo: command.payload.gameInfo,
-          scheduledStartAt: command.payload.scheduledStartAt,
-          protectedUntil: command.payload.protectedUntil,
-        },
+        }),
+        replayed: false,
+      });
+    }
+
+    let recruitingCommand: RecruitingCommand;
+    let createdFromCompletedForm = false;
+    if (command.action === "FINISH") {
+      const target = await this.resolve(context, "PARTY", command.target);
+      recruitingCommand = sealRecruitingCommand({
+        type: "FINISH_PARTY",
+        aggregateId: target.id,
+        metadata: commandMetadata(context, target.revision),
+        payload: {},
       });
     } else {
-      const target = await this.resolve(context, "PARTY", command.target);
-      recruitingCommand = command.action === "SYNC"
+      const target = command.target.recruitNumber !== null
+        ? await this.dependencies.recruiting.resolveCompatTarget({
+            kind: "PARTY",
+            sourceRoomId: context.authorization.roomId,
+            recruitDate: command.target.recruitDate,
+            recruitNumber: command.target.recruitNumber,
+          })
+        : null;
+      if (command.action === "SYNC" && !target && command.payload.members.length === 0) {
+        throw new KakaoV4DispatcherError("INVALID_FORM");
+      }
+      createdFromCompletedForm = !target;
+      recruitingCommand = target
         ? sealRecruitingCommand({
             type: "SYNC_PARTY",
             aggregateId: target.id,
             metadata: commandMetadata(context, target.revision),
-            payload: command.payload,
+            payload: {
+              members: command.payload.members,
+              startTimeText: command.payload.startTimeText,
+              gameInfo: command.payload.gameInfo,
+              scheduledStartAt: command.payload.scheduledStartAt,
+            },
           })
         : sealRecruitingCommand({
-            type: "FINISH_PARTY",
-            aggregateId: target.id,
-            metadata: commandMetadata(context, target.revision),
-            payload: {},
+            type: "CREATE_PARTY",
+            aggregateId: deterministicAggregateId(context.envelope.eventId, "PARTY"),
+            metadata: commandMetadata(context, 0),
+            payload: {
+              recruitDate: command.payload.recruitDate,
+              resetSequence: null,
+              recruitNumber: command.payload.preferredRecruitNumber,
+              partyType: command.payload.partyType,
+              title: command.payload.title,
+              maximumMembers: command.payload.maximumMembers,
+              members: command.payload.members,
+              startTimeText: command.payload.startTimeText,
+              gameInfo: command.payload.gameInfo,
+              scheduledStartAt: command.payload.scheduledStartAt ?? null,
+              protectedUntil: command.payload.protectedUntil ?? null,
+            },
           });
     }
     const result = await this.dependencies.recruiting.handle(recruitingCommand);
     const data = result.body.data;
-    const legacyReply = command.action === "CREATE"
-      ? [
-          "[K-LOL.GG 파티 모집]",
-          `모집번호: #${String(data.recruitNumber)}`,
-          command.payload.title,
-          ...Array.from({ length: command.payload.maximumMembers }, (_, index) => `${index + 1}.`),
-        ].join("\n")
-      : command.action === "FINISH"
-        ? `[K-LOL.GG 파티 마감]\n#${String(data.recruitNumber)} 모집을 마감했습니다.`
+    const recruitNumber = typeof data.recruitNumber === "number" ? data.recruitNumber : null;
+    if (recruitNumber === null) throw new KakaoV4DispatcherError("UNAVAILABLE");
+    const legacyReply = command.action === "FINISH"
+        ? `[K-LOL.GG 파티 마감]\n#${String(recruitNumber)} 모집을 마감했습니다.`
         : [
-            `[K-LOL.GG 파티 #${String(data.recruitNumber)} 반영]`,
+            `[K-LOL.GG 파티 #${String(data.recruitNumber)} ${createdFromCompletedForm ? "등록" : "반영"}]`,
             `인원: ${String(data.memberCount)}/${String(data.maximumMembers)}`,
             `시작시간: ${String(data.startTimeText)}`,
             `게임정보: ${String(data.gameInfo)}`,
-            ...command.payload.members.map((member) => `${member.slotNo}. ${member.name}`),
+            `마감: ${String(recruitNumber)}ㅉ`,
+            "",
+            "수정할 때는 아래 양식을 고쳐 전체 전송해 주세요.",
+            "",
+            partyTemplate({
+              recruitNumber,
+              partyType: command.payload.partyType,
+              title: command.payload.title,
+              maximumMembers: command.payload.maximumMembers,
+              members: command.payload.members,
+            }),
           ].join("\n");
     return Object.freeze({ kind: "PARTY", action: command.action, aggregate: result.body, legacyReply, replayed: result.replayed });
   }

@@ -27,8 +27,8 @@
 | Release-readiness | 5 | 0 | PASS, P0 RESOLVED |
 | Phase 2·3·V1 client/golden | 95 | 0 | PASS |
 | Phase 2·3 server/dispatcher | 91 | 0 | PASS |
-| `npm run test:contracts` | 308 | 0 | PASS |
-| `npm run test:unit` | 610 | 0 | PASS |
+| `npm run test:contracts` | 309 | 0 | PASS |
+| `npm run test:unit` | 611 | 0 | PASS |
 | `npm run typecheck` | - | - | PASS |
 | 변경 TypeScript/MJS 12개 ESLint | - | - | PASS, 오류·경고 0건 |
 | `npm run build` | - | - | PASS, V4 route 포함·정적 페이지 92개 |
@@ -38,11 +38,19 @@
 
 | 운영 산출물 | 문자 수 | 바이트 | 줄 | 최대 줄 길이 | SHA-256 |
 | --- | ---: | ---: | ---: | ---: | --- |
-| UNIFIED | 13,018 | 15,534 | 276 | 471 | `09a0ddbc80b86ad65a293593ebf0e0c893222d31f8cca57f24f3d609a05316c1` |
+| UNIFIED | 15,775 | 18,751 | 339 | 471 | `788d9e6f386d4b46fa95476f6bffecc1cce2b51e71992974476e166866ee0065` |
 
 V4 루트의 paste-ready 운영 산출물은 UNIFIED 하나뿐이다. 분리형 두 산출물은 `legacy-split-profiles`로 이동했으며 설치하지 않는다. SHA-256은 현재 worktree 바이트 기준이다. 설치 과정에서 줄바꿈이 바뀌면 해시도 달라지므로 paste 직전 파일과 대조한다.
 
-실제 휴대폰용 `.private/KLOL_KAKAO_BOT_V4_UNIFIED_PRIVATE_MESSENGERBOT_R.js`는 13,657자·16,187바이트이며 ES5·단일 callback·Rhino 정적 검사에 통과했다. V4 전용 비밀값이 있으므로 Git에서 제외했고 본문·해시는 QA 문서에 기록하지 않는다.
+실제 휴대폰용 `.private/KLOL_KAKAO_BOT_V4_UNIFIED_PRIVATE_MESSENGERBOT_R.js`는 16,414자·19,404바이트이며 ES5·단일 callback·Rhino 정적 검사에 통과했다. `--refresh`는 기존 V4 전용 keyring을 보존한 채 공개 코드를 교체한다. 비밀값이 있으므로 Git에서 제외했고 본문·해시는 QA 문서에 기록하지 않는다.
+
+## 파티 양식 선행·속도 패치
+
+- `2인파티`, `5인파티`, `자랭구인` 등 파티 양식 생성은 휴대폰에서 즉시 처리한다: HTTP 0회, `CREATE_PARTY` 0회.
+- 번호를 생략한 빈 양식은 `모집번호: #자동배정`으로 표시하며 DB 파티를 만들지 않는다.
+- 이름이 한 명 이상 입력된 전체 양식의 첫 전송에서만 `CREATE_PARTY` 1회와 번호 배정을 수행한다.
+- 등록 응답은 확정 번호가 들어간 수정용 전체 양식을 포함한다. 이후 같은 번호의 전체 양식은 authoritative `SYNC_PARTY`, 빈 명단은 전체 취소 반영으로 유지한다.
+- 명시적 번호가 있는 생성 명령과 기존 숫자 양식은 계속 지원한다.
 
 ## 수행하지 않음
 

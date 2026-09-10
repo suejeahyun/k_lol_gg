@@ -218,10 +218,11 @@ function classifySnapshot(text: string): KakaoV4RecognizedCommand | null {
     }, "SNAPSHOT");
   }
 
-  const partyNumber = /^\s*모집번호\s*:\s*#(\d+)\s*$/mu.exec(text)?.[1];
+  const partyNumber = /^\s*모집번호\s*:\s*#(자동배정|\d+)\s*$/mu.exec(text)?.[1];
   if (partyNumber && /^\s*📢\s*.+(?:파티 구인|하실분!?)\s*$/mu.test(text)) {
     return recognized("PARTY_SNAPSHOT", text, {
-      recruitNumber: Number(partyNumber),
+      recruitNumber: partyNumber === "자동배정" ? null : Number(partyNumber),
+      automaticRecruitNumber: partyNumber === "자동배정",
       memberCount: countFilledNumberedRows(text),
       startTimeOptional: true,
       gameInfoOptional: true,

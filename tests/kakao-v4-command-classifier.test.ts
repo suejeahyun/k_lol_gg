@@ -192,6 +192,17 @@ test("party snapshot accepts absent start time/game info and populated optional 
   const second = classifyKakaoV4Command({ profileId: "RECRUIT", text: populated });
   assert.equal(second.kind, "SNAPSHOT");
   if (second.kind === "SNAPSHOT") assert.equal(second.command, "PARTY_SNAPSHOT");
+
+  const automatic = classifyKakaoV4Command({
+    profileId: "RECRUIT",
+    text: initial.replace("모집번호: #12", "모집번호: #자동배정").replace("1.", "1. 재현"),
+  });
+  assert.equal(automatic.kind, "SNAPSHOT");
+  if (automatic.kind === "SNAPSHOT") {
+    assert.equal(automatic.command, "PARTY_SNAPSHOT");
+    assert.equal(automatic.parameters.recruitNumber, null);
+    assert.equal(automatic.parameters.automaticRecruitNumber, true);
+  }
 });
 
 test("A→B→A identical text is reclassified without state or content-hash suppression", () => {

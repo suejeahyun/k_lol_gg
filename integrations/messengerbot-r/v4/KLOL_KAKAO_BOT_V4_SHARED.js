@@ -98,8 +98,75 @@ var KLOL_V4 = (function () {
     return !stripped || /^\s/.test(stripped) ? null : stripped;
   }
 
+  function partyTemplateDefinition(command) {
+    var numbered = String(command || "").match(/^(\d{1,2})인(?:\s*협곡\s*)?(?:파티|구인)(?:\s+(\d{1,2}))?$/);
+    var rift = String(command || "").match(/^5인\s*협곡(?:\s*파티)?(?:\s+(\d{1,2}))?$/);
+    var named = String(command || "").match(/^(자랭|일반|솔랭|칼바람|증바람|기타게임|롤체일반|롤체랭크|더블업)구인(?:\s+(\d{1,2}))?$/);
+    var definitions = {
+      "자랭": ["FLEX_RANK", "자랭 하실분!", 5],
+      "일반": ["NORMAL_GAME", "일반 하실분!", 5],
+      "솔랭": ["SOLO_RANK", "솔랭 하실분!", 2],
+      "칼바람": ["ARAM", "칼바람 하실분!", 5],
+      "증바람": ["ARAM", "증바람 하실분!", 5],
+      "기타게임": ["OTHER_GAME", "기타게임 하실분!", 8],
+      "롤체일반": ["TFT_NORMAL", "롤체 일반 하실분!", 8],
+      "롤체랭크": ["TFT_RANK", "롤체 랭크 하실분!", 3],
+      "더블업": ["DOUBLE_UP", "더블업 하실분!", 2]
+    };
+    var count = 0;
+    var explicitNumber = null;
+    var definition = null;
+    if (rift) {
+      return {
+        type: "PARTY_RIFT", title: "5인 협곡 파티 구인", maximumMembers: 5,
+        explicitRecruitNumber: rift[1] ? Number(rift[1]) : null
+      };
+    }
+    if (numbered) {
+      count = Number(numbered[1]);
+      if (count < 1 || count > 99) return null;
+      explicitNumber = numbered[2] ? Number(numbered[2]) : null;
+      return {
+        type: /협곡/.test(command) ? "PARTY_RIFT" : "PARTY_NUMBER",
+        title: /협곡/.test(command) ? "5인 협곡 파티 구인" : count + "인 파티 구인",
+        maximumMembers: count,
+        explicitRecruitNumber: explicitNumber
+      };
+    }
+    if (!named) return null;
+    definition = definitions[named[1]];
+    if (!definition) return null;
+    return {
+      type: definition[0], title: definition[1], maximumMembers: definition[2],
+      explicitRecruitNumber: named[2] ? Number(named[2]) : null
+    };
+  }
+
+  function partyTemplateReply(command) {
+    var parsed = partyTemplateDefinition(command);
+    var lines = [];
+    var index = 0;
+    var lineParty = false;
+    if (!parsed) return null;
+    lines = [
+      "[K-LOL.GG 구인구직 양식]", "같이 할사람~", "",
+      "아래 양식을 작성해 전체 전송하면 파티가 저장됩니다.", "",
+      "📢 " + parsed.title,
+      "모집번호: #" + (parsed.explicitRecruitNumber === null ? "자동배정" : String(parsed.explicitRecruitNumber)), ""
+    ];
+    lineParty = parsed.type === "FLEX_RANK" || parsed.type === "NORMAL_GAME" || parsed.type === "PARTY_RIFT";
+    if (lineParty) {
+      lines.push("TOP.", "JUG.", "MID.", "ADC.", "SUP.");
+    } else {
+      for (index = 1; index <= Number(parsed.maximumMembers); index += 1) lines.push(index + ".");
+    }
+    lines.push("예비 1.", "", lineParty ? "마지막 참가자가 전체 태그 해주세요." : "참여해주실 분은 태그해주세요.", "*상호배려와 존중 부탁드립니다.");
+    return lines.join("\n");
+  }
+
   function localReply(profileId, text, codeVersion) {
     var command = canonicalLocalCommand(text);
+    var partyTemplate = null;
     if (command === "봇버전") {
       return "[K-LOL.GG V4 봇 버전]\n프로필: " + profile(profileId) + "\n버전: " + codeVersion + "\n설치본: " + installationId(profileId);
     }
@@ -111,6 +178,10 @@ var KLOL_V4 = (function () {
     }
     if (profileId === "RECRUIT" && /^(?:구인도우미|구인웹도우미|구인매뉴얼|명령어페이지)$/.test(command)) {
       return "[K-LOL.GG 구인도우미]\n\n현재 사용 중인 카카오톡 명령어 전체 설명은 아래 페이지에서 확인해주세요.\n\nhttps://k-lol-gg.vercel.app/recruit-helper\n\n구인현황 바로가기:\nhttps://k-lol-gg.vercel.app/recruit";
+    }
+    if (profileId === "RECRUIT") {
+      partyTemplate = partyTemplateReply(command);
+      if (partyTemplate) return partyTemplate;
     }
     if (profileId === "FEATURES" && command === "사진상태") {
       return "[K-LOL.GG 사진 제출 안내]\nV4 휴대폰 봇은 사진 세션 업로드를 사용하지 않습니다.\n사이트에 로그인해 사진을 제출해 주세요.\n\n내전 결과 사진:\nhttps://k-lol-gg.vercel.app/matches/submit\n\n경고 차감 사진:\nhttps://k-lol-gg.vercel.app/discipline/evidence";

@@ -39,6 +39,18 @@ test("V4 private generator creates one ignored paste-ready file without printing
     assert.ok(secrets.every((value) => !result.stdout.includes(value) && !result.stderr.includes(value)));
     assert.match(source, /KLOL_V4_BOT_SELF_NAME_RECRUIT/u);
     assert.match(source, /KLOL_V4_BOT_SELF_NAME_FEATURES/u);
+
+    const refreshed = spawnSync(process.execPath, ["scripts/build-private-messengerbot-v4.mjs", "--refresh", "--output", relativeOutput], {
+      cwd: root,
+      encoding: "utf8",
+      windowsHide: true,
+    });
+    assert.equal(refreshed.status, 0, refreshed.stderr);
+    const refreshedSource = await readFile(output, "utf8");
+    const refreshedSecrets = [...refreshedSource.matchAll(/DataBase\.setDataBase\("KLOL_V4_KAKAO_(?:IDENTITY_SECRET|WEBHOOK_SECRET_CURRENT)", "([^"]+)"\)/gu)]
+      .map((match) => match[1]);
+    assert.deepEqual(refreshedSecrets, secrets);
+    assert.ok(refreshedSecrets.every((value) => !refreshed.stdout.includes(value) && !refreshed.stderr.includes(value)));
   } finally {
     await rm(output, { force: true });
   }

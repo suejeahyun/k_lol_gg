@@ -32,7 +32,7 @@
 - V4 전용 identity secret과 profile ID로 RECRUIT/FEATURES installation ID를 서로 다르게 결정한다.
 - installation ID에서 DB 식별자를 노출하지 않는 내부 room scope를 결정한다.
 - profile 교차 사용, 임의 installation ID와 잘못된 signature는 fail-closed한다.
-- 파티·스크림은 RECRUIT, 내전·조회·운영은 FEATURES로 분류되어 명령당 서버 전송은 정확히 한 번이다.
+- 파티 양식 생성은 휴대폰에서 즉시 응답해 서버 전송과 조기 저장이 0회다. 작성 완료 양식·스크림은 RECRUIT, 내전·조회·운영은 FEATURES로 분류되며 서버가 필요한 명령은 최대 한 번만 전송한다.
 - 방 이름·room·channel은 분류나 인증에 사용하지 않는다.
 - 두 방의 서로 다른 봇 표시명은 RECRUIT/FEATURES self-echo 이름 설정으로 모두 차단한다.
 - 일반 sender 두 명이 같은 installation scope에서 생성·교차 수정·종료할 수 있다.

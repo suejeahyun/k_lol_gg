@@ -26,10 +26,21 @@ export type KakaoV4PartyCreatePayload = Readonly<{
 }>;
 
 export type KakaoV4PartySyncPayload = Readonly<{
+  recruitDate: string;
+  preferredRecruitNumber: number | null;
+  partyType: RecruitPartyType;
+  title: string;
+  maximumMembers: number;
   members: readonly RecruitMember[];
   startTimeText?: string | null;
   gameInfo?: string | null;
   scheduledStartAt?: string | null;
+  protectedUntil?: string | null;
+}>;
+
+export type KakaoV4PartySyncTarget = Readonly<{
+  recruitDate: string;
+  recruitNumber: number | null;
 }>;
 
 export type KakaoV4SeasonParticipant = Readonly<{
@@ -66,7 +77,7 @@ export type CanonicalKakaoV4Command =
   | Readonly<{ domain: "PARTY"; action: "CREATE"; payload: KakaoV4PartyCreatePayload }>
   | Readonly<{ domain: "PARTY"; action: "STATUS" }>
   | Readonly<{ domain: "PARTY"; action: "DETAIL"; target: KakaoV4RecruitTarget }>
-  | Readonly<{ domain: "PARTY"; action: "SYNC"; target: KakaoV4RecruitTarget; payload: KakaoV4PartySyncPayload }>
+  | Readonly<{ domain: "PARTY"; action: "SYNC"; target: KakaoV4PartySyncTarget; payload: KakaoV4PartySyncPayload }>
   | Readonly<{ domain: "PARTY"; action: "FINISH"; target: KakaoV4RecruitTarget }>
   | Readonly<{ domain: "SCRIM"; action: "CREATE"; payload: ScrimFormCommandPayload }>
   | Readonly<{ domain: "SCRIM"; action: "TEMPLATE"; recruitDate: string }>
@@ -123,12 +134,81 @@ function textParameter(parameters: Readonly<Record<string, string | number | boo
 
 function snapshotMembers(text: string): readonly RecruitMember[] {
   const members: RecruitMember[] = [];
+  const occupied = new Set<string>();
+  const positions = new Map<string, Readonly<{ position: "TOP" | "JGL" | "MID" | "ADC" | "SUP"; slotNo: number }>>([
+    ["TOP", { position: "TOP", slotNo: 1 }], ["탑", { position: "TOP", slotNo: 1 }],
+    ["JUG", { position: "JGL", slotNo: 2 }], ["JGL", { position: "JGL", slotNo: 2 }], ["JG", { position: "JGL", slotNo: 2 }], ["정글", { position: "JGL", slotNo: 2 }],
+    ["MID", { position: "MID", slotNo: 3 }], ["미드", { position: "MID", slotNo: 3 }],
+    ["ADC", { position: "ADC", slotNo: 4 }], ["AD", { position: "ADC", slotNo: 4 }], ["원딜", { position: "ADC", slotNo: 4 }],
+    ["SUP", { position: "SUP", slotNo: 5 }], ["서폿", { position: "SUP", slotNo: 5 }], ["서포터", { position: "SUP", slotNo: 5 }],
+  ]);
   for (const line of text.split("\n")) {
-    const match = /^\s*(예비\s*)?(\d+)\.\s*(.*?)\s*$/u.exec(line);
-    if (!match?.[3]) continue;
-    members.push(Object.freeze({ slotNo: Number(match[2]), name: match[3], position: null, substitute: Boolean(match[1]) }));
+    const positionRow = /^\s*(TOP|JUG|JGL|JG|MID|ADC|AD|SUP|탑|정글|미드|원딜|서폿|서포터)\s*[.:：]\s*(.*?)\s*$/iu.exec(line);
+    if (positionRow) {
+      const definition = positions.get(positionRow[1]!.toUpperCase()) ?? positions.get(positionRow[1]!);
+      const name = positionRow[2]!.trim().replace(/\s+/gu, " ");
+      if (!definition || !name || name.length > 80 || occupied.has(`position:${definition.position}`)) continue;
+      occupied.add(`position:${definition.position}`);
+      members.push(Object.freeze({ slotNo: definition.slotNo, name, position: definition.position, substitute: false }));
+      continue;
+    }
+    const reserveRow = /^\s*(?:예비|후보|대기)\s*(\d{1,2})?\s*[.):：]?\s*(.*?)\s*$/u.exec(line);
+    if (reserveRow) {
+      const firstSlot = Number(reserveRow[1] ?? 1);
+      const names = reserveRow[2]!.split(/[,/]+/u).map((value) => value.trim().replace(/\s+/gu, " ")).filter(Boolean);
+      for (const [index, name] of names.entries()) {
+        const slotNo = firstSlot + index;
+        if (slotNo < 1 || slotNo > 99 || name.length > 80 || occupied.has(`reserve:${slotNo}`)) continue;
+        occupied.add(`reserve:${slotNo}`);
+        members.push(Object.freeze({ slotNo, name, position: null, substitute: true }));
+      }
+      continue;
+    }
+    const match = /^\s*(\d{1,2})\s*[.)]\s*(.*?)\s*$/u.exec(line);
+    if (!match?.[2]) continue;
+    const slotNo = Number(match[1]);
+    const name = match[2].trim().replace(/\s+/gu, " ");
+    if (slotNo < 1 || slotNo > 99 || !name || name.length > 80 || occupied.has(`slot:${slotNo}`)) continue;
+    occupied.add(`slot:${slotNo}`);
+    members.push(Object.freeze({ slotNo, name, position: null, substitute: false }));
   }
   return Object.freeze(members);
+}
+
+function partySnapshotDefinition(text: string) {
+  const header = /^\s*📢\s*(.*?)\s*$/mu.exec(text)?.[1]?.trim() ?? "";
+  const definitions = [
+    [/롤체\s*일반/u, "TFT_NORMAL", "롤체 일반 하실분!", 8],
+    [/롤체\s*랭크/u, "TFT_RANK", "롤체 랭크 하실분!", 3],
+    [/더블업/u, "DOUBLE_UP", "더블업 하실분!", 2],
+    [/솔랭/u, "SOLO_RANK", "솔랭 하실분!", 2],
+    [/자랭/u, "FLEX_RANK", "자랭 하실분!", 5],
+    [/일반/u, "NORMAL_GAME", "일반 하실분!", 5],
+    [/증바람/u, "ARAM", "증바람 하실분!", 5],
+    [/칼바람/u, "ARAM", "칼바람 하실분!", 5],
+    [/기타게임/u, "OTHER_GAME", "기타게임 하실분!", 8],
+    [/협곡/u, "PARTY_RIFT", "5인 협곡 파티 구인", 5],
+  ] as const;
+  for (const [pattern, partyType, title, maximumMembers] of definitions) {
+    if (pattern.test(header)) return { partyType, title, maximumMembers } as const;
+  }
+  const numbered = /(\d{1,2})\s*인\s*(?:파티\s*)?구인/u.exec(header);
+  const maximumMembers = Number(numbered?.[1] ?? 0);
+  if (maximumMembers < 1 || maximumMembers > 99) return null;
+  return { partyType: "PARTY_NUMBER" as const, title: `${maximumMembers}인 파티 구인`, maximumMembers };
+}
+
+function partySnapshotMeta(text: string) {
+  let startTimeText: string | undefined;
+  let gameInfo: string | undefined;
+  for (const rawLine of text.split("\n")) {
+    const line = rawLine.trim().replace(/^[》>]\s*/u, "");
+    const start = /^(?:게임\s*)?(?:시작|출발)\s*시간\s*[:：]\s*(.*?)\s*$/u.exec(line)?.[1]?.trim();
+    const game = /^게임\s*정보\s*[:：]\s*(.*?)\s*$/u.exec(line)?.[1]?.trim();
+    if (start) startTimeText = start.slice(0, 160);
+    if (game) gameInfo = game.slice(0, 500);
+  }
+  return { startTimeText, gameInfo } as const;
 }
 
 function validDateKey(value: string | null, fallback: string) {
@@ -316,8 +396,26 @@ export function canonicalizeKakaoV4Command(classification: KakaoV4CommandClassif
   }
   if (classification.command === "PARTY_SNAPSHOT") {
     const recruitNumber = numberParameter(parameters, "recruitNumber");
-    if (!recruitNumber) return null;
-    return Object.freeze({ domain: "PARTY" as const, action: "SYNC" as const, target: Object.freeze({ recruitDate: date, recruitNumber }), payload: Object.freeze({ members: snapshotMembers(envelope.text) }) });
+    const definition = partySnapshotDefinition(envelope.text);
+    if (!definition) return null;
+    const meta = partySnapshotMeta(envelope.text);
+    return Object.freeze({
+      domain: "PARTY" as const,
+      action: "SYNC" as const,
+      target: Object.freeze({ recruitDate: date, recruitNumber }),
+      payload: Object.freeze({
+        recruitDate: date,
+        preferredRecruitNumber: recruitNumber,
+        partyType: definition.partyType,
+        title: definition.title,
+        maximumMembers: definition.maximumMembers,
+        members: snapshotMembers(envelope.text),
+        startTimeText: meta.startTimeText,
+        gameInfo: meta.gameInfo,
+        scheduledStartAt: null,
+        protectedUntil: null,
+      }),
+    });
   }
   if (classification.command === "INHOUSE_CREATE") return inhouseTemplateCommand(parameters, date);
   if (classification.command === "INHOUSE_JOIN_GUIDE") {

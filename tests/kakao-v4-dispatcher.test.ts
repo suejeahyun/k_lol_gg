@@ -145,7 +145,7 @@ test("V4 event key is shared by recruiting and assistant durable receipts", () =
   assert.deepEqual(Buffer.from(assistant.keyHash), Buffer.from(direct));
 });
 
-test("party create is one application mutation and hides server defaults from the initial template", async () => {
+test("party create command returns an unsaved template without an application mutation", async () => {
   const state = harness();
   const command: CanonicalKakaoV4Command = {
     domain: "PARTY",
@@ -157,16 +157,29 @@ test("party create is one application mutation and hides server defaults from th
     },
   };
   const result = await state.dispatcher.dispatch(context, command);
-  assert.equal(state.handled.length, 1);
-  assert.equal(state.handled[0]?.type, "CREATE_PARTY");
-  assert.equal(state.handled[0]?.metadata.actor.kind, "BOT");
-  if (state.handled[0]?.metadata.actor.kind === "BOT") {
-    assert.equal(state.handled[0].metadata.actor.commandSource, "KAKAO_V4");
-  }
-  assert.equal(state.handled[0]?.metadata.idempotency.scope, KAKAO_V4_EVENT_SCOPE);
+  assert.equal(state.handled.length, 0);
+  assert.equal(result.aggregate, null);
+  assert.match(result.legacyReply, /모집번호: #자동배정/u);
+  assert.match(result.legacyReply, /전체 전송하면 파티가 저장/u);
   assert.doesNotMatch(result.legacyReply, /시작시간|게임정보/u);
-  assert.equal((result.aggregate as RecruitingCommandResult["body"]).data.startTimeText, "09:26");
-  assert.equal((result.aggregate as RecruitingCommandResult["body"]).data.gameInfo, "미입력");
+});
+
+test("first completed automatic party form creates the party once", async () => {
+  const state = harness();
+  const result = await state.dispatcher.dispatch(context, {
+    domain: "PARTY", action: "SYNC", target: { recruitDate: "2026-09-10", recruitNumber: null },
+    payload: {
+      recruitDate: "2026-09-10", preferredRecruitNumber: null, partyType: "PARTY_NUMBER",
+      title: "5인 파티 구인", maximumMembers: 5,
+      members: [{ slotNo: 1, name: "재현", position: null, substitute: false }],
+      scheduledStartAt: null, protectedUntil: null,
+    },
+  });
+  assert.deepEqual(state.handled.map((command) => command.type), ["CREATE_PARTY"]);
+  assert.equal(state.handled[0]?.metadata.actor.kind, "BOT");
+  assert.equal(state.handled[0]?.metadata.idempotency.scope, KAKAO_V4_EVENT_SCOPE);
+  assert.match(result.legacyReply, /파티 #8 등록/u);
+  assert.match(result.legacyReply, /모집번호: #8/u);
 });
 
 test("party status and detail use one server status receipt and return the latest aggregate", async () => {
@@ -189,7 +202,10 @@ test("party snapshot and finish resolve latest revision without owner or role in
   const state = harness();
   await state.dispatcher.dispatch(context, {
     domain: "PARTY", action: "SYNC", target: { recruitDate: "2026-09-10", recruitNumber: 7 },
-    payload: { members: [] },
+    payload: {
+      recruitDate: "2026-09-10", preferredRecruitNumber: 7, partyType: "PARTY_NUMBER",
+      title: "5인 파티 구인", maximumMembers: 5, members: [], scheduledStartAt: null, protectedUntil: null,
+    },
   });
   await state.dispatcher.dispatch({ ...context, envelope: { ...context.envelope, eventId: "event-dispatcher-00000002" } }, {
     domain: "PARTY", action: "FINISH", target: { recruitDate: "2026-09-10", recruitNumber: 7 },
