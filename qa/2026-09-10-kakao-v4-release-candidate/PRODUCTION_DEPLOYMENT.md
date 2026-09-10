@@ -1,10 +1,10 @@
 # Production 배포 증거
 
-확인 시각: 2026-09-10 12:08 KST
+확인 시각: 2026-09-10 12:39 KST
 
 ## GitHub
 
-- 검증 커밋: `a04da75f18a5e8f59fb01b8562425f2490046638`
+- 검증 커밋: `aedfb83376a6dd18fea07255fdf151bd5f819714`
 - feature ref: `refs/heads/feat/kakao-v4-gateway-20260910`
 - production ref: `refs/heads/main`
 - 두 원격 ref 모두 같은 검증 커밋으로 확인했다.
@@ -14,8 +14,8 @@
 ## Vercel
 
 - Project: `k-lol-gg`
-- Production deployment ID: `AKLqtQmqqAWiSXZtuiZmzBecRnvM`
-- Source: `main` / `a04da75f18a5e8f59fb01b8562425f2490046638`
+- Production deployment ID: `2poEtgAwJY2KYA3q66a7pBqh5j3k`
+- Source: `main` / `aedfb83376a6dd18fea07255fdf151bd5f819714`
 - Vercel UI status: `Ready`
 - Production URL: `https://k-lol-gg.vercel.app`
 
@@ -48,7 +48,7 @@ Vercel UI에서 값은 열지 않고 이름과 Production scope만 확인했다.
 
 ## 운영 판정
 
-- 서버 코드와 V4 route: Production 배포 확인.
+- 서버 코드, 통합 봇 산출물과 V4 route: Production 배포 확인.
 - 기존 운영 사이트와 기존 카카오봇: 변경 없이 계속 사용 가능.
 - V4 휴대폰 전환: 보류. 별도의 identity secret을 Vercel Production과 같은 휴대폰의 MessengerBot R `DataBase`에 일치시킨 뒤, 기존 분리형 두 프로필을 중지하고 통합 프로필 하나로 실기기 checklist를 통과해야 한다.
 - signing secret을 identity secret으로 재사용하지 않는다.
