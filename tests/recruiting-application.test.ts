@@ -3,6 +3,9 @@ import test from "node:test";
 
 import {
   hashRecruitingRequestKey,
+  hashKakaoV4EventId,
+  kakaoRecruitCommandAccess,
+  KAKAO_V4_EVENT_SCOPE,
   recruitingCommandRequestFingerprint,
   RecruitingApplicationError,
   RecruitingCommandHandler,
@@ -604,4 +607,131 @@ test("public party and scrim DTOs expose only reviewed fields", () => {
   const scrim: ScrimRecruit = { id: "scrim-1", revision: 2, sourceRoomId: null, sourceSenderId: null, opponentSenderId: null, recruitDate: "2026-09-07", scrimNumber: 1, tournamentId: "destruction-1", legacyTournamentNumber: null, requesterTeamId: "team-a", opponentTeamId: "team-b", requesterLineup: null, opponentLineup: null, legacyMemo: null, legacySeriesRuleText: null, status: "MATCHED", scheduledAt: null, bestOf: 3 };
   assert.deepEqual(Object.keys(toPublicScrimDto(scrim)).sort(), ["bestOf", "id", "legacyTournamentNumber", "memo", "opponentLineup", "opponentTeamId", "opponentTeamName", "recruitDate", "requesterLineup", "requesterTeamId", "requesterTeamName", "scheduledAt", "scrimNumber", "seriesRuleText", "status", "title", "tournamentId"]);
   assert.equal("revision" in toPublicScrimDto(scrim), false);
+});
+
+function v4Command<Type extends RecruitingCommand["type"]>(
+  type: Type,
+  aggregateId: string,
+  expectedRevision: number,
+  payload: Extract<RecruitingCommand, { type: Type }>["payload"],
+  input: Readonly<{ eventId: string; senderId: string; nonce: string; digest?: string }>,
+): Extract<RecruitingCommand, { type: Type }> {
+  const digest = input.digest ?? bodyDigestHex;
+  return seal({
+    type,
+    aggregateId,
+    metadata: {
+      actor: {
+        kind: "BOT" as const,
+        principalId: "bot:kakao:v4:install-11111111111111111111111111111111",
+        commandSource: "KAKAO_V4" as const,
+        authorizationIntent: {
+          kind: "KAKAO_HMAC" as const,
+          keyId: "recruit-current",
+          timestampSeconds: Math.floor(now.getTime() / 1_000),
+          nonce: input.nonce,
+          installationId: "install-11111111111111111111111111111111",
+          deliveryId: input.eventId,
+          roomId: "room-v4-canonical",
+          senderId: input.senderId,
+          bodyDigestHex: digest,
+          requireNonceClaim: true as const,
+          transactionRecheck: true as const,
+        },
+      },
+      requestId: `request-${input.eventId}`,
+      expectedRevision,
+      issuedAt: now.toISOString(),
+      idempotency: {
+        scope: KAKAO_V4_EVENT_SCOPE,
+        keyHash: hashKakaoV4EventId(input.eventId),
+        requestFingerprint: new Uint8Array(32),
+        bodyDigestHex: digest,
+      },
+    },
+    payload,
+  } as unknown as Extract<RecruitingCommand, { type: Type }>);
+}
+
+test("V4 room scope allows cross-sender snapshots and finish while preserving durable event receipts", async () => {
+  assert.equal(kakaoRecruitCommandAccess("SYNC_PARTY", "KAKAO_V4"), "ROOM_MEMBER_MUTATION");
+  assert.equal(kakaoRecruitCommandAccess("FINISH_PARTY", "KAKAO_V4"), "ROOM_MEMBER_MUTATION");
+  assert.equal(kakaoRecruitCommandAccess("SYNC_SCRIM", "KAKAO_V4"), "ROOM_MEMBER_MUTATION");
+
+  const harness = new Harness();
+  const handler = new RecruitingCommandHandler(harness.dependencies());
+  const created = await handler.handle(v4Command("CREATE_PARTY", "party-v4-shared", 0, {
+    recruitDate: "2026-09-07", resetSequence: 0, recruitNumber: 11,
+    partyType: "PARTY_NUMBER", title: "공용 모집", maximumMembers: 5,
+    members: [{ name: "A", position: null, slotNo: 1, substitute: false }],
+    startTimeText: null, gameInfo: null, scheduledStartAt: null, protectedUntil: null,
+  }, {
+    eventId: "event-v4-create-00000001", senderId: "sender-user-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    nonce: "v4_create_nonce_12345678",
+  }));
+  assert.equal(created.body.data.startTimeText, "09:00");
+  assert.equal(created.body.data.gameInfo, "미입력");
+
+  const snapshots = [
+    [{ name: "A", position: null, slotNo: 1, substitute: false }],
+    [{ name: "B", position: null, slotNo: 1, substitute: false }],
+    [{ name: "A", position: null, slotNo: 1, substitute: false }],
+    [],
+  ] as const;
+  const actors = ["b", "c", "b", "c"];
+  let revision = 0;
+  let secondSnapshot: Extract<RecruitingCommand, { type: "SYNC_PARTY" }> | null = null;
+  for (let index = 0; index < snapshots.length; index += 1) {
+    const mutation = v4Command("SYNC_PARTY", "party-v4-shared", revision, { members: snapshots[index] }, {
+      eventId: `event-v4-sync-0000000${index + 1}`,
+      senderId: `sender-user-${actors[index]!.repeat(32)}`,
+      nonce: `v4_sync_nonce_${index}_12345678`,
+    });
+    const result = await handler.handle(mutation);
+    revision = result.revision;
+    if (index === 1) secondSnapshot = mutation;
+  }
+  assert.equal(revision, 4);
+  assert.deepEqual(harness.snapshot.parties.get("party-v4-shared")?.members, []);
+
+  const auditCount = harness.snapshot.audits.length;
+  const replay = await handler.handle(secondSnapshot!);
+  assert.equal(replay.replayed, true);
+  assert.equal(harness.snapshot.audits.length, auditCount);
+  assert.deepEqual(harness.snapshot.parties.get("party-v4-shared")?.members, []);
+
+  const finished = await handler.handle(v4Command("FINISH_PARTY", "party-v4-shared", revision, {}, {
+    eventId: "event-v4-finish-0000001",
+    senderId: "sender-user-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    nonce: "v4_finish_nonce_1234567",
+  }));
+  assert.equal(finished.body.status, "FINISHED");
+
+  const conflicting = v4Command("FINISH_PARTY", "party-v4-shared", revision, {}, {
+    eventId: "event-v4-finish-0000001",
+    senderId: "sender-user-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    nonce: "v4_conflict_nonce_12345",
+    digest: "cd".repeat(32),
+  });
+  await assert.rejects(
+    () => handler.handle(conflicting),
+    (error: unknown) => error instanceof RecruitingApplicationError && error.code === "IDEMPOTENCY_MISMATCH",
+  );
+});
+
+test("V4 request fingerprint is stable across server-resolved revisions but changes with the signed body", () => {
+  const base = v4Command("SYNC_PARTY", "party-v4-fingerprint", 3, { members: [] }, {
+    eventId: "event-v4-fingerprint-001",
+    senderId: "sender-user-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    nonce: "v4_fingerprint_nonce_123",
+  });
+  const latestRevision = seal({ ...base, metadata: { ...base.metadata, expectedRevision: 9 } });
+  assert.deepEqual(Buffer.from(base.metadata.idempotency.requestFingerprint), Buffer.from(latestRevision.metadata.idempotency.requestFingerprint));
+  const changedBody = v4Command("SYNC_PARTY", "party-v4-fingerprint", 3, { members: [] }, {
+    eventId: "event-v4-fingerprint-001",
+    senderId: "sender-user-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    nonce: "v4_fingerprint_nonce_123",
+    digest: "ef".repeat(32),
+  });
+  assert.notDeepEqual(Buffer.from(base.metadata.idempotency.requestFingerprint), Buffer.from(changedBody.metadata.idempotency.requestFingerprint));
 });

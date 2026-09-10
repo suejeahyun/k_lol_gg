@@ -76,7 +76,7 @@ function validateAuthorization(command: RecruitingCommand) {
       actor.authorizationIntent.transactionRecheck !== true ||
       actor.authorizationIntent.requireNonceClaim !== true ||
       actor.authorizationIntent.bodyDigestHex !== command.metadata.idempotency.bodyDigestHex ||
-      (actor.commandSource !== "COMPAT_V1" && actor.commandSource !== "RAW_V2")
+      !["COMPAT_V1", "RAW_V2", "KAKAO_V4"].includes(actor.commandSource)
     ) throw new RecruitingApplicationError("INVALID_AUTHORIZATION_INTENT", "BOT commands require the verified Kakao body and an in-transaction nonce claim.");
     if (Math.floor(Date.parse(command.metadata.issuedAt) / 1_000) !== actor.authorizationIntent.timestampSeconds) {
       throw new RecruitingApplicationError("INVALID_AUTHORIZATION_INTENT", "The BOT command time must remain bound to its signed webhook timestamp.");
@@ -138,7 +138,11 @@ function validateCommand(command: RecruitingCommand) {
   canonicalIdentifier(command.aggregateId, "aggregateId");
   canonicalIdentifier(command.metadata.requestId, "requestId");
   canonicalIdentifier(command.metadata.idempotency.scope, "scope");
-  if (command.metadata.idempotency.scope !== recruitingCommandScope(command.metadata.actor.kind, command.type)) throw new RecruitingApplicationError("INVALID_COMMAND", "The command scope does not match its actor and action.");
+  if (command.metadata.idempotency.scope !== recruitingCommandScope(
+    command.metadata.actor.kind,
+    command.type,
+    command.metadata.actor.kind === "BOT" ? command.metadata.actor.commandSource : undefined,
+  )) throw new RecruitingApplicationError("INVALID_COMMAND", "The command scope does not match its actor and action.");
   if (!Number.isSafeInteger(command.metadata.expectedRevision) || command.metadata.expectedRevision < 0) throw new RecruitingApplicationError("INVALID_COMMAND", "Expected revision must be a non-negative safe integer.");
   canonicalInstant(command.metadata.issuedAt, "issuedAt");
   digest(command.metadata.idempotency.keyHash, "keyHash");
@@ -264,11 +268,13 @@ export class RecruitingCommandHandler {
     if (claim.kind === "REPLAY") {
       const receipt = claim.receipt;
       validateReceipt(receipt);
+      const v4EventReplay = command.metadata.actor.kind === "BOT" && command.metadata.actor.commandSource === "KAKAO_V4";
       if (
         receipt.actorPrincipalId !== command.metadata.actor.principalId || receipt.scope !== command.metadata.idempotency.scope ||
         receipt.bodyDigestHex !== command.metadata.idempotency.bodyDigestHex ||
         !sameDigest(receipt.keyHash, command.metadata.idempotency.keyHash) || !sameDigest(receipt.requestHash, command.metadata.idempotency.requestFingerprint) ||
-        receipt.body.aggregateId !== command.aggregateId || receipt.body.commandType !== command.type || receipt.body.revision !== receipt.revision
+        (!v4EventReplay && (receipt.body.aggregateId !== command.aggregateId || receipt.body.commandType !== command.type)) ||
+        receipt.body.revision !== receipt.revision
       ) throw new RecruitingApplicationError("IDEMPOTENCY_MISMATCH", "The durable receipt does not match the command identity.");
       return { body: receipt.body, revision: receipt.revision, replayed: true };
     }
@@ -276,8 +282,9 @@ export class RecruitingCommandHandler {
     let allocatedPartyIdentity: Readonly<{ resetSequence: number; recruitNumber: number }> | null = null;
     if (command.type === "CREATE_PARTY" && command.payload.resetSequence === null) {
       if (
-        command.metadata.actor.kind !== "BOT" || command.metadata.actor.commandSource !== "COMPAT_V1"
-      ) throw new RecruitingApplicationError("INVALID_COMMAND", "Automatic party numbering is limited to signed Kakao V1 creates.");
+        command.metadata.actor.kind !== "BOT" ||
+        (command.metadata.actor.commandSource !== "COMPAT_V1" && command.metadata.actor.commandSource !== "KAKAO_V4")
+      ) throw new RecruitingApplicationError("INVALID_COMMAND", "Automatic party numbering is limited to signed Kakao compatibility creates.");
       allocatedPartyIdentity = await this.dependencies.repository.allocateNextPartyIdentityForUpdate(transaction, {
         sourceRoomId: command.metadata.actor.authorizationIntent.roomId,
         recruitDate: command.payload.recruitDate,

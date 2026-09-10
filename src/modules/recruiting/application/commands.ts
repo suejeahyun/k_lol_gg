@@ -26,7 +26,7 @@ export type RecruitingCommandActor =
       principalId: string;
       authorizationIntent: VerifiedKakaoWebhookIntent;
       /** The compatibility surface is part of the authorization policy, not caller metadata. */
-      commandSource: "COMPAT_V1" | "RAW_V2";
+      commandSource: "COMPAT_V1" | "RAW_V2" | "KAKAO_V4";
     }>
   | Readonly<{ kind: "ACCOUNT"; principalId: string; sessionActor: TransactionSessionActor; authorizationIntent: Readonly<{ kind: "APPROVED_ACCOUNT"; transactionRecheck: true }> }>
   | Readonly<{ kind: "ADMIN"; principalId: string; sessionActor: TransactionSessionActor; authorizationIntent: RecruitingAdminAuthorizationIntent }>
@@ -108,6 +108,13 @@ export type RecruitingCommand = PartyCommand | ScrimCommand;
 
 export type KakaoRecruitCommandAccess = "PUBLIC_CREATE" | "PUBLIC_READ" | "PUBLIC_JOIN" | "ROOM_MEMBER_MUTATION" | "OWNER_OR_MANAGER" | "ADMIN" | "DENY";
 
+/**
+ * Every V4 command shares one durable event namespace. This prevents an event
+ * ID from being reused for a different command family without relying on the
+ * command text or content hash as its identity.
+ */
+export const KAKAO_V4_EVENT_SCOPE = "bot:kakao-v4:event";
+
 const COMPAT_V1_MEMBER_COMMANDS: ReadonlySet<RecruitingCommand["type"]> = new Set([
   "SYNC_PARTY",
   "FINISH_PARTY",
@@ -117,12 +124,12 @@ const COMPAT_V1_MEMBER_COMMANDS: ReadonlySet<RecruitingCommand["type"]> = new Se
 /** Server-side policy for commands received through the signed Kakao webhook. */
 export function kakaoRecruitCommandAccess(
   type: RecruitingCommand["type"],
-  source: "COMPAT_V1" | "RAW_V2" = "RAW_V2",
+  source: "COMPAT_V1" | "RAW_V2" | "KAKAO_V4" = "RAW_V2",
 ): KakaoRecruitCommandAccess {
   if (type === "CREATE_PARTY" || type === "CREATE_SCRIM") return "PUBLIC_CREATE";
   if (type === "GET_PARTY_STATUS") return "PUBLIC_READ";
   if (type === "JOIN_SCRIM") return "PUBLIC_JOIN";
-  if (source === "COMPAT_V1" && COMPAT_V1_MEMBER_COMMANDS.has(type)) return "ROOM_MEMBER_MUTATION";
+  if ((source === "COMPAT_V1" || source === "KAKAO_V4") && COMPAT_V1_MEMBER_COMMANDS.has(type)) return "ROOM_MEMBER_MUTATION";
   if (type === "RESET_PARTY") return "DENY";
   if (type === "CANCEL_PARTY" || type === "CANCEL_SCRIM" || type === "REOPEN_SCRIM") return "ADMIN";
   return "OWNER_OR_MANAGER";
@@ -144,9 +151,31 @@ const COMMAND_SCOPE_SUFFIX: Readonly<Record<RecruitingCommand["type"], string>> 
   CANCEL_SCRIM: "recruiting:scrim:cancel",
 };
 
-export function recruitingCommandScope(actorKind: RecruitingCommandActor["kind"], type: RecruitingCommand["type"]) {
+export function recruitingCommandScope(
+  actorKind: RecruitingCommandActor["kind"],
+  type: RecruitingCommand["type"],
+  commandSource?: Extract<RecruitingCommandActor, { kind: "BOT" }>["commandSource"],
+) {
+  if (actorKind === "BOT" && commandSource === "KAKAO_V4") return KAKAO_V4_EVENT_SCOPE;
   if (type === "RESET_PARTY") return "admin:recruiting:party:reset";
   return `${actorKind === "ACCOUNT" ? "account" : actorKind === "ADMIN" ? "admin" : "bot"}:${COMMAND_SCOPE_SUFFIX[type]}`;
+}
+
+export function hashKakaoV4EventId(eventId: string) {
+  if (!/^event-[A-Za-z0-9._:-]{8,121}$/u.test(eventId)) throw new Error("INVALID_KAKAO_V4_EVENT_ID");
+  return createHash("sha256").update("klol-v4:event-key:v1\0").update(eventId).digest();
+}
+
+export function kakaoV4EventRequestFingerprint(input: Readonly<{
+  principalId: string;
+  bodyDigestHex: string;
+}>) {
+  return createHash("sha256").update([
+    "klol-v4:event-request:v1",
+    input.principalId,
+    KAKAO_V4_EVENT_SCOPE,
+    input.bodyDigestHex,
+  ].join("\0")).digest();
 }
 
 function canonicalJson(value: unknown): string {
@@ -158,6 +187,12 @@ function canonicalJson(value: unknown): string {
 }
 
 export function recruitingCommandRequestFingerprint(command: RecruitingCommand): Uint8Array {
+  if (command.metadata.actor.kind === "BOT" && command.metadata.actor.commandSource === "KAKAO_V4") {
+    return kakaoV4EventRequestFingerprint({
+      principalId: command.metadata.actor.principalId,
+      bodyDigestHex: command.metadata.idempotency.bodyDigestHex,
+    });
+  }
   const actorBinding = command.metadata.actor.kind === "BOT"
     ? command.metadata.actor.authorizationIntent.deliveryId ? {
         kind: command.metadata.actor.kind,

@@ -8,6 +8,11 @@ import {
   type KakaoV4CommandEnvelope,
   type KakaoV4ProfileId,
 } from "./domain";
+import type { CanonicalKakaoV4Command } from "./canonical-command";
+import {
+  KakaoV4CommandDispatcher,
+  type KakaoV4DispatcherResult,
+} from "./dispatcher";
 
 export type KakaoV4ProfileAuthorizer = Readonly<{
   authorizeProfile(input: Readonly<{
@@ -24,7 +29,7 @@ type DispatchResult =
 export type KakaoV4CommandResult = DispatchResult & Readonly<{ replayed: boolean }>;
 
 export class KakaoV4CommandError extends Error {
-  constructor(readonly code: "IDEMPOTENCY_MISMATCH") {
+  constructor(readonly code: "IDEMPOTENCY_MISMATCH" | "DISPATCHER_UNAVAILABLE") {
     super(code);
   }
 }
@@ -53,7 +58,10 @@ function dispatchProbe(envelope: KakaoV4CommandEnvelope): DispatchResult {
 export class KakaoV4CommandService {
   private readonly receipts = new Map<string, Readonly<{ digest: string; result: DispatchResult }>>();
 
-  constructor(private readonly authorizer: KakaoV4ProfileAuthorizer) {}
+  constructor(
+    private readonly authorizer: KakaoV4ProfileAuthorizer,
+    private readonly dispatcher?: KakaoV4CommandDispatcher,
+  ) {}
 
   async execute(envelope: KakaoV4CommandEnvelope, keyId: string): Promise<KakaoV4CommandResult> {
     await this.authorizer.authorizeProfile({
@@ -72,5 +80,27 @@ export class KakaoV4CommandService {
     if (this.receipts.size >= 1_024) this.receipts.delete(this.receipts.keys().next().value as string);
     this.receipts.set(receiptKey, Object.freeze({ digest, result }));
     return Object.freeze({ ...result, replayed: false });
+  }
+
+  async executeCanonical(input: Readonly<{
+    envelope: KakaoV4CommandEnvelope;
+    keyId: string;
+    requestDigestHex: string;
+    requestId: string;
+    command: CanonicalKakaoV4Command;
+  }>): Promise<KakaoV4DispatcherResult> {
+    if (!this.dispatcher) throw new KakaoV4CommandError("DISPATCHER_UNAVAILABLE");
+    const authorization = await this.authorizer.authorizeProfile({
+      installationPublicId: input.envelope.installationId,
+      requiredCapabilityProfile: input.envelope.profileId,
+      keyId: input.keyId,
+    });
+    return this.dispatcher.dispatch({
+      envelope: input.envelope,
+      keyId: input.keyId,
+      requestDigestHex: input.requestDigestHex,
+      requestId: input.requestId,
+      authorization,
+    }, input.command);
   }
 }

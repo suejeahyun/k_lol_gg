@@ -11,7 +11,7 @@ import {
   verifyKakaoV4Signature,
   type KakaoV4CommandEnvelope,
 } from "../src/modules/recruiting/kakao-v4/domain";
-import { kakaoV4ProblemResponse, type KakaoV4HttpErrorCode } from "../src/modules/recruiting/kakao-v4/http";
+import { kakaoV4CommandFailureResponse, kakaoV4ProblemResponse, type KakaoV4HttpErrorCode } from "../src/modules/recruiting/kakao-v4/http";
 
 const now = new Date("2026-09-10T03:00:00.000Z");
 const envelope = Object.freeze({
@@ -104,4 +104,18 @@ test("public error responses keep stable status and code contracts", async () =>
     assert.equal(response.status, status);
     assert.equal((await response.json()).code, publicCode);
   }
+});
+
+test("V4 application errors normalize idempotency conflicts to public 409 only", async () => {
+  const conflict = kakaoV4CommandFailureResponse(new KakaoV4CommandError("IDEMPOTENCY_MISMATCH"), "trace-v4-conflict");
+  assert.equal(conflict.status, 409);
+  assert.equal((await conflict.json()).code, "IDEMPOTENCY_MISMATCH");
+
+  const unavailable = kakaoV4CommandFailureResponse(new KakaoV4CommandError("DISPATCHER_UNAVAILABLE"), "trace-v4-unavailable");
+  assert.equal(unavailable.status, 503);
+  assert.equal((await unavailable.json()).code, "KAKAO_V4_UNAVAILABLE");
+
+  const invalid = kakaoV4CommandFailureResponse({ code: "INVALID_COMMAND" }, "trace-v4-invalid");
+  assert.equal(invalid.status, 400);
+  assert.equal((await invalid.json()).code, "KAKAO_V4_COMMAND_INVALID");
 });

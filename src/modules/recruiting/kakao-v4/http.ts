@@ -26,3 +26,15 @@ const problems = Object.freeze({
 export function kakaoV4ProblemResponse(code: KakaoV4HttpErrorCode, traceId?: string, headers?: HeadersInit) {
   return problemResponse(problems[code], { traceId, headers });
 }
+
+/** Keep application and database error classes out of the public V4 contract. */
+export function kakaoV4CommandFailureResponse(error: unknown, traceId?: string) {
+  const code = typeof error === "object" && error !== null && "code" in error
+    ? (error as { code?: unknown }).code
+    : undefined;
+  if (code === "IDEMPOTENCY_MISMATCH") return kakaoV4ProblemResponse("IDEMPOTENCY_MISMATCH", traceId);
+  if (code === "INVALID_COMMAND" || code === "PROFILE_MISMATCH" || code === "NOT_FOUND") {
+    return kakaoV4ProblemResponse("COMMAND_INVALID", traceId);
+  }
+  return kakaoV4ProblemResponse("UNAVAILABLE", traceId);
+}

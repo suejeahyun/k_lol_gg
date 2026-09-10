@@ -8,17 +8,20 @@ import {
   readValidatedTraceId,
 } from "@/platform/http";
 import { getRuntimeKakaoRoomRegistry } from "@/modules/recruiting/kakao-access/runtime";
+import { getRuntimeKakaoAssistant } from "@/modules/recruiting/kakao-assistant/runtime";
+import { getRuntimeRecruitingService } from "@/modules/recruiting/infrastructure/runtime-recruiting";
 import { kakaoWebhookFailureResponse } from "@/modules/recruiting/kakao-access/http";
 import { KakaoRoomRegistryError } from "@/modules/recruiting/kakao-access/postgres-kakao-room-registry";
 import { kakaoWebhookSecrets, readBoundedKakaoRawBody } from "@/modules/recruiting/infrastructure/kakao-http-request";
-import { KakaoV4CommandError, KakaoV4CommandService } from "@/modules/recruiting/kakao-v4/application";
+import { KakaoV4CommandService } from "@/modules/recruiting/kakao-v4/application";
+import { KakaoV4CommandDispatcher } from "@/modules/recruiting/kakao-v4/dispatcher";
 import {
   KAKAO_V4_COMMAND_CONTRACT,
   KAKAO_V4_MAXIMUM_BODY_BYTES,
   parseKakaoV4CommandEnvelope,
   verifyKakaoV4Signature,
 } from "@/modules/recruiting/kakao-v4/domain";
-import { kakaoV4ProblemResponse } from "@/modules/recruiting/kakao-v4/http";
+import { kakaoV4CommandFailureResponse, kakaoV4ProblemResponse } from "@/modules/recruiting/kakao-v4/http";
 
 export const runtime = "nodejs";
 
@@ -29,7 +32,11 @@ function runtimeService() {
   if (service) return service;
   const registry = getRuntimeKakaoRoomRegistry();
   if (!registry) return null;
-  service = new KakaoV4CommandService(registry);
+  const recruiting = getRuntimeRecruitingService();
+  const assistant = getRuntimeKakaoAssistant();
+  service = recruiting && assistant
+    ? new KakaoV4CommandService(registry, new KakaoV4CommandDispatcher({ recruiting, assistant }))
+    : new KakaoV4CommandService(registry);
   return service;
 }
 
@@ -90,8 +97,7 @@ export async function POST(request: Request) {
       reply: result.reply,
     }, { traceId, headers: replayHeaders });
   } catch (error) {
-    if (error instanceof KakaoV4CommandError) return kakaoV4ProblemResponse("IDEMPOTENCY_MISMATCH", traceId);
     if (error instanceof KakaoRoomRegistryError) return registryFailure(error, traceId);
-    return kakaoV4ProblemResponse("UNAVAILABLE", traceId);
+    return kakaoV4CommandFailureResponse(error, traceId);
   }
 }

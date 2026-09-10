@@ -2,6 +2,11 @@ import { createHash } from "node:crypto";
 
 import type { PlayerSummary } from "@/modules/players/domain/player";
 import {
+  KAKAO_V4_EVENT_SCOPE,
+  hashKakaoV4EventId,
+  kakaoV4EventRequestFingerprint,
+} from "../application/commands";
+import {
   isSeasonApplicationPosition,
   type SeasonApplicationSource,
   type SeasonApplicationStatus,
@@ -453,6 +458,15 @@ export function toKakaoPlayerSearchItem(player: PlayerSummary): KakaoPlayerSearc
 }
 
 export function kakaoReadIdentity(input: Readonly<{ principalId: string; scope: string; requestKey: string; bodyDigestHex: string }>) {
+  if (input.scope === KAKAO_V4_EVENT_SCOPE) {
+    return Object.freeze({
+      keyHash: hashKakaoV4EventId(input.requestKey),
+      requestHash: kakaoV4EventRequestFingerprint({
+        principalId: input.principalId,
+        bodyDigestHex: input.bodyDigestHex,
+      }),
+    });
+  }
   const keyHash = createHash("sha256").update(`klol-v2:kakao-read-key:v1\0${input.requestKey}`).digest();
   const requestHash = createHash("sha256").update([
     "klol-v2:kakao-read-request:v1", input.principalId, input.scope, input.bodyDigestHex,
