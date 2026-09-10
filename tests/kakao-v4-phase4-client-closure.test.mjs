@@ -141,7 +141,7 @@ async function phone(profile) {
 const localCases = [
   ["RECRUIT", "봇버전", null],
   ["FEATURES", "봇버전", null],
-  ["RECRUIT", "도움말", fixture.exactReplies.recruitHelp],
+  ["RECRUIT", "도움말", fixture.exactReplies.generalHelp],
   ["FEATURES", "도움말", fixture.exactReplies.generalHelp],
   ["RECRUIT", "구인도움말", fixture.exactReplies.recruitHelp],
   ["RECRUIT", "구인웹도우미", fixture.exactReplies.recruitWebHelp],

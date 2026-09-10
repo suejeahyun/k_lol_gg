@@ -63,7 +63,7 @@ function localReply(envelope: KakaoV4CommandEnvelope, classification: KakaoV4Com
   if (classification.command === "OPERATIONS_INHOUSE_PREVIEW_CANCEL" || classification.command === "OPERATIONS_INHOUSE_CONFIRM") {
     return Object.freeze({
       kind: "REPLY" as const,
-      reply: "[K-LOL.GG 내전 신청 안내]\n내전 미리보기·확인 코드 방식은 사용하지 않습니다.\n봇이 출력한 협곡 전체 양식을 수정해 전송하면 서버의 최종 명단으로 즉시 반영됩니다.\n이 명령으로 변경된 내용은 없습니다.",
+      reply: "[K-LOL.GG 내전 신청 안내]\n내전 미리보기·확인 코드 방식은 사용하지 않습니다.\n미리보기·확인 요청은 취소되었습니다.\n봇이 출력한 협곡 전체 양식을 수정해 전송하면 서버의 최종 명단으로 즉시 반영됩니다.\n사이트에는 반영하지 않았으며, 이 명령으로 변경된 내용은 없습니다.",
     });
   }
   if (classification.audience === "INTERNAL") return null;

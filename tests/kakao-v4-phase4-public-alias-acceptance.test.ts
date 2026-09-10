@@ -6,7 +6,7 @@ import test from "node:test";
 import { KakaoV4CommandError, KakaoV4CommandService } from "../src/modules/recruiting/kakao-v4/application";
 import type { KakaoV4CommandDispatcher } from "../src/modules/recruiting/kakao-v4/dispatcher";
 import type { KakaoV4CommandEnvelope, KakaoV4ProfileId } from "../src/modules/recruiting/kakao-v4/domain";
-import { kakaoV4CommandFailureResponse, kakaoV4ProblemResponse } from "../src/modules/recruiting/kakao-v4/http";
+import { kakaoV4CommandFailureResponse } from "../src/modules/recruiting/kakao-v4/http";
 
 type PublicRoute = Readonly<{
   domain: "HELP" | "PARTY" | "INHOUSE" | "SCRIM" | "PLAYER" | "REGISTRATION";
@@ -143,16 +143,12 @@ test("[P4-S04] unknown public input is INVALID_FORM instead of 501 ROUTER_NOT_EN
   for (const text of ["알수없는명령", "지원하지 않는 명령 123", "자동공지 13"]) {
     const qa = service();
     let error: unknown;
-    let notImplemented = false;
     try {
-      const result = await qa.instance.execute(envelope("FEATURES", text), "current");
-      notImplemented = result.kind === "NOT_IMPLEMENTED";
+      await qa.instance.execute(envelope("FEATURES", text), "current");
     } catch (caught) {
       error = caught;
     }
-    const response = notImplemented
-      ? kakaoV4ProblemResponse("ROUTER_NOT_ENABLED", "trace-phase4-invalid-form")
-      : kakaoV4CommandFailureResponse(error, "trace-phase4-invalid-form");
+    const response = kakaoV4CommandFailureResponse(error, "trace-phase4-invalid-form");
     const body = await response.json() as { code?: unknown };
     assert.equal(response.status, 400, text);
     assert.equal(body.code, "INVALID_FORM", text);

@@ -68,14 +68,18 @@ test("[R03] V3 and V4 server intake coexist while V4 binds profile-specific inst
   assert.match(service, /requiredCapabilityProfile: envelope\.profileId/u);
 });
 
-test("[BLOCKER R04] V4 phone clients have no supported first-pairing command yet", () => {
+test("[RESOLVED R04] V4 uses deterministic installation scope without a pairing command", () => {
   const shared = source("integrations/messengerbot-r/v4/KLOL_KAKAO_BOT_V4_SHARED.js");
   const recruit = source("integrations/messengerbot-r/v4/KLOL_KAKAO_BOT_V4_RECRUIT.js");
   const features = source("integrations/messengerbot-r/v4/KLOL_KAKAO_BOT_V4_FEATURES.js");
   const service = source("src/modules/recruiting/kakao-v4/application.ts");
+  const route = source("src/app/api/integrations/kakao/v4/commands/route.ts");
   assert.doesNotMatch(shared, /pair-room|pairRoom|V2방연동/u);
   assert.doesNotMatch(recruit, /pair-room|pairRoom|V2방연동/u);
   assert.doesNotMatch(features, /pair-room|pairRoom|V2방연동/u);
+  assert.match(shared, /KLOL_V2_KAKAO_IDENTITY_SECRET/u);
+  assert.match(route, /getRuntimeKakaoV4ProfileAuthorizer/u);
+  assert.doesNotMatch(route, /getRuntimeKakaoRoomRegistry|pair-room|pairRoom/u);
   assert.match(
     service,
     /async execute\([\s\S]+?await this\.authorizer\.authorizeProfile\([\s\S]+?classifyKakaoV4Command/u,

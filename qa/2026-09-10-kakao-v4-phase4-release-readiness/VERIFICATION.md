@@ -34,7 +34,7 @@ node --test tests/kakao-v4-client-acceptance.test.mjs tests/kakao-v4-phase3-clie
 node --test tests/kakao-v4-release-readiness.test.mjs
 ```
 
-- PASS, 5/5. migration ledger, receipt/nonce schema, installation/profile/key mapping, V3/V4 route 공존, P0 pairing 부재를 고정했다.
+- PASS, 5/5. migration ledger, receipt/nonce schema, V3/V4 route 공존과 P0 installation-scope 인증 RESOLVED 상태를 고정했다.
 
 ```powershell
 npm run check

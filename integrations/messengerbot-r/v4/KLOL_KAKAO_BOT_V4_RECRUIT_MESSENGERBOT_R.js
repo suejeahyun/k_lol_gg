@@ -113,7 +113,7 @@ var KLOL_V4 = (function () {
       return "[K-LOL.GG 사진 제출 안내]\nV4 휴대폰 봇은 사진 세션 업로드를 사용하지 않습니다.\n사이트에 로그인해 사진을 제출해 주세요.\n\n내전 결과 사진:\nhttps://k-lol-gg.vercel.app/matches/submit\n\n경고 차감 사진:\nhttps://k-lol-gg.vercel.app/discipline/evidence";
     }
     if (profileId === "FEATURES" && (command === "내전미리보기취소" || /^내전확인\s+.+$/.test(command))) {
-      return "[K-LOL.GG 내전 신청 안내]\n내전 미리보기·확인 코드 방식은 사용하지 않습니다.\n봇이 출력한 협곡 전체 양식을 수정해 전송하면 서버의 최종 명단으로 즉시 반영됩니다.\n이 명령으로 변경된 내용은 없습니다.";
+      return "[K-LOL.GG 내전 신청 안내]\n내전 미리보기·확인 코드 방식은 사용하지 않습니다.\n미리보기·확인 요청은 취소되었습니다.\n봇이 출력한 협곡 전체 양식을 수정해 전송하면 서버의 최종 명단으로 즉시 반영됩니다.\n사이트에는 반영하지 않았으며, 이 명령으로 변경된 내용은 없습니다.";
     }
     return null;
   }

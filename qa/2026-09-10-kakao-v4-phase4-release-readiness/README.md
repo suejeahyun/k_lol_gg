@@ -4,11 +4,11 @@
 
 기준 커밋: `924ebd187c0064274a403414881fbf7cd4a3b362`
 
-브랜치: `chore/kakao-v4-phase4-release-readiness-20260910`
+통합 브랜치: `feat/kakao-v4-gateway-20260910`
 
 ## 결론
 
-판정은 **배포 보류**다. V4 기능·생성 산출물·서버 route와 필요한 additive DB migration은 저장소에 존재하지만, 신규 V4 설치본이 canonical 방에 최초 pairing되는 지원 경로가 없다. 운영 DB migration 적용 여부, Vercel 환경변수 구성 여부, 실기기 동작도 이번 범위에서는 확인하지 않았다.
+P0 판정은 **RESOLVED**다. V4는 DB room registry나 pairing 없이 identity secret에서 profile별 deterministic installation ID와 내부 scope를 만들고 current/previous HMAC으로 요청을 인증한다. 다만 운영 DB migration 적용 여부, Vercel 환경변수 구성 여부와 실기기 동작은 확인하지 않았으므로 실제 배포는 계속 보류한다.
 
 ## 확인됨
 
@@ -18,11 +18,10 @@
 - `0031`은 installation/room/member/pairing 테이블, `0032`는 installation key와 bot version, `0033`은 installation당 canonical room FK, `0034`는 `RECRUIT | FEATURES` capability profile을 추가한다. 모두 Drizzle journal에 순서대로 등록돼 있다.
 - assistant read/static reply와 recruiting/operation-form mutation은 transaction 안에서 nonce·receipt·body digest·저장 응답 replay를 사용한다.
 - V4 route와 기존 V3 `/api/integrations/kakao/*` route는 소스에서 함께 존재한다.
-- V4 `RECRUIT`와 `FEATURES`는 같은 identity secret을 써도 profile ID를 HMAC material에 포함해 서로 다른 installation ID를 만든다.
-- 두 profile은 동일한 서버 current/previous signing-key 집합을 사용하고, DB installation의 `key_id`에 현재 공개 key ID가 결합된다. 방의 capability profile과 envelope profile이 같아야 한다.
-- 생성된 휴대폰 파일은 각 219줄이다. `build-messengerbot:v4`가 만든 LF 바이트 기준 SHA-256은 다음과 같다. 전송 도구가 CRLF로 바꾸면 바이트 해시는 달라지므로 설치 직전 동일한 줄바꿈으로 다시 대조한다.
-  - RECRUIT: `ad8293a0849a46e7726fe714b6ed5650305f4f9ba1023307dc2e169d93591c28`
-  - FEATURES: `5c21f0f2edcdcb81dd75862c084dfee66a1d05fd92e84921b002c30931968744`
+- V4 `RECRUIT`와 `FEATURES`는 같은 identity secret을 써도 profile ID를 HMAC material에 포함해 서로 다른 installation ID와 내부 room scope를 만든다.
+- 두 profile은 서버 current/previous signing-key 집합으로 raw envelope를 검증하며 envelope profile과 deterministic installation ID가 일치해야 한다.
+- V4 route에는 room registry와 pair-room 의존성이 없다. V3/V41 route와 pairing 동작은 변경하지 않았다.
+- 생성된 휴대폰 파일의 최종 크기·해시는 release-candidate QA에서 다시 기록하며 설치 직전 동일한 줄바꿈으로 대조한다.
 
 ## 추정
 
@@ -34,19 +33,19 @@
 - 운영 Neon의 migration head, 테이블·컬럼·index·constraint 실제 상태
 - Vercel Production/Preview 환경변수의 configured 여부와 환경 범위
 - DB `kakao_operation_settings` singleton 및 기능별 enable 상태
-- 실제 RECRUIT/FEATURES canonical room과 installation row의 pairing 상태
+- Production/Preview의 V4 identity secret과 current/previous signing key configured 상태
 - MessengerBot R 컴파일, callback, 네트워크 재시도, 실제 카카오 줄바꿈·링크 동작
 - 운영 로그의 replay/conflict/reject code와 실제 복구 시간
 
-## 배포 전 차단 항목
+## 배포 전 항목
 
-### P0 — V4 최초 pairing 경로 없음
+### P0 — RESOLVED: V4 installation-scope 인증
 
-- V4 installation ID는 `KLOL_V4 + profileId`로 생성되어 기존 V41 installation ID와 다르다.
-- V4 server service는 command 분류 전에 `authorizeProfile()`을 실행하므로 미연결 설치본은 `ROOM_BINDING_REQUIRED`로 끝난다.
-- V4 휴대폰 shared/RECRUIT/FEATURES 코드에는 `/api/integrations/kakao/pair-room` 호출과 `/V2방연동 CODE` 처리가 없다.
-- 따라서 DB 직접 조작 없이 신규 V4 설치본을 canonical 방에 연결할 지원 절차가 없다.
-- 해제 조건: V4 전용 서명 pairing 명령을 추가하고, profile 일치·일회성 code·replay·잘못된 profile/room을 자동 테스트와 staging에서 검증한다.
+- V4 installation ID는 identity secret과 `KLOL_V4 + profileId` HMAC으로 결정되며 RECRUIT와 FEATURES가 분리된다.
+- 서버는 같은 identity secret으로 installation/profile을 검증하고 installation ID에서 내부 scope를 결정한다.
+- V4 휴대폰과 route는 pair-room이나 room registry를 사용하지 않는다.
+- current/previous signing key, wrong installation/profile/signature, replay와 cross-sender 동작을 자동 테스트로 확인했다.
+- 운영 환경변수 값과 실기기 동작은 별도 확인 전까지 미확인이다.
 
 ### P1 — 일부 응답은 durable receipt 바깥
 
@@ -54,10 +53,10 @@
 - 주요 조회·mutation은 durable하지만, 모든 command가 재시작 후 동일 저장 응답을 보장하는 것은 아니다.
 - 해제 조건: release 범위를 주요 데이터 명령으로 명시하거나 local/invalid 응답도 공통 durable receipt로 통일한다.
 
-### P1 — 기존 운영 문서의 V4 설치 절차 부재
+### P1 — 기존 운영 문서의 V4 정식 설치 절차 반영
 
-- 현재 `MESSENGERBOT_R_INSTALL.md`는 V41 설치·롤백 절차다. V4 두 profile의 백업, pairing, canary, 전환, 해시 확인 절차는 이번 QA 체크리스트에만 있다.
-- P0 해결 후 정식 설치 문서로 승격해야 한다.
+- 현재 `MESSENGERBOT_R_INSTALL.md`의 V41 pairing 절차는 그대로 유지한다. V4 두 profile의 백업, identity 설정, canary, 전환, 해시 확인 절차는 release-candidate QA에 기록한다.
+- 운영 적용 전에 V4 절차를 정식 설치 문서로 승격해야 한다.
 
 ## Migration 판정
 

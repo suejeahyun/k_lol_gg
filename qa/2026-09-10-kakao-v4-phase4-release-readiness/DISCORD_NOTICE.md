@@ -10,7 +10,7 @@ V4 서버 기능, DB migration, RECRUIT/FEATURES 분리, 재전송 방지 구조
 - RECRUIT/FEATURES 설치본 ID 분리 및 profile 차단 확인
 - V4 기능 집중 테스트 105건과 release-readiness 계약 5건 통과
 
-다만 신규 V4 설치본을 카카오방에 최초 연결하는 공식 pairing 명령이 아직 없어 현재 배포는 보류합니다. 이 경로를 추가하고 staging DB·실기기 검증까지 통과한 뒤 운영 적용 일정을 다시 안내하겠습니다.
+V4 최초 pairing 차단 항목은 deterministic installation-scope 인증으로 해결했습니다. V4는 room registry/pair-room을 사용하지 않으며 V3/V41의 기존 pairing은 그대로 유지합니다. 다만 운영 환경변수·DB·실기기는 아직 확인하지 않아 실제 배포는 보류합니다.
 
 현재 운영 서버·DB·카카오봇에는 변경을 적용하지 않았습니다. 기존 V41 봇은 그대로 유지합니다.
 ```
