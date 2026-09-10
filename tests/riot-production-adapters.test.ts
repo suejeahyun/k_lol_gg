@@ -150,8 +150,16 @@ test("RSO state is HMAC-bound and authorization URL never includes the client se
   });
   const issued = adapter.issueState(randomUUID());
   assert.equal(adapter.digestState(issued.publicState), issued.digestHex);
-  const replacement = issued.publicState.endsWith("x") ? "y" : "x";
-  assert.throws(() => adapter.digestState(`${issued.publicState.slice(0, -1)}${replacement}`), /INVALID_RIOT_RSO_STATE/u);
+  const [stateId, signature] = issued.publicState.split(".");
+  assert.ok(stateId && signature);
+  const base64UrlAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+  const finalCharacterIndex = base64UrlAlphabet.indexOf(signature.at(-1)!);
+  assert.equal(finalCharacterIndex % 4, 0);
+  const nonCanonicalSignature = `${signature.slice(0, -1)}${base64UrlAlphabet[finalCharacterIndex + 1]}`;
+  assert.deepEqual(Buffer.from(nonCanonicalSignature, "base64url"), Buffer.from(signature, "base64url"));
+  assert.throws(() => adapter.digestState(`${stateId}.${nonCanonicalSignature}`), /INVALID_RIOT_RSO_STATE/u);
+  const invalidSignature = `${signature.slice(0, 1) === "A" ? "B" : "A"}${signature.slice(1)}`;
+  assert.throws(() => adapter.digestState(`${stateId}.${invalidSignature}`), /INVALID_RIOT_RSO_STATE/u);
   const authorization = adapter.authorizationUrl({ publicState: issued.publicState });
   assert.equal(authorization.includes(clientSecret), false);
   assert.equal(new URL(authorization).origin, "https://auth.riotgames.com");

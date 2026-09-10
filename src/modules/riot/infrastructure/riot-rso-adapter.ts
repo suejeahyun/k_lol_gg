@@ -94,7 +94,11 @@ export class RiotRsoAdapter implements RiotRsoPort {
     const expected = createHmac("sha256", this.configuration.stateSecret)
       .update(`klol-v2:riot-rso-state:r1\0${match[1]}`)
       .digest();
-    const presented = Buffer.from(match[2]!, "base64url");
+    const encodedSignature = match[2]!;
+    const presented = Buffer.from(encodedSignature, "base64url");
+    if (presented.toString("base64url") !== encodedSignature) {
+      throw new Error("INVALID_RIOT_RSO_STATE");
+    }
     if (presented.byteLength !== expected.byteLength || !timingSafeEqual(presented, expected)) {
       throw new Error("INVALID_RIOT_RSO_STATE");
     }
