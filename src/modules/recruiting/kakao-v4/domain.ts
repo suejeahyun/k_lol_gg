@@ -5,13 +5,15 @@ import type { KakaoRoomCapabilityProfile } from "../kakao-access/domain";
 
 export const KAKAO_V4_COMMAND_CONTRACT = "KLOL_KAKAO_COMMAND_V4";
 export const KAKAO_V4_V1_CONTRACT = "KLOL_KAKAO_V4_V1_COMPAT_2026_09_10_R1";
+export const KAKAO_V1_STRICT_PROTOCOL = "KLOL_KAKAO_V1_STRICT";
+export const KAKAO_V1_STRICT_RESPONSE_FORMAT = "V1_SERVER_EXACT";
 export const KAKAO_V4_MAXIMUM_BODY_BYTES = 32 * 1_024;
 export const KAKAO_V4_MAXIMUM_TEXT_LENGTH = 20_000;
 export const KAKAO_V4_TIMESTAMP_TOLERANCE_SECONDS = 300;
 
 export type KakaoV4ProfileId = KakaoRoomCapabilityProfile;
 
-export type KakaoV4CommandEnvelope = Readonly<{
+type KakaoV4CommandEnvelopeBase = Readonly<{
   profileId: KakaoV4ProfileId;
   installationId: string;
   senderId: string;
@@ -20,6 +22,14 @@ export type KakaoV4CommandEnvelope = Readonly<{
   nonce: string;
   text: string;
 }>;
+
+export type KakaoV4CommandEnvelope = KakaoV4CommandEnvelopeBase & (
+  | Readonly<{ protocol?: never; responseFormat?: never }>
+  | Readonly<{
+      protocol: typeof KAKAO_V1_STRICT_PROTOCOL;
+      responseFormat: typeof KAKAO_V1_STRICT_RESPONSE_FORMAT;
+    }>
+);
 
 export type KakaoV4SignatureFailure =
   | "SIGNING_KEY_UNAVAILABLE"
@@ -43,7 +53,13 @@ function hasExactKeys(value: Record<string, unknown>, expected: readonly string[
 export function parseKakaoV4CommandEnvelope(value: unknown): KakaoV4CommandEnvelope | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const body = value as Record<string, unknown>;
-  if (!hasExactKeys(body, ["profileId", "installationId", "senderId", "eventId", "timestamp", "nonce", "text"])) return null;
+  const baseKeys = ["profileId", "installationId", "senderId", "eventId", "timestamp", "nonce", "text"] as const;
+  const v1Strict = hasExactKeys(body, [...baseKeys, "protocol", "responseFormat"]);
+  if (!hasExactKeys(body, baseKeys) && !v1Strict) return null;
+  if (v1Strict && (
+    body.protocol !== KAKAO_V1_STRICT_PROTOCOL ||
+    body.responseFormat !== KAKAO_V1_STRICT_RESPONSE_FORMAT
+  )) return null;
   if (body.profileId !== "RECRUIT" && body.profileId !== "FEATURES") return null;
   if (typeof body.installationId !== "string" || !INSTALLATION_PATTERN.test(body.installationId)) return null;
   if (typeof body.senderId !== "string" || !SENDER_PATTERN.test(body.senderId)) return null;
@@ -51,7 +67,7 @@ export function parseKakaoV4CommandEnvelope(value: unknown): KakaoV4CommandEnvel
   if (!Number.isSafeInteger(body.timestamp) || (body.timestamp as number) <= 0) return null;
   if (typeof body.nonce !== "string" || !NONCE_PATTERN.test(body.nonce)) return null;
   if (typeof body.text !== "string" || body.text.length < 1 || body.text.length > KAKAO_V4_MAXIMUM_TEXT_LENGTH) return null;
-  return Object.freeze({
+  const envelopeBase: KakaoV4CommandEnvelopeBase = Object.freeze({
     profileId: body.profileId,
     installationId: body.installationId,
     senderId: body.senderId,
@@ -60,6 +76,18 @@ export function parseKakaoV4CommandEnvelope(value: unknown): KakaoV4CommandEnvel
     nonce: body.nonce,
     text: body.text,
   });
+  return v1Strict
+    ? Object.freeze({
+      ...envelopeBase,
+      protocol: KAKAO_V1_STRICT_PROTOCOL,
+      responseFormat: KAKAO_V1_STRICT_RESPONSE_FORMAT,
+    })
+    : envelopeBase;
+}
+
+export function usesKakaoV1StrictResponse(envelope: KakaoV4CommandEnvelope) {
+  return envelope.protocol === KAKAO_V1_STRICT_PROTOCOL &&
+    envelope.responseFormat === KAKAO_V1_STRICT_RESPONSE_FORMAT;
 }
 
 export function canonicalKakaoV4CommandText(value: string) {

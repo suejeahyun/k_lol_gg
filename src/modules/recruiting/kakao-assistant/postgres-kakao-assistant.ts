@@ -225,6 +225,59 @@ function legacyInhouseOverview(applyDate: string, grouped: ReadonlyMap<number, r
   return lines.join("\n");
 }
 
+function v1StrictLegacyInhouseStatus(applyDate: string, grouped: ReadonlyMap<number, readonly LegacySeasonEntry[]>) {
+  if (grouped.size === 0) return "[내전현황]\n현재 등록된 내전 신청 현황이 없습니다.";
+  if (grouped.size === 1) {
+    const recruitNo = [...grouped.keys()][0]!;
+    return legacyInhouseDetail(applyDate, recruitNo, grouped.get(recruitNo) ?? []);
+  }
+  return legacyInhouseOverview(applyDate, grouped);
+}
+
+type LegacySeasonSyncChanges = {
+  added: string[];
+  updated: string[];
+  removed: string[];
+  pending: string[];
+  reserve: string[];
+  currentMainCount: number;
+};
+
+function legacySeasonParticipantLabel(
+  participant: KakaoSeasonSnapshotCommand["participants"][number],
+  playerName?: string | null,
+) {
+  const prefix = participant.reserve ? `예비 ${participant.slotNo}` : String(participant.slotNo);
+  return `${prefix}. ${String(playerName || participant.name).normalize("NFKC").replace(/[\r\n/]+/gu, " ").replace(/\s+/gu, " ").trim()}`;
+}
+
+function compactLegacySeasonChanges(items: readonly string[]) {
+  const normalized = items.map((item) => item.trim()).filter(Boolean);
+  if (normalized.length <= 6) return normalized.join(", ");
+  return `${normalized.slice(0, 6).join(", ")} 외 ${normalized.length - 6}명`;
+}
+
+function legacySeasonSyncReply(recruitNo: number, changes: LegacySeasonSyncChanges) {
+  const hasChanges = changes.added.length > 0 || changes.updated.length > 0 || changes.removed.length > 0 ||
+    changes.pending.length > 0 || changes.reserve.length > 0;
+  if (!hasChanges) return `[K-LOL.GG 내전 #${recruitNo} 명단 변경 없음]\n현재: ${changes.currentMainCount}/${LEGACY_INHOUSE_CAPACITY}`;
+  const lines = [changes.pending.length > 0
+    ? `[K-LOL.GG 내전 #${recruitNo} 명단 업데이트/보류]`
+    : `[K-LOL.GG 내전 #${recruitNo} 명단 업데이트]`];
+  for (const [label, items] of [
+    ["추가", changes.added],
+    ["수정", changes.updated],
+    ["제외", changes.removed],
+    ["보류", changes.pending],
+    ["예비", changes.reserve],
+  ] as const) {
+    const text = compactLegacySeasonChanges(items);
+    if (text) lines.push(`${label}: ${text}`);
+  }
+  lines.push(`현재: ${changes.currentMainCount}/${LEGACY_INHOUSE_CAPACITY}`);
+  return lines.join("\n");
+}
+
 export class PostgresKakaoAssistant {
   constructor(private readonly database: V2Database) {}
 
@@ -652,6 +705,14 @@ export class PostgresKakaoAssistant {
       let cancelledCount = 0;
       let createdCount = 0;
       let updatedCount = 0;
+      const legacyChanges: LegacySeasonSyncChanges = {
+        added: [],
+        updated: [],
+        removed: [],
+        pending: [],
+        reserve: [],
+        currentMainCount: requested.action === "SYNC" ? requested.participants.filter((participant) => !participant.reserve).length : 0,
+      };
       if (command.action === "SYNC") {
         const sourceHash = Buffer.from(input.intent.bodyDigestHex, "hex");
         const matched: Array<{
@@ -682,6 +743,11 @@ export class PostgresKakaoAssistant {
           eq(seasonApplications.sourceRoomIdHash, sourceRoomIdHash),
           eq(seasonApplications.sourceMode, sourceMode),
         )).for("update");
+        const currentPlayerIds = [...new Set(currentApplications.map((application) => application.playerId))];
+        const currentPlayerNames = new Map(currentPlayerIds.length === 0 ? [] : (await transaction.select({
+          id: players.id,
+          memberName: players.memberName,
+        }).from(players).where(inArray(players.id, currentPlayerIds))).map((player) => [player.id, player.memberName] as const));
         for (const current of currentApplications) {
           if (uniqueMatchedIds.includes(current.playerId) || current.status === "CANCELLED") continue;
           if (current.status !== "APPLIED") continue;
@@ -689,6 +755,8 @@ export class PostgresKakaoAssistant {
             status: "CANCELLED", cancelledAt: now, revision: sql`${seasonApplications.revision} + 1`, updatedAt: now,
           }).where(eq(seasonApplications.id, current.id));
           cancelledCount += 1;
+          const playerName = currentPlayerNames.get(current.playerId) ?? "이름 미확인";
+          legacyChanges.removed.push(current.sourceSlotNo ? `${current.sourceSlotNo}. ${playerName}` : playerName);
         }
 
         const activeSlots = new Set(command.participants.map((participant) => participant.slotNo));
@@ -708,6 +776,7 @@ export class PostgresKakaoAssistant {
             status: "CANCELLED", cancelledAt: now, revision: sql`${seasonKakaoPendingApplications.revision} + 1`, updatedAt: now,
           }).where(eq(seasonKakaoPendingApplications.id, pending.id));
           cancelledCount += 1;
+          legacyChanges.removed.push(`${pending.reserve ? `예비 ${pending.slotNo}` : pending.slotNo}. ${pending.suppliedName}`);
         }
 
         for (const { participant, candidates } of matched) {
@@ -745,6 +814,7 @@ export class PostgresKakaoAssistant {
                   updatedAt: now,
                 }).where(eq(seasonApplications.id, current.id));
                 updatedCount += 1;
+                legacyChanges.updated.push(legacySeasonParticipantLabel(participant, matchedPlayer.memberName));
               }
             } else if (mergePlan.action === "CREATE_KAKAO") {
               await transaction.insert(seasonApplications).values({
@@ -755,6 +825,7 @@ export class PostgresKakaoAssistant {
                 createdAt: now, updatedAt: now,
               });
               createdCount += 1;
+              legacyChanges.added.push(legacySeasonParticipantLabel(participant, matchedPlayer.memberName));
             }
             const existingPending = currentPending.find((pending) => pending.slotNo === participant.slotNo);
             if (existingPending?.status === "ACTIVE") {
@@ -800,6 +871,8 @@ export class PostgresKakaoAssistant {
                 ...pendingValues, revision: sql`${seasonKakaoPendingApplications.revision} + 1`,
               }).where(eq(seasonKakaoPendingApplications.id, existing.id));
               updatedCount += 1;
+              (participant.reserve ? legacyChanges.reserve : legacyChanges.pending)
+                .push(legacySeasonParticipantLabel(participant, matchedPlayer?.memberName));
             }
           } else {
             await transaction.insert(seasonKakaoPendingApplications).values({
@@ -808,6 +881,8 @@ export class PostgresKakaoAssistant {
               ...pendingValues,
             });
             createdCount += 1;
+            (participant.reserve ? legacyChanges.reserve : legacyChanges.pending)
+              .push(legacySeasonParticipantLabel(participant, matchedPlayer?.memberName));
           }
         }
         await transaction.insert(auditEvents).values({
@@ -918,6 +993,7 @@ export class PostgresKakaoAssistant {
           cancelledCount: 0,
           availableRecruitNos: Object.freeze(availableRecruitNos),
           legacyReply: legacyInhouseOverview(command.applyDate, legacyGrouped),
+          v1StrictLegacyReply: v1StrictLegacyInhouseStatus(command.applyDate, legacyGrouped),
         });
       }
       const entries: KakaoSeasonSnapshotEntryDto[] = [
@@ -968,8 +1044,12 @@ export class PostgresKakaoAssistant {
         pendingCount: pending.filter(({ pending: item }) => item.matchState !== "MATCHED_RESERVE").length,
         cancelledCount,
         ...(command.action === "STATUS" ? {} : { createdCount, updatedCount, mode: sourceMode }),
+        ...(command.action === "SYNC" ? { v1StrictLegacyReply: legacySeasonSyncReply(command.recruitNo, legacyChanges) } : {}),
         ...(command.action === "STATUS" && command.recruitNo !== null ? {
           legacyReply: legacyInhouseDetail(command.applyDate, command.recruitNo, legacyEntries),
+          v1StrictLegacyReply: legacyEntries.length > 0
+            ? legacyInhouseDetail(command.applyDate, command.recruitNo, legacyEntries)
+            : "[내전현황]\n현재 등록된 내전 신청 현황이 없습니다.",
         } : {}),
       });
     });

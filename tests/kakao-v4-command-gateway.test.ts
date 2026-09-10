@@ -5,6 +5,8 @@ import test from "node:test";
 import { KakaoV4CommandError, KakaoV4CommandService } from "../src/modules/recruiting/kakao-v4/application";
 import {
   KAKAO_V4_COMMAND_CONTRACT,
+  KAKAO_V1_STRICT_PROTOCOL,
+  KAKAO_V1_STRICT_RESPONSE_FORMAT,
   canonicalKakaoV4CommandText,
   kakaoV4SignatureMaterial,
   parseKakaoV4CommandEnvelope,
@@ -24,8 +26,16 @@ const envelope = Object.freeze({
   text: "/V4상태",
 } satisfies KakaoV4CommandEnvelope);
 
-test("V4 schema accepts only the seven identity-free envelope fields", () => {
+test("V4 schema preserves the seven-field client and accepts only the exact V1 strict extension", () => {
   assert.deepEqual(parseKakaoV4CommandEnvelope(envelope), envelope);
+  const v1Strict = {
+    ...envelope,
+    protocol: KAKAO_V1_STRICT_PROTOCOL,
+    responseFormat: KAKAO_V1_STRICT_RESPONSE_FORMAT,
+  } as const;
+  assert.deepEqual(parseKakaoV4CommandEnvelope(v1Strict), v1Strict);
+  assert.equal(parseKakaoV4CommandEnvelope({ ...envelope, protocol: KAKAO_V1_STRICT_PROTOCOL }), null);
+  assert.equal(parseKakaoV4CommandEnvelope({ ...v1Strict, responseFormat: "V4_DEFAULT" }), null);
   assert.equal(parseKakaoV4CommandEnvelope({ ...envelope, roomName: "실제 방 이름" }), null);
   assert.equal(parseKakaoV4CommandEnvelope({ ...envelope, channelId: "123" }), null);
   assert.equal(parseKakaoV4CommandEnvelope({ ...envelope, profileId: "ADMIN" }), null);

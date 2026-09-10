@@ -1,4 +1,5 @@
 import { toPublicRecruitPartyDto, type RecruitParty, type ScrimRecruit } from "../domain/recruiting";
+import { publicScrimMemo } from "../domain/v1-strict-scrim-time";
 
 export type PublicScrimRecruitDto = Readonly<{
   id: string;
@@ -38,7 +39,7 @@ export function toPublicScrimDto(scrim: ScrimRecruit): PublicScrimRecruitDto {
     opponentTeamName: scrim.opponentTeamName ?? null,
     requesterLineup: scrim.requesterLineup,
     opponentLineup: scrim.opponentLineup,
-    memo: scrim.legacyMemo,
+    memo: publicScrimMemo(scrim.legacyMemo),
     seriesRuleText: scrim.legacySeriesRuleText,
     status: scrim.status,
     scheduledAt: scrim.scheduledAt?.toISOString() ?? null,

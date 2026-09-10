@@ -222,6 +222,7 @@ export type KakaoSeasonSnapshotDto = Readonly<{
   mode?: "RIFT" | "ARAM" | "AUGMENT_ARAM";
   availableRecruitNos?: readonly number[];
   legacyReply?: string;
+  v1StrictLegacyReply?: string;
 }>;
 
 export type KakaoImageReceiveCommand = Readonly<{

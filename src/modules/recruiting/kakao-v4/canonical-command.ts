@@ -2,9 +2,10 @@ import type { SeasonApplicationPosition } from "@/modules/seasons/domain/season"
 
 import type { ScrimFormCommandPayload, SyncScrimCommandPayload } from "../application/commands";
 import type { RecruitMember, RecruitPartyType, ScrimLineup } from "../domain/recruiting";
+import { encodeV1StrictScrimTimeText, parseV1StrictScrimTime } from "../domain/v1-strict-scrim-time";
 import { isOperationFormType, type OperationFormPayloadByType, type OperationFormType } from "../operation-forms/domain";
 import type { KakaoV4CommandClassification } from "./classifier";
-import type { KakaoV4CommandEnvelope } from "./domain";
+import { usesKakaoV1StrictResponse, type KakaoV4CommandEnvelope } from "./domain";
 import { parseKakaoV4OperationForm } from "./operation-form";
 
 export type KakaoV4RecruitTarget = Readonly<{
@@ -329,7 +330,7 @@ function cleanScrimValue(value: string | null) {
   return normalized;
 }
 
-function scrimSnapshot(text: string, fallbackDate: string): KakaoV4ScrimUpsertPayload | null {
+function scrimSnapshot(text: string, fallbackDate: string, v1Strict: boolean): KakaoV4ScrimUpsertPayload | null {
   const normalized = text.replace(/\r\n?/gu, "\n").trim();
   const lines = normalized.split("\n");
   const field = (label: string) => {
@@ -370,7 +371,9 @@ function scrimSnapshot(text: string, fallbackDate: string): KakaoV4ScrimUpsertPa
   if (bestOf < 1 || bestOf > 20) return null;
   const timeText = field("일시");
   const clock = /(?:^|\s)([01]?\d|2[0-3])\s*:\s*([0-5]\d)(?:\s|$)/u.exec(` ${timeText ?? ""} `);
-  const scheduledAt = clock ? new Date(`${applyDate}T${String(Number(clock[1])).padStart(2, "0")}:${clock[2]}:00+09:00`).toISOString() : null;
+  const v1Schedule = v1Strict ? parseV1StrictScrimTime(cleanScrimValue(timeText), applyDate) : null;
+  const scheduledAt = v1Schedule?.scheduledAt ??
+    (clock ? new Date(`${applyDate}T${String(Number(clock[1])).padStart(2, "0")}:${clock[2]}:00+09:00`).toISOString() : null);
   return Object.freeze({
     recruitDate: applyDate,
     scrimNumber: scrimNumberMatch ? Number(scrimNumberMatch[1]) : null,
@@ -380,7 +383,9 @@ function scrimSnapshot(text: string, fallbackDate: string): KakaoV4ScrimUpsertPa
     opponentTeamName,
     requesterLineup: sectionLineup(requesterIndex + 1, opponentIndex),
     opponentLineup: sectionLineup(opponentIndex + 1, lines.length),
-    memo: cleanScrimValue(field("메모")),
+    memo: v1Strict && !scheduledAt
+      ? encodeV1StrictScrimTimeText(v1Schedule?.startTimeText ?? null)
+      : cleanScrimValue(field("메모")),
     seriesRuleText: ruleText,
     scheduledAt,
     bestOf,
@@ -446,7 +451,7 @@ export function canonicalizeKakaoV4Command(classification: KakaoV4CommandClassif
     return Object.freeze({ domain: "SCRIM" as const, action: "TEMPLATE" as const, recruitDate: date });
   }
   if (classification.command === "SCRIM_SNAPSHOT") {
-    const payload = scrimSnapshot(classification.canonicalText, date);
+    const payload = scrimSnapshot(classification.canonicalText, date, usesKakaoV1StrictResponse(envelope));
     return payload ? Object.freeze({ domain: "SCRIM" as const, action: "UPSERT" as const, payload }) : null;
   }
   if (classification.command === "SCRIM_STATUS") return Object.freeze({ domain: "SCRIM" as const, action: "STATUS" as const });

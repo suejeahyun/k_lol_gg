@@ -7,9 +7,10 @@ import {
   type RecruitingCommand,
   type RecruitingCommandResult,
 } from "../src/modules/recruiting";
-import { kakaoReadIdentity, type KakaoOpenChatStatusDto, type KakaoSeasonSnapshotDto } from "../src/modules/recruiting/kakao-assistant/domain";
+import { KakaoAssistantError, kakaoReadIdentity, type KakaoOpenChatStatusDto, type KakaoSeasonSnapshotDto } from "../src/modules/recruiting/kakao-assistant/domain";
 import { canonicalizeKakaoV4Command, type CanonicalKakaoV4Command } from "../src/modules/recruiting/kakao-v4/canonical-command";
 import { classifyKakaoV4Command } from "../src/modules/recruiting/kakao-v4/classifier";
+import { KAKAO_V1_STRICT_PROTOCOL, KAKAO_V1_STRICT_RESPONSE_FORMAT } from "../src/modules/recruiting/kakao-v4/domain";
 import {
   KakaoV4CommandDispatcher,
   KakaoV4DispatcherError,
@@ -95,6 +96,8 @@ function harness(options: Readonly<{
   missingPlayer?: boolean;
   emptyRanking?: boolean;
   wholePercent?: boolean;
+  v1StrictSeasonLegacyReply?: string;
+  seasonNotFound?: boolean;
 }> = {}) {
   const handled: RecruitingCommand[] = [];
   const resolved: unknown[] = [];
@@ -174,6 +177,7 @@ function harness(options: Readonly<{
     },
     async syncSeasonSnapshot(input) {
       seasonCalls.push({ command: input.command });
+      if (options.seasonNotFound) throw new KakaoAssistantError("NOT_FOUND");
       const body: KakaoSeasonSnapshotDto = {
         kind: "SEASON_APPLICATION_SNAPSHOT",
         seasonId: input.command.seasonId ?? "11111111-1111-4111-8111-111111111111",
@@ -182,6 +186,7 @@ function harness(options: Readonly<{
         entries: [], appliedCount: 0, reserveCount: 0, confirmedCount: 0,
         pendingCount: 0, cancelledCount: input.command.action === "SYNC" ? 2 : 0,
         createdCount: 0, updatedCount: 0,
+        ...(options.v1StrictSeasonLegacyReply ? { v1StrictLegacyReply: options.v1StrictSeasonLegacyReply } : {}),
       };
       return { body, replayed: false };
     },
@@ -377,6 +382,78 @@ test("season authoritative zero-person snapshot stays one transactional assistan
   assert.equal(state.seasonCalls.length, 1);
   assert.equal((state.seasonCalls[0]?.command as { action: string }).action, "SYNC");
   assert.match(result.legacyReply, /취소 2/u);
+});
+
+test("season SYNC exposes the legacy change reply only to explicit V1 strict clients", async () => {
+  const legacyReply = "[K-LOL.GG 내전 #2 명단 업데이트]\n추가: 1. 재현\n현재: 1/10";
+  const state = harness({ v1StrictSeasonLegacyReply: legacyReply });
+  const featuresContext: KakaoV4DispatchContext = {
+    ...context,
+    envelope: { ...context.envelope, profileId: "FEATURES", eventId: "event-season-normal-legacy-1" },
+    authorization: { ...context.authorization, capabilityProfile: "FEATURES" },
+  };
+  const command = {
+    domain: "SEASON" as const,
+    action: "SYNC" as const,
+    seasonId: "11111111-1111-4111-8111-111111111111",
+    applyDate: "2026-09-10",
+    recruitNumber: 2,
+    mode: "RIFT" as const,
+    participants: [],
+  };
+  const normal = await state.dispatcher.dispatch(featuresContext, command);
+  assert.match(normal.legacyReply, /^\[K-LOL\.GG 내전 신청 반영\]/u);
+  assert.doesNotMatch(normal.legacyReply, /명단 업데이트/u);
+
+  const strict = await state.dispatcher.dispatch({
+    ...featuresContext,
+    envelope: {
+      ...featuresContext.envelope,
+      eventId: "event-season-strict-legacy-1",
+      protocol: KAKAO_V1_STRICT_PROTOCOL,
+      responseFormat: KAKAO_V1_STRICT_RESPONSE_FORMAT,
+    },
+  }, command);
+  assert.equal(strict.legacyReply, legacyReply);
+});
+
+test("V1 strict season STATUS maps no active season to the canonical empty reply only", async () => {
+  const state = harness({ seasonNotFound: true });
+  const strictContext: KakaoV4DispatchContext = {
+    ...context,
+    envelope: {
+      ...context.envelope,
+      profileId: "FEATURES",
+      eventId: "event-season-not-found-strict-1",
+      protocol: KAKAO_V1_STRICT_PROTOCOL,
+      responseFormat: KAKAO_V1_STRICT_RESPONSE_FORMAT,
+    },
+    authorization: { ...context.authorization, capabilityProfile: "FEATURES" },
+  };
+  const command = {
+    domain: "SEASON" as const,
+    action: "STATUS" as const,
+    seasonId: "11111111-1111-4111-8111-111111111111",
+    applyDate: "2026-09-10",
+  };
+  const strict = await state.dispatcher.dispatch(strictContext, command);
+  assert.equal(strict.legacyReply, "[내전현황]\n현재 등록된 내전 신청 현황이 없습니다.");
+
+  await assert.rejects(
+    () => state.dispatcher.dispatch({
+      ...strictContext,
+      envelope: {
+        profileId: "FEATURES",
+        installationId: strictContext.envelope.installationId,
+        senderId: strictContext.envelope.senderId,
+        eventId: "event-season-not-found-normal-1",
+        timestamp: strictContext.envelope.timestamp,
+        nonce: "99999999999999999999999999999999",
+        text: "내전현황",
+      },
+    }, command),
+    (error: unknown) => error instanceof KakaoAssistantError && error.code === "NOT_FOUND",
+  );
 });
 
 test("scrim create and snapshot each issue one recruiting mutation", async () => {

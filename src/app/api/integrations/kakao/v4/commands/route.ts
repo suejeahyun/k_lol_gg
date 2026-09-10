@@ -94,6 +94,7 @@ export async function POST(request: Request) {
       version: KAKAO_V4_COMMAND_CONTRACT,
       profileId: envelope.profileId,
       eventId: envelope.eventId,
+      ...(envelope.protocol ? { protocol: envelope.protocol, responseFormat: envelope.responseFormat } : {}),
       reply: result.reply,
     }, { traceId, headers: replayHeaders });
   } catch (error) {
