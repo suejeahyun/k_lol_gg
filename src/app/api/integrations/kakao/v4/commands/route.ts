@@ -37,13 +37,13 @@ function runtimeService() {
   if (!registry) return null;
   const recruiting = getRuntimeRecruitingService();
   const assistant = getRuntimeKakaoAssistant();
-  if (!recruiting || !assistant) return null;
   const operationForms = getRuntimeOperationForms();
+  if (!recruiting || !assistant || !operationForms) return null;
   service = new KakaoV4CommandService(registry, new KakaoV4CommandDispatcher({
     recruiting,
     assistant,
     publicOrigin: process.env.V2_PUBLIC_ORIGIN ?? process.env.NEXT_PUBLIC_SITE_URL,
-    ...(operationForms ? { operationForms } : {}),
+    operationForms,
   }));
   return service;
 }

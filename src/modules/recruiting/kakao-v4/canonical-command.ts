@@ -93,7 +93,7 @@ export type CanonicalKakaoV4Command =
       seasonId: string | null;
       applyDate: string;
       recruitNumber: number;
-      mode: "RIFT";
+      mode: KakaoV4InhouseMode;
       participants: readonly KakaoV4SeasonParticipant[];
     }>
   | Readonly<{ domain: "PLAYER"; action: "RECORD" | "RECENT"; query: string }>
@@ -181,7 +181,15 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
   const dateValue = /^\s*》\s*(20\d{2}-\d{2}-\d{2})(?:\s|$)/mu.exec(normalized)?.[1] ?? null;
   const applyDate = validDateKey(dateValue, fallbackDate);
   const capacity = Number(/^\s*👥\s*\d{1,3}\s*\/\s*(\d{1,3})\s*명\s*$/mu.exec(normalized)?.[1] ?? 0);
-  if (!recruitNumber || !applyDate || capacity < 1 || capacity > 99 || !/^\s*》\s*협곡\s*$/mu.test(normalized)) return null;
+  const modeLabel = /^\s*》\s*(협곡|칼바람|증바람|증강칼바람)\s*$/mu.exec(normalized)?.[1] ?? null;
+  const mode: KakaoV4InhouseMode | null = modeLabel === "협곡"
+    ? "RIFT"
+    : modeLabel === "칼바람"
+      ? "ARAM"
+      : modeLabel === "증바람" || modeLabel === "증강칼바람"
+        ? "AUGMENT_ARAM"
+        : null;
+  if (!recruitNumber || !applyDate || capacity < 1 || capacity > 99 || !mode) return null;
 
   const slots = new Set<number>();
   const participants: KakaoV4SeasonParticipant[] = [];
@@ -193,10 +201,12 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
     slots.add(slotNo);
     if (!row[2]) continue;
     const fields = row[2].split("/").map((field) => field.trim());
-    if (fields.length < 4 || !fields[0]) return null;
-    const mainPosition = seasonPosition(fields[3] ?? "");
+    if (!fields[0] || (mode === "RIFT" && fields.length < 4)) return null;
+    const mainPosition = mode === "RIFT" ? seasonPosition(fields[3] ?? "") : "ALL";
     if (!mainPosition) return null;
-    const subPositions = fields.slice(4).flatMap((field) => field.split(/[,，]/u)).map(seasonPosition).filter((position): position is SeasonApplicationPosition => Boolean(position && position !== "ALL" && position !== mainPosition));
+    const subPositions = mode === "RIFT"
+      ? fields.slice(4).flatMap((field) => field.split(/[,，]/u)).map(seasonPosition).filter((position): position is SeasonApplicationPosition => Boolean(position && position !== "ALL" && position !== mainPosition))
+      : [];
     const uniqueSubPositions = [...new Set(subPositions)];
     if (mainPosition === "ALL" && uniqueSubPositions.length > 0) return null;
     participants.push(Object.freeze({
@@ -215,7 +225,7 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
     seasonId: null,
     applyDate,
     recruitNumber,
-    mode: "RIFT" as const,
+    mode,
     participants: Object.freeze(participants),
   });
 }

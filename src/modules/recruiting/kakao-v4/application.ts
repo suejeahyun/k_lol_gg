@@ -90,7 +90,12 @@ export class KakaoV4CommandService {
     let replayed = false;
     if (!result && this.dispatcher) {
       const canonical = canonicalizeKakaoV4Command(classification, envelope);
-      if (canonical) {
+      if (canonical?.domain === "OPERATIONS" && canonical.action === "INVALID_FORM") {
+        result = Object.freeze({
+          kind: "REPLY" as const,
+          reply: `[K-LOL.GG 양식 필드 누락]\n필수 항목을 확인해 주세요: ${canonical.missingFields.join(", ")}`,
+        });
+      } else if (canonical) {
         const dispatched = await this.dispatcher.dispatch({ envelope, keyId, requestDigestHex: metadata?.requestDigestHex ?? digest, requestId: metadata?.requestId ?? envelope.eventId, authorization }, canonical);
         result = Object.freeze({ kind: "REPLY" as const, reply: dispatched.legacyReply });
         replayed = dispatched.replayed;

@@ -117,13 +117,13 @@ export type KakaoSeasonSnapshotCommand =
   | (KakaoSeasonSnapshotCommandBase & Readonly<{
       action: "SYNC";
       recruitNo: number;
-      mode: "RIFT";
+      mode: "RIFT" | "ARAM" | "AUGMENT_ARAM";
       participants: readonly KakaoSeasonSnapshotParticipant[];
     }>)
   | (KakaoSeasonSnapshotCommandBase & Readonly<{
       action: "CANCEL";
       recruitNo: number;
-      mode: "RIFT";
+      mode: "RIFT" | "ARAM" | "AUGMENT_ARAM";
       participants: readonly KakaoSeasonSnapshotParticipant[];
     }>)
   | (KakaoSeasonSnapshotCommandBase & Readonly<{
@@ -209,7 +209,7 @@ export type KakaoSeasonSnapshotDto = Readonly<{
   cancelledCount: number;
   createdCount?: number;
   updatedCount?: number;
-  mode?: "RIFT";
+  mode?: "RIFT" | "ARAM" | "AUGMENT_ARAM";
   availableRecruitNos?: readonly number[];
   legacyReply?: string;
 }>;

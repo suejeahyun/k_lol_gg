@@ -126,15 +126,17 @@ export function parseKakaoV4OperationForm(input: Readonly<{
     const friendName = cleanField(readField(text, "지인 이름", ["지인 닉네임", "이용기간", "디스코드 닉네임 변경"]), 100);
     const friendNickname = cleanField(readField(text, "지인 닉네임", ["이용기간", "디스코드 닉네임 변경"]), 64);
     const usagePeriod = cleanField(readField(text, "이용기간", ["디스코드 닉네임 변경"]), 160);
+    const discordNicknameChange = cleanField(readField(text, "디스코드 닉네임 변경", []), 40);
     const missing = [!friendName && "지인 이름", !friendNickname && "지인 닉네임", !usagePeriod && "이용기간"].filter(Boolean) as string[];
     if (missing.length > 0) return invalid(input.formType, missing);
     return Object.freeze({ valid: true as const, formType: input.formType, payload: Object.freeze({
       applicantName: person.name, applicantNickname: person.nickname, friendName, friendNickname,
-      usagePeriod, discordNicknameChange: booleanFromText(readField(text, "디스코드 닉네임 변경", [])),
+      usagePeriod, discordNicknameChange: booleanFromText(discordNicknameChange),
     }) });
   }
   if (input.formType === "suggestions") {
-    const person = splitPerson(readField(text, "본인 이름 및 닉네임", ["건의 사유", "건의 내용"]), input.senderFallback);
+    const personText = cleanField(readField(text, "본인 이름 및 닉네임", ["건의 사유", "건의 내용"]), 180);
+    const person = splitPerson(personText, input.senderFallback);
     const reason = cleanField(readField(text, "건의 사유", ["건의 내용"]), 500);
     const content = cleanField(readField(text, "건의 내용", []), 4_000);
     const missing = [!reason && "건의 사유", !content && "건의 내용"].filter(Boolean) as string[];
@@ -142,7 +144,8 @@ export function parseKakaoV4OperationForm(input: Readonly<{
     return Object.freeze({ valid: true as const, formType: input.formType, payload: Object.freeze({ applicantName: person.name, applicantNickname: person.nickname, reason, content }) });
   }
   if (input.formType === "meetups") {
-    const person = splitPerson(readField(text, "주최자 이름 및 닉네임", ["일자", "장소", "참여자 명단"]), input.senderFallback);
+    const personText = cleanField(readField(text, "주최자 이름 및 닉네임", ["일자", "장소", "참여자 명단"]), 180);
+    const person = splitPerson(personText, input.senderFallback);
     const legacyDateText = cleanField(readField(text, "일자", ["장소", "참여자 명단"]), 160);
     const location = cleanField(readField(text, "장소", ["참여자 명단"]), 240);
     const participants = participantsFromText(readField(text, "참여자 명단", []));
@@ -150,7 +153,8 @@ export function parseKakaoV4OperationForm(input: Readonly<{
     if (missing.length > 0) return invalid(input.formType, missing);
     return Object.freeze({ valid: true as const, formType: input.formType, payload: Object.freeze({ hostName: person.name, hostNickname: person.nickname, meetupAt: null, legacyDateText, location, participants }) });
   }
-  const person = splitPerson(readField(text, "이름 및 닉네임", ["외출기간", "외출사유", "외출범위"]), input.senderFallback);
+  const personText = cleanField(readField(text, "이름 및 닉네임", ["외출기간", "외출사유", "외출범위"]), 180);
+  const person = splitPerson(personText, input.senderFallback);
   const period = parsePeriod(readField(text, "외출기간", ["외출사유", "외출범위"]));
   const reason = cleanField(readField(text, "외출사유", ["외출범위"]), 1_000);
   const scope = scopeFromText(readField(text, "외출범위", []));

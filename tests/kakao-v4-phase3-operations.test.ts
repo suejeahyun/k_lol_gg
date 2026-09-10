@@ -82,6 +82,7 @@ function harness(operationForms?: KakaoV4OperationFormsPort) {
   const recruiting: KakaoV4RecruitingPort = {
     async handle() { throw new Error("unexpected recruiting mutation"); },
     async resolveCompatTarget() { throw new Error("unexpected recruiting lookup"); },
+    async resolveScrimUpsert() { throw new Error("unexpected scrim lookup"); },
   };
   return {
     dispatcher: new KakaoV4CommandDispatcher({ recruiting, assistant, ...(operationForms ? { operationForms } : {}) }),
