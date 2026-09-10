@@ -62,7 +62,7 @@ V4 루트의 paste-ready 운영 산출물은 UNIFIED 하나뿐이다. 분리형 
 
 ## 운영 배포
 
-- GitHub `main`과 기능 브랜치에 검증 코드 커밋 `886f3a58bc090278e9ff10f1160121dd84ff35f7`을 동일하게 푸시했다.
-- Vercel Production 배포 `4SyV7sqyJ6h938ugCNvMmAaLYGN7`가 `Ready`임을 UI에서 확인했다.
+- GitHub `main`과 기능 브랜치에 검증 코드 커밋 `00c2077c1a0dfdd7959430e105bab8e5307a65b1`을 동일하게 푸시했다.
+- Vercel Production 배포 `GaCfdRo6rafGatUDx37QGJkPgETD`가 `Ready`임을 UI에서 확인했다.
 - 운영 `/`, `/api/health`, `/recruits`는 HTTP 200이다.
-- private one-paste 파일과 동일한 V4 전용 keyring으로 서명한 `V4계약확인` 운영 요청은 HTTP 200, 계약 `KLOL_KAKAO_COMMAND_V4`, reply 존재로 확인했다. 비밀값·서명·식별자는 출력하지 않았다.
+- private one-paste 파일과 동일한 V4 전용 keyring으로 서명한 `5인파티` 운영 요청은 HTTP 200, 계약 `KLOL_KAKAO_COMMAND_V4`, `#자동배정`·저장 안내 존재, 시작시간·게임정보 미노출로 확인했다. 모집 데이터는 생성하지 않았고 비밀값·서명·식별자는 출력하지 않았다.
