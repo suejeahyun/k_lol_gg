@@ -1,6 +1,5 @@
 import { createHash } from "node:crypto";
 
-import type { KakaoProfileAuthorization } from "../kakao-access/postgres-kakao-room-registry";
 import type { VerifiedKakaoWebhookIntent } from "../infrastructure/kakao-signature";
 import {
   KAKAO_V4_EVENT_SCOPE,
@@ -21,6 +20,7 @@ import type {
   KakaoV4StaticReceiptDto,
 } from "../kakao-assistant/domain";
 import type { KakaoV4CommandEnvelope } from "./domain";
+import type { KakaoV4InstallationAuthorization } from "./installation-scope";
 import {
   requiredProfileForKakaoV4Command,
   type CanonicalKakaoV4Command,
@@ -80,7 +80,7 @@ export type KakaoV4DispatchContext = Readonly<{
   keyId: string;
   requestDigestHex: string;
   requestId: string;
-  authorization: KakaoProfileAuthorization;
+  authorization: KakaoV4InstallationAuthorization;
 }>;
 
 export type KakaoV4DispatcherResult = Readonly<{

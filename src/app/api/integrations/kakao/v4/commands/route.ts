@@ -9,12 +9,9 @@ import {
   readJsonBody,
   readValidatedTraceId,
 } from "@/platform/http";
-import { getRuntimeKakaoRoomRegistry } from "@/modules/recruiting/kakao-access/runtime";
 import { getRuntimeKakaoAssistant } from "@/modules/recruiting/kakao-assistant/runtime";
 import { getRuntimeRecruitingService } from "@/modules/recruiting/infrastructure/runtime-recruiting";
 import { getRuntimeOperationForms } from "@/modules/recruiting/operation-forms/runtime";
-import { kakaoWebhookFailureResponse } from "@/modules/recruiting/kakao-access/http";
-import { KakaoRoomRegistryError } from "@/modules/recruiting/kakao-access/postgres-kakao-room-registry";
 import { kakaoWebhookSecrets, readBoundedKakaoRawBody } from "@/modules/recruiting/infrastructure/kakao-http-request";
 import { KakaoV4CommandService } from "@/modules/recruiting/kakao-v4/application";
 import { KakaoV4CommandDispatcher } from "@/modules/recruiting/kakao-v4/dispatcher";
@@ -25,6 +22,10 @@ import {
   verifyKakaoV4Signature,
 } from "@/modules/recruiting/kakao-v4/domain";
 import { kakaoV4CommandFailureResponse, kakaoV4ProblemResponse } from "@/modules/recruiting/kakao-v4/http";
+import {
+  getRuntimeKakaoV4ProfileAuthorizer,
+  KakaoV4InstallationScopeError,
+} from "@/modules/recruiting/kakao-v4/installation-scope";
 
 export const runtime = "nodejs";
 
@@ -33,28 +34,19 @@ let service: KakaoV4CommandService | null = null;
 
 function runtimeService() {
   if (service) return service;
-  const registry = getRuntimeKakaoRoomRegistry();
-  if (!registry) return null;
+  const authorizer = getRuntimeKakaoV4ProfileAuthorizer();
+  if (!authorizer) return null;
   const recruiting = getRuntimeRecruitingService();
   const assistant = getRuntimeKakaoAssistant();
   const operationForms = getRuntimeOperationForms();
   if (!recruiting || !assistant || !operationForms) return null;
-  service = new KakaoV4CommandService(registry, new KakaoV4CommandDispatcher({
+  service = new KakaoV4CommandService(authorizer, new KakaoV4CommandDispatcher({
     recruiting,
     assistant,
     publicOrigin: process.env.V2_PUBLIC_ORIGIN ?? process.env.NEXT_PUBLIC_SITE_URL,
     operationForms,
   }));
   return service;
-}
-
-function registryFailure(error: KakaoRoomRegistryError, traceId?: string) {
-  if (
-    error.code === "INSTALLATION_KEY_MISMATCH" || error.code === "INSTALLATION_REVOKED" ||
-    error.code === "ROOM_BINDING_REQUIRED" || error.code === "ROOM_NOT_REGISTERED" ||
-    error.code === "ROOM_PAUSED" || error.code === "ROOM_CAPABILITY_FORBIDDEN"
-  ) return kakaoWebhookFailureResponse(error.code, traceId);
-  return kakaoV4ProblemResponse("UNAVAILABLE", traceId);
 }
 
 export async function POST(request: Request) {
@@ -104,7 +96,7 @@ export async function POST(request: Request) {
       reply: result.reply,
     }, { traceId, headers: replayHeaders });
   } catch (error) {
-    if (error instanceof KakaoRoomRegistryError) return registryFailure(error, traceId);
+    if (error instanceof KakaoV4InstallationScopeError) return kakaoV4ProblemResponse("SIGNATURE_INVALID", traceId);
     return kakaoV4CommandFailureResponse(error, traceId);
   }
 }

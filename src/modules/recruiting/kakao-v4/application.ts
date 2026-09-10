@@ -1,26 +1,17 @@
 import { createHash } from "node:crypto";
 
-import type { KakaoProfileAuthorization } from "../kakao-access/postgres-kakao-room-registry";
 import {
   KAKAO_V4_COMMAND_CONTRACT,
   KAKAO_V4_V1_CONTRACT,
   type KakaoV4CommandEnvelope,
-  type KakaoV4ProfileId,
 } from "./domain";
+import type { KakaoV4ProfileAuthorizer } from "./installation-scope";
 import { canonicalizeKakaoV4Command, type CanonicalKakaoV4Command } from "./canonical-command";
 import { classifyKakaoV4Command, type KakaoV4CommandClassification } from "./classifier";
 import {
   KakaoV4CommandDispatcher,
   type KakaoV4DispatcherResult,
 } from "./dispatcher";
-
-export type KakaoV4ProfileAuthorizer = Readonly<{
-  authorizeProfile(input: Readonly<{
-    installationPublicId: string;
-    requiredCapabilityProfile: KakaoV4ProfileId;
-    keyId: string;
-  }>): Promise<KakaoProfileAuthorization>;
-}>;
 
 type DispatchResult = Readonly<{ kind: "REPLY"; reply: string }>;
 
@@ -97,7 +88,6 @@ export class KakaoV4CommandService {
     const authorization = await this.authorizer.authorizeProfile({
       installationPublicId: envelope.installationId,
       requiredCapabilityProfile: envelope.profileId,
-      keyId,
     });
     const receiptKey = `${envelope.installationId}:${envelope.eventId}`;
     const digest = envelopeDigest(envelope);
@@ -149,7 +139,6 @@ export class KakaoV4CommandService {
     const authorization = await this.authorizer.authorizeProfile({
       installationPublicId: input.envelope.installationId,
       requiredCapabilityProfile: input.envelope.profileId,
-      keyId: input.keyId,
     });
     return this.dispatcher.dispatch({
       envelope: input.envelope,

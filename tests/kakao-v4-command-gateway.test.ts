@@ -61,7 +61,7 @@ test("profile authorization does not receive sender role or allowlist inputs", a
   });
   const result = await service.execute(envelope, "current");
   assert.equal(result.kind, "REPLY");
-  assert.deepEqual(calls, [{ installationPublicId: envelope.installationId, requiredCapabilityProfile: "RECRUIT", keyId: "current" }]);
+  assert.deepEqual(calls, [{ installationPublicId: envelope.installationId, requiredCapabilityProfile: "RECRUIT" }]);
   assert.doesNotMatch(JSON.stringify(calls), /sender|role|allowlist/iu);
 });
 
