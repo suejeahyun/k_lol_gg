@@ -1,12 +1,12 @@
 # K-LOL.GG V2 상태
 
-- 운영 확인 시각: 2026-09-10T16:07:39.077Z (2026-09-11 01:07:39 KST)
-- 운영 검증 기능 기준: `e2a618a4b5b9aec8a706f97cb690b82740d8d021`
+- 운영 확인 시각: 2026-09-10T17:07:30.124Z (2026-09-11 02:07:30 KST)
+- 운영 검증 기능 기준: `8dcbee424a0b8ca1f480858af00196daedfd0dff`
 - 현재 단계: V1 기능 계약을 V2 독립 코드로 재구현하고 Vercel Production에 반영한 운영 후보
 - V1 코드 복사: 없음. V1은 기능 목록과 동등성 대조 근거로만 사용
 - V1 기준선: 블루·블랙 Vercel 기준선 저장소를 변경하지 않음
-- 운영 Vercel: 운영 검증 기능 기준과 같은 commit의 배포 `dpl_BDynzkQKWpJEvko2SFxT5erTHCEB`가 `Ready`
-- 운영 확인: immutable URL `https://k-lol-gq0s45q0k-tjdmswo11-3715s-projects.vercel.app`, production alias health `ready`, DB `select 1` 성공
+- 운영 Vercel: 운영 검증 기능 기준과 같은 commit의 배포 `dpl_GFtbYMGfu2dZVSUMVALUTpb9vxWg`가 `Ready`
+- 운영 확인: immutable URL `https://k-lol-ekv491mea-tjdmswo11-3715s-projects.vercel.app`, production alias health `ready`, DB `select 1` 성공
 - 휴대폰 Kakao R5: 산출물은 준비됐으나 MessengerBot R 설치·실제 Kakao 송수신은 미확인
 
 ## 확인된 상태
@@ -22,7 +22,7 @@
 - 추적 트리와 전체 Git 이력 비밀정보 검사 및 감사 로그 계약 검증이 통과했다.
 - 2026-09-07 검증에서 `npm audit --omit=dev --audit-level=moderate` 결과 운영 의존성 취약점은 0건이었다.
 
-2026-09-07 화면 원본과 모음 이미지는 [`qa-evidence/v2-final-2026-09-07-r2/screenshots/README.md`](./qa-evidence/v2-final-2026-09-07-r2/screenshots/README.md)에 있다. 최신 Kakao R5 소스 검증과 미설치 상태는 [`qa-evidence/kakao-v4-r5-form-defaults-2026-09-11/README.md`](./qa-evidence/kakao-v4-r5-form-defaults-2026-09-11/README.md)에 있다.
+2026-09-07 화면 원본과 모음 이미지는 [`qa-evidence/v2-final-2026-09-07-r2/screenshots/README.md`](./qa-evidence/v2-final-2026-09-07-r2/screenshots/README.md)에 있다. 최신 Kakao R5 소스 검증과 미설치 상태는 [`qa-evidence/kakao-v4-r5-form-defaults-2026-09-11/README.md`](./qa-evidence/kakao-v4-r5-form-defaults-2026-09-11/README.md), 프로젝트 규칙·ERD·UI 재사용 검증은 [`qa-evidence/project-governance-erd-reuse-2026-09-11/README.md`](./qa-evidence/project-governance-erd-reuse-2026-09-11/README.md)에 있다.
 
 ## 구현된 범위
 

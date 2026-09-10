@@ -26,6 +26,26 @@
           "status": "PENDING_USER_INSTALL"
         }
       ]
+    },
+    {
+      "featureId": "project-governance",
+      "version": "1.0.0",
+      "gitTag": "project-governance-v1.0.0",
+      "commit": "8dcbee424a0b8ca1f480858af00196daedfd0dff",
+      "releasedAt": "2026-09-11T02:05:51+09:00",
+      "migrationHead": "0034_kakao_room_capability_profiles",
+      "qaEvidence": "docs/qa-evidence/project-governance-erd-reuse-2026-09-11/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-11-project-governance-erd-reuse.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_GFtbYMGfu2dZVSUMVALUTpb9vxWg",
+        "url": "https://k-lol-ekv491mea-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-10T17:07:30.124Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": []
     }
   ]
 }

@@ -1,6 +1,6 @@
 # 프로젝트 규칙·ERD·UI 재사용 기반 QA
 
-상태: 소스 수정과 로컬 통합 검증을 완료했다. 이 문서 작성 시점에는 이번 패치를 운영에 배포하지 않았다.
+상태: 소스 수정과 로컬 통합 검증을 완료했다. 커밋 `8dcbee424a0b8ca1f480858af00196daedfd0dff`을 Vercel Production에 배포했고 운영 별칭의 health/DB 연결을 확인했다.
 
 ## 요구사항별 반영
 
@@ -29,7 +29,8 @@
 
 ## 운영 반영 상태와 남은 위험
 
-- 이번 패치는 아직 운영 미반영이다. 배포 뒤 이 문서와 릴리스 원장에 실제 commit·tag·deployment·health 근거를 추가한다.
+- 기능 커밋과 태그 `project-governance-v1.0.0`을 원격에 게시했다. Vercel 배포 `dpl_GFtbYMGfu2dZVSUMVALUTpb9vxWg`는 `Ready`, immutable URL은 `https://k-lol-ekv491mea-tjdmswo11-3715s-projects.vercel.app`이다.
+- 운영 별칭 `https://k-lol-gg.vercel.app/api/health`는 2026-09-10T17:07:30.124Z에 HTTP 200 `ready`를 반환했다. 이 route는 DB `select 1` 성공 뒤에만 `ready`를 반환한다.
 - journal timestamp 역전은 정적 일관성 검사를 통과하도록 바로잡았지만, 이미 중간 migration까지만 적용된 익명화 DB 복제본의 전진 적용은 아직 실행하지 않았다.
 - 현재 103개 화면 전체의 최신 데스크톱·태블릿·모바일 캡처 회귀는 이번 패치 범위에 포함하지 않았다.
 - UI 변경은 중복 탭 한 곳뿐이다. 문서에 기록한 큰 화면의 점진 추출은 각 기능 회귀 테스트와 함께 별도 패치로 진행해야 한다.
