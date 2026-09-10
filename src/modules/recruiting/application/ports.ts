@@ -20,6 +20,11 @@ export interface RecruitingRepository {
     recruitDate: string;
     preferredRecruitNumber: number | null;
   }>): Promise<Readonly<{ resetSequence: number; recruitNumber: number }> | null>;
+  /** Allocates the next date-wide V1/V4 scrim number under a transaction advisory lock. */
+  allocateNextScrimNumberForUpdate(
+    transaction: RecruitingTransactionContext,
+    recruitDate: string,
+  ): Promise<number | null>;
   loadPartyForUpdate(transaction: RecruitingTransactionContext, partyId: string): Promise<RecruitParty | null>;
   loadScrimForUpdate(transaction: RecruitingTransactionContext, scrimId: string): Promise<ScrimRecruit | null>;
   /**

@@ -187,6 +187,32 @@ export class PostgresRecruitingAdapter implements
       )).limit(1))[0] ?? null;
   }
 
+  async resolveScrimUpsert(input: Readonly<{
+    sourceRoomId: string;
+    recruitDate: string;
+    requestedScrimNumber: number | null;
+  }>) {
+    const scrimNumber = input.requestedScrimNumber;
+    if (scrimNumber === null) return null;
+    if (scrimNumber < 1 || scrimNumber > 99) return null;
+    const row = (await this.database.select().from(scrimRecruits).where(and(
+      eq(scrimRecruits.sourceRoomId, input.sourceRoomId),
+      eq(scrimRecruits.recruitDate, input.recruitDate),
+      eq(scrimRecruits.scrimNumber, scrimNumber),
+      inArray(scrimRecruits.status, ["RECRUITING", "MATCHED", "CONFIRMED"]),
+    )).limit(1))[0];
+    const existing = row ? toPublicScrimDto(scrimFromRow(row)) : null;
+    return Object.freeze({
+      scrimNumber,
+      existing: existing ? Object.freeze({
+        ...existing,
+        revision: row!.revision,
+        status: existing.status as "RECRUITING" | "MATCHED" | "CONFIRMED",
+        bestOf: existing.bestOf ?? 3,
+      }) : null,
+    });
+  }
+
   private transactionFor(context: RecruitingTransactionContext) {
     const transaction = this.transactions.get(context);
     if (!transaction) throw new Error("Recruiting transaction context is no longer active.");
@@ -416,6 +442,16 @@ export class PostgresRecruitingAdapter implements
   async loadScrimForUpdate(context: RecruitingTransactionContext, scrimId: string) {
     const row = (await this.transactionFor(context).select().from(scrimRecruits).where(eq(scrimRecruits.id, scrimId)).for("update").limit(1))[0];
     return row ? scrimFromRow(row) : null;
+  }
+
+  async allocateNextScrimNumberForUpdate(context: RecruitingTransactionContext, recruitDate: string) {
+    const transaction = this.transactionFor(context);
+    await transaction.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`kakao-v1-scrim-number:${recruitDate}`}, 0))`);
+    const latest = (await transaction.select({ scrimNumber: scrimRecruits.scrimNumber }).from(scrimRecruits)
+      .where(eq(scrimRecruits.recruitDate, recruitDate))
+      .orderBy(desc(scrimRecruits.scrimNumber)).limit(1))[0];
+    if (!latest) return 1;
+    return latest.scrimNumber < 99 ? latest.scrimNumber + 1 : null;
   }
 
   async listActiveDestructionTournamentIdsForUpdate(context: RecruitingTransactionContext) {

@@ -169,6 +169,13 @@ class Harness {
           }
           return latest.recruitNumber < 99 ? { resetSequence: latest.resetSequence, recruitNumber: latest.recruitNumber + 1 } : null;
         },
+        allocateNextScrimNumberForUpdate: async (_transaction, recruitDate) => {
+          this.operations.push("allocate-scrim-number");
+          const latest = [...this.snapshot.scrims.values()]
+            .filter((scrim) => scrim.recruitDate === recruitDate)
+            .sort((left, right) => right.scrimNumber - left.scrimNumber)[0];
+          return latest ? latest.scrimNumber < 99 ? latest.scrimNumber + 1 : null : 1;
+        },
         loadPartyForUpdate: async (_transaction, id) => {
           this.operations.push("load");
           return this.snapshot.parties.get(id) ?? null;
@@ -717,6 +724,39 @@ test("V4 room scope allows cross-sender snapshots and finish while preserving du
     () => handler.handle(conflicting),
     (error: unknown) => error instanceof RecruitingApplicationError && error.code === "IDEMPOTENCY_MISMATCH",
   );
+});
+
+test("V4 automatic scrim number is allocated after receipt claim and replays before a second allocation", async () => {
+  const harness = new Harness();
+  harness.activeDestructionTournamentIds = ["destruction-v4-active"];
+  const handler = new RecruitingCommandHandler(harness.dependencies());
+  const command = v4Command("CREATE_SCRIM", "scrim-v4-auto", 0, {
+    recruitDate: "2026-09-07",
+    scrimNumber: null,
+    tournamentId: null,
+    legacyTournamentNumber: null,
+    requesterTeamId: null,
+    title: "하늘단 스크림 구인",
+    requesterTeamName: "하늘단",
+    opponentTeamName: null,
+    requesterLineup: null,
+    opponentLineup: null,
+    memo: null,
+    seriesRuleText: "3판2선",
+    scheduledAt: null,
+    bestOf: 3,
+  }, {
+    eventId: "event-v4-scrim-auto-0001",
+    senderId: "sender-user-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    nonce: "v4_scrim_auto_nonce_123456",
+  });
+  const first = await handler.handle(command);
+  const allocations = harness.operations.filter((operation) => operation === "allocate-scrim-number").length;
+  const replay = await handler.handle(command);
+  assert.equal(first.body.data.scrimNumber, 1);
+  assert.equal(replay.replayed, true);
+  assert.equal(replay.body.data.scrimNumber, 1);
+  assert.equal(harness.operations.filter((operation) => operation === "allocate-scrim-number").length, allocations);
 });
 
 test("V4 request fingerprint is stable across server-resolved revisions but changes with the signed body", () => {

@@ -54,10 +54,6 @@ function localReply(envelope: KakaoV4CommandEnvelope, classification: KakaoV4Com
   }
   if (classification.command === "LOCAL_USER_HELP") return Object.freeze({ kind: "REPLY" as const, reply: "[K-LOL.GG 도움말]\nV1 호환 명령을 사용할 수 있습니다." });
   if (classification.command === "LOCAL_RECRUIT_HELP") return Object.freeze({ kind: "REPLY" as const, reply: "[K-LOL.GG 구인 도움말]\n파티·스크림 모집 명령을 사용할 수 있습니다." });
-  if (classification.command === "SCRIM_CREATE") return Object.freeze({
-    kind: "REPLY" as const,
-    reply: "[K-LOL.GG 스크림 구인 양식]\n\n운영일: 작성일\n번호: #자동배정\n\n일시: \n방식: 3판2선\n\n우리팀: \nTOP: \nJUG: \nMID: \nADC: \nSUP: \n\n상대팀: \nTOP: \nJUG: \nMID: \nADC: \nSUP: ",
-  });
   return null;
 }
 
@@ -91,17 +87,21 @@ export class KakaoV4CommandService {
     const classification = classifyKakaoV4Command({ profileId: envelope.profileId, text: envelope.text });
     if (classification.kind === "WRONG_PROFILE") throw new KakaoV4CommandError("WRONG_PROFILE");
     let result = localReply(envelope, classification);
+    let replayed = false;
     if (!result && this.dispatcher) {
       const canonical = canonicalizeKakaoV4Command(classification, envelope);
       if (canonical) {
         const dispatched = await this.dispatcher.dispatch({ envelope, keyId, requestDigestHex: metadata?.requestDigestHex ?? digest, requestId: metadata?.requestId ?? envelope.eventId, authorization }, canonical);
         result = Object.freeze({ kind: "REPLY" as const, reply: dispatched.legacyReply });
+        replayed = dispatched.replayed;
+      } else if (classification.kind === "SNAPSHOT") {
+        throw new KakaoV4CommandError("INVALID_FORM");
       }
     }
     result ??= this.dispatcher ? Object.freeze({ kind: "NOT_IMPLEMENTED" as const }) : deterministicFallback(classification);
     if (this.receipts.size >= 1_024) this.receipts.delete(this.receipts.keys().next().value as string);
     this.receipts.set(receiptKey, Object.freeze({ digest, result }));
-    return Object.freeze({ ...result, replayed: false });
+    return Object.freeze({ ...result, replayed });
   }
 
   async executeCanonical(input: Readonly<{

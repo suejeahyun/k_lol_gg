@@ -102,6 +102,15 @@ function harness() {
       resolved.push(input);
       return { id: input.kind === "PARTY" ? "party-7" : "scrim-3", revision: 2 };
     },
+    async resolveScrimUpsert(input) {
+      const status = openStatus();
+      const scrimNumber = input.requestedScrimNumber ?? status.nextScrimNumber;
+      if (!scrimNumber) return null;
+      return {
+        scrimNumber,
+        existing: status.scrims.find((scrim) => scrim.recruitDate === input.recruitDate && scrim.scrimNumber === scrimNumber) ?? null,
+      };
+    },
   };
   const assistant: KakaoV4AssistantPort = {
     async getOpenChatStatus(input) {
@@ -112,7 +121,7 @@ function harness() {
       seasonCalls.push({ command: input.command });
       const body: KakaoSeasonSnapshotDto = {
         kind: "SEASON_APPLICATION_SNAPSHOT",
-        seasonId: input.command.seasonId,
+        seasonId: input.command.seasonId ?? "11111111-1111-4111-8111-111111111111",
         applyDate: input.command.applyDate,
         recruitNo: input.command.recruitNo,
         entries: [], appliedCount: 0, reserveCount: 0, confirmedCount: 0,

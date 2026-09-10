@@ -557,9 +557,14 @@ export class PostgresKakaoAssistant {
   }>): Promise<KakaoAssistantResult<KakaoSeasonSnapshotDto>> {
     return this.execute(input, async (transaction) => {
       const now = input.now ?? new Date();
-      const command = input.command;
-      const season = (await transaction.select().from(seasons).where(eq(seasons.id, command.seasonId)).for("update").limit(1))[0];
-      if (!season) throw new KakaoAssistantError("NOT_FOUND");
+      const requested = input.command;
+      const seasonCandidates = requested.seasonId
+        ? await transaction.select().from(seasons).where(eq(seasons.id, requested.seasonId)).for("update").limit(1)
+        : await transaction.select().from(seasons).where(eq(seasons.status, "ACTIVE")).orderBy(asc(seasons.id)).for("update").limit(2);
+      if (seasonCandidates.length === 0) throw new KakaoAssistantError("NOT_FOUND");
+      if (requested.seasonId === null && seasonCandidates.length !== 1) throw new KakaoAssistantError("CONFLICT");
+      const season = seasonCandidates[0]!;
+      const command = { ...requested, seasonId: season.id } as KakaoSeasonSnapshotCommand & Readonly<{ seasonId: string }>;
       if (command.action !== "STATUS") {
         if (season.status !== "ACTIVE" ||
             (season.applicationsOpenAt && season.applicationsOpenAt > now) ||

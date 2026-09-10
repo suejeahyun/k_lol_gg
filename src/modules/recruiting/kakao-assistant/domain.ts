@@ -102,7 +102,8 @@ export type KakaoSeasonSnapshotParticipant = Readonly<{
 }>;
 
 type KakaoSeasonSnapshotCommandBase = Readonly<{
-  seasonId: string;
+  /** Null is accepted only by the in-process V4 dispatcher for exact-one-active-season resolution. */
+  seasonId: string | null;
   applyDate: string;
 }>;
 

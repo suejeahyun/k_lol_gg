@@ -181,11 +181,16 @@ function scrimLineup(value: ScrimLineup | null | undefined, label: string): Scri
   return Object.values(output).some((entry) => entry !== null) ? Object.freeze(output) : null;
 }
 
-function createScrim(command: Extract<RecruitingCommand, { type: "CREATE_SCRIM" }>, inferredTournamentId: string | null = null): ScrimRecruit {
+function createScrim(
+  command: Extract<RecruitingCommand, { type: "CREATE_SCRIM" }>,
+  inferredTournamentId: string | null = null,
+  allocatedScrimNumber: number | null = null,
+): ScrimRecruit {
   const payload = command.payload;
   const tournamentId = payload.tournamentId ?? inferredTournamentId;
+  const scrimNumber = payload.scrimNumber ?? allocatedScrimNumber;
   if (!/^\d{4}-\d{2}-\d{2}$/u.test(payload.recruitDate)) throw new RecruitingApplicationError("INVALID_COMMAND", "Scrim recruitDate must be YYYY-MM-DD.");
-  if (!Number.isSafeInteger(payload.scrimNumber) || payload.scrimNumber < 1 || payload.scrimNumber > 99) throw new RecruitingApplicationError("INVALID_COMMAND", "Scrim number must be between one and 99.");
+  if (!Number.isSafeInteger(scrimNumber) || scrimNumber === null || scrimNumber < 1 || scrimNumber > 99) throw new RecruitingApplicationError("INVALID_COMMAND", "Scrim number must be between one and 99.");
   if (tournamentId) canonicalIdentifier(tournamentId, "tournamentId");
   if (payload.requesterTeamId) canonicalIdentifier(payload.requesterTeamId, "requesterTeamId");
   if (!tournamentId && (!Number.isSafeInteger(payload.legacyTournamentNumber) || Number(payload.legacyTournamentNumber) < 1 || Number(payload.legacyTournamentNumber) > 9999)) {
@@ -203,7 +208,7 @@ function createScrim(command: Extract<RecruitingCommand, { type: "CREATE_SCRIM" 
     sourceSenderId: command.metadata.actor.kind === "BOT" ? command.metadata.actor.authorizationIntent.senderId : null,
     opponentSenderId: null,
     recruitDate: payload.recruitDate,
-    scrimNumber: payload.scrimNumber,
+    scrimNumber,
     tournamentId,
     legacyTournamentNumber: payload.legacyTournamentNumber ?? null,
     requesterTeamId: payload.requesterTeamId,
@@ -280,6 +285,7 @@ export class RecruitingCommandHandler {
     }
 
     let allocatedPartyIdentity: Readonly<{ resetSequence: number; recruitNumber: number }> | null = null;
+    let allocatedScrimNumber: number | null = null;
     if (command.type === "CREATE_PARTY" && command.payload.resetSequence === null) {
       if (
         command.metadata.actor.kind !== "BOT" ||
@@ -294,6 +300,14 @@ export class RecruitingCommandHandler {
     }
     if (command.type === "CREATE_PARTY" && command.payload.resetSequence !== null && command.payload.recruitNumber === null) {
       throw new RecruitingApplicationError("INVALID_COMMAND", "A party number is required when automatic numbering is disabled.");
+    }
+    if (command.type === "CREATE_SCRIM" && command.payload.scrimNumber === null) {
+      if (
+        command.metadata.actor.kind !== "BOT" ||
+        (command.metadata.actor.commandSource !== "COMPAT_V1" && command.metadata.actor.commandSource !== "KAKAO_V4")
+      ) throw new RecruitingApplicationError("INVALID_COMMAND", "Automatic scrim numbering is limited to signed Kakao compatibility creates.");
+      allocatedScrimNumber = await this.dependencies.repository.allocateNextScrimNumberForUpdate(transaction, command.payload.recruitDate);
+      if (allocatedScrimNumber === null) throw new RecruitingApplicationError("INVALID_COMMAND", "All 99 scrim numbers for this date are already used.");
     }
 
     const partyCommand = PARTY_TYPES.has(command.type);
@@ -334,7 +348,7 @@ export class RecruitingCommandHandler {
         nextParty = transitionRecruitParty({ party: party!, expectedRevision: command.metadata.expectedRevision, command: command.type === "FINISH_PARTY" ? "FINISH" : command.type === "CANCEL_PARTY" ? "CANCEL" : "RESET", now });
         break;
       case "CREATE_SCRIM":
-        nextScrim = createScrim(command, await this.inferV1ScrimTournamentId(transaction, command));
+        nextScrim = createScrim(command, await this.inferV1ScrimTournamentId(transaction, command), allocatedScrimNumber);
         break;
       case "SYNC_SCRIM":
         nextScrim = syncScrim(command, scrim!);

@@ -37,7 +37,11 @@ function runtimeService() {
   const recruiting = getRuntimeRecruitingService();
   const assistant = getRuntimeKakaoAssistant();
   if (!recruiting || !assistant) return null;
-  service = new KakaoV4CommandService(registry, new KakaoV4CommandDispatcher({ recruiting, assistant }));
+  service = new KakaoV4CommandService(registry, new KakaoV4CommandDispatcher({
+    recruiting,
+    assistant,
+    publicOrigin: process.env.V2_PUBLIC_ORIGIN ?? process.env.NEXT_PUBLIC_SITE_URL,
+  }));
   return service;
 }
 

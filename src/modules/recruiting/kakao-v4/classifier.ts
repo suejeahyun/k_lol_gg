@@ -315,8 +315,8 @@ function classifyInhouse(text: string): KakaoV4RecognizedCommand | null {
   const argumentsText = create[1]?.trim() ?? "";
   const modeToken = argumentsText.split(/\s+/u)[0]?.toLowerCase() ?? "";
   const modes: Readonly<Record<string, string>> = Object.freeze({
-    협곡: "RIFT", rift: "RIFT", 칼바람: "ARAM", aram: "ARAM",
-    증바람: "AUGMENT_ARAM", 증강칼바람: "AUGMENT_ARAM", augmentaram: "AUGMENT_ARAM",
+    협곡: "RIFT", 소환사의협곡: "RIFT", rift: "RIFT", 칼바람: "ARAM", 칼바람아수라장: "ARAM", aram: "ARAM",
+    증바: "AUGMENT_ARAM", 증바람: "AUGMENT_ARAM", 증강칼바람: "AUGMENT_ARAM", augmentaram: "AUGMENT_ARAM",
   });
   return recognized("INHOUSE_CREATE", text, { mode: modes[modeToken] ?? null, argumentsText: argumentsText || null });
 }

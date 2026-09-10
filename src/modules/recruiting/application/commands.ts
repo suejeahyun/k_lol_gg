@@ -62,7 +62,7 @@ export type PartyCommand =
 
 export type ScrimFormCommandPayload = Readonly<{
       recruitDate: string;
-      scrimNumber: number;
+      scrimNumber: number | null;
       tournamentId: string | null;
       legacyTournamentNumber?: number | null;
       requesterTeamId: string | null;
