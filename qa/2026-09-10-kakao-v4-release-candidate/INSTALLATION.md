@@ -5,11 +5,11 @@
 1. 기존 V41 RECRUIT/FEATURES 소스와 private 설정을 비밀 보관소에 백업한다.
 2. staging server에서 환경변수 이름과 환경 범위만 확인한다. 값을 로그·채팅·스크린샷에 남기지 않는다.
 3. 운영 DB와 분리된 staging DB의 migration head, receipt와 nonce schema를 read-only로 확인한다.
-4. `npm run build-messengerbot:v4`로 `KLOL_KAKAO_BOT_V4_UNIFIED_MESSENGERBOT_R.js` 하나를 생성한다. 휴대폰은 1대만 사용한다.
-5. 생성 파일의 byte SHA-256을 `COMMAND_RESULTS.md`와 대조한다.
+4. `npm run build-messengerbot:v4`로 비밀값 없는 공개 통합본을 생성한다.
+5. 최초 설치 때 한 번만 `npm run bot:kakao:v4:private -- --configure-vercel`을 실행해 V4 전용 keyring을 Vercel Production에 등록하고 Git에서 제외되는 private one-paste 파일을 생성한다. 휴대폰은 1대만 사용한다.
 6. 기존 V4 RECRUIT/FEATURES 분리형 봇 프로필을 모두 중지한다. `legacy-split-profiles` 파일은 설치하지 않는다.
-7. 같은 휴대폰의 MessengerBot R에 V4 통합 봇 프로필 하나를 만들고 통합 파일만 설치한다.
-8. 같은 휴대폰의 공용 `DataBase`에 필요한 네 연결 설정을 한 번만 안전하게 저장한다. 두 방의 봇 표시명이 다르면 `KLOL_V4_BOT_SELF_NAME_RECRUIT`와 `KLOL_V4_BOT_SELF_NAME_FEATURES`도 각각 저장한다.
+7. 같은 휴대폰의 MessengerBot R에 V4 통합 봇 프로필 하나를 만들고 `.private/KLOL_KAKAO_BOT_V4_UNIFIED_PRIVATE_MESSENGERBOT_R.js` 전체를 한 번만 복사해 붙여넣는다.
+8. private 파일 선두가 V4 전용 연결 설정과 두 방의 봇 표시명을 `DataBase`에 자동 저장하므로 별도 설정 코드를 실행하지 않는다. 이 파일을 Git·채팅·공유 드라이브에 올리지 않는다.
 9. V4에서는 pair-room 명령을 실행하지 않는다. V3/V41 pairing 설정은 삭제하거나 변경하지 않는다.
 10. 두 대상 방의 V41을 중지한 뒤 V4 통합 프로필 하나만 staging canary로 시작한다.
 11. 각 방에서 `/봇버전`을 실행해 통합 봇 응답이 메시지당 한 번만 오고, 응답 안의 RECRUIT/FEATURES installation ID가 서로 다른지 확인한다.

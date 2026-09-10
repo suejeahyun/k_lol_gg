@@ -42,9 +42,9 @@ async function phone() {
   const source = await readFile(resolve(directory, "KLOL_KAKAO_BOT_V4_UNIFIED_MESSENGERBOT_R.js"), "utf8");
   const values = new Map([
     ["KLOL_V2_BASE_URL", "https://example.invalid"],
-    ["KLOL_V2_KAKAO_WEBHOOK_SECRET_CURRENT", "s".repeat(32)],
-    ["KLOL_V2_KAKAO_WEBHOOK_KEY_ID_CURRENT", "current"],
-    ["KLOL_V2_KAKAO_IDENTITY_SECRET", "i".repeat(32)],
+    ["KLOL_V4_KAKAO_WEBHOOK_SECRET_CURRENT", "s".repeat(32)],
+    ["KLOL_V4_KAKAO_WEBHOOK_KEY_ID_CURRENT", "v4-current"],
+    ["KLOL_V4_KAKAO_IDENTITY_SECRET", "i".repeat(32)],
   ]);
   const sends = [];
   const replies = [];

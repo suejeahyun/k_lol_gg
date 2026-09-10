@@ -27,8 +27,8 @@
 | Release-readiness | 5 | 0 | PASS, P0 RESOLVED |
 | Phase 2·3·V1 client/golden | 95 | 0 | PASS |
 | Phase 2·3 server/dispatcher | 91 | 0 | PASS |
-| `npm run test:contracts` | 307 | 0 | PASS |
-| `npm run test:unit` | 609 | 0 | PASS |
+| `npm run test:contracts` | 308 | 0 | PASS |
+| `npm run test:unit` | 610 | 0 | PASS |
 | `npm run typecheck` | - | - | PASS |
 | 변경 TypeScript/MJS 12개 ESLint | - | - | PASS, 오류·경고 0건 |
 | `npm run build` | - | - | PASS, V4 route 포함·정적 페이지 92개 |
@@ -38,9 +38,11 @@
 
 | 운영 산출물 | 문자 수 | 바이트 | 줄 | 최대 줄 길이 | SHA-256 |
 | --- | ---: | ---: | ---: | ---: | --- |
-| UNIFIED | 13,018 | 15,534 | 276 | 471 | `95d8897d5d6f6330d0ebad05413636ae536269087c02d2f09970fe3b6b8c9501` |
+| UNIFIED | 13,018 | 15,534 | 276 | 471 | `09a0ddbc80b86ad65a293593ebf0e0c893222d31f8cca57f24f3d609a05316c1` |
 
 V4 루트의 paste-ready 운영 산출물은 UNIFIED 하나뿐이다. 분리형 두 산출물은 `legacy-split-profiles`로 이동했으며 설치하지 않는다. SHA-256은 현재 worktree 바이트 기준이다. 설치 과정에서 줄바꿈이 바뀌면 해시도 달라지므로 paste 직전 파일과 대조한다.
+
+실제 휴대폰용 `.private/KLOL_KAKAO_BOT_V4_UNIFIED_PRIVATE_MESSENGERBOT_R.js`는 13,657자·16,187바이트이며 ES5·단일 callback·Rhino 정적 검사에 통과했다. V4 전용 비밀값이 있으므로 Git에서 제외했고 본문·해시는 QA 문서에 기록하지 않는다.
 
 ## 수행하지 않음
 

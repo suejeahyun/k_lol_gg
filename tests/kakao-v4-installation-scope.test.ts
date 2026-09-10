@@ -15,6 +15,7 @@ import {
 } from "../src/modules/recruiting/kakao-v4/domain";
 import {
   getRuntimeKakaoV4ProfileAuthorizer,
+  getRuntimeKakaoV4SigningSecrets,
   kakaoV4InstallationId,
   kakaoV4InstallationScopeId,
   KakaoV4InstallationScopeAuthorizer,
@@ -140,8 +141,31 @@ test("two senders share one installation scope for create, cross-edit and finish
 
 test("runtime identity configuration is bounded without inspecting real environment values", () => {
   assert.equal(getRuntimeKakaoV4ProfileAuthorizer({}), null);
-  assert.equal(getRuntimeKakaoV4ProfileAuthorizer({ KLOL_V2_KAKAO_IDENTITY_SECRET: "short" }), null);
-  assert.ok(getRuntimeKakaoV4ProfileAuthorizer({ KLOL_V2_KAKAO_IDENTITY_SECRET: "x".repeat(32) }));
+  assert.equal(getRuntimeKakaoV4ProfileAuthorizer({ KAKAO_V4_IDENTITY_SECRET: "short" }), null);
+  assert.equal(getRuntimeKakaoV4ProfileAuthorizer({ KLOL_V2_KAKAO_IDENTITY_SECRET: "x".repeat(32) }), null);
+  assert.ok(getRuntimeKakaoV4ProfileAuthorizer({ KAKAO_V4_IDENTITY_SECRET: "x".repeat(32) }));
+});
+
+test("V4 signing keyring is isolated from V1 and rejects unsafe reuse", () => {
+  const identity = "i".repeat(32);
+  const current = "s".repeat(32);
+  assert.equal(getRuntimeKakaoV4SigningSecrets({
+    KAKAO_WEBHOOK_SECRET_CURRENT: current,
+    KAKAO_WEBHOOK_KEY_ID_CURRENT: "current",
+  }), null);
+  assert.equal(getRuntimeKakaoV4SigningSecrets({
+    KAKAO_V4_IDENTITY_SECRET: identity,
+    KAKAO_V4_WEBHOOK_SECRET_CURRENT: identity,
+    KAKAO_V4_WEBHOOK_KEY_ID_CURRENT: "v4-current",
+  }), null);
+  const keys = getRuntimeKakaoV4SigningSecrets({
+    KAKAO_V4_IDENTITY_SECRET: identity,
+    KAKAO_V4_WEBHOOK_SECRET_CURRENT: current,
+    KAKAO_V4_WEBHOOK_KEY_ID_CURRENT: "v4-current",
+    KAKAO_V4_WEBHOOK_SECRET_PREVIOUS: "p".repeat(32),
+    KAKAO_V4_WEBHOOK_KEY_ID_PREVIOUS: "v4-previous",
+  });
+  assert.deepEqual(keys?.map((key) => key.keyId), ["v4-current", "v4-previous"]);
 });
 
 test("V4 route is registry-free and keeps the seven-field identity-free boundary", () => {
@@ -150,6 +174,8 @@ test("V4 route is registry-free and keeps the seven-field identity-free boundary
   const shared = readFileSync(resolve(import.meta.dirname, "../integrations/messengerbot-r/v4/KLOL_KAKAO_BOT_V4_SHARED.js"), "utf8");
   assert.doesNotMatch(route, /KakaoRoomRegistry|getRuntimeKakaoRoomRegistry|authorizeProfile\(/u);
   assert.match(route, /getRuntimeKakaoV4ProfileAuthorizer/u);
+  assert.match(route, /getRuntimeKakaoV4SigningSecrets/u);
+  assert.doesNotMatch(route, /kakaoWebhookSecrets\(/u);
   assert.match(route, /KakaoV4InstallationScopeError[\s\S]+?SIGNATURE_INVALID/u);
   assert.match(domain, /\["profileId", "installationId", "senderId", "eventId", "timestamp", "nonce", "text"\]/u);
   assert.doesNotMatch(domain, /roomName|channelId/u);

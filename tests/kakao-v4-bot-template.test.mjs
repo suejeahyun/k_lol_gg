@@ -69,9 +69,9 @@ test("release docs lock one phone, one MessengerBot profile, and two Kakao rooms
   assert.doesNotMatch(contract, /봇 프로필 2개|각 휴대폰에 붙여넣|별도 휴대폰|휴대폰 두 대가 필요/u);
   for (const key of [
     "KLOL_V2_BASE_URL",
-    "KLOL_V2_KAKAO_IDENTITY_SECRET",
-    "KLOL_V2_KAKAO_WEBHOOK_SECRET_CURRENT",
-    "KLOL_V2_KAKAO_WEBHOOK_KEY_ID_CURRENT",
+    "KLOL_V4_KAKAO_IDENTITY_SECRET",
+    "KLOL_V4_KAKAO_WEBHOOK_SECRET_CURRENT",
+    "KLOL_V4_KAKAO_WEBHOOK_KEY_ID_CURRENT",
   ]) assert.match(shared, new RegExp(`"${key}"`, "u"));
   assert.match(shared, /"installation-id\\nKLOL_V4\\n" \+ profile\(profileId\)/u);
   assert.doesNotMatch(shared, /KLOL_V2_(?:BASE_URL|KAKAO_IDENTITY_SECRET)_(?:RECRUIT|FEATURES)/u);

@@ -4,8 +4,8 @@
 
 - [ ] 휴대폰 1대에 V4 통합 MessengerBot R 봇 프로필 하나만 생성.
 - [ ] 기존 V4 RECRUIT/FEATURES 분리형 프로필은 모두 중지.
-- [ ] 통합 생성 파일 하나 저장·Rhino 컴파일 성공.
-- [ ] 구인방·기능방의 서로 다른 봇 표시명을 두 self-echo DataBase 키에 각각 설정.
+- [ ] `.private/KLOL_KAKAO_BOT_V4_UNIFIED_PRIVATE_MESSENGERBOT_R.js` 전체를 한 번 붙여넣고 Rhino 컴파일 성공.
+- [ ] private 파일 선두가 V4 전용 keyring과 두 self-echo 표시명을 DataBase에 자동 저장.
 - [ ] 두 대상 방의 `/봇버전`이 각각 응답 1회이며 UNIFIED와 서로 다른 RECRUIT/FEATURES installation ID를 출력.
 - [ ] 두 방 모두 파티·스크림 명령은 RECRUIT profile로 서버 전송 1회.
 - [ ] 두 방 모두 내전·전적·랭킹·운영 명령은 FEATURES profile로 서버 전송 1회.

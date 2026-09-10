@@ -12,7 +12,7 @@ import {
 import { getRuntimeKakaoAssistant } from "@/modules/recruiting/kakao-assistant/runtime";
 import { getRuntimeRecruitingService } from "@/modules/recruiting/infrastructure/runtime-recruiting";
 import { getRuntimeOperationForms } from "@/modules/recruiting/operation-forms/runtime";
-import { kakaoWebhookSecrets, readBoundedKakaoRawBody } from "@/modules/recruiting/infrastructure/kakao-http-request";
+import { readBoundedKakaoRawBody } from "@/modules/recruiting/infrastructure/kakao-http-request";
 import { KakaoV4CommandService } from "@/modules/recruiting/kakao-v4/application";
 import { KakaoV4CommandDispatcher } from "@/modules/recruiting/kakao-v4/dispatcher";
 import {
@@ -24,6 +24,7 @@ import {
 import { kakaoV4CommandFailureResponse, kakaoV4ProblemResponse } from "@/modules/recruiting/kakao-v4/http";
 import {
   getRuntimeKakaoV4ProfileAuthorizer,
+  getRuntimeKakaoV4SigningSecrets,
   KakaoV4InstallationScopeError,
 } from "@/modules/recruiting/kakao-v4/installation-scope";
 
@@ -75,7 +76,7 @@ export async function POST(request: Request) {
     rawBody,
     keyId,
     signature: request.headers.get("x-klol-signature") ?? "",
-    secrets: kakaoWebhookSecrets(),
+    secrets: getRuntimeKakaoV4SigningSecrets(),
   });
   if (!verified.ok) {
     console.warn("KAKAO_V4_COMMAND_REJECTED", { code: verified.code, route: new URL(request.url).pathname, traceId: traceId ?? null });

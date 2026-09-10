@@ -7,7 +7,7 @@
 - 소스 구현: 단일 gateway, profile 전용 authorization, 전체 공개 V1 명령 dispatcher, 통합 ES5 템플릿과 단일 산출물 생성 스크립트.
 - 실제 동작: `봇버전`·`도움말` 등은 봇 로컬 응답, 나머지 공개 V1 파티·내전·스크림·조회·운영 양식은 서명·profile 검증 후 canonical dispatcher가 처리한다.
 - 차단 동작: 알 수 없는 명령과 internal/raw 입력은 `INVALID_FORM`, 교차 profile 명령은 `WRONG_PROFILE`로 fail-closed한다. 공개 V1 명령에 `501` 또는 `ROUTER_NOT_ENABLED` 경로는 없다.
-- 검증 상태: 자동 contract·unit·typecheck·production build 통과. 운영 Vercel의 필수 환경변수 이름은 확인했으며 `KLOL_V2_KAKAO_IDENTITY_SECRET`은 아직 미설정이다. MessengerBot R 실기기 전환도 아직 수행하지 않았다.
+- 검증 상태: 자동 contract·unit·typecheck·production build 통과. V4 전용 identity·signing keyring을 V1/V41과 분리했으며 실제 값은 Git에 저장하지 않는다. MessengerBot R 실기기 전환은 아직 수행하지 않았다.
 - 운영 반영: 서버 endpoint는 2026-09-10 GitHub `main`과 Vercel Production에 배포됐다. 통합 휴대폰 봇은 아직 운영에 설치하지 않았다.
 
 ## 경계
@@ -38,7 +38,7 @@ V4의 기준 운영 형태는 **휴대폰 1대 + MessengerBot R 통합 봇 프�
 - `/봇버전`과 로컬 도움말은 통합 프로필이 한 번만 응답하며 서버로 전송하지 않는다.
 - callback의 `room`, `channelId`, 방 이름은 파싱·분류·인증·전송에 사용하지 않는다.
 - 따라서 실제 카카오 방은 권한 경계가 아니다. 잘못된 방에서 지원 명령을 입력해도 해당 family 요청은 실행될 수 있으며, 접근 제어는 installation/profile 서명과 서버 도메인 규칙이 담당한다.
-- 같은 통합 스크립트가 공용 identity secret과 선택된 profile ID로 서로 다른 RECRUIT/FEATURES `installationId`와 내부 room scope를 계산한다.
+- 같은 통합 스크립트가 V4 전용 identity secret과 선택된 profile ID로 서로 다른 RECRUIT/FEATURES `installationId`와 내부 room scope를 계산한다.
 - 분류된 명령은 서버에 정확히 한 번 전송한다. 네트워크 예외 시 자동 재시도하지 않아 최대 대기 시간은 5초다.
 - 두 방에서 봇 표시명이 다르므로 `KLOL_V4_BOT_SELF_NAME_RECRUIT`와 `KLOL_V4_BOT_SELF_NAME_FEATURES`에 각 표시명을 저장한다. 통합 callback은 둘 중 어느 이름이든 self echo로 무시한다.
 
@@ -89,4 +89,4 @@ V1 dispatcher는 기존 PostgreSQL 서비스에 연결되어 있다. 상태 변�
 npm run bot:kakao:v4
 ```
 
-생성된 `KLOL_KAKAO_BOT_V4_UNIFIED_MESSENGERBOT_R.js`만 같은 휴대폰의 MessengerBot R 통합 봇 프로필 하나에 붙여넣는다. 과거 분리형 산출물은 `legacy-split-profiles`에 보존하지만 운영에 설치하지 않는다. 자동 검증과 실기기 QA가 모두 끝나기 전에는 운영방에 설치하지 않는다.
+공개 생성본에는 비밀값이 없다. 실제 휴대폰에는 `.private/KLOL_KAKAO_BOT_V4_UNIFIED_PRIVATE_MESSENGERBOT_R.js` 한 파일만 전체 붙여넣는다. private 생성기는 V4 전용 identity·signing keyring과 두 self-echo 표시명을 파일 선두에서 `DataBase`에 자동 저장하며, 같은 값을 Vercel Production에 등록할 수 있다. 과거 분리형 산출물은 `legacy-split-profiles`에 보존하지만 운영에 설치하지 않는다. 자동 검증과 실기기 QA가 모두 끝나기 전에는 운영방에 설치하지 않는다.

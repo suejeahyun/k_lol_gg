@@ -8,7 +8,7 @@
 - 공개 V1 명령의 501 응답 0건
 - 도움말·봇버전·사진·미리보기 안내는 서버 전송 없이 처리
 - 내부 운영/raw 명령은 공개 V4 전송에서 차단
-- RECRUIT/FEATURES deterministic installation ID와 profile 격리
+- V1/V41과 분리된 V4 전용 keyring 및 RECRUIT/FEATURES deterministic installation ID
 - 휴대폰 1대의 통합 봇 프로필 1개로 두 카카오톡 방 처리
 - 파티·스크림은 RECRUIT, 내전·조회·운영은 FEATURES로 자동 분류
 - 메시지당 HTTP 전송 1회, timeout 최대 5초, 자동 재시도 없음
@@ -23,8 +23,8 @@
 - Phase 4 acceptance 25/25
 - Phase 5 installation 보안 9/9
 - Phase 2·3·V1 회귀 186/186
-- 전체 contract 307/307, unit 609/609
+- 전체 contract 308/308, unit 610/610
 - typecheck, ESLint, production build, tree secret scan 통과
 
-P0 최초 pairing 차단은 RESOLVED입니다. 서버 V4 endpoint는 배포됐지만 통합 휴대폰 봇, identity secret, 실기기 송수신은 아직 운영 반영 전입니다.
+P0 최초 pairing 차단은 RESOLVED입니다. V4 전용 keyring과 서버 endpoint는 배포됐으며, 통합 private 파일의 휴대폰 붙여넣기와 실기기 송수신 확인만 남았습니다.
 ```

@@ -74,7 +74,7 @@ test("[RESOLVED R04] V4 uses deterministic installation scope without a pairing 
   const route = source("src/app/api/integrations/kakao/v4/commands/route.ts");
   assert.doesNotMatch(shared, /pair-room|pairRoom|V2방연동/u);
   assert.doesNotMatch(unified, /pair-room|pairRoom|V2방연동/u);
-  assert.match(shared, /KLOL_V2_KAKAO_IDENTITY_SECRET/u);
+  assert.match(shared, /KLOL_V4_KAKAO_IDENTITY_SECRET/u);
   assert.match(route, /getRuntimeKakaoV4ProfileAuthorizer/u);
   assert.doesNotMatch(route, /getRuntimeKakaoRoomRegistry|pair-room|pairRoom/u);
   assert.match(
@@ -94,5 +94,10 @@ test("[R05] documented Vercel variable names cover the V4 runtime without readin
     "KAKAO_WEBHOOK_KEY_ID_CURRENT",
     "KAKAO_WEBHOOK_SECRET_PREVIOUS",
     "KAKAO_WEBHOOK_KEY_ID_PREVIOUS",
+    "KAKAO_V4_IDENTITY_SECRET",
+    "KAKAO_V4_WEBHOOK_SECRET_CURRENT",
+    "KAKAO_V4_WEBHOOK_KEY_ID_CURRENT",
+    "KAKAO_V4_WEBHOOK_SECRET_PREVIOUS",
+    "KAKAO_V4_WEBHOOK_KEY_ID_PREVIOUS",
   ]) assert.match(example, new RegExp(`^${name}=`, "mu"));
 });

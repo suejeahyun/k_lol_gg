@@ -37,12 +37,11 @@ Vercel UI에서 값은 열지 않고 이름과 Production scope만 확인했다.
 - `DATABASE_URL`
 - `DATABASE_POOL_MAX`
 - `V2_PUBLIC_ORIGIN`
-- `KAKAO_WEBHOOK_SECRET_CURRENT`
-- `KAKAO_WEBHOOK_KEY_ID_CURRENT`
+- `KAKAO_V4_IDENTITY_SECRET`
+- `KAKAO_V4_WEBHOOK_SECRET_CURRENT`
+- `KAKAO_V4_WEBHOOK_KEY_ID_CURRENT`
 
-미설정:
-
-- `KLOL_V2_KAKAO_IDENTITY_SECRET`
+V4 전용 세 값은 private generator가 값 출력 없이 Production에 등록했다. 기존 V1/V41의 `KAKAO_WEBHOOK_*` 값은 조회·변경하지 않았다.
 
 신규 migration은 없다. 저장소 migration head는 `0034_kakao_room_capability_profiles`이며 과거 운영 증거도 0034지만, 이번 배포에서 Neon 값을 열거나 운영 DB를 새로 조회하지 않았다.
 
@@ -50,5 +49,5 @@ Vercel UI에서 값은 열지 않고 이름과 Production scope만 확인했다.
 
 - 서버 코드, 통합 봇 산출물과 V4 route: Production 배포 확인.
 - 기존 운영 사이트와 기존 카카오봇: 변경 없이 계속 사용 가능.
-- V4 휴대폰 전환: 보류. 별도의 identity secret을 Vercel Production과 같은 휴대폰의 MessengerBot R `DataBase`에 일치시킨 뒤, 기존 분리형 두 프로필을 중지하고 통합 프로필 하나로 실기기 checklist를 통과해야 한다.
+- V4 휴대폰 전환: private one-paste 파일 생성 완료, 실제 MessengerBot R 붙여넣기와 실기기 checklist는 미확인이다.
 - signing secret을 identity secret으로 재사용하지 않는다.

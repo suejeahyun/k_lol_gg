@@ -13,7 +13,7 @@
 - V3/V41 pairing: 변경하지 않음.
 - 서버 운영 반영: GitHub `main`과 Vercel Production 배포 확인. 자세한 근거는 `PRODUCTION_DEPLOYMENT.md`.
 - 운영 DB 실제 schema 재조회, 환경변수 실제 값, MessengerBot-R 실기기: 미확인.
-- `KLOL_V2_KAKAO_IDENTITY_SECRET` 이름은 Vercel Production에 아직 미설정이므로 V4 휴대폰 전환은 보류.
+- V4 전용 identity·signing keyring은 Vercel Production에 값 노출 없이 등록했으며 V1/V41 keyring과 분리했다.
 
 ## 공개 명령 폐쇄
 
@@ -28,7 +28,7 @@
 
 - 기준 토폴로지는 휴대폰 1대, MessengerBot R 통합 봇 프로필 1개, 카카오톡 방 2개다.
 - 두 분리형 프로필이 두 방에 중복 응답한 실기기 증거를 반영해 통합 callback 하나가 명령 family를 분류한다.
-- identity secret과 profile ID로 RECRUIT/FEATURES installation ID를 서로 다르게 결정한다.
+- V4 전용 identity secret과 profile ID로 RECRUIT/FEATURES installation ID를 서로 다르게 결정한다.
 - installation ID에서 DB 식별자를 노출하지 않는 내부 room scope를 결정한다.
 - profile 교차 사용, 임의 installation ID와 잘못된 signature는 fail-closed한다.
 - 파티·스크림은 RECRUIT, 내전·조회·운영은 FEATURES로 분류되어 명령당 서버 전송은 정확히 한 번이다.

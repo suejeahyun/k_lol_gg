@@ -1,5 +1,7 @@
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 
+import type { KakaoWebhookSecret } from "../infrastructure/kakao-signature";
+
 import type { KakaoV4ProfileId } from "./domain";
 
 export type KakaoV4InstallationAuthorization = Readonly<{
@@ -66,9 +68,36 @@ export class KakaoV4InstallationScopeAuthorizer implements KakaoV4ProfileAuthori
 export function getRuntimeKakaoV4ProfileAuthorizer(
   environment: Readonly<Record<string, string | undefined>> = process.env,
 ): KakaoV4ProfileAuthorizer | null {
-  const value = environment.KLOL_V2_KAKAO_IDENTITY_SECRET;
+  const value = environment.KAKAO_V4_IDENTITY_SECRET;
   if (!value) return null;
   const secret = new TextEncoder().encode(value);
   if (secret.byteLength < 32 || secret.byteLength > 1_024) return null;
   return new KakaoV4InstallationScopeAuthorizer(secret);
+}
+
+function validKeyId(value: string | undefined) {
+  return value && /^[A-Za-z0-9._:-]{1,128}$/u.test(value) ? value : null;
+}
+
+export function getRuntimeKakaoV4SigningSecrets(
+  environment: Readonly<Record<string, string | undefined>> = process.env,
+): readonly KakaoWebhookSecret[] | null {
+  const identity = environment.KAKAO_V4_IDENTITY_SECRET;
+  const current = environment.KAKAO_V4_WEBHOOK_SECRET_CURRENT;
+  const currentKeyId = validKeyId(environment.KAKAO_V4_WEBHOOK_KEY_ID_CURRENT ?? "v4-current");
+  if (!identity || !current || !currentKeyId || identity === current) return null;
+  const identityBytes = new TextEncoder().encode(identity);
+  const currentBytes = new TextEncoder().encode(current);
+  if (identityBytes.byteLength < 32 || identityBytes.byteLength > 1_024) return null;
+  if (currentBytes.byteLength < 32 || currentBytes.byteLength > 1_024) return null;
+
+  const secrets: KakaoWebhookSecret[] = [{ keyId: currentKeyId, secret: currentBytes }];
+  const previous = environment.KAKAO_V4_WEBHOOK_SECRET_PREVIOUS;
+  if (!previous) return secrets;
+  const previousKeyId = validKeyId(environment.KAKAO_V4_WEBHOOK_KEY_ID_PREVIOUS ?? "v4-previous");
+  const previousBytes = new TextEncoder().encode(previous);
+  if (!previousKeyId || previousKeyId === currentKeyId || previous === identity || previous === current) return null;
+  if (previousBytes.byteLength < 32 || previousBytes.byteLength > 1_024) return null;
+  secrets.push({ keyId: previousKeyId, secret: previousBytes });
+  return secrets;
 }
