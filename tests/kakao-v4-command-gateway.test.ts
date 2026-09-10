@@ -96,7 +96,7 @@ test("public error responses keep stable status and code contracts", async () =>
     ["COMMAND_INVALID", 400, "KAKAO_V4_COMMAND_INVALID"],
     ["SIGNATURE_INVALID", 401, "INVALID_SIGNATURE"],
     ["IDEMPOTENCY_MISMATCH", 409, "REPLAY_CONFLICT"],
-    ["ROUTER_NOT_ENABLED", 501, "KAKAO_V4_COMMAND_ROUTER_NOT_ENABLED"],
+    ["INVALID_FORM", 400, "INVALID_FORM"],
     ["UNAVAILABLE", 503, "SERVER_UNAVAILABLE"],
   ];
   for (const [code, status, publicCode] of cases) {

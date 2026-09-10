@@ -1,6 +1,6 @@
 /* eslint-disable */
 var KLOL_V4_PROFILE_ID = "RECRUIT";
-var KLOL_V4_BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V4_RECRUIT_2026_09_10_R1";
+var KLOL_V4_BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V4_RECRUIT_2026_09_10_R2";
 
 function klolV4EntryAcceptsText(text) {
   var value = String(text == null ? "" : text).replace(/^\s+|\s+$/g, "");
@@ -18,6 +18,7 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName,
   var result = null;
   var reply = "";
   if (!klolV4EntryAcceptsText(text)) return;
+  if (KLOL_V4.acceptsPublicText && !KLOL_V4.acceptsPublicText(KLOL_V4_PROFILE_ID, text)) return;
   if (KLOL_V4.shouldIgnore(KLOL_V4_PROFILE_ID, text, sender)) return;
   local = KLOL_V4.localReply(KLOL_V4_PROFILE_ID, text, KLOL_V4_BOT_CODE_VERSION);
   if (local) {

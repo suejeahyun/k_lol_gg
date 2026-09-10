@@ -97,7 +97,6 @@ export async function POST(request: Request) {
   try {
     const result = await commandService.execute(envelope, keyId, { requestDigestHex: verified.requestDigestHex, requestId: traceId ?? randomUUID() });
     const replayHeaders = result.replayed ? { "Idempotency-Replayed": "true" } : undefined;
-    if (result.kind === "NOT_IMPLEMENTED") return kakaoV4ProblemResponse("ROUTER_NOT_ENABLED", traceId, replayHeaders);
     return noStoreJsonResponse({
       version: KAKAO_V4_COMMAND_CONTRACT,
       profileId: envelope.profileId,
