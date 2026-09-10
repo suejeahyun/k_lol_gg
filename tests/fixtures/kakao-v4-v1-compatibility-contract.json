@@ -1,0 +1,183 @@
+{
+  "contractVersion": "KLOL_KAKAO_V4_V1_COMPAT_2026_09_10_R1",
+  "source": {
+    "v1Artifact": "pasted-text.txt (delegated attachment; not committed)",
+    "v1Sha256": "c91a56a289a762fe7e08143e8fd4b55c9695c4df68ebfcb6689613dcb73776b7",
+    "currentGoldenTests": [
+      "tests/kakao-v40-exact-reply-parity.test.mjs",
+      "tests/kakao-v40-scrim-exact-parity.golden.test.mjs",
+      "tests/kakao-v40-misc-command-parity.test.mjs",
+      "tests/kakao-v41-v1-inhouse-golden.test.mjs",
+      "tests/kakao-v41-v1-compat.test.mjs",
+      "tests/kakao-v41-v1-router-integration.test.mjs",
+      "tests/database/recruiting.contract.test.ts"
+    ]
+  },
+  "invariants": {
+    "optionalLeadingSlash": "ASCII / exactly zero or one time at the beginning only; both forms have the same route and reply",
+    "notCommands": [
+      "//5인파티",
+      "/ 5인파티",
+      "https://k-lol-gg.vercel.app/recruit",
+      "오늘 /5인파티",
+      "문의/도움말"
+    ],
+    "roomMutation": "Any verified sender in the same canonical recruit room may replace or finish another sender's recruit; a different room may not read or mutate it",
+    "initialPartyMetadata": "The initial party template omits start-time and game-info fields",
+    "serverDefaults": {
+      "startTimeText": "KST server receipt time formatted HH:mm",
+      "gameInfo": "미입력",
+      "visibility": "Defaults are shown in status/detail only, never injected into the initial template"
+    },
+    "authoritativeSnapshot": "Each accepted full form is the complete current snapshot. Omitted names are deleted. Zero names means empty/cancelled/withdrawn according to the domain.",
+    "reedit": "A then B then A is three accepted revisions. Only an immediate duplicate delivery of the same message may be suppressed.",
+    "v2Separation": "V2 diagnostics and raw JSON commands are operator-only and must not appear in V1 user help or user command lists"
+  },
+  "slashBoundary": {
+    "accepted": [
+      "도움말",
+      "/도움말",
+      "5인파티",
+      "/5인파티",
+      "전적 별빛#KR1",
+      "/전적 별빛#KR1",
+      "내전구인 협곡",
+      "/내전구인 협곡",
+      "스크림현황",
+      "/스크림현황"
+    ],
+    "rejected": [
+      "//도움말",
+      "//5인파티",
+      "/ 5인파티",
+      "https://k-lol-gg.vercel.app/도움말",
+      "오늘 /내전현황",
+      "구인/현황"
+    ]
+  },
+  "routes": [
+    { "domain": "HELP", "action": "GENERAL_HELP", "aliases": ["도움말", "명령어"] },
+    { "domain": "HELP", "action": "RECRUIT_HELP", "aliases": ["구인구직도움말", "구인도움말", "구인명령어"] },
+    { "domain": "HELP", "action": "RECRUIT_WEB_HELP", "aliases": ["구인도우미", "구인웹도우미", "구인매뉴얼", "명령어페이지"] },
+    { "domain": "PARTY", "action": "CREATE_NUMBERED", "aliases": ["5인파티", "5인구인"] },
+    { "domain": "PARTY", "action": "CREATE_RIFT", "aliases": ["5인협곡", "5인협곡파티", "5인 협곡 파티"] },
+    { "domain": "PARTY", "action": "CREATE_FLEX", "aliases": ["자랭구인"] },
+    { "domain": "PARTY", "action": "CREATE_NORMAL", "aliases": ["일반구인"] },
+    { "domain": "PARTY", "action": "CREATE_SOLO", "aliases": ["솔랭구인"] },
+    { "domain": "PARTY", "action": "CREATE_ARAM", "aliases": ["칼바람구인", "증바람구인"] },
+    { "domain": "PARTY", "action": "CREATE_OTHER", "aliases": ["기타게임구인"] },
+    { "domain": "PARTY", "action": "CREATE_TFT_NORMAL", "aliases": ["롤체일반구인"] },
+    { "domain": "PARTY", "action": "CREATE_TFT_RANK", "aliases": ["롤체랭크구인"] },
+    { "domain": "PARTY", "action": "CREATE_DOUBLE_UP", "aliases": ["더블업구인"] },
+    { "domain": "PARTY", "action": "STATUS", "aliases": ["현재구인구직현황", "현재구인현황", "구인구직현황", "구인현황", "현황"] },
+    { "domain": "PARTY", "action": "DETAIL", "aliases": ["구인상세 #1", "상세 1"] },
+    { "domain": "PARTY", "action": "FINISH", "aliases": ["1쫑", "#1ㅉ", "1번 파티 마감", "1인 구인 종료", "구인마감 #1", "구인쫑 #1", "구인종료 #1"] },
+    { "domain": "INHOUSE", "action": "CREATE_RIFT", "aliases": ["내전구인구직 협곡", "내전구인 협곡", "내전모집 rift"] },
+    { "domain": "INHOUSE", "action": "CREATE_ARAM", "aliases": ["내전구인 칼바람", "내전모집 aram"] },
+    { "domain": "INHOUSE", "action": "CREATE_AUGMENT_ARAM", "aliases": ["내전구인 증바람", "내전모집 증강칼바람", "내전구인 augmentaram"] },
+    { "domain": "INHOUSE", "action": "DETAIL", "aliases": ["내전상세 #2"] },
+    { "domain": "INHOUSE", "action": "STATUS", "aliases": ["내전현황 #2", "시즌내전현황 #2", "AI공지 #2"] },
+    { "domain": "INHOUSE", "action": "JOIN_GUIDE", "aliases": ["내전참가 #2", "내전신청 #2", "참가신청 #2"] },
+    { "domain": "SCRIM", "action": "CREATE", "aliases": ["스크림구인", "스크림모집", "멸망전스크림", "멸망전스크림구인", "멸망전스크림모집", "멸망전 스크림 모집"] },
+    { "domain": "SCRIM", "action": "STATUS", "aliases": ["스크림현황", "스크림목록", "멸망전스크림현황", "멸망전스크림목록", "멸망전 스크림 목록 #4"] },
+    { "domain": "SCRIM", "action": "DETAIL", "aliases": ["스크림상세 #1", "멸망전스크림상세 #1"] },
+    { "domain": "SCRIM", "action": "DEPRECATED_JOIN", "aliases": ["스크림참가 #1 별빛단", "멸망전스크림참가 #1 별빛단"] },
+    { "domain": "SCRIM", "action": "DEPRECATED_CONFIRM", "aliases": ["스크림확정 #1", "멸망전스크림확정 #1"] },
+    { "domain": "SCRIM", "action": "DEPRECATED_CANCEL", "aliases": ["스크림취소 #1", "멸망전스크림취소 #1"] },
+    { "domain": "SCRIM", "action": "DEPRECATED_FINISH", "aliases": ["스크림마감 #1", "스크림종료 #1", "멸망전스크림마감 #1", "멸망전스크림종료 #1"] },
+    { "domain": "PLAYER", "action": "RECORD", "aliases": ["전적 별빛#KR1"] },
+    { "domain": "PLAYER", "action": "RECENT", "aliases": ["최근 별빛#KR1"] },
+    { "domain": "PLAYER", "action": "RANKING", "aliases": ["랭킹"] },
+    { "domain": "REGISTRATION", "action": "HUB", "aliases": ["등록", "등록도움말", "사진취소"] },
+    { "domain": "REGISTRATION", "action": "INHOUSE_RESULT", "aliases": ["내전등록", "결과등록", "내전결과"] },
+    { "domain": "REGISTRATION", "action": "INHOUSE_RESULT_STATUS", "aliases": ["내전등록현황", "결과현황"] },
+    { "domain": "REGISTRATION", "action": "DISCIPLINE_CREATE", "aliases": ["경고등록", "경고"] },
+    { "domain": "REGISTRATION", "action": "DISCIPLINE_EVIDENCE", "aliases": ["인증", "경고인증"] },
+    { "domain": "REGISTRATION", "action": "DISCIPLINE_STATUS", "aliases": ["경고현황"] }
+  ],
+  "party": {
+    "initialFivePersonTemplate": "[K-LOL.GG 구인구직 양식]\n같이 할사람~\n\n아래 양식의 모집번호는 유지해서 작성해주세요.\n\n📢 5인 파티 구인\n모집번호: #12\n\n1.\n2.\n3.\n4.\n5.\n예비 1.\n\n참여해주실 분은 태그해주세요.\n*상호배려와 존중 부탁드립니다.",
+    "missingNumberReply": "[K-LOL.GG 양식 확인 필요]\n모집번호를 찾지 못했습니다.\n\n봇이 출력한 원본 양식의 ‘모집번호: #번호’를 유지해서 다시 보내주세요.",
+    "statusReply": "[K-LOL.GG 구인구직 현황]\n🔎 전체 명단: 상세 번호\n\n[구인중]\n#12 · 5인 파티 · 3/5 · 21:00 · 자랭 5인큐 9시 출발\n참여: 재현, 민서, 주현\n└ 상세 12",
+    "detailWithDefaults": "[K-LOL.GG 파티 #12]\n5인 파티 구인\n인원 0/5\n시작시간: 21:34 · 게임정보: 미입력\n아직 참가자가 없습니다.",
+    "snapshotScenario": {
+      "recruitNo": 12,
+      "revisions": [
+        { "label": "A", "members": ["재현", "기용"] },
+        { "label": "B", "members": ["재현", "소영"] },
+        { "label": "A", "members": ["재현", "기용"] },
+        { "label": "ZERO", "members": [] }
+      ]
+    },
+    "crossOwnerScenario": {
+      "roomId": "room-ad9195e02863363eb38dc06a27c3af9b",
+      "creatorSenderId": "sender-47297e48d9af1c08c8aa3157886d7384",
+      "editorSenderId": "sender-54705a042971882b0c12f0acb24668ea",
+      "finisherSenderId": "sender-26f57f96be0cad95c0d682ae30b6eaea",
+      "differentRoomId": "room-6deb4cdee4ea09d71d2e171f4cbbb7b3"
+    }
+  },
+  "inhouse": {
+    "modeSelectorReply": "[K-LOL.GG 내전 종목 선택]\n지원하지 않는 종목입니다: 양식\n✅️협곡내전은 관리자에게 신청 후 안내에 따라 구인해주세요.✅️\n\n아래 명령어 중 하나를 입력해주세요.\n- /내전구인 협곡\n- /내전구인 칼바람\n- /내전구인 증바람\n\n날짜·시간 지정: /내전구인 협곡 2026-08-06 21:00\n모집번호·정원 지정: /내전구인 칼바람 #2 10명\n\n협곡은 티어·라인 양식으로 내전 명단에 등록됩니다.\n칼바람·증바람은 이름만 모집하며 내전 명단에는 등록되지 않습니다.",
+    "riftTemplate": "📢 내전하실분 #2\n 》협곡\n 》2026-09-09 21:30 시작\n👥 0/10명\n\n*참가 신청 양식*\n이름/현티어/최고티어/주라인/부라인\nEX) 1.지후/P/E/AD/MD\n\n1.\n2.\n3.\n4.\n5.\n6.\n7.\n8.\n9.\n10.",
+    "aramTemplate": "📢 내전하실분 #3\n 》칼바람\n 》2026-09-09 21:30 시작\n👥 0/10명\n\n*참가 신청 양식*\n이름\nEX) 1.지후\n\n1.\n2.\n3.\n4.\n5.\n6.\n7.\n8.\n9.\n10.",
+    "multiRoundStatusReply": "[K-LOL.GG 내전현황]\n🔎 전체 명단: 내전상세 번호\n\n#1 2026-9-9 21:00 시작 (2/10)\n└ 내전상세 1\n#2 2026-9-9 21:30 시작 (1/10 / 예비 1)\n└ 내전상세 2\n\n상세 명령: 내전상세 1 / 내전상세 2",
+    "modes": {
+      "RIFT": { "labels": ["협곡", "rift"], "memberFields": ["이름", "현티어", "최고티어", "주라인", "부라인"], "seasonRoster": true },
+      "ARAM": { "labels": ["칼바람", "aram"], "memberFields": ["이름"], "seasonRoster": false },
+      "AUGMENT_ARAM": { "labels": ["증바람", "증강칼바람", "augmentaram"], "memberFields": ["이름"], "seasonRoster": false }
+    },
+    "zeroParticipants": "The accepted full form withdraws/cancels the same-room, same-round participant snapshot"
+  },
+  "scrim": {
+    "initialTemplate": "[K-LOL.GG 스크림 구인 양식]\n\n운영일: 2026-09-09\n번호: #자동배정\n\n일시: \n방식: 3판2선\n\n우리팀: \nTOP: \nJUG: \nMID: \nADC: \nSUP: \n\n상대팀: \nTOP: \nJUG: \nMID: \nADC: \nSUP: ",
+    "emptyStatusReply": "[K-LOL.GG 스크림 현황]\n\n현재 모집중/확정된 스크림이 없습니다.",
+    "statusReply": "[K-LOL.GG 스크림 현황]\n🔎 전체 양식: 스크림상세 번호\n\n#7 하늘단 vs 꽃잎단 / 9/9 21:00 / 3판2선 / 매칭완료\n└ 스크림상세 7",
+    "detailReply": "[K-LOL.GG 멸망전 스크림 상세]\n\n#7 하늘단 vs 꽃잎단 / 9/9 21:00 / 3판2선 / 매칭완료\n\n운영일: 2026-09-09\n번호: #7\n일시: 9/9 21:00\n방식: 3판2선\n\n우리팀: 하늘단\nTOP: 하늘탑\nJUG: 하늘정글\nMID: 하늘미드\nADC: 하늘원딜\nSUP: 하늘서폿\n\n상대팀: 꽃잎단\nTOP: 꽃잎탑\nJUG: 꽃잎정글\nMID: 꽃잎미드\nADC: 꽃잎원딜\nSUP: 꽃잎서폿\n\n수정: 이 메시지를 복사해 내용을 고친 뒤 전체 전송",
+    "newFormReply": "[K-LOL.GG 스크림 등록 완료]",
+    "deprecatedReplies": {
+      "DEPRECATED_JOIN": "[K-LOL.GG 스크림 참가 명령 사용 안 함]\n스크림 양식에 직접 입력해주세요.",
+      "DEPRECATED_CONFIRM": "[K-LOL.GG 스크림 확정 명령 사용 안 함]\n최신 스크림 양식을 다시 보내주세요.",
+      "DEPRECATED_CANCEL": "[K-LOL.GG 스크림 취소 명령 사용 안 함]\n스크림은 오전 6시에 자동 종료됩니다.",
+      "DEPRECATED_FINISH": "[K-LOL.GG 스크림 수동 종료 사용 안 함]\n스크림은 매일 오전 6시에 자동 종료됩니다."
+    },
+    "editPolicy": "A full form for an existing number replaces editable fields immediately without a confirmation step and preserves its tournament binding",
+    "closePolicy": "V1 manual cancel/finish commands do not mutate; active scrims automatically close at 06:00 KST"
+  },
+  "operationForms": {
+    "botEchoSender": "오픈채팅봇",
+    "botEchoPolicy": "ignore",
+    "forms": {
+      "friends": ["지인 이름", "지인 닉네임", "이용기간", "디스코드 닉네임 변경"],
+      "suggestions": ["본인 이름 및 닉네임", "건의 사유", "건의 내용"],
+      "meetups": ["주최자 이름 및 닉네임", "일자", "장소", "참여자 명단"],
+      "leaves": ["이름 및 닉네임", "외출기간", "외출사유", "외출범위"]
+    },
+    "leaveWrappers": ["💟간편 공지💟", "2. 양식작성 후 전송", "<외출>", "&lt;외출&gt;"],
+    "missingFieldsReply": "[K-LOL.GG 양식 필드 누락]\n필수 항목을 확인해 주세요: 외출기간, 외출사유, 외출범위"
+  },
+  "exactReplies": {
+    "generalHelp": "[K-LOL.GG 일반 도움말]\n\nLOL-K 기능\n- 내전현황 : 현재 시즌내전 신청 현황\n- 내전참가 / 참가신청 : 참가 방법 안내\n- 전적 닉네임#태그 : 플레이어 전적 조회\n- 최근 닉네임#태그 : 최근 경기 조회\n- 랭킹 : 랭킹 조회\n\n운영 기능\n- /등록 : 초보자용 등록 센터\n- /내전등록 : 사이트에서 내전 결과·사진 한 번에 등록\n- /경고등록 : 관리자 경고 등록 화면 열기\n- /인증 : 로그인 후 내 경고 사진을 사이트에서 제출\n- /경고현황 : 내정보의 경고 진행 상황 열기\n- /결과현황 : 사이트의 내 미완료 결과 접수 열기\n\n구인구직 명령어는 구인도움말을 입력해주세요.\n스크림구인은 /스크림구인, /스크림현황을 사용해주세요.\n\n참고\n- 모든 명령어 앞에 /를 붙여도 사용할 수 있습니다.\n- 예) /내전현황, /전적 닉네임#태그, /구인도움말",
+    "recruitHelp": "[K-LOL.GG 구인 도움말]\n\n1. 파티\n생성: 5인파티\n현황: 구인현황\n종료: 번호ㅉ\n\n2. 내전\n생성: 내전구인\n현황: 내전현황\n매일 오전 6시 자동 종료\n\n3. 스크림\n생성: 스크림구인\n현황: 스크림현황\n매일 오전 6시 자동 종료\n\n공통: 양식 복사 → 이름 추가·삭제 → 양식 전체 전송",
+    "recruitWebHelp": "[K-LOL.GG 구인도우미]\n\n현재 사용 중인 카카오톡 명령어 전체 설명은 아래 페이지에서 확인해주세요.\n\nhttps://k-lol-gg.vercel.app/recruit-helper\n\n구인현황 바로가기:\nhttps://k-lol-gg.vercel.app/recruit",
+    "registrationHub": "[K-LOL.GG 쉬운 등록 센터]\n처음 사용하셔도 괜찮아요. 필요한 항목의 링크를 누르면 됩니다.\n▶ https://k-lol-gg.vercel.app/start\n\n① 내전 결과 등록\n경기 정보와 결과 사진 2~3장을 한 화면에서 제출합니다.\n▶ https://k-lol-gg.vercel.app/matches/submit\n\n② 주의·경고·벤 등록 (관리자)\n대상 검색부터 사유·근거 사진 등록까지 한 화면에서 처리합니다.\n▶ https://k-lol-gg.vercel.app/admin/discipline/new\n※ 관리자 로그인이 필요하며, 권한이 없으면 등록할 수 없습니다.\n\n③ 경고 차감 사진 제출\n본인의 진행 과제를 선택하고 남은 사진을 한 번에 제출합니다.\n▶ https://k-lol-gg.vercel.app/discipline/evidence\n※ 본인 계정 로그인이 필요합니다.\n\n등록과 사진 제출은 로그인한 본인 계정 기준으로 처리됩니다.",
+    "inhouseResultGuide": "[K-LOL.GG 내전 결과 등록]\n가장 쉬운 등록 방법을 안내합니다.\n\n1. 아래 링크를 엽니다.\n2. 세트 수·회차·팀 밸런스를 확인합니다.\n3. 결과 사진 2~3장을 한 번에 올리고 제출합니다.\n\n▶ https://k-lol-gg.vercel.app/matches/submit\n\n로그인하면 진행 중인 제출을 자동으로 찾아 이어서 할 수 있습니다.",
+    "disciplineCreateGuide": "[K-LOL.GG 관리자 경고 등록]\n관리자 화면에서 대상 검색 → 종류 선택 → 사유·사진 등록 순서로 진행합니다.\n\n▶ https://k-lol-gg.vercel.app/admin/discipline/new\n\n※ 관리자 로그인과 2차 인증이 필요하며, 완료 후 이 화면으로 돌아옵니다.",
+    "disciplineEvidenceGuide": "[K-LOL.GG 경고 차감 사진 제출]\n사이트에 로그인하면 본인의 진행 과제만 자동으로 표시됩니다.\n로그인 계정 기준으로 남은 사진을 한 번에 제출할 수 있습니다.\n\n▶ https://k-lol-gg.vercel.app/discipline/evidence",
+    "disciplineStatusGuide": "[K-LOL.GG 내 경고 현황]\n내정보에서 경고 상태와 남은 사진 수를 확인하세요.\n\n▶ https://k-lol-gg.vercel.app/account#discipline",
+    "inhouseResultStatusGuide": "[K-LOL.GG 내전 결과 제출 현황]\n사이트에 로그인하면 진행 중인 내 제출을 자동으로 확인할 수 있습니다.\n\n▶ https://k-lol-gg.vercel.app/matches/submit",
+    "record": "[별빛#KR1 전적]\n\n시즌: 가을 시즌\n티어: EMERALD / DIAMOND\n참여: 7회 / 12세트\n전적: 5승 2패 (71.4%)\nKDA: 4.20 (25/8/9)\nMVP: 2회\n\n최근: 승 아리 8/2/9\n\nhttps://k-lol-gg.vercel.app/players/player-1",
+    "recent": "[별빛#KR1 최근 경기]\n\n1. 승 | 아리 | 8/2/9\n\nhttps://k-lol-gg.vercel.app/players/player-1",
+    "ranking": "🏆 K-LOL.GG 랭킹 TOP 5\n기준: 내전 참여 10회 이상\n\n1. 별빛#KR1 | 승률 71.4% | 참여 12회 | 12세트 | KDA 4.20"
+  },
+  "userHelpForbiddenTokens": [
+    "V2도움말",
+    "V2진단",
+    "V2연동확인",
+    "V2모집",
+    "V2시즌",
+    "V2양식",
+    "V2사진세션",
+    "JSON"
+  ]
+}
