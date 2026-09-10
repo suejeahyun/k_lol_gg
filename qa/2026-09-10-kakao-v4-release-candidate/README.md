@@ -2,7 +2,7 @@
 
 검증일: 2026-09-10 (Asia/Seoul)
 
-RC 토폴로지 보강 기준 HEAD: `a04da75f18a5e8f59fb01b8562425f2490046638`
+통합 봇 재설계 기준 HEAD: `41771bd76a8be232c286668e0abf979055d3a11b`
 
 ## 판정
 
@@ -26,12 +26,14 @@ RC 토폴로지 보강 기준 HEAD: `a04da75f18a5e8f59fb01b8562425f2490046638`
 
 ## Installation-scope 보안
 
-- 기준 토폴로지는 휴대폰 1대, MessengerBot R 프로필 2개, 카카오톡 방 2개다.
-- 같은 휴대폰의 공용 DataBase 설정을 두 프로필이 공유하고, MessengerBot R의 응답 방 선택으로 각 프로필을 지정 방 하나에만 연결한다.
+- 기준 토폴로지는 휴대폰 1대, MessengerBot R 통합 봇 프로필 1개, 카카오톡 방 2개다.
+- 두 분리형 프로필이 두 방에 중복 응답한 실기기 증거를 반영해 통합 callback 하나가 명령 family를 분류한다.
 - identity secret과 profile ID로 RECRUIT/FEATURES installation ID를 서로 다르게 결정한다.
 - installation ID에서 DB 식별자를 노출하지 않는 내부 room scope를 결정한다.
 - profile 교차 사용, 임의 installation ID와 잘못된 signature는 fail-closed한다.
-- 교차 명령은 휴대폰에서 전송 전에 차단하고, 우회 요청도 서버에서 `WRONG_PROFILE`로 차단한다.
+- 파티·스크림은 RECRUIT, 내전·조회·운영은 FEATURES로 분류되어 명령당 서버 전송은 정확히 한 번이다.
+- 방 이름·room·channel은 분류나 인증에 사용하지 않는다.
+- 두 방의 서로 다른 봇 표시명은 RECRUIT/FEATURES self-echo 이름 설정으로 모두 차단한다.
 - 일반 sender 두 명이 같은 installation scope에서 생성·교차 수정·종료할 수 있다.
 - 같은 `eventId`와 body는 replay하고 다른 body는 HTTP 409 `REPLAY_CONFLICT`다.
 
@@ -39,12 +41,13 @@ RC 토폴로지 보강 기준 HEAD: `a04da75f18a5e8f59fb01b8562425f2490046638`
 
 - Production/Preview 환경변수 configured 여부와 값 일치.
 - 운영 DB migration head와 receipt/nonce schema 실제 상태.
-- 실기기 Rhino 컴파일, callback, 줄바꿈, 링크, timeout, network retry.
+- 실기기 Rhino 컴파일, callback, 줄바꿈, 링크, 5초 timeout·무재시도 동작.
+- MessengerBot R log ID가 두 방 전체에서 유일한지 여부와 같은 family 충돌 가능성.
 - 운영 로그와 DB에서 durable replay/conflict가 실제로 한 번만 반영되는지 여부.
 
 ## 다음 패치 추천
 
 1. 분리된 staging에서 환경변수 이름·범위와 DB schema를 read-only preflight한다.
-2. RECRUIT와 FEATURES 실기기 canary 증거를 자동 수집한다.
+2. 통합 봇의 두 방 명령 family 실기기 canary 증거를 자동 수집한다.
 3. local reply의 server/client 단일 source 생성을 도입해 문구 drift를 차단한다.
 4. local 안내 응답까지 durable receipt가 필요한지 운영 기준을 확정한다.

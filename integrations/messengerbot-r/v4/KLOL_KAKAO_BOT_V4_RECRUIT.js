@@ -1,4 +1,5 @@
 /* eslint-disable */
+/* DEPRECATED split-profile entry. Do not install; use KLOL_KAKAO_BOT_V4_UNIFIED_MESSENGERBOT_R.js. */
 var KLOL_V4_PROFILE_ID = "RECRUIT";
 var KLOL_V4_BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V4_RECRUIT_2026_09_10_R2";
 

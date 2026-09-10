@@ -48,24 +48,59 @@ async function entryHarness(profile) {
   };
 }
 
-async function sharedInternals() {
+async function sharedInternals(bootUuid = "01234567-89ab-cdef-0123-456789abcdef", settings = {}) {
   const source = (await readFile(resolve(directory, "KLOL_KAKAO_BOT_V4_SHARED.js"), "utf8")).replace(/\r\n?/gu, "\n");
   const instrumented = source.replace(
     "return {\n    localReply: localReply,",
-    "return {\n    __testNextEventId: nextEventId,\n    __testCanonicalLocalCommand: canonicalLocalCommand,\n    localReply: localReply,",
+    "return {\n    __testNextEventId: nextEventId,\n    __testLogEventMaterial: logEventMaterial,\n    __testCanonicalLocalCommand: canonicalLocalCommand,\n    localReply: localReply,",
   );
   assert.notEqual(instrumented, source, "shared export instrumentation point disappeared");
   const context = vm.createContext({
     java: {
       util: {
         UUID: {
-          randomUUID() { return { toString() { return "01234567-89ab-cdef-0123-456789abcdef"; } }; },
+          randomUUID() { return { toString() { return bootUuid; } }; },
         },
       },
     },
+    DataBase: {
+      getDataBase(key) { return settings[key] ?? ""; },
+    },
   });
   vm.runInContext(instrumented, context);
-  return { source, api: context.KLOL_V4 };
+  return { source, api: context.KLOL_V4, context };
+}
+
+async function unifiedHarness() {
+  const { api, context } = await sharedInternals();
+  const calls = [];
+  const replies = [];
+  api.send = (profileId, text, sender, logId, userHash) => {
+    calls.push({ profileId, text, sender, logId, userHash });
+    return { ok: true, body: { reply: `[${profileId}] ${text}` } };
+  };
+  api.resultReply = (result) => result.body.reply;
+  vm.runInContext(await readFile(resolve(directory, "KLOL_KAKAO_BOT_V4_UNIFIED.js"), "utf8"), context);
+  return {
+    api,
+    calls,
+    replies,
+    respond(text, options = {}) {
+      context.response(
+        options.room ?? "untrusted-room",
+        text,
+        options.sender ?? "USER_A",
+        true,
+        { reply(value) { replies.push(String(value)); } },
+        null,
+        "qa.package",
+        false,
+        options.logId ?? null,
+        options.channelId ?? "untrusted-channel",
+        options.userHash ?? "qa-user-hash",
+      );
+    },
+  };
 }
 
 test("[C01] each entry sends its own static profile regardless of poisoned callback room values", async () => {
@@ -92,20 +127,31 @@ test("[C03] FEATURES ignores RECRUIT commands locally without a server call", as
   assert.equal(bot.replies.length, 0);
 });
 
-test("[C03A] one phone with two room-selected bot profiles emits only the matching profile command", async () => {
-  const recruitRoomBot = await entryHarness("RECRUIT");
-  const featuresRoomBot = await entryHarness("FEATURES");
+test("[C03A] one unified phone bot routes both room command families exactly once", async () => {
+  const bot = await unifiedHarness();
+  for (const [command, profileId, room] of [
+    ["5인파티", "RECRUIT", "구인 관련방"],
+    ["구인현황", "RECRUIT", "구인 관련방"],
+    ["스크림구인", "RECRUIT", "구인 관련방"],
+    ["랭킹", "FEATURES", "기능방"],
+    ["전적 별빛#KR1", "FEATURES", "기능방"],
+    ["내전구인 협곡", "FEATURES", "기능방"],
+  ]) {
+    const before = bot.calls.length;
+    bot.respond(command, { room, logId: `unified-${before}` });
+    assert.equal(bot.calls.length, before + 1, command);
+    assert.equal(bot.calls.at(-1).profileId, profileId, command);
+  }
+  assert.equal(bot.replies.length, 6);
+  assert.doesNotMatch(JSON.stringify(bot.calls), /구인 관련방|기능방|untrusted-room|untrusted-channel/u);
+});
 
-  recruitRoomBot.respond("5인파티", { room: "구인 관련방", logId: "same-phone-recruit-1" });
-  recruitRoomBot.respond("랭킹", { room: "구인 관련방", logId: "same-phone-recruit-cross" });
-  featuresRoomBot.respond("랭킹", { room: "기능방", logId: "same-phone-features-1" });
-  featuresRoomBot.respond("5인파티", { room: "기능방", logId: "same-phone-features-cross" });
-
-  assert.deepEqual(recruitRoomBot.calls.map((call) => call.profileId), ["RECRUIT"]);
-  assert.deepEqual(featuresRoomBot.calls.map((call) => call.profileId), ["FEATURES"]);
-  assert.equal(recruitRoomBot.replies.length, 1);
-  assert.equal(featuresRoomBot.replies.length, 1);
-  assert.doesNotMatch(JSON.stringify([...recruitRoomBot.calls, ...featuresRoomBot.calls]), /구인 관련방|기능방/u);
+test("[C03B] unified bot version is one local reply and never reaches transport", async () => {
+  const bot = await unifiedHarness();
+  bot.api.unifiedLocalReply = (text) => text === "/봇버전" ? "통합 봇 버전" : null;
+  bot.respond("/봇버전", { room: "어느 방이든 동일" });
+  assert.deepEqual(bot.replies, ["통합 봇 버전"]);
+  assert.equal(bot.calls.length, 0);
 });
 
 test("[C04] malformed slash, URLs and middle slash are rejected before transport", async () => {
@@ -130,11 +176,31 @@ test("[C05] no-logId boot counter gives every independent command a new event ID
   assert.equal(new Set([first, second, third]).size, 3);
 });
 
-test("[C06] a network retry reuses one preallocated event ID", async () => {
+test("[C06] one command performs one HTTP execute with a five-second maximum", async () => {
   const { source } = await sharedInternals();
   const send = source.slice(source.indexOf("function send("), source.indexOf("function resultReply("));
-  assert.match(send, /(?:retry|attempt)/iu, "transport has no observable retry path");
-  assert.match(send, /eventId[\s\S]*execute\([\s\S]*execute\(/u, "retry must execute with the same eventId");
+  assert.equal((send.match(/\.execute\(\)/gu) ?? []).length, 1);
+  assert.equal((send.match(/\.timeout\(5000\)/gu) ?? []).length, 1);
+  assert.doesNotMatch(send, /(?:retry|attempt|firstNetworkError|secondNetworkError)/iu);
+});
+
+test("[C05A] logId replay is stable in one boot and isolated across profiles and restarts", async () => {
+  const firstBoot = (await sharedInternals("11111111-1111-1111-1111-111111111111")).api;
+  const secondBoot = (await sharedInternals("22222222-2222-2222-2222-222222222222")).api;
+  const first = firstBoot.__testLogEventMaterial("RECRUIT", "room-local-log-1");
+  assert.equal(firstBoot.__testLogEventMaterial("RECRUIT", "room-local-log-1"), first);
+  assert.notEqual(firstBoot.__testLogEventMaterial("FEATURES", "room-local-log-1"), first);
+  assert.notEqual(secondBoot.__testLogEventMaterial("RECRUIT", "room-local-log-1"), first);
+});
+
+test("[C05B] unified echo suppression checks both room-specific bot display names", async () => {
+  const { api } = await sharedInternals("01234567-89ab-cdef-0123-456789abcdef", {
+    KLOL_V4_BOT_SELF_NAME_RECRUIT: "K-LOL 구인구직 도우미",
+    KLOL_V4_BOT_SELF_NAME_FEATURES: "Klol",
+  });
+  assert.equal(api.shouldIgnoreUnified("5인파티", "K-LOL 구인구직 도우미"), true);
+  assert.equal(api.shouldIgnoreUnified("랭킹", "Klol"), true);
+  assert.equal(api.shouldIgnoreUnified("랭킹", "일반 사용자"), false);
 });
 
 test("[C07] one scrim command performs exactly one client-to-server send", async () => {

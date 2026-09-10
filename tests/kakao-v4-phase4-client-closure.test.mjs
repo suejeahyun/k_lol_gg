@@ -14,10 +14,10 @@ const require = createRequire(import.meta.url);
 const acorn = require("next/dist/compiled/acorn");
 const fixture = JSON.parse(await readFile(resolve(import.meta.dirname, "fixtures/kakao-v4-v1-compatibility-contract.json"), "utf8"));
 
-function profiles(route) {
-  if (route.domain === "HELP" && route.action === "GENERAL_HELP") return ["RECRUIT", "FEATURES"];
-  if (route.domain === "HELP" || route.domain === "PARTY" || route.domain === "SCRIM") return ["RECRUIT"];
-  return ["FEATURES"];
+function expectedProfile(route) {
+  if (route.domain === "HELP") return null;
+  if (route.domain === "PARTY" || route.domain === "SCRIM") return "RECRUIT";
+  return "FEATURES";
 }
 
 function JavaString(value) {
@@ -38,8 +38,8 @@ function SecretKeySpec(bytes) {
   this.bytes = Buffer.from(bytes);
 }
 
-async function phone(profile) {
-  const source = await readFile(resolve(directory, `KLOL_KAKAO_BOT_V4_${profile}_MESSENGERBOT_R.js`), "utf8");
+async function phone() {
+  const source = await readFile(resolve(directory, "KLOL_KAKAO_BOT_V4_UNIFIED_MESSENGERBOT_R.js"), "utf8");
   const values = new Map([
     ["KLOL_V2_BASE_URL", "https://example.invalid"],
     ["KLOL_V2_KAKAO_WEBHOOK_SECRET_CURRENT", "s".repeat(32)],
@@ -114,7 +114,7 @@ async function phone(profile) {
       },
     },
   });
-  vm.runInContext(source, context, { filename: `KLOL_KAKAO_BOT_V4_${profile}_MESSENGERBOT_R.js` });
+  vm.runInContext(source, context, { filename: "KLOL_KAKAO_BOT_V4_UNIFIED_MESSENGERBOT_R.js" });
   let logSequence = 0;
   return {
     sends,
@@ -139,19 +139,17 @@ async function phone(profile) {
 }
 
 const localCases = [
-  ["RECRUIT", "봇버전", null],
-  ["FEATURES", "봇버전", null],
-  ["RECRUIT", "도움말", fixture.exactReplies.generalHelp],
-  ["FEATURES", "도움말", fixture.exactReplies.generalHelp],
-  ["RECRUIT", "구인도움말", fixture.exactReplies.recruitHelp],
-  ["RECRUIT", "구인웹도우미", fixture.exactReplies.recruitWebHelp],
+  ["봇버전", null],
+  ["도움말", fixture.exactReplies.generalHelp],
+  ["구인도움말", fixture.exactReplies.recruitHelp],
+  ["구인웹도우미", fixture.exactReplies.recruitWebHelp],
 ];
 
-for (const [index, [profile, command, expected]] of localCases.entries()) {
-  test(`[P4-C${String(index + 1).padStart(2, "0")}] ${profile} ${command} is client-only with exact local content`, async () => {
-    const plain = await phone(profile);
+for (const [index, [command, expected]] of localCases.entries()) {
+  test(`[P4-C${String(index + 1).padStart(2, "0")}] unified ${command} is client-only with exact local content`, async () => {
+    const plain = await phone();
     plain.respond(command);
-    const slash = await phone(profile);
+    const slash = await phone();
     slash.respond(`/${command}`);
     assert.equal(plain.sends.length, 0, `${command}: plain command must not use public transport`);
     assert.equal(slash.sends.length, 0, `${command}: slash command must not use public transport`);
@@ -160,45 +158,45 @@ for (const [index, [profile, command, expected]] of localCases.entries()) {
     if (expected) assert.equal(plain.replies[0], expected);
     else {
       assert.match(plain.replies[0], /^\[K-LOL\.GG V4 봇 버전\]\n/u);
-      assert.match(plain.replies[0], new RegExp(`프로필: ${profile}`, "u"));
-      assert.match(plain.replies[0], /설치본: install-[a-f0-9]{32}$/u);
+      assert.match(plain.replies[0], /프로필: UNIFIED/u);
+      assert.match(plain.replies[0], /RECRUIT 설치본: install-[a-f0-9]{32}/u);
+      assert.match(plain.replies[0], /FEATURES 설치본: install-[a-f0-9]{32}$/u);
     }
   });
 }
 
-test("[P4-C07] every V1 PUBLIC alias is accepted by its actual phone profile with at most one send", async () => {
-  const phones = { RECRUIT: await phone("RECRUIT"), FEATURES: await phone("FEATURES") };
+test("[P4-C05] every V1 PUBLIC alias is classified by the unified phone with at most one send", async () => {
+  const bot = await phone();
   const failures = [];
   let executions = 0;
   for (const route of fixture.routes) {
     for (const alias of route.aliases) {
-      for (const profile of profiles(route)) {
-        for (const text of [alias, `/${alias}`]) {
-          const bot = phones[profile];
-          const beforeSends = bot.sends.length;
-          const beforeReplies = bot.replies.length;
-          bot.respond(text);
-          const sendCount = bot.sends.length - beforeSends;
-          const replyCount = bot.replies.length - beforeReplies;
-          executions += 1;
-          if (sendCount > 1 || replyCount !== 1) failures.push(`${profile}:${text}: send=${sendCount}, reply=${replyCount}`);
+      for (const text of [alias, `/${alias}`]) {
+        const beforeSends = bot.sends.length;
+        const beforeReplies = bot.replies.length;
+        bot.respond(text);
+        const sendCount = bot.sends.length - beforeSends;
+        const replyCount = bot.replies.length - beforeReplies;
+        const profile = expectedProfile(route);
+        executions += 1;
+        if (sendCount > 1 || replyCount !== 1) failures.push(`${text}: send=${sendCount}, reply=${replyCount}`);
+        if (profile && sendCount === 1 && bot.sends.at(-1).body.profileId !== profile) {
+          failures.push(`${text}: expected ${profile}, got ${bot.sends.at(-1).body.profileId}`);
         }
       }
     }
   }
-  assert.equal(executions, 186);
+  assert.equal(executions, fixture.routes.reduce((total, route) => total + route.aliases.length * 2, 0));
   assert.deepEqual(failures, []);
 });
 
-test("[P4-C08] malformed slash, URL and middle-slash inputs never enter public transport", async () => {
+test("[P4-C06] malformed slash, URL and middle-slash inputs never enter public transport", async () => {
   const rejected = [...new Set([...fixture.slashBoundary.rejected, ...fixture.invariants.notCommands, "", "/"])];
-  for (const profile of ["RECRUIT", "FEATURES"]) {
-    for (const text of rejected) {
-      const bot = await phone(profile);
-      bot.respond(text);
-      assert.equal(bot.sends.length, 0, `${profile}:${text}`);
-      assert.equal(bot.replies.length, 0, `${profile}:${text}`);
-    }
+  for (const text of rejected) {
+    const bot = await phone();
+    bot.respond(text);
+    assert.equal(bot.sends.length, 0, text);
+    assert.equal(bot.replies.length, 0, text);
   }
 });
 
@@ -214,37 +212,35 @@ const internalCases = [
   ["FEATURES", "V2사진취소"],
 ];
 
-for (const [index, [profile, command]] of internalCases.entries()) {
+for (const [index, [, command]] of internalCases.entries()) {
   test(`[P4-I${String(index + 1).padStart(2, "0")}] ${command.split(" ")[0]} never enters public V4 transport`, async () => {
     for (const text of [command, `/${command}`]) {
-      const bot = await phone(profile);
+      const bot = await phone();
       bot.respond(text);
-      assert.equal(bot.sends.length, 0, `${profile}:${text}`);
+      assert.equal(bot.sends.length, 0, text);
     }
   });
 }
 
-test("[P4-A01] final phone artifacts are synchronized ES5, under 40k and Rhino-static clean", async () => {
+test("[P4-A01] final unified phone artifact is synchronized ES5, under 40k and Rhino-static clean", async () => {
   const shared = (await readFile(resolve(directory, "KLOL_KAKAO_BOT_V4_SHARED.js"), "utf8")).replace(/\r\n?/gu, "\n").trim();
-  for (const profile of ["RECRUIT", "FEATURES"]) {
-    const entryName = `KLOL_KAKAO_BOT_V4_${profile}.js`;
-    const entry = (await readFile(resolve(directory, entryName), "utf8")).replace(/\r\n?/gu, "\n").trim();
-    const output = (await readFile(resolve(directory, `KLOL_KAKAO_BOT_V4_${profile}_MESSENGERBOT_R.js`), "utf8")).replace(/\r\n?/gu, "\n");
-    const expected = `/* GENERATED by scripts/build-messengerbot-v4.mjs. Edit SHARED or ${entryName}. */\n${shared}\n\n${entry}\n`;
-    assert.equal(output, expected, `${profile}: generated artifact is stale`);
-    assert.ok(output.length < 40_000, `${profile}: ${output.length} characters`);
-    const program = acorn.parse(output, { ecmaVersion: 5, allowReserved: true, preserveParens: true });
-    const findings = analyzeRhinoStatic(program);
-    assert.deepEqual({
-      statements: findings.statementCandidates.length,
-      sequences: findings.unsafeSequenceOperands.length,
-      voids: findings.voidExpressions.length,
-      assignments: findings.bareAssignmentConditions.length,
-    }, { statements: 0, sequences: 0, voids: 0, assignments: 0 }, profile);
-    assert.equal((output.match(/KLOL_V4\.send\(/gu) ?? []).length, 1, `${profile}: entry send call count`);
-    const responseSource = output.slice(output.indexOf("function response("));
-    assert.doesNotMatch(responseSource, /\b(?:room|channelId|isGroupChat)\b(?=[^)]*(?:KLOL_V4\.send|JSON\.stringify))/u);
-  }
+  const entryName = "KLOL_KAKAO_BOT_V4_UNIFIED.js";
+  const entry = (await readFile(resolve(directory, entryName), "utf8")).replace(/\r\n?/gu, "\n").trim();
+  const output = (await readFile(resolve(directory, "KLOL_KAKAO_BOT_V4_UNIFIED_MESSENGERBOT_R.js"), "utf8")).replace(/\r\n?/gu, "\n");
+  const expected = `/* GENERATED by scripts/build-messengerbot-v4.mjs. Edit SHARED or ${entryName}. */\n${shared}\n\n${entry}\n`;
+  assert.equal(output, expected, "UNIFIED: generated artifact is stale");
+  assert.ok(output.length < 40_000, `UNIFIED: ${output.length} characters`);
+  const program = acorn.parse(output, { ecmaVersion: 5, allowReserved: true, preserveParens: true });
+  const findings = analyzeRhinoStatic(program);
+  assert.deepEqual({
+    statements: findings.statementCandidates.length,
+    sequences: findings.unsafeSequenceOperands.length,
+    voids: findings.voidExpressions.length,
+    assignments: findings.bareAssignmentConditions.length,
+  }, { statements: 0, sequences: 0, voids: 0, assignments: 0 }, "UNIFIED");
+  assert.equal((output.match(/KLOL_V4\.send\(/gu) ?? []).length, 1, "UNIFIED: entry send call count");
+  const responseSource = output.slice(output.indexOf("function response("));
+  assert.doesNotMatch(responseSource, /\b(?:room|channelId|isGroupChat)\b(?=[^)]*(?:KLOL_V4\.send|JSON\.stringify))/u);
   const timeout = /\.timeout\((\d+)\)/u.exec(shared);
   assert.ok(timeout);
   assert.ok(Number(timeout[1]) <= 5_000, `timeout=${String(timeout[1])}ms`);

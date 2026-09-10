@@ -45,7 +45,7 @@ test("V4 installation identity exactly mirrors the phone HMAC contract", () => {
   }
 });
 
-test("one phone may share one identity secret while RECRUIT and FEATURES keep distinct stable installation scopes", async () => {
+test("one unified phone script shares one identity secret while RECRUIT and FEATURES keep distinct stable installation scopes", async () => {
   const authorizer = new KakaoV4InstallationScopeAuthorizer(secret);
   const recruitId = kakaoV4InstallationId("RECRUIT", secret);
   const featuresId = kakaoV4InstallationId("FEATURES", secret);
@@ -59,7 +59,7 @@ test("one phone may share one identity secret while RECRUIT and FEATURES keep di
   assert.equal(features.roomId, kakaoV4InstallationScopeId(featuresId));
 });
 
-test("the server rejects cross-profile commands before dispatch for both phone profiles", async () => {
+test("the server rejects cross-family commands before dispatch for both unified-script profiles", async () => {
   let dispatches = 0;
   const dispatcher = {
     async dispatch() {
@@ -156,28 +156,27 @@ test("V4 route is registry-free and keeps the seven-field identity-free boundary
   assert.doesNotMatch(shared, /body\s*=\s*JSON\.stringify\(\{[\s\S]*?(?:room|channel|isGroupChat)\s*:/u);
 });
 
-test("V4 phone callbacks ignore room and channel values", () => {
+test("the unified V4 phone callback ignores room and channel values while routing both families", () => {
   const replies: string[] = [];
-  for (const file of ["KLOL_KAKAO_BOT_V4_RECRUIT.js", "KLOL_KAKAO_BOT_V4_FEATURES.js"] as const) {
-    const source = readFileSync(resolve(import.meta.dirname, `../integrations/messengerbot-r/v4/${file}`), "utf8");
-    const sends: unknown[][] = [];
-    const context = {
-      KLOL_V4: {
-        shouldIgnore: () => false,
-        localReply: () => null,
-        send: (...args: unknown[]) => {
-          sends.push(args);
-          return { ok: true, body: { reply: "ok" } };
-        },
-        resultReply: () => "ok",
+  const source = readFileSync(resolve(import.meta.dirname, "../integrations/messengerbot-r/v4/KLOL_KAKAO_BOT_V4_UNIFIED.js"), "utf8");
+  const sends: unknown[][] = [];
+  const context = {
+    KLOL_V4: {
+      shouldIgnoreUnified: () => false,
+      unifiedLocalReply: () => null,
+      publicProfileId: (text: string) => text === "5인파티" ? "RECRUIT" : "FEATURES",
+      send: (...args: unknown[]) => {
+        sends.push(args);
+        return { ok: true, body: { reply: "ok" } };
       },
-    } as Record<string, unknown>;
-    runInNewContext(source, context);
-    const callback = context.response as (...args: unknown[]) => void;
-    callback("first-room", "테스트명령", "같은사용자", true, { reply: (value: string) => replies.push(value) }, null, "pkg", false, "same-log", "first-channel", "same-hash");
-    callback("other-room", "테스트명령", "같은사용자", false, { reply: (value: string) => replies.push(value) }, null, "pkg", false, "same-log", "other-channel", "same-hash");
-    assert.equal(sends.length, 2);
-    assert.deepEqual(sends[0], sends[1]);
-  }
-  assert.deepEqual(replies, ["ok", "ok", "ok", "ok"]);
+      resultReply: () => "ok",
+    },
+  } as Record<string, unknown>;
+  runInNewContext(source, context);
+  const callback = context.response as (...args: unknown[]) => void;
+  callback("first-room", "5인파티", "같은사용자", true, { reply: (value: string) => replies.push(value) }, null, "pkg", false, "recruit-log", "first-channel", "same-hash");
+  callback("other-room", "랭킹", "같은사용자", false, { reply: (value: string) => replies.push(value) }, null, "pkg", false, "features-log", "other-channel", "same-hash");
+  assert.deepEqual(sends.map((args) => args[0]), ["RECRUIT", "FEATURES"]);
+  assert.doesNotMatch(JSON.stringify(sends), /first-room|other-room|first-channel|other-channel/u);
+  assert.deepEqual(replies, ["ok", "ok"]);
 });

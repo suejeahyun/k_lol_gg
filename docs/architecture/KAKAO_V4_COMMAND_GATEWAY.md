@@ -1,14 +1,14 @@
 # Kakao V4 command gateway
 
-설계 버전: `KLOL_KAKAO_COMMAND_V4_2026_09_10_R1`
+설계 버전: `KLOL_KAKAO_COMMAND_V4_2026_09_10_R2_UNIFIED`
 
 ## 상태
 
-- 소스 구현: 단일 gateway, profile 전용 authorization, 전체 공개 V1 명령 dispatcher, 두 ES5 템플릿과 생성 스크립트.
+- 소스 구현: 단일 gateway, profile 전용 authorization, 전체 공개 V1 명령 dispatcher, 통합 ES5 템플릿과 단일 산출물 생성 스크립트.
 - 실제 동작: `봇버전`·`도움말` 등은 봇 로컬 응답, 나머지 공개 V1 파티·내전·스크림·조회·운영 양식은 서명·profile 검증 후 canonical dispatcher가 처리한다.
 - 차단 동작: 알 수 없는 명령과 internal/raw 입력은 `INVALID_FORM`, 교차 profile 명령은 `WRONG_PROFILE`로 fail-closed한다. 공개 V1 명령에 `501` 또는 `ROUTER_NOT_ENABLED` 경로는 없다.
 - 검증 상태: 자동 contract·unit·typecheck·production build 통과. 운영 Vercel의 필수 환경변수 이름은 확인했으며 `KLOL_V2_KAKAO_IDENTITY_SECRET`은 아직 미설정이다. MessengerBot R 실기기 전환도 아직 수행하지 않았다.
-- 운영 반영: 서버 코드는 2026-09-10 GitHub `main`과 Vercel Production에 배포됐다. V4 endpoint는 배포됐지만, 위 identity secret 설정과 같은 휴대폰의 두 봇 프로필 실기기 검증 전에는 기존 운영 봇에서 V4로 전환하지 않는다.
+- 운영 반영: 서버 endpoint는 2026-09-10 GitHub `main`과 Vercel Production에 배포됐다. 통합 휴대폰 봇은 아직 운영에 설치하지 않았다.
 
 ## 경계
 
@@ -16,8 +16,9 @@
 MessengerBot R
   -> local: 봇버전 / 도움말
   -> prefilter: empty / over 20,000 chars / bot echo
+  -> command family: 파티·스크림=RECRUIT / 내전·조회·운영=FEATURES
   -> raw text exactly once
-  -> POST /api/integrations/kakao/v4/commands (5 second timeout)
+  -> POST /api/integrations/kakao/v4/commands (1 execute, 5 second timeout, no automatic retry)
        -> exact envelope + body size + query/header rejection
        -> V4 raw-body HMAC + timestamp
        -> installation -> canonical room -> profile capability
@@ -28,15 +29,18 @@ MessengerBot R
 
 V4는 실제 room ID, channel ID, room name을 body나 header로 받지 않는다. MessengerBot R callback의 `room`과 `channelId` 인자는 플랫폼 시그니처 때문에 존재하지만 읽거나 전송하지 않는다. `senderId`는 표시명 또는 안정 user hash의 HMAC fingerprint이며, 공개 명령 authorization은 sender role이나 환경 allowlist를 사용하지 않는다.
 
-## 한 휴대폰·두 방 운영 토폴로지
+## 한 휴대폰·통합 봇·두 방 운영 토폴로지
 
-V4의 기준 운영 형태는 **휴대폰 1대 + MessengerBot R 봇 프로필 2개 + 카카오톡 방 2개**다. 같은 휴대폰의 `DataBase`에 저장한 서버 주소·identity secret·signing secret·key ID를 두 프로필이 함께 읽는다. 다만 각 entry에 정적으로 고정된 `profileId`가 installation HMAC 재료에 포함되므로 RECRUIT와 FEATURES의 `installationId` 및 내부 room scope는 반드시 서로 다르다.
+V4의 기준 운영 형태는 **휴대폰 1대 + MessengerBot R 통합 봇 프로필 1개 + 카카오톡 방 2개**다. 실기기에서 두 분리형 프로필이 두 방 알림을 모두 수신한 사실을 반영해, 통합 callback 하나만 사용한다.
 
-- RECRUIT 봇 프로필: MessengerBot R 앱에서 구인 관련방 하나만 응답 대상으로 선택한다.
-- FEATURES 봇 프로필: MessengerBot R 앱에서 나머지 기능방 하나만 응답 대상으로 선택한다.
-- 한 봇 프로필에 두 방을 동시에 선택하거나 두 프로필을 같은 방에 선택하지 않는다.
-- 실제 방 격리는 MessengerBot R의 프로필별 응답 방 선택이 담당한다. callback의 `room` 문자열은 신뢰하거나 서버로 보내지 않는다.
-- 교차 명령은 profile별 entry에서 서버 전송 없이 무응답 처리하며, 우회 전송돼도 서버 classifier가 `WRONG_PROFILE`로 거부한다.
+- 통합 프로필이 구인 관련방과 기능방 알림을 함께 수신한다.
+- 파티·구인·스크림 명령은 `RECRUIT`, 내전·전적·랭킹·운영 양식은 `FEATURES`로 분류한다.
+- `/봇버전`과 로컬 도움말은 통합 프로필이 한 번만 응답하며 서버로 전송하지 않는다.
+- callback의 `room`, `channelId`, 방 이름은 파싱·분류·인증·전송에 사용하지 않는다.
+- 따라서 실제 카카오 방은 권한 경계가 아니다. 잘못된 방에서 지원 명령을 입력해도 해당 family 요청은 실행될 수 있으며, 접근 제어는 installation/profile 서명과 서버 도메인 규칙이 담당한다.
+- 같은 통합 스크립트가 공용 identity secret과 선택된 profile ID로 서로 다른 RECRUIT/FEATURES `installationId`와 내부 room scope를 계산한다.
+- 분류된 명령은 서버에 정확히 한 번 전송한다. 네트워크 예외 시 자동 재시도하지 않아 최대 대기 시간은 5초다.
+- 두 방에서 봇 표시명이 다르므로 `KLOL_V4_BOT_SELF_NAME_RECRUIT`와 `KLOL_V4_BOT_SELF_NAME_FEATURES`에 각 표시명을 저장한다. 통합 callback은 둘 중 어느 이름이든 self echo로 무시한다.
 
 ## 요청 계약
 
@@ -54,14 +58,16 @@ V4의 기준 운영 형태는 **휴대폰 1대 + MessengerBot R 봇 프로필 2�
 }
 ```
 
-- `profileId`: 소스에 정적으로 고정된 `RECRUIT` 또는 `FEATURES`.
+- `profileId`: 통합 entry가 원문 명령 family로 결정한 `RECRUIT` 또는 `FEATURES`.
 - `installationId`: identity secret과 profile에서 만들어지는 안정 fingerprint.
 - `senderId`: user hash가 있으면 이를, 없으면 표시명을 HMAC 처리한 fingerprint.
-- `eventId`: log ID가 있으면 profile+log ID, 없으면 프로세스 시작 때 생성한 `bootId`와 증가 counter를 사용한다. message content hash는 사용하지 않는다.
+- `eventId`: log ID가 있으면 profile+boot ID+log ID, 없으면 프로세스 시작 때 생성한 `bootId`와 증가 counter를 사용한다. 같은 실행 중 동일 callback 재전송은 같은 ID이고, 재시작 뒤 같은 log ID는 다른 ID다. message content hash는 사용하지 않는다.
 - `timestamp`, `nonce`: replay window와 서명 신선도 입력.
 - `text`: 파싱하지 않은 원문. 이미지 입력은 이번 범위에서 제외한다.
 
 HTTP header는 `Content-Type`, `Accept`, `x-klol-key-id`, `x-klol-signature`, `Idempotency-Key`만 애플리케이션 계약으로 사용한다. `Idempotency-Key`는 `eventId`와 정확히 같아야 한다. `x-klol-room`, `x-klol-channel`, `x-klol-room-name`, `x-klol-sender`가 있으면 요청을 거부한다.
+
+MessengerBot R의 log ID가 방 전체가 아니라 방별로만 유일한지는 미확인이다. 같은 실행·같은 profile family·서로 다른 방에서 같은 log ID가 충돌할 잔여 위험이 있으므로 실기기 로그로 확인해야 한다. room 값을 event ID에 넣어 이 위험을 숨기지 않는다. 방 값은 신뢰 경계가 아니기 때문이다.
 
 서명 material은 다음과 같다.
 
@@ -77,10 +83,10 @@ V1 dispatcher는 기존 PostgreSQL 서비스에 연결되어 있다. 상태 변�
 
 ## MessengerBot R 산출물
 
-편집 원본은 공용 `KLOL_KAKAO_BOT_V4_SHARED.js`와 profile별 얇은 entry다. 다음 명령이 transport를 포함한 휴대폰 붙여넣기용 한 파일 두 개를 생성한다.
+편집 원본은 공용 `KLOL_KAKAO_BOT_V4_SHARED.js`와 통합 `KLOL_KAKAO_BOT_V4_UNIFIED.js` entry다. 다음 명령이 휴대폰 붙여넣기용 파일 하나를 생성한다.
 
 ```powershell
 npm run bot:kakao:v4
 ```
 
-생성된 `*_MESSENGERBOT_R.js` 두 파일을 같은 휴대폰의 서로 다른 MessengerBot R 봇 프로필에 각각 붙여넣는다. 자동 검증과 실기기 QA가 모두 끝나기 전에는 운영방에 설치하지 않는다.
+생성된 `KLOL_KAKAO_BOT_V4_UNIFIED_MESSENGERBOT_R.js`만 같은 휴대폰의 MessengerBot R 통합 봇 프로필 하나에 붙여넣는다. 과거 분리형 산출물은 `legacy-split-profiles`에 보존하지만 운영에 설치하지 않는다. 자동 검증과 실기기 QA가 모두 끝나기 전에는 운영방에 설치하지 않는다.

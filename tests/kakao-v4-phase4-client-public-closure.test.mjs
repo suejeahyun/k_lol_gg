@@ -31,6 +31,8 @@ test("[P4-C01] every public V1 alias passes the correct phone profile with zero-
     for (const alias of route.aliases) {
       assert.equal(KLOL_V4.acceptsPublicText(profile, alias), true, `${profile}:${alias}`);
       assert.equal(KLOL_V4.acceptsPublicText(profile, `/${alias}`), true, `${profile}:/${alias}`);
+      assert.equal(KLOL_V4.publicProfileId(alias), profile, `unified:${profile}:${alias}`);
+      assert.equal(KLOL_V4.publicProfileId(`/${alias}`), profile, `unified:${profile}:/${alias}`);
     }
   }
   for (const [profile, snapshot] of [
@@ -38,7 +40,10 @@ test("[P4-C01] every public V1 alias passes the correct phone profile with zero-
     ["RECRUIT", fixture.scrim.initialTemplate],
     ["FEATURES", fixture.inhouse.riftTemplate],
     ["FEATURES", fixture.inhouse.aramTemplate],
-  ]) assert.equal(KLOL_V4.acceptsPublicText(profile, snapshot), true, `${profile}:snapshot`);
+  ]) {
+    assert.equal(KLOL_V4.acceptsPublicText(profile, snapshot), true, `${profile}:snapshot`);
+    assert.equal(KLOL_V4.publicProfileId(snapshot), profile, `unified:${profile}:snapshot`);
+  }
 });
 
 test("[P4-C02] local public replies are exact and never include V2 operator commands", async () => {
@@ -67,7 +72,7 @@ test("[P4-C02A] all actual V41 public command samples pass the matching V4 phone
 
 test("[P4-C03] photo and retired preview commands reply locally with no server transmission", async () => {
   const context = await sharedContext();
-  const entry = await readFile(resolve(directory, "KLOL_KAKAO_BOT_V4_FEATURES.js"), "utf8");
+  const entry = await readFile(resolve(directory, "KLOL_KAKAO_BOT_V4_UNIFIED.js"), "utf8");
   vm.runInContext(entry, context);
   let sends = 0;
   const replies = [];
@@ -97,14 +102,14 @@ test("[P4-C04] internal, unknown, and malformed inputs are rejected before trans
   }
 });
 
-test("[P4-C05] R2 entries preserve one send site, five-second timeout, and static profile split", async () => {
-  const [shared, recruit, features] = await Promise.all([
+test("[P4-C05] unified entry preserves one send site, five-second timeout, and dynamic family split", async () => {
+  const [shared, unified] = await Promise.all([
     readFile(resolve(directory, "KLOL_KAKAO_BOT_V4_SHARED.js"), "utf8"),
-    readFile(resolve(directory, "KLOL_KAKAO_BOT_V4_RECRUIT.js"), "utf8"),
-    readFile(resolve(directory, "KLOL_KAKAO_BOT_V4_FEATURES.js"), "utf8"),
+    readFile(resolve(directory, "KLOL_KAKAO_BOT_V4_UNIFIED.js"), "utf8"),
   ]);
   assert.match(shared, /\.timeout\(5000\)/u);
-  assert.equal((`${recruit}\n${features}`.match(/KLOL_V4\.send\(/gu) ?? []).length, 2);
-  assert.match(recruit, /KLOL_KAKAO_BOT_V4_RECRUIT_2026_09_10_R2/u);
-  assert.match(features, /KLOL_KAKAO_BOT_V4_FEATURES_2026_09_10_R2/u);
+  assert.equal((shared.match(/\.execute\(\)/gu) ?? []).length, 1);
+  assert.equal((unified.match(/KLOL_V4\.send\(/gu) ?? []).length, 1);
+  assert.match(unified, /KLOL_KAKAO_BOT_V4_UNIFIED_2026_09_10_R1/u);
+  assert.match(shared, /function publicProfileId/u);
 });

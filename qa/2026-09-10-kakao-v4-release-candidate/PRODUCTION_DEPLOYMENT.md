@@ -50,5 +50,5 @@ Vercel UI에서 값은 열지 않고 이름과 Production scope만 확인했다.
 
 - 서버 코드와 V4 route: Production 배포 확인.
 - 기존 운영 사이트와 기존 카카오봇: 변경 없이 계속 사용 가능.
-- V4 휴대폰 전환: 보류. 별도의 identity secret을 Vercel Production과 같은 휴대폰의 공용 MessengerBot R `DataBase`에 일치시킨 뒤, RECRUIT/FEATURES 두 프로필을 각각 지정 방 하나에 연결해 실기기 checklist를 통과해야 한다.
+- V4 휴대폰 전환: 보류. 별도의 identity secret을 Vercel Production과 같은 휴대폰의 MessengerBot R `DataBase`에 일치시킨 뒤, 기존 분리형 두 프로필을 중지하고 통합 프로필 하나로 실기기 checklist를 통과해야 한다.
 - signing secret을 identity secret으로 재사용하지 않는다.

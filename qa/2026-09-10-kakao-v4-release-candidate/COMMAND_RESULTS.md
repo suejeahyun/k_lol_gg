@@ -27,7 +27,7 @@
 | Release-readiness | 5 | 0 | PASS, P0 RESOLVED |
 | Phase 2·3·V1 client/golden | 95 | 0 | PASS |
 | Phase 2·3 server/dispatcher | 91 | 0 | PASS |
-| `npm run test:contracts` | 306 | 0 | PASS |
+| `npm run test:contracts` | 307 | 0 | PASS |
 | `npm run test:unit` | 609 | 0 | PASS |
 | `npm run typecheck` | - | - | PASS |
 | 변경 TypeScript/MJS 12개 ESLint | - | - | PASS, 오류·경고 0건 |
@@ -36,12 +36,11 @@
 
 ## 생성 산출물
 
-| Profile | 문자 수 | 바이트 | 줄 | SHA-256 |
-| --- | ---: | ---: | ---: | --- |
-| RECRUIT | 12,408 | 14,942 | 257 | `87efb237790ed8abd24a1c5b52ef0a89b8d5d7bca85fed47ab9e0c74d02f54bc` |
-| FEATURES | 12,537 | 15,199 | 257 | `f63d80dbb2faf550d16e6fab3efa0203164d3bdeb163a0add940807afcefdf26` |
+| 운영 산출물 | 문자 수 | 바이트 | 줄 | 최대 줄 길이 | SHA-256 |
+| --- | ---: | ---: | ---: | ---: | --- |
+| UNIFIED | 13,018 | 15,534 | 276 | 471 | `95d8897d5d6f6330d0ebad05413636ae536269087c02d2f09970fe3b6b8c9501` |
 
-SHA-256은 현재 worktree 바이트 기준이다. 설치 과정에서 줄바꿈이 바뀌면 해시도 달라지므로 paste 직전 파일과 대조한다.
+V4 루트의 paste-ready 운영 산출물은 UNIFIED 하나뿐이다. 분리형 두 산출물은 `legacy-split-profiles`로 이동했으며 설치하지 않는다. SHA-256은 현재 worktree 바이트 기준이다. 설치 과정에서 줄바꿈이 바뀌면 해시도 달라지므로 paste 직전 파일과 대조한다.
 
 ## 수행하지 않음
 

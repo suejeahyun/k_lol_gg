@@ -53,30 +53,27 @@ test("[R02] installation, canonical room, key and capability migrations match th
   assert.match(profile, /"kakao_rooms" ADD COLUMN "capability_profile"/u);
 });
 
-test("[R03] V3 and V4 server intake coexist while V4 binds profile-specific installation identity", () => {
+test("[R03] V3 and V4 server intake coexist while one V4 entry binds profile-specific installation identity", () => {
   const v4Route = source("src/app/api/integrations/kakao/v4/commands/route.ts");
   const v3Route = source("src/app/api/integrations/kakao/recruits/route.ts");
   const service = source("src/modules/recruiting/kakao-v4/application.ts");
   const shared = source("integrations/messengerbot-r/v4/KLOL_KAKAO_BOT_V4_SHARED.js");
-  const recruit = source("integrations/messengerbot-r/v4/KLOL_KAKAO_BOT_V4_RECRUIT.js");
-  const features = source("integrations/messengerbot-r/v4/KLOL_KAKAO_BOT_V4_FEATURES.js");
+  const unified = source("integrations/messengerbot-r/v4/KLOL_KAKAO_BOT_V4_UNIFIED.js");
   assert.match(v4Route, /KAKAO_V4_COMMAND_CONTRACT/u);
   assert.match(v3Route, /RECRUIT_KAKAO_ROOM_COMMAND/u);
   assert.match(shared, /installation-id\\nKLOL_V4\\n" \+ profile\(profileId\)/u);
-  assert.match(recruit, /KLOL_V4_PROFILE_ID = "RECRUIT"/u);
-  assert.match(features, /KLOL_V4_PROFILE_ID = "FEATURES"/u);
+  assert.match(unified, /KLOL_V4\.publicProfileId\(text\)/u);
+  assert.equal((unified.match(/KLOL_V4\.send\(/gu) ?? []).length, 1);
   assert.match(service, /requiredCapabilityProfile: envelope\.profileId/u);
 });
 
 test("[RESOLVED R04] V4 uses deterministic installation scope without a pairing command", () => {
   const shared = source("integrations/messengerbot-r/v4/KLOL_KAKAO_BOT_V4_SHARED.js");
-  const recruit = source("integrations/messengerbot-r/v4/KLOL_KAKAO_BOT_V4_RECRUIT.js");
-  const features = source("integrations/messengerbot-r/v4/KLOL_KAKAO_BOT_V4_FEATURES.js");
+  const unified = source("integrations/messengerbot-r/v4/KLOL_KAKAO_BOT_V4_UNIFIED.js");
   const service = source("src/modules/recruiting/kakao-v4/application.ts");
   const route = source("src/app/api/integrations/kakao/v4/commands/route.ts");
   assert.doesNotMatch(shared, /pair-room|pairRoom|V2방연동/u);
-  assert.doesNotMatch(recruit, /pair-room|pairRoom|V2방연동/u);
-  assert.doesNotMatch(features, /pair-room|pairRoom|V2방연동/u);
+  assert.doesNotMatch(unified, /pair-room|pairRoom|V2방연동/u);
   assert.match(shared, /KLOL_V2_KAKAO_IDENTITY_SECRET/u);
   assert.match(route, /getRuntimeKakaoV4ProfileAuthorizer/u);
   assert.doesNotMatch(route, /getRuntimeKakaoRoomRegistry|pair-room|pairRoom/u);
