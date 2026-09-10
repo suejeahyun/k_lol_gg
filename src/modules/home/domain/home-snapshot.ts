@@ -153,8 +153,8 @@ export function homeChampionPresentation(champion: HomeChampionCandidate): HomeC
   if (known) {
     return {
       message: known.message,
-      localImageSrc: known.overlayImageSrc,
-      localImageAlt: null,
+      localImageSrc: known.artWebpSrc,
+      localImageAlt: `밝은 파스텔 테마의 ${champion.displayName} 비공식 팬아트`,
       tone: known.tone,
     };
   }

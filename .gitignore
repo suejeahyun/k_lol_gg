@@ -17,6 +17,9 @@
 # next.js
 /.next/
 /out/
+/output/home-female-champions-v2/source/
+/output/home-female-champions-v2/qa/
+/output/home-female-champions-v2/optimized/
 
 # production
 /build

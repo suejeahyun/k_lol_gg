@@ -55,25 +55,30 @@ test("홈은 DB 전체 활성 챔피언을 읽되 여성 허용 목록에서 KST
   const runtime = source("../src/modules/home/infrastructure/runtime-home-data.ts");
   const domain = source("../src/modules/home/domain/home-snapshot.ts");
   const guidePolicy = source("../src/modules/home/domain/home-guide-champions.ts");
+  const guideArt = source("../src/components/home/home-guide-art.tsx");
   const home = source("../src/app/(public)/(home)/page.tsx");
   assert.match(runtime, /service\.listPublic\(\{ query: null, status: "ACTIVE"/);
   assert.match(runtime, /Math\.ceil\(firstPage\.total \/ pageSize\)/);
   assert.match(domain, /timeZone: "Asia\/Seoul"/);
   assert.match(domain, /findHomeGuideChampion/);
   assert.match(guidePolicy, /HOME_GUIDE_CHAMPION_COUNT = 68/);
+  assert.match(guidePolicy, /\/images\/home\/champions-v2\//);
   assert.match(home, /data-guide-audience="female-only"/);
-  assert.match(home, /pastel-breeze-frame-v1\.avif/);
+  assert.match(home, /data-guide-art="female-champion-original-v2"/);
+  assert.match(home, /HomeGuideArt/);
   assert.match(home, /우리 같이/);
   assert.match(home, /롤하자~/);
   assert.match(home, /getPublicSeasonRanking\(null, 10\)/);
   assert.match(home, /className="home-ranking-table"/);
-  assert.match(home, /ChampionPortrait/);
-  assert.match(home, /championKey=\{displayChampion\.key\}/);
-  assert.match(home, /variant="splash"/);
-  assert.equal((home.match(/<ChampionPortrait/g) ?? []).length, 1);
+  assert.doesNotMatch(home, /ChampionPortrait/);
+  assert.doesNotMatch(home, /variant="splash"/);
+  assert.doesNotMatch(home, /displayChampion\.imageUrl/);
+  assert.doesNotMatch(guideArt, /<source/);
+  assert.match(guideArt, /src=\{webpSrc\}/);
+  assert.match(guideArt, /hero-art__custom--fallback/);
   assert.doesNotMatch(home, /26\.18\.1/);
-  assert.match(home, /Riot Data Dragon/);
-  assert.doesNotMatch(home, /비공식 팬아트/);
+  assert.match(home, /여성 챔피언 팬아트/);
+  assert.match(domain, /비공식 팬아트/);
 });
 
 test("홈과 플레이어 찾기는 회원명 검색을 안내하되 회원명을 결과로 출력하지 않는다", () => {

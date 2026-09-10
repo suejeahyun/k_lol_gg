@@ -11,7 +11,6 @@ import {
   findHomeGuideChampion,
   HOME_GUIDE_CHAMPION_COUNT,
   HOME_GUIDE_CHAMPIONS,
-  HOME_GUIDE_OVERLAY_IMAGE_SRC,
 } from "../src/modules/home/domain/home-guide-champions";
 
 test("홈의 서로 다른 공개 피드는 시간 역순과 ID tie-break로 결정적으로 합쳐진다", () => {
@@ -56,11 +55,11 @@ test("오늘의 챔피언은 KST 날짜·활성 목록에 대해 SSR에서도 �
   assert.deepEqual([...cycle].sort(), champions.map((champion) => champion.key).sort());
 });
 
-test("오늘의 챔피언 문구는 이름을 자연스럽게 포함하고 공통 로컬 오버레이만 연결한다", () => {
+test("오늘의 챔피언 문구와 챔피언별 개별 재구성 이미지를 연결한다", () => {
   const ahri = homeChampionPresentation(champions[0]);
   assert.match(ahri.message, /아리/);
-  assert.equal(ahri.localImageSrc, HOME_GUIDE_OVERLAY_IMAGE_SRC);
-  assert.equal(ahri.localImageAlt, null);
+  assert.equal(ahri.localImageSrc, "/images/home/champions-v2/ahri.webp");
+  assert.match(ahri.localImageAlt ?? "", /아리.*비공식 팬아트/);
   const unknown = homeChampionPresentation({ key: "new-champion", displayName: "새 챔피언", imageUrl: null });
   assert.match(unknown.message, /새 챔피언/);
   assert.equal(unknown.localImageSrc, null);
@@ -77,9 +76,10 @@ test("홈 안내 허용 목록은 공식 매핑을 통과한 여성 챔피언 68
   );
   for (const profile of HOME_GUIDE_CHAMPIONS) {
     assert.match(profile.message, /[가-힣]/u, profile.id);
-    assert.equal(profile.overlayImageSrc, HOME_GUIDE_OVERLAY_IMAGE_SRC, profile.id);
+    assert.equal(profile.artWebpSrc, `/images/home/champions-v2/${profile.id.toLocaleLowerCase("en-US")}.webp`);
     assert.equal(findHomeGuideChampion(profile.id)?.id, profile.id);
   }
+  assert.equal(new Set(HOME_GUIDE_CHAMPIONS.map((profile) => profile.artWebpSrc)).size, HOME_GUIDE_CHAMPION_COUNT);
 });
 
 test("특례 네 챔피언은 포함하고 Kindred와 남성·미확인 후보는 기본 거부한다", () => {

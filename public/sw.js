@@ -1,4 +1,4 @@
-const CACHE_NAME = "klol-v2-static-v2";
+const CACHE_NAME = "klol-v2-static-v3";
 const PRECACHE = [
   "/manifest.webmanifest",
   "/icons/icon-192.png",
@@ -6,7 +6,6 @@ const PRECACHE = [
   "/icons/icon-maskable-512.png",
   "/images/brand/v2-hero-ahri-1600.webp",
   "/images/champions/lulu-card.avif",
-  "/images/home/pastel-breeze-frame-v1.avif",
 ];
 
 self.addEventListener("install", (event) => {

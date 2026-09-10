@@ -18,7 +18,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChampionPortrait } from "@/components/champions/champion-portrait";
+import { HomeGuideArt } from "@/components/home/home-guide-art";
 import { getRuntimeAccountRepository } from "@/modules/accounts/infrastructure/runtime-account-data";
 import { getCurrentSession } from "@/modules/auth/infrastructure/runtime-session";
 import { homeChampionPresentation } from "@/modules/home/domain/home-snapshot";
@@ -183,35 +183,20 @@ export default async function HomePage() {
           className="hero-art"
           data-tone={championPresentation.tone}
           data-guide-audience="female-only"
-          data-guide-art="pastel-breeze-frame-v1"
+          data-guide-art="female-champion-original-v2"
           data-champion-key={displayChampion.key}
           data-champion-name={displayChampion.displayName}
         >
-          <ChampionPortrait
-            className="hero-art__champion"
-            displayName={displayChampion.displayName}
-            imageUrl={displayChampion.imageUrl}
-            championKey={displayChampion.key}
-            variant="splash"
-            eager
+          <HomeGuideArt
+            webpSrc={championPresentation.localImageSrc}
+            alt={championPresentation.localImageAlt ?? `${displayChampion.displayName} 비공식 팬아트`}
           />
-          <picture className="hero-art__theme">
-            <source srcSet="/images/home/pastel-breeze-frame-v1.avif" type="image/avif" />
-            <img
-              src={championPresentation.localImageSrc ?? "/images/home/pastel-breeze-frame-v1.webp"}
-              alt=""
-              width={1672}
-              height={940}
-              loading="eager"
-              decoding="async"
-            />
-          </picture>
           <div className="hero-art__wash" aria-hidden="true" />
           <div className="hero-art__label">
             <span>오늘의 안내 챔피언</span>
             <strong>{displayChampion.displayName}</strong>
             <small>{championPresentation.message}</small>
-            <em>{dailyChampion ? "KST 기준 매일 변경" : "Riot Data Dragon"}</em>
+            <em>{dailyChampion ? "KST 기준 매일 변경" : "여성 챔피언 팬아트"}</em>
           </div>
         </div>
       </section>

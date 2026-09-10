@@ -1,7 +1,6 @@
 import { findDataDragonChampion } from "../../champions/domain/champion-image";
 
 export const HOME_GUIDE_CHAMPION_COUNT = 68;
-export const HOME_GUIDE_OVERLAY_IMAGE_SRC = "/images/home/pastel-breeze-frame-v1.webp";
 
 export type HomeGuideTone = "sky" | "lilac" | "peach" | "mint";
 
@@ -9,7 +8,7 @@ export type HomeGuideChampionProfile = Readonly<{
   id: string;
   message: string;
   tone: HomeGuideTone;
-  overlayImageSrc: typeof HOME_GUIDE_OVERLAY_IMAGE_SRC;
+  artWebpSrc: string;
 }>;
 
 const guide = (
@@ -20,7 +19,7 @@ const guide = (
   id,
   message,
   tone,
-  overlayImageSrc: HOME_GUIDE_OVERLAY_IMAGE_SRC,
+  artWebpSrc: `/images/home/champions-v2/${id.toLocaleLowerCase("en-US")}.webp`,
 });
 
 /**

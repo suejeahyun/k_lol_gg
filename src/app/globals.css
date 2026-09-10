@@ -510,33 +510,7 @@
 .hero-art[data-tone="peach"] { --hero-art-tint: rgba(255, 165, 193, 0.2); background: linear-gradient(145deg, #ffe9ee, #fff3d9); }
 .hero-art[data-tone="mint"] { --hero-art-tint: rgba(132, 226, 193, 0.2); background: linear-gradient(145deg, #dff8ee, #e6efff); }
 
-.hero-art > .hero-art__champion {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  width: 100%;
-  height: 100%;
-  border: 0;
-  border-radius: 0;
-  object-fit: cover;
-  object-position: 50% 35%;
-  filter: saturate(0.92) brightness(1.1) contrast(0.94);
-  box-shadow: none;
-}
-
-.hero-art > .hero-art__champion--fallback,
-.hero-art > span.hero-art__champion {
-  place-items: center;
-  color: rgba(57, 84, 128, 0.8);
-  background:
-    radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.92), transparent 14rem),
-    linear-gradient(145deg, #dff4ff, #f5e7ff);
-  font-family: var(--font-heading);
-  font-size: clamp(80px, 12vw, 150px);
-  text-shadow: 0 10px 30px rgba(88, 112, 159, 0.14);
-}
-
-.hero-art__theme {
+.hero-art__custom {
   position: absolute;
   inset: 0;
   z-index: 2;
@@ -545,12 +519,18 @@
   pointer-events: none;
 }
 
-.hero-art__theme img {
+.hero-art__custom img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: 50% 50%;
-  opacity: 0.88;
+  opacity: 1;
+}
+
+.hero-art__custom--fallback {
+  background:
+    radial-gradient(circle at 36% 42%, rgba(255, 255, 255, 0.82), transparent 13rem),
+    linear-gradient(145deg, #dff4ff, #f5e7ff 58%, #ffe9f2);
 }
 
 .hero-art__wash {
@@ -558,10 +538,8 @@
   inset: 0;
   z-index: 3;
   background:
-    linear-gradient(145deg, var(--hero-art-tint), transparent 64%),
-    radial-gradient(circle at 68% 38%, rgba(255, 255, 255, 0.04), rgba(213, 233, 255, 0.16) 48%, transparent 72%),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.12) 31%, transparent 62%),
-    linear-gradient(180deg, rgba(232, 244, 255, 0.04) 48%, rgba(54, 58, 111, 0.2));
+    linear-gradient(145deg, var(--hero-art-tint), transparent 66%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03) 52%, rgba(36, 45, 91, 0.16));
   pointer-events: none;
 }
 
@@ -2383,19 +2361,14 @@ body:has(.user-dialog[open]) {
     min-height: 330px;
   }
 
-  .hero-art > .hero-art__champion {
-    object-position: 50% 30%;
-  }
-
-  .hero-art__theme img {
+  .hero-art__custom img {
     object-position: 50% 50%;
   }
 
   .hero-art__wash {
     background:
-      linear-gradient(145deg, var(--hero-art-tint), transparent 66%),
-      linear-gradient(180deg, rgba(255, 255, 255, 0.62), transparent 31%, rgba(32, 40, 84, 0.16)),
-      radial-gradient(circle at 50% 30%, rgba(225, 241, 255, 0.08), rgba(255, 225, 242, 0.12) 72%);
+      linear-gradient(145deg, var(--hero-art-tint), transparent 68%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.02) 48%, rgba(32, 40, 84, 0.16));
   }
 
   .hero-art__label {
@@ -2403,7 +2376,7 @@ body:has(.user-dialog[open]) {
     right: 16px;
     bottom: auto;
     left: 16px;
-    max-width: min(270px, calc(100% - 32px));
+    max-width: min(210px, calc(100% - 32px));
     margin-left: auto;
     padding: 13px 15px;
     background: rgba(49, 63, 112, 0.86);
@@ -2688,9 +2661,10 @@ body:has(.user-dialog[open]) {
   .home-page .hero-art__label {
     top: 10px;
     right: 10px;
+    bottom: auto;
     left: 10px;
     gap: 0;
-    max-width: min(240px, calc(100% - 20px));
+    max-width: min(210px, calc(100% - 20px));
     padding: 10px 12px;
     border-radius: 14px;
   }

@@ -15,6 +15,7 @@
     "bot:kakao:audit": "node scripts/audit-messengerbot-v41-commands.mjs",
     "bot:kakao:rhino-audit": "node scripts/audit-messengerbot-rhino-static.mjs",
     "verify:champion-images": "tsx scripts/champions/verify-data-dragon-images.ts",
+    "verify:home-guide-art": "tsx scripts/home/verify-female-guide-art.ts",
     "db:champion-images": "tsx scripts/champions/backfill-data-dragon-images.ts",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
@@ -27,7 +28,7 @@
     "verify:browser-quality": "node scripts/verify-browser-quality.mjs",
     "security:secrets": "node scripts/check-secrets.mjs",
     "check:wave": "npm run lint && npm run typecheck && npm test",
-    "check": "npm run lint && npm run typecheck && npm test && npm run build",
+    "check": "npm run lint && npm run typecheck && npm test && npm run verify:home-guide-art && npm run build",
     "check:final": "npm run check && npm run test:db && npm run verify:auth-http && npm run security:secrets"
   },
   "dependencies": {

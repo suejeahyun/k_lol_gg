@@ -71,12 +71,10 @@ while (Date.now() < deadline) {
   const ready = await command("Runtime.evaluate", {
     expression: `(() => {
       const hero = document.querySelector('.hero-panel');
-      const image = document.querySelector('.hero-art__champion');
-      const themeImage = document.querySelector('.hero-art__theme img');
+      const customImage = document.querySelector('.hero-art__custom img');
       return document.readyState === 'complete' &&
         Boolean(hero && hero.getBoundingClientRect().width > 0) &&
-        Boolean(image && (image.tagName !== 'IMG' || image.naturalWidth > 0)) &&
-        Boolean(themeImage && themeImage.complete && themeImage.naturalWidth > 0);
+        Boolean(customImage && customImage.complete && customImage.naturalWidth > 0);
     })()`,
     returnByValue: true,
   });
@@ -142,9 +140,11 @@ const evaluation = await command("Runtime.evaluate", {
         wordBreak: style.wordBreak,
       };
     }).sort((left, right) => right.scrollWidth - left.scrollWidth).slice(0, 25);
-    const image = document.querySelector('.hero-art__champion');
-    const themeImage = document.querySelector('.hero-art__theme img');
+    const customImage = document.querySelector('.hero-art__custom img');
     const heroArt = document.querySelector('.hero-art');
+    const officialSplashRequests = performance.getEntriesByType('resource')
+      .map((entry) => entry.name)
+      .filter((resourceUrl) => resourceUrl.includes('ddragon.leagueoflegends.com/cdn/img/champion/splash/'));
     return {
       viewport: {
         innerWidth: window.innerWidth,
@@ -163,19 +163,12 @@ const evaluation = await command("Runtime.evaluate", {
         searchButton: rect('.hero-search button'),
         mobileNav: rect('.mobile-nav'),
       },
-      image: image ? {
-        tag: image.tagName.toLowerCase(),
-        complete: image.complete ?? true,
-        naturalWidth: image.naturalWidth ?? null,
-        naturalHeight: image.naturalHeight ?? null,
-        currentSrc: image.currentSrc ?? null,
-      } : null,
-      themeImage: themeImage ? {
-        complete: themeImage.complete,
-        naturalWidth: themeImage.naturalWidth,
-        naturalHeight: themeImage.naturalHeight,
-        currentSrc: themeImage.currentSrc,
-        opacity: getComputedStyle(themeImage).opacity,
+      customImage: customImage ? {
+        complete: customImage.complete,
+        naturalWidth: customImage.naturalWidth,
+        naturalHeight: customImage.naturalHeight,
+        currentSrc: customImage.currentSrc,
+        opacity: getComputedStyle(customImage).opacity,
       } : null,
       guide: heroArt ? {
         audience: heroArt.getAttribute('data-guide-audience'),
@@ -184,6 +177,7 @@ const evaluation = await command("Runtime.evaluate", {
         championName: heroArt.getAttribute('data-champion-name'),
       } : null,
       cumulativeLayoutShift: window.__homeLayoutShift || 0,
+      officialSplashRequests,
       homeGridTemplateColumns: getComputedStyle(document.querySelector('.home-page')).gridTemplateColumns,
       intrinsicCandidates,
       overflows,
@@ -221,13 +215,12 @@ if (
   scrollWidth > clientWidth ||
   requiredRects.some((value) => value.x < -0.5 || value.right > clientWidth + 0.5) ||
   labelNavIntersection > 0.5 ||
-  result.image?.complete !== true ||
-  !(result.image?.naturalWidth > 0) ||
-  !(result.image?.naturalHeight > 0) ||
-  result.themeImage?.complete !== true ||
-  !(result.themeImage?.naturalWidth > 0) ||
-  !(result.themeImage?.naturalHeight > 0) ||
+  result.customImage?.complete !== true ||
+  !(result.customImage?.naturalWidth > 0) ||
+  !(result.customImage?.naturalHeight > 0) ||
   result.guide?.audience !== "female-only" ||
-  result.guide?.art !== "pastel-breeze-frame-v1" ||
+  result.guide?.art !== "female-champion-original-v2" ||
+  result.officialSplashRequests.length !== 0 ||
+  !result.customImage?.currentSrc?.endsWith(".webp") ||
   result.cumulativeLayoutShift > 0.1
 ) process.exitCode = 1;
