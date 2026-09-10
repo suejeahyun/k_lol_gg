@@ -41,7 +41,7 @@
 ## 운영 전 확인
 
 - 운영 signing secret을 별도 채널에서 주입한다. 기존 room 목록을 이관할 때만 bootstrap room 값을 일시 주입하고, 명시적 import 후 제거한다. raw-V2 내부 호환 명령을 사용하지 않으면 sender 값도 bootstrap 뒤 제거한다. 값 자체가 아닌 configured boolean만 확인한다.
-- migration head `0033_tan_sprite` 적용과 no-drift, signed request fixture, private storage adapter를 검증한다. 0033은 설치본별 기존 distinct canonical room이 둘 이상이면 자동 병합·삭제 없이 실패한다.
+- migration head `0034_kakao_room_capability_profiles` 적용과 no-drift, signed request fixture, private storage adapter를 검증한다. 0033은 설치본별 기존 distinct canonical room이 둘 이상이면 자동 병합·삭제 없이 실패하고, 0034는 방과 pairing에 `RECRUIT | FEATURES` capability profile을 추가한다.
 - 외부 Kakao 발송은 이 저장소의 책임 범위가 아니다. scheduled notice API는 safe DTO만 반환한다.
 
 ## 최종 브라우저 증거 조건

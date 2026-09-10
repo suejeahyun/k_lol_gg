@@ -15,7 +15,7 @@
 
 - `KAKAO_WEBHOOK_SECRET_CURRENT`: 32 UTF-8 bytes 이상의 독립 난수 키
 - `KAKAO_WEBHOOK_BOT_SENDER_ID`: 봇 자신의 opaque sender ID
-- `DATABASE_URL`, migration head `0033_tan_sprite`
+- `DATABASE_URL`, migration head `0034_kakao_room_capability_profiles`
 
 선택:
 
@@ -99,7 +99,7 @@ Remove-Variable klolRandomBytes, klolRng, klolGeneratedSecret, klolSha256, klolD
 3. `/V2연동확인`의 설치본·발신자 ID를 확인하고, 미등록 설치본이면 사이트 SUPER 관리자가 발급한 코드를 그 설치본에서 `/V2방연동 CODE`로 한 번 사용한다.
 4. 먼저 `랭킹`, `구인현황` 같은 읽기 요청을 확인한 뒤, Preview에서만 테스트 모집 create → status → finish 또는 내전 신청 미리보기 → 확인을 검증한다.
 5. 관리자 `/admin/kakao/rooms`에서 canonical 방 상태, 설치본 binding, MEMBER/MANAGER/ADMIN 역할을 확인한다. 키·fingerprint 원문은 화면이나 로그에 노출하지 않는다.
-6. 서버 로그의 제한된 reject code와 stage만 확인한다. `SIGNING_KEY_UNAVAILABLE`/`INVALID_SIGNATURE`/`INSTALLATION_KEY_MISMATCH`는 401 설치본 인증 오류, `INSTALLATION_REVOKED`는 403 회수 상태, `ROOM_BINDING_REQUIRED`는 403 pairing 필요, `ROOM_PAUSED`/`ROOM_NOT_REGISTERED`는 canonical 방 상태 오류, `ROLE_FORBIDDEN`은 역할 부족, `BOT_SELF_MESSAGE`는 bot ID/self header 차단이다. 503이면 DB 연결과 migration head `0033`을 우선 확인하며 DB 장애는 우회 허용하지 않는다.
+6. 서버 로그의 제한된 reject code와 stage만 확인한다. `SIGNING_KEY_UNAVAILABLE`/`INVALID_SIGNATURE`/`INSTALLATION_KEY_MISMATCH`는 401 설치본 인증 오류, `INSTALLATION_REVOKED`는 403 회수 상태, `ROOM_BINDING_REQUIRED`는 403 pairing 필요, `ROOM_PAUSED`/`ROOM_NOT_REGISTERED`는 canonical 방 상태 오류, `ROLE_FORBIDDEN`은 역할 부족, `BOT_SELF_MESSAGE`는 bot ID/self header 차단이다. 503이면 DB 연결과 migration head `0034`를 우선 확인하며 DB 장애는 우회 허용하지 않는다.
 
 ### R14.2 설치본 scope 진단
 
