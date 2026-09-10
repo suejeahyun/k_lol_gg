@@ -205,6 +205,15 @@ test("party snapshot accepts absent start time/game info and populated optional 
   }
 });
 
+test("party snapshot rejects truncated numeric and position templates", () => {
+  for (const text of [
+    "📢 5인 파티 구인\n모집번호: #12\n1.\n2.\n예비 1.",
+    "📢 5인 협곡 파티 구인\n모집번호: #12\nTOP.\nJUG.\nMID.\n예비 1.",
+  ]) {
+    assert.equal(classifyKakaoV4Command({ profileId: "RECRUIT", text }).kind, "UNKNOWN");
+  }
+});
+
 test("A→B→A identical text is reclassified without state or content-hash suppression", () => {
   const base = compatibilityFixture.party.initialFivePersonTemplate;
   const a = base.replace("1.", "1. 재현").replace("2.", "2. 기용");

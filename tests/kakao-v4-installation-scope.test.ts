@@ -132,7 +132,7 @@ test("two senders share one installation scope for create, cross-edit and finish
   } as unknown as KakaoV4CommandDispatcher;
   const service = new KakaoV4CommandService(new KakaoV4InstallationScopeAuthorizer(secret), dispatcher);
   await service.execute(envelope("RECRUIT", "a", 1, "5인파티 5"), "current");
-  await service.execute(envelope("RECRUIT", "b", 2, "📢 5인 파티 구인\n모집번호: #5\n1. 재현\n2. 기용"), "current");
+  await service.execute(envelope("RECRUIT", "b", 2, "📢 5인 파티 구인\n모집번호: #5\n1. 재현\n2. 기용\n3.\n4.\n5.\n예비 1."), "current");
   await service.execute(envelope("RECRUIT", "b", 3, "5ㅉ"), "current");
   assert.deepEqual(calls.map((call) => call.action), ["CREATE", "SYNC", "FINISH"]);
   assert.equal(new Set(calls.map((call) => call.roomId)).size, 1);

@@ -26,6 +26,11 @@ function command(profileId: KakaoV4ProfileId, senderHex: string, event: number, 
   });
 }
 
+function partySnapshotText(members: readonly string[], recruitNumber = 12) {
+  const rows = Array.from({ length: 5 }, (_, index) => `${index + 1}. ${members[index] ?? ""}`.trimEnd());
+  return `📢 5인 파티 구인\n모집번호: #${recruitNumber}\n${rows.join("\n")}\n예비 1.`;
+}
+
 function service() {
   const authorizations: unknown[] = [];
   const instance = new KakaoV4CommandService({
@@ -61,7 +66,7 @@ test("[S03] two unregistered general users can create, cross-edit and cross-fini
   const { instance, authorizations } = service();
   const results = await Promise.all([
     instance.execute(command("RECRUIT", "a", 1, "5인파티 12"), "current"),
-    instance.execute(command("RECRUIT", "b", 2, "📢 5인 파티 구인\n모집번호: #12\n1. 재현\n2. 기용"), "current"),
+    instance.execute(command("RECRUIT", "b", 2, partySnapshotText(["재현", "기용"])), "current"),
     instance.execute(command("RECRUIT", "b", 3, "12ㅉ"), "current"),
   ]);
   assert.deepEqual(results.map((result) => result.kind), ["REPLY", "REPLY", "REPLY"]);
@@ -74,8 +79,7 @@ test("[S04] full recruit snapshots delete names, accept zero people and preserve
   const snapshots = fixture.party.snapshotScenario.revisions;
   const results = [];
   for (const [index, snapshot] of snapshots.entries()) {
-    const members = snapshot.members.map((name: string, memberIndex: number) => `${memberIndex + 1}. ${name}`).join("\n");
-    results.push(await instance.execute(command("RECRUIT", "b", 10 + index, `📢 5인 파티 구인\n모집번호: #12\n${members}`), "current"));
+    results.push(await instance.execute(command("RECRUIT", "b", 10 + index, partySnapshotText(snapshot.members)), "current"));
   }
   assert.deepEqual(results.map((result) => result.kind), ["REPLY", "REPLY", "REPLY", "REPLY"]);
   assert.deepEqual(snapshots.map((snapshot: { label: string }) => snapshot.label), ["A", "B", "A", "ZERO"]);

@@ -195,6 +195,37 @@ function countFilledNumberedRows(text: string) {
   return count;
 }
 
+function hasCompletePartyTemplate(text: string) {
+  const header = /^\s*📢\s*(.*?)\s*$/mu.exec(text)?.[1]?.trim() ?? "";
+  const namedMaximum = /롤체\s*일반/u.test(header) ? 8
+    : /롤체\s*랭크/u.test(header) ? 3
+      : /(?:더블업|솔랭)/u.test(header) ? 2
+        : /기타게임/u.test(header) ? 8
+          : /(?:자랭|일반|칼바람|증바람)/u.test(header) ? 5
+            : null;
+  const numberedMaximum = Number(/(\d{1,2})\s*인\s*(?:협곡\s*)?(?:파티\s*)?구인/u.exec(header)?.[1] ?? 0);
+  const maximumMembers = namedMaximum ?? numberedMaximum;
+  if (!maximumMembers || maximumMembers > 99) return false;
+  if (!/^\s*(?:예비|후보|대기)\s*1\s*[.):：]/mu.test(text)) return false;
+  const lineParty = /(?:자랭|일반|협곡)/u.test(header) && !/(?:솔랭|롤체)/u.test(header);
+  if (lineParty) {
+    const labels = new Set<string>();
+    for (const line of text.split("\n")) {
+      const label = /^\s*(TOP|JUG|JGL|JG|MID|ADC|AD|SUP)\s*[.:：]/iu.exec(line)?.[1]?.toUpperCase();
+      if (!label) continue;
+      labels.add(label === "JGL" || label === "JG" ? "JUG" : label === "AD" ? "ADC" : label);
+    }
+    return ["TOP", "JUG", "MID", "ADC", "SUP"].every((label) => labels.has(label));
+  }
+  const slots = new Set<number>();
+  for (const line of text.split("\n")) {
+    if (/^\s*(?:예비|후보|대기)/u.test(line)) continue;
+    const slot = Number(/^\s*(\d{1,2})\s*[.)]/u.exec(line)?.[1] ?? 0);
+    if (slot) slots.add(slot);
+  }
+  return Array.from({ length: maximumMembers }, (_, index) => index + 1).every((slot) => slots.has(slot));
+}
+
 function classifySnapshot(text: string): KakaoV4RecognizedCommand | null {
   if (
     /^\s*\[K-LOL\.GG 스크림 구인 양식\]/u.test(text) &&
@@ -220,12 +251,14 @@ function classifySnapshot(text: string): KakaoV4RecognizedCommand | null {
 
   const partyNumber = /^\s*모집번호\s*:\s*#(자동배정|\d+)\s*$/mu.exec(text)?.[1];
   if (partyNumber && /^\s*📢\s*.+(?:파티 구인|하실분!?)\s*$/mu.test(text)) {
+    if (!hasCompletePartyTemplate(text)) return null;
     return recognized("PARTY_SNAPSHOT", text, {
       recruitNumber: partyNumber === "자동배정" ? null : Number(partyNumber),
       automaticRecruitNumber: partyNumber === "자동배정",
       memberCount: countFilledNumberedRows(text),
       startTimeOptional: true,
       gameInfoOptional: true,
+      completeTemplate: true,
     }, "SNAPSHOT");
   }
 

@@ -145,11 +145,11 @@ test("[C03A] one unified phone bot routes both room command families exactly onc
   assert.doesNotMatch(JSON.stringify(bot.calls), /구인 관련방|기능방|untrusted-room|untrusted-channel/u);
 });
 
-test("[C03C] party template commands reply locally without HTTP or an early save", async () => {
+test("[C03C] party template commands including spaced aliases reply locally without HTTP or an early save", async () => {
   const bot = await unifiedHarness();
-  for (const command of ["5인파티", "/2인파티", "자랭구인"]) bot.respond(command);
+  for (const command of ["5인파티", "/2인파티", "5인 파티", "/2인 파티", "자랭구인"]) bot.respond(command);
   assert.equal(bot.calls.length, 0);
-  assert.equal(bot.replies.length, 3);
+  assert.equal(bot.replies.length, 5);
   for (const reply of bot.replies) {
     assert.match(reply, /모집번호: #자동배정/u);
     assert.match(reply, /전체 전송하면 파티가 저장/u);

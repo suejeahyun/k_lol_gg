@@ -13,6 +13,7 @@
 - 파티·스크림은 RECRUIT, 내전·조회·운영은 FEATURES로 자동 분류
 - 파티 생성 명령은 빈 양식만 즉시 표시하며, 작성 완료 양식을 보낼 때 처음 저장·번호 자동배정
 - 파티 빈 양식 응답은 서버 요청 0회로 개선
+- 띄어 쓴 파티 명령도 즉시 처리하며, 잘린 양식·존재하지 않는 수정 번호는 저장하지 않음
 - 메시지당 HTTP 전송 1회, timeout 최대 5초, 자동 재시도 없음
 - 방 이름·room·channel을 파싱하거나 권한에 사용하지 않음
 - 두 방의 서로 다른 봇 표시명 모두 self echo 차단
@@ -25,7 +26,7 @@
 - Phase 4 acceptance 25/25
 - Phase 5 installation 보안 9/9
 - Phase 2·3·V1 회귀 186/186
-- 전체 contract 309/309, unit 611/611
+- 전체 contract 309/309, unit 613/613
 - typecheck, ESLint, production build, tree secret scan 통과
 
 P0 최초 pairing 차단은 RESOLVED입니다. V4 전용 keyring과 서버 endpoint는 배포됐으며, 통합 private 파일의 휴대폰 붙여넣기와 실기기 송수신 확인만 남았습니다.

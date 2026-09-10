@@ -99,7 +99,7 @@ var KLOL_V4 = (function () {
   }
 
   function partyTemplateDefinition(command) {
-    var numbered = String(command || "").match(/^(\d{1,2})인(?:\s*협곡\s*)?(?:파티|구인)(?:\s+(\d{1,2}))?$/);
+    var numbered = String(command || "").match(/^(\d{1,2})인\s*(?:협곡\s*)?(?:파티|구인)(?:\s+(\d{1,2}))?$/);
     var rift = String(command || "").match(/^5인\s*협곡(?:\s*파티)?(?:\s+(\d{1,2}))?$/);
     var named = String(command || "").match(/^(자랭|일반|솔랭|칼바람|증바람|기타게임|롤체일반|롤체랭크|더블업)구인(?:\s+(\d{1,2}))?$/);
     var definitions = {

@@ -100,7 +100,7 @@ var KLOL_V4 = (function () {
   }
 
   function partyTemplateDefinition(command) {
-    var numbered = String(command || "").match(/^(\d{1,2})인(?:\s*협곡\s*)?(?:파티|구인)(?:\s+(\d{1,2}))?$/);
+    var numbered = String(command || "").match(/^(\d{1,2})인\s*(?:협곡\s*)?(?:파티|구인)(?:\s+(\d{1,2}))?$/);
     var rift = String(command || "").match(/^5인\s*협곡(?:\s*파티)?(?:\s+(\d{1,2}))?$/);
     var named = String(command || "").match(/^(자랭|일반|솔랭|칼바람|증바람|기타게임|롤체일반|롤체랭크|더블업)구인(?:\s+(\d{1,2}))?$/);
     var definitions = {
@@ -320,7 +320,7 @@ var KLOL_V4 = (function () {
 }());
 
 /* eslint-disable */
-var KLOL_V4_BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V4_UNIFIED_2026_09_10_R2_TEMPLATE_FIRST";
+var KLOL_V4_BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V4_UNIFIED_2026_09_10_R3_TEMPLATE_FIRST_SAFE";
 
 function response(room, msg, sender, isGroupChat, replier, imageDB, packageName, isMention, logId, channelId, userHash) {
   var text = String(msg == null ? "" : msg);

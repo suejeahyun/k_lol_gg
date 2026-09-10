@@ -88,7 +88,7 @@ function mutationResult(command: RecruitingCommand): RecruitingCommandResult {
   };
 }
 
-function harness() {
+function harness(options: Readonly<{ missingPartyTarget?: boolean }> = {}) {
   const handled: RecruitingCommand[] = [];
   const resolved: unknown[] = [];
   const statusCalls: unknown[] = [];
@@ -100,6 +100,7 @@ function harness() {
     },
     async resolveCompatTarget(input) {
       resolved.push(input);
+      if (input.kind === "PARTY" && options.missingPartyTarget) return null;
       return { id: input.kind === "PARTY" ? "party-7" : "scrim-3", revision: 2 };
     },
     async resolveScrimUpsert(input) {
@@ -180,6 +181,20 @@ test("first completed automatic party form creates the party once", async () => 
   assert.equal(state.handled[0]?.metadata.idempotency.scope, KAKAO_V4_EVENT_SCOPE);
   assert.match(result.legacyReply, /파티 #8 등록/u);
   assert.match(result.legacyReply, /모집번호: #8/u);
+});
+
+test("explicit missing party number never falls back to creating a new party", async () => {
+  const state = harness({ missingPartyTarget: true });
+  await assert.rejects(state.dispatcher.dispatch(context, {
+    domain: "PARTY", action: "SYNC", target: { recruitDate: "2026-09-10", recruitNumber: 999 },
+    payload: {
+      recruitDate: "2026-09-10", preferredRecruitNumber: 999, partyType: "PARTY_NUMBER",
+      title: "5인 파티 구인", maximumMembers: 5,
+      members: [{ slotNo: 1, name: "재현", position: null, substitute: false }],
+      scheduledStartAt: null, protectedUntil: null,
+    },
+  }), (error: unknown) => error instanceof KakaoV4DispatcherError && error.code === "NOT_FOUND");
+  assert.equal(state.handled.length, 0);
 });
 
 test("party status and detail use one server status receipt and return the latest aggregate", async () => {

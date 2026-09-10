@@ -563,7 +563,8 @@ export class KakaoV4CommandDispatcher {
         payload: {},
       });
     } else {
-      const target = command.target.recruitNumber !== null
+      const automaticRecruitNumber = command.target.recruitNumber === null;
+      const target = !automaticRecruitNumber
         ? await this.dependencies.recruiting.resolveCompatTarget({
             kind: "PARTY",
             sourceRoomId: context.authorization.roomId,
@@ -571,10 +572,13 @@ export class KakaoV4CommandDispatcher {
             recruitNumber: command.target.recruitNumber,
           })
         : null;
-      if (command.action === "SYNC" && !target && command.payload.members.length === 0) {
+      if (!automaticRecruitNumber && !target) {
+        throw new KakaoV4DispatcherError("NOT_FOUND");
+      }
+      if (automaticRecruitNumber && command.payload.members.length === 0) {
         throw new KakaoV4DispatcherError("INVALID_FORM");
       }
-      createdFromCompletedForm = !target;
+      createdFromCompletedForm = automaticRecruitNumber;
       recruitingCommand = target
         ? sealRecruitingCommand({
             type: "SYNC_PARTY",

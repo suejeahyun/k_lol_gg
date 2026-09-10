@@ -383,7 +383,7 @@ export function canonicalizeKakaoV4Command(classification: KakaoV4CommandClassif
     const maximumMembers = numberParameter(parameters, "maximumMembers") ?? 5;
     return Object.freeze({ domain: "PARTY" as const, action: "CREATE" as const, payload: Object.freeze({
       recruitDate: date, preferredRecruitNumber: numberParameter(parameters, "explicitRecruitNumber"), partyType,
-      title: partyType === "PARTY_NUMBER" ? `${maximumMembers}인 파티` : classification.canonicalText,
+      title: partyType === "PARTY_NUMBER" ? `${maximumMembers}인 파티 구인` : classification.canonicalText,
       maximumMembers, members: Object.freeze([]), startTimeText: null, gameInfo: null,
       scheduledStartAt: null, protectedUntil: null,
     }) });

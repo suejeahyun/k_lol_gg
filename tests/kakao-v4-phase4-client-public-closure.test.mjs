@@ -110,6 +110,6 @@ test("[P4-C05] unified entry preserves one send site, five-second timeout, and d
   assert.match(shared, /\.timeout\(5000\)/u);
   assert.equal((shared.match(/\.execute\(\)/gu) ?? []).length, 1);
   assert.equal((unified.match(/KLOL_V4\.send\(/gu) ?? []).length, 1);
-  assert.match(unified, /KLOL_KAKAO_BOT_V4_UNIFIED_2026_09_10_R2_TEMPLATE_FIRST/u);
+  assert.match(unified, /KLOL_KAKAO_BOT_V4_UNIFIED_2026_09_10_R3_TEMPLATE_FIRST_SAFE/u);
   assert.match(shared, /function publicProfileId/u);
 });
