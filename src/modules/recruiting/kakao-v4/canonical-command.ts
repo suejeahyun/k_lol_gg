@@ -7,6 +7,7 @@ import { isOperationFormType, type OperationFormPayloadByType, type OperationFor
 import type { KakaoV4CommandClassification } from "./classifier";
 import { usesKakaoV1StrictResponse, type KakaoV4CommandEnvelope } from "./domain";
 import { parseKakaoV4OperationForm } from "./operation-form";
+import { parsePartyNumberedRow, parsePartyPositionRow, parsePartyReserveRow } from "./party-snapshot-parser";
 
 export type KakaoV4RecruitTarget = Readonly<{
   recruitDate: string;
@@ -144,19 +145,19 @@ function snapshotMembers(text: string): readonly RecruitMember[] {
     ["SUP", { position: "SUP", slotNo: 5 }], ["서폿", { position: "SUP", slotNo: 5 }], ["서포터", { position: "SUP", slotNo: 5 }],
   ]);
   for (const line of text.split("\n")) {
-    const positionRow = /^\s*(TOP|JUG|JGL|JG|MID|ADC|AD|SUP|탑|정글|미드|원딜|서폿|서포터)\s*[.:：]\s*(.*?)\s*$/iu.exec(line);
+    const positionRow = parsePartyPositionRow(line);
     if (positionRow) {
-      const definition = positions.get(positionRow[1]!.toUpperCase()) ?? positions.get(positionRow[1]!);
-      const name = positionRow[2]!.trim().replace(/\s+/gu, " ");
+      const definition = positions.get(positionRow.label.toUpperCase()) ?? positions.get(positionRow.label);
+      const name = positionRow.value.replace(/\s+/gu, " ");
       if (!definition || !name || name.length > 80 || occupied.has(`position:${definition.position}`)) continue;
       occupied.add(`position:${definition.position}`);
       members.push(Object.freeze({ slotNo: definition.slotNo, name, position: definition.position, substitute: false }));
       continue;
     }
-    const reserveRow = /^\s*(?:예비|후보|대기)\s*(\d{1,2})?\s*[.):：]?\s*(.*?)\s*$/u.exec(line);
+    const reserveRow = parsePartyReserveRow(line);
     if (reserveRow) {
-      const firstSlot = Number(reserveRow[1] ?? 1);
-      const names = reserveRow[2]!.split(/[,/]+/u).map((value) => value.trim().replace(/\s+/gu, " ")).filter(Boolean);
+      const firstSlot = reserveRow.slotNo;
+      const names = reserveRow.value.split(/[,/]+/u).map((value) => value.trim().replace(/\s+/gu, " ")).filter(Boolean);
       for (const [index, name] of names.entries()) {
         const slotNo = firstSlot + index;
         if (slotNo < 1 || slotNo > 99 || name.length > 80 || occupied.has(`reserve:${slotNo}`)) continue;
@@ -165,10 +166,10 @@ function snapshotMembers(text: string): readonly RecruitMember[] {
       }
       continue;
     }
-    const match = /^\s*(\d{1,2})\s*[.)]\s*(.*?)\s*$/u.exec(line);
-    if (!match?.[2]) continue;
-    const slotNo = Number(match[1]);
-    const name = match[2].trim().replace(/\s+/gu, " ");
+    const match = parsePartyNumberedRow(line);
+    if (!match?.value) continue;
+    const slotNo = match.slotNo;
+    const name = match.value.replace(/\s+/gu, " ");
     if (slotNo < 1 || slotNo > 99 || !name || name.length > 80 || occupied.has(`slot:${slotNo}`)) continue;
     occupied.add(`slot:${slotNo}`);
     members.push(Object.freeze({ slotNo, name, position: null, substitute: false }));

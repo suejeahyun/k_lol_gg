@@ -10,7 +10,8 @@ import {
   classifyKakaoV4Command,
   type KakaoV4CommandFamily,
 } from "../src/modules/recruiting/kakao-v4/classifier";
-import type { KakaoV4ProfileId } from "../src/modules/recruiting/kakao-v4/domain";
+import { canonicalizeKakaoV4Command } from "../src/modules/recruiting/kakao-v4/canonical-command";
+import type { KakaoV4CommandEnvelope, KakaoV4ProfileId } from "../src/modules/recruiting/kakao-v4/domain";
 
 type ParityFixture = Readonly<{
   commands: readonly Readonly<{ domain: string; name: string; sample: string }>[];
@@ -202,6 +203,83 @@ test("party snapshot accepts absent start time/game info and populated optional 
     assert.equal(automatic.command, "PARTY_SNAPSHOT");
     assert.equal(automatic.parameters.recruitNumber, null);
     assert.equal(automatic.parameters.automaticRecruitNumber, true);
+  }
+});
+
+test("Kakao copy/paste party row variants still canonicalize to one SYNC member", () => {
+  const variants = [
+    ["space separator and missing opening bracket", "2 발", true],
+    ["dot without following space", "2.발", false],
+    ["closing parenthesis", "2) 발", false],
+    ["Kakao-visible escaped dot", String.raw`2\. 발`, false],
+    ["full-width digit and dot", "２． 발", false],
+    ["surrounding whitespace", "  2  .   발  ", false],
+  ] as const;
+
+  for (const [index, [label, row, omitOpeningBracket]] of variants.entries()) {
+    const original = compatibilityFixture.party.initialFivePersonTemplate;
+    const text = original
+      .replace("\n2.\n", `\n${row}\n`)
+      .replace("[K-LOL.GG 구인구직 양식]", omitOpeningBracket ? "K-LOL.GG 구인구직 양식]" : "[K-LOL.GG 구인구직 양식]");
+    const classification = classifyKakaoV4Command({ profileId: "RECRUIT", text });
+
+    assert.equal(classification.kind, "SNAPSHOT", label);
+    if (classification.kind !== "SNAPSHOT") continue;
+    assert.equal(classification.command, "PARTY_SNAPSHOT", label);
+    assert.equal(classification.parameters.memberCount, 1, label);
+
+    const envelope: KakaoV4CommandEnvelope = {
+      profileId: "RECRUIT",
+      installationId: "install-11111111111111111111111111111111",
+      senderId: "sender-user-22222222222222222222222222222222",
+      eventId: `event-flexible-party-row-${index}`,
+      timestamp: Date.parse("2026-09-10T03:00:00.000Z") / 1_000,
+      nonce: "3".repeat(32),
+      text,
+    };
+    const canonical = canonicalizeKakaoV4Command(classification, envelope);
+    assert.equal(canonical?.domain, "PARTY", label);
+    assert.equal(canonical?.action, "SYNC", label);
+    if (canonical?.domain === "PARTY" && canonical.action === "SYNC") {
+      assert.deepEqual(canonical.payload.members, [{ slotNo: 2, name: "발", position: null, substitute: false }], label);
+    }
+  }
+});
+
+test("full-width empty reserve punctuation and clock text never become party members", () => {
+  const text = compatibilityFixture.party.initialFivePersonTemplate
+    .replace("예비 1.", "예비 １．")
+    .replace("\n1.\n", "\n20: 00 출발\n1.\n");
+  const classification = classifyKakaoV4Command({ profileId: "RECRUIT", text });
+  assert.equal(classification.kind, "SNAPSHOT");
+  if (classification.kind !== "SNAPSHOT") return;
+  assert.equal(classification.parameters.memberCount, 0);
+  const canonical = canonicalizeKakaoV4Command(classification, {
+    profileId: "RECRUIT",
+    installationId: "install-11111111111111111111111111111111",
+    senderId: "sender-user-22222222222222222222222222222222",
+    eventId: "event-flexible-party-empty-reserve",
+    timestamp: Date.parse("2026-09-10T03:00:00.000Z") / 1_000,
+    nonce: "4".repeat(32),
+    text,
+  });
+  if (canonical?.domain === "PARTY" && canonical.action === "SYNC") {
+    assert.deepEqual(canonical.payload.members, []);
+  } else {
+    assert.fail("expected PARTY/SYNC");
+  }
+});
+
+test("flexible party row parsing does not classify ordinary chat or generic number lists", () => {
+  const ordinaryTexts = [
+    "2 발 먼저 가요",
+    ["오늘 할 일", "1 장보기", "2 운동", "3 저녁 약속", "4 귀가", "5 취침"].join("\n"),
+    ["모집번호: #12", "1 사과", "2 배", "3 포도", "4 수박", "5 복숭아", "예비 1 후보"].join("\n"),
+    ["📢 5인 파티 구인", "1 사과", "2 배", "3 포도", "4 수박", "5 복숭아", "예비 1 후보"].join("\n"),
+  ];
+
+  for (const text of ordinaryTexts) {
+    assert.equal(classifyKakaoV4Command({ profileId: "RECRUIT", text }).kind, "UNKNOWN", text);
   }
 });
 

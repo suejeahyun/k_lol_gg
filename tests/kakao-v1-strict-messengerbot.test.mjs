@@ -75,7 +75,7 @@ function responseReachableFunctions(source, transportSeams) {
   return reachable;
 }
 
-function makeRuntime({ responseBody = { reply: "[V1 server reply]" }, responseStatus = 200, rawResponseText, settings = {} } = {}) {
+function makeRuntime({ responseBody = { reply: "[V1 server reply]" }, responseStatus = 200, rawResponseText, executeError, settings = {} } = {}) {
   const data = new Map([
     ["KLOL_V2_BASE_URL", "https://k-lol-gg.vercel.app"],
     ["KLOL_V4_KAKAO_WEBHOOK_SECRET_CURRENT", "s".repeat(32)],
@@ -162,11 +162,14 @@ function makeRuntime({ responseBody = { reply: "[V1 server reply]" }, responseSt
               http.body = value;
               return chain;
             },
-            execute: () => ({
-              statusCode: () => responseStatus,
-              body: () => rawResponseText === undefined ? JSON.stringify(responseBody) : rawResponseText,
-              header: () => ""
-            })
+            execute() {
+              if (executeError) throw executeError;
+              return {
+                statusCode: () => responseStatus,
+                body: () => rawResponseText === undefined ? JSON.stringify(responseBody) : rawResponseText,
+                header: () => ""
+              };
+            }
           };
           return chain;
         }
@@ -299,7 +302,6 @@ test("local replies, echo rules, events, and no-reply behavior equal the canonic
   const canonical = evaluate(canonicalSource());
   const strict = evaluate(await readFile(artifactPath, "utf8"));
   const cases = [
-    { message: "봇버전" },
     { message: "/도움말" },
     { message: "명령어" },
     { message: "내전참가" },
@@ -327,6 +329,10 @@ test("local replies, echo rules, events, and no-reply behavior equal the canonic
     const actual = replyFor(strict, item.message, { sender: item.sender });
     assert.deepEqual(actual, expected, item.message);
   }
+  assert.deepEqual(
+    replyFor(strict, "봇버전"),
+    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R3_2026_09_11"],
+  );
 });
 
 test("command and form predicates are byte-derived and behaviorally equal to V1", async () => {
@@ -468,7 +474,7 @@ test("all seven active text seams preserve the V1 success, empty, 404, auth, and
   assert.deepEqual(emptyOperationReply.values, ["[K-LOL.GG 운영 양식]\n서버 응답을 확인하지 못했습니다. 잠시 후 다시 시도해주세요."]);
 });
 
-test("literal transport failures keep V1 seam labels without exposing response or credential values", async () => {
+test("literal transport failures distinguish settings, input, and connection errors without exposing values", async () => {
   const artifact = await readFile(artifactPath, "utf8");
   const replies = [];
   const replier = { reply: (value) => replies.push(String(value)) };
@@ -489,10 +495,38 @@ test("literal transport failures keep V1 seam labels without exposing response o
   party.handlePartyRecruitApi("PARTY_CREATE", "구인방", "5인파티", "재현", replier, "구인구직 생성");
   assert.equal(replies.pop(), "[K-LOL.GG 연결 설정 확인]\n봇 인증 정보를 확인할 수 없습니다. 관리자에게 문의해주세요.");
 
+  const invalidParty = evaluate(artifact, { responseStatus: 400, responseBody: { code: "INVALID_FORM", secret: "must-not-leak" } });
+  invalidParty.KLOL_V1_GATEWAY.beginRequest("log-party-invalid", "user-party-invalid", "재현");
+  invalidParty.handlePartyRecruitApi("PARTY_CREATE", "구인방", "5인파티", "재현", replier, "구인구직 생성");
+  const invalidPartyReply = replies.pop();
+  assert.equal(invalidPartyReply, "[K-LOL.GG 구인구직 생성]\n입력 형식이 올바르지 않습니다. 양식을 확인한 뒤 다시 보내주세요.");
+  assert.doesNotMatch(invalidPartyReply, /must-not-leak|INVALID_FORM/u);
+
   const operation = evaluate(artifact, { responseStatus: 403, responseBody: { code: "WRONG_PROFILE" } });
   operation.KLOL_V1_GATEWAY.beginRequest("log-operation-auth", "user-operation-auth", "재현");
   operation.handleOperationFormMessage("기능방", "<외출>\n1. 이름 및 닉네임 :재현\n2. 외출기간 :하루\n3. 외출사유 :휴식\n4. 외출범위 :소통방", "재현", replier);
-  assert.equal(replies.pop(), "[K-LOL.GG 운영 양식]\n현재 접수 권한을 확인할 수 없습니다. 관리자에게 문의해주세요.");
+  assert.equal(replies.pop(), "[K-LOL.GG 연결 설정 확인]\n봇 인증 정보를 확인할 수 없습니다. 관리자에게 문의해주세요.");
+
+  const invalidOperation = evaluate(artifact, { responseStatus: 400, responseBody: { code: "INVALID_FORM", detail: "must-not-leak" } });
+  invalidOperation.KLOL_V1_GATEWAY.beginRequest("log-operation-invalid", "user-operation-invalid", "재현");
+  invalidOperation.handleOperationFormMessage("기능방", "<외출>\n1. 이름 및 닉네임 :재현\n2. 외출기간 :하루\n3. 외출사유 :휴식\n4. 외출범위 :소통방", "재현", replier);
+  const invalidOperationReply = replies.pop();
+  assert.equal(invalidOperationReply, "[K-LOL.GG 운영 양식]\n입력 형식이 올바르지 않습니다. 양식을 확인한 뒤 다시 보내주세요.");
+  assert.doesNotMatch(invalidOperationReply, /must-not-leak|INVALID_FORM/u);
+
+  const unavailableParty = evaluate(artifact, { responseStatus: 503, responseBody: { code: "SERVER_UNAVAILABLE", detail: "must-not-leak" } });
+  unavailableParty.KLOL_V1_GATEWAY.beginRequest("log-party-503", "user-party-503", "재현");
+  unavailableParty.handlePartyRecruitApi("PARTY_SYNC", "구인방", "모집번호: #1\n1.재현", "재현", replier, "구인구직 반영");
+  const unavailablePartyReply = replies.pop();
+  assert.equal(unavailablePartyReply, "[K-LOL.GG 구인구직 반영]\n서버 연결이 원활하지 않습니다. 잠시 후 다시 시도해주세요.");
+  assert.doesNotMatch(unavailablePartyReply, /must-not-leak|SERVER_UNAVAILABLE/u);
+
+  const timedOutOperation = evaluate(artifact, { executeError: new Error("SocketTimeoutException must-not-leak") });
+  timedOutOperation.KLOL_V1_GATEWAY.beginRequest("log-operation-timeout", "user-operation-timeout", "재현");
+  timedOutOperation.handleOperationFormMessage("기능방", "<외출>\n1. 이름 및 닉네임 :재현\n2. 외출기간 :하루\n3. 외출사유 :휴식\n4. 외출범위 :소통방", "재현", replier);
+  const timedOutOperationReply = replies.pop();
+  assert.equal(timedOutOperationReply, "[K-LOL.GG 운영 양식]\n서버 연결이 원활하지 않습니다. 잠시 후 다시 시도해주세요.");
+  assert.doesNotMatch(timedOutOperationReply, /must-not-leak|SocketTimeoutException/u);
 });
 
 test("both V40 R2 image seams stay inactive for every transport outcome", async () => {

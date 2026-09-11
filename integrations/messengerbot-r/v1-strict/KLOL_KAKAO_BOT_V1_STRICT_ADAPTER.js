@@ -1,6 +1,6 @@
 /* eslint-disable */
 /* V1-visible constants. No legacy endpoint or bearer secret is retained. */
-var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R2_2026_08_31";
+var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R3_2026_09_11";
 var BASE_URL = "https://k-lol-gg.vercel.app";
 var WEB_INHOUSE_RESULT_UPLOAD_URL = BASE_URL + "/matches/submit";
 var WEB_ADMIN_DISCIPLINE_CREATE_URL = BASE_URL + "/admin/discipline/new";
@@ -28,6 +28,24 @@ function v1GatewaySucceeded(result) {
   return Boolean(result && result.ok && (!result.body || result.body.ok !== false));
 }
 
+function v1GatewayFailureStatus(result) {
+  var status = Number(result && result.status || 0);
+  var bodyStatus = Number(result && result.body && result.body.statusCode || 0);
+  if ((status === 0 || (status >= 200 && status < 300)) && bodyStatus >= 400) return bodyStatus;
+  return status;
+}
+
+function v1GatewayFailureNotice(result, title) {
+  var status = v1GatewayFailureStatus(result);
+  if (status === 401 || status === 403) {
+    return "[K-LOL.GG 연결 설정 확인]\n봇 인증 정보를 확인할 수 없습니다. 관리자에게 문의해주세요.";
+  }
+  if (status === 400) {
+    return title + "\n입력 형식이 올바르지 않습니다. 양식을 확인한 뒤 다시 보내주세요.";
+  }
+  return title + "\n서버 연결이 원활하지 않습니다. 잠시 후 다시 시도해주세요.";
+}
+
 function v1ExtractSeasonRecruitNoFromSnapshot(text) {
   var lines = normalizeText(String(text || "")).split("\n");
   var headerText = lines.slice(0, 8).join("\n");
@@ -53,7 +71,7 @@ function sendSearchPlayerCommand(text, room, sender, replier) {
       replier.reply(reply);
       return;
     }
-    if (result.status == 401 || result.status == 403) {
+    if (v1GatewayFailureStatus(result) === 401 || v1GatewayFailureStatus(result) === 403) {
       replier.reply("[전적 검색 인증 오류]\n봇 인증 정보를 확인해 주세요.\n상태코드: " + result.status);
       return;
     }
@@ -159,8 +177,9 @@ function handlePartyRecruitApi(apiTag, roomLabel, text, sender, replier, label) 
   var reply = "";
   try {
     result = KLOL_V1_GATEWAY.send("RECRUIT", text, sender);
-    if (result.body && Number(result.body.statusCode || 0) === 401) {
-      replier.reply("[K-LOL.GG 연결 설정 확인]\n봇 인증 정보를 확인할 수 없습니다. 관리자에게 문의해주세요.");
+    reply = KLOL_V1_GATEWAY.replyText(result);
+    if (reply == "" && (v1GatewayFailureStatus(result) === 401 || v1GatewayFailureStatus(result) === 403)) {
+      replier.reply(v1GatewayFailureNotice(result, "[K-LOL.GG " + label + "]"));
       return false;
     }
     if (result.body && (result.body.ignored === true || result.body.empty === true) && !result.body.reply) {
@@ -169,13 +188,12 @@ function handlePartyRecruitApi(apiTag, roomLabel, text, sender, replier, label) 
     if (result.body && result.body.reply !== undefined && String(result.body.reply || "") === "" && result.ok) {
       return result.body.ok !== false;
     }
-    reply = KLOL_V1_GATEWAY.replyText(result);
     if (reply != "") {
       replier.reply(reply);
       return v1GatewaySucceeded(result);
     }
     if (!result.ok) {
-      replier.reply("[K-LOL.GG " + label + "]\n서버 연결이 원활하지 않습니다. 잠시 후 다시 시도해주세요.");
+      replier.reply(v1GatewayFailureNotice(result, "[K-LOL.GG " + label + "]"));
       return false;
     }
     replier.reply("[K-LOL.GG " + label + "]\n서버 응답을 확인하지 못했습니다. 잠시 후 다시 시도해주세요.");
@@ -230,11 +248,11 @@ function handleOperationFormMessage(room, text, sender, replier) {
       return;
     }
     if (result.status == 401 || result.status == 403) {
-      replier.reply("[K-LOL.GG 운영 양식]\n현재 접수 권한을 확인할 수 없습니다. 관리자에게 문의해주세요.");
+      replier.reply(v1GatewayFailureNotice(result, "[K-LOL.GG 운영 양식]"));
       return;
     }
     if (!result.ok) {
-      replier.reply("[K-LOL.GG 운영 양식]\n서버 연결이 원활하지 않습니다. 잠시 후 다시 시도해주세요.");
+      replier.reply(v1GatewayFailureNotice(result, "[K-LOL.GG 운영 양식]"));
       return;
     }
     replier.reply("[K-LOL.GG 운영 양식]\n서버 응답을 확인하지 못했습니다. 잠시 후 다시 시도해주세요.");

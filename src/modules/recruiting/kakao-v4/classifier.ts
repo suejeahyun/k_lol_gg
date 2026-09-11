@@ -1,4 +1,5 @@
 import { canonicalKakaoV4CommandText, type KakaoV4ProfileId } from "./domain";
+import { parsePartyNumberedRow, parsePartyPositionRow, parsePartyReserveRow } from "./party-snapshot-parser";
 
 export const KAKAO_V4_COMMAND_FAMILIES = ["PARTY", "INHOUSE", "SCRIM", "PLAYER", "OPERATIONS", "LOCAL"] as const;
 export type KakaoV4CommandFamily = (typeof KAKAO_V4_COMMAND_FAMILIES)[number];
@@ -187,9 +188,7 @@ function slashBoundaryReason(text: string) {
 function countFilledNumberedRows(text: string) {
   let count = 0;
   for (const line of text.split("\n")) {
-    const numbered = /^\s*(?:예비\s*|후보\s*|대기\s*)?\d+\.\s*(.*?)\s*$/u.exec(line);
-    const positioned = /^\s*(?:TOP|JUG|JGL|MID|ADC|SUP)\.\s*(.*?)\s*$/iu.exec(line);
-    const value = numbered?.[1] ?? positioned?.[1];
+    const value = parsePartyReserveRow(line)?.value ?? parsePartyNumberedRow(line)?.value ?? parsePartyPositionRow(line)?.value;
     if (value) count += value.split(/\s*,\s*/u).filter(Boolean).length;
   }
   return count;
@@ -206,12 +205,12 @@ function hasCompletePartyTemplate(text: string) {
   const numberedMaximum = Number(/(\d{1,2})\s*인\s*(?:협곡\s*)?(?:파티\s*)?구인/u.exec(header)?.[1] ?? 0);
   const maximumMembers = namedMaximum ?? numberedMaximum;
   if (!maximumMembers || maximumMembers > 99) return false;
-  if (!/^\s*(?:예비|후보|대기)\s*1\s*[.):：]/mu.test(text)) return false;
+  if (!text.split("\n").some((line) => parsePartyReserveRow(line)?.slotNo === 1)) return false;
   const lineParty = /(?:자랭|일반|협곡)/u.test(header) && !/(?:솔랭|롤체)/u.test(header);
   if (lineParty) {
     const labels = new Set<string>();
     for (const line of text.split("\n")) {
-      const label = /^\s*(TOP|JUG|JGL|JG|MID|ADC|AD|SUP)\s*[.:：]/iu.exec(line)?.[1]?.toUpperCase();
+      const label = parsePartyPositionRow(line)?.label.toUpperCase();
       if (!label) continue;
       labels.add(label === "JGL" || label === "JG" ? "JUG" : label === "AD" ? "ADC" : label);
     }
@@ -220,7 +219,7 @@ function hasCompletePartyTemplate(text: string) {
   const slots = new Set<number>();
   for (const line of text.split("\n")) {
     if (/^\s*(?:예비|후보|대기)/u.test(line)) continue;
-    const slot = Number(/^\s*(\d{1,2})\s*[.)]/u.exec(line)?.[1] ?? 0);
+    const slot = parsePartyNumberedRow(line)?.slotNo ?? 0;
     if (slot) slots.add(slot);
   }
   return Array.from({ length: maximumMembers }, (_, index) => index + 1).every((slot) => slots.has(slot));
@@ -249,7 +248,7 @@ function classifySnapshot(text: string): KakaoV4RecognizedCommand | null {
     }, "SNAPSHOT");
   }
 
-  const partyNumber = /^\s*모집번호\s*:\s*#(자동배정|\d+)\s*$/mu.exec(text)?.[1];
+  const partyNumber = /^\s*모집번호\s*[:：]?\s*#?\s*(자동배정|\d+)\s*$/mu.exec(text)?.[1];
   if (partyNumber && /^\s*📢\s*.+(?:파티 구인|하실분!?)\s*$/mu.test(text)) {
     if (!hasCompletePartyTemplate(text)) return null;
     return recognized("PARTY_SNAPSHOT", text, {
