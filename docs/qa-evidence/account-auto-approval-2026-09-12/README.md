@@ -23,7 +23,7 @@
 | 기존 제재·복구 정책 | PASS | `REJECTED`, `SUSPENDED`, 삭제·복구와 관리자 수동 상태 변경 경로 미변경 |
 | 운영 앱 배포 | PASS | 지정 deployment가 운영 별칭을 가리키며 health `ready` |
 | 운영 공개 문구 | PASS | `/signup`, `/start`에서 자동승인과 기존 플레이어 수동 검토 안내 확인 |
-| 기존 승인 대기 27개 일괄승인 | PENDING | read-only 안전 조건 확인 완료, action-time UI 확인 대기로 실제 변경 0건 |
+| 기존 승인 대기 27개 일괄승인 | PASS | safe class 27개 확인 후 승인 완료, `PENDING` 27→0 |
 
 ## 자동승인 계약
 
@@ -51,7 +51,9 @@
 
 자동승인 코드는 운영에 반영됐다. 따라서 배포 이후 새 Riot ID로 가입하는 일반 사용자에게 적용된다.
 
-기존 `PENDING` 계정 27개는 별도 운영 작업이다. read-only 사전점검에서 27개 모두 `USER`, 삭제되지 않음, 미해결 player claim 없음, 연결 플레이어 상태 정상으로 확인됐고 자동승인 제외 대상인 ADMIN/SUPER_ADMIN은 0개였다. 그러나 UI의 action-time confirmation이 아직 완료되지 않아 실제 승인된 계정은 0개다. 보호 대상 기존 `REJECTED/SUSPENDED` 8개는 변경 대상이 아니다.
+기존 `PENDING` 계정 27개는 자동승인 배포와 분리된 운영 일괄 승인 작업으로 처리했다. 2026-09-12 05:52 KST 전후 action-time 확인에서 safe class 27개, 관리자 승인 대기 0개, 삭제 계정 승인 대기 0개, 미해결 player claim 0개를 확인한 뒤 27개를 승인했다. 처리 후 `PENDING`은 27개에서 0개가 됐다.
+
+연결 플레이어 27개는 모두 `ACTIVE`다. 기존 `ACTIVE` 23개는 유지했고 비활성 4개는 재활성화했다. 기존 세션 6개를 폐기하고 계정 status history 27개, 계정 audit 27개, 플레이어 audit 4개를 기록했다. 보호 대상 기존 `REJECTED/SUSPENDED` 8개는 변경되지 않았다.
 
 ## migration과 롤백
 
@@ -59,11 +61,11 @@
 - 저장소와 운영 DB 기준은 계속 `0036_flowery_hairball`이다.
 - 앱 문제가 있으면 직전 정상 deployment로 되돌리면 이후 가입은 다시 기존 승인 대기 정책을 따른다.
 - 이미 자동승인된 계정을 일괄 강등하지 않는다. 필요한 계정만 관리자 상태 변경 기능으로 개별 처리한다.
-- 기존 27개 일괄승인은 아직 0건이므로 이 운영 작업에 대한 데이터 롤백은 현재 필요하지 않다.
+- 기존 27개 승인 작업은 계정 status history와 audit로 대상과 변경을 추적할 수 있다. 롤백이 필요하면 전체 계정을 일괄 변경하지 말고 이 작업의 감사 대상 ID를 기준으로 현재 상태를 재검사한 뒤 개별 상태 변경 기능을 사용한다.
+- 스키마 migration이나 데이터 삭제는 수행하지 않았다.
 
 ## 확인하지 않은 범위
 
-- 기존 승인 대기 27개 계정의 실제 상태 변경
 - 실제 사용자 자격 증명으로 운영 회원가입 POST와 로그인 전체 E2E
 - 실제 휴대폰 Kakao 두 방 송수신
 - 실제 사용자 Riot RSO/API와 Vercel Blob E2E
@@ -71,8 +73,6 @@
 
 ## 근거 있는 다음 작업
 
-1. UI action-time confirmation 후 안전 조건을 다시 잠그고 기존 `PENDING` 27개를 단일 transaction으로 승인한다.
-2. 승인 직후 계정·플레이어 상태, session revoke, status history와 audit 건수를 사후 검증한다.
-3. 합성 신규 Riot ID로 운영 가입·로그인·승인 기능 접근 smoke를 남긴다.
-4. 기존 플레이어 Riot ID 가입이 계속 수동 claim으로 남는지 운영 fixture로 확인한다.
-
+1. 승인된 27개 계정의 로그인 실패율과 재문의 발생 여부를 운영 지표로 확인한다.
+2. 합성 신규 Riot ID로 운영 가입·로그인·승인 기능 접근 smoke를 남긴다.
+3. 기존 플레이어 Riot ID 가입이 계속 수동 claim으로 남는지 운영 fixture로 확인한다.
