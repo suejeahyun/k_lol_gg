@@ -72,6 +72,26 @@
           "status": "PENDING_USER_INSTALL"
         }
       ]
+    },
+    {
+      "featureId": "v2-v1-team-balance",
+      "version": "1.0.1",
+      "gitTag": "v2-v1-team-balance-v1.0.1",
+      "commit": "8ee4fa4455cf98f0ada62f6ad31d8d45dacc23c4",
+      "releasedAt": "2026-09-11T19:26:48+09:00",
+      "migrationHead": "0036_flowery_hairball",
+      "qaEvidence": "docs/qa-evidence/v2-v1-team-balance-release-2026-09-11/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-11-v1-team-balance-release.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_4BzqPTPUWTVmzmXui1sSVcrzreKC",
+        "url": "https://k-lol-btwyt99iy-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-11T10:28:11.460Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": []
     }
   ]
 }

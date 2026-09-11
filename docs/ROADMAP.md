@@ -20,8 +20,10 @@
 
 각 슬라이스는 사용자 기능과 같은 영역의 관리자 기능을 함께 완성한다.
 
-S00~S13은 현재 공유 worktree의 구현 후보로 통합됐다. S14에서 최종 `npm run check`의 contracts 347/347·unit 707 pass·1 intentional skip·build 92 app routes, `npm run test:db`의 migration 37개·head `0036_flowery_hairball`·Kakao V4 P0 31/31·recovery archive, `verify:auth-http`, 현재 트리 비밀정보 검사, Data Dragon 173종/346자산과 여성 홈 가이드 68/68을 확인했다. 로컬 production 서버의 공개 자동 품질은 30/30과 axe 위반 0을 확인했고, 전체 높이 캡처는 27/30 PASS·`/competitions` 3조건 BLOCKED다.
+S00~S13은 현재 소스에 통합됐다. S14에서 최종 `npm run check`의 contracts 347/347·unit 707 pass·1 intentional skip·build 92 app routes, `npm run test:db`의 migration 37개·head `0036_flowery_hairball`·Kakao V4 P0 31/31·recovery archive, `verify:auth-http`, 현재 트리 비밀정보 검사, Data Dragon 173종/346자산과 여성 홈 가이드 68/68을 확인했다. 운영 별칭의 공개 자동 품질은 30/30·issues 0·axe 위반 0이고 health는 `ready`다. 로컬 전체 높이 캡처는 27/30 PASS·`/competitions` 3조건 BLOCKED로 별도 유지한다.
 
 운영 Neon production은 비밀값 비노출 preflight와 1일 복구 분기 생성 후 `0035`·`0036`을 단일 transaction으로 적용했다. 사후 migration 37개와 head hash, unique index 3개, validated foreign key 1개, 중복·mismatch 0을 확인했다.
 
-아직 남은 S14 조건은 릴리스 commit·tag·registry·앱 deployment ID 확정, 운영 앱 배포와 smoke, 격리 DB·합성 세션 기반 `/competitions` 및 현재 103개 화면 335대상 회귀 캡처다. 운영 DB 적용만 확인됐고 앱 배포 근거가 없으므로 현재 기능을 운영 반영 완료로 판정하지 않는다. 운영 Vercel 전환은 별도 승인·배포 절차의 범위다.
+최종 기능 commit `8ee4fa4455cf98f0ada62f6ad31d8d45dacc23c4`, tag `v2-v1-team-balance-v1.0.1`, Vercel deployment `dpl_4BzqPTPUWTVmzmXui1sSVcrzreKC`와 운영 별칭을 연결했다. 이 근거 범위에서 V1 팀 밸런스·결과 공유의 운영 반영을 확인했다.
+
+남은 S14 조건은 로그인·관리자 포함 103개 페이지 335회 실캡처, 실제 휴대폰 Kakao 두 방 E2E, 실제 사용자 Riot RSO·Blob E2E다. V1 최근 솔로 20경기 상세 데이터와 관리자 밸런스 수동 보정 원천 데이터는 V2에 없어 명시적 0/미제공 경로를 유지한다. 이 범위를 확인하지 않고 V2 전체 기능이나 외부 연동 전부가 검증됐다고 판정하지 않는다.
