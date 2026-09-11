@@ -19,7 +19,7 @@ export function TeamToolNav({ current, approved }: { current: TeamToolPage; appr
       </Link>
       {approved ? (
         <Link href="/tools/team-balance/drafts" data-active={current === "drafts" ? "true" : undefined} aria-current={current === "drafts" ? "page" : undefined}>
-          <FolderOpen size={17} aria-hidden="true" /> 내 초안
+          <FolderOpen size={17} aria-hidden="true" /> 팀 밸런스 초안
         </Link>
       ) : null}
     </nav>

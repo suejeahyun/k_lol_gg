@@ -72,7 +72,7 @@ export function SubmissionForm({
     return <section className={styles.panel} role="status"><h2>결과 접수를 이용할 수 없어요.</h2><p>잠시 후 다시 시도해 주세요.</p></section>;
   }
   if (requestedTeamBalanceDraftId && !teamBalanceDraft) {
-    return <section className={styles.panel} role="alert"><h2>팀 초안을 연결할 수 없어요</h2><p>본인이 선택한 최신 팀 후보인지 확인한 뒤 다시 접수해 주세요.</p><Link href="/tools/team-balance/drafts">내 초안 목록으로 이동</Link></section>;
+    return <section className={styles.panel} role="alert"><h2>팀 초안을 연결할 수 없어요</h2><p>현재 적용된 최신 팀 배치인지 확인한 뒤 다시 접수해 주세요.</p><Link href="/tools/team-balance/drafts">팀 밸런스 초안 목록으로 이동</Link></section>;
   }
 
   function continueByCode(event: React.FormEvent) {
@@ -276,7 +276,7 @@ export function SubmissionForm({
       {!submission ? (
         <section className={styles.panel} aria-labelledby="new-submission-title">
           <h2 id="new-submission-title">새 결과 접수</h2>
-          {teamBalanceDraft ? <div className={styles.linkedDraft} role="status"><span>팀 밸런스 초안 연결</span><strong>{teamBalanceDraft.title}</strong><small>{teamBalanceDraft.status === "SAVED" ? "저장된 선택 팀" : "현재 선택한 팀"} · 참가자와 배치는 서버에서 다시 확인합니다.</small></div> : null}
+          {teamBalanceDraft ? <div className={styles.linkedDraft} role="status"><span>팀 밸런스 초안 연결</span><strong>{teamBalanceDraft.title}</strong><small>{teamBalanceDraft.status === "SAVED" ? "저장된 팀 배치" : "현재 팀 배치"} · 참가자와 배치는 서버에서 다시 확인합니다.</small></div> : null}
           <form className={styles.form} onSubmit={createSubmission}>
             <label className={styles.wide}>경기 제목<input name="title" required maxLength={160} defaultValue={teamBalanceDraft?.title ?? ""} /></label>
             <label>주최자<input name="organizer" required maxLength={100} /></label>

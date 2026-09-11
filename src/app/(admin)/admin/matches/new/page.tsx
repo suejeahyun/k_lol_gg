@@ -50,7 +50,7 @@ export default async function NewMatchPage({ searchParams }: { searchParams: Pro
     ? draftResult.data.candidates.find((candidate) => candidate.signature === draftResult.data?.selectedCandidateSignature) ?? null
     : null;
   if (teamBalanceDraftId && !selectedCandidate) {
-    return <main className={styles.page}><Link href={`/admin/balance/drafts/${teamBalanceDraftId}`}><ArrowLeft size={16} aria-hidden="true" /> 팀 초안으로</Link><section className={styles.state} role="alert"><h1>선택된 팀 배치를 확인할 수 없습니다.</h1><p>팀 후보를 다시 선택한 뒤 경기 등록을 시작해 주세요.</p></section></main>;
+    return <main className={styles.page}><Link href={`/admin/balance/drafts/${teamBalanceDraftId}`}><ArrowLeft size={16} aria-hidden="true" /> 팀 초안으로</Link><section className={styles.state} role="alert"><h1>선택된 팀 배치를 확인할 수 없습니다.</h1><p>추천 팀 배치를 다시 적용한 뒤 경기 등록을 시작해 주세요.</p></section></main>;
   }
   const result = await loadRuntimeMatchData((service) => service.getAdminEditorCatalog(
     draftResult.data?.participants.map((participant) => participant.playerId) ?? [],

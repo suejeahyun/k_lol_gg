@@ -292,10 +292,10 @@ export function TeamBalanceBuilder() {
         }),
       });
       const body = await response.json() as { detail?: string; location?: string };
-      if (!response.ok || !body.location) throw new Error(body.detail ?? "팀 후보를 계산하지 못했어요.");
+      if (!response.ok || !body.location) throw new Error(body.detail ?? "V1 추천 팀을 계산하지 못했어요.");
       router.push(body.location);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "팀 후보를 계산하지 못했어요.");
+      setMessage(error instanceof Error ? error.message : "V1 추천 팀을 계산하지 못했어요.");
     } finally {
       setPending(false);
     }

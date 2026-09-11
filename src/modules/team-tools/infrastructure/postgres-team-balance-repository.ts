@@ -534,7 +534,7 @@ export class PostgresTeamBalanceRepository implements TeamBalanceRepository {
           )[0]!;
         }
       }
-      if (!selected) throw new TeamBalanceServiceError("NOT_FOUND", "선택한 팀 후보를 찾을 수 없습니다.");
+      if (!selected) throw new TeamBalanceServiceError("NOT_FOUND", "선택한 팀 배치를 찾을 수 없습니다.");
 
       const updated = (
         await transaction
@@ -570,7 +570,7 @@ export class PostgresTeamBalanceRepository implements TeamBalanceRepository {
     return this.idempotent(envelope, "EITHER", async (transaction) => {
       const current = await this.lockedDraft(transaction, envelope, draftId, expectedRevision);
       if (current.status !== "EVALUATED" || !current.selectedCandidateSignature) {
-        throw new TeamBalanceServiceError("INVALID_TRANSITION", "팀 후보를 선택한 평가 상태에서만 저장할 수 있습니다.");
+        throw new TeamBalanceServiceError("INVALID_TRANSITION", "추천 또는 수동 팀 배치가 적용된 평가 상태에서만 저장할 수 있습니다.");
       }
       const updated = (
         await transaction

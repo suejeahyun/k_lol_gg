@@ -77,7 +77,7 @@ export function TeamBalanceDraftWorkspace({
             ? "초안을 보관했어요. 일반 사용자 목록에서는 더 이상 보이지 않아요."
             : action === "restore"
               ? "보관한 초안을 복구했어요."
-              : "팀 후보를 선택했어요.");
+              : "팀 배치를 적용했어요.");
       router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "팀 초안을 변경하지 못했어요.");
@@ -184,9 +184,9 @@ export function TeamBalanceDraftWorkspace({
                 onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "move"; setDragOverSlot(index); }}
                 onDrop={(event) => { event.preventDefault(); const sourceSlot = Number(event.dataTransfer.getData("text/plain")); if (Number.isInteger(sourceSlot) && sourceSlot !== index) { swapManual(sourceSlot, index); setMessage("두 플레이어의 자리를 바꿨어요. 서버 평가로 확인해 주세요."); } setDraggingSlot(null); setDragOverSlot(null); }}
               >
-                <div className={styles.manualPlayerName}><GripVertical aria-hidden="true"/><b>{positionLabel[entry.position]}</b><strong>{participantName.get(entry.playerId) ?? entry.playerId}</strong><small>끌어서 이동</small></div>
+                <div className={styles.manualPlayerName}><GripVertical aria-hidden="true"/><b>{positionLabel[entry.position]}</b><strong>{participantName.get(entry.playerId) ?? entry.playerId}</strong><small>드래그해 교체</small></div>
                 <div className={styles.manualPlayerInfo}><strong>{eligibility}</strong><small>{ratingSummary}</small></div>
-                <button type="button" aria-pressed={keyboardSlot === index} onClick={() => selectKeyboardSlot(index)}>{keyboardSlot === null ? "교체 시작" : keyboardSlot === index ? "선택 취소" : "여기와 교체"}</button>
+                <button type="button" aria-pressed={keyboardSlot === index} onClick={() => selectKeyboardSlot(index)}>{keyboardSlot === null ? "교체할 카드 선택" : keyboardSlot === index ? "선택 취소" : "이 카드와 교체"}</button>
               </article>;
             })}</div>
           </section>)}

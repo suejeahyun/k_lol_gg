@@ -77,6 +77,9 @@ test("팀 밸런스 화면은 승인 계정, 10명 입력, V1 단일 추천·공
   const drafts = source("../src/app/(public)/(tools)/tools/team-balance/drafts/page.tsx");
   const builder = source("../src/app/(public)/(tools)/tools/team-balance/team-balance-builder.tsx");
   const detail = source("../src/app/(public)/(tools)/tools/team-balance/drafts/[draftId]/team-balance-draft-workspace.tsx");
+  const detailPage = source("../src/app/(public)/(tools)/tools/team-balance/drafts/[draftId]/page.tsx");
+  const navigation = source("../src/app/(public)/(tools)/tools/team-tool-nav.tsx");
+  const submission = source("../src/app/(public)/(matches)/matches/submit/submission-form.tsx");
 
   for (const contract of [
     "getCurrentSession",
@@ -139,6 +142,18 @@ test("팀 밸런스 화면은 승인 계정, 10명 입력, V1 단일 추천·공
   assert.equal(detail.includes("자동 추천 후보 비교"), false, "기존 세 후보 비교 제목은 노출하지 않는다");
   assert.equal(detail.includes("compactTeams"), false, "1·2·3안의 블루/레드 사진형 미리보기를 제거한다");
   assert.equal(detail.includes("<select"), false, "수동 배치에는 플레이어 드롭다운을 표시하지 않는다");
+  assert.equal(page.includes("V1 기준의 가장 균형 잡힌 배치 한 가지"), true, "시작 화면은 단일 추천을 안내한다");
+  assert.equal(drafts.includes('title: "팀 밸런스 초안"'), true, "목록 metadata는 공용 운영 명칭을 사용한다");
+  assert.equal(drafts.includes('"팀 밸런스 초안"}</h1>'), true, "목록 제목은 공용 운영 명칭을 사용한다");
+  assert.equal(navigation.includes("팀 밸런스 초안"), true, "팀 도구 메뉴는 개인 소유 명칭을 사용하지 않는다");
+  assert.equal(detailPage.includes("초안 목록"), true, "상세 화면은 공용 초안 목록으로 돌아간다");
+  assert.equal(detail.includes("드래그해 교체"), true, "수동 카드에 현재 교체 동작을 안내한다");
+  assert.equal(detail.includes("교체할 카드 선택"), true, "키보드 교체 버튼은 선택 대상을 설명한다");
+  assert.equal(submission.includes("현재 적용된 최신 팀 배치"), true, "결과 접수는 적용된 배치를 안내한다");
+  const currentTeamBalanceCopy = [page, drafts, builder, detail, detailPage, navigation, submission].join("\n");
+  for (const legacyCopy of ["내 팀 밸런스 초안", "내 초안", "가장 균형 잡힌 세 가지", "팀 후보를 계산", "팀 후보를 선택", "교체 시작", "끌어서 이동"]) {
+    assert.equal(currentTeamBalanceCopy.includes(legacyCopy), false, `과거 문구 제거: ${legacyCopy}`);
+  }
   for (const contract of [
     "requireApprovedAccountPage",
     "service.listDrafts",

@@ -14,8 +14,8 @@ import { TeamBalanceRecommendationsPanel } from "./team-balance-recommendations-
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
-  title: "내 팀 밸런스 초안",
-  description: "저장한 팀 밸런스 초안을 다시 확인하고 이어서 작업합니다.",
+  title: "팀 밸런스 초안",
+  description: "팀 밸런스 초안을 다시 확인하고 재평가·결과 등록 작업을 이어갑니다.",
   alternates: { canonical: "/tools/team-balance/drafts" },
   robots: { index: false, follow: false },
 };
@@ -64,9 +64,9 @@ export default async function TeamBalanceDraftsPage({
       <TeamToolNav current="drafts" approved />
       <section className={styles.draftListHeader} aria-labelledby="draft-list-title">
         <div>
-          <span>{query?.view === "recommendations" ? "PICK · BAN" : "MY TEAM DRAFTS"}</span>
-          <h1 id="draft-list-title">{query?.view === "recommendations" ? "저장 팀 밴픽 추천" : "내 팀 밸런스 초안"}</h1>
-          <p>{query?.view === "recommendations" ? "선택한 저장 배치와 최신 시즌 챔피언 통계로 픽·상대 밴 후보를 확인합니다." : "계정에 안전하게 저장된 배치를 다시 열고, 통계가 달라졌다면 재평가할 수 있어요."}</p>
+          <span>{query?.view === "recommendations" ? "PICK · BAN" : "TEAM DRAFTS"}</span>
+          <h1 id="draft-list-title">{query?.view === "recommendations" ? "저장 팀 밴픽 추천" : "팀 밸런스 초안"}</h1>
+          <p>{query?.view === "recommendations" ? "선택한 저장 배치와 최신 시즌 챔피언 통계로 픽·상대 밴 후보를 확인합니다." : "생성된 팀 배치를 다시 열고, 통계가 달라졌다면 재평가한 뒤 결과 등록으로 이어갈 수 있어요."}</p>
         </div>
         <Link className={styles.primaryLink} href={query?.view === "recommendations" ? "/tools/team-balance/drafts" : "/tools/team-balance/drafts?view=recommendations"}>{query?.view === "recommendations" ? "초안 목록" : "밴픽 추천"}</Link>
       </section>
@@ -79,7 +79,7 @@ export default async function TeamBalanceDraftsPage({
         </form>
         {recommendation?.state === "ready" && recommendation.data ? <TeamBalanceRecommendationsPanel recommendation={recommendation.data} hrefForTeam={(team) => `/tools/team-balance/drafts?view=recommendations&draftId=${selectedDraftId}&team=${team}`}/>
           : <section className={styles.emptyState} role={recommendation?.state === "error" ? "alert" : "status"}><Scale aria-hidden="true"/><h2>밴픽 추천을 불러올 수 없어요</h2><p>잠시 후 다시 시도하거나 팀 구성을 확인해 주세요.</p></section>}
-      </> : query?.view === "recommendations" && result.state === "ready" ? <section className={styles.emptyState}><FolderOpen aria-hidden="true"/><h2>추천할 저장 초안이 없습니다.</h2><p>팀 후보를 선택하고 저장한 뒤 다시 확인해 주세요.</p><Link className={styles.primaryLink} href="/tools/team-balance">첫 초안 만들기</Link></section>
+      </> : query?.view === "recommendations" && result.state === "ready" ? <section className={styles.emptyState}><FolderOpen aria-hidden="true"/><h2>추천할 저장 초안이 없습니다.</h2><p>추천 팀 배치를 저장한 뒤 다시 확인해 주세요.</p><Link className={styles.primaryLink} href="/tools/team-balance">첫 초안 만들기</Link></section>
       : result.state === "unavailable" ? (
         <section className={styles.emptyState} role="status"><Scale aria-hidden="true" /><h2>저장한 초안을 확인할 수 없어요</h2><p>잠시 후 다시 확인해 주세요.</p></section>
       ) : result.state === "error" ? (

@@ -1510,7 +1510,7 @@ export class PostgresMatchRepository implements MatchRepository {
       draft.selectedCandidateSignature !== source.teamBalanceCandidateSignature ||
       !draft.selectedCandidateSource
     ) {
-      throw new MatchServiceError("PRECONDITION_FAILED", "팀 초안 또는 선택 후보가 변경되었습니다. 최신 배치를 다시 불러와 주세요.");
+      throw new MatchServiceError("PRECONDITION_FAILED", "팀 초안 또는 적용된 팀 배치가 변경되었습니다. 최신 배치를 다시 불러와 주세요.");
     }
     const [candidate, participantRows] = await Promise.all([
       transaction
@@ -1534,7 +1534,7 @@ export class PostgresMatchRepository implements MatchRepository {
       candidate[0].assignmentsJson,
       participantRows.map((row) => row.playerId),
     )) {
-      throw new MatchServiceError("INVALID_TRANSITION", "선택한 팀 후보의 참가자 구성이 손상되었습니다.");
+      throw new MatchServiceError("INVALID_TRANSITION", "적용된 팀 배치의 참가자 구성이 손상되었습니다.");
     }
     const selectedAssignments = new Set(
       (candidate[0].assignmentsJson as readonly Record<string, unknown>[])
@@ -1914,7 +1914,7 @@ export class PostgresMatchRepository implements MatchRepository {
       throw new MatchServiceError("NOT_FOUND", "연결할 수 있는 본인 팀 초안을 찾을 수 없습니다.");
     }
     if (!draft.selectedCandidateSource || !draft.selectedCandidateSignature) {
-      throw new MatchServiceError("INVALID_TRANSITION", "팀 후보를 선택한 초안만 경기 접수에 연결할 수 있습니다.");
+      throw new MatchServiceError("INVALID_TRANSITION", "팀 배치가 적용된 초안만 경기 접수에 연결할 수 있습니다.");
     }
     const [candidate, participantRows] = await Promise.all([
       transaction
@@ -1938,7 +1938,7 @@ export class PostgresMatchRepository implements MatchRepository {
       candidate[0].assignmentsJson,
       participantRows.map((row) => row.playerId),
     )) {
-      throw new MatchServiceError("INVALID_TRANSITION", "선택한 팀 후보와 참가자 구성이 일치하지 않습니다.");
+      throw new MatchServiceError("INVALID_TRANSITION", "적용된 팀 배치와 참가자 구성이 일치하지 않습니다.");
     }
   }
 
