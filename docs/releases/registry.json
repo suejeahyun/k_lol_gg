@@ -46,6 +46,32 @@
         "healthStatus": "ready"
       },
       "externalInstallations": []
+    },
+    {
+      "featureId": "kakao-v1-flexible-input",
+      "version": "1.0.0",
+      "gitTag": "kakao-v1-flexible-input-v1.0.0",
+      "commit": "0ec3e9fe4bce5244fb628130709750301c720452",
+      "releasedAt": "2026-09-11T10:20:54+09:00",
+      "migrationHead": "0034_kakao_room_capability_profiles",
+      "qaEvidence": "docs/qa-evidence/kakao-v1-flexible-input-2026-09-11/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-11-kakao-v1-flexible-input.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_HNSKfjtJJEey9DSBBqDiybsU96Uf",
+        "url": "https://k-lol-5n9flegf0-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-11T01:16:20.249Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": [
+        {
+          "name": "MessengerBot R V1 strict",
+          "version": "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R3_2026_09_11",
+          "status": "PENDING_USER_INSTALL"
+        }
+      ]
     }
   ]
 }
