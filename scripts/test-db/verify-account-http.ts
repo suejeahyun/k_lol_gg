@@ -471,13 +471,13 @@ try {
   const signupKey = idempotencyKey("signup-new");
   const signedUp = await signup(origin, signupInput, signupKey);
   assert.equal(signedUp.status, 201);
-  assert.equal(signedUp.headers.get("etag"), '"0"');
+  assert.equal(signedUp.headers.get("etag"), '"1"');
   assert.equal(signedUp.headers.get("cache-control"), "no-store, max-age=0");
   const signedUpBody = await signedUp.json() as {
     account: { id: string; status: string; revision: number; player: { id: string } | null };
   };
   recursivelyRejectSensitiveFields(signedUpBody);
-  assert.equal(signedUpBody.account.status, "PENDING");
+  assert.equal(signedUpBody.account.status, "APPROVED");
   const signedUpId = signedUpBody.account.id;
   assert.ok(signedUpBody.account.player);
   const expiredResetRequestId = randomUUID();
@@ -493,8 +493,8 @@ try {
     origin,
     playerId: signedUpBody.account.player!.id,
     riotId: signupInput.riotId,
-    visible: false,
-    message: "a PENDING signup player must not appear in the public registry",
+    visible: true,
+    message: "an automatically approved signup player must appear in the public registry",
   });
 
   const replayedSignup = await signup(origin, signupInput, signupKey);
@@ -559,7 +559,7 @@ try {
 
   const pendingLogin = await loginAccount(origin, signupInput.loginId, signupInput.password);
   assert.equal(pendingLogin.response.status, 200);
-  assert.equal((pendingLogin.body.account as { status: string }).status, "PENDING");
+  assert.equal((pendingLogin.body.account as { status: string }).status, "APPROVED");
   recursivelyRejectSensitiveFields(pendingLogin.body);
   assert.equal(responseCookies(pendingLogin.response).some((value) => value.startsWith(`${ADMIN_COOKIE_NAME}=`)), false);
   const pendingMe = await fetch(`${origin}/api/auth/me`, {
@@ -707,7 +707,7 @@ try {
     headers: { cookie: adminCookie },
   });
   assert.equal(detail.status, 200);
-  assert.equal(detail.headers.get("etag"), '"0"');
+  assert.equal(detail.headers.get("etag"), '"1"');
   recursivelyRejectSensitiveFields(await detail.clone().json(), true);
   const adminVictimForAdmin = await fetch(`${origin}/api/admin/users/${adminVictim.id}`, {
     headers: { cookie: adminCookie },
@@ -735,7 +735,7 @@ try {
     origin,
     cookie: adminCookie,
     path: `/api/admin/users/${signedUpId}/approve`,
-    revision: 0,
+    revision: 1,
     body: {
       ...reason("잘못된 연결 승인"),
       expectedClaimId: randomUUID(),
@@ -743,16 +743,16 @@ try {
     },
   });
   assert.equal(invalidLinkedApproval.status, 409);
-  assert.equal((await database.select().from(userAccounts).where(eq(userAccounts.id, signedUpId)))[0]?.status, "PENDING");
+  assert.equal((await database.select().from(userAccounts).where(eq(userAccounts.id, signedUpId)))[0]?.status, "APPROVED");
   assert.equal((await database.select().from(players).where(
     eq(players.id, signedUpBody.account.player!.id),
-  ))[0]?.status, "INACTIVE");
+  ))[0]?.status, "ACTIVE");
   await assertPublicPlayerVisibility({
     origin,
     playerId: signedUpBody.account.player!.id,
     riotId: signupInput.riotId,
-    visible: false,
-    message: "a failed approval must not publish the linked player",
+    visible: true,
+    message: "a redundant approval must not hide the automatically published player",
   });
   const missingRevision = await adminMutation({
     origin,
@@ -765,22 +765,20 @@ try {
     origin,
     cookie: adminCookie,
     path: `/api/admin/users/${signedUpId}/approve`,
-    revision: 0,
+    revision: 1,
     body: approvalBody,
   });
-  assert.equal(approved.status, 200);
-  assert.equal(approved.headers.get("etag"), '"1"');
-  recursivelyRejectSensitiveFields(await approved.clone().json(), true);
+  assert.equal(approved.status, 409);
   await assertPublicPlayerVisibility({
     origin,
     playerId: signedUpBody.account.player!.id,
     riotId: signupInput.riotId,
     visible: true,
-    message: "approval must atomically publish the linked player",
+    message: "automatic approval must atomically publish the linked player",
   });
-  await assertAnonymousMe(await fetch(`${origin}/api/auth/me`, {
+  await assertAuthenticatedMe(await fetch(`${origin}/api/auth/me`, {
     headers: { cookie: pendingLogin.cookie },
-  }), "status mutation must revoke the pre-approval session");
+  }), signedUpId, "a redundant approval must not revoke the approved signup session");
   const staleApproval = await adminMutation({
     origin,
     cookie: adminCookie,
@@ -1034,7 +1032,7 @@ try {
     origin,
     cookie: adminCookie,
     path: `/api/admin/users/${statusAccountId}/reject`,
-    revision: 0,
+    revision: 1,
     body: confirmedReason("이전 로그인 아이디 확인 거부", statusPayload.loginId),
   });
   assert.equal(renamedConfirmationRejected.status, 409);
@@ -1042,7 +1040,7 @@ try {
     origin,
     cookie: adminCookie,
     path: `/api/admin/users/${statusAccountId}/reject`,
-    revision: 0,
+    revision: 1,
     body: confirmedReason("거절", renamedStatusLoginId),
   });
   assert.equal(rejected.status, 200);
@@ -1050,7 +1048,7 @@ try {
     origin,
     cookie: adminCookie,
     path: `/api/admin/users/${statusAccountId}/reset-pending`,
-    revision: 1,
+    revision: 2,
     body: confirmedReason("재검토", renamedStatusLoginId),
   });
   assert.equal(resetPending.status, 200);
@@ -1058,7 +1056,7 @@ try {
     origin,
     cookie: adminCookie,
     path: `/api/admin/users/${statusAccountId}/approve`,
-    revision: 2,
+    revision: 3,
     body: approvalBody,
   });
   assert.equal(statusApproved.status, 200);
@@ -1066,7 +1064,7 @@ try {
     origin,
     cookie: adminCookie,
     path: `/api/admin/users/${statusAccountId}/suspend`,
-    revision: 3,
+    revision: 4,
     body: confirmedReason("이용 제한", renamedStatusLoginId),
   });
   assert.equal(suspended.status, 200);
@@ -1074,7 +1072,7 @@ try {
     origin,
     cookie: adminCookie,
     path: `/api/admin/users/${statusAccountId}/suspend`,
-    revision: 4,
+    revision: 5,
     body: confirmedReason("중복 제한", renamedStatusLoginId),
   });
   assert.equal(unchangedSuspend.status, 409);
@@ -1082,7 +1080,7 @@ try {
     origin,
     cookie: adminCookie,
     path: `/api/admin/users/${statusAccountId}/reset-pending`,
-    revision: 4,
+    revision: 5,
     body: confirmedReason("승인 계정 재검토", renamedStatusLoginId),
   });
   assert.equal(approvedToPending.status, 200);
@@ -1097,7 +1095,7 @@ try {
     origin,
     cookie: adminCookie,
     path: `/api/admin/users/${statusAccountId}/approve`,
-    revision: 5,
+    revision: 6,
     body: approvalBody,
   });
   assert.equal(pendingToApproved.status, 200);
@@ -1122,7 +1120,7 @@ try {
       origin,
       cookie: superAdminCookie,
       path: `/api/admin/users/${statusAccountId}/password-reset`,
-      revision: 6,
+      revision: 7,
       body: {
         internalReason: "관리자 초기화와 복구 요청 잠금 순서 검증",
         confirmLoginId: renamedStatusLoginId,

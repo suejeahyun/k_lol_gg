@@ -44,7 +44,7 @@ export default async function StartPage() {
           ) : session ? (
             <Link className={styles.card} href={session.mustChangePassword ? "/account/password" : "/account"}><ShieldCheck size={24} aria-hidden="true" /><strong>계정 상태 확인</strong><p>승인 상태와 필요한 비밀번호 변경, 연결 플레이어 정보를 확인합니다.</p><small>로그인 계정</small></Link>
           ) : (
-            <Link className={styles.card} href="/signup"><UserRoundPlus size={24} aria-hidden="true" /><strong>참가 계정 만들기</strong><p>약관에 동의하고 플레이어 연결을 신청한 뒤 관리자 승인을 기다립니다.</p><small>회원가입</small></Link>
+            <Link className={styles.card} href="/signup"><UserRoundPlus size={24} aria-hidden="true" /><strong>참가 계정 만들기</strong><p>약관에 동의하고 새 플레이어 계정을 만들면 자동 승인됩니다.</p><small>회원가입</small></Link>
           )}
         </div>
         <div className={styles.actions}>

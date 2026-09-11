@@ -220,7 +220,7 @@
 
 ### S01 인증·권한
 
-- 가입 → PENDING 로그인 → 승인 → APPROVED action, REJECTED 안내를 실제 DB 세션으로 검수한다.
+- 신규 플레이어 가입 → 즉시 APPROVED 로그인, 기존 플레이어 claim → PENDING 로그인 → 수동 승인, REJECTED 안내를 실제 DB 세션으로 검수한다.
 - 비밀번호 변경, 로그아웃, `authVersion` 철회, 삭제 계정, rate limit, 외부 `next`를 검수한다.
 - 관리자와 일반 사용자 세션은 같은 계정 상태 원본을 쓰되 관리자 TOTP assurance를 별도로 요구한다.
 

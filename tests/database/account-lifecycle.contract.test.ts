@@ -35,6 +35,7 @@ import { createDatabaseHandle, type V2Database } from "../../src/platform/db/dat
 import { applyMigrations } from "../../src/platform/db/migrate";
 import {
   accountMutationReceipts,
+  accountStatusHistory,
   adminTotpCredentials,
   auditEvents,
   authSessions,
@@ -466,6 +467,8 @@ test("S01 account lifecycle, recovery security, races, replay, and rollback hold
       throw new Error("New-player signup failed.");
     }
     const newAccountId = signedUp.response.account.id;
+    assert.equal(signedUp.response.account.status, "APPROVED");
+    assert.match(signedUp.response.message, /자동 승인/u);
     recursivelyAssertPublicAccount(signedUp.response.account);
     const signupEvidence = (
       await database
@@ -474,16 +477,30 @@ test("S01 account lifecycle, recovery security, races, replay, and rollback hold
         .where(eq(userAccounts.id, newAccountId))
     )[0];
     assert.deepEqual(signupEvidence, {
-      termsVersion: "terms-2026-09-01.1",
+      termsVersion: "terms-2026-09-12.1",
       privacyVersion: "privacy-2026-09-01.1",
     });
     const newLinkedPlayer = (
       await database.select().from(players).where(eq(players.userAccountId, newAccountId))
     )[0];
-    assert.equal(newLinkedPlayer?.status, "INACTIVE");
-    assert.ok(newLinkedPlayer?.accountLifecycleDeactivatedAt);
-    assert.equal(await publicPlayers.findById(newLinkedPlayer!.id), null);
-    assert.equal((await publicPlayers.search(newSignup.nickname)).length, 0);
+    assert.equal(newLinkedPlayer?.status, "ACTIVE");
+    assert.equal(newLinkedPlayer?.deactivatedAt, null);
+    assert.equal(newLinkedPlayer?.accountLifecycleDeactivatedAt, null);
+    assert.equal((await publicPlayers.findById(newLinkedPlayer!.id))?.id, newLinkedPlayer!.id);
+    assert.equal((await publicPlayers.search(newSignup.nickname)).length, 1);
+    const autoApprovalHistory = (await database.select().from(accountStatusHistory).where(and(
+      eq(accountStatusHistory.userAccountId, newAccountId),
+      eq(accountStatusHistory.action, "ACCOUNT_SIGNUP_AUTO_APPROVED"),
+    )))[0];
+    assert.equal(autoApprovalHistory?.action, "ACCOUNT_SIGNUP_AUTO_APPROVED");
+    assert.equal(autoApprovalHistory?.previousStatus, "PENDING");
+    assert.equal(autoApprovalHistory?.nextStatus, "APPROVED");
+    const autoApprovalAudit = (await database.select().from(auditEvents).where(and(
+      eq(auditEvents.targetId, newAccountId),
+      eq(auditEvents.action, "ACCOUNT_SIGNUP_AUTO_APPROVED"),
+    )))[0];
+    assert.equal(autoApprovalAudit?.afterJson?.status, "APPROVED");
+    assert.equal(autoApprovalAudit?.metadataJson?.approvalMode, "AUTOMATIC_SIGNUP");
 
     const linkedApproval: AccountStatusInput = {
       publicReason: "가입 신청이 승인되었습니다.",
@@ -491,36 +508,6 @@ test("S01 account lifecycle, recovery security, races, replay, and rollback hold
       expectedClaimId: null,
       claimOwnershipReviewed: false,
     };
-    const invalidLinkedApproval: AccountStatusInput = {
-      ...linkedApproval,
-      expectedClaimId: randomUUID(),
-      claimOwnershipReviewed: true,
-    };
-    const auditBeforeInvalidApproval = (await database.select({ value: count() }).from(auditEvents))[0]!.value;
-    const invalidApproval = await repository.changeStatus(
-      newAccountId,
-      "APPROVED",
-      invalidLinkedApproval,
-      0,
-      statusCommand(admin, newAccountId, "APPROVED", 0, invalidLinkedApproval),
-    );
-    assert.deepEqual(invalidApproval, { type: "conflict", reason: "PLAYER_CLAIM_STATE_CHANGED" });
-    assert.equal((await database.select().from(userAccounts).where(eq(userAccounts.id, newAccountId)))[0]?.status, "PENDING");
-    assert.equal((await database.select().from(players).where(eq(players.id, newLinkedPlayer!.id)))[0]?.status, "INACTIVE");
-    assert.equal((await database.select({ value: count() }).from(auditEvents))[0]!.value, auditBeforeInvalidApproval);
-    assert.equal((await database.select({ value: count() }).from(accountMutationReceipts).where(
-      eq(accountMutationReceipts.actorUserAccountId, admin.id),
-    ))[0]?.value, 0);
-    const approvedNew = await repository.changeStatus(
-      newAccountId,
-      "APPROVED",
-      linkedApproval,
-      0,
-      statusCommand(admin, newAccountId, "APPROVED", 0, linkedApproval),
-    );
-    assert.equal(approvedNew.type, "success");
-    assert.equal((await publicPlayers.findById(newLinkedPlayer!.id))?.id, newLinkedPlayer!.id);
-
     const rejectInput = {
       publicReason: "가입 정보를 다시 확인해 주세요.",
       internalReason: "합성 계약: 재검토 필요",
@@ -648,6 +635,15 @@ test("S01 account lifecycle, recovery security, races, replay, and rollback hold
       throw new Error("Claim signup failed.");
     }
     const claimAccountId = claimedSignup.response.account.id;
+    assert.equal(claimedSignup.response.account.status, "PENDING");
+    assert.match(claimedSignup.response.message, /수동 검토/u);
+    const manualClaimSignupAudit = (await database.select().from(auditEvents).where(and(
+      eq(auditEvents.targetId, claimAccountId),
+      eq(auditEvents.action, "ACCOUNT_SIGNUP_SUBMITTED"),
+    )))[0];
+    assert.equal(manualClaimSignupAudit?.afterJson?.status, "PENDING");
+    assert.equal(manualClaimSignupAudit?.metadataJson?.approvalMode, "MANUAL_PLAYER_CLAIM");
+    assert.equal(manualClaimSignupAudit?.metadataJson?.ownershipVerified, false);
     const unchangedPlayer = (
       await database.select().from(players).where(eq(players.id, existingPlayerId))
     )[0];

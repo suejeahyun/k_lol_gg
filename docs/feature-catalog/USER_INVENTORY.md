@@ -46,15 +46,15 @@
 | 항목 | V1 기능 계약 |
 |---|---|
 | 시작 URL | `/start`, `/login`, `/signup`, `/forgot-password`, `/account`, `/account/password`, `/account/tier`, `/app/login`, `/app/account`, `/app/me` |
-| 핵심 흐름 | 약관·개인정보 동의 회원가입 → 기존 Riot ID 플레이어 연결 또는 새 플레이어 생성 → `PENDING` → 관리자 승인/거절 → 로그인 → 계정·연결 플레이어·징계 과제 확인 → 비밀번호 변경 후 세션 폐기 |
+| 핵심 흐름 | 약관·개인정보 동의 회원가입 → 새 Riot ID와 신규 플레이어는 같은 transaction에서 `APPROVED`·`ACTIVE`로 자동 승인 → 기존 Riot ID 플레이어 claim은 `PENDING` 수동 검토 → 로그인 → 계정·연결 플레이어·징계 과제 확인 → 비밀번호 변경 후 세션 폐기 |
 | 권한·상태 | 로그인은 승인 상태와 무관하게 가능. 제출 기능은 `APPROVED`. 비밀번호 찾기는 계정 존재 여부를 같은 202 응답으로 숨기고 관리자 초기화 요청만 기록 |
 | 데이터 | `UserAccount`, `Player`, `UserDisciplineRecord`, `DisciplineResolutionTask`, `AdminLog`, `RateLimitLog` |
-| 중요 상태 | `PENDING`, `APPROVED`, `REJECTED`; 삭제 계정; `authVersion` 불일치; 연결 플레이어 없음 |
+| 중요 상태 | 신규 플레이어 자동 `APPROVED`; 기존 플레이어 claim `PENDING`; `REJECTED`, `SUSPENDED`; 삭제 계정; `authVersion` 불일치; 연결 플레이어 없음 |
 | V1 근거 | `src/app/(user)/start/page.tsx`, `src/app/(user)/account/**`, `src/app/app/{login,account,me}/page.tsx`, `src/app/api/auth/**`, `src/lib/auth/**` |
 
 V2 수용 기준:
 
-1. 회원가입 중복 아이디/Riot ID, 약관 미동의, 길이 오류, 성공 후 승인 대기를 각각 검증한다.
+1. 회원가입 중복 아이디/Riot ID, 약관 미동의, 길이 오류, 신규 플레이어 자동 승인과 기존 플레이어 claim 승인 대기를 각각 검증한다.
 2. 로그인 실패 응답은 계정 존재·삭제·비밀번호 오류를 구분해 노출하지 않는다.
 3. 계정 상태나 `authVersion`이 바뀌면 기존 세션은 다음 요청부터 거부된다.
 4. `/account`는 ready, 연결 플레이어 없음, 징계 과제 없음, 오류 상태를 갖는다.
@@ -232,7 +232,7 @@ V2 원칙:
 | `/api/auth/me` | GET | PUBLIC, 없으면 null·있으면 안전한 세션 DTO | 유지 (S01) |
 | `/api/auth/password` | PATCH | SESSION, 현재 비밀번호 확인·변경·세션 폐기 | 유지 (S01) |
 | `/api/auth/password/forgot` | PATCH | PUBLIC, 동일 202 응답·관리자 reset 요청 | 유지 (S01) |
-| `/api/auth/signup` | POST | PUBLIC, 계정/플레이어 생성·승인 대기 | 유지 (S01/S02) |
+| `/api/auth/signup` | POST | PUBLIC, 신규 계정/플레이어 자동 승인·기존 플레이어 claim 수동 검토 | 유지 (S01/S02) |
 | `/api/health` | GET | PUBLIC, 최소 상태 응답 | 유지하되 DB/외부 상세 비공개 (S00) |
 | `/api/rankings` | GET | PUBLIC, 랭킹 read model | 유지 (S05) |
 | `/api/recruits` | GET | PUBLIC, 공개 구인 DTO | 유지, canonical `/api/recruits` (S09) |

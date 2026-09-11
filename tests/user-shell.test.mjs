@@ -235,6 +235,6 @@ test("가입·본인 비밀번호 변경 UI는 성공과 pagehide에서 비밀�
     assert.match(source, /window\.addEventListener\("pagehide", clearSensitiveFingerprint\)/);
     assert.match(source, /idempotency\.current = null/);
   }
-  assert.match(authForms, /if \(!response\.ok\)[\s\S]*idempotency\.current = null;[\s\S]*가입 신청이 접수되었습니다/);
+  assert.match(authForms, /if \(!response\.ok\)[\s\S]*idempotency\.current = null;[\s\S]*가입과 자동 승인이 완료되었습니다/);
   assert.match(passwordForm, /idempotency\.current = null;[\s\S]*비밀번호가 변경되었습니다/);
 });

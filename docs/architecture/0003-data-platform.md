@@ -108,7 +108,7 @@ page / route / server action
 | `login_id_normalized text UNIQUE NOT NULL` | trim + Unicode normalization + 소문자화 결과. 중복 판정은 이 값만 사용 |
 | `password_hash text NOT NULL` | algorithm/cost가 포함된 PHC 형식. 평문·복호화 가능 암호 금지 |
 | `role auth.user_role NOT NULL DEFAULT USER` | 현재 권한의 단일 원본 |
-| `status auth.account_status NOT NULL DEFAULT PENDING` | `APPROVED`만 일반 세션 사용 가능 |
+| `status auth.account_status NOT NULL DEFAULT PENDING` | DB 기본값은 fail-closed다. 가입 transaction은 새 Riot ID와 신규 플레이어를 함께 만드는 USER만 `APPROVED`로 명시하며, 기존 플레이어 claim은 `PENDING`을 유지한다. `APPROVED`만 일반 사용자 기능 사용 가능 |
 | `auth_version integer NOT NULL DEFAULT 0` | 0 이상. 전체 세션 폐기의 monotonic counter |
 | `terms_accepted_at`, `privacy_accepted_at timestamptz NULL` | 동의 시점. boolean으로 대체하지 않음 |
 | `created_at`, `updated_at timestamptz NOT NULL` | DB UTC 시각 |

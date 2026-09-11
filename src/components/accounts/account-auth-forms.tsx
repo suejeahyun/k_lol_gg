@@ -126,11 +126,11 @@ export function SignupForm() {
       });
       const body = await response.json().catch(() => null);
       if (!response.ok) {
-        setMessage({ text: safeMessage(body, "가입 신청을 처리하지 못했습니다."), tone: "error" });
+        setMessage({ text: safeMessage(body, "가입을 처리하지 못했습니다."), tone: "error" });
         return;
       }
       idempotency.current = null;
-      setMessage({ text: safeMessage(body, "가입 신청이 접수되었습니다."), tone: "success" });
+      setMessage({ text: safeMessage(body, "가입과 자동 승인이 완료되었습니다."), tone: "success" });
       form.reset();
       window.setTimeout(() => router.push("/login"), 900);
     } catch {
@@ -148,8 +148,8 @@ export function SignupForm() {
       <label className={styles.field}>Riot ID<input name="riotId" placeholder="GameName#TAG" autoComplete="off" minLength={3} maxLength={97} required /><small>기존 플레이어와 일치하면 즉시 연결하지 않고 관리자 수동 검토를 거칩니다.</small></label>
       <label className={styles.check}><input name="termsAccepted" type="checkbox" required /><span><Link href="/terms" target="_blank">이용약관</Link>을 확인했고 계정 운영 규칙에 동의합니다.</span></label>
       <label className={styles.check}><input name="privacyAccepted" type="checkbox" required /><span><Link href="/privacy" target="_blank">개인정보 처리 안내</Link>에 따른 계정·회원명·Riot ID 처리에 동의합니다.</span></label>
-      <button className={styles.submit} type="submit" disabled={busy}>{busy ? "접수 중…" : "가입 신청 보내기"}</button>
-      <div className={styles.message} data-tone={message?.tone} role={message?.tone === "error" ? "alert" : "status"} aria-live="polite">{message?.text ?? "가입 신청 후 승인 전에는 계정 상태와 비밀번호만 관리할 수 있습니다."}</div>
+      <button className={styles.submit} type="submit" disabled={busy}>{busy ? "가입 중…" : "가입하기"}</button>
+      <div className={styles.message} data-tone={message?.tone} role={message?.tone === "error" ? "alert" : "status"} aria-live="polite">{message?.text ?? "새 Riot ID는 가입 즉시 승인됩니다. 기존 플레이어와 일치하면 안전한 연결을 위해 관리자 확인을 거칩니다."}</div>
       <div className={styles.links}><Link href="/login">이미 계정이 있어요</Link></div>
     </form>
   );

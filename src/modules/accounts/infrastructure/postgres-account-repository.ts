@@ -1107,6 +1107,14 @@ export class PostgresAccountRepository implements AccountRepository {
           return { type: "conflict", reason: "RIOT_ID_ALREADY_LINKED" };
         }
 
+        // A brand-new Riot identity can be activated with its new account in
+        // the same transaction. An existing unowned identity remains a manual
+        // claim so signup cannot take over another player's record.
+        const requiresManualPlayerClaim = existingPlayer !== undefined;
+        const initialAccountStatus = requiresManualPlayerClaim ? "PENDING" : "APPROVED";
+        const initialStatusReason = requiresManualPlayerClaim
+          ? "기존 플레이어 연결을 관리자에게 확인하고 있습니다."
+          : "가입과 동시에 자동 승인되었습니다.";
         const accountId = randomUUID();
         await transaction.insert(userAccounts).values({
           id: accountId,
@@ -1114,10 +1122,11 @@ export class PostgresAccountRepository implements AccountRepository {
           loginIdNormalized: input.loginIdNormalized,
           passwordHash,
           role: "USER",
-          status: "PENDING",
+          status: initialAccountStatus,
+          revision: requiresManualPlayerClaim ? 0 : 1,
           passwordChangedAt: command.now,
           statusChangedAt: command.now,
-          statusReasonPublic: "가입 신청이 접수되어 관리자 검토를 기다리고 있습니다.",
+          statusReasonPublic: initialStatusReason,
           termsAcceptedAt: command.now,
           termsVersion: ACCOUNT_TERMS_VERSION,
           privacyAcceptedAt: command.now,
@@ -1149,9 +1158,9 @@ export class PostgresAccountRepository implements AccountRepository {
             nicknameNormalized: input.nicknameNormalized,
             tagLine: input.tagLine,
             tagLineNormalized: input.tagLineNormalized,
-            status: "INACTIVE",
-            deactivatedAt: command.now,
-            accountLifecycleDeactivatedAt: command.now,
+            status: "ACTIVE",
+            deactivatedAt: null,
+            accountLifecycleDeactivatedAt: null,
             createdAt: command.now,
             updatedAt: command.now,
           });
@@ -1163,12 +1172,26 @@ export class PostgresAccountRepository implements AccountRepository {
           action: "ACCOUNT_SIGNUP_SUBMITTED",
           previousStatus: null,
           nextStatus: "PENDING",
-          publicReason: "가입 신청이 접수되어 관리자 검토를 기다리고 있습니다.",
+          publicReason: claimCreated
+            ? initialStatusReason
+            : "가입 정보가 접수되었습니다.",
           internalReason: claimCreated
             ? "기존 플레이어 식별자가 있어 소유권 수동 검토가 필요합니다."
-            : "신규 플레이어와 함께 가입 신청되었습니다.",
+            : "신규 플레이어와 함께 가입 정보가 접수되었습니다.",
           now: command.now,
         });
+        if (!claimCreated) {
+          await insertStatusHistory(transaction, {
+            actorId: accountId,
+            userAccountId: accountId,
+            action: "ACCOUNT_SIGNUP_AUTO_APPROVED",
+            previousStatus: "PENDING",
+            nextStatus: "APPROVED",
+            publicReason: initialStatusReason,
+            internalReason: "신규 플레이어 생성과 계정 자동 승인이 같은 transaction에서 완료되었습니다.",
+            now: command.now,
+          });
+        }
         await transaction.insert(auditEvents).values({
           requestId: command.requestId,
           actorUserAccountId: accountId,
@@ -1178,12 +1201,32 @@ export class PostgresAccountRepository implements AccountRepository {
           afterJson: { id: accountId, role: "USER", status: "PENDING", revision: 0 },
           metadataJson: {
             playerBinding: claimCreated ? "PENDING_MANUAL_CLAIM" : "NEW_PLAYER_CREATED",
+            approvalMode: claimCreated ? "MANUAL_PLAYER_CLAIM" : "AUTOMATIC_SIGNUP_PENDING",
             ownershipVerified: false,
             termsVersion: ACCOUNT_TERMS_VERSION,
             privacyVersion: ACCOUNT_PRIVACY_VERSION,
           },
           createdAt: command.now,
         });
+        if (!claimCreated) {
+          await transaction.insert(auditEvents).values({
+            requestId: command.requestId,
+            actorUserAccountId: accountId,
+            action: "ACCOUNT_SIGNUP_AUTO_APPROVED",
+            targetType: "USER_ACCOUNT",
+            targetId: accountId,
+            beforeJson: { id: accountId, role: "USER", status: "PENDING", revision: 0 },
+            afterJson: { id: accountId, role: "USER", status: "APPROVED", revision: 1 },
+            metadataJson: {
+              playerBinding: "NEW_PLAYER_CREATED",
+              approvalMode: "AUTOMATIC_SIGNUP",
+              ownershipVerified: false,
+              termsVersion: ACCOUNT_TERMS_VERSION,
+              privacyVersion: ACCOUNT_PRIVACY_VERSION,
+            },
+            createdAt: command.now,
+          });
+        }
 
         const dto = await accountDto(transaction, accountId);
         if (!dto) throw new Error("Signed-up account could not be reloaded.");
@@ -1193,7 +1236,7 @@ export class PostgresAccountRepository implements AccountRepository {
           response: {
             message: claimCreated
               ? "가입 신청이 접수되었습니다. 기존 플레이어 연결은 관리자 수동 검토 후 확정됩니다."
-              : "가입 신청이 접수되었습니다. 관리자 승인 후 전체 기능을 사용할 수 있습니다.",
+              : "가입과 자동 승인이 완료되었습니다. 로그인 후 서비스를 이용해 주세요.",
             account: selfDto(dto),
           },
           revision: dto.revision,
