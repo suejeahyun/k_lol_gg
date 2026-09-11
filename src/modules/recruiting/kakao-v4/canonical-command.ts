@@ -6,6 +6,7 @@ import { encodeV1StrictScrimTimeText, parseV1StrictScrimTime } from "../domain/v
 import { isOperationFormType, type OperationFormPayloadByType, type OperationFormType } from "../operation-forms/domain";
 import type { KakaoV4CommandClassification } from "./classifier";
 import { usesKakaoV1StrictResponse, type KakaoV4CommandEnvelope } from "./domain";
+import { parseKakaoV4InhouseParticipantRow } from "./inhouse-snapshot-parser";
 import { parseKakaoV4OperationForm } from "./operation-form";
 import { parsePartyForm, type ParsedPartyForm } from "./party-snapshot-parser";
 
@@ -195,17 +196,6 @@ function inhouseTemplateCommand(parameters: Readonly<Record<string, string | num
   });
 }
 
-function seasonPosition(value: string): SeasonApplicationPosition | null {
-  const token = value.trim().toUpperCase();
-  if (token === "탑" || token === "T") return "TOP";
-  if (token === "정글" || token === "JG" || token === "JUG") return "JGL";
-  if (token === "미드" || token === "MD" || token === "M") return "MID";
-  if (token === "원딜" || token === "AD" || token === "원딜러") return "ADC";
-  if (token === "서폿" || token === "서포터" || token === "S") return "SUP";
-  if (token === "올" || token === "전체" || token === "FILL") return "ALL";
-  return ["TOP", "JGL", "MID", "ADC", "SUP", "ALL"].includes(token) ? token as SeasonApplicationPosition : null;
-}
-
 function inhouseSnapshot(text: string, fallbackDate: string) {
   const normalized = text.replace(/\r\n?/gu, "\n").trim();
   const recruitNumber = Number(/^\s*📢\s*내전하실분\s*#\s*(\d{1,3})\s*$/mu.exec(normalized)?.[1] ?? 0);
@@ -225,29 +215,13 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
   const slots = new Set<number>();
   const participants: KakaoV4SeasonParticipant[] = [];
   for (const line of normalized.split("\n")) {
-    const row = /^\s*(\d{1,2})\s*[.)]\s*(.*?)\s*$/u.exec(line);
-    if (!row) continue;
-    const slotNo = Number(row[1]);
+    const row = parseKakaoV4InhouseParticipantRow(line, mode);
+    if (!row.matched) continue;
+    const slotNo = row.slotNo;
     if (slotNo < 1 || slotNo > capacity || slots.has(slotNo)) return null;
     slots.add(slotNo);
-    if (!row[2]) continue;
-    const fields = row[2].split("/").map((field) => field.trim());
-    if (!fields[0] || (mode === "RIFT" && fields.length < 4)) return null;
-    const mainPosition = mode === "RIFT" ? seasonPosition(fields[3] ?? "") : "ALL";
-    if (!mainPosition) return null;
-    const subPositions = mode === "RIFT"
-      ? fields.slice(4).flatMap((field) => field.split(/[,，]/u)).map(seasonPosition).filter((position): position is SeasonApplicationPosition => Boolean(position && position !== "ALL" && position !== mainPosition))
-      : [];
-    const uniqueSubPositions = [...new Set(subPositions)];
-    if (mainPosition === "ALL" && uniqueSubPositions.length > 0) return null;
-    participants.push(Object.freeze({
-      slotNo,
-      name: fields[0],
-      riotId: null,
-      mainPosition,
-      subPositions: Object.freeze(uniqueSubPositions),
-      reserve: /(?:예비|대기)/u.test(row[2]),
-    }));
+    if (!row.valid) return null;
+    if (row.participant) participants.push(row.participant);
   }
   if (slots.size !== capacity) return null;
   return Object.freeze({
