@@ -201,11 +201,21 @@ const provenance = [
 const entry = [
   "function response(room, msg, sender, isGroupChat, replier, imageDB, packageName, isMention, logId, channelId, userHash) {",
   "  KLOL_V1_GATEWAY.beginRequest(logId, userHash, sender);",
-  "  v1SourceResponse(room, msg, sender, isGroupChat, replier, imageDB, packageName);",
+  "  KLOL_V1_OPERATION_RAW_TEXT = String(msg || \"\");",
+  "  try {",
+  "    v1SourceResponse(room, msg, sender, isGroupChat, replier, imageDB, packageName);",
+  "  } finally {",
+  "    KLOL_V1_OPERATION_RAW_TEXT = \"\";",
+  "  }",
   "}",
   "response.__kakaoBotEntryPoint = true;"
 ].join("\n");
-const output = `${provenance}\n\n${transport}\n\n${adapter}\n\n${extracted.join("\n\n")}\n\n${entry}\n`;
+const operationCandidateBinding = [
+  "/* Preserve the byte-derived completion predicate for diagnostics, but route candidates to V4. */",
+  "var isOperationFormCompleteMessage = isOperationFormMessage;",
+  "isOperationFormMessage = isOperationFormCandidateMessage;",
+].join("\n");
+const output = `${provenance}\n\n${transport}\n\n${adapter}\n\n${extracted.join("\n\n")}\n\n${operationCandidateBinding}\n\n${entry}\n`;
 const program = acorn.parse(output, {
   ecmaVersion: 5,
   allowReserved: true,
@@ -228,6 +238,12 @@ const bannedTransport = [
 if (responseCount !== 1) throw new Error("V1-strict output must define exactly one response callback");
 if (connectCount !== 1) throw new Error("V1-strict output must contain exactly one HTTP boundary");
 if (!output.includes(".timeout(5000)")) throw new Error("V1-strict transport must use the five-second timeout");
+if (!output.includes("var isOperationFormCompleteMessage = isOperationFormMessage;")) {
+  throw new Error("V1-strict output must preserve the operation-form completion predicate");
+}
+if (!output.includes("isOperationFormMessage = isOperationFormCandidateMessage;")) {
+  throw new Error("V1-strict output must route incomplete operation-form candidates");
+}
 if (output.length >= 65_535) throw new Error("V1-strict output exceeds MessengerBot R's 65,535-character limit");
 if (Math.max(...output.split("\n").map((line) => line.length)) > 1_000) {
   throw new Error("V1-strict output contains an unreadably long line");

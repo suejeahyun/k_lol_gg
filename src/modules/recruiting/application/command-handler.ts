@@ -2,6 +2,7 @@ import { canonicalIdentifier, validateBestOf, type JsonObject } from "@/modules/
 
 import {
   createRecruitParty,
+  mergeRecruitPartySlotPatches,
   syncScrimRecruit,
   syncRecruitParty,
   transitionRecruitParty,
@@ -245,7 +246,7 @@ function scrimSnapshot(scrim: ScrimRecruit | null): JsonObject | null {
 
 function partyJson(party: RecruitParty): JsonObject {
   const dto = toPublicPartyDto(party);
-  return { id: dto.id, recruitNumber: dto.recruitNumber, type: dto.type, status: dto.status, title: dto.title, memberCount: dto.memberCount, maximumMembers: dto.maximumMembers, startTimeText: dto.startTimeText, gameInfo: dto.gameInfo, scheduledStartAt: dto.scheduledStartAt };
+  return { id: dto.id, recruitNumber: dto.recruitNumber, type: dto.type, status: dto.status, title: dto.title, memberCount: dto.memberCount, reserveCount: party.members.filter((member) => member.substitute).length, maximumMembers: dto.maximumMembers, startTimeText: dto.startTimeText, gameInfo: dto.gameInfo, scheduledStartAt: dto.scheduledStartAt };
 }
 
 function scrimJson(scrim: ScrimRecruit): JsonObject {
@@ -377,7 +378,8 @@ export class RecruitingCommandHandler {
     const data = partyCommand ? partyJson(nextParty!) : scrimJson(nextScrim!);
     const body: RecruitMutationBody = { aggregateKind: partyCommand ? "PARTY" : "SCRIM", aggregateId: next.id, revision: next.revision, status: next.status, commandType: command.type, data };
     const nowIso = now.toISOString();
-    if (!STATUS_TYPES.has(command.type)) {
+    const mutationApplied = !STATUS_TYPES.has(command.type) && (create || current!.revision !== next.revision);
+    if (mutationApplied) {
       if (partyCommand) await this.dependencies.repository.saveParty(transaction, { party: nextParty!, expectedRevision: command.metadata.expectedRevision, create });
       else await this.dependencies.repository.saveScrim(transaction, { scrim: nextScrim!, expectedRevision: command.metadata.expectedRevision, create });
       const audit: RecruitingAuditEvent = { requestId: command.metadata.requestId, actorPrincipalId: command.metadata.actor.principalId, action: `RECRUITING_${command.type}`, targetType: partyCommand ? "RECRUIT_PARTY" : "SCRIM_RECRUIT", targetId: next.id, before: partyCommand ? partySnapshot(party) : scrimSnapshot(scrim), after: partyCommand ? partySnapshot(nextParty)! : scrimSnapshot(nextScrim)!, occurredAt: nowIso };
@@ -415,9 +417,13 @@ function sync(command: Extract<RecruitingCommand, { type: "SYNC_PARTY" }>, party
   return syncRecruitParty({
     party,
     expectedRevision: command.metadata.expectedRevision,
-    members: command.payload.members,
+    members: command.payload.slotPatches
+      ? mergeRecruitPartySlotPatches(party, command.payload.slotPatches)
+      : command.payload.members,
     startTimeText: command.payload.startTimeText,
+    startTimeState: command.payload.startTimeState,
     gameInfo: command.payload.gameInfo,
+    gameInfoState: command.payload.gameInfoState,
     scheduledStartAt: command.payload.scheduledStartAt === undefined
       ? undefined
       : parseDate(command.payload.scheduledStartAt, "scheduledStartAt"),

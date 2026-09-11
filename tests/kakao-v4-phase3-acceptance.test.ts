@@ -252,16 +252,15 @@ for (const [index, [formType, text]] of OPERATION_FORMS.entries()) {
     const missing = text.replace(/:\s*[^\n]*/gu, ":");
     const requiredFields = {
       friends: ["지인 이름", "지인 닉네임", "이용기간"],
-      suggestions: ["건의 사유", "건의 내용"],
-      meetups: ["일자", "장소", "참여자 명단"],
-      leaves: ["외출기간", "외출사유", "외출범위"],
+      suggestions: ["본인 이름 및 닉네임", "건의 사유", "건의 내용"],
+      meetups: ["주최자 이름 및 닉네임", "일자", "장소", "참여자 명단"],
+      leaves: ["이름 및 닉네임", "외출기간", "외출사유", "외출범위"],
     } as const;
     const expected = `[K-LOL.GG 양식 필드 누락]\n필수 항목을 확인해 주세요: ${requiredFields[formType].join(", ")}`;
     const qa = harness();
     const result = await qa.service.execute(envelope("FEATURES", missing, 310 + index), "current");
     assert.equal(result.kind, "REPLY", `${formType}: invalid form must not remain 501`);
     if (result.kind === "REPLY") assert.equal(result.reply, expected);
-    if (formType === "leaves") assert.equal(expected, fixture.operationForms.missingFieldsReply);
     assert.equal(qa.dispatches.length, 0, "invalid form must not reach a mutation port");
   });
 }

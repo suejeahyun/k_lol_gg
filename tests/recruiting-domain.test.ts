@@ -9,6 +9,7 @@ import {
   kakaoRoomOwnsRecruitAggregate,
   kakaoSenderControlsRecruitAggregate,
   kakaoRecruitCommandAccess,
+  mergeRecruitPartySlotPatches,
   shouldAutoFinishRecruit,
   syncScrimRecruit,
   syncRecruitParty,
@@ -39,7 +40,7 @@ test("KST recruit display time is stable across midnight", () => {
   assert.equal(kakaoRecruitTimeText(new Date("2026-09-07T15:00:00.000Z")), "00:00");
 });
 
-test("party metadata defaults on the server clock and preserves free text on sync", () => {
+test("party metadata distinguishes absent preservation from explicit empty defaults", () => {
   const created = createRecruitParty({
     id: "party-meta", recruitDate: "2026-09-08", resetSequence: 0, recruitNumber: 9,
     type: "FLEX_RANK", title: "자랭 모집", maximumMembers: 5,
@@ -48,16 +49,34 @@ test("party metadata defaults on the server clock and preserves free text on syn
   assert.equal(created.startTimeText, "00:00");
   assert.equal(created.gameInfo, "미입력");
 
-  const preserved = syncRecruitParty({ party: created, expectedRevision: 0, members: [], startTimeText: null, gameInfo: null, now });
+  const preserved = syncRecruitParty({ party: created, expectedRevision: 0, members: [], now });
   assert.equal(preserved.startTimeText, "00:00");
   assert.equal(preserved.gameInfo, "미입력");
+  assert.equal(preserved.revision, 0);
+
+  const legacyNull = syncRecruitParty({ party: preserved, expectedRevision: 0, members: [], startTimeText: null, gameInfo: null, now });
+  assert.strictEqual(legacyNull, preserved);
+
+  const cleared = syncRecruitParty({
+    party: preserved, expectedRevision: 0, members: [], startTimeText: null, startTimeState: "PRESENT_EMPTY",
+    gameInfo: null, gameInfoState: "PRESENT_EMPTY", now,
+  });
+  assert.equal(cleared.startTimeText, "미정");
+  assert.equal(cleared.gameInfo, "미입력");
 
   const populated = syncRecruitParty({
-    party: preserved, expectedRevision: 1, members: [], startTimeText: "모이면", gameInfo: "일겜or자랭", now,
+    party: cleared, expectedRevision: 1, members: [], startTimeText: "모이면", gameInfo: "일겜or자랭", now,
   });
   assert.equal(populated.startTimeText, "모이면");
   assert.equal(populated.gameInfo, "일겜or자랭");
   assert.equal(populated.scheduledStartAt, null);
+
+  const resetToDefaults = syncRecruitParty({
+    party: populated, expectedRevision: 2, members: [], startTimeText: null, startTimeState: "PRESENT_EMPTY",
+    gameInfo: null, gameInfoState: "PRESENT_EMPTY", now,
+  });
+  assert.equal(resetToDefaults.startTimeText, "미정");
+  assert.equal(resetToDefaults.gameInfo, "미입력");
 });
 
 test("a Kakao V4 number reservation stays draft until the completed V1 form activates it", () => {
@@ -75,6 +94,53 @@ test("a Kakao V4 number reservation stays draft until the completed V1 form acti
   assert.equal(activated.members[0]?.name, "재현");
   assert.equal(activated.startTimeText, "00:34");
   assert.equal(activated.gameInfo, "미입력");
+  assert.throws(() => syncRecruitParty({ party: reserved, expectedRevision: 0, now: submittedAt, members: [] }), /EMPTY_DRAFT_ACTIVATION/);
+
+  const explicitEmptyMetadata = syncRecruitParty({
+    party: reserved, expectedRevision: 0, now: submittedAt,
+    members: [{ name: "재현", position: null, slotNo: 1, substitute: false }],
+    startTimeText: null, startTimeState: "PRESENT_EMPTY", gameInfo: null, gameInfoState: "PRESENT_EMPTY",
+  });
+  assert.equal(explicitEmptyMetadata.startTimeText, "00:34");
+  assert.equal(explicitEmptyMetadata.gameInfo, "미입력");
+});
+
+test("party slot patches use stored type and capacity while preserving absent and deleting explicit empty slots", () => {
+  const stored = createRecruitParty({
+    id: "party-patch", recruitDate: "2026-09-08", resetSequence: 0, recruitNumber: 13,
+    type: "FLEX_RANK", title: "DB 자랭 모집", maximumMembers: 5, now,
+    members: [
+      { name: "기존탑", position: "TOP", slotNo: 1, substitute: false },
+      { name: "기존정글", position: "JGL", slotNo: 2, substitute: false },
+      { name: "기존예비", position: null, slotNo: 1, substitute: true },
+    ],
+  });
+  const merged = mergeRecruitPartySlotPatches(stored, [
+    { slotNo: 1, substitute: false, state: "PRESENT_EMPTY", value: null },
+    { slotNo: 2, substitute: false, state: "ABSENT", value: null },
+    { slotNo: 3, substitute: false, state: "PRESENT_VALUE", value: "새미드" },
+    { slotNo: 1, substitute: true, state: "PRESENT_EMPTY", value: null },
+  ]);
+  assert.deepEqual(merged, [
+    { name: "기존정글", position: "JGL", slotNo: 2, substitute: false },
+    { slotNo: 3, name: "새미드", position: "MID", substitute: false },
+  ]);
+  const synced = syncRecruitParty({ party: stored, expectedRevision: 0, members: merged, now });
+  assert.equal(synced.type, "FLEX_RANK");
+  assert.equal(synced.title, "DB 자랭 모집");
+  assert.equal(synced.maximumMembers, 5);
+});
+
+test("canonical party sync returns the stored aggregate without increasing revision", () => {
+  const stored = createRecruitParty({
+    id: "party-noop", recruitDate: "2026-09-08", resetSequence: 0, recruitNumber: 14,
+    type: "PARTY_NUMBER", title: "2인 파티", maximumMembers: 2, now,
+    members: [{ name: "동일", position: null, slotNo: 1, substitute: false }],
+  });
+  const result = syncRecruitParty({ party: stored, expectedRevision: 0, members: [...stored.members], now: new Date(now.getTime() + 60_000) });
+  assert.strictEqual(result, stored);
+  assert.equal(result.revision, 0);
+  assert.equal(result.lastActivityAt, stored.lastActivityAt);
 });
 
 test("request fingerprint is canonical and binds actor, action, key and body", () => {

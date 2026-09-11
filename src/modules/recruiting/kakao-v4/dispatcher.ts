@@ -692,8 +692,16 @@ export class KakaoV4CommandDispatcher {
             metadata: commandMetadata(context, target.revision),
             payload: {
               members: command.payload.members,
+              slotPatches: command.payload.parsedForm?.slots.map((slot) => ({
+                slotNo: slot.slotNo,
+                substitute: slot.kind === "RESERVE",
+                state: slot.state,
+                value: slot.value,
+              })),
               startTimeText: command.payload.startTimeText,
+              startTimeState: command.payload.parsedForm?.startTime.state,
               gameInfo: command.payload.gameInfo,
+              gameInfoState: command.payload.parsedForm?.gameInfo.state,
               scheduledStartAt: command.payload.scheduledStartAt,
             },
           })
@@ -716,16 +724,28 @@ export class KakaoV4CommandDispatcher {
             },
           });
     }
-    const result = await this.dependencies.recruiting.handle(recruitingCommand);
+    let result: RecruitingCommandResult;
+    try {
+      result = await this.dependencies.recruiting.handle(recruitingCommand);
+    } catch (error) {
+      if (error instanceof Error && error.message === "EMPTY_DRAFT_ACTIVATION") {
+        throw new KakaoV4DispatcherError("INVALID_FORM");
+      }
+      throw error;
+    }
     const data = result.body.data;
     const recruitNumber = typeof data.recruitNumber === "number" ? data.recruitNumber : null;
     if (recruitNumber === null) throw new KakaoV4DispatcherError("UNAVAILABLE");
-    const primaryCount = command.action === "FINISH" ? 0 : command.payload.members.filter((member) => !member.substitute).length;
-    const reserveCount = command.action === "FINISH" ? 0 : command.payload.members.length - primaryCount;
+    const primaryCount = command.action === "FINISH" ? 0 : Number(data.memberCount);
+    const reserveCount = command.action === "FINISH" ? 0 : Number(data.reserveCount ?? 0);
+    const replyMembers = [
+      ...Array.from({ length: primaryCount }, () => ({ substitute: false })),
+      ...Array.from({ length: reserveCount }, () => ({ substitute: true })),
+    ];
     const legacyReply = command.action === "FINISH"
         ? `[K-LOL.GG 파티 #${String(recruitNumber)}]\n모집을 마감했습니다.`
         : v1Strict
-          ? v1StrictPartySyncReply(recruitNumber, Number(data.maximumMembers), command.payload.members)
+          ? v1StrictPartySyncReply(recruitNumber, Number(data.maximumMembers), replyMembers)
           : [
             `[파티 #${String(recruitNumber)} 반영]`,
             `${String(primaryCount)}/${String(data.maximumMembers)} · 예비 ${String(reserveCount)}명`,

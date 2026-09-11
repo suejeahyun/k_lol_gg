@@ -67,10 +67,12 @@ function openStatus(): KakaoOpenChatStatusDto {
 
 function mutationResult(command: RecruitingCommand): RecruitingCommandResult {
   const party = command.type.includes("PARTY");
+  const partyMembers = command.type === "SYNC_PARTY" || command.type === "CREATE_PARTY" ? command.payload.members : [];
   const data: RecruitingCommandResult["body"]["data"] = party ? {
     id: command.aggregateId, recruitNumber: command.type === "CREATE_PARTY" ? 8 : 7,
     type: "PARTY_NUMBER", status: command.type === "FINISH_PARTY" ? "FINISHED" : "IN_PROGRESS",
-    title: "5인 파티", memberCount: command.type === "SYNC_PARTY" ? command.payload.members.length : 0,
+    title: "5인 파티", memberCount: partyMembers.filter((member) => !member.substitute).length,
+    reserveCount: partyMembers.filter((member) => member.substitute).length,
     maximumMembers: 5, startTimeText: "09:26", gameInfo: "미입력", scheduledStartAt: null,
   } : {
     id: command.aggregateId, recruitDate: "2026-09-10", scrimNumber: 3,
@@ -316,6 +318,25 @@ test("explicit missing party number never falls back to creating a new party", a
     },
   }), (error: unknown) => error instanceof KakaoV4DispatcherError && error.code === "NOT_FOUND");
   assert.equal(state.handled.length, 0);
+});
+
+test("existing party snapshots forward slot states without forwarding submitted type or capacity", async () => {
+  const state = harness();
+  const text = "[K-LOL.GG 구인구직 양식]\n📢 2인 파티 구인\n모집번호: #7\n\n1. 새참가자\n2.\n예비 1.";
+  const classification = classifyKakaoV4Command({ profileId: "RECRUIT", text });
+  const command = canonicalizeKakaoV4Command(classification, { ...context.envelope, text, eventId: "event-dispatcher-db-authority-01" });
+  if (!command || command.domain !== "PARTY" || command.action !== "SYNC") assert.fail("expected exact party snapshot");
+  await state.dispatcher.dispatch({ ...context, envelope: { ...context.envelope, text, eventId: "event-dispatcher-db-authority-01" } }, command);
+  const handled = state.handled[0];
+  if (handled?.type !== "SYNC_PARTY") assert.fail("expected party sync");
+  assert.equal("partyType" in handled.payload, false);
+  assert.equal("title" in handled.payload, false);
+  assert.equal("maximumMembers" in handled.payload, false);
+  assert.deepEqual(handled.payload.slotPatches, [
+    { slotNo: 1, substitute: false, state: "PRESENT_VALUE", value: "새참가자" },
+    { slotNo: 2, substitute: false, state: "PRESENT_EMPTY", value: null },
+    { slotNo: 1, substitute: true, state: "PRESENT_EMPTY", value: null },
+  ]);
 });
 
 test("party status and detail use one server status receipt and return the latest aggregate", async () => {

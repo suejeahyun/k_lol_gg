@@ -1,41 +1,27 @@
 import type { OperationFormPayloadByType, OperationFormType } from "../operation-forms/domain";
+import { normalizeKakaoV4OperationFormText, parseKakaoV4OperationFormFieldMap } from "./operation-form-parser";
+
+export type KakaoV4OperationFormDiagnostic = Readonly<{
+  code: "CONFLICTING_DUPLICATE_FIELD";
+  fieldLabel: string;
+  occurrenceCount: number;
+}>;
 
 export type KakaoV4OperationFormParseResult =
   | Readonly<{ valid: true; formType: OperationFormType; payload: OperationFormPayloadByType[OperationFormType] }>
-  | Readonly<{ valid: false; formType: OperationFormType; missingFields: readonly string[] }>;
+  | Readonly<{
+      valid: false;
+      formType: OperationFormType;
+      missingFields: readonly string[];
+      diagnostics?: readonly KakaoV4OperationFormDiagnostic[];
+    }>;
 
 function normalizeText(value: string) {
-  return value.normalize("NFKC").replace(/\r\n?/gu, "\n").replace(/[–—]/gu, "-").replace(/\n{4,}/gu, "\n\n\n");
-}
-
-function stripFieldPrefix(line: string) {
-  return line.trim().replace(/^\d+\s*[.)]\s*/u, "");
+  return normalizeKakaoV4OperationFormText(value);
 }
 
 function canonical(value: string) {
   return value.trim().replace(/\s+/gu, "").replace(/[.:()\[\]{}<>·ㆍ,/\\_-]/gu, "");
-}
-
-function startsWithLabel(line: string, label: string) {
-  return canonical(stripFieldPrefix(line)).startsWith(canonical(label));
-}
-
-function readField(text: string, label: string, nextLabels: readonly string[]) {
-  const lines = normalizeText(text).split("\n");
-  let startIndex = -1;
-  for (let index = 0; index < lines.length; index += 1) {
-    if (startsWithLabel(lines[index]!, label)) startIndex = index;
-  }
-  if (startIndex < 0) return "";
-  const labelPattern = label.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&").replace(/\s+/gu, "\\s*");
-  const labelRegex = new RegExp(`^\\s*${labelPattern}\\s*[:：]?\\s*`, "iu");
-  const output = [stripFieldPrefix(lines[startIndex]!).replace(labelRegex, "").trim()];
-  for (let index = startIndex + 1; index < lines.length; index += 1) {
-    const line = stripFieldPrefix(lines[index]!);
-    if (nextLabels.some((nextLabel) => startsWithLabel(line, nextLabel))) break;
-    output.push(line);
-  }
-  return output.join("\n").trim();
 }
 
 function cleanField(value: string, maximum: number) {
@@ -56,9 +42,11 @@ function safeText(value: string, maximum: number) {
 function splitPerson(value: string, fallback: string) {
   const cleaned = cleanField(value, 180);
   const backup = safeText(fallback, 100) || "카카오 사용자";
-  const parts = cleaned ? cleaned.split(/\s*(?:\/|\||,|·)\s*/u) : [];
-  const name = safeText(parts[0] ?? backup, 100) || backup.slice(0, 100);
-  const nickname = safeText(parts[1] ?? parts[0] ?? backup, 64) || backup.slice(0, 64);
+  const separatorIndex = cleaned.search(/[\/|]/u);
+  const explicitName = separatorIndex >= 0 ? cleaned.slice(0, separatorIndex) : cleaned;
+  const explicitNickname = separatorIndex >= 0 ? cleaned.slice(separatorIndex + 1) : cleaned;
+  const name = safeText(explicitName || backup, 100) || backup.slice(0, 100);
+  const nickname = safeText(explicitNickname || explicitName || backup, 64) || backup.slice(0, 64);
   return { name, nickname };
 }
 
@@ -102,7 +90,8 @@ function parsePeriod(value: string) {
 function scopeFromText(value: string) {
   const normalized = normalizeText(value);
   const withoutChoices = normalized.replace(/^\s*[（(][^）)]*[）)]\s*/u, "");
-  const selectedValue = withoutChoices.trim() ? withoutChoices : normalized;
+  const cleanedSelection = cleanField(withoutChoices, 160);
+  const selectedValue = cleanedSelection || (withoutChoices.trim() ? withoutChoices : normalized);
   const compact = selectedValue.replace(/\s+/gu, "");
   const selected: string[] = [];
   if (/소통방/u.test(compact)) selected.push("소통방");
@@ -111,8 +100,17 @@ function scopeFromText(value: string) {
   return selected.length > 0 ? selected.join(", ") : cleanField(selectedValue, 160);
 }
 
-function invalid(formType: OperationFormType, missingFields: readonly string[]): KakaoV4OperationFormParseResult {
-  return Object.freeze({ valid: false as const, formType, missingFields: Object.freeze([...missingFields]) });
+function invalid(
+  formType: OperationFormType,
+  missingFields: readonly string[],
+  diagnostics: readonly KakaoV4OperationFormDiagnostic[],
+): KakaoV4OperationFormParseResult {
+  return Object.freeze({
+    valid: false as const,
+    formType,
+    missingFields: Object.freeze([...new Set([...missingFields, ...diagnostics.map((item) => item.fieldLabel)])]),
+    ...(diagnostics.length > 0 ? { diagnostics: Object.freeze([...diagnostics]) } : {}),
+  });
 }
 
 export function parseKakaoV4OperationForm(input: Readonly<{
@@ -121,45 +119,67 @@ export function parseKakaoV4OperationForm(input: Readonly<{
   senderFallback: string;
 }>): KakaoV4OperationFormParseResult {
   const text = normalizeText(input.text).trim();
+  const fieldMap = parseKakaoV4OperationFormFieldMap({ formType: input.formType, text });
+  const diagnostics: KakaoV4OperationFormDiagnostic[] = [];
+  const readField = (label: string, maximum: number) => {
+    const occurrences = (fieldMap.fields[label] ?? []).map((value) => cleanField(value, maximum));
+    const unique = [...new Set(occurrences)];
+    if (unique.length > 1) diagnostics.push(Object.freeze({
+      code: "CONFLICTING_DUPLICATE_FIELD" as const,
+      fieldLabel: label,
+      occurrenceCount: occurrences.length,
+    }));
+    return unique.length === 1 ? unique[0]! : "";
+  };
+  const readRawField = (label: string) => {
+    const occurrences = (fieldMap.fields[label] ?? []).map((value) => normalizeText(value).trim());
+    const unique = [...new Set(occurrences)];
+    if (unique.length > 1) diagnostics.push(Object.freeze({
+      code: "CONFLICTING_DUPLICATE_FIELD" as const,
+      fieldLabel: label,
+      occurrenceCount: occurrences.length,
+    }));
+    return unique.length === 1 ? unique[0]! : "";
+  };
   if (input.formType === "friends") {
     const person = splitPerson("", input.senderFallback);
-    const friendName = cleanField(readField(text, "지인 이름", ["지인 닉네임", "이용기간", "디스코드 닉네임 변경"]), 100);
-    const friendNickname = cleanField(readField(text, "지인 닉네임", ["이용기간", "디스코드 닉네임 변경"]), 64);
-    const usagePeriod = cleanField(readField(text, "이용기간", ["디스코드 닉네임 변경"]), 160);
-    const discordNicknameChange = cleanField(readField(text, "디스코드 닉네임 변경", []), 40);
+    const friendName = readField("지인 이름", 100);
+    const friendNickname = readField("지인 닉네임", 64);
+    const usagePeriod = readField("이용기간", 160);
+    const discordNicknameChange = readField("디스코드 닉네임 변경", 40);
     const missing = [!friendName && "지인 이름", !friendNickname && "지인 닉네임", !usagePeriod && "이용기간"].filter(Boolean) as string[];
-    if (missing.length > 0) return invalid(input.formType, missing);
+    if (missing.length > 0 || diagnostics.length > 0) return invalid(input.formType, missing, diagnostics);
     return Object.freeze({ valid: true as const, formType: input.formType, payload: Object.freeze({
       applicantName: person.name, applicantNickname: person.nickname, friendName, friendNickname,
       usagePeriod, discordNicknameChange: booleanFromText(discordNicknameChange),
     }) });
   }
   if (input.formType === "suggestions") {
-    const personText = cleanField(readField(text, "본인 이름 및 닉네임", ["건의 사유", "건의 내용"]), 180);
+    const personText = readField("본인 이름 및 닉네임", 180);
     const person = splitPerson(personText, input.senderFallback);
-    const reason = cleanField(readField(text, "건의 사유", ["건의 내용"]), 500);
-    const content = cleanField(readField(text, "건의 내용", []), 4_000);
-    const missing = [!reason && "건의 사유", !content && "건의 내용"].filter(Boolean) as string[];
-    if (missing.length > 0) return invalid(input.formType, missing);
+    const reason = readField("건의 사유", 500);
+    const content = readField("건의 내용", 4_000);
+    const missing = [!personText && "본인 이름 및 닉네임", !reason && "건의 사유", !content && "건의 내용"].filter(Boolean) as string[];
+    if (missing.length > 0 || diagnostics.length > 0) return invalid(input.formType, missing, diagnostics);
     return Object.freeze({ valid: true as const, formType: input.formType, payload: Object.freeze({ applicantName: person.name, applicantNickname: person.nickname, reason, content }) });
   }
   if (input.formType === "meetups") {
-    const personText = cleanField(readField(text, "주최자 이름 및 닉네임", ["일자", "장소", "참여자 명단"]), 180);
+    const personText = readField("주최자 이름 및 닉네임", 180);
     const person = splitPerson(personText, input.senderFallback);
-    const legacyDateText = cleanField(readField(text, "일자", ["장소", "참여자 명단"]), 160);
-    const location = cleanField(readField(text, "장소", ["참여자 명단"]), 240);
-    const participants = participantsFromText(readField(text, "참여자 명단", []));
-    const missing = [!legacyDateText && "일자", !location && "장소", participants.length < 1 && "참여자 명단"].filter(Boolean) as string[];
-    if (missing.length > 0) return invalid(input.formType, missing);
+    const legacyDateText = readField("일자", 160);
+    const location = readField("장소", 240);
+    const participants = participantsFromText(readField("참여자 명단", 4_000));
+    const missing = [!personText && "주최자 이름 및 닉네임", !legacyDateText && "일자", !location && "장소", participants.length < 1 && "참여자 명단"].filter(Boolean) as string[];
+    if (missing.length > 0 || diagnostics.length > 0) return invalid(input.formType, missing, diagnostics);
     return Object.freeze({ valid: true as const, formType: input.formType, payload: Object.freeze({ hostName: person.name, hostNickname: person.nickname, meetupAt: null, legacyDateText, location, participants }) });
   }
-  const personText = cleanField(readField(text, "이름 및 닉네임", ["외출기간", "외출사유", "외출범위"]), 180);
+  const personText = readField("이름 및 닉네임", 180);
   const person = splitPerson(personText, input.senderFallback);
-  const period = parsePeriod(readField(text, "외출기간", ["외출사유", "외출범위"]));
-  const reason = cleanField(readField(text, "외출사유", ["외출범위"]), 1_000);
-  const scope = scopeFromText(readField(text, "외출범위", []));
-  const missing = [!period && "외출기간", !reason && "외출사유", !scope && "외출범위"].filter(Boolean) as string[];
-  if (missing.length > 0) return invalid(input.formType, missing);
+  const period = parsePeriod(readField("외출기간", 160));
+  const reason = readField("외출사유", 1_000);
+  const scope = scopeFromText(readRawField("외출범위"));
+  const missing = [!personText && "이름 및 닉네임", !period && "외출기간", !reason && "외출사유", !scope && "외출범위"].filter(Boolean) as string[];
+  if (missing.length > 0 || diagnostics.length > 0) return invalid(input.formType, missing, diagnostics);
   return Object.freeze({ valid: true as const, formType: input.formType, payload: Object.freeze({
     applicantName: person.name, applicantNickname: person.nickname,
     periodStart: period!.periodStart, periodEnd: period!.periodEnd,

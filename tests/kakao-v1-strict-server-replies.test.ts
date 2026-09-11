@@ -97,6 +97,7 @@ function mutationResult(command: RecruitingCommand): RecruitingCommandResult {
         status: command.type === "FINISH_PARTY" ? "FINISHED" : "IN_PROGRESS",
         title: "5인 파티 구인",
         memberCount: command.type === "SYNC_PARTY" ? command.payload.members.filter((member) => !member.substitute).length : 0,
+        reserveCount: command.type === "SYNC_PARTY" ? command.payload.members.filter((member) => member.substitute).length : 0,
         maximumMembers: 5,
         startTimeText: "09:26",
         gameInfo: "미입력",

@@ -23,6 +23,15 @@ export type RecruitMember = Readonly<{
   substitute: boolean;
 }>;
 
+export type RecruitPartyPatchState = "PRESENT_VALUE" | "PRESENT_EMPTY" | "ABSENT";
+
+export type RecruitPartySlotPatch = Readonly<{
+  slotNo: number;
+  substitute: boolean;
+  state: RecruitPartyPatchState;
+  value: string | null;
+}>;
+
 export type ScrimLineup = Readonly<{
   top: string | null;
   jungle: string | null;
@@ -181,6 +190,47 @@ function normalizeMembers(members: readonly RecruitMember[], maximumMembers: num
   }).sort((left, right) => Number(left.substitute) - Number(right.substitute) || left.slotNo - right.slotNo || compareText(left.name, right.name));
 }
 
+const LINE_PARTY_TYPES: ReadonlySet<RecruitPartyType> = new Set(["FLEX_RANK", "NORMAL_GAME", "PARTY_RIFT"]);
+const LINE_POSITIONS: readonly RecruitPosition[] = ["TOP", "JGL", "MID", "ADC", "SUP"];
+
+/** Applies only explicitly represented form slots; absent slots retain the stored member. */
+export function mergeRecruitPartySlotPatches(
+  party: RecruitParty,
+  patches: readonly RecruitPartySlotPatch[],
+): readonly RecruitMember[] {
+  const members = new Map(party.members.map((member) => [`${member.substitute ? "SUB" : "MAIN"}:${member.slotNo}`, member]));
+  const patched = new Set<string>();
+  for (const patch of patches) {
+    if (!Number.isSafeInteger(patch.slotNo) || patch.slotNo < 1 || patch.slotNo > 99) throw new Error("INVALID_RECRUIT_SLOT");
+    if (!patch.substitute && patch.slotNo > party.maximumMembers) throw new Error("RECRUIT_CAPACITY_EXCEEDED");
+    if (!patch.substitute && LINE_PARTY_TYPES.has(party.type) && patch.slotNo > LINE_POSITIONS.length) throw new Error("INVALID_RECRUIT_SLOT");
+    const key = `${patch.substitute ? "SUB" : "MAIN"}:${patch.slotNo}`;
+    if (patched.has(key)) throw new Error("DUPLICATE_RECRUIT_SLOT");
+    patched.add(key);
+    if (patch.state === "ABSENT") continue;
+    if (patch.state === "PRESENT_EMPTY") {
+      members.delete(key);
+      continue;
+    }
+    if (patch.state !== "PRESENT_VALUE" || patch.value === null) throw new Error("INVALID_RECRUIT_MEMBER");
+    members.set(key, {
+      slotNo: patch.slotNo,
+      name: patch.value,
+      position: !patch.substitute && LINE_PARTY_TYPES.has(party.type) ? LINE_POSITIONS[patch.slotNo - 1]! : null,
+      substitute: patch.substitute,
+    });
+  }
+  return Object.freeze([...members.values()]);
+}
+
+function sameMembers(left: readonly RecruitMember[], right: readonly RecruitMember[]) {
+  return left.length === right.length && left.every((member, index) => {
+    const candidate = right[index];
+    return candidate !== undefined && member.name === candidate.name && member.position === candidate.position &&
+      member.slotNo === candidate.slotNo && member.substitute === candidate.substitute;
+  });
+}
+
 export function createRecruitParty(input: Readonly<{
   id: string;
   sourceRoomId?: string | null;
@@ -237,7 +287,9 @@ export function syncRecruitParty(input: Readonly<{
   expectedRevision: number;
   members: readonly RecruitMember[];
   startTimeText?: string | null;
+  startTimeState?: RecruitPartyPatchState;
   gameInfo?: string | null;
+  gameInfoState?: RecruitPartyPatchState;
   scheduledStartAt?: Date | null;
   now: Date;
 }>): RecruitParty {
@@ -245,18 +297,41 @@ export function syncRecruitParty(input: Readonly<{
   if (input.party.status !== "IN_PROGRESS" && input.party.status !== "DRAFT") throw new Error("RECRUIT_NOT_MUTABLE");
   validDate(input.now, "INVALID_RECRUIT_TIME");
   const activatingDraft = input.party.status === "DRAFT";
+  const members = normalizeMembers(input.members, input.party.maximumMembers);
+  if (activatingDraft && members.length === 0) throw new Error("EMPTY_DRAFT_ACTIVATION");
+  const startTimeText = input.startTimeState === "ABSENT"
+    ? activatingDraft ? kakaoRecruitTimeText(input.now) : input.party.startTimeText
+    : input.startTimeState === "PRESENT_EMPTY"
+      ? activatingDraft ? kakaoRecruitTimeText(input.now) : "미정"
+      : input.startTimeState === "PRESENT_VALUE"
+        ? cleanText(input.startTimeText ?? "", "INVALID_RECRUIT_START_TIME_TEXT", 160)
+        : optionalPartyText(input.startTimeText, "INVALID_RECRUIT_START_TIME_TEXT", 160)
+          ?? (activatingDraft ? kakaoRecruitTimeText(input.now) : input.party.startTimeText);
+  const gameInfo = input.gameInfoState === "ABSENT"
+    ? activatingDraft ? "미입력" : input.party.gameInfo
+    : input.gameInfoState === "PRESENT_EMPTY"
+      ? "미입력"
+      : input.gameInfoState === "PRESENT_VALUE"
+        ? cleanText(input.gameInfo ?? "", "INVALID_RECRUIT_GAME_INFO", 500)
+        : optionalPartyText(input.gameInfo, "INVALID_RECRUIT_GAME_INFO", 500)
+          ?? (activatingDraft ? "미입력" : input.party.gameInfo);
+  const scheduledStartAt = input.startTimeState === "ABSENT" ||
+    (input.startTimeState === undefined && (input.startTimeText === null || input.startTimeText === undefined))
+    ? input.party.scheduledStartAt
+    : input.scheduledStartAt ?? null;
+  if (
+    !activatingDraft && sameMembers(input.party.members, members) &&
+    input.party.startTimeText === startTimeText && input.party.gameInfo === gameInfo &&
+    input.party.scheduledStartAt?.getTime() === scheduledStartAt?.getTime()
+  ) return input.party;
   return {
     ...input.party,
     revision: input.party.revision + 1,
     status: "IN_PROGRESS",
-    members: normalizeMembers(input.members, input.party.maximumMembers),
-    startTimeText: optionalPartyText(input.startTimeText, "INVALID_RECRUIT_START_TIME_TEXT", 160)
-      ?? (activatingDraft ? kakaoRecruitTimeText(input.now) : input.party.startTimeText),
-    gameInfo: optionalPartyText(input.gameInfo, "INVALID_RECRUIT_GAME_INFO", 500)
-      ?? (activatingDraft ? "미입력" : input.party.gameInfo),
-    scheduledStartAt: input.startTimeText === null || input.startTimeText === undefined
-      ? input.party.scheduledStartAt
-      : input.scheduledStartAt ?? null,
+    members,
+    startTimeText,
+    gameInfo,
+    scheduledStartAt,
     lastActivityAt: input.now,
   };
 }

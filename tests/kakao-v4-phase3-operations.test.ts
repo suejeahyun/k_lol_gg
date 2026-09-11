@@ -95,7 +95,7 @@ test("four V1 operation forms become exact typed payloads", () => {
   const cases = [
     ["friends", "지인 이름: 친구\n지인 닉네임: Friend#KR1\n이용기간: 장기\n디스코드 닉네임 변경: 네"],
     ["suggestions", "본인 이름 및 닉네임: 홍길동/테스터\n건의 사유: 편의성\n건의 내용: 개선 바랍니다."],
-    ["meetups", "주최자 이름 및 닉네임:\n일자: 2026-09-10 18시\n장소: 서울\n참여자 명단:\n1. 가\n2. 나\n3. 가"],
+    ["meetups", "주최자 이름 및 닉네임: 주최자/닉\n일자: 2026-09-10 18시\n장소: 서울\n참여자 명단:\n1. 가\n2. 나\n3. 가"],
     ["leaves", "&lt;외출&gt;\n이름 및 닉네임: 신청자/닉\n외출기간: 2026-09-10 ~ 2026-09-12\n외출사유: 여행\n외출범위: (소통방, 구인방, 디코)"],
   ] as const;
   for (const [formType, text] of cases) {
@@ -144,9 +144,9 @@ test("four V1 operation forms become exact typed payloads", () => {
 test("all four forms report their exact missing fields as INVALID_FORM commands", () => {
   const cases = [
     ["지인 이름:\n지인 닉네임:\n이용기간:\n디스코드 닉네임 변경:", ["지인 이름", "지인 닉네임", "이용기간"]],
-    ["본인 이름 및 닉네임:\n건의 사유:\n건의 내용:", ["건의 사유", "건의 내용"]],
-    ["주최자 이름 및 닉네임:\n일자:\n장소:\n참여자 명단:", ["일자", "장소", "참여자 명단"]],
-    ["&lt;외출&gt;\n이름 및 닉네임:\n외출기간:\n외출사유:\n외출범위:", ["외출기간", "외출사유", "외출범위"]],
+    ["본인 이름 및 닉네임:\n건의 사유:\n건의 내용:", ["본인 이름 및 닉네임", "건의 사유", "건의 내용"]],
+    ["주최자 이름 및 닉네임:\n일자:\n장소:\n참여자 명단:", ["주최자 이름 및 닉네임", "일자", "장소", "참여자 명단"]],
+    ["&lt;외출&gt;\n이름 및 닉네임:\n외출기간:\n외출사유:\n외출범위:", ["이름 및 닉네임", "외출기간", "외출사유", "외출범위"]],
   ] as const;
   for (const [text, missingFields] of cases) {
     const command = canonical(text);

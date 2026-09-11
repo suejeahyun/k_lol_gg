@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import type { RecruitMember, RecruitPartyType, ScrimLineup } from "../domain/recruiting";
+import type { RecruitMember, RecruitPartyPatchState, RecruitPartySlotPatch, RecruitPartyType, ScrimLineup } from "../domain/recruiting";
 import type { VerifiedKakaoWebhookIntent } from "../infrastructure/kakao-signature";
 import type { TransactionSessionActor } from "@/modules/auth/domain/transaction-session";
 
@@ -54,7 +54,7 @@ type Command<Type extends string, Payload> = Readonly<{
 
 export type PartyCommand =
   | Command<"CREATE_PARTY", Readonly<{ recruitDate: string; resetSequence: number | null; recruitNumber: number | null; partyType: RecruitPartyType; title: string; maximumMembers: number; members: readonly RecruitMember[]; startTimeText?: string | null; gameInfo?: string | null; scheduledStartAt: string | null; protectedUntil: string | null; initialStatus?: "DRAFT" }>>
-  | Command<"SYNC_PARTY", Readonly<{ members: readonly RecruitMember[]; startTimeText?: string | null; gameInfo?: string | null; scheduledStartAt?: string | null }>>
+  | Command<"SYNC_PARTY", Readonly<{ members: readonly RecruitMember[]; slotPatches?: readonly RecruitPartySlotPatch[]; startTimeText?: string | null; startTimeState?: RecruitPartyPatchState; gameInfo?: string | null; gameInfoState?: RecruitPartyPatchState; scheduledStartAt?: string | null }>>
   | Command<"GET_PARTY_STATUS", Readonly<Record<string, never>>>
   | Command<"FINISH_PARTY", Readonly<Record<string, never>>>
   | Command<"CANCEL_PARTY", Readonly<Record<string, never>>>

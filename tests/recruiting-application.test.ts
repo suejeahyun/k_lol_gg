@@ -304,6 +304,18 @@ test("party create, sync, status and finish use the domain while mutations commi
   }));
   assert.equal(synced.revision, 1);
   assert.equal(synced.body.data.memberCount, 2);
+  assert.equal(synced.body.data.reserveCount, 0);
+
+  harness.operations = [];
+  const semanticNoOp = await handler.handle(command("SYNC_PARTY", "party-1", 1, {
+    members: [
+      { name: "Alpha", position: "TOP", slotNo: 1, substitute: false },
+      { name: "Bravo", position: "JGL", slotNo: 2, substitute: false },
+    ],
+  }));
+  assert.equal(semanticNoOp.revision, 1);
+  assert.equal(semanticNoOp.replayed, false);
+  assert.deepEqual(harness.operations, ["authorization", "claim", "load", "receipt"]);
 
   harness.operations = [];
   const status = await handler.handle(command("GET_PARTY_STATUS", "party-1", 1, {}));
@@ -313,6 +325,37 @@ test("party create, sync, status and finish use the domain while mutations commi
   const finished = await handler.handle(command("FINISH_PARTY", "party-1", 1, {}));
   assert.equal(finished.body.status, "FINISHED");
   assert.equal(finished.revision, 2);
+});
+
+test("V4 slot patches preserve absent rows, delete explicit empty rows, and use stored party shape", async () => {
+  const harness = new Harness();
+  const handler = new RecruitingCommandHandler(harness.dependencies());
+  await handler.handle(createParty("party-slot-patch"));
+  await handler.handle(command("SYNC_PARTY", "party-slot-patch", 0, {
+    members: [
+      { name: "Alpha", position: "TOP", slotNo: 1, substitute: false },
+      { name: "Bravo", position: "JGL", slotNo: 2, substitute: false },
+    ],
+  }));
+  harness.operations = [];
+  const result = await handler.handle(command("SYNC_PARTY", "party-slot-patch", 1, {
+    members: [],
+    slotPatches: [
+      { slotNo: 1, substitute: false, state: "PRESENT_EMPTY", value: null },
+      { slotNo: 2, substitute: false, state: "ABSENT", value: null },
+      { slotNo: 3, substitute: false, state: "PRESENT_VALUE", value: "Charlie" },
+    ],
+  }));
+  const stored = harness.snapshot.parties.get("party-slot-patch")!;
+  assert.equal(result.revision, 2);
+  assert.equal(stored.type, "FLEX_RANK");
+  assert.equal(stored.title, "저녁 내전 모집");
+  assert.equal(stored.maximumMembers, 5);
+  assert.deepEqual(stored.members, [
+    { name: "Bravo", position: "JGL", slotNo: 2, substitute: false },
+    { name: "Charlie", position: "MID", slotNo: 3, substitute: false },
+  ]);
+  assert.deepEqual(harness.operations, ["authorization", "claim", "load", "save", "audit", "outbox", "receipt"]);
 });
 
 test("party cancel and SUPER-only reset are distinct terminal commands", async () => {
@@ -698,7 +741,10 @@ test("V4 room scope allows cross-sender snapshots and finish while preserving du
     revision = result.revision;
     if (index === 1) secondSnapshot = mutation;
   }
-  assert.equal(revision, 4);
+  assert.equal(revision, 3);
+  assert.equal(harness.snapshot.receipts.size, 5);
+  assert.equal(harness.snapshot.audits.length, 4);
+  assert.equal(harness.snapshot.outbox.length, 4);
   assert.deepEqual(harness.snapshot.parties.get("party-v4-shared")?.members, []);
 
   const auditCount = harness.snapshot.audits.length;

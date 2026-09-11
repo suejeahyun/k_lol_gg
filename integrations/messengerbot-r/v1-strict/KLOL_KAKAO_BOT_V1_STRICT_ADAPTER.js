@@ -1,6 +1,6 @@
 /* eslint-disable */
 /* V1-visible constants. No legacy endpoint or bearer secret is retained. */
-var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R3_2026_09_11";
+var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R4_2026_09_11";
 var BASE_URL = "https://k-lol-gg.vercel.app";
 var WEB_INHOUSE_RESULT_UPLOAD_URL = BASE_URL + "/matches/submit";
 var WEB_ADMIN_DISCIPLINE_CREATE_URL = BASE_URL + "/admin/discipline/new";
@@ -23,6 +23,7 @@ var RECRUIT_SAVE_KEY = "KLOL_RECRUIT_LAST_HASH_UNIFIED_V24";
 var lastRecruitHash = "";
 var OPERATION_FORM_SAVE_KEY = "KLOL_OPERATION_FORM_LAST_HASH_V1";
 var lastOperationFormHash = "";
+var KLOL_V1_OPERATION_RAW_TEXT = "";
 
 function v1GatewaySucceeded(result) {
   return Boolean(result && result.ok && (!result.body || result.body.ok !== false));
@@ -224,7 +225,7 @@ function handleOperationFormMessage(room, text, sender, replier) {
   var result = null;
   var reply = "";
   try {
-    text = normalizeText(text);
+    text = canonicalizeOperationCandidateForGateway(KLOL_V1_OPERATION_RAW_TEXT || text);
     hash = makeHash("operation-form:" + room + ":" + sender + ":" + text);
     if (lastOperationFormHash == hash) return;
     saved = DataBase.getDataBase(OPERATION_FORM_SAVE_KEY);
@@ -272,4 +273,139 @@ function handleManagedImage(room, sender, imageBase64, replier) {
 
 function replyManagedImageFallback(room, sender, replier) {
   return false;
+}
+
+/*
+ * Operation-form routing is intentionally structural. The canonical V1
+ * predicate remains available as isOperationFormCompleteMessage in the built
+ * artifact, while response() uses this candidate predicate so an incomplete
+ * form can receive the server's field-specific validation reply.
+ */
+function normalizeOperationCandidateText(value) {
+  var input = String(value || "");
+  var output = "";
+  var index = 0;
+  var code = 0;
+  input = input.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  input = input.replace(/[\u00a0\u2007\u202f\u3000]/g, " ");
+  for (index = 0; index < input.length; index += 1) {
+    code = input.charCodeAt(index);
+    output += code >= 65281 && code <= 65374 ? String.fromCharCode(code - 65248) : input.charAt(index);
+  }
+  return output;
+}
+
+function makeOperationCandidateLabelRegex(label) {
+  var compact = normalizeOperationCandidateText(label).replace(/\s+/g, "");
+  var pattern = "";
+  var index = 0;
+  var character = "";
+  for (index = 0; index < compact.length; index += 1) {
+    character = compact.charAt(index).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    if (index > 0) pattern += "\\s*";
+    pattern += character;
+  }
+  return new RegExp(
+    "^\\s*(?:(?:\\(\\s*)?\\d+\\s*(?:\\\\\\s*)?(?:[.)]\\s*)?)?" +
+    pattern + "(?:\\s*:\\s*|\\s+|(?=$)|(?=\\())"
+  );
+}
+
+function hasOperationCandidateLabelWithSyntax(text, label) {
+  var lines = normalizeOperationCandidateText(text).split("\n");
+  var pattern = makeOperationCandidateLabelRegex(label);
+  var index = 0;
+  for (index = 0; index < lines.length; index += 1) {
+    if (hasOperationCandidateFieldSyntax(lines[index]) && pattern.test(lines[index])) return true;
+  }
+  return false;
+}
+
+function hasOperationCandidateFieldSyntax(line) {
+  line = normalizeOperationCandidateText(line);
+  return /^\s*(?:\(\s*)?\d+\s*(?:\\\s*)?[.)]/.test(line) || /:/.test(line);
+}
+
+function operationCandidateDefinitions() {
+  return [
+    ["friends", "지인", ["지인 이름", "지인 닉네임", "이용기간", "디스코드 닉네임 변경"]],
+    ["suggestions", "건의", ["본인 이름 및 닉네임", "건의 사유", "건의 내용"]],
+    ["meetups", "(?:모임|정모)", ["주최자 이름 및 닉네임", "일자", "장소", "참여자 명단"]],
+    ["leaves", "외출", ["이름 및 닉네임", "외출기간", "외출사유", "외출범위"]]
+  ];
+}
+
+function detectOperationFormHeaderType(text, forms) {
+  var lines = normalizeOperationCandidateText(text).split("\n");
+  var formIndex = 0;
+  var lineIndex = 0;
+  var pattern = null;
+  for (formIndex = 0; formIndex < forms.length; formIndex += 1) {
+    pattern = new RegExp(
+      "^\\s*(?:[-*#>》•▪▶]\\s*)?(?:(?:\\(\\s*)?\\d+\\s*(?:\\\\\\s*)?[.)]\\s*)?" +
+      "(?:<|&lt;)\\s*" + forms[formIndex][1] + "\\s*(?:>|&gt;)\\s*$",
+      "i"
+    );
+    for (lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+      if (pattern.test(lines[lineIndex])) return forms[formIndex][0];
+    }
+  }
+  return "";
+}
+
+function detectOperationFormCandidateType(text) {
+  var forms = operationCandidateDefinitions();
+  var normalized = normalizeOperationCandidateText(text);
+  var headerType = detectOperationFormHeaderType(normalized, forms);
+  var bestType = "";
+  var bestScore = 0;
+  var tied = false;
+  var formIndex = 0;
+  var labelIndex = 0;
+  var score = 0;
+  if (headerType != "") return headerType;
+  for (formIndex = 0; formIndex < forms.length; formIndex += 1) {
+    score = 0;
+    for (labelIndex = 0; labelIndex < forms[formIndex][2].length; labelIndex += 1) {
+      if (hasOperationCandidateLabelWithSyntax(normalized, forms[formIndex][2][labelIndex])) score += 1;
+    }
+    if (score > bestScore) {
+      bestType = forms[formIndex][0];
+      bestScore = score;
+      tied = false;
+    } else if (score == bestScore && score > 0) {
+      tied = true;
+    }
+  }
+  return bestScore >= 2 && !tied ? bestType : "";
+}
+
+function isOperationFormCandidateMessage(text) {
+  return detectOperationFormCandidateType(text) != "";
+}
+
+function canonicalizeOperationCandidateForGateway(text) {
+  var normalized = normalizeOperationCandidateText(text);
+  var formType = detectOperationFormCandidateType(normalized);
+  var forms = operationCandidateDefinitions();
+  var labels = [];
+  var lines = normalized.split("\n");
+  var formIndex = 0;
+  var lineIndex = 0;
+  var labelIndex = 0;
+  var match = null;
+  for (formIndex = 0; formIndex < forms.length; formIndex += 1) {
+    if (forms[formIndex][0] == formType) labels = forms[formIndex][2];
+  }
+  if (formType == "") return trimText(normalized);
+  for (lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+    for (labelIndex = 0; labelIndex < labels.length; labelIndex += 1) {
+      if (!hasOperationCandidateFieldSyntax(lines[lineIndex])) continue;
+      match = makeOperationCandidateLabelRegex(labels[labelIndex]).exec(lines[lineIndex]);
+      if (!match) continue;
+      lines[lineIndex] = labels[labelIndex] + ": " + lines[lineIndex].substring(match[0].length);
+      break;
+    }
+  }
+  return trimText(lines.join("\n"));
 }
