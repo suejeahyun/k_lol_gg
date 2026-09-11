@@ -1,19 +1,21 @@
 # K-LOL.GG V2 상태
 
-- 운영 공개 QA 확인 시각: 2026-09-11T10:28:11.460Z (2026-09-11 19:28:11 KST)
-- 운영 검증 기능 기준: `8ee4fa4455cf98f0ada62f6ad31d8d45dacc23c4`
-- 릴리스 tag: `v2-v1-team-balance-v1.0.1`
-- 현재 단계: V1 팀 밸런스·결과 공유 기능의 운영 앱 배포와 공개 화면 검증 완료
+- 운영 자동승인 확인 시각: 2026-09-11T20:41:16.240Z (2026-09-12 05:41:16 KST)
+- 운영 검증 기능 기준: `1c49070823f195b854fe84d523a5dd9ab4877049`
+- 릴리스 tag: `account-auto-approval-v1.0.0`
+- 현재 단계: 신규 일반 사용자 가입 자동승인 운영 반영 완료, 기존 승인 대기 27개 실제 승인 0건
 - V1 코드 복사: 없음. V1은 기능 목록과 동등성 대조 근거로만 사용
 - V1 기준선: 블루·블랙 Vercel 기준선 저장소를 변경하지 않음
-- 운영 Vercel: 배포 `dpl_4BzqPTPUWTVmzmXui1sSVcrzreKC`, 불변 URL `https://k-lol-btwyt99iy-tjdmswo11-3715s-projects.vercel.app`
-- 운영 별칭: `https://k-lol-gg.vercel.app`, health `ready`, 공개 브라우저 QA 30/30·issues 0
+- 운영 Vercel: 배포 `dpl_9Aw98w2NNxkyjnybFqrCjv1yNbNo`, 불변 URL `https://k-lol-k43ds9jze-tjdmswo11-3715s-projects.vercel.app`
+- 운영 별칭: `https://k-lol-gg.vercel.app`, health `ready`, `/signup`·`/start` 자동승인 안내 확인
 - 운영 DB: migration 37개, head `0036_flowery_hairball` 확인
 - 휴대폰 Kakao R5: 산출물은 준비됐으나 MessengerBot R 설치·실제 Kakao 송수신은 미확인
 
 ## 확인된 상태
 
 - 현재 소스에는 공개·계정·관리자 영역을 포함한 103개 `page.tsx`와 197개 API `route.ts`가 있다.
+- 새 Riot ID와 신규 플레이어를 함께 만드는 일반 사용자 가입은 같은 transaction에서 `APPROVED`·`ACTIVE`로 자동 승인된다. 기존 플레이어와 일치하는 Riot ID는 `PENDING` claim 수동 검토를 유지한다.
+- 기존 `PENDING` 27개는 read-only 안전 조건을 확인했지만 UI action-time confirmation 대기로 실제 승인 0건이다. 기존 `REJECTED/SUSPENDED` 8개는 보호 대상이며 변경하지 않았다.
 - 2026-09-07 시점의 100개 화면은 326개 조건(데스크톱 156, 태블릿 85, 모바일 85)에서 non-200·화면 이슈·가로 넘침 0건, 브라우저 품질 27/27 통과를 확인했다.
 - 이후 추가된 3개 화면을 포함한 현재 103개 화면 335회의 로그인·관리자 포함 실캡처는 아직 실행하지 않았다. 합성 fixture와 캡처 계획만 생성했다. 운영 공개 화면 10개 경로의 desktop·mobile·narrow 자동 품질은 30/30, issues 0, axe 위반 0이다. 로컬 전체 높이 캡처는 27/30 PASS이며 로컬 DB가 필요한 `/competitions` 3개 조건은 BLOCKED로 별도 유지한다.
 - 관리자 페이지는 익명·ACCOUNT 세션을 거부하고 ADMIN/SUPER_ADMIN 역할 경계를 유지한다.
@@ -33,7 +35,7 @@
 ## 구현된 범위
 
 - 밝고 가벼운 Community Breeze 디자인, 여성 챔피언 중심 브랜드 비주얼, 반응형 사용자/관리자 셸
-- 가입·로그인·TOTP·계정 승인/복구/역할/플레이어 연결과 본인 Riot ID·티어 관리
+- 가입 자동승인·로그인·TOTP·계정 수동 승인/복구/역할/플레이어 claim과 본인 Riot ID·티어 관리
 - 플레이어 등록부, 시즌 참가, 경기 접수·OCR 검토·수정·게시·무효화·복구
 - 시즌 통계·MMR·팀 밸런스·랜덤 팀·코인 토스
 - 이벤트전·멸망전의 참가, 팀, 대진, 결과 정정, 경매, 교체, MVP 수명주기
@@ -46,7 +48,10 @@
 
 최종 기능 commit과 tag, Vercel deployment, 운영 별칭 health, 운영 DB head와 공개 브라우저 30조건을 확인했다. 이 범위에서 V1 팀 밸런스·결과 공유 앱의 운영 반영을 확인했다. 아래 항목은 별도의 운영 권한·실기기·실데이터 근거가 있어야 완료로 판정한다.
 
+이후 `account-auto-approval-v1.0.0`이 운영에 배포되어 신규 일반 사용자 자동승인과 `/signup`·`/start` 안내를 확인했다. 기존 승인 대기 계정 27개의 일괄 상태 변경은 이 배포에 포함되지 않았고 실제 승인 수는 0건이다.
+
 - 로그인·관리자 화면을 포함한 103개 페이지 335회 실캡처와 인증 사용자 흐름 전체 확인
+- UI action-time confirmation 후 기존 승인 대기 27개를 재검사하고 승인 transaction과 사후 감사 건수를 확인
 - 자동 만료 1일 복구 분기 보존 시간 안의 DB 오류 지표와 무결성 위반 재확인
 - R5 산출물 SHA-256 대조, MessengerBot R 교체, `/봇버전` 확인과 실제 두 Kakao 방 송수신
 - Kakao V4 서명 HTTP는 운영 서버에서 확인했지만 실제 휴대폰 E2E, 재시도, 줄바꿈과 체감 지연은 미확인
