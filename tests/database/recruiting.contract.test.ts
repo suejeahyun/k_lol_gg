@@ -236,7 +236,7 @@ test("Kakao aggregate controllers block confused-deputy lifecycle mutations", { 
       type: "CREATE_PARTY", aggregateId: partyId, expectedRevision: 0, senderId: "sender-creator",
       payload: { recruitDate: "2026-09-09", resetSequence: 90, recruitNumber: 90, partyType: "ARAM", title: "소유권 테스트", maximumMembers: 5, members: [], scheduledStartAt: null, protectedUntil: null },
     });
-    const createdParty = await handler.handle(createParty);
+    await handler.handle(createParty);
     assert.equal((await handler.handle(createParty)).replayed, true);
     assert.equal((await database.select().from(recruitParties).where(eq(recruitParties.id, partyId)))[0]?.sourceSenderId, "sender-creator");
 
@@ -246,10 +246,10 @@ test("Kakao aggregate controllers block confused-deputy lifecycle mutations", { 
     await assert.rejects(handler.handle(botCommand({ type: "SYNC_PARTY", aggregateId: partyId, expectedRevision: 0, payload: { members: [] }, senderId: "sender-other" })), (error: unknown) => error instanceof RecruitingApplicationError && error.code === "FORBIDDEN");
 
     const creatorSync = botCommand({ type: "SYNC_PARTY", aggregateId: partyId, expectedRevision: 0, payload: { members: [] }, senderId: "sender-creator" });
-    assert.equal((await handler.handle(creatorSync)).revision, 1);
+    assert.equal((await handler.handle(creatorSync)).revision, 0);
     assert.equal((await handler.handle(creatorSync)).replayed, true);
-    await assert.rejects(handler.handle(botCommand({ type: "FINISH_PARTY", aggregateId: partyId, expectedRevision: 1, payload: {}, senderId: "sender-other" })), (error: unknown) => error instanceof RecruitingApplicationError && error.code === "FORBIDDEN");
-    assert.equal((await handler.handle(botCommand({ type: "FINISH_PARTY", aggregateId: partyId, expectedRevision: 1, payload: {}, senderId: "sender-other", commandSource: "COMPAT_V1" }))).body.status, "FINISHED");
+    await assert.rejects(handler.handle(botCommand({ type: "FINISH_PARTY", aggregateId: partyId, expectedRevision: 0, payload: {}, senderId: "sender-other" })), (error: unknown) => error instanceof RecruitingApplicationError && error.code === "FORBIDDEN");
+    assert.equal((await handler.handle(botCommand({ type: "FINISH_PARTY", aggregateId: partyId, expectedRevision: 0, payload: {}, senderId: "sender-other", commandSource: "COMPAT_V1" }))).body.status, "FINISHED");
 
     const scrimId = randomUUID();
     await handler.handle(botCommand({

@@ -23,5 +23,5 @@
 .eyebrow { margin: 1rem 0 0.4rem; color: #416d9f; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.12em; }
 .panel h1 { margin: 0; color: #173454; font-size: clamp(1.55rem, 4vw, 2.35rem); }
 .panel > p:not(.eyebrow) { margin: 0.85rem auto 1.5rem; max-width: 34rem; color: #4a6684; line-height: 1.7; }
-.panel a { display: inline-flex; min-height: 44px; align-items: center; padding: 0.72rem 1.1rem; border-radius: 999px; color: #fff; background: #477fbd; font-weight: 800; }
+.panel a { display: inline-flex; min-height: 44px; align-items: center; padding: 0.72rem 1.1rem; border-radius: 999px; color: var(--primary-foreground); background: var(--primary); font-weight: 800; }
 .panel a:focus-visible { outline: 3px solid #173454; outline-offset: 3px; }

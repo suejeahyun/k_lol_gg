@@ -1,0 +1,3276 @@
+{
+  "origin": "http://127.0.0.1:3000",
+  "auditedAt": "2026-09-11T10:03:23.358Z",
+  "budgets": {
+    "ttfbMs": 800,
+    "lcpMs": 2500,
+    "cls": 0.1,
+    "longTaskMs": 500,
+    "requestCount": 75,
+    "transferBytes": 2097152,
+    "scriptBytes": 716800
+  },
+  "results": [
+    {
+      "path": "/",
+      "viewport": "desktop",
+      "status": 200,
+      "lang": "ko",
+      "mainCount": 1,
+      "h1Count": 1,
+      "hasSkipLink": true,
+      "hasHorizontalOverflow": false,
+      "scrollWidth": 1425,
+      "clientWidth": 1425,
+      "reducedMotionMatches": true,
+      "maxAnimationDurationMs": 0,
+      "performance": {
+        "ttfbMs": 16,
+        "lcpMs": 444,
+        "cls": 0,
+        "layoutShifts": [],
+        "longTaskMs": 147,
+        "requestCount": 35,
+        "transferBytes": 494159,
+        "scriptBytes": 190390
+      },
+      "firstTab": {
+        "tag": "a",
+        "label": "본문 바로가기",
+        "href": "#main-content",
+        "visible": true
+      },
+      "tabSequence": [
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "K-LOL.GG 홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "플레이어",
+          "href": "/players",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "경기",
+          "href": "/matches",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "랭킹",
+          "href": "/rankings",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "팀 도구",
+          "href": "/tools/team-balance",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "참가 신청",
+          "href": "/applications",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "대회",
+          "href": "/competitions",
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 검색 열기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 메뉴 열기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "사용자 로그인",
+          "href": "/login",
+          "visible": true
+        }
+      ],
+      "axeViolations": [],
+      "axUnnamedFocusable": [],
+      "issues": []
+    },
+    {
+      "path": "/players",
+      "viewport": "desktop",
+      "status": 200,
+      "lang": "ko",
+      "mainCount": 1,
+      "h1Count": 1,
+      "hasSkipLink": true,
+      "hasHorizontalOverflow": false,
+      "scrollWidth": 1425,
+      "clientWidth": 1425,
+      "reducedMotionMatches": true,
+      "maxAnimationDurationMs": 0,
+      "performance": {
+        "ttfbMs": 9,
+        "lcpMs": 56,
+        "cls": 0,
+        "layoutShifts": [],
+        "longTaskMs": 0,
+        "requestCount": 21,
+        "transferBytes": 16802,
+        "scriptBytes": 0
+      },
+      "firstTab": {
+        "tag": "a",
+        "label": "본문 바로가기",
+        "href": "#main-content",
+        "visible": true
+      },
+      "tabSequence": [
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "K-LOL.GG 홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "플레이어",
+          "href": "/players",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "경기",
+          "href": "/matches",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "랭킹",
+          "href": "/rankings",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "팀 도구",
+          "href": "/tools/team-balance",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "참가 신청",
+          "href": "/applications",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "대회",
+          "href": "/competitions",
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 검색 열기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 메뉴 열기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "사용자 로그인",
+          "href": "/login",
+          "visible": true
+        }
+      ],
+      "axeViolations": [],
+      "axUnnamedFocusable": [],
+      "issues": []
+    },
+    {
+      "path": "/matches",
+      "viewport": "desktop",
+      "status": 200,
+      "lang": "ko",
+      "mainCount": 1,
+      "h1Count": 1,
+      "hasSkipLink": true,
+      "hasHorizontalOverflow": false,
+      "scrollWidth": 1425,
+      "clientWidth": 1425,
+      "reducedMotionMatches": true,
+      "maxAnimationDurationMs": 0,
+      "performance": {
+        "ttfbMs": 10,
+        "lcpMs": 68,
+        "cls": 0,
+        "layoutShifts": [],
+        "longTaskMs": 0,
+        "requestCount": 40,
+        "transferBytes": 35567,
+        "scriptBytes": 0
+      },
+      "firstTab": {
+        "tag": "a",
+        "label": "본문 바로가기",
+        "href": "#main-content",
+        "visible": true
+      },
+      "tabSequence": [
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "K-LOL.GG 홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "플레이어",
+          "href": "/players",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "경기",
+          "href": "/matches",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "랭킹",
+          "href": "/rankings",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "팀 도구",
+          "href": "/tools/team-balance",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "참가 신청",
+          "href": "/applications",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "대회",
+          "href": "/competitions",
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 검색 열기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 메뉴 열기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "사용자 로그인",
+          "href": "/login",
+          "visible": true
+        }
+      ],
+      "axeViolations": [],
+      "axUnnamedFocusable": [],
+      "issues": []
+    },
+    {
+      "path": "/rankings",
+      "viewport": "desktop",
+      "status": 200,
+      "lang": "ko",
+      "mainCount": 1,
+      "h1Count": 1,
+      "hasSkipLink": true,
+      "hasHorizontalOverflow": false,
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "reducedMotionMatches": true,
+      "maxAnimationDurationMs": 0,
+      "performance": {
+        "ttfbMs": 8,
+        "lcpMs": 36,
+        "cls": 0,
+        "layoutShifts": [],
+        "longTaskMs": 0,
+        "requestCount": 38,
+        "transferBytes": 31787,
+        "scriptBytes": 0
+      },
+      "firstTab": {
+        "tag": "a",
+        "label": "본문 바로가기",
+        "href": "#main-content",
+        "visible": true
+      },
+      "tabSequence": [
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "K-LOL.GG 홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "플레이어",
+          "href": "/players",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "경기",
+          "href": "/matches",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "랭킹",
+          "href": "/rankings",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "팀 도구",
+          "href": "/tools/team-balance",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "참가 신청",
+          "href": "/applications",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "대회",
+          "href": "/competitions",
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 검색 열기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 메뉴 열기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "사용자 로그인",
+          "href": "/login",
+          "visible": true
+        }
+      ],
+      "axeViolations": [],
+      "axUnnamedFocusable": [],
+      "issues": []
+    },
+    {
+      "path": "/competitions",
+      "viewport": "desktop",
+      "status": 200,
+      "lang": "ko",
+      "mainCount": 1,
+      "h1Count": 1,
+      "hasSkipLink": true,
+      "hasHorizontalOverflow": false,
+      "scrollWidth": 1425,
+      "clientWidth": 1425,
+      "reducedMotionMatches": true,
+      "maxAnimationDurationMs": 0,
+      "performance": {
+        "ttfbMs": 9,
+        "lcpMs": 52,
+        "cls": 0,
+        "layoutShifts": [],
+        "longTaskMs": 0,
+        "requestCount": 40,
+        "transferBytes": 36332,
+        "scriptBytes": 0
+      },
+      "firstTab": {
+        "tag": "a",
+        "label": "본문 바로가기",
+        "href": "#main-content",
+        "visible": true
+      },
+      "tabSequence": [
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "K-LOL.GG 홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "플레이어",
+          "href": "/players",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "경기",
+          "href": "/matches",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "랭킹",
+          "href": "/rankings",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "팀 도구",
+          "href": "/tools/team-balance",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "참가 신청",
+          "href": "/applications",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "대회",
+          "href": "/competitions",
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 검색 열기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 메뉴 열기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "사용자 로그인",
+          "href": "/login",
+          "visible": true
+        }
+      ],
+      "axeViolations": [],
+      "axUnnamedFocusable": [],
+      "issues": []
+    },
+    {
+      "path": "/tools/team-balance",
+      "viewport": "desktop",
+      "status": 200,
+      "lang": "ko",
+      "mainCount": 1,
+      "h1Count": 1,
+      "hasSkipLink": true,
+      "hasHorizontalOverflow": false,
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "reducedMotionMatches": true,
+      "maxAnimationDurationMs": 0,
+      "performance": {
+        "ttfbMs": 9,
+        "lcpMs": 44,
+        "cls": 0,
+        "layoutShifts": [],
+        "longTaskMs": 0,
+        "requestCount": 41,
+        "transferBytes": 31686,
+        "scriptBytes": 0
+      },
+      "firstTab": {
+        "tag": "a",
+        "label": "본문 바로가기",
+        "href": "#main-content",
+        "visible": true
+      },
+      "tabSequence": [
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "K-LOL.GG 홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "플레이어",
+          "href": "/players",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "경기",
+          "href": "/matches",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "랭킹",
+          "href": "/rankings",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "팀 도구",
+          "href": "/tools/team-balance",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "참가 신청",
+          "href": "/applications",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "대회",
+          "href": "/competitions",
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 검색 열기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 메뉴 열기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "사용자 로그인",
+          "href": "/login",
+          "visible": true
+        }
+      ],
+      "axeViolations": [],
+      "axUnnamedFocusable": [],
+      "issues": []
+    },
+    {
+      "path": "/tools/coin-toss",
+      "viewport": "desktop",
+      "status": 200,
+      "lang": "ko",
+      "mainCount": 1,
+      "h1Count": 1,
+      "hasSkipLink": true,
+      "hasHorizontalOverflow": false,
+      "scrollWidth": 1425,
+      "clientWidth": 1425,
+      "reducedMotionMatches": true,
+      "maxAnimationDurationMs": 0,
+      "performance": {
+        "ttfbMs": 7,
+        "lcpMs": 60,
+        "cls": 0,
+        "layoutShifts": [],
+        "longTaskMs": 0,
+        "requestCount": 45,
+        "transferBytes": 36975,
+        "scriptBytes": 0
+      },
+      "firstTab": {
+        "tag": "a",
+        "label": "본문 바로가기",
+        "href": "#main-content",
+        "visible": true
+      },
+      "tabSequence": [
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "K-LOL.GG 홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "플레이어",
+          "href": "/players",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "경기",
+          "href": "/matches",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "랭킹",
+          "href": "/rankings",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "팀 도구",
+          "href": "/tools/team-balance",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "참가 신청",
+          "href": "/applications",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "대회",
+          "href": "/competitions",
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 검색 열기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 메뉴 열기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "사용자 로그인",
+          "href": "/login",
+          "visible": true
+        }
+      ],
+      "axeViolations": [],
+      "axUnnamedFocusable": [],
+      "issues": []
+    },
+    {
+      "path": "/tools/random-team",
+      "viewport": "desktop",
+      "status": 200,
+      "lang": "ko",
+      "mainCount": 1,
+      "h1Count": 1,
+      "hasSkipLink": true,
+      "hasHorizontalOverflow": false,
+      "scrollWidth": 1425,
+      "clientWidth": 1425,
+      "reducedMotionMatches": true,
+      "maxAnimationDurationMs": 0,
+      "performance": {
+        "ttfbMs": 8,
+        "lcpMs": 76,
+        "cls": 0,
+        "layoutShifts": [],
+        "longTaskMs": 0,
+        "requestCount": 45,
+        "transferBytes": 37185,
+        "scriptBytes": 0
+      },
+      "firstTab": {
+        "tag": "a",
+        "label": "본문 바로가기",
+        "href": "#main-content",
+        "visible": true
+      },
+      "tabSequence": [
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "K-LOL.GG 홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "플레이어",
+          "href": "/players",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "경기",
+          "href": "/matches",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "랭킹",
+          "href": "/rankings",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "팀 도구",
+          "href": "/tools/team-balance",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "참가 신청",
+          "href": "/applications",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "대회",
+          "href": "/competitions",
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 검색 열기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 메뉴 열기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "사용자 로그인",
+          "href": "/login",
+          "visible": true
+        }
+      ],
+      "axeViolations": [],
+      "axUnnamedFocusable": [],
+      "issues": []
+    },
+    {
+      "path": "/login",
+      "viewport": "desktop",
+      "status": 200,
+      "lang": "ko",
+      "mainCount": 1,
+      "h1Count": 2,
+      "hasSkipLink": true,
+      "hasHorizontalOverflow": false,
+      "scrollWidth": 1425,
+      "clientWidth": 1425,
+      "reducedMotionMatches": true,
+      "maxAnimationDurationMs": 0,
+      "performance": {
+        "ttfbMs": 8,
+        "lcpMs": 72,
+        "cls": 0,
+        "layoutShifts": [],
+        "longTaskMs": 0,
+        "requestCount": 44,
+        "transferBytes": 38793,
+        "scriptBytes": 0
+      },
+      "firstTab": {
+        "tag": "a",
+        "label": "본문 바로가기",
+        "href": "#main-content",
+        "visible": true
+      },
+      "tabSequence": [
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "K-LOL.GG 홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "플레이어",
+          "href": "/players",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "경기",
+          "href": "/matches",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "랭킹",
+          "href": "/rankings",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "팀 도구",
+          "href": "/tools/team-balance",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "참가 신청",
+          "href": "/applications",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "대회",
+          "href": "/competitions",
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 검색 열기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 메뉴 열기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "사용자 로그인",
+          "href": "/login",
+          "visible": true
+        }
+      ],
+      "axeViolations": [],
+      "axUnnamedFocusable": [],
+      "issues": []
+    },
+    {
+      "path": "/signup",
+      "viewport": "desktop",
+      "status": 200,
+      "lang": "ko",
+      "mainCount": 1,
+      "h1Count": 1,
+      "hasSkipLink": true,
+      "hasHorizontalOverflow": false,
+      "scrollWidth": 1425,
+      "clientWidth": 1425,
+      "reducedMotionMatches": true,
+      "maxAnimationDurationMs": 0,
+      "performance": {
+        "ttfbMs": 9,
+        "lcpMs": 68,
+        "cls": 0,
+        "layoutShifts": [],
+        "longTaskMs": 0,
+        "requestCount": 40,
+        "transferBytes": 32239,
+        "scriptBytes": 0
+      },
+      "firstTab": {
+        "tag": "a",
+        "label": "본문 바로가기",
+        "href": "#main-content",
+        "visible": true
+      },
+      "tabSequence": [
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "K-LOL.GG 홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "플레이어",
+          "href": "/players",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "경기",
+          "href": "/matches",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "랭킹",
+          "href": "/rankings",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "팀 도구",
+          "href": "/tools/team-balance",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "참가 신청",
+          "href": "/applications",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "대회",
+          "href": "/competitions",
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 검색 열기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 메뉴 열기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "사용자 로그인",
+          "href": "/login",
+          "visible": true
+        }
+      ],
+      "axeViolations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "nodes": [
+            {
+              "target": [
+                ".site-feature-state-module__0BoFoq__panel > a[href=\"/\"]"
+              ],
+              "html": "<a href=\"/\">홈으로 돌아가기</a>",
+              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.16 (foreground color: #ffffff, background color: #477fbd, font size: 12.0pt (16px), font weight: bold). Expected contrast ratio of 4.5:1"
+            }
+          ]
+        }
+      ],
+      "axUnnamedFocusable": [],
+      "issues": [
+        "AXE_color-contrast:1"
+      ]
+    },
+    {
+      "path": "/",
+      "viewport": "mobile",
+      "status": 200,
+      "lang": "ko",
+      "mainCount": 1,
+      "h1Count": 1,
+      "hasSkipLink": true,
+      "hasHorizontalOverflow": false,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "reducedMotionMatches": true,
+      "maxAnimationDurationMs": 0,
+      "performance": {
+        "ttfbMs": 10,
+        "lcpMs": 52,
+        "cls": 0,
+        "layoutShifts": [],
+        "longTaskMs": 0,
+        "requestCount": 23,
+        "transferBytes": 22971,
+        "scriptBytes": 0
+      },
+      "firstTab": {
+        "tag": "a",
+        "label": "본문 바로가기",
+        "href": "#main-content",
+        "visible": true
+      },
+      "tabSequence": [
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "K-LOL.GG 홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "label": "",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "찾아보기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "이용 가능플레이어 찾기회원명·닉네임·Riot ID로 함께할 플레이어를 찾아보세요.",
+          "href": "/players",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "이용 가능경기 살펴보기최근 경기와 세트 기록을 가볍게 둘러보세요.",
+          "href": "/matches",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "이용 가능팀 밸런스포지션과 경기 기록을 맞춰 즐거운 팀을 만들어 보세요.",
+          "href": "/tools/team-balance",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "이벤트전 이용 가능대회 진행열린 이벤트를 보고 바로 참가해 보세요.",
+          "href": "/competitions",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "전체 랭킹 보기",
+          "href": "/rankings",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "로그인",
+          "href": "/login",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "가입하기",
+          "href": "/signup",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "이용약관",
+          "href": "/terms",
+          "visible": true
+        }
+      ],
+      "axeViolations": [],
+      "axUnnamedFocusable": [],
+      "issues": []
+    },
+    {
+      "path": "/players",
+      "viewport": "mobile",
+      "status": 200,
+      "lang": "ko",
+      "mainCount": 1,
+      "h1Count": 1,
+      "hasSkipLink": true,
+      "hasHorizontalOverflow": false,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "reducedMotionMatches": true,
+      "maxAnimationDurationMs": 0,
+      "performance": {
+        "ttfbMs": 6,
+        "lcpMs": 36,
+        "cls": 0,
+        "layoutShifts": [],
+        "longTaskMs": 0,
+        "requestCount": 23,
+        "transferBytes": 19927,
+        "scriptBytes": 0
+      },
+      "firstTab": {
+        "tag": "a",
+        "label": "본문 바로가기",
+        "href": "#main-content",
+        "visible": true
+      },
+      "tabSequence": [
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "K-LOL.GG 홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "홈으로",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "label": "",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "검색",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "전체",
+          "href": "/players",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "아이언",
+          "href": "/players?tier=IRON",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "브론즈",
+          "href": "/players?tier=BRONZE",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "실버",
+          "href": "/players?tier=SILVER",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "골드",
+          "href": "/players?tier=GOLD",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "플래티넘",
+          "href": "/players?tier=PLATINUM",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "에메랄드",
+          "href": "/players?tier=EMERALD",
+          "visible": true
+        }
+      ],
+      "axeViolations": [],
+      "axUnnamedFocusable": [],
+      "issues": []
+    },
+    {
+      "path": "/matches",
+      "viewport": "mobile",
+      "status": 200,
+      "lang": "ko",
+      "mainCount": 1,
+      "h1Count": 1,
+      "hasSkipLink": true,
+      "hasHorizontalOverflow": false,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "reducedMotionMatches": true,
+      "maxAnimationDurationMs": 0,
+      "performance": {
+        "ttfbMs": 7,
+        "lcpMs": 36,
+        "cls": 0,
+        "layoutShifts": [],
+        "longTaskMs": 0,
+        "requestCount": 24,
+        "transferBytes": 20516,
+        "scriptBytes": 0
+      },
+      "firstTab": {
+        "tag": "a",
+        "label": "본문 바로가기",
+        "href": "#main-content",
+        "visible": true
+      },
+      "tabSequence": [
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "K-LOL.GG 홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "결과 접수",
+          "href": "/matches/submit",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "플레이어 찾기",
+          "href": "/players",
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "label": "",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "select",
+          "label": "전체 시즌",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "select",
+          "label": "전체블루 승리레드 승리무승부",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "label": "",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "label": "",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "label": "",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "label": "",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "label": "",
+          "href": null,
+          "visible": true
+        }
+      ],
+      "axeViolations": [],
+      "axUnnamedFocusable": [],
+      "issues": []
+    },
+    {
+      "path": "/rankings",
+      "viewport": "mobile",
+      "status": 200,
+      "lang": "ko",
+      "mainCount": 1,
+      "h1Count": 1,
+      "hasSkipLink": true,
+      "hasHorizontalOverflow": false,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "reducedMotionMatches": true,
+      "maxAnimationDurationMs": 0,
+      "performance": {
+        "ttfbMs": 7,
+        "lcpMs": 36,
+        "cls": 0,
+        "layoutShifts": [],
+        "longTaskMs": 0,
+        "requestCount": 27,
+        "transferBytes": 21536,
+        "scriptBytes": 0
+      },
+      "firstTab": {
+        "tag": "a",
+        "label": "본문 바로가기",
+        "href": "#main-content",
+        "visible": true
+      },
+      "tabSequence": [
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "K-LOL.GG 홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "이용약관",
+          "href": "/terms",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "개인정보 처리 안내",
+          "href": "/privacy",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Riot Games의 Legal Jibber Jabber 정책",
+          "href": "https://www.riotgames.com/en/legal",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "플레이어",
+          "href": "/players",
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 검색 열기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "로그인",
+          "href": "/login",
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 메뉴 열기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "body",
+          "label": "본문 바로가기K-LOL.GG새로운 내전 놀이터홈플레이어경기랭킹팀 도구참가 신청대회COMMAND PALETTE무엇을 찾고 있나요?페이지, 도구, ",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        }
+      ],
+      "axeViolations": [],
+      "axUnnamedFocusable": [],
+      "issues": []
+    },
+    {
+      "path": "/competitions",
+      "viewport": "mobile",
+      "status": 200,
+      "lang": "ko",
+      "mainCount": 1,
+      "h1Count": 1,
+      "hasSkipLink": true,
+      "hasHorizontalOverflow": false,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "reducedMotionMatches": true,
+      "maxAnimationDurationMs": 0,
+      "performance": {
+        "ttfbMs": 7,
+        "lcpMs": 36,
+        "cls": 0,
+        "layoutShifts": [],
+        "longTaskMs": 0,
+        "requestCount": 24,
+        "transferBytes": 21281,
+        "scriptBytes": 0
+      },
+      "firstTab": {
+        "tag": "a",
+        "label": "본문 바로가기",
+        "href": "#main-content",
+        "visible": true
+      },
+      "tabSequence": [
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "K-LOL.GG 홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "이벤트전",
+          "href": "/competitions?type=event",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "멸망전",
+          "href": "/competitions?type=destruction",
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "label": "",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "select",
+          "label": "전체 상태준비 중참가 모집팀 편성진행 중완료취소",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "select",
+          "label": "전체 방식포지션 드래프트칼바람",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "찾기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "이용약관",
+          "href": "/terms",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "개인정보 처리 안내",
+          "href": "/privacy",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Riot Games의 Legal Jibber Jabber 정책",
+          "href": "https://www.riotgames.com/en/legal",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "홈",
+          "href": "/",
+          "visible": true
+        }
+      ],
+      "axeViolations": [],
+      "axUnnamedFocusable": [],
+      "issues": []
+    },
+    {
+      "path": "/tools/team-balance",
+      "viewport": "mobile",
+      "status": 200,
+      "lang": "ko",
+      "mainCount": 1,
+      "h1Count": 1,
+      "hasSkipLink": true,
+      "hasHorizontalOverflow": false,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "reducedMotionMatches": true,
+      "maxAnimationDurationMs": 0,
+      "performance": {
+        "ttfbMs": 6,
+        "lcpMs": 36,
+        "cls": 0,
+        "layoutShifts": [],
+        "longTaskMs": 0,
+        "requestCount": 30,
+        "transferBytes": 21436,
+        "scriptBytes": 0
+      },
+      "firstTab": {
+        "tag": "a",
+        "label": "본문 바로가기",
+        "href": "#main-content",
+        "visible": true
+      },
+      "tabSequence": [
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "K-LOL.GG 홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "이용약관",
+          "href": "/terms",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "개인정보 처리 안내",
+          "href": "/privacy",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Riot Games의 Legal Jibber Jabber 정책",
+          "href": "https://www.riotgames.com/en/legal",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "플레이어",
+          "href": "/players",
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 검색 열기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "로그인",
+          "href": "/login",
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 메뉴 열기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "body",
+          "label": "본문 바로가기K-LOL.GG새로운 내전 놀이터홈플레이어경기랭킹팀 도구참가 신청대회COMMAND PALETTE무엇을 찾고 있나요?페이지, 도구, ",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        }
+      ],
+      "axeViolations": [],
+      "axUnnamedFocusable": [],
+      "issues": []
+    },
+    {
+      "path": "/tools/coin-toss",
+      "viewport": "mobile",
+      "status": 200,
+      "lang": "ko",
+      "mainCount": 1,
+      "h1Count": 1,
+      "hasSkipLink": true,
+      "hasHorizontalOverflow": false,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "reducedMotionMatches": true,
+      "maxAnimationDurationMs": 0,
+      "performance": {
+        "ttfbMs": 8,
+        "lcpMs": 40,
+        "cls": 0,
+        "layoutShifts": [],
+        "longTaskMs": 0,
+        "requestCount": 30,
+        "transferBytes": 23497,
+        "scriptBytes": 0
+      },
+      "firstTab": {
+        "tag": "a",
+        "label": "본문 바로가기",
+        "href": "#main-content",
+        "visible": true
+      },
+      "tabSequence": [
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "K-LOL.GG 홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "팀 밸런스",
+          "href": "/tools/team-balance",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "랜덤 팀",
+          "href": "/tools/random-team",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "코인 토스",
+          "href": "/tools/coin-toss",
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "코인 던지기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "이용약관",
+          "href": "/terms",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "개인정보 처리 안내",
+          "href": "/privacy",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Riot Games의 Legal Jibber Jabber 정책",
+          "href": "https://www.riotgames.com/en/legal",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "플레이어",
+          "href": "/players",
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 검색 열기",
+          "href": null,
+          "visible": true
+        }
+      ],
+      "axeViolations": [],
+      "axUnnamedFocusable": [],
+      "issues": []
+    },
+    {
+      "path": "/tools/random-team",
+      "viewport": "mobile",
+      "status": 200,
+      "lang": "ko",
+      "mainCount": 1,
+      "h1Count": 1,
+      "hasSkipLink": true,
+      "hasHorizontalOverflow": false,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "reducedMotionMatches": true,
+      "maxAnimationDurationMs": 0,
+      "performance": {
+        "ttfbMs": 7,
+        "lcpMs": 40,
+        "cls": 0,
+        "layoutShifts": [],
+        "longTaskMs": 0,
+        "requestCount": 30,
+        "transferBytes": 23723,
+        "scriptBytes": 0
+      },
+      "firstTab": {
+        "tag": "a",
+        "label": "본문 바로가기",
+        "href": "#main-content",
+        "visible": true
+      },
+      "tabSequence": [
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "K-LOL.GG 홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "팀 밸런스",
+          "href": "/tools/team-balance",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "랜덤 팀",
+          "href": "/tools/random-team",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "코인 토스",
+          "href": "/tools/coin-toss",
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "무작위",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "티어 균형",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "textarea",
+          "label": "",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "팀 섞기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "초기화",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "이용약관",
+          "href": "/terms",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "개인정보 처리 안내",
+          "href": "/privacy",
+          "visible": true
+        }
+      ],
+      "axeViolations": [],
+      "axUnnamedFocusable": [],
+      "issues": []
+    },
+    {
+      "path": "/login",
+      "viewport": "mobile",
+      "status": 200,
+      "lang": "ko",
+      "mainCount": 1,
+      "h1Count": 2,
+      "hasSkipLink": true,
+      "hasHorizontalOverflow": false,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "reducedMotionMatches": true,
+      "maxAnimationDurationMs": 0,
+      "performance": {
+        "ttfbMs": 7,
+        "lcpMs": 36,
+        "cls": 0,
+        "layoutShifts": [],
+        "longTaskMs": 0,
+        "requestCount": 22,
+        "transferBytes": 17249,
+        "scriptBytes": 0
+      },
+      "firstTab": {
+        "tag": "a",
+        "label": "본문 바로가기",
+        "href": "#main-content",
+        "visible": true
+      },
+      "tabSequence": [
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "K-LOL.GG 홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "label": "",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "label": "",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "로그인",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "가입 신청",
+          "href": "/signup",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "비밀번호 도움",
+          "href": "/forgot-password",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "관리자 로그인",
+          "href": "/admin/login",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "이용약관",
+          "href": "/terms",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "개인정보 처리 안내",
+          "href": "/privacy",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Riot Games의 Legal Jibber Jabber 정책",
+          "href": "https://www.riotgames.com/en/legal",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "홈",
+          "href": "/",
+          "visible": true
+        }
+      ],
+      "axeViolations": [],
+      "axUnnamedFocusable": [],
+      "issues": []
+    },
+    {
+      "path": "/signup",
+      "viewport": "mobile",
+      "status": 200,
+      "lang": "ko",
+      "mainCount": 1,
+      "h1Count": 1,
+      "hasSkipLink": true,
+      "hasHorizontalOverflow": false,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "reducedMotionMatches": true,
+      "maxAnimationDurationMs": 0,
+      "performance": {
+        "ttfbMs": 10,
+        "lcpMs": 36,
+        "cls": 0,
+        "layoutShifts": [],
+        "longTaskMs": 0,
+        "requestCount": 28,
+        "transferBytes": 21481,
+        "scriptBytes": 0
+      },
+      "firstTab": {
+        "tag": "a",
+        "label": "본문 바로가기",
+        "href": "#main-content",
+        "visible": true
+      },
+      "tabSequence": [
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "K-LOL.GG 홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "홈으로 돌아가기",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "이용약관",
+          "href": "/terms",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "개인정보 처리 안내",
+          "href": "/privacy",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Riot Games의 Legal Jibber Jabber 정책",
+          "href": "https://www.riotgames.com/en/legal",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "플레이어",
+          "href": "/players",
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 검색 열기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "로그인",
+          "href": "/login",
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 메뉴 열기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        }
+      ],
+      "axeViolations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "nodes": [
+            {
+              "target": [
+                ".site-feature-state-module__0BoFoq__panel > a[href=\"/\"]"
+              ],
+              "html": "<a href=\"/\">홈으로 돌아가기</a>",
+              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.16 (foreground color: #ffffff, background color: #477fbd, font size: 12.0pt (16px), font weight: bold). Expected contrast ratio of 4.5:1"
+            }
+          ]
+        }
+      ],
+      "axUnnamedFocusable": [],
+      "issues": [
+        "AXE_color-contrast:1"
+      ]
+    },
+    {
+      "path": "/",
+      "viewport": "narrow",
+      "status": 200,
+      "lang": "ko",
+      "mainCount": 1,
+      "h1Count": 1,
+      "hasSkipLink": true,
+      "hasHorizontalOverflow": false,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "reducedMotionMatches": true,
+      "maxAnimationDurationMs": 0,
+      "performance": {
+        "ttfbMs": 10,
+        "lcpMs": 40,
+        "cls": 0,
+        "layoutShifts": [],
+        "longTaskMs": 0,
+        "requestCount": 23,
+        "transferBytes": 22974,
+        "scriptBytes": 0
+      },
+      "firstTab": {
+        "tag": "a",
+        "label": "본문 바로가기",
+        "href": "#main-content",
+        "visible": true
+      },
+      "tabSequence": [
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "K-LOL.GG 홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "label": "",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "찾아보기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "이용 가능플레이어 찾기회원명·닉네임·Riot ID로 함께할 플레이어를 찾아보세요.",
+          "href": "/players",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "이용 가능경기 살펴보기최근 경기와 세트 기록을 가볍게 둘러보세요.",
+          "href": "/matches",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "이용 가능팀 밸런스포지션과 경기 기록을 맞춰 즐거운 팀을 만들어 보세요.",
+          "href": "/tools/team-balance",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "이벤트전 이용 가능대회 진행열린 이벤트를 보고 바로 참가해 보세요.",
+          "href": "/competitions",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "전체 랭킹 보기",
+          "href": "/rankings",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "로그인",
+          "href": "/login",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "가입하기",
+          "href": "/signup",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "이용약관",
+          "href": "/terms",
+          "visible": true
+        }
+      ],
+      "axeViolations": [],
+      "axUnnamedFocusable": [],
+      "issues": []
+    },
+    {
+      "path": "/players",
+      "viewport": "narrow",
+      "status": 200,
+      "lang": "ko",
+      "mainCount": 1,
+      "h1Count": 1,
+      "hasSkipLink": true,
+      "hasHorizontalOverflow": false,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "reducedMotionMatches": true,
+      "maxAnimationDurationMs": 0,
+      "performance": {
+        "ttfbMs": 6,
+        "lcpMs": 32,
+        "cls": 0,
+        "layoutShifts": [],
+        "longTaskMs": 0,
+        "requestCount": 22,
+        "transferBytes": 18354,
+        "scriptBytes": 0
+      },
+      "firstTab": {
+        "tag": "a",
+        "label": "본문 바로가기",
+        "href": "#main-content",
+        "visible": true
+      },
+      "tabSequence": [
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "K-LOL.GG 홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "홈으로",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "label": "",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "검색",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "전체",
+          "href": "/players",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "아이언",
+          "href": "/players?tier=IRON",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "브론즈",
+          "href": "/players?tier=BRONZE",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "실버",
+          "href": "/players?tier=SILVER",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "골드",
+          "href": "/players?tier=GOLD",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "플래티넘",
+          "href": "/players?tier=PLATINUM",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "에메랄드",
+          "href": "/players?tier=EMERALD",
+          "visible": true
+        }
+      ],
+      "axeViolations": [],
+      "axUnnamedFocusable": [],
+      "issues": []
+    },
+    {
+      "path": "/matches",
+      "viewport": "narrow",
+      "status": 200,
+      "lang": "ko",
+      "mainCount": 1,
+      "h1Count": 1,
+      "hasSkipLink": true,
+      "hasHorizontalOverflow": false,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "reducedMotionMatches": true,
+      "maxAnimationDurationMs": 0,
+      "performance": {
+        "ttfbMs": 9,
+        "lcpMs": 36,
+        "cls": 0,
+        "layoutShifts": [],
+        "longTaskMs": 0,
+        "requestCount": 24,
+        "transferBytes": 20514,
+        "scriptBytes": 0
+      },
+      "firstTab": {
+        "tag": "a",
+        "label": "본문 바로가기",
+        "href": "#main-content",
+        "visible": true
+      },
+      "tabSequence": [
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "K-LOL.GG 홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "결과 접수",
+          "href": "/matches/submit",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "플레이어 찾기",
+          "href": "/players",
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "label": "",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "select",
+          "label": "전체 시즌",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "select",
+          "label": "전체블루 승리레드 승리무승부",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "label": "",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "label": "",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "label": "",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "label": "",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "label": "",
+          "href": null,
+          "visible": true
+        }
+      ],
+      "axeViolations": [],
+      "axUnnamedFocusable": [],
+      "issues": []
+    },
+    {
+      "path": "/rankings",
+      "viewport": "narrow",
+      "status": 200,
+      "lang": "ko",
+      "mainCount": 1,
+      "h1Count": 1,
+      "hasSkipLink": true,
+      "hasHorizontalOverflow": false,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "reducedMotionMatches": true,
+      "maxAnimationDurationMs": 0,
+      "performance": {
+        "ttfbMs": 7,
+        "lcpMs": 32,
+        "cls": 0,
+        "layoutShifts": [],
+        "longTaskMs": 0,
+        "requestCount": 27,
+        "transferBytes": 21529,
+        "scriptBytes": 0
+      },
+      "firstTab": {
+        "tag": "a",
+        "label": "본문 바로가기",
+        "href": "#main-content",
+        "visible": true
+      },
+      "tabSequence": [
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "K-LOL.GG 홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "이용약관",
+          "href": "/terms",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "개인정보 처리 안내",
+          "href": "/privacy",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Riot Games의 Legal Jibber Jabber 정책",
+          "href": "https://www.riotgames.com/en/legal",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "플레이어",
+          "href": "/players",
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 검색 열기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "로그인",
+          "href": "/login",
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 메뉴 열기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "body",
+          "label": "본문 바로가기K-LOL.GG새로운 내전 놀이터홈플레이어경기랭킹팀 도구참가 신청대회COMMAND PALETTE무엇을 찾고 있나요?페이지, 도구, ",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        }
+      ],
+      "axeViolations": [],
+      "axUnnamedFocusable": [],
+      "issues": []
+    },
+    {
+      "path": "/competitions",
+      "viewport": "narrow",
+      "status": 200,
+      "lang": "ko",
+      "mainCount": 1,
+      "h1Count": 1,
+      "hasSkipLink": true,
+      "hasHorizontalOverflow": false,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "reducedMotionMatches": true,
+      "maxAnimationDurationMs": 0,
+      "performance": {
+        "ttfbMs": 7,
+        "lcpMs": 32,
+        "cls": 0,
+        "layoutShifts": [],
+        "longTaskMs": 0,
+        "requestCount": 24,
+        "transferBytes": 21284,
+        "scriptBytes": 0
+      },
+      "firstTab": {
+        "tag": "a",
+        "label": "본문 바로가기",
+        "href": "#main-content",
+        "visible": true
+      },
+      "tabSequence": [
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "K-LOL.GG 홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "이벤트전",
+          "href": "/competitions?type=event",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "멸망전",
+          "href": "/competitions?type=destruction",
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "label": "",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "select",
+          "label": "전체 상태준비 중참가 모집팀 편성진행 중완료취소",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "select",
+          "label": "전체 방식포지션 드래프트칼바람",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "찾기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "이용약관",
+          "href": "/terms",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "개인정보 처리 안내",
+          "href": "/privacy",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Riot Games의 Legal Jibber Jabber 정책",
+          "href": "https://www.riotgames.com/en/legal",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "홈",
+          "href": "/",
+          "visible": true
+        }
+      ],
+      "axeViolations": [],
+      "axUnnamedFocusable": [],
+      "issues": []
+    },
+    {
+      "path": "/tools/team-balance",
+      "viewport": "narrow",
+      "status": 200,
+      "lang": "ko",
+      "mainCount": 1,
+      "h1Count": 1,
+      "hasSkipLink": true,
+      "hasHorizontalOverflow": false,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "reducedMotionMatches": true,
+      "maxAnimationDurationMs": 0,
+      "performance": {
+        "ttfbMs": 7,
+        "lcpMs": 32,
+        "cls": 0,
+        "layoutShifts": [],
+        "longTaskMs": 0,
+        "requestCount": 30,
+        "transferBytes": 21443,
+        "scriptBytes": 0
+      },
+      "firstTab": {
+        "tag": "a",
+        "label": "본문 바로가기",
+        "href": "#main-content",
+        "visible": true
+      },
+      "tabSequence": [
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "K-LOL.GG 홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "이용약관",
+          "href": "/terms",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "개인정보 처리 안내",
+          "href": "/privacy",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Riot Games의 Legal Jibber Jabber 정책",
+          "href": "https://www.riotgames.com/en/legal",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "플레이어",
+          "href": "/players",
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 검색 열기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "로그인",
+          "href": "/login",
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 메뉴 열기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "body",
+          "label": "본문 바로가기K-LOL.GG새로운 내전 놀이터홈플레이어경기랭킹팀 도구참가 신청대회COMMAND PALETTE무엇을 찾고 있나요?페이지, 도구, ",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        }
+      ],
+      "axeViolations": [],
+      "axUnnamedFocusable": [],
+      "issues": []
+    },
+    {
+      "path": "/tools/coin-toss",
+      "viewport": "narrow",
+      "status": 200,
+      "lang": "ko",
+      "mainCount": 1,
+      "h1Count": 1,
+      "hasSkipLink": true,
+      "hasHorizontalOverflow": false,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "reducedMotionMatches": true,
+      "maxAnimationDurationMs": 0,
+      "performance": {
+        "ttfbMs": 6,
+        "lcpMs": 36,
+        "cls": 0,
+        "layoutShifts": [],
+        "longTaskMs": 0,
+        "requestCount": 30,
+        "transferBytes": 23503,
+        "scriptBytes": 0
+      },
+      "firstTab": {
+        "tag": "a",
+        "label": "본문 바로가기",
+        "href": "#main-content",
+        "visible": true
+      },
+      "tabSequence": [
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "K-LOL.GG 홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "팀 밸런스",
+          "href": "/tools/team-balance",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "랜덤 팀",
+          "href": "/tools/random-team",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "코인 토스",
+          "href": "/tools/coin-toss",
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "코인 던지기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "이용약관",
+          "href": "/terms",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "개인정보 처리 안내",
+          "href": "/privacy",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Riot Games의 Legal Jibber Jabber 정책",
+          "href": "https://www.riotgames.com/en/legal",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "플레이어",
+          "href": "/players",
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 검색 열기",
+          "href": null,
+          "visible": true
+        }
+      ],
+      "axeViolations": [],
+      "axUnnamedFocusable": [],
+      "issues": []
+    },
+    {
+      "path": "/tools/random-team",
+      "viewport": "narrow",
+      "status": 200,
+      "lang": "ko",
+      "mainCount": 1,
+      "h1Count": 1,
+      "hasSkipLink": true,
+      "hasHorizontalOverflow": false,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "reducedMotionMatches": true,
+      "maxAnimationDurationMs": 0,
+      "performance": {
+        "ttfbMs": 8,
+        "lcpMs": 36,
+        "cls": 0,
+        "layoutShifts": [],
+        "longTaskMs": 0,
+        "requestCount": 30,
+        "transferBytes": 23721,
+        "scriptBytes": 0
+      },
+      "firstTab": {
+        "tag": "a",
+        "label": "본문 바로가기",
+        "href": "#main-content",
+        "visible": true
+      },
+      "tabSequence": [
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "K-LOL.GG 홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "팀 밸런스",
+          "href": "/tools/team-balance",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "랜덤 팀",
+          "href": "/tools/random-team",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "코인 토스",
+          "href": "/tools/coin-toss",
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "무작위",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "티어 균형",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "textarea",
+          "label": "",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "팀 섞기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "초기화",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "이용약관",
+          "href": "/terms",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "개인정보 처리 안내",
+          "href": "/privacy",
+          "visible": true
+        }
+      ],
+      "axeViolations": [],
+      "axUnnamedFocusable": [],
+      "issues": []
+    },
+    {
+      "path": "/login",
+      "viewport": "narrow",
+      "status": 200,
+      "lang": "ko",
+      "mainCount": 1,
+      "h1Count": 2,
+      "hasSkipLink": true,
+      "hasHorizontalOverflow": false,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "reducedMotionMatches": true,
+      "maxAnimationDurationMs": 0,
+      "performance": {
+        "ttfbMs": 7,
+        "lcpMs": 36,
+        "cls": 0,
+        "layoutShifts": [],
+        "longTaskMs": 0,
+        "requestCount": 28,
+        "transferBytes": 23253,
+        "scriptBytes": 0
+      },
+      "firstTab": {
+        "tag": "a",
+        "label": "본문 바로가기",
+        "href": "#main-content",
+        "visible": true
+      },
+      "tabSequence": [
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "K-LOL.GG 홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "label": "",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "input",
+          "label": "",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "로그인",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "가입 신청",
+          "href": "/signup",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "비밀번호 도움",
+          "href": "/forgot-password",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "관리자 로그인",
+          "href": "/admin/login",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "이용약관",
+          "href": "/terms",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "개인정보 처리 안내",
+          "href": "/privacy",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Riot Games의 Legal Jibber Jabber 정책",
+          "href": "https://www.riotgames.com/en/legal",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "홈",
+          "href": "/",
+          "visible": true
+        }
+      ],
+      "axeViolations": [],
+      "axUnnamedFocusable": [],
+      "issues": []
+    },
+    {
+      "path": "/signup",
+      "viewport": "narrow",
+      "status": 200,
+      "lang": "ko",
+      "mainCount": 1,
+      "h1Count": 1,
+      "hasSkipLink": true,
+      "hasHorizontalOverflow": false,
+      "scrollWidth": 320,
+      "clientWidth": 320,
+      "reducedMotionMatches": true,
+      "maxAnimationDurationMs": 0,
+      "performance": {
+        "ttfbMs": 7,
+        "lcpMs": 32,
+        "cls": 0,
+        "layoutShifts": [],
+        "longTaskMs": 0,
+        "requestCount": 28,
+        "transferBytes": 21488,
+        "scriptBytes": 0
+      },
+      "firstTab": {
+        "tag": "a",
+        "label": "본문 바로가기",
+        "href": "#main-content",
+        "visible": true
+      },
+      "tabSequence": [
+        {
+          "tag": "a",
+          "label": "본문 바로가기",
+          "href": "#main-content",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "K-LOL.GG 홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "홈으로 돌아가기",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "이용약관",
+          "href": "/terms",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "개인정보 처리 안내",
+          "href": "/privacy",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "Riot Games의 Legal Jibber Jabber 정책",
+          "href": "https://www.riotgames.com/en/legal",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "홈",
+          "href": "/",
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "플레이어",
+          "href": "/players",
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 검색 열기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "a",
+          "label": "로그인",
+          "href": "/login",
+          "visible": true
+        },
+        {
+          "tag": "button",
+          "label": "전체 메뉴 열기",
+          "href": null,
+          "visible": true
+        },
+        {
+          "tag": "body",
+          "label": "본문 바로가기K-LOL.GG새로운 내전 놀이터홈플레이어경기랭킹팀 도구참가 신청대회COMMAND PALETTE무엇을 찾고 있나요?페이지, 도구, ",
+          "href": null,
+          "visible": true
+        }
+      ],
+      "axeViolations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "nodes": [
+            {
+              "target": [
+                ".site-feature-state-module__0BoFoq__panel > a[href=\"/\"]"
+              ],
+              "html": "<a href=\"/\">홈으로 돌아가기</a>",
+              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.16 (foreground color: #ffffff, background color: #477fbd, font size: 12.0pt (16px), font weight: bold). Expected contrast ratio of 4.5:1"
+            }
+          ]
+        }
+      ],
+      "axUnnamedFocusable": [],
+      "issues": [
+        "AXE_color-contrast:1"
+      ]
+    }
+  ]
+}

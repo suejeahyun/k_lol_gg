@@ -50,6 +50,7 @@ export const players = registrySchema.table(
   (table) => [
     uniqueIndex("players_legacy_id_uidx").on(table.legacyId),
     uniqueIndex("players_user_account_id_uidx").on(table.userAccountId),
+    uniqueIndex("players_id_user_account_uidx").on(table.id, table.userAccountId),
     uniqueIndex("players_nickname_tag_line_normalized_uidx").on(
       table.nicknameNormalized,
       table.tagLineNormalized,

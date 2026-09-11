@@ -55,6 +55,8 @@ test("S05-B persists canonical full-ledger MMR replay without competing for the 
   const adminId = randomUUID();
   const adminSessionId = randomUUID();
   const seasonId = randomUUID();
+  const endedSeasonId = randomUUID();
+  const activeWithoutReadySeasonId = randomUUID();
   const matchIds = [randomUUID(), randomUUID()] as const;
   const gameIds = [randomUUID(), randomUUID()] as const;
   const playerIds = Array.from({ length: 11 }, () => randomUUID());
@@ -190,6 +192,22 @@ test("S05-B persists canonical full-ledger MMR replay without competing for the 
     assert.equal((await database.select().from(mmrProjectionStates))[0]?.generation, 4);
     assert.equal((await database.select().from(mmrPlayerProfiles)).length, 40, "published generations remain append-only");
 
+    await database.insert(seasons).values({
+      id: endedSeasonId,
+      name: "종료된 최신 계산 시즌",
+      nameNormalized: "ended-latest-projection-season",
+      status: "ENDED",
+      activatedAt: new Date(now.getTime() - 86_400_000),
+      endedAt: now,
+    });
+    await database.insert(seasonProjectionStates).values({
+      seasonId: endedSeasonId, generation: 1, status: "READY", sourceMatchCount: 0, sourceGameCount: 0,
+      sourceParticipantCount: 0, sourceChecksum: randomBytes(32), calculatedAt: new Date(now.getTime() + 86_400_000),
+    });
+    await database.insert(playerSeasonStats).values({
+      seasonId: endedSeasonId, playerId: playerIds[10], generation: 1, totalGames: 4, participationCount: 4,
+      wins: 4, losses: 0, mvpCount: 0, calculatedAt: now,
+    });
     await database.insert(seasonProjectionStates).values({
       seasonId, generation: 1, status: "READY", sourceMatchCount: 2, sourceGameCount: 2,
       sourceParticipantCount: 20, sourceChecksum: randomBytes(32), calculatedAt: now,
@@ -201,7 +219,12 @@ test("S05-B persists canonical full-ledger MMR replay without competing for the 
     const rating = await new PostgresTeamBalanceRatingProvider().load(database, [playerIds[0]!, playerIds[10]!]);
     assert.equal(rating.generation, 4);
     assert.equal(rating.ratings.get(playerIds[0]!)?.positions?.TOP?.sampleSize, 2);
-    assert.equal(rating.ratings.get(playerIds[10]!)?.overall, 75, "players absent from READY MMR use S05 statistics fallback");
+    assert.equal(rating.ratings.get(playerIds[10]!)?.overall, 75, "generic fallback uses only the ACTIVE READY season");
+    assert.deepEqual(rating.ratings.get(playerIds[10]!)?.v1?.mmr, {
+      overall: 50,
+      confidence: 0,
+      positions: { TOP: 50, JGL: 50, MID: 50, ADC: 50, SUP: 50 },
+    }, "missing V1 balance profile must not inherit the generic statistics fallback");
 
     const publicPage = await repository.listPlayers({ query: "MMR플레이어", position: null, page: 1, pageSize: 20 });
     assert.equal(publicPage.total, 10);
@@ -211,6 +234,18 @@ test("S05-B persists canonical full-ledger MMR replay without competing for the 
     // state. Keep this contract's durable history, but release its temporary
     // active-season singleton before the next isolated-harness phase.
     await database.update(seasons).set({ status: "ENDED", endedAt: now, revision: 1 }).where(eq(seasons.id, seasonId));
+    await database.insert(seasons).values({
+      id: activeWithoutReadySeasonId,
+      name: "계산 대기 활성 시즌",
+      nameNormalized: "active-without-ready-projection",
+      status: "ACTIVE",
+      activatedAt: now,
+    });
+    const noReadyRating = await new PostgresTeamBalanceRatingProvider().load(database, [playerIds[10]!]);
+    assert.equal(noReadyRating.ratings.get(playerIds[10]!)?.overall, null);
+    assert.equal(noReadyRating.ratings.get(playerIds[10]!)?.v1?.season, null);
+    assert.equal(noReadyRating.ratings.get(playerIds[10]!)?.v1?.mmr.confidence, 0);
+    await database.update(seasons).set({ status: "ENDED", endedAt: now, revision: 1 }).where(eq(seasons.id, activeWithoutReadySeasonId));
   } finally {
     await pool.end();
   }

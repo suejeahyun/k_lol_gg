@@ -404,7 +404,7 @@ export function TeamBalanceBuilder() {
 
       {message ? <p className={styles.error} role="alert">{message}</p> : null}
       <div className={styles.actions}>
-        <button className={styles.primaryButton} type="submit" disabled={pending || selectedRows.length !== 10}><Scale size={18} aria-hidden="true" /> {pending ? "계산 중…" : "상위 3개 계산"}</button>
+        <button className={styles.primaryButton} type="submit" disabled={pending || selectedRows.length !== 10}><Scale size={18} aria-hidden="true" /> {pending ? "계산 중…" : "V1 추천 계산"}</button>
         <button className={styles.secondaryButton} type="button" disabled={pending} onClick={reset}><RotateCcw size={17} aria-hidden="true" /> 입력 초기화</button>
         <span className={styles.stageHint}><Plus size={14} aria-hidden="true" /> 표본이 없으면 중립 점수 50으로 계산합니다.</span>
       </div>

@@ -69,7 +69,8 @@ test("홈은 DB 전체 활성 챔피언을 읽되 여성 허용 목록에서 KST
   assert.match(home, /우리 같이/);
   assert.match(home, /롤하자~/);
   assert.match(home, /getPublicSeasonRanking\(null, 10\)/);
-  assert.match(home, /className="home-ranking-table"/);
+  assert.match(home, /buildHomePublicRankingSummaries/);
+  assert.match(home, /home-ranking-summary-grid/);
   assert.doesNotMatch(home, /ChampionPortrait/);
   assert.doesNotMatch(home, /variant="splash"/);
   assert.doesNotMatch(home, /displayChampion\.imageUrl/);
@@ -92,11 +93,13 @@ test("홈과 플레이어 찾기는 회원명 검색을 안내하되 회원명�
   assert.doesNotMatch(playerPage, /player\.memberName/);
 });
 
-test("홈의 고정폭 랭킹 표는 모바일에서 페이지 grid를 넓히지 않는다", () => {
+test("홈의 지표별 랭킹 요약은 모바일에서 44px 터치 영역과 단일 열을 유지한다", () => {
   const styles = source("../src/app/globals.css");
+  const home = source("../src/app/(public)/(home)/page.tsx");
   assert.match(styles, /\.home-page\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/s);
   assert.match(styles, /\.home-page\s*>\s*\*\s*\{[^}]*min-width:\s*0/s);
   assert.match(styles, /@media\s*\(max-width:\s*820px\)[\s\S]*?\.hero-panel\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/s);
-  assert.match(styles, /\.home-ranking-table-wrap\s*\{[^}]*overflow-x:\s*auto/s);
-  assert.match(styles, /\.home-ranking-table\s*\{[^}]*min-width:\s*580px/s);
+  assert.match(styles, /\.home-ranking-summary li > a\s*\{[^}]*min-height:\s*44px/s);
+  assert.match(styles, /@media\s*\(max-width:\s*820px\)[\s\S]*?\.home-ranking-summary-grid\s*\{[^}]*grid-template-columns:\s*1fr/s);
+  assert.doesNotMatch(home, /home-ranking-table/);
 });

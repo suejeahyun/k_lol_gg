@@ -34,6 +34,18 @@ import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
 
 const digest = "ab".repeat(32);
 
+function postgresConstraint(code: string, constraint: string) {
+  return (error: unknown) => {
+    let current: unknown = error;
+    while (current && typeof current === "object") {
+      const candidate = current as { code?: string; constraint?: string; cause?: unknown };
+      if (candidate.code === code && candidate.constraint === constraint) return true;
+      current = candidate.cause;
+    }
+    return false;
+  };
+}
+
 function ownerContext(actor: TransactionSessionActor, label: string): RiotCommandContext {
   return {
     principalId: actor.userAccountId,
@@ -89,6 +101,11 @@ test("S12 Riot persistence keeps owner auth, one-time RSO, jobs, receipts, audit
   const sessionId = randomUUID();
   const playerId = randomUUID();
   const actor = { userAccountId: ownerId, sessionId, role: "USER", authVersion: 0 } as const;
+  const secondOwnerId = randomUUID();
+  const secondSessionId = randomUUID();
+  const secondPlayerId = randomUUID();
+  const unownedPlayerId = randomUUID();
+  const secondActor = { userAccountId: secondOwnerId, sessionId: secondSessionId, role: "USER", authVersion: 0 } as const;
   const now = new Date();
 
   try {
@@ -106,35 +123,37 @@ test("S12 Riot persistence keeps owner auth, one-time RSO, jobs, receipts, audit
     assert.equal((await pool.query("select 1 from information_schema.tables where table_schema='competition' and table_name='destruction_competitions'")).rowCount, 1);
     assert.equal((await pool.query("select 1 from information_schema.tables where table_schema='catalog' and table_name='champions'")).rowCount, 1);
     const riotMigration = await readFile(new URL("../../drizzle/0014_s12_riot.sql", import.meta.url), "utf8");
+    const riotLinkSafetyMigration = await readFile(new URL("../../drizzle/0035_supreme_joystick.sql", import.meta.url), "utf8");
     assert.doesNotMatch(riotMigration, /champion_(?:command_receipts|outbox)/u, "0014 must not pre-apply the later champion mutation ledger");
+    assert.match(riotLinkSafetyMigration, /DO \$\$/u);
+    assert.match(riotLinkSafetyMigration, /GROUP BY "normalized_key"/u);
+    assert.match(riotLinkSafetyMigration, /GROUP BY "owner_user_account_id"/u);
+    const riotPlayerOwnerMigration = await readFile(new URL("../../drizzle/0036_flowery_hairball.sql", import.meta.url), "utf8");
+    assert.match(riotPlayerOwnerMigration, /DO \$\$/u);
+    assert.match(riotPlayerOwnerMigration, /riot_links_player_owner_fk/u);
     assert.equal((await pool.query("select 1 from information_schema.tables where table_schema='catalog' and table_name in ('champion_command_receipts', 'champion_outbox')")).rowCount, 2, "0016 must install the champion mutation ledger");
 
-    await database.insert(userAccounts).values({
-      id: ownerId,
-      loginId: "s12-owner",
-      loginIdNormalized: "s12-owner",
-      status: "APPROVED",
-    });
-    await database.insert(authSessions).values({
-      id: sessionId,
-      tokenHash: randomBytes(32),
-      userAccountId: ownerId,
-      authVersion: 0,
-      role: "USER",
-      purpose: "ACCOUNT",
-      issuedAt: now,
-      expiresAt: new Date(now.getTime() + 60 * 60_000),
-    });
-    await database.insert(players).values({
-      id: playerId,
-      userAccountId: ownerId,
-      memberName: "S12 계약 회원",
-      memberNameNormalized: "s12 계약 회원",
-      nickname: "S12계약선수",
-      nicknameNormalized: "s12계약선수",
-      tagLine: "KR1",
-      tagLineNormalized: "kr1",
-    });
+    await database.insert(userAccounts).values([
+      { id: ownerId, loginId: "s12-owner", loginIdNormalized: "s12-owner", status: "APPROVED" },
+      { id: secondOwnerId, loginId: "s12-owner-2", loginIdNormalized: "s12-owner-2", status: "APPROVED" },
+    ]);
+    await database.insert(authSessions).values([
+      { id: sessionId, tokenHash: randomBytes(32), userAccountId: ownerId, authVersion: 0, role: "USER", purpose: "ACCOUNT", issuedAt: now, expiresAt: new Date(now.getTime() + 60 * 60_000) },
+      { id: secondSessionId, tokenHash: randomBytes(32), userAccountId: secondOwnerId, authVersion: 0, role: "USER", purpose: "ACCOUNT", issuedAt: now, expiresAt: new Date(now.getTime() + 60 * 60_000) },
+    ]);
+    await database.insert(players).values([
+      { id: playerId, userAccountId: ownerId, memberName: "S12 계약 회원", memberNameNormalized: "s12 계약 회원", nickname: "S12계약선수", nicknameNormalized: "s12계약선수", tagLine: "KR1", tagLineNormalized: "kr1" },
+      { id: secondPlayerId, userAccountId: secondOwnerId, memberName: "S12 계약 회원 둘", memberNameNormalized: "s12 계약 회원 둘", nickname: "S12계약선수둘", nicknameNormalized: "s12계약선수둘", tagLine: "KR1", tagLineNormalized: "kr1" },
+      { id: unownedPlayerId, memberName: "S12 미소유 선수", memberNameNormalized: "s12 미소유 선수", nickname: "S12미소유선수", nicknameNormalized: "s12미소유선수", tagLine: "KR1", tagLineNormalized: "kr1" },
+    ]);
+    await assert.rejects(
+      database.insert(riotAccountLinks).values({
+        id: randomUUID(), revision: 0, playerId: unownedPlayerId, ownerUserAccountId: ownerId,
+        gameName: "Mismatch", tagLine: "KR1", normalizedKey: "mismatch#kr1", protectedPuuid: "test-only",
+        method: "DIRECT_OWNER", status: "CONNECTED", linkedAt: now,
+      }),
+      postgresConstraint("23503", "riot_links_player_owner_fk"),
+    );
 
     gateway.registerIdentity({ gameName: "ContractPlayer", tagLine: "KR1", puuid: "private-direct-puuid" });
     const connectContext = ownerContext(actor, "connect");
@@ -157,12 +176,27 @@ test("S12 Riot persistence keeps owner auth, one-time RSO, jobs, receipts, audit
     const storedDirectLink = (await database.select().from(riotAccountLinks).where(eq(riotAccountLinks.id, linkId)))[0];
     assert.ok(storedDirectLink?.protectedPuuid);
     assert.notEqual(storedDirectLink.protectedPuuid, "private-direct-puuid");
+    await assert.rejects(service.connectDirect({
+      context: ownerContext(secondActor, "duplicate-riot-id"),
+      playerId: secondPlayerId,
+      expectedRevision: 0,
+      gameName: "ContractPlayer",
+      tagLine: "KR1",
+    }), /RIOT_IDENTITY_ALREADY_CONNECTED/u);
     const directDisconnected = await service.disconnect({
       context: ownerContext(actor, "direct-disconnect"),
       playerId,
       expectedRevision: Number(connected.body.revision),
     });
     assert.equal(directDisconnected.body.status, "DISCONNECTED");
+    const reconnectedToSecondOwner = await service.connectDirect({
+      context: ownerContext(secondActor, "reconnect-after-disconnect"),
+      playerId: secondPlayerId,
+      expectedRevision: 0,
+      gameName: "ContractPlayer",
+      tagLine: "KR1",
+    });
+    assert.equal(reconnectedToSecondOwner.body.status, "CONNECTED");
 
     const start = await service.startRso({ context: ownerContext(actor, "rso-start"), returnTo: `/players/${playerId}?tab=riot` });
     const publicState = new URL(start.authorizationUrl).searchParams.get("state");
@@ -236,7 +270,7 @@ test("S12 Riot persistence keeps owner auth, one-time RSO, jobs, receipts, audit
       expectedRevision: Number(verified.body.revision),
     });
     assert.equal(disconnected.body.status, "DISCONNECTED");
-    assert.equal((await database.select().from(riotAccountLinks))[0]?.protectedPuuid, null);
+    assert.equal((await database.select().from(riotAccountLinks).where(eq(riotAccountLinks.playerId, playerId)))[0]?.protectedPuuid, null);
     assert.equal(await adapter.getPublicSummary(playerId), null, "a disconnected link cannot expose a stale public summary");
     assert.deepEqual(await publicQuery.getPublicProfileState(playerId), { kind: "UNLINKED" });
 
@@ -260,7 +294,7 @@ test("S12 Riot persistence keeps owner auth, one-time RSO, jobs, receipts, audit
       gameName: "ContractPlayer",
       tagLine: "KR1",
     }), (error: unknown) => error instanceof RiotApplicationError && error.code === "NOT_FOUND");
-    assert.equal((await database.select().from(riotAccountLinks))[0]?.status, "DISCONNECTED");
+    assert.equal((await database.select().from(riotAccountLinks).where(eq(riotAccountLinks.playerId, playerId)))[0]?.status, "DISCONNECTED");
   } finally {
     await pool.end();
   }

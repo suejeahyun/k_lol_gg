@@ -10,10 +10,14 @@ import styles from "./mmr-admin.module.css";
 
 export function MmrAdminActions({
   generation,
+  formulaVersion,
+  formulaTransition,
   allowed,
   startWithRecalculateConfirmation = false,
 }: {
   generation: number;
+  formulaVersion: string | null;
+  formulaTransition: "ADMIN_RECALCULATION_REQUIRED" | null;
   allowed: boolean;
   startWithRecalculateConfirmation?: boolean;
 }) {
@@ -74,7 +78,7 @@ export function MmrAdminActions({
         <div className={styles.dialogBackdrop} role="presentation">
           <section className={styles.confirmDialog} role="alertdialog" aria-modal="true" aria-labelledby="mmr-recalculate-title" aria-describedby="mmr-recalculate-description">
             <h3 id="mmr-recalculate-title">전체 MMR 원장을 다시 계산할까요?</h3>
-            <p id="mmr-recalculate-description">공개된 모든 경기와 수동 조정 원장을 처음부터 재생합니다. 현재 generation이 바뀐 경우 작업은 안전하게 거부됩니다.</p>
+            <p id="mmr-recalculate-description">{formulaTransition === "ADMIN_RECALCULATION_REQUIRED" ? `현재 게시 generation ${generation}의 ${formulaVersion ?? "기존"} 공식에서 V2_DETERMINISTIC_1 공식으로 전환합니다. 자동 전환은 없으며, 확인하면 새 generation을 계산해 게시합니다.` : "공개된 모든 경기와 수동 조정 원장을 처음부터 재생합니다. 현재 generation이 바뀐 경우 작업은 안전하게 거부됩니다."}</p>
             <div>
               <button type="button" className={styles.cancelButton} disabled={busy} onClick={() => setConfirmingRecalculation(false)}>취소</button>
               <button type="button" disabled={busy} autoFocus onClick={() => { setConfirmingRecalculation(false); void command("recalculate", {}); }}>확인 후 재계산</button>

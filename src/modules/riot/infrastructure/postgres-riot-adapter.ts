@@ -37,6 +37,26 @@ type LinkRow = typeof riotAccountLinks.$inferSelect;
 type StateRow = typeof riotRsoStates.$inferSelect;
 type JobRow = typeof riotSyncJobs.$inferSelect;
 
+function postgresCode(error: unknown): string | undefined {
+  let current = error;
+  while (current && typeof current === "object") {
+    const candidate = current as { code?: string; cause?: unknown };
+    if (candidate.code && /^[0-9A-Z]{5}$/u.test(candidate.code)) return candidate.code;
+    current = candidate.cause;
+  }
+  return undefined;
+}
+
+function postgresConstraint(error: unknown): string | undefined {
+  let current = error;
+  while (current && typeof current === "object") {
+    const candidate = current as { constraint?: string; cause?: unknown };
+    if (candidate.constraint) return candidate.constraint;
+    current = candidate.cause;
+  }
+  return undefined;
+}
+
 function linkFromRow(row: LinkRow): RiotAccountLink {
   return {
     id: row.id,
@@ -254,10 +274,20 @@ export class PostgresRiotAdapter implements RiotQueryRepository {
             updatedAt: new Date(),
           } as const;
           const exists = (await transaction.select({ id: riotAccountLinks.id }).from(riotAccountLinks).where(eq(riotAccountLinks.id, link.id)).limit(1))[0];
-          if (!exists) await transaction.insert(riotAccountLinks).values({ id: link.id, ...values });
-          else {
-            const updated = await transaction.update(riotAccountLinks).set(values).where(and(eq(riotAccountLinks.id, link.id), eq(riotAccountLinks.revision, expectedRevision))).returning({ id: riotAccountLinks.id });
-            if (!updated[0]) throw new Error("STALE_RIOT_REVISION");
+          try {
+            if (!exists) await transaction.insert(riotAccountLinks).values({ id: link.id, ...values });
+            else {
+              const updated = await transaction.update(riotAccountLinks).set(values).where(and(eq(riotAccountLinks.id, link.id), eq(riotAccountLinks.revision, expectedRevision))).returning({ id: riotAccountLinks.id });
+              if (!updated[0]) throw new Error("STALE_RIOT_REVISION");
+            }
+          } catch (error) {
+            if (postgresCode(error) === "23505" && postgresConstraint(error) === "riot_links_connected_normalized_key_uidx") {
+              throw new Error("RIOT_IDENTITY_ALREADY_CONNECTED");
+            }
+            if (postgresCode(error) === "23505" && postgresConstraint(error) === "riot_links_connected_owner_uidx") {
+              throw new Error("RIOT_OWNER_ALREADY_CONNECTED");
+            }
+            throw error;
           }
         },
         loadRsoStateForUpdate: async (context, stateDigestHex) => {

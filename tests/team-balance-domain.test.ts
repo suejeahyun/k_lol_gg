@@ -6,6 +6,7 @@ import {
   DEFAULT_TEAM_BALANCE_CONFIDENCE,
   DEFAULT_TEAM_BALANCE_SCORE,
   evaluateTeamBalanceLayout,
+  formatTeamBalanceShareText,
   TEAM_BALANCE_PLAYER_COUNT,
   TEAM_BALANCE_POSITIONS,
   TEAM_BALANCE_PREFERENCES,
@@ -68,48 +69,6 @@ function exhaustivePairedLayouts(players: readonly TeamBalancePlayer[]) {
   return layouts;
 }
 
-function compareOracle(
-  left: ReturnType<typeof evaluateTeamBalanceLayout>,
-  right: ReturnType<typeof evaluateTeamBalanceLayout>,
-) {
-  return (
-    left.score.totalPenalty - right.score.totalPenalty ||
-    left.score.teamStrength.difference - right.score.teamStrength.difference ||
-    left.score.positionDifferenceTotal - right.score.positionDifferenceTotal ||
-    left.score.preference.rawPenalty - right.score.preference.rawPenalty ||
-    left.score.uncertainty.rawPenalty - right.score.uncertainty.rawPenalty ||
-    (left.signature < right.signature ? -1 : left.signature > right.signature ? 1 : 0)
-  );
-}
-
-function comparePositionOracle(
-  left: ReturnType<typeof evaluateTeamBalanceLayout>,
-  right: ReturnType<typeof evaluateTeamBalanceLayout>,
-) {
-  return (
-    left.score.positionDifferenceTotal - right.score.positionDifferenceTotal ||
-    left.score.teamStrength.difference - right.score.teamStrength.difference ||
-    left.score.preference.rawPenalty - right.score.preference.rawPenalty ||
-    left.score.uncertainty.rawPenalty - right.score.uncertainty.rawPenalty ||
-    left.score.totalPenalty - right.score.totalPenalty ||
-    (left.signature < right.signature ? -1 : left.signature > right.signature ? 1 : 0)
-  );
-}
-
-function comparePreferenceOracle(
-  left: ReturnType<typeof evaluateTeamBalanceLayout>,
-  right: ReturnType<typeof evaluateTeamBalanceLayout>,
-) {
-  return (
-    left.score.preference.rawPenalty - right.score.preference.rawPenalty ||
-    left.score.teamStrength.difference - right.score.teamStrength.difference ||
-    left.score.positionDifferenceTotal - right.score.positionDifferenceTotal ||
-    left.score.uncertainty.rawPenalty - right.score.uncertainty.rawPenalty ||
-    left.score.totalPenalty - right.score.totalPenalty ||
-    (left.signature < right.signature ? -1 : left.signature > right.signature ? 1 : 0)
-  );
-}
-
 test("team balance vocabulary and neutral provider defaults are explicit", () => {
   assert.deepEqual(TEAM_BALANCE_POSITIONS, ["TOP", "JGL", "MID", "ADC", "SUP"]);
   assert.deepEqual(TEAM_BALANCE_TEAMS, ["BLUE", "RED"]);
@@ -155,13 +114,13 @@ test("input rejects oversized, duplicate, missing-position, and invalid-score ca
   );
 });
 
-test("each candidate is a lossless 5:5 layout with every position exactly once", () => {
+test("the V1 global recommendation is one lossless 5:5 layout with every position exactly once", () => {
   const players = pairedPlayers();
   const result = calculateTeamBalanceCandidates(players);
-  assert.equal(result.candidates.length, 3);
+  assert.equal(result.candidates.length, 1);
   assert.equal(result.search.symmetryAnchorPlayerId, "player-00");
   assert.equal(result.search.teamCombinationCount, 126);
-  assert.equal(result.search.feasibleLayoutCount, 16);
+  assert.equal(result.search.feasibleLayoutCount, 126);
 
   for (const candidate of result.candidates) {
     assert.equal(candidate.assignments.length, 10);
@@ -171,33 +130,49 @@ test("each candidate is a lossless 5:5 layout with every position exactly once",
       assert.equal(assignments.length, 5);
       assert.deepEqual(assignments.map((entry) => entry.position), TEAM_BALANCE_POSITIONS);
     }
-    assert.equal(candidate.assignments.find((entry) => entry.playerId === "player-00")?.team, "BLUE");
+    assert.equal(candidate.assignments.find((entry) => entry.playerId === "player-00")?.team, "RED");
   }
 });
 
-test("three recommendations use distinct overall, position, and preference criteria", () => {
+test("V1 global recommendation is deterministic regardless of request order", () => {
   const players = pairedPlayers();
-  const evaluated = exhaustivePairedLayouts(players).map((layout) => evaluateTeamBalanceLayout(players, layout));
-  const used = new Set<string>();
-  const oracle = [compareOracle, comparePositionOracle, comparePreferenceOracle].map((compare) => {
-    const candidate = [...evaluated].sort(compare).find((entry) => !used.has(entry.signature))!;
-    used.add(candidate.signature);
-    return candidate;
-  });
-  const calculated = calculateTeamBalanceCandidates([...players].reverse());
+  const forward = calculateTeamBalanceCandidates(players);
+  const reverse = calculateTeamBalanceCandidates([...players].reverse());
 
-  assert.equal(new Set(calculated.candidates.map((candidate) => candidate.signature)).size, 3);
-  assert.deepEqual(
-    calculated.candidates.map((candidate) => candidate.signature),
-    oracle.map((candidate) => candidate.signature),
-  );
-  assert.deepEqual(
-    calculated.candidates.map((candidate) => candidate.score),
-    oracle.map((candidate) => candidate.score),
-  );
+  assert.equal(forward.candidates.length, 1);
+  assert.deepEqual(reverse.candidates, forward.candidates);
 });
 
-test("fully flexible ten-player search exhausts 1,814,400 layouts within the focused budget", () => {
+test("mixed legacy and new player ids keep a total order across forward, reverse and rotate", () => {
+  const legacyIds = [null, 4, 1, null, 5, 2, null, 6, 3, null] as const;
+  const players = pairedPlayers().map((player, index) => ({
+    ...player,
+    rating: {
+      ...player.rating!,
+      v1: {
+        legacyPlayerId: legacyIds[index]!,
+        currentTier: null,
+        peakTier: null,
+        season: null,
+        internalGames: 0,
+        internalPositionGames: {},
+        recentSolo: null,
+        balanceOverrideScore: 0,
+        mmr: { overall: 50, confidence: 0, positions: {} },
+        missingSources: ["RECENT_SOLO", "BALANCE_OVERRIDE"] as const,
+      },
+    },
+  }));
+  const forward = calculateTeamBalanceCandidates(players);
+  const reverse = calculateTeamBalanceCandidates([...players].reverse());
+  const rotate = calculateTeamBalanceCandidates([...players.slice(3), ...players.slice(0, 3)]);
+
+  assert.equal(forward.search.symmetryAnchorPlayerId, "player-02");
+  assert.deepEqual(reverse.candidates, forward.candidates);
+  assert.deepEqual(rotate.candidates, forward.candidates);
+});
+
+test("V1 search evaluates 126 anchored team splits and each team's best permutation", () => {
   const flexible: TeamBalancePlayer[] = pairedPlayers().map((player, playerIndex) => ({
     ...player,
     eligiblePositions: TEAM_BALANCE_POSITIONS.map((position, positionIndex) => ({
@@ -210,8 +185,8 @@ test("fully flexible ten-player search exhausts 1,814,400 layouts within the foc
   const elapsedMs = performance.now() - startedAt;
 
   assert.equal(result.search.teamCombinationCount, 126);
-  assert.equal(result.search.feasibleLayoutCount, 1_814_400);
-  assert.equal(result.candidates.length, 3);
+  assert.equal(result.search.feasibleLayoutCount, 126);
+  assert.equal(result.candidates.length, 1);
   assert.ok(elapsedMs < 5_000, `exhaustive search took ${Math.round(elapsedMs)}ms`);
 });
 
@@ -250,12 +225,57 @@ test("position rating overrides overall and confidence shrinks unknown data towa
   });
 });
 
-test("eligible positions may still have no feasible five-position lineup", () => {
-  const impossible = pairedPlayers(false).map((player) => ({
+test("positions omitted from the request remain legal V1 AUTO assignments", () => {
+  const topOnly = pairedPlayers(false).map((player) => ({
     ...player,
     eligiblePositions: [{ position: "TOP" as TeamBalancePosition, preference: "AUTO" as const }],
   }));
-  assert.throws(() => calculateTeamBalanceCandidates(impossible), assertCode("NO_FEASIBLE_LAYOUT"));
+  const result = calculateTeamBalanceCandidates(topOnly);
+  assert.equal(result.candidates[0]?.assignments.length, 10);
+  assert.ok(result.candidates[0]?.assignments.every((entry) => entry.preference === "AUTO"));
+});
+
+test("[V1 blueblack golden] score uses tier, inhouse, position experience and the data-missing path", () => {
+  const players = pairedPlayers().map((player, index) => index === 0 ? {
+    ...player,
+    rating: {
+      overall: 50,
+      confidence: 1,
+      sampleSize: 20,
+      positions: { TOP: { score: 50, confidence: 1, sampleSize: 10 } },
+      v1: {
+        legacyPlayerId: 1,
+        currentTier: "골드1",
+        peakTier: "다이아2",
+        season: { totalGames: 20, wins: 10, mvpCount: 2 },
+        internalGames: 20,
+        internalPositionGames: { TOP: 10 },
+        recentSolo: null,
+        balanceOverrideScore: 0,
+        mmr: { overall: 50, confidence: 0, positions: { TOP: 50 } },
+        missingSources: ["RECENT_SOLO", "BALANCE_OVERRIDE"] as const,
+      },
+    },
+  } : player);
+  const evaluated = evaluateTeamBalanceLayout(players, exhaustivePairedLayouts(players)[0]!);
+  const player = evaluated.assignments.find((entry) => entry.playerId === "player-00")!;
+
+  assert.equal(player.rating.source, "V1");
+  assert.equal(player.rating.effectiveScore, 66.7);
+  assert.equal(evaluated.score.v1?.formulaVersion, "V1_BLUEBLACK_AI_GLOBAL_2026_09_11");
+  assert.deepEqual(evaluated.score.v1?.missingSources, ["RECENT_SOLO", "BALANCE_OVERRIDE"]);
+});
+
+test("share text keeps the V1 line order and excludes draft ids, account ids and links", () => {
+  const candidate = calculateTeamBalanceCandidates(pairedPlayers(), 1).candidates[0]!;
+  const text = formatTeamBalanceShareText(
+    { ...candidate, source: "AUTO" },
+    pairedPlayers().map((player, ordinal) => ({ playerId: player.playerId, displayName: ordinal === 0 ? "닉네임\n0" : `닉네임${ordinal}` })),
+  );
+
+  assert.match(text, /^BLUE .+\nRED .+\n밸런스 판단: AI 전체탐색 최고안 \/ RED \d+\.\d% vs BLUE \d+\.\d%$/u);
+  assert.doesNotMatch(text, /https?:|draft|account|player-/u);
+  assert.match(text, /닉네임 0/u);
 });
 
 test("manual evaluation rejects duplicate players and incomplete team-position coverage", () => {

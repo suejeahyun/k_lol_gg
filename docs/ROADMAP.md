@@ -20,4 +20,8 @@
 
 각 슬라이스는 사용자 기능과 같은 영역의 관리자 기능을 함께 완성한다.
 
-S00~S03은 로컬 구현 후보로 통합됐다. 이후에는 S04 단독, S05/S06, S07/S08, S09/S10/S11, S12/S13 순의 병렬 웨이브로 진행한다. 반복되는 전수 검증과 화면 캡처는 S14에서 한 번에 수행하되, 각 슬라이스에서는 컴파일과 변경 범위의 핵심 테스트를 유지한다. 운영 Vercel 전환과 운영 데이터 변경은 이 로드맵의 실행 범위가 아니다.
+S00~S13은 현재 공유 worktree의 구현 후보로 통합됐다. S14에서 최종 `npm run check`의 contracts 347/347·unit 707 pass·1 intentional skip·build 92 app routes, `npm run test:db`의 migration 37개·head `0036_flowery_hairball`·Kakao V4 P0 31/31·recovery archive, `verify:auth-http`, 현재 트리 비밀정보 검사, Data Dragon 173종/346자산과 여성 홈 가이드 68/68을 확인했다. 로컬 production 서버의 공개 자동 품질은 30/30과 axe 위반 0을 확인했고, 전체 높이 캡처는 27/30 PASS·`/competitions` 3조건 BLOCKED다.
+
+운영 Neon production은 비밀값 비노출 preflight와 1일 복구 분기 생성 후 `0035`·`0036`을 단일 transaction으로 적용했다. 사후 migration 37개와 head hash, unique index 3개, validated foreign key 1개, 중복·mismatch 0을 확인했다.
+
+아직 남은 S14 조건은 릴리스 commit·tag·registry·앱 deployment ID 확정, 운영 앱 배포와 smoke, 격리 DB·합성 세션 기반 `/competitions` 및 현재 103개 화면 335대상 회귀 캡처다. 운영 DB 적용만 확인됐고 앱 배포 근거가 없으므로 현재 기능을 운영 반영 완료로 판정하지 않는다. 운영 Vercel 전환은 별도 승인·배포 절차의 범위다.

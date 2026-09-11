@@ -10,6 +10,7 @@ export const TEAM_BALANCE_DRAFT_STATUSES = ["EVALUATED", "SAVED", "ARCHIVED"] as
 export type TeamBalanceDraftStatus = (typeof TEAM_BALANCE_DRAFT_STATUSES)[number];
 export type TeamBalanceDraftAuthorization = "APPROVED_ACCOUNT_MUTATION" | "ADMIN_MUTATION";
 export type TeamBalanceCandidateCriterion =
+  | "V1_AI_GLOBAL"
   | "OVERALL_BALANCE"
   | "POSITION_BALANCE"
   | "PREFERENCE_PRIORITY"
@@ -17,7 +18,7 @@ export type TeamBalanceCandidateCriterion =
   | "MANUAL";
 
 export function automaticTeamBalanceCriterion(rank: number): TeamBalanceCandidateCriterion {
-  return rank === 2 ? "POSITION_BALANCE" : rank === 3 ? "PREFERENCE_PRIORITY" : "OVERALL_BALANCE";
+  return rank === 1 ? "V1_AI_GLOBAL" : rank === 2 ? "POSITION_BALANCE" : rank === 3 ? "PREFERENCE_PRIORITY" : "LEGACY";
 }
 
 export type TeamBalanceDraftParticipant = Readonly<{

@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import {
   bigint,
   check,
+  foreignKey,
   index,
   integer,
   jsonb,
@@ -41,8 +42,19 @@ export const riotAccountLinks = riotSchema.table("account_links", {
   createdAt: timestamptz("created_at").defaultNow().notNull(),
   updatedAt: timestamptz("updated_at").defaultNow().notNull(),
 }, (table) => [
-  uniqueIndex("riot_links_player_uidx").on(table.playerId),
-  index("riot_links_owner_status_idx").on(table.ownerUserAccountId, table.status),
+    uniqueIndex("riot_links_player_uidx").on(table.playerId),
+    uniqueIndex("riot_links_connected_normalized_key_uidx")
+      .on(table.normalizedKey)
+      .where(sql`${table.status} = 'CONNECTED'`),
+    uniqueIndex("riot_links_connected_owner_uidx")
+      .on(table.ownerUserAccountId)
+      .where(sql`${table.status} = 'CONNECTED'`),
+    index("riot_links_owner_status_idx").on(table.ownerUserAccountId, table.status),
+    foreignKey({
+      name: "riot_links_player_owner_fk",
+      columns: [table.playerId, table.ownerUserAccountId],
+      foreignColumns: [players.id, players.userAccountId],
+    }).onDelete("restrict"),
   index("riot_links_normalized_idx").on(table.normalizedKey),
   check("riot_links_revision_nonnegative", sql`${table.revision} >= 0`),
   check("riot_links_normalized_nonempty", sql`char_length(btrim(${table.normalizedKey})) BETWEEN 3 AND 24`),

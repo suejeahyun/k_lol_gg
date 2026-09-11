@@ -38,6 +38,8 @@ test("S12 schema exposes durable ledgers without OAuth token/code/request-log co
   }
   assert.ok(getTableConfig(riotCommandReceipts).indexes.some((index) => index.config.name === "riot_receipts_actor_scope_key_uidx"));
   assert.ok(getTableConfig(riotOutbox).indexes.some((index) => index.config.name === "riot_outbox_dedupe_uidx"));
+  assert.ok(getTableConfig(riotAccountLinks).indexes.some((index) => index.config.name === "riot_links_connected_normalized_key_uidx"));
+  assert.ok(getTableConfig(riotAccountLinks).indexes.some((index) => index.config.name === "riot_links_connected_owner_uidx"));
 });
 
 test("0014 migration and snapshot add only the S12 Riot schema", () => {

@@ -7,6 +7,16 @@ export type MmrPosition = (typeof MMR_POSITIONS)[number];
 export type MmrTeam = (typeof MMR_TEAMS)[number];
 
 export const MMR_FORMULA_VERSION = "V2_DETERMINISTIC_1";
+export const MMR_FORMULA_TRANSITION = Object.freeze({
+  targetFormulaVersion: MMR_FORMULA_VERSION,
+  requiresExplicitAdminRecalculation: true,
+});
+
+export function mmrFormulaTransitionState(formulaVersion: string | null): "ADMIN_RECALCULATION_REQUIRED" | null {
+  return formulaVersion !== null && formulaVersion !== MMR_FORMULA_VERSION
+    ? "ADMIN_RECALCULATION_REQUIRED"
+    : null;
+}
 export const MMR_INITIAL_SCORE_BP = 5_000;
 export const MMR_MIN_SCORE_BP = 100;
 export const MMR_MAX_SCORE_BP = 10_000;

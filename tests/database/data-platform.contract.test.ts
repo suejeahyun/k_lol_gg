@@ -14,8 +14,11 @@ import { applyMigrations } from "../../src/platform/db/migrate";
 import {
   adminTotpCredentials,
   auditEvents,
+  playerSeasonStats,
   authSessions,
   players,
+  seasonProjectionStates,
+  seasons,
   userAccounts,
 } from "../../src/platform/db/schema/index";
 import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
@@ -715,6 +718,36 @@ test("migrations, constraints, repository, and transaction contracts hold on Pos
       assert.deepEqual(wildcardLiteral, []);
       assert.equal(byNickname.some((player) => player.id === inactiveId), false);
       assert.equal("memberName" in byNickname[0]!, false);
+
+      const seasonId = randomUUID();
+      const calculatedAt = new Date();
+      await database.insert(seasons).values({
+        id: seasonId, name: "공개 통계 시즌", nameNormalized: "공개 통계 시즌", status: "ACTIVE", activatedAt: calculatedAt,
+      });
+      await database.insert(seasonProjectionStates).values({
+        seasonId, generation: 1, status: "READY", sourceChecksum: digest("public-player-stats"), calculatedAt,
+      });
+      await database.insert(playerSeasonStats).values({
+        seasonId, playerId: activeId, generation: 1, totalGames: 10, participationCount: 10, wins: 6, losses: 4, mvpCount: 0, calculatedAt,
+      });
+      const projectedStats = await database.execute(sql`
+        select public_stats.total_games, public_stats.wins
+        from statistics.player_season_stats public_stats
+        inner join competition.seasons public_seasons on public_seasons.id = public_stats.season_id
+        inner join statistics.season_projection_states public_projection on public_projection.season_id = public_stats.season_id
+          and public_projection.status = 'READY'
+          and public_projection.generation = public_stats.generation
+        where public_stats.player_id = ${activeId} and public_seasons.status = 'ACTIVE'
+      `);
+      assert.equal(projectedStats.rows.length, 1);
+      assert.deepEqual(await repository.search("lilac"), [{ ...byNickname[0]!, recentMatches: 10, winRate: 60 }]);
+
+      await database.update(playerSeasonStats).set({ generation: 2 }).where(eq(playerSeasonStats.playerId, activeId));
+      assert.deepEqual(await repository.search("lilac"), byNickname, "stale projection generation must not be public");
+
+      await database.update(playerSeasonStats).set({ generation: 1, totalGames: 0, participationCount: 0, wins: 0, losses: 0 }).where(eq(playerSeasonStats.playerId, activeId));
+      assert.deepEqual(await repository.search("lilac"), [{ ...byNickname[0]!, recentMatches: 0, winRate: null }]);
+      await database.update(seasons).set({ status: "ENDED", endedAt: new Date() }).where(eq(seasons.id, seasonId));
     });
 
     await t.test("domain change and audit append commit or roll back atomically", async () => {

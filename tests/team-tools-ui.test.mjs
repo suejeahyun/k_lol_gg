@@ -72,7 +72,7 @@ test("공개 도구 페이지에는 상호 이동과 canonical metadata가 있�
   assert.equal(navigation.includes('aria-current='), true);
 });
 
-test("팀 밸런스 화면은 승인 계정, 10명 입력, top3·수동·저장·재평가 수명주기를 연결한다", () => {
+test("팀 밸런스 화면은 승인 계정, 10명 입력, V1 단일 추천·공유·수동·저장·재평가 수명주기를 연결한다", () => {
   const page = source("../src/app/(public)/(tools)/tools/team-balance/page.tsx");
   const drafts = source("../src/app/(public)/(tools)/tools/team-balance/drafts/page.tsx");
   const builder = source("../src/app/(public)/(tools)/tools/team-balance/team-balance-builder.tsx");
@@ -106,18 +106,21 @@ test("팀 밸런스 화면은 승인 계정, 10명 입력, top3·수동·저장�
     '"If-Match"',
     '"Idempotency-Key"',
     'role="alert"',
-    "상위 3개 계산",
+    "V1 추천 계산",
     "입력 초기화",
   ]) {
     assert.equal(builder.includes(contract), true, contract);
   }
   for (const contract of [
-    "candidate.score.totalPenalty",
-    "종합 균형",
-    "라인 균형",
-    "주 포지션 우선",
+    "V1 AI GLOBAL · ONE RESULT",
+    "V1 기준 추천 결과",
+    "selectedCandidate.score.v1?.recommendationScore",
+    "V1 전체탐색 추천",
     "현재 선택 기준",
-    "새 3가지 기준으로 재평가",
+    "V1 기준으로 재평가",
+    "formatTeamBalanceShareText",
+    "navigator.clipboard.writeText",
+    "팀 결과 복사",
     'mutate("select"',
     'mutate("save"',
     'mutate("reevaluate"',
@@ -132,6 +135,8 @@ test("팀 밸런스 화면은 승인 계정, 10명 입력, top3·수동·저장�
   ]) {
     assert.equal(detail.includes(contract), true, contract);
   }
+  assert.equal(detail.includes("AUTO OPTIONS · TOP 3"), false, "기존 TOP 3 비교 표시는 노출하지 않는다");
+  assert.equal(detail.includes("자동 추천 후보 비교"), false, "기존 세 후보 비교 제목은 노출하지 않는다");
   assert.equal(detail.includes("compactTeams"), false, "1·2·3안의 블루/레드 사진형 미리보기를 제거한다");
   assert.equal(detail.includes("<select"), false, "수동 배치에는 플레이어 드롭다운을 표시하지 않는다");
   for (const contract of [

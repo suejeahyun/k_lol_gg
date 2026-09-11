@@ -3,7 +3,6 @@ import Link from "next/link";
 import {
   ArrowRight,
   CalendarDays,
-  Crown,
   Database,
   Images,
   LogIn,
@@ -27,6 +26,7 @@ import {
   loadRuntimeHomeSnapshot,
 } from "@/modules/home/infrastructure/runtime-home-data";
 import { loadRuntimeStatisticsData } from "@/modules/statistics/infrastructure/runtime-statistics-data";
+import { buildHomePublicRankingSummaries } from "@/modules/statistics/domain/public-ranking-view";
 
 export const dynamic = "force-dynamic";
 
@@ -136,8 +136,8 @@ export default async function HomePage() {
     imageUrl: null,
   };
   const championPresentation = homeChampionPresentation(displayChampion);
-  const currentRanking = rankingResult.state === "ready"
-    ? rankingResult.data.rankings.slice(0, 5)
+  const currentRankings = rankingResult.state === "ready"
+    ? buildHomePublicRankingSummaries(rankingResult.data.rankings)
     : [];
 
   return (
@@ -240,26 +240,22 @@ export default async function HomePage() {
           </div>
           <Link href="/rankings">전체 랭킹 보기 <ArrowRight size={15} aria-hidden="true" /></Link>
         </div>
-        {currentRanking.length ? (
-          <div className="home-ranking-table-wrap">
-            <table className="home-ranking-table">
-              <caption className="sr-only">현재 시즌 참여 10회 이상 플레이어 상위 5명</caption>
-              <thead><tr><th scope="col">순위</th><th scope="col">플레이어</th><th scope="col">승률</th><th scope="col">참여</th><th scope="col">MVP</th></tr></thead>
-              <tbody>{currentRanking.map((row) => (
-                <tr key={row.playerId}>
-                  <td><span data-rank={row.rank}>{row.rank === 1 ? <Crown size={14} aria-hidden="true" /> : null}{row.rank}위</span></td>
-                  <th scope="row"><Link href={`/players/${row.playerId}`}><strong>{row.displayName}</strong><small>{row.riotId}</small></Link></th>
-                  <td><strong>{row.winRate}%</strong></td>
-                  <td>{row.participationCount}회</td>
-                  <td>{row.mvpCount}회</td>
-                </tr>
-              ))}</tbody>
-            </table>
+        {currentRankings.some((ranking) => ranking.rows.length) ? (
+          <div className="home-ranking-summary-grid" aria-label="현재 시즌 지표별 상위 랭킹">
+            {currentRankings.map((ranking) => (
+              <article className="home-ranking-summary" key={ranking.id}>
+                <header>
+                  <Link href={`/rankings?view=${ranking.id}`}><span>{ranking.label}</span><ArrowRight size={14} aria-hidden="true" /></Link>
+                  <small>{ranking.description}</small>
+                </header>
+                <ol>{ranking.rows.map((row, index) => <li key={row.playerId}><b>{index + 1}</b><Link href={`/players/${row.playerId}`}><strong>{row.displayName}</strong><small>{row.riotId}</small></Link><em>{ranking.metric(row)}</em></li>)}</ol>
+              </article>
+            ))}
           </div>
         ) : (
           <div className={`home-ranking-empty${rankingResult.state === "error" ? " home-ranking-empty--error" : ""}`} role={rankingResult.state === "error" ? "alert" : "status"}>
             <Trophy size={24} aria-hidden="true" />
-            <div><strong>{rankingResult.state === "ready" ? "아직 순위가 없어요." : "랭킹을 잠시 불러올 수 없어요."}</strong><p>{rankingResult.state === "ready" ? "공개 경기가 쌓이면 상위 플레이어를 바로 보여 드릴게요." : "전체 랭킹 페이지에서 다시 확인해 주세요."}</p></div>
+            <div><strong>{rankingResult.state === "ready" ? "아직 순위가 없어요." : rankingResult.state === "unavailable" ? "랭킹 집계를 준비하고 있어요." : "랭킹을 불러오지 못했어요."}</strong><p>{rankingResult.state === "ready" ? "공개 경기가 쌓이면 지표별 상위 플레이어를 바로 보여 드릴게요." : rankingResult.state === "unavailable" ? "집계 환경이 준비되면 승률·참여·MVP 순위를 표시합니다." : "전체 랭킹 페이지에서 잠시 후 다시 확인해 주세요."}</p></div>
           </div>
         )}
       </section>

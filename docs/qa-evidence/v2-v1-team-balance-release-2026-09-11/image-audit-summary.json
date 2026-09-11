@@ -1,0 +1,37 @@
+{
+  "origin": "http://127.0.0.1:3000",
+  "auditedAt": "2026-09-11T19:15:11.7900858+09:00",
+  "method": "read-only browser DOM inspection of document.images after load",
+  "paths": [
+    "/",
+    "/players",
+    "/matches",
+    "/rankings",
+    "/competitions",
+    "/tools/team-balance",
+    "/tools/coin-toss",
+    "/tools/random-team",
+    "/login",
+    "/signup"
+  ],
+  "viewports": [
+    { "name": "desktop", "width": 1440, "height": 1000 },
+    { "name": "mobile", "width": 390, "height": 844 },
+    { "name": "narrow", "width": 320, "height": 800 }
+  ],
+  "conditions": 30,
+  "renderedImageElements": 3,
+  "brokenImageElements": 0,
+  "passConditions": 27,
+  "blockedConditions": 3,
+  "blocked": [
+    { "viewport": "desktop", "path": "/competitions", "reason": "VISIBLE_RUNTIME_FAILURE: local database unavailable" },
+    { "viewport": "mobile", "path": "/competitions", "reason": "VISIBLE_RUNTIME_FAILURE: local database unavailable" },
+    { "viewport": "narrow", "path": "/competitions", "reason": "VISIBLE_RUNTIME_FAILURE: local database unavailable" }
+  ],
+  "limitations": [
+    "The local health endpoint was degraded because the database was unavailable.",
+    "Only the home guide image rendered in this anonymous fallback-data run; player, match, champion, gallery, and competition data images were not exercised.",
+    "Background images and authenticated fixture-only images are outside this DOM image audit."
+  ]
+}

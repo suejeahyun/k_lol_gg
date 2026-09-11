@@ -8,6 +8,7 @@ import { getCurrentSession } from "@/modules/auth/infrastructure/runtime-session
 import { isDestructionUuid, type DestructionPublicDto } from "@/modules/competitions/destruction";
 import { getRuntimeDestruction } from "@/modules/competitions/destruction/runtime-destruction";
 import { parseDestructionDetailView } from "@/modules/competitions/public-navigation";
+import { publicDestructionStatusLabel, publicPreliminaryFormatLabel } from "@/modules/competitions/core";
 
 import styles from "../../events.module.css";
 import { DestructionOwnerActions } from "./destruction-owner-actions";
@@ -15,8 +16,6 @@ import { DestructionOwnerActions } from "./destruction-owner-actions";
 export const dynamic = "force-dynamic";
 
 const DESTRUCTION_STEPS = ["PLANNED", "RECRUITING", "TEAM_BUILDING", "AUCTION", "PRELIMINARY", "TOURNAMENT", "COMPLETED"] as const;
-const DESTRUCTION_STATUS_LABEL = { PLANNED: "준비", RECRUITING: "참가 모집", TEAM_BUILDING: "주장 선정", AUCTION: "경매", PRELIMINARY: "예선", TOURNAMENT: "본선", COMPLETED: "완료", CANCELLED: "취소" } as const;
-const PRELIMINARY_LABEL: Record<string, string> = { FULL_ROUND_ROBIN_BO3: "전체 풀리그", FULL_ROUND_ROBIN_BO1: "전체 풀리그", GROUP_ROUND_ROBIN_BO3: "조별 풀리그", GROUP_ROUND_ROBIN_BO1: "조별 풀리그", SWISS_ROUND_BO3: "스위스 라운드", SWISS_ROUND_BO1: "스위스 라운드", RANDOM_ROUNDS_BO3: "랜덤 라운드", RANDOM_ROUNDS_BO1: "랜덤 라운드" };
 
 export async function generateMetadata({ params }: { params: Promise<{ tournamentId: string }> }): Promise<Metadata> {
   const { tournamentId } = await params;
@@ -58,11 +57,11 @@ export default async function DestructionDetailPage({ params, searchParams }: { 
 
   return <div className={styles.page}>
     <Link className={styles.back} href="/competitions?type=destruction"><ArrowLeft aria-hidden="true" /> 멸망전 목록</Link>
-    <header className={styles.detailHero} data-kind="destruction"><div><span className={styles.statusBadge} data-status={destruction.status}>{DESTRUCTION_STATUS_LABEL[destruction.status]}</span><p className={styles.heroKicker}>AUCTION TOURNAMENT</p><h1>{destruction.title}</h1><p>모집, 주장 선정, 경매, 예선과 본선 결과를 한 화면에서 확인하세요.</p></div><Gavel aria-hidden="true" /></header>
-    {destruction.status === "CANCELLED" ? <p className={styles.cancelledNotice} role="status">이 멸망전은 취소되었습니다. 신청과 운영 작업은 종료됐어요.</p> : <ol className={styles.statusJourney} aria-label="멸망전 진행 단계">{DESTRUCTION_STEPS.map((step, index) => { const current = DESTRUCTION_STEPS.indexOf(destruction.status as (typeof DESTRUCTION_STEPS)[number]); return <li data-state={index < current ? "done" : index === current ? "current" : "upcoming"} key={step}>{index < current ? <Check aria-hidden="true" /> : <span>{index + 1}</span>}<strong>{DESTRUCTION_STATUS_LABEL[step]}</strong></li>; })}</ol>}
+    <header className={styles.detailHero} data-kind="destruction"><div><span className={styles.statusBadge} data-status={destruction.status}>{publicDestructionStatusLabel(destruction.status)}</span><p className={styles.heroKicker}>AUCTION TOURNAMENT</p><h1>{destruction.title}</h1><p>모집, 주장 선정, 경매, 예선과 본선 결과를 한 화면에서 확인하세요.</p></div><Gavel aria-hidden="true" /></header>
+    {destruction.status === "CANCELLED" ? <p className={styles.cancelledNotice} role="status">이 멸망전은 취소되었습니다. 신청과 운영 작업은 종료됐어요.</p> : <ol className={styles.statusJourney} aria-label="멸망전 진행 단계">{DESTRUCTION_STEPS.map((step, index) => { const current = DESTRUCTION_STEPS.indexOf(destruction.status as (typeof DESTRUCTION_STEPS)[number]); return <li data-state={index < current ? "done" : index === current ? "current" : "upcoming"} key={step}>{index < current ? <Check aria-hidden="true" /> : <span>{index + 1}</span>}<strong>{publicDestructionStatusLabel(step)}</strong></li>; })}</ol>}
     <section className={styles.facts} aria-label="멸망전 요약">
       <article><UsersRound aria-hidden="true" /><div><span>팀·확정 로스터</span><strong>{destruction.teams.length}팀 · {participantCount}명</strong></div></article>
-      <article><Swords aria-hidden="true" /><div><span>예선 방식</span><strong>{PRELIMINARY_LABEL[destruction.preliminaryFormat] ?? "예선"} · BO{destruction.preliminaryBestOf}</strong></div></article>
+      <article><Swords aria-hidden="true" /><div><span>예선 방식</span><strong>{publicPreliminaryFormatLabel(destruction.preliminaryFormat)} · BO{destruction.preliminaryBestOf}</strong></div></article>
       <article><Sparkles aria-hidden="true" /><div><span>본선 진출</span><strong>상위 {destruction.advanceTeamCount}팀</strong></div></article>
       <article><Crown aria-hidden="true" /><div><span>우승 팀</span><strong>{destruction.championTeamName ?? "아직 결정 전"}</strong></div></article>
     </section>

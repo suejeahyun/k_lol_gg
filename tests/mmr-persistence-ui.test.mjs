@@ -17,6 +17,8 @@ test("public MMR page exposes canonical allowlisted filters and bounded projecti
     "viewValid",
     'data-mmr-view="players"',
     "pendingSourceCount",
+    "formulaTransition",
+    "ADMIN_RECALCULATION_REQUIRED",
     "confidence",
     "sampleSize",
     'role="status"',
@@ -28,7 +30,7 @@ test("public MMR page exposes canonical allowlisted filters and bounded projecti
 test("admin MMR workspace connects protected recalculate, adjustment, players and review states", () => {
   const page = source("../src/app/(admin)/admin/balance-ai/page.tsx");
   const actions = source("../src/app/(admin)/admin/balance-ai/mmr-admin-actions.tsx");
-  for (const contract of ["requirePageRole", 'tab === "players"', 'tab === "reviews"', 'raw.action === "recalculate"', "selectedReviewId", "selectedReview", "data-mmr-review-detail", "pendingSourceCount", "MmrAdminActions", "?tab=balance"]) {
+  for (const contract of ["requirePageRole", 'tab === "players"', 'tab === "reviews"', 'raw.action === "recalculate"', "selectedReviewId", "selectedReview", "data-mmr-review-detail", "pendingSourceCount", "formulaTransition", "data-mmr-formula-transition", "MmrAdminActions", "?tab=balance"]) {
     assert.equal(page.includes(contract), true, contract);
   }
   for (const state of ['data-mmr-state="summary"', 'data-mmr-state="players"', 'data-mmr-state="reviews"']) {
@@ -43,6 +45,8 @@ test("admin MMR workspace connects protected recalculate, adjustment, players an
     'role="alertdialog"',
     'aria-modal="true"',
     "확인 후 재계산",
+    "V2_DETERMINISTIC_1",
+    "기존" ,
     "조정 원장 추가",
     'aria-live="polite"',
   ]) assert.equal(actions.includes(contract), true, contract);

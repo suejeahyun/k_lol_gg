@@ -926,7 +926,7 @@
 .draftHeader p { margin: 0; color: var(--text-muted); font-size: 12px; }
 .draftHeader > strong { border-radius: 999px; padding: 9px 13px; color: #46705d; background: #e7f8ef; font-size: 12px; }
 
-.candidateGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.candidateGrid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
 .candidateGrid article { display: grid; gap: 13px; border: 1px solid rgba(118, 151, 198, .2); border-radius: 18px; padding: 15px; background: #fbfdff; }
 .candidateGrid article[data-selected="true"] { border-color: #7d75c8; box-shadow: inset 0 0 0 2px rgba(125,117,200,.14); }
 .candidateGrid header { display: flex; justify-content: space-between; gap: 8px; }

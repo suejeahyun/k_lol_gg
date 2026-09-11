@@ -33,7 +33,7 @@ test("공개 Riot 플레이어 ID는 canonical UUID만 받는다", () => {
 test("공개 Riot 조회는 없는 플레이어·미연동·동기화 대기·준비 완료를 구분한다", async () => {
   assert.deepEqual(await repositoryReturning(null).getPublicProfileState(playerId), { kind: "PLAYER_NOT_FOUND" });
   assert.deepEqual(await repositoryReturning({ playerId, linkId: null }).getPublicProfileState(playerId), { kind: "UNLINKED" });
-  assert.deepEqual(await repositoryReturning({ playerId, linkId: "link", summaryPlayerId: null }).getPublicProfileState(playerId), { kind: "PENDING_SYNC" });
+  assert.deepEqual(await repositoryReturning({ playerId, linkId: "link", summaryPlayerId: null }).getPublicProfileState(playerId), { kind: "PENDING_SYNC", connectionState: "CONNECTED" });
 
   const lastSyncedAt = new Date();
   const ready = await repositoryReturning({

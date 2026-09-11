@@ -6,6 +6,7 @@ export type MmrProjectionSummary = Readonly<{
   status: "EMPTY" | "READY";
   generation: number;
   formulaVersion: string | null;
+  formulaTransition: "ADMIN_RECALCULATION_REQUIRED" | null;
   sourceMatchCount: number;
   sourceGameCount: number;
   sourceAdjustmentCount: number;

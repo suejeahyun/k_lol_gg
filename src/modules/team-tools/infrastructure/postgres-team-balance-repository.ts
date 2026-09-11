@@ -154,7 +154,7 @@ function candidateFromRow(row: typeof teamBalanceDraftCandidates.$inferSelect): 
   delete score.criterion;
   const criterion: TeamBalanceCandidateCriterion = row.source === "MANUAL"
     ? "MANUAL"
-    : storedCriterion === "OVERALL_BALANCE" || storedCriterion === "POSITION_BALANCE" || storedCriterion === "PREFERENCE_PRIORITY"
+    : storedCriterion === "V1_AI_GLOBAL" || storedCriterion === "OVERALL_BALANCE" || storedCriterion === "POSITION_BALANCE" || storedCriterion === "PREFERENCE_PRIORITY"
       ? storedCriterion
       : "LEGACY";
   return {
@@ -397,6 +397,7 @@ export class PostgresTeamBalanceRepository implements TeamBalanceRepository {
         rating: ratingSnapshot.ratings.get(participant.playerId) ?? null,
       }));
       const calculation = calculateTeamBalanceCandidates(calculationPlayers);
+      const recommendation = calculation.candidates[0]!;
       const id = randomUUID();
       const draft = (
         await transaction
@@ -406,6 +407,8 @@ export class PostgresTeamBalanceRepository implements TeamBalanceRepository {
             ownerUserAccountId: envelope.actorUserAccountId,
             title: input.title,
             ratingGeneration: ratingSnapshot.generation,
+            selectedCandidateSource: "AUTO",
+            selectedCandidateSignature: recommendation.signature,
             createdByUserAccountId: envelope.actorUserAccountId,
             updatedByUserAccountId: envelope.actorUserAccountId,
             createdAt: now,
@@ -610,6 +613,7 @@ export class PostgresTeamBalanceRepository implements TeamBalanceRepository {
           rating: ratingSnapshot.ratings.get(row.playerId) ?? null,
         })),
       );
+      const recommendation = calculation.candidates[0]!;
       const nextRound = current.evaluationRound + 1;
       await transaction.insert(teamBalanceDraftCandidates).values(
         evaluatedCandidatesValues(draftId, nextRound, envelope.actorUserAccountId, calculation.candidates, now),
@@ -635,8 +639,8 @@ export class PostgresTeamBalanceRepository implements TeamBalanceRepository {
             status: "EVALUATED",
             evaluationRound: nextRound,
             ratingGeneration: ratingSnapshot.generation,
-            selectedCandidateSource: null,
-            selectedCandidateSignature: null,
+            selectedCandidateSource: "AUTO",
+            selectedCandidateSignature: recommendation.signature,
             savedAt: null,
             revision: sql`${teamBalanceDrafts.revision} + 1`,
             updatedByUserAccountId: envelope.actorUserAccountId,

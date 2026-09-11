@@ -38,6 +38,7 @@ if (
   contractScope !== "team-tools" &&
   contractScope !== "mmr" &&
   contractScope !== "recruiting" &&
+  contractScope !== "kakao-v4" &&
   contractScope !== "media" &&
   contractScope !== "events" &&
   contractScope !== "destruction" &&
@@ -47,7 +48,7 @@ if (
   contractScope !== "champions" &&
   contractScope !== "recovery"
 ) {
-  throw new Error("V2_DB_CONTRACT_SCOPE must be 'all', 'matches', 'statistics', 'team-tools', 'mmr', 'recruiting', 'media', 'events', 'destruction', 'operations', 'riot', 'discipline', 'champions', or 'recovery'.");
+  throw new Error("V2_DB_CONTRACT_SCOPE must be 'all', 'matches', 'statistics', 'team-tools', 'mmr', 'recruiting', 'kakao-v4', 'media', 'events', 'destruction', 'operations', 'riot', 'discipline', 'champions', or 'recovery'.");
 }
 
 type EphemeralCluster = Readonly<{
@@ -446,6 +447,7 @@ async function runContractTests(connectionString: string): Promise<void> {
     "tests/database/operation-forms.contract.test.ts",
     "tests/database/kakao-assistant.contract.test.ts",
     "tests/database/kakao-room-registry.contract.test.ts",
+    "tests/kakao-v4-input-tolerance-p0.test.ts",
     "tests/database/event-competition.contract.test.ts",
     "tests/database/destruction-competition.contract.test.ts",
     "tests/database/operations.contract.test.ts",
@@ -461,7 +463,8 @@ async function runContractTests(connectionString: string): Promise<void> {
     statistics: ["tests/database/statistics-projection.contract.test.ts"],
     "team-tools": ["tests/database/team-balance-draft.contract.test.ts"],
     mmr: ["tests/database/mmr-projection.contract.test.ts"],
-    recruiting: ["tests/database/recruiting.contract.test.ts", "tests/database/operation-forms.contract.test.ts", "tests/database/kakao-assistant.contract.test.ts", "tests/database/kakao-room-registry.contract.test.ts"],
+    recruiting: ["tests/database/recruiting.contract.test.ts", "tests/database/operation-forms.contract.test.ts", "tests/database/kakao-assistant.contract.test.ts", "tests/database/kakao-room-registry.contract.test.ts", "tests/kakao-v4-input-tolerance-p0.test.ts"],
+    "kakao-v4": ["tests/kakao-v4-input-tolerance-p0.test.ts"],
     media: ["tests/database/media.contract.test.ts"],
     events: ["tests/database/event-competition.contract.test.ts"],
     destruction: ["tests/database/destruction-competition.contract.test.ts"],

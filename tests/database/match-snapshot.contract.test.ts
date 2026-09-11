@@ -11,6 +11,7 @@ import type { MatchCommandEnvelope } from "../../src/modules/matches/application
 import type { MatchTransactionAuthorizer } from "../../src/modules/matches/application/ports/match-transaction-authorizer";
 import { MatchServiceError } from "../../src/modules/matches/domain/match";
 import { PostgresMatchRepository } from "../../src/modules/matches/infrastructure/postgres-match-repository";
+import { DATA_DRAGON_VERSION } from "../../src/modules/champions/domain/data-dragon-catalog";
 import { resolveChampionImageUrl } from "../../src/modules/champions/domain/champion-image";
 import { createDatabaseHandle } from "../../src/platform/db/database";
 import { applyMigrations } from "../../src/platform/db/migrate";
@@ -218,7 +219,10 @@ test("S04 stores participant display identity and rejection reasons as durable h
         game.participants.map(({ kills, deaths, assists }) => ({ kills, deaths, assists })),
       );
       assert.equal(participants.every((participant) => participant.championImageUrl === null), true);
-      assert.match(resolveChampionImageUrl(participants[0]?.championImageUrl, participants[0]?.championKey) ?? "", /^https:\/\/ddragon\.leagueoflegends\.com\/cdn\/26\.18\.1\/img\/champion\//);
+      assert.equal(
+        resolveChampionImageUrl(participants[0]?.championImageUrl, "103", "아리"),
+        `https://ddragon.leagueoflegends.com/cdn/${DATA_DRAGON_VERSION}/img/champion/Ahri.png`,
+      );
 
     });
 

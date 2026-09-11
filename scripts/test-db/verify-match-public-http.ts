@@ -5,6 +5,7 @@ import { createServer } from "node:net";
 import path from "node:path";
 
 import { PostgresMatchRepository } from "../../src/modules/matches/infrastructure/postgres-match-repository";
+import { DATA_DRAGON_CHAMPIONS, DATA_DRAGON_VERSION } from "../../src/modules/champions/domain/data-dragon-catalog";
 import { resolveChampionImageUrl } from "../../src/modules/champions/domain/champion-image";
 import { createDatabaseHandle } from "../../src/platform/db/database";
 import { applyMigrations } from "../../src/platform/db/migrate";
@@ -63,7 +64,10 @@ const playerRows = Array.from({ length: 10 }, (_, index) => ({
   nickname: `HttpPlayer${index + 1}`, nicknameNormalized: `httpplayer${index + 1}`,
   tagLine: "TEST", tagLineNormalized: "test",
 }));
-const champions = playerRows.map((_, index) => ({ key: `httpchampion${index + 1}`, displayName: `HTTP Champion ${index + 1}`, imageUrl: null }));
+const champions = playerRows.map((_, index) => {
+  const champion = DATA_DRAGON_CHAMPIONS[index]!;
+  return { key: champion.id.toLocaleLowerCase("en-US"), displayName: champion.name, imageUrl: null };
+});
 const positions = ["TOP", "JGL", "MID", "ADC", "SUP"] as const;
 const sessionKey = randomBytes(32).toString("base64url");
 const totpKey = randomBytes(32).toString("base64url");
@@ -93,7 +97,7 @@ try {
   assert.equal(repositoryParticipants.length, 10);
   assert.deepEqual(repositoryParticipants.map(({ kills, deaths, assists }) => ({ kills, deaths, assists })), game.participants.map(({ kills, deaths, assists }) => ({ kills, deaths, assists })));
   const repositoryFallbackUrl = resolveChampionImageUrl(repositoryParticipants[0]?.championImageUrl, repositoryParticipants[0]?.championKey) ?? "";
-  assert.match(repositoryFallbackUrl, /^https:\/\/ddragon\.leagueoflegends\.com\/cdn\/26\.18\.1\/img\/champion\//);
+  assert.equal(repositoryFallbackUrl, `https://ddragon.leagueoflegends.com/cdn/${DATA_DRAGON_VERSION}/img/champion/${DATA_DRAGON_CHAMPIONS[0]!.id}.png`);
   process.stdout.write(`[match-public-http] PASS repository participantCount expected=10 actual=${repositoryParticipants.length}\n`);
   process.stdout.write(`[match-public-http] PASS repository kdaPreserved=true\n`);
   process.stdout.write(`[match-public-http] PASS repository dataDragonFallback=${repositoryFallbackUrl}\n`);
@@ -121,7 +125,7 @@ try {
     assert.equal(participants.length, 10);
     assert.deepEqual(participants.map(({ kills, deaths, assists }) => ({ kills, deaths, assists })), game.participants.map(({ kills, deaths, assists }) => ({ kills, deaths, assists })));
     const fallbackUrl = resolveChampionImageUrl(participants[0]?.championImageUrl, participants[0]?.championKey) ?? "";
-    assert.match(fallbackUrl, /^https:\/\/ddragon\.leagueoflegends\.com\/cdn\/26\.18\.1\/img\/champion\//);
+    assert.equal(fallbackUrl, `https://ddragon.leagueoflegends.com/cdn/${DATA_DRAGON_VERSION}/img/champion/${DATA_DRAGON_CHAMPIONS[0]!.id}.png`);
     const missing = await fetch(`${available.origin}/api/matches/${randomUUID()}`);
     assert.equal(missing.status, 404);
     process.stdout.write(`[match-public-http] PASS publishedMatch expected=200 actual=${existing.status} participantCount=${participants.length} kdaPreserved=true dataDragonFallback=${fallbackUrl}\n`);

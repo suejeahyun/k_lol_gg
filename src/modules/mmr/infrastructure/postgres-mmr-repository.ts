@@ -37,6 +37,7 @@ import { MmrServiceError } from "../application/mmr-service";
 import {
   MMR_FORMULA_VERSION,
   MMR_POSITIONS,
+  mmrFormulaTransitionState,
   rebuildMmrProjection,
   toPublicMmrProfileDto,
   type MmrManualAdjustmentSource,
@@ -180,6 +181,9 @@ async function publishProjection(
 ) {
   await transaction.execute(sql`select pg_advisory_xact_lock(hashtextextended('mmr:projection:global', 0))`);
   const state = await currentState(transaction);
+  if (state.status === "READY" && state.formulaVersion !== MMR_FORMULA_VERSION && input.trigger !== "ADMIN") {
+    throw new MmrServiceError("PRECONDITION_FAILED", "MMR formula transition requires explicit ADMIN recalculation.");
+  }
   if (input.expectedGeneration !== null && state.generation !== input.expectedGeneration) {
     throw new MmrServiceError("PRECONDITION_FAILED", "MMR generation이 변경되었습니다.");
   }
@@ -325,6 +329,7 @@ export class PostgresMmrRepository implements MmrRepository {
           status: row.status,
           generation: row.generation,
           formulaVersion: row.formulaVersion,
+          formulaTransition: mmrFormulaTransitionState(row.formulaVersion),
           sourceMatchCount: row.sourceMatchCount,
           sourceGameCount: row.sourceGameCount,
           sourceAdjustmentCount: row.sourceAdjustmentCount,
@@ -335,6 +340,7 @@ export class PostgresMmrRepository implements MmrRepository {
           status: "EMPTY",
           generation: 0,
           formulaVersion: null,
+          formulaTransition: null,
           sourceMatchCount: 0,
           sourceGameCount: 0,
           sourceAdjustmentCount: 0,
@@ -399,7 +405,7 @@ export class PostgresMmrRepository implements MmrRepository {
     const search = normalizedQuery
       ? or(ilike(players.nicknameNormalized, `%${normalizedQuery}%`), ilike(players.tagLineNormalized, `%${normalizedQuery}%`))
       : undefined;
-    const where = and(eq(mmrPlayerProfiles.generation, generation), search);
+    const where = and(eq(mmrPlayerProfiles.generation, generation), eq(players.status, "ACTIVE"), search);
     const scoreOrder = query.position
       ? sql<number>`(
           select position_profile.score_bp
@@ -463,7 +469,7 @@ export class PostgresMmrRepository implements MmrRepository {
       })
       .from(mmrPlayerProfiles)
       .innerJoin(players, eq(players.id, mmrPlayerProfiles.playerId))
-      .where(and(eq(mmrPlayerProfiles.generation, generation), eq(mmrPlayerProfiles.playerId, playerId)))
+      .where(and(eq(mmrPlayerProfiles.generation, generation), eq(mmrPlayerProfiles.playerId, playerId), eq(players.status, "ACTIVE")))
       .limit(1);
     return (await this.playerDtos(generation, rows))[0] ?? null;
   }

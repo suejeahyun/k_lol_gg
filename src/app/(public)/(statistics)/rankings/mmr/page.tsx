@@ -54,6 +54,7 @@ export default async function MmrRankingPage({ searchParams }: {
             <article><span>공개 경기</span><strong>{result.data.summary.sourceMatchCount}</strong></article>
             <article><span>반영 대기</span><strong>{result.data.summary.pendingSourceCount}</strong></article>
           </section>
+          {result.data.summary.formulaTransition === "ADMIN_RECALCULATION_REQUIRED" ? <section className={styles.state} role="status" data-mmr-formula-transition="ADMIN_RECALCULATION_REQUIRED"><h2>현재 게시 MMR generation을 표시하고 있어요</h2><p>이 generation은 {result.data.summary.formulaVersion ?? "기존"} 공식으로 계산됐습니다. V2_DETERMINISTIC_1로 자동 전환하지 않으며, 관리자 재계산이 승인된 뒤에만 새 generation이 게시됩니다.</p></section> : null}
           {result.data.summary.status === "EMPTY" || result.data.players.items.length === 0 ? (
             <section className={styles.state} role="status"><Activity aria-hidden="true" /><h2>표시할 MMR이 아직 없어요</h2><p>공개 경기 반영이 끝나면 이곳에 안전한 요약만 표시됩니다.</p></section>
           ) : (

@@ -1,8 +1,12 @@
 import assert from "node:assert/strict";
+import { createHash, randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import test from "node:test";
 
+import { eq } from "drizzle-orm";
+
+import { RecruitingCommandHandler } from "../src/modules/recruiting/application/command-handler";
 import { KakaoV4CommandService } from "../src/modules/recruiting/kakao-v4/application";
 import { canonicalizeKakaoV4Command, type CanonicalKakaoV4Command } from "../src/modules/recruiting/kakao-v4/canonical-command";
 import { classifyKakaoV4Command } from "../src/modules/recruiting/kakao-v4/classifier";
@@ -14,9 +18,19 @@ import {
   type KakaoV4RecruitingPort,
 } from "../src/modules/recruiting/kakao-v4/dispatcher";
 import type { KakaoV4CommandEnvelope, KakaoV4ProfileId } from "../src/modules/recruiting/kakao-v4/domain";
+import {
+  KakaoV4InstallationScopeAuthorizer,
+  kakaoV4InstallationId,
+  kakaoV4InstallationScopeId,
+} from "../src/modules/recruiting/kakao-v4/installation-scope";
 import type { RecruitingCommand } from "../src/modules/recruiting/application/commands";
 import type { RecruitingCommandResult } from "../src/modules/recruiting/application/ports";
+import { PostgresRecruitingAdapter } from "../src/modules/recruiting/infrastructure/postgres-recruiting-adapter";
 import type { OperationFormPayloadByType } from "../src/modules/recruiting/operation-forms/domain";
+import { createDatabaseHandle } from "../src/platform/db/database";
+import { applyMigrations } from "../src/platform/db/migrate";
+import { auditEvents, recruitParties, recruitingCommandReceipts } from "../src/platform/db/schema";
+import { assertSafeTestDatabase } from "../src/platform/db/test-guard";
 
 type V1Fixture = Readonly<{
   contractVersion: string;
@@ -351,4 +365,153 @@ test("[P0-MULTIUSER-01] same-room events from different senders reach edit and f
   assert.notEqual(calls[0]?.envelope.senderId, calls[1]?.envelope.senderId);
 });
 
-test.todo("[P0-MULTIUSER-02] PostgreSQL contract proves same-room cross-user edit/finish and different-room no-mutation");
+test(
+  "[P0-MULTIUSER-02] PostgreSQL contract proves same-room cross-user edit/finish and different-room no-mutation without an administrator role",
+  { skip: process.env.TEST_DATABASE_URL ? false : "isolated PostgreSQL harness required" },
+  async () => {
+    const connectionString = process.env.TEST_DATABASE_URL;
+    assert.ok(connectionString, "TEST_DATABASE_URL must be injected by the isolated harness.");
+    assertSafeTestDatabase({
+      connectionString,
+      nodeEnv: process.env.NODE_ENV,
+      testMode: process.env.V2_DB_TEST_MODE,
+    });
+
+    const { database, pool } = createDatabaseHandle(connectionString, { max: 3 });
+    const adapter = new PostgresRecruitingAdapter(database);
+    const handler = new RecruitingCommandHandler({
+      unitOfWork: adapter,
+      repository: adapter,
+      authorization: adapter,
+      receipts: adapter,
+      audit: adapter.auditPort(),
+      outbox: adapter.outboxPort(),
+      clock: {
+        now: () => new Date(KST_TIMESTAMP * 1_000),
+        receiptExpiresAt: (now) => new Date(now.getTime() + 86_400_000),
+      },
+    });
+    const dispatcher = new KakaoV4CommandDispatcher({
+      recruiting: {
+        handle: (command) => handler.handle(command),
+        resolveCompatTarget: (input) => adapter.resolveCompatTarget(input),
+        resolveScrimUpsert: (input) => adapter.resolveScrimUpsert(input),
+      },
+      assistant: {} as KakaoV4AssistantPort,
+    });
+
+    const roomASecret = new TextEncoder().encode("a".repeat(32));
+    const roomBSecret = new TextEncoder().encode("b".repeat(32));
+    const roomAInstallation = kakaoV4InstallationId("RECRUIT", roomASecret);
+    const roomBInstallation = kakaoV4InstallationId("RECRUIT", roomBSecret);
+    const roomA = kakaoV4InstallationScopeId(roomAInstallation);
+    const roomB = kakaoV4InstallationScopeId(roomBInstallation);
+    const roomAService = new KakaoV4CommandService(
+      new KakaoV4InstallationScopeAuthorizer(roomASecret),
+      dispatcher,
+    );
+    const roomBService = new KakaoV4CommandService(
+      new KakaoV4InstallationScopeAuthorizer(roomBSecret),
+      dispatcher,
+    );
+    const partyId = randomUUID();
+    const resetSequence = Number.parseInt(partyId.slice(0, 8), 16) % 2_000_000_000;
+
+    function databaseEnvelope(input: Readonly<{
+      installationId: string;
+      senderId: string;
+      eventId: string;
+      text: string;
+    }>): KakaoV4CommandEnvelope {
+      return {
+        ...envelope("RECRUIT", input.text, input.eventId, input.senderId),
+        installationId: input.installationId,
+        nonce: `nonce-${input.eventId}`,
+      };
+    }
+
+    async function execute(
+      service: KakaoV4CommandService,
+      input: Parameters<typeof databaseEnvelope>[0],
+    ) {
+      const commandEnvelope = databaseEnvelope(input);
+      return service.execute(commandEnvelope, "current", {
+        requestDigestHex: createHash("sha256").update(JSON.stringify(commandEnvelope)).digest("hex"),
+        requestId: randomUUID(),
+      });
+    }
+
+    try {
+      await applyMigrations(database);
+      await database.insert(recruitParties).values({
+        id: partyId,
+        sourceRoomId: roomA,
+        sourceSenderId: "sender-user-11111111111111111111111111111111",
+        recruitDate: "2026-09-10",
+        resetSequence,
+        recruitNumber: 12,
+        type: "FLEX_RANK",
+        status: "IN_PROGRESS",
+        title: "V1 동일 방 공동 관리 계약",
+        maximumMembers: 5,
+        membersJson: [{ name: "작성자", position: null, slotNo: 1, substitute: false }],
+        startTimeText: "21:00",
+        gameInfo: "자유 랭크",
+        lastActivityAt: new Date(KST_TIMESTAMP * 1_000),
+      });
+
+      const edited = await execute(roomAService, {
+        installationId: roomAInstallation,
+        senderId: "sender-user-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        eventId: "event-p0-multiuser-db-edit-0001",
+        text: replaceRow(1, "1. 다른 사용자 수정"),
+      });
+      assert.equal(edited.replayed, false);
+      const afterEdit = (await database.select().from(recruitParties).where(eq(recruitParties.id, partyId)))[0];
+      assert.equal(afterEdit?.revision, 1);
+      assert.deepEqual(afterEdit?.membersJson, [
+        { name: "다른 사용자 수정", position: "TOP", slotNo: 1, substitute: false },
+      ]);
+
+      await assert.rejects(
+        execute(roomBService, {
+          installationId: roomBInstallation,
+          senderId: "sender-user-dddddddddddddddddddddddddddddddd",
+          eventId: "event-p0-multiuser-db-other-room-0001",
+          text: replaceRow(1, "1. 다른 방 침범"),
+        }),
+        (error: unknown) => error instanceof KakaoV4DispatcherError && error.code === "NOT_FOUND",
+      );
+      const afterForeignAttempt = (await database.select().from(recruitParties).where(eq(recruitParties.id, partyId)))[0];
+      assert.equal(afterForeignAttempt?.revision, 1);
+      assert.equal(afterForeignAttempt?.status, "IN_PROGRESS");
+      assert.deepEqual(afterForeignAttempt?.membersJson, afterEdit?.membersJson);
+      assert.equal(roomA === roomB, false);
+
+      const finished = await execute(roomAService, {
+        installationId: roomAInstallation,
+        senderId: "sender-user-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        eventId: "event-p0-multiuser-db-finish-0001",
+        text: "12ㅉ",
+      });
+      assert.equal(finished.replayed, false);
+      const finalParty = (await database.select().from(recruitParties).where(eq(recruitParties.id, partyId)))[0];
+      assert.equal(finalParty?.revision, 2);
+      assert.equal(finalParty?.status, "FINISHED");
+      assert.equal(finalParty?.sourceSenderId, "sender-user-11111111111111111111111111111111");
+
+      const receipts = await database.select().from(recruitingCommandReceipts);
+      assert.equal(receipts.filter((receipt) => (
+        receipt.actorPrincipalId === `bot:kakao:v4:${roomAInstallation}` &&
+        receipt.scope === "bot:kakao-v4:event"
+      )).length, 2);
+      const audits = await database.select().from(auditEvents).where(eq(auditEvents.targetId, partyId));
+      assert.deepEqual(
+        audits.map((event) => event.action).sort(),
+        ["RECRUITING_FINISH_PARTY", "RECRUITING_SYNC_PARTY"],
+      );
+    } finally {
+      await pool.end();
+    }
+  },
+);

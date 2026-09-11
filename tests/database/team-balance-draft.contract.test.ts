@@ -22,6 +22,8 @@ import {
   authSessions,
   matchSubmissions,
   players,
+  seasonProjectionStates,
+  seasons,
   teamBalanceCommandReceipts,
   teamBalanceDraftCandidates,
   teamBalanceDraftParticipants,
@@ -179,7 +181,7 @@ test("S06 draft lifecycle is owner/admin authorized, append-only, transactional,
     )).length, 10);
     assert.equal((await database.select().from(teamBalanceDraftCandidates).where(
       eq(teamBalanceDraftCandidates.draftId, draftId),
-    )).length, 3);
+    )).length, 1);
     assert.equal((await database.select().from(teamBalanceCommandReceipts).where(
       eq(teamBalanceCommandReceipts.actorUserAccountId, ownerId),
     )).length, 1);
@@ -269,15 +271,15 @@ test("S06 draft lifecycle is owner/admin authorized, append-only, transactional,
     assert.equal(draft.status, "EVALUATED");
     assert.equal(draft.evaluationRound, 2);
     assert.equal(draft.ratingGeneration, 7);
-    assert.equal(draft.selectedCandidateSignature, null);
-    assert.equal(draft.candidates.length, 3);
+    assert.ok(draft.selectedCandidateSignature);
+    assert.equal(draft.candidates.length, 1);
     assert.deepEqual(
       draft.candidates.map((candidate) => candidate.criterion),
-      ["OVERALL_BALANCE", "POSITION_BALANCE", "PREFERENCE_PRIORITY"],
+      ["V1_AI_GLOBAL"],
     );
     assert.equal((await database.select().from(teamBalanceDraftCandidates).where(
       eq(teamBalanceDraftCandidates.draftId, draftId),
-    )).length, 6);
+    )).length, 2);
     assert.equal((await database.select().from(teamBalanceOutbox).where(
       eq(teamBalanceOutbox.draftId, draftId),
     )).length, 4);
@@ -416,6 +418,15 @@ test("S06 draft lifecycle is owner/admin authorized, append-only, transactional,
     assert.equal(captureDraft?.status, "SAVED");
     assert.equal(captureDraft?.selectedCandidateSource, "AUTO");
     assert.ok(captureDraft?.candidates.some((candidate) => candidate.signature === captureDraft.selectedCandidateSignature));
+    const expectedRecommendationState = (await database
+      .select({ seasonId: seasonProjectionStates.seasonId })
+      .from(seasonProjectionStates)
+      .innerJoin(seasons, eq(seasons.id, seasonProjectionStates.seasonId))
+      .where(and(
+        eq(seasonProjectionStates.status, "READY"),
+        inArray(seasons.status, ["ACTIVE", "ENDED"]),
+      ))
+      .limit(1)).length > 0 ? "READY" : "NO_PROJECTION";
     const recommendation = await new TeamBalanceRecommendationService(
       new PostgresTeamBalanceRecommendationRepository(database),
     ).getRecommendation(
@@ -424,7 +435,7 @@ test("S06 draft lifecycle is owner/admin authorized, append-only, transactional,
       "RED",
     );
     assert.ok(recommendation);
-    assert.equal(recommendation.state, "NO_PROJECTION");
+    assert.equal(recommendation.state, expectedRecommendationState);
     assert.equal(recommendation.picks.length, 5);
   } finally {
     await pool.end();

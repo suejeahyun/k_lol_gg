@@ -37,3 +37,8 @@ test("핵심 일반 텍스트 토큰은 밝은 배경에서 WCAG AA 4.5:1 이상
   assert.ok(contrastRatio(token("text-accent"), "#ffffff") >= 4.5);
   assert.ok(contrastRatio(token("text-accent-purple"), "#eee9ff") >= 4.5);
 });
+
+test("기능 상태 패널의 홈 링크는 AA 대비 primary 토큰 쌍을 사용한다", async () => {
+  const css = await readFile(new URL("../src/components/site-feature-state.module.css", import.meta.url), "utf8");
+  assert.match(css, /\.panel a[^}]*color:\s*var\(--primary-foreground\)[^}]*background:\s*var\(--primary\)/s);
+});

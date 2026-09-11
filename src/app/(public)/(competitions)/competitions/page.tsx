@@ -8,14 +8,12 @@ import { loadRuntimeDestruction } from "@/modules/competitions/destruction/runti
 import { EVENT_FORMATS, EVENT_PUBLIC_STATUSES, parseEventListQuery } from "@/modules/competitions/events";
 import { loadRuntimeEvent } from "@/modules/competitions/events/infrastructure/runtime-event";
 import { parseCompetitionSavedView } from "@/modules/competitions/public-navigation";
+import { publicCompetitionFormatLabel, publicDestructionStatusLabel, publicEventStatusLabel, publicPreliminaryFormatLabel } from "@/modules/competitions/core";
 
 import styles from "./events.module.css";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "대회", description: "K-LOL.GG 이벤트전과 멸망전의 모집, 팀, 대진과 결과를 확인하세요.", alternates: { canonical: "/competitions" } };
-
-const eventStatusLabel = { PLANNED: "준비 중", RECRUITING: "모집 중", TEAM_BUILDING: "팀 편성", IN_PROGRESS: "진행 중", COMPLETED: "완료", CANCELLED: "취소" } as const;
-const destructionStatusLabel = { PLANNED: "준비 중", RECRUITING: "모집 중", TEAM_BUILDING: "주장 선정", AUCTION: "경매 중", PRELIMINARY: "예선", TOURNAMENT: "본선", COMPLETED: "완료", CANCELLED: "취소" } as const;
 
 function paramsFromRaw(raw: Record<string, string | string[] | undefined>) {
   const params = new URLSearchParams();
@@ -41,8 +39,8 @@ export default async function CompetitionsPage({ searchParams }: { searchParams:
     return <div className={styles.page}>
       <CompetitionViewTabs active="destruction" />
       <header className={styles.hero}><div><span><Gavel aria-hidden="true" /> DESTRUCTION COMPETITIONS</span><h1>함께 만드는 멸망전</h1><p>모집과 주장 선정, 경매, 예선과 본선 결과를 한 흐름으로 확인해요.</p></div><Swords aria-hidden="true" /></header>
-      <CompetitionFilters view="destruction" query={query.query} status={query.status} format={query.format} statuses={DESTRUCTION_PUBLIC_STATUSES.map((status) => ({ value: status, label: destructionStatusLabel[status] }))} formats={DESTRUCTION_PRELIMINARY_FORMATS} />
-      {result.state === "ready" ? result.data.items.length ? <section className={styles.grid} aria-label="멸망전 목록">{result.data.items.map((item) => <Link className={styles.card} href={`/competitions/destruction/${item.id}`} key={item.id}><header><span data-status={item.status}>{destructionStatusLabel[item.status]}</span><b>{item.preliminaryFormat}</b></header><h2>{item.title}</h2><p>{item.teams.length ? `${item.teams.length}개 팀의 대회가 진행 중이에요.` : "참가자와 주장을 기다리고 있어요."}</p><dl><div><dt><UsersRound aria-hidden="true" /> 참가자</dt><dd>{item.participantCount}명</dd></div><div><dt><Gavel aria-hidden="true" /> 진행 단계</dt><dd>{destructionStatusLabel[item.status]}</dd></div></dl><span className={styles.more}>자세히 보기 <ChevronRight aria-hidden="true" /></span></Link>)}</section> : <CompetitionState title="조건에 맞는 멸망전이 아직 없어요." description="필터를 바꾸거나 새 멸망전 모집을 기다려 주세요." /> : <CompetitionState error title="멸망전 목록을 불러올 수 없어요." description="잠시 후 다시 시도해 주세요." />}
+      <CompetitionFilters view="destruction" query={query.query} status={query.status} format={query.format} statuses={DESTRUCTION_PUBLIC_STATUSES.map((status) => ({ value: status, label: publicDestructionStatusLabel(status) }))} formats={DESTRUCTION_PRELIMINARY_FORMATS.map((value) => ({ value, label: publicPreliminaryFormatLabel(value) }))} />
+      {result.state === "ready" ? result.data.items.length ? <section className={styles.grid} aria-label="멸망전 목록">{result.data.items.map((item) => <Link className={styles.card} href={`/competitions/destruction/${item.id}`} key={item.id}><header><span data-status={item.status}>{publicDestructionStatusLabel(item.status)}</span><b>{publicPreliminaryFormatLabel(item.preliminaryFormat)}</b></header><h2>{item.title}</h2><p>{item.teams.length ? `${item.teams.length}개 팀의 대회가 진행 중이에요.` : "참가자와 주장을 기다리고 있어요."}</p><dl><div><dt><UsersRound aria-hidden="true" /> 참가자</dt><dd>{item.participantCount}명</dd></div><div><dt><Gavel aria-hidden="true" /> 진행 단계</dt><dd>{publicDestructionStatusLabel(item.status)}</dd></div></dl><span className={styles.more}>자세히 보기 <ChevronRight aria-hidden="true" /></span></Link>)}</section> : <CompetitionState title="조건에 맞는 멸망전이 아직 없어요." description="필터를 바꾸거나 새 멸망전 모집을 기다려 주세요." /> : <CompetitionState error title="멸망전 목록을 불러올 수 없어요." description="잠시 후 다시 시도해 주세요." />}
     </div>;
   }
 
@@ -52,8 +50,8 @@ export default async function CompetitionsPage({ searchParams }: { searchParams:
   return <div className={styles.page}>
     <CompetitionViewTabs active="event" />
     <header className={styles.hero}><div><span><PartyPopper aria-hidden="true" /> EVENT COMPETITIONS</span><h1>함께 즐기는 이벤트전</h1><p>모집 일정부터 팀 편성, 대진과 최종 결과까지 한눈에 확인해요.</p></div><UsersRound aria-hidden="true" /></header>
-    <CompetitionFilters view="event" query={query.query} status={query.status} format={query.format} statuses={EVENT_PUBLIC_STATUSES.map((status) => ({ value: status, label: eventStatusLabel[status] }))} formats={EVENT_FORMATS} />
-    {result.state === "ready" ? result.data.items.length ? <section className={styles.grid} aria-label="이벤트전 목록">{result.data.items.map((event) => <Link className={styles.card} href={`/competitions/events/${event.id}`} key={event.id}><header><span data-status={event.status}>{eventStatusLabel[event.status]}</span><b>{event.format}</b></header><h2>{event.title}</h2><p>{event.description ?? "즐거운 이벤트전이 준비되고 있어요."}</p><dl><div><dt><CalendarDays aria-hidden="true" /> 모집 마감</dt><dd>{new Date(event.recruitmentClosesAt).toLocaleString("ko-KR")}</dd></div><div><dt><UsersRound aria-hidden="true" /> 참가자</dt><dd>{event.participantCount}/10</dd></div></dl><span className={styles.more}>자세히 보기 <ChevronRight aria-hidden="true" /></span></Link>)}</section> : <CompetitionState title="조건에 맞는 이벤트전이 아직 없어요." description="필터를 바꾸거나 새 이벤트 모집을 기다려 주세요." /> : <CompetitionState error title="이벤트전 목록을 불러올 수 없어요." description="잠시 후 다시 시도해 주세요." />}
+    <CompetitionFilters view="event" query={query.query} status={query.status} format={query.format} statuses={EVENT_PUBLIC_STATUSES.map((status) => ({ value: status, label: publicEventStatusLabel(status) }))} formats={EVENT_FORMATS.map((value) => ({ value, label: publicCompetitionFormatLabel(value) }))} />
+    {result.state === "ready" ? result.data.items.length ? <section className={styles.grid} aria-label="이벤트전 목록">{result.data.items.map((event) => <Link className={styles.card} href={`/competitions/events/${event.id}`} key={event.id}><header><span data-status={event.status}>{publicEventStatusLabel(event.status)}</span><b>{publicCompetitionFormatLabel(event.format)}</b></header><h2>{event.title}</h2><p>{event.description ?? "즐거운 이벤트전이 준비되고 있어요."}</p><dl><div><dt><CalendarDays aria-hidden="true" /> 모집 마감</dt><dd>{new Date(event.recruitmentClosesAt).toLocaleString("ko-KR")}</dd></div><div><dt><UsersRound aria-hidden="true" /> 참가자</dt><dd>{event.participantCount}/10</dd></div></dl><span className={styles.more}>자세히 보기 <ChevronRight aria-hidden="true" /></span></Link>)}</section> : <CompetitionState title="조건에 맞는 이벤트전이 아직 없어요." description="필터를 바꾸거나 새 이벤트 모집을 기다려 주세요." /> : <CompetitionState error title="이벤트전 목록을 불러올 수 없어요." description="잠시 후 다시 시도해 주세요." />}
   </div>;
 }
 
@@ -61,8 +59,8 @@ function CompetitionViewTabs({ active }: { active: "event" | "destruction" }) {
   return <nav className={styles.viewTabs} aria-label="대회 종류"><Link aria-current={active === "event" ? "page" : undefined} href="/competitions?type=event">이벤트전</Link><Link aria-current={active === "destruction" ? "page" : undefined} href="/competitions?type=destruction">멸망전</Link></nav>;
 }
 
-function CompetitionFilters({ view, query, status, format, statuses, formats }: Readonly<{ view: "event" | "destruction"; query: string; status: string | null; format: string | null; statuses: readonly Readonly<{ value: string; label: string }>[]; formats: readonly string[] }>) {
-  return <form className={styles.filters} action="/competitions" method="get" role="search"><input type="hidden" name="type" value={view} /><label><span>대회 검색</span><div><Search aria-hidden="true" /><input name="q" defaultValue={query} maxLength={64} placeholder="대회 이름" /></div></label><label><span>상태</span><select name="status" defaultValue={status ?? ""}><option value="">전체 상태</option>{statuses.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label><label><span>방식</span><select name="format" defaultValue={format ?? ""}><option value="">전체 방식</option>{formats.map((item) => <option key={item} value={item}>{item}</option>)}</select></label><button type="submit">찾기</button></form>;
+function CompetitionFilters({ view, query, status, format, statuses, formats }: Readonly<{ view: "event" | "destruction"; query: string; status: string | null; format: string | null; statuses: readonly Readonly<{ value: string; label: string }>[]; formats: readonly Readonly<{ value: string; label: string }>[] }>) {
+  return <form className={styles.filters} action="/competitions" method="get" role="search"><input type="hidden" name="type" value={view} /><label><span>대회 검색</span><div><Search aria-hidden="true" /><input name="q" defaultValue={query} maxLength={64} placeholder="대회 이름" /></div></label><label><span>상태</span><select name="status" defaultValue={status ?? ""}><option value="">전체 상태</option>{statuses.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label><label><span>방식</span><select name="format" defaultValue={format ?? ""}><option value="">전체 방식</option>{formats.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label><button type="submit">찾기</button></form>;
 }
 
 function CompetitionState({ title, description, error = false }: Readonly<{ title: string; description: string; error?: boolean }>) {

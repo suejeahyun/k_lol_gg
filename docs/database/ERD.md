@@ -6,9 +6,9 @@
 운영 DB, 환경 변수, 외부 서비스에는 연결하지 않습니다.
 
 - Source: `src/platform/db/schema/index.ts`
-- Schema SHA-256: `55b03fc0f6b0797963b240fc723ebee2cb8b5c6187e43996a1d6eafbd3d04cd0`
+- Schema SHA-256: `e3024f8a1ac38aaf3601c458c0d7910b67a4bb29310a49708fe98c6a4198a9a2`
 - Tables: 101
-- Foreign keys: 163
+- Foreign keys: 164
 - Regenerate: `npm run db:erd`
 - Drift check: `npm run db:erd:check`
 
@@ -1453,6 +1453,7 @@ erDiagram
     auth__user_accounts ||--o{ riot__command_receipts : "actor_user_account_id to id"
     auth__user_accounts ||--o{ riot__rso_states : "owner_user_account_id to id"
     registry__players ||--o| riot__account_links : "player_id to id"
+    registry__players ||--o{ riot__account_links : "player_id to id, owner_user_account_id to user_account_id"
     registry__players ||--o| riot__summaries : "player_id to id"
     riot__account_links ||--o| riot__summaries : "link_id to id"
     riot__account_links ||--o{ riot__sync_jobs : "link_id to id"

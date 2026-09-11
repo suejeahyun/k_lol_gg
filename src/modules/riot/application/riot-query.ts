@@ -91,7 +91,7 @@ export interface RiotQueryRepository {
 export type PublicRiotProfileState =
   | Readonly<{ kind: "PLAYER_NOT_FOUND" }>
   | Readonly<{ kind: "UNLINKED" }>
-  | Readonly<{ kind: "PENDING_SYNC" }>
+  | Readonly<{ kind: "PENDING_SYNC"; connectionState: "CONNECTED" }>
   | Readonly<{ kind: "STALE_SNAPSHOT"; summary: PublicRiotSummaryDto }>
   | Readonly<{ kind: "RATE_LIMITED"; summary: PublicRiotSummaryDto | null; retryAfterSeconds: number | null }>
   | Readonly<{ kind: "TEMPORARY_ERROR"; summary: PublicRiotSummaryDto | null }>
@@ -120,9 +120,9 @@ export function resolvePublicRiotProfileState(input: Readonly<{
   if (input.latestSync?.failureCode && ["TIMEOUT", "UPSTREAM_5XX", "NETWORK"].includes(input.latestSync.failureCode)) {
     return { kind: "TEMPORARY_ERROR", summary: input.summary };
   }
-  if (!input.summary) return { kind: "PENDING_SYNC" };
+  if (!input.summary) return { kind: "PENDING_SYNC", connectionState: "CONNECTED" };
   const lastSyncedAt = input.summary.lastSyncedAt;
-  if (!lastSyncedAt) return { kind: "PENDING_SYNC" };
+  if (!lastSyncedAt) return { kind: "PENDING_SYNC", connectionState: "CONNECTED" };
   if (input.now.getTime() - new Date(lastSyncedAt).getTime() > PUBLIC_RIOT_SNAPSHOT_STALE_AFTER_MS) {
     return { kind: "STALE_SNAPSHOT", summary: input.summary };
   }

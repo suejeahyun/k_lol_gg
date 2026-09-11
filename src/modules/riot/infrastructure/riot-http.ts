@@ -124,7 +124,7 @@ export function riotErrorResponse(error: unknown, traceId?: string) {
   }
   if (error instanceof Error && error.message === "STALE_RIOT_REVISION") return problemResponse(problems.precondition, { traceId });
   if (error instanceof Error && /^INVALID_RIOT_/u.test(error.message)) return problemResponse(problems.invalid, { traceId });
-  if (error instanceof Error && /RIOT_LINK_ALREADY_CONNECTED|RIOT_LINK_NOT_CONNECTED/u.test(error.message)) return problemResponse(problems.conflict, { traceId });
+  if (error instanceof Error && /RIOT_LINK_ALREADY_CONNECTED|RIOT_LINK_NOT_CONNECTED|RIOT_IDENTITY_ALREADY_CONNECTED|RIOT_OWNER_ALREADY_CONNECTED/u.test(error.message)) return problemResponse(problems.conflict, { traceId });
   return problemResponse(problems.unavailable, { traceId });
 }
 

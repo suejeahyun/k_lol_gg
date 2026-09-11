@@ -1,0 +1,25 @@
+{
+  "parameters": {
+    "assetId": "d6847e6b-b72d-40a2-a980-dead07eff9c1",
+    "draftId": "b71df32b-3cbb-4784-a58d-2b99828a46ae",
+    "championId": "mmr-1ab547c5-9120-4161-a8fa-a544f2849606",
+    "recordId": "0ecb88ec-b864-4690-87fe-721d813d88f7",
+    "highlightId": "ff11b088-064b-4350-9279-924f3c45f565",
+    "imageId": "4ae0abba-19cf-43da-a83a-90857e99d9e1",
+    "formType": "suggestions",
+    "matchId": "41d22fcf-562b-46a4-9889-cab6039d0940",
+    "submissionId": "d93f4fa3-751b-4162-9898-282ccdcbf1f6",
+    "id": "3b6d41c6-9196-4384-ae30-31bd090e657c",
+    "playerId": "93f2e721-8ce5-4dbd-93fd-9d3517c42d64",
+    "tournamentId": "dc5b3f7d-507e-4b04-a2a3-8fcc1b6a8576",
+    "eventId": "3628de7a-2d95-48e4-914a-a32c687e9b89",
+    "userAccountId": "d058ea6c-9823-4a7a-9e72-3f8d42cdca24",
+    "mmrReviewId": "89f17620-d3d1-4e19-b6cb-2bb9d4da3e52",
+    "destructionPlayerId": "6d6ea237-f66b-4282-ae91-22a3401a6b12",
+    "pendingId": "00000000-0000-4000-8000-000000000103"
+  },
+  "routes": {
+    "/admin/kakao/recruits": { "tab": "recruits" }
+  },
+  "source": "Synthetic fixture identifiers only; no production account or operating data."
+}

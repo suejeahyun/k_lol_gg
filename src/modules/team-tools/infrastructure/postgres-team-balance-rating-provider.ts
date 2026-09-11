@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, count, desc, eq, inArray } from "drizzle-orm";
 
 import {
   MMR_POSITIONS,
@@ -10,6 +10,8 @@ import {
   mmrPlayerProfiles,
   mmrProjectionStates,
 } from "@/platform/db/schema/mmr";
+import { matchParticipants } from "@/platform/db/schema/matches";
+import { players } from "@/platform/db/schema/registry";
 import { seasons } from "@/platform/db/schema/seasons";
 import {
   playerPositionStats,
@@ -21,7 +23,7 @@ import type {
   TeamBalanceRatingProvider,
   TeamBalanceRatingSnapshot,
 } from "../application/ports/team-balance-rating-provider";
-import type { TeamBalancePosition, TeamBalanceRatingProviderDto } from "../domain/team-balance";
+import { TEAM_BALANCE_POSITIONS, type TeamBalancePosition, type TeamBalanceRatingProviderDto } from "../domain/team-balance";
 
 function score(wins: number, games: number) {
   return games > 0 ? Math.round((wins * 10_000) / games) / 100 : null;
@@ -32,6 +34,87 @@ function confidence(games: number) {
 }
 
 export class PostgresTeamBalanceRatingProvider implements TeamBalanceRatingProvider {
+  private async attachV1Inputs(
+    executor: Parameters<TeamBalanceRatingProvider["load"]>[0],
+    playerIds: readonly string[],
+    snapshot: TeamBalanceRatingSnapshot,
+    v1MmrRatings: ReadonlyMap<string, TeamBalanceRatingProviderDto>,
+  ): Promise<TeamBalanceRatingSnapshot> {
+    const projection = (
+      await executor
+        .select({ seasonId: seasonProjectionStates.seasonId, generation: seasonProjectionStates.generation })
+        .from(seasonProjectionStates)
+        .innerJoin(seasons, eq(seasons.id, seasonProjectionStates.seasonId))
+        .where(and(eq(seasonProjectionStates.status, "READY"), eq(seasons.status, "ACTIVE")))
+        .orderBy(desc(seasonProjectionStates.calculatedAt), desc(seasons.createdAt))
+        .limit(1)
+    )[0];
+    const [registryRows, seasonRows, positionRows] = await Promise.all([
+      executor
+        .select({ id: players.id, legacyId: players.legacyId, currentTier: players.currentTier, peakTier: players.peakTier })
+        .from(players)
+        .where(inArray(players.id, [...playerIds])),
+      projection
+        ? executor
+            .select()
+            .from(playerSeasonStats)
+            .where(and(
+              eq(playerSeasonStats.seasonId, projection.seasonId),
+              eq(playerSeasonStats.generation, projection.generation),
+              inArray(playerSeasonStats.playerId, [...playerIds]),
+            ))
+        : Promise.resolve([]),
+      executor
+        .select({ playerId: matchParticipants.playerId, position: matchParticipants.position, games: count() })
+        .from(matchParticipants)
+        .where(inArray(matchParticipants.playerId, [...playerIds]))
+        .groupBy(matchParticipants.playerId, matchParticipants.position),
+    ]);
+    const registryById = new Map(registryRows.map((row) => [row.id, row]));
+    const seasonById = new Map(seasonRows.map((row) => [row.playerId, row]));
+    const internalPositionsById = new Map<string, Partial<Record<TeamBalancePosition, number>>>();
+    const internalGamesById = new Map<string, number>();
+    for (const row of positionRows) {
+      const positions = internalPositionsById.get(row.playerId) ?? {};
+      positions[row.position] = row.games;
+      internalPositionsById.set(row.playerId, positions);
+      internalGamesById.set(row.playerId, (internalGamesById.get(row.playerId) ?? 0) + row.games);
+    }
+    const ratings = new Map<string, TeamBalanceRatingProviderDto | null>();
+    for (const playerId of playerIds) {
+      const base = snapshot.ratings.get(playerId);
+      const registry = registryById.get(playerId);
+      const season = seasonById.get(playerId);
+      const v1Mmr = v1MmrRatings.get(playerId);
+      ratings.set(playerId, {
+        overall: base?.overall ?? null,
+        confidence: base?.confidence ?? null,
+        sampleSize: base?.sampleSize ?? null,
+        positions: base?.positions ?? null,
+        v1: {
+          legacyPlayerId: registry?.legacyId ?? null,
+          currentTier: registry?.currentTier ?? null,
+          peakTier: registry?.peakTier ?? null,
+          season: season ? { totalGames: season.totalGames, wins: season.wins, mvpCount: season.mvpCount } : null,
+          internalGames: internalGamesById.get(playerId) ?? 0,
+          internalPositionGames: internalPositionsById.get(playerId) ?? {},
+          recentSolo: null,
+          balanceOverrideScore: 0,
+          mmr: {
+            overall: v1Mmr?.overall ?? 50,
+            confidence: v1Mmr?.confidence ?? 0,
+            positions: Object.fromEntries(TEAM_BALANCE_POSITIONS.map((position) => [
+              position,
+              v1Mmr?.positions?.[position]?.score ?? v1Mmr?.overall ?? 50,
+            ])),
+          },
+          missingSources: ["RECENT_SOLO", "BALANCE_OVERRIDE"],
+        },
+      });
+    }
+    return { generation: snapshot.generation, ratings };
+  }
+
   private async loadStatisticsFallback(
     executor: Parameters<TeamBalanceRatingProvider["load"]>[0],
     playerIds: readonly string[],
@@ -41,7 +124,7 @@ export class PostgresTeamBalanceRatingProvider implements TeamBalanceRatingProvi
         .select({ seasonId: seasonProjectionStates.seasonId, generation: seasonProjectionStates.generation })
         .from(seasonProjectionStates)
         .innerJoin(seasons, eq(seasons.id, seasonProjectionStates.seasonId))
-        .where(eq(seasonProjectionStates.status, "READY"))
+        .where(and(eq(seasonProjectionStates.status, "READY"), eq(seasons.status, "ACTIVE")))
         .orderBy(desc(seasonProjectionStates.calculatedAt), desc(seasons.createdAt))
         .limit(1)
     )[0];
@@ -114,7 +197,9 @@ export class PostgresTeamBalanceRatingProvider implements TeamBalanceRatingProvi
         .where(eq(mmrProjectionStates.key, "GLOBAL"))
         .limit(1)
     )[0];
-    if (!state || state.status !== "READY") return this.loadStatisticsFallback(executor, playerIds);
+    if (!state || state.status !== "READY") {
+      return this.attachV1Inputs(executor, playerIds, await this.loadStatisticsFallback(executor, playerIds), new Map());
+    }
 
     const [profileRows, positionRows] = await Promise.all([
       executor.select().from(mmrPlayerProfiles).where(and(
@@ -152,10 +237,12 @@ export class PostgresTeamBalanceRatingProvider implements TeamBalanceRatingProvi
       }));
     }
     const missing = playerIds.filter((playerId) => !ratings.has(playerId));
+    const v1MmrRatings = new Map<string, TeamBalanceRatingProviderDto>();
+    for (const [playerId, rating] of ratings) if (rating) v1MmrRatings.set(playerId, rating);
     if (missing.length > 0) {
       const fallback = await this.loadStatisticsFallback(executor, missing);
       for (const playerId of missing) ratings.set(playerId, fallback.ratings.get(playerId) ?? null);
     }
-    return { generation: state.generation, ratings };
+    return this.attachV1Inputs(executor, playerIds, { generation: state.generation, ratings }, v1MmrRatings);
   }
 }

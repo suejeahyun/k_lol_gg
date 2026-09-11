@@ -1,6 +1,8 @@
-import { and, asc, count, eq, ilike, like, or, sql } from "drizzle-orm";
+import { and, asc, count, eq, ilike, inArray, like, or, sql } from "drizzle-orm";
 
 import { players } from "@/platform/db/schema/registry";
+import { playerSeasonStats, seasonProjectionStates } from "@/platform/db/schema/statistics";
+import { seasons } from "@/platform/db/schema/seasons";
 import type { DatabaseExecutor } from "@/platform/db/transaction";
 
 import type { PlayerRepository } from "../application/ports/player-repository";
@@ -10,6 +12,7 @@ import { playerTierAliases, type PlayerTierFilter } from "../domain/player-tier"
 const maximumSearchResults = 50;
 const maximumPageSize = 50;
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+type PublicPlayerRow = Pick<typeof players.$inferSelect, "id" | "nickname" | "tagLine" | "currentTier">;
 
 function normalizeIdentity(value: string): string {
   return value.trim().normalize("NFKC").toLocaleLowerCase("ko-KR");
@@ -27,7 +30,8 @@ const publicPlayerSelection = {
 } as const;
 
 function toSummary(
-  row: Pick<typeof players.$inferSelect, "id" | "nickname" | "tagLine" | "currentTier">,
+  row: PublicPlayerRow,
+  seasonStats: Readonly<{ totalGames: number; wins: number }> | undefined = undefined,
 ): PlayerSummary {
   return {
     id: row.id,
@@ -35,8 +39,10 @@ function toSummary(
     riotId: `${row.nickname}#${row.tagLine}`,
     mainPosition: null,
     tier: row.currentTier,
-    recentMatches: null,
-    winRate: null,
+    recentMatches: seasonStats?.totalGames ?? null,
+    winRate: seasonStats && seasonStats.totalGames > 0
+      ? Math.round((seasonStats.wins * 100) / seasonStats.totalGames)
+      : null,
   };
 }
 
@@ -65,6 +71,24 @@ function buildSearchPredicate(normalized: string, tier: PlayerTierFilter | null 
 export class PostgresPlayerRepository implements PlayerRepository {
   constructor(private readonly database: DatabaseExecutor) {}
 
+  private async summariesWithActiveSeasonStats(rows: readonly PublicPlayerRow[]) {
+    if (rows.length === 0) return [];
+    const stats = await this.database.select({
+      playerId: playerSeasonStats.playerId,
+      totalGames: playerSeasonStats.totalGames,
+      wins: playerSeasonStats.wins,
+    }).from(playerSeasonStats)
+      .innerJoin(seasons, and(eq(seasons.id, playerSeasonStats.seasonId), eq(seasons.status, "ACTIVE")))
+      .innerJoin(seasonProjectionStates, and(
+        eq(seasonProjectionStates.seasonId, playerSeasonStats.seasonId),
+        eq(seasonProjectionStates.status, "READY"),
+        eq(seasonProjectionStates.generation, playerSeasonStats.generation),
+      ))
+      .where(inArray(playerSeasonStats.playerId, rows.map((row) => row.id)));
+    const byPlayer = new Map(stats.map((stat) => [stat.playerId, stat]));
+    return rows.map((row) => toSummary(row, byPlayer.get(row.id)));
+  }
+
   async search(query: string): Promise<readonly PlayerSummary[]> {
     const normalized = normalizeIdentity(query);
     const predicate = buildSearchPredicate(normalized);
@@ -76,7 +100,7 @@ export class PostgresPlayerRepository implements PlayerRepository {
       .orderBy(asc(players.nicknameNormalized), asc(players.tagLineNormalized))
       .limit(maximumSearchResults);
 
-    return rows.map(toSummary);
+    return this.summariesWithActiveSeasonStats(rows);
   }
 
   async getCatalog(query: PlayerCatalogQuery) {
@@ -102,7 +126,7 @@ export class PostgresPlayerRepository implements PlayerRepository {
       .offset((currentPage - 1) * pageSize);
 
     return {
-      items: rows.map(toSummary),
+      items: await this.summariesWithActiveSeasonStats(rows),
       totalCount,
       currentPage,
       totalPages,

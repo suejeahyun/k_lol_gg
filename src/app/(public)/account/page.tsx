@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AlertTriangle, CalendarCheck2, Gamepad2, KeyRound, Radio, ShieldCheck, Swords, UserRound, UsersRound } from "lucide-react";
+import { AlertTriangle, CalendarCheck2, Gamepad2, Swords } from "lucide-react";
 
 import { AccountLogoutButton } from "@/components/accounts/account-logout-button";
 import { AccountPlayerForm } from "@/components/accounts/account-player-form";
+import { AccountShell } from "@/components/accounts/account-shell";
 import styles from "@/components/accounts/account-access.module.css";
 import type { AccountSelfDto } from "@/modules/accounts/domain/account-contracts";
 import { accountRoleLabel } from "@/modules/accounts/domain/account-display-labels";
+import { publicCompetitionStatusLabel, publicParticipationStatusLabel } from "@/modules/competitions/core";
 import { getRuntimeAccountRepository } from "@/modules/accounts/infrastructure/runtime-account-data";
 import { requireAccountPage } from "@/modules/auth/infrastructure/server-authorization";
 import { loadRuntimeDiscipline } from "@/modules/discipline/infrastructure/runtime-discipline";
@@ -26,9 +28,7 @@ const defaultStatusMessages: Record<AccountSelfDto["status"], string> = {
 
 function participationStatusLabel(status: string) {
   const [competition, application] = status.split(":", 2);
-  const competitionLabel: Record<string, string> = { PLANNED: "준비", RECRUITING: "모집", TEAM_BUILDING: "팀 편성", AUCTION: "경매", PRELIMINARY: "예선", IN_PROGRESS: "진행", TOURNAMENT: "본선", COMPLETED: "완료", CANCELLED: "취소", PUBLISHED: "결과 공개" };
-  const applicationLabel: Record<string, string> = { APPLIED: "신청", CONFIRMED: "참가 확정", RESERVE: "예비" };
-  return [competitionLabel[competition] ?? competition, application ? applicationLabel[application] ?? application : null].filter(Boolean).join(" · ");
+  return [publicCompetitionStatusLabel(competition), application ? publicParticipationStatusLabel(application) : null].filter(Boolean).join(" · ");
 }
 
 function playerClaimMessage(claim: NonNullable<AccountSelfDto["playerClaim"]>) {
@@ -52,15 +52,10 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
   const rawTab = (await searchParams).tab;
   const tab = (Array.isArray(rawTab) ? rawTab[0] : rawTab) === "player" ? "player" : "overview";
   if (!account) {
-    return <div className={styles.page}><section className={styles.panel} role="alert"><h1>계정 정보를 불러오지 못했습니다.</h1><p>잠시 후 다시 시도해 주세요.</p></section></div>;
+    return <AccountShell activeTab="overview" title="내 계정" description="계정 상태와 연결된 플레이어 정보를 관리하세요."><section className={styles.panel} role="alert"><h1>계정 정보를 불러오지 못했습니다.</h1><p>잠시 후 다시 시도해 주세요.</p></section></AccountShell>;
   }
   return (
-    <div className={styles.page}>
-      <header className={styles.accountHero}>
-        <div><span className={styles.eyebrow}><UserRound aria-hidden="true" /> MY ACCOUNT</span><h1>{account.loginId}</h1><p>계정 상태와 연결된 플레이어 정보를 관리하세요.</p></div>
-        <div><span className={styles.status} data-state={account.status}>{statusLabels[account.status]}</span><AccountLogoutButton /></div>
-      </header>
-      <nav className={styles.tabs} aria-label="계정 메뉴"><Link href="/account" aria-current={tab === "overview" ? "page" : undefined}><ShieldCheck aria-hidden="true" /> 상태</Link><Link href="/account?tab=player" aria-current={tab === "player" ? "page" : undefined}><UsersRound aria-hidden="true" /> 플레이어</Link><Link href="/account/discipline"><AlertTriangle aria-hidden="true" /> 경고·증빙</Link><Link href="/account/riot"><Radio aria-hidden="true" /> Riot</Link><Link href="/account/password"><KeyRound aria-hidden="true" /> 비밀번호</Link></nav>
+    <AccountShell activeTab={tab} title={account.loginId} description="계정 상태와 연결된 플레이어 정보를 관리하세요." status={{ label: statusLabels[account.status], state: account.status }} action={<AccountLogoutButton />}>
       {account.mustChangePassword ? <p className={styles.notice}>임시 비밀번호를 사용 중입니다. 다른 기능을 사용하기 전에 <Link href="/account/password?required=1">비밀번호를 변경해 주세요.</Link></p> : null}
       {tab === "overview" ? (
         <>
@@ -79,6 +74,6 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
       ) : (
         <section className={styles.panel}><h2>연결 플레이어</h2>{account.player ? <><dl className={styles.facts}><div><dt>Riot ID</dt><dd>{account.player.riotId}</dd></div><div><dt>플레이어 상태</dt><dd>{account.player.status === "ACTIVE" ? "활성" : "비활성"}</dd></div><div><dt>현재 티어</dt><dd>{account.player.currentTier ?? "미입력"}</dd></div><div><dt>최고 티어</dt><dd>{account.player.peakTier ?? "미입력"}</dd></div></dl>{account.status === "APPROVED" && account.player.status === "ACTIVE" ? <AccountPlayerForm player={account.player} /> : <p className={styles.notice}>승인된 활성 플레이어만 본인 정보를 수정할 수 있습니다.</p>}</> : account.playerClaim ? <p className={styles.notice}>{playerClaimMessage(account.playerClaim)}</p> : <p>연결된 플레이어가 없습니다. 관리자에게 가입 신청 정보를 확인해 달라고 요청해 주세요.</p>}</section>
       )}
-    </div>
+    </AccountShell>
   );
 }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import type { OwnDestructionApplicationDto, OwnDestructionMvpBallotDto } from "@/modules/competitions/destruction";
+import { publicParticipationStatusLabel } from "@/modules/competitions/core";
 import styles from "../../events.module.css";
 
 const positions = ["TOP", "JGL", "MID", "ADC", "SUP"] as const;
@@ -65,6 +66,6 @@ export function DestructionOwnerActions({ tournamentId, revision, status, signed
   return <section className={styles.application} aria-label="내 참가 신청과 MVP 투표">
     <div ref={applicationRef} id="destruction-application" tabIndex={-1} role="region" aria-labelledby="destruction-application-title"><h2 id="destruction-application-title">참가 신청</h2>{status === "RECRUITING" ? <form onSubmit={submitApplication}><label>주 포지션<select name="position" defaultValue={application?.position ?? "TOP"}>{positions.map((lane) => <option key={lane}>{lane}</option>)}</select></label><button disabled={busy}>{application ? "신청 수정" : "참가 신청"}</button>{application && ["APPLIED", "RESERVE"].includes(application.status) ? <button className={styles.secondary} type="button" disabled={busy} onClick={() => void mutate(`/api/competitions/destruction/${tournamentId}/application`, "DELETE", {})}>신청 취소</button> : null}</form> : <p>현재는 참가 신청 기간이 아닙니다.</p>}</div>
     <div ref={mvpRef} id="destruction-mvp" tabIndex={-1} role="region" aria-labelledby="destruction-mvp-title"><h2 id="destruction-mvp-title">MVP 투표</h2>{["PRELIMINARY", "TOURNAMENT"].includes(status) && eligibleBallots.length ? <form onSubmit={submitVote}><label>투표할 경기<select value={selectedBallot?.fixtureId ?? ""} onChange={(event) => setSelectedFixtureId(event.target.value)}>{eligibleBallots.map((ballot) => <option key={ballot.fixtureId} value={ballot.fixtureId}>{ballot.fixtureName}</option>)}</select></label><label>MVP 후보<select key={selectedBallot?.fixtureId ?? "empty"} name="candidatePlayerId" required defaultValue=""><option value="" disabled>선수를 선택해 주세요</option>{selectedBallot?.candidates.map((candidate) => <option key={candidate.playerId} value={candidate.playerId}>{candidate.playerName}</option>)}</select></label><button disabled={busy || !selectedBallot}>MVP 투표·재투표</button></form> : ["PRELIMINARY", "TOURNAMENT"].includes(status) ? <p>현재 내가 투표할 수 있는 경기가 없습니다.</p> : <p>경기가 시작되면 MVP 투표가 열려요.</p>}</div>
-    <p role="status" aria-live="polite">{busy ? "처리 중…" : message || (application ? `현재 신청 상태: ${application.status}` : "")}</p>
+    <p role="status" aria-live="polite">{busy ? "처리 중…" : message || (application ? `현재 신청 상태: ${publicParticipationStatusLabel(application.status)}` : "")}</p>
   </section>;
 }
