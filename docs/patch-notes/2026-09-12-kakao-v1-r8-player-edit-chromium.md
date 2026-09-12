@@ -4,6 +4,6 @@
 
 플레이어 편집은 임시 PostgreSQL 18과 실제 Next 서버, 격리 Chromium에서 본인·관리자 흐름을 검증했다. 키보드 저장, 화면과 DB revision 갱신, concurrent 변경 뒤 HTTP 412 최신값 재마운트, 티어 전용 변경의 Riot 연결 유지, Riot ID 변경의 연결 해제·PUUID 제거·작업 취소·안전 감사 표시를 확인했다. `npm run test:db`는 종료 코드 0이며 계정 route 3/3, TypeScript와 ESLint도 통과했다.
 
-R8 오류 처리 보완 전 전체 `npm run check`는 359개 중 운영 양식 누락 안내 회귀 1개가 실패했다. 해당 400 안내를 보존하도록 고친 뒤 전체 check를 다시 실행해 계약 359/359, 단위 검사, 홈 아트 검증과 프로덕션 빌드까지 통과했다. 관리자 브라우저 포커스 하네스도 공용 CDP 키보드 입력으로 보완한 뒤 `npm run test:db` 전체를 처음부터 다시 통과했다. 현재 변경은 커밋·tag·Vercel 배포 전이고 R8 휴대폰 설치와 실제 Kakao 송수신도 미확인이다. 따라서 이 문서는 아직 운영 릴리스 공지가 아닌 배포 전 초안이다.
+R8 오류 처리 보완 전 전체 `npm run check`는 359개 중 운영 양식 누락 안내 회귀 1개가 실패했다. 해당 400 안내를 보존하도록 고친 뒤 전체 check를 다시 실행해 계약 359/359, 단위 검사, 홈 아트 검증과 프로덕션 빌드까지 통과했다. 관리자 브라우저 포커스 하네스도 공용 CDP 키보드 입력으로 보완한 뒤 `npm run test:db` 전체를 처음부터 다시 통과했다. 커밋 `2f576d93`, tag `kakao-v1-r8-player-edit-qa-v1.0.0`, Vercel 배포 `dpl_2hAKT6xuYPHsTTUgHuKzsZskMXxa`와 운영 health를 확인했다. R8 휴대폰 설치와 실제 Kakao 송수신은 아직 미확인이다.
 
 검증 범위와 재현 절차는 [`docs/qa-evidence/kakao-v1-r8-player-edit-chromium-2026-09-12/README.md`](../qa-evidence/kakao-v1-r8-player-edit-chromium-2026-09-12/README.md)에 기록했다. 디스코드 복붙 공지 초안은 같은 폴더의 [`DISCORD_NOTICE.md`](../qa-evidence/kakao-v1-r8-player-edit-chromium-2026-09-12/DISCORD_NOTICE.md)에 있다.

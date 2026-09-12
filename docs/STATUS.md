@@ -1,16 +1,16 @@
 # K-LOL.GG V2 상태
 
-- 운영 검증 확인 시각: 2026-09-12T12:13:03.3155054Z (2026-09-12 21:13:03 KST)
-- 운영 검증 기능 기준: `1b3f7a277c0e8e6e45281293e62589422a76ed88`
-- 릴리스 tag: `player-profile-edit-v1.0.2`
-- 현재 단계: 본인·관리자 플레이어 Riot ID·티어 편집 운영 배포 완료
+- 운영 검증 확인 시각: 2026-09-12T13:36:38.587Z (2026-09-12 22:36:38 KST)
+- 운영 검증 기능 기준: `2f576d939498d664db8962460ddf12200623b5c9`
+- 릴리스 tag: `kakao-v1-r8-player-edit-qa-v1.0.0`
+- 현재 단계: Kakao R8 서버 대응·플레이어 편집 브라우저 QA 운영 배포 완료, 휴대폰 R8 설치 대기
 - V1 코드 복사: 없음. V1은 기능 목록과 동등성 대조 근거로만 사용
 - V1 기준선: 블루·블랙 Vercel 기준선 저장소를 변경하지 않음
-- 운영 Vercel: 배포 `dpl_GCJG5Xvk8fkXQsoLtYZek7NMLsQ1`, 불변 URL `https://k-lol-5bmwwd3ct-tjdmswo11-3715s-projects.vercel.app`, deployment `Ready`
-- 운영 별칭: `https://k-lol-gg.vercel.app`, `2026-09-12T12:13:03.3155054Z`에 `/api/health` HTTP 200·JSON `status: ready` 확인
+- 운영 Vercel: 배포 `dpl_2hAKT6xuYPHsTTUgHuKzsZskMXxa`, 불변 URL `https://k-lol-7rtp1k24x-tjdmswo11-3715s-projects.vercel.app`, deployment `Ready`
+- 운영 별칭: `https://k-lol-gg.vercel.app`, `2026-09-12T13:36:38.587Z`에 `/api/health` HTTP 200·JSON `status: ready` 확인
 - 운영 DB: migration 38개, head `0037_swift_brood` 확인
 - Kakao 구인·내전 입력 복구: `v1.0.1` 사이트·서버 운영 배포와 health 확인 완료
-- 휴대폰 Kakao V1 strict R7: `PENDING_USER_INSTALL`; MessengerBot R 설치·실제 Kakao 송수신은 미확인
+- 휴대폰 Kakao V1 strict R8: `PENDING_USER_INSTALL`; MessengerBot R 설치·실제 Kakao 송수신은 미확인
 
 ## 확인된 상태
 
@@ -20,7 +20,7 @@
 - 2026-09-07 시점의 100개 화면은 326개 조건(데스크톱 156, 태블릿 85, 모바일 85)에서 non-200·화면 이슈·가로 넘침 0건, 브라우저 품질 27/27 통과를 확인했다.
 - 이후 추가된 3개 화면을 포함한 현재 103개 화면 335회의 로그인·관리자 포함 실캡처는 아직 실행하지 않았다. 합성 fixture와 캡처 계획만 생성했다. 운영 공개 화면 10개 경로의 desktop·mobile·narrow 자동 품질은 30/30, issues 0, axe 위반 0이다. 로컬 전체 높이 캡처는 27/30 PASS이며 로컬 DB가 필요한 `/competitions` 3개 조건은 BLOCKED로 별도 유지한다.
 - 관리자 페이지는 익명·ACCOUNT 세션을 거부하고 ADMIN/SUPER_ADMIN 역할 경계를 유지한다.
-- 현재 저장소 기준 최종 `npm run check`에서 계약 테스트 347/347, 단위 테스트 707 pass·1 intentional skip, production build 92 app routes가 통과했다.
+- 현재 저장소 기준 최종 `npm run check`에서 계약 테스트 359/359, 단위 테스트 725 pass·1 intentional skip, production build 92 app routes가 통과했다.
 - migration journal과 SQL은 각각 38개로 일치하고 `npm run test:db`가 통과했으며, 저장소 migration head는 `0037_swift_brood`이다.
 - 같은 DB 검사에서 Kakao V4 P0 31/31과 recovery archive 검증이 통과했다.
 - 운영 배포된 Kakao 입력 복구 릴리스는 구인 운영일을 KST 오전 6시 경계로 계산한다. 이는 이전 행을 삭제하는 초기화가 아니라 새 운영일 조회에서 이전 운영일 구인을 제외하는 논리 리셋이다.
@@ -37,11 +37,11 @@
 - 운영 DB 사후 검증은 migration 37개, head hash `ebb200d8597ed63d270c2a66a7369dd67d3536c238939458aeed337028bdc63f`, Riot unique index 2개, player-owner index 1개, validated foreign key 1개이며 중복·mismatch는 모두 0이다.
 - Drizzle TypeScript 스키마와 최신 snapshot은 101개 테이블을 정의한다.
 - 2026-09-07 PostgreSQL 18 QA에서 DB 기반 인증·계정·플레이어·시즌 HTTP, 로그인 제한, 비밀번호+TOTP, 쿠키, 역할, 보안 헤더, 로그아웃, 복구 훈련과 운영 fixture 차단이 통과했다.
-- 현재 추적 트리의 비밀정보 검사와 `verify:auth-http`가 통과했다. 전체 Git 이력 검사는 이번 릴리스에서 다시 실행했다고 판정하지 않는다.
+- 현재 추적·미추적 tree와 전체 Git 이력 비밀정보 검사, `verify:auth-http`가 모두 통과했다. `.private/`는 Git과 Vercel 업로드에서 제외된다.
 - 고정 Data Dragon 기준 챔피언 173종·자산 346개와 여성 홈 가이드 68/68을 확인했다.
 - 2026-09-07 검증에서 `npm audit --omit=dev --audit-level=moderate` 결과 운영 의존성 취약점은 0건이었다.
 
-2026-09-07 화면 원본과 모음 이미지는 [`qa-evidence/v2-final-2026-09-07-r2/screenshots/README.md`](./qa-evidence/v2-final-2026-09-07-r2/screenshots/README.md)에 있다. 현재 V1 팀 밸런스·결과 공유 운영 릴리스는 [`qa-evidence/v2-v1-team-balance-release-2026-09-11/README.md`](./qa-evidence/v2-v1-team-balance-release-2026-09-11/README.md), 최신 Kakao 구인·내전 입력 복구 운영 릴리스와 휴대폰 R15/R6 미설치 상태는 [`qa-evidence/kakao-recruit-input-recovery-2026-09-12/README.md`](./qa-evidence/kakao-recruit-input-recovery-2026-09-12/README.md), 프로젝트 규칙·ERD·UI 재사용 검증은 [`qa-evidence/project-governance-erd-reuse-2026-09-11/README.md`](./qa-evidence/project-governance-erd-reuse-2026-09-11/README.md)에 있다.
+2026-09-07 화면 원본과 모음 이미지는 [`qa-evidence/v2-final-2026-09-07-r2/screenshots/README.md`](./qa-evidence/v2-final-2026-09-07-r2/screenshots/README.md)에 있다. 현재 V1 팀 밸런스·결과 공유 운영 릴리스는 [`qa-evidence/v2-v1-team-balance-release-2026-09-11/README.md`](./qa-evidence/v2-v1-team-balance-release-2026-09-11/README.md), 최신 Kakao R8·플레이어 편집 QA 운영 릴리스는 [`qa-evidence/kakao-v1-r8-player-edit-chromium-2026-09-12/README.md`](./qa-evidence/kakao-v1-r8-player-edit-chromium-2026-09-12/README.md), 프로젝트 규칙·ERD·UI 재사용 검증은 [`qa-evidence/project-governance-erd-reuse-2026-09-11/README.md`](./qa-evidence/project-governance-erd-reuse-2026-09-11/README.md)에 있다.
 
 ## 구현된 범위
 
@@ -64,8 +64,8 @@
 - 로그인·관리자 화면을 포함한 103개 페이지 335회 실캡처와 인증 사용자 흐름 전체 확인
 - 승인된 기존 27개 계정의 로그인 실패율과 재문의 발생 여부 확인
 - 자동 만료 1일 복구 분기 보존 시간 안의 DB 오류 지표와 무결성 위반 재확인
-- R15/R6 중 설치 대상을 확정해 SHA-256 대조, MessengerBot R 교체, `/봇버전` 확인과 실제 두 Kakao 방 송수신
-- V1 strict R7을 MessengerBot R에 설치하고 수정한 시간·공지·참가자와 빈칸 취소가 `내전현황`에 유지되는지 실제 방에서 확인
+- V1 strict R8 private 전체 설치본의 SHA-256을 대조하고 MessengerBot R에 한 번에 교체한 뒤 `봇버전`과 실제 두 Kakao 방 송수신 확인
+- R8에서 완전히 빈 내전 양식, 수정한 시간·공지·참가자와 빈칸 취소가 `내전현황`에 유지되는지 실제 방에서 확인
 - 오래된 전체 내전 양식 충돌을 탐지할 revision/base-token을 V1 화면 호환 방식으로 설계
 - Kakao V4 서명 HTTP는 운영 서버에서 확인했지만 실제 휴대폰 E2E, 재시도, 줄바꿈과 체감 지연은 미확인
 - 실제 사용자 Riot RSO/API와 Vercel Blob 업로드·읽기·삭제 E2E는 완전히 검증하지 않음
@@ -76,6 +76,6 @@
 
 1. 승인된 합성 세션으로 로그인·관리자 화면을 포함한 103개 페이지 335대상 회귀 캡처를 실행한다.
 2. 1일 복구 분기 만료 전 운영 DB 오류 지표와 중복·mismatch 0건 유지 여부를 재확인한다.
-3. 실제 휴대폰에서 선택한 R15/R6 산출물 hash와 `/봇버전`을 대조하고 두 Kakao 방 canary를 기록한다.
+3. 실제 휴대폰에서 R8 private 전체 설치본 hash와 `/봇버전`을 대조하고 두 Kakao 방 canary를 기록한다.
 4. 승인된 실제 사용자 계정으로 Riot RSO와 Blob 업로드·읽기·삭제 E2E를 각각 기록한다.
 5. 개인정보 없이 팀 계산 실패율, 결과 복사 성공·실패율과 수동 교체율을 관측하고 목표값은 운영자 승인 후 정한다.

@@ -3,16 +3,18 @@
 ## 판정
 
 - 기록일: 2026-09-12
-- 기록 성격: 배포 전 작업트리 QA 체크포인트
+- 기록 성격: 사이트 운영 배포 완료·휴대폰 설치 대기 QA 근거
 - 기준 커밋: `80026b9da6139289f06c99db180e199d15ab251d`
-- 현재 변경: 커밋·Git tag 없음
+- 기능 커밋: `2f576d939498d664db8962460ddf12200623b5c9`
+- Git tag: `kakao-v1-r8-player-edit-qa-v1.0.0`
 - DB migration: 없음, head `0037_swift_brood` 유지
-- Vercel 운영 배포: 이번 변경분 미배포
+- Vercel 운영 배포: `dpl_2hAKT6xuYPHsTTUgHuKzsZskMXxa`, `Ready`
+- 운영 별칭: `https://k-lol-gg.vercel.app`, `/api/health` HTTP 200·`status: ready`
 - MessengerBot R 설치: `KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R8_2026_09_12` 설치 대기
 - 실제 Kakao 송수신: 미확인
 - 운영 데이터 변경: 없음
 
-카카오 R8 생성본과 플레이어 편집 브라우저 회귀는 로컬에서 확인했다. 그러나 현재 변경은 커밋·Vercel 배포·휴대폰 설치·실제 카카오 송수신까지 이어지지 않았으므로 운영 반영으로 판정하지 않는다. 이 체크포인트는 아직 `docs/releases/registry.json`에 등록한 기능 릴리스가 아니다.
+카카오 R8 서버 대응과 플레이어 편집 보완은 커밋·tag·Vercel Ready 배포·운영 alias health까지 확인했다. 사이트·서버 범위는 운영 반영으로 판정한다. MessengerBot R의 R8 전체 설치본은 휴대폰 설치와 실제 Kakao 송수신 전이므로 외부 설치는 완료로 판정하지 않는다.
 
 ## 카카오 증상과 원인
 
@@ -88,7 +90,7 @@ R7에서 완전한 빈 1..정원 스냅샷을 내전 전체 취소로 라우팅�
 - 인증 HTTP 검증: guards, limits, password+TOTP, cookie, roles, headers, logout, 운영 fixture 잠금 PASS
 - DB 스키마 변경과 운영 데이터 변경: 없음
 
-Chromium QA 자체는 통과했지만 관련 코드와 테스트는 현재 작업트리 변경분이다. Git tag, immutable Vercel 배포 ID와 운영 alias smoke가 없으므로 이번 보완을 운영 배포 완료로 기록하지 않는다.
+Chromium QA와 관련 코드는 `2f576d93`에 고정했고 동일 소스의 Vercel 배포 ID와 운영 alias health를 확인했다. 실제 운영 계정으로 Riot ID를 바꾸거나 Riot RSO를 재연결하는 파괴 가능 검증은 수행하지 않았다.
 
 ## 재현 명령
 
@@ -117,7 +119,7 @@ npm run release:evidence:check
 ## 남은 위험과 롤백
 
 - R8 휴대폰 설치와 실제 두 카카오방 송수신은 아직 확인하지 않았다.
-- 현재 변경분의 Git commit/tag와 Vercel Ready 배포가 없다.
+- 사이트 배포는 확인됐지만 인증된 실제 운영 사용자·관리자 브라우저 세션에서 저장을 실행하지 않았다.
 - 휴대폰 비밀값 산출물은 `.private/`에만 있고 Git에서 제외된다. 로컬 Vercel 업로드에서도 제외되도록 `.vercelignore`에 `.private/`을 명시했다.
 - 플레이어 브라우저 QA는 합성 세션·합성 Riot provider 기반이다. 실제 운영 Riot 계정 재연결은 사용자 동의 없이 실행하지 않았다.
 - 문제가 확인되면 휴대폰은 직전 확인 설치본으로 되돌리고, 사이트는 새 배포를 만들지 않거나 배포했다면 직전 Ready 배포로 되돌린다.

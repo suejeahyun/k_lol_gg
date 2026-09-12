@@ -229,6 +229,32 @@
         "healthStatus": "ready"
       },
       "externalInstallations": []
+    },
+    {
+      "featureId": "kakao-v1-r8-player-edit-qa",
+      "version": "1.0.0",
+      "gitTag": "kakao-v1-r8-player-edit-qa-v1.0.0",
+      "commit": "2f576d939498d664db8962460ddf12200623b5c9",
+      "releasedAt": "2026-09-12T22:36:38+09:00",
+      "migrationHead": "0037_swift_brood",
+      "qaEvidence": "docs/qa-evidence/kakao-v1-r8-player-edit-chromium-2026-09-12/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-12-kakao-v1-r8-player-edit-chromium.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_2hAKT6xuYPHsTTUgHuKzsZskMXxa",
+        "url": "https://k-lol-7rtp1k24x-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-12T13:36:38.587Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": [
+        {
+          "name": "MessengerBot R V1 strict",
+          "version": "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R8_2026_09_12",
+          "status": "PENDING_USER_INSTALL"
+        }
+      ]
     }
   ]
 }
