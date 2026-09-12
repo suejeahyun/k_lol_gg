@@ -112,6 +112,37 @@
         "healthStatus": "ready"
       },
       "externalInstallations": []
+    },
+    {
+      "featureId": "kakao-recruit-input-recovery",
+      "version": "1.0.0",
+      "gitTag": "kakao-recruit-input-recovery-v1.0.0",
+      "commit": "bb715a7682dbcee59707addad6572bbdabf83d82",
+      "releasedAt": "2026-09-12T12:07:26+09:00",
+      "migrationHead": "0036_flowery_hairball",
+      "qaEvidence": "docs/qa-evidence/kakao-recruit-input-recovery-2026-09-12/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-12-kakao-recruit-input-recovery.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_HC3pxuL5MJkbh4exd4m4WbMfCegB",
+        "url": "https://k-lol-povhwmqp0-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-12T03:06:38.840Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": [
+        {
+          "name": "MessengerBot R V41",
+          "version": "KLOL_KAKAO_BOT_V41_V3_2026_09_12_R15_OP_DAY_STATUS",
+          "status": "PENDING_USER_INSTALL"
+        },
+        {
+          "name": "MessengerBot R V1 strict",
+          "version": "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R6_2026_09_12",
+          "status": "PENDING_USER_INSTALL"
+        }
+      ]
     }
   ]
 }

@@ -1,16 +1,22 @@
-# 카카오 구인·내전 입력 복구 릴리스 후보
+# 카카오 구인·내전 입력 복구 v1.0.0
 
 ## 적용 상태
 
 - 기능 ID: `kakao-recruit-input-recovery`
-- 기능 버전: `PENDING`
-- 코드 커밋·tag: `PENDING` — 미커밋 공유 작업 트리
+- 기능 버전: `1.0.0`
+- 코드 커밋: `bb715a7682dbcee59707addad6572bbdabf83d82`
+- Git tag: `kakao-recruit-input-recovery-v1.0.0`
 - 로컬 focused 검사: 통과
-- Vercel 배포·운영 alias 확인: 미실행
+- Vercel 배포: `dpl_HC3pxuL5MJkbh4exd4m4WbMfCegB`, `Ready`
+- 불변 URL: `https://k-lol-povhwmqp0-tjdmswo11-3715s-projects.vercel.app`
+- 운영 alias: `https://k-lol-gg.vercel.app`
+- GitHub Vercel commit status: `success`
+- 운영 health: `2026-09-12T03:06:38.840Z`에 `/api/health` HTTP 200, JSON `status: ready`
 - DB migration: 없음, head `0036_flowery_hairball` 유지
-- R15/R6 휴대폰 설치·컴파일·실카카오 E2E: 미확인
+- V41 R15/V1 strict R6 외부 설치 상태: 모두 `PENDING_USER_INSTALL`
+- R15/R6 휴대폰 설치·컴파일·실제 Kakao E2E: 미확인
 
-이 문서는 배포 완료 공지가 아니라 릴리스 후보의 소스 변경과 로컬 검증 기록이다. 실제 SHA, tag, deployment ID는 생성된 뒤에만 기록한다.
+사이트·서버 릴리스는 운영 배포와 health 확인까지 완료했다. 다만 MessengerBot R 설치본 교체와 실제 Kakao 구인방·기능방 E2E는 별도 외부 작업이므로 완료로 판정하지 않는다.
 
 ## 변경 내용
 
@@ -69,7 +75,7 @@
 - V41 R15: `KLOL_KAKAO_BOT_V41_V3_2026_09_12_R15_OP_DAY_STATUS`
 - V1 strict R6: `KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R6_2026_09_12`
 
-두 산출물 모두 현재 작업 트리에서 생성·정적 검증됐지만 실제 휴대폰에 설치하거나 MessengerBot R에서 컴파일하지 않았다. 실제 Kakao 구인방·기능방 E2E도 아직 수행하지 않았다.
+두 산출물 모두 tag가 가리키는 릴리스 산출물로 생성·정적 검증됐지만 상태는 `PENDING_USER_INSTALL`이다. 실제 휴대폰에 설치하거나 MessengerBot R에서 컴파일하지 않았고 실제 Kakao 구인방·기능방 E2E도 아직 수행하지 않았다.
 
 ## 롤백
 
@@ -77,8 +83,7 @@
 
 ## 다음 권장 확인
 
-1. 기능 commit·tag·Vercel deployment를 실제 값으로 연결한다.
-2. 선택한 R15/R6 설치본 해시와 `/봇버전`을 실제 휴대폰에서 대조한다.
-3. 실제 구인방에서 생성→입력→수정→빈칸 삭제→타 사용자 마감→전체 현황을 확인한다.
-4. 실제 기능방에서 `Mid all`, 이름만, 중복 번호, 빈 행 취소와 사이트·확정 신청 보존을 확인한다.
-5. 개인정보 없이 실패율·확인 필요율·처리시간 p50·p95를 관측한다.
+1. 선택한 R15/R6 설치본 해시와 `/봇버전`을 실제 휴대폰에서 대조한다.
+2. 실제 구인방에서 생성→입력→수정→빈칸 삭제→타 사용자 마감→전체 현황을 확인한다.
+3. 실제 기능방에서 `Mid all`, 이름만, 중복 번호, 빈 행 취소와 사이트·확정 신청 보존을 확인한다.
+4. 개인정보 없이 실패율·확인 필요율·처리시간 p50·p95를 관측한다.

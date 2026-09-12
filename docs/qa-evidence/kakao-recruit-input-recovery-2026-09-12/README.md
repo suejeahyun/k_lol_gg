@@ -1,12 +1,14 @@
-# Kakao 구인·내전 입력 복구 릴리스 후보 QA 근거
+# Kakao 구인·내전 입력 복구 운영 릴리스 QA 근거
 
 - 검증일: 2026-09-12
 - 기능 ID: `kakao-recruit-input-recovery`
-- 기능 버전: `PENDING`
-- 코드 커밋: `PENDING` — 현재 공유 작업 트리의 미커밋 소스
-- Git tag: `PENDING`
-- Vercel deployment ID/URL: `PENDING` — 배포하지 않음
-- 운영 별칭 반영: 미확인
+- 기능 버전: `1.0.0`
+- 코드 커밋: `bb715a7682dbcee59707addad6572bbdabf83d82`
+- Git tag: `kakao-recruit-input-recovery-v1.0.0`
+- Vercel deployment: `dpl_HC3pxuL5MJkbh4exd4m4WbMfCegB`
+- 불변 URL: `https://k-lol-povhwmqp0-tjdmswo11-3715s-projects.vercel.app`
+- 운영 별칭: `https://k-lol-gg.vercel.app`
+- 배포 검증: GitHub Vercel commit status `success`, deployment `Ready`, alias `/api/health` HTTP 200 · `status: ready` (`2026-09-12T03:06:38.840Z`)
 - DB migration: 없음
 - migration head: `0036_flowery_hairball` 유지
 - 실제 휴대폰 MessengerBot R 설치·컴파일: 미확인
@@ -28,10 +30,8 @@
 - 같은 방·같은 날짜·같은 회차·같은 모드의 `KAKAO/APPLIED` 행만 빈 행 취소 대상이다. `SITE`, `CONFIRMED`, 다른 방의 신청은 보존한다.
 - 기존 V1 사용자 입력·출력 순서와 단일 서명 요청 경계를 유지한다.
 
-### 아직 확인되지 않음
+### 외부 설치·실사용 미확인
 
-- 미커밋 작업 트리이므로 최종 Git SHA와 tag가 없다.
-- Vercel preview/production 배포와 운영 health 확인을 수행하지 않았다.
 - R15 또는 R6 파일을 실제 휴대폰에 복사하거나 MessengerBot R에서 컴파일하지 않았다.
 - 두 실제 Kakao 방에서 여러 사용자가 구인과 내전 양식을 보내는 E2E를 수행하지 않았다.
 - 운영 환경의 응답시간 p50·p95와 HTTP 400 감소 폭은 측정하지 않았다.
@@ -53,7 +53,7 @@
 - 슬롯을 비운 양식의 참가자 삭제
 - `번호ㅉ` 형식의 모집 마감
 
-후속 조회에는 mutation 요청과 분리된 receipt 범위를 사용한다. 조회만 실패한 경우 mutation 성공 문구는 유지하고 `조회 실패. 구인현황을 입력해 주세요.`를 표시한다.
+후속 조회는 이미 인증·반영된 mutation의 내부 postflight read로 수행해 mutation receipt와 경쟁하지 않는다. 일반 `구인현황` 조회는 기존 durable receipt 경계를 유지한다. 조회만 실패한 경우 mutation 성공 문구는 유지하고 `조회 실패. 구인현황을 입력해 주세요.`를 표시한다.
 
 `2인파티`, `5인파티` 같은 빈 양식 생성은 기존처럼 양식만 반환한다. 참가자가 입력된 전체 양식을 다시 보낼 때 저장된다.
 
@@ -100,7 +100,7 @@
 | V41 설정 분리형 | `integrations/messengerbot-r/KLOL_KAKAO_BOT_V41_MESSENGERBOT_R.js` | `KLOL_KAKAO_BOT_V41_V3_2026_09_12_R15_OP_DAY_STATUS` | 65,106 | `46a31ab94978f2fd37780214a753a8facbaff6ae9ab04f60959330513eda419c` | 휴대폰 미설치 |
 | V1 strict 호환형 | `integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js` | `KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R6_2026_09_12` | 60,972 | `e8922a75341ea7f07cf55c243d317164ccb1dcd4b446b0d67fd0e7c86131bdf0` | 휴대폰 미설치 |
 
-위 해시는 현재 작업 트리 산출물 식별값이다. 최종 commit 전에 파일이 바뀌면 다시 계산해야 하며, 어느 파일도 실제 휴대폰에 설치됐다고 판정하지 않는다.
+위 해시는 tag가 가리키는 릴리스 산출물 식별값이다. 두 외부 설치본 상태는 모두 `PENDING_USER_INSTALL`이며, 어느 파일도 실제 휴대폰에 설치됐다고 판정하지 않는다.
 
 ## 로컬 검증 근거
 
@@ -118,14 +118,17 @@
 
 PostgreSQL 검사는 격리 PostgreSQL 18에서 실행한 뒤 일회성 작업 경로를 제거했다. 운영 Neon DB를 변경하지 않았다.
 
-## 릴리스 전 필수 확인
+## 운영 배포 확인
 
-1. 공유 작업 트리의 다른 변경과 충돌을 검토하고 기능 commit을 만든다.
-2. 기능 tag와 `docs/releases/registry.json` 항목은 실제 commit이 생긴 뒤 별도 등록한다.
-3. Vercel 배포 ID·불변 URL·운영 alias·health를 실제 값으로 기록한다.
-4. 선택한 휴대폰 설치본의 SHA-256을 재계산하고 MessengerBot R 컴파일을 확인한다.
-5. 실제 구인방에서 빈 양식 생성 후 참가자 입력, 수정, 빈칸 삭제, 타 사용자 마감, 전체 현황을 확인한다.
-6. 실제 기능방에서 정상 내전 행, 이름만 행, `Mid all`, 중복 슬롯, 빈 행 취소와 저장 결과를 확인한다.
+1. 기능 commit `bb715a7682dbcee59707addad6572bbdabf83d82`과 tag `kakao-recruit-input-recovery-v1.0.0`을 연결했다.
+2. Vercel deployment `dpl_HC3pxuL5MJkbh4exd4m4WbMfCegB`가 `Ready`이고 GitHub commit status가 `success`임을 확인했다.
+3. 운영 alias `/api/health`가 HTTP 200과 JSON `status: ready`를 반환함을 `2026-09-12T03:06:38.840Z`에 확인했다.
+
+## 남은 외부 확인
+
+1. 선택한 휴대폰 설치본의 SHA-256을 대조하고 MessengerBot R 컴파일을 확인한다.
+2. 실제 구인방에서 빈 양식 생성 후 참가자 입력, 수정, 빈칸 삭제, 타 사용자 마감, 전체 현황을 확인한다.
+3. 실제 기능방에서 정상 내전 행, 이름만 행, `Mid all`, 중복 슬롯, 빈 행 취소와 저장 결과를 확인한다.
 
 ## 롤백
 

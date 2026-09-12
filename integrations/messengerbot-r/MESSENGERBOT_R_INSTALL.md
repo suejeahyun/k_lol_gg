@@ -42,9 +42,9 @@ R15 설치본은 65,535자 미만이며 빌드 시 ES5 파서와 Rhino `CODE_HAS
 
 | 확인 결과 | 판정 |
 | --- | --- |
-| 아래 줄 수 + R14.3 버전 + 아래 SHA-256 일치 | 설정 분리형 휴대폰 설치본 |
+| 아래 줄 수 + R15 버전 + 아래 SHA-256 일치 | 설정 분리형 휴대폰 설치본 |
 | 약 1,567줄에서 끝나고 `response.__kakaoBotEntryPoint=!0;`가 없음 | 붙여 넣기/저장 중 잘린 파일일 가능성이 매우 높음 |
-| 2,777줄 + R14 START/END 표식 | 개발·검토용 전체본. 휴대폰에는 설치하지 않음 |
+| 2,784줄 + 내부 BUNDLE START/END 표식 | 개발·검토용 전체본. 휴대폰에는 설치하지 않음 |
 | 줄 수가 다르고 버전 또는 해시도 다름 | 이전 버전, 혼합 붙여 넣기 또는 내용 변형 |
 
 ## 비공개 설정
@@ -94,10 +94,10 @@ RECRUIT 최초 양식은 `》시작시간 :`, `》게임정보 :` 빈 줄을 출
 
 중요한 운영 불변식은 **봇 설치본 하나 = 실제 카카오톡 방 하나**다. RECRUIT와 FEATURES는 서로 다른 identity secret·설치본 ID·MessengerBot 봇 프로필을 사용하고, 관리자 pairing에서 각각 `RECRUIT`, `FEATURES`를 선택한다. 같은 identity secret이 들어간 installer를 두 방에서 실행하면 서버는 두 방을 구분할 수 없고 데이터와 권한이 합쳐진다. room parser를 의도적으로 제거했기 때문에 이를 코드로 탐지할 수 없다.
 
-R14.2 휴대폰 설치본은 `/봇버전`과 `/V2연동확인`에 공개 설치본 ID와 키 ID, opaque 발신자 ID를 표시한다. V3 서명은 이 값들과 봇 버전·설치본 기반 scope·메시지 전달 ID를 함께 묶는다. scope는 installation ID에서 SHA-256으로 파생하므로 signing key 교체 뒤에도 유지된다. 같은 카카오 메시지 재전송은 설치본+발신자+logId+본문 delivery ID로 멱등 처리한다. 키 교체 시 서버의 current/previous ID를 먼저 설정한 뒤 휴대폰 키와 ID를 current로 바꾸며, 이전 키 ID로 고정된 설치본은 새 current ID로 한 번 승격된 뒤 되돌아갈 수 없다.
+R14.2 이후 휴대폰 설치본은 `/봇버전`과 `/V2연동확인`에 공개 설치본 ID와 키 ID, opaque 발신자 ID를 표시한다. V3 서명은 이 값들과 봇 버전·설치본 기반 scope·메시지 전달 ID를 함께 묶는다. scope는 installation ID에서 SHA-256으로 파생하므로 signing key 교체 뒤에도 유지된다. 같은 카카오 메시지 재전송은 설치본+발신자+logId+본문 delivery ID로 멱등 처리한다. 키 교체 시 서버의 current/previous ID를 먼저 설정한 뒤 휴대폰 키와 ID를 current로 바꾸며, 이전 키 ID로 고정된 설치본은 새 current ID로 한 번 승격된 뒤 되돌아갈 수 없다.
 
-migration `0031_brainy_taskmaster.sql`, `0032_bent_ultimates.sql`, `0033_tan_sprite.sql`, `0034_kakao_room_capability_profiles.sql`, 대응 서버, R14.3 휴대폰 설치본을 하나의 점검 시간에 적용하고 혼용 중에는 모집 변경을 중지한다. 0034는 기존 방을 `RECRUIT`로 보존하고 이후 방마다 `RECRUIT` 또는 `FEATURES` 프로필을 강제한다. 정상 요청은 Vercel sender/room allowlist를 권한 판정에 사용하지 않으며, 미등록 설치본은 `ROOM_BINDING_REQUIRED` 후 DB pairing만 사용한다.
+migration `0031_brainy_taskmaster.sql`, `0032_bent_ultimates.sql`, `0033_tan_sprite.sql`, `0034_kakao_room_capability_profiles.sql`, 대응 서버, R15 휴대폰 설치본을 하나의 점검 시간에 적용하고 혼용 중에는 모집 변경을 중지한다. 0034는 기존 방을 `RECRUIT`로 보존하고 이후 방마다 `RECRUIT` 또는 `FEATURES` 프로필을 강제한다. 정상 요청은 Vercel sender/room allowlist를 권한 판정에 사용하지 않으며, 미등록 설치본은 `ROOM_BINDING_REQUIRED` 후 DB pairing만 사용한다.
 
-R14.2로 바꾸면 휴대폰 `DataBase`의 모집 revision·내전 미리보기·사진 세션 key가 기존 room fingerprint에서 installation scope로 바뀐다. 전환 전에 진행 중인 양식을 완료하거나 취소하고, 전환 뒤 미리보기·사진 세션을 새로 시작한다. 기존 서버 데이터는 삭제하지 않는다.
+R14.2 이후 설치본으로 바꾸면 휴대폰 `DataBase`의 모집 revision·내전 미리보기·사진 세션 key가 기존 room fingerprint에서 installation scope로 바뀐다. 전환 전에 진행 중인 양식을 완료하거나 취소하고, 전환 뒤 미리보기·사진 세션을 새로 시작한다. 기존 서버 데이터는 삭제하지 않는다.
 
 서버 설정이나 서명 키가 아직 없거나 현재 Vercel 배포가 새 환경변수를 읽지 못하면 컴파일은 성공하지만 서버 요청은 안전한 실패 안내를 반환한다.
