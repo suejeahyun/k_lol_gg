@@ -1,15 +1,15 @@
-# 플레이어 Riot ID·티어 편집 v1.0.1
+# 플레이어 Riot ID·티어 편집 v1.0.2
 
 ## 판정
 
 - 기능 ID: `player-profile-edit`
-- 기능 버전: `1.0.1`
-- 코드 커밋: `5b089b16da9c5902f58d789038eee125ad5d4530`
-- Git tag: `player-profile-edit-v1.0.1`
-- Vercel 배포: `dpl_2jDYnFXxGGz2FpjgccBdV3z8sV4B`, `Ready`
-- 불변 URL: `https://k-lol-8zheg3pua-tjdmswo11-3715s-projects.vercel.app`
+- 기능 버전: `1.0.2`
+- 코드 커밋: `1b3f7a277c0e8e6e45281293e62589422a76ed88`
+- Git tag: `player-profile-edit-v1.0.2`
+- Vercel 배포: `dpl_GCJG5Xvk8fkXQsoLtYZek7NMLsQ1`, `Ready`
+- 불변 URL: `https://k-lol-5bmwwd3ct-tjdmswo11-3715s-projects.vercel.app`
 - 운영 alias: `https://k-lol-gg.vercel.app`
-- 운영 health: `2026-09-12T12:03:16.3288394Z`에 HTTP 200, JSON `status: ready`
+- 운영 health: `2026-09-12T12:13:03.3155054Z`에 HTTP 200, JSON `status: ready`
 - DB migration: 없음, head `0037_swift_brood` 유지
 - 운영 데이터 변경: 없음
 
@@ -59,6 +59,8 @@
 - 멱등 replay 성공과 같은 키의 다른 payload 409
 - 직접 연결과 RSO의 이전·임의 Riot ID 재연결 거부
 - migration head `0037_swift_brood`, 38 migrations, 복구 보고서의 물리 테이블 103개
+- 본인·관리자 연결 상태 중복 Riot ID 409 뒤 link·PUUID·sync job·감사 이벤트 전체 rollback
+- 본인·관리자 성공 요청 replay 뒤 link·job revision과 disconnect 감사 건수 무중복
 
 ### 운영 무변경 smoke
 
@@ -66,6 +68,7 @@
 - 비로그인 `GET /api/auth/me/player`: 401
 - 비로그인 `PATCH /api/auth/me/player`: 401
 - 비로그인 `PATCH /api/admin/players/:playerId`: 401
+- 운영 Neon production의 `CONNECTED` link와 플레이어 등록 Riot ID 불일치: 0건
 
 운영 데이터 변경 없이 배포 상태와 인증 경계를 확인했다.
 

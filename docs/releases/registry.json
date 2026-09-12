@@ -212,20 +212,20 @@
     },
     {
       "featureId": "player-profile-edit",
-      "version": "1.0.1",
-      "gitTag": "player-profile-edit-v1.0.1",
-      "commit": "5b089b16da9c5902f58d789038eee125ad5d4530",
-      "releasedAt": "2026-09-12T21:04:38+09:00",
+      "version": "1.0.2",
+      "gitTag": "player-profile-edit-v1.0.2",
+      "commit": "1b3f7a277c0e8e6e45281293e62589422a76ed88",
+      "releasedAt": "2026-09-12T21:13:03+09:00",
       "migrationHead": "0037_swift_brood",
       "qaEvidence": "docs/qa-evidence/player-profile-edit-2026-09-12/README.md",
       "patchNotes": "docs/patch-notes/2026-09-12-player-profile-edit.md",
       "deployment": {
         "status": "PRODUCTION",
         "provider": "vercel",
-        "deploymentId": "dpl_2jDYnFXxGGz2FpjgccBdV3z8sV4B",
-        "url": "https://k-lol-8zheg3pua-tjdmswo11-3715s-projects.vercel.app",
+        "deploymentId": "dpl_GCJG5Xvk8fkXQsoLtYZek7NMLsQ1",
+        "url": "https://k-lol-5bmwwd3ct-tjdmswo11-3715s-projects.vercel.app",
         "alias": "https://k-lol-gg.vercel.app",
-        "verifiedAt": "2026-09-12T12:03:16.3288394Z",
+        "verifiedAt": "2026-09-12T12:13:03.3155054Z",
         "healthStatus": "ready"
       },
       "externalInstallations": []
