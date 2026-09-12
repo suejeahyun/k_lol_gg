@@ -8,6 +8,15 @@ export interface RecruitingTransactionContext {
   readonly recruitingTransaction: unique symbol;
 }
 
+export type RecruitingCompatTargetInput = Readonly<{
+  kind: "PARTY" | "SCRIM";
+  sourceRoomId: string;
+  recruitDate: string;
+  recruitNumber: number;
+  /** PARTY lookups may be narrowed to the states accepted by the caller's command. */
+  allowedPartyStatuses?: readonly RecruitParty["status"][];
+}>;
+
 export interface RecruitingUnitOfWork {
   /** Must rollback repository, audit, outbox, nonce, and receipt writes together. */
   transaction<T>(operation: (transaction: RecruitingTransactionContext) => Promise<T>): Promise<T>;

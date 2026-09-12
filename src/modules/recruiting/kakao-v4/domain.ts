@@ -91,7 +91,11 @@ export function usesKakaoV1StrictResponse(envelope: KakaoV4CommandEnvelope) {
 }
 
 export function canonicalKakaoV4CommandText(value: string) {
-  const text = value.trim();
+  // Normalize mobile full-width punctuation/digits without turning isolated
+  // compatibility-jamo commands such as `ㅉ` into a different code point.
+  const text = Array.from(value, (character) => (
+    /[\u3131-\u318e]/u.test(character) ? character : character.normalize("NFKC")
+  )).join("").trim();
   if (!text || text === "/" || text.startsWith("//")) return null;
   if (/^[a-z][a-z0-9+.-]*:\/\//iu.test(text)) return null;
   if (!text.includes("\n") && text.indexOf("/") > 0) return null;

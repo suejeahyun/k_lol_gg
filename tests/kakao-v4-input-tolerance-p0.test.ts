@@ -365,6 +365,33 @@ test("[P0-MULTIUSER-01] same-room events from different senders reach edit and f
   assert.notEqual(calls[0]?.envelope.senderId, calls[1]?.envelope.senderId);
 });
 
+test("[P0-CANONICAL-01] V1-local fullwidth slash and digits canonicalize to the same finish command on the server", () => {
+  const command = canonical("RECRUIT", "／１５ㅉ", "event-fullwidth-finish-0001");
+  assert.deepEqual(command, {
+    domain: "PARTY",
+    action: "FINISH",
+    target: { recruitDate: "2026-09-10", recruitNumber: 15 },
+  });
+});
+
+test("[P0-CANONICAL-02] finish and detail commands tolerate whitespace after the copied hash marker", () => {
+  assert.deepEqual(canonical("RECRUIT", "# 15ㅉ", "event-spaced-hash-finish-0001"), {
+    domain: "PARTY",
+    action: "FINISH",
+    target: { recruitDate: "2026-09-10", recruitNumber: 15 },
+  });
+  assert.deepEqual(canonical("RECRUIT", "구인마감 # 15", "event-spaced-hash-finish-0002"), {
+    domain: "PARTY",
+    action: "FINISH",
+    target: { recruitDate: "2026-09-10", recruitNumber: 15 },
+  });
+  assert.deepEqual(canonical("RECRUIT", "상세 # 15", "event-spaced-hash-detail-0001"), {
+    domain: "PARTY",
+    action: "DETAIL",
+    target: { recruitDate: "2026-09-10", recruitNumber: 15 },
+  });
+});
+
 test(
   "[P0-MULTIUSER-02] PostgreSQL contract proves same-room cross-user edit/finish and different-room no-mutation without an administrator role",
   { skip: process.env.TEST_DATABASE_URL ? false : "isolated PostgreSQL harness required" },
@@ -415,7 +442,9 @@ test(
       dispatcher,
     );
     const partyId = randomUUID();
-    const resetSequence = Number.parseInt(partyId.slice(0, 8), 16) % 2_000_000_000;
+    const resetSequence = 100;
+    const finishedDecoyId = randomUUID();
+    const draftDecoyId = randomUUID();
 
     function databaseEnvelope(input: Readonly<{
       installationId: string;
@@ -488,6 +517,34 @@ test(
       assert.deepEqual(afterForeignAttempt?.membersJson, afterEdit?.membersJson);
       assert.equal(roomA === roomB, false);
 
+      await database.insert(recruitParties).values([{
+        id: finishedDecoyId,
+        sourceRoomId: roomA,
+        sourceSenderId: "sender-user-11111111111111111111111111111111",
+        recruitDate: "2026-09-10",
+        resetSequence: resetSequence + 1,
+        recruitNumber: 12,
+        type: "FLEX_RANK",
+        status: "FINISHED",
+        title: "높은 리셋 종료 행",
+        maximumMembers: 5,
+        membersJson: [],
+        lastActivityAt: new Date(KST_TIMESTAMP * 1_000),
+      }, {
+        id: draftDecoyId,
+        sourceRoomId: roomA,
+        sourceSenderId: "sender-user-11111111111111111111111111111111",
+        recruitDate: "2026-09-10",
+        resetSequence: resetSequence + 2,
+        recruitNumber: 12,
+        type: "FLEX_RANK",
+        status: "DRAFT",
+        title: "더 높은 리셋 초안 행",
+        maximumMembers: 5,
+        membersJson: [],
+        lastActivityAt: new Date(KST_TIMESTAMP * 1_000),
+      }]);
+
       const finished = await execute(roomAService, {
         installationId: roomAInstallation,
         senderId: "sender-user-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
@@ -499,6 +556,8 @@ test(
       assert.equal(finalParty?.revision, 2);
       assert.equal(finalParty?.status, "FINISHED");
       assert.equal(finalParty?.sourceSenderId, "sender-user-11111111111111111111111111111111");
+      assert.equal((await database.select().from(recruitParties).where(eq(recruitParties.id, finishedDecoyId)))[0]?.status, "FINISHED");
+      assert.equal((await database.select().from(recruitParties).where(eq(recruitParties.id, draftDecoyId)))[0]?.status, "DRAFT");
 
       const receipts = await database.select().from(recruitingCommandReceipts);
       assert.equal(receipts.filter((receipt) => (

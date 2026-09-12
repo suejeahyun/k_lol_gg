@@ -266,11 +266,11 @@ function classifyParty(text: string): KakaoV4RecognizedCommand | null {
   if (["현재구인구직현황", "현재구인현황", "구인구직현황", "구인현황", "현황"].includes(text)) {
     return recognized("PARTY_STATUS", text);
   }
-  const detail = /^(?:구인상세|상세)\s*#?(\d+)$/u.exec(text);
+  const detail = /^(?:구인상세|상세)\s*#?\s*(\d+)$/u.exec(text);
   if (detail) return recognized("PARTY_DETAIL", text, { recruitNumber: Number(detail[1]) });
 
-  const prefixFinish = /^구인(?:마감|쫑|종료)\s*#?(\d+)$/u.exec(text);
-  const suffixFinish = /^#?(\d+)(?:번|인)?\s*(?:파티|구인)?\s*(?:쫑|ㅉ|마감|종료)$/u.exec(text);
+  const prefixFinish = /^구인(?:마감|쫑|종료)\s*#?\s*(\d+)$/u.exec(text);
+  const suffixFinish = /^#?\s*(\d+)(?:번|인)?\s*(?:파티|구인)?\s*(?:쫑|ㅉ|마감|종료)$/u.exec(text);
   const finishNumber = prefixFinish?.[1] ?? suffixFinish?.[1];
   if (finishNumber) return recognized("PARTY_FINISH", text, { recruitNumber: Number(finishNumber) });
 

@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import type { RecruitMember, RecruitPartyPatchState, RecruitPartySlotPatch, RecruitPartyType, ScrimLineup } from "../domain/recruiting";
+import type { RecruitMember, RecruitPartyPatchState, RecruitPartySlotPatch, RecruitPartyStatus, RecruitPartyType, ScrimLineup } from "../domain/recruiting";
 import type { VerifiedKakaoWebhookIntent } from "../infrastructure/kakao-signature";
 import type { TransactionSessionActor } from "@/modules/auth/domain/transaction-session";
 
@@ -120,6 +120,13 @@ const COMPAT_V1_MEMBER_COMMANDS: ReadonlySet<RecruitingCommand["type"]> = new Se
   "FINISH_PARTY",
   "SYNC_SCRIM",
 ]);
+
+/** PARTY compatibility lookups must select only states mutable by the command. */
+export function partyCompatTargetStatuses(type: RecruitingCommand["type"]): readonly RecruitPartyStatus[] | undefined {
+  if (type === "FINISH_PARTY") return ["IN_PROGRESS"];
+  if (type === "SYNC_PARTY") return ["DRAFT", "IN_PROGRESS"];
+  return undefined;
+}
 
 /** Server-side policy for commands received through the signed Kakao webhook. */
 export function kakaoRecruitCommandAccess(

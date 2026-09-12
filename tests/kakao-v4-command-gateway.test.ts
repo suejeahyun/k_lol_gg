@@ -45,6 +45,7 @@ test("V4 schema preserves the seven-field client and accepts only the exact V1 s
 test("slash boundary preserves zero-or-one leading slash parity", () => {
   assert.equal(canonicalKakaoV4CommandText("V4상태"), "V4상태");
   assert.equal(canonicalKakaoV4CommandText("/V4상태"), "V4상태");
+  assert.equal(canonicalKakaoV4CommandText("／１５ㅉ"), "15ㅉ");
   for (const rejected of ["//V4상태", "/ V4상태", "오늘 /V4상태", "https://example.com/V4상태"]) {
     const canonical = canonicalKakaoV4CommandText(rejected);
     assert.notEqual(canonical, "V4상태");
@@ -59,6 +60,16 @@ test("V4 signature covers the exact raw envelope and timestamp", () => {
   assert.deepEqual(verifyKakaoV4Signature({ envelope, rawBody, keyId: "current", signature, secrets: [{ keyId: "current", secret }], now }), { ok: true, requestDigestHex: digest });
   assert.deepEqual(verifyKakaoV4Signature({ envelope, rawBody, keyId: "current", signature: signature.replace(/.$/u, "0"), secrets: [{ keyId: "current", secret }], now }), { ok: false, code: "SIGNATURE_INVALID" });
   assert.deepEqual(verifyKakaoV4Signature({ envelope, rawBody, keyId: "current", signature, secrets: [{ keyId: "current", secret }], now: new Date("2026-09-10T04:00:00.000Z") }), { ok: false, code: "TIMESTAMP_STALE" });
+
+  const fullwidthEnvelope = { ...envelope, text: "／１５ㅉ" };
+  const fullwidthRawBody = Buffer.from(JSON.stringify(fullwidthEnvelope));
+  const fullwidthDigest = createHash("sha256").update(fullwidthRawBody).digest("hex");
+  const fullwidthSignature = "v4=" + createHmac("sha256", secret).update(kakaoV4SignatureMaterial("current", fullwidthDigest)).digest("hex");
+  assert.deepEqual(
+    verifyKakaoV4Signature({ envelope: fullwidthEnvelope, rawBody: fullwidthRawBody, keyId: "current", signature: fullwidthSignature, secrets: [{ keyId: "current", secret }], now }),
+    { ok: true, requestDigestHex: fullwidthDigest },
+  );
+  assert.notEqual(fullwidthDigest, createHash("sha256").update(Buffer.from(JSON.stringify({ ...fullwidthEnvelope, text: "15ㅉ" }))).digest("hex"));
 });
 
 test("profile authorization does not receive sender role or allowlist inputs", async () => {

@@ -433,9 +433,41 @@ test("party snapshot and finish resolve latest revision without owner or role in
     domain: "PARTY", action: "FINISH", target: { recruitDate: "2026-09-10", recruitNumber: 7 },
   });
   assert.equal(state.resolved.length, 2);
+  assert.deepEqual(
+    state.resolved.map((input) => (input as { allowedPartyStatuses?: readonly string[] }).allowedPartyStatuses),
+    [["DRAFT", "IN_PROGRESS"], ["IN_PROGRESS"]],
+  );
   assert.deepEqual(state.handled.map((command) => command.type), ["SYNC_PARTY", "FINISH_PARTY"]);
   assert.equal(JSON.stringify(state.handled).includes("role"), false);
   assert.equal(JSON.stringify(state.handled).includes("owner"), false);
+});
+
+test("missing current-operating-day party finish is a V1 success reply with the latest status and no mutation", async () => {
+  const state = harness({ missingPartyTarget: true });
+  const result = await state.dispatcher.dispatch({
+    ...context,
+    envelope: {
+      ...context.envelope,
+      protocol: KAKAO_V1_STRICT_PROTOCOL,
+      responseFormat: KAKAO_V1_STRICT_RESPONSE_FORMAT,
+      eventId: "event-missing-party-finish-0001",
+    },
+  }, {
+    domain: "PARTY",
+    action: "FINISH",
+    target: { recruitDate: "2026-09-10", recruitNumber: 15 },
+  });
+
+  assert.equal(result.aggregate, null);
+  assert.equal(result.replayed, false);
+  assert.equal(state.handled.length, 0);
+  assert.deepEqual(
+    (state.resolved[0] as { allowedPartyStatuses?: readonly string[] }).allowedPartyStatuses,
+    ["IN_PROGRESS"],
+  );
+  assert.match(result.legacyReply, /^\[K-LOL\.GG 구인구직 마무리\]\n현재 운영일의 진행 중인 모집번호 #15를 찾지 못했습니다\.\n최신 구인현황을 확인해 주세요\./u);
+  assert.match(result.legacyReply, /\[K-LOL\.GG 구인구직 현황\]/u);
+  assert.match(result.legacyReply, /#7/u);
 });
 
 test("scrim status requests only the scrim projection", async () => {

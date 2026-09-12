@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import type { RecruitingCommand } from "@/modules/recruiting/application/commands";
+import { partyCompatTargetStatuses, type RecruitingCommand } from "@/modules/recruiting/application/commands";
 import { RecruitingApplicationError } from "@/modules/recruiting/application/command-handler";
 import { getRuntimeRecruitingService } from "@/modules/recruiting/infrastructure/runtime-recruiting";
 import { parseRecruitingCommandBody } from "@/modules/recruiting/infrastructure/recruiting-input";
@@ -147,7 +147,13 @@ async function handlePost(request: Request, metrics: RecruitRoutePerformance) {
         throw new RecruitingApplicationError("INVALID_COMMAND", "Invalid V1 compatibility target.");
       }
       const resolveStartedAt = performance.now();
-      const target = await service.resolveCompatTarget({ ...parsed.compatTarget, sourceRoomId: intent.roomId });
+      const target = await service.resolveCompatTarget({
+        ...parsed.compatTarget,
+        sourceRoomId: intent.roomId,
+        ...(parsed.compatTarget.kind === "PARTY"
+          ? { allowedPartyStatuses: partyCompatTargetStatuses(parsed.type) }
+          : {}),
+      });
       metrics.resolveMs += performance.now() - resolveStartedAt;
       if (target) {
         aggregateId = target.id;

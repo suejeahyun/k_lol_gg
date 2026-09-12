@@ -4,10 +4,11 @@ import type { VerifiedKakaoWebhookIntent } from "../infrastructure/kakao-signatu
 import {
   KAKAO_V4_EVENT_SCOPE,
   hashKakaoV4EventId,
+  partyCompatTargetStatuses,
   sealRecruitingCommand,
   type RecruitingCommand,
 } from "../application/commands";
-import type { RecruitingCommandResult } from "../application/ports";
+import type { RecruitingCommandResult, RecruitingCompatTargetInput } from "../application/ports";
 import { decodeV1StrictScrimTimeText } from "../domain/v1-strict-scrim-time";
 import {
   KakaoAssistantError,
@@ -50,12 +51,7 @@ type SignedAssistantInput = Readonly<{
 
 export type KakaoV4RecruitingPort = Readonly<{
   handle(command: RecruitingCommand): Promise<RecruitingCommandResult>;
-  resolveCompatTarget(input: Readonly<{
-    kind: "PARTY" | "SCRIM";
-    sourceRoomId: string;
-    recruitDate: string;
-    recruitNumber: number;
-  }>): Promise<Readonly<{ id: string; revision: number }> | null>;
+  resolveCompatTarget(input: RecruitingCompatTargetInput): Promise<Readonly<{ id: string; revision: number }> | null>;
   resolveScrimUpsert(input: Readonly<{
     sourceRoomId: string;
     recruitDate: string;
@@ -683,7 +679,27 @@ export class KakaoV4CommandDispatcher {
 
     let recruitingCommand: RecruitingCommand;
     if (command.action === "FINISH") {
-      const target = await this.resolve(context, "PARTY", command.target);
+      const target = await this.dependencies.recruiting.resolveCompatTarget({
+        kind: "PARTY",
+        sourceRoomId: context.authorization.roomId,
+        recruitDate: command.target.recruitDate,
+        recruitNumber: command.target.recruitNumber,
+        allowedPartyStatuses: partyCompatTargetStatuses("FINISH_PARTY"),
+      });
+      if (!target) {
+        const reply = [
+          "[K-LOL.GG 구인구직 마무리]",
+          `현재 운영일의 진행 중인 모집번호 #${String(command.target.recruitNumber)}를 찾지 못했습니다.`,
+          "최신 구인현황을 확인해 주세요.",
+        ].join("\n");
+        return Object.freeze({
+          kind: "PARTY",
+          action: command.action,
+          aggregate: null,
+          legacyReply: await this.appendLatestPartyStatus(context, reply, v1Strict),
+          replayed: false,
+        });
+      }
       recruitingCommand = sealRecruitingCommand({
         type: "FINISH_PARTY",
         aggregateId: target.id,
@@ -698,6 +714,7 @@ export class KakaoV4CommandDispatcher {
             sourceRoomId: context.authorization.roomId,
             recruitDate: command.target.recruitDate,
             recruitNumber: command.target.recruitNumber,
+            allowedPartyStatuses: partyCompatTargetStatuses("SYNC_PARTY"),
           })
         : null;
       if (!automaticRecruitNumber && !target) {

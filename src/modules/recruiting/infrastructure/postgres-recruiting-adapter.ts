@@ -33,6 +33,7 @@ import type {
   RecruitCommandReceipt,
   RecruitingAuditEvent,
   RecruitingAuthorizationPort,
+  RecruitingCompatTargetInput,
   RecruitingOutboxEvent,
   RecruitingQueryPort,
   RecruitingReceiptPort,
@@ -165,18 +166,15 @@ export class PostgresRecruitingAdapter implements
 
   constructor(private readonly database: V2Database) {}
 
-  async resolveCompatTarget(input: Readonly<{
-    kind: "PARTY" | "SCRIM";
-    sourceRoomId: string;
-    recruitDate: string;
-    recruitNumber: number;
-  }>) {
+  async resolveCompatTarget(input: RecruitingCompatTargetInput) {
     if (input.kind === "PARTY") {
+      if (input.allowedPartyStatuses?.length === 0) return null;
       return (await this.database.select({ id: recruitParties.id, revision: recruitParties.revision })
         .from(recruitParties).where(and(
           eq(recruitParties.sourceRoomId, input.sourceRoomId),
           eq(recruitParties.recruitDate, input.recruitDate),
           eq(recruitParties.recruitNumber, input.recruitNumber),
+          input.allowedPartyStatuses ? inArray(recruitParties.status, input.allowedPartyStatuses) : undefined,
         )).orderBy(desc(recruitParties.resetSequence)).limit(1))[0] ?? null;
     }
     return (await this.database.select({ id: scrimRecruits.id, revision: scrimRecruits.revision })

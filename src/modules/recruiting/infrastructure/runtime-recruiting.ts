@@ -4,6 +4,7 @@ import { getDatabase } from "@/platform/db/client";
 
 import { RecruitingCommandHandler } from "../application/command-handler";
 import type { RecruitingCommand } from "../application/commands";
+import type { RecruitingCompatTargetInput } from "../application/ports";
 import { PostgresRecruitingAdapter } from "./postgres-recruiting-adapter";
 
 const clock = {
@@ -30,12 +31,7 @@ export class RuntimeRecruitingService {
     return this.handler.handle(command);
   }
 
-  resolveCompatTarget(input: Readonly<{
-    kind: "PARTY" | "SCRIM";
-    sourceRoomId: string;
-    recruitDate: string;
-    recruitNumber: number;
-  }>) {
+  resolveCompatTarget(input: RecruitingCompatTargetInput) {
     return this.adapter.resolveCompatTarget(input);
   }
 
