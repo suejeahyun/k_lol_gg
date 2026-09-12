@@ -14,6 +14,7 @@ test("own player mutation keeps approval, origin, revision and idempotency guard
 
 test("own player form keeps one idempotency key for an uncertain retry and explains Riot relinking", async () => {
   const form = await readFile(new URL("../src/components/accounts/account-player-form.tsx", import.meta.url), "utf8");
+  const page = await readFile(new URL("../src/app/(public)/account/page.tsx", import.meta.url), "utf8");
   assert.match(form, /useRef/);
   assert.match(form, /fingerprint/);
   assert.match(form, /idempotency\.current = null/);
@@ -22,4 +23,5 @@ test("own player form keeps one idempotency key for an uncertain retry and expla
   assert.match(form, /router\.refresh\(\)/);
   assert.match(form, /maxLength=\{22\}/);
   assert.match(form, /aria-describedby="account-player-riot-id-help account-player-riot-id-warning"/);
+  assert.match(page, /<AccountPlayerForm key=\{account\.player\.revision\} player=\{account\.player\} \/>/);
 });
