@@ -78,6 +78,7 @@ export function kakaoAssistantErrorResponse(error: unknown, traceId?: string) {
     if (error.code === "NONCE_CONFLICT") return problemResponse(problems.forbidden, { traceId });
     if (error.code === "NOT_FOUND") return problemResponse(problems.notFound, { traceId });
     if (error.code === "CONFLICT") return problemResponse(problems.conflict, { traceId });
+    if (error.code === "INVALID_STATE") return problemResponse(problems.conflict, { traceId });
     if (error.code === "FORBIDDEN") return problemResponse(problems.forbidden, { traceId });
     if (error.code === "PRECONDITION_FAILED") return problemResponse(problems.precondition, { traceId });
   }

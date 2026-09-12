@@ -331,7 +331,7 @@ test("local replies, echo rules, events, and no-reply behavior equal the canonic
   }
   assert.deepEqual(
     replyFor(strict, "봇버전"),
-    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R6_2026_09_12"],
+    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R7_2026_09_12"],
   );
 });
 
@@ -408,6 +408,58 @@ test("recoverable season rows reach the gateway once even with whitespace number
   assert.deepEqual(replyFor(strict, message), ["[참가 신청 반영]\n정상 1 · 확인 필요 1"]);
   assert.equal(strict.http.calls, 1);
   assert.equal(JSON.parse(strict.http.body).text, message);
+});
+
+test("a complete empty season snapshot reaches the gateway once for authoritative cancellation", async () => {
+  const lines = [
+    "📢 내전하실분 #1",
+    "》협곡",
+    "》2026-09-12 20:00 시작 승리팀 랜덤 1인 스킨 증정",
+    "👥 0/10명",
+    "",
+    "*참가 신청 양식*",
+    "이름/현티어/최고티어/주라인/부라인",
+    "EX) 1.지후/P/E/AD/MD",
+    "",
+    ...Array.from({ length: 10 }, (_, index) => `${index + 1}.`),
+  ];
+  const empty = lines.join("\n");
+  for (const message of [empty, `/${empty}`, `／${empty}`]) {
+    const strict = evaluate(await readFile(artifactPath, "utf8"), {
+      responseBody: { reply: "[K-LOL.GG 내전 #1 명단 업데이트]\n제외: 재현\n현재: 0/10" },
+    });
+    assert.equal(strict.isCompleteEmptySeasonApplySnapshot(message), true);
+    assert.deepEqual(replyFor(strict, message), ["[K-LOL.GG 내전 #1 명단 업데이트]\n제외: 재현\n현재: 0/10"]);
+    assert.equal(strict.http.calls, 1);
+    assert.equal(JSON.parse(strict.http.body).text, message.replace(/^／/u, "/"));
+  }
+});
+
+test("empty-snapshot gate rejects incomplete forms and ordinary conversation", async () => {
+  const complete = [
+    "📢 내전하실분 #1",
+    "》협곡",
+    "》2026-09-12 20:00 시작",
+    "👥 0/10명",
+    "*참가 신청 양식*",
+    "이름/현티어/최고티어/주라인/부라인",
+    "EX) 1.지후/P/E/AD/MD",
+    ...Array.from({ length: 10 }, (_, index) => `${index + 1}.`),
+  ];
+  const malformed = complete.filter((line) => line !== "10.").join("\n");
+  for (const message of [malformed, "오늘 내전 모두 취소할까요?", "1.\n2.\n3."]) {
+    const strict = evaluate(await readFile(artifactPath, "utf8"));
+    assert.equal(strict.isCompleteEmptySeasonApplySnapshot(message), false, message.slice(0, 30));
+    assert.equal(strict.isSeasonApplyCandidateMessage(message), false, message.slice(0, 30));
+    assert.deepEqual(replyFor(strict, message), [], message.slice(0, 30));
+    assert.equal(strict.http.calls, 0, message.slice(0, 30));
+  }
+  const strictMalformed = evaluate(await readFile(artifactPath, "utf8"));
+  assert.equal(strictMalformed.isSeasonApplySnapshotEnvelope(malformed), true);
+  assert.equal(strictMalformed.isPartyRecruitFormMessage(malformed), false);
+  const doubleSlash = `//${complete.join("\n")}`;
+  const strict = evaluate(await readFile(artifactPath, "utf8"));
+  assert.equal(strict.isCompleteEmptySeasonApplySnapshot(doubleSlash), false);
 });
 
 test("clean-session imageDB input preserves the active V40 R2 no-reply and no-HTTP behavior", async () => {

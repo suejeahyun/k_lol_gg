@@ -10,6 +10,7 @@ export type KakaoV4HttpErrorCode =
   | "IDEMPOTENCY_MISMATCH"
   | "WRONG_PROFILE"
   | "INVALID_FORM"
+  | "INVALID_STATE"
   | "UNAVAILABLE";
 
 const problems = Object.freeze({
@@ -22,6 +23,7 @@ const problems = Object.freeze({
   IDEMPOTENCY_MISMATCH: definePublicProblem({ code: "REPLAY_CONFLICT", status: 409, title: "event ID가 다른 요청에 재사용되었습니다.", detail: "새 event ID로 다시 전송해 주세요." }),
   WRONG_PROFILE: definePublicProblem({ code: "WRONG_PROFILE", status: 403, title: "이 봇 프로필에서 사용할 수 없는 명령입니다.", detail: "RECRUIT와 FEATURES 봇 구성을 확인해 주세요." }),
   INVALID_FORM: definePublicProblem({ code: "INVALID_FORM", status: 400, title: "V1 양식이 올바르지 않습니다.", detail: "봇이 제공한 전체 양식의 필수 항목을 유지해 다시 보내 주세요." }),
+  INVALID_STATE: definePublicProblem({ code: "INVALID_STATE", status: 409, title: "현재 내전 상태에서는 변경할 수 없습니다.", detail: "확정 참가자가 있는 회차의 종목은 변경할 수 없습니다. 최신 내전 현황을 확인해 주세요." }),
   UNAVAILABLE: definePublicProblem({ code: "SERVER_UNAVAILABLE", status: 503, title: "V4 command gateway를 사용할 수 없습니다.", detail: "잠시 후 다시 시도해 주세요." }),
 });
 
@@ -49,6 +51,7 @@ export function kakaoV4CommandFailureResponse(error: unknown, traceId?: string) 
     return kakaoV4ProblemResponse("INVALID_FORM", traceId);
   }
   if (code === "INVALID_COMMAND") return kakaoV4ProblemResponse("INVALID_FORM", traceId);
+  if (code === "INVALID_STATE") return kakaoV4ProblemResponse("INVALID_STATE", traceId);
   if (code === "NOT_FOUND") return kakaoV4ProblemResponse("COMMAND_INVALID", traceId);
   return kakaoV4ProblemResponse("UNAVAILABLE", traceId);
 }

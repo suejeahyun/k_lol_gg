@@ -109,6 +109,55 @@ export const seasons = competitionSchema.table(
   ],
 );
 
+/**
+ * Room-scoped presentation metadata for a Kakao in-house round. Participant
+ * applications remain the source of truth for the roster; this row preserves
+ * the mode, start time, and announcement that accompanied the full snapshot.
+ */
+export const seasonInhouseRounds = competitionSchema.table(
+  "season_inhouse_rounds",
+  {
+    id: uuid("id").primaryKey(),
+    seasonId: uuid("season_id")
+      .notNull()
+      .references(() => seasons.id, { onDelete: "restrict" }),
+    applyDate: date("apply_date", { mode: "string" }).notNull(),
+    recruitNo: integer("recruit_no").notNull(),
+    sourceRoomIdHash: bytea("source_room_id_hash").notNull(),
+    mode: varchar("mode", { length: 16 }).notNull(),
+    capacity: integer("capacity").default(10).notNull(),
+    startTimeText: varchar("start_time_text", { length: 32 }),
+    scheduledStartAt: timestamptz("scheduled_start_at"),
+    noticeText: text("notice_text"),
+    sourceReferenceHash: bytea("source_reference_hash").notNull(),
+    revision: bigint("revision", { mode: "number" }).default(0).notNull(),
+    createdAt: timestamptz("created_at").defaultNow().notNull(),
+    updatedAt: timestamptz("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("season_inhouse_rounds_scope_uidx").on(
+      table.seasonId,
+      table.applyDate,
+      table.recruitNo,
+      table.sourceRoomIdHash,
+      table.mode,
+    ),
+    index("season_inhouse_rounds_room_date_idx").on(
+      table.seasonId,
+      table.applyDate,
+      table.sourceRoomIdHash,
+      table.recruitNo,
+    ),
+    check("season_inhouse_rounds_recruit_no_positive", sql`${table.recruitNo} > 0`),
+    check("season_inhouse_rounds_capacity_range", sql`${table.capacity} >= 2 AND ${table.capacity} <= 20`),
+    check("season_inhouse_rounds_room_hash_32_bytes", sql`octet_length(${table.sourceRoomIdHash}) = 32`),
+    check("season_inhouse_rounds_source_hash_32_bytes", sql`octet_length(${table.sourceReferenceHash}) = 32`),
+    check("season_inhouse_rounds_mode", sql`${table.mode} IN ('RIFT', 'ARAM', 'AUGMENT_ARAM')`),
+    check("season_inhouse_rounds_revision_nonnegative", sql`${table.revision} >= 0`),
+    check("season_inhouse_rounds_notice_length", sql`${table.noticeText} IS NULL OR char_length(${table.noticeText}) <= 600`),
+  ],
+);
+
 export const seasonApplications = competitionSchema.table(
   "season_applications",
   {
@@ -182,7 +231,7 @@ export const seasonApplications = competitionSchema.table(
       "season_applications_room_hash_32_bytes",
       sql`${table.sourceRoomIdHash} IS NULL OR octet_length(${table.sourceRoomIdHash}) = 32`,
     ),
-    check("season_applications_source_mode", sql`${table.sourceMode} IS NULL OR ${table.sourceMode} = 'RIFT'`),
+    check("season_applications_source_mode", sql`${table.sourceMode} IS NULL OR ${table.sourceMode} IN ('RIFT', 'ARAM', 'AUGMENT_ARAM')`),
     check(
       "season_applications_source_hash_consistency",
       sql`(
@@ -301,7 +350,7 @@ export const seasonKakaoPendingApplications = competitionSchema.table(
     check("season_kakao_pending_name_nonempty", sql`char_length(${table.suppliedName}) > 0`),
     check("season_kakao_pending_source_hash_32_bytes", sql`octet_length(${table.sourceReferenceHash}) = 32`),
     check("season_kakao_pending_room_hash_32_bytes", sql`${table.sourceRoomIdHash} IS NULL OR octet_length(${table.sourceRoomIdHash}) = 32`),
-    check("season_kakao_pending_source_mode", sql`${table.sourceMode} IS NULL OR ${table.sourceMode} = 'RIFT'`),
+    check("season_kakao_pending_source_mode", sql`${table.sourceMode} IS NULL OR ${table.sourceMode} IN ('RIFT', 'ARAM', 'AUGMENT_ARAM')`),
     check("season_kakao_pending_revision_nonnegative", sql`${table.revision} >= 0`),
     check(
       "season_kakao_pending_match_consistency",

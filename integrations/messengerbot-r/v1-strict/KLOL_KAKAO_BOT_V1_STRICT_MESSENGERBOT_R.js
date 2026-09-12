@@ -287,7 +287,7 @@ var KLOL_V1_GATEWAY = (function () {
 
 /* eslint-disable */
 /* V1-visible constants. No legacy endpoint or bearer secret is retained. */
-var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R6_2026_09_12";
+var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R7_2026_09_12";
 var BASE_URL = "https://k-lol-gg.vercel.app";
 var WEB_INHOUSE_RESULT_UPLOAD_URL = BASE_URL + "/matches/submit";
 var WEB_ADMIN_DISCIPLINE_CREATE_URL = BASE_URL + "/admin/discipline/new";
@@ -349,6 +349,51 @@ function v1SeasonApplyCompleteNotice() {
   return "[K-LOL.GG 구인구직방 참가 자동 등록 완료]\n내전 시작 10분전에 디스코드 내전 대기방으로 와주세요.";
 }
 
+function isSeasonApplySnapshotEnvelope(text) {
+  var normalized = trimText(normalizeText(String(text || "")));
+  if (normalized.indexOf("//") === 0 || /^\/\s/.test(normalized)) return false;
+  if (normalized.charAt(0) === "/") normalized = normalized.substring(1);
+  return /^📢\s*내전하실분\s*#\s*\d{1,3}\s*(?:\n|$)/.test(normalized) &&
+    /^\s*》\s*(?:협곡|칼바람|증바람|증강칼바람)\s*$/m.test(normalized) &&
+    /^\s*》\s*20\d{2}-\d{2}-\d{2}\s+(?:[01]?\d|2[0-3])\s*:\s*[0-5]\d\s*시작(?:\s+.*?)?\s*$/m.test(normalized) &&
+    /^\s*👥\s*\d{1,2}\s*\/\s*\d{1,2}\s*명\s*$/m.test(normalized) &&
+    /^\s*\*참가\s*신청\s*양식\*\s*$/m.test(normalized) &&
+    /^\s*EX\)\s*1\./im.test(normalized);
+}
+
+function isCompleteEmptySeasonApplySnapshot(text) {
+  var lines = [];
+  var capacityMatch = null;
+  var capacity = 0;
+  var slots = {};
+  var row = null;
+  var i = 0;
+  var slotNo = 0;
+  var value = "";
+  text = trimText(normalizeText(String(text || "")));
+  if (!isSeasonApplySnapshotEnvelope(text)) return false;
+  if (text.indexOf("//") === 0 || /^\/\s/.test(text)) return false;
+  if (text.charAt(0) === "/") text = text.substring(1);
+  capacityMatch = text.match(/^\s*👥\s*\d{1,2}\s*\/\s*(\d{1,2})\s*명\s*$/m);
+  if (!capacityMatch) return false;
+  capacity = Number(capacityMatch[1]);
+  if (capacity < 2 || capacity > 20) return false;
+  lines = text.split("\n");
+  for (i = 0; i < lines.length; i += 1) {
+    row = trimText(String(lines[i] || "")).match(/^(\d{1,2})\s*\\?\s*[.)]\s*(.*)$/);
+    if (!row) continue;
+    slotNo = Number(row[1]);
+    if (slotNo < 1 || slotNo > capacity) return false;
+    value = trimText(String(row[2] || ""));
+    if (value !== "") return false;
+    slots[String(slotNo)] = true;
+  }
+  for (i = 1; i <= capacity; i += 1) {
+    if (!slots[String(i)]) return false;
+  }
+  return Object.keys(slots).length === capacity;
+}
+
 function isSeasonApplyCandidateMessage(text) {
   var lines = [];
   var i = 0;
@@ -364,7 +409,7 @@ function isSeasonApplyCandidateMessage(text) {
     row = line.match(/^(\d{1,2})(?:(?:\s*\\?\s*[.)])|\s+)(.*)$/);
     if (row && trimText(String(row[2] || "")) != "") return true;
   }
-  return false;
+  return isCompleteEmptySeasonApplySnapshot(text);
 }
 
 function sendSearchPlayerCommand(text, room, sender, replier) {
@@ -2720,6 +2765,12 @@ isOperationFormMessage = isOperationFormCandidateMessage;
 /* Keep V1 routing, but let recoverable numbered rows reach the V4 row parser. */
 var isSeasonApplyCompleteMessage = isSeasonApplyFormMessage;
 isSeasonApplyFormMessage = isSeasonApplyCandidateMessage;
+/* A structurally in-house snapshot must never fall through to PARTY_SYNC. */
+var isPartyRecruitFormMessageWithoutSeasonSnapshot = isPartyRecruitFormMessage;
+isPartyRecruitFormMessage = function (text) {
+  if (isSeasonApplySnapshotEnvelope(text)) return false;
+  return isPartyRecruitFormMessageWithoutSeasonSnapshot(text);
+};
 
 function response(room, msg, sender, isGroupChat, replier, imageDB, packageName, isMention, logId, channelId, userHash) {
   KLOL_V1_GATEWAY.beginRequest(logId, userHash, sender);

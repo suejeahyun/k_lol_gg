@@ -6,9 +6,9 @@
 운영 DB, 환경 변수, 외부 서비스에는 연결하지 않습니다.
 
 - Source: `src/platform/db/schema/index.ts`
-- Schema SHA-256: `e3024f8a1ac38aaf3601c458c0d7910b67a4bb29310a49708fe98c6a4198a9a2`
-- Tables: 101
-- Foreign keys: 164
+- Schema SHA-256: `7911650458777e61a3cdece988a10f26653c69618c05ca4a9beb78601e1963c4`
+- Tables: 102
+- Foreign keys: 165
 - Regenerate: `npm run db:erd`
 - Drift check: `npm run db:erd:check`
 
@@ -542,6 +542,22 @@ erDiagram
         timestamp_with_time_zone created_at "NOT NULL"
         timestamp_with_time_zone expires_at "NOT NULL"
     }
+    competition__season_inhouse_rounds {
+        uuid id PK "NOT NULL"
+        uuid season_id FK "NOT NULL"
+        date apply_date "NOT NULL"
+        integer recruit_no "NOT NULL"
+        bytea source_room_id_hash "NOT NULL"
+        varchar_16 mode "NOT NULL"
+        integer capacity "NOT NULL"
+        varchar_32 start_time_text "nullable"
+        timestamp_with_time_zone scheduled_start_at "nullable"
+        text notice_text "nullable"
+        bytea source_reference_hash "NOT NULL"
+        bigint revision "NOT NULL"
+        timestamp_with_time_zone created_at "NOT NULL"
+        timestamp_with_time_zone updated_at "NOT NULL"
+    }
     competition__season_kakao_pending_applications {
         uuid id PK "NOT NULL"
         uuid season_id FK "NOT NULL"
@@ -626,6 +642,7 @@ erDiagram
     competition__seasons ||--o{ competition__match_series : "season_id to id"
     competition__seasons o|--o{ competition__match_submissions : "season_id to id"
     competition__seasons ||--o{ competition__season_applications : "season_id to id"
+    competition__seasons ||--o{ competition__season_inhouse_rounds : "season_id to id"
     competition__seasons ||--o{ competition__season_kakao_pending_applications : "season_id to id"
     competition__seasons o|--o{ competition__seasons : "cloned_from_season_id to id"
     media__galleries o|--o{ competition__destruction_competitions : "gallery_id to id"

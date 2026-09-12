@@ -60,6 +60,13 @@ export type KakaoV4SeasonParticipant = Readonly<{
 
 export type KakaoV4InhouseMode = "RIFT" | "ARAM" | "AUGMENT_ARAM";
 
+export type KakaoV4InhouseRoundMetadata = Readonly<{
+  capacity: number;
+  startTimeText: string | null;
+  scheduledStartAt: string | null;
+  noticeText: string | null;
+}>;
+
 export type KakaoV4ScrimUpsertPayload = Readonly<{
   recruitDate: string;
   scrimNumber: number | null;
@@ -111,6 +118,7 @@ export type CanonicalKakaoV4Command =
       applyDate: string;
       recruitNumber: number;
       mode: KakaoV4InhouseMode;
+      roundMetadata?: KakaoV4InhouseRoundMetadata;
       participants: readonly KakaoV4SeasonParticipant[];
       preserveSlotNos?: readonly number[];
     }>
@@ -205,6 +213,7 @@ function inhouseTemplateCommand(parameters: Readonly<Record<string, string | num
 
 function inhouseSnapshot(text: string, fallbackDate: string) {
   const normalized = text.replace(/\r\n?/gu, "\n").trim();
+  const lines = normalized.split("\n");
   const recruitNumber = Number(/^\s*📢\s*내전하실분\s*#\s*(\d{1,3})\s*$/mu.exec(normalized)?.[1] ?? 0);
   const dateValue = /^\s*》\s*(20\d{2}-\d{2}-\d{2})(?:\s|$)/mu.exec(normalized)?.[1] ?? null;
   const applyDate = validDateKey(dateValue, fallbackDate);
@@ -217,13 +226,56 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
       : modeLabel === "증바람" || modeLabel === "증강칼바람"
         ? "AUGMENT_ARAM"
         : null;
-  if (!recruitNumber || !applyDate || capacity < 1 || capacity > 99 || !mode) return null;
+  if (!recruitNumber || !applyDate || capacity < 2 || capacity > 20 || !mode) return null;
+
+  const schedulePattern = /^\s*》\s*20\d{2}-\d{2}-\d{2}\s+([01]?\d|2[0-3])\s*:\s*([0-5]\d)\s*시작(?:\s+(.*?))?\s*$/u;
+  const scheduleIndex = lines.findIndex((line) => schedulePattern.test(line));
+  const scheduleLine = scheduleIndex < 0 ? null : schedulePattern.exec(lines[scheduleIndex]!) ?? null;
+  const startTimeText = scheduleLine
+    ? `${String(Number(scheduleLine[1])).padStart(2, "0")}:${scheduleLine[2]}`
+    : null;
+  const scheduledStartAt = startTimeText
+    ? new Date(`${applyDate}T${startTimeText}:00+09:00`).toISOString()
+    : null;
+  const safeNoticeLine = (value: string) => value.normalize("NFKC").trim()
+    .replace(/[\u0000-\u001F\u007F-\u009F\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/gu, "");
+  const noticeCandidates: string[] = [];
+  if (scheduleLine?.[3]) {
+    const tailNotice = safeNoticeLine(scheduleLine[3]);
+    if (tailNotice) noticeCandidates.push(tailNotice);
+  }
+  const firstSlotOffset = scheduleIndex < 0
+    ? -1
+    : lines.slice(scheduleIndex + 1).findIndex((line) => /^\s*(?:예비\s*)?\d{1,3}\s*(?:[.)．）]|\\\.)/u.test(line.normalize("NFKC")));
+  const noticeWindow = scheduleIndex < 0
+    ? []
+    : lines.slice(scheduleIndex + 1, firstSlotOffset < 0 ? lines.length : scheduleIndex + 1 + firstSlotOffset);
+  for (const line of noticeWindow) {
+    const candidate = safeNoticeLine(line);
+    if (!candidate) continue;
+    if (
+      /^📢\s*내전하실분\s*#\s*\d{1,3}$/u.test(candidate) ||
+      /^》\s*(?:협곡|칼바람|증바람|증강칼바람)$/u.test(candidate) ||
+      /^》\s*20\d{2}-\d{2}-\d{2}\s+/u.test(candidate) ||
+      /^👥\s*\d{1,3}\s*\/\s*\d{1,3}\s*명$/u.test(candidate) ||
+      /^\*참가 신청 양식\*$/u.test(candidate) ||
+      /^이름(?:\/현티어\/최고티어\/주라인\/부라인)?$/u.test(candidate) ||
+      /^EX\)\s*/iu.test(candidate) ||
+      /^(?:예비\s*)?\d{1,3}\s*(?:[.)．）]|\\\.)/u.test(candidate)
+    ) continue;
+    noticeCandidates.push(candidate);
+  }
+  const noticeLines = [...new Set(noticeCandidates)]
+    .slice(0, 6)
+    .map((line) => line.slice(0, 160));
+  const noticeText = noticeLines.join("\n").slice(0, 600) || null;
 
   type SlotValue =
     | Readonly<{ state: "EMPTY" }>
     | Readonly<{ state: "PRESERVE" }>
     | Readonly<{ state: "PARTICIPANT"; participant: KakaoV4InhouseParticipant }>;
   const slots = new Map<number, SlotValue>();
+  const observedSlotNos = new Set<number>();
   const requireReview = (participant: KakaoV4InhouseParticipant): KakaoV4InhouseParticipant => Object.freeze({
     ...participant,
     reviewRequired: true,
@@ -238,6 +290,27 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
       : row.valid
         ? Object.freeze({ state: "EMPTY" })
         : Object.freeze({ state: "PRESERVE" });
+    const current = slots.get(slotNo);
+    if (
+      observedSlotNos.size === capacity &&
+      next.state === "PARTICIPANT" && next.participant.reviewRequired
+    ) {
+      // After a complete roster, a weaker numbered fragment is a copied
+      // footer/comment. Still accept a later valid edit or explicit empty row
+      // so the established V1 last-write-wins workflow remains intact.
+      continue;
+    }
+    observedSlotNos.add(slotNo);
+    if (
+      current?.state === "PARTICIPANT" && !current.participant.reviewRequired &&
+      next.state === "PARTICIPANT" && next.participant.reviewRequired
+    ) {
+      // A copied footer such as `1. 공지...` can look like an incomplete
+      // participant row. Never let that weaker row replace an already valid
+      // slot. Valid-to-valid edits and explicit empty cancellations remain
+      // last-write-wins for the established V1 workflow.
+      continue;
+    }
     // Kakao copies can contain the same numbered row more than once. V1 users
     // edit top-to-bottom, so the final occurrence is authoritative; a final
     // empty occurrence is therefore an explicit cancellation.
@@ -265,6 +338,7 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
     applyDate,
     recruitNumber,
     mode,
+    roundMetadata: Object.freeze({ capacity, startTimeText, scheduledStartAt, noticeText }),
     participants: Object.freeze(participants),
     ...(preserveSlotNos.length > 0 ? { preserveSlotNos: Object.freeze(preserveSlotNos) } : {}),
   });

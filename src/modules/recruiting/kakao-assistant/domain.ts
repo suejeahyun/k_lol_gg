@@ -109,6 +109,16 @@ export type KakaoSeasonSnapshotParticipant = Readonly<{
   reviewRequired?: true;
 }>;
 
+export type KakaoSeasonRoundMetadataDto = Readonly<{
+  recruitNo: number;
+  mode: "RIFT" | "ARAM" | "AUGMENT_ARAM";
+  capacity: number;
+  startTimeText: string | null;
+  scheduledStartAt: string | null;
+  noticeText: string | null;
+  revision: number;
+}>;
+
 type KakaoSeasonSnapshotCommandBase = Readonly<{
   /** Null is accepted only by the in-process V4 dispatcher for exact-one-active-season resolution. */
   seasonId: string | null;
@@ -120,6 +130,12 @@ export type KakaoSeasonSnapshotCommand =
       action: "SYNC";
       recruitNo: number;
       mode: "RIFT" | "ARAM" | "AUGMENT_ARAM";
+      roundMetadata?: Readonly<{
+        capacity: number;
+        startTimeText: string | null;
+        scheduledStartAt: string | null;
+        noticeText: string | null;
+      }>;
       participants: readonly KakaoSeasonSnapshotParticipant[];
       /** In-process V4 only; absent numbered rows preserve their current state. */
       preserveSlotNos?: readonly number[];
@@ -224,6 +240,9 @@ export type KakaoSeasonSnapshotDto = Readonly<{
   createdCount?: number;
   updatedCount?: number;
   mode?: "RIFT" | "ARAM" | "AUGMENT_ARAM";
+  metadataUpdated?: boolean;
+  roundMetadata?: KakaoSeasonRoundMetadataDto | null;
+  roundMetadataList?: readonly KakaoSeasonRoundMetadataDto[];
   availableRecruitNos?: readonly number[];
   legacyReply?: string;
   v1StrictLegacyReply?: string;
@@ -272,7 +291,7 @@ export type KakaoAssistantResponse =
   | KakaoImageReceiveDto;
 
 export class KakaoAssistantError extends Error {
-  constructor(readonly code: "INVALID_INPUT" | "IDEMPOTENCY_MISMATCH" | "NONCE_CONFLICT" | "INCOMPLETE_RECEIPT" | "NOT_FOUND" | "CONFLICT" | "FORBIDDEN" | "PRECONDITION_FAILED") {
+  constructor(readonly code: "INVALID_INPUT" | "IDEMPOTENCY_MISMATCH" | "NONCE_CONFLICT" | "INCOMPLETE_RECEIPT" | "NOT_FOUND" | "CONFLICT" | "INVALID_STATE" | "FORBIDDEN" | "PRECONDITION_FAILED") {
     super(code);
   }
 }

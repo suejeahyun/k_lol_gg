@@ -10,7 +10,7 @@ import { auditEvents } from "@/platform/db/schema/audit";
 import { matchGames, matchParticipants, matchSeries } from "@/platform/db/schema/matches";
 import { recruitParties, recruitingCommandReceipts, recruitingNonceBindings, scrimRecruits } from "@/platform/db/schema/recruiting";
 import { players } from "@/platform/db/schema/registry";
-import { seasonApplications, seasonKakaoPendingApplications, seasons } from "@/platform/db/schema/seasons";
+import { seasonApplications, seasonInhouseRounds, seasonKakaoPendingApplications, seasons } from "@/platform/db/schema/seasons";
 import { withTransaction, type V2Transaction } from "@/platform/db/transaction";
 
 import type { VerifiedKakaoWebhookIntent } from "../infrastructure/kakao-signature";
@@ -28,6 +28,7 @@ import {
   type KakaoSeasonSnapshotCommand,
   type KakaoSeasonSnapshotDto,
   type KakaoSeasonSnapshotEntryDto,
+  type KakaoSeasonRoundMetadataDto,
   type KakaoScheduledNoticeDto,
   type KakaoV4StaticReceiptDto,
 } from "./domain";
@@ -58,6 +59,24 @@ type LegacySeasonEntry = Readonly<{
   subPositions: KakaoSeasonSnapshotEntryDto["subPositions"];
   createdAt: Date;
 }>;
+
+type LegacySeasonRoundMetadata = KakaoSeasonRoundMetadataDto;
+
+const INHOUSE_MODES = ["RIFT", "ARAM", "AUGMENT_ARAM"] as const;
+
+function toSeasonRoundMetadata(
+  row: typeof seasonInhouseRounds.$inferSelect,
+): KakaoSeasonRoundMetadataDto {
+  return Object.freeze({
+    recruitNo: row.recruitNo,
+    mode: row.mode as KakaoSeasonRoundMetadataDto["mode"],
+    capacity: row.capacity,
+    startTimeText: row.startTimeText,
+    scheduledStartAt: row.scheduledStartAt?.toISOString() ?? null,
+    noticeText: row.noticeText,
+    revision: row.revision,
+  });
+}
 
 type SignedReadInput = Readonly<{
   actorPrincipalId: string;
@@ -168,19 +187,50 @@ function compareLegacySeasonEntries(left: LegacySeasonEntry, right: LegacySeason
   return left.createdAt.getTime() - right.createdAt.getTime() || left.name.localeCompare(right.name, "ko");
 }
 
-function legacyInhouseEntryLine(prefix: string, entry: LegacySeasonEntry | null) {
+function legacyInhouseEntryLine(prefix: string, entry: LegacySeasonEntry | null, namesOnly = false) {
   if (!entry) return `${prefix}.`;
   const name = entry.name.normalize("NFKC").replace(/[\r\n/]+/gu, " ").replace(/\s+/gu, " ").trim();
-  return `${prefix}. ${name}/${legacyInhouseTier(entry.currentTier)}/${legacyInhouseTier(entry.peakTier)}/${legacyInhousePositions(entry)}`;
+  return namesOnly
+    ? `${prefix}. ${name}`
+    : `${prefix}. ${name}/${legacyInhouseTier(entry.currentTier)}/${legacyInhouseTier(entry.peakTier)}/${legacyInhousePositions(entry)}`;
 }
 
-function legacyInhouseDetail(applyDate: string, recruitNo: number, entries: readonly LegacySeasonEntry[]) {
+function legacyInhouseModeLabel(mode: LegacySeasonRoundMetadata["mode"] | undefined) {
+  if (mode === "ARAM") return "칼바람";
+  if (mode === "AUGMENT_ARAM") return "증바람";
+  return "협곡";
+}
+
+function legacyInhouseStartTime(metadata: LegacySeasonRoundMetadata | undefined) {
+  if (metadata?.startTimeText) return metadata.startTimeText;
+  if (metadata?.scheduledStartAt) {
+    const scheduled = new Date(metadata.scheduledStartAt);
+    if (!Number.isNaN(scheduled.getTime())) {
+      const kst = new Date(scheduled.getTime() + 9 * 60 * 60 * 1_000);
+      return `${String(kst.getUTCHours()).padStart(2, "0")}:${String(kst.getUTCMinutes()).padStart(2, "0")}`;
+    }
+  }
+  return "21:00";
+}
+
+function oneLineInhouseNotice(value: string) {
+  return value.replace(/[\r\n]+/gu, " / ").replace(/\s+/gu, " ").trim();
+}
+
+function legacyInhouseDetail(
+  applyDate: string,
+  recruitNo: number,
+  entries: readonly LegacySeasonEntry[],
+  metadata?: LegacySeasonRoundMetadata,
+) {
   const mainEntries = entries.filter((entry) => !entry.reserve).sort(compareLegacySeasonEntries);
   const reserveEntries = entries.filter((entry) => entry.reserve).sort(compareLegacySeasonEntries);
-  const slots: Array<LegacySeasonEntry | null> = Array.from({ length: LEGACY_INHOUSE_CAPACITY }, () => null);
+  const capacity = metadata?.capacity ?? LEGACY_INHOUSE_CAPACITY;
+  const namesOnly = metadata?.mode === "ARAM" || metadata?.mode === "AUGMENT_ARAM";
+  const slots: Array<LegacySeasonEntry | null> = Array.from({ length: capacity }, () => null);
   const overflow: LegacySeasonEntry[] = [];
   for (const entry of mainEntries) {
-    if (entry.slotNo !== null && entry.slotNo >= 1 && entry.slotNo <= LEGACY_INHOUSE_CAPACITY && !slots[entry.slotNo - 1]) {
+    if (entry.slotNo !== null && entry.slotNo >= 1 && entry.slotNo <= capacity && !slots[entry.slotNo - 1]) {
       slots[entry.slotNo - 1] = entry;
       continue;
     }
@@ -190,49 +240,62 @@ function legacyInhouseDetail(applyDate: string, recruitNo: number, entries: read
   }
   const lines = [
     `📢 내전하실분 #${recruitNo}`,
-    " 》협곡",
-    ` 》${applyDate} 21:00 시작`,
-    `👥 ${mainEntries.length}/${LEGACY_INHOUSE_CAPACITY}명`,
+    ` 》${legacyInhouseModeLabel(metadata?.mode)}`,
+    ` 》${applyDate} ${legacyInhouseStartTime(metadata)} 시작`,
+    `👥 ${mainEntries.length}/${capacity}명`,
     "",
     "*참가 신청 양식*",
-    "이름/현티어/최고티어/주라인/부라인",
-    "EX) 1.지후/P/E/AD/MD",
-    "",
+    namesOnly ? "이름" : "이름/현티어/최고티어/주라인/부라인",
+    namesOnly ? "EX) 1.지후" : "EX) 1.지후/P/E/AD/MD",
   ];
-  slots.forEach((entry, index) => lines.push(legacyInhouseEntryLine(String(index + 1), entry)));
-  overflow.forEach((entry, index) => lines.push(legacyInhouseEntryLine(String(LEGACY_INHOUSE_CAPACITY + index + 1), entry)));
+  if (metadata?.noticeText) lines.push("", metadata.noticeText);
+  lines.push("");
+  slots.forEach((entry, index) => lines.push(legacyInhouseEntryLine(String(index + 1), entry, namesOnly)));
+  overflow.forEach((entry, index) => lines.push(legacyInhouseEntryLine(String(capacity + index + 1), entry, namesOnly)));
   if (reserveEntries.length > 0) {
     lines.push("");
-    reserveEntries.forEach((entry, index) => lines.push(legacyInhouseEntryLine(`예비 ${index + 1}`, entry)));
+    reserveEntries.forEach((entry, index) => lines.push(legacyInhouseEntryLine(`예비 ${index + 1}`, entry, namesOnly)));
   }
   return lines.join("\n");
 }
 
-function legacyInhouseOverview(applyDate: string, grouped: ReadonlyMap<number, readonly LegacySeasonEntry[]>) {
-  if (grouped.size === 0) {
+function legacyInhouseOverview(
+  applyDate: string,
+  grouped: ReadonlyMap<number, readonly LegacySeasonEntry[]>,
+  metadataByRecruitNo: ReadonlyMap<number, LegacySeasonRoundMetadata>,
+) {
+  const recruitNos = [...new Set([...grouped.keys(), ...metadataByRecruitNo.keys()])].sort((left, right) => left - right);
+  if (recruitNos.length === 0) {
     return "[K-LOL.GG 내전현황]\n오늘 등록된 내전 신청이 없습니다.\n\n참가 신청: 내전참가";
   }
-  const recruitNos = [...grouped.keys()].sort((left, right) => left - right);
   const lines = ["[K-LOL.GG 내전현황]", "🔎 전체 명단: 내전상세 번호", ""];
   for (const recruitNo of recruitNos) {
     const entries = grouped.get(recruitNo) ?? [];
+    const metadata = metadataByRecruitNo.get(recruitNo);
     const mainCount = entries.filter((entry) => !entry.reserve).length;
     const reserveCount = entries.length - mainCount;
     const reserveText = reserveCount > 0 ? ` / 예비 ${reserveCount}` : "";
-    lines.push(`#${recruitNo} ${legacyInhouseDate(applyDate)} 21:00 시작 (${mainCount}/${LEGACY_INHOUSE_CAPACITY}${reserveText})`);
+    const modeText = metadata ? ` · ${legacyInhouseModeLabel(metadata.mode)}` : "";
+    lines.push(`#${recruitNo} ${legacyInhouseDate(applyDate)} ${legacyInhouseStartTime(metadata)} 시작${modeText} (${mainCount}/${metadata?.capacity ?? LEGACY_INHOUSE_CAPACITY}${reserveText})`);
+    if (metadata?.noticeText) lines.push(`공지: ${oneLineInhouseNotice(metadata.noticeText)}`);
     lines.push(`└ 내전상세 ${recruitNo}`);
   }
   lines.push("", `상세 명령: ${recruitNos.map((recruitNo) => `내전상세 ${recruitNo}`).join(" / ")}`);
   return lines.join("\n");
 }
 
-function v1StrictLegacyInhouseStatus(applyDate: string, grouped: ReadonlyMap<number, readonly LegacySeasonEntry[]>) {
-  if (grouped.size === 0) return "[내전현황]\n현재 등록된 내전 신청 현황이 없습니다.";
-  if (grouped.size === 1) {
-    const recruitNo = [...grouped.keys()][0]!;
-    return legacyInhouseDetail(applyDate, recruitNo, grouped.get(recruitNo) ?? []);
+function v1StrictLegacyInhouseStatus(
+  applyDate: string,
+  grouped: ReadonlyMap<number, readonly LegacySeasonEntry[]>,
+  metadataByRecruitNo: ReadonlyMap<number, LegacySeasonRoundMetadata>,
+) {
+  const recruitNos = [...new Set([...grouped.keys(), ...metadataByRecruitNo.keys()])].sort((left, right) => left - right);
+  if (recruitNos.length === 0) return "[내전현황]\n현재 등록된 내전 신청 현황이 없습니다.";
+  if (recruitNos.length === 1) {
+    const recruitNo = recruitNos[0]!;
+    return legacyInhouseDetail(applyDate, recruitNo, grouped.get(recruitNo) ?? [], metadataByRecruitNo.get(recruitNo));
   }
-  return legacyInhouseOverview(applyDate, grouped);
+  return legacyInhouseOverview(applyDate, grouped, metadataByRecruitNo);
 }
 
 type LegacySeasonSyncChanges = {
@@ -242,6 +305,8 @@ type LegacySeasonSyncChanges = {
   pending: string[];
   reserve: string[];
   currentMainCount: number;
+  metadataChanged: boolean;
+  roundMetadata: LegacySeasonRoundMetadata | null;
 };
 
 function legacySeasonParticipantLabel(
@@ -261,10 +326,15 @@ function compactLegacySeasonChanges(items: readonly string[]) {
 function legacySeasonSyncReply(recruitNo: number, changes: LegacySeasonSyncChanges) {
   const hasChanges = changes.added.length > 0 || changes.updated.length > 0 || changes.removed.length > 0 ||
     changes.pending.length > 0 || changes.reserve.length > 0;
-  if (!hasChanges) return `[K-LOL.GG 내전 #${recruitNo} 명단 변경 없음]\n현재: ${changes.currentMainCount}/${LEGACY_INHOUSE_CAPACITY}`;
-  const lines = [changes.pending.length > 0
-    ? `[K-LOL.GG 내전 #${recruitNo} 명단 업데이트/보류]`
-    : `[K-LOL.GG 내전 #${recruitNo} 명단 업데이트]`];
+  const capacity = changes.roundMetadata?.capacity ?? LEGACY_INHOUSE_CAPACITY;
+  if (!hasChanges && !changes.metadataChanged) return `[K-LOL.GG 내전 #${recruitNo} 명단 변경 없음]\n현재: ${changes.currentMainCount}/${capacity}`;
+  const lines = [!hasChanges
+    ? `[K-LOL.GG 내전 #${recruitNo} 정보 업데이트]`
+    : changes.metadataChanged
+      ? `[K-LOL.GG 내전 #${recruitNo} 명단/정보 업데이트${changes.pending.length > 0 ? "/보류" : ""}]`
+      : changes.pending.length > 0
+        ? `[K-LOL.GG 내전 #${recruitNo} 명단 업데이트/보류]`
+        : `[K-LOL.GG 내전 #${recruitNo} 명단 업데이트]`];
   for (const [label, items] of [
     ["추가", changes.added],
     ["수정", changes.updated],
@@ -275,7 +345,12 @@ function legacySeasonSyncReply(recruitNo: number, changes: LegacySeasonSyncChang
     const text = compactLegacySeasonChanges(items);
     if (text) lines.push(`${label}: ${text}`);
   }
-  lines.push(`현재: ${changes.currentMainCount}/${LEGACY_INHOUSE_CAPACITY}`);
+  if (changes.metadataChanged) {
+    lines.push(`종목: ${legacyInhouseModeLabel(changes.roundMetadata?.mode)}`);
+    lines.push(`시작: ${legacyInhouseStartTime(changes.roundMetadata ?? undefined)}`);
+    lines.push(`공지: ${changes.roundMetadata?.noticeText ? oneLineInhouseNotice(changes.roundMetadata.noticeText) : "없음"}`);
+  }
+  lines.push(`현재: ${changes.currentMainCount}/${capacity}`);
   return lines.join("\n");
 }
 
@@ -702,10 +777,21 @@ export class PostgresKakaoAssistant {
       const command = { ...requested, seasonId: season.id } as KakaoSeasonSnapshotCommand & Readonly<{ seasonId: string }>;
       if (command.action === "SYNC") {
         const preserved = command.preserveSlotNos ?? [];
+        const roundMetadata = command.roundMetadata ?? {
+          capacity: LEGACY_INHOUSE_CAPACITY,
+          startTimeText: null,
+          scheduledStartAt: null,
+          noticeText: null,
+        };
         if (
           preserved.some((slotNo) => !Number.isSafeInteger(slotNo) || slotNo < 1 || slotNo > 99) ||
           new Set(preserved).size !== preserved.length ||
-          command.participants.some((participant) => preserved.includes(participant.slotNo))
+          command.participants.some((participant) => preserved.includes(participant.slotNo)) ||
+          !Number.isSafeInteger(roundMetadata.capacity) || roundMetadata.capacity < 2 || roundMetadata.capacity > 20 ||
+          command.participants.some((participant) => participant.slotNo > roundMetadata.capacity) ||
+          (roundMetadata.startTimeText !== null && !/^(?:[01]\d|2[0-3]):[0-5]\d$/u.test(roundMetadata.startTimeText)) ||
+          (roundMetadata.scheduledStartAt !== null && Number.isNaN(new Date(roundMetadata.scheduledStartAt).getTime())) ||
+          (roundMetadata.noticeText !== null && (roundMetadata.noticeText.length < 1 || roundMetadata.noticeText.length > 600))
         ) throw new KakaoAssistantError("INVALID_INPUT");
       }
       if (command.action !== "STATUS") {
@@ -719,12 +805,15 @@ export class PostgresKakaoAssistant {
       const sourceRoomIdHash = seasonRoomIdHash(input.intent.roomId);
       const sourceMode = command.action === "STATUS" ? "RIFT" as const : command.mode;
       const roomScope = sourceRoomIdHash.toString("hex");
-      const roundKey = `${command.seasonId}:${command.applyDate}:${command.recruitNo ?? "all"}:${sourceMode}:${roomScope}`;
+      // Lock the room/date/round independent of mode so an authoritative mode
+      // correction cannot race another snapshot for the same visible round.
+      const roundKey = `${command.seasonId}:${command.applyDate}:${command.recruitNo ?? "all"}:${roomScope}`;
       await transaction.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`kakao-season:${roundKey}`}, 0))`);
 
       let cancelledCount = 0;
       let createdCount = 0;
       let updatedCount = 0;
+      let metadataUpdated = false;
       const legacyChanges: LegacySeasonSyncChanges = {
         added: [],
         updated: [],
@@ -732,9 +821,114 @@ export class PostgresKakaoAssistant {
         pending: [],
         reserve: [],
         currentMainCount: requested.action === "SYNC" ? requested.participants.filter((participant) => !participant.reserve).length : 0,
+        metadataChanged: false,
+        roundMetadata: null,
       };
       if (command.action === "SYNC") {
         const sourceHash = Buffer.from(input.intent.bodyDigestHex, "hex");
+        const requestedMetadata = command.roundMetadata;
+        const scopedMetadata = await transaction.select().from(seasonInhouseRounds).where(and(
+          eq(seasonInhouseRounds.seasonId, command.seasonId),
+          eq(seasonInhouseRounds.applyDate, command.applyDate),
+          eq(seasonInhouseRounds.recruitNo, command.recruitNo),
+          eq(seasonInhouseRounds.sourceRoomIdHash, sourceRoomIdHash),
+        )).for("update");
+        const currentMetadata = scopedMetadata.find((metadata) => metadata.mode === command.mode);
+        const previousModes = INHOUSE_MODES.filter((mode) => mode !== command.mode);
+        const previousModeApplications = await transaction.select({ application: seasonApplications, player: players })
+          .from(seasonApplications)
+          .innerJoin(players, eq(players.id, seasonApplications.playerId))
+          .where(and(
+            eq(seasonApplications.seasonId, command.seasonId),
+            eq(seasonApplications.applyDate, command.applyDate),
+            eq(seasonApplications.recruitNo, command.recruitNo),
+            eq(seasonApplications.source, "KAKAO"),
+            eq(seasonApplications.sourceRoomIdHash, sourceRoomIdHash),
+            inArray(seasonApplications.sourceMode, previousModes),
+            inArray(seasonApplications.status, ["APPLIED", "RESERVE", "CONFIRMED"]),
+          )).for("update");
+        if (previousModeApplications.some(({ application }) => application.status === "CONFIRMED")) {
+          throw new KakaoAssistantError("INVALID_STATE");
+        }
+        const obsoleteMetadataIds = scopedMetadata
+          .filter((metadata) => metadata.mode !== command.mode)
+          .map((metadata) => metadata.id);
+        if (obsoleteMetadataIds.length > 0) {
+          await transaction.delete(seasonInhouseRounds).where(inArray(seasonInhouseRounds.id, obsoleteMetadataIds));
+        }
+        const cancellablePreviousModeApplications = previousModeApplications.filter(({ application }) =>
+          application.status === "APPLIED" || application.status === "RESERVE");
+        if (cancellablePreviousModeApplications.length > 0) {
+          await transaction.update(seasonApplications).set({
+            status: "CANCELLED",
+            cancelledAt: now,
+            reviewNote: null,
+            reviewedByUserAccountId: null,
+            reviewedAt: null,
+            revision: sql`${seasonApplications.revision} + 1`,
+            updatedAt: now,
+          }).where(inArray(seasonApplications.id, cancellablePreviousModeApplications.map(({ application }) => application.id)));
+          cancelledCount += cancellablePreviousModeApplications.length;
+          legacyChanges.removed.push(...cancellablePreviousModeApplications.map(({ application, player }) =>
+            application.sourceSlotNo ? `${application.sourceSlotNo}. ${player.memberName}` : player.memberName));
+        }
+        const previousModePending = await transaction.select().from(seasonKakaoPendingApplications).where(and(
+          eq(seasonKakaoPendingApplications.seasonId, command.seasonId),
+          eq(seasonKakaoPendingApplications.applyDate, command.applyDate),
+          eq(seasonKakaoPendingApplications.recruitNo, command.recruitNo),
+          eq(seasonKakaoPendingApplications.sourceRoomIdHash, sourceRoomIdHash),
+          inArray(seasonKakaoPendingApplications.sourceMode, previousModes),
+          eq(seasonKakaoPendingApplications.status, "ACTIVE"),
+        )).for("update");
+        if (previousModePending.length > 0) {
+          await transaction.update(seasonKakaoPendingApplications).set({
+            status: "CANCELLED",
+            cancelledAt: now,
+            revision: sql`${seasonKakaoPendingApplications.revision} + 1`,
+            updatedAt: now,
+          }).where(inArray(seasonKakaoPendingApplications.id, previousModePending.map((pending) => pending.id)));
+          cancelledCount += previousModePending.length;
+          legacyChanges.removed.push(...previousModePending.map((pending) =>
+            `${pending.reserve ? `예비 ${pending.slotNo}` : pending.slotNo}. ${pending.suppliedName}`));
+        }
+        if (requestedMetadata) {
+        const scheduledStartAt = requestedMetadata.scheduledStartAt === null
+          ? null
+          : new Date(requestedMetadata.scheduledStartAt);
+        metadataUpdated = !currentMetadata ||
+          currentMetadata.capacity !== requestedMetadata.capacity ||
+          currentMetadata.startTimeText !== requestedMetadata.startTimeText ||
+          currentMetadata.scheduledStartAt?.getTime() !== scheduledStartAt?.getTime() ||
+          currentMetadata.noticeText !== requestedMetadata.noticeText;
+        if (!currentMetadata) {
+          await transaction.insert(seasonInhouseRounds).values({
+            id: randomUUID(),
+            seasonId: command.seasonId,
+            applyDate: command.applyDate,
+            recruitNo: command.recruitNo,
+            sourceRoomIdHash,
+            mode: command.mode,
+            capacity: requestedMetadata.capacity,
+            startTimeText: requestedMetadata.startTimeText,
+            scheduledStartAt,
+            noticeText: requestedMetadata.noticeText,
+            sourceReferenceHash: sourceHash,
+            createdAt: now,
+            updatedAt: now,
+          });
+        } else if (metadataUpdated) {
+          await transaction.update(seasonInhouseRounds).set({
+            capacity: requestedMetadata.capacity,
+            startTimeText: requestedMetadata.startTimeText,
+            scheduledStartAt,
+            noticeText: requestedMetadata.noticeText,
+            sourceReferenceHash: sourceHash,
+            revision: sql`${seasonInhouseRounds.revision} + 1`,
+            updatedAt: now,
+          }).where(eq(seasonInhouseRounds.id, currentMetadata.id));
+        }
+        legacyChanges.metadataChanged = metadataUpdated;
+        }
         const preserveSlotNos = new Set(command.preserveSlotNos ?? []);
         const matched: Array<{
           participant: KakaoSeasonSnapshotCommand["participants"][number];
@@ -777,10 +971,28 @@ export class PostgresKakaoAssistant {
           eq(seasonApplications.sourceMode, sourceMode),
         )).for("update");
         const currentPlayerIds = [...new Set(currentApplications.map((application) => application.playerId))];
-        const currentPlayerNames = new Map(currentPlayerIds.length === 0 ? [] : (await transaction.select({
+        const currentPlayerRecords = new Map(currentPlayerIds.length === 0 ? [] : (await transaction.select({
           id: players.id,
           memberName: players.memberName,
-        }).from(players).where(inArray(players.id, currentPlayerIds))).map((player) => [player.id, player.memberName] as const));
+          memberNameNormalized: players.memberNameNormalized,
+          nicknameNormalized: players.nicknameNormalized,
+        }).from(players).where(inArray(players.id, currentPlayerIds))).map((player) => [player.id, player] as const));
+        for (const { participant } of matched) {
+          if (!participant.reviewRequired) continue;
+          const current = currentApplications.find((application) =>
+            application.sourceSlotNo === participant.slotNo && application.status !== "CANCELLED");
+          const player = current ? currentPlayerRecords.get(current.playerId) : null;
+          const suppliedIdentity = normalizedIdentity(participant.name);
+          if (
+            player &&
+            (suppliedIdentity === player.memberNameNormalized || suppliedIdentity === player.nicknameNormalized)
+          ) {
+            // A partial annotation for the same person is weaker than the
+            // already accepted slot. Preserve the application instead of
+            // cancelling it and creating a pending-review downgrade.
+            preserveSlotNos.add(participant.slotNo);
+          }
+        }
         for (const current of currentApplications) {
           if (
             uniqueMatchedIds.includes(current.playerId) || current.status === "CANCELLED" ||
@@ -791,7 +1003,7 @@ export class PostgresKakaoAssistant {
             status: "CANCELLED", cancelledAt: now, revision: sql`${seasonApplications.revision} + 1`, updatedAt: now,
           }).where(eq(seasonApplications.id, current.id));
           cancelledCount += 1;
-          const playerName = currentPlayerNames.get(current.playerId) ?? "이름 미확인";
+          const playerName = currentPlayerRecords.get(current.playerId)?.memberName ?? "이름 미확인";
           legacyChanges.removed.push(current.sourceSlotNo ? `${current.sourceSlotNo}. ${playerName}` : playerName);
         }
 
@@ -816,6 +1028,7 @@ export class PostgresKakaoAssistant {
         }
 
         for (const { participant, candidates } of matched) {
+          if (participant.reviewRequired && preserveSlotNos.has(participant.slotNo)) continue;
           const matchedPlayer = candidates.length === 1 ? candidates[0]! : null;
           if (matchedPlayer && !participant.reserve) {
             const current = (await transaction.select().from(seasonApplications).where(and(
@@ -826,7 +1039,7 @@ export class PostgresKakaoAssistant {
             )).for("update").limit(1))[0];
             const currentOwnedBySnapshot = current?.source !== "KAKAO" || (
               current.sourceRoomIdHash !== null && sameBytes(current.sourceRoomIdHash, sourceRoomIdHash) &&
-              current.sourceMode === sourceMode
+              INHOUSE_MODES.includes(current.sourceMode as typeof INHOUSE_MODES[number])
             );
             const mergePlan = currentOwnedBySnapshot
               ? planSeasonApplicationMerge(current ?? null)
@@ -933,6 +1146,7 @@ export class PostgresKakaoAssistant {
             createdCount,
             updatedCount,
             cancelledCount,
+            metadataUpdated,
             sourceDigest: input.intent.bodyDigestHex,
             sourceRoomDigest: roomScope,
             sourceMode,
@@ -966,25 +1180,53 @@ export class PostgresKakaoAssistant {
         });
       }
 
-      const applications = await transaction.select({ application: seasonApplications, player: players }).from(seasonApplications)
+      const applicationCandidates = await transaction.select({ application: seasonApplications, player: players }).from(seasonApplications)
         .innerJoin(players, eq(players.id, seasonApplications.playerId)).where(and(
           eq(seasonApplications.seasonId, command.seasonId), eq(seasonApplications.applyDate, command.applyDate),
           command.recruitNo === null ? undefined : eq(seasonApplications.recruitNo, command.recruitNo),
           inArray(seasonApplications.status, ["APPLIED", "RESERVE", "CONFIRMED"]),
           or(
             eq(seasonApplications.source, "SITE"),
-            and(eq(seasonApplications.source, "KAKAO"), eq(seasonApplications.sourceRoomIdHash, sourceRoomIdHash), eq(seasonApplications.sourceMode, sourceMode)),
+            and(
+              eq(seasonApplications.source, "KAKAO"),
+              eq(seasonApplications.sourceRoomIdHash, sourceRoomIdHash),
+              command.action === "STATUS"
+                ? inArray(seasonApplications.sourceMode, INHOUSE_MODES)
+                : eq(seasonApplications.sourceMode, command.mode),
+            ),
           ),
         )).orderBy(asc(seasonApplications.recruitNo), asc(seasonApplications.sourceSlotNo), asc(seasonApplications.createdAt), asc(seasonApplications.id));
-      const pending = await transaction.select({ pending: seasonKakaoPendingApplications, player: players }).from(seasonKakaoPendingApplications)
+      const pendingCandidates = await transaction.select({ pending: seasonKakaoPendingApplications, player: players }).from(seasonKakaoPendingApplications)
         .leftJoin(players, eq(players.id, seasonKakaoPendingApplications.matchedPlayerId)).where(and(
           eq(seasonKakaoPendingApplications.seasonId, command.seasonId),
           eq(seasonKakaoPendingApplications.applyDate, command.applyDate),
           command.recruitNo === null ? undefined : eq(seasonKakaoPendingApplications.recruitNo, command.recruitNo),
           eq(seasonKakaoPendingApplications.status, "ACTIVE"),
           eq(seasonKakaoPendingApplications.sourceRoomIdHash, sourceRoomIdHash),
-          eq(seasonKakaoPendingApplications.sourceMode, sourceMode),
+          command.action === "STATUS"
+            ? inArray(seasonKakaoPendingApplications.sourceMode, INHOUSE_MODES)
+            : eq(seasonKakaoPendingApplications.sourceMode, command.mode),
         )).orderBy(asc(seasonKakaoPendingApplications.recruitNo), asc(seasonKakaoPendingApplications.slotNo), asc(seasonKakaoPendingApplications.createdAt), asc(seasonKakaoPendingApplications.id));
+      const metadataRows = await transaction.select().from(seasonInhouseRounds).where(and(
+        eq(seasonInhouseRounds.seasonId, command.seasonId),
+        eq(seasonInhouseRounds.applyDate, command.applyDate),
+        command.recruitNo === null ? undefined : eq(seasonInhouseRounds.recruitNo, command.recruitNo),
+        eq(seasonInhouseRounds.sourceRoomIdHash, sourceRoomIdHash),
+        command.action === "STATUS" ? inArray(seasonInhouseRounds.mode, INHOUSE_MODES) : eq(seasonInhouseRounds.mode, command.mode),
+      )).orderBy(asc(seasonInhouseRounds.recruitNo), desc(seasonInhouseRounds.updatedAt), desc(seasonInhouseRounds.id));
+      const roundMetadataList = metadataRows.map(toSeasonRoundMetadata);
+      const metadataByRecruitNo = new Map<number, KakaoSeasonRoundMetadataDto>();
+      for (const metadata of roundMetadataList) {
+        if (!metadataByRecruitNo.has(metadata.recruitNo)) metadataByRecruitNo.set(metadata.recruitNo, metadata);
+      }
+      // A legacy detail command identifies only the round number. If old data
+      // contains more than one mode for the same room/date/round, render the
+      // most recently updated metadata and its Kakao roster instead of merging
+      // incompatible modes. SITE applications remain shared and appear once.
+      const selectedMode = (recruitNo: number) => metadataByRecruitNo.get(recruitNo)?.mode ?? "RIFT";
+      const applications = applicationCandidates.filter(({ application }) =>
+        application.source === "SITE" || application.sourceMode === selectedMode(application.recruitNo));
+      const pending = pendingCandidates.filter(({ pending: item }) => item.sourceMode === selectedMode(item.recruitNo));
       const legacyEntries: LegacySeasonEntry[] = [
         ...applications.map(({ application, player }) => ({
           recruitNo: application.recruitNo,
@@ -1017,9 +1259,11 @@ export class PostgresKakaoAssistant {
       }
       if (command.action === "SYNC") {
         legacyChanges.currentMainCount = legacyEntries.filter((entry) => !entry.reserve).length;
+        legacyChanges.roundMetadata = metadataByRecruitNo.get(command.recruitNo) ?? null;
       }
       if (command.action === "STATUS" && command.recruitNo === null) {
-        const availableRecruitNos = [...legacyGrouped.keys()].sort((left, right) => left - right);
+        const availableRecruitNos = [...new Set([...legacyGrouped.keys(), ...metadataByRecruitNo.keys()])]
+          .sort((left, right) => left - right);
         return Object.freeze({
           kind: "SEASON_APPLICATION_SNAPSHOT" as const,
           seasonId: command.seasonId,
@@ -1033,8 +1277,9 @@ export class PostgresKakaoAssistant {
           pendingCount: pending.filter(({ pending: item }) => item.matchState !== "MATCHED_RESERVE").length,
           cancelledCount: 0,
           availableRecruitNos: Object.freeze(availableRecruitNos),
-          legacyReply: legacyInhouseOverview(command.applyDate, legacyGrouped),
-          v1StrictLegacyReply: v1StrictLegacyInhouseStatus(command.applyDate, legacyGrouped),
+          roundMetadataList: Object.freeze(roundMetadataList),
+          legacyReply: legacyInhouseOverview(command.applyDate, legacyGrouped, metadataByRecruitNo),
+          v1StrictLegacyReply: v1StrictLegacyInhouseStatus(command.applyDate, legacyGrouped, metadataByRecruitNo),
         });
       }
       const entries: KakaoSeasonSnapshotEntryDto[] = [
@@ -1084,12 +1329,14 @@ export class PostgresKakaoAssistant {
         confirmedCount: applications.filter(({ application }) => application.status === "CONFIRMED").length,
         pendingCount: pending.filter(({ pending: item }) => item.matchState !== "MATCHED_RESERVE").length,
         cancelledCount,
+        metadataUpdated,
+        roundMetadata: command.recruitNo === null ? null : metadataByRecruitNo.get(command.recruitNo) ?? null,
         ...(command.action === "STATUS" ? {} : { createdCount, updatedCount, mode: sourceMode }),
         ...(command.action === "SYNC" ? { v1StrictLegacyReply: legacySeasonSyncReply(command.recruitNo, legacyChanges) } : {}),
         ...(command.action === "STATUS" && command.recruitNo !== null ? {
-          legacyReply: legacyInhouseDetail(command.applyDate, command.recruitNo, legacyEntries),
-          v1StrictLegacyReply: legacyEntries.length > 0
-            ? legacyInhouseDetail(command.applyDate, command.recruitNo, legacyEntries)
+          legacyReply: legacyInhouseDetail(command.applyDate, command.recruitNo, legacyEntries, metadataByRecruitNo.get(command.recruitNo)),
+          v1StrictLegacyReply: legacyEntries.length > 0 || metadataByRecruitNo.has(command.recruitNo)
+            ? legacyInhouseDetail(command.applyDate, command.recruitNo, legacyEntries, metadataByRecruitNo.get(command.recruitNo))
             : "[내전현황]\n현재 등록된 내전 신청 현황이 없습니다.",
         } : {}),
       });

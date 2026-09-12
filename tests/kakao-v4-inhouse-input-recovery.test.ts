@@ -146,6 +146,80 @@ test("a final empty duplicate row means cancellation while a missing numbered ro
   assert.deepEqual(command.preserveSlotNos, [8]);
 });
 
+test("an incomplete duplicate footer cannot replace a valid slot while valid edits stay last-write-wins", () => {
+  const text = form()
+    .replace(String.raw`9\.`, "9. 먼저/M/M/TOP/SUP\r\n9. 나중/M/M/ADC/")
+    .concat("\r\n1. 승리팀 랜덤 1인 스킨 증정");
+  const command = canonicalizeKakaoV4Command(
+    classifyKakaoV4Command({ profileId: "FEATURES", text }),
+    envelope(text),
+  );
+  assert.equal(command?.domain, "SEASON");
+  assert.equal(command?.action, "SYNC");
+  if (command?.domain !== "SEASON" || command.action !== "SYNC") assert.fail("expected a recoverable season snapshot");
+  assert.deepEqual(command.participants.find((participant) => participant.slotNo === 1), {
+    slotNo: 1,
+    name: "지오",
+    riotId: null,
+    mainPosition: "ADC",
+    subPositions: ["MID"],
+    reserve: false,
+  });
+  assert.deepEqual(command.participants.find((participant) => participant.slotNo === 9), {
+    slotNo: 9,
+    name: "나중",
+    riotId: null,
+    mainPosition: "ADC",
+    subPositions: [],
+    reserve: false,
+  });
+});
+
+test("numbered footer text after a complete empty roster cannot create a pending participant", () => {
+  const text = form()
+    .replace("1.지오/G/E/AD/Mid", "1.")
+    .replace("2.동휘/M/M/Mid all", "2.")
+    .concat("\r\n1. 승리팀 랜덤 1인 스킨 증정");
+  const command = canonicalizeKakaoV4Command(
+    classifyKakaoV4Command({ profileId: "FEATURES", text }),
+    envelope(text),
+  );
+  assert.equal(command?.domain, "SEASON");
+  assert.equal(command?.action, "SYNC");
+  if (command?.domain !== "SEASON" || command.action !== "SYNC") assert.fail("expected a complete empty season snapshot");
+  assert.deepEqual(command.participants, []);
+  assert.deepEqual(command.preserveSlotNos, undefined);
+});
+
+test("valid edits and explicit cancellation after a complete roster remain last-write-wins", () => {
+  const validEditText = form().concat("\r\n1. 수정/M/M/MID/ADC");
+  const validEdit = canonicalizeKakaoV4Command(
+    classifyKakaoV4Command({ profileId: "FEATURES", text: validEditText }),
+    envelope(validEditText),
+  );
+  assert.equal(validEdit?.domain, "SEASON");
+  assert.equal(validEdit?.action, "SYNC");
+  if (validEdit?.domain !== "SEASON" || validEdit.action !== "SYNC") assert.fail("expected a valid edited snapshot");
+  assert.deepEqual(validEdit.participants.find((participant) => participant.slotNo === 1), {
+    slotNo: 1,
+    name: "수정",
+    riotId: null,
+    mainPosition: "MID",
+    subPositions: ["ADC"],
+    reserve: false,
+  });
+
+  const cancelledText = form().concat("\r\n1.");
+  const cancelled = canonicalizeKakaoV4Command(
+    classifyKakaoV4Command({ profileId: "FEATURES", text: cancelledText }),
+    envelope(cancelledText),
+  );
+  assert.equal(cancelled?.domain, "SEASON");
+  assert.equal(cancelled?.action, "SYNC");
+  if (cancelled?.domain !== "SEASON" || cancelled.action !== "SYNC") assert.fail("expected an explicit cancellation snapshot");
+  assert.equal(cancelled.participants.some((participant) => participant.slotNo === 1), false);
+});
+
 test("the former canonical failure maps to the exact public HTTP 400 document", async () => {
   const response = kakaoV4CommandFailureResponse(new KakaoV4CommandError("INVALID_FORM"), "trace-inhouse-mid-all");
   assert.equal(response.status, 400);

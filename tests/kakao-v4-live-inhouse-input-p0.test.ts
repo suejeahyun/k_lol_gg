@@ -132,3 +132,51 @@ test("[P0-INHOUSE-LIVE-03] Mid all 복구는 mainPosition MID를 유지하고 AL
     field: "mainPosition/subPositions",
   }]);
 });
+
+test("[P0-INHOUSE-METADATA-01] 독립 공지와 20시 시작을 전체 스냅샷 메타로 보존한다", () => {
+  const text = liveForm("김동휘")
+    .replace("2026-09-11 21:00 시작", "2026-09-11 20:00 시작")
+    .replace("EX) 1.지후/P/E/AD/MD\n\n", "EX) 1.지후/P/E/AD/MD\n\n승리팀 랜덤 1인 스킨 증정\n\n");
+  const command = canonical(text);
+  assert.equal(command?.domain, "SEASON");
+  assert.equal(command?.action, "SYNC");
+  if (command?.domain !== "SEASON" || command.action !== "SYNC") assert.fail("expected SEASON/SYNC");
+  assert.deepEqual(command.roundMetadata, {
+    capacity: 10,
+    startTimeText: "20:00",
+    scheduledStartAt: "2026-09-11T11:00:00.000Z",
+    noticeText: "승리팀 랜덤 1인 스킨 증정",
+  });
+});
+
+test("[P0-INHOUSE-METADATA-02] 시작 줄 tail 공지는 수용하고 슬롯 뒤 문장은 공지로 오인하지 않는다", () => {
+  const text = liveForm("동휘")
+    .replace("2026-09-11 21:00 시작", "2026-09-11 20:00 시작 승리팀 랜덤 1인 스킨 증정")
+    .concat("\n슬롯 입력 뒤의 임의 문장은 공지가 아님");
+  const command = canonical(text);
+  assert.equal(command?.domain, "SEASON");
+  assert.equal(command?.action, "SYNC");
+  if (command?.domain !== "SEASON" || command.action !== "SYNC") assert.fail("expected SEASON/SYNC");
+  assert.equal(command.roundMetadata?.noticeText, "승리팀 랜덤 1인 스킨 증정");
+  assert.equal(command.roundMetadata?.startTimeText, "20:00");
+});
+
+test("[P0-INHOUSE-METADATA-03] 공지가 없는 전체 스냅샷은 명시적인 null을 만든다", () => {
+  const command = canonical(liveForm("동휘"));
+  assert.equal(command?.domain, "SEASON");
+  assert.equal(command?.action, "SYNC");
+  if (command?.domain !== "SEASON" || command.action !== "SYNC") assert.fail("expected SEASON/SYNC");
+  assert.equal(command.roundMetadata?.noticeText, null);
+});
+
+test("[P0-INHOUSE-METADATA-04] 시작 줄 다음과 인원 줄 사이의 공지도 구조 필드와 분리해 저장한다", () => {
+  const text = liveForm("동휘").replace(
+    " 》2026-09-11 21:00 시작\n👥 2/10명",
+    " 》2026-09-11 21:00 시작\n🎁 승리팀 랜덤 1인 스킨 증정\n👥 2/10명",
+  );
+  const command = canonical(text);
+  assert.equal(command?.domain, "SEASON");
+  assert.equal(command?.action, "SYNC");
+  if (command?.domain !== "SEASON" || command.action !== "SYNC") assert.fail("expected SEASON/SYNC");
+  assert.equal(command.roundMetadata?.noticeText, "🎁 승리팀 랜덤 1인 스킨 증정");
+});

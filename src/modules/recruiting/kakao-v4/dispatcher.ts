@@ -948,6 +948,7 @@ export class KakaoV4CommandDispatcher {
           applyDate: command.applyDate,
           recruitNo: command.recruitNumber,
           mode: command.mode,
+          roundMetadata: command.roundMetadata,
           participants: command.participants,
           ...(command.preserveSlotNos ? { preserveSlotNos: command.preserveSlotNos } : {}),
         }
