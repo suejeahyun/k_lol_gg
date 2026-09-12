@@ -1,15 +1,15 @@
 # K-LOL.GG V2 상태
 
 - 운영 자동승인 확인 시각: 2026-09-11T20:41:16.240Z (2026-09-12 05:41:16 KST)
-- 운영 검증 기능 기준: `bb715a7682dbcee59707addad6572bbdabf83d82`
-- 릴리스 tag: `kakao-recruit-input-recovery-v1.0.0`
-- 현재 단계: Kakao 구인·내전 입력 복구 사이트·서버 운영 배포 완료, 휴대폰 설치·실제 두 방 E2E 대기
+- 운영 검증 기능 기준: `8b476ad7181d002e41b71e0d297c028a1b213ec5`
+- 릴리스 tag: `kakao-recruit-input-recovery-v1.0.1`
+- 현재 단계: Kakao 구인 마감 대상 조회 핫픽스 운영 배포 완료, 실제 구인방 canary 대기
 - V1 코드 복사: 없음. V1은 기능 목록과 동등성 대조 근거로만 사용
 - V1 기준선: 블루·블랙 Vercel 기준선 저장소를 변경하지 않음
-- 운영 Vercel: 배포 `dpl_HC3pxuL5MJkbh4exd4m4WbMfCegB`, 불변 URL `https://k-lol-povhwmqp0-tjdmswo11-3715s-projects.vercel.app`, deployment `Ready`, GitHub commit status `success`
-- 운영 별칭: `https://k-lol-gg.vercel.app`, `2026-09-12T03:06:38.840Z`에 `/api/health` HTTP 200·JSON `status: ready` 확인
+- 운영 Vercel: 배포 `dpl_67gzXT1pRnY6ybCWPM78JEHgB46q`, 불변 URL `https://k-lol-7xg47f0f7-tjdmswo11-3715s-projects.vercel.app`, deployment `Ready`
+- 운영 별칭: `https://k-lol-gg.vercel.app`, `2026-09-12T03:52:15.274Z`에 `/api/health` HTTP 200·JSON `status: ready` 확인
 - 운영 DB: migration 37개, head `0036_flowery_hairball` 확인
-- Kakao 구인·내전 입력 복구: `v1.0.0` 사이트·서버 운영 배포와 health 확인 완료
+- Kakao 구인·내전 입력 복구: `v1.0.1` 사이트·서버 운영 배포와 health 확인 완료
 - 휴대폰 Kakao V41 R15/V1 strict R6: 모두 `PENDING_USER_INSTALL`; MessengerBot R 설치·실제 Kakao 송수신은 미확인
 
 ## 확인된 상태
