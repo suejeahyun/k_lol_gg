@@ -331,7 +331,7 @@ test("local replies, echo rules, events, and no-reply behavior equal the canonic
   }
   assert.deepEqual(
     replyFor(strict, "봇버전"),
-    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R7_2026_09_12"],
+    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R8_2026_09_12"],
   );
 });
 
@@ -470,7 +470,7 @@ test("clean-session imageDB input preserves the active V40 R2 no-reply and no-HT
   assert.equal(strict.http.calls, 0);
 });
 
-test("all seven active text seams preserve the V1 success, empty, 404, auth, and 5xx branches", async () => {
+test("all seven active text seams preserve V1 success and empty replies while failures use safe common notices", async () => {
   const artifact = await readFile(artifactPath, "utf8");
   const replyCollector = () => {
     const values = [];
@@ -481,40 +481,43 @@ test("all seven active text seams preserve the V1 success, empty, 404, auth, and
     runtime.KLOL_V1_GATEWAY.beginRequest("log-matrix", "user-matrix", "재현");
     return runtime;
   };
+  const failureNotice = (status, title) => status === 401
+    ? `${title}\n요청 권한을 확인하지 못했습니다. 최신 전체 설치본인지 확인해 주세요.`
+    : `${title}\n서버 연결이 원활하지 않습니다. 잠시 후 다시 시도해주세요.`;
 
   for (const [status, body] of [[200, { reply: "정상 응답" }], [404, { reply: "도메인 오류" }], [401, { reply: "인증되지 않은 요청입니다." }], [500, { reply: "서버 처리 오류" }]]) {
     const search = runtimeFor(status, body);
     const searchReply = replyCollector();
     search.sendSearchPlayerCommand("전적 재현#KR1", "기능방", "재현", searchReply.replier);
-    assert.deepEqual(searchReply.values, [body.reply], `search ${status}`);
+    assert.deepEqual(searchReply.values, [status === 200 ? body.reply : failureNotice(status, "[전적 검색 오류]")], `search ${status}`);
 
     const openchat = runtimeFor(status, body);
     const openchatReply = replyCollector();
     openchat.sendOpenchatCommand("최근 재현#KR1", openchatReply.replier);
-    assert.deepEqual(openchatReply.values, [body.reply], `openchat ${status}`);
+    assert.deepEqual(openchatReply.values, [status === 200 ? body.reply : failureNotice(status, "[전적/명령어 서버 오류]")], `openchat ${status}`);
 
     const seasonStatus = runtimeFor(status, body);
     assert.equal(seasonStatus.fetchSeasonRecruitStatusText("기능방", "내전현황", "재현"),
-      status === 200 ? body.reply : "[내전현황]\n현황을 불러오지 못했습니다.\n잠시 후 다시 시도해주세요.");
+      status === 200 ? body.reply : failureNotice(status, "[내전현황 오류]"));
 
     const seasonApply = runtimeFor(status, body);
     const seasonApplyReply = replyCollector();
     seasonApply.handleSeasonApplyMessage("기능방", "📢 내전하실분 #1\n1.재현/M/M/TOP/SUP", "재현", seasonApplyReply.replier);
-    assert.deepEqual(seasonApplyReply.values, [body.reply], `season apply ${status}`);
+    assert.deepEqual(seasonApplyReply.values, [status === 200 ? body.reply : failureNotice(status, "[참가 신청 등록 오류]")], `season apply ${status}`);
 
     const party = runtimeFor(status, body);
     const partyReply = replyCollector();
     party.handlePartyRecruitApi("PARTY_SYNC", "구인방", "모집번호: #1\n1.재현", "재현", partyReply.replier, "구인구직 반영");
-    assert.deepEqual(partyReply.values, [body.reply], `party ${status}`);
+    assert.deepEqual(partyReply.values, [status === 200 ? body.reply : failureNotice(status, "[K-LOL.GG 구인구직 반영]")], `party ${status}`);
 
     const partyStatus = runtimeFor(status, body);
     assert.equal(partyStatus.fetchPartyRecruitStatusText(false, "구인현황", "구인방", "재현"),
-      status === 200 ? body.reply : "[K-LOL.GG 구인구직 현황]\n\n현황을 불러오지 못했습니다.\n잠시 후 다시 시도해주세요.");
+      status === 200 ? body.reply : failureNotice(status, "[K-LOL.GG 구인구직 현황]"));
 
     const operation = runtimeFor(status, body);
     const operationReply = replyCollector();
     operation.handleOperationFormMessage("기능방", "<외출>\n1. 이름 및 닉네임 :재현\n2. 외출기간 :하루\n3. 외출사유 :휴식\n4. 외출범위 :소통방", "재현", operationReply.replier);
-    assert.deepEqual(operationReply.values, [body.reply], `operation ${status}`);
+    assert.deepEqual(operationReply.values, [status === 200 ? body.reply : failureNotice(status, "[K-LOL.GG 운영 양식]")], `operation ${status}`);
   }
 
   const emptySearch = runtimeFor(200, {});
@@ -550,22 +553,62 @@ test("literal transport failures distinguish settings, input, and connection err
   const artifact = await readFile(artifactPath, "utf8");
   const replies = [];
   const replier = { reply: (value) => replies.push(String(value)) };
-  const search = evaluate(artifact, { responseStatus: 401, responseBody: { code: "INVALID_SIGNATURE", secret: "must-not-leak" } });
+  const search = evaluate(artifact, { responseStatus: 401, responseBody: { code: "INVALID_SIGNATURE", reply: "인증되지 않은 요청입니다.", secret: "must-not-leak" } });
   search.KLOL_V1_GATEWAY.beginRequest("log-auth", "user-auth", "재현");
   search.sendSearchPlayerCommand("전적 재현#KR1", "기능방", "재현", replier);
-  assert.equal(replies.pop(), "[전적 검색 인증 오류]\n봇 인증 정보를 확인해 주세요.\n상태코드: 401");
+  assert.equal(replies.pop(), "[K-LOL.GG 연결 설정 확인]\n봇 인증 정보를 확인할 수 없습니다. 관리자에게 문의해주세요.");
+
+  const seasonWrongProfile = evaluate(artifact, { responseStatus: 403, responseBody: { code: "WRONG_PROFILE", reply: "인증되지 않은 요청입니다.", secret: "must-not-leak" } });
+  seasonWrongProfile.KLOL_V1_GATEWAY.beginRequest("log-season-wrong-profile", "user-season-wrong-profile", "재현");
+  seasonWrongProfile.handleSeasonApplyMessage("기능방", "📢 내전하실분 #1\n1.재현/M/M/TOP/SUP", "재현", replier);
+  const seasonWrongProfileReply = replies.pop();
+  assert.equal(seasonWrongProfileReply, "[K-LOL.GG 휴대폰 봇 업데이트 필요]\n휴대폰 봇 코드를 최신 전체 설치본으로 교체해 주세요.");
+  assert.doesNotMatch(seasonWrongProfileReply, /must-not-leak|봇 인증 정보/u);
+
+  const seasonStatusWrongProfile = evaluate(artifact, { responseStatus: 403, responseBody: { code: "WRONG_PROFILE", reply: "인증되지 않은 요청입니다.", secret: "must-not-leak" } });
+  seasonStatusWrongProfile.KLOL_V1_GATEWAY.beginRequest("log-season-status-wrong-profile", "user-season-status-wrong-profile", "재현");
+  const seasonStatusWrongProfileReply = seasonStatusWrongProfile.fetchSeasonRecruitStatusText("기능방", "내전현황", "재현");
+  assert.equal(seasonStatusWrongProfileReply, "[K-LOL.GG 휴대폰 봇 업데이트 필요]\n휴대폰 봇 코드를 최신 전체 설치본으로 교체해 주세요.");
+  assert.doesNotMatch(seasonStatusWrongProfileReply, /must-not-leak|봇 인증 정보/u);
 
   const openchat = evaluate(artifact, { responseStatus: 500, responseBody: { code: "SERVER_UNAVAILABLE", secret: "must-not-leak" } });
   openchat.KLOL_V1_GATEWAY.beginRequest("log-500", "user-500", "재현");
   openchat.sendOpenchatCommand("랭킹", replier);
   const safeFailure = replies.pop();
-  assert.equal(safeFailure, "[전적/명령어 서버 오류]\n상태코드: 500\n잠시 후 다시 시도해주세요.");
+  assert.equal(safeFailure, "[전적/명령어 서버 오류]\n서버 연결이 원활하지 않습니다. 잠시 후 다시 시도해주세요.");
   assert.doesNotMatch(safeFailure, /must-not-leak|SERVER_UNAVAILABLE/u);
 
-  const party = evaluate(artifact, { responseStatus: 401, responseBody: { statusCode: 401 } });
+  const party = evaluate(artifact, { responseStatus: 401, responseBody: { code: "INVALID_SIGNATURE", statusCode: 401 } });
   party.KLOL_V1_GATEWAY.beginRequest("log-party-auth", "user-party-auth", "재현");
   party.handlePartyRecruitApi("PARTY_CREATE", "구인방", "5인파티", "재현", replier, "구인구직 생성");
   assert.equal(replies.pop(), "[K-LOL.GG 연결 설정 확인]\n봇 인증 정보를 확인할 수 없습니다. 관리자에게 문의해주세요.");
+
+  const staleClock = evaluate(artifact, { responseStatus: 401, responseBody: { code: "KAKAO_V4_TIMESTAMP_STALE", reply: "인증되지 않은 요청입니다.", secret: "must-not-leak" } });
+  staleClock.KLOL_V1_GATEWAY.beginRequest("log-stale-clock", "user-stale-clock", "재현");
+  staleClock.handlePartyRecruitApi("PARTY_CREATE", "구인방", "5인파티", "재현", replier, "구인구직 생성");
+  const staleClockReply = replies.pop();
+  assert.equal(staleClockReply, "[K-LOL.GG 휴대폰 시간 확인]\n휴대폰 날짜와 시간을 자동으로 설정한 뒤 다시 시도해 주세요.");
+  assert.doesNotMatch(staleClockReply, /must-not-leak|KAKAO_V4_TIMESTAMP_STALE/u);
+
+  const partyStatusStaleClock = evaluate(artifact, { responseStatus: 401, responseBody: { code: "KAKAO_V4_TIMESTAMP_STALE", reply: "인증되지 않은 요청입니다.", secret: "must-not-leak" } });
+  partyStatusStaleClock.KLOL_V1_GATEWAY.beginRequest("log-party-status-stale-clock", "user-party-status-stale-clock", "재현");
+  const partyStatusStaleClockReply = partyStatusStaleClock.fetchPartyRecruitStatusText(false, "구인현황", "구인방", "재현");
+  assert.equal(partyStatusStaleClockReply, "[K-LOL.GG 휴대폰 시간 확인]\n휴대폰 날짜와 시간을 자동으로 설정한 뒤 다시 시도해 주세요.");
+  assert.doesNotMatch(partyStatusStaleClockReply, /must-not-leak|KAKAO_V4_TIMESTAMP_STALE/u);
+
+  const unknownForbidden = evaluate(artifact, { responseStatus: 403, responseBody: { statusCode: 403, secret: "must-not-leak" } });
+  unknownForbidden.KLOL_V1_GATEWAY.beginRequest("log-unknown-forbidden", "user-unknown-forbidden", "재현");
+  unknownForbidden.handlePartyRecruitApi("PARTY_CREATE", "구인방", "5인파티", "재현", replier, "구인구직 생성");
+  const unknownForbiddenReply = replies.pop();
+  assert.equal(unknownForbiddenReply, "[K-LOL.GG 구인구직 생성]\n요청 권한을 확인하지 못했습니다. 최신 전체 설치본인지 확인해 주세요.");
+  assert.doesNotMatch(unknownForbiddenReply, /must-not-leak|봇 인증 정보/u);
+
+  const wrappedWrongProfile = evaluate(artifact, { responseStatus: 200, responseBody: { statusCode: 403, code: "WRONG_PROFILE", reply: "인증되지 않은 요청입니다.", secret: "must-not-leak" } });
+  wrappedWrongProfile.KLOL_V1_GATEWAY.beginRequest("log-wrapped-wrong-profile", "user-wrapped-wrong-profile", "재현");
+  wrappedWrongProfile.sendOpenchatCommand("랭킹", replier);
+  const wrappedWrongProfileReply = replies.pop();
+  assert.equal(wrappedWrongProfileReply, "[K-LOL.GG 휴대폰 봇 업데이트 필요]\n휴대폰 봇 코드를 최신 전체 설치본으로 교체해 주세요.");
+  assert.doesNotMatch(wrappedWrongProfileReply, /must-not-leak|봇 인증 정보/u);
 
   const invalidParty = evaluate(artifact, { responseStatus: 400, responseBody: { code: "INVALID_FORM", secret: "must-not-leak" } });
   invalidParty.KLOL_V1_GATEWAY.beginRequest("log-party-invalid", "user-party-invalid", "재현");
@@ -574,10 +617,10 @@ test("literal transport failures distinguish settings, input, and connection err
   assert.equal(invalidPartyReply, "[K-LOL.GG 구인구직 생성]\n입력 형식이 올바르지 않습니다. 양식을 확인한 뒤 다시 보내주세요.");
   assert.doesNotMatch(invalidPartyReply, /must-not-leak|INVALID_FORM/u);
 
-  const operation = evaluate(artifact, { responseStatus: 403, responseBody: { code: "WRONG_PROFILE" } });
+  const operation = evaluate(artifact, { responseStatus: 403, responseBody: { code: "WRONG_PROFILE", reply: "인증되지 않은 요청입니다." } });
   operation.KLOL_V1_GATEWAY.beginRequest("log-operation-auth", "user-operation-auth", "재현");
   operation.handleOperationFormMessage("기능방", "<외출>\n1. 이름 및 닉네임 :재현\n2. 외출기간 :하루\n3. 외출사유 :휴식\n4. 외출범위 :소통방", "재현", replier);
-  assert.equal(replies.pop(), "[K-LOL.GG 연결 설정 확인]\n봇 인증 정보를 확인할 수 없습니다. 관리자에게 문의해주세요.");
+  assert.equal(replies.pop(), "[K-LOL.GG 휴대폰 봇 업데이트 필요]\n휴대폰 봇 코드를 최신 전체 설치본으로 교체해 주세요.");
 
   const invalidOperation = evaluate(artifact, { responseStatus: 400, responseBody: { code: "INVALID_FORM", detail: "must-not-leak" } });
   invalidOperation.KLOL_V1_GATEWAY.beginRequest("log-operation-invalid", "user-operation-invalid", "재현");

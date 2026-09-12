@@ -25,3 +25,17 @@ test("own player form keeps one idempotency key for an uncertain retry and expla
   assert.match(form, /aria-describedby="account-player-riot-id-help account-player-riot-id-warning"/);
   assert.match(page, /<AccountPlayerForm key=\{account\.player\.revision\} player=\{account\.player\} \/>/);
 });
+
+test("isolated account HTTP verification runs the real Chromium owner profile regression", async () => {
+  const browser = await readFile(new URL("../scripts/test-db/verify-player-profile-browser.ts", import.meta.url), "utf8");
+  const accountHttp = await readFile(new URL("../scripts/test-db/verify-account-http.ts", import.meta.url), "utf8");
+  assert.match(browser, /IsolatedChromium\.launch/);
+  assert.match(browser, /\/account\?tab=player/);
+  assert.match(browser, /replaceFieldWithKeyboard/);
+  assert.match(browser, /pressEnter/);
+  assert.match(browser, /waitForResponse\("\/api\/auth\/me\/player", 200\)/);
+  assert.match(browser, /waitForResponse\("\/api\/auth\/me\/player", 412\)/);
+  assert.match(browser, /browserQaInstance = 'before-412'/);
+  assert.match(browser, /the stale browser submission must not overwrite/);
+  assert.match(accountHttp, /runPlayerProfileBrowserRegression\(origin, selfProfileLogin\.cookie\)/);
+});

@@ -24,6 +24,7 @@ import {
   userAccounts,
 } from "../../src/platform/db/schema/index";
 import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
+import { IsolatedChromium } from "./isolated-chromium";
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 
@@ -213,8 +214,74 @@ await database.insert(riotSyncJobs).values([
   },
 ]);
 
+const browserOwner = {
+  id: randomUUID(),
+  loginId: `player_browser_owner_${randomBytes(4).toString("hex")}`,
+};
+await database.insert(userAccounts).values({
+  ...browserOwner,
+  loginIdNormalized: browserOwner.loginId,
+  passwordHash: "$argon2id$v=19$synthetic-browser-owner",
+  role: "USER",
+  status: "APPROVED",
+});
+const browserLinkedPlayer = {
+  id: randomUUID(),
+  userAccountId: browserOwner.id,
+  memberName: `브라우저 관리자 편집 ${randomBytes(3).toString("hex")}`,
+  nickname: `Browser${randomBytes(3).toString("hex")}`,
+  tagLine: "B01",
+  peakTier: "DIAMOND II",
+  currentTier: "PLATINUM IV",
+};
+await database.insert(players).values({
+  ...browserLinkedPlayer,
+  memberNameNormalized: browserLinkedPlayer.memberName.normalize("NFKC").toLocaleLowerCase("ko-KR"),
+  nicknameNormalized: browserLinkedPlayer.nickname.toLocaleLowerCase("ko-KR"),
+  tagLineNormalized: browserLinkedPlayer.tagLine.toLocaleLowerCase("en-US"),
+});
+const browserLinkId = randomUUID();
+const browserLinkSeededAt = new Date();
+await database.insert(riotAccountLinks).values({
+  id: browserLinkId,
+  playerId: browserLinkedPlayer.id,
+  ownerUserAccountId: browserOwner.id,
+  gameName: browserLinkedPlayer.nickname,
+  tagLine: browserLinkedPlayer.tagLine,
+  normalizedKey: `${browserLinkedPlayer.nickname}#${browserLinkedPlayer.tagLine}`.normalize("NFKC").toLocaleLowerCase("ko-KR"),
+  protectedPuuid: "synthetic-protected-puuid-for-admin-browser",
+  method: "ADMIN",
+  status: "CONNECTED",
+  linkedAt: browserLinkSeededAt,
+});
+const browserJobIds = [randomUUID(), randomUUID()];
+await database.insert(riotSyncJobs).values([
+  {
+    id: browserJobIds[0],
+    linkId: browserLinkId,
+    requestedBy: "ADMIN",
+    status: "QUEUED",
+    requestedAt: browserLinkSeededAt,
+    availableAt: browserLinkSeededAt,
+  },
+  {
+    id: browserJobIds[1],
+    linkId: browserLinkId,
+    requestedBy: "ADMIN",
+    status: "RUNNING",
+    requestedAt: browserLinkSeededAt,
+    availableAt: browserLinkSeededAt,
+    lockedAt: browserLinkSeededAt,
+    leaseId: randomUUID(),
+  },
+]);
+
 const port = await availablePort();
 const origin = `http://127.0.0.1:${port}`;
+const riotEncryptionKeys = JSON.stringify({
+  current: "browser-v1",
+  keys: { "browser-v1": randomBytes(32).toString("base64url") },
+});
 const nextBin = path.join(process.cwd(), "node_modules", "next", "dist", "bin", "next");
 const child = spawn(process.execPath, [nextBin, "dev", "--hostname", "127.0.0.1", "--port", String(port)], {
   cwd: process.cwd(),
@@ -231,6 +298,16 @@ const child = spawn(process.execPath, [nextBin, "dev", "--hostname", "127.0.0.1"
     V2_TEST_AUTH_ENABLED: "false",
     V2_TEST_AUTH_SECRET: "",
     V2_TEST_AUTH_FIXTURES_JSON: "",
+    V2_RIOT_INTEGRATION_ENABLED: "true",
+    RIOT_API_REGIONAL_ROUTE: "asia",
+    RIOT_API_PLATFORM_ROUTE: "kr",
+    RIOT_API_KEY: "RGAPI-synthetic-browser-regression",
+    RIOT_RSO_CLIENT_ID: "synthetic-browser-client",
+    RIOT_RSO_CLIENT_SECRET: "synthetic-browser-client-secret-0000000000000000",
+    RIOT_RSO_REDIRECT_URI: `${origin}/api/me/riot/rso/callback`,
+    RIOT_RSO_STATE_SECRET: "synthetic-browser-state-secret-0000000000000000",
+    RIOT_ENCRYPTION_KEYS: riotEncryptionKeys,
+    OPERATIONS_JOB_SECRET: "synthetic-browser-job-secret-000000000000000000",
   },
   stdio: ["ignore", "pipe", "pipe"],
   windowsHide: true,
@@ -302,6 +379,35 @@ function playerPayload(label: string, legacyId: number | null) {
   };
 }
 
+async function replaceBrowserField(browser: IsolatedChromium, name: string, value: string) {
+  const selector = `input[name=${JSON.stringify(name)}]`;
+  await browser.focus(selector);
+  assert.equal(
+    await browser.evaluate("document.activeElement?.getAttribute('name')"),
+    name,
+    `${name} must be focusable in the admin form`,
+  );
+  await browser.selectAll();
+  await browser.insertText(value);
+  await browser.waitFor(
+    `document.querySelector(${JSON.stringify(selector)})?.value === ${JSON.stringify(value)}`,
+    `${name} keyboard input in the admin form`,
+  );
+}
+
+async function submitBrowserPlayerForm(browser: IsolatedChromium, playerId: string, expectedStatus: number) {
+  const response = browser.waitForResponse(`/api/admin/players/${playerId}`, expectedStatus);
+  const clicked = await browser.evaluate<boolean>(`(() => {
+    const button = [...document.querySelectorAll('button')]
+      .find((candidate) => candidate.type === "submit" && candidate.textContent?.includes("변경 저장"));
+    if (!(button instanceof HTMLButtonElement) || button.disabled) return false;
+    button.click();
+    return true;
+  })()`);
+  assert.equal(clicked, true, "the enabled admin player save button must be clickable");
+  await response;
+}
+
 try {
   await waitUntilReady(origin, child);
   const adminCookie = await login(admin);
@@ -353,6 +459,123 @@ try {
   const linkedEditHtml = await linkedEditPage.text();
   for (const expectedText of ["Riot ID", "게임 이름", "최고 티어", "현재 티어", "저장", "기존 연동을 해제"]) {
     assert.match(linkedEditHtml, new RegExp(expectedText));
+  }
+
+  const browser = await IsolatedChromium.launch(origin);
+  try {
+    await browser.setCookie(userCookie);
+    await browser.navigate(`/admin/players/${browserLinkedPlayer.id}?mode=edit`);
+    assert.equal(await browser.evaluate("location.pathname"), "/admin/login");
+    assert.equal(await browser.evaluate("document.querySelector('form input[name=\"nickname\"]') === null"), true);
+
+    await browser.clearCookies();
+    await browser.setCookie(adminCookie);
+    await browser.navigate(`/admin/players/${browserLinkedPlayer.id}?mode=edit`);
+    await browser.waitFor(
+      "document.querySelector('form input[name=\"nickname\"]') instanceof HTMLInputElement",
+      "hydrated admin player edit form",
+    );
+    const initialBrowserForm = await browser.evaluate<Record<string, string | null>>(`(() => ({
+      memberName: document.querySelector('input[name="memberName"]')?.value ?? null,
+      nickname: document.querySelector('input[name="nickname"]')?.value ?? null,
+      tagLine: document.querySelector('input[name="tagLine"]')?.value ?? null,
+      currentTier: document.querySelector('input[name="currentTier"]')?.value ?? null,
+      peakTier: document.querySelector('input[name="peakTier"]')?.value ?? null,
+      save: [...document.querySelectorAll('button')].find((button) => button.textContent?.includes('변경 저장'))?.textContent?.trim() ?? null,
+    }))()`);
+    assert.deepEqual(initialBrowserForm, {
+      memberName: browserLinkedPlayer.memberName,
+      nickname: browserLinkedPlayer.nickname,
+      tagLine: browserLinkedPlayer.tagLine,
+      currentTier: browserLinkedPlayer.currentTier,
+      peakTier: browserLinkedPlayer.peakTier,
+      save: "변경 저장",
+    });
+
+    await replaceBrowserField(browser, "currentTier", "DIAMOND I");
+    await replaceBrowserField(browser, "peakTier", "MASTER 120");
+    await submitBrowserPlayerForm(browser, browserLinkedPlayer.id, 200);
+    await browser.waitFor(
+      `document.querySelector('input[name="currentTier"]')?.value === "DIAMOND I" &&
+       document.querySelector('input[name="peakTier"]')?.value === "MASTER 120" &&
+       document.body.innerText.includes("revision 1")`,
+      "tier-only admin edit refresh",
+    );
+    const linkAfterTierOnlyBrowserEdit = (await database.select().from(riotAccountLinks)
+      .where(eq(riotAccountLinks.id, browserLinkId)))[0];
+    assert.equal(linkAfterTierOnlyBrowserEdit?.status, "CONNECTED");
+    assert.equal(linkAfterTierOnlyBrowserEdit?.protectedPuuid, "synthetic-protected-puuid-for-admin-browser");
+    assert.deepEqual(
+      new Set((await database.select().from(riotSyncJobs).where(eq(riotSyncJobs.linkId, browserLinkId))).map((job) => job.status)),
+      new Set(["QUEUED", "RUNNING"]),
+    );
+
+    assert.equal(await browser.evaluate(`(() => {
+      const input = document.querySelector('input[name="currentTier"]');
+      if (!(input instanceof HTMLInputElement)) return false;
+      input.dataset.browserQaInstance = "before-412";
+      return true;
+    })()`), true);
+    await database.update(players).set({
+      currentTier: "EMERALD I",
+      peakTier: "MASTER 220",
+      revision: 2,
+      updatedAt: new Date(),
+    }).where(eq(players.id, browserLinkedPlayer.id));
+    await replaceBrowserField(browser, "currentTier", "PLATINUM I");
+    await submitBrowserPlayerForm(browser, browserLinkedPlayer.id, 412);
+    await browser.waitFor(
+      `document.querySelector('input[name="currentTier"]')?.value === "EMERALD I" &&
+       document.querySelector('input[name="peakTier"]')?.value === "MASTER 220" &&
+       document.querySelector('input[name="currentTier"]')?.dataset.browserQaInstance !== "before-412" &&
+       document.body.innerText.includes("revision 2")`,
+      "HTTP 412 recovery with the latest admin player revision",
+    );
+
+    const browserChangedNickname = `Admin${randomBytes(3).toString("hex")}`;
+    await replaceBrowserField(browser, "nickname", browserChangedNickname);
+    await replaceBrowserField(browser, "tagLine", "A02");
+    await replaceBrowserField(browser, "currentTier", "MASTER 90");
+    await replaceBrowserField(browser, "peakTier", "GRANDMASTER 450");
+    await browser.waitFor(
+      "document.body.innerText.includes('기존 Riot 계정 연동은 안전하게 해제')",
+      "Riot ID disconnect warning",
+    );
+    await submitBrowserPlayerForm(browser, browserLinkedPlayer.id, 200);
+    await browser.waitFor(
+      `document.querySelector('input[name="nickname"]')?.value === ${JSON.stringify(browserChangedNickname)} &&
+       document.querySelector('input[name="tagLine"]')?.value === "A02" &&
+       document.querySelector('input[name="currentTier"]')?.value === "MASTER 90" &&
+       document.querySelector('input[name="peakTier"]')?.value === "GRANDMASTER 450" &&
+       document.body.innerText.includes("revision 3")`,
+      "Riot ID and tier admin browser edit refresh",
+    );
+    const browserDisconnectedLink = (await database.select().from(riotAccountLinks)
+      .where(eq(riotAccountLinks.id, browserLinkId)))[0];
+    assert.equal(browserDisconnectedLink?.status, "DISCONNECTED");
+    assert.equal(browserDisconnectedLink?.protectedPuuid, null);
+    const browserCancelledJobs = await database.select().from(riotSyncJobs).where(eq(riotSyncJobs.linkId, browserLinkId));
+    assert.equal(browserCancelledJobs.length, 2);
+    assert.equal(browserCancelledJobs.every((job) => job.status === "CANCELLED"), true);
+    const browserDisconnectAudits = await database.select().from(auditEvents).where(and(
+      eq(auditEvents.targetId, browserLinkId),
+      eq(auditEvents.action, "RIOT_LINK_DISCONNECTED_ON_REGISTRY_ID_CHANGE"),
+    ));
+    assert.equal(browserDisconnectAudits.length, 1);
+    assert.equal(browserDisconnectAudits[0]?.metadataJson?.source, "ADMIN_PROFILE");
+    assert.equal(browserDisconnectAudits[0]?.metadataJson?.cancelledSyncJobCount, 2);
+
+    await browser.navigate("/admin/riot?tab=logs&source=AUDIT");
+    await browser.waitFor(
+      "document.body.innerText.includes('Riot ID 변경 연동 해제') && document.body.innerText.includes('동기화 작업 2건 취소')",
+      "safe Riot profile disconnect audit log",
+    );
+    const safeAuditText = await browser.evaluate<string>("document.body.innerText");
+    assert.match(safeAuditText, /관리자 프로필 수정 · 등록 Riot ID 변경으로 기존 연동 해제 · 동기화 작업 2건 취소/u);
+    assert.doesNotMatch(safeAuditText, new RegExp(browserChangedNickname, "u"));
+    assert.doesNotMatch(safeAuditText, /synthetic-protected-puuid-for-admin-browser/u);
+  } finally {
+    await browser.close();
   }
 
   const strictPayload = playerPayload(randomBytes(3).toString("hex"), 1_111_222_333);
@@ -805,7 +1028,7 @@ try {
   assert.equal(receiptRows.length, 1);
   assert.equal(JSON.stringify(receiptRows[0]).includes(createKey), false);
 
-  process.stdout.write("[db-player-http] ADMIN/SUPER UI, strict CRUD/reactivation, Riot identity disconnect, legacy restoration, privacy, revision, audit, and replay passed\n");
+  process.stdout.write("[db-player-http] ADMIN/SUPER UI, Chromium edit/412 recovery, strict CRUD/reactivation, Riot identity disconnect, safe audit UI, legacy restoration, privacy, revision, and replay passed\n");
 } catch (error) {
   let sanitizedLog = serverLog;
   for (const secret of syntheticSecrets) sanitizedLog = sanitizedLog.replaceAll(secret, "[synthetic-secret]");

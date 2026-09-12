@@ -287,7 +287,7 @@ var KLOL_V1_GATEWAY = (function () {
 
 /* eslint-disable */
 /* V1-visible constants. No legacy endpoint or bearer secret is retained. */
-var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R7_2026_09_12";
+var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R8_2026_09_12";
 var BASE_URL = "https://k-lol-gg.vercel.app";
 var WEB_INHOUSE_RESULT_UPLOAD_URL = BASE_URL + "/matches/submit";
 var WEB_ADMIN_DISCIPLINE_CREATE_URL = BASE_URL + "/admin/discipline/new";
@@ -313,7 +313,7 @@ var lastOperationFormHash = "";
 var KLOL_V1_OPERATION_RAW_TEXT = "";
 
 function v1GatewaySucceeded(result) {
-  return Boolean(result && result.ok && (!result.body || result.body.ok !== false));
+  return Boolean(result && result.ok && v1GatewayFailureStatus(result) < 400 && (!result.body || result.body.ok !== false));
 }
 
 function v1GatewayFailureStatus(result) {
@@ -325,10 +325,22 @@ function v1GatewayFailureStatus(result) {
 
 function v1GatewayFailureNotice(result, title) {
   var status = v1GatewayFailureStatus(result);
-  if (status === 401 || status === 403) {
+  var code = String(result && result.body && result.body.code || "");
+  if (code === "WRONG_PROFILE") {
+    return "[K-LOL.GG 휴대폰 봇 업데이트 필요]\n휴대폰 봇 코드를 최신 전체 설치본으로 교체해 주세요.";
+  }
+  if (code === "KAKAO_V4_TIMESTAMP_STALE") {
+    return "[K-LOL.GG 휴대폰 시간 확인]\n휴대폰 날짜와 시간을 자동으로 설정한 뒤 다시 시도해 주세요.";
+  }
+  if (code === "INVALID_SIGNATURE") {
     return "[K-LOL.GG 연결 설정 확인]\n봇 인증 정보를 확인할 수 없습니다. 관리자에게 문의해주세요.";
   }
+  if (status === 401 || status === 403) {
+    return title + "\n요청 권한을 확인하지 못했습니다. 최신 전체 설치본인지 확인해 주세요.";
+  }
   if (status === 400) {
+    var validationReply = String(result && result.body && result.body.reply || "");
+    if (validationReply !== "") return validationReply;
     return title + "\n입력 형식이 올바르지 않습니다. 양식을 확인한 뒤 다시 보내주세요.";
   }
   return title + "\n서버 연결이 원활하지 않습니다. 잠시 후 다시 시도해주세요.";
@@ -417,21 +429,17 @@ function sendSearchPlayerCommand(text, room, sender, replier) {
   var reply = "";
   try {
     result = KLOL_V1_GATEWAY.send("FEATURES", text, sender);
-    reply = KLOL_V1_GATEWAY.replyText(result);
-    if (reply != "") {
-      replier.reply(reply);
-      return;
-    }
-    if (v1GatewayFailureStatus(result) === 401 || v1GatewayFailureStatus(result) === 403) {
-      replier.reply("[전적 검색 인증 오류]\n봇 인증 정보를 확인해 주세요.\n상태코드: " + result.status);
-      return;
-    }
-    if (result.status == 429) {
+    if (v1GatewayFailureStatus(result) === 429) {
       replier.reply("[전적 검색 제한]\n잠시 후 다시 시도해주세요.");
       return;
     }
-    if (!result.ok) {
-      replier.reply("[전적 검색 서버 오류]\n상태코드: " + result.status + "\n잠시 후 다시 시도해주세요.");
+    if (!v1GatewaySucceeded(result)) {
+      replier.reply(v1GatewayFailureNotice(result, "[전적 검색 오류]"));
+      return;
+    }
+    reply = KLOL_V1_GATEWAY.replyText(result);
+    if (reply != "") {
+      replier.reply(reply);
       return;
     }
     replier.reply("[전적 검색 서버 응답 확인 필요]\n서버 응답이 비어 있습니다.");
@@ -445,13 +453,13 @@ function sendOpenchatCommand(text, replier) {
   var reply = "";
   try {
     result = KLOL_V1_GATEWAY.send("FEATURES", text, "");
+    if (!v1GatewaySucceeded(result)) {
+      replier.reply(v1GatewayFailureNotice(result, "[전적/명령어 서버 오류]"));
+      return;
+    }
     reply = KLOL_V1_GATEWAY.replyText(result);
     if (reply != "") {
       replier.reply(reply);
-      return;
-    }
-    if (!result.ok) {
-      replier.reply("[전적/명령어 서버 오류]\n상태코드: " + result.status + "\n잠시 후 다시 시도해주세요.");
       return;
     }
     replier.reply("[전적/명령어 서버 응답 확인 필요]\n서버 응답이 비어 있습니다.");
@@ -466,9 +474,7 @@ function fetchSeasonRecruitStatusText(roomLabel, text, sender) {
   try {
     result = KLOL_V1_GATEWAY.send("FEATURES", text, sender);
     if (!result.body) return "[내전현황 API 오류]\nJSON 응답이 아닙니다.\n잠시 후 다시 시도해주세요.";
-    if (!v1GatewaySucceeded(result)) {
-      return "[내전현황]\n현황을 불러오지 못했습니다.\n잠시 후 다시 시도해주세요.";
-    }
+    if (!v1GatewaySucceeded(result)) return v1GatewayFailureNotice(result, "[내전현황 오류]");
     if (result.body.empty === true) return "__NO_SEASON_RECRUIT_STATUS__";
     reply = KLOL_V1_GATEWAY.replyText(result);
     if (reply != "") return reply;
@@ -494,21 +500,15 @@ function handleSeasonApplyMessage(roomLabel, text, sender, replier) {
       return;
     }
     result = KLOL_V1_GATEWAY.send("FEATURES", text, sender);
+    if (!v1GatewaySucceeded(result)) {
+      replier.reply(v1GatewayFailureNotice(result, "[참가 신청 등록 오류]"));
+      return;
+    }
     reply = KLOL_V1_GATEWAY.replyText(result);
     if (reply != "") {
       replier.reply(reply);
-      if (v1GatewaySucceeded(result)) {
-        lastRecruitHash = hash;
-        DataBase.setDataBase(RECRUIT_SAVE_KEY, hash);
-      }
-      return;
-    }
-    if (result.status == 401 || result.status == 403) {
-      replier.reply("[참가 신청 등록 인증 오류]\n봇 인증 정보를 확인해 주세요.\n상태코드: " + result.status);
-      return;
-    }
-    if (!result.ok) {
-      replier.reply("[참가 신청 등록 서버 오류]\n상태코드: " + result.status + "\n잠시 후 다시 시도해주세요.");
+      lastRecruitHash = hash;
+      DataBase.setDataBase(RECRUIT_SAVE_KEY, hash);
       return;
     }
     if (result.body && result.body.ok === true && Number(result.body.pending || 0) === 0) {
@@ -528,11 +528,11 @@ function handlePartyRecruitApi(apiTag, roomLabel, text, sender, replier, label) 
   var reply = "";
   try {
     result = KLOL_V1_GATEWAY.send("RECRUIT", text, sender);
-    reply = KLOL_V1_GATEWAY.replyText(result);
-    if (reply == "" && (v1GatewayFailureStatus(result) === 401 || v1GatewayFailureStatus(result) === 403)) {
+    if (!v1GatewaySucceeded(result)) {
       replier.reply(v1GatewayFailureNotice(result, "[K-LOL.GG " + label + "]"));
       return false;
     }
+    reply = KLOL_V1_GATEWAY.replyText(result);
     if (result.body && (result.body.ignored === true || result.body.empty === true) && !result.body.reply) {
       return v1GatewaySucceeded(result);
     }
@@ -542,10 +542,6 @@ function handlePartyRecruitApi(apiTag, roomLabel, text, sender, replier, label) 
     if (reply != "") {
       replier.reply(reply);
       return v1GatewaySucceeded(result);
-    }
-    if (!result.ok) {
-      replier.reply(v1GatewayFailureNotice(result, "[K-LOL.GG " + label + "]"));
-      return false;
     }
     replier.reply("[K-LOL.GG " + label + "]\n서버 응답을 확인하지 못했습니다. 잠시 후 다시 시도해주세요.");
     return false;
@@ -559,9 +555,7 @@ function fetchPartyRecruitStatusText(silentWhenEmpty, messageText, room, sender)
   var result = null;
   try {
     result = KLOL_V1_GATEWAY.send("RECRUIT", messageText, sender);
-    if (!v1GatewaySucceeded(result)) {
-      return "[K-LOL.GG 구인구직 현황]\n\n현황을 불러오지 못했습니다.\n잠시 후 다시 시도해주세요.";
-    }
+    if (!v1GatewaySucceeded(result)) return v1GatewayFailureNotice(result, "[K-LOL.GG 구인구직 현황]");
     if (result.body && result.body.empty === true && silentWhenEmpty) return "__NO_ACTIVE_PARTY_RECRUIT__";
     return KLOL_V1_GATEWAY.replyText(result);
   } catch (error) {
@@ -584,6 +578,10 @@ function handleOperationFormMessage(room, text, sender, replier) {
       return;
     }
     result = KLOL_V1_GATEWAY.send("FEATURES", text, sender);
+    if (!v1GatewaySucceeded(result)) {
+      replier.reply(v1GatewayFailureNotice(result, "[K-LOL.GG 운영 양식]"));
+      return;
+    }
     if (result.body && result.body.duplicate === true && v1GatewaySucceeded(result)) {
       lastOperationFormHash = hash;
       DataBase.setDataBase(OPERATION_FORM_SAVE_KEY, hash);
@@ -596,14 +594,6 @@ function handleOperationFormMessage(room, text, sender, replier) {
         lastOperationFormHash = hash;
         DataBase.setDataBase(OPERATION_FORM_SAVE_KEY, hash);
       }
-      return;
-    }
-    if (result.status == 401 || result.status == 403) {
-      replier.reply(v1GatewayFailureNotice(result, "[K-LOL.GG 운영 양식]"));
-      return;
-    }
-    if (!result.ok) {
-      replier.reply(v1GatewayFailureNotice(result, "[K-LOL.GG 운영 양식]"));
       return;
     }
     replier.reply("[K-LOL.GG 운영 양식]\n서버 응답을 확인하지 못했습니다. 잠시 후 다시 시도해주세요.");

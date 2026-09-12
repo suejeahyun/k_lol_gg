@@ -37,6 +37,21 @@ type LinkRow = typeof riotAccountLinks.$inferSelect;
 type StateRow = typeof riotRsoStates.$inferSelect;
 type JobRow = typeof riotSyncJobs.$inferSelect;
 
+const RIOT_PROFILE_DISCONNECT_ACTION = "RIOT_LINK_DISCONNECTED_ON_REGISTRY_ID_CHANGE";
+
+function profileDisconnectAuditDetail(metadata: Record<string, unknown> | null) {
+  const source = metadata?.source === "OWNER_PROFILE"
+    ? "본인 프로필 수정"
+    : metadata?.source === "ADMIN_PROFILE"
+      ? "관리자 프로필 수정"
+      : "프로필 수정";
+  const rawCount = metadata?.cancelledSyncJobCount;
+  const cancelledSyncJobCount = typeof rawCount === "number" && Number.isSafeInteger(rawCount) && rawCount >= 0
+    ? rawCount
+    : 0;
+  return `${source} · 등록 Riot ID 변경으로 기존 연동 해제 · 동기화 작업 ${cancelledSyncJobCount}건 취소`;
+}
+
 function postgresCode(error: unknown): string | undefined {
   let current = error;
   while (current && typeof current === "object") {
@@ -583,6 +598,13 @@ export class PostgresRiotAdapter implements RiotQueryRepository {
     const includeApi = query.source === "ALL" || query.source === "API";
     const includeSync = query.source === "ALL" || query.source === "SYNC";
     const includeAudit = query.source === "ALL" || query.source === "AUDIT";
+    const safeRiotAuditCondition = or(
+      eq(auditEvents.targetType, "RIOT_INTEGRATION"),
+      and(
+        eq(auditEvents.targetType, "RIOT_ACCOUNT_LINK"),
+        eq(auditEvents.action, RIOT_PROFILE_DISCONNECT_ACTION),
+      ),
+    );
     const [apiRows, syncRows, auditRows, apiTotal, syncTotal, auditTotal] = await Promise.all([
       includeApi ? this.database.select({
         id: riotSyncJobs.id,
@@ -606,11 +628,11 @@ export class PostgresRiotAdapter implements RiotQueryRepository {
         occurredAt: auditEvents.createdAt,
         action: auditEvents.action,
         metadata: auditEvents.metadataJson,
-      }).from(auditEvents).where(eq(auditEvents.targetType, "RIOT_INTEGRATION"))
+      }).from(auditEvents).where(safeRiotAuditCondition)
         .orderBy(desc(auditEvents.createdAt), auditEvents.id).limit(end) : Promise.resolve([]),
       includeApi ? this.database.select({ value: count() }).from(riotSyncJobs) : Promise.resolve([{ value: 0 }]),
       includeSync ? this.database.select({ value: count() }).from(riotOutbox) : Promise.resolve([{ value: 0 }]),
-      includeAudit ? this.database.select({ value: count() }).from(auditEvents).where(eq(auditEvents.targetType, "RIOT_INTEGRATION")) : Promise.resolve([{ value: 0 }]),
+      includeAudit ? this.database.select({ value: count() }).from(auditEvents).where(safeRiotAuditCondition) : Promise.resolve([{ value: 0 }]),
     ]);
     const logItems = [
       ...apiRows.map((row) => ({
@@ -633,8 +655,10 @@ export class PostgresRiotAdapter implements RiotQueryRepository {
         id: `audit:${row.id}`,
         source: "AUDIT" as const,
         occurredAt: row.occurredAt.toISOString(),
-        title: "관리 감사 기록",
-        detail: `${row.action} · ${String(row.metadata?.source ?? "UNKNOWN")}`,
+        title: row.action === RIOT_PROFILE_DISCONNECT_ACTION ? "Riot ID 변경 연동 해제" : "관리 감사 기록",
+        detail: row.action === RIOT_PROFILE_DISCONNECT_ACTION
+          ? profileDisconnectAuditDetail(row.metadata)
+          : `${row.action} · ${String(row.metadata?.source ?? "UNKNOWN")}`,
         status: "RECORDED",
       })),
     ].sort((left, right) => right.occurredAt.localeCompare(left.occurredAt) || left.id.localeCompare(right.id))

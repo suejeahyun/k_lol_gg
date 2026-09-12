@@ -16,6 +16,7 @@
     "bot:kakao:v41": "node scripts/build-messengerbot-v41.mjs",
     "bot:kakao:v4": "node scripts/build-messengerbot-v4.mjs",
     "bot:kakao:v1-strict": "node scripts/build-messengerbot-v1-strict.mjs",
+    "bot:kakao:v1-strict:private": "node scripts/build-private-messengerbot-v1-strict.mjs",
     "build-messengerbot:v4": "node scripts/build-messengerbot-v4.mjs",
     "bot:kakao:v4:private": "node scripts/build-private-messengerbot-v4.mjs",
     "bot:kakao:audit": "node scripts/audit-messengerbot-v41-commands.mjs",

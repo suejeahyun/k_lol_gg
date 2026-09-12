@@ -134,6 +134,7 @@ export function AdminPlayerForm({
         <label className={styles.field}>
           <span>회원명 <b>관리자 전용</b></span>
           <Input
+            name="memberName"
             required
             maxLength={100}
             autoComplete="off"
@@ -145,6 +146,7 @@ export function AdminPlayerForm({
         <label className={styles.field}>
           <span>V1 기존 번호</span>
           <Input
+            name="legacyId"
             type="number"
             min={1}
             max={2147483647}
@@ -160,6 +162,7 @@ export function AdminPlayerForm({
           <label className={styles.field}>
             <span>게임 이름</span>
             <Input
+              name="nickname"
               required
               maxLength={16}
               autoComplete="off"
@@ -170,6 +173,7 @@ export function AdminPlayerForm({
           <label className={styles.field}>
             <span>태그</span>
             <Input
+              name="tagLine"
               required
               maxLength={5}
               autoComplete="off"
@@ -188,6 +192,7 @@ export function AdminPlayerForm({
         <label className={styles.field}>
           <span>최고 티어</span>
           <Input
+            name="peakTier"
             maxLength={32}
             list="player-tier-examples"
             placeholder="예: 에메랄드 1"
@@ -198,6 +203,7 @@ export function AdminPlayerForm({
         <label className={styles.field}>
           <span>현재 티어</span>
           <Input
+            name="currentTier"
             maxLength={32}
             list="player-tier-examples"
             placeholder="예: PLATINUM IV"

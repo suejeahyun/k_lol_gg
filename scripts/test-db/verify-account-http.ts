@@ -137,6 +137,29 @@ async function stopServer(server: RunningServer | undefined): Promise<void> {
   if (server.child.exitCode === null) server.child.kill("SIGKILL");
 }
 
+async function runPlayerProfileBrowserRegression(origin: string, accountCookie: string): Promise<void> {
+  const tsxCli = path.join(process.cwd(), "node_modules", "tsx", "dist", "cli.mjs");
+  const verificationFile = path.join(process.cwd(), "scripts", "test-db", "verify-player-profile-browser.ts");
+  const child = spawn(process.execPath, [tsxCli, verificationFile], {
+    cwd: process.cwd(),
+    env: {
+      ...process.env,
+      V2_BROWSER_QA_ORIGIN: origin,
+      V2_BROWSER_QA_ACCOUNT_COOKIE: accountCookie,
+    },
+    stdio: "inherit",
+    windowsHide: true,
+  });
+  const exitCode = await new Promise<number>((resolveExit, reject) => {
+    child.once("error", reject);
+    child.once("exit", (code, signal) => {
+      if (signal) reject(new Error(`Player profile browser regression ended by ${signal}.`));
+      else resolveExit(code ?? 1);
+    });
+  });
+  if (exitCode !== 0) throw new Error(`Player profile browser regression failed with exit code ${exitCode}.`);
+}
+
 function idempotencyKey(label: string): string {
   return `${label}-${randomUUID()}`;
 }
@@ -841,6 +864,7 @@ try {
   });
   assert.equal(duplicateSelfRiotId.status, 409);
   assert.equal(problemCode(await duplicateSelfRiotId.json()), "RIOT_ID_ALREADY_LINKED");
+  await runPlayerProfileBrowserRegression(origin, selfProfileLogin.cookie);
 
   const visibleSignupBase = signupPayload("visible-identifiers");
   for (const unsafeSignup of [
