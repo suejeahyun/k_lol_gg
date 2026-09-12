@@ -479,6 +479,36 @@ try {
   const preservedJobs = await database.select().from(riotSyncJobs).where(eq(riotSyncJobs.linkId, linkedRiotAccountId));
   assert.deepEqual(new Set(preservedJobs.map((job) => job.status)), new Set(["QUEUED", "RUNNING"]));
 
+  const duplicateLinkedIdentityUpdate = await fetch(`${origin}/api/admin/players/${linkedPlayer.id}`, {
+    method: "PATCH",
+    headers: { cookie: adminCookie, origin, "content-type": "application/json", "idempotency-key": `linked-duplicate-${randomUUID()}`, "if-match": '"1"' },
+    body: JSON.stringify({
+      ...tierOnlyPayload,
+      nickname: seededPlayer.nickname,
+      tagLine: seededPlayer.tagLine,
+    }),
+  });
+  assert.equal(duplicateLinkedIdentityUpdate.status, 409);
+  assert.equal((await duplicateLinkedIdentityUpdate.json()).code, "PLAYER_RIOT_ID_CONFLICT");
+  const duplicateRollbackLink = (await database.select().from(riotAccountLinks)
+    .where(eq(riotAccountLinks.id, linkedRiotAccountId)))[0];
+  assert.equal(duplicateRollbackLink?.status, "CONNECTED");
+  assert.equal(duplicateRollbackLink?.protectedPuuid, "synthetic-protected-puuid-for-player-admin-http");
+  assert.equal(duplicateRollbackLink?.revision, 0);
+  const duplicateRollbackJobs = await database.select().from(riotSyncJobs)
+    .where(eq(riotSyncJobs.linkId, linkedRiotAccountId));
+  assert.deepEqual(
+    duplicateRollbackJobs.map((job) => ({ id: job.id, revision: job.revision, status: job.status }))
+      .sort((left, right) => left.id.localeCompare(right.id, "en-US")),
+    preservedJobs.map((job) => ({ id: job.id, revision: job.revision, status: job.status }))
+      .sort((left, right) => left.id.localeCompare(right.id, "en-US")),
+  );
+  const duplicateRollbackAudits = await database.select({ value: count() }).from(auditEvents).where(and(
+    eq(auditEvents.targetId, linkedRiotAccountId),
+    eq(auditEvents.action, "RIOT_LINK_DISCONNECTED_ON_REGISTRY_ID_CHANGE"),
+  ));
+  assert.equal(duplicateRollbackAudits[0]?.value, 0);
+
   const staleLinkedIdentityUpdate = await fetch(`${origin}/api/admin/players/${linkedPlayer.id}`, {
     method: "PATCH",
     headers: { cookie: adminCookie, origin, "content-type": "application/json", "idempotency-key": `linked-stale-${randomUUID()}`, "if-match": '"0"' },
@@ -491,9 +521,10 @@ try {
     "CONNECTED",
   );
 
+  const linkedUpdateKey = `linked-update-${randomUUID()}`;
   const linkedUpdate = await fetch(`${origin}/api/admin/players/${linkedPlayer.id}`, {
     method: "PATCH",
-    headers: { cookie: adminCookie, origin, "content-type": "application/json", "idempotency-key": `linked-update-${randomUUID()}`, "if-match": '"1"' },
+    headers: { cookie: adminCookie, origin, "content-type": "application/json", "idempotency-key": linkedUpdateKey, "if-match": '"1"' },
     body: JSON.stringify(linkedUpdatePayload),
   });
   assert.equal(linkedUpdate.status, 200);
@@ -521,6 +552,7 @@ try {
   assert.equal(disconnectedLink?.status, "DISCONNECTED");
   assert.equal(disconnectedLink?.protectedPuuid, null);
   assert.ok(disconnectedLink?.disconnectedAt);
+  assert.equal(disconnectedLink?.revision, 1);
   const cancelledJobs = await database.select().from(riotSyncJobs).where(eq(riotSyncJobs.linkId, linkedRiotAccountId));
   assert.equal(cancelledJobs.length, 2);
   for (const job of cancelledJobs) {
@@ -543,6 +575,36 @@ try {
   assert.equal(identityDisconnectAudit.actorUserAccountId, admin.id);
   assert.equal(identityDisconnectAudit.metadataJson?.source, "ADMIN_PROFILE");
   assert.equal(identityDisconnectAudit.metadataJson?.cancelledSyncJobCount, 2);
+
+  const linkedUpdateReplay = await fetch(`${origin}/api/admin/players/${linkedPlayer.id}`, {
+    method: "PATCH",
+    headers: { cookie: adminCookie, origin, "content-type": "application/json", "idempotency-key": linkedUpdateKey, "if-match": '"1"' },
+    body: JSON.stringify(linkedUpdatePayload),
+  });
+  assert.equal(linkedUpdateReplay.status, 200);
+  assert.equal(linkedUpdateReplay.headers.get("idempotency-replayed"), "true");
+  assert.deepEqual(await linkedUpdateReplay.json(), linkedUpdateBody);
+  const replayedAdminLink = (await database.select().from(riotAccountLinks)
+    .where(eq(riotAccountLinks.id, linkedRiotAccountId)))[0];
+  assert.equal(replayedAdminLink?.status, "DISCONNECTED");
+  assert.equal(replayedAdminLink?.revision, 1);
+  const replayedAdminJobs = await database.select().from(riotSyncJobs)
+    .where(eq(riotSyncJobs.linkId, linkedRiotAccountId));
+  assert.equal(replayedAdminJobs.length, 2);
+  for (const job of replayedAdminJobs) {
+    assert.equal(job.status, "CANCELLED");
+    assert.equal(job.revision, 1);
+  }
+  const replayedAdminPlayerAudits = await database.select({ value: count() }).from(auditEvents).where(and(
+    eq(auditEvents.targetId, linkedPlayer.id),
+    eq(auditEvents.action, "PLAYER_UPDATED"),
+  ));
+  assert.equal(replayedAdminPlayerAudits[0]?.value, 2);
+  const replayedAdminDisconnectAudits = await database.select({ value: count() }).from(auditEvents).where(and(
+    eq(auditEvents.targetId, linkedRiotAccountId),
+    eq(auditEvents.action, "RIOT_LINK_DISCONNECTED_ON_REGISTRY_ID_CHANGE"),
+  ));
+  assert.equal(replayedAdminDisconnectAudits[0]?.value, 1);
 
   const deactivateKey = `deactivate-${randomUUID()}`;
   const deactivated = await fetch(`${origin}/api/admin/players/${createdId}`, {

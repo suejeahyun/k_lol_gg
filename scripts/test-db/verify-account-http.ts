@@ -684,6 +684,17 @@ try {
   assert.equal(rolledBackConnectedLink.status, "CONNECTED");
   assert.equal(rolledBackConnectedLink.protectedPuuid, selfProfileProtectedPuuid);
   assert.equal(rolledBackConnectedLink.revision, 0);
+  const rolledBackConnectedJobs = await database.select().from(riotSyncJobs)
+    .where(eq(riotSyncJobs.linkId, selfProfileLinkId));
+  assert.deepEqual(
+    rolledBackConnectedJobs.map((job) => ({ id: job.id, revision: job.revision, status: job.status }))
+      .sort((left, right) => left.id.localeCompare(right.id, "en-US")),
+    [
+      { id: selfProfileJobIds[0], revision: 0, status: "QUEUED" },
+      { id: selfProfileJobIds[1], revision: 0, status: "RETRY_WAIT" },
+      { id: selfProfileJobIds[2], revision: 0, status: "RUNNING" },
+    ].sort((left, right) => left.id.localeCompare(right.id, "en-US")),
+  );
   const rolledBackDisconnectAudits = await database.select({ value: count() })
     .from(auditEvents).where(and(
       eq(auditEvents.actorUserAccountId, selfProfileOwner.id),
@@ -782,6 +793,25 @@ try {
       eq(auditEvents.action, "PLAYER_SELF_UPDATED"),
     ));
   assert.equal(replayedSelfProfileAuditCount[0]?.value, 2);
+  const replayedSelfDisconnectAuditCount = await database.select({ value: count() })
+    .from(auditEvents).where(and(
+      eq(auditEvents.actorUserAccountId, selfProfileOwner.id),
+      eq(auditEvents.action, "RIOT_LINK_DISCONNECTED_ON_REGISTRY_ID_CHANGE"),
+    ));
+  assert.equal(replayedSelfDisconnectAuditCount[0]?.value, 1);
+  const replayedSelfLink = (
+    await database.select().from(riotAccountLinks)
+      .where(eq(riotAccountLinks.id, selfProfileLinkId)).limit(1)
+  )[0];
+  assert.equal(replayedSelfLink?.status, "DISCONNECTED");
+  assert.equal(replayedSelfLink?.revision, 1);
+  const replayedSelfJobs = await database.select().from(riotSyncJobs)
+    .where(eq(riotSyncJobs.linkId, selfProfileLinkId));
+  assert.equal(replayedSelfJobs.length, 3);
+  for (const job of replayedSelfJobs) {
+    assert.equal(job.status, "CANCELLED");
+    assert.equal(job.revision, 1);
+  }
 
   const reusedSelfProfileKey = await selfPlayerMutation({
     origin,
