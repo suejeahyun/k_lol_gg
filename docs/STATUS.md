@@ -1,5 +1,19 @@
 # K-LOL.GG V2 상태
 
+## 2026-09-13 전체 검증·보완 릴리스 후보
+
+- 기능 커밋: `dfb0ccb787d1602804c2019c7a87594de77d1661`
+- 릴리스 tag: `v2-completion-audit-v1.0.0`
+- 상태: 소스·빌드·합성 PostgreSQL·격리 Chromium 검증 완료, **운영 미배포**
+- 전체 화면: 103 pages / 335 captures / issue 0 / 종료 코드 0
+- 테스트: 742개 중 741 PASS, DB 전용 1 skip, 실패 0
+- Drizzle application schema: 102 tables / 165 foreign keys
+- recovery physical schema: migration journal table 포함 103 tables
+- 운영 DB 변경·데이터 삭제: 없음
+- 남은 외부 확인: Vercel 배포·Cron secret, MessengerBot R 실기기 두 방, 실제 Riot RSO/API, 실제 Vercel Blob
+
+전체 근거와 요구사항 판정은 [`qa-evidence/v2-completion-audit-2026-09-13/README.md`](./qa-evidence/v2-completion-audit-2026-09-13/README.md)에 있다. 아래 내용은 직전 운영 배포 기준 기록이며 이번 릴리스 후보가 운영에 반영됐다는 의미가 아니다.
+
 - 운영 검증 확인 시각: 2026-09-12T13:36:38.587Z (2026-09-12 22:36:38 KST)
 - 운영 검증 기능 기준: `2f576d939498d664db8962460ddf12200623b5c9`
 - 릴리스 tag: `kakao-v1-r8-player-edit-qa-v1.0.0`
@@ -18,9 +32,9 @@
 - 새 Riot ID와 신규 플레이어를 함께 만드는 일반 사용자 가입은 같은 transaction에서 `APPROVED`·`ACTIVE`로 자동 승인된다. 기존 플레이어와 일치하는 Riot ID는 `PENDING` claim 수동 검토를 유지한다.
 - 기존 `PENDING` 27개는 safe class와 action-time 조건을 확인한 뒤 별도 운영 작업으로 승인했고 `PENDING`은 27개에서 0개가 됐다. 연결 플레이어는 기존 `ACTIVE` 23개 유지·4개 재활성화로 모두 `ACTIVE`이며, 세션 6개 폐기, status history 27개, 계정 audit 27개, 플레이어 audit 4개를 기록했다. 기존 `REJECTED/SUSPENDED` 8개는 변경하지 않았다.
 - 2026-09-07 시점의 100개 화면은 326개 조건(데스크톱 156, 태블릿 85, 모바일 85)에서 non-200·화면 이슈·가로 넘침 0건, 브라우저 품질 27/27 통과를 확인했다.
-- 이후 추가된 3개 화면을 포함한 현재 103개 화면 335회의 로그인·관리자 포함 실캡처는 아직 실행하지 않았다. 합성 fixture와 캡처 계획만 생성했다. 운영 공개 화면 10개 경로의 desktop·mobile·narrow 자동 품질은 30/30, issues 0, axe 위반 0이다. 로컬 전체 높이 캡처는 27/30 PASS이며 로컬 DB가 필요한 `/competitions` 3개 조건은 BLOCKED로 별도 유지한다.
+- 현재 103개 화면 335회의 익명·로그인·관리자·초기설정 실캡처를 합성 PostgreSQL과 격리 Chromium에서 완료했다. HTTP 오류·탐지 이슈·가로 넘침은 0건이고 자격증명과 운영 데이터는 산출물에 포함하지 않았다.
 - 관리자 페이지는 익명·ACCOUNT 세션을 거부하고 ADMIN/SUPER_ADMIN 역할 경계를 유지한다.
-- 현재 저장소 기준 최종 `npm run check`에서 계약 테스트 359/359, 단위 테스트 725 pass·1 intentional skip, production build 92 app routes가 통과했다.
+- 현재 저장소 기준 최종 `npm run check`에서 계약 테스트 375/375, 전체 742개 중 741 pass·1 intentional skip, production build static generation 92/92가 통과했다.
 - migration journal과 SQL은 각각 38개로 일치하고 `npm run test:db`가 통과했으며, 저장소 migration head는 `0037_swift_brood`이다.
 - 같은 DB 검사에서 Kakao V4 P0 31/31과 recovery archive 검증이 통과했다.
 - 운영 배포된 Kakao 입력 복구 릴리스는 구인 운영일을 KST 오전 6시 경계로 계산한다. 이는 이전 행을 삭제하는 초기화가 아니라 새 운영일 조회에서 이전 운영일 구인을 제외하는 논리 리셋이다.
@@ -35,7 +49,7 @@
 - 운영 Neon production의 연결 중 Riot ID와 플레이어 등록 Riot ID가 다른 행은 읽기 전용 집계에서 0건이었다. 본인·관리자 중복 충돌 rollback과 멱등 replay는 link·job·audit의 revision과 건수까지 실제 PostgreSQL HTTP 테스트로 고정했다.
 - 운영 Neon production은 비밀값 비노출 read-only preflight에서 기존 migration 35개, CONNECTED identity·owner 중복과 player-owner mismatch 0을 확인했다. 자동 만료 1일 복구 분기 `pre-0035-0036-20260911` 생성 후 `0035`·`0036`을 단일 transaction으로 적용했다.
 - 운영 DB 사후 검증은 migration 37개, head hash `ebb200d8597ed63d270c2a66a7369dd67d3536c238939458aeed337028bdc63f`, Riot unique index 2개, player-owner index 1개, validated foreign key 1개이며 중복·mismatch는 모두 0이다.
-- Drizzle TypeScript 스키마와 최신 snapshot은 101개 테이블을 정의한다.
+- Drizzle TypeScript application schema와 최신 snapshot은 102개 테이블·165개 foreign key를 정의한다. 복구 훈련의 physical table 103개는 migration journal table을 포함한다.
 - 2026-09-07 PostgreSQL 18 QA에서 DB 기반 인증·계정·플레이어·시즌 HTTP, 로그인 제한, 비밀번호+TOTP, 쿠키, 역할, 보안 헤더, 로그아웃, 복구 훈련과 운영 fixture 차단이 통과했다.
 - 현재 추적·미추적 tree와 전체 Git 이력 비밀정보 검사, `verify:auth-http`가 모두 통과했다. `.private/`는 Git과 Vercel 업로드에서 제외된다.
 - 고정 Data Dragon 기준 챔피언 173종·자산 346개와 여성 홈 가이드 68/68을 확인했다.
@@ -74,8 +88,8 @@
 
 ## 근거 있는 다음 패치 추천
 
-1. 승인된 합성 세션으로 로그인·관리자 화면을 포함한 103개 페이지 335대상 회귀 캡처를 실행한다.
-2. 1일 복구 분기 만료 전 운영 DB 오류 지표와 중복·mismatch 0건 유지 여부를 재확인한다.
-3. 실제 휴대폰에서 R8 private 전체 설치본 hash와 `/봇버전`을 대조하고 두 Kakao 방 canary를 기록한다.
-4. 승인된 실제 사용자 계정으로 Riot RSO와 Blob 업로드·읽기·삭제 E2E를 각각 기록한다.
+1. Vercel Production에 별도 `CRON_SECRET`을 설정하고 기능 커밋을 배포한 뒤 alias health와 오전 6시 예약 호출을 기록한다.
+2. 실제 휴대폰에서 R8 private 전체 설치본 hash와 `/봇버전`을 대조하고 두 Kakao 방 canary를 기록한다.
+3. 승인된 실제 사용자 계정으로 Riot RSO와 Blob 업로드·읽기·삭제 E2E를 각각 기록한다.
+4. 오래된 내전 전체 양식 충돌을 V1 표시 형식을 유지하는 revision/base token으로 탐지한다.
 5. 개인정보 없이 팀 계산 실패율, 결과 복사 성공·실패율과 수동 교체율을 관측하고 목표값은 운영자 승인 후 정한다.

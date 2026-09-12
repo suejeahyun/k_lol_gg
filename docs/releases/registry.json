@@ -255,6 +255,31 @@
           "status": "PENDING_USER_INSTALL"
         }
       ]
+    },
+    {
+      "featureId": "v2-completion-audit",
+      "version": "1.0.0",
+      "gitTag": "v2-completion-audit-v1.0.0",
+      "commit": "dfb0ccb787d1602804c2019c7a87594de77d1661",
+      "releasedAt": "2026-09-13T00:52:52+09:00",
+      "migrationHead": "0037_swift_brood",
+      "qaEvidence": "docs/qa-evidence/v2-completion-audit-2026-09-13/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-13-v2-completion-audit.md",
+      "deployment": {
+        "status": "NOT_DEPLOYED"
+      },
+      "externalInstallations": [
+        {
+          "name": "MessengerBot R V1 strict",
+          "version": "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R8_2026_09_12",
+          "status": "PENDING_USER_INSTALL"
+        },
+        {
+          "name": "Vercel Kakao daily-close cron",
+          "version": "v2-completion-audit-v1.0.0",
+          "status": "PENDING_USER_INSTALL"
+        }
+      ]
     }
   ]
 }

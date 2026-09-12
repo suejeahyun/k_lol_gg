@@ -1,0 +1,18 @@
+{
+  "generatedAt": "2026-09-12T15:43:16.083Z",
+  "pages": 103,
+  "expectedTargets": 335,
+  "capturedTargets": 335,
+  "issueCount": 0,
+  "affectedTargets": 0,
+  "passed": true,
+  "sessions": {
+    "anonymous": 105,
+    "account": 39,
+    "admin": 188,
+    "setup": 3
+  },
+  "containsProductionData": false,
+  "credentialsPersisted": false
+}
+
