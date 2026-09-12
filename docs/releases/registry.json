@@ -176,10 +176,10 @@
       "deployment": {
         "status": "PRODUCTION",
         "provider": "vercel",
-        "deploymentId": "dpl_Fz2onEm7CAhypBDGYH9zVa1wLG9K",
-        "url": "https://k-lol-a1lh8rd86-tjdmswo11-3715s-projects.vercel.app",
+        "deploymentId": "dpl_CaAJrnSE83TMz946UYNLQSrzJZme",
+        "url": "https://k-lol-387y1tt37-tjdmswo11-3715s-projects.vercel.app",
         "alias": "https://k-lol-gg.vercel.app",
-        "verifiedAt": "2026-09-12T04:47:34.417Z",
+        "verifiedAt": "2026-09-12T04:50:05.411Z",
         "healthStatus": "ready"
       },
       "externalInstallations": [

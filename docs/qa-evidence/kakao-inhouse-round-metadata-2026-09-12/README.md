@@ -6,10 +6,10 @@
 - 기능 버전: `1.0.0`
 - 코드 커밋: `fa6d4f2875857ce7b1a3981f932738a42d35165b`
 - Git tag: `kakao-inhouse-round-metadata-v1.0.0`
-- Vercel 배포: `dpl_Fz2onEm7CAhypBDGYH9zVa1wLG9K`, `Ready`
-- 불변 URL: `https://k-lol-a1lh8rd86-tjdmswo11-3715s-projects.vercel.app`
+- Vercel 배포: `dpl_CaAJrnSE83TMz946UYNLQSrzJZme`, `Ready`
+- 불변 URL: `https://k-lol-387y1tt37-tjdmswo11-3715s-projects.vercel.app`
 - 운영 alias: `https://k-lol-gg.vercel.app`
-- 운영 health: `2026-09-12T04:47:34.417Z`에 HTTP 200, JSON `status: ready`
+- 운영 health: `2026-09-12T04:50:05.411Z`에 HTTP 200, JSON `status: ready`
 - DB migration: `0037_swift_brood`, SHA-256 `6c78ef2f688c6ae73774656966faee0c1e95b02b68ee03585c94b4ab89b1f109`
 - 운영 DB 백업 분기: `pre-0037-inhouse-metadata-20260912` (`br-lingering-water-amlokf0n`), 2026-09-13 13:33 KST 자동 만료
 - 휴대폰 코드: `KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R7_2026_09_12`, 사용자 설치 대기

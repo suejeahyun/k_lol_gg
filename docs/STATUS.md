@@ -6,8 +6,8 @@
 - 현재 단계: Kakao 내전 시간·공지 보존 서버·DB 운영 배포 완료, 휴대폰 R7 설치와 실제 Kakao canary 대기
 - V1 코드 복사: 없음. V1은 기능 목록과 동등성 대조 근거로만 사용
 - V1 기준선: 블루·블랙 Vercel 기준선 저장소를 변경하지 않음
-- 운영 Vercel: 배포 `dpl_Fz2onEm7CAhypBDGYH9zVa1wLG9K`, 불변 URL `https://k-lol-a1lh8rd86-tjdmswo11-3715s-projects.vercel.app`, deployment `Ready`
-- 운영 별칭: `https://k-lol-gg.vercel.app`, `2026-09-12T04:47:34.417Z`에 `/api/health` HTTP 200·JSON `status: ready` 확인
+- 운영 Vercel: 배포 `dpl_CaAJrnSE83TMz946UYNLQSrzJZme`, 불변 URL `https://k-lol-387y1tt37-tjdmswo11-3715s-projects.vercel.app`, deployment `Ready`
+- 운영 별칭: `https://k-lol-gg.vercel.app`, `2026-09-12T04:50:05.411Z`에 `/api/health` HTTP 200·JSON `status: ready` 확인
 - 운영 DB: migration 38개, head `0037_swift_brood` 확인
 - Kakao 구인·내전 입력 복구: `v1.0.1` 사이트·서버 운영 배포와 health 확인 완료
 - 휴대폰 Kakao V1 strict R7: `PENDING_USER_INSTALL`; MessengerBot R 설치·실제 Kakao 송수신은 미확인
