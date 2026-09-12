@@ -8,6 +8,8 @@ import sharp from "sharp";
 import { KakaoAssistantError } from "../../src/modules/recruiting/kakao-assistant/domain";
 import { PostgresKakaoAssistant } from "../../src/modules/recruiting/kakao-assistant/postgres-kakao-assistant";
 import { PostgresKakaoImageReceive } from "../../src/modules/recruiting/kakao-assistant/postgres-kakao-image-receive";
+import { recruitingOperatingDateKey } from "../../src/modules/recruiting/domain/operating-day";
+import { hashKakaoV4EventId, kakaoV4EventRequestFingerprint, KAKAO_V4_EVENT_SCOPE } from "../../src/modules/recruiting";
 import { KakaoAdminError, PostgresKakaoAdmin } from "../../src/modules/recruiting/kakao-admin/postgres-kakao-admin";
 import { PostgresRecruitingAdapter } from "../../src/modules/recruiting/infrastructure/postgres-recruiting-adapter";
 import { FakePrivateImageStorage } from "../../src/modules/matches/infrastructure/private-image";
@@ -46,9 +48,14 @@ test("signed Kakao reads persist safe replay receipts and isolate recruit member
   const playerId = randomUUID();
   const partyId = randomUUID();
   const foreignPartyId = randomUUID();
+  const nextOperatingDayPartyId = randomUUID();
   const suffix = randomUUID().slice(0, 8);
   try {
     await applyMigrations(database);
+    const statusBeforeBoundary = new Date("2026-09-12T05:59:59.000+09:00");
+    const statusAfterBoundary = new Date("2026-09-12T06:01:00.000+09:00");
+    const operatingDate = recruitingOperatingDateKey(statusBeforeBoundary);
+    const nextOperatingDate = recruitingOperatingDateKey(statusAfterBoundary);
     await database.insert(players).values({
       id: playerId,
       memberName: `비공개-${suffix}`,
@@ -62,7 +69,7 @@ test("signed Kakao reads persist safe replay receipts and isolate recruit member
     await database.insert(recruitParties).values([
       {
         id: partyId,
-        recruitDate: "2099-01-01",
+        recruitDate: operatingDate,
         recruitNumber: 91,
         type: "FLEX_RANK",
         status: "IN_PROGRESS",
@@ -74,7 +81,7 @@ test("signed Kakao reads persist safe replay receipts and isolate recruit member
       },
       {
         id: foreignPartyId,
-        recruitDate: "2099-01-01",
+        recruitDate: operatingDate,
         recruitNumber: 92,
         type: "FLEX_RANK",
         status: "IN_PROGRESS",
@@ -82,6 +89,18 @@ test("signed Kakao reads persist safe replay receipts and isolate recruit member
         maximumMembers: 5,
         membersJson: [{ name: "다른 방 비공개", position: "TOP", slotNo: 1, substitute: false }],
         sourceRoomId: "room-other",
+        lastActivityAt: new Date(),
+      },
+      {
+        id: nextOperatingDayPartyId,
+        recruitDate: nextOperatingDate,
+        recruitNumber: 93,
+        type: "FLEX_RANK",
+        status: "IN_PROGRESS",
+        title: "이전 운영일 파티",
+        maximumMembers: 5,
+        membersJson: [{ name: "이전 운영일 참가자", position: "SUP", slotNo: 1, substitute: false }],
+        sourceRoomId: "room-contract",
         lastActivityAt: new Date(),
       },
     ]);
@@ -117,14 +136,61 @@ test("signed Kakao reads persist safe replay receipts and isolate recruit member
       intent: intent("nonce-status-0001", "status"),
       requestKey: "status-request-key",
       scope: "BOT:KAKAO:OPENCHAT:STATUS",
+      now: statusBeforeBoundary,
     });
     const ownParty = status.body.parties.find((party) => party.id === partyId);
     assert.ok(ownParty);
     assert.equal(ownParty.memberCount, 1);
     assert.equal(ownParty.members.length, 1);
     assert.equal(ownParty.members[0]?.name, "같은 방 참가자");
+    // Recruit numbers are reserved globally per operating day/reset sequence,
+    // even though room listings remain isolated, so foreign room #92 makes #93 next.
+    assert.equal(status.body.nextPartyRecruitNumber, 93);
     assert.equal(status.body.parties.some((party) => party.id === foreignPartyId), false);
+    assert.equal(status.body.parties.some((party) => party.id === nextOperatingDayPartyId), false);
     assert.equal(JSON.stringify(status.body).includes("다른 방 비공개"), false);
+    assert.equal(JSON.stringify(status.body).includes("이전 운영일 참가자"), false);
+
+    const nextStatus = await assistant.getOpenChatStatus({
+      actorPrincipalId: principalId,
+      intent: intent("nonce-status-0002", "status-after-boundary"),
+      requestKey: "status-after-boundary-key",
+      scope: "BOT:KAKAO:OPENCHAT:STATUS",
+      now: statusAfterBoundary,
+    });
+    assert.equal(nextStatus.body.parties.some((party) => party.id === partyId), false);
+    assert.equal(nextStatus.body.parties.some((party) => party.id === nextOperatingDayPartyId), true);
+    assert.equal(nextStatus.body.nextPartyRecruitNumber, 94);
+
+    const postMutationEventId = "event-post-mutation-status-0001";
+    const postMutationIntent = intent("nonce-post-mutation-status-01", "post-mutation-status");
+    const mutationReceiptId = randomUUID();
+    await database.insert(recruitingCommandReceipts).values({
+      id: mutationReceiptId,
+      actorPrincipalId: principalId,
+      scope: KAKAO_V4_EVENT_SCOPE,
+      keyHash: hashKakaoV4EventId(postMutationEventId),
+      requestHash: kakaoV4EventRequestFingerprint({ principalId, bodyDigestHex: postMutationIntent.bodyDigestHex }),
+      bodyDigestHex: postMutationIntent.bodyDigestHex,
+      responseStatus: 200,
+      responseJson: { aggregateKind: "PARTY", aggregateId: partyId, status: "IN_PROGRESS" },
+      responseRevision: 1,
+      expiresAt: new Date(Date.now() + 60_000),
+    });
+    const postMutationStatus = await assistant.getOpenChatStatus({
+      actorPrincipalId: principalId,
+      intent: postMutationIntent,
+      requestKey: postMutationEventId,
+      scope: KAKAO_V4_EVENT_SCOPE,
+      projection: "PARTY",
+      now: statusBeforeBoundary,
+      afterMutation: true,
+    });
+    assert.equal(postMutationStatus.body.parties.some((party) => party.id === partyId), true);
+    assert.equal(postMutationStatus.replayed, false);
+    const preservedMutationReceipt = (await database.select().from(recruitingCommandReceipts)
+      .where(eq(recruitingCommandReceipts.id, mutationReceiptId)).limit(1))[0];
+    assert.equal(preservedMutationReceipt?.responseRevision, 1);
 
     let createdActiveSeasonId: string | null = null;
     let activeSeason = (await database.select({ id: seasons.id }).from(seasons).where(eq(seasons.status, "ACTIVE")).limit(1))[0];
@@ -156,10 +222,10 @@ test("signed Kakao reads persist safe replay receipts and isolate recruit member
     assert.equal(notice.body.remaining, Math.max(10 - notice.body.total, 0));
     assert.equal(JSON.stringify(notice.body).includes("비공개"), false);
 
-    assert.equal((await database.select().from(recruitingCommandReceipts).where(eq(recruitingCommandReceipts.actorPrincipalId, principalId))).length, 3);
+    assert.equal((await database.select().from(recruitingCommandReceipts).where(eq(recruitingCommandReceipts.actorPrincipalId, principalId))).length, 5);
     assert.equal((await database.select().from(recruitingNonceBindings).where(and(
       eq(recruitingNonceBindings.actorKind, "BOT"), eq(recruitingNonceBindings.actorPrincipalId, principalId),
-    ))).length, 3);
+    ))).length, 4);
     if (createdActiveSeasonId) {
       await database.update(seasons).set({ status: "ENDED", endedAt: new Date(), revision: 1 }).where(eq(seasons.id, createdActiveSeasonId));
     }
@@ -419,6 +485,137 @@ test("signed Kakao season snapshots match exact players and preserve unresolved 
     ));
     assert.deepEqual(activeAgain.map((row) => row.id).sort(), [formerlyCancelled.id, formerlyResolved.id].sort());
     assert.equal(activeAgain.every((row) => row.cancelledAt === null && row.resolvedAt === null), true);
+  } finally {
+    await database.update(seasons).set({ status: "ENDED", endedAt: new Date(), revision: 1 }).where(eq(seasons.id, seasonId)).catch(() => undefined);
+    await pool.end();
+  }
+});
+
+test("recoverable Kakao season rows save valid players, queue review rows, preserve omitted slots, and cancel explicit blanks", async () => {
+  const connectionString = process.env.TEST_DATABASE_URL;
+  assert.ok(connectionString);
+  assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
+  const { database, pool } = createDatabaseHandle(connectionString, { max: 3 });
+  const now = new Date();
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
+  const suffix = randomUUID().slice(0, 8);
+  const seasonId = randomUUID();
+  const reviewerId = randomUUID();
+  const roomId = `room-recoverable-${suffix}`;
+  const roomHash = createHash("sha256").update(`klol-v2:kakao-season-room:v1\0${roomId}`).digest();
+  const otherRoomHash = createHash("sha256").update(`klol-v2:kakao-season-room:v1\0other-${roomId}`).digest();
+  const playerIds = Object.fromEntries(["valid", "review", "preserve", "cancel", "site", "confirmed", "foreign"].map((key) => [key, randomUUID()])) as Record<string, string>;
+  try {
+    await applyMigrations(database);
+    await database.insert(userAccounts).values({
+      id: reviewerId,
+      loginId: `recoverable-reviewer-${suffix}`,
+      loginIdNormalized: `recoverable-reviewer-${suffix}`,
+      role: "ADMIN",
+      status: "APPROVED",
+    });
+    await database.insert(seasons).values({
+      id: seasonId,
+      name: `Kakao recoverable ${suffix}`,
+      nameNormalized: `kakao recoverable ${suffix}`,
+      status: "ACTIVE",
+      activatedAt: now,
+    });
+    await database.insert(players).values(Object.entries(playerIds).map(([key, id]) => ({
+      id,
+      memberName: `${key}-${suffix}`,
+      memberNameNormalized: `${key}-${suffix}`,
+      nickname: `${key}${suffix}`,
+      nicknameNormalized: `${key}${suffix}`,
+      tagLine: "KR1",
+      tagLineNormalized: "kr1",
+    })));
+    const source = {
+      seasonId,
+      applyDate: today,
+      recruitNo: 19,
+      source: "KAKAO" as const,
+      sourceReferenceHash: randomBytes(32),
+      sourceRoomIdHash: roomHash,
+      sourceMode: "RIFT",
+      mainPosition: "TOP" as const,
+      subPositions: [],
+      status: "APPLIED" as const,
+      createdAt: now,
+      updatedAt: now,
+    };
+    await database.insert(seasonApplications).values([
+      { ...source, id: randomUUID(), playerId: playerIds.preserve!, sourceSlotNo: 3 },
+      { ...source, id: randomUUID(), playerId: playerIds.cancel!, sourceSlotNo: 4 },
+      {
+        ...source,
+        id: randomUUID(),
+        playerId: playerIds.confirmed!,
+        sourceSlotNo: 6,
+        status: "CONFIRMED" as const,
+        reviewedByUserAccountId: reviewerId,
+        reviewedAt: now,
+      },
+      { ...source, id: randomUUID(), playerId: playerIds.foreign!, sourceSlotNo: 7, sourceRoomIdHash: otherRoomHash },
+    ]);
+    await database.insert(seasonApplications).values({
+      ...source,
+      id: randomUUID(),
+      playerId: playerIds.site!,
+      sourceSlotNo: 5,
+      source: "SITE",
+      sourceReferenceHash: null,
+      sourceRoomIdHash: null,
+      sourceMode: null,
+    });
+
+    const assistant = new PostgresKakaoAssistant(database);
+    const result = await assistant.syncSeasonSnapshot({
+      actorPrincipalId: principalId,
+      intent: intent(`nonce-recoverable-${suffix}`, `recoverable-${suffix}`, roomId),
+      requestKey: `season-recoverable-${suffix}`,
+      scope: "kakao:season-applications:sync",
+      command: {
+        action: "SYNC",
+        seasonId,
+        applyDate: today,
+        recruitNo: 19,
+        mode: "RIFT",
+        participants: [
+          { slotNo: 1, name: `valid-${suffix}`, riotId: null, mainPosition: "MID", subPositions: ["SUP"], reserve: false },
+          { slotNo: 2, name: `review-${suffix}`, riotId: null, mainPosition: "ALL", subPositions: [], reserve: false, reviewRequired: true },
+          { slotNo: 8, name: `valid${suffix}`, riotId: null, mainPosition: "TOP", subPositions: [], reserve: false },
+        ],
+        preserveSlotNos: [3],
+      },
+      requestId: randomUUID(),
+      now,
+    });
+
+    assert.equal(result.body.appliedCount, 3);
+    assert.equal(result.body.confirmedCount, 1);
+    assert.equal(result.body.pendingCount, 2);
+    const storedApplications = await database.select().from(seasonApplications).where(eq(seasonApplications.seasonId, seasonId));
+    const statusFor = (key: string) => storedApplications.find((row) => row.playerId === playerIds[key])?.status;
+    assert.equal(statusFor("valid"), "APPLIED");
+    assert.equal(statusFor("review"), undefined);
+    assert.equal(statusFor("preserve"), "APPLIED");
+    assert.equal(statusFor("cancel"), "CANCELLED");
+    assert.equal(statusFor("site"), "APPLIED");
+    assert.equal(statusFor("confirmed"), "CONFIRMED");
+    assert.equal(statusFor("foreign"), "APPLIED");
+    const reviewRows = await database.select().from(seasonKakaoPendingApplications).where(and(
+      eq(seasonKakaoPendingApplications.seasonId, seasonId),
+      eq(seasonKakaoPendingApplications.status, "ACTIVE"),
+    ));
+    assert.equal(reviewRows.length, 2);
+    const explicitReview = reviewRows.find((row) => row.slotNo === 2);
+    const duplicateAlias = reviewRows.find((row) => row.slotNo === 8);
+    assert.equal(explicitReview?.suppliedName, `review-${suffix}`);
+    assert.equal(explicitReview?.mainPosition, "ALL");
+    assert.equal(explicitReview?.matchState, "UNMATCHED");
+    assert.equal(duplicateAlias?.suppliedName, `valid${suffix}`);
+    assert.equal(duplicateAlias?.matchState, "UNMATCHED");
   } finally {
     await database.update(seasons).set({ status: "ENDED", endedAt: new Date(), revision: 1 }).where(eq(seasons.id, seasonId)).catch(() => undefined);
     await pool.end();

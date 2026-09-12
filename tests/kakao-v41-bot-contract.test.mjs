@@ -77,7 +77,7 @@ test("paste-ready V41 bot routes major commands only through the signed V2 trans
   assert.match(build, /writeFile\(outputPath/u);
   assert.match(build, /writeFile\(mobileOutputPath/u);
   assert.match(mobile, /(?:function\s+response\s*\(|response\s*=\s*function\s*\()/u);
-  assert.match(mobile, /KLOL_KAKAO_BOT_V41_V3_2026_09_09_R14_3_TWO_ROOM_V1_PARITY/u);
+  assert.match(mobile, /KLOL_KAKAO_BOT_V41_V3_2026_09_12_R15_OP_DAY_STATUS/u);
   assert.match(complete, /KLOL_V41_BUNDLE_R14_3_TWO_ROOM_V1_PARITY_START/u);
   assert.match(complete, /KLOL_V41_BUNDLE_R14_3_TWO_ROOM_V1_PARITY_END/u);
   assert.ok(mobile.length < complete.length, "mobile bundle should be smaller than the readable source bundle");

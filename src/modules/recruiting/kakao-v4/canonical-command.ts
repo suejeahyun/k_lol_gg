@@ -1,12 +1,13 @@
 import type { SeasonApplicationPosition } from "@/modules/seasons/domain/season";
 
 import type { ScrimFormCommandPayload, SyncScrimCommandPayload } from "../application/commands";
+import { recruitingOperatingDateKey } from "../domain/operating-day";
 import type { RecruitMember, RecruitPartyType, ScrimLineup } from "../domain/recruiting";
 import { encodeV1StrictScrimTimeText, parseV1StrictScrimTime } from "../domain/v1-strict-scrim-time";
 import { isOperationFormType, type OperationFormPayloadByType, type OperationFormType } from "../operation-forms/domain";
 import type { KakaoV4CommandClassification } from "./classifier";
 import { usesKakaoV1StrictResponse, type KakaoV4CommandEnvelope } from "./domain";
-import { parseKakaoV4InhouseParticipantRow } from "./inhouse-snapshot-parser";
+import { parseKakaoV4InhouseParticipantRow, type KakaoV4InhouseParticipant } from "./inhouse-snapshot-parser";
 import { parseKakaoV4OperationForm } from "./operation-form";
 import { parsePartyForm, type ParsedPartyForm } from "./party-snapshot-parser";
 
@@ -54,6 +55,7 @@ export type KakaoV4SeasonParticipant = Readonly<{
   mainPosition: SeasonApplicationPosition;
   subPositions: readonly SeasonApplicationPosition[];
   reserve: boolean;
+  reviewRequired?: true;
 }>;
 
 export type KakaoV4InhouseMode = "RIFT" | "ARAM" | "AUGMENT_ARAM";
@@ -110,6 +112,7 @@ export type CanonicalKakaoV4Command =
       recruitNumber: number;
       mode: KakaoV4InhouseMode;
       participants: readonly KakaoV4SeasonParticipant[];
+      preserveSlotNos?: readonly number[];
     }>
   | Readonly<{ domain: "PLAYER"; action: "RECORD" | "RECENT"; query: string }>
   | Readonly<{ domain: "PLAYER"; action: "RANKING" }>
@@ -124,6 +127,10 @@ export function requiredProfileForKakaoV4Command(command: CanonicalKakaoV4Comman
 
 function kstDate(timestamp: number) {
   return new Date((timestamp + 9 * 60 * 60) * 1_000).toISOString().slice(0, 10);
+}
+
+function partyOperatingDate(timestamp: number) {
+  return recruitingOperatingDateKey(new Date(timestamp * 1_000));
 }
 
 function numberParameter(parameters: Readonly<Record<string, string | number | boolean | null>>, key: string) {
@@ -212,18 +219,45 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
         : null;
   if (!recruitNumber || !applyDate || capacity < 1 || capacity > 99 || !mode) return null;
 
-  const slots = new Set<number>();
-  const participants: KakaoV4SeasonParticipant[] = [];
+  type SlotValue =
+    | Readonly<{ state: "EMPTY" }>
+    | Readonly<{ state: "PRESERVE" }>
+    | Readonly<{ state: "PARTICIPANT"; participant: KakaoV4InhouseParticipant }>;
+  const slots = new Map<number, SlotValue>();
+  const requireReview = (participant: KakaoV4InhouseParticipant): KakaoV4InhouseParticipant => Object.freeze({
+    ...participant,
+    reviewRequired: true,
+  });
   for (const line of normalized.split("\n")) {
     const row = parseKakaoV4InhouseParticipantRow(line, mode);
     if (!row.matched) continue;
     const slotNo = row.slotNo;
-    if (slotNo < 1 || slotNo > capacity || slots.has(slotNo)) return null;
-    slots.add(slotNo);
-    if (!row.valid) return null;
-    if (row.participant) participants.push(row.participant);
+    if (slotNo < 1 || slotNo > capacity) continue;
+    const next: SlotValue = row.participant
+      ? Object.freeze({ state: "PARTICIPANT", participant: row.participant })
+      : row.valid
+        ? Object.freeze({ state: "EMPTY" })
+        : Object.freeze({ state: "PRESERVE" });
+    // Kakao copies can contain the same numbered row more than once. V1 users
+    // edit top-to-bottom, so the final occurrence is authoritative; a final
+    // empty occurrence is therefore an explicit cancellation.
+    slots.set(slotNo, next);
   }
-  if (slots.size !== capacity) return null;
+  const preserveSlotNos: number[] = [];
+  const participants: KakaoV4SeasonParticipant[] = [];
+  const seenNames = new Set<string>();
+  for (let slotNo = 1; slotNo <= capacity; slotNo += 1) {
+    const slot = slots.get(slotNo);
+    if (!slot || slot.state === "PRESERVE") {
+      preserveSlotNos.push(slotNo);
+      continue;
+    }
+    if (slot.state !== "PARTICIPANT") continue;
+    const nameKey = slot.participant.name.normalize("NFKC").trim().replace(/\s+/gu, " ").toLocaleLowerCase("ko-KR");
+    const participant = seenNames.has(nameKey) ? requireReview(slot.participant) : slot.participant;
+    seenNames.add(nameKey);
+    participants.push(participant);
+  }
   return Object.freeze({
     domain: "SEASON" as const,
     action: "SYNC" as const,
@@ -232,6 +266,7 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
     recruitNumber,
     mode,
     participants: Object.freeze(participants),
+    ...(preserveSlotNos.length > 0 ? { preserveSlotNos: Object.freeze(preserveSlotNos) } : {}),
   });
 }
 
@@ -306,12 +341,13 @@ function scrimSnapshot(text: string, fallbackDate: string, v1Strict: boolean): K
 export function canonicalizeKakaoV4Command(classification: KakaoV4CommandClassification, envelope: KakaoV4CommandEnvelope): CanonicalKakaoV4Command | null {
   if (classification.kind === "UNKNOWN" || classification.kind === "WRONG_PROFILE") return null;
   const date = kstDate(envelope.timestamp);
+  const partyDate = partyOperatingDate(envelope.timestamp);
   const parameters = classification.parameters;
   if (classification.command === "PARTY_CREATE") {
     const partyType = (textParameter(parameters, "partyType") ?? "PARTY_NUMBER") as RecruitPartyType;
     const maximumMembers = numberParameter(parameters, "maximumMembers") ?? 5;
     return Object.freeze({ domain: "PARTY" as const, action: "CREATE" as const, payload: Object.freeze({
-      recruitDate: date, preferredRecruitNumber: numberParameter(parameters, "explicitRecruitNumber"), partyType,
+      recruitDate: partyDate, preferredRecruitNumber: numberParameter(parameters, "explicitRecruitNumber"), partyType,
       title: partyCreateTitle(partyType, maximumMembers, classification.canonicalText),
       maximumMembers, members: Object.freeze([]), startTimeText: null, gameInfo: null,
       scheduledStartAt: null, protectedUntil: null,
@@ -321,7 +357,7 @@ export function canonicalizeKakaoV4Command(classification: KakaoV4CommandClassif
   if (classification.command === "PARTY_DETAIL" || classification.command === "PARTY_FINISH") {
     const recruitNumber = numberParameter(parameters, "recruitNumber");
     if (!recruitNumber) return null;
-    return Object.freeze({ domain: "PARTY" as const, action: classification.command === "PARTY_DETAIL" ? "DETAIL" as const : "FINISH" as const, target: Object.freeze({ recruitDate: date, recruitNumber }) });
+    return Object.freeze({ domain: "PARTY" as const, action: classification.command === "PARTY_DETAIL" ? "DETAIL" as const : "FINISH" as const, target: Object.freeze({ recruitDate: partyDate, recruitNumber }) });
   }
   if (classification.command === "PARTY_SNAPSHOT") {
     const parsedForm = parsePartyForm(envelope.text);
@@ -331,9 +367,9 @@ export function canonicalizeKakaoV4Command(classification: KakaoV4CommandClassif
     return Object.freeze({
       domain: "PARTY" as const,
       action: "SYNC" as const,
-      target: Object.freeze({ recruitDate: date, recruitNumber }),
+      target: Object.freeze({ recruitDate: partyDate, recruitNumber }),
       payload: Object.freeze({
-        recruitDate: date,
+        recruitDate: partyDate,
         preferredRecruitNumber: recruitNumber,
         partyType: definition.partyType,
         title: definition.canonicalTitle,

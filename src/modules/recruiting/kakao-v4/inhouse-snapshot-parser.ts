@@ -5,6 +5,17 @@ export type KakaoV4InhouseParticipantDiagnostic = Readonly<{
   field: "mainPosition/subPositions";
 }>;
 
+export type KakaoV4InhouseParticipant = Readonly<{
+  slotNo: number;
+  name: string;
+  riotId: null;
+  mainPosition: SeasonApplicationPosition;
+  subPositions: readonly SeasonApplicationPosition[];
+  reserve: boolean;
+  /** Internal V4 hint: preserve the row for manual review instead of auto-matching it. */
+  reviewRequired?: true;
+}>;
+
 export type KakaoV4InhouseParticipantRowResult =
   | Readonly<{ matched: false }>
   | Readonly<{
@@ -12,20 +23,14 @@ export type KakaoV4InhouseParticipantRowResult =
       valid: false;
       slotNo: number;
       field: "name" | "mainPosition" | "subPositions";
+      participant: KakaoV4InhouseParticipant | null;
       diagnostics: readonly KakaoV4InhouseParticipantDiagnostic[];
     }>
   | Readonly<{
       matched: true;
       valid: true;
       slotNo: number;
-      participant: Readonly<{
-        slotNo: number;
-        name: string;
-        riotId: null;
-        mainPosition: SeasonApplicationPosition;
-        subPositions: readonly SeasonApplicationPosition[];
-        reserve: boolean;
-      }> | null;
+      participant: KakaoV4InhouseParticipant | null;
       diagnostics: readonly KakaoV4InhouseParticipantDiagnostic[];
     }>;
 
@@ -47,9 +52,29 @@ function isEmptySubPosition(value: string) {
 function invalid(
   slotNo: number,
   field: "name" | "mainPosition" | "subPositions",
+  participant: KakaoV4InhouseParticipant | null,
   diagnostics: readonly KakaoV4InhouseParticipantDiagnostic[] = Object.freeze([]),
 ): KakaoV4InhouseParticipantRowResult {
-  return Object.freeze({ matched: true, valid: false, slotNo, field, diagnostics });
+  return Object.freeze({ matched: true, valid: false, slotNo, field, participant, diagnostics });
+}
+
+function reviewParticipant(
+  slotNo: number,
+  name: string,
+  mainPosition: SeasonApplicationPosition,
+  subPositions: readonly SeasonApplicationPosition[],
+  reserve: boolean,
+): KakaoV4InhouseParticipant | null {
+  if (!name) return null;
+  return Object.freeze({
+    slotNo,
+    name,
+    riotId: null,
+    mainPosition,
+    subPositions: Object.freeze([...new Set(subPositions)].filter((position) => position !== mainPosition && position !== "ALL")),
+    reserve,
+    reviewRequired: true,
+  });
 }
 
 export function parseKakaoV4InhouseParticipantRow(
@@ -57,59 +82,67 @@ export function parseKakaoV4InhouseParticipantRow(
   mode: "RIFT" | "ARAM" | "AUGMENT_ARAM",
 ): KakaoV4InhouseParticipantRowResult {
   const line = rawLine.normalize("NFKC");
-  const row = /^\s*(\d{1,2})\s*(?:\\\s*)?[.)]\s*(.*?)\s*$/u.exec(line);
+  const row = /^\s*(\d{1,2})(?:(?:\s*\\?\s*[.)])|\s+)(.*?)\s*$/u.exec(line);
   if (!row) return Object.freeze({ matched: false });
   const slotNo = Number(row[1]);
   const value = row[2]!.trim();
   if (!value) return Object.freeze({ matched: true, valid: true, slotNo, participant: null, diagnostics: Object.freeze([]) });
 
   const fields = value.split("/").map((field) => field.trim());
-  if (!fields[0]) return invalid(slotNo, "name");
+  const name = fields[0] ?? "";
+  const reserve = /(?:예비|대기)/u.test(value);
+  if (!name) return invalid(slotNo, "name", null);
   if (mode !== "RIFT") {
     return Object.freeze({
       matched: true,
       valid: true,
       slotNo,
-      participant: Object.freeze({ slotNo, name: fields[0], riotId: null, mainPosition: "ALL", subPositions: Object.freeze([]), reserve: /(?:예비|대기)/u.test(value) }),
+      participant: Object.freeze({ slotNo, name, riotId: null, mainPosition: "ALL", subPositions: Object.freeze([]), reserve }),
       diagnostics: Object.freeze([]),
     });
   }
-  if (fields.length < 4) return invalid(slotNo, "mainPosition");
+  if (fields.length < 4) return invalid(slotNo, "mainPosition", reviewParticipant(slotNo, name, "ALL", [], reserve));
 
-  let positionFields = fields.slice(3);
+  const positionFields = fields.slice(3);
+  const positionTokens = positionFields.flatMap((field) => field.split(/[\s,，]+/u)).filter(Boolean);
   const diagnostics: KakaoV4InhouseParticipantDiagnostic[] = [];
-  if (fields.length === 4) {
-    const mergedPositions = fields[3]!.split(/\s+/u).filter(Boolean);
-    if (mergedPositions.length === 2 && mergedPositions.every((entry) => seasonPosition(entry) !== null)) {
-      positionFields = mergedPositions;
-      diagnostics.push(Object.freeze({ code: "RECOVERED_MISSING_POSITION_DELIMITER", field: "mainPosition/subPositions" }));
-    }
+  if (positionFields.length === 1 && positionTokens.length >= 2) {
+    diagnostics.push(Object.freeze({ code: "RECOVERED_MISSING_POSITION_DELIMITER", field: "mainPosition/subPositions" }));
   }
 
-  const mainPosition = seasonPosition(positionFields[0] ?? "");
-  if (!mainPosition) return invalid(slotNo, "mainPosition", Object.freeze(diagnostics));
-  const rawSubPositions = positionFields.slice(1)
-    .flatMap((field) => field.split(/[,，]/u))
-    .map((field) => field.trim())
+  const mainPosition = seasonPosition(positionTokens[0] ?? "");
+  if (!mainPosition) {
+    return invalid(slotNo, "mainPosition", reviewParticipant(slotNo, name, "ALL", [], reserve), Object.freeze(diagnostics));
+  }
+  const rawSubPositions = positionTokens.slice(1)
     .filter((field) => field.length > 0 && !isEmptySubPosition(field));
   const parsedSubPositions = rawSubPositions.map(seasonPosition);
-  if (parsedSubPositions.some((position) => position === null)) return invalid(slotNo, "subPositions", Object.freeze(diagnostics));
+  if (parsedSubPositions.some((position) => position === null)) {
+    return invalid(
+      slotNo,
+      positionFields.length === 1 ? "mainPosition" : "subPositions",
+      reviewParticipant(slotNo, name, mainPosition, parsedSubPositions.filter((position): position is SeasonApplicationPosition => position !== null), reserve),
+      Object.freeze(diagnostics),
+    );
+  }
   const subPositions = parsedSubPositions.filter((position): position is SeasonApplicationPosition => Boolean(
     position && position !== "ALL" && position !== mainPosition,
   ));
   const uniqueSubPositions = Object.freeze([...new Set(subPositions)]);
-  if (mainPosition === "ALL" && uniqueSubPositions.length > 0) return invalid(slotNo, "subPositions", Object.freeze(diagnostics));
+  if (mainPosition === "ALL" && uniqueSubPositions.length > 0) {
+    return invalid(slotNo, "subPositions", reviewParticipant(slotNo, name, "ALL", [], reserve), Object.freeze(diagnostics));
+  }
   return Object.freeze({
     matched: true,
     valid: true,
     slotNo,
     participant: Object.freeze({
       slotNo,
-      name: fields[0],
+      name,
       riotId: null,
       mainPosition,
       subPositions: uniqueSubPositions,
-      reserve: /(?:예비|대기)/u.test(value),
+      reserve,
     }),
     diagnostics: Object.freeze(diagnostics),
   });

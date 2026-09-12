@@ -215,7 +215,12 @@ const operationCandidateBinding = [
   "var isOperationFormCompleteMessage = isOperationFormMessage;",
   "isOperationFormMessage = isOperationFormCandidateMessage;",
 ].join("\n");
-const output = `${provenance}\n\n${transport}\n\n${adapter}\n\n${extracted.join("\n\n")}\n\n${operationCandidateBinding}\n\n${entry}\n`;
+const seasonCandidateBinding = [
+  "/* Keep V1 routing, but let recoverable numbered rows reach the V4 row parser. */",
+  "var isSeasonApplyCompleteMessage = isSeasonApplyFormMessage;",
+  "isSeasonApplyFormMessage = isSeasonApplyCandidateMessage;",
+].join("\n");
+const output = `${provenance}\n\n${transport}\n\n${adapter}\n\n${extracted.join("\n\n")}\n\n${operationCandidateBinding}\n${seasonCandidateBinding}\n\n${entry}\n`;
 const program = acorn.parse(output, {
   ecmaVersion: 5,
   allowReserved: true,
@@ -243,6 +248,9 @@ if (!output.includes("var isOperationFormCompleteMessage = isOperationFormMessag
 }
 if (!output.includes("isOperationFormMessage = isOperationFormCandidateMessage;")) {
   throw new Error("V1-strict output must route incomplete operation-form candidates");
+}
+if (!output.includes("isSeasonApplyFormMessage = isSeasonApplyCandidateMessage;")) {
+  throw new Error("V1-strict output must route recoverable season-application candidates");
 }
 if (output.length >= 65_535) throw new Error("V1-strict output exceeds MessengerBot R's 65,535-character limit");
 if (Math.max(...output.split("\n").map((line) => line.length)) > 1_000) {

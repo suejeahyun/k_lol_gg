@@ -67,7 +67,11 @@ export type KakaoV4RecruitingPort = Readonly<{
 }>;
 
 export type KakaoV4AssistantPort = Readonly<{
-  getOpenChatStatus(input: SignedAssistantInput & Readonly<{ projection?: "PARTY" | "SCRIM" }>): Promise<Readonly<{ body: KakaoOpenChatStatusDto; replayed: boolean }>>;
+  getOpenChatStatus(input: SignedAssistantInput & Readonly<{
+    projection?: "PARTY" | "SCRIM";
+    now?: Date;
+    afterMutation?: boolean;
+  }>): Promise<Readonly<{ body: KakaoOpenChatStatusDto; replayed: boolean }>>;
   syncSeasonSnapshot(input: SignedAssistantInput & Readonly<{
     command: KakaoSeasonSnapshotCommand;
     requestId: string;
@@ -575,8 +579,25 @@ export class KakaoV4CommandDispatcher {
     });
   }
 
-  private async openChatStatus(context: KakaoV4DispatchContext, projection?: "PARTY" | "SCRIM") {
-    return this.dependencies.assistant.getOpenChatStatus({ ...signedInput(context), projection });
+  private async openChatStatus(context: KakaoV4DispatchContext, projection?: "PARTY" | "SCRIM", afterMutation = false) {
+    return this.dependencies.assistant.getOpenChatStatus({
+      ...signedInput(context),
+      projection,
+      now: new Date(context.envelope.timestamp * 1_000),
+      afterMutation,
+    });
+  }
+
+  private async appendLatestPartyStatus(context: KakaoV4DispatchContext, reply: string, v1Strict: boolean) {
+    try {
+      const status = await this.openChatStatus(context, "PARTY", true);
+      const statusReply = v1Strict
+        ? v1StrictPartyStatusReply(status.body.parties)
+        : partyStatusReply(status.body.parties);
+      return `${reply}\n\n${statusReply}`;
+    } catch {
+      return `${reply}\n\n[K-LOL.GG 구인구직 현황]\n조회 실패. 구인현황을 입력해 주세요.`;
+    }
   }
 
   private async resolve(context: KakaoV4DispatchContext, kind: "PARTY" | "SCRIM", target: KakaoV4RecruitTarget) {
@@ -742,7 +763,7 @@ export class KakaoV4CommandDispatcher {
       ...Array.from({ length: primaryCount }, () => ({ substitute: false })),
       ...Array.from({ length: reserveCount }, () => ({ substitute: true })),
     ];
-    const legacyReply = command.action === "FINISH"
+    const mutationReply = command.action === "FINISH"
         ? `[K-LOL.GG 파티 #${String(recruitNumber)}]\n모집을 마감했습니다.`
         : v1Strict
           ? v1StrictPartySyncReply(recruitNumber, Number(data.maximumMembers), replyMembers)
@@ -752,6 +773,7 @@ export class KakaoV4CommandDispatcher {
             `시작시간: ${String(data.startTimeText)} · 게임정보: ${String(data.gameInfo)}`,
             `마감: ${String(recruitNumber)}ㅉ`,
           ].join("\n");
+    const legacyReply = await this.appendLatestPartyStatus(context, mutationReply, v1Strict);
     return Object.freeze({ kind: "PARTY", action: command.action, aggregate: result.body, legacyReply, replayed: result.replayed });
   }
 
@@ -910,6 +932,7 @@ export class KakaoV4CommandDispatcher {
           recruitNo: command.recruitNumber,
           mode: command.mode,
           participants: command.participants,
+          ...(command.preserveSlotNos ? { preserveSlotNos: command.preserveSlotNos } : {}),
         }
       : {
           action: "STATUS",

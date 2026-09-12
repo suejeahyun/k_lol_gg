@@ -6,7 +6,7 @@ import vm from "node:vm";
 
 const integrationDirectory = resolve(import.meta.dirname, "../integrations/messengerbot-r");
 
-async function harness() {
+async function harness(options = {}) {
   const [compatibility, router] = await Promise.all([
     readFile(resolve(integrationDirectory, "KLOL_KAKAO_BOT_V41_V1_COMPAT.js"), "utf8"),
     readFile(resolve(integrationDirectory, "KLOL_KAKAO_BOT_V41_V2_ROUTER.js"), "utf8"),
@@ -45,6 +45,7 @@ async function harness() {
       userMessage(result) { return result?.ok ? "[K-LOL.GG]\n요청을 안전하게 처리했습니다." : "[K-LOL.GG 요청 실패]\n테스트 실패"; },
       openchatStatus() {
         calls.openchat += 1;
+        if (options.failStatus) return { ok: false, status: 503, body: { code: "UNAVAILABLE" } };
         return {
           ok: true,
           body: {
@@ -58,6 +59,7 @@ async function harness() {
       },
       recruit(command, requestContext) {
         calls.recruits.push({ command: structuredClone(command), requestContext: structuredClone(requestContext) });
+        if (options.failRecruit) return { ok: false, status: 503, body: { code: "UNAVAILABLE" } };
         if (receipts.has(requestContext.requestKey)) return structuredClone(receipts.get(requestContext.requestKey));
         let effectiveCommand = structuredClone(command);
         if (command.compatTarget?.kind === "PARTY") {
@@ -237,7 +239,8 @@ test("legacy full party form maps positions to slots and synchronizes the existi
   assert.match(bot.replies.at(-1), /5\/5 · 예비 0명/u);
   assert.match(bot.replies.at(-1), /시작시간: 21:00/u);
   assert.match(bot.replies.at(-1), /게임정보: 미입력/u);
-  assert.equal(bot.calls.openchat, 0, "party sync resolves its target in the mutation request");
+  assert.equal(bot.calls.openchat, 1, "party sync fetches the latest status only after mutation success");
+  assert.match(bot.replies.at(-1), /\[K-LOL\.GG 구인구직 현황\][\s\S]*└ 상세 7/u);
 });
 
 test("slash and plain temporary/form flows share server-first metadata fallback and preserve free text", async () => {
@@ -275,7 +278,7 @@ test("99 재현, 지오, 97 기용 fixtures complete public create, form, and fi
       bot.respond(`${slash}7ㅉ`, { sender });
       assert.deepEqual(bot.calls.recruits.map(({ command }) => command.type), ["CREATE_PARTY", "SYNC_PARTY", "FINISH_PARTY"], `${sender}:${slash || "plain"}`);
       assert.equal(bot.parties[0].status, "FINISHED");
-      assert.equal(bot.calls.openchat, 0, "party create, sync, and finish each avoid a status preflight");
+      assert.equal(bot.calls.openchat, 2, "sync and finish each fetch status only after mutation success");
       assert.doesNotMatch(bot.replies.join("\n"), /요청 실패/u);
     }
   }
@@ -306,6 +309,51 @@ test("legacy finish suppresses a duplicate callback after the party leaves activ
   assert.deepEqual(bot.calls.recruits.map(({ command }) => command.type), ["CREATE_PARTY", "FINISH_PARTY"]);
   assert.equal(bot.parties[0].status, "FINISHED");
   assert.match(bot.replies.at(-1), /모집을 마감했습니다/u);
+});
+
+test("same-room users can clear and finish another user's two-digit party while repeated forms stay idempotent", async () => {
+  for (const recruitNo of [13, 15]) {
+    const bot = await harness();
+    bot.respond(`5인파티 ${recruitNo}`, { sender: "생성자" });
+    const form = [
+      "K-LOL.GG 구인구직 양식]", "📢 5인 파티 구인", `모집번호: #${recruitNo}`,
+      "1. 참가자", "2.", "3\\.", "4.", "5.", "예비 1.",
+    ].join("\n");
+    bot.respond(form, { sender: "작성자" });
+    bot.respond(form, { sender: "작성자" });
+    bot.respond(form.replace("1. 참가자", "1."), { sender: "다른 수정자" });
+    bot.respond(`${recruitNo}ㅉ`, { sender: "마감자" });
+
+    assert.deepEqual(bot.calls.recruits.map(({ command }) => command.type), ["CREATE_PARTY", "SYNC_PARTY", "SYNC_PARTY", "FINISH_PARTY"]);
+    assert.deepEqual(bot.calls.recruits[2].command.payload.members, []);
+    assert.equal(bot.parties[0].status, "FINISHED");
+    assert.equal(bot.calls.openchat, 3);
+    assert.match(bot.replies.at(-2), /\[파티 #[0-9]+ 반영\][\s\S]*\[K-LOL\.GG 구인구직 현황\]/u);
+    assert.match(bot.replies.at(-1), /모집을 마감했습니다\.[\s\S]*\[K-LOL\.GG 구인구직 현황\]/u);
+    assert.doesNotMatch(bot.replies.join("\n"), /요청 실패/u);
+  }
+});
+
+test("failed party mutations return the cause without fetching or appending status", async () => {
+  const bot = await harness({ failRecruit: true });
+  bot.respond(["📢 2인 파티 구인", "모집번호: #13", "1. 참가자", "2.", "예비 1."].join("\n"));
+  assert.equal(bot.calls.recruits.length, 1);
+  assert.equal(bot.calls.openchat, 0);
+  assert.match(bot.replies.at(-1), /요청 실패/u);
+  assert.doesNotMatch(bot.replies.at(-1), /구인구직 현황/u);
+});
+
+test("successful sync, blank deletion, and finish explain a failed status refresh", async () => {
+  const bot = await harness({ failStatus: true });
+  bot.respond("5인파티 15");
+  const form = ["📢 5인 파티 구인", "모집번호: #15", "1. 참가자", "2.", "3.", "4.", "5.", "예비 1."].join("\n");
+  bot.respond(form);
+  bot.respond(form.replace("1. 참가자", "1."));
+  bot.respond("15ㅉ");
+  assert.deepEqual(bot.calls.recruits.map(({ command }) => command.type), ["CREATE_PARTY", "SYNC_PARTY", "SYNC_PARTY", "FINISH_PARTY"]);
+  for (const reply of bot.replies.slice(-3)) {
+    assert.match(reply, /\[K-LOL\.GG 구인구직 현황\]\n조회 실패\. 구인현황을 입력해 주세요\.$/u);
+  }
 });
 
 test("legacy operation form, inhouse template, and scrim template stay available", async () => {

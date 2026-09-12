@@ -181,7 +181,7 @@ test("strict V1 create and sync use canonical server copy while ordinary V4 rema
     },
   };
   const strictSync = await strictState.dispatcher.dispatch(context(true, "전체 양식", 3), syncCommand);
-  assert.equal(strictSync.legacyReply, "[파티 #12 반영]\n1/5 · 예비 1명\n마감: 12ㅉ");
+  assert.equal(strictSync.legacyReply, "[파티 #12 반영]\n1/5 · 예비 1명\n마감: 12ㅉ\n\n[K-LOL.GG 구인구직 현황]\n\n현재 진행 중인 구인글이 없습니다.");
   const normalSync = await normalState.dispatcher.dispatch(context(false, "전체 양식", 4), syncCommand);
   assert.match(normalSync.legacyReply, /시작시간: 09:26 · 게임정보: 미입력/u);
 });

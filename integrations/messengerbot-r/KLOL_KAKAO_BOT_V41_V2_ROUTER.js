@@ -5,7 +5,7 @@
  * This router requires KLOL_KAKAO_BOT_V41_V2_TRANSPORT.js and
  * KLOL_KAKAO_BOT_V41_V1_COMPAT.js immediately before it.
  */
-var KLOL_V41_BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V41_V3_2026_09_09_R14_3_TWO_ROOM_V1_PARITY";
+var KLOL_V41_BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V41_V3_2026_09_12_R15_OP_DAY_STATUS";
 var KLOL_V41_CURRENT_DELIVERY_ID = "";
 var KLOL_V41_CURRENT_USER_HASH = "";
 var KLOL_V41_DELIVERY_TTL_MS = 30000;
@@ -132,10 +132,10 @@ function v41ResultMessage(result) {
   return KLOL_V2_KAKAO.userMessage(result);
 }
 
-function v41Today() {
+function v41Today(offset) {
   var formatter = new java.text.SimpleDateFormat("yyyy-MM-dd");
   formatter.setTimeZone(java.util.TimeZone.getTimeZone("Asia/Seoul"));
-  return String(formatter.format(new java.util.Date()));
+  return String(formatter.format(new java.util.Date(new Date().getTime() - (offset || 0))));
 }
 
 function v41RecruitNumber(text) {
@@ -795,7 +795,7 @@ function v41OpenChat(room, sender) {
 
 function v41FindParty(status, recruitNo) {
   var parties = status && status.body && v41IsArray(status.body.parties) ? status.body.parties : [];
-  var today = v41Today();
+  var today = v41Today(216e5);
   var index = 0;
   for (index = 0; index < parties.length; index += 1) {
     if (String(parties[index].recruitDate || today) === today &&
@@ -949,6 +949,14 @@ function v41RecruitMutation(room, sender, text, commandFactory) {
   return result;
 }
 
+function v41AppendLatestPartyStatus(room, sender, message) {
+  try {
+    return message + "\n\n" + v41FormatPartyStatus(v41OpenChat(room, sender));
+  } catch (ignored) {
+    return message + "\n\n[K-LOL.GG 구인구직 현황]\n조회 실패. 구인현황을 입력해 주세요.";
+  }
+}
+
 function v41HandleLegacyParty(parsed, text, room, sender, replier) {
   var status = null;
   var party = null;
@@ -975,7 +983,7 @@ function v41HandleLegacyParty(parsed, text, room, sender, replier) {
         command: {
           type: "CREATE_PARTY", aggregateId: v41AggregateId("party-create"),
           payload: {
-            recruitDate: v41Today(), resetSequence: null,
+            recruitDate: v41Today(216e5), resetSequence: null,
             recruitNumber: parsed.explicitRecruitNumber || null, partyType: parsed.type, title: parsed.title,
             maximumMembers: Number(parsed.maximumMembers), members: [],
             startTimeText: null, gameInfo: null, scheduledStartAt: null, protectedUntil: null
@@ -1003,21 +1011,21 @@ function v41HandleLegacyParty(parsed, text, room, sender, replier) {
         expectedRevision: 0,
         command: {
           type: "SYNC_PARTY", aggregateId: v41AggregateId("party-form-create"),
-          compatTarget: { kind: "PARTY", recruitDate: v41Today(), recruitNumber: Number(parsed.recruitNo) },
+          compatTarget: { kind: "PARTY", recruitDate: v41Today(216e5), recruitNumber: Number(parsed.recruitNo) },
           compatCreate: { partyType: parsed.type, title: parsed.title, maximumMembers: Number(parsed.maximumMembers) },
           payload: {
             members: members,
             startTimeText: parsed.startTimeText, gameInfo: parsed.gameInfo,
-            scheduledStartAt: v41ScheduledInstant(v41Today(), parsed.startTimeText)
+            scheduledStartAt: v41ScheduledInstant(v41Today(216e5), parsed.startTimeText)
           }
         }
       };
     });
     if (!result || !result.ok) return v41Reply(replier, v41ResultMessage(result));
     party = result.body && result.body.data ? result.body.data : null;
-    return v41Reply(replier, party
+    return v41Reply(replier, v41AppendLatestPartyStatus(room, sender, party
       ? "[파티 #" + Number(parsed.recruitNo) + " 반영]\n" + Number(party.memberCount || primaryCount) + "/" + Number(party.maximumMembers || parsed.maximumMembers) + " · 예비 " + Number(members.length - primaryCount) + "명\n시작시간: " + v41PartyStartText(party) + " · 게임정보: " + (v41Trim(party.gameInfo || party.note) || "미입력") + "\n마감: " + Number(parsed.recruitNo) + "ㅉ"
-      : "[K-LOL.GG 파티]\n명단을 반영했습니다.");
+      : "[K-LOL.GG 파티]\n명단을 반영했습니다."));
   }
   if (parsed.action === "FINISH") {
     result = v41RecruitMutation(room, sender, text, function () {
@@ -1025,13 +1033,13 @@ function v41HandleLegacyParty(parsed, text, room, sender, replier) {
         expectedRevision: 0,
         command: {
           type: "FINISH_PARTY", aggregateId: null,
-          compatTarget: { kind: "PARTY", recruitDate: v41Today(), recruitNumber: Number(parsed.recruitNo) },
+          compatTarget: { kind: "PARTY", recruitDate: v41Today(216e5), recruitNumber: Number(parsed.recruitNo) },
           payload: {}
         }
       };
     });
     return v41Reply(replier, result && result.ok
-      ? "[K-LOL.GG 파티 #" + parsed.recruitNo + "]\n모집을 마감했습니다."
+      ? v41AppendLatestPartyStatus(room, sender, "[K-LOL.GG 파티 #" + parsed.recruitNo + "]\n모집을 마감했습니다.")
       : v41ResultMessage(result));
   }
   return false;

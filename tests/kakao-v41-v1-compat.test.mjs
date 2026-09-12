@@ -47,8 +47,8 @@ test("all V40 party creation, finish, help, status, and detail aliases are class
     plain(compat.parsePartyCreateCommand("１２인　구인　９")),
     { domain: "PARTY", action: "CREATE", type: "PARTY_NUMBER", title: "12인 파티 구인", maximumMembers: 12, explicitRecruitNumber: 9 },
   );
-  for (const command of ["1쫑", "#1ㅉ", "1번 파티 마감", "구인마감 #1", "/구인종료 1"]) {
-    assert.equal(compat.parsePartyFinishCommand(command).recruitNo, 1, command);
+  for (const [command, recruitNo] of [["1쫑", 1], ["#1ㅉ", 1], ["1번 파티 마감", 1], ["구인마감 #1", 1], ["/구인종료 1", 1], ["13ㅉ", 13], ["/15ㅉ", 15]]) {
+    assert.equal(compat.parsePartyFinishCommand(command).recruitNo, recruitNo, command);
   }
   for (const command of ["구인구직도움말", "/구인도움말", "구인명령어", "구인도우미", "구인웹도우미", "구인매뉴얼", "명령어페이지"]) {
     assert.equal(compat.classifyPartyCommand(command).action, "HELP", command);
@@ -106,6 +106,7 @@ test("party form parser preserves metadata, positions, numbered members, and sub
   assert.equal(compat.isPartyFormWithoutNumber(missingNumber), true);
   assert.deepEqual(plain(compat.classifyMessage(missingNumber, "보낸이", "2026-09-08")), { domain: "PARTY", action: "MISSING_NUMBER" });
   assert.equal(compat.isPartyFormWithoutNumber("[K-LOL.GG 내전 참가 신청]\n신청일: 2026-09-08\n회차: #1\n1. 플레이어: 별빛 | Riot ID: 별빛#KR1 | 주라인: MID"), false);
+  assert.deepEqual(plain(compat.parsePartyForm(["📢 2인 파티 구인", "모집번호: #9", "1.", "2.", "예비 1."].join("\n")).members), []);
 });
 
 test("party form metadata accepts line endings and colon variants without rewriting values", async () => {
@@ -123,6 +124,27 @@ test("party form metadata accepts line endings and colon variants without rewrit
     assert.equal(empty.startTimeText, null);
     assert.equal(empty.gameInfo, null);
   }
+});
+
+test("party form tolerates clipped headers, Markdown escapes, attached values, and controlled line wraps", async () => {
+  const { compat } = await loadCompat();
+  const parsed = compat.parsePartyForm([
+    " /K-LOL.GG 구인구직 양식]", "📢 5인 파티 구인", "모 집 번 호 : \\#15",
+    "》시작시간:", "모이면", "》게임정보:", "일겜 or 자랭",
+    "1.붙임", "2 공백", "3\\.", "줄바꿈", "4.", "5.", "예비 1\\.", "대기자",
+  ].join("\n"));
+  assert.equal(parsed.recruitNo, 15);
+  assert.equal(parsed.startTimeText, "모이면");
+  assert.equal(parsed.gameInfo, "일겜 or 자랭");
+  assert.deepEqual(
+    plain(parsed.members.map(({ name, slotNo, substitute }) => ({ name, slotNo, substitute }))),
+    [
+      { name: "붙임", slotNo: 1, substitute: false },
+      { name: "공백", slotNo: 2, substitute: false },
+      { name: "줄바꿈", slotNo: 3, substitute: false },
+      { name: "대기자", slotNo: 1, substitute: true },
+    ],
+  );
 });
 
 test("inhouse aliases parse mode, date, time, recruit number, and capacity", async () => {

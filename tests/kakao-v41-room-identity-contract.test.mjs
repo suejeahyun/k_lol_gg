@@ -14,7 +14,7 @@ function loadRuntime(source, identitySecret, signingSecret = "signing-secret-012
   const values = { KLOL_V2_KAKAO_IDENTITY_SECRET: identitySecret, KLOL_V2_KAKAO_WEBHOOK_SECRET_CURRENT: signingSecret, KLOL_V2_KAKAO_WEBHOOK_KEY_ID_CURRENT: "current", KLOL_V2_BASE_URL: "https://example.test" };
   const context = vm.createContext({
     Buffer,
-    KLOL_V41_BOT_CODE_VERSION: "KLOL_KAKAO_BOT_V41_V3_2026_09_09_R14_3_TWO_ROOM_V1_PARITY",
+    KLOL_V41_BOT_CODE_VERSION: "KLOL_KAKAO_BOT_V41_V3_2026_09_12_R15_OP_DAY_STATUS",
     KLOL_V41_CURRENT_DELIVERY_ID: "",
     KLOL_V41_CURRENT_USER_HASH: "",
     DataBase: { getDataBase: (key) => values[key] ?? "" },

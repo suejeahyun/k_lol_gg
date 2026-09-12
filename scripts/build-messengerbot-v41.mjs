@@ -236,7 +236,7 @@ function compactPreservingSemicolons(source) {
     }
     if (token.raw === "}") {
       closingBraceCount += 1;
-      if (closingBraceCount % 12 === 0) output += "\n";
+      if (closingBraceCount % 20 === 0) output += "\n";
     }
     previous = token;
   }

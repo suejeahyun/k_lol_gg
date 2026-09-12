@@ -100,6 +100,8 @@ function harness(options: Readonly<{
   wholePercent?: boolean;
   v1StrictSeasonLegacyReply?: string;
   seasonNotFound?: boolean;
+  statusFailure?: boolean;
+  mutationReplayed?: boolean;
 }> = {}) {
   const handled: RecruitingCommand[] = [];
   const resolved: unknown[] = [];
@@ -109,7 +111,8 @@ function harness(options: Readonly<{
   const recruiting: KakaoV4RecruitingPort = {
     async handle(command) {
       handled.push(command);
-      return mutationResult(command);
+      const result = mutationResult(command);
+      return options.mutationReplayed ? { ...result, replayed: true } : result;
     },
     async resolveCompatTarget(input) {
       resolved.push(input);
@@ -129,6 +132,7 @@ function harness(options: Readonly<{
   const assistant: KakaoV4AssistantPort = {
     async getOpenChatStatus(input) {
       statusCalls.push(input);
+      if (options.statusFailure) throw new Error("status unavailable");
       const body = openStatus();
       return { body: options.emptyPartyStatus ? { ...body, parties: [] } : body, replayed: false };
     },
@@ -303,7 +307,7 @@ test("first completed automatic party form creates the party once", async () => 
   assert.deepEqual(state.handled.map((command) => command.type), ["CREATE_PARTY"]);
   assert.equal(state.handled[0]?.metadata.actor.kind, "BOT");
   assert.equal(state.handled[0]?.metadata.idempotency.scope, KAKAO_V4_EVENT_SCOPE);
-  assert.equal(result.legacyReply, "[파티 #8 반영]\n1/5 · 예비 0명\n시작시간: 09:26 · 게임정보: 미입력\n마감: 8ㅉ");
+  assert.equal(result.legacyReply, "[파티 #8 반영]\n1/5 · 예비 0명\n시작시간: 09:26 · 게임정보: 미입력\n마감: 8ㅉ\n\n[K-LOL.GG 구인구직 현황]\n🔎 전체 명단: 상세 번호\n\n[구인중]\n#7 · 5인 파티 · 1/5 · 21:00 · 미입력\n참여: A\n└ 상세 7");
 });
 
 test("explicit missing party number never falls back to creating a new party", async () => {
@@ -344,6 +348,8 @@ test("party status and detail use one server status receipt and return the lates
   const status = await statusState.dispatcher.dispatch(context, { domain: "PARTY", action: "STATUS" });
   assert.equal(statusState.statusCalls.length, 1);
   assert.equal((statusState.statusCalls[0] as { projection?: string }).projection, "PARTY");
+  assert.equal((statusState.statusCalls[0] as { now?: Date }).now?.toISOString(), new Date(context.envelope.timestamp * 1_000).toISOString());
+  assert.equal((statusState.statusCalls[0] as { afterMutation?: boolean }).afterMutation, false);
   assert.equal(statusState.handled.length, 0);
   assert.match(status.legacyReply, /K-LOL\.GG 구인구직 현황/u);
 
@@ -361,6 +367,57 @@ test("party status and detail use one server status receipt and return the lates
     domain: "PARTY", action: "DETAIL", target: { recruitDate: "2026-09-10", recruitNumber: 77 },
   });
   assert.equal(missingDetail.legacyReply, "[K-LOL.GG 요청 실패]\n진행 중인 파티 #77을 찾지 못했습니다.");
+});
+
+test("party mutation and appended status keep the signed instant across the 06:00 KST boundary", async () => {
+  for (const [instant, expectedDate] of [
+    ["2026-09-12T05:59:59.000+09:00", "2026-09-11"],
+    ["2026-09-12T06:01:00.000+09:00", "2026-09-12"],
+  ] as const) {
+    const text = "[K-LOL.GG 구인구직 양식]\n📢 5인 파티 구인\n모집번호: #7\n1. 재현\n2.\n3.\n4.\n5.\n예비 1.";
+    const envelope = { ...context.envelope, eventId: `event-boundary-${expectedDate}`, timestamp: Date.parse(instant) / 1_000, text };
+    const command = canonicalizeKakaoV4Command(classifyKakaoV4Command({ profileId: "RECRUIT", text }), envelope);
+    if (!command || command.domain !== "PARTY" || command.action !== "SYNC") assert.fail("expected party sync");
+    const state = harness();
+    const result = await state.dispatcher.dispatch({ ...context, envelope }, command);
+    assert.equal(command.target.recruitDate, expectedDate);
+    assert.equal((state.statusCalls[0] as { now?: Date }).now?.toISOString(), new Date(instant).toISOString());
+    assert.equal((state.statusCalls[0] as { afterMutation?: boolean }).afterMutation, true);
+    assert.match(result.legacyReply, /\[파티 #7 반영\][\s\S]*\[K-LOL\.GG 구인구직 현황\]/u);
+  }
+});
+
+test("replayed sync, blank deletion, and finish disclose a failed post-mutation status refresh", async () => {
+  const suffix = "[K-LOL.GG 구인구직 현황]\n조회 실패. 구인현황을 입력해 주세요.";
+  const commands: readonly CanonicalKakaoV4Command[] = [
+    {
+      domain: "PARTY", action: "SYNC", target: { recruitDate: "2026-09-10", recruitNumber: 7 },
+      payload: {
+        recruitDate: "2026-09-10", preferredRecruitNumber: 7, partyType: "PARTY_NUMBER",
+        title: "5인 파티 구인", maximumMembers: 5,
+        members: [{ slotNo: 1, name: "재현", position: null, substitute: false }],
+        scheduledStartAt: null, protectedUntil: null,
+      },
+    },
+    {
+      domain: "PARTY", action: "SYNC", target: { recruitDate: "2026-09-10", recruitNumber: 7 },
+      payload: {
+        recruitDate: "2026-09-10", preferredRecruitNumber: 7, partyType: "PARTY_NUMBER",
+        title: "5인 파티 구인", maximumMembers: 5, members: [], scheduledStartAt: null, protectedUntil: null,
+      },
+    },
+    { domain: "PARTY", action: "FINISH", target: { recruitDate: "2026-09-10", recruitNumber: 7 } },
+  ];
+  for (const [index, command] of commands.entries()) {
+    const state = harness({ statusFailure: true, mutationReplayed: index === 0 });
+    const result = await state.dispatcher.dispatch({
+      ...context,
+      envelope: { ...context.envelope, eventId: `event-status-failure-${String(index)}` },
+    }, command);
+    assert.equal(result.replayed, index === 0);
+    assert.equal(result.legacyReply.endsWith(suffix), true);
+    assert.match(result.legacyReply, command.action === "FINISH" ? /모집을 마감했습니다/u : /\[파티 #7 반영\]/u);
+  }
 });
 
 test("party snapshot and finish resolve latest revision without owner or role inputs", async () => {

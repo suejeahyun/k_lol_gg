@@ -38,6 +38,7 @@ var KLOL_V41_V1_COMPAT = (function () {
     return output
       .replace(/\r\n?/g, "\n")
       .replace(/[–—]/g, "-")
+      .replace(/\\(?=[.):：#*\-])/g, "")
       .replace(/\n{4,}/g, "\n\n\n");
   }
 
@@ -167,6 +168,11 @@ var KLOL_V41_V1_COMPAT = (function () {
     return POSITION_ALIASES[key] || POSITION_ALIASES[trim(value)] || null;
   }
 
+  function partyContinuation(lines, index) {
+    var value = index + 1 < lines.length ? trim(lines[index + 1]) : "";
+    return value && !/^(?:\[|📢|(?:같이|아래|참여|\*?상호배려)|(?:예비|후보|대기)(?=\s|\d|[.):：.]|$)|[^:：]{1,12}[:：]|\d{1,3}(?:[.)]|\s+))/i.test(value) ? value : null;
+  }
+
   function readSimpleMeta(text) {
     var lines = text.split("\n");
     var result = { startTimeText: null, gameInfo: null, tierText: null, preferredLineText: null, playStyle: null };
@@ -177,6 +183,7 @@ var KLOL_V41_V1_COMPAT = (function () {
       line = trim(lines[index]).replace(/^[》>]\s*/, "");
       if (/^(?:게임\s*)?(?:시작|출발)\s*시간\s*[:：]/.test(line)) {
         value = trim(line.replace(/^(?:게임\s*)?(?:시작|출발)\s*시간\s*[:：]/, ""));
+        if (!value && (value = partyContinuation(lines, index) || "")) index += 1;
         var tierMatch = value.match(/^(.*?)(?:\+\s*티어\s*[:：]?\s*)([^+]+)$/);
         if (tierMatch) {
           if (trim(tierMatch[1]).length <= 160) result.startTimeText = trim(tierMatch[1]) || null;
@@ -184,6 +191,7 @@ var KLOL_V41_V1_COMPAT = (function () {
         } else if (value && value.length <= 160) result.startTimeText = value;
       } else if (/^게임\s*정보\s*[:：]/.test(line)) {
         value = trim(line.replace(/^게임\s*정보\s*[:：]/, ""));
+        if (!value && (value = partyContinuation(lines, index) || "")) index += 1;
         if (value && value.length <= 500) result.gameInfo = value;
       } else if (/^(?:티어|현티어)\s*:/.test(line)) {
         value = trim(line.replace(/^(?:티어|현티어)\s*:/, ""));
@@ -263,16 +271,19 @@ var KLOL_V41_V1_COMPAT = (function () {
       if (match) {
         position = normalizePosition(match[1]);
         name = cleanMemberName(match[2]);
+        if (!trim(match[2]) && (name = cleanMemberName(partyContinuation(lines, index)))) index += 1;
         if (!position || !name) continue;
         if (occupied["position:" + position]) return null;
         occupied["position:" + position] = true;
         members.push({ name: name, position: position, slotNo: null, substitute: false });
         continue;
       }
-      match = line.match(/^(?:예비|후보|대기)\s*(\d{1,2})?\s*[.):]?\s*(.*)$/);
+      match = line.match(/^(?:예비|후보|대기)(?=\s|\d|[.):：.]|$)\s*(\d{1,2})?\s*[.):]?\s*(.*)$/);
       if (match) {
         slotNo = match[1] ? Number(match[1]) : 1;
-        substituteNames = String(match[2] || "").split(/[,/]+/);
+        name = match[2] || "";
+        if (!trim(name) && (name = partyContinuation(lines, index) || "")) index += 1;
+        substituteNames = String(name).split(/[,/]+/);
         if (!validNumber(slotNo, 1, 99)) continue;
         for (substituteIndex = 0; substituteIndex < substituteNames.length; substituteIndex += 1) {
           name = cleanMemberName(substituteNames[substituteIndex].replace(/^\d{1,2}\s*[.)]\s*/, ""));
@@ -287,6 +298,7 @@ var KLOL_V41_V1_COMPAT = (function () {
       if (!match) continue;
       slotNo = Number(match[1]);
       name = cleanMemberName(match[2]);
+      if (!trim(match[2]) && (name = cleanMemberName(partyContinuation(lines, index)))) index += 1;
       substitute = false;
       if (!name || !validNumber(slotNo, 1, definition.maximumMembers)) continue;
       if (occupied["slot:" + slotNo]) return null;
@@ -294,7 +306,6 @@ var KLOL_V41_V1_COMPAT = (function () {
       members.push({ name: name, position: null, slotNo: slotNo, substitute: substitute });
       if (members.length > MAX_MEMBERS) return null;
     }
-    if (members.length < 1) return null;
     members.sort(function (left, right) {
       var leftPosition = left.position ? POSITIONS.indexOf(left.position) : 100;
       var rightPosition = right.position ? POSITIONS.indexOf(right.position) : 100;

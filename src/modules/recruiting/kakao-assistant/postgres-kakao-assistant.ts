@@ -15,6 +15,7 @@ import { withTransaction, type V2Transaction } from "@/platform/db/transaction";
 
 import type { VerifiedKakaoWebhookIntent } from "../infrastructure/kakao-signature";
 import { planSeasonApplicationMerge } from "@/modules/seasons/domain/application-source-policy";
+import { recruitingOperatingDateKey } from "../domain/operating-day";
 import {
   KakaoAssistantError,
   kakaoReadIdentity,
@@ -513,9 +514,15 @@ export class PostgresKakaoAssistant {
     });
   }
 
-  getOpenChatStatus(input: SignedReadInput & Readonly<{ projection?: "PARTY" | "SCRIM" }>): Promise<KakaoAssistantResult<KakaoOpenChatStatusDto>> {
-    return this.execute(input, async (transaction) => {
-      const today = kstDateKey(new Date());
+  getOpenChatStatus(input: SignedReadInput & Readonly<{
+    projection?: "PARTY" | "SCRIM";
+    now?: Date;
+    afterMutation?: boolean;
+  }>): Promise<KakaoAssistantResult<KakaoOpenChatStatusDto>> {
+    const query = async (transaction: V2Transaction) => {
+      const statusNow = input.now ?? new Date(input.intent.timestampSeconds * 1_000);
+      const today = kstDateKey(statusNow);
+      const partyOperatingDate = recruitingOperatingDateKey(statusNow);
       const partyRows = input.projection === "SCRIM" ? [] : await transaction.select({
           id: recruitParties.id,
           revision: recruitParties.revision,
@@ -533,6 +540,7 @@ export class PostgresKakaoAssistant {
         }).from(recruitParties).where(and(
           eq(recruitParties.status, "IN_PROGRESS"),
           eq(recruitParties.sourceRoomId, input.intent.roomId),
+          eq(recruitParties.recruitDate, partyOperatingDate),
         ))
           .orderBy(desc(recruitParties.recruitDate), asc(recruitParties.recruitNumber)).limit(MAXIMUM_STATUS_RESULTS + 1);
       const scrimRows = input.projection === "PARTY" ? [] : await transaction.select({
@@ -560,7 +568,7 @@ export class PostgresKakaoAssistant {
         ))
           .orderBy(desc(scrimRecruits.recruitDate), asc(scrimRecruits.scrimNumber)).limit(MAXIMUM_STATUS_RESULTS + 1);
       const latestPartyRows = input.projection ? [] : await transaction.select({ resetSequence: recruitParties.resetSequence, recruitNumber: recruitParties.recruitNumber })
-          .from(recruitParties).where(eq(recruitParties.recruitDate, today))
+          .from(recruitParties).where(eq(recruitParties.recruitDate, partyOperatingDate))
           .orderBy(desc(recruitParties.resetSequence), desc(recruitParties.recruitNumber)).limit(1);
       const latestScrimRows = input.projection ? [] : await transaction.select({ scrimNumber: scrimRecruits.scrimNumber })
           .from(scrimRecruits).where(eq(scrimRecruits.recruitDate, today))
@@ -617,7 +625,11 @@ export class PostgresKakaoAssistant {
           scheduledAt: scrim.scheduledAt?.toISOString() ?? null,
         }))),
       });
-    });
+    };
+    if (input.afterMutation) {
+      return withTransaction(this.database, async (transaction) => ({ body: await query(transaction), replayed: false }));
+    }
+    return this.execute(input, query);
   }
 
   getScheduledNotice(input: SignedReadInput & Readonly<{ slot: string | null; now?: Date }>): Promise<KakaoAssistantResult<KakaoScheduledNoticeDto>> {
@@ -688,6 +700,14 @@ export class PostgresKakaoAssistant {
       if (requested.seasonId === null && seasonCandidates.length !== 1) throw new KakaoAssistantError("CONFLICT");
       const season = seasonCandidates[0]!;
       const command = { ...requested, seasonId: season.id } as KakaoSeasonSnapshotCommand & Readonly<{ seasonId: string }>;
+      if (command.action === "SYNC") {
+        const preserved = command.preserveSlotNos ?? [];
+        if (
+          preserved.some((slotNo) => !Number.isSafeInteger(slotNo) || slotNo < 1 || slotNo > 99) ||
+          new Set(preserved).size !== preserved.length ||
+          command.participants.some((participant) => preserved.includes(participant.slotNo))
+        ) throw new KakaoAssistantError("INVALID_INPUT");
+      }
       if (command.action !== "STATUS") {
         if (season.status !== "ACTIVE" ||
             (season.applicationsOpenAt && season.applicationsOpenAt > now) ||
@@ -715,19 +735,32 @@ export class PostgresKakaoAssistant {
       };
       if (command.action === "SYNC") {
         const sourceHash = Buffer.from(input.intent.bodyDigestHex, "hex");
+        const preserveSlotNos = new Set(command.preserveSlotNos ?? []);
         const matched: Array<{
           participant: KakaoSeasonSnapshotCommand["participants"][number];
           candidates: (typeof players.$inferSelect)[];
         }> = [];
+        const resolvedPlayerIds = new Set<string>();
         for (const participant of command.participants) {
           const riot = splitRiotId(participant.riotId);
           const identity = normalizedIdentity(participant.name);
-          const candidates = await transaction.select().from(players).where(and(
-            eq(players.status, "ACTIVE"),
-            riot
-              ? and(eq(players.nicknameNormalized, riot.nickname), eq(players.tagLineNormalized, riot.tagLine))
-              : or(eq(players.memberNameNormalized, identity), eq(players.nicknameNormalized, identity)),
-          )).orderBy(asc(players.id)).limit(3);
+          let candidates = participant.reviewRequired
+            ? []
+            : await transaction.select().from(players).where(and(
+                eq(players.status, "ACTIVE"),
+                riot
+                  ? and(eq(players.nicknameNormalized, riot.nickname), eq(players.tagLineNormalized, riot.tagLine))
+                  : or(eq(players.memberNameNormalized, identity), eq(players.nicknameNormalized, identity)),
+              )).orderBy(asc(players.id)).limit(3);
+          const resolvedPlayerId = candidates.length === 1 && !participant.reserve ? candidates[0]!.id : null;
+          if (resolvedPlayerId && resolvedPlayerIds.has(resolvedPlayerId)) {
+            // Different aliases can resolve to the same player. Keep the first
+            // authoritative slot and send later duplicates to the existing
+            // manual-review queue instead of aborting the entire snapshot.
+            candidates = [];
+          } else if (resolvedPlayerId) {
+            resolvedPlayerIds.add(resolvedPlayerId);
+          }
           matched.push({ participant, candidates });
         }
         const uniqueMatchedIds = matched
@@ -749,7 +782,10 @@ export class PostgresKakaoAssistant {
           memberName: players.memberName,
         }).from(players).where(inArray(players.id, currentPlayerIds))).map((player) => [player.id, player.memberName] as const));
         for (const current of currentApplications) {
-          if (uniqueMatchedIds.includes(current.playerId) || current.status === "CANCELLED") continue;
+          if (
+            uniqueMatchedIds.includes(current.playerId) || current.status === "CANCELLED" ||
+            (current.sourceSlotNo !== null && preserveSlotNos.has(current.sourceSlotNo))
+          ) continue;
           if (current.status !== "APPLIED") continue;
           await transaction.update(seasonApplications).set({
             status: "CANCELLED", cancelledAt: now, revision: sql`${seasonApplications.revision} + 1`, updatedAt: now,
@@ -759,7 +795,7 @@ export class PostgresKakaoAssistant {
           legacyChanges.removed.push(current.sourceSlotNo ? `${current.sourceSlotNo}. ${playerName}` : playerName);
         }
 
-        const activeSlots = new Set(command.participants.map((participant) => participant.slotNo));
+        const activeSlots = new Set([...command.participants.map((participant) => participant.slotNo), ...preserveSlotNos]);
         // The slot key is unique across every lifecycle state. Lock all rows so a
         // later snapshot reactivates the same row instead of inserting beside a
         // RESOLVED or CANCELLED row and violating season_kakao_pending_slot_uidx.
@@ -892,6 +928,8 @@ export class PostgresKakaoAssistant {
           targetId: roundKey,
           metadataJson: {
             participantCount: command.participants.length,
+            reviewRequiredCount: command.participants.filter((participant) => participant.reviewRequired).length,
+            preservedSlotCount: preserveSlotNos.size,
             createdCount,
             updatedCount,
             cancelledCount,
@@ -976,6 +1014,9 @@ export class PostgresKakaoAssistant {
         const group = legacyGrouped.get(entry.recruitNo) ?? [];
         group.push(entry);
         legacyGrouped.set(entry.recruitNo, group);
+      }
+      if (command.action === "SYNC") {
+        legacyChanges.currentMainCount = legacyEntries.filter((entry) => !entry.reserve).length;
       }
       if (command.action === "STATUS" && command.recruitNo === null) {
         const availableRecruitNos = [...legacyGrouped.keys()].sort((left, right) => left - right);

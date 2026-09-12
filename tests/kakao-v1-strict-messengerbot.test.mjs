@@ -331,7 +331,7 @@ test("local replies, echo rules, events, and no-reply behavior equal the canonic
   }
   assert.deepEqual(
     replyFor(strict, "봇버전"),
-    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R5_2026_09_11"],
+    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R6_2026_09_12"],
   );
 });
 
@@ -388,6 +388,26 @@ test("one public command performs one five-second signed gateway request without
     assert.match(body.senderId, /^sender-user-[a-f0-9]{32}$/u);
     assert.match(body.eventId, /^event-log-[a-f0-9]{32}$/u);
   }
+});
+
+test("recoverable season rows reach the gateway once even with whitespace numbering and partial fields", async () => {
+  const strict = evaluate(await readFile(artifactPath, "utf8"), {
+    responseBody: { reply: "[참가 신청 반영]\n정상 1 · 확인 필요 1" },
+  });
+  const message = [
+    "📢 내전하실분 #1",
+    "》협곡",
+    "》2026-09-12 21:00 시작",
+    "*참가 신청 양식*",
+    "이름/현티어/최고티어/주라인/부라인",
+    "1 참가자/G/E/TOP, MID",
+    "2. 이름만",
+    "3.",
+  ].join("\n");
+
+  assert.deepEqual(replyFor(strict, message), ["[참가 신청 반영]\n정상 1 · 확인 필요 1"]);
+  assert.equal(strict.http.calls, 1);
+  assert.equal(JSON.parse(strict.http.body).text, message);
 });
 
 test("clean-session imageDB input preserves the active V40 R2 no-reply and no-HTTP behavior", async () => {

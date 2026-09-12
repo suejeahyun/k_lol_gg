@@ -9,7 +9,8 @@
 - 운영 Vercel: 배포 `dpl_9Aw98w2NNxkyjnybFqrCjv1yNbNo`, 불변 URL `https://k-lol-k43ds9jze-tjdmswo11-3715s-projects.vercel.app`
 - 운영 별칭: `https://k-lol-gg.vercel.app`, health `ready`, `/signup`·`/start` 자동승인 안내 확인
 - 운영 DB: migration 37개, head `0036_flowery_hairball` 확인
-- 휴대폰 Kakao R5: 산출물은 준비됐으나 MessengerBot R 설치·실제 Kakao 송수신은 미확인
+- Kakao 구인·내전 입력 복구 후보: 미커밋 소스와 로컬 검증만 완료, commit·tag·Vercel 배포는 `PENDING`
+- 휴대폰 Kakao V41 R15/V1 strict R6: 산출물은 준비됐으나 MessengerBot R 설치·실제 Kakao 송수신은 미확인
 
 ## 확인된 상태
 
@@ -22,6 +23,10 @@
 - 현재 저장소 기준 최종 `npm run check`에서 계약 테스트 347/347, 단위 테스트 707 pass·1 intentional skip, production build 92 app routes가 통과했다.
 - migration journal과 SQL은 각각 37개로 일치하고 `npm run test:db`가 통과했으며, 저장소 migration head는 `0036_flowery_hairball`이다.
 - 같은 DB 검사에서 Kakao V4 P0 31/31과 recovery archive 검증이 통과했다.
+- 현재 미커밋 Kakao 릴리스 후보는 구인 운영일을 KST 오전 6시 경계로 계산한다. 이는 이전 행을 삭제하는 초기화가 아니라 새 운영일 조회에서 이전 운영일 구인을 제외하는 논리 리셋이다.
+- 구인 참가자 추가·수정·빈 슬롯 삭제·마감 성공 뒤 최신 전체 현황을 이어서 표시하며, 후속 현황 조회만 실패하면 mutation 성공은 유지하고 재조회 안내를 표시한다.
+- 내전 신청 후보는 번호 뒤 공백, 들여쓰기, 대소문자 포지션, `ALL`, `Mid all`, `TOP, MID`, 이름만·부라인 공란, 중복 슬롯과 빈 행 취소를 처리한다. 정상 행은 반영하고 불완전·중복 플레이어 행만 확인 필요로 분리하며 `SITE`, `CONFIRMED`, 다른 방 신청은 보존한다.
+- Kakao 후보 focused 검증은 V41 28/28, JavaScript 31/31, V1 strict 12/12, 내전 파서·서비스 22/22, 격리 PostgreSQL recruiting 계약 42/42가 통과했다. TypeScript·변경 범위 lint·Rhino 정적 검사도 통과했다.
 - 운영 Neon production은 비밀값 비노출 read-only preflight에서 기존 migration 35개, CONNECTED identity·owner 중복과 player-owner mismatch 0을 확인했다. 자동 만료 1일 복구 분기 `pre-0035-0036-20260911` 생성 후 `0035`·`0036`을 단일 transaction으로 적용했다.
 - 운영 DB 사후 검증은 migration 37개, head hash `ebb200d8597ed63d270c2a66a7369dd67d3536c238939458aeed337028bdc63f`, Riot unique index 2개, player-owner index 1개, validated foreign key 1개이며 중복·mismatch는 모두 0이다.
 - Drizzle TypeScript 스키마와 최신 snapshot은 101개 테이블을 정의한다.
@@ -30,7 +35,7 @@
 - 고정 Data Dragon 기준 챔피언 173종·자산 346개와 여성 홈 가이드 68/68을 확인했다.
 - 2026-09-07 검증에서 `npm audit --omit=dev --audit-level=moderate` 결과 운영 의존성 취약점은 0건이었다.
 
-2026-09-07 화면 원본과 모음 이미지는 [`qa-evidence/v2-final-2026-09-07-r2/screenshots/README.md`](./qa-evidence/v2-final-2026-09-07-r2/screenshots/README.md)에 있다. 현재 V1 팀 밸런스·결과 공유 운영 릴리스는 [`qa-evidence/v2-v1-team-balance-release-2026-09-11/README.md`](./qa-evidence/v2-v1-team-balance-release-2026-09-11/README.md), 최신 Kakao R5 소스 검증과 미설치 상태는 [`qa-evidence/kakao-v4-r5-form-defaults-2026-09-11/README.md`](./qa-evidence/kakao-v4-r5-form-defaults-2026-09-11/README.md), 프로젝트 규칙·ERD·UI 재사용 검증은 [`qa-evidence/project-governance-erd-reuse-2026-09-11/README.md`](./qa-evidence/project-governance-erd-reuse-2026-09-11/README.md)에 있다.
+2026-09-07 화면 원본과 모음 이미지는 [`qa-evidence/v2-final-2026-09-07-r2/screenshots/README.md`](./qa-evidence/v2-final-2026-09-07-r2/screenshots/README.md)에 있다. 현재 V1 팀 밸런스·결과 공유 운영 릴리스는 [`qa-evidence/v2-v1-team-balance-release-2026-09-11/README.md`](./qa-evidence/v2-v1-team-balance-release-2026-09-11/README.md), 최신 Kakao 구인·내전 입력 복구 릴리스 후보와 휴대폰 R15/R6 미설치 상태는 [`qa-evidence/kakao-recruit-input-recovery-2026-09-12/README.md`](./qa-evidence/kakao-recruit-input-recovery-2026-09-12/README.md), 프로젝트 규칙·ERD·UI 재사용 검증은 [`qa-evidence/project-governance-erd-reuse-2026-09-11/README.md`](./qa-evidence/project-governance-erd-reuse-2026-09-11/README.md)에 있다.
 
 ## 구현된 범위
 
@@ -53,7 +58,8 @@
 - 로그인·관리자 화면을 포함한 103개 페이지 335회 실캡처와 인증 사용자 흐름 전체 확인
 - 승인된 기존 27개 계정의 로그인 실패율과 재문의 발생 여부 확인
 - 자동 만료 1일 복구 분기 보존 시간 안의 DB 오류 지표와 무결성 위반 재확인
-- R5 산출물 SHA-256 대조, MessengerBot R 교체, `/봇버전` 확인과 실제 두 Kakao 방 송수신
+- Kakao 구인·내전 입력 복구 기능 commit·tag·Vercel deployment와 운영 health 근거 연결
+- R15/R6 중 설치 대상을 확정해 SHA-256 대조, MessengerBot R 교체, `/봇버전` 확인과 실제 두 Kakao 방 송수신
 - Kakao V4 서명 HTTP는 운영 서버에서 확인했지만 실제 휴대폰 E2E, 재시도, 줄바꿈과 체감 지연은 미확인
 - 실제 사용자 Riot RSO/API와 Vercel Blob 업로드·읽기·삭제 E2E는 완전히 검증하지 않음
 - 운영 도메인 CSP/WAF/관측/알림/cleanup scheduler 확인
@@ -63,6 +69,6 @@
 
 1. 승인된 합성 세션으로 로그인·관리자 화면을 포함한 103개 페이지 335대상 회귀 캡처를 실행한다.
 2. 1일 복구 분기 만료 전 운영 DB 오류 지표와 중복·mismatch 0건 유지 여부를 재확인한다.
-3. 실제 휴대폰에서 R5 산출물 hash와 `/봇버전`을 대조하고 두 Kakao 방 canary를 기록한다.
+3. Kakao 입력 복구 후보를 별도 기능 commit·tag·Vercel deployment에 연결한 뒤, 실제 휴대폰에서 선택한 R15/R6 산출물 hash와 `/봇버전`을 대조하고 두 Kakao 방 canary를 기록한다.
 4. 승인된 실제 사용자 계정으로 Riot RSO와 Blob 업로드·읽기·삭제 E2E를 각각 기록한다.
 5. 개인정보 없이 팀 계산 실패율, 결과 복사 성공·실패율과 수동 교체율을 관측하고 목표값은 운영자 승인 후 정한다.

@@ -2,7 +2,7 @@ import type { RecruitPartyType } from "../domain/recruiting";
 
 const NUMBERED_ROW = /^\s*([0-9０-９]{1,2})(?:\s*\\?[.)．。）]|\s+)\s*(.*?)\s*$/u;
 const POSITION_ROW = /^\s*(TOP|JUG|JGL|JG|MID|ADC|AD|SUP|탑|정글|미드|원딜|서폿|서포터)(?:\s*\\?[.:：．。]|\s+)\s*(.*?)\s*$/iu;
-const RESERVE_ROW = /^\s*(?:예비|후보|대기)\s*([0-9０-９]{1,2})?(?:\s*\\?[.):：．。）]|\s+)?\s*(.*?)\s*$/u;
+const RESERVE_ROW = /^\s*(?:예비|후보|대기)(?=\s|[0-9０-９]|[.):：．。）]|$)\s*([0-9０-９]{1,2})?(?:\s*\\?[.):：．。）]|\s+)?\s*(.*?)\s*$/u;
 const RECRUIT_LABEL = /^\s*(?:[》>*#-]\s*)*모\s*집\s*번\s*호\s*[:：]?\s*(.*?)\s*$/u;
 const START_TIME_LABEL = /^\s*[》>]?\s*(?:게임\s*)?(?:시작|출발)\s*시간\s*[:：]?\s*(.*?)\s*$/u;
 const GAME_INFO_LABEL = /^\s*[》>]?\s*게임\s*정보\s*[:：]?\s*(.*?)\s*$/u;
@@ -168,6 +168,18 @@ function slotState(value: string): Exclude<PartySlotState, "ABSENT"> {
   return value.length > 0 ? "PRESENT_VALUE" : "PRESENT_EMPTY";
 }
 
+function partySlotContinuation(lines: readonly string[], index: number) {
+  const value = normalizedValue(lines[index + 1] ?? "");
+  if (!value) return null;
+  if (
+    RECRUIT_LABEL.test(value) || START_TIME_LABEL.test(value) || GAME_INFO_LABEL.test(value) ||
+    DETAIL_HEADER.test(value) || DETAIL_SUMMARY.test(value) || RESERVE_COUNT_SUMMARY.test(value) ||
+    parsePartyReserveRow(value) || parsePartyNumberedRow(value) || parsePartyPositionRow(value) || /^\d{3,}\s*[.)]/u.test(value) ||
+    submittedTitle(value, index + 2) || /^\s*(?:\[?K-LOL|📢|참여해|\*?상호배려|같이 할사람|아래 양식|수정\s*:|마감\s*:)/u.test(value)
+  ) return null;
+  return value;
+}
+
 function metadata(lines: readonly string[], pattern: RegExp): Readonly<{ field: ParsedPartyMetadata; duplicateLines: readonly number[] }> {
   const matches: { lineIndex: number; firstValue: string }[] = [];
   for (let index = 0; index < lines.length; index += 1) {
@@ -281,8 +293,10 @@ export function parsePartyForm(input: string): ParsedPartyForm {
     if (!reserve && !position && !numbered) continue;
     slotSignals += 1;
     const parsed = reserve ?? position ?? numbered!;
+    const continuation = parsed.value ? null : partySlotContinuation(lines, index);
     if (MERGED_ROW.test(parsed.value)) diagnostics.push(diagnostic("MERGED_SLOT_ROWS", lineNumber, null));
-    const value = normalizedValue(parsed.value);
+    const value = normalizedValue(continuation ?? parsed.value);
+    if (continuation) index += 1;
     if (value.length > 80) diagnostics.push(diagnostic("VALUE_TOO_LONG", lineNumber, null));
     if (reserve) slots.push(Object.freeze({ kind: "RESERVE", slotNo: reserve.slotNo, position: null, state: slotState(value), value: value || null, line: lineNumber }));
     else if (position) {

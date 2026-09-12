@@ -53,6 +53,20 @@ test("party parser keeps raw slot intent across Kakao punctuation variants", () 
   assert.deepEqual(parsed.slots.filter((slot) => slot.kind === "RESERVE").map((slot) => slot.value), ["duo/name, memo"]);
 });
 
+test("party parser accepts clipped headers and an adjacent wrapped slot value", () => {
+  const text = [
+    " /K-LOL.GG 구인구직 양식]", "📢 5인 파티 구인", String.raw`모 집 번 호 : \#15`,
+    "1.붙임", "2 공백", String.raw`3\.`, "줄바꿈", "4.", "5.", String.raw`예비 1\.`, "대기자",
+  ].join("\n");
+  const parsed = parsePartyForm(text);
+  assert.equal(parsed.decision, "EXACT");
+  assert.equal(parsed.recruitNumber, 15);
+  assert.deepEqual(
+    parsed.slots.filter((slot) => slot.state === "PRESENT_VALUE").map((slot) => [slot.kind, slot.slotNo, slot.value]),
+    [["NUMBERED", 1, "붙임"], ["NUMBERED", 2, "공백"], ["NUMBERED", 3, "줄바꿈"], ["RESERVE", 1, "대기자"]],
+  );
+});
+
 test("metadata is order independent, multiline, and keeps absent separate from empty", () => {
   const text = base
     .replace("모집번호: #12", "》게임 정보: 자유랭크\n초대 링크는 추후\n》시작 시간: 21:00\n인원 모이면 바로 시작\n모집번호: #12")

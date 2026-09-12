@@ -16,11 +16,11 @@ MessengerBot R의 각 봇 프로필에는 아래 **한 파일만** 설치한다.
 2. 필요하면 기존 소스를 휴대폰 밖의 안전한 위치에 백업한다. 비밀 설정값은 소스에 넣지 않는다.
 3. 소스 편집기의 기존 내용을 전체 선택해 지운다.
 4. 설치용 파일 전체를 첫 글자부터 마지막 글자까지 붙여 넣는다.
-5. 설치본 안에 `KLOL_KAKAO_BOT_V41_V3_2026_09_09_R14_3_TWO_ROOM_V1_PARITY`가 있는지 검색한다.
+5. 설치본 안에 `KLOL_KAKAO_BOT_V41_V3_2026_09_12_R15_OP_DAY_STATUS`가 있는지 검색한다.
 6. 끝부분에 `response.__kakaoBotEntryPoint=!0;`가 있는지 확인한다. `!0`은 압축된 `true`다. 휴대폰 설치본은 용량 절약을 위해 개발용 START/END 변수를 포함하지 않는다.
 7. 저장 후 컴파일하고 봇을 다시 시작한다.
 8. 이 설치본이 구독하는 실제 카카오톡 방을 하나만 남긴다. 같은 방의 중복 봇뿐 아니라 동일 설치본으로 다른 방을 함께 구독해서도 안 된다.
-9. 카카오톡 방에서 `/봇버전`과 `봇버전`을 각각 보내 `KLOL_KAKAO_BOT_V41_V3_2026_09_09_R14_3_TWO_ROOM_V1_PARITY`, 설치본 ID, 키 ID가 동일하게 출력되는지 확인한다.
+9. 카카오톡 방에서 `/봇버전`과 `봇버전`을 각각 보내 `KLOL_KAKAO_BOT_V41_V3_2026_09_12_R15_OP_DAY_STATUS`, 설치본 ID, 키 ID가 동일하게 출력되는지 확인한다.
 
 편집기의 자동 줄바꿈은 화면에 보이는 줄 수를 늘릴 수 있다. 가능하면 파일 관리자나 전송 도구에서 바이트와 SHA-256을 확인한다.
 
@@ -36,7 +36,7 @@ function v41JsonAfter(text, prefix) {
 }
 ```
 
-R14.3 설치본은 65,535자 미만이며 빌드 시 ES5 파서와 Rhino `CODE_HAS_NO_SIDE_EFFECTS` 정적 검사를 통과한다. standalone sequence·logical·conditional·pure expression과 `void` 표현을 명시적 `if`·호출·대입 문장으로 변환하고, 중첩 comma 피연산자와 bare assignment 조건도 경고 없는 형태로 만든다. 휴대폰 앱 컴파일은 설치 시 별도 확인한다.
+R15 설치본은 65,535자 미만이며 빌드 시 ES5 파서와 Rhino `CODE_HAS_NO_SIDE_EFFECTS` 정적 검사를 통과한다. standalone sequence·logical·conditional·pure expression과 `void` 표현을 명시적 `if`·호출·대입 문장으로 변환하고, 중첩 comma 피연산자와 bare assignment 조건도 경고 없는 형태로 만든다. 휴대폰 앱 컴파일은 설치 시 별도 확인한다.
 
 따라서 오류 행에 `}`만 추가하지 않는다. 파일 마지막에 END 표식이 없거나 전체 줄 수·해시가 다르면 기존 내용을 완전히 지우고 전체본 파일을 다시 전송한다.
 
@@ -66,12 +66,12 @@ R14.3 설치본은 65,535자 미만이며 빌드 시 ES5 파서와 Rhino `CODE_H
 
 | 용도 | 파일 | 버전 | 물리 줄 수 | 크기 | SHA-256 |
 | --- | --- | --- | ---: | ---: | --- |
-| MessengerBot R 설정 분리형 | `KLOL_KAKAO_BOT_V41_MESSENGERBOT_R.js` | `KLOL_KAKAO_BOT_V41_V3_2026_09_09_R14_3_TWO_ROOM_V1_PARITY` | 98 | 76,121 bytes / 64,560자 | `554ba00ea2a650bbd0418d2761c0aae26d37dd3d8c11f4592531c5ac95498e23` |
-| 개발·검토용 | `KLOL_KAKAO_BOT_V41_V2_COMPLETE.js` | `KLOL_KAKAO_BOT_V41_V3_2026_09_09_R14_3_TWO_ROOM_V1_PARITY` | 2,765 | 133,135 bytes / 121,436자 | `c644065f7308d6644196d77254282c976dd4916c6f6b861580e055ddf88ecc91` |
+| MessengerBot R 설정 분리형 | `KLOL_KAKAO_BOT_V41_MESSENGERBOT_R.js` | `KLOL_KAKAO_BOT_V41_V3_2026_09_12_R15_OP_DAY_STATUS` | 84 | 76,753 bytes / 65,106자 | `46a31ab94978f2fd37780214a753a8facbaff6ae9ab04f60959330513eda419c` |
+| 개발·검토용 | `KLOL_KAKAO_BOT_V41_V2_COMPLETE.js` | `KLOL_KAKAO_BOT_V41_V3_2026_09_12_R15_OP_DAY_STATUS` | 2,784 | 134,380 bytes / 122,595자 | `b1f75788ad6f16bd9b893afd583b568e0581dfdcc25044b5cc5a85dd9b311857` |
 
 해시, 크기 또는 끝 표시가 다르면 다른 버전이거나 전송 과정에서 변형된 파일이다.
 
-설치본의 LF가 모두 CRLF로 변환되는 보수적 계산은 64,657자로 65,535자 이하다. private 설정 포함 RECRUIT 설치본은 65,050자, FEATURES 설치본은 65,029자다. 전송 도구가 다른 문자를 추가하지 않게 파일 자체를 그대로 설치한다.
+설치본의 LF가 모두 CRLF로 변환되는 보수적 계산은 65,189자로 65,535자 이하다. private 설정 포함 파일도 생성 단계에서 실제 설정 길이를 포함해 같은 제한을 검증한다. 전송 도구가 다른 문자를 추가하지 않게 파일 자체를 그대로 설치한다.
 
 ## 첫 동작 확인
 

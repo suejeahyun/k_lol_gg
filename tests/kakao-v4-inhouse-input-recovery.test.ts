@@ -93,6 +93,59 @@ test("legacy empty sub-position markers are accepted only in the sub-position fi
   assert.equal(unknown.field, "subPositions");
 });
 
+test("mixed real-world rows keep valid entries, route partial rows to review, and use the last duplicate slot", () => {
+  const text = [
+    "📢 내전하실분 #1",
+    "》협곡",
+    "》2026-09-11 21:00 시작",
+    "👥 6/10명",
+    "*참가 신청 양식*",
+    "이름/현티어/최고티어/주라인/부라인",
+    "EX) 1.지후/P/E/AD/MD",
+    "   1 정상/g/e/TOP, MID",
+    "2. 이름만",
+    "3.중복/m/m/MID/",
+    "4. 중복/M/M/MID/SUP",
+    "5. 확인행/d/e/아무데나/SUP",
+    "6.",
+    "7.",
+    "9. 먼저/M/M/TOP/SUP",
+    "9. 나중/M/M/ADC/",
+    "10.",
+  ].join("\n");
+  const command = canonicalizeKakaoV4Command(
+    classifyKakaoV4Command({ profileId: "FEATURES", text }),
+    envelope(text),
+  );
+  assert.equal(command?.domain, "SEASON");
+  assert.equal(command?.action, "SYNC");
+  if (command?.domain !== "SEASON" || command.action !== "SYNC") assert.fail("expected a recoverable season snapshot");
+  assert.deepEqual(command.participants, [
+    { slotNo: 1, name: "정상", riotId: null, mainPosition: "TOP", subPositions: ["MID"], reserve: false },
+    { slotNo: 2, name: "이름만", riotId: null, mainPosition: "ALL", subPositions: [], reserve: false, reviewRequired: true },
+    { slotNo: 3, name: "중복", riotId: null, mainPosition: "MID", subPositions: [], reserve: false },
+    { slotNo: 4, name: "중복", riotId: null, mainPosition: "MID", subPositions: ["SUP"], reserve: false, reviewRequired: true },
+    { slotNo: 5, name: "확인행", riotId: null, mainPosition: "ALL", subPositions: [], reserve: false, reviewRequired: true },
+    { slotNo: 9, name: "나중", riotId: null, mainPosition: "ADC", subPositions: [], reserve: false },
+  ]);
+  assert.deepEqual(command.preserveSlotNos, [8]);
+});
+
+test("a final empty duplicate row means cancellation while a missing numbered row is preserved", () => {
+  const text = form()
+    .replace("8.\r\n", "")
+    .replace(String.raw`9\.`, "9. 유지/M/M/TOP/SUP\r\n9.");
+  const command = canonicalizeKakaoV4Command(
+    classifyKakaoV4Command({ profileId: "FEATURES", text }),
+    envelope(text),
+  );
+  assert.equal(command?.domain, "SEASON");
+  assert.equal(command?.action, "SYNC");
+  if (command?.domain !== "SEASON" || command.action !== "SYNC") assert.fail("expected a recoverable season snapshot");
+  assert.equal(command.participants.some((participant) => participant.slotNo === 9), false);
+  assert.deepEqual(command.preserveSlotNos, [8]);
+});
+
 test("the former canonical failure maps to the exact public HTTP 400 document", async () => {
   const response = kakaoV4CommandFailureResponse(new KakaoV4CommandError("INVALID_FORM"), "trace-inhouse-mid-all");
   assert.equal(response.status, 400);

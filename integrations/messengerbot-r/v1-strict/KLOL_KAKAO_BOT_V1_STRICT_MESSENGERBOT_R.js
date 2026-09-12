@@ -287,7 +287,7 @@ var KLOL_V1_GATEWAY = (function () {
 
 /* eslint-disable */
 /* V1-visible constants. No legacy endpoint or bearer secret is retained. */
-var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R5_2026_09_11";
+var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R6_2026_09_12";
 var BASE_URL = "https://k-lol-gg.vercel.app";
 var WEB_INHOUSE_RESULT_UPLOAD_URL = BASE_URL + "/matches/submit";
 var WEB_ADMIN_DISCIPLINE_CREATE_URL = BASE_URL + "/admin/discipline/new";
@@ -347,6 +347,24 @@ function v1ExtractSeasonRecruitNoFromSnapshot(text) {
 
 function v1SeasonApplyCompleteNotice() {
   return "[K-LOL.GG 구인구직방 참가 자동 등록 완료]\n내전 시작 10분전에 디스코드 내전 대기방으로 와주세요.";
+}
+
+function isSeasonApplyCandidateMessage(text) {
+  var lines = [];
+  var i = 0;
+  var line = "";
+  var row = null;
+  text = normalizeText(String(text || ""));
+  if (isPartyRecruitLikeMessage(text)) return false;
+  if (!hasSeasonApplyForm(text) && !hasSeasonApplyWord(text)) return false;
+  lines = text.split("\n");
+  for (i = 0; i < lines.length; i++) {
+    line = trimText(String(lines[i] || ""));
+    if (isSeasonApplyExampleLine(line)) continue;
+    row = line.match(/^(\d{1,2})(?:(?:\s*\\?\s*[.)])|\s+)(.*)$/);
+    if (row && trimText(String(row[2] || "")) != "") return true;
+  }
+  return false;
 }
 
 function sendSearchPlayerCommand(text, room, sender, replier) {
@@ -2699,6 +2717,9 @@ function isImagePlaceholderMessage(text) {
 /* Preserve the byte-derived completion predicate for diagnostics, but route candidates to V4. */
 var isOperationFormCompleteMessage = isOperationFormMessage;
 isOperationFormMessage = isOperationFormCandidateMessage;
+/* Keep V1 routing, but let recoverable numbered rows reach the V4 row parser. */
+var isSeasonApplyCompleteMessage = isSeasonApplyFormMessage;
+isSeasonApplyFormMessage = isSeasonApplyCandidateMessage;
 
 function response(room, msg, sender, isGroupChat, replier, imageDB, packageName, isMention, logId, channelId, userHash) {
   KLOL_V1_GATEWAY.beginRequest(logId, userHash, sender);

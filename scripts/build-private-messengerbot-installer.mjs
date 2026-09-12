@@ -51,7 +51,7 @@ if (freshIdentity) settings.set("KLOL_V2_KAKAO_IDENTITY_SECRET", randomBytes(32)
 const preamble = settingKeys
   .map((key) => `DataBase.setDataBase(${JSON.stringify(key)},${JSON.stringify(settings.get(key))});`)
   .join("");
-const privateInstaller = `${preamble}\n${mobile}`;
+const privateInstaller = `${preamble}${mobile}`;
 const crlfProjection = privateInstaller.length + (privateInstaller.match(/\n/g) || []).length;
 if (privateInstaller.length >= 65_535 || crlfProjection >= 65_535) {
   throw new Error(`Private installer exceeds the MessengerBot R limit: LF=${privateInstaller.length}, CRLF=${crlfProjection}`);

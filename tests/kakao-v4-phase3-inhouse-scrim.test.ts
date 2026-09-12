@@ -4,7 +4,7 @@ import test from "node:test";
 
 import type { RecruitingCommand, RecruitingCommandResult } from "../src/modules/recruiting";
 import type { KakaoOpenChatStatusDto, KakaoSeasonSnapshotDto } from "../src/modules/recruiting/kakao-assistant/domain";
-import { KakaoV4CommandError, KakaoV4CommandService } from "../src/modules/recruiting/kakao-v4/application";
+import { KakaoV4CommandService } from "../src/modules/recruiting/kakao-v4/application";
 import {
   KakaoV4CommandDispatcher,
   type KakaoV4AssistantPort,
@@ -235,13 +235,11 @@ test("Phase 3-A: 기존 번호 전체 양식은 대회 바인딩을 보존하고
   assert.match(result.reply, /SUP: 새꽃잎서폿$/u);
 });
 
-test("Phase 3-A: 인식된 불완전 전체 양식은 저장하지 않고 INVALID_FORM으로 닫힌다", async () => {
+test("Phase 3-A: 번호 행 하나가 빠진 양식은 그 슬롯을 보존하고 나머지 행을 동기화한다", async () => {
   const state = harness();
   const malformed = contract.inhouse.riftTemplate.split("\n").filter((line) => line !== "10.").join("\n");
-  await assert.rejects(
-    () => state.service.execute(envelope("FEATURES", malformed, 16), "current"),
-    (error: unknown) => error instanceof KakaoV4CommandError && error.code === "INVALID_FORM",
-  );
-  assert.equal(state.seasonCalls.length, 0);
+  await state.service.execute(envelope("FEATURES", malformed, 16), "current");
+  assert.equal(state.seasonCalls.length, 1);
+  assert.deepEqual(state.seasonCalls[0]?.command.action === "SYNC" ? state.seasonCalls[0].command.preserveSlotNos : null, [10]);
   assert.equal(state.handled.length, 0);
 });

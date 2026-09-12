@@ -28,7 +28,11 @@ export async function POST(request: Request) {
       requestKey: prepared.requestKey,
     };
     const result = command.command === "STATUS"
-      ? await service.getOpenChatStatus({ ...common, scope: "BOT:KAKAO:OPENCHAT:STATUS" })
+      ? await service.getOpenChatStatus({
+          ...common,
+          scope: "BOT:KAKAO:OPENCHAT:STATUS",
+          now: new Date(prepared.intent.timestampSeconds * 1_000),
+        })
       : command.command === "SEARCH_PLAYER"
         ? await service.searchPlayers({ ...common, scope: "BOT:KAKAO:OPENCHAT:SEARCH_PLAYER", query: command.query })
         : command.command === "RECORD" || command.command === "RECENT"

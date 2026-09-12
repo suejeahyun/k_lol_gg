@@ -105,6 +105,8 @@ export type KakaoSeasonSnapshotParticipant = Readonly<{
   mainPosition: SeasonApplicationPosition;
   subPositions: readonly SeasonApplicationPosition[];
   reserve: boolean;
+  /** In-process V4 only; forces an otherwise parseable row into manual review. */
+  reviewRequired?: true;
 }>;
 
 type KakaoSeasonSnapshotCommandBase = Readonly<{
@@ -119,6 +121,8 @@ export type KakaoSeasonSnapshotCommand =
       recruitNo: number;
       mode: "RIFT" | "ARAM" | "AUGMENT_ARAM";
       participants: readonly KakaoSeasonSnapshotParticipant[];
+      /** In-process V4 only; absent numbered rows preserve their current state. */
+      preserveSlotNos?: readonly number[];
     }>)
   | (KakaoSeasonSnapshotCommandBase & Readonly<{
       action: "CANCEL";
