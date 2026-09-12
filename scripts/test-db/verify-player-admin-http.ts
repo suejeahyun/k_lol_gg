@@ -19,6 +19,8 @@ import {
   authSessions,
   playerMutationReceipts,
   players,
+  riotAccountLinks,
+  riotSyncJobs,
   userAccounts,
 } from "../../src/platform/db/schema/index";
 import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
@@ -159,6 +161,58 @@ seededPlayer.memberNameNormalized = seededPlayer.memberName.normalize("NFKC").to
 seededPlayer.nicknameNormalized = seededPlayer.nickname.toLocaleLowerCase("ko-KR");
 await database.insert(players).values(seededPlayer);
 
+const linkedPlayer = {
+  id: randomUUID(),
+  userAccountId: plainUser.id,
+  memberName: `Riot 연동 HTTP 회원 ${randomBytes(3).toString("hex")}`,
+  nickname: `Linked${randomBytes(3).toString("hex")}`,
+  tagLine: "LNK",
+};
+await database.insert(players).values({
+  ...linkedPlayer,
+  memberNameNormalized: linkedPlayer.memberName.normalize("NFKC").toLocaleLowerCase("ko-KR"),
+  nicknameNormalized: linkedPlayer.nickname.normalize("NFKC").toLocaleLowerCase("ko-KR"),
+  tagLineNormalized: linkedPlayer.tagLine.toLocaleLowerCase("ko-KR"),
+  peakTier: "DIAMOND II",
+  currentTier: "PLATINUM IV",
+});
+const linkedRiotAccountId = randomUUID();
+const linkSeededAt = new Date();
+await database.insert(riotAccountLinks).values({
+  id: linkedRiotAccountId,
+  playerId: linkedPlayer.id,
+  ownerUserAccountId: plainUser.id,
+  gameName: linkedPlayer.nickname,
+  tagLine: linkedPlayer.tagLine,
+  normalizedKey: `${linkedPlayer.nickname}#${linkedPlayer.tagLine}`.normalize("NFKC").toLocaleLowerCase("ko-KR"),
+  protectedPuuid: "synthetic-protected-puuid-for-player-admin-http",
+  method: "ADMIN",
+  status: "CONNECTED",
+  linkedAt: linkSeededAt,
+});
+const linkedSyncJobIds = [randomUUID(), randomUUID()];
+await database.insert(riotSyncJobs).values([
+  {
+    id: linkedSyncJobIds[0],
+    linkId: linkedRiotAccountId,
+    requestedBy: "OWNER",
+    status: "QUEUED",
+    requestedAt: linkSeededAt,
+    availableAt: linkSeededAt,
+  },
+  {
+    id: linkedSyncJobIds[1],
+    linkId: linkedRiotAccountId,
+    requestedBy: "ADMIN",
+    status: "RUNNING",
+    attemptCount: 1,
+    requestedAt: linkSeededAt,
+    availableAt: linkSeededAt,
+    lockedAt: linkSeededAt,
+    leaseId: randomUUID(),
+  },
+]);
+
 const port = await availablePort();
 const origin = `http://127.0.0.1:${port}`;
 const nextBin = path.join(process.cwd(), "node_modules", "next", "dist", "bin", "next");
@@ -292,6 +346,14 @@ try {
   assert.equal(emptyPage.status, 200);
   assert.match(await emptyPage.text(), /일치하는 플레이어가 없습니다/);
   assert.equal((await fetch(`${origin}/admin/players`, { headers: { cookie: userCookie }, redirect: "manual" })).status, 307);
+  const linkedEditPage = await fetch(`${origin}/admin/players/${linkedPlayer.id}?mode=edit`, {
+    headers: { cookie: adminCookie },
+  });
+  assert.equal(linkedEditPage.status, 200);
+  const linkedEditHtml = await linkedEditPage.text();
+  for (const expectedText of ["Riot ID", "게임 이름", "최고 티어", "현재 티어", "저장", "기존 연동을 해제"]) {
+    assert.match(linkedEditHtml, new RegExp(expectedText));
+  }
 
   const strictPayload = playerPayload(randomBytes(3).toString("hex"), 1_111_222_333);
   const missingKey = await fetch(`${origin}/api/admin/players`, {
@@ -353,7 +415,7 @@ try {
   assert.equal(duplicate.status, 409);
   assert.equal((await duplicate.json()).code, "PLAYER_RIOT_ID_CONFLICT");
 
-  const updatePayload = { ...strictPayload, nickname: `${strictPayload.nickname}Updated`, currentTier: "EMERALD III" };
+  const updatePayload = { ...strictPayload, nickname: `Updated${strictPayload.nickname.slice(-6)}`, currentTier: "EMERALD III" };
   const updated = await fetch(`${origin}/api/admin/players/${createdId}`, {
     method: "PATCH",
     headers: { cookie: adminCookie, origin, "content-type": "application/json", "idempotency-key": `update-${randomUUID()}`, "if-match": '"0"' },
@@ -369,6 +431,118 @@ try {
   });
   assert.equal(stale.status, 412);
   assert.equal(stale.headers.get("etag"), '"1"');
+
+  const tierOnlyPayload = {
+    memberName: linkedPlayer.memberName,
+    nickname: linkedPlayer.nickname,
+    tagLine: linkedPlayer.tagLine,
+    legacyId: null,
+    peakTier: "MASTER 120",
+    currentTier: "DIAMOND I",
+  };
+  const linkedUpdatePayload = {
+    ...tierOnlyPayload,
+    nickname: `Relink${randomBytes(3).toString("hex")}`,
+    tagLine: "NEW",
+    peakTier: "GRANDMASTER 450",
+    currentTier: "MASTER 90",
+  };
+  const userLinkedUpdate = await fetch(`${origin}/api/admin/players/${linkedPlayer.id}`, {
+    method: "PATCH",
+    headers: { cookie: userCookie, origin, "content-type": "application/json", "idempotency-key": `linked-user-${randomUUID()}`, "if-match": '"0"' },
+    body: JSON.stringify(linkedUpdatePayload),
+  });
+  assert.equal(userLinkedUpdate.status, 401);
+  const crossOriginLinkedUpdate = await fetch(`${origin}/api/admin/players/${linkedPlayer.id}`, {
+    method: "PATCH",
+    headers: { cookie: adminCookie, origin: "https://untrusted.invalid", "content-type": "application/json", "idempotency-key": `linked-origin-${randomUUID()}`, "if-match": '"0"' },
+    body: JSON.stringify(linkedUpdatePayload),
+  });
+  assert.equal(crossOriginLinkedUpdate.status, 403);
+  assert.equal(
+    (await database.select().from(riotAccountLinks).where(eq(riotAccountLinks.id, linkedRiotAccountId)))[0]?.status,
+    "CONNECTED",
+  );
+
+  const tierOnlyUpdate = await fetch(`${origin}/api/admin/players/${linkedPlayer.id}`, {
+    method: "PATCH",
+    headers: { cookie: adminCookie, origin, "content-type": "application/json", "idempotency-key": `tier-only-${randomUUID()}`, "if-match": '"0"' },
+    body: JSON.stringify(tierOnlyPayload),
+  });
+  assert.equal(tierOnlyUpdate.status, 200);
+  assert.equal(tierOnlyUpdate.headers.get("etag"), '"1"');
+  assert.doesNotMatch((await tierOnlyUpdate.json()).message, /연동.*해제/);
+  const preservedLink = (await database.select().from(riotAccountLinks).where(eq(riotAccountLinks.id, linkedRiotAccountId)))[0];
+  assert.equal(preservedLink?.status, "CONNECTED");
+  assert.equal(preservedLink?.protectedPuuid, "synthetic-protected-puuid-for-player-admin-http");
+  assert.equal(preservedLink?.revision, 0);
+  const preservedJobs = await database.select().from(riotSyncJobs).where(eq(riotSyncJobs.linkId, linkedRiotAccountId));
+  assert.deepEqual(new Set(preservedJobs.map((job) => job.status)), new Set(["QUEUED", "RUNNING"]));
+
+  const staleLinkedIdentityUpdate = await fetch(`${origin}/api/admin/players/${linkedPlayer.id}`, {
+    method: "PATCH",
+    headers: { cookie: adminCookie, origin, "content-type": "application/json", "idempotency-key": `linked-stale-${randomUUID()}`, "if-match": '"0"' },
+    body: JSON.stringify(linkedUpdatePayload),
+  });
+  assert.equal(staleLinkedIdentityUpdate.status, 412);
+  assert.equal(staleLinkedIdentityUpdate.headers.get("etag"), '"1"');
+  assert.equal(
+    (await database.select().from(riotAccountLinks).where(eq(riotAccountLinks.id, linkedRiotAccountId)))[0]?.status,
+    "CONNECTED",
+  );
+
+  const linkedUpdate = await fetch(`${origin}/api/admin/players/${linkedPlayer.id}`, {
+    method: "PATCH",
+    headers: { cookie: adminCookie, origin, "content-type": "application/json", "idempotency-key": `linked-update-${randomUUID()}`, "if-match": '"1"' },
+    body: JSON.stringify(linkedUpdatePayload),
+  });
+  assert.equal(linkedUpdate.status, 200);
+  assert.equal(linkedUpdate.headers.get("etag"), '"2"');
+  const linkedUpdateBody = await linkedUpdate.json() as {
+    message: string;
+    player: { nickname: string; tagLine: string; peakTier: string | null; currentTier: string | null };
+  };
+  assert.match(linkedUpdateBody.message, /Riot.*연동.*해제/);
+  assert.match(linkedUpdateBody.message, /다시 연결/);
+  assert.equal(linkedUpdateBody.player.nickname, linkedUpdatePayload.nickname);
+  assert.equal(linkedUpdateBody.player.tagLine, linkedUpdatePayload.tagLine);
+  assert.equal(linkedUpdateBody.player.peakTier, linkedUpdatePayload.peakTier);
+  assert.equal(linkedUpdateBody.player.currentTier, linkedUpdatePayload.currentTier);
+
+  const storedLinkedPlayer = (await database.select().from(players).where(eq(players.id, linkedPlayer.id)))[0];
+  assert.equal(storedLinkedPlayer?.userAccountId, plainUser.id);
+  assert.equal(storedLinkedPlayer?.nickname, linkedUpdatePayload.nickname);
+  assert.equal(storedLinkedPlayer?.tagLine, linkedUpdatePayload.tagLine);
+  assert.equal(storedLinkedPlayer?.peakTier, linkedUpdatePayload.peakTier);
+  assert.equal(storedLinkedPlayer?.currentTier, linkedUpdatePayload.currentTier);
+  assert.equal(storedLinkedPlayer?.revision, 2);
+
+  const disconnectedLink = (await database.select().from(riotAccountLinks).where(eq(riotAccountLinks.id, linkedRiotAccountId)))[0];
+  assert.equal(disconnectedLink?.status, "DISCONNECTED");
+  assert.equal(disconnectedLink?.protectedPuuid, null);
+  assert.ok(disconnectedLink?.disconnectedAt);
+  const cancelledJobs = await database.select().from(riotSyncJobs).where(eq(riotSyncJobs.linkId, linkedRiotAccountId));
+  assert.equal(cancelledJobs.length, 2);
+  for (const job of cancelledJobs) {
+    assert.equal(job.status, "CANCELLED");
+    assert.equal(job.lockedAt, null);
+    assert.equal(job.leaseId, null);
+    assert.ok(job.completedAt);
+  }
+  const linkedPlayerAudits = await database.select().from(auditEvents).where(eq(auditEvents.targetId, linkedPlayer.id));
+  assert.equal(linkedPlayerAudits.filter((event) => event.action === "PLAYER_UPDATED").length, 2);
+  assert.equal(
+    linkedPlayerAudits.some((event) => JSON.stringify(event.metadataJson).includes("linkedRiotAccountDisconnected")),
+    true,
+  );
+  const linkedRiotAudits = await database.select().from(auditEvents).where(eq(auditEvents.targetId, linkedRiotAccountId));
+  const identityDisconnectAudit = linkedRiotAudits.find(
+    (event) => event.action === "RIOT_LINK_DISCONNECTED_ON_REGISTRY_ID_CHANGE",
+  );
+  assert.ok(identityDisconnectAudit);
+  assert.equal(identityDisconnectAudit.actorUserAccountId, admin.id);
+  assert.equal(identityDisconnectAudit.metadataJson?.source, "ADMIN_PROFILE");
+  assert.equal(identityDisconnectAudit.metadataJson?.cancelledSyncJobCount, 2);
 
   const deactivateKey = `deactivate-${randomUUID()}`;
   const deactivated = await fetch(`${origin}/api/admin/players/${createdId}`, {
@@ -569,7 +743,7 @@ try {
   assert.equal(receiptRows.length, 1);
   assert.equal(JSON.stringify(receiptRows[0]).includes(createKey), false);
 
-  process.stdout.write("[db-player-http] ADMIN/SUPER UI, strict CRUD/reactivation, legacy restoration, privacy, revision, audit, and replay passed\n");
+  process.stdout.write("[db-player-http] ADMIN/SUPER UI, strict CRUD/reactivation, Riot identity disconnect, legacy restoration, privacy, revision, audit, and replay passed\n");
 } catch (error) {
   let sanitizedLog = serverLog;
   for (const secret of syntheticSecrets) sanitizedLog = sanitizedLog.replaceAll(secret, "[synthetic-secret]");

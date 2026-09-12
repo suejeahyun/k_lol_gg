@@ -174,7 +174,16 @@ export class RiotApplicationService {
       expectedRevision: input.expectedRevision,
       riotId: riotId.normalizedKey,
     });
-    const replay = await this.preflight(input.context, identity, "CONNECT_DIRECT", input.playerId);
+    const replay = await this.dependencies.unitOfWork.transaction(async (transaction) => {
+      await this.authorize(transaction, input.context, "CONNECT_DIRECT", input.playerId);
+      const inspection = await this.dependencies.receipts.inspect(transaction, identity);
+      if (inspection.kind === "MISMATCH") {
+        throw new RiotApplicationError("IDEMPOTENCY_MISMATCH", "Idempotency key was reused.");
+      }
+      if (inspection.kind === "REPLAY") return inspection.receipt;
+      await this.requireMatchingRegistryRiotIdentity(transaction, input.playerId, riotId.normalizedKey);
+      return null;
+    });
     if (replay) return { body: replay.body, replayed: true };
 
     let resolved: Awaited<ReturnType<RiotGatewayPort["resolveRiotId"]>>;
@@ -203,10 +212,15 @@ export class RiotApplicationService {
       const actor = await this.authorize(transaction, input.context, "CONNECT_DIRECT", input.playerId);
       const claim = await this.claim(transaction, identity);
       if (claim) return { body: claim.body, replayed: true };
+      const registryIdentity = await this.requireMatchingRegistryRiotIdentity(
+        transaction,
+        input.playerId,
+        resolvedId.normalizedKey,
+      );
       const current = await this.dependencies.repository.loadLinkForPlayerForUpdate(transaction, input.playerId);
       const ownerAccountId = actor.purpose === "ACCOUNT"
         ? actor.userAccountId
-        : current?.ownerAccountId ?? await this.dependencies.repository.loadPlayerOwnerAccountIdForUpdate(transaction, input.playerId);
+        : current?.ownerAccountId ?? registryIdentity.ownerAccountId;
       if (!ownerAccountId) throw new RiotApplicationError("NOT_FOUND", "Player ownership is not available.");
       const next = connectRiotAccount({
         current,
@@ -463,6 +477,7 @@ export class RiotApplicationService {
       if (replay) return { body: replay.body, replayed: true };
       const stateCurrent = await this.dependencies.repository.loadRsoStateForUpdate(transaction, stateDigestHex);
       if (!stateCurrent) throw new RiotApplicationError("NOT_FOUND", "RSO state is not available.");
+      await this.requireMatchingRegistryRiotIdentity(transaction, input.playerId, riotId.normalizedKey);
       const state = completeRsoStateExchange({ state: stateCurrent, exchangeId: prepared.stateId, now: this.now() });
       const current = await this.dependencies.repository.loadLinkForPlayerForUpdate(transaction, input.playerId);
       const next = connectRiotAccount({
@@ -606,6 +621,25 @@ export class RiotApplicationService {
     const now = this.dependencies.clock.now();
     if (!Number.isFinite(now.getTime())) throw new RiotApplicationError("INVALID_COMMAND", "Clock returned an invalid time.");
     return now;
+  }
+
+  private async requireMatchingRegistryRiotIdentity(
+    transaction: RiotTransaction,
+    playerId: string,
+    expectedNormalizedKey: string,
+  ) {
+    const registryIdentity = await this.dependencies.repository.loadPlayerRiotIdentityForUpdate(transaction, playerId);
+    if (!registryIdentity) {
+      throw new RiotApplicationError("NOT_FOUND", "Player Riot identity is not available.");
+    }
+    const canonicalRegistryIdentity = canonicalRiotId(registryIdentity);
+    if (canonicalRegistryIdentity.normalizedKey !== expectedNormalizedKey) {
+      throw new RiotApplicationError(
+        "INVALID_COMMAND",
+        "The Riot account must match the player's registered Riot ID.",
+      );
+    }
+    return registryIdentity;
   }
 
   private async preflight(

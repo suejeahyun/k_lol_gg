@@ -1,4 +1,5 @@
 import type { TransactionSessionActor } from "@/modules/auth/domain/transaction-session";
+import { canonicalRiotId } from "@/modules/riot/domain/riot-integration";
 import { containsUnsafeText } from "@/platform/security/input-safety";
 
 export const PLAYER_STATUSES = ["ACTIVE", "INACTIVE"] as const;
@@ -117,14 +118,20 @@ export function parsePlayerWriteInput(value: unknown): PlayerWriteValidationResu
   if (unknownField) return { ok: false, field: unknownField, reason: "UNKNOWN" };
 
   const memberName = normalizeRequiredText(record.memberName, 100);
-  const nickname = normalizeRequiredText(record.nickname, 64);
-  const tagLine = normalizeRequiredText(record.tagLine, 32);
+  const nickname = normalizeRequiredText(record.nickname, 16);
+  const tagLine = normalizeRequiredText(record.tagLine, 5);
   if (!memberName) return { ok: false, field: "memberName", reason: "MISSING" };
   if (!nickname || nickname.includes("#")) {
     return { ok: false, field: "nickname", reason: nickname ? "INVALID" : "MISSING" };
   }
   if (!tagLine || tagLine.includes("#")) {
     return { ok: false, field: "tagLine", reason: tagLine ? "INVALID" : "MISSING" };
+  }
+  let canonical;
+  try {
+    canonical = canonicalRiotId({ gameName: nickname, tagLine });
+  } catch {
+    return { ok: false, field: "nickname", reason: "INVALID" };
   }
 
   const legacyIdWasOmitted = record.legacyId === null || record.legacyId === undefined || record.legacyId === "";
@@ -142,7 +149,14 @@ export function parsePlayerWriteInput(value: unknown): PlayerWriteValidationResu
 
   return {
     ok: true,
-    value: { legacyId, memberName, nickname, tagLine, peakTier, currentTier },
+    value: {
+      legacyId,
+      memberName,
+      nickname: canonical.gameName,
+      tagLine: canonical.tagLine,
+      peakTier,
+      currentTier,
+    },
   };
 }
 

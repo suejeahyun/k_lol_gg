@@ -699,7 +699,7 @@ test("S01 account lifecycle, recovery security, races, replay, and rollback hold
     assert.equal(approvedClaimPlayer?.accountLifecycleDeactivatedAt, null);
 
     const rejectionAuditPlayerId = randomUUID();
-    const rejectionAuditNickname = `RejectAudit${randomBytes(4).toString("hex")}`;
+    const rejectionAuditNickname = `RejectAudit${randomBytes(2).toString("hex")}`;
     await database.insert(players).values({
       id: rejectionAuditPlayerId,
       memberName: "claim 감사 대상 회원",
@@ -787,7 +787,7 @@ test("S01 account lifecycle, recovery security, races, replay, and rollback hold
     assert.equal(JSON.stringify(publicRejectionAccount).includes(rejectionPrivateReason), false);
 
     const claimLockOrderPlayerId = randomUUID();
-    const claimLockOrderNickname = `ClaimLock${randomBytes(4).toString("hex")}`;
+    const claimLockOrderNickname = `ClaimLock${randomBytes(3).toString("hex")}`;
     await database.insert(players).values({
       id: claimLockOrderPlayerId,
       memberName: "claim lock order 회원",
@@ -886,7 +886,7 @@ test("S01 account lifecycle, recovery security, races, replay, and rollback hold
     ))[0]?.userAccountId, claimLockOrderAccountId);
 
     const deleteClaimPlayerId = randomUUID();
-    const deleteClaimNickname = `DeleteClaim${randomBytes(4).toString("hex")}`;
+    const deleteClaimNickname = `DeleteClaim${randomBytes(2).toString("hex")}`;
     await database.insert(players).values({
       id: deleteClaimPlayerId,
       memberName: "삭제 claim 대상 회원",
@@ -986,7 +986,7 @@ test("S01 account lifecycle, recovery security, races, replay, and rollback hold
     assert.equal(restoreConflictAccount?.revision, 1);
 
     const recoverablePlayerId = randomUUID();
-    const recoverableNickname = `RecoverableClaim${randomBytes(4).toString("hex")}`;
+    const recoverableNickname = `Recover${randomBytes(4).toString("hex")}`;
     await database.insert(players).values({
       id: recoverablePlayerId,
       memberName: "복구 가능한 claim 회원",
@@ -1300,7 +1300,7 @@ test("S01 account lifecycle, recovery security, races, replay, and rollback hold
     ))).length, 1, "recovery admitted after the admin reset must remain available");
 
     const independentInactivePlayerId = randomUUID();
-    const independentInactiveNick = `Independent${randomBytes(4).toString("hex")}`;
+    const independentInactiveNick = `Indep${randomBytes(4).toString("hex")}`;
     await database.insert(players).values({
       id: independentInactivePlayerId,
       memberName: "운영상 독립 비활성 회원",

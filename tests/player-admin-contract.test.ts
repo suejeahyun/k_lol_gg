@@ -34,6 +34,8 @@ test("player write DTO is an allowlist with normalized validated values", () => 
     { ok: false, field: "revision", reason: "UNKNOWN" },
   );
   assert.equal(parsePlayerWriteInput({ ...validInput, peakTier: "unverified tier" }).ok, false);
+  assert.equal(parsePlayerWriteInput({ ...validInput, nickname: "a".repeat(17) }).ok, false);
+  assert.equal(parsePlayerWriteInput({ ...validInput, tagLine: "TOOLNG" }).ok, false);
   assert.equal(parsePlayerWriteInput({ ...validInput, legacyId: 0 }).ok, false);
   assert.equal(parsePlayerWriteInput({ ...validInput, legacyId: MAXIMUM_LEGACY_PLAYER_ID + 1 }).ok, false);
 });
@@ -91,4 +93,6 @@ test("legacy detail mapping remains outside proxy and administrator APIs use the
   assert.match(reactivateRoute, /repository\.reactivate/);
   assert.match(playerLifecycleUi, /재활성화 준비/);
   assert.match(playerLifecycleUi, /재활성화 확인/);
+  assert.match(playerLifecycleUi, /maxLength=\{16\}/);
+  assert.match(playerLifecycleUi, /maxLength=\{5\}/);
 });

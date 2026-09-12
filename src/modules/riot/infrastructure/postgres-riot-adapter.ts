@@ -534,7 +534,7 @@ export class PostgresRiotAdapter implements RiotQueryRepository {
           ownerUserAccountId: row.ownerUserAccountId,
           linkId: row.linkId,
           revision: row.revision,
-          riotId: `${row.gameName ?? row.registryGameName}#${row.tagLine ?? row.registryTagLine}`,
+          riotId: `${row.registryGameName}#${row.registryTagLine}`,
           method: row.method,
           status: row.status ?? "UNLINKED" as const,
           lastSyncStatus: lastJob?.status ?? null,

@@ -27,6 +27,7 @@ import {
   lockTransactionSessionActor,
   SELF_PASSWORD_SESSION_POLICY,
 } from "@/modules/auth/infrastructure/transaction-session-guard";
+import { disconnectConnectedRiotIdentityForPlayer } from "@/modules/riot/infrastructure/postgres-riot-identity-change";
 import type { V2Database } from "@/platform/db/database";
 import { auditEvents } from "@/platform/db/schema/audit";
 import {
@@ -901,6 +902,16 @@ export class PostgresAccountRepository implements AccountRepository {
           return { type: "precondition-failed", currentRevision: before.revision };
         }
 
+        const riotIdentityChange = await disconnectConnectedRiotIdentityForPlayer(transaction, {
+          playerId: before.id,
+          nextGameName: input.nickname,
+          nextTagLine: input.tagLine,
+          actorUserAccountId: actor.id,
+          requestId: command.requestId,
+          now: command.now,
+          source: "OWNER_PROFILE",
+        });
+
         const updated = (
           await transaction
             .update(players)
@@ -950,7 +961,9 @@ export class PostgresAccountRepository implements AccountRepository {
           type: "success",
           status: 200,
           response: {
-            message: "내 Riot ID와 티어 정보가 수정되었습니다.",
+            message: riotIdentityChange.disconnected
+              ? "내 Riot ID와 티어 정보가 수정되었습니다. Riot ID가 변경되어 기존 Riot 연동이 해제되었습니다. 새 Riot ID를 다시 연동해 주세요."
+              : "내 Riot ID와 티어 정보가 수정되었습니다.",
             account: selfDto(dto),
             playerRevision: updated.revision,
           },

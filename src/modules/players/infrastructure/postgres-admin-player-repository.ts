@@ -12,6 +12,7 @@ import { playerMutationReceipts, players } from "@/platform/db/schema/registry";
 import type { V2Database } from "@/platform/db/database";
 import type { DatabaseExecutor, V2Transaction } from "@/platform/db/transaction";
 import { withTransaction } from "@/platform/db/transaction";
+import { disconnectConnectedRiotIdentityForPlayer } from "@/modules/riot/infrastructure/postgres-riot-identity-change";
 
 import type { AdminPlayerRepository } from "../application/ports/admin-player-repository";
 import {
@@ -388,6 +389,9 @@ export class PostgresAdminPlayerRepository implements AdminPlayerRepository {
         if (beforeRow.revision !== expectedRevision) {
           return { type: "precondition-failed", currentRevision: beforeRow.revision };
         }
+        const riotIdentityChanged =
+          normalizePlayerIdentity(beforeRow.nickname) !== normalizePlayerIdentity(input.nickname) ||
+          normalizePlayerIdentity(beforeRow.tagLine) !== normalizePlayerIdentity(input.tagLine);
 
         const updated = await transaction
           .update(players)
@@ -405,6 +409,18 @@ export class PostgresAdminPlayerRepository implements AdminPlayerRepository {
             : { type: "not-found" };
         }
 
+        const riotIdentityChange = riotIdentityChanged
+          ? await disconnectConnectedRiotIdentityForPlayer(transaction, {
+              playerId: id,
+              nextGameName: input.nickname,
+              nextTagLine: input.tagLine,
+              actorUserAccountId: command.actorUserAccountId,
+              requestId: command.requestId,
+              now: command.now,
+              source: "ADMIN_PROFILE",
+            })
+          : { disconnected: false, previousRiotId: undefined };
+
         const afterRow = await findAdminPlayerRow(transaction, id);
         if (!afterRow) throw new Error("Updated player could not be reloaded.");
         const before = toAdminPlayer(beforeRow);
@@ -417,11 +433,23 @@ export class PostgresAdminPlayerRepository implements AdminPlayerRepository {
           targetId: id,
           beforeJson: auditSnapshot(before),
           afterJson: auditSnapshot(player),
+          metadataJson: riotIdentityChanged
+            ? {
+                riotIdentityChanged: true,
+                linkedRiotAccountDisconnected: riotIdentityChange.disconnected,
+                previousLinkedRiotId: riotIdentityChange.previousRiotId ?? null,
+              }
+            : undefined,
         });
         const outcome: Extract<PlayerMutationOutcome, { type: "success" }> = {
           type: "success",
           status: 200,
-          response: { message: "플레이어 정보가 수정되었습니다.", player },
+          response: {
+            message: riotIdentityChange.disconnected
+              ? "플레이어 정보가 수정되었습니다. 기존 Riot 연동을 해제했습니다. Riot 탭에서 새 ID로 다시 연결해 주세요."
+              : "플레이어 정보가 수정되었습니다.",
+            player,
+          },
           revision: player.revision,
           replayed: false,
         };

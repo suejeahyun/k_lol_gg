@@ -142,8 +142,8 @@ test("S12 Riot persistence keeps owner auth, one-time RSO, jobs, receipts, audit
       { id: secondSessionId, tokenHash: randomBytes(32), userAccountId: secondOwnerId, authVersion: 0, role: "USER", purpose: "ACCOUNT", issuedAt: now, expiresAt: new Date(now.getTime() + 60 * 60_000) },
     ]);
     await database.insert(players).values([
-      { id: playerId, userAccountId: ownerId, memberName: "S12 계약 회원", memberNameNormalized: "s12 계약 회원", nickname: "S12계약선수", nicknameNormalized: "s12계약선수", tagLine: "KR1", tagLineNormalized: "kr1" },
-      { id: secondPlayerId, userAccountId: secondOwnerId, memberName: "S12 계약 회원 둘", memberNameNormalized: "s12 계약 회원 둘", nickname: "S12계약선수둘", nicknameNormalized: "s12계약선수둘", tagLine: "KR1", tagLineNormalized: "kr1" },
+      { id: playerId, userAccountId: ownerId, memberName: "S12 계약 회원", memberNameNormalized: "s12 계약 회원", nickname: "ContractPlayer", nicknameNormalized: "contractplayer", tagLine: "KR1", tagLineNormalized: "kr1" },
+      { id: secondPlayerId, userAccountId: secondOwnerId, memberName: "S12 계약 회원 둘", memberNameNormalized: "s12 계약 회원 둘", nickname: "SecondPlayer", nicknameNormalized: "secondplayer", tagLine: "KR2", tagLineNormalized: "kr2" },
       { id: unownedPlayerId, memberName: "S12 미소유 선수", memberNameNormalized: "s12 미소유 선수", nickname: "S12미소유선수", nicknameNormalized: "s12미소유선수", tagLine: "KR1", tagLineNormalized: "kr1" },
     ]);
     await assert.rejects(
@@ -182,26 +182,27 @@ test("S12 Riot persistence keeps owner auth, one-time RSO, jobs, receipts, audit
       expectedRevision: 0,
       gameName: "ContractPlayer",
       tagLine: "KR1",
-    }), /RIOT_IDENTITY_ALREADY_CONNECTED/u);
+    }), (error: unknown) => error instanceof RiotApplicationError && error.code === "INVALID_COMMAND");
     const directDisconnected = await service.disconnect({
       context: ownerContext(actor, "direct-disconnect"),
       playerId,
       expectedRevision: Number(connected.body.revision),
     });
     assert.equal(directDisconnected.body.status, "DISCONNECTED");
+    gateway.registerIdentity({ gameName: "SecondPlayer", tagLine: "KR2", puuid: "private-second-puuid" });
     const reconnectedToSecondOwner = await service.connectDirect({
       context: ownerContext(secondActor, "reconnect-after-disconnect"),
       playerId: secondPlayerId,
       expectedRevision: 0,
-      gameName: "ContractPlayer",
-      tagLine: "KR1",
+      gameName: "SecondPlayer",
+      tagLine: "KR2",
     });
     assert.equal(reconnectedToSecondOwner.body.status, "CONNECTED");
 
     const start = await service.startRso({ context: ownerContext(actor, "rso-start"), returnTo: `/players/${playerId}?tab=riot` });
     const publicState = new URL(start.authorizationUrl).searchParams.get("state");
     assert.ok(publicState);
-    rso.registerCallback("one-time-code", { gameName: "VerifiedPlayer", tagLine: "V2", puuid: "private-rso-puuid" });
+    rso.registerCallback("one-time-code", { gameName: "ContractPlayer", tagLine: "KR1", puuid: "private-rso-puuid" });
     const callbackContext = ownerContext(actor, "rso-callback");
     const verified = await service.completeRso({
       context: callbackContext,

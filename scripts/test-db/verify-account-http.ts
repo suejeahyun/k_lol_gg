@@ -21,6 +21,8 @@ import {
   passwordResetRequests,
   playerAccountClaims,
   players,
+  riotAccountLinks,
+  riotSyncJobs,
   userAccounts,
 } from "../../src/platform/db/schema/index";
 import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
@@ -195,7 +197,7 @@ function signupPayload(label: string, riotId?: string) {
     loginId: `account_http_${label}_${suffix}`,
     password: `살랑바람${randomBytes(8).toString("hex")}2026`,
     memberName: `HTTP 비공개 회원 ${label} ${suffix}`,
-    riotId: riotId ?? `Http${label}${suffix}#S01`,
+    riotId: riotId ?? `Http${suffix}#S01`,
     termsAccepted: true,
     privacyAccepted: true,
   };
@@ -236,7 +238,11 @@ async function assertPublicPlayerVisibility(input: {
   const response = await fetch(`${input.origin}/players/${input.playerId}`, { redirect: "manual" });
   assert.ok(response.status < 500, `${input.message}: public profile returned ${response.status}`);
   const body = await response.text();
-  assert.equal(body.includes(input.riotId), input.visible, input.message);
+  assert.equal(
+    body.includes(input.riotId),
+    input.visible,
+    `${input.message}: status=${response.status}, location=${response.headers.get("location") ?? "none"}, expected=${input.riotId}, body=${body.slice(0, 600)}`,
+  );
 }
 
 function confirmedReason(label: string, confirmLoginId: string) {
@@ -387,6 +393,27 @@ async function adminMutation(input: {
   });
 }
 
+async function selfPlayerMutation(input: {
+  origin: string;
+  cookie?: string;
+  revision?: number;
+  key?: string;
+  requestOrigin?: string;
+  body: object;
+}) {
+  return fetch(`${input.origin}/api/auth/me/player`, {
+    method: "PATCH",
+    headers: {
+      ...(input.cookie ? { cookie: input.cookie } : {}),
+      origin: input.requestOrigin ?? input.origin,
+      "content-type": "application/json",
+      "idempotency-key": input.key ?? idempotencyKey("account-self-player"),
+      ...(input.revision === undefined ? {} : { "if-match": `"${input.revision}"` }),
+    },
+    body: JSON.stringify(input.body),
+  });
+}
+
 async function waitForDatabaseLockWaiters(minimum: number, label: string) {
   const deadline = Date.now() + 8_000;
   while (Date.now() < deadline) {
@@ -407,6 +434,72 @@ const superAdmin = await seedAccount("super", "SUPER_ADMIN", true);
 const admin = await seedAccount("admin", "ADMIN", true);
 const adminVictim = await seedAccount("admin_victim", "ADMIN", true);
 const unlinkedPromotionTarget = await seedAccount("unlinked_promotion", "USER", false, false);
+const selfProfileOwner = await seedAccount("self_profile", "USER");
+const selfProfileDuplicate = await seedAccount("self_profile_duplicate", "USER");
+const selfProfileInitialGameName = `Self${randomBytes(3).toString("hex")}`;
+const selfProfileNextGameName = `Changed${randomBytes(3).toString("hex")}`;
+const selfProfileDuplicateGameName = `Taken${randomBytes(3).toString("hex")}`;
+const selfProfileLinkId = randomUUID();
+const selfProfileProtectedPuuid = `test-protected-puuid-${randomUUID()}`;
+syntheticSecrets.push(selfProfileProtectedPuuid);
+const selfProfileJobIds = [randomUUID(), randomUUID(), randomUUID()] as const;
+const selfProfileSeededAt = new Date();
+await database.update(players).set({
+  nickname: selfProfileInitialGameName,
+  nicknameNormalized: selfProfileInitialGameName.toLocaleLowerCase("ko-KR"),
+  tagLine: "S01",
+  tagLineNormalized: "s01",
+  currentTier: "실버 2",
+  peakTier: "골드 4",
+}).where(eq(players.id, selfProfileOwner.playerId));
+await database.update(players).set({
+  nickname: selfProfileDuplicateGameName,
+  nicknameNormalized: selfProfileDuplicateGameName.toLocaleLowerCase("ko-KR"),
+  tagLine: "D01",
+  tagLineNormalized: "d01",
+}).where(eq(players.id, selfProfileDuplicate.playerId));
+await database.insert(riotAccountLinks).values({
+  id: selfProfileLinkId,
+  playerId: selfProfileOwner.playerId,
+  ownerUserAccountId: selfProfileOwner.id,
+  gameName: selfProfileInitialGameName,
+  tagLine: "S01",
+  normalizedKey: `${selfProfileInitialGameName.toLocaleLowerCase("ko-KR")}#s01`,
+  protectedPuuid: selfProfileProtectedPuuid,
+  method: "DIRECT_OWNER",
+  status: "CONNECTED",
+  linkedAt: selfProfileSeededAt,
+});
+await database.insert(riotSyncJobs).values([
+  {
+    id: selfProfileJobIds[0],
+    linkId: selfProfileLinkId,
+    requestedBy: "OWNER",
+    status: "QUEUED",
+    requestedAt: selfProfileSeededAt,
+    availableAt: selfProfileSeededAt,
+  },
+  {
+    id: selfProfileJobIds[1],
+    linkId: selfProfileLinkId,
+    requestedBy: "OWNER",
+    status: "RETRY_WAIT",
+    attemptCount: 1,
+    requestedAt: selfProfileSeededAt,
+    availableAt: selfProfileSeededAt,
+  },
+  {
+    id: selfProfileJobIds[2],
+    linkId: selfProfileLinkId,
+    requestedBy: "OWNER",
+    status: "RUNNING",
+    attemptCount: 1,
+    requestedAt: selfProfileSeededAt,
+    availableAt: selfProfileSeededAt,
+    lockedAt: selfProfileSeededAt,
+    leaseId: randomUUID(),
+  },
+]);
 
 let mainServer: RunningServer | undefined;
 let unavailableServer: RunningServer | undefined;
@@ -454,6 +547,271 @@ try {
     body: '{"loginId":"nobody","loginId":"other","password":"not-a-password"}',
   });
   assert.equal(duplicateAdminLoginKey.status, 400);
+
+  const selfProfileLogin = await loginAccount(
+    origin,
+    selfProfileOwner.loginId,
+    selfProfileOwner.password,
+  );
+  assert.equal(selfProfileLogin.response.status, 200, "self profile owner must be able to log in");
+  const initialSelfPlayer = await fetch(`${origin}/api/auth/me/player`, {
+    headers: { cookie: selfProfileLogin.cookie },
+  });
+  assert.equal(initialSelfPlayer.status, 200);
+  assert.equal(initialSelfPlayer.headers.get("etag"), '"0"');
+  const initialSelfPlayerBody = await initialSelfPlayer.json() as {
+    player: { riotId: string; currentTier: string | null; peakTier: string | null; revision: number };
+  };
+  assert.equal(initialSelfPlayerBody.player.riotId, `${selfProfileInitialGameName}#S01`);
+  assert.equal(initialSelfPlayerBody.player.currentTier, "실버 2");
+  assert.equal(initialSelfPlayerBody.player.peakTier, "골드 4");
+  assert.equal(initialSelfPlayerBody.player.revision, 0);
+
+  const initialAccountOverview = await fetch(`${origin}/account`, {
+    headers: { cookie: selfProfileLogin.cookie },
+  });
+  assert.equal(initialAccountOverview.status, 200);
+  const initialAccountOverviewHtml = await initialAccountOverview.text();
+  assert.equal(initialAccountOverviewHtml.includes(`${selfProfileInitialGameName}#S01`), true);
+  assert.equal(initialAccountOverviewHtml.includes("실버 2"), true);
+  assert.equal(initialAccountOverviewHtml.includes("골드 4"), true);
+  assert.equal(initialAccountOverviewHtml.includes("Riot ID·티어 변경"), true);
+  const selfProfileFormPage = await fetch(`${origin}/account?tab=player`, {
+    headers: { cookie: selfProfileLogin.cookie },
+  });
+  assert.equal(selfProfileFormPage.status, 200);
+  const selfProfileFormHtml = await selfProfileFormPage.text();
+  assert.equal(selfProfileFormHtml.includes('name="riotId"'), true);
+  assert.equal(selfProfileFormHtml.includes('name="currentTier"'), true);
+  assert.equal(selfProfileFormHtml.includes('name="peakTier"'), true);
+  assert.equal(selfProfileFormHtml.includes("내 플레이어 정보 저장"), true);
+  assert.equal(selfProfileFormHtml.includes("기존 Riot 전적 연동이 자동 해제"), true);
+
+  const selfProfileBody = {
+    riotId: `${selfProfileNextGameName}#N01`,
+    currentTier: "골드 1",
+    peakTier: "플래티넘 4",
+  };
+  const anonymousSelfPatch = await selfPlayerMutation({
+    origin,
+    revision: 0,
+    body: selfProfileBody,
+  });
+  assert.equal(anonymousSelfPatch.status, 401);
+  const crossOriginSelfPatch = await selfPlayerMutation({
+    origin,
+    cookie: selfProfileLogin.cookie,
+    revision: 0,
+    requestOrigin: "https://attacker.invalid",
+    body: selfProfileBody,
+  });
+  assert.equal(crossOriginSelfPatch.status, 403);
+  const missingSelfRevision = await selfPlayerMutation({
+    origin,
+    cookie: selfProfileLogin.cookie,
+    body: selfProfileBody,
+  });
+  assert.equal(missingSelfRevision.status, 428);
+  const malformedSelfPatch = await selfPlayerMutation({
+    origin,
+    cookie: selfProfileLogin.cookie,
+    revision: 0,
+    body: { ...selfProfileBody, role: "ADMIN" },
+  });
+  assert.equal(malformedSelfPatch.status, 400);
+
+  const tierOnlySelfProfileBody = {
+    riotId: `${selfProfileInitialGameName}#S01`,
+    currentTier: "실버 1",
+    peakTier: "골드 3",
+  };
+  const tierOnlySelfProfile = await selfPlayerMutation({
+    origin,
+    cookie: selfProfileLogin.cookie,
+    revision: 0,
+    body: tierOnlySelfProfileBody,
+  });
+  assert.equal(tierOnlySelfProfile.status, 200);
+  assert.equal(tierOnlySelfProfile.headers.get("etag"), '"1"');
+  const tierOnlySelfProfileResponse = await tierOnlySelfProfile.json() as {
+    message: string;
+    playerRevision: number;
+    account: { player: { riotId: string; currentTier: string | null; peakTier: string | null } };
+  };
+  assert.equal(tierOnlySelfProfileResponse.message.includes("다시 연동"), false);
+  assert.equal(tierOnlySelfProfileResponse.playerRevision, 1);
+  assert.equal(tierOnlySelfProfileResponse.account.player.riotId, tierOnlySelfProfileBody.riotId);
+  assert.equal(tierOnlySelfProfileResponse.account.player.currentTier, tierOnlySelfProfileBody.currentTier);
+  assert.equal(tierOnlySelfProfileResponse.account.player.peakTier, tierOnlySelfProfileBody.peakTier);
+  const preservedSelfLink = (
+    await database.select().from(riotAccountLinks)
+      .where(eq(riotAccountLinks.id, selfProfileLinkId)).limit(1)
+  )[0];
+  assert.ok(preservedSelfLink);
+  assert.equal(preservedSelfLink.status, "CONNECTED");
+  assert.equal(preservedSelfLink.protectedPuuid, selfProfileProtectedPuuid);
+  assert.equal(preservedSelfLink.revision, 0);
+  const preservedSelfJobs = await database.select().from(riotSyncJobs)
+    .where(eq(riotSyncJobs.linkId, selfProfileLinkId));
+  assert.deepEqual(
+    preservedSelfJobs.map((job) => ({ id: job.id, revision: job.revision, status: job.status }))
+      .sort((left, right) => left.id.localeCompare(right.id, "en-US")),
+    [
+      { id: selfProfileJobIds[0], revision: 0, status: "QUEUED" },
+      { id: selfProfileJobIds[1], revision: 0, status: "RETRY_WAIT" },
+      { id: selfProfileJobIds[2], revision: 0, status: "RUNNING" },
+    ].sort((left, right) => left.id.localeCompare(right.id, "en-US")),
+  );
+
+  const duplicateWhileConnected = await selfPlayerMutation({
+    origin,
+    cookie: selfProfileLogin.cookie,
+    revision: 1,
+    key: idempotencyKey("self-player-connected-duplicate"),
+    body: {
+      riotId: `${selfProfileDuplicateGameName}#D01`,
+      currentTier: "골드 1",
+      peakTier: "플래티넘 4",
+    },
+  });
+  assert.equal(duplicateWhileConnected.status, 409);
+  assert.equal(problemCode(await duplicateWhileConnected.json()), "RIOT_ID_ALREADY_LINKED");
+  const rolledBackConnectedLink = (
+    await database.select().from(riotAccountLinks)
+      .where(eq(riotAccountLinks.id, selfProfileLinkId)).limit(1)
+  )[0];
+  assert.ok(rolledBackConnectedLink);
+  assert.equal(rolledBackConnectedLink.status, "CONNECTED");
+  assert.equal(rolledBackConnectedLink.protectedPuuid, selfProfileProtectedPuuid);
+  assert.equal(rolledBackConnectedLink.revision, 0);
+  const rolledBackDisconnectAudits = await database.select({ value: count() })
+    .from(auditEvents).where(and(
+      eq(auditEvents.actorUserAccountId, selfProfileOwner.id),
+      eq(auditEvents.action, "RIOT_LINK_DISCONNECTED_ON_REGISTRY_ID_CHANGE"),
+    ));
+  assert.equal(rolledBackDisconnectAudits[0]?.value, 0);
+
+  const selfProfileKey = idempotencyKey("self-player-success");
+  const updatedSelfProfile = await selfPlayerMutation({
+    origin,
+    cookie: selfProfileLogin.cookie,
+    revision: 1,
+    key: selfProfileKey,
+    body: selfProfileBody,
+  });
+  assert.equal(updatedSelfProfile.status, 200);
+  assert.equal(updatedSelfProfile.headers.get("etag"), '"2"');
+  const updatedSelfProfileBody = await updatedSelfProfile.json() as {
+    message: string;
+    playerRevision: number;
+    account: { player: { riotId: string; currentTier: string | null; peakTier: string | null; revision: number } };
+  };
+  assert.equal(updatedSelfProfileBody.message.includes("다시 연동"), true);
+  assert.equal(updatedSelfProfileBody.playerRevision, 2);
+  assert.equal(updatedSelfProfileBody.account.player.riotId, selfProfileBody.riotId);
+  assert.equal(updatedSelfProfileBody.account.player.currentTier, selfProfileBody.currentTier);
+  assert.equal(updatedSelfProfileBody.account.player.peakTier, selfProfileBody.peakTier);
+  assert.equal(updatedSelfProfileBody.account.player.revision, 2);
+
+  const reloadedSelfPlayer = await fetch(`${origin}/api/auth/me/player`, {
+    headers: { cookie: selfProfileLogin.cookie },
+  });
+  assert.equal(reloadedSelfPlayer.status, 200);
+  assert.equal(reloadedSelfPlayer.headers.get("etag"), '"2"');
+  const reloadedSelfPlayerBody = await reloadedSelfPlayer.json() as typeof initialSelfPlayerBody;
+  assert.equal(reloadedSelfPlayerBody.player.riotId, selfProfileBody.riotId);
+  assert.equal(reloadedSelfPlayerBody.player.currentTier, selfProfileBody.currentTier);
+  assert.equal(reloadedSelfPlayerBody.player.peakTier, selfProfileBody.peakTier);
+  await assertPublicPlayerVisibility({
+    origin,
+    playerId: selfProfileOwner.playerId,
+    riotId: selfProfileBody.riotId,
+    visible: true,
+    message: "a self-edited Riot ID must be reflected in the public player profile",
+  });
+
+  const disconnectedSelfLink = (
+    await database.select().from(riotAccountLinks)
+      .where(eq(riotAccountLinks.id, selfProfileLinkId)).limit(1)
+  )[0];
+  assert.ok(disconnectedSelfLink);
+  assert.equal(disconnectedSelfLink.status, "DISCONNECTED");
+  assert.equal(disconnectedSelfLink.protectedPuuid, null);
+  assert.ok(disconnectedSelfLink.disconnectedAt);
+  assert.equal(disconnectedSelfLink.revision, 1);
+  const cancelledSelfJobs = await database.select().from(riotSyncJobs)
+    .where(eq(riotSyncJobs.linkId, selfProfileLinkId));
+  assert.equal(cancelledSelfJobs.length, 3);
+  for (const job of cancelledSelfJobs) {
+    assert.equal(job.status, "CANCELLED");
+    assert.equal(job.revision, 1);
+    assert.equal(job.lockedAt, null);
+    assert.equal(job.leaseId, null);
+    assert.ok(job.completedAt);
+  }
+
+  const selfPlayerAudits = await database.select().from(auditEvents).where(and(
+    eq(auditEvents.actorUserAccountId, selfProfileOwner.id),
+    eq(auditEvents.action, "PLAYER_SELF_UPDATED"),
+  ));
+  assert.equal(selfPlayerAudits.length, 2);
+  const selfDisconnectAudits = await database.select().from(auditEvents).where(and(
+    eq(auditEvents.actorUserAccountId, selfProfileOwner.id),
+    eq(auditEvents.action, "RIOT_LINK_DISCONNECTED_ON_REGISTRY_ID_CHANGE"),
+  ));
+  assert.equal(selfDisconnectAudits.length, 1);
+  assert.equal(selfDisconnectAudits[0]?.targetId, selfProfileLinkId);
+  const safeDisconnectAudit = JSON.stringify(selfDisconnectAudits[0]);
+  assert.equal(safeDisconnectAudit.includes(selfProfileProtectedPuuid), false);
+  assert.equal(safeDisconnectAudit.includes("protectedPuuid"), false);
+  assert.equal(safeDisconnectAudit.includes("leaseId"), false);
+
+  const replayedSelfProfile = await selfPlayerMutation({
+    origin,
+    cookie: selfProfileLogin.cookie,
+    revision: 1,
+    key: selfProfileKey,
+    body: selfProfileBody,
+  });
+  assert.equal(replayedSelfProfile.status, 200);
+  assert.equal(replayedSelfProfile.headers.get("idempotency-replayed"), "true");
+  assert.deepEqual(await replayedSelfProfile.json(), updatedSelfProfileBody);
+  const replayedSelfProfileAuditCount = await database.select({ value: count() })
+    .from(auditEvents).where(and(
+      eq(auditEvents.actorUserAccountId, selfProfileOwner.id),
+      eq(auditEvents.action, "PLAYER_SELF_UPDATED"),
+    ));
+  assert.equal(replayedSelfProfileAuditCount[0]?.value, 2);
+
+  const reusedSelfProfileKey = await selfPlayerMutation({
+    origin,
+    cookie: selfProfileLogin.cookie,
+    revision: 1,
+    key: selfProfileKey,
+    body: { ...selfProfileBody, currentTier: "골드 2" },
+  });
+  assert.equal(reusedSelfProfileKey.status, 409);
+  assert.equal(problemCode(await reusedSelfProfileKey.json()), "IDEMPOTENCY_KEY_REUSED");
+  const staleSelfProfile = await selfPlayerMutation({
+    origin,
+    cookie: selfProfileLogin.cookie,
+    revision: 1,
+    body: { ...selfProfileBody, currentTier: "골드 2" },
+  });
+  assert.equal(staleSelfProfile.status, 412);
+  assert.equal(staleSelfProfile.headers.get("etag"), '"2"');
+  const duplicateSelfRiotId = await selfPlayerMutation({
+    origin,
+    cookie: selfProfileLogin.cookie,
+    revision: 2,
+    body: {
+      ...selfProfileBody,
+      riotId: `${selfProfileDuplicateGameName}#D01`,
+    },
+  });
+  assert.equal(duplicateSelfRiotId.status, 409);
+  assert.equal(problemCode(await duplicateSelfRiotId.json()), "RIOT_ID_ALREADY_LINKED");
+
   const visibleSignupBase = signupPayload("visible-identifiers");
   for (const unsafeSignup of [
     { ...visibleSignupBase, riotId: "Existing\u200b#KR1" },
@@ -1206,7 +1564,7 @@ try {
     eq(passwordResetRequests.status, "PENDING"),
   ));
 
-  const claimNickname = `ExistingHttp${randomBytes(4).toString("hex")}`;
+  const claimNickname = `ExistingHttp${randomBytes(2).toString("hex")}`;
   const claimPlayerId = randomUUID();
   const claimDeactivatedAt = new Date();
   await database.insert(players).values({
@@ -1317,7 +1675,7 @@ try {
   assert.equal(claimedPlayer?.accountLifecycleDeactivatedAt, null);
 
   const deleteClaimPlayerId = randomUUID();
-  const deleteClaimNickname = `DeleteClaimHttp${randomBytes(4).toString("hex")}`;
+  const deleteClaimNickname = `DelClaim${randomBytes(3).toString("hex")}`;
   const deleteClaimRiotId = `${deleteClaimNickname}#S01`;
   await database.insert(players).values({
     id: deleteClaimPlayerId,
@@ -1402,7 +1760,7 @@ try {
   assert.equal(stillDeletedClaimOwner?.revision, 1);
 
   const recoverablePlayerId = randomUUID();
-  const recoverableNickname = `RecoverableHttp${randomBytes(4).toString("hex")}`;
+  const recoverableNickname = `RecoverHttp${randomBytes(2).toString("hex")}`;
   const recoverableRiotId = `${recoverableNickname}#S01`;
   await database.insert(players).values({
     id: recoverablePlayerId,
@@ -1592,7 +1950,7 @@ try {
   assert.equal(resetDeleteTerminalRow?.resolvedByUserAccountId, superAdmin.id);
 
   const independentInactivePlayerId = randomUUID();
-  const independentInactiveNickname = `IndependentHttp${randomBytes(4).toString("hex")}`;
+  const independentInactiveNickname = `IndepHttp${randomBytes(3).toString("hex")}`;
   const independentInactiveRiotId = `${independentInactiveNickname}#S01`;
   await database.insert(players).values({
     id: independentInactivePlayerId,

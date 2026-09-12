@@ -3,6 +3,7 @@ import type {
   UserRole,
 } from "@/modules/auth/domain/auth-records";
 import type { TransactionSessionActor } from "@/modules/auth/domain/transaction-session";
+import { canonicalRiotId } from "@/modules/riot/domain/riot-integration";
 import { containsUnsafeText } from "@/platform/security/input-safety";
 
 const loginIdPattern = /^[\p{L}\p{N}._-]{4,64}$/u;
@@ -251,15 +252,21 @@ export function parseSignupInput(value: unknown): ParseResult<SignupInput> {
 
   const loginId = safeText(record.loginId, 4, 64);
   const memberName = safeText(record.memberName, 2, 100);
-  const riotId = safeText(record.riotId, 3, 97);
+  const riotId = safeText(record.riotId, 3, 22);
   if (!loginId || !loginIdPattern.test(loginId) || !memberName || !riotId) return { ok: false };
   if (!validateNewPassword(record.password)) return { ok: false };
 
   const separator = riotId.lastIndexOf("#");
   if (separator < 1 || separator === riotId.length - 1) return { ok: false };
-  const nickname = safeText(riotId.slice(0, separator), 1, 64);
-  const tagLine = safeText(riotId.slice(separator + 1), 1, 32);
+  const nickname = safeText(riotId.slice(0, separator), 1, 16);
+  const tagLine = safeText(riotId.slice(separator + 1), 1, 5);
   if (!nickname || !tagLine || nickname.includes("#") || tagLine.includes("#")) {
+    return { ok: false };
+  }
+  let canonical;
+  try {
+    canonical = canonicalRiotId({ gameName: nickname, tagLine });
+  } catch {
     return { ok: false };
   }
 
@@ -271,10 +278,10 @@ export function parseSignupInput(value: unknown): ParseResult<SignupInput> {
       password: record.password,
       memberName,
       memberNameNormalized: normalizeAccountIdentity(memberName),
-      nickname,
-      nicknameNormalized: normalizeAccountIdentity(nickname),
-      tagLine,
-      tagLineNormalized: normalizeAccountIdentity(tagLine),
+      nickname: canonical.gameName,
+      nicknameNormalized: normalizeAccountIdentity(canonical.gameName),
+      tagLine: canonical.tagLine,
+      tagLineNormalized: normalizeAccountIdentity(canonical.tagLine),
     },
   };
 }
@@ -337,18 +344,23 @@ function optionalTier(value: unknown): string | null | undefined {
 export function parseOwnPlayerInput(value: unknown): ParseResult<OwnPlayerInput> {
   const record = exactRecord(value, ["riotId", "peakTier", "currentTier"]);
   if (!record) return { ok: false };
-  const riotId = safeText(record.riotId, 3, 97);
+  const riotId = safeText(record.riotId, 3, 22);
   if (!riotId) return { ok: false };
   const separator = riotId.lastIndexOf("#");
   if (separator < 1 || separator === riotId.length - 1) return { ok: false };
-  const nickname = safeText(riotId.slice(0, separator), 1, 64);
-  const tagLine = safeText(riotId.slice(separator + 1), 1, 32);
+  const nickname = safeText(riotId.slice(0, separator), 1, 16);
+  const tagLine = safeText(riotId.slice(separator + 1), 1, 5);
   const peakTier = optionalTier(record.peakTier);
   const currentTier = optionalTier(record.currentTier);
   if (!nickname || !tagLine || nickname.includes("#") || tagLine.includes("#") || peakTier === undefined || currentTier === undefined) {
     return { ok: false };
   }
-  return { ok: true, value: { nickname, tagLine, peakTier, currentTier } };
+  try {
+    const canonical = canonicalRiotId({ gameName: nickname, tagLine });
+    return { ok: true, value: { nickname: canonical.gameName, tagLine: canonical.tagLine, peakTier, currentTier } };
+  } catch {
+    return { ok: false };
+  }
 }
 
 export function parseAccountReasonInput(value: unknown): ParseResult<AccountReasonInput> {

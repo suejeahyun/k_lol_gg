@@ -145,7 +145,7 @@ export function SignupForm() {
       <label className={styles.field}>로그인 아이디<input name="loginId" autoComplete="username" minLength={4} maxLength={64} required autoFocus /><small>4~64자, 한글·영문·숫자와 . _ - 를 사용할 수 있습니다.</small></label>
       <label className={styles.field}>비밀번호<input name="password" type="password" autoComplete="new-password" minLength={10} maxLength={128} required /><small>문자와 숫자를 포함한 10자 이상으로 만들어 주세요.</small></label>
       <label className={styles.field}>회원명<input name="memberName" autoComplete="name" minLength={2} maxLength={100} required /></label>
-      <label className={styles.field}>Riot ID<input name="riotId" placeholder="GameName#TAG" autoComplete="off" minLength={3} maxLength={97} required /><small>기존 플레이어와 일치하면 즉시 연결하지 않고 관리자 수동 검토를 거칩니다.</small></label>
+      <label className={styles.field}>Riot ID<input name="riotId" placeholder="GameName#TAG" autoComplete="off" minLength={3} maxLength={22} required /><small>게임 이름은 최대 16자, 태그는 최대 5자입니다. 기존 플레이어와 일치하면 즉시 연결하지 않고 관리자 수동 검토를 거칩니다.</small></label>
       <label className={styles.check}><input name="termsAccepted" type="checkbox" required /><span><Link href="/terms" target="_blank">이용약관</Link>을 확인했고 계정 운영 규칙에 동의합니다.</span></label>
       <label className={styles.check}><input name="privacyAccepted" type="checkbox" required /><span><Link href="/privacy" target="_blank">개인정보 처리 안내</Link>에 따른 계정·회원명·Riot ID 처리에 동의합니다.</span></label>
       <button className={styles.submit} type="submit" disabled={busy}>{busy ? "가입 중…" : "가입하기"}</button>

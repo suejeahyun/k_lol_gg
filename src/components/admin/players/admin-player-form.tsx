@@ -21,6 +21,12 @@ type FormValues = {
 
 type ProblemBody = { code?: unknown; detail?: unknown; title?: unknown };
 
+function normalizedRiotIdentity(gameName: string, tagLine: string) {
+  const normalizedGameName = gameName.normalize("NFKC").trim().replace(/\s+/gu, " ").toLocaleLowerCase("ko-KR");
+  const normalizedTagLine = tagLine.replace(/^#+/, "").normalize("NFKC").trim().toLocaleLowerCase("en-US");
+  return `${normalizedGameName}#${normalizedTagLine}`;
+}
+
 function initialValues(player?: AdminPlayer): FormValues {
   return {
     memberName: player?.memberName ?? "",
@@ -58,6 +64,8 @@ export function AdminPlayerForm({
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<{ tone: "error" | "success"; text: string } | null>(null);
   const retryKey = useRef<{ fingerprint: string; key: string } | null>(null);
+  const riotIdChanged = mode === "edit" && Boolean(player) &&
+    normalizedRiotIdentity(values.nickname, values.tagLine) !== normalizedRiotIdentity(player!.nickname, player!.tagLine);
 
   function setField(field: keyof FormValues, value: string) {
     setValues((current) => ({ ...current, [field]: value }));
@@ -135,28 +143,6 @@ export function AdminPlayerForm({
           <small>공개 목록과 공개 검색에는 포함되지 않습니다.</small>
         </label>
         <label className={styles.field}>
-          <span>닉네임</span>
-          <Input
-            required
-            maxLength={64}
-            autoComplete="off"
-            value={values.nickname}
-            onChange={(event) => setField("nickname", event.target.value)}
-          />
-        </label>
-        <label className={styles.field}>
-          <span>태그</span>
-          <Input
-            required
-            maxLength={32}
-            autoComplete="off"
-            placeholder="KLOL"
-            value={values.tagLine}
-            onChange={(event) => setField("tagLine", event.target.value)}
-          />
-          <small># 기호는 제외하고 입력합니다.</small>
-        </label>
-        <label className={styles.field}>
           <span>V1 기존 번호</span>
           <Input
             type="number"
@@ -169,6 +155,36 @@ export function AdminPlayerForm({
           />
           <small>이관 대상에게만 지정하며 다른 플레이어와 중복될 수 없습니다.</small>
         </label>
+        <fieldset className={styles.identityGroup} aria-describedby="admin-player-riot-id-help">
+          <legend>Riot ID</legend>
+          <label className={styles.field}>
+            <span>게임 이름</span>
+            <Input
+              required
+              maxLength={16}
+              autoComplete="off"
+              value={values.nickname}
+              onChange={(event) => setField("nickname", event.target.value)}
+            />
+          </label>
+          <label className={styles.field}>
+            <span>태그</span>
+            <Input
+              required
+              maxLength={5}
+              autoComplete="off"
+              placeholder="KLOL"
+              value={values.tagLine}
+              onChange={(event) => setField("tagLine", event.target.value)}
+            />
+            <small># 기호는 제외하고 입력합니다.</small>
+          </label>
+          <p id="admin-player-riot-id-help" className={styles.identityHelp} data-changed={riotIdChanged || undefined} role={riotIdChanged ? "status" : undefined}>
+            {riotIdChanged
+              ? "Riot ID가 변경됩니다. 기존 Riot 계정 연동은 안전하게 해제되고 진행 중인 동기화는 취소됩니다. 저장 후 Riot 운영 화면에서 새 ID로 다시 연결해 주세요."
+              : "게임 이름과 태그를 함께 공개 Riot ID로 저장합니다. 연결된 Riot ID를 변경하면 기존 연동을 해제한 뒤 새 ID 재연결이 필요합니다."}
+          </p>
+        </fieldset>
         <label className={styles.field}>
           <span>최고 티어</span>
           <Input

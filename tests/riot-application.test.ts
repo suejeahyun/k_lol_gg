@@ -275,6 +275,49 @@ test("approved owner direct link/unlink is transactional, idempotent, and never 
   assert.equal([...harness.snapshot.links.values()][0]?.puuidCiphertext, null);
 });
 
+test("direct and RSO links must match the player's canonical registry Riot ID", async () => {
+  const { harness, service } = setup();
+  harness.gateway.registerIdentity({ gameName: "Lux", tagLine: "KR2", puuid: "private-puuid-2" });
+  await assert.rejects(
+    service.connectDirect({
+      context: harness.ownerContext("registry-mismatch-direct"),
+      playerId: "player-1",
+      expectedRevision: 0,
+      gameName: "Lux",
+      tagLine: "KR2",
+    }),
+    (error: unknown) => error instanceof RiotApplicationError && error.code === "INVALID_COMMAND",
+  );
+  assert.equal(harness.snapshot.links.size, 0);
+  assert.equal(harness.snapshot.receipts.size, 0);
+
+  harness.rso.registerCallback("mismatched-rso-code", {
+    gameName: "Lux",
+    tagLine: "KR2",
+    puuid: "rso-private-puuid-2",
+  });
+  const started = await service.startRso({
+    context: harness.ownerContext("registry-mismatch-rso-start"),
+    returnTo: "/account/riot",
+  });
+  const state = new URL(started.authorizationUrl).searchParams.get("state");
+  assert.ok(state);
+  const receiptCountBeforeMismatchedRso = harness.snapshot.receipts.size;
+  await assert.rejects(
+    service.completeRso({
+      context: harness.ownerContext("registry-mismatch-rso"),
+      playerId: "player-1",
+      expectedRevision: 0,
+      publicState: state,
+      authorizationCode: "mismatched-rso-code",
+    }),
+    (error: unknown) => error instanceof RiotApplicationError && error.code === "INVALID_COMMAND",
+  );
+  assert.equal(harness.snapshot.links.size, 0);
+  assert.equal(harness.snapshot.receipts.size, receiptCountBeforeMismatchedRso);
+  assert.equal(harness.rso.exchangeCalls, 1);
+});
+
 test("feature flag fails closed and outbox failure rolls link, audit, and receipt back together", async () => {
   const { harness, service } = setup();
   harness.enabled = false;
@@ -324,6 +367,7 @@ test("only SUPER_ADMIN can bulk/sync-all while owner is restricted to the owned 
   await service.connectDirect({ context: harness.ownerContext("owner-link"), playerId: "player-1", expectedRevision: 0, gameName: "Ahri", tagLine: "KR1" });
   const linkId = [...harness.snapshot.links.keys()][0]!;
   harness.gateway.registerIdentity({ gameName: "Lux", tagLine: "KR2", puuid: "private-puuid-2" });
+  harness.playerIdentities.set("player-2", { ownerAccountId: "account-2", gameName: "Lux", tagLine: "KR2" });
   const adminLinked = await service.connectDirect({ context: harness.adminContext("admin-link"), playerId: "player-2", expectedRevision: 0, gameName: "Lux", tagLine: "KR2" });
   assert.equal(adminLinked.body.method, "ADMIN");
   await assert.rejects(

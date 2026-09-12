@@ -8,9 +8,9 @@ type AccountTab = "overview" | "player" | "discipline" | "riot" | "password";
 
 const tabs: ReadonlyArray<Readonly<{ id: AccountTab; href: string; label: string; icon: typeof ShieldCheck }>> = [
   { id: "overview", href: "/account", label: "상태", icon: ShieldCheck },
-  { id: "player", href: "/account?tab=player", label: "플레이어", icon: UsersRound },
+  { id: "player", href: "/account?tab=player", label: "Riot ID·티어 변경", icon: UsersRound },
   { id: "discipline", href: "/account/discipline", label: "경고·증빙", icon: AlertTriangle },
-  { id: "riot", href: "/account/riot", label: "Riot", icon: Radio },
+  { id: "riot", href: "/account/riot", label: "Riot 전적 연동", icon: Radio },
   { id: "password", href: "/account/password", label: "비밀번호", icon: KeyRound },
 ];
 

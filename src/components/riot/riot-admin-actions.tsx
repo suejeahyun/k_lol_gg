@@ -66,9 +66,9 @@ export function RiotAdminGlobalActions({ superAdmin, items }: Readonly<{ superAd
     void operation().then(() => setMessage(success)).catch((error: unknown) => setMessage(error instanceof Error ? error.message : "요청에 실패했습니다.")).finally(() => setPending(false));
   }
   return <div>
-    <form className={styles.form} onSubmit={(event) => { event.preventDefault(); run(() => command("/api/admin/riot/link", { playerId, gameName, tagLine }, revision), "단일 연결을 반영했습니다."); }}>
+    <form id="riot-single-link" className={styles.form} onSubmit={(event) => { event.preventDefault(); run(() => command("/api/admin/riot/link", { playerId, gameName, tagLine }, revision), "단일 연결을 반영했습니다."); }}>
       <label><span>연결할 플레이어</span><BoundedPicker ariaLabel="Riot 단일 연결 플레이어" value={playerId} options={playerOptions} placeholder="현재 목록에서 이름 또는 Riot ID 검색" onChange={selectPlayer} /></label>
-      <label>게임 이름<input value={gameName} onChange={(event) => setGameName(event.target.value)} placeholder="게임 이름" required /></label><label>태그<input value={tagLine} onChange={(event) => setTagLine(event.target.value)} placeholder="태그" required /></label>
+      <label>게임 이름<input value={gameName} onChange={(event) => setGameName(event.target.value)} placeholder="게임 이름" maxLength={16} required /></label><label>태그<input value={tagLine} onChange={(event) => setTagLine(event.target.value)} placeholder="태그" maxLength={5} required /></label>
       <p className={styles.selectionSummary} role="status">{selectedPlayer ? `${selectedPlayer.displayName} · 현재 revision ${revision} 자동 적용` : "현재 목록에서 미연결·연결 해제 플레이어를 선택해 주세요."}</p>
       <div className={styles.actions}><button type="submit" disabled={pending || !selectedPlayer || !gameName || !tagLine}>단일 연결</button></div>
     </form>

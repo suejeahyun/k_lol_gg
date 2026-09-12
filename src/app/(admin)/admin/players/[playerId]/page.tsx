@@ -106,7 +106,7 @@ export default async function AdminPlayerDetailPage({
           <h2>Riot 계정·전적</h2>
           {riotResult?.state === "unavailable" ? <p>Riot 운영 adapter가 비활성 상태입니다. 운영 feature flag는 기본적으로 꺼져 있습니다.</p>
             : riotResult?.state === "error" ? <p role="alert">Riot 전적을 불러오지 못했습니다.</p>
-            : !riotResult?.data ? <p>아직 공개 가능한 동기화 전적이 없습니다. <Link href="/admin/riot?tab=accounts">Riot 운영 화면에서 연결 상태 확인</Link></p>
+            : !riotResult?.data ? <p>아직 공개 가능한 동기화 전적이 없습니다. <Link href="/admin/riot?tab=accounts#riot-single-link">Riot 운영 화면에서 등록 Riot ID 연결</Link></p>
             : <dl className={styles.facts}><div><dt>Riot ID</dt><dd>{riotResult.data.riotId}</dd></div><div><dt>솔로 랭크</dt><dd>{riotResult.data.soloTier ?? "Unranked"} {riotResult.data.soloRank ?? ""}</dd></div><div><dt>LP</dt><dd>{riotResult.data.leaguePoints ?? 0}</dd></div><div><dt>전적</dt><dd>{riotResult.data.wins ?? 0}승 {riotResult.data.losses ?? 0}패</dd></div></dl>}
         </section>
       ) : (

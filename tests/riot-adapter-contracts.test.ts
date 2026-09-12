@@ -89,7 +89,7 @@ test("Riot production feature flag is exact and fail-closed by default", () => {
 
 test("explicit fake runtime adapter connects application mutations to safe query DTOs", async () => {
   const adapter = new InMemoryRiotAdapter(true);
-  adapter.bindOwner("account-1", "player-1");
+  adapter.bindBulkCandidate("account-1", "player-1", "Ahri", "KR1");
   const service = new RiotApplicationService({
     ...adapter.dependencies,
     gateway: new FakeRiotGateway(true),
@@ -153,6 +153,8 @@ test("public, owner, admin HTTP routes and responsive UI states are present", ()
     assert.match(source, /error/);
   }
   assert.match(account, /Riot 계정 연결/);
+  assert.match(account, /이전 Riot 연동/);
+  assert.match(account, /현재 Riot 연동은 해제된 상태/);
   assert.match(admin, /표시할 연동 계정이 없습니다/);
   assert.match(admin, /data-riot-state="accounts"/);
   assert.match(admin, /data-riot-state="sync"/);
@@ -160,6 +162,8 @@ test("public, owner, admin HTTP routes and responsive UI states are present", ()
   assert.match(admin, /data-riot-action/);
   assert.match(admin, /action=bulk-link/);
   assert.match(admin, /Riot 계정 연결 현황/);
+  assert.match(admin, /row\.status === "CONNECTED" && row\.linkId/);
+  assert.match(admin, /위 연결 폼에서 재연결/);
   assert.match(admin, /Riot 동기화 작업 이력/);
   assert.match(admin, /Riot API·동기화·감사 로그/);
   const actions = readFileSync(new URL("../src/components/riot/riot-admin-actions.tsx", import.meta.url), "utf8");
@@ -168,6 +172,9 @@ test("public, owner, admin HTTP routes and responsive UI states are present", ()
   assert.match(actions, /\/api\/admin\/riot\/bulk-link/);
   assert.match(actions, /role="dialog"/);
   assert.match(actions, /등록 확인/);
+  assert.match(actions, /id="riot-single-link"/);
+  assert.match(actions, /maxLength=\{16\}/);
+  assert.match(actions, /maxLength=\{5\}/);
   assert.match(player, /Riot 계정을 연결하지 않았어요/);
   assert.match(player, /공개 전적을 아직 동기화하지 않았어요/);
   const bulkLinkRoute = readFileSync(new URL("../src/app/api/admin/riot/bulk-link/route.ts", import.meta.url), "utf8");

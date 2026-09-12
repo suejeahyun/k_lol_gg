@@ -141,8 +141,8 @@ test("production RSO cache and signed sync job survive application retry without
       userAccountId: ownerId,
       memberName: "S12 production contract",
       memberNameNormalized: `s12 production ${ownerId}`,
-      nickname: `Prod${ownerId.slice(0, 8)}`,
-      nicknameNormalized: `prod${ownerId.slice(0, 8)}`,
+      nickname: "VerifiedPlayer",
+      nicknameNormalized: "verifiedplayer",
       tagLine: "KR1",
       tagLineNormalized: "kr1",
     });
@@ -216,7 +216,7 @@ test("production RSO cache and signed sync job survive application retry without
     assert.equal((await database.select().from(jobNonceBindings).where(eq(jobNonceBindings.jobName, "riot-sync"))).length, 1);
     const accounts = await adapter.listAdmin({ tab: "accounts", action: "NONE", status: "ALL", source: "ALL", q: "", batchSize: 10, page: 1, pageSize: 25 });
     assert.equal(accounts.tab, "accounts");
-    assert.ok(accounts.items.some((row) => row.playerId === playerId));
+    assert.equal(accounts.items.find((row) => row.playerId === playerId)?.riotId, "VerifiedPlayer#KR1");
     assert.equal(accounts.syncItems.length, 0);
     assert.equal(accounts.logItems.length, 0);
     const sync = await adapter.listAdmin({ tab: "sync", action: "NONE", status: "ALL", source: "ALL", q: "", batchSize: 10, page: 1, pageSize: 25 });

@@ -147,6 +147,8 @@ test("signup is an exact agreement-bound contract with NFKC lowercase identities
   assert.equal(parseSignupInput({ ...validSignup, role: "ADMIN" }).ok, false);
   assert.equal(parseSignupInput({ ...validSignup, loginId: "bad id" }).ok, false);
   assert.equal(parseSignupInput({ ...validSignup, riotId: "missing-tag" }).ok, false);
+  assert.equal(parseSignupInput({ ...validSignup, riotId: `${"a".repeat(17)}#KR1` }).ok, false);
+  assert.equal(parseSignupInput({ ...validSignup, riotId: "Breeze#TOOLNG" }).ok, false);
   for (const control of [
     "\u061c",
     "\u200b",
@@ -217,6 +219,8 @@ test("own player edit accepts only Riot ID and supported tier fields", () => {
     });
   }
   assert.equal(parseOwnPlayerInput({ riotId: "태그없음", currentTier: null, peakTier: null }).ok, false);
+  assert.equal(parseOwnPlayerInput({ riotId: `${"a".repeat(17)}#KR1`, currentTier: null, peakTier: null }).ok, false);
+  assert.equal(parseOwnPlayerInput({ riotId: "Breeze#TOOLNG", currentTier: null, peakTier: null }).ok, false);
   assert.equal(parseOwnPlayerInput({ riotId: "Breeze#KR1", currentTier: "신화 1", peakTier: null }).ok, false);
   assert.equal(parseOwnPlayerInput({ riotId: "Breeze#KR1", currentTier: null, peakTier: null, status: "ACTIVE" }).ok, false);
 });
