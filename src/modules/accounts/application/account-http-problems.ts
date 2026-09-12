@@ -25,7 +25,7 @@ export const ACCOUNT_HTTP_PROBLEMS = Object.freeze({
   playerClaimAckRequired: definePublicProblem({ code: "PLAYER_CLAIM_ACK_REQUIRED", status: 409, title: "플레이어 연결 수동 검토 확인이 필요합니다.", detail: "대상 플레이어와 가입 입력을 다시 대조하고 명시적 확인란을 선택해 주세요." }),
   playerClaimStateChanged: definePublicProblem({ code: "PLAYER_CLAIM_STATE_CHANGED", status: 409, title: "플레이어 연결 요청 상태가 변경되었습니다.", detail: "계정 상세를 새로 불러와 현재 claim 대상과 상태를 다시 검토해 주세요." }),
   roleUnchanged: definePublicProblem({ code: "ROLE_UNCHANGED", status: 409, title: "이미 선택한 계정 역할입니다.", detail: "최신 역할을 확인하고 다른 역할을 선택해 주세요." }),
-  adminEligibility: definePublicProblem({ code: "ADMIN_ELIGIBILITY", status: 409, title: "관리자 역할 요건을 충족하지 않습니다.", detail: "승인된 계정과 활성 연결 플레이어인지 확인한 뒤 다시 시도해 주세요." }),
+  adminEligibility: definePublicProblem({ code: "ADMIN_ELIGIBILITY", status: 409, title: "관리자 역할 요건을 충족하지 않습니다.", detail: "승인된 활성 계정인지 확인한 뒤 다시 시도해 주세요." }),
   totpNotConfigured: definePublicProblem({ code: "TOTP_NOT_CONFIGURED", status: 409, title: "초기화할 관리자 2단계 인증이 없습니다.", detail: "대상의 현재 2단계 인증 상태를 새로 확인해 주세요." }),
   alreadyDeleted: definePublicProblem({ code: "ALREADY_DELETED", status: 409, title: "이미 삭제된 계정입니다.", detail: "삭제 목록에서 최신 상태를 확인하고 복구 작업을 사용해 주세요." }),
   notDeleted: definePublicProblem({ code: "NOT_DELETED", status: 409, title: "삭제되지 않은 계정은 복구할 수 없습니다.", detail: "활성 계정 목록에서 최신 상태를 확인해 주세요." }),

@@ -37,13 +37,25 @@ function temporaryPassword() {
   return `K9-${randomBytes(18).toString("base64url")}`;
 }
 
-async function mutationContext(request: Request, userAccountId: string) {
+async function mutationContext(
+  request: Request,
+  userAccountId: string,
+  requireSuperAdmin = false,
+) {
   const authorization = await authorizeAdminAccountApi(request);
   if (!authorization.ok) return { ok: false as const, response: authorization.response };
   const queryFailure = guardExactAccountQuery(request, [], authorization.traceId);
   if (queryFailure) return { ok: false as const, response: queryFailure };
   const originFailure = guardAccountMutationOrigin(request, authorization.traceId);
   if (originFailure) return { ok: false as const, response: originFailure };
+  if (requireSuperAdmin && authorization.session.role !== "SUPER_ADMIN") {
+    return {
+      ok: false as const,
+      response: problemResponse(ACCOUNT_HTTP_PROBLEMS.forbidden, {
+        traceId: authorization.traceId,
+      }),
+    };
+  }
   if (!isCanonicalAccountUuid(userAccountId)) {
     return {
       ok: false as const,
@@ -130,7 +142,7 @@ export async function handleAdminStatusMutation(
 }
 
 export async function handleAdminRoleMutation(request: Request, userAccountId: string) {
-  const context = await mutationContext(request, userAccountId);
+  const context = await mutationContext(request, userAccountId, true);
   if (!context.ok) return context.response;
   const body = await bodyOrProblem(request, context.authorization.traceId);
   if (!body.ok) return body.response;

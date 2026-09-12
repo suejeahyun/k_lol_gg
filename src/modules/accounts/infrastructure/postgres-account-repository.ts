@@ -1803,18 +1803,8 @@ export class PostgresAccountRepository implements AccountRepository {
         return { type: "precondition-failed", currentRevision: target.revision };
       }
       if (target.role === nextRole) return { type: "conflict", reason: "ROLE_UNCHANGED" };
-      if (nextRole === "ADMIN") {
-        const activePlayer = (
-          await transaction
-            .select({ id: players.id })
-            .from(players)
-            .where(and(eq(players.userAccountId, target.id), eq(players.status, "ACTIVE")))
-            .for("update")
-            .limit(1)
-        )[0];
-        if (target.status !== "APPROVED" || !activePlayer) {
-          return { type: "conflict", reason: "ADMIN_ELIGIBILITY" };
-        }
+      if (nextRole === "ADMIN" && target.status !== "APPROVED") {
+        return { type: "conflict", reason: "ADMIN_ELIGIBILITY" };
       }
       const updated = (
         await transaction

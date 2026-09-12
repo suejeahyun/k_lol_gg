@@ -142,6 +142,16 @@ export function AdminAccountActions({
   const targetAllowed = account.deletedAt === null && account.role !== "SUPER_ADMIN" && account.id !== actor.id && (actor.role === "SUPER_ADMIN" || account.role === "USER");
   const superTargetAllowed = actor.role === "SUPER_ADMIN" && account.role !== "SUPER_ADMIN" && account.id !== actor.id;
   const superActiveAllowed = superTargetAllowed && account.deletedAt === null;
+  const roleManagementBlockedReason = account.id === actor.id
+    ? "자기 계정의 역할은 이 화면에서 변경할 수 없습니다."
+    : account.role === "SUPER_ADMIN"
+      ? "최고 관리자 계정의 역할은 웹에서 변경할 수 없습니다."
+      : account.deletedAt !== null
+        ? "삭제된 계정은 먼저 복구해야 역할을 변경할 수 있습니다."
+        : roleAction === "ADMIN" && account.status !== "APPROVED"
+          ? "관리자 지정은 승인된 계정만 가능합니다. 먼저 계정 상태를 승인으로 변경해 주세요."
+          : null;
+  const roleManagementAllowed = superActiveAllowed && roleManagementBlockedReason === null;
   const canReopenRejectedClaim = account.status === "PENDING" && account.playerClaimReview?.status === "REJECTED";
   const actionsUnavailable = busy !== null || temporaryPassword !== null;
 
@@ -411,18 +421,21 @@ export function AdminAccountActions({
           <button data-tone="danger" type="submit" disabled={!superActiveAllowed || account.role !== "ADMIN" || !account.adminTotpConfigured || actionsUnavailable}>{busy === "2fa-reset" ? "초기화 중…" : account.adminTotpConfigured ? "2단계 인증 초기화" : "등록된 2단계 인증 없음"}</button>
         </form>
 
-        <form className={styles.actionPanel} onSubmit={(event) => {
+        {actor.role === "SUPER_ADMIN" ? <form id="role-management" className={styles.actionPanel} onSubmit={(event) => {
           event.preventDefault();
           const data = new FormData(event.currentTarget);
           if (!requireTypedConfirmation(data)) return;
           void mutate("role", `/api/admin/users/${account.id}/role`, "PATCH", { role: roleAction, internalReason: String(data.get("internalReason") ?? ""), confirmLoginId: String(data.get("confirmLoginId") ?? "") });
         }}>
-          <h3>역할</h3><p>최고 관리자(SUPER_ADMIN)만 일반 사용자(USER)↔관리자(ADMIN)를 변경할 수 있고 최고 관리자 역할은 웹에서 부여하거나 회수할 수 없습니다.</p>
+          <h3>역할 관리</h3>
+          <p>최고 관리자(SUPER_ADMIN)만 일반 사용자(USER)↔관리자(ADMIN)를 변경할 수 있고 최고 관리자 역할은 웹에서 부여하거나 회수할 수 없습니다.</p>
+          <p>관리자 지정 요건은 승인됨(APPROVED)이고 삭제되지 않은 일반 사용자(USER) 계정입니다. 플레이어 연결 여부는 요건이 아닙니다. 지정하면 기존 세션이 모두 종료되고, 다음 관리자 로그인에서 2단계 인증 등록이 필요합니다.</p>
+          {roleManagementBlockedReason ? <p className={styles.inactiveNotice}>{roleManagementBlockedReason}</p> : null}
           <label>다음 역할<select name="role" value={roleAction} onChange={(event) => setRoleAction(event.target.value as "USER" | "ADMIN")} disabled={!superActiveAllowed}><option value="USER" disabled={account.role === "USER"}>일반 사용자 (USER)</option><option value="ADMIN" disabled={account.role === "ADMIN"}>관리자 (ADMIN)</option></select></label>
           <label>내부 운영 사유<textarea name="internalReason" minLength={2} maxLength={1000} required /></label>
           <label>대상 확인<input name="confirmLoginId" autoComplete="off" placeholder={account.loginId} required /></label>
-          <button type="submit" disabled={!superActiveAllowed || actionsUnavailable}>{busy === "role" ? "처리 중…" : "역할 변경"}</button>
-        </form>
+          <button type="submit" disabled={!roleManagementAllowed || actionsUnavailable}>{busy === "role" ? "처리 중…" : "역할 변경"}</button>
+        </form> : null}
 
         <form className={styles.actionPanel} onSubmit={(event) => {
           event.preventDefault();

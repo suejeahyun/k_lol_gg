@@ -274,6 +274,7 @@ async function seedAccount(
   label: string,
   role: SyntheticAccount["role"],
   withTotp = false,
+  withPlayer = true,
 ): Promise<SyntheticAccount> {
   const id = randomUUID();
   const playerId = randomUUID();
@@ -294,16 +295,18 @@ async function seedAccount(
     status: "APPROVED",
     passwordChangedAt: new Date(),
   });
-  await database.insert(players).values({
-    id: playerId,
-    userAccountId: id,
-    memberName: `HTTP 관리자 회원 ${label}`,
-    memberNameNormalized: `http 관리자 회원 ${label}`,
-    nickname,
-    nicknameNormalized: nickname.toLocaleLowerCase("ko-KR"),
-    tagLine: "S01",
-    tagLineNormalized: "s01",
-  });
+  if (withPlayer) {
+    await database.insert(players).values({
+      id: playerId,
+      userAccountId: id,
+      memberName: `HTTP 관리자 회원 ${label}`,
+      memberNameNormalized: `http 관리자 회원 ${label}`,
+      nickname,
+      nicknameNormalized: nickname.toLocaleLowerCase("ko-KR"),
+      tagLine: "S01",
+      tagLineNormalized: "s01",
+    });
+  }
   if (totpSecret) {
     await database.insert(adminTotpCredentials).values({
       userAccountId: id,
@@ -403,6 +406,7 @@ async function waitForDatabaseLockWaiters(minimum: number, label: string) {
 const superAdmin = await seedAccount("super", "SUPER_ADMIN", true);
 const admin = await seedAccount("admin", "ADMIN", true);
 const adminVictim = await seedAccount("admin_victim", "ADMIN", true);
+const unlinkedPromotionTarget = await seedAccount("unlinked_promotion", "USER", false, false);
 
 let mainServer: RunningServer | undefined;
 let unavailableServer: RunningServer | undefined;
@@ -799,6 +803,15 @@ try {
     body: { role: "ADMIN", internalReason: "ADMIN은 역할 변경 불가", confirmLoginId: signupInput.loginId },
   });
   assert.equal(adminCannotChangeRole.status, 403);
+  const adminDeniedBeforeMutationPreconditions = await fetch(
+    `${origin}/api/admin/users/${unlinkedPromotionTarget.id}/role`,
+    {
+      method: "PATCH",
+      headers: { cookie: adminCookie, origin },
+      body: "{malformed",
+    },
+  );
+  assert.equal(adminDeniedBeforeMutationPreconditions.status, 403);
   const cannotAssignSuper = await adminMutation({
     origin,
     cookie: superAdminCookie,
@@ -819,6 +832,24 @@ try {
   await assertAnonymousMe(await fetch(`${origin}/api/auth/me`, {
     headers: { cookie: approvedAccountLogin.cookie },
   }), "role mutation must revoke account sessions");
+  const promotedWithoutPlayer = await adminMutation({
+    origin,
+    cookie: superAdminCookie,
+    path: `/api/admin/users/${unlinkedPromotionTarget.id}/role`,
+    revision: 0,
+    body: {
+      role: "ADMIN",
+      internalReason: "승인된 사이트 계정의 관리자 지정 검증",
+      confirmLoginId: unlinkedPromotionTarget.loginId,
+    },
+  });
+  assert.equal(promotedWithoutPlayer.status, 200);
+  assert.equal((await database.select().from(userAccounts).where(
+    eq(userAccounts.id, unlinkedPromotionTarget.id),
+  ))[0]?.role, "ADMIN");
+  assert.equal((await database.select({ value: count() }).from(players).where(
+    eq(players.userAccountId, unlinkedPromotionTarget.id),
+  ))[0]?.value, 0);
 
   const resetKey = idempotencyKey("password-reset");
   const ordinaryAdminCannotHashReset = await adminMutation({
