@@ -1,16 +1,16 @@
 # K-LOL.GG V2 상태
 
 - 운영 자동승인 확인 시각: 2026-09-11T20:41:16.240Z (2026-09-12 05:41:16 KST)
-- 운영 검증 기능 기준: `8b476ad7181d002e41b71e0d297c028a1b213ec5`
-- 릴리스 tag: `kakao-recruit-input-recovery-v1.0.1`
-- 현재 단계: Kakao 구인 마감 대상 조회 핫픽스 운영 배포 완료, 실제 구인방 canary 대기
+- 운영 검증 기능 기준: `fa6d4f2875857ce7b1a3981f932738a42d35165b`
+- 릴리스 tag: `kakao-inhouse-round-metadata-v1.0.0`
+- 현재 단계: Kakao 내전 시간·공지 보존 서버·DB 운영 배포 완료, 휴대폰 R7 설치와 실제 Kakao canary 대기
 - V1 코드 복사: 없음. V1은 기능 목록과 동등성 대조 근거로만 사용
 - V1 기준선: 블루·블랙 Vercel 기준선 저장소를 변경하지 않음
-- 운영 Vercel: 배포 `dpl_67gzXT1pRnY6ybCWPM78JEHgB46q`, 불변 URL `https://k-lol-7xg47f0f7-tjdmswo11-3715s-projects.vercel.app`, deployment `Ready`
-- 운영 별칭: `https://k-lol-gg.vercel.app`, `2026-09-12T03:52:15.274Z`에 `/api/health` HTTP 200·JSON `status: ready` 확인
-- 운영 DB: migration 37개, head `0036_flowery_hairball` 확인
+- 운영 Vercel: 배포 `dpl_Fz2onEm7CAhypBDGYH9zVa1wLG9K`, 불변 URL `https://k-lol-a1lh8rd86-tjdmswo11-3715s-projects.vercel.app`, deployment `Ready`
+- 운영 별칭: `https://k-lol-gg.vercel.app`, `2026-09-12T04:47:34.417Z`에 `/api/health` HTTP 200·JSON `status: ready` 확인
+- 운영 DB: migration 38개, head `0037_swift_brood` 확인
 - Kakao 구인·내전 입력 복구: `v1.0.1` 사이트·서버 운영 배포와 health 확인 완료
-- 휴대폰 Kakao V41 R15/V1 strict R6: 모두 `PENDING_USER_INSTALL`; MessengerBot R 설치·실제 Kakao 송수신은 미확인
+- 휴대폰 Kakao V1 strict R7: `PENDING_USER_INSTALL`; MessengerBot R 설치·실제 Kakao 송수신은 미확인
 
 ## 확인된 상태
 
@@ -27,6 +27,9 @@
 - 구인 참가자 추가·수정·빈 슬롯 삭제·마감 성공 뒤 최신 전체 현황을 이어서 표시하며, 후속 현황 조회만 실패하면 mutation 성공은 유지하고 재조회 안내를 표시한다.
 - 내전 신청 후보는 번호 뒤 공백, 들여쓰기, 대소문자 포지션, `ALL`, `Mid all`, `TOP, MID`, 이름만·부라인 공란, 중복 슬롯과 빈 행 취소를 처리한다. 정상 행은 반영하고 불완전·중복 플레이어 행만 확인 필요로 분리하며 `SITE`, `CONFIRMED`, 다른 방 신청은 보존한다.
 - Kakao 릴리스 focused 검증은 V41 28/28, JavaScript 31/31, V1 strict 12/12, 내전 파서·서비스 22/22, 격리 PostgreSQL recruiting 계약 42/42가 통과했다. TypeScript·변경 범위 lint·Rhino 정적 검사도 통과했다.
+- Kakao 내전 회차는 종목·정원·시작 시간·공지·revision을 별도 저장하고, 전체 양식의 명단 추가·수정·취소와 같은 transaction에서 갱신한다. `내전현황`과 상세는 저장값을 출력하며 기존 메타데이터 없는 회차만 협곡·21:00·10명 fallback을 사용한다.
+- 내전 시간·공지 릴리스의 최신 검증은 V1 strict 14/14, parser/dispatcher 44/44, 전체 DB 계약 PASS이며 전체 `npm run check`는 725개 중 724 PASS·DB 전용 1개 intentional skip, production build 92 pages PASS다.
+- 운영 Neon은 자동 만료 복구 분기 `pre-0037-inhouse-metadata-20260912` 생성 후 `0037_swift_brood`를 적용했다. 사후 조회에서 migration hash, 신규 테이블, 인덱스 3개와 세 종목 제약을 확인했다.
 - 운영 Neon production은 비밀값 비노출 read-only preflight에서 기존 migration 35개, CONNECTED identity·owner 중복과 player-owner mismatch 0을 확인했다. 자동 만료 1일 복구 분기 `pre-0035-0036-20260911` 생성 후 `0035`·`0036`을 단일 transaction으로 적용했다.
 - 운영 DB 사후 검증은 migration 37개, head hash `ebb200d8597ed63d270c2a66a7369dd67d3536c238939458aeed337028bdc63f`, Riot unique index 2개, player-owner index 1개, validated foreign key 1개이며 중복·mismatch는 모두 0이다.
 - Drizzle TypeScript 스키마와 최신 snapshot은 101개 테이블을 정의한다.
@@ -59,6 +62,8 @@
 - 승인된 기존 27개 계정의 로그인 실패율과 재문의 발생 여부 확인
 - 자동 만료 1일 복구 분기 보존 시간 안의 DB 오류 지표와 무결성 위반 재확인
 - R15/R6 중 설치 대상을 확정해 SHA-256 대조, MessengerBot R 교체, `/봇버전` 확인과 실제 두 Kakao 방 송수신
+- V1 strict R7을 MessengerBot R에 설치하고 수정한 시간·공지·참가자와 빈칸 취소가 `내전현황`에 유지되는지 실제 방에서 확인
+- 오래된 전체 내전 양식 충돌을 탐지할 revision/base-token을 V1 화면 호환 방식으로 설계
 - Kakao V4 서명 HTTP는 운영 서버에서 확인했지만 실제 휴대폰 E2E, 재시도, 줄바꿈과 체감 지연은 미확인
 - 실제 사용자 Riot RSO/API와 Vercel Blob 업로드·읽기·삭제 E2E는 완전히 검증하지 않음
 - 운영 도메인 CSP/WAF/관측/알림/cleanup scheduler 확인
