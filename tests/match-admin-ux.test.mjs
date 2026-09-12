@@ -7,10 +7,14 @@ const pickerPath = new URL("../src/app/(admin)/admin/matches/bounded-picker.tsx"
 const reviewPath = new URL("../src/app/(admin)/admin/matches/submissions/[submissionId]/submission-review.tsx", import.meta.url);
 const reviewPagePath = new URL("../src/app/(admin)/admin/matches/submissions/[submissionId]/page.tsx", import.meta.url);
 const editorPagePath = new URL("../src/app/(admin)/admin/matches/[matchId]/page.tsx", import.meta.url);
+const stylesPath = new URL("../src/app/(admin)/admin/matches/matches-admin.module.css", import.meta.url);
 
 test("match editor exposes only the structured form and traps the void confirmation dialog", async () => {
   const source = await readFile(editorPath, "utf8");
   assert.doesNotMatch(source, /전송 JSON 미리보기/);
+  assert.doesNotMatch(source, />진행 초</);
+  assert.match(source, /durationSeconds: game\.durationSeconds/u);
+  assert.match(source, /durationSeconds: 1_800/u);
   assert.match(source, /inert=\{voidOpen \? true : undefined\}/);
   assert.match(source, /aria-modal="true"/);
   assert.match(source, /event\.key === "Escape"/);
@@ -77,4 +81,10 @@ test("match editor conflict preserves local input and adopts only a verified lat
   assert.match(source, /서버 경기 전체 불러오기/);
   assert.match(source, /disabled=\{busy \|\| Boolean\(serverConflict\)/);
   assert.doesNotMatch(source, /if \(response\.status === 412\) \{\s*router\.refresh\(\)/);
+});
+
+test("match editor save action stays readable in enabled and disabled states", async () => {
+  const styles = await readFile(stylesPath, "utf8");
+  assert.match(styles, /\.actions \.action \{ color: #fff; border-color: var\(--primary\); background: var\(--primary\); \}/);
+  assert.match(styles, /\.actions \.action:disabled \{ color: #66758b; border-color: #d8e1ed; background: #e9eef5; cursor: not-allowed; \}/);
 });

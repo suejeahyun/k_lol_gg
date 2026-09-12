@@ -225,6 +225,7 @@ test("builder pins the canonical V1 hash and produces an ES5/Rhino-safe artifact
   assert.equal(sha256(canonical), sourceSha256);
   assert.match(artifact, new RegExp(`KLOL_V1_SOURCE_SHA256 = "${sourceSha256}"`));
   assert.ok(artifact.length < 65_535, `artifact length: ${artifact.length}`);
+  assert.ok(artifact.replace(/\n/gu, "\r\n").length < 65_535, `CRLF artifact length: ${artifact.replace(/\n/gu, "\r\n").length}`);
   assert.equal((artifact.match(/function\s+response\s*\(/gu) ?? []).length, 1);
   assert.equal((artifact.match(/org\.jsoup\.Jsoup\.connect\s*\(/gu) ?? []).length, 1);
   assert.match(artifact, /\.timeout\(5000\)/u);
@@ -257,7 +258,7 @@ test("artifact excludes legacy HTTP, bearer, and embedded secret material", asyn
   }
 });
 
-test("all response-reachable non-transport V1 functions are present byte-for-byte", async () => {
+test("all response-reachable non-transport V1 function lines are preserved except blank spacers", async () => {
   const canonical = canonicalSource();
   const artifact = await readFile(artifactPath, "utf8");
   const strict = evaluate(artifact);
@@ -279,9 +280,16 @@ test("all response-reachable non-transport V1 functions are present byte-for-byt
     assert.ok(actual, `artifact function missing: ${actualName}`);
     slices.push(actual);
     if (name === "response") actual = actual.replace(/^function v1SourceResponse\s*\(/u, "function response(");
-    assert.equal(actual, expected, name);
+    assert.equal(
+      actual.split("\n").filter((line) => line.trim().length > 0).join("\n"),
+      expected.split("\n").filter((line) => line.trim().length > 0).join("\n"),
+      name
+    );
   }
-  assert.equal(sha256(slices.join("\n\n")), strict.KLOL_V1_EXTRACTED_SHA256);
+  assert.equal(
+    sha256(slices.join("\n\n").split("\n").filter((line) => line.trim().length > 0).join("\n")),
+    strict.KLOL_V1_EXTRACTED_SHA256
+  );
 
   assert.equal(transportSeams.size, 9);
   for (const name of transportSeams) {

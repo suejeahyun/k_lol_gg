@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { ArrowLeft, CalendarDays, Check, Crown, Sparkles, Swords, UsersRound } from "lucide-react";
 
 import { isEventUuid, type PublicEventDto } from "@/modules/competitions/events";
@@ -8,7 +8,10 @@ import { getRuntimeEvent } from "@/modules/competitions/events/infrastructure/ru
 import { getCurrentSession } from "@/modules/auth/infrastructure/runtime-session";
 import { parseEventDetailAction } from "@/modules/competitions/public-navigation";
 import { publicCompetitionFormatLabel, publicEventStatusLabel } from "@/modules/competitions/core";
+import { buildLegacyCanonicalIdDestination } from "@/modules/navigation/application/legacy-user-redirects";
+import { parseLegacyIntegerId } from "@/platform/legacy-identifiers";
 import { formatKoreanDateTime } from "@/platform/time/format-korean-date-time";
+import { ResilientMediaImage } from "@/app/(public)/(media)/resilient-media-image";
 
 import styles from "../../events.module.css";
 import { EventApplicationActions } from "./event-application-actions";
@@ -25,7 +28,9 @@ function FixtureScore({ fixture }: { fixture: PublicEventDto["fixtures"][number]
 
 export default async function EventDetailPage({ params, searchParams }: { params: Promise<{ eventId: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { eventId: rawId } = await params;
-  if (!isEventUuid(rawId)) notFound();
+  const canonicalId = isEventUuid(rawId);
+  const legacyId = canonicalId ? null : parseLegacyIntegerId(rawId);
+  if (!canonicalId && legacyId === null) notFound();
   const rawQuery = await searchParams;
   const query = new URLSearchParams();
   for (const [key, value] of Object.entries(rawQuery)) {
@@ -34,9 +39,21 @@ export default async function EventDetailPage({ params, searchParams }: { params
   }
   const action = parseEventDetailAction(query);
   if (action === undefined) notFound();
-  const eventId = rawId.toLocaleLowerCase("en-US");
   const runtime = getRuntimeEvent();
   if (!runtime) return <div className={styles.page}><section className={styles.state} role="status"><h1>이벤트전 저장소를 사용할 수 없어요.</h1><p>잠시 후 다시 시도해 주세요.</p></section></div>;
+  if (legacyId !== null) {
+    let mappedId;
+    try { mappedId = await runtime.repository.resolveLegacyId(legacyId); }
+    catch { return <div className={styles.page}><section className={styles.state} role="alert"><h1>이벤트전을 불러오지 못했어요.</h1><p>잠시 후 다시 시도해 주세요.</p></section></div>; }
+    if (!mappedId) notFound();
+    permanentRedirect(buildLegacyCanonicalIdDestination(
+      "/competitions/events",
+      mappedId,
+      "/competitions?type=event",
+      action === "apply" ? { action } : {},
+    ));
+  }
+  const eventId = rawId.toLocaleLowerCase("en-US");
   let event;
   try { event = await runtime.repository.getPublic(eventId, new Date()); } catch { return <div className={styles.page}><section className={styles.state} role="alert"><h1>이벤트전을 불러오지 못했어요.</h1><p>잠시 후 다시 시도해 주세요.</p></section></div>; }
   if (!event) notFound();
@@ -50,5 +67,6 @@ export default async function EventDetailPage({ params, searchParams }: { params
     <EventApplicationActions eventId={event.id} revision={event.revision} format={event.format} open={event.applicationsOpen} signedIn={Boolean(session)} approved={session?.accountStatus === "APPROVED"} application={own} focusOnMount={action === "apply"} />
     {event.winnerTeamName ? <section className={styles.championCallout} aria-label="이벤트전 최종 결과"><Sparkles aria-hidden="true" /><div><span>EVENT CHAMPION</span><h2>{event.winnerTeamName}</h2><p>{event.mvpPlayerName ? `대회 MVP ${event.mvpPlayerName}` : "참가한 모든 선수에게 박수를 보내요."}</p></div></section> : null}
     <section className={styles.detailGrid}><article><div className={styles.sectionHeading}><div><span>ROSTERS</span><h2>팀 편성</h2></div><b>{event.teams.length}팀</b></div>{event.teams.length ? <div className={styles.teamGrid}>{event.teams.map((team) => <section className={styles.team} key={team.id}><header><strong>{team.name}</strong>{team.seed ? <span>SEED {team.seed}</span> : null}</header><ul>{team.members.map((member) => <li key={member.participantId}><span>{member.position ?? "ARAM"}</span><Link href={`/players/${member.playerId}`}>{member.playerName}</Link></li>)}</ul></section>)}</div> : <p>아직 팀을 편성하지 않았어요.</p>}</article><article><div className={styles.sectionHeading}><div><span>BRACKET</span><h2>대진과 결과</h2></div><b>{event.fixtures.filter((fixture) => fixture.winnerTeamId).length}/{event.fixtures.length}</b></div>{event.fixtures.length ? <div className={styles.fixtureList}>{event.fixtures.map((fixture) => <FixtureScore fixture={fixture} key={fixture.id} />)}</div> : <p>팀 편성 뒤 대진이 공개돼요.</p>}</article></section>
+    {event.gallery ? <section className={styles.eventGallery} aria-labelledby="event-gallery-title"><div className={styles.sectionHeading}><div><span>GALLERY</span><h2 id="event-gallery-title">{event.gallery.title}</h2></div><b>{event.gallery.images.length}장</b></div><p>{event.gallery.description}</p><div>{event.gallery.images.map((image, index) => <figure key={image.assetId}><ResilientMediaImage sizes="(max-width: 700px) 100vw, 50vw" src={image.url} alt={`${event.gallery!.title} ${index + 1}번째 이미지`} /></figure>)}</div></section> : null}
   </div>;
 }

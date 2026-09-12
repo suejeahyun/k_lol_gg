@@ -3,8 +3,9 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 
-import type { GalleryContent, HighlightContent } from "@/modules/media";
+import type { GalleryContent, GalleryImageReference, HighlightContent } from "@/modules/media";
 import { PRIVATE_ASSET_MAX_BYTES } from "@/modules/assets/domain/private-asset";
+import { ResilientMediaImage } from "@/app/(public)/(media)/resilient-media-image";
 
 import styles from "./admin-media.module.css";
 
@@ -36,7 +37,11 @@ export function AdminMediaForm(props: Props) {
   const [description, setDescription] = useState(initial?.description ?? "");
   const [youtubeUrl, setYoutubeUrl] = useState(initialHighlight ? `https://www.youtube.com/watch?v=${initialHighlight.youtubeId}` : "");
   const [sortOrder, setSortOrder] = useState(initialHighlight?.sortOrder ?? 0);
-  const [assetIds, setAssetIds] = useState<string[]>(initialHighlight?.thumbnailAssetId ? [initialHighlight.thumbnailAssetId] : [...(initialGallery?.imageAssetIds ?? [])]);
+  const [assetIds, setAssetIds] = useState<string[]>(initialHighlight?.thumbnailAssetId ? [initialHighlight.thumbnailAssetId] : []);
+  const [galleryImages, setGalleryImages] = useState<GalleryImageReference[]>(initialGallery?.imageOrder ? [...initialGallery.imageOrder] : [
+    ...(initialGallery?.imageAssetIds ?? []).map((assetId) => ({ kind: "ASSET" as const, assetId })),
+    ...(initialGallery?.externalImageUrls ?? []).map((url) => ({ kind: "EXTERNAL" as const, url })),
+  ]);
   const [assets, setAssets] = useState<Asset[]>([]);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -44,6 +49,7 @@ export function AdminMediaForm(props: Props) {
   const endpoint = initial ? `${base}/${initial.id}` : base;
   const assetEndpoint = initial ? `${endpoint}/assets` : null;
   const editable = initial?.status === "DRAFT";
+  const linkedGalleryAssetIds = galleryImages.flatMap((image) => image.kind === "ASSET" ? [image.assetId] : []);
 
   useEffect(() => {
     if (!assetEndpoint || !editable) return;
@@ -55,10 +61,16 @@ export function AdminMediaForm(props: Props) {
     return () => { active = false; };
   }, [assetEndpoint, editable]);
 
-  function contentBody(nextAssetIds = assetIds) {
+  function contentBody(nextAssetIds = assetIds, nextGalleryImages = galleryImages) {
     return props.kind === "highlight"
       ? { title, description, youtubeUrl, thumbnailAssetId: nextAssetIds[0] ?? null, sortOrder: Number(sortOrder) }
-      : { title, description, imageAssetIds: nextAssetIds };
+      : {
+        title,
+        description,
+        imageAssetIds: nextGalleryImages.flatMap((image) => image.kind === "ASSET" ? [image.assetId] : []),
+        externalImageUrls: nextGalleryImages.flatMap((image) => image.kind === "EXTERNAL" ? [image.url] : []),
+        imageOrder: nextGalleryImages,
+      };
   }
 
   async function send(method: string, body: unknown) {
@@ -86,12 +98,27 @@ export function AdminMediaForm(props: Props) {
     router.refresh();
   }
 
+  async function saveGalleryImages(nextImages: GalleryImageReference[]) {
+    const payload = await send("PATCH", contentBody(assetIds, nextImages));
+    if (!payload) return;
+    setGalleryImages(nextImages);
+    router.refresh();
+  }
+
+  function moveGalleryImage(index: number, direction: -1 | 1) {
+    const target = index + direction;
+    if (target < 0 || target >= galleryImages.length) return;
+    const next = [...galleryImages];
+    [next[index], next[target]] = [next[target]!, next[index]!];
+    void saveGalleryImages(next);
+  }
+
   async function upload(file: File | null) {
     if (!file || !assetEndpoint || !editable || busy) return;
     if (!["image/png", "image/jpeg", "image/webp"].includes(file.type) || file.size < 12 || file.size > PRIVATE_ASSET_MAX_BYTES) {
       setMessage("PNG, JPEG, WebP 이미지만 4MiB 이하로 선택해 주세요."); return;
     }
-    if (props.kind === "gallery" && assetIds.length >= 5) { setMessage("갤러리는 이미지를 최대 5개까지 연결할 수 있습니다."); return; }
+    if (props.kind === "gallery" && galleryImages.length >= 5) { setMessage("갤러리는 이미지를 최대 5개까지 연결할 수 있습니다."); return; }
     setBusy(true); setMessage(null);
     try {
       const bytes = await file.arrayBuffer();
@@ -111,10 +138,11 @@ export function AdminMediaForm(props: Props) {
       });
       const payload = await response.json().catch(() => null) as { detail?: string; asset?: Asset } | null;
       if (!response.ok || !payload?.asset) { setMessage(payload?.detail ?? "이미지를 업로드하지 못했습니다."); return; }
-      const nextAssetIds = props.kind === "highlight" ? [payload.asset.assetId] : [...assetIds, payload.asset.assetId];
+      const nextAssetIds = props.kind === "highlight" ? [payload.asset.assetId] : assetIds;
+      const nextGalleryImages = props.kind === "gallery" ? [...galleryImages, { kind: "ASSET" as const, assetId: payload.asset.assetId }] : galleryImages;
       setAssets((current) => current.some((asset) => asset.assetId === payload.asset!.assetId) ? current : [payload.asset!, ...current]);
-      const saved = await send("PATCH", contentBody(nextAssetIds));
-      if (saved) { setAssetIds(nextAssetIds); router.refresh(); }
+      const saved = await send("PATCH", contentBody(nextAssetIds, nextGalleryImages));
+      if (saved) { setAssetIds(nextAssetIds); setGalleryImages(nextGalleryImages); router.refresh(); }
     } catch { setMessage("이미지 검사 또는 업로드 중 오류가 발생했습니다."); }
     finally { setBusy(false); }
   }
@@ -135,13 +163,18 @@ export function AdminMediaForm(props: Props) {
     {props.kind === "highlight" ? <div className={styles.split}><label>YouTube 주소<input type="url" required placeholder="https://youtu.be/..." value={youtubeUrl} onChange={(event) => setYoutubeUrl(event.target.value)} /></label><label>정렬 순서<input type="number" min="-100000" max="100000" value={sortOrder} onChange={(event) => setSortOrder(Number(event.target.value))} /></label></div> : null}
 
     {!initial ? <p className={styles.notice}>먼저 초안을 만드세요. 다음 화면에서 파일을 안전하게 검사하고 바로 연결할 수 있습니다.</p> : <section className={styles.assetPanel} aria-labelledby="asset-heading">
-      <div><h2 id="asset-heading">{props.kind === "highlight" ? "썸네일" : `갤러리 이미지 ${assetIds.length}/5`}</h2><p>검사를 통과해 READY가 된 이미지만 초안에 연결됩니다.</p></div>
-      {!editable ? <p className={styles.notice}>이미지를 바꾸려면 먼저 게시를 내리거나 보관된 초안을 복구해 주세요.</p> : !props.uploadAvailable ? <p className={styles.error} role="status">운영 비공개 저장소가 아직 연결되지 않아 업로드가 안전하게 닫혀 있습니다.</p> : <label className={styles.filePicker}>파일 선택<input disabled={busy || (props.kind === "gallery" && assetIds.length >= 5)} type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { void upload(event.target.files?.[0] ?? null); event.currentTarget.value = ""; }} /><span>PNG · JPEG · WebP / 최대 4MiB</span></label>}
-      {assetIds.length === 0 ? <p className={styles.hint}>아직 연결된 이미지가 없습니다.</p> : <div className={styles.assetList}>{assetIds.map((assetId, index) => {
+      <div><h2 id="asset-heading">{props.kind === "highlight" ? "썸네일" : `갤러리 이미지 ${galleryImages.length}/5`}</h2><p>{props.kind === "gallery" ? "비공개 자산과 이관된 외부 이미지는 아래 표시 순서를 함께 사용합니다." : "검사를 통과해 READY가 된 이미지만 초안에 연결됩니다."}</p></div>
+      {!editable ? <p className={styles.notice}>이미지를 바꾸려면 먼저 게시를 내리거나 보관된 초안을 복구해 주세요.</p> : !props.uploadAvailable ? <p className={styles.error} role="status">운영 비공개 저장소가 아직 연결되지 않아 업로드가 안전하게 닫혀 있습니다.</p> : <label className={styles.filePicker}>파일 선택<input disabled={busy || (props.kind === "gallery" && galleryImages.length >= 5)} type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { void upload(event.target.files?.[0] ?? null); event.currentTarget.value = ""; }} /><span>PNG · JPEG · WebP / 최대 4MiB</span></label>}
+      {props.kind === "highlight" ? assetIds.length === 0 ? <p className={styles.hint}>아직 연결된 이미지가 없습니다.</p> : <div className={styles.assetList}>{assetIds.map((assetId) => {
         const asset = assets.find((candidate) => candidate.assetId === assetId);
-        return <article className={styles.assetItem} key={assetId}><div><strong>{props.kind === "highlight" ? "현재 썸네일" : `이미지 ${index + 1}`}</strong><span>{asset ? assetLabel(asset) : "READY 자산"}</span></div>{editable && (props.kind === "highlight" || assetIds.length > 1) ? <button disabled={busy} type="button" onClick={() => void saveAssets(assetIds.filter((id) => id !== assetId))}>연결 해제</button> : null}</article>;
+        return <article className={styles.assetItem} key={assetId}><div><strong>현재 썸네일</strong><span>{asset ? assetLabel(asset) : "READY 자산"}</span></div>{editable ? <button disabled={busy} type="button" onClick={() => void saveAssets([])}>연결 해제</button> : null}</article>;
+      })}</div> : galleryImages.length === 0 ? <p className={styles.hint}>아직 연결된 이미지가 없습니다.</p> : <div className={styles.assetList}>{galleryImages.map((image, index) => {
+        const asset = image.kind === "ASSET" ? assets.find((candidate) => candidate.assetId === image.assetId) : undefined;
+        const key = image.kind === "ASSET" ? `asset:${image.assetId}` : `external:${image.url}`;
+        const url = image.kind === "ASSET" ? `/api/admin/private-assets/${image.assetId}` : image.url;
+        return <article className={styles.assetItem} key={key}><div className={styles.assetPreview}><ResilientMediaImage sizes="96px" src={url} alt={`${title || "갤러리"} ${index + 1}번째 이미지`} /></div><div><strong>이미지 {index + 1} · {image.kind === "ASSET" ? "비공개 자산" : "이관 외부 이미지"}</strong><span>{asset ? assetLabel(asset) : image.kind === "ASSET" ? "READY 자산" : image.url}</span></div>{editable ? <div className={styles.orderActions}><button aria-label={`${index + 1}번째 이미지 위로`} disabled={busy || index === 0} type="button" onClick={() => moveGalleryImage(index, -1)}>↑</button><button aria-label={`${index + 1}번째 이미지 아래로`} disabled={busy || index === galleryImages.length - 1} type="button" onClick={() => moveGalleryImage(index, 1)}>↓</button><button disabled={busy} type="button" onClick={() => void saveGalleryImages(galleryImages.filter((_, itemIndex) => itemIndex !== index))}>삭제</button></div> : null}</article>;
       })}</div>}
-      {editable && assets.some((asset) => !assetIds.includes(asset.assetId)) ? <div className={styles.assetSelector}><strong>이 초안의 기존 READY 이미지</strong>{assets.filter((asset) => !assetIds.includes(asset.assetId)).map((asset) => <button disabled={busy || (props.kind === "gallery" && assetIds.length >= 5)} key={asset.assetId} type="button" onClick={() => void saveAssets(props.kind === "highlight" ? [asset.assetId] : [...assetIds, asset.assetId])}><span>{assetLabel(asset)}</span><b>연결</b></button>)}</div> : null}
+      {editable && assets.some((asset) => props.kind === "highlight" ? !assetIds.includes(asset.assetId) : !linkedGalleryAssetIds.includes(asset.assetId)) ? <div className={styles.assetSelector}><strong>이 초안의 기존 READY 이미지</strong>{assets.filter((asset) => props.kind === "highlight" ? !assetIds.includes(asset.assetId) : !linkedGalleryAssetIds.includes(asset.assetId)).map((asset) => <button disabled={busy || (props.kind === "gallery" && galleryImages.length >= 5)} key={asset.assetId} type="button" onClick={() => props.kind === "highlight" ? void saveAssets([asset.assetId]) : void saveGalleryImages([...galleryImages, { kind: "ASSET", assetId: asset.assetId }])}><span>{assetLabel(asset)}</span><b>연결</b></button>)}</div> : null}
     </section>}
 
     <p className={styles.hint}>게시 시 서버가 자산 READY 상태·용도·개수와 최신 revision을 다시 확인합니다.</p>

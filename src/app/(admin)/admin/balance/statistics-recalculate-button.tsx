@@ -16,7 +16,7 @@ export function StatisticsRecalculateButton({
 }) {
   const router = useRouter();
   const idempotencyKey = useRef<string | null>(null);
-  const [message, setMessage] = useState(allowed ? "" : "SUPER_ADMIN 전용");
+  const [message, setMessage] = useState(allowed ? "" : "최고 관리자 전용");
   const [pending, setPending] = useState(false);
 
   async function recalculate() {
@@ -46,7 +46,7 @@ export function StatisticsRecalculateButton({
         return;
       }
       idempotencyKey.current = null;
-      setMessage(`generation ${body?.generation ?? generation + 1} 완료`);
+      setMessage(`계산 버전 ${body?.generation ?? generation + 1} 완료`);
       router.refresh();
     } catch {
       setMessage("네트워크 오류로 재계산하지 못했습니다.");

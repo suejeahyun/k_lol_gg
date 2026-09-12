@@ -1,4 +1,5 @@
 import { competitionPlayerLabel, competitionTeamLabel } from "../../core";
+import type { PublicGalleryDto } from "@/modules/media";
 import { eventAcceptsApplications, type EventAggregate } from "../domain/event";
 
 export type PublicEventDto = Readonly<{
@@ -12,6 +13,7 @@ export type PublicEventDto = Readonly<{
   recruitmentClosesAt: string;
   applicationsOpen: boolean;
   participantCount: number;
+  gallery: PublicGalleryDto | null;
   teams: readonly Readonly<{
     id: string;
     name: string;
@@ -59,6 +61,7 @@ export function toPublicEventDto(
   aggregate: EventAggregate,
   now: string,
   playerCatalog: ReadonlyMap<string, string> = new Map(),
+  gallery: PublicGalleryDto | null = null,
 ): PublicEventDto {
   const participantById = new Map(aggregate.participants.map((participant) => [participant.id, participant]));
   return {
@@ -72,6 +75,7 @@ export function toPublicEventDto(
     recruitmentClosesAt: aggregate.settings.recruitmentClosesAt,
     applicationsOpen: eventAcceptsApplications(aggregate, now),
     participantCount: aggregate.participants.filter((participant) => participant.status === "ACTIVE").length,
+    gallery,
     teams: aggregate.teams.map((team) => ({
       id: team.id,
       name: team.name,

@@ -61,6 +61,7 @@ export type OwnDestructionMvpBallotDto = Readonly<{
 }>;
 
 export interface DestructionQueryPort {
+  resolveLegacyId(legacyId: number): Promise<string | null>;
   listPublic(query: DestructionListQuery): Promise<DestructionPage>;
   getPublic(tournamentId: string): Promise<DestructionPublicDto | null>;
   getOwnApplication(tournamentId: string, ownerUserAccountId: string): Promise<OwnDestructionApplicationDto | null>;

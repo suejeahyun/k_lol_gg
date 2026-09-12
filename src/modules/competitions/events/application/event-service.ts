@@ -108,6 +108,10 @@ function adminPayload(value: unknown): Pick<EventAdminCommand, "type" | "payload
       const body = record(payload, ["mvpParticipantId"]);
       return { type: input.type, payload: { mvpParticipantId: body.mvpParticipantId === null ? null : text(body.mvpParticipantId, 180)! } };
     }
+    case "SET_MEDIA_GALLERY": {
+      const body = record(payload, ["galleryId"]);
+      return { type: input.type, payload: { galleryId: body.galleryId === null ? null : uuid(body.galleryId) } };
+    }
     case "CANCEL_EVENT": return { type: input.type, payload: { reason: text(record(payload, ["reason"]).reason, 500)! } };
     default: throw new TypeError("INVALID_INPUT");
   }

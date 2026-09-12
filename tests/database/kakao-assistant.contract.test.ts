@@ -20,7 +20,7 @@ import { players } from "../../src/platform/db/schema/registry";
 import { authSessions, userAccounts } from "../../src/platform/db/schema/auth";
 import { auditEvents } from "../../src/platform/db/schema/audit";
 import { matchSubmissionImages, matchSubmissions, privateAssets } from "../../src/platform/db/schema/matches";
-import { kakaoImageSessions, kakaoInboundImages, kakaoOperationSettings, recruitParties, recruitingCommandReceipts, recruitingNonceBindings, recruitingOutbox } from "../../src/platform/db/schema/recruiting";
+import { kakaoImageSessions, kakaoInboundImages, kakaoOperationSettings, recruitParties, recruitingCommandReceipts, recruitingNonceBindings, recruitingOutbox, scrimRecruits } from "../../src/platform/db/schema/recruiting";
 import { seasonApplications, seasonInhouseRounds, seasonKakaoPendingApplications, seasons } from "../../src/platform/db/schema/seasons";
 import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
 
@@ -49,6 +49,9 @@ test("signed Kakao reads persist safe replay receipts and isolate recruit member
   const partyId = randomUUID();
   const foreignPartyId = randomUUID();
   const nextOperatingDayPartyId = randomUUID();
+  const scrimId = randomUUID();
+  const foreignScrimId = randomUUID();
+  const nextOperatingDayScrimId = randomUUID();
   const suffix = randomUUID().slice(0, 8);
   try {
     await applyMigrations(database);
@@ -104,6 +107,35 @@ test("signed Kakao reads persist safe replay receipts and isolate recruit member
         lastActivityAt: new Date(),
       },
     ]);
+    await database.insert(scrimRecruits).values([
+      {
+        id: scrimId,
+        recruitDate: operatingDate,
+        scrimNumber: 81,
+        legacyTournamentNumber: 1,
+        requesterTeamName: "현재 운영일 팀",
+        status: "RECRUITING",
+        sourceRoomId: "room-contract",
+      },
+      {
+        id: foreignScrimId,
+        recruitDate: operatingDate,
+        scrimNumber: 83,
+        legacyTournamentNumber: 1,
+        requesterTeamName: "다른 방 팀",
+        status: "RECRUITING",
+        sourceRoomId: "room-other",
+      },
+      {
+        id: nextOperatingDayScrimId,
+        recruitDate: nextOperatingDate,
+        scrimNumber: 82,
+        legacyTournamentNumber: 1,
+        requesterTeamName: "다음 운영일 팀",
+        status: "MATCHED",
+        sourceRoomId: "room-contract",
+      },
+    ]);
     const assistant = new PostgresKakaoAssistant(database);
     const searchInput = {
       actorPrincipalId: principalId,
@@ -148,6 +180,10 @@ test("signed Kakao reads persist safe replay receipts and isolate recruit member
     assert.equal(status.body.nextPartyRecruitNumber, 93);
     assert.equal(status.body.parties.some((party) => party.id === foreignPartyId), false);
     assert.equal(status.body.parties.some((party) => party.id === nextOperatingDayPartyId), false);
+    assert.equal(status.body.scrims.some((scrim) => scrim.id === scrimId), true);
+    assert.equal(status.body.scrims.some((scrim) => scrim.id === foreignScrimId), false);
+    assert.equal(status.body.scrims.some((scrim) => scrim.id === nextOperatingDayScrimId), false);
+    assert.equal(status.body.nextScrimNumber, 84);
     assert.equal(JSON.stringify(status.body).includes("다른 방 비공개"), false);
     assert.equal(JSON.stringify(status.body).includes("이전 운영일 참가자"), false);
 
@@ -161,6 +197,9 @@ test("signed Kakao reads persist safe replay receipts and isolate recruit member
     assert.equal(nextStatus.body.parties.some((party) => party.id === partyId), false);
     assert.equal(nextStatus.body.parties.some((party) => party.id === nextOperatingDayPartyId), true);
     assert.equal(nextStatus.body.nextPartyRecruitNumber, 94);
+    assert.equal(nextStatus.body.scrims.some((scrim) => scrim.id === scrimId), false);
+    assert.equal(nextStatus.body.scrims.some((scrim) => scrim.id === nextOperatingDayScrimId), true);
+    assert.equal(nextStatus.body.nextScrimNumber, 83);
 
     const postMutationEventId = "event-post-mutation-status-0001";
     const postMutationIntent = intent("nonce-post-mutation-status-01", "post-mutation-status");

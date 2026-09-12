@@ -1,6 +1,6 @@
-import { createHash, randomUUID } from "node:crypto";
+import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
 
-import { and, asc, count, desc, eq, isNull, lte, lt, or, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNull, lte, lt, or, sql } from "drizzle-orm";
 
 import { authorizeAiRequest, updateSiteSettings, type PublicFeatureFlags, type SiteSettings } from "../domain/site-settings";
 import { buildCsvBackup } from "../domain/csv-backup";
@@ -35,14 +35,16 @@ import {
   siteSettings,
 } from "@/platform/db/schema/operations";
 import { players } from "@/platform/db/schema/registry";
-import { recruitParties, recruitingOutbox } from "@/platform/db/schema/recruiting";
+import { recruitParties, recruitingOutbox, scrimRecruits } from "@/platform/db/schema/recruiting";
 import { playerSeasonStats } from "@/platform/db/schema/statistics";
 import type { V2Database } from "@/platform/db/database";
 import type { V2Transaction } from "@/platform/db/transaction";
 import { withTransaction } from "@/platform/db/transaction";
+import { recruitingOperatingDateKey } from "@/modules/recruiting/domain/operating-day";
 
 const RECEIPT_TTL_MS = 24 * 60 * 60 * 1_000;
 const JOB_NONCE_TTL_MS = 15 * 60 * 1_000;
+const KAKAO_DAILY_CLOSE_NONCE_TTL_MS = 48 * 60 * 60 * 1_000;
 const AI_FAILURE_COST_MICROS = 0;
 
 export class OperationsError extends Error {
@@ -519,10 +521,19 @@ export class PostgresOperationsRepository implements OperationsQueryPort, Operat
       const lockKey = `${input.jobName}:${nonceHash.toString("hex")}`;
       await transaction.execute(sql`select pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`);
       const previous = (await transaction.select().from(jobNonceBindings).where(and(eq(jobNonceBindings.jobName, input.jobName), eq(jobNonceBindings.nonceHash, nonceHash))).limit(1))[0];
-      if (previous && previous.expiresAt > new Date()) throw new OperationsError("JOB_NONCE_REPLAYED");
       const now = new Date();
+      if (previous && previous.expiresAt > now) {
+        if (!timingSafeEqual(previous.requestHash, requestHash)) throw new OperationsError("JOB_NONCE_REPLAYED");
+        const completed = (await transaction.select().from(maintenanceRuns).where(and(
+          eq(maintenanceRuns.requestId, input.requestId),
+          eq(maintenanceRuns.jobName, input.jobName),
+          eq(maintenanceRuns.status, "SUCCEEDED"),
+        )).limit(1))[0];
+        if (!completed) throw new OperationsError("JOB_NONCE_REPLAYED");
+        return { runId: completed.id, counts: completed.countsJson };
+      }
       if (previous) await transaction.delete(jobNonceBindings).where(eq(jobNonceBindings.id, previous.id));
-      await transaction.insert(jobNonceBindings).values({ id: randomUUID(), jobName: input.jobName, nonceHash, requestHash, createdAt: now, expiresAt: new Date(now.getTime() + JOB_NONCE_TTL_MS) });
+      await transaction.insert(jobNonceBindings).values({ id: randomUUID(), jobName: input.jobName, nonceHash, requestHash, createdAt: now, expiresAt: new Date(now.getTime() + KAKAO_DAILY_CLOSE_NONCE_TTL_MS) });
 
       const cutoff = new Date(now.getTime() - input.idleHours * 60 * 60 * 1_000);
       const candidates = await transaction
@@ -570,7 +581,108 @@ export class PostgresOperationsRepository implements OperationsQueryPort, Operat
         });
       }
 
-      const counts = { partiesClosed: candidates.length };
+      const operatingDate = recruitingOperatingDateKey(now);
+      const staleDrafts = await transaction
+        .select()
+        .from(recruitParties)
+        .where(and(
+          eq(recruitParties.status, "DRAFT"),
+          lt(recruitParties.recruitDate, operatingDate),
+        ))
+        .orderBy(asc(recruitParties.recruitDate), asc(recruitParties.resetSequence), asc(recruitParties.recruitNumber), asc(recruitParties.id))
+        .limit(input.maximumClosures)
+        .for("update");
+
+      for (const party of staleDrafts) {
+        const eventRequestId = randomUUID();
+        const nextRevision = party.revision + 1;
+        const updated = await transaction
+          .update(recruitParties)
+          .set({ status: "RESET", revision: nextRevision, lastActivityAt: now, updatedAt: now })
+          .where(and(
+            eq(recruitParties.id, party.id),
+            eq(recruitParties.revision, party.revision),
+            eq(recruitParties.status, "DRAFT"),
+          ))
+          .returning({ id: recruitParties.id });
+        if (updated.length !== 1) throw new OperationsError("RECRUIT_DRAFT_DAILY_RESET_CONFLICT");
+        await transaction.insert(auditEvents).values({
+          requestId: eventRequestId,
+          actorUserAccountId: null,
+          action: "RECRUIT_PARTY_DRAFT_AUTO_RESET",
+          targetType: "RECRUIT_PARTY",
+          targetId: party.id,
+          beforeJson: { status: party.status, revision: party.revision, recruitDate: party.recruitDate },
+          afterJson: { status: "RESET", revision: nextRevision, recruitDate: party.recruitDate },
+          metadataJson: { jobRequestId: input.requestId, operatingDate },
+          createdAt: now,
+        });
+        await transaction.insert(recruitingOutbox).values({
+          id: `party:${party.id}:${nextRevision}:RECRUIT_PARTY_DRAFT_AUTO_RESET`,
+          requestId: eventRequestId,
+          aggregateType: "RECRUIT_PARTY",
+          aggregateId: party.id,
+          aggregateRevision: nextRevision,
+          eventType: "RECRUIT_PARTY_DRAFT_AUTO_RESET",
+          dedupeKey: `party:${party.id}:revision:${nextRevision}`,
+          payloadJson: { id: party.id, status: "RESET", revision: nextRevision },
+          createdAt: now,
+        });
+      }
+
+      const scrimCandidates = await transaction
+        .select()
+        .from(scrimRecruits)
+        .where(and(
+          inArray(scrimRecruits.status, ["RECRUITING", "MATCHED", "CONFIRMED"]),
+          lt(scrimRecruits.recruitDate, operatingDate),
+        ))
+        .orderBy(asc(scrimRecruits.recruitDate), asc(scrimRecruits.scrimNumber), asc(scrimRecruits.id))
+        .limit(input.maximumClosures)
+        .for("update");
+
+      for (const scrim of scrimCandidates) {
+        const eventRequestId = randomUUID();
+        const nextRevision = scrim.revision + 1;
+        const updated = await transaction
+          .update(scrimRecruits)
+          .set({ status: "COMPLETED", revision: nextRevision, updatedAt: now })
+          .where(and(
+            eq(scrimRecruits.id, scrim.id),
+            eq(scrimRecruits.revision, scrim.revision),
+            inArray(scrimRecruits.status, ["RECRUITING", "MATCHED", "CONFIRMED"]),
+          ))
+          .returning({ id: scrimRecruits.id });
+        if (updated.length !== 1) throw new OperationsError("SCRIM_DAILY_CLOSE_CONFLICT");
+        await transaction.insert(auditEvents).values({
+          requestId: eventRequestId,
+          actorUserAccountId: null,
+          action: "SCRIM_RECRUIT_AUTO_COMPLETED",
+          targetType: "SCRIM_RECRUIT",
+          targetId: scrim.id,
+          beforeJson: { status: scrim.status, revision: scrim.revision, recruitDate: scrim.recruitDate },
+          afterJson: { status: "COMPLETED", revision: nextRevision, recruitDate: scrim.recruitDate },
+          metadataJson: { jobRequestId: input.requestId, operatingDate },
+          createdAt: now,
+        });
+        await transaction.insert(recruitingOutbox).values({
+          id: `scrim:${scrim.id}:${nextRevision}:SCRIM_RECRUIT_AUTO_COMPLETED`,
+          requestId: eventRequestId,
+          aggregateType: "SCRIM_RECRUIT",
+          aggregateId: scrim.id,
+          aggregateRevision: nextRevision,
+          eventType: "SCRIM_RECRUIT_AUTO_COMPLETED",
+          dedupeKey: `scrim:${scrim.id}:revision:${nextRevision}`,
+          payloadJson: { id: scrim.id, status: "COMPLETED", revision: nextRevision },
+          createdAt: now,
+        });
+      }
+
+      const counts = {
+        partiesClosed: candidates.length,
+        partyDraftsReset: staleDrafts.length,
+        scrimsClosed: scrimCandidates.length,
+      };
       const runId = randomUUID();
       await transaction.insert(maintenanceRuns).values({ id: runId, requestId: input.requestId, jobName: input.jobName, status: "SUCCEEDED", countsJson: counts, startedAt: now, completedAt: now });
       await writeAuditAndOutbox(transaction, { actorId: null, requestId: input.requestId, action: "KAKAO_DAILY_CLOSE_COMPLETED", targetType: "MAINTENANCE_RUN", targetId: runId, revision: 0, metadata: { ...counts, idleHours: input.idleHours, maximumClosures: input.maximumClosures }, now });

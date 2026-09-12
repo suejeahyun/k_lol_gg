@@ -596,8 +596,7 @@ export class PostgresKakaoAssistant {
   }>): Promise<KakaoAssistantResult<KakaoOpenChatStatusDto>> {
     const query = async (transaction: V2Transaction) => {
       const statusNow = input.now ?? new Date(input.intent.timestampSeconds * 1_000);
-      const today = kstDateKey(statusNow);
-      const partyOperatingDate = recruitingOperatingDateKey(statusNow);
+      const operatingDate = recruitingOperatingDateKey(statusNow);
       const partyRows = input.projection === "SCRIM" ? [] : await transaction.select({
           id: recruitParties.id,
           revision: recruitParties.revision,
@@ -615,7 +614,7 @@ export class PostgresKakaoAssistant {
         }).from(recruitParties).where(and(
           eq(recruitParties.status, "IN_PROGRESS"),
           eq(recruitParties.sourceRoomId, input.intent.roomId),
-          eq(recruitParties.recruitDate, partyOperatingDate),
+          eq(recruitParties.recruitDate, operatingDate),
         ))
           .orderBy(desc(recruitParties.recruitDate), asc(recruitParties.recruitNumber)).limit(MAXIMUM_STATUS_RESULTS + 1);
       const scrimRows = input.projection === "PARTY" ? [] : await transaction.select({
@@ -640,13 +639,14 @@ export class PostgresKakaoAssistant {
         }).from(scrimRecruits).where(and(
           inArray(scrimRecruits.status, ["RECRUITING", "MATCHED", "CONFIRMED"]),
           eq(scrimRecruits.sourceRoomId, input.intent.roomId),
+          eq(scrimRecruits.recruitDate, operatingDate),
         ))
           .orderBy(desc(scrimRecruits.recruitDate), asc(scrimRecruits.scrimNumber)).limit(MAXIMUM_STATUS_RESULTS + 1);
       const latestPartyRows = input.projection ? [] : await transaction.select({ resetSequence: recruitParties.resetSequence, recruitNumber: recruitParties.recruitNumber })
-          .from(recruitParties).where(eq(recruitParties.recruitDate, partyOperatingDate))
+          .from(recruitParties).where(eq(recruitParties.recruitDate, operatingDate))
           .orderBy(desc(recruitParties.resetSequence), desc(recruitParties.recruitNumber)).limit(1);
       const latestScrimRows = input.projection ? [] : await transaction.select({ scrimNumber: scrimRecruits.scrimNumber })
-          .from(scrimRecruits).where(eq(scrimRecruits.recruitDate, today))
+          .from(scrimRecruits).where(eq(scrimRecruits.recruitDate, operatingDate))
           .orderBy(desc(scrimRecruits.scrimNumber)).limit(1);
       const parties = partyRows.slice(0, MAXIMUM_STATUS_RESULTS);
       const scrims = scrimRows.slice(0, MAXIMUM_STATUS_RESULTS);

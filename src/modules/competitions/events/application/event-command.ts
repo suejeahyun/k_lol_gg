@@ -72,6 +72,7 @@ export type EventAdminCommand =
   | AdminCommand<"RECORD_RESULT", Readonly<{ fixtureId: string; teamAScore: number; teamBScore: number; winnerTeamId: string }>>
   | AdminCommand<"CORRECT_RESULT", Readonly<{ fixtureId: string; teamAScore: number; teamBScore: number; winnerTeamId: string }>>
   | AdminCommand<"COMPLETE_EVENT", Readonly<{ mvpParticipantId: string | null }>>
+  | AdminCommand<"SET_MEDIA_GALLERY", Readonly<{ galleryId: string | null }>>
   | AdminCommand<"CANCEL_EVENT", Readonly<{ reason: string }>>
   | AdminCommand<"RESTORE_EVENT", Readonly<Record<string, never>>>;
 

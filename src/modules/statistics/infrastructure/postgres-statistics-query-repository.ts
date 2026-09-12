@@ -12,6 +12,9 @@ import {
   players,
   seasonProjectionStates,
   seasons,
+  teamBalanceDraftCandidates,
+  teamBalanceDraftParticipants,
+  teamBalanceDrafts,
 } from "@/platform/db/schema";
 import type { DatabaseExecutor } from "@/platform/db/transaction";
 
@@ -64,6 +67,16 @@ function emptyProjection(): StatisticsProjectionSummary {
     calculatedAt: null,
   };
 }
+
+const EMPTY_PLAYER_PERFORMANCE: PublicPlayerStatistics["performance"] = Object.freeze({
+  gameCount: 0,
+  averageKills: null,
+  averageDeaths: null,
+  averageAssists: null,
+  averageKda: null,
+  averageBalanceScore: null,
+  assignmentGames: Object.freeze({ main: 0, sub: 0, all: 0, nonPreferred: 0, unclassified: 0 }),
+});
 
 async function selectPublicSeason(
   database: DatabaseExecutor,
@@ -186,6 +199,7 @@ export class PostgresStatisticsQueryRepository implements StatisticsQueryReposit
         season: null,
         projection: null,
         summary: { totalGames: 0, participationCount: 0, wins: 0, losses: 0, winRate: 0, mvpCount: 0 },
+        performance: EMPTY_PLAYER_PERFORMANCE,
         champions: [],
         positions: [],
         recentMatches: [],
@@ -246,6 +260,52 @@ export class PostgresStatisticsQueryRepository implements StatisticsQueryReposit
           eq(playerPositionStats.generation, readyGeneration),
         ))
         .orderBy(desc(playerPositionStats.games), asc(playerPositionStats.position));
+    const assignedPreference = sql<string | null>`(
+      SELECT eligibility ->> 'preference'
+      FROM jsonb_array_elements(coalesce(${teamBalanceDraftParticipants.eligiblePositionsJson}, '[]'::jsonb)) AS eligibility
+      WHERE eligibility ->> 'position' = ${matchParticipants.position}::text
+      LIMIT 1
+    )`;
+    const assignedBalanceScore = sql<number | null>`(
+      SELECT nullif(assignment -> 'rating' ->> 'effectiveScore', '')::double precision
+      FROM jsonb_array_elements(coalesce(${teamBalanceDraftCandidates.assignmentsJson}, '[]'::jsonb)) AS assignment
+      WHERE assignment ->> 'playerId' = ${matchParticipants.playerId}::text
+        AND assignment ->> 'position' = ${matchParticipants.position}::text
+      LIMIT 1
+    )`;
+    const performanceRow = (await this.database
+      .select({
+        gameCount: sql<number>`count(*)::integer`,
+        averageKills: sql<number | null>`round(avg(${matchParticipants.kills})::numeric, 1)::double precision`,
+        averageDeaths: sql<number | null>`round(avg(${matchParticipants.deaths})::numeric, 1)::double precision`,
+        averageAssists: sql<number | null>`round(avg(${matchParticipants.assists})::numeric, 1)::double precision`,
+        averageKda: sql<number | null>`round(avg((${matchParticipants.kills} + ${matchParticipants.assists})::numeric / greatest(${matchParticipants.deaths}, 1)), 2)::double precision`,
+        averageBalanceScore: sql<number | null>`round(avg(${assignedBalanceScore})::numeric, 1)::double precision`,
+        mainGames: sql<number>`count(*) filter (where ${assignedPreference} = 'MAIN')::integer`,
+        subGames: sql<number>`count(*) filter (where ${assignedPreference} = 'SUB')::integer`,
+        allGames: sql<number>`count(*) filter (where ${assignedPreference} = 'AUTO')::integer`,
+        nonPreferredGames: sql<number>`count(*) filter (where ${teamBalanceDraftParticipants.playerId} is not null and ${assignedPreference} is null)::integer`,
+        unclassifiedGames: sql<number>`count(*) filter (where ${teamBalanceDraftParticipants.playerId} is null)::integer`,
+      })
+      .from(matchParticipants)
+      .innerJoin(matchGames, eq(matchGames.id, matchParticipants.gameId))
+      .innerJoin(matchSeries, eq(matchSeries.id, matchGames.seriesId))
+      .leftJoin(teamBalanceDrafts, eq(teamBalanceDrafts.id, matchSeries.teamBalanceDraftId))
+      .leftJoin(teamBalanceDraftParticipants, and(
+        eq(teamBalanceDraftParticipants.draftId, teamBalanceDrafts.id),
+        eq(teamBalanceDraftParticipants.playerId, matchParticipants.playerId),
+      ))
+      .leftJoin(teamBalanceDraftCandidates, and(
+        eq(teamBalanceDraftCandidates.draftId, teamBalanceDrafts.id),
+        eq(teamBalanceDraftCandidates.evaluationRound, teamBalanceDrafts.evaluationRound),
+        eq(teamBalanceDraftCandidates.source, teamBalanceDrafts.selectedCandidateSource),
+        eq(teamBalanceDraftCandidates.signature, teamBalanceDrafts.selectedCandidateSignature),
+      ))
+      .where(and(
+        eq(matchParticipants.playerId, playerId),
+        eq(matchSeries.seasonId, season.id),
+        eq(matchSeries.status, "PUBLISHED"),
+      )))[0];
     const recentRows = await this.database
       .select({
         matchId: matchSeries.id,
@@ -286,6 +346,21 @@ export class PostgresStatisticsQueryRepository implements StatisticsQueryReposit
         winRate: winRatePercent(wins, totalGames),
         mvpCount: seasonStatistic?.mvpCount ?? 0,
       },
+      performance: performanceRow ? {
+        gameCount: performanceRow.gameCount,
+        averageKills: performanceRow.averageKills,
+        averageDeaths: performanceRow.averageDeaths,
+        averageAssists: performanceRow.averageAssists,
+        averageKda: performanceRow.averageKda,
+        averageBalanceScore: performanceRow.averageBalanceScore,
+        assignmentGames: {
+          main: performanceRow.mainGames,
+          sub: performanceRow.subGames,
+          all: performanceRow.allGames,
+          nonPreferred: performanceRow.nonPreferredGames,
+          unclassified: performanceRow.unclassifiedGames,
+        },
+      } : EMPTY_PLAYER_PERFORMANCE,
       champions: championRows.map((row) => ({ ...row, winRate: winRatePercent(row.wins, row.games) })),
       positions: positionRows.map((row) => ({ ...row, winRate: winRatePercent(row.wins, row.games) })),
       recentMatches: recentRows.map((row) => ({

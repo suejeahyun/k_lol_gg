@@ -7,18 +7,28 @@ const root = resolve(import.meta.dirname, "..");
 const read = (path) => readFile(resolve(root, path), "utf8");
 
 test("Kakao admin API splits ADMIN reads from SUPER TOTP mutations", async () => {
-  const [settings, stats, health, adapter, repairUi] = await Promise.all([
+  const [settings, stats, health, adapter, repairUi, page, roomsPage] = await Promise.all([
     read("src/app/api/admin/kakao/settings/route.ts"),
     read("src/app/api/admin/kakao/stats/route.ts"),
     read("src/app/api/admin/kakao/recruit-health/route.ts"),
     read("src/modules/recruiting/kakao-admin/postgres-kakao-admin.ts"),
     read("src/app/(admin)/admin/kakao/kakao-health-repair.tsx"),
+    read("src/app/(admin)/admin/kakao/page.tsx"),
+    read("src/app/(admin)/admin/kakao/rooms/page.tsx"),
   ]);
   assert.match(settings, /requireOperationsApiSession\("ADMIN"\)/u);
   assert.match(settings, /requireOperationsApiSession\("SUPER_ADMIN"\)/u);
   assert.match(health, /requireOperationsApiSession\("ADMIN"\)/u);
   assert.match(health, /requireOperationsApiSession\("SUPER_ADMIN"\)/u);
   assert.match(stats, /getAdminStatus/u);
+  assert.match(stats, /requireOperationsApiSession\("ADMIN"\)/u);
+  assert.match(stats, /parsePartyMemberStatsQuery/u);
+  assert.match(stats, /getPartyMemberStats/u);
+  assert.match(page, /kakaoAdminRequiredRole\(tab\)/u);
+  assert.match(page, /session\.role === "SUPER_ADMIN"/u);
+  assert.match(page, /getPartyMemberStats/u);
+  assert.match(roomsPage, /requirePageRole\("SUPER_ADMIN"/u);
+  assert.doesNotMatch(roomsPage, /읽기 전용/u);
   assert.match(repairUi, /REPAIR_EXPIRED_SESSIONS/u);
   assert.match(repairUi, /If-Match/u);
   for (const boundary of ["lockTransactionSessionActor", "ADMIN_MUTATION_SESSION_POLICY", "recruitingCommandReceipts", "auditEvents", "recruitingOutbox", "PRECONDITION_FAILED"]) assert.match(adapter, new RegExp(boundary));

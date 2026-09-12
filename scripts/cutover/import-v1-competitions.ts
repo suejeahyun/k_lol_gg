@@ -421,6 +421,7 @@ export function buildImportedEventAggregate(source: LegacyEventCompetition): Eve
 
   return Object.freeze({
     id,
+    galleryId: null,
     settings: Object.freeze({
       title: text(source.title, `event ${source.legacyId}.title`, 120),
       description: optionalText(source.description, `event ${source.legacyId}.description`, 2_000),

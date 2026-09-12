@@ -10,6 +10,10 @@ const repositoryPath = new URL("../src/modules/matches/infrastructure/postgres-m
 
 test("관리자 직접 가져오기는 파일·붙여넣기·비공개 미리보기·재시도 복구를 제공한다", async () => {
   const source = await readFile(panelPath, "utf8");
+  assert.match(source, /<details className=\{`\$\{styles\.panel\} \$\{styles\.importPanel\}`\}>/);
+  assert.match(source, /<summary className=\{styles\.importSummary\}>/);
+  assert.match(source, /<span aria-hidden="true">펼치기<\/span>/);
+  assert.doesNotMatch(source, /<details[^>]*\sopen(?:=|\s|>)/);
   assert.match(source, /type="file"/);
   assert.match(source, /onPaste=\{onPaste\}/);
   assert.match(source, /Ctrl\/Cmd\+V/);
@@ -55,6 +59,9 @@ test("검토 UI는 fuzzy 자동 연결 없이 구조화 행별 사람 확인을 
   assert.doesNotMatch(source, /JSON\.parse\(reviewText\)/);
   assert.doesNotMatch(source, /검토 결과 JSON 미리보기/);
   assert.doesNotMatch(source, /OCR 후보 원문/);
+  assert.doesNotMatch(source, />진행 초</);
+  assert.match(source, /durationSeconds: game\.durationSeconds/u);
+  assert.match(source, /durationSeconds: 1_800/u);
 });
 
 test("admin import cancellation is authorized only for ADMIN-source rows", async () => {

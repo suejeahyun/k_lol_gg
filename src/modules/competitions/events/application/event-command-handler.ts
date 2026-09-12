@@ -24,6 +24,7 @@ import {
   recordEventFixtureResult,
   replaceEventSettings,
   restoreCancelledEvent,
+  setEventMediaGallery,
   startEventRecruitment,
   upsertOwnEventApplication,
   type EventAggregate,
@@ -208,6 +209,9 @@ async function decide(
     case "COMPLETE_EVENT":
       aggregate = completeEvent(current, command.payload.mvpParticipantId, now);
       break;
+    case "SET_MEDIA_GALLERY":
+      aggregate = setEventMediaGallery(current, command.payload.galleryId, now);
+      break;
     case "CANCEL_EVENT":
       aggregate = cancelEvent(current, command.payload.reason, now);
       break;
@@ -325,6 +329,9 @@ export class EventCommandHandler {
       throw new EventDomainError(current ? "REVISION_CONFLICT" : "NOT_FOUND", current ? "Event revision changed." : "Event does not exist.");
     }
     const now = this.dependencies.clock.now();
+    if (command.type === "SET_MEDIA_GALLERY" && command.payload.galleryId) {
+      await this.dependencies.repository.assertPublishedReadyGallery(transaction, command.payload.galleryId);
+    }
     const decision = await decide(command, current, now, transaction, this.dependencies.teamBalance);
     const aggregate = Object.freeze({ ...decision.aggregate, revision: decision.aggregate.revision + 1 });
     await this.dependencies.repository.save(transaction, {

@@ -20,6 +20,7 @@ export interface EventUnitOfWork {
 
 export interface EventRepository {
   loadForUpdate(transaction: EventTransactionContext, eventId: string): Promise<EventAggregate | null>;
+  assertPublishedReadyGallery(transaction: EventTransactionContext, galleryId: string): Promise<void>;
   save(
     transaction: EventTransactionContext,
     input: Readonly<{

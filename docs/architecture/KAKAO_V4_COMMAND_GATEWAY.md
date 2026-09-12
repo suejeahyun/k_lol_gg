@@ -21,7 +21,7 @@ MessengerBot R
   -> POST /api/integrations/kakao/v4/commands (1 execute, 5 second timeout, no automatic retry)
        -> exact envelope + body size + query/header rejection
        -> V4 raw-body HMAC + timestamp
-       -> installation -> canonical room -> profile capability
+       -> profile-derived installation scope -> profile capability
        -> eventId idempotency
        -> local/probe reply OR canonical V1 dispatcher
        -> unknown/internal/cross-profile fail-closed
@@ -77,7 +77,7 @@ KLOL_KAKAO_COMMAND_V4\n<keyId>\n<SHA-256(raw JSON body)>
 
 ## V1 계약
 
-명령 분류와 exact reply의 기준은 `docs/contracts/KAKAO_V4_V1_COMPATIBILITY_CONTRACT.md`와 `tests/fixtures/kakao-v4-v1-compatibility-contract.json`이다. 선행 ASCII slash 0회/1회 동등성, slash 오탐 방지, canonical room 소유권, authoritative full snapshot, A→B→A revision 수용, V2 진단 분리를 유지한다.
+명령 분류와 exact reply의 기준은 `docs/contracts/KAKAO_V4_V1_COMPATIBILITY_CONTRACT.md`와 `tests/fixtures/kakao-v4-v1-compatibility-contract.json`이다. 선행 ASCII slash 0회/1회 동등성, slash 오탐 방지, profile installation scope 소유권, authoritative full snapshot, A→B→A revision 수용, V2 진단 분리를 유지한다. 현재 V4 command gateway는 room parser나 canonical room registry를 인증·라우팅에 사용하지 않는다.
 
 V1 dispatcher는 기존 PostgreSQL 서비스에 연결되어 있다. 상태 변경과 서버 조회 응답은 기존 durable receipt·nonce 경계를 사용하며 같은 event/body 재전송은 replay, 같은 event의 다른 body는 conflict로 처리한다. application의 bounded in-memory receipt는 동일 프로세스 안의 빠른 재전송을 보조할 뿐 영속 경계를 대체하지 않는다.
 

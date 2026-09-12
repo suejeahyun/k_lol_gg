@@ -17,6 +17,8 @@ import {
   authSessions,
   mediaCommandReceipts,
   mediaGalleries,
+  mediaGalleryAssets,
+  mediaGalleryExternalImages,
   mediaHighlights,
   mediaOutbox,
   privateAssets,
@@ -59,14 +61,17 @@ test("S10 media publication is TOTP-authorized, idempotent, asset-safe, auditabl
     const highlightBody = { title: "결승 역전", description: "바론 앞 한타", youtubeUrl: "https://youtu.be/dQw4w9WgXcQ", thumbnailAssetId, sortOrder: 1 };
     const createdHighlight = await service.createHighlight(createHighlightContext, 0, highlightBody, now);
     const highlightId = String((createdHighlight.body.highlight as { id: string }).id);
+    await database.update(mediaHighlights).set({ legacyId: 101 }).where(eq(mediaHighlights.id, highlightId));
     assert.equal(createdHighlight.revision, 0);
     assert.equal((await service.createHighlight(createHighlightContext, 0, highlightBody, now)).replayed, true);
     await assert.rejects(service.createHighlight(createHighlightContext, 0, { ...highlightBody, title: "다른 제목" }, now), isServiceError("IDEMPOTENCY_MISMATCH"));
     assert.equal((await service.listPublicHighlights({ pageSize: 12, cursor: null })).items.length, 0);
+    assert.equal(await service.resolvePublicHighlightLegacyId("101"), null);
 
     const publishedHighlight = await service.transitionHighlight(context(actor, "s10-highlight-publish-key"), highlightId, 0, { action: "PUBLISH" }, now);
     assert.equal(publishedHighlight.revision, 1);
     assert.equal((await service.listPublicHighlights({ pageSize: 12, cursor: null })).items[0]?.id, highlightId);
+    assert.equal(await service.resolvePublicHighlightLegacyId("101"), highlightId);
     await assert.rejects(service.updateHighlight(context(actor, "s10-highlight-stale-key"), highlightId, 0, highlightBody, now), isServiceError("PRECONDITION_FAILED"));
 
     await assert.rejects(service.createGallery(context(unverifiedActor, "s10-no-totp-key"), 0, { title: "거부", description: "2FA 없음", imageAssetIds: [galleryAssetId] }, now), isServiceError("SESSION_STALE"));
@@ -74,16 +79,21 @@ test("S10 media publication is TOTP-authorized, idempotent, asset-safe, auditabl
 
     const createdGallery = await service.createGallery(context(actor, "s10-gallery-create-key"), 0, { title: "우승 기록", description: "함께 남긴 순간", imageAssetIds: [galleryAssetId] }, now);
     const galleryId = String((createdGallery.body.gallery as { id: string }).id);
+    await database.update(mediaGalleries).set({ legacyId: 202 }).where(eq(mediaGalleries.id, galleryId));
+    assert.equal(await service.resolvePublicGalleryLegacyId(202), null);
     await service.transitionGallery(context(actor, "s10-gallery-publish-key"), galleryId, 0, { action: "PUBLISH" }, now);
     const homeGallery = await service.setGalleryHomeDisplay(context(actor, "s10-gallery-home-key"), galleryId, 1, { showOnHome: true }, now);
     assert.equal((homeGallery.body.gallery as { showOnHome: boolean }).showOnHome, true);
     assert.equal((await service.getPublicGallery(galleryId))?.imageAssetIds[0], galleryAssetId);
+    assert.equal(await service.resolvePublicGalleryLegacyId(202), galleryId);
     await assert.rejects(database.update(privateAssets).set({ status: "DELETE_PENDING", deleteRequestedAt: now }).where(eq(privateAssets.id, galleryAssetId)));
 
     await service.archiveHighlight(context(actor, "s10-highlight-archive-key"), highlightId, 1, {}, now);
     await service.archiveGallery(context(actor, "s10-gallery-archive-key"), galleryId, 2, {}, now);
     assert.equal(await service.getPublicHighlight(highlightId), null);
     assert.equal(await service.getPublicGallery(galleryId), null);
+    assert.equal(await service.resolvePublicHighlightLegacyId(101), null);
+    assert.equal(await service.resolvePublicGalleryLegacyId("202"), null);
     assert.equal((await database.select().from(mediaHighlights).where(eq(mediaHighlights.id, highlightId))).length, 1);
     assert.equal((await database.select().from(mediaGalleries).where(eq(mediaGalleries.id, galleryId)))[0]?.status, "ARCHIVED");
     assert.equal((await database.select().from(mediaCommandReceipts)).length, 7);
@@ -141,6 +151,32 @@ test("S10 admin upload persists STAGED to READY, lists by exact draft, attaches 
 
     const attached = await media.updateGallery(context(sessionActor, "s10-attach-ready-gallery"), galleryId, 0, { title: "업로드 초안", description: "READY 연결", imageAssetIds: [ready.assetId] }, now);
     assert.equal((attached.body.gallery as { imageAssetIds: string[] }).imageAssetIds[0], ready.assetId);
+
+    const externalUrl = "/images/legacy/event-winner.webp";
+    await media.updateGallery(context(sessionActor, "s10-mixed-gallery-order"), galleryId, 1, {
+      title: "업로드 초안",
+      description: "이관 외부 이미지와 READY 자산",
+      imageAssetIds: [ready.assetId],
+      externalImageUrls: [externalUrl],
+      imageOrder: [
+        { kind: "EXTERNAL", url: externalUrl },
+        { kind: "ASSET", assetId: ready.assetId },
+      ],
+    }, now);
+    assert.equal((await database.select().from(mediaGalleryExternalImages).where(eq(mediaGalleryExternalImages.galleryId, galleryId)))[0]?.ordinal, 0);
+    assert.equal((await database.select().from(mediaGalleryAssets).where(eq(mediaGalleryAssets.galleryId, galleryId)))[0]?.ordinal, 1);
+    assert.deepEqual((await media.getAdminGallery(galleryId))?.imageOrder, [
+      { kind: "EXTERNAL", url: externalUrl },
+      { kind: "ASSET", assetId: ready.assetId },
+    ]);
+    await media.updateGallery(context(sessionActor, "s10-remove-external-gallery-image"), galleryId, 2, {
+      title: "업로드 초안",
+      description: "외부 이미지 삭제",
+      imageAssetIds: [ready.assetId],
+      externalImageUrls: [],
+      imageOrder: [{ kind: "ASSET", assetId: ready.assetId }],
+    }, now);
+    assert.equal((await database.select().from(mediaGalleryExternalImages).where(eq(mediaGalleryExternalImages.galleryId, galleryId))).length, 0);
 
     const unusedDraft = await media.createGallery(context(sessionActor, "s10-unused-gallery"), 0, { title: "미연결 초안", description: "정리 대상", imageAssetIds: [] }, now);
     const unusedGalleryId = String((unusedDraft.body.gallery as { id: string }).id);

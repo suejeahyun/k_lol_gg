@@ -153,6 +153,9 @@ test("public, owner, admin HTTP routes and responsive UI states are present", ()
     assert.match(source, /error/);
   }
   assert.match(account, /Riot 계정 연결/);
+  assert.match(account, /<AccountShell activeTab="riot"/);
+  assert.match(account, /랭크 없음/);
+  assert.doesNotMatch(account, /Unranked/);
   assert.match(account, /이전 Riot 연동/);
   assert.match(account, /현재 Riot 연동은 해제된 상태/);
   assert.match(admin, /표시할 연동 계정이 없습니다/);
@@ -166,6 +169,10 @@ test("public, owner, admin HTTP routes and responsive UI states are present", ()
   assert.match(admin, /위 연결 폼에서 재연결/);
   assert.match(admin, /Riot 동기화 작업 이력/);
   assert.match(admin, /Riot API·동기화·감사 로그/);
+  assert.match(admin, /publicRiotLinkStatusLabel\(row\.status\)/);
+  assert.match(admin, /publicRiotSyncStatusLabel\(row\.status\)/);
+  assert.match(admin, /logSourceLabel\[row\.source\]/);
+  assert.doesNotMatch(admin, /RIOT OPERATIONS|운영 adapter|feature flag|credential 없이/);
   const actions = readFileSync(new URL("../src/components/riot/riot-admin-actions.tsx", import.meta.url), "utf8");
   assert.match(actions, /일괄 동기화 미리보기/);
   assert.match(actions, /활성 미연동 플레이어 미리보기/);

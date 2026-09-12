@@ -57,6 +57,7 @@ export type EventTeam = Readonly<{
 
 export type EventAggregate = Readonly<{
   id: string;
+  galleryId: string | null;
   settings: EventSettings;
   lifecycle: EventLifecycle;
   participants: readonly EventParticipant[];
@@ -217,6 +218,7 @@ export function createEventAggregate(input: Readonly<{
   const now = new Date(canonicalInstant(input.now, "now")).toISOString();
   return Object.freeze({
     id,
+    galleryId: null,
     settings: validateSettings(input.settings),
     lifecycle: INITIAL_EVENT_LIFECYCLE,
     participants: Object.freeze([]),
@@ -241,6 +243,20 @@ export function replaceEventSettings(aggregate: EventAggregate, settings: EventS
   failUnless(aggregate.lifecycle.status === "PLANNED", "INVALID_STATE", "Settings are editable only while planned.");
   failUnless(aggregate.participants.length === 0, "INVALID_STATE", "Settings cannot change after applications exist.");
   return updated(aggregate, now, { settings: validateSettings(settings) });
+}
+
+export function setEventMediaGallery(
+  aggregate: EventAggregate,
+  galleryId: string | null,
+  now: string,
+) {
+  failUnless(
+    aggregate.lifecycle.status === "IN_PROGRESS" || aggregate.lifecycle.status === "COMPLETED",
+    "INVALID_STATE",
+    "A result gallery may be linked during or after the event.",
+  );
+  if (galleryId !== null) canonicalIdentifier(galleryId, "galleryId");
+  return updated(aggregate, now, { galleryId });
 }
 
 export function startEventRecruitment(aggregate: EventAggregate, now: string) {

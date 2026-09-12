@@ -12,6 +12,9 @@ import { PostgresTeamBalanceRatingProvider } from "@/modules/team-tools/infrastr
 import type { V2Database } from "@/platform/db/database";
 import { auditEvents } from "@/platform/db/schema/audit";
 import { players } from "@/platform/db/schema/registry";
+import { mediaGalleries, mediaGalleryAssets, mediaGalleryExternalImages } from "@/platform/db/schema/media";
+import { privateAssets } from "@/platform/db/schema/matches";
+import type { PublicGalleryDto } from "@/modules/media";
 import {
   eventCommandReceipts,
   eventCompetitions,
@@ -19,6 +22,7 @@ import {
   eventParticipantIndex,
 } from "@/platform/db/schema/event-competitions";
 import type { V2Transaction } from "@/platform/db/transaction";
+import { deriveLegacyCompetitionUuid } from "@/platform/legacy-identifiers";
 import { loadCompetitionPlayerDisplayCatalog } from "../../infrastructure/postgres-player-display-catalog";
 
 import type { CompetitionCommandReceipt } from "../../core";
@@ -53,7 +57,7 @@ function aggregateFromRow(row: EventRow): EventAggregate {
     !value || typeof value !== "object" || value.id !== row.id || value.revision !== row.revision ||
     value.lifecycle?.status !== row.status || !Array.isArray(value.participants) || !Array.isArray(value.teams)
   ) throw new EventDomainError("INVALID_STATE", "The stored event aggregate snapshot is inconsistent.");
-  return value;
+  return Object.freeze({ ...value, galleryId: row.galleryId ?? null });
 }
 
 function rowValues(aggregate: EventAggregate, actorUserAccountId: string) {
@@ -71,6 +75,7 @@ function rowValues(aggregate: EventAggregate, actorUserAccountId: string) {
     recruitmentClosesAt: new Date(aggregate.settings.recruitmentClosesAt),
     bracketBestOf: aggregate.settings.bracketBestOf,
     activeParticipantCount,
+    galleryId: aggregate.galleryId,
     aggregateJson: snapshot(aggregate),
     revision: aggregate.revision,
     updatedByUserAccountId: actorUserAccountId,
@@ -99,6 +104,22 @@ export class PostgresEventAdapter implements EventQueryRepository {
         const row = (await this.tx(context).select().from(eventCompetitions)
           .where(eq(eventCompetitions.id, eventId)).for("update").limit(1))[0];
         return row ? aggregateFromRow(row) : null;
+      },
+      assertPublishedReadyGallery: async (context, galleryId) => {
+        const transaction = this.tx(context);
+        const gallery = (await transaction.select({ id: mediaGalleries.id }).from(mediaGalleries)
+          .where(and(eq(mediaGalleries.id, galleryId), eq(mediaGalleries.status, "PUBLISHED"))).for("share").limit(1))[0];
+        if (!gallery) throw new EventDomainError("INVALID_INPUT", "A published gallery is required.");
+        const [assets, externalImages] = await Promise.all([
+          transaction.select({ status: privateAssets.status, purpose: privateAssets.purpose }).from(mediaGalleryAssets)
+            .innerJoin(privateAssets, eq(mediaGalleryAssets.privateAssetId, privateAssets.id)).where(eq(mediaGalleryAssets.galleryId, galleryId)),
+          transaction.select({ url: mediaGalleryExternalImages.sourceUrl }).from(mediaGalleryExternalImages)
+            .where(eq(mediaGalleryExternalImages.galleryId, galleryId)),
+        ]);
+        if (assets.length + externalImages.length < 1 || assets.length + externalImages.length > 5 ||
+          assets.some((asset) => asset.status !== "READY" || asset.purpose !== "GALLERY")) {
+          throw new EventDomainError("INVALID_INPUT", "The gallery is not ready for public use.");
+        }
       },
       save: async (context, input) => {
         const transaction = this.tx(context);
@@ -289,6 +310,34 @@ export class PostgresEventAdapter implements EventQueryRepository {
     return actor;
   }
 
+  private async getPublishedReadyGallery(galleryId: string | null): Promise<PublicGalleryDto | null> {
+    if (!galleryId) return null;
+    const gallery = (await this.database.select({
+      id: mediaGalleries.id,
+      title: mediaGalleries.title,
+      description: mediaGalleries.description,
+      showOnHome: mediaGalleries.showOnHome,
+    }).from(mediaGalleries).where(and(eq(mediaGalleries.id, galleryId), eq(mediaGalleries.status, "PUBLISHED"))).limit(1))[0];
+    if (!gallery) return null;
+    const [assets, externalImages] = await Promise.all([
+      this.database.select({ assetId: mediaGalleryAssets.privateAssetId, ordinal: mediaGalleryAssets.ordinal, status: privateAssets.status, purpose: privateAssets.purpose })
+        .from(mediaGalleryAssets).innerJoin(privateAssets, eq(mediaGalleryAssets.privateAssetId, privateAssets.id))
+        .where(eq(mediaGalleryAssets.galleryId, galleryId)),
+      this.database.select({ ordinal: mediaGalleryExternalImages.ordinal, url: mediaGalleryExternalImages.sourceUrl })
+        .from(mediaGalleryExternalImages).where(eq(mediaGalleryExternalImages.galleryId, galleryId)),
+    ]);
+    if (assets.length + externalImages.length < 1 || assets.length + externalImages.length > 5 ||
+      assets.some((asset) => asset.status !== "READY" || asset.purpose !== "GALLERY")) return null;
+    const images = [
+      ...assets.map((asset) => ({ assetId: asset.assetId, ordinal: asset.ordinal, url: `/api/media/assets/${asset.assetId}` })),
+      ...externalImages.map((image) => ({ assetId: `external:${gallery.id}:${image.ordinal}`, ...image })),
+    ].sort((left, right) => left.ordinal - right.ordinal);
+    return Object.freeze({
+      ...gallery,
+      images: Object.freeze(images.map(({ assetId, url }) => Object.freeze({ assetId, url }))),
+    });
+  }
+
   private async list(query: EventListQuery, now: Date): Promise<EventPage> {
     const conditions = [
       query.query ? or(ilike(eventCompetitions.titleNormalized, `%${normalizeText(query.query)}%`), ilike(eventCompetitions.title, `%${query.query}%`)) : undefined,
@@ -320,12 +369,23 @@ export class PostgresEventAdapter implements EventQueryRepository {
   listPublic(query: EventListQuery, now: Date) { return this.list(query, now); }
   listAdmin(query: EventListQuery, now: Date) { return this.list(query, now); }
 
+  async resolveLegacyId(legacyId: number) {
+    const eventId = deriveLegacyCompetitionUuid("competition.event_competitions", legacyId);
+    if (!eventId) return null;
+    const row = (await this.database.select({ id: eventCompetitions.id }).from(eventCompetitions)
+      .where(eq(eventCompetitions.id, eventId)).limit(1))[0];
+    return row?.id ?? null;
+  }
+
   async getPublic(eventId: string, now: Date) {
     const row = (await this.database.select().from(eventCompetitions).where(eq(eventCompetitions.id, eventId)).limit(1))[0];
     if (!row) return null;
     const aggregate = aggregateFromRow(row);
-    const catalog = await loadCompetitionPlayerDisplayCatalog(this.database, aggregate.participants.map((entry) => entry.playerId));
-    return toPublicEventDto(aggregate, now.toISOString(), catalog.labels);
+    const [catalog, gallery] = await Promise.all([
+      loadCompetitionPlayerDisplayCatalog(this.database, aggregate.participants.map((entry) => entry.playerId)),
+      this.getPublishedReadyGallery(aggregate.galleryId),
+    ]);
+    return toPublicEventDto(aggregate, now.toISOString(), catalog.labels, gallery);
   }
 
   async getAdmin(eventId: string) {
@@ -341,10 +401,17 @@ export class PostgresEventAdapter implements EventQueryRepository {
       event.participants.map((entry) => entry.playerId),
       true,
     );
+    const candidateGalleries = await this.database.select({ id: mediaGalleries.id, title: mediaGalleries.title })
+      .from(mediaGalleries).where(eq(mediaGalleries.status, "PUBLISHED"))
+      .orderBy(desc(mediaGalleries.publishedAt), mediaGalleries.id).limit(50);
+    const galleryOptions = (await Promise.all(candidateGalleries.map(async (gallery) =>
+      await this.getPublishedReadyGallery(gallery.id) ? gallery : null
+    ))).filter((gallery): gallery is NonNullable<typeof gallery> => gallery !== null);
     return {
       event,
       playerOptions: catalog.options,
       playerLabels: Object.fromEntries(catalog.labels),
+      galleryOptions,
     };
   }
 

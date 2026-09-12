@@ -1,7 +1,7 @@
 "use client";
 
 import { Clipboard, Coins, RotateCcw, Sparkles } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   beginCoinToss,
@@ -13,7 +13,7 @@ import {
 
 import styles from "../team-tools.module.css";
 
-const FALLBACK_REVEAL_MS = 1_600;
+const FALLBACK_REVEAL_MS = 2_000;
 
 function browserUint32() {
   const value = new Uint32Array(1);
@@ -30,6 +30,22 @@ export function CoinTossTool() {
   const [state, setState] = useState<CoinTossState>(INITIAL_COIN_TOSS_STATE);
   const [error, setError] = useState<string | null>(null);
   const [copyStatus, setCopyStatus] = useState("");
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setReducedMotion(query.matches);
+    update();
+    const handleChange = () => {
+      update();
+      if (query.matches) {
+        setState((current) => current.phase === "playing" ? revealCoinToss(current) : current);
+      }
+    };
+    query.addEventListener("change", handleChange);
+    return () => query.removeEventListener("change", handleChange);
+  }, []);
 
   useEffect(() => {
     if (state.phase !== "playing") return;
@@ -38,6 +54,34 @@ export function CoinTossTool() {
     }, FALLBACK_REVEAL_MS);
     return () => window.clearTimeout(fallback);
   }, [state.phase, state.round]);
+
+  useEffect(() => {
+    if (state.phase !== "playing" || reducedMotion) return;
+    const video = videoRef.current;
+    if (!video) return;
+    let active = true;
+    let recoveryTimer: number | null = null;
+    try {
+      const attempt = video.play();
+      if (attempt) {
+        void attempt.catch(() => {
+          if (active) {
+            setState((current) => current.phase === "playing" ? revealCoinToss(current) : current);
+          }
+        });
+      }
+    } catch {
+      recoveryTimer = window.setTimeout(() => {
+        if (active) {
+          setState((current) => current.phase === "playing" ? revealCoinToss(current) : current);
+        }
+      }, 0);
+    }
+    return () => {
+      active = false;
+      if (recoveryTimer !== null) window.clearTimeout(recoveryTimer);
+    };
+  }, [state.phase, state.round, reducedMotion]);
 
   function reveal() {
     setState((current) => current.phase === "playing" ? revealCoinToss(current) : current);
@@ -48,7 +92,8 @@ export function CoinTossTool() {
     setError(null);
     setCopyStatus("");
     try {
-      setState(beginCoinToss(state, browserUint32));
+      const playing = beginCoinToss(state, browserUint32);
+      setState(reducedMotion ? revealCoinToss(playing) : playing);
     } catch {
       setError("코인을 던지지 못했어요. 브라우저를 새로고침한 뒤 다시 시도해 주세요.");
     }
@@ -104,14 +149,26 @@ export function CoinTossTool() {
       </section>
 
       <section className={styles.coinStage} aria-labelledby="coin-result-title">
-        <div
-          className={styles.coin}
-          data-phase={state.phase}
-          data-side={state.phase === "revealed" ? state.outcome : undefined}
-          onAnimationEnd={reveal}
-          aria-hidden="true"
-        >
-          {state.phase === "revealed" && state.outcome === "BACK" ? <Sparkles /> : <Coins />}
+        <div className={styles.coinVisual} aria-hidden="true">
+          {state.phase === "playing" ? <video
+            key={state.round}
+            ref={videoRef}
+            className={styles.coinVideo}
+            autoPlay
+            muted
+            playsInline
+            preload="auto"
+            poster="/videos/coin-toss-breeze-source.svg"
+            onEnded={reveal}
+            onError={reveal}
+          ><source src="/videos/coin-toss-breeze.mp4" type="video/mp4" /></video> : null}
+          <div
+            className={styles.coin}
+            data-phase={state.phase}
+            data-side={state.phase === "revealed" ? state.outcome : undefined}
+          >
+            {state.phase === "revealed" && state.outcome === "BACK" ? <Sparkles /> : <Coins />}
+          </div>
         </div>
         <div className={styles.coinText} role="status" aria-live="polite" aria-atomic="true">
           <span>{phaseCopy.kicker}</span>

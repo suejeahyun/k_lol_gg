@@ -54,3 +54,18 @@ test("own application requires a stable participant UUID so retry fingerprints c
   assert.deepEqual(commands[0]?.metadata.idempotency.requestFingerprint, commands[1]?.metadata.idempotency.requestFingerprint);
   assert.throws(() => service.upsertOwnApplication(ownerContext, eventId, playerId, 1, { mainPosition: "MID", subPositions: [] }), TypeError);
 });
+
+test("event gallery command accepts only an exact nullable gallery identifier", async () => {
+  const commands: EventCommand[] = [];
+  const service = new EventService({ handle: async (command) => {
+    commands.push(command);
+    return { body: { eventId: command.eventId, revision: 2, status: "IN_PROGRESS", commandType: command.type }, revision: 2, replayed: false };
+  } });
+  const eventId = randomUUID();
+  const galleryId = randomUUID();
+  await service.executeAdmin(context, eventId, 1, { type: "SET_MEDIA_GALLERY", payload: { galleryId } });
+  await service.executeAdmin(context, eventId, 1, { type: "SET_MEDIA_GALLERY", payload: { galleryId: null } });
+  assert.equal(commands[0]?.type, "SET_MEDIA_GALLERY");
+  assert.deepEqual(commands.map((command) => command.payload), [{ galleryId }, { galleryId: null }]);
+  assert.throws(() => service.executeAdmin(context, eventId, 1, { type: "SET_MEDIA_GALLERY", payload: { galleryId, extra: true } }), TypeError);
+});

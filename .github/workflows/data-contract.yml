@@ -1,30 +1,9 @@
 name: V2 data contract
 
 on:
+  # 앱 어느 영역의 변경도 공유 스키마, 인증 경계, 릴리스 근거에 영향을 줄 수 있다.
+  # 경로 필터로 검증이 건너뛰어지지 않도록 모든 PR에서 실행한다.
   pull_request:
-    paths:
-      - ".github/workflows/data-contract.yml"
-      - "drizzle/**"
-      - "scripts/test-db/**"
-      - "scripts/verify-auth-http.mjs"
-      - "src/app/(admin)/**"
-      - "src/app/(auth)/**"
-      - "src/app/(public)/account/**"
-      - "src/app/(public)/forgot-password/**"
-      - "src/app/(public)/login/**"
-      - "src/app/(public)/signup/**"
-      - "src/app/api/admin/**"
-      - "src/app/api/auth/**"
-      - "src/components/accounts/**"
-      - "src/components/admin/**"
-      - "src/components/auth/**"
-      - "src/modules/accounts/**"
-      - "src/modules/auth/**"
-      - "src/modules/players/**"
-      - "src/platform/db/**"
-      - "tests/database/**"
-      - "package.json"
-      - "package-lock.json"
   workflow_dispatch:
 
 permissions:
@@ -33,7 +12,7 @@ permissions:
 jobs:
   postgres-contract:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     services:
       postgres:
         image: postgres:18.6-bookworm
@@ -51,6 +30,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          # 릴리스 근거 검사는 registry의 annotated tag와 commit을 대조한다.
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -66,3 +48,6 @@ jobs:
           TEST_DATABASE_URL: postgresql://postgres:synthetic_ci_only@127.0.0.1:5432/klol_v2_test_ci
           V2_DB_TEST_MODE: "true"
           V2_USE_CI_POSTGRES_SERVICE: "true"
+      - run: npm run verify:auth-http
+      - run: npm run release:evidence:check
+      - run: npm run security:secrets

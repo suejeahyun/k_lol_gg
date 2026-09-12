@@ -69,6 +69,35 @@ test("public gallery DTO resolves only reviewed asset identifiers", () => {
   assert.throws(() => toPublicGalleryDto({ ...gallery, status: "ARCHIVED" }, () => "x"), /GALLERY_NOT_PUBLIC/);
 });
 
+test("gallery keeps one explicit display order across private and migrated external images", () => {
+  const gallery = createGallery({
+    id: "mixed-gallery",
+    title: "혼합 갤러리",
+    description: "이관 이미지와 새 이미지",
+    imageAssetIds: ["asset-a", "asset-b"],
+    externalImageUrls: ["/images/legacy/one.webp"],
+    imageOrder: [
+      { kind: "EXTERNAL", url: "/images/legacy/one.webp" },
+      { kind: "ASSET", assetId: "asset-b" },
+      { kind: "ASSET", assetId: "asset-a" },
+    ],
+    publish: true,
+  });
+  assert.deepEqual(toPublicGalleryDto(gallery, (id) => `/api/media/assets/${id}`).images.map((image) => image.url), [
+    "/images/legacy/one.webp",
+    "/api/media/assets/asset-b",
+    "/api/media/assets/asset-a",
+  ]);
+  assert.throws(() => createGallery({
+    id: "bad-order",
+    title: "잘못된 순서",
+    description: "누락",
+    imageAssetIds: ["asset-a"],
+    externalImageUrls: ["/images/legacy/one.webp"],
+    imageOrder: [{ kind: "ASSET", assetId: "asset-a" }],
+  }), /INVALID_GALLERY_IMAGE_ORDER/);
+});
+
 test("metadata edits preserve publication status, increment revision, and reject archived content", () => {
   const publishedHighlight = createHighlight({ id: "h", title: "제목", description: "설명", youtubeUrl: "dQw4w9WgXcQ", publish: true });
   const editedHighlight = updateHighlight({ highlight: publishedHighlight, expectedRevision: 0, title: "새 제목", description: "새 설명", youtubeUrl: "https://youtu.be/abcdefghijk", thumbnailAssetId: null, sortOrder: 3 });

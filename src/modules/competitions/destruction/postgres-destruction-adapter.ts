@@ -23,6 +23,7 @@ import {
 import { privateAssets } from "@/platform/db/schema/matches";
 import { players } from "@/platform/db/schema/registry";
 import type { V2Transaction } from "@/platform/db/transaction";
+import { deriveLegacyCompetitionUuid } from "@/platform/legacy-identifiers";
 import { loadCompetitionPlayerDisplayCatalog } from "../infrastructure/postgres-player-display-catalog";
 
 import type { CompetitionCommandReceipt } from "../core";
@@ -200,6 +201,13 @@ export class PostgresDestructionAdapter implements DestructionQueryPort {
 
   listPublic(query: DestructionListQuery) { return this.list(query); }
   listAdmin(query: DestructionListQuery) { return this.list(query); }
+  async resolveLegacyId(legacyId: number) {
+    const tournamentId = deriveLegacyCompetitionUuid("competition.destruction_competitions", legacyId);
+    if (!tournamentId) return null;
+    const row = (await this.database.select({ id: destructionCompetitions.id }).from(destructionCompetitions)
+      .where(eq(destructionCompetitions.id, tournamentId)).limit(1))[0];
+    return row?.id ?? null;
+  }
   async getPublic(tournamentId: string) {
     const row = (await this.database.select().from(destructionCompetitions).where(eq(destructionCompetitions.id, tournamentId)).limit(1))[0];
     if (!row) return null;

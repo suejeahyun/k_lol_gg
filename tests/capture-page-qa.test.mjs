@@ -18,3 +18,10 @@ test("full-page capture fails visible repository error states even when HTTP is 
   assert.ok(source.includes('[role="alert"]'));
   assert.match(source, /불러오지 못했습니다/);
 });
+
+test("full-page capture accepts synthetic credentials through bounded stdin", () => {
+  assert.match(source, /readCredentialsFromStdin/u);
+  assert.match(source, /16 \* 1024/u);
+  assert.match(source, /credentials-stdin/u);
+  assert.match(source, /credential\("admin-login-id", "adminLoginId"\)/u);
+});

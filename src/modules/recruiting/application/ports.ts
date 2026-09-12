@@ -91,9 +91,29 @@ export type AdminRecruitingStatusDto = Readonly<{
   }>[];
 }>;
 
+export type PartyMemberStatisticsDto = Readonly<{
+  query: string;
+  lookbackDays: number;
+  scannedPartyLimit: number;
+  resultLimit: number;
+  items: readonly Readonly<{
+    name: string;
+    totalPartyCount: number;
+    inProgressCount: number;
+    finishedCount: number;
+    canceledCount: number;
+    resetCount: number;
+    companions: readonly Readonly<{
+      name: string;
+      partyCount: number;
+    }>[];
+  }>[];
+}>;
+
 export interface RecruitingQueryPort {
   listPublicFeed(): Promise<PublicRecruitFeedDto>;
   getAdminStatus(): Promise<AdminRecruitingStatusDto>;
+  getPartyMemberStats(query: string): Promise<PartyMemberStatisticsDto>;
 }
 
 export interface RecruitingAuthorizationPort {

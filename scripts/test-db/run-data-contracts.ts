@@ -1079,8 +1079,9 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
     let seasonTableRenamed = false;
     let claimTableRenamed = false;
     let sessionsTableRenamed = false;
+    let onBrowserQaCommand: ((chunk: string) => void) | undefined;
     await new Promise<void>((resolveStop, reject) => {
-      process.stdin.on("data", (chunk) => {
+      onBrowserQaCommand = (chunk: string) => {
         buffer += chunk;
         const lines = buffer.split(/\r?\n/);
         buffer = lines.pop() ?? "";
@@ -1157,8 +1158,11 @@ async function runSeasonBrowserQaServer(connectionString: string): Promise<void>
             resolveStop();
           }
         }
-      });
+      };
+      process.stdin.on("data", onBrowserQaCommand);
     });
+    if (onBrowserQaCommand) process.stdin.off("data", onBrowserQaCommand);
+    process.stdin.pause();
     if (seasonTableRenamed) {
       await pool.query(`alter table competition.seasons_s03_browser_error rename to seasons`);
     }

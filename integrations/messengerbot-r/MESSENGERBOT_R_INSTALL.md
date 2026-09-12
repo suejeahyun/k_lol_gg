@@ -1,103 +1,88 @@
-# MessengerBot R V41 설치 안내
+# MessengerBot R V1 strict R8 설치 안내
 
-## 휴대폰 제한 대응본을 우선 사용
+## 현재 설치본
 
-MessengerBot R의 각 봇 프로필에는 아래 **한 파일만** 설치한다.
+운영 휴대폰에는 아래 **비공개 한 파일만** 전체 복사해 설치한다.
 
-`KLOL_KAKAO_BOT_V41_MESSENGERBOT_R.js`
+`.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js`
 
-이 파일은 모든 기능을 포함하면서 MessengerBot R의 65,535자 제한 아래로 생성한 설치 코드다. 세미콜론을 보존하고 충분한 줄바꿈을 넣어 Rhino strict 경고 없이 읽을 수 있게 했다. `TRANSPORT`, `V1_COMPAT`, `ROUTER` 파일을 따로 붙이거나 기존 `response()` 함수 안에 넣지 않는다.
+이 설치본은 사용자가 제공한 V1/V40의 명령 판정, 양식, 정상 응답과 무응답 동작을 유지하고 HTTP 전송 경계만 현재 V4 서명 API로 연결한다. `TRANSPORT`, `ADAPTER`, V41 또는 V4 파일을 함께 붙이지 않는다.
 
-`KLOL_KAKAO_BOT_V41_V2_COMPLETE.js`는 개발·검토용 전체본이며 휴대폰 편집기에는 넣지 않는다. Git의 두 파일은 모두 비밀값이 없는 공개 소스다. 운영 인계용 private installer는 승인된 비밀 보관소에서 별도로 만들고 Git에는 커밋하지 않는다.
+한 대의 휴대폰에서 MessengerBot R 봇 프로필 하나가 구인구직방과 기능방 두 곳을 구독한다. 메시지 내용에 따라 서버 프로필을 자동 선택한다.
 
-## 완전 교체 순서
+- 파티·구인·스크림 계열: `RECRUIT`
+- 내전·전적·랭킹·운영 양식 계열: `FEATURES`
 
-1. MessengerBot R에서 해당 봇을 중지한다.
-2. 필요하면 기존 소스를 휴대폰 밖의 안전한 위치에 백업한다. 비밀 설정값은 소스에 넣지 않는다.
-3. 소스 편집기의 기존 내용을 전체 선택해 지운다.
-4. 설치용 파일 전체를 첫 글자부터 마지막 글자까지 붙여 넣는다.
-5. 설치본 안에 `KLOL_KAKAO_BOT_V41_V3_2026_09_12_R15_OP_DAY_STATUS`가 있는지 검색한다.
-6. 끝부분에 `response.__kakaoBotEntryPoint=!0;`가 있는지 확인한다. `!0`은 압축된 `true`다. 휴대폰 설치본은 용량 절약을 위해 개발용 START/END 변수를 포함하지 않는다.
-7. 저장 후 컴파일하고 봇을 다시 시작한다.
-8. 이 설치본이 구독하는 실제 카카오톡 방을 하나만 남긴다. 같은 방의 중복 봇뿐 아니라 동일 설치본으로 다른 방을 함께 구독해서도 안 된다.
-9. 카카오톡 방에서 `/봇버전`과 `봇버전`을 각각 보내 `KLOL_KAKAO_BOT_V41_V3_2026_09_12_R15_OP_DAY_STATUS`, 설치본 ID, 키 ID가 동일하게 출력되는지 확인한다.
+카카오 알림 parser의 방 이름은 인증이나 라우팅에 쓰지 않는다. 따라서 잘못된 방에서 명령을 보내도 명령 종류가 맞으면 실행될 수 있다. 물리적인 두 방 분리는 MessengerBot R의 구독 대상과 운영 안내로 유지한다.
 
-편집기의 자동 줄바꿈은 화면에 보이는 줄 수를 늘릴 수 있다. 가능하면 파일 관리자나 전송 도구에서 바이트와 SHA-256을 확인한다.
+## 한 번에 교체하는 순서
 
-## 1567행 `missing }` 진단
+1. 휴대폰 MessengerBot R에서 기존 K-LOL 봇을 중지한다.
+2. 기존 소스를 휴대폰 밖의 안전한 장소에 백업한다.
+3. 소스 편집기의 내용을 전체 선택해 완전히 지운다.
+4. `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js`의 첫 글자부터 마지막 글자까지 한 번에 붙여 넣는다.
+5. 파일 안에서 `KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R8_2026_09_12`를 검색한다.
+6. 마지막 줄이 `response.__kakaoBotEntryPoint = true;`인지 확인한다.
+7. 저장·컴파일 후 봇을 다시 시작한다.
+8. 같은 봇 프로필의 응답 대상에 구인구직방과 기능방 두 곳만 활성화한다.
+9. 두 방에서 각각 `봇버전`과 `/봇버전`을 확인한다.
 
-과거 오류는 설치 코드가 약 65,535자에서 잘려 문자열과 함수가 닫히지 않으면서 발생했다.
+휴대폰에 붙일 비공개 파일에는 필요한 네 설정을 먼저 `DataBase`에 기록하는 초기화 코드가 포함되어 있다. 값을 채팅이나 Git에 복사하지 않는다. 공개 설치본은 비밀값이 없으므로 휴대폰 `DataBase`에 설정이 이미 존재할 때만 단독으로 동작한다.
 
-```javascript
-function v41JsonAfter(text, prefix) {
-  var parsed = JSON.parse(v41Trim(String(text).substring(prefix.length)));
-  if (!parsed || typeof parsed !== "object" || v41IsArray(parsed)) throw new Error("JSON 객체 형식을 확인해 주세요.");
-  return parsed;
-}
-```
+## 현재 파일 검증값
 
-R15 설치본은 65,535자 미만이며 빌드 시 ES5 파서와 Rhino `CODE_HAS_NO_SIDE_EFFECTS` 정적 검사를 통과한다. standalone sequence·logical·conditional·pure expression과 `void` 표현을 명시적 `if`·호출·대입 문장으로 변환하고, 중첩 comma 피연산자와 bare assignment 조건도 경고 없는 형태로 만든다. 휴대폰 앱 컴파일은 설치 시 별도 확인한다.
+| 용도 | 파일 | LF 문자 | CRLF 문자 | 물리 줄 | SHA-256 |
+| --- | --- | ---: | ---: | ---: | --- |
+| 공개·비밀값 없음 | `integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js` | 62,037 | 63,829 | 1,793 | `a9e83edad5deadf49d782ad606ef7784bd40aa50809884fe61dca3d62dabc725` |
+| 휴대폰 한 번 붙여넣기 | `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js` | 62,545 | 64,345 | 1,801 | `6ef9a734ee10ed9e79f1494a5ec2a8bd7bcecfaa74a145416c08d83ad604e5fc` |
 
-따라서 오류 행에 `}`만 추가하지 않는다. 파일 마지막에 END 표식이 없거나 전체 줄 수·해시가 다르면 기존 내용을 완전히 지우고 전체본 파일을 다시 전송한다.
+두 파일 모두 LF와 CRLF에서 MessengerBot R의 65,535자 제한보다 작다. 빌드가 두 줄바꿈 형식과 ES5 parser, Rhino `CODE_HAS_NO_SIDE_EFFECTS` 후보를 모두 검사한다. V1 원본의 실행·주석 줄은 유지하고 의미 없는 빈 줄만 제거했다.
 
-| 확인 결과 | 판정 |
-| --- | --- |
-| 아래 줄 수 + R15 버전 + 아래 SHA-256 일치 | 설정 분리형 휴대폰 설치본 |
-| 약 1,567줄에서 끝나고 `response.__kakaoBotEntryPoint=!0;`가 없음 | 붙여 넣기/저장 중 잘린 파일일 가능성이 매우 높음 |
-| 2,784줄 + 내부 BUNDLE START/END 표식 | 개발·검토용 전체본. 휴대폰에는 설치하지 않음 |
-| 줄 수가 다르고 버전 또는 해시도 다름 | 이전 버전, 혼합 붙여 넣기 또는 내용 변형 |
+해시나 끝 표시가 다르면 일부만 복사됐거나 다른 버전이 섞인 것이다. 오류 행에 임의로 `}`나 따옴표를 추가하지 말고 전체 파일을 다시 교체한다.
 
-## 비공개 설정
+## 서버 연결 확인
 
-서명 키를 소스에 직접 적지 않는다. MessengerBot R의 `DataBase`에 다음 값을 별도로 저장한다.
+비공개 설치본의 설정은 다음 네 항목이다.
 
 - `KLOL_V2_BASE_URL`
-- `KLOL_V2_KAKAO_WEBHOOK_SECRET_CURRENT`
-- `KLOL_V2_KAKAO_WEBHOOK_KEY_ID_CURRENT` (서버 `KAKAO_WEBHOOK_KEY_ID_CURRENT`와 동일한 공개 식별자)
-- `KLOL_V2_KAKAO_IDENTITY_SECRET`
-- `KLOL_V2_ACTIVE_SEASON_ID` (내전 현황·전체 신청 양식을 사용할 때 현재 시즌 UUID)
+- `KLOL_V4_KAKAO_WEBHOOK_SECRET_CURRENT`
+- `KLOL_V4_KAKAO_WEBHOOK_KEY_ID_CURRENT`
+- `KLOL_V4_KAKAO_IDENTITY_SECRET`
 
-두 secret은 각각 UTF-8 기준 32바이트 이상이어야 한다. 실제 값은 채팅, 스크린샷, Git, QA 문서에 남기지 않는다.
-`KLOL_V2_BASE_URL`도 필수다. 검증한 HTTPS origin만 넣으며 소스에는 운영 주소 기본값이 없다. 설정하지 않으면 링크 안내에는 설정 필요 문구가 표시되고 API 요청은 전송되지 않는다.
+공개 저장소나 문서에는 실제 값이 없어야 한다. 서버와 휴대폰 서명 키·키 ID가 글자 하나까지 같아야 하며 identity secret은 서명 키와 다른 32바이트 이상 값이어야 한다.
 
-서명 값은 서버의 `KAKAO_WEBHOOK_SECRET_CURRENT`와 글자 하나까지 같아야 한다. 익명 식별 값은 서버로 복사하지 않으며 서명 값과도 달라야 한다. 기존 V1의 `KAKAO_RECRUIT_SECRET`, `KAKAO_SEARCH_PLAYER_SECRET`, `KAKAO_OPENCHAT_SECRET` 또는 대응하는 `KLOL_KAKAO_*` 값을 어느 V2 항목에도 재사용하지 않는다.
+로컬 비공개 설정을 이용한 운영 읽기 전용 smoke는 `RECRUIT`와 `FEATURES` 두 프로필 모두 HTTP 200 및 command gateway 정상 응답을 확인한다.
 
-## 현재 재생성본 확인값
+```powershell
+npm run bot:kakao:v1-strict
+npm run bot:kakao:v1-strict:private
+node scripts/verify-private-messengerbot-v1-strict-live.mjs
+```
 
-| 용도 | 파일 | 버전 | 물리 줄 수 | 크기 | SHA-256 |
-| --- | --- | --- | ---: | ---: | --- |
-| MessengerBot R 설정 분리형 | `KLOL_KAKAO_BOT_V41_MESSENGERBOT_R.js` | `KLOL_KAKAO_BOT_V41_V3_2026_09_12_R15_OP_DAY_STATUS` | 84 | 76,753 bytes / 65,106자 | `46a31ab94978f2fd37780214a753a8facbaff6ae9ab04f60959330513eda419c` |
-| 개발·검토용 | `KLOL_KAKAO_BOT_V41_V2_COMPLETE.js` | `KLOL_KAKAO_BOT_V41_V3_2026_09_12_R15_OP_DAY_STATUS` | 2,784 | 134,380 bytes / 122,595자 | `b1f75788ad6f16bd9b893afd583b568e0581dfdcc25044b5cc5a85dd9b311857` |
+이 검사는 비밀값을 출력하지 않는다. 실제 휴대폰 컴파일과 카카오 송수신은 휴대폰 설치 후 별도로 확인해야 한다.
 
-해시, 크기 또는 끝 표시가 다르면 다른 버전이거나 전송 과정에서 변형된 파일이다.
+## 기능 확인 순서
 
-설치본의 LF가 모두 CRLF로 변환되는 보수적 계산은 65,189자로 65,535자 이하다. private 설정 포함 파일도 생성 단계에서 실제 설정 길이를 포함해 같은 제한을 검증한다. 전송 도구가 다른 문자를 추가하지 않게 파일 자체를 그대로 설치한다.
+구인구직방:
 
-## 첫 동작 확인
+1. `5인파티` → 양식만 출력되고 사용자에게 보이는 구인은 아직 시작되지 않음
+2. 출력 양식에 참가자를 넣어 다시 전송 → 저장 후 최신 구인현황 표시
+3. `구인현황`, `상세 번호`, 다른 사용자가 만든 `번호ㅉ`
+4. `스크림구인`, `스크림현황`
 
-컴파일 성공 뒤 다음 순서로 확인한다.
+기능방:
 
-1. `/봇버전`
-2. `/V2연동확인`
-3. 사이트 SUPER 관리자가 `/admin/kakao/rooms`에서 새 방 또는 기존 canonical 방 연결 코드를 발급
-4. 해당 실제 방에서 `/V2방연동 8자리코드`
-5. `/도움말`
-6. RECRUIT 방: `5인파티`, `구인현황`, `스크림구인`, 다른 사용자가 만든 모집의 `번호ㅉ`
-7. FEATURES 방: `내전구인`, 외출 양식, `랭킹`
-8. 각 명령을 `/` 포함·미포함으로 한 번씩 확인
+1. `내전구인`, `내전현황`
+2. 전체 내전 양식의 참가자 추가·수정·빈칸 취소
+3. `전적 RiotID#태그`, `최근 RiotID#태그`, `랭킹`
+4. 외출·지인·건의·모임 양식
 
-서명 키는 설치본 신뢰만 증명하며 사람 권한을 부여하지 않는다. DB에 연결된 ACTIVE canonical 방의 미등록 발신자는 MEMBER로 자동 기록된다. RECRUIT 방의 V1 파티·스크림·구인 조회·생성·수정·마감은 같은 방의 모든 MEMBER가 사용할 수 있다. 웹사이트 관리자 기능과 raw V2·보안 설정·내부 maintenance는 기존 관리자 권한을 그대로 유지한다. `/` 유무는 판정에 영향을 주지 않는다.
+모든 명령은 맨 앞 `/`가 있거나 없어도 같게 처리한다. 구인 운영일은 KST 오전 6시에 바뀌며 이전 운영일의 파티·스크림은 새 현황에서 보이지 않는다.
 
-RECRUIT 최초 양식은 `》시작시간 :`, `》게임정보 :` 빈 줄을 출력하지 않는다. 사용자가 복사 양식에 두 줄을 직접 추가하면 값은 그대로 인식한다. 줄이 없거나 공백이면 서버가 요청을 받은 KST `HH:mm`과 `미입력`으로 저장한다.
+## 판정 기준
 
-`ROOM_BINDING_REQUIRED`이면 sender나 환경변수를 추가하지 말고 `/V2연동확인` 결과 전체를 관리자에게 전달한다. R14.2는 MessengerBot callback의 `room`, `channelId`, `isGroupChat`을 인증·라우팅에 전혀 사용하지 않는다. `room=sender`처럼 손상된 알림 callback도 동일한 설치본 ID로 동작한다. 관리자는 일회용 코드로 그 설치본을 canonical 방 하나에 연결한다.
+- 소스 빌드·ES5/Rhino·서명 smoke 통과: 코드와 서버 연결 확인
+- 휴대폰 컴파일 성공: 설치 파일 무결성 확인
+- 실제 두 방에서 위 기능 확인: 외부 설치 완료
 
-중요한 운영 불변식은 **봇 설치본 하나 = 실제 카카오톡 방 하나**다. RECRUIT와 FEATURES는 서로 다른 identity secret·설치본 ID·MessengerBot 봇 프로필을 사용하고, 관리자 pairing에서 각각 `RECRUIT`, `FEATURES`를 선택한다. 같은 identity secret이 들어간 installer를 두 방에서 실행하면 서버는 두 방을 구분할 수 없고 데이터와 권한이 합쳐진다. room parser를 의도적으로 제거했기 때문에 이를 코드로 탐지할 수 없다.
-
-R14.2 이후 휴대폰 설치본은 `/봇버전`과 `/V2연동확인`에 공개 설치본 ID와 키 ID, opaque 발신자 ID를 표시한다. V3 서명은 이 값들과 봇 버전·설치본 기반 scope·메시지 전달 ID를 함께 묶는다. scope는 installation ID에서 SHA-256으로 파생하므로 signing key 교체 뒤에도 유지된다. 같은 카카오 메시지 재전송은 설치본+발신자+logId+본문 delivery ID로 멱등 처리한다. 키 교체 시 서버의 current/previous ID를 먼저 설정한 뒤 휴대폰 키와 ID를 current로 바꾸며, 이전 키 ID로 고정된 설치본은 새 current ID로 한 번 승격된 뒤 되돌아갈 수 없다.
-
-migration `0031_brainy_taskmaster.sql`, `0032_bent_ultimates.sql`, `0033_tan_sprite.sql`, `0034_kakao_room_capability_profiles.sql`, 대응 서버, R15 휴대폰 설치본을 하나의 점검 시간에 적용하고 혼용 중에는 모집 변경을 중지한다. 0034는 기존 방을 `RECRUIT`로 보존하고 이후 방마다 `RECRUIT` 또는 `FEATURES` 프로필을 강제한다. 정상 요청은 Vercel sender/room allowlist를 권한 판정에 사용하지 않으며, 미등록 설치본은 `ROOM_BINDING_REQUIRED` 후 DB pairing만 사용한다.
-
-R14.2 이후 설치본으로 바꾸면 휴대폰 `DataBase`의 모집 revision·내전 미리보기·사진 세션 key가 기존 room fingerprint에서 installation scope로 바뀐다. 전환 전에 진행 중인 양식을 완료하거나 취소하고, 전환 뒤 미리보기·사진 세션을 새로 시작한다. 기존 서버 데이터는 삭제하지 않는다.
-
-서버 설정이나 서명 키가 아직 없거나 현재 Vercel 배포가 새 환경변수를 읽지 못하면 컴파일은 성공하지만 서버 요청은 안전한 실패 안내를 반환한다.
+앞의 두 단계만 통과한 상태를 휴대폰 운영 완료라고 기록하지 않는다.

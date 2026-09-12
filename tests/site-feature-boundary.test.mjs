@@ -39,4 +39,7 @@ test("Kakao help feature controls its public guide without exposing configuratio
   const page = source("../src/app/(public)/(recruiting)/help/kakao/page.tsx");
   assert.match(page, /readSiteFeatureState\("kakaoHelp"\)/);
   assert.match(page, /SiteFeatureStatePanel/);
+  assert.match(page, /운영일은 한국 시간 오전 6시에 바뀌며/);
+  assert.match(page, /이전 운영일 스크림은 현황에서 제외/);
+  assert.match(page, /운영일 종료 시 자동 마감/);
 });

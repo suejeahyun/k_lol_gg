@@ -10,6 +10,7 @@ import {
   buildLegacyPlayerBalanceRecommendationDestination,
   legacyRedirectResponse,
 } from "../src/modules/navigation/application/legacy-user-redirects";
+import { GET as getLegacyDestructionImage } from "../src/app/(public)/(legacy)/progress/destruction/[tournamentId]/images/[imageIndex]/route";
 
 test("legacy 앱 로그인은 내부 next만 보존하고 중복·외부 주소는 계정으로 축소한다", () => {
   assert.equal(buildLegacyAppLoginDestination({}), "/login");
@@ -46,8 +47,20 @@ test("동적 legacy ID와 밸런스 추천 query는 path traversal과 미검토 
 test("멸망전 참가자와 이미지 legacy deep link는 검증한 ID와 ordinal만 보존한다", () => {
   assert.equal(buildLegacyDestructionParticipantDestination("tournament_01", "player_01"), "/competitions/destruction/tournament_01?tab=participants&player=player_01");
   assert.equal(buildLegacyDestructionParticipantDestination("../admin", "player_01"), "/applications");
-  assert.equal(buildLegacyDestructionImageDestination("tournament_01", "4"), "/competitions/destruction/tournament_01?tab=gallery&image=4");
+  assert.equal(buildLegacyDestructionImageDestination("tournament_01", "1"), "/competitions/destruction/tournament_01?tab=gallery&imageIndex=0");
+  assert.equal(buildLegacyDestructionImageDestination("tournament_01", "4"), "/competitions/destruction/tournament_01?tab=gallery&imageIndex=3");
+  assert.equal(buildLegacyDestructionImageDestination("tournament_01", "0"), "/competitions?type=destruction");
   assert.equal(buildLegacyDestructionImageDestination("tournament_01", "-1"), "/competitions?type=destruction");
+});
+
+test("멸망전 V1 이미지 route는 1-based 번호를 canonical 0-based query로 308 이동한다", async () => {
+  const response = await getLegacyDestructionImage(
+    new Request("https://v2.example/progress/destruction/7/images/5"),
+    { params: Promise.resolve({ tournamentId: "7", imageIndex: "5" }) },
+  );
+  assert.equal(response.status, 308);
+  assert.equal(response.headers.get("location"), "/competitions/destruction/7?tab=gallery&imageIndex=4");
+  assert.equal(response.headers.get("cache-control"), "no-store");
 });
 
 test("legacy redirect 응답은 상대 Location과 no-store를 사용한다", () => {

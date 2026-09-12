@@ -1,5 +1,9 @@
 export type MediaPublicationStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
 
+export type GalleryImageReference =
+  | Readonly<{ kind: "ASSET"; assetId: string }>
+  | Readonly<{ kind: "EXTERNAL"; url: string }>;
+
 export type HighlightContent = Readonly<{
   id: string;
   revision: number;
@@ -19,6 +23,7 @@ export type GalleryContent = Readonly<{
   description: string;
   imageAssetIds: readonly string[];
   externalImageUrls?: readonly string[];
+  imageOrder?: readonly GalleryImageReference[];
   showOnHome: boolean;
   status: MediaPublicationStatus;
 }>;
@@ -54,6 +59,40 @@ function identifier(value: string, field: string): string {
   const normalized = normalizedText(value, field, 200);
   if (/[/\\?#]/.test(normalized)) throw new Error(`INVALID_${field}`);
   return normalized;
+}
+
+function externalImageUrl(value: string): string {
+  const normalized = value.trim();
+  if (
+    normalized.length < 1 || normalized.length > 2_048 ||
+    /[\u0000-\u001f\u007f]/u.test(normalized) ||
+    (!normalized.startsWith("https://") && !normalized.startsWith("/images/"))
+  ) throw new Error("INVALID_GALLERY_EXTERNAL_URL");
+  return normalized;
+}
+
+function galleryImageOrder(
+  imageAssetIds: readonly string[],
+  externalImageUrls: readonly string[],
+  input?: readonly GalleryImageReference[],
+): readonly GalleryImageReference[] {
+  const fallback = [
+    ...imageAssetIds.map((assetId) => ({ kind: "ASSET" as const, assetId })),
+    ...externalImageUrls.map((url) => ({ kind: "EXTERNAL" as const, url })),
+  ];
+  if (input === undefined) return Object.freeze(fallback);
+  if (input.length !== fallback.length) throw new Error("INVALID_GALLERY_IMAGE_ORDER");
+  const normalized = input.map((entry) => entry.kind === "ASSET"
+    ? Object.freeze({ kind: "ASSET" as const, assetId: identifier(entry.assetId, "GALLERY_ASSET_ID") })
+    : entry.kind === "EXTERNAL"
+      ? Object.freeze({ kind: "EXTERNAL" as const, url: externalImageUrl(entry.url) })
+      : (() => { throw new Error("INVALID_GALLERY_IMAGE_ORDER"); })());
+  const expected = new Set(fallback.map((entry) => entry.kind === "ASSET" ? `asset:${entry.assetId}` : `external:${entry.url}`));
+  const actual = normalized.map((entry) => entry.kind === "ASSET" ? `asset:${entry.assetId}` : `external:${entry.url}`);
+  if (new Set(actual).size !== actual.length || actual.some((entry) => !expected.has(entry))) {
+    throw new Error("INVALID_GALLERY_IMAGE_ORDER");
+  }
+  return Object.freeze(normalized);
 }
 
 function revision(value: number): number {
@@ -125,18 +164,23 @@ export function createGallery(input: Readonly<{
   title: string;
   description: string;
   imageAssetIds: readonly string[];
+  externalImageUrls?: readonly string[];
+  imageOrder?: readonly GalleryImageReference[];
   showOnHome?: boolean;
   publish?: boolean;
   allowEmptyDraft?: boolean;
 }>): GalleryContent {
   if (
-    input.imageAssetIds.length > 5 ||
-    (input.imageAssetIds.length < 1 && (!input.allowEmptyDraft || input.publish))
+    input.imageAssetIds.length + (input.externalImageUrls?.length ?? 0) > 5 ||
+    (input.imageAssetIds.length + (input.externalImageUrls?.length ?? 0) < 1 && (!input.allowEmptyDraft || input.publish))
   ) {
     throw new Error("INVALID_GALLERY_IMAGE_COUNT");
   }
   const imageAssetIds = input.imageAssetIds.map((assetId) => identifier(assetId, "GALLERY_ASSET_ID"));
   if (new Set(imageAssetIds).size !== imageAssetIds.length) throw new Error("DUPLICATE_GALLERY_ASSET");
+  const externalImageUrls = (input.externalImageUrls ?? []).map(externalImageUrl);
+  if (new Set(externalImageUrls).size !== externalImageUrls.length) throw new Error("DUPLICATE_GALLERY_EXTERNAL_URL");
+  const imageOrder = galleryImageOrder(imageAssetIds, externalImageUrls, input.imageOrder);
   const status: MediaPublicationStatus = input.publish ? "PUBLISHED" : "DRAFT";
   return {
     id: identifier(input.id, "GALLERY_ID"),
@@ -144,6 +188,8 @@ export function createGallery(input: Readonly<{
     title: normalizedText(input.title, "GALLERY_TITLE", 120),
     description: normalizedText(input.description, "GALLERY_DESCRIPTION", 4_000),
     imageAssetIds,
+    externalImageUrls,
+    imageOrder,
     showOnHome: status === "PUBLISHED" && Boolean(input.showOnHome),
     status,
   };
@@ -178,11 +224,14 @@ export function updateGallery(input: Readonly<{
   title: string;
   description: string;
   imageAssetIds: readonly string[];
+  externalImageUrls?: readonly string[];
+  imageOrder?: readonly GalleryImageReference[];
 }>): GalleryContent {
   revision(input.expectedRevision);
   if (input.gallery.revision !== input.expectedRevision) throw new Error("STALE_MEDIA_REVISION");
   if (input.gallery.status === "ARCHIVED") throw new Error("ARCHIVED_MEDIA_READ_ONLY");
-  if (input.imageAssetIds.length + (input.gallery.externalImageUrls?.length ?? 0) > 5) {
+  const externalImageUrls = input.externalImageUrls ?? input.gallery.externalImageUrls ?? [];
+  if (input.imageAssetIds.length + externalImageUrls.length > 5) {
     throw new Error("INVALID_GALLERY_IMAGE_COUNT");
   }
   const validated = createGallery({
@@ -190,13 +239,17 @@ export function updateGallery(input: Readonly<{
     title: input.title,
     description: input.description,
     imageAssetIds: input.imageAssetIds,
-    allowEmptyDraft: (input.gallery.externalImageUrls?.length ?? 0) > 0,
+    externalImageUrls,
+    imageOrder: input.imageOrder,
+    allowEmptyDraft: true,
   });
   return {
     ...input.gallery,
     title: validated.title,
     description: validated.description,
     imageAssetIds: validated.imageAssetIds,
+    externalImageUrls: validated.externalImageUrls,
+    imageOrder: validated.imageOrder,
     revision: input.gallery.revision + 1,
   };
 }
@@ -272,13 +325,9 @@ export function toPublicGalleryDto(
     id: content.id,
     title: content.title,
     description: content.description,
-    images: [
-      ...content.imageAssetIds.map((assetId) => ({ assetId, url: resolveAssetUrl(assetId) })),
-      ...(content.externalImageUrls ?? []).map((url, ordinal) => ({
-        assetId: `external:${content.id}:${ordinal}`,
-        url,
-      })),
-    ],
+    images: (content.imageOrder ?? galleryImageOrder(content.imageAssetIds, content.externalImageUrls ?? [])).map((entry, ordinal) => entry.kind === "ASSET"
+      ? { assetId: entry.assetId, url: resolveAssetUrl(entry.assetId) }
+      : { assetId: `external:${content.id}:${ordinal}`, url: entry.url }),
     showOnHome: content.showOnHome,
   };
 }

@@ -5,6 +5,9 @@
 .header h1 { margin: .5rem 0; font-size: clamp(2rem,4.5vw,3.25rem); letter-spacing: -.05em; }
 .header p { margin: 0; color: #61718a; }
 .header > strong { padding: .5rem .75rem; border: 1px solid #d7e4f6; border-radius: 999px; color: #61718a; background: #fff; font-size: .72rem; }
+.header nav { display: flex; flex-wrap: wrap; gap: .5rem; }
+.header nav a { min-height: 2.75rem; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #c9d9ec; border-radius: .8rem; color: #315eaa; background: #ffffff; padding: 0 .9rem; font-size: .76rem; font-weight: 850; text-decoration: none; }
+.header nav a:hover, .header nav a:focus-visible { border-color: #91add2; color: #244f90; background: #eef5ff; box-shadow: 0 0 0 3px rgb(49 94 170 / 12%); }
 .summary { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .8rem; margin: 2rem 0 1rem; }
 .summary article { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .7rem; padding: 1rem; border: 1px solid #dce6f4; border-radius: 1rem; background: #fff; }
 .summary svg { width: 1.1rem; color: #315eaa; }

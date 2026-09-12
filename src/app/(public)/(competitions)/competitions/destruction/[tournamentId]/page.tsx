@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { ArrowLeft, Check, Crown, Gavel, Images, Sparkles, Swords, UsersRound, X } from "lucide-react";
 
 import { ResilientMediaImage } from "@/app/(public)/(media)/resilient-media-image";
@@ -9,6 +9,10 @@ import { isDestructionUuid, type DestructionPublicDto } from "@/modules/competit
 import { getRuntimeDestruction } from "@/modules/competitions/destruction/runtime-destruction";
 import { parseDestructionDetailView } from "@/modules/competitions/public-navigation";
 import { publicDestructionStatusLabel, publicPreliminaryFormatLabel } from "@/modules/competitions/core";
+import { buildLegacyCanonicalIdDestination } from "@/modules/navigation/application/legacy-user-redirects";
+import { parseLegacyPlayerId } from "@/modules/players/domain/admin-player";
+import { resolveRuntimePublicPlayerLegacyMapping } from "@/modules/players/infrastructure/runtime-public-player-legacy-mapping";
+import { parseLegacyIntegerId } from "@/platform/legacy-identifiers";
 
 import styles from "../../events.module.css";
 import { DestructionOwnerActions } from "./destruction-owner-actions";
@@ -31,20 +35,54 @@ function queryFromRaw(raw: Record<string, string | string[] | undefined>) {
   return query;
 }
 
+function canonicalViewQuery(
+  view: NonNullable<ReturnType<typeof parseDestructionDetailView>>,
+  playerId: string | null,
+) {
+  return {
+    action: view.action ?? undefined,
+    tab: view.tab === "overview" ? undefined : view.tab,
+    player: playerId ?? undefined,
+    imageIndex: view.imageIndex === null ? undefined : String(view.imageIndex),
+  };
+}
+
 export default async function DestructionDetailPage({ params, searchParams }: { params: Promise<{ tournamentId: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { tournamentId: rawId } = await params;
-  if (!isDestructionUuid(rawId)) notFound();
+  const canonicalId = isDestructionUuid(rawId);
+  const legacyId = canonicalId ? null : parseLegacyIntegerId(rawId);
+  if (!canonicalId && legacyId === null) notFound();
   const view = parseDestructionDetailView(queryFromRaw(await searchParams));
   if (!view) notFound();
-  const tournamentId = rawId.toLocaleLowerCase("en-US");
+  let selectedPlayerId = view.playerId;
+  if (selectedPlayerId !== null && parseLegacyPlayerId(selectedPlayerId) !== null) {
+    const mapping = await resolveRuntimePublicPlayerLegacyMapping(selectedPlayerId);
+    if (mapping.state !== "ready") return <div className={styles.page}><section className={styles.state} role={mapping.state === "error" ? "alert" : "status"}><h1>멸망전 정보를 확인할 수 없어요.</h1><p>잠시 후 다시 확인해 주세요.</p></section></div>;
+    if (!mapping.playerId) notFound();
+    selectedPlayerId = mapping.playerId;
+  }
   const runtime = getRuntimeDestruction();
   if (!runtime) return <div className={styles.page}><section className={styles.state} role="status"><h1>멸망전 정보를 확인할 수 없어요.</h1><p>잠시 후 다시 확인해 주세요.</p></section></div>;
+  let tournamentId = rawId.toLocaleLowerCase("en-US");
+  if (legacyId !== null) {
+    try { tournamentId = await runtime.repository.resolveLegacyId(legacyId) ?? ""; }
+    catch { return <div className={styles.page}><section className={styles.state} role="alert"><h1>멸망전을 불러오지 못했어요.</h1><p>잠시 후 다시 시도해 주세요.</p></section></div>; }
+    if (!tournamentId) notFound();
+  }
+  if (legacyId !== null || selectedPlayerId !== view.playerId) {
+    permanentRedirect(buildLegacyCanonicalIdDestination(
+      "/competitions/destruction",
+      tournamentId,
+      "/competitions?type=destruction",
+      canonicalViewQuery(view, selectedPlayerId),
+    ));
+  }
   let destruction;
   try { destruction = await runtime.repository.getPublic(tournamentId); }
   catch { return <div className={styles.page}><section className={styles.state} role="alert"><h1>멸망전을 불러오지 못했어요.</h1><p>잠시 후 다시 시도해 주세요.</p></section></div>; }
   if (!destruction) notFound();
-  const selectedPlayer = view.playerId === null ? null : destruction.teams.flatMap((team) => team.rosterPlayers.map((player) => ({ ...player, teamName: team.name }))).find((player) => player.playerId === view.playerId || player.participantId === view.playerId);
-  if (view.playerId !== null && !selectedPlayer) notFound();
+  const selectedPlayer = selectedPlayerId === null ? null : destruction.teams.flatMap((team) => team.rosterPlayers.map((player) => ({ ...player, teamName: team.name }))).find((player) => player.playerId === selectedPlayerId || player.participantId === selectedPlayerId);
+  if (selectedPlayerId !== null && !selectedPlayer) notFound();
   const selectedImage = view.imageIndex === null ? null : destruction.gallery?.images[view.imageIndex];
   if (view.imageIndex !== null && !selectedImage) notFound();
 

@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { ArrowLeft, CalendarDays, Gamepad2, Hash, ShieldCheck, Sparkles, Trophy } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { ChampionPortrait } from "@/components/champions/champion-portrait";
 import riotStyles from "@/components/riot/riot-workspace.module.css";
+import { buildLegacyCanonicalIdDestination } from "@/modules/navigation/application/legacy-user-redirects";
+import { parseLegacyPlayerId } from "@/modules/players/domain/admin-player";
 import { loadRuntimePlayerProfile } from "@/modules/players/infrastructure/runtime-player-data";
+import { resolveRuntimePublicPlayerLegacyMapping } from "@/modules/players/infrastructure/runtime-public-player-legacy-mapping";
 import type { PublicRiotSummaryDto } from "@/modules/riot/domain/riot-integration";
 import { loadRuntimePublicRiotProfile } from "@/modules/riot/infrastructure/runtime-riot";
 import { loadRuntimeStatisticsData } from "@/modules/statistics/infrastructure/runtime-statistics-data";
@@ -75,14 +78,33 @@ export default async function PlayerDetailPage({
   params: Promise<{ playerId: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const { playerId } = await params;
+  const { playerId: rawPlayerId } = await params;
   const rawTab = (await searchParams).tab;
   const tab = rawTab === "riot" ? "riot" : "profile";
-  const [result, statisticsResult] = await Promise.all([
-    loadRuntimePlayerProfile(playerId),
-    loadRuntimeStatisticsData((service) => service.getPublicPlayerStatistics(playerId, null)),
-  ]);
-  const riotResult = tab === "riot" ? await loadRuntimePublicRiotProfile(playerId) : null;
+  let legacyMappingFailure: "unavailable" | "error" | null = null;
+  if (parseLegacyPlayerId(rawPlayerId) !== null) {
+    const mapping = await resolveRuntimePublicPlayerLegacyMapping(rawPlayerId);
+    if (mapping.state === "ready") {
+      if (!mapping.playerId) notFound();
+      permanentRedirect(buildLegacyCanonicalIdDestination(
+        "/players",
+        mapping.playerId,
+        "/players",
+        tab === "riot" ? { tab } : {},
+      ));
+    }
+    legacyMappingFailure = mapping.state;
+  }
+  const playerId = rawPlayerId;
+  const [result, statisticsResult] = legacyMappingFailure
+    ? [{ state: legacyMappingFailure } as const, { state: legacyMappingFailure } as const]
+    : await Promise.all([
+      loadRuntimePlayerProfile(playerId),
+      loadRuntimeStatisticsData((service) => service.getPublicPlayerStatistics(playerId, null)),
+    ]);
+  const riotResult = tab === "riot" && !legacyMappingFailure
+    ? await loadRuntimePublicRiotProfile(playerId)
+    : null;
   const topChampion = statisticsResult.state === "ready"
     ? statisticsResult.data?.champions[0] ?? null
     : null;
@@ -153,6 +175,11 @@ export default async function PlayerDetailPage({
                   <article><Gamepad2 size={22} aria-hidden="true" /><strong>{statisticsResult.data.summary.wins}승 {statisticsResult.data.summary.losses}패</strong><p>{statisticsResult.data.summary.totalGames}게임 · 승률 {statisticsResult.data.summary.winRate}%</p></article>
                   <article><ShieldCheck size={22} aria-hidden="true" /><strong>참여 {statisticsResult.data.summary.participationCount}회</strong><p>{statisticsResult.data.positions[0] ? `주 포지션 ${statisticsResult.data.positions[0].position} · ${statisticsResult.data.positions[0].games}게임` : "포지션 기록 없음"}</p></article>
                   <article>{topChampion ? <ChampionPortrait displayName={topChampion.championName} imageUrl={topChampion.championImageUrl} championKey={topChampion.championKey} /> : <Trophy size={22} aria-hidden="true" />}<strong>MVP {statisticsResult.data.summary.mvpCount}회</strong><p>{topChampion ? `최다 챔피언 ${topChampion.championName}` : "챔피언 기록 없음"}</p></article>
+                </div>
+                <div className="profile-records__grid" aria-label="내전 상세 기록">
+                  <article><Gamepad2 size={22} aria-hidden="true" /><strong>평균 KDA {statisticsResult.data.performance.averageKda ?? "-"}</strong><p>{statisticsResult.data.performance.averageKills ?? "-"} / {statisticsResult.data.performance.averageDeaths ?? "-"} / {statisticsResult.data.performance.averageAssists ?? "-"} · {statisticsResult.data.performance.gameCount}게임</p></article>
+                  <article><ShieldCheck size={22} aria-hidden="true" /><strong>신청 포지션 배치</strong><p>주 {statisticsResult.data.performance.assignmentGames.main} · 부 {statisticsResult.data.performance.assignmentGames.sub} · ALL {statisticsResult.data.performance.assignmentGames.all} · 비선호 {statisticsResult.data.performance.assignmentGames.nonPreferred}{statisticsResult.data.performance.assignmentGames.unclassified > 0 ? ` · 미분류 ${statisticsResult.data.performance.assignmentGames.unclassified}` : ""}</p></article>
+                  <article><Trophy size={22} aria-hidden="true" /><strong>팀 밸런스 점수 {statisticsResult.data.performance.averageBalanceScore ?? "-"}</strong><p>{statisticsResult.data.performance.averageBalanceScore === null ? "연결된 팀 밸런스 초안 기록 없음" : "실제 배치 당시 유효 점수 평균"}</p></article>
                 </div>
                 {statisticsResult.data.champions.length > 0 ? (
                   <div className={championStyles.championGrid} aria-label="많이 플레이한 챔피언">

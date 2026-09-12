@@ -10,6 +10,11 @@ import styles from "./seasons.module.css";
 
 export const dynamic = "force-dynamic";
 
+const seasonStatusLabel = { DRAFT: "초안", ACTIVE: "진행 중", ENDED: "종료", RETIRED: "보관됨" } as const;
+const applicationStatusLabel = { APPLIED: "신청", CONFIRMED: "참가 확정", RESERVE: "예비", REJECTED: "반려", CANCELLED: "취소" } as const;
+const applicationSourceLabel = { SITE: "사이트", KAKAO: "카카오" } as const;
+const positionLabel = { TOP: "탑", JGL: "정글", MID: "미드", ADC: "원딜", SUP: "서포터", ALL: "모든 포지션" } as const;
+
 function pageHref(search: URLSearchParams, page: number) {
   const next = new URLSearchParams(search);
   next.set("page", String(page));
@@ -70,9 +75,9 @@ export default async function AdminSeasonsPage({
         <div>
           <span><ShieldCheck aria-hidden="true" /> 보호된 작업 공간 · A3</span>
           <h1>시즌·참가</h1>
-          <p>시즌 수명주기와 SITE·Kakao 참가 신청을 같은 작업 흐름에서 검토합니다.</p>
+          <p>시즌 운영 단계와 사이트·카카오 참가 신청을 같은 작업 흐름에서 검토합니다.</p>
         </div>
-        <b>ADMIN / SUPER</b>
+        <b>관리자 / 최고 관리자</b>
       </header>
       <nav className={styles.viewTabs} aria-label="시즌 관리자 보기"><a href="/admin/seasons" aria-current={!applicationView ? "page" : undefined}>시즌 수명주기</a><a href="/admin/seasons?view=applications" aria-current={applicationView ? "page" : undefined}>참가 신청 검토</a><Link href="/admin/seasons/kakao-pending">Kakao 보류 신청</Link></nav>
 
@@ -80,24 +85,24 @@ export default async function AdminSeasonsPage({
         <section className={styles.state} role={result.state === "error" ? "alert" : "status"}>
           <Database aria-hidden="true" />
           <h2>{result.state === "unavailable" ? "시즌 정보를 확인할 수 없습니다." : "시즌 작업 공간을 불러오지 못했습니다."}</h2>
-          <p>운영 DB나 샘플 데이터로 대체하지 않고 안전한 연결을 기다립니다.</p>
+          <p>운영 데이터베이스나 샘플 데이터로 대체하지 않고 안전한 연결을 기다립니다.</p>
         </section>
       ) : (
         <>
           <section className={styles.panel} aria-labelledby="create-season-title">
-            <div className={styles.panelHeading}><div><span>CREATE</span><h2 id="create-season-title">초안 시즌 만들기</h2></div><CalendarCheck2 aria-hidden="true" /></div>
+            <div className={styles.panelHeading}><div><span>새 시즌</span><h2 id="create-season-title">초안 시즌 만들기</h2></div><CalendarCheck2 aria-hidden="true" /></div>
             <CreateSeasonForm />
           </section>
 
           <section className={styles.panel} aria-labelledby="season-list-title">
-            <div className={styles.panelHeading}><div><span>LIFECYCLE</span><h2 id="season-list-title">시즌 목록</h2></div><strong>{result.data.seasons.length}개</strong></div>
+            <div className={styles.panelHeading}><div><span>운영 단계</span><h2 id="season-list-title">시즌 목록</h2></div><strong>{result.data.seasons.length}개</strong></div>
             {result.data.seasons.length === 0 ? <div className={styles.empty}>등록된 시즌이 없습니다.</div> : (
               <div className={styles.seasonList}>
                 {result.data.seasons.map((season) => (
                   <article key={season.id}>
                     <div className={styles.seasonIdentity}>
-                      <b data-status={season.status}>{season.status}</b>
-                      <div><h3>{season.name}</h3><p>revision {season.revision} · 신청 {season.applicationCount}건</p></div>
+                      <b data-status={season.status}>{seasonStatusLabel[season.status]}</b>
+                      <div><h3>{season.name}</h3><p>변경 버전 {season.revision} · 신청 {season.applicationCount}건</p></div>
                     </div>
                     <dl>
                       <div><dt>신청 시작</dt><dd>{kstDisplay(season.applicationsOpenAt)}</dd></div>
@@ -111,14 +116,14 @@ export default async function AdminSeasonsPage({
           </section>
 
           <section className={styles.panel} aria-labelledby="application-review-title" data-focus={applicationView || undefined}>
-            <div className={styles.panelHeading}><div><span>REVIEW QUEUE</span><h2 id="application-review-title">참가 신청 검토</h2></div><strong>{result.data.applicationTotalCount}건</strong></div>
+            <div className={styles.panelHeading}><div><span>검토 대기</span><h2 id="application-review-title">참가 신청 검토</h2></div><strong>{result.data.applicationTotalCount}건</strong></div>
             <form className={styles.filters} action="/admin/seasons" method="get">
               {applicationView ? <input type="hidden" name="view" value="applications" /> : null}
               <Filter aria-hidden="true" />
               <label><span className="sr-only">회원명·닉네임·Riot ID 검색</span><input name="q" defaultValue={query.query} maxLength={80} placeholder="회원명·닉네임·Riot ID" /></label>
               <label><span className="sr-only">시즌 필터</span><select name="seasonId" defaultValue={query.seasonId ?? ""}><option value="">모든 시즌</option>{result.data.seasons.map((season) => <option key={season.id} value={season.id}>{season.name}</option>)}</select></label>
-              <label><span className="sr-only">신청 상태 필터</span><select name="status" defaultValue={query.status ?? ""}><option value="">모든 상태</option>{["APPLIED", "CONFIRMED", "RESERVE", "REJECTED", "CANCELLED"].map((status) => <option key={status}>{status}</option>)}</select></label>
-              <label><span className="sr-only">신청 출처 필터</span><select name="source" defaultValue={query.source ?? ""}><option value="">모든 출처</option><option>SITE</option><option>KAKAO</option></select></label>
+              <label><span className="sr-only">신청 상태 필터</span><select name="status" defaultValue={query.status ?? ""}><option value="">모든 상태</option>{(["APPLIED", "CONFIRMED", "RESERVE", "REJECTED", "CANCELLED"] as const).map((status) => <option key={status} value={status}>{applicationStatusLabel[status]}</option>)}</select></label>
+              <label><span className="sr-only">신청 출처 필터</span><select name="source" defaultValue={query.source ?? ""}><option value="">모든 출처</option><option value="SITE">사이트</option><option value="KAKAO">카카오</option></select></label>
               <button type="submit">조회</button>
               <a href={applicationView ? "/admin/seasons?view=applications" : "/admin/seasons"}>초기화</a>
             </form>
@@ -132,8 +137,8 @@ export default async function AdminSeasonsPage({
                     <tr key={application.id}>
                       <td data-label="신청자"><strong>{application.player.displayName}</strong><small>{application.player.riotId}</small><em>{application.player.memberName}</em></td>
                       <td data-label="시즌·회차"><strong>{application.seasonName}</strong><small>{application.applyDate} · #{application.recruitNo}</small></td>
-                      <td data-label="라인"><strong>{application.mainPosition}</strong><small>{application.subPositions.join(" · ") || "부라인 없음"}</small></td>
-                      <td data-label="상태·출처"><b data-status={application.status}>{application.status}</b><small>{application.source} · rev {application.revision}</small></td>
+                      <td data-label="라인"><strong>{positionLabel[application.mainPosition]}</strong><small>{application.subPositions.map((position) => positionLabel[position]).join(" · ") || "부라인 없음"}</small></td>
+                      <td data-label="상태·출처"><b data-status={application.status}>{applicationStatusLabel[application.status]}</b><small>{applicationSourceLabel[application.source]} · 변경 버전 {application.revision}</small></td>
                       <td data-label="검토"><ReviewApplicationForm application={application} /></td>
                     </tr>
                   ))}</tbody>

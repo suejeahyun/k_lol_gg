@@ -49,6 +49,8 @@ test("역할 관리 UI와 목록 진입점은 SUPER_ADMIN에게만 노출된다"
   assert.match(listPage, /viewerRole === "SUPER_ADMIN" \? <th>역할 관리<\/th>/);
   assert.match(listPage, /href=\{`\/admin\/users\/\$\{account\.id\}#role-management`\}/);
   assert.match(listPage, /account\.role === "USER" \? "관리자 지정" : "역할 관리"/);
+  assert.match(listPage, /S01 · 계정 운영/);
+  assert.doesNotMatch(listPage, /ACCOUNT OPERATIONS|revision 기반/);
 });
 
 test("승인된 미삭제 USER의 ADMIN 승격은 플레이어 연결을 요구하지 않는다", async () => {

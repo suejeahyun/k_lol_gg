@@ -1,11 +1,13 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { ArrowLeft, Gavel } from "lucide-react";
 
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
 import { isDestructionUuid } from "@/modules/competitions/destruction";
 import { getRuntimeDestruction } from "@/modules/competitions/destruction/runtime-destruction";
 import { parseDestructionAdminDetailView } from "@/modules/competitions/public-navigation";
+import { buildLegacyCanonicalIdDestination } from "@/modules/navigation/application/legacy-user-redirects";
+import { parseLegacyIntegerId } from "@/platform/legacy-identifiers";
 
 import styles from "../../event/event-admin.module.css";
 import { DestructionAdminActions } from "./destruction-admin-actions";
@@ -14,9 +16,11 @@ export const dynamic = "force-dynamic";
 const stages = ["PLANNED", "RECRUITING", "TEAM_BUILDING", "AUCTION", "PRELIMINARY", "TOURNAMENT", "COMPLETED"] as const;
 
 export default async function AdminDestructionDetailPage({ params, searchParams }: { params: Promise<{ tournamentId: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  const { tournamentId } = await params;
-  await requirePageRole("ADMIN", `/admin/progress/destruction/${tournamentId}`);
-  if (!isDestructionUuid(tournamentId)) notFound();
+  const { tournamentId: rawId } = await params;
+  await requirePageRole("ADMIN", `/admin/progress/destruction/${rawId}`);
+  const canonicalId = isDestructionUuid(rawId);
+  const legacyId = canonicalId ? null : parseLegacyIntegerId(rawId);
+  if (!canonicalId && legacyId === null) notFound();
   const rawQuery = await searchParams;
   const query = new URLSearchParams();
   for (const [key, value] of Object.entries(rawQuery)) {
@@ -27,6 +31,19 @@ export default async function AdminDestructionDetailPage({ params, searchParams 
   if (!view) notFound();
   const runtime = getRuntimeDestruction();
   if (!runtime) return <main className={styles.page}><section className={styles.state} role="status"><h1>멸망전 저장소를 준비하고 있습니다.</h1><p>0013 영속 어댑터 연결 뒤 이 화면에서 운영할 수 있습니다.</p></section></main>;
+  if (legacyId !== null) {
+    let mappedId;
+    try { mappedId = await runtime.repository.resolveLegacyId(legacyId); }
+    catch { return <main className={styles.page}><section className={styles.state} role="alert"><h1>멸망전을 불러오지 못했습니다.</h1><p>잠시 후 다시 시도해 주세요.</p></section></main>; }
+    if (!mappedId) notFound();
+    permanentRedirect(buildLegacyCanonicalIdDestination(
+      "/admin/progress/destruction",
+      mappedId,
+      "/admin/progress/destruction",
+      view === "auction-live" ? { tab: "auction", mode: "live" } : {},
+    ));
+  }
+  const tournamentId = rawId.toLocaleLowerCase("en-US");
   let workspace;
   try { workspace = await runtime.repository.getAdminWorkspace(tournamentId); }
   catch { return <main className={styles.page}><section className={styles.state} role="alert"><h1>멸망전을 불러오지 못했습니다.</h1><p>잠시 후 다시 시도해 주세요.</p></section></main>; }

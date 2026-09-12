@@ -11,6 +11,7 @@ import { PostgresEventAdapter } from "../../src/modules/competitions/events/infr
 import { createDatabaseHandle } from "../../src/platform/db/database";
 import { applyMigrations } from "../../src/platform/db/migrate";
 import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
+import { deriveLegacyCompetitionUuid } from "../../src/platform/legacy-identifiers";
 import {
   auditEvents,
   authSessions,
@@ -18,6 +19,8 @@ import {
   eventCompetitions,
   eventOutbox,
   eventParticipantIndex,
+  mediaGalleries,
+  mediaGalleryExternalImages,
   players,
   userAccounts,
 } from "../../src/platform/db/schema";
@@ -44,8 +47,9 @@ test("S07 event adapter persists exact-ten lifecycle, S06 teams, correction inva
   const otherId = randomUUID();
   const otherSessionId = randomUUID();
   const playerIds = Array.from({ length: 10 }, () => randomUUID());
-  const eventId = randomUUID();
+  const eventId = deriveLegacyCompetitionUuid("competition.event_competitions", 701)!;
   const ownerEventId = randomUUID();
+  const galleryId = randomUUID();
   const now = new Date();
   const opensAt = new Date(now.getTime() - 60_000).toISOString();
   const closesAt = new Date(now.getTime() + 3_600_000).toISOString();
@@ -90,8 +94,10 @@ test("S07 event adapter persists exact-ten lifecycle, S06 teams, correction inva
     })));
 
     const createContext = context(adminActor, "ADMIN", "create-main");
+    assert.equal(await adapter.resolveLegacyId(701), null);
     const created = await service.create(createContext, { eventId, settings });
     assert.equal(created.revision, 1);
+    assert.equal(await adapter.resolveLegacyId(701), eventId);
     assert.equal((await service.create(createContext, { eventId, settings })).replayed, true);
     await service.executeAdmin(context(adminActor, "ADMIN", "start-main"), eventId, 1, { type: "START_RECRUITMENT", payload: {} });
     await service.executeAdmin(context(adminActor, "ADMIN", "import-nine"), eventId, 2, { type: "IMPORT_PARTICIPANTS", payload: { participants: participants.slice(0, 9) } });
@@ -135,6 +141,22 @@ test("S07 event adapter persists exact-ten lifecycle, S06 teams, correction inva
       nextWinnerTeamId: semiOne!.teamBId,
     });
     assert.equal((await adapter.getAdmin(eventId))?.bracket?.fixtures.find((fixture) => fixture.id === final!.id)?.result, null);
+
+    await database.insert(mediaGalleries).values({
+      id: galleryId,
+      title: "S07 이벤트 결과",
+      description: "이관된 이벤트 갤러리",
+      status: "DRAFT",
+      revision: 0,
+      createdByUserAccountId: adminId,
+      updatedByUserAccountId: adminId,
+    });
+    await database.insert(mediaGalleryExternalImages).values({ galleryId, ordinal: 0, sourceUrl: "/images/legacy/s07-event.webp" });
+    await database.update(mediaGalleries).set({ status: "PUBLISHED", publishedAt: now }).where(eq(mediaGalleries.id, galleryId));
+    const galleryLinked = await service.executeAdmin(context(adminActor, "ADMIN", "event-gallery"), eventId, 11, { type: "SET_MEDIA_GALLERY", payload: { galleryId } });
+    assert.equal(galleryLinked.revision, 12);
+    assert.equal((await adapter.getAdmin(eventId))?.galleryId, galleryId);
+    assert.deepEqual((await adapter.getPublic(eventId, now))?.gallery?.images.map((image) => image.url), ["/images/legacy/s07-event.webp"]);
 
     await service.create(context(adminActor, "ADMIN", "create-owner"), { eventId: ownerEventId, settings: { ...settings, title: "신청 소유권 계약", bracketBestOf: 1 } });
     await service.executeAdmin(context(adminActor, "ADMIN", "start-owner"), ownerEventId, 1, { type: "START_RECRUITMENT", payload: {} });

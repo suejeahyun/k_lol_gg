@@ -33,6 +33,7 @@
     "verify:recovery": "tsx scripts/test-db/run-recovery-drill.ts",
     "verify:auth-http": "node scripts/verify-auth-http.mjs",
     "verify:browser-quality": "node scripts/verify-browser-quality.mjs",
+    "qa:capture:full": "node scripts/run-full-page-qa.mjs --expected-pages 103 --expected-captures 335",
     "release:evidence:check": "node scripts/releases/verify-release-evidence.mjs",
     "security:secrets": "node scripts/check-secrets.mjs",
     "check:wave": "npm run lint && npm run typecheck && npm test",

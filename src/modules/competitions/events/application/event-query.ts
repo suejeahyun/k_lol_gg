@@ -1,6 +1,7 @@
 import { EVENT_FORMATS, type EventAggregate } from "../domain/event";
 import type { CompetitionPlayerOption } from "../../core";
 import type { OwnEventApplicationDto, PublicEventDto } from "./public-event-dto";
+import type { PublicGalleryDto } from "@/modules/media";
 
 export const EVENT_PUBLIC_STATUSES = [
   "PLANNED",
@@ -31,9 +32,11 @@ export type EventAdminWorkspace = Readonly<{
   event: EventAggregate;
   playerOptions: readonly CompetitionPlayerOption[];
   playerLabels: Readonly<Record<string, string>>;
+  galleryOptions: readonly Pick<PublicGalleryDto, "id" | "title">[];
 }>;
 
 export interface EventQueryRepository {
+  resolveLegacyId(legacyId: number): Promise<string | null>;
   listPublic(query: EventListQuery, now: Date): Promise<EventPage>;
   getPublic(eventId: string, now: Date): Promise<PublicEventDto | null>;
   getOwnApplication(eventId: string, ownerUserAccountId: string): Promise<OwnEventApplicationDto | null>;

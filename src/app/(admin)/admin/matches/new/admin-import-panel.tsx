@@ -236,8 +236,10 @@ export function AdminImportPanel({ seasons, playedOn }: { seasons: readonly Seas
     } finally { setBusy(false); }
   }
 
-  return <section className={styles.panel}>
-    <div><h2>Windows 캡처 · 비공개 OCR 가져오기</h2><p>Ctrl/Cmd+V 또는 파일 선택으로 한 게임 스코어보드를 등록합니다. 원본은 비공개이며 OCR은 후보만 만들고, 구조화 검토 후 명시적으로 승인해야 공개됩니다.</p></div>
+  return <details className={`${styles.panel} ${styles.importPanel}`}>
+    <summary className={styles.importSummary}><div><h2>Windows 캡처 · 비공개 OCR 가져오기</h2><p>필요할 때 펼쳐 캡처 이미지를 안전하게 검토하세요.</p></div><span aria-hidden="true">펼치기</span></summary>
+    <div className={styles.importBody}>
+    <p>Ctrl/Cmd+V 또는 파일 선택으로 한 게임 스코어보드를 등록합니다. 원본은 비공개이며 OCR은 후보만 만들고, 구조화 검토 후 명시적으로 승인해야 공개됩니다.</p>
     {message ? <p className={styles.message} data-error={error} role={error ? "alert" : "status"}>{message}</p> : null}
     <form className={styles.form} onSubmit={submit}>
       <label className={styles.wide}>경기 이름<input name="title" minLength={2} maxLength={160} required placeholder="예: 관리자 직접 입력 1게임" /></label>
@@ -251,5 +253,6 @@ export function AdminImportPanel({ seasons, playedOn }: { seasons: readonly Seas
       <div className={`${styles.actions} ${styles.wide}`}><button className={styles.action} type="submit" disabled={busy || !file}><ScanLine size={17} aria-hidden="true" /> {error && createdSubmissionId ? "비공개 업로드 다시 시도" : "비공개 저장·OCR 후보 만들기"}</button>{createdSubmissionId ? <button data-danger="true" type="button" disabled={busy} onClick={cancelPendingImport}>가져오기 취소·원본 정리</button> : null}</div>
     </form>
     {createdSubmissionId && error ? <p>가져오기 작업은 보존되어 있습니다. <Link href={`/admin/matches/submissions/${createdSubmissionId}`}>검토 작업 열기</Link></p> : null}
-  </section>;
+    </div>
+  </details>;
 }

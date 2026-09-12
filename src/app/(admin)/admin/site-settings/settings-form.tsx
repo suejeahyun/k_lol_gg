@@ -55,7 +55,7 @@ export default function SettingsForm({ initial }: { initial: SiteSettings }) {
       <label className={styles.field}><span>내부 유지보수 메모 (공개되지 않음)</span><textarea rows={4} maxLength={2000} value={settings.internalMaintenanceNote ?? ""} onChange={(event) => setSettings({ ...settings, internalMaintenanceNote: event.target.value || null })} /></label>
       {state === "saved" ? <p className={styles.notice} role="status">설정을 저장했습니다.</p> : null}
       {state === "error" ? <p className={styles.error} role="alert">저장하지 못했습니다. 최신 설정을 다시 불러와 확인해 주세요.</p> : null}
-      <div className={styles.actions}><button type="submit" className={styles.button} disabled={state === "saving"}>{state === "saving" ? "저장 중…" : "설정 저장"}</button><span className={styles.muted}>revision {settings.revision}</span></div>
+      <div className={styles.actions}><button type="submit" className={styles.button} disabled={state === "saving"}>{state === "saving" ? "저장 중…" : "설정 저장"}</button><span className={styles.muted}>변경 버전 {settings.revision}</span></div>
     </form>
   );
 }

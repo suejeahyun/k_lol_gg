@@ -27,6 +27,13 @@ import { withTransaction } from "@/platform/db/transaction";
 
 import { RecruitingApplicationError } from "../application/command-handler";
 import { kakaoRecruitCommandAccess, type RecruitingCommand, type RecruitingCommandActor } from "../application/commands";
+import {
+  parsePartyMemberStatsQuery,
+  PARTY_MEMBER_STATS_COMPANION_LIMIT,
+  PARTY_MEMBER_STATS_LOOKBACK_DAYS,
+  PARTY_MEMBER_STATS_RESULT_LIMIT,
+  PARTY_MEMBER_STATS_SCAN_LIMIT,
+} from "../application/party-member-statistics";
 import { kakaoRoleAtLeast, type KakaoRoomMemberRole } from "../kakao-access/domain";
 import type {
   AdminRecruitingStatusDto,
@@ -35,6 +42,7 @@ import type {
   RecruitingAuthorizationPort,
   RecruitingCompatTargetInput,
   RecruitingOutboxEvent,
+  PartyMemberStatisticsDto,
   RecruitingQueryPort,
   RecruitingReceiptPort,
   RecruitingRepository,
@@ -632,5 +640,123 @@ export class PostgresRecruitingAdapter implements
         updatedAt: row.updatedAt.toISOString(),
       })),
     };
+  }
+
+  async getPartyMemberStats(query: string): Promise<PartyMemberStatisticsDto> {
+    const parsed = parsePartyMemberStatsQuery(query);
+    if (parsed.state !== "ready" || parsed.query !== query) throw new Error("INVALID_PARTY_MEMBER_STATS_QUERY");
+    type StatisticsRow = Readonly<{
+      name: string;
+      totalPartyCount: number;
+      inProgressCount: number;
+      finishedCount: number;
+      canceledCount: number;
+      resetCount: number;
+      companions: unknown;
+    }>;
+    const rows = ((await this.database.execute(sql`
+      WITH recent_parties AS MATERIALIZED (
+        SELECT id, status, members_json
+          FROM recruiting.parties
+         WHERE recruit_date >= current_date - (${PARTY_MEMBER_STATS_LOOKBACK_DAYS})::integer
+           AND status <> 'DRAFT'
+           AND jsonb_array_length(members_json) > 0
+         ORDER BY recruit_date DESC, reset_sequence DESC, recruit_number DESC
+         LIMIT ${PARTY_MEMBER_STATS_SCAN_LIMIT}
+      ),
+      party_members AS MATERIALIZED (
+        SELECT party.id AS party_id,
+               party.status,
+               btrim(member.value ->> 'name') AS display_name,
+               lower(regexp_replace(btrim(member.value ->> 'name'), '[[:space:]]+', ' ', 'g')) AS normalized_name
+          FROM recent_parties party
+          CROSS JOIN LATERAL jsonb_array_elements(party.members_json) WITH ORDINALITY AS member(value, ordinal)
+         WHERE jsonb_typeof(member.value) = 'object'
+           AND jsonb_typeof(member.value -> 'name') = 'string'
+           AND member.value @> '{"substitute": false}'::jsonb
+           AND char_length(btrim(member.value ->> 'name')) BETWEEN 1 AND 80
+      ),
+      matched_names AS MATERIALIZED (
+        SELECT normalized_name, min(display_name) AS display_name, count(DISTINCT party_id)::int AS match_count
+          FROM party_members
+         WHERE strpos(normalized_name, ${parsed.query}) > 0
+         GROUP BY normalized_name
+         ORDER BY match_count DESC, display_name ASC
+         LIMIT ${PARTY_MEMBER_STATS_RESULT_LIMIT}
+      ),
+      party_summary AS (
+        SELECT target.normalized_name,
+               target.display_name,
+               count(DISTINCT member.party_id)::int AS total_party_count,
+               count(DISTINCT member.party_id) FILTER (WHERE member.status = 'IN_PROGRESS')::int AS in_progress_count,
+               count(DISTINCT member.party_id) FILTER (WHERE member.status = 'FINISHED')::int AS finished_count,
+               count(DISTINCT member.party_id) FILTER (WHERE member.status = 'CANCELED')::int AS canceled_count,
+               count(DISTINCT member.party_id) FILTER (WHERE member.status = 'RESET')::int AS reset_count
+          FROM matched_names target
+          JOIN party_members member ON member.normalized_name = target.normalized_name
+         GROUP BY target.normalized_name, target.display_name
+      ),
+      target_parties AS MATERIALIZED (
+        SELECT DISTINCT target.normalized_name, member.party_id
+          FROM matched_names target
+          JOIN party_members member ON member.normalized_name = target.normalized_name
+      ),
+      companion_counts AS (
+        SELECT target.normalized_name,
+               companion.normalized_name AS companion_normalized_name,
+               min(companion.display_name) AS companion_name,
+               count(DISTINCT target.party_id)::int AS party_count
+          FROM target_parties target
+          JOIN party_members companion ON companion.party_id = target.party_id
+         WHERE companion.normalized_name <> target.normalized_name
+         GROUP BY target.normalized_name, companion.normalized_name
+      ),
+      ranked_companions AS (
+        SELECT companion_counts.*,
+               row_number() OVER (
+                 PARTITION BY normalized_name
+                 ORDER BY party_count DESC, companion_name ASC, companion_normalized_name ASC
+               ) AS companion_rank
+          FROM companion_counts
+      )
+      SELECT summary.display_name AS name,
+             summary.total_party_count AS "totalPartyCount",
+             summary.in_progress_count AS "inProgressCount",
+             summary.finished_count AS "finishedCount",
+             summary.canceled_count AS "canceledCount",
+             summary.reset_count AS "resetCount",
+             coalesce(
+               jsonb_agg(
+                 jsonb_build_object('name', companion.companion_name, 'partyCount', companion.party_count)
+                 ORDER BY companion.party_count DESC, companion.companion_name ASC
+               ) FILTER (WHERE companion.companion_rank <= ${PARTY_MEMBER_STATS_COMPANION_LIMIT}),
+               '[]'::jsonb
+             ) AS companions
+        FROM party_summary summary
+        LEFT JOIN ranked_companions companion ON companion.normalized_name = summary.normalized_name
+       GROUP BY summary.normalized_name, summary.display_name, summary.total_party_count,
+                summary.in_progress_count, summary.finished_count, summary.canceled_count, summary.reset_count
+       ORDER BY summary.total_party_count DESC, summary.display_name ASC
+    `)).rows) as StatisticsRow[];
+    return Object.freeze({
+      query: parsed.query,
+      lookbackDays: PARTY_MEMBER_STATS_LOOKBACK_DAYS,
+      scannedPartyLimit: PARTY_MEMBER_STATS_SCAN_LIMIT,
+      resultLimit: PARTY_MEMBER_STATS_RESULT_LIMIT,
+      items: Object.freeze(rows.map((row) => ({
+        name: row.name,
+        totalPartyCount: Number(row.totalPartyCount),
+        inProgressCount: Number(row.inProgressCount),
+        finishedCount: Number(row.finishedCount),
+        canceledCount: Number(row.canceledCount),
+        resetCount: Number(row.resetCount),
+        companions: Object.freeze((Array.isArray(row.companions) ? row.companions : []).flatMap((value) => {
+          if (!value || typeof value !== "object" || Array.isArray(value)) return [];
+          const companion = value as Record<string, unknown>;
+          if (typeof companion.name !== "string" || !Number.isSafeInteger(Number(companion.partyCount))) return [];
+          return [{ name: companion.name, partyCount: Number(companion.partyCount) }];
+        }).slice(0, PARTY_MEMBER_STATS_COMPANION_LIMIT)),
+      }))),
+    });
   }
 }

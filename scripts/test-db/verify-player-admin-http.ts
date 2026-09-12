@@ -381,10 +381,22 @@ function playerPayload(label: string, legacyId: number | null) {
 
 async function replaceBrowserField(browser: IsolatedChromium, name: string, value: string) {
   const selector = `input[name=${JSON.stringify(name)}]`;
-  await browser.focus(selector);
+  await browser.waitFor(
+    `(() => {
+      const input = document.querySelector(${JSON.stringify(selector)});
+      return input instanceof HTMLInputElement && !input.disabled && input.getClientRects().length > 0;
+    })()`,
+    `${name} visible enabled input in the admin form`,
+  );
+  const focused = await browser.evaluate<boolean>(`(() => {
+    const input = document.querySelector(${JSON.stringify(selector)});
+    if (!(input instanceof HTMLInputElement) || input.disabled || input.getClientRects().length === 0) return false;
+    input.focus();
+    return document.activeElement === input;
+  })()`);
   assert.equal(
-    await browser.evaluate("document.activeElement?.getAttribute('name')"),
-    name,
+    focused,
+    true,
     `${name} must be focusable in the admin form`,
   );
   await browser.selectAll();
@@ -498,7 +510,7 @@ try {
     await browser.waitFor(
       `document.querySelector('input[name="currentTier"]')?.value === "DIAMOND I" &&
        document.querySelector('input[name="peakTier"]')?.value === "MASTER 120" &&
-       document.body.innerText.includes("revision 1")`,
+       document.body.innerText.includes("변경 버전 1")`,
       "tier-only admin edit refresh",
     );
     const linkAfterTierOnlyBrowserEdit = (await database.select().from(riotAccountLinks)
@@ -528,7 +540,7 @@ try {
       `document.querySelector('input[name="currentTier"]')?.value === "EMERALD I" &&
        document.querySelector('input[name="peakTier"]')?.value === "MASTER 220" &&
        document.querySelector('input[name="currentTier"]')?.dataset.browserQaInstance !== "before-412" &&
-       document.body.innerText.includes("revision 2")`,
+       document.body.innerText.includes("변경 버전 2")`,
       "HTTP 412 recovery with the latest admin player revision",
     );
 
@@ -547,7 +559,7 @@ try {
        document.querySelector('input[name="tagLine"]')?.value === "A02" &&
        document.querySelector('input[name="currentTier"]')?.value === "MASTER 90" &&
        document.querySelector('input[name="peakTier"]')?.value === "GRANDMASTER 450" &&
-       document.body.innerText.includes("revision 3")`,
+       document.body.innerText.includes("변경 버전 3")`,
       "Riot ID and tier admin browser edit refresh",
     );
     const browserDisconnectedLink = (await database.select().from(riotAccountLinks)

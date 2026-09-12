@@ -17,6 +17,7 @@ import {
 } from "drizzle-orm";
 import type { SQLWrapper } from "drizzle-orm";
 
+import { championImageUrlProjection } from "@/modules/champions/infrastructure/champion-image-projection";
 import { auditEvents } from "@/platform/db/schema/audit";
 import { championCatalog } from "@/platform/db/schema/catalog";
 import {
@@ -646,7 +647,7 @@ export class PostgresMatchRepository implements MatchRepository {
             tagLine: matchParticipants.tagLineSnapshot,
             championKey: matchParticipants.championKey,
             championName: championCatalog.displayName,
-            championImageUrl: championCatalog.imageUrl,
+            championImageUrl: championImageUrlProjection(),
             team: matchParticipants.team,
             position: matchParticipants.position,
             kills: matchParticipants.kills,

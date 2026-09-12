@@ -34,5 +34,7 @@ test("admin pages expose filtered empty/error/unavailable states and compatibili
   const [list, detail, legacy] = await Promise.all([source("list"), source("detail"), source("legacy")]);
   for (const text of ["조건에 맞는 신청이 없습니다", "신청서를 확인할 수 없습니다", "신청서를 불러오지 못했습니다"]) assert.match(list, new RegExp(text));
   assert.match(list, /aria-current/u); assert.match(list, /<table/u); assert.match(detail, /AdminOperationFormActions/u);
+  assert.match(list, /관리자 · 운영 신청서/u); assert.match(detail, /operationFormStatusLabels\[form\.status\]/u);
+  assert.doesNotMatch(`${list}\n${detail}`, /ADMIN · OPERATION FORMS|ADMIN · DETAIL|revision \{form\.revision\}/u);
   assert.match(legacy, /permanentRedirect/u); assert.match(legacy, /\/admin\/operation-forms\?type=/u);
 });

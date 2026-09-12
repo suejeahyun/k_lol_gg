@@ -78,6 +78,41 @@ test("gallery input permits only one to five distinct READY asset identifiers at
   assert.throws(() => service.createGallery(context, 0, { title: "우승", description: "기록", imageAssetIds: [first, first] }), (error: unknown) => error instanceof MediaServiceError && error.code === "INVALID_INPUT");
 });
 
+test("gallery input accepts an explicit mixed image order without exposing arbitrary fields", async () => {
+  let captured: unknown;
+  const repository = {
+    async createGallery(_envelope: MediaCommandEnvelope, input: unknown) {
+      captured = input;
+      return { body: { revision: 0 }, status: 201, revision: 0, replayed: false };
+    },
+  } as unknown as MediaRepository;
+  const service = new MediaService(repository);
+  const assetId = randomUUID();
+  await service.createGallery(context, 0, {
+    title: "혼합",
+    description: "이관 자료",
+    imageAssetIds: [assetId],
+    externalImageUrls: ["/images/legacy/one.webp"],
+    imageOrder: [
+      { kind: "EXTERNAL", url: "/images/legacy/one.webp" },
+      { kind: "ASSET", assetId },
+    ],
+  });
+  assert.deepEqual(captured, {
+    title: "혼합",
+    description: "이관 자료",
+    imageAssetIds: [assetId],
+    externalImageUrls: ["/images/legacy/one.webp"],
+    imageOrder: [
+      { kind: "EXTERNAL", url: "/images/legacy/one.webp" },
+      { kind: "ASSET", assetId },
+    ],
+  });
+  assert.throws(() => service.createGallery(context, 0, {
+    title: "혼합", description: "오류", imageAssetIds: [assetId], externalImageUrls: ["javascript:alert(1)"],
+  }), (error: unknown) => error instanceof MediaServiceError && error.code === "INVALID_INPUT");
+});
+
 function publishedAsset(bytes: Uint8Array): PrivateAssetRecord {
   return {
     id: randomUUID(), createdByUserAccountId: actorId, ingestSource: "ADMIN",

@@ -2,6 +2,10 @@
 
 상태: 로컬 코드와 격리 PostgreSQL 계약 검증 완료. 운영 자격 증명·외부 메시지 발송·배포는 별도다.
 
+## 현재 V1 strict R8 / V4 경계
+
+현재 휴대폰 운영본은 한 휴대폰·한 MessengerBot R 봇 프로필에서 구인방과 기능방을 함께 수신하고, 메시지 내용으로 `RECRUIT` 또는 `FEATURES` 프로필을 선택한다. `/api/integrations/kakao/v4/commands`는 raw room 이름·channel ID·room parser·canonical room registry를 사용하지 않고, 프로필에서 파생한 installation scope와 V4 전용 서명으로 요청을 검증한다. 아래 R14.2 canonical 방 registry 설명은 레거시 V2/V3 endpoint와 관리자 이관 화면에만 적용된다.
+
 ## R14.2 설치본 신뢰와 canonical 방 권한
 
 - HMAC은 허용된 MessengerBot 설치본이 정확한 요청을 만들었다는 사실만 증명하며 사람 역할을 부여하지 않는다. V3 서명 material은 공개 `botInstallationId`, 키 ID, 메시지 전달 ID, 봇 버전, 설치본 scope·발신자 fingerprint, nonce, timestamp, body digest를 포함한다. 서버는 V1/V2 검증 호환을 유지하되 R14.2 휴대폰은 V3만 생성한다.

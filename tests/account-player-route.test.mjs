@@ -26,6 +26,23 @@ test("own player form keeps one idempotency key for an uncertain retry and expla
   assert.match(page, /<AccountPlayerForm key=\{account\.player\.revision\} player=\{account\.player\} \/>/);
 });
 
+test("account pages reuse the account shell and avoid decorative English headings", async () => {
+  const [shell, overview, riot, discipline, password] = await Promise.all([
+    readFile(new URL("../src/components/accounts/account-shell.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/(public)/account/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/(public)/account/riot/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/(public)/account/discipline/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/app/(public)/account/password/page.tsx", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(shell, /> 내 계정</);
+  assert.match(overview, /<AccountShell activeTab=/);
+  assert.match(riot, /<AccountShell activeTab="riot"/);
+  assert.match(discipline, /내 경고 해소 과제/);
+  assert.match(password, /비밀번호 보안/);
+  assert.doesNotMatch(`${shell}\n${overview}\n${discipline}\n${password}`, /MY ACCOUNT|MY PLAYER|MY ACTIVITY|SAFETY STATUS|MY DISCIPLINE TASKS|PASSWORD SECURITY/);
+});
+
 test("isolated account HTTP verification runs the real Chromium owner profile regression", async () => {
   const browser = await readFile(new URL("../scripts/test-db/verify-player-profile-browser.ts", import.meta.url), "utf8");
   const accountHttp = await readFile(new URL("../scripts/test-db/verify-account-http.ts", import.meta.url), "utf8");

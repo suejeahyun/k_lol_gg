@@ -50,6 +50,10 @@ export class RuntimeRecruitingService {
   getAdminStatus() {
     return this.adapter.getAdminStatus();
   }
+
+  getPartyMemberStats(query: string) {
+    return this.adapter.getPartyMemberStats(query);
+  }
 }
 
 export function getRuntimeRecruitingService() {

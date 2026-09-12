@@ -45,8 +45,8 @@ function applyFullSnapshot(state, message) {
   };
 }
 
-function canMutateRecruit({ targetRoomId, actorRoomId, actorVerified }) {
-  return actorVerified && targetRoomId === actorRoomId;
+function canMutateRecruit({ targetScopeId, actorScopeId, actorVerified }) {
+  return actorVerified && targetScopeId === actorScopeId;
 }
 
 test("contract fixture has traceable V1 evidence and all required domains", () => {
@@ -78,21 +78,21 @@ test("double slash, URL slash, separated slash, and middle slash are not command
   }
 });
 
-test("same-room verified members can edit and finish across sender identities", () => {
+test("same installation scope members can edit and finish across sender identities", () => {
   const scenario = contract.party.crossOwnerScenario;
   assert.notEqual(scenario.creatorSenderId, scenario.editorSenderId);
   assert.notEqual(scenario.creatorSenderId, scenario.finisherSenderId);
   for (const actorSenderId of [scenario.editorSenderId, scenario.finisherSenderId]) {
     assert.ok(actorSenderId.startsWith("sender-"));
     assert.equal(canMutateRecruit({
-      targetRoomId: scenario.roomId,
-      actorRoomId: scenario.roomId,
+      targetScopeId: scenario.roomId,
+      actorScopeId: scenario.roomId,
       actorVerified: true,
     }), true);
   }
   assert.equal(canMutateRecruit({
-    targetRoomId: scenario.roomId,
-    actorRoomId: scenario.differentRoomId,
+    targetScopeId: scenario.roomId,
+    actorScopeId: scenario.differentRoomId,
     actorVerified: true,
   }), false);
   assert.equal(canMutateRecruit({

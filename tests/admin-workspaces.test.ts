@@ -12,6 +12,7 @@ test("administrator IA exposes exactly ten unique protected workspaces", () => {
   assert.equal(new Set(ADMIN_WORKSPACES.map(({ id }) => id)).size, 10);
   assert.equal(new Set(ADMIN_WORKSPACES.map(({ href }) => href)).size, 10);
   assert.equal(ADMIN_WORKSPACES[0].href, "/admin");
+  assert.equal(ADMIN_WORKSPACES.find(({ id }) => id === "content")?.href, "/admin/highlights");
 
   for (const workspace of ADMIN_WORKSPACES) {
     assert.match(workspace.href, /^\/admin(?:\/|$)/);
@@ -32,8 +33,9 @@ test("active workspace matching does not make the dashboard match every route", 
   assert.equal(isAdminWorkspaceActive("/admin/players", "/admin"), false);
   assert.equal(isAdminWorkspaceActive("/admin/players/example", "/admin/players"), true);
   assert.equal(isAdminWorkspaceActive("/admin/progress/destruction", "/admin/progress/event"), true);
-  assert.equal(isAdminWorkspaceActive("/admin/highlights/example/edit", "/admin/champions"), true);
-  assert.equal(isAdminWorkspaceActive("/admin/images", "/admin/champions"), true);
+  assert.equal(isAdminWorkspaceActive("/admin/highlights/example/edit", "/admin/highlights"), true);
+  assert.equal(isAdminWorkspaceActive("/admin/images", "/admin/highlights"), true);
+  assert.equal(isAdminWorkspaceActive("/admin/champions/example/edit", "/admin/highlights"), true);
 });
 
 test("dashboard leaves a real work destination available", () => {

@@ -13,8 +13,16 @@ import { MMR_POSITIONS } from "@/modules/mmr";
 import { loadRuntimeMmr } from "@/modules/mmr/infrastructure/runtime-mmr";
 import { loadRuntimeAdminPlayer } from "@/modules/players/infrastructure/runtime-admin-player-data";
 import { loadRuntimeRiot } from "@/modules/riot/infrastructure/runtime-riot";
+import { accountRoleLabel } from "@/modules/accounts/domain/account-display-labels";
 
 export const dynamic = "force-dynamic";
+
+const accountStatusLabel = {
+  PENDING: "승인 대기",
+  APPROVED: "승인됨",
+  REJECTED: "거절됨",
+  SUSPENDED: "이용 제한",
+} as const;
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("ko-KR", {
@@ -72,7 +80,7 @@ export default async function AdminPlayerDetailPage({
           <h1>{player.nickname}#{player.tagLine}</h1>
           <p>회원명 · {player.memberName} {player.legacyId ? `· V1 #${player.legacyId}` : "· 신규 UUID 등록"}</p>
         </div>
-        <div className={styles.revision}><span>낙관적 잠금</span><strong>revision {player.revision}</strong><span>{formatDate(player.updatedAt)}</span></div>
+        <div className={styles.revision}><span>동시 수정 보호</span><strong>변경 버전 {player.revision}</strong><span>{formatDate(player.updatedAt)}</span></div>
       </section>
 
       <nav className={styles.tabs} aria-label="플레이어 관리 상세 탭">
@@ -88,7 +96,7 @@ export default async function AdminPlayerDetailPage({
         </section>
       ) : tab === "balance" ? (
         <section className={styles.integrationCard}>
-          <span className={styles.integrationBadge}>S05-B READY MMR</span>
+          <span className={styles.integrationBadge}>S05-B · MMR 계산 완료</span>
           <h2>밸런스 프로필</h2>
           {mmrResult?.state === "ready" && mmrResult.data ? <>
             <dl className={styles.facts}>
@@ -102,12 +110,12 @@ export default async function AdminPlayerDetailPage({
         </section>
       ) : tab === "riot" ? (
         <section className={styles.integrationCard}>
-          <span className={styles.integrationBadge}>S12 RIOT</span>
+          <span className={styles.integrationBadge}>S12 · Riot 연동</span>
           <h2>Riot 계정·전적</h2>
-          {riotResult?.state === "unavailable" ? <p>Riot 운영 adapter가 비활성 상태입니다. 운영 feature flag는 기본적으로 꺼져 있습니다.</p>
+          {riotResult?.state === "unavailable" ? <p>Riot 운영 연동이 비활성 상태입니다. 운영 기능은 기본적으로 꺼져 있습니다.</p>
             : riotResult?.state === "error" ? <p role="alert">Riot 전적을 불러오지 못했습니다.</p>
             : !riotResult?.data ? <p>아직 공개 가능한 동기화 전적이 없습니다. <Link href="/admin/riot?tab=accounts#riot-single-link">Riot 운영 화면에서 등록 Riot ID 연결</Link></p>
-            : <dl className={styles.facts}><div><dt>Riot ID</dt><dd>{riotResult.data.riotId}</dd></div><div><dt>솔로 랭크</dt><dd>{riotResult.data.soloTier ?? "Unranked"} {riotResult.data.soloRank ?? ""}</dd></div><div><dt>LP</dt><dd>{riotResult.data.leaguePoints ?? 0}</dd></div><div><dt>전적</dt><dd>{riotResult.data.wins ?? 0}승 {riotResult.data.losses ?? 0}패</dd></div></dl>}
+            : <dl className={styles.facts}><div><dt>Riot ID</dt><dd>{riotResult.data.riotId}</dd></div><div><dt>솔로 랭크</dt><dd>{riotResult.data.soloTier ?? "랭크 없음"} {riotResult.data.soloRank ?? ""}</dd></div><div><dt>LP</dt><dd>{riotResult.data.leaguePoints ?? 0}</dd></div><div><dt>전적</dt><dd>{riotResult.data.wins ?? 0}승 {riotResult.data.losses ?? 0}패</dd></div></dl>}
         </section>
       ) : (
         <>
@@ -130,8 +138,8 @@ export default async function AdminPlayerDetailPage({
               {player.account ? (
                 <dl className={styles.facts}>
                   <div><dt>로그인 ID</dt><dd>{player.account.loginId}</dd></div>
-                  <div><dt>역할</dt><dd>{player.account.role}</dd></div>
-                  <div><dt>상태</dt><dd>{player.account.status}</dd></div>
+                  <div><dt>역할</dt><dd>{accountRoleLabel(player.account.role)}</dd></div>
+                  <div><dt>상태</dt><dd>{accountStatusLabel[player.account.status]}</dd></div>
                   <div><dt>계정 UUID</dt><dd>{player.account.id}</dd></div>
                 </dl>
               ) : <p>연결된 사이트 계정이 없습니다. 플레이어 기록은 계정과 독립적으로 보존됩니다.</p>}

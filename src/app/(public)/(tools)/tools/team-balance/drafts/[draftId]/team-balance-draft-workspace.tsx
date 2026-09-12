@@ -19,11 +19,11 @@ const positionLabel = { TOP: "탑", JGL: "정글", MID: "미드", ADC: "원딜",
 const teamLabel = { BLUE: "블루", RED: "레드" } as const;
 const preferenceLabel = { MAIN: "주", SUB: "부", AUTO: "자동" } as const;
 const candidateCriteria = {
-  V1_AI_GLOBAL: { label: "V1 전체탐색 추천", description: "V1의 전체 후보 AI 평가 순서로 선택한 단일 추천 결과" },
+  V1_AI_GLOBAL: { label: "AI 최적 추천", description: "V1의 전체 후보 평가 기준으로 가장 균형 잡힌 한 가지 결과" },
   OVERALL_BALANCE: { label: "종합 균형", description: "팀 전력·라인 차이·포지션 선호를 모두 반영한 추천" },
   POSITION_BALANCE: { label: "라인 균형", description: "각 라인의 맞대결 점수 차이를 가장 먼저 줄인 추천" },
   PREFERENCE_PRIORITY: { label: "주 포지션 우선", description: "참가자가 신청한 주 포지션 배치를 가장 먼저 지킨 추천" },
-  LEGACY: { label: "이전 계산 후보", description: "새 3가지 기준을 적용하려면 아래 재평가 버튼을 눌러 주세요." },
+  LEGACY: { label: "이전 계산 결과", description: "최신 V1 기준을 적용하려면 아래 재평가 버튼을 눌러 주세요." },
   MANUAL: { label: "수동 배치", description: "사용자가 직접 교체하고 서버에서 다시 평가한 배치" },
 } as const;
 
@@ -137,8 +137,8 @@ export function TeamBalanceDraftWorkspace({
       </section>
 
       <section className={styles.candidateSection} aria-labelledby="candidate-title">
-        <div className={styles.heading}><div><span>V1 AI GLOBAL · ONE RESULT</span><h2 id="candidate-title">V1 기준 추천 결과</h2><p className={styles.stageHint}>전체 조합을 V1 기준으로 평가해 가장 높은 한 가지 결과를 바로 적용합니다.</p></div></div>
-        {selectedCandidate ? <div className={styles.evaluationOverview} role="status"><div><span>현재 선택 기준</span><strong>{candidateCriterion(selectedCandidate).label}</strong></div><div><span>추천 점수</span><strong>{selectedCandidate.score.v1?.recommendationScore ?? selectedCandidate.score.totalPenalty.toLocaleString()}</strong></div><div><span>팀 차이</span><strong>{selectedCandidate.score.teamStrength.difference}</strong></div><div><span>예상 승률</span><strong>R {selectedCandidate.score.v1?.predictedRedWinRate.toFixed(1) ?? "-"}% · B {selectedCandidate.score.v1?.predictedBlueWinRate.toFixed(1) ?? "-"}%</strong></div></div> : null}
+        <div className={styles.heading}><div><span>V1 ENGINE · ONE RESULT</span><h2 id="candidate-title">AI 최적 팀 추천</h2><p className={styles.stageHint}>전체 조합을 V1 기준으로 평가해 가장 높은 한 가지 결과를 바로 적용합니다.</p></div></div>
+        {selectedCandidate ? <div className={styles.evaluationOverview} role="status"><div><span>추천 기준</span><strong>{candidateCriterion(selectedCandidate).label}</strong></div><div><span>추천 점수</span><strong>{selectedCandidate.score.v1?.recommendationScore ?? selectedCandidate.score.totalPenalty.toLocaleString()}</strong></div><div><span>팀 차이</span><strong>{selectedCandidate.score.teamStrength.difference}</strong></div><div><span>예상 승률</span><strong>R {selectedCandidate.score.v1?.predictedRedWinRate.toFixed(1) ?? "-"}% · B {selectedCandidate.score.v1?.predictedBlueWinRate.toFixed(1) ?? "-"}%</strong></div></div> : null}
         <div className={styles.candidateGrid}>
           {autoCandidates.slice(0, 1).map((candidate) => {
             const criterion = candidateCriterion(candidate);
@@ -148,7 +148,7 @@ export function TeamBalanceDraftWorkspace({
               <p>{criterion.description}</p>
               {candidate.score.v1?.missingSources.length ? <p role="note">V2에 원본 이관되지 않은 최근 솔랭 상세·관리자 보정은 V1의 데이터 없음(0) 경로로 계산했습니다.</p> : null}
               <div className={styles.candidateMetrics}><span>품질 점수 <b>{candidate.score.v1?.qualityScore ?? "-"}</b></span><span>팀 차이 <b>{candidate.score.teamStrength.difference}</b></span><span>라인 차이 <b>{candidate.score.positionDifferenceTotal}</b></span><span>주/부/자동 <b>{candidate.score.preference.mainCount}/{candidate.score.preference.subCount}/{candidate.score.preference.autoCount}</b></span></div>
-              <div className={styles.lineComparison} aria-label={`${candidate.rank}안 라인별 비교`}>{candidate.score.positions.map((line) => { const blue = candidate.assignments.find((entry) => entry.team === "BLUE" && entry.position === line.position); const red = candidate.assignments.find((entry) => entry.team === "RED" && entry.position === line.position); return <span key={line.position}><b>{positionLabel[line.position]}</b><em>{blue ? participantName.get(blue.playerId) : "-"}</em><small>↔</small><em>{red ? participantName.get(red.playerId) : "-"}</em><strong>{line.difference}</strong></span>; })}</div>
+              <div className={styles.lineComparison} aria-label="AI 추천 라인별 비교">{candidate.score.positions.map((line) => { const blue = candidate.assignments.find((entry) => entry.team === "BLUE" && entry.position === line.position); const red = candidate.assignments.find((entry) => entry.team === "RED" && entry.position === line.position); return <span key={line.position}><b>{positionLabel[line.position]}</b><em>{blue ? participantName.get(blue.playerId) : "-"}</em><small>↔</small><em>{red ? participantName.get(red.playerId) : "-"}</em><strong>{line.difference}</strong></span>; })}</div>
               <button type="button" aria-pressed={selected} disabled={Boolean(pending) || selected || draft.status === "ARCHIVED"} onClick={() => mutate("select", { candidateRank: candidate.rank })}><Check size={16} aria-hidden="true" /> {selected ? `${criterion.label} 적용 중` : `${criterion.label} 선택`}</button>
             </article>;
           })}
@@ -156,7 +156,7 @@ export function TeamBalanceDraftWorkspace({
       </section>
 
       <section className={styles.manualSection} aria-labelledby="manual-title">
-        <div className={styles.heading}><div><span>MANUAL BOARD</span><h2 id="manual-title">수동 배치와 서버 재평가</h2><p className={styles.stageHint}>플레이어 카드를 클릭한 채 원하는 자리로 끌어 놓으세요. 키보드에서는 교체 버튼을 두 번 선택하면 돼요.</p></div></div>
+        <div className={styles.heading}><div><span>MANUAL BOARD</span><h2 id="manual-title">수동 배치와 서버 재평가</h2></div></div>
         <div className={styles.manualTeams}>
           {TEAM_BALANCE_TEAMS.map((team) => <section key={team} data-team={team} aria-labelledby={`manual-${team.toLowerCase()}-title`}>
             <header><h3 id={`manual-${team.toLowerCase()}-title`}>{teamLabel[team]} 팀</h3><span>5명</span></header>
@@ -177,14 +177,13 @@ export function TeamBalanceDraftWorkspace({
                 data-dragging={draggingSlot === index ? "true" : undefined}
                 data-drop-target={dragOverSlot === index && draggingSlot !== index ? "true" : undefined}
                 data-keyboard-selected={keyboardSlot === index ? "true" : undefined}
-                aria-label={`${teamLabel[team]} 팀 ${positionLabel[entry.position]} ${participantName.get(entry.playerId) ?? entry.playerId}. 클릭한 채 다른 카드로 끌어 교체`}
-                title="클릭한 채 다른 플레이어 카드로 끌어 교체"
+                aria-label={`${teamLabel[team]} 팀 ${positionLabel[entry.position]} ${participantName.get(entry.playerId) ?? entry.playerId}. 다른 카드와 자리 교체 가능`}
                 onDragStart={(event) => { event.dataTransfer.effectAllowed = "move"; event.dataTransfer.setData("text/plain", String(index)); setDraggingSlot(index); setDragOverSlot(index); setMessage("교체할 자리 위에 카드를 놓아 주세요."); }}
                 onDragEnd={() => { setDraggingSlot(null); setDragOverSlot(null); }}
                 onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "move"; setDragOverSlot(index); }}
                 onDrop={(event) => { event.preventDefault(); const sourceSlot = Number(event.dataTransfer.getData("text/plain")); if (Number.isInteger(sourceSlot) && sourceSlot !== index) { swapManual(sourceSlot, index); setMessage("두 플레이어의 자리를 바꿨어요. 서버 평가로 확인해 주세요."); } setDraggingSlot(null); setDragOverSlot(null); }}
               >
-                <div className={styles.manualPlayerName}><GripVertical aria-hidden="true"/><b>{positionLabel[entry.position]}</b><strong>{participantName.get(entry.playerId) ?? entry.playerId}</strong><small>드래그해 교체</small></div>
+                <div className={styles.manualPlayerName}><GripVertical aria-hidden="true"/><b>{positionLabel[entry.position]}</b><strong>{participantName.get(entry.playerId) ?? entry.playerId}</strong></div>
                 <div className={styles.manualPlayerInfo}><strong>{eligibility}</strong><small>{ratingSummary}</small></div>
                 <button type="button" aria-pressed={keyboardSlot === index} onClick={() => selectKeyboardSlot(index)}>{keyboardSlot === null ? "교체할 카드 선택" : keyboardSlot === index ? "선택 취소" : "이 카드와 교체"}</button>
               </article>;

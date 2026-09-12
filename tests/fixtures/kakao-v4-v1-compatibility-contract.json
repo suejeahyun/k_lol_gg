@@ -127,7 +127,7 @@
       "ARAM": { "labels": ["칼바람", "aram"], "memberFields": ["이름"], "seasonRoster": false },
       "AUGMENT_ARAM": { "labels": ["증바람", "증강칼바람", "augmentaram"], "memberFields": ["이름"], "seasonRoster": false }
     },
-    "zeroParticipants": "The accepted full form withdraws/cancels the same-room, same-round participant snapshot"
+    "zeroParticipants": "The accepted full form withdraws/cancels the same-installation-scope, same-round participant snapshot"
   },
   "scrim": {
     "initialTemplate": "[K-LOL.GG 스크림 구인 양식]\n\n운영일: 2026-09-09\n번호: #자동배정\n\n일시: \n방식: 3판2선\n\n우리팀: \nTOP: \nJUG: \nMID: \nADC: \nSUP: \n\n상대팀: \nTOP: \nJUG: \nMID: \nADC: \nSUP: ",

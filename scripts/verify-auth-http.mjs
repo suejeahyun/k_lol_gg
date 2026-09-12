@@ -189,7 +189,11 @@ const fixtures = JSON.stringify([
   },
 ]);
 const protectedWorkspacePaths = PROTECTED_ADMIN_PAGE_CASES.map(({ requestPath }) => requestPath);
-const superAdminWorkspaceRoutes = new Set(["/admin/logs", "/admin/site-settings"]);
+const superAdminWorkspaceRoutes = new Set([
+  "/admin/kakao/rooms",
+  "/admin/logs",
+  "/admin/site-settings",
+]);
 const enrollmentPath = ADMIN_SECURITY_PAGE_CASE.requestPath;
 
 const nextBin = path.join(process.cwd(), "node_modules", "next", "dist", "bin", "next");

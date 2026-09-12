@@ -19,6 +19,7 @@ import {
   generateEventBracket,
   recordEventFixtureResult,
   restoreCancelledEvent,
+  setEventMediaGallery,
   startEventRecruitment,
   toOwnEventApplicationDto,
   toPublicEventDto,
@@ -34,6 +35,14 @@ const opensAt = "2026-09-07T00:00:00.000Z";
 const duringRecruitment = "2026-09-07T01:00:00.000Z";
 const closesAt = "2026-09-08T00:00:00.000Z";
 const digest = (byte: number) => new Uint8Array(32).fill(byte);
+
+test("event result gallery can be linked only during or after play", () => {
+  const galleryId = "00000000-0000-4000-8000-000000000099";
+  assert.throws(() => setEventMediaGallery(planned(), galleryId, opensAt), /result gallery/i);
+  const inProgress = { ...planned(), lifecycle: { status: "IN_PROGRESS" as const, cancelledFrom: null, cancellationReason: null } };
+  assert.equal(setEventMediaGallery(inProgress, galleryId, opensAt).galleryId, galleryId);
+  assert.equal(setEventMediaGallery({ ...inProgress, lifecycle: { ...inProgress.lifecycle, status: "COMPLETED" as const } }, null, opensAt).galleryId, null);
+});
 
 function settings(format: "POSITION" | "ARAM" = "POSITION") {
   return {
@@ -315,6 +324,7 @@ function handlerDependencies(
   const dependencies: EventCommandHandlerDependencies = {
     unitOfWork: { transaction: async (operation) => operation(transaction) },
     repository: {
+      assertPublishedReadyGallery: async () => {},
       loadForUpdate: async () => {
         operations.push("load");
         return null;
@@ -393,6 +403,7 @@ test("command handler rejects stale expected revisions before any aggregate writ
   const current = { ...planned(), revision: 2 };
   const harness = handlerDependencies({
     repository: {
+      assertPublishedReadyGallery: async () => {},
       loadForUpdate: async () => {
         harness.operations.push("load");
         return current;

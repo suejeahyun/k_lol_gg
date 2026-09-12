@@ -49,6 +49,9 @@ const output = `${preamble}${publicSource}`;
 const program = acorn.parse(output, { ecmaVersion: 5, allowReserved: true, preserveParens: true });
 const findings = analyzeRhinoStatic(program);
 if ((output.match(/function\s+response\s*\(/gu) ?? []).length !== 1) throw new Error("Private V1 strict output must define one response callback");
+if (output.length >= 65_535 || output.replace(/\n/gu, "\r\n").length >= 65_535) {
+  throw new Error("Private V1 strict output exceeds MessengerBot R's LF/CRLF 65,535-character limit");
+}
 if (findings.statementCandidates.length || findings.unsafeSequenceOperands.length || findings.voidExpressions.length || findings.bareAssignmentConditions.length) {
   throw new Error("Private V1 strict output contains Rhino static warning candidates");
 }

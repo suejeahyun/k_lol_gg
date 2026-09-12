@@ -98,6 +98,13 @@ function sha256(value) {
   return createHash("sha256").update(value).digest("hex");
 }
 
+function withoutBlankLines(value) {
+  return value
+    .split("\n")
+    .filter((line) => line.trim().length > 0)
+    .join("\n");
+}
+
 const source = await readFile(fixturePath, "utf8");
 if (sha256(source) !== sourceSha256Lf) {
   throw new Error("Canonical V1 source hash mismatch");
@@ -186,11 +193,11 @@ const provenance = [
   ` * Canonical V1: ${sourceCommit}:${sourcePath}`,
   ` * Canonical SHA-256 (Git LF blob): ${sourceSha256Lf}`,
   ` * User-provided CRLF SHA-256: ${sourceSha256Crlf}`,
-  " * V1 functions below are sliced byte-for-byte from that verified Git blob.",
+  " * V1 executable/comment lines are preserved; blank spacer lines are removed for the phone limit.",
   " */",
   `var KLOL_V1_SOURCE_COMMIT = "${sourceCommit}";`,
   `var KLOL_V1_SOURCE_SHA256 = "${sourceSha256Lf}";`,
-  `var KLOL_V1_EXTRACTED_SHA256 = "${sha256(extracted.join("\n\n"))}";`,
+  `var KLOL_V1_EXTRACTED_SHA256 = "${sha256(withoutBlankLines(extracted.join("\n\n")))}";`,
   "var KLOL_V1_SOURCE_FUNCTIONS = [",
   extractedNames.map((name) => `  "${name}"`).join(",\n"),
   "];",
@@ -226,7 +233,11 @@ const seasonCandidateBinding = [
   "  return isPartyRecruitFormMessageWithoutSeasonSnapshot(text);",
   "};",
 ].join("\n");
-const output = `${provenance}\n\n${transport}\n\n${adapter}\n\n${extracted.join("\n\n")}\n\n${operationCandidateBinding}\n${seasonCandidateBinding}\n\n${entry}\n`;
+const uncompressedOutput = `${provenance}\n\n${transport}\n\n${adapter}\n\n${extracted.join("\n\n")}\n\n${operationCandidateBinding}\n${seasonCandidateBinding}\n\n${entry}\n`;
+// The canonical V1 source contains many blank spacer lines. MessengerBot R may
+// store pasted LF text as CRLF, so remove only blank lines while preserving
+// every executable/comment line and the human-readable layout.
+const output = `${withoutBlankLines(uncompressedOutput)}\n`;
 const program = acorn.parse(output, {
   ecmaVersion: 5,
   allowReserved: true,
@@ -267,7 +278,9 @@ if (!output.includes("function isSeasonApplySnapshotEnvelope(text)")) {
 if (!output.includes("isPartyRecruitFormMessageWithoutSeasonSnapshot")) {
   throw new Error("V1-strict output must exclude in-house snapshots from party-form routing");
 }
-if (output.length >= 65_535) throw new Error("V1-strict output exceeds MessengerBot R's 65,535-character limit");
+if (output.length >= 65_535) throw new Error("V1-strict LF output exceeds MessengerBot R's 65,535-character limit");
+const crlfLength = output.replace(/\n/gu, "\r\n").length;
+if (crlfLength >= 65_535) throw new Error("V1-strict CRLF output exceeds MessengerBot R's 65,535-character limit");
 if (Math.max(...output.split("\n").map((line) => line.length)) > 1_000) {
   throw new Error("V1-strict output contains an unreadably long line");
 }
@@ -286,5 +299,5 @@ if (
 await writeFile(resolve(directory, outputName), output, "utf8");
 console.log(
   `Generated integrations/messengerbot-r/v1-strict/${outputName} ` +
-  `(${output.length} characters, source=${sourceSha256Lf}, functions=${extractedNames.length})`
+  `(${output.length} LF characters, ${crlfLength} CRLF characters, source=${sourceSha256Lf}, functions=${extractedNames.length})`
 );

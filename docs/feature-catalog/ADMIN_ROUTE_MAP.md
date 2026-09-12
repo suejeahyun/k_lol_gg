@@ -120,7 +120,7 @@
 | 005 | `/admin/ai-requests` | 통합 | `/admin/logs?view=ai-requests` 탭, 검색·필터·페이지 유지 | SUPER |
 | 006 | `/admin/logs` | 유지 | 운영·감사의 감사 이벤트 기본 탭 | SUPER |
 | 007 | `/admin/logs/stats` | 통합 | `/admin/logs?view=stats` 통계 탭 | SUPER |
-| 008 | `/admin/logs/kakao` | redirect | `/admin/kakao?tab=logs`; 허용된 기간·상태 query 보존 | ADMIN |
+| 008 | `/admin/logs/kakao` | redirect | `/admin/kakao?tab=logs`; 허용된 기간·상태 query 보존 | SUPER |
 
 ### 5.2 인물·계정·징계 (13/81, 누계 21)
 
@@ -178,12 +178,12 @@
 |---:|---|---|---|---|
 | 044 | `/admin/kakao` | 유지 | 커뮤니티 운영 요약·설정 상태·최근 구인 | ADMIN |
 | 045 | `/admin/kakao/recruits` | 통합 | `/admin/kakao?tab=recruits`, 진행 구인·이력 | ADMIN (reset·자동화 SUPER) |
-| 046 | `/admin/kakao/recruits/logs` | 통합 | `/admin/kakao?tab=logs`, 필터·페이지 유지 | ADMIN |
-| 047 | `/admin/kakao/recruits/settings` | 통합 | `/admin/kakao?tab=health`, 진단·복구·자동화 설정 | ADMIN (복구·reset 설정 SUPER) |
+| 046 | `/admin/kakao/recruits/logs` | 통합 | `/admin/kakao?tab=logs`, 필터·페이지 유지 | SUPER |
+| 047 | `/admin/kakao/recruits/settings` | 통합 | `/admin/kakao?tab=health`, 진단·복구·자동화 설정 | SUPER |
 | 048 | `/admin/kakao/scrims` | 통합 | `/admin/kakao?tab=scrims`, 스크림 구인 목록 | ADMIN |
 | 049 | `/admin/kakao/season-apply` | 통합 | `/admin/seasons/kakao-pending`, Kakao 자동 일치 보류를 시즌 신청으로 안전하게 연결 | ADMIN 조회, SUPER 변경 |
-| 050 | `/admin/kakao/settings` | 통합 | `/admin/kakao?tab=settings` | ADMIN |
-| 051 | `/admin/kakao/stats` | 통합 | `/admin/kakao?tab=stats`, 기간·상태 보존 | ADMIN |
+| 050 | `/admin/kakao/settings` | 통합 | `/admin/kakao?tab=settings` | SUPER |
+| 051 | `/admin/kakao/stats` | 통합 | `/admin/kakao?tab=stats`, 운영 요약과 bounded 이름별 참여·상태·동반자 통계 | ADMIN |
 | 052 | `/admin/kakao/operation-forms` | redirect | `/admin/operation-forms`; 중복 분류 허브 제거 | ADMIN |
 | 053 | `/admin/kakao/operation-forms/friends` | redirect | `/admin/operation-forms?type=friends` | ADMIN |
 | 054 | `/admin/kakao/operation-forms/leaves` | redirect | `/admin/operation-forms?type=leaves` | ADMIN |

@@ -1,9 +1,13 @@
 import type { TransactionSessionActor } from "@/modules/auth/domain/transaction-session";
 import { canonicalRiotId } from "@/modules/riot/domain/riot-integration";
+import {
+  MAXIMUM_LEGACY_INTEGER_ID,
+  parseLegacyIntegerId,
+} from "@/platform/legacy-identifiers";
 import { containsUnsafeText } from "@/platform/security/input-safety";
 
 export const PLAYER_STATUSES = ["ACTIVE", "INACTIVE"] as const;
-export const MAXIMUM_LEGACY_PLAYER_ID = 2_147_483_647;
+export const MAXIMUM_LEGACY_PLAYER_ID = MAXIMUM_LEGACY_INTEGER_ID;
 
 export type PlayerStatus = (typeof PLAYER_STATUSES)[number];
 
@@ -100,12 +104,7 @@ function normalizeTier(value: unknown): string | null | undefined {
 }
 
 export function parseLegacyPlayerId(value: unknown): number | null {
-  const parsed = typeof value === "string" && /^[1-9][0-9]{0,9}$/.test(value)
-    ? Number(value)
-    : value;
-  return Number.isSafeInteger(parsed) && Number(parsed) > 0 && Number(parsed) <= MAXIMUM_LEGACY_PLAYER_ID
-    ? Number(parsed)
-    : null;
+  return parseLegacyIntegerId(value);
 }
 
 export function parsePlayerWriteInput(value: unknown): PlayerWriteValidationResult {

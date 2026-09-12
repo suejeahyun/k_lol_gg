@@ -10,6 +10,7 @@ test("public match and player detail use the same allowlisted champion portrait 
   const portrait = source("src/components/champions/champion-portrait.tsx");
   const resolver = source("src/modules/champions/domain/champion-image.ts");
   const match = source("src/app/(public)/(matches)/matches/[matchId]/page.tsx");
+  const matchRepository = source("src/modules/matches/infrastructure/postgres-match-repository.ts");
   const player = source("src/app/(public)/(registry)/players/[playerId]/page.tsx");
 
   assert.match(resolver, /ddragon\.leagueoflegends\.com/);
@@ -19,6 +20,8 @@ test("public match and player detail use the same allowlisted champion portrait 
   assert.match(portrait, /setFailedUrls/);
   assert.match(portrait, /챔피언 이미지 없음/);
   assert.match(match, /imageUrl=\{player\.championImageUrl\}/);
+  assert.match(matchRepository, /championImageUrl: championImageUrlProjection\(\)/);
+  assert.doesNotMatch(matchRepository, /championImageUrl: championCatalog\.imageUrl/);
   assert.match(player, /imageUrl=\{champion\.championImageUrl\}/);
   assert.match(player, /imageUrl=\{match\.championImageUrl\}/);
 });

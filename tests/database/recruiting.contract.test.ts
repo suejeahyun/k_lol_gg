@@ -139,6 +139,87 @@ test("S09 PostgreSQL adapter commits aggregate, receipt, audit and outbox atomic
     await pool.end();
   }
 });
+
+test("party member statistics are bounded and count distinct parties and primary companions", async () => {
+  const connectionString = process.env.TEST_DATABASE_URL;
+  assert.ok(connectionString, "TEST_DATABASE_URL must be injected by the isolated harness.");
+  assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
+  const { database, pool } = createDatabaseHandle(connectionString, { max: 3 });
+  const adapter = new PostgresRecruitingAdapter(database);
+  const suffix = randomBytes(4).toString("hex");
+  const targetName = `통계대상${suffix}`;
+  const alice = `동반자A${suffix}`;
+  const bob = `동반자B${suffix}`;
+  const charlie = `동반자C${suffix}`;
+  const reserve = `예비${suffix}`;
+  const sourceRoomId = `stats-${suffix}`;
+  const today = new Date().toISOString().slice(0, 10);
+  const oldDate = new Date(Date.now() - 400 * 86_400_000).toISOString().slice(0, 10);
+  const resetSequence = Number.parseInt(suffix, 16) % 1_000_000_000;
+  const member = (name: string, slotNo: number, substitute = false) => ({ name, position: null, slotNo, substitute });
+  const rows = [
+    { status: "IN_PROGRESS" as const, membersJson: [member(targetName, 1), member(alice, 2), member(bob, 3), member(reserve, 1, true)] },
+    { status: "FINISHED" as const, membersJson: [member(targetName, 1), member(alice, 2)] },
+    { status: "CANCELED" as const, membersJson: [member(targetName, 1), member(bob, 2)] },
+    { status: "RESET" as const, membersJson: [member(targetName, 1), member(charlie, 2)] },
+    { status: "DRAFT" as const, membersJson: [member(targetName, 1), member(reserve, 2)] },
+  ];
+
+  try {
+    await applyMigrations(database);
+    await database.insert(recruitParties).values([
+      ...rows.map((row, index) => ({
+        id: randomUUID(),
+        sourceRoomId,
+        recruitDate: today,
+        resetSequence,
+        recruitNumber: index + 1,
+        type: "PARTY_NUMBER" as const,
+        status: row.status,
+        title: `통계 계약 ${index + 1}`,
+        maximumMembers: 5,
+        membersJson: row.membersJson,
+        lastActivityAt: new Date(),
+      })),
+      {
+        id: randomUUID(),
+        sourceRoomId,
+        recruitDate: oldDate,
+        resetSequence,
+        recruitNumber: 6,
+        type: "PARTY_NUMBER" as const,
+        status: "FINISHED" as const,
+        title: "집계 기간 밖 계약",
+        maximumMembers: 5,
+        membersJson: [member(targetName, 1), member(reserve, 2)],
+        lastActivityAt: new Date(),
+      },
+    ]);
+
+    const statistics = await adapter.getPartyMemberStats(targetName.toLocaleLowerCase("ko-KR"));
+    assert.equal(statistics.items.length, 1);
+    const result = statistics.items[0];
+    assert.ok(result);
+    assert.equal(result.name, targetName);
+    assert.deepEqual({
+      total: result.totalPartyCount,
+      current: result.inProgressCount,
+      finished: result.finishedCount,
+      canceled: result.canceledCount,
+      reset: result.resetCount,
+    }, { total: 4, current: 1, finished: 1, canceled: 1, reset: 1 });
+    assert.deepEqual(result.companions.slice(0, 2), [
+      { name: alice, partyCount: 2 },
+      { name: bob, partyCount: 2 },
+    ]);
+    assert.equal(result.companions.some((companion) => companion.name === reserve), false);
+    await assert.rejects(adapter.getPartyMemberStats("가"), /INVALID_PARTY_MEMBER_STATS_QUERY/u);
+  } finally {
+    await database.delete(recruitParties).where(eq(recruitParties.sourceRoomId, sourceRoomId));
+    await pool.end();
+  }
+});
+
 test("S09 PostgreSQL adapter binds a BOT nonce to exactly one signed request identity", async () => {
   const connectionString = process.env.TEST_DATABASE_URL;
   assert.ok(connectionString);

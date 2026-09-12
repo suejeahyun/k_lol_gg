@@ -470,16 +470,16 @@ export function canonicalizeKakaoV4Command(classification: KakaoV4CommandClassif
   }
   if (classification.command === "INHOUSE_SNAPSHOT") return inhouseSnapshot(classification.canonicalText, date);
   if (classification.command === "SCRIM_CREATE") {
-    return Object.freeze({ domain: "SCRIM" as const, action: "TEMPLATE" as const, recruitDate: date });
+    return Object.freeze({ domain: "SCRIM" as const, action: "TEMPLATE" as const, recruitDate: partyDate });
   }
   if (classification.command === "SCRIM_SNAPSHOT") {
-    const payload = scrimSnapshot(classification.canonicalText, date, usesKakaoV1StrictResponse(envelope));
+    const payload = scrimSnapshot(classification.canonicalText, partyDate, usesKakaoV1StrictResponse(envelope));
     return payload ? Object.freeze({ domain: "SCRIM" as const, action: "UPSERT" as const, payload }) : null;
   }
   if (classification.command === "SCRIM_STATUS") return Object.freeze({ domain: "SCRIM" as const, action: "STATUS" as const });
   if (classification.command === "SCRIM_DETAIL") {
     const recruitNumber = numberParameter(parameters, "scrimNumber");
-    return recruitNumber ? Object.freeze({ domain: "SCRIM" as const, action: "DETAIL" as const, target: Object.freeze({ recruitDate: date, recruitNumber }) }) : null;
+    return recruitNumber ? Object.freeze({ domain: "SCRIM" as const, action: "DETAIL" as const, target: Object.freeze({ recruitDate: partyDate, recruitNumber }) }) : null;
   }
   if (classification.command.startsWith("SCRIM_LEGACY_")) {
     const action = classification.command.slice("SCRIM_LEGACY_".length) as "JOIN" | "CONFIRM" | "CANCEL" | "FINISH";

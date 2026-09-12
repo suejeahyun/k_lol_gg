@@ -96,3 +96,16 @@ test("legacy detail mapping remains outside proxy and administrator APIs use the
   assert.match(playerLifecycleUi, /maxLength=\{16\}/);
   assert.match(playerLifecycleUi, /maxLength=\{5\}/);
 });
+
+test("administrator player pages present operational labels in Korean", () => {
+  const listPage = readFileSync(new URL("../src/app/(admin)/admin/players/page.tsx", import.meta.url), "utf8");
+  const detailPage = readFileSync(new URL("../src/app/(admin)/admin/players/[playerId]/page.tsx", import.meta.url), "utf8");
+
+  assert.match(listPage, /S02 · 플레이어 등록부/);
+  assert.match(listPage, /accountRoleLabel\(player\.account\.role\)/);
+  assert.match(detailPage, /변경 버전 \{player\.revision\}/);
+  assert.match(detailPage, /MMR 계산 완료/);
+  assert.match(detailPage, /Riot 운영 연동이 비활성 상태/);
+  assert.match(detailPage, /accountStatusLabel\[player\.account\.status\]/);
+  assert.doesNotMatch(`${listPage}\n${detailPage}`, /PLAYER REGISTRY|READY MMR|Unranked|feature flag|운영 adapter|>revision /);
+});

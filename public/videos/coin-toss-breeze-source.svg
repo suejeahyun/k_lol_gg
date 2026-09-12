@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="360" viewBox="0 0 360 360">
+  <defs>
+    <radialGradient id="coin" cx="35%" cy="28%" r="75%">
+      <stop offset="0" stop-color="#fff8c7"/>
+      <stop offset="0.48" stop-color="#f4ca61"/>
+      <stop offset="1" stop-color="#d99a32"/>
+    </radialGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#fff3ad"/>
+      <stop offset="1" stop-color="#b87924"/>
+    </linearGradient>
+    <filter id="shadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="16" stdDeviation="14" flood-color="#35577d" flood-opacity=".28"/>
+    </filter>
+  </defs>
+  <circle cx="180" cy="180" r="144" fill="url(#rim)" filter="url(#shadow)"/>
+  <circle cx="180" cy="180" r="130" fill="url(#coin)" stroke="#fff2a4" stroke-width="5"/>
+  <circle cx="180" cy="180" r="108" fill="none" stroke="#c9872b" stroke-width="3" stroke-dasharray="7 8" opacity=".65"/>
+  <path d="M180 91l18 51 54 2-42 33 15 52-45-30-45 30 15-52-42-33 54-2z" fill="#fff7c0" opacity=".88"/>
+  <text x="180" y="178" text-anchor="middle" fill="#315eaa" font-family="Arial, sans-serif" font-size="39" font-weight="900" letter-spacing="-2">K-LOL</text>
+  <text x="180" y="216" text-anchor="middle" fill="#6b4a19" font-family="Arial, sans-serif" font-size="20" font-weight="800" letter-spacing="3">GG</text>
+</svg>

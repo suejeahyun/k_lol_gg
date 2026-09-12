@@ -235,6 +235,24 @@ test("S05 rebuilds PUBLISHED match statistics atomically and receipts make repla
       2,
     );
 
+    await database.update(seasons).set({
+      status: "ENDED",
+      activatedAt: new Date(now.getTime() - 86_400_000),
+      endedAt: now,
+      updatedAt: now,
+    }).where(eq(seasons.id, seasonId));
+    const publicPlayerStatistics = await queryRepository.getPublicPlayerStatistics(playerIds[0], seasonId);
+    assert.ok(publicPlayerStatistics);
+    assert.deepEqual(publicPlayerStatistics.performance, {
+      gameCount: 2,
+      averageKills: 0.5,
+      averageDeaths: 1,
+      averageAssists: 2,
+      averageKda: 2.5,
+      averageBalanceScore: null,
+      assignmentGames: { main: 0, sub: 0, all: 0, nonPreferred: 0, unclassified: 2 },
+    });
+
     const replay = await repository.applyClaimedMatchChanged({
       event: claimed,
       affectedSeasonIds,

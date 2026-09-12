@@ -9,6 +9,7 @@ import { DestructionService, type DestructionCommandContext } from "../../src/mo
 import { PostgresDestructionAdapter } from "../../src/modules/competitions/destruction/postgres-destruction-adapter";
 import { createDatabaseHandle } from "../../src/platform/db/database";
 import { applyMigrations } from "../../src/platform/db/migrate";
+import { deriveLegacyCompetitionUuid } from "../../src/platform/legacy-identifiers";
 import {
   auditEvents,
   authSessions,
@@ -45,7 +46,7 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
   const ownerSessionIds = Array.from({ length: 20 }, () => randomUUID());
   const playerIds: string[] = Array.from({ length: 20 }, () => randomUUID());
   const extraPlayerId = randomUUID();
-  const tournamentId = randomUUID();
+  const tournamentId = deriveLegacyCompetitionUuid("competition.destruction_competitions", 801)!;
   const galleryId = randomUUID();
   const emptyGalleryId = randomUUID();
   const galleryAssetId = randomUUID();
@@ -86,8 +87,10 @@ test("S08 adapter persists recruitment, seeded auction, BO stages, roster histor
 
     const settings = { title: "S08 하늘빛 멸망전", configuration: { preliminaryFormat: "FULL_ROUND_ROBIN_BO1", preliminaryRoundCount: 1, teamCount: 4, laneLimits: { TOP: 4, JGL: 4, MID: 4, ADC: 4, SUP: 4 } } };
     const createContext = context(adminActor, "ADMIN", "create");
+    assert.equal(await adapter.resolveLegacyId(801), null);
     let result = await service.create(createContext, { tournamentId, ...settings });
     revision = result.revision;
+    assert.equal(await adapter.resolveLegacyId(801), tournamentId);
     assert.equal((await service.create(createContext, { tournamentId, ...settings })).replayed, true);
     result = await service.executeAdmin(context(adminActor, "ADMIN", "start"), tournamentId, revision, { type: "START_RECRUITMENT", payload: {} });
     revision = result.revision;

@@ -78,8 +78,11 @@ export function buildLegacyDestructionParticipantDestination(tournamentId: strin
 }
 
 export function buildLegacyDestructionImageDestination(tournamentId: string, imageIndex: string) {
-  if (!SAFE_LEGACY_ID.test(tournamentId) || !/^(?:0|[1-9][0-9]{0,3})$/u.test(imageIndex)) return "/competitions?type=destruction";
-  return destination(`/competitions/destruction/${tournamentId}`, { tab: "gallery", image: imageIndex });
+  if (!SAFE_LEGACY_ID.test(tournamentId) || !/^[1-9][0-9]{0,3}$/u.test(imageIndex)) return "/competitions?type=destruction";
+  return destination(`/competitions/destruction/${tournamentId}`, {
+    tab: "gallery",
+    imageIndex: String(Number(imageIndex) - 1),
+  });
 }
 
 export function buildLegacyPlayerBalanceRecommendationDestination(query: LegacyQuery) {

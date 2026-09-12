@@ -34,6 +34,10 @@ test("regular administrators may read discipline details but only super administ
   assert.match(recordRoute, /GET[\s\S]*requireDisciplineApiSession\("ADMIN"\)/);
   assert.equal(recordRoute.match(/requireDisciplineApiSession\("SUPER_ADMIN"\)/g)?.length, 2);
   assert.match(detailPage, /canManage=\{session\.role === "SUPER_ADMIN"\}/);
+  assert.match(detailPage, /관리자 · 상세/);
+  assert.match(detailPage, /typeLabel\[record\.type\]/);
+  assert.match(detailPage, /taskStatusLabel\[record\.task\.status\]/);
+  assert.doesNotMatch(detailPage, /ADMIN · DETAIL|>\{record\.type\}<|revision \{record\.revision\}/);
   assert.match(actions, /징계 기록의 수정·취소와 증빙 검토는 최고 관리자만/);
   assert.match(adapter, /mutateRecord[\s\S]*minimumRole: "SUPER_ADMIN"/);
 });
@@ -56,4 +60,18 @@ test("discipline pages declare real empty, error, and unavailable states", async
   }
   assert.match(pages[0], /징계 현황을 확인할 수 없어요/);
   assert.match(pages[2], /필터를 바꾸거나 새 기록을 등록해 주세요/);
+});
+
+test("discipline administrator headings and status labels are readable Korean", async () => {
+  const [list, detail, create, actions] = await Promise.all([
+    source("src/app/(admin)/admin/discipline/page.tsx"),
+    source("src/app/(admin)/admin/discipline/[recordId]/page.tsx"),
+    source("src/app/(admin)/admin/discipline/new/page.tsx"),
+    source("src/components/discipline/admin-discipline-actions.tsx"),
+  ]);
+  assert.match(list, /typeLabel\[record\.type\]/);
+  assert.match(detail, /evidenceStatusLabel\[item\.status\]/);
+  assert.match(create, /관리자 · 새 기록/);
+  assert.match(actions, /최신 변경 버전과 관리자 2단계 인증 상태/);
+  assert.doesNotMatch(`${list}\n${detail}\n${create}\n${actions}`, /ADMIN · DISCIPLINE|ADMIN · DETAIL|ADMIN · NEW|최신 revision/);
 });

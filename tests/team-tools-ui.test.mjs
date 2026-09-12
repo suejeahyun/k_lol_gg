@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { readFileSync, statSync } from "node:fs";
 import test from "node:test";
 
 function source(relativePath) {
@@ -30,7 +31,7 @@ test("랜덤 팀 화면은 도메인 계산과 입력·빈·오류·결과·복�
   assert.equal(client.includes("꽃잎 팀"), false);
 });
 
-test("코인 토스 화면은 상태머신과 animation/fallback 공개 경로를 함께 둔다", () => {
+test("코인 토스 화면은 제작 영상과 상태머신·fallback 공개 경로를 함께 둔다", () => {
   const client = source("../src/app/(public)/(tools)/tools/coin-toss/coin-toss-tool.tsx");
   const styles = source("../src/app/(public)/(tools)/tools/team-tools.module.css");
 
@@ -40,7 +41,13 @@ test("코인 토스 화면은 상태머신과 animation/fallback 공개 경로�
     "revealCoinToss",
     "transitionCoinToss",
     "FALLBACK_REVEAL_MS",
-    "onAnimationEnd",
+    "onEnded",
+    "onError",
+    'src="/videos/coin-toss-breeze.mp4"',
+    'poster="/videos/coin-toss-breeze-source.svg"',
+    "playsInline",
+    "window.matchMedia",
+    "video.play()",
     'aria-live="polite"',
     "navigator.clipboard.writeText",
     "초기화",
@@ -49,7 +56,19 @@ test("코인 토스 화면은 상태머신과 animation/fallback 공개 경로�
   }
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/u);
   assert.match(styles, /\.coin\[data-phase="playing"\]/u);
+  assert.match(styles, /\.coinVideo/u);
+  assert.doesNotMatch(client, /onAnimationEnd/u);
   assert.equal(client.includes("Math.random"), false);
+  const video = new URL("../public/videos/coin-toss-breeze.mp4", import.meta.url);
+  const bytes = readFileSync(video);
+  assert.ok(statSync(video).size > 10_000);
+  assert.equal(bytes.subarray(4, 8).toString("ascii"), "ftyp");
+  assert.equal(createHash("sha256").update(bytes).digest("hex"), "3d4f02610e96ba464fa2315530734cf43550858e24433292220c2dbcd68284f7");
+  const poster = new URL("../public/videos/coin-toss-breeze-source.svg", import.meta.url);
+  const posterBytes = readFileSync(poster);
+  assert.ok(statSync(poster).size > 500);
+  assert.match(posterBytes.toString("utf8"), /^<svg[\s\S]+<\/svg>\s*$/u);
+  assert.equal(createHash("sha256").update(posterBytes).digest("hex"), "4a4cde040c99ad2b2d957921f72f0f4fef840b5c14c600324579ab1fa2e9c27d");
 });
 
 test("공개 도구 페이지에는 상호 이동과 canonical metadata가 있다", () => {
@@ -115,11 +134,11 @@ test("팀 밸런스 화면은 승인 계정, 10명 입력, V1 단일 추천·공
     assert.equal(builder.includes(contract), true, contract);
   }
   for (const contract of [
-    "V1 AI GLOBAL · ONE RESULT",
-    "V1 기준 추천 결과",
+    "V1 ENGINE · ONE RESULT",
+    "AI 최적 팀 추천",
     "selectedCandidate.score.v1?.recommendationScore",
-    "V1 전체탐색 추천",
-    "현재 선택 기준",
+    "AI 최적 추천",
+    "추천 기준",
     "V1 기준으로 재평가",
     "formatTeamBalanceShareText",
     "navigator.clipboard.writeText",
@@ -147,7 +166,8 @@ test("팀 밸런스 화면은 승인 계정, 10명 입력, V1 단일 추천·공
   assert.equal(drafts.includes('"팀 밸런스 초안"}</h1>'), true, "목록 제목은 공용 운영 명칭을 사용한다");
   assert.equal(navigation.includes("팀 밸런스 초안"), true, "팀 도구 메뉴는 개인 소유 명칭을 사용하지 않는다");
   assert.equal(detailPage.includes("초안 목록"), true, "상세 화면은 공용 초안 목록으로 돌아간다");
-  assert.equal(detail.includes("드래그해 교체"), true, "수동 카드에 현재 교체 동작을 안내한다");
+  assert.equal(detail.includes("플레이어 카드를 클릭한 채 원하는 자리로 끌어 놓으세요"), false, "수동 배치의 중복 드래그 설명은 노출하지 않는다");
+  assert.equal(detail.includes("<small>드래그해 교체</small>"), false, "플레이어 카드의 반복 드래그 문구를 제거한다");
   assert.equal(detail.includes("교체할 카드 선택"), true, "키보드 교체 버튼은 선택 대상을 설명한다");
   assert.equal(submission.includes("현재 적용된 최신 팀 배치"), true, "결과 접수는 적용된 배치를 안내한다");
   const currentTeamBalanceCopy = [page, drafts, builder, detail, detailPage, navigation, submission].join("\n");

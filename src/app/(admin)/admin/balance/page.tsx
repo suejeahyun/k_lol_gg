@@ -9,6 +9,18 @@ import styles from "./statistics.module.css";
 
 export const dynamic = "force-dynamic";
 
+const seasonStatusLabel = {
+  DRAFT: "초안",
+  ACTIVE: "진행 중",
+  ENDED: "종료",
+  RETIRED: "보관됨",
+} as const;
+
+const projectionStatusLabel = {
+  EMPTY: "미계산",
+  READY: "계산 완료",
+} as const;
+
 export default async function AdminBalancePage() {
   const session = await requirePageRole("ADMIN", "/admin/balance");
   const result = await loadRuntimeAdminStatisticsData((service) => service.getAdminStatus(null));
@@ -16,8 +28,8 @@ export default async function AdminBalancePage() {
   return (
     <main className={styles.page}>
       <header className={styles.header}>
-        <div><span><ShieldCheck aria-hidden="true" /> S05 보호된 작업 공간</span><h1>통계·랭킹 상태</h1><p>경기 원본에서 만든 시즌 projection과 처리 대기 이벤트를 확인합니다.</p></div>
-        <nav aria-label="밸런스 관리 화면"><Link href="/admin/balance/drafts">저장 초안</Link> · <Link href="/admin/balance-ai">MMR 작업대</Link></nav>
+        <div><span><ShieldCheck aria-hidden="true" /> S05 보호된 작업 공간</span><h1>통계·랭킹 상태</h1><p>경기 원본에서 만든 시즌 집계와 처리 대기 이벤트를 확인합니다.</p></div>
+        <nav aria-label="밸런스 관리 화면"><Link href="/admin/balance/drafts">저장 초안</Link><Link href="/admin/balance-ai">MMR 작업대</Link></nav>
       </header>
 
       {result.state === "ready" ? (
@@ -25,17 +37,17 @@ export default async function AdminBalancePage() {
           <section className={styles.summary} aria-label="통계 처리 상태">
             <article><Activity /><span>처리 대기</span><strong>{result.data.pendingEventCount}</strong></article>
             <article><RefreshCw /><span>실패 이벤트</span><strong>{result.data.failedEventCount}</strong></article>
-            <article><Database /><span>시즌 projection</span><strong>{result.data.seasons.length}</strong></article>
+            <article><Database /><span>시즌 집계</span><strong>{result.data.seasons.length}</strong></article>
           </section>
           {result.data.seasons.length === 0 ? (
-            <section className={styles.state}><h2>등록된 시즌이 없습니다.</h2><p>시즌을 만든 뒤 통계 projection을 준비할 수 있습니다.</p></section>
+            <section className={styles.state}><h2>등록된 시즌이 없습니다.</h2><p>시즌을 만든 뒤 통계 집계를 준비할 수 있습니다.</p></section>
           ) : (
             <section className={styles.list} aria-labelledby="statistics-seasons-title">
-              <header><div><span>PROJECTIONS</span><h2 id="statistics-seasons-title">시즌별 집계</h2></div><p>ADMIN은 상태를 확인하고 SUPER_ADMIN만 수동 재계산할 수 있습니다.</p></header>
+              <header><div><span>시즌 집계</span><h2 id="statistics-seasons-title">시즌별 집계</h2></div><p>관리자는 상태를 확인할 수 있고, 수동 재계산은 최고 관리자만 할 수 있습니다.</p></header>
               <div>
                 {result.data.seasons.map((item) => (
                   <article key={item.season.id}>
-                    <div className={styles.season}><span>{item.season.status}</span><strong>{item.season.name}</strong><small>{item.projection.status} · generation {item.projection.generation}</small></div>
+                    <div className={styles.season}><span>{seasonStatusLabel[item.season.status]}</span><strong>{item.season.name}</strong><small>{projectionStatusLabel[item.projection.status]} · 계산 버전 {item.projection.generation}</small></div>
                     <dl>
                       <div><dt>경기</dt><dd>{item.projection.sourceMatchCount}</dd></div>
                       <div><dt>게임</dt><dd>{item.projection.sourceGameCount}</dd></div>

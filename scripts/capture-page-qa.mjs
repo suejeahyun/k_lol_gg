@@ -17,6 +17,38 @@ function readArguments(argv) {
   return values;
 }
 
+async function readCredentialsFromStdin(enabled) {
+  if (!enabled) return {};
+  let source = "";
+  process.stdin.setEncoding("utf8");
+  for await (const chunk of process.stdin) {
+    source += chunk;
+    if (Buffer.byteLength(source, "utf8") > 16 * 1024) {
+      throw new Error("Synthetic browser QA credentials exceeded the 16 KiB input limit.");
+    }
+  }
+  let credentials;
+  try {
+    credentials = JSON.parse(source);
+  } catch {
+    throw new Error("Synthetic browser QA credentials stdin must be one JSON object.");
+  }
+  if (!credentials || typeof credentials !== "object" || Array.isArray(credentials)) {
+    throw new Error("Synthetic browser QA credentials stdin must be one JSON object.");
+  }
+  const allowed = new Set([
+    "password", "adminLoginId", "setupLoginId", "accountLoginId", "totpCode",
+    "adminCookie", "accountCookie", "setupCookie",
+  ]);
+  for (const [key, value] of Object.entries(credentials)) {
+    if (!allowed.has(key)) throw new Error(`Unknown synthetic browser QA credential field: ${key}.`);
+    if (typeof value !== "string" || value.length === 0) {
+      throw new Error(`Synthetic browser QA credential ${key} must be a non-empty string.`);
+    }
+  }
+  return credentials;
+}
+
 async function reservePort() {
   const server = createServer();
   await new Promise((resolveListen, reject) => {
@@ -140,6 +172,8 @@ async function evaluate(client, expression) {
 
 async function main() {
   const args = readArguments(process.argv.slice(2));
+  const stdinCredentials = await readCredentialsFromStdin(args.get("credentials-stdin") === "true");
+  const credential = (argumentName, fieldName) => args.get(argumentName) ?? stdinCredentials[fieldName];
   const origin = new URL(args.get("origin") ?? "http://127.0.0.1:3000").origin;
   const routesPath = resolve(args.get("routes") ?? "docs/qa-evidence/capture-plan.json");
   const outputDirectory = resolve(args.get("output") ?? "docs/qa-evidence/screenshots");
@@ -148,15 +182,15 @@ async function main() {
   if (!Array.isArray(routes) || routes.length === 0) throw new Error("The capture plan must contain at least one route.");
   await mkdir(outputDirectory, { recursive: true });
 
-  const password = args.get("password");
-  const adminLoginId = args.get("admin-login-id");
-  const setupLoginId = args.get("setup-login-id");
-  const accountLoginId = args.get("account-login-id");
-  const totpCode = args.get("totp-code");
-  let adminCookie = args.get("admin-cookie");
-  let accountCookie = args.get("account-cookie");
-  let setupCookie = args.get("setup-cookie");
-  if (!adminCookie && (adminLoginId || password || totpCode)) {
+  const password = credential("password", "password");
+  const adminLoginId = credential("admin-login-id", "adminLoginId");
+  const setupLoginId = credential("setup-login-id", "setupLoginId");
+  const accountLoginId = credential("account-login-id", "accountLoginId");
+  const totpCode = credential("totp-code", "totpCode");
+  let adminCookie = credential("admin-cookie", "adminCookie");
+  let accountCookie = credential("account-cookie", "accountCookie");
+  let setupCookie = credential("setup-cookie", "setupCookie");
+  if (!adminCookie && (adminLoginId || totpCode)) {
     if (!adminLoginId || !password || !totpCode) throw new Error("Admin QA login requires --admin-login-id, --password, and --totp-code together.");
     adminCookie = await loginForCookie(origin, "/api/admin/login", { loginId: adminLoginId, password, totpCode });
   }

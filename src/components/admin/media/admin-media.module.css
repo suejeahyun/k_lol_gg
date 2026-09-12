@@ -35,6 +35,10 @@
 .filePicker input { width: auto; max-width: 15rem; padding: .4rem; }.filePicker span { color: #6b7e98; font-size: .75rem; }
 .assetList,.assetSelector { display: grid; gap: .55rem; }
 .assetItem,.assetSelector button { display: flex; align-items: center; justify-content: space-between; gap: .8rem; border: 1px solid #d7e3f0; border-radius: .8rem; background: white; padding: .75rem .85rem; }
+.assetPreview { position: relative; flex: 0 0 5rem; width: 5rem; height: 4rem; overflow: hidden; border-radius: .65rem; background: #eef4fb; }
+.assetPreview img { object-fit: contain; }
+.orderActions { display: flex !important; grid-auto-flow: column; gap: .35rem !important; }
+.orderActions button { min-width: 2rem; min-height: 2rem; padding: .3rem .5rem; border: 1px solid #d7e3f0; border-radius: .55rem; background: #f8fbff; }
 .assetItem div { display: grid; gap: .2rem; }.assetItem span,.assetSelector span { color: #6b7b91; font-size: .75rem; }.assetItem button,.assetSelector button { border: 0; color: #416da9; font: inherit; font-size: .75rem; font-weight: 850; cursor: pointer; }
 .assetSelector > strong { color: #52637a; font-size: .8rem; }.assetSelector button { width: 100%; cursor: pointer; }.assetSelector button:hover { border-color: #91b0d5; background: #f5f9ff; }
 .assetGrid { display: grid; grid-template-columns: repeat(auto-fill,minmax(220px,1fr)); gap: .8rem; }

@@ -11,10 +11,10 @@ import { AdminLogoutButton } from "./admin-logout-button";
 import styles from "./admin-shell.module.css";
 
 function environmentLabel() {
-  if (process.env.VERCEL_ENV === "production") return "PRODUCTION";
-  if (process.env.VERCEL_ENV === "preview") return "PREVIEW";
-  if (process.env.NODE_ENV === "test") return "TEST";
-  return "LOCAL";
+  if (process.env.VERCEL_ENV === "production") return "운영";
+  if (process.env.VERCEL_ENV === "preview") return "미리보기";
+  if (process.env.NODE_ENV === "test") return "테스트";
+  return "로컬";
 }
 
 export function AdminShell({ session, children }: { session: AuthSession; children: React.ReactNode }) {

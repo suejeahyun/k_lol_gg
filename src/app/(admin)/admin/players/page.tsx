@@ -6,6 +6,7 @@ import styles from "@/components/admin/players/admin-players.module.css";
 import { requirePageRole } from "@/modules/auth/infrastructure/server-authorization";
 import { parseAdminPlayerQuery } from "@/modules/players/application/parse-admin-player-query";
 import { loadRuntimeAdminPlayers } from "@/modules/players/infrastructure/runtime-admin-player-data";
+import { accountRoleLabel } from "@/modules/accounts/domain/account-display-labels";
 
 export const dynamic = "force-dynamic";
 
@@ -48,7 +49,7 @@ export default async function AdminPlayersPage({
     <main className={styles.page}>
       <header className={styles.header}>
         <div>
-          <span className={styles.eyebrow}><UsersRound aria-hidden="true" /> S02 · PLAYER REGISTRY</span>
+          <span className={styles.eyebrow}><UsersRound aria-hidden="true" /> S02 · 플레이어 등록부</span>
           <h1>플레이어 등록부</h1>
           <p>회원명은 이 관리자 경계 안에서만 조회하고, 공개 프로필은 UUID와 허용된 Riot 정보만 사용합니다.</p>
         </div>
@@ -114,7 +115,7 @@ export default async function AdminPlayersPage({
                       <td data-label="V1 번호">{player.legacyId ?? "—"}</td>
                       <td data-label="티어">{player.currentTier ?? "미등록"}</td>
                       <td data-label="상태"><span className={styles.status} data-state={player.status}>{player.status === "ACTIVE" ? "활성" : "비활성"}</span></td>
-                      <td data-label="계정">{player.account ? `${player.account.loginId} · ${player.account.role}` : "미연결"}</td>
+                      <td data-label="계정">{player.account ? `${player.account.loginId} · ${accountRoleLabel(player.account.role)}` : "미연결"}</td>
                       <td data-label="수정">{formatDate(player.updatedAt)}</td>
                     </tr>
                   ))}

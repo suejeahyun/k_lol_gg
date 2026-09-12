@@ -2070,6 +2070,10 @@ body:has(.user-dialog[open]) {
   gap: 10px;
 }
 
+.profile-records__grid + .profile-records__grid {
+  margin-top: 10px;
+}
+
 .profile-summary__grid article,
 .profile-records__grid article {
   display: grid;

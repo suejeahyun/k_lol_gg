@@ -206,3 +206,16 @@ test("the unified V4 phone callback ignores room and channel values while routin
   assert.doesNotMatch(JSON.stringify(sends), /first-room|other-room|first-channel|other-channel/u);
   assert.deepEqual(replies, ["ok", "ok"]);
 });
+
+test("admin and architecture copy distinguish V4 installation scope from the legacy room registry", () => {
+  const hub = readFileSync(resolve(import.meta.dirname, "../src/app/(admin)/admin/kakao/page.tsx"), "utf8");
+  const rooms = readFileSync(resolve(import.meta.dirname, "../src/app/(admin)/admin/kakao/rooms/page.tsx"), "utf8");
+  const architecture = readFileSync(resolve(import.meta.dirname, "../docs/architecture/KAKAO_V4_COMMAND_GATEWAY.md"), "utf8");
+
+  assert.match(hub, /레거시 방 권한/u);
+  assert.match(hub, /V1 strict R8\/V4는 프로필별 installation scope로 검증/u);
+  assert.match(rooms, /레거시 카카오 방·설치본 연결/u);
+  assert.match(rooms, /V4 command gateway[\s\S]+?raw room을 파싱하지 않고 프로필별 installation scope로 검증/u);
+  assert.match(rooms, /registry는 `\/api\/integrations\/kakao\/v4\/commands`의 권한이나 라우팅을 변경하지 않습니다/u);
+  assert.match(architecture, /현재 V4 command gateway는 room parser나 canonical room registry를 인증·라우팅에 사용하지 않는다/u);
+});

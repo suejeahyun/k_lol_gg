@@ -53,8 +53,10 @@ export type CreateGalleryInput = Readonly<Omit<GalleryContent, "id" | "revision"
 export interface MediaRepository {
   listPublicHighlights(query: MediaPublicListQuery): Promise<MediaPublicHighlightList>;
   getPublicHighlight(id: string): Promise<HighlightContent | null>;
+  findPublicHighlightUuidByLegacyId(legacyId: number): Promise<string | null>;
   listPublicGalleries(query: MediaPublicListQuery): Promise<MediaPublicGalleryList>;
   getPublicGallery(id: string): Promise<GalleryContent | null>;
+  findPublicGalleryUuidByLegacyId(legacyId: number): Promise<string | null>;
   listAdminHighlights(query: MediaAdminListQuery): Promise<MediaAdminList<HighlightContent>>;
   getAdminHighlight(id: string): Promise<HighlightContent | null>;
   listAdminGalleries(query: MediaAdminListQuery): Promise<MediaAdminList<GalleryContent>>;

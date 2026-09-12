@@ -84,7 +84,7 @@ TOTP 등록 관리자
 | `/admin/ai-requests` | 직접 DB: AI 요청 로그 | SUPER | 검색/필터/페이지 목록, 오류·빈 목록 | S13 |
 | `/admin/logs` | 직접 DB 및 `GET /api/admin/logs` | SUPER | 감사 로그 필터·페이지, 빈 목록; 서버 실패 전용 상태 없음 | S13 |
 | `/admin/logs/stats` | `GET /api/admin/logs/stats`와 통계 read model | SUPER | 로그 통계 대시보드; 로딩·오류·빈 상태를 V2에서 명시 | S13 |
-| `/admin/logs/kakao` | 직접 DB, 사이트 기능 플래그 | ADMIN | 카카오 로그 필터·목록·premium lock·빈 목록 | S09/S13 |
+| `/admin/logs/kakao` | 직접 DB, 사이트 기능 플래그 | SUPER | 카카오 로그 필터·목록·premium lock·빈 목록 | S09/S13 |
 
 ### 3.2 플레이어·계정·징계
 
@@ -147,14 +147,15 @@ TOTP 등록 관리자
 
 | 페이지 경로 | 관련 API/데이터 | 권한 | 핵심 상태·행동 | V2 순서 |
 |---|---|---|---|---:|
-| `/admin/kakao` | 직접 DB, Kakao 설정, private storage health | ADMIN | 운영센터 요약·설정 상태·최근 구인, 빈 상태 | S09 |
+| `/admin/kakao` | 직접 DB, Kakao 설정, private storage health | MIXED | 파티·스크림·이름 검색 통계는 ADMIN, 설정·처리 상태·보안 점검·방 권한은 SUPER | S09 |
 | `/admin/kakao/recruits` | 직접 DB, recruit reset/settings API | MIXED | 진행 구인·이력·페이지·빈 상태; 번호/전체 reset·자동화 설정은 SUPER | S09 |
-| `/admin/kakao/recruits/logs` | 직접 DB | ADMIN | 카카오 구인 로그 필터·페이지·빈 목록 | S09 |
-| `/admin/kakao/recruits/settings` | `GET/POST /api/admin/kakao/recruit-health`, recruit settings API | MIXED | 진단은 ADMIN, 안전 복구·reset 설정은 SUPER, 오류·빈 상태 | S09 |
+| `/admin/kakao/recruits/logs` | 직접 DB | SUPER | 카카오 구인 로그 필터·페이지·빈 목록 | S09 |
+| `/admin/kakao/recruits/settings` | `GET/POST /api/admin/kakao/recruit-health`, recruit settings API | SUPER | 진단·안전 복구·reset 설정, 오류·빈 상태 | S09 |
 | `/admin/kakao/scrims` | 직접 DB, `GET /api/admin/destruction-scrim-recruits` | ADMIN | 스크림 구인 목록·상태·빈 목록 | S09 |
 | `/admin/kakao/season-apply` → `/admin/seasons/kakao-pending` | `GET /api/admin/season-kakao-pending`, 상세·resolve·cancel | ADMIN 조회, SUPER 변경 | 보류 신청 목록·필터·상세 player picker·revision 안전 해결/취소 | S03/S09 |
-| `/admin/kakao/settings` | `GET/POST /api/admin/kakao/settings` | ADMIN | 카카오 운영 설정 조회·저장·오류 | S09 |
-| `/admin/kakao/stats` | `GET /api/admin/kakao/stats` | ADMIN | 운영 통계·기간/상태·오류·빈 데이터 | S09 |
+| `/admin/kakao/settings` | `GET/POST /api/admin/kakao/settings` | SUPER | 카카오 운영 설정 조회·저장·오류 | S09 |
+| `/admin/kakao/stats` | `GET /api/admin/kakao/stats`, `recruiting.parties.members_json` | ADMIN | 최근 365일·최대 1,000개 파티에서 이름 검색, 참여·상태·동반자 빈도, 오류·빈 데이터 | S09 |
+| `/admin/kakao/rooms` | 레거시 V2/V3 canonical Kakao 방 registry | SUPER | 레거시 방·설치본·기능 프로필 관리, 오류·빈 데이터. 현재 V1 strict R8/V4 권한·라우팅에는 미사용 | S09 |
 | `/admin/kakao/operation-forms` | 직접 DB | ADMIN | 4종 신청 건수와 분류 허브 | S09 |
 | `/admin/kakao/operation-forms/friends`<br>`/admin/kakao/operation-forms/leaves`<br>`/admin/kakao/operation-forms/meetups`<br>`/admin/kakao/operation-forms/suggestions` | operation-form 목록/상세 API | ADMIN | `/admin/operation-forms/**` 구현을 재사용하는 별칭, 상태 필터·빈 목록 | S09 |
 | `/admin/operation-forms` | 직접 DB | ADMIN | 4종 신청 분류 허브 | S09 |

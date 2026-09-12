@@ -36,6 +36,7 @@ import {
   updateGallery,
   updateHighlight,
   type GalleryContent,
+  type GalleryImageReference,
   type HighlightContent,
 } from "../domain/media-content";
 
@@ -81,6 +82,7 @@ function galleryFromRow(
   row: GalleryRow,
   imageAssetIds: readonly string[],
   externalImageUrls: readonly string[],
+  imageOrder?: readonly GalleryImageReference[],
 ): GalleryContent {
   return {
     id: row.id,
@@ -89,6 +91,7 @@ function galleryFromRow(
     description: row.description,
     imageAssetIds,
     externalImageUrls,
+    imageOrder,
     showOnHome: row.showOnHome,
     status: row.status,
   };
@@ -170,16 +173,22 @@ async function appendEvidence(
   });
 }
 
-async function imageIds(executor: DatabaseExecutor, galleryId: string) {
-  return (await executor.select({ id: mediaGalleryAssets.privateAssetId }).from(mediaGalleryAssets)
-    .where(eq(mediaGalleryAssets.galleryId, galleryId)).orderBy(asc(mediaGalleryAssets.ordinal))).map((row) => row.id);
-}
-
-async function externalImageUrls(executor: DatabaseExecutor, galleryId: string) {
-  return (await executor.select({ url: mediaGalleryExternalImages.sourceUrl })
-    .from(mediaGalleryExternalImages)
-    .where(eq(mediaGalleryExternalImages.galleryId, galleryId))
-    .orderBy(asc(mediaGalleryExternalImages.ordinal))).map((row) => row.url);
+async function galleryImageState(executor: DatabaseExecutor, galleryId: string) {
+  const [assets, externalImages] = await Promise.all([
+    executor.select({ assetId: mediaGalleryAssets.privateAssetId, ordinal: mediaGalleryAssets.ordinal })
+      .from(mediaGalleryAssets).where(eq(mediaGalleryAssets.galleryId, galleryId)).orderBy(asc(mediaGalleryAssets.ordinal)),
+    executor.select({ url: mediaGalleryExternalImages.sourceUrl, ordinal: mediaGalleryExternalImages.ordinal })
+      .from(mediaGalleryExternalImages).where(eq(mediaGalleryExternalImages.galleryId, galleryId)).orderBy(asc(mediaGalleryExternalImages.ordinal)),
+  ]);
+  const imageOrder = [
+    ...assets.map((entry) => ({ ...entry, reference: { kind: "ASSET" as const, assetId: entry.assetId } })),
+    ...externalImages.map((entry) => ({ ...entry, reference: { kind: "EXTERNAL" as const, url: entry.url } })),
+  ].sort((left, right) => left.ordinal - right.ordinal || ("assetId" in left ? -1 : 1)).map((entry) => Object.freeze(entry.reference));
+  return {
+    imageAssetIds: Object.freeze(assets.map((entry) => entry.assetId)),
+    externalImageUrls: Object.freeze(externalImages.map((entry) => entry.url)),
+    imageOrder: Object.freeze(imageOrder),
+  };
 }
 
 async function assertReadyAssets(
@@ -277,6 +286,15 @@ export class PostgresMediaRepository implements MediaRepository {
     return row ? highlightFromRow(row) : null;
   }
 
+  async findPublicHighlightUuidByLegacyId(legacyId: number) {
+    const row = (await this.database.select({ id: mediaHighlights.id }).from(mediaHighlights).where(and(
+      eq(mediaHighlights.legacyId, legacyId),
+      eq(mediaHighlights.status, "PUBLISHED"),
+    )).limit(1))[0];
+    if (!row) return null;
+    return await this.getPublicHighlight(row.id) ? row.id : null;
+  }
+
   async listPublicGalleries(query: MediaPublicListQuery) {
     const cursor = decodeGalleryCursor(query.cursor);
     const validAssets = sql<boolean>`(exists (
@@ -294,11 +312,10 @@ export class PostgresMediaRepository implements MediaRepository {
       cursor ? or(lt(mediaGalleries.publishedAt, cursor[0]), and(eq(mediaGalleries.publishedAt, cursor[0]), lt(mediaGalleries.id, cursor[1]))) : undefined,
     )).orderBy(desc(mediaGalleries.publishedAt), desc(mediaGalleries.id)).limit(query.pageSize + 1);
     const page = rows.slice(0, query.pageSize);
-    const items = await Promise.all(page.map(async (row) => galleryFromRow(
-      row,
-      await imageIds(this.database, row.id),
-      await externalImageUrls(this.database, row.id),
-    )));
+    const items = await Promise.all(page.map(async (row) => {
+      const images = await galleryImageState(this.database, row.id);
+      return galleryFromRow(row, images.imageAssetIds, images.externalImageUrls, images.imageOrder);
+    }));
     const last = page.at(-1);
     return {
       items,
@@ -316,11 +333,18 @@ export class PostgresMediaRepository implements MediaRepository {
         where ga."gallery_id" = ${mediaGalleries.id} and (pa."id" is null or pa."status" <> 'READY' or pa."purpose" <> 'GALLERY')
       )`,
     )).limit(1))[0];
-    return row ? galleryFromRow(
-      row,
-      await imageIds(this.database, row.id),
-      await externalImageUrls(this.database, row.id),
-    ) : null;
+    if (!row) return null;
+    const images = await galleryImageState(this.database, row.id);
+    return galleryFromRow(row, images.imageAssetIds, images.externalImageUrls, images.imageOrder);
+  }
+
+  async findPublicGalleryUuidByLegacyId(legacyId: number) {
+    const row = (await this.database.select({ id: mediaGalleries.id }).from(mediaGalleries).where(and(
+      eq(mediaGalleries.legacyId, legacyId),
+      eq(mediaGalleries.status, "PUBLISHED"),
+    )).limit(1))[0];
+    if (!row) return null;
+    return await this.getPublicGallery(row.id) ? row.id : null;
   }
 
   async listAdminHighlights(query: MediaAdminListQuery) {
@@ -343,21 +367,18 @@ export class PostgresMediaRepository implements MediaRepository {
     const totalPages = Math.max(1, Math.ceil(totalCount / query.pageSize));
     const currentPage = Math.min(query.page, totalPages);
     const rows = await this.database.select().from(mediaGalleries).where(predicate).orderBy(desc(mediaGalleries.updatedAt), desc(mediaGalleries.id)).limit(query.pageSize).offset((currentPage - 1) * query.pageSize);
-    const items = await Promise.all(rows.map(async (row) => galleryFromRow(
-      row,
-      await imageIds(this.database, row.id),
-      await externalImageUrls(this.database, row.id),
-    )));
+    const items = await Promise.all(rows.map(async (row) => {
+      const images = await galleryImageState(this.database, row.id);
+      return galleryFromRow(row, images.imageAssetIds, images.externalImageUrls, images.imageOrder);
+    }));
     return { items, totalCount, totalPages, currentPage, pageSize: query.pageSize };
   }
 
   async getAdminGallery(id: string) {
     const row = (await this.database.select().from(mediaGalleries).where(eq(mediaGalleries.id, id)).limit(1))[0];
-    return row ? galleryFromRow(
-      row,
-      await imageIds(this.database, row.id),
-      await externalImageUrls(this.database, row.id),
-    ) : null;
+    if (!row) return null;
+    const images = await galleryImageState(this.database, row.id);
+    return galleryFromRow(row, images.imageAssetIds, images.externalImageUrls, images.imageOrder);
   }
 
   async createHighlight(envelope: MediaCommandEnvelope, input: CreateHighlightInput, now: Date) {
@@ -424,8 +445,8 @@ export class PostgresMediaRepository implements MediaRepository {
         createdAt: now, updatedAt: now,
       }).returning())[0];
       if (!row) throw new Error("MEDIA_GALLERY_INSERT_FAILED");
-      await this.replaceGalleryAssets(transaction, row.id, input.imageAssetIds);
-      const content = galleryFromRow(row, input.imageAssetIds, []);
+      await this.replaceGalleryImages(transaction, row.id, input);
+      const content = galleryFromRow(row, input.imageAssetIds, input.externalImageUrls ?? [], input.imageOrder);
       await appendEvidence(transaction, envelope, "GALLERY", "MEDIA_GALLERY_CREATED", null, content);
       return { body: { gallery: content, revision: content.revision }, status: 201, revision: content.revision };
     });
@@ -436,11 +457,8 @@ export class PostgresMediaRepository implements MediaRepository {
       const row = await this.lockGallery(transaction, id);
       if (!row) throw new MediaServiceError("NOT_FOUND", "갤러리를 찾을 수 없습니다.");
       await assertReadyAssets(transaction, input.imageAssetIds, "GALLERY");
-      const current = galleryFromRow(
-        row,
-        await imageIds(transaction, id),
-        await externalImageUrls(transaction, id),
-      );
+      const currentImages = await galleryImageState(transaction, id);
+      const current = galleryFromRow(row, currentImages.imageAssetIds, currentImages.externalImageUrls, currentImages.imageOrder);
       let next: GalleryContent;
       try { next = updateGallery({ gallery: current, expectedRevision, ...input }); }
       catch (error) { this.rethrowDomain(error); }
@@ -449,8 +467,8 @@ export class PostgresMediaRepository implements MediaRepository {
         updatedByUserAccountId: envelope.actorUserAccountId, updatedAt: now,
       }).where(and(eq(mediaGalleries.id, id), eq(mediaGalleries.revision, expectedRevision))).returning())[0];
       if (!updated) throw new MediaServiceError("PRECONDITION_FAILED", "갤러리 revision이 변경되었습니다.");
-      await this.replaceGalleryAssets(transaction, id, next!.imageAssetIds);
-      const content = galleryFromRow(updated, next!.imageAssetIds, current.externalImageUrls ?? []);
+      await this.replaceGalleryImages(transaction, id, next!);
+      const content = galleryFromRow(updated, next!.imageAssetIds, next!.externalImageUrls ?? [], next!.imageOrder);
       await appendEvidence(transaction, envelope, "GALLERY", "MEDIA_GALLERY_UPDATED", snapshot(current), content);
       return { body: { gallery: content, revision: content.revision }, status: 200, revision: content.revision };
     });
@@ -460,11 +478,8 @@ export class PostgresMediaRepository implements MediaRepository {
     return this.idempotent(envelope, async (transaction) => {
       const row = await this.lockGallery(transaction, id);
       if (!row) throw new MediaServiceError("NOT_FOUND", "갤러리를 찾을 수 없습니다.");
-      const current = galleryFromRow(
-        row,
-        await imageIds(transaction, id),
-        await externalImageUrls(transaction, id),
-      );
+      const currentImages = await galleryImageState(transaction, id);
+      const current = galleryFromRow(row, currentImages.imageAssetIds, currentImages.externalImageUrls, currentImages.imageOrder);
       if (command === "PUBLISH") await assertReadyAssets(transaction, current.imageAssetIds, "GALLERY");
       let next: GalleryContent;
       try { next = transitionMediaStatus({ content: current, expectedRevision, command }); }
@@ -475,7 +490,7 @@ export class PostgresMediaRepository implements MediaRepository {
         updatedByUserAccountId: envelope.actorUserAccountId, updatedAt: now,
       }).where(and(eq(mediaGalleries.id, id), eq(mediaGalleries.revision, expectedRevision))).returning())[0];
       if (!updated) throw new MediaServiceError("PRECONDITION_FAILED", "갤러리 revision이 변경되었습니다.");
-      const content = galleryFromRow(updated, current.imageAssetIds, current.externalImageUrls ?? []);
+      const content = galleryFromRow(updated, current.imageAssetIds, current.externalImageUrls ?? [], current.imageOrder);
       await appendEvidence(transaction, envelope, "GALLERY", `MEDIA_GALLERY_${command}`, snapshot(current), content);
       return { body: { gallery: content, revision: content.revision }, status: 200, revision: content.revision };
     });
@@ -485,11 +500,8 @@ export class PostgresMediaRepository implements MediaRepository {
     return this.idempotent(envelope, async (transaction) => {
       const row = await this.lockGallery(transaction, id);
       if (!row) throw new MediaServiceError("NOT_FOUND", "갤러리를 찾을 수 없습니다.");
-      const current = galleryFromRow(
-        row,
-        await imageIds(transaction, id),
-        await externalImageUrls(transaction, id),
-      );
+      const currentImages = await galleryImageState(transaction, id);
+      const current = galleryFromRow(row, currentImages.imageAssetIds, currentImages.externalImageUrls, currentImages.imageOrder);
       let next: GalleryContent;
       try { next = setGalleryHomeDisplay({ gallery: current, expectedRevision, showOnHome }); }
       catch (error) { this.rethrowDomain(error); }
@@ -498,7 +510,7 @@ export class PostgresMediaRepository implements MediaRepository {
         updatedByUserAccountId: envelope.actorUserAccountId, updatedAt: now,
       }).where(and(eq(mediaGalleries.id, id), eq(mediaGalleries.revision, expectedRevision))).returning())[0];
       if (!updated) throw new MediaServiceError("PRECONDITION_FAILED", "갤러리 revision이 변경되었습니다.");
-      const content = galleryFromRow(updated, current.imageAssetIds, current.externalImageUrls ?? []);
+      const content = galleryFromRow(updated, current.imageAssetIds, current.externalImageUrls ?? [], current.imageOrder);
       await appendEvidence(transaction, envelope, "GALLERY", "MEDIA_GALLERY_HOME_DISPLAY_SET", snapshot(current), content);
       return { body: { gallery: content, revision: content.revision }, status: 200, revision: content.revision };
     });
@@ -512,10 +524,20 @@ export class PostgresMediaRepository implements MediaRepository {
     return (await transaction.select().from(mediaGalleries).where(eq(mediaGalleries.id, id)).for("update").limit(1))[0] ?? null;
   }
 
-  private async replaceGalleryAssets(transaction: V2Transaction, galleryId: string, ids: readonly string[]) {
+  private async replaceGalleryImages(transaction: V2Transaction, galleryId: string, content: Pick<GalleryContent, "imageAssetIds" | "externalImageUrls" | "imageOrder">) {
     await transaction.delete(mediaGalleryAssets).where(eq(mediaGalleryAssets.galleryId, galleryId));
-    if (ids.length > 0) {
-      await transaction.insert(mediaGalleryAssets).values(ids.map((privateAssetId, ordinal) => ({ galleryId, privateAssetId, ordinal })));
+    await transaction.delete(mediaGalleryExternalImages).where(eq(mediaGalleryExternalImages.galleryId, galleryId));
+    const order = content.imageOrder ?? [
+      ...content.imageAssetIds.map((assetId) => ({ kind: "ASSET" as const, assetId })),
+      ...(content.externalImageUrls ?? []).map((url) => ({ kind: "EXTERNAL" as const, url })),
+    ];
+    const assets = order.flatMap((entry, ordinal) => entry.kind === "ASSET" ? [{ galleryId, privateAssetId: entry.assetId, ordinal }] : []);
+    const externalImages = order.flatMap((entry, ordinal) => entry.kind === "EXTERNAL" ? [{ galleryId, sourceUrl: entry.url, ordinal }] : []);
+    if (assets.length > 0) {
+      await transaction.insert(mediaGalleryAssets).values(assets);
+    }
+    if (externalImages.length > 0) {
+      await transaction.insert(mediaGalleryExternalImages).values(externalImages);
     }
   }
 

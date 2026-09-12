@@ -39,12 +39,12 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
   const result = parsed.ok && repository ? await repository.listAdmin(parsed.value, viewerRole).catch(() => null) : null;
   return (
     <main className={styles.page}>
-      <header className={styles.header}><div><span className={styles.eyebrow}><UsersRound aria-hidden="true" /> S01 · ACCOUNT OPERATIONS</span><h1>사용자 계정</h1><p>가입 승인, 역할, 복구 요청과 소프트 삭제를 한 곳에서 revision 기반으로 관리합니다.</p></div><Link className={styles.ghostLink} href="/admin/players"><UserCheck aria-hidden="true" /> 플레이어 등록부</Link></header>
+      <header className={styles.header}><div><span className={styles.eyebrow}><UsersRound aria-hidden="true" /> S01 · 계정 운영</span><h1>사용자 계정</h1><p>가입 승인, 역할, 복구 요청과 소프트 삭제를 한 곳에서 변경 버전으로 안전하게 관리합니다.</p></div><Link className={styles.ghostLink} href="/admin/players"><UserCheck aria-hidden="true" /> 플레이어 등록부</Link></header>
       <form className={styles.search} action="/admin/users" method="get" role="search">
         <label>계정 검색<input name="q" type="search" maxLength={100} defaultValue={parsed.ok ? parsed.value.query : ""} placeholder="아이디, 회원명, Riot ID, V1 번호" /></label>
         <label>상태<select name="status" defaultValue={parsed.ok ? parsed.value.status : "ALL"}><option value="ALL">전체 상태</option><option value="PENDING">승인 대기</option><option value="APPROVED">승인됨</option><option value="REJECTED">거절됨</option><option value="SUSPENDED">이용 제한</option></select></label>
         <button className={styles.primaryLink} type="submit"><Search aria-hidden="true" /> 조회</button>
-        <label>역할<select name="role" defaultValue={parsed.ok ? parsed.value.role : "ALL"}><option value="ALL">전체 역할</option><option value="USER">일반 사용자 (USER)</option><option value="ADMIN">관리자 (ADMIN)</option><option value="SUPER_ADMIN">최고 관리자 (SUPER_ADMIN)</option></select></label>
+        <label>역할<select name="role" defaultValue={parsed.ok ? parsed.value.role : "ALL"}><option value="ALL">전체 역할</option><option value="USER">일반 사용자</option><option value="ADMIN">관리자</option><option value="SUPER_ADMIN">최고 관리자</option></select></label>
         <label>삭제 범위<select name="deleted" defaultValue={parsed.ok ? parsed.value.deleted : "ACTIVE"}><option value="ACTIVE">활성 계정</option><option value="DELETED">삭제 계정</option><option value="ALL">모두</option></select></label>
       </form>
       {!parsed.ok ? <section className={styles.state} data-tone="error" role="alert"><Search aria-hidden="true" /><h2>조회 조건을 확인해 주세요.</h2><p>각 조건은 한 번만 전달하고 허용된 상태·역할·페이지 값만 사용해 주세요.</p><Link className={styles.ghostLink} href="/admin/users">조건 초기화</Link></section>

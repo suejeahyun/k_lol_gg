@@ -24,7 +24,7 @@ export function AccountShell({ activeTab, title, description, status, action, ch
 }>) {
   return <div className={styles.page}>
     <header className={styles.accountHero}>
-      <div><span className={styles.eyebrow}><ShieldCheck aria-hidden="true" /> MY ACCOUNT</span><h1>{title}</h1><p>{description}</p></div>
+      <div><span className={styles.eyebrow}><ShieldCheck aria-hidden="true" /> 내 계정</span><h1>{title}</h1><p>{description}</p></div>
       {(status || action) ? <div className={styles.accountHeroActions}>{status ? <span className={styles.status} data-state={status.state}>{status.label}</span> : null}{action}</div> : null}
     </header>
     <nav className={styles.tabs} aria-label="계정 메뉴">{tabs.map((tab) => { const Icon = tab.icon; return <Link href={tab.href} aria-current={activeTab === tab.id ? "page" : undefined} key={tab.id}><Icon aria-hidden="true" /> {tab.label}</Link>; })}</nav>

@@ -22,6 +22,17 @@
 .state { padding: 38px; border: 1px dashed var(--border); border-radius: 20px; text-align: center; background: #fff; }
 .panel { display: grid; gap: 16px; padding: 22px; border: 1px solid var(--border); border-radius: 22px; background: #fff; }
 .panel h2,.panel p { margin: 0; }
+.importPanel { display: block; padding: 0; }
+.importSummary { display: flex; min-height: 76px; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 22px; cursor: pointer; list-style: none; }
+.importSummary::-webkit-details-marker { display: none; }
+.importSummary div { display: grid; gap: 5px; }
+.importSummary h2,.importSummary p { margin: 0; }
+.importSummary p { color: var(--text-muted); font-size: 13px; font-weight: 600; }
+.importSummary > span { flex: 0 0 auto; padding: 8px 12px; border: 1px solid var(--border); border-radius: 11px; color: var(--text-accent); background: var(--sky); font-size: 12px; font-weight: 850; }
+.importPanel[open] .importSummary { border-bottom: 1px solid var(--border); }
+.importPanel[open] .importSummary > span { font-size: 0; }
+.importPanel[open] .importSummary > span::after { content: "접기"; font-size: 12px; }
+.importBody { display: grid; gap: 16px; padding: 22px; }
 .form { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
 .form label { display: grid; gap: 6px; color: var(--text-muted); font-size: 13px; font-weight: 800; }
 .form input,.form select,.form textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--input); border-radius: 12px; background: #fff; }
@@ -75,6 +86,8 @@
 .advanced pre { overflow: auto; max-height: 360px; margin: 0; padding: 14px; border-top: 1px solid var(--border); background: #152237; color: #e6f2ff; font: 12px/1.55 ui-monospace,monospace; }
 .actions { display: flex; flex-wrap: wrap; gap: 9px; }
 .actions button,.actions a { padding: 10px 14px; border: 1px solid var(--border); border-radius: 12px; background: #fff; font-weight: 850; text-decoration: none; cursor: pointer; }
+.actions .action { color: #fff; border-color: var(--primary); background: var(--primary); }
+.actions .action:disabled { color: #66758b; border-color: #d8e1ed; background: #e9eef5; cursor: not-allowed; }
 .actions button[data-danger="true"] { color: #fff; border-color: var(--destructive); background: var(--destructive); }
 .message { padding: 12px 14px; border-radius: 13px; color: #315e78; background: var(--sky); }
 .message[data-error="true"] { color: #8d3c53; background: #ffe8ee; }

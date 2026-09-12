@@ -36,6 +36,21 @@ export type PublicPlayerStatistics = Readonly<{
     winRate: number;
     mvpCount: number;
   }>;
+  performance: Readonly<{
+    gameCount: number;
+    averageKills: number | null;
+    averageDeaths: number | null;
+    averageAssists: number | null;
+    averageKda: number | null;
+    averageBalanceScore: number | null;
+    assignmentGames: Readonly<{
+      main: number;
+      sub: number;
+      all: number;
+      nonPreferred: number;
+      unclassified: number;
+    }>;
+  }>;
   champions: readonly Readonly<{
     championKey: string;
     championName: string;
