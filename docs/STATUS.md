@@ -1,13 +1,13 @@
 # K-LOL.GG V2 상태
 
 - 운영 자동승인 확인 시각: 2026-09-11T20:41:16.240Z (2026-09-12 05:41:16 KST)
-- 운영 검증 기능 기준: `fa6d4f2875857ce7b1a3981f932738a42d35165b`
-- 릴리스 tag: `kakao-inhouse-round-metadata-v1.0.0`
-- 현재 단계: Kakao 내전 시간·공지 보존 서버·DB 운영 배포 완료, 휴대폰 R7 설치와 실제 Kakao canary 대기
+- 운영 검증 기능 기준: `0bb0751cf574c6bd425d743d0d0b226fdefc6124`
+- 릴리스 tag: `super-admin-role-management-v1.0.0`
+- 현재 단계: SUPER_ADMIN 사용자 역할 관리 운영 배포 완료
 - V1 코드 복사: 없음. V1은 기능 목록과 동등성 대조 근거로만 사용
 - V1 기준선: 블루·블랙 Vercel 기준선 저장소를 변경하지 않음
-- 운영 Vercel: 배포 `dpl_CaAJrnSE83TMz946UYNLQSrzJZme`, 불변 URL `https://k-lol-387y1tt37-tjdmswo11-3715s-projects.vercel.app`, deployment `Ready`
-- 운영 별칭: `https://k-lol-gg.vercel.app`, `2026-09-12T04:50:05.411Z`에 `/api/health` HTTP 200·JSON `status: ready` 확인
+- 운영 Vercel: 배포 `dpl_12eHDAaSAKUZ5UKtTpyV4g24xL5D`, 불변 URL `https://k-lol-aesm5bw3i-tjdmswo11-3715s-projects.vercel.app`, deployment `Ready`
+- 운영 별칭: `https://k-lol-gg.vercel.app`, `2026-09-12T10:46:28.090Z`에 `/api/health` HTTP 200·JSON `status: ready` 확인
 - 운영 DB: migration 38개, head `0037_swift_brood` 확인
 - Kakao 구인·내전 입력 복구: `v1.0.1` 사이트·서버 운영 배포와 health 확인 완료
 - 휴대폰 Kakao V1 strict R7: `PENDING_USER_INSTALL`; MessengerBot R 설치·실제 Kakao 송수신은 미확인
@@ -21,7 +21,7 @@
 - 이후 추가된 3개 화면을 포함한 현재 103개 화면 335회의 로그인·관리자 포함 실캡처는 아직 실행하지 않았다. 합성 fixture와 캡처 계획만 생성했다. 운영 공개 화면 10개 경로의 desktop·mobile·narrow 자동 품질은 30/30, issues 0, axe 위반 0이다. 로컬 전체 높이 캡처는 27/30 PASS이며 로컬 DB가 필요한 `/competitions` 3개 조건은 BLOCKED로 별도 유지한다.
 - 관리자 페이지는 익명·ACCOUNT 세션을 거부하고 ADMIN/SUPER_ADMIN 역할 경계를 유지한다.
 - 현재 저장소 기준 최종 `npm run check`에서 계약 테스트 347/347, 단위 테스트 707 pass·1 intentional skip, production build 92 app routes가 통과했다.
-- migration journal과 SQL은 각각 37개로 일치하고 `npm run test:db`가 통과했으며, 저장소 migration head는 `0036_flowery_hairball`이다.
+- migration journal과 SQL은 각각 38개로 일치하고 `npm run test:db`가 통과했으며, 저장소 migration head는 `0037_swift_brood`이다.
 - 같은 DB 검사에서 Kakao V4 P0 31/31과 recovery archive 검증이 통과했다.
 - 운영 배포된 Kakao 입력 복구 릴리스는 구인 운영일을 KST 오전 6시 경계로 계산한다. 이는 이전 행을 삭제하는 초기화가 아니라 새 운영일 조회에서 이전 운영일 구인을 제외하는 논리 리셋이다.
 - 구인 참가자 추가·수정·빈 슬롯 삭제·마감 성공 뒤 최신 전체 현황을 이어서 표시하며, 후속 현황 조회만 실패하면 mutation 성공은 유지하고 재조회 안내를 표시한다.
@@ -30,6 +30,7 @@
 - Kakao 내전 회차는 종목·정원·시작 시간·공지·revision을 별도 저장하고, 전체 양식의 명단 추가·수정·취소와 같은 transaction에서 갱신한다. `내전현황`과 상세는 저장값을 출력하며 기존 메타데이터 없는 회차만 협곡·21:00·10명 fallback을 사용한다.
 - 내전 시간·공지 릴리스의 최신 검증은 V1 strict 14/14, parser/dispatcher 44/44, 전체 DB 계약 PASS이며 전체 `npm run check`는 725개 중 724 PASS·DB 전용 1개 intentional skip, production build 92 pages PASS다.
 - 운영 Neon은 자동 만료 복구 분기 `pre-0037-inhouse-metadata-20260912` 생성 후 `0037_swift_brood`를 적용했다. 사후 조회에서 migration hash, 신규 테이블, 인덱스 3개와 세 종목 제약을 확인했다.
+- SUPER_ADMIN은 사용자 계정 목록의 `관리자 지정`에서 APPROVED·미삭제 USER를 플레이어 연결 여부와 관계없이 ADMIN으로 변경할 수 있다. 역할 UI는 SUPER_ADMIN에게만 표시하고 일반 ADMIN은 입력 검증 전에 403으로 차단한다. 변경 시 기존 세션 폐기, revision·멱등성·감사 로그와 다음 관리자 로그인 TOTP 등록을 유지한다.
 - 운영 Neon production은 비밀값 비노출 read-only preflight에서 기존 migration 35개, CONNECTED identity·owner 중복과 player-owner mismatch 0을 확인했다. 자동 만료 1일 복구 분기 `pre-0035-0036-20260911` 생성 후 `0035`·`0036`을 단일 transaction으로 적용했다.
 - 운영 DB 사후 검증은 migration 37개, head hash `ebb200d8597ed63d270c2a66a7369dd67d3536c238939458aeed337028bdc63f`, Riot unique index 2개, player-owner index 1개, validated foreign key 1개이며 중복·mismatch는 모두 0이다.
 - Drizzle TypeScript 스키마와 최신 snapshot은 101개 테이블을 정의한다.
