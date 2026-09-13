@@ -20,6 +20,7 @@ var KLOL_V1_GATEWAY = (function () {
   var currentLogId = "";
   var currentUserHash = "";
   var currentSender = "";
+  var currentDelivery = null;
   var deliveryCache = {};
   var deliveryCacheOrder = [];
   var DELIVERY_CACHE_LIMIT = 256;
@@ -93,6 +94,7 @@ var KLOL_V1_GATEWAY = (function () {
     currentLogId = clean(logId);
     currentUserHash = clean(userHash);
     currentSender = clean(sender);
+    currentDelivery = null;
   }
 
   function installationId(profileId) {
@@ -162,6 +164,7 @@ var KLOL_V1_GATEWAY = (function () {
   function send(profileId, text, sender) {
     var keyId = setting(SIGNING_KEY_ID_KEY) || "current";
     var item = delivery(profileId, text, sender);
+    currentDelivery = item;
     var material = CONTRACT + "\n" + keyId + "\n" + sha256(item.body);
     var responseValue = org.jsoup.Jsoup.connect(baseUrl() + ENDPOINT)
       .ignoreContentType(true)
@@ -176,13 +179,23 @@ var KLOL_V1_GATEWAY = (function () {
       .requestBody(item.body)
       .execute();
     var responseText = String(responseValue.body() || "");
+    var responseStatus = responseValue.statusCode();
+    var replayed = clean(responseValue.header("Idempotency-Replayed")) === "true";
     return {
-      ok: responseValue.statusCode() >= 200 && responseValue.statusCode() < 300,
-      status: responseValue.statusCode(),
+      ok: responseStatus >= 200 && responseStatus < 300,
+      status: responseStatus,
       body: parseJson(responseText),
       traceId: clean(responseValue.header("X-Trace-Id")),
-      replayed: clean(responseValue.header("Idempotency-Replayed")) === "true"
+      replayed: replayed
     };
+  }
+
+  function shouldSuppressReply() {
+    return Boolean(currentDelivery && currentDelivery.replySent);
+  }
+
+  function markReplySent() {
+    if (currentDelivery) currentDelivery.replySent = true;
   }
 
   function replyText(result) {
@@ -195,6 +208,8 @@ var KLOL_V1_GATEWAY = (function () {
   return {
     beginRequest: beginRequest,
     replyText: replyText,
-    send: send
+    send: send,
+    shouldSuppressReply: shouldSuppressReply,
+    markReplySent: markReplySent
   };
 }());

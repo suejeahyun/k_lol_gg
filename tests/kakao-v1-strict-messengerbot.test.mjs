@@ -84,6 +84,8 @@ function makeRuntime({ responseBody = { reply: "[V1 server reply]" }, responseSt
     ...Object.entries(settings)
   ]);
   const http = { calls: 0, url: "", timeout: 0, body: "", headers: {} };
+  const seenEventIds = new Set();
+  let lastResponseReplayed = false;
 
   function JavaString(value) {
     this.value = String(value);
@@ -164,10 +166,13 @@ function makeRuntime({ responseBody = { reply: "[V1 server reply]" }, responseSt
             },
             execute() {
               if (executeError) throw executeError;
+              const eventId = JSON.parse(http.body).eventId;
+              lastResponseReplayed = seenEventIds.has(eventId);
+              seenEventIds.add(eventId);
               return {
                 statusCode: () => responseStatus,
                 body: () => rawResponseText === undefined ? JSON.stringify(responseBody) : rawResponseText,
-                header: () => ""
+                header: (name) => name === "Idempotency-Replayed" && lastResponseReplayed ? "true" : ""
               };
             }
           };
@@ -199,6 +204,7 @@ function evaluate(source, options) {
 function replyFor(runtime, message, options = {}) {
   const replies = [];
   const replier = { reply: (value) => replies.push(String(value)) };
+  runtime.__testLogCounter = Number(runtime.__testLogCounter || 0) + 1;
   runtime.response(
     options.room ?? "K롤방 구인구직방",
     message,
@@ -208,7 +214,7 @@ function replyFor(runtime, message, options = {}) {
     options.imageDB ?? {},
     "com.kakao.talk",
     false,
-    options.logId ?? "log-1",
+    options.logId ?? `log-${runtime.__testLogCounter}`,
     "channel",
     options.userHash ?? "user-hash"
   );
@@ -390,7 +396,7 @@ test("local replies, echo rules, events, and no-reply behavior equal the canonic
   }
   assert.deepEqual(
     replyFor(strict, "봇버전"),
-    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R11_2026_09_13_ALL_MODE_DRAFT"],
+    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R12_2026_09_13_TRANSCRIPT_DEDUPE"],
   );
 });
 
@@ -433,6 +439,43 @@ test("inhouse and scrim member shortcuts reach the matching profile gateway", as
     assert.deepEqual(replyFor(strict, message), ["[명단 변경 완료]"], message);
     assert.equal(JSON.parse(strict.http.body).profileId, profileId, message);
   }
+});
+
+test("reported inhouse loading echo is ignored while user commands and explicit member edits keep one reply", async () => {
+  const artifact = await readFile(artifactPath, "utf8");
+  const strict = evaluate(artifact, { responseBody: { reply: "[K-LOL.GG 정상 응답]" } });
+
+  for (const loading of ["내전구인 양식 불러오는 중…", "내전구인 양식 불러오는 중..."]) {
+    assert.equal(strict.isOpenChatBotInhouseLoadingNotice(loading, "오픈채팅봇"), true, loading);
+    assert.deepEqual(replyFor(strict, loading, { sender: "오픈채팅봇" }), [], loading);
+  }
+  assert.equal(strict.http.calls, 0);
+
+  assert.equal(strict.isOpenChatBotInhouseLoadingNotice("/내전구인", "운영진. 94 은지 U(U)"), false);
+  assert.deepEqual(replyFor(strict, "/내전구인", { sender: "운영진. 94 은지 U(U)" }), ["[K-LOL.GG 정상 응답]"]);
+  assert.deepEqual(replyFor(strict, "/내전구인 증바람", { sender: "운영진. 94 은지 U(U)" }), ["[K-LOL.GG 정상 응답]"]);
+  assert.deepEqual(replyFor(strict, "내전상세 2 추가 은지", { sender: "운영진. 94 은지 U(U)" }), ["[K-LOL.GG 정상 응답]"]);
+  assert.equal(strict.http.calls, 3);
+
+  assert.equal(strict.parseMemberMutationCommand("2 추가 은지"), null);
+  assert.deepEqual(replyFor(strict, "2 추가 은지", { sender: "운영진. 94 은지 U(U)" }), []);
+  assert.equal(strict.http.calls, 3);
+});
+
+test("same MessengerBot logId replay suppresses only the duplicate visible reply", async () => {
+  const artifact = await readFile(artifactPath, "utf8");
+  const strict = evaluate(artifact, { responseBody: { reply: "[K-LOL.GG 내전 종목 선택]" } });
+  const options = { sender: "운영진. 94 은지 U(U)", logId: "same-kakao-notification-1" };
+
+  assert.deepEqual(replyFor(strict, "/내전구인", options), ["[K-LOL.GG 내전 종목 선택]"]);
+  assert.deepEqual(replyFor(strict, "/내전구인", options), []);
+  assert.equal(strict.http.calls, 2, "the server receives the retry and marks it replayed");
+
+  assert.deepEqual(
+    replyFor(strict, "/내전구인 증바람", { ...options, logId: "different-kakao-notification-2" }),
+    ["[K-LOL.GG 내전 종목 선택]"],
+  );
+  assert.equal(strict.http.calls, 3, "a different real Kakao log remains independently replyable");
 });
 
 test("ambiguous party member text never reaches the mutation gateway", async () => {

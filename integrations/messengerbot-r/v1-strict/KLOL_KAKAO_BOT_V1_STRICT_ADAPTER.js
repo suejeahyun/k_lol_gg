@@ -1,6 +1,6 @@
 /* eslint-disable */
 /* V1-visible constants. No legacy endpoint or bearer secret is retained. */
-var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R11_2026_09_13_ALL_MODE_DRAFT";
+var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R12_2026_09_13_TRANSCRIPT_DEDUPE";
 var BASE_URL = "https://k-lol-gg.vercel.app";
 var WEB_INHOUSE_RESULT_UPLOAD_URL = BASE_URL + "/matches/submit";
 var WEB_ADMIN_DISCIPLINE_CREATE_URL = BASE_URL + "/admin/discipline/new";
@@ -24,6 +24,13 @@ var lastRecruitHash = "";
 var OPERATION_FORM_SAVE_KEY = "KLOL_OPERATION_FORM_LAST_HASH_V1";
 var lastOperationFormHash = "";
 var KLOL_V1_OPERATION_RAW_TEXT = "";
+
+function isOpenChatBotInhouseLoadingNotice(text, sender) {
+  var normalizedSender = trimText(normalizeText(String(sender || "")));
+  var normalizedText = trimText(normalizeText(String(text || ""))).replace(/[ \t]+/g, " ");
+  return normalizedSender.indexOf("\uC624\uD508\uCC44\uD305\uBD07") >= 0 &&
+    /^\uB0B4\uC804\uAD6C\uC778 \uC591\uC2DD \uBD88\uB7EC\uC624\uB294 \uC911(?:\u2026|\.{3})?$/.test(normalizedText);
+}
 
 function v1GatewaySucceeded(result) {
   return Boolean(result && result.ok && v1GatewayFailureStatus(result) < 400 && (!result.body || result.body.ok !== false));

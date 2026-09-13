@@ -1,4 +1,4 @@
-# MessengerBot R V1 strict R11 설치 안내
+# MessengerBot R V1 strict R12 설치 안내
 
 ## 현재 설치본
 
@@ -6,7 +6,7 @@
 
 `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js`
 
-`integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js`는 비밀값이 없는 공개 검토·생성 기준 파일이다. 휴대폰 설치에는 이 공개 파일이나 과거 R9 파일을 사용하지 말고, 위 `.private` R11 파일만 사용한다.
+`integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js`는 비밀값이 없는 공개 검토·생성 기준 파일이다. 휴대폰 설치에는 이 공개 파일이나 과거 R9/R11 파일을 사용하지 말고, 위 `.private` R12 파일만 사용한다.
 
 이 설치본은 사용자가 제공한 V1/V40의 명령 판정, 양식, 정상 응답과 무응답 동작을 유지하고 HTTP 전송 경계만 현재 V4 서명 API로 연결한다. `TRANSPORT`, `ADAPTER`, V41 또는 V4 파일을 함께 붙이지 않는다.
 
@@ -23,7 +23,7 @@
 2. 기존 소스를 휴대폰 밖의 안전한 장소에 백업한다.
 3. 소스 편집기의 내용을 전체 선택해 완전히 지운다.
 4. `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js`의 첫 글자부터 마지막 글자까지 한 번에 붙여 넣는다.
-5. 파일 안에서 `KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R11_2026_09_13_ALL_MODE_DRAFT`를 검색한다.
+5. 파일 안에서 `KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R12_2026_09_13_TRANSCRIPT_DEDUPE`를 검색한다.
 6. 마지막 줄이 `response.__kakaoBotEntryPoint = true;`인지 확인한다.
 7. 저장·컴파일 후 봇을 다시 시작한다.
 8. 같은 봇 프로필의 응답 대상에 구인구직방과 기능방 두 곳만 활성화한다.
@@ -35,8 +35,8 @@
 
 | 용도 | 파일 | LF 문자 | CRLF 문자 | 물리 줄 | SHA-256 |
 | --- | --- | ---: | ---: | ---: | --- |
-| 공개 검토·생성 기준, 설치 금지 | `integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js` | 63,517 | 65,371 | 1,855 | `b2e7e214f949f766b48eb8fe530a8b27f2459debfc5c61cd03f79977e1e67db7` |
-| 휴대폰 한 번 붙여넣기 | `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js` | 61,135 | 62,912 | 1,778 | `fb21ea0aeb65f7f878b080edea8b099bc7409b3a3042551af5e72a021c0516bf` |
+| 공개 검토·생성 기준, 설치 금지 | `integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js` | 63,537 | 65,350 | 1,814 | `e061d81a56e1f4a6801ea0035b030730a320a3a29a9839b03e23b7ef3485d00e` |
+| 휴대폰 한 번 붙여넣기 | `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js` | 61,368 | 63,173 | 1,806 | `646b04dbbc101656b0d4a9e87b4068bab2eb32c6611d0ad62b9068c774d8a9c4` |
 
 두 파일 모두 LF와 CRLF에서 MessengerBot R의 65,535자 제한보다 작다. 빌드가 두 줄바꿈 형식과 ES5 parser, Rhino `CODE_HAS_NO_SIDE_EFFECTS` 후보를 모두 검사한다. V1 원본의 실행·주석 줄은 유지하고 의미 없는 빈 줄만 제거했다.
 

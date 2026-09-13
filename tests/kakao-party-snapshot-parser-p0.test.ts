@@ -183,12 +183,12 @@ test("metadata-only party activation forms accept slash and keep organizer separ
   }
 });
 
-test("the full production party template classifies as one metadata activation snapshot", () => {
+test("the reported #11 party template classifies as one metadata activation snapshot", () => {
   const text = [
     "[K-LOL.GG 구인구직 양식]", "같이 할사람~", "",
     "아래 양식의 모집번호는 유지해서 작성해주세요.", "",
-    "📢 5인 파티 구인", "모집번호: #7", "운영일: 2026-09-13", "",
-    "》시작시간 : 모바시", "》게임정보 : 증칼", "》주최자 : TEST", "",
+    "📢 5인 파티 구인", "모집번호: #11", "운영일: 2026-09-13", "",
+    "》시작시간 : test", "》게임정보 :test", "》주최자 :test", "",
     "위 항목을 작성해 전체 전송해주세요.",
     "비워 둔 시간과 게임 정보는 자동으로 채워집니다.",
     "활성화 후 상세 번호 추가 이름으로 참가할 수 있습니다.", "",
@@ -206,11 +206,11 @@ test("the full production party template classifies as one metadata activation s
   assert.equal(classification.kind, "SNAPSHOT");
   assert.equal(classification.kind === "SNAPSHOT" ? classification.command : null, "PARTY_SNAPSHOT");
   if (!canonical || canonical.domain !== "PARTY" || canonical.action !== "SYNC") assert.fail("expected party metadata activation");
-  assert.deepEqual(canonical.target, { recruitDate: "2026-09-13", recruitNumber: 7 });
+  assert.deepEqual(canonical.target, { recruitDate: "2026-09-13", recruitNumber: 11 });
   assert.deepEqual(canonical.payload.members, []);
-  assert.equal(canonical.payload.startTimeText, "모바시");
-  assert.equal(canonical.payload.gameInfo, "증칼");
-  assert.equal(canonical.payload.organizerText, "TEST");
+  assert.equal(canonical.payload.startTimeText, "test");
+  assert.equal(canonical.payload.gameInfo, "test");
+  assert.equal(canonical.payload.organizerText, "test");
 });
 
 test("generated operating day wins across the 06:00 boundary while legacy forms keep fallback behavior", () => {

@@ -106,7 +106,15 @@ function withoutBlankLines(value) {
 }
 
 function compactBundleSource(value) {
-  return value.replace(/\/\*(?! eslint-disable \*\/)[\s\S]*?\*\//gu, "").replace(/^ {2}/gmu, "");
+  return value.replace(/\/\*(?! eslint-disable \*\/)[\s\S]*?\*\//gu, "").replace(/^[ \t]+/gmu, "");
+}
+
+function compactStringArray(values) {
+  const rows = [];
+  for (let index = 0; index < values.length; index += 12) {
+    rows.push(values.slice(index, index + 12).map((value) => JSON.stringify(value)).join(","));
+  }
+  return `[${rows.join(",\n")}]`;
 }
 
 const source = await readFile(fixturePath, "utf8");
@@ -202,20 +210,25 @@ const provenance = [
   `var KLOL_V1_SOURCE_COMMIT = "${sourceCommit}";`,
   `var KLOL_V1_SOURCE_SHA256 = "${sourceSha256Lf}";`,
   `var KLOL_V1_EXTRACTED_SHA256 = "${sha256(withoutBlankLines(extracted.join("\n\n")))}";`,
-  "var KLOL_V1_SOURCE_FUNCTIONS = [",
-  extractedNames.map((name) => `  "${name}"`).join(",\n"),
-  "];",
-  "var KLOL_V1_TRANSPORT_SEAMS = [",
-  [...transportSeamNames].map((name) => `  "${name}"`).join(",\n"),
-  "];"
+  `var KLOL_V1_SOURCE_FUNCTIONS = ${compactStringArray(extractedNames)};`,
+  `var KLOL_V1_TRANSPORT_SEAMS = ${compactStringArray([...transportSeamNames])};`
 ].join("\n");
 const entry = [
   "function response(room, msg, sender, isGroupChat, replier, imageDB, packageName, isMention, logId, channelId, userHash) {",
   "  KLOL_V1_GATEWAY.beginRequest(logId, userHash, sender);",
+  "  if (isOpenChatBotInhouseLoadingNotice(msg, sender)) return;",
+  "  var sourceReplier = replier;",
+  "  var guardedReplier = {",
+  "    reply: function (value) {",
+  "      if (KLOL_V1_GATEWAY.shouldSuppressReply()) return;",
+  "      sourceReplier.reply(value);",
+  "      KLOL_V1_GATEWAY.markReplySent();",
+  "    }",
+  "  };",
   "  KLOL_V1_OPERATION_RAW_TEXT = String(msg || \"\");",
   "  try {",
-  "    if (handleMemberMutationCommand(msg, room, sender, replier)) return;",
-  "    v1SourceResponse(room, msg, sender, isGroupChat, replier, imageDB, packageName);",
+  "    if (handleMemberMutationCommand(msg, room, sender, guardedReplier)) return;",
+  "    v1SourceResponse(room, msg, sender, isGroupChat, guardedReplier, imageDB, packageName);",
   "  } finally {",
   "    KLOL_V1_OPERATION_RAW_TEXT = \"\";",
   "  }",
@@ -302,8 +315,15 @@ if (!output.includes("isPartyRecruitFormMessageWithoutSeasonSnapshot")) {
 if (!output.includes("function isPartyMetadataActivationForm(text)")) {
   throw new Error("V1-strict output must route metadata-only party activation forms");
 }
-if (!output.includes("if (handleMemberMutationCommand(msg, room, sender, replier)) return;")) {
+if (!output.includes("if (handleMemberMutationCommand(msg, room, sender, guardedReplier)) return;")) {
   throw new Error("V1-strict output must route explicit member mutations before the V1 dispatcher");
+}
+if (!output.includes("if (isOpenChatBotInhouseLoadingNotice(msg, sender)) return;")) {
+  throw new Error("V1-strict output must ignore the OpenChat bot's in-house loading notice");
+}
+if (!output.includes("if (KLOL_V1_GATEWAY.shouldSuppressReply()) return;") ||
+    !output.includes("KLOL_V1_GATEWAY.markReplySent();")) {
+  throw new Error("V1-strict output must suppress only callbacks whose visible reply was already sent");
 }
 if (!output.includes("추가: 상세 번호 추가 이름") || !output.includes("삭제: 상세 번호 삭제 이름")) {
   throw new Error("V1-strict output must document the approved party member mutation commands");
