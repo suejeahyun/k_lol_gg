@@ -406,20 +406,26 @@ test("concurrent V4 party member commands serialize on the locked latest aggrega
   try {
     await applyMigrations(database);
     await handler.handle(v4Command("CREATE_PARTY", {
-      recruitDate: new Date().toISOString().slice(0, 10), resetSequence: 0, recruitNumber: 97,
+      recruitDate: "2026-09-13", resetSequence: 0, recruitNumber: 7,
       partyType: "PARTY_NUMBER", title: "원자적 명단 계약", maximumMembers: 2, members: [],
       startTimeText: null, gameInfo: null, organizerText: null, scheduledStartAt: null, protectedUntil: null, initialStatus: "DRAFT",
     }, `sender-${suffix}-creator`));
-    const activated = await handler.handle(v4Command("SYNC_PARTY", {
+    const activationCommand = v4Command("SYNC_PARTY", {
       members: [],
-      startTimeText: "21:00", startTimeState: "PRESENT_VALUE",
-      gameInfo: "자랭", gameInfoState: "PRESENT_VALUE",
-      organizerText: `주최자-${suffix}`, organizerState: "PRESENT_VALUE",
+      startTimeText: "모바시", startTimeState: "PRESENT_VALUE",
+      gameInfo: "증칼", gameInfoState: "PRESENT_VALUE",
+      organizerText: "TEST", organizerState: "PRESENT_VALUE",
       scheduledStartAt: null,
-    }, `sender-${suffix}-activator`));
+    }, `sender-${suffix}-activator`);
+    const activated = await handler.handle(activationCommand);
+    const activationReplay = await handler.handle(activationCommand);
     assert.equal(activated.body.status, "IN_PROGRESS");
-    assert.equal(activated.body.data.organizerText, `주최자-${suffix}`);
+    assert.equal(activated.body.data.startTimeText, "모바시");
+    assert.equal(activated.body.data.gameInfo, "증칼");
+    assert.equal(activated.body.data.organizerText, "TEST");
     assert.equal(activated.body.data.memberCount, 0);
+    assert.equal(activationReplay.replayed, true);
+    assert.deepEqual(activationReplay.body, activated.body);
 
     const [first, second] = await Promise.all([
       handler.handle(v4Command("PARTY_MEMBER_ADD", { name: `첫째-${suffix}` }, `sender-${suffix}-a`)),
@@ -431,9 +437,13 @@ test("concurrent V4 party member commands serialize on the locked latest aggrega
 
     const stored = (await database.select().from(recruitParties).where(eq(recruitParties.id, partyId)))[0];
     assert.ok(stored);
+    assert.equal(stored.recruitDate, "2026-09-13");
+    assert.equal(stored.recruitNumber, 7);
     assert.equal(stored.status, "IN_PROGRESS");
     assert.equal(stored.revision, 3);
-    assert.equal(stored.organizerText, `주최자-${suffix}`);
+    assert.equal(stored.startTimeText, "모바시");
+    assert.equal(stored.gameInfo, "증칼");
+    assert.equal(stored.organizerText, "TEST");
     const members = stored.membersJson as readonly Readonly<{ name: string; slotNo: number; substitute: boolean }>[];
     assert.deepEqual(members.map((member) => member.slotNo), [1, 2]);
     assert.equal(members.every((member) => member.substitute === false), true);

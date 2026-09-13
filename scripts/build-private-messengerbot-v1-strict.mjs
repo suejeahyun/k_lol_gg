@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { dirname, relative, resolve, sep } from "node:path";
@@ -37,6 +38,13 @@ const settings = [
   "KLOL_V4_KAKAO_WEBHOOK_KEY_ID_CURRENT",
 ].map((name) => [name, privateSetting(settingsSource, name)]);
 const publicSource = (await readFile(publicPath, "utf8")).replace(/\r\n?/gu, "\n");
+const executableMarker = "/* eslint-disable */";
+const executableSourceIndex = publicSource.indexOf(executableMarker);
+if (executableSourceIndex < 0) throw new Error("Public V1 strict executable marker is missing");
+// Provenance arrays are useful in the reviewed public artifact but are never
+// read at runtime. Leave them in that immutable artifact and omit them only
+// from the phone installer so the settings preamble also fits after CRLF paste.
+const phoneSource = publicSource.slice(executableSourceIndex);
 const preamble = [
   "/* PRIVATE LOCAL V1-STRICT INSTALLER. DO NOT COMMIT OR SHARE. */",
   "var KLOL_V1_PRIVATE_SETTINGS_APPLIED = (function () {",
@@ -45,11 +53,16 @@ const preamble = [
   "}());",
   "",
 ].join("\n");
-const output = `${preamble}${publicSource}`;
+const output = `${preamble}${phoneSource}`;
 const program = acorn.parse(output, { ecmaVersion: 5, allowReserved: true, preserveParens: true });
 const findings = analyzeRhinoStatic(program);
+const crlfLength = output.replace(/\n/gu, "\r\n").length;
+const version = /var BOT_CODE_VERSION = "([^"]+)";/u.exec(output)?.[1];
+const outputSha256 = createHash("sha256").update(output).digest("hex");
 if ((output.match(/function\s+response\s*\(/gu) ?? []).length !== 1) throw new Error("Private V1 strict output must define one response callback");
-if (output.length >= 65_535 || output.replace(/\n/gu, "\r\n").length >= 65_535) {
+if (!version) throw new Error("Private V1 strict output must expose BOT_CODE_VERSION");
+if (!output.includes("function isPartyMetadataActivationForm(text)")) throw new Error("Private V1 strict output must include party metadata activation routing");
+if (output.length >= 65_535 || crlfLength >= 65_535) {
   throw new Error("Private V1 strict output exceeds MessengerBot R's LF/CRLF 65,535-character limit");
 }
 if (findings.statementCandidates.length || findings.unsafeSequenceOperands.length || findings.voidExpressions.length || findings.bareAssignmentConditions.length) {
@@ -58,4 +71,7 @@ if (findings.statementCandidates.length || findings.unsafeSequenceOperands.lengt
 
 await mkdir(dirname(outputPath), { recursive: true });
 await writeFile(outputPath, output, "utf8");
-console.log(`Private V1 strict one-paste installer refreshed under .private (${output.length} characters).`);
+console.log(
+  `Private V1 strict one-paste installer refreshed under .private ` +
+  `(version=${version}, LF=${output.length}, CRLF=${crlfLength}, SHA-256=${outputSha256}).`,
+);

@@ -183,6 +183,36 @@ test("metadata-only party activation forms accept slash and keep organizer separ
   }
 });
 
+test("the full production party template classifies as one metadata activation snapshot", () => {
+  const text = [
+    "[K-LOL.GG 구인구직 양식]", "같이 할사람~", "",
+    "아래 양식의 모집번호는 유지해서 작성해주세요.", "",
+    "📢 5인 파티 구인", "모집번호: #7", "운영일: 2026-09-13", "",
+    "》시작시간 : 모바시", "》게임정보 : 증칼", "》주최자 : TEST", "",
+    "위 항목을 작성해 전체 전송해주세요.",
+    "비워 둔 시간과 게임 정보는 자동으로 채워집니다.",
+    "활성화 후 상세 번호 추가 이름으로 참가할 수 있습니다.", "",
+    "참여해주실 분은 태그해주세요.", "*상호배려와 존중 부탁드립니다.",
+  ].join("\n");
+  const parsed = parsePartyForm(text);
+  const classification = classifyKakaoV4Command({ profileId: "RECRUIT", text });
+  const canonical = canonicalizeKakaoV4Command(classification, {
+    profileId: "RECRUIT", installationId: "install-11111111111111111111111111111111",
+    senderId: "sender-user-22222222222222222222222222222222", eventId: "event-party-production-template",
+    timestamp: Date.parse("2026-09-13T20:38:00.000+09:00") / 1_000, nonce: "3".repeat(32), text,
+  });
+
+  assert.equal(parsed.decision, "EXACT");
+  assert.equal(classification.kind, "SNAPSHOT");
+  assert.equal(classification.kind === "SNAPSHOT" ? classification.command : null, "PARTY_SNAPSHOT");
+  if (!canonical || canonical.domain !== "PARTY" || canonical.action !== "SYNC") assert.fail("expected party metadata activation");
+  assert.deepEqual(canonical.target, { recruitDate: "2026-09-13", recruitNumber: 7 });
+  assert.deepEqual(canonical.payload.members, []);
+  assert.equal(canonical.payload.startTimeText, "모바시");
+  assert.equal(canonical.payload.gameInfo, "증칼");
+  assert.equal(canonical.payload.organizerText, "TEST");
+});
+
 test("generated operating day wins across the 06:00 boundary while legacy forms keep fallback behavior", () => {
   const generated = `${base.replace("모집번호: #12", "모집번호: #12\n운영일: 2026-09-12")}\n》시작시간 :\n》게임정보 :\n》주최자 : 재현`;
   const afterBoundary: KakaoV4CommandEnvelope = {

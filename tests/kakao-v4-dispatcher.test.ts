@@ -8,6 +8,7 @@ import {
   type RecruitingCommandResult,
 } from "../src/modules/recruiting";
 import { KakaoAssistantError, kakaoReadIdentity, type KakaoOpenChatStatusDto, type KakaoSeasonSnapshotDto } from "../src/modules/recruiting/kakao-assistant/domain";
+import { KakaoV4CommandService } from "../src/modules/recruiting/kakao-v4/application";
 import { canonicalizeKakaoV4Command, type CanonicalKakaoV4Command } from "../src/modules/recruiting/kakao-v4/canonical-command";
 import { classifyKakaoV4Command } from "../src/modules/recruiting/kakao-v4/classifier";
 import { KAKAO_V1_STRICT_PROTOCOL, KAKAO_V1_STRICT_RESPONSE_FORMAT } from "../src/modules/recruiting/kakao-v4/domain";
@@ -311,6 +312,67 @@ test("the exact generated V1 party form activates with only organizer populated 
     assert.deepEqual(state.handled[1].payload.members, []);
     assert.match(saved.legacyReply, /주최자: 재현/u);
   }
+});
+
+test("the reported metadata-only #7 form reaches one idempotent party activation", async () => {
+  const state = harness();
+  const service = new KakaoV4CommandService({
+    async authorizeProfile() {
+      return context.authorization;
+    },
+  }, state.dispatcher);
+  const text = [
+    "[K-LOL.GG 구인구직 양식]",
+    "같이 할사람~",
+    "",
+    "아래 양식의 모집번호는 유지해서 작성해주세요.",
+    "",
+    "📢 5인 파티 구인",
+    "모집번호: #7",
+    "운영일: 2026-09-13",
+    "",
+    "》시작시간 : 모바시",
+    "》게임정보 : 증칼",
+    "》주최자 : TEST",
+    "",
+    "위 항목을 작성해 전체 전송해주세요.",
+    "비워 둔 시간과 게임 정보는 자동으로 채워집니다.",
+    "활성화 후 상세 번호 추가 이름으로 참가할 수 있습니다.",
+    "",
+    "참여해주실 분은 태그해주세요.",
+    "*상호배려와 존중 부탁드립니다.",
+  ].join("\n");
+  const envelope = {
+    ...context.envelope,
+    eventId: "event-reported-party-form-00000001",
+    timestamp: Date.parse("2026-09-13T20:38:00+09:00") / 1_000,
+    text,
+  };
+
+  const first = await service.execute(envelope, context.keyId);
+  const replay = await service.execute(envelope, context.keyId);
+
+  assert.equal(first.replayed, false);
+  assert.equal(replay.replayed, true);
+  assert.deepEqual(replay.reply, first.reply);
+  assert.deepEqual(state.resolved, [{
+    kind: "PARTY",
+    sourceRoomId: context.authorization.roomId,
+    recruitDate: "2026-09-13",
+    recruitNumber: 7,
+    allowedPartyStatuses: ["DRAFT", "IN_PROGRESS"],
+  }]);
+  assert.equal(state.handled.length, 1);
+  const activation = state.handled[0];
+  if (activation?.type !== "SYNC_PARTY") assert.fail("reported form must dispatch one party sync");
+  assert.deepEqual(activation.payload.members, []);
+  assert.equal(activation.payload.startTimeText, "모바시");
+  assert.equal(activation.payload.startTimeState, "PRESENT_VALUE");
+  assert.equal(activation.payload.gameInfo, "증칼");
+  assert.equal(activation.payload.gameInfoState, "PRESENT_VALUE");
+  assert.equal(activation.payload.organizerText, "TEST");
+  assert.equal(activation.payload.organizerState, "PRESENT_VALUE");
+  assert.equal(first.reply.includes("[파티 #7 반영]"), true);
 });
 
 test("first completed automatic party form creates the party once", async () => {

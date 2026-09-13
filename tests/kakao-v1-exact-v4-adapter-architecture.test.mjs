@@ -39,6 +39,22 @@ test("the reusable V4 text transport is one signed five-second request without b
   assert.doesNotMatch(shared, /Authorization/u);
 });
 
+test("the V1 strict phone installer uses the private R11 artifact and omits public-only provenance", async () => {
+  const [builder, installGuide] = await Promise.all([
+    read("scripts/build-private-messengerbot-v1-strict.mjs"),
+    read("integrations/messengerbot-r/MESSENGERBOT_R_INSTALL.md"),
+  ]);
+
+  assert.match(builder, /const executableMarker = "\/\* eslint-disable \*\/";/u);
+  assert.match(builder, /const phoneSource = publicSource\.slice\(executableSourceIndex\);/u);
+  assert.match(builder, /const output = `\$\{preamble\}\$\{phoneSource\}`;/u);
+  assert.match(builder, /function isPartyMetadataActivationForm\(text\)/u);
+  assert.match(installGuide, /\.private\/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R\.js/u);
+  assert.match(installGuide, /KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R11_2026_09_13_ALL_MODE_DRAFT/u);
+  assert.match(installGuide, /공개 검토·생성 기준, 설치 금지/u);
+  assert.doesNotMatch(installGuide, /현재 설치본[\s\S]*R9_2026_09_13_MEMBER_COMMANDS/u);
+});
+
 test("installation profiles, not callback room or sender role, form the V4 text authorization boundary", async () => {
   const [shared, entry, installationScope] = await Promise.all([
     read("integrations/messengerbot-r/v4/KLOL_KAKAO_BOT_V4_SHARED.js"),

@@ -246,6 +246,41 @@ test("V1 strict routes organizer-only metadata activation forms with or without 
   }
 });
 
+test("V1 strict routes the full organizer-only template returned by the production server", async () => {
+  const artifact = await readFile(artifactPath, "utf8");
+  const message = [
+    "[K-LOL.GG 구인구직 양식]",
+    "같이 할사람~",
+    "",
+    "아래 양식의 모집번호는 유지해서 작성해주세요.",
+    "",
+    "📢 5인 파티 구인",
+    "모집번호: #7",
+    "운영일: 2026-09-13",
+    "",
+    "》시작시간 : 모바시",
+    "》게임정보 : 증칼",
+    "》주최자 : TEST",
+    "",
+    "위 항목을 작성해 전체 전송해주세요.",
+    "비워 둔 시간과 게임 정보는 자동으로 채워집니다.",
+    "활성화 후 상세 번호 추가 이름으로 참가할 수 있습니다.",
+    "",
+    "참여해주실 분은 태그해주세요.",
+    "*상호배려와 존중 부탁드립니다.",
+  ].join("\n");
+  const runtime = evaluate(artifact, { responseBody: { reply: "[활성화 완료]" } });
+
+  assert.equal(runtime.isPartyMetadataActivationForm(message), true);
+  assert.equal(runtime.isPartyRecruitFormMessage(message), true);
+  assert.equal(runtime.isRecruitCommand(message), true);
+  assert.deepEqual(replyFor(runtime, message, { sender: "관리자. 99 재현 M(M)" }), ["[활성화 완료]"]);
+  assert.equal(runtime.http.calls, 1);
+  const request = JSON.parse(runtime.http.body);
+  assert.equal(request.profileId, "RECRUIT");
+  assert.equal(request.text, message);
+});
+
 test("artifact excludes legacy HTTP, bearer, and embedded secret material", async () => {
   const artifact = await readFile(artifactPath, "utf8");
   const banned = [

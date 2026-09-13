@@ -1,10 +1,12 @@
-# MessengerBot R V1 strict R9 설치 안내
+# MessengerBot R V1 strict R11 설치 안내
 
 ## 현재 설치본
 
 운영 휴대폰에는 아래 **비공개 한 파일만** 전체 복사해 설치한다.
 
 `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js`
+
+`integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js`는 비밀값이 없는 공개 검토·생성 기준 파일이다. 휴대폰 설치에는 이 공개 파일이나 과거 R9 파일을 사용하지 말고, 위 `.private` R11 파일만 사용한다.
 
 이 설치본은 사용자가 제공한 V1/V40의 명령 판정, 양식, 정상 응답과 무응답 동작을 유지하고 HTTP 전송 경계만 현재 V4 서명 API로 연결한다. `TRANSPORT`, `ADAPTER`, V41 또는 V4 파일을 함께 붙이지 않는다.
 
@@ -21,7 +23,7 @@
 2. 기존 소스를 휴대폰 밖의 안전한 장소에 백업한다.
 3. 소스 편집기의 내용을 전체 선택해 완전히 지운다.
 4. `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js`의 첫 글자부터 마지막 글자까지 한 번에 붙여 넣는다.
-5. 파일 안에서 `KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R9_2026_09_13_MEMBER_COMMANDS`를 검색한다.
+5. 파일 안에서 `KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R11_2026_09_13_ALL_MODE_DRAFT`를 검색한다.
 6. 마지막 줄이 `response.__kakaoBotEntryPoint = true;`인지 확인한다.
 7. 저장·컴파일 후 봇을 다시 시작한다.
 8. 같은 봇 프로필의 응답 대상에 구인구직방과 기능방 두 곳만 활성화한다.
@@ -33,8 +35,8 @@
 
 | 용도 | 파일 | LF 문자 | CRLF 문자 | 물리 줄 | SHA-256 |
 | --- | --- | ---: | ---: | ---: | --- |
-| 공개·비밀값 없음 | `integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js` | 62,443 | 64,274 | 1,831 | `974e0ebf2e913c7cc711ffe06810dea06043869a76995446cda1fc7e0139d60d` |
-| 휴대폰 한 번 붙여넣기 | `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js` | 62,951 | 64,790 | 1,839 | `532d4037a8a516d0799351c118bacd6f0fbaa7a9ad4c970584facdb467152017` |
+| 공개 검토·생성 기준, 설치 금지 | `integrations/messengerbot-r/v1-strict/KLOL_KAKAO_BOT_V1_STRICT_MESSENGERBOT_R.js` | 63,517 | 65,371 | 1,855 | `b2e7e214f949f766b48eb8fe530a8b27f2459debfc5c61cd03f79977e1e67db7` |
+| 휴대폰 한 번 붙여넣기 | `.private/KLOL_KAKAO_BOT_V1_STRICT_PRIVATE_MESSENGERBOT_R.js` | 61,135 | 62,912 | 1,778 | `fb21ea0aeb65f7f878b080edea8b099bc7409b3a3042551af5e72a021c0516bf` |
 
 두 파일 모두 LF와 CRLF에서 MessengerBot R의 65,535자 제한보다 작다. 빌드가 두 줄바꿈 형식과 ES5 parser, Rhino `CODE_HAS_NO_SIDE_EFFECTS` 후보를 모두 검사한다. V1 원본의 실행·주석 줄은 유지하고 의미 없는 빈 줄만 제거했다.
 
@@ -66,7 +68,7 @@ node scripts/verify-private-messengerbot-v1-strict-live.mjs
 구인구직방:
 
 1. `5인파티` → 양식만 출력되고 사용자에게 보이는 구인은 아직 시작되지 않음
-2. 출력 양식에 참가자를 넣어 다시 전송 → 저장 후 최신 구인현황 표시
+2. 출력 양식의 주최자를 채워 전체 전송 → 같은 모집번호 활성화 후 최신 구인현황 표시
 3. `상세 번호 추가 이름`, `상세 번호 삭제 이름` → 최신 현황과 함께 1명만 변경
 4. `구인현황`, `상세 번호`, 다른 사용자가 만든 `번호ㅉ`
 5. `스크림구인`, `스크림현황`
