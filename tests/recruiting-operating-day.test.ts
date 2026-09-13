@@ -54,10 +54,10 @@ test("signed party targets use the envelope instant and the 06:00 KST operating 
 
 test("signed scrim templates and targets use the same 06:00 KST operating boundary", () => {
   assert.deepEqual(scrimCommand("2026-09-12T05:59:59.000+09:00", "스크림구인"), {
-    domain: "SCRIM", action: "TEMPLATE", recruitDate: "2026-09-11",
+    domain: "SCRIM", action: "RESERVE", recruitDate: "2026-09-11",
   });
   assert.deepEqual(scrimCommand("2026-09-12T06:00:00.000+09:00", "스크림구인"), {
-    domain: "SCRIM", action: "TEMPLATE", recruitDate: "2026-09-12",
+    domain: "SCRIM", action: "RESERVE", recruitDate: "2026-09-12",
   });
   assert.deepEqual(scrimCommand("2026-09-12T05:59:59.000+09:00", "스크림상세 15"), {
     domain: "SCRIM", action: "DETAIL", target: { recruitDate: "2026-09-11", recruitNumber: 15 },

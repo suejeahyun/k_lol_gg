@@ -1,6 +1,6 @@
 /* eslint-disable */
 /* V1-visible constants. No legacy endpoint or bearer secret is retained. */
-var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R10_2026_09_13_PARTY_DRAFT_ORGANIZER";
+var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R11_2026_09_13_ALL_MODE_DRAFT";
 var BASE_URL = "https://k-lol-gg.vercel.app";
 var WEB_INHOUSE_RESULT_UPLOAD_URL = BASE_URL + "/matches/submit";
 var WEB_ADMIN_DISCIPLINE_CREATE_URL = BASE_URL + "/admin/discipline/new";
@@ -76,29 +76,45 @@ function partyMemberMutationNameLength(value) {
 }
 
 function parsePartyMemberMutationCommand(value) {
+  var parsed = parseMemberMutationCommand(value);
+  if (!parsed || parsed.surface !== "PARTY") return null;
+  return {
+    command: parsed.command === "ADD" ? "PARTY_MEMBER_ADD" : "PARTY_MEMBER_REMOVE",
+    recruitNumber: parsed.recruitNumber,
+    name: parsed.name
+  };
+}
+
+function parseMemberMutationCommand(value) {
   var text = normalizePartyMemberMutationCommandText(value);
   var match = null;
   var recruitNumber = 0;
   var name = "";
+  var prefix = "";
+  var action = "";
   if (/[\r\n\u2028\u2029]/.test(text)) return null;
   if (text.indexOf("//") === 0 || /^\/\s/.test(text)) return null;
   if (text.charAt(0) === "/") text = text.substring(1);
-  match = /^(?:구인상세|상세)\s+(?:\\?#\s*)?(\d{1,2})\s+(추가|삭제)\s+(.+)$/.exec(text);
+  match = /^(구인상세|상세|내전\s*(?:상세|명단)|스크림\s*(?:상세|명단))\s+(?:\\?#\s*)?(\d{1,2})\s+(추가|추가해|추가하기|추기|등록|참가|삭제|삭제해|삭제하기|삭재|제외|탈퇴)\s+(.+)$/.exec(text);
   if (!match) return null;
-  recruitNumber = Number(match[1]);
-  name = String(match[3] || "").replace(/^[ \t]+|[ \t]+$/g, "").replace(/[ \t]+/g, " ");
+  prefix = String(match[1] || "").replace(/\s/g, "");
+  recruitNumber = Number(match[2]);
+  action = String(match[3] || "");
+  name = String(match[4] || "").replace(/^[ \t]+|[ \t]+$/g, "").replace(/[ \t]+/g, " ");
   if (recruitNumber < 1 || recruitNumber > 99 || partyMemberMutationNameLength(name) < 1 || partyMemberMutationNameLength(name) > 80) return null;
-  if (/[\/,，、;；]/.test(name) || /^(?:추가|삭제)(?:\s|$)/.test(name)) return null;
+  if (/[\/,，、;；]/.test(name) || /^(?:추가|추기|등록|참가|삭제|삭재|제외|탈퇴)(?:\s|$)/.test(name)) return null;
   if (/[\u0000-\u001F\u007F-\u009F\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/.test(name)) return null;
   return {
-    command: match[2] === "추가" ? "PARTY_MEMBER_ADD" : "PARTY_MEMBER_REMOVE",
+    surface: prefix.indexOf("내전") === 0 ? "INHOUSE" : prefix.indexOf("스크림") === 0 ? "SCRIM" : "PARTY",
+    profileId: prefix.indexOf("내전") === 0 ? "FEATURES" : "RECRUIT",
+    command: (/^(?:추가|추가해|추가하기|추기|등록|참가)$/.test(action) ? "ADD" : "REMOVE"),
     recruitNumber: recruitNumber,
     name: name
   };
 }
 
-function handlePartyMemberMutationCommand(text, room, sender, replier) {
-  var parsed = parsePartyMemberMutationCommand(text);
+function handleMemberMutationCommand(text, room, sender, replier) {
+  var parsed = parseMemberMutationCommand(text);
   if (!parsed) return false;
   handlePartyRecruitApi(
     parsed.command,
@@ -106,7 +122,8 @@ function handlePartyMemberMutationCommand(text, room, sender, replier) {
     String(text || ""),
     sender,
     replier,
-    parsed.command === "PARTY_MEMBER_ADD" ? "구인구직 인원 추가" : "구인구직 인원 삭제"
+    "명단 " + (parsed.command === "ADD" ? "추가" : "삭제"),
+    parsed.profileId
   );
   return true;
 }
@@ -288,11 +305,11 @@ function handleSeasonApplyMessage(roomLabel, text, sender, replier) {
   }
 }
 
-function handlePartyRecruitApi(apiTag, roomLabel, text, sender, replier, label) {
+function handlePartyRecruitApi(apiTag, roomLabel, text, sender, replier, label, profileId) {
   var result = null;
   var reply = "";
   try {
-    result = KLOL_V1_GATEWAY.send("RECRUIT", text, sender);
+    result = KLOL_V1_GATEWAY.send(profileId || "RECRUIT", text, sender);
     if (!v1GatewaySucceeded(result)) {
       replier.reply(v1GatewayFailureNotice(result, "[K-LOL.GG " + label + "]"));
       return false;

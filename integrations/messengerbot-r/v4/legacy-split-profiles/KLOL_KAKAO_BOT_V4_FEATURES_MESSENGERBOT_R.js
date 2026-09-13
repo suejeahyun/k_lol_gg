@@ -131,20 +131,23 @@ var KLOL_V4 = (function () {
     return trimText(text).replace(/[\u00a0\u1680\u2000-\u200a\u202f\u205f\u3000]/g, " ").replace(/[ \t]+/g, " ");
   }
 
-  function isPartyMemberMutationCommand(value) {
+  function memberMutationProfile(value) {
     var text = normalizePartyMemberMutationText(value);
     var match = null;
     var name = "";
     var nameLength = 0;
-    if (/[\r\n\u2028\u2029]/.test(text) || text.indexOf("//") === 0 || /^\/\s/.test(text)) return false;
+    var prefix = "";
+    if (/[\r\n\u2028\u2029]/.test(text) || text.indexOf("//") === 0 || /^\/\s/.test(text)) return null;
     if (text.charAt(0) === "/") text = text.substring(1);
-    match = /^(?:구인상세|상세)\s+(?:\\?#\s*)?(\d{1,2})\s+(추가|삭제)\s+(.+)$/.exec(text);
-    if (!match || Number(match[1]) < 1 || Number(match[1]) > 99) return false;
-    name = String(match[3] || "").replace(/^[ \t]+|[ \t]+$/g, "").replace(/[ \t]+/g, " ");
+    match = /^(구인상세|상세|내전\s*(?:상세|명단)|스크림\s*(?:상세|명단))\s+(?:\\?#\s*)?(\d{1,2})\s+(추가|추가해|추가하기|추기|등록|참가|삭제|삭제해|삭제하기|삭재|제외|탈퇴)\s+(.+)$/.exec(text);
+    if (!match || Number(match[2]) < 1 || Number(match[2]) > 99) return null;
+    prefix = String(match[1] || "").replace(/\s/g, "");
+    name = String(match[4] || "").replace(/^[ \t]+|[ \t]+$/g, "").replace(/[ \t]+/g, " ");
     nameLength = name.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "_").length;
-    return nameLength >= 1 && nameLength <= 80 &&
-      !/[\/,，、;；]/.test(name) && !/^(?:추가|삭제)(?:\s|$)/.test(name) &&
-      !/[\u0000-\u001F\u007F-\u009F\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/.test(name);
+    if (nameLength < 1 || nameLength > 80 || /[\/,，、;；]/.test(name) ||
+        /^(?:추가|추기|등록|참가|삭제|삭재|제외|탈퇴)(?:\s|$)/.test(name) ||
+        /[\u0000-\u001F\u007F-\u009F\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/.test(name)) return null;
+    return prefix.indexOf("내전") === 0 ? "FEATURES" : "RECRUIT";
   }
 
   function localReply(profileId, text, codeVersion) {
@@ -157,7 +160,7 @@ var KLOL_V4 = (function () {
       return "[K-LOL.GG 일반 도움말]\n\nLOL-K 기능\n- 내전현황 : 현재 시즌내전 신청 현황\n- 내전참가 / 참가신청 : 참가 방법 안내\n- 전적 닉네임#태그 : 플레이어 전적 조회\n- 최근 닉네임#태그 : 최근 경기 조회\n- 랭킹 : 랭킹 조회\n\n운영 기능\n- /등록 : 초보자용 등록 센터\n- /내전등록 : 사이트에서 내전 결과·사진 한 번에 등록\n- /경고등록 : 관리자 경고 등록 화면 열기\n- /인증 : 로그인 후 내 경고 사진을 사이트에서 제출\n- /경고현황 : 내정보의 경고 진행 상황 열기\n- /결과현황 : 사이트의 내 미완료 결과 접수 열기\n\n구인구직 명령어는 구인도움말을 입력해주세요.\n스크림구인은 /스크림구인, /스크림현황을 사용해주세요.\n\n참고\n- 모든 명령어 앞에 /를 붙여도 사용할 수 있습니다.\n- 예) /내전현황, /전적 닉네임#태그, /구인도움말";
     }
     if (profileId === "RECRUIT" && /^(?:구인구직도움말|구인도움말|구인명령어)$/.test(command)) {
-      return "[K-LOL.GG 구인 도움말]\n\n1. 파티\n생성: 5인파티\n활성화: 주최자 입력 후 전체 전송 (시간·게임은 비우면 자동)\n현황: 구인현황\n추가: 상세 번호 추가 이름\n삭제: 상세 번호 삭제 이름\n종료: 번호ㅉ\n\n2. 내전\n생성: 내전구인\n현황: 내전현황\n매일 오전 6시 자동 종료\n\n3. 스크림\n생성: 스크림구인\n현황: 스크림현황\n매일 오전 6시 자동 종료\n\n공통: 양식 복사 → 이름 추가·삭제 → 양식 전체 전송";
+      return "[K-LOL.GG 구인 도움말]\n\n1. 파티\n생성: 5인파티\n활성화: 주최자 입력 후 전체 전송 (시간·게임은 비우면 자동)\n현황: 구인현황\n추가: 상세 번호 추가 이름\n삭제: 상세 번호 삭제 이름\n종료: 번호ㅉ\n\n2. 내전\n생성: 내전구인\n활성화: 주최자 입력 후 전체 전송\n현황: 내전현황\n추가: 내전상세 번호 추가 이름\n삭제: 내전상세 번호 삭제 이름\n매일 오전 6시 자동 종료\n\n3. 스크림\n생성: 스크림구인\n활성화: 주최자 입력 후 전체 전송\n현황: 스크림현황\n추가: 스크림상세 번호 추가 이름\n삭제: 스크림상세 번호 삭제 이름\n매일 오전 6시 자동 종료\n\n공통: 양식 생성만으로 현황에는 공개되지 않으며, 작성한 전체 양식을 보내면 모집이 시작됩니다.";
     }
     if (profileId === "RECRUIT" && /^(?:구인도우미|구인웹도우미|구인매뉴얼|명령어페이지)$/.test(command)) {
       return "[K-LOL.GG 구인도우미]\n\n현재 사용 중인 카카오톡 명령어 전체 설명은 아래 페이지에서 확인해주세요.\n\nhttps://k-lol-gg.vercel.app/recruit-helper\n\n구인현황 바로가기:\nhttps://k-lol-gg.vercel.app/recruit";
@@ -185,7 +188,7 @@ var KLOL_V4 = (function () {
     if (/^V2(?:모집|시즌|양식|사진세션)\s+\S/.test(command)) return false;
     if (/^(?:봇버전|도움말|명령어|V4상태|V4계약확인)$/.test(command)) return true;
     if (profileId === "RECRUIT") {
-      if (isPartyMemberMutationCommand(value)) return true;
+      if (memberMutationProfile(value) === "RECRUIT") return true;
       if (/^(?:구인구직도움말|구인도움말|구인명령어|구인도우미|구인웹도우미|구인매뉴얼|명령어페이지)$/.test(command)) return true;
       if (/^(?:(?:\d+인\s*(?:파티|구인))(?:\s+\d+)?|5인\s*협곡(?:\s*파티)?(?:\s+\d+)?|(?:자랭|일반|솔랭|칼바람|증바람|기타게임|롤체일반|롤체랭크|더블업)구인(?:\s+\d+)?)$/.test(command)) return true;
       if (/^(?:현재구인구직현황|현재구인현황|구인구직현황|구인현황|현황|(?:구인상세|상세)\s*#?\d+|구인(?:마감|쫑|종료)\s*#?\d+|#?\d+(?:번|인)?\s*(?:파티|구인)?\s*(?:쫑|ㅉ|마감|종료))$/.test(command)) return true;
@@ -193,6 +196,7 @@ var KLOL_V4 = (function () {
       if (/^\[K-LOL\.GG 스크림 구인 양식\]/.test(command)) return true;
       return command.indexOf("모집번호:") >= 0 && /📢\s*.+(?:파티 구인|하실분!?)/.test(command);
     }
+    if (memberMutationProfile(value) === "FEATURES") return true;
     if (/^(?:(?:내전구인구직|내전구인|내전모집)(?:\s+.*)?|내전상세(?:\s*#?\d+)?|(?:내전현황|시즌내전현황|AI공지)(?:\s*#?\d+)?|(?:내전참가|내전신청|참가신청)(?:\s*#?\d+)?)$/.test(command)) return true;
     if (/^(?:전적|최근)\s+.+$/.test(command) || command === "랭킹") return true;
     if (/^(?:등록|등록도움말|사진취소|내전등록|결과등록|내전결과|내전등록현황|결과현황|경고등록|경고|인증|경고인증|경고현황|사진상태|내전미리보기취소|내전확인\s+.+|자동공지(?:\s+(?:12|15|18|20))?|공지생성(?:\s+(?:12|15|18|20))?)$/.test(command)) return true;

@@ -1,6 +1,6 @@
 {
   "contractVersion": "KLOL_KAKAO_V4_V1_COMPAT_2026_09_13_R3",
-  "clientArtifactVersion": "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R10_2026_09_13_PARTY_DRAFT_ORGANIZER",
+  "clientArtifactVersion": "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R11_2026_09_13_ALL_MODE_DRAFT",
   "source": {
     "v1Artifact": "pasted-text.txt (delegated attachment; not committed)",
     "v1Sha256": "c91a56a289a762fe7e08143e8fd4b55c9695c4df68ebfcb6689613dcb73776b7",
@@ -143,8 +143,8 @@
   },
   "inhouse": {
     "modeSelectorReply": "[K-LOL.GG 내전 종목 선택]\n지원하지 않는 종목입니다: 양식\n✅️협곡내전은 관리자에게 신청 후 안내에 따라 구인해주세요.✅️\n\n아래 명령어 중 하나를 입력해주세요.\n- /내전구인 협곡\n- /내전구인 칼바람\n- /내전구인 증바람\n\n날짜·시간 지정: /내전구인 협곡 2026-08-06 21:00\n모집번호·정원 지정: /내전구인 칼바람 #2 10명\n\n협곡은 티어·라인 양식으로 내전 명단에 등록됩니다.\n칼바람·증바람은 이름만 모집하며 내전 명단에는 등록되지 않습니다.",
-    "riftTemplate": "📢 내전하실분 #2\n 》협곡\n 》2026-09-09 21:30 시작\n👥 0/10명\n\n*참가 신청 양식*\n이름/현티어/최고티어/주라인/부라인\nEX) 1.지후/P/E/AD/MD\n\n1.\n2.\n3.\n4.\n5.\n6.\n7.\n8.\n9.\n10.",
-    "aramTemplate": "📢 내전하실분 #3\n 》칼바람\n 》2026-09-09 21:30 시작\n👥 0/10명\n\n*참가 신청 양식*\n이름\nEX) 1.지후\n\n1.\n2.\n3.\n4.\n5.\n6.\n7.\n8.\n9.\n10.",
+    "riftTemplate": "📢 내전하실분 #2\n 》협곡\n 》2026-09-09 21:30 시작\n 》게임정보 :\n 》주최자 :\n👥 0/10명\n\n*참가 신청 양식*\n이름/현티어/최고티어/주라인/부라인\nEX) 1.지후/P/E/AD/MD\n\n1.\n2.\n3.\n4.\n5.\n6.\n7.\n8.\n9.\n10.\n\n빠른 추가: 내전상세 2 추가 이름\n빠른 삭제: 내전상세 2 삭제 이름",
+    "aramTemplate": "📢 내전하실분 #3\n 》칼바람\n 》2026-09-09 21:30 시작\n 》게임정보 :\n 》주최자 :\n👥 0/10명\n\n*참가 신청 양식*\n이름\nEX) 1.지후\n\n1.\n2.\n3.\n4.\n5.\n6.\n7.\n8.\n9.\n10.\n\n빠른 추가: 내전상세 3 추가 이름\n빠른 삭제: 내전상세 3 삭제 이름",
     "multiRoundStatusReply": "[K-LOL.GG 내전현황]\n🔎 전체 명단: 내전상세 번호\n\n#1 2026-9-9 21:00 시작 (2/10)\n└ 내전상세 1\n#2 2026-9-9 21:30 시작 (1/10 / 예비 1)\n└ 내전상세 2\n\n상세 명령: 내전상세 1 / 내전상세 2",
     "modes": {
       "RIFT": { "labels": ["협곡", "rift"], "memberFields": ["이름", "현티어", "최고티어", "주라인", "부라인"], "seasonRoster": true },
@@ -154,10 +154,10 @@
     "zeroParticipants": "The accepted full form withdraws/cancels the same-installation-scope, same-round participant snapshot"
   },
   "scrim": {
-    "initialTemplate": "[K-LOL.GG 스크림 구인 양식]\n\n운영일: 2026-09-09\n번호: #자동배정\n\n일시: \n방식: 3판2선\n\n우리팀: \nTOP: \nJUG: \nMID: \nADC: \nSUP: \n\n상대팀: \nTOP: \nJUG: \nMID: \nADC: \nSUP: ",
+    "initialTemplate": "[K-LOL.GG 스크림 구인 양식]\n\n운영일: 2026-09-09\n번호: #7\n\n일시: \n방식: 3판2선\n주최자: \n\n우리팀: \nTOP: \nJUG: \nMID: \nADC: \nSUP: \n\n상대팀: \nTOP: \nJUG: \nMID: \nADC: \nSUP: \n\n주최자를 입력해 전체 전송하면 모집이 시작됩니다.\n활성화 후 스크림상세 7 추가 이름으로 참가할 수 있습니다.",
     "emptyStatusReply": "[K-LOL.GG 스크림 현황]\n\n현재 모집중/확정된 스크림이 없습니다.",
-    "statusReply": "[K-LOL.GG 스크림 현황]\n🔎 전체 양식: 스크림상세 번호\n\n#7 하늘단 vs 꽃잎단 / 9/9 21:00 / 3판2선 / 매칭완료\n└ 스크림상세 7",
-    "detailReply": "[K-LOL.GG 멸망전 스크림 상세]\n\n#7 하늘단 vs 꽃잎단 / 9/9 21:00 / 3판2선 / 매칭완료\n\n운영일: 2026-09-09\n번호: #7\n일시: 9/9 21:00\n방식: 3판2선\n\n우리팀: 하늘단\nTOP: 하늘탑\nJUG: 하늘정글\nMID: 하늘미드\nADC: 하늘원딜\nSUP: 하늘서폿\n\n상대팀: 꽃잎단\nTOP: 꽃잎탑\nJUG: 꽃잎정글\nMID: 꽃잎미드\nADC: 꽃잎원딜\nSUP: 꽃잎서폿\n\n수정: 이 메시지를 복사해 내용을 고친 뒤 전체 전송",
+    "statusReply": "[K-LOL.GG 스크림 현황]\n🔎 전체 양식: 스크림상세 번호\n\n#7 하늘단 vs 꽃잎단 / 9/9 21:00 / 3판2선 / 매칭완료\n주최자: 미입력 · 참여 하늘탑, 하늘정글, 하늘미드, 하늘원딜, 하늘서폿, 꽃잎탑, 꽃잎정글, 꽃잎미드, 꽃잎원딜, 꽃잎서폿\n└ 스크림상세 7",
+    "detailReply": "[K-LOL.GG 멸망전 스크림 상세]\n\n#7 하늘단 vs 꽃잎단 / 9/9 21:00 / 3판2선 / 매칭완료\n주최자: 미입력 · 참여 하늘탑, 하늘정글, 하늘미드, 하늘원딜, 하늘서폿, 꽃잎탑, 꽃잎정글, 꽃잎미드, 꽃잎원딜, 꽃잎서폿\n\n운영일: 2026-09-09\n번호: #7\n일시: 9/9 21:00\n방식: 3판2선\n주최자: \n\n우리팀: 하늘단\nTOP: 하늘탑\nJUG: 하늘정글\nMID: 하늘미드\nADC: 하늘원딜\nSUP: 하늘서폿\n\n상대팀: 꽃잎단\nTOP: 꽃잎탑\nJUG: 꽃잎정글\nMID: 꽃잎미드\nADC: 꽃잎원딜\nSUP: 꽃잎서폿\n\n수정: 이 메시지를 복사해 내용을 고친 뒤 전체 전송\n빠른 추가: 스크림상세 7 추가 이름\n빠른 삭제: 스크림상세 7 삭제 이름",
     "newFormReply": "[K-LOL.GG 스크림 등록 완료]",
     "deprecatedReplies": {
       "DEPRECATED_JOIN": "[K-LOL.GG 스크림 참가 명령 사용 안 함]\n스크림 양식에 직접 입력해주세요.",
@@ -182,7 +182,7 @@
   },
   "exactReplies": {
     "generalHelp": "[K-LOL.GG 일반 도움말]\n\nLOL-K 기능\n- 내전현황 : 현재 시즌내전 신청 현황\n- 내전참가 / 참가신청 : 참가 방법 안내\n- 전적 닉네임#태그 : 플레이어 전적 조회\n- 최근 닉네임#태그 : 최근 경기 조회\n- 랭킹 : 랭킹 조회\n\n운영 기능\n- /등록 : 초보자용 등록 센터\n- /내전등록 : 사이트에서 내전 결과·사진 한 번에 등록\n- /경고등록 : 관리자 경고 등록 화면 열기\n- /인증 : 로그인 후 내 경고 사진을 사이트에서 제출\n- /경고현황 : 내정보의 경고 진행 상황 열기\n- /결과현황 : 사이트의 내 미완료 결과 접수 열기\n\n구인구직 명령어는 구인도움말을 입력해주세요.\n스크림구인은 /스크림구인, /스크림현황을 사용해주세요.\n\n참고\n- 모든 명령어 앞에 /를 붙여도 사용할 수 있습니다.\n- 예) /내전현황, /전적 닉네임#태그, /구인도움말",
-    "recruitHelp": "[K-LOL.GG 구인 도움말]\n\n1. 파티\n생성: 5인파티\n활성화: 주최자 입력 후 전체 전송 (시간·게임은 비우면 자동)\n현황: 구인현황\n추가: 상세 번호 추가 이름\n삭제: 상세 번호 삭제 이름\n종료: 번호ㅉ\n\n2. 내전\n생성: 내전구인\n현황: 내전현황\n매일 오전 6시 자동 종료\n\n3. 스크림\n생성: 스크림구인\n현황: 스크림현황\n매일 오전 6시 자동 종료\n\n공통: 양식 복사 → 이름 추가·삭제 → 양식 전체 전송",
+    "recruitHelp": "[K-LOL.GG 구인 도움말]\n\n1. 파티\n생성: 5인파티\n활성화: 주최자 입력 후 전체 전송 (시간·게임은 비우면 자동)\n현황: 구인현황\n추가: 상세 번호 추가 이름\n삭제: 상세 번호 삭제 이름\n종료: 번호ㅉ\n\n2. 내전\n생성: 내전구인\n활성화: 주최자 입력 후 전체 전송\n현황: 내전현황\n추가: 내전상세 번호 추가 이름\n삭제: 내전상세 번호 삭제 이름\n매일 오전 6시 자동 종료\n\n3. 스크림\n생성: 스크림구인\n활성화: 주최자 입력 후 전체 전송\n현황: 스크림현황\n추가: 스크림상세 번호 추가 이름\n삭제: 스크림상세 번호 삭제 이름\n매일 오전 6시 자동 종료\n\n공통: 양식 생성만으로 현황에는 공개되지 않으며, 작성한 전체 양식을 보내면 모집이 시작됩니다.",
     "recruitWebHelp": "[K-LOL.GG 구인도우미]\n\n현재 사용 중인 카카오톡 명령어 전체 설명은 아래 페이지에서 확인해주세요.\n\nhttps://k-lol-gg.vercel.app/recruit-helper\n\n구인현황 바로가기:\nhttps://k-lol-gg.vercel.app/recruit",
     "registrationHub": "[K-LOL.GG 쉬운 등록 센터]\n처음 사용하셔도 괜찮아요. 필요한 항목의 링크를 누르면 됩니다.\n▶ https://k-lol-gg.vercel.app/start\n\n① 내전 결과 등록\n경기 정보와 결과 사진 2~3장을 한 화면에서 제출합니다.\n▶ https://k-lol-gg.vercel.app/matches/submit\n\n② 주의·경고·벤 등록 (관리자)\n대상 검색부터 사유·근거 사진 등록까지 한 화면에서 처리합니다.\n▶ https://k-lol-gg.vercel.app/admin/discipline/new\n※ 관리자 로그인이 필요하며, 권한이 없으면 등록할 수 없습니다.\n\n③ 경고 차감 사진 제출\n본인의 진행 과제를 선택하고 남은 사진을 한 번에 제출합니다.\n▶ https://k-lol-gg.vercel.app/discipline/evidence\n※ 본인 계정 로그인이 필요합니다.\n\n등록과 사진 제출은 로그인한 본인 계정 기준으로 처리됩니다.",
     "inhouseResultGuide": "[K-LOL.GG 내전 결과 등록]\n가장 쉬운 등록 방법을 안내합니다.\n\n1. 아래 링크를 엽니다.\n2. 세트 수·회차·팀 밸런스를 확인합니다.\n3. 결과 사진 2~3장을 한 번에 올리고 제출합니다.\n\n▶ https://k-lol-gg.vercel.app/matches/submit\n\n로그인하면 진행 중인 제출을 자동으로 찾아 이어서 할 수 있습니다.",

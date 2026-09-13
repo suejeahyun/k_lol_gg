@@ -279,7 +279,7 @@ test("party create command reserves an invisible draft number and returns the ex
   assert.deepEqual(state.handled.map((handled) => handled.type), ["CREATE_PARTY"]);
   assert.equal(state.handled[0]?.type === "CREATE_PARTY" ? state.handled[0].payload.initialStatus : null, "DRAFT");
   assert.notEqual(result.aggregate, null);
-  assert.equal(result.legacyReply, "[K-LOL.GG 구인구직 양식]\n같이 할사람~\n\n아래 양식의 모집번호는 유지해서 작성해주세요.\n\n📢 5인 파티 구인\n모집번호: #8\n\n》시작시간 :\n》게임정보 :\n》주최자 :\n\n위 항목을 작성해 전체 전송해주세요.\n비워 둔 시간과 게임 정보는 자동으로 채워집니다.\n활성화 후 상세 번호 추가 이름으로 참가할 수 있습니다.\n\n참여해주실 분은 태그해주세요.\n*상호배려와 존중 부탁드립니다.");
+  assert.equal(result.legacyReply, "[K-LOL.GG 구인구직 양식]\n같이 할사람~\n\n아래 양식의 모집번호는 유지해서 작성해주세요.\n\n📢 5인 파티 구인\n모집번호: #8\n운영일: 2026-09-10\n\n》시작시간 :\n》게임정보 :\n》주최자 :\n\n위 항목을 작성해 전체 전송해주세요.\n비워 둔 시간과 게임 정보는 자동으로 채워집니다.\n활성화 후 상세 번호 추가 이름으로 참가할 수 있습니다.\n\n참여해주실 분은 태그해주세요.\n*상호배려와 존중 부탁드립니다.");
   assert.doesNotMatch(result.legacyReply, /^1\.|^예비 1\./mu);
 });
 

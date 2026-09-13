@@ -36,6 +36,7 @@ import {
 } from "@/platform/db/schema/operations";
 import { players } from "@/platform/db/schema/registry";
 import { recruitParties, recruitingOutbox, scrimRecruits } from "@/platform/db/schema/recruiting";
+import { seasonApplications, seasonInhouseRounds, seasonKakaoPendingApplications } from "@/platform/db/schema/seasons";
 import { playerSeasonStats } from "@/platform/db/schema/statistics";
 import type { V2Database } from "@/platform/db/database";
 import type { V2Transaction } from "@/platform/db/transaction";
@@ -678,10 +679,93 @@ export class PostgresOperationsRepository implements OperationsQueryPort, Operat
         });
       }
 
+      const inhouseCandidates = await transaction
+        .select()
+        .from(seasonInhouseRounds)
+        .where(and(
+          inArray(seasonInhouseRounds.status, ["DRAFT", "IN_PROGRESS"]),
+          lt(seasonInhouseRounds.applyDate, operatingDate),
+        ))
+        .orderBy(asc(seasonInhouseRounds.applyDate), asc(seasonInhouseRounds.recruitNo), asc(seasonInhouseRounds.id))
+        .limit(input.maximumClosures)
+        .for("update");
+      let inhouseApplicationsCancelled = 0;
+      let inhousePendingCancelled = 0;
+
+      for (const round of inhouseCandidates) {
+        const eventRequestId = randomUUID();
+        const nextRevision = round.revision + 1;
+        const updated = await transaction.update(seasonInhouseRounds).set({
+          status: "CANCELED",
+          revision: nextRevision,
+          updatedAt: now,
+        }).where(and(
+          eq(seasonInhouseRounds.id, round.id),
+          eq(seasonInhouseRounds.revision, round.revision),
+          inArray(seasonInhouseRounds.status, ["DRAFT", "IN_PROGRESS"]),
+        )).returning({ id: seasonInhouseRounds.id });
+        if (updated.length !== 1) throw new OperationsError("INHOUSE_DAILY_CLOSE_CONFLICT");
+
+        // Only rows owned by this Kakao room/mode are lifecycle children of the
+        // round. SITE registrations and reviewed CONFIRMED decisions survive.
+        const cancelledApplications = await transaction.update(seasonApplications).set({
+          status: "CANCELLED",
+          cancelledAt: now,
+          reviewNote: null,
+          reviewedByUserAccountId: null,
+          reviewedAt: null,
+          revision: sql`${seasonApplications.revision} + 1`,
+          updatedAt: now,
+        }).where(and(
+          eq(seasonApplications.seasonId, round.seasonId),
+          eq(seasonApplications.applyDate, round.applyDate),
+          eq(seasonApplications.recruitNo, round.recruitNo),
+          eq(seasonApplications.source, "KAKAO"),
+          eq(seasonApplications.sourceRoomIdHash, round.sourceRoomIdHash),
+          eq(seasonApplications.sourceMode, round.mode),
+          inArray(seasonApplications.status, ["APPLIED", "RESERVE"]),
+        )).returning({ id: seasonApplications.id });
+        const cancelledPending = await transaction.update(seasonKakaoPendingApplications).set({
+          status: "CANCELLED",
+          cancelledAt: now,
+          revision: sql`${seasonKakaoPendingApplications.revision} + 1`,
+          updatedAt: now,
+        }).where(and(
+          eq(seasonKakaoPendingApplications.seasonId, round.seasonId),
+          eq(seasonKakaoPendingApplications.applyDate, round.applyDate),
+          eq(seasonKakaoPendingApplications.recruitNo, round.recruitNo),
+          eq(seasonKakaoPendingApplications.sourceRoomIdHash, round.sourceRoomIdHash),
+          eq(seasonKakaoPendingApplications.sourceMode, round.mode),
+          eq(seasonKakaoPendingApplications.status, "ACTIVE"),
+        )).returning({ id: seasonKakaoPendingApplications.id });
+        inhouseApplicationsCancelled += cancelledApplications.length;
+        inhousePendingCancelled += cancelledPending.length;
+
+        await transaction.insert(auditEvents).values({
+          requestId: eventRequestId,
+          actorUserAccountId: null,
+          action: "SEASON_INHOUSE_ROUND_AUTO_CANCELED",
+          targetType: "SEASON_RECRUIT_ROUND",
+          targetId: round.id,
+          beforeJson: { status: round.status, revision: round.revision, applyDate: round.applyDate },
+          afterJson: { status: "CANCELED", revision: nextRevision, applyDate: round.applyDate },
+          metadataJson: {
+            jobRequestId: input.requestId,
+            operatingDate,
+            applicationsCancelled: cancelledApplications.length,
+            pendingCancelled: cancelledPending.length,
+          },
+          createdAt: now,
+        });
+      }
+
       const counts = {
         partiesClosed: candidates.length,
         partyDraftsReset: staleDrafts.length,
         scrimsClosed: scrimCandidates.length,
+        inhouseRoundsClosed: inhouseCandidates.length,
+        inhouseApplicationsCancelled,
+        inhousePendingCancelled,
       };
       const runId = randomUUID();
       await transaction.insert(maintenanceRuns).values({ id: runId, requestId: input.requestId, jobName: input.jobName, status: "SUCCEEDED", countsJson: counts, startedAt: now, completedAt: now });

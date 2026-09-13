@@ -50,7 +50,7 @@ function localReply(envelope: KakaoV4CommandEnvelope, classification: KakaoV4Com
   });
   if (classification.command === "LOCAL_RECRUIT_HELP") return Object.freeze({
     kind: "REPLY" as const,
-    reply: "[K-LOL.GG 구인 도움말]\n\n1. 파티\n생성: 5인파티\n활성화: 주최자 입력 후 전체 전송 (시간·게임은 비우면 자동)\n현황: 구인현황\n추가: 상세 번호 추가 이름\n삭제: 상세 번호 삭제 이름\n종료: 번호ㅉ\n\n2. 내전\n생성: 내전구인\n현황: 내전현황\n매일 오전 6시 자동 종료\n\n3. 스크림\n생성: 스크림구인\n현황: 스크림현황\n매일 오전 6시 자동 종료\n\n공통: 양식 복사 → 이름 추가·삭제 → 양식 전체 전송",
+    reply: "[K-LOL.GG 구인 도움말]\n\n1. 파티\n생성: 5인파티\n활성화: 주최자 입력 후 전체 전송 (시간·게임은 비우면 자동)\n현황: 구인현황\n추가: 상세 번호 추가 이름\n삭제: 상세 번호 삭제 이름\n종료: 번호ㅉ\n\n2. 내전\n생성: 내전구인\n활성화: 주최자 입력 후 전체 전송\n현황: 내전현황\n추가: 내전상세 번호 추가 이름\n삭제: 내전상세 번호 삭제 이름\n매일 오전 6시 자동 종료\n\n3. 스크림\n생성: 스크림구인\n활성화: 주최자 입력 후 전체 전송\n현황: 스크림현황\n추가: 스크림상세 번호 추가 이름\n삭제: 스크림상세 번호 삭제 이름\n매일 오전 6시 자동 종료\n\n공통: 양식 생성만으로 현황에는 공개되지 않으며, 작성한 전체 양식을 보내면 모집이 시작됩니다.",
   });
   if (classification.command === "LOCAL_RECRUIT_WEB_HELP") return Object.freeze({
     kind: "REPLY" as const,

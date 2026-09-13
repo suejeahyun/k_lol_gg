@@ -45,7 +45,7 @@ function canMutateRecruit({ targetScopeId, actorScopeId, actorVerified }) {
 }
 
 test("contract fixture has traceable V1 evidence and all required domains", () => {
-  assert.equal(contract.clientArtifactVersion, "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R10_2026_09_13_PARTY_DRAFT_ORGANIZER");
+  assert.equal(contract.clientArtifactVersion, "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R11_2026_09_13_ALL_MODE_DRAFT");
   assert.match(contract.contractVersion, /^KLOL_KAKAO_V4_V1_COMPAT_/u);
   assert.match(contract.source.v1Sha256, /^[a-f0-9]{64}$/u);
   assert.ok(contract.source.currentGoldenTests.length >= 7);
@@ -176,7 +176,8 @@ test("Rift, ARAM, and Augment ARAM preserve their V1 field policies", () => {
 });
 
 test("scrim keeps full-form editing and V1 disabled manual lifecycle replies", () => {
-  assert.match(contract.scrim.initialTemplate, /번호: #자동배정/u);
+  assert.match(contract.scrim.initialTemplate, /번호: #\d{1,3}/u);
+  assert.match(contract.scrim.initialTemplate, /스크림상세 \d{1,3} 추가 이름/u);
   assert.match(contract.scrim.editPolicy, /replaces editable fields immediately/u);
   assert.match(contract.scrim.closePolicy, /06:00 KST/u);
   assert.deepEqual(contract.scrim.deprecatedReplies, {
@@ -218,7 +219,8 @@ test("user-facing help excludes V2 diagnostics and raw JSON commands", () => {
     assert.equal(userHelp.includes(token), false, token);
   }
   assert.match(userHelp, /모든 명령어 앞에 \/를 붙여도 사용할 수 있습니다/u);
-  assert.match(userHelp, /양식 복사 → 이름 추가·삭제 → 양식 전체 전송/u);
+  assert.match(userHelp, /양식 생성만으로 현황에는 공개되지 않으며/u);
+  assert.match(userHelp, /작성한 전체 양식을 보내면 모집이 시작됩니다/u);
   assert.match(userHelp, /상세 번호 추가 이름/u);
   assert.match(userHelp, /상세 번호 삭제 이름/u);
 });

@@ -16,6 +16,7 @@ import { withTransaction, type V2Transaction } from "@/platform/db/transaction";
 import type { VerifiedKakaoWebhookIntent } from "../infrastructure/kakao-signature";
 import { planSeasonApplicationMerge } from "@/modules/seasons/domain/application-source-policy";
 import { recruitingOperatingDateKey } from "../domain/operating-day";
+import { kakaoRecruitTimeText } from "../domain/recruiting";
 import {
   KakaoAssistantError,
   kakaoReadIdentity,
@@ -26,6 +27,7 @@ import {
   type KakaoPlayerRecordDto,
   type KakaoRankingDto,
   type KakaoSeasonSnapshotCommand,
+  type KakaoSeasonSnapshotParticipant,
   type KakaoSeasonSnapshotDto,
   type KakaoSeasonSnapshotEntryDto,
   type KakaoSeasonRoundMetadataDto,
@@ -73,6 +75,8 @@ function toSeasonRoundMetadata(
     capacity: row.capacity,
     startTimeText: row.startTimeText,
     scheduledStartAt: row.scheduledStartAt?.toISOString() ?? null,
+    gameInfo: row.gameInfo,
+    organizerText: row.organizerText,
     noticeText: row.noticeText,
     revision: row.revision,
   });
@@ -92,12 +96,6 @@ export type KakaoAssistantResult<T extends KakaoAssistantResponse = KakaoAssista
 
 function sameBytes(left: Uint8Array, right: Uint8Array) {
   return Buffer.from(left).equals(Buffer.from(right));
-}
-
-function kstDateKey(now: Date) {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit",
-  }).format(now);
 }
 
 function normalizedIdentity(value: string) {
@@ -310,7 +308,7 @@ type LegacySeasonSyncChanges = {
 };
 
 function legacySeasonParticipantLabel(
-  participant: KakaoSeasonSnapshotCommand["participants"][number],
+  participant: KakaoSeasonSnapshotParticipant,
   playerName?: string | null,
 ) {
   const prefix = participant.reserve ? `예비 ${participant.slotNo}` : String(participant.slotNo);
@@ -634,10 +632,12 @@ export class PostgresKakaoAssistant {
           opponentLineup: scrimRecruits.opponentLineupJson,
           memo: scrimRecruits.legacyMemo,
           seriesRuleText: scrimRecruits.legacySeriesRuleText,
+          organizerText: scrimRecruits.organizerText,
           status: scrimRecruits.status,
           bestOf: scrimRecruits.bestOf,
           scheduledAt: scrimRecruits.scheduledAt,
         }).from(scrimRecruits).where(and(
+          eq(scrimRecruits.isDraft, false),
           inArray(scrimRecruits.status, ["RECRUITING", "MATCHED", "CONFIRMED"]),
           eq(scrimRecruits.sourceRoomId, input.intent.roomId),
           eq(scrimRecruits.recruitDate, operatingDate),
@@ -697,6 +697,7 @@ export class PostgresKakaoAssistant {
           opponentLineup: publicScrimLineup(scrim.opponentLineup),
           memo: scrim.memo,
           seriesRuleText: scrim.seriesRuleText,
+          organizerText: scrim.organizerText,
           status: scrim.status as "RECRUITING" | "MATCHED" | "CONFIRMED",
           bestOf: scrim.bestOf ?? 3,
           scheduledAt: scrim.scheduledAt?.toISOString() ?? null,
@@ -712,7 +713,7 @@ export class PostgresKakaoAssistant {
   getScheduledNotice(input: SignedReadInput & Readonly<{ slot: string | null; now?: Date }>): Promise<KakaoAssistantResult<KakaoScheduledNoticeDto>> {
     return this.execute(input, async (transaction) => {
       const now = input.now ?? new Date();
-      const date = kstDateKey(now);
+      const date = recruitingOperatingDateKey(now);
       const season = (await transaction.select({ id: seasons.id }).from(seasons).where(eq(seasons.status, "ACTIVE")).limit(1))[0];
       const positionCounts = { TOP: 0, JGL: 0, MID: 0, ADC: 0, SUP: 0 };
       if (season) {
@@ -777,12 +778,14 @@ export class PostgresKakaoAssistant {
       if (requested.seasonId === null && seasonCandidates.length !== 1) throw new KakaoAssistantError("CONFLICT");
       const season = seasonCandidates[0]!;
       const command = { ...requested, seasonId: season.id } as KakaoSeasonSnapshotCommand & Readonly<{ seasonId: string }>;
-      if (command.action === "SYNC") {
-        const preserved = command.preserveSlotNos ?? [];
+      if (command.action === "SYNC" || command.action === "RESERVE") {
+        const preserved = command.action === "SYNC" ? command.preserveSlotNos ?? [] : [];
         const roundMetadata = command.roundMetadata ?? {
           capacity: LEGACY_INHOUSE_CAPACITY,
           startTimeText: null,
           scheduledStartAt: null,
+          gameInfo: null,
+          organizerText: null,
           noticeText: null,
         };
         if (
@@ -793,6 +796,8 @@ export class PostgresKakaoAssistant {
           command.participants.some((participant) => participant.slotNo > roundMetadata.capacity) ||
           (roundMetadata.startTimeText !== null && !/^(?:[01]\d|2[0-3]):[0-5]\d$/u.test(roundMetadata.startTimeText)) ||
           (roundMetadata.scheduledStartAt !== null && Number.isNaN(new Date(roundMetadata.scheduledStartAt).getTime())) ||
+          (roundMetadata.gameInfo != null && (roundMetadata.gameInfo.trim().length < 1 || roundMetadata.gameInfo.length > 500)) ||
+          (roundMetadata.organizerText != null && (roundMetadata.organizerText.trim().length < 1 || roundMetadata.organizerText.length > 100)) ||
           (roundMetadata.noticeText !== null && (roundMetadata.noticeText.length < 1 || roundMetadata.noticeText.length > 600))
         ) throw new KakaoAssistantError("INVALID_INPUT");
       }
@@ -800,13 +805,57 @@ export class PostgresKakaoAssistant {
         if (season.status !== "ACTIVE" ||
             (season.applicationsOpenAt && season.applicationsOpenAt > now) ||
             (season.applicationsCloseAt && season.applicationsCloseAt <= now) ||
-            command.applyDate !== kstDateKey(now)) {
+            command.applyDate !== recruitingOperatingDateKey(now)) {
           throw new KakaoAssistantError("CONFLICT");
         }
       }
       const sourceRoomIdHash = seasonRoomIdHash(input.intent.roomId);
-      const sourceMode = command.action === "STATUS" ? "RIFT" as const : command.mode;
       const roomScope = sourceRoomIdHash.toString("hex");
+      if (command.action === "RESERVE") {
+        await transaction.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`kakao-season-reserve:${command.seasonId}:${command.applyDate}:${roomScope}`}, 0))`);
+        const latest = (await transaction.select({ recruitNo: seasonInhouseRounds.recruitNo }).from(seasonInhouseRounds).where(and(
+          eq(seasonInhouseRounds.seasonId, command.seasonId),
+          eq(seasonInhouseRounds.applyDate, command.applyDate),
+          eq(seasonInhouseRounds.sourceRoomIdHash, sourceRoomIdHash),
+        )).orderBy(desc(seasonInhouseRounds.recruitNo)).limit(1))[0];
+        const recruitNo = command.recruitNo ?? (latest ? latest.recruitNo + 1 : 1);
+        if (!Number.isSafeInteger(recruitNo) || recruitNo < 1 || recruitNo > 999) throw new KakaoAssistantError("CONFLICT");
+        const duplicate = (await transaction.select({ id: seasonInhouseRounds.id }).from(seasonInhouseRounds).where(and(
+          eq(seasonInhouseRounds.seasonId, command.seasonId),
+          eq(seasonInhouseRounds.applyDate, command.applyDate),
+          eq(seasonInhouseRounds.recruitNo, recruitNo),
+          eq(seasonInhouseRounds.sourceRoomIdHash, sourceRoomIdHash),
+        )).limit(1))[0];
+        if (duplicate) throw new KakaoAssistantError("CONFLICT");
+        const metadata = command.roundMetadata;
+        const row = (await transaction.insert(seasonInhouseRounds).values({
+          id: randomUUID(), seasonId: command.seasonId, applyDate: command.applyDate, recruitNo,
+          sourceRoomIdHash, mode: command.mode, status: "DRAFT", capacity: metadata.capacity,
+          startTimeText: metadata.startTimeText,
+          scheduledStartAt: metadata.scheduledStartAt ? new Date(metadata.scheduledStartAt) : null,
+          gameInfo: metadata.gameInfo, organizerText: metadata.organizerText, noticeText: metadata.noticeText,
+          sourceReferenceHash: Buffer.from(input.intent.bodyDigestHex, "hex"), createdAt: now, updatedAt: now,
+        }).returning())[0]!;
+        return Object.freeze({
+          kind: "SEASON_APPLICATION_SNAPSHOT" as const, seasonId: command.seasonId, applyDate: command.applyDate,
+          recruitNo, entries: Object.freeze([]), appliedCount: 0, reserveCount: 0, confirmedCount: 0,
+          pendingCount: 0, cancelledCount: 0, createdCount: 0, updatedCount: 0, mode: command.mode,
+          metadataUpdated: true, roundMetadata: toSeasonRoundMetadata(row),
+        });
+      }
+      const commandMode = command.action === "SYNC" || command.action === "CANCEL"
+        ? command.mode
+        : command.action === "ADD_PARTICIPANT" || command.action === "REMOVE_PARTICIPANT"
+          ? ((await transaction.select({ mode: seasonInhouseRounds.mode }).from(seasonInhouseRounds).where(and(
+              eq(seasonInhouseRounds.seasonId, command.seasonId), eq(seasonInhouseRounds.applyDate, command.applyDate),
+              eq(seasonInhouseRounds.recruitNo, command.recruitNo), eq(seasonInhouseRounds.sourceRoomIdHash, sourceRoomIdHash),
+              eq(seasonInhouseRounds.status, "IN_PROGRESS"),
+            )).limit(1))[0]?.mode as typeof INHOUSE_MODES[number] | undefined)
+          : undefined;
+      if ((command.action === "ADD_PARTICIPANT" || command.action === "REMOVE_PARTICIPANT") && !commandMode) {
+        throw new KakaoAssistantError("NOT_FOUND");
+      }
+      const sourceMode = command.action === "STATUS" ? "RIFT" as const : commandMode!;
       // Lock the room/date/round independent of mode so an authoritative mode
       // correction cannot race another snapshot for the same visible round.
       const roundKey = `${command.seasonId}:${command.applyDate}:${command.recruitNo ?? "all"}:${roomScope}`;
@@ -826,6 +875,113 @@ export class PostgresKakaoAssistant {
         metadataChanged: false,
         roundMetadata: null,
       };
+      if (command.action === "ADD_PARTICIPANT" || command.action === "REMOVE_PARTICIPANT") {
+        const identity = normalizedIdentity(command.name);
+        const activeApplications = await transaction.select({ application: seasonApplications, player: players })
+          .from(seasonApplications).innerJoin(players, eq(players.id, seasonApplications.playerId)).where(and(
+            eq(seasonApplications.seasonId, command.seasonId), eq(seasonApplications.applyDate, command.applyDate),
+            eq(seasonApplications.recruitNo, command.recruitNo),
+            inArray(seasonApplications.status, ["APPLIED", "RESERVE", "CONFIRMED"]),
+            or(
+              eq(seasonApplications.source, "SITE"),
+              and(
+                eq(seasonApplications.source, "KAKAO"),
+                eq(seasonApplications.sourceRoomIdHash, sourceRoomIdHash),
+                eq(seasonApplications.sourceMode, sourceMode),
+              ),
+            ),
+          )).for("update");
+        const scopedPending = await transaction.select().from(seasonKakaoPendingApplications).where(and(
+          eq(seasonKakaoPendingApplications.seasonId, command.seasonId),
+          eq(seasonKakaoPendingApplications.applyDate, command.applyDate),
+          eq(seasonKakaoPendingApplications.recruitNo, command.recruitNo),
+          eq(seasonKakaoPendingApplications.sourceRoomIdHash, sourceRoomIdHash),
+          eq(seasonKakaoPendingApplications.sourceMode, sourceMode),
+          eq(seasonKakaoPendingApplications.status, "ACTIVE"),
+        )).for("update");
+        const applicationMatches = activeApplications.filter(({ application, player }) =>
+          (command.action === "ADD_PARTICIPANT" || (
+            application.source === "KAKAO" && (application.status === "APPLIED" || application.status === "RESERVE")
+          )) && (player.memberNameNormalized === identity || player.nicknameNormalized === identity));
+        const pendingMatches = scopedPending.filter((pending) => normalizedIdentity(pending.suppliedName) === identity);
+        if (command.action === "REMOVE_PARTICIPANT") {
+          if (applicationMatches.length + pendingMatches.length > 1) throw new KakaoAssistantError("CONFLICT");
+          if (applicationMatches[0]) {
+            await transaction.update(seasonApplications).set({
+              status: "CANCELLED", cancelledAt: now, revision: sql`${seasonApplications.revision} + 1`, updatedAt: now,
+            }).where(eq(seasonApplications.id, applicationMatches[0].application.id));
+            cancelledCount += 1;
+          } else if (pendingMatches[0]) {
+            await transaction.update(seasonKakaoPendingApplications).set({
+              status: "CANCELLED", cancelledAt: now, revision: sql`${seasonKakaoPendingApplications.revision} + 1`, updatedAt: now,
+            }).where(eq(seasonKakaoPendingApplications.id, pendingMatches[0].id));
+            cancelledCount += 1;
+          }
+        } else if (applicationMatches.length + pendingMatches.length === 0) {
+          const metadata = (await transaction.select().from(seasonInhouseRounds).where(and(
+            eq(seasonInhouseRounds.seasonId, command.seasonId), eq(seasonInhouseRounds.applyDate, command.applyDate),
+            eq(seasonInhouseRounds.recruitNo, command.recruitNo), eq(seasonInhouseRounds.sourceRoomIdHash, sourceRoomIdHash),
+            eq(seasonInhouseRounds.status, "IN_PROGRESS"),
+          )).for("update").limit(1))[0]!;
+          if (activeApplications.length + scopedPending.length >= metadata.capacity) throw new KakaoAssistantError("CONFLICT");
+          const usedSlots = new Set([
+            ...activeApplications.map(({ application }) => application.sourceSlotNo).filter((slot): slot is number => slot !== null),
+            ...scopedPending.map((pending) => pending.slotNo),
+          ]);
+          let slotNo = 1;
+          while (usedSlots.has(slotNo)) slotNo += 1;
+          if (slotNo > metadata.capacity) throw new KakaoAssistantError("CONFLICT");
+          const candidates = await transaction.select().from(players).where(and(
+            eq(players.status, "ACTIVE"), or(eq(players.memberNameNormalized, identity), eq(players.nicknameNormalized, identity)),
+          )).orderBy(asc(players.id)).limit(3);
+          const reserve = command.reserve ?? false;
+          const mainPosition = command.mainPosition ?? "ALL";
+          const subPositions = command.subPositions ?? [];
+          const sourceReferenceHash = Buffer.from(input.intent.bodyDigestHex, "hex");
+          if (candidates.length === 1 && !reserve) {
+            const current = (await transaction.select().from(seasonApplications).where(and(
+              eq(seasonApplications.seasonId, command.seasonId), eq(seasonApplications.playerId, candidates[0]!.id),
+              eq(seasonApplications.applyDate, command.applyDate), eq(seasonApplications.recruitNo, command.recruitNo),
+            )).for("update").limit(1))[0];
+            const ownedByThisRoom = current?.source !== "KAKAO" || (
+              current.sourceRoomIdHash !== null && sameBytes(current.sourceRoomIdHash, sourceRoomIdHash) &&
+              current.sourceMode === sourceMode
+            );
+            const mergePlan = ownedByThisRoom
+              ? planSeasonApplicationMerge(current ?? null)
+              : { action: "PRESERVE" as const, outcome: "REVIEWED_PRESERVED" as const };
+            const values = {
+              sourceSlotNo: slotNo, mainPosition, subPositions: [...subPositions], status: "APPLIED" as const,
+              source: "KAKAO" as const, sourceReferenceHash, sourceRoomIdHash, sourceMode,
+              reviewNote: null, reviewedByUserAccountId: null, reviewedAt: null, cancelledAt: null,
+              updatedAt: now,
+            };
+            if (mergePlan.action === "REFRESH_KAKAO") {
+              await transaction.update(seasonApplications).set({ ...values, revision: sql`${seasonApplications.revision} + 1` }).where(eq(seasonApplications.id, current!.id));
+              updatedCount += 1;
+            } else if (mergePlan.action === "CREATE_KAKAO") {
+              await transaction.insert(seasonApplications).values({ id: randomUUID(), seasonId: command.seasonId, playerId: candidates[0]!.id, applyDate: command.applyDate, recruitNo: command.recruitNo, createdAt: now, ...values });
+              createdCount += 1;
+            }
+          } else {
+            const historical = (await transaction.select().from(seasonKakaoPendingApplications).where(and(
+              eq(seasonKakaoPendingApplications.seasonId, command.seasonId), eq(seasonKakaoPendingApplications.applyDate, command.applyDate),
+              eq(seasonKakaoPendingApplications.recruitNo, command.recruitNo), eq(seasonKakaoPendingApplications.slotNo, slotNo),
+              eq(seasonKakaoPendingApplications.sourceRoomIdHash, sourceRoomIdHash), eq(seasonKakaoPendingApplications.sourceMode, sourceMode),
+            )).for("update").limit(1))[0];
+            const matchState = candidates.length === 1 && reserve ? "MATCHED_RESERVE" as const : candidates.length > 1 ? "AMBIGUOUS" as const : "UNMATCHED" as const;
+            const values = {
+              matchedPlayerId: matchState === "MATCHED_RESERVE" ? candidates[0]!.id : null,
+              suppliedName: command.name, suppliedRiotId: null, mainPosition, subPositions: [...subPositions], reserve,
+              matchState, status: "ACTIVE" as const, sourceReferenceHash, sourceRoomIdHash, sourceMode,
+              cancelledAt: null, resolvedAt: null, updatedAt: now,
+            };
+            if (historical) await transaction.update(seasonKakaoPendingApplications).set({ ...values, revision: sql`${seasonKakaoPendingApplications.revision} + 1` }).where(eq(seasonKakaoPendingApplications.id, historical.id));
+            else await transaction.insert(seasonKakaoPendingApplications).values({ id: randomUUID(), seasonId: command.seasonId, applyDate: command.applyDate, recruitNo: command.recruitNo, slotNo, createdAt: now, ...values });
+            createdCount += 1;
+          }
+        }
+      }
       if (command.action === "SYNC") {
         const sourceHash = Buffer.from(input.intent.bodyDigestHex, "hex");
         const requestedMetadata = command.roundMetadata;
@@ -897,10 +1053,21 @@ export class PostgresKakaoAssistant {
         const scheduledStartAt = requestedMetadata.scheduledStartAt === null
           ? null
           : new Date(requestedMetadata.scheduledStartAt);
+        const activatingDraft = currentMetadata?.status === "DRAFT";
+        if (activatingDraft && command.participants.length === 0 && !requestedMetadata.organizerText?.trim() &&
+            !requestedMetadata.noticeText?.trim() && !requestedMetadata.gameInfo?.trim()) {
+          throw new KakaoAssistantError("INVALID_INPUT");
+        }
+        const startTimeText = requestedMetadata.startTimeText ?? (activatingDraft ? kakaoRecruitTimeText(now) : currentMetadata?.startTimeText ?? null);
+        const gameInfo = requestedMetadata.gameInfo?.trim() || (activatingDraft ? "미입력" : currentMetadata?.gameInfo ?? null);
+        const organizerText = requestedMetadata.organizerText?.trim() || currentMetadata?.organizerText || null;
         metadataUpdated = !currentMetadata ||
+          currentMetadata.status !== "IN_PROGRESS" ||
           currentMetadata.capacity !== requestedMetadata.capacity ||
-          currentMetadata.startTimeText !== requestedMetadata.startTimeText ||
+          currentMetadata.startTimeText !== startTimeText ||
           currentMetadata.scheduledStartAt?.getTime() !== scheduledStartAt?.getTime() ||
+          currentMetadata.gameInfo !== gameInfo ||
+          currentMetadata.organizerText !== organizerText ||
           currentMetadata.noticeText !== requestedMetadata.noticeText;
         if (!currentMetadata) {
           await transaction.insert(seasonInhouseRounds).values({
@@ -910,9 +1077,12 @@ export class PostgresKakaoAssistant {
             recruitNo: command.recruitNo,
             sourceRoomIdHash,
             mode: command.mode,
+            status: "IN_PROGRESS",
             capacity: requestedMetadata.capacity,
-            startTimeText: requestedMetadata.startTimeText,
+            startTimeText,
             scheduledStartAt,
+            gameInfo,
+            organizerText,
             noticeText: requestedMetadata.noticeText,
             sourceReferenceHash: sourceHash,
             createdAt: now,
@@ -921,8 +1091,11 @@ export class PostgresKakaoAssistant {
         } else if (metadataUpdated) {
           await transaction.update(seasonInhouseRounds).set({
             capacity: requestedMetadata.capacity,
-            startTimeText: requestedMetadata.startTimeText,
+            status: "IN_PROGRESS",
+            startTimeText,
             scheduledStartAt,
+            gameInfo,
+            organizerText,
             noticeText: requestedMetadata.noticeText,
             sourceReferenceHash: sourceHash,
             revision: sql`${seasonInhouseRounds.revision} + 1`,
@@ -932,8 +1105,15 @@ export class PostgresKakaoAssistant {
         legacyChanges.metadataChanged = metadataUpdated;
         }
         const preserveSlotNos = new Set(command.preserveSlotNos ?? []);
-        const matched: Array<{
-          participant: KakaoSeasonSnapshotCommand["participants"][number];
+        const siteApplications = await transaction.select().from(seasonApplications).where(and(
+          eq(seasonApplications.seasonId, command.seasonId),
+          eq(seasonApplications.applyDate, command.applyDate),
+          eq(seasonApplications.recruitNo, command.recruitNo),
+          eq(seasonApplications.source, "SITE"),
+          inArray(seasonApplications.status, ["APPLIED", "RESERVE", "CONFIRMED"]),
+        )).for("update");
+        let matched: Array<{
+          participant: KakaoSeasonSnapshotParticipant;
           candidates: (typeof players.$inferSelect)[];
         }> = [];
         const resolvedPlayerIds = new Set<string>();
@@ -963,6 +1143,29 @@ export class PostgresKakaoAssistant {
           .filter((item) => item.candidates.length === 1 && !item.participant.reserve)
           .map((item) => item.candidates[0]!.id);
         if (new Set(uniqueMatchedIds).size !== uniqueMatchedIds.length) throw new KakaoAssistantError("CONFLICT");
+
+        // SITE rows are part of the same visible roster but are never rewritten
+        // by a Kakao snapshot. Move only Kakao-owned incoming rows to the next
+        // free integrated slot so persisted slots do not collide with SITE.
+        const capacity = requestedMetadata?.capacity ?? currentMetadata?.capacity ?? LEGACY_INHOUSE_CAPACITY;
+        const sitePlayerIds = new Set(siteApplications.map((application) => application.playerId));
+        const occupiedSlots = new Set([
+          ...siteApplications.map((application) => application.sourceSlotNo)
+            .filter((slot): slot is number => slot !== null && slot >= 1 && slot <= capacity),
+          ...preserveSlotNos,
+        ]);
+        matched = matched.map((item) => {
+          const representedBySite = item.candidates.length === 1 && !item.participant.reserve && sitePlayerIds.has(item.candidates[0]!.id);
+          if (representedBySite) return item;
+          let slotNo = item.participant.slotNo;
+          if (occupiedSlots.has(slotNo)) {
+            slotNo = 1;
+            while (occupiedSlots.has(slotNo)) slotNo += 1;
+          }
+          if (slotNo > capacity) throw new KakaoAssistantError("CONFLICT");
+          occupiedSlots.add(slotNo);
+          return slotNo === item.participant.slotNo ? item : { ...item, participant: { ...item.participant, slotNo } };
+        });
 
         const currentApplications = await transaction.select().from(seasonApplications).where(and(
           eq(seasonApplications.seasonId, command.seasonId),
@@ -1009,7 +1212,7 @@ export class PostgresKakaoAssistant {
           legacyChanges.removed.push(current.sourceSlotNo ? `${current.sourceSlotNo}. ${playerName}` : playerName);
         }
 
-        const activeSlots = new Set([...command.participants.map((participant) => participant.slotNo), ...preserveSlotNos]);
+        const activeSlots = new Set([...matched.map(({ participant }) => participant.slotNo), ...preserveSlotNos]);
         // The slot key is unique across every lifecycle state. Lock all rows so a
         // later snapshot reactivates the same row instead of inserting beside a
         // RESOLVED or CANCELLED row and violating season_kakao_pending_slot_uidx.
@@ -1136,6 +1339,29 @@ export class PostgresKakaoAssistant {
               .push(legacySeasonParticipantLabel(participant, matchedPlayer?.memberName));
           }
         }
+        const integratedApplications = await transaction.select({ id: seasonApplications.id }).from(seasonApplications).where(and(
+          eq(seasonApplications.seasonId, command.seasonId),
+          eq(seasonApplications.applyDate, command.applyDate),
+          eq(seasonApplications.recruitNo, command.recruitNo),
+          inArray(seasonApplications.status, ["APPLIED", "RESERVE", "CONFIRMED"]),
+          or(
+            eq(seasonApplications.source, "SITE"),
+            and(
+              eq(seasonApplications.source, "KAKAO"),
+              eq(seasonApplications.sourceRoomIdHash, sourceRoomIdHash),
+              eq(seasonApplications.sourceMode, sourceMode),
+            ),
+          ),
+        ));
+        const integratedPending = await transaction.select({ id: seasonKakaoPendingApplications.id }).from(seasonKakaoPendingApplications).where(and(
+          eq(seasonKakaoPendingApplications.seasonId, command.seasonId),
+          eq(seasonKakaoPendingApplications.applyDate, command.applyDate),
+          eq(seasonKakaoPendingApplications.recruitNo, command.recruitNo),
+          eq(seasonKakaoPendingApplications.sourceRoomIdHash, sourceRoomIdHash),
+          eq(seasonKakaoPendingApplications.sourceMode, sourceMode),
+          eq(seasonKakaoPendingApplications.status, "ACTIVE"),
+        ));
+        if (integratedApplications.length + integratedPending.length > capacity) throw new KakaoAssistantError("CONFLICT");
         await transaction.insert(auditEvents).values({
           requestId: input.requestId,
           action: "KAKAO_SEASON_SNAPSHOT_SYNCED",
@@ -1194,7 +1420,7 @@ export class PostgresKakaoAssistant {
               eq(seasonApplications.sourceRoomIdHash, sourceRoomIdHash),
               command.action === "STATUS"
                 ? inArray(seasonApplications.sourceMode, INHOUSE_MODES)
-                : eq(seasonApplications.sourceMode, command.mode),
+                : eq(seasonApplications.sourceMode, sourceMode),
             ),
           ),
         )).orderBy(asc(seasonApplications.recruitNo), asc(seasonApplications.sourceSlotNo), asc(seasonApplications.createdAt), asc(seasonApplications.id));
@@ -1207,14 +1433,15 @@ export class PostgresKakaoAssistant {
           eq(seasonKakaoPendingApplications.sourceRoomIdHash, sourceRoomIdHash),
           command.action === "STATUS"
             ? inArray(seasonKakaoPendingApplications.sourceMode, INHOUSE_MODES)
-            : eq(seasonKakaoPendingApplications.sourceMode, command.mode),
+            : eq(seasonKakaoPendingApplications.sourceMode, sourceMode),
         )).orderBy(asc(seasonKakaoPendingApplications.recruitNo), asc(seasonKakaoPendingApplications.slotNo), asc(seasonKakaoPendingApplications.createdAt), asc(seasonKakaoPendingApplications.id));
       const metadataRows = await transaction.select().from(seasonInhouseRounds).where(and(
         eq(seasonInhouseRounds.seasonId, command.seasonId),
         eq(seasonInhouseRounds.applyDate, command.applyDate),
         command.recruitNo === null ? undefined : eq(seasonInhouseRounds.recruitNo, command.recruitNo),
         eq(seasonInhouseRounds.sourceRoomIdHash, sourceRoomIdHash),
-        command.action === "STATUS" ? inArray(seasonInhouseRounds.mode, INHOUSE_MODES) : eq(seasonInhouseRounds.mode, command.mode),
+        command.action === "STATUS" ? inArray(seasonInhouseRounds.mode, INHOUSE_MODES) : eq(seasonInhouseRounds.mode, sourceMode),
+        eq(seasonInhouseRounds.status, "IN_PROGRESS"),
       )).orderBy(asc(seasonInhouseRounds.recruitNo), desc(seasonInhouseRounds.updatedAt), desc(seasonInhouseRounds.id));
       const roundMetadataList = metadataRows.map(toSeasonRoundMetadata);
       const metadataByRecruitNo = new Map<number, KakaoSeasonRoundMetadataDto>();

@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import type { RecruitMember, RecruitPartyPatchState, RecruitPartySlotPatch, RecruitPartyStatus, RecruitPartyType, ScrimLineup } from "../domain/recruiting";
+import type { RecruitMember, RecruitPartyPatchState, RecruitPartySlotPatch, RecruitPartyStatus, RecruitPartyType, ScrimLineup, ScrimParticipantTeam } from "../domain/recruiting";
 import type { VerifiedKakaoWebhookIntent } from "../infrastructure/kakao-signature";
 import type { TransactionSessionActor } from "@/modules/auth/domain/transaction-session";
 
@@ -77,6 +77,8 @@ export type ScrimFormCommandPayload = Readonly<{
       seriesRuleText?: string | null;
       scheduledAt: string | null;
       bestOf: number;
+      organizerText?: string | null;
+      initialStatus?: "DRAFT";
     }>;
 
 export type SyncScrimCommandPayload = Readonly<{
@@ -95,11 +97,14 @@ export type SyncScrimCommandPayload = Readonly<{
   seriesRuleText: string | null;
   scheduledAt: string | null;
   bestOf: number;
+  organizerText?: string | null;
 }>;
 
 export type ScrimCommand =
   | Command<"CREATE_SCRIM", ScrimFormCommandPayload>
   | Command<"SYNC_SCRIM", SyncScrimCommandPayload>
+  | Command<"ADD_SCRIM_PARTICIPANT", Readonly<{ name: string; team?: ScrimParticipantTeam; position?: "TOP" | "JGL" | "MID" | "ADC" | "SUP" | "ALL" }>>
+  | Command<"REMOVE_SCRIM_PARTICIPANT", Readonly<{ name: string; team?: ScrimParticipantTeam }>>
   | Command<"JOIN_SCRIM", Readonly<{ opponentTeamId: string }>>
   | Command<"REOPEN_SCRIM", Readonly<Record<string, never>>>
   | Command<"CONFIRM_SCRIM", Readonly<Record<string, never>>>
@@ -123,6 +128,8 @@ const COMPAT_V1_MEMBER_COMMANDS: ReadonlySet<RecruitingCommand["type"]> = new Se
   "PARTY_MEMBER_REMOVE",
   "FINISH_PARTY",
   "SYNC_SCRIM",
+  "ADD_SCRIM_PARTICIPANT",
+  "REMOVE_SCRIM_PARTICIPANT",
 ]);
 
 /** PARTY compatibility lookups must select only states mutable by the command. */
@@ -158,6 +165,8 @@ const COMMAND_SCOPE_SUFFIX: Readonly<Record<RecruitingCommand["type"], string>> 
   RESET_PARTY: "recruiting:party:reset",
   CREATE_SCRIM: "recruiting:scrim:create",
   SYNC_SCRIM: "recruiting:scrim:sync",
+  ADD_SCRIM_PARTICIPANT: "recruiting:scrim:participant-add",
+  REMOVE_SCRIM_PARTICIPANT: "recruiting:scrim:participant-remove",
   JOIN_SCRIM: "recruiting:scrim:join",
   REOPEN_SCRIM: "recruiting:scrim:reopen",
   CONFIRM_SCRIM: "recruiting:scrim:confirm",

@@ -214,7 +214,7 @@ const entry = [
   "  KLOL_V1_GATEWAY.beginRequest(logId, userHash, sender);",
   "  KLOL_V1_OPERATION_RAW_TEXT = String(msg || \"\");",
   "  try {",
-  "    if (handlePartyMemberMutationCommand(msg, room, sender, replier)) return;",
+  "    if (handleMemberMutationCommand(msg, room, sender, replier)) return;",
   "    v1SourceResponse(room, msg, sender, isGroupChat, replier, imageDB, packageName);",
   "  } finally {",
   "    KLOL_V1_OPERATION_RAW_TEXT = \"\";",
@@ -302,8 +302,8 @@ if (!output.includes("isPartyRecruitFormMessageWithoutSeasonSnapshot")) {
 if (!output.includes("function isPartyMetadataActivationForm(text)")) {
   throw new Error("V1-strict output must route metadata-only party activation forms");
 }
-if (!output.includes("if (handlePartyMemberMutationCommand(msg, room, sender, replier)) return;")) {
-  throw new Error("V1-strict output must route explicit party member mutations before the V1 dispatcher");
+if (!output.includes("if (handleMemberMutationCommand(msg, room, sender, replier)) return;")) {
+  throw new Error("V1-strict output must route explicit member mutations before the V1 dispatcher");
 }
 if (!output.includes("추가: 상세 번호 추가 이름") || !output.includes("삭제: 상세 번호 삭제 이름")) {
   throw new Error("V1-strict output must document the approved party member mutation commands");

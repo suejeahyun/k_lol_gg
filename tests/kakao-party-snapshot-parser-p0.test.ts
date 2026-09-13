@@ -182,3 +182,28 @@ test("metadata-only party activation forms accept slash and keep organizer separ
     assert.equal(canonical.payload.organizerText, "재현");
   }
 });
+
+test("generated operating day wins across the 06:00 boundary while legacy forms keep fallback behavior", () => {
+  const generated = `${base.replace("모집번호: #12", "모집번호: #12\n운영일: 2026-09-12")}\n》시작시간 :\n》게임정보 :\n》주최자 : 재현`;
+  const afterBoundary: KakaoV4CommandEnvelope = {
+    profileId: "RECRUIT", installationId: "install-11111111111111111111111111111111",
+    senderId: "sender-user-22222222222222222222222222222222", eventId: "event-party-operating-day-boundary",
+    timestamp: Date.parse("2026-09-13T06:01:00.000+09:00") / 1_000, nonce: "2".repeat(32), text: generated,
+  };
+  const generatedCommand = canonicalizeKakaoV4Command(
+    classifyKakaoV4Command({ profileId: "RECRUIT", text: generated }),
+    afterBoundary,
+  );
+  if (!generatedCommand || generatedCommand.domain !== "PARTY" || generatedCommand.action !== "SYNC") assert.fail("expected generated party snapshot");
+  assert.equal(generatedCommand.target.recruitDate, "2026-09-12");
+  assert.equal(generatedCommand.payload.parsedForm?.operatingDate.value, "2026-09-12");
+
+  const legacy = generated.replace("운영일: 2026-09-12\n", "");
+  const legacyCommand = canonicalizeKakaoV4Command(
+    classifyKakaoV4Command({ profileId: "RECRUIT", text: legacy }),
+    { ...afterBoundary, eventId: "event-party-operating-day-legacy", text: legacy },
+  );
+  if (!legacyCommand || legacyCommand.domain !== "PARTY" || legacyCommand.action !== "SYNC") assert.fail("expected legacy party snapshot");
+  assert.equal(legacyCommand.target.recruitDate, "2026-09-13");
+  assert.equal(legacyCommand.payload.parsedForm?.operatingDate.state, "ABSENT");
+});

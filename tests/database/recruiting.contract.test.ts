@@ -478,3 +478,81 @@ test("concurrent V4 party member commands serialize on the locked latest aggrega
     await pool.end();
   }
 });
+
+test("concurrent V4 scrim participant commands compose after the database row lock", { concurrency: false }, async () => {
+  const connectionString = process.env.TEST_DATABASE_URL;
+  assert.ok(connectionString);
+  assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
+  const { database, pool } = createDatabaseHandle(connectionString, { max: 4 });
+  const adapter = new PostgresRecruitingAdapter(database);
+  const handler = new RecruitingCommandHandler({
+    unitOfWork: adapter, repository: adapter, authorization: adapter, receipts: adapter,
+    audit: adapter.auditPort(), outbox: adapter.outboxPort(),
+    clock: { now: () => new Date(), receiptExpiresAt: (createdAt) => new Date(createdAt.getTime() + 86_400_000) },
+  });
+  const suffix = randomBytes(8).toString("hex");
+  const scrimId = randomUUID();
+  const principalId = `bot:kakao:v4:scrim-member-${suffix}`;
+  const roomId = `room-v4-scrim-member-${suffix}`;
+  let sequence = 0;
+  function v4Command<Type extends RecruitingCommand["type"]>(
+    type: Type,
+    payload: Extract<RecruitingCommand, { type: Type }>["payload"],
+    senderId: string,
+  ): Extract<RecruitingCommand, { type: Type }> {
+    sequence += 1;
+    const eventId = `event-scrim-member-${suffix}-${sequence}`;
+    const digest = createHash("sha256").update(JSON.stringify({ type, payload, sequence })).digest("hex");
+    const issuedAt = new Date(Math.floor(Date.now() / 1_000) * 1_000);
+    return sealRecruitingCommand({
+      type,
+      aggregateId: scrimId,
+      metadata: {
+        actor: {
+          kind: "BOT", principalId, commandSource: "KAKAO_V4",
+          authorizationIntent: {
+            kind: "KAKAO_HMAC", keyId: "recruit-current", timestampSeconds: Math.floor(issuedAt.getTime() / 1_000),
+            nonce: `scrim_member_nonce_${suffix}_${sequence}`, installationId: `install-${suffix}`,
+            deliveryId: eventId, roomId, senderId, bodyDigestHex: digest,
+            requireNonceClaim: true, transactionRecheck: true,
+          },
+        },
+        requestId: randomUUID(), expectedRevision: 0, issuedAt: issuedAt.toISOString(),
+        idempotency: {
+          scope: recruitingCommandScope("BOT", type, "KAKAO_V4"),
+          keyHash: hashKakaoV4EventId(eventId), requestFingerprint: new Uint8Array(32), bodyDigestHex: digest,
+        },
+      },
+      payload,
+    } as unknown as Extract<RecruitingCommand, { type: Type }>);
+  }
+
+  try {
+    await applyMigrations(database);
+    await handler.handle(v4Command("CREATE_SCRIM", {
+      recruitDate: new Date().toISOString().slice(0, 10), scrimNumber: 98,
+      tournamentId: randomUUID(), legacyTournamentNumber: null, requesterTeamId: randomUUID(),
+      requesterTeamName: "요청팀", opponentTeamName: null, requesterLineup: null, opponentLineup: null,
+      title: "동시 스크림 명단", memo: null, seriesRuleText: "3판2선", organizerText: "주최자",
+      scheduledAt: null, bestOf: 3,
+    }, `sender-${suffix}-creator`));
+
+    const [first, second] = await Promise.all([
+      handler.handle(v4Command("ADD_SCRIM_PARTICIPANT", { name: `탑-${suffix}`, team: "REQUESTER", position: "TOP" }, `sender-${suffix}-a`)),
+      handler.handle(v4Command("ADD_SCRIM_PARTICIPANT", { name: `미드-${suffix}`, team: "REQUESTER", position: "MID" }, `sender-${suffix}-b`)),
+    ]);
+    assert.deepEqual([first.revision, second.revision].sort((left, right) => left - right), [1, 2]);
+    const stored = (await database.select().from(scrimRecruits).where(eq(scrimRecruits.id, scrimId)))[0]!;
+    assert.equal(stored.revision, 2);
+    assert.equal(stored.requesterLineupJson?.top, `탑-${suffix}`);
+    assert.equal(stored.requesterLineupJson?.mid, `미드-${suffix}`);
+
+    const duplicateCommand = v4Command("ADD_SCRIM_PARTICIPANT", { name: `탑-${suffix}`, team: "REQUESTER", position: "TOP" }, `sender-${suffix}-c`);
+    const duplicate = await handler.handle(duplicateCommand);
+    assert.equal(duplicate.body.data.outcome, "ALREADY_PRESENT");
+    assert.equal(duplicate.revision, 2);
+    assert.equal((await handler.handle(duplicateCommand)).replayed, true);
+  } finally {
+    await pool.end();
+  }
+});

@@ -306,6 +306,7 @@ function partyMemberResultData(
 
 function partyTemplate(input: Readonly<{
   recruitNumber: number | null;
+  recruitDate: string;
   partyType: string;
   title: string;
   maximumMembers: number;
@@ -319,6 +320,7 @@ function partyTemplate(input: Readonly<{
     "",
     `📢 ${input.title}`,
     `모집번호: #${String(input.recruitNumber)}`,
+    `운영일: ${input.recruitDate}`,
     "",
     "》시작시간 :",
     "》게임정보 :",
@@ -335,7 +337,52 @@ function partyTemplate(input: Readonly<{
 }
 
 function scrimLines(scrim: KakaoOpenChatStatusDto["scrims"][number], v1Strict = false) {
-  return `#${scrim.scrimNumber} ${scrim.requesterTeamName ?? "요청팀 미정"} vs ${scrim.opponentTeamName ?? "상대구함"} / ${scrimTime(scrim, v1Strict)} / ${scrimRule(scrim)} / ${scrimStatusLabel(scrim.status)}`;
+  const organizer = "organizerText" in scrim && typeof scrim.organizerText === "string" ? scrim.organizerText : null;
+  const participants = [scrim.requesterLineup, scrim.opponentLineup]
+    .flatMap((lineup) => lineup ? Object.values(lineup) : [])
+    .filter((name): name is string => typeof name === "string" && name.length > 0);
+  return [
+    `#${scrim.scrimNumber} ${scrim.requesterTeamName ?? "요청팀 미정"} vs ${scrim.opponentTeamName ?? "상대구함"} / ${scrimTime(scrim, v1Strict)} / ${scrimRule(scrim)} / ${scrimStatusLabel(scrim.status)}`,
+    `주최자: ${organizer || "미입력"}${participants.length > 0 ? ` · 참여 ${participants.join(", ")}` : ""}`,
+  ].join("\n");
+}
+
+function scrimMemberMutationReply(input: Readonly<{
+  recruitNumber: number;
+  action: "ADD" | "REMOVE";
+  outcome: "APPLIED" | "ALREADY_PRESENT" | "NOT_FOUND";
+  name: string;
+}>) {
+  const outcomeLine = input.action === "ADD"
+    ? input.outcome === "APPLIED"
+      ? `추가 완료: ${input.name}`
+      : `이미 명단에 있습니다: ${input.name}`
+    : input.outcome === "APPLIED"
+      ? `삭제 완료: ${input.name}`
+      : `명단에서 찾지 못했습니다: ${input.name}`;
+  return [`[K-LOL.GG 스크림 #${input.recruitNumber} 명단]`, outcomeLine].join("\n");
+}
+
+function scrimMemberBusinessReply(input: Readonly<{
+  recruitNumber: number;
+  name: string;
+  reason: "TARGET_NOT_FOUND" | "AMBIGUOUS_SCRIM_PARTICIPANT" | "SCRIM_PARTICIPANT_LIMIT_EXCEEDED";
+}>) {
+  if (input.reason === "TARGET_NOT_FOUND") return [
+    `[K-LOL.GG 스크림 #${input.recruitNumber} 명단]`,
+    "현재 운영일의 수정 가능한 스크림을 찾지 못했습니다.",
+    "스크림현황에서 번호를 확인해 주세요.",
+  ].join("\n");
+  if (input.reason === "AMBIGUOUS_SCRIM_PARTICIPANT") return [
+    `[K-LOL.GG 스크림 #${input.recruitNumber} 명단]`,
+    `양 팀에 같은 이름이 있어 자동 삭제할 수 없습니다: ${input.name}`,
+    "스크림 상세 양식에서 해당 라인의 이름을 지운 뒤 전송해 주세요.",
+  ].join("\n");
+  return [
+    `[K-LOL.GG 스크림 #${input.recruitNumber} 명단]`,
+    "우리 팀의 다섯 라인이 모두 찼습니다.",
+    `추가하지 못한 이름: ${input.name}`,
+  ].join("\n");
 }
 
 function scrimStatusReply(scrims: KakaoOpenChatStatusDto["scrims"], v1Strict = false) {
@@ -371,6 +418,7 @@ function scrimFormLines(scrim: KakaoOpenChatStatusDto["scrims"][number], v1Stric
     `번호: #${scrim.scrimNumber}`,
     `일시: ${scrimTime(scrim, v1Strict)}`,
     `방식: ${scrimRule(scrim)}`,
+    `주최자: ${"organizerText" in scrim && typeof scrim.organizerText === "string" ? scrim.organizerText : ""}`,
     "",
     `우리팀: ${scrim.requesterTeamName ?? ""}`,
     `TOP: ${requester.top ?? ""}`,
@@ -389,14 +437,21 @@ function scrimFormLines(scrim: KakaoOpenChatStatusDto["scrims"][number], v1Stric
 }
 
 function scrimDetailReply(scrim: KakaoOpenChatStatusDto["scrims"][number], v1Strict = false) {
-  return ["[K-LOL.GG 멸망전 스크림 상세]", "", scrimLines(scrim, v1Strict), "", ...scrimFormLines(scrim, v1Strict), "", "수정: 이 메시지를 복사해 내용을 고친 뒤 전체 전송"].join("\n");
+  return [
+    "[K-LOL.GG 멸망전 스크림 상세]", "", scrimLines(scrim, v1Strict), "", ...scrimFormLines(scrim, v1Strict), "",
+    "수정: 이 메시지를 복사해 내용을 고친 뒤 전체 전송",
+    `빠른 추가: 스크림상세 ${scrim.scrimNumber} 추가 이름`,
+    `빠른 삭제: 스크림상세 ${scrim.scrimNumber} 삭제 이름`,
+  ].join("\n");
 }
 
-function scrimTemplate(recruitDate: string) {
+function scrimTemplate(recruitDate: string, scrimNumber: number | null = null) {
   return [
-    "[K-LOL.GG 스크림 구인 양식]", "", `운영일: ${recruitDate}`, "번호: #자동배정", "",
-    "일시: ", "방식: 3판2선", "", "우리팀: ", "TOP: ", "JUG: ", "MID: ", "ADC: ", "SUP: ", "",
-    "상대팀: ", "TOP: ", "JUG: ", "MID: ", "ADC: ", "SUP: ",
+    "[K-LOL.GG 스크림 구인 양식]", "", `운영일: ${recruitDate}`, `번호: #${scrimNumber ?? "자동배정"}`, "",
+    "일시: ", "방식: 3판2선", "주최자: ", "", "우리팀: ", "TOP: ", "JUG: ", "MID: ", "ADC: ", "SUP: ", "",
+    "상대팀: ", "TOP: ", "JUG: ", "MID: ", "ADC: ", "SUP: ", "",
+    "주최자를 입력해 전체 전송하면 모집이 시작됩니다.",
+    `활성화 후 스크림상세 ${scrimNumber ?? "번호"} 추가 이름으로 참가할 수 있습니다.`,
   ].join("\n");
 }
 
@@ -417,13 +472,20 @@ const INHOUSE_MODE_SELECTION = [
   "칼바람·증바람은 이름만 모집하며 내전 명단에는 등록되지 않습니다.",
 ].join("\n");
 
-function inhouseTemplate(command: Extract<CanonicalKakaoV4Command, { domain: "SEASON"; action: "TEMPLATE" }>) {
-  if (!command.mode) return INHOUSE_MODE_SELECTION;
+function inhouseTemplate(command: Readonly<{
+  applyDate: string;
+  recruitNumber: number;
+  capacity: number;
+  time: string;
+  mode: "RIFT" | "ARAM" | "AUGMENT_ARAM";
+}>) {
   const mode = command.mode === "RIFT" ? "협곡" : command.mode === "ARAM" ? "칼바람" : "증바람";
   const lines = [
     `📢 내전하실분 #${command.recruitNumber}`,
     ` 》${mode}`,
     ` 》${command.applyDate} ${command.time} 시작`,
+    " 》게임정보 :",
+    " 》주최자 :",
     `👥 0/${command.capacity}명`,
     "",
     "*참가 신청 양식*",
@@ -432,6 +494,7 @@ function inhouseTemplate(command: Extract<CanonicalKakaoV4Command, { domain: "SE
     ? ["이름/현티어/최고티어/주라인/부라인", "EX) 1.지후/P/E/AD/MD"]
     : ["이름", "EX) 1.지후"]), "");
   for (let slot = 1; slot <= command.capacity; slot += 1) lines.push(`${slot}.`);
+  lines.push("", `빠른 추가: 내전상세 ${command.recruitNumber} 추가 이름`, `빠른 삭제: 내전상세 ${command.recruitNumber} 삭제 이름`);
   return lines.join("\n");
 }
 
@@ -564,6 +627,30 @@ function seasonReply(body: KakaoSeasonSnapshotDto, allowLegacyReply = true) {
   ].join("\n");
 }
 
+function inhouseMemberReply(
+  body: KakaoSeasonSnapshotDto,
+  input: Readonly<{ action: "ADD" | "REMOVE"; recruitNumber: number; name: string }>,
+) {
+  const applied = input.action === "ADD"
+    ? (body.createdCount ?? 0) + (body.updatedCount ?? 0) > 0
+    : body.cancelledCount > 0;
+  const outcome = input.action === "ADD"
+    ? applied ? `추가 완료: ${input.name}` : `이미 명단에 있습니다: ${input.name}`
+    : applied ? `삭제 완료: ${input.name}` : `명단에서 찾지 못했습니다: ${input.name}`;
+  const capacity = body.roundMetadata?.capacity ?? 10;
+  const entries = body.entries
+    .filter((entry) => entry.status !== "CANCELLED")
+    .sort((left, right) => left.slotNo - right.slotNo);
+  return [
+    `[K-LOL.GG 내전 #${input.recruitNumber} 명단]`, outcome,
+    `현재 ${entries.length}/${capacity}명`, "",
+    ...entries.map((entry) => `${entry.slotNo}. ${entry.suppliedName}`),
+    ...(entries.length === 0 ? ["아직 참가자가 없습니다."] : []), "",
+    `빠른 추가: 내전상세 ${input.recruitNumber} 추가 이름`,
+    `빠른 삭제: 내전상세 ${input.recruitNumber} 삭제 이름`,
+  ].join("\n");
+}
+
 export class KakaoV4CommandDispatcher {
   constructor(private readonly dependencies: Readonly<{
     recruiting: KakaoV4RecruitingPort;
@@ -678,6 +765,15 @@ export class KakaoV4CommandDispatcher {
       return `${reply}\n\n${statusReply}`;
     } catch {
       return `${reply}\n\n[K-LOL.GG 구인구직 현황]\n조회 실패. 구인현황을 입력해 주세요.`;
+    }
+  }
+
+  private async appendLatestScrimStatus(context: KakaoV4DispatchContext, reply: string, v1Strict: boolean) {
+    try {
+      const status = await this.openChatStatus(context, "SCRIM", true);
+      return `${reply}\n\n${scrimStatusReply(status.body.scrims, v1Strict)}`;
+    } catch {
+      return `${reply}\n\n[K-LOL.GG 스크림 현황]\n조회 실패. 스크림현황을 입력해 주세요.`;
     }
   }
 
@@ -817,12 +913,14 @@ export class KakaoV4CommandDispatcher {
         legacyReply: v1Strict
           ? v1StrictPartyTemplate({
               recruitNumber,
+              recruitDate: command.payload.recruitDate,
               partyType: command.payload.partyType,
               title: command.payload.title,
               maximumMembers: command.payload.maximumMembers,
             })
           : partyTemplate({
               recruitNumber,
+              recruitDate: command.payload.recruitDate,
               partyType: command.payload.partyType,
               title: command.payload.title,
               maximumMembers: command.payload.maximumMembers,
@@ -956,13 +1054,39 @@ export class KakaoV4CommandDispatcher {
     context: KakaoV4DispatchContext,
     command: Extract<CanonicalKakaoV4Command, { domain: "SCRIM" }>,
   ): Promise<KakaoV4DispatcherResult> {
-    if (command.action === "TEMPLATE") {
+    if (command.action === "RESERVE") {
+      const recruitingCommand = sealRecruitingCommand({
+        type: "CREATE_SCRIM",
+        aggregateId: deterministicAggregateId(context.envelope.eventId, "SCRIM"),
+        metadata: commandMetadata(context, 0),
+        payload: {
+          recruitDate: command.recruitDate,
+          scrimNumber: null,
+          tournamentId: null,
+          legacyTournamentNumber: null,
+          requesterTeamId: null,
+          title: null,
+          requesterTeamName: null,
+          opponentTeamName: null,
+          requesterLineup: null,
+          opponentLineup: null,
+          memo: null,
+          seriesRuleText: "3판2선",
+          scheduledAt: null,
+          bestOf: 3,
+          organizerText: null,
+          initialStatus: "DRAFT",
+        },
+      });
+      const result = await this.dependencies.recruiting.handle(recruitingCommand);
+      const scrimNumber = typeof result.body.data.scrimNumber === "number" ? result.body.data.scrimNumber : null;
+      if (scrimNumber === null) throw new KakaoV4DispatcherError("UNAVAILABLE");
       return Object.freeze({
         kind: "SCRIM",
         action: command.action,
-        aggregate: null,
-        legacyReply: scrimTemplate(command.recruitDate),
-        replayed: false,
+        aggregate: result.body,
+        legacyReply: scrimTemplate(command.recruitDate, scrimNumber),
+        replayed: result.replayed,
       });
     }
     if (
@@ -1011,6 +1135,82 @@ export class KakaoV4CommandDispatcher {
       });
     }
 
+    if (command.action === "ADD_MEMBER" || command.action === "REMOVE_MEMBER") {
+      const v1Strict = usesKakaoV1StrictResponse(context.envelope);
+      const target = await this.dependencies.recruiting.resolveCompatTarget({
+        kind: "SCRIM",
+        sourceRoomId: context.authorization.roomId,
+        recruitDate: command.target.recruitDate,
+        recruitNumber: command.target.recruitNumber,
+      });
+      if (!target) {
+        const reply = scrimMemberBusinessReply({
+          recruitNumber: command.target.recruitNumber,
+          name: command.name,
+          reason: "TARGET_NOT_FOUND",
+        });
+        return Object.freeze({
+          kind: "SCRIM",
+          action: command.action,
+          aggregate: null,
+          legacyReply: await this.appendLatestScrimStatus(context, reply, v1Strict),
+          replayed: false,
+        });
+      }
+      const action = command.action === "ADD_MEMBER" ? "ADD" as const : "REMOVE" as const;
+      const memberCommand = sealRecruitingCommand({
+        type: command.action === "ADD_MEMBER" ? "ADD_SCRIM_PARTICIPANT" : "REMOVE_SCRIM_PARTICIPANT",
+        aggregateId: target.id,
+        metadata: commandMetadata(context, target.revision),
+        payload: command.action === "ADD_MEMBER"
+          ? { name: command.name, team: "REQUESTER", position: "ALL" }
+          : { name: command.name },
+      });
+      let result: RecruitingCommandResult;
+      try {
+        result = await this.dependencies.recruiting.handle(memberCommand);
+      } catch (error) {
+        const code = typeof error === "object" && error !== null && "code" in error
+          ? (error as { code?: unknown }).code
+          : error instanceof Error
+            ? error.message
+            : undefined;
+        if (code === "AMBIGUOUS_SCRIM_PARTICIPANT" || code === "SCRIM_PARTICIPANT_LIMIT_EXCEEDED") {
+          const reply = scrimMemberBusinessReply({
+            recruitNumber: command.target.recruitNumber,
+            name: command.name,
+            reason: code,
+          });
+          return Object.freeze({
+            kind: "SCRIM",
+            action: command.action,
+            aggregate: null,
+            legacyReply: await this.appendLatestScrimStatus(context, reply, v1Strict),
+            replayed: false,
+          });
+        }
+        throw error;
+      }
+      const data = result.body.data;
+      const outcome = data.outcome;
+      if (data.action !== action || (outcome !== "APPLIED" && outcome !== "ALREADY_PRESENT" && outcome !== "NOT_FOUND")) {
+        throw new KakaoV4DispatcherError("UNAVAILABLE");
+      }
+      const reply = scrimMemberMutationReply({
+        recruitNumber: command.target.recruitNumber,
+        action,
+        outcome,
+        name: typeof data.name === "string" && data.name.length > 0 ? data.name : command.name,
+      });
+      return Object.freeze({
+        kind: "SCRIM",
+        action: command.action,
+        aggregate: result.body,
+        legacyReply: await this.appendLatestScrimStatus(context, reply, v1Strict),
+        replayed: result.replayed,
+      });
+    }
+
     let recruitingCommand: RecruitingCommand;
     if (command.action === "CREATE") {
       recruitingCommand = sealRecruitingCommand({
@@ -1044,6 +1244,7 @@ export class KakaoV4CommandDispatcher {
         seriesRuleText: command.payload.seriesRuleText,
         scheduledAt: command.payload.scheduledAt,
         bestOf: command.payload.bestOf,
+        organizerText: command.payload.organizerText,
       };
       recruitingCommand = existing
         ? sealRecruitingCommand({
@@ -1093,11 +1294,90 @@ export class KakaoV4CommandDispatcher {
     command: Extract<CanonicalKakaoV4Command, { domain: "SEASON" }>,
   ): Promise<KakaoV4DispatcherResult> {
     if (command.action === "TEMPLATE") {
-      return Object.freeze({ kind: "SEASON", action: command.action, aggregate: null, legacyReply: inhouseTemplate(command), replayed: false });
+      return Object.freeze({ kind: "SEASON", action: command.action, aggregate: null, legacyReply: INHOUSE_MODE_SELECTION, replayed: false });
+    }
+    if (command.action === "RESERVE") {
+      const result = await this.dependencies.assistant.syncSeasonSnapshot({
+        ...signedInput(context),
+        requestId: context.requestId,
+        command: {
+          action: "RESERVE",
+          seasonId: null,
+          applyDate: command.applyDate,
+          recruitNo: command.recruitNumber,
+          mode: command.mode,
+          roundMetadata: {
+            capacity: command.capacity,
+            startTimeText: command.time,
+            scheduledStartAt: new Date(`${command.applyDate}T${command.time}:00+09:00`).toISOString(),
+            gameInfo: null,
+            organizerText: null,
+            noticeText: null,
+          },
+          participants: [],
+        },
+      });
+      if (result.body.recruitNo === null) throw new KakaoV4DispatcherError("UNAVAILABLE");
+      return Object.freeze({
+        kind: "SEASON", action: command.action, aggregate: result.body,
+        legacyReply: inhouseTemplate({ ...command, recruitNumber: result.body.recruitNo }),
+        replayed: result.replayed,
+      });
     }
     if (command.action === "JOIN_GUIDE") {
       const publicOrigin = (this.dependencies.publicOrigin ?? "https://k-lol-gg.vercel.app").replace(/\/$/u, "");
       return Object.freeze({ kind: "SEASON", action: command.action, aggregate: null, legacyReply: participationGuide(publicOrigin), replayed: false });
+    }
+    if (command.action === "ADD_MEMBER" || command.action === "REMOVE_MEMBER") {
+      let result: Awaited<ReturnType<KakaoV4AssistantPort["syncSeasonSnapshot"]>>;
+      try {
+        result = await this.dependencies.assistant.syncSeasonSnapshot({
+          ...signedInput(context),
+          requestId: context.requestId,
+          command: command.action === "ADD_MEMBER"
+            ? {
+                action: "ADD_PARTICIPANT",
+                seasonId: command.seasonId,
+                applyDate: command.applyDate,
+                recruitNo: command.recruitNumber,
+                name: command.name,
+                mainPosition: "ALL",
+                subPositions: [],
+                reserve: false,
+                participants: [],
+              }
+            : {
+                action: "REMOVE_PARTICIPANT",
+                seasonId: command.seasonId,
+                applyDate: command.applyDate,
+                recruitNo: command.recruitNumber,
+                name: command.name,
+                participants: [],
+              },
+        });
+      } catch (error) {
+        if (error instanceof KakaoAssistantError && error.code === "NOT_FOUND") {
+          return Object.freeze({
+            kind: "SEASON", action: command.action, aggregate: null,
+            legacyReply: [
+              `[K-LOL.GG 내전 #${command.recruitNumber} 명단]`,
+              "현재 운영일의 수정 가능한 내전을 찾지 못했습니다.",
+              "내전현황에서 번호를 확인해 주세요.",
+            ].join("\n"),
+            replayed: false,
+          });
+        }
+        throw error;
+      }
+      return Object.freeze({
+        kind: "SEASON", action: command.action, aggregate: result.body,
+        legacyReply: inhouseMemberReply(result.body, {
+          action: command.action === "ADD_MEMBER" ? "ADD" : "REMOVE",
+          recruitNumber: command.recruitNumber,
+          name: command.name,
+        }),
+        replayed: result.replayed,
+      });
     }
     const seasonCommand: KakaoSeasonSnapshotCommand = command.action === "SYNC"
       ? {

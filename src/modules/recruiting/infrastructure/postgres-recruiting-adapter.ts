@@ -137,7 +137,8 @@ function scrimFromRow(row: typeof scrimRecruits.$inferSelect): ScrimRecruit {
     opponentLineup: row.opponentLineupJson,
     legacyMemo: row.legacyMemo,
     legacySeriesRuleText: row.legacySeriesRuleText,
-    status: row.status,
+    organizerText: row.organizerText,
+    status: row.isDraft && row.status === "RECRUITING" ? "DRAFT" : row.status,
     scheduledAt: row.scheduledAt,
     bestOf: row.bestOf,
   };
@@ -191,6 +192,7 @@ export class PostgresRecruitingAdapter implements
         eq(scrimRecruits.sourceRoomId, input.sourceRoomId),
         eq(scrimRecruits.recruitDate, input.recruitDate),
         eq(scrimRecruits.scrimNumber, input.recruitNumber),
+        eq(scrimRecruits.isDraft, false),
       )).limit(1))[0] ?? null;
   }
 
@@ -538,7 +540,9 @@ export class PostgresRecruitingAdapter implements
       opponentLineupJson: input.scrim.opponentLineup,
       legacyMemo: input.scrim.legacyMemo,
       legacySeriesRuleText: input.scrim.legacySeriesRuleText,
-      status: input.scrim.status,
+      organizerText: input.scrim.organizerText,
+      isDraft: input.scrim.status === "DRAFT",
+      status: input.scrim.status === "DRAFT" ? "RECRUITING" as const : input.scrim.status,
       scheduledAt: input.scrim.scheduledAt,
       bestOf: input.scrim.bestOf,
       updatedAt: now,
@@ -606,7 +610,10 @@ export class PostgresRecruitingAdapter implements
   async listPublicFeed() {
     const [partyRows, scrimRows] = await Promise.all([
       this.database.select().from(recruitParties).where(inArray(recruitParties.status, ["IN_PROGRESS"])).orderBy(desc(recruitParties.recruitDate), recruitParties.recruitNumber).limit(60),
-      this.database.select().from(scrimRecruits).where(inArray(scrimRecruits.status, ["RECRUITING", "MATCHED", "CONFIRMED"])).orderBy(desc(scrimRecruits.recruitDate), scrimRecruits.scrimNumber).limit(60),
+      this.database.select().from(scrimRecruits).where(and(
+        eq(scrimRecruits.isDraft, false),
+        inArray(scrimRecruits.status, ["RECRUITING", "MATCHED", "CONFIRMED"]),
+      )).orderBy(desc(scrimRecruits.recruitDate), scrimRecruits.scrimNumber).limit(60),
     ]);
     return {
       parties: partyRows.map((row) => toPublicPartyDto(partyFromRow(row))),
@@ -618,7 +625,10 @@ export class PostgresRecruitingAdapter implements
     const now = new Date();
     const [partyCountRows, scrimCountRows, outboxCountRows, incompleteReceiptRows, activeNonceRows, activeImageRows, unresolvedSeasonRows, recentReceiptRows, partyRows, scrimRows] = await Promise.all([
       this.database.select({ value: count() }).from(recruitParties).where(eq(recruitParties.status, "IN_PROGRESS")),
-      this.database.select({ value: count() }).from(scrimRecruits).where(inArray(scrimRecruits.status, ["RECRUITING", "MATCHED", "CONFIRMED"])),
+      this.database.select({ value: count() }).from(scrimRecruits).where(and(
+        eq(scrimRecruits.isDraft, false),
+        inArray(scrimRecruits.status, ["RECRUITING", "MATCHED", "CONFIRMED"]),
+      )),
       this.database.select({ value: count() }).from(recruitingOutbox).where(eq(recruitingOutbox.status, "PENDING")),
       this.database.select({ value: count() }).from(recruitingCommandReceipts).where(isNull(recruitingCommandReceipts.responseStatus)),
       this.database.select({ value: count() }).from(recruitingNonceBindings).where(gt(recruitingNonceBindings.expiresAt, now)),

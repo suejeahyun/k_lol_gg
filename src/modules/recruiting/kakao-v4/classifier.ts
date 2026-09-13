@@ -29,11 +29,15 @@ export const KAKAO_V4_CANONICAL_COMMANDS = [
   "INHOUSE_CREATE",
   "INHOUSE_STATUS",
   "INHOUSE_DETAIL",
+  "INHOUSE_MEMBER_ADD",
+  "INHOUSE_MEMBER_REMOVE",
   "INHOUSE_JOIN_GUIDE",
   "INHOUSE_SNAPSHOT",
   "SCRIM_CREATE",
   "SCRIM_STATUS",
   "SCRIM_DETAIL",
+  "SCRIM_MEMBER_ADD",
+  "SCRIM_MEMBER_REMOVE",
   "SCRIM_LEGACY_JOIN",
   "SCRIM_LEGACY_CONFIRM",
   "SCRIM_LEGACY_CANCEL",
@@ -116,11 +120,15 @@ const COMMAND_PROFILE_MATRIX = Object.freeze({
   INHOUSE_CREATE: FEATURES_ONLY,
   INHOUSE_STATUS: FEATURES_ONLY,
   INHOUSE_DETAIL: FEATURES_ONLY,
+  INHOUSE_MEMBER_ADD: FEATURES_ONLY,
+  INHOUSE_MEMBER_REMOVE: FEATURES_ONLY,
   INHOUSE_JOIN_GUIDE: FEATURES_ONLY,
   INHOUSE_SNAPSHOT: FEATURES_ONLY,
   SCRIM_CREATE: RECRUIT_ONLY,
   SCRIM_STATUS: RECRUIT_ONLY,
   SCRIM_DETAIL: RECRUIT_ONLY,
+  SCRIM_MEMBER_ADD: RECRUIT_ONLY,
+  SCRIM_MEMBER_REMOVE: RECRUIT_ONLY,
   SCRIM_LEGACY_JOIN: RECRUIT_ONLY,
   SCRIM_LEGACY_CONFIRM: RECRUIT_ONLY,
   SCRIM_LEGACY_CANCEL: RECRUIT_ONLY,
@@ -270,22 +278,12 @@ function classifyParty(text: string): KakaoV4RecognizedCommand | null {
   if (["현재구인구직현황", "현재구인현황", "구인구직현황", "구인현황", "현황"].includes(text)) {
     return recognized("PARTY_STATUS", text);
   }
-  const memberMutationText = text.normalize("NFKC");
-  if (!/[\r\n\u2028\u2029]/u.test(memberMutationText)) {
-    const memberMutation = /^(?:구인상세|상세)\s+(?:\\?#\s*)?(\d{1,2})\s+(추가|삭제)\s+(.+)$/u.exec(memberMutationText);
-    if (memberMutation) {
-      const recruitNumber = Number(memberMutation[1]);
-      const name = memberMutation[3]!.trim().replace(/\s+/gu, " ");
-      const nameLength = Array.from(name).length;
-      const ambiguousName = /[\/,，、;；]/u.test(name) || /^(?:추가|삭제)(?:\s|$)/u.test(name);
-      const unsafeName = /[\u0000-\u001F\u007F-\u009F\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/u.test(name);
-      if (recruitNumber >= 1 && recruitNumber <= 99 && nameLength >= 1 && nameLength <= 80 && !ambiguousName && !unsafeName) {
-        return recognized(memberMutation[2] === "추가" ? "PARTY_MEMBER_ADD" : "PARTY_MEMBER_REMOVE", memberMutationText, {
-          recruitNumber,
-          name,
-        });
-      }
-    }
+  const memberMutation = detailMemberMutation(text, ["구인상세", "상세"]);
+  if (memberMutation) {
+    return recognized(memberMutation.action === "ADD" ? "PARTY_MEMBER_ADD" : "PARTY_MEMBER_REMOVE", text, {
+      recruitNumber: memberMutation.recruitNumber,
+      name: memberMutation.name,
+    });
   }
   const detail = /^(?:구인상세|상세)\s*#?\s*(\d+)$/u.exec(text);
   if (detail) return recognized("PARTY_DETAIL", text, { recruitNumber: Number(detail[1]) });
@@ -319,7 +317,48 @@ function classifyParty(text: string): KakaoV4RecognizedCommand | null {
   });
 }
 
+type DetailMemberMutation = Readonly<{
+  action: "ADD" | "REMOVE";
+  recruitNumber: number;
+  name: string;
+}>;
+
+/**
+ * Parses only explicit, single-line member edits. The accepted aliases cover
+ * common mobile spacing and typing variants without treating ordinary chat as
+ * a command or allowing an accidental multi-person edit.
+ */
+function detailMemberMutation(text: string, prefixes: readonly string[]): DetailMemberMutation | null {
+  if (/[\r\n\u2028\u2029]/u.test(text)) return null;
+  const prefixPattern = prefixes
+    .map((prefix) => prefix.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&").replace(/\s+/gu, "\\s*"))
+    .join("|");
+  const match = new RegExp(
+    `^(?:${prefixPattern})\\s*(?:\\\\?#\\s*)?(\\d{1,2})\\s+(추가(?:해|하기)?|추기|등록|참가|삭제(?:해|하기)?|삭재|제외|탈퇴)\\s+(.+)$`,
+    "u",
+  ).exec(text.normalize("NFKC"));
+  if (!match) return null;
+  const recruitNumber = Number(match[1]);
+  const name = match[3]!.trim().replace(/\s+/gu, " ");
+  const nameLength = Array.from(name).length;
+  const ambiguousName = /[\/,，、;；]/u.test(name) || /^(?:추가|삭제|등록|제외|참가|탈퇴)(?:\s|$)/u.test(name);
+  const unsafeName = /[\u0000-\u001F\u007F-\u009F\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/u.test(name);
+  if (recruitNumber < 1 || recruitNumber > 99 || nameLength < 1 || nameLength > 80 || ambiguousName || unsafeName) return null;
+  return Object.freeze({
+    action: /^(?:추가|추기|등록|참가)/u.test(match[2]!) ? "ADD" : "REMOVE",
+    recruitNumber,
+    name,
+  });
+}
+
 function classifyInhouse(text: string): KakaoV4RecognizedCommand | null {
+  const memberMutation = detailMemberMutation(text, ["내전상세", "내전 상세", "내전명단", "내전 명단"]);
+  if (memberMutation) {
+    return recognized(memberMutation.action === "ADD" ? "INHOUSE_MEMBER_ADD" : "INHOUSE_MEMBER_REMOVE", text, {
+      recruitNumber: memberMutation.recruitNumber,
+      name: memberMutation.name,
+    });
+  }
   const detail = /^내전상세(?:\s*#?(\d+))?$/u.exec(text);
   if (detail) return recognized("INHOUSE_DETAIL", text, { recruitNumber: detail[1] ? Number(detail[1]) : null });
   const status = /^(?:내전현황|시즌내전현황|AI공지)(?:\s*#?(\d+))?$/u.exec(text);
@@ -338,6 +377,13 @@ function classifyInhouse(text: string): KakaoV4RecognizedCommand | null {
 }
 
 function classifyScrim(text: string): KakaoV4RecognizedCommand | null {
+  const memberMutation = detailMemberMutation(text, ["스크림상세", "스크림 상세", "스크림명단", "스크림 명단"]);
+  if (memberMutation) {
+    return recognized(memberMutation.action === "ADD" ? "SCRIM_MEMBER_ADD" : "SCRIM_MEMBER_REMOVE", text, {
+      scrimNumber: memberMutation.recruitNumber,
+      name: memberMutation.name,
+    });
+  }
   const prefix = "(?:멸망전\\s*)?스크림\\s*";
   const lifecycle = [
     ["참가", "SCRIM_LEGACY_JOIN"],

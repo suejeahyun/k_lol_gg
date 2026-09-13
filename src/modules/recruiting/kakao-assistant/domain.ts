@@ -56,7 +56,7 @@ export type KakaoOpenChatStatusDto = Readonly<{
     }>[];
     startTimeText: string;
     gameInfo: string;
-    organizerText: string | null;
+    organizerText?: string | null;
     scheduledStartAt: string | null;
   }>[];
   scrims: readonly Readonly<{
@@ -75,6 +75,7 @@ export type KakaoOpenChatStatusDto = Readonly<{
     opponentLineup: Readonly<{ top: string | null; jungle: string | null; mid: string | null; adc: string | null; support: string | null }> | null;
     memo: string | null;
     seriesRuleText: string | null;
+    organizerText?: string | null;
     status: "RECRUITING" | "MATCHED" | "CONFIRMED";
     bestOf: number;
     scheduledAt: string | null;
@@ -116,6 +117,8 @@ export type KakaoSeasonRoundMetadataDto = Readonly<{
   capacity: number;
   startTimeText: string | null;
   scheduledStartAt: string | null;
+  gameInfo?: string | null;
+  organizerText?: string | null;
   noticeText: string | null;
   revision: number;
 }>;
@@ -128,6 +131,20 @@ type KakaoSeasonSnapshotCommandBase = Readonly<{
 
 export type KakaoSeasonSnapshotCommand =
   | (KakaoSeasonSnapshotCommandBase & Readonly<{
+      action: "RESERVE";
+      recruitNo: number | null;
+      mode: "RIFT" | "ARAM" | "AUGMENT_ARAM";
+      roundMetadata: Readonly<{
+        capacity: number;
+        startTimeText: string | null;
+        scheduledStartAt: string | null;
+        gameInfo: string | null;
+        organizerText: string | null;
+        noticeText: string | null;
+      }>;
+      participants: readonly [];
+    }>)
+  | (KakaoSeasonSnapshotCommandBase & Readonly<{
       action: "SYNC";
       recruitNo: number;
       mode: "RIFT" | "ARAM" | "AUGMENT_ARAM";
@@ -135,6 +152,8 @@ export type KakaoSeasonSnapshotCommand =
         capacity: number;
         startTimeText: string | null;
         scheduledStartAt: string | null;
+        gameInfo?: string | null;
+        organizerText?: string | null;
         noticeText: string | null;
       }>;
       participants: readonly KakaoSeasonSnapshotParticipant[];
@@ -146,6 +165,21 @@ export type KakaoSeasonSnapshotCommand =
       recruitNo: number;
       mode: "RIFT" | "ARAM" | "AUGMENT_ARAM";
       participants: readonly KakaoSeasonSnapshotParticipant[];
+    }>)
+  | (KakaoSeasonSnapshotCommandBase & Readonly<{
+      action: "ADD_PARTICIPANT";
+      recruitNo: number;
+      name: string;
+      mainPosition?: SeasonApplicationPosition;
+      subPositions?: readonly SeasonApplicationPosition[];
+      reserve?: boolean;
+      participants: readonly [];
+    }>)
+  | (KakaoSeasonSnapshotCommandBase & Readonly<{
+      action: "REMOVE_PARTICIPANT";
+      recruitNo: number;
+      name: string;
+      participants: readonly [];
     }>)
   | (KakaoSeasonSnapshotCommandBase & Readonly<{
       action: "STATUS";

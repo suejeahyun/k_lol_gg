@@ -110,7 +110,7 @@ test("[P4-C05] unified entry preserves one send site, five-second timeout, and d
   assert.match(shared, /\.timeout\(5000\)/u);
   assert.equal((shared.match(/\.execute\(\)/gu) ?? []).length, 1);
   assert.equal((unified.match(/KLOL_V4\.send\(/gu) ?? []).length, 1);
-  assert.match(unified, /KLOL_KAKAO_BOT_V4_UNIFIED_2026_09_11_R5_FORM_DEFAULTS/u);
+  assert.match(unified, /KLOL_KAKAO_BOT_V4_UNIFIED_2026_09_13_R6_ALL_MODE_DRAFT/u);
   assert.match(shared, /function publicProfileId/u);
 });
 
@@ -123,14 +123,20 @@ test("[P4-C02B] member shortcuts tolerate mobile normalization and reject ambigu
     "상세 #15 삭제 재현",
     String.raw`상세 \#15 추가 재현`,
     "／상세　＃１５　추가　ＡＢＣ",
+    "상세 15 추기 재현",
+    "/상세 15 삭재 재현",
+    "내전상세 #3 추가 재현",
+    "/내전 명단 3 삭제 김 별",
+    "스크림상세 4 추기 재현",
+    "/스크림 명단 #4 삭재 김 별",
   ]) {
-    assert.equal(KLOL_V4.acceptsPublicText("RECRUIT", input), true, input);
-    assert.equal(KLOL_V4.acceptsPublicText("FEATURES", input), false, input);
-    assert.equal(KLOL_V4.publicProfileId(input), "RECRUIT", input);
+    const expectedProfile = input.replace(/^[/／]/u, "").startsWith("내전") ? "FEATURES" : "RECRUIT";
+    assert.equal(KLOL_V4.acceptsPublicText(expectedProfile, input), true, input);
+    assert.equal(KLOL_V4.acceptsPublicText(expectedProfile === "RECRUIT" ? "FEATURES" : "RECRUIT", input), false, input);
+    assert.equal(KLOL_V4.publicProfileId(input), expectedProfile, input);
   }
   for (const input of [
     "15 추가 재현",
-    "상세 15 추기 재현",
     "상세 15 추가",
     "상세 0 추가 재현",
     "상세 100 추가 재현",

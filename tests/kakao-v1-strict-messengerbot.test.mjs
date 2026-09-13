@@ -355,7 +355,7 @@ test("local replies, echo rules, events, and no-reply behavior equal the canonic
   }
   assert.deepEqual(
     replyFor(strict, "봇버전"),
-    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R10_2026_09_13_PARTY_DRAFT_ORGANIZER"],
+    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R11_2026_09_13_ALL_MODE_DRAFT"],
   );
 });
 
@@ -383,11 +383,27 @@ test("approved party member mutations parse safely and use one RECRUIT gateway r
   }
 });
 
+test("inhouse and scrim member shortcuts reach the matching profile gateway", async () => {
+  const artifact = await readFile(artifactPath, "utf8");
+  for (const [message, surface, command, profileId] of [
+    ["/내전상세 #3 추가 재현", "INHOUSE", "ADD", "FEATURES"],
+    ["내전 명단 3 삭재 재현", "INHOUSE", "REMOVE", "FEATURES"],
+    ["스크림상세 4 참가 재현", "SCRIM", "ADD", "RECRUIT"],
+    [String.raw`/스크림 명단 \#4 제외 재현`, "SCRIM", "REMOVE", "RECRUIT"],
+  ]) {
+    const strict = evaluate(artifact, { responseBody: { reply: "[명단 변경 완료]" } });
+    const parsed = strict.parseMemberMutationCommand(message);
+    assert.equal(parsed.surface, surface, message);
+    assert.equal(parsed.command, command, message);
+    assert.deepEqual(replyFor(strict, message), ["[명단 변경 완료]"], message);
+    assert.equal(JSON.parse(strict.http.body).profileId, profileId, message);
+  }
+});
+
 test("ambiguous party member text never reaches the mutation gateway", async () => {
   const artifact = await readFile(artifactPath, "utf8");
   for (const message of [
     "15 추가 재현",
-    "상세 15 추기 재현",
     "상세 15 추가",
     "상세 0 추가 재현",
     "상세 100 추가 재현",

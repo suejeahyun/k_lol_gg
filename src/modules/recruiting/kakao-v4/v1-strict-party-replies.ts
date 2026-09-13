@@ -159,6 +159,7 @@ function detailBlock(party: Party) {
 
 export function v1StrictPartyTemplate(input: Readonly<{
   recruitNumber: number;
+  recruitDate: string;
   partyType: Party["type"];
   title: string;
   maximumMembers: number;
@@ -166,7 +167,7 @@ export function v1StrictPartyTemplate(input: Readonly<{
   const lines = [
     "[K-LOL.GG 구인구직 양식]", "같이 할사람~", "",
     "아래 양식의 모집번호는 유지해서 작성해주세요.", "",
-    `📢 ${input.title}`, `모집번호: #${input.recruitNumber}`, "",
+    `📢 ${input.title}`, `모집번호: #${input.recruitNumber}`, `운영일: ${input.recruitDate}`, "",
     "》시작시간 :", "》게임정보 :", "》주최자 :", "",
     "위 항목을 작성해 전체 전송해주세요.",
     "비워 둔 시간과 게임 정보는 자동으로 채워집니다.",

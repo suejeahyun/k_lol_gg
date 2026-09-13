@@ -10,7 +10,7 @@ import { OperationsError, PostgresOperationsRepository } from "../../src/modules
 import { recruitingOperatingDateKey } from "../../src/modules/recruiting/domain/operating-day";
 import { createDatabaseHandle } from "../../src/platform/db/database";
 import { applyMigrations } from "../../src/platform/db/migrate";
-import { aiRequestLedger, auditEvents, authSessions, jobNonceBindings, maintenanceRuns, operationsCommandReceipts, operationsOutbox, recruitParties, recruitingOutbox, scrimRecruits, siteSettings, userAccounts } from "../../src/platform/db/schema";
+import { aiRequestLedger, auditEvents, authSessions, jobNonceBindings, maintenanceRuns, operationsCommandReceipts, operationsOutbox, players, recruitParties, recruitingOutbox, scrimRecruits, seasonApplications, seasonInhouseRounds, seasonKakaoPendingApplications, seasons, siteSettings, userAccounts } from "../../src/platform/db/schema";
 import { assertSafeTestDatabase } from "../../src/platform/db/test-guard";
 
 function metadata(requestKey: string, expectedRevision: number, body: unknown): OperationsCommandMetadata {
@@ -139,6 +139,69 @@ test("S13 settings, AI ledger and signed maintenance preserve authorization and 
         legacyTournamentNumber: 1, requesterTeamName: "현재 운영일 팀", status: "RECRUITING",
       },
     ]);
+    const inhouseSeasonId = randomUUID();
+    const staleInhouseRoundId = randomUUID();
+    const currentInhouseRoundId = randomUUID();
+    const inhouseRoomHash = createHash("sha256").update("daily-close-inhouse-room").digest();
+    const foreignRoomHash = createHash("sha256").update("daily-close-foreign-room").digest();
+    const inhouseSourceHash = createHash("sha256").update("daily-close-inhouse-source").digest();
+    const inhousePlayerIds = Array.from({ length: 4 }, () => randomUUID());
+    await database.insert(seasons).values({
+      id: inhouseSeasonId,
+      name: `Daily close ${inhouseSeasonId}`,
+      nameNormalized: `daily close ${inhouseSeasonId}`,
+      status: "ACTIVE",
+      activatedAt: new Date(),
+    });
+    await database.insert(players).values(inhousePlayerIds.map((id, index) => ({
+      id,
+      memberName: `마감-${index}-${id.slice(0, 6)}`,
+      memberNameNormalized: `마감-${index}-${id.slice(0, 6)}`,
+      nickname: `Close${index}${id.slice(0, 6)}`,
+      nicknameNormalized: `close${index}${id.slice(0, 6)}`,
+      tagLine: "QA",
+      tagLineNormalized: "qa",
+    })));
+    await database.insert(seasonInhouseRounds).values([
+      {
+        id: staleInhouseRoundId, seasonId: inhouseSeasonId, applyDate: previousOperatingDate, recruitNo: 71,
+        sourceRoomIdHash: inhouseRoomHash, mode: "RIFT", status: "IN_PROGRESS", capacity: 10,
+        sourceReferenceHash: inhouseSourceHash,
+      },
+      {
+        id: currentInhouseRoundId, seasonId: inhouseSeasonId, applyDate: currentOperatingDate, recruitNo: 72,
+        sourceRoomIdHash: inhouseRoomHash, mode: "RIFT", status: "DRAFT", capacity: 10,
+        sourceReferenceHash: inhouseSourceHash,
+      },
+    ]);
+    await database.insert(seasonApplications).values([
+      {
+        id: randomUUID(), seasonId: inhouseSeasonId, playerId: inhousePlayerIds[0]!, applyDate: previousOperatingDate,
+        recruitNo: 71, sourceSlotNo: 1, mainPosition: "ALL", status: "APPLIED", source: "SITE",
+      },
+      {
+        id: randomUUID(), seasonId: inhouseSeasonId, playerId: inhousePlayerIds[1]!, applyDate: previousOperatingDate,
+        recruitNo: 71, sourceSlotNo: 2, mainPosition: "ALL", status: "CONFIRMED", source: "KAKAO",
+        sourceReferenceHash: inhouseSourceHash, sourceRoomIdHash: inhouseRoomHash, sourceMode: "RIFT",
+        reviewedByUserAccountId: accountId, reviewedAt: new Date(),
+      },
+      {
+        id: randomUUID(), seasonId: inhouseSeasonId, playerId: inhousePlayerIds[2]!, applyDate: previousOperatingDate,
+        recruitNo: 71, sourceSlotNo: 3, mainPosition: "ALL", status: "APPLIED", source: "KAKAO",
+        sourceReferenceHash: inhouseSourceHash, sourceRoomIdHash: inhouseRoomHash, sourceMode: "RIFT",
+      },
+      {
+        id: randomUUID(), seasonId: inhouseSeasonId, playerId: inhousePlayerIds[3]!, applyDate: previousOperatingDate,
+        recruitNo: 71, sourceSlotNo: 4, mainPosition: "ALL", status: "APPLIED", source: "KAKAO",
+        sourceReferenceHash: inhouseSourceHash, sourceRoomIdHash: foreignRoomHash, sourceMode: "RIFT",
+      },
+    ]);
+    const pendingInhouseId = randomUUID();
+    await database.insert(seasonKakaoPendingApplications).values({
+      id: pendingInhouseId, seasonId: inhouseSeasonId, applyDate: previousOperatingDate, recruitNo: 71, slotNo: 5,
+      suppliedName: "확인 필요", mainPosition: "ALL", matchState: "UNMATCHED", status: "ACTIVE",
+      sourceReferenceHash: inhouseSourceHash, sourceRoomIdHash: inhouseRoomHash, sourceMode: "RIFT",
+    });
     const closeCutoff = new Date(Date.now() - 12 * 60 * 60_000);
     const eligiblePartiesBeforeClose = await database
       .select({ id: recruitParties.id })
@@ -167,6 +230,9 @@ test("S13 settings, AI ledger and signed maintenance preserve authorization and 
     assert.equal(close.counts.partiesClosed, eligiblePartiesBeforeClose.length);
     assert.equal(close.counts.partyDraftsReset, eligibleDraftsBeforeClose.length);
     assert.equal(close.counts.scrimsClosed, eligibleScrimsBeforeClose.length);
+    assert.equal(close.counts.inhouseRoundsClosed, 1);
+    assert.equal(close.counts.inhouseApplicationsCancelled, 1);
+    assert.equal(close.counts.inhousePendingCancelled, 1);
     const closedParty = (await database.select().from(recruitParties).where(eq(recruitParties.id, idlePartyId)))[0];
     assert.equal(closedParty?.status, "FINISHED");
     assert.equal(closedParty?.revision, 1);
@@ -178,6 +244,17 @@ test("S13 settings, AI ledger and signed maintenance preserve authorization and 
       assert.equal(scrim?.revision, 1);
     }
     assert.equal((await database.select().from(scrimRecruits).where(eq(scrimRecruits.id, currentScrimId)))[0]?.status, "RECRUITING");
+    assert.equal((await database.select().from(seasonInhouseRounds).where(eq(seasonInhouseRounds.id, staleInhouseRoundId)))[0]?.status, "CANCELED");
+    assert.equal((await database.select().from(seasonInhouseRounds).where(eq(seasonInhouseRounds.id, currentInhouseRoundId)))[0]?.status, "DRAFT");
+    const closedInhouseApplications = await database.select().from(seasonApplications).where(and(
+      eq(seasonApplications.seasonId, inhouseSeasonId),
+      eq(seasonApplications.recruitNo, 71),
+    ));
+    assert.equal(closedInhouseApplications.find((row) => row.playerId === inhousePlayerIds[0])?.status, "APPLIED", "SITE application is preserved");
+    assert.equal(closedInhouseApplications.find((row) => row.playerId === inhousePlayerIds[1])?.status, "CONFIRMED", "reviewed Kakao decision is preserved");
+    assert.equal(closedInhouseApplications.find((row) => row.playerId === inhousePlayerIds[2])?.status, "CANCELLED");
+    assert.equal(closedInhouseApplications.find((row) => row.playerId === inhousePlayerIds[3])?.status, "APPLIED", "another room is preserved");
+    assert.equal((await database.select().from(seasonKakaoPendingApplications).where(eq(seasonKakaoPendingApplications.id, pendingInhouseId)))[0]?.status, "CANCELLED");
     assert.equal((await database.select().from(recruitingOutbox).where(eq(recruitingOutbox.aggregateId, idlePartyId))).length, 1);
     assert.equal((await database.select().from(recruitingOutbox).where(eq(recruitingOutbox.aggregateId, staleDraftId))).length, 1);
     for (const scrimId of staleScrimIds) {

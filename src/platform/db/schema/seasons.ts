@@ -47,6 +47,11 @@ export const seasonApplicationPosition = competitionSchema.enum("season_applicat
   "SUP",
   "ALL",
 ]);
+export const seasonInhouseRoundStatus = competitionSchema.enum("season_inhouse_round_status", [
+  "DRAFT",
+  "IN_PROGRESS",
+  "CANCELED",
+]);
 
 export const seasons = competitionSchema.table(
   "seasons",
@@ -125,9 +130,12 @@ export const seasonInhouseRounds = competitionSchema.table(
     recruitNo: integer("recruit_no").notNull(),
     sourceRoomIdHash: bytea("source_room_id_hash").notNull(),
     mode: varchar("mode", { length: 16 }).notNull(),
+    status: seasonInhouseRoundStatus("status").default("IN_PROGRESS").notNull(),
     capacity: integer("capacity").default(10).notNull(),
     startTimeText: varchar("start_time_text", { length: 32 }),
     scheduledStartAt: timestamptz("scheduled_start_at"),
+    gameInfo: varchar("game_info", { length: 500 }),
+    organizerText: varchar("organizer_text", { length: 100 }),
     noticeText: text("notice_text"),
     sourceReferenceHash: bytea("source_reference_hash").notNull(),
     revision: bigint("revision", { mode: "number" }).default(0).notNull(),
@@ -153,6 +161,8 @@ export const seasonInhouseRounds = competitionSchema.table(
     check("season_inhouse_rounds_room_hash_32_bytes", sql`octet_length(${table.sourceRoomIdHash}) = 32`),
     check("season_inhouse_rounds_source_hash_32_bytes", sql`octet_length(${table.sourceReferenceHash}) = 32`),
     check("season_inhouse_rounds_mode", sql`${table.mode} IN ('RIFT', 'ARAM', 'AUGMENT_ARAM')`),
+    check("season_inhouse_rounds_game_info_length", sql`${table.gameInfo} IS NULL OR char_length(btrim(${table.gameInfo})) BETWEEN 1 AND 500`),
+    check("season_inhouse_rounds_organizer_length", sql`${table.organizerText} IS NULL OR char_length(btrim(${table.organizerText})) BETWEEN 1 AND 100`),
     check("season_inhouse_rounds_revision_nonnegative", sql`${table.revision} >= 0`),
     check("season_inhouse_rounds_notice_length", sql`${table.noticeText} IS NULL OR char_length(${table.noticeText}) <= 600`),
   ],

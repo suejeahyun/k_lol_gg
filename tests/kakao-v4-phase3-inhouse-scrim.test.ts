@@ -152,7 +152,7 @@ test("Phase 3-A: V1 내전 모드 선택과 협곡·칼바람 전체 양식을 �
   assert.equal((await reply(state.service, envelope("FEATURES", "내전구인", 1))).reply, contract.inhouse.modeSelectorReply);
   assert.equal((await reply(state.service, envelope("FEATURES", "내전구인 협곡 2026-09-09 21:30 #2 10명", 2))).reply, contract.inhouse.riftTemplate);
   assert.equal((await reply(state.service, envelope("FEATURES", "내전구인 칼바람 2026-09-09 21:30 #3 10명", 3))).reply, contract.inhouse.aramTemplate);
-  assert.equal(state.seasonCalls.length, 0);
+  assert.deepEqual(state.seasonCalls.map(({ command }) => command.action), ["RESERVE", "RESERVE"]);
   assert.equal(state.handled.length, 0);
 });
 
@@ -205,7 +205,7 @@ test("Phase 3-A: 신규 스크림은 서버 번호와 기존 단일 활성 대�
   const command = state.handled[0];
   assert.equal(command?.type, "CREATE_SCRIM");
   if (command?.type === "CREATE_SCRIM") {
-    assert.equal(command.payload.scrimNumber, null, "자동 번호는 dispatcher가 추측하지 않고 application에 위임해야 한다");
+    assert.equal(command.payload.scrimNumber, 7, "초안에서 예약된 실제 번호를 제출해야 한다");
     assert.equal(command.payload.tournamentId, null);
     assert.equal(command.payload.legacyTournamentNumber, null);
   }

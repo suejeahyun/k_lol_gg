@@ -274,6 +274,13 @@
       "when": 1789294516310,
       "tag": "0038_lying_sphinx",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1789296503535,
+      "tag": "0039_massive_arachne",
+      "breakpoints": true
     }
   ]
 }

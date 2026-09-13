@@ -6,7 +6,7 @@ import type { RecruitingCommand } from "../application/commands";
 
 const COMMAND_TYPES = new Set<RecruitingCommand["type"]>([
   "CREATE_PARTY", "SYNC_PARTY", "PARTY_MEMBER_ADD", "PARTY_MEMBER_REMOVE", "GET_PARTY_STATUS", "FINISH_PARTY", "CANCEL_PARTY", "RESET_PARTY",
-  "CREATE_SCRIM", "SYNC_SCRIM", "JOIN_SCRIM", "REOPEN_SCRIM", "CONFIRM_SCRIM", "COMPLETE_SCRIM", "CANCEL_SCRIM",
+  "CREATE_SCRIM", "SYNC_SCRIM", "ADD_SCRIM_PARTICIPANT", "REMOVE_SCRIM_PARTICIPANT", "JOIN_SCRIM", "REOPEN_SCRIM", "CONFIRM_SCRIM", "COMPLETE_SCRIM", "CANCEL_SCRIM",
 ]);
 const POSITIONS = new Set(["TOP", "JGL", "MID", "ADC", "SUP"]);
 
@@ -93,11 +93,11 @@ function payloadFor(type: RecruitingCommand["type"], value: unknown): Recruiting
     case "CREATE_SCRIM":
       if (!exactKeys(payload, ["recruitDate", "scrimNumber", "tournamentId", "requesterTeamId", "scheduledAt", "bestOf"], [
         "legacyTournamentNumber", "title", "requesterTeamName", "opponentTeamName",
-        "requesterLineup", "opponentLineup", "memo", "seriesRuleText",
+        "requesterLineup", "opponentLineup", "memo", "seriesRuleText", "organizerText", "initialStatus",
       ])) return null;
       if (
         typeof payload.recruitDate !== "string" || !/^\d{4}-\d{2}-\d{2}$/u.test(payload.recruitDate) ||
-        !integer(payload.scrimNumber, 1, 99) ||
+        !(payload.scrimNumber === null || integer(payload.scrimNumber, 1, 99)) ||
         !(
           uuid(payload.tournamentId) ||
           (payload.tournamentId === null && (
@@ -106,9 +106,10 @@ function payloadFor(type: RecruitingCommand["type"], value: unknown): Recruiting
             integer(payload.legacyTournamentNumber, 1, 9999)
           ))
         ) ||
-        !(uuid(payload.requesterTeamId) || (payload.requesterTeamId === null && text(payload.requesterTeamName, 120))) ||
+        !(payload.initialStatus === "DRAFT" || uuid(payload.requesterTeamId) || (payload.requesterTeamId === null && text(payload.requesterTeamName, 120))) ||
         !optionalText(payload.title, 160) || !optionalText(payload.opponentTeamName, 120) ||
-        !optionalText(payload.memo, 500) || !optionalText(payload.seriesRuleText, 160) ||
+        !optionalText(payload.memo, 500) || !optionalText(payload.seriesRuleText, 160) || !optionalText(payload.organizerText, 100) ||
+        !(payload.initialStatus === undefined || payload.initialStatus === "DRAFT") ||
         !lineup(payload.requesterLineup) || !lineup(payload.opponentLineup) ||
         !nullableInstant(payload.scheduledAt) || ![1, 3, 5].includes(Number(payload.bestOf))
       ) return null;
@@ -118,7 +119,7 @@ function payloadFor(type: RecruitingCommand["type"], value: unknown): Recruiting
         "recruitDate", "scrimNumber", "tournamentId", "legacyTournamentNumber", "requesterTeamId",
         "title", "requesterTeamName", "opponentTeamName", "requesterLineup", "opponentLineup",
         "memo", "seriesRuleText", "scheduledAt", "bestOf",
-      ], ["opponentTeamId"])) return null;
+      ], ["opponentTeamId", "organizerText"])) return null;
       if (
         typeof payload.recruitDate !== "string" || !/^\d{4}-\d{2}-\d{2}$/u.test(payload.recruitDate) ||
         !integer(payload.scrimNumber, 1, 99) ||
@@ -127,11 +128,20 @@ function payloadFor(type: RecruitingCommand["type"], value: unknown): Recruiting
         !(uuid(payload.requesterTeamId) || (payload.requesterTeamId === null && text(payload.requesterTeamName, 120))) ||
         !(payload.opponentTeamId === undefined || payload.opponentTeamId === null || uuid(payload.opponentTeamId)) ||
         !optionalText(payload.title, 160) || !optionalText(payload.opponentTeamName, 120) ||
-        !optionalText(payload.memo, 500) || !optionalText(payload.seriesRuleText, 160) ||
+        !optionalText(payload.memo, 500) || !optionalText(payload.seriesRuleText, 160) || !optionalText(payload.organizerText, 100) ||
         !lineup(payload.requesterLineup) || !lineup(payload.opponentLineup) ||
         !nullableInstant(payload.scheduledAt) || ![1, 3, 5].includes(Number(payload.bestOf))
       ) return null;
       return payload as RecruitingCommand["payload"];
+    case "ADD_SCRIM_PARTICIPANT":
+      return exactKeys(payload, ["name"], ["team", "position"]) && text(payload.name, 80) &&
+        (payload.team === undefined || payload.team === "REQUESTER" || payload.team === "OPPONENT") &&
+        (payload.position === undefined || ["TOP", "JGL", "MID", "ADC", "SUP", "ALL"].includes(String(payload.position)))
+        ? payload as RecruitingCommand["payload"] : null;
+    case "REMOVE_SCRIM_PARTICIPANT":
+      return exactKeys(payload, ["name"], ["team"]) && text(payload.name, 80) &&
+        (payload.team === undefined || payload.team === "REQUESTER" || payload.team === "OPPONENT")
+        ? payload as RecruitingCommand["payload"] : null;
     case "JOIN_SCRIM":
       return exactKeys(payload, ["opponentTeamId"]) && uuid(payload.opponentTeamId)
         ? payload as RecruitingCommand["payload"] : null;

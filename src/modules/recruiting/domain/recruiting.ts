@@ -13,8 +13,9 @@ export const RECRUIT_PARTY_TYPES = [
 
 export type RecruitPartyType = (typeof RECRUIT_PARTY_TYPES)[number];
 export type RecruitPartyStatus = "DRAFT" | "IN_PROGRESS" | "FINISHED" | "CANCELED" | "RESET";
-export type ScrimRecruitStatus = "RECRUITING" | "MATCHED" | "CONFIRMED" | "COMPLETED" | "CANCELED";
+export type ScrimRecruitStatus = "DRAFT" | "RECRUITING" | "MATCHED" | "CONFIRMED" | "COMPLETED" | "CANCELED";
 export type RecruitPosition = "TOP" | "JGL" | "MID" | "ADC" | "SUP";
+export type ScrimParticipantTeam = "REQUESTER" | "OPPONENT";
 
 export type RecruitMember = Readonly<{
   name: string;
@@ -101,6 +102,7 @@ export type ScrimRecruit = Readonly<{
   opponentLineup: ScrimLineup | null;
   legacyMemo: string | null;
   legacySeriesRuleText: string | null;
+  organizerText?: string | null;
   status: ScrimRecruitStatus;
   scheduledAt: Date | null;
   bestOf: number | null;
@@ -543,6 +545,63 @@ export function transitionScrimRecruit(input: Readonly<{
   return { ...input.scrim, revision: input.scrim.revision + 1, opponentTeamId, opponentSenderId, status };
 }
 
+function normalizeScrimParticipantName(value: string): string {
+  return cleanText(value, "INVALID_SCRIM_PARTICIPANT", 80);
+}
+
+const SCRIM_LINEUP_KEYS = ["top", "jungle", "mid", "adc", "support"] as const;
+const SCRIM_POSITION_KEY = Object.freeze({ TOP: "top", JGL: "jungle", MID: "mid", ADC: "adc", SUP: "support" } as const);
+
+function emptyScrimLineup(): ScrimLineup {
+  return Object.freeze({ top: null, jungle: null, mid: null, adc: null, support: null });
+}
+
+/** Adds/removes a name from the existing V1 five-line lineups, which remain the single roster source of truth. */
+export function mutateScrimParticipant(input: Readonly<{
+  scrim: ScrimRecruit;
+  expectedRevision: number;
+  action: "ADD" | "REMOVE";
+  name: string;
+  team?: ScrimParticipantTeam;
+  position?: RecruitPosition | "ALL";
+}>): Readonly<{ scrim: ScrimRecruit; outcome: "APPLIED" | "ALREADY_PRESENT" | "NOT_FOUND" }> {
+  expectedRevision(input.scrim.revision, input.expectedRevision);
+  if (!["RECRUITING", "MATCHED", "CONFIRMED"].includes(input.scrim.status)) throw new Error("INVALID_SCRIM_TRANSITION");
+  const name = normalizeScrimParticipantName(input.name);
+  const normalizedName = name.normalize("NFKC").toLocaleLowerCase("ko-KR");
+  const teams = input.team ? [input.team] : ["REQUESTER", "OPPONENT"] as const;
+  const lineups = {
+    REQUESTER: input.scrim.requesterLineup ?? emptyScrimLineup(),
+    OPPONENT: input.scrim.opponentLineup ?? emptyScrimLineup(),
+  };
+  const matches = teams.flatMap((team) => SCRIM_LINEUP_KEYS.flatMap((key) =>
+    lineups[team][key]?.normalize("NFKC").toLocaleLowerCase("ko-KR") === normalizedName ? [{ team, key }] : []));
+  if (input.action === "REMOVE") {
+    if (matches.length === 0) return { scrim: input.scrim, outcome: "NOT_FOUND" };
+    if (matches.length > 1) throw new Error("AMBIGUOUS_SCRIM_PARTICIPANT");
+    const match = matches[0]!;
+    const lineup = { ...lineups[match.team], [match.key]: null };
+    return { scrim: {
+      ...input.scrim,
+      revision: input.scrim.revision + 1,
+      ...(match.team === "REQUESTER" ? { requesterLineup: lineup } : { opponentLineup: lineup }),
+    }, outcome: "APPLIED" };
+  }
+  const allMatches = (["REQUESTER", "OPPONENT"] as const).flatMap((candidateTeam) => SCRIM_LINEUP_KEYS.filter((key) =>
+    lineups[candidateTeam][key]?.normalize("NFKC").toLocaleLowerCase("ko-KR") === normalizedName));
+  if (allMatches.length > 0) return { scrim: input.scrim, outcome: "ALREADY_PRESENT" };
+  const team = input.team ?? "REQUESTER";
+  const requestedKey = input.position && input.position !== "ALL" ? SCRIM_POSITION_KEY[input.position] : null;
+  const key = requestedKey ?? SCRIM_LINEUP_KEYS.find((candidate) => lineups[team][candidate] === null);
+  if (!key || lineups[team][key] !== null) throw new Error("SCRIM_PARTICIPANT_LIMIT_EXCEEDED");
+  const lineup = { ...lineups[team], [key]: name };
+  return { scrim: {
+    ...input.scrim,
+    revision: input.scrim.revision + 1,
+    ...(team === "REQUESTER" ? { requesterLineup: lineup } : { opponentLineup: lineup }),
+  }, outcome: "APPLIED" };
+}
+
 function scrimLineupHasMember(lineup: ScrimLineup | null): boolean {
   return lineup !== null && Object.values(lineup).some((member) => member !== null);
 }
@@ -566,6 +625,7 @@ export function syncScrimRecruit(input: Readonly<{
   legacySeriesRuleText: string | null;
   scheduledAt: Date | null;
   bestOf: number;
+  organizerText?: string | null;
 }>): ScrimRecruit {
   expectedRevision(input.scrim.revision, input.expectedRevision);
   if (["COMPLETED", "CANCELED"].includes(input.scrim.status)) throw new Error("INVALID_SCRIM_TRANSITION");
@@ -575,12 +635,12 @@ export function syncScrimRecruit(input: Readonly<{
   if (input.tournamentId === null && (!Number.isSafeInteger(input.legacyTournamentNumber) || input.legacyTournamentNumber === null || input.legacyTournamentNumber < 1 || input.legacyTournamentNumber > 9999)) {
     throw new Error("INVALID_SCRIM_TOURNAMENT");
   }
-  if (
+  if (input.scrim.status !== "DRAFT" && (
     input.recruitDate !== input.scrim.recruitDate ||
     input.scrimNumber !== input.scrim.scrimNumber ||
     input.tournamentId !== input.scrim.tournamentId ||
     input.legacyTournamentNumber !== input.scrim.legacyTournamentNumber
-  ) throw new Error("SCRIM_IDENTITY_MISMATCH");
+  )) throw new Error("SCRIM_IDENTITY_MISMATCH");
   if (input.requesterTeamId !== null) identifier(input.requesterTeamId, "INVALID_SCRIM_REQUESTER");
   if (input.requesterTeamId === null && input.requesterTeamName === null) throw new Error("INVALID_SCRIM_REQUESTER");
   if (input.opponentTeamId !== null) identifier(input.opponentTeamId, "INVALID_SCRIM_OPPONENT");
@@ -595,6 +655,8 @@ export function syncScrimRecruit(input: Readonly<{
   return {
     ...input.scrim,
     revision: input.scrim.revision + 1,
+    tournamentId: input.tournamentId,
+    legacyTournamentNumber: input.legacyTournamentNumber,
     requesterTeamId: input.requesterTeamId,
     opponentTeamId: input.opponentTeamId,
     opponentSenderId: hasOpponent ? input.scrim.opponentSenderId : null,
@@ -605,6 +667,7 @@ export function syncScrimRecruit(input: Readonly<{
     opponentLineup: input.opponentLineup,
     legacyMemo: input.legacyMemo,
     legacySeriesRuleText: input.legacySeriesRuleText,
+    organizerText: optionalPartyText(input.organizerText, "INVALID_SCRIM_ORGANIZER_TEXT", 100) ?? input.scrim.organizerText,
     status,
     scheduledAt: input.scheduledAt,
     bestOf: input.bestOf,

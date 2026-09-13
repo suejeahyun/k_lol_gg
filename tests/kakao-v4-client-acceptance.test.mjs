@@ -139,13 +139,15 @@ test("[C03A] one unified phone bot routes both room command families exactly onc
     ["랭킹", "FEATURES", "기능방"],
     ["전적 별빛#KR1", "FEATURES", "기능방"],
     ["내전구인 협곡", "FEATURES", "기능방"],
+    ["/내전상세 #3 추기 재현", "FEATURES", "기능방"],
+    ["스크림상세 4 삭재 재현", "RECRUIT", "구인 관련방"],
   ]) {
     const before = bot.calls.length;
     bot.respond(command, { room, logId: `unified-${before}` });
     assert.equal(bot.calls.length, before + 1, command);
     assert.equal(bot.calls.at(-1).profileId, profileId, command);
   }
-  assert.equal(bot.replies.length, 5);
+  assert.equal(bot.replies.length, 7);
   assert.doesNotMatch(JSON.stringify(bot.calls), /구인 관련방|기능방|untrusted-room|untrusted-channel/u);
 });
 
@@ -168,7 +170,7 @@ test("[C03B] unified bot version is one local reply and never reaches transport"
   const bot = await unifiedHarness();
   bot.api.unifiedLocalReply = (text, codeVersion) => text === "/봇버전" ? `버전: ${codeVersion}` : null;
   bot.respond("/봇버전", { room: "어느 방이든 동일" });
-  assert.deepEqual(bot.replies, ["버전: KLOL_KAKAO_BOT_V4_UNIFIED_2026_09_11_R5_FORM_DEFAULTS"]);
+  assert.deepEqual(bot.replies, ["버전: KLOL_KAKAO_BOT_V4_UNIFIED_2026_09_13_R6_ALL_MODE_DRAFT"]);
   assert.equal(bot.calls.length, 0);
 });
 

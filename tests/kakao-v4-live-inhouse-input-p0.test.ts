@@ -145,6 +145,8 @@ test("[P0-INHOUSE-METADATA-01] 독립 공지와 20시 시작을 전체 스냅샷
     capacity: 10,
     startTimeText: "20:00",
     scheduledStartAt: "2026-09-11T11:00:00.000Z",
+    gameInfo: null,
+    organizerText: null,
     noticeText: "승리팀 랜덤 1인 스킨 증정",
   });
 });

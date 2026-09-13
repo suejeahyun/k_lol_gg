@@ -16,6 +16,7 @@ export type PublicScrimRecruitDto = Readonly<{
   opponentLineup: ScrimRecruit["opponentLineup"];
   memo: string | null;
   seriesRuleText: string | null;
+  organizerText?: string | null;
   status: ScrimRecruit["status"];
   scheduledAt: string | null;
   bestOf: number | null;
@@ -41,6 +42,7 @@ export function toPublicScrimDto(scrim: ScrimRecruit): PublicScrimRecruitDto {
     opponentLineup: scrim.opponentLineup,
     memo: publicScrimMemo(scrim.legacyMemo),
     seriesRuleText: scrim.legacySeriesRuleText,
+    organizerText: scrim.organizerText ?? null,
     status: scrim.status,
     scheduledAt: scrim.scheduledAt?.toISOString() ?? null,
     bestOf: scrim.bestOf,

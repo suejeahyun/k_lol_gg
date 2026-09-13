@@ -46,8 +46,8 @@ function successfulProfile(text: string) {
 }
 
 test("classifier exposes a complete canonical/profile matrix", () => {
-  assert.equal(KAKAO_V4_CANONICAL_COMMANDS.length, 48);
-  assert.equal(new Set(KAKAO_V4_CANONICAL_COMMANDS).size, 48);
+  assert.equal(KAKAO_V4_CANONICAL_COMMANDS.length, 52);
+  assert.equal(new Set(KAKAO_V4_CANONICAL_COMMANDS).size, 52);
   assert.deepEqual(KAKAO_V4_COMMAND_FAMILIES, ["PARTY", "INHOUSE", "SCRIM", "PLAYER", "OPERATIONS", "LOCAL"]);
   for (const command of KAKAO_V4_CANONICAL_COMMANDS) {
     assert.ok(
@@ -215,6 +215,8 @@ test("party member mutations require an explicit detail prefix and one safe sing
     ["구인상세 15 추가 김 별", "PARTY_MEMBER_ADD", "김 별"],
     ["상세 #15 삭제 재현", "PARTY_MEMBER_REMOVE", "재현"],
     [String.raw`상세 \#15 추가 재현`, "PARTY_MEMBER_ADD", "재현"],
+    ["상세 15 추기 재현", "PARTY_MEMBER_ADD", "재현"],
+    ["상세 15 삭재 재현", "PARTY_MEMBER_REMOVE", "재현"],
     ["／상세　＃１５　추가　ＡＢＣ", "PARTY_MEMBER_ADD", "ABC"],
   ] as const;
   for (const [text, command, name] of accepted) {
@@ -230,7 +232,6 @@ test("party member mutations require an explicit detail prefix and one safe sing
 
   for (const text of [
     "15 추가 재현",
-    "상세 15 추기 재현",
     "상세 15 추가",
     "상세 0 추가 재현",
     "상세 100 추가 재현",

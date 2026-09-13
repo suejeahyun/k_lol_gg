@@ -35,6 +35,8 @@ const scopes: Record<RecruitingCommand["type"], string> = {
   RESET_PARTY: "admin:recruiting:party:reset",
   CREATE_SCRIM: "bot:recruiting:scrim:create",
   SYNC_SCRIM: "bot:recruiting:scrim:sync",
+  ADD_SCRIM_PARTICIPANT: "bot:recruiting:scrim:participant-add",
+  REMOVE_SCRIM_PARTICIPANT: "bot:recruiting:scrim:participant-remove",
   JOIN_SCRIM: "bot:recruiting:scrim:join",
   REOPEN_SCRIM: "bot:recruiting:scrim:reopen",
   CONFIRM_SCRIM: "bot:recruiting:scrim:confirm",
@@ -399,6 +401,37 @@ test("atomic party member commands compose on the locked latest revision and per
   assert.equal(removed.body.data.outcome, "APPLIED");
 });
 
+test("scrim participant shortcuts compose on the locked latest revision across room members", async () => {
+  const harness = new Harness();
+  const handler = new RecruitingCommandHandler(harness.dependencies());
+  await handler.handle(createScrim("scrim-participant-atomic"));
+
+  const roomMember = (senderId: string, nonce: string) => ({
+    ...botActor,
+    authorizationIntent: { ...botActor.authorizationIntent, senderId, nonce },
+  });
+  const first = await handler.handle(command("ADD_SCRIM_PARTICIPANT", "scrim-participant-atomic", 0, {
+    name: "Alpha", team: "REQUESTER", position: "TOP",
+  }, roomMember("sender-room-member-a", "scrim_member_a_nonce_123456")));
+  const second = await handler.handle(command("ADD_SCRIM_PARTICIPANT", "scrim-participant-atomic", 0, {
+    name: "Bravo", team: "REQUESTER", position: "MID",
+  }, roomMember("sender-room-member-b", "scrim_member_b_nonce_123456")));
+
+  assert.equal(first.body.revision, 1);
+  assert.equal(second.body.revision, 2, "a stale pre-lock revision composes from the row locked in the transaction");
+  assert.deepEqual(harness.snapshot.scrims.get("scrim-participant-atomic")?.requesterLineup, {
+    top: "Alpha", jungle: null, mid: "Bravo", adc: null, support: null,
+  });
+
+  const mutationAuditCount = harness.snapshot.audits.length;
+  const duplicate = await handler.handle(command("ADD_SCRIM_PARTICIPANT", "scrim-participant-atomic", 0, {
+    name: "alpha", team: "REQUESTER", position: "TOP",
+  }, roomMember("sender-room-member-a", "scrim_member_dup_nonce_12345")));
+  assert.equal(duplicate.body.revision, 2);
+  assert.equal(duplicate.body.data.outcome, "ALREADY_PRESENT");
+  assert.equal(harness.snapshot.audits.length, mutationAuditCount, "idempotent no-ops do not emit another mutation event");
+});
+
 test("party member command validation and ambiguous removal fail closed before persistence", async () => {
   const harness = new Harness();
   const handler = new RecruitingCommandHandler(harness.dependencies());
@@ -740,7 +773,7 @@ test("public party and scrim DTOs expose only reviewed fields", () => {
   assert.deepEqual(Object.keys(toPublicPartyDto(party)).sort(), ["gameInfo", "id", "maximumMembers", "memberCount", "members", "organizerText", "recruitNumber", "scheduledStartAt", "startTimeText", "status", "title", "type"]);
   assert.deepEqual(toPublicPartyDto(party).members, party.members);
   const scrim: ScrimRecruit = { id: "scrim-1", revision: 2, sourceRoomId: null, sourceSenderId: null, opponentSenderId: null, recruitDate: "2026-09-07", scrimNumber: 1, tournamentId: "destruction-1", legacyTournamentNumber: null, requesterTeamId: "team-a", opponentTeamId: "team-b", requesterLineup: null, opponentLineup: null, legacyMemo: null, legacySeriesRuleText: null, status: "MATCHED", scheduledAt: null, bestOf: 3 };
-  assert.deepEqual(Object.keys(toPublicScrimDto(scrim)).sort(), ["bestOf", "id", "legacyTournamentNumber", "memo", "opponentLineup", "opponentTeamId", "opponentTeamName", "recruitDate", "requesterLineup", "requesterTeamId", "requesterTeamName", "scheduledAt", "scrimNumber", "seriesRuleText", "status", "title", "tournamentId"]);
+  assert.deepEqual(Object.keys(toPublicScrimDto(scrim)).sort(), ["bestOf", "id", "legacyTournamentNumber", "memo", "opponentLineup", "opponentTeamId", "opponentTeamName", "organizerText", "recruitDate", "requesterLineup", "requesterTeamId", "requesterTeamName", "scheduledAt", "scrimNumber", "seriesRuleText", "status", "title", "tournamentId"]);
   assert.equal("revision" in toPublicScrimDto(scrim), false);
 });
 
@@ -890,6 +923,65 @@ test("V4 automatic scrim number is allocated after receipt claim and replays bef
   assert.equal(replay.replayed, true);
   assert.equal(replay.body.data.scrimNumber, 1);
   assert.equal(harness.operations.filter((operation) => operation === "allocate-scrim-number").length, allocations);
+});
+
+test("V4 scrim draft activates with one inferred tournament and a server-time fallback", async () => {
+  const harness = new Harness();
+  harness.activeDestructionTournamentIds = ["destruction-v4-active"];
+  const handler = new RecruitingCommandHandler(harness.dependencies());
+  const aggregateId = "scrim-v4-draft";
+  const draft = await handler.handle(v4Command("CREATE_SCRIM", aggregateId, 0, {
+    recruitDate: "2026-09-07",
+    scrimNumber: null,
+    tournamentId: null,
+    legacyTournamentNumber: null,
+    requesterTeamId: null,
+    title: null,
+    requesterTeamName: null,
+    opponentTeamName: null,
+    requesterLineup: null,
+    opponentLineup: null,
+    memo: null,
+    seriesRuleText: "3판2선",
+    scheduledAt: null,
+    bestOf: 3,
+    organizerText: null,
+    initialStatus: "DRAFT",
+  }, {
+    eventId: "event-v4-scrim-draft-0001",
+    senderId: "sender-user-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    nonce: "v4_scrim_draft_nonce_1234",
+  }));
+  assert.equal(draft.body.status, "DRAFT");
+  assert.equal(harness.snapshot.scrims.get(aggregateId)?.tournamentId, null);
+
+  const activated = await handler.handle(v4Command("SYNC_SCRIM", aggregateId, 0, {
+    recruitDate: "2026-09-07",
+    scrimNumber: 1,
+    tournamentId: null,
+    legacyTournamentNumber: null,
+    requesterTeamId: null,
+    opponentTeamId: null,
+    title: null,
+    requesterTeamName: "하늘단",
+    opponentTeamName: null,
+    requesterLineup: null,
+    opponentLineup: null,
+    memo: null,
+    seriesRuleText: "3판2선",
+    scheduledAt: null,
+    bestOf: 3,
+    organizerText: "재현",
+  }, {
+    eventId: "event-v4-scrim-draft-0002",
+    senderId: "sender-user-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    nonce: "v4_scrim_activate_nonce_12",
+  }));
+  const stored = harness.snapshot.scrims.get(aggregateId);
+  assert.equal(activated.body.status, "RECRUITING");
+  assert.equal(stored?.tournamentId, "destruction-v4-active");
+  assert.equal(stored?.organizerText, "재현");
+  assert.equal(stored?.scheduledAt?.toISOString(), now.toISOString());
 });
 
 test("V4 request fingerprint is stable across server-resolved revisions but changes with the signed body", () => {

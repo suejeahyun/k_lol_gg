@@ -72,7 +72,10 @@ export class PostgresHomeRepository implements HomeRepository {
         scrimNumber: scrimRecruits.scrimNumber,
         bestOf: scrimRecruits.bestOf,
         updatedAt: scrimRecruits.updatedAt,
-      }).from(scrimRecruits).where(inArray(scrimRecruits.status, ["RECRUITING", "MATCHED", "CONFIRMED"]))
+      }).from(scrimRecruits).where(and(
+        eq(scrimRecruits.isDraft, false),
+        inArray(scrimRecruits.status, ["RECRUITING", "MATCHED", "CONFIRMED"]),
+      ))
         .orderBy(desc(scrimRecruits.updatedAt), desc(scrimRecruits.id)).limit(4),
       this.database.select({
         id: eventCompetitions.id,

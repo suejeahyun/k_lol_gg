@@ -66,6 +66,8 @@ export type KakaoV4InhouseRoundMetadata = Readonly<{
   capacity: number;
   startTimeText: string | null;
   scheduledStartAt: string | null;
+  gameInfo: string | null;
+  organizerText: string | null;
   noticeText: string | null;
 }>;
 
@@ -82,6 +84,7 @@ export type KakaoV4ScrimUpsertPayload = Readonly<{
   seriesRuleText: string | null;
   scheduledAt: string | null;
   bestOf: number;
+  organizerText: string | null;
 }>;
 
 /**
@@ -97,24 +100,31 @@ export type CanonicalKakaoV4Command =
   | Readonly<{ domain: "PARTY"; action: "SYNC"; target: KakaoV4PartySyncTarget; payload: KakaoV4PartySyncPayload }>
   | Readonly<{ domain: "PARTY"; action: "FINISH"; target: KakaoV4RecruitTarget }>
   | Readonly<{ domain: "SCRIM"; action: "CREATE"; payload: ScrimFormCommandPayload }>
-  | Readonly<{ domain: "SCRIM"; action: "TEMPLATE"; recruitDate: string }>
+  | Readonly<{ domain: "SCRIM"; action: "RESERVE"; recruitDate: string }>
   | Readonly<{ domain: "SCRIM"; action: "UPSERT"; payload: KakaoV4ScrimUpsertPayload }>
   | Readonly<{ domain: "SCRIM"; action: "STATUS" }>
   | Readonly<{ domain: "SCRIM"; action: "DETAIL"; target: KakaoV4RecruitTarget }>
+  | Readonly<{ domain: "SCRIM"; action: "ADD_MEMBER" | "REMOVE_MEMBER"; target: KakaoV4RecruitTarget; name: string }>
   | Readonly<{ domain: "SCRIM"; action: "SYNC"; target: KakaoV4RecruitTarget; payload: SyncScrimCommandPayload }>
   | Readonly<{ domain: "SCRIM"; action: "DEPRECATED_JOIN" | "DEPRECATED_CONFIRM" | "DEPRECATED_CANCEL" | "DEPRECATED_FINISH" }>
   | Readonly<{
       domain: "SEASON";
       action: "TEMPLATE";
+      mode: null;
+    }>
+  | Readonly<{
+      domain: "SEASON";
+      action: "RESERVE";
       applyDate: string;
-      recruitNumber: number;
+      recruitNumber: number | null;
       capacity: number;
       time: string;
-      mode: KakaoV4InhouseMode | null;
+      mode: KakaoV4InhouseMode;
     }>
   | Readonly<{ domain: "SEASON"; action: "JOIN_GUIDE" }>
   | Readonly<{ domain: "SEASON"; action: "STATUS"; seasonId: string | null; applyDate: string }>
   | Readonly<{ domain: "SEASON"; action: "DETAIL"; seasonId: string | null; applyDate: string; recruitNumber: number }>
+  | Readonly<{ domain: "SEASON"; action: "ADD_MEMBER" | "REMOVE_MEMBER"; seasonId: string | null; applyDate: string; recruitNumber: number; name: string }>
   | Readonly<{
       domain: "SEASON";
       action: "SYNC";
@@ -135,10 +145,6 @@ export type CanonicalKakaoV4Command =
 
 export function requiredProfileForKakaoV4Command(command: CanonicalKakaoV4Command) {
   return command.domain === "SEASON" || command.domain === "PLAYER" || command.domain === "OPERATIONS" ? "FEATURES" as const : "RECRUIT" as const;
-}
-
-function kstDate(timestamp: number) {
-  return new Date((timestamp + 9 * 60 * 60) * 1_000).toISOString().slice(0, 10);
 }
 
 function partyOperatingDate(timestamp: number) {
@@ -204,11 +210,12 @@ function inhouseTemplateCommand(parameters: Readonly<Record<string, string | num
   const recruitValue = /(?:^|\s)#\s*(\d{1,3})(?:\s|$)/u.exec(` ${argumentsText} `)?.[1];
   const modeValue = textParameter(parameters, "mode");
   const mode = modeValue === "RIFT" || modeValue === "ARAM" || modeValue === "AUGMENT_ARAM" ? modeValue : null;
+  if (!mode) return Object.freeze({ domain: "SEASON" as const, action: "TEMPLATE" as const, mode: null });
   return Object.freeze({
     domain: "SEASON" as const,
-    action: "TEMPLATE" as const,
+    action: "RESERVE" as const,
     applyDate,
-    recruitNumber: recruitValue ? Number(recruitValue) : 1,
+    recruitNumber: recruitValue ? Number(recruitValue) : null,
     capacity: capacityValue ? Math.min(Math.max(Number(capacityValue), 2), 20) : 10,
     time: `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`,
     mode,
@@ -241,6 +248,15 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
   const scheduledStartAt = startTimeText
     ? new Date(`${applyDate}T${startTimeText}:00+09:00`).toISOString()
     : null;
+  const metadataValue = (label: string) => {
+    const escaped = label.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+    const match = lines.find((line) => new RegExp(`^\\s*》?\\s*${escaped}\\s*[:：]`, "u").test(line));
+    return match
+      ? cleanScrimValue(match.replace(new RegExp(`^\\s*》?\\s*${escaped}\\s*[:：]\\s*`, "u"), ""))
+      : null;
+  };
+  const gameInfo = metadataValue("게임정보");
+  const organizerText = metadataValue("주최자");
   const safeNoticeLine = (value: string) => value.normalize("NFKC").trim()
     .replace(/[\u0000-\u001F\u007F-\u009F\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/gu, "");
   const noticeCandidates: string[] = [];
@@ -261,6 +277,7 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
       /^📢\s*내전하실분\s*#\s*\d{1,3}$/u.test(candidate) ||
       /^》\s*(?:협곡|칼바람|증바람|증강칼바람)$/u.test(candidate) ||
       /^》\s*20\d{2}-\d{2}-\d{2}\s+/u.test(candidate) ||
+      /^》?\s*(?:게임정보|주최자)\s*[:：]/u.test(candidate) ||
       /^👥\s*\d{1,3}\s*\/\s*\d{1,3}\s*명$/u.test(candidate) ||
       /^\*참가 신청 양식\*$/u.test(candidate) ||
       /^이름(?:\/현티어\/최고티어\/주라인\/부라인)?$/u.test(candidate) ||
@@ -342,7 +359,7 @@ function inhouseSnapshot(text: string, fallbackDate: string) {
     applyDate,
     recruitNumber,
     mode,
-    roundMetadata: Object.freeze({ capacity, startTimeText, scheduledStartAt, noticeText }),
+    roundMetadata: Object.freeze({ capacity, startTimeText, scheduledStartAt, gameInfo, organizerText, noticeText }),
     participants: Object.freeze(participants),
     ...(preserveSlotNos.length > 0 ? { preserveSlotNos: Object.freeze(preserveSlotNos) } : {}),
   });
@@ -387,7 +404,8 @@ function scrimSnapshot(text: string, fallbackDate: string, v1Strict: boolean): K
     }
     return Object.values(output).some(Boolean) ? Object.freeze(output) : null;
   };
-  const requesterTeamName = cleanScrimValue(lines[requesterIndex]!.replace(/^\s*우리팀\s*[:：]\s*/u, ""));
+  const organizerText = cleanScrimValue(field("주최자"));
+  const requesterTeamName = cleanScrimValue(lines[requesterIndex]!.replace(/^\s*우리팀\s*[:：]\s*/u, "")) ?? organizerText;
   if (!requesterTeamName) return null;
   const opponentTeamName = cleanScrimValue(lines[opponentIndex]!.replace(/^\s*상대팀\s*[:：]\s*/u, ""));
   const ruleText = cleanScrimValue(field("방식"));
@@ -413,12 +431,12 @@ function scrimSnapshot(text: string, fallbackDate: string, v1Strict: boolean): K
     seriesRuleText: ruleText,
     scheduledAt,
     bestOf,
+    organizerText,
   });
 }
 
 export function canonicalizeKakaoV4Command(classification: KakaoV4CommandClassification, envelope: KakaoV4CommandEnvelope): CanonicalKakaoV4Command | null {
   if (classification.kind === "UNKNOWN" || classification.kind === "WRONG_PROFILE") return null;
-  const date = kstDate(envelope.timestamp);
   const partyDate = partyOperatingDate(envelope.timestamp);
   const parameters = classification.parameters;
   if (classification.command === "PARTY_CREATE") {
@@ -452,13 +470,17 @@ export function canonicalizeKakaoV4Command(classification: KakaoV4CommandClassif
     const parsedForm = parsePartyForm(envelope.text);
     const definition = parsedForm.submittedTitle;
     if (parsedForm.decision !== "EXACT" || !definition) return null;
+    const formDate = parsedForm.operatingDate.state === "ABSENT"
+      ? partyDate
+      : validDateKey(parsedForm.operatingDate.value, partyDate);
+    if (!formDate) return null;
     const recruitNumber = parsedForm.recruitNumber;
     return Object.freeze({
       domain: "PARTY" as const,
       action: "SYNC" as const,
-      target: Object.freeze({ recruitDate: partyDate, recruitNumber }),
+      target: Object.freeze({ recruitDate: formDate, recruitNumber }),
       payload: Object.freeze({
-        recruitDate: partyDate,
+        recruitDate: formDate,
         preferredRecruitNumber: recruitNumber,
         partyType: definition.partyType,
         title: definition.canonicalTitle,
@@ -473,7 +495,7 @@ export function canonicalizeKakaoV4Command(classification: KakaoV4CommandClassif
       }),
     });
   }
-  if (classification.command === "INHOUSE_CREATE") return inhouseTemplateCommand(parameters, date);
+  if (classification.command === "INHOUSE_CREATE") return inhouseTemplateCommand(parameters, partyDate);
   if (classification.command === "INHOUSE_JOIN_GUIDE") {
     return Object.freeze({ domain: "SEASON" as const, action: "JOIN_GUIDE" as const });
   }
@@ -481,12 +503,25 @@ export function canonicalizeKakaoV4Command(classification: KakaoV4CommandClassif
     const recruitNumber = numberParameter(parameters, "recruitNumber");
     if (classification.command === "INHOUSE_DETAIL" && recruitNumber === null) return null;
     return recruitNumber === null
-      ? Object.freeze({ domain: "SEASON" as const, action: "STATUS" as const, seasonId: null, applyDate: date })
-      : Object.freeze({ domain: "SEASON" as const, action: "DETAIL" as const, seasonId: null, applyDate: date, recruitNumber });
+      ? Object.freeze({ domain: "SEASON" as const, action: "STATUS" as const, seasonId: null, applyDate: partyDate })
+      : Object.freeze({ domain: "SEASON" as const, action: "DETAIL" as const, seasonId: null, applyDate: partyDate, recruitNumber });
   }
-  if (classification.command === "INHOUSE_SNAPSHOT") return inhouseSnapshot(classification.canonicalText, date);
+  if (classification.command === "INHOUSE_MEMBER_ADD" || classification.command === "INHOUSE_MEMBER_REMOVE") {
+    const recruitNumber = numberParameter(parameters, "recruitNumber");
+    const name = textParameter(parameters, "name");
+    if (!recruitNumber || !name) return null;
+    return Object.freeze({
+      domain: "SEASON" as const,
+      action: classification.command === "INHOUSE_MEMBER_ADD" ? "ADD_MEMBER" as const : "REMOVE_MEMBER" as const,
+      seasonId: null,
+      applyDate: partyDate,
+      recruitNumber,
+      name,
+    });
+  }
+  if (classification.command === "INHOUSE_SNAPSHOT") return inhouseSnapshot(classification.canonicalText, partyDate);
   if (classification.command === "SCRIM_CREATE") {
-    return Object.freeze({ domain: "SCRIM" as const, action: "TEMPLATE" as const, recruitDate: partyDate });
+    return Object.freeze({ domain: "SCRIM" as const, action: "RESERVE" as const, recruitDate: partyDate });
   }
   if (classification.command === "SCRIM_SNAPSHOT") {
     const payload = scrimSnapshot(classification.canonicalText, partyDate, usesKakaoV1StrictResponse(envelope));
@@ -496,6 +531,17 @@ export function canonicalizeKakaoV4Command(classification: KakaoV4CommandClassif
   if (classification.command === "SCRIM_DETAIL") {
     const recruitNumber = numberParameter(parameters, "scrimNumber");
     return recruitNumber ? Object.freeze({ domain: "SCRIM" as const, action: "DETAIL" as const, target: Object.freeze({ recruitDate: partyDate, recruitNumber }) }) : null;
+  }
+  if (classification.command === "SCRIM_MEMBER_ADD" || classification.command === "SCRIM_MEMBER_REMOVE") {
+    const recruitNumber = numberParameter(parameters, "scrimNumber");
+    const name = textParameter(parameters, "name");
+    if (!recruitNumber || !name) return null;
+    return Object.freeze({
+      domain: "SCRIM" as const,
+      action: classification.command === "SCRIM_MEMBER_ADD" ? "ADD_MEMBER" as const : "REMOVE_MEMBER" as const,
+      target: Object.freeze({ recruitDate: partyDate, recruitNumber }),
+      name,
+    });
   }
   if (classification.command.startsWith("SCRIM_LEGACY_")) {
     const action = classification.command.slice("SCRIM_LEGACY_".length) as "JOIN" | "CONFIRM" | "CANCEL" | "FINISH";

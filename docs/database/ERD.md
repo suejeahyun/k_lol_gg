@@ -6,7 +6,7 @@
 운영 DB, 환경 변수, 외부 서비스에는 연결하지 않습니다.
 
 - Source: `src/platform/db/schema/index.ts`
-- Schema SHA-256: `c98a86e1a179fc7c2528c72e70dd77780481a1d9d0f58412c1991de72ae53b86`
+- Schema SHA-256: `13e835c456bf0c679b38fe0b397be198afc53c8e3b832432806c15e8d5f579bc`
 - Tables: 102
 - Foreign keys: 165
 - Regenerate: `npm run db:erd`
@@ -549,9 +549,12 @@ erDiagram
         integer recruit_no "NOT NULL"
         bytea source_room_id_hash "NOT NULL"
         varchar_16 mode "NOT NULL"
+        season_inhouse_round_status status "NOT NULL"
         integer capacity "NOT NULL"
         varchar_32 start_time_text "nullable"
         timestamp_with_time_zone scheduled_start_at "nullable"
+        varchar_500 game_info "nullable"
+        varchar_100 organizer_text "nullable"
         text notice_text "nullable"
         bytea source_reference_hash "NOT NULL"
         bigint revision "NOT NULL"
@@ -1295,6 +1298,8 @@ erDiagram
         jsonb opponent_lineup_json "nullable"
         varchar_500 legacy_memo "nullable"
         varchar_160 legacy_series_rule_text "nullable"
+        varchar_100 organizer_text "nullable"
+        boolean is_draft "NOT NULL"
         scrim_status status "NOT NULL"
         timestamp_with_time_zone scheduled_at "nullable"
         integer best_of "nullable"
