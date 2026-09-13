@@ -113,7 +113,31 @@ test("a Kakao V4 number reservation stays draft until the completed V1 form acti
   assert.equal(metadataActivated.startTimeText, "00:34");
   assert.equal(metadataActivated.gameInfo, "미입력");
   assert.equal(metadataActivated.organizerText, "재현");
-  assert.deepEqual(metadataActivated.members, []);
+  assert.deepEqual(metadataActivated.members, [{
+    name: "재현", position: null, slotNo: 1, substitute: false,
+  }]);
+
+  const metadataPatched = syncRecruitParty({
+    party: metadataActivated, expectedRevision: 1, now: new Date(submittedAt.getTime() + 60_000),
+    members: metadataActivated.members,
+    organizerText: "새 주최자", organizerState: "PRESENT_VALUE",
+  });
+  assert.equal(metadataPatched.organizerText, "새 주최자");
+  assert.deepEqual(metadataPatched.members, metadataActivated.members, "later organizer edits preserve the active roster");
+
+  const organizerRemoved = mutateRecruitPartyMember({
+    party: metadataActivated, mutation: { action: "REMOVE", name: "재현" },
+    now: new Date(submittedAt.getTime() + 120_000),
+  });
+  assert.equal(organizerRemoved.party.organizerText, "재현", "participant removal does not erase organizer metadata");
+  assert.deepEqual(organizerRemoved.party.members, []);
+  const afterRemovalMetadataEdit = syncRecruitParty({
+    party: organizerRemoved.party, expectedRevision: organizerRemoved.party.revision,
+    now: new Date(submittedAt.getTime() + 180_000), members: organizerRemoved.party.members,
+    gameInfo: "새 게임 정보", gameInfoState: "PRESENT_VALUE",
+  });
+  assert.equal(afterRemovalMetadataEdit.gameInfo, "새 게임 정보");
+  assert.deepEqual(afterRemovalMetadataEdit.members, [], "active metadata edits never reinsert a removed organizer");
 
   const explicitEmptyMetadata = syncRecruitParty({
     party: reserved, expectedRevision: 0, now: submittedAt,

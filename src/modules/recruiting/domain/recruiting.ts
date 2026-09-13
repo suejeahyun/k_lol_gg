@@ -413,11 +413,9 @@ export function syncRecruitParty(input: Readonly<{
   if (input.party.status !== "IN_PROGRESS" && input.party.status !== "DRAFT") throw new Error("RECRUIT_NOT_MUTABLE");
   validDate(input.now, "INVALID_RECRUIT_TIME");
   const activatingDraft = input.party.status === "DRAFT";
-  const members = normalizeMembers(input.members, input.party.maximumMembers);
   const metadataActivationSignal = hasRecruitingMetadataActivationSignal([
     { state: input.organizerState, value: input.organizerText },
   ]);
-  if (activatingDraft && members.length === 0 && !metadataActivationSignal) throw new Error("EMPTY_DRAFT_ACTIVATION");
   const startTimeText = input.startTimeState === "ABSENT"
     ? activatingDraft ? kakaoRecruitTimeText(input.now) : input.party.startTimeText
     : input.startTimeState === "PRESENT_EMPTY"
@@ -442,6 +440,18 @@ export function syncRecruitParty(input: Readonly<{
         ? cleanText(input.organizerText ?? "", "INVALID_RECRUIT_ORGANIZER_TEXT", 100)
         : optionalPartyText(input.organizerText, "INVALID_RECRUIT_ORGANIZER_TEXT", 100)
           ?? input.party.organizerText;
+  const submittedMembers = normalizeMembers(input.members, input.party.maximumMembers);
+  if (activatingDraft && submittedMembers.length === 0 && !metadataActivationSignal) throw new Error("EMPTY_DRAFT_ACTIVATION");
+  // A metadata-only V1 form names the organizer but has no member rows. On the
+  // first activation only, treat that organizer as the first participant.
+  const members = activatingDraft && submittedMembers.length === 0 && organizerText
+    ? normalizeMembers([{
+        name: organizerText,
+        position: LINE_PARTY_TYPES.has(input.party.type) ? LINE_POSITIONS[0]! : null,
+        slotNo: 1,
+        substitute: false,
+      }], input.party.maximumMembers)
+    : submittedMembers;
   const scheduledStartAt = input.startTimeState === "ABSENT" ||
     (input.startTimeState === undefined && (input.startTimeText === null || input.startTimeText === undefined))
     ? input.party.scheduledStartAt

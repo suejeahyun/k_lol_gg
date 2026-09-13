@@ -270,7 +270,8 @@ test("signed Kakao reads persist safe replay receipts and isolate recruit member
       activeSeason = { id };
       createdActiveSeasonId = id;
     }
-    const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+    const noticeNow = new Date();
+    const today = recruitingOperatingDateKey(noticeNow);
     await database.insert(seasonApplications).values({
       id: randomUUID(), seasonId: activeSeason.id, playerId, applyDate: today,
       recruitNo: 17, mainPosition: "MID", status: "APPLIED", source: "SITE",
@@ -281,6 +282,7 @@ test("signed Kakao reads persist safe replay receipts and isolate recruit member
       requestKey: "notice-request-key",
       scope: "BOT:KAKAO:SCHEDULED_NOTICE",
       slot: "21",
+      now: noticeNow,
     });
     assert.equal(notice.body.positionCounts.MID >= 1, true);
     assert.equal(notice.body.remaining, Math.max(10 - notice.body.total, 0));
@@ -304,7 +306,7 @@ test("in-house round metadata persists schedule and notice, clears on full snaps
   assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
   const { database, pool } = createDatabaseHandle(connectionString, { max: 3 });
   const now = new Date();
-  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
+  const today = recruitingOperatingDateKey(now);
   const suffix = randomUUID().slice(0, 8);
   const seasonId = randomUUID();
   const reviewerId = randomUUID();
@@ -563,7 +565,7 @@ test("authoritative Kakao season sync withdraws only same-room same-round RIFT r
   assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
   const { database, pool } = createDatabaseHandle(connectionString, { max: 3 });
   const now = new Date();
-  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
+  const today = recruitingOperatingDateKey(now);
   const suffix = randomUUID().slice(0, 8);
   const seasonId = randomUUID();
   const exactPlayerId = randomUUID();
@@ -644,7 +646,7 @@ test("signed Kakao season snapshots match exact players and preserve unresolved 
   assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
   const { database, pool } = createDatabaseHandle(connectionString, { max: 3 });
   const now = new Date();
-  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
+  const today = recruitingOperatingDateKey(now);
   const suffix = randomUUID().slice(0, 8);
   const seasonId = randomUUID();
   const exactPlayerId = randomUUID();
@@ -820,7 +822,7 @@ test("recoverable Kakao season rows save valid players, queue review rows, prese
   assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
   const { database, pool } = createDatabaseHandle(connectionString, { max: 3 });
   const now = new Date();
-  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
+  const today = recruitingOperatingDateKey(now);
   const suffix = randomUUID().slice(0, 8);
   const seasonId = randomUUID();
   const reviewerId = randomUUID();

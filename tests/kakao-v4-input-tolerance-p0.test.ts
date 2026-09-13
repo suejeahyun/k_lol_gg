@@ -116,7 +116,7 @@ function partyDispatcherHarness() {
 }
 
 test("[P0-FIXTURE] input-tolerance matrix is pinned to the unchanged V1 oracle", () => {
-  assert.equal(fixture.contractVersion, "KLOL_KAKAO_V4_V1_COMPAT_2026_09_13_R3");
+  assert.equal(fixture.contractVersion, "KLOL_KAKAO_V4_V1_COMPAT_2026_09_14_R4");
   assert.equal(fixture.source.v1Artifact, "pasted-text.txt (delegated attachment; not committed)");
   assert.equal(fixture.source.v1Sha256, "c91a56a289a762fe7e08143e8fd4b55c9695c4df68ebfcb6689613dcb73776b7");
   assert.deepEqual(Object.keys(fixture.operationForms.forms).sort(), ["friends", "leaves", "meetups", "suggestions"]);

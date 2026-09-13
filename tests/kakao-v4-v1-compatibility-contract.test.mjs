@@ -111,10 +111,13 @@ test("initial party form exposes the three activation fields without participant
   assert.equal(contract.party.activation.emptyGameInfoDefault, "미입력");
   assert.equal(contract.party.activation.unchangedBlankTemplateActivates, false);
   assert.equal(contract.party.activation.legacyParticipantRowsRemainAccepted, true);
-  assert.equal(contract.party.activation.organizerIsMember, false);
+  assert.equal(contract.party.activation.organizerIsMember, true);
+  assert.match(contract.party.activation.organizerMemberPolicy, /primary slot 1/u);
   assert.match(contract.party.detailWithDefaults, /시작시간: 21:34/u);
   assert.match(contract.party.detailWithDefaults, /게임정보: 미입력/u);
   assert.match(contract.party.detailWithDefaults, /주최자: 재현/u);
+  assert.match(contract.party.detailWithDefaults, /인원 1\/5/u);
+  assert.match(contract.party.detailWithDefaults, /1\. 재현/u);
 });
 
 test("full party forms are authoritative snapshots and allow A→B→A", () => {

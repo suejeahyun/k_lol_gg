@@ -423,7 +423,7 @@ test("concurrent V4 party member commands serialize on the locked latest aggrega
     assert.equal(activated.body.data.startTimeText, "모바시");
     assert.equal(activated.body.data.gameInfo, "증칼");
     assert.equal(activated.body.data.organizerText, "TEST");
-    assert.equal(activated.body.data.memberCount, 0);
+    assert.equal(activated.body.data.memberCount, 1);
     assert.equal(activationReplay.replayed, true);
     assert.deepEqual(activationReplay.body, activated.body);
 
@@ -445,8 +445,11 @@ test("concurrent V4 party member commands serialize on the locked latest aggrega
     assert.equal(stored.gameInfo, "증칼");
     assert.equal(stored.organizerText, "TEST");
     const members = stored.membersJson as readonly Readonly<{ name: string; slotNo: number; substitute: boolean }>[];
-    assert.deepEqual(members.map((member) => member.slotNo), [1, 2]);
-    assert.equal(members.every((member) => member.substitute === false), true);
+    assert.deepEqual(members.map((member) => [member.slotNo, member.substitute]), [
+      [1, false], [2, false], [1, true],
+    ]);
+    assert.equal(members[0]?.name, "TEST");
+    assert.deepEqual(members.slice(1).map((member) => member.name).sort(), [`둘째-${suffix}`, `첫째-${suffix}`].sort());
 
     const duplicateCommand = v4Command("PARTY_MEMBER_ADD", { name: members[0]!.name }, `sender-${suffix}-c`);
     const duplicate = await handler.handle(duplicateCommand);
@@ -463,7 +466,8 @@ test("concurrent V4 party member commands serialize on the locked latest aggrega
     assert.equal(removed.body.data.outcome, "APPLIED");
     assert.equal(removed.revision, 4);
     const afterRemoval = (await database.select().from(recruitParties).where(eq(recruitParties.id, partyId)))[0]!;
-    assert.deepEqual(afterRemoval.membersJson, [members[1]], "remaining slot is preserved and reserve promotion is not performed");
+    assert.deepEqual(afterRemoval.membersJson, [members[1], members[2]], "remaining primary and reserve slots are preserved without promotion");
+    assert.equal(afterRemoval.organizerText, "TEST", "removing the organizer participant keeps organizer metadata");
     const partyAudits = await database.select({
       action: auditEvents.action,
       metadata: auditEvents.metadataJson,
