@@ -2,16 +2,16 @@
 
 ## 2026-09-13 UI·운영 흐름 보완 릴리스 후보
 
-- 기능 커밋: `fd819b0c5fd19957b95ecff3d2708da61f8d5ce7`
-- 릴리스 tag: `ui-workflow-refinement-v1.0.0`
+- 최신 기능 커밋: `fd87e5f47703f92f09e1d4db70617ee2aa49fc92`
+- 릴리스 tag: `ui-workflow-refinement-v1.0.1`
 - 상태: 소스·빌드·격리 PostgreSQL·격리 Chromium 검증 완료, **운영 미배포**
 - 전체 화면: 105 pages / 339 captures / issue 0 / 종료 코드 0
 - 테스트: 747개 중 746 PASS, DB 전용 1 skip, 실패 0
 - 프로덕션 빌드: static generation 93/93
 - DB migration·운영 데이터 변경·삭제: 없음
-- 주요 범위: 본인 티어 선택기, 멸망전 우승 사진 캐러셀, 구인 참가자 이름, 내전 시간 표시 제거, 이벤트 대회·멸망전 독립 경로
+- 주요 범위: 티어 10종 + 우측 단계/LP 입력기, 멸망전 우승 사진 캐러셀, 구인 참가자 이름, 내전 시간 표시 제거, 이벤트 대회·멸망전 독립 경로
 
-전체 근거와 남은 운영 조건은 [`qa-evidence/ui-workflow-refinement-2026-09-13/README.md`](./qa-evidence/ui-workflow-refinement-2026-09-13/README.md)에 있다.
+전체 근거는 [`qa-evidence/ui-workflow-refinement-2026-09-13/README.md`](./qa-evidence/ui-workflow-refinement-2026-09-13/README.md), 티어 입력 구조 정정 근거는 [`qa-evidence/tier-control-correction-2026-09-13/README.md`](./qa-evidence/tier-control-correction-2026-09-13/README.md)에 있다.
 
 ## 2026-09-13 전체 검증·보완 릴리스 후보
 

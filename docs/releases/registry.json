@@ -294,6 +294,20 @@
         "status": "NOT_DEPLOYED"
       },
       "externalInstallations": []
+    },
+    {
+      "featureId": "ui-workflow-refinement",
+      "version": "1.0.1",
+      "gitTag": "ui-workflow-refinement-v1.0.1",
+      "commit": "fd87e5f47703f92f09e1d4db70617ee2aa49fc92",
+      "releasedAt": "2026-09-13T16:28:37+09:00",
+      "migrationHead": "0037_swift_brood",
+      "qaEvidence": "docs/qa-evidence/tier-control-correction-2026-09-13/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-13-tier-control-correction.md",
+      "deployment": {
+        "status": "NOT_DEPLOYED"
+      },
+      "externalInstallations": []
     }
   ]
 }
