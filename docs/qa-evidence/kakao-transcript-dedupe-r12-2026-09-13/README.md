@@ -2,7 +2,7 @@
 
 검토일: 2026-09-13 KST  
 대상: MessengerBot R V1 strict 공개/비공개 산출물과 V4 command gateway  
-판정: 소스·생성물·focused 자동 테스트 반영 완료, 운영 휴대폰 설치와 실방 송수신은 미확인
+판정: 소스·생성물·전체 자동 테스트·Vercel 운영 배포 완료, 운영 휴대폰 설치와 실방 송수신은 미확인
 
 ## 제보 재현과 기대 동작
 
@@ -55,6 +55,8 @@ node scripts/check-secrets.mjs --tree-only
 공개 생성물은 LF 63,537자, CRLF 65,350자로 MessengerBot R 65,535자 제한 안이다. SHA-256은 `e061d81a56e1f4a6801ea0035b030730a320a3a29a9839b03e23b7ef3485d00e`다.
 
 비공개 설치본은 LF 61,368자, CRLF 63,173자이며 SHA-256은 `646b04dbbc101656b0d4a9e87b4068bab2eb32c6611d0ad62b9068c774d8a9c4`다. 비밀값은 출력하거나 저장소에 추가하지 않았다.
+
+운영 배포 `dpl_HAhkug5Sq5XVzKNA8Gg4tuauCknR`은 Ready이며 `https://k-lol-gg.vercel.app/api/health`에서 HTTP 200·`status: ready`를 확인했다. private 설치본의 RECRUIT·FEATURES 서명 요청도 운영 명령 게이트웨이에서 각각 HTTP 200을 반환했고 인증 값은 출력하지 않았다.
 
 ## 현재 공백과 남은 위험
 

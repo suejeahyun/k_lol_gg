@@ -1,5 +1,19 @@
 # K-LOL.GG V2 상태
 
+## 2026-09-13 카카오 V1 strict R12 알림 중복·양식 활성화 보완
+
+- 기능 커밋: `c6b5c9f0c9d22f9474828c297521c2f56fb4fcaa`
+- 릴리스 tag: `kakao-r12-transcript-dedupe-v1.0.0`
+- 상태: 소스·전체 테스트·격리 PostgreSQL·private 연결 검증 및 Vercel 운영 배포 완료, 휴대폰 MessengerBot R 설치 대기
+- 운영 배포: `dpl_HAhkug5Sq5XVzKNA8Gg4tuauCknR`
+- 운영 별칭: `https://k-lol-gg.vercel.app` · `/api/health` HTTP 200 · `status: ready`
+- 테스트: 카카오 focused 54/54, 계약 394/394, 일반 774 PASS·DB 전용 1 skip, PostgreSQL 전체 계약·HTTP·브라우저, static generation 93/93
+- private 설치본: R12, LF 61,368 / CRLF 63,173, SHA-256 `646b04dbbc101656b0d4a9e87b4068bab2eb32c6611d0ad62b9068c774d8a9c4`
+- 주요 범위: 정상 외부 로딩 안내 유지, 외부 안내 재처리 차단, 동일 logId 가시 답장 중복 억제, 무인자 내전구인 선택 안내, 파티 #11 전체 양식 활성화 회귀
+- DB migration·운영 데이터 변경·삭제: 없음
+
+전체 근거와 디스코드 공지는 [`qa-evidence/kakao-transcript-dedupe-r12-2026-09-13/README.md`](./qa-evidence/kakao-transcript-dedupe-r12-2026-09-13/README.md)에 있다.
+
 ## 2026-09-13 카카오 V1 strict R11 설치본 정합성 긴급 수정
 
 - 기능 커밋: `56c8f33eeef4de3986a6e373234d3678c5ee2ccb`

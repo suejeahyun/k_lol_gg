@@ -2,6 +2,32 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "featureId": "kakao-r12-transcript-dedupe",
+      "version": "1.0.0",
+      "gitTag": "kakao-r12-transcript-dedupe-v1.0.0",
+      "commit": "c6b5c9f0c9d22f9474828c297521c2f56fb4fcaa",
+      "releasedAt": "2026-09-13T21:31:51+09:00",
+      "migrationHead": "0039_massive_arachne",
+      "qaEvidence": "docs/qa-evidence/kakao-transcript-dedupe-r12-2026-09-13/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-13-kakao-r12-transcript-dedupe.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_HAhkug5Sq5XVzKNA8Gg4tuauCknR",
+        "url": "https://k-lol-4605dsc3w-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-13T12:31:51.256Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": [
+        {
+          "name": "MessengerBot R V1 strict",
+          "version": "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R12_2026_09_13_TRANSCRIPT_DEDUPE",
+          "status": "PENDING_USER_INSTALL"
+        }
+      ]
+    },
+    {
       "featureId": "kakao-v1-r11-private-installer-hotfix",
       "version": "1.0.0",
       "gitTag": "kakao-v1-r11-private-installer-hotfix-v1.0.0",
