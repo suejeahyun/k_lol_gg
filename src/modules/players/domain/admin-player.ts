@@ -16,6 +16,8 @@ export type AdminPlayerAccount = Readonly<{
   loginId: string;
   role: "USER" | "ADMIN" | "SUPER_ADMIN";
   status: "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED";
+  revision: number;
+  deletedAt: string | null;
 }>;
 
 export type AdminPlayer = Readonly<{

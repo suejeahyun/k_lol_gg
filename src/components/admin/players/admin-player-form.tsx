@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, RotateCcw, Save, UserPlus } from "lucide-react";
 
@@ -229,6 +229,124 @@ export function AdminPlayerForm({
       <div className={styles.formMessage} data-tone={message?.tone ?? "idle"} aria-live="polite">
         {message ? <><AlertCircle aria-hidden="true" /> {message.text}</> : null}
       </div>
+    </form>
+  );
+}
+
+export function AdminPlayerAccountPromotion({
+  account,
+  actorRole,
+}: {
+  account: NonNullable<AdminPlayer["account"]>;
+  actorRole: "ADMIN" | "SUPER_ADMIN";
+}) {
+  const router = useRouter();
+  const [pending, setPending] = useState(false);
+  const [promoted, setPromoted] = useState(false);
+  const [message, setMessage] = useState<{ tone: "error" | "success"; text: string } | null>(null);
+  const retryKey = useRef<{ fingerprint: string; key: string } | null>(null);
+
+  if (actorRole !== "SUPER_ADMIN") {
+    return <p className={styles.inactiveNotice}>계정 역할 변경은 최고 관리자(SUPER_ADMIN)만 실행할 수 있습니다.</p>;
+  }
+  if (account.role === "SUPER_ADMIN") {
+    return <p className={styles.inactiveNotice}>최고 관리자 계정의 역할은 웹에서 변경할 수 없습니다.</p>;
+  }
+  if (account.role === "ADMIN" || promoted) {
+    return (
+      <p className={styles.formMessage} data-tone="success" role="status" aria-live="polite">
+        {promoted
+          ? "관리자 역할로 변경했습니다. 기존 세션은 종료되며 다음 관리자 로그인에서 2단계 인증 등록이 필요합니다."
+          : "이미 관리자(ADMIN) 계정입니다."}
+      </p>
+    );
+  }
+
+  const blockedReason = account.deletedAt
+    ? "삭제된 계정은 먼저 복구해야 관리자 역할을 지정할 수 있습니다."
+    : account.status !== "APPROVED"
+      ? "승인된 계정만 관리자 역할을 지정할 수 있습니다. 먼저 계정 상태를 승인으로 변경해 주세요."
+      : null;
+  const allowed = blockedReason === null;
+
+  async function promote(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!allowed || pending) return;
+    const data = new FormData(event.currentTarget);
+    const internalReason = String(data.get("internalReason") ?? "").trim();
+    const confirmLoginId = String(data.get("confirmLoginId") ?? "").trim();
+    if (confirmLoginId.normalize("NFKC") !== account.loginId.normalize("NFKC")) {
+      setMessage({ tone: "error", text: `대상 확인란에 ${account.loginId} 아이디를 정확히 입력해 주세요.` });
+      return;
+    }
+    const payload = { role: "ADMIN", internalReason, confirmLoginId } as const;
+    const fingerprint = JSON.stringify({ accountId: account.id, revision: account.revision, payload });
+    if (retryKey.current?.fingerprint !== fingerprint) {
+      retryKey.current = { fingerprint, key: newIdempotencyKey() };
+    }
+
+    setPending(true);
+    setMessage(null);
+    try {
+      const response = await fetch(`/api/admin/users/${account.id}/role`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Idempotency-Key": retryKey.current.key,
+          "If-Match": `"${account.revision}"`,
+        },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        const text = await problemMessage(response);
+        if (response.status === 404 || response.status === 412) {
+          retryKey.current = null;
+          router.refresh();
+        }
+        setMessage({ tone: "error", text });
+        return;
+      }
+      retryKey.current = null;
+      setPromoted(true);
+      router.refresh();
+    } catch {
+      setMessage({ tone: "error", text: "네트워크 연결을 확인한 뒤 같은 내용으로 다시 시도해 주세요." });
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <form
+      id="player-account-role-promotion"
+      className={`${styles.actionPanel} ${styles.accountRoleAction}`}
+      data-account-revision={account.revision}
+      onSubmit={promote}
+    >
+      <h3>관리자 지정</h3>
+      <p>연결된 일반 사용자(USER)를 관리자(ADMIN)로 지정합니다. 최고 관리자 역할은 이 화면에서 부여할 수 없습니다.</p>
+      <p>역할이 변경되면 기존 세션은 모두 종료되고, 다음 관리자 로그인에서 2단계 인증 등록이 필요합니다.</p>
+      {blockedReason ? <p className={styles.inactiveNotice}>{blockedReason}</p> : null}
+      <label>
+        내부 운영 사유
+        <textarea name="internalReason" minLength={2} maxLength={1000} required disabled={!allowed || pending} />
+      </label>
+      <label>
+        대상 확인
+        <input name="confirmLoginId" autoComplete="off" placeholder={account.loginId} required disabled={!allowed || pending} />
+        <small>실행할 계정의 로그인 아이디를 입력하세요.</small>
+      </label>
+      <button type="submit" disabled={!allowed || pending}>
+        <UserPlus aria-hidden="true" /> {pending ? "변경 중…" : "관리자로 지정"}
+      </button>
+      <p
+        className={styles.formMessage}
+        data-tone={message?.tone ?? "idle"}
+        role={message?.tone === "error" ? "alert" : "status"}
+        aria-live="polite"
+      >
+        {message ? <><AlertCircle aria-hidden="true" /> {message.text}</> : null}
+      </p>
     </form>
   );
 }

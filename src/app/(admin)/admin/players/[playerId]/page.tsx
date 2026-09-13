@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Database, Gamepad2, Pencil, Radio, ShieldCheck, UserRound } from "lucide-react";
 
 import {
+  AdminPlayerAccountPromotion,
   AdminPlayerDeactivate,
   AdminPlayerForm,
   AdminPlayerReactivate,
@@ -40,7 +41,7 @@ export default async function AdminPlayerDetailPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { playerId } = await params;
-  await requirePageRole("ADMIN", `/admin/players/${playerId}`);
+  const session = await requirePageRole("ADMIN", `/admin/players/${playerId}`);
   const query = await searchParams;
   const requestedTab = typeof query.tab === "string" ? query.tab : "profile";
   const tab = requestedTab === "balance" || requestedTab === "riot" ? requestedTab : "profile";
@@ -136,12 +137,23 @@ export default async function AdminPlayerDetailPage({
             <aside className={styles.accountCard}>
               <h2><ShieldCheck aria-hidden="true" /> 연결 계정</h2>
               {player.account ? (
-                <dl className={styles.facts}>
-                  <div><dt>로그인 ID</dt><dd>{player.account.loginId}</dd></div>
-                  <div><dt>역할</dt><dd>{accountRoleLabel(player.account.role)}</dd></div>
-                  <div><dt>상태</dt><dd>{accountStatusLabel[player.account.status]}</dd></div>
-                  <div><dt>계정 UUID</dt><dd>{player.account.id}</dd></div>
-                </dl>
+                <>
+                  <dl className={styles.facts}>
+                    <div><dt>로그인 ID</dt><dd>{player.account.loginId}</dd></div>
+                    <div><dt>역할</dt><dd>{accountRoleLabel(player.account.role)}</dd></div>
+                    <div><dt>상태</dt><dd>{accountStatusLabel[player.account.status]}</dd></div>
+                    <div><dt>삭제</dt><dd>{player.account.deletedAt ? "삭제됨" : "활성"}</dd></div>
+                    <div><dt>계정 변경 버전</dt><dd>{player.account.revision}</dd></div>
+                    <div><dt>계정 UUID</dt><dd>{player.account.id}</dd></div>
+                  </dl>
+                  {session.role === "SUPER_ADMIN" ? (
+                    <AdminPlayerAccountPromotion
+                      key={`${player.account.id}-${player.account.revision}`}
+                      account={player.account}
+                      actorRole="SUPER_ADMIN"
+                    />
+                  ) : null}
+                </>
               ) : <p>연결된 사이트 계정이 없습니다. 플레이어 기록은 계정과 독립적으로 보존됩니다.</p>}
             </aside>
           </div>

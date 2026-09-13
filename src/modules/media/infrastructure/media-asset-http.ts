@@ -30,7 +30,7 @@ const problems = Object.freeze({
   notFound: definePublicProblem({ code: "ASSET_NOT_AVAILABLE", status: 404, title: "자산을 찾을 수 없습니다.", detail: "주소와 접근 권한을 확인해 주세요." }),
   origin: definePublicProblem({ code: "ORIGIN_FORBIDDEN", status: 403, title: "허용되지 않은 요청 출처입니다.", detail: "같은 관리자 사이트에서 다시 요청해 주세요." }),
   precondition: definePublicProblem({ code: "PRECONDITION_FAILED", status: 412, title: "초안이 먼저 변경되었습니다.", detail: "편집 화면을 새로고침한 뒤 다시 시도해 주세요." }),
-  storage: definePublicProblem({ code: "PRIVATE_STORAGE_UNAVAILABLE", status: 503, title: "이미지 저장소를 사용할 수 없습니다.", detail: "운영 저장소가 연결될 때까지 업로드와 원본 읽기는 닫혀 있습니다." }),
+  storage: definePublicProblem({ code: "PRIVATE_STORAGE_UNAVAILABLE", status: 503, title: "이미지 저장소를 사용할 수 없습니다.", detail: "비공개 저장소 연결과 서버 인증을 확인한 뒤 다시 시도해 주세요." }),
   unavailable: definePublicProblem({ code: "PRIVATE_ASSET_SERVICE_UNAVAILABLE", status: 503, title: "비공개 자산 서비스를 사용할 수 없습니다.", detail: "잠시 후 다시 시도해 주세요." }),
 });
 
@@ -156,6 +156,10 @@ export function privateAssetErrorResponse(error: unknown, traceId?: string) {
 
 export function privateAssetUnavailableResponse(traceId?: string) {
   return problemResponse(problems.unavailable, { traceId });
+}
+
+export function privateAssetStorageUnavailableResponse(traceId?: string) {
+  return problemResponse(problems.storage, { traceId });
 }
 
 export function privateAssetPreconditionResponse(traceId?: string) {

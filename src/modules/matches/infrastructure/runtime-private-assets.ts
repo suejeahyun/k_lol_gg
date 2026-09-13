@@ -1,7 +1,7 @@
 import "server-only";
 
 import {
-  privateBlobToken,
+  privateBlobCredentials,
   resolveRuntimePrivateStorageMode,
   type RuntimePrivateStorageMode,
 } from "@/modules/assets/infrastructure/private-blob-storage-core";
@@ -51,7 +51,7 @@ export function getRuntimePrivateImageStorage(): PrivateImageStorage | null {
   if (globalThis.__klolV2PrivateImageStorageState?.mode === mode) {
     return globalThis.__klolV2PrivateImageStorageState.storage;
   }
-  const token = privateBlobToken(process.env);
+  const credentials = privateBlobCredentials(process.env);
   let storage: PrivateImageStorage;
   if (mode === "FAKE_LOCAL") {
     const fixture = browserQaFixture();
@@ -59,8 +59,8 @@ export function getRuntimePrivateImageStorage(): PrivateImageStorage | null {
     storage = new FakePrivateImageStorage(fixture);
   }
   else {
-    if (!token) return null;
-    storage = createVercelBlobPrivateImageStorage(token);
+    if (!credentials) return null;
+    storage = createVercelBlobPrivateImageStorage(credentials);
   }
   globalThis.__klolV2PrivateImageStorageState = { mode, storage };
   return storage;

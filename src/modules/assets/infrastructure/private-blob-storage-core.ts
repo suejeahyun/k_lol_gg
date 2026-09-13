@@ -7,9 +7,16 @@ export const PRIVATE_BLOB_STORAGE_PROVIDER = "VERCEL_BLOB_PRIVATE";
 export const PRIVATE_BLOB_MAX_BYTES = PRIVATE_ASSET_MAX_BYTES;
 export type RuntimePrivateStorageMode = "FAKE_LOCAL" | "VERCEL_BLOB_PRIVATE" | "UNAVAILABLE";
 
-type BlobPutOptions = Readonly<{
+export type PrivateBlobCredentials =
+  | Readonly<{ kind: "oidc"; storeId: string }>
+  | Readonly<{ kind: "read-write-token"; token: string }>;
+
+type BlobAuthenticationOptions =
+  | Readonly<{ storeId: string; token?: never; oidcToken?: never }>
+  | Readonly<{ token: string; oidcToken?: never; storeId?: never }>;
+
+type BlobPutOptions = BlobAuthenticationOptions & Readonly<{
   access: "private";
-  token: string;
   addRandomSuffix: false;
   allowOverwrite: false;
   contentType: "image/png" | "image/jpeg" | "image/webp";
@@ -17,14 +24,13 @@ type BlobPutOptions = Readonly<{
   abortSignal: AbortSignal;
 }>;
 
-type BlobGetOptions = Readonly<{
+type BlobGetOptions = BlobAuthenticationOptions & Readonly<{
   access: "private";
-  token: string;
   useCache: false;
   abortSignal: AbortSignal;
 }>;
 
-type BlobDeleteOptions = Readonly<{ token: string; abortSignal: AbortSignal }>;
+type BlobDeleteOptions = BlobAuthenticationOptions & Readonly<{ abortSignal: AbortSignal }>;
 
 export type PrivateBlobSdkClient = Readonly<{
   put(pathname: string, bytes: Uint8Array, options: BlobPutOptions): Promise<Readonly<{ pathname: string; contentType: string }>>;
@@ -41,6 +47,7 @@ const SAFE_TOKEN = /^[^\u0000-\u0020\u007f-\u009f]{32,4096}$/u;
 
 type PrivateBlobEnvironment = Readonly<{
   BLOB_READ_WRITE_TOKEN?: string;
+  BLOB_STORE_ID?: string;
   DATABASE_URL?: string;
   NEXT_PUBLIC_SITE_URL?: string;
   NODE_ENV?: string;
@@ -51,9 +58,24 @@ type PrivateBlobEnvironment = Readonly<{
   VERCEL?: string;
 }>;
 
+const SAFE_STORE_ID = /^store_[A-Za-z0-9]+$/u;
+
+function privateBlobSecret(value: string | undefined) {
+  return value && value === value.trim() && SAFE_TOKEN.test(value) ? value : null;
+}
+
 export function privateBlobToken(env: PrivateBlobEnvironment) {
-  const token = env.BLOB_READ_WRITE_TOKEN;
-  return token && token === token.trim() && SAFE_TOKEN.test(token) ? token : null;
+  return privateBlobSecret(env.BLOB_READ_WRITE_TOKEN);
+}
+
+/** Prefer a connected Vercel Blob store; the SDK resolves and refreshes request-scoped OIDC itself. */
+export function privateBlobCredentials(env: PrivateBlobEnvironment): PrivateBlobCredentials | null {
+  const storeId = env.BLOB_STORE_ID;
+  if (storeId && storeId === storeId.trim() && SAFE_STORE_ID.test(storeId)) {
+    return { kind: "oidc", storeId };
+  }
+  const token = privateBlobToken(env);
+  return token ? { kind: "read-write-token", token } : null;
 }
 
 function isIsolatedBrowserQa(env: PrivateBlobEnvironment) {
@@ -95,7 +117,7 @@ export function resolveRuntimePrivateStorageMode(
   if (env.V2_FAKE_PRIVATE_ASSETS === "1" && env.VERCEL !== "1" && env.VERCEL !== "true") {
     if (env.NODE_ENV === "development" || isIsolatedBrowserQa(env)) return "FAKE_LOCAL";
   }
-  return privateBlobToken(env) ? PRIVATE_BLOB_STORAGE_PROVIDER : "UNAVAILABLE";
+  return privateBlobCredentials(env) ? PRIVATE_BLOB_STORAGE_PROVIDER : "UNAVAILABLE";
 }
 
 function storageKey(value: string) {
@@ -174,13 +196,17 @@ async function boundedBytes(stream: ReadableStream<Uint8Array>, declaredSize: nu
 
 export class VercelBlobPrivateImageStorage implements PrivateImageStorage {
   readonly storageProvider = PRIVATE_BLOB_STORAGE_PROVIDER;
-  readonly #token: string;
+  readonly #authentication: BlobAuthenticationOptions;
   readonly #client: PrivateBlobSdkClient;
 
-  constructor(token: string, client: PrivateBlobSdkClient) {
-    const checked = privateBlobToken({ BLOB_READ_WRITE_TOKEN: token });
-    if (!checked) throw new Error("PRIVATE_STORAGE_TOKEN_INVALID");
-    this.#token = checked;
+  constructor(credentials: PrivateBlobCredentials, client: PrivateBlobSdkClient) {
+    const checked = credentials.kind === "oidc"
+      ? privateBlobCredentials({ BLOB_STORE_ID: credentials.storeId })
+      : privateBlobCredentials({ BLOB_READ_WRITE_TOKEN: credentials.token });
+    if (!checked || checked.kind !== credentials.kind) throw new Error("PRIVATE_STORAGE_CREDENTIALS_INVALID");
+    this.#authentication = checked.kind === "oidc"
+      ? { storeId: checked.storeId }
+      : { token: checked.token };
     this.#client = client;
   }
 
@@ -195,7 +221,7 @@ export class VercelBlobPrivateImageStorage implements PrivateImageStorage {
     try {
       const stored = await this.#client.put(pathname, input.bytes, {
         access: "private",
-        token: this.#token,
+        ...this.#authentication,
         addRandomSuffix: false,
         allowOverwrite: false,
         contentType: type,
@@ -217,7 +243,7 @@ export class VercelBlobPrivateImageStorage implements PrivateImageStorage {
     signal.throwIfAborted();
     const result = await this.#client.get(pathname, {
       access: "private",
-      token: this.#token,
+      ...this.#authentication,
       useCache: false,
       abortSignal: signal,
     });
@@ -234,7 +260,7 @@ export class VercelBlobPrivateImageStorage implements PrivateImageStorage {
   async requestDelete(storageKeyValue: string, signal: AbortSignal) {
     const pathname = storageKey(storageKeyValue);
     signal.throwIfAborted();
-    await this.#client.del(pathname, { token: this.#token, abortSignal: signal });
+    await this.#client.del(pathname, { ...this.#authentication, abortSignal: signal });
     signal.throwIfAborted();
   }
 }

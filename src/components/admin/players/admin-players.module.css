@@ -100,6 +100,9 @@
 .actionPanel button { min-height: 2.75rem; border: 0; border-radius: .75rem; color: white; background: #426fbd; padding: 0 .8rem; font: inherit; font-size: .73rem; font-weight: 850; cursor: pointer; }
 .actionPanel button[data-tone="danger"] { background: #a64c66; }
 .actionPanel button:disabled { cursor: wait; opacity: .6; }
+.accountRoleAction { margin-top: .8rem; }
+.accountRoleAction button { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; }
+.accountRoleAction button svg { width: .95rem; height: .95rem; }
 .secret { border: 1px solid #ead39d; border-radius: .8rem; color: #6e5620; background: #fff8e7; padding: .75rem; overflow-wrap: anywhere; font-family: ui-monospace, monospace; font-size: .78rem; }
 .loadingGrid { display: grid; gap: .8rem; }
 .loadingGrid span { min-height: 4rem; border-radius: 1rem; background: linear-gradient(100deg, #edf2f8 20%, #fafcff 45%, #edf2f8 70%); background-size: 300% 100%; animation: shimmer 1.2s ease infinite; }

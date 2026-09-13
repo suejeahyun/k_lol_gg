@@ -47,6 +47,8 @@ const adminPlayerSelection = {
   accountLoginId: userAccounts.loginId,
   accountRole: userAccounts.role,
   accountStatus: userAccounts.status,
+  accountRevision: userAccounts.revision,
+  accountDeletedAt: userAccounts.deletedAt,
 };
 
 type AdminPlayerRow = {
@@ -67,6 +69,8 @@ type AdminPlayerRow = {
   accountLoginId: string | null;
   accountRole: "USER" | "ADMIN" | "SUPER_ADMIN" | null;
   accountStatus: "PENDING" | "APPROVED" | "REJECTED" | "SUSPENDED" | null;
+  accountRevision: number | null;
+  accountDeletedAt: Date | null;
 };
 
 function escapeLikePrefix(value: string): string {
@@ -89,12 +93,14 @@ function toAdminPlayer(row: AdminPlayerRow): AdminPlayer {
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     account:
-      row.accountId && row.accountLoginId && row.accountRole && row.accountStatus
+      row.accountId && row.accountLoginId && row.accountRole && row.accountStatus && row.accountRevision !== null
         ? {
             id: row.accountId,
             loginId: row.accountLoginId,
             role: row.accountRole,
             status: row.accountStatus,
+            revision: row.accountRevision,
+            deletedAt: row.accountDeletedAt?.toISOString() ?? null,
           }
         : null,
   };

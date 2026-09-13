@@ -4,6 +4,7 @@ import { del, get, put } from "@vercel/blob";
 
 import {
   VercelBlobPrivateImageStorage,
+  type PrivateBlobCredentials,
   type PrivateBlobSdkClient,
 } from "./private-blob-storage-core";
 
@@ -15,6 +16,6 @@ const officialVercelBlobClient: PrivateBlobSdkClient = {
   del,
 };
 
-export function createVercelBlobPrivateImageStorage(token: string) {
-  return new VercelBlobPrivateImageStorage(token, officialVercelBlobClient);
+export function createVercelBlobPrivateImageStorage(credentials: PrivateBlobCredentials) {
+  return new VercelBlobPrivateImageStorage(credentials, officialVercelBlobClient);
 }

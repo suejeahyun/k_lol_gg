@@ -9,6 +9,7 @@ import {
   privateAssetErrorResponse,
   privateAssetJsonResponse,
   privateAssetPreconditionResponse,
+  privateAssetStorageUnavailableResponse,
   privateAssetUnavailableResponse,
 } from "./media-asset-http";
 import { readValidatedTraceId } from "@/platform/http";
@@ -52,7 +53,8 @@ export async function uploadMediaDraftAsset(
   if (!prepared.ok) return prepared.response;
   const media = getRuntimeMediaService();
   const assets = getRuntimeMediaAssetUploadService();
-  if (!media || !assets) return privateAssetUnavailableResponse(prepared.value.traceId);
+  if (!media) return privateAssetUnavailableResponse(prepared.value.traceId);
+  if (!assets) return privateAssetStorageUnavailableResponse(prepared.value.traceId);
   try {
     const draft = resource.resourceType === "HIGHLIGHT"
       ? await media.getAdminHighlight(resourceId)

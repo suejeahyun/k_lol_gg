@@ -5,6 +5,7 @@ import test from "node:test";
 import {
   parsePrivateAssetAdminListQuery,
   prepareMediaAssetUpload,
+  privateAssetStorageUnavailableResponse,
 } from "../src/modules/media/infrastructure/media-asset-http";
 import { PRIVATE_ASSET_MAX_BYTES } from "../src/modules/assets/domain/private-asset";
 
@@ -43,6 +44,21 @@ test("raw media upload preflight requires same origin, If-Match, bounded image M
   assert.equal(prepareMediaAssetUpload(new Request(request.url, { method: "POST", headers: { ...Object.fromEntries(request.headers), Origin: "https://evil.test" } })).ok, false);
   assert.equal(prepareMediaAssetUpload(new Request(request.url, { method: "POST", headers: { ...Object.fromEntries(request.headers), "X-Upload-Byte-Size": String(PRIVATE_ASSET_MAX_BYTES + 1) } })).ok, false);
   assert.equal(prepareMediaAssetUpload(new Request(request.url, { method: "POST", headers: { ...Object.fromEntries(request.headers), "Content-Type": "image/svg+xml" } })).ok, false);
+});
+
+test("unconfigured upload storage returns the specific fail-closed problem", async () => {
+  const traceId = "1234567890abcdef1234567890abcdef";
+  const response = privateAssetStorageUnavailableResponse(traceId);
+  assert.equal(response.status, 503);
+  assert.match(response.headers.get("cache-control") ?? "", /\bno-store\b/u);
+  assert.deepEqual(await response.json(), {
+    type: "urn:klol:problem:private-storage-unavailable",
+    title: "이미지 저장소를 사용할 수 없습니다.",
+    status: 503,
+    detail: "비공개 저장소 연결과 서버 인증을 확인한 뒤 다시 시도해 주세요.",
+    code: "PRIVATE_STORAGE_UNAVAILABLE",
+    traceId,
+  });
 });
 
 test("media editor and private asset administration expose the complete safe workflow", () => {

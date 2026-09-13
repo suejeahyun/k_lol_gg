@@ -6,6 +6,7 @@ import {
   PRIVATE_BLOB_MAX_BYTES,
   PRIVATE_BLOB_STORAGE_PROVIDER,
   VercelBlobPrivateImageStorage,
+  privateBlobCredentials,
   privateBlobToken,
   resolveRuntimePrivateStorageMode,
   type PrivateBlobSdkClient,
@@ -62,7 +63,16 @@ function sdkFixture() {
 test("private storage mode is one fail-closed production policy", () => {
   assert.equal(privateBlobToken({}), null);
   assert.equal(privateBlobToken({ BLOB_READ_WRITE_TOKEN: ` ${SDK_AUTH_FIXTURE}` }), null);
+  assert.equal(privateBlobCredentials({ BLOB_STORE_ID: "wrong" }), null);
+  assert.equal(privateBlobCredentials({ BLOB_STORE_ID: " store_connected" }), null);
+  assert.equal(privateBlobCredentials({ BLOB_STORE_ID: "store_connected!" }), null);
+  assert.deepEqual(
+    privateBlobCredentials({ BLOB_STORE_ID: "wrong", BLOB_READ_WRITE_TOKEN: SDK_AUTH_FIXTURE }),
+    { kind: "read-write-token", token: SDK_AUTH_FIXTURE },
+  );
   assert.equal(resolveRuntimePrivateStorageMode({ NODE_ENV: "production", V2_FAKE_PRIVATE_ASSETS: "1" }), "UNAVAILABLE");
+  assert.equal(resolveRuntimePrivateStorageMode({ NODE_ENV: "production", BLOB_STORE_ID: "store_connected" }), PRIVATE_BLOB_STORAGE_PROVIDER);
+  assert.equal(resolveRuntimePrivateStorageMode({ NODE_ENV: "production", BLOB_STORE_ID: "store_connected!" }), "UNAVAILABLE");
   assert.equal(resolveRuntimePrivateStorageMode({ NODE_ENV: "production", V2_FAKE_PRIVATE_ASSETS: "1", BLOB_READ_WRITE_TOKEN: SDK_AUTH_FIXTURE }), PRIVATE_BLOB_STORAGE_PROVIDER);
   assert.equal(resolveRuntimePrivateStorageMode({ NODE_ENV: "development", V2_FAKE_PRIVATE_ASSETS: "1", VERCEL: "1", BLOB_READ_WRITE_TOKEN: SDK_AUTH_FIXTURE }), PRIVATE_BLOB_STORAGE_PROVIDER);
   assert.equal(resolveRuntimePrivateStorageMode({ NODE_ENV: "development", V2_FAKE_PRIVATE_ASSETS: "1" }), "FAKE_LOCAL");
@@ -79,7 +89,7 @@ test("private storage mode is one fail-closed production policy", () => {
   assert.equal(resolveRuntimePrivateStorageMode({ ...isolatedQa, DATABASE_URL: "postgres://qa@127.0.0.1/production" }), "UNAVAILABLE");
   assert.equal(resolveRuntimePrivateStorageMode({ ...isolatedQa, V2_PUBLIC_ORIGIN: "https://example.com" }), "UNAVAILABLE");
   assert.equal(resolveRuntimePrivateStorageMode({ ...isolatedQa, VERCEL: "1" }), "UNAVAILABLE");
-  assert.throws(() => new VercelBlobPrivateImageStorage("short", sdkFixture().client), /TOKEN_INVALID/u);
+  assert.throws(() => new VercelBlobPrivateImageStorage({ kind: "read-write-token", token: "short" }, sdkFixture().client), /CREDENTIALS_INVALID/u);
 });
 
 test("fake private storage can preload immutable local QA bytes without sharing caller buffers", async () => {
@@ -96,7 +106,7 @@ test("fake private storage can preload immutable local QA bytes without sharing 
 
 test("official SDK seam uses private deterministic collision-safe put/get/delete options", async () => {
   const fixture = sdkFixture();
-  const storage = new VercelBlobPrivateImageStorage(SDK_AUTH_FIXTURE, fixture.client);
+  const storage = new VercelBlobPrivateImageStorage({ kind: "read-write-token", token: SDK_AUTH_FIXTURE }, fixture.client);
   const bytes = pngBytes();
   const sha256Hex = createHash("sha256").update(bytes).digest("hex");
   const storageKey = "media/gallery/item-1/asset-1-deadbeef";
@@ -125,9 +135,53 @@ test("official SDK seam uses private deterministic collision-safe put/get/delete
   assert.equal(JSON.stringify(storage).includes(SDK_AUTH_FIXTURE), false);
 });
 
+test("connected private Blob credentials prefer OIDC and pass only the store-scoped SDK options", async () => {
+  const fixture = sdkFixture();
+  const credentials = privateBlobCredentials({
+    BLOB_STORE_ID: "store_connected",
+    BLOB_READ_WRITE_TOKEN: "legacy-" + "b".repeat(48),
+  });
+  assert.deepEqual(credentials, { kind: "oidc", storeId: "store_connected" });
+  const storage = new VercelBlobPrivateImageStorage(credentials!, fixture.client);
+  const bytes = pngBytes();
+  const signal = new AbortController().signal;
+  await storage.stageAt({
+    storageKey: "media/gallery/item-oidc/asset-oidc-deadbeef",
+    bytes,
+    sha256Hex: createHash("sha256").update(bytes).digest("hex"),
+    signal,
+  });
+  assert.deepEqual(await storage.read("media/gallery/item-oidc/asset-oidc-deadbeef", signal), bytes);
+  await storage.requestDelete("media/gallery/item-oidc/asset-oidc-deadbeef", signal);
+
+  const put = fixture.calls.find((call) => call.operation === "put")!;
+  assert.deepEqual(put.options, {
+    access: "private",
+    storeId: "store_connected",
+    addRandomSuffix: false,
+    allowOverwrite: false,
+    contentType: "image/png",
+    maximumSizeInBytes: 4 * 1024 * 1024,
+    abortSignal: signal,
+  });
+  const get = fixture.calls.find((call) => call.operation === "get")!;
+  assert.deepEqual(get.options, {
+    access: "private",
+    storeId: "store_connected",
+    useCache: false,
+    abortSignal: signal,
+  });
+  const del = fixture.calls.find((call) => call.operation === "del")!;
+  assert.deepEqual(del.options, { storeId: "store_connected", abortSignal: signal });
+  for (const call of [put, get, del]) {
+    assert.equal("token" in call.options, false);
+    assert.equal("oidcToken" in call.options, false);
+  }
+});
+
 test("deterministic retries are idempotent only for the same digest and DELETE_PENDING cleanup is repeatable", async () => {
   const fixture = sdkFixture();
-  const storage = new VercelBlobPrivateImageStorage(SDK_AUTH_FIXTURE, fixture.client);
+  const storage = new VercelBlobPrivateImageStorage({ kind: "read-write-token", token: SDK_AUTH_FIXTURE }, fixture.client);
   const signal = new AbortController().signal;
   const storageKey = "discipline/task-1/asset-1/deadbeef";
   const bytes = pngBytes();
@@ -146,7 +200,7 @@ test("deterministic retries are idempotent only for the same digest and DELETE_P
 
 test("adapter rejects traversal, mismatched digest, invalid containers and pre-aborted calls before SDK access", async () => {
   const fixture = sdkFixture();
-  const storage = new VercelBlobPrivateImageStorage(SDK_AUTH_FIXTURE, fixture.client);
+  const storage = new VercelBlobPrivateImageStorage({ kind: "read-write-token", token: SDK_AUTH_FIXTURE }, fixture.client);
   const bytes = pngBytes();
   const digest = createHash("sha256").update(bytes).digest("hex");
   const signal = new AbortController().signal;

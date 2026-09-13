@@ -14,6 +14,7 @@ import { generateTotpCode } from "../../src/modules/auth/infrastructure/totp";
 import { parseTotpEncryptionKeyring } from "../../src/modules/auth/infrastructure/versioned-secret-keyring";
 import { createDatabaseHandle } from "../../src/platform/db/database";
 import {
+  accountMutationReceipts,
   adminTotpCredentials,
   auditEvents,
   authSessions,
@@ -176,6 +177,31 @@ await database.insert(players).values({
   tagLineNormalized: linkedPlayer.tagLine.toLocaleLowerCase("ko-KR"),
   peakTier: "DIAMOND II",
   currentTier: "PLATINUM IV",
+});
+
+const staleRoleUser = {
+  id: randomUUID(),
+  loginId: `player_stale_role_user_${randomBytes(4).toString("hex")}`,
+};
+await database.insert(userAccounts).values({
+  ...staleRoleUser,
+  loginIdNormalized: staleRoleUser.loginId,
+  passwordHash: "$argon2id$v=19$synthetic-stale-role-user",
+  role: "USER",
+  status: "APPROVED",
+});
+const staleRolePlayer = {
+  id: randomUUID(),
+  userAccountId: staleRoleUser.id,
+  memberName: `역할 경합 HTTP 회원 ${randomBytes(3).toString("hex")}`,
+  nickname: `StaleRole${randomBytes(3).toString("hex")}`,
+  tagLine: "R01",
+};
+await database.insert(players).values({
+  ...staleRolePlayer,
+  memberNameNormalized: staleRolePlayer.memberName.normalize("NFKC").toLocaleLowerCase("ko-KR"),
+  nicknameNormalized: staleRolePlayer.nickname.normalize("NFKC").toLocaleLowerCase("ko-KR"),
+  tagLineNormalized: staleRolePlayer.tagLine.toLocaleLowerCase("en-US"),
 });
 const linkedRiotAccountId = randomUUID();
 const linkSeededAt = new Date();
@@ -380,19 +406,21 @@ function playerPayload(label: string, legacyId: number | null) {
 }
 
 async function replaceBrowserField(browser: IsolatedChromium, name: string, value: string) {
-  const selector = `input[name=${JSON.stringify(name)}]`;
+  const selector = `[name=${JSON.stringify(name)}]`;
   await browser.waitFor(
     `(() => {
-      const input = document.querySelector(${JSON.stringify(selector)});
-      return input instanceof HTMLInputElement && !input.disabled && input.getClientRects().length > 0;
+      const control = document.querySelector(${JSON.stringify(selector)});
+      return (control instanceof HTMLInputElement || control instanceof HTMLTextAreaElement) &&
+        !control.disabled && control.getClientRects().length > 0;
     })()`,
-    `${name} visible enabled input in the admin form`,
+    `${name} visible enabled control in the admin form`,
   );
   const focused = await browser.evaluate<boolean>(`(() => {
-    const input = document.querySelector(${JSON.stringify(selector)});
-    if (!(input instanceof HTMLInputElement) || input.disabled || input.getClientRects().length === 0) return false;
-    input.focus();
-    return document.activeElement === input;
+    const control = document.querySelector(${JSON.stringify(selector)});
+    if (!(control instanceof HTMLInputElement || control instanceof HTMLTextAreaElement) ||
+      control.disabled || control.getClientRects().length === 0) return false;
+    control.focus();
+    return document.activeElement === control;
   })()`);
   assert.equal(
     focused,
@@ -417,6 +445,19 @@ async function submitBrowserPlayerForm(browser: IsolatedChromium, playerId: stri
     return true;
   })()`);
   assert.equal(clicked, true, "the enabled admin player save button must be clickable");
+  await response;
+}
+
+async function submitBrowserRolePromotion(browser: IsolatedChromium, accountId: string, expectedStatus: number) {
+  const response = browser.waitForResponse(`/api/admin/users/${accountId}/role`, expectedStatus);
+  const clicked = await browser.evaluate<boolean>(`(() => {
+    const form = document.querySelector('#player-account-role-promotion');
+    const button = form?.querySelector('button[type="submit"]');
+    if (!(button instanceof HTMLButtonElement) || button.disabled || !button.textContent?.includes('관리자로 지정')) return false;
+    button.click();
+    return true;
+  })()`);
+  assert.equal(clicked, true, "the enabled player account promotion button must be clickable");
   await response;
 }
 
@@ -473,12 +514,147 @@ try {
     assert.match(linkedEditHtml, new RegExp(expectedText));
   }
 
+  const linkedDetailResponse = await fetch(`${origin}/api/admin/players/${linkedPlayer.id}`, {
+    headers: { cookie: adminCookie },
+  });
+  assert.equal(linkedDetailResponse.status, 200);
+  const linkedDetailBody = await linkedDetailResponse.json() as {
+    player?: { account?: { id?: unknown; revision?: unknown; deletedAt?: unknown } | null };
+  };
+  assert.deepEqual(linkedDetailBody.player?.account, {
+    id: plainUser.id,
+    loginId: plainUser.loginId,
+    role: "USER",
+    status: "APPROVED",
+    revision: 0,
+    deletedAt: null,
+  });
+
+  const ordinaryAdminRolePage = await fetch(`${origin}/admin/players/${linkedPlayer.id}`, {
+    headers: { cookie: adminCookie },
+  });
+  assert.equal(ordinaryAdminRolePage.status, 200);
+  const ordinaryAdminRoleHtml = await ordinaryAdminRolePage.text();
+  assert.doesNotMatch(ordinaryAdminRoleHtml, /player-account-role-promotion|관리자로 지정/u);
+  const ordinaryAdminRoleMutation = await fetch(`${origin}/api/admin/users/${plainUser.id}/role`, {
+    method: "PATCH",
+    headers: { cookie: adminCookie, origin },
+    body: "{malformed",
+  });
+  assert.equal(ordinaryAdminRoleMutation.status, 403);
+  const crossOriginSuperRoleMutation = await fetch(`${origin}/api/admin/users/${staleRoleUser.id}/role`, {
+    method: "PATCH",
+    headers: { cookie: superCookie, origin: "https://untrusted.invalid" },
+    body: "{malformed",
+  });
+  assert.equal(crossOriginSuperRoleMutation.status, 403);
+  const superRolePage = await fetch(`${origin}/admin/players/${linkedPlayer.id}`, {
+    headers: { cookie: superCookie },
+  });
+  assert.equal(superRolePage.status, 200);
+  assert.match(await superRolePage.text(), /player-account-role-promotion|관리자로 지정/u);
+
   const browser = await IsolatedChromium.launch(origin);
   try {
     await browser.setCookie(userCookie);
     await browser.navigate(`/admin/players/${browserLinkedPlayer.id}?mode=edit`);
     assert.equal(await browser.evaluate("location.pathname"), "/admin/login");
     assert.equal(await browser.evaluate("document.querySelector('form input[name=\"nickname\"]') === null"), true);
+
+    await browser.clearCookies();
+    await browser.setCookie(adminCookie);
+    await browser.navigate(`/admin/players/${linkedPlayer.id}`);
+    assert.equal(
+      await browser.evaluate("document.querySelector('#player-account-role-promotion') === null"),
+      true,
+      "ordinary ADMIN must not receive the player account promotion form",
+    );
+    assert.equal(
+      await browser.evaluate("[...document.querySelectorAll('button')].some((button) => button.textContent?.includes('관리자로 지정'))"),
+      false,
+      "ordinary ADMIN must not receive a player account promotion button",
+    );
+
+    const playerBeforeRolePromotion = (await database.select().from(players)
+      .where(eq(players.id, linkedPlayer.id)))[0];
+    assert.ok(playerBeforeRolePromotion);
+    await browser.clearCookies();
+    await browser.setCookie(superCookie);
+    await browser.navigate(`/admin/players/${linkedPlayer.id}`);
+    await browser.waitFor(
+      `document.querySelector('#player-account-role-promotion[data-account-revision="0"]') instanceof HTMLFormElement`,
+      "SUPER_ADMIN player account promotion form",
+    );
+    await replaceBrowserField(browser, "internalReason", "플레이어 상세 관리자 지정 브라우저 검증");
+    await replaceBrowserField(browser, "confirmLoginId", plainUser.loginId);
+    await submitBrowserRolePromotion(browser, plainUser.id, 200);
+    await browser.waitFor(
+      `document.querySelector('#player-account-role-promotion') === null &&
+       (document.body.innerText.includes('관리자 역할로 변경했습니다') || document.body.innerText.includes('이미 관리자(ADMIN) 계정입니다.'))`,
+      "committed player account promotion refresh",
+    );
+    const promotedAccount = (await database.select().from(userAccounts)
+      .where(eq(userAccounts.id, plainUser.id)))[0];
+    assert.equal(promotedAccount?.role, "ADMIN");
+    assert.equal(promotedAccount?.revision, 1);
+    assert.equal(promotedAccount?.authVersion, 1);
+    const promotedSessions = await database.select().from(authSessions)
+      .where(eq(authSessions.userAccountId, plainUser.id));
+    assert.equal(promotedSessions.length, 1);
+    assert.equal(promotedSessions.every((session) => session.revokedAt !== null), true);
+    assert.deepEqual(
+      (await database.select().from(players).where(eq(players.id, linkedPlayer.id)))[0],
+      playerBeforeRolePromotion,
+      "role promotion must not alter the player row or account link",
+    );
+    const promotionAudits = await database.select().from(auditEvents).where(and(
+      eq(auditEvents.targetId, plainUser.id),
+      eq(auditEvents.action, "ACCOUNT_ROLE_CHANGED"),
+    ));
+    assert.equal(promotionAudits.length, 1);
+    assert.equal(promotionAudits[0]?.actorUserAccountId, superAdmin.id);
+    assert.equal(promotionAudits[0]?.beforeJson?.role, "USER");
+    assert.equal(promotionAudits[0]?.afterJson?.role, "ADMIN");
+    assert.equal(promotionAudits[0]?.metadataJson?.internalReason, "플레이어 상세 관리자 지정 브라우저 검증");
+    const promotionReceipts = await database.select().from(accountMutationReceipts).where(and(
+      eq(accountMutationReceipts.actorUserAccountId, superAdmin.id),
+      eq(accountMutationReceipts.scope, `account:role:${plainUser.id}`),
+    ));
+    assert.equal(promotionReceipts.length, 1);
+
+    await browser.navigate(`/admin/players/${staleRolePlayer.id}`);
+    await browser.waitFor(
+      `document.querySelector('#player-account-role-promotion[data-account-revision="0"]') instanceof HTMLFormElement`,
+      "stale account revision promotion form",
+    );
+    await replaceBrowserField(browser, "internalReason", "계정 변경 버전 경합 복구 검증");
+    await replaceBrowserField(browser, "confirmLoginId", staleRoleUser.loginId);
+    assert.equal(await browser.evaluate(`(() => {
+      const input = document.querySelector('#player-account-role-promotion input[name="confirmLoginId"]');
+      if (!(input instanceof HTMLInputElement)) return false;
+      input.dataset.browserQaInstance = "before-role-412";
+      return true;
+    })()`), true);
+    await database.update(userAccounts).set({ revision: 1, updatedAt: new Date() })
+      .where(eq(userAccounts.id, staleRoleUser.id));
+    await submitBrowserRolePromotion(browser, staleRoleUser.id, 412);
+    await browser.waitFor(
+      `document.querySelector('#player-account-role-promotion')?.dataset.accountRevision === "1" &&
+       document.querySelector('#player-account-role-promotion input[name="confirmLoginId"]')?.dataset.browserQaInstance !== "before-role-412"`,
+      "HTTP 412 recovery with the latest linked account revision",
+    );
+    await replaceBrowserField(browser, "internalReason", "계정 변경 버전 경합 재시도 검증");
+    await replaceBrowserField(browser, "confirmLoginId", staleRoleUser.loginId);
+    await submitBrowserRolePromotion(browser, staleRoleUser.id, 200);
+    await browser.waitFor(
+      "document.querySelector('#player-account-role-promotion') === null && document.body.innerText.includes('관리자')",
+      "account role promotion retry after refresh",
+    );
+    const retriedRoleAccount = (await database.select().from(userAccounts)
+      .where(eq(userAccounts.id, staleRoleUser.id)))[0];
+    assert.equal(retriedRoleAccount?.role, "ADMIN");
+    assert.equal(retriedRoleAccount?.revision, 2);
+    assert.equal(retriedRoleAccount?.authVersion, 1);
 
     await browser.clearCookies();
     await browser.setCookie(adminCookie);
@@ -1040,7 +1216,7 @@ try {
   assert.equal(receiptRows.length, 1);
   assert.equal(JSON.stringify(receiptRows[0]).includes(createKey), false);
 
-  process.stdout.write("[db-player-http] ADMIN/SUPER UI, Chromium edit/412 recovery, strict CRUD/reactivation, Riot identity disconnect, safe audit UI, legacy restoration, privacy, revision, and replay passed\n");
+  process.stdout.write("[db-player-http] ADMIN/SUPER UI, Chromium account promotion and edit/412 recovery, role audit/receipt/session invariants, strict CRUD/reactivation, Riot identity disconnect, safe audit UI, legacy restoration, privacy, revision, and replay passed\n");
 } catch (error) {
   let sanitizedLog = serverLog;
   for (const secret of syntheticSecrets) sanitizedLog = sanitizedLog.replaceAll(secret, "[synthetic-secret]");

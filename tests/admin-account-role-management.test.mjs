@@ -68,3 +68,38 @@ test("승인된 미삭제 USER의 ADMIN 승격은 플레이어 연결을 요구�
   assert.match(roleMutation, /target\.id === actor\.id \|\| target\.role === "SUPER_ADMIN"/);
   assert.match(roleMutation, /target\.deletedAt/);
 });
+
+test("플레이어 상세는 연결 계정 revision으로 기존 SUPER_ADMIN 역할 API를 안전하게 재사용한다", async () => {
+  const [page, actions, playerDomain, playerRepository] = await Promise.all([
+    readFile(new URL("../src/app/(admin)/admin/players/[playerId]/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/components/admin/players/admin-player-form.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/modules/players/domain/admin-player.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/modules/players/infrastructure/postgres-admin-player-repository.ts", import.meta.url), "utf8"),
+  ]);
+  const promotion = actions.slice(
+    actions.indexOf("export function AdminPlayerAccountPromotion"),
+    actions.indexOf("export function AdminPlayerDeactivate"),
+  );
+
+  assert.match(page, /const session = await requirePageRole\("ADMIN"/);
+  assert.match(page, /<AdminPlayerAccountPromotion/);
+  assert.match(page, /session\.role === "SUPER_ADMIN" \? \(/);
+  assert.match(page, /actorRole="SUPER_ADMIN"/);
+  assert.match(promotion, /actorRole !== "SUPER_ADMIN"/);
+  assert.match(promotion, /account\.role === "SUPER_ADMIN"/);
+  assert.match(promotion, /account\.role === "ADMIN" \|\| promoted/);
+  assert.match(promotion, /account\.deletedAt/);
+  assert.match(promotion, /account\.status !== "APPROVED"/);
+  assert.match(promotion, /`\/api\/admin\/users\/\$\{account\.id\}\/role`/);
+  assert.match(promotion, /"If-Match": `"\$\{account\.revision\}"`/);
+  assert.match(promotion, /"Idempotency-Key": retryKey\.current\.key/);
+  assert.match(promotion, /const payload = \{ role: "ADMIN", internalReason, confirmLoginId \}/);
+  assert.match(promotion, /confirmLoginId\.normalize\("NFKC"\) !== account\.loginId\.normalize\("NFKC"\)/);
+  assert.match(promotion, /response\.status === 404 \|\| response\.status === 412/);
+  assert.match(promotion, /네트워크 연결을 확인한 뒤 같은 내용으로 다시 시도/);
+
+  assert.match(playerDomain, /revision: number;\s+deletedAt: string \| null;/);
+  assert.match(playerRepository, /accountRevision: userAccounts\.revision/);
+  assert.match(playerRepository, /accountDeletedAt: userAccounts\.deletedAt/);
+  assert.match(playerRepository, /revision: row\.accountRevision/);
+});
