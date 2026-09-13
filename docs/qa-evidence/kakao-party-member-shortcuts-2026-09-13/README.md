@@ -40,10 +40,10 @@
 
 - Git 태그: `kakao-party-member-shortcuts-v1.0.0`
 - 기능 커밋: `524d7938b5850ce0b7677853c134c8ac2e53138f`
-- Vercel 배포 ID: `dpl_4pGHC9p3yHffuPUgdKxMhxTChRRt`
-- 불변 주소: `https://k-lol-mrmpoj4to-tjdmswo11-3715s-projects.vercel.app`
+- Vercel 배포 ID: `dpl_BB98422yvyDwZxA1rx3aCYfdM44y`
+- 불변 주소: `https://k-lol-39ie0ogdy-tjdmswo11-3715s-projects.vercel.app`
 - 운영 별칭: `https://k-lol-gg.vercel.app`
-- 확인 시각: `2026-09-13T09:59:57.3787311Z`
+- 확인 시각: `2026-09-13T10:03:05.2165556Z`
 - `/api/health`: HTTP 200, `status=ready`
 - `/help/recruits`: HTTP 200, 배포 HTML/RSC에서 `상세 12 추가 홍길동`·`상세 12 삭제 홍길동` 확인
 
