@@ -2,6 +2,34 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "featureId": "admin-player-role-promotion",
+      "version": "1.0.0",
+      "gitTag": "admin-player-role-promotion-v1.0.0",
+      "commit": "b48465ac781d5f17679e4911cebc03b0d50aec8f",
+      "releasedAt": "2026-09-13T17:44:23+09:00",
+      "migrationHead": "0037_swift_brood",
+      "qaEvidence": "docs/qa-evidence/admin-player-role-promotion-2026-09-13/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-13-admin-player-role-promotion.md",
+      "deployment": {
+        "status": "NOT_DEPLOYED"
+      },
+      "externalInstallations": []
+    },
+    {
+      "featureId": "private-blob-oidc",
+      "version": "1.0.0",
+      "gitTag": "private-blob-oidc-v1.0.0",
+      "commit": "b48465ac781d5f17679e4911cebc03b0d50aec8f",
+      "releasedAt": "2026-09-13T17:44:23+09:00",
+      "migrationHead": "0037_swift_brood",
+      "qaEvidence": "docs/qa-evidence/private-blob-oidc-2026-09-13/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-13-private-blob-oidc.md",
+      "deployment": {
+        "status": "NOT_DEPLOYED"
+      },
+      "externalInstallations": []
+    },
+    {
       "featureId": "kakao-v4-form-defaults",
       "version": "5.0.0",
       "gitTag": "kakao-v4-form-defaults-v5.0.0",

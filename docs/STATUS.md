@@ -1,5 +1,18 @@
 # K-LOL.GG V2 상태
 
+## 2026-09-13 관리자 지정·비공개 Blob OIDC 릴리스 후보
+
+- 기능 커밋: `b48465ac781d5f17679e4911cebc03b0d50aec8f`
+- 릴리스 tag: `admin-player-role-promotion-v1.0.0`, `private-blob-oidc-v1.0.0`
+- 상태: 소스·전체 테스트·격리 PostgreSQL·격리 Chromium 검증 완료, 운영 배포 진행 중
+- 전체 화면: 105 pages / 339 captures / issue 0 / 종료 코드 0
+- 테스트: 749개 중 748 PASS, DB 전용 1 skip, 실패 0
+- 프로덕션 빌드: static generation 93/93
+- DB migration·운영 데이터 변경·삭제: 없음
+- 주요 범위: 플레이어 상세의 SUPER_ADMIN 전용 일반 계정→ADMIN 지정, 연결 계정 revision/상태 표시, Vercel Private Blob OIDC `BLOB_STORE_ID` 인식
+
+전체 근거는 [`qa-evidence/admin-player-role-promotion-2026-09-13/README.md`](./qa-evidence/admin-player-role-promotion-2026-09-13/README.md), [`qa-evidence/private-blob-oidc-2026-09-13/README.md`](./qa-evidence/private-blob-oidc-2026-09-13/README.md)에 있다.
+
 ## 2026-09-13 UI·운영 흐름 보완 운영 릴리스
 
 - 최신 기능 커밋: `fd87e5f47703f92f09e1d4db70617ee2aa49fc92`

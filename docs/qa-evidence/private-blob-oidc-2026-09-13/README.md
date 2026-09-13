@@ -3,7 +3,9 @@
 ## 판정
 
 - 기능 ID/버전: `private-blob-oidc@1.0.0`
-- 상태: 소스 반영 및 로컬 집중 검증 완료, 통합 게이트·커밋·태그·운영 배포 전
+- 상태: 소스 반영·통합 게이트·기능 커밋·태그 완료, 푸시·운영 배포 전
+- 기능 커밋: `b48465ac781d5f17679e4911cebc03b0d50aec8f`
+- Git tag: `private-blob-oidc-v1.0.0`
 - DB migration: 없음, migration head `0037_swift_brood` 유지
 - 운영 데이터 변경: 없음
 
