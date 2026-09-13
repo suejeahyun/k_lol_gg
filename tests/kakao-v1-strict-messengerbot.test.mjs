@@ -235,6 +235,17 @@ test("builder pins the canonical V1 hash and produces an ES5/Rhino-safe artifact
   assert.deepEqual(findings.bareAssignmentConditions, []);
 });
 
+test("V1 strict routes organizer-only metadata activation forms with or without one slash", async () => {
+  const artifact = await readFile(artifactPath, "utf8");
+  const base = "[K-LOL.GG 구인구직 양식]\n📢 2인 파티 구인\n모집번호: #6\n\n》시작시간 :\n》게임정보 :\n》주최자 : 재현";
+  for (const prefix of ["", "/"]) {
+    const runtime = evaluate(artifact, { responseBody: { reply: "[활성화 완료]" } });
+    assert.deepEqual(replyFor(runtime, `${prefix}${base}`), ["[활성화 완료]"]);
+    assert.equal(runtime.http.calls, 1);
+    assert.match(JSON.parse(runtime.http.body).text, /》주최자 : 재현/u);
+  }
+});
+
 test("artifact excludes legacy HTTP, bearer, and embedded secret material", async () => {
   const artifact = await readFile(artifactPath, "utf8");
   const banned = [
@@ -336,7 +347,7 @@ test("local replies, echo rules, events, and no-reply behavior equal the canonic
     const expected = replyFor(canonical, item.message, { sender: item.sender }).map((reply) => item.message === "구인도움말"
       ? reply.replace(
         "현황: 구인현황\n종료: 번호ㅉ",
-        "현황: 구인현황\n추가: 상세 번호 추가 이름\n삭제: 상세 번호 삭제 이름\n종료: 번호ㅉ",
+        "활성화: 주최자 입력 후 전체 전송 (시간·게임은 비우면 자동)\n현황: 구인현황\n추가: 상세 번호 추가 이름\n삭제: 상세 번호 삭제 이름\n종료: 번호ㅉ",
       )
       : reply);
     const actual = replyFor(strict, item.message, { sender: item.sender });
@@ -344,7 +355,7 @@ test("local replies, echo rules, events, and no-reply behavior equal the canonic
   }
   assert.deepEqual(
     replyFor(strict, "봇버전"),
-    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R9_2026_09_13_MEMBER_COMMANDS"],
+    ["[K-LOL.GG 카카오봇 코드 버전]\nKLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R10_2026_09_13_PARTY_DRAFT_ORGANIZER"],
   );
 });
 

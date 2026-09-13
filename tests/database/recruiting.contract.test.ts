@@ -125,7 +125,7 @@ test("S09 PostgreSQL adapter commits aggregate, receipt, audit and outbox atomic
     assert.equal((await database.select().from(auditEvents).where(eq(auditEvents.targetType, "RECRUIT_PARTY"))).length, 1);
     const feed = await adapter.listPublicFeed();
     assert.equal(feed.parties.length, 1);
-    assert.deepEqual(Object.keys(feed.parties[0]!).sort(), ["gameInfo", "id", "maximumMembers", "memberCount", "members", "recruitNumber", "scheduledStartAt", "startTimeText", "status", "title", "type"]);
+    assert.deepEqual(Object.keys(feed.parties[0]!).sort(), ["gameInfo", "id", "maximumMembers", "memberCount", "members", "organizerText", "recruitNumber", "scheduledStartAt", "startTimeText", "status", "title", "type"]);
     assert.deepEqual(feed.parties[0]!.members, [{ name: "계약 참가자", position: "TOP", slotNo: 1, substitute: false }]);
 
     const changed = accountCreateCommand({ accountId, sessionId, aggregateId: partyId, requestKey: "s09-contract-create-0001", title: "다른 본문" });
@@ -408,8 +408,18 @@ test("concurrent V4 party member commands serialize on the locked latest aggrega
     await handler.handle(v4Command("CREATE_PARTY", {
       recruitDate: new Date().toISOString().slice(0, 10), resetSequence: 0, recruitNumber: 97,
       partyType: "PARTY_NUMBER", title: "원자적 명단 계약", maximumMembers: 2, members: [],
-      startTimeText: null, gameInfo: null, scheduledStartAt: null, protectedUntil: null, initialStatus: "DRAFT",
+      startTimeText: null, gameInfo: null, organizerText: null, scheduledStartAt: null, protectedUntil: null, initialStatus: "DRAFT",
     }, `sender-${suffix}-creator`));
+    const activated = await handler.handle(v4Command("SYNC_PARTY", {
+      members: [],
+      startTimeText: "21:00", startTimeState: "PRESENT_VALUE",
+      gameInfo: "자랭", gameInfoState: "PRESENT_VALUE",
+      organizerText: `주최자-${suffix}`, organizerState: "PRESENT_VALUE",
+      scheduledStartAt: null,
+    }, `sender-${suffix}-activator`));
+    assert.equal(activated.body.status, "IN_PROGRESS");
+    assert.equal(activated.body.data.organizerText, `주최자-${suffix}`);
+    assert.equal(activated.body.data.memberCount, 0);
 
     const [first, second] = await Promise.all([
       handler.handle(v4Command("PARTY_MEMBER_ADD", { name: `첫째-${suffix}` }, `sender-${suffix}-a`)),
@@ -417,12 +427,13 @@ test("concurrent V4 party member commands serialize on the locked latest aggrega
     ]);
     assert.equal(first.body.data.outcome, "APPLIED");
     assert.equal(second.body.data.outcome, "APPLIED");
-    assert.deepEqual([first.revision, second.revision].sort((left, right) => left - right), [1, 2]);
+    assert.deepEqual([first.revision, second.revision].sort((left, right) => left - right), [2, 3]);
 
     const stored = (await database.select().from(recruitParties).where(eq(recruitParties.id, partyId)))[0];
     assert.ok(stored);
     assert.equal(stored.status, "IN_PROGRESS");
-    assert.equal(stored.revision, 2);
+    assert.equal(stored.revision, 3);
+    assert.equal(stored.organizerText, `주최자-${suffix}`);
     const members = stored.membersJson as readonly Readonly<{ name: string; slotNo: number; substitute: boolean }>[];
     assert.deepEqual(members.map((member) => member.slotNo), [1, 2]);
     assert.equal(members.every((member) => member.substitute === false), true);
@@ -430,24 +441,24 @@ test("concurrent V4 party member commands serialize on the locked latest aggrega
     const duplicateCommand = v4Command("PARTY_MEMBER_ADD", { name: members[0]!.name }, `sender-${suffix}-c`);
     const duplicate = await handler.handle(duplicateCommand);
     assert.equal(duplicate.body.data.outcome, "ALREADY_PRESENT");
-    assert.equal(duplicate.revision, 2);
+    assert.equal(duplicate.revision, 3);
     const duplicateReplay = await handler.handle(duplicateCommand);
     assert.equal(duplicateReplay.replayed, true);
     assert.deepEqual(duplicateReplay.body.data, duplicate.body.data);
     const missing = await handler.handle(v4Command("PARTY_MEMBER_REMOVE", { name: `없음-${suffix}` }, `sender-${suffix}-d`));
     assert.equal(missing.body.data.outcome, "NOT_FOUND");
-    assert.equal(missing.revision, 2);
+    assert.equal(missing.revision, 3);
 
     const removed = await handler.handle(v4Command("PARTY_MEMBER_REMOVE", { name: members[0]!.name }, `sender-${suffix}-e`));
     assert.equal(removed.body.data.outcome, "APPLIED");
-    assert.equal(removed.revision, 3);
+    assert.equal(removed.revision, 4);
     const afterRemoval = (await database.select().from(recruitParties).where(eq(recruitParties.id, partyId)))[0]!;
     assert.deepEqual(afterRemoval.membersJson, [members[1]], "remaining slot is preserved and reserve promotion is not performed");
     const partyAudits = await database.select({
       action: auditEvents.action,
       metadata: auditEvents.metadataJson,
     }).from(auditEvents).where(eq(auditEvents.targetId, partyId));
-    assert.equal(partyAudits.length, 4);
+    assert.equal(partyAudits.length, 5);
     const memberAuditMetadata = partyAudits
       .filter((event) => event.action === "RECRUITING_PARTY_MEMBER_ADD" || event.action === "RECRUITING_PARTY_MEMBER_REMOVE")
       .map((event) => event.metadata);
@@ -461,8 +472,8 @@ test("concurrent V4 party member commands serialize on the locked latest aggrega
       metadata?.actorKind === "BOT" && metadata.actorPrincipalId === principalId &&
       !("keyId" in metadata) && !("displayName" in metadata) && !("memberName" in metadata)
     ), true, "audit metadata contains only pseudonymous actor/room/sender identifiers");
-    assert.equal((await database.select().from(recruitingOutbox).where(eq(recruitingOutbox.aggregateId, partyId))).length, 4);
-    assert.equal((await database.select().from(recruitingCommandReceipts).where(eq(recruitingCommandReceipts.actorPrincipalId, principalId))).length, 6);
+    assert.equal((await database.select().from(recruitingOutbox).where(eq(recruitingOutbox.aggregateId, partyId))).length, 5);
+    assert.equal((await database.select().from(recruitingCommandReceipts).where(eq(recruitingCommandReceipts.actorPrincipalId, principalId))).length, 7);
   } finally {
     await pool.end();
   }

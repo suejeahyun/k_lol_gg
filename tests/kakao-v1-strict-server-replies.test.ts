@@ -31,6 +31,7 @@ function party(input: Partial<Party> & Pick<Party, "recruitNumber" | "maximumMem
     reserveCount: input.members.filter((member) => member.substitute).length,
     startTimeText: "21:00",
     gameInfo: "미입력",
+    organizerText: null,
     scheduledStartAt: new Date(Date.now() + 86_400_000).toISOString(),
     ...input,
   };
@@ -134,7 +135,7 @@ function harness(parties: readonly Party[] = [], scrims: KakaoOpenChatStatusDto[
   return { dispatcher: new KakaoV4CommandDispatcher({ recruiting, assistant }), handled };
 }
 
-test("strict V1 create and sync use canonical server copy while ordinary V4 remains unchanged", async () => {
+test("strict V1 and ordinary V4 create reserve metadata-only drafts", async () => {
   const createCommand = {
     domain: "PARTY" as const,
     action: "CREATE" as const,
@@ -156,14 +157,16 @@ test("strict V1 create and sync use canonical server copy while ordinary V4 rema
   assert.equal(strictCreate.legacyReply, [
     "[K-LOL.GG 구인구직 양식]", "같이 할사람~", "",
     "아래 양식의 모집번호는 유지해서 작성해주세요.", "", "📢 5인 파티 구인",
-    "모집번호: #8", "", "》시작시간 :", "》게임정보 :", "",
-    "1.", "2.", "3.", "4.", "5.", "예비 1.", "",
-    "참여해주실 분은 태그해주세요.", "*상호배려와 존중 부탁드립니다.",
+    "모집번호: #8", "", "》시작시간 :", "》게임정보 :", "》주최자 :", "",
+    "위 항목을 작성해 전체 전송해주세요.",
+    "비워 둔 시간과 게임 정보는 자동으로 채워집니다.",
+    "활성화 후 상세 번호 추가 이름으로 참가할 수 있습니다.",
+    "", "참여해주실 분은 태그해주세요.", "*상호배려와 존중 부탁드립니다.",
   ].join("\n"));
 
   const normalState = harness();
   const normalCreate = await normalState.dispatcher.dispatch(context(false, "5인파티", 2), createCommand);
-  assert.doesNotMatch(normalCreate.legacyReply, /》시작시간 :|》게임정보 :/u);
+  assert.match(normalCreate.legacyReply, /》시작시간 :[\s\S]*》게임정보 :[\s\S]*》주최자 :/u);
 
   const syncCommand = {
     domain: "PARTY" as const,
@@ -204,7 +207,7 @@ test("strict V1 detail is the full copyable form with edit and finish guidance",
   });
   assert.equal(result.legacyReply, [
     "[K-LOL.GG 구인상세 #12]", "", "#12 · 5인 파티 · 2/5",
-    "시작시간: 9:30", "》게임정보 : 자랭 예상 골드", "예비: 1명", "",
+    "시작시간: 9:30", "》게임정보 : 자랭 예상 골드", "》주최자 : 미입력", "예비: 1명", "",
     "1. 재현", "2.", "3. 민서", "4.", "5.", "예비 1. 기용", "예비 2.", "",
     "수정: 이 메시지를 복사해 이름을 고친 뒤 전체 전송",
     "빠른 추가: 상세 12 추가 이름", "빠른 삭제: 상세 12 삭제 이름", "마감: 12ㅉ",

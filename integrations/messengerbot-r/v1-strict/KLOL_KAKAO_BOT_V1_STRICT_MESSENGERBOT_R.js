@@ -262,7 +262,7 @@ return {
 };
 }());
 /* eslint-disable */
-var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R9_2026_09_13_MEMBER_COMMANDS";
+var BOT_CODE_VERSION = "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R10_2026_09_13_PARTY_DRAFT_ORGANIZER";
 var BASE_URL = "https://k-lol-gg.vercel.app";
 var WEB_INHOUSE_RESULT_UPLOAD_URL = BASE_URL + "/matches/submit";
 var WEB_ADMIN_DISCIPLINE_CREATE_URL = BASE_URL + "/admin/discipline/new";
@@ -1805,17 +1805,24 @@ isOperationFormMessage = isOperationFormCandidateMessage;
 /* Keep V1 routing, but let recoverable numbered rows reach the V4 row parser. */
 var isSeasonApplyCompleteMessage = isSeasonApplyFormMessage;
 isSeasonApplyFormMessage = isSeasonApplyCandidateMessage;
+function isPartyMetadataActivationForm(text) {
+  text = normalizeText(String(text || ""));
+  return hasPartyRecruitNumber(text) && isPartyRecruitLikeMessage(text) &&
+    /^\s*[》>]?\s*시작\s*시간\s*[:：]?/m.test(text) &&
+    /^\s*[》>]?\s*게임\s*정보\s*[:：]?/m.test(text) &&
+    /^\s*[》>]?\s*주\s*최\s*자\s*[:：]?/m.test(text);
+}
 /* A structurally in-house snapshot must never fall through to PARTY_SYNC. */
 var isPartyRecruitFormMessageWithoutSeasonSnapshot = isPartyRecruitFormMessage;
 isPartyRecruitFormMessage = function (text) {
   if (isSeasonApplySnapshotEnvelope(text)) return false;
-  return isPartyRecruitFormMessageWithoutSeasonSnapshot(text);
+  return isPartyRecruitFormMessageWithoutSeasonSnapshot(text) || isPartyMetadataActivationForm(text);
 };
 var v1PartyHelp = getPartyRecruitHelpNotice;
 getPartyRecruitHelpNotice = function () {
   return v1PartyHelp().replace(
     "현황: 구인현황\n종료: 번호ㅉ",
-    "현황: 구인현황\n추가: 상세 번호 추가 이름\n삭제: 상세 번호 삭제 이름\n종료: 번호ㅉ"
+    "활성화: 주최자 입력 후 전체 전송 (시간·게임은 비우면 자동)\n현황: 구인현황\n추가: 상세 번호 추가 이름\n삭제: 상세 번호 삭제 이름\n종료: 번호ㅉ"
   );
 };
 function response(room, msg, sender, isGroupChat, replier, imageDB, packageName, isMention, logId, channelId, userHash) {

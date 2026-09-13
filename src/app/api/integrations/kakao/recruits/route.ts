@@ -170,9 +170,10 @@ async function handlePost(request: Request, metrics: RecruitRoutePerformance) {
           title: parsed.compatCreate.title,
           maximumMembers: parsed.compatCreate.maximumMembers,
           members: syncPayload.members,
-          startTimeText: syncPayload.startTimeText,
-          gameInfo: syncPayload.gameInfo,
-          scheduledStartAt: syncPayload.scheduledStartAt ?? null,
+           startTimeText: syncPayload.startTimeText,
+           gameInfo: syncPayload.gameInfo,
+           organizerText: syncPayload.organizerText,
+           scheduledStartAt: syncPayload.scheduledStartAt ?? null,
           protectedUntil: null,
         } satisfies Extract<RecruitingCommand, { type: "CREATE_PARTY" }>["payload"];
       } else {

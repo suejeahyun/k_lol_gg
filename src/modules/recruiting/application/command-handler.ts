@@ -238,7 +238,7 @@ function createScrim(
 }
 
 function partySnapshot(party: RecruitParty | null): JsonObject | null {
-  return party ? { id: party.id, revision: party.revision, status: party.status, memberCount: party.members.filter((member) => !member.substitute).length, reserveCount: party.members.filter((member) => member.substitute).length, maximumMembers: party.maximumMembers, startTimeText: party.startTimeText, gameInfo: party.gameInfo } : null;
+  return party ? { id: party.id, revision: party.revision, status: party.status, memberCount: party.members.filter((member) => !member.substitute).length, reserveCount: party.members.filter((member) => member.substitute).length, maximumMembers: party.maximumMembers, startTimeText: party.startTimeText, gameInfo: party.gameInfo, organizerText: party.organizerText } : null;
 }
 
 function scrimSnapshot(scrim: ScrimRecruit | null): JsonObject | null {
@@ -256,7 +256,7 @@ function scrimSnapshot(scrim: ScrimRecruit | null): JsonObject | null {
 
 function partyJson(party: RecruitParty): JsonObject {
   const dto = toPublicPartyDto(party);
-  return { id: dto.id, recruitNumber: dto.recruitNumber, type: dto.type, status: dto.status, title: dto.title, memberCount: dto.memberCount, reserveCount: party.members.filter((member) => member.substitute).length, maximumMembers: dto.maximumMembers, startTimeText: dto.startTimeText, gameInfo: dto.gameInfo, scheduledStartAt: dto.scheduledStartAt };
+  return { id: dto.id, recruitNumber: dto.recruitNumber, type: dto.type, status: dto.status, title: dto.title, memberCount: dto.memberCount, reserveCount: party.members.filter((member) => member.substitute).length, maximumMembers: dto.maximumMembers, startTimeText: dto.startTimeText, gameInfo: dto.gameInfo, organizerText: dto.organizerText, scheduledStartAt: dto.scheduledStartAt };
 }
 
 function scrimJson(scrim: ScrimRecruit): JsonObject {
@@ -469,6 +469,8 @@ function sync(command: Extract<RecruitingCommand, { type: "SYNC_PARTY" }>, party
     startTimeState: command.payload.startTimeState,
     gameInfo: command.payload.gameInfo,
     gameInfoState: command.payload.gameInfoState,
+    organizerText: command.payload.organizerText,
+    organizerState: command.payload.organizerState,
     scheduledStartAt: command.payload.scheduledStartAt === undefined
       ? undefined
       : parseDate(command.payload.scheduledStartAt, "scheduledStartAt"),

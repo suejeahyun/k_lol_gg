@@ -6,6 +6,7 @@ const RESERVE_ROW = /^\s*(?:예비|후보|대기)(?=\s|[0-9０-９]|[.):：．�
 const RECRUIT_LABEL = /^\s*(?:[》>*#-]\s*)*모\s*집\s*번\s*호\s*[:：]?\s*(.*?)\s*$/u;
 const START_TIME_LABEL = /^\s*[》>]?\s*(?:게임\s*)?(?:시작|출발)\s*시간\s*[:：]?\s*(.*?)\s*$/u;
 const GAME_INFO_LABEL = /^\s*[》>]?\s*게임\s*정보\s*[:：]?\s*(.*?)\s*$/u;
+const ORGANIZER_LABEL = /^\s*[》>]?\s*주\s*최\s*자\s*[:：]?\s*(.*?)\s*$/u;
 const DETAIL_HEADER = /^\s*\[\s*K-LOL\.GG\s+구인\s*상세\s*#\s*(\d+)\s*\]\s*$/iu;
 const DETAIL_SUMMARY = /^\s*#\s*(\d+)\s*[·ㆍ|]\s*(.*?)\s*[·ㆍ|]\s*(\d+)\s*\/\s*(\d+)(?:\s|$)/u;
 const RESERVE_COUNT_SUMMARY = /^\s*예비\s*[:：]\s*\d+\s*명(?:\s|$)/u;
@@ -76,6 +77,7 @@ export type ParsedPartyForm = Readonly<{
   slots: readonly ParsedPartySlot[];
   startTime: ParsedPartyMetadata;
   gameInfo: ParsedPartyMetadata;
+  organizer: ParsedPartyMetadata;
   diagnostics: readonly PartyFormDiagnostic[];
 }>;
 
@@ -172,10 +174,10 @@ function partySlotContinuation(lines: readonly string[], index: number) {
   const value = normalizedValue(lines[index + 1] ?? "");
   if (!value) return null;
   if (
-    RECRUIT_LABEL.test(value) || START_TIME_LABEL.test(value) || GAME_INFO_LABEL.test(value) ||
+    RECRUIT_LABEL.test(value) || START_TIME_LABEL.test(value) || GAME_INFO_LABEL.test(value) || ORGANIZER_LABEL.test(value) ||
     DETAIL_HEADER.test(value) || DETAIL_SUMMARY.test(value) || RESERVE_COUNT_SUMMARY.test(value) ||
     parsePartyReserveRow(value) || parsePartyNumberedRow(value) || parsePartyPositionRow(value) || /^\d{3,}\s*[.)]/u.test(value) ||
-    submittedTitle(value, index + 2) || /^\s*(?:\[?K-LOL|📢|참여해|\*?상호배려|같이 할사람|아래 양식|수정\s*:|마감\s*:)/u.test(value)
+    submittedTitle(value, index + 2) || /^\s*(?:\[?K-LOL|📢|참여해|\*?상호배려|같이 할사람|아래 양식|세 항목을|주최자를 입력|시작시간·게임정보를 비우면|위 항목을|비워 둔 시간과|활성화 후|수정\s*:|마감\s*:)/u.test(value)
   ) return null;
   return value;
 }
@@ -192,10 +194,10 @@ function metadata(lines: readonly string[], pattern: RegExp): Readonly<{ field: 
   for (let index = selected.lineIndex + 1; index < lines.length; index += 1) {
     const line = lines[index]!;
     if (
-      RECRUIT_LABEL.test(line) || START_TIME_LABEL.test(line) || GAME_INFO_LABEL.test(line) ||
+      RECRUIT_LABEL.test(line) || START_TIME_LABEL.test(line) || GAME_INFO_LABEL.test(line) || ORGANIZER_LABEL.test(line) ||
       DETAIL_HEADER.test(line) || DETAIL_SUMMARY.test(line) || RESERVE_COUNT_SUMMARY.test(line) ||
       parsePartyReserveRow(line) || parsePartyNumberedRow(line) || parsePartyPositionRow(line) ||
-      submittedTitle(line, index + 1) || /^\s*(?:\[K-LOL|참여해|\*상호배려|같이 할사람|아래 양식|수정\s*:|마감\s*:)/u.test(line)
+      submittedTitle(line, index + 1) || /^\s*(?:\[K-LOL|참여해|\*상호배려|같이 할사람|아래 양식|세 항목을|주최자를 입력|시작시간·게임정보를 비우면|위 항목을|비워 둔 시간과|활성화 후|수정\s*:|마감\s*:)/u.test(line)
     ) break;
     const value = normalizedValue(line);
     if (value) values.push(value);
@@ -333,7 +335,9 @@ export function parsePartyForm(input: string): ParsedPartyForm {
     seen.add(key);
   }
 
-  if (selectedTitle) {
+  const metadataOnlyForm = slotSignals === 0 &&
+    [START_TIME_LABEL, GAME_INFO_LABEL, ORGANIZER_LABEL].every((pattern) => lines.some((line) => pattern.test(line)));
+  if (selectedTitle && !metadataOnlyForm) {
     const expectedKind = selectedTitle.positionSlots ? "POSITION" : "NUMBERED";
     for (let slotNo = 1; slotNo <= selectedTitle.maximumMembers; slotNo += 1) {
       if (!slots.some((slot) => slot.kind === expectedKind && slot.slotNo === slotNo)) {
@@ -353,10 +357,13 @@ export function parsePartyForm(input: string): ParsedPartyForm {
 
   const start = metadata(lines, START_TIME_LABEL);
   const game = metadata(lines, GAME_INFO_LABEL);
+  const organizer = metadata(lines, ORGANIZER_LABEL);
   for (const line of start.duplicateLines) diagnostics.push(diagnostic("DUPLICATE_METADATA_LABEL", line, "startTime"));
   for (const line of game.duplicateLines) diagnostics.push(diagnostic("DUPLICATE_METADATA_LABEL", line, "gameInfo"));
+  for (const line of organizer.duplicateLines) diagnostics.push(diagnostic("DUPLICATE_METADATA_LABEL", line, "organizer"));
 
-  const candidate = slotSignals >= 2 && (recruitLabelSignals > 0 || detailSignals > 0 || titles.length > 0 || invalidStructuralSignal);
+  const candidate = (slotSignals >= 2 || metadataOnlyForm) &&
+    (recruitLabelSignals > 0 || detailSignals > 0 || titles.length > 0 || invalidStructuralSignal);
   const decision = decisionFor(diagnostics, candidate);
   const onlyRecruitNumber = uniqueRecruitNumbers.size === 1 ? [...uniqueRecruitNumbers][0] : null;
   return Object.freeze({
@@ -370,6 +377,7 @@ export function parsePartyForm(input: string): ParsedPartyForm {
     slots: Object.freeze(slots),
     startTime: start.field,
     gameInfo: game.field,
+    organizer: organizer.field,
     diagnostics: Object.freeze(diagnostics),
   });
 }

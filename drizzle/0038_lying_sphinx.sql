@@ -1,0 +1,2 @@
+ALTER TABLE "recruiting"."parties" ADD COLUMN "organizer_text" varchar(100);--> statement-breakpoint
+ALTER TABLE "recruiting"."parties" ADD CONSTRAINT "recruit_parties_organizer_text" CHECK ("recruiting"."parties"."organizer_text" IS NULL OR char_length(btrim("recruiting"."parties"."organizer_text")) BETWEEN 1 AND 100);

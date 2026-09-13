@@ -26,6 +26,7 @@ const party: KakaoOpenChatStatusDto["parties"][number] = {
   ],
   startTimeText: "21:00",
   gameInfo: "자유랭크",
+  organizerText: "주최자",
   scheduledStartAt: null,
 };
 

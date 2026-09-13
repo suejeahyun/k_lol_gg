@@ -610,6 +610,7 @@ export class PostgresKakaoAssistant {
           maximumMembers: recruitParties.maximumMembers,
           startTimeText: recruitParties.startTimeText,
           gameInfo: recruitParties.gameInfo,
+          organizerText: recruitParties.organizerText,
           scheduledStartAt: recruitParties.scheduledStartAt,
         }).from(recruitParties).where(and(
           eq(recruitParties.status, "IN_PROGRESS"),
@@ -676,6 +677,7 @@ export class PostgresKakaoAssistant {
             members: Object.freeze(members.map((member) => Object.freeze(member))),
             startTimeText: party.startTimeText,
             gameInfo: party.gameInfo,
+            organizerText: party.organizerText,
             scheduledStartAt: party.scheduledStartAt?.toISOString() ?? null,
           });
         })),

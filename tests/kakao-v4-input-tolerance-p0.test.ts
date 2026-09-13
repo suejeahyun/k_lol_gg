@@ -35,7 +35,7 @@ import { assertSafeTestDatabase } from "../src/platform/db/test-guard";
 type V1Fixture = Readonly<{
   contractVersion: string;
   source: Readonly<{ v1Artifact: string; v1Sha256: string }>;
-  party: Readonly<{ initialFivePersonTemplate: string }>;
+  party: Readonly<{ initialFivePersonTemplate: string; legacyFivePersonTemplate: string }>;
   operationForms: Readonly<{ forms: Readonly<Record<string, readonly string[]>> }>;
 }>;
 
@@ -44,7 +44,7 @@ const fixture = JSON.parse(await readFile(
   "utf8",
 )) as V1Fixture;
 
-const PARTY_ORACLE = fixture.party.initialFivePersonTemplate;
+const PARTY_ORACLE = fixture.party.legacyFivePersonTemplate;
 const KST_TIMESTAMP = Date.parse("2026-09-10T03:00:00.000Z") / 1_000;
 
 function envelope(profileId: KakaoV4ProfileId, text: string, eventId: string, senderId = "sender-user-11111111111111111111111111111111"): KakaoV4CommandEnvelope {
@@ -116,7 +116,7 @@ function partyDispatcherHarness() {
 }
 
 test("[P0-FIXTURE] input-tolerance matrix is pinned to the unchanged V1 oracle", () => {
-  assert.equal(fixture.contractVersion, "KLOL_KAKAO_V4_V1_COMPAT_2026_09_13_R2");
+  assert.equal(fixture.contractVersion, "KLOL_KAKAO_V4_V1_COMPAT_2026_09_13_R3");
   assert.equal(fixture.source.v1Artifact, "pasted-text.txt (delegated attachment; not committed)");
   assert.equal(fixture.source.v1Sha256, "c91a56a289a762fe7e08143e8fd4b55c9695c4df68ebfcb6689613dcb73776b7");
   assert.deepEqual(Object.keys(fixture.operationForms.forms).sort(), ["friends", "leaves", "meetups", "suggestions"]);

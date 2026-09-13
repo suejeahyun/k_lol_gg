@@ -50,7 +50,7 @@ export default async function RecruitsPage() {
                 {result.data.parties.map((party) => <article className={styles.card} key={party.id}>
                   <div className={styles.cardTop}><span>{partyTypeLabel[party.type]}</span><b>#{party.recruitNumber}</b></div>
                   <h3>{party.title}</h3>
-                  <dl><div><dt>참여</dt><dd>{party.memberCount} / {party.maximumMembers}명</dd></div><div><dt>예정</dt><dd>{timeLabel(party.scheduledStartAt)}</dd></div></dl>
+                  <dl><div><dt>주최자</dt><dd>{party.organizerText ?? "미입력"}</dd></div><div><dt>참여</dt><dd>{party.memberCount} / {party.maximumMembers}명</dd></div><div><dt>예정</dt><dd>{timeLabel(party.scheduledStartAt)}</dd></div></dl>
                   <section className={styles.members} aria-label={`파티 #${party.recruitNumber} 참여자`}>
                     <strong>참여자</strong>
                     {party.members.length ? <ul>{party.members.map((member) => <li key={`${member.substitute ? "reserve" : "member"}-${member.slotNo}`}>

@@ -179,6 +179,7 @@ function partyLines(party: KakaoOpenChatStatusDto["parties"][number]) {
     party.title || "파티 구인",
     `인원 ${party.memberCount}/${party.maximumMembers}${party.reserveCount > 0 ? ` · 예비 ${party.reserveCount}` : ""}`,
     `시작시간: ${party.startTimeText || "미정"} · 게임정보: ${party.gameInfo || "미입력"}`,
+    `주최자: ${party.organizerText || "미입력"}`,
   ];
   for (const member of party.members) {
     lines.push(`${member.substitute ? "예비 " : ""}${member.slotNo}. ${member.name || "이름 미정"}${member.position ? ` · ${positionLabels[member.position]}` : ""}`);
@@ -206,6 +207,7 @@ function partyStatusReply(parties: KakaoOpenChatStatusDto["parties"]) {
   const lines = ["[K-LOL.GG 구인구직 현황]", "🔎 전체 명단: 상세 번호", "", "[구인중]"];
   for (const [index, party] of parties.entries()) {
     lines.push(`#${party.recruitNumber} · ${partyTypeLabel(party)} · ${party.memberCount}/${party.maximumMembers} · ${party.startTimeText || "미정"} · ${party.gameInfo || "미입력"}`);
+    lines.push(`주최자: ${party.organizerText || "미입력"}`);
     const names = party.members.filter((member) => !member.substitute).map((member) => member.name);
     if (names.length > 0) lines.push(`참여: ${names.join(", ")}`);
     lines.push(`└ 상세 ${party.recruitNumber}`);
@@ -309,7 +311,6 @@ function partyTemplate(input: Readonly<{
   maximumMembers: number;
   members?: readonly Readonly<{ slotNo: number | null; name: string; position: string | null; substitute: boolean }>[];
 }>) {
-  const members = input.members ?? [];
   const lines = [
     "[K-LOL.GG 구인구직 양식]",
     "같이 할사람~",
@@ -319,22 +320,17 @@ function partyTemplate(input: Readonly<{
     `📢 ${input.title}`,
     `모집번호: #${String(input.recruitNumber)}`,
     "",
+    "》시작시간 :",
+    "》게임정보 :",
+    "》주최자 :",
+    "",
+    "위 항목을 작성해 전체 전송해주세요.",
+    "비워 둔 시간과 게임 정보는 자동으로 채워집니다.",
+    "활성화 후 상세 번호 추가 이름으로 참가할 수 있습니다.",
+    "",
+    "참여해주실 분은 태그해주세요.",
+    "*상호배려와 존중 부탁드립니다.",
   ];
-  const lineParty = input.partyType === "FLEX_RANK" || input.partyType === "NORMAL_GAME" || input.partyType === "PARTY_RIFT";
-  const positionLabels = ["TOP", "JUG", "MID", "ADC", "SUP"] as const;
-  if (lineParty) {
-    for (const [index, label] of positionLabels.entries()) {
-      const member = members.find((candidate) => !candidate.substitute && (candidate.position === (label === "JUG" ? "JGL" : label) || candidate.slotNo === index + 1));
-      lines.push(`${label}. ${member?.name ?? ""}`.trimEnd());
-    }
-  } else {
-    for (let slotNo = 1; slotNo <= input.maximumMembers; slotNo += 1) {
-      const member = members.find((candidate) => !candidate.substitute && candidate.slotNo === slotNo);
-      lines.push(`${slotNo}. ${member?.name ?? ""}`.trimEnd());
-    }
-  }
-  const reserves = members.filter((member) => member.substitute);
-  lines.push(`예비 1. ${reserves.map((member) => member.name).join(", ")}`.trimEnd(), "", lineParty ? "마지막 참가자가 전체 태그 해주세요." : "참여해주실 분은 태그해주세요.", "*상호배려와 존중 부탁드립니다.");
   return lines.join("\n");
 }
 
@@ -805,6 +801,7 @@ export class KakaoV4CommandDispatcher {
           members: [],
           startTimeText: null,
           gameInfo: null,
+          organizerText: null,
           scheduledStartAt: null,
           protectedUntil: null,
           initialStatus: "DRAFT",
@@ -897,6 +894,8 @@ export class KakaoV4CommandDispatcher {
               startTimeState: command.payload.parsedForm?.startTime.state,
               gameInfo: command.payload.gameInfo,
               gameInfoState: command.payload.parsedForm?.gameInfo.state,
+              organizerText: command.payload.organizerText,
+              organizerState: command.payload.parsedForm?.organizer.state,
               scheduledStartAt: command.payload.scheduledStartAt,
             },
           })
@@ -914,6 +913,7 @@ export class KakaoV4CommandDispatcher {
               members: command.payload.members,
               startTimeText: command.payload.startTimeText,
               gameInfo: command.payload.gameInfo,
+              organizerText: command.payload.organizerText,
               scheduledStartAt: command.payload.scheduledStartAt ?? null,
               protectedUntil: command.payload.protectedUntil ?? null,
             },
@@ -945,6 +945,7 @@ export class KakaoV4CommandDispatcher {
             `[파티 #${String(recruitNumber)} 반영]`,
             `${String(primaryCount)}/${String(data.maximumMembers)} · 예비 ${String(reserveCount)}명`,
             `시작시간: ${String(data.startTimeText)} · 게임정보: ${String(data.gameInfo)}`,
+            `주최자: ${String(data.organizerText ?? "미입력")}`,
             `마감: ${String(recruitNumber)}ㅉ`,
           ].join("\n");
     const legacyReply = await this.appendLatestPartyStatus(context, mutationReply, v1Strict);

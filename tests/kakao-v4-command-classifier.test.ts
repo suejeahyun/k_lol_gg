@@ -19,7 +19,7 @@ type ParityFixture = Readonly<{
 
 type CompatibilityFixture = Readonly<{
   routes: readonly Readonly<{ domain: string; action: string; aliases: readonly string[] }>[];
-  party: Readonly<{ initialFivePersonTemplate: string }>;
+  party: Readonly<{ initialFivePersonTemplate: string; legacyFivePersonTemplate: string }>;
   inhouse: Readonly<{ riftTemplate: string; aramTemplate: string }>;
   scrim: Readonly<{ initialTemplate: string }>;
   operationForms: Readonly<{ forms: Readonly<Record<string, readonly string[]>> }>;
@@ -33,6 +33,7 @@ const compatibilityFixture = JSON.parse(await readFile(
   resolve(import.meta.dirname, "fixtures/kakao-v4-v1-compatibility-contract.json"),
   "utf8",
 )) as CompatibilityFixture;
+const LEGACY_PARTY_TEMPLATE = compatibilityFixture.party.legacyFivePersonTemplate;
 
 const oppositeProfile = (profileId: KakaoV4ProfileId): KakaoV4ProfileId => profileId === "RECRUIT" ? "FEATURES" : "RECRUIT";
 
@@ -183,15 +184,16 @@ test("party, inhouse, and scrim full forms win over command parsing as SNAPSHOT"
   if (scrim.kind === "SNAPSHOT") assert.equal(scrim.command, "SCRIM_SNAPSHOT");
 });
 
-test("party snapshot accepts absent start time/game info and populated optional lines", () => {
+test("party snapshot accepts metadata-only activation fields and legacy participant rows", () => {
   const initial = compatibilityFixture.party.initialFivePersonTemplate;
-  assert.doesNotMatch(initial, /시작\s*시간|게임\s*정보/u);
+  assert.match(initial, /》시작시간 :[\s\S]*》게임정보 :[\s\S]*》주최자 :/u);
   const first = classifyKakaoV4Command({ profileId: "RECRUIT", text: initial });
   assert.equal(first.kind, "SNAPSHOT");
 
-  const populated = initial.replace("모집번호: #12", "모집번호: #12\n》시작시간: 모이면\n》게임정보: 일겜or자랭");
+  const populated = initial.replace("》시작시간 :", "》시작시간 : 모이면").replace("》게임정보 :", "》게임정보 : 일겜or자랭").replace("》주최자 :", "》주최자 : 재현");
   const second = classifyKakaoV4Command({ profileId: "RECRUIT", text: populated });
   assert.equal(second.kind, "SNAPSHOT");
+  assert.equal(classifyKakaoV4Command({ profileId: "RECRUIT", text: LEGACY_PARTY_TEMPLATE.replace("1.", "1. 재현") }).kind, "SNAPSHOT");
   if (second.kind === "SNAPSHOT") assert.equal(second.command, "PARTY_SNAPSHOT");
 
   const automatic = classifyKakaoV4Command({
@@ -260,7 +262,7 @@ test("Kakao copy/paste party row variants still canonicalize to one SYNC member"
   ] as const;
 
   for (const [index, [label, row, omitOpeningBracket]] of variants.entries()) {
-    const original = compatibilityFixture.party.initialFivePersonTemplate;
+    const original = LEGACY_PARTY_TEMPLATE;
     const text = original
       .replace("\n2.\n", `\n${row}\n`)
       .replace("[K-LOL.GG 구인구직 양식]", omitOpeningBracket ? "K-LOL.GG 구인구직 양식]" : "[K-LOL.GG 구인구직 양식]");
@@ -290,7 +292,7 @@ test("Kakao copy/paste party row variants still canonicalize to one SYNC member"
 });
 
 test("full-width empty reserve punctuation and clock text never become party members", () => {
-  const text = compatibilityFixture.party.initialFivePersonTemplate
+  const text = LEGACY_PARTY_TEMPLATE
     .replace("예비 1.", "예비 １．")
     .replace("\n1.\n", "\n20: 00 출발\n1.\n");
   const classification = classifyKakaoV4Command({ profileId: "RECRUIT", text });
@@ -336,7 +338,7 @@ test("party snapshot rejects truncated numeric and position templates", () => {
 });
 
 test("A→B→A identical text is reclassified without state or content-hash suppression", () => {
-  const base = compatibilityFixture.party.initialFivePersonTemplate;
+  const base = LEGACY_PARTY_TEMPLATE;
   const a = base.replace("1.", "1. 재현").replace("2.", "2. 기용");
   const b = base.replace("1.", "1. 재현").replace("2.", "2. 소영");
   const results = [a, b, a].map((text) => classifyKakaoV4Command({ profileId: "RECRUIT", text }));

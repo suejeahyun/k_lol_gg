@@ -53,7 +53,7 @@ function openStatus(): KakaoOpenChatStatusDto {
       recruitNumber: 7, type: "PARTY_NUMBER", title: "5인 파티", status: "IN_PROGRESS",
       memberCount: 1, reserveCount: 0, maximumMembers: 5,
       members: [{ name: "A", position: null, slotNo: 1, substitute: false }],
-      startTimeText: "21:00", gameInfo: "미입력", scheduledStartAt: null,
+      startTimeText: "21:00", gameInfo: "미입력", organizerText: "주최자", scheduledStartAt: null,
     }],
     scrims: [{
       id: "scrim-3", revision: 2, recruitDate: "2026-09-10", scrimNumber: 3,
@@ -76,7 +76,7 @@ function mutationResult(
     type: "PARTY_NUMBER", status: command.type === "FINISH_PARTY" ? "FINISHED" : "IN_PROGRESS",
     title: "5인 파티", memberCount: partyMembers.filter((member) => !member.substitute).length,
     reserveCount: partyMembers.filter((member) => member.substitute).length,
-    maximumMembers: 5, startTimeText: "09:26", gameInfo: "미입력", scheduledStartAt: null,
+    maximumMembers: 5, startTimeText: "09:26", gameInfo: "미입력", organizerText: "재현", scheduledStartAt: null,
     ...(command.type === "PARTY_MEMBER_ADD" || command.type === "PARTY_MEMBER_REMOVE" ? {
       action: command.type === "PARTY_MEMBER_ADD" ? "ADD" : "REMOVE",
       outcome: memberOutcome,
@@ -271,7 +271,7 @@ test("party create command reserves an invisible draft number and returns the ex
     action: "CREATE",
     payload: {
       recruitDate: "2026-09-10", preferredRecruitNumber: null, partyType: "PARTY_NUMBER",
-      title: "5인 파티 구인", maximumMembers: 5, members: [], startTimeText: null, gameInfo: null,
+      title: "5인 파티 구인", maximumMembers: 5, members: [], startTimeText: null, gameInfo: null, organizerText: null,
       scheduledStartAt: null, protectedUntil: null,
     },
   };
@@ -279,11 +279,11 @@ test("party create command reserves an invisible draft number and returns the ex
   assert.deepEqual(state.handled.map((handled) => handled.type), ["CREATE_PARTY"]);
   assert.equal(state.handled[0]?.type === "CREATE_PARTY" ? state.handled[0].payload.initialStatus : null, "DRAFT");
   assert.notEqual(result.aggregate, null);
-  assert.equal(result.legacyReply, "[K-LOL.GG 구인구직 양식]\n같이 할사람~\n\n아래 양식의 모집번호는 유지해서 작성해주세요.\n\n📢 5인 파티 구인\n모집번호: #8\n\n1.\n2.\n3.\n4.\n5.\n예비 1.\n\n참여해주실 분은 태그해주세요.\n*상호배려와 존중 부탁드립니다.");
-  assert.doesNotMatch(result.legacyReply, /시작시간|게임정보/u);
+  assert.equal(result.legacyReply, "[K-LOL.GG 구인구직 양식]\n같이 할사람~\n\n아래 양식의 모집번호는 유지해서 작성해주세요.\n\n📢 5인 파티 구인\n모집번호: #8\n\n》시작시간 :\n》게임정보 :\n》주최자 :\n\n위 항목을 작성해 전체 전송해주세요.\n비워 둔 시간과 게임 정보는 자동으로 채워집니다.\n활성화 후 상세 번호 추가 이름으로 참가할 수 있습니다.\n\n참여해주실 분은 태그해주세요.\n*상호배려와 존중 부탁드립니다.");
+  assert.doesNotMatch(result.legacyReply, /^1\.|^예비 1\./mu);
 });
 
-test("the exact generated V1 party form is accepted without metadata for slash and plain submissions", async () => {
+test("the exact generated V1 party form activates with only organizer populated and applies metadata defaults", async () => {
   for (const prefix of ["", "/"]) {
     const state = harness();
     const generated = await state.dispatcher.dispatch(context, {
@@ -291,11 +291,12 @@ test("the exact generated V1 party form is accepted without metadata for slash a
       action: "CREATE",
       payload: {
         recruitDate: "2026-09-10", preferredRecruitNumber: null, partyType: "PARTY_NUMBER",
-        title: "5인 파티 구인", maximumMembers: 5, members: [], startTimeText: null, gameInfo: null,
+        title: "5인 파티 구인", maximumMembers: 5, members: [], startTimeText: null, gameInfo: null, organizerText: null,
         scheduledStartAt: null, protectedUntil: null,
       },
     });
-    const submittedText = `${prefix}${generated.legacyReply.replace("1.", "1. 재현")}`;
+    const submittedText = `${prefix}${generated.legacyReply}`
+      .replace("》주최자 :", "》주최자 : 재현");
     const submittedEnvelope = { ...context.envelope, eventId: `event-dispatcher-form-${prefix ? "slash" : "plain"}`, text: submittedText };
     const classification = classifyKakaoV4Command({ profileId: "RECRUIT", text: submittedText });
     const command = canonicalizeKakaoV4Command(classification, submittedEnvelope);
@@ -304,9 +305,11 @@ test("the exact generated V1 party form is accepted without metadata for slash a
     const saved = await state.dispatcher.dispatch({ ...context, envelope: submittedEnvelope }, command);
     assert.deepEqual(state.handled.map((handled) => handled.type), ["CREATE_PARTY", "SYNC_PARTY"]);
     if (state.handled[1]?.type !== "SYNC_PARTY") assert.fail("submitted form must activate the reserved party");
-    assert.equal(state.handled[1].payload.startTimeText, undefined);
-    assert.equal(state.handled[1].payload.gameInfo, undefined);
-    assert.match(saved.legacyReply, /시작시간: 09:26 · 게임정보: 미입력/u);
+    assert.equal(state.handled[1].payload.startTimeState, "PRESENT_EMPTY");
+    assert.equal(state.handled[1].payload.gameInfoState, "PRESENT_EMPTY");
+    assert.equal(state.handled[1].payload.organizerText, "재현");
+    assert.deepEqual(state.handled[1].payload.members, []);
+    assert.match(saved.legacyReply, /주최자: 재현/u);
   }
 });
 
@@ -324,7 +327,7 @@ test("first completed automatic party form creates the party once", async () => 
   assert.deepEqual(state.handled.map((command) => command.type), ["CREATE_PARTY"]);
   assert.equal(state.handled[0]?.metadata.actor.kind, "BOT");
   assert.equal(state.handled[0]?.metadata.idempotency.scope, KAKAO_V4_EVENT_SCOPE);
-  assert.equal(result.legacyReply, "[파티 #8 반영]\n1/5 · 예비 0명\n시작시간: 09:26 · 게임정보: 미입력\n마감: 8ㅉ\n\n[K-LOL.GG 구인구직 현황]\n🔎 전체 명단: 상세 번호\n\n[구인중]\n#7 · 5인 파티 · 1/5 · 21:00 · 미입력\n참여: A\n└ 상세 7");
+  assert.equal(result.legacyReply, "[파티 #8 반영]\n1/5 · 예비 0명\n시작시간: 09:26 · 게임정보: 미입력\n주최자: 재현\n마감: 8ㅉ\n\n[K-LOL.GG 구인구직 현황]\n🔎 전체 명단: 상세 번호\n\n[구인중]\n#7 · 5인 파티 · 1/5 · 21:00 · 미입력\n주최자: 주최자\n참여: A\n└ 상세 7");
 });
 
 test("explicit missing party number never falls back to creating a new party", async () => {
@@ -436,7 +439,7 @@ test("party member shortcut outcomes return concrete replies and append the late
       sourceRoomId: context.authorization.roomId,
       recruitDate: "2026-09-10",
       recruitNumber: 7,
-      allowedPartyStatuses: ["DRAFT", "IN_PROGRESS"],
+      allowedPartyStatuses: ["IN_PROGRESS"],
     }]);
     assert.equal(state.handled.length, 1);
     const handled = state.handled[0];

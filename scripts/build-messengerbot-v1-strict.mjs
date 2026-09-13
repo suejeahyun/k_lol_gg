@@ -231,11 +231,18 @@ const seasonCandidateBinding = [
   "/* Keep V1 routing, but let recoverable numbered rows reach the V4 row parser. */",
   "var isSeasonApplyCompleteMessage = isSeasonApplyFormMessage;",
   "isSeasonApplyFormMessage = isSeasonApplyCandidateMessage;",
+  "function isPartyMetadataActivationForm(text) {",
+  "  text = normalizeText(String(text || \"\"));",
+  "  return hasPartyRecruitNumber(text) && isPartyRecruitLikeMessage(text) &&",
+  "    /^\\s*[》>]?\\s*시작\\s*시간\\s*[:：]?/m.test(text) &&",
+  "    /^\\s*[》>]?\\s*게임\\s*정보\\s*[:：]?/m.test(text) &&",
+  "    /^\\s*[》>]?\\s*주\\s*최\\s*자\\s*[:：]?/m.test(text);",
+  "}",
   "/* A structurally in-house snapshot must never fall through to PARTY_SYNC. */",
   "var isPartyRecruitFormMessageWithoutSeasonSnapshot = isPartyRecruitFormMessage;",
   "isPartyRecruitFormMessage = function (text) {",
   "  if (isSeasonApplySnapshotEnvelope(text)) return false;",
-  "  return isPartyRecruitFormMessageWithoutSeasonSnapshot(text);",
+  "  return isPartyRecruitFormMessageWithoutSeasonSnapshot(text) || isPartyMetadataActivationForm(text);",
   "};",
 ].join("\n");
 const recruitHelpBinding = [
@@ -243,7 +250,7 @@ const recruitHelpBinding = [
   "getPartyRecruitHelpNotice = function () {",
   "  return v1PartyHelp().replace(",
   "    \"현황: 구인현황\\n종료: 번호ㅉ\",",
-  "    \"현황: 구인현황\\n추가: 상세 번호 추가 이름\\n삭제: 상세 번호 삭제 이름\\n종료: 번호ㅉ\"",
+  "    \"활성화: 주최자 입력 후 전체 전송 (시간·게임은 비우면 자동)\\n현황: 구인현황\\n추가: 상세 번호 추가 이름\\n삭제: 상세 번호 삭제 이름\\n종료: 번호ㅉ\"",
   "  );",
   "};",
 ].join("\n");
@@ -291,6 +298,9 @@ if (!output.includes("function isSeasonApplySnapshotEnvelope(text)")) {
 }
 if (!output.includes("isPartyRecruitFormMessageWithoutSeasonSnapshot")) {
   throw new Error("V1-strict output must exclude in-house snapshots from party-form routing");
+}
+if (!output.includes("function isPartyMetadataActivationForm(text)")) {
+  throw new Error("V1-strict output must route metadata-only party activation forms");
 }
 if (!output.includes("if (handlePartyMemberMutationCommand(msg, room, sender, replier)) return;")) {
   throw new Error("V1-strict output must route explicit party member mutations before the V1 dispatcher");

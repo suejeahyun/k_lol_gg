@@ -96,6 +96,24 @@ test("a Kakao V4 number reservation stays draft until the completed V1 form acti
   assert.equal(activated.startTimeText, "00:34");
   assert.equal(activated.gameInfo, "미입력");
   assert.throws(() => syncRecruitParty({ party: reserved, expectedRevision: 0, now: submittedAt, members: [] }), /EMPTY_DRAFT_ACTIVATION/);
+  assert.throws(() => syncRecruitParty({
+    party: reserved, expectedRevision: 0, now: submittedAt, members: [],
+    startTimeText: null, startTimeState: "PRESENT_EMPTY",
+    gameInfo: null, gameInfoState: "PRESENT_EMPTY",
+    organizerText: null, organizerState: "PRESENT_EMPTY",
+  }), /EMPTY_DRAFT_ACTIVATION/);
+
+  const metadataActivated = syncRecruitParty({
+    party: reserved, expectedRevision: 0, now: submittedAt, members: [],
+    startTimeText: null, startTimeState: "PRESENT_EMPTY",
+    gameInfo: null, gameInfoState: "PRESENT_EMPTY",
+    organizerText: "재현", organizerState: "PRESENT_VALUE",
+  });
+  assert.equal(metadataActivated.status, "IN_PROGRESS");
+  assert.equal(metadataActivated.startTimeText, "00:34");
+  assert.equal(metadataActivated.gameInfo, "미입력");
+  assert.equal(metadataActivated.organizerText, "재현");
+  assert.deepEqual(metadataActivated.members, []);
 
   const explicitEmptyMetadata = syncRecruitParty({
     party: reserved, expectedRevision: 0, now: submittedAt,
@@ -144,19 +162,14 @@ test("canonical party sync returns the stored aggregate without increasing revis
   assert.equal(result.lastActivityAt, stored.lastActivityAt);
 });
 
-test("party member mutation activates drafts and fills the first primary hole before reserve", () => {
+test("party member mutation requires an active party and fills the first primary hole before reserve", () => {
   const reserved = createRecruitParty({
     id: "party-member-draft", recruitDate: "2026-09-08", resetSequence: 0, recruitNumber: 15,
     type: "PARTY_NUMBER", title: "2인 파티", maximumMembers: 2, initialStatus: "DRAFT", now,
   });
-  const first = mutateRecruitPartyMember({
-    party: reserved, mutation: { action: "ADD", name: "  재현  " }, now: new Date("2026-09-07T15:34:00.000Z"),
-  });
-  assert.equal(first.party.status, "IN_PROGRESS");
-  assert.equal(first.party.startTimeText, "00:34");
-  assert.deepEqual({ outcome: first.outcome, name: first.name, slotNo: first.slotNo, substitute: first.substitute }, {
-    outcome: "APPLIED", name: "재현", slotNo: 1, substitute: false,
-  });
+  assert.throws(() => mutateRecruitPartyMember({
+    party: reserved, mutation: { action: "ADD", name: "재현" }, now,
+  }), /RECRUIT_NOT_MUTABLE/);
 
   const withHole = createRecruitParty({
     id: "party-member-hole", recruitDate: "2026-09-08", resetSequence: 0, recruitNumber: 16,
@@ -307,7 +320,7 @@ test("full scrim sync replaces V1 form fields but binds date, number, tournament
 });
 
 test("public party DTO excludes room, sender, notes and request keys by construction", () => {
-  assert.deepEqual(Object.keys(toPublicRecruitPartyDto(party())).sort(), ["gameInfo", "id", "maximumMembers", "memberCount", "members", "recruitNumber", "scheduledStartAt", "startTimeText", "status", "title", "type"]);
+  assert.deepEqual(Object.keys(toPublicRecruitPartyDto(party())).sort(), ["gameInfo", "id", "maximumMembers", "memberCount", "members", "organizerText", "recruitNumber", "scheduledStartAt", "startTimeText", "status", "title", "type"]);
   assert.deepEqual(toPublicRecruitPartyDto(createRecruitParty({
     id: "public-members", recruitDate: "2026-09-08", resetSequence: 0, recruitNumber: 3,
     type: "PARTY_NUMBER", title: "공개 참여자", maximumMembers: 2, now,

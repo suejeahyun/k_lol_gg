@@ -70,10 +70,10 @@ V4의 두 profile에서 파생한 installation scope는 DB의 물리적 카카�
 V1은 양식에 사용할 모집번호가 필요하다. 번호 충돌 없이 이를 유지하기 위해 양식 생성 요청은 기존 `RecruitPartyStatus = "DRAFT"`를 사용해 번호만 예약한다.
 
 - DRAFT는 구인 현황·상세·활성 모집 집계에 노출하지 않는다.
-- 사용자가 채운 전체 양식을 보내면 같은 DRAFT를 `IN_PROGRESS`로 전환한다.
+- 사용자가 주최자를 채운 전체 양식을 보내면 참가자 0명이어도 같은 DRAFT를 `IN_PROGRESS`로 전환한다. 빈 시작시간은 현재 KST, 빈 게임정보는 `미입력`으로 기본화하며, 세 항목 모두 빈 무편집 양식은 거절한다. 구형 참가행 양식은 한 명 이상 채우면 종전대로 활성화한다.
 - 양식만 생성하고 제출하지 않은 경우 활성 파티가 생긴 것처럼 보이면 안 된다.
-- V1과 동일하게 최초 양식에는 값이 비어 있는 `》시작시간 :`과 `》게임정보 :` 줄을 표시한다. 제출에도 값이 없을 때만 서버가 접수 시각 KST `HH:mm`과 `미입력`을 저장하고 현황·상세에서 보여준다.
-- 이 흐름은 현재 enum, command payload와 조회 filter로 구현 가능하므로 DB migration을 추가하지 않는다.
+- 최초 양식에는 값이 비어 있는 `》시작시간 :`, `》게임정보 :`, `》주최자 :`를 표시하고 참가행을 넣지 않는다. 주최자는 명단과 분리해 저장·표시한다.
+- 기존 DB에 주최자 필드가 없으므로 nullable `organizer_text` forward migration만 추가한다. 기존 행은 `NULL`을 유지하며 읽기·상세에서는 `미입력`으로 표시한다.
 
 ### 5. imageDB는 V1 R2의 실제 활성 동작을 유지한다
 
@@ -96,7 +96,7 @@ V1은 양식에 사용할 모집번호가 필요하다. 번호 충돌 없이 이
 - 공개 생성본과 Git에는 signing secret, identity secret 또는 운영 DB 자격증명을 넣지 않는다. 비밀값은 MessengerBot R `DataBase`와 Vercel secret 환경변수에만 둔다.
 - HTTPS, raw-body-before-JSON HMAC, constant-time 비교, 5분 timestamp tolerance, nonce replay 방지, durable event idempotency, request size cap과 no-store 응답을 유지한다.
 - 로그에는 raw room, sender, signature, secret, 본문과 이미지 내용을 남기지 않는다. 제한된 reason code와 비가역 hint만 허용한다.
-- 기존 V2 application service, Drizzle schema와 Neon PostgreSQL 데이터를 재사용한다. 이 어댑터를 위해 table, column, enum 또는 migration을 추가하지 않는다.
+- 기존 V2 application service, Drizzle schema와 Neon PostgreSQL 데이터를 재사용한다. 서명 전송 어댑터 자체만을 위해 table, column, enum 또는 migration을 추가하지 않는다. 다만 DRAFT 활성화처럼 별도 제품 기능이 새 영속 필드를 요구하면 forward migration과 계약 테스트를 함께 추가한다.
 - 서버의 in-memory receipt는 빠른 중복 억제일 뿐이다. 실제 mutation은 기존 `recruiting_command_receipts`와 nonce claim을 사용한다.
 
 오류 응답은 V1의 기능별 제목과 재시도·권한 의미를 유지하되, V1이 사용자의 명령 원문, 서버 raw body 또는 `String(error)`를 그대로 되돌리던 부분은 복원하지 않는다. strict 휴대폰 생성본은 서버가 명시적으로 제공한 `reply`만 상태와 무관하게 통과시키고, 그 외 실패는 상태 코드와 안전한 고정 문구만 표시한다. signing secret, identity secret, signature, raw response와 내부 예외는 사용자 응답에 포함하지 않는다.
@@ -128,7 +128,7 @@ V1 스크림의 `일시`는 `9/12 21:00`, 오전·오후, `H시` 표기를 KST i
 - callback room 또는 sender allowlist가 공개 명령 권한이 된다.
 - 양식 생성만으로 DRAFT가 활성 현황에 보인다.
 - V1에 없는 이미지 session/API가 사용자 입력 경로에 추가된다.
-- 구형 bearer API 또는 DB migration이 다시 추가된다.
+- 구형 bearer API가 다시 추가되거나, 서명 전송 어댑터만을 위한 불필요한 DB migration이 추가된다.
 
 ## 결과
 

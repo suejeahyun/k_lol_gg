@@ -25,6 +25,7 @@ export type KakaoV4PartyCreatePayload = Readonly<{
   members: readonly RecruitMember[];
   startTimeText?: string | null;
   gameInfo?: string | null;
+  organizerText?: string | null;
   scheduledStartAt: string | null;
   protectedUntil: string | null;
 }>;
@@ -38,6 +39,7 @@ export type KakaoV4PartySyncPayload = Readonly<{
   members: readonly RecruitMember[];
   startTimeText?: string | null;
   gameInfo?: string | null;
+  organizerText?: string | null;
   scheduledStartAt?: string | null;
   protectedUntil?: string | null;
   parsedForm?: ParsedPartyForm;
@@ -425,7 +427,7 @@ export function canonicalizeKakaoV4Command(classification: KakaoV4CommandClassif
     return Object.freeze({ domain: "PARTY" as const, action: "CREATE" as const, payload: Object.freeze({
       recruitDate: partyDate, preferredRecruitNumber: numberParameter(parameters, "explicitRecruitNumber"), partyType,
       title: partyCreateTitle(partyType, maximumMembers, classification.canonicalText),
-      maximumMembers, members: Object.freeze([]), startTimeText: null, gameInfo: null,
+      maximumMembers, members: Object.freeze([]), startTimeText: null, gameInfo: null, organizerText: null,
       scheduledStartAt: null, protectedUntil: null,
     }) });
   }
@@ -464,6 +466,7 @@ export function canonicalizeKakaoV4Command(classification: KakaoV4CommandClassif
         members: partySnapshotMembers(parsedForm),
         startTimeText: parsedForm.startTime.state === "ABSENT" ? undefined : parsedForm.startTime.value,
         gameInfo: parsedForm.gameInfo.state === "ABSENT" ? undefined : parsedForm.gameInfo.value,
+        organizerText: parsedForm.organizer.state === "ABSENT" ? undefined : parsedForm.organizer.value,
         scheduledStartAt: null,
         protectedUntil: null,
         parsedForm,

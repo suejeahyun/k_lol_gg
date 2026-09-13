@@ -53,8 +53,8 @@ type Command<Type extends string, Payload> = Readonly<{
 }>;
 
 export type PartyCommand =
-  | Command<"CREATE_PARTY", Readonly<{ recruitDate: string; resetSequence: number | null; recruitNumber: number | null; partyType: RecruitPartyType; title: string; maximumMembers: number; members: readonly RecruitMember[]; startTimeText?: string | null; gameInfo?: string | null; scheduledStartAt: string | null; protectedUntil: string | null; initialStatus?: "DRAFT" }>>
-  | Command<"SYNC_PARTY", Readonly<{ members: readonly RecruitMember[]; slotPatches?: readonly RecruitPartySlotPatch[]; startTimeText?: string | null; startTimeState?: RecruitPartyPatchState; gameInfo?: string | null; gameInfoState?: RecruitPartyPatchState; scheduledStartAt?: string | null }>>
+  | Command<"CREATE_PARTY", Readonly<{ recruitDate: string; resetSequence: number | null; recruitNumber: number | null; partyType: RecruitPartyType; title: string; maximumMembers: number; members: readonly RecruitMember[]; startTimeText?: string | null; gameInfo?: string | null; organizerText?: string | null; scheduledStartAt: string | null; protectedUntil: string | null; initialStatus?: "DRAFT" }>>
+  | Command<"SYNC_PARTY", Readonly<{ members: readonly RecruitMember[]; slotPatches?: readonly RecruitPartySlotPatch[]; startTimeText?: string | null; startTimeState?: RecruitPartyPatchState; gameInfo?: string | null; gameInfoState?: RecruitPartyPatchState; organizerText?: string | null; organizerState?: RecruitPartyPatchState; scheduledStartAt?: string | null }>>
   | Command<"PARTY_MEMBER_ADD", Readonly<{ name: string }>>
   | Command<"PARTY_MEMBER_REMOVE", Readonly<{ name: string }>>
   | Command<"GET_PARTY_STATUS", Readonly<Record<string, never>>>
@@ -128,7 +128,8 @@ const COMPAT_V1_MEMBER_COMMANDS: ReadonlySet<RecruitingCommand["type"]> = new Se
 /** PARTY compatibility lookups must select only states mutable by the command. */
 export function partyCompatTargetStatuses(type: RecruitingCommand["type"]): readonly RecruitPartyStatus[] | undefined {
   if (type === "FINISH_PARTY") return ["IN_PROGRESS"];
-  if (type === "SYNC_PARTY" || type === "PARTY_MEMBER_ADD" || type === "PARTY_MEMBER_REMOVE") return ["DRAFT", "IN_PROGRESS"];
+  if (type === "SYNC_PARTY") return ["DRAFT", "IN_PROGRESS"];
+  if (type === "PARTY_MEMBER_ADD" || type === "PARTY_MEMBER_REMOVE") return ["IN_PROGRESS"];
   return undefined;
 }
 

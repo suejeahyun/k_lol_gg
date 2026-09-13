@@ -124,6 +124,7 @@ function memberSummary(party: Party) {
 function summary(party: Party) {
   return [
     `#${party.recruitNumber} · ${compactTitle(party)} · ${Math.min(activeMembers(party).length, party.maximumMembers)}/${party.maximumMembers} · ${startTime(party.startTimeText)} · ${gameInfo(party.gameInfo)}`,
+    `주최자: ${party.organizerText || "미입력"}`,
     memberSummary(party),
     `└ 상세 ${party.recruitNumber}`,
   ].join("\n");
@@ -135,6 +136,7 @@ function detailBlock(party: Party) {
     `#${party.recruitNumber} · ${compactTitle(party)} · ${Math.min(activeMembers(party).length, party.maximumMembers)}/${party.maximumMembers}`,
     `시작시간: ${startTime(party.startTimeText)}`,
     `》게임정보 : ${gameInfo(party.gameInfo)}`,
+    `》주최자 : ${party.organizerText || "미입력"}`,
   ];
   if (reserves.length > 0) lines.push(`예비: ${reserves.length}명`);
   lines.push("");
@@ -165,15 +167,14 @@ export function v1StrictPartyTemplate(input: Readonly<{
     "[K-LOL.GG 구인구직 양식]", "같이 할사람~", "",
     "아래 양식의 모집번호는 유지해서 작성해주세요.", "",
     `📢 ${input.title}`, `모집번호: #${input.recruitNumber}`, "",
-    "》시작시간 :", "》게임정보 :", "",
-  ];
-  if (isLineParty(input.partyType)) lines.push("TOP.", "JUG.", "MID.", "ADC.", "SUP.");
-  else for (let slotNo = 1; slotNo <= input.maximumMembers; slotNo += 1) lines.push(`${slotNo}.`);
-  lines.push(
-    "예비 1.", "",
-    isLineParty(input.partyType) ? "마지막 참가자가 전체 태그 해주세요." : "참여해주실 분은 태그해주세요.",
+    "》시작시간 :", "》게임정보 :", "》주최자 :", "",
+    "위 항목을 작성해 전체 전송해주세요.",
+    "비워 둔 시간과 게임 정보는 자동으로 채워집니다.",
+    "활성화 후 상세 번호 추가 이름으로 참가할 수 있습니다.",
+    "",
+    "참여해주실 분은 태그해주세요.",
     "*상호배려와 존중 부탁드립니다.",
-  );
+  ];
   return lines.join("\n");
 }
 

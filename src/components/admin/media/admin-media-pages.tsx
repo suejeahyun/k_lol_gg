@@ -8,7 +8,7 @@ import type { GalleryContent, HighlightContent, MediaAdminList } from "@/modules
 import { isRuntimeMediaAssetUploadAvailable } from "@/modules/media/infrastructure/media-private-assets";
 import { loadRuntimeMedia } from "@/modules/media/infrastructure/runtime-media";
 
-import { AdminMediaForm } from "./admin-media-form";
+import { AdminMediaForm, type GalleryUploadNavigationReport } from "./admin-media-form";
 import styles from "./admin-media.module.css";
 
 export async function AdminMediaListPage({ kind, searchParams }: { kind: "highlight" | "gallery"; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
@@ -29,13 +29,13 @@ export async function AdminMediaNewPage({ kind }: { kind: "highlight" | "gallery
   return <main className={styles.page}><header className={styles.header}><div><strong>새 콘텐츠</strong><h1>{label} 초안 만들기</h1><p>게시 전 자산 상태와 공개 문구를 다시 확인할 수 있습니다.</p></div></header><AdminContentTabs active={kind} /><AdminMediaForm kind={kind} uploadAvailable={isRuntimeMediaAssetUploadAvailable()} /></main>;
 }
 
-export async function AdminMediaEditorPage({ kind, id }: { kind: "highlight" | "gallery"; id: string }) {
+export async function AdminMediaEditorPage({ kind, id, initialUploadReport }: { kind: "highlight" | "gallery"; id: string; initialUploadReport?: GalleryUploadNavigationReport }) {
   const path = kind === "highlight" ? `/admin/highlights/${id}/edit` : `/admin/images/${id}/edit`; await requirePageRole("ADMIN", path);
   const result = await loadRuntimeMedia<HighlightContent | GalleryContent | null>(async (service) =>
     kind === "highlight" ? service.getAdminHighlight(id) : service.getAdminGallery(id));
   if (result.state === "ready" && !result.data) notFound();
   if (result.state !== "ready") return <main className={styles.page}><section className={styles.state} role={result.state === "error" ? "alert" : "status"}><Sparkles aria-hidden="true" /><h1>콘텐츠를 불러오지 못했습니다.</h1><p>잠시 후 다시 시도해 주세요.</p></section></main>;
-  return <main className={styles.page}><header className={styles.header}><div><strong>{result.data!.status} · rev. {result.data!.revision}</strong><h1>{result.data!.title}</h1><p>모든 변경은 If-Match와 멱등성 키로 보호되며 보관은 원장을 삭제하지 않습니다.</p></div></header><AdminContentTabs active={kind} />{kind === "highlight" ? <AdminMediaForm kind="highlight" initial={result.data as import("@/modules/media").HighlightContent} uploadAvailable={isRuntimeMediaAssetUploadAvailable()} /> : <AdminMediaForm kind="gallery" initial={result.data as import("@/modules/media").GalleryContent} uploadAvailable={isRuntimeMediaAssetUploadAvailable()} />}</main>;
+  return <main className={styles.page}><header className={styles.header}><div><strong>{result.data!.status} · rev. {result.data!.revision}</strong><h1>{result.data!.title}</h1><p>모든 변경은 If-Match와 멱등성 키로 보호되며 보관은 원장을 삭제하지 않습니다.</p></div></header><AdminContentTabs active={kind} />{kind === "highlight" ? <AdminMediaForm kind="highlight" initial={result.data as import("@/modules/media").HighlightContent} uploadAvailable={isRuntimeMediaAssetUploadAvailable()} /> : <AdminMediaForm kind="gallery" initial={result.data as import("@/modules/media").GalleryContent} initialUploadReport={initialUploadReport} uploadAvailable={isRuntimeMediaAssetUploadAvailable()} />}</main>;
 }
 
 export type AdminContentKind = "highlight" | "gallery" | "champion" | "private-assets";

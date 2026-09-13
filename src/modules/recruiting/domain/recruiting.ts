@@ -39,6 +39,13 @@ export type RecruitPartyMemberMutationResult = Readonly<{
 
 export type RecruitPartyPatchState = "PRESENT_VALUE" | "PRESENT_EMPTY" | "ABSENT";
 
+export function hasRecruitingMetadataActivationSignal(
+  fields: readonly Readonly<{ state?: RecruitPartyPatchState; value?: string | null }>[],
+) {
+  return fields.every(({ state, value }) => state === "PRESENT_VALUE" ||
+    (state === undefined && typeof value === "string" && value.trim().length > 0));
+}
+
 export type RecruitPartySlotPatch = Readonly<{
   slotNo: number;
   substitute: boolean;
@@ -69,6 +76,7 @@ export type RecruitParty = Readonly<{
   members: readonly RecruitMember[];
   startTimeText: string;
   gameInfo: string;
+  organizerText: string | null;
   scheduledStartAt: Date | null;
   protectedUntil: Date | null;
   lastActivityAt: Date;
@@ -114,6 +122,7 @@ export type PublicRecruitPartyDto = Readonly<{
   maximumMembers: number;
   startTimeText: string;
   gameInfo: string;
+  organizerText: string | null;
   scheduledStartAt: string | null;
 }>;
 
@@ -223,7 +232,7 @@ export function mutateRecruitPartyMember(input: Readonly<{
   mutation: RecruitPartyMemberMutation;
   now: Date;
 }>): RecruitPartyMemberMutationResult {
-  if (input.party.status !== "IN_PROGRESS" && input.party.status !== "DRAFT") throw new Error("RECRUIT_NOT_MUTABLE");
+  if (input.party.status !== "IN_PROGRESS") throw new Error("RECRUIT_NOT_MUTABLE");
   validDate(input.now, "INVALID_RECRUIT_TIME");
   const name = cleanText(input.mutation.name, "INVALID_RECRUIT_MEMBER", 80);
   const identity = normalizedMemberIdentity(name);
@@ -345,6 +354,7 @@ export function createRecruitParty(input: Readonly<{
   members?: readonly RecruitMember[];
   startTimeText?: string | null;
   gameInfo?: string | null;
+  organizerText?: string | null;
   scheduledStartAt?: Date | null;
   protectedUntil?: Date | null;
   initialStatus?: "DRAFT";
@@ -377,6 +387,7 @@ export function createRecruitParty(input: Readonly<{
     members: normalizeMembers(input.members ?? [], input.maximumMembers),
     startTimeText: optionalPartyText(input.startTimeText, "INVALID_RECRUIT_START_TIME_TEXT", 160) ?? kakaoRecruitTimeText(input.now),
     gameInfo: optionalPartyText(input.gameInfo, "INVALID_RECRUIT_GAME_INFO", 500) ?? "미입력",
+    organizerText: optionalPartyText(input.organizerText, "INVALID_RECRUIT_ORGANIZER_TEXT", 100),
     scheduledStartAt: input.scheduledStartAt ?? null,
     protectedUntil: input.protectedUntil ?? null,
     lastActivityAt: input.now,
@@ -391,6 +402,8 @@ export function syncRecruitParty(input: Readonly<{
   startTimeState?: RecruitPartyPatchState;
   gameInfo?: string | null;
   gameInfoState?: RecruitPartyPatchState;
+  organizerText?: string | null;
+  organizerState?: RecruitPartyPatchState;
   scheduledStartAt?: Date | null;
   now: Date;
 }>): RecruitParty {
@@ -399,7 +412,10 @@ export function syncRecruitParty(input: Readonly<{
   validDate(input.now, "INVALID_RECRUIT_TIME");
   const activatingDraft = input.party.status === "DRAFT";
   const members = normalizeMembers(input.members, input.party.maximumMembers);
-  if (activatingDraft && members.length === 0) throw new Error("EMPTY_DRAFT_ACTIVATION");
+  const metadataActivationSignal = hasRecruitingMetadataActivationSignal([
+    { state: input.organizerState, value: input.organizerText },
+  ]);
+  if (activatingDraft && members.length === 0 && !metadataActivationSignal) throw new Error("EMPTY_DRAFT_ACTIVATION");
   const startTimeText = input.startTimeState === "ABSENT"
     ? activatingDraft ? kakaoRecruitTimeText(input.now) : input.party.startTimeText
     : input.startTimeState === "PRESENT_EMPTY"
@@ -416,6 +432,14 @@ export function syncRecruitParty(input: Readonly<{
         ? cleanText(input.gameInfo ?? "", "INVALID_RECRUIT_GAME_INFO", 500)
         : optionalPartyText(input.gameInfo, "INVALID_RECRUIT_GAME_INFO", 500)
           ?? (activatingDraft ? "미입력" : input.party.gameInfo);
+  const organizerText = input.organizerState === "ABSENT"
+    ? input.party.organizerText
+    : input.organizerState === "PRESENT_EMPTY"
+      ? null
+      : input.organizerState === "PRESENT_VALUE"
+        ? cleanText(input.organizerText ?? "", "INVALID_RECRUIT_ORGANIZER_TEXT", 100)
+        : optionalPartyText(input.organizerText, "INVALID_RECRUIT_ORGANIZER_TEXT", 100)
+          ?? input.party.organizerText;
   const scheduledStartAt = input.startTimeState === "ABSENT" ||
     (input.startTimeState === undefined && (input.startTimeText === null || input.startTimeText === undefined))
     ? input.party.scheduledStartAt
@@ -423,6 +447,7 @@ export function syncRecruitParty(input: Readonly<{
   if (
     !activatingDraft && sameMembers(input.party.members, members) &&
     input.party.startTimeText === startTimeText && input.party.gameInfo === gameInfo &&
+    input.party.organizerText === organizerText &&
     input.party.scheduledStartAt?.getTime() === scheduledStartAt?.getTime()
   ) return input.party;
   return {
@@ -432,6 +457,7 @@ export function syncRecruitParty(input: Readonly<{
     members,
     startTimeText,
     gameInfo,
+    organizerText,
     scheduledStartAt,
     lastActivityAt: input.now,
   };
@@ -479,6 +505,7 @@ export function toPublicRecruitPartyDto(party: RecruitParty): PublicRecruitParty
     maximumMembers: party.maximumMembers,
     startTimeText: party.startTimeText,
     gameInfo: party.gameInfo,
+    organizerText: party.organizerText,
     scheduledStartAt: party.scheduledStartAt?.toISOString() ?? null,
   };
 }

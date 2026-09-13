@@ -30,11 +30,6 @@ function classify(input) {
   return canonical === null ? null : routeByAlias.get(canonical) ?? null;
 }
 
-function kstHHmm(isoTime) {
-  const kst = new Date(new Date(isoTime).getTime() + (9 * 60 * 60 * 1000));
-  return `${String(kst.getUTCHours()).padStart(2, "0")}:${String(kst.getUTCMinutes()).padStart(2, "0")}`;
-}
-
 function applyFullSnapshot(state, message) {
   if (message.deliveryId === state.lastDeliveryId) return { ...state, duplicate: true };
   return {
@@ -50,6 +45,7 @@ function canMutateRecruit({ targetScopeId, actorScopeId, actorVerified }) {
 }
 
 test("contract fixture has traceable V1 evidence and all required domains", () => {
+  assert.equal(contract.clientArtifactVersion, "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R10_2026_09_13_PARTY_DRAFT_ORGANIZER");
   assert.match(contract.contractVersion, /^KLOL_KAKAO_V4_V1_COMPAT_/u);
   assert.match(contract.source.v1Sha256, /^[a-f0-9]{64}$/u);
   assert.ok(contract.source.currentGoldenTests.length >= 7);
@@ -102,16 +98,23 @@ test("same installation scope members can edit and finish across sender identiti
   }), false);
 });
 
-test("initial party form omits metadata while detail exposes server defaults", () => {
+test("initial party form exposes the three activation fields without participant rows", () => {
   const template = contract.party.initialFivePersonTemplate;
-  assert.doesNotMatch(template, /시작\s*시간|시작시간/u);
-  assert.doesNotMatch(template, /게임\s*정보|게임정보/u);
+  assert.match(template, /》시작시간 :/u);
+  assert.match(template, /》게임정보 :/u);
+  assert.match(template, /》주최자 :/u);
+  assert.doesNotMatch(template, /^1\.|^예비 1\./mu);
   assert.match(template, /모집번호: #12/u);
-
-  const receiptTime = "2026-09-10T12:34:00.000Z";
-  assert.equal(kstHHmm(receiptTime), "21:34");
+  assert.equal(contract.party.activation.metadataOnlyAllowsZeroMembers, true);
+  assert.equal(contract.party.activation.metadataOnlyRequiredValue, "organizerText");
+  assert.equal(contract.party.activation.emptyStartTimeDefault, "current KST HH:mm");
+  assert.equal(contract.party.activation.emptyGameInfoDefault, "미입력");
+  assert.equal(contract.party.activation.unchangedBlankTemplateActivates, false);
+  assert.equal(contract.party.activation.legacyParticipantRowsRemainAccepted, true);
+  assert.equal(contract.party.activation.organizerIsMember, false);
   assert.match(contract.party.detailWithDefaults, /시작시간: 21:34/u);
   assert.match(contract.party.detailWithDefaults, /게임정보: 미입력/u);
+  assert.match(contract.party.detailWithDefaults, /주최자: 재현/u);
 });
 
 test("full party forms are authoritative snapshots and allow A→B→A", () => {
@@ -143,7 +146,7 @@ test("party member shortcuts retain the full-form workflow and current-scope mut
   assert.equal(classify(`/${shortcuts.syntax[1]}`), "PARTY:REMOVE_MEMBER");
   assert.match(shortcuts.targetScope, /current recruiting operating day/u);
   assert.match(shortcuts.targetScope, /RECRUIT installation scope/u);
-  assert.deepEqual(shortcuts.allowedStatuses, ["DRAFT", "IN_PROGRESS"]);
+  assert.deepEqual(shortcuts.allowedStatuses, ["IN_PROGRESS"]);
   assert.equal(shortcuts.appendLatestStatus, true);
   assert.deepEqual(shortcuts.outcomes, [
     "APPLIED",

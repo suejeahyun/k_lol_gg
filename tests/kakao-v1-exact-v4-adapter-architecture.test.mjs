@@ -15,7 +15,7 @@ test("the ADR freezes every non-negotiable V1-exact adapter constraint", async (
     "DRAFT",
     "timeout 5,000ms",
     "imageDB",
-    "DB migration을 추가하지 않는다",
+    "서명 전송 어댑터 자체만을 위해 table, column, enum 또는 migration을 추가하지 않는다",
   ]) {
     assert.match(adr, new RegExp(contract, "u"), contract);
   }

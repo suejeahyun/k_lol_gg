@@ -267,6 +267,13 @@
       "when": 1789186759803,
       "tag": "0037_swift_brood",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1789294516310,
+      "tag": "0038_lying_sphinx",
+      "breakpoints": true
     }
   ]
 }

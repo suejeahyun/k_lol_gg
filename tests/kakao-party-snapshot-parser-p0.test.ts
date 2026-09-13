@@ -164,3 +164,21 @@ test("only EXACT party forms become SYNC while parsed title and slot states reac
   if (ambiguous.kind === "UNKNOWN") assert.equal(ambiguous.partyForm?.decision, "AMBIGUOUS");
   assert.equal(canonicalizeKakaoV4Command(ambiguous, { ...envelope, text: ambiguousText }), null);
 });
+
+test("metadata-only party activation forms accept slash and keep organizer separate from members", () => {
+  for (const prefix of ["", "/"]) {
+    const text = `${prefix}[K-LOL.GG 구인구직 양식]\n📢 2인 파티 구인\n모집번호: #6\n\n》시작시간 : 21:00\n》게임정보 : 자랭\n》주최자 : 재현`;
+    const parsed = parsePartyForm(text);
+    assert.equal(parsed.decision, "EXACT");
+    assert.deepEqual(parsed.organizer, { state: "PRESENT_VALUE", value: "재현", line: 7 });
+    const classification = classifyKakaoV4Command({ profileId: "RECRUIT", text });
+    const canonical = canonicalizeKakaoV4Command(classification, {
+      profileId: "RECRUIT", installationId: "install-11111111111111111111111111111111",
+      senderId: "sender-user-22222222222222222222222222222222", eventId: `event-metadata-${prefix ? "slash" : "plain"}`,
+      timestamp: Date.parse("2026-09-11T12:00:00.000Z") / 1_000, nonce: "1".repeat(32), text,
+    });
+    if (!canonical || canonical.domain !== "PARTY" || canonical.action !== "SYNC") assert.fail("expected metadata activation snapshot");
+    assert.deepEqual(canonical.payload.members, []);
+    assert.equal(canonical.payload.organizerText, "재현");
+  }
+});

@@ -6,7 +6,7 @@
 운영 DB, 환경 변수, 외부 서비스에는 연결하지 않습니다.
 
 - Source: `src/platform/db/schema/index.ts`
-- Schema SHA-256: `7911650458777e61a3cdece988a10f26653c69618c05ca4a9beb78601e1963c4`
+- Schema SHA-256: `c98a86e1a179fc7c2528c72e70dd77780481a1d9d0f58412c1991de72ae53b86`
 - Tables: 102
 - Foreign keys: 165
 - Regenerate: `npm run db:erd`
@@ -1268,6 +1268,7 @@ erDiagram
         jsonb members_json "NOT NULL"
         varchar_160 start_time_text "NOT NULL"
         varchar_500 game_info "NOT NULL"
+        varchar_100 organizer_text "nullable"
         timestamp_with_time_zone scheduled_start_at "nullable"
         timestamp_with_time_zone protected_until "nullable"
         timestamp_with_time_zone last_activity_at "NOT NULL"
