@@ -1066,10 +1066,10 @@ function v41InhouseTemplate(parsed) {
   return lines.join("\n");
 }
 
-function v41InhouseModeSelection() {
-  return [
-    "[K-LOL.GG 내전 종목 선택]",
-    "지원하지 않는 종목입니다: 양식",
+function v41InhouseModeSelection(invalidMode) {
+  var lines = ["[K-LOL.GG 내전 종목 선택]"];
+  if (invalidMode) lines.push("지원하지 않는 종목입니다: " + invalidMode);
+  lines.push(
     "✅️협곡내전은 관리자에게 신청 후 안내에 따라 구인해주세요.✅️",
     "",
     "아래 명령어 중 하나를 입력해주세요.",
@@ -1082,13 +1082,14 @@ function v41InhouseModeSelection() {
     "",
     "협곡은 티어·라인 양식으로 내전 명단에 등록됩니다.",
     "칼바람·증바람은 이름만 모집하며 내전 명단에는 등록되지 않습니다."
-  ].join("\n");
+  );
+  return lines.join("\n");
 }
 
 function v41HandleLegacyInhouse(parsed, room, sender, replier) {
   if (parsed.action === "JOIN") return v41Reply(replier, v41ParticipationGuideNotice());
   if (parsed.action === "CREATE") {
-    if (parsed.templateRequest || parsed.invalidMode || !parsed.mode) return v41Reply(replier, v41InhouseModeSelection());
+    if (parsed.templateRequest || parsed.invalidMode || !parsed.mode) return v41Reply(replier, v41InhouseModeSelection(parsed.invalidMode));
     return v41Reply(replier, v41InhouseTemplate(parsed));
   }
   if (parsed.action === "STATUS" || parsed.action === "DETAIL") {

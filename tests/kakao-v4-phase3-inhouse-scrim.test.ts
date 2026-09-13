@@ -13,7 +13,7 @@ import {
 import type { KakaoV4CommandEnvelope, KakaoV4ProfileId } from "../src/modules/recruiting/kakao-v4/domain";
 
 const contract = JSON.parse(await readFile(new URL("./fixtures/kakao-v4-v1-compatibility-contract.json", import.meta.url), "utf8")) as {
-  inhouse: { modeSelectorReply: string; riftTemplate: string; aramTemplate: string; multiRoundStatusReply: string };
+  inhouse: { modeSelectorReply: string; invalidModeSelectorReply: string; riftTemplate: string; aramTemplate: string; multiRoundStatusReply: string };
   scrim: { initialTemplate: string; emptyStatusReply: string; statusReply: string; detailReply: string; newFormReply: string };
 };
 
@@ -150,8 +150,9 @@ async function reply(service: KakaoV4CommandService, input: KakaoV4CommandEnvelo
 test("Phase 3-A: V1 내전 모드 선택과 협곡·칼바람 전체 양식을 정확히 보존한다", async () => {
   const state = harness();
   assert.equal((await reply(state.service, envelope("FEATURES", "내전구인", 1))).reply, contract.inhouse.modeSelectorReply);
-  assert.equal((await reply(state.service, envelope("FEATURES", "내전구인 협곡 2026-09-09 21:30 #2 10명", 2))).reply, contract.inhouse.riftTemplate);
-  assert.equal((await reply(state.service, envelope("FEATURES", "내전구인 칼바람 2026-09-09 21:30 #3 10명", 3))).reply, contract.inhouse.aramTemplate);
+  assert.equal((await reply(state.service, envelope("FEATURES", "내전구인 양식", 2))).reply, contract.inhouse.invalidModeSelectorReply);
+  assert.equal((await reply(state.service, envelope("FEATURES", "내전구인 협곡 2026-09-09 21:30 #2 10명", 3))).reply, contract.inhouse.riftTemplate);
+  assert.equal((await reply(state.service, envelope("FEATURES", "내전구인 칼바람 2026-09-09 21:30 #3 10명", 4))).reply, contract.inhouse.aramTemplate);
   assert.deepEqual(state.seasonCalls.map(({ command }) => command.action), ["RESERVE", "RESERVE"]);
   assert.equal(state.handled.length, 0);
 });

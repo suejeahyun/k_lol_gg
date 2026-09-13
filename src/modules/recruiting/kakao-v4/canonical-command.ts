@@ -111,6 +111,7 @@ export type CanonicalKakaoV4Command =
       domain: "SEASON";
       action: "TEMPLATE";
       mode: null;
+      unsupportedMode: string | null;
     }>
   | Readonly<{
       domain: "SEASON";
@@ -210,7 +211,16 @@ function inhouseTemplateCommand(parameters: Readonly<Record<string, string | num
   const recruitValue = /(?:^|\s)#\s*(\d{1,3})(?:\s|$)/u.exec(` ${argumentsText} `)?.[1];
   const modeValue = textParameter(parameters, "mode");
   const mode = modeValue === "RIFT" || modeValue === "ARAM" || modeValue === "AUGMENT_ARAM" ? modeValue : null;
-  if (!mode) return Object.freeze({ domain: "SEASON" as const, action: "TEMPLATE" as const, mode: null });
+  if (!mode) {
+    const firstArgument = argumentsText.split(/\s+/u)[0] ?? "";
+    const unsupportedMode = firstArgument &&
+      !/^20\d{2}[-/.]\d{1,2}[-/.]\d{1,2}$/u.test(firstArgument) &&
+      !/^#\s*\d{1,3}$/u.test(firstArgument) &&
+      !/^\d{1,2}(?::\d{2}|시|명)$/u.test(firstArgument)
+      ? firstArgument.slice(0, 40)
+      : null;
+    return Object.freeze({ domain: "SEASON" as const, action: "TEMPLATE" as const, mode: null, unsupportedMode });
+  }
   return Object.freeze({
     domain: "SEASON" as const,
     action: "RESERVE" as const,

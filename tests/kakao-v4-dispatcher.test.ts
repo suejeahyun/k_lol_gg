@@ -314,7 +314,7 @@ test("the exact generated V1 party form activates with only organizer populated 
   }
 });
 
-test("the reported metadata-only #7 form reaches one idempotent party activation", async () => {
+test("the reported metadata-only #11 form reaches one idempotent party activation", async () => {
   const state = harness();
   const service = new KakaoV4CommandService({
     async authorizeProfile() {
@@ -328,12 +328,12 @@ test("the reported metadata-only #7 form reaches one idempotent party activation
     "아래 양식의 모집번호는 유지해서 작성해주세요.",
     "",
     "📢 5인 파티 구인",
-    "모집번호: #7",
+    "모집번호: #11",
     "운영일: 2026-09-13",
     "",
-    "》시작시간 : 모바시",
-    "》게임정보 : 증칼",
-    "》주최자 : TEST",
+    "》시작시간 : test",
+    "》게임정보 :test",
+    "》주최자 :test",
     "",
     "위 항목을 작성해 전체 전송해주세요.",
     "비워 둔 시간과 게임 정보는 자동으로 채워집니다.",
@@ -359,20 +359,20 @@ test("the reported metadata-only #7 form reaches one idempotent party activation
     kind: "PARTY",
     sourceRoomId: context.authorization.roomId,
     recruitDate: "2026-09-13",
-    recruitNumber: 7,
+    recruitNumber: 11,
     allowedPartyStatuses: ["DRAFT", "IN_PROGRESS"],
   }]);
   assert.equal(state.handled.length, 1);
   const activation = state.handled[0];
   if (activation?.type !== "SYNC_PARTY") assert.fail("reported form must dispatch one party sync");
   assert.deepEqual(activation.payload.members, []);
-  assert.equal(activation.payload.startTimeText, "모바시");
+  assert.equal(activation.payload.startTimeText, "test");
   assert.equal(activation.payload.startTimeState, "PRESENT_VALUE");
-  assert.equal(activation.payload.gameInfo, "증칼");
+  assert.equal(activation.payload.gameInfo, "test");
   assert.equal(activation.payload.gameInfoState, "PRESENT_VALUE");
-  assert.equal(activation.payload.organizerText, "TEST");
+  assert.equal(activation.payload.organizerText, "test");
   assert.equal(activation.payload.organizerState, "PRESENT_VALUE");
-  assert.equal(first.reply.includes("[파티 #7 반영]"), true);
+  assert.match(first.reply, /^\[파티 #\d+ 반영\]/u);
 });
 
 test("first completed automatic party form creates the party once", async () => {

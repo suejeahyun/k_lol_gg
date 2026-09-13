@@ -455,22 +455,24 @@ function scrimTemplate(recruitDate: string, scrimNumber: number | null = null) {
   ].join("\n");
 }
 
-const INHOUSE_MODE_SELECTION = [
-  "[K-LOL.GG 내전 종목 선택]",
-  "지원하지 않는 종목입니다: 양식",
-  "✅️협곡내전은 관리자에게 신청 후 안내에 따라 구인해주세요.✅️",
-  "",
-  "아래 명령어 중 하나를 입력해주세요.",
-  "- /내전구인 협곡",
-  "- /내전구인 칼바람",
-  "- /내전구인 증바람",
-  "",
-  "날짜·시간 지정: /내전구인 협곡 2026-08-06 21:00",
-  "모집번호·정원 지정: /내전구인 칼바람 #2 10명",
-  "",
-  "협곡은 티어·라인 양식으로 내전 명단에 등록됩니다.",
-  "칼바람·증바람은 이름만 모집하며 내전 명단에는 등록되지 않습니다.",
-].join("\n");
+function inhouseModeSelection(unsupportedMode: string | null) {
+  return [
+    "[K-LOL.GG 내전 종목 선택]",
+    ...(unsupportedMode ? [`지원하지 않는 종목입니다: ${unsupportedMode}`] : []),
+    "✅️협곡내전은 관리자에게 신청 후 안내에 따라 구인해주세요.✅️",
+    "",
+    "아래 명령어 중 하나를 입력해주세요.",
+    "- /내전구인 협곡",
+    "- /내전구인 칼바람",
+    "- /내전구인 증바람",
+    "",
+    "날짜·시간 지정: /내전구인 협곡 2026-08-06 21:00",
+    "모집번호·정원 지정: /내전구인 칼바람 #2 10명",
+    "",
+    "협곡은 티어·라인 양식으로 내전 명단에 등록됩니다.",
+    "칼바람·증바람은 이름만 모집하며 내전 명단에는 등록되지 않습니다.",
+  ].join("\n");
+}
 
 function inhouseTemplate(command: Readonly<{
   applyDate: string;
@@ -1294,7 +1296,13 @@ export class KakaoV4CommandDispatcher {
     command: Extract<CanonicalKakaoV4Command, { domain: "SEASON" }>,
   ): Promise<KakaoV4DispatcherResult> {
     if (command.action === "TEMPLATE") {
-      return Object.freeze({ kind: "SEASON", action: command.action, aggregate: null, legacyReply: INHOUSE_MODE_SELECTION, replayed: false });
+      return Object.freeze({
+        kind: "SEASON",
+        action: command.action,
+        aggregate: null,
+        legacyReply: inhouseModeSelection(command.unsupportedMode),
+        replayed: false,
+      });
     }
     if (command.action === "RESERVE") {
       const result = await this.dependencies.assistant.syncSeasonSnapshot({

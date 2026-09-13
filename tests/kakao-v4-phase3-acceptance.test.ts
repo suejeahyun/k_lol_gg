@@ -13,6 +13,7 @@ import { kakaoV4CommandFailureResponse, kakaoV4ProblemResponse } from "../src/mo
 type V1Contract = Readonly<{
   inhouse: Readonly<{
     modeSelectorReply: string;
+    invalidModeSelectorReply: string;
     riftTemplate: string;
     aramTemplate: string;
     multiRoundStatusReply: string;
@@ -157,6 +158,7 @@ async function expectExactReply(profile: KakaoV4ProfileId, text: string, expecte
 
 const INHOUSE_REPLY_CASES = [
   ["내전구인", fixture.inhouse.modeSelectorReply],
+  ["내전구인 양식", fixture.inhouse.invalidModeSelectorReply],
   ["내전구인 협곡 2026-09-09 21:30 #2 10명", fixture.inhouse.riftTemplate],
   ["내전구인 칼바람 2026-09-09 21:30 #3 10명", fixture.inhouse.aramTemplate],
   ["내전구인 증바람 2026-09-09 21:30 #3 10명", fixture.inhouse.aramTemplate.replace("칼바람", "증바람")],
