@@ -33,19 +33,22 @@
 npx tsx --test tests/kakao-party-snapshot-parser-p0.test.ts tests/kakao-v4-dispatcher.test.ts tests/kakao-v4-all-mode-chat-surface.test.ts
 41 pass / 0 fail
 
-node --test tests/kakao-v1-strict-messengerbot.test.mjs tests/kakao-v1-exact-v4-adapter-architecture.test.mjs tests/kakao-v4-v1-compatibility-contract.test.mjs tests/kakao-private-installer-generator.test.mjs
-42 pass / 0 fail
+node --test tests/kakao-v1-strict-messengerbot.test.mjs tests/kakao-v1-exact-v4-adapter-architecture.test.mjs tests/kakao-v4-v1-compatibility-contract.test.mjs tests/kakao-private-installer-generator.test.mjs tests/kakao-v41-v1-inhouse-golden.test.mjs
+54 pass / 0 fail
 
 npm run test:contracts
 394 pass / 0 fail
 
 npm run test:unit
-773 pass / 1 skip / 0 fail (변경 중간점 전체 서버 단위 회귀)
+774 pass / 1 skip / 0 fail
 
-npm run typecheck
-통과
+npm run check
+계약 394 pass, 일반 774 pass / 1 intentional skip, static generation 93/93
 
-npx eslint <변경한 JS/MJS/TS 파일>
+npm run test:db
+격리 PostgreSQL 18 전체 계약·HTTP·브라우저 검증 통과, migration head 0039
+
+node scripts/check-secrets.mjs --tree-only
 통과
 ```
 
@@ -57,8 +60,9 @@ npx eslint <변경한 JS/MJS/TS 파일>
 
 - 자동 테스트는 Android MessengerBot R의 실제 알림 parser, 카카오 재수신 타이밍, 실제 `replier.reply`를 실행하지 않는다.
 - 휴대폰에 KLOL 봇 프로필이 둘 이상 활성화되어 있으면 각 런타임 캐시가 독립이므로 다른 프로필이 각각 답할 수 있다. 이번 dedupe는 동일 프로필/런타임의 동일 callback 중복만 해결한다.
-- 서버·휴대폰의 R12 배포는 수행하지 않았다. 운영 DB의 실제 #11이 DRAFT로 남았는지, 이미 종료됐는지는 이 소스 QA만으로 판정할 수 없다.
-- `/내전구인`의 V1 exact 종목 선택 문구에는 기존 `지원하지 않는 종목입니다: 양식` 한 줄이 포함된다. 이번 패치는 그 응답을 두 번 만들던 외부 안내 재수집을 막으며, 문구 자체 변경 여부는 별도 제품 정책 결정이 필요하다.
+- 휴대폰의 R12 설치는 수행하지 않았다. 운영 DB의 실제 #11이 DRAFT로 남았는지, 이미 종료됐는지는 이 소스 QA만으로 판정할 수 없다.
+- `/내전구인`만 입력하면 오류 문구 없이 종목 선택 안내를 내고, 실제 미지원 인자(`/내전구인 양식` 등)에만 입력값을 포함한 오류를 낸다.
+- 전체 DB 검증에서 신규 operations fixture가 합성 ACTIVE 시즌을 남겨 후속 season HTTP 검증을 오염시키는 누락을 발견했다. fixture 종료 정리를 추가한 뒤 새 격리 PostgreSQL 18에서 전체 `npm run test:db`가 통과했다. 운영 DB 변경은 없다.
 
 ## 배포 전 필수 검증
 
@@ -73,7 +77,7 @@ npx eslint <변경한 JS/MJS/TS 파일>
 
 ## 다음 패치 추천
 
-1. `/내전구인` 무인자 선택 안내의 `지원하지 않는 종목입니다: 양식`을 제거할지 운영 문구 정책으로 확정하고 golden fixture를 함께 갱신한다.
-2. Android 실기기 smoke 결과에 logId·bot version·서버 trace ID를 비밀값 없이 남기는 체크리스트를 자동화한다.
-3. 동일 휴대폰에서 중복 KLOL 봇 프로필을 탐지할 수 있는 운영 진단 안내를 추가한다.
-4. callback cache 256건 퇴출과 앱 재시작 경계의 dedupe 관찰 지표를 서버 로그에 추가한다.
+1. Android 실기기 smoke 결과에 logId·bot version·서버 trace ID를 비밀값 없이 남기는 체크리스트를 자동화한다.
+2. 동일 휴대폰에서 중복 KLOL 봇 프로필을 탐지할 수 있는 운영 진단 안내를 추가한다.
+3. callback cache 256건 퇴출과 앱 재시작 경계의 dedupe 관찰 지표를 서버 로그에 추가한다.
+4. 공유 DB 계약 fixture가 후속 HTTP 검증에 상태를 남기지 않는지 CI에서 별도 격리 검사를 추가한다.

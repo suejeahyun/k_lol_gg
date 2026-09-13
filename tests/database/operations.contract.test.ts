@@ -297,6 +297,14 @@ test("S13 settings, AI ledger and signed maintenance preserve authorization and 
     assert.ok(stats.latestEventAt);
     assert.equal(new Date(stats.latestEventAt).toISOString(), stats.latestEventAt);
     assert.equal(aiRequests.items.length, 1);
+
+    // The shared HTTP verifier intentionally starts without an active season.
+    // Retain this contract's in-house history while releasing its singleton
+    // fixture so later verification phases remain isolated and deterministic.
+    await database
+      .update(seasons)
+      .set({ status: "ENDED", endedAt: new Date(), revision: 1 })
+      .where(eq(seasons.id, inhouseSeasonId));
   } finally {
     await pool.end();
   }
