@@ -1,14 +1,19 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { promisify } from "node:util";
 import test from "node:test";
+import { analyzeRhinoStatic } from "../scripts/lib/messengerbot-rhino-static.mjs";
 
 const execFileAsync = promisify(execFile);
 const root = resolve(import.meta.dirname, "..");
 const generator = resolve(root, "scripts/build-private-messengerbot-installer.mjs");
+const mobilePath = resolve(root, "integrations/messengerbot-r/KLOL_KAKAO_BOT_V41_MESSENGERBOT_R.js");
+const require = createRequire(import.meta.url);
+const acorn = require("next/dist/compiled/acorn");
 const settingKeys = [
   "KLOL_V2_BASE_URL",
   "KLOL_V2_KAKAO_WEBHOOK_SECRET_CURRENT",
@@ -44,6 +49,8 @@ test("private installer generator preserves shared settings and creates one iden
     await execFileAsync(process.execPath, [generator, source, features, "--fresh-identity"], { cwd: root });
     const recruitSource = await readFile(recruit, "utf8");
     const featuresSource = await readFile(features, "utf8");
+    const mobileSource = await readFile(mobilePath, "utf8");
+    const phoneMobile = mobileSource.replace(/([;}])\r?\n/gu, "$1");
     const recruitSettings = readSettings(recruitSource);
     const featuresSettings = readSettings(featuresSource);
 
@@ -55,9 +62,19 @@ test("private installer generator preserves shared settings and creates one iden
     assert.notEqual(featuresSettings.get(settingKeys[3]), approved.get(settingKeys[3]));
     assert.notEqual(featuresSettings.get(settingKeys[3]), recruitSettings.get(settingKeys[3]));
     for (const generated of [recruitSource, featuresSource]) {
+      const executableStart = generated.indexOf("var __=function");
+      assert.notEqual(executableStart, -1);
+      assert.equal(generated.slice(executableStart), phoneMobile);
       const crlfProjection = generated.length + (generated.match(/\n/g) ?? []).length;
       assert.ok(generated.length < 65_535);
       assert.ok(crlfProjection < 65_535);
+      const program = acorn.parse(generated, { ecmaVersion: 5, allowReserved: true, preserveParens: true });
+      assert.deepEqual(analyzeRhinoStatic(program), {
+        statementCandidates: [],
+        unsafeSequenceOperands: [],
+        voidExpressions: [],
+        bareAssignmentConditions: [],
+      });
     }
   } finally {
     await rm(directory, { recursive: true, force: true });
