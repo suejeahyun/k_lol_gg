@@ -90,6 +90,8 @@ export type CanonicalKakaoV4Command =
   | Readonly<{ domain: "PARTY"; action: "CREATE"; payload: KakaoV4PartyCreatePayload }>
   | Readonly<{ domain: "PARTY"; action: "STATUS" }>
   | Readonly<{ domain: "PARTY"; action: "DETAIL"; target: KakaoV4RecruitTarget }>
+  | Readonly<{ domain: "PARTY"; action: "ADD_MEMBER"; target: KakaoV4RecruitTarget; name: string }>
+  | Readonly<{ domain: "PARTY"; action: "REMOVE_MEMBER"; target: KakaoV4RecruitTarget; name: string }>
   | Readonly<{ domain: "PARTY"; action: "SYNC"; target: KakaoV4PartySyncTarget; payload: KakaoV4PartySyncPayload }>
   | Readonly<{ domain: "PARTY"; action: "FINISH"; target: KakaoV4RecruitTarget }>
   | Readonly<{ domain: "SCRIM"; action: "CREATE"; payload: ScrimFormCommandPayload }>
@@ -428,6 +430,17 @@ export function canonicalizeKakaoV4Command(classification: KakaoV4CommandClassif
     }) });
   }
   if (classification.command === "PARTY_STATUS") return Object.freeze({ domain: "PARTY" as const, action: "STATUS" as const });
+  if (classification.command === "PARTY_MEMBER_ADD" || classification.command === "PARTY_MEMBER_REMOVE") {
+    const recruitNumber = numberParameter(parameters, "recruitNumber");
+    const name = textParameter(parameters, "name");
+    if (!recruitNumber || !name) return null;
+    return Object.freeze({
+      domain: "PARTY" as const,
+      action: classification.command === "PARTY_MEMBER_ADD" ? "ADD_MEMBER" as const : "REMOVE_MEMBER" as const,
+      target: Object.freeze({ recruitDate: partyDate, recruitNumber }),
+      name,
+    });
+  }
   if (classification.command === "PARTY_DETAIL" || classification.command === "PARTY_FINISH") {
     const recruitNumber = numberParameter(parameters, "recruitNumber");
     if (!recruitNumber) return null;

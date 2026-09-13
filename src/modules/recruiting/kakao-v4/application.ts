@@ -50,7 +50,7 @@ function localReply(envelope: KakaoV4CommandEnvelope, classification: KakaoV4Com
   });
   if (classification.command === "LOCAL_RECRUIT_HELP") return Object.freeze({
     kind: "REPLY" as const,
-    reply: "[K-LOL.GG 구인 도움말]\n\n1. 파티\n생성: 5인파티\n현황: 구인현황\n종료: 번호ㅉ\n\n2. 내전\n생성: 내전구인\n현황: 내전현황\n매일 오전 6시 자동 종료\n\n3. 스크림\n생성: 스크림구인\n현황: 스크림현황\n매일 오전 6시 자동 종료\n\n공통: 양식 복사 → 이름 추가·삭제 → 양식 전체 전송",
+    reply: "[K-LOL.GG 구인 도움말]\n\n1. 파티\n생성: 5인파티\n현황: 구인현황\n추가: 상세 번호 추가 이름\n삭제: 상세 번호 삭제 이름\n종료: 번호ㅉ\n\n2. 내전\n생성: 내전구인\n현황: 내전현황\n매일 오전 6시 자동 종료\n\n3. 스크림\n생성: 스크림구인\n현황: 스크림현황\n매일 오전 6시 자동 종료\n\n공통: 양식 복사 → 이름 추가·삭제 → 양식 전체 전송",
   });
   if (classification.command === "LOCAL_RECRUIT_WEB_HELP") return Object.freeze({
     kind: "REPLY" as const,

@@ -10,6 +10,7 @@ import {
   kakaoSenderControlsRecruitAggregate,
   kakaoRecruitCommandAccess,
   mergeRecruitPartySlotPatches,
+  mutateRecruitPartyMember,
   shouldAutoFinishRecruit,
   syncScrimRecruit,
   syncRecruitParty,
@@ -143,6 +144,77 @@ test("canonical party sync returns the stored aggregate without increasing revis
   assert.equal(result.lastActivityAt, stored.lastActivityAt);
 });
 
+test("party member mutation activates drafts and fills the first primary hole before reserve", () => {
+  const reserved = createRecruitParty({
+    id: "party-member-draft", recruitDate: "2026-09-08", resetSequence: 0, recruitNumber: 15,
+    type: "PARTY_NUMBER", title: "2인 파티", maximumMembers: 2, initialStatus: "DRAFT", now,
+  });
+  const first = mutateRecruitPartyMember({
+    party: reserved, mutation: { action: "ADD", name: "  재현  " }, now: new Date("2026-09-07T15:34:00.000Z"),
+  });
+  assert.equal(first.party.status, "IN_PROGRESS");
+  assert.equal(first.party.startTimeText, "00:34");
+  assert.deepEqual({ outcome: first.outcome, name: first.name, slotNo: first.slotNo, substitute: first.substitute }, {
+    outcome: "APPLIED", name: "재현", slotNo: 1, substitute: false,
+  });
+
+  const withHole = createRecruitParty({
+    id: "party-member-hole", recruitDate: "2026-09-08", resetSequence: 0, recruitNumber: 16,
+    type: "FLEX_RANK", title: "자랭", maximumMembers: 3, now,
+    members: [
+      { name: "정글", position: "JGL", slotNo: 2, substitute: false },
+      { name: "기존예비", position: null, slotNo: 1, substitute: true },
+    ],
+  });
+  const filled = mutateRecruitPartyMember({ party: withHole, mutation: { action: "ADD", name: "탑" }, now });
+  assert.deepEqual(filled.party.members, [
+    { name: "탑", position: "TOP", slotNo: 1, substitute: false },
+    { name: "정글", position: "JGL", slotNo: 2, substitute: false },
+    { name: "기존예비", position: null, slotNo: 1, substitute: true },
+  ]);
+  const mainFull = mutateRecruitPartyMember({ party: filled.party, mutation: { action: "ADD", name: "미드" }, now });
+  const reservedNext = mutateRecruitPartyMember({ party: mainFull.party, mutation: { action: "ADD", name: "새예비" }, now });
+  assert.deepEqual({ slotNo: reservedNext.slotNo, substitute: reservedNext.substitute }, { slotNo: 2, substitute: true });
+});
+
+test("party member no-ops preserve revision and removal preserves every remaining slot", () => {
+  const stored = createRecruitParty({
+    id: "party-member-remove", recruitDate: "2026-09-08", resetSequence: 0, recruitNumber: 17,
+    type: "PARTY_NUMBER", title: "2인 파티", maximumMembers: 2, now,
+    members: [
+      { name: "Alpha", position: null, slotNo: 1, substitute: false },
+      { name: "Bravo", position: null, slotNo: 2, substitute: false },
+      { name: "Reserve", position: null, slotNo: 1, substitute: true },
+    ],
+  });
+  const duplicate = mutateRecruitPartyMember({ party: stored, mutation: { action: "ADD", name: "alpha" }, now });
+  assert.strictEqual(duplicate.party, stored);
+  assert.equal(duplicate.outcome, "ALREADY_PRESENT");
+  const missing = mutateRecruitPartyMember({ party: stored, mutation: { action: "REMOVE", name: "Missing" }, now });
+  assert.strictEqual(missing.party, stored);
+  assert.equal(missing.outcome, "NOT_FOUND");
+
+  const removed = mutateRecruitPartyMember({ party: stored, mutation: { action: "REMOVE", name: "Alpha" }, now });
+  assert.deepEqual(removed.party.members, [
+    { name: "Bravo", position: null, slotNo: 2, substitute: false },
+    { name: "Reserve", position: null, slotNo: 1, substitute: true },
+  ]);
+  assert.equal(removed.party.members.some((member) => member.name === "Reserve" && !member.substitute), false);
+
+  const ambiguous = createRecruitParty({
+    id: "party-member-ambiguous", recruitDate: "2026-09-08", resetSequence: 0, recruitNumber: 18,
+    type: "PARTY_NUMBER", title: "동명이인", maximumMembers: 2, now,
+    members: [
+      { name: "Same", position: null, slotNo: 1, substitute: false },
+      { name: "same", position: null, slotNo: 1, substitute: true },
+    ],
+  });
+  assert.throws(
+    () => mutateRecruitPartyMember({ party: ambiguous, mutation: { action: "REMOVE", name: "ＳＡＭＥ" }, now }),
+    /AMBIGUOUS_MEMBER/u,
+  );
+});
+
 test("request fingerprint is canonical and binds actor, action, key and body", () => {
   const digest = "a".repeat(64);
   assert.equal(canonicalRecruitRequestFingerprint({ actor: "BOT", action: " create ", requestKey: "request-1", payloadDigestHex: digest }), `BOT:CREATE:request-1:${digest}`);
@@ -262,7 +334,7 @@ test("Kakao command access separates public create/read/join from controller lif
 });
 
 test("V1 room members may update and close shared forms without weakening raw V2", () => {
-  for (const type of ["SYNC_PARTY", "FINISH_PARTY", "SYNC_SCRIM"] as const) {
+  for (const type of ["SYNC_PARTY", "PARTY_MEMBER_ADD", "PARTY_MEMBER_REMOVE", "FINISH_PARTY", "SYNC_SCRIM"] as const) {
     assert.equal(kakaoRecruitCommandAccess(type, "COMPAT_V1"), "ROOM_MEMBER_MUTATION", type);
     assert.equal(kakaoRecruitCommandAccess(type, "RAW_V2"), "OWNER_OR_MANAGER", type);
   }

@@ -184,6 +184,7 @@ function partyLines(party: KakaoOpenChatStatusDto["parties"][number]) {
     lines.push(`${member.substitute ? "예비 " : ""}${member.slotNo}. ${member.name || "이름 미정"}${member.position ? ` · ${positionLabels[member.position]}` : ""}`);
   }
   if (party.members.length === 0) lines.push("아직 참가자가 없습니다.");
+  lines.push("", `빠른 추가: 상세 ${party.recruitNumber} 추가 이름`, `빠른 삭제: 상세 ${party.recruitNumber} 삭제 이름`);
   return lines.join("\n");
 }
 
@@ -211,6 +212,94 @@ function partyStatusReply(parties: KakaoOpenChatStatusDto["parties"]) {
     if (index + 1 < parties.length) lines.push("");
   }
   return lines.join("\n");
+}
+
+type PartyMemberMutationAction = "ADD" | "REMOVE";
+type PartyMemberMutationOutcome = "APPLIED" | "ALREADY_PRESENT" | "NOT_FOUND";
+
+function partyMemberMutationReply(input: Readonly<{
+  recruitNumber: number;
+  action: PartyMemberMutationAction;
+  outcome: PartyMemberMutationOutcome;
+  name: string;
+  slotNo: number | null;
+  substitute: boolean | null;
+  memberCount: number;
+  reserveCount: number;
+  maximumMembers: number;
+}>) {
+  const slotLabel = input.slotNo !== null && input.substitute !== null
+    ? ` · ${input.substitute ? `예비 ${String(input.slotNo)}번` : `${String(input.slotNo)}번`}`
+    : "";
+  const outcomeLine = input.action === "ADD"
+    ? input.outcome === "APPLIED"
+      ? `추가 완료: ${input.name}${slotLabel}`
+      : `이미 명단에 있습니다: ${input.name}${slotLabel}`
+    : input.outcome === "APPLIED"
+      ? `삭제 완료: ${input.name}${slotLabel}`
+      : `명단에서 찾지 못했습니다: ${input.name}`;
+  return [
+    `[K-LOL.GG 파티 #${String(input.recruitNumber)} 명단]`,
+    outcomeLine,
+    `현재 ${String(input.memberCount)}/${String(input.maximumMembers)}명 · 예비 ${String(input.reserveCount)}명`,
+  ].join("\n");
+}
+
+function partyMemberBusinessReply(input: Readonly<{
+  recruitNumber: number;
+  name: string;
+  reason: "TARGET_NOT_FOUND" | "AMBIGUOUS_MEMBER" | "RECRUIT_MEMBER_LIMIT_EXCEEDED";
+}>) {
+  if (input.reason === "TARGET_NOT_FOUND") return [
+    `[K-LOL.GG 파티 #${String(input.recruitNumber)} 명단]`,
+    "현재 운영일의 수정 가능한 모집을 찾지 못했습니다.",
+    "구인현황에서 모집번호를 확인해 주세요.",
+  ].join("\n");
+  if (input.reason === "AMBIGUOUS_MEMBER") return [
+    `[K-LOL.GG 파티 #${String(input.recruitNumber)} 명단]`,
+    `동명이인이 있어 자동 삭제할 수 없습니다: ${input.name}`,
+    "상세 전체 양식에서 삭제할 사람의 줄을 비운 뒤 전송해 주세요.",
+  ].join("\n");
+  return [
+    `[K-LOL.GG 파티 #${String(input.recruitNumber)} 명단]`,
+    "참가자와 예비 명단의 전체 한도(99명)에 도달했습니다.",
+    `추가하지 못한 이름: ${input.name}`,
+  ].join("\n");
+}
+
+function partyMemberResultData(
+  data: RecruitingCommandResult["body"]["data"],
+  expected: Readonly<{ recruitNumber: number; action: PartyMemberMutationAction; name: string }>,
+) {
+  const outcome = data.outcome;
+  const memberCount = data.memberCount;
+  const reserveCount = data.reserveCount;
+  const maximumMembers = data.maximumMembers;
+  const slotNo = data.slotNo;
+  const substitute = data.substitute;
+  if (
+    data.action !== expected.action ||
+    (outcome !== "APPLIED" && outcome !== "ALREADY_PRESENT" && outcome !== "NOT_FOUND") ||
+    (expected.action === "ADD" && outcome === "NOT_FOUND") ||
+    (expected.action === "REMOVE" && outcome === "ALREADY_PRESENT") ||
+    typeof memberCount !== "number" || !Number.isSafeInteger(memberCount) || memberCount < 0 ||
+    typeof reserveCount !== "number" || !Number.isSafeInteger(reserveCount) || reserveCount < 0 ||
+    typeof maximumMembers !== "number" || !Number.isSafeInteger(maximumMembers) || maximumMembers < 1 ||
+    (slotNo !== null && (typeof slotNo !== "number" || !Number.isSafeInteger(slotNo) || slotNo < 1 || slotNo > 99)) ||
+    (substitute !== null && typeof substitute !== "boolean") ||
+    ((slotNo === null) !== (substitute === null))
+  ) return null;
+  return Object.freeze({
+    recruitNumber: typeof data.recruitNumber === "number" ? data.recruitNumber : expected.recruitNumber,
+    action: expected.action,
+    outcome,
+    name: typeof data.name === "string" && data.name.length > 0 ? data.name : expected.name,
+    slotNo,
+    substitute,
+    memberCount,
+    reserveCount,
+    maximumMembers,
+  });
 }
 
 function partyTemplate(input: Readonly<{
@@ -630,6 +719,74 @@ export class KakaoV4CommandDispatcher {
             ? `[K-LOL.GG 요청 실패]\n진행 중인 파티 #${command.target.recruitNumber}을 찾지 못했습니다.`
             : command.action === "DETAIL" ? partyLines(parties[0]!) : partyStatusReply(parties),
         replayed: status.replayed,
+      });
+    }
+
+    if (command.action === "ADD_MEMBER" || command.action === "REMOVE_MEMBER") {
+      const commandType = command.action === "ADD_MEMBER" ? "PARTY_MEMBER_ADD" as const : "PARTY_MEMBER_REMOVE" as const;
+      const target = await this.dependencies.recruiting.resolveCompatTarget({
+        kind: "PARTY",
+        sourceRoomId: context.authorization.roomId,
+        recruitDate: command.target.recruitDate,
+        recruitNumber: command.target.recruitNumber,
+        allowedPartyStatuses: partyCompatTargetStatuses(commandType),
+      });
+      if (!target) {
+        const reply = partyMemberBusinessReply({
+          recruitNumber: command.target.recruitNumber,
+          name: command.name,
+          reason: "TARGET_NOT_FOUND",
+        });
+        return Object.freeze({
+          kind: "PARTY",
+          action: command.action,
+          aggregate: null,
+          legacyReply: await this.appendLatestPartyStatus(context, reply, v1Strict),
+          replayed: false,
+        });
+      }
+      const action = command.action === "ADD_MEMBER" ? "ADD" as const : "REMOVE" as const;
+      const memberCommand = sealRecruitingCommand({
+        type: commandType,
+        aggregateId: target.id,
+        metadata: commandMetadata(context, target.revision),
+        payload: { name: command.name },
+      });
+      let result: RecruitingCommandResult;
+      try {
+        result = await this.dependencies.recruiting.handle(memberCommand);
+      } catch (error) {
+        const code = typeof error === "object" && error !== null && "code" in error
+          ? (error as { code?: unknown }).code
+          : undefined;
+        if (code === "AMBIGUOUS_MEMBER" || code === "RECRUIT_MEMBER_LIMIT_EXCEEDED") {
+          const reply = partyMemberBusinessReply({
+            recruitNumber: command.target.recruitNumber,
+            name: command.name,
+            reason: code,
+          });
+          return Object.freeze({
+            kind: "PARTY",
+            action: command.action,
+            aggregate: null,
+            legacyReply: await this.appendLatestPartyStatus(context, reply, v1Strict),
+            replayed: false,
+          });
+        }
+        throw error;
+      }
+      const data = partyMemberResultData(result.body.data, {
+        recruitNumber: command.target.recruitNumber,
+        action,
+        name: command.name,
+      });
+      if (!data) throw new KakaoV4DispatcherError("UNAVAILABLE");
+      return Object.freeze({
+        kind: "PARTY",
+        action: command.action,
+        aggregate: result.body,
+        legacyReply: await this.appendLatestPartyStatus(context, partyMemberMutationReply(data), v1Strict),
+        replayed: result.replayed,
       });
     }
 

@@ -134,6 +134,31 @@ test("full party forms are authoritative snapshots and allow A→B→A", () => {
   assert.equal(duplicate.duplicate, true);
 });
 
+test("party member shortcuts retain the full-form workflow and current-scope mutation boundary", () => {
+  const shortcuts = contract.party.memberShortcuts;
+  assert.deepEqual(shortcuts.syntax, ["상세 12 추가 민서", "상세 12 삭제 민서"]);
+  assert.equal(classify(shortcuts.syntax[0]), "PARTY:ADD_MEMBER");
+  assert.equal(classify(`/${shortcuts.syntax[0]}`), "PARTY:ADD_MEMBER");
+  assert.equal(classify(shortcuts.syntax[1]), "PARTY:REMOVE_MEMBER");
+  assert.equal(classify(`/${shortcuts.syntax[1]}`), "PARTY:REMOVE_MEMBER");
+  assert.match(shortcuts.targetScope, /current recruiting operating day/u);
+  assert.match(shortcuts.targetScope, /RECRUIT installation scope/u);
+  assert.deepEqual(shortcuts.allowedStatuses, ["DRAFT", "IN_PROGRESS"]);
+  assert.equal(shortcuts.appendLatestStatus, true);
+  assert.deepEqual(shortcuts.outcomes, [
+    "APPLIED",
+    "ALREADY_PRESENT",
+    "NOT_FOUND",
+    "AMBIGUOUS_MEMBER",
+    "RECRUIT_MEMBER_LIMIT_EXCEEDED",
+    "TARGET_NOT_FOUND",
+  ]);
+  assert.equal(
+    contract.party.detailShortcutGuidance,
+    "수정: 이 메시지를 복사해 이름을 고친 뒤 전체 전송\n빠른 추가: 상세 12 추가 이름\n빠른 삭제: 상세 12 삭제 이름\n마감: 12ㅉ",
+  );
+});
+
 test("Rift, ARAM, and Augment ARAM preserve their V1 field policies", () => {
   const { modes } = contract.inhouse;
   assert.deepEqual(modes.RIFT.memberFields, ["이름", "현티어", "최고티어", "주라인", "부라인"]);
@@ -191,6 +216,8 @@ test("user-facing help excludes V2 diagnostics and raw JSON commands", () => {
   }
   assert.match(userHelp, /모든 명령어 앞에 \/를 붙여도 사용할 수 있습니다/u);
   assert.match(userHelp, /양식 복사 → 이름 추가·삭제 → 양식 전체 전송/u);
+  assert.match(userHelp, /상세 번호 추가 이름/u);
+  assert.match(userHelp, /상세 번호 삭제 이름/u);
 });
 
 test("representative record, recent, and ranking replies remain exact V1 fixtures", () => {

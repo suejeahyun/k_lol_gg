@@ -206,6 +206,8 @@ export function v1StrictPartyDetailReply(party: Party | null, recruitNumber: num
   return [
     `[K-LOL.GG 구인상세 #${party.recruitNumber}]`, "", detailBlock(party), "",
     "수정: 이 메시지를 복사해 이름을 고친 뒤 전체 전송",
+    `빠른 추가: 상세 ${party.recruitNumber} 추가 이름`,
+    `빠른 삭제: 상세 ${party.recruitNumber} 삭제 이름`,
     `마감: ${party.recruitNumber}ㅉ`,
   ].join("\n");
 }

@@ -99,7 +99,7 @@ test("[P4-S01] every V1 PUBLIC alias succeeds on its actual profile with exact z
       }
     }
   }
-  assert.equal(executions, 186, "fixture PUBLIC aliases or actual-profile matrix changed; review the Phase 4 contract");
+  assert.equal(executions, 190, "fixture PUBLIC aliases or actual-profile matrix changed; review the Phase 4 contract");
   assert.deepEqual(failures, []);
 });
 
@@ -125,7 +125,7 @@ test("[P4-S02] every single-profile PUBLIC alias maps its opposite profile to HT
       }
     }
   }
-  assert.equal(executions, 89);
+  assert.equal(executions, 91);
   assert.deepEqual(failures, []);
 });
 

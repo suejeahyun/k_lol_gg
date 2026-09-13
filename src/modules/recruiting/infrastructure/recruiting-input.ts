@@ -5,7 +5,7 @@ import {
 import type { RecruitingCommand } from "../application/commands";
 
 const COMMAND_TYPES = new Set<RecruitingCommand["type"]>([
-  "CREATE_PARTY", "SYNC_PARTY", "GET_PARTY_STATUS", "FINISH_PARTY", "CANCEL_PARTY", "RESET_PARTY",
+  "CREATE_PARTY", "SYNC_PARTY", "PARTY_MEMBER_ADD", "PARTY_MEMBER_REMOVE", "GET_PARTY_STATUS", "FINISH_PARTY", "CANCEL_PARTY", "RESET_PARTY",
   "CREATE_SCRIM", "SYNC_SCRIM", "JOIN_SCRIM", "REOPEN_SCRIM", "CONFIRM_SCRIM", "COMPLETE_SCRIM", "CANCEL_SCRIM",
 ]);
 const POSITIONS = new Set(["TOP", "JGL", "MID", "ADC", "SUP"]);
@@ -76,6 +76,10 @@ function payloadFor(type: RecruitingCommand["type"], value: unknown): Recruiting
         Array.isArray(payload.members) && payload.members.every(member) &&
         optionalText(payload.startTimeText, 160) && optionalText(payload.gameInfo, 500) &&
         (payload.scheduledStartAt === undefined || nullableInstant(payload.scheduledStartAt))
+        ? payload as RecruitingCommand["payload"] : null;
+    case "PARTY_MEMBER_ADD":
+    case "PARTY_MEMBER_REMOVE":
+      return exactKeys(payload, ["name"]) && text(payload.name, 80)
         ? payload as RecruitingCommand["payload"] : null;
     case "GET_PARTY_STATUS":
     case "FINISH_PARTY":

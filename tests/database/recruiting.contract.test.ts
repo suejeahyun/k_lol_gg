@@ -5,6 +5,7 @@ import test from "node:test";
 import { eq } from "drizzle-orm";
 
 import {
+  hashKakaoV4EventId,
   hashRecruitingRequestKey,
   recruitingCommandScope,
   sealRecruitingCommand,
@@ -349,6 +350,120 @@ test("Kakao aggregate controllers block confused-deputy lifecycle mutations", { 
   } finally {
     if (previousAllowedSenders === undefined) delete process.env.KAKAO_WEBHOOK_ALLOWED_SENDERS;
     else process.env.KAKAO_WEBHOOK_ALLOWED_SENDERS = previousAllowedSenders;
+    await pool.end();
+  }
+});
+
+test("concurrent V4 party member commands serialize on the locked latest aggregate", { concurrency: false }, async () => {
+  const connectionString = process.env.TEST_DATABASE_URL;
+  assert.ok(connectionString);
+  assertSafeTestDatabase({ connectionString, nodeEnv: process.env.NODE_ENV, testMode: process.env.V2_DB_TEST_MODE });
+  const { database, pool } = createDatabaseHandle(connectionString, { max: 4 });
+  const adapter = new PostgresRecruitingAdapter(database);
+  const handler = new RecruitingCommandHandler({
+    unitOfWork: adapter, repository: adapter, authorization: adapter, receipts: adapter,
+    audit: adapter.auditPort(), outbox: adapter.outboxPort(),
+    clock: { now: () => new Date(), receiptExpiresAt: (createdAt) => new Date(createdAt.getTime() + 86_400_000) },
+  });
+  const suffix = randomBytes(8).toString("hex");
+  const partyId = randomUUID();
+  const principalId = `bot:kakao:v4:member-${suffix}`;
+  const roomId = `room-v4-member-${suffix}`;
+  let sequence = 0;
+
+  function v4Command<Type extends RecruitingCommand["type"]>(
+    type: Type,
+    payload: Extract<RecruitingCommand, { type: Type }>["payload"],
+    senderId: string,
+  ): Extract<RecruitingCommand, { type: Type }> {
+    sequence += 1;
+    const eventId = `event-member-${suffix}-${sequence}`;
+    const digest = createHash("sha256").update(JSON.stringify({ type, payload, sequence })).digest("hex");
+    const issuedAt = new Date(Math.floor(Date.now() / 1_000) * 1_000);
+    return sealRecruitingCommand({
+      type,
+      aggregateId: partyId,
+      metadata: {
+        actor: {
+          kind: "BOT", principalId, commandSource: "KAKAO_V4",
+          authorizationIntent: {
+            kind: "KAKAO_HMAC", keyId: "recruit-current", timestampSeconds: Math.floor(issuedAt.getTime() / 1_000),
+            nonce: `member_nonce_${suffix}_${sequence}`, installationId: `install-${suffix}`,
+            deliveryId: eventId, roomId, senderId, bodyDigestHex: digest,
+            requireNonceClaim: true, transactionRecheck: true,
+          },
+        },
+        requestId: randomUUID(), expectedRevision: 0, issuedAt: issuedAt.toISOString(),
+        idempotency: {
+          scope: recruitingCommandScope("BOT", type, "KAKAO_V4"),
+          keyHash: hashKakaoV4EventId(eventId), requestFingerprint: new Uint8Array(32), bodyDigestHex: digest,
+        },
+      },
+      payload,
+    } as unknown as Extract<RecruitingCommand, { type: Type }>);
+  }
+
+  try {
+    await applyMigrations(database);
+    await handler.handle(v4Command("CREATE_PARTY", {
+      recruitDate: new Date().toISOString().slice(0, 10), resetSequence: 0, recruitNumber: 97,
+      partyType: "PARTY_NUMBER", title: "원자적 명단 계약", maximumMembers: 2, members: [],
+      startTimeText: null, gameInfo: null, scheduledStartAt: null, protectedUntil: null, initialStatus: "DRAFT",
+    }, `sender-${suffix}-creator`));
+
+    const [first, second] = await Promise.all([
+      handler.handle(v4Command("PARTY_MEMBER_ADD", { name: `첫째-${suffix}` }, `sender-${suffix}-a`)),
+      handler.handle(v4Command("PARTY_MEMBER_ADD", { name: `둘째-${suffix}` }, `sender-${suffix}-b`)),
+    ]);
+    assert.equal(first.body.data.outcome, "APPLIED");
+    assert.equal(second.body.data.outcome, "APPLIED");
+    assert.deepEqual([first.revision, second.revision].sort((left, right) => left - right), [1, 2]);
+
+    const stored = (await database.select().from(recruitParties).where(eq(recruitParties.id, partyId)))[0];
+    assert.ok(stored);
+    assert.equal(stored.status, "IN_PROGRESS");
+    assert.equal(stored.revision, 2);
+    const members = stored.membersJson as readonly Readonly<{ name: string; slotNo: number; substitute: boolean }>[];
+    assert.deepEqual(members.map((member) => member.slotNo), [1, 2]);
+    assert.equal(members.every((member) => member.substitute === false), true);
+
+    const duplicateCommand = v4Command("PARTY_MEMBER_ADD", { name: members[0]!.name }, `sender-${suffix}-c`);
+    const duplicate = await handler.handle(duplicateCommand);
+    assert.equal(duplicate.body.data.outcome, "ALREADY_PRESENT");
+    assert.equal(duplicate.revision, 2);
+    const duplicateReplay = await handler.handle(duplicateCommand);
+    assert.equal(duplicateReplay.replayed, true);
+    assert.deepEqual(duplicateReplay.body.data, duplicate.body.data);
+    const missing = await handler.handle(v4Command("PARTY_MEMBER_REMOVE", { name: `없음-${suffix}` }, `sender-${suffix}-d`));
+    assert.equal(missing.body.data.outcome, "NOT_FOUND");
+    assert.equal(missing.revision, 2);
+
+    const removed = await handler.handle(v4Command("PARTY_MEMBER_REMOVE", { name: members[0]!.name }, `sender-${suffix}-e`));
+    assert.equal(removed.body.data.outcome, "APPLIED");
+    assert.equal(removed.revision, 3);
+    const afterRemoval = (await database.select().from(recruitParties).where(eq(recruitParties.id, partyId)))[0]!;
+    assert.deepEqual(afterRemoval.membersJson, [members[1]], "remaining slot is preserved and reserve promotion is not performed");
+    const partyAudits = await database.select({
+      action: auditEvents.action,
+      metadata: auditEvents.metadataJson,
+    }).from(auditEvents).where(eq(auditEvents.targetId, partyId));
+    assert.equal(partyAudits.length, 4);
+    const memberAuditMetadata = partyAudits
+      .filter((event) => event.action === "RECRUITING_PARTY_MEMBER_ADD" || event.action === "RECRUITING_PARTY_MEMBER_REMOVE")
+      .map((event) => event.metadata);
+    assert.deepEqual(memberAuditMetadata.map((metadata) => metadata?.roomId), [roomId, roomId, roomId]);
+    assert.deepEqual(memberAuditMetadata.map((metadata) => metadata?.senderId).sort(), [
+      `sender-${suffix}-a`,
+      `sender-${suffix}-b`,
+      `sender-${suffix}-e`,
+    ]);
+    assert.equal(memberAuditMetadata.every((metadata) =>
+      metadata?.actorKind === "BOT" && metadata.actorPrincipalId === principalId &&
+      !("keyId" in metadata) && !("displayName" in metadata) && !("memberName" in metadata)
+    ), true, "audit metadata contains only pseudonymous actor/room/sender identifiers");
+    assert.equal((await database.select().from(recruitingOutbox).where(eq(recruitingOutbox.aggregateId, partyId))).length, 4);
+    assert.equal((await database.select().from(recruitingCommandReceipts).where(eq(recruitingCommandReceipts.actorPrincipalId, principalId))).length, 6);
+  } finally {
     await pool.end();
   }
 });

@@ -141,11 +141,13 @@ export function recruitingErrorResponse(error: unknown, traceId?: string) {
       ACTIVE_DESTRUCTION_TOURNAMENT_AMBIGUOUS: problems.activeTournamentAmbiguous,
       ACTIVE_DESTRUCTION_TOURNAMENT_NOT_FOUND: problems.activeTournamentNotFound,
       ALREADY_EXISTS: problems.conflict,
+      AMBIGUOUS_MEMBER: problems.conflict,
       FORBIDDEN: problems.forbidden,
       IDEMPOTENCY_MISMATCH: problems.idempotencyMismatch,
       INVALID_AUTHORIZATION_INTENT: problems.forbidden,
       INVALID_COMMAND: problems.invalidInput,
       NOT_FOUND: problems.notFound,
+      RECRUIT_MEMBER_LIMIT_EXCEEDED: problems.invalidInput,
       REVISION_CONFLICT: problems.preconditionFailed,
       SESSION_STALE: problems.unauthenticated,
     }[error.code];

@@ -23,6 +23,20 @@ export type RecruitMember = Readonly<{
   substitute: boolean;
 }>;
 
+export type RecruitPartyMemberMutation = Readonly<{
+  action: "ADD" | "REMOVE";
+  name: string;
+}>;
+
+export type RecruitPartyMemberMutationResult = Readonly<{
+  party: RecruitParty;
+  action: RecruitPartyMemberMutation["action"];
+  outcome: "APPLIED" | "ALREADY_PRESENT" | "NOT_FOUND";
+  name: string;
+  slotNo: number | null;
+  substitute: boolean | null;
+}>;
+
 export type RecruitPartyPatchState = "PRESENT_VALUE" | "PRESENT_EMPTY" | "ABSENT";
 
 export type RecruitPartySlotPatch = Readonly<{
@@ -198,6 +212,87 @@ function normalizeMembers(members: readonly RecruitMember[], maximumMembers: num
 
 const LINE_PARTY_TYPES: ReadonlySet<RecruitPartyType> = new Set(["FLEX_RANK", "NORMAL_GAME", "PARTY_RIFT"]);
 const LINE_POSITIONS: readonly RecruitPosition[] = ["TOP", "JGL", "MID", "ADC", "SUP"];
+
+function normalizedMemberIdentity(name: string): string {
+  return cleanText(name, "INVALID_RECRUIT_MEMBER", 80).toLocaleLowerCase("ko-KR");
+}
+
+/** Applies one name command to the locked aggregate without rebuilding its other slots. */
+export function mutateRecruitPartyMember(input: Readonly<{
+  party: RecruitParty;
+  mutation: RecruitPartyMemberMutation;
+  now: Date;
+}>): RecruitPartyMemberMutationResult {
+  if (input.party.status !== "IN_PROGRESS" && input.party.status !== "DRAFT") throw new Error("RECRUIT_NOT_MUTABLE");
+  validDate(input.now, "INVALID_RECRUIT_TIME");
+  const name = cleanText(input.mutation.name, "INVALID_RECRUIT_MEMBER", 80);
+  const identity = normalizedMemberIdentity(name);
+  const matches = input.party.members.filter((member) => normalizedMemberIdentity(member.name) === identity);
+
+  if (input.mutation.action === "REMOVE") {
+    if (matches.length === 0) {
+      return { party: input.party, action: "REMOVE", outcome: "NOT_FOUND", name, slotNo: null, substitute: null };
+    }
+    if (matches.length !== 1) throw new Error("AMBIGUOUS_MEMBER");
+    const removed = matches[0]!;
+    const party = syncRecruitParty({
+      party: input.party,
+      expectedRevision: input.party.revision,
+      members: input.party.members.filter((member) => member !== removed),
+      now: input.now,
+    });
+    return {
+      party,
+      action: "REMOVE",
+      outcome: "APPLIED",
+      name: removed.name,
+      slotNo: removed.slotNo,
+      substitute: removed.substitute,
+    };
+  }
+
+  if (input.mutation.action !== "ADD") throw new Error("INVALID_RECRUIT_MEMBER_MUTATION");
+  if (matches.length > 0) {
+    const existing = matches[0]!;
+    return {
+      party: input.party,
+      action: "ADD",
+      outcome: "ALREADY_PRESENT",
+      name: existing.name,
+      slotNo: existing.slotNo,
+      substitute: existing.substitute,
+    };
+  }
+  if (input.party.members.length >= 99) throw new Error("RECRUIT_MEMBER_LIMIT_EXCEEDED");
+
+  const occupiedPrimarySlots = new Set(
+    input.party.members.filter((member) => !member.substitute).map((member) => member.slotNo),
+  );
+  let slotNo = 1;
+  while (slotNo <= input.party.maximumMembers && occupiedPrimarySlots.has(slotNo)) slotNo += 1;
+  const substitute = occupiedPrimarySlots.size >= input.party.maximumMembers || slotNo > input.party.maximumMembers;
+  if (substitute) {
+    const occupiedReserveSlots = new Set(
+      input.party.members.filter((member) => member.substitute).map((member) => member.slotNo),
+    );
+    slotNo = 1;
+    while (slotNo <= 99 && occupiedReserveSlots.has(slotNo)) slotNo += 1;
+    if (slotNo > 99) throw new Error("RECRUIT_MEMBER_LIMIT_EXCEEDED");
+  }
+  const member: RecruitMember = {
+    name,
+    position: !substitute && LINE_PARTY_TYPES.has(input.party.type) ? LINE_POSITIONS[slotNo - 1] ?? null : null,
+    slotNo,
+    substitute,
+  };
+  const party = syncRecruitParty({
+    party: input.party,
+    expectedRevision: input.party.revision,
+    members: [...input.party.members, member],
+    now: input.now,
+  });
+  return { party, action: "ADD", outcome: "APPLIED", name, slotNo, substitute };
+}
 
 /** Applies only explicitly represented form slots; absent slots retain the stored member. */
 export function mergeRecruitPartySlotPatches(

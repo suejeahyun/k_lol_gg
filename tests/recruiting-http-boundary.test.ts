@@ -62,6 +62,16 @@ test("signed V1 compatibility targets are exact while raw V2 cannot smuggle extr
   assert.equal(parseRecruitingCommandBody({ ...value, compatCreate: { ...value.compatCreate, owner: "forged" } }, new Set(["SYNC_PARTY"] as const), undefined, true), null);
 });
 
+test("party member command boundary accepts exactly one bounded name", () => {
+  const allowed = new Set(["PARTY_MEMBER_ADD", "PARTY_MEMBER_REMOVE"] as const);
+  const valid = { type: "PARTY_MEMBER_ADD", aggregateId: partyId, payload: { name: "참가자" } };
+  assert.equal(parseRecruitingCommandBody(valid, allowed)?.type, "PARTY_MEMBER_ADD");
+  assert.equal(parseRecruitingCommandBody({ ...valid, payload: { name: "" } }, allowed), null);
+  assert.equal(parseRecruitingCommandBody({ ...valid, payload: { name: " 참가자" } }, allowed), null);
+  assert.equal(parseRecruitingCommandBody({ ...valid, payload: { name: "가".repeat(81) } }, allowed), null);
+  assert.equal(parseRecruitingCommandBody({ ...valid, payload: { name: "참가자", slotNo: 1 } }, allowed), null);
+});
+
 test("scrim boundary validates UUID seams and command allowlists", () => {
   const input = {
     type: "CREATE_SCRIM",
@@ -103,5 +113,7 @@ test("command scope is bound to both actor and action", () => {
   assert.equal(recruitingCommandScope("ACCOUNT", "CREATE_PARTY"), "account:recruiting:party:create");
   assert.equal(recruitingCommandScope("ADMIN", "CANCEL_SCRIM"), "admin:recruiting:scrim:cancel");
   assert.equal(recruitingCommandScope("BOT", "SYNC_SCRIM"), "bot:recruiting:scrim:sync");
+  assert.equal(recruitingCommandScope("BOT", "PARTY_MEMBER_ADD"), "bot:recruiting:party:member-add");
+  assert.equal(recruitingCommandScope("ACCOUNT", "PARTY_MEMBER_REMOVE"), "account:recruiting:party:member-remove");
   assert.equal(recruitingCommandScope("ADMIN", "RESET_PARTY"), "admin:recruiting:party:reset");
 });

@@ -27,6 +27,8 @@ const bodyDigestHex = "ab".repeat(32);
 const scopes: Record<RecruitingCommand["type"], string> = {
   CREATE_PARTY: "bot:recruiting:party:create",
   SYNC_PARTY: "bot:recruiting:party:sync",
+  PARTY_MEMBER_ADD: "bot:recruiting:party:member-add",
+  PARTY_MEMBER_REMOVE: "bot:recruiting:party:member-remove",
   GET_PARTY_STATUS: "bot:recruiting:party:status",
   FINISH_PARTY: "bot:recruiting:party:finish",
   CANCEL_PARTY: "bot:recruiting:party:cancel",
@@ -356,6 +358,89 @@ test("V4 slot patches preserve absent rows, delete explicit empty rows, and use 
     { name: "Charlie", position: "MID", slotNo: 3, substitute: false },
   ]);
   assert.deepEqual(harness.operations, ["authorization", "claim", "load", "save", "audit", "outbox", "receipt"]);
+});
+
+test("atomic party member commands compose on the locked latest revision and persist stable outcomes", async () => {
+  const harness = new Harness();
+  const handler = new RecruitingCommandHandler(harness.dependencies());
+  await handler.handle(createParty("party-member-atomic"));
+
+  const addedBravo = await handler.handle(command("PARTY_MEMBER_ADD", "party-member-atomic", 0, { name: "Bravo" }));
+  assert.equal(addedBravo.revision, 1);
+  assert.deepEqual({
+    action: addedBravo.body.data.action,
+    outcome: addedBravo.body.data.outcome,
+    name: addedBravo.body.data.name,
+    slotNo: addedBravo.body.data.slotNo,
+    substitute: addedBravo.body.data.substitute,
+    memberCount: addedBravo.body.data.memberCount,
+    reserveCount: addedBravo.body.data.reserveCount,
+  }, { action: "ADD", outcome: "APPLIED", name: "Bravo", slotNo: 2, substitute: false, memberCount: 2, reserveCount: 0 });
+
+  const addedCharlie = await handler.handle(command("PARTY_MEMBER_ADD", "party-member-atomic", 0, { name: "Charlie" }));
+  assert.equal(addedCharlie.revision, 2, "the command applies to the aggregate loaded under the transaction lock");
+  assert.deepEqual(harness.snapshot.parties.get("party-member-atomic")?.members.map((member) => member.name), ["Alpha", "Bravo", "Charlie"]);
+
+  const mutationAuditCount = harness.snapshot.audits.length;
+  const duplicate = await handler.handle(command("PARTY_MEMBER_ADD", "party-member-atomic", 0, { name: "bravo" }));
+  assert.equal(duplicate.revision, 2);
+  assert.equal(duplicate.body.data.outcome, "ALREADY_PRESENT");
+  const missing = await handler.handle(command("PARTY_MEMBER_REMOVE", "party-member-atomic", 0, { name: "Missing" }));
+  assert.equal(missing.revision, 2);
+  assert.equal(missing.body.data.outcome, "NOT_FOUND");
+  assert.equal(harness.snapshot.audits.length, mutationAuditCount, "business no-ops write receipts but no audit/outbox mutation");
+
+  const removed = await handler.handle(command("PARTY_MEMBER_REMOVE", "party-member-atomic", 0, { name: "Alpha" }));
+  assert.equal(removed.revision, 3);
+  assert.deepEqual(harness.snapshot.parties.get("party-member-atomic")?.members.map((member) => [member.name, member.slotNo, member.substitute]), [
+    ["Bravo", 2, false],
+    ["Charlie", 3, false],
+  ]);
+  assert.equal(removed.body.data.outcome, "APPLIED");
+});
+
+test("party member command validation and ambiguous removal fail closed before persistence", async () => {
+  const harness = new Harness();
+  const handler = new RecruitingCommandHandler(harness.dependencies());
+  const invalid = command("PARTY_MEMBER_ADD", "party-invalid-member", 0, { name: "valid" });
+  assert.throws(
+    () => handler.handle({ ...invalid, payload: { name: " bad " } } as unknown as RecruitingCommand),
+    (error: unknown) => error instanceof RecruitingApplicationError && error.code === "INVALID_COMMAND",
+  );
+  assert.deepEqual(harness.operations, []);
+
+  await handler.handle(command("CREATE_PARTY", "party-ambiguous-member", 0, {
+    ...createParty("unused-party").payload,
+    members: [
+      { name: "Same", position: "TOP", slotNo: 1, substitute: false },
+      { name: "same", position: null, slotNo: 1, substitute: true },
+    ],
+  }));
+  const before = structuredClone(harness.snapshot.parties.get("party-ambiguous-member"));
+  await assert.rejects(
+    handler.handle(command("PARTY_MEMBER_REMOVE", "party-ambiguous-member", 0, { name: "ＳＡＭＥ" })),
+    (error: unknown) => error instanceof RecruitingApplicationError && error.code === "AMBIGUOUS_MEMBER",
+  );
+  assert.deepEqual(harness.snapshot.parties.get("party-ambiguous-member"), before);
+
+  const limitHarness = new Harness();
+  const limitHandler = new RecruitingCommandHandler(limitHarness.dependencies());
+  await limitHandler.handle(command("CREATE_PARTY", "party-member-limit", 0, {
+    recruitDate: "2026-09-07", resetSequence: 0, recruitNumber: 19,
+    partyType: "PARTY_NUMBER", title: "총 명단 한도", maximumMembers: 1,
+    members: [
+      { name: "Main", position: null, slotNo: 1, substitute: false },
+      ...Array.from({ length: 98 }, (_, index) => ({
+        name: `Reserve-${index + 1}`, position: null, slotNo: index + 1, substitute: true,
+      })),
+    ],
+    scheduledStartAt: null, protectedUntil: null,
+  }));
+  await assert.rejects(
+    limitHandler.handle(command("PARTY_MEMBER_ADD", "party-member-limit", 0, { name: "Overflow" })),
+    (error: unknown) => error instanceof RecruitingApplicationError && error.code === "RECRUIT_MEMBER_LIMIT_EXCEEDED",
+  );
+  assert.equal(limitHarness.snapshot.parties.get("party-member-limit")?.members.length, 99);
 });
 
 test("party cancel and SUPER-only reset are distinct terminal commands", async () => {
@@ -705,6 +790,8 @@ function v4Command<Type extends RecruitingCommand["type"]>(
 
 test("V4 room scope allows cross-sender snapshots and finish while preserving durable event receipts", async () => {
   assert.equal(kakaoRecruitCommandAccess("SYNC_PARTY", "KAKAO_V4"), "ROOM_MEMBER_MUTATION");
+  assert.equal(kakaoRecruitCommandAccess("PARTY_MEMBER_ADD", "KAKAO_V4"), "ROOM_MEMBER_MUTATION");
+  assert.equal(kakaoRecruitCommandAccess("PARTY_MEMBER_REMOVE", "KAKAO_V4"), "ROOM_MEMBER_MUTATION");
   assert.equal(kakaoRecruitCommandAccess("FINISH_PARTY", "KAKAO_V4"), "ROOM_MEMBER_MUTATION");
   assert.equal(kakaoRecruitCommandAccess("SYNC_SCRIM", "KAKAO_V4"), "ROOM_MEMBER_MUTATION");
 

@@ -3,6 +3,7 @@ import { canonicalIdentifier, validateBestOf, type JsonObject } from "@/modules/
 import {
   createRecruitParty,
   mergeRecruitPartySlotPatches,
+  mutateRecruitPartyMember,
   syncScrimRecruit,
   syncRecruitParty,
   transitionRecruitParty,
@@ -30,7 +31,7 @@ import type {
 import { toPublicPartyDto, toPublicScrimDto } from "./public-dto";
 
 export class RecruitingApplicationError extends Error {
-  constructor(readonly code: "INVALID_COMMAND" | "INVALID_AUTHORIZATION_INTENT" | "IDEMPOTENCY_MISMATCH" | "NOT_FOUND" | "REVISION_CONFLICT" | "ALREADY_EXISTS" | "FORBIDDEN" | "SESSION_STALE" | "ACTIVE_DESTRUCTION_TOURNAMENT_NOT_FOUND" | "ACTIVE_DESTRUCTION_TOURNAMENT_AMBIGUOUS", message: string) {
+  constructor(readonly code: "INVALID_COMMAND" | "INVALID_AUTHORIZATION_INTENT" | "IDEMPOTENCY_MISMATCH" | "NOT_FOUND" | "REVISION_CONFLICT" | "ALREADY_EXISTS" | "FORBIDDEN" | "SESSION_STALE" | "ACTIVE_DESTRUCTION_TOURNAMENT_NOT_FOUND" | "ACTIVE_DESTRUCTION_TOURNAMENT_AMBIGUOUS" | "AMBIGUOUS_MEMBER" | "RECRUIT_MEMBER_LIMIT_EXCEEDED", message: string) {
     super(message);
     this.name = "RecruitingApplicationError";
   }
@@ -46,7 +47,8 @@ export type RecruitingCommandHandlerDependencies = Readonly<{
   clock: RecruitingClockPort;
 }>;
 
-const PARTY_TYPES = new Set<RecruitingCommand["type"]>(["CREATE_PARTY", "SYNC_PARTY", "GET_PARTY_STATUS", "FINISH_PARTY", "CANCEL_PARTY", "RESET_PARTY"]);
+const PARTY_TYPES = new Set<RecruitingCommand["type"]>(["CREATE_PARTY", "SYNC_PARTY", "PARTY_MEMBER_ADD", "PARTY_MEMBER_REMOVE", "GET_PARTY_STATUS", "FINISH_PARTY", "CANCEL_PARTY", "RESET_PARTY"]);
+const PARTY_MEMBER_TYPES = new Set<RecruitingCommand["type"]>(["PARTY_MEMBER_ADD", "PARTY_MEMBER_REMOVE"]);
 const CREATE_TYPES = new Set<RecruitingCommand["type"]>(["CREATE_PARTY", "CREATE_SCRIM"]);
 const STATUS_TYPES = new Set<RecruitingCommand["type"]>(["GET_PARTY_STATUS"]);
 
@@ -149,6 +151,14 @@ function validateCommand(command: RecruitingCommand) {
   digest(command.metadata.idempotency.keyHash, "keyHash");
   digest(command.metadata.idempotency.requestFingerprint, "requestFingerprint");
   if (!/^[a-f0-9]{64}$/u.test(command.metadata.idempotency.bodyDigestHex)) throw new RecruitingApplicationError("INVALID_COMMAND", "bodyDigestHex must be lowercase SHA-256.");
+  if (PARTY_MEMBER_TYPES.has(command.type)) {
+    const payload = command.payload as unknown as Record<string, unknown>;
+    if (
+      !payload || typeof payload !== "object" || Array.isArray(payload) ||
+      Object.keys(payload).length !== 1 || typeof payload.name !== "string" ||
+      !payload.name || payload.name !== payload.name.trim() || payload.name.length > 80 || /[\u0000-\u001f\u007f]/u.test(payload.name)
+    ) throw new RecruitingApplicationError("INVALID_COMMAND", "Party member commands require one valid name.");
+  }
   validateAuthorization(command);
   if (!sameDigest(command.metadata.idempotency.requestFingerprint, recruitingCommandRequestFingerprint(command))) {
     throw new RecruitingApplicationError("IDEMPOTENCY_MISMATCH", "The request fingerprint does not match the immutable command body.");
@@ -323,12 +333,20 @@ export class RecruitingCommandHandler {
     const create = CREATE_TYPES.has(command.type);
     const current = partyCommand ? party : scrim;
     if (create ? current !== null : current === null) throw new RecruitingApplicationError(create ? "ALREADY_EXISTS" : "NOT_FOUND", create ? "Recruit aggregate already exists." : "Recruit aggregate does not exist.");
-    if (create ? command.metadata.expectedRevision !== 0 : current!.revision !== command.metadata.expectedRevision) throw new RecruitingApplicationError("REVISION_CONFLICT", "Recruit aggregate revision changed.");
+    const appliesToLatestParty = PARTY_MEMBER_TYPES.has(command.type);
+    if (create ? command.metadata.expectedRevision !== 0 : !appliesToLatestParty && current!.revision !== command.metadata.expectedRevision) throw new RecruitingApplicationError("REVISION_CONFLICT", "Recruit aggregate revision changed.");
 
     const now = this.dependencies.clock.now();
     if (!Number.isFinite(now.getTime())) throw new RecruitingApplicationError("INVALID_COMMAND", "Clock returned an invalid time.");
     let nextParty: RecruitParty | null = party;
     let nextScrim: ScrimRecruit | null = scrim;
+    let memberMutation: Readonly<{
+      action: "ADD" | "REMOVE";
+      outcome: "APPLIED" | "ALREADY_PRESENT" | "NOT_FOUND";
+      name: string;
+      slotNo: number | null;
+      substitute: boolean | null;
+    }> | null = null;
     switch (command.type) {
       case "CREATE_PARTY":
         nextParty = createRecruitParty({
@@ -347,6 +365,33 @@ export class RecruitingCommandHandler {
       case "SYNC_PARTY":
         nextParty = sync(command, party!, now);
         break;
+      case "PARTY_MEMBER_ADD":
+      case "PARTY_MEMBER_REMOVE": {
+        try {
+          const result = mutateRecruitPartyMember({
+            party: party!,
+            mutation: { action: command.type === "PARTY_MEMBER_ADD" ? "ADD" : "REMOVE", name: command.payload.name },
+            now,
+          });
+          nextParty = result.party;
+          memberMutation = {
+            action: result.action,
+            outcome: result.outcome,
+            name: result.name,
+            slotNo: result.slotNo,
+            substitute: result.substitute,
+          };
+        } catch (error) {
+          if (error instanceof Error && error.message === "AMBIGUOUS_MEMBER") {
+            throw new RecruitingApplicationError("AMBIGUOUS_MEMBER", "More than one party member matches this name.");
+          }
+          if (error instanceof Error && error.message === "RECRUIT_MEMBER_LIMIT_EXCEEDED") {
+            throw new RecruitingApplicationError("RECRUIT_MEMBER_LIMIT_EXCEEDED", "The party member list has reached its total limit.");
+          }
+          throw error;
+        }
+        break;
+      }
       case "GET_PARTY_STATUS":
         break;
       case "FINISH_PARTY":
@@ -375,12 +420,12 @@ export class RecruitingCommandHandler {
     }
 
     const next = (partyCommand ? nextParty : nextScrim)!;
-    const data = partyCommand ? partyJson(nextParty!) : scrimJson(nextScrim!);
+    const data = partyCommand ? { ...partyJson(nextParty!), ...(memberMutation ?? {}) } : scrimJson(nextScrim!);
     const body: RecruitMutationBody = { aggregateKind: partyCommand ? "PARTY" : "SCRIM", aggregateId: next.id, revision: next.revision, status: next.status, commandType: command.type, data };
     const nowIso = now.toISOString();
     const mutationApplied = !STATUS_TYPES.has(command.type) && (create || current!.revision !== next.revision);
     if (mutationApplied) {
-      if (partyCommand) await this.dependencies.repository.saveParty(transaction, { party: nextParty!, expectedRevision: command.metadata.expectedRevision, create });
+      if (partyCommand) await this.dependencies.repository.saveParty(transaction, { party: nextParty!, expectedRevision: appliesToLatestParty ? party!.revision : command.metadata.expectedRevision, create });
       else await this.dependencies.repository.saveScrim(transaction, { scrim: nextScrim!, expectedRevision: command.metadata.expectedRevision, create });
       const audit: RecruitingAuditEvent = { requestId: command.metadata.requestId, actorPrincipalId: command.metadata.actor.principalId, action: `RECRUITING_${command.type}`, targetType: partyCommand ? "RECRUIT_PARTY" : "SCRIM_RECRUIT", targetId: next.id, before: partyCommand ? partySnapshot(party) : scrimSnapshot(scrim), after: partyCommand ? partySnapshot(nextParty)! : scrimSnapshot(nextScrim)!, occurredAt: nowIso };
       await this.dependencies.audit.append(transaction, audit);

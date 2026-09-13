@@ -567,7 +567,14 @@ export class PostgresRecruitingAdapter implements
       targetId: event.targetId,
       beforeJson: event.before,
       afterJson: event.after,
-      metadataJson: actor ? { actorKind: actor.kind, actorPrincipalId: actor.principalId } : undefined,
+      metadataJson: actor ? {
+        actorKind: actor.kind,
+        actorPrincipalId: actor.principalId,
+        ...(actor.kind === "BOT" ? {
+          roomId: actor.authorizationIntent.roomId,
+          senderId: actor.authorizationIntent.senderId,
+        } : {}),
+      } : undefined,
       createdAt: new Date(event.occurredAt),
     });
   }

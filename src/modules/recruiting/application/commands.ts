@@ -55,6 +55,8 @@ type Command<Type extends string, Payload> = Readonly<{
 export type PartyCommand =
   | Command<"CREATE_PARTY", Readonly<{ recruitDate: string; resetSequence: number | null; recruitNumber: number | null; partyType: RecruitPartyType; title: string; maximumMembers: number; members: readonly RecruitMember[]; startTimeText?: string | null; gameInfo?: string | null; scheduledStartAt: string | null; protectedUntil: string | null; initialStatus?: "DRAFT" }>>
   | Command<"SYNC_PARTY", Readonly<{ members: readonly RecruitMember[]; slotPatches?: readonly RecruitPartySlotPatch[]; startTimeText?: string | null; startTimeState?: RecruitPartyPatchState; gameInfo?: string | null; gameInfoState?: RecruitPartyPatchState; scheduledStartAt?: string | null }>>
+  | Command<"PARTY_MEMBER_ADD", Readonly<{ name: string }>>
+  | Command<"PARTY_MEMBER_REMOVE", Readonly<{ name: string }>>
   | Command<"GET_PARTY_STATUS", Readonly<Record<string, never>>>
   | Command<"FINISH_PARTY", Readonly<Record<string, never>>>
   | Command<"CANCEL_PARTY", Readonly<Record<string, never>>>
@@ -117,6 +119,8 @@ export const KAKAO_V4_EVENT_SCOPE = "bot:kakao-v4:event";
 
 const COMPAT_V1_MEMBER_COMMANDS: ReadonlySet<RecruitingCommand["type"]> = new Set([
   "SYNC_PARTY",
+  "PARTY_MEMBER_ADD",
+  "PARTY_MEMBER_REMOVE",
   "FINISH_PARTY",
   "SYNC_SCRIM",
 ]);
@@ -124,7 +128,7 @@ const COMPAT_V1_MEMBER_COMMANDS: ReadonlySet<RecruitingCommand["type"]> = new Se
 /** PARTY compatibility lookups must select only states mutable by the command. */
 export function partyCompatTargetStatuses(type: RecruitingCommand["type"]): readonly RecruitPartyStatus[] | undefined {
   if (type === "FINISH_PARTY") return ["IN_PROGRESS"];
-  if (type === "SYNC_PARTY") return ["DRAFT", "IN_PROGRESS"];
+  if (type === "SYNC_PARTY" || type === "PARTY_MEMBER_ADD" || type === "PARTY_MEMBER_REMOVE") return ["DRAFT", "IN_PROGRESS"];
   return undefined;
 }
 
@@ -145,6 +149,8 @@ export function kakaoRecruitCommandAccess(
 const COMMAND_SCOPE_SUFFIX: Readonly<Record<RecruitingCommand["type"], string>> = {
   CREATE_PARTY: "recruiting:party:create",
   SYNC_PARTY: "recruiting:party:sync",
+  PARTY_MEMBER_ADD: "recruiting:party:member-add",
+  PARTY_MEMBER_REMOVE: "recruiting:party:member-remove",
   GET_PARTY_STATUS: "recruiting:party:status",
   FINISH_PARTY: "recruiting:party:finish",
   CANCEL_PARTY: "recruiting:party:cancel",

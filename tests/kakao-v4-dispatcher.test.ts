@@ -65,7 +65,10 @@ function openStatus(): KakaoOpenChatStatusDto {
   };
 }
 
-function mutationResult(command: RecruitingCommand): RecruitingCommandResult {
+function mutationResult(
+  command: RecruitingCommand,
+  memberOutcome: "APPLIED" | "ALREADY_PRESENT" | "NOT_FOUND" = "APPLIED",
+): RecruitingCommandResult {
   const party = command.type.includes("PARTY");
   const partyMembers = command.type === "SYNC_PARTY" || command.type === "CREATE_PARTY" ? command.payload.members : [];
   const data: RecruitingCommandResult["body"]["data"] = party ? {
@@ -74,6 +77,15 @@ function mutationResult(command: RecruitingCommand): RecruitingCommandResult {
     title: "5인 파티", memberCount: partyMembers.filter((member) => !member.substitute).length,
     reserveCount: partyMembers.filter((member) => member.substitute).length,
     maximumMembers: 5, startTimeText: "09:26", gameInfo: "미입력", scheduledStartAt: null,
+    ...(command.type === "PARTY_MEMBER_ADD" || command.type === "PARTY_MEMBER_REMOVE" ? {
+      action: command.type === "PARTY_MEMBER_ADD" ? "ADD" : "REMOVE",
+      outcome: memberOutcome,
+      name: command.payload.name,
+      slotNo: memberOutcome === "APPLIED" ? 2 : null,
+      substitute: memberOutcome === "APPLIED" ? false : null,
+      memberCount: command.type === "PARTY_MEMBER_ADD" && memberOutcome === "APPLIED" ? 2 : 1,
+      reserveCount: 0,
+    } : {}),
   } : {
     id: command.aggregateId, recruitDate: "2026-09-10", scrimNumber: 3,
     status: "RECRUITING", requesterTeamName: "별빛단", bestOf: 3,
@@ -102,6 +114,8 @@ function harness(options: Readonly<{
   seasonNotFound?: boolean;
   statusFailure?: boolean;
   mutationReplayed?: boolean;
+  memberOutcome?: "APPLIED" | "ALREADY_PRESENT" | "NOT_FOUND";
+  memberError?: "AMBIGUOUS_MEMBER" | "RECRUIT_MEMBER_LIMIT_EXCEEDED";
 }> = {}) {
   const handled: RecruitingCommand[] = [];
   const resolved: unknown[] = [];
@@ -111,7 +125,10 @@ function harness(options: Readonly<{
   const recruiting: KakaoV4RecruitingPort = {
     async handle(command) {
       handled.push(command);
-      const result = mutationResult(command);
+      if (options.memberError && (command.type === "PARTY_MEMBER_ADD" || command.type === "PARTY_MEMBER_REMOVE")) {
+        throw Object.assign(new Error(options.memberError), { code: options.memberError });
+      }
+      const result = mutationResult(command, options.memberOutcome);
       return options.mutationReplayed ? { ...result, replayed: true } : result;
     },
     async resolveCompatTarget(input) {
@@ -367,6 +384,100 @@ test("party status and detail use one server status receipt and return the lates
     domain: "PARTY", action: "DETAIL", target: { recruitDate: "2026-09-10", recruitNumber: 77 },
   });
   assert.equal(missingDetail.legacyReply, "[K-LOL.GG 요청 실패]\n진행 중인 파티 #77을 찾지 못했습니다.");
+});
+
+test("party member shortcut classifications canonicalize to the current operating day", () => {
+  const timestamp = Date.parse("2026-09-13T05:59:59.000+09:00") / 1_000;
+  for (const [text, action] of [
+    ["상세 12 추가 민서", "ADD_MEMBER"],
+    ["/상세 12 삭제 민서", "REMOVE_MEMBER"],
+  ] as const) {
+    const classification = classifyKakaoV4Command({ profileId: "RECRUIT", text });
+    const command = canonicalizeKakaoV4Command(classification, {
+      ...context.envelope,
+      text,
+      timestamp,
+      eventId: `event-member-canonical-${action.toLowerCase()}`,
+    });
+    assert.deepEqual(command, {
+      domain: "PARTY",
+      action,
+      target: { recruitDate: "2026-09-12", recruitNumber: 12 },
+      name: "민서",
+    });
+  }
+});
+
+test("party member shortcut outcomes return concrete replies and append the latest full status", async () => {
+  for (const scenario of [
+    { action: "ADD_MEMBER" as const, outcome: "APPLIED" as const, expected: "추가 완료: 민서 · 2번" },
+    { action: "ADD_MEMBER" as const, outcome: "ALREADY_PRESENT" as const, expected: "이미 명단에 있습니다: 민서" },
+    { action: "REMOVE_MEMBER" as const, outcome: "APPLIED" as const, expected: "삭제 완료: 민서 · 2번" },
+    { action: "REMOVE_MEMBER" as const, outcome: "NOT_FOUND" as const, expected: "명단에서 찾지 못했습니다: 민서" },
+  ]) {
+    const state = harness({ memberOutcome: scenario.outcome });
+    const result = await state.dispatcher.dispatch(context, {
+      domain: "PARTY",
+      action: scenario.action,
+      target: { recruitDate: "2026-09-10", recruitNumber: 7 },
+      name: "민서",
+    });
+    assert.equal(result.kind, "PARTY");
+    assert.equal(result.action, scenario.action);
+    assert.match(result.legacyReply, new RegExp(scenario.expected, "u"));
+    assert.match(result.legacyReply, /현재 \d+\/5명 · 예비 0명/u);
+    assert.match(result.legacyReply, /\[K-LOL\.GG 구인구직 현황\]/u);
+    assert.match(result.legacyReply, /#7/u);
+    assert.equal(state.statusCalls.length, 1);
+    assert.equal((state.statusCalls[0] as { projection?: string }).projection, "PARTY");
+    assert.equal((state.statusCalls[0] as { afterMutation?: boolean }).afterMutation, true);
+    assert.deepEqual(state.resolved, [{
+      kind: "PARTY",
+      sourceRoomId: context.authorization.roomId,
+      recruitDate: "2026-09-10",
+      recruitNumber: 7,
+      allowedPartyStatuses: ["DRAFT", "IN_PROGRESS"],
+    }]);
+    assert.equal(state.handled.length, 1);
+    const handled = state.handled[0];
+    assert.equal(handled?.type, scenario.action === "ADD_MEMBER" ? "PARTY_MEMBER_ADD" : "PARTY_MEMBER_REMOVE");
+    if (handled?.type !== "PARTY_MEMBER_ADD" && handled?.type !== "PARTY_MEMBER_REMOVE") assert.fail("expected member command");
+    assert.deepEqual(handled.payload, { name: "민서" });
+    assert.equal(handled.metadata.expectedRevision, 2);
+  }
+});
+
+test("missing, ambiguous, and member-limit shortcut results stay concrete successful replies", async () => {
+  const missing = harness({ missingPartyTarget: true });
+  const missingResult = await missing.dispatcher.dispatch(context, {
+    domain: "PARTY",
+    action: "ADD_MEMBER",
+    target: { recruitDate: "2026-09-10", recruitNumber: 15 },
+    name: "민서",
+  });
+  assert.equal(missing.handled.length, 0);
+  assert.equal(missingResult.aggregate, null);
+  assert.match(missingResult.legacyReply, /현재 운영일의 수정 가능한 모집을 찾지 못했습니다/u);
+  assert.match(missingResult.legacyReply, /\[K-LOL\.GG 구인구직 현황\]/u);
+
+  for (const scenario of [
+    { action: "REMOVE_MEMBER" as const, error: "AMBIGUOUS_MEMBER" as const, expected: "동명이인이 있어 자동 삭제할 수 없습니다: 민서" },
+    { action: "ADD_MEMBER" as const, error: "RECRUIT_MEMBER_LIMIT_EXCEEDED" as const, expected: "전체 한도(99명)에 도달했습니다" },
+  ]) {
+    const state = harness({ memberError: scenario.error });
+    const result = await state.dispatcher.dispatch(context, {
+      domain: "PARTY",
+      action: scenario.action,
+      target: { recruitDate: "2026-09-10", recruitNumber: 7 },
+      name: "민서",
+    });
+    assert.equal(result.aggregate, null);
+    assert.equal(result.replayed, false);
+    assert.match(result.legacyReply, new RegExp(scenario.expected.replace(/[()]/gu, "\\$&"), "u"));
+    assert.match(result.legacyReply, /\[K-LOL\.GG 구인구직 현황\]/u);
+    assert.equal(state.handled.length, 1);
+    assert.equal(state.statusCalls.length, 1);
+  }
 });
 
 test("party mutation and appended status keep the signed instant across the 06:00 KST boundary", async () => {

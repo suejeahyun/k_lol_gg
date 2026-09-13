@@ -4,7 +4,7 @@ import type { KakaoWebhookSecret } from "../infrastructure/kakao-signature";
 import type { KakaoRoomCapabilityProfile } from "../kakao-access/domain";
 
 export const KAKAO_V4_COMMAND_CONTRACT = "KLOL_KAKAO_COMMAND_V4";
-export const KAKAO_V4_V1_CONTRACT = "KLOL_KAKAO_V4_V1_COMPAT_2026_09_10_R1";
+export const KAKAO_V4_V1_CONTRACT = "KLOL_KAKAO_V4_V1_COMPAT_2026_09_13_R2";
 export const KAKAO_V1_STRICT_PROTOCOL = "KLOL_KAKAO_V1_STRICT";
 export const KAKAO_V1_STRICT_RESPONSE_FORMAT = "V1_SERVER_EXACT";
 export const KAKAO_V4_MAXIMUM_BODY_BYTES = 32 * 1_024;

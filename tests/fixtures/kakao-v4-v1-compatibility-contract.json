@@ -1,5 +1,5 @@
 {
-  "contractVersion": "KLOL_KAKAO_V4_V1_COMPAT_2026_09_10_R1",
+  "contractVersion": "KLOL_KAKAO_V4_V1_COMPAT_2026_09_13_R2",
   "source": {
     "v1Artifact": "pasted-text.txt (delegated attachment; not committed)",
     "v1Sha256": "c91a56a289a762fe7e08143e8fd4b55c9695c4df68ebfcb6689613dcb73776b7",
@@ -71,6 +71,8 @@
     { "domain": "PARTY", "action": "CREATE_DOUBLE_UP", "aliases": ["더블업구인"] },
     { "domain": "PARTY", "action": "STATUS", "aliases": ["현재구인구직현황", "현재구인현황", "구인구직현황", "구인현황", "현황"] },
     { "domain": "PARTY", "action": "DETAIL", "aliases": ["구인상세 #1", "상세 1"] },
+    { "domain": "PARTY", "action": "ADD_MEMBER", "aliases": ["상세 12 추가 민서"] },
+    { "domain": "PARTY", "action": "REMOVE_MEMBER", "aliases": ["상세 12 삭제 민서"] },
     { "domain": "PARTY", "action": "FINISH", "aliases": ["1쫑", "#1ㅉ", "1번 파티 마감", "1인 구인 종료", "구인마감 #1", "구인쫑 #1", "구인종료 #1"] },
     { "domain": "INHOUSE", "action": "CREATE_RIFT", "aliases": ["내전구인구직 협곡", "내전구인 협곡", "내전모집 rift"] },
     { "domain": "INHOUSE", "action": "CREATE_ARAM", "aliases": ["내전구인 칼바람", "내전모집 aram"] },
@@ -100,6 +102,14 @@
     "missingNumberReply": "[K-LOL.GG 양식 확인 필요]\n모집번호를 찾지 못했습니다.\n\n봇이 출력한 원본 양식의 ‘모집번호: #번호’를 유지해서 다시 보내주세요.",
     "statusReply": "[K-LOL.GG 구인구직 현황]\n🔎 전체 명단: 상세 번호\n\n[구인중]\n#12 · 5인 파티 · 3/5 · 21:00 · 자랭 5인큐 9시 출발\n참여: 재현, 민서, 주현\n└ 상세 12",
     "detailWithDefaults": "[K-LOL.GG 파티 #12]\n5인 파티 구인\n인원 0/5\n시작시간: 21:34 · 게임정보: 미입력\n아직 참가자가 없습니다.",
+    "detailShortcutGuidance": "수정: 이 메시지를 복사해 이름을 고친 뒤 전체 전송\n빠른 추가: 상세 12 추가 이름\n빠른 삭제: 상세 12 삭제 이름\n마감: 12ㅉ",
+    "memberShortcuts": {
+      "syntax": ["상세 12 추가 민서", "상세 12 삭제 민서"],
+      "targetScope": "current recruiting operating day and the verified RECRUIT installation scope only",
+      "allowedStatuses": ["DRAFT", "IN_PROGRESS"],
+      "appendLatestStatus": true,
+      "outcomes": ["APPLIED", "ALREADY_PRESENT", "NOT_FOUND", "AMBIGUOUS_MEMBER", "RECRUIT_MEMBER_LIMIT_EXCEEDED", "TARGET_NOT_FOUND"]
+    },
     "snapshotScenario": {
       "recruitNo": 12,
       "revisions": [
@@ -158,7 +168,7 @@
   },
   "exactReplies": {
     "generalHelp": "[K-LOL.GG 일반 도움말]\n\nLOL-K 기능\n- 내전현황 : 현재 시즌내전 신청 현황\n- 내전참가 / 참가신청 : 참가 방법 안내\n- 전적 닉네임#태그 : 플레이어 전적 조회\n- 최근 닉네임#태그 : 최근 경기 조회\n- 랭킹 : 랭킹 조회\n\n운영 기능\n- /등록 : 초보자용 등록 센터\n- /내전등록 : 사이트에서 내전 결과·사진 한 번에 등록\n- /경고등록 : 관리자 경고 등록 화면 열기\n- /인증 : 로그인 후 내 경고 사진을 사이트에서 제출\n- /경고현황 : 내정보의 경고 진행 상황 열기\n- /결과현황 : 사이트의 내 미완료 결과 접수 열기\n\n구인구직 명령어는 구인도움말을 입력해주세요.\n스크림구인은 /스크림구인, /스크림현황을 사용해주세요.\n\n참고\n- 모든 명령어 앞에 /를 붙여도 사용할 수 있습니다.\n- 예) /내전현황, /전적 닉네임#태그, /구인도움말",
-    "recruitHelp": "[K-LOL.GG 구인 도움말]\n\n1. 파티\n생성: 5인파티\n현황: 구인현황\n종료: 번호ㅉ\n\n2. 내전\n생성: 내전구인\n현황: 내전현황\n매일 오전 6시 자동 종료\n\n3. 스크림\n생성: 스크림구인\n현황: 스크림현황\n매일 오전 6시 자동 종료\n\n공통: 양식 복사 → 이름 추가·삭제 → 양식 전체 전송",
+    "recruitHelp": "[K-LOL.GG 구인 도움말]\n\n1. 파티\n생성: 5인파티\n현황: 구인현황\n추가: 상세 번호 추가 이름\n삭제: 상세 번호 삭제 이름\n종료: 번호ㅉ\n\n2. 내전\n생성: 내전구인\n현황: 내전현황\n매일 오전 6시 자동 종료\n\n3. 스크림\n생성: 스크림구인\n현황: 스크림현황\n매일 오전 6시 자동 종료\n\n공통: 양식 복사 → 이름 추가·삭제 → 양식 전체 전송",
     "recruitWebHelp": "[K-LOL.GG 구인도우미]\n\n현재 사용 중인 카카오톡 명령어 전체 설명은 아래 페이지에서 확인해주세요.\n\nhttps://k-lol-gg.vercel.app/recruit-helper\n\n구인현황 바로가기:\nhttps://k-lol-gg.vercel.app/recruit",
     "registrationHub": "[K-LOL.GG 쉬운 등록 센터]\n처음 사용하셔도 괜찮아요. 필요한 항목의 링크를 누르면 됩니다.\n▶ https://k-lol-gg.vercel.app/start\n\n① 내전 결과 등록\n경기 정보와 결과 사진 2~3장을 한 화면에서 제출합니다.\n▶ https://k-lol-gg.vercel.app/matches/submit\n\n② 주의·경고·벤 등록 (관리자)\n대상 검색부터 사유·근거 사진 등록까지 한 화면에서 처리합니다.\n▶ https://k-lol-gg.vercel.app/admin/discipline/new\n※ 관리자 로그인이 필요하며, 권한이 없으면 등록할 수 없습니다.\n\n③ 경고 차감 사진 제출\n본인의 진행 과제를 선택하고 남은 사진을 한 번에 제출합니다.\n▶ https://k-lol-gg.vercel.app/discipline/evidence\n※ 본인 계정 로그인이 필요합니다.\n\n등록과 사진 제출은 로그인한 본인 계정 기준으로 처리됩니다.",
     "inhouseResultGuide": "[K-LOL.GG 내전 결과 등록]\n가장 쉬운 등록 방법을 안내합니다.\n\n1. 아래 링크를 엽니다.\n2. 세트 수·회차·팀 밸런스를 확인합니다.\n3. 결과 사진 2~3장을 한 번에 올리고 제출합니다.\n\n▶ https://k-lol-gg.vercel.app/matches/submit\n\n로그인하면 진행 중인 제출을 자동으로 찾아 이어서 할 수 있습니다.",
