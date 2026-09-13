@@ -1,5 +1,18 @@
 # K-LOL.GG V2 상태
 
+## 2026-09-13 UI·운영 흐름 보완 릴리스 후보
+
+- 기능 커밋: `fd819b0c5fd19957b95ecff3d2708da61f8d5ce7`
+- 릴리스 tag: `ui-workflow-refinement-v1.0.0`
+- 상태: 소스·빌드·격리 PostgreSQL·격리 Chromium 검증 완료, **운영 미배포**
+- 전체 화면: 105 pages / 339 captures / issue 0 / 종료 코드 0
+- 테스트: 747개 중 746 PASS, DB 전용 1 skip, 실패 0
+- 프로덕션 빌드: static generation 93/93
+- DB migration·운영 데이터 변경·삭제: 없음
+- 주요 범위: 본인 티어 선택기, 멸망전 우승 사진 캐러셀, 구인 참가자 이름, 내전 시간 표시 제거, 이벤트 대회·멸망전 독립 경로
+
+전체 근거와 남은 운영 조건은 [`qa-evidence/ui-workflow-refinement-2026-09-13/README.md`](./qa-evidence/ui-workflow-refinement-2026-09-13/README.md)에 있다.
+
 ## 2026-09-13 전체 검증·보완 릴리스 후보
 
 - 기능 커밋: `dfb0ccb787d1602804c2019c7a87594de77d1661`
@@ -28,13 +41,13 @@
 
 ## 확인된 상태
 
-- 현재 소스에는 공개·계정·관리자 영역을 포함한 103개 `page.tsx`와 197개 API `route.ts`가 있다.
+- 현재 소스에는 공개·계정·관리자 영역을 포함한 105개 `page.tsx`가 있다.
 - 새 Riot ID와 신규 플레이어를 함께 만드는 일반 사용자 가입은 같은 transaction에서 `APPROVED`·`ACTIVE`로 자동 승인된다. 기존 플레이어와 일치하는 Riot ID는 `PENDING` claim 수동 검토를 유지한다.
 - 기존 `PENDING` 27개는 safe class와 action-time 조건을 확인한 뒤 별도 운영 작업으로 승인했고 `PENDING`은 27개에서 0개가 됐다. 연결 플레이어는 기존 `ACTIVE` 23개 유지·4개 재활성화로 모두 `ACTIVE`이며, 세션 6개 폐기, status history 27개, 계정 audit 27개, 플레이어 audit 4개를 기록했다. 기존 `REJECTED/SUSPENDED` 8개는 변경하지 않았다.
 - 2026-09-07 시점의 100개 화면은 326개 조건(데스크톱 156, 태블릿 85, 모바일 85)에서 non-200·화면 이슈·가로 넘침 0건, 브라우저 품질 27/27 통과를 확인했다.
-- 현재 103개 화면 335회의 익명·로그인·관리자·초기설정 실캡처를 합성 PostgreSQL과 격리 Chromium에서 완료했다. HTTP 오류·탐지 이슈·가로 넘침은 0건이고 자격증명과 운영 데이터는 산출물에 포함하지 않았다.
+- 현재 105개 화면 339회의 익명·로그인·관리자·초기설정 실캡처를 합성 PostgreSQL과 격리 Chromium에서 완료했다. HTTP 오류·탐지 이슈·가로 넘침은 0건이고 자격증명과 운영 데이터는 산출물에 포함하지 않았다.
 - 관리자 페이지는 익명·ACCOUNT 세션을 거부하고 ADMIN/SUPER_ADMIN 역할 경계를 유지한다.
-- 현재 저장소 기준 최종 `npm run check`에서 계약 테스트 375/375, 전체 742개 중 741 pass·1 intentional skip, production build static generation 92/92가 통과했다.
+- 현재 저장소 기준 최종 `npm run check`에서 전체 747개 중 746 pass·1 intentional skip, production build static generation 93/93가 통과했다.
 - migration journal과 SQL은 각각 38개로 일치하고 `npm run test:db`가 통과했으며, 저장소 migration head는 `0037_swift_brood`이다.
 - 같은 DB 검사에서 Kakao V4 P0 31/31과 recovery archive 검증이 통과했다.
 - 운영 배포된 Kakao 입력 복구 릴리스는 구인 운영일을 KST 오전 6시 경계로 계산한다. 이는 이전 행을 삭제하는 초기화가 아니라 새 운영일 조회에서 이전 운영일 구인을 제외하는 논리 리셋이다.

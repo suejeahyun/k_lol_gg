@@ -4,7 +4,7 @@
 
 운영 DB와 실제 계정을 사용하지 않고 현재 App Router 전체 화면을 `anonymous`, `account`, `admin`, `setup` 세션으로 캡처한다. 격리 PostgreSQL 18, 합성 계정, 실제 로그인 API와 HttpOnly 세션, 최적화 Next.js 서버를 그대로 통과한다.
 
-`admin` 캡처 세션은 전체 관리자 경로를 열 수 있는 합성 `SUPER_ADMIN` 계정이다. 일반 `ADMIN`의 최고관리자 전용 UI 숨김·403 경계는 별도 권한 회귀 테스트의 책임이며, 이 335개 시각 캡처 수에 중복 추가하지 않는다.
+`admin` 캡처 세션은 전체 관리자 경로를 열 수 있는 합성 `SUPER_ADMIN` 계정이다. 일반 `ADMIN`의 최고관리자 전용 UI 숨김·403 경계는 별도 권한 회귀 테스트의 책임이며, 이 339개 시각 캡처 수에 중복 추가하지 않는다.
 
 ## 실행
 
@@ -17,7 +17,7 @@ npm run qa:capture:full
 기본 결과는 `.tmp/full-page-qa`에 생성된다.
 
 - `fixtures.json`: 합성 DB에서 실제 조회한 비운영 ID만 포함
-- `capture-plan.json`: 현재 103개 `page.tsx`의 335개 캡처 대상
+- `capture-plan.json`: 현재 105개 `page.tsx`의 339개 캡처 대상
 - `screenshots/*.png`: desktop·tablet·mobile 전체 높이 캡처
 - `screenshots/index.json`: 경로별 HTTP·redirect·overflow·런타임 오류 판정
 - `summary.json`: 전체 개수와 issue 0 여부
@@ -25,7 +25,7 @@ npm run qa:capture:full
 릴리스 증거 폴더를 직접 지정하려면 다음처럼 실행한다.
 
 ```powershell
-node scripts/run-full-page-qa.mjs --output docs/qa-evidence/<release>/full-page --expected-pages 103 --expected-captures 335
+node scripts/run-full-page-qa.mjs --output docs/qa-evidence/<release>/full-page --expected-pages 105 --expected-captures 339
 ```
 
 이미 현재 checkout에서 만든 production build를 의도적으로 재사용할 때만 `--build false`를 붙인다. 이 경우 `.next/BUILD_ID`가 없으면 즉시 실패한다.

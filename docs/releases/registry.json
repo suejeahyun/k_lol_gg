@@ -280,6 +280,20 @@
           "status": "PENDING_USER_INSTALL"
         }
       ]
+    },
+    {
+      "featureId": "ui-workflow-refinement",
+      "version": "1.0.0",
+      "gitTag": "ui-workflow-refinement-v1.0.0",
+      "commit": "fd819b0c5fd19957b95ecff3d2708da61f8d5ce7",
+      "releasedAt": "2026-09-13T16:02:59+09:00",
+      "migrationHead": "0037_swift_brood",
+      "qaEvidence": "docs/qa-evidence/ui-workflow-refinement-2026-09-13/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-13-ui-workflow-refinement.md",
+      "deployment": {
+        "status": "NOT_DEPLOYED"
+      },
+      "externalInstallations": []
     }
   ]
 }
