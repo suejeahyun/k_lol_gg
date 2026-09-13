@@ -15,6 +15,21 @@
 
 전체 근거는 [`qa-evidence/admin-player-role-promotion-2026-09-13/README.md`](./qa-evidence/admin-player-role-promotion-2026-09-13/README.md), [`qa-evidence/private-blob-oidc-2026-09-13/README.md`](./qa-evidence/private-blob-oidc-2026-09-13/README.md)에 있다.
 
+## 2026-09-13 카카오 파티·내전·스크림 통합 수명주기 운영 릴리스
+
+- 기능 커밋: `249a1bf24e27dac0f5c59103bc6d5b3ea0c80743`
+- 예정 릴리스 tag: `kakao-all-mode-draft-lifecycle-v1.0.0`
+- 상태: 소스·빌드·격리 PostgreSQL·Neon production migration 및 **Vercel 운영 배포 완료**, 휴대폰 MessengerBot R 설치 대기
+- 운영 DB: `0039_massive_arachne`, migration 40개, 신규 enum·column·constraint 사후 검증 완료
+- 운영 배포: `dpl_FaX8XujaQQrBY9ntwixwQTgQooAZ`
+- 운영 별칭: `https://k-lol-gg.vercel.app` · `/api/health` HTTP 200 · `status: ready`
+- 테스트: 계약 390/390, 일반 771 PASS·DB 전용 1 skip, PostgreSQL recruiting 49/49·operations 1/1, static generation 93/93
+- 공개 API: 파티 10건 모두 `IN_PROGRESS`, 공개 초안 0건, `organizerText` 10/10
+- 주요 범위: 파티·내전·스크림의 번호 예약 초안, 전체 양식 활성화, 빠른 추가·삭제, 최신 현황, 06:00 KST 이전 운영일 종료
+- 휴대폰 코드: V1 strict R11, SHA-256 `B2E7E214F949F766B48EB8FE530A8B27F2459DEBFC5C61CD03F79977E1E67DB7`, `PENDING_USER_INSTALL`
+
+전체 근거와 디스코드 공지는 [`qa-evidence/kakao-all-mode-draft-lifecycle-2026-09-13/README.md`](./qa-evidence/kakao-all-mode-draft-lifecycle-2026-09-13/README.md)에 있다.
+
 ## 2026-09-13 UI·운영 흐름 보완 운영 릴리스
 
 - 최신 기능 커밋: `fd87e5f47703f92f09e1d4db70617ee2aa49fc92`
