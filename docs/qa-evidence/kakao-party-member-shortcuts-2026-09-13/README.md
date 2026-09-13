@@ -34,7 +34,7 @@
 - V4 통합 산출물: 16,582자, ES5/Rhino 정적 계약 PASS
 - V1 strict 공개 산출물: LF 62,443자 / CRLF 64,274자, 기준 소스 SHA-256 `0514eb3c26862ffedfc132dbe1b258db25d30657aaf8455429467a151bfb18a2`, 도달 함수 63개 보존 계약 PASS
 - 비공개 한 번 붙여넣기 산출물: 62,951자, RECRUIT·FEATURES 각각 HTTP 200 및 서명 게이트웨이 OK, 비밀값 출력 없음
-- 현재 트리 비밀값 스캔: PASS
+- 현재 트리와 전체 Git 이력 비밀값 스캔: PASS
 
 ## 운영 배포 증거
 
