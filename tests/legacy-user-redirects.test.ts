@@ -49,8 +49,8 @@ test("멸망전 참가자와 이미지 legacy deep link는 검증한 ID와 ordin
   assert.equal(buildLegacyDestructionParticipantDestination("../admin", "player_01"), "/applications");
   assert.equal(buildLegacyDestructionImageDestination("tournament_01", "1"), "/competitions/destruction/tournament_01?tab=gallery&imageIndex=0");
   assert.equal(buildLegacyDestructionImageDestination("tournament_01", "4"), "/competitions/destruction/tournament_01?tab=gallery&imageIndex=3");
-  assert.equal(buildLegacyDestructionImageDestination("tournament_01", "0"), "/competitions?type=destruction");
-  assert.equal(buildLegacyDestructionImageDestination("tournament_01", "-1"), "/competitions?type=destruction");
+  assert.equal(buildLegacyDestructionImageDestination("tournament_01", "0"), "/competitions/destruction");
+  assert.equal(buildLegacyDestructionImageDestination("tournament_01", "-1"), "/competitions/destruction");
 });
 
 test("멸망전 V1 이미지 route는 1-based 번호를 canonical 0-based query로 308 이동한다", async () => {

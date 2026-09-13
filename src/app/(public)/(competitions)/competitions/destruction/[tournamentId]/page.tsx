@@ -73,7 +73,7 @@ export default async function DestructionDetailPage({ params, searchParams }: { 
     permanentRedirect(buildLegacyCanonicalIdDestination(
       "/competitions/destruction",
       tournamentId,
-      "/competitions?type=destruction",
+      "/competitions/destruction",
       canonicalViewQuery(view, selectedPlayerId),
     ));
   }
@@ -94,7 +94,7 @@ export default async function DestructionDetailPage({ params, searchParams }: { 
   const participantCount = destruction.teams.reduce((count, team) => count + team.rosterPlayerIds.length, 0);
 
   return <div className={styles.page}>
-    <Link className={styles.back} href="/competitions?type=destruction"><ArrowLeft aria-hidden="true" /> 멸망전 목록</Link>
+    <Link className={styles.back} href="/competitions/destruction"><ArrowLeft aria-hidden="true" /> 멸망전 목록</Link>
     <header className={styles.detailHero} data-kind="destruction"><div><span className={styles.statusBadge} data-status={destruction.status}>{publicDestructionStatusLabel(destruction.status)}</span><p className={styles.heroKicker}>AUCTION TOURNAMENT</p><h1>{destruction.title}</h1><p>모집, 주장 선정, 경매, 예선과 본선 결과를 한 화면에서 확인하세요.</p></div><Gavel aria-hidden="true" /></header>
     {destruction.status === "CANCELLED" ? <p className={styles.cancelledNotice} role="status">이 멸망전은 취소되었습니다. 신청과 운영 작업은 종료됐어요.</p> : <ol className={styles.statusJourney} aria-label="멸망전 진행 단계">{DESTRUCTION_STEPS.map((step, index) => { const current = DESTRUCTION_STEPS.indexOf(destruction.status as (typeof DESTRUCTION_STEPS)[number]); return <li data-state={index < current ? "done" : index === current ? "current" : "upcoming"} key={step}>{index < current ? <Check aria-hidden="true" /> : <span>{index + 1}</span>}<strong>{publicDestructionStatusLabel(step)}</strong></li>; })}</ol>}
     <section className={styles.facts} aria-label="멸망전 요약">

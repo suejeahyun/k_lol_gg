@@ -235,7 +235,18 @@ test("full scrim sync replaces V1 form fields but binds date, number, tournament
 });
 
 test("public party DTO excludes room, sender, notes and request keys by construction", () => {
-  assert.deepEqual(Object.keys(toPublicRecruitPartyDto(party())).sort(), ["gameInfo", "id", "maximumMembers", "memberCount", "recruitNumber", "scheduledStartAt", "startTimeText", "status", "title", "type"]);
+  assert.deepEqual(Object.keys(toPublicRecruitPartyDto(party())).sort(), ["gameInfo", "id", "maximumMembers", "memberCount", "members", "recruitNumber", "scheduledStartAt", "startTimeText", "status", "title", "type"]);
+  assert.deepEqual(toPublicRecruitPartyDto(createRecruitParty({
+    id: "public-members", recruitDate: "2026-09-08", resetSequence: 0, recruitNumber: 3,
+    type: "PARTY_NUMBER", title: "공개 참여자", maximumMembers: 2, now,
+    members: [
+      { name: "참가자", position: null, slotNo: 1, substitute: false },
+      { name: "예비자", position: null, slotNo: 1, substitute: true },
+    ],
+  })).members, [
+    { name: "참가자", position: null, slotNo: 1, substitute: false },
+    { name: "예비자", position: null, slotNo: 1, substitute: true },
+  ]);
 });
 
 test("Kakao command access separates public create/read/join from controller lifecycle changes", () => {

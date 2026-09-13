@@ -42,9 +42,31 @@
 .playerPreview strong { font-family: var(--font-heading); font-size: clamp(30px,5vw,54px); }
 .playerPreview em { display: inline-flex; align-items: center; gap: 8px; padding: 11px 17px; border-radius: 999px; color: #344d88; background: #fff; font-style: normal; font-weight: 900; box-shadow: 0 12px 28px rgba(15,25,55,.18); }
 .playerPreview em svg { width: 18px; height: 18px; fill: currentColor; }
-.galleryDetail { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px; }
-.galleryImage { position: relative; overflow: hidden; min-height: 320px; border: 1px solid var(--border); border-radius: 26px; background: var(--muted); }
-.galleryImage:first-child:nth-last-child(odd) { grid-column: 1 / -1; min-height: min(68vw,680px); }
-.galleryImage img { object-fit: contain; }
+.mediaCarousel { display: grid; min-width: 0; gap: 12px; }
+.carouselSlide { display: grid; min-width: 0; gap: 10px; margin: 0; }
+.carouselViewport { position: relative; overflow: hidden; width: 100%; aspect-ratio: 16 / 9; border: 1px solid var(--border); border-radius: 26px; background: linear-gradient(145deg, rgba(226,244,255,.78), rgba(241,232,255,.82)); box-shadow: var(--shadow-soft); }
+.carouselViewport img { object-fit: contain; }
+.carouselImageLink { position: absolute; inset: 0; border-radius: inherit; }
+.carouselImageLink:focus-visible { outline: 3px solid rgba(91,131,210,.48); outline-offset: -4px; }
+.carouselCaption { display: grid; min-width: 0; gap: 3px; padding-inline: 4px; }
+.carouselCaption span { color: var(--text-accent-purple); font-size: 10px; font-weight: 950; letter-spacing: .08em; }
+.carouselCaption strong,.carouselCaption small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.carouselCaption strong { color: var(--ink-strong); font-size: 15px; }
+.carouselCaption small { color: var(--text-muted); font-size: 11px; }
+.carouselFooter { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 10px; min-width: 0; }
+.carouselStatus { margin: 0; color: var(--text-muted); font-size: 11px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.carouselControls { display: flex; min-width: 0; align-items: center; justify-content: flex-end; gap: 6px; }
+.carouselControls > button,.carouselDots button { display: inline-grid; width: 44px; height: 44px; flex: 0 0 44px; place-items: center; padding: 0; border: 1px solid var(--border); border-radius: 13px; color: #5872a6; background: #fff; cursor: pointer; }
+.carouselControls > button:hover,.carouselControls > button:focus-visible,.carouselDots button:hover,.carouselDots button:focus-visible { color: #3e5995; background: #edf6ff; outline: 3px solid rgba(91,131,210,.28); outline-offset: 1px; }
+.carouselControls > button svg { width: 18px; height: 18px; }
+.carouselDots { display: flex; min-width: 0; max-width: min(100%, 300px); gap: 2px; overflow-x: auto; overscroll-behavior-inline: contain; scrollbar-width: thin; }
+.carouselDots button { position: relative; border-color: transparent; background: transparent; }
+.carouselDots button::after { width: 8px; height: 8px; border-radius: 999px; background: #c6d5e8; content: ""; }
+.carouselDots button[data-active="true"]::after { width: 20px; background: #6e78c8; }
+.mediaCarousel[data-variant="compact"] { gap: 8px; margin-top: 10px; }
+.mediaCarousel[data-variant="compact"] .carouselViewport { border-radius: 14px; box-shadow: none; }
+.mediaCarousel[data-variant="compact"] .carouselCaption { gap: 1px; }
+.mediaCarousel[data-variant="compact"] .carouselFooter { gap: 6px; }
 @media (max-width: 900px) { .grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
-@media (max-width: 640px) { .hero { min-height: 0; border-radius: 24px; } .hero > svg { display: none; } .grid,.galleryDetail { grid-template-columns: 1fr; } .galleryImage:first-child:nth-last-child(odd) { grid-column: auto; } .galleryImage { min-height: 260px; } .heading { align-items: start; flex-direction: column; } }
+@media (max-width: 640px) { .hero { min-height: 0; border-radius: 24px; } .hero > svg { display: none; } .grid { grid-template-columns: 1fr; } .heading { align-items: start; flex-direction: column; } .carouselViewport { aspect-ratio: 4 / 3; border-radius: 20px; } .carouselDots { max-width: 176px; } }
+@media (prefers-reduced-motion: reduce) { .carouselDots { scroll-behavior: auto; } }

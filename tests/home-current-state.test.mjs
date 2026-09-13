@@ -27,7 +27,7 @@ test("홈 공개 집계는 활성 플레이어·시즌과 게시 경기만 센�
   ]) assert.equal(repository.includes(contract), true, contract);
 });
 
-test("홈 공개 피드는 실제 구인·대회·홈 갤러리를 조회하고 준비됨으로 꾸미지 않는다", () => {
+test("홈 공개 피드는 실제 구인·대회와 완료된 멸망전 우승 갤러리를 조회한다", () => {
   const repository = source("../src/modules/home/infrastructure/postgres-home-repository.ts");
   const domain = source("../src/modules/home/domain/home-snapshot.ts");
   const home = source("../src/app/(public)/(home)/page.tsx");
@@ -35,13 +35,24 @@ test("홈 공개 피드는 실제 구인·대회·홈 갤러리를 조회하고 
     assert.equal(repository.includes(table), true, table);
   }
   assert.equal(repository.includes('eq(mediaGalleries.status, "PUBLISHED")'), true);
-  assert.equal(repository.includes("eq(mediaGalleries.showOnHome, true)"), true);
+  assert.equal(repository.includes('eq(destructionCompetitions.status, "COMPLETED")'), true);
+  assert.equal(repository.includes("destructionCompetitions.galleryId"), true);
+  assert.equal(repository.includes("mediaGalleryAssets"), true);
+  assert.equal(repository.includes("mediaGalleryExternalImages"), true);
+  assert.equal(repository.includes('image.status !== "READY"'), true);
+  assert.equal(repository.includes('image.purpose !== "GALLERY"'), true);
+  assert.equal(repository.includes('eq(mediaGalleries.showOnHome, true)'), true);
+  assert.equal(repository.includes('ilike(mediaGalleries.title, "%멸망전%")'), true);
+  assert.equal(repository.includes('ilike(mediaGalleries.title, "%우승%")'), true);
+  assert.equal(repository.includes("selectHomeDestructionWinnerGalleries"), true);
   assert.equal(domain.includes('"not-implemented"'), false);
   assert.equal(home.includes('data-state="ready">커뮤니티'), false);
   assert.equal(home.includes("snapshot.feeds.recentMatches"), true);
   assert.equal(home.includes("snapshot.feeds.recruits"), true);
   assert.equal(home.includes("snapshot.feeds.competitions"), true);
-  assert.equal(home.includes("snapshot.feeds.gallery"), true);
+  assert.equal(home.includes("snapshot.feeds.destructionWinnerGalleries"), true);
+  assert.equal(home.includes("멸망전 우승 사진"), true);
+  assert.equal(home.includes("홈 갤러리"), false);
 });
 
 test("홈 피드 공개 projection은 소유자·회원·Discord 필드를 선택하지 않는다", () => {

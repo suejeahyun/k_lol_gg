@@ -8,9 +8,9 @@ import {
   userNavigationSections,
 } from "../src/modules/navigation/domain/user-navigation";
 
-test("USER_ROUTE_MAP canonical 사용자 경로 37개가 중복 없이 분류된다", () => {
-  assert.equal(canonicalUserRoutes.length, 37);
-  assert.equal(new Set(canonicalUserRoutes.map((route) => route.template)).size, 37);
+test("USER_ROUTE_MAP canonical 사용자 경로 39개가 중복 없이 분류된다", () => {
+  assert.equal(canonicalUserRoutes.length, 39);
+  assert.equal(new Set(canonicalUserRoutes.map((route) => route.template)).size, 39);
   assert.equal(userNavigationSections.length, 6);
 
   const counts = Object.fromEntries(
@@ -25,7 +25,7 @@ test("USER_ROUTE_MAP canonical 사용자 경로 37개가 중복 없이 분류된
     "auth-help": 9,
     "registry-match": 7,
     tools: 5,
-    competitions: 4,
+    competitions: 6,
     community: 6,
   });
 });
@@ -64,7 +64,9 @@ test("page-contract로 표시한 사용자 경로는 실제 App Router 페이지
     "/tools/coin-toss",
     "/applications",
     "/competitions",
+    "/competitions/events",
     "/competitions/events/[eventId]",
+    "/competitions/destruction",
     "/competitions/destruction/[tournamentId]",
     "/recruits",
     "/discipline",
@@ -104,7 +106,9 @@ test("page-contract로 표시한 사용자 경로는 실제 App Router 페이지
     "../src/app/(public)/(tools)/tools/coin-toss/page.tsx",
     "../src/app/(public)/(applications)/applications/page.tsx",
     "../src/app/(public)/(competitions)/competitions/page.tsx",
+    "../src/app/(public)/(competitions)/competitions/events/page.tsx",
     "../src/app/(public)/(competitions)/competitions/events/[eventId]/page.tsx",
+    "../src/app/(public)/(competitions)/competitions/destruction/page.tsx",
     "../src/app/(public)/(competitions)/competitions/destruction/[tournamentId]/page.tsx",
     "../src/app/(public)/(recruiting)/recruits/page.tsx",
     "../src/app/(public)/(discipline)/discipline/page.tsx",

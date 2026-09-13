@@ -20,6 +20,13 @@
 .card dl div { display: grid; gap: 3px; }
 .card dt { color: var(--text-muted); font-size: 11px; }
 .card dd { margin: 0; color: var(--ink-strong); font-size: 13px; font-weight: 850; overflow-wrap: anywhere; }
+.members { display: grid; gap: 8px; min-width: 0; padding-top: 12px; border-top: 1px solid #edf2f8; }
+.members > strong { color: var(--text-muted); font-size: 11px; }
+.members ul { display: flex; flex-wrap: wrap; gap: 7px; margin: 0; padding: 0; list-style: none; }
+.members li { display: inline-flex; min-width: 0; align-items: center; gap: 5px; padding: 6px 9px; border: 1px solid #dfe9f5; border-radius: 999px; color: var(--ink-strong); background: #f8fbff; font-size: 12px; }
+.members li span { max-width: 12rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.members li small { flex: 0 0 auto; color: var(--text-accent-purple); font-size: 10px; font-weight: 850; }
+.members p { margin: 0; color: var(--text-muted); font-size: 12px; }
 .capacity { height: 8px; overflow: hidden; border-radius: 999px; background: #edf2f9; }
 .capacity i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#7ab9e8,#d895ce); }
 .scrimLine { display: flex; align-items: center; gap: 7px; margin: 0; color: var(--text-muted); font-size: 13px; }

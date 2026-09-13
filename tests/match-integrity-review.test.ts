@@ -26,6 +26,7 @@ test("deterministic match review passes a structurally consistent series", () =>
   assert.equal(review.grade, "PASS");
   assert.equal(review.errorCount, 0);
   assert.equal(review.warningCount, 0);
+  assert.equal(review.findings.some((item) => item.id.includes("duration") || item.title.includes("경기 시간")), false);
 });
 
 test("deterministic match review blocks stale aggregates and duplicate roster entries", () => {

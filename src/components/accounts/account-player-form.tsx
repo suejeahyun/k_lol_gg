@@ -1,12 +1,91 @@
 "use client";
 
-import { useRef, useState, type FormEvent } from "react";
+import { useId, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 
 import type { AccountPlayerDto } from "@/modules/accounts/domain/account-contracts";
+import {
+  formatPlayerTierEditValue,
+  isPlayerMasterPlusTier,
+  playerDivisionTierOptions,
+  playerMasterPlusTierOptions,
+  playerTierEditState,
+} from "@/modules/players/domain/player-tier";
 import styles from "./account-access.module.css";
 
 type Problem = { detail?: string; title?: string };
+type TierFieldName = "currentTier" | "peakTier";
+
+function AccountTierField({
+  label,
+  name,
+  initialValue,
+}: {
+  label: string;
+  name: TierFieldName;
+  initialValue: string | null;
+}) {
+  const controlId = useId();
+  const initial = playerTierEditState(initialValue);
+  const [tier, setTier] = useState(initial.tier);
+  const [score, setScore] = useState(initial.score);
+  const masterPlus = isPlayerMasterPlusTier(tier);
+  const value = formatPlayerTierEditValue(tier, score) ?? "";
+  const helpId = `${controlId}-help`;
+
+  return (
+    <fieldset className={styles.tierField}>
+      <legend>{label}</legend>
+      <input type="hidden" name={name} value={value} />
+      <label className={styles.field} htmlFor={controlId}>
+        <span>티어 및 단계</span>
+        <select
+          id={controlId}
+          data-tier-name={name}
+          value={tier}
+          onChange={(event) => {
+            setTier(event.target.value);
+            if (!isPlayerMasterPlusTier(event.target.value)) setScore("");
+          }}
+          aria-describedby={helpId}
+        >
+          <option value="">미입력</option>
+          <optgroup label="다이아몬드 이하">
+            {playerDivisionTierOptions.map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </optgroup>
+          <optgroup label="마스터 이상">
+            {playerMasterPlusTierOptions.map((family) => (
+              <option key={family.value} value={family.value}>{family.label}</option>
+            ))}
+          </optgroup>
+        </select>
+      </label>
+      {masterPlus ? (
+        <label className={styles.field}>
+          <span>LP(점수)</span>
+          <input
+            data-tier-score={name}
+            type="number"
+            min={0}
+            max={9999}
+            step={1}
+            inputMode="numeric"
+            required
+            value={score}
+            onChange={(event) => setScore(event.target.value)}
+            aria-describedby={helpId}
+            placeholder="예: 120"
+          />
+        </label>
+      ) : null}
+      <small id={helpId} className={styles.tierHelp}>
+        다이아몬드 이하는 목록에서 선택하고, 마스터 이상은 티어를 선택한 뒤 LP만 직접 입력합니다.
+      </small>
+    </fieldset>
+  );
+}
 
 function newIdempotencyKey() {
   return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
@@ -71,12 +150,8 @@ export function AccountPlayerForm({ player }: { player: AccountPlayerDto }) {
         <small id="account-player-riot-id-help">게임 이름은 최대 16자, 태그는 최대 5자이며 `닉네임#태그` 형식으로 입력합니다.</small>
       </label>
       <div className={styles.playerTierGrid}>
-        <label className={styles.field}>현재 티어
-          <input name="currentTier" defaultValue={player.currentTier ?? ""} maxLength={32} placeholder="예: 골드 2" />
-        </label>
-        <label className={styles.field}>최고 티어
-          <input name="peakTier" defaultValue={player.peakTier ?? ""} maxLength={32} placeholder="예: 플래티넘 4" />
-        </label>
+        <AccountTierField label="현재 티어" name="currentTier" initialValue={player.currentTier} />
+        <AccountTierField label="최고 티어" name="peakTier" initialValue={player.peakTier} />
       </div>
       <p id="account-player-riot-id-warning" className={styles.notice}>Riot ID를 변경하면 기존 Riot 전적 연동이 자동 해제됩니다. 저장 후 새 Riot ID로 다시 연동해 주세요.</p>
       <button className={styles.submit} type="submit" disabled={pending}>{pending ? "저장 중…" : "내 플레이어 정보 저장"}</button>

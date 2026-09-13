@@ -95,10 +95,6 @@ const QUERY_VARIANTS = Object.freeze({
   "/admin/progress/destruction/[tournamentId]": [
     { label: "live-auction", query: { tab: "auction", mode: "live" } },
   ],
-  "/competitions": [
-    { label: "events", query: { type: "event" } },
-    { label: "destruction", query: { type: "destruction" } },
-  ],
   "/competitions/events/[eventId]": [
     { label: "apply", query: { action: "apply" } },
   ],

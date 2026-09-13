@@ -30,7 +30,7 @@ export const ADMIN_WORKSPACES = [
   { id: "seasons", label: "시즌·참가", shortLabel: "시즌", href: "/admin/seasons", description: "시즌 일정과 참가 신청 검토를 한 흐름으로 관리", scope: "시즌·참가 신청", icon: "seasons", stage: "시즌" },
   { id: "matches", label: "경기·결과", shortLabel: "경기", href: "/admin/matches", description: "경기 등록, 결과 접수와 검토를 한곳에서 관리", scope: "경기·접수·증거", icon: "matches", stage: "경기" },
   { id: "balance", label: "팀·AI", shortLabel: "팀", href: "/admin/balance", description: "팀 편성, 저장한 초안, MMR 프로필과 재계산 관리", scope: "밸런스·팀 초안·검토", icon: "balance", stage: "팀" },
-  { id: "tournaments", label: "대회", shortLabel: "대회", href: "/admin/progress/event", description: "이벤트전과 멸망전의 단계별 운영 흐름", scope: "이벤트전·멸망전", icon: "tournaments", stage: "대회" },
+  { id: "tournaments", label: "대회 운영", shortLabel: "대회", href: "/admin/progress/event", description: "서로 분리된 이벤트 대회와 멸망전 작업 공간으로 이동", scope: "이벤트 대회 / 멸망전", icon: "tournaments", stage: "대회" },
   { id: "community", label: "커뮤니티", shortLabel: "커뮤니티", href: "/admin/kakao", description: "구인, 스크림, Kakao와 운영 신청을 함께 처리", scope: "구인·Kakao·신청", icon: "community", stage: "커뮤니티" },
   { id: "content", label: "콘텐츠·자료", shortLabel: "콘텐츠", href: "/admin/highlights", description: "하이라이트, 갤러리, 챔피언과 권한 기반 비공개 자료", scope: "하이라이트·갤러리·챔피언·비공개 자료", icon: "content", stage: "콘텐츠" },
   { id: "integrations", label: "연동", shortLabel: "연동", href: "/admin/riot", description: "Riot 계정 연결과 동기화 상태·실패 재시도", scope: "Riot·외부 연동", icon: "integrations", stage: "연동" },

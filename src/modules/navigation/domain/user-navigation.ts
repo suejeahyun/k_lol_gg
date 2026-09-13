@@ -28,7 +28,7 @@ export const userNavigationSections = [
 }>[];
 
 /**
- * USER_ROUTE_MAP.md의 V2 사용자 canonical 37개를 그대로 옮긴 계약이다.
+ * USER_ROUTE_MAP.md의 V2 사용자 canonical과 분리된 대회 목록 경로를 옮긴 계약이다.
  * `page-contract`는 이 브랜치에서 ready/empty/error/loading 페이지 상태를 구현했다는 뜻이다.
  * V1 기능 동등성, 운영 데이터 이관 또는 production readiness를 뜻하지 않는다.
  */
@@ -66,7 +66,9 @@ export const canonicalUserRoutes = [
 
   { template: "/applications", label: "참가 신청", section: "competitions", implementationState: "page-contract" },
   { template: "/competitions", label: "대회", section: "competitions", implementationState: "page-contract" },
+  { template: "/competitions/events", label: "이벤트 대회", section: "competitions", implementationState: "page-contract" },
   { template: "/competitions/events/[eventId]", label: "이벤트전 상세", section: "competitions", implementationState: "page-contract" },
+  { template: "/competitions/destruction", label: "멸망전", section: "competitions", implementationState: "page-contract" },
   { template: "/competitions/destruction/[tournamentId]", label: "멸망전 상세", section: "competitions", implementationState: "page-contract" },
 
   { template: "/recruits", label: "구인 현황", section: "community", implementationState: "page-contract" },
@@ -84,7 +86,8 @@ export const primaryUserNavigation = [
   { href: "/rankings", activeRoot: "/rankings", label: "랭킹" },
   { href: "/tools/team-balance", activeRoot: "/tools", label: "팀 도구" },
   { href: "/applications", activeRoot: "/applications", label: "참가 신청" },
-  { href: "/competitions", activeRoot: "/competitions", label: "대회" },
+  { href: "/competitions/events", activeRoot: "/competitions/events", label: "이벤트 대회" },
+  { href: "/competitions/destruction", activeRoot: "/competitions/destruction", label: "멸망전" },
 ] as const;
 
 export function isUserNavigationActive(pathname: string, href: string): boolean {

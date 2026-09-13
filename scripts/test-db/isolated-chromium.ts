@@ -244,15 +244,16 @@ export class IsolatedChromium {
   }
 
   async focus(selector: string) {
-    const document = await this.client.call<{ root?: { nodeId?: number } }>("DOM.getDocument", { depth: 0 });
-    const documentNodeId = document.root?.nodeId;
-    if (!documentNodeId) throw new Error("Chromium did not expose the current document node.");
-    const target = await this.client.call<{ nodeId?: number }>("DOM.querySelector", {
-      nodeId: documentNodeId,
-      selector,
-    });
-    if (!target.nodeId) throw new Error(`Chromium could not focus ${selector}.`);
-    await this.client.call("DOM.focus", { nodeId: target.nodeId });
+    const serializedSelector = JSON.stringify(selector);
+    await this.waitFor(
+      `(() => {
+        const target = document.querySelector(${serializedSelector});
+        if (!(target instanceof HTMLElement) || target.hidden || target.matches(':disabled')) return false;
+        target.focus();
+        return document.activeElement === target;
+      })()`,
+      `${selector} to become focusable`,
+    );
   }
 
   async insertText(text: string) {

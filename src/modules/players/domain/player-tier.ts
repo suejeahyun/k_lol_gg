@@ -13,6 +13,24 @@ export const playerTierFilters = [
 
 export type PlayerTierFilter = (typeof playerTierFilters)[number]["value"];
 
+const playerTierDivisionRanks = [
+  { value: "IV", label: "4" },
+  { value: "III", label: "3" },
+  { value: "II", label: "2" },
+  { value: "I", label: "1" },
+] as const;
+
+export const playerDivisionTierOptions = playerTierFilters.slice(0, 7).flatMap((family) =>
+  playerTierDivisionRanks.map((rank) => ({
+    value: `${family.value} ${rank.value}`,
+    label: `${family.label} ${rank.label}`,
+  })),
+);
+
+export const playerMasterPlusTierOptions = playerTierFilters.slice(7);
+
+export type PlayerTierEditState = Readonly<{ tier: string; score: string }>;
+
 const tierAliases: Readonly<Record<PlayerTierFilter, readonly string[]>> = {
   IRON: ["IRON", "아이언"],
   BRONZE: ["BRONZE", "브론즈"],
@@ -51,4 +69,30 @@ export function playerTierFamily(value: string | null): PlayerTierFilter | null 
     }
   }
   return null;
+}
+
+export function isPlayerMasterPlusTier(value: string): value is PlayerTierFilter {
+  return playerMasterPlusTierOptions.some((tier) => tier.value === value);
+}
+
+export function playerTierEditState(value: string | null): PlayerTierEditState {
+  const family = playerTierFamily(value);
+  if (!family) return { tier: "", score: "" };
+  const numericPart = value?.match(/[0-9]{1,4}/u)?.[0] ?? "";
+  if (isPlayerMasterPlusTier(family)) return { tier: family, score: numericPart };
+
+  const rankPart = value
+    ?.normalize("NFKC")
+    .trim()
+    .toLocaleUpperCase("en-US")
+    .match(/(?:IV|III|II|I|[1-4])$/u)?.[0];
+  const canonicalRank = playerTierDivisionRanks.find((rank) => rank.value === rankPart || rank.label === rankPart)?.value;
+  return canonicalRank ? { tier: `${family} ${canonicalRank}`, score: "" } : { tier: "", score: "" };
+}
+
+export function formatPlayerTierEditValue(tier: string, score: string): string | null | undefined {
+  if (!tier) return null;
+  if (playerDivisionTierOptions.some((option) => option.value === tier)) return tier;
+  if (!isPlayerMasterPlusTier(tier) || !/^[0-9]{1,4}$/u.test(score)) return undefined;
+  return `${tier} ${Number(score)}`;
 }

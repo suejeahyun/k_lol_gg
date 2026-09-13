@@ -49,7 +49,7 @@ export default async function EventDetailPage({ params, searchParams }: { params
     permanentRedirect(buildLegacyCanonicalIdDestination(
       "/competitions/events",
       mappedId,
-      "/competitions?type=event",
+      "/competitions/events",
       action === "apply" ? { action } : {},
     ));
   }
@@ -60,7 +60,7 @@ export default async function EventDetailPage({ params, searchParams }: { params
   const session = await getCurrentSession("ACCOUNT");
   const own = session ? await runtime.repository.getOwnApplication(eventId, session.userId).catch(() => null) : null;
   return <div className={styles.page}>
-    <Link className={styles.back} href="/competitions"><ArrowLeft aria-hidden="true" /> 이벤트전 목록</Link>
+    <Link className={styles.back} href="/competitions/events"><ArrowLeft aria-hidden="true" /> 이벤트 대회 목록</Link>
     <header className={styles.detailHero} data-kind="event"><div><span className={styles.statusBadge} data-status={event.status}>{publicEventStatusLabel(event.status)}</span><p className={styles.heroKicker}>{publicCompetitionFormatLabel(event.format)} 이벤트전</p><h1>{event.title}</h1><p>{event.description ?? "즐거운 이벤트전입니다."}</p></div><Swords aria-hidden="true" /></header>
     {event.status === "CANCELLED" ? <p className={styles.cancelledNotice} role="status">이 이벤트전은 취소되었습니다. 참가 신청과 경기 진행은 종료됐어요.</p> : <ol className={styles.statusJourney} aria-label="이벤트전 진행 단계">{EVENT_STEPS.map((step, index) => { const current = EVENT_STEPS.indexOf(event.status as (typeof EVENT_STEPS)[number]); return <li data-state={index < current ? "done" : index === current ? "current" : "upcoming"} key={step}>{index < current ? <Check aria-hidden="true" /> : <span>{index + 1}</span>}<strong>{publicEventStatusLabel(step)}</strong></li>; })}</ol>}
     <section className={styles.facts} aria-label="이벤트전 일정"><article><CalendarDays aria-hidden="true" /><div><span>모집 기간</span><strong>{formatKoreanDateTime(event.recruitmentOpensAt)}<br />~ {formatKoreanDateTime(event.recruitmentClosesAt)}</strong></div></article><article><UsersRound aria-hidden="true" /><div><span>현재 참가자</span><strong>{event.participantCount}/10명</strong></div></article><article><Swords aria-hidden="true" /><div><span>경기 방식</span><strong>{publicCompetitionFormatLabel(event.format)} · BO{event.fixtures[0]?.bestOf ?? "-"}</strong></div></article><article><Crown aria-hidden="true" /><div><span>최종 결과</span><strong>{event.winnerTeamName ?? "진행 중"}{event.mvpPlayerName ? ` · MVP ${event.mvpPlayerName}` : ""}</strong></div></article></section>

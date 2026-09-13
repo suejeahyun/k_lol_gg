@@ -51,7 +51,7 @@ export default async function MatchDetailPage({
           <section className={styles.gameList} aria-label="게임별 스코어보드">
             {result.data.games.map((game) => (
               <article className={styles.game} key={game.gameNumber}>
-                <header className={styles.gameHeader}><strong>GAME {game.gameNumber}</strong><span>{teamLabel(game.winnerTeam)} 승리 · {Math.floor(game.durationSeconds / 60)}분 {game.durationSeconds % 60}초</span></header>
+                <header className={styles.gameHeader}><strong>GAME {game.gameNumber}</strong><span>{teamLabel(game.winnerTeam)} 승리</span></header>
                 <div className={styles.teams}>
                   {(["BLUE", "RED"] as const).map((team) => (
                     <section className={styles.team} key={team} aria-label={teamLabel(team)}>

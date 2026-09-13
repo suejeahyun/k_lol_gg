@@ -82,15 +82,6 @@ export function analyzeMatchIntegrity(
         : "인원·포지션 또는 선수·챔피언 중복을 확인해야 합니다.",
     ));
 
-    const durationOk = game.durationSeconds >= 600 && game.durationSeconds <= 5_400;
-    findings.push(finding(
-      `game-${game.gameNumber}-duration`,
-      durationOk ? "PASS" : "WARNING",
-      `${prefix} 경기 시간`,
-      durationOk
-        ? `${Math.floor(game.durationSeconds / 60)}분 ${game.durationSeconds % 60}초로 정상 범위입니다.`
-        : `${Math.floor(game.durationSeconds / 60)}분 ${game.durationSeconds % 60}초입니다. 오기입 여부를 확인하세요.`,
-    ));
 
     const blueKills = blue.reduce((sum, participant) => sum + participant.kills, 0);
     const redDeaths = red.reduce((sum, participant) => sum + participant.deaths, 0);

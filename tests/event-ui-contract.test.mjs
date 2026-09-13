@@ -5,10 +5,14 @@ import test from "node:test";
 const source = (relative) => readFileSync(new URL(relative, import.meta.url), "utf8");
 
 test("public competition pages expose list/detail/application states without administrator controls", () => {
-  const list = source("../src/app/(public)/(competitions)/competitions/page.tsx");
+  const list = source("../src/app/(public)/(competitions)/competitions/competition-list-views.tsx");
+  const eventListPage = source("../src/app/(public)/(competitions)/competitions/events/page.tsx");
+  const destructionListPage = source("../src/app/(public)/(competitions)/competitions/destruction/page.tsx");
   const detail = source("../src/app/(public)/(competitions)/competitions/events/[eventId]/page.tsx");
   const application = source("../src/app/(public)/(competitions)/competitions/events/[eventId]/event-application-actions.tsx");
-  for (const token of ["parseEventListQuery", "parseDestructionListQuery", "parseCompetitionSavedView", 'alternates: { canonical: "/competitions" }', 'role={error ? "alert" : "status"}']) assert.equal(list.includes(token), true, token);
+  for (const token of ["parseEventListQuery", "parseDestructionListQuery", 'action="/competitions/events"', 'action="/competitions/destruction"', 'role={error ? "alert" : "status"}']) assert.equal(list.includes(token), true, token);
+  assert.match(eventListPage, /canonical: "\/competitions\/events"/);
+  assert.match(destructionListPage, /canonical: "\/competitions\/destruction"/);
   for (const token of ["notFound()", "applicationsOpen", "EventApplicationActions", "팀 편성", "대진과 결과", "event.gallery", "ResilientMediaImage", "parseEventDetailAction"]) assert.equal(detail.includes(token), true, token);
   for (const token of ["playerName", "teamAName", "teamBName", "winnerTeamName"]) assert.equal(detail.includes(token), true, token);
   for (const token of ["If-Match", "Idempotency-Key", 'aria-live="polite"', 'method: "PUT"', '"DELETE"']) assert.equal(application.includes(token), true, token);

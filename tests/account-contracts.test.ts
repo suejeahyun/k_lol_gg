@@ -222,6 +222,10 @@ test("own player edit accepts only Riot ID and supported tier fields", () => {
   assert.equal(parseOwnPlayerInput({ riotId: `${"a".repeat(17)}#KR1`, currentTier: null, peakTier: null }).ok, false);
   assert.equal(parseOwnPlayerInput({ riotId: "Breeze#TOOLNG", currentTier: null, peakTier: null }).ok, false);
   assert.equal(parseOwnPlayerInput({ riotId: "Breeze#KR1", currentTier: "신화 1", peakTier: null }).ok, false);
+  assert.equal(parseOwnPlayerInput({ riotId: "Breeze#KR1", currentTier: "MASTER 0", peakTier: "GRANDMASTER 450" }).ok, true);
+  assert.equal(parseOwnPlayerInput({ riotId: "Breeze#KR1", currentTier: "CHALLENGER 9999", peakTier: "마스터 3층" }).ok, true);
+  assert.equal(parseOwnPlayerInput({ riotId: "Breeze#KR1", currentTier: "MASTER 10000", peakTier: null }).ok, false);
+  assert.equal(parseOwnPlayerInput({ riotId: "Breeze#KR1", currentTier: "GRANDMASTER -1", peakTier: null }).ok, false);
   assert.equal(parseOwnPlayerInput({ riotId: "Breeze#KR1", currentTier: null, peakTier: null, status: "ACTIVE" }).ok, false);
 });
 

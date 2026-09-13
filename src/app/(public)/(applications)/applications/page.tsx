@@ -54,7 +54,8 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
   const selectedRecruitNo = Number(selection.values.recruitNo ?? "1");
   if (type !== "season") {
     const label = type === "event" ? "이벤트전" : "멸망전";
-    return <div className={`page-wrap ${styles.page}`} data-application-type={type} data-entry-source={source}><ApplicationsHero type={type} source={source} /><section className={styles.stateCard} role="status"><UsersRound aria-hidden="true" /><h2>{label} 신청</h2><p>{label}별 모집 상태와 참가 신청은 해당 대회 상세에서 확인합니다.</p><Link className={styles.focusLink} href="/competitions">대회 목록에서 선택</Link></section></div>;
+    const href = type === "event" ? "/competitions/events" : "/competitions/destruction";
+    return <div className={`page-wrap ${styles.page}`} data-application-type={type} data-entry-source={source}><ApplicationsHero type={type} source={source} /><section className={styles.stateCard} role="status"><UsersRound aria-hidden="true" /><h2>{label} 신청</h2><p>{label}별 모집 상태와 참가 신청은 해당 대회 상세에서 확인합니다.</p><Link className={styles.focusLink} href={href}>{label} 목록에서 선택</Link></section></div>;
   }
   const session = await getCurrentSession("ACCOUNT");
   const result = await loadRuntimeSeasonData((service) =>

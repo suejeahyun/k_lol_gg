@@ -24,6 +24,8 @@ function timeLabel(value: string | null) {
   return new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Seoul" }).format(new Date(value));
 }
 
+const positionLabel = { TOP: "탑", JGL: "정글", MID: "미드", ADC: "원딜", SUP: "서포터" } as const;
+
 export default async function RecruitsPage() {
   const result = await loadRuntimeRecruiting((service) => service.listPublicFeed());
   const empty = result.state === "ready" && result.data.parties.length === 0 && result.data.scrims.length === 0;
@@ -49,6 +51,13 @@ export default async function RecruitsPage() {
                   <div className={styles.cardTop}><span>{partyTypeLabel[party.type]}</span><b>#{party.recruitNumber}</b></div>
                   <h3>{party.title}</h3>
                   <dl><div><dt>참여</dt><dd>{party.memberCount} / {party.maximumMembers}명</dd></div><div><dt>예정</dt><dd>{timeLabel(party.scheduledStartAt)}</dd></div></dl>
+                  <section className={styles.members} aria-label={`파티 #${party.recruitNumber} 참여자`}>
+                    <strong>참여자</strong>
+                    {party.members.length ? <ul>{party.members.map((member) => <li key={`${member.substitute ? "reserve" : "member"}-${member.slotNo}`}>
+                      <span>{member.name}</span>
+                      <small>{member.substitute ? "예비" : member.position ? positionLabel[member.position] : `${member.slotNo}번`}</small>
+                    </li>)}</ul> : <p>아직 참여자가 없어요.</p>}
+                  </section>
                   <div className={styles.capacity} aria-label={`정원 ${party.maximumMembers}명 중 ${party.memberCount}명 참여`}><i style={{ width: `${Math.min(100, party.memberCount / party.maximumMembers * 100)}%` }} /></div>
                 </article>)}
               </div>

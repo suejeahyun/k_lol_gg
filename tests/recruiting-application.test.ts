@@ -652,8 +652,8 @@ test("public party and scrim DTOs expose only reviewed fields", () => {
     startTimeText: "21:00", gameInfo: "미입력",
     scheduledStartAt: null, protectedUntil: new Date(now), lastActivityAt: new Date(now),
   };
-  assert.deepEqual(Object.keys(toPublicPartyDto(party)).sort(), ["gameInfo", "id", "maximumMembers", "memberCount", "recruitNumber", "scheduledStartAt", "startTimeText", "status", "title", "type"]);
-  assert.equal("members" in toPublicPartyDto(party), false);
+  assert.deepEqual(Object.keys(toPublicPartyDto(party)).sort(), ["gameInfo", "id", "maximumMembers", "memberCount", "members", "recruitNumber", "scheduledStartAt", "startTimeText", "status", "title", "type"]);
+  assert.deepEqual(toPublicPartyDto(party).members, party.members);
   const scrim: ScrimRecruit = { id: "scrim-1", revision: 2, sourceRoomId: null, sourceSenderId: null, opponentSenderId: null, recruitDate: "2026-09-07", scrimNumber: 1, tournamentId: "destruction-1", legacyTournamentNumber: null, requesterTeamId: "team-a", opponentTeamId: "team-b", requesterLineup: null, opponentLineup: null, legacyMemo: null, legacySeriesRuleText: null, status: "MATCHED", scheduledAt: null, bestOf: 3 };
   assert.deepEqual(Object.keys(toPublicScrimDto(scrim)).sort(), ["bestOf", "id", "legacyTournamentNumber", "memo", "opponentLineup", "opponentTeamId", "opponentTeamName", "recruitDate", "requesterLineup", "requesterTeamId", "requesterTeamName", "scheduledAt", "scrimNumber", "seriesRuleText", "status", "title", "tournamentId"]);
   assert.equal("revision" in toPublicScrimDto(scrim), false);

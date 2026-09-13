@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { HomeGuideArt } from "@/components/home/home-guide-art";
+import { MediaCarousel } from "@/app/(public)/(media)/media-carousel";
 import { getRuntimeAccountRepository } from "@/modules/accounts/infrastructure/runtime-account-data";
 import { getCurrentSession } from "@/modules/auth/infrastructure/runtime-session";
 import { homeChampionPresentation } from "@/modules/home/domain/home-snapshot";
@@ -138,6 +139,20 @@ export default async function HomePage() {
   const championPresentation = homeChampionPresentation(displayChampion);
   const currentRankings = rankingResult.state === "ready"
     ? buildHomePublicRankingSummaries(rankingResult.data.rankings)
+    : [];
+  const destructionWinnerSlides = homeResult.state === "ready"
+    ? homeResult.snapshot.feeds.destructionWinnerGalleries.flatMap((gallery) => {
+      const displayTitle = gallery.tournamentTitle ?? gallery.galleryTitle;
+      return gallery.images.map((image, index) => ({
+        id: `${gallery.galleryId}:${image.id}`,
+        src: image.url,
+        alt: `${displayTitle} 우승 사진 ${index + 1}`,
+        href: `/images/${gallery.galleryId}`,
+        eyebrow: "멸망전 우승",
+        title: displayTitle,
+        description: gallery.galleryDescription,
+      }));
+    })
     : [];
 
   return (
@@ -283,8 +298,8 @@ export default async function HomePage() {
               {homeResult.snapshot.feeds.competitions.length ? <ul>{homeResult.snapshot.feeds.competitions.map((competition) => <li key={`${competition.kind}-${competition.id}`}><Link href={competition.kind === "EVENT" ? `/competitions/events/${competition.id}` : `/competitions/destruction/${competition.id}`}><span><strong>{competition.title}</strong><small>{competition.kind === "EVENT" ? "이벤트전" : "멸망전"} · {competition.status} · {competition.participantCount}명</small></span><ArrowRight aria-hidden="true" /></Link></li>)}</ul> : <FeedEmpty>공개된 이벤트전·멸망전이 아직 없어요.</FeedEmpty>}
             </article>
             <article className="home-feed-panel">
-              <header><Images aria-hidden="true" /><div><span>홈 갤러리</span><strong>{homeResult.snapshot.feeds.gallery.length}건</strong></div><Link href="/images">전체 보기</Link></header>
-              {homeResult.snapshot.feeds.gallery.length ? <ul>{homeResult.snapshot.feeds.gallery.map((gallery) => <li key={gallery.id}><Link href={`/images/${gallery.id}`}><span><strong>{gallery.title}</strong><small>{gallery.description}</small></span><ArrowRight aria-hidden="true" /></Link></li>)}</ul> : <FeedEmpty>홈에 공개된 갤러리가 아직 없어요.</FeedEmpty>}
+              <header><Images aria-hidden="true" /><div><span>멸망전 우승 사진</span><strong>{destructionWinnerSlides.length}장</strong></div><Link href="/images">전체 보기</Link></header>
+              {destructionWinnerSlides.length ? <MediaCarousel label="멸망전 우승 사진" slides={destructionWinnerSlides} sizes="(max-width: 820px) 100vw, 50vw" variant="compact" /> : <FeedEmpty>게시 완료된 멸망전 우승 사진이 아직 없어요.</FeedEmpty>}
             </article>
           </div>
         ) : (
@@ -316,7 +331,7 @@ export default async function HomePage() {
           <span>시즌·경기·구인 현황을 최신 기록으로 확인하세요.</span>
         </div>
         <HomeDataState result={homeResult} />
-        {homeResult.state === "ready" ? <div className="home-feed-contract" aria-label="실제 공개 피드 건수"><span data-state="ready">최근 경기 <strong>{homeResult.snapshot.feeds.recentMatches.length}건</strong></span><span data-state="ready">구인 <strong>{homeResult.snapshot.feeds.recruits.length}건</strong></span><span data-state="ready">대회 <strong>{homeResult.snapshot.feeds.competitions.length}건</strong></span><span data-state="ready">홈 갤러리 <strong>{homeResult.snapshot.feeds.gallery.length}건</strong></span></div> : null}
+        {homeResult.state === "ready" ? <div className="home-feed-contract" aria-label="실제 공개 피드 건수"><span data-state="ready">최근 경기 <strong>{homeResult.snapshot.feeds.recentMatches.length}건</strong></span><span data-state="ready">구인 <strong>{homeResult.snapshot.feeds.recruits.length}건</strong></span><span data-state="ready">대회 <strong>{homeResult.snapshot.feeds.competitions.length}건</strong></span><span data-state="ready">멸망전 우승 사진 <strong>{destructionWinnerSlides.length}장</strong></span></div> : null}
       </section>
     </div>
   );

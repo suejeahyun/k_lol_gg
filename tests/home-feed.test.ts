@@ -5,6 +5,7 @@ import {
   homeChampionPresentation,
   kstHomeDateKey,
   mergeRecentHomeItems,
+  selectHomeDestructionWinnerGalleries,
   selectDailyHomeChampion,
 } from "../src/modules/home/domain/home-snapshot";
 import {
@@ -33,6 +34,24 @@ test("홈 피드 제한은 음수와 비정수 값을 거부하고 0은 빈 피�
   assert.deepEqual(mergeRecentHomeItems([[{ id: "one", occurredAt: "2026-09-07T00:00:00.000Z" }]], 0), []);
   assert.throws(() => mergeRecentHomeItems([], -1), /HOME_FEED_LIMIT_INVALID/);
   assert.throws(() => mergeRecentHomeItems([], 1.5), /HOME_FEED_LIMIT_INVALID/);
+});
+
+test("홈 멸망전 우승 갤러리는 FK 연결을 우선해 중복 제거하고 게시일 역순과 최대 개수를 지킨다", () => {
+  const linked = [
+    { tournamentId: "t-1", tournamentTitle: "연결 대회", galleryId: "g-1", galleryTitle: "연결 우승", galleryDescription: "기록", publishedAt: "2026-09-03T00:00:00.000Z" },
+    { tournamentId: "t-2", tournamentTitle: "두 번째 대회", galleryId: "g-2", galleryTitle: "두 번째 우승", galleryDescription: "기록", publishedAt: "2026-09-02T00:00:00.000Z" },
+  ] as const;
+  const curatedLegacy = [
+    { tournamentId: null, tournamentTitle: null, galleryId: "g-1", galleryTitle: "중복 레거시", galleryDescription: "기록", publishedAt: "2026-09-03T00:00:00.000Z" },
+    { tournamentId: null, tournamentTitle: null, galleryId: "g-3", galleryTitle: "최신 레거시", galleryDescription: "기록", publishedAt: "2026-09-04T00:00:00.000Z" },
+    { tournamentId: null, tournamentTitle: null, galleryId: "g-4", galleryTitle: "오래된 레거시", galleryDescription: "기록", publishedAt: "2026-09-01T00:00:00.000Z" },
+  ] as const;
+
+  const selected = selectHomeDestructionWinnerGalleries(linked, curatedLegacy, 3);
+  assert.deepEqual(selected.map((gallery) => gallery.galleryId), ["g-3", "g-1", "g-2"]);
+  assert.equal(selected.find((gallery) => gallery.galleryId === "g-1")?.tournamentId, "t-1");
+  assert.equal(selectHomeDestructionWinnerGalleries(linked, curatedLegacy, 0).length, 0);
+  assert.throws(() => selectHomeDestructionWinnerGalleries([], [], -1), /WINNER_GALLERY_LIMIT_INVALID/);
 });
 
 const champions = Object.freeze([

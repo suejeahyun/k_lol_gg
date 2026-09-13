@@ -30,12 +30,21 @@ export type HomeCompetition = Readonly<{
   occurredAt: string;
 }>;
 
-export type HomeGallery = Readonly<{
-  id: string;
-  title: string;
-  description: string;
+export type HomeDestructionWinnerGallery = Readonly<{
+  tournamentId: string | null;
+  tournamentTitle: string | null;
+  galleryId: string;
+  galleryTitle: string;
+  galleryDescription: string;
   publishedAt: string;
+  images: readonly Readonly<{
+    id: string;
+    url: string;
+    ordinal: number;
+  }>[];
 }>;
+
+export type HomeDestructionWinnerGalleryCandidate = Omit<HomeDestructionWinnerGallery, "images">;
 
 export type HomeActiveSeason = Readonly<{
   id: string;
@@ -53,7 +62,7 @@ export type HomeSnapshot = Readonly<{
     recentMatches: readonly HomeRecentMatch[];
     recruits: readonly HomeRecruit[];
     competitions: readonly HomeCompetition[];
-    gallery: readonly HomeGallery[];
+    destructionWinnerGalleries: readonly HomeDestructionWinnerGallery[];
   }>;
 }>;
 
@@ -66,6 +75,21 @@ export function mergeRecentHomeItems<T extends Readonly<{ id: string; occurredAt
     const byTime = right.occurredAt.localeCompare(left.occurredAt);
     return byTime || left.id.localeCompare(right.id);
   }).slice(0, limit);
+}
+
+export function selectHomeDestructionWinnerGalleries(
+  linked: readonly HomeDestructionWinnerGalleryCandidate[],
+  curatedLegacy: readonly HomeDestructionWinnerGalleryCandidate[],
+  limit: number,
+): readonly HomeDestructionWinnerGalleryCandidate[] {
+  if (!Number.isSafeInteger(limit) || limit < 0) throw new TypeError("HOME_WINNER_GALLERY_LIMIT_INVALID");
+  const unique = new Map<string, HomeDestructionWinnerGalleryCandidate>();
+  for (const candidate of [...linked, ...curatedLegacy]) {
+    if (!unique.has(candidate.galleryId)) unique.set(candidate.galleryId, candidate);
+  }
+  return [...unique.values()].sort((left, right) => (
+    right.publishedAt.localeCompare(left.publishedAt) || left.galleryId.localeCompare(right.galleryId)
+  )).slice(0, limit);
 }
 
 export type HomeSnapshotResult =

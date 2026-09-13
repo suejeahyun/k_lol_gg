@@ -91,6 +91,12 @@ export type PublicRecruitPartyDto = Readonly<{
   status: RecruitPartyStatus;
   title: string;
   memberCount: number;
+  members: readonly Readonly<{
+    name: string;
+    position: RecruitPosition | null;
+    slotNo: number;
+    substitute: boolean;
+  }>[];
   maximumMembers: number;
   startTimeText: string;
   gameInfo: string;
@@ -369,6 +375,12 @@ export function toPublicRecruitPartyDto(party: RecruitParty): PublicRecruitParty
     status: party.status,
     title: party.title,
     memberCount: party.members.filter((member) => !member.substitute).length,
+    members: Object.freeze(party.members.map((member) => Object.freeze({
+      name: member.name,
+      position: member.position,
+      slotNo: member.slotNo,
+      substitute: member.substitute,
+    }))),
     maximumMembers: party.maximumMembers,
     startTimeText: party.startTimeText,
     gameInfo: party.gameInfo,

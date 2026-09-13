@@ -14,6 +14,7 @@ test("own player mutation keeps approval, origin, revision and idempotency guard
 
 test("own player form keeps one idempotency key for an uncertain retry and explains Riot relinking", async () => {
   const form = await readFile(new URL("../src/components/accounts/account-player-form.tsx", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../src/components/accounts/account-access.module.css", import.meta.url), "utf8");
   const page = await readFile(new URL("../src/app/(public)/account/page.tsx", import.meta.url), "utf8");
   assert.match(form, /useRef/);
   assert.match(form, /fingerprint/);
@@ -23,6 +24,17 @@ test("own player form keeps one idempotency key for an uncertain retry and expla
   assert.match(form, /router\.refresh\(\)/);
   assert.match(form, /maxLength=\{22\}/);
   assert.match(form, /aria-describedby="account-player-riot-id-help account-player-riot-id-warning"/);
+  assert.match(form, /<AccountTierField label="현재 티어" name="currentTier"/);
+  assert.match(form, /<AccountTierField label="최고 티어" name="peakTier"/);
+  assert.match(form, /<optgroup label="다이아몬드 이하">/);
+  assert.match(form, /<optgroup label="마스터 이상">/);
+  assert.match(form, /data-tier-score=\{name\}/);
+  assert.match(form, /min=\{0\}/);
+  assert.match(form, /max=\{9999\}/);
+  assert.match(form, /required/);
+  assert.match(form, /LP만 직접 입력/);
+  assert.match(styles, /@media \(max-width: 520px\)/);
+  assert.match(styles, /\.promise, \.facts, \.playerTierGrid, \.activityGrid, \.accountGrid \{ grid-template-columns: 1fr; \}/);
   assert.match(page, /<AccountPlayerForm key=\{account\.player\.revision\} player=\{account\.player\} \/>/);
 });
 
