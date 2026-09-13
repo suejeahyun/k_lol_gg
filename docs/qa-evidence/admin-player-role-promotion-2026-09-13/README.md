@@ -3,9 +3,12 @@
 ## 판정
 
 - 기능 ID/버전: `admin-player-role-promotion@1.0.0`
-- 상태: 소스 반영·로컬 검증·기능 커밋·태그 완료, 푸시·운영 배포 전
+- 상태: 소스 반영·로컬 검증·기능 커밋·태그·Vercel 운영 배포 완료
 - 기능 커밋: `b48465ac781d5f17679e4911cebc03b0d50aec8f`
 - Git tag: `admin-player-role-promotion-v1.0.0`
+- 운영 배포: `dpl_GJQWShTTiDt5DbM39MkMf3hzYRPc`
+- 운영 URL: `https://k-lol-r16sdffpp-tjdmswo11-3715s-projects.vercel.app`
+- 운영 별칭 확인: `2026-09-13T08:46:29.472Z`에 `/api/health` HTTP 200·`status: ready`
 - DB migration: 없음, migration head `0037_swift_brood` 유지
 - 운영 데이터 변경: 없음
 
@@ -34,7 +37,7 @@
 
 ## 남은 위험
 
-- 운영 계정으로 역할 변경을 실행하지 않았으며 운영 배포는 아직 진행 전이다.
+- 운영 계정으로 역할 변경을 실행하지 않았다. 실제 계정 역할 변경은 사용자가 대상을 확인한 뒤 실행해야 한다.
 - 역할 변경 감사 이벤트의 상세 표시 개선은 별도 운영 로그 UI 범위다.
 - 승격 직후 대상 관리자는 다음 관리자 로그인에서 2단계 인증을 등록해야 한다.
 

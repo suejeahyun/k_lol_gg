@@ -12,3 +12,5 @@
 업로드 권한, 관리자 세션·2단계 인증, same-origin, `If-Match`, 멱등성, 4MiB 제한, PNG/JPEG/WebP 컨테이너·SHA-256 검사는 그대로 유지한다. DB migration과 운영 데이터 변경은 없다.
 
 검증 상세와 디스코드 공지는 [`docs/qa-evidence/private-blob-oidc-2026-09-13/README.md`](../qa-evidence/private-blob-oidc-2026-09-13/README.md)에서 확인한다.
+
+Vercel 운영 배포 `dpl_GJQWShTTiDt5DbM39MkMf3hzYRPc`와 공개 별칭 health를 확인했다. 운영 데이터 비변경 smoke에서는 실제 파일 업로드를 실행하지 않았다.

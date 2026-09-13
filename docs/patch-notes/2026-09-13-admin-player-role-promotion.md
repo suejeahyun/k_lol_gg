@@ -5,3 +5,5 @@
 기존 계정 역할 API를 재사용하므로 same-origin, 로그인 아이디 재확인, 계정 revision 기반 동시 수정 보호, 멱등 receipt, 역할 변경 감사 로그와 대상 세션 폐기 계약을 유지한다. `SUPER_ADMIN` 부여·회수는 계속 금지한다.
 
 DB migration과 운영 데이터 변경은 없다. 검증 상세와 디스코드 공지는 [`docs/qa-evidence/admin-player-role-promotion-2026-09-13/README.md`](../qa-evidence/admin-player-role-promotion-2026-09-13/README.md)에서 확인한다.
+
+Vercel 운영 배포 `dpl_GJQWShTTiDt5DbM39MkMf3hzYRPc`와 공개 별칭 health를 확인했다.

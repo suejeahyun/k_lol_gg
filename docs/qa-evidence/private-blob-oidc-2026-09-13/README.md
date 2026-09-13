@@ -3,9 +3,12 @@
 ## 판정
 
 - 기능 ID/버전: `private-blob-oidc@1.0.0`
-- 상태: 소스 반영·통합 게이트·기능 커밋·태그 완료, 푸시·운영 배포 전
+- 상태: 소스 반영·통합 게이트·기능 커밋·태그·Vercel 운영 배포 완료
 - 기능 커밋: `b48465ac781d5f17679e4911cebc03b0d50aec8f`
 - Git tag: `private-blob-oidc-v1.0.0`
+- 운영 배포: `dpl_GJQWShTTiDt5DbM39MkMf3hzYRPc`
+- 운영 URL: `https://k-lol-r16sdffpp-tjdmswo11-3715s-projects.vercel.app`
+- 운영 별칭 확인: `2026-09-13T08:46:29.472Z`에 `/api/health` HTTP 200·`status: ready`
 - DB migration: 없음, migration head `0037_swift_brood` 유지
 - 운영 데이터 변경: 없음
 
@@ -39,10 +42,10 @@
 - 전체 화면 회귀: 105 pages / 339 captures / HTTP·레이아웃 issue 0 / 종료 코드 0
 - 이미지 편집 화면 실캡처에서 기존의 저장소 미연결 차단 안내가 나타나지 않고 비공개 자산 상태가 정상 표시됨
 
-## 운영 확인 계획
+## 운영 확인
 
-- 배포 뒤 지정 이미지 편집 화면에서 저장소 미연결 안내가 사라지고 파일 선택 입력이 열리는지 확인한다.
-- 운영 데이터 비변경 smoke에서는 파일을 실제 선택·업로드하지 않는다.
+- Vercel 배포 `Ready`와 공개 운영 별칭의 health 응답을 확인했다.
+- 운영 데이터 비변경 원칙에 따라 파일을 실제 선택·업로드하지 않았다.
 - 실제 OIDC 쓰기 검증은 전용 초안과 삭제 흔적·감사 기록을 수반하므로 별도 운영 쓰기 승인 범위에서 수행한다.
 
 ## 다음 권장 패치

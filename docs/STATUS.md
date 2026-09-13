@@ -1,10 +1,12 @@
 # K-LOL.GG V2 상태
 
-## 2026-09-13 관리자 지정·비공개 Blob OIDC 릴리스 후보
+## 2026-09-13 관리자 지정·비공개 Blob OIDC 운영 릴리스
 
 - 기능 커밋: `b48465ac781d5f17679e4911cebc03b0d50aec8f`
 - 릴리스 tag: `admin-player-role-promotion-v1.0.0`, `private-blob-oidc-v1.0.0`
-- 상태: 소스·전체 테스트·격리 PostgreSQL·격리 Chromium 검증 완료, 운영 배포 진행 중
+- 상태: 소스·전체 테스트·격리 PostgreSQL·격리 Chromium 검증 및 Vercel 운영 배포 완료
+- 운영 배포: `dpl_GJQWShTTiDt5DbM39MkMf3hzYRPc` · main `6b76a2f3749fb394c090f3bd120e98e5fadaf9ae`
+- 운영 별칭: `https://k-lol-gg.vercel.app` · `/api/health` HTTP 200 · `status: ready`
 - 전체 화면: 105 pages / 339 captures / issue 0 / 종료 코드 0
 - 테스트: 749개 중 748 PASS, DB 전용 1 skip, 실패 0
 - 프로덕션 빌드: static generation 93/93

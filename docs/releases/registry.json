@@ -11,7 +11,13 @@
       "qaEvidence": "docs/qa-evidence/admin-player-role-promotion-2026-09-13/README.md",
       "patchNotes": "docs/patch-notes/2026-09-13-admin-player-role-promotion.md",
       "deployment": {
-        "status": "NOT_DEPLOYED"
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_GJQWShTTiDt5DbM39MkMf3hzYRPc",
+        "url": "https://k-lol-r16sdffpp-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-13T08:46:29.472Z",
+        "healthStatus": "ready"
       },
       "externalInstallations": []
     },
@@ -25,7 +31,13 @@
       "qaEvidence": "docs/qa-evidence/private-blob-oidc-2026-09-13/README.md",
       "patchNotes": "docs/patch-notes/2026-09-13-private-blob-oidc.md",
       "deployment": {
-        "status": "NOT_DEPLOYED"
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_GJQWShTTiDt5DbM39MkMf3hzYRPc",
+        "url": "https://k-lol-r16sdffpp-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-13T08:46:29.472Z",
+        "healthStatus": "ready"
       },
       "externalInstallations": []
     },
