@@ -1,5 +1,19 @@
 # K-LOL.GG V2 상태
 
+## 2026-09-14 카카오 파티 주최자 자동 참가 운영 릴리스
+
+- 기능 커밋: `bd4a2ea506120883ec1513827cc6abdbe165d92d`
+- 릴리스 tag: `kakao-party-organizer-auto-member-v1.0.0`
+- 상태: 소스·전체 테스트·격리 PostgreSQL·private gateway 검증 및 Vercel 운영 배포 완료
+- 운영 배포: `dpl_HK7Yr8GJSRNjpTbxwZLkD6n6ermi`
+- 운영 별칭: `https://k-lol-gg.vercel.app` · `/api/health` HTTP 200 · `status: ready`
+- 테스트: V1 호환 70/70, 파티 domain 22/22, 일반 774 PASS·DB 전용 1 skip, PostgreSQL 전체 계약, static generation 93/93
+- 주요 범위: 참가행 없는 파티 양식 최초 활성화 시 주최자를 1번 참가자로 원자적 등록, 재전송·동일 이름 추가 중복 방지, 삭제 후 자동 재삽입 방지
+- 휴대폰 MessengerBot R R12 변경·재설치: 없음
+- DB migration·운영 데이터 직접 수정·삭제: 없음
+
+전체 근거와 디스코드 공지는 [`qa-evidence/kakao-party-organizer-auto-member-2026-09-14/README.md`](./qa-evidence/kakao-party-organizer-auto-member-2026-09-14/README.md)에 있다.
+
 ## 2026-09-13 카카오 V1 strict R12 알림 중복·양식 활성화 보완
 
 - 기능 커밋: `c6b5c9f0c9d22f9474828c297521c2f56fb4fcaa`

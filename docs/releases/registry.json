@@ -470,6 +470,26 @@
           "status": "PENDING_USER_INSTALL"
         }
       ]
+    },
+    {
+      "featureId": "kakao-party-organizer-auto-member",
+      "version": "1.0.0",
+      "gitTag": "kakao-party-organizer-auto-member-v1.0.0",
+      "commit": "bd4a2ea506120883ec1513827cc6abdbe165d92d",
+      "releasedAt": "2026-09-14T05:43:05+09:00",
+      "migrationHead": "0039_massive_arachne",
+      "qaEvidence": "docs/qa-evidence/kakao-party-organizer-auto-member-2026-09-14/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-14-kakao-party-organizer-auto-member.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_HK7Yr8GJSRNjpTbxwZLkD6n6ermi",
+        "url": "https://k-lol-2i26r45ey-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-13T20:43:05.663Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": []
     }
   ]
 }

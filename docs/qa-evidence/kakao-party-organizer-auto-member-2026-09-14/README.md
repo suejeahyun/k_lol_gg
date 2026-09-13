@@ -6,7 +6,7 @@
 - 기능 버전: `1.0.0`
 - DB migration·운영 데이터 직접 수정: 없음
 - MessengerBot R 변경·재설치: 없음
-- 현재 상태: 소스 수정과 로컬 검증 완료, 운영 배포 대기
+- 현재 상태: 소스 수정·전체 검증·Vercel 운영 배포 완료
 
 ## 재현 원인
 
@@ -59,13 +59,21 @@
 
 ## 운영 배포 증거
 
-배포 후 Git tag, 기능 commit, Vercel deployment ID·불변 URL, alias health를 기록한다.
+- 기능 commit: `bd4a2ea506120883ec1513827cc6abdbe165d92d`
+- Git tag: `kakao-party-organizer-auto-member-v1.0.0`
+- Vercel deployment: `dpl_HK7Yr8GJSRNjpTbxwZLkD6n6ermi`
+- 불변 URL: `https://k-lol-2i26r45ey-tjdmswo11-3715s-projects.vercel.app`
+- 운영 alias: `https://k-lol-gg.vercel.app`
+- Vercel 상태: Production · Ready · Latest
+- 운영 health: `2026-09-13T20:43:05.663Z`에 `/api/health` HTTP 200, `status: ready`
+- private MessengerBot V1 strict live 점검: RECRUIT HTTP 200·FEATURES HTTP 200, gateway `OK`
+- 휴대폰 설치본 R12는 변경하지 않았으며 재설치가 필요 없다.
 
 ## 남은 위험
 
 - 이미 `IN_PROGRESS`인 기존 파티는 소급해서 주최자를 참가자로 넣지 않는다. 새 DRAFT 활성화부터 적용한다.
 - 주최자 이름과 다른 사람이 같은 표시 이름을 쓰면 이름 기반 빠른 명령만으로 구분할 수 없다.
-- 실제 Kakao 방 송수신은 운영 배포 후 새 파티 번호로 확인해야 한다.
+- 실제 Kakao 방에서 새 파티 번호로 양식을 전송해 `주최자 자동 참가 → 1/정원` 표시를 확인하는 마지막 사용자 실기기 확인은 남아 있다.
 
 ## 롤백
 
