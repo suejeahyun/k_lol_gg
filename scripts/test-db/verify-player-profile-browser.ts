@@ -25,6 +25,7 @@ type RenderedField = Readonly<{
 type RenderedTierField = Readonly<{
   value: string;
   selection: string;
+  division: string | null;
   score: string | null;
   label: string;
   optionCount: number;
@@ -87,7 +88,7 @@ async function replaceFieldWithKeyboard(browser: IsolatedChromium, name: string,
   );
 }
 
-async function selectTier(browser: IsolatedChromium, name: "currentTier" | "peakTier", value: string, score?: string) {
+async function selectTier(browser: IsolatedChromium, name: "currentTier" | "peakTier", value: string, detail?: string) {
   const selector = `select[data-tier-name=${JSON.stringify(name)}]`;
   assert.equal(await browser.evaluate<boolean>(`(() => {
     const select = document.querySelector(${JSON.stringify(selector)});
@@ -100,18 +101,34 @@ async function selectTier(browser: IsolatedChromium, name: "currentTier" | "peak
     `document.querySelector(${JSON.stringify(selector)})?.value === ${JSON.stringify(value)}`,
     `${name} tier selection`,
   );
-  if (score === undefined) return;
-  const scoreSelector = `input[data-tier-score=${JSON.stringify(name)}]`;
+  if (detail === undefined) return;
+  const detailSelector = isPlayerMasterPlusTier(value)
+    ? `input[data-tier-score=${JSON.stringify(name)}]`
+    : `select[data-tier-division=${JSON.stringify(name)}]`;
   await browser.waitFor(
-    `document.querySelector(${JSON.stringify(scoreSelector)}) instanceof HTMLInputElement`,
-    `${name} LP input`,
+    `document.querySelector(${JSON.stringify(detailSelector)}) instanceof ${isPlayerMasterPlusTier(value) ? "HTMLInputElement" : "HTMLSelectElement"}`,
+    `${name} detail control`,
   );
-  await browser.focus(scoreSelector);
-  await browser.selectAll();
-  await browser.insertText(score);
+  if (isPlayerMasterPlusTier(value)) {
+    await browser.focus(detailSelector);
+    await browser.selectAll();
+    await browser.insertText(detail);
+    await browser.waitFor(
+      `document.querySelector(${JSON.stringify(detailSelector)})?.value === ${JSON.stringify(detail)}`,
+      `${name} LP keyboard input`,
+    );
+    return;
+  }
+  assert.equal(await browser.evaluate<boolean>(`(() => {
+    const control = document.querySelector(${JSON.stringify(detailSelector)});
+    if (!(control instanceof HTMLSelectElement)) return false;
+    control.value = ${JSON.stringify(detail)};
+    control.dispatchEvent(new Event('change', { bubbles: true }));
+    return true;
+  })()`), true, `${name} must expose the matching detail control`);
   await browser.waitFor(
-    `document.querySelector(${JSON.stringify(scoreSelector)})?.value === ${JSON.stringify(score)}`,
-    `${name} LP keyboard input`,
+    `document.querySelector(${JSON.stringify(detailSelector)})?.value === ${JSON.stringify(detail)}`,
+    `${name} detail selection`,
   );
 }
 
@@ -136,11 +153,13 @@ async function readRenderedProfile(browser: IsolatedChromium) {
     const tierField = (name) => {
       const input = document.querySelector('input[type="hidden"][name="' + name + '"]');
       const select = document.querySelector('select[data-tier-name="' + name + '"]');
+      const division = document.querySelector('select[data-tier-division="' + name + '"]');
       const score = document.querySelector('input[data-tier-score="' + name + '"]');
       if (!(input instanceof HTMLInputElement) || !(select instanceof HTMLSelectElement)) return null;
       return {
         value: input.value,
         selection: select.value,
+        division: division instanceof HTMLSelectElement ? division.value : null,
         score: score instanceof HTMLInputElement ? score.value : null,
         label: select.closest('fieldset')?.querySelector('legend')?.textContent?.trim() ?? '',
         optionCount: select.options.length,
@@ -183,15 +202,16 @@ try {
     const expected = playerTierEditState(persistedValue);
     const rendered = initialRendered[name];
     assert.equal(rendered?.selection, expected.tier);
-    assert.equal(rendered?.value, formatPlayerTierEditValue(expected.tier, expected.score) ?? "");
-    assert.equal(rendered?.score, isPlayerMasterPlusTier(expected.tier) ? expected.score : null);
+    assert.equal(rendered?.value, formatPlayerTierEditValue(expected.tier, expected.detail) ?? "");
+    assert.equal(rendered?.division, isPlayerMasterPlusTier(expected.tier) ? null : expected.detail);
+    assert.equal(rendered?.score, isPlayerMasterPlusTier(expected.tier) ? expected.detail : null);
   }
   assert.equal(initialRendered.riotId?.maxLength, 22);
   assert.match(initialRendered.riotId?.label ?? "", /Riot ID/u);
   assert.match(initialRendered.currentTier?.label ?? "", /현재 티어/u);
   assert.match(initialRendered.peakTier?.label ?? "", /최고 티어/u);
-  assert.equal(initialRendered.currentTier?.optionCount, 32);
-  assert.equal(initialRendered.peakTier?.optionCount, 32);
+  assert.equal(initialRendered.currentTier?.optionCount, 11);
+  assert.equal(initialRendered.peakTier?.optionCount, 11);
   assert.equal(initialRendered.saveButton, "내 플레이어 정보 저장");
 
   const browserIdentity = `Browser${randomBytes(3).toString("hex")}`;
@@ -201,7 +221,7 @@ try {
     peakTier: "MASTER 120",
   };
   await replaceFieldWithKeyboard(browser, "riotId", browserBody.riotId);
-  await selectTier(browser, "currentTier", browserBody.currentTier);
+  await selectTier(browser, "currentTier", "DIAMOND", "II");
   await selectTier(browser, "peakTier", "MASTER", "120");
   const successfulMutation = browser.waitForResponse("/api/auth/me/player", 200);
   await submitWithEnter(browser, 'input[data-tier-score="peakTier"]');
@@ -245,7 +265,7 @@ try {
   const externalMutation = await mutatePlayer(afterBrowserSave.revision, externalBody);
   assert.equal(externalMutation.status, 200, "the concurrent owner mutation must advance the server revision");
 
-  await selectTier(browser, "currentTier", "PLATINUM IV");
+  await selectTier(browser, "currentTier", "PLATINUM", "IV");
   const staleMutation = browser.waitForResponse("/api/auth/me/player", 412);
   await submitWithEnter(browser);
   await staleMutation;
@@ -255,14 +275,16 @@ try {
       const currentTier = document.querySelector('input[type="hidden"][name="currentTier"]');
       const peakTier = document.querySelector('input[type="hidden"][name="peakTier"]');
       const currentTierSelect = document.querySelector('select[data-tier-name="currentTier"]');
+      const currentTierDivision = document.querySelector('select[data-tier-division="currentTier"]');
       const peakTierSelect = document.querySelector('select[data-tier-name="peakTier"]');
       const peakTierScore = document.querySelector('input[data-tier-score="peakTier"]');
       return riotId instanceof HTMLInputElement && currentTier instanceof HTMLInputElement && peakTier instanceof HTMLInputElement &&
-        currentTierSelect instanceof HTMLSelectElement && peakTierSelect instanceof HTMLSelectElement && peakTierScore instanceof HTMLInputElement &&
+        currentTierSelect instanceof HTMLSelectElement && currentTierDivision instanceof HTMLSelectElement && peakTierSelect instanceof HTMLSelectElement && peakTierScore instanceof HTMLInputElement &&
         riotId.value === ${JSON.stringify(externalBody.riotId)} &&
         currentTier.value === ${JSON.stringify(externalBody.currentTier)} &&
         peakTier.value === ${JSON.stringify(externalBody.peakTier)} &&
-        currentTierSelect.value === ${JSON.stringify(externalBody.currentTier)} &&
+        currentTierSelect.value === 'EMERALD' &&
+        currentTierDivision.value === 'I' &&
         peakTierSelect.value === 'GRANDMASTER' &&
         peakTierScore.value === '450' &&
         !riotId.dataset.browserQaInstance;

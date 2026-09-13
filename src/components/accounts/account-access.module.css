@@ -20,6 +20,7 @@
 .field small { color: #718097; font-size: .75rem; font-weight: 650; line-height: 1.5; }
 .tierField { min-width: 0; display: grid; align-content: start; gap: .65rem; margin: 0; border: 1px solid #dbe5f1; border-radius: 1rem; background: #f8fbff; padding: .85rem; }
 .tierField legend { color: #354760; padding: 0 .3rem; font-size: .78rem; font-weight: 900; }
+.tierControls { display: grid; grid-template-columns: minmax(0, 1fr) minmax(6.5rem, .55fr); gap: .55rem; align-items: end; }
 .tierHelp { color: #718097; font-size: .7rem; font-weight: 650; line-height: 1.5; }
 .check { min-height: 2.75rem; display: flex; align-items: flex-start; gap: .6rem; color: #4b5d75; font-size: .74rem; line-height: 1.55; }
 .check input { width: 1.1rem; height: 1.1rem; margin-top: .12rem; accent-color: #4a74bd; }

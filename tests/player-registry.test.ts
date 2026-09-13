@@ -8,10 +8,12 @@ import { fixturePlayerRepository } from "../src/modules/players/infrastructure/f
 import {
   formatPlayerTierEditValue,
   parsePlayerTierFilter,
+  playerDivisionRankOptions,
   playerDivisionTierOptions,
   playerMasterPlusTierOptions,
   playerTierEditState,
   playerTierFamily,
+  playerTierFilters,
 } from "../src/modules/players/domain/player-tier";
 import {
   buildLegacyHomeDestination,
@@ -38,25 +40,34 @@ test("티어 query는 허용 목록만 받고 영문·한글 티어 표기를 �
   assert.equal(playerTierFamily(null), null);
 });
 
-test("내정보 티어 선택값은 다이아 이하 4단계와 마스터 이상 점수 입력 계약을 보존한다", () => {
+test("내정보 티어 선택값은 10개 티어와 다이아 이하 4단계 및 마스터 이상 점수 계약을 보존한다", () => {
+  assert.equal(playerTierFilters.length, 10);
+  assert.deepEqual(playerDivisionRankOptions, [
+    { value: "I", label: "1" },
+    { value: "II", label: "2" },
+    { value: "III", label: "3" },
+    { value: "IV", label: "4" },
+  ]);
   assert.equal(playerDivisionTierOptions.length, 7 * 4);
-  assert.deepEqual(playerDivisionTierOptions[0], { value: "IRON IV", label: "아이언 4" });
-  assert.deepEqual(playerDivisionTierOptions.at(-1), { value: "DIAMOND I", label: "다이아몬드 1" });
+  assert.deepEqual(playerDivisionTierOptions[0], { value: "IRON I", label: "아이언 1" });
+  assert.deepEqual(playerDivisionTierOptions.at(-1), { value: "DIAMOND IV", label: "다이아몬드 4" });
   assert.deepEqual(playerMasterPlusTierOptions.map((tier) => tier.value), ["MASTER", "GRANDMASTER", "CHALLENGER"]);
 
-  assert.deepEqual(playerTierEditState("골드 2"), { tier: "GOLD II", score: "" });
-  assert.deepEqual(playerTierEditState("DIAMOND IV"), { tier: "DIAMOND IV", score: "" });
-  assert.deepEqual(playerTierEditState("마스터 3층"), { tier: "MASTER", score: "3" });
-  assert.deepEqual(playerTierEditState("MASTER 0"), { tier: "MASTER", score: "0" });
-  assert.deepEqual(playerTierEditState("그랜드마스터 450"), { tier: "GRANDMASTER", score: "450" });
-  assert.deepEqual(playerTierEditState("CHALLENGER 9999"), { tier: "CHALLENGER", score: "9999" });
+  assert.deepEqual(playerTierEditState("골드 2"), { tier: "GOLD", detail: "II" });
+  assert.deepEqual(playerTierEditState("DIAMOND IV"), { tier: "DIAMOND", detail: "IV" });
+  assert.deepEqual(playerTierEditState("마스터 3층"), { tier: "MASTER", detail: "3" });
+  assert.deepEqual(playerTierEditState("MASTER 0"), { tier: "MASTER", detail: "0" });
+  assert.deepEqual(playerTierEditState("그랜드마스터 450"), { tier: "GRANDMASTER", detail: "450" });
+  assert.deepEqual(playerTierEditState("CHALLENGER 9999"), { tier: "CHALLENGER", detail: "9999" });
 
-  assert.equal(formatPlayerTierEditValue("EMERALD III", ""), "EMERALD III");
+  assert.equal(formatPlayerTierEditValue("EMERALD", "III"), "EMERALD III");
+  assert.equal(formatPlayerTierEditValue("DIAMOND", "IV"), "DIAMOND IV");
   assert.equal(formatPlayerTierEditValue("MASTER", "0"), "MASTER 0");
   assert.equal(formatPlayerTierEditValue("MASTER", "0007"), "MASTER 7");
   assert.equal(formatPlayerTierEditValue("GRANDMASTER", "450"), "GRANDMASTER 450");
   assert.equal(formatPlayerTierEditValue("CHALLENGER", "9999"), "CHALLENGER 9999");
   assert.equal(formatPlayerTierEditValue("MASTER", ""), undefined);
+  assert.equal(formatPlayerTierEditValue("GOLD", ""), undefined);
   assert.equal(formatPlayerTierEditValue("MASTER", "10000"), undefined);
 });
 

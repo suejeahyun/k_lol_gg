@@ -7,9 +7,9 @@ import type { AccountPlayerDto } from "@/modules/accounts/domain/account-contrac
 import {
   formatPlayerTierEditValue,
   isPlayerMasterPlusTier,
-  playerDivisionTierOptions,
-  playerMasterPlusTierOptions,
+  playerDivisionRankOptions,
   playerTierEditState,
+  playerTierFilters,
 } from "@/modules/players/domain/player-tier";
 import styles from "./account-access.module.css";
 
@@ -28,60 +28,75 @@ function AccountTierField({
   const controlId = useId();
   const initial = playerTierEditState(initialValue);
   const [tier, setTier] = useState(initial.tier);
-  const [score, setScore] = useState(initial.score);
+  const [detail, setDetail] = useState(initial.detail);
   const masterPlus = isPlayerMasterPlusTier(tier);
-  const value = formatPlayerTierEditValue(tier, score) ?? "";
+  const value = formatPlayerTierEditValue(tier, detail) ?? "";
   const helpId = `${controlId}-help`;
+  const detailId = `${controlId}-detail`;
 
   return (
     <fieldset className={styles.tierField}>
       <legend>{label}</legend>
       <input type="hidden" name={name} value={value} />
-      <label className={styles.field} htmlFor={controlId}>
-        <span>티어 및 단계</span>
-        <select
-          id={controlId}
-          data-tier-name={name}
-          value={tier}
-          onChange={(event) => {
-            setTier(event.target.value);
-            if (!isPlayerMasterPlusTier(event.target.value)) setScore("");
-          }}
-          aria-describedby={helpId}
-        >
-          <option value="">미입력</option>
-          <optgroup label="다이아몬드 이하">
-            {playerDivisionTierOptions.map((option) => (
+      <div className={styles.tierControls}>
+        <label className={styles.field} htmlFor={controlId}>
+          <span>티어</span>
+          <select
+            id={controlId}
+            data-tier-name={name}
+            value={tier}
+            onChange={(event) => {
+              setTier(event.target.value);
+              setDetail("");
+            }}
+            aria-describedby={helpId}
+          >
+            <option value="">미입력</option>
+            {playerTierFilters.map((option) => (
               <option key={option.value} value={option.value}>{option.label}</option>
             ))}
-          </optgroup>
-          <optgroup label="마스터 이상">
-            {playerMasterPlusTierOptions.map((family) => (
-              <option key={family.value} value={family.value}>{family.label}</option>
-            ))}
-          </optgroup>
-        </select>
-      </label>
-      {masterPlus ? (
-        <label className={styles.field}>
-          <span>LP(점수)</span>
-          <input
-            data-tier-score={name}
-            type="number"
-            min={0}
-            max={9999}
-            step={1}
-            inputMode="numeric"
-            required
-            value={score}
-            onChange={(event) => setScore(event.target.value)}
-            aria-describedby={helpId}
-            placeholder="예: 120"
-          />
+          </select>
         </label>
-      ) : null}
+        {masterPlus ? (
+          <label className={styles.field} htmlFor={detailId}>
+            <span>LP(점수)</span>
+            <input
+              id={detailId}
+              data-tier-score={name}
+              type="number"
+              min={0}
+              max={9999}
+              step={1}
+              inputMode="numeric"
+              required
+              value={detail}
+              onChange={(event) => setDetail(event.target.value)}
+              aria-describedby={helpId}
+              placeholder="예: 120"
+            />
+          </label>
+        ) : (
+          <label className={styles.field} htmlFor={detailId}>
+            <span>단계</span>
+            <select
+              id={detailId}
+              data-tier-division={name}
+              value={detail}
+              onChange={(event) => setDetail(event.target.value)}
+              aria-describedby={helpId}
+              required={Boolean(tier)}
+              disabled={!tier}
+            >
+              <option value="">{tier ? "선택" : "-"}</option>
+              {playerDivisionRankOptions.map((rank) => (
+                <option key={rank.value} value={rank.value}>{rank.label}</option>
+              ))}
+            </select>
+          </label>
+        )}
+      </div>
       <small id={helpId} className={styles.tierHelp}>
-        다이아몬드 이하는 목록에서 선택하고, 마스터 이상은 티어를 선택한 뒤 LP만 직접 입력합니다.
+        아이언부터 챌린저까지 티어를 선택합니다. 다이아몬드 이하는 단계를 선택하고, 마스터 이상은 LP만 직접 입력합니다.
       </small>
     </fieldset>
   );
