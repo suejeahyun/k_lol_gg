@@ -44,6 +44,5 @@
 | Riot | 닉네임#태그 기반 전적·챔피언·티어 갱신 | 소스 검증 완료 | 합성 provider·PostgreSQL PASS; 실제 Riot 계정 필요 |
 | Blob | 이미지 업로드·읽기·삭제 | 소스 검증 완료 | repository 계약 PASS; 실제 Vercel Blob 필요 |
 | 운영 | 103개 페이지·335개 반응형 전체 캡처 | 검증 완료 | HTTP 200, issue 0, 자격증명 미저장, 종료 코드 0 |
-| 운영 | Vercel 배포·alias smoke | 외부 검증 필요 | 이번 태그는 `NOT_DEPLOYED` |
+| 운영 | Vercel 배포·alias smoke | 확인됨 | Production `dpl_48xow9mENhg2BrSAZyFdBD4giJQZ`, 운영 health·주요 공개 경로 HTTP 200 |
 | 데이터 | test/test000 플레이어 삭제 | 안전상 보류 | 참조·복구 근거 확인 전 삭제 금지 |
-

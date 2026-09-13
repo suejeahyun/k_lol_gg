@@ -6,11 +6,11 @@
 - 기능 커밋: `dfb0ccb787d1602804c2019c7a87594de77d1661`
 - Git tag: `v2-completion-audit-v1.0.0`
 - DB migration: 없음, head `0037_swift_brood` 유지
-- 운영 배포: **하지 않음** (`NOT_DEPLOYED`)
+- 운영 배포: **완료** (`dpl_48xow9mENhg2BrSAZyFdBD4giJQZ`)
 - 운영 DB 변경·삭제: **하지 않음**
 - MessengerBot R 휴대폰 설치·실제 두 방 송수신: **외부 검증 대기**
 
-현재 소스에서 이전 V2 기능을 유지하면서 팀 밸런스, 경기 결과, 플레이어 통계, 콘텐츠·이미지, 이벤트·멸망전, 관리자 권한, Kakao V1 호환, 레거시 링크와 전체 화면 QA의 남은 간극을 보완했다. 소스·빌드·합성 PostgreSQL·격리 Chromium 범위는 검증 완료로 판정한다. 실제 휴대폰, 실제 Riot 계정, 실제 Blob, Vercel Cron과 운영 배포는 이 근거에 포함하지 않는다.
+현재 소스에서 이전 V2 기능을 유지하면서 팀 밸런스, 경기 결과, 플레이어 통계, 콘텐츠·이미지, 이벤트·멸망전, 관리자 권한, Kakao V1 호환, 레거시 링크와 전체 화면 QA의 남은 간극을 보완했다. 소스·빌드·합성 PostgreSQL·격리 Chromium 검증 후 Vercel Production과 운영 별칭 smoke까지 확인했다. 실제 휴대폰, 실제 Riot 계정, 실제 Blob과 Vercel Cron 실행 증거는 이 근거에 포함하지 않는다.
 
 세부 요구사항 판정은 [REQUIREMENTS_MATRIX.md](./REQUIREMENTS_MATRIX.md)에 있다.
 
@@ -94,4 +94,3 @@
 - Kakao 방 이름 파싱을 제거한 현재 구조에서는 잘못된 실제 방에 동일 명령을 설치하면 실행을 막을 방 식별 근거가 없다. 이는 요청한 설치본 단위 구조의 알려진 제한이다.
 - 최근 솔로 20경기와 관리자 수동 보정 원천이 없으면 팀 밸런스의 해당 값은 0/미제공으로 표시된다.
 - 오래된 내전 전체 양식의 동시 편집 충돌을 V1 표시 형식을 깨지 않고 탐지할 revision/base token은 후속 설계 항목이다.
-

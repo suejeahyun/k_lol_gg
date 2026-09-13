@@ -266,7 +266,13 @@
       "qaEvidence": "docs/qa-evidence/v2-completion-audit-2026-09-13/README.md",
       "patchNotes": "docs/patch-notes/2026-09-13-v2-completion-audit.md",
       "deployment": {
-        "status": "NOT_DEPLOYED"
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_48xow9mENhg2BrSAZyFdBD4giJQZ",
+        "url": "https://k-lol-fzrtlr3rt-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-13T07:45:49.303Z",
+        "healthStatus": "ready"
       },
       "externalInstallations": [
         {
@@ -291,7 +297,13 @@
       "qaEvidence": "docs/qa-evidence/ui-workflow-refinement-2026-09-13/README.md",
       "patchNotes": "docs/patch-notes/2026-09-13-ui-workflow-refinement.md",
       "deployment": {
-        "status": "NOT_DEPLOYED"
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_48xow9mENhg2BrSAZyFdBD4giJQZ",
+        "url": "https://k-lol-fzrtlr3rt-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-13T07:45:49.303Z",
+        "healthStatus": "ready"
       },
       "externalInstallations": []
     },
@@ -305,7 +317,13 @@
       "qaEvidence": "docs/qa-evidence/tier-control-correction-2026-09-13/README.md",
       "patchNotes": "docs/patch-notes/2026-09-13-tier-control-correction.md",
       "deployment": {
-        "status": "NOT_DEPLOYED"
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_48xow9mENhg2BrSAZyFdBD4giJQZ",
+        "url": "https://k-lol-fzrtlr3rt-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-13T07:45:49.303Z",
+        "healthStatus": "ready"
       },
       "externalInstallations": []
     }

@@ -1,10 +1,11 @@
 # K-LOL.GG V2 상태
 
-## 2026-09-13 UI·운영 흐름 보완 릴리스 후보
+## 2026-09-13 UI·운영 흐름 보완 운영 릴리스
 
 - 최신 기능 커밋: `fd87e5f47703f92f09e1d4db70617ee2aa49fc92`
 - 릴리스 tag: `ui-workflow-refinement-v1.0.1`
-- 상태: 소스·빌드·격리 PostgreSQL·격리 Chromium 검증 완료, **운영 미배포**
+- 상태: 소스·빌드·격리 PostgreSQL·격리 Chromium 검증 및 **Vercel 운영 배포 완료**
+- 운영 배포: `dpl_48xow9mENhg2BrSAZyFdBD4giJQZ` · main `477651491ce9feef404f5cba186602f1fb481036`
 - 전체 화면: 105 pages / 339 captures / issue 0 / 종료 코드 0
 - 테스트: 747개 중 746 PASS, DB 전용 1 skip, 실패 0
 - 프로덕션 빌드: static generation 93/93
@@ -13,19 +14,19 @@
 
 전체 근거는 [`qa-evidence/ui-workflow-refinement-2026-09-13/README.md`](./qa-evidence/ui-workflow-refinement-2026-09-13/README.md), 티어 입력 구조 정정 근거는 [`qa-evidence/tier-control-correction-2026-09-13/README.md`](./qa-evidence/tier-control-correction-2026-09-13/README.md)에 있다.
 
-## 2026-09-13 전체 검증·보완 릴리스 후보
+## 2026-09-13 전체 검증·보완 운영 릴리스
 
 - 기능 커밋: `dfb0ccb787d1602804c2019c7a87594de77d1661`
 - 릴리스 tag: `v2-completion-audit-v1.0.0`
-- 상태: 소스·빌드·합성 PostgreSQL·격리 Chromium 검증 완료, **운영 미배포**
+- 상태: 소스·빌드·합성 PostgreSQL·격리 Chromium 검증 및 **Vercel 운영 배포 완료**
 - 전체 화면: 103 pages / 335 captures / issue 0 / 종료 코드 0
 - 테스트: 742개 중 741 PASS, DB 전용 1 skip, 실패 0
 - Drizzle application schema: 102 tables / 165 foreign keys
 - recovery physical schema: migration journal table 포함 103 tables
 - 운영 DB 변경·데이터 삭제: 없음
-- 남은 외부 확인: Vercel 배포·Cron secret, MessengerBot R 실기기 두 방, 실제 Riot RSO/API, 실제 Vercel Blob
+- 남은 외부 확인: Vercel Cron 실제 실행, MessengerBot R 실기기 두 방, 실제 Riot RSO/API, 실제 Vercel Blob
 
-전체 근거와 요구사항 판정은 [`qa-evidence/v2-completion-audit-2026-09-13/README.md`](./qa-evidence/v2-completion-audit-2026-09-13/README.md)에 있다. 아래 내용은 직전 운영 배포 기준 기록이며 이번 릴리스 후보가 운영에 반영됐다는 의미가 아니다.
+전체 근거와 요구사항 판정은 [`qa-evidence/v2-completion-audit-2026-09-13/README.md`](./qa-evidence/v2-completion-audit-2026-09-13/README.md)에 있다. 아래 내용은 직전 Kakao R8 운영 배포 기록이다.
 
 - 운영 검증 확인 시각: 2026-09-12T13:36:38.587Z (2026-09-12 22:36:38 KST)
 - 운영 검증 기능 기준: `2f576d939498d664db8962460ddf12200623b5c9`
