@@ -23,12 +23,25 @@
 - `npm run bot:kakao:v1-strict`: 통과, 공개 R11 LF 63,517 / CRLF 65,371
 - `npm run bot:kakao:v1-strict:private`: 통과, private R11 LF 61,135 / CRLF 62,912
 - `node --test tests/kakao-v1-strict-messengerbot.test.mjs tests/kakao-v1-exact-v4-adapter-architecture.test.mjs`: 26/26 통과
-- `npx tsx --test tests/kakao-party-snapshot-parser-p0.test.ts`: 9/9 통과
-- 대상 ESLint와 `git diff --check`: 통과
+- `npx tsx --test tests/kakao-party-snapshot-parser-p0.test.ts`: 10/10 통과
+- 격리 PostgreSQL recruiting 계약: 49/49 통과
+- 전체 `npm run check`: 계약 392/392, 일반 773 PASS·DB 전용 1 intentional skip, static generation 93/93 통과
+- private RECRUIT·FEATURES 실연결 검증: 각 HTTP 200 / gateway OK, 인증값 출력 없음
+- 대상 ESLint, 추적 트리 비밀값 검사와 `git diff --check`: 통과
+
+## 운영 배포 근거
+
+- 기능 커밋: `56c8f33eeef4de3986a6e373234d3678c5ee2ccb`
+- Vercel deployment: `dpl_H9QGLqUs1d16PsoLwWybiQoXRtWF`
+- 불변 URL: `https://k-lol-m5d69oipf-tjdmswo11-3715s-projects.vercel.app`
+- 운영 별칭: `https://k-lol-gg.vercel.app`
+- 배포 상태: `Ready`
+- 운영 health: 2026-09-13T11:55:50.097Z, HTTP 200, `status: ready`
+- DB migration·운영 데이터 변경·삭제: 없음
 
 ## 운영 반영 상태와 남은 위험
 
-서버 R11 기능의 기존 Vercel 운영 배포와 별개로, 이번 private 재생성 파일은 로컬 ignored 산출물이다. 실제 휴대폰에는 아직 설치하지 않았으므로 카카오 운영 반영 완료로 판정하지 않는다. 설치 전 기존 휴대폰 코드를 백업하고 파일 전체 교체 후 `봇버전`, 컴파일, 실제 양식 왕복을 확인해야 한다.
+서버와 사이트는 Vercel 운영 배포 및 health 확인을 마쳤다. 이번 private 재생성 파일은 로컬 ignored 산출물이며 실제 휴대폰에는 아직 설치하지 않았으므로 카카오 운영 반영 완료로 판정하지 않는다. 설치 전 기존 휴대폰 코드를 백업하고 파일 전체 교체 후 `봇버전`, 컴파일, 실제 양식 왕복을 확인해야 한다.
 
 ## 다음 패치 추천
 

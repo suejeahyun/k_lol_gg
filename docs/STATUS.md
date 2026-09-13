@@ -1,5 +1,19 @@
 # K-LOL.GG V2 상태
 
+## 2026-09-13 카카오 V1 strict R11 설치본 정합성 긴급 수정
+
+- 기능 커밋: `56c8f33eeef4de3986a6e373234d3678c5ee2ccb`
+- 릴리스 tag: `kakao-v1-r11-private-installer-hotfix-v1.0.0`
+- 상태: 소스·전체 테스트·격리 PostgreSQL·private 연결 검증 및 Vercel 운영 배포 완료, 휴대폰 MessengerBot R 설치 대기
+- 운영 배포: `dpl_H9QGLqUs1d16PsoLwWybiQoXRtWF`
+- 운영 별칭: `https://k-lol-gg.vercel.app` · `/api/health` HTTP 200 · `status: ready`
+- 테스트: 계약 392/392, 일반 773 PASS·DB 전용 1 skip, PostgreSQL recruiting 49/49, private/client/architecture 26/26, static generation 93/93
+- private 설치본: R11, LF 61,135 / CRLF 62,912, SHA-256 `fb21ea0aeb65f7f878b080edea8b099bc7409b3a3042551af5e72a021c0516bf`
+- 원인: 설치 안내의 private 파일이 R9에 남아 참가행 없는 R11 주최자 양식을 명령으로 분류하지 못하고 무응답 종료
+- DB migration·운영 데이터 변경·삭제: 없음
+
+전체 근거와 디스코드 공지는 [`qa-evidence/kakao-v1-r11-private-installer-hotfix-2026-09-13/README.md`](./qa-evidence/kakao-v1-r11-private-installer-hotfix-2026-09-13/README.md)에 있다.
+
 ## 2026-09-13 관리자 지정·비공개 Blob OIDC 운영 릴리스
 
 - 기능 커밋: `b48465ac781d5f17679e4911cebc03b0d50aec8f`

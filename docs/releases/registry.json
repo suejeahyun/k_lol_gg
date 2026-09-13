@@ -2,6 +2,32 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "featureId": "kakao-v1-r11-private-installer-hotfix",
+      "version": "1.0.0",
+      "gitTag": "kakao-v1-r11-private-installer-hotfix-v1.0.0",
+      "commit": "56c8f33eeef4de3986a6e373234d3678c5ee2ccb",
+      "releasedAt": "2026-09-13T20:56:07+09:00",
+      "migrationHead": "0039_massive_arachne",
+      "qaEvidence": "docs/qa-evidence/kakao-v1-r11-private-installer-hotfix-2026-09-13/README.md",
+      "patchNotes": "docs/patch-notes/2026-09-13-kakao-v1-r11-private-installer-hotfix.md",
+      "deployment": {
+        "status": "PRODUCTION",
+        "provider": "vercel",
+        "deploymentId": "dpl_H9QGLqUs1d16PsoLwWybiQoXRtWF",
+        "url": "https://k-lol-m5d69oipf-tjdmswo11-3715s-projects.vercel.app",
+        "alias": "https://k-lol-gg.vercel.app",
+        "verifiedAt": "2026-09-13T11:55:50.097Z",
+        "healthStatus": "ready"
+      },
+      "externalInstallations": [
+        {
+          "name": "MessengerBot R V1 strict",
+          "version": "KLOL_KAKAO_BOT_V40_SITE_FIRST_NO_CODES_R11_2026_09_13_ALL_MODE_DRAFT",
+          "status": "PENDING_USER_INSTALL"
+        }
+      ]
+    },
+    {
       "featureId": "admin-player-role-promotion",
       "version": "1.0.0",
       "gitTag": "admin-player-role-promotion-v1.0.0",
